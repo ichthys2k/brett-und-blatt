@@ -1,0 +1,12 @@
+{
+  "name": "@brett-und-blatt/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "description": "Spielmodul-Schnittstelle, Zufall, lokale Spielleitung, Uhren und allgemeine Bots",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  }
+}

@@ -1,0 +1,5 @@
+packages:
+  - apps/*
+  - packages/engine
+  - packages/ui
+  - packages/games/*

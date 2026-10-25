@@ -1,0 +1,127 @@
+.c4-layout {
+  display: grid;
+  width: 100%;
+  height: 100%;
+}
+
+.c4-strip {
+  display: grid;
+  padding: 0 1.6%;
+  gap: 1.4%;
+}
+
+.c4-strip-cell {
+  display: grid;
+  place-items: center;
+  padding: 6%;
+}
+
+.c4-board {
+  height: 100%;
+  padding: 1.6%;
+  gap: 1.4%;
+  border-radius: 14px;
+  background: #1f4fd1;
+  box-shadow: inset 0 -6px 0 rgb(0 0 0 / 0.22);
+}
+
+.c4-hole {
+  display: grid;
+  place-items: center;
+  width: 88%;
+  height: 88%;
+  border-radius: 50%;
+  background: var(--color-bg);
+  box-shadow: inset 0 3px 5px rgb(0 0 0 / 0.35);
+}
+
+.c4-board .c4-column-hover .c4-hole {
+  box-shadow:
+    inset 0 3px 5px rgb(0 0 0 / 0.35),
+    0 0 0 3px rgb(255 255 255 / 0.55);
+}
+
+.c4-disc {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.18);
+}
+
+.c4-disc svg {
+  width: 100%;
+  height: 100%;
+}
+
+.c4-seat-0 {
+  background: radial-gradient(circle at 35% 30%, #ff7676, #d62828 60%, #a4161a);
+}
+
+.c4-seat-1 {
+  background: radial-gradient(circle at 35% 30%, #ffe680, #f2b705 60%, #c99700);
+}
+
+.c4-symbol {
+  fill: rgb(255 255 255 / 0.55);
+}
+
+.c4-ring {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.6);
+  stroke-width: 8;
+}
+
+.c4-ghost {
+  opacity: 0.4;
+}
+
+.c4-win {
+  animation: c4-pulse 0.9s ease-in-out infinite alternate;
+}
+
+.c4-drop {
+  position: relative;
+  z-index: 2;
+  animation: c4-drop 0.38s cubic-bezier(0.45, 0, 0.9, 0.6) both;
+}
+
+.c4-pop {
+  border: 0;
+  border-radius: 10px;
+  margin: 8% 6%;
+  background: var(--color-surface-2);
+  color: var(--color-ink);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+@keyframes c4-drop {
+  from {
+    transform: translateY(calc(var(--c4-drop) * -117%));
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes c4-pulse {
+  from {
+    box-shadow:
+      inset 0 -4px 0 rgb(0 0 0 / 0.18),
+      0 0 0 0 rgb(255 255 255 / 0.9);
+  }
+  to {
+    box-shadow:
+      inset 0 -4px 0 rgb(0 0 0 / 0.18),
+      0 0 0 5px rgb(255 255 255 / 0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c4-drop,
+  .c4-win {
+    animation: none;
+  }
+}

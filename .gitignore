@@ -28,3 +28,6 @@ pnpm-debug.log*
 !.vscode/extensions.json
 .DS_Store
 *.swp
+
+# Lokale Einstellungen für Claude Code
+.claude/

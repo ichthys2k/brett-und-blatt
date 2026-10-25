@@ -40,7 +40,7 @@ interface GameModule<State, Move, View> {
   options: OptionSchema;       // Varianten und Hausregeln, erscheinen als Lobby-Schalter
   timePresets: TimePresets;    // „gemütlich“, „normal“, „schnell“
 
-  setup(seats: Seat[], options: Options, seed: string): State;
+  setup(seats: number, options: Options, seed: string): State;
   currentPlayers(s: State): SeatId[];          // wer handeln darf, auch mehrere oder 'system'
   legalMoves(s: State, seat: SeatId): Move[];
   applyMove(s: State, seat: SeatId, m: Move): { state: State; events: GameEvent[] };
@@ -172,7 +172,7 @@ brett-und-blatt/
 ```
 
 - **Werkzeuge:** pnpm-Workspaces (mehrere Pakete in einem Repo), Vitest für Tests, Wrangler für Cloudflare.
-- **Neue Spiele:** Die Plattform findet Spielordner automatisch (`import.meta.glob`) und lädt ein Spiel erst, wenn man es öffnet (Code-Splitting). Vorlage: `npm run neues-spiel`, Lehrbeispiel ist Tic-Tac-Toe.
+- **Neue Spiele:** Die Plattform findet Spielordner automatisch (`import.meta.glob`) und lädt ein Spiel erst, wenn man es öffnet (Code-Splitting). Vorlage: `pnpm neues-spiel <id> "<Name>"`, Lehrbeispiel ist Tic-Tac-Toe (siehe [CONTRIBUTING.md](../CONTRIBUTING.md)).
 - **Server neutral:** Die Server-Spielleitung ist ein eigenes Paket mit dünnem Cloudflare-Adapter. Ein Node-Adapter für warpdrive oder einen gemieteten Server ist jederzeit möglich.
 
 **GitHub:**
@@ -185,7 +185,7 @@ brett-und-blatt/
 
 | Etappe | Inhalt | Spiele |
 |---|---|---|
-| 1 Fundament | Monorepo, Schnittstelle, lokale Spielleitung, Gitterbrett, allgemeine Bots, lokale Zeitlimits, PWA, CI | Tic-Tac-Toe (Vorlage), Vier in einer Reihe |
+| 1 Fundament ✅ | Monorepo, Schnittstelle, lokale Spielleitung, Gitterbrett, allgemeine Bots, lokale Zeitlimits, PWA, CI | Tic-Tac-Toe (Vorlage), Vier in einer Reihe |
 | 2 Offline-Sammlung | Netzbrett, Karten-Baukasten, Übergabe-Bildschirm, Inhaltspakete | Ultimate Tic-Tac-Toe, Mühle, Reversi, Paare finden, Schwarzer Peter, Vierer-Schach (Port) |
 | 3 Online | Cloudflare-Server, Räume, Wiedereinstieg, Bot-Ersatz, Server-Uhr, flüchtige Signale | Schiffe versenken, Quartett, Mäxle, Bingo (Klassen-Modus) |
 | 4 Großes Brett | Zoombares Brett, Byo-yomi, Auszählphase, Fernpartie | Go, Domino |

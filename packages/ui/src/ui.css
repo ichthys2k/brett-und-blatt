@@ -1,0 +1,153 @@
+/* Baukasten-Stile. Farben kommen aus den Variablen der App (--color-…). */
+
+.bub-fit {
+  container-type: size;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.bub-fit-inner {
+  width: min(100cqw, calc(100cqh * var(--bub-ratio)));
+  aspect-ratio: var(--bub-ratio);
+}
+
+.bub-grid {
+  display: grid;
+  width: 100%;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.bub-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+button.bub-cell:not(:disabled) {
+  cursor: pointer;
+}
+
+button.bub-cell:disabled {
+  cursor: default;
+}
+
+button.bub-cell:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: -3px;
+  border-radius: 8px;
+}
+
+/* Spielerleiste */
+
+.bub-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  flex: 1 1 0;
+  padding: 0.4rem 0.75rem 0.4rem 0.4rem;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  transition:
+    border-color 0.2s,
+    transform 0.2s;
+}
+
+.bub-chip[data-active] {
+  border-color: var(--color-accent);
+}
+
+.bub-chip[data-winner] {
+  border-color: #d4a017;
+}
+
+.bub-chip-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.bub-chip-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bub-chip-detail {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bub-ring {
+  position: relative;
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.bub-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bub-ring-track {
+  fill: var(--color-surface-2);
+  stroke: var(--color-line);
+  stroke-width: 3;
+}
+
+.bub-ring-bar {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.25s linear;
+}
+
+.bub-ring[data-tone='warning'] .bub-ring-bar {
+  stroke: var(--color-warning);
+}
+
+.bub-ring[data-tone='danger'] .bub-ring-bar {
+  stroke: var(--color-danger);
+}
+
+.bub-ring-content {
+  position: absolute;
+  inset: 22%;
+  display: grid;
+  place-items: center;
+}
+
+.bub-ring-content > * {
+  width: 100%;
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bub-chip,
+  .bub-ring-bar {
+    transition: none;
+  }
+}

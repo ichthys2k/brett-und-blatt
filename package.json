@@ -1,0 +1,27 @@
+{
+  "name": "brett-und-blatt",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @brett-und-blatt/web dev",
+    "build": "pnpm --filter @brett-und-blatt/web build",
+    "preview": "pnpm --filter @brett-und-blatt/web preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json",
+    "check": "pnpm typecheck && pnpm test && pnpm build",
+    "neues-spiel": "node scripts/new-game.mjs"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}

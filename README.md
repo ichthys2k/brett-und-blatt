@@ -10,10 +10,16 @@ Geplant sind unter anderem Skat, Doppelkopf, Schafkopf, Quartett, Paare finden, 
 
 ## Stand
 
-Das Projekt ist in der **Planungsphase**. Es gibt noch keinen lauffähigen Code.
+**Etappe 1 (Fundament) ist umgesetzt.** Spielbar sind Tic-Tac-Toe und Vier in einer Reihe – allein gegen den Computer in drei Stärken oder zu zweit an einem Gerät, wahlweise mit Zeitlimit. Die App lässt sich auf dem Handy installieren und funktioniert danach auch ohne Internet.
+
+```bash
+pnpm install
+pnpm dev        # http://localhost:5173
+```
 
 - [Konzept](docs/KONZEPT.md): Entscheidungen, Aufbau, Spielmodul-Schnittstelle, Bots, Zeitlimits, Datenschutz, Fahrplan
 - [Spielpläne](docs/spiele/README.md): ein Plan pro Spiel mit Regeln, Bot, Oberfläche und Tests
+- [Mitmachen](CONTRIBUTING.md): Aufbau des Codes und wie man ein neues Spiel hinzufügt
 
 ## Grundsätze
 

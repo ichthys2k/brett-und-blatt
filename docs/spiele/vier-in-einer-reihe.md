@@ -47,7 +47,8 @@ type ConnectMove =
 ```
 
 - **Zustand:** Raster (Spalten mit Höhen), aktiver Spieler, Zugliste.
-- Für den Bot zusätzlich eine schnelle **Bitboard-Darstellung**: Das Brett wird als Bitmuster gespeichert, die Vierer-Prüfung geht dann über wenige Bit-Operationen.
+- Für den Bot zusätzlich eine schnelle **Such-Darstellung**: ein Zahlenfeld, auf dem Züge gesetzt und wieder zurückgenommen werden, dazu vorberechnete Vierer-Fenster je Feld. Echte Bitboards gehen in JavaScript nur mit 32 Bit; für 9×7-Bretter reicht das nicht, und BigInt wäre langsamer.
+- **PopOut-Sonderregeln** (so umgesetzt): Entsteht beim Herausziehen ein Vierer für beide, gewinnt, wer gezogen hat. Unentschieden bei dreifacher Stellungswiederholung, nach 200 Zügen oder wenn niemand mehr ziehen kann.
 - **Ereignisse:** `stoneDropped` (Spalte, Zielreihe), `win` (die vier Felder) für die Animation.
 
 ## Bot

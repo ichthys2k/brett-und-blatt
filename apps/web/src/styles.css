@@ -1,0 +1,48 @@
+@import 'tailwindcss';
+@import '../../../packages/ui/src/ui.css';
+
+/* Tailwind soll auch die Klassen im Baukasten und in den Spielen finden. */
+@source '../../../packages';
+
+@theme {
+  --color-bg: #f5f1ea;
+  --color-surface: #ffffff;
+  --color-surface-2: #eee8de;
+  --color-ink: #1f2328;
+  --color-muted: #5d646d;
+  --color-line: #ddd4c6;
+  --color-accent: #1f6f5c;
+  --color-accent-ink: #ffffff;
+  --color-warning: #b26a00;
+  --color-danger: #c0392b;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #121417;
+    --color-surface: #1c1f24;
+    --color-surface-2: #262b32;
+    --color-ink: #e9e7e3;
+    --color-muted: #9aa3ad;
+    --color-line: #333a43;
+    --color-accent: #4fb69a;
+    --color-accent-ink: #0b1a16;
+    --color-warning: #f0a83a;
+    --color-danger: #ff6b5e;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}

@@ -1,0 +1,36 @@
+name: Prüfungen
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Typprüfung, Tests und Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # pnpm in der Version aus package.json („packageManager“)
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Abhängigkeiten installieren
+        run: pnpm install --frozen-lockfile
+
+      - name: Typprüfung
+        run: pnpm typecheck
+
+      - name: Tests (inkl. Prüfungen für jedes Spielmodul)
+        run: pnpm test
+
+      - name: Web-App bauen
+        run: pnpm build
