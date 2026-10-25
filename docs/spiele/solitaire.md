@@ -52,7 +52,12 @@ Ein Bot mit Faustregeln spielt die Varianten ordentlich:
 3. lange Folgen bilden
 4. Talon nutzen
 
-Er liefert auch die **Tipps** („Was kann ich jetzt tun?“). Ein vollständiger Löser, der nur lösbare Spiele austeilt, ist für später vorgesehen.
+Er liefert auch die **Tipps** („Was kann ich jetzt tun?“). Dazu kommen zwei Suchverfahren (`src/solver/`):
+
+- **FreeCell-Löser:** Alle Karten liegen offen, deshalb rechnet eine Bestensuche die Partie bis zum Sieg durch (98 von 100 Testspielen in höchstens 1,5 s, meist unter 0,3 s). Der Tipp ist der erste Zug der Lösung; die Lösung wird zwischengespeichert.
+- **Vorausschau für Klondike und Spider:** Sucht mit den offenen Karten die Zugfolge mit dem größten Fortschritt (Karte freilegen, ablegen, Spalte leeren, Farbfolge bauen), sonst Talon. Spider (eine Farbe) gewinnt damit 4 von 10 statt vorher keines; bei Klondike bleibt es bei etwa 1–2 von 12.
+
+Offen: ein Löser, der verdeckte Karten über Stichproben berücksichtigt (für Klondike), und nur lösbare Spiele austeilen.
 
 ## Oberfläche
 

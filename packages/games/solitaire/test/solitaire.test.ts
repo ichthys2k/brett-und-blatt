@@ -1,6 +1,8 @@
 import { cardRank, computeBotMove, resolveOptions, type CardId, type Options } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
+import { solveFreeCell } from '../src/solver/freecell';
+import { bestPlan } from '../src/solver/lookahead';
 import { gameModule, isFree, type FreeCellState, type KlondikeState, type PyramidState, type SolitaireMove, type SolitaireState, type SpiderState } from '../src';
 
 function start<T extends SolitaireState>(options: Options, seed = 'test'): T {
@@ -163,6 +165,41 @@ describe('Bot', () => {
     const custom: KlondikeState = { ...state, waste: ['D1.1'] };
     const move = computeBotMove(gameModule, { gameId: 'solitaire', botId: 'solitaire', level: 'hard', seat: 0, view: gameModule.playerView(custom, 0), seed: 'x', timeBudgetMs: 10 }) as SolitaireMove;
     expect(move).toMatchObject({ type: 'move', to: { kind: 'foundation' } });
+  });
+});
+
+describe('Löser und Vorausschau', () => {
+  it('FreeCell: der Löser findet eine Lösung, die sich regelgerecht nachspielen lässt', () => {
+    let state: SolitaireState = start<FreeCellState>({ variant: 'freecell' });
+    const solution = solveFreeCell(state as FreeCellState, { timeBudgetMs: 5000 });
+    expect(solution.moves).not.toBeNull();
+    for (const move of solution.moves ?? []) {
+      // Liegt alles sortiert, legt die Spielleitung den Rest selbst ab.
+      if (!gameModule.currentPlayers(state).includes(0)) break;
+      state = gameModule.applyMove(state, 0, move).state;
+    }
+    while (gameModule.currentPlayers(state)[0] === 'system') state = gameModule.applyMove(state, 'system', gameModule.legalMoves(state, 'system')[0]!).state;
+    expect(gameModule.result(state)).toEqual({ kind: 'win', winners: [0] });
+  });
+
+  it('Klondike: die Vorausschau legt eine verdeckte Karte frei', () => {
+    const empty = { down: [], up: [] };
+    const state: KlondikeState = {
+      ...start<KlondikeState>({ variant: 'klondike' }),
+      tableau: [{ down: ['C9.1'], up: ['H5.1'] }, { down: [], up: ['S6.1'] }, empty, empty, empty, empty, empty],
+      stock: [],
+      waste: [],
+    };
+    const plan = bestPlan(gameModule.playerView(state, 0) as KlondikeState, { timeBudgetMs: 1000 });
+    expect(plan?.move).toEqual({ type: 'move', from: { kind: 'tableau', index: 0 }, to: { kind: 'tableau', index: 1 }, count: 1 });
+  });
+
+  it('Spider: ohne sinnvollen Zug rät der Tipp zum Austeilen', () => {
+    const base = start<SpiderState>({ variant: 'spider' });
+    const tableau = base.tableau.map((_, i) => ({ down: ['S1.1'], up: [`S${(i % 2) * 6 + 2}.1`] }));
+    const state: SpiderState = { ...base, tableau };
+    const move = computeBotMove(gameModule, { gameId: 'solitaire', botId: 'solitaire', level: 'hard', seat: 0, view: gameModule.playerView(state, 0), seed: 'x', timeBudgetMs: 200 }) as SolitaireMove;
+    expect(move).toEqual({ type: 'draw' });
   });
 });
 

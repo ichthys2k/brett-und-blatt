@@ -3,7 +3,7 @@
  * speichert die Stellung als FEN-Text (die übliche Kurzschreibweise einer
  * Schachstellung), damit er reines JSON bleibt.
  */
-import type { Actor, GameEvent, MoveResult, Result, SeatId } from '@brett-und-blatt/engine';
+import type { Actor, GameEvent, MoveResult, Options, Result, SeatId } from '@brett-und-blatt/engine';
 import { Chess } from 'chess.js';
 
 export type Promotion = 'q' | 'r' | 'b' | 'n';
@@ -27,6 +27,8 @@ export interface ChessState {
   inCheck: boolean;
   end: ChessEnd | null;
   winner: SeatId | null;
+  /** Darstellung: Brett zum Spieler am Zug drehen (fehlt in älteren Spielständen = ja). */
+  rotate?: boolean;
 }
 
 export const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -41,8 +43,8 @@ export function turnSeat(fen: string): SeatId {
   return fen.split(' ')[1] === 'w' ? 0 : 1;
 }
 
-export function setup(): ChessState {
-  return { fen: START_FEN, positions: { [positionKey(START_FEN)]: 1 }, history: [], lastMove: null, inCheck: false, end: null, winner: null };
+export function setup(_seats = 2, options: Options = {}): ChessState {
+  return { fen: START_FEN, positions: { [positionKey(START_FEN)]: 1 }, history: [], lastMove: null, inCheck: false, end: null, winner: null, rotate: options.board !== 'fixed' };
 }
 
 export function currentPlayers(state: ChessState): Actor[] {
@@ -84,6 +86,7 @@ export function applyMove(state: ChessState, actor: Actor, move: ChessMove): Mov
       inCheck: chess.inCheck(),
       end,
       winner: end === 'checkmate' ? (actor as SeatId) : null,
+      ...(state.rotate === undefined ? {} : { rotate: state.rotate }),
     },
     events,
   };

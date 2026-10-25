@@ -139,54 +139,102 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
   };
 
   return (
-    <div className="mx-auto flex h-dvh max-w-3xl flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)]">
-      <header className="flex h-14 flex-none items-center gap-2 px-3">
-        <Button variant="ghost" className="px-3" aria-label={t('play.back')} onClick={() => navigate(paths.home)}>
-          ←
-        </Button>
-        <h1 className="truncate text-lg font-semibold">
-          <span aria-hidden="true">{info.emoji} </span>
-          {info.name}
-        </h1>
-        <Button variant="ghost" className="ml-auto px-3 text-lg" aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
-          ?
-        </Button>
-        {session.timed && !result && (
-          <Button
-            variant="ghost"
-            className="px-3 text-xl"
-            aria-label={session.paused ? t('play.resume') : t('play.pause')}
-            title={session.paused ? t('play.resume') : t('play.pause')}
-            onClick={() => (session.paused ? session.resume() : session.pause())}
-          >
-            {session.paused ? '▶' : '⏸'}
+    <div className="mx-auto flex h-dvh max-w-3xl flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] flat:max-w-none flat:flex-row flat:pl-[env(safe-area-inset-left)] flat:pr-[env(safe-area-inset-right)]">
+      {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
+      <div className="contents flat:flex flat:w-64 flat:flex-none flat:flex-col flat:overflow-y-auto">
+        <header className="flex h-14 flex-none items-center gap-2 px-3">
+          <Button variant="ghost" className="px-3" aria-label={t('play.back')} onClick={() => navigate(paths.home)}>
+            ←
           </Button>
+          <h1 className="truncate text-lg font-semibold">
+            <span aria-hidden="true">{info.emoji} </span>
+            {info.name}
+          </h1>
+          <Button variant="ghost" className="ml-auto px-3 text-lg" aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
+            ?
+          </Button>
+          {session.timed && !result && (
+            <Button
+              variant="ghost"
+              className="px-3 text-xl"
+              aria-label={session.paused ? t('play.resume') : t('play.pause')}
+              title={session.paused ? t('play.resume') : t('play.pause')}
+              onClick={() => (session.paused ? session.resume() : session.pause())}
+            >
+              {session.paused ? '▶' : '⏸'}
+            </Button>
+          )}
+        </header>
+
+        <section className="flex flex-none flex-wrap gap-2 px-3" aria-label="Spieler">
+          {seats.map((seat, index) => (
+            <PlayerChip
+              key={index}
+              name={seat.name}
+              symbol={<ui.SeatSymbol seat={index} />}
+  detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index))}
+              active={!result && current.includes(index)}
+              thinking={session.isThinking(index) && seat.kind === 'bot'}
+              away={session.isAway(index)}
+              winner={result?.kind === 'win' && result.winners.includes(index)}
+              clock={session.timed ? session.clock(index) : null}
+            />
+          ))}
+        </section>
+
+        <p className="flex-none py-2 text-center font-medium" aria-live="polite">
+          {status}
+          {result?.reason === 'time' && ` (${t('play.reason.time')})`}
+          {result?.reason === 'resign' && ` (${t('play.reason.resign')})`}
+        </p>
+
+
+        {hintMissing && <p className="order-2 flex-none pt-2 text-center text-sm text-muted">{t('play.noHint')}</p>}
+
+        {awaySeats.length > 0 && !result && (
+          <div className="order-2 mx-3 mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm">
+            {awaySeats.map((seat) => (
+              <span key={seat} className="flex flex-1 flex-wrap items-center gap-2">
+                {t('play.away', { name: seats[seat]?.name ?? '' })}
+                <Button variant="primary" onClick={() => session.returnSeat(seat)}>
+                  {t('play.takeBack')}
+                </Button>
+              </span>
+            ))}
+          </div>
         )}
-      </header>
 
-      <section className="flex flex-none flex-wrap gap-2 px-3" aria-label="Spieler">
-        {seats.map((seat, index) => (
-          <PlayerChip
-            key={index}
-            name={seat.name}
-            symbol={<ui.SeatSymbol seat={index} />}
-detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index))}
-            active={!result && current.includes(index)}
-            thinking={session.isThinking(index) && seat.kind === 'bot'}
-            away={session.isAway(index)}
-            winner={result?.kind === 'win' && result.winners.includes(index)}
-            clock={session.timed ? session.clock(index) : null}
-          />
-        ))}
-      </section>
+        <footer className="order-2 flex flex-none flat:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 [&>button]:px-3">
+          {result ? (
+            <>
+              <Button variant="primary" onClick={() => restart(true)}>
+                {t('play.rematch')}
+              </Button>
+              <Button onClick={() => navigate(paths.setup(info.id))}>{t('play.settings')}</Button>
+              <Button variant="ghost" onClick={() => navigate(paths.home)}>
+                {t('play.menu')}
+              </Button>
+            </>
+          ) : (
+            <>
+              {humans.length > 0 && (
+                <Button disabled={!session.canUndo()} onClick={() => session.undo()}>
+                  ↶ {t('play.undo')}
+                </Button>
+              )}
+              {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
+              <Button onClick={() => restart(false)}>{t('play.restart')}</Button>
+              {humans.length > 0 && (
+                <Button variant="ghost" onClick={resign}>
+                  {t('play.resign')}
+                </Button>
+              )}
+            </>
+          )}
+        </footer>
+      </div>
 
-      <p className="flex-none py-2 text-center font-medium" aria-live="polite">
-        {status}
-        {result?.reason === 'time' && ` (${t('play.reason.time')})`}
-        {result?.reason === 'resign' && ` (${t('play.reason.resign')})`}
-      </p>
-
-      <main className="relative min-h-0 flex-1 px-3">
+      <main className="relative order-1 min-h-0 min-w-0 flex-1 px-3 flat:py-2">
         <ui.Board
           view={session.view(viewer)}
           legalMoves={legalMoves}
@@ -223,50 +271,6 @@ detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatL
           </button>
         )}
       </main>
-
-      {hintMissing && <p className="flex-none pt-2 text-center text-sm text-muted">{t('play.noHint')}</p>}
-
-      {awaySeats.length > 0 && !result && (
-        <div className="mx-3 mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm">
-          {awaySeats.map((seat) => (
-            <span key={seat} className="flex flex-1 flex-wrap items-center gap-2">
-              {t('play.away', { name: seats[seat]?.name ?? '' })}
-              <Button variant="primary" onClick={() => session.returnSeat(seat)}>
-                {t('play.takeBack')}
-              </Button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      <footer className="flex flex-none flex-wrap justify-center gap-2 px-3 pt-3 [&>button]:px-3">
-        {result ? (
-          <>
-            <Button variant="primary" onClick={() => restart(true)}>
-              {t('play.rematch')}
-            </Button>
-            <Button onClick={() => navigate(paths.setup(info.id))}>{t('play.settings')}</Button>
-            <Button variant="ghost" onClick={() => navigate(paths.home)}>
-              {t('play.menu')}
-            </Button>
-          </>
-        ) : (
-          <>
-            {humans.length > 0 && (
-              <Button disabled={!session.canUndo()} onClick={() => session.undo()}>
-                ↶ {t('play.undo')}
-              </Button>
-            )}
-            {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
-            <Button onClick={() => restart(false)}>{t('play.restart')}</Button>
-            {humans.length > 0 && (
-              <Button variant="ghost" onClick={resign}>
-                {t('play.resign')}
-              </Button>
-            )}
-          </>
-        )}
-      </footer>
     </div>
   );
 }

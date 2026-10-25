@@ -38,7 +38,18 @@ const chessBot: BotDefinition<ChessState, ChessMove> = {
 
 export const gameModule: GameModule<ChessState, ChessMove> = {
   info: meta,
-  options: [],
+  options: [
+    {
+      id: 'board',
+      label: 'Brett drehen',
+      description: 'Wichtig, wenn zwei an einem Gerät spielen: Soll sich das Brett nach jedem Zug zur Farbe am Zug drehen?',
+      choices: [
+        { value: 'turn', label: 'Zum Spieler am Zug' },
+        { value: 'fixed', label: 'Fest' },
+      ],
+      default: 'turn',
+    },
+  ],
   timePresets: {
     relaxed: { kind: 'none' },
     normal: { kind: 'chessClock', baseMs: 600_000, incrementMs: 5_000 },

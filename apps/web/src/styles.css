@@ -4,6 +4,9 @@
 /* Tailwind soll auch die Klassen im Baukasten und in den Spielen finden. */
 @source '../../../packages';
 
+/* Flacher Bildschirm, z. B. Handy im Querformat: Spielfeld rechts, alles andere in einer Spalte links. */
+@custom-variant flat (@media (orientation: landscape) and (max-height: 540px));
+
 @theme {
   --color-bg: #f5f1ea;
   --color-surface: #ffffff;
@@ -45,4 +48,10 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Wer mit der Tastatur spielt, soll immer sehen, wo er gerade ist. */
+:where(button, a, [tabindex], input, select):focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
 }

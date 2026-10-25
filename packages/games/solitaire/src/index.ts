@@ -25,7 +25,8 @@ export const gameModule: GameModule<SolitaireState, SolitaireMove> = {
     },
     {
       id: 'draw',
-      label: 'Klondike: Karten ziehen',
+      label: 'Karten ziehen',
+      when: { variant: ['klondike'] },
       choices: [
         { value: '1', label: 'Eine' },
         { value: '3', label: 'Drei' },
@@ -34,7 +35,8 @@ export const gameModule: GameModule<SolitaireState, SolitaireMove> = {
     },
     {
       id: 'spiderSuits',
-      label: 'Spider: Farben',
+      label: 'Farben',
+      when: { variant: ['spider'] },
       choices: [
         { value: '1', label: 'Eine' },
         { value: '2', label: 'Zwei' },

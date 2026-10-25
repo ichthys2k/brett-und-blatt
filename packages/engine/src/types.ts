@@ -46,6 +46,8 @@ export interface OptionSpec {
   description?: string;
   choices: OptionChoice[];
   default: string;
+  /** Nur zeigen, wenn andere Optionen bestimmte Werte haben, z. B. { variant: ['klondike'] }. */
+  when?: Record<string, string[]>;
 }
 
 export type Options = Record<string, string>;

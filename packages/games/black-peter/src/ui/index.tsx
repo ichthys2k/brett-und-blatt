@@ -11,13 +11,14 @@ function Face({ set, card, small = false }: { set: string; card: Card; small?: b
 }
 
 function Board({ view, legalMoves, onMove, viewer, seatNames, hint }: BoardProps<BlackPeterState, BlackPeterMove>) {
-  const [ref, { width }] = useElementSize<HTMLDivElement>();
+  const [ref, { width, height }] = useElementSize<HTMLDivElement>();
   const source = sourceOf(view);
   const canDraw = legalMoves.some((m) => m.type === 'draw');
   const canShuffle = legalMoves.some((m) => m.type === 'shuffle');
   const others = view.hands.map((_, seat) => seat).filter((seat) => seat !== viewer);
   const own = viewer === 'spectator' ? [] : (view.hands[viewer] ?? []);
-  const big = Math.max(44, Math.min(96, width / 5.5));
+  // Zwei große Fächer (Ziehen und eigene Hand) plus Mitte müssen auch im Querformat in die Höhe passen.
+  const big = Math.max(44, Math.min(96, width / 5.5, height > 0 ? (height - 130) / 2.9 : 96));
   const small = Math.max(22, Math.min(40, width / (others.length * 4.5)));
   const hintIndex = hint?.type === 'draw' ? hint.index : null;
   const recent = view.discarded.slice(-6).reverse();

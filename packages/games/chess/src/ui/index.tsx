@@ -36,18 +36,53 @@ function squareIndex(name: string): number {
   return (8 - Number(name[1])) * 8 + FILES.indexOf(name[0] ?? 'a');
 }
 
+/** Englische Figurenbuchstaben in deutsche: Springer, Läufer, Turm, Dame. */
+export function germanSan(san: string): string {
+  return san.replace(/[QRBN]/g, (ch) => ({ Q: 'D', R: 'T', B: 'L', N: 'S' })[ch] ?? ch);
+}
+
+const START_COUNT: Record<PieceType, number> = { k: 1, q: 1, r: 2, b: 2, n: 2, p: 8 };
+const CAPTURE_ORDER: PieceType[] = ['q', 'r', 'b', 'n', 'p'];
+
+/** Die Figuren, die eine Seite schon geschlagen hat (also dem Gegner fehlen). */
+function capturedBy(board: (Piece | null)[], white: boolean): PieceType[] {
+  const left: Record<PieceType, number> = { k: 0, q: 0, r: 0, b: 0, n: 0, p: 0 };
+  for (const p of board) if (p && p.white !== white) left[p.type]++;
+  // Umgewandelte Bauern zählen als Bauer, der fehlt: zusätzliche Damen usw. gleichen das aus.
+  let promoted = 0;
+  for (const type of ['q', 'r', 'b', 'n'] as const) promoted += Math.max(0, left[type] - START_COUNT[type]);
+  const missingPawns = Math.max(0, START_COUNT.p - left.p - promoted);
+  return CAPTURE_ORDER.flatMap((type) => Array.from({ length: type === 'p' ? missingPawns : Math.max(0, START_COUNT[type] - left[type]) }, () => type));
+}
+
+function CaptureStrip({ board, white, lead }: { board: (Piece | null)[]; white: boolean; lead: number }) {
+  const taken = capturedBy(board, white);
+  return (
+    <div className="ch-strip" aria-label={`${white ? 'Weiß' : 'Schwarz'} hat geschlagen: ${taken.length ? taken.map((t) => PIECE_NAMES[t]).join(', ') : 'nichts'}`}>
+      <span className={`ch-taken ${white ? 'ch-black' : 'ch-white'}`} aria-hidden="true">
+        {taken.map((t) => GLYPHS[t]).join('')}
+      </span>
+      {lead > 0 && <span className="ch-lead">+{lead}</span>}
+    </div>
+  );
+}
+
 function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProps<ChessState, ChessMove>) {
   const [selected, setSelected] = useState<number | null>(null);
   const [promotion, setPromotion] = useState<ChessMove[] | null>(null);
+  const [showMoves, setShowMoves] = useState(false);
   const [lastView, setLastView] = useState(view);
   if (lastView !== view) {
     setLastView(view);
     setSelected(null);
     setPromotion(null);
   }
+  // Bei festem Brett: Wechselt der Betrachter zwischen beiden Farben (zwei Menschen), bleibt Weiß unten.
+  const [anchor, setAnchor] = useState(typeof viewer === 'number' ? viewer : 0);
+  if (typeof viewer === 'number' && viewer !== anchor && anchor !== 0) setAnchor(0);
 
   // Wer Schwarz spielt, sieht das Brett von der schwarzen Seite.
-  const seat = typeof viewer === 'number' ? viewer : activeSeat;
+  const seat = view.rotate === false ? anchor : typeof viewer === 'number' ? viewer : activeSeat;
   const flipped = seat === 1;
   const toBoard = (dc: number, dr: number) => (flipped ? (7 - dr) * 8 + (7 - dc) : dr * 8 + dc);
 
@@ -71,8 +106,9 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   };
 
   return (
-    <FitBox ratio={1}>
+    <FitBox ratio={8 / 9}>
       <div className="ch-wrap">
+        <CaptureStrip board={board} white={flipped} lead={materialLead(view.fen, flipped)} />
         <GridBoard
           cols={8}
           rows={8}
@@ -110,6 +146,29 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
             return `${squareName(index)}: ${piece ? `${piece.white ? 'weißer' : 'schwarzer'} ${PIECE_NAMES[piece.type]}` : 'frei'}`;
           }}
         />
+        <div className="ch-bottom">
+          <CaptureStrip board={board} white={!flipped} lead={materialLead(view.fen, !flipped)} />
+          {view.history.length > 0 && (
+            <button type="button" className="ch-moves-button" onClick={() => setShowMoves(true)} aria-label="Alle Züge anzeigen">
+              {Math.ceil(view.history.length / 2)}.{view.history.length % 2 === 0 ? '…' : ''} {germanSan(view.history.at(-1) ?? '')} 📜
+            </button>
+          )}
+        </div>
+        {showMoves && (
+          <div className="ch-moves" role="dialog" aria-label="Partieverlauf">
+            <ol>
+              {Array.from({ length: Math.ceil(view.history.length / 2) }, (_, i) => (
+                <li key={i}>
+                  <span>{germanSan(view.history[2 * i] ?? '')}</span>
+                  <span>{germanSan(view.history[2 * i + 1] ?? '')}</span>
+                </li>
+              ))}
+            </ol>
+            <button type="button" onClick={() => setShowMoves(false)}>
+              Schließen
+            </button>
+          </div>
+        )}
         {promotion && (
           <div className="ch-promotion" role="dialog" aria-label="Umwandlung wählen">
             {promotion.map((m) => (
@@ -140,8 +199,6 @@ export const gameUi: GameUi<ChessState, ChessMove> = {
   seatDetail: (view, seat) => {
     const white = seat === 0;
     const parts = [white ? 'Weiß' : 'Schwarz'];
-    const lead = materialLead(view.fen, white);
-    if (lead > 0) parts.push(`+${lead}`);
     const toMove = (view.fen.split(' ')[1] === 'w') === white;
     if (view.inCheck && toMove && !view.end) parts.push('Schach!');
     if (view.end === 'checkmate' && toMove) parts.push('matt');

@@ -177,7 +177,7 @@ export function Setup({ gameId }: { gameId: string }) {
 
       {module.options.length > 0 && (
         <Section title={t('setup.rules')}>
-          {module.options.map((spec) => (
+          {module.options.filter((spec) => !spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(draft.options[id] ?? module.options.find((o) => o.id === id)?.default ?? ''))).map((spec) => (
             <div key={spec.id} className="space-y-1">
               <p className="font-medium">{spec.label}</p>
               {spec.description && <p className="text-sm text-muted">{spec.description}</p>}

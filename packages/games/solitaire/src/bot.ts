@@ -3,6 +3,8 @@ import { last } from './common';
 import { maxMovable } from './freecell';
 import { rowOf } from './pyramid';
 import { legalMoves } from './rules';
+import { solveFreeCell } from './solver/freecell';
+import { bestPlan } from './solver/lookahead';
 import type { Loc, SolitaireMove, SolitaireState } from './types';
 
 /** Ist `move` die Umkehrung des letzten Zuges? Hin und her schieben bringt nichts. */
@@ -99,15 +101,35 @@ function foundationNeed(state: SolitaireState, card: CardId): number {
 /**
  * Standard-Bot und Tipp-Geber: wählt den Zug mit der besten Bewertung.
  * - leicht: oft ein zufälliger sinnvoller Zug
- * - mittel: meist der beste Zug
- * - schwer: immer der beste Zug
+ * - mittel: meist der beste Zug, bei FreeCell der Zug aus dem Löser
+ * - schwer: immer der beste Zug, bei FreeCell der Zug aus dem Löser
  */
 export const solitaireBot: BotDefinition<SolitaireState, SolitaireMove> = {
   id: 'solitaire',
   name: 'Faustregeln',
   levels: ['easy', 'medium', 'hard'],
   chooseMove(ctx) {
+    // FreeCell liegt ganz offen: Der Löser rechnet die Partie bis zum Sieg durch und nimmt den ersten Zug.
+    if (ctx.view.variant === 'freecell' && ctx.level !== 'easy') {
+      const solution = solveFreeCell(ctx.view, { timeBudgetMs: Math.min(ctx.timeBudgetMs, 1500), now: ctx.now });
+      const first = solution.moves?.[0];
+      if (first) return first;
+    }
     const moves = legalMoves(ctx.view, ctx.seat);
+    // Klondike und Spider: die Zugfolge mit den offenen Karten suchen, die am meisten bringt – sonst Talon.
+    if ((ctx.view.variant === 'klondike' || ctx.view.variant === 'spider') && ctx.level !== 'easy') {
+      // Asse und Zweien gehören immer sofort auf die Ablage.
+      const safe = moves.find((m) => {
+        if (m.type !== 'move' || m.to.kind !== 'foundation') return false;
+        const card = topCard(ctx.view, m.from);
+        return card !== null && cardRank(card) <= 2;
+      });
+      if (safe) return safe;
+      const plan = bestPlan(ctx.view, { timeBudgetMs: Math.min(ctx.timeBudgetMs, 800), now: ctx.now });
+      if (plan) return plan.move;
+      const stock = moves.find((m) => m.type === 'draw') ?? moves.find((m) => m.type === 'recycle');
+      if (stock) return stock;
+    }
     const scored = moves.map((move) => ({ move, score: scoreMove(ctx.view, move) }));
     const sensible = scored.filter((s) => s.score > 0);
     const randomness = ctx.level === 'easy' ? 0.5 : ctx.level === 'medium' ? 0.1 : 0;
