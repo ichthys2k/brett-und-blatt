@@ -93,7 +93,7 @@ Jedes Spiel ist gegen Bots spielbar. Das ist Pflicht und wird automatisch geprü
 
 1. **Allgemeiner Bot:** Er nutzt nur die Schnittstelle. Die erste Stufe zieht zufällig aus den erlaubten Zügen, die zweite nutzt Monte-Carlo-Baumsuche (MCTS: viele zufällige Partien im Kopf zu Ende spielen).
 2. **Eigene Bewertung je Spiel** (`evaluate`) für Minimax mit Alpha-Beta-Schnitt oder für eine gelenkte MCTS.
-3. **Spezial-Bots,** wo nötig: Reizen bei Skat, Stockfish für Schach, Wortsuche für Scrabble.
+3. **Spezial-Bots,** wo nötig: Reizen bei Skat, eigene Alpha-Beta-Suche für Schach (Stockfish später denkbar), Wortsuche für Scrabble.
 
 Grundsätze:
 
@@ -186,12 +186,12 @@ brett-und-blatt/
 | Etappe | Inhalt | Spiele |
 |---|---|---|
 | 1 Fundament ✅ | Monorepo, Schnittstelle, lokale Spielleitung, Gitterbrett, allgemeine Bots, lokale Zeitlimits, PWA, CI | Tic-Tac-Toe (Vorlage), Vier in einer Reihe |
-| 2 Offline-Sammlung ✅ | Netzbrett, Karten-Baukasten, Übergabe-Bildschirm, Inhaltspakete | Ultimate Tic-Tac-Toe, Mühle, Reversi, Paare finden, Schwarzer Peter, Solitaire, Vierer-Schach (Port) |
+| 2 Offline-Sammlung ✅ | Netzbrett, Karten-Baukasten, Übergabe-Bildschirm, Inhaltspakete | Ultimate Tic-Tac-Toe, Mühle, Reversi, Paare finden, Schwarzer Peter, Solitaire, Vierer-Schach (Port), Schach |
 | 3 Online | Cloudflare-Server, Räume, Wiedereinstieg, Bot-Ersatz, Server-Uhr, flüchtige Signale | Schiffe versenken, Quartett, Mäxle, Bingo (Klassen-Modus) |
 | 4 Großes Brett | Zoombares Brett, Byo-yomi, Auszählphase, Fernpartie, Bänkchen für Steine | Go, Domino, Farbe & Form (Qwirkle-artig) |
 | 5 Stichspiele | Stich-Kern, Serien-Rahmen, Reizen und Ansagen | Skat, Schafkopf, Doppelkopf |
 | 6 Eigene Spiele | Parallel-Modus mit Match-Engine | Emoji-Sortierer, Emojistone |
-| danach | | Scrabble, Uno-artig, Poker, Binokel, Schach, Dame, Mensch ärgere dich nicht und die Ideenliste |
+| danach | | Scrabble, Uno-artig, Poker, Binokel, Dame, Mensch ärgere dich nicht und die Ideenliste |
 
 Die Pläne der einzelnen Spiele stehen in [`spiele/`](spiele/README.md).
 

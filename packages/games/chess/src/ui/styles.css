@@ -1,0 +1,117 @@
+.ch-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.ch-board {
+  height: 100%;
+}
+
+.ch-board .bub-cell {
+  position: relative;
+  container-type: size;
+}
+
+.ch-board .bub-cell.ch-light {
+  background: #ecd9b9;
+}
+
+.ch-board .bub-cell.ch-dark {
+  background: #b88a5c;
+}
+
+.ch-board .bub-cell.ch-last {
+  box-shadow: inset 0 0 0 100vmax rgb(242 183 5 / 0.35);
+}
+
+.ch-board .bub-cell.ch-check {
+  background: radial-gradient(circle, #ff4d4d 0%, rgb(214 40 40 / 0.6) 45%, transparent 75%), #b88a5c;
+}
+
+.ch-board .bub-cell.ch-selected {
+  box-shadow: inset 0 0 0 3px var(--color-accent);
+}
+
+.ch-board .bub-cell.ch-capture {
+  box-shadow: inset 0 0 0 3px #d62828;
+}
+
+.ch-board .bub-cell.ch-hint {
+  box-shadow: inset 0 0 0 3px #f2b705;
+}
+
+.ch-piece {
+  font-size: 82cqmin;
+  line-height: 1;
+  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'DejaVu Sans', serif;
+  paint-order: stroke fill;
+}
+
+/* Gefüllte Zeichen für beide Farben: Weiß mit heller Füllung und dunkler Kontur. */
+.ch-white {
+  color: #fdfaf3;
+  -webkit-text-stroke: 1.2px #1f2328;
+}
+
+.ch-black {
+  color: #1f2328;
+  -webkit-text-stroke: 0.6px rgb(255 255 255 / 0.35);
+}
+
+.ch-dot {
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.3);
+}
+
+.ch-coord {
+  position: absolute;
+  font-size: 18cqmin;
+  font-weight: 700;
+  line-height: 1;
+  color: rgb(0 0 0 / 0.45);
+  pointer-events: none;
+}
+
+.ch-rank {
+  left: 6%;
+  top: 6%;
+}
+
+.ch-file {
+  right: 8%;
+  bottom: 6%;
+}
+
+.ch-promotion {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  translate: -50% -50%;
+  border-radius: 14px;
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+.ch-promotion button {
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  container-type: size;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: #ecd9b9;
+  cursor: pointer;
+}
+
+.ch-symbol {
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+}
