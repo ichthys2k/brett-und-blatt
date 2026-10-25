@@ -1,0 +1,330 @@
+.bs-table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  height: 100%;
+  min-height: 0;
+}
+
+.bs-center {
+  justify-content: center;
+}
+
+.bs-seas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bs-wide .bs-seas {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.bs-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.bs-side h3,
+.bs-toggle {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.bs-toggle {
+  border: 0;
+  background: none;
+  padding: 0.1rem 0.4rem;
+}
+
+.bs-toggle:disabled {
+  opacity: 1;
+}
+
+/* Rahmen mit Buchstaben oben und Zahlen links; das Meer füllt den Rest. */
+.bs-sea-frame {
+  display: grid;
+  grid-template-columns: 1.1em minmax(0, 1fr);
+  grid-template-rows: 1.1em minmax(0, 1fr);
+  font-size: clamp(0.55rem, 1.6vmin, 0.8rem);
+  color: var(--color-muted);
+}
+
+.bs-letters {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  text-align: center;
+}
+
+.bs-numbers {
+  grid-row: 2;
+  display: grid;
+  grid-template-rows: repeat(10, minmax(0, 1fr));
+  align-items: center;
+  text-align: right;
+  padding-right: 0.15em;
+}
+
+.bs-sea {
+  grid-row: 2;
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  grid-template-rows: repeat(10, minmax(0, 1fr));
+  gap: 1px;
+  padding: 1px;
+  border-radius: 6px;
+  background: color-mix(in srgb, #1c7ed6 45%, var(--color-line));
+  touch-action: manipulation;
+}
+
+.bs-cell {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: color-mix(in srgb, #74c0fc 35%, var(--color-surface));
+  color: inherit;
+  font-size: inherit;
+}
+
+.bs-cell:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.bs-armed .bs-cell:not(:disabled):hover {
+  background: color-mix(in srgb, #fab005 40%, var(--color-surface));
+  cursor: crosshair;
+}
+
+.bs-cell:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  z-index: 1;
+}
+
+.bs-ship {
+  background: #495057;
+}
+
+.bs-preview {
+  background: color-mix(in srgb, #495057 45%, var(--color-surface));
+}
+
+.bs-selected {
+  background: #f08c00;
+}
+
+.bs-bad {
+  background: #e03131;
+}
+
+.bs-hit {
+  background: color-mix(in srgb, #fa5252 30%, var(--color-surface));
+  color: #c92a2a;
+}
+
+.bs-sunk {
+  background: #343a40;
+  color: #ff8787;
+}
+
+.bs-hint {
+  outline: 3px dashed var(--color-warning);
+  outline-offset: -2px;
+}
+
+.bs-mark {
+  font-weight: 800;
+  font-size: 1.3em;
+  line-height: 1;
+  animation: bs-pop 0.25s ease-out both;
+}
+
+.bs-aimed {
+  color: #e8590c;
+}
+
+.bs-dot {
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: #1971c2;
+  animation: bs-splash 0.35s ease-out both;
+}
+
+.bs-known .bs-dot {
+  background: color-mix(in srgb, #1971c2 35%, transparent);
+  animation: none;
+}
+
+.bs-mini .bs-sea-frame {
+  font-size: 0.5rem;
+}
+
+.bs-news {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.bs-help {
+  margin: 0;
+  max-width: 30rem;
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.bs-fleetbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bs-fleetbar li,
+.bs-yard-ship {
+  display: flex;
+  gap: 1px;
+}
+
+.bs-fleetbar li span,
+.bs-yard-ship span {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 2px;
+  background: #495057;
+}
+
+.bs-fleetbar li.bs-gone {
+  opacity: 0.35;
+  text-decoration: line-through;
+}
+
+.bs-fleetbar li.bs-gone span {
+  background: #e03131;
+}
+
+.bs-placement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bs-shipyard {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  max-width: 30rem;
+}
+
+.bs-yard-ship {
+  padding: 0.4rem;
+  border: 2px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.bs-yard-ship span {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.bs-yard-ship.bs-done {
+  opacity: 0.45;
+}
+
+.bs-yard-ship.bs-selected {
+  border-color: #f08c00;
+  opacity: 1;
+}
+
+.bs-yard-ship.bs-selected span {
+  background: #f08c00;
+}
+
+.bs-yard-ship.bs-bad span {
+  background: #e03131;
+}
+
+.bs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.bs-button {
+  min-height: 2.6rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.bs-button:hover:not(:disabled) {
+  background: var(--color-surface-2);
+}
+
+.bs-primary {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.bs-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 85%, black);
+}
+
+.bs-button:disabled {
+  opacity: 0.45;
+}
+
+.bs-symbol {
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+}
+
+@keyframes bs-pop {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes bs-splash {
+  from {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bs-mark,
+  .bs-dot {
+    animation: none;
+  }
+}

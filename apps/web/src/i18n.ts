@@ -36,6 +36,7 @@ const de = {
   'time.none': 'ohne Uhr',
   'time.perMove': '{s} s pro Zug',
   'time.perMoveBank': '{s} s pro Zug + {bank} s Reserve',
+  'time.firstMove': 'erster Zug {s} s, dann ',
   'time.chessClock': '{min} min + {inc} s pro Zug',
   'play.yourTurn': 'Du bist dran',
   'play.turnOf': '{name} ist dran',

@@ -5,10 +5,13 @@ export function describeTime(control: TimeControl): string {
   switch (control.kind) {
     case 'none':
       return t('time.none');
-    case 'perMove':
-      return control.bankMs
-        ? t('time.perMoveBank', { s: control.moveMs / 1000, bank: control.bankMs / 1000 })
-        : t('time.perMove', { s: control.moveMs / 1000 });
+    case 'perMove': {
+      const first = control.firstMoveMs !== undefined ? t('time.firstMove', { s: control.firstMoveMs / 1000 }) : '';
+      return (
+        first +
+        (control.bankMs ? t('time.perMoveBank', { s: control.moveMs / 1000, bank: control.bankMs / 1000 }) : t('time.perMove', { s: control.moveMs / 1000 }))
+      );
+    }
     case 'chessClock':
       return t('time.chessClock', { min: control.baseMs / 60_000, inc: control.incrementMs / 1000 });
   }

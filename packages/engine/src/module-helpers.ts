@@ -15,7 +15,8 @@ export function seatActors(actors: Actor[]): SeatId[] {
   return actors.filter((a): a is SeatId => a !== 'system');
 }
 
-export function isLegalMove<S, M>(module: { legalMoves(s: S, a: Actor): M[] }, state: S, actor: Actor, move: M): boolean {
+export function isLegalMove<S, M>(module: { legalMoves(s: S, a: Actor): M[]; isLegal?(s: S, a: Actor, m: M): boolean }, state: S, actor: Actor, move: M): boolean {
+  if (module.isLegal) return module.isLegal(state, actor, move);
   return module.legalMoves(state, actor).some((m) => sameValue(m, move));
 }
 
