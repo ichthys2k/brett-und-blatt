@@ -62,7 +62,7 @@ export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile
   );
 }
 
-/** Raumcode eingeben, ohne Tastatur: die vier Bilder antippen. */
+/** Raumcode eingeben, ohne Tastatur: die sechs Bilder antippen. */
 export function EmojiKeypad({ onComplete }: { onComplete: (code: string) => void }) {
   const [parts, setParts] = useState<string[]>([]);
   // Jede Eingabe baut auf dem neuesten Stand auf – auch bei sehr schnellem Tippen.
@@ -77,7 +77,7 @@ export function EmojiKeypad({ onComplete }: { onComplete: (code: string) => void
       <div className="flex items-center gap-2">
         <div className="flex flex-1 justify-center gap-2" aria-live="polite">
           {Array.from({ length: ROOM_CODE_LENGTH }, (_, i) => (
-            <span key={i} className="grid size-12 place-items-center rounded-xl border border-line bg-surface text-3xl">
+            <span key={i} className="grid size-10 place-items-center rounded-xl border border-line bg-surface text-2xl sm:size-12 sm:text-3xl">
               {parts[i] ?? ''}
             </span>
           ))}
@@ -86,9 +86,9 @@ export function EmojiKeypad({ onComplete }: { onComplete: (code: string) => void
           ⌫
         </Button>
       </div>
-      <div className="grid grid-cols-8 gap-1">
+      <div className="mx-auto grid max-w-xs grid-cols-4 gap-2">
         {ROOM_EMOJIS.map((emoji) => (
-          <button key={emoji} type="button" className="grid aspect-square place-items-center rounded-lg bg-surface-2 text-2xl hover:bg-line" onClick={() => add(emoji)}>
+          <button key={emoji} type="button" className="grid aspect-square place-items-center rounded-xl bg-surface-2 text-3xl hover:bg-line" onClick={() => add(emoji)}>
             {emoji}
           </button>
         ))}
