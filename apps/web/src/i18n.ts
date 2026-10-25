@@ -78,7 +78,7 @@ const de = {
   'online.badName': 'Bitte einen Spitznamen eingeben.',
   'online.create': 'Neuen Raum erstellen',
   'online.join': 'Raum beitreten',
-  'online.codeHint': 'Tippe die sechs Bilder des Raumcodes an.',
+  'online.codeHint': 'Tippe die vier Bilder des Raumcodes an.',
   'online.codeDelete': 'Letztes Bild löschen',
   'online.enter': 'Beitreten',
   'online.notFound': 'Diesen Raum gibt es nicht (mehr).',

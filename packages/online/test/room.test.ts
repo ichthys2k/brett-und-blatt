@@ -39,7 +39,7 @@ function setup() {
     },
     close: (connection) => closed.add(connection),
   };
-  let room = new Room('🦊🍎🚀🎈⭐🐶', deps);
+  let room = new Room('🦊🍎🚀🎈', deps);
 
   const client = (connection: string, token = `token-${connection}-0123456789`, name = connection) => {
     room.connect(connection);

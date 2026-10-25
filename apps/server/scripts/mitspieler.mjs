@@ -2,7 +2,7 @@
 // sind für den Server dieselbe Person (gleiche Geräte-Kennung). Dieses Skript tritt
 // stattdessen als „Ben“ bei, setzt sich auf den ersten freien Platz und zieht immer
 // selbst, wenn er dran ist. Beenden mit Strg+C.
-//   node apps/server/scripts/mitspieler.mjs '🦊🍎🚀🎈⭐🐶' [http://127.0.0.1:8787]
+//   node apps/server/scripts/mitspieler.mjs '🦊🍎🚀🎈' [http://127.0.0.1:8787]
 const [code, base = 'http://127.0.0.1:8787'] = process.argv.slice(2);
 if (!code) {
   console.log('Aufruf: node apps/server/scripts/mitspieler.mjs <Raumcode> [Serveradresse]');
