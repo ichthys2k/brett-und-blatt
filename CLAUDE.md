@@ -36,14 +36,12 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Fertig und veröffentlicht:** Etappe 1 und 2 sowie Schach (Commit `1cc2d29`). Spielbar: Tic-Tac-Toe, Vier in einer Reihe, Ultimate Tic-Tac-Toe, Reversi, Mühle, Paare finden, Schwarzer Peter, Solitaire (Klondike, FreeCell, Spider, Pyramide), Vierer-Schach, Schach – jeweils mit Bots in drei Stufen, Hot-Seat, Zeitlimits und Kurzanleitung.
 
-**Feinschliff-Runde (fertig, Tests und Build grün, aber noch NICHT committet):**
+**Feinschliff-Runde (fertig und veröffentlicht, Commit `5dd4ded`):**
 - Querformat auf dem Handy: eigenes Layout (`flat:`-Variante in `apps/web/src/styles.css`, Spielfeld rechts, Steuerung links) in `Play.tsx`.
 - Schwarzer Peter: Kartenfächer liefen auf schmalen Bildschirmen über den Rand (Grid-Spalte jetzt `minmax(0, 1fr)`), Kartengröße richtet sich auch nach der Höhe.
 - Schach: Option „Brett drehen“ (zum Spieler am Zug / fest), Leisten mit geschlagenen Figuren und Materialvorsprung, letzter Zug und Partieverlauf in deutscher Notation.
 - Solitaire: FreeCell-Löser (`src/solver/freecell.ts`, löst ~98 % in ≤ 1,5 s) und Vorausschau für Klondike/Spider (`src/solver/lookahead.ts`); Spider-Bot deutlich besser, Klondike etwa unverändert. Bedingte Optionen (`when`) im Setup.
 - Einheitliche Fokus-Markierung für Tastaturbedienung.
-
-→ Zuerst mit Cornelius klären, ob diese Änderungen committet und hochgeladen werden sollen.
 
 **Bekannte offene Punkte:**
 - Vierer-Schach: Felder auf dem Handy nur ~25 px groß (14×14-Brett); im Querformat muss die linke Spalte bei vier Spielern gescrollt werden.
@@ -59,7 +57,7 @@ Danach laut Fahrplan: Etappe 4 (Go, Domino, Farbe & Form), 5 (Skat, Schafkopf, D
 
 ## Hinweise zum Rechnerwechsel
 
-Cornelius arbeitet am Laptop (`FES-MD-377`) und am Desktop (`cornelius-cachyOS`); welcher läuft, zeigt `hostname`.
+Cornelius arbeitet am Laptop (`FES-MD-377`) und am Desktop (`cornelius-desktop`; in Syncthing heißt das Gerät `cornelius-cachyOS`); welcher läuft, zeigt `hostname`.
 
 - **Über GitHub (empfohlen):** Am neuen Rechner `gh repo clone ichthys2k/brett-und-blatt ~/code/brett-und-blatt`, später `git pull`. Nicht committete Änderungen kommen so nicht mit – sie müssen vorher am anderen Rechner committet und hochgeladen sein.
 - **Über eine Ordner-Synchronisation (Syncthing o. Ä.):** **`node_modules/` nicht mitsynchronisieren** (pnpm nutzt rechnerabhängige Verknüpfungen) und nie gleichzeitig auf beiden Rechnern arbeiten, sonst kann der `.git`-Ordner beschädigt werden.
