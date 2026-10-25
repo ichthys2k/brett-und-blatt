@@ -1,4 +1,4 @@
-import { Clocks, type ClockReading } from './clock';
+import { Clocks, type ClockReading, type ClocksState } from './clock';
 import type { GameSession } from './game-session';
 import { isLegalMove, replay, resolveOptions, seatActors } from './module-helpers';
 import { Rng } from './random';
@@ -42,6 +42,14 @@ export interface SessionSnapshot<M = unknown> {
   config: SessionConfig;
   log: LogEntry<M>[];
   forfeit: Forfeit | null;
+  /** Uhren und Abwesenheit – nur für einen Server, der die Partie nahtlos weiterführt. */
+  runtime?: SessionRuntime;
+}
+
+export interface SessionRuntime {
+  clocks: ClocksState;
+  away: SeatId[];
+  timeouts: number[];
 }
 
 export interface BotRequest<V = unknown> {
@@ -109,6 +117,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     deps: SessionDeps,
     log: LogEntry<M>[] = [],
     forfeit: Forfeit | null = null,
+    runtime?: SessionRuntime,
   ) {
     if (config.seats.length < module.info.players.min || config.seats.length > module.info.players.max) {
       throw new Error(`${module.info.name} braucht ${module.info.players.min}–${module.info.players.max} Spieler.`);
@@ -123,11 +132,21 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     this._log = [...log];
     this._forfeit = forfeit;
     this._state = replay<S, M>(module, config.seats.length, this.config.options, config.seed, this._log);
+    if (runtime) {
+      this.clocks.load(runtime.clocks);
+      runtime.away.forEach((seat) => this.away.add(seat));
+      runtime.timeouts.forEach((count, seat) => (this.consecutiveTimeouts[seat] = count));
+    }
     this.advance();
   }
 
-  static restore<S, M, V>(module: GameModule<S, M, V>, snapshot: SessionSnapshot<M>, deps: SessionDeps): LocalSession<S, M, V> {
-    return new LocalSession(module, snapshot.config, deps, snapshot.log, snapshot.forfeit);
+  /**
+   * Stellt eine Partie aus einem Schnappschuss wieder her. Im Browser beginnen die Uhren
+   * dabei von vorn (wer eine Partie Stunden später fortsetzt, soll nicht sofort verlieren);
+   * ein Server übernimmt mit `resumeClocks` auch Uhren und Abwesenheit.
+   */
+  static restore<S, M, V>(module: GameModule<S, M, V>, snapshot: SessionSnapshot<M>, deps: SessionDeps, options: { resumeClocks?: boolean } = {}): LocalSession<S, M, V> {
+    return new LocalSession(module, snapshot.config, deps, snapshot.log, snapshot.forfeit, options.resumeClocks ? snapshot.runtime : undefined);
   }
 
   get id(): string {
@@ -340,7 +359,13 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   }
 
   snapshot(): SessionSnapshot<M> {
-    return { version: 1, config: this.config, log: [...this._log], forfeit: this._forfeit };
+    return {
+      version: 1,
+      config: this.config,
+      log: [...this._log],
+      forfeit: this._forfeit,
+      runtime: { clocks: this.clocks.state(), away: [...this.away], timeouts: [...this.consecutiveTimeouts] },
+    };
   }
 
   dispose(): void {

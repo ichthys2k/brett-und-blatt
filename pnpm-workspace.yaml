@@ -4,3 +4,6 @@ packages:
   - packages/ui
   - packages/online
   - packages/games/*
+allowBuilds:
+  esbuild: true
+  workerd: true

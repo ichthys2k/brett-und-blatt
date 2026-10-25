@@ -13,3 +13,4 @@ export {
   type RoomDeps,
   type RoomSnapshot,
 } from './room';
+export { serverBotRunner } from './server-bots';

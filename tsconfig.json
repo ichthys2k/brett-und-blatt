@@ -21,6 +21,7 @@
     "packages/ui/src",
     "packages/online/src",
     "packages/online/test",
+    "apps/server/test",
     "packages/games/*/src",
     "packages/games/*/test",
     "apps/web/src"

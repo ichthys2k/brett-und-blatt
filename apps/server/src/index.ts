@@ -1,0 +1,220 @@
+import { DurableObject } from 'cloudflare:workers';
+import { Room, parseRoomCode, randomRoomCode, serverBotRunner, type RoomDeps, type RoomSnapshot, type ServerMessage } from '@brett-und-blatt/online';
+import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
+import { onlineGames } from './games';
+
+/**
+ * Der Spieleserver auf Cloudflare – nur ein dünner Adapter: Die ganze Spiellogik
+ * steckt in `packages/online` (Klasse `Room`) und in den Spielmodulen.
+ *
+ * - `POST /rooms` erstellt einen Raum und antwortet mit seinem Emoji-Code.
+ * - `GET /rooms/<code>` mit WebSocket-Upgrade betritt einen Raum.
+ *
+ * Jeder Raum ist ein eigenes Durable Object (ein kleiner Server mit Speicher),
+ * angelegt in der EU.
+ */
+
+interface Env {
+  ROOMS: DurableObjectNamespace<GameRoom>;
+  ALLOWED_ORIGINS: string;
+  /** "eu" im echten Betrieb. Nur der lokale Testserver kennt keine Jurisdiktionen und setzt "none". */
+  ROOM_JURISDICTION: string;
+}
+
+/** Was an jeder WebSocket-Verbindung hängt und auch das Schlafen des Raums übersteht. */
+interface Attachment {
+  id: string;
+  memberId: string | null;
+}
+
+const gamesById = new Map(onlineGames.map((m) => [m.info.id, m]));
+const botRunner = serverBotRunner(onlineGames, { stepMs: BOT_STEP_MS });
+
+function randomInt(n: number): number {
+  return crypto.getRandomValues(new Uint32Array(1))[0]! % n;
+}
+
+function randomSeed(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function roomStub(env: Env, code: string): DurableObjectStub<GameRoom> {
+  // Kein stilles Ausweichen: Ohne ausdrückliches "none" werden Räume immer in der EU angelegt.
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.ROOMS : env.ROOMS.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(code));
+}
+
+function corsHeaders(request: Request, env: Env): Record<string, string> {
+  const origin = request.headers.get('Origin') ?? '';
+  const allowed = env.ALLOWED_ORIGINS.split(',').map((o) => o.trim());
+  return allowed.includes(origin) ? { 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Methods': 'GET, POST', Vary: 'Origin' } : {};
+}
+
+/** Nur die eigene Web-App darf Räume anlegen und betreten. */
+function originAllowed(request: Request, env: Env): boolean {
+  const origin = request.headers.get('Origin');
+  return origin !== null && env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).includes(origin);
+}
+
+function json(data: unknown, status: number, headers: Record<string, string>): Response {
+  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...headers } });
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    const cors = corsHeaders(request, env);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
+
+    if (url.pathname === '/rooms' && request.method === 'POST') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      // Ein freier Code ist fast immer der erste; zur Sicherheit ein paar Versuche.
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const code = randomRoomCode(randomInt);
+        if (await roomStub(env, code).create(code)) return json({ code }, 201, cors);
+      }
+      return json({ error: 'busy' }, 503, cors);
+    }
+
+    const match = /^\/rooms\/([^/]+)$/.exec(url.pathname);
+    if (match && request.method === 'GET') {
+      const code = parseRoomCode(decodeURIComponent(match[1]!));
+      if (!code) return json({ error: 'code' }, 404, cors);
+      if (request.headers.get('Upgrade') !== 'websocket') {
+        return json({ exists: await roomStub(env, code).exists() }, 200, cors);
+      }
+      if (!originAllowed(request, env)) return new Response('Origin nicht erlaubt', { status: 403 });
+      return roomStub(env, code).fetch(request);
+    }
+
+    if (url.pathname === '/') return new Response('Brett & Blatt – Spieleserver. Quellcode: https://github.com/ichthys2k/brett-und-blatt', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    return new Response('Nicht gefunden', { status: 404 });
+  },
+} satisfies ExportedHandler<Env>;
+
+/**
+ * Ein Raum als Durable Object. Der Raum selbst liegt im Speicher und zusätzlich als
+ * Schnappschuss im Speicher des Objekts. Legt Cloudflare den Raum schlafen, bleiben
+ * die WebSocket-Verbindungen offen; beim Aufwachen wird der Raum aus dem Schnappschuss
+ * neu aufgebaut und die Verbindungen werden wieder zugeordnet.
+ */
+export class GameRoom extends DurableObject<Env> {
+  private room: Room | null = null;
+  private sockets = new Map<string, WebSocket>();
+
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    ctx.blockConcurrencyWhile(async () => {
+      const snapshot = await ctx.storage.get<RoomSnapshot>('room');
+      if (!snapshot) return;
+      this.room = Room.restore(snapshot, this.deps());
+      for (const ws of ctx.getWebSockets()) {
+        const attachment = ws.deserializeAttachment() as Attachment;
+        this.sockets.set(attachment.id, ws);
+        if (attachment.memberId) this.room.reattach(attachment.id, attachment.memberId);
+        else this.room.connect(attachment.id);
+      }
+    });
+  }
+
+  /** Legt den Raum an. false, wenn es ihn unter diesem Code schon gibt. */
+  async create(code: string): Promise<boolean> {
+    if (this.room) return false;
+    this.room = new Room(code, this.deps());
+    await this.persist();
+    return true;
+  }
+
+  async exists(): Promise<boolean> {
+    return this.room !== null;
+  }
+
+  override async fetch(request: Request): Promise<Response> {
+    if (!this.room) return new Response('Diesen Raum gibt es nicht (mehr).', { status: 404 });
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
+    const id = crypto.randomUUID();
+    this.ctx.acceptWebSocket(server);
+    server.serializeAttachment({ id, memberId: null } satisfies Attachment);
+    this.sockets.set(id, server);
+    this.room.connect(id);
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  override async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
+    if (typeof message !== 'string') return;
+    this.room?.receive(this.idOf(ws), message);
+  }
+
+  override async webSocketClose(ws: WebSocket): Promise<void> {
+    this.dropSocket(ws);
+  }
+
+  override async webSocketError(ws: WebSocket): Promise<void> {
+    this.dropSocket(ws);
+  }
+
+  override async alarm(): Promise<void> {
+    const room = this.room;
+    if (!room) return;
+    // Lange niemand da: Raum samt allen Daten löschen.
+    if (Date.now() >= room.expiresAt() && room.connectionCount === 0) {
+      this.room = null;
+      await this.ctx.storage.deleteAll();
+      return;
+    }
+    room.tick();
+    await this.persist();
+  }
+
+  private dropSocket(ws: WebSocket): void {
+    const id = this.idOf(ws);
+    this.sockets.delete(id);
+    this.room?.disconnect(id);
+  }
+
+  private idOf(ws: WebSocket): string {
+    return (ws.deserializeAttachment() as Attachment).id;
+  }
+
+  private deps(): RoomDeps {
+    return {
+      now: () => Date.now(),
+      findGame: (id) => gamesById.get(id),
+      botRunner,
+      botBudgetMs: BOT_BUDGET_MS,
+      randomSeed,
+      send: (id, message) => this.send(id, message),
+      close: (id) => {
+        try {
+          this.sockets.get(id)?.close(1000, 'Auf Wiedersehen');
+        } catch {
+          // Schon geschlossen.
+        }
+        this.sockets.delete(id);
+      },
+      changed: () => void this.persist(),
+    };
+  }
+
+  private send(id: string, message: ServerMessage): void {
+    const ws = this.sockets.get(id);
+    if (!ws) return;
+    // Nach der Anmeldung merkt sich die Verbindung ihr Mitglied – für das Aufwachen.
+    if (message.type === 'welcome') ws.serializeAttachment({ id, memberId: message.you } satisfies Attachment);
+    try {
+      ws.send(JSON.stringify(message));
+    } catch {
+      // Verbindung schon weg; webSocketClose räumt auf.
+    }
+  }
+
+  /** Speichert den Raum und stellt den Wecker auf den nächsten fälligen Zeitpunkt. */
+  private async persist(): Promise<void> {
+    const room = this.room;
+    if (!room) return;
+    await this.ctx.storage.put('room', room.snapshot());
+    const wake = room.nextWakeup();
+    if (wake !== null) await this.ctx.storage.setAlarm(Math.max(wake, Date.now() + 50));
+  }
+}

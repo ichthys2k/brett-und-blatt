@@ -384,3 +384,16 @@ describe('Signale und Raumleitung', () => {
     expect(anna.game().away).toEqual([1]);
   });
 });
+
+describe('Schlafen und Aufwachen', () => {
+  it('die Uhr des laufenden Zugs läuft nach dem Wiederherstellen weiter statt neu zu beginnen', () => {
+    const env = setup();
+    twoPlayers(env, 'normal');
+    const wake = env.room.nextWakeup();
+    env.advance(4000);
+    const restored = Room.restore(JSON.parse(JSON.stringify(env.room.snapshot())), env.deps);
+    restored.reattach('anna', 'm1');
+    restored.reattach('ben', 'm2');
+    expect(restored.nextWakeup()).toBe(wake);
+  });
+});

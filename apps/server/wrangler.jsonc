@@ -1,0 +1,18 @@
+// Konfiguration für Cloudflare (Wrangler). Lokal: `corepack pnpm --filter @brett-und-blatt/server dev`.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "brett-und-blatt",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "GameRoom" }]
+  },
+  // Im Gratis-Tarif gibt es nur Durable Objects mit SQLite-Speicher.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GameRoom"] }],
+  "vars": {
+    // Von diesen Seiten aus dürfen Räume erstellt und betreten werden.
+    "ALLOWED_ORIGINS": "https://spiele.lipponer.de,http://localhost:5173",
+    // Räume liegen in der EU. Der lokale Testserver kann das nicht und überschreibt es mit "none".
+    "ROOM_JURISDICTION": "eu"
+  }
+}

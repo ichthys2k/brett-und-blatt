@@ -3,7 +3,7 @@ export { Rng, hashSeed, randomSeed, type RngState } from './random';
 export { canonicalJson, sameValue } from './canonical';
 export * from './cards';
 export { isLegalMove, replay, resolveOptions, seatActors, settleSystemMoves } from './module-helpers';
-export { Clocks, type ClockReading } from './clock';
+export { Clocks, type ClockReading, type ClocksState } from './clock';
 export type { GameSession, PublicSessionConfig } from './game-session';
 export {
   AWAY_AFTER_TIMEOUTS,
@@ -18,6 +18,7 @@ export {
   type SessionChange,
   type SessionConfig,
   type SessionDeps,
+  type SessionRuntime,
   type SessionSnapshot,
 } from './session';
 export { mctsSearch, type MctsOptions } from './bots/mcts';

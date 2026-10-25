@@ -1,0 +1,31 @@
+{
+  "name": "@brett-und-blatt/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "description": "Spieleserver: dünner Cloudflare-Adapter (Worker + Durable Object pro Raum) um packages/online",
+  "scripts": {
+    "dev": "wrangler dev --var ROOM_JURISDICTION:none",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@brett-und-blatt/engine": "workspace:*",
+    "@brett-und-blatt/online": "workspace:*",
+    "@brett-und-blatt/game-black-peter": "workspace:*",
+    "@brett-und-blatt/game-chess": "workspace:*",
+    "@brett-und-blatt/game-four-in-a-row": "workspace:*",
+    "@brett-und-blatt/game-four-player-chess": "workspace:*",
+    "@brett-und-blatt/game-mill": "workspace:*",
+    "@brett-und-blatt/game-pairs": "workspace:*",
+    "@brett-und-blatt/game-reversi": "workspace:*",
+    "@brett-und-blatt/game-tic-tac-toe": "workspace:*",
+    "@brett-und-blatt/game-ultimate-tic-tac-toe": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261010.1",
+    "typescript": "~6.0.3",
+    "wrangler": "4.149.0"
+  }
+}

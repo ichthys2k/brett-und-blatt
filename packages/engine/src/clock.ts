@@ -15,6 +15,12 @@ export interface ClockReading {
   expired: boolean;
 }
 
+/** Stand aller Uhren als JSON – zum Speichern auf dem Server. Zeiten sind echte Zeitpunkte in ms. */
+export interface ClocksState {
+  seats: SeatClock[];
+  pausedAt: number | null;
+}
+
 interface SeatClock {
   /** Schachuhr: verbleibende Gesamtzeit. */
   remainingMs: number;
@@ -44,6 +50,17 @@ export class Clocks {
 
   get enabled(): boolean {
     return this.control.kind !== 'none';
+  }
+
+  state(): ClocksState {
+    return { seats: this.seats.map((clock) => ({ ...clock })), pausedAt: this.pausedAt };
+  }
+
+  /** Übernimmt einen gespeicherten Stand – laufende Züge laufen ab ihrem echten Beginn weiter. */
+  load(state: ClocksState): void {
+    if (state.seats.length !== this.seats.length) return;
+    this.seats = state.seats.map((clock) => ({ ...clock }));
+    this.pausedAt = state.pausedAt;
   }
 
   get paused(): boolean {

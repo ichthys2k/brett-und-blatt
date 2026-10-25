@@ -92,9 +92,10 @@ export interface RoomSnapshot {
   hostId: string | null;
   phase: RoomPhase;
   lobby: LobbySettings;
-  members: { id: string; token: string; name: string; avatar: string }[];
+  members: { id: string; token: string; name: string; avatar: string; awayByDisconnect: boolean }[];
   kicked: string[];
   nextMember: number;
+  lastVersion: number;
   lastActivity: number;
   game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; time: LobbySettings['time']; version: number } | null;
 }
@@ -221,17 +222,19 @@ export class Room {
       hostId: this.hostId,
       phase: this.phase,
       lobby: structuredClone(this.lobby),
-      members: [...this.members.values()].map(({ id, token, name, avatar }) => ({ id, token, name, avatar })),
+      members: [...this.members.values()].map(({ id, token, name, avatar, awayByDisconnect }) => ({ id, token, name, avatar, awayByDisconnect })),
       kicked: [...this.kicked],
       nextMember: this.nextMember,
+      lastVersion: this.lastVersion,
       lastActivity: this.lastActivity,
       game: game ? { session: game.session.snapshot(), seatMembers: [...game.seatMembers], seats: game.seats, time: game.time, version: this.gameVersion() } : null,
     };
   }
 
   /**
-   * Stellt einen gespeicherten Raum wieder her. Die Partie wird aus Seed und Zugliste
-   * neu berechnet; laufende Uhren beginnen dabei für den aktuellen Zug von vorn.
+   * Stellt einen gespeicherten Raum wieder her, z. B. nachdem der Server ihn schlafen
+   * gelegt hat. Die Partie wird aus Seed und Zugliste neu berechnet; Uhren und
+   * Abwesenheit laufen nahtlos weiter.
    */
   static restore(snapshot: RoomSnapshot, deps: RoomDeps): Room {
     const room = new Room(snapshot.code, deps);
@@ -240,16 +243,17 @@ export class Room {
     room.lobby = snapshot.lobby;
     room.kicked = new Set(snapshot.kicked);
     room.nextMember = snapshot.nextMember;
+    room.lastVersion = snapshot.lastVersion;
     room.lastActivity = snapshot.lastActivity;
     const now = deps.now();
     for (const m of snapshot.members) {
-      room.members.set(m.id, { ...m, connections: new Set(), disconnectedAt: now, awayByDisconnect: false, lastSignal: 0 });
+      room.members.set(m.id, { ...m, connections: new Set(), disconnectedAt: now, lastSignal: 0 });
       room.tokens.set(m.token, m.id);
     }
     const saved = snapshot.game;
     const module = saved ? deps.findGame(saved.session.config.gameId) : undefined;
     if (saved && module) {
-      const session = LocalSession.restore(module, saved.session, room.sessionDeps());
+      const session = LocalSession.restore(module, saved.session, room.sessionDeps(), { resumeClocks: true });
       room.attachGame({ module, session, seatMembers: saved.seatMembers, seats: saved.seats, time: saved.time, versionOffset: saved.version - session.version, unsubscribe: () => {} });
     } else if (saved) {
       room.phase = 'lobby';
