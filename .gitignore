@@ -1,0 +1,30 @@
+# Abhängigkeiten
+node_modules/
+.pnpm-store/
+
+# Build-Ergebnisse
+dist/
+build/
+.vite/
+coverage/
+
+# Cloudflare (lokaler Zustand und Geheimnisse)
+.wrangler/
+.dev.vars
+
+# Umgebungsvariablen – nie ins Repo
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor und System
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+*.swp
