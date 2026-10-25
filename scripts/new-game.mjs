@@ -53,6 +53,8 @@ Nächste Schritte:
   4. src/bots.ts             Bot anpassen – oder erst einmal nur die allgemeinen Bots nutzen
   5. src/ui/index.tsx        Oberfläche bauen
   6. test/${id}.test.ts      eigene Regeltests ergänzen
-  7. pnpm test && pnpm dev   prüfen und ausprobieren
+  7. Mehrspieler-Spiel?      in apps/server/src/games.ts und apps/server/package.json
+                             eintragen, dann pnpm install
+  8. pnpm test && pnpm dev   prüfen und ausprobieren
 
 Anleitung: CONTRIBUTING.md`);
