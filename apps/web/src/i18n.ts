@@ -60,6 +60,8 @@ const de = {
   'play.away': '{name} war mehrmals zu langsam – der Computer spielt für diesen Platz.',
   'play.takeBack': 'Wieder selbst spielen',
   'play.loading': 'Partie wird geladen …',
+  'legal.imprint': 'Impressum',
+  'legal.privacy': 'Datenschutz',
 } as const;
 
 export type MessageKey = keyof typeof de;

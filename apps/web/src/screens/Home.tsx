@@ -84,11 +84,21 @@ export function Home() {
         </ul>
       </section>
 
-      <footer className="mt-auto text-xs text-muted">
-        {t('home.footer')}{' '}
-        <a className="underline" href="https://github.com/ichthys2k/brett-und-blatt" target="_blank" rel="noreferrer">
-          {t('home.source')}
-        </a>
+      <footer className="mt-auto space-y-2 text-xs text-muted">
+        <p>
+          {t('home.footer')}{' '}
+          <a className="underline" href="https://github.com/ichthys2k/brett-und-blatt" target="_blank" rel="noreferrer">
+            {t('home.source')}
+          </a>
+        </p>
+        <nav className="flex gap-4" aria-label="Rechtliches">
+          <a className="underline" href={paths.imprint}>
+            {t('legal.imprint')}
+          </a>
+          <a className="underline" href={paths.privacy}>
+            {t('legal.privacy')}
+          </a>
+        </nav>
       </footer>
     </div>
   );

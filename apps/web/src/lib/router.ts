@@ -4,12 +4,14 @@ import { useSyncExternalStore } from 'react';
  * Einfache Navigation über den Teil hinter dem # in der Adresse. So funktioniert
  * die App auf jedem einfachen Webspace, ohne Einstellungen am Server.
  */
-export type Route = { name: 'home' } | { name: 'setup'; gameId: string } | { name: 'play' };
+export type Route = { name: 'home' } | { name: 'setup'; gameId: string } | { name: 'play' } | { name: 'imprint' } | { name: 'privacy' };
 
 export function parseRoute(hash: string): Route {
   const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (parts[0] === 'neu' && parts[1]) return { name: 'setup', gameId: decodeURIComponent(parts[1]) };
   if (parts[0] === 'partie') return { name: 'play' };
+  if (parts[0] === 'impressum') return { name: 'imprint' };
+  if (parts[0] === 'datenschutz') return { name: 'privacy' };
   return { name: 'home' };
 }
 
@@ -17,6 +19,8 @@ export const paths = {
   home: '#/',
   setup: (gameId: string) => `#/neu/${encodeURIComponent(gameId)}`,
   play: '#/partie',
+  imprint: '#/impressum',
+  privacy: '#/datenschutz',
 };
 
 export function navigate(path: string): void {
