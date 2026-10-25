@@ -22,7 +22,11 @@ async function client(code, name, token = `${name}-${crypto.randomUUID()}`) {
   ws.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
     messages.push(message);
-    for (const w of [...waiting]) if (w.test(message)) waiting.splice(waiting.indexOf(w), 1) && w.resolve(message);
+    // Eine Fehlermeldung des Servers beendet jedes Warten sofort, statt erst nach der Zeitüberschreitung.
+    for (const w of [...waiting]) {
+      if (w.test(message)) waiting.splice(waiting.indexOf(w), 1) && w.resolve(message);
+      else if (message.type === 'error') waiting.splice(waiting.indexOf(w), 1) && w.reject(new Error(`${name}: Server meldet ${message.code} – ${message.message}`));
+    }
   });
   await new Promise((resolve, reject) => {
     ws.addEventListener('open', resolve, { once: true });
@@ -32,12 +36,25 @@ async function client(code, name, token = `${name}-${crypto.randomUUID()}`) {
     token,
     messages,
     send: (m) => ws.send(JSON.stringify(m)),
-    /** Wartet auf die nächste Nachricht, die passt (auch eine schon erhaltene, die neuer als `after` ist). */
-    next: (test, timeoutMs = 5000) =>
+    /** Wartet auf die nächste ankommende Nachricht, die passt. */
+    next: (test, timeoutMs = 10_000) =>
       new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error(`${name}: Zeitüberschreitung beim Warten`)), timeoutMs);
-        waiting.push({ test, resolve: (m) => (clearTimeout(timer), resolve(m)) });
+        const entry = { test, resolve: (m) => (clearTimeout(timer), resolve(m)), reject: (e) => (clearTimeout(timer), reject(e)) };
+        const timer = setTimeout(() => {
+          waiting.splice(waiting.indexOf(entry), 1);
+          reject(new Error(`${name}: Zeitüberschreitung beim Warten`));
+        }, timeoutMs);
+        waiting.push(entry);
       }),
+    /**
+     * Schickt eine Nachricht und wartet, bis der Raum sie bestätigt. Nachrichten verschiedener
+     * Browser kommen beim Server in beliebiger Reihenfolge an – nur so bleibt die Abfolge sicher.
+     */
+    step: (message, test, timeoutMs) => {
+      const done = c.next((m) => m.type === 'room' && test(m), timeoutMs);
+      c.send(message);
+      return done;
+    },
     close: () => ws.close(),
   };
   const welcome = c.next((m) => m.type === 'welcome');
@@ -60,12 +77,10 @@ const anna = await client(code, 'Anna');
 const ben = await client(code, 'Ben');
 check(anna.you === 'm1' && ben.you === 'm2', 'beide angemeldet, Anna leitet den Raum');
 
-// Lobby: Tic-Tac-Toe, beide setzen sich.
-let room = anna.next((m) => m.type === 'room' && m.lobby.seats.length === 2 && m.lobby.seats.every((s) => s.memberId));
-anna.send({ type: 'setGame', gameId: 'tic-tac-toe' });
-anna.send({ type: 'takeSeat', index: 0 });
-ben.send({ type: 'takeSeat', index: 1 });
-await room;
+// Lobby: Tic-Tac-Toe, beide setzen sich – Ben erst, wenn das Spiel gewählt ist (sonst gibt es Platz 2 noch nicht).
+await anna.step({ type: 'setGame', gameId: 'tic-tac-toe' }, (m) => m.lobby.gameId === 'tic-tac-toe' && m.lobby.seats.length === 2);
+await anna.step({ type: 'takeSeat', index: 0 }, (m) => m.lobby.seats[0]?.memberId === 'm1');
+await ben.step({ type: 'takeSeat', index: 1 }, (m) => m.lobby.seats[1]?.memberId === 'm2');
 let annaGame = anna.next((m) => m.type === 'game');
 let benGame = ben.next((m) => m.type === 'game');
 anna.send({ type: 'start' });
@@ -90,12 +105,10 @@ const benAgain = await client(code, 'Ben', ben.token);
 check(benAgain.you === 'm2', 'Ben kommt mit derselben Kennung zurück auf seinen Platz');
 
 // Revanche gegen einen Bot (schwer) bei Vier in einer Reihe: Wie lange denkt er nach?
-anna.send({ type: 'toLobby' });
-await anna.next((m) => m.type === 'room' && m.phase === 'lobby');
-anna.send({ type: 'setGame', gameId: 'four-in-a-row' });
-benAgain.send({ type: 'leaveSeat' });
-anna.send({ type: 'setSeat', index: 1, seat: { bot: 'hard' } });
-await anna.next((m) => m.type === 'room' && m.lobby.gameId === 'four-in-a-row' && m.lobby.seats[1]?.kind === 'bot');
+await anna.step({ type: 'toLobby' }, (m) => m.phase === 'lobby');
+await anna.step({ type: 'setGame', gameId: 'four-in-a-row' }, (m) => m.lobby.gameId === 'four-in-a-row');
+await benAgain.step({ type: 'leaveSeat' }, (m) => m.lobby.seats.every((s) => s.memberId !== 'm2'));
+await anna.step({ type: 'setSeat', index: 1, seat: { bot: 'hard' } }, (m) => m.lobby.seats[1]?.kind === 'bot');
 annaGame = anna.next((m) => m.type === 'game');
 anna.send({ type: 'start' });
 let game = await annaGame;
@@ -110,14 +123,11 @@ for (let turn = 0; turn < 4 && !game.result; turn++) {
 check(times.length > 0, `Bot „schwer“ antwortet nach ${times.join(', ')} ms`);
 
 // Zeitablauf über den Wecker des Servers: Tic-Tac-Toe „schnell“ (5 s pro Zug), Anna zieht nicht.
-anna.send({ type: 'toLobby' });
-await anna.next((m) => m.type === 'room' && m.phase === 'lobby');
-anna.send({ type: 'setGame', gameId: 'tic-tac-toe' });
-anna.send({ type: 'setTime', time: 'fast' });
-anna.send({ type: 'setSeat', index: 1, seat: 'open' });
-await anna.next((m) => m.type === 'room' && m.lobby.gameId === 'tic-tac-toe' && m.lobby.seats[1]?.kind === 'human');
-benAgain.send({ type: 'takeSeat', index: 1 });
-await anna.next((m) => m.type === 'room' && m.lobby.seats[1]?.memberId === 'm2');
+await anna.step({ type: 'toLobby' }, (m) => m.phase === 'lobby');
+await anna.step({ type: 'setGame', gameId: 'tic-tac-toe' }, (m) => m.lobby.gameId === 'tic-tac-toe');
+await anna.step({ type: 'setTime', time: 'fast' }, (m) => m.lobby.time === 'fast');
+await anna.step({ type: 'setSeat', index: 1, seat: 'open' }, (m) => m.lobby.seats[1]?.kind === 'human' && m.lobby.seats[1].memberId === null);
+await benAgain.step({ type: 'takeSeat', index: 1 }, (m) => m.lobby.seats[1]?.memberId === 'm2');
 annaGame = anna.next((m) => m.type === 'game');
 anna.send({ type: 'start' });
 game = await annaGame;
