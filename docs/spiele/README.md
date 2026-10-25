@@ -17,11 +17,12 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Paare finden](paare-finden.md) | 1–6 | verdeckt | Gitterbrett, Inhaltspakete | S | M | S | 2 |
 | [Schwarzer Peter](schwarzer-peter.md) | 2–6 | verdeckt | Karten-Baukasten, Übergabe, Inhaltspakete | S | M | S | 2 |
 | [Solitaire](solitaire.md) | 1 | verdeckt, Einzelspieler | Spielkarten, Stapel, Tipps | M | L | M | 2 |
-| Schach | 2 | offen | Gitterbrett, chess.js | – | M | M | 2 |
-| Vierer-Schach (Übernahme) | 4 | offen | Gitterbrett (Kreuzform) | – | M | – | 2 |
+| [Schach](schach.md) | 2 | offen | Gitterbrett, chess.js | – | M | M | 2 |
+| [Vierer-Schach](vierer-schach.md) (Übernahme) | 4 | offen | Gitterbrett (Kreuzform), Lupe | – | M | – | 2 |
 | [Schiffe versenken](schiffe-versenken.md) | 2 | verdeckt, gleichzeitig | Gitterbrett | M | M | M | 3 |
 | [Quartett](quartett.md) | 2–6 | verdeckt | Karten, Inhaltspakete | M | M | M | 3 |
 | [Mäxle](maexle.md) | 2–10 | verdeckt | Würfel und Becher | S | M | M | 3 |
+| [Bingo](bingo.md) | 1–10, Klasse bis ~35 | gleichzeitig | Taktgeber, Inhaltspakete, Tafel | S | M | S | 3 |
 | [Go](go.md) | 2 | offen | Gitterbrett, zoombares Brett | M | L | L | 4 |
 | [Skat](skat.md) | 3–4 | verdeckt | Stich-Kern, Serie, Kartenblätter | L | L | XL | 5 |
 | [Schafkopf](schafkopf.md) | 4 | verdeckt | Stich-Kern, Serie, Kartenblätter | L | L | XL | 5 |
