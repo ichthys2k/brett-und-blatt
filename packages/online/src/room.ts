@@ -199,13 +199,20 @@ export class Room {
 
   /** Wann `tick()` das nächste Mal fällig ist – für den Wecker des Adapters. */
   nextWakeup(): number | null {
-    const times: number[] = [this.expiresAt()];
+    // Nur Zeitpunkte, an denen `tick()` wirklich etwas ändern kann. Ein Zeitpunkt in der
+    // Vergangenheit, der nichts bewirkt, ließe den Adapter den Raum im Dauertakt wecken.
+    const now = this.deps.now();
+    const expires = this.expiresAt();
+    // Abgelaufen, aber noch jemand verbunden: Der Raum bleibt, später erneut nachsehen.
+    const times: number[] = [expires > now ? expires : now + HOST_HANDOVER_MS];
     const deadline = this.game?.session.nextDeadline();
     if (deadline != null) times.push(deadline);
+    const successor = [...this.members.values()].some((m) => m.disconnectedAt === null);
     for (const member of this.members.values()) {
       if (member.disconnectedAt === null) continue;
       if (!member.awayByDisconnect && this.phase === 'playing' && this.seatOf(member.id) !== null) times.push(member.disconnectedAt + AWAY_AFTER_DISCONNECT_MS);
-      if (member.id === this.hostId) times.push(member.disconnectedAt + HOST_HANDOVER_MS);
+      // Ohne verbundenes Mitglied gibt es niemanden, an den die Leitung gehen könnte.
+      if (member.id === this.hostId && successor) times.push(member.disconnectedAt + HOST_HANDOVER_MS);
     }
     return Math.min(...times);
   }

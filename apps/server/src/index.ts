@@ -163,8 +163,8 @@ export class GameRoom extends DurableObject<Env> {
       await this.ctx.storage.deleteAll();
       return;
     }
+    // tick() meldet die Änderung selbst (changed → persist); ein zweites Speichern wäre doppelt.
     room.tick();
-    await this.persist();
   }
 
   private dropSocket(ws: WebSocket): void {
