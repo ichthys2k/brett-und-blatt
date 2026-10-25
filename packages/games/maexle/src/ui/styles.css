@@ -1,0 +1,340 @@
+.mx-table {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  height: 100%;
+  min-height: 0;
+}
+
+.mx-top {
+  min-height: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mx-history {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
+
+.mx-history li {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-muted);
+}
+
+.mx-history li.mx-current {
+  border-color: var(--color-accent);
+  color: var(--color-ink);
+}
+
+.mx-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+
+.mx-reveal {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  max-width: 28rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  background: var(--color-surface);
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.mx-reveal-dice .mx-die {
+  width: 1.6rem;
+}
+
+.mx-reveal-dice .mx-dice {
+  gap: 0.2rem;
+}
+
+/* Erst hebt sich der Becher, nach einer kurzen Pause erscheint das Ergebnis. */
+.mx-reveal-new {
+  animation: mx-fade 0.35s ease-out 0.9s both;
+}
+
+.mx-cup-area {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  place-items: center;
+  min-height: 0;
+  position: relative;
+}
+
+.mx-dice-slot {
+  grid-area: 1 / 1;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  margin-bottom: 4%;
+  z-index: 0;
+}
+
+.mx-dice {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mx-die {
+  width: clamp(2.6rem, 11vmin, 4.5rem);
+  height: auto;
+}
+
+.mx-die rect {
+  fill: #fff;
+  stroke: var(--color-line);
+  stroke-width: 3;
+}
+
+.mx-die circle {
+  fill: #212529;
+}
+
+.mx-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.mx-cup {
+  grid-area: 1 / 1;
+  align-self: end;
+  z-index: 1;
+  width: clamp(7rem, 34vmin, 12rem);
+  max-height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: transform 0.25s ease-out;
+}
+
+button.mx-cup {
+  cursor: grab;
+}
+
+.mx-cup-shape {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.mx-cup-shape path:first-child {
+  fill: #8d5524;
+  stroke: #5c3412;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.mx-cup-band {
+  fill: none;
+  stroke: #c68642;
+  stroke-width: 5;
+}
+
+.mx-cup-open,
+.mx-cup-lifted {
+  transform: translateY(-80%) rotate(-10deg);
+}
+
+.mx-cup-lifted {
+  animation: mx-lift 0.5s ease-out both;
+}
+
+.mx-cup-empty {
+  opacity: 0.55;
+}
+
+.mx-cup-caption {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.mx-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+}
+
+.mx-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mx-row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mx-button {
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.mx-button:hover {
+  background: var(--color-surface-2);
+}
+
+.mx-primary {
+  min-width: 10rem;
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-size: 1.1rem;
+}
+
+.mx-primary:hover {
+  background: color-mix(in srgb, var(--color-accent) 85%, black);
+}
+
+.mx-danger {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.mx-hint {
+  outline: 3px dashed var(--color-warning);
+  outline-offset: 2px;
+}
+
+.mx-link {
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  text-decoration: underline;
+  font-size: 0.85rem;
+}
+
+.mx-help,
+.mx-said {
+  margin: 0;
+  text-align: center;
+}
+
+.mx-help {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.mx-said {
+  font-size: 1.15rem;
+}
+
+.mx-ladder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 34rem;
+}
+
+.mx-rung-group {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.mx-pasch {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.mx-maexle {
+  grid-template-columns: 1fr;
+}
+
+.mx-rung {
+  min-height: 2.4rem;
+  padding: 0;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.mx-rung:not(:disabled):hover {
+  background: var(--color-surface-2);
+}
+
+.mx-rung:disabled {
+  opacity: 0.3;
+}
+
+.mx-pasch .mx-rung {
+  border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-line));
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+}
+
+.mx-maexle .mx-rung {
+  border-color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 18%, var(--color-surface));
+}
+
+.mx-symbol {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+@keyframes mx-lift {
+  from {
+    transform: none;
+  }
+}
+
+@keyframes mx-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mx-cup,
+  .mx-cup-lifted,
+  .mx-reveal-new {
+    transition: none;
+    animation: none;
+  }
+}
