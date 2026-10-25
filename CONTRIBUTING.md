@@ -18,9 +18,12 @@ pnpm check       # alles zusammen: Typprüfung, Tests, Build
 
 ```
 apps/web/              Web-App (React, Vite, Tailwind, PWA)
+apps/server/           Spieleserver: dünner Cloudflare-Adapter (Worker + Durable Object pro Raum)
 packages/engine/       Spielmodul-Schnittstelle, Zufall, Spielleitung, Uhren, allgemeine Bots, Prüfungen
-packages/ui/           Baukasten für die Oberfläche (Gitterbrett, Spielerleiste, Uhr-Ring)
+packages/online/       Online-Spielleitung ohne Anbieterbindung (Raum, Nachrichtenformat, Raumcodes, OnlineSession)
+packages/ui/           Baukasten für die Oberfläche (Gitterbrett, Netzbrett, Spielerleiste mit Uhr-Ring, Karten)
 packages/games/<id>/   ein Ordner pro Spiel
+content/               Inhaltspakete, z. B. Paare (CC BY-SA 4.0)
 docs/                  Konzept und Spielpläne
 ```
 
@@ -37,6 +40,8 @@ Ein Spiel besteht aus:
 
 Die Web-App findet neue Spiele automatisch. Der Ordnername muss dabei der `id` im Steckbrief entsprechen.
 
+Für Online-Partien muss ein Spiel für mehrere Personen zusätzlich im Spieleserver eingetragen werden: in `apps/server/src/games.ts` (Liste `onlineGames`) und als Abhängigkeit in `apps/server/package.json`, danach `pnpm install`. Ein Test im Server-Paket schlägt fehl, solange das fehlt. Spiele für eine Person (wie Solitaire) laufen nur im Browser.
+
 ## Ein neues Spiel hinzufügen
 
 ```bash
@@ -44,7 +49,7 @@ pnpm neues-spiel muehle "Mühle"
 pnpm install
 ```
 
-Das legt eine Kopie der Vorlage Tic-Tac-Toe an. Die Kopie ist sofort spielbar und besteht alle Prüfungen. Danach ersetzt du Schritt für Schritt Regeln, Bot und Oberfläche. Die Vorlage [`packages/games/tic-tac-toe`](packages/games/tic-tac-toe) ist ausführlich kommentiert.
+Das legt eine Kopie der Vorlage Tic-Tac-Toe an. Die Kopie ist sofort spielbar und besteht alle Prüfungen, sobald sie wie oben im Spieleserver eingetragen ist. Danach ersetzt du Schritt für Schritt Regeln, Bot und Oberfläche. Die Vorlage [`packages/games/tic-tac-toe`](packages/games/tic-tac-toe) ist ausführlich kommentiert.
 
 ### Regeln für Spielmodule
 

@@ -19,6 +19,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - `corepack pnpm install`
   - `corepack pnpm check` – Typprüfung + Tests + Build
   - `corepack pnpm exec vitest run packages/games/<id>` – Tests eines Spiels
+  - `corepack pnpm neues-spiel <id> "<Name>"` – neues Spiel als Kopie der Vorlage Tic-Tac-Toe (danach `corepack pnpm install` und im Server eintragen, siehe unten)
   - `corepack pnpm --filter @brett-und-blatt/web dev` – Dev-Server auf http://localhost:5173
   - `corepack pnpm --filter @brett-und-blatt/server dev` – Spieleserver lokal auf http://127.0.0.1:8787 (Wrangler, kein Konto nötig; für Telemetrie aus `WRANGLER_SEND_METRICS=false` davor)
   - `node apps/server/scripts/smoke.mjs` – Rauchtest gegen den laufenden Spieleserver (zwei nachgebaute Browser: Raum, Partie, Wiedereinstieg, Bot, Zeitablauf)
@@ -32,7 +33,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 - Monorepo mit pnpm-Workspaces: `apps/web` (React 19, Vite 8, Tailwind 4, PWA), `apps/server` (Cloudflare-Worker, dünner Adapter um `packages/online`), `packages/engine` (Spielmodul-Schnittstelle, Zufall, lokale Spielleitung, Uhren, allgemeine Bots, Vertragsprüfungen), `packages/online` (Online-Spielleitung ohne Anbieterbindung: Raum, Nachrichtenformat, Raumcodes), `packages/ui` (Baukasten: GridBoard, NetBoard, FitBox, PlayerChip, Karten), `packages/games/<id>` (ein Ordner pro Spiel), `content/` (Inhaltspakete, z. B. Paare).
 - **Spielmodul** `GameModule<S, M, V>`: `info`, `options` (optional mit `when` für bedingte Anzeige), `timePresets`, `setup`, `currentPlayers`, `legalMoves`, `applyMove`, `playerView`, `result`, `bots` u. a. Spielstand ist reines JSON, Zufall nur über den Seed-Rng.
-- **Jedes Spiel** hat `src/meta.ts` (mit Pflicht-Kurzanleitung `howToPlay`), `src/rules.ts`, `src/index.ts`, `src/ui/index.tsx` und `test/<id>.test.ts` mit den allgemeinen Prüfungen `gameContractChecks`. Die Web-App findet Spiele automatisch; **Ordnername = `id`**.
+- **Jedes Spiel** hat `src/meta.ts` (mit Pflicht-Kurzanleitung `howToPlay`), `src/rules.ts`, `src/index.ts`, `src/ui/index.tsx` und `test/<id>.test.ts` mit den allgemeinen Prüfungen `gameContractChecks`. Die Web-App findet Spiele automatisch; **Ordnername = `id`**. **Mehrspieler-Spiele (ab 2 Plätzen) zusätzlich im Server eintragen:** in `apps/server/src/games.ts` (`onlineGames`) und als Abhängigkeit in `apps/server/package.json`, danach `corepack pnpm install` – sonst schlägt `apps/server/test/games.test.ts` fehl. Bei einem eigenen Bot ggf. Schrittweite in `apps/server/src/bots.ts` (`BOT_STEP_MS`) messen.
 - Bots laufen im Web Worker; Tipp-Knopf = Standard-Bot auf Stufe „schwer“ mit 1,5 s Budget.
 - Fremdcode: `chess.js` (BSD-2-Clause) – Lizenztext in `THIRD_PARTY.md`. Neue Fremdbibliotheken dort ergänzen.
 

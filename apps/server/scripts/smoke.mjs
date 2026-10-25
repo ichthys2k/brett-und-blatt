@@ -2,7 +2,7 @@
 // Aufruf (Server läuft, z. B. lokal mit `wrangler dev`):
 //   node apps/server/scripts/smoke.mjs [http://127.0.0.1:8787]
 // Prüft: Raum erstellen, Anmelden, Lobby, eine ganze Partie, Wiedereinstieg,
-// Herkunftsprüfung, und misst die Antwortzeit eines Bots.
+// Herkunftsprüfung, Bot-Antwortzeit, Zeitablauf mit Bot-Zug und Emoji-Reaktion.
 
 const base = process.argv[2] ?? 'http://127.0.0.1:8787';
 const origin = 'http://localhost:5173';
