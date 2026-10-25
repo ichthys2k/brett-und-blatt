@@ -25,7 +25,9 @@ export function extrapolateClock(reading: ClockReading, control: TimeControl, el
       return { ...reading, bankLeftMs: bankLeft, fraction: total > 0 ? bankLeft / total : 0, expired: bankLeft <= 0 };
     }
     const moveLeft = (reading.leftMs ?? 0) - elapsedMs;
-    if (moveLeft >= 0) return { ...reading, leftMs: moveLeft, fraction: moveLeft / control.moveMs };
+    // Die volle Zugzeit ergibt sich aus der Anzeige (beim ersten Zug kann sie `firstMoveMs` sein).
+    const limit = reading.fraction > 0 ? (reading.leftMs ?? 0) / reading.fraction : control.moveMs;
+    if (moveLeft >= 0) return { ...reading, leftMs: moveLeft, fraction: moveLeft / limit };
     const bankLeft = Math.max(0, (reading.bankLeftMs ?? 0) + moveLeft);
     return {
       ...reading,
@@ -157,7 +159,7 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
   }
 
   submit(seat: SeatId, move: M): boolean {
-    if (!this.legalMoves(seat).some((m) => sameValue(m, move))) return false;
+    if (!this.allows(seat, move)) return false;
     this.deps.send({ type: 'move', version: this.message.version, move });
     this.waiting = true;
     this._version++;
@@ -197,8 +199,16 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
       seed: `tipp/${this.message.version}/${Math.random()}`,
       timeBudgetMs: 1500,
     })) as M;
-    if (token !== this._version || !this.legalMoves(seat).some((m) => sameValue(m, move))) return null;
+    if (token !== this._version || !this.allows(seat, move)) return null;
     return move;
+  }
+
+  /** Darf der eigene Platz diesen Zug machen? Spiele mit `isLegal` prüfen ihn an der eigenen Sicht. */
+  private allows(seat: SeatId, move: M): boolean {
+    const moves = this.legalMoves(seat);
+    if (moves.length === 0) return false;
+    const { module } = this.deps;
+    return module.isLegal ? module.isLegal(this.message.view, seat, move) : moves.some((m) => sameValue(m, move));
   }
 
   resign(seat: SeatId): void {

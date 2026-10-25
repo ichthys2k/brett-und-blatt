@@ -20,6 +20,20 @@ describe('Clocks', () => {
     expect(clocks.isExpired(0, 20_000 + 10_000 + 25_000)).toBe(true);
   });
 
+  it('eigene Zeit für den ersten Zug (z. B. Aufstellen), danach die normale Zugzeit', () => {
+    const clocks = new Clocks({ kind: 'perMove', moveMs: 10_000, firstMoveMs: 90_000 }, 2);
+    clocks.start(0, 0);
+    expect(clocks.read(0, 30_000)).toMatchObject({ leftMs: 60_000, expired: false });
+    expect(clocks.isExpired(0, 90_001)).toBe(true);
+    clocks.stop(0, 40_000);
+    clocks.start(0, 50_000);
+    expect(clocks.read(0, 50_000)).toMatchObject({ leftMs: 10_000, fraction: 1 });
+    // Gespeicherte Stände ohne Zugzähler gelten als „noch kein Zug“.
+    const old = new Clocks({ kind: 'perMove', moveMs: 10_000, firstMoveMs: 90_000 }, 1);
+    old.load({ seats: [{ remainingMs: 0, bankMs: 0, startedAt: 0 }], pausedAt: null });
+    expect(old.read(0, 0).leftMs).toBe(90_000);
+  });
+
   it('Schachuhr zieht verbrauchte Zeit ab und schreibt den Zuschlag gut', () => {
     const clocks = new Clocks({ kind: 'chessClock', baseMs: 60_000, incrementMs: 2_000 }, 2);
     clocks.start(0, 0);

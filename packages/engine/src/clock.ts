@@ -27,6 +27,8 @@ interface SeatClock {
   /** Zugzeit: verbleibende Zeitbank. */
   bankMs: number;
   startedAt: number | null;
+  /** Abgeschlossene Züge (für `firstMoveMs`); fehlt in älteren Spielständen. */
+  moves?: number;
 }
 
 /**
@@ -45,6 +47,7 @@ export class Clocks {
       remainingMs: control.kind === 'chessClock' ? control.baseMs : 0,
       bankMs: control.kind === 'perMove' ? (control.bankMs ?? 0) : 0,
       startedAt: null,
+      moves: 0,
     }));
   }
 
@@ -83,10 +86,11 @@ export class Clocks {
     if (clock.startedAt === null) return;
     const elapsed = this.elapsed(clock, now);
     if (this.control.kind === 'perMove') {
-      clock.bankMs = Math.max(0, clock.bankMs - Math.max(0, elapsed - this.control.moveMs));
+      clock.bankMs = Math.max(0, clock.bankMs - Math.max(0, elapsed - this.moveLimit(clock)));
     } else if (this.control.kind === 'chessClock') {
       clock.remainingMs = Math.max(0, clock.remainingMs - elapsed) + this.control.incrementMs;
     }
+    clock.moves = (clock.moves ?? 0) + 1;
     clock.startedAt = null;
   }
 
@@ -120,9 +124,10 @@ export class Clocks {
 
     if (control.kind === 'perMove') {
       const total = control.bankMs ?? 0;
-      const moveLeft = control.moveMs - elapsed;
+      const limit = this.moveLimit(clock);
+      const moveLeft = limit - elapsed;
       if (moveLeft >= 0) {
-        return { kind: control.kind, running, leftMs: moveLeft, bankLeftMs: total > 0 ? clock.bankMs : null, fraction: moveLeft / control.moveMs, usingBank: false, expired: false };
+        return { kind: control.kind, running, leftMs: moveLeft, bankLeftMs: total > 0 ? clock.bankMs : null, fraction: moveLeft / limit, usingBank: false, expired: false };
       }
       const bankLeft = Math.max(0, clock.bankMs + moveLeft);
       return {
@@ -146,6 +151,12 @@ export class Clocks {
 
   isExpired(seat: SeatId, now: number): boolean {
     return this.isRunning(seat) && this.read(seat, now).expired;
+  }
+
+  /** Zugzeit für den nächsten Zug: beim ersten Zug ggf. `firstMoveMs`. */
+  private moveLimit(clock: SeatClock): number {
+    if (this.control.kind !== 'perMove') return 0;
+    return (clock.moves ?? 0) === 0 && this.control.firstMoveMs !== undefined ? this.control.firstMoveMs : this.control.moveMs;
   }
 
   private elapsed(clock: SeatClock, now: number): number {
