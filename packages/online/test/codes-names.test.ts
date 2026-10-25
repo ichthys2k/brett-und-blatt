@@ -2,27 +2,27 @@ import { describe, expect, it } from 'vitest';
 import { AVATARS, MAX_NAME_LENGTH, ROOM_EMOJIS, cleanAvatar, cleanName, parseRoomCode, randomRoomCode } from '../src';
 
 describe('Raumcodes', () => {
-  it('64 verschiedene Emojis aus je einem Zeichen', () => {
-    expect(new Set(ROOM_EMOJIS).size).toBe(64);
+  it('16 verschiedene Emojis aus je einem Zeichen', () => {
+    expect(new Set(ROOM_EMOJIS).size).toBe(16);
     expect(ROOM_EMOJIS.every((e) => Array.from(e).length === 1)).toBe(true);
   });
 
-  it('ein neuer Code besteht aus vier Emojis und lässt sich wieder lesen', () => {
+  it('ein neuer Code besteht aus sechs Emojis und lässt sich wieder lesen', () => {
     let i = 0;
-    const code = randomRoomCode(() => (i++ * 17) % 64);
-    expect(Array.from(code)).toHaveLength(4);
+    const code = randomRoomCode(() => (i++ * 17) % 16);
+    expect(Array.from(code)).toHaveLength(6);
     expect(parseRoomCode(code)).toBe(code);
   });
 
   it('Leerzeichen und unsichtbare Varianten-Zeichen stören nicht', () => {
-    expect(parseRoomCode(' 🦊 🍎️ 🚀🎈 ')).toBe('🦊🍎🚀🎈');
+    expect(parseRoomCode(' 🦊 🍎️ 🚀🎈 ⭐️🐶 ')).toBe('🦊🍎🚀🎈⭐🐶');
   });
 
   it('falsche Länge oder fremde Zeichen ergeben keinen Code', () => {
-    expect(parseRoomCode('🦊🍎🚀')).toBeNull();
-    expect(parseRoomCode('🦊🍎🚀🎈🎈')).toBeNull();
-    expect(parseRoomCode('🦊🍎🚀X')).toBeNull();
-    expect(parseRoomCode('💩🍎🚀🎈')).toBeNull();
+    expect(parseRoomCode('🦊🍎🚀🎈⭐')).toBeNull();
+    expect(parseRoomCode('🦊🍎🚀🎈⭐🐶🐶')).toBeNull();
+    expect(parseRoomCode('🦊🍎🚀🎈⭐X')).toBeNull();
+    expect(parseRoomCode('💩🍎🚀🎈⭐🐶')).toBeNull();
   });
 });
 

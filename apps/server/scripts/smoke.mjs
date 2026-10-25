@@ -53,7 +53,7 @@ check(created.status === 201 && typeof code === 'string', `Raum erstellt: ${code
 const foreign = await fetch(`${base}/rooms`, { method: 'POST', headers: { Origin: 'https://fremde-seite.example' } });
 check(foreign.status === 403, 'fremde Seiten dürfen keine Räume anlegen');
 
-const missing = await fetch(`${base}/rooms/${encodeURIComponent('🐶🐶🐶🐶')}`);
+const missing = await fetch(`${base}/rooms/${encodeURIComponent('🐶🐶🐶🐶🐶🐶')}`);
 check((await missing.json()).exists === false, 'ein unbekannter Code führt ins Leere');
 
 const anna = await client(code, 'Anna');
