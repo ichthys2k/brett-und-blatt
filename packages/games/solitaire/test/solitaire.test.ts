@@ -3,7 +3,7 @@ import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { solveFreeCell } from '../src/solver/freecell';
 import { solveKlondike } from '../src/solver/klondike';
-import { bestPlan } from '../src/solver/lookahead';
+import { bestPlan, progress } from '../src/solver/lookahead';
 import { gameModule, isFree, type FreeCellState, type KlondikeState, type PyramidState, type SolitaireMove, type SolitaireState, type SpiderState } from '../src';
 
 function start<T extends SolitaireState>(options: Options, seed = 'test'): T {
@@ -215,6 +215,120 @@ describe('Löser und Vorausschau', () => {
     const state: SpiderState = { ...base, tableau };
     const move = computeBotMove(gameModule, { gameId: 'solitaire', botId: 'solitaire', level: 'hard', seat: 0, view: gameModule.playerView(state, 0), seed: 'x', timeBudgetMs: 200 }) as SolitaireMove;
     expect(move).toEqual({ type: 'draw' });
+  });
+});
+
+describe('Vorausschau im Detail', () => {
+  const empty = () => ({ down: [], up: [] as CardId[] });
+  const toTableau = (from: number, to: number, count = 1): SolitaireMove => ({ type: 'move', from: { kind: 'tableau', index: from }, to: { kind: 'tableau', index: to }, count });
+
+  /** Klondike ohne Talon; fehlende Stapel bleiben leer. */
+  function klondike(tableau: KlondikeState['tableau'], foundations: CardId[][] = [[], [], [], []]): KlondikeState {
+    const piles = [...tableau, ...Array.from({ length: 7 - tableau.length }, empty)];
+    return { ...start<KlondikeState>({ variant: 'klondike' }), tableau: piles, foundations, stock: [], waste: [] };
+  }
+
+  function spider(tableau: SpiderState['tableau']): SpiderState {
+    return { ...start<SpiderState>({ variant: 'spider' }), tableau };
+  }
+
+  const view = <T extends SolitaireState>(state: T) => gameModule.playerView(state, 0) as T;
+
+  it('plant über mehrere Züge: erst die Karo 5 ablegen, dann wird die Pik 6 frei', () => {
+    const state = klondike(
+      [{ down: ['C9.1'], up: ['H5.1'] }, { down: [], up: ['S6.1', 'D5.1'] }],
+      [[], ['D1.1', 'D2.1', 'D3.1', 'D4.1'], [], []],
+    );
+    const plan = bestPlan(view(state), { timeBudgetMs: 1000 });
+    expect(plan).toMatchObject({ move: { type: 'move', from: { kind: 'tableau', index: 1 }, to: { kind: 'foundation', index: 1 }, count: 1 }, length: 2 });
+  });
+
+  it('sucht nach dem Aufdecken nicht weiter – was darunter liegt, weiß niemand', () => {
+    // Pik 6 freilegen und Kreuz-Ass ablegen bringen zusammen am meisten. Würde die
+    // Suche nach dem Aufdecken weiterlaufen, käme das Aufdecken als erster Zug heraus.
+    const state = klondike([{ down: ['C9.1'], up: ['H5.1'] }, { down: [], up: ['S6.1'] }, { down: [], up: ['C1.1'] }]);
+    const plan = bestPlan(view(state), { timeBudgetMs: 1000 });
+    expect(plan?.move).toEqual({ type: 'move', from: { kind: 'tableau', index: 2 }, to: { kind: 'foundation', index: 0 }, count: 1 });
+    expect(plan?.length).toBe(2);
+  });
+
+  it('ohne Fortschritt gibt es keinen Plan', () => {
+    // Nur ein König, der zwischen leeren Spalten wandern kann.
+    expect(bestPlan(view(klondike([{ down: [], up: ['H13.1'] }])), { timeBudgetMs: 1000 })).toBeNull();
+  });
+
+  it('nimmt den direkten Weg und zieht die Planlänge vom Gewinn ab', () => {
+    // Der Karo-König könnte vorher in eine leere Spalte – das ist nur ein Umweg.
+    const state = klondike([{ down: ['C9.1'], up: ['H5.1'] }, { down: [], up: ['S6.1'] }, { down: ['C2.1'], up: ['D13.1'] }]);
+    const plan = bestPlan(view(state), { timeBudgetMs: 1000 });
+    expect(plan).toEqual({ move: toTableau(0, 1), gain: 60 - 1, length: 1 });
+  });
+
+  it('Spider: gleichfarbige Folgen zählen mehr als gemischte', () => {
+    const rest = Array.from({ length: 9 }, () => ({ down: [], up: ['D2.1'] }));
+    const suited = progress(spider([{ down: [], up: ['S9.1', 'S8.1'] }, ...rest]));
+    const mixed = progress(spider([{ down: [], up: ['S9.1', 'H8.1'] }, ...rest]));
+    expect(suited - mixed).toBe(6);
+  });
+
+  it('Spider: eine Folge König bis Ass im Plan wird abgelegt und hoch bewertet', () => {
+    const run = Array.from({ length: 12 }, (_, i) => `S${13 - i}.1`);
+    const rest = Array.from({ length: 8 }, () => ({ down: [], up: ['H9.1'] }));
+    const state = spider([{ down: ['H5.1'], up: run }, { down: [], up: ['S1.1'] }, ...rest]);
+    const plan = bestPlan(view(state), { timeBudgetMs: 1000 });
+    expect(plan?.move).toEqual(toTableau(1, 0));
+    expect(plan!.gain).toBeGreaterThan(600);
+  });
+
+  it('endet, auch wenn Karten hin und her pendeln können', () => {
+    // Die Herz 5 passt auf beide schwarzen Sechsen; ohne Zeitgrenze hilft nur das Merken gesehener Stellungen.
+    const state = klondike([{ down: [], up: ['S6.1'] }, { down: [], up: ['C6.1', 'H5.1'] }]);
+    expect(bestPlan(view(state), { timeBudgetMs: 0, now: () => 0, maxNodes: Infinity })).toBeNull();
+  });
+
+  it('hält Zeit- und Knotengrenze ein und behält das Beste aus der ersten Ebene', () => {
+    const reveal = klondike([{ down: ['C9.1'], up: ['H5.1'] }, { down: [], up: ['S6.1'] }]);
+    expect(bestPlan(view(reveal), { timeBudgetMs: 1000, maxNodes: 0 })?.move).toEqual(toTableau(0, 1));
+    // Die Uhr springt bei jeder Abfrage eine Sekunde weiter: Die Suche bricht beim ersten Zeitblick ab.
+    let calls = 0;
+    const now = () => ++calls * 1000;
+    // Lauter einzelne Karten, die sich vielfach aufeinander stapeln lassen: weit mehr als 32 Stellungen.
+    const busy = klondike(['S6.1', 'C6.1', 'H5.1', 'D5.1', 'S4.1', 'C4.1', 'H3.1'].map((card) => ({ down: [], up: [card] })));
+    bestPlan(view(busy), { timeBudgetMs: 500, now });
+    expect(calls).toBe(2);
+    // Gegenprobe mit stehender Uhr: Die Suche läuft deutlich länger.
+    calls = 0;
+    bestPlan(view(busy), { timeBudgetMs: 500, now: () => (calls++, 0) });
+    expect(calls).toBeGreaterThan(2);
+  });
+
+  it('arbeitet nur mit der Sicht und schlägt nur regelgerechte Züge vor', () => {
+    const cases: Options[] = [{ variant: 'klondike', draw: '1' }, { variant: 'spider', spiderSuits: '1' }, { variant: 'spider', spiderSuits: '2' }, { variant: 'spider', spiderSuits: '4' }];
+    for (const options of cases) {
+      for (let g = 0; g < 5; g++) {
+        // Ein paar Züge vorspielen, damit nicht nur Anfangsstellungen geprüft werden.
+        let state: SolitaireState = start(options, `vorausschau-${g}`);
+        for (let i = 0; i < g * 6 && gameModule.result(state) === null; i++) {
+          const seat = gameModule.currentPlayers(state)[0]!;
+          const moves = gameModule.legalMoves(state, seat);
+          state = gameModule.applyMove(state, seat, moves[(i * 7 + g) % moves.length]!).state;
+        }
+        if (gameModule.result(state) !== null || !gameModule.currentPlayers(state).includes(0)) continue;
+        const seen = view(state) as KlondikeState | SpiderState;
+        const before = structuredClone(seen);
+        const plan = bestPlan(seen, { timeBudgetMs: 0, now: () => 0, maxNodes: 2000 });
+        expect(seen).toEqual(before);
+        if (plan) {
+          expect(plan.gain).toBeGreaterThan(0);
+          expect(plan.length).toBeGreaterThanOrEqual(1);
+          expect(gameModule.legalMoves(state, 0)).toContainEqual(plan.move);
+        }
+        // Andere verdeckte Karten, gleiche Sicht: derselbe Plan.
+        const hidden = (state as KlondikeState | SpiderState).tableau.flatMap((p) => p.down).reverse();
+        const shuffled = { ...state, tableau: (state as KlondikeState | SpiderState).tableau.map((p) => ({ up: p.up, down: hidden.splice(0, p.down.length) })) } as SolitaireState;
+        expect(bestPlan(view(shuffled) as KlondikeState | SpiderState, { timeBudgetMs: 0, now: () => 0, maxNodes: 2000 })).toEqual(plan);
+      }
+    }
   });
 });
 
