@@ -33,8 +33,12 @@ jobs:
       - name: Tests (inkl. Prüfungen für jedes Spielmodul)
         run: pnpm test
 
+      # Adresse des Spieleservers aus der GitHub-Variable GAME_SERVER.
+      # Ohne Variable bleibt der Online-Bereich unsichtbar.
       - name: Web-App bauen
         run: pnpm build
+        env:
+          VITE_GAME_SERVER: ${{ vars.GAME_SERVER }}
 
       - name: Gebaute App für GitHub Pages bereitstellen
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
