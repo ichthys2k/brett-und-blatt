@@ -326,6 +326,29 @@ describe('Uhr, Verbindungsabbruch und Wiedereinstieg', () => {
     expect(ben.room().hostId).toBe('m2');
   });
 
+  it('ein verlassener Raum weckt nicht im Dauertakt', () => {
+    const anna = env.client('anna');
+    anna.hello();
+    env.room.disconnect('anna');
+    // Niemand da, der die Leitung übernehmen könnte: erst zum Löschen wieder wecken.
+    expect(env.room.nextWakeup()).toBe(env.room.expiresAt());
+    env.advance(HOST_HANDOVER_MS);
+    env.room.tick();
+    expect(env.room.nextWakeup()!).toBeGreaterThan(env.now);
+    // Kommt jemand Neues, zählt die Frist für den Wechsel wieder.
+    env.client('ben').hello();
+    expect(env.room.nextWakeup()).toBeLessThanOrEqual(env.now);
+    env.room.tick();
+    expect(env.room.nextWakeup()!).toBeGreaterThan(env.now);
+  });
+
+  it('ein abgelaufener Raum mit Verbindung wird nicht sofort wieder geweckt', () => {
+    const anna = env.client('anna');
+    anna.hello();
+    env.advance(env.room.expiresAt() - env.now + 1);
+    expect(env.room.nextWakeup()!).toBeGreaterThan(env.now);
+  });
+
   it('Speichern und Wiederherstellen: die Partie geht genau dort weiter', () => {
     const [anna, ben] = twoPlayers(env);
     anna.send({ type: 'move', version: anna.game().version, move: anna.game().legalMoves[0] });
