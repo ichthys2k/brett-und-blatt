@@ -54,8 +54,11 @@ export type Options = Record<string, string>;
 
 export type TimeControl =
   | { kind: 'none' }
-  /** Feste Zeit pro Zug, optional mit persönlicher Reserve (Zeitbank) für die ganze Partie. */
-  | { kind: 'perMove'; moveMs: number; bankMs?: number }
+  /**
+   * Feste Zeit pro Zug, optional mit persönlicher Reserve (Zeitbank) für die ganze Partie.
+   * `firstMoveMs`: eigene Zeit für den ersten Zug jedes Platzes, z. B. das Aufstellen der Flotte.
+   */
+  | { kind: 'perMove'; moveMs: number; bankMs?: number; firstMoveMs?: number }
   /** Schachuhr: Gesamtzeit pro Spieler, nach jedem Zug kommt der Zuschlag dazu. */
   | { kind: 'chessClock'; baseMs: number; incrementMs: number };
 
@@ -120,6 +123,12 @@ export interface GameModule<S, M, V = S> {
   /** Wer gerade handeln darf – auch mehrere Plätze gleichzeitig oder 'system'. */
   currentPlayers(state: S): Actor[];
   legalMoves(state: S, actor: Actor): M[];
+  /**
+   * Für Züge, die sich nicht vollständig aufzählen lassen (z. B. eine ganze Flotte aufstellen):
+   * prüft einen Zug direkt. `legalMoves` liefert dann nur einige Beispiele. Fehlt die Funktion,
+   * ist erlaubt, was `legalMoves` aufzählt.
+   */
+  isLegal?(state: S, actor: Actor, move: M): boolean;
   /** Wirft einen Fehler bei unerlaubten Zügen. */
   applyMove(state: S, actor: Actor, move: M): MoveResult<S>;
   /** Blendet Geheimes aus. Bei Spielen ohne Geheimnisse ist die Sicht der ganze Spielstand. */

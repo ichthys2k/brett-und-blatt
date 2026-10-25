@@ -83,6 +83,8 @@ interface Game {
   round: number;
   /** Damit die Versionsnummer nach einem Neustart des Servers weiterzählt statt bei 0 anzufangen. */
   versionOffset: number;
+  /** Version nach dem letzten Zug je Platz (auch Bot- oder Zeitablauf-Zug für ihn); nicht gespeichert. */
+  seatMoved?: number[];
   unsubscribe: () => void;
 }
 
@@ -410,7 +412,7 @@ export class Room {
         const seat = this.seatOf(member.id);
         const session = this.game?.session;
         if (!session || seat === null) return deny();
-        if (message.version !== this.gameVersion()) {
+        if (message.version !== this.gameVersion() && !this.stillValid(seat, message.version)) {
           this.error(connectionId, 'staleMove', 'Der Spielstand hat sich inzwischen geändert.');
           return this.sendGame(connectionId, []);
         }
@@ -481,12 +483,15 @@ export class Room {
 
   private attachGame(game: Game): void {
     this.game = game;
+    game.seatMoved = game.seats.map(() => this.gameVersion());
     this.phase = game.session.result ? 'finished' : 'playing';
     game.unsubscribe = game.session.subscribe((change) => this.onSessionChange(change));
   }
 
   private onSessionChange(change: SessionChange): void {
     if (!this.game) return;
+    const actor = change.entry?.actor;
+    if (typeof actor === 'number' && this.game.seatMoved) this.game.seatMoved[actor] = this.gameVersion();
     const finished = this.game.session.result !== null;
     if (finished && this.phase === 'playing') {
       this.phase = 'finished';
@@ -494,6 +499,16 @@ export class Room {
     }
     this.broadcastGame(change.events);
     this.deps.changed?.();
+  }
+
+  /**
+   * Ein Zug mit älterer Version gilt trotzdem, wenn dieser Platz seitdem nicht gezogen hat –
+   * etwa beim gleichzeitigen Aufstellen, wenn der andere zuerst fertig war. Ob der Zug jetzt
+   * noch erlaubt ist, prüft danach die Spielleitung.
+   */
+  private stillValid(seat: SeatId, version: number): boolean {
+    const moved = this.game?.seatMoved?.[seat];
+    return moved !== undefined && version >= moved && version < this.gameVersion();
   }
 
   private gameVersion(): number {

@@ -1,4 +1,4 @@
-import { inlineBotRunner, type AnyGameModule } from '@brett-und-blatt/engine';
+import { inlineBotRunner, type AnyGameModule, type GameModule } from '@brett-und-blatt/engine';
 import { gameModule as blackPeter } from '@brett-und-blatt/game-black-peter';
 import { gameModule as ticTacToe } from '@brett-und-blatt/game-tic-tac-toe';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -18,9 +18,27 @@ import {
 } from '../src';
 
 const SEED = 'GEHEIMER-STARTWERT-4711';
+
+/** Kleinstes Spiel mit gleichzeitigem Zug: Beide wählen verdeckt eine Zahl, die höhere gewinnt. */
+type PickState = { picks: (number | null)[] };
+const together: GameModule<PickState, number> = {
+  info: { ...ticTacToe.info, id: 'zugleich', name: 'Zugleich', patterns: ['simultaneous'], hiddenInformation: true },
+  options: [],
+  timePresets: ticTacToe.timePresets,
+  setup: (seats) => ({ picks: Array.from({ length: seats }, () => null) }),
+  currentPlayers: (state) => state.picks.flatMap((p, seat) => (p === null ? [seat] : [])),
+  legalMoves: (state, actor) => (typeof actor === 'number' && state.picks[actor] === null ? [1, 2, 3] : []),
+  applyMove: (state, actor, move) => ({ state: { picks: state.picks.map((p, s) => (s === actor ? move : p)) }, events: [] }),
+  playerView: (state, seat) => ({ picks: state.picks.map((p, s) => (s === seat || state.picks.every((x) => x !== null) ? p : null)) }),
+  result: (state) => (state.picks.every((p) => p !== null) ? { kind: 'win', winners: [state.picks[0]! >= state.picks[1]! ? 0 : 1] } : null),
+  sampleHidden: (view) => ({ picks: view.picks.map((p) => p ?? 1) }),
+  bots: ticTacToe.bots as unknown as GameModule<PickState, number>['bots'],
+};
+
 const modules = new Map<string, AnyGameModule>([
   [ticTacToe.info.id, ticTacToe],
   [blackPeter.info.id, blackPeter],
+  [together.info.id, together],
 ]);
 
 /** Ein Raum mit nachgebauten Verbindungen und einer Uhr, die man vorstellen kann. */
@@ -213,6 +231,28 @@ describe('Partie', () => {
     expect(ben.last('error')?.code).toBe('illegalMove');
     anna.send({ type: 'move', version: first.version, move: { cell: 99 } });
     expect(anna.last('error')?.code).toBe('illegalMove');
+  });
+
+  it('gleichzeitige Züge: Ein Zug mit älterer Version gilt, wenn der Platz seitdem nicht gezogen hat', () => {
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    anna.hello();
+    ben.hello();
+    anna.send({ type: 'setGame', gameId: 'zugleich' });
+    anna.send({ type: 'takeSeat', index: 0 });
+    ben.send({ type: 'takeSeat', index: 1 });
+    anna.send({ type: 'start' });
+    const seen = ben.game().version;
+    expect(anna.game().current).toEqual([0, 1]);
+    anna.send({ type: 'move', version: anna.game().version, move: 3 });
+    expect(ben.game().version).toBeGreaterThan(seen);
+    // Ben hat den Stand vor Annas Zug gesehen – sein Zug zählt trotzdem.
+    ben.send({ type: 'move', version: seen, move: 2 });
+    expect(ben.last('error')).toBeUndefined();
+    expect(ben.game().result).toEqual({ kind: 'win', winners: [0] });
+    // Ein zweiter Zug mit derselben alten Version wäre doppelt: abgelehnt.
+    anna.send({ type: 'move', version: seen, move: 1 });
+    expect(anna.last('error')?.code).toBe('staleMove');
   });
 
   it('der Startwert verlässt nie den Server', () => {

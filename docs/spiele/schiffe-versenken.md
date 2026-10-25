@@ -38,6 +38,18 @@
 | Salvenmodus | aus, an (so viele Schüsse pro Runde wie eigene Schiffe übrig) | aus |
 | Komfort | Wasser um versenkte Schiffe automatisch markieren (folgt aus dem Berührverbot) | an |
 
+## Umsetzung (Oktober 2026)
+
+Umgesetzt in `packages/games/battleship`, lokal und online. Abweichungen und Präzisierungen gegenüber dem Plan:
+
+- **Aufstellen als ein Zug, geprüft mit `isLegal`:** Aufstellungen lassen sich nicht aufzählen. Dafür gibt es in der Engine die optionale Funktion `isLegal(state, actor, move)`; `legalMoves` liefert in der Aufstellphase nur eine Beispiel-Aufstellung (für Zufallstests und die allgemeine Spielleitung). `isLegalMove`, die Spielleitung und `OnlineSession` nutzen `isLegal`, wenn ein Spiel es hat.
+- **Aufstellzeit:** `perMove` hat jetzt `firstMoveMs` – eine eigene Zeit für den ersten Zug jedes Platzes (normal 90 s, schnell 45 s; danach 10 s bzw. 5 s pro Schuss). Bei Zeitablauf stellt der Bot zufällig auf; einzelne von Hand gesetzte Schiffe gehen dabei verloren, weil der Server Zwischenstände nicht kennt.
+- **Gleichzeitig online:** Ein Zug mit älterer Versionsnummer gilt jetzt, wenn der Platz seitdem nicht selbst gezogen hat (`Room.stillValid`). Sonst würde beim gleichzeitigen Aufstellen der Zweite als „veraltet“ abgewiesen.
+- **Salvenmodus ohne `shootSalvo`:** Jeder Schuss der Salve ist ein eigener Zug `shoot` und wird nur anvisiert (`aim`); aufgelöst wird, wenn alle Schüsse der Salve gesetzt sind. Danach ist immer der andere dran.
+- **Aufstellen per Antippen** statt Ziehen: Schiff in der Leiste wählen, Feld antippen (Vorschau beim Überfahren mit der Maus), gesetztes Schiff antippen hebt es auf, ein zweites Antippen dreht es. Dazu „waagerecht/senkrecht“, „Zufällig“ und „Fertig“; Schiffe, die sich berühren, werden rot.
+- **Hot-Seat:** Übergabe-Bildschirm vor jedem Zug (wie bei anderen Spielen mit eigener Sicht). Danach sind Zielmeer groß und eigene Flotte klein zu sehen.
+- **Bot:** Die Wahrscheinlichkeitskarte zählt die möglichen Lagen der übrigen Schiffe direkt (mit Berührverbot und offenen Treffern), statt über `sampleHidden` zu ziehen. `sampleHidden` gibt es trotzdem für die allgemeinen Werkzeuge. Schüsse bis zum Sieg über 100 zufällige Flotten (Papierversion, ohne Weiterschießen gezählt): leicht ≈ 68, mittel ≈ 52, schwer ≈ 47.
+
 ## Spielmodell
 
 ```ts

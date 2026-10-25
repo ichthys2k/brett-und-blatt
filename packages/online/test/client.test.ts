@@ -99,6 +99,12 @@ describe('Uhr weiterzählen', () => {
     expect(extrapolateClock(running(0, 2000, true), control, 500)).toMatchObject({ bankLeftMs: 1500 });
   });
 
+  it('erster Zug mit eigener Zeit: Der Füllstand bezieht sich auf diese Zeit', () => {
+    const control = { kind: 'perMove' as const, moveMs: 10_000, firstMoveMs: 90_000 };
+    const reading: ClockReading = { kind: 'perMove', running: true, leftMs: 60_000, bankLeftMs: null, fraction: 60_000 / 90_000, usingBank: false, expired: false };
+    expect(extrapolateClock(reading, control, 15_000)).toMatchObject({ leftMs: 45_000, fraction: 0.5 });
+  });
+
   it('Schachuhr und stehende Uhren', () => {
     const chess = { kind: 'chessClock' as const, baseMs: 60_000, incrementMs: 0 };
     const reading: ClockReading = { kind: 'chessClock', running: true, leftMs: 30_000, bankLeftMs: null, fraction: 0.5, usingBank: false, expired: false };
