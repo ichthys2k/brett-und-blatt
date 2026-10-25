@@ -8,7 +8,7 @@ function setup() {
   let time = 5_000_000;
   const sessions = new Map<string, OnlineSession>();
   const runner = inlineBotRunner([ticTacToe], { timeBudgetMs: 5 });
-  const room = new Room('🦊🍎🚀🎈⭐🐶', {
+  const room = new Room('🦊🍎🚀🎈', {
     now: () => time,
     findGame: (id) => (id === 'tic-tac-toe' ? ticTacToe : undefined),
     botRunner: runner,
@@ -17,11 +17,11 @@ function setup() {
       if (message.type !== 'game') return;
       const copy = JSON.parse(JSON.stringify(message)) as GameMessage;
       const existing = sessions.get(connection);
-      if (existing?.id === `🦊🍎🚀🎈⭐🐶/${copy.round}`) existing.update(copy);
+      if (existing?.id === `🦊🍎🚀🎈/${copy.round}`) existing.update(copy);
       else
         sessions.set(
           connection,
-          new OnlineSession(copy, { module: ticTacToe, roomCode: '🦊🍎🚀🎈⭐🐶', send: (m: ClientMessage) => room.receive(connection, JSON.stringify(m)), botRunner: runner, now: () => time }),
+          new OnlineSession(copy, { module: ticTacToe, roomCode: '🦊🍎🚀🎈', send: (m: ClientMessage) => room.receive(connection, JSON.stringify(m)), botRunner: runner, now: () => time }),
         );
     },
     close: () => {},
