@@ -165,6 +165,7 @@ brett-und-blatt/
   apps/web/            PWA (React, Vite)
   apps/server/         Cloudflare Worker mit Durable Objects (ein Objekt pro Raum)
   packages/engine/     Schnittstelle, Zufall, Spielleitung, Zeitmodelle, allgemeine Bots
+  packages/online/     Online-Spielleitung ohne Anbieterbindung: Räume, Lobby, Nachrichtenformat
   packages/ui/         Baukasten (Karten, Bretter, Würfel, Spielrahmen)
   packages/games/<id>/ ein Ordner pro Spiel (rules, bots, ui, tests)
   content/             Inhaltspakete (CC BY-SA 4.0)
@@ -173,7 +174,7 @@ brett-und-blatt/
 
 - **Werkzeuge:** pnpm-Workspaces (mehrere Pakete in einem Repo), Vitest für Tests, Wrangler für Cloudflare.
 - **Neue Spiele:** Die Plattform findet Spielordner automatisch (`import.meta.glob`) und lädt ein Spiel erst, wenn man es öffnet (Code-Splitting). Vorlage: `pnpm neues-spiel <id> "<Name>"`, Lehrbeispiel ist Tic-Tac-Toe (siehe [CONTRIBUTING.md](../CONTRIBUTING.md)).
-- **Server neutral:** Die Server-Spielleitung ist ein eigenes Paket mit dünnem Cloudflare-Adapter. Ein Node-Adapter für warpdrive oder einen gemieteten Server ist jederzeit möglich.
+- **Server neutral:** Die Server-Spielleitung ist ein eigenes Paket (`packages/online`) mit dünnem Cloudflare-Adapter. Ein Raum enthält eine normale `LocalSession`; menschliche Plätze sind dort ferne Mitglieder. Jeder Browser bekommt nur die Sicht und die Züge seines Platzes, nie den Seed und nie fremde Züge; Ereignisse filtert das optionale `eventView` des Spielmoduls. Ein Node-Adapter für warpdrive oder einen gemieteten Server ist jederzeit möglich.
 
 **GitHub:**
 

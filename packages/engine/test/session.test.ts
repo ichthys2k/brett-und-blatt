@@ -146,3 +146,65 @@ describe('LocalSession', () => {
     expect(session.humanSeatsToAct()).toEqual([1]);
   });
 });
+
+describe('LocalSession für den Server', () => {
+  function serverSession(graceMs: number, botBudgetMs?: { easy: number }) {
+    let time = 0;
+    const requests: number[] = [];
+    const runner = inlineBotRunner([nim]);
+    const session = new LocalSession(
+      nim,
+      {
+        gameId: 'nim',
+        seats: [
+          { kind: 'human', name: 'Anna' },
+          { kind: 'bot', name: 'Bot', level: 'easy' },
+        ],
+        options: {},
+        seed: 'test',
+        time: { kind: 'perMove', moveMs: 1000, bankMs: 500 },
+      },
+      {
+        botRunner: { requestMove: (r) => (requests.push(r.timeBudgetMs), runner.requestMove(r)) },
+        now: () => time,
+        graceMs,
+        botBudgetMs,
+      },
+    );
+    return { session, requests, advanceTime: (ms: number) => (time += ms) };
+  }
+
+  it('nennt den Zeitpunkt des nächsten Zeitablaufs – mit Zeitbank und Kulanz', () => {
+    const { session } = serverSession(200);
+    expect(session.nextDeadline()).toBe(1000 + 500 + 200 + 1);
+  });
+
+  it('Zeitablauf erst nach der Kulanz', async () => {
+    const { session, advanceTime } = serverSession(200);
+    advanceTime(1700);
+    session.tick();
+    expect(session.log).toHaveLength(0);
+    advanceTime(1);
+    session.tick();
+    await flush();
+    expect(session.log[0]?.cause).toBe('timeout');
+  });
+
+  it('markAway: Ein Bot übernimmt den Platz, bis der Mensch zurückkommt', async () => {
+    const { session } = serverSession(0);
+    session.markAway(0);
+    expect(session.isAway(0)).toBe(true);
+    expect(session.nextDeadline()).toBeNull();
+    await flush();
+    expect(session.log[0]?.cause).toBe('bot');
+    session.returnSeat(0);
+    expect(session.isAway(0)).toBe(false);
+  });
+
+  it('die Bedenkzeit der Bots lässt sich begrenzen', async () => {
+    const { session, requests } = serverSession(0, { easy: 80 });
+    session.submit(0, { take: 1 });
+    await flush();
+    expect(requests[0]).toBe(80);
+  });
+});

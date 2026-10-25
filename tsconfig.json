@@ -19,6 +19,8 @@
     "packages/engine/src",
     "packages/engine/test",
     "packages/ui/src",
+    "packages/online/src",
+    "packages/online/test",
     "packages/games/*/src",
     "packages/games/*/test",
     "apps/web/src"

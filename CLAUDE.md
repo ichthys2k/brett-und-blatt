@@ -26,7 +26,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 ## Technik in Kürze
 
-- Monorepo mit pnpm-Workspaces: `apps/web` (React 19, Vite 8, Tailwind 4, PWA), `packages/engine` (Spielmodul-Schnittstelle, Zufall, lokale Spielleitung, Uhren, allgemeine Bots, Vertragsprüfungen), `packages/ui` (Baukasten: GridBoard, NetBoard, FitBox, PlayerChip, Karten), `packages/games/<id>` (ein Ordner pro Spiel), `content/` (Inhaltspakete, z. B. Paare).
+- Monorepo mit pnpm-Workspaces: `apps/web` (React 19, Vite 8, Tailwind 4, PWA), `packages/engine` (Spielmodul-Schnittstelle, Zufall, lokale Spielleitung, Uhren, allgemeine Bots, Vertragsprüfungen), `packages/online` (Online-Spielleitung ohne Anbieterbindung: Raum, Nachrichtenformat, Raumcodes), `packages/ui` (Baukasten: GridBoard, NetBoard, FitBox, PlayerChip, Karten), `packages/games/<id>` (ein Ordner pro Spiel), `content/` (Inhaltspakete, z. B. Paare).
 - **Spielmodul** `GameModule<S, M, V>`: `info`, `options` (optional mit `when` für bedingte Anzeige), `timePresets`, `setup`, `currentPlayers`, `legalMoves`, `applyMove`, `playerView`, `result`, `bots` u. a. Spielstand ist reines JSON, Zufall nur über den Seed-Rng.
 - **Jedes Spiel** hat `src/meta.ts` (mit Pflicht-Kurzanleitung `howToPlay`), `src/rules.ts`, `src/index.ts`, `src/ui/index.tsx` und `test/<id>.test.ts` mit den allgemeinen Prüfungen `gameContractChecks`. Die Web-App findet Spiele automatisch; **Ordnername = `id`**.
 - Bots laufen im Web Worker; Tipp-Knopf = Standard-Bot auf Stufe „schwer“ mit 1,5 s Budget.
@@ -54,7 +54,17 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 ## Nächste Schritte
 
-**Etappe 3 – Online** (noch nicht begonnen, Start nur nach Absprache): Cloudflare Workers mit Durable Objects (ein Objekt pro Raum, Daten in der EU per `jurisdiction('eu')`, Gratis-Tarif), neues Paket `apps/server` mit dünnem Cloudflare-Adapter, Räume mit Emoji-Code/Link/QR, Wiedereinstieg, Bot-Ersatz für Abwesende, Server-Uhr, flüchtige Signale. Erste Online-Spiele: Schiffe versenken, Quartett, Mäxle, Bingo (Klassen-Modus). Details im Konzept (Fahrplan, Muster, Zeitlimits) und in den Spielplänen. Für Cloudflare braucht es ein Konto von Cornelius – Anmeldung und Zugangsdaten macht er selbst.
+**Etappe 3 – Online** (begonnen am 25.10.2026). Mit Cornelius abgestimmter Ablauf:
+
+1. ✅ **Phase 1 – Fundament** (ohne Cloudflare): gemeinsame Schnittstelle `GameSession` (Engine, `Play.tsx` nutzt nur sie); neues Paket `packages/online` mit Nachrichtenformat (`protocol.ts`, jede Browser-Nachricht wird geprüft), Raum (`room.ts`: Lobby, Plätze, Start, Züge mit Versionsprüfung, Sicht je Platz, `eventView`-Filter, Server-Uhr mit 1 s Kulanz, Bot-Ersatz nach 20 s ohne Verbindung, Wiedereinstieg per geheimer Geräte-Kennung, Raumleitung wechselt nach 60 s, Entfernen, Emoji-Reaktionen und Schnellnachrichten, Speichern/Wiederherstellen), Emoji-Raumcodes (4 aus 64) und Spitznamen-Filter. `LocalSession` hat dafür `graceMs`, `botBudgetMs`, `nextDeadline()`, `markAway()`. **Der Seed geht nie an Browser.**
+2. **Phase 2 – Cloudflare-Adapter** `apps/server` (lokal mit `wrangler dev`, kein Konto nötig): Worker + Durable Object pro Raum, WebSockets (Hibernation, Verbindung ↔ Mitglied per Attachment, `Room.reattach`), Alarm auf `room.nextWakeup()`, Speichern per `room.snapshot()`, `jurisdiction('eu')`. **Messen, wie viel Rechenzeit Bots auf dem Gratis-Tarif bekommen** (Doku widersprüchlich: 10 ms vs. 30 s); notfalls knappe `botBudgetMs` oder Bots im Browser der Raumleitung.
+3. **Phase 3 – Online in der Web-App:** Raum erstellen/beitreten (Emoji-Auswahl, Link, QR-Code), Lobby, `OnlineSession` als zweite `GameSession`, Reaktionsleiste; erst mit vorhandenen Spielen testen.
+4. **Phase 4 – Veröffentlichen** (braucht Cornelius): Cloudflare-Konto, Datenschutzerklärung ergänzen, ggf. GitHub-Secret. `lipponer.de` liegt bei **Strato** → der Server läuft zunächst unter `….workers.dev` (eigene Adresse ginge nur mit DNS bei Cloudflare).
+5. **Phase 5 – neue Spiele:** Mäxle, Schiffe versenken, Quartett (Werte recherchiert Cornelius), Bingo (Plan fehlt noch).
+
+Entscheidungen: erst Infrastruktur mit vorhandenen Spielen, dann neue Spiele; höchstens 10 Plätze (Bingo später mehr), bis 40 Mitglieder inkl. Zuschauer, Räume nach 24 h ohne Aktivität löschen.
+
+Ursprüngliche Eckpunkte: Cloudflare Workers mit Durable Objects (ein Objekt pro Raum, Daten in der EU per `jurisdiction('eu')`, Gratis-Tarif), neues Paket `apps/server` mit dünnem Cloudflare-Adapter, Räume mit Emoji-Code/Link/QR, Wiedereinstieg, Bot-Ersatz für Abwesende, Server-Uhr, flüchtige Signale. Erste Online-Spiele: Schiffe versenken, Quartett, Mäxle, Bingo (Klassen-Modus). Details im Konzept (Fahrplan, Muster, Zeitlimits) und in den Spielplänen. Für Cloudflare braucht es ein Konto von Cornelius – Anmeldung und Zugangsdaten macht er selbst.
 
 Danach laut Fahrplan: Etappe 4 (Go, Domino, Farbe & Form), 5 (Skat, Schafkopf, Doppelkopf), 6 (Emoji-Sortierer, Emojistone). Seine Originalspiele liegen in `~/code/4playerchess` und `~/code/emojiclicker/minigames/` (nur als Vorlage lesen).
 

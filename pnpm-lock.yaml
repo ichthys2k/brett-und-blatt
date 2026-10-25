@@ -354,6 +354,19 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1
 
+  packages/online:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../engine
+    devDependencies:
+      '@brett-und-blatt/game-black-peter':
+        specifier: workspace:*
+        version: link:../games/black-peter
+      '@brett-und-blatt/game-tic-tac-toe':
+        specifier: workspace:*
+        version: link:../games/tic-tac-toe
+
   packages/ui:
     dependencies:
       '@brett-und-blatt/engine':

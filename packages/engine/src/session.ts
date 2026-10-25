@@ -1,4 +1,5 @@
 import { Clocks, type ClockReading } from './clock';
+import type { GameSession } from './game-session';
 import { isLegalMove, replay, resolveOptions, seatActors } from './module-helpers';
 import { Rng } from './random';
 import type { Actor, BotLevel, GameEvent, GameModule, Options, Result, SeatId, TimeControl } from './types';
@@ -66,6 +67,13 @@ export interface SessionChange {
 export interface SessionDeps {
   botRunner: BotRunner;
   now?: () => number;
+  /**
+   * Kulanz bei Zeitablauf: Die Zeit gilt erst so viel später als abgelaufen. Online
+   * gleicht das die Netzverzögerung aus; ein Zug, der knapp zu spät eintrifft, zählt noch.
+   */
+  graceMs?: number;
+  /** Bedenkzeit der Bots je Stufe, z. B. knapper auf einem Server mit wenig Rechenzeit. */
+  botBudgetMs?: Partial<Record<BotLevel, number>>;
 }
 
 /** Nach so vielen Zeitüberschreitungen in Folge übernimmt der Bot den Platz. */
@@ -77,7 +85,7 @@ const BOT_BUDGET_MS: Record<BotLevel, number> = { easy: 150, medium: 600, hard: 
  * Die lokale Spielleitung: nimmt Züge entgegen, prüft sie mit dem Regelwerk,
  * lässt Bots ziehen, führt die Uhren und merkt sich die Zugliste.
  */
-export class LocalSession<S = unknown, M = unknown, V = unknown> {
+export class LocalSession<S = unknown, M = unknown, V = unknown> implements GameSession<M, V> {
   readonly config: SessionConfig;
   private _state: S;
   private _log: LogEntry<M>[] = [];
@@ -87,6 +95,8 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> {
   private _disposed = false;
   private clocks: Clocks;
   private now: () => number;
+  private graceMs: number;
+  private botBudgets: Record<BotLevel, number>;
   private botRunner: BotRunner;
   private listeners = new Set<(change: SessionChange) => void>();
   private pendingBots = new Map<SeatId, number>();
@@ -105,6 +115,8 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> {
     }
     this.config = { ...config, options: resolveOptions(module, config.options) };
     this.now = deps.now ?? (() => Date.now());
+    this.graceMs = deps.graceMs ?? 0;
+    this.botBudgets = { ...BOT_BUDGET_MS, ...deps.botBudgetMs };
     this.botRunner = deps.botRunner;
     this.clocks = new Clocks(config.time, config.seats.length);
     this.consecutiveTimeouts = config.seats.map(() => 0);
@@ -116,6 +128,10 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> {
 
   static restore<S, M, V>(module: GameModule<S, M, V>, snapshot: SessionSnapshot<M>, deps: SessionDeps): LocalSession<S, M, V> {
     return new LocalSession(module, snapshot.config, deps, snapshot.log, snapshot.forfeit);
+  }
+
+  get id(): string {
+    return this.config.seed;
   }
 
   get state(): S {
@@ -211,9 +227,38 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> {
     const now = this.now();
     for (const seat of this.currentSeats()) {
       if (!this.isHuman(seat) || this.away.has(seat) || this.pendingBots.has(seat)) continue;
-      if (this.clocks.isExpired(seat, now)) this.handleTimeout(seat);
+      if (this.clocks.isExpired(seat, now - this.graceMs)) this.handleTimeout(seat);
       if (this.result) return;
     }
+  }
+
+  /**
+   * Wann läuft die nächste Uhr eines Menschen ab (einschließlich Kulanz)? Ein Server
+   * stellt danach seinen Wecker, statt ständig nachzusehen. null: keine Uhr läuft.
+   */
+  nextDeadline(): number | null {
+    if (this._disposed || this._paused || this.result || !this.clocks.enabled) return null;
+    const now = this.now();
+    let next: number | null = null;
+    for (const seat of this.currentSeats()) {
+      if (!this.isHuman(seat) || this.away.has(seat) || this.pendingBots.has(seat) || !this.clocks.isRunning(seat)) continue;
+      const reading = this.clocks.read(seat, now);
+      // Zugzeit: erst die Zugzeit, dann die Zeitbank; Schachuhr: die Gesamtzeit.
+      const left = reading.usingBank ? (reading.bankLeftMs ?? 0) : (reading.leftMs ?? 0) + (reading.bankLeftMs ?? 0);
+      // +1: Abgelaufen ist die Zeit erst, wenn mehr als die volle Zeit verstrichen ist.
+      const at = now + left + this.graceMs + 1;
+      if (next === null || at < next) next = at;
+    }
+    return next;
+  }
+
+  /** Ein Mensch ist nicht mehr da (z. B. Verbindung weg): Der Bot übernimmt, bis er zurückkommt. */
+  markAway(seat: SeatId): void {
+    if (!this.isHuman(seat) || this.away.has(seat) || this.result) return;
+    this.away.add(seat);
+    this.bump();
+    this.advance();
+    this.notify([{ type: 'away', seat }], null);
   }
 
   pause(): void {
@@ -283,7 +328,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> {
       seat,
       view: this.module.playerView(this._state, seat),
       seed: `${this.config.seed}/tipp/${this._log.length}`,
-      timeBudgetMs: BOT_BUDGET_MS.hard,
+      timeBudgetMs: this.botBudgets.hard,
     })) as M;
     if (token !== this._version || !isLegalMove(this.module, this._state, seat, move)) return null;
     return move;
@@ -411,7 +456,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> {
   }
 
   private botBudget(seat: SeatId, level: BotLevel): number {
-    const base = BOT_BUDGET_MS[level];
+    const base = this.botBudgets[level];
     const reading = this.clocks.read(seat, this.now());
     if (reading.kind === 'none' || reading.leftMs === null) return base;
     // Nie mehr als ein Drittel der verbleibenden Zeit verbrauchen.

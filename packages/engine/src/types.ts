@@ -132,6 +132,12 @@ export interface GameModule<S, M, V = S> {
   sampleHidden?(view: V, seat: SeatId, rng: Rng): S;
   /** Stellungsbewertung aus Sicht von `seat` für Suchbots. */
   evaluate?(state: S, seat: SeatId): number;
+  /**
+   * Online: Was darf ein Platz von einem Ereignis erfahren? Fehlt die Funktion, gelten alle
+   * Ereignisse als öffentlich. Ereignisse mit Geheimnissen (z. B. welche Karte gezogen wurde)
+   * hier entschärfen oder mit null ganz ausblenden. Züge selbst gehen online nie an andere.
+   */
+  eventView?(event: GameEvent, seat: SeatId | 'spectator'): GameEvent | null;
 
   /** Mindestens einer. Der erste ist der Standard-Bot in der Lobby. */
   bots: BotDefinition<S, M, V>[];

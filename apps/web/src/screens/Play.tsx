@@ -1,4 +1,4 @@
-import { randomSeed, type GameEvent, type LocalSession, type Result, type SeatId } from '@brett-und-blatt/engine';
+import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { PlayerChip } from '@brett-und-blatt/ui';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Button } from '../components/controls';
@@ -25,10 +25,10 @@ export function Play() {
   }, [active]);
 
   if (!active) return <p className="p-6 text-center text-muted">{t('play.loading')}</p>;
-  return <Table key={active.session.config.seed} active={active} onRestart={setActive} />;
+  return <Table key={active.session.id} active={active} onRestart={setActive} />;
 }
 
-function resultTitle(result: Result, session: LocalSession): string {
+function resultTitle(result: Result, session: GameSession): string {
   const seats = session.config.seats;
   if (result.kind === 'draw') return t('play.draw');
   if (result.kind === 'loss') return t('play.lost');
@@ -40,7 +40,8 @@ function resultTitle(result: Result, session: LocalSession): string {
 }
 
 function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: ActiveGame) => void }) {
-  const { session, game } = active;
+  const { game } = active;
+  const session: GameSession = active.session;
   const { ui, info } = game;
   const [events, setEvents] = useState<GameEvent[]>([]);
   const [, setTick] = useState(0);
@@ -61,7 +62,7 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
         setEvents(change.events);
         setHint(null);
         setHintMissing(false);
-        saveProgress(session);
+        saveProgress(active.session);
       }),
     [session],
   );

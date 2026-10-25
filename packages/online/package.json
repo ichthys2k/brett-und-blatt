@@ -1,0 +1,18 @@
+{
+  "name": "@brett-und-blatt/online",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "description": "Online-Spielleitung ohne Bindung an einen Anbieter: Räume, Lobby, Nachrichtenformat, Emoji-Codes",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@brett-und-blatt/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@brett-und-blatt/game-black-peter": "workspace:*",
+    "@brett-und-blatt/game-tic-tac-toe": "workspace:*"
+  }
+}

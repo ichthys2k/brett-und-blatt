@@ -1,0 +1,592 @@
+import {
+  LocalSession,
+  resolveOptions,
+  type AnyGameModule,
+  type BotLevel,
+  type BotRunner,
+  type GameEvent,
+  type SeatId,
+  type SessionChange,
+  type SessionConfig,
+  type SessionSnapshot,
+} from '@brett-und-blatt/engine';
+import { cleanAvatar, cleanName } from './names';
+import {
+  PHRASES,
+  PROTOCOL_VERSION,
+  REACTIONS,
+  parseClientMessage,
+  type ClientMessage,
+  type ErrorCode,
+  type GameMessage,
+  type LobbySettings,
+  type MemberInfo,
+  type PublicSeat,
+  type RoomMessage,
+  type RoomPhase,
+  type ServerMessage,
+} from './protocol';
+
+/** Höchstens so viele Mitglieder (Spieler und Zuschauer) pro Raum. */
+export const MAX_MEMBERS = 40;
+/** Höchstens so viele Plätze am Tisch, auch wenn ein Spiel mehr erlaubt. */
+export const MAX_SEATS = 10;
+/** Kulanz bei Zeitablauf für die Netzverzögerung. */
+export const CLOCK_GRACE_MS = 1000;
+/** So lange darf die Verbindung weg sein, bevor ein Bot den Platz übernimmt. */
+export const AWAY_AFTER_DISCONNECT_MS = 20_000;
+/** So lange wartet der Raum auf die Raumleitung, bevor ein anderes Mitglied sie übernimmt. */
+export const HOST_HANDOVER_MS = 60_000;
+/** Ein Raum ohne jede Aktivität wird nach dieser Zeit gelöscht. */
+export const ROOM_TTL_MS = 24 * 60 * 60 * 1000;
+/** Mindestabstand zwischen zwei Signalen (Emoji, Schnellnachricht) eines Mitglieds. */
+export const SIGNAL_INTERVAL_MS = 500;
+
+export interface RoomDeps {
+  now(): number;
+  /** Das Regelwerk eines Spiels, das online angeboten wird – sonst undefined. */
+  findGame(gameId: string): AnyGameModule | undefined;
+  botRunner: BotRunner;
+  /** Ein neuer, geheimer Startwert für eine Partie. */
+  randomSeed(): string;
+  /** Schickt eine Nachricht an eine Verbindung. */
+  send(connectionId: string, message: ServerMessage): void;
+  /** Schließt eine Verbindung (nach „Verlassen“, Entfernen oder falschem Protokoll). */
+  close(connectionId: string): void;
+  /** Wird nach jeder Änderung aufgerufen, die gespeichert werden sollte. */
+  changed?(): void;
+  /** Bedenkzeit der Bots je Stufe – auf dem Server eventuell knapper. */
+  botBudgetMs?: Partial<Record<BotLevel, number>>;
+}
+
+interface Member {
+  id: string;
+  /** Geheime Kennung des Geräts. Geht nie an andere Mitglieder. */
+  token: string;
+  name: string;
+  avatar: string;
+  connections: Set<string>;
+  /** Seit wann keine Verbindung mehr besteht (null: verbunden). */
+  disconnectedAt: number | null;
+  /** Hat der Raum den Platz wegen der fehlenden Verbindung einem Bot übergeben? */
+  awayByDisconnect: boolean;
+  lastSignal: number;
+}
+
+interface Game {
+  module: AnyGameModule;
+  session: LocalSession;
+  /** Welches Mitglied an welchem Platz sitzt (null bei Bots). */
+  seatMembers: (string | null)[];
+  seats: PublicSeat[];
+  time: LobbySettings['time'];
+  /** Damit die Versionsnummer nach einem Neustart des Servers weiterzählt statt bei 0 anzufangen. */
+  versionOffset: number;
+  unsubscribe: () => void;
+}
+
+/** Alles, was ein Raum zum Weiterleben braucht – reines JSON, zum Speichern auf dem Server. */
+export interface RoomSnapshot {
+  version: 1;
+  code: string;
+  hostId: string | null;
+  phase: RoomPhase;
+  lobby: LobbySettings;
+  members: { id: string; token: string; name: string; avatar: string }[];
+  kicked: string[];
+  nextMember: number;
+  lastActivity: number;
+  game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; time: LobbySettings['time']; version: number } | null;
+}
+
+/**
+ * Ein Raum: Lobby, Partie, Mitglieder und ihre Verbindungen. Er weiß nichts über
+ * WebSockets oder Cloudflare – ein dünner Adapter reicht Nachrichten herein und
+ * stellt einen Wecker auf `nextWakeup()`.
+ */
+export class Room {
+  private members = new Map<string, Member>();
+  private tokens = new Map<string, string>();
+  /** Verbindung → Mitglied (null, solange noch kein „hello“ kam). */
+  private connections = new Map<string, string | null>();
+  private kicked = new Set<string>();
+  private hostId: string | null = null;
+  private phase: RoomPhase = 'lobby';
+  private lobby: LobbySettings = { gameId: null, options: {}, time: 'relaxed', seats: [] };
+  private game: Game | null = null;
+  private nextMember = 1;
+  private lastVersion = 0;
+  private lastActivity: number;
+
+  constructor(
+    readonly code: string,
+    private deps: RoomDeps,
+  ) {
+    this.lastActivity = deps.now();
+  }
+
+  // -------------------------------------------------------------------------
+  // Schnittstelle für den Adapter
+
+  connect(connectionId: string): void {
+    this.connections.set(connectionId, null);
+    this.touch();
+  }
+
+  /** Nach einem Neustart des Servers: eine noch offene Verbindung wieder einem Mitglied zuordnen. */
+  reattach(connectionId: string, memberId: string): void {
+    const member = this.members.get(memberId);
+    if (!member) return;
+    this.connections.set(connectionId, memberId);
+    member.connections.add(connectionId);
+    member.disconnectedAt = null;
+  }
+
+  disconnect(connectionId: string): void {
+    const memberId = this.connections.get(connectionId);
+    this.connections.delete(connectionId);
+    const member = memberId ? this.members.get(memberId) : undefined;
+    if (!member) return;
+    member.connections.delete(connectionId);
+    if (member.connections.size === 0) {
+      member.disconnectedAt = this.deps.now();
+      this.broadcastRoom();
+      this.deps.changed?.();
+    }
+  }
+
+  receive(connectionId: string, raw: string): void {
+    if (!this.connections.has(connectionId)) return;
+    this.touch();
+    const message = parseClientMessage(raw);
+    if (!message) return this.error(connectionId, 'badMessage', 'Unbekannte Nachricht.');
+    if (message.type === 'ping') return this.deps.send(connectionId, { type: 'pong', serverNow: this.deps.now() });
+    if (message.type === 'hello') return this.hello(connectionId, message);
+    const member = this.memberOf(connectionId);
+    if (!member) return this.error(connectionId, 'notReady', 'Erst anmelden.');
+    this.handle(connectionId, member, message);
+    this.deps.changed?.();
+  }
+
+  /** Erledigt, was zeitlich fällig ist: Uhren, Bot-Ersatz für Abwesende, Wechsel der Raumleitung. */
+  tick(): void {
+    const now = this.deps.now();
+    this.game?.session.tick();
+    for (const member of this.members.values()) {
+      if (member.disconnectedAt === null || member.awayByDisconnect) continue;
+      const seat = this.seatOf(member.id);
+      if (seat !== null && this.phase === 'playing' && now - member.disconnectedAt >= AWAY_AFTER_DISCONNECT_MS) {
+        member.awayByDisconnect = true;
+        this.game?.session.markAway(seat);
+      }
+    }
+    const host = this.hostId ? this.members.get(this.hostId) : undefined;
+    if (host?.disconnectedAt != null && now - host.disconnectedAt >= HOST_HANDOVER_MS) {
+      const successor = [...this.members.values()].find((m) => m.disconnectedAt === null);
+      if (successor) {
+        this.hostId = successor.id;
+        this.broadcastRoom();
+      }
+    }
+    this.deps.changed?.();
+  }
+
+  /** Wann `tick()` das nächste Mal fällig ist – für den Wecker des Adapters. */
+  nextWakeup(): number | null {
+    const times: number[] = [this.expiresAt()];
+    const deadline = this.game?.session.nextDeadline();
+    if (deadline != null) times.push(deadline);
+    for (const member of this.members.values()) {
+      if (member.disconnectedAt === null) continue;
+      if (!member.awayByDisconnect && this.phase === 'playing' && this.seatOf(member.id) !== null) times.push(member.disconnectedAt + AWAY_AFTER_DISCONNECT_MS);
+      if (member.id === this.hostId) times.push(member.disconnectedAt + HOST_HANDOVER_MS);
+    }
+    return Math.min(...times);
+  }
+
+  /** Ab wann der Raum gelöscht werden darf. */
+  expiresAt(): number {
+    return this.lastActivity + ROOM_TTL_MS;
+  }
+
+  get connectionCount(): number {
+    return this.connections.size;
+  }
+
+  snapshot(): RoomSnapshot {
+    const game = this.game;
+    return {
+      version: 1,
+      code: this.code,
+      hostId: this.hostId,
+      phase: this.phase,
+      lobby: structuredClone(this.lobby),
+      members: [...this.members.values()].map(({ id, token, name, avatar }) => ({ id, token, name, avatar })),
+      kicked: [...this.kicked],
+      nextMember: this.nextMember,
+      lastActivity: this.lastActivity,
+      game: game ? { session: game.session.snapshot(), seatMembers: [...game.seatMembers], seats: game.seats, time: game.time, version: this.gameVersion() } : null,
+    };
+  }
+
+  /**
+   * Stellt einen gespeicherten Raum wieder her. Die Partie wird aus Seed und Zugliste
+   * neu berechnet; laufende Uhren beginnen dabei für den aktuellen Zug von vorn.
+   */
+  static restore(snapshot: RoomSnapshot, deps: RoomDeps): Room {
+    const room = new Room(snapshot.code, deps);
+    room.hostId = snapshot.hostId;
+    room.phase = snapshot.phase;
+    room.lobby = snapshot.lobby;
+    room.kicked = new Set(snapshot.kicked);
+    room.nextMember = snapshot.nextMember;
+    room.lastActivity = snapshot.lastActivity;
+    const now = deps.now();
+    for (const m of snapshot.members) {
+      room.members.set(m.id, { ...m, connections: new Set(), disconnectedAt: now, awayByDisconnect: false, lastSignal: 0 });
+      room.tokens.set(m.token, m.id);
+    }
+    const saved = snapshot.game;
+    const module = saved ? deps.findGame(saved.session.config.gameId) : undefined;
+    if (saved && module) {
+      const session = LocalSession.restore(module, saved.session, room.sessionDeps());
+      room.attachGame({ module, session, seatMembers: saved.seatMembers, seats: saved.seats, time: saved.time, versionOffset: saved.version - session.version, unsubscribe: () => {} });
+    } else if (saved) {
+      room.phase = 'lobby';
+    }
+    return room;
+  }
+
+  // -------------------------------------------------------------------------
+  // Nachrichten
+
+  private hello(connectionId: string, message: Extract<ClientMessage, { type: 'hello' }>): void {
+    if (message.protocol !== PROTOCOL_VERSION) {
+      this.error(connectionId, 'protocol', 'Bitte die Seite neu laden – es gibt eine neue Version.');
+      return this.deps.close(connectionId);
+    }
+    if (this.kicked.has(message.token)) {
+      this.deps.send(connectionId, { type: 'kicked' });
+      return this.deps.close(connectionId);
+    }
+    const name = cleanName(message.name);
+    if (!name) return this.error(connectionId, 'badName', 'Bitte einen anderen Spitznamen wählen.');
+
+    const previous = this.connections.get(connectionId);
+    if (previous) this.members.get(previous)?.connections.delete(connectionId);
+
+    let member = this.members.get(this.tokens.get(message.token) ?? '');
+    if (!member) {
+      if (this.members.size >= MAX_MEMBERS) {
+        this.error(connectionId, 'roomFull', 'Der Raum ist voll.');
+        return this.deps.close(connectionId);
+      }
+      member = {
+        id: `m${this.nextMember++}`,
+        token: message.token,
+        name,
+        avatar: cleanAvatar(message.avatar),
+        connections: new Set(),
+        disconnectedAt: null,
+        awayByDisconnect: false,
+        lastSignal: 0,
+      };
+      this.members.set(member.id, member);
+      this.tokens.set(member.token, member.id);
+      this.hostId ??= member.id;
+    } else {
+      member.name = name;
+      member.avatar = cleanAvatar(message.avatar);
+    }
+    this.connections.set(connectionId, member.id);
+    member.connections.add(connectionId);
+    member.disconnectedAt = null;
+
+    this.deps.send(connectionId, { type: 'welcome', protocol: PROTOCOL_VERSION, you: member.id, serverNow: this.deps.now() });
+    // Zurück nach einem Verbindungsabbruch: Der Bot gibt den Platz wieder ab.
+    const seat = this.seatOf(member.id);
+    if (member.awayByDisconnect && seat !== null) {
+      member.awayByDisconnect = false;
+      this.game?.session.returnSeat(seat);
+    }
+    this.broadcastRoom();
+    if (this.game) this.sendGame(connectionId, []);
+    this.deps.changed?.();
+  }
+
+  private handle(connectionId: string, member: Member, message: ClientMessage): void {
+    const isHost = member.id === this.hostId;
+    const deny = () => this.error(connectionId, 'notAllowed', 'Das ist gerade nicht möglich.');
+    switch (message.type) {
+      case 'setName': {
+        const name = cleanName(message.name);
+        if (!name) return this.error(connectionId, 'badName', 'Bitte einen anderen Spitznamen wählen.');
+        member.name = name;
+        member.avatar = cleanAvatar(message.avatar);
+        return this.broadcastRoom();
+      }
+      case 'setGame': {
+        const module = this.deps.findGame(message.gameId);
+        if (!isHost || this.phase !== 'lobby' || !module) return deny();
+        const { min, max } = module.info.players;
+        const count = Math.min(Math.min(max, MAX_SEATS), Math.max(min, this.lobby.seats.length));
+        this.lobby = { gameId: message.gameId, options: resolveOptions(module), time: this.lobby.time, seats: this.resizeSeats(count) };
+        return this.broadcastRoom();
+      }
+      case 'setOption': {
+        const module = this.lobbyModule();
+        const spec = module?.options.find((o) => o.id === message.id);
+        if (!isHost || this.phase !== 'lobby' || !spec?.choices.some((c) => c.value === message.value)) return deny();
+        this.lobby.options = { ...this.lobby.options, [message.id]: message.value };
+        return this.broadcastRoom();
+      }
+      case 'setTime':
+        if (!isHost || this.phase !== 'lobby') return deny();
+        this.lobby.time = message.time;
+        return this.broadcastRoom();
+      case 'setSeatCount': {
+        const module = this.lobbyModule();
+        if (!isHost || this.phase !== 'lobby' || !module) return deny();
+        const { min, max } = module.info.players;
+        if (message.count < min || message.count > Math.min(max, MAX_SEATS)) return deny();
+        this.lobby.seats = this.resizeSeats(message.count);
+        return this.broadcastRoom();
+      }
+      case 'setSeat': {
+        if (!isHost || this.phase !== 'lobby' || message.index >= this.lobby.seats.length) return deny();
+        this.lobby.seats[message.index] = message.seat === 'open' ? { kind: 'human', memberId: null } : { kind: 'bot', level: message.seat.bot };
+        return this.broadcastRoom();
+      }
+      case 'takeSeat': {
+        const seat = this.lobby.seats[message.index];
+        if (this.phase !== 'lobby' || seat?.kind !== 'human' || seat.memberId !== null) return deny();
+        this.unseat(member.id);
+        seat.memberId = member.id;
+        return this.broadcastRoom();
+      }
+      case 'leaveSeat':
+        if (this.phase !== 'lobby') return deny();
+        this.unseat(member.id);
+        return this.broadcastRoom();
+      case 'kick': {
+        const target = this.members.get(message.memberId);
+        if (!isHost || !target || target.id === member.id) return deny();
+        this.kicked.add(target.token);
+        for (const connection of target.connections) {
+          this.deps.send(connection, { type: 'kicked' });
+          this.deps.close(connection);
+          this.connections.delete(connection);
+        }
+        return this.removeMember(target);
+      }
+      case 'start':
+        if (!isHost || this.phase !== 'lobby') return deny();
+        return this.start(connectionId);
+      case 'toLobby':
+        if (!isHost || this.phase === 'lobby') return deny();
+        this.endGame();
+        return this.broadcastRoom();
+      case 'move': {
+        const seat = this.seatOf(member.id);
+        const session = this.game?.session;
+        if (!session || seat === null) return deny();
+        if (message.version !== this.gameVersion()) {
+          this.error(connectionId, 'staleMove', 'Der Spielstand hat sich inzwischen geändert.');
+          return this.sendGame(connectionId, []);
+        }
+        if (!session.submit(seat, message.move)) return this.error(connectionId, 'illegalMove', 'Dieser Zug ist nicht erlaubt.');
+        return;
+      }
+      case 'resign': {
+        const seat = this.seatOf(member.id);
+        if (seat === null || this.phase !== 'playing') return deny();
+        return this.game?.session.resign(seat);
+      }
+      case 'returnSeat': {
+        const seat = this.seatOf(member.id);
+        if (seat === null || this.phase !== 'playing') return deny();
+        member.awayByDisconnect = false;
+        return this.game?.session.returnSeat(seat);
+      }
+      case 'react':
+      case 'say': {
+        const allowed: readonly string[] = message.type === 'react' ? REACTIONS : PHRASES;
+        const value = message.type === 'react' ? message.emoji : message.phrase;
+        const now = this.deps.now();
+        if (!allowed.includes(value)) return deny();
+        if (now - member.lastSignal < SIGNAL_INTERVAL_MS) return;
+        member.lastSignal = now;
+        return this.broadcast({ type: 'signal', from: member.id, kind: message.type, value });
+      }
+      case 'leave':
+        for (const connection of member.connections) {
+          this.deps.close(connection);
+          this.connections.delete(connection);
+        }
+        return this.removeMember(member);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Lobby und Partie
+
+  private start(connectionId: string): void {
+    const module = this.lobbyModule();
+    const seats = this.lobby.seats;
+    if (!module) return this.error(connectionId, 'notAllowed', 'Bitte zuerst ein Spiel wählen.');
+    if (seats.length < module.info.players.min || seats.some((s) => s.kind === 'human' && s.memberId === null)) {
+      return this.error(connectionId, 'notAllowed', 'Es sind noch Plätze frei.');
+    }
+    const publicSeats: PublicSeat[] = seats.map((seat) =>
+      seat.kind === 'bot'
+        ? { kind: 'bot', name: 'Computer', level: seat.level, memberId: null }
+        : { kind: 'human', name: this.members.get(seat.memberId ?? '')?.name ?? '?', memberId: seat.memberId },
+    );
+    const config: SessionConfig = {
+      gameId: module.info.id,
+      seats: publicSeats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name })),
+      options: resolveOptions(module, this.lobby.options),
+      seed: this.deps.randomSeed(),
+      time: module.timePresets[this.lobby.time],
+    };
+    const session = new LocalSession(module, config, this.sessionDeps());
+    // Die Versionen zählen über Partien hinweg weiter, damit kein alter Zug in eine neue Partie rutscht.
+    const versionOffset = this.lastVersion + 1;
+    this.attachGame({ module, session, seatMembers: publicSeats.map((s) => s.memberId), seats: publicSeats, time: this.lobby.time, versionOffset, unsubscribe: () => {} });
+    for (const member of this.members.values()) member.awayByDisconnect = false;
+    this.broadcastRoom();
+    this.broadcastGame([]);
+  }
+
+  private attachGame(game: Game): void {
+    this.game = game;
+    this.phase = game.session.result ? 'finished' : 'playing';
+    game.unsubscribe = game.session.subscribe((change) => this.onSessionChange(change));
+  }
+
+  private onSessionChange(change: SessionChange): void {
+    if (!this.game) return;
+    const finished = this.game.session.result !== null;
+    if (finished && this.phase === 'playing') {
+      this.phase = 'finished';
+      this.broadcastRoom();
+    }
+    this.broadcastGame(change.events);
+    this.deps.changed?.();
+  }
+
+  private gameVersion(): number {
+    return this.game ? this.game.session.version + this.game.versionOffset : this.lastVersion;
+  }
+
+  private endGame(): void {
+    this.lastVersion = this.gameVersion();
+    if (this.game) {
+      this.game.unsubscribe();
+      this.game.session.dispose();
+    }
+    this.game = null;
+    this.phase = 'lobby';
+  }
+
+  private sessionDeps() {
+    return { botRunner: this.deps.botRunner, now: () => this.deps.now(), graceMs: CLOCK_GRACE_MS, botBudgetMs: this.deps.botBudgetMs };
+  }
+
+  private lobbyModule(): AnyGameModule | undefined {
+    return this.lobby.gameId ? this.deps.findGame(this.lobby.gameId) : undefined;
+  }
+
+  /** Neue Platzzahl: vorhandene Plätze bleiben, neue sind offen für Menschen. */
+  private resizeSeats(count: number): LobbySettings['seats'] {
+    const seats = this.lobby.seats.slice(0, count);
+    while (seats.length < count) seats.push({ kind: 'human', memberId: null });
+    return seats;
+  }
+
+  private unseat(memberId: string): void {
+    for (const seat of this.lobby.seats) if (seat.kind === 'human' && seat.memberId === memberId) seat.memberId = null;
+  }
+
+  private removeMember(member: Member): void {
+    this.unseat(member.id);
+    const seat = this.seatOf(member.id);
+    if (seat !== null && this.phase === 'playing') this.game?.session.markAway(seat);
+    this.members.delete(member.id);
+    this.tokens.delete(member.token);
+    if (this.hostId === member.id) this.hostId = [...this.members.values()].find((m) => m.disconnectedAt === null)?.id ?? this.members.keys().next().value ?? null;
+    this.broadcastRoom();
+  }
+
+  /** Der Platz eines Mitglieds in der laufenden Partie oder null (Zuschauer). */
+  private seatOf(memberId: string): SeatId | null {
+    const index = this.game?.seatMembers.indexOf(memberId) ?? -1;
+    return index >= 0 ? index : null;
+  }
+
+  // -------------------------------------------------------------------------
+  // Senden
+
+  private memberOf(connectionId: string): Member | undefined {
+    const id = this.connections.get(connectionId);
+    return id ? this.members.get(id) : undefined;
+  }
+
+  private roomMessage(): RoomMessage {
+    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, connected: m.disconnectedAt === null }));
+    return { type: 'room', code: this.code, phase: this.phase, hostId: this.hostId, members, lobby: this.lobby };
+  }
+
+  private broadcastRoom(): void {
+    this.broadcast(this.roomMessage());
+  }
+
+  private broadcast(message: ServerMessage): void {
+    for (const [connection, memberId] of this.connections) if (memberId) this.deps.send(connection, message);
+  }
+
+  private broadcastGame(events: GameEvent[]): void {
+    for (const connection of this.connections.keys()) this.sendGame(connection, events);
+  }
+
+  private sendGame(connectionId: string, events: GameEvent[]): void {
+    const member = this.memberOf(connectionId);
+    if (!member || !this.game) return;
+    this.deps.send(connectionId, this.gameMessage(this.seatOf(member.id), events));
+  }
+
+  /** Was ein Platz von der Partie erfährt: nur seine Sicht, seine Züge und gefilterte Ereignisse. */
+  private gameMessage(seat: SeatId | null, events: GameEvent[]): GameMessage {
+    const { module, session, seats, time } = this.game!;
+    const viewer = seat ?? 'spectator';
+    const filtered = module.eventView ? events.map((e) => module.eventView!(e, viewer)).filter((e): e is GameEvent => e !== null) : events;
+    const now = this.deps.now();
+    return {
+      type: 'game',
+      gameId: module.info.id,
+      version: this.gameVersion(),
+      seats,
+      options: session.config.options,
+      time,
+      yourSeat: seat,
+      view: session.view(viewer),
+      legalMoves: seat !== null && !session.isAway(seat) ? session.legalMoves(seat) : [],
+      current: session.currentSeats(),
+      away: seats.map((_, i) => i).filter((i) => session.isAway(i)),
+      thinking: seats.map((_, i) => i).filter((i) => session.isThinking(i)),
+      result: session.result,
+      forfeit: session.forfeit,
+      clocks: seats.map((_, i) => session.clock(i)),
+      serverNow: now,
+      events: filtered,
+    };
+  }
+
+  private error(connectionId: string, code: ErrorCode, message: string): void {
+    this.deps.send(connectionId, { type: 'error', code, message });
+  }
+
+  private touch(): void {
+    this.lastActivity = this.deps.now();
+  }
+}

@@ -4,6 +4,7 @@ export { canonicalJson, sameValue } from './canonical';
 export * from './cards';
 export { isLegalMove, replay, resolveOptions, seatActors, settleSystemMoves } from './module-helpers';
 export { Clocks, type ClockReading } from './clock';
+export type { GameSession, PublicSessionConfig } from './game-session';
 export {
   AWAY_AFTER_TIMEOUTS,
   LocalSession,
