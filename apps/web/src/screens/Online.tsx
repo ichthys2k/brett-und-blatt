@@ -96,7 +96,7 @@ export function Online() {
               <input
                 className="min-h-11 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3"
                 aria-label={t('online.join')}
-                placeholder="🦊🍎🚀🎈"
+                placeholder="🦊🍎🚀🎈⭐🐶"
                 value={pasted}
                 onChange={(event) => setPasted(event.target.value)}
               />
