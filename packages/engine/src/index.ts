@@ -1,6 +1,7 @@
 export * from './types';
 export { Rng, hashSeed, randomSeed, type RngState } from './random';
 export { canonicalJson, sameValue } from './canonical';
+export * from './cards';
 export { isLegalMove, replay, resolveOptions, seatActors, settleSystemMoves } from './module-helpers';
 export { Clocks, type ClockReading } from './clock';
 export {

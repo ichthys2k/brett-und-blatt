@@ -1,6 +1,7 @@
 import { BOT_LEVELS, randomSeed, resolveOptions, type BotLevel, type Options, type SeatConfig, type SeatKind, type TimePresetId } from '@brett-und-blatt/engine';
 import { useEffect, useState } from 'react';
 import { Button, Section, Segmented } from '../components/controls';
+import { HowToList } from '../components/HowTo';
 import { t } from '../i18n';
 import { startGame } from '../lib/activeGame';
 import { describeTime, levelLabel } from '../lib/format';
@@ -109,6 +110,13 @@ export function Setup({ gameId }: { gameId: string }) {
           </h1>
         </div>
       </header>
+
+      <details className="rounded-2xl border border-line bg-surface p-3 shadow-sm">
+        <summary className="cursor-pointer font-semibold">📖 {t('howto.title')}</summary>
+        <div className="pt-3">
+          <HowToList info={info} />
+        </div>
+      </details>
 
       <Section title={t('setup.players')}>
         {info.players.min < info.players.max && (

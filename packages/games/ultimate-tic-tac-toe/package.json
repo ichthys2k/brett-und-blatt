@@ -1,0 +1,23 @@
+{
+  "name": "@brett-und-blatt/game-ultimate-tic-tac-toe",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "description": "Ultimate Tic-Tac-Toe",
+  "exports": {
+    ".": "./src/index.ts",
+    "./meta": "./src/meta.ts",
+    "./ui": "./src/ui/index.tsx"
+  },
+  "dependencies": {
+    "@brett-und-blatt/engine": "workspace:*",
+    "@brett-und-blatt/ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
+  },
+  "devDependencies": {
+    "react": "^19.3.1"
+  }
+}

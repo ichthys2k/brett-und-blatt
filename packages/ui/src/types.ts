@@ -10,6 +10,12 @@ export interface BoardProps<V, M> {
   events: GameEvent[];
   /** Wer gerade am Zug ist (für Vorschau-Steine), oder null. */
   activeSeat: SeatId | null;
+  /** Vorgeschlagener Zug nach Druck auf „Tipp“ – die Oberfläche hebt ihn hervor. */
+  hint: M | null;
+  /** Aus wessen Sicht gezeigt wird (bei Handkarten: wessen Hand offen liegt). */
+  viewer: SeatId | 'spectator';
+  /** Namen der Plätze, z. B. für Spielfelder mit mehreren Mitspielern. */
+  seatNames: string[];
 }
 
 /** Was ein Spiel der Oberfläche liefert. Die Plattform findet es über den Export `gameUi`. */
@@ -19,4 +25,6 @@ export interface GameUi<V = unknown, M = unknown> {
   SeatSymbol: ComponentType<{ seat: SeatId; className?: string }>;
   /** Name der Farbe bzw. des Zeichens eines Platzes, z. B. „Rot“. */
   seatLabel: (seat: SeatId) => string;
+  /** Zusatz in der Spielerleiste aus der öffentlichen Sicht, z. B. „12 Punkte“ oder „5 Karten“. */
+  seatDetail?: (view: V, seat: SeatId) => string | null;
 }

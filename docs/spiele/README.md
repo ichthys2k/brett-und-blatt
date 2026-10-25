@@ -15,6 +15,9 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Mühle](muehle.md) | 2 | offen | Netzbrett | S | M | M | 2 |
 | [Reversi](reversi.md) | 2 | offen | Gitterbrett | S | S | M | 2 |
 | [Paare finden](paare-finden.md) | 1–6 | verdeckt | Gitterbrett, Inhaltspakete | S | M | S | 2 |
+| [Schwarzer Peter](schwarzer-peter.md) | 2–6 | verdeckt | Karten-Baukasten, Übergabe, Inhaltspakete | S | M | S | 2 |
+| [Solitaire](solitaire.md) | 1 | verdeckt, Einzelspieler | Spielkarten, Stapel, Tipps | M | L | M | 2 |
+| Vierer-Schach (Übernahme) | 4 | offen | Gitterbrett (Kreuzform) | – | M | – | 2 |
 | [Schiffe versenken](schiffe-versenken.md) | 2 | verdeckt, gleichzeitig | Gitterbrett | M | M | M | 3 |
 | [Quartett](quartett.md) | 2–6 | verdeckt | Karten, Inhaltspakete | M | M | M | 3 |
 | [Mäxle](maexle.md) | 2–10 | verdeckt | Würfel und Becher | S | M | M | 3 |

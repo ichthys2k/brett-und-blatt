@@ -12,7 +12,7 @@ Geplant sind unter anderem Skat, Doppelkopf, Schafkopf, Quartett, Paare finden, 
 
 **Online spielen:** https://spiele.lipponer.de
 
-**Etappe 1 (Fundament) ist umgesetzt.** Spielbar sind Tic-Tac-Toe und Vier in einer Reihe – allein gegen den Computer in drei Stärken oder zu zweit an einem Gerät, wahlweise mit Zeitlimit. Die App lässt sich auf dem Handy installieren und funktioniert danach auch ohne Internet.
+**Etappe 2 ist umgesetzt.** Spielbar sind Tic-Tac-Toe, Vier in einer Reihe, Ultimate Tic-Tac-Toe, Reversi, Mühle, Paare finden, Schwarzer Peter, Solitaire (Klondike, FreeCell, Spider, Pyramide) und Vierer-Schach – allein gegen den Computer in drei Stärken oder zu mehreren an einem Gerät, wahlweise mit Zeitlimit. Jedes Spiel hat eine kurze Anleitung. Die App lässt sich auf dem Handy installieren und funktioniert danach auch ohne Internet.
 
 ```bash
 pnpm install

@@ -140,6 +140,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> {
     if (result) return result;
     if (!this._forfeit) return null;
     const winners = this.config.seats.map((_, seat) => seat).filter((seat) => seat !== this._forfeit?.seat);
+    if (winners.length === 0) return { kind: 'loss', reason: this._forfeit.reason };
     return { kind: 'win', winners, reason: this._forfeit.reason };
   }
 
@@ -267,6 +268,25 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> {
     this.advance();
     this.notify([{ type: 'undo' }], null);
     return true;
+  }
+
+  /** Ein Zugvorschlag des Standard-Bots für einen Menschen („Tipp“). Wird nicht ausgeführt. */
+  async hint(seat: SeatId): Promise<M | null> {
+    if (this.result || !this.currentSeats().includes(seat)) return null;
+    const token = this._version;
+    const bot = this.module.bots[0];
+    if (!bot) return null;
+    const move = (await this.botRunner.requestMove({
+      gameId: this.module.info.id,
+      botId: bot.id,
+      level: 'hard',
+      seat,
+      view: this.module.playerView(this._state, seat),
+      seed: `${this.config.seed}/tipp/${this._log.length}`,
+      timeBudgetMs: BOT_BUDGET_MS.hard,
+    })) as M;
+    if (token !== this._version || !isLegalMove(this.module, this._state, seat, move)) return null;
+    return move;
   }
 
   resign(seat: SeatId): void {

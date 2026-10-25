@@ -65,7 +65,7 @@ export function mctsSearch<S, M, V>(module: GameModule<S, M, V>, rootState: S, s
   const root = makeNode(rootState, null, null, null, seat);
 
   for (let i = 0; i < options.iterations; i++) {
-    if ((i & 31) === 0 && now() > deadline) break;
+    if (i > 0 && now() > deadline) break;
 
     // 1. Auswahl: absteigen, solange alle Züge schon ausprobiert sind.
     let node = root;
@@ -141,6 +141,7 @@ function playout<S, M, V>(module: GameModule<S, M, V>, start: S, rng: Rng, maxMo
 
 function rewardFor(result: Result | null, seat: SeatId): number {
   if (!result || result.kind === 'draw') return 0.5;
+  if (result.kind === 'loss') return 0;
   return result.winners.includes(seat) ? 1 / result.winners.length : 0;
 }
 

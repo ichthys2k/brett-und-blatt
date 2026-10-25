@@ -10,4 +10,10 @@ export const meta: GameInfo = {
   patterns: ['open'],
   hiddenInformation: false,
   ruleVersion: 1,
+  howToPlay: [
+    'Werft abwechselnd einen Stein in eine Spalte. Er fällt auf den untersten freien Platz.',
+    'Wer zuerst vier eigene Steine in einer Reihe hat – waagerecht, senkrecht oder diagonal –, gewinnt.',
+    'Ist das Brett voll, endet die Partie unentschieden.',
+    'PopOut (Option): Statt einzuwerfen darfst du einen eigenen Stein ganz unten herausziehen; die Steine darüber rutschen nach.',
+  ],
 };

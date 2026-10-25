@@ -28,7 +28,7 @@ Ein Spiel besteht aus:
 
 | Datei | Inhalt |
 |---|---|
-| `src/meta.ts` | Steckbrief (Name, Emoji, Spielerzahl) – für das Menü, wird sofort geladen |
+| `src/meta.ts` | Steckbrief (Name, Emoji, Spielerzahl, Kurzanleitung „So geht's“) – für das Menü, wird sofort geladen |
 | `src/rules.ts` | die Regeln als reine Funktionen |
 | `src/bots.ts` | der Standard-Bot |
 | `src/index.ts` | das Spielmodul (`gameModule`) – fügt alles zusammen |
@@ -52,6 +52,7 @@ Das legt eine Kopie der Vorlage Tic-Tac-Toe an. Die Kopie ist sofort spielbar un
 - **Wiederholbar:** Zufall nur über `Rng` aus dem Seed, nie `Math.random()`. Gleicher Seed und gleiche Züge müssen denselben Spielstand ergeben.
 - **Reines JSON:** Spielstand, Züge und Sicht enthalten keine Klassen, Funktionen, `Map` oder `Set`.
 - **Geheimnisse:** Was ein Spieler nicht sehen darf, blendet `playerView` aus. Spiele mit Geheimnissen brauchen `sampleHidden` für die Bots.
+- **Anleitung ist Pflicht:** `howToPlay` im Steckbrief erklärt die wichtigsten Regeln in wenigen kurzen Sätzen. Sie erscheint beim Einrichten und im Spiel hinter dem „?“-Knopf.
 - **Bots sind Pflicht:** Jedes Spiel ist gegen den Computer spielbar. Der erste Bot in `bots` ist der Standard; die allgemeinen Bots (`generalBots()`) funktionieren mit jedem Spiel.
 - **Prüfungen:** Jeder Spieltest bindet `gameContractChecks(gameModule)` ein. Sie spielen viele Zufalls- und Bot-Partien und prüfen dabei die Regeln oben.
 

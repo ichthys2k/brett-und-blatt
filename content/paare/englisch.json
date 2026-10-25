@@ -1,0 +1,127 @@
+{
+  "id": "englisch",
+  "name": "Englisch",
+  "license": "CC-BY-SA-4.0",
+  "pairs": [
+    {
+      "a": "Hund",
+      "b": "dog"
+    },
+    {
+      "a": "Katze",
+      "b": "cat"
+    },
+    {
+      "a": "Haus",
+      "b": "house"
+    },
+    {
+      "a": "Baum",
+      "b": "tree"
+    },
+    {
+      "a": "Buch",
+      "b": "book"
+    },
+    {
+      "a": "Apfel",
+      "b": "apple"
+    },
+    {
+      "a": "Sonne",
+      "b": "sun"
+    },
+    {
+      "a": "Mond",
+      "b": "moon"
+    },
+    {
+      "a": "Wasser",
+      "b": "water"
+    },
+    {
+      "a": "Schule",
+      "b": "school"
+    },
+    {
+      "a": "Freund",
+      "b": "friend"
+    },
+    {
+      "a": "Auto",
+      "b": "car"
+    },
+    {
+      "a": "Vogel",
+      "b": "bird"
+    },
+    {
+      "a": "Fisch",
+      "b": "fish"
+    },
+    {
+      "a": "Blume",
+      "b": "flower"
+    },
+    {
+      "a": "Tisch",
+      "b": "table"
+    },
+    {
+      "a": "Stuhl",
+      "b": "chair"
+    },
+    {
+      "a": "Fenster",
+      "b": "window"
+    },
+    {
+      "a": "Tür",
+      "b": "door"
+    },
+    {
+      "a": "Brot",
+      "b": "bread"
+    },
+    {
+      "a": "Milch",
+      "b": "milk"
+    },
+    {
+      "a": "rot",
+      "b": "red"
+    },
+    {
+      "a": "grün",
+      "b": "green"
+    },
+    {
+      "a": "blau",
+      "b": "blue"
+    },
+    {
+      "a": "groß",
+      "b": "big"
+    },
+    {
+      "a": "klein",
+      "b": "small"
+    },
+    {
+      "a": "Lehrer",
+      "b": "teacher"
+    },
+    {
+      "a": "Pferd",
+      "b": "horse"
+    },
+    {
+      "a": "Maus",
+      "b": "mouse"
+    },
+    {
+      "a": "Herz",
+      "b": "heart"
+    }
+  ]
+}

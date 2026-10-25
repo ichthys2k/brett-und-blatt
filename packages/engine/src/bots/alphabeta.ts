@@ -40,6 +40,7 @@ export function alphaBetaSearch<S, M, V>(module: GameModule<S, M, V>, rootState:
     const result = module.result(settled);
     if (result) {
       if (result.kind === 'draw') return 0;
+      if (result.kind === 'loss') return -WIN_SCORE + ply;
       return result.winners.includes(seat) ? WIN_SCORE - ply : -WIN_SCORE + ply;
     }
     if (depth === 0) return options.evaluate(settled, seat);

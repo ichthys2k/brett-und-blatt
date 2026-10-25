@@ -1,0 +1,134 @@
+.ml-layout {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.4rem;
+  width: 100%;
+  height: 100%;
+}
+
+.ml-hands {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 1.1rem;
+}
+
+.ml-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.ml-board {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 6%;
+  border-radius: 14px;
+  background: #e4c894;
+  color: #5a3d1b;
+  box-shadow: inset 0 0 0 3px rgb(90 61 27 / 0.35);
+}
+
+.ml-stone {
+  display: block;
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 -3px 0 rgb(0 0 0 / 0.2),
+    0 2px 3px rgb(0 0 0 / 0.35);
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+}
+
+.ml-white {
+  background: radial-gradient(circle at 35% 30%, #fff, #dcdcdc 70%);
+}
+
+.ml-black {
+  background: radial-gradient(circle at 35% 30%, #5a5a5a, #121212 70%);
+}
+
+.ml-small {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.ml-dot {
+  width: 26%;
+  height: 26%;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.ml-dot.ml-target {
+  width: 45%;
+  height: 45%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.ml-selected {
+  transform: scale(1.12);
+  box-shadow:
+    0 0 0 3px var(--color-accent),
+    0 4px 6px rgb(0 0 0 / 0.35);
+}
+
+.ml-pending {
+  opacity: 0.7;
+}
+
+.ml-removed {
+  opacity: 0.25;
+}
+
+.ml-can-remove .ml-stone {
+  box-shadow: 0 0 0 3px #d62828;
+  animation: ml-wobble 0.6s ease-in-out infinite alternate;
+}
+
+.ml-hint {
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px #f2b705;
+}
+
+.ml-last .ml-stone {
+  box-shadow:
+    0 0 0 2px rgb(255 255 255 / 0.8),
+    0 2px 3px rgb(0 0 0 / 0.35);
+}
+
+.ml-help {
+  min-height: 1.4rem;
+  margin: 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+.ml-symbol {
+  display: grid;
+  place-items: center;
+}
+
+.ml-symbol .ml-stone {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes ml-wobble {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ml-can-remove .ml-stone {
+    animation: none;
+  }
+}

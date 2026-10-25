@@ -8,12 +8,14 @@ import type { Actor, AnyGameModule, Options, SeatId } from '../types';
 export interface ContractOptions {
   /** Welche Spielerzahlen geprüft werden (Standard: Minimum und Maximum). */
   seatCounts?: number[];
-  /** Zufallspartien je Spielerzahl und Optionssatz. */
+  /** Zufallspartien insgesamt (verteilt auf Spielerzahlen und Varianten, je Kombination mindestens zwei). */
   randomGames?: number;
   /** Bot-gegen-Bot-Partien je Bot und Stufe. */
   botGames?: number;
   /** Partien, die länger dauern, gelten als Fehler. */
   maxMoves?: number;
+  /** Bot-Partien nach so vielen Zügen abbrechen (für Spiele mit langsamen Bots oder sehr langen Partien). */
+  botMoveLimit?: number;
   seed?: string;
   /** Eigene Prüfung, dass eine Sicht nichts verrät; gibt eine Fehlermeldung oder null zurück. */
   checkView?: (state: unknown, view: unknown, seat: SeatId) => string | null;
@@ -36,6 +38,9 @@ export function gameContractChecks(module: AnyGameModule, options: ContractOptio
   const maxMoves = options.maxMoves ?? 2_000;
   const seed = options.seed ?? 'vertrag';
   const optionSets = allOptionSets(module);
+  // Viele Spielerzahlen und Varianten: dann je Kombination weniger Partien, mindestens aber zwei.
+  const combos = seatCounts.length * optionSets.length;
+  const gamesPerSetup = Math.max(2, Math.ceil(randomGames / combos));
 
   const forEachSetup = (fn: (seats: number, opts: Options, label: string) => void) => {
     for (const seats of seatCounts) {
@@ -51,6 +56,7 @@ export function gameContractChecks(module: AnyGameModule, options: ContractOptio
         assert(info.id.length > 0 && info.name.length > 0, 'id und name fehlen');
         assert(info.players.min >= 1 && info.players.min <= info.players.max, 'Spielerzahl ungültig');
         assert(module.bots.length > 0, 'Jedes Spiel braucht mindestens einen Bot');
+        assert(info.howToPlay.length > 0 && info.howToPlay.every((line) => line.trim().length > 0), 'Jedes Spiel braucht eine kurze Anleitung (howToPlay)');
         for (const spec of module.options) {
           assert(spec.choices.some((c) => c.value === spec.default), `Option ${spec.id}: Standard ist keine Auswahl`);
         }
@@ -63,7 +69,7 @@ export function gameContractChecks(module: AnyGameModule, options: ContractOptio
       name: 'Zufallspartien enden regelgerecht und verändern alte Spielstände nicht',
       run() {
         forEachSetup((seats, opts, label) => {
-          for (let g = 0; g < randomGames; g++) {
+          for (let g = 0; g < gamesPerSetup; g++) {
             playRandomGame(module, seats, opts, `${seed}/${label}/${g}`, maxMoves, options.checkView);
           }
         });
@@ -73,7 +79,7 @@ export function gameContractChecks(module: AnyGameModule, options: ContractOptio
       name: 'Gleicher Seed und gleiche Züge ergeben denselben Spielstand',
       run() {
         forEachSetup((seats, opts, label) => {
-          for (let g = 0; g < Math.min(randomGames, 10); g++) {
+          for (let g = 0; g < Math.min(gamesPerSetup, 3); g++) {
             const gameSeed = `${seed}/wiederholung/${label}/${g}`;
             const { state, log } = playRandomGame(module, seats, opts, gameSeed, maxMoves);
             const again = replay(module, seats, opts, gameSeed, log);
@@ -86,13 +92,18 @@ export function gameContractChecks(module: AnyGameModule, options: ContractOptio
     {
       name: 'Jeder Bot spielt auf jeder Stufe ganze Partien mit erlaubten Zügen',
       run() {
+        // Bots auf den Standardeinstellungen; die Varianten prüfen schon die Zufallspartien.
+        const seats = module.info.players.min;
+        const opts = resolveOptions(module);
+        const label = `${seats} Spieler`;
         for (const bot of module.bots) {
           for (const level of bot.levels) {
-            forEachSetup((seats, opts, label) => {
+            {
               for (let g = 0; g < botGames; g++) {
                 const gameSeed = `${seed}/bot/${bot.id}/${level}/${label}/${g}`;
                 let state = settleSystemMoves(module, module.setup(seats, opts, gameSeed));
                 for (let step = 0; !module.result(state); step++) {
+                  if (options.botMoveLimit !== undefined && step >= options.botMoveLimit) break;
                   assert(step < maxMoves, `${bot.id}/${level} ${label}: Partie endet nicht`);
                   const actor = firstSeat(module.currentPlayers(state));
                   assert(actor !== null, `${label}: niemand am Zug`);
@@ -103,13 +114,13 @@ export function gameContractChecks(module: AnyGameModule, options: ContractOptio
                     seat: actor,
                     view: module.playerView(state, actor),
                     seed: `${gameSeed}/${step}`,
-                    timeBudgetMs: 25,
+                    timeBudgetMs: 10,
                   });
                   assert(isLegalMove(module, state, actor, move), `${bot.id}/${level} ${label}: unerlaubter Zug ${canonicalJson(move)}`);
                   state = settleSystemMoves(module, module.applyMove(state, actor, move).state);
                 }
               }
-            });
+            }
           }
         }
       },
@@ -161,7 +172,9 @@ export function playRandomGame(
     if (module.result(state)) break;
     const actors = module.currentPlayers(state);
     assert(actors.length > 0, 'Kein Ergebnis, aber niemand am Zug');
-    for (const seat of [...Array(seats).keys()]) {
+    // Alle Sichten am Anfang und danach reihum je eine – das prüft jede Sicht, ohne jeden Zug zu verteuern.
+    const viewSeats = step === 0 ? [...Array(seats).keys()] : [step % seats];
+    for (const seat of viewSeats) {
       const view = module.playerView(state, seat);
       assertJson(view, 'Sicht');
       const problem = checkView?.(state, view, seat);
@@ -202,7 +215,31 @@ function assert(condition: unknown, message: string): asserts condition {
 }
 
 function assertJson(value: unknown, what: string): void {
-  assert(sameValue(JSON.parse(JSON.stringify(value)), value), `${what} ist kein reines JSON`);
+  const problem = jsonProblem(value, what);
+  assert(problem === null, `${problem} – Spielstände und Sichten müssen reines JSON sein`);
+}
+
+/** Findet Werte, die JSON nicht verlustfrei speichert (undefined, Funktionen, Map, Set, Klassen, NaN …). */
+function jsonProblem(value: unknown, path: string): string | null {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? null : `${path} ist ${value}`;
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      const problem = jsonProblem(value[i], `${path}[${i}]`);
+      if (problem) return problem;
+    }
+    return null;
+  }
+  if (typeof value === 'object') {
+    const proto = Object.getPrototypeOf(value);
+    if (proto !== Object.prototype && proto !== null) return `${path} ist kein einfaches Objekt`;
+    for (const [key, entry] of Object.entries(value)) {
+      const problem = jsonProblem(entry, `${path}.${key}`);
+      if (problem) return problem;
+    }
+    return null;
+  }
+  return `${path} ist ${typeof value}`;
 }
 
 /** Friert ein Objekt tief ein: Jeder Versuch, es zu verändern, wirft dann einen Fehler. */

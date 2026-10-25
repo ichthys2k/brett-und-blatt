@@ -20,8 +20,18 @@ export interface GameInfo {
   patterns: Pattern[];
   /** true, wenn `playerView` etwas verbirgt (Handkarten, Flotten, Würfel …). */
   hiddenInformation: boolean;
+  /**
+   * Sieht jeder Platz etwas anderes (eigene Handkarten)? Dann kommt beim Hot-Seat
+   * vor jedem Zug der Übergabe-Bildschirm. Fehlt die Angabe, gilt `hiddenInformation`.
+   * Paare finden verbirgt zwar die Karten, aber vor allen gleich – dort ist es false.
+   */
+  privateViews?: boolean;
   /** Wird erhöht, wenn sich Regeln so ändern, dass alte Zuglisten anders ausgehen würden. */
   ruleVersion: number;
+  /** Bietet die Oberfläche einen „Tipp“-Knopf an? Der Tipp kommt vom Standard-Bot. */
+  hints?: boolean;
+  /** Kurze Anleitung „So geht's“: die wichtigsten Regeln in wenigen Sätzen, je ein Punkt pro Eintrag. */
+  howToPlay: string[];
 }
 
 export interface OptionChoice {
@@ -68,7 +78,9 @@ export interface MoveResult<S> {
 
 export type Result =
   | { kind: 'win'; winners: SeatId[]; reason?: string }
-  | { kind: 'draw'; reason?: string };
+  | { kind: 'draw'; reason?: string }
+  /** Niemand gewinnt – etwa ein Solitaire, das aufgegeben wurde, oder ein verlorenes kooperatives Spiel. */
+  | { kind: 'loss'; reason?: string };
 
 export type BotLevel = 'easy' | 'medium' | 'hard';
 

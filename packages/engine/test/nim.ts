@@ -25,6 +25,7 @@ export const nim: GameModule<NimState, NimMove> = {
     patterns: ['open'],
     hiddenInformation: false,
     ruleVersion: 1,
+    howToPlay: ['Nimm 1 bis 3 Hölzer. Wer das letzte nimmt, gewinnt.'],
   },
   options: [{ id: 'heap', label: 'Haufen', choices: [{ value: '10', label: '10' }, { value: '21', label: '21' }], default: '10' }],
   timePresets: { relaxed: { kind: 'none' }, normal: { kind: 'perMove', moveMs: 10_000 }, fast: { kind: 'perMove', moveMs: 5_000 } },

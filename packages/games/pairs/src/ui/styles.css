@@ -1,0 +1,31 @@
+.pf-board {
+  height: 100%;
+  gap: 2.5%;
+}
+
+.pf-board .bub-cell {
+  padding: 4%;
+}
+
+.pf-slot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  outline: 3px solid transparent;
+  outline-offset: 1px;
+}
+
+.pf-board button.bub-cell:not(:disabled):hover .bub-ccard {
+  transform: translateY(-3%);
+  box-shadow: 0 4px 8px rgb(0 0 0 / 0.25);
+}
+
+.pf-symbol {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+}

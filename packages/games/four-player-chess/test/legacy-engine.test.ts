@@ -1,0 +1,269 @@
+// @ts-nocheck – Regeltests aus dem Projekt 4playerchess, auf Vitest umgestellt.
+import { test } from 'vitest';
+import assert from 'node:assert/strict';
+import {
+    COLORS, newGame, replay, applyAction, legalMoves, canClaim, findKing, inCheck, idx,
+} from '../src/legacy/engine';
+import { chooseBotMove } from '../src/legacy/bot';
+
+// Feldnamen wie im Spiel: Linien a–n von links, Reihen 1–14 von unten (Sicht Rot).
+const at = name => idx(14 - Number(name.slice(1)), name.charCodeAt(0) - 97);
+const move = (s, p, from, to, extra = {}) => applyAction(s, { t: 'm', p, f: at(from), to: at(to), ...extra });
+const piece = (s, name) => s.board[at(name)];
+
+/** Leeres Brett mit den angegebenen Figuren. Ohne Angabe stehen die vier Könige auf ihren Startfeldern. */
+function custom(mode, pieces, turn = 'r') {
+    const s = newGame(mode);
+    s.board.fill(null);
+    const list = [['h1', 'r', 'K'], ['a7', 'b', 'K'], ['g14', 'y', 'K'], ['n8', 'g', 'K'], ...pieces];
+    for (const [sq, c, t] of list) s.board[at(sq)] = t ? { c, t } : null;
+    s.castle = { r: [], b: [], y: [], g: [] };
+    s.turn = turn;
+    s.seen = {};
+    return s;
+}
+
+function seededRandom(seed) {
+    return () => {
+        seed = (seed * 1103515245 + 12345) % 2147483648;
+        return seed / 2147483648;
+    };
+}
+
+test('Startaufstellung: Könige gegenüber den Damen, je 20 Züge', () => {
+    const s = newGame();
+    assert.equal(s.board.filter(Boolean).length, 64);
+    for (const [sq, c] of [['h1', 'r'], ['a7', 'b'], ['g14', 'y'], ['n8', 'g']]) {
+        assert.deepEqual(piece(s, sq), { c, t: 'K' });
+    }
+    for (const [sq, c] of [['g1', 'r'], ['a8', 'b'], ['h14', 'y'], ['n7', 'g']]) {
+        assert.deepEqual(piece(s, sq), { c, t: 'Q' });
+    }
+    for (const c of COLORS) assert.equal(legalMoves(s, c).length, 20, `Farbe ${c}`);
+});
+
+test('Zugreihenfolge Rot → Blau → Gelb → Grün', () => {
+    const s = newGame();
+    assert.ok(move(s, 'r', 'e2', 'e4'));
+    assert.equal(s.turn, 'b');
+    assert.equal(move(s, 'r', 'f2', 'f4'), false, 'Rot ist nicht am Zug');
+    assert.ok(move(s, 'b', 'b5', 'd5'));
+    assert.ok(move(s, 'y', 'e13', 'e11'));
+    assert.ok(move(s, 'g', 'm5', 'k5'));
+    assert.equal(s.turn, 'r');
+});
+
+test('Rochade kurz und lang für Rot', () => {
+    let s = custom('ffa', [['k1', 'r', 'R']]);
+    s.castle.r = [at('k1')];
+    assert.ok(move(s, 'r', 'h1', 'j1'));
+    assert.equal(piece(s, 'i1').t, 'R');
+    assert.equal(piece(s, 'k1'), null);
+
+    s = custom('ffa', [['d1', 'r', 'R']]);
+    s.castle.r = [at('d1')];
+    assert.ok(move(s, 'r', 'h1', 'f1'));
+    assert.equal(piece(s, 'g1').t, 'R');
+    assert.equal(s.log.at(-1).text, 'O-O-O+', 'Turm auf g1 gibt Schach gegen Gelb auf g14');
+});
+
+test('Rochade für Blau (seitlich)', () => {
+    const s = custom('ffa', [['a4', 'b', 'R']], 'b');
+    s.castle.b = [at('a4')];
+    assert.ok(move(s, 'b', 'a7', 'a5'));
+    assert.equal(piece(s, 'a6').t, 'R');
+});
+
+test('Keine Rochade über ein angegriffenes Feld – außer der Angreifer ist Teampartner', () => {
+    const pieces = [['k1', 'r', 'R'], ['i14', 'y', 'R']];
+    const ffa = custom('ffa', pieces);
+    ffa.castle.r = [at('k1')];
+    assert.ok(!legalMoves(ffa).some(m => m.castle));
+
+    const teams = custom('teams', pieces);
+    teams.castle.r = [at('k1')];
+    assert.ok(legalMoves(teams).some(m => m.castle));
+});
+
+test('En passant über Kreuz und Verfall der Möglichkeit', () => {
+    let s = custom('ffa', [['f2', 'r', 'P'], ['e4', 'b', 'P']]);
+    assert.ok(move(s, 'r', 'f2', 'f4'));
+    assert.ok(move(s, 'b', 'e4', 'f3'), 'Blau schlägt en passant');
+    assert.equal(piece(s, 'f4'), null);
+    assert.equal(piece(s, 'f3').c, 'b');
+
+    s = custom('ffa', [['f2', 'r', 'P'], ['e4', 'b', 'P']]);
+    move(s, 'r', 'f2', 'f4');
+    move(s, 'b', 'a7', 'b7');
+    move(s, 'y', 'g14', 'g13');
+    move(s, 'g', 'n8', 'm8');
+    move(s, 'r', 'h1', 'h2');
+    assert.equal(move(s, 'b', 'e4', 'f3'), false, 'nach einer Runde verfallen');
+});
+
+test('Umwandlung im FFA auf der 8. Reihe, immer zur 1-Punkt-Dame', () => {
+    const s = custom('ffa', [['f7', 'r', 'P'], ['b8', 'b', 'R']]);
+    assert.ok(move(s, 'r', 'f7', 'f8', { pr: 'N' }));
+    assert.deepEqual(piece(s, 'f8'), { c: 'r', t: 'Q', pr: true });
+    assert.ok(move(s, 'b', 'b8', 'f8'));
+    assert.equal(s.scores.b, 1);
+});
+
+test('Umwandlung im Teammodus auf der 11. Reihe mit freier Wahl', () => {
+    const s = custom('teams', [['f10', 'r', 'P'], ['j7', 'r', 'P']]);
+    assert.ok(move(s, 'r', 'f10', 'f11', { pr: 'N' }));
+    assert.equal(piece(s, 'f11').t, 'N');
+    const t = custom('teams', [['f7', 'r', 'P']]);
+    assert.ok(move(t, 'r', 'f7', 'f8'));
+    assert.equal(piece(t, 'f8').t, 'P', 'auf der 8. Reihe noch keine Umwandlung');
+});
+
+// Blau steht in der Ecke a11; Rot setzt mit dem Turm auf a5 matt.
+const MATE = [['a7', 'b', null], ['a11', 'b', 'K'], ['b6', 'r', 'R'], ['f5', 'r', 'R']];
+
+test('Schachmatt im FFA: +20, Figuren werden grau, Blau wird übersprungen', () => {
+    const s = custom('ffa', MATE);
+    assert.ok(move(s, 'r', 'f5', 'a5'));
+    assert.equal(s.scores.r, 20);
+    assert.equal(s.active.b, false);
+    assert.equal(s.out.b, 'mate');
+    assert.equal(s.turn, 'y');
+    assert.ok(piece(s, 'a11').d, 'König von Blau ist jetzt tot');
+    assert.equal(s.result, null);
+});
+
+test('Schachmatt im Teammodus beendet das Spiel', () => {
+    const s = custom('teams', MATE);
+    assert.ok(move(s, 'r', 'f5', 'a5'));
+    assert.deepEqual(s.result.winners, ['r', 'y']);
+    assert.equal(s.result.reason, 'mate');
+});
+
+test('Patt im FFA: +20 für den Pattgesetzten', () => {
+    const s = custom('ffa', [['a7', 'b', null], ['a11', 'b', 'K'], ['b6', 'r', 'R'], ['f10', 'r', 'R']]);
+    assert.ok(move(s, 'r', 'h1', 'h2'));
+    assert.equal(s.scores.b, 20);
+    assert.equal(s.out.b, 'stalemate');
+    assert.equal(s.turn, 'y');
+});
+
+test('Patt im Teammodus ist unentschieden', () => {
+    const s = custom('teams', [['a7', 'b', null], ['a11', 'b', 'K'], ['b6', 'r', 'R'], ['f10', 'r', 'R']]);
+    move(s, 'r', 'h1', 'h2');
+    assert.deepEqual(s.result.winners, []);
+});
+
+test('Ein ungeschützter König im Schach kann geschlagen werden', () => {
+    const s = custom('ffa', [['f7', 'r', 'R']]);
+    assert.ok(move(s, 'r', 'f7', 'a7'));
+    assert.equal(s.scores.r, 20);
+    assert.equal(s.out.b, 'king');
+    assert.equal(s.turn, 'y');
+});
+
+test('Teampartner können sich nicht schlagen', () => {
+    const s = custom('teams', [['f7', 'r', 'R'], ['i7', 'y', 'P']]);
+    const targets = legalMoves(s).filter(m => m.from === at('f7')).map(m => m.to);
+    assert.ok(targets.includes(at('h7')));
+    assert.ok(!targets.includes(at('i7')));
+});
+
+test('Doppelschach: +5 mit dem Turm, +1 mit der Dame', () => {
+    const s = custom('ffa', [['a7', 'b', null], ['c9', 'b', 'K'], ['g14', 'y', null], ['i13', 'y', 'K'], ['i5', 'r', 'R']]);
+    assert.ok(move(s, 'r', 'i5', 'i9'));
+    assert.equal(s.scores.r, 5);
+    assert.ok(inCheck(s, 'b'));
+
+    const q = custom('ffa', [['a7', 'b', null], ['c9', 'b', 'K'], ['g14', 'y', null], ['i13', 'y', 'K'], ['i5', 'r', 'Q']]);
+    move(q, 'r', 'i5', 'i9');
+    assert.equal(q.scores.r, 1);
+});
+
+test('Aufgeben im FFA: Figuren grau, letzter Spieler beendet das Spiel', () => {
+    const s = newGame();
+    assert.ok(applyAction(s, { t: 'resign', p: 'b' }));
+    assert.equal(s.turn, 'r');
+    assert.ok(piece(s, 'a7').d);
+    move(s, 'r', 'e2', 'e4');
+    assert.equal(s.turn, 'y', 'Blau wird übersprungen');
+    applyAction(s, { t: 'resign', p: 'y' });
+    assert.equal(s.turn, 'g');
+    applyAction(s, { t: 'resign', p: 'g' });
+    assert.equal(s.result.reason, 'last');
+    assert.equal(applyAction(s, { t: 'resign', p: 'r' }), false, 'nach Spielende geht nichts mehr');
+});
+
+test('Sieg beanspruchen bei 21 Punkten Vorsprung', () => {
+    const s = newGame();
+    applyAction(s, { t: 'resign', p: 'b' });
+    applyAction(s, { t: 'resign', p: 'g' });
+    s.scores.r = 30;
+    s.scores.y = 9;
+    assert.ok(canClaim(s, 'r'));
+    assert.ok(!canClaim(s, 'y'));
+    assert.ok(applyAction(s, { t: 'claim', p: 'r' }));
+    assert.equal(s.scores.y, 29);
+    assert.deepEqual(s.result.winners, ['r']);
+});
+
+test('Dreifache Stellungswiederholung: Spielende, +10 für alle', () => {
+    const s = newGame();
+    const out = [['r', 'e1', 'd3'], ['b', 'a5', 'c4'], ['y', 'e14', 'd12'], ['g', 'n5', 'l4']];
+    for (let round = 0; round < 2; round++) {
+        for (const [p, a, b] of out) assert.ok(move(s, p, a, b));
+        for (const [p, a, b] of out) assert.ok(move(s, p, b, a));
+    }
+    assert.equal(s.result.reason, 'repetition');
+    for (const c of COLORS) assert.equal(s.scores[c], 10);
+});
+
+for (const mode of ['ffa', 'teams']) {
+    test(`Zufallspartien (${mode}) laufen fehlerfrei und lassen sich exakt nachspielen`, () => {
+        for (let game = 0; game < 6; game++) {
+            const random = seededRandom(1000 + game);
+            const s = newGame(mode);
+            const actions = [];
+            while (!s.result && actions.length < 4000) {
+                const moves = legalMoves(s);
+                assert.ok(moves.length > 0, 'wer am Zug ist, hat einen Zug');
+                const m = moves[Math.floor(random() * moves.length)];
+                const action = { t: 'm', p: s.turn, f: m.from, to: m.to };
+                if (m.promote) action.pr = 'QRBN'[Math.floor(random() * 4)];
+                assert.ok(applyAction(s, action));
+                actions.push(action);
+                for (const c of COLORS) {
+                    if (s.active[c]) assert.ok(findKing(s.board, c) >= 0, `aktive Farbe ${c} hat einen König`);
+                }
+                if (!s.result) assert.ok(s.active[s.turn]);
+            }
+            assert.ok(s.result, 'Partie endet (spätestens durch die 50-Züge-Regel)');
+            const again = replay(mode, actions);
+            assert.deepEqual(again.board, s.board);
+            assert.deepEqual(again.scores, s.scores);
+            assert.deepEqual(again.result, s.result);
+        }
+    });
+}
+
+test('Computergegner: schlägt eine ungedeckte Dame und findet ein Matt', () => {
+    const s = custom('ffa', [['f5', 'r', 'R'], ['j5', 'b', 'Q']]);
+    const a = chooseBotMove(s);
+    assert.equal(a.to, at('j5'));
+
+    const mate = custom('ffa', MATE);
+    const b = chooseBotMove(mate);
+    assert.deepEqual([b.f, b.to], [at('f5'), at('a5')]);
+});
+
+test('Vier Computergegner spielen eine Partie zu Ende', () => {
+    for (const mode of ['ffa', 'teams']) {
+        const random = seededRandom(7);
+        const s = newGame(mode);
+        let plies = 0;
+        while (!s.result && plies < 3000) {
+            assert.ok(applyAction(s, chooseBotMove(s, s.turn, random)));
+            plies++;
+        }
+        assert.ok(s.result, `${mode}: Partie beendet nach ${plies} Halbzügen`);
+    }
+});

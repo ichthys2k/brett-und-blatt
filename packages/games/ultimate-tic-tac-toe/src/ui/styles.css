@@ -1,0 +1,100 @@
+.ut-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.ut-board {
+  height: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: 0 0 0 2px var(--color-ink);
+}
+
+.ut-board .bub-cell {
+  border-right: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+  transition: background-color 0.15s;
+}
+
+.ut-board .bub-cell.ut-edge-right {
+  border-right: 3px solid var(--color-ink);
+}
+
+.ut-board .bub-cell.ut-edge-bottom {
+  border-bottom: 3px solid var(--color-ink);
+}
+
+.ut-board .bub-cell.ut-active {
+  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
+}
+
+.ut-board button.bub-cell:not(:disabled):hover {
+  background: color-mix(in srgb, var(--color-accent) 28%, var(--color-surface));
+}
+
+.ut-board .bub-cell.ut-last {
+  background: color-mix(in srgb, #f2b705 30%, var(--color-surface));
+}
+
+.ut-board .bub-cell.ut-hint {
+  box-shadow: inset 0 0 0 3px #f2b705;
+}
+
+.ut-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  pointer-events: none;
+}
+
+.ut-big {
+  display: grid;
+  place-items: center;
+}
+
+.ut-big:has(.ut-big-mark),
+.ut-big:has(.ut-draw) {
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
+}
+
+.ut-big-win {
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent) !important;
+}
+
+.ut-mark {
+  width: 78%;
+  height: 78%;
+  fill: none;
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+.ut-big-mark {
+  width: 80%;
+  height: 80%;
+  stroke-width: 9;
+}
+
+.ut-x {
+  stroke: #d6336c;
+}
+
+.ut-o {
+  stroke: #1c7ed6;
+}
+
+.ut-draw {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--color-muted);
+}
+
+.bub-ring-content .ut-mark {
+  width: 100%;
+  height: 100%;
+  stroke-width: 14;
+}

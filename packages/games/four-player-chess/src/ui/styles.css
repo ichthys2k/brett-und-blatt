@@ -1,0 +1,138 @@
+.fc-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.fc-board {
+  height: 100%;
+}
+
+.fc-board .bub-cell {
+  container-type: size;
+}
+
+.fc-board .bub-cell.fc-light {
+  background: #ecd9b9;
+}
+
+.fc-board .bub-cell.fc-dark {
+  background: #b88a5c;
+}
+
+.fc-board .bub-cell.fc-off {
+  visibility: hidden;
+}
+
+.fc-board .bub-cell.fc-last {
+  box-shadow: inset 0 0 0 100vmax rgb(242 183 5 / 0.35);
+}
+
+.fc-board .bub-cell.fc-selected {
+  box-shadow: inset 0 0 0 3px var(--color-accent);
+}
+
+.fc-board .bub-cell.fc-capture {
+  box-shadow: inset 0 0 0 3px #d62828;
+}
+
+.fc-board .bub-cell.fc-hint {
+  box-shadow: inset 0 0 0 3px #f2b705;
+}
+
+.fc-piece {
+  font-size: 82cqmin;
+  line-height: 1;
+  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'DejaVu Sans', serif;
+  -webkit-text-stroke: 0.6px rgb(0 0 0 / 0.7);
+  paint-order: stroke fill;
+}
+
+.fc-r {
+  color: #d62828;
+}
+
+.fc-b {
+  color: #1c5fd4;
+}
+
+.fc-y {
+  color: #e6a800;
+}
+
+.fc-g {
+  color: #2b8a3e;
+}
+
+.fc-dead {
+  color: #8a8a8a;
+  opacity: 0.8;
+}
+
+.fc-dot {
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.3);
+}
+
+.fc-claim {
+  position: absolute;
+  left: 50%;
+  top: 2%;
+  translate: -50% 0;
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: #f2b705;
+  color: #1f2328;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fc-promotion {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  translate: -50% -50%;
+  border-radius: 14px;
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+.fc-promotion button {
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: var(--color-bg);
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.fc-symbol {
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.fc-symbol-r {
+  color: #d62828;
+}
+
+.fc-symbol-b {
+  color: #1c5fd4;
+}
+
+.fc-symbol-y {
+  color: #e6a800;
+}
+
+.fc-symbol-g {
+  color: #2b8a3e;
+}

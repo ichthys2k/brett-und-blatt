@@ -36,7 +36,7 @@ Jedes Spiel ist ein Ordner unter `packages/games/<id>/` mit Regeln, Bots und Obe
 
 ```ts
 interface GameModule<State, Move, View> {
-  info: GameInfo;              // id, Name, Spielerzahl, Modi, Muster, Regelversion
+  info: GameInfo;              // id, Name, Spielerzahl, Modi, Muster, Regelversion, Kurzanleitung
   options: OptionSchema;       // Varianten und Hausregeln, erscheinen als Lobby-Schalter
   timePresets: TimePresets;    // „gemütlich“, „normal“, „schnell“
 
@@ -147,13 +147,13 @@ Die Plattform richtet sich auch an Kinder, Schülerinnen, Schüler und Fremde. D
 - **Kein freier Chat:** nur Emoji-Reaktionen und vorgefertigte Schnellnachrichten („Gut gespielt!“).
 - **Spitznamen-Filter;** die Raumleitung kann Spieler entfernen. Öffentliche Räume mit Fremden kommen erst später und bekommen eine Melden-Funktion. Standard sind private Räume per Code.
 - **Daten in der EU** (Durable Objects mit `jurisdiction('eu')`), kurze Speicherdauer (inaktive Räume werden gelöscht), keine Tracker, keine Werbung.
-- **Impressum und Datenschutzerklärung** auf `spiele.lipponer.de`.
+- **Impressum und Datenschutzerklärung** auf `spiele.lipponer.de` (`#/impressum`, `#/datenschutz`); das Impressum verweist auf die Anbieterangaben auf lipponer.de. Vor Online-Partien wird die Datenschutzerklärung um Cloudflare ergänzt.
 - **Schule:** Vor dem Einsatz im Unterricht mit dem schulischen Datenschutz abstimmen. Dank Datensparsamkeit ist das wenig Aufwand.
 - **Repo:** Keine Geheimnisse im Repo (Zugangsdaten nur als GitHub-Secrets), keine Schülerdaten in Code oder Issues. Commits laufen über die noreply-Adresse von GitHub.
 
 ## Rechtliches
 
-- Spielmechaniken sind frei, Markennamen nicht. Darum heißen die Spiele z. B. „Vier in einer Reihe“, „Paare finden“ und „Reversi“. Für Uno, Kniffel, Malefiz, Monopoly, Catan, Scrabble usw. braucht es eigene Namen.
+- Spielmechaniken sind frei, Markennamen nicht. Darum heißen die Spiele z. B. „Vier in einer Reihe“, „Paare finden“ und „Reversi“. Für Uno, Kniffel, Malefiz, Monopoly, Catan, Scrabble, Qwirkle usw. braucht es eigene Namen.
 - Fremder Code und fremde Daten nur mit verträglicher Lizenz, z. B. Stockfish (GPL-3), Wortliste igerman98 (GPL-2/3). Die Quelle steht in `THIRD_PARTY.md`.
 - Musik und Tierlaute aus Emojistone sind mit bezahltem Suno-Abo erstellt und dürfen unter CC BY-SA ins Repo (Nennung: „Cornelius Lipponer, erstellt mit Suno“).
 - Poker nur mit Spielgeld; Mäxle mit Leben statt Getränken.
@@ -186,14 +186,23 @@ brett-und-blatt/
 | Etappe | Inhalt | Spiele |
 |---|---|---|
 | 1 Fundament ✅ | Monorepo, Schnittstelle, lokale Spielleitung, Gitterbrett, allgemeine Bots, lokale Zeitlimits, PWA, CI | Tic-Tac-Toe (Vorlage), Vier in einer Reihe |
-| 2 Offline-Sammlung | Netzbrett, Karten-Baukasten, Übergabe-Bildschirm, Inhaltspakete | Ultimate Tic-Tac-Toe, Mühle, Reversi, Paare finden, Schwarzer Peter, Vierer-Schach (Port) |
+| 2 Offline-Sammlung ✅ | Netzbrett, Karten-Baukasten, Übergabe-Bildschirm, Inhaltspakete | Ultimate Tic-Tac-Toe, Mühle, Reversi, Paare finden, Schwarzer Peter, Solitaire, Vierer-Schach (Port) |
 | 3 Online | Cloudflare-Server, Räume, Wiedereinstieg, Bot-Ersatz, Server-Uhr, flüchtige Signale | Schiffe versenken, Quartett, Mäxle, Bingo (Klassen-Modus) |
-| 4 Großes Brett | Zoombares Brett, Byo-yomi, Auszählphase, Fernpartie | Go, Domino |
+| 4 Großes Brett | Zoombares Brett, Byo-yomi, Auszählphase, Fernpartie, Bänkchen für Steine | Go, Domino, Farbe & Form (Qwirkle-artig) |
 | 5 Stichspiele | Stich-Kern, Serien-Rahmen, Reizen und Ansagen | Skat, Schafkopf, Doppelkopf |
 | 6 Eigene Spiele | Parallel-Modus mit Match-Engine | Emoji-Sortierer, Emojistone |
-| danach | | Scrabble, Uno-artig, Poker, Binokel, Solitaire, Schach, Dame, Mensch ärgere dich nicht und die Ideenliste |
+| danach | | Scrabble, Uno-artig, Poker, Binokel, Schach, Dame, Mensch ärgere dich nicht und die Ideenliste |
 
 Die Pläne der einzelnen Spiele stehen in [`spiele/`](spiele/README.md).
+
+## Vorgemerkt: Farbe & Form (Qwirkle-artig)
+
+Legespiel für 2–4 Personen mit 108 Steinen (6 Farben × 6 Formen, je dreimal). Jeder hat 6 Steine auf dem Bänkchen und legt Reihen, in denen alle Steine dieselbe Farbe oder dieselbe Form haben, ohne Doppelte. Punkte gibt es für jede berührte Reihe, für eine volle Sechserreihe zusätzlich 6.
+
+- **Muster:** verdeckt (Bänkchen und Beutel), Zug um Zug
+- **Bausteine:** zoombares, nach allen Seiten wachsendes Brett; Bänkchen (auch für Scrabble und Domino)
+- **Bot:** gierig (meiste Punkte), stärker mit Determinisierung (was der Gegner haben könnte)
+- **Etappe:** 4, eigener Plan folgt
 
 ## Ideenliste
 
@@ -204,7 +213,5 @@ Weitere passende Spiele aus dem Brainstorming:
 
 ## Offene Punkte
 
-- DNS-Eintrag bei Strato: CNAME `spiele` → `ichthys2k.github.io`, danach HTTPS erzwingen
-- Impressum und Datenschutzerklärung für `spiele.lipponer.de`
 - Kartenblätter und Quartett-Sets gestalten bzw. recherchieren
 - Wortliste für Scrabble (vor Etappe „danach“)

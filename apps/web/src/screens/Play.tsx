@@ -2,6 +2,7 @@ import { randomSeed, type GameEvent, type LocalSession, type Result, type SeatId
 import { PlayerChip } from '@brett-und-blatt/ui';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Button } from '../components/controls';
+import { HowToOverlay } from '../components/HowTo';
 import { t } from '../i18n';
 import { getActiveGame, resumeGame, saveProgress, startGame, type ActiveGame } from '../lib/activeGame';
 import { levelLabel } from '../lib/format';
@@ -28,11 +29,14 @@ export function Play() {
 }
 
 function resultTitle(result: Result, session: LocalSession): string {
+  const seats = session.config.seats;
   if (result.kind === 'draw') return t('play.draw');
-  const humans = session.config.seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
+  if (result.kind === 'loss') return t('play.lost');
+  const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const winners = result.winners;
+  if (seats.length === 1) return humans.length === 1 ? t('play.solved') : t('play.solvedBy', { name: seats[0]?.name ?? '' });
   if (humans.length === 1) return winners.includes(humans[0] as number) ? t('play.youWon') : t('play.botWon');
-  return t('play.won', { name: winners.map((seat) => session.config.seats[seat]?.name ?? '?').join(' & ') });
+  return t('play.won', { name: winners.map((seat) => seats[seat]?.name ?? '?').join(' & ') });
 }
 
 function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: ActiveGame) => void }) {
@@ -40,6 +44,11 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
   const { ui, info } = game;
   const [events, setEvents] = useState<GameEvent[]>([]);
   const [, setTick] = useState(0);
+  const [hint, setHint] = useState<unknown>(null);
+  const [hintMissing, setHintMissing] = useState(false);
+  const [showHowTo, setShowHowTo] = useState(false);
+  /** Hot-Seat mit Geheimnissen: Wer hat zuletzt seine Sicht aufgedeckt? */
+  const [revealedFor, setRevealedFor] = useState<SeatId | null>(null);
 
   useSyncExternalStore(
     (onChange) => session.subscribe(onChange),
@@ -50,6 +59,8 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
     () =>
       session.subscribe((change) => {
         setEvents(change.events);
+        setHint(null);
+        setHintMissing(false);
         saveProgress(session);
       }),
     [session],
@@ -78,10 +89,31 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
   const current = session.currentSeats();
-  const actingSeat = session.humanSeatsToAct()[0];
-  const viewer: SeatId | 'spectator' = humans.length === 1 ? (humans[0] as number) : (actingSeat ?? 'spectator');
+  /** Der Mensch, der jetzt am Gerät dran ist – auch während einer Pause. */
+  const turnSeat = current.find((seat) => session.isHuman(seat) && !session.isAway(seat));
+
+  // Mehrere Menschen an einem Gerät und Geheimnisse (z. B. Handkarten): Vor jedem
+  // Zug wird das Gerät übergeben, erst dann wird die eigene Sicht aufgedeckt.
+  const needsHandover = (info.privateViews ?? info.hiddenInformation) && humans.length >= 2;
+  const handoverSeat = needsHandover && !result && turnSeat !== undefined && revealedFor !== turnSeat ? turnSeat : null;
+  useEffect(() => {
+    if (handoverSeat !== null && session.timed) session.pause();
+  }, [handoverSeat, session]);
+
+  const actingSeat = handoverSeat === null ? session.humanSeatsToAct()[0] : undefined;
+  let viewer: SeatId | 'spectator';
+  if (!needsHandover) viewer = humans.length === 1 ? (humans[0] as number) : (actingSeat ?? 'spectator');
+  else viewer = revealedFor !== null && revealedFor === turnSeat ? revealedFor : 'spectator';
   const legalMoves = actingSeat !== undefined ? session.legalMoves(actingSeat) : [];
   const awaySeats = humans.filter((seat) => session.isAway(seat));
+  const publicView = session.view('spectator');
+
+  const askHint = async () => {
+    if (actingSeat === undefined) return;
+    const move = await session.hint(actingSeat);
+    setHint(move);
+    setHintMissing(move === null);
+  };
 
   let status: string;
   if (result) status = resultTitle(result, session);
@@ -116,10 +148,13 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
           <span aria-hidden="true">{info.emoji} </span>
           {info.name}
         </h1>
+        <Button variant="ghost" className="ml-auto px-3 text-lg" aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
+          ?
+        </Button>
         {session.timed && !result && (
           <Button
             variant="ghost"
-            className="ml-auto px-3 text-xl"
+            className="px-3 text-xl"
             aria-label={session.paused ? t('play.resume') : t('play.pause')}
             title={session.paused ? t('play.resume') : t('play.pause')}
             onClick={() => (session.paused ? session.resume() : session.pause())}
@@ -129,13 +164,13 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
         )}
       </header>
 
-      <section className="flex flex-none gap-2 px-3" aria-label="Spieler">
+      <section className="flex flex-none flex-wrap gap-2 px-3" aria-label="Spieler">
         {seats.map((seat, index) => (
           <PlayerChip
             key={index}
             name={seat.name}
             symbol={<ui.SeatSymbol seat={index} />}
-            detail={seat.kind === 'bot' ? `${ui.seatLabel(index)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index)}
+detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index))}
             active={!result && current.includes(index)}
             thinking={session.isThinking(index) && seat.kind === 'bot'}
             away={session.isAway(index)}
@@ -152,13 +187,44 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
       </p>
 
       <main className="relative min-h-0 flex-1 px-3">
-        <ui.Board view={session.view(viewer)} legalMoves={legalMoves} onMove={(move) => actingSeat !== undefined && session.submit(actingSeat, move)} events={events} activeSeat={current[0] ?? null} />
-        {session.paused && !result && (
+        <ui.Board
+          view={session.view(viewer)}
+          legalMoves={legalMoves}
+          onMove={(move) => actingSeat !== undefined && session.submit(actingSeat, move)}
+          events={events}
+          activeSeat={current[0] ?? null}
+          hint={hint}
+          viewer={viewer}
+          seatNames={seats.map((seat) => seat.name)}
+        />
+        {showHowTo && <HowToOverlay info={info} onClose={() => setShowHowTo(false)} />}
+        {handoverSeat !== null ? (
+          <div className="absolute inset-0 grid place-items-center bg-bg px-6 text-center">
+            <div className="space-y-3">
+              <p className="text-4xl" aria-hidden="true">
+                🤫
+              </p>
+              <p className="text-xl font-semibold">{t('play.handover', { name: seats[handoverSeat]?.name ?? '' })}</p>
+              <p className="text-muted">{t('play.handoverHint')}</p>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setRevealedFor(handoverSeat);
+                  session.resume();
+                }}
+              >
+                {t('play.handoverReveal', { name: seats[handoverSeat]?.name ?? '' })}
+              </Button>
+            </div>
+          </div>
+        ) : session.paused && !result && (
           <button type="button" className="absolute inset-0 grid place-items-center bg-bg/80 text-xl font-semibold backdrop-blur-sm" onClick={() => session.resume()}>
             ▶ {t('play.resume')}
           </button>
         )}
       </main>
+
+      {hintMissing && <p className="flex-none pt-2 text-center text-sm text-muted">{t('play.noHint')}</p>}
 
       {awaySeats.length > 0 && !result && (
         <div className="mx-3 mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm">
@@ -191,6 +257,7 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
                 ↶ {t('play.undo')}
               </Button>
             )}
+            {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
             <Button onClick={() => restart(false)}>{t('play.restart')}</Button>
             {humans.length > 0 && (
               <Button variant="ghost" onClick={resign}>

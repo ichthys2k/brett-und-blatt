@@ -14,4 +14,9 @@ export const meta: GameInfo = {
   patterns: ['open'],
   hiddenInformation: false,
   ruleVersion: 1,
+  howToPlay: [
+    'Ihr setzt abwechselnd euer Zeichen (Kreuz oder Kreis) in ein freies Feld.',
+    'Wer zuerst drei Zeichen in einer Reihe hat – waagerecht, senkrecht oder diagonal –, gewinnt.',
+    'Ist das Feld voll ohne Dreierreihe, endet die Partie unentschieden.',
+  ],
 };
