@@ -199,6 +199,9 @@ importers:
       '@brett-und-blatt/game-four-player-chess':
         specifier: workspace:*
         version: link:../../packages/games/four-player-chess
+      '@brett-und-blatt/game-maexle':
+        specifier: workspace:*
+        version: link:../../packages/games/maexle
       '@brett-und-blatt/game-mill':
         specifier: workspace:*
         version: link:../../packages/games/mill
@@ -316,6 +319,19 @@ importers:
         version: 19.3.1
 
   packages/games/four-player-chess:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/maexle:
     dependencies:
       '@brett-und-blatt/engine':
         specifier: workspace:*

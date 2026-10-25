@@ -38,6 +38,19 @@ Bluff-Würfelspiel, auch „Meiern“ genannt. Gespielt wird mit **Leben** statt
 | Wertung | Leben (Ausscheiden), Strafpunkte (alle spielen bis zum Rundenende, wenigste Punkte gewinnt) | Leben |
 | Schütteln | Würfeln per Handy-Schütteln, nur Knopf | Schütteln, wo verfügbar |
 
+## Umsetzung (Oktober 2026)
+
+Umgesetzt in `packages/games/maexle`, lokal und online. Abweichungen und Präzisierungen gegenüber dem Plan:
+
+- **Würfeln** ist kein eigener Systemzug: Der Zug `roll` (bzw. `believe`) zieht die Würfel direkt aus dem Zufallsstrom „Würfel“ im Spielstand. Online rechnet das nur der Server; die Sicht nullt den Zufallsstrom, kein Ereignis nennt die Würfel vor dem Aufdecken.
+- **Glauben heißt würfeln:** `believe` würfelt sofort neu (ein Klick „Glauben und würfeln“). Nur bei einem angesagten Mäxle kostet `believe` direkt ein Leben.
+- **Blind weitergeben:** Der Wurf bleibt unter dem Becher. Wird angezweifelt, zählt die blinde Ansage; gelogen hat dann der Blinde.
+- **Strafpunkte:** Niemand scheidet aus. Sobald jemand so viele Strafpunkte hat, wie Leben eingestellt sind, endet die Partie; es gewinnt, wer die wenigsten hat (bei Gleichstand mehrere).
+- **Hot-Seat ohne Übergabe-Bildschirm** (`privateViews: false`): Den Wurf sieht man nur, solange man den Becher gedrückt hält.
+- **Schütteln** nur auf Touch-Geräten; auf iPhones erscheint dafür einmal der Knopf „Würfeln durch Schütteln erlauben“.
+- **Spielerbild:** Der Spielstand zählt je Platz aufgedeckte Ansagen, Lügen und Lügen knapp über der Vorgabe (`record`). Der schwere Bot schätzt daraus, wie oft und wohin jemand lügt.
+- **Bot-Stärke** (je 1000 Partien zu zweit): schwer gegen leicht etwa 63 %, mittel gegen leicht 57 %, schwer gegen mittel 55 %. Selbst ein Bot, der beim Anzweifeln den Wurf kennt, gewinnt nur etwa 75 % – Mäxle bleibt ein Glücksspiel.
+
 ## Spielmodell
 
 ```ts
