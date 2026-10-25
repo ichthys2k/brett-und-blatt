@@ -62,7 +62,7 @@ export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile
   );
 }
 
-/** Raumcode eingeben, ohne Tastatur: die sechs Bilder antippen. */
+/** Raumcode eingeben, ohne Tastatur: die vier Bilder antippen. */
 export function EmojiKeypad({ onComplete }: { onComplete: (code: string) => void }) {
   const [parts, setParts] = useState<string[]>([]);
   // Jede Eingabe baut auf dem neuesten Stand auf – auch bei sehr schnellem Tippen.

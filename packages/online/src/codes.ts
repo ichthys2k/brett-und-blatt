@@ -1,8 +1,7 @@
 /**
- * Raumcodes aus Emojis: sechs aus 16 ergeben gut 16,7 Millionen Möglichkeiten –
- * genauso viele wie früher vier aus 64, aber mit einer übersichtlichen Auswahl.
- * Kinder können sie vorlesen („Fuchs, Apfel, Rakete, Ballon, …“) und ohne Tastatur
- * eintippen, weil die Oberfläche alle 16 zur Auswahl zeigt.
+ * Raumcodes aus Emojis: vier aus 16 ergeben 65.536 Möglichkeiten. Bewusst kurz und
+ * übersichtlich – Kinder können sie vorlesen („Fuchs, Apfel, Rakete, Ballon“) und ohne
+ * Tastatur eintippen, weil die Oberfläche alle 16 zur Auswahl zeigt.
  *
  * Nur Emojis aus einem einzigen Zeichen, damit es auf allen Geräten gleich aussieht
  * und sich zuverlässig zerlegen lässt.
@@ -12,7 +11,7 @@ export const ROOM_EMOJIS = [
   '🍎', '🍌', '🍓', '🍕', '🌈', '⭐', '🚀', '🎈',
 ] as const;
 
-export const ROOM_CODE_LENGTH = 6;
+export const ROOM_CODE_LENGTH = 4;
 
 /** Ein neuer Raumcode. `randomInt(n)` liefert eine Zufallszahl von 0 bis n − 1. */
 export function randomRoomCode(randomInt: (n: number) => number): string {
