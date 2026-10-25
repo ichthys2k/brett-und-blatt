@@ -1,7 +1,9 @@
 import { useRoute } from './lib/router';
 import { Home } from './screens/Home';
 import { Datenschutz, Impressum } from './screens/Legal';
+import { Online } from './screens/Online';
 import { Play } from './screens/Play';
+import { RoomScreen } from './screens/Room';
 import { Setup } from './screens/Setup';
 
 export function App() {
@@ -11,6 +13,10 @@ export function App() {
       return <Setup key={route.gameId} gameId={route.gameId} />;
     case 'play':
       return <Play />;
+    case 'online':
+      return <Online />;
+    case 'room':
+      return <RoomScreen key={route.code} code={route.code} />;
     case 'imprint':
       return <Impressum />;
     case 'privacy':

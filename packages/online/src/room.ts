@@ -80,6 +80,7 @@ interface Game {
   seatMembers: (string | null)[];
   seats: PublicSeat[];
   time: LobbySettings['time'];
+  round: number;
   /** Damit die Versionsnummer nach einem Neustart des Servers weiterzählt statt bei 0 anzufangen. */
   versionOffset: number;
   unsubscribe: () => void;
@@ -92,12 +93,14 @@ export interface RoomSnapshot {
   hostId: string | null;
   phase: RoomPhase;
   lobby: LobbySettings;
-  members: { id: string; token: string; name: string; avatar: string; awayByDisconnect: boolean }[];
+  /** `disconnectedAt`: seit wann ohne Verbindung (null: beim Speichern verbunden). */
+  members: { id: string; token: string; name: string; avatar: string; awayByDisconnect: boolean; disconnectedAt: number | null }[];
   kicked: string[];
   nextMember: number;
   lastVersion: number;
+  rounds: number;
   lastActivity: number;
-  game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; time: LobbySettings['time']; version: number } | null;
+  game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; time: LobbySettings['time']; version: number; round: number } | null;
 }
 
 /**
@@ -117,6 +120,8 @@ export class Room {
   private game: Game | null = null;
   private nextMember = 1;
   private lastVersion = 0;
+  /** Wie viele Partien in diesem Raum schon begonnen haben. */
+  private rounds = 0;
   private lastActivity: number;
 
   constructor(
@@ -222,12 +227,13 @@ export class Room {
       hostId: this.hostId,
       phase: this.phase,
       lobby: structuredClone(this.lobby),
-      members: [...this.members.values()].map(({ id, token, name, avatar, awayByDisconnect }) => ({ id, token, name, avatar, awayByDisconnect })),
+      members: [...this.members.values()].map(({ id, token, name, avatar, awayByDisconnect, disconnectedAt }) => ({ id, token, name, avatar, awayByDisconnect, disconnectedAt })),
       kicked: [...this.kicked],
       nextMember: this.nextMember,
       lastVersion: this.lastVersion,
+      rounds: this.rounds,
       lastActivity: this.lastActivity,
-      game: game ? { session: game.session.snapshot(), seatMembers: [...game.seatMembers], seats: game.seats, time: game.time, version: this.gameVersion() } : null,
+      game: game ? { session: game.session.snapshot(), seatMembers: [...game.seatMembers], seats: game.seats, time: game.time, version: this.gameVersion(), round: game.round } : null,
     };
   }
 
@@ -244,17 +250,20 @@ export class Room {
     room.kicked = new Set(snapshot.kicked);
     room.nextMember = snapshot.nextMember;
     room.lastVersion = snapshot.lastVersion;
+    room.rounds = snapshot.rounds;
     room.lastActivity = snapshot.lastActivity;
     const now = deps.now();
     for (const m of snapshot.members) {
-      room.members.set(m.id, { ...m, connections: new Set(), disconnectedAt: now, lastSignal: 0 });
+      // Wer schon vorher weg war, behält seinen Zeitpunkt – sonst begänne die Frist bei jedem
+      // Aufwachen des Servers von vorn. Wer verbunden war, gilt bis zur Wiederzuordnung als weg.
+      room.members.set(m.id, { ...m, connections: new Set(), disconnectedAt: m.disconnectedAt ?? now, lastSignal: 0 });
       room.tokens.set(m.token, m.id);
     }
     const saved = snapshot.game;
     const module = saved ? deps.findGame(saved.session.config.gameId) : undefined;
     if (saved && module) {
       const session = LocalSession.restore(module, saved.session, room.sessionDeps(), { resumeClocks: true });
-      room.attachGame({ module, session, seatMembers: saved.seatMembers, seats: saved.seats, time: saved.time, versionOffset: saved.version - session.version, unsubscribe: () => {} });
+      room.attachGame({ module, session, seatMembers: saved.seatMembers, seats: saved.seats, time: saved.time, round: saved.round, versionOffset: saved.version - session.version, unsubscribe: () => {} });
     } else if (saved) {
       room.phase = 'lobby';
     }
@@ -456,7 +465,8 @@ export class Room {
     const session = new LocalSession(module, config, this.sessionDeps());
     // Die Versionen zählen über Partien hinweg weiter, damit kein alter Zug in eine neue Partie rutscht.
     const versionOffset = this.lastVersion + 1;
-    this.attachGame({ module, session, seatMembers: publicSeats.map((s) => s.memberId), seats: publicSeats, time: this.lobby.time, versionOffset, unsubscribe: () => {} });
+    this.rounds++;
+    this.attachGame({ module, session, seatMembers: publicSeats.map((s) => s.memberId), seats: publicSeats, time: this.lobby.time, round: this.rounds, versionOffset, unsubscribe: () => {} });
     for (const member of this.members.values()) member.awayByDisconnect = false;
     this.broadcastRoom();
     this.broadcastGame([]);
@@ -568,6 +578,7 @@ export class Room {
     return {
       type: 'game',
       gameId: module.info.id,
+      round: this.game!.round,
       version: this.gameVersion(),
       seats,
       options: session.config.options,

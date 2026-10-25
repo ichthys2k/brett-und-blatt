@@ -92,6 +92,8 @@ export interface RoomMessage {
 export interface GameMessage {
   type: 'game';
   gameId: string;
+  /** Laufende Nummer der Partie im Raum – eine Revanche ist eine neue Partie. */
+  round: number;
   /** Zählt jede Änderung; Züge nennen die Version, die der Browser gesehen hat. */
   version: number;
   seats: PublicSeat[];

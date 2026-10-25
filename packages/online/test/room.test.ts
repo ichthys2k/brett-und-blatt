@@ -397,3 +397,27 @@ describe('Schlafen und Aufwachen', () => {
     expect(restored.nextWakeup()).toBe(wake);
   });
 });
+
+describe('Neustart des Servers', () => {
+  it('wer nach dem Neustart nicht zurückkommt, wird vom Bot vertreten', async () => {
+    const env = setup();
+    const [anna] = twoPlayers(env);
+    anna.send({ type: 'move', version: anna.game().version, move: anna.game().legalMoves[0] });
+    const restored = Room.restore(JSON.parse(JSON.stringify(env.room.snapshot())), env.deps);
+    env.replaceRoom(restored);
+    // Nur Anna verbindet sich neu (neue Verbindung, gleiche Kennung).
+    const again = env.client('anna-neu', anna.token, 'anna');
+    again.hello();
+    expect(restored.nextWakeup()).toBe(env.now + AWAY_AFTER_DISCONNECT_MS);
+    // Zwischendurch schläft der Server und wacht wieder auf: Die Frist läuft trotzdem weiter.
+    env.advance(AWAY_AFTER_DISCONNECT_MS / 2);
+    const woken = Room.restore(JSON.parse(JSON.stringify(restored.snapshot())), env.deps);
+    env.replaceRoom(woken);
+    woken.reattach('anna-neu', 'm1');
+    env.advance(AWAY_AFTER_DISCONNECT_MS / 2);
+    woken.tick();
+    await flush();
+    expect(again.game().away).toEqual([1]);
+    expect(again.game().current).toEqual([0]);
+  });
+});

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '../components/controls';
 import { t } from '../i18n';
 import { discardGame } from '../lib/activeGame';
+import { GAME_SERVER } from '../lib/online';
 import { findGame, games } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
@@ -59,6 +60,21 @@ export function Home() {
             setSnapshot(null);
           }}
         />
+      )}
+
+      {GAME_SERVER && (
+        <a
+          href={paths.online}
+          className="flex items-center gap-4 rounded-2xl border border-accent/40 bg-accent/10 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
+        >
+          <span className="text-4xl leading-none" aria-hidden="true">
+            🌐
+          </span>
+          <span className="min-w-0 space-y-1">
+            <span className="block font-semibold">{t('home.online')}</span>
+            <span className="block text-sm text-muted">{t('home.online.text')}</span>
+          </span>
+        </a>
       )}
 
       <section className="space-y-3">

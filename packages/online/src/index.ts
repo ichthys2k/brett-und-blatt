@@ -14,3 +14,4 @@ export {
   type RoomSnapshot,
 } from './room';
 export { serverBotRunner } from './server-bots';
+export { OnlineSession, extrapolateClock, type OnlineSessionDeps } from './client';
