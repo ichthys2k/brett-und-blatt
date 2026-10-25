@@ -178,7 +178,7 @@ brett-und-blatt/
 **GitHub:**
 
 - **Actions** testen bei jedem Push. Für jedes Spiel laufen Hunderte Bot-gegen-Bot- und Zufallspartien mit; geprüft werden Absturzfreiheit, Spielende, Wiederholbarkeit, dass keine Geheimnisse in `playerView` landen und Partien mit ständigem Zeitablauf.
-- **Deployment:** Die Web-App kommt über Cloudflare Pages oder GitHub Pages unter `spiele.lipponer.de` online, der Worker über Wrangler.
+- **Deployment:** Die Web-App läuft über GitHub Pages unter `spiele.lipponer.de`. Der Workflow „Prüfungen“ veröffentlicht nach jedem Push auf `main` – aber nur, wenn alle Prüfungen bestanden sind. Der Worker kommt später über Wrangler.
 - **Mitmachen:** Issue-Vorlagen („Spielidee“, „Fehler gefunden“) und das Label „good first issue“ für kleine Spiele.
 
 ## Fahrplan
@@ -204,6 +204,7 @@ Weitere passende Spiele aus dem Brainstorming:
 
 ## Offene Punkte
 
-- Einrichtung von `spiele.lipponer.de` (DNS-Eintrag beim Domain-Anbieter)
+- DNS-Eintrag bei Strato: CNAME `spiele` → `ichthys2k.github.io`, danach HTTPS erzwingen
+- Impressum und Datenschutzerklärung für `spiele.lipponer.de`
 - Kartenblätter und Quartett-Sets gestalten bzw. recherchieren
 - Wortliste für Scrabble (vor Etappe „danach“)
