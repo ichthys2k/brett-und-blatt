@@ -55,9 +55,15 @@ Ein Bot mit Faustregeln spielt die Varianten ordentlich:
 Er liefert auch die **Tipps** („Was kann ich jetzt tun?“). Dazu kommen zwei Suchverfahren (`src/solver/`):
 
 - **FreeCell-Löser:** Alle Karten liegen offen, deshalb rechnet eine Bestensuche die Partie bis zum Sieg durch (98 von 100 Testspielen in höchstens 1,5 s, meist unter 0,3 s). Der Tipp ist der erste Zug der Lösung; die Lösung wird zwischengespeichert.
-- **Vorausschau für Klondike und Spider:** Sucht mit den offenen Karten die Zugfolge mit dem größten Fortschritt (Karte freilegen, ablegen, Spalte leeren, Farbfolge bauen), sonst Talon. Spider (eine Farbe) gewinnt damit 4 von 10 statt vorher keines; bei Klondike bleibt es bei etwa 1–2 von 12.
+- **Klondike-Löser mit voller Information** (`src/solver/klondike.ts`): Bestensuche wie bei FreeCell, braucht aber alle Karten. Er löst mit 5 000 Knoten gut die Hälfte der Spiele in rund 10 ms, mit 30 000 Knoten etwa zwei Drittel.
+- **Stichprobensuche für Klondike:** Der Bot belegt die verdeckten Karten mehrfach zufällig mit den Karten, die nirgends offen liegen, löst jede Belegung und nimmt den ersten Zug, der am häufigsten zum Sieg führte. Er hört früher auf, wenn ein Zug klar vorn liegt oder keine Stichprobe lösbar ist; dann greift die Vorausschau. Ergebnis: etwa 6 von 12 Partien (Eine Karte ziehen) statt 1–2.
+- **Vorausschau für Spider (und Klondike als Rückfall):** Sucht mit den offenen Karten die Zugfolge mit dem größten Fortschritt (Karte freilegen, ablegen, Spalte leeren, Farbfolge bauen), sonst Talon. Spider (eine Farbe) gewinnt damit 4 von 10 statt vorher keines.
 
-Offen: ein Löser, der verdeckte Karten über Stichproben berücksichtigt (für Klondike), und nur lösbare Spiele austeilen.
+## Nur lösbare Spiele
+
+Option für Klondike und FreeCell (`solvable`, Standard „Nein“). Beim Austeilen wird so lange neu gemischt, bis der Löser eine Lösung findet (`src/solvable.ts`). Damit das Austeilen aus dem Seed wiederholbar bleibt, zählt nur ein Knotenlimit (30 000), keine Uhr. Weil die Spielleitung bei „Zug zurück“ und beim Fortsetzen den Spielstand aus dem Seed neu berechnet, bleiben die letzten Ergebnisse zwischengespeichert. Im Browser dauert das Austeilen etwa 0,2 s.
+
+Offen: lösbare Spiele für Spider und Pyramide.
 
 ## Oberfläche
 

@@ -34,6 +34,16 @@ export const gameModule: GameModule<SolitaireState, SolitaireMove> = {
       default: '1',
     },
     {
+      id: 'solvable',
+      label: 'Nur lösbare Spiele',
+      when: { variant: ['klondike', 'freecell'] },
+      choices: [
+        { value: 'no', label: 'Nein' },
+        { value: 'yes', label: 'Ja' },
+      ],
+      default: 'no',
+    },
+    {
       id: 'spiderSuits',
       label: 'Farben',
       when: { variant: ['spider'] },

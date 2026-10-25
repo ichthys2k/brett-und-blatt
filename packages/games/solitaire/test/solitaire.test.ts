@@ -2,6 +2,7 @@ import { cardRank, computeBotMove, resolveOptions, type CardId, type Options } f
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { solveFreeCell } from '../src/solver/freecell';
+import { solveKlondike } from '../src/solver/klondike';
 import { bestPlan } from '../src/solver/lookahead';
 import { gameModule, isFree, type FreeCellState, type KlondikeState, type PyramidState, type SolitaireMove, type SolitaireState, type SpiderState } from '../src';
 
@@ -182,6 +183,20 @@ describe('Löser und Vorausschau', () => {
     expect(gameModule.result(state)).toEqual({ kind: 'win', winners: [0] });
   });
 
+  it('Klondike: der Löser mit voller Information findet eine regelgerechte Lösung', () => {
+    for (const draw of ['1', '3']) {
+      const state = start<KlondikeState>({ variant: 'klondike', draw, solvable: 'yes' }, `löser-${draw}`);
+      const solution = solveKlondike(state, { maxNodes: 30_000 });
+      expect(solution.moves).not.toBeNull();
+      expect(playToEnd(state, solution.moves ?? [])).toEqual({ kind: 'win', winners: [0] });
+    }
+  });
+
+  it('Klondike: der Löser verlangt alle Karten', () => {
+    const view = gameModule.playerView(start<KlondikeState>({ variant: 'klondike' }), 0) as KlondikeState;
+    expect(() => solveKlondike(view, { maxNodes: 10 })).toThrow();
+  });
+
   it('Klondike: die Vorausschau legt eine verdeckte Karte frei', () => {
     const empty = { down: [], up: [] };
     const state: KlondikeState = {
@@ -202,6 +217,38 @@ describe('Löser und Vorausschau', () => {
     expect(move).toEqual({ type: 'draw' });
   });
 });
+
+describe('Nur lösbare Spiele', () => {
+  it('Klondike und FreeCell: jedes ausgeteilte Spiel ist lösbar', () => {
+    for (let g = 0; g < 4; g++) {
+      const klondike = start<KlondikeState>({ variant: 'klondike', solvable: 'yes' }, `lösbar-${g}`);
+      expect(solveKlondike(klondike, { maxNodes: 30_000 }).moves).not.toBeNull();
+      const freecell = start<FreeCellState>({ variant: 'freecell', solvable: 'yes' }, `lösbar-${g}`);
+      expect(solveFreeCell(freecell, { timeBudgetMs: 1, now: () => 0, maxNodes: 30_000 }).moves).not.toBeNull();
+    }
+  });
+
+  it('das Austeilen bleibt aus dem Seed wiederholbar und vollständig', () => {
+    const a = start<KlondikeState>({ variant: 'klondike', solvable: 'yes' }, 'gleich');
+    expect(start({ variant: 'klondike', solvable: 'yes' }, 'gleich')).toEqual(a);
+    expect(new Set(allCards(a)).size).toBe(52);
+  });
+
+  it('ohne die Option bleibt das Austeilen wie bisher', () => {
+    expect(start({ variant: 'klondike', solvable: 'no' }, 'alt')).toEqual(start({ variant: 'klondike' }, 'alt'));
+  });
+});
+
+/** Spielt Züge regelgerecht nach; den Rest übernimmt wie im Spiel die Automatik. */
+function playToEnd(initial: SolitaireState, moves: SolitaireMove[]) {
+  let state = initial;
+  for (const move of moves) {
+    if (!gameModule.currentPlayers(state).includes(0)) break;
+    state = gameModule.applyMove(state, 0, move).state;
+  }
+  while (gameModule.currentPlayers(state)[0] === 'system') state = gameModule.applyMove(state, 'system', gameModule.legalMoves(state, 'system')[0]!).state;
+  return gameModule.result(state);
+}
 
 describe('Vertrag für Spielmodule', () => {
   for (const check of gameContractChecks(gameModule, { randomGames: 8, botGames: 1, maxMoves: 1600 })) test(check.name, check.run);

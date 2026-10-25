@@ -86,6 +86,8 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
   }, [session]);
 
   const seats = session.config.seats;
+  /** Ab drei Spielern wird die linke Spalte im Querformat breiter und die Spieler stehen zu zweit nebeneinander. */
+  const crowded = seats.length > 2;
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
   const current = session.currentSeats();
@@ -141,7 +143,7 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
   return (
     <div className="mx-auto flex h-dvh max-w-3xl flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] flat:max-w-none flat:flex-row flat:pl-[env(safe-area-inset-left)] flat:pr-[env(safe-area-inset-right)]">
       {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
-      <div className="contents flat:flex flat:w-64 flat:flex-none flat:flex-col flat:overflow-y-auto">
+      <div className={`contents flat:flex flat:flex-none flat:flex-col flat:overflow-y-auto ${crowded ? 'flat:w-80' : 'flat:w-64'}`}>
         <header className="flex h-14 flex-none items-center gap-2 px-3">
           <Button variant="ghost" className="px-3" aria-label={t('play.back')} onClick={() => navigate(paths.home)}>
             ←
@@ -166,7 +168,7 @@ function Table({ active, onRestart }: { active: ActiveGame; onRestart: (game: Ac
           )}
         </header>
 
-        <section className="flex flex-none flex-wrap gap-2 px-3" aria-label="Spieler">
+        <section className={`flex flex-none flex-wrap gap-2 px-3 ${crowded ? 'flat:grid flat:grid-cols-2' : ''}`} data-crowded={crowded || undefined} aria-label="Spieler">
           {seats.map((seat, index) => (
             <PlayerChip
               key={index}

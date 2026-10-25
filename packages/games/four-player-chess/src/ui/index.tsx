@@ -1,6 +1,6 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { FitBox, GridBoard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
-import { useState } from 'react';
+import { FitBox, GridBoard, useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { COLORS, type Color, type FourChessMove, type FourChessState, type Piece } from '../rules';
 import './styles.css';
 
@@ -34,6 +34,18 @@ function squareName(index: number): string {
 
 type MoveMove = Extract<FourChessMove, { t: 'm' }>;
 
+/** Unter dieser Feldgröße (in Pixeln) wird die Lupe angeboten. */
+const ZOOM_BELOW = 36;
+const ZOOM_KEY = 'bub-four-player-chess-zoom';
+
+function readZoom(): boolean {
+  try {
+    return localStorage.getItem(ZOOM_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProps<FourChessState, FourChessMove>) {
   const [selected, setSelected] = useState<number | null>(null);
   const [promotion, setPromotion] = useState<MoveMove[] | null>(null);
@@ -43,6 +55,27 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
     setSelected(null);
     setPromotion(null);
   }
+
+  // Lupe: Auf kleinen Bildschirmen sind die Felder nur gut 25 px groß. Vergrößert lässt sich das Brett mit dem Finger verschieben.
+  const [zoomed, setZoomed] = useState(readZoom);
+  const [sizeRef, size] = useElementSize<HTMLDivElement>();
+  const cellSize = size.width / 14;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const toggleZoom = (on: boolean) => {
+    setZoomed(on);
+    try {
+      localStorage.setItem(ZOOM_KEY, on ? '1' : '0');
+    } catch {
+      // Ohne Speicher gilt die Einstellung nur für diese Partie.
+    }
+  };
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!zoomed || !el) return;
+    // Die eigene Seite liegt unten: dort in der Mitte anfangen.
+    el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2;
+    el.scrollTop = el.scrollHeight - el.clientHeight;
+  }, [zoomed]);
 
   const seat = typeof viewer === 'number' ? viewer : activeSeat;
   const perspective: Color = seat !== null && seat !== undefined ? (COLORS[seat] ?? 'r') : 'r';
@@ -64,41 +97,50 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
 
   return (
     <FitBox ratio={1}>
-      <div className="fc-wrap">
-        <GridBoard
-          cols={14}
-          rows={14}
-          label="Vierer-Schachbrett"
-          className="fc-board"
-          renderCell={(dc, dr) => {
-            const index = toBoard(dc, dr, perspective);
-            const piece = view.board[index];
-            if (!onBoard(Math.floor(index / 14), index % 14)) return null;
-            return piece ? <span className={`fc-piece fc-${piece.d ? 'dead' : piece.c}`}>{GLYPHS[piece.t]}</span> : targets.has(index) ? <span className="fc-dot" /> : null;
-          }}
-          isActive={(dc, dr) => {
-            const index = toBoard(dc, dr, perspective);
-            return movable.has(index) || targets.has(index);
-          }}
-          onActivate={(dc, dr) => tap(toBoard(dc, dr, perspective))}
-          cellClassName={(dc, dr) => {
-            const index = toBoard(dc, dr, perspective);
-            const row = Math.floor(index / 14);
-            const col = index % 14;
-            if (!onBoard(row, col)) return 'fc-off';
-            const classes = [(row + col) % 2 === 0 ? 'fc-light' : 'fc-dark'];
-            if (index === selected) classes.push('fc-selected');
-            if (targets.has(index) && view.board[index]) classes.push('fc-capture');
-            if (view.lastMove && (view.lastMove.from === index || view.lastMove.to === index)) classes.push('fc-last');
-            if (hintMove && (hintMove.f === index || hintMove.to === index)) classes.push('fc-hint');
-            return classes.join(' ');
-          }}
-          cellLabel={(dc, dr) => {
-            const index = toBoard(dc, dr, perspective);
-            const piece = view.board[index];
-            return `${squareName(index)}: ${piece ? `${piece.d ? 'tote Figur' : NAMES[piece.c]} ${PIECE_NAMES[piece.t]}` : 'frei'}`;
-          }}
-        />
+      <div className="fc-wrap" ref={sizeRef}>
+        <div className={`fc-scroll ${zoomed ? 'fc-zoomed' : ''}`} ref={scrollRef}>
+          <div className="fc-zoom">
+            <GridBoard
+              cols={14}
+              rows={14}
+              label="Vierer-Schachbrett"
+              className="fc-board"
+              renderCell={(dc, dr) => {
+                const index = toBoard(dc, dr, perspective);
+                const piece = view.board[index];
+                if (!onBoard(Math.floor(index / 14), index % 14)) return null;
+                return piece ? <span className={`fc-piece fc-${piece.d ? 'dead' : piece.c}`}>{GLYPHS[piece.t]}</span> : targets.has(index) ? <span className="fc-dot" /> : null;
+              }}
+              isActive={(dc, dr) => {
+                const index = toBoard(dc, dr, perspective);
+                return movable.has(index) || targets.has(index);
+              }}
+              onActivate={(dc, dr) => tap(toBoard(dc, dr, perspective))}
+              cellClassName={(dc, dr) => {
+                const index = toBoard(dc, dr, perspective);
+                const row = Math.floor(index / 14);
+                const col = index % 14;
+                if (!onBoard(row, col)) return 'fc-off';
+                const classes = [(row + col) % 2 === 0 ? 'fc-light' : 'fc-dark'];
+                if (index === selected) classes.push('fc-selected');
+                if (targets.has(index) && view.board[index]) classes.push('fc-capture');
+                if (view.lastMove && (view.lastMove.from === index || view.lastMove.to === index)) classes.push('fc-last');
+                if (hintMove && (hintMove.f === index || hintMove.to === index)) classes.push('fc-hint');
+                return classes.join(' ');
+              }}
+              cellLabel={(dc, dr) => {
+                const index = toBoard(dc, dr, perspective);
+                const piece = view.board[index];
+                return `${squareName(index)}: ${piece ? `${piece.d ? 'tote Figur' : NAMES[piece.c]} ${PIECE_NAMES[piece.t]}` : 'frei'}`;
+              }}
+            />
+          </div>
+        </div>
+        {(zoomed || (cellSize > 0 && cellSize < ZOOM_BELOW)) && (
+          <button type="button" className="fc-lens" aria-pressed={zoomed} aria-label={zoomed ? 'Brett verkleinern' : 'Brett vergrößern'} title={zoomed ? 'Brett verkleinern' : 'Brett vergrößern'} onClick={() => toggleZoom(!zoomed)}>
+            {zoomed ? '⊖' : '🔍'}
+          </button>
+        )}
         {claim && (
           <button type="button" className="fc-claim" onClick={() => onMove(claim)}>
             🏆 Sieg beanspruchen

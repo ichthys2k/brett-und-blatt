@@ -43,9 +43,12 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - Solitaire: FreeCell-Löser (`src/solver/freecell.ts`, löst ~98 % in ≤ 1,5 s) und Vorausschau für Klondike/Spider (`src/solver/lookahead.ts`); Spider-Bot deutlich besser, Klondike etwa unverändert. Bedingte Optionen (`when`) im Setup.
 - Einheitliche Fokus-Markierung für Tastaturbedienung.
 
+**Kleine offene Punkte (fertig):**
+- Vierer-Schach: Lupe (🔍 in der freien Ecke oben rechts, ab Feldern < 36 px) vergrößert das Brett auf 170 % in einem verschiebbaren Ausschnitt; Einstellung je Gerät in `localStorage`. Im Querformat bei drei oder mehr Spielern breitere linke Spalte mit kompakten Spieler-Chips zu zweit (`data-crowded` in `Play.tsx`/`styles.css`) – kein Scrollen mehr.
+- Solitaire: Klondike-Löser mit voller Information (`src/solver/klondike.ts`), Stichprobensuche im Bot (~6 von 12 statt 1–2) und Option „Nur lösbare Spiele“ für Klondike und FreeCell (`src/solvable.ts`). Details im Spielplan.
+
 **Bekannte offene Punkte:**
-- Vierer-Schach: Felder auf dem Handy nur ~25 px groß (14×14-Brett); im Querformat muss die linke Spalte bei vier Spielern gescrollt werden.
-- Solitaire: Klondike-Bot schwach (gewinnt ~1–2 von 12); denkbar ist eine Stichprobensuche über die verdeckten Karten. „Nur lösbare Spiele austeilen“ fehlt.
+- Solitaire: lösbare Spiele für Spider und Pyramide fehlen.
 - Soundeffekte: kommen später – Cornelius sucht passende Effekte aus und gibt sie vor. Nicht eigenmächtig einbauen.
 - Datenschutzerklärung muss vor den Online-Partien um Cloudflare ergänzt werden (siehe Konzept, Abschnitt „Datenschutz und Sicherheit“).
 

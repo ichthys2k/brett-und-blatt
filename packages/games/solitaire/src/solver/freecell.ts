@@ -1,6 +1,7 @@
 import { cardRank, type CardId } from '@brett-und-blatt/engine';
 import { foundationIndex } from '../common';
 import type { FreeCellState, SolitaireMove } from '../types';
+import { Heap } from './heap';
 
 /**
  * Löser für FreeCell. Alle Karten liegen offen, deshalb lässt sich eine Partie
@@ -166,45 +167,6 @@ function expand(n: Node): Node[] {
   return out;
 }
 
-/** Einfache Vorrangwarteschlange (binärer Heap) nach Schätzwert. */
-class Heap {
-  private items: Node[] = [];
-  get size() {
-    return this.items.length;
-  }
-  push(node: Node) {
-    const a = this.items;
-    a.push(node);
-    let i = a.length - 1;
-    while (i > 0) {
-      const p = (i - 1) >> 1;
-      if (a[p]!.h <= a[i]!.h) break;
-      [a[p], a[i]] = [a[i]!, a[p]!];
-      i = p;
-    }
-  }
-  pop(): Node | undefined {
-    const a = this.items;
-    const top = a[0];
-    const end = a.pop();
-    if (a.length > 0 && end) {
-      a[0] = end;
-      let i = 0;
-      for (;;) {
-        const l = 2 * i + 1;
-        const r = l + 1;
-        let m = i;
-        if (l < a.length && a[l]!.h < a[m]!.h) m = l;
-        if (r < a.length && a[r]!.h < a[m]!.h) m = r;
-        if (m === i) break;
-        [a[m], a[i]] = [a[i]!, a[m]!];
-        i = m;
-      }
-    }
-    return top;
-  }
-}
-
 export interface SolveResult {
   /** Die Züge bis zum Sieg (in den Regeln der Spielleitung) oder null, wenn keine Lösung gefunden wurde. */
   moves: SolitaireMove[] | null;
@@ -247,7 +209,7 @@ export function solveFreeCell(state: FreeCellState, options: { timeBudgetMs: num
   const known = cache.get(exactKey(start));
   if (known) return { moves: known, nodes: 0 };
   const seen = new Set<string>([key(start)]);
-  const open = new Heap();
+  const open = new Heap<Node>();
   open.push(start);
   let nodes = 0;
   while (open.size > 0) {

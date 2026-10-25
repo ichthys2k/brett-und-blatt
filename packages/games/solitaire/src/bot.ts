@@ -1,11 +1,12 @@
-import { cardRank, sameValue, type BotDefinition, type CardId } from '@brett-und-blatt/engine';
+import { cardRank, sameValue, type BotDefinition, type CardId, type Rng } from '@brett-und-blatt/engine';
 import { last } from './common';
 import { maxMovable } from './freecell';
 import { rowOf } from './pyramid';
-import { legalMoves } from './rules';
+import { legalMoves, sampleHidden } from './rules';
 import { solveFreeCell } from './solver/freecell';
+import { solveKlondike } from './solver/klondike';
 import { bestPlan } from './solver/lookahead';
-import type { Loc, SolitaireMove, SolitaireState } from './types';
+import type { KlondikeState, Loc, SolitaireMove, SolitaireState } from './types';
 
 /** Ist `move` die Umkehrung des letzten Zuges? Hin und her schieben bringt nichts. */
 function undoesLast(state: SolitaireState, move: SolitaireMove): boolean {
@@ -99,6 +100,33 @@ function foundationNeed(state: SolitaireState, card: CardId): number {
 }
 
 /**
+ * Klondike mit Stichproben: Die verdeckten Karten werden mehrfach zufällig belegt
+ * (nur mit Karten, die nirgends offen liegen), jede Belegung löst der Löser mit
+ * voller Information. Gewählt wird der erste Zug, der am häufigsten zum Sieg führte.
+ * Ohne eine einzige gelöste Stichprobe gibt es kein Ergebnis.
+ */
+function sampledKlondikeMove(view: KlondikeState, moves: SolitaireMove[], rng: Rng, budgetMs: number, now: () => number): SolitaireMove | null {
+  const deadline = now() + budgetMs;
+  const votes = new Map<string, { move: SolitaireMove; count: number }>();
+  const ranking = () => [...votes.values()].sort((a, b) => b.count - a.count);
+  for (let sample = 1; sample <= 60 && now() < deadline; sample++) {
+    const filled = sampleHidden(view, 0, rng) as KlondikeState;
+    const first = solveKlondike(filled, { maxNodes: 4000, timeBudgetMs: deadline - now(), now }).moves?.[0];
+    if (first && moves.some((m) => sameValue(m, first))) {
+      const id = JSON.stringify(first);
+      const entry = votes.get(id) ?? { move: first, count: 0 };
+      entry.count++;
+      votes.set(id, entry);
+    }
+    // Früher aufhören: Ist keine Stichprobe lösbar, hilft mehr Rechnen kaum; liegt ein Zug klar vorn, steht er fest.
+    if (sample === 8 && votes.size === 0) break;
+    const [lead, second] = ranking();
+    if (lead && lead.count >= 12 && lead.count >= 2 * (second?.count ?? 0)) break;
+  }
+  return ranking()[0]?.move ?? null;
+}
+
+/**
  * Standard-Bot und Tipp-Geber: wählt den Zug mit der besten Bewertung.
  * - leicht: oft ein zufälliger sinnvoller Zug
  * - mittel: meist der beste Zug, bei FreeCell der Zug aus dem Löser
@@ -125,6 +153,10 @@ export const solitaireBot: BotDefinition<SolitaireState, SolitaireMove> = {
         return card !== null && cardRank(card) <= 2;
       });
       if (safe) return safe;
+      if (ctx.view.variant === 'klondike') {
+        const sampled = sampledKlondikeMove(ctx.view, moves, ctx.rng, Math.min(ctx.timeBudgetMs, ctx.level === 'hard' ? 1500 : 500), ctx.now);
+        if (sampled) return sampled;
+      }
       const plan = bestPlan(ctx.view, { timeBudgetMs: Math.min(ctx.timeBudgetMs, 800), now: ctx.now });
       if (plan) return plan.move;
       const stock = moves.find((m) => m.type === 'draw') ?? moves.find((m) => m.type === 'recycle');

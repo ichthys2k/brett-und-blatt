@@ -2,6 +2,7 @@ import { cardRank, createDeck, Rng, sameValue, type Actor, type CardId, type Gam
 import { applyFreeCell, freeCellMoves, freeCellTrivial, freeCellWon, setupFreeCell } from './freecell';
 import { applyKlondike, klondikeMoves, klondikeTrivial, klondikeWon, setupKlondike } from './klondike';
 import { applyPyramid, pyramidMoves, pyramidWon, setupPyramid } from './pyramid';
+import { solvableFreeCell, solvableKlondike } from './solvable';
 import { applySpider, setupSpider, spiderMoves, spiderWon } from './spider';
 import type { Pile, SolitaireMove, SolitaireState } from './types';
 
@@ -10,15 +11,18 @@ export const MOVE_LIMIT = 1500;
 
 export function setup(_seats: number, options: Options, seed: string): SolitaireState {
   const rng = Rng.fromSeed(seed, 'mischen');
+  const solvable = options.solvable === 'yes';
   switch (options.variant) {
     case 'freecell':
-      return setupFreeCell(rng);
+      return solvable ? solvableFreeCell(rng, seed) : setupFreeCell(rng);
     case 'spider':
       return setupSpider(rng, options.spiderSuits === '4' ? 4 : options.spiderSuits === '2' ? 2 : 1);
     case 'pyramid':
       return setupPyramid(rng);
-    default:
-      return setupKlondike(rng, options.draw === '3' ? 3 : 1);
+    default: {
+      const draw = options.draw === '3' ? 3 : 1;
+      return solvable ? solvableKlondike(rng, draw, seed) : setupKlondike(rng, draw);
+    }
   }
 }
 
