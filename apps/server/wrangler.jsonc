@@ -2,6 +2,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "brett-und-blatt",
+  // Cloudflare-Konto von Cornelius (nicht geheim; erspart der CI ein zweites Secret).
+  "account_id": "edce5b79ce86adb04d7e64f0f41c44d2",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
   "durable_objects": {
