@@ -15,6 +15,8 @@ export interface GridBoardProps {
   /** Meldet die Spalte unter dem Mauszeiger (für Vorschau-Steine am Desktop). */
   onHoverColumn?: (col: number | null) => void;
   className?: string;
+  /** Zusätzliche Attribute (z. B. data-drop-target oder Pointer-Handler). */
+  cellProps?: (col: number, row: number) => Record<string, unknown>;
 }
 
 /**
@@ -23,11 +25,12 @@ export interface GridBoardProps {
  * und damit auch per Tastatur bedienbar; nicht antippbare Zellen sind deaktiviert.
  * Die Zellen bleiben immer dieselben Elemente, damit Animationen nicht neu starten.
  */
-export function GridBoard({ cols, rows, label, renderCell, isActive, onActivate, cellLabel, cellClassName, onHoverColumn, className = '' }: GridBoardProps) {
+export function GridBoard({ cols, rows, label, renderCell, isActive, onActivate, cellLabel, cellClassName, onHoverColumn, className = '', cellProps }: GridBoardProps) {
   const cells: ReactNode[] = [];
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const active = isActive?.(col, row) ?? false;
+      const extra = cellProps?.(col, row);
       cells.push(
         <button
           key={`${col}-${row}`}
@@ -36,6 +39,7 @@ export function GridBoard({ cols, rows, label, renderCell, isActive, onActivate,
           aria-label={cellLabel?.(col, row)}
           className={`bub-cell ${cellClassName?.(col, row) ?? ''}`}
           onClick={active ? () => onActivate?.(col, row) : undefined}
+          {...extra}
         >
           {renderCell(col, row)}
         </button>,

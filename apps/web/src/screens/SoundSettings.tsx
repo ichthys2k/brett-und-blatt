@@ -22,7 +22,7 @@ export function SoundSettingsScreen() {
         <h1 className="text-2xl font-bold">{t('sound.settings')}</h1>
       </header>
       <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
-        <VolumeControls />
+        <VolumeControls showClientOption />
       </div>
       <div className="rounded-2xl border border-line bg-surface p-4">
         <MusicList

@@ -59,3 +59,21 @@
     transition: none;
   }
 }
+
+.sol-card.bub-dragging {
+  transition: none !important;
+  cursor: grabbing !important;
+  z-index: 1000 !important;
+}
+
+.sol-card.bub-snapping {
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.25, 1) !important;
+  pointer-events: none;
+}
+
+.sol-pos[data-drop-active='true'] .bub-slot,
+.sol-card[data-drop-active='true'] .bub-card {
+  outline: 3px solid #f2b705;
+  outline-offset: 2px;
+  box-shadow: 0 0 16px rgba(242, 183, 5, 0.6);
+}

@@ -402,6 +402,11 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<BingoState, BingoMove> = {
   Board,
   SeatSymbol,
+  sounds: {
+    drawn: 'aufdecken',
+    marked: 'paar',
+    bingo: (event) => (event.valid ? 'stapel-fertig' : 'zweifeln'),
+  },
   seatLabel: (seat) => (seat === CALLER ? 'Spielleitung' : `Platz ${seat + 1}`),
   seatDetail: (view, seat) => {
     if (!hasCard(view, seat)) return 'zieht';

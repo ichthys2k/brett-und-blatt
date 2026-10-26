@@ -17,6 +17,7 @@ function loadSettings(): SoundSettings {
       muted: typeof saved.muted === 'boolean' ? saved.muted : DEFAULT_SOUND_SETTINGS.muted,
       effects: typeof saved.effects === 'number' ? saved.effects : DEFAULT_SOUND_SETTINGS.effects,
       music: typeof saved.music === 'number' ? saved.music : DEFAULT_SOUND_SETTINGS.music,
+      clientMusic: typeof saved.clientMusic === 'boolean' ? saved.clientMusic : (DEFAULT_SOUND_SETTINGS.clientMusic ?? false),
     };
   } catch {
     return DEFAULT_SOUND_SETTINGS;

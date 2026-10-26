@@ -1,12 +1,33 @@
 import { cardRank, SUITS, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
-import { PlayingCard, SuitShape, useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
-import { useState, type ReactNode } from 'react';
+import {
+  PlayingCard,
+  SuitShape,
+  useElementSize,
+  usePointerDrag,
+  useSpawnAnimation,
+  type BoardProps,
+  type DragState,
+  type GameUi,
+} from '@brett-und-blatt/ui';
+import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { isFree, rowOf, rowStart } from '../pyramid';
 import { sameLoc, type Loc, type Pile, type PyramidLoc, type SolitaireMove, type SolitaireState } from '../types';
 import './styles.css';
 
 type MoveMove = Extract<SolitaireMove, { type: 'move' }>;
 type Highlight = 'target' | 'hint' | null;
+
+interface SolitaireDragItem {
+  loc: Loc;
+  count: number;
+  card: CardId;
+  cards: CardId[];
+}
+
+function locToTargetId(loc: Loc): string {
+  if (loc.kind === 'waste') return 'waste';
+  return `${loc.kind}-${loc.index}`;
+}
 
 interface Placed {
   key: string;
@@ -16,6 +37,11 @@ interface Placed {
   onClick?: () => void;
   selected?: boolean;
   highlight?: Highlight;
+  dragItem?: SolitaireDragItem;
+  dropTarget?: string;
+  spawnOrigin?: { x: number; y: number } | null;
+  spawnDelay?: number;
+  anim?: 'deal' | null;
 }
 
 interface Slot {
@@ -26,6 +52,7 @@ interface Slot {
   onClick?: () => void;
   highlight?: Highlight;
   badge?: string;
+  dropTarget?: string;
 }
 
 const COLUMNS: Record<SolitaireState['variant'], number> = { klondike: 7, freecell: 8, spider: 10, pyramid: 7 };
@@ -38,9 +65,69 @@ function SuitLabel({ suit }: { suit: Suit }) {
   );
 }
 
+function PlacedCard({
+  p,
+  z,
+  cardW,
+  dragState,
+  bindDrag,
+  isDragged,
+  isSnapping,
+}: {
+  p: Placed;
+  z: number;
+  cardW: number;
+  dragState: DragState<SolitaireDragItem>;
+  bindDrag: (item: SolitaireDragItem) => {
+    onPointerDown: (e: React.PointerEvent<HTMLElement>) => void;
+    style?: CSSProperties;
+  };
+  isDragged: boolean;
+  isSnapping: boolean;
+}) {
+  const { style: spawnStyle } = useSpawnAnimation({
+    origin: p.spawnOrigin,
+    target: { x: p.x, y: p.y },
+    delayMs: p.spawnDelay,
+  });
+
+  const dragTransform =
+    isDragged || isSnapping
+      ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)`
+      : undefined;
+
+  const dragHandlers = p.dragItem ? bindDrag(p.dragItem) : undefined;
+
+  return (
+    <span
+      className={`sol-pos sol-card ${isDragged ? 'bub-dragging' : ''} ${isSnapping ? 'bub-snapping' : ''}`}
+      style={{
+        left: p.x,
+        top: p.y,
+        width: cardW,
+        zIndex: isDragged ? 1000 + z : z + 1,
+        transform: dragTransform,
+        ...spawnStyle,
+        ...dragHandlers?.style,
+      }}
+      data-drop-target={p.dropTarget}
+      onPointerDown={dragHandlers?.onPointerDown}
+    >
+      <PlayingCard
+        card={p.card}
+        onClick={p.onClick}
+        selected={p.selected}
+        highlight={p.highlight ?? null}
+        label={p.card === null && p.onClick ? 'Talon: Karten ziehen' : undefined}
+        anim={p.anim}
+      />
+    </span>
+  );
+}
+
 /**
- * Bedienung: Karte antippen führt den naheliegendsten Zug aus (Ablage zuerst).
- * Gibt es mehrere Ziele, wird die Karte gewählt und die Ziele leuchten auf.
+ * Bedienung: Karten können per Drag & Drop auf gültige Ziele gezogen werden,
+ * oder wie gewohnt durch Antippen (Ablage zuerst, bei mehreren Zielen Auswahl).
  */
 function Board({ view, legalMoves, onMove, hint }: BoardProps<SolitaireState, SolitaireMove>) {
   const [ref, size] = useElementSize<HTMLDivElement>();
@@ -55,7 +142,6 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<SolitaireState, So
 
   const cols = COLUMNS[view.variant];
   const gap = Math.max(3, size.width * 0.012);
-  // Die Pyramide ist höher (sieben halb überlappende Reihen plus Talon) als die anderen Auslagen.
   const maxCardH = view.variant === 'pyramid' ? (size.height - gap * 4) / 5.2 : size.height * 0.24;
   const cardW = Math.max(18, Math.min(110, (size.width - gap * (cols + 1)) / cols, maxCardH / 1.4));
   const cardH = cardW * 1.4;
@@ -68,6 +154,31 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<SolitaireState, So
   const isTarget = (loc: Loc) => targetsOfSelection.some((t) => sameLoc(t, loc));
   const hintMove = hint?.type === 'move' ? hint : null;
   const hintTarget = (loc: Loc): Highlight => (hintMove && sameLoc(hintMove.to, loc) ? 'hint' : isTarget(loc) ? 'target' : null);
+
+  const { dragState, bindDrag } = usePointerDrag<SolitaireDragItem>({
+    threshold: 6,
+    onDrop: (item, targetId) => {
+      if (!targetId) return false;
+      const targetMove = moves.find(
+        (m) => sameLoc(m.from, item.loc) && m.count === item.count && locToTargetId(m.to) === targetId,
+      );
+      if (targetMove) {
+        onMove(targetMove);
+        return true;
+      }
+      return false;
+    },
+  });
+
+  const prevWasteLen = useRef(view.variant === 'klondike' ? view.waste.length : 0);
+  const prevStockLen = useRef('stock' in view ? view.stock.length : 0);
+  const isDeal = view.moveCount === 0;
+
+  const justDrewKlondike = view.variant === 'klondike' && view.waste.length > prevWasteLen.current;
+  prevWasteLen.current = view.variant === 'klondike' ? view.waste.length : 0;
+
+  const justDrewSpider = view.variant === 'spider' && view.stock.length < prevStockLen.current;
+  prevStockLen.current = 'stock' in view ? view.stock.length : 0;
 
   const tapCard = (loc: Loc, count: number) => {
     if (selected) {
@@ -108,9 +219,9 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<SolitaireState, So
   const topY = gap;
   const tableauY = gap * 2 + cardH;
 
-  /** Ein Stapel mit verdeckten und offenen Karten, der sich bei Platzmangel zusammenschiebt. */
   const layPile = (pile: Pile, index: number, x: number) => {
     const loc: Loc = { kind: 'tableau', index };
+    const targetId = `tableau-${index}`;
     const available = Math.max(cardH * 0.2, size.height - tableauY - cardH - gap);
     let down = cardH * 0.12;
     let up = cardH * 0.28;
@@ -120,28 +231,77 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<SolitaireState, So
       down *= scale;
       up *= scale;
     }
-    slots.push({ key: `pile-${index}`, x, y: tableauY, onClick: () => tapSlot(loc), highlight: hintTarget(loc) });
-    pile.down.forEach((card, i) => placed.push({ key: card ?? `verdeckt-${index}-${i}`, card: null, x, y: tableauY + i * down }));
+    slots.push({
+      key: `pile-${index}`,
+      x,
+      y: tableauY,
+      onClick: () => tapSlot(loc),
+      highlight: hintTarget(loc),
+      dropTarget: targetId,
+    });
+    pile.down.forEach((card, i) =>
+      placed.push({
+        key: card ?? `verdeckt-${index}-${i}`,
+        card: null,
+        x,
+        y: tableauY + i * down,
+        dropTarget: targetId,
+        anim: isDeal ? 'deal' : undefined,
+      }),
+    );
     const asTarget = hintTarget(loc);
     pile.up.forEach((card, i) => {
       const count = pile.up.length - i;
+      const runCards = pile.up.slice(i);
       const flags = cardFlags(loc, count);
-      // Ist der Stapel Ziel eines Tipps oder der Auswahl, leuchtet seine oberste Karte.
       if (count === 1 && !flags.highlight && !flags.selected) flags.highlight = asTarget;
-      placed.push({ key: card, card, x, y: tableauY + pile.down.length * down + i * up, onClick: () => tapCard(loc, count), ...flags });
+      const canDrag = moves.some((m) => sameLoc(m.from, loc) && m.count === count);
+      const isNewSpiderCard = justDrewSpider && i === pile.up.length - 1;
+      placed.push({
+        key: card,
+        card,
+        x,
+        y: tableauY + pile.down.length * down + i * up,
+        onClick: () => tapCard(loc, count),
+        dragItem: canDrag ? { loc, count, card, cards: runCards } : undefined,
+        dropTarget: targetId,
+        spawnOrigin: isNewSpiderCard ? { x: colX(0), y: topY } : null,
+        spawnDelay: isNewSpiderCard ? index * 25 : undefined,
+        anim: isDeal ? 'deal' : undefined,
+        ...flags,
+      });
     });
   };
 
   const layFoundations = (foundations: CardId[][], firstCol: number) => {
     foundations.forEach((foundation, index) => {
       const loc: Loc = { kind: 'foundation', index };
+      const targetId = `foundation-${index}`;
       const x = colX(firstCol + index);
-      slots.push({ key: `ablage-${index}`, x, y: topY, label: <SuitLabel suit={SUITS[index] as Suit} />, onClick: () => tapSlot(loc), highlight: hintTarget(loc) });
+      slots.push({
+        key: `ablage-${index}`,
+        x,
+        y: topY,
+        label: <SuitLabel suit={SUITS[index] as Suit} />,
+        onClick: () => tapSlot(loc),
+        highlight: hintTarget(loc),
+        dropTarget: targetId,
+      });
       foundation.forEach((card, i) => {
         const top = i === foundation.length - 1;
         const flags: { selected?: boolean; highlight?: Highlight } = top ? cardFlags(loc, 1) : {};
         if (top && !flags.highlight && !flags.selected) flags.highlight = hintTarget(loc);
-        placed.push({ key: card, card, x, y: topY, onClick: top ? () => tapCard(loc, 1) : undefined, ...flags });
+        const canDrag = top && moves.some((m) => sameLoc(m.from, loc) && m.count === 1);
+        placed.push({
+          key: card,
+          card,
+          x,
+          y: topY,
+          onClick: top ? () => tapCard(loc, 1) : undefined,
+          dragItem: canDrag ? { loc, count: 1, card, cards: [card] } : undefined,
+          dropTarget: targetId,
+          ...flags,
+        });
       });
     });
   };
@@ -163,15 +323,48 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<SolitaireState, So
     shown.forEach((card, i) => {
       const top = i === shown.length - 1;
       const loc: Loc = { kind: 'waste' };
-      placed.push({ key: card, card, x: colX(1) + i * cardW * 0.28, y: topY, onClick: top ? () => tapCard(loc, 1) : undefined, ...(top ? cardFlags(loc, 1) : {}) });
+      const canDrag = top && moves.some((m) => sameLoc(m.from, loc) && m.count === 1);
+      const isNewWasteCard = justDrewKlondike && top;
+      placed.push({
+        key: card,
+        card,
+        x: colX(1) + i * cardW * 0.28,
+        y: topY,
+        onClick: top ? () => tapCard(loc, 1) : undefined,
+        dragItem: canDrag ? { loc, count: 1, card, cards: [card] } : undefined,
+        dropTarget: 'waste',
+        spawnOrigin: isNewWasteCard ? { x: colX(0), y: topY } : null,
+        ...(top ? cardFlags(loc, 1) : {}),
+      });
     });
     layFoundations(view.foundations, 3);
     view.tableau.forEach((pile, i) => layPile(pile, i, colX(i)));
   } else if (view.variant === 'freecell') {
     view.cells.forEach((card, index) => {
       const loc: Loc = { kind: 'cell', index };
-      slots.push({ key: `zelle-${index}`, x: colX(index), y: topY, label: 'frei', onClick: () => tapSlot(loc), highlight: hintTarget(loc) });
-      if (card) placed.push({ key: card, card, x: colX(index), y: topY, onClick: () => tapCard(loc, 1), ...cardFlags(loc, 1) });
+      const targetId = `cell-${index}`;
+      slots.push({
+        key: `zelle-${index}`,
+        x: colX(index),
+        y: topY,
+        label: 'frei',
+        onClick: () => tapSlot(loc),
+        highlight: hintTarget(loc),
+        dropTarget: targetId,
+      });
+      if (card) {
+        const canDrag = moves.some((m) => sameLoc(m.from, loc) && m.count === 1);
+        placed.push({
+          key: card,
+          card,
+          x: colX(index),
+          y: topY,
+          onClick: () => tapCard(loc, 1),
+          dragItem: canDrag ? { loc, count: 1, card, cards: [card] } : undefined,
+          dropTarget: targetId,
+          ...cardFlags(loc, 1),
+        });
+      }
     });
     layFoundations(view.foundations, 4);
     view.tableau.forEach((column, i) => layPile({ down: [], up: column }, i, colX(i)));
@@ -239,32 +432,66 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<SolitaireState, So
     }
   }
 
+  const dragTargets =
+    dragState.isDragging && dragState.item
+      ? moves
+          .filter((m) => sameLoc(m.from, dragState.item!.loc) && m.count === dragState.item!.count)
+          .map((m) => locToTargetId(m.to))
+      : [];
+
   return (
     <div ref={ref} className="sol-table" style={{ fontSize: Math.max(10, cardW * 0.22) }}>
       {size.width > 0 && (
         <>
-          {slots.map((slot) =>
-            slot.badge ? (
+          {slots.map((slot) => {
+            const isDragTarget = slot.dropTarget ? dragTargets.includes(slot.dropTarget) : false;
+            const isDragActive = isDragTarget && dragState.targetId === slot.dropTarget;
+            const highlight = isDragTarget ? 'target' : slot.highlight;
+            return slot.badge ? (
               <span key={slot.key} className="sol-badge" style={{ left: slot.x + cardW * 0.62, top: slot.y - 6, zIndex: 900 }}>
                 {slot.badge}
               </span>
             ) : (
-              <span key={slot.key} className="sol-pos" style={{ left: slot.x, top: slot.y, width: cardW }}>
+              <span
+                key={slot.key}
+                className="sol-pos"
+                style={{ left: slot.x, top: slot.y, width: cardW }}
+                data-drop-target={slot.dropTarget}
+                data-drop-active={isDragActive ? 'true' : undefined}
+              >
                 {slot.onClick ? (
-                  <button type="button" className={`bub-slot ${slot.highlight ? `bub-card-${slot.highlight}` : ''}`} onClick={slot.onClick} aria-label="Ablageplatz">
+                  <button
+                    type="button"
+                    className={`bub-slot ${highlight ? `bub-card-${highlight}` : ''}`}
+                    onClick={slot.onClick}
+                    aria-label="Ablageplatz"
+                  >
                     {slot.label}
                   </button>
                 ) : (
-                  <span className={`bub-slot ${slot.highlight ? `bub-card-${slot.highlight}` : ''}`}>{slot.label}</span>
+                  <span className={`bub-slot ${highlight ? `bub-card-${highlight}` : ''}`}>{slot.label}</span>
                 )}
               </span>
-            ),
-          )}
-          {placed.map((p, z) => (
-            <span key={p.key} className="sol-pos sol-card" style={{ left: p.x, top: p.y, width: cardW, zIndex: z + 1 }}>
-              <PlayingCard card={p.card} onClick={p.onClick} selected={p.selected} highlight={p.highlight ?? null} label={p.card === null && p.onClick ? 'Talon: Karten ziehen' : undefined} />
-            </span>
-          ))}
+            );
+          })}
+          {placed.map((p, z) => {
+            const isDragged =
+              p.card !== null && dragState.isDragging && dragState.item?.cards.includes(p.card) === true;
+            const isSnapping =
+              p.card !== null && dragState.snapping && dragState.item?.cards.includes(p.card) === true;
+            return (
+              <PlacedCard
+                key={p.key}
+                p={p}
+                z={z}
+                cardW={cardW}
+                dragState={dragState}
+                bindDrag={bindDrag}
+                isDragged={isDragged}
+                isSnapping={isSnapping}
+              />
+            );
+          })}
         </>
       )}
     </div>

@@ -482,3 +482,43 @@ button.bub-net-point:not(:disabled) {
     animation: none;
   }
 }
+
+/* Drag & Drop */
+
+.bub-draggable {
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+
+.bub-draggable:active {
+  cursor: grabbing;
+}
+
+.bub-dragging {
+  cursor: grabbing !important;
+  z-index: 1000 !important;
+  scale: 1.05;
+  filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.38));
+  transition: scale 0.12s ease-out;
+}
+
+.bub-snapping {
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.25, 1) !important;
+  pointer-events: none;
+}
+
+[data-drop-target] {
+  transition: box-shadow 0.15s ease-out, border-color 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+[data-drop-active="true"] {
+  box-shadow: 0 0 0 3px var(--color-accent, #3b82f6), 0 0 16px rgba(59, 130, 246, 0.4) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bub-dragging,
+  .bub-snapping {
+    transition: none !important;
+  }
+}

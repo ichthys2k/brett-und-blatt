@@ -10,6 +10,7 @@ import { levelLabel } from '../lib/format';
 import type { LoadedGame } from '../lib/registry';
 import { useGameMusic } from '../lib/music';
 import { navigate, paths } from '../lib/router';
+import { useSoundSettings } from '../lib/sound';
 import { useGameSounds } from '../lib/useGameSounds';
 
 export function Play() {
@@ -105,8 +106,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     [session],
   );
 
+  const isClient = online !== undefined && !online.isHost;
+  const soundSettings = useSoundSettings();
+  const playMusic = !isClient || Boolean(soundSettings.clientMusic);
+
   useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined);
-  useGameMusic(info.id);
+  useGameMusic(info.id, playMusic);
 
   // Uhren prüfen und anzeigen.
   useEffect(() => {
@@ -205,7 +210,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           <Button variant="ghost" className="ml-auto px-3 text-lg" aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
             ?
           </Button>
-          <SoundControl gameId={info.id} />
+          <SoundControl gameId={info.id} isClient={isClient} />
           {session.timed && !result && !online && (
             <Button
               variant="ghost"

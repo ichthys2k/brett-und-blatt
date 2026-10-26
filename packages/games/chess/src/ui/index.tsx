@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { FitBox, GridBoard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { FitBox, GridBoard, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import type { ChessMove, ChessState, Promotion } from '../rules';
 import './styles.css';
@@ -95,6 +95,27 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   const hinted = hint ? [squareIndex(hint.from), squareIndex(hint.to)] : [];
   const checkedKing = view.inCheck ? board.findIndex((p) => p?.type === 'k' && p.white === whiteToMove) : -1;
 
+  const { dragState, bindDrag } = usePointerDrag<number>({
+    threshold: 6,
+    onDrop: (fromIndex, targetId) => {
+      if (!targetId) return false;
+      const toIndex = Number(targetId);
+      const options = moves.filter((m) => m.from === fromIndex && m.to === toIndex).map((m) => m.move);
+      if (options.length > 1) {
+        setPromotion(PROMOTIONS.map((p) => options.find((o) => o.promotion === p)).filter((o): o is ChessMove => !!o));
+        return true;
+      } else if (options[0]) {
+        onMove(options[0]);
+        return true;
+      }
+      return false;
+    },
+  });
+
+  const dragSource = dragState.isDragging && dragState.item !== null ? dragState.item : null;
+  const dragTargets = dragSource !== null ? new Set(moves.filter((m) => m.from === dragSource).map((m) => m.to)) : null;
+  const effectiveTargets = dragTargets ?? targets;
+
   const tap = (index: number) => {
     if (selected !== null && targets.has(index)) {
       const options = moves.filter((m) => m.from === selected && m.to === index).map((m) => m.move);
@@ -117,9 +138,24 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
           renderCell={(dc, dr) => {
             const index = toBoard(dc, dr);
             const piece = board[index];
+            const isDragged = (dragState.isDragging || dragState.snapping) && dragState.item === index;
+            const pieceTransform = isDragged ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)` : undefined;
             return (
               <>
-                {piece ? <span className={`ch-piece ${piece.white ? 'ch-white' : 'ch-black'}`}>{GLYPHS[piece.type]}</span> : targets.has(index) ? <span className="ch-dot" /> : null}
+                {piece ? (
+                  <span
+                    className={`ch-piece ${piece.white ? 'ch-white' : 'ch-black'} ${isDragged ? 'bub-dragging' : ''} ${dragState.snapping && isDragged ? 'bub-snapping' : ''}`}
+                    style={{
+                      transform: pieceTransform,
+                      position: isDragged ? 'relative' : undefined,
+                      zIndex: isDragged ? 1000 : undefined,
+                    }}
+                  >
+                    {GLYPHS[piece.type]}
+                  </span>
+                ) : effectiveTargets.has(index) ? (
+                  <span className="ch-dot" />
+                ) : null}
                 {dc === 0 && <span className="ch-coord ch-rank">{8 - Math.floor(index / 8)}</span>}
                 {dr === 7 && <span className="ch-coord ch-file">{FILES[index % 8]}</span>}
               </>
@@ -127,16 +163,28 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
           }}
           isActive={(dc, dr) => {
             const index = toBoard(dc, dr);
-            return movable.has(index) || targets.has(index);
+            return movable.has(index) || effectiveTargets.has(index);
           }}
           onActivate={(dc, dr) => tap(toBoard(dc, dr))}
+          cellProps={(dc, dr) => {
+            const index = toBoard(dc, dr);
+            const isMovable = movable.has(index);
+            const isTarget = dragTargets !== null && dragTargets.has(index);
+            const isDropActive = isTarget && dragState.targetId === String(index);
+            const dragBind = isMovable ? bindDrag(index) : undefined;
+            return {
+              'data-drop-target': String(index),
+              'data-drop-active': isDropActive ? 'true' : undefined,
+              ...dragBind,
+            };
+          }}
           cellClassName={(dc, dr) => {
             const index = toBoard(dc, dr);
             const classes = [(Math.floor(index / 8) + (index % 8)) % 2 === 0 ? 'ch-light' : 'ch-dark'];
             if (last.includes(index)) classes.push('ch-last');
             if (index === checkedKing) classes.push('ch-check');
-            if (index === selected) classes.push('ch-selected');
-            if (targets.has(index) && board[index]) classes.push('ch-capture');
+            if (index === selected || index === dragSource) classes.push('ch-selected');
+            if (effectiveTargets.has(index) && board[index]) classes.push('ch-capture');
             if (hinted.includes(index)) classes.push('ch-hint');
             return classes.join(' ');
           }}

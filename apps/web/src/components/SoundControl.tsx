@@ -7,7 +7,7 @@ import { Button } from './controls';
 import { MusicList, StarButton } from './MusicList';
 
 /** Ton an/aus und die beiden Lautstärken – im Spiel und in den Ton-Einstellungen. */
-export function VolumeControls() {
+export function VolumeControls({ showClientOption }: { showClientOption?: boolean } = {}) {
   const settings = useSoundSettings();
   return (
     <>
@@ -48,21 +48,36 @@ export function VolumeControls() {
           onChange={(event) => setSoundSettings({ music: Number(event.target.value) / 100 })}
         />
       </label>
+      {showClientOption && (
+        <label className="flex items-center justify-between gap-3 text-sm">
+          <div>
+            <span className="block font-medium">{t('sound.clientMusic')}</span>
+            <span className="block text-xs text-muted">{t('sound.clientMusicHint')}</span>
+          </div>
+          <input
+            type="checkbox"
+            className="size-5 flex-none accent-[var(--color-accent)]"
+            checked={settings.clientMusic ?? false}
+            onChange={(event) => setSoundSettings({ clientMusic: event.target.checked })}
+          />
+        </label>
+      )}
     </>
   );
 }
 
 /** Lautsprecher-Knopf im Spiel: Lautstärken, Playlist, laufendes Stück. */
-export function SoundControl({ gameId }: { gameId: string }) {
+export function SoundControl({ gameId, isClient }: { gameId: string; isClient?: boolean }) {
   const settings = useSoundSettings();
   const prefs = useMusicPrefs();
   const current = useCurrentTrack();
   const [open, setOpen] = useState(false);
   const [showList, setShowList] = useState(false);
   const box = useRef<HTMLDivElement>(null);
-  const silent = settings.muted || (settings.effects === 0 && settings.music === 0);
+  const musicActive = !isClient || Boolean(settings.clientMusic);
+  const silent = settings.muted || (settings.effects === 0 && (!musicActive || settings.music === 0));
   const playlistId = playlistFor(gameId, prefs);
-  const musicOn = !settings.muted && settings.music > 0 && musicTracks.length > 0;
+  const musicOn = !settings.muted && settings.music > 0 && musicTracks.length > 0 && musicActive;
 
   useEffect(() => {
     if (!open) return;
@@ -84,7 +99,7 @@ export function SoundControl({ gameId }: { gameId: string }) {
       </Button>
       {open && (
         <div className="absolute top-full right-0 z-30 mt-1 w-72 space-y-3 rounded-xl border border-line bg-surface p-3 shadow-md">
-          <VolumeControls />
+          <VolumeControls showClientOption={isClient} />
           {musicOn && (
             <>
               <label className="block space-y-1 text-sm">

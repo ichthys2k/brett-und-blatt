@@ -134,6 +134,8 @@ const de = {
   'sound.on': 'Ton an',
   'sound.effects': 'Lautstärke der Effekte',
   'sound.music': 'Lautstärke der Musik',
+  'sound.clientMusic': 'Musik als Mitspieler (Online)',
+  'sound.clientMusicHint': 'In Online-Spielen läuft Musik standardmäßig nur bei der Raumleitung.',
   'sound.settings': 'Ton und Musik',
   'music.playlist': 'Playlist',
   'music.playlistDefault': '{name} (Standard)',

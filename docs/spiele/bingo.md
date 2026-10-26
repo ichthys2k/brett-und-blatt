@@ -75,7 +75,7 @@ interface BingoState {
 - **Geheim (`playerView`):** `order` wird bis auf die gezogenen Einträge abgeschnitten. Sonst könnte jemand im Browser die nächsten Zahlen lesen. Fremde Karten sind kein Geheimnis, die Sicht zeigt aber nur, wie viele Felder jedem noch zur nächsten Reihe fehlen.
 - **Gleichzeitig:** `currentPlayers` liefert alle Plätze, die nicht gesperrt sind. Dazu kommt `'system'` bzw. der Ansager, sobald die nächste Ziehung fällig ist.
 - **Gültige Bingos prüfen:** Nur markierte Felder zählen, die auch gezogen wurden. Wer ein Feld fälschlich markiert hat, hat dort kein gültiges Feld.
-- **Ereignisse:** `drawn` (mit Ansage und Lösung), `bingo` (richtig oder falsch, mit Platz) und `over`. Alle sind öffentlich; `mark` erzeugt kein Ereignis für andere.
+- **Ereignisse:** `drawn` (mit Ansage und Lösung), `marked` (über `eventView` nur für den eigenen Platz) und `bingo` (richtig oder falsch, mit Platz). Markierungen erzeugen über `eventView` kein Ereignis für andere.
 
 ### Taktgeber für die Ziehung (neu, in der Engine)
 

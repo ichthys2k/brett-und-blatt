@@ -9,7 +9,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 ## Regeln für die Zusammenarbeit
 
 - **Sprache:** Bezeichner im Code englisch; Kommentare, Doku, Commit-Nachrichten und UI-Texte deutsch.
-- **Commits und Push nur auf ausdrückliche Anweisung** von Cornelius – jeweils einzeln („Commit“, danach „Hochladen“). Ein Push auf `main` veröffentlicht sofort auf spiele.lipponer.de.
+- **Commits und Push nur auf ausdrückliche Anweisung** von Cornelius – jeweils einzeln („Commit“, danach „Hochladen“), **oder komplett in einem Schritt durch den Befehl „deploy“** (committen, nach `main` mergen und pushen). Ein Push auf `main` veröffentlicht sofort auf spiele.lipponer.de.
 - **Commit-Adresse:** immer `855814+ichthys2k@users.noreply.github.com` (steht in der lokalen Git-Konfiguration des Repos; vor dem ersten Commit auf einem neuen Rechner mit `git config user.email` prüfen).
 - **Keine Geheimnisse ins Repo:** keine `.env`, Tokens oder Zugangsdaten. Für Cloudflare später nur `.dev.vars`/Wrangler-Secrets (sind in `.gitignore`).
 - **Nichts außerhalb dieses Repos anfassen**, was nicht zur Aufgabe gehört – insbesondere keine Dateien mit Zugangsdaten in anderen Projekten (z. B. im Blog-Repo) lesen.
@@ -58,7 +58,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Farbensortierer** (`packages/games/color-sorter`, 26.10.2026, aus Etappe 6 vorgezogen): Balatro-artiges Deckbau-Kartenspiel nach Cornelius' Klon „Emoji-Sortierer“, ohne Glücksspiel-Anmutung (Jugendschutz: Token 🔩 statt Geld, Lieferungen statt Booster, keine Casino-Begriffe – die Grundmechaniken bleiben aber alle drin). Von Anfang an mehrspielerfähig wie die Balatro-Multiplayer-Mod: parallele Läufe mit gleichem Seed, Duell/Showdown mit Leben, Überleben, Wettrennen. Dazu Endlos-Modus, Boss-Neuwahl, 7 Mehrspieler-Mods (Duell-Punkte geheim außer mit Spion) und die Meta-Währung **Farbtropfen 💧** mit Atelier (Freischaltungen, Atelier-Lieferung ohne Dubletten, Schmuck), Album und Sichern – alles je Gerät in `localStorage`; online gilt die Grundausstattung. Plan und Umsetzungsstand in `docs/spiele/farbensortierer.md`.
 
-**Drachenspiel** (`packages/games/drachenspiel`, 26.10.2026, Etappe 6): Sammelkarten-Duell nach Cornelius' Klon (Hearthstone-artig) mit 54 Tierkarten, 5 ausgewogenen Themendecks (Wald, Meer, Bauernhof, Wildnis, Krabbeltiere), Manasystem (1–10 Kristalle), 30 Leben, Startspieler-Vorteilsausgleich durch ⭐ Sternschnuppe (+1 temporärer Kristall), 7 Fähigkeiten (Beschützer 🛡️, Flink ⚡, Schutzblase 🫧, Giftig 🧪, Versteckt 🌙, Auftritt 🎺, Abschied 👋), simultanem Mulligan und Bot „Drachenhüter“ in drei Stufen. Vollständiges Regelwerk mit deterministischer Zustandsevolution, reines JSON für Zustand und Sichten, interaktive Arena-Oberfläche mit Deck- und Mulligan-Auswahl, Zielmarkierung und Schadens-Feedback sowie Registrierung für Online-Partien auf dem Spieleserver. Plan in `docs/spiele/drachenspiel.md`.
+**Drachenspiel** (`packages/games/drachenspiel`, 26.10.2026, Etappe 6): Sammelkarten-Duell nach Cornelius' Klon (Hearthstone-artig) mit 54 Tierkarten, 5 ausgewogenen Themendecks (Wald, Meer, Bauernhof, Wildnis, Krabbeltiere), Manasystem (1–10 Kristalle), 30 Leben, Startspieler-Vorteilsausgleich durch ⭐ Sternschnuppe (+1 temporärer Kristall), 7 Fähigkeiten (Beschützer 🛡️, Flink ⚡, Schutzblase 🫧, Giftig 🧪, Versteckt 🌙, Auftritt 🎺, Abschied 👋), simultanem Mulligan und Bot „Drachenhüter“ in drei Stufen. Vollständiges Regelwerk mit deterministischer Zustandsevolution, reines JSON für Zustand und Sichten, interaktive Arena-Oberfläche mit Deck- und Mulligan-Auswahl, Zielmarkierung und Schadens-Feedback, vollständiger Übernahme der originalen Sound-Effekte (`ds_snip`, `ds_swipe`, `ds_punch1`, `ds_punch2`, `ds_flipcard`) und on-demand Sprachausgabe aller 368 Minion-Tierstimmen sowie Registrierung für Online-Partien auf dem Spieleserver. Plan in `docs/spiele/drachenspiel.md`.
 
 **Etappe 4** (26.10.2026): **Go** (`packages/games/go`, 9/13/19, Superko, Auszählphase mit Vorschlag, Flächenwertung, Vorgabe, Atari-Go, SGF-Export und -Import, MCTS mit RAVE, Fernpartien über Tage mit 30 Tagen Raum-Lebensdauer und Web Notifications; Engine-Zeitvorgabe `byoyomi` und `timePresetsFor(options)`), **Farbe & Form** (`packages/games/color-and-shape`, Qwirkle-artig) und **Domino** (`packages/games/dominoes`, Doppel-6: Block, Ziehen, Fünfer mit optionaler Spinner-Regel). Pläne in `docs/spiele/go.md`, `farbe-und-form.md`, `domino.md`.
 
@@ -73,6 +73,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Bekannte offene Punkte:**
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
+- Musik in Online-Partien: Läuft standardmäßig nur bei der Raumleitung, für Mitspieler deaktiviert (mit Einstellmöglichkeit im Ton-Menü und unter `#/ton`).
+- Drag & Drop: Pointer-Drag für Solitaire und Drachenspiel mit Animationsunterstützung (`packages/ui/src/dnd`).
 
 ## Nächste Schritte
 

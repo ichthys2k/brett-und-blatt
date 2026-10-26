@@ -8,6 +8,9 @@ export { PlayingCard, SuitShape, type DeckStyle, type PlayingCardProps } from '.
 export { TrickTable, useTrickDisplay, type TrickTableProps, type TrickTableSlot } from './cards/TrickTable';
 export { CardFan, type CardFanProps } from './cards/CardFan';
 export { ContentCard, type ContentCardProps } from './cards/ContentCard';
+export { usePointerDrag } from './dnd/usePointerDrag';
+export { useSpawnAnimation, type SpawnAnimationOptions } from './dnd/useSpawnAnimation';
+export type { DragState, Point, PointerDragControls, UsePointerDragOptions } from './dnd/types';
 export {
   DEFAULT_SOUND_SETTINGS,
   SoundPlayer,

@@ -28,5 +28,10 @@
   "dein-zug": { "file": "correct_double.mp3", "end": 1.68, "gain": 0.6 },
   "zeit-knapp": { "file": "timer_warning.mp3", "end": 1.06, "gain": 1.2 },
   "zeit-um": { "file": "time_up.mp3", "end": 1.2, "gain": 0.45 },
-  "reaktion": { "file": "click_bubble.mp3", "end": 0.25, "gain": 1.5 }
+  "reaktion": { "file": "click_bubble.mp3", "end": 0.25, "gain": 1.5 },
+  "drachen-karte-ziehen": { "file": "ds_flipcard.mp3", "end": 0.28, "gain": 1.2 },
+  "drachen-karte-legen": { "file": "ds_snip.mp3", "end": 0.25, "gain": 1.3 },
+  "drachen-angriff": { "file": "ds_swipe.mp3", "end": 0.35, "gain": 1.1 },
+  "drachen-schaden-tier": { "file": "ds_punch1.mp3", "end": 0.35, "gain": 1.4 },
+  "drachen-schaden-held": { "file": "ds_punch2.mp3", "end": 0.45, "gain": 1.5 }
 }

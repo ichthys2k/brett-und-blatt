@@ -215,6 +215,7 @@ export function applyMove(state: BingoState, actor: Actor, move: BingoMove): Mov
     case 'mark': {
       if (state.autoMark || !unmarkedCells(state, seat).includes(move.cell)) throw new Error('Dieses Feld kann man nicht markieren.');
       const marks = state.marks.map((row, s) => (s === seat ? row.map((m, i) => m || i === move.cell) : row));
+      events.push({ type: 'marked', seat, cell: move.cell });
       return { state: { ...state, marks }, events };
     }
     case 'bingo': {
@@ -244,6 +245,12 @@ export function result(state: BingoState): Result | null {
   // Alles gezogen und niemand kann mehr etwas tun (z. B. alle anderen ausgeschieden).
   const drawnSet = new Set(drawnIds(state));
   return players.some((seat) => hasSomethingToDo(state, seat, drawnSet)) ? null : { kind: 'loss', reason: 'empty' };
+}
+
+/** Eigene Markierungen hört/sieht nur der jeweilige Spieler, damit Mehrspieler-Partien ruhig bleiben. */
+export function eventView(event: GameEvent, seat: SeatId | 'spectator'): GameEvent | null {
+  if (event.type === 'marked') return event.seat === seat ? event : null;
+  return event;
 }
 
 /** Die Ziehreihenfolge bleibt geheim: Jede Sicht kennt nur, was schon gezogen ist. Die Karten sind offen. */

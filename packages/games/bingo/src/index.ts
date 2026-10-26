@@ -2,10 +2,10 @@ import type { GameModule } from '@brett-und-blatt/engine';
 import { bingoBot } from './bots';
 import { PACKS } from './content';
 import { meta } from './meta';
-import { applyMove, currentPlayers, legalMoves, playerView, result, setup, type BingoMove, type BingoState } from './rules';
+import { applyMove, currentPlayers, eventView, legalMoves, playerView, result, setup, type BingoMove, type BingoState } from './rules';
 
 export type { BingoCall, BingoMove, BingoState, FalseCall, Goal } from './rules';
-export { CALLER, canCall, drawnIds, hasCard, isPlaying, linesOf, missing, unmarkedCells } from './rules';
+export { CALLER, canCall, drawnIds, eventView, hasCard, isPlaying, linesOf, missing, unmarkedCells } from './rules';
 export { LETTERS, NUMBERS, NUMBER_COUNT, PACKS, callOf, columnOf, entryIds, faceOf } from './content';
 
 const packIds = Object.keys(PACKS);
@@ -82,6 +82,7 @@ export const gameModule: GameModule<BingoState, BingoMove> = {
   currentPlayers,
   legalMoves,
   applyMove,
+  eventView,
   playerView,
   result,
   bots: [bingoBot],

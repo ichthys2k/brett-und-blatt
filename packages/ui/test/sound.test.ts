@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { soundCatalog, soundDuration, soundsForEvents, type SoundMap } from '../src/audio/sound';
+import { DEFAULT_SOUND_SETTINGS, soundCatalog, soundDuration, soundsForEvents, type SoundMap } from '../src/audio/sound';
+
+describe('DEFAULT_SOUND_SETTINGS', () => {
+  it('hat clientMusic standardmäßig deaktiviert', () => {
+    expect(DEFAULT_SOUND_SETTINGS.clientMusic).toBe(false);
+  });
+});
 
 describe('Klang-Katalog', () => {
   it('hat gültige Einträge', () => {

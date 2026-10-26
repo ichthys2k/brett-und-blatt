@@ -491,3 +491,27 @@
   }
 }
 
+.ds-board-row[data-drop-active='true'] {
+  border-color: var(--color-accent, #3b82f6) !important;
+  background: rgba(59, 130, 246, 0.12) !important;
+}
+
+.ds-card.bub-dragging {
+  cursor: grabbing !important;
+  z-index: 1000 !important;
+  scale: 1.12;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.45));
+}
+
+.ds-minion.bub-dragging {
+  cursor: grabbing !important;
+  z-index: 1000 !important;
+  scale: 1.15;
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.4));
+}
+
+.ds-minion[data-drop-active='true'],
+.ds-hero-card[data-drop-active='true'] {
+  box-shadow: 0 0 0 4px #ff4757, 0 0 16px rgba(255, 71, 87, 0.5) !important;
+}
+

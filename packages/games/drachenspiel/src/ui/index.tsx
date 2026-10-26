@@ -1,12 +1,16 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
-import { useEffect, useRef, useState } from 'react';
+import { usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { CARDS_DB, STAR_CARD } from '../cards';
 import { DECK_THEMES, DECK_THEME_IDS } from '../decks';
 import type { DeckThemeId, DrachenspielMove, DrachenspielView, Minion } from '../types';
 import './styles.css';
 
 const LABELS = ['Blau', 'Rot'];
+
+type DrachenDragItem =
+  | { kind: 'card'; handIndex: number }
+  | { kind: 'minion'; minionId: string };
 
 function MinionView({
   minion,
@@ -18,6 +22,12 @@ function MinionView({
   damageAmount,
   healAmount,
   onClick,
+  onPointerDown,
+  dropTarget,
+  dropActive,
+  isDragged,
+  isSnapping,
+  dragTransform,
 }: {
   minion: Minion;
   isOwner: boolean;
@@ -28,6 +38,12 @@ function MinionView({
   damageAmount?: number | null;
   healAmount?: number | null;
   onClick: () => void;
+  onPointerDown?: (e: ReactPointerEvent<HTMLElement>) => void;
+  dropTarget?: string;
+  dropActive?: boolean;
+  isDragged?: boolean;
+  isSnapping?: boolean;
+  dragTransform?: string;
 }) {
   const classes = [
     'ds-minion bub-animate-drop',
@@ -40,6 +56,8 @@ function MinionView({
     minion.taunt && 'taunt',
     minion.bubble && 'bubble',
     minion.stealth && 'stealth',
+    isDragged && 'bub-dragging',
+    isSnapping && 'bub-snapping',
   ]
     .filter(Boolean)
     .join(' ');
@@ -48,6 +66,15 @@ function MinionView({
     <div
       className={classes}
       onClick={onClick}
+      onPointerDown={onPointerDown}
+      style={{
+        transform: dragTransform,
+        position: isDragged ? 'relative' : undefined,
+        zIndex: isDragged ? 1000 : undefined,
+        touchAction: canAttack ? 'none' : undefined,
+      }}
+      data-drop-target={dropTarget}
+      data-drop-active={dropActive ? 'true' : undefined}
       role="button"
       tabIndex={0}
       aria-label={`${minion.name}, Angriff ${minion.attack}, Leben ${minion.health}`}
@@ -503,10 +530,10 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
   Board,
   SeatSymbol,
   sounds: {
-    cardDrawn: 'karte-ziehen',
-    cardPlayed: 'karte-legen',
-    attack: 'stein-schlagen',
-    damage: 'treffer',
+    cardDrawn: 'drachen-karte-ziehen',
+    cardPlayed: 'drachen-karte-legen',
+    attack: 'drachen-angriff',
+    damage: (event) => ('targetType' in event && event.targetType === 'hero' ? 'drachen-schaden-held' : 'drachen-schaden-tier'),
     minionLeft: 'leben-weg',
     bubblePopped: 'stein-heraus',
     starPlayed: 'stapel-fertig',

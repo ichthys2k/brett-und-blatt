@@ -77,8 +77,19 @@ describe('Markieren und Bingo', () => {
     state = drawIds(state, [card[0]!]);
     expect(gameModule.currentPlayers(state)).toContain(1);
     expect(gameModule.legalMoves(state, 1)).toEqual([{ type: 'mark', cell: 0 }, { type: 'bingo' }]);
-    state = apply(state, 1, { type: 'mark', cell: 0 }).state;
+    const marked = apply(state, 1, { type: 'mark', cell: 0 });
+    expect(marked.events).toEqual([{ type: 'marked', seat: 1, cell: 0 }]);
+    state = marked.state;
     expect(gameModule.currentPlayers(state)).not.toContain(1);
+  });
+
+  it('eventView: Markierungen erfährt nur der jeweilige Spieler', () => {
+    const event = { type: 'marked', seat: 1, cell: 4 };
+    expect(gameModule.eventView!(event, 1)).toEqual(event);
+    expect(gameModule.eventView!(event, 2)).toBeNull();
+    expect(gameModule.eventView!(event, 'spectator')).toBeNull();
+    const drawn = { type: 'drawn', id: 5, count: 1 };
+    expect(gameModule.eventView!(drawn, 2)).toEqual(drawn);
   });
 
   it('erkennt jede Reihe: waagrecht, senkrecht und beide Diagonalen', () => {

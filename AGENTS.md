@@ -8,7 +8,7 @@ Freie Spielesammlung im Browser (Karten- und Brettspiele für Handy und Desktop)
 
 - **Sprache:** Cornelius schreibt Deutsch – antworte Deutsch. Bezeichner im Code englisch; Kommentare, Doku, Commit-Nachrichten und UI-Texte deutsch.
 - **Erst Vorschlag, dann Änderung:** Bei allem, was über eine kleine, klar beauftragte Änderung hinausgeht, zuerst den Plan bzw. Vorschlag zeigen und auf Zustimmung warten.
-- **Commit, Hochladen (Push) und Merge nur auf Cornelius' ausdrückliches Wort** – jeweils einzeln. Ein „Commit“ erlaubt noch keinen Push, ein Push noch keinen Merge.
+- **Commit, Hochladen (Push) und Merge nur auf Cornelius' ausdrückliches Wort** – jeweils einzeln, **oder komplett in einem Schritt durch den Befehl „deploy“** (committen, nach `main` mergen und pushen). Ein „Commit“ alleine erlaubt noch keinen Push.
 - **Jeder Push auf `main` veröffentlicht sofort:** Die CI (`.github/workflows/ci.yml`) prüft, veröffentlicht dann den Spieleserver auf Cloudflare und danach die Web-App über GitHub Pages. Arbeite auf einem eigenen Zweig.
 - **Vor jedem Commit:** `corepack pnpm check` (Typprüfung, alle Tests, Build) muss grün sein, und die Änderung im Browser ansehen (`corepack pnpm --filter @brett-und-blatt/web dev`, http://localhost:5173).
 - **Commit-Adresse:** `855814+ichthys2k@users.noreply.github.com` (vorher mit `git config user.email` prüfen).

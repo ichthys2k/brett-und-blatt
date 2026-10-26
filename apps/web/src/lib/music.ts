@@ -86,11 +86,17 @@ export function useCurrentTrack(): MusicTrack | null {
 }
 
 /** Musik zur Partie: die Playlist des Spiels, solange die Komponente da ist. */
-export function useGameMusic(gameId: string): void {
+export function useGameMusic(gameId: string, enabled = true): void {
   const settings = useMusicPrefs();
   const playlistId = playlistFor(gameId, settings);
   useEffect(() => () => music.stop(), []);
-  useEffect(() => music.play(playlistTracks(playlistId), settings), [playlistId, settings]);
+  useEffect(() => {
+    if (!enabled) {
+      music.stop();
+      return;
+    }
+    music.play(playlistTracks(playlistId), settings);
+  }, [playlistId, settings, enabled]);
 }
 
 const applyVolume = () => {

@@ -53,9 +53,11 @@ export interface SoundSettings {
   effects: number;
   /** Lautstärke der Musik, 0 bis 1 (spielt der MusicPlayer). */
   music: number;
+  /** Ob in Online-Partien auch als Mitspieler (nicht Raumleitung) Musik laufen soll. */
+  clientMusic?: boolean;
 }
 
-export const DEFAULT_SOUND_SETTINGS: SoundSettings = { muted: false, effects: 0.7, music: 0.4 };
+export const DEFAULT_SOUND_SETTINGS: SoundSettings = { muted: false, effects: 0.7, music: 0.4, clientMusic: false };
 
 const FADE_S = 0.03;
 
@@ -121,6 +123,35 @@ export class SoundPlayer {
     });
   }
 
+  /**
+   * Spielt eine beliebige Audiodatei ab (z. B. Tier-Sounds für das Drachenspiel).
+   * @param file Relativer Pfad unter baseUrl, z. B. „tiere/drache/01_Der Drache.mp3“.
+   * @param volume Anteil an der eingestellten Lautstärke.
+   * @param delay Verzögerung in Sekunden.
+   */
+  playFile(file: string, { volume = 1, delay = 0, gain = 1, rate = 1 }: { volume?: number; delay?: number; gain?: number; rate?: number } = {}): void {
+    if (this.volume() === 0) return;
+    const context = this.ensureContext();
+    if (!context || context.state !== 'running') return;
+    void this.buffer(file).then((buffer) => {
+      if (!buffer || !this.output) return;
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = rate;
+      const gainNode = context.createGain();
+      source.connect(gainNode).connect(this.output);
+      const length = buffer.duration;
+      const at = context.currentTime + delay;
+      const end = at + length / source.playbackRate.value;
+      const level = gain * volume;
+      gainNode.gain.setValueAtTime(level, at);
+      gainNode.gain.setValueAtTime(level, Math.max(at, end - FADE_S));
+      gainNode.gain.linearRampToValueAtTime(0, end);
+      source.start(at, 0, length);
+      source.stop(end + 0.05);
+    });
+  }
+
   private volume(): number {
     return this.settings.muted ? 0 : Math.max(0, Math.min(1, this.settings.effects));
   }
@@ -139,8 +170,9 @@ export class SoundPlayer {
     let promise = this.buffers.get(file);
     if (!promise) {
       const context = this.ensureContext();
+      const url = encodeURI(`${this.baseUrl}${file}`);
       promise = context
-        ? fetch(this.baseUrl + file)
+        ? fetch(url)
             .then((response) => (response.ok ? response.arrayBuffer() : Promise.reject(new Error(String(response.status)))))
             .then((data) => context.decodeAudioData(data))
             // Fehlt die Datei (z. B. beim Bauen ohne Klang-Repo), bleibt es still.
