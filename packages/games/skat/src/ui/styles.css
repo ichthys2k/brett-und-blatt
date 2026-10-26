@@ -1,0 +1,68 @@
+.ttt-board {
+  gap: 3%;
+  padding: 3%;
+  border-radius: 18px;
+  background: var(--color-line);
+}
+
+.ttt-board .bub-cell {
+  border-radius: 12px;
+  background: var(--color-surface);
+  transition: background-color 0.15s;
+}
+
+.ttt-board button.bub-cell:not(:disabled):hover {
+  background: var(--color-surface-2);
+}
+
+.ttt-board .bub-cell.ttt-win {
+  background: color-mix(in srgb, var(--color-accent) 22%, var(--color-surface));
+}
+
+.ttt-mark {
+  width: 80%;
+  height: 80%;
+  fill: none;
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+.bub-ring-content .ttt-mark {
+  width: 100%;
+  height: 100%;
+  stroke-width: 14;
+}
+
+.ttt-x {
+  stroke: #d6336c;
+}
+
+.ttt-o {
+  stroke: #1c7ed6;
+}
+
+.ttt-board .ttt-mark path,
+.ttt-board .ttt-mark circle {
+  stroke-dasharray: 180;
+  animation: ttt-draw 0.3s ease-out both;
+}
+
+.ttt-board .ttt-x path:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+@keyframes ttt-draw {
+  from {
+    stroke-dashoffset: 180;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ttt-board .ttt-mark path,
+  .ttt-board .ttt-mark circle {
+    animation: none;
+  }
+}

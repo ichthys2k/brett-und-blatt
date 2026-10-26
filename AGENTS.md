@@ -41,7 +41,7 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 ## Fahrplan-Stand (Oktober 2026)
 
 - ✅ Etappe 1 Fundament, ✅ Etappe 2 Offline-Sammlung, ✅ Etappe 3 Online (Schiffe versenken, Quartett, Mäxle, Bingo), ✅ Etappe 4 Großes Brett (Go, Domino, Farbe & Form).
-- Etappe 5 Stichspiele (Skat, Schafkopf, Doppelkopf): offen, Pläne liegen in `docs/spiele/`.
+- ✅ Etappe 5 Stichspiele (Skat, Schafkopf, Doppelkopf): Stich-Kern und Serien-Rahmen in der Engine, 4-Farben- und Bayerisch/Deutsches Blatt, Skat (ISkO, Seeger-Fabian), Schafkopf (Sauspiel, Wenz, Solo, Ramsch), Doppelkopf (DDV, Soli, Hochzeit, Ansagen).
 - Etappe 6 Eigene Spiele: halb – Farbensortierer ist live, Emojistone offen.
 - Danach (Etappe 7): Scrabble, Uno-artig, Poker, Binokel, Dame, Mensch ärgere dich nicht und die Ideenliste im Konzept – offen.
 

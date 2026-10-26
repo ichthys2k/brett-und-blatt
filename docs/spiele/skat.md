@@ -190,7 +190,15 @@ Der aufwendigste Bot der Sammlung. Er hat drei Teile.
 - `playerView` verrät weder Skat noch gedrückte Karten noch fremde Hände.
 - Bot-gegen-Bot-Serien laufen ohne Fehler durch.
 
+## Umsetzung (Oktober 2026)
+
+- `packages/engine/src/tricks.ts` & `series.ts`: Universeller Stich-Kern (Bedienpflicht, Trumpf- und Fehlfarben, Stichsieger, Augen zählen) und Serien-Rahmen (Geberrotation, aktive Spieler am 4er-Tisch, Serienabrechnung).
+- `packages/ui/src/cards/PlayingCard.tsx` & `TrickTable.tsx`: Unterstützung für 4-Farben- und Deutsches Blatt; räumliche Tischanordnung von Stichen je nach Sitzplatz.
+- `packages/games/skat/src/rules.ts`: Vollständige ISkO-Regeln (Reizen mit Vorhand/Mittelhand/Hinterhand, Skataufnahme und Drücken, Handspiele, Farbspiele/Grand/Null mit Ouvert und Schneider/Schwarz, Spitzenermittlung mit Skat, Überreizungsauswertung, 10 Stiche, Seeger-Fabian-Abrechnung für 3er- und 4er-Tisch).
+- `packages/games/skat/src/bots.ts`: Eigener Skat-Bot mit Handbewertung für das Reizen, Skat-Drückheuristik und Stichspiel mit Trumpf- und Fehlfarbenabwurf.
+- `packages/games/skat/src/ui/index.tsx`: Reizdialog, Skat-Drücken, Spielansage-Auswahl, Kartenausspielung mit Hervorhebung legaler Karten, Stichanzeige im `TrickTable` und Ergebnisliste.
+- Server-Integration in `apps/server/src/games.ts` für Online-Partien.
+
 ## Offene Punkte
 
-- ISkO-Text als Referenz beschaffen und Sonderfälle prüfen: falsches Beanspruchen, Aufgeben vor dem ersten Stich, Sonderfälle beim Reizen (z. B. wenn Mittel- und Hinterhand sofort passen).
-- Deutsches Blatt (Eichel, Grün, Rot, Schellen) gestalten; dieselbe Vorlage dient Schafkopf.
+- ISkO-Sonderfälle (z. B. falsches Beanspruchen / Schenken).

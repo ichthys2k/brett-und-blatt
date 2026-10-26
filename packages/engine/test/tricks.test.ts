@@ -1,0 +1,140 @@
+import { describe, expect, it } from 'vitest';
+import {
+  cardEyePoints,
+  cardId,
+  createDokoContract,
+  createSchafkopfContract,
+  createSkatContract,
+  legalCards,
+  trickPoints,
+  trickWinner,
+  type PlayedCard,
+} from '../src/index.js';
+
+describe('Augenpunkte', () => {
+  it('wertet Standardkarten nach ISkO / Schafkopf / Doko korrekt aus', () => {
+    expect(cardEyePoints(cardId('H', 1))).toBe(11); // Ass
+    expect(cardEyePoints(cardId('C', 10))).toBe(10); // 10
+    expect(cardEyePoints(cardId('S', 13))).toBe(4); // König
+    expect(cardEyePoints(cardId('D', 12))).toBe(3); // Dame/Ober
+    expect(cardEyePoints(cardId('C', 11))).toBe(2); // Bube/Unter
+    expect(cardEyePoints(cardId('H', 9))).toBe(0); // 9
+    expect(cardEyePoints(cardId('S', 8))).toBe(0); // 8
+    expect(cardEyePoints(cardId('D', 7))).toBe(0); // 7
+
+    const trick: PlayedCard[] = [
+      { player: 0, card: cardId('H', 1) }, // 11
+      { player: 1, card: cardId('C', 10) }, // 10
+      { player: 2, card: cardId('S', 13) }, // 4
+      { player: 3, card: cardId('D', 11) }, // 2
+    ];
+    expect(trickPoints(trick)).toBe(27);
+  });
+});
+
+describe('Skat-Verträge', () => {
+  it('Grand: Buben sind Trumpf, Kreuz sticht Pik, Fehlfarbe muss bedient werden', () => {
+    const contract = createSkatContract('grand');
+
+    expect(contract.isTrump(cardId('C', 11))).toBe(true);
+    expect(contract.isTrump(cardId('D', 11))).toBe(true);
+    expect(contract.isTrump(cardId('H', 1))).toBe(false);
+
+    // Kreuz-Bube sticht Pik-Bube
+    const trick: PlayedCard[] = [
+      { player: 0, card: cardId('S', 11) }, // Pik-Bube
+      { player: 1, card: cardId('C', 11) }, // Kreuz-Bube
+      { player: 2, card: cardId('H', 1) }, // Herz-Ass
+    ];
+    expect(trickWinner(trick, contract)).toEqual({ player: 1, card: cardId('C', 11) });
+  });
+
+  it('Farbspiel Herz: Buben + Herz sind Trumpf', () => {
+    const contract = createSkatContract('suit', 'H');
+
+    expect(contract.isTrump(cardId('D', 11))).toBe(true); // Karo-Bube ist Trumpf
+    expect(contract.isTrump(cardId('H', 7))).toBe(true); // Herz 7 ist Trumpf
+    expect(contract.isTrump(cardId('C', 1))).toBe(false); // Kreuz Ass ist kein Trumpf
+
+    // Karo-Bube sticht Herz-Ass
+    const trick: PlayedCard[] = [
+      { player: 0, card: cardId('H', 1) }, // Herz-Ass
+      { player: 1, card: cardId('D', 11) }, // Karo-Bube (niedrigster Bube, aber Bube > Ass)
+      { player: 2, card: cardId('H', 10) }, // Herz-10
+    ];
+    expect(trickWinner(trick, contract).player).toBe(1);
+  });
+
+  it('Bedienpflicht: muss Trumpf bedienen wenn Trumpf angespielt wird', () => {
+    const contract = createSkatContract('suit', 'H');
+    const trick: PlayedCard[] = [{ player: 0, card: cardId('S', 11) }]; // Pik-Bube (Trumpf!)
+    const hand = [cardId('C', 1), cardId('H', 8), cardId('D', 7)];
+
+    // Spieler hat H8 (Trumpf). Muss Trumpf bedienen!
+    const allowed = legalCards(hand, trick, contract);
+    expect(allowed).toEqual([cardId('H', 8)]);
+  });
+
+  it('Null-Spiel: kein Trumpf, 7..Ass', () => {
+    const contract = createSkatContract('null');
+    const trick: PlayedCard[] = [
+      { player: 0, card: cardId('C', 8) },
+      { player: 1, card: cardId('C', 7) },
+      { player: 2, card: cardId('C', 11) }, // Bube
+    ];
+    // Im Null sticht die 11 die 8, nicht die 7
+    expect(trickWinner(trick, contract).player).toBe(2);
+  });
+});
+
+describe('Schafkopf-Verträge', () => {
+  it('Sauspiel: Ober > Unter > Herz', () => {
+    const contract = createSchafkopfContract('sauspiel');
+
+    expect(contract.isTrump(cardId('C', 12))).toBe(true); // Eichel-Ober
+    expect(contract.isTrump(cardId('D', 11))).toBe(true); // Schellen-Unter
+    expect(contract.isTrump(cardId('H', 7))).toBe(true); // Herz 7
+
+    const trick: PlayedCard[] = [
+      { player: 0, card: cardId('H', 1) }, // Herz Sau
+      { player: 1, card: cardId('D', 11) }, // Schellen-Unter
+      { player: 2, card: cardId('C', 12) }, // Eichel-Ober
+      { player: 3, card: cardId('S', 12) }, // Gras-Ober
+    ];
+    expect(trickWinner(trick, contract).player).toBe(2); // Eichel-Ober sticht
+  });
+
+  it('Wenz: Nur Unter sind Trumpf', () => {
+    const contract = createSchafkopfContract('wenz');
+
+    expect(contract.isTrump(cardId('C', 11))).toBe(true); // Unter
+    expect(contract.isTrump(cardId('C', 12))).toBe(false); // Ober ist KEIN Trumpf!
+
+    // In Fehlfarbe steht Ober zwischen König und 9
+    const trick: PlayedCard[] = [
+      { player: 0, card: cardId('S', 13) }, // Gras König (Power 12)
+      { player: 1, card: cardId('S', 12) }, // Gras Ober (Power 11)
+      { player: 2, card: cardId('S', 1) }, // Gras Sau (Power 14)
+    ];
+    expect(trickWinner(trick, contract).player).toBe(2);
+  });
+});
+
+describe('Doppelkopf-Verträge', () => {
+  it('Normalspiel: Dulle (H10) > Damen > Buben > Karo; bei gleichen Karten sticht die erste', () => {
+    const contract = createDokoContract('normal');
+
+    expect(contract.isTrump(cardId('H', 10, 1))).toBe(true); // Dulle
+    expect(contract.isTrump(cardId('C', 12, 1))).toBe(true); // Kreuz-Dame
+    expect(contract.isTrump(cardId('D', 1, 1))).toBe(true); // Karo-Ass
+
+    // Zwei gleiche Kreuz-Damen: die zuerst gespielte Karte sticht nach TSR!
+    const trick: PlayedCard[] = [
+      { player: 0, card: cardId('C', 12, 1) }, // Erste Kreuz-Dame
+      { player: 1, card: cardId('C', 12, 2) }, // Zweite Kreuz-Dame
+      { player: 2, card: cardId('S', 12, 1) }, // Pik-Dame
+      { player: 3, card: cardId('D', 1, 1) }, // Karo-Ass
+    ];
+    expect(trickWinner(trick, contract).player).toBe(0);
+  });
+});
