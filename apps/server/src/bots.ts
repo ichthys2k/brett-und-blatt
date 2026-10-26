@@ -3,7 +3,8 @@
  * `serverBotRunner` in packages/online. Die Schrittweiten je Spiel sind so
  * gemessen, dass ein schwerer Bot etwa 0,3 s rechnet (test/bot-timing.test.ts,
  * Stand Oktober 2026, lokal). Auf Cloudflare (Gratis-Tarif) nachgemessen am
- * 25.10.2026: schwer 0,3–0,4 s bei Vier in einer Reihe, 0,5–1,3 s bei Schach.
+ * 26.10.2026, Zug bis Antwort inkl. Netzweg: schwer im Median 0,5–1,1 s,
+ * Spitzen bis 1,6 s (Reversi, Mühle, Vier in einer Reihe, Schach).
  */
 export const BOT_BUDGET_MS = { easy: 100, medium: 300, hard: 800 };
 export const BOT_STEP_MS: Record<string, number> = { chess: 140, reversi: 35, mill: 16, 'four-in-a-row': 7 };
