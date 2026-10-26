@@ -12,6 +12,8 @@ export interface ClockReading {
   fraction: number;
   /** true, wenn gerade die Zeitbank angebrochen wird. */
   usingBank: boolean;
+  /** Byo-yomi: verbleibende Perioden (einschließlich der laufenden). */
+  periodsLeft?: number;
   expired: boolean;
 }
 
@@ -29,6 +31,8 @@ interface SeatClock {
   startedAt: number | null;
   /** Abgeschlossene Züge (für `firstMoveMs`); fehlt in älteren Spielständen. */
   moves?: number;
+  /** Byo-yomi: verbleibende Perioden. */
+  periods?: number;
 }
 
 /**
@@ -44,10 +48,11 @@ export class Clocks {
     seatCount: number,
   ) {
     this.seats = Array.from({ length: seatCount }, () => ({
-      remainingMs: control.kind === 'chessClock' ? control.baseMs : 0,
+      remainingMs: control.kind === 'chessClock' ? control.baseMs : control.kind === 'byoyomi' ? control.mainMs : 0,
       bankMs: control.kind === 'perMove' ? (control.bankMs ?? 0) : 0,
       startedAt: null,
       moves: 0,
+      ...(control.kind === 'byoyomi' ? { periods: control.periods } : {}),
     }));
   }
 
@@ -89,6 +94,11 @@ export class Clocks {
       clock.bankMs = Math.max(0, clock.bankMs - Math.max(0, elapsed - this.moveLimit(clock)));
     } else if (this.control.kind === 'chessClock') {
       clock.remainingMs = Math.max(0, clock.remainingMs - elapsed) + this.control.incrementMs;
+    } else if (this.control.kind === 'byoyomi') {
+      // Erst die Hauptzeit; jede ganz überschrittene Periode ist verbraucht, die laufende beginnt neu.
+      const over = elapsed - clock.remainingMs;
+      clock.remainingMs = Math.max(0, clock.remainingMs - elapsed);
+      if (over > 0) clock.periods = Math.max(0, (clock.periods ?? 0) - Math.floor(over / this.control.periodMs));
     }
     clock.moves = (clock.moves ?? 0) + 1;
     clock.startedAt = null;
@@ -144,6 +154,18 @@ export class Clocks {
     if (control.kind === 'chessClock') {
       const left = Math.max(0, clock.remainingMs - elapsed);
       return { kind: control.kind, running, leftMs: left, bankLeftMs: null, fraction: Math.min(1, left / control.baseMs), usingBank: false, expired: running && left <= 0 };
+    }
+
+    if (control.kind === 'byoyomi') {
+      if (elapsed <= clock.remainingMs) {
+        const left = clock.remainingMs - elapsed;
+        return { kind: control.kind, running, leftMs: left, bankLeftMs: null, fraction: Math.min(1, left / control.mainMs), usingBank: false, periodsLeft: clock.periods ?? 0, expired: false };
+      }
+      const over = elapsed - clock.remainingMs;
+      const periodsLeft = (clock.periods ?? 0) - Math.floor(over / control.periodMs);
+      if (periodsLeft <= 0) return { kind: control.kind, running, leftMs: 0, bankLeftMs: null, fraction: 0, usingBank: true, periodsLeft: 0, expired: true };
+      const left = control.periodMs - (over % control.periodMs);
+      return { kind: control.kind, running, leftMs: left, bankLeftMs: null, fraction: left / control.periodMs, usingBank: true, periodsLeft, expired: false };
     }
 
     return { kind: 'none', running, leftMs: null, bankLeftMs: null, fraction: 1, usingBank: false, expired: false };

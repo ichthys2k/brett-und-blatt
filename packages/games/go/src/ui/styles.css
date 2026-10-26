@@ -1,0 +1,278 @@
+.go-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+}
+
+.go-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  background: #dcb35c;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15), 0 2px 8px rgb(0 0 0 / 0.18);
+}
+
+.go-board {
+  box-sizing: border-box;
+  height: 100%;
+  padding: 1.5%;
+}
+
+/* Linien durch die Mitte jeder Zelle; am Rand nur bis zur Mitte. */
+.go-board .bub-cell::before,
+.go-board .bub-cell::after {
+  content: '';
+  position: absolute;
+  background: #4a3410;
+  pointer-events: none;
+}
+
+.go-board .bub-cell::before {
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.go-board .bub-cell::after {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.go-board .go-l::before {
+  left: 50%;
+}
+
+.go-board .go-r::before {
+  right: 50%;
+}
+
+.go-board .go-t::after {
+  top: 50%;
+}
+
+.go-board .go-b::after {
+  bottom: 50%;
+}
+
+.go-board button.bub-cell:focus-visible {
+  border-radius: 999px;
+}
+
+.go-star {
+  position: absolute;
+  z-index: 1;
+  width: 22%;
+  height: 22%;
+  border-radius: 999px;
+  background: #4a3410;
+}
+
+.go-stone {
+  position: relative;
+  z-index: 2;
+  width: 94%;
+  height: 94%;
+  border-radius: 999px;
+}
+
+.go-black {
+  background: radial-gradient(circle at 35% 30%, #666 0%, #222 45%, #000 100%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
+}
+
+.go-white {
+  background: radial-gradient(circle at 35% 30%, #fff 0%, #eee 50%, #c8c8c8 100%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+}
+
+.go-ghost {
+  opacity: 0.5;
+}
+
+.go-dead {
+  opacity: 0.45;
+  transform: scale(0.8);
+}
+
+/* Tote Steine zusätzlich mit einem Kreuz, damit man sie nicht nur an der Blässe erkennt. */
+.go-dead::after {
+  content: '×';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #b02020;
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+.go-board .bub-cell .go-stone {
+  animation: go-drop 0.15s ease-out;
+}
+
+@keyframes go-drop {
+  from {
+    transform: scale(1.25);
+    opacity: 0.4;
+  }
+}
+
+.go-board .go-dead.go-stone {
+  animation: none;
+}
+
+/* Markierung des letzten Zugs: kleiner Ring auf dem Stein. */
+.go-board .go-last .go-stone::after {
+  content: '';
+  position: absolute;
+  inset: 30%;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+}
+
+.go-board .go-last .go-black {
+  color: #fff;
+}
+
+.go-board .go-last .go-white {
+  color: #000;
+}
+
+.go-ko {
+  position: absolute;
+  z-index: 2;
+  width: 45%;
+  height: 45%;
+  border: 2px solid #b02020;
+}
+
+.go-area {
+  position: absolute;
+  z-index: 3;
+  width: 38%;
+  height: 38%;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.go-area-black {
+  background: #111;
+}
+
+.go-area-white {
+  background: #fafafa;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.4);
+}
+
+.go-board .go-hint {
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 65%, transparent) 0 35%, transparent 36%);
+}
+
+.go-board .go-preview {
+  background: radial-gradient(circle, rgb(255 255 255 / 0.35) 0 70%, transparent 71%);
+}
+
+@media (hover: hover) {
+  .go-board button.go-playable:hover {
+    background: radial-gradient(circle, rgb(0 0 0 / 0.18) 0 40%, transparent 41%);
+  }
+}
+
+/* Lupe: vergrößertes Brett in einem verschiebbaren Ausschnitt. */
+.go-scroll {
+  width: 100%;
+  height: 100%;
+}
+
+.go-scroll.go-zoomed {
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 10px;
+}
+
+.go-zoom {
+  width: 100%;
+  height: 100%;
+}
+
+.go-zoomed .go-zoom {
+  width: 190%;
+  height: 190%;
+}
+
+.go-lens {
+  position: absolute;
+  top: -0.6rem;
+  right: -0.6rem;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+  color: var(--color-ink);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.go-bar {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 0;
+}
+
+.go-score {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.go-score small {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.go-button {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.go-primary,
+.go-hinted {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink, #fff);
+}
+
+.go-symbol {
+  display: grid;
+  place-items: center;
+  width: 70%;
+  height: 70%;
+}
+
+.go-symbol .go-stone {
+  width: 100%;
+  height: 100%;
+}

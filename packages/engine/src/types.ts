@@ -68,7 +68,12 @@ export type TimeControl =
    */
   | { kind: 'perMove'; moveMs: number; bankMs?: number; firstMoveMs?: number }
   /** Schachuhr: Gesamtzeit pro Spieler, nach jedem Zug kommt der Zuschlag dazu. */
-  | { kind: 'chessClock'; baseMs: number; incrementMs: number };
+  | { kind: 'chessClock'; baseMs: number; incrementMs: number }
+  /**
+   * Byo-yomi (Go): Hauptzeit für die ganze Partie, danach `periods` Perioden mit je `periodMs`
+   * pro Zug. Wer eine Periode überschreitet, verbraucht sie; nach der letzten ist die Zeit um.
+   */
+  | { kind: 'byoyomi'; mainMs: number; periods: number; periodMs: number };
 
 export interface TimePresets {
   relaxed: TimeControl;
@@ -133,6 +138,8 @@ export interface GameModule<S, M, V = S> {
   info: GameInfo;
   options: OptionSpec[];
   timePresets: TimePresets;
+  /** Zeitvorgaben, die von den Optionen abhängen (z. B. Brettgröße bei Go). Fehlt sie, gilt `timePresets`. */
+  timePresetsFor?(options: Options): TimePresets;
 
   setup(seats: number, options: Options, seed: string): S;
   /** Wer gerade handeln darf – auch mehrere Plätze gleichzeitig oder 'system'. */

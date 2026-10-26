@@ -1,4 +1,4 @@
-import { BOT_LEVELS, type TimePresetId } from '@brett-und-blatt/engine';
+import { BOT_LEVELS, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
 import { MAX_SEATS, parseRoomCode, type LobbySeat, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
@@ -257,12 +257,12 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
               <Segmented
                 label={t('setup.time')}
                 value={lobby.time}
-                choices={TIME_PRESETS.map((preset) => ({ value: preset, label: t(`time.${preset}`), hint: describeTime(game.module.timePresets[preset]) }))}
+                choices={TIME_PRESETS.map((preset) => ({ value: preset, label: t(`time.${preset}`), hint: describeTime(timePresetsOf(game.module, lobby.options)[preset]) }))}
                 onChange={(time) => send({ type: 'setTime', time })}
               />
             ) : (
               <p className="text-muted">
-                {t(`time.${lobby.time}`)} · {describeTime(game.module.timePresets[lobby.time])}
+                {t(`time.${lobby.time}`)} · {describeTime(timePresetsOf(game.module, lobby.options)[lobby.time])}
               </p>
             )}
           </Section>
