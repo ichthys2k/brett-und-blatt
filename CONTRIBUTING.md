@@ -62,6 +62,19 @@ Das legt eine Kopie der Vorlage Tic-Tac-Toe an. Die Kopie ist sofort spielbar un
 - **Bots sind Pflicht:** Jedes Spiel ist gegen den Computer spielbar. Der erste Bot in `bots` ist der Standard; die allgemeinen Bots (`generalBots()`) funktionieren mit jedem Spiel.
 - **Prüfungen:** Jeder Spieltest bindet `gameContractChecks(gameModule)` ein. Sie spielen viele Zufalls- und Bot-Partien und prüfen dabei die Regeln oben.
 
+### Klänge
+
+Klänge sind freiwillig. Ein Spiel ordnet in `gameUi.sounds` seinen Ereignissen Klangnamen aus dem Katalog [`packages/ui/src/audio/catalog.json`](packages/ui/src/audio/catalog.json) zu:
+
+```ts
+sounds: {
+  placed: 'stein-setzen',
+  moved: (event) => (event.captured ? 'stein-schlagen' : 'stein-ziehen'),
+},
+```
+
+Sieg, Niederlage und Zeit vertont die Plattform selbst. Die Klangdateien liegen nicht in diesem Repo (Lizenz von ElevenLabs, siehe Konzept); wer sie nicht hat, baut und spielt die App einfach ohne Ton. Neue Klänge trägt Cornelius im Katalog und im privaten Klang-Repo ein.
+
 ## Konventionen
 
 - Bezeichner im Code auf Englisch, Kommentare, Doku und Commit-Nachrichten auf Deutsch.
@@ -70,4 +83,4 @@ Das legt eine Kopie der Vorlage Tic-Tac-Toe an. Die Kopie ist sofort spielbar un
 
 ## Lizenzen
 
-Mit einem Beitrag stimmst du zu, dass Code unter der [AGPL-3.0](LICENSE) und Inhalte (Grafiken, Sounds, Kartensets, Wortlisten) unter CC BY-SA 4.0 veröffentlicht werden. Fremde Inhalte bitte nur mit verträglicher Lizenz und mit Quellenangabe.
+Mit einem Beitrag stimmst du zu, dass Code unter der [AGPL-3.0](LICENSE) und Inhalte (Grafiken, Sounds, Kartensets, Wortlisten) unter CC BY-SA 4.0 veröffentlicht werden. Ausnahme sind die Soundeffekte aus dem privaten Klang-Repo (alle Rechte vorbehalten). Fremde Inhalte bitte nur mit verträglicher Lizenz und mit Quellenangabe.

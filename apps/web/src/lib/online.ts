@@ -2,6 +2,7 @@ import { OnlineSession, PROTOCOL_VERSION, type ClientMessage, type GameMessage, 
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createBotRunner } from './botRunner';
 import { loadGame, type LoadedGame } from './registry';
+import { sound } from './sound';
 import { storage, type Profile } from './storage';
 
 /**
@@ -156,6 +157,7 @@ export class RoomConnection {
       case 'signal': {
         const signal: Signal = { id: this.nextSignal++, from: message.from, kind: message.kind, value: message.value };
         this.set({ signals: [...this.state.signals.slice(-4), signal] });
+        if (message.from !== this.state.you) sound.play('reaktion');
         window.setTimeout(() => this.set({ signals: this.state.signals.filter((s) => s.id !== signal.id) }), 3500);
         return;
       }

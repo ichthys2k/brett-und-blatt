@@ -139,6 +139,14 @@ Was den Spielfluss außerdem beschleunigt: automatische Pflichtzüge, Vorab-Züg
 - **Kartenblätter:** Französisch (32, 48 und 52 Karten, wahlweise vierfarbig wie das Skat-Turnierbild), Deutsch/Bayerisch (32 und 24 Karten), später Württembergisch. Alle werden aus Daten als SVG erzeugt: scharf, klein, im Dunkelmodus nutzbar und lizenzrechtlich sauber.
 - **Barrierearm:** Farben immer zusätzlich mit Symbolen unterschieden, Koordinaten als Text, Vorlesen optional.
 
+## Klänge
+
+- **Ereignisse → Klänge:** Jedes Spiel nennt in `gameUi.sounds` nur Klangnamen zu seinen Ereignissen (z. B. `placed: 'stein-setzen'`). Sieg, Niederlage, Unentschieden, Zeitwarnung (eigene Uhr unter 10 s), Zeitablauf, online „Du bist dran“ und Emoji-Reaktionen vertont die Plattform selbst. Züge der Gegner klingen leiser, Zurücknehmen und Fortsetzen spielen nichts nach.
+- **Katalog:** `packages/ui/src/audio/catalog.json` ordnet jedem Klangnamen eine Datei zu, mit Ausschnitt (`start`/`end`), Lautheitsangleichung (`gain`) und ggf. Tonhöhe (`rate`). Abgespielt wird per Web Audio (`SoundPlayer`), mit leichter Zufallsvariation der Tonhöhe.
+- **Dateien:** Die Effekte hat Cornelius mit ElevenLabs (bezahlter Tarif „Creator“) erzeugt. Die Bedingungen von ElevenLabs erlauben die Nutzung im Spiel, aber keine Weitergabe als Einzeldateien oder Sammlung. Deshalb liegen sie **nicht** in diesem Repo und nicht unter CC BY-SA, sondern im privaten Repo `ichthys2k/brett-und-blatt-klaenge` (Ordner `effekte/`). `apps/web/klaenge.ts` baut beim Bauen nur die Dateien ein, die der Katalog braucht (höchstens 1,5 MB, werden vorab gespeichert); gesucht wird in `KLAENGE_DIR` oder neben dem Repo in `../brett-und-blatt-klaenge/effekte`. Die CI holt das Repo mit dem Deploy-Key aus dem Secret `KLAENGE_DEPLOY_KEY`. Ohne die Dateien bleibt die App stumm.
+- **Einstellungen:** Lautsprecher-Knopf im Spiel (Ton an/aus, Lautstärke der Effekte), je Gerät in `localStorage`. Standard: an, 70 %. Browser spielen Ton erst nach der ersten Berührung.
+- **Musik (geplant):** eigene Playlists je Spielfamilie (Denkraum, Kartentisch, Patience, Spielabend), erstellt mit Suno (Pro), wechselbar, einzelne Stücke mit Stern oder ausgeschlossen; standardmäßig an. Wird nur bei Bedarf geladen.
+
 ## Datenschutz und Sicherheit
 
 Die Plattform richtet sich auch an Kinder, Schülerinnen, Schüler und Fremde. Deshalb:
@@ -155,6 +163,7 @@ Die Plattform richtet sich auch an Kinder, Schülerinnen, Schüler und Fremde. D
 
 - Spielmechaniken sind frei, Markennamen nicht. Darum heißen die Spiele z. B. „Vier in einer Reihe“, „Paare finden“ und „Reversi“. Für Uno, Kniffel, Malefiz, Monopoly, Catan, Scrabble, Qwirkle usw. braucht es eigene Namen.
 - Fremder Code und fremde Daten nur mit verträglicher Lizenz, z. B. Stockfish (GPL-3), Wortliste igerman98 (GPL-2/3). Die Quelle steht in `THIRD_PARTY.md`.
+- Soundeffekte aus ElevenLabs dürfen nur eingebaut genutzt, nicht als Dateien weitergegeben werden – darum im privaten Klang-Repo (siehe „Klänge“).
 - Musik und Tierlaute aus Emojistone sind mit bezahltem Suno-Abo erstellt und dürfen unter CC BY-SA ins Repo (Nennung: „Cornelius Lipponer, erstellt mit Suno“).
 - Poker nur mit Spielgeld; Mäxle mit Leben statt Getränken.
 
