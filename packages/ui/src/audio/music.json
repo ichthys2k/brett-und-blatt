@@ -1,14 +1,30 @@
 {
   "playlists": [
-    { "id": "denkraum", "title": "Denkraum", "mood": "ruhig und konzentriert", "games": ["chess", "four-player-chess", "mill", "reversi"] },
-    { "id": "kartentisch", "title": "Kartentisch", "mood": "gesellig und leicht", "games": ["black-peter", "pairs", "quartett", "color-sorter"] },
+    { "id": "denkraum", "title": "Denkraum", "mood": "ruhig und konzentriert", "games": ["chess", "four-player-chess", "mill", "reversi", "go"] },
+    { "id": "kartentisch", "title": "Kartentisch", "mood": "gesellig und leicht", "games": ["black-peter", "pairs", "quartett", "color-sorter", "skat", "schafkopf", "doppelkopf", "drachenspiel"] },
     { "id": "patience", "title": "Patience", "mood": "gemütlich und verträumt", "games": ["solitaire"] },
-    { "id": "spielabend", "title": "Spielabend", "mood": "fröhlich und verspielt", "games": ["maexle", "battleship", "tic-tac-toe", "four-in-a-row", "ultimate-tic-tac-toe", "bingo"] }
+    { "id": "spielabend", "title": "Spielabend", "mood": "fröhlich und verspielt", "games": ["maexle", "battleship", "tic-tac-toe", "four-in-a-row", "ultimate-tic-tac-toe", "bingo", "dominoes", "color-and-shape"] }
   ],
   "tracks": [
     { "id": "herbstbibliothek", "title": "Herbstbibliothek", "file": "herbstbibliothek.mp3", "playlist": "denkraum" },
     { "id": "bedenkzeit", "title": "Bedenkzeit", "file": "bedenkzeit.mp3", "playlist": "denkraum" },
     { "id": "holzbrett", "title": "Holzbrett", "file": "holzbrett.mp3", "playlist": "denkraum" },
-    { "id": "nachtpartie", "title": "Nachtpartie", "file": "nachtpartie.mp3", "playlist": "denkraum" }
+    { "id": "nachtpartie", "title": "Nachtpartie", "file": "nachtpartie.mp3", "playlist": "denkraum" },
+    { "id": "stille-zuege", "title": "Stille Züge", "file": "stille-zuege.mp3", "playlist": "denkraum" },
+    { "id": "cafe-am-markt", "title": "Café am Markt", "file": "cafe-am-markt.mp3", "playlist": "kartentisch" },
+    { "id": "gemischtes-blatt", "title": "Gemischtes Blatt", "file": "gemischtes-blatt.mp3", "playlist": "kartentisch" },
+    { "id": "sonntagsrunde", "title": "Sonntagsrunde", "file": "sonntagsrunde.mp3", "playlist": "kartentisch" },
+    { "id": "stich-fuer-stich", "title": "Stich für Stich", "file": "stich-fuer-stich.mp3", "playlist": "kartentisch" },
+    { "id": "wohnzimmerlicht", "title": "Wohnzimmerlicht", "file": "wohnzimmerlicht.mp3", "playlist": "kartentisch" },
+    { "id": "regennachmittag", "title": "Regennachmittag", "file": "regennachmittag.mp3", "playlist": "patience" },
+    { "id": "kartenhaus", "title": "Kartenhaus", "file": "kartenhaus.mp3", "playlist": "patience" },
+    { "id": "morgentee", "title": "Morgentee", "file": "morgentee.mp3", "playlist": "patience" },
+    { "id": "wolkenzug", "title": "Wolkenzug", "file": "wolkenzug.mp3", "playlist": "patience" },
+    { "id": "kerzenschein", "title": "Kerzenschein", "file": "kerzenschein.mp3", "playlist": "patience" },
+    { "id": "wuerfelglueck", "title": "Würfelglück", "file": "wuerfelglueck.mp3", "playlist": "spielabend" },
+    { "id": "volle-fahrt", "title": "Volle Fahrt", "file": "volle-fahrt.mp3", "playlist": "spielabend" },
+    { "id": "kunterbunt", "title": "Kunterbunt", "file": "kunterbunt.mp3", "playlist": "spielabend" },
+    { "id": "seegang", "title": "Seegang", "file": "seegang.mp3", "playlist": "spielabend" },
+    { "id": "siegertreppchen", "title": "Siegertreppchen", "file": "siegertreppchen.mp3", "playlist": "spielabend" }
   ]
 }

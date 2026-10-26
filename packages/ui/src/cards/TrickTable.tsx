@@ -1,4 +1,5 @@
-import type { CardId } from '@brett-und-blatt/engine';
+import type { CardId, PlayedCard, Trick } from '@brett-und-blatt/engine';
+import { useEffect, useRef, useState } from 'react';
 import { type DeckStyle, PlayingCard } from './PlayingCard.js';
 
 export interface TrickTableSlot {
@@ -9,6 +10,55 @@ export interface TrickTableSlot {
   isWinner?: boolean;
 }
 
+/**
+ * Hilfs-Hook für Stichspiele: Hält einen fertigen Stich kurz sichtbar (mit Sieger-Hervorhebung)
+ * und animiert danach das Einziehen der Karten zum Siegerplatz.
+ */
+export function useTrickDisplay(
+  currentTrick: Trick,
+  completedTricks: { winner: number; cards: PlayedCard[] }[],
+  durationMs = 600,
+) {
+  const [display, setDisplay] = useState<{
+    cards: PlayedCard[];
+    winner: number | null;
+    collecting: boolean;
+  }>({ cards: currentTrick, winner: null, collecting: false });
+
+  const prevCompletedCount = useRef(completedTricks.length);
+
+  useEffect(() => {
+    if (currentTrick.length > 0) {
+      prevCompletedCount.current = completedTricks.length;
+      setDisplay({ cards: currentTrick, winner: null, collecting: false });
+      return;
+    }
+
+    if (completedTricks.length > prevCompletedCount.current) {
+      prevCompletedCount.current = completedTricks.length;
+      const last = completedTricks.at(-1)!;
+      setDisplay({ cards: last.cards, winner: last.winner, collecting: false });
+
+      const collectTimer = window.setTimeout(() => {
+        setDisplay((d) => (d ? { ...d, collecting: true } : d));
+      }, Math.max(durationMs - 220, 250));
+
+      const clearTimer = window.setTimeout(() => {
+        setDisplay({ cards: [], winner: null, collecting: false });
+      }, durationMs);
+
+      return () => {
+        window.clearTimeout(collectTimer);
+        window.clearTimeout(clearTimer);
+      };
+    }
+
+    setDisplay({ cards: currentTrick, winner: null, collecting: false });
+  }, [currentTrick, completedTricks, durationMs]);
+
+  return display;
+}
+
 export interface TrickTableProps {
   /** Die Plätze am Tisch mit ihren im Stich gelegten Karten. */
   slots: TrickTableSlot[];
@@ -17,6 +67,8 @@ export interface TrickTableProps {
   deckStyle?: DeckStyle;
   cardWidth?: number;
   className?: string;
+  /** Ob der fertige Stich gerade zum Sieger eingezogen wird. */
+  collecting?: boolean;
 }
 
 /**
@@ -30,8 +82,11 @@ export function TrickTable({
   deckStyle = 'french',
   cardWidth = 72,
   className = '',
+  collecting = false,
 }: TrickTableProps) {
   const total = slots.length;
+  const winnerSlot = slots.find((s) => s.isWinner);
+  const winnerDir = winnerSlot ? getRelativePosition(winnerSlot.seat) : 'bottom';
 
   // Berechne relative Positionen bezogen auf bottomSeat:
   // 0 = unten (Süd), 1 = links/oben-links, 2 = oben/oben-rechts, 3 = rechts
@@ -81,13 +136,16 @@ export function TrickTable({
               break;
           }
 
+          const collectClass = collecting ? 'bub-trick-collect' : '';
+
           return (
             <div
               key={slot.seat}
-              className={`absolute transition-all duration-200 ${posClasses} ${slot.isWinner ? 'z-20 ring-4 ring-amber-400 rounded-lg shadow-lg scale-105' : 'z-10 shadow'}`}
+              className={`absolute transition-all duration-200 ${posClasses} ${slot.isWinner ? 'z-20 ring-4 ring-amber-400 rounded-lg shadow-lg scale-105' : 'z-10 shadow'} ${collectClass}`}
+              data-winner-dir={collecting ? winnerDir : undefined}
               style={{ width: cardWidth }}
             >
-              <PlayingCard card={slot.card} deckStyle={deckStyle} />
+              <PlayingCard card={slot.card} deckStyle={deckStyle} anim="drop" />
               {slot.name && (
                 <div className="text-center text-[11px] font-medium text-stone-700 dark:text-stone-300 truncate max-w-[80px] mt-0.5 mx-auto">
                   {slot.name}

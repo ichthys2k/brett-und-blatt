@@ -36,7 +36,6 @@ export const gameModule: GameModule<SolitaireState, SolitaireMove> = {
     {
       id: 'solvable',
       label: 'Nur lösbare Spiele',
-      when: { variant: ['klondike', 'freecell'] },
       choices: [
         { value: 'no', label: 'Nein' },
         { value: 'yes', label: 'Ja' },

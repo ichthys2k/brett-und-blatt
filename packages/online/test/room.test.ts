@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   AWAY_AFTER_DISCONNECT_MS,
   CLOCK_GRACE_MS,
+  CORRESPONDENCE_ROOM_TTL_MS,
   HOST_HANDOVER_MS,
   PROTOCOL_VERSION,
   Room,
@@ -66,11 +67,26 @@ const round: GameModule<RoundState, RoundMove> = {
   bots: ticTacToe.bots as unknown as GameModule<RoundState, RoundMove>['bots'],
 };
 
+const correspondenceGame: AnyGameModule = {
+  ...ticTacToe,
+  info: { ...ticTacToe.info, id: 'corr-game', name: 'Corr Game' },
+  options: [{ id: 'correspondence', label: 'Fernpartie', choices: [{ value: 'no', label: 'Nein' }, { value: 'yes', label: 'Ja' }], default: 'no' }],
+  timePresetsFor: (opts) =>
+    opts.correspondence === 'yes'
+      ? {
+          relaxed: { kind: 'perMove', moveMs: 2 * 86_400_000 },
+          normal: { kind: 'perMove', moveMs: 86_400_000 },
+          fast: { kind: 'perMove', moveMs: 12 * 60 * 60 * 1000 },
+        }
+      : ticTacToe.timePresets,
+};
+
 const modules = new Map<string, AnyGameModule>([
   [round.info.id, round],
   [ticTacToe.info.id, ticTacToe],
   [blackPeter.info.id, blackPeter],
   [together.info.id, together],
+  [correspondenceGame.info.id, correspondenceGame],
 ]);
 
 /** Ein Raum mit nachgebauten Verbindungen und einer Uhr, die man vorstellen kann. */
@@ -458,6 +474,29 @@ describe('Uhr, Verbindungsabbruch und Wiedereinstieg', () => {
     anna.hello();
     env.advance(env.room.expiresAt() - env.now + 1);
     expect(env.room.nextWakeup()!).toBeGreaterThan(env.now);
+  });
+
+  it('Fernpartien: 30 Tage Lebensdauer und kein Bot-Ersatz nach kurzem Verbindungsabbruch', () => {
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    anna.hello();
+    ben.hello();
+    anna.send({ type: 'setGame', gameId: 'corr-game' });
+    anna.send({ type: 'setOption', id: 'correspondence', value: 'yes' });
+    anna.send({ type: 'takeSeat', index: 0 });
+    ben.send({ type: 'takeSeat', index: 1 });
+    expect(env.room.isCorrespondence()).toBe(true);
+    expect(env.room.expiresAt()).toBe(env.now + CORRESPONDENCE_ROOM_TTL_MS);
+
+    anna.send({ type: 'start' });
+
+    // Anna trennt die Verbindung (schließt den Tab)
+    env.room.disconnect('anna');
+    // Nach 25 Sekunden (mehr als die üblichen 20s AWAY_AFTER_DISCONNECT_MS)
+    env.advance(25_000);
+    env.room.tick();
+    // Anna darf nicht als abwesend markiert werden
+    expect(env.room.snapshot().members.find((m) => m.name === 'anna')?.awayByDisconnect).toBe(false);
   });
 
   it('Speichern und Wiederherstellen: die Partie geht genau dort weiter', () => {

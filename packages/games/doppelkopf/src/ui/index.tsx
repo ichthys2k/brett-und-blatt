@@ -1,5 +1,5 @@
 import { cardSuit, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
-import { CardFan, PlayingCard, TrickTable, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import { CardFan, PlayingCard, TrickTable, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import {
   type DokoAnnouncement,
   type DokoContract,
@@ -19,10 +19,13 @@ export function DokoBoard({
   const myHand: CardId[] = view.hands[mySeat] || [];
   const isMyRe = view.reTeam.includes(mySeat);
 
+  const displayTrick = useTrickDisplay(view.currentTrick, view.completedTricks);
+
   // TrickTable Slots
   const trickSlots: TrickTableSlot[] = view.activeSeats.map((seat: number) => {
-    const played = view.currentTrick.find((p) => p.player === seat);
-    const isLead = view.currentTrick[0]?.player === seat;
+    const played = displayTrick.cards.find((p) => p.player === seat);
+    const isLead = displayTrick.cards[0]?.player === seat;
+    const isWin = displayTrick.winner === seat;
     let name = seatNames[seat] ?? `Spieler ${seat + 1}`;
 
     const isSeatRe = view.reTeam.includes(seat);
@@ -37,6 +40,7 @@ export function DokoBoard({
       name,
       card: played ? played.card : null,
       isLeader: isLead,
+      isWinner: isWin,
     };
   });
 
@@ -154,6 +158,7 @@ export function DokoBoard({
           bottomSeat={mySeat}
           deckStyle={view.deckStyle}
           cardWidth={80}
+          collecting={displayTrick.collecting}
         />
       </div>
 

@@ -1,5 +1,5 @@
 import { cardId, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
-import { CardFan, PlayingCard, TrickTable, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import { CardFan, PlayingCard, TrickTable, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import {
   type SchafkopfContract,
@@ -23,10 +23,13 @@ export function SchafkopfBoard({
   const [selectedGameType, setSelectedGameType] = useState<SchafkopfGameType>('sauspiel');
   const [selectedSuit, setSelectedSuit] = useState<Suit>('C');
 
+  const displayTrick = useTrickDisplay(view.currentTrick, view.completedTricks);
+
   // 4 TrickTable Slots
   const trickSlots: TrickTableSlot[] = [0, 1, 2, 3].map((seat) => {
-    const played = view.currentTrick.find((p) => p.player === seat);
-    const isLead = view.currentTrick[0]?.player === seat;
+    const played = displayTrick.cards.find((p) => p.player === seat);
+    const isLead = displayTrick.cards[0]?.player === seat;
+    const isWin = displayTrick.winner === seat;
     let label = seatNames[seat] ?? `Spieler ${seat + 1}`;
     if (seat === view.declarerSeat) label += ' (Solist)';
     else if (seat === view.partnerSeat && (view.partnerRevealed || mySeat === view.partnerSeat)) {
@@ -38,6 +41,7 @@ export function SchafkopfBoard({
       name: label,
       card: played ? played.card : null,
       isLeader: isLead,
+      isWinner: isWin,
     };
   });
 
@@ -181,6 +185,7 @@ export function SchafkopfBoard({
           bottomSeat={mySeat}
           deckStyle={view.deckStyle}
           cardWidth={80}
+          collecting={displayTrick.collecting}
         />
       </div>
 

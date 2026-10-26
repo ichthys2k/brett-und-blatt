@@ -64,6 +64,41 @@ describe('Regeln', () => {
     expect(gameModule.applyMove(t, 0, { type: 'play', stone: id(5, 0), end: 'left' }).state.scores[0]).toBe(10);
   });
 
+  it('Spinner: erster Pasch wird zum Spinner und öffnet bis zu vier Enden', () => {
+    // Kette mit Pasch in der Mitte [5|5] und [3|5] links, [5|2] rechts
+    const s: DominoState = {
+      ...start({ variant: 'fives', spinner: 'yes' }),
+      chain: [
+        { stone: id(3, 5), left: 3, right: 5 },
+        { stone: id(5, 5), left: 5, right: 5 },
+        { stone: id(5, 2), left: 5, right: 2 },
+      ],
+      spinnerIndex: 1,
+      upBranch: [],
+      downBranch: [],
+      hands: [[id(5, 0), id(1, 2)], [id(1, 1)]],
+      turn: 0,
+      opening: null,
+      passes: 0,
+      lacks: [[], []],
+    };
+
+    // Beide Linienenden sind belegt: Anlegen an 'up' und 'down' muss für [5|0] erlaubt sein!
+    const moves = gameModule.legalMoves(s, 0);
+    expect(moves).toContainEqual({ type: 'play', stone: id(5, 0), end: 'up' });
+    expect(moves).toContainEqual({ type: 'play', stone: id(5, 0), end: 'down' });
+
+    // Wenn an 'up' angelegt wird:
+    // Linkes Ende: 3, rechtes Ende: 2.
+    // Unten ist noch frei (zählt Paschwert 5).
+    // Oben liegt nun [5|0] (äußeres Ende 0).
+    // Summe der offenen Enden: 3 + 2 + 5 + 0 = 10 Punkte (Vielfaches von 5)!
+    const next = gameModule.applyMove(s, 0, { type: 'play', stone: id(5, 0), end: 'up' }).state;
+    expect(next.upBranch).toHaveLength(1);
+    expect(next.upBranch[0]).toEqual({ stone: id(5, 0), left: 5, right: 0 });
+    expect(next.scores[0]).toBe(10);
+  });
+
   it('Sicht: fremde Hände, Vorrat und Zufall bleiben verborgen', () => {
     const s = start({}, 3);
     const view = gameModule.playerView(s, 1);

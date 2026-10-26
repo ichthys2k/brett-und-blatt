@@ -73,7 +73,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Bekannte offene Punkte:**
 - Solitaire: lösbare Spiele für Spider und Pyramide fehlen.
-- Musik: erst 4 von 20 Stücken da (Denkraum); die übrigen Playlists spielen bis dahin alle vorhandenen Stücke. Titel und Prompts im Konzept-Doc.
+- Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend).
 
 ## Nächste Schritte
 

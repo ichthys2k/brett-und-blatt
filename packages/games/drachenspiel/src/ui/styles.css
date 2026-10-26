@@ -437,3 +437,57 @@
   }
 }
 
+/* Kampf-Animationen */
+@keyframes ds-lunge-up {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-26px) scale(1.08); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes ds-lunge-down {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(26px) scale(1.08); }
+  100% { transform: translateY(0); }
+}
+
+.ds-attacking-up {
+  animation: ds-lunge-up 0.22s ease-in-out;
+  z-index: 30;
+}
+
+.ds-attacking-down {
+  animation: ds-lunge-down 0.22s ease-in-out;
+  z-index: 30;
+}
+
+.ds-bubble-pop {
+  animation: ds-bubble-pop-anim 0.35s ease-out forwards;
+}
+
+@keyframes ds-bubble-pop-anim {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.8; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+.ds-damage-badge {
+  color: #ff4757;
+  font-size: 1.5rem;
+  -webkit-text-stroke: 1px #800000;
+}
+
+.ds-heal-badge {
+  color: #2ed573;
+  font-size: 1.5rem;
+  -webkit-text-stroke: 1px #006000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-attacking-up,
+  .ds-attacking-down,
+  .ds-bubble-pop {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+

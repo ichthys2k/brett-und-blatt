@@ -39,7 +39,7 @@ export const dominoBot: BotDefinition<DominoState, DominoMove> = {
     const fives = view.variant === 'fives';
     const immediate = (m: Extract<DominoMove, { type: 'play' }>) => {
       if (!fives) return 0;
-      const sum = endSum(applyMove(base, ctx.seat, m).state.chain);
+      const sum = endSum(applyMove(base, ctx.seat, m).state);
       return sum > 0 && sum % 5 === 0 ? sum : 0;
     };
     if (ctx.level === 'medium') return best(plays, (m) => immediate(m) * 10 + pipsOf(m.stone), ctx.rng);
@@ -66,7 +66,7 @@ export const dominoBot: BotDefinition<DominoState, DominoMove> = {
             const replies = legalMoves(s, next).filter((x) => x.type === 'play');
             let top = 0;
             for (const x of replies) {
-              const sum = endSum(applyMove(s, next, x).state.chain);
+              const sum = endSum(applyMove(s, next, x).state);
               if (sum > 0 && sum % 5 === 0) top = Math.max(top, sum);
             }
             reply += top;

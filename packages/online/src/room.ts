@@ -39,6 +39,8 @@ export const AWAY_AFTER_DISCONNECT_MS = 20_000;
 export const HOST_HANDOVER_MS = 60_000;
 /** Ein Raum ohne jede Aktivität wird nach dieser Zeit gelöscht. */
 export const ROOM_TTL_MS = 24 * 60 * 60 * 1000;
+/** Für Fernpartien über Tage (asynchrone Züge): 30 Tage Lebensdauer. */
+export const CORRESPONDENCE_ROOM_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 /** Mindestabstand zwischen zwei Signalen (Emoji, Schnellnachricht) eines Mitglieds. */
 export const SIGNAL_INTERVAL_MS = 1000;
 /** Zeitfenster für die Begrenzung von Signalen. */
@@ -181,14 +183,25 @@ export class Room {
     this.deps.changed?.();
   }
 
+  /** Prüft, ob der Raum als Fernpartie läuft (Bedenkzeit >= 12h oder Option correspondence). */
+  isCorrespondence(): boolean {
+    const mod = this.lobby.gameId ? this.deps.findGame(this.lobby.gameId) : undefined;
+    const presets = mod ? (mod.timePresetsFor ? mod.timePresetsFor(this.lobby.options) : mod.timePresets) : undefined;
+    const preset = presets ? presets[this.lobby.time] : undefined;
+    const moveMs = preset && preset.kind === 'perMove' ? preset.moveMs : 0;
+    return moveMs >= 12 * 60 * 60 * 1000 || this.lobby.options?.correspondence === 'yes';
+  }
+
   /** Erledigt, was zeitlich fällig ist: Uhren, Bot-Ersatz für Abwesende, Wechsel der Raumleitung. */
   tick(): void {
     const now = this.deps.now();
     this.game?.session.tick();
+    const corr = this.isCorrespondence();
     for (const member of this.members.values()) {
       if (member.disconnectedAt === null || member.awayByDisconnect) continue;
       const seat = this.seatOf(member.id);
-      if (seat !== null && this.phase === 'playing' && now - member.disconnectedAt >= AWAY_AFTER_DISCONNECT_MS) {
+      // Bei Fernpartien übernimmt der Bot nicht nach 20s Disconnect, sondern erst bei regulärem Zeitablauf.
+      if (!corr && seat !== null && this.phase === 'playing' && now - member.disconnectedAt >= AWAY_AFTER_DISCONNECT_MS) {
         member.awayByDisconnect = true;
         this.game?.session.markAway(seat);
       }
@@ -215,18 +228,21 @@ export class Room {
     const deadline = this.game?.session.nextDeadline();
     if (deadline != null) times.push(deadline);
     const successor = [...this.members.values()].some((m) => m.disconnectedAt === null);
+    const corr = this.isCorrespondence();
     for (const member of this.members.values()) {
       if (member.disconnectedAt === null) continue;
-      if (!member.awayByDisconnect && this.phase === 'playing' && this.seatOf(member.id) !== null) times.push(member.disconnectedAt + AWAY_AFTER_DISCONNECT_MS);
+      if (!corr && !member.awayByDisconnect && this.phase === 'playing' && this.seatOf(member.id) !== null) {
+        times.push(member.disconnectedAt + AWAY_AFTER_DISCONNECT_MS);
+      }
       // Ohne verbundenes Mitglied gibt es niemanden, an den die Leitung gehen könnte.
       if (member.id === this.hostId && successor) times.push(member.disconnectedAt + HOST_HANDOVER_MS);
     }
     return Math.min(...times);
   }
 
-  /** Ab wann der Raum gelöscht werden darf. */
+  /** Ab wann der Raum gelöscht werden darf (bei Fernpartien 30 Tage statt 24 h). */
   expiresAt(): number {
-    return this.lastActivity + ROOM_TTL_MS;
+    return this.lastActivity + (this.isCorrespondence() ? CORRESPONDENCE_ROOM_TTL_MS : ROOM_TTL_MS);
   }
 
   get connectionCount(): number {

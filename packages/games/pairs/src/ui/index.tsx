@@ -1,13 +1,27 @@
-import type { SeatId } from '@brett-und-blatt/engine';
+import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { ContentCard, FitBox, GridBoard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { useEffect, useRef, useState } from 'react';
 import { faceOf } from '../content';
 import type { PairsMove, PairsState } from '../rules';
 import './styles.css';
 
 const SEAT_COLORS = ['#d6336c', '#1c7ed6', '#2f9e44', '#f08c00', '#7048e8', '#0c8599'];
 
-function Board({ view, legalMoves, onMove, hint }: BoardProps<PairsState, PairsMove>) {
+function Board({ view, legalMoves, onMove, hint, events }: BoardProps<PairsState, PairsMove>) {
   const playable = new Set(legalMoves.map((m) => m.card));
+  const [mismatched, setMismatched] = useState<number[]>([]);
+  const seenEventsRef = useRef<GameEvent[] | null>(null);
+
+  useEffect(() => {
+    if (seenEventsRef.current === events) return;
+    seenEventsRef.current = events;
+    const mismatch = events?.find((e) => e.type === 'mismatch') as { cards: number[] } | undefined;
+    if (mismatch) {
+      setMismatched(mismatch.cards);
+      const timer = window.setTimeout(() => setMismatched([]), 450);
+      return () => window.clearTimeout(timer);
+    }
+  }, [events]);
 
   return (
     <FitBox ratio={view.cols / view.rows}>
@@ -21,6 +35,7 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<PairsState, PairsM
           const face = view.faces[card];
           const status = view.status[card];
           const taken = typeof status === 'object' ? status.takenBy : null;
+          const isMismatched = mismatched.includes(card);
           return (
             <span className="pf-slot" style={taken !== null ? { outlineColor: SEAT_COLORS[taken % SEAT_COLORS.length] } : undefined}>
               <ContentCard
@@ -28,6 +43,7 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<PairsState, PairsM
                 content={face ? faceOf(view.set, face.pair, face.side) : null}
                 dimmed={taken !== null}
                 highlight={hint?.card === card ? 'hint' : null}
+                anim={isMismatched ? 'shake' : null}
               />
             </span>
           );

@@ -3,6 +3,8 @@ import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { solveFreeCell } from '../src/solver/freecell';
 import { solveKlondike } from '../src/solver/klondike';
+import { solvePyramid } from '../src/solver/pyramid';
+import { solveSpider } from '../src/solver/spider';
 import { bestPlan, progress } from '../src/solver/lookahead';
 import { gameModule, isFree, type FreeCellState, type KlondikeState, type PyramidState, type SolitaireMove, type SolitaireState, type SpiderState } from '../src';
 
@@ -342,14 +344,33 @@ describe('Nur lösbare Spiele', () => {
     }
   });
 
+  it('Pyramide: jedes ausgeteilte Spiel ist lösbar', () => {
+    for (let g = 0; g < 2; g++) {
+      const pyramid = start<PyramidState>({ variant: 'pyramid', solvable: 'yes' }, `lösbar-pyr-${g}`);
+      expect(solvePyramid(pyramid, { maxNodes: 30_000 }).moves).not.toBeNull();
+    }
+  });
+
+  it('Spider (1 Farbe): jedes ausgeteilte Spiel ist lösbar', () => {
+    const spider = start<SpiderState>({ variant: 'spider', spiderSuits: '1', solvable: 'yes' }, 'lösbar-spi');
+    expect(solveSpider(spider, { maxNodes: 30_000 }).moves).not.toBeNull();
+  });
+
   it('das Austeilen bleibt aus dem Seed wiederholbar und vollständig', () => {
     const a = start<KlondikeState>({ variant: 'klondike', solvable: 'yes' }, 'gleich');
     expect(start({ variant: 'klondike', solvable: 'yes' }, 'gleich')).toEqual(a);
     expect(new Set(allCards(a)).size).toBe(52);
+
+    const pyr = start<PyramidState>({ variant: 'pyramid', solvable: 'yes' }, 'pyr-gleich');
+    expect(start({ variant: 'pyramid', solvable: 'yes' }, 'pyr-gleich')).toEqual(pyr);
+
+    const spi = start<SpiderState>({ variant: 'spider', spiderSuits: '1', solvable: 'yes' }, 'spi-gleich');
+    expect(start({ variant: 'spider', spiderSuits: '1', solvable: 'yes' }, 'spi-gleich')).toEqual(spi);
   });
 
   it('ohne die Option bleibt das Austeilen wie bisher', () => {
     expect(start({ variant: 'klondike', solvable: 'no' }, 'alt')).toEqual(start({ variant: 'klondike' }, 'alt'));
+    expect(start({ variant: 'pyramid', solvable: 'no' }, 'alt')).toEqual(start({ variant: 'pyramid' }, 'alt'));
   });
 });
 

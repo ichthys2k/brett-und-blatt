@@ -61,12 +61,24 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
     else if (options.length > 1) setSelected(selected === stone ? null : stone);
   };
   const choices = selected !== null ? endsFor(selected) : [];
-  const endButton = (end: 'left' | 'right') => {
+  const endButton = (end: 'left' | 'right' | 'up' | 'down') => {
     const move = choices.find((m) => m.end === end);
     if (!move) return null;
+    const labels = {
+      left: 'Links anlegen',
+      right: 'Rechts anlegen',
+      up: 'Oben anlegen',
+      down: 'Unten anlegen',
+    };
+    const symbols = {
+      left: '◀',
+      right: '▶',
+      up: '▲',
+      down: '▼',
+    };
     return (
-      <button type="button" className="dm-end" onClick={() => onMove(move)} aria-label={end === 'left' ? 'Links anlegen' : 'Rechts anlegen'}>
-        {end === 'left' ? '◀' : '▶'}
+      <button type="button" className={`dm-end dm-end-${end}`} onClick={() => onMove(move)} aria-label={labels[end]}>
+        {symbols[end]}
       </button>
     );
   };
@@ -96,16 +108,35 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
         )}
         <div className="dm-chain" aria-label="Kette">
           {endButton('left')}
-          {view.chain.map((c, i) => (
-            <Stone
-              key={`${c.stone}-${i}`}
-              left={c.left}
-              right={c.right}
-              upright={isDouble(c.stone)}
-              className={view.lastPlayed?.stone === c.stone ? 'dm-last' : ''}
-              label={`${c.left} und ${c.right}`}
-            />
-          ))}
+          {view.chain.map((c, i) => {
+            const isSpinner = view.spinnerIndex === i;
+            const stoneEl = (
+              <Stone
+                key={`${c.stone}-${i}`}
+                left={c.left}
+                right={c.right}
+                upright={isDouble(c.stone)}
+                className={`${view.lastPlayed?.stone === c.stone ? 'dm-last' : ''} ${isSpinner ? 'dm-spinner' : ''}`}
+                label={`${c.left} und ${c.right}`}
+              />
+            );
+            if (!isSpinner || (!view.upBranch?.length && !view.downBranch?.length && !choices.some((m) => m.end === 'up' || m.end === 'down'))) {
+              return stoneEl;
+            }
+            return (
+              <div key={`spinner-col-${i}`} className="dm-spinner-col">
+                {endButton('up')}
+                {view.upBranch?.slice().reverse().map((b, bi) => (
+                  <Stone key={`up-${b.stone}-${bi}`} left={b.right} right={b.left} upright className={view.lastPlayed?.stone === b.stone ? 'dm-last' : ''} />
+                ))}
+                {stoneEl}
+                {view.downBranch?.map((b, bi) => (
+                  <Stone key={`down-${b.stone}-${bi}`} left={b.left} right={b.right} upright className={view.lastPlayed?.stone === b.stone ? 'dm-last' : ''} />
+                ))}
+                {endButton('down')}
+              </div>
+            );
+          })}
           {endButton('right')}
           {view.chain.length === 0 && !summary && <p className="dm-empty">Der erste Stein kommt in die Mitte.</p>}
         </div>

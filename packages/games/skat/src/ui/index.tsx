@@ -1,5 +1,5 @@
 import { cardEyePoints, cardSuit, type CardId, type SeatId } from '@brett-und-blatt/engine';
-import { CardFan, PlayingCard, TrickTable, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import { CardFan, PlayingCard, TrickTable, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import {
   ALL_BID_VALUES,
@@ -30,15 +30,19 @@ export function SkatBoard({
   const [selectedSchwarz, setSelectedSchwarz] = useState(false);
   const [selectedOuvert, setSelectedOuvert] = useState(false);
 
+  const displayTrick = useTrickDisplay(view.currentTrick, view.completedTricks);
+
   const trickSlots: TrickTableSlot[] = view.activeSeats.map((seat: number) => {
-    const played = view.currentTrick.find((p) => p.player === seat);
-    const isLead = view.currentTrick[0]?.player === seat;
+    const played = displayTrick.cards.find((p) => p.player === seat);
+    const isLead = displayTrick.cards[0]?.player === seat;
+    const isWin = displayTrick.winner === seat;
     const name = seatNames[seat] ?? `Spieler ${seat + 1}${seat === view.declarerSeat ? ' (Alleinspieler)' : ''}`;
     return {
       seat,
       name,
       card: played ? played.card : null,
       isLeader: isLead,
+      isWinner: isWin,
     };
   });
 
@@ -219,6 +223,7 @@ export function SkatBoard({
           bottomSeat={mySeat}
           deckStyle={view.deckStyle}
           cardWidth={80}
+          collecting={displayTrick.collecting}
         />
       </div>
 

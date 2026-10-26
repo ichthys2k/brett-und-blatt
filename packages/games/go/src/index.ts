@@ -4,7 +4,7 @@ import { meta } from './meta';
 import { applyMove, currentPlayers, isLegal, legalMoves, resignMove, result, setup, type GoMove, type GoState } from './rules';
 
 export type { GoEnd, GoMove, GoState, GoVariant } from './rules';
-export { handicapPoints, parseSgf, scoreOf, toSgf, tryPlace } from './rules';
+export { handicapPoints, loadFromSgf, parseSgf, scoreOf, toSgf, tryPlace } from './rules';
 export { estimateOwnership, groupAt, geometry } from './board';
 
 const NINE: TimePresets = {
@@ -71,10 +71,36 @@ export const gameModule: GameModule<GoState, GoMove> = {
       default: 'off',
       when: { variant: ['go'] },
     },
+    {
+      id: 'correspondence',
+      label: 'Fernpartie',
+      description: 'Züge über Tage statt Minuten – ideal für asynchrone Partien.',
+      choices: [
+        { value: 'no', label: 'Nein' },
+        { value: 'yes', label: 'Ja (1–2 Tage pro Zug)' },
+      ],
+      default: 'no',
+      when: { variant: ['go'] },
+    },
+    {
+      id: 'sgf',
+      label: 'SGF-Partie',
+      hidden: true,
+      pattern: '.*',
+      choices: [{ value: '', label: 'keine' }],
+      default: '',
+    },
   ],
   timePresets: NINE,
   // Größere Bretter brauchen mehr Zeit (Byo-yomi: Hauptzeit, danach Perioden mit fester Zugzeit).
   timePresetsFor(options) {
+    if (options.correspondence === 'yes') {
+      return {
+        relaxed: { kind: 'perMove', moveMs: 2 * 86_400_000 },
+        normal: { kind: 'perMove', moveMs: 86_400_000 },
+        fast: { kind: 'perMove', moveMs: 12 * 3_600_000 },
+      };
+    }
     if (options.size === '19') {
       return {
         relaxed: { kind: 'none' },

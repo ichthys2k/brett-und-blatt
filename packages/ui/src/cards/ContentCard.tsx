@@ -14,6 +14,8 @@ export interface ContentCardProps {
   label?: string;
   className?: string;
   style?: CSSProperties;
+  /** Optionale Animation (z. B. 'drop', 'shake', 'deal'). */
+  anim?: 'drop' | 'shake' | 'deal' | null;
 }
 
 /**
@@ -21,8 +23,9 @@ export interface ContentCardProps {
  * Schwarzer Peter und Lernkarten (Einmaleins, Vokabeln). Die Schrift passt sich
  * der Kartengröße an.
  */
-export function ContentCard({ content, caption, highlight, dimmed, onClick, label, className = '', style }: ContentCardProps) {
-  const classes = `bub-ccard ${content === null ? 'bub-ccard-down' : ''} ${highlight ? `bub-card-${highlight}` : ''} ${dimmed ? 'bub-ccard-dimmed' : ''} ${onClick ? 'bub-card-clickable' : ''} ${className}`;
+export function ContentCard({ content, caption, highlight, dimmed, onClick, label, className = '', style, anim }: ContentCardProps) {
+  const animClass = anim ? `bub-animate-${anim}` : '';
+  const classes = `bub-ccard ${content === null ? 'bub-ccard-down' : ''} ${highlight ? `bub-card-${highlight}` : ''} ${dimmed ? 'bub-ccard-dimmed' : ''} ${onClick ? 'bub-card-clickable' : ''} ${animClass} ${className}`;
   const inner =
     content === null ? (
       <span className="bub-card-back" />

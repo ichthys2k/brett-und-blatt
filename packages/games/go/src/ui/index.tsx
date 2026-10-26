@@ -3,6 +3,7 @@ import { FitBox, GridBoard, useElementSize, type BoardProps, type GameUi } from 
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { BLACK, estimateOwnership, WHITE } from '../board';
 import { handicapPoints, scoreOf, toSgf, type GoMove, type GoState } from '../rules';
+import { SgfImportModal } from './SgfImport';
 import './styles.css';
 
 const LABELS = ['Schwarz', 'Weiß'];
@@ -45,6 +46,7 @@ function download(name: string, text: string) {
 function Board({ view, legalMoves, onMove, hint, activeSeat, seatNames }: BoardProps<GoState, GoMove>) {
   const { size } = view;
   const [preview, setPreview] = useState<number | null>(null);
+  const [importingSgf, setImportingSgf] = useState(false);
   const [lastView, setLastView] = useState(view);
   if (lastView !== view) {
     setLastView(view);
@@ -200,6 +202,9 @@ function Board({ view, legalMoves, onMove, hint, activeSeat, seatNames }: BoardP
               <button type="button" className="go-button" onClick={() => download(`go-${size}x${size}.sgf`, toSgf(view, names as [string, string]))}>
                 SGF speichern
               </button>
+              <button type="button" className="go-button" onClick={() => setImportingSgf(true)}>
+                SGF laden
+              </button>
             </>
           ) : (
             <>
@@ -217,11 +222,57 @@ function Board({ view, legalMoves, onMove, hint, activeSeat, seatNames }: BoardP
                   Passen
                 </button>
               )}
+              <button type="button" className="go-button" onClick={() => setImportingSgf(true)}>
+                SGF laden
+              </button>
             </>
           )}
         </div>
       </div>
+      {importingSgf && (
+        <SgfImportModal
+          onImport={(_state, sgf) => onMove({ type: 'loadSgf', sgf })}
+          onClose={() => setImportingSgf(false)}
+        />
+      )}
     </FitBox>
+  );
+}
+
+function SetupExtra({ options }: { options: Record<string, string>; seats: number }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [loadedInfo, setLoadedInfo] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-2 rounded-2xl border border-line bg-surface p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="font-medium text-fg">📥 SGF-Partie fortsetzen</p>
+          <p className="text-sm text-muted">
+            {loadedInfo ? `Geladen: ${loadedInfo}` : 'Eine bestehende Go-Partie aus einer Datei oder Zwischenablage laden.'}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="rounded-xl border border-line bg-bg px-3 py-1.5 font-medium text-sm hover:bg-line cursor-pointer flex-none"
+          onClick={() => setModalOpen(true)}
+        >
+          {loadedInfo ? 'Ändern' : 'SGF importieren'}
+        </button>
+      </div>
+
+      {modalOpen && (
+        <SgfImportModal
+          onImport={(state, sgf) => {
+            options.sgf = sgf;
+            options.size = String(state.size);
+            options.komi = String(state.komi);
+            setLoadedInfo(`${state.size}×${state.size}, ${state.record.length} Züge`);
+          }}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+    </div>
   );
 }
 
@@ -236,6 +287,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<GoState, GoMove> = {
   Board,
   SeatSymbol,
+  SetupExtra,
   sounds: { placed: (event) => ((event.captured as number[] | undefined)?.length ? 'stein-schlagen' : 'stein-setzen') },
   seatLabel: (seat) => LABELS[seat] ?? `Platz ${seat + 1}`,
   seatDetail: (view, seat) => `${view.captures[seat]} gefangen`,

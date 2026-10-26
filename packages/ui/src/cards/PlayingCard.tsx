@@ -132,6 +132,8 @@ export interface PlayingCardProps {
   /** Text für Screenreader, falls abweichend vom Kartennamen. */
   label?: string;
   deckStyle?: DeckStyle;
+  /** Optionale Animation (z. B. 'drop' beim Ausspielen, 'shake' bei Erschütterung, 'deal' beim Austeilen). */
+  anim?: 'drop' | 'shake' | 'deal' | null;
 }
 
 /**
@@ -147,8 +149,10 @@ export function PlayingCard({
   style,
   label,
   deckStyle = 'french',
+  anim,
 }: PlayingCardProps) {
-  const classes = `bub-card ${selected ? 'bub-card-selected' : ''} ${highlight ? `bub-card-${highlight}` : ''} ${onClick ? 'bub-card-clickable' : ''} ${className}`;
+  const animClass = anim ? `bub-animate-${anim}` : '';
+  const classes = `bub-card ${selected ? 'bub-card-selected' : ''} ${highlight ? `bub-card-${highlight}` : ''} ${onClick ? 'bub-card-clickable' : ''} ${animClass} ${className}`;
   const content = card === null ? <span className="bub-card-back" /> : <CardFace card={card} deckStyle={deckStyle} />;
   const name = label ?? (card === null ? 'verdeckte Karte' : cardName(card));
   return onClick ? (

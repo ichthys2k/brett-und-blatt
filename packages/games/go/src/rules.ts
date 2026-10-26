@@ -51,7 +51,9 @@ export type GoMove =
   /** Auszählung abbrechen und weiterspielen. */
   | { type: 'resume' }
   /** Aufgeben bzw. Zeit abgelaufen – nicht in `legalMoves`. */
-  | { type: 'resign'; seat: SeatId; time?: boolean };
+  | { type: 'resign'; seat: SeatId; time?: boolean }
+  /** SGF-Partie laden. */
+  | { type: 'loadSgf'; sgf: string };
 
 const colorOf = (seat: SeatId): Color => (seat === 0 ? BLACK : WHITE);
 
@@ -74,6 +76,13 @@ export function handicapPoints(size: number, count: number): number[] {
 }
 
 export function setup(_seats: number, options: Options): GoState {
+  if (typeof options.sgf === 'string' && options.sgf.trim().length > 0) {
+    try {
+      return loadFromSgf(options.sgf.trim());
+    } catch {
+      // Rückfall bei fehlerhaftem SGF-String
+    }
+  }
   const size = Number(options.size ?? 9);
   const variant: GoVariant = options.variant === 'atari' ? 'atari' : 'go';
   const handicap = variant === 'go' ? Number(options.handicap ?? 0) : 0;
@@ -153,6 +162,7 @@ export function legalMoves(state: GoState, actor: Actor): GoMove[] {
 export function isLegal(state: GoState, actor: Actor, move: GoMove): boolean {
   if (actor === 'system') return false;
   if (move.type === 'resign') return move.seat === actor && state.phase !== 'over';
+  if (move.type === 'loadSgf') return typeof move.sgf === 'string' && move.sgf.trim().length > 0;
   if (!currentPlayers(state).includes(actor)) return false;
   switch (move.type) {
     case 'place':
@@ -194,6 +204,12 @@ export function applyMove(state: GoState, actor: Actor, move: GoMove): MoveResul
   const events: GameEvent[] = [];
 
   switch (move.type) {
+    case 'loadSgf': {
+      const loaded = loadFromSgf(move.sgf);
+      events.push({ type: 'sgfLoaded', moves: loaded.record.length });
+      return { state: loaded, events };
+    }
+
     case 'resign': {
       const winner = 1 - seat;
       events.push({ type: 'resigned', seat });
@@ -345,4 +361,46 @@ export function parseSgf(sgf: string): { size: number; komi: number; handicapSto
   const handicapStones = values(prop('AB')).map(toPoint);
   const moves = [...sgf.matchAll(/;\s*[BW]\[([a-z]{0,2})\]/g)].map((m) => toPoint(m[1]!));
   return { size, komi, handicapStones, moves };
+}
+
+/** Erzeugt einen vollen GoState aus einer SGF-Partie und spielt alle Züge nach. */
+export function loadFromSgf(sgf: string): GoState {
+  const parsed = parseSgf(sgf);
+  if (![9, 13, 19].includes(parsed.size)) {
+    throw new Error(`Nicht unterstützte Brettgröße in SGF: ${parsed.size}×${parsed.size}`);
+  }
+  const board: number[] = Array(parsed.size * parsed.size).fill(EMPTY);
+  for (const p of parsed.handicapStones) {
+    if (p >= 0 && p < board.length) board[p] = BLACK;
+  }
+  let state: GoState = {
+    size: parsed.size,
+    variant: 'go',
+    komi: parsed.komi,
+    board,
+    turn: parsed.handicapStones.length > 0 ? 1 : 0,
+    phase: 'play',
+    passes: 0,
+    captures: [0, 0],
+    history: [positionHash(board)],
+    lastMove: null,
+    ko: null,
+    handicapStones: parsed.handicapStones,
+    record: [],
+    dead: [],
+    accepted: [false, false],
+    showTerritory: false,
+    end: null,
+  };
+
+  for (const movePoint of parsed.moves) {
+    if (state.phase !== 'play') break;
+    const move: GoMove = movePoint === -1 ? { type: 'pass' } : { type: 'place', point: movePoint };
+    if (!isLegal(state, state.turn, move)) {
+      throw new Error(`Unerlaubter Zug in SGF: ${movePoint === -1 ? 'Passen' : `Punkt ${movePoint}`}`);
+    }
+    state = applyMove(state, state.turn, move).state;
+  }
+
+  return state;
 }

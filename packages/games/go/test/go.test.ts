@@ -1,7 +1,7 @@
 import { computeBotMove, resolveOptions, type BotLevel, type Options } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
-import { gameModule, parseSgf, scoreOf, toSgf, tryPlace, type GoMove, type GoState } from '../src';
+import { gameModule, loadFromSgf, parseSgf, scoreOf, toSgf, tryPlace, type GoMove, type GoState } from '../src';
 import { BLACK, EMPTY, positionHash, WHITE } from '../src/board';
 
 const at = (row: number, col: number, size = 9) => row * size + col;
@@ -144,11 +144,32 @@ describe('Regeln', () => {
     expect(parsed.handicapStones).toEqual(state.handicapStones);
     expect(parsed.moves).toEqual(state.record);
   });
+
+  it('loadFromSgf stellt den vollständigen Spielstand her', () => {
+    const moves = [place(at(2, 2)), place(at(6, 6)), { type: 'pass' } as GoMove, place(at(4, 4))];
+    const initial = play(start({ handicap: '2', size: '9' }), moves);
+    const sgf = toSgf(initial);
+    const loaded = loadFromSgf(sgf);
+    expect(loaded.size).toBe(9);
+    expect(loaded.komi).toBe(0.5);
+    expect(loaded.record).toEqual(initial.record);
+    expect(loaded.board).toEqual(initial.board);
+    expect(loaded.turn).toBe(initial.turn);
+
+    const viaMove = gameModule.applyMove(start({ size: '9' }), 0, { type: 'loadSgf', sgf }).state;
+    expect(viaMove.board).toEqual(initial.board);
+  });
+
+  it('Fernpartie: liefert tageweise Zeitvorgaben', () => {
+    const presets = gameModule.timePresetsFor!({ correspondence: 'yes' });
+    expect(presets.relaxed).toEqual({ kind: 'perMove', moveMs: 2 * 86_400_000 });
+    expect(presets.normal).toEqual({ kind: 'perMove', moveMs: 86_400_000 });
+  });
 });
 
 describe('Bot', () => {
   function bot(state: GoState, level: BotLevel = 'medium', seed = 'bot'): GoMove {
-    return computeBotMove(gameModule, { gameId: 'go', botId: 'go', level, seat: state.turn, view: state, seed, timeBudgetMs: 300 }) as GoMove;
+    return computeBotMove(gameModule, { gameId: 'go', botId: 'go', level, seat: state.turn, view: state, seed, timeBudgetMs: 1_000 }) as GoMove;
   }
 
   it('schlägt eine Gruppe in Atari, bevor sie entkommt', () => {

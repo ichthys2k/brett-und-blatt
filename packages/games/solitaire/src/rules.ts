@@ -2,7 +2,7 @@ import { cardRank, createDeck, Rng, sameValue, type Actor, type CardId, type Gam
 import { applyFreeCell, freeCellMoves, freeCellTrivial, freeCellWon, setupFreeCell } from './freecell';
 import { applyKlondike, klondikeMoves, klondikeTrivial, klondikeWon, setupKlondike } from './klondike';
 import { applyPyramid, pyramidMoves, pyramidWon, setupPyramid } from './pyramid';
-import { solvableFreeCell, solvableKlondike } from './solvable';
+import { solvableFreeCell, solvableKlondike, solvablePyramid, solvableSpider } from './solvable';
 import { applySpider, setupSpider, spiderMoves, spiderWon } from './spider';
 import type { Pile, SolitaireMove, SolitaireState } from './types';
 
@@ -15,10 +15,12 @@ export function setup(_seats: number, options: Options, seed: string): Solitaire
   switch (options.variant) {
     case 'freecell':
       return solvable ? solvableFreeCell(rng, seed) : setupFreeCell(rng);
-    case 'spider':
-      return setupSpider(rng, options.spiderSuits === '4' ? 4 : options.spiderSuits === '2' ? 2 : 1);
+    case 'spider': {
+      const suits: 1 | 2 | 4 = options.spiderSuits === '4' ? 4 : options.spiderSuits === '2' ? 2 : 1;
+      return solvable ? solvableSpider(rng, suits, seed) : setupSpider(rng, suits);
+    }
     case 'pyramid':
-      return setupPyramid(rng);
+      return solvable ? solvablePyramid(rng, seed) : setupPyramid(rng);
     default: {
       const draw = options.draw === '3' ? 3 : 1;
       return solvable ? solvableKlondike(rng, draw, seed) : setupKlondike(rng, draw);

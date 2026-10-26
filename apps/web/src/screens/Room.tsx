@@ -5,6 +5,7 @@ import { Button, PlayerCount, Section, Segmented } from '../components/controls'
 import { ProfileForm, QrCode, ReactionBar, SignalToasts } from '../components/OnlineParts';
 import { t } from '../i18n';
 import { describeTime, levelLabel } from '../lib/format';
+import { requestNotificationPermission } from '../lib/notifications';
 import { useRoomConnection, type RoomConnection, type RoomState } from '../lib/online';
 import { games, loadGame, type LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
@@ -37,6 +38,12 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
   const code = parseRoomCode(rawCode);
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
   const [state, connection] = useRoomConnection(code ?? '', code ? profile : null);
+
+  useEffect(() => {
+    if (code && profile) {
+      requestNotificationPermission();
+    }
+  }, [code, profile]);
 
   if (!code) return <Notice text={t('online.notFound')} />;
   if (!profile) {

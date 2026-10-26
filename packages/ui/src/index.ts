@@ -5,7 +5,7 @@ export { ClockRing, PlayerChip, formatClock, type PlayerChipProps } from './Play
 export { NetBoard, type NetBoardProps } from './NetBoard';
 export { useElementSize } from './useElementSize';
 export { PlayingCard, SuitShape, type DeckStyle, type PlayingCardProps } from './cards/PlayingCard';
-export { TrickTable, type TrickTableProps, type TrickTableSlot } from './cards/TrickTable';
+export { TrickTable, useTrickDisplay, type TrickTableProps, type TrickTableSlot } from './cards/TrickTable';
 export { CardFan, type CardFanProps } from './cards/CardFan';
 export { ContentCard, type ContentCardProps } from './cards/ContentCard';
 export {

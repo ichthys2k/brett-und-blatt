@@ -1,6 +1,7 @@
 import { OnlineSession, PROTOCOL_VERSION, type ClientMessage, type GameMessage, type RoomMessage, type ServerMessage } from '@brett-und-blatt/online';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createBotRunner } from './botRunner';
+import { notifyTurn } from './notifications';
 import { loadGame, type LoadedGame } from './registry';
 import { sound } from './sound';
 import { storage, type Profile } from './storage';
@@ -179,6 +180,9 @@ export class RoomConnection {
     const current = this.state.game;
     if (current && current.session.id === `${this.code}/${message.round}` && current.loaded.info.id === message.gameId) {
       current.session.update(message);
+      if (message.yourSeat !== null && message.current.includes(message.yourSeat)) {
+        notifyTurn(current.loaded.info.name);
+      }
       return;
     }
     // Neue Partie: erst Regeln und Oberfläche laden, dann die Sitzung anlegen.
@@ -193,6 +197,9 @@ export class RoomConnection {
       botRunner ??= createBotRunner();
       const session = new OnlineSession(latest, { module: loaded.module, roomCode: this.code, send: (m) => this.send(m), botRunner });
       this.set({ game: { session, loaded } });
+      if (latest.yourSeat !== null && latest.current.includes(latest.yourSeat)) {
+        notifyTurn(loaded.info.name);
+      }
     });
   }
 }

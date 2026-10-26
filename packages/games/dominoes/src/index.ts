@@ -31,6 +31,17 @@ export const gameModule: GameModule<DominoState, DominoMove> = {
       ],
       default: '100',
     },
+    {
+      id: 'spinner',
+      label: 'Spinner',
+      description: 'Beim Fünfer-Domino wird der erste Pasch zum Spinner mit vier offenen Enden.',
+      when: { variant: ['fives'] },
+      choices: [
+        { value: 'no', label: 'Nein' },
+        { value: 'yes', label: 'Ja' },
+      ],
+      default: 'no',
+    },
   ],
   timePresets: {
     relaxed: { kind: 'none' },
