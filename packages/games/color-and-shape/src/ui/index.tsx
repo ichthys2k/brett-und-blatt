@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { GridBoard, useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { GridBoard, useElementSize, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { boardMap, checkPlacement, colorOf, shapeOf, type ColorShapeMove, type ColorShapeState, type Placed, type TileId } from '../rules';
 import './styles.css';
@@ -85,14 +85,34 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
     el.scrollTop = (el.scrollHeight - el.clientHeight) / 2;
   }, [view.board.length]);
 
+  const { dragState, bindDrag } = usePointerDrag<TileId>({
+    threshold: 6,
+    onDrop: (tile, targetId) => {
+      if (!targetId || !targetId.startsWith('cell-')) return false;
+      const [xStr, yStr] = targetId.slice('cell-'.length).split(',');
+      const x = Number(xStr);
+      const y = Number(yStr);
+      if (isNaN(x) || isNaN(y)) return false;
+      if (checkPlacement(view.board, hand, [...pending, { x, y, tile }], map).ok) {
+        setPending([...pending, { x, y, tile }]);
+        setSelected(null);
+        return true;
+      }
+      return false;
+    },
+  });
+
+  const draggedTile = dragState.isDragging && dragState.item !== null ? dragState.item : null;
+  const activeTile = draggedTile ?? selected;
+
   const pendingAt = (x: number, y: number) => pending.find((p) => p.x === x && p.y === y);
   const check = pending.length > 0 ? checkPlacement(view.board, hand, pending, map) : null;
   const canPlaceAt = (x: number, y: number) => {
-    if (!myTurn || selected === null || swapMode || map.has(`${x},${y}`) || pendingAt(x, y)) return false;
-    return checkPlacement(view.board, hand, [...pending, { x, y, tile: selected }], map).ok;
+    if (!myTurn || activeTile === null || swapMode || map.has(`${x},${y}`) || pendingAt(x, y)) return false;
+    return checkPlacement(view.board, hand, [...pending, { x, y, tile: activeTile }], map).ok;
   };
   const targets = new Set<string>();
-  if (selected !== null) for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) if (canPlaceAt(x, y)) targets.add(`${x},${y}`);
+  if (activeTile !== null) for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) if (canPlaceAt(x, y)) targets.add(`${x},${y}`);
 
   const tapCell = (x: number, y: number) => {
     const own = pendingAt(x, y);
@@ -148,6 +168,17 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
                 return pendingAt(x, y) !== undefined || targets.has(`${x},${y}`);
               }}
               onActivate={(c, r) => tapCell(c + minX, r + minY)}
+              cellProps={(c, r) => {
+                const x = c + minX;
+                const y = r + minY;
+                const key = `${x},${y}`;
+                const isTarget = targets.has(key);
+                const isDropActive = isTarget && dragState.isDragging && dragState.targetId === `cell-${key}`;
+                return {
+                  'data-drop-target': `cell-${key}`,
+                  'data-drop-active': isDropActive ? 'true' : undefined,
+                };
+              }}
               cellClassName={(c, r) => (lastPlaced.has(`${c + minX},${r + minY}`) ? 'cs-last' : '')}
               cellLabel={(c, r) => {
                 const x = c + minX;
@@ -162,21 +193,33 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
 
       {seat !== null && (
         <div className="cs-rack" role="group" aria-label="Dein Bänkchen">
-          {rack.map((tile) => (
-            <button
-              key={tile}
-              type="button"
-              className="cs-rack-tile"
-              data-selected={selected === tile || swapTiles.includes(tile) || undefined}
-              data-hint={hintRack.has(tile) || undefined}
-              disabled={!myTurn}
-              aria-pressed={selected === tile || swapTiles.includes(tile)}
-              aria-label={tileName(tile)}
-              onClick={() => tapRack(tile)}
-            >
-              <Tile tile={tile} />
-            </button>
-          ))}
+          {rack.map((tile) => {
+            const isDragged = (dragState.isDragging || dragState.snapping) && dragState.item === tile;
+            const dragTransform = isDragged ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)` : undefined;
+            const dragBind = myTurn && !swapMode ? bindDrag(tile) : undefined;
+            return (
+              <button
+                key={tile}
+                type="button"
+                className={`cs-rack-tile ${isDragged ? 'bub-dragging' : ''} ${dragState.snapping && isDragged ? 'bub-snapping' : ''}`}
+                data-selected={selected === tile || swapTiles.includes(tile) || undefined}
+                data-hint={hintRack.has(tile) || undefined}
+                disabled={!myTurn}
+                aria-pressed={selected === tile || swapTiles.includes(tile)}
+                aria-label={tileName(tile)}
+                onClick={() => tapRack(tile)}
+                onPointerDown={dragBind?.onPointerDown}
+                style={{
+                  transform: dragTransform,
+                  position: isDragged ? 'relative' : undefined,
+                  zIndex: isDragged ? 1000 : undefined,
+                  touchAction: myTurn && !swapMode ? 'none' : undefined,
+                }}
+              >
+                <Tile tile={tile} />
+              </button>
+            );
+          })}
         </div>
       )}
 

@@ -25,6 +25,7 @@
 - Sicht: eigenes Bänkchen, von den anderen und vom Beutel nur die Anzahl; `eventView` verrät gezogene Steine nur dem Ziehenden.
 - Bot: leicht (oft zufällig), mittel (gierig), schwer (Punkte + Wert des Rest-Bänkchens, vermeidet Fünferreihen für den Gegner, tauscht ein schlechtes Bänkchen).
 - Farben nach Okabe-Ito, zusätzlich durch die Form unterscheidbar.
+- Steuerung: Steine auf der Bank können angetippt oder per Drag & Drop direkt auf gültige Rasterfelder des Bretts gezogen werden.
 
 ## Offen
 

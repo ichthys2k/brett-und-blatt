@@ -212,3 +212,25 @@
     animation: none;
   }
 }
+
+.dm-hand-stone.bub-dragging {
+  cursor: grabbing !important;
+  z-index: 1000 !important;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
+  scale: 1.1;
+  transition: scale 0.12s ease-out;
+}
+
+.dm-hand-stone.bub-snapping {
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.25, 1) !important;
+  pointer-events: none;
+}
+
+.dm-end[data-drop-active='true'] {
+  scale: 1.35 !important;
+  box-shadow: 0 0 16px var(--color-accent) !important;
+}
+
+.dm-table[data-drop-active='true'] {
+  box-shadow: inset 0 0 0 3px var(--color-accent), inset 0 0 30px rgba(59, 130, 246, 0.3) !important;
+}

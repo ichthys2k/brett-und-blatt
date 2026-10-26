@@ -63,13 +63,17 @@ const FADE_S = 0.03;
 
 /** Spielt Klänge über Web Audio ab. Eine Instanz für die ganze App. */
 export class SoundPlayer {
-  private context: AudioContext | null = null;
+  private static sharedContext: AudioContext | null = null;
+  private static sharedSettings: SoundSettings = DEFAULT_SOUND_SETTINGS;
+  private static instances = new Set<SoundPlayer>();
+
   private output: GainNode | null = null;
   private buffers = new Map<string, Promise<AudioBuffer | null>>();
-  private settings: SoundSettings = DEFAULT_SOUND_SETTINGS;
 
   /** @param baseUrl Ordner mit den Dateien, z. B. „/klaenge/“. */
-  constructor(private readonly baseUrl: string) {}
+  constructor(private readonly baseUrl: string) {
+    SoundPlayer.instances.add(this);
+  }
 
   /** Browser erlauben Ton erst nach einer Berührung oder einem Tastendruck. */
   unlock(): void {
@@ -83,8 +87,10 @@ export class SoundPlayer {
   }
 
   setSettings(settings: SoundSettings): void {
-    this.settings = settings;
-    if (this.output) this.output.gain.value = this.volume();
+    SoundPlayer.sharedSettings = settings;
+    for (const inst of SoundPlayer.instances) {
+      if (inst.output) inst.output.gain.value = inst.volume();
+    }
   }
 
   /** Lädt und dekodiert Klänge vorab, damit der erste nicht verzögert kommt. */
@@ -153,17 +159,24 @@ export class SoundPlayer {
   }
 
   private volume(): number {
-    return this.settings.muted ? 0 : Math.max(0, Math.min(1, this.settings.effects));
+    return SoundPlayer.sharedSettings.muted ? 0 : Math.max(0, Math.min(1, SoundPlayer.sharedSettings.effects));
   }
 
   private ensureContext(): AudioContext | null {
-    if (this.context) return this.context;
+    if (SoundPlayer.sharedContext) {
+      if (!this.output) {
+        this.output = SoundPlayer.sharedContext.createGain();
+        this.output.gain.value = this.volume();
+        this.output.connect(SoundPlayer.sharedContext.destination);
+      }
+      return SoundPlayer.sharedContext;
+    }
     if (typeof AudioContext === 'undefined') return null;
-    this.context = new AudioContext();
-    this.output = this.context.createGain();
+    SoundPlayer.sharedContext = new AudioContext();
+    this.output = SoundPlayer.sharedContext.createGain();
     this.output.gain.value = this.volume();
-    this.output.connect(this.context.destination);
-    return this.context;
+    this.output.connect(SoundPlayer.sharedContext.destination);
+    return SoundPlayer.sharedContext;
   }
 
   private buffer(file: string): Promise<AudioBuffer | null> {

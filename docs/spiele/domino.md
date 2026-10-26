@@ -24,6 +24,7 @@
 - `lacks`: öffentlich, welche Zahlen ein Platz nicht bedienen konnte; nutzen der schwere Bot und `sampleHidden`.
 - Bot: leicht zufällig, mittel gierig (Fünferpunkte, dann schwere Steine), schwer zusätzlich Pasche früh, eigene Zahlen offen halten, Zahlen legen, die der Nächste nicht hat, beim Fünfer die Antwort des Nächsten über sechs Belegungen schätzen.
 - Kette als umbrechende Reihe, Pasche quer, Spinner-Zweige nach oben und unten.
+- Steuerung: Steine können per Antippen/Klick oder per Drag & Drop direkt auf das Spielfeld bzw. an die offenen Enden gezogen werden.
 
 ## Offen
 

@@ -74,7 +74,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 **Bekannte offene Punkte:**
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
 - Musik in Online-Partien: Läuft standardmäßig nur bei der Raumleitung, für Mitspieler deaktiviert (mit Einstellmöglichkeit im Ton-Menü und unter `#/ton`).
-- Drag & Drop: Pointer-Drag für Solitaire und Drachenspiel mit Animationsunterstützung (`packages/ui/src/dnd`).
+- Drag & Drop: Universeller Pointer-Drag (`usePointerDrag`) und Reise-Animationen (`useSpawnAnimation`) in `packages/ui/src/dnd`. Aktiviert für Solitaire (Karten & Sequenzen), Schach (Figurenzug), Drachenspiel (Karten ausspielen & Minion-Angriff), Domino (Steine an Enden/Tisch) und Farbe & Form (Steine von der Bank aufs Raster). Barrierefreiheit (Tastatur und Klick/Tap) bleibt vollständig erhalten.
 
 ## Nächste Schritte
 

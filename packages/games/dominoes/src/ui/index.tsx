@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import { isDouble, pipsOf, STONES, type DominoMove, type DominoState, type StoneId } from '../rules';
 import './styles.css';
@@ -55,12 +55,36 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
   const pass = legalMoves.find((m) => m.type === 'pass');
   const hintStone = hint?.type === 'play' ? hint.stone : null;
 
+  const { dragState, bindDrag } = usePointerDrag<StoneId>({
+    threshold: 6,
+    onDrop: (stone, targetId) => {
+      if (!targetId) return false;
+      const options = endsFor(stone);
+      if (targetId === 'board') {
+        if (options.length === 1) {
+          onMove(options[0]!);
+          return true;
+        }
+      } else {
+        const match = options.find((m) => m.end === targetId);
+        if (match) {
+          onMove(match);
+          return true;
+        }
+      }
+      return false;
+    },
+  });
+
+  const draggedStone = dragState.isDragging && dragState.item !== null ? dragState.item : null;
+  const activeStone = draggedStone ?? selected;
+
   const tapStone = (stone: StoneId) => {
     const options = endsFor(stone);
     if (options.length === 1) onMove(options[0]!);
     else if (options.length > 1) setSelected(selected === stone ? null : stone);
   };
-  const choices = selected !== null ? endsFor(selected) : [];
+  const choices = activeStone !== null ? endsFor(activeStone) : [];
   const endButton = (end: 'left' | 'right' | 'up' | 'down') => {
     const move = choices.find((m) => m.end === end);
     if (!move) return null;
@@ -76,8 +100,16 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
       up: '▲',
       down: '▼',
     };
+    const isTargetActive = dragState.isDragging && dragState.targetId === end;
     return (
-      <button type="button" className={`dm-end dm-end-${end}`} onClick={() => onMove(move)} aria-label={labels[end]}>
+      <button
+        type="button"
+        className={`dm-end dm-end-${end}`}
+        onClick={() => onMove(move)}
+        aria-label={labels[end]}
+        data-drop-target={end}
+        data-drop-active={isTargetActive ? 'true' : undefined}
+      >
         {symbols[end]}
       </button>
     );
@@ -88,7 +120,11 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
 
   return (
     <div className="dm-layout">
-      <div className="dm-table">
+      <div
+        className="dm-table"
+        data-drop-target={draggedStone && endsFor(draggedStone).length === 1 ? 'board' : undefined}
+        data-drop-active={dragState.isDragging && dragState.targetId === 'board' ? 'true' : undefined}
+      >
         {summary && (
           <div className="dm-summary" role="status">
             <strong>
@@ -163,16 +199,27 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
         <div className="dm-hand" role="group" aria-label="Deine Steine">
           {hand.map((stone) => {
             const [a, b] = STONES[stone]!;
+            const isPlayable = playable.has(stone);
+            const isDragged = (dragState.isDragging || dragState.snapping) && dragState.item === stone;
+            const dragTransform = isDragged ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)` : undefined;
+            const dragBind = isPlayable ? bindDrag(stone) : undefined;
             return (
               <button
                 key={stone}
                 type="button"
-                className="dm-hand-stone"
-                disabled={!playable.has(stone)}
+                className={`dm-hand-stone ${isDragged ? 'bub-dragging' : ''} ${dragState.snapping && isDragged ? 'bub-snapping' : ''}`}
+                disabled={!isPlayable}
                 data-selected={selected === stone || undefined}
                 data-hint={hintStone === stone || undefined}
-                aria-label={`${stoneName(stone)}${playable.has(stone) ? '' : ', passt nicht'}`}
+                aria-label={`${stoneName(stone)}${isPlayable ? '' : ', passt nicht'}`}
                 onClick={() => tapStone(stone)}
+                onPointerDown={dragBind?.onPointerDown}
+                style={{
+                  transform: dragTransform,
+                  position: isDragged ? 'relative' : undefined,
+                  zIndex: isDragged ? 1000 : undefined,
+                  touchAction: isPlayable ? 'none' : undefined,
+                }}
               >
                 <Stone left={a} right={b} upright />
               </button>

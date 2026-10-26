@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Plugin } from 'vite';
 import catalog from '../../packages/ui/src/audio/catalog.json' with { type: 'json' };

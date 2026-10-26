@@ -389,6 +389,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     health: 4,
     emoji: '🐒',
     quote: 'Ugh Ugh Aah Aah!',
+    sound: 'monkey_chatter.mp3',
   },
   c35: {
     id: 'c35',
@@ -398,6 +399,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     health: 3,
     emoji: '🐓',
     quote: 'Kikeriki!',
+    sound: 'chicken_cluck.mp3',
     abilities: [{ type: 'battlecry', effect: 'buff_allies_attack_1' }],
   },
   c36: {
@@ -417,6 +419,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     health: 6,
     emoji: '🐑',
     quote: 'Mäh määh!',
+    sound: 'sheep_baa.mp3',
   },
   c38: {
     id: 'c38',
@@ -482,6 +485,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     health: 7,
     emoji: '🐴',
     quote: 'Wieher!',
+    sound: 'horse_whinny.mp3',
     abilities: [{ type: 'rush' }],
   },
   c45: {
@@ -520,6 +524,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     health: 9,
     emoji: '🐘',
     quote: 'Törööö!',
+    sound: 'elephant_trumpet.mp3',
     abilities: [{ type: 'taunt' }],
   },
   c49: {
