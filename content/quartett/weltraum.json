@@ -3,7 +3,6 @@
   "name": "Weltraum",
   "emoji": "🪐",
   "license": "CC-BY-SA-4.0",
-  "status": "Entwurf",
   "description": "Planeten, Zwergplaneten, Monde und Sterne.",
   "note": "Entfernung: mittlerer Abstand zur Sonne; Monde zählen mit dem Abstand ihres Planeten. Temperatur: mittlere Oberflächentemperatur, bei Gasriesen in der Höhe von 1 bar. Sterne haben keine Monde. Mondzahlen Stand 2025.",
   "properties": [
