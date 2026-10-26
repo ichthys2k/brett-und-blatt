@@ -108,6 +108,13 @@ export interface BotDefinition<S, M, V = S> {
   name: string;
   levels: BotLevel[];
   chooseMove(ctx: BotContext<S, M, V>): M;
+  /**
+   * Bedenkpause in Millisekunden, bevor die Spielleitung den gewählten Zug ausführt – etwa
+   * damit ein Bingo-Ansager nicht alle Zahlen auf einmal zieht. Gilt nur für Bot-Züge, nicht
+   * bei Zeitablauf. Bis dahin wird der Zug geparkt und erst bei Fälligkeit noch einmal geprüft.
+   * Fehlt die Funktion, zieht der Bot sofort.
+   */
+  delayMs?(ctx: { view: V; seat: SeatId; level: BotLevel; move: M; rng: Rng }): number;
 }
 
 /**

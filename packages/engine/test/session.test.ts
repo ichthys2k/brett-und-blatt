@@ -208,3 +208,58 @@ describe('LocalSession für den Server', () => {
     expect(requests[0]).toBe(80);
   });
 });
+
+describe('Bedenkpause der Bots (delayMs)', () => {
+  const slowNim = { ...nim, bots: nim.bots.map((bot) => ({ ...bot, delayMs: () => 5_000 })) };
+
+  function slowSession() {
+    let time = 0;
+    let wakeups = 0;
+    const session = new LocalSession(
+      slowNim,
+      {
+        gameId: 'nim',
+        seats: [
+          { kind: 'human', name: 'Anna' },
+          { kind: 'bot', name: 'Bot', level: 'hard' },
+        ],
+        options: {},
+        seed: 'test',
+        time: { kind: 'none' },
+      },
+      { botRunner: inlineBotRunner([slowNim]), now: () => time, deadlineChanged: () => wakeups++ },
+    );
+    return { session, advanceTime: (ms: number) => (time += ms), wakeups: () => wakeups };
+  }
+
+  it('parkt den Bot-Zug und führt ihn erst nach der Pause aus', async () => {
+    const { session, advanceTime, wakeups } = slowSession();
+    session.submit(0, { take: 1 });
+    await flush();
+    expect(session.log).toHaveLength(1);
+    expect(session.isThinking(1)).toBe(true);
+    expect(session.nextDeadline()).toBe(5_000);
+    expect(wakeups()).toBe(1);
+    advanceTime(4_999);
+    session.tick();
+    expect(session.log).toHaveLength(1);
+    advanceTime(1);
+    session.tick();
+    expect(session.log).toHaveLength(2);
+    expect(session.state.left).toBe(8);
+    expect(session.nextDeadline()).toBeNull();
+    session.dispose();
+  });
+
+  it('verwirft den geparkten Zug, wenn ein Mensch den Platz zurücknimmt', async () => {
+    const { session, advanceTime } = slowSession();
+    session.submit(0, { take: 1 });
+    await flush();
+    session.undo();
+    advanceTime(5_000);
+    session.tick();
+    expect(session.log).toHaveLength(0);
+    expect(session.nextDeadline()).toBeNull();
+    session.dispose();
+  });
+});

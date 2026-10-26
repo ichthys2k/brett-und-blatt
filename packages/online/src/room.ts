@@ -12,6 +12,7 @@ import {
 } from '@brett-und-blatt/engine';
 import { cleanAvatar, cleanName } from './names';
 import {
+  MAX_SEATS,
   PHRASES,
   PROTOCOL_VERSION,
   REACTIONS,
@@ -29,8 +30,6 @@ import {
 
 /** Höchstens so viele Mitglieder (Spieler und Zuschauer) pro Raum. */
 export const MAX_MEMBERS = 40;
-/** Höchstens so viele Plätze am Tisch, auch wenn ein Spiel mehr erlaubt. */
-export const MAX_SEATS = 10;
 /** Kulanz bei Zeitablauf für die Netzverzögerung. */
 export const CLOCK_GRACE_MS = 1000;
 /** So lange darf die Verbindung weg sein, bevor ein Bot den Platz übernimmt. */
@@ -454,9 +453,11 @@ export class Room {
 
   private start(connectionId: string): void {
     const module = this.lobbyModule();
-    const seats = this.lobby.seats;
     if (!module) return this.error(connectionId, 'notAllowed', 'Bitte zuerst ein Spiel wählen.');
-    if (seats.length < module.info.players.min || seats.some((s) => s.kind === 'human' && s.memberId === null)) {
+    // Freie Plätze bleiben weg, solange genug Spieler übrig sind – bei 30 Plätzen fürs Bingo muss
+    // die Raumleitung so nicht genau abzählen, wer mitspielt.
+    const seats = this.lobby.seats.filter((s) => s.kind === 'bot' || s.memberId !== null);
+    if (seats.length < module.info.players.min) {
       return this.error(connectionId, 'notAllowed', 'Es sind noch Plätze frei.');
     }
     const publicSeats: PublicSeat[] = seats.map((seat) =>
@@ -526,7 +527,14 @@ export class Room {
   }
 
   private sessionDeps() {
-    return { botRunner: this.deps.botRunner, now: () => this.deps.now(), graceMs: CLOCK_GRACE_MS, botBudgetMs: this.deps.botBudgetMs };
+    return {
+      botRunner: this.deps.botRunner,
+      now: () => this.deps.now(),
+      graceMs: CLOCK_GRACE_MS,
+      botBudgetMs: this.deps.botBudgetMs,
+      // Ein Bot hat einen Zug mit Bedenkpause geparkt: speichern lassen, damit der Wecker neu gestellt wird.
+      deadlineChanged: () => this.deps.changed?.(),
+    };
   }
 
   private lobbyModule(): AnyGameModule | undefined {

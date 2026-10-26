@@ -1,6 +1,6 @@
 import { BOT_LEVELS, randomSeed, resolveOptions, type BotLevel, type Options, type SeatConfig, type SeatKind, type TimePresetId } from '@brett-und-blatt/engine';
 import { useEffect, useState } from 'react';
-import { Button, Section, Segmented } from '../components/controls';
+import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { HowToList } from '../components/HowTo';
 import { t } from '../i18n';
 import { startGame } from '../lib/activeGame';
@@ -120,15 +120,7 @@ export function Setup({ gameId }: { gameId: string }) {
 
       <Section title={t('setup.players')}>
         {info.players.min < info.players.max && (
-          <Segmented
-            label={t('setup.playerCount')}
-            value={String(draft.seats.length)}
-            choices={Array.from({ length: info.players.max - info.players.min + 1 }, (_, i) => {
-              const n = String(info.players.min + i);
-              return { value: n, label: n };
-            })}
-            onChange={(value) => setCount(Number(value))}
-          />
+          <PlayerCount label={t('setup.playerCount')} value={draft.seats.length} min={info.players.min} max={info.players.max} onChange={setCount} />
         )}
         <ol className="space-y-2">
           {draft.seats.map((seat, index) => (

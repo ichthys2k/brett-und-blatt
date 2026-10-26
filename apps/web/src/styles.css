@@ -80,3 +80,9 @@ body {
     font-size: 0.7rem;
   }
 }
+
+/* Sehr viele Spieler (Bingo bis 30): Chips fester Breite in einer Zeile zum Wischen. */
+[data-many] > .bub-chip {
+  flex: none;
+  width: 10rem;
+}
