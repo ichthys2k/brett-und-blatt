@@ -61,5 +61,6 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<TicTacToeState, TicTacToeMove> = {
   Board,
   SeatSymbol,
+  sounds: { placed: 'stein-setzen' },
   seatLabel: (seat) => LABELS[seat] ?? `Platz ${seat + 1}`,
 };

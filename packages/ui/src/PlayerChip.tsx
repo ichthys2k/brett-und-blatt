@@ -63,6 +63,7 @@ export function formatClock(clock: ClockReading): string {
     if (clock.usingBank && clock.bankLeftMs !== null) return `Reserve ${Math.ceil(clock.bankLeftMs / 1000)} s`;
     return `${Math.ceil((clock.leftMs ?? 0) / 1000)} s`;
   }
+  if (clock.kind === 'byoyomi' && clock.usingBank) return `${Math.ceil((clock.leftMs ?? 0) / 1000)} s · ${clock.periodsLeft ?? 0}×`;
   const total = Math.ceil((clock.leftMs ?? 0) / 1000);
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }

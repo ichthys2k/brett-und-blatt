@@ -195,6 +195,9 @@ function materialLead(fen: string, white: boolean): number {
 export const gameUi: GameUi<ChessState, ChessMove> = {
   Board,
   SeatSymbol,
+  sounds: {
+    moved: (event) => [event.captured ? 'stein-schlagen' : 'stein-ziehen', ...(event.check ? (['schach'] as const) : [])],
+  },
   seatLabel: (seat) => (seat === 0 ? 'Weiß' : 'Schwarz'),
   seatDetail: (view, seat) => {
     const white = seat === 0;

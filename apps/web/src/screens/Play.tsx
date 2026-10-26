@@ -3,11 +3,14 @@ import { PlayerChip } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Button } from '../components/controls';
 import { HowToOverlay } from '../components/HowTo';
+import { SoundControl } from '../components/SoundControl';
 import { t } from '../i18n';
 import { getActiveGame, resumeGame, saveProgress, startGame, type ActiveGame } from '../lib/activeGame';
 import { levelLabel } from '../lib/format';
 import type { LoadedGame } from '../lib/registry';
+import { useGameMusic } from '../lib/music';
 import { navigate, paths } from '../lib/router';
+import { useGameSounds } from '../lib/useGameSounds';
 
 export function Play() {
   const [active, setActive] = useState<ActiveGame | null>(() => getActiveGame());
@@ -60,6 +63,8 @@ export interface OnlineTableProps {
   onLeave(): void;
   /** Z. B. die Leiste mit Emoji-Reaktionen. */
   extra?: ReactNode;
+  /** Raumcode und Einladungslink – Spiele zeigen sie z. B. auf einer Tafel an. */
+  invite?: { code: string; link: string };
 }
 
 interface GameTableProps {
@@ -99,6 +104,9 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     [session],
   );
 
+  useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined);
+  useGameMusic(info.id);
+
   // Uhren prüfen und anzeigen.
   useEffect(() => {
     if (!session.timed) return;
@@ -122,6 +130,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const seats = session.config.seats;
   /** Ab drei Spielern wird die linke Spalte im Querformat breiter und die Spieler stehen zu zweit nebeneinander. */
   const crowded = seats.length > 2;
+  /** Sehr viele Spieler (Bingo bis 30): eine Zeile zum Wischen statt vieler umbrechender Reihen. */
+  const many = seats.length > 10;
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
   const current = session.currentSeats();
@@ -165,9 +175,18 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     else status = t('play.turnOf', { name });
   }
 
+  // Wer aufgibt: online der eigene Platz, lokal wer gerade zieht – sonst der erste Mensch,
+  // der noch im Spiel ist (bei Vierer-Schach scheidet nur diese Farbe aus).
+  const resignSeat = online
+    ? (online.yourSeat ?? undefined)
+    : actingSeat !== undefined && session.canResign(actingSeat)
+      ? actingSeat
+      : humans.find((seat) => session.canResign(seat));
+  const canResign = resignSeat !== undefined && session.canResign(resignSeat);
   const resign = () => {
-    const seat = online ? (online.yourSeat ?? undefined) : (actingSeat ?? humans[0]);
-    if (seat !== undefined && window.confirm(t('play.resignConfirm'))) session.resign(seat);
+    if (resignSeat === undefined) return;
+    const question = humans.length > 1 && !online ? t('play.resignConfirmNamed', { name: seats[resignSeat]?.name ?? '' }) : t('play.resignConfirm');
+    if (window.confirm(question)) session.resign(resignSeat);
   };
 
   return (
@@ -185,6 +204,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           <Button variant="ghost" className="ml-auto px-3 text-lg" aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
             ?
           </Button>
+          <SoundControl gameId={info.id} />
           {session.timed && !result && !online && (
             <Button
               variant="ghost"
@@ -198,7 +218,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           )}
         </header>
 
-        <section className={`flex flex-none flex-wrap gap-2 px-3 ${crowded ? 'flat:grid flat:grid-cols-2' : ''}`} data-crowded={crowded || undefined} aria-label="Spieler">
+        <section
+          className={`flex flex-none gap-2 px-3 ${many ? 'overflow-x-auto pb-1 flat:flex-col flat:overflow-x-visible' : 'flex-wrap'} ${crowded && !many ? 'flat:grid flat:grid-cols-2' : ''}`}
+          data-crowded={crowded || undefined}
+          data-many={many || undefined}
+          aria-label="Spieler"
+        >
           {seats.map((seat, index) => (
             <PlayerChip
               key={index}
@@ -249,7 +274,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             ) : (
               <>
                 {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
-                {online.yourSeat !== null && (
+                {canResign && (
                   <Button variant="ghost" onClick={resign}>
                     {t('play.resign')}
                   </Button>
@@ -275,7 +300,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               )}
               {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
               <Button onClick={() => local?.onRestart(false)}>{t('play.restart')}</Button>
-              {humans.length > 0 && (
+              {canResign && (
                 <Button variant="ghost" onClick={resign}>
                   {t('play.resign')}
                 </Button>
@@ -296,6 +321,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           hint={hint}
           viewer={viewer}
           seatNames={seats.map((seat) => seat.name)}
+          invite={online?.invite}
+          humanSeats={
+            !online && !needsHandover && humans.length > 1
+              ? humans.map((seat) => ({ seat, legalMoves: session.isAway(seat) || session.paused ? [] : session.legalMoves(seat), onMove: (move: unknown) => session.submit(seat, move) }))
+              : undefined
+          }
         />
         {showHowTo && <HowToOverlay info={info} onClose={() => setShowHowTo(false)} />}
         {handoverSeat !== null ? (

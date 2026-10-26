@@ -48,6 +48,14 @@ export interface OptionSpec {
   default: string;
   /** Nur zeigen, wenn andere Optionen bestimmte Werte haben, z. B. { variant: ['klondike'] }. */
   when?: Record<string, string[]>;
+  /**
+   * Nicht in Einrichtung und Lobby zeigen: Die Oberfläche des Spiels füllt den Wert selbst
+   * (`GameUi.prepareOptions`), z. B. mit Freischaltungen dieses Geräts. Online lässt sich eine
+   * verborgene Option nicht setzen, dort gilt immer der Standard.
+   */
+  hidden?: boolean;
+  /** Freier Wert statt Auswahl: erlaubt ist außer den Auswahlen jeder Text, der ganz auf dieses Muster passt (höchstens 256 Zeichen). */
+  pattern?: string;
 }
 
 export type Options = Record<string, string>;
@@ -60,7 +68,12 @@ export type TimeControl =
    */
   | { kind: 'perMove'; moveMs: number; bankMs?: number; firstMoveMs?: number }
   /** Schachuhr: Gesamtzeit pro Spieler, nach jedem Zug kommt der Zuschlag dazu. */
-  | { kind: 'chessClock'; baseMs: number; incrementMs: number };
+  | { kind: 'chessClock'; baseMs: number; incrementMs: number }
+  /**
+   * Byo-yomi (Go): Hauptzeit für die ganze Partie, danach `periods` Perioden mit je `periodMs`
+   * pro Zug. Wer eine Periode überschreitet, verbraucht sie; nach der letzten ist die Zeit um.
+   */
+  | { kind: 'byoyomi'; mainMs: number; periods: number; periodMs: number };
 
 export interface TimePresets {
   relaxed: TimeControl;
@@ -108,6 +121,13 @@ export interface BotDefinition<S, M, V = S> {
   name: string;
   levels: BotLevel[];
   chooseMove(ctx: BotContext<S, M, V>): M;
+  /**
+   * Bedenkpause in Millisekunden, bevor die Spielleitung den gewählten Zug ausführt – etwa
+   * damit ein Bingo-Ansager nicht alle Zahlen auf einmal zieht. Gilt nur für Bot-Züge, nicht
+   * bei Zeitablauf. Bis dahin wird der Zug geparkt und erst bei Fälligkeit noch einmal geprüft.
+   * Fehlt die Funktion, zieht der Bot sofort.
+   */
+  delayMs?(ctx: { view: V; seat: SeatId; level: BotLevel; move: M; rng: Rng }): number;
 }
 
 /**
@@ -118,6 +138,8 @@ export interface GameModule<S, M, V = S> {
   info: GameInfo;
   options: OptionSpec[];
   timePresets: TimePresets;
+  /** Zeitvorgaben, die von den Optionen abhängen (z. B. Brettgröße bei Go). Fehlt sie, gilt `timePresets`. */
+  timePresetsFor?(options: Options): TimePresets;
 
   setup(seats: number, options: Options, seed: string): S;
   /** Wer gerade handeln darf – auch mehrere Plätze gleichzeitig oder 'system'. */
@@ -135,6 +157,14 @@ export interface GameModule<S, M, V = S> {
   playerView(state: S, seat: SeatId | 'spectator'): V;
   result(state: S): Result | null;
 
+  /**
+   * Aufgeben als Spielzug: Nur dieser Platz scheidet aus, die anderen spielen weiter.
+   * `applyMove` muss ihn jederzeit annehmen, auch wenn der Platz nicht am Zug ist; in
+   * `legalMoves` gehört er nicht (sonst wählen ihn Bots). null, wenn der Platz nicht
+   * (mehr) aufgeben kann. Fehlt die Funktion, beendet Aufgeben die ganze Partie.
+   * Mit `reason: 'time'` gilt dasselbe bei abgelaufener Schachuhr.
+   */
+  resignMove?(state: S, seat: SeatId, reason?: 'resign' | 'time'): M | null;
   /** Standardzug bei Zeitablauf; fehlt er, zieht der Bot. */
   timeoutMove?(state: S, seat: SeatId): M;
   /** Pflicht bei verdeckten Informationen: füllt Unbekanntes passend zur Sicht auf. */

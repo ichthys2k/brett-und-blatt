@@ -1,0 +1,50 @@
+import { randomBot, type BotDefinition, type GameModule } from '@brett-und-blatt/engine';
+import { dominoBot } from './bots';
+import { meta } from './meta';
+import { applyMove, currentPlayers, eventView, isLegal, legalMoves, playerView, result, sampleHidden, setup, type DominoMove, type DominoState } from './rules';
+
+export type { ChainStone, DominoMove, DominoState, DominoVariant, RoundSummary, StoneId } from './rules';
+export { endSum, ends, isDouble, pipsOf, playsFor, STONES } from './rules';
+
+export const gameModule: GameModule<DominoState, DominoMove> = {
+  info: meta,
+  options: [
+    {
+      id: 'variant',
+      label: 'Variante',
+      description: 'Block: wer nicht kann, passt. Ziehen: aus dem Vorrat ziehen. Fünfer: dazu Punkte für Vielfache von 5 an den Enden.',
+      choices: [
+        { value: 'block', label: 'Block' },
+        { value: 'draw', label: 'Ziehen' },
+        { value: 'fives', label: 'Fünfer' },
+      ],
+      default: 'draw',
+    },
+    {
+      id: 'target',
+      label: 'Spielziel',
+      choices: [
+        { value: '50', label: '50 Punkte' },
+        { value: '100', label: '100 Punkte' },
+        { value: '150', label: '150 Punkte' },
+        { value: '250', label: '250 Punkte' },
+      ],
+      default: '100',
+    },
+  ],
+  timePresets: {
+    relaxed: { kind: 'none' },
+    normal: { kind: 'perMove', moveMs: 30_000 },
+    fast: { kind: 'perMove', moveMs: 15_000 },
+  },
+  setup,
+  currentPlayers,
+  legalMoves,
+  isLegal,
+  applyMove,
+  playerView,
+  result,
+  sampleHidden,
+  eventView,
+  bots: [dominoBot, randomBot as unknown as BotDefinition<DominoState, DominoMove>],
+};

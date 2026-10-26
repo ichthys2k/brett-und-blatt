@@ -1,5 +1,6 @@
 import {
   sameValue,
+  timePresetsOf,
   type AnyGameModule,
   type BotRunner,
   type ClockReading,
@@ -42,6 +43,19 @@ export function extrapolateClock(reading: ClockReading, control: TimeControl, el
     const left = Math.max(0, (reading.leftMs ?? 0) - elapsedMs);
     return { ...reading, leftMs: left, fraction: Math.min(1, left / control.baseMs), expired: left <= 0 };
   }
+  if (control.kind === 'byoyomi') {
+    const leftMs = reading.leftMs ?? 0;
+    if (!reading.usingBank && elapsedMs <= leftMs) {
+      const left = leftMs - elapsedMs;
+      return { ...reading, leftMs: left, fraction: Math.min(1, left / control.mainMs) };
+    }
+    // In den Perioden: wie weit ist die laufende Periode schon verbraucht?
+    const over = reading.usingBank ? control.periodMs - leftMs + elapsedMs : elapsedMs - leftMs;
+    const periodsLeft = (reading.periodsLeft ?? 0) - Math.floor(over / control.periodMs);
+    if (periodsLeft <= 0) return { ...reading, leftMs: 0, fraction: 0, usingBank: true, periodsLeft: 0, expired: true };
+    const left = control.periodMs - (over % control.periodMs);
+    return { ...reading, leftMs: left, fraction: left / control.periodMs, usingBank: true, periodsLeft };
+  }
   return reading;
 }
 
@@ -79,7 +93,7 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
     this.message = first;
     this.receivedAt = this.now();
     this.id = `${deps.roomCode}/${first.round}`;
-    this.control = deps.module.timePresets[first.time];
+    this.control = timePresetsOf(deps.module, first.options)[first.time];
     this.config = {
       gameId: first.gameId,
       seats: first.seats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name })),
@@ -211,7 +225,11 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
     return module.isLegal ? module.isLegal(this.message.view, seat, move) : moves.some((m) => sameValue(m, move));
   }
 
+  canResign(seat: SeatId): boolean {
+    return seat === this.message.yourSeat && !this.message.result && this.message.canResign;
+  }
+
   resign(seat: SeatId): void {
-    if (seat === this.message.yourSeat) this.deps.send({ type: 'resign' });
+    if (this.canResign(seat)) this.deps.send({ type: 'resign' });
   }
 }

@@ -10,6 +10,8 @@
 | Aufwand | Regeln M, Oberfläche M, Bot M, Inhalte L (vier Sets recherchieren) |
 | Etappe | 3 |
 
+> **Stand 26.10.2026:** gebaut in `packages/games/quartett` (Trumpf und Sammeln, Bots in drei Stufen, online spielbar). Die vier Sets in `content/quartett/` hat Cornelius am 26.10.2026 bestätigt. Werte für Tiere, Weltraum und Dinosaurier sind gerundet, mit Quellenhinweis je Karte; die Bibel-Zahlen sind in der gemeinfreien Menge-Bibel (1939) ausgezählt, weil die Lutherbibel 2017 nicht frei vorliegt. Ein neues, noch ungeprüftes Set bekommt `"status": "Entwurf"` (wird an der Karte angezeigt). Laute fehlen noch (Soundeffekte gibt Cornelius später vor), deshalb gibt es die Option „Laute“ noch nicht.
+
 Ein Modul mit **zwei Spielweisen**, die dieselben Kartensets nutzen:
 
 - **Trumpf:** Werte vergleichen, wie beim Autoquartett.
@@ -55,7 +57,8 @@ Regel für Sets: Jede Karte hat **alle** Werte des Sets. Leere Werte sind nicht 
 
 ## Regeln: Sammeln
 
-- Alle Karten werden verteilt (Hand verdeckt).
+- Ab vier Spielern werden alle Karten verteilt (Hand verdeckt). **Zu zweit und zu dritt** bekommt jeder 7 Karten, der Rest ist ein verdeckter Stapel – sonst wüsste man zu zweit bei jeder Frage, dass der andere die Karte hat, und wer anfängt, gewinnt alles.
+- Bei einer Niete zieht der Fragende eine Karte vom Stapel (falls vorhanden). Wer keine Karten mehr hat, zieht eine nach, solange der Stapel reicht.
 - Wer am Zug ist, fragt einen Mitspieler nach einer bestimmten Karte („Hast du C3, den Elefanten?“). Er muss selbst mindestens eine Karte dieser Gruppe haben.
 - Hat der Gefragte sie, muss er sie abgeben, und der Fragende darf weiterfragen. Sonst ist der Gefragte am Zug.
 - Vollständige Vierergruppen werden offen abgelegt. Wer am Ende die meisten Quartette hat, gewinnt.
@@ -67,7 +70,8 @@ Regel für Sets: Jede Karte hat **alle** Werte des Sets. Leere Werte sind nicht 
 | Spielweise | Trumpf, Sammeln | Trumpf |
 | Kartenset | Tiere, Weltraum, Biblische Personen, Dinosaurier, später eigene | Tiere |
 | Rundenlimit (Trumpf) | 15, 30, 50, unbegrenzt | 30 |
-| Laute | an, aus | an |
+| Aufgedeckte Karten zeigen (Trumpf) | 1, 2, 3 Sekunden | 2 Sekunden |
+| Laute | an, aus (kommt mit den Soundeffekten) | an |
 
 ## Spielmodell
 
@@ -105,8 +109,10 @@ type QuartettMove =
 | Voreinstellung | Trumpf: Eigenschaft wählen | Sammeln: fragen |
 |---|---|---|
 | gemütlich | aus | aus |
-| normal | 15 s | 20 s |
-| schnell | 8 s | 10 s |
+| normal | 20 s | 20 s |
+| schnell | 10 s | 10 s |
+
+Umgesetzt ist eine gemeinsame Vorgabe für beide Spielweisen (Zeitvorgaben gelten je Spiel, nicht je Option).
 
 **Bei Zeitablauf** entscheidet der Bot. Nach dem Aufdecken bleibt das Ergebnis 2 Sekunden stehen (einstellbar), dann geht es automatisch weiter.
 

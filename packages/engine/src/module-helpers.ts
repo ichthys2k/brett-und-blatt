@@ -1,14 +1,23 @@
 import { sameValue } from './canonical';
-import type { Actor, AnyGameModule, Options, Result, SeatId } from './types';
+import type { Actor, AnyGameModule, Options, OptionSpec, Result, SeatId, TimePresets } from './types';
 
 /** Die Voreinstellungen aller Optionen, ergänzt um die übergebenen Werte. */
 export function resolveOptions(module: AnyGameModule, options: Options = {}): Options {
   const resolved: Options = {};
   for (const spec of module.options) {
     const value = options[spec.id];
-    resolved[spec.id] = value !== undefined && spec.choices.some((c) => c.value === value) ? value : spec.default;
+    resolved[spec.id] = value !== undefined && (spec.choices.some((c) => c.value === value) || matchesPattern(spec, value)) ? value : spec.default;
   }
   return resolved;
+}
+
+/** Die Zeitvorgaben eines Spiels für diese Optionen (manche Spiele brauchen auf großen Brettern mehr Zeit). */
+export function timePresetsOf(module: AnyGameModule, options: Options = {}): TimePresets {
+  return module.timePresetsFor?.(resolveOptions(module, options)) ?? module.timePresets;
+}
+
+function matchesPattern(spec: OptionSpec, value: string): boolean {
+  return spec.pattern !== undefined && typeof value === 'string' && value.length <= 256 && new RegExp(`^(?:${spec.pattern})$`).test(value);
 }
 
 export function seatActors(actors: Actor[]): SeatId[] {

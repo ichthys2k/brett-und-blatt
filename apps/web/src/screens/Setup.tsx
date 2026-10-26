@@ -1,6 +1,6 @@
-import { BOT_LEVELS, randomSeed, resolveOptions, type BotLevel, type Options, type SeatConfig, type SeatKind, type TimePresetId } from '@brett-und-blatt/engine';
+import { BOT_LEVELS, randomSeed, resolveOptions, timePresetsOf, type BotLevel, type Options, type SeatConfig, type SeatKind, type TimePresetId } from '@brett-und-blatt/engine';
 import { useEffect, useState } from 'react';
-import { Button, Section, Segmented } from '../components/controls';
+import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { HowToList } from '../components/HowTo';
 import { t } from '../i18n';
 import { startGame } from '../lib/activeGame';
@@ -79,6 +79,9 @@ export function Setup({ gameId }: { gameId: string }) {
   if (!game || !draft) return <p className="p-6 text-center text-muted">{t('setup.loading')}</p>;
 
   const { info, module, ui } = game;
+  const visibleOptions = module.options.filter(
+    (spec) => !spec.hidden && (!spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(draft.options[id] ?? module.options.find((o) => o.id === id)?.default ?? ''))),
+  );
   const update = (change: Partial<SetupDraft>) => setDraft({ ...draft, ...change });
   const updateSeat = (index: number, change: Partial<SeatDraft>) => update({ seats: draft.seats.map((s, i) => (i === index ? { ...s, ...change } : s)) });
   const setCount = (count: number) =>
@@ -89,9 +92,9 @@ export function Setup({ gameId }: { gameId: string }) {
     await startGame({
       gameId: info.id,
       seats: toSeatConfigs(draft.seats),
-      options: draft.options,
+      options: ui.prepareOptions ? ui.prepareOptions(draft.options) : draft.options,
       seed: randomSeed(),
-      time: module.timePresets[draft.time],
+      time: timePresetsOf(module, draft.options)[draft.time],
     });
     navigate(paths.play);
   };
@@ -120,15 +123,7 @@ export function Setup({ gameId }: { gameId: string }) {
 
       <Section title={t('setup.players')}>
         {info.players.min < info.players.max && (
-          <Segmented
-            label={t('setup.playerCount')}
-            value={String(draft.seats.length)}
-            choices={Array.from({ length: info.players.max - info.players.min + 1 }, (_, i) => {
-              const n = String(info.players.min + i);
-              return { value: n, label: n };
-            })}
-            onChange={(value) => setCount(Number(value))}
-          />
+          <PlayerCount label={t('setup.playerCount')} value={draft.seats.length} min={info.players.min} max={info.players.max} onChange={setCount} />
         )}
         <ol className="space-y-2">
           {draft.seats.map((seat, index) => (
@@ -175,9 +170,9 @@ export function Setup({ gameId }: { gameId: string }) {
         )}
       </Section>
 
-      {module.options.length > 0 && (
+      {visibleOptions.length > 0 && (
         <Section title={t('setup.rules')}>
-          {module.options.filter((spec) => !spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(draft.options[id] ?? module.options.find((o) => o.id === id)?.default ?? ''))).map((spec) => (
+          {visibleOptions.map((spec) => (
             <div key={spec.id} className="space-y-1">
               <p className="font-medium">{spec.label}</p>
               {spec.description && <p className="text-sm text-muted">{spec.description}</p>}
@@ -192,11 +187,13 @@ export function Setup({ gameId }: { gameId: string }) {
         </Section>
       )}
 
+      {ui.SetupExtra && <ui.SetupExtra options={resolveOptions(module, draft.options)} seats={draft.seats.length} />}
+
       <Section title={t('setup.time')}>
         <Segmented
           label={t('setup.time')}
           value={draft.time}
-          choices={TIME_PRESETS.map((preset) => ({ value: preset, label: t(`time.${preset}`), hint: describeTime(module.timePresets[preset]) }))}
+          choices={TIME_PRESETS.map((preset) => ({ value: preset, label: t(`time.${preset}`), hint: describeTime(timePresetsOf(module, draft.options)[preset]) }))}
           onChange={(time) => update({ time })}
         />
       </Section>

@@ -102,5 +102,6 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<FourInARowState, FourInARowMove> = {
   Board,
   SeatSymbol,
+  sounds: { dropped: 'stein-fallen', popped: 'stein-heraus' },
   seatLabel: (seat) => LABELS[seat] ?? `Platz ${seat + 1}`,
 };

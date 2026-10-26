@@ -13,8 +13,21 @@ jobs:
   check:
     name: Typprüfung, Tests und Build
     runs-on: ubuntu-latest
+    env:
+      # Klänge liegen im privaten Repo brett-und-blatt-klaenge (ElevenLabs-Lizenz).
+      # Ohne das Secret KLAENGE_DEPLOY_KEY (z. B. bei PRs aus Forks) wird die App stumm gebaut.
+      HAS_KLAENGE: ${{ secrets.KLAENGE_DEPLOY_KEY != '' }}
     steps:
       - uses: actions/checkout@v7
+
+      - name: Klänge aus dem privaten Repo holen
+        if: env.HAS_KLAENGE == 'true'
+        uses: actions/checkout@v7
+        with:
+          repository: ichthys2k/brett-und-blatt-klaenge
+          ssh-key: ${{ secrets.KLAENGE_DEPLOY_KEY }}
+          path: klaenge-repo
+          persist-credentials: false
 
       # pnpm in der Version aus package.json („packageManager“)
       - uses: pnpm/action-setup@v6
@@ -39,6 +52,8 @@ jobs:
         run: pnpm build
         env:
           VITE_GAME_SERVER: ${{ vars.GAME_SERVER }}
+          # Gesetzt, wenn die Klänge geholt wurden – dann bricht der Build ab, falls eine Datei fehlt.
+          KLAENGE_DIR: ${{ env.HAS_KLAENGE == 'true' && format('{0}/klaenge-repo', github.workspace) || '' }}
 
       - name: Gebaute App für GitHub Pages bereitstellen
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -46,10 +61,44 @@ jobs:
         with:
           path: apps/web/dist
 
-  # Veröffentlicht wird nur, was alle Prüfungen bestanden hat.
+  # Spieleserver (Cloudflare-Worker) – vor der Web-App, damit die neue
+  # Web-App nie auf einen alten Server trifft. Braucht das Secret
+  # CLOUDFLARE_API_TOKEN (nur „Workers Scripts: Bearbeiten“); die
+  # Konto-ID steht in apps/server/wrangler.jsonc. Fehlt das Secret,
+  # schlägt der Schritt fehl und die Web-App bleibt auf dem alten Stand.
+  deploy-server:
+    name: Spieleserver auf Cloudflare veröffentlichen
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cloudflare-worker
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Abhängigkeiten installieren
+        run: pnpm install --frozen-lockfile
+
+      # „run deploy“ – ohne „run“ greift pnpms eingebauter deploy-Befehl.
+      - name: Worker veröffentlichen
+        run: pnpm --filter @brett-und-blatt/server run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          WRANGLER_SEND_METRICS: 'false'
+
+  # Veröffentlicht wird nur, was alle Prüfungen bestanden hat und erst,
+  # wenn der passende Spieleserver läuft.
   deploy:
     name: Veröffentlichen auf spiele.lipponer.de
-    needs: check
+    needs: [check, deploy-server]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:

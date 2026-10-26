@@ -343,6 +343,12 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<BattleshipState, BattleshipMove> = {
   Board,
   SeatSymbol,
+  sounds: {
+    placed: 'schiff-setzen',
+    aimed: 'zielen',
+    shot: (event) => (event.result === 'water' ? 'wasser' : 'treffer'),
+    sunk: 'versenkt',
+  },
   seatLabel: (seat) => `Flotte ${seat + 1}`,
   seatDetail: (view, seat) => {
     if (view.phase === 'place') return view.placed[seat] ? 'aufgestellt' : 'stellt auf …';

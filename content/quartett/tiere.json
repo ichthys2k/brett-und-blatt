@@ -1,0 +1,492 @@
+{
+  "id": "tiere",
+  "name": "Tiere",
+  "emoji": "🐘",
+  "license": "CC-BY-SA-4.0",
+  "description": "Vom Meerschweinchen bis zum Blauwal.",
+  "note": "Typische Werte erwachsener Tiere, gerundet. Länge: Körper ohne Schwanz, bei Walen, Haien und Vögeln Gesamtlänge. Tempo: Höchstgeschwindigkeit (beim Adler und Falken im Sturzflug).",
+  "properties": [
+    {
+      "id": "weight",
+      "label": "Gewicht",
+      "unit": "kg",
+      "higherWins": true
+    },
+    {
+      "id": "length",
+      "label": "Länge",
+      "unit": "cm",
+      "higherWins": true
+    },
+    {
+      "id": "speed",
+      "label": "Höchsttempo",
+      "unit": "km/h",
+      "higherWins": true
+    },
+    {
+      "id": "lifespan",
+      "label": "Lebenserwartung",
+      "unit": "Jahre",
+      "higherWins": true
+    },
+    {
+      "id": "offspring",
+      "label": "Junge je Wurf",
+      "unit": "",
+      "higherWins": true
+    }
+  ],
+  "groups": [
+    {
+      "id": "A",
+      "name": "Savanne"
+    },
+    {
+      "id": "B",
+      "name": "Wald"
+    },
+    {
+      "id": "C",
+      "name": "Bauernhof"
+    },
+    {
+      "id": "D",
+      "name": "Meer"
+    },
+    {
+      "id": "E",
+      "name": "Haustiere"
+    },
+    {
+      "id": "F",
+      "name": "Vögel"
+    },
+    {
+      "id": "G",
+      "name": "Asien"
+    },
+    {
+      "id": "H",
+      "name": "Polargebiete"
+    }
+  ],
+  "cards": [
+    {
+      "id": "A1",
+      "name": "Afrikanischer Elefant",
+      "emoji": "🐘",
+      "values": {
+        "weight": 6000,
+        "length": 650,
+        "speed": 40,
+        "lifespan": 65,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Afrikanischer_Elefant"
+    },
+    {
+      "id": "A2",
+      "name": "Giraffe",
+      "emoji": "🦒",
+      "values": {
+        "weight": 1200,
+        "length": 450,
+        "speed": 55,
+        "lifespan": 25,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Giraffe"
+    },
+    {
+      "id": "A3",
+      "name": "Löwe",
+      "emoji": "🦁",
+      "values": {
+        "weight": 190,
+        "length": 200,
+        "speed": 80,
+        "lifespan": 14,
+        "offspring": 3
+      },
+      "source": "https://de.wikipedia.org/wiki/Löwe"
+    },
+    {
+      "id": "A4",
+      "name": "Breitmaulnashorn",
+      "emoji": "🦏",
+      "values": {
+        "weight": 2300,
+        "length": 380,
+        "speed": 50,
+        "lifespan": 45,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Breitmaulnashorn"
+    },
+    {
+      "id": "B1",
+      "name": "Rothirsch",
+      "emoji": "🦌",
+      "values": {
+        "weight": 160,
+        "length": 220,
+        "speed": 65,
+        "lifespan": 18,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Rothirsch"
+    },
+    {
+      "id": "B2",
+      "name": "Wildschwein",
+      "emoji": "🐗",
+      "values": {
+        "weight": 100,
+        "length": 150,
+        "speed": 48,
+        "lifespan": 10,
+        "offspring": 6
+      },
+      "source": "https://de.wikipedia.org/wiki/Wildschwein"
+    },
+    {
+      "id": "B3",
+      "name": "Rotfuchs",
+      "emoji": "🦊",
+      "values": {
+        "weight": 7,
+        "length": 70,
+        "speed": 50,
+        "lifespan": 5,
+        "offspring": 5
+      },
+      "source": "https://de.wikipedia.org/wiki/Rotfuchs"
+    },
+    {
+      "id": "B4",
+      "name": "Braunbär",
+      "emoji": "🐻",
+      "values": {
+        "weight": 300,
+        "length": 230,
+        "speed": 55,
+        "lifespan": 25,
+        "offspring": 2
+      },
+      "source": "https://de.wikipedia.org/wiki/Braunbär"
+    },
+    {
+      "id": "C1",
+      "name": "Hausrind",
+      "emoji": "🐄",
+      "values": {
+        "weight": 700,
+        "length": 250,
+        "speed": 40,
+        "lifespan": 20,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Hausrind"
+    },
+    {
+      "id": "C2",
+      "name": "Hausschwein",
+      "emoji": "🐖",
+      "values": {
+        "weight": 200,
+        "length": 150,
+        "speed": 17,
+        "lifespan": 15,
+        "offspring": 11
+      },
+      "source": "https://de.wikipedia.org/wiki/Hausschwein"
+    },
+    {
+      "id": "C3",
+      "name": "Hauspferd",
+      "emoji": "🐎",
+      "values": {
+        "weight": 500,
+        "length": 240,
+        "speed": 70,
+        "lifespan": 28,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Hauspferd"
+    },
+    {
+      "id": "C4",
+      "name": "Hausschaf",
+      "emoji": "🐑",
+      "values": {
+        "weight": 70,
+        "length": 140,
+        "speed": 40,
+        "lifespan": 12,
+        "offspring": 2
+      },
+      "source": "https://de.wikipedia.org/wiki/Hausschaf"
+    },
+    {
+      "id": "D1",
+      "name": "Blauwal",
+      "emoji": "🐋",
+      "values": {
+        "weight": 130000,
+        "length": 2500,
+        "speed": 50,
+        "lifespan": 85,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Blauwal"
+    },
+    {
+      "id": "D2",
+      "name": "Schwertwal",
+      "emoji": "🐳",
+      "values": {
+        "weight": 5500,
+        "length": 750,
+        "speed": 55,
+        "lifespan": 50,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Schwertwal"
+    },
+    {
+      "id": "D3",
+      "name": "Weißer Hai",
+      "emoji": "🦈",
+      "values": {
+        "weight": 1100,
+        "length": 450,
+        "speed": 56,
+        "lifespan": 70,
+        "offspring": 8
+      },
+      "source": "https://de.wikipedia.org/wiki/Weißer_Hai"
+    },
+    {
+      "id": "D4",
+      "name": "Großer Tümmler",
+      "emoji": "🐬",
+      "values": {
+        "weight": 300,
+        "length": 300,
+        "speed": 35,
+        "lifespan": 40,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Großer_Tümmler"
+    },
+    {
+      "id": "E1",
+      "name": "Haushund",
+      "emoji": "🐕",
+      "values": {
+        "weight": 35,
+        "length": 110,
+        "speed": 48,
+        "lifespan": 12,
+        "offspring": 7
+      },
+      "source": "https://de.wikipedia.org/wiki/Haushund"
+    },
+    {
+      "id": "E2",
+      "name": "Hauskatze",
+      "emoji": "🐈",
+      "values": {
+        "weight": 4,
+        "length": 50,
+        "speed": 48,
+        "lifespan": 15,
+        "offspring": 4
+      },
+      "source": "https://de.wikipedia.org/wiki/Hauskatze"
+    },
+    {
+      "id": "E3",
+      "name": "Hauskaninchen",
+      "emoji": "🐇",
+      "values": {
+        "weight": 2,
+        "length": 40,
+        "speed": 50,
+        "lifespan": 9,
+        "offspring": 6
+      },
+      "source": "https://de.wikipedia.org/wiki/Hauskaninchen"
+    },
+    {
+      "id": "E4",
+      "name": "Meerschweinchen",
+      "emoji": "🐹",
+      "values": {
+        "weight": 1,
+        "length": 25,
+        "speed": 10,
+        "lifespan": 6,
+        "offspring": 3
+      },
+      "source": "https://de.wikipedia.org/wiki/Meerschweinchen"
+    },
+    {
+      "id": "F1",
+      "name": "Strauß",
+      "emoji": "🪶",
+      "values": {
+        "weight": 120,
+        "length": 200,
+        "speed": 70,
+        "lifespan": 40,
+        "offspring": 8
+      },
+      "source": "https://de.wikipedia.org/wiki/Strauß"
+    },
+    {
+      "id": "F2",
+      "name": "Steinadler",
+      "emoji": "🦅",
+      "values": {
+        "weight": 5,
+        "length": 85,
+        "speed": 240,
+        "lifespan": 25,
+        "offspring": 2
+      },
+      "source": "https://de.wikipedia.org/wiki/Steinadler"
+    },
+    {
+      "id": "F3",
+      "name": "Wanderfalke",
+      "emoji": "🐦",
+      "values": {
+        "weight": 1,
+        "length": 45,
+        "speed": 320,
+        "lifespan": 15,
+        "offspring": 3
+      },
+      "source": "https://de.wikipedia.org/wiki/Wanderfalke"
+    },
+    {
+      "id": "F4",
+      "name": "Kaiserpinguin",
+      "emoji": "🐧",
+      "values": {
+        "weight": 35,
+        "length": 115,
+        "speed": 10,
+        "lifespan": 20,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Kaiserpinguin"
+    },
+    {
+      "id": "G1",
+      "name": "Tiger",
+      "emoji": "🐅",
+      "values": {
+        "weight": 220,
+        "length": 220,
+        "speed": 60,
+        "lifespan": 15,
+        "offspring": 3
+      },
+      "source": "https://de.wikipedia.org/wiki/Tiger"
+    },
+    {
+      "id": "G2",
+      "name": "Großer Panda",
+      "emoji": "🐼",
+      "values": {
+        "weight": 100,
+        "length": 150,
+        "speed": 30,
+        "lifespan": 20,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Großer_Panda"
+    },
+    {
+      "id": "G3",
+      "name": "Orang-Utan",
+      "emoji": "🦧",
+      "values": {
+        "weight": 75,
+        "length": 130,
+        "speed": 6,
+        "lifespan": 40,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Orang-Utan"
+    },
+    {
+      "id": "G4",
+      "name": "Komodowaran",
+      "emoji": "🦎",
+      "values": {
+        "weight": 80,
+        "length": 260,
+        "speed": 20,
+        "lifespan": 30,
+        "offspring": 20
+      },
+      "source": "https://de.wikipedia.org/wiki/Komodowaran"
+    },
+    {
+      "id": "H1",
+      "name": "Eisbär",
+      "emoji": "🐻‍❄️",
+      "values": {
+        "weight": 450,
+        "length": 230,
+        "speed": 40,
+        "lifespan": 25,
+        "offspring": 2
+      },
+      "source": "https://de.wikipedia.org/wiki/Eisbär"
+    },
+    {
+      "id": "H2",
+      "name": "Walross",
+      "emoji": "🦭",
+      "values": {
+        "weight": 1200,
+        "length": 330,
+        "speed": 35,
+        "lifespan": 35,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Walross"
+    },
+    {
+      "id": "H3",
+      "name": "Rentier",
+      "emoji": "🦌",
+      "values": {
+        "weight": 120,
+        "length": 190,
+        "speed": 80,
+        "lifespan": 15,
+        "offspring": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Rentier"
+    },
+    {
+      "id": "H4",
+      "name": "Polarfuchs",
+      "emoji": "🦊",
+      "values": {
+        "weight": 4,
+        "length": 60,
+        "speed": 50,
+        "lifespan": 4,
+        "offspring": 8
+      },
+      "source": "https://de.wikipedia.org/wiki/Polarfuchs"
+    }
+  ]
+}

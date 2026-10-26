@@ -190,18 +190,33 @@ importers:
       '@brett-und-blatt/game-battleship':
         specifier: workspace:*
         version: link:../../packages/games/battleship
+      '@brett-und-blatt/game-bingo':
+        specifier: workspace:*
+        version: link:../../packages/games/bingo
       '@brett-und-blatt/game-black-peter':
         specifier: workspace:*
         version: link:../../packages/games/black-peter
       '@brett-und-blatt/game-chess':
         specifier: workspace:*
         version: link:../../packages/games/chess
+      '@brett-und-blatt/game-color-and-shape':
+        specifier: workspace:*
+        version: link:../../packages/games/color-and-shape
+      '@brett-und-blatt/game-color-sorter':
+        specifier: workspace:*
+        version: link:../../packages/games/color-sorter
+      '@brett-und-blatt/game-dominoes':
+        specifier: workspace:*
+        version: link:../../packages/games/dominoes
       '@brett-und-blatt/game-four-in-a-row':
         specifier: workspace:*
         version: link:../../packages/games/four-in-a-row
       '@brett-und-blatt/game-four-player-chess':
         specifier: workspace:*
         version: link:../../packages/games/four-player-chess
+      '@brett-und-blatt/game-go':
+        specifier: workspace:*
+        version: link:../../packages/games/go
       '@brett-und-blatt/game-maexle':
         specifier: workspace:*
         version: link:../../packages/games/maexle
@@ -211,6 +226,9 @@ importers:
       '@brett-und-blatt/game-pairs':
         specifier: workspace:*
         version: link:../../packages/games/pairs
+      '@brett-und-blatt/game-quartett':
+        specifier: workspace:*
+        version: link:../../packages/games/quartett
       '@brett-und-blatt/game-reversi':
         specifier: workspace:*
         version: link:../../packages/games/reversi
@@ -292,6 +310,22 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1
 
+  packages/games/bingo:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+      uqr:
+        specifier: 0.1.3
+        version: 0.1.3
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
   packages/games/black-peter:
     dependencies:
       '@brett-und-blatt/engine':
@@ -321,6 +355,45 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1
 
+  packages/games/color-and-shape:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/color-sorter:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/dominoes:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
   packages/games/four-in-a-row:
     dependencies:
       '@brett-und-blatt/engine':
@@ -335,6 +408,19 @@ importers:
         version: 19.3.1
 
   packages/games/four-player-chess:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/go:
     dependencies:
       '@brett-und-blatt/engine':
         specifier: workspace:*
@@ -374,6 +460,19 @@ importers:
         version: 19.3.1
 
   packages/games/pairs:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/quartett:
     dependencies:
       '@brett-und-blatt/engine':
         specifier: workspace:*

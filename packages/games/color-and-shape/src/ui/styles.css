@@ -1,0 +1,145 @@
+.cs-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.cs-area {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 12rem;
+}
+
+.cs-scroll {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-surface) 70%, #2a7a5a 30%);
+}
+
+.cs-table {
+  margin: auto;
+}
+
+.cs-board {
+  height: 100%;
+}
+
+.cs-board .bub-cell {
+  padding: 3%;
+}
+
+.cs-tile {
+  width: 100%;
+  height: 100%;
+}
+
+.cs-tile-bg {
+  fill: #1d1d22;
+}
+
+.cs-pending .cs-tile-bg {
+  stroke: var(--color-accent);
+  stroke-width: 8;
+}
+
+.cs-ghost {
+  opacity: 0.45;
+}
+
+.cs-board .cs-last .cs-tile-bg {
+  stroke: #f4e04d;
+  stroke-width: 6;
+}
+
+.cs-dot {
+  width: 30%;
+  height: 30%;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.55);
+}
+
+.cs-rack {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.4rem;
+  max-width: 26rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.cs-rack-tile {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.cs-rack-tile[data-selected] {
+  border-color: var(--color-accent);
+  transform: translateY(-6px);
+}
+
+.cs-rack-tile[data-hint] {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 50%, transparent);
+}
+
+.cs-rack-tile:disabled {
+  cursor: default;
+}
+
+.cs-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cs-info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.cs-info small {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.cs-button {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cs-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.cs-primary {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink, #fff);
+}
+
+.cs-symbol {
+  width: 70%;
+  height: 70%;
+}

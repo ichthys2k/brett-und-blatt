@@ -9,6 +9,9 @@ export const PROTOCOL_VERSION = 1;
 /** Größte erlaubte Nachricht vom Browser in Zeichen – schützt den Server vor Datenmüll. */
 export const MAX_MESSAGE_LENGTH = 16_000;
 
+/** Höchstens so viele Plätze am Tisch, auch wenn ein Spiel mehr erlaubt (Bingo: bis 30). */
+export const MAX_SEATS = 30;
+
 /** Ein Platz in der Lobby: offen für einen Menschen, von einem Mitglied besetzt oder ein Bot. */
 export type LobbySeat = { kind: 'human'; memberId: string | null } | { kind: 'bot'; level: BotLevel };
 
@@ -104,6 +107,8 @@ export interface GameMessage {
   view: unknown;
   /** Nur die Züge, die der eigene Platz gerade machen darf. */
   legalMoves: unknown[];
+  /** Darf der eigene Platz aufgeben? (Nicht mehr, wenn er schon ausgeschieden ist.) */
+  canResign: boolean;
   current: SeatId[];
   away: SeatId[];
   thinking: SeatId[];
@@ -161,14 +166,14 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     case 'setTime':
       return isTime(m.time) ? { type: 'setTime', time: m.time } : null;
     case 'setSeatCount':
-      return isInt(m.count, 1, 20) ? { type: 'setSeatCount', count: m.count } : null;
+      return isInt(m.count, 1, MAX_SEATS) ? { type: 'setSeatCount', count: m.count } : null;
     case 'setSeat': {
-      if (!isInt(m.index, 0, 19)) return null;
+      if (!isInt(m.index, 0, MAX_SEATS - 1)) return null;
       if (m.seat === 'open') return { type: 'setSeat', index: m.index, seat: 'open' };
       return isRecord(m.seat) && isLevel(m.seat.bot) ? { type: 'setSeat', index: m.index, seat: { bot: m.seat.bot } } : null;
     }
     case 'takeSeat':
-      return isInt(m.index, 0, 19) ? { type: 'takeSeat', index: m.index } : null;
+      return isInt(m.index, 0, MAX_SEATS - 1) ? { type: 'takeSeat', index: m.index } : null;
     case 'kick':
       return isString(m.memberId, 20) ? { type: 'kick', memberId: m.memberId } : null;
     case 'move':

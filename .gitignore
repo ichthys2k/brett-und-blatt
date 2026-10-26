@@ -8,6 +8,9 @@ build/
 .vite/
 coverage/
 
+# Klänge aus dem privaten Repo (nur in der CI, siehe .github/workflows/ci.yml)
+klaenge-repo/
+
 # Cloudflare (lokaler Zustand und Geheimnisse)
 .wrangler/
 .dev.vars

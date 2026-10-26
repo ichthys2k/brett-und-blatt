@@ -69,7 +69,7 @@ Regeln für alle Module:
 | Offene Information, Zug um Zug | Mühle, Vier in einer Reihe, Reversi, Go | Züge prüfen |
 | Verdeckte Information, Zug um Zug | Skat, Quartett, Schiffe versenken, Mäxle, Paare finden | Geheimnisse hüten, jedem nur seine Sicht schicken |
 | Gleichzeitig | Bingo, Aufstellen bei Schiffe versenken | Reihenfolge der Eingänge festlegen |
-| Parallele Läufe mit gleichem Seed | Emoji-Sortierer, Solitaire-Wettrennen | Etappen abgleichen, Punkte vergleichen, per Replay prüfen |
+| Parallele Läufe mit gleichem Seed | Farbensortierer, Solitaire-Wettrennen | Etappen abgleichen, Punkte vergleichen, per Replay prüfen |
 | Kooperativ | Feuerwerk, Gedankenlesen | wie oben, Ergebnis gilt für alle |
 
 Ergänzende Bausteine der Spielleitung:
@@ -139,6 +139,14 @@ Was den Spielfluss außerdem beschleunigt: automatische Pflichtzüge, Vorab-Züg
 - **Kartenblätter:** Französisch (32, 48 und 52 Karten, wahlweise vierfarbig wie das Skat-Turnierbild), Deutsch/Bayerisch (32 und 24 Karten), später Württembergisch. Alle werden aus Daten als SVG erzeugt: scharf, klein, im Dunkelmodus nutzbar und lizenzrechtlich sauber.
 - **Barrierearm:** Farben immer zusätzlich mit Symbolen unterschieden, Koordinaten als Text, Vorlesen optional.
 
+## Klänge
+
+- **Ereignisse → Klänge:** Jedes Spiel nennt in `gameUi.sounds` nur Klangnamen zu seinen Ereignissen (z. B. `placed: 'stein-setzen'`). Sieg, Niederlage, Unentschieden, Zeitwarnung (eigene Uhr unter 10 s), Zeitablauf, online „Du bist dran“ und Emoji-Reaktionen vertont die Plattform selbst. Züge der Gegner klingen leiser, Zurücknehmen und Fortsetzen spielen nichts nach.
+- **Katalog:** `packages/ui/src/audio/catalog.json` ordnet jedem Klangnamen eine Datei zu, mit Ausschnitt (`start`/`end`), Lautheitsangleichung (`gain`) und ggf. Tonhöhe (`rate`). Abgespielt wird per Web Audio (`SoundPlayer`), mit leichter Zufallsvariation der Tonhöhe.
+- **Dateien:** Die Effekte hat Cornelius mit ElevenLabs (bezahlter Tarif „Creator“) erzeugt. Die Bedingungen von ElevenLabs erlauben die Nutzung im Spiel, aber keine Weitergabe als Einzeldateien oder Sammlung. Deshalb liegen sie **nicht** in diesem Repo und nicht unter CC BY-SA, sondern im privaten Repo `ichthys2k/brett-und-blatt-klaenge` (Ordner `effekte/`). `apps/web/klaenge.ts` baut beim Bauen nur die Dateien ein, die der Katalog braucht (höchstens 1,5 MB, werden vorab gespeichert); gesucht wird in `KLAENGE_DIR` oder neben dem Repo in `../brett-und-blatt-klaenge` (Ordner `effekte/` und `musik/`). Die CI holt das Repo mit dem Deploy-Key aus dem Secret `KLAENGE_DEPLOY_KEY`. Ohne die Dateien bleibt die App stumm.
+- **Einstellungen:** Lautsprecher-Knopf im Spiel (Ton an/aus, Lautstärke der Effekte und der Musik, Playlist, laufendes Stück mit Stern und „Weiter“, „Alle Stücke …“) und die Seite `#/ton` (Link auf der Startseite), je Gerät in `localStorage`. Standard: an, Effekte 70 %, Musik 40 %. Browser spielen Ton erst nach der ersten Berührung.
+- **Musik:** Playlists je Spielfamilie (Denkraum, Kartentisch, Patience, Spielabend) in `packages/ui/src/audio/music.json`, erstellt von Cornelius mit Suno (Pro), Lizenz CC BY-SA 4.0. Im Spiel wechselbar (Wahl je Spiel gemerkt); Stücke mit Stern laufen doppelt so oft, ausgeschlossene nie, wahlweise nur Sterne. Zufällige Reihenfolge ohne direkte Wiederholung, 2 s Überblenden. Eine leere Playlist spielt alle Stücke. Geladen wird nur das laufende und das nächste Stück (als Blob, damit iOS-Lautstärke und Offline-Speicher funktionieren); der Service Worker hält bis zu 8 Stücke im Speicher `musik`, vorab gespeichert wird keins. Musik läuft nur in Partien und beim Probehören, pausiert bei verborgener Seite.
+
 ## Datenschutz und Sicherheit
 
 Die Plattform richtet sich auch an Kinder, Schülerinnen, Schüler und Fremde. Deshalb:
@@ -147,7 +155,7 @@ Die Plattform richtet sich auch an Kinder, Schülerinnen, Schüler und Fremde. D
 - **Kein freier Chat:** nur Emoji-Reaktionen und vorgefertigte Schnellnachrichten („Gut gespielt!“).
 - **Spitznamen-Filter;** die Raumleitung kann Spieler entfernen. Öffentliche Räume mit Fremden kommen erst später und bekommen eine Melden-Funktion. Standard sind private Räume per Code.
 - **Daten in der EU** (Durable Objects mit `jurisdiction('eu')`), kurze Speicherdauer (inaktive Räume werden gelöscht), keine Tracker, keine Werbung.
-- **Impressum und Datenschutzerklärung** auf `spiele.lipponer.de` (`#/impressum`, `#/datenschutz`); das Impressum verweist auf die Anbieterangaben auf lipponer.de. Vor Online-Partien wird die Datenschutzerklärung um Cloudflare ergänzt.
+- **Impressum und Datenschutzerklärung** auf `spiele.lipponer.de` (`#/impressum`, `#/datenschutz`); das Impressum verweist auf die Anbieterangaben auf lipponer.de. Die Datenschutzerklärung nennt auch Cloudflare als Betreiber des Spieleservers.
 - **Schule:** Vor dem Einsatz im Unterricht mit dem schulischen Datenschutz abstimmen. Dank Datensparsamkeit ist das wenig Aufwand.
 - **Repo:** Keine Geheimnisse im Repo (Zugangsdaten nur als GitHub-Secrets), keine Schülerdaten in Code oder Issues. Commits laufen über die noreply-Adresse von GitHub.
 
@@ -155,6 +163,7 @@ Die Plattform richtet sich auch an Kinder, Schülerinnen, Schüler und Fremde. D
 
 - Spielmechaniken sind frei, Markennamen nicht. Darum heißen die Spiele z. B. „Vier in einer Reihe“, „Paare finden“ und „Reversi“. Für Uno, Kniffel, Malefiz, Monopoly, Catan, Scrabble, Qwirkle usw. braucht es eigene Namen.
 - Fremder Code und fremde Daten nur mit verträglicher Lizenz, z. B. Stockfish (GPL-3), Wortliste igerman98 (GPL-2/3). Die Quelle steht in `THIRD_PARTY.md`.
+- Soundeffekte aus ElevenLabs dürfen nur eingebaut genutzt, nicht als Dateien weitergegeben werden – darum im privaten Klang-Repo (siehe „Klänge“).
 - Musik und Tierlaute aus Emojistone sind mit bezahltem Suno-Abo erstellt und dürfen unter CC BY-SA ins Repo (Nennung: „Cornelius Lipponer, erstellt mit Suno“).
 - Poker nur mit Spielgeld; Mäxle mit Leben statt Getränken.
 
@@ -179,7 +188,7 @@ brett-und-blatt/
 **GitHub:**
 
 - **Actions** testen bei jedem Push. Für jedes Spiel laufen Hunderte Bot-gegen-Bot- und Zufallspartien mit; geprüft werden Absturzfreiheit, Spielende, Wiederholbarkeit, dass keine Geheimnisse in `playerView` landen und Partien mit ständigem Zeitablauf.
-- **Deployment:** Die Web-App läuft über GitHub Pages unter `spiele.lipponer.de`. Der Workflow „Prüfungen“ veröffentlicht nach jedem Push auf `main` – aber nur, wenn alle Prüfungen bestanden sind. Der Worker kommt später über Wrangler.
+- **Deployment:** Die Web-App läuft über GitHub Pages unter `spiele.lipponer.de`. Der Workflow „Prüfungen“ veröffentlicht nach jedem Push auf `main` – aber nur, wenn alle Prüfungen bestanden sind. Davor veröffentlicht derselbe Lauf den Spieleserver mit Wrangler auf Cloudflare (`brett-und-blatt.lipponer.workers.dev`); schlägt das fehl, bleibt auch die Web-App auf dem alten Stand.
 - **Mitmachen:** Issue-Vorlagen („Spielidee“, „Fehler gefunden“) und das Label „good first issue“ für kleine Spiele.
 
 ## Fahrplan
@@ -191,7 +200,7 @@ brett-und-blatt/
 | 3 Online | Cloudflare-Server, Räume, Wiedereinstieg, Bot-Ersatz, Server-Uhr, flüchtige Signale | Schiffe versenken, Quartett, Mäxle, Bingo (Klassen-Modus) |
 | 4 Großes Brett | Zoombares Brett, Byo-yomi, Auszählphase, Fernpartie, Bänkchen für Steine | Go, Domino, Farbe & Form (Qwirkle-artig) |
 | 5 Stichspiele | Stich-Kern, Serien-Rahmen, Reizen und Ansagen | Skat, Schafkopf, Doppelkopf |
-| 6 Eigene Spiele | Parallel-Modus mit Match-Engine | Emoji-Sortierer, Emojistone |
+| 6 Eigene Spiele | Parallel-Modus mit Match-Engine | Farbensortierer (früher Emoji-Sortierer, vorgezogen), Emojistone |
 | danach | | Scrabble, Uno-artig, Poker, Binokel, Dame, Mensch ärgere dich nicht und die Ideenliste |
 
 Die Pläne der einzelnen Spiele stehen in [`spiele/`](spiele/README.md).
