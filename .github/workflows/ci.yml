@@ -47,10 +47,10 @@ jobs:
           path: apps/web/dist
 
   # Spieleserver (Cloudflare-Worker) – vor der Web-App, damit die neue
-  # Web-App nie auf einen alten Server trifft. Braucht die Secrets
-  # CLOUDFLARE_API_TOKEN (nur „Workers Scripts: Bearbeiten“) und
-  # CLOUDFLARE_ACCOUNT_ID. Fehlen sie, schlägt der Schritt fehl und die
-  # Web-App bleibt auf dem alten Stand.
+  # Web-App nie auf einen alten Server trifft. Braucht das Secret
+  # CLOUDFLARE_API_TOKEN (nur „Workers Scripts: Bearbeiten“); die
+  # Konto-ID steht in apps/server/wrangler.jsonc. Fehlt das Secret,
+  # schlägt der Schritt fehl und die Web-App bleibt auf dem alten Stand.
   deploy-server:
     name: Spieleserver auf Cloudflare veröffentlichen
     needs: check
@@ -77,7 +77,6 @@ jobs:
         run: pnpm --filter @brett-und-blatt/server run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_SEND_METRICS: 'false'
 
   # Veröffentlicht wird nur, was alle Prüfungen bestanden hat und erst,
