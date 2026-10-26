@@ -1,0 +1,510 @@
+{
+  "id": "bibel",
+  "name": "Biblische Personen",
+  "emoji": "📖",
+  "license": "CC-BY-SA-4.0",
+  "status": "Entwurf",
+  "description": "Von Abraham bis Paulus.",
+  "note": "Verse, Kapitel und Bücher sind gezählt in der gemeinfreien Menge-Bibel (1939) ohne Apokryphen, Reihenfolge der Bücher wie in der Lutherbibel. Gezählt wird jeder Vers mit dem Namen, auch wenn eine andere Person gleichen Namens gemeint ist (z. B. Saul in 1. Mose 36). „Lebte um“ ist eine grobe, übliche Datierung; früher gewinnt.",
+  "properties": [
+    {
+      "id": "verses",
+      "label": "Verse",
+      "unit": "",
+      "higherWins": true
+    },
+    {
+      "id": "chapters",
+      "label": "Kapitel",
+      "unit": "",
+      "higherWins": true
+    },
+    {
+      "id": "books",
+      "label": "Bücher",
+      "unit": "",
+      "higherWins": true
+    },
+    {
+      "id": "first",
+      "label": "Erste Erwähnung",
+      "unit": "",
+      "higherWins": false,
+      "valueLabels": {
+        "1": "1. Mose",
+        "2": "2. Mose",
+        "7": "Richter",
+        "8": "Rut",
+        "9": "1. Samuel",
+        "10": "2. Samuel",
+        "11": "1. Könige",
+        "12": "2. Könige",
+        "14": "2. Chronik",
+        "17": "Ester",
+        "40": "Matthäus",
+        "42": "Lukas",
+        "43": "Johannes",
+        "44": "Apostelgeschichte"
+      }
+    },
+    {
+      "id": "lived",
+      "label": "Lebte um",
+      "unit": "",
+      "higherWins": false,
+      "format": "year"
+    }
+  ],
+  "groups": [
+    {
+      "id": "A",
+      "name": "Erzeltern"
+    },
+    {
+      "id": "B",
+      "name": "Auszug aus Ägypten"
+    },
+    {
+      "id": "C",
+      "name": "Könige"
+    },
+    {
+      "id": "D",
+      "name": "Propheten"
+    },
+    {
+      "id": "E",
+      "name": "Frauen im Alten Testament"
+    },
+    {
+      "id": "F",
+      "name": "Jünger Jesu"
+    },
+    {
+      "id": "G",
+      "name": "Paulus und seine Begleiter"
+    },
+    {
+      "id": "H",
+      "name": "Begegnungen mit Jesus"
+    }
+  ],
+  "cards": [
+    {
+      "id": "A1",
+      "name": "Abraham",
+      "emoji": "⭐",
+      "values": {
+        "verses": 280,
+        "chapters": 82,
+        "books": 27,
+        "first": 1,
+        "lived": -1800
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "A2",
+      "name": "Sara",
+      "emoji": "👵",
+      "values": {
+        "verses": 49,
+        "chapters": 17,
+        "books": 6,
+        "first": 1,
+        "lived": -1800
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "A3",
+      "name": "Isaak",
+      "emoji": "🐏",
+      "values": {
+        "verses": 122,
+        "chapters": 52,
+        "books": 21,
+        "first": 1,
+        "lived": -1750
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "A4",
+      "name": "Jakob",
+      "emoji": "🪜",
+      "values": {
+        "verses": 344,
+        "chapters": 137,
+        "books": 29,
+        "first": 1,
+        "lived": -1700
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "B1",
+      "name": "Mose",
+      "emoji": "📜",
+      "values": {
+        "verses": 775,
+        "chapters": 199,
+        "books": 31,
+        "first": 2,
+        "lived": -1250
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "B2",
+      "name": "Aaron",
+      "emoji": "🪄",
+      "values": {
+        "verses": 333,
+        "chapters": 101,
+        "books": 16,
+        "first": 2,
+        "lived": -1250
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "B3",
+      "name": "Mirjam",
+      "emoji": "🥁",
+      "values": {
+        "verses": 14,
+        "chapters": 8,
+        "books": 5,
+        "first": 2,
+        "lived": -1250
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "B4",
+      "name": "Josua",
+      "emoji": "🎺",
+      "values": {
+        "verses": 203,
+        "chapters": 52,
+        "books": 15,
+        "first": 2,
+        "lived": -1200
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "C1",
+      "name": "Saul",
+      "emoji": "👑",
+      "values": {
+        "verses": 334,
+        "chapters": 60,
+        "books": 9,
+        "first": 9,
+        "lived": -1020
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "C2",
+      "name": "David",
+      "emoji": "🎵",
+      "values": {
+        "verses": 932,
+        "chapters": 251,
+        "books": 28,
+        "first": 8,
+        "lived": -1000
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "C3",
+      "name": "Salomo",
+      "emoji": "🏛️",
+      "values": {
+        "verses": 276,
+        "chapters": 68,
+        "books": 15,
+        "first": 10,
+        "lived": -960
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "C4",
+      "name": "Hiskia",
+      "emoji": "🛡️",
+      "values": {
+        "verses": 125,
+        "chapters": 28,
+        "books": 12,
+        "first": 12,
+        "lived": -710
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "D1",
+      "name": "Elia",
+      "emoji": "🔥",
+      "values": {
+        "verses": 96,
+        "chapters": 27,
+        "books": 12,
+        "first": 11,
+        "lived": -860
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "D2",
+      "name": "Elisa",
+      "emoji": "🧥",
+      "values": {
+        "verses": 65,
+        "chapters": 14,
+        "books": 6,
+        "first": 11,
+        "lived": -840
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "D3",
+      "name": "Jesaja",
+      "emoji": "🕊️",
+      "values": {
+        "verses": 61,
+        "chapters": 34,
+        "books": 12,
+        "first": 12,
+        "lived": -730
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "D4",
+      "name": "Jeremia",
+      "emoji": "😢",
+      "values": {
+        "verses": 138,
+        "chapters": 47,
+        "books": 8,
+        "first": 14,
+        "lived": -600
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "E1",
+      "name": "Rut",
+      "emoji": "🌾",
+      "values": {
+        "verses": 14,
+        "chapters": 5,
+        "books": 2,
+        "first": 8,
+        "lived": -1100
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "E2",
+      "name": "Ester",
+      "emoji": "👸",
+      "values": {
+        "verses": 44,
+        "chapters": 7,
+        "books": 1,
+        "first": 17,
+        "lived": -480
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "E3",
+      "name": "Debora",
+      "emoji": "🌴",
+      "values": {
+        "verses": 10,
+        "chapters": 3,
+        "books": 2,
+        "first": 7,
+        "lived": -1150
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "E4",
+      "name": "Hanna",
+      "emoji": "🙏",
+      "values": {
+        "verses": 16,
+        "chapters": 6,
+        "books": 4,
+        "first": 9,
+        "lived": -1070
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "F1",
+      "name": "Petrus",
+      "emoji": "🗝️",
+      "values": {
+        "verses": 166,
+        "chapters": 52,
+        "books": 9,
+        "first": 40,
+        "lived": 30
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "F2",
+      "name": "Andreas",
+      "emoji": "🎣",
+      "values": {
+        "verses": 12,
+        "chapters": 10,
+        "books": 5,
+        "first": 40,
+        "lived": 30
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "F3",
+      "name": "Thomas",
+      "emoji": "✋",
+      "values": {
+        "verses": 11,
+        "chapters": 8,
+        "books": 5,
+        "first": 40,
+        "lived": 30
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "F4",
+      "name": "Matthäus",
+      "emoji": "💰",
+      "values": {
+        "verses": 6,
+        "chapters": 5,
+        "books": 4,
+        "first": 40,
+        "lived": 30
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "G1",
+      "name": "Paulus",
+      "emoji": "✉️",
+      "values": {
+        "verses": 186,
+        "chapters": 43,
+        "books": 15,
+        "first": 44,
+        "lived": 50
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "G2",
+      "name": "Barnabas",
+      "emoji": "🤝",
+      "values": {
+        "verses": 29,
+        "chapters": 10,
+        "books": 4,
+        "first": 44,
+        "lived": 45
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "G3",
+      "name": "Timotheus",
+      "emoji": "📖",
+      "values": {
+        "verses": 24,
+        "chapters": 20,
+        "books": 12,
+        "first": 44,
+        "lived": 55
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "G4",
+      "name": "Silas",
+      "emoji": "🎶",
+      "values": {
+        "verses": 18,
+        "chapters": 8,
+        "books": 5,
+        "first": 44,
+        "lived": 50
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "H1",
+      "name": "Maria Magdalena",
+      "emoji": "🌅",
+      "values": {
+        "verses": 12,
+        "chapters": 8,
+        "books": 4,
+        "first": 40,
+        "lived": 30
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "H2",
+      "name": "Marta",
+      "emoji": "🍲",
+      "values": {
+        "verses": 12,
+        "chapters": 3,
+        "books": 2,
+        "first": 42,
+        "lived": 30
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "H3",
+      "name": "Zachäus",
+      "emoji": "🌳",
+      "values": {
+        "verses": 3,
+        "chapters": 1,
+        "books": 1,
+        "first": 42,
+        "lived": 30
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    },
+    {
+      "id": "H4",
+      "name": "Nikodemus",
+      "emoji": "🌙",
+      "values": {
+        "verses": 5,
+        "chapters": 3,
+        "books": 1,
+        "first": 43,
+        "lived": 30
+      },
+      "source": "Menge-Bibel 1939 (gemeinfrei), Text: https://github.com/scrollmapper/bible_databases"
+    }
+  ]
+}

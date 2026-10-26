@@ -1,0 +1,494 @@
+{
+  "id": "dinosaurier",
+  "name": "Dinosaurier",
+  "emoji": "🦕",
+  "license": "CC-BY-SA-4.0",
+  "status": "Entwurf",
+  "description": "Riesen, Räuber und Panzerträger aus der Urzeit.",
+  "note": "Länge, Gewicht und Höhe sind Schätzwerte der Forschung und schwanken je nach Quelle stark. Höhe: Hüft- bzw. Rückenhöhe, bei Langhälsen Kopfhöhe. Erster Fund: Jahr der ersten Knochen, die heute dieser Gattung zugeordnet werden – früher gewinnt.",
+  "properties": [
+    {
+      "id": "length",
+      "label": "Länge",
+      "unit": "m",
+      "higherWins": true
+    },
+    {
+      "id": "weight",
+      "label": "Gewicht",
+      "unit": "kg",
+      "higherWins": true
+    },
+    {
+      "id": "height",
+      "label": "Höhe",
+      "unit": "m",
+      "higherWins": true
+    },
+    {
+      "id": "age",
+      "label": "Lebte vor",
+      "unit": "Mio. Jahren",
+      "higherWins": true
+    },
+    {
+      "id": "found",
+      "label": "Erster Fund",
+      "unit": "",
+      "higherWins": false,
+      "format": "plain"
+    }
+  ],
+  "groups": [
+    {
+      "id": "A",
+      "name": "Große Raubsaurier"
+    },
+    {
+      "id": "B",
+      "name": "Kleine Räuber"
+    },
+    {
+      "id": "C",
+      "name": "Langhälse"
+    },
+    {
+      "id": "D",
+      "name": "Hörner und Kuppeln"
+    },
+    {
+      "id": "E",
+      "name": "Panzer und Platten"
+    },
+    {
+      "id": "F",
+      "name": "Entenschnäbel und Verwandte"
+    },
+    {
+      "id": "G",
+      "name": "Mittlere Raubsaurier"
+    },
+    {
+      "id": "H",
+      "name": "Frühe Saurier und Urvogel"
+    }
+  ],
+  "cards": [
+    {
+      "id": "A1",
+      "name": "Tyrannosaurus",
+      "emoji": "🦖",
+      "values": {
+        "length": 12.3,
+        "weight": 8400,
+        "height": 4,
+        "age": 67,
+        "found": 1902
+      },
+      "source": "https://de.wikipedia.org/wiki/Tyrannosaurus"
+    },
+    {
+      "id": "A2",
+      "name": "Spinosaurus",
+      "emoji": "🦖",
+      "values": {
+        "length": 14,
+        "weight": 7400,
+        "height": 4,
+        "age": 97,
+        "found": 1912
+      },
+      "source": "https://de.wikipedia.org/wiki/Spinosaurus"
+    },
+    {
+      "id": "A3",
+      "name": "Giganotosaurus",
+      "emoji": "🦖",
+      "values": {
+        "length": 12.5,
+        "weight": 8000,
+        "height": 4,
+        "age": 98,
+        "found": 1993
+      },
+      "source": "https://de.wikipedia.org/wiki/Giganotosaurus"
+    },
+    {
+      "id": "A4",
+      "name": "Allosaurus",
+      "emoji": "🦖",
+      "values": {
+        "length": 9.5,
+        "weight": 2300,
+        "height": 3,
+        "age": 150,
+        "found": 1877
+      },
+      "source": "https://de.wikipedia.org/wiki/Allosaurus"
+    },
+    {
+      "id": "B1",
+      "name": "Velociraptor",
+      "emoji": "🦖",
+      "values": {
+        "length": 2,
+        "weight": 15,
+        "height": 0.5,
+        "age": 75,
+        "found": 1923
+      },
+      "source": "https://de.wikipedia.org/wiki/Velociraptor"
+    },
+    {
+      "id": "B2",
+      "name": "Deinonychus",
+      "emoji": "🦖",
+      "values": {
+        "length": 3.4,
+        "weight": 73,
+        "height": 0.9,
+        "age": 115,
+        "found": 1931
+      },
+      "source": "https://de.wikipedia.org/wiki/Deinonychus"
+    },
+    {
+      "id": "B3",
+      "name": "Compsognathus",
+      "emoji": "🦖",
+      "values": {
+        "length": 1,
+        "weight": 3,
+        "height": 0.3,
+        "age": 150,
+        "found": 1859
+      },
+      "source": "https://de.wikipedia.org/wiki/Compsognathus"
+    },
+    {
+      "id": "B4",
+      "name": "Troodon",
+      "emoji": "🦖",
+      "values": {
+        "length": 2.4,
+        "weight": 50,
+        "height": 1,
+        "age": 76,
+        "found": 1855
+      },
+      "source": "https://de.wikipedia.org/wiki/Troodon"
+    },
+    {
+      "id": "C1",
+      "name": "Brachiosaurus",
+      "emoji": "🦕",
+      "values": {
+        "length": 26,
+        "weight": 40000,
+        "height": 12,
+        "age": 153,
+        "found": 1900
+      },
+      "source": "https://de.wikipedia.org/wiki/Brachiosaurus"
+    },
+    {
+      "id": "C2",
+      "name": "Diplodocus",
+      "emoji": "🦕",
+      "values": {
+        "length": 26,
+        "weight": 15000,
+        "height": 5,
+        "age": 152,
+        "found": 1877
+      },
+      "source": "https://de.wikipedia.org/wiki/Diplodocus"
+    },
+    {
+      "id": "C3",
+      "name": "Argentinosaurus",
+      "emoji": "🦕",
+      "values": {
+        "length": 35,
+        "weight": 70000,
+        "height": 7,
+        "age": 95,
+        "found": 1987
+      },
+      "source": "https://de.wikipedia.org/wiki/Argentinosaurus"
+    },
+    {
+      "id": "C4",
+      "name": "Apatosaurus",
+      "emoji": "🦕",
+      "values": {
+        "length": 22,
+        "weight": 23000,
+        "height": 5,
+        "age": 152,
+        "found": 1877
+      },
+      "source": "https://de.wikipedia.org/wiki/Apatosaurus"
+    },
+    {
+      "id": "D1",
+      "name": "Triceratops",
+      "emoji": "🦏",
+      "values": {
+        "length": 9,
+        "weight": 9000,
+        "height": 3,
+        "age": 67,
+        "found": 1887
+      },
+      "source": "https://de.wikipedia.org/wiki/Triceratops"
+    },
+    {
+      "id": "D2",
+      "name": "Styracosaurus",
+      "emoji": "🦏",
+      "values": {
+        "length": 5.5,
+        "weight": 2700,
+        "height": 1.8,
+        "age": 75,
+        "found": 1913
+      },
+      "source": "https://de.wikipedia.org/wiki/Styracosaurus"
+    },
+    {
+      "id": "D3",
+      "name": "Protoceratops",
+      "emoji": "🦏",
+      "values": {
+        "length": 1.8,
+        "weight": 85,
+        "height": 0.6,
+        "age": 72,
+        "found": 1922
+      },
+      "source": "https://de.wikipedia.org/wiki/Protoceratops"
+    },
+    {
+      "id": "D4",
+      "name": "Pachycephalosaurus",
+      "emoji": "🪖",
+      "values": {
+        "length": 4.5,
+        "weight": 450,
+        "height": 1.4,
+        "age": 67,
+        "found": 1940
+      },
+      "source": "https://de.wikipedia.org/wiki/Pachycephalosaurus"
+    },
+    {
+      "id": "E1",
+      "name": "Stegosaurus",
+      "emoji": "🦕",
+      "values": {
+        "length": 9,
+        "weight": 5000,
+        "height": 4,
+        "age": 152,
+        "found": 1877
+      },
+      "source": "https://de.wikipedia.org/wiki/Stegosaurus"
+    },
+    {
+      "id": "E2",
+      "name": "Ankylosaurus",
+      "emoji": "🛡️",
+      "values": {
+        "length": 8,
+        "weight": 6000,
+        "height": 1.7,
+        "age": 67,
+        "found": 1906
+      },
+      "source": "https://de.wikipedia.org/wiki/Ankylosaurus"
+    },
+    {
+      "id": "E3",
+      "name": "Kentrosaurus",
+      "emoji": "🦕",
+      "values": {
+        "length": 4.5,
+        "weight": 1100,
+        "height": 1.5,
+        "age": 152,
+        "found": 1909
+      },
+      "source": "https://de.wikipedia.org/wiki/Kentrosaurus"
+    },
+    {
+      "id": "E4",
+      "name": "Euoplocephalus",
+      "emoji": "🛡️",
+      "values": {
+        "length": 5.5,
+        "weight": 2500,
+        "height": 1.5,
+        "age": 76,
+        "found": 1897
+      },
+      "source": "https://de.wikipedia.org/wiki/Euoplocephalus"
+    },
+    {
+      "id": "F1",
+      "name": "Parasaurolophus",
+      "emoji": "🦕",
+      "values": {
+        "length": 9.5,
+        "weight": 2500,
+        "height": 4,
+        "age": 75,
+        "found": 1920
+      },
+      "source": "https://de.wikipedia.org/wiki/Parasaurolophus"
+    },
+    {
+      "id": "F2",
+      "name": "Iguanodon",
+      "emoji": "🦕",
+      "values": {
+        "length": 10,
+        "weight": 3500,
+        "height": 3,
+        "age": 125,
+        "found": 1822
+      },
+      "source": "https://de.wikipedia.org/wiki/Iguanodon"
+    },
+    {
+      "id": "F3",
+      "name": "Edmontosaurus",
+      "emoji": "🦕",
+      "values": {
+        "length": 12,
+        "weight": 4000,
+        "height": 3.5,
+        "age": 67,
+        "found": 1892
+      },
+      "source": "https://de.wikipedia.org/wiki/Edmontosaurus"
+    },
+    {
+      "id": "F4",
+      "name": "Maiasaura",
+      "emoji": "🦕",
+      "values": {
+        "length": 9,
+        "weight": 3000,
+        "height": 2.5,
+        "age": 76,
+        "found": 1978
+      },
+      "source": "https://de.wikipedia.org/wiki/Maiasaura"
+    },
+    {
+      "id": "G1",
+      "name": "Carnotaurus",
+      "emoji": "🦖",
+      "values": {
+        "length": 7.5,
+        "weight": 1500,
+        "height": 2.5,
+        "age": 71,
+        "found": 1984
+      },
+      "source": "https://de.wikipedia.org/wiki/Carnotaurus"
+    },
+    {
+      "id": "G2",
+      "name": "Baryonyx",
+      "emoji": "🦖",
+      "values": {
+        "length": 9,
+        "weight": 1700,
+        "height": 2.5,
+        "age": 125,
+        "found": 1983
+      },
+      "source": "https://de.wikipedia.org/wiki/Baryonyx"
+    },
+    {
+      "id": "G3",
+      "name": "Dilophosaurus",
+      "emoji": "🦖",
+      "values": {
+        "length": 7,
+        "weight": 400,
+        "height": 2,
+        "age": 193,
+        "found": 1942
+      },
+      "source": "https://de.wikipedia.org/wiki/Dilophosaurus"
+    },
+    {
+      "id": "G4",
+      "name": "Ceratosaurus",
+      "emoji": "🦖",
+      "values": {
+        "length": 6,
+        "weight": 600,
+        "height": 2,
+        "age": 152,
+        "found": 1883
+      },
+      "source": "https://de.wikipedia.org/wiki/Ceratosaurus"
+    },
+    {
+      "id": "H1",
+      "name": "Archaeopteryx",
+      "emoji": "🪶",
+      "values": {
+        "length": 0.5,
+        "weight": 1,
+        "height": 0.3,
+        "age": 150,
+        "found": 1861
+      },
+      "source": "https://de.wikipedia.org/wiki/Archaeopteryx"
+    },
+    {
+      "id": "H2",
+      "name": "Plateosaurus",
+      "emoji": "🦕",
+      "values": {
+        "length": 8,
+        "weight": 700,
+        "height": 2,
+        "age": 214,
+        "found": 1834
+      },
+      "source": "https://de.wikipedia.org/wiki/Plateosaurus"
+    },
+    {
+      "id": "H3",
+      "name": "Eoraptor",
+      "emoji": "🦖",
+      "values": {
+        "length": 1,
+        "weight": 10,
+        "height": 0.5,
+        "age": 231,
+        "found": 1991
+      },
+      "source": "https://de.wikipedia.org/wiki/Eoraptor"
+    },
+    {
+      "id": "H4",
+      "name": "Coelophysis",
+      "emoji": "🦖",
+      "values": {
+        "length": 3,
+        "weight": 20,
+        "height": 1,
+        "age": 205,
+        "found": 1881
+      },
+      "source": "https://de.wikipedia.org/wiki/Coelophysis"
+    }
+  ]
+}

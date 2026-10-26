@@ -90,6 +90,40 @@ describe('Aufgeben', () => {
   });
 });
 
+describe('Zeitablauf mit Schachuhr', () => {
+  function clocked(mode: 'ffa' | 'teams') {
+    let time = 0;
+    const config: SessionConfig = {
+      gameId: 'four-player-chess',
+      seats: ['Rot', 'Blau', 'Gelb', 'Grün'].map((name) => ({ kind: 'human' as const, name })),
+      options: { mode },
+      seed: 'zeit',
+      time: { kind: 'chessClock', baseMs: 1_000, incrementMs: 0 },
+    };
+    const session = new LocalSession(gameModule, config, { botRunner: inlineBotRunner([gameModule]), now: () => time });
+    return { session, advance: (ms: number) => (time += ms) };
+  }
+
+  it('lässt im Modus „Jeder gegen jeden“ nur die eigene Farbe ausscheiden', () => {
+    const { session, advance } = clocked('ffa');
+    advance(1_500);
+    session.tick();
+    expect(session.result).toBeNull();
+    expect(session.forfeit).toBeNull();
+    const state = session.state as FourChessState;
+    expect(state.out.r).toBe('time');
+    expect(session.currentSeats()).toEqual([1]);
+    expect(session.log.at(-1)).toMatchObject({ actor: 0, cause: 'timeout', move: { t: 'resign', p: 'r', time: true } });
+  });
+
+  it('im Teammodus verliert das ganze Team wegen Zeit', () => {
+    const { session, advance } = clocked('teams');
+    advance(1_500);
+    session.tick();
+    expect(session.result).toMatchObject({ kind: 'win', winners: [1, 3], reason: 'time' });
+  });
+});
+
 describe('Vertrag für Spielmodule', () => {
   for (const check of gameContractChecks(gameModule, { randomGames: 2, botMoveLimit: 40, maxMoves: 4000 })) test(check.name, check.run);
 });
