@@ -2,6 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { klaenge } from './klaenge.ts';
 
 export default defineConfig({
   // Unter einer Unteradresse (z. B. GitHub Pages) mit BASE_PATH=/brett-und-blatt/ bauen.
@@ -9,6 +10,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    klaenge(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
@@ -30,8 +32,8 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Alles vorab speichern: Solo und Hot-Seat funktionieren dann ohne Internet.
-        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        // Alles vorab speichern: Solo und Hot-Seat funktionieren dann ohne Internet (Klänge zusammen etwa 1 MB).
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,mp3}'],
         navigateFallback: 'index.html',
       },
     }),

@@ -34,6 +34,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - Monorepo mit pnpm-Workspaces: `apps/web` (React 19, Vite 8, Tailwind 4, PWA), `apps/server` (Cloudflare-Worker, dünner Adapter um `packages/online`), `packages/engine` (Spielmodul-Schnittstelle, Zufall, lokale Spielleitung, Uhren, allgemeine Bots, Vertragsprüfungen), `packages/online` (Online-Spielleitung ohne Anbieterbindung: Raum, Nachrichtenformat, Raumcodes), `packages/ui` (Baukasten: GridBoard, NetBoard, FitBox, PlayerChip, Karten), `packages/games/<id>` (ein Ordner pro Spiel), `content/` (Inhaltspakete, z. B. Paare).
 - **Spielmodul** `GameModule<S, M, V>`: `info`, `options` (optional mit `when` für bedingte Anzeige), `timePresets`, `setup`, `currentPlayers`, `legalMoves`, `applyMove`, `playerView`, `result`, `bots` u. a. Spielstand ist reines JSON, Zufall nur über den Seed-Rng.
 - **Jedes Spiel** hat `src/meta.ts` (mit Pflicht-Kurzanleitung `howToPlay`), `src/rules.ts`, `src/index.ts`, `src/ui/index.tsx` und `test/<id>.test.ts` mit den allgemeinen Prüfungen `gameContractChecks`. Die Web-App findet Spiele automatisch; **Ordnername = `id`**. **Mehrspieler-Spiele (ab 2 Plätzen) zusätzlich im Server eintragen:** in `apps/server/src/games.ts` (`onlineGames`) und als Abhängigkeit in `apps/server/package.json`, danach `corepack pnpm install` – sonst schlägt `apps/server/test/games.test.ts` fehl. Bei einem eigenen Bot ggf. Schrittweite in `apps/server/src/bots.ts` (`BOT_STEP_MS`) messen.
+- **Klänge:** `gameUi.sounds` (Ereignis → Klangname), Katalog `packages/ui/src/audio/catalog.json`, Abspielen über `SoundPlayer` (`apps/web/src/lib/sound.ts`, `useGameSounds.ts`). Die MP3s liegen im **privaten** Repo `ichthys2k/brett-und-blatt-klaenge` (ElevenLabs-Lizenz: nicht ins öffentliche Repo kopieren!); `apps/web/klaenge.ts` baut nur die benötigten ein (aus `KLAENGE_DIR` oder `../brett-und-blatt-klaenge/effekte`), die CI holt sie per Secret `KLAENGE_DEPLOY_KEY`. Neue Klänge nur nach Auswahl durch Cornelius.
 - Bots laufen im Web Worker; Tipp-Knopf = Standard-Bot auf Stufe „schwer“ mit 1,5 s Budget.
 - Fremdcode: `chess.js` (BSD-2-Clause) – Lizenztext in `THIRD_PARTY.md`. Neue Fremdbibliotheken dort ergänzen.
 
@@ -54,7 +55,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Bekannte offene Punkte:**
 - Solitaire: lösbare Spiele für Spider und Pyramide fehlen.
-- Soundeffekte: kommen später – Cornelius sucht passende Effekte aus und gibt sie vor. Nicht eigenmächtig einbauen.
+- Musik: Playlists je Spielfamilie mit Suno, Stern/Ausschließen in den Einstellungen – kommt, sobald Cornelius die Stücke erzeugt hat (Konzept: Abschnitt „Klänge“).
 
 ## Nächste Schritte
 

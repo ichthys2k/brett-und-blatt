@@ -86,6 +86,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<UltimateState, UltimateMove> = {
   Board,
   SeatSymbol,
+  sounds: { placed: 'stein-setzen', boardWon: 'muehle' },
   seatLabel: (seat) => LABELS[seat] ?? `Platz ${seat + 1}`,
   seatDetail: (view, seat) => {
     const won = view.boards.filter((owner) => owner === seat).length;

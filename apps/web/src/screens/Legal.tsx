@@ -48,6 +48,10 @@ export function Impressum() {
         Der Quellcode ist öffentlich: <ExternalLink href={SOURCE_URL}>github.com/ichthys2k/brett-und-blatt</ExternalLink>. Er steht unter der GNU Affero
         General Public License 3.0, Grafiken, Sounds und andere Inhalte stehen unter der Lizenz CC BY-SA 4.0, soweit nicht anders angegeben.
       </p>
+      <p>
+        Die Soundeffekte hat Cornelius Lipponer mit ElevenLabs erstellt. Sie sind von der freien Lizenz ausgenommen (alle Rechte vorbehalten) und liegen
+        nicht im öffentlichen Quellcode.
+      </p>
       <h2>Hinweise und Fehler</h2>
       <p>Fehler und Ideen kannst du als „Issue“ auf GitHub melden oder per E-Mail schicken (Adresse siehe Impressum).</p>
       <p>
@@ -116,6 +120,7 @@ export function Datenschutz() {
       <ul>
         <li>die laufende Partie mit Spielernamen, Einstellungen und Zügen,</li>
         <li>die zuletzt gewählten Einstellungen je Spiel,</li>
+        <li>ob der Ton an ist und wie laut,</li>
         <li>für Online-Partien deinen Spitznamen, dein Emoji-Bild und die zufällige Geräte-Kennung.</li>
       </ul>
       <p>

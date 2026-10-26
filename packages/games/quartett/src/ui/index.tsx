@@ -379,6 +379,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<QuartettState, QuartettMove> = {
   Board,
   SeatSymbol,
+  sounds: { trick: 'karte-legen', drew: 'karte-ziehen', asked: (event) => (event.got ? 'karte-ziehen' : 'kein-paar'), quartet: 'paar' },
   seatLabel: (seat) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) => {
     if (view.mode === 'trump') {

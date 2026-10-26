@@ -13,8 +13,21 @@ jobs:
   check:
     name: Typprüfung, Tests und Build
     runs-on: ubuntu-latest
+    env:
+      # Klänge liegen im privaten Repo brett-und-blatt-klaenge (ElevenLabs-Lizenz).
+      # Ohne das Secret KLAENGE_DEPLOY_KEY (z. B. bei PRs aus Forks) wird die App stumm gebaut.
+      HAS_KLAENGE: ${{ secrets.KLAENGE_DEPLOY_KEY != '' }}
     steps:
       - uses: actions/checkout@v7
+
+      - name: Klänge aus dem privaten Repo holen
+        if: env.HAS_KLAENGE == 'true'
+        uses: actions/checkout@v7
+        with:
+          repository: ichthys2k/brett-und-blatt-klaenge
+          ssh-key: ${{ secrets.KLAENGE_DEPLOY_KEY }}
+          path: klaenge-repo
+          persist-credentials: false
 
       # pnpm in der Version aus package.json („packageManager“)
       - uses: pnpm/action-setup@v6
@@ -39,6 +52,8 @@ jobs:
         run: pnpm build
         env:
           VITE_GAME_SERVER: ${{ vars.GAME_SERVER }}
+          # Gesetzt, wenn die Klänge geholt wurden – dann bricht der Build ab, falls eine Datei fehlt.
+          KLAENGE_DIR: ${{ env.HAS_KLAENGE == 'true' && format('{0}/klaenge-repo/effekte', github.workspace) || '' }}
 
       - name: Gebaute App für GitHub Pages bereitstellen
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

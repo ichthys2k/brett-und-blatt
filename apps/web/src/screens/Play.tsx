@@ -3,11 +3,13 @@ import { PlayerChip } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Button } from '../components/controls';
 import { HowToOverlay } from '../components/HowTo';
+import { SoundControl } from '../components/SoundControl';
 import { t } from '../i18n';
 import { getActiveGame, resumeGame, saveProgress, startGame, type ActiveGame } from '../lib/activeGame';
 import { levelLabel } from '../lib/format';
 import type { LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
+import { useGameSounds } from '../lib/useGameSounds';
 
 export function Play() {
   const [active, setActive] = useState<ActiveGame | null>(() => getActiveGame());
@@ -98,6 +100,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       }),
     [session],
   );
+
+  useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined);
 
   // Uhren prüfen und anzeigen.
   useEffect(() => {
@@ -194,6 +198,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           <Button variant="ghost" className="ml-auto px-3 text-lg" aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
             ?
           </Button>
+          <SoundControl />
           {session.timed && !result && !online && (
             <Button
               variant="ghost"
