@@ -46,10 +46,45 @@ jobs:
         with:
           path: apps/web/dist
 
-  # Veröffentlicht wird nur, was alle Prüfungen bestanden hat.
+  # Spieleserver (Cloudflare-Worker) – vor der Web-App, damit die neue
+  # Web-App nie auf einen alten Server trifft. Braucht die Secrets
+  # CLOUDFLARE_API_TOKEN (nur „Workers Scripts: Bearbeiten“) und
+  # CLOUDFLARE_ACCOUNT_ID. Fehlen sie, schlägt der Schritt fehl und die
+  # Web-App bleibt auf dem alten Stand.
+  deploy-server:
+    name: Spieleserver auf Cloudflare veröffentlichen
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cloudflare-worker
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Abhängigkeiten installieren
+        run: pnpm install --frozen-lockfile
+
+      # „run deploy“ – ohne „run“ greift pnpms eingebauter deploy-Befehl.
+      - name: Worker veröffentlichen
+        run: pnpm --filter @brett-und-blatt/server run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: 'false'
+
+  # Veröffentlicht wird nur, was alle Prüfungen bestanden hat und erst,
+  # wenn der passende Spieleserver läuft.
   deploy:
     name: Veröffentlichen auf spiele.lipponer.de
-    needs: check
+    needs: [check, deploy-server]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
