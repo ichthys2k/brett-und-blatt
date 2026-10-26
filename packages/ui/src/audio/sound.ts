@@ -51,9 +51,11 @@ export interface SoundSettings {
   muted: boolean;
   /** Lautstärke der Effekte, 0 bis 1. */
   effects: number;
+  /** Lautstärke der Musik, 0 bis 1 (spielt der MusicPlayer). */
+  music: number;
 }
 
-export const DEFAULT_SOUND_SETTINGS: SoundSettings = { muted: false, effects: 0.7 };
+export const DEFAULT_SOUND_SETTINGS: SoundSettings = { muted: false, effects: 0.7, music: 0.4 };
 
 const FADE_S = 0.03;
 
@@ -71,6 +73,11 @@ export class SoundPlayer {
   unlock(): void {
     const context = this.ensureContext();
     if (context && context.state !== 'running') void context.resume().catch(() => {});
+  }
+
+  /** Der gemeinsame AudioContext, auch für die Musik. */
+  audioContext(): AudioContext | null {
+    return this.ensureContext();
   }
 
   setSettings(settings: SoundSettings): void {

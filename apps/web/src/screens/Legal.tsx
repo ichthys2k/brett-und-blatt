@@ -52,6 +52,7 @@ export function Impressum() {
         Die Soundeffekte hat Cornelius Lipponer mit ElevenLabs erstellt. Sie sind von der freien Lizenz ausgenommen (alle Rechte vorbehalten) und liegen
         nicht im öffentlichen Quellcode.
       </p>
+      <p>Die Musik hat Cornelius Lipponer mit Suno erstellt; sie steht unter CC BY-SA 4.0.</p>
       <h2>Hinweise und Fehler</h2>
       <p>Fehler und Ideen kannst du als „Issue“ auf GitHub melden oder per E-Mail schicken (Adresse siehe Impressum).</p>
       <p>
@@ -120,7 +121,7 @@ export function Datenschutz() {
       <ul>
         <li>die laufende Partie mit Spielernamen, Einstellungen und Zügen,</li>
         <li>die zuletzt gewählten Einstellungen je Spiel,</li>
-        <li>ob der Ton an ist und wie laut,</li>
+        <li>ob der Ton an ist und wie laut, welche Playlist du je Spiel gewählt hast und welche Musikstücke du markiert oder ausgeschlossen hast,</li>
         <li>für Online-Partien deinen Spitznamen, dein Emoji-Bild und die zufällige Geräte-Kennung.</li>
       </ul>
       <p>

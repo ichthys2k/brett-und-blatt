@@ -19,3 +19,16 @@ export {
   type SoundSettings,
   type SoundSpec,
 } from './audio/sound';
+export {
+  DEFAULT_MUSIC_PREFS,
+  defaultPlaylist,
+  MusicPlayer,
+  musicTracks,
+  pickTrack,
+  playableTracks,
+  playlists,
+  playlistTracks,
+  type MusicPrefs,
+  type MusicTrack,
+  type Playlist,
+} from './audio/music';

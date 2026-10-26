@@ -10,6 +10,7 @@ export type Route =
   | { name: 'play' }
   | { name: 'online' }
   | { name: 'room'; code: string }
+  | { name: 'sound' }
   | { name: 'imprint' }
   | { name: 'privacy' };
 
@@ -19,6 +20,7 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'partie') return { name: 'play' };
   if (parts[0] === 'online') return { name: 'online' };
   if (parts[0] === 'raum' && parts[1]) return { name: 'room', code: decodeURIComponent(parts[1]) };
+  if (parts[0] === 'ton') return { name: 'sound' };
   if (parts[0] === 'impressum') return { name: 'imprint' };
   if (parts[0] === 'datenschutz') return { name: 'privacy' };
   return { name: 'home' };
@@ -30,6 +32,7 @@ export const paths = {
   play: '#/partie',
   online: '#/online',
   room: (code: string) => `#/raum/${encodeURIComponent(code)}`,
+  sound: '#/ton',
   imprint: '#/impressum',
   privacy: '#/datenschutz',
 };
