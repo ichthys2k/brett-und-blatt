@@ -389,7 +389,14 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private handleTimeout(seat: SeatId): void {
     this.consecutiveTimeouts[seat] = (this.consecutiveTimeouts[seat] ?? 0) + 1;
     if (this.config.time.kind === 'chessClock' && (this.config.onTimeout ?? 'lose') === 'lose') {
-      this.endByForfeit({ seat, reason: 'time' });
+      // Spiele mit `resignMove` lassen nur diesen Platz ausscheiden, sonst endet die Partie.
+      const move = this.module.resignMove?.(this._state, seat, 'time');
+      if (move) {
+        this.pendingBots.delete(seat);
+        this.commit(seat, move, 'timeout');
+      } else {
+        this.endByForfeit({ seat, reason: 'time' });
+      }
       return;
     }
     if ((this.consecutiveTimeouts[seat] ?? 0) >= AWAY_AFTER_TIMEOUTS) this.away.add(seat);
