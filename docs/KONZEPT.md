@@ -147,7 +147,7 @@ Die Plattform richtet sich auch an Kinder, Schülerinnen, Schüler und Fremde. D
 - **Kein freier Chat:** nur Emoji-Reaktionen und vorgefertigte Schnellnachrichten („Gut gespielt!“).
 - **Spitznamen-Filter;** die Raumleitung kann Spieler entfernen. Öffentliche Räume mit Fremden kommen erst später und bekommen eine Melden-Funktion. Standard sind private Räume per Code.
 - **Daten in der EU** (Durable Objects mit `jurisdiction('eu')`), kurze Speicherdauer (inaktive Räume werden gelöscht), keine Tracker, keine Werbung.
-- **Impressum und Datenschutzerklärung** auf `spiele.lipponer.de` (`#/impressum`, `#/datenschutz`); das Impressum verweist auf die Anbieterangaben auf lipponer.de. Vor Online-Partien wird die Datenschutzerklärung um Cloudflare ergänzt.
+- **Impressum und Datenschutzerklärung** auf `spiele.lipponer.de` (`#/impressum`, `#/datenschutz`); das Impressum verweist auf die Anbieterangaben auf lipponer.de. Die Datenschutzerklärung nennt auch Cloudflare als Betreiber des Spieleservers.
 - **Schule:** Vor dem Einsatz im Unterricht mit dem schulischen Datenschutz abstimmen. Dank Datensparsamkeit ist das wenig Aufwand.
 - **Repo:** Keine Geheimnisse im Repo (Zugangsdaten nur als GitHub-Secrets), keine Schülerdaten in Code oder Issues. Commits laufen über die noreply-Adresse von GitHub.
 
@@ -179,7 +179,7 @@ brett-und-blatt/
 **GitHub:**
 
 - **Actions** testen bei jedem Push. Für jedes Spiel laufen Hunderte Bot-gegen-Bot- und Zufallspartien mit; geprüft werden Absturzfreiheit, Spielende, Wiederholbarkeit, dass keine Geheimnisse in `playerView` landen und Partien mit ständigem Zeitablauf.
-- **Deployment:** Die Web-App läuft über GitHub Pages unter `spiele.lipponer.de`. Der Workflow „Prüfungen“ veröffentlicht nach jedem Push auf `main` – aber nur, wenn alle Prüfungen bestanden sind. Der Worker kommt später über Wrangler.
+- **Deployment:** Die Web-App läuft über GitHub Pages unter `spiele.lipponer.de`. Der Workflow „Prüfungen“ veröffentlicht nach jedem Push auf `main` – aber nur, wenn alle Prüfungen bestanden sind. Davor veröffentlicht derselbe Lauf den Spieleserver mit Wrangler auf Cloudflare (`brett-und-blatt.lipponer.workers.dev`); schlägt das fehl, bleibt auch die Web-App auf dem alten Stand.
 - **Mitmachen:** Issue-Vorlagen („Spielidee“, „Fehler gefunden“) und das Label „good first issue“ für kleine Spiele.
 
 ## Fahrplan
