@@ -9,6 +9,8 @@ export {
   ROOM_TTL_MS,
   Room,
   SIGNAL_INTERVAL_MS,
+  SIGNAL_MAX_PER_WINDOW,
+  SIGNAL_WINDOW_MS,
   type RoomDeps,
   type RoomSnapshot,
 } from './room';

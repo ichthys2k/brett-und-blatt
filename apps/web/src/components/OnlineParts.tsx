@@ -1,4 +1,4 @@
-import { AVATARS, MAX_NAME_LENGTH, PHRASES, REACTIONS, ROOM_CODE_LENGTH, ROOM_EMOJIS, type MemberInfo } from '@brett-und-blatt/online';
+import { AVATARS, MAX_NAME_LENGTH, PHRASES, REACTIONS, ROOM_CODE_LENGTH, ROOM_EMOJIS, SIGNAL_INTERVAL_MS, SIGNAL_MAX_PER_WINDOW, SIGNAL_WINDOW_MS, type MemberInfo } from '@brett-und-blatt/online';
 import { useEffect, useMemo, useState } from 'react';
 import { renderSVG } from 'uqr';
 import { t, type MessageKey } from '../i18n';
@@ -106,11 +106,48 @@ export function QrCode({ text, label }: { text: string; label: string }) {
 /** Emoji-Reaktionen und Schnellnachrichten – freien Text gibt es nicht. */
 export function ReactionBar({ onReact, onSay }: { onReact: (emoji: string) => void; onSay: (phrase: string) => void }) {
   const [phrases, setPhrases] = useState(false);
+  const [timestamps, setTimestamps] = useState<number[]>([]);
+  const [cooldown, setCooldown] = useState(false);
+  const [, setTick] = useState(0);
+
+  const now = Date.now();
+  const recent = timestamps.filter((t) => now - t < SIGNAL_WINDOW_MS);
+  const isRateLimited = recent.length >= SIGNAL_MAX_PER_WINDOW;
+  const disabled = cooldown || isRateLimited;
+
+  useEffect(() => {
+    if (!cooldown) return;
+    const timer = window.setTimeout(() => setCooldown(false), SIGNAL_INTERVAL_MS);
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
+
+  useEffect(() => {
+    if (!isRateLimited) return;
+    const oldest = recent[0] ?? now;
+    const remaining = Math.max(0, SIGNAL_WINDOW_MS - (Date.now() - oldest) + 50);
+    const timer = window.setTimeout(() => setTick((t) => t + 1), remaining);
+    return () => window.clearTimeout(timer);
+  }, [isRateLimited, recent, now]);
+
+  const trigger = (action: () => void) => {
+    if (disabled) return;
+    const timestamp = Date.now();
+    action();
+    setTimestamps((prev) => [...prev.filter((t) => timestamp - t < SIGNAL_WINDOW_MS), timestamp]);
+    setCooldown(true);
+  };
+
   return (
     <div className="order-3 space-y-2 px-3 pt-2" aria-label={t('online.reactions')}>
       <div className="flex flex-wrap justify-center gap-1">
         {REACTIONS.map((emoji) => (
-          <button key={emoji} type="button" className="grid size-10 place-items-center rounded-full bg-surface-2 text-xl hover:bg-line" onClick={() => onReact(emoji)}>
+          <button
+            key={emoji}
+            type="button"
+            disabled={disabled}
+            className="grid size-10 place-items-center rounded-full bg-surface-2 text-xl hover:bg-line disabled:pointer-events-none disabled:opacity-40"
+            onClick={() => trigger(() => onReact(emoji))}
+          >
             {emoji}
           </button>
         ))}
@@ -118,16 +155,24 @@ export function ReactionBar({ onReact, onSay }: { onReact: (emoji: string) => vo
           💬
         </button>
       </div>
+      {isRateLimited && (
+        <p className="text-center text-xs text-muted" role="status">
+          {t('online.rateLimit')}
+        </p>
+      )}
       {phrases && (
         <div className="flex flex-wrap justify-center gap-1">
           {PHRASES.map((phrase) => (
             <button
               key={phrase}
               type="button"
-              className="rounded-full bg-surface-2 px-3 py-1.5 text-sm hover:bg-line"
+              disabled={disabled}
+              className="rounded-full bg-surface-2 px-3 py-1.5 text-sm hover:bg-line disabled:pointer-events-none disabled:opacity-40"
               onClick={() => {
-                onSay(phrase);
-                setPhrases(false);
+                trigger(() => {
+                  onSay(phrase);
+                  setPhrases(false);
+                });
               }}
             >
               {phraseText(phrase)}
@@ -147,7 +192,7 @@ export function phraseText(phrase: string): string {
 export function SignalToasts({ signals, members }: { signals: Signal[]; members: MemberInfo[] }) {
   if (signals.length === 0) return null;
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-[max(env(safe-area-inset-top),0.75rem)] z-20 flex flex-col items-center gap-1" aria-live="polite">
+    <div className="pointer-events-none fixed inset-x-0 top-[max(env(safe-area-inset-top),0.75rem)] z-20 flex flex-col items-center gap-1 side:inset-x-auto side:right-4 side:top-4 side:items-end" aria-live="polite">
       {signals.map((signal) => {
         const member = members.find((m) => m.id === signal.from);
         return (

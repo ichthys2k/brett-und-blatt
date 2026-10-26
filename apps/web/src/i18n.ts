@@ -120,6 +120,7 @@ const de = {
   'online.startHint': 'Die Raumleitung startet die Partie.',
   'online.openSeatsDropped': 'Freie Plätze ({n}) bleiben beim Start einfach weg.',
   'online.reactions': 'Reaktionen',
+  'online.rateLimit': 'Bitte kurz warten …',
   'phrase.hello': 'Hallo!',
   'phrase.goodGame': 'Gutes Spiel!',
   'phrase.wellPlayed': 'Gut gespielt!',

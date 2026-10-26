@@ -40,7 +40,11 @@ export const HOST_HANDOVER_MS = 60_000;
 /** Ein Raum ohne jede Aktivität wird nach dieser Zeit gelöscht. */
 export const ROOM_TTL_MS = 24 * 60 * 60 * 1000;
 /** Mindestabstand zwischen zwei Signalen (Emoji, Schnellnachricht) eines Mitglieds. */
-export const SIGNAL_INTERVAL_MS = 500;
+export const SIGNAL_INTERVAL_MS = 1000;
+/** Zeitfenster für die Begrenzung von Signalen. */
+export const SIGNAL_WINDOW_MS = 60_000;
+/** Maximale Anzahl an Signalen innerhalb des Zeitfensters. */
+export const SIGNAL_MAX_PER_WINDOW = 8;
 
 export interface RoomDeps {
   now(): number;
@@ -70,7 +74,8 @@ interface Member {
   disconnectedAt: number | null;
   /** Hat der Raum den Platz wegen der fehlenden Verbindung einem Bot übergeben? */
   awayByDisconnect: boolean;
-  lastSignal: number;
+  /** Zeitstempel kürzlich gesendeter Signale zur Spam-Begrenzung. */
+  recentSignals: number[];
 }
 
 interface Game {
@@ -265,7 +270,7 @@ export class Room {
     for (const m of snapshot.members) {
       // Wer schon vorher weg war, behält seinen Zeitpunkt – sonst begänne die Frist bei jedem
       // Aufwachen des Servers von vorn. Wer verbunden war, gilt bis zur Wiederzuordnung als weg.
-      room.members.set(m.id, { ...m, connections: new Set(), disconnectedAt: m.disconnectedAt ?? now, lastSignal: 0 });
+      room.members.set(m.id, { ...m, connections: new Set(), disconnectedAt: m.disconnectedAt ?? now, recentSignals: [] });
       room.tokens.set(m.token, m.id);
     }
     const saved = snapshot.game;
@@ -311,7 +316,7 @@ export class Room {
         connections: new Set(),
         disconnectedAt: null,
         awayByDisconnect: false,
-        lastSignal: 0,
+        recentSignals: [],
       };
       this.members.set(member.id, member);
       this.tokens.set(member.token, member.id);
@@ -436,8 +441,11 @@ export class Room {
         const value = message.type === 'react' ? message.emoji : message.phrase;
         const now = this.deps.now();
         if (!allowed.includes(value)) return deny();
-        if (now - member.lastSignal < SIGNAL_INTERVAL_MS) return;
-        member.lastSignal = now;
+        const lastSignal = member.recentSignals.at(-1) ?? 0;
+        if (now - lastSignal < SIGNAL_INTERVAL_MS) return;
+        member.recentSignals = member.recentSignals.filter((t) => now - t < SIGNAL_WINDOW_MS);
+        if (member.recentSignals.length >= SIGNAL_MAX_PER_WINDOW) return;
+        member.recentSignals.push(now);
         return this.broadcast({ type: 'signal', from: member.id, kind: message.type, value });
       }
       case 'leave':

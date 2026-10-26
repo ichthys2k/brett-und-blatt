@@ -21,6 +21,7 @@
     "@brett-und-blatt/game-color-sorter": "workspace:*",
     "@brett-und-blatt/game-dominoes": "workspace:*",
     "@brett-und-blatt/game-doppelkopf": "workspace:*",
+    "@brett-und-blatt/game-drachenspiel": "workspace:*",
     "@brett-und-blatt/game-four-in-a-row": "workspace:*",
     "@brett-und-blatt/game-four-player-chess": "workspace:*",
     "@brett-und-blatt/game-go": "workspace:*",

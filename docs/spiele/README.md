@@ -24,6 +24,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Mäxle](maexle.md) | 2–10 | verdeckt | Würfel und Becher | S | M | M | 3 |
 | [Bingo](bingo.md) | 1–30 | gleichzeitig | Inhaltspakete, Bot-Bedenkpause, Tafel | S | M | S | 3 |
 | [Farbensortierer](farbensortierer.md) | 1–8 | verdeckt, parallel, gleichzeitig | Emoji-Karten, Phasen, Treffpunkte | L | L | M | 6 (vorgezogen) |
+| [Drachenspiel](drachenspiel.md) | 2 | verdeckt, gleichzeitig (Start) | Karten-Baukasten, Phasen-Timer | L | L | M | 6 |
 | [Go](go.md) | 2 | offen | Gitterbrett, zoombares Brett | M | L | L | 4 |
 | [Skat](skat.md) | 3–4 | verdeckt | Stich-Kern, Serie, Kartenblätter | L | L | XL | 5 |
 | [Schafkopf](schafkopf.md) | 4 | verdeckt | Stich-Kern, Serie, Kartenblätter | L | L | XL | 5 |
