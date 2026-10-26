@@ -19,6 +19,7 @@
     "packages/engine/src",
     "packages/engine/test",
     "packages/ui/src",
+    "packages/ui/test",
     "packages/online/src",
     "packages/online/test",
     "apps/server/test",

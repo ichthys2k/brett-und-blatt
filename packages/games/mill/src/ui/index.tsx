@@ -136,6 +136,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<MillState, MillMove> = {
   Board,
   SeatSymbol,
+  sounds: { placed: 'stein-setzen', moved: 'stein-ziehen', mill: 'muehle', removed: 'stein-schlagen' },
   seatLabel: (seat) => LABELS[seat] ?? `Platz ${seat + 1}`,
   seatDetail: (view, seat) => {
     const phase = phaseOf(view, seat);

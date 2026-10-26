@@ -298,6 +298,12 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<MaexleState, MaexleMove> = {
   Board,
   SeatSymbol,
+  sounds: {
+    rolled: 'wuerfeln',
+    announced: 'ansage',
+    doubted: 'zweifeln',
+    revealed: (event) => (event.dice ? ['aufdecken', 'leben-weg'] : 'leben-weg'),
+  },
   seatLabel: (seat) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) => {
     const lost = view.penalties[seat] ?? 0;

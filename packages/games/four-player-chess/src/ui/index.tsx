@@ -168,6 +168,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<FourChessState, FourChessMove> = {
   Board,
   SeatSymbol,
+  sounds: { moved: (event) => (event.captured ? 'stein-schlagen' : 'stein-ziehen') },
   seatLabel: (seat) => NAMES[COLORS[seat] ?? 'r'],
   seatDetail: (view, seat) => {
     const color = COLORS[seat] ?? 'r';

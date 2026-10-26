@@ -284,6 +284,15 @@ function SeatSymbol({ className = '' }: { seat: SeatId; className?: string }) {
 export const gameUi: GameUi<SolitaireState, SolitaireMove> = {
   Board,
   SeatSymbol,
+  sounds: {
+    moved: 'karte-legen',
+    drawn: 'karte-ziehen',
+    flipped: 'karte-ziehen',
+    recycled: 'mischen',
+    dealt: 'mischen',
+    completed: 'stapel-fertig',
+    paired: 'paar',
+  },
   seatLabel: () => 'Solitaire',
   seatDetail: (view) => {
     const progress =
