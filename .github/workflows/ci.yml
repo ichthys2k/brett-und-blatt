@@ -53,7 +53,7 @@ jobs:
         env:
           VITE_GAME_SERVER: ${{ vars.GAME_SERVER }}
           # Gesetzt, wenn die Klänge geholt wurden – dann bricht der Build ab, falls eine Datei fehlt.
-          KLAENGE_DIR: ${{ env.HAS_KLAENGE == 'true' && format('{0}/klaenge-repo/effekte', github.workspace) || '' }}
+          KLAENGE_DIR: ${{ env.HAS_KLAENGE == 'true' && format('{0}/klaenge-repo', github.workspace) || '' }}
 
       - name: Gebaute App für GitHub Pages bereitstellen
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

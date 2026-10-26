@@ -8,6 +8,7 @@ import { t } from '../i18n';
 import { getActiveGame, resumeGame, saveProgress, startGame, type ActiveGame } from '../lib/activeGame';
 import { levelLabel } from '../lib/format';
 import type { LoadedGame } from '../lib/registry';
+import { useGameMusic } from '../lib/music';
 import { navigate, paths } from '../lib/router';
 import { useGameSounds } from '../lib/useGameSounds';
 
@@ -104,6 +105,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   );
 
   useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined);
+  useGameMusic(info.id);
 
   // Uhren prüfen und anzeigen.
   useEffect(() => {
@@ -202,7 +204,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           <Button variant="ghost" className="ml-auto px-3 text-lg" aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
             ?
           </Button>
-          <SoundControl />
+          <SoundControl gameId={info.id} />
           {session.timed && !result && !online && (
             <Button
               variant="ghost"
