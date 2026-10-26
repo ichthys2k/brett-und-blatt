@@ -3,6 +3,7 @@ import { gameModule as battleship } from '@brett-und-blatt/game-battleship';
 import { gameModule as bingo } from '@brett-und-blatt/game-bingo';
 import { gameModule as blackPeter } from '@brett-und-blatt/game-black-peter';
 import { gameModule as chess } from '@brett-und-blatt/game-chess';
+import { gameModule as colorSorter } from '@brett-und-blatt/game-color-sorter';
 import { gameModule as fourInARow } from '@brett-und-blatt/game-four-in-a-row';
 import { gameModule as fourPlayerChess } from '@brett-und-blatt/game-four-player-chess';
 import { gameModule as go } from '@brett-und-blatt/game-go';
@@ -19,4 +20,4 @@ import { gameModule as ultimateTicTacToe } from '@brett-und-blatt/game-ultimate-
  * Mehrspieler-Spiel muss hier (und in package.json) eingetragen werden – ein Test
  * im Server-Paket erinnert daran.
  */
-export const onlineGames: AnyGameModule[] = [battleship, bingo, blackPeter, chess, fourInARow, fourPlayerChess, go, maexle, mill, pairs, quartett, reversi, ticTacToe, ultimateTicTacToe];
+export const onlineGames: AnyGameModule[] = [battleship, bingo, blackPeter, chess, colorSorter, fourInARow, fourPlayerChess, go, maexle, mill, pairs, quartett, reversi, ticTacToe, ultimateTicTacToe];

@@ -79,6 +79,9 @@ export function Setup({ gameId }: { gameId: string }) {
   if (!game || !draft) return <p className="p-6 text-center text-muted">{t('setup.loading')}</p>;
 
   const { info, module, ui } = game;
+  const visibleOptions = module.options.filter(
+    (spec) => !spec.hidden && (!spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(draft.options[id] ?? module.options.find((o) => o.id === id)?.default ?? ''))),
+  );
   const update = (change: Partial<SetupDraft>) => setDraft({ ...draft, ...change });
   const updateSeat = (index: number, change: Partial<SeatDraft>) => update({ seats: draft.seats.map((s, i) => (i === index ? { ...s, ...change } : s)) });
   const setCount = (count: number) =>
@@ -89,7 +92,7 @@ export function Setup({ gameId }: { gameId: string }) {
     await startGame({
       gameId: info.id,
       seats: toSeatConfigs(draft.seats),
-      options: draft.options,
+      options: ui.prepareOptions ? ui.prepareOptions(draft.options) : draft.options,
       seed: randomSeed(),
       time: timePresetsOf(module, draft.options)[draft.time],
     });
@@ -167,9 +170,9 @@ export function Setup({ gameId }: { gameId: string }) {
         )}
       </Section>
 
-      {module.options.length > 0 && (
+      {visibleOptions.length > 0 && (
         <Section title={t('setup.rules')}>
-          {module.options.filter((spec) => !spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(draft.options[id] ?? module.options.find((o) => o.id === id)?.default ?? ''))).map((spec) => (
+          {visibleOptions.map((spec) => (
             <div key={spec.id} className="space-y-1">
               <p className="font-medium">{spec.label}</p>
               {spec.description && <p className="text-sm text-muted">{spec.description}</p>}
@@ -183,6 +186,8 @@ export function Setup({ gameId }: { gameId: string }) {
           ))}
         </Section>
       )}
+
+      {ui.SetupExtra && <ui.SetupExtra options={resolveOptions(module, draft.options)} seats={draft.seats.length} />}
 
       <Section title={t('setup.time')}>
         <Segmented

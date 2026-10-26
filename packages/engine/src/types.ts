@@ -48,6 +48,14 @@ export interface OptionSpec {
   default: string;
   /** Nur zeigen, wenn andere Optionen bestimmte Werte haben, z. B. { variant: ['klondike'] }. */
   when?: Record<string, string[]>;
+  /**
+   * Nicht in Einrichtung und Lobby zeigen: Die Oberfläche des Spiels füllt den Wert selbst
+   * (`GameUi.prepareOptions`), z. B. mit Freischaltungen dieses Geräts. Online lässt sich eine
+   * verborgene Option nicht setzen, dort gilt immer der Standard.
+   */
+  hidden?: boolean;
+  /** Freier Wert statt Auswahl: erlaubt ist außer den Auswahlen jeder Text, der ganz auf dieses Muster passt (höchstens 256 Zeichen). */
+  pattern?: string;
 }
 
 export type Options = Record<string, string>;
