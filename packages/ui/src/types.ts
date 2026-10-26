@@ -1,4 +1,4 @@
-import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
+import type { GameEvent, Options, SeatId } from '@brett-und-blatt/engine';
 import type { ComponentType } from 'react';
 import type { SoundMap } from './audio/sound';
 
@@ -37,4 +37,11 @@ export interface GameUi<V = unknown, M = unknown> {
   seatDetail?: (view: V, seat: SeatId) => string | null;
   /** Klänge zu den Ereignissen, z. B. `{ placed: 'stein-setzen' }`. Sieg, Niederlage und Zeit vertont die Plattform selbst. */
   sounds?: SoundMap;
+  /**
+   * Vor dem Start einer Partie auf diesem Gerät: Optionen ergänzen, etwa verborgene Optionen mit
+   * Freischaltungen füllen. Online wird das nicht aufgerufen.
+   */
+  prepareOptions?: (options: Options) => Options;
+  /** Zusätzlicher Abschnitt in der Einrichtung, z. B. Atelier und Album eines Spiels. */
+  SetupExtra?: ComponentType<{ options: Options; seats: number }>;
 }

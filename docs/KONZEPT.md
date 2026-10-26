@@ -69,7 +69,7 @@ Regeln für alle Module:
 | Offene Information, Zug um Zug | Mühle, Vier in einer Reihe, Reversi, Go | Züge prüfen |
 | Verdeckte Information, Zug um Zug | Skat, Quartett, Schiffe versenken, Mäxle, Paare finden | Geheimnisse hüten, jedem nur seine Sicht schicken |
 | Gleichzeitig | Bingo, Aufstellen bei Schiffe versenken | Reihenfolge der Eingänge festlegen |
-| Parallele Läufe mit gleichem Seed | Emoji-Sortierer, Solitaire-Wettrennen | Etappen abgleichen, Punkte vergleichen, per Replay prüfen |
+| Parallele Läufe mit gleichem Seed | Farbensortierer, Solitaire-Wettrennen | Etappen abgleichen, Punkte vergleichen, per Replay prüfen |
 | Kooperativ | Feuerwerk, Gedankenlesen | wie oben, Ergebnis gilt für alle |
 
 Ergänzende Bausteine der Spielleitung:
@@ -200,7 +200,7 @@ brett-und-blatt/
 | 3 Online | Cloudflare-Server, Räume, Wiedereinstieg, Bot-Ersatz, Server-Uhr, flüchtige Signale | Schiffe versenken, Quartett, Mäxle, Bingo (Klassen-Modus) |
 | 4 Großes Brett | Zoombares Brett, Byo-yomi, Auszählphase, Fernpartie, Bänkchen für Steine | Go, Domino, Farbe & Form (Qwirkle-artig) |
 | 5 Stichspiele | Stich-Kern, Serien-Rahmen, Reizen und Ansagen | Skat, Schafkopf, Doppelkopf |
-| 6 Eigene Spiele | Parallel-Modus mit Match-Engine | Emoji-Sortierer, Emojistone |
+| 6 Eigene Spiele | Parallel-Modus mit Match-Engine | Farbensortierer (früher Emoji-Sortierer, vorgezogen), Emojistone |
 | danach | | Scrabble, Uno-artig, Poker, Binokel, Dame, Mensch ärgere dich nicht und die Ideenliste |
 
 Die Pläne der einzelnen Spiele stehen in [`spiele/`](spiele/README.md).

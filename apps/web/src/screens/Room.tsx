@@ -231,9 +231,10 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
             </ol>
           </Section>
 
-          {game.module.options.length > 0 && (
+          {game.module.options.some((spec) => !spec.hidden) && (
             <Section title={t('setup.rules')}>
               {game.module.options
+                .filter((spec) => !spec.hidden)
                 .filter((spec) => !spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(lobby.options[id] ?? '')))
                 .map((spec) => {
                   const value = lobby.options[spec.id] ?? spec.default;
