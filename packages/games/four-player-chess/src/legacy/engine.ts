@@ -314,14 +314,14 @@ export function legalMoves(state, color = state.turn) {
 /**
  * Führt eine Aktion aus und verändert dabei den Spielstand.
  *   { t: 'm', p: Farbe, f: von, to: nach, pr?: 'Q'|'R'|'B'|'N' }   Zug
- *   { t: 'resign', p: Farbe }                                    Aufgeben (jederzeit)
+ *   { t: 'resign', p: Farbe, time?: true }                       Aufgeben (jederzeit; time: Zeit abgelaufen)
  *   { t: 'claim', p: Farbe }                                     Sieg beanspruchen
  * Gibt false zurück, wenn die Aktion nicht erlaubt ist.
  */
 export function applyAction(state, action) {
     if (!action || state.result) return false;
     if (action.t === 'm') return applyMove(state, action);
-    if (action.t === 'resign') return applyResign(state, action.p);
+    if (action.t === 'resign') return applyResign(state, action.p, action.time ? 'time' : 'resign');
     if (action.t === 'claim') return applyClaim(state, action.p);
     return false;
 }
@@ -378,13 +378,13 @@ function applyMove(state, a) {
     return true;
 }
 
-function applyResign(state, color) {
+function applyResign(state, color, reason = 'resign') {
     if (!state.active[color]) return false;
     const wasTurn = state.turn === color;
-    eliminate(state, color, 'resign');
-    logEvent(state, color, `${COLOR_NAMES[color]} gibt auf`);
+    eliminate(state, color, reason);
+    logEvent(state, color, reason === 'time' ? `${COLOR_NAMES[color]} hat keine Zeit mehr` : `${COLOR_NAMES[color]} gibt auf`);
     if (state.mode === 'teams') {
-        state.result = { reason: 'resign', winners: COLORS.filter(c => TEAM_OF[c] !== TEAM_OF[color]), loser: color };
+        state.result = { reason, winners: COLORS.filter(c => TEAM_OF[c] !== TEAM_OF[color]), loser: color };
     } else if (wasTurn) {
         advance(state);
     } else if (activeColors(state).length <= 1) {

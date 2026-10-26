@@ -1,0 +1,492 @@
+{
+  "id": "weltraum",
+  "name": "Weltraum",
+  "emoji": "🪐",
+  "license": "CC-BY-SA-4.0",
+  "description": "Planeten, Zwergplaneten, Monde und Sterne.",
+  "note": "Entfernung: mittlerer Abstand zur Sonne; Monde zählen mit dem Abstand ihres Planeten. Temperatur: mittlere Oberflächentemperatur, bei Gasriesen in der Höhe von 1 bar. Sterne haben keine Monde. Mondzahlen Stand 2025.",
+  "properties": [
+    {
+      "id": "diameter",
+      "label": "Durchmesser",
+      "unit": "km",
+      "higherWins": true
+    },
+    {
+      "id": "mass",
+      "label": "Masse",
+      "unit": "Erdmassen",
+      "higherWins": true
+    },
+    {
+      "id": "distance",
+      "label": "Abstand zur Sonne",
+      "unit": "km",
+      "higherWins": true
+    },
+    {
+      "id": "temperature",
+      "label": "Temperatur",
+      "unit": "°C",
+      "higherWins": true
+    },
+    {
+      "id": "moons",
+      "label": "Monde",
+      "unit": "",
+      "higherWins": true
+    }
+  ],
+  "groups": [
+    {
+      "id": "A",
+      "name": "Gesteinsplaneten"
+    },
+    {
+      "id": "B",
+      "name": "Gasriesen"
+    },
+    {
+      "id": "C",
+      "name": "Zwergplaneten"
+    },
+    {
+      "id": "D",
+      "name": "Kleine Monde"
+    },
+    {
+      "id": "E",
+      "name": "Jupitermonde"
+    },
+    {
+      "id": "F",
+      "name": "Ferne Monde"
+    },
+    {
+      "id": "G",
+      "name": "Nahe Sterne"
+    },
+    {
+      "id": "H",
+      "name": "Helle Sterne"
+    }
+  ],
+  "cards": [
+    {
+      "id": "A1",
+      "name": "Merkur",
+      "emoji": "🪨",
+      "values": {
+        "diameter": 4879,
+        "mass": 0.055,
+        "distance": 57900000.0,
+        "temperature": 167,
+        "moons": 0
+      },
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+    },
+    {
+      "id": "A2",
+      "name": "Venus",
+      "emoji": "🌕",
+      "values": {
+        "diameter": 12104,
+        "mass": 0.815,
+        "distance": 108200000.0,
+        "temperature": 464,
+        "moons": 0
+      },
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+    },
+    {
+      "id": "A3",
+      "name": "Erde",
+      "emoji": "🌍",
+      "values": {
+        "diameter": 12742,
+        "mass": 1,
+        "distance": 149600000.0,
+        "temperature": 15,
+        "moons": 1
+      },
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+    },
+    {
+      "id": "A4",
+      "name": "Mars",
+      "emoji": "🔴",
+      "values": {
+        "diameter": 6779,
+        "mass": 0.107,
+        "distance": 227900000.0,
+        "temperature": -63,
+        "moons": 2
+      },
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+    },
+    {
+      "id": "B1",
+      "name": "Jupiter",
+      "emoji": "🪐",
+      "values": {
+        "diameter": 139820,
+        "mass": 317.8,
+        "distance": 778500000.0,
+        "temperature": -110,
+        "moons": 97
+      },
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+    },
+    {
+      "id": "B2",
+      "name": "Saturn",
+      "emoji": "🪐",
+      "values": {
+        "diameter": 116460,
+        "mass": 95.2,
+        "distance": 1432000000.0,
+        "temperature": -140,
+        "moons": 274
+      },
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+    },
+    {
+      "id": "B3",
+      "name": "Uranus",
+      "emoji": "🔵",
+      "values": {
+        "diameter": 50724,
+        "mass": 14.5,
+        "distance": 2867000000.0,
+        "temperature": -195,
+        "moons": 28
+      },
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+    },
+    {
+      "id": "B4",
+      "name": "Neptun",
+      "emoji": "🔵",
+      "values": {
+        "diameter": 49244,
+        "mass": 17.1,
+        "distance": 4515000000.0,
+        "temperature": -200,
+        "moons": 16
+      },
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+    },
+    {
+      "id": "C1",
+      "name": "Ceres",
+      "emoji": "🪨",
+      "values": {
+        "diameter": 940,
+        "mass": 0.00016,
+        "distance": 414000000.0,
+        "temperature": -105,
+        "moons": 0
+      },
+      "source": "https://de.wikipedia.org/wiki/Ceres"
+    },
+    {
+      "id": "C2",
+      "name": "Pluto",
+      "emoji": "🤍",
+      "values": {
+        "diameter": 2377,
+        "mass": 0.0022,
+        "distance": 5906000000.0,
+        "temperature": -229,
+        "moons": 5
+      },
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+    },
+    {
+      "id": "C3",
+      "name": "Eris",
+      "emoji": "⚪",
+      "values": {
+        "diameter": 2326,
+        "mass": 0.0028,
+        "distance": 10120000000.0,
+        "temperature": -231,
+        "moons": 1
+      },
+      "source": "https://de.wikipedia.org/wiki/Eris"
+    },
+    {
+      "id": "C4",
+      "name": "Haumea",
+      "emoji": "🥚",
+      "values": {
+        "diameter": 1600,
+        "mass": 0.00067,
+        "distance": 6450000000.0,
+        "temperature": -241,
+        "moons": 2
+      },
+      "source": "https://de.wikipedia.org/wiki/Haumea"
+    },
+    {
+      "id": "D1",
+      "name": "Mond",
+      "emoji": "🌙",
+      "values": {
+        "diameter": 3475,
+        "mass": 0.0123,
+        "distance": 149600000.0,
+        "temperature": -20,
+        "moons": 0
+      },
+      "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+    },
+    {
+      "id": "D2",
+      "name": "Phobos",
+      "emoji": "🥔",
+      "values": {
+        "diameter": 22,
+        "mass": 1.8e-09,
+        "distance": 227900000.0,
+        "temperature": -40,
+        "moons": 0
+      },
+      "source": "https://ssd.jpl.nasa.gov/sats/phys_par/"
+    },
+    {
+      "id": "D3",
+      "name": "Deimos",
+      "emoji": "🥔",
+      "values": {
+        "diameter": 12,
+        "mass": 2.5e-10,
+        "distance": 227900000.0,
+        "temperature": -40,
+        "moons": 0
+      },
+      "source": "https://ssd.jpl.nasa.gov/sats/phys_par/"
+    },
+    {
+      "id": "D4",
+      "name": "Charon",
+      "emoji": "🌑",
+      "values": {
+        "diameter": 1212,
+        "mass": 0.00027,
+        "distance": 5906000000.0,
+        "temperature": -220,
+        "moons": 0
+      },
+      "source": "https://ssd.jpl.nasa.gov/sats/phys_par/"
+    },
+    {
+      "id": "E1",
+      "name": "Io",
+      "emoji": "🟡",
+      "values": {
+        "diameter": 3643,
+        "mass": 0.015,
+        "distance": 778500000.0,
+        "temperature": -143,
+        "moons": 0
+      },
+      "source": "https://ssd.jpl.nasa.gov/sats/phys_par/"
+    },
+    {
+      "id": "E2",
+      "name": "Europa",
+      "emoji": "🧊",
+      "values": {
+        "diameter": 3122,
+        "mass": 0.008,
+        "distance": 778500000.0,
+        "temperature": -160,
+        "moons": 0
+      },
+      "source": "https://ssd.jpl.nasa.gov/sats/phys_par/"
+    },
+    {
+      "id": "E3",
+      "name": "Ganymed",
+      "emoji": "🌑",
+      "values": {
+        "diameter": 5268,
+        "mass": 0.025,
+        "distance": 778500000.0,
+        "temperature": -163,
+        "moons": 0
+      },
+      "source": "https://ssd.jpl.nasa.gov/sats/phys_par/"
+    },
+    {
+      "id": "E4",
+      "name": "Kallisto",
+      "emoji": "🌑",
+      "values": {
+        "diameter": 4821,
+        "mass": 0.018,
+        "distance": 778500000.0,
+        "temperature": -139,
+        "moons": 0
+      },
+      "source": "https://ssd.jpl.nasa.gov/sats/phys_par/"
+    },
+    {
+      "id": "F1",
+      "name": "Titan",
+      "emoji": "🟠",
+      "values": {
+        "diameter": 5150,
+        "mass": 0.0225,
+        "distance": 1432000000.0,
+        "temperature": -179,
+        "moons": 0
+      },
+      "source": "https://ssd.jpl.nasa.gov/sats/phys_par/"
+    },
+    {
+      "id": "F2",
+      "name": "Enceladus",
+      "emoji": "❄️",
+      "values": {
+        "diameter": 504,
+        "mass": 1.8e-05,
+        "distance": 1432000000.0,
+        "temperature": -198,
+        "moons": 0
+      },
+      "source": "https://ssd.jpl.nasa.gov/sats/phys_par/"
+    },
+    {
+      "id": "F3",
+      "name": "Titania",
+      "emoji": "🌑",
+      "values": {
+        "diameter": 1578,
+        "mass": 0.00057,
+        "distance": 2867000000.0,
+        "temperature": -203,
+        "moons": 0
+      },
+      "source": "https://ssd.jpl.nasa.gov/sats/phys_par/"
+    },
+    {
+      "id": "F4",
+      "name": "Triton",
+      "emoji": "🧊",
+      "values": {
+        "diameter": 2707,
+        "mass": 0.0036,
+        "distance": 4515000000.0,
+        "temperature": -235,
+        "moons": 0
+      },
+      "source": "https://ssd.jpl.nasa.gov/sats/phys_par/"
+    },
+    {
+      "id": "G1",
+      "name": "Sonne",
+      "emoji": "☀️",
+      "values": {
+        "diameter": 1392700,
+        "mass": 333000,
+        "distance": 0,
+        "temperature": 5500,
+        "moons": 0
+      },
+      "source": "https://de.wikipedia.org/wiki/Sonne"
+    },
+    {
+      "id": "G2",
+      "name": "Proxima Centauri",
+      "emoji": "🔴",
+      "values": {
+        "diameter": 210000,
+        "mass": 41000,
+        "distance": 40000000000000,
+        "temperature": 2770,
+        "moons": 0
+      },
+      "source": "https://de.wikipedia.org/wiki/Proxima_Centauri"
+    },
+    {
+      "id": "G3",
+      "name": "Alpha Centauri A",
+      "emoji": "🟡",
+      "values": {
+        "diameter": 1700000,
+        "mass": 360000,
+        "distance": 41000000000000,
+        "temperature": 5200,
+        "moons": 0
+      },
+      "source": "https://de.wikipedia.org/wiki/Alpha_Centauri_A"
+    },
+    {
+      "id": "G4",
+      "name": "Sirius A",
+      "emoji": "⚪",
+      "values": {
+        "diameter": 2400000,
+        "mass": 690000,
+        "distance": 81000000000000,
+        "temperature": 9700,
+        "moons": 0
+      },
+      "source": "https://de.wikipedia.org/wiki/Sirius_A"
+    },
+    {
+      "id": "H1",
+      "name": "Beteigeuze",
+      "emoji": "🔴",
+      "values": {
+        "diameter": 1100000000,
+        "mass": 5500000,
+        "distance": 5200000000000000,
+        "temperature": 3300,
+        "moons": 0
+      },
+      "source": "https://de.wikipedia.org/wiki/Beteigeuze"
+    },
+    {
+      "id": "H2",
+      "name": "Rigel",
+      "emoji": "🔵",
+      "values": {
+        "diameter": 110000000,
+        "mass": 7000000,
+        "distance": 8100000000000000,
+        "temperature": 12000,
+        "moons": 0
+      },
+      "source": "https://de.wikipedia.org/wiki/Rigel"
+    },
+    {
+      "id": "H3",
+      "name": "Wega",
+      "emoji": "⚪",
+      "values": {
+        "diameter": 3500000,
+        "mass": 700000,
+        "distance": 240000000000000,
+        "temperature": 9300,
+        "moons": 0
+      },
+      "source": "https://de.wikipedia.org/wiki/Wega"
+    },
+    {
+      "id": "H4",
+      "name": "Polarstern",
+      "emoji": "⭐",
+      "values": {
+        "diameter": 64000000,
+        "mass": 1800000,
+        "distance": 4100000000000000,
+        "temperature": 5700,
+        "moons": 0
+      },
+      "source": "https://de.wikipedia.org/wiki/Polarstern"
+    }
+  ]
+}

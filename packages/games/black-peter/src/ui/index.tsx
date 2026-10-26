@@ -103,6 +103,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<BlackPeterState, BlackPeterMove> = {
   Board,
   SeatSymbol,
+  sounds: { drawn: 'karte-ziehen', discarded: 'paar', shuffled: 'mischen' },
   seatLabel: (seat) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) => {
     const cards = view.hands[seat]?.length ?? 0;

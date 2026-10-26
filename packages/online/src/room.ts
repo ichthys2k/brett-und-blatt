@@ -616,6 +616,7 @@ export class Room {
       yourSeat: seat,
       view: session.view(viewer),
       legalMoves: seat !== null && !session.isAway(seat) ? session.legalMoves(seat) : [],
+      canResign: seat !== null && session.canResign(seat),
       current: session.currentSeats(),
       away: seats.map((_, i) => i).filter((i) => session.isAway(i)),
       thinking: seats.map((_, i) => i).filter((i) => session.isThinking(i)),

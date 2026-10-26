@@ -142,6 +142,14 @@ export interface GameModule<S, M, V = S> {
   playerView(state: S, seat: SeatId | 'spectator'): V;
   result(state: S): Result | null;
 
+  /**
+   * Aufgeben als Spielzug: Nur dieser Platz scheidet aus, die anderen spielen weiter.
+   * `applyMove` muss ihn jederzeit annehmen, auch wenn der Platz nicht am Zug ist; in
+   * `legalMoves` gehört er nicht (sonst wählen ihn Bots). null, wenn der Platz nicht
+   * (mehr) aufgeben kann. Fehlt die Funktion, beendet Aufgeben die ganze Partie.
+   * Mit `reason: 'time'` gilt dasselbe bei abgelaufener Schachuhr.
+   */
+  resignMove?(state: S, seat: SeatId, reason?: 'resign' | 'time'): M | null;
   /** Standardzug bei Zeitablauf; fehlt er, zieht der Bot. */
   timeoutMove?(state: S, seat: SeatId): M;
   /** Pflicht bei verdeckten Informationen: füllt Unbekanntes passend zur Sicht auf. */

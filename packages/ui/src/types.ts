@@ -1,5 +1,6 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import type { ComponentType } from 'react';
+import type { SoundMap } from './audio/sound';
 
 export interface BoardProps<V, M> {
   view: V;
@@ -34,4 +35,6 @@ export interface GameUi<V = unknown, M = unknown> {
   seatLabel: (seat: SeatId) => string;
   /** Zusatz in der Spielerleiste aus der öffentlichen Sicht, z. B. „12 Punkte“ oder „5 Karten“. */
   seatDetail?: (view: V, seat: SeatId) => string | null;
+  /** Klänge zu den Ereignissen, z. B. `{ placed: 'stein-setzen' }`. Sieg, Niederlage und Zeit vertont die Plattform selbst. */
+  sounds?: SoundMap;
 }

@@ -3,11 +3,13 @@ import { PlayerChip } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Button } from '../components/controls';
 import { HowToOverlay } from '../components/HowTo';
+import { SoundControl } from '../components/SoundControl';
 import { t } from '../i18n';
 import { getActiveGame, resumeGame, saveProgress, startGame, type ActiveGame } from '../lib/activeGame';
 import { levelLabel } from '../lib/format';
 import type { LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
+import { useGameSounds } from '../lib/useGameSounds';
 
 export function Play() {
   const [active, setActive] = useState<ActiveGame | null>(() => getActiveGame());
@@ -101,6 +103,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     [session],
   );
 
+  useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined);
+
   // Uhren prüfen und anzeigen.
   useEffect(() => {
     if (!session.timed) return;
@@ -169,9 +173,18 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     else status = t('play.turnOf', { name });
   }
 
+  // Wer aufgibt: online der eigene Platz, lokal wer gerade zieht – sonst der erste Mensch,
+  // der noch im Spiel ist (bei Vierer-Schach scheidet nur diese Farbe aus).
+  const resignSeat = online
+    ? (online.yourSeat ?? undefined)
+    : actingSeat !== undefined && session.canResign(actingSeat)
+      ? actingSeat
+      : humans.find((seat) => session.canResign(seat));
+  const canResign = resignSeat !== undefined && session.canResign(resignSeat);
   const resign = () => {
-    const seat = online ? (online.yourSeat ?? undefined) : (actingSeat ?? humans[0]);
-    if (seat !== undefined && window.confirm(t('play.resignConfirm'))) session.resign(seat);
+    if (resignSeat === undefined) return;
+    const question = humans.length > 1 && !online ? t('play.resignConfirmNamed', { name: seats[resignSeat]?.name ?? '' }) : t('play.resignConfirm');
+    if (window.confirm(question)) session.resign(resignSeat);
   };
 
   return (
@@ -189,6 +202,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           <Button variant="ghost" className="ml-auto px-3 text-lg" aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
             ?
           </Button>
+          <SoundControl />
           {session.timed && !result && !online && (
             <Button
               variant="ghost"
@@ -258,7 +272,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             ) : (
               <>
                 {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
-                {online.yourSeat !== null && (
+                {canResign && (
                   <Button variant="ghost" onClick={resign}>
                     {t('play.resign')}
                   </Button>
@@ -284,7 +298,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               )}
               {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
               <Button onClick={() => local?.onRestart(false)}>{t('play.restart')}</Button>
-              {humans.length > 0 && (
+              {canResign && (
                 <Button variant="ghost" onClick={resign}>
                   {t('play.resign')}
                 </Button>
