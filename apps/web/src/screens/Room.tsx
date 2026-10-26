@@ -1,7 +1,7 @@
 import { BOT_LEVELS, type TimePresetId } from '@brett-und-blatt/engine';
 import { MAX_SEATS, parseRoomCode, type LobbySeat, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
-import { Button, Section, Segmented } from '../components/controls';
+import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { ProfileForm, QrCode, ReactionBar, SignalToasts } from '../components/OnlineParts';
 import { t } from '../i18n';
 import { describeTime, levelLabel } from '../lib/format';
@@ -101,6 +101,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             isHost,
             onLobby: () => connection.send({ type: 'toLobby' }),
             onLeave: leave,
+            invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
             extra: <ReactionBar onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} />,
           }}
         />
@@ -143,7 +144,10 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
   const memberName = (id: string | null) => room.members.find((m) => m.id === id);
   const send = connection.send.bind(connection);
   const mySeat = lobby.seats.findIndex((seat) => seat.kind === 'human' && seat.memberId === state.you);
-  const ready = game !== null && lobby.seats.length >= game.info.players.min && lobby.seats.every((seat) => seat.kind === 'bot' || seat.memberId !== null);
+  // Freie Plätze fallen beim Start weg; es müssen nur genug besetzt sein.
+  const filled = lobby.seats.filter((seat) => seat.kind === 'bot' || seat.memberId !== null).length;
+  const ready = game !== null && filled >= game.info.players.min;
+  const openSeats = lobby.seats.length - filled;
 
   const copy = async () => {
     try {
@@ -212,19 +216,17 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
         <>
           <Section title={t('online.seats')}>
             {isHost && game.info.players.min < Math.min(game.info.players.max, MAX_SEATS) && (
-              <Segmented
+              <PlayerCount
                 label={t('setup.playerCount')}
-                value={String(lobby.seats.length)}
-                choices={Array.from({ length: Math.min(game.info.players.max, MAX_SEATS) - game.info.players.min + 1 }, (_, i) => {
-                  const n = String(game.info.players.min + i);
-                  return { value: n, label: n };
-                })}
-                onChange={(value) => send({ type: 'setSeatCount', count: Number(value) })}
+                value={lobby.seats.length}
+                min={game.info.players.min}
+                max={Math.min(game.info.players.max, MAX_SEATS)}
+                onChange={(count) => send({ type: 'setSeatCount', count })}
               />
             )}
             <ol className="space-y-2">
               {lobby.seats.map((seat, index) => (
-                <SeatRow key={index} index={index} seat={seat} game={game} isHost={isHost} you={state.you} mySeat={mySeat} member={seat.kind === 'human' ? memberName(seat.memberId) : undefined} send={send} />
+                <SeatRow key={index} compact={lobby.seats.length > 10} index={index} seat={seat} game={game} isHost={isHost} you={state.you} mySeat={mySeat} member={seat.kind === 'human' ? memberName(seat.memberId) : undefined} send={send} />
               ))}
             </ol>
           </Section>
@@ -289,18 +291,22 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
         </ul>
       </Section>
 
-      {isHost ? (
+      {isHost && (
         <Button variant="primary" className="w-full" disabled={!ready} onClick={() => send({ type: 'start' })}>
           ▶ {t('online.start')}
         </Button>
-      ) : (
-        <p className="text-center text-sm text-muted">{t('online.startHint')}</p>
       )}
+      {isHost && ready && openSeats > 0 ? (
+        <p className="-mt-3 text-center text-sm text-muted">{t('online.openSeatsDropped', { n: openSeats })}</p>
+      ) : !isHost ? (
+        <p className="text-center text-sm text-muted">{t('online.startHint')}</p>
+      ) : null}
     </Page>
   );
 }
 
 function SeatRow({
+  compact,
   index,
   seat,
   game,
@@ -310,6 +316,8 @@ function SeatRow({
   member,
   send,
 }: {
+  /** Viele Plätze (Bingo bis 30): eine Zeile je Platz, Bot-Auswahl als Klappliste. */
+  compact: boolean;
   index: number;
   seat: LobbySeat;
   game: LoadedGame;
@@ -322,12 +330,12 @@ function SeatRow({
   const { ui } = game;
   const mine = seat.kind === 'human' && seat.memberId === you;
   return (
-    <li className={`space-y-2 rounded-2xl border p-3 shadow-sm ${mine ? 'border-accent bg-accent/5' : 'border-line bg-surface'}`}>
-      <div className="flex flex-wrap items-center gap-3">
-        <ui.SeatSymbol seat={index} className="block size-8 flex-none" />
-        <span className="text-sm text-muted">{ui.seatLabel(index)}</span>
-        <span className="flex-1 font-medium">
-          {seat.kind === 'bot' ? `🤖 ${t('setup.bot')} · ${levelLabel(seat.level)}` : member ? `${member.avatar} ${member.name}` : t('online.seatOpen')}
+    <li className={`space-y-2 border shadow-sm ${compact ? 'rounded-xl px-3 py-1.5' : 'rounded-2xl p-3'} ${mine ? 'border-accent bg-accent/5' : 'border-line bg-surface'}`}>
+      <div className={`flex items-center ${compact ? 'gap-2' : 'flex-wrap gap-3'}`}>
+        <ui.SeatSymbol seat={index} className={`block flex-none ${compact ? 'size-6' : 'size-8'}`} />
+        <span className="text-sm whitespace-nowrap text-muted">{ui.seatLabel(index)}</span>
+        <span className={`flex-1 font-medium ${compact ? 'min-w-0 truncate' : ''}`}>
+          {seat.kind === 'bot' ? (compact ? '🤖' : `🤖 ${t('setup.bot')} · ${levelLabel(seat.level)}`) : member ? `${member.avatar} ${member.name}` : compact && isHost ? '' : t('online.seatOpen')}
         </span>
         {seat.kind === 'human' && seat.memberId === null && (
           <Button variant={mySeat < 0 ? 'primary' : 'secondary'} className="min-h-9 text-sm" onClick={() => send({ type: 'takeSeat', index })}>
@@ -339,8 +347,23 @@ function SeatRow({
             {t('online.standUp')}
           </Button>
         )}
+        {compact && isHost && (seat.kind === 'bot' || seat.memberId === null) && (
+          <select
+            className="min-h-9 rounded-lg border border-line bg-bg px-2 text-sm"
+            aria-label={`${ui.seatLabel(index)}: ${t('online.seatOpen')} oder ${t('setup.bot')}`}
+            value={seat.kind === 'bot' ? seat.level : 'open'}
+            onChange={(event) => send({ type: 'setSeat', index, seat: event.target.value === 'open' ? 'open' : { bot: event.target.value as (typeof BOT_LEVELS)[number] } })}
+          >
+            <option value="open">{t('online.seatOpen')}</option>
+            {BOT_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                🤖 {levelLabel(level)}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
-      {isHost && (seat.kind === 'bot' || seat.memberId === null) && (
+      {!compact && isHost && (seat.kind === 'bot' || seat.memberId === null) && (
         <Segmented
           label={`${ui.seatLabel(index)}: ${t('online.seatOpen')} oder ${t('setup.bot')}`}
           value={seat.kind === 'bot' ? seat.level : 'open'}

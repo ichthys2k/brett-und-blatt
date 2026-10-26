@@ -17,6 +17,13 @@ export interface BoardProps<V, M> {
   viewer: SeatId | 'spectator';
   /** Namen der Plätze, z. B. für Spielfelder mit mehreren Mitspielern. */
   seatNames: string[];
+  /**
+   * Nur lokal mit mehreren Menschen ohne Geheimnisse: alle Menschen am Gerät mit ihren Zügen.
+   * Für Spiele, in denen alle gleichzeitig handeln (Bingo: mehrere Karten nebeneinander).
+   */
+  humanSeats?: { seat: SeatId; legalMoves: M[]; onMove: (move: M) => void }[];
+  /** Nur online: Raumcode und Einladungslink, z. B. für eine Tafel mit QR-Code am Beamer. */
+  invite?: { code: string; link: string };
 }
 
 /** Was ein Spiel der Oberfläche liefert. Die Plattform findet es über den Export `gameUi`. */

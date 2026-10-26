@@ -47,6 +47,33 @@ export function Segmented<T extends string>({ value, choices, onChange, label }:
   );
 }
 
+/** Spielerzahl: wenige Möglichkeiten als Knopfleiste, viele (Bingo bis 30) mit − und +. */
+export function PlayerCount({ value, min, max, onChange, label }: { value: number; min: number; max: number; onChange: (value: number) => void; label: string }) {
+  if (max - min < 10) {
+    return (
+      <Segmented
+        label={label}
+        value={String(value)}
+        choices={Array.from({ length: max - min + 1 }, (_, i) => ({ value: String(min + i), label: String(min + i) }))}
+        onChange={(next) => onChange(Number(next))}
+      />
+    );
+  }
+  return (
+    <div role="group" aria-label={label} className="flex items-center gap-2 rounded-xl bg-surface-2 p-1">
+      <Button variant="ghost" className="px-4 text-xl" aria-label="weniger" disabled={value <= min} onClick={() => onChange(Math.max(min, value - 1))}>
+        −
+      </Button>
+      <output className="flex-1 text-center text-lg font-semibold tabular-nums" aria-live="polite">
+        {value}
+      </output>
+      <Button variant="ghost" className="px-4 text-xl" aria-label="mehr" disabled={value >= max} onClick={() => onChange(Math.min(max, value + 1))}>
+        +
+      </Button>
+    </div>
+  );
+}
+
 export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-2">

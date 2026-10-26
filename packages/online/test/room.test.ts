@@ -221,6 +221,22 @@ describe('Raum und Lobby', () => {
     expect(anna.game().yourSeat).toBe(0);
   });
 
+  it('freie Plätze fallen beim Start weg, solange genug Spieler übrig sind', () => {
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    anna.hello();
+    ben.hello();
+    anna.send({ type: 'setGame', gameId: 'black-peter' });
+    anna.send({ type: 'setSeatCount', count: 4 });
+    anna.send({ type: 'takeSeat', index: 1 });
+    ben.send({ type: 'takeSeat', index: 3 });
+    anna.send({ type: 'start' });
+    expect(anna.room().phase).toBe('playing');
+    expect(anna.game().seats.map((s) => s.memberId)).toEqual(['m1', 'm2']);
+    expect(anna.game().yourSeat).toBe(0);
+    expect(ben.game().yourSeat).toBe(1);
+  });
+
   it('wer einen Platz wechselt, gibt den alten frei', () => {
     const anna = env.client('anna');
     anna.hello();
