@@ -283,8 +283,14 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     for (const seat of this.currentSeats()) {
       if (!this.isHuman(seat) || this.away.has(seat) || this.pendingBots.has(seat) || !this.clocks.isRunning(seat)) continue;
       const reading = this.clocks.read(seat, now);
-      // Zugzeit: erst die Zugzeit, dann die Zeitbank; Schachuhr: die Gesamtzeit.
-      const left = reading.usingBank ? (reading.bankLeftMs ?? 0) : (reading.leftMs ?? 0) + (reading.bankLeftMs ?? 0);
+      // Zugzeit: erst die Zugzeit, dann die Zeitbank; Schachuhr: die Gesamtzeit; Byo-yomi: Hauptzeit und alle Perioden.
+      const control = this.config.time;
+      const left =
+        control.kind === 'byoyomi'
+          ? (reading.leftMs ?? 0) + Math.max(0, (reading.periodsLeft ?? 0) - (reading.usingBank ? 1 : 0)) * control.periodMs
+          : reading.usingBank
+            ? (reading.bankLeftMs ?? 0)
+            : (reading.leftMs ?? 0) + (reading.bankLeftMs ?? 0);
       // +1: Abgelaufen ist die Zeit erst, wenn mehr als die volle Zeit verstrichen ist.
       const at = now + left + this.graceMs + 1;
       if (next === null || at < next) next = at;
@@ -409,7 +415,8 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
 
   private handleTimeout(seat: SeatId): void {
     this.consecutiveTimeouts[seat] = (this.consecutiveTimeouts[seat] ?? 0) + 1;
-    if (this.config.time.kind === 'chessClock' && (this.config.onTimeout ?? 'lose') === 'lose') {
+    const kind = this.config.time.kind;
+    if ((kind === 'chessClock' || kind === 'byoyomi') && (this.config.onTimeout ?? 'lose') === 'lose') {
       // Spiele mit `resignMove` lassen nur diesen Platz ausscheiden, sonst endet die Partie.
       const move = this.module.resignMove?.(this._state, seat, 'time');
       if (move) {

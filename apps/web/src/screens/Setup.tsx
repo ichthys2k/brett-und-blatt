@@ -1,4 +1,4 @@
-import { BOT_LEVELS, randomSeed, resolveOptions, type BotLevel, type Options, type SeatConfig, type SeatKind, type TimePresetId } from '@brett-und-blatt/engine';
+import { BOT_LEVELS, randomSeed, resolveOptions, timePresetsOf, type BotLevel, type Options, type SeatConfig, type SeatKind, type TimePresetId } from '@brett-und-blatt/engine';
 import { useEffect, useState } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { HowToList } from '../components/HowTo';
@@ -91,7 +91,7 @@ export function Setup({ gameId }: { gameId: string }) {
       seats: toSeatConfigs(draft.seats),
       options: draft.options,
       seed: randomSeed(),
-      time: module.timePresets[draft.time],
+      time: timePresetsOf(module, draft.options)[draft.time],
     });
     navigate(paths.play);
   };
@@ -188,7 +188,7 @@ export function Setup({ gameId }: { gameId: string }) {
         <Segmented
           label={t('setup.time')}
           value={draft.time}
-          choices={TIME_PRESETS.map((preset) => ({ value: preset, label: t(`time.${preset}`), hint: describeTime(module.timePresets[preset]) }))}
+          choices={TIME_PRESETS.map((preset) => ({ value: preset, label: t(`time.${preset}`), hint: describeTime(timePresetsOf(module, draft.options)[preset]) }))}
           onChange={(time) => update({ time })}
         />
       </Section>

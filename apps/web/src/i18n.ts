@@ -38,6 +38,7 @@ const de = {
   'time.perMoveBank': '{s} s pro Zug + {bank} s Reserve',
   'time.firstMove': 'erster Zug {s} s, dann ',
   'time.chessClock': '{min} min + {inc} s pro Zug',
+  'time.byoyomi': '{min} min, dann {n} × {s} s pro Zug',
   'play.yourTurn': 'Du bist dran',
   'play.turnOf': '{name} ist dran',
   'play.thinking': '{name} denkt nach …',
