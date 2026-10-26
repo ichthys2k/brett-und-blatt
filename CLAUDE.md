@@ -2,6 +2,8 @@
 
 Freie Spielesammlung im Browser (Karten- und Brettspiele für Handy und Desktop): allein gegen Bots, zu mehreren an einem Gerät (Hot-Seat), später online. Live unter **https://spiele.lipponer.de**, Quellcode öffentlich unter **github.com/ichthys2k/brett-und-blatt** (AGPL-3.0, Inhalte CC BY-SA 4.0).
 
+Für andere Agenten (Google Antigravity/Gemini, Codex u. a.) gibt es `AGENTS.md`, `GEMINI.md` und `.agent/` (Regeln und Workflows); sie verweisen auf diese Datei als gemeinsame Übergabe. Neuer Stand gehört hierher, Kernregeln oder Fahrplan-Stand bei Änderungen auch kurz in `AGENTS.md` nachziehen.
+
 Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidungen, Schnittstelle, Fahrplan) und für ein bestimmtes Spiel den Plan unter [`docs/spiele/`](docs/spiele/README.md). [`CONTRIBUTING.md`](CONTRIBUTING.md) erklärt, wie ein neues Spiel angelegt wird.
 
 ## Regeln für die Zusammenarbeit
