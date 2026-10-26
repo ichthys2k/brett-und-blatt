@@ -37,6 +37,21 @@ Bingo ist das erste Spiel, bei dem **alle gleichzeitig** handeln, und das erste 
 - **Markieren „automatisch“** ist für kleine Kinder gedacht: Die Karte markiert sich selbst, man muss nur noch „Bingo!“ rufen.
 - Bei 4 × 4 gibt es kein freies Mittelfeld.
 
+## Umsetzung (Oktober 2026)
+
+Umgesetzt in `packages/games/bingo`, lokal und online. Entscheidungen von Cornelius und Abweichungen vom Plan:
+
+- **Die Spielleitung zieht per Knopf** – kein automatischer Taktgeber. Spielleitung ist Platz 1 (`CALLER`); Option „zieht und spielt mit“ oder „zieht nur“ (ohne Karte, z. B. die Lehrkraft am Beamer). Allein spielt sie immer mit.
+- **Zieh-Animation:** Bei jeder Ziehung wirbeln auf allen Geräten etwa 2,8 s lang zufällige Einträge durch die Kugel, immer langsamer, dann springt die echte Zahl heraus. Bis dahin ist die neue Zahl auch auf der Karte noch nicht markierbar (auch nicht automatisch). Mit „Bewegung reduzieren“ nur 0,5 s.
+- **Bis 30 Spieler** (`players.max`, Raumgrenze `MAX_SEATS` = 30). Freie Plätze fallen beim Start weg, solange genug besetzt sind – die Raumleitung muss also nicht abzählen. Lobby und Setup zeigen bei vielen Plätzen − / + und eine kompakte Platzliste.
+- **Am Zug ist, wer etwas zu tun hat:** eine gezogene Zahl markieren oder ein gültiges Bingo rufen; die Spielleitung, solange es etwas zu ziehen gibt. Markieren geht nur bei gezogenen Einträgen. Falsch rufen kann man daher nur, solange noch etwas zu markieren ist. Der Knopf „Bingo!“ sieht trotzdem immer bereit aus (sonst verriete er eine ungesehene Zahl); ohne möglichen Ruf erscheint nur „Noch keine volle Reihe!“ ohne Strafe.
+- **Mehrere Gewinner:** Wer zur selben Ziehung ebenfalls eine fertige Karte hat (nach gezogenen Zahlen, auch unmarkiert), gewinnt mit.
+- **Bot-Tempo über eine neue Engine-Funktion:** `BotDefinition.delayMs` parkt einen Bot-Zug bis zur Fälligkeit (`LocalSession`: Zeitgeber plus `nextDeadline()`, auf dem Server über den Alarm). Bingo-Bots markieren leicht 2–4 s, mittel 1–2 s, schwer ¼ s und übersehen manchmal eine Zahl; eine Computer-Spielleitung (oder ein Bot-Ersatz für eine abwesende) zieht alle 6–8 s.
+- **Hot-Seat:** alle Karten der Menschen nebeneinander (neue optionale `BoardProps.humanSeats`).
+- **Zeit-Voreinstellungen** haben keine Wirkung (alle „ohne Zeitlimit“).
+- **Tafel für den Beamer:** Knopf „📺 Tafel“ öffnet das Vollbild mit großer Kugel, allen gezogenen Einträgen, den zehn Besten und online dem QR-Code samt Raumcode (neue optionale `BoardProps.invite`). Die Spielleitung kann dort auch ziehen.
+- Noch offen: automatische Platzvergabe beim Beitreten, eigene Bingo-Inhaltspakete.
+
 ## Spielmodell
 
 ```ts

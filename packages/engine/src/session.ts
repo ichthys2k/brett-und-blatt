@@ -82,6 +82,19 @@ export interface SessionDeps {
   graceMs?: number;
   /** Bedenkzeit der Bots je Stufe, z. B. knapper auf einem Server mit wenig Rechenzeit. */
   botBudgetMs?: Partial<Record<BotLevel, number>>;
+  /**
+   * Ein Bot hat einen Zug mit Bedenkpause geparkt (`BotDefinition.delayMs`), `nextDeadline()`
+   * hat sich also geändert. Ein Server stellt daraufhin seinen Wecker neu.
+   */
+  deadlineChanged?: () => void;
+}
+
+/** Ein Bot-Zug, der erst nach seiner Bedenkpause ausgeführt wird. */
+interface ParkedMove<M> {
+  move: M;
+  cause: 'bot' | 'timeout';
+  due: number;
+  token: number;
 }
 
 /** Nach so vielen Zeitüberschreitungen in Folge übernimmt der Bot den Platz. */
@@ -108,6 +121,9 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private botRunner: BotRunner;
   private listeners = new Set<(change: SessionChange) => void>();
   private pendingBots = new Map<SeatId, number>();
+  private parked = new Map<SeatId, ParkedMove<M>>();
+  private parkTimer: ReturnType<typeof setTimeout> | null = null;
+  private deadlineChanged: (() => void) | undefined;
   private consecutiveTimeouts: number[];
   private away = new Set<SeatId>();
 
@@ -127,6 +143,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     this.graceMs = deps.graceMs ?? 0;
     this.botBudgets = { ...BOT_BUDGET_MS, ...deps.botBudgetMs };
     this.botRunner = deps.botRunner;
+    this.deadlineChanged = deps.deadlineChanged;
     this.clocks = new Clocks(config.time, config.seats.length);
     this.consecutiveTimeouts = config.seats.map(() => 0);
     this._log = [...log];
@@ -235,14 +252,16 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     if (!isLegalMove(this.module, this._state, seat, move)) return false;
     this.away.delete(seat);
     this.consecutiveTimeouts[seat] = 0;
-    this.pendingBots.delete(seat);
+    this.dropBot(seat);
     this.commit(seat, move, 'player');
     return true;
   }
 
-  /** Prüft die Uhren. Die Oberfläche ruft das regelmäßig auf (etwa alle 200 ms). */
+  /** Prüft die Uhren und geparkte Bot-Züge. Die Oberfläche ruft das regelmäßig auf (etwa alle 200 ms). */
   tick(): void {
-    if (this._disposed || this._paused || this.result || !this.clocks.enabled) return;
+    if (this._disposed || this._paused || this.result) return;
+    this.runParked();
+    if (this.result || !this.clocks.enabled) return;
     const now = this.now();
     for (const seat of this.currentSeats()) {
       if (!this.isHuman(seat) || this.away.has(seat) || this.pendingBots.has(seat)) continue;
@@ -256,9 +275,11 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
    * stellt danach seinen Wecker, statt ständig nachzusehen. null: keine Uhr läuft.
    */
   nextDeadline(): number | null {
-    if (this._disposed || this._paused || this.result || !this.clocks.enabled) return null;
+    if (this._disposed || this._paused || this.result) return null;
     const now = this.now();
     let next: number | null = null;
+    for (const parked of this.parked.values()) if (next === null || parked.due < next) next = parked.due;
+    if (!this.clocks.enabled) return next;
     for (const seat of this.currentSeats()) {
       if (!this.isHuman(seat) || this.away.has(seat) || this.pendingBots.has(seat) || !this.clocks.isRunning(seat)) continue;
       const reading = this.clocks.read(seat, now);
@@ -284,7 +305,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     if (this._paused || this.result) return;
     this._paused = true;
     this.clocks.pause(this.now());
-    this.pendingBots.clear();
+    this.dropAllBots();
     this.bump();
     this.notify([{ type: 'paused' }], null);
   }
@@ -302,7 +323,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   returnSeat(seat: SeatId): void {
     if (!this.away.delete(seat)) return;
     this.consecutiveTimeouts[seat] = 0;
-    this.pendingBots.delete(seat);
+    this.dropBot(seat);
     this.bump();
     this.advance();
     this.notify([{ type: 'returned', seat }], null);
@@ -326,7 +347,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     this._log = this._log.slice(0, index);
     this._state = replay<S, M>(this.module, this.config.seats.length, this.config.options, this.config.seed, this._log);
     this._forfeit = null;
-    this.pendingBots.clear();
+    this.dropAllBots();
     this.config.seats.forEach((_, seat) => this.clocks.cancel(seat));
     this.bump();
     this.advance();
@@ -382,7 +403,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
 
   dispose(): void {
     this._disposed = true;
-    this.pendingBots.clear();
+    this.dropAllBots();
     this.listeners.clear();
   }
 
@@ -411,7 +432,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private endByForfeit(forfeit: Forfeit): void {
     this._forfeit = forfeit;
     this.clocks.stopAll(this.now());
-    this.pendingBots.clear();
+    this.dropAllBots();
     this.bump();
     this.notify([{ type: 'forfeit', ...forfeit }], null);
   }
@@ -479,6 +500,13 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
 
     const finish = (move: M | undefined) => {
       if (this._disposed || this.pendingBots.get(seat) !== token) return;
+      // Mit Bedenkpause: Der Zug wird geparkt und erst bei Fälligkeit geprüft – auch wenn
+      // inzwischen andere gezogen haben (bei gleichzeitigen Spielen wie Bingo der Normalfall).
+      const wait = cause === 'bot' && move !== undefined && bot.delayMs ? bot.delayMs({ view: request.view as V, seat, level, move, rng: Rng.fromSeed(request.seed, 'pause') }) : 0;
+      if (wait > 0) {
+        this.park(seat, { move: move as M, cause, due: this.now() + wait, token });
+        return;
+      }
       this.pendingBots.delete(seat);
       if (token !== this._version || this.result || !this.currentSeats().includes(seat)) {
         this.advance();
@@ -491,6 +519,47 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
       (move) => finish(move as M),
       () => finish(undefined),
     );
+  }
+
+  private park(seat: SeatId, parked: ParkedMove<M>): void {
+    this.parked.set(seat, parked);
+    this.armParkTimer();
+    this.deadlineChanged?.();
+  }
+
+  /** Führt fällige geparkte Bot-Züge aus, sofern sie noch erlaubt sind; sonst rechnet der Bot neu. */
+  private runParked(): void {
+    const now = this.now();
+    for (const [seat, parked] of [...this.parked]) {
+      if (parked.due > now || this._disposed || this._paused || this.result) continue;
+      this.parked.delete(seat);
+      if (this.pendingBots.get(seat) !== parked.token) continue;
+      this.pendingBots.delete(seat);
+      const botSeat = !this.isHuman(seat) || this.away.has(seat) || parked.cause === 'timeout';
+      if (botSeat && this.currentSeats().includes(seat) && isLegalMove(this.module, this._state, seat, parked.move)) this.commit(seat, parked.move, parked.cause);
+      else this.advance();
+    }
+    this.armParkTimer();
+  }
+
+  /** Ein Wecker für den nächsten geparkten Zug. Ein Server weckt zusätzlich über `nextDeadline()`. */
+  private armParkTimer(): void {
+    if (this.parkTimer !== null) clearTimeout(this.parkTimer);
+    this.parkTimer = null;
+    if (this._disposed || this.parked.size === 0) return;
+    const due = Math.min(...[...this.parked.values()].map((p) => p.due));
+    this.parkTimer = setTimeout(() => this.runParked(), Math.max(0, due - this.now()));
+  }
+
+  private dropBot(seat: SeatId): void {
+    this.pendingBots.delete(seat);
+    if (this.parked.delete(seat)) this.armParkTimer();
+  }
+
+  private dropAllBots(): void {
+    this.pendingBots.clear();
+    this.parked.clear();
+    this.armParkTimer();
   }
 
   /** Notlösung, falls ein Bot ausfällt: ein zufälliger erlaubter Zug. */
