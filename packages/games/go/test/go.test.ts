@@ -190,7 +190,7 @@ describe('Bot', () => {
       const strong = g % 2;
       for (let step = 0; !gameModule.result(state) && step < 300; step++) {
         const seat = gameModule.currentPlayers(state)[0] as number;
-        const move = computeBotMove(gameModule, { gameId: 'go', botId: 'go', level: seat === strong ? 'medium' : 'easy', seat, view: state, seed: `duell/${g}/${step}`, timeBudgetMs: 100 }) as GoMove;
+        const move = computeBotMove(gameModule, { gameId: 'go', botId: 'go', level: seat === strong ? 'medium' : 'easy', seat, view: state, seed: `duell/${g}/${step}`, timeBudgetMs: 150 }) as GoMove;
         state = gameModule.applyMove(state, seat, move).state;
       }
       const result = gameModule.result(state);

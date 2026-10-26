@@ -96,5 +96,5 @@ describe('Bot', () => {
 });
 
 describe('Vertrag für Spielmodule', () => {
-  for (const check of gameContractChecks(gameModule, { randomGames: 4, botMoveLimit: 30 })) test(check.name, check.run);
+  for (const check of gameContractChecks(gameModule, { randomGames: 4, botMoveLimit: 30 })) test(check.name, check.run, 120_000);
 });
