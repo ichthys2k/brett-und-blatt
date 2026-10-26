@@ -38,7 +38,7 @@ export type FourChessMove =
   /** Sieg beanspruchen: bei zwei übrigen Spielern mit 21 Punkten Vorsprung. */
   | { t: 'claim'; p: Color }
   /** Aufgeben: jederzeit, auch ohne am Zug zu sein. Steht nicht in `legalMoves`. */
-  | { t: 'resign'; p: Color };
+  | { t: 'resign'; p: Color; time?: true };
 
 export const seatOf = (color: Color): SeatId => COLORS.indexOf(color);
 
@@ -70,9 +70,11 @@ export function legalMoves(state: FourChessState, actor: Actor): FourChessMove[]
  * Aufgeben lässt nur die eigene Farbe ausscheiden (Figuren werden grau), die anderen
  * spielen weiter. Im Teammodus verliert damit das ganze Team.
  */
-export function resignMove(state: FourChessState, seat: SeatId): FourChessMove | null {
+export function resignMove(state: FourChessState, seat: SeatId, reason: 'resign' | 'time' = 'resign'): FourChessMove | null {
   const color = COLORS[seat];
-  return color && !state.result && state.active[color] ? { t: 'resign', p: color } : null;
+  if (!color || state.result || !state.active[color]) return null;
+  // Abgelaufene Schachuhr: wie Aufgeben, nur mit anderem Grund.
+  return reason === 'time' ? { t: 'resign', p: color, time: true } : { t: 'resign', p: color };
 }
 
 export function applyMove(state: FourChessState, actor: Actor, move: FourChessMove): MoveResult<FourChessState> {
@@ -80,7 +82,7 @@ export function applyMove(state: FourChessState, actor: Actor, move: FourChessMo
     if (actor !== seatOf(move.p) || !resignMove(state, actor)) throw new Error('Aufgeben ist nicht möglich.');
     const next = structuredClone(state);
     if (!engine.applyAction(next, move)) throw new Error('Aufgeben ist nicht möglich.');
-    const events: GameEvent[] = [{ type: 'resigned', color: move.p }];
+    const events: GameEvent[] = [{ type: move.time ? 'timedOut' : 'resigned', color: move.p }];
     if (next.result) events.push({ type: 'over', winners: next.result.winners });
     return { state: next, events };
   }

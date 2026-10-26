@@ -106,15 +106,14 @@ Die allgemeine MCTS wäre bei vier Spielern auf 160 Feldern zu langsam. Der Zufa
 ## Tests
 
 - `test/legacy-engine.test.ts` (übernommen und ergänzt): Startaufstellung, Zugreihenfolge, Rochade (auch seitlich und mit Teampartner als „Angreifer“), en passant über Kreuz, Umwandlung in beiden Spielarten, Matt und Patt in beiden Spielarten, König schlagen, Teampartner nicht schlagbar, Doppelschach-Punkte, Aufgeben, Sieg beanspruchen, Wiederholung, Zufallspartien mit exaktem Nachspielen, Bot findet Matt und schlägt eine ungedeckte Dame, vier Bots spielen eine Partie zu Ende.
-- `test/four-player-chess.test.ts`: Anbindung an die Schnittstelle (20 Eröffnungszüge, alter Spielstand bleibt unverändert, Bot-Züge im richtigen Format), Aufgeben (nur die eigene Farbe scheidet aus, auch ohne am Zug zu sein; Teammodus: Team verliert; Nachspielen und Zurücknehmen) und `gameContractChecks`.
+- `test/four-player-chess.test.ts`: Anbindung an die Schnittstelle (20 Eröffnungszüge, alter Spielstand bleibt unverändert, Bot-Züge im richtigen Format), Aufgeben (nur die eigene Farbe scheidet aus, auch ohne am Zug zu sein; Teammodus: Team verliert; Nachspielen und Zurücknehmen), Zeitablauf mit Schachuhr (nur die eigene Farbe bzw. das Team scheidet aus) und `gameContractChecks`.
 
 ## Aufgeben
 
-Aufgeben ist ein Spielzug `{ t: 'resign', p: Farbe }`, den die Spielleitung über `resignMove` aus der Schnittstelle erzeugt – jederzeit, auch ohne am Zug zu sein. Er steht nicht in `legalMoves`, damit Bots nie aufgeben. Im Modus „Jeder gegen jeden“ scheidet nur diese Farbe aus (Figuren werden grau, die Punkte bleiben), die anderen spielen weiter; ist nur noch einer übrig, gewinnt wie üblich, wer die meisten Punkte hat. Im Teammodus verliert das ganze Team. Ausgeschiedene sehen keinen „Aufgeben“-Knopf mehr (`canResign`, online im Feld `canResign` der Spielnachricht).
+Aufgeben ist ein Spielzug `{ t: 'resign', p: Farbe }`, den die Spielleitung über `resignMove` aus der Schnittstelle erzeugt – jederzeit, auch ohne am Zug zu sein. Er steht nicht in `legalMoves`, damit Bots nie aufgeben. Im Modus „Jeder gegen jeden“ scheidet nur diese Farbe aus (Figuren werden grau, die Punkte bleiben), die anderen spielen weiter; ist nur noch einer übrig, gewinnt wie üblich, wer die meisten Punkte hat. Im Teammodus verliert das ganze Team. Läuft bei „Schnell“ die Schachuhr ab, geschieht dasselbe mit dem Grund „Zeit abgelaufen“ (`resignMove(state, seat, 'time')`, Zug mit `time: true`). Ausgeschiedene sehen keinen „Aufgeben“-Knopf mehr (`canResign`, online im Feld `canResign` der Spielnachricht).
 
 ## Offene Punkte
 
-- **Zeitablauf bei „Schnell“ (Schachuhr):** beendet weiterhin die ganze Partie. Ließe sich wie Aufgeben über `resignMove` lösen, wenn gewünscht.
 - **Protokoll anzeigen:** Die Engine schreibt Züge und Ereignisse mit Punkten ins `log`. Die Oberfläche zeigt es noch nicht.
 - **Typisieren:** `src/legacy/` hat noch `@ts-nocheck`. Beim nächsten größeren Umbau typisieren.
 - **Stärkerer Bot:** eine flache Suche (zwei bis vier Halbzüge, „paranoid“ oder „max-n“) über den Faustregeln.

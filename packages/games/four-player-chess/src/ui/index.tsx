@@ -8,7 +8,7 @@ const NAMES: Record<Color, string> = { r: 'Rot', b: 'Blau', y: 'Gelb', g: 'Grün
 /** Schachfiguren als Textzeichen; ︎ verhindert, dass Handys sie als bunte Emojis zeigen. */
 const GLYPHS: Record<Piece['t'], string> = { K: '♚︎', Q: '♛︎', R: '♜︎', B: '♝︎', N: '♞︎', P: '♟︎' };
 const PIECE_NAMES: Record<Piece['t'], string> = { K: 'König', Q: 'Dame', R: 'Turm', B: 'Läufer', N: 'Springer', P: 'Bauer' };
-const OUT_REASONS: Record<string, string> = { mate: 'matt', stalemate: 'patt', resign: 'aufgegeben', king: 'König geschlagen' };
+const OUT_REASONS: Record<string, string> = { mate: 'matt', stalemate: 'patt', resign: 'aufgegeben', time: 'Zeit abgelaufen', king: 'König geschlagen' };
 
 function onBoard(row: number, col: number): boolean {
   return !((row < 3 || row > 10) && (col < 3 || col > 10));
