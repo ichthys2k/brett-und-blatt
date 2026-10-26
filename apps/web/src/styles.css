@@ -4,8 +4,15 @@
 /* Tailwind soll auch die Klassen im Baukasten und in den Spielen finden. */
 @source '../../../packages';
 
-/* Flacher Bildschirm, z. B. Handy im Querformat: Spielfeld rechts, alles andere in einer Spalte links. */
+/* Querformat generell (Handy, Tablet, Laptop, Desktop): Spielfeld und Steuerung nebeneinander. */
+@custom-variant side (@media (orientation: landscape));
+
+/* Breitbildschirm (Desktop, Laptop, großes Tablet im Querformat): großzügigere Seitenleiste. */
+@custom-variant wide (@media (orientation: landscape) and (min-width: 900px));
+
+/* Flacher Bildschirm, z. B. Handy im Querformat: extrem kompakte Steuerung. */
 @custom-variant flat (@media (orientation: landscape) and (max-height: 540px));
+
 
 @theme {
   --color-bg: #f5f1ea;

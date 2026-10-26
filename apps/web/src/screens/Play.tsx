@@ -87,6 +87,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const [showHowTo, setShowHowTo] = useState(false);
   /** Hot-Seat mit Geheimnissen: Wer hat zuletzt seine Sicht aufgedeckt? */
   const [revealedFor, setRevealedFor] = useState<SeatId | null>(null);
+  const [copiedInvite, setCopiedInvite] = useState(false);
 
   useSyncExternalStore(
     (onChange) => session.subscribe(onChange),
@@ -190,9 +191,9 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   };
 
   return (
-    <div className="mx-auto flex h-dvh max-w-3xl flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] flat:max-w-none flat:flex-row flat:pl-[env(safe-area-inset-left)] flat:pr-[env(safe-area-inset-right)]">
+    <div className="mx-auto flex h-dvh max-w-3xl flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:max-w-none side:flex-row side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)]">
       {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
-      <div className={`contents flat:flex flat:flex-none flat:flex-col flat:overflow-y-auto ${crowded ? 'flat:w-80' : 'flat:w-64'}`}>
+      <div className={`contents side:flex side:flex-none side:flex-col side:overflow-y-auto ${crowded ? 'side:w-80' : 'side:w-64 wide:w-72'}`}>
         <header className="flex h-14 flex-none items-center gap-2 px-3">
           <Button variant="ghost" className="px-3" aria-label={online ? t('online.leave') : t('play.back')} onClick={() => (online ? online.onLeave() : navigate(paths.home))}>
             ←
@@ -218,8 +219,28 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           )}
         </header>
 
+        {online?.invite && (
+          <div className="order-2 mx-3 mb-1 hidden side:flex flex-none items-center justify-between rounded-xl border border-line/70 bg-surface px-3 py-1.5 text-xs text-muted">
+            <span>
+              {t('online.room')}: <strong className="font-semibold text-ink">{online.invite.code}</strong>
+            </span>
+            <button
+              type="button"
+              className="cursor-pointer font-medium hover:text-ink"
+              onClick={() => {
+                navigator.clipboard.writeText(online.invite!.link);
+                setCopiedInvite(true);
+                setTimeout(() => setCopiedInvite(false), 2000);
+              }}
+              title={t('online.copyLink')}
+            >
+              📋 {copiedInvite ? t('online.copied') : t('online.copyLink')}
+            </button>
+          </div>
+        )}
+
         <section
-          className={`flex flex-none gap-2 px-3 ${many ? 'overflow-x-auto pb-1 flat:flex-col flat:overflow-x-visible' : 'flex-wrap'} ${crowded && !many ? 'flat:grid flat:grid-cols-2' : ''}`}
+          className={`flex flex-none gap-2 px-3 ${many ? 'overflow-x-auto pb-1 side:flex-col side:overflow-x-visible side:max-h-60 side:overflow-y-auto' : 'flex-wrap'} ${crowded && !many ? 'side:grid side:grid-cols-2' : 'side:flex-col'}`}
           data-crowded={crowded || undefined}
           data-many={many || undefined}
           aria-label="Spieler"
@@ -261,7 +282,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           </div>
         )}
 
-        <footer className="order-2 flex flex-none flat:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 [&>button]:px-3">
+        <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3">
           {online ? (
             result ? (
               online.isHost ? (
@@ -311,7 +332,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         {online?.extra}
       </div>
 
-      <main className="relative order-1 min-h-0 min-w-0 flex-1 px-3 flat:py-2">
+      <main className="relative order-1 min-h-0 min-w-0 flex-1 px-3 side:py-2 side:px-4">
         <ui.Board
           view={session.view(viewer)}
           legalMoves={legalMoves}
