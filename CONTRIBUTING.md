@@ -73,7 +73,7 @@ sounds: {
 },
 ```
 
-Sieg, Niederlage und Zeit vertont die Plattform selbst. Die Klangdateien liegen nicht in diesem Repo (Lizenz von ElevenLabs, siehe Konzept); wer sie nicht hat, baut und spielt die App einfach ohne Ton. Neue Klänge trägt Cornelius im Katalog und im privaten Klang-Repo ein.
+Sieg, Niederlage und Zeit vertont die Plattform selbst. Die Klangdateien liegen nicht in diesem Repo (Lizenz von ElevenLabs, siehe Konzept); wer sie nicht hat, baut und spielt die App einfach ohne Ton. Neue Klänge trägt Cornelius im Katalog und im privaten Klang-Repo ein. Hintergrundmusik spielt die Plattform je Spielfamilie (`packages/ui/src/audio/music.json`); ein neues Spiel trägt man dort bei der passenden Playlist unter `games` ein, sonst läuft der „Spielabend“.
 
 ## Konventionen
 

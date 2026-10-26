@@ -16,6 +16,7 @@ function loadSettings(): SoundSettings {
     return {
       muted: typeof saved.muted === 'boolean' ? saved.muted : DEFAULT_SOUND_SETTINGS.muted,
       effects: typeof saved.effects === 'number' ? saved.effects : DEFAULT_SOUND_SETTINGS.effects,
+      music: typeof saved.music === 'number' ? saved.music : DEFAULT_SOUND_SETTINGS.music,
     };
   } catch {
     return DEFAULT_SOUND_SETTINGS;
@@ -37,14 +38,17 @@ export function setSoundSettings(next: Partial<SoundSettings>): void {
   for (const listener of listeners) listener();
 }
 
+export function getSoundSettings(): SoundSettings {
+  return settings;
+}
+
+export function subscribeSoundSettings(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
 export function useSoundSettings(): SoundSettings {
-  return useSyncExternalStore(
-    (onChange) => {
-      listeners.add(onChange);
-      return () => listeners.delete(onChange);
-    },
-    () => settings,
-  );
+  return useSyncExternalStore(subscribeSoundSettings, getSoundSettings);
 }
 
 // Browser erlauben Ton erst nach einer Berührung; jede weitere weckt den Ton auch nach einer Unterbrechung (z. B. Anruf).

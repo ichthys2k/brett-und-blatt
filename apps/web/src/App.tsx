@@ -5,6 +5,7 @@ import { Online } from './screens/Online';
 import { Play } from './screens/Play';
 import { RoomScreen } from './screens/Room';
 import { Setup } from './screens/Setup';
+import { SoundSettingsScreen } from './screens/SoundSettings';
 
 export function App() {
   const route = useRoute();
@@ -17,6 +18,8 @@ export function App() {
       return <Online />;
     case 'room':
       return <RoomScreen key={route.code} code={route.code} />;
+    case 'sound':
+      return <SoundSettingsScreen />;
     case 'imprint':
       return <Impressum />;
     case 'privacy':

@@ -107,7 +107,10 @@ export function Home() {
             {t('home.source')}
           </a>
         </p>
-        <nav className="flex gap-4" aria-label="Rechtliches">
+        <nav className="flex flex-wrap gap-4" aria-label="Einstellungen und Rechtliches">
+          <a className="underline" href={paths.sound}>
+            {t('sound.settings')}
+          </a>
           <a className="underline" href={paths.imprint}>
             {t('legal.imprint')}
           </a>

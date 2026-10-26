@@ -34,7 +34,20 @@ export default defineConfig({
       workbox: {
         // Alles vorab speichern: Solo und Hot-Seat funktionieren dann ohne Internet (Klänge zusammen etwa 1 MB).
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,mp3}'],
+        // Musik ist zu groß zum Vorab-Speichern: Sie kommt beim ersten Abspielen in einen eigenen Speicher.
+        globIgnores: ['**/klaenge/musik/**'],
         navigateFallback: 'index.html',
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.includes('/klaenge/musik/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'musik',
+              expiration: { maxEntries: 8, purgeOnQuotaError: true },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
       },
     }),
   ],
