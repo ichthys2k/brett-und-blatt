@@ -60,7 +60,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Drachenspiel** (`packages/games/drachenspiel`, 26.10.2026, Etappe 6): Sammelkarten-Duell nach Cornelius' Klon (Hearthstone-artig) mit 54 Tierkarten, 5 ausgewogenen Themendecks (Wald, Meer, Bauernhof, Wildnis, Krabbeltiere), Manasystem (1–10 Kristalle), 30 Leben, Startspieler-Vorteilsausgleich durch ⭐ Sternschnuppe (+1 temporärer Kristall), 7 Fähigkeiten (Beschützer 🛡️, Flink ⚡, Schutzblase 🫧, Giftig 🧪, Versteckt 🌙, Auftritt 🎺, Abschied 👋), simultanem Mulligan und Bot „Drachenhüter“ in drei Stufen. Vollständiges Regelwerk mit deterministischer Zustandsevolution, reines JSON für Zustand und Sichten, interaktive Arena-Oberfläche mit Deck- und Mulligan-Auswahl, Zielmarkierung und Schadens-Feedback sowie Registrierung für Online-Partien auf dem Spieleserver. Plan in `docs/spiele/drachenspiel.md`.
 
-**Etappe 4** (26.10.2026): **Go** (`packages/games/go`, 9/13/19, Superko, Auszählphase mit Vorschlag, Flächenwertung, Vorgabe, Atari-Go, SGF-Export, MCTS mit RAVE; Engine-Zeitvorgabe `byoyomi` und `timePresetsFor(options)`), **Farbe & Form** (`packages/games/color-and-shape`, Qwirkle-artig) und **Domino** (`packages/games/dominoes`, Doppel-6: Block, Ziehen, Fünfer). Pläne in `docs/spiele/go.md`, `farbe-und-form.md`, `domino.md`. Offen: Go-Fernpartie, SGF-Import, Domino-Spinner.
+**Etappe 4** (26.10.2026): **Go** (`packages/games/go`, 9/13/19, Superko, Auszählphase mit Vorschlag, Flächenwertung, Vorgabe, Atari-Go, SGF-Export und -Import, MCTS mit RAVE, Fernpartien über Tage mit 30 Tagen Raum-Lebensdauer und Web Notifications; Engine-Zeitvorgabe `byoyomi` und `timePresetsFor(options)`), **Farbe & Form** (`packages/games/color-and-shape`, Qwirkle-artig) und **Domino** (`packages/games/dominoes`, Doppel-6: Block, Ziehen, Fünfer mit optionaler Spinner-Regel). Pläne in `docs/spiele/go.md`, `farbe-und-form.md`, `domino.md`.
 
 **Etappe 5** (26.10.2026): **Stichspiele** abgeschlossen.
 - Neuer Stich-Kern (`packages/engine/src/tricks.ts`): Kontrakte, Trumpf- und Fehlfarben, Bedienpflicht, Stichsiegerermittlung mit Vorrang der zuerst gespielten Karte bei identischen Kartenwerten, Standardaugen.
@@ -72,8 +72,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - Alle drei Spiele sind im Spieleserver (`apps/server/src/games.ts`) für Online-Mehrspieler registriert.
 
 **Bekannte offene Punkte:**
-- Solitaire: lösbare Spiele für Spider und Pyramide fehlen.
-- Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend).
+- Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
 
 ## Nächste Schritte
 

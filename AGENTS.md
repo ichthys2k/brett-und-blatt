@@ -45,7 +45,7 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 - ✅ Etappe 6 Eigene Spiele: abgeschlossen – Farbensortierer und Drachenspiel (Emojistone) sind live.
 - Danach (Etappe 7): Scrabble, Uno-artig, Poker, Binokel, Dame, Mensch ärgere dich nicht und die Ideenliste im Konzept – offen.
 
-Kleinere offene Punkte (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide, Musikstücke) stehen in `CLAUDE.md` und in den Spielplänen.
+Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; Musikstücke werden ergänzt.
 
 ## Zum Abschluss einer Aufgabe
 

@@ -113,11 +113,10 @@ type GoMove =
 ## Umsetzung (Oktober 2026)
 
 - `src/board.ts`: schnelles Brett (Gruppen, Freiheiten, Zobrist-Prüfsummen, Flächenwertung) und Zufallspartien (`Playout`, wiederverwendbar, eigener schneller Zufall aus dem Seed-Rng). Die Gebietsschätzung (`estimateOwnership`) liefert den Vorschlag für tote Steine und die Lernhilfe.
-- `src/rules.ts`: Positional Superko über die Prüfsummen; `legalMoves` prüft schnell über die Freiheiten der Nachbargruppen. In der Auszählphase stehen dort nur Zustimmen und Weiterspielen, das Markieren prüft `isLegal`. Zeitablauf geht über `resignMove(…, 'time')`: im Spiel verloren, in der Auszählung gilt der Vorschlag als bestätigt. SGF-Export (Import-Parser für Tests vorhanden, in der Oberfläche noch nicht).
+- `src/rules.ts`: Positional Superko über die Prüfsummen; `legalMoves` prüft schnell über die Freiheiten der Nachbargruppen. In der Auszählphase stehen dort nur Zustimmen und Weiterspielen, das Markieren prüft `isLegal`. Zeitablauf geht über `resignMove(…, 'time')`: im Spiel verloren, in der Auszählung gilt der Vorschlag als bestätigt. SGF-Export und SGF-Import (`loadFromSgf` in `src/rules.ts`, `SgfImport.tsx` mit Dateiupload, Textarea und Stellungsprüfung).
 - `src/bots.ts`: MCTS mit RAVE und Vorwissen (Schlagen/Retten gut, Selbst-Atari und erste Linie schlecht, auf großen Brettern dritte/vierte Linie gut). Der Bot passt, wenn der Gegner gepasst hat und die Auszählung für ihn spricht oder wenn der beste Zug auf einem entschiedenen Punkt läge. Etwa 9 000 Zufallspartien/s auf 9 × 9, 2 000/s auf 19 × 19.
-- Engine: neue Zeitvorgabe `byoyomi` (Hauptzeit, dann Perioden) und `timePresetsFor(options)` – größere Bretter haben längere Zeiten.
-- Oberfläche: Linien per CSS im `GridBoard`; unter 30 px pro Punkt erst Vorschau-Stein, dann „Setzen“ oder zweites Tippen; unter 26 px Lupe (190 %).
-- Noch nicht: Fernpartie, SGF-Import in der Oberfläche, KataGo.
+- Engine & Online: neue Zeitvorgabe `byoyomi` (Hauptzeit, dann Perioden) und `timePresetsFor(options)` – größere Bretter haben längere Zeiten. Fernpartien (Option `correspondence` mit 12h–2 Tagen pro Zug): 30 Tage Raum-Lebensdauer (`CORRESPONDENCE_ROOM_TTL_MS`), kein Bot-Ersatz nach kurzem Verbindungsabbruch und lokale Web Notifications („Du bist am Zug“).
+- Oberfläche: Linien per CSS im `GridBoard`; unter 30 px pro Punkt erst Vorschau-Stein, dann „Setzen“ oder zweites Tippen; unter 26 px Lupe (190 %). Im Desktop- und Board-Menü SGF laden und speichern.
 
 ## Offene Punkte
 

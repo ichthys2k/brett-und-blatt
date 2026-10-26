@@ -61,9 +61,7 @@ Er liefert auch die **Tipps** („Was kann ich jetzt tun?“). Dazu kommen zwei 
 
 ## Nur lösbare Spiele
 
-Option für Klondike und FreeCell (`solvable`, Standard „Nein“). Beim Austeilen wird so lange neu gemischt, bis der Löser eine Lösung findet (`src/solvable.ts`). Damit das Austeilen aus dem Seed wiederholbar bleibt, zählt nur ein Knotenlimit (30 000), keine Uhr. Weil die Spielleitung bei „Zug zurück“ und beim Fortsetzen den Spielstand aus dem Seed neu berechnet, bleiben die letzten Ergebnisse zwischengespeichert. Im Browser dauert das Austeilen etwa 0,2 s.
-
-Offen: lösbare Spiele für Spider und Pyramide.
+Option für alle vier Varianten (`solvable`, Standard „Nein“): Klondike, FreeCell, Spider (eine Farbe) und Pyramide. Beim Austeilen wird so lange neu gemischt, bis der jeweilige Löser (`src/solver/`) eine Lösung findet (`src/solvable.ts`). Damit das Austeilen aus dem Seed wiederholbar bleibt, zählt nur ein Knotenlimit (30 000), keine Uhr. Weil die Spielleitung bei „Zug zurück“ und beim Fortsetzen den Spielstand aus dem Seed neu berechnet, bleiben die letzten Ergebnisse zwischengespeichert. Im Browser dauert das Austeilen meist unter 0,2 s.
 
 ## Oberfläche
 
