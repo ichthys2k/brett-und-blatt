@@ -1,0 +1,205 @@
+.dm-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.dm-table {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 10rem;
+  overflow: auto;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: #24704f;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.2);
+}
+
+.dm-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  gap: 1.2rem 0.2rem;
+  margin: auto 0;
+}
+
+.dm-stone {
+  width: 3.6rem;
+  height: 1.8rem;
+  flex: none;
+}
+
+.dm-stone.dm-upright {
+  width: 1.8rem;
+  height: 3.6rem;
+}
+
+/* Quer stehende Steine: das SVG wird gedreht. */
+.dm-upright {
+  transform-box: fill-box;
+}
+
+.dm-chain .dm-upright,
+.dm-hand .dm-upright,
+.dm-symbol .dm-upright {
+  rotate: 90deg;
+  width: 3.6rem;
+  height: 1.8rem;
+  margin: 0 -0.9rem;
+}
+
+.dm-face {
+  fill: #fbf8f0;
+  stroke: #444;
+  stroke-width: 3;
+}
+
+.dm-bar {
+  stroke: #777;
+  stroke-width: 4;
+}
+
+.dm-pip {
+  fill: #1d1d22;
+}
+
+.dm-last .dm-face {
+  stroke: #f4c430;
+  stroke-width: 8;
+}
+
+.dm-end {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  animation: dm-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes dm-pulse {
+  to {
+    transform: scale(1.1);
+  }
+}
+
+.dm-empty {
+  color: rgb(255 255 255 / 0.85);
+  text-align: center;
+}
+
+.dm-summary {
+  margin-bottom: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.92);
+  color: #1d1d22;
+}
+
+.dm-reveal {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+
+.dm-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dm-info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.dm-info small {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.dm-button {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dm-primary {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink, #fff);
+}
+
+.dm-hand {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.dm-hand-stone {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 4.4rem;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.dm-hand-stone:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.dm-hand-stone[data-selected] {
+  border-color: var(--color-accent);
+  transform: translateY(-6px);
+}
+
+.dm-hand-stone[data-hint] {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 55%, transparent);
+}
+
+.dm-symbol {
+  display: grid;
+  place-items: center;
+  width: 70%;
+  height: 70%;
+}
+
+.dm-symbol .dm-upright {
+  width: 2.4rem;
+  height: 1.2rem;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dm-end {
+    animation: none;
+  }
+}

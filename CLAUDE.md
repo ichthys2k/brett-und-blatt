@@ -55,6 +55,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Farbensortierer** (`packages/games/color-sorter`, 26.10.2026, aus Etappe 6 vorgezogen): Balatro-artiges Deckbau-Kartenspiel nach Cornelius' Klon „Emoji-Sortierer“, ohne Glücksspiel-Anmutung (Jugendschutz: Token 🔩 statt Geld, Lieferungen statt Booster, keine Casino-Begriffe – die Grundmechaniken bleiben aber alle drin). Von Anfang an mehrspielerfähig wie die Balatro-Multiplayer-Mod: parallele Läufe mit gleichem Seed, Duell/Showdown mit Leben, Überleben, Wettrennen. Dazu Endlos-Modus, Boss-Neuwahl, 7 Mehrspieler-Mods (Duell-Punkte geheim außer mit Spion) und die Meta-Währung **Farbtropfen 💧** mit Atelier (Freischaltungen, Atelier-Lieferung ohne Dubletten, Schmuck), Album und Sichern – alles je Gerät in `localStorage`; online gilt die Grundausstattung. Plan und Umsetzungsstand in `docs/spiele/farbensortierer.md`.
 
+**Etappe 4** (26.10.2026): **Go** (`packages/games/go`, 9/13/19, Superko, Auszählphase mit Vorschlag, Flächenwertung, Vorgabe, Atari-Go, SGF-Export, MCTS mit RAVE; Engine-Zeitvorgabe `byoyomi` und `timePresetsFor(options)`), **Farbe & Form** (`packages/games/color-and-shape`, Qwirkle-artig) und **Domino** (`packages/games/dominoes`, Doppel-6: Block, Ziehen, Fünfer). Pläne in `docs/spiele/go.md`, `farbe-und-form.md`, `domino.md`. Offen: Go-Fernpartie, SGF-Import, Domino-Spinner.
+
 **Bekannte offene Punkte:**
 - Solitaire: lösbare Spiele für Spider und Pyramide fehlen.
 - Musik: Playlists je Spielfamilie mit Suno, Stern/Ausschließen in den Einstellungen – kommt, sobald Cornelius die Stücke erzeugt hat (Konzept: Abschnitt „Klänge“).
