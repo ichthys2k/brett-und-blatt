@@ -353,9 +353,21 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     return move;
   }
 
+  canResign(seat: SeatId): boolean {
+    if (this.result || !this.isHuman(seat)) return false;
+    return !this.module.resignMove || this.module.resignMove(this._state, seat) !== null;
+  }
+
+  /** Spiele mit `resignMove` lassen nur diesen Platz ausscheiden, sonst endet die Partie. */
   resign(seat: SeatId): void {
-    if (this.result || !this.isHuman(seat)) return;
-    this.endByForfeit({ seat, reason: 'resign' });
+    if (!this.canResign(seat)) return;
+    const move = this.module.resignMove?.(this._state, seat);
+    if (move) {
+      this.pendingBots.delete(seat);
+      this.commit(seat, move, 'player');
+    } else {
+      this.endByForfeit({ seat, reason: 'resign' });
+    }
   }
 
   snapshot(): SessionSnapshot<M> {

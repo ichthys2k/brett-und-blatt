@@ -165,9 +165,18 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     else status = t('play.turnOf', { name });
   }
 
+  // Wer aufgibt: online der eigene Platz, lokal wer gerade zieht – sonst der erste Mensch,
+  // der noch im Spiel ist (bei Vierer-Schach scheidet nur diese Farbe aus).
+  const resignSeat = online
+    ? (online.yourSeat ?? undefined)
+    : actingSeat !== undefined && session.canResign(actingSeat)
+      ? actingSeat
+      : humans.find((seat) => session.canResign(seat));
+  const canResign = resignSeat !== undefined && session.canResign(resignSeat);
   const resign = () => {
-    const seat = online ? (online.yourSeat ?? undefined) : (actingSeat ?? humans[0]);
-    if (seat !== undefined && window.confirm(t('play.resignConfirm'))) session.resign(seat);
+    if (resignSeat === undefined) return;
+    const question = humans.length > 1 && !online ? t('play.resignConfirmNamed', { name: seats[resignSeat]?.name ?? '' }) : t('play.resignConfirm');
+    if (window.confirm(question)) session.resign(resignSeat);
   };
 
   return (
@@ -249,7 +258,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             ) : (
               <>
                 {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
-                {online.yourSeat !== null && (
+                {canResign && (
                   <Button variant="ghost" onClick={resign}>
                     {t('play.resign')}
                   </Button>
@@ -275,7 +284,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               )}
               {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
               <Button onClick={() => local?.onRestart(false)}>{t('play.restart')}</Button>
-              {humans.length > 0 && (
+              {canResign && (
                 <Button variant="ghost" onClick={resign}>
                   {t('play.resign')}
                 </Button>
