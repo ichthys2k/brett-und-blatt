@@ -3,7 +3,6 @@
   "name": "Tiere",
   "emoji": "🐘",
   "license": "CC-BY-SA-4.0",
-  "status": "Entwurf",
   "description": "Vom Meerschweinchen bis zum Blauwal.",
   "note": "Typische Werte erwachsener Tiere, gerundet. Länge: Körper ohne Schwanz, bei Walen, Haien und Vögeln Gesamtlänge. Tempo: Höchstgeschwindigkeit (beim Adler und Falken im Sturzflug).",
   "properties": [

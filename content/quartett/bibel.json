@@ -3,7 +3,6 @@
   "name": "Biblische Personen",
   "emoji": "📖",
   "license": "CC-BY-SA-4.0",
-  "status": "Entwurf",
   "description": "Von Abraham bis Paulus.",
   "note": "Verse, Kapitel und Bücher sind gezählt in der gemeinfreien Menge-Bibel (1939) ohne Apokryphen, Reihenfolge der Bücher wie in der Lutherbibel. Gezählt wird jeder Vers mit dem Namen, auch wenn eine andere Person gleichen Namens gemeint ist (z. B. Saul in 1. Mose 36). „Lebte um“ ist eine grobe, übliche Datierung; früher gewinnt.",
   "properties": [
