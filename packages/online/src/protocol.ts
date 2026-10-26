@@ -104,6 +104,8 @@ export interface GameMessage {
   view: unknown;
   /** Nur die Züge, die der eigene Platz gerade machen darf. */
   legalMoves: unknown[];
+  /** Darf der eigene Platz aufgeben? (Nicht mehr, wenn er schon ausgeschieden ist.) */
+  canResign: boolean;
   current: SeatId[];
   away: SeatId[];
   thinking: SeatId[];

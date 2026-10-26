@@ -1,7 +1,7 @@
 import { randomBot, stateFor, type BotDefinition, type GameModule } from '@brett-und-blatt/engine';
 import { chooseBotMove } from './legacy/bot';
 import { meta } from './meta';
-import { applyMove, COLORS, currentPlayers, legalMoves, result, setup, type FourChessMove, type FourChessState } from './rules';
+import { applyMove, COLORS, currentPlayers, legalMoves, resignMove, result, setup, type FourChessMove, type FourChessState } from './rules';
 
 export type { Color, FourChessMove, FourChessState, Piece } from './rules';
 export { COLORS, seatOf } from './rules';
@@ -58,6 +58,7 @@ export const gameModule: GameModule<FourChessState, FourChessMove> = {
   applyMove,
   playerView: (state) => state,
   result,
+  resignMove,
   // Die allgemeine Monte-Carlo-Suche wäre bei vier Spielern auf 160 Feldern zu langsam.
   bots: [fourChessBot, randomBot as unknown as BotDefinition<FourChessState, FourChessMove>],
 };

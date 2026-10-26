@@ -35,7 +35,37 @@ const together: GameModule<PickState, number> = {
   bots: ticTacToe.bots as unknown as GameModule<PickState, number>['bots'],
 };
 
+/** Reihum weitergeben; wer aufgibt, scheidet aus, der Letzte gewinnt. */
+type RoundState = { turn: number; out: boolean[] };
+type RoundMove = 'pass' | { resign: number };
+const nextIn = (state: RoundState, from: number) => {
+  for (let i = 1; i <= state.out.length; i++) {
+    const seat = (from + i) % state.out.length;
+    if (!state.out[seat]) return seat;
+  }
+  return from;
+};
+const round: GameModule<RoundState, RoundMove> = {
+  info: { ...ticTacToe.info, id: 'reihum', name: 'Reihum', players: { min: 3, max: 3 } },
+  options: [],
+  timePresets: ticTacToe.timePresets,
+  setup: (seats) => ({ turn: 0, out: Array.from({ length: seats }, () => false) }),
+  currentPlayers: (state) => (state.out.filter((o) => !o).length > 1 ? [state.turn] : []),
+  legalMoves: (state, actor) => (actor === state.turn && state.out.filter((o) => !o).length > 1 ? ['pass'] : []),
+  applyMove: (state, actor, move) => {
+    if (move === 'pass') return { state: { ...state, turn: nextIn(state, state.turn) }, events: [] };
+    const out = state.out.map((o, s) => o || s === move.resign);
+    const next = { turn: state.turn, out };
+    return { state: { ...next, turn: out[state.turn] ? nextIn(next, state.turn) : state.turn }, events: [{ type: 'resigned', seat: actor }] };
+  },
+  playerView: (state) => state,
+  result: (state) => (state.out.filter((o) => !o).length === 1 ? { kind: 'win', winners: [state.out.indexOf(false)] } : null),
+  resignMove: (state, seat) => (state.out[seat] ? null : { resign: seat }),
+  bots: ticTacToe.bots as unknown as GameModule<RoundState, RoundMove>['bots'],
+};
+
 const modules = new Map<string, AnyGameModule>([
+  [round.info.id, round],
   [ticTacToe.info.id, ticTacToe],
   [blackPeter.info.id, blackPeter],
   [together.info.id, together],
@@ -301,6 +331,29 @@ describe('Partie', () => {
     // Die Plätze bleiben besetzt – eine Revanche ist ein Klick.
     anna.send({ type: 'start' });
     expect(ben.room().phase).toBe('playing');
+  });
+
+  it('Aufgeben im Spiel mit resignMove: nur dieser Platz scheidet aus', () => {
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    const cleo = env.client('cleo');
+    for (const c of [anna, ben, cleo]) c.hello();
+    anna.send({ type: 'setGame', gameId: 'reihum' });
+    anna.send({ type: 'takeSeat', index: 0 });
+    ben.send({ type: 'takeSeat', index: 1 });
+    cleo.send({ type: 'takeSeat', index: 2 });
+    anna.send({ type: 'start' });
+    expect(ben.game().canResign).toBe(true);
+    // Ben gibt auf, während Anna am Zug ist.
+    ben.send({ type: 'resign' });
+    expect(anna.game().result).toBeNull();
+    expect(anna.room().phase).toBe('playing');
+    expect(ben.game().canResign).toBe(false);
+    expect(cleo.game().events).toContainEqual({ type: 'resigned', seat: 1 });
+    anna.send({ type: 'move', version: anna.game().version, move: 'pass' });
+    expect(cleo.game().current).toEqual([2]);
+    cleo.send({ type: 'resign' });
+    expect(anna.game().result).toEqual({ kind: 'win', winners: [0] });
   });
 
   it('wer später kommt, schaut zu', () => {
