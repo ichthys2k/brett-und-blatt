@@ -13,6 +13,7 @@ import { previewHand, type ScoreStep } from '../scoring';
 import type { Card, HandType, Offer, RunState, SorterMove, SorterState, ViewCard } from '../types';
 import { BackContext, CardView, cardDetails, isOpen, Tile } from './Card';
 import { describeConsumable, describeMod, describeOffer, describePack, describeTag, describeTool, formatMult, formatNumber, handName } from './texts';
+import { playBossSound, playEffect, playHandAnnouncement } from './audio';
 import './styles.css';
 
 type Selected =
@@ -37,6 +38,7 @@ interface ScoredEvent {
   cards: Card[];
   scoring: number[];
   label: string;
+  handType?: HandType;
   steps: ScoreStep[];
   score: number;
   notAllowed: boolean;
@@ -50,13 +52,27 @@ function useScoring(events: GameEvent[], seat: SeatId | 'spectator') {
     if (seen.current === events) return;
     seen.current = events;
     const scored = events.find((e) => e.type === 'scored' && e.seat === seat) as unknown as ScoredEvent | undefined;
-    if (scored) setAnim({ event: scored, tick: 0 });
+    if (scored) {
+      setAnim({ event: scored, tick: 0 });
+      if (scored.handType) playHandAnnouncement(scored.handType);
+    }
   }, [events, seat]);
   useEffect(() => {
     if (!anim) return;
     if (anim.tick >= anim.event.steps.length + 4) {
       setAnim(null);
       return;
+    }
+    if (anim.tick < anim.event.steps.length) {
+      const step = anim.event.steps[anim.tick];
+      if (step?.mult || step?.xmult) {
+        playEffect('fs-mult');
+      } else {
+        playEffect('fs-pop');
+      }
+    } else if (anim.tick === anim.event.steps.length) {
+      playEffect('fs-treffer');
+      playEffect('fs-angriff', { delay: 0.05 });
     }
     const id = window.setTimeout(() => setAnim((a) => (a ? { ...a, tick: a.tick + 1 } : a)), anim.tick < anim.event.steps.length ? 280 : 420);
     return () => window.clearTimeout(id);
@@ -77,6 +93,9 @@ function usePackReveal(events: GameEvent[], seat: SeatId | 'spectator', count: n
   }, [events, seat]);
   useEffect(() => {
     if (stage >= 2 + count) return;
+    if (stage >= 2) {
+      playEffect('fs-karte-waehlen');
+    }
     const id = window.setTimeout(() => setStage((s) => s + 1), stage === 0 ? 700 : stage === 1 ? 450 : 300);
     return () => window.clearTimeout(id);
   }, [stage, count]);
@@ -195,6 +214,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
 
   const hintCards = hint && (hint.type === 'play' || hint.type === 'discard') ? hint.cards : [];
   const togglePick = (i: number) => {
+    playEffect('fs-karte-waehlen');
     setSelected((s) => (s?.kind === 'cons' ? s : null));
     setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : p.length >= 5 ? p : [...p, i]));
   };
@@ -407,17 +427,27 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           ))}
         </div>
         <div className="cs-actions">
-          <Btn primary disabled={!playMove} hint={hint?.type === 'play'} onClick={() => playMove && onMove(playMove)}>
+          <Btn primary disabled={!playMove} hint={hint?.type === 'play'} onClick={() => playMove && (playEffect('fs-abschicken'), onMove(playMove))}>
             Abschicken
           </Btn>
-          <Btn disabled={!discardMove} hint={hint?.type === 'discard'} onClick={() => discardMove && onMove(discardMove)}>
+          <Btn disabled={!discardMove} hint={hint?.type === 'discard'} onClick={() => discardMove && (playEffect('fs-verwerfen'), onMove(discardMove))}>
             Verwerfen ({round.discardsLeft})
           </Btn>
           <span className="cs-sort">
-            <button type="button" className="cs-link" onClick={() => can({ type: 'sortHand', by: 'rank' }) && onMove({ type: 'sortHand', by: 'rank' })} aria-label="Nach Rang sortieren">
+            <button
+              type="button"
+              className="cs-link"
+              onClick={() => can({ type: 'sortHand', by: 'rank' }) && (playEffect('fs-karte-waehlen'), onMove({ type: 'sortHand', by: 'rank' }))}
+              aria-label="Nach Rang sortieren"
+            >
               🔢
             </button>
-            <button type="button" className="cs-link" onClick={() => can({ type: 'sortHand', by: 'color' }) && onMove({ type: 'sortHand', by: 'color' })} aria-label="Nach Farbe sortieren">
+            <button
+              type="button"
+              className="cs-link"
+              onClick={() => can({ type: 'sortHand', by: 'color' }) && (playEffect('fs-karte-waehlen'), onMove({ type: 'sortHand', by: 'color' }))}
+              aria-label="Nach Farbe sortieren"
+            >
               🌈
             </button>
             <span className="cs-muted" title="Karten im Stapel">
@@ -568,6 +598,14 @@ function ChoosePanel({ view, run, can, onMove, hint }: { view: SorterState; run:
   const tag = run.round < 2 ? (view.tags[(run.level - 1) * 2 + run.round] ?? null) : null;
   const tagInfo = tag ? describeTag(tag) : null;
   const reward = run.round === 0 && view.stake >= 2 ? 0 : [3, 4, 5][run.round];
+
+  useEffect(() => {
+    if (run.round === 2) {
+      const boss = run.current?.boss ?? bossFor(view, run);
+      playBossSound(boss);
+    }
+  }, [view, run, run.level, run.round, run.current?.boss]);
+
   return (
     <div className="cs-panel cs-center">
       <p className="cs-muted">
@@ -597,7 +635,7 @@ function ChoosePanel({ view, run, can, onMove, hint }: { view: SorterState; run:
         </p>
       )}
       {can({ type: 'rerollBoss' }) && (
-        <Btn hint={hint?.type === 'rerollBoss'} onClick={() => onMove({ type: 'rerollBoss' })}>
+        <Btn hint={hint?.type === 'rerollBoss'} onClick={() => (playEffect('fs-karte-waehlen'), onMove({ type: 'rerollBoss' }))}>
           {run.tools.includes('scope2') ? '🛰️' : '🔭'} Anderen Boss wählen ({BOSS_REROLL_PRICE} T)
         </Btn>
       )}
@@ -1020,6 +1058,21 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<SorterState, SorterMove> = {
   Board,
   SeatSymbol,
+  sounds: {
+    bought: 'fs-kauf',
+    toolBought: 'fs-kauf',
+    sold: 'fs-verkauf',
+    rerolled: 'fs-karte-waehlen',
+    packOpened: 'fs-kauf',
+    picked: 'fs-kauf',
+    used: 'fs-kauf',
+    drawn: 'fs-mischen',
+    boarDiscard: 'fs-angriff',
+    roundWon: 'fs-auszahlung',
+    roundLost: 'fs-game-over',
+    out: 'fs-game-over',
+    lifeLost: 'fs-game-over',
+  },
   prepareOptions: withUnlocks,
   SetupExtra,
   seatLabel: (seat) => `Platz ${seat + 1}`,

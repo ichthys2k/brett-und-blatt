@@ -156,8 +156,8 @@ Umgesetzt in `packages/games/color-sorter` (Schritte 1 bis 5 des Plans, lokal, H
 - **Gleicher Seed:** Alle Plätze haben eigene Zufallsströme mit demselben Startwert (Mischen, Laden, Effekte); Bosse und Sticker liegen für alle gleich im Spielstand. Gleiche Entscheidungen ergeben dieselben Karten und Läden.
 - **Treffpunkt:** Wer das Duell erreicht, wartet (`wait`). Sind alle noch lebenden Plätze da, beginnt das Duell für alle gleichzeitig; jeder spielt alle Hände. Danach verlieren die mit den wenigsten Punkten ein Leben (bei Gleichstand aller niemand), alle bekommen 5 T Belohnung. Eine verlorene normale Runde kostet ebenfalls ein Leben.
 - **Hot-Seat:** Die Spielleitung übergibt das Gerät, sobald der aktuelle Platz am Treffpunkt wartet – jeder spielt also bis zum nächsten Duell, nicht rundenweise.
-- **Bot:** Schätzt jede mögliche Auswahl mit der echten Wertung (ohne Zufall), verwirft gezielt auf Farben-Sätze, kauft nach Seltenheit. Gemessen über 20 Läufe: leicht scheitert fast immer in Level 1, mittel kommt bis Level 1–5, schwer bis Level 2–7 (Schnitt etwa 4). Der Bot rechnet unter 2 ms je Zug; eine Schrittweite für den Server ist nicht nötig.
-- **Noch nicht umgesetzt:** Klänge (Cornelius wählt sie aus); der weitere Ausbau der Inhalte auf den Endumfang (etwa 150 Mods, 32 Werkzeuge, 15 Kartensätze).
+- **Klänge:** Vollständige Übernahme der originalen Soundeffekte (`fs_pop`, `fs_mult`, `fs_coin`, `fs_coin_end`, `fs_shuffle`, `fs_game_over`, `ds_flipcard`, `ds_snip`, `ds_swipe`, `ds_punch1`), aller 11 Kombination-Sprachaufnahmen (`fs_hand_*`) beim Abschicken sowie der Boss-Tierstimmen aus `tiere/` synchron zur Wertungs-Animation und Interaktion.
+- **Noch nicht umgesetzt:** der weitere Ausbau der Inhalte auf den Endumfang (etwa 150 Mods, 32 Werkzeuge, 15 Kartensätze).
 
 ### Ausbau (26.10.2026)
 

@@ -13,7 +13,7 @@ import music from '../../packages/ui/src/audio/music.json' with { type: 'json' }
  * Übernommen werden nur die Dateien, die die Kataloge brauchen, plus tiere/ (Drachenspiel).
  */
 /** Alle Effekte werden vorab gespeichert – darum eine feste Obergrenze. */
-const MAX_BYTES = 1536 * 1024;
+const MAX_BYTES = 2048 * 1024;
 /** Musik wird erst beim Abspielen geladen; ein Stück darf trotzdem nicht ausufern. */
 const MAX_TRACK_BYTES = 8 * 1024 * 1024;
 /** Tier-Sounds fürs Drachenspiel werden on-demand geladen; Obergrenze fürs gesamte Paket. */
