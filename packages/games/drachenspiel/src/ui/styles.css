@@ -1,0 +1,439 @@
+.ds-arena {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 900px;
+  height: 100%;
+  max-height: 850px;
+  margin: 0 auto;
+  padding: 8px;
+  box-sizing: border-box;
+  user-select: none;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Deck Selection & Mulligan */
+.ds-phase-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  gap: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.ds-phase-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+  color: var(--color-text, #2d3436);
+}
+
+.ds-phase-subtitle {
+  font-size: 0.95rem;
+  color: var(--color-text-muted, #636e72);
+  margin: 0;
+  max-width: 500px;
+}
+
+.ds-deck-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 750px;
+}
+
+.ds-deck-choice {
+  background: var(--color-surface, #ffffff);
+  border: 2px solid var(--color-border, #dfe6e9);
+  border-radius: 12px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.ds-deck-choice:hover {
+  transform: translateY(-4px);
+  border-color: #0984e3;
+  box-shadow: 0 6px 16px rgba(9, 132, 227, 0.2);
+}
+
+.ds-deck-choice .ds-deck-emoji {
+  font-size: 2.2rem;
+}
+
+.ds-deck-choice .ds-deck-name {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.ds-deck-choice .ds-deck-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #636e72);
+  line-height: 1.25;
+}
+
+/* Mulligan row */
+.ds-mulligan-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+.ds-mulligan-card {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.ds-mulligan-card.discarded {
+  opacity: 0.5;
+  filter: grayscale(80%);
+}
+
+.ds-mulligan-cross {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  color: #d63031;
+  pointer-events: none;
+}
+
+/* Play Phase Layout */
+.ds-opponent-zone,
+.ds-player-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  gap: 8px;
+}
+
+.ds-hero-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--color-surface, #ffffff);
+  border: 2px solid var(--color-border, #dfe6e9);
+  border-radius: 24px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ds-hero-card.targetable {
+  border-color: #e74c3c;
+  cursor: crosshair;
+  animation: ds-target-pulse 1s infinite alternate;
+}
+
+.ds-hero-avatar {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.ds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  padding: 2px 7px;
+  border-radius: 12px;
+}
+
+.ds-badge-hp {
+  background: #ff7675;
+  color: white;
+}
+
+.ds-badge-mana {
+  background: #74b9ff;
+  color: #0984e3;
+}
+
+.ds-badge-deck {
+  background: #dfe6e9;
+  color: #2d3436;
+}
+
+/* Boards */
+.ds-board-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  background: color-mix(in srgb, var(--color-surface, #ffffff) 85%, #74b9ff 15%);
+  border-radius: 16px;
+  padding: 8px;
+  border: 2px dashed var(--color-border, #dfe6e9);
+  min-height: 220px;
+  gap: 8px;
+}
+
+.ds-board-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 95px;
+  width: 100%;
+}
+
+.ds-board-row.empty-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #b2bec3);
+  font-style: italic;
+}
+
+/* Minions */
+.ds-minion {
+  width: 78px;
+  height: 98px;
+  background: var(--color-surface, #ffffff);
+  border: 2px solid var(--color-border, #b2bec3);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px;
+  box-sizing: border-box;
+  position: relative;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.ds-minion.can-attack {
+  border-color: #2ecc71;
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.6);
+  cursor: pointer;
+}
+
+.ds-minion.can-attack:hover {
+  transform: translateY(-4px) scale(1.05);
+}
+
+.ds-minion.selected {
+  border-color: #f1c40f;
+  box-shadow: 0 0 14px rgba(241, 196, 15, 0.85);
+  transform: translateY(-6px) scale(1.08);
+  z-index: 10;
+}
+
+.ds-minion.targetable {
+  border-color: #e74c3c;
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.7);
+  cursor: crosshair;
+  animation: ds-target-pulse 1s infinite alternate;
+}
+
+.ds-minion.taunt {
+  border-width: 3px;
+  border-style: solid;
+}
+
+.ds-minion.bubble {
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.6);
+}
+
+.ds-minion.stealth {
+  opacity: 0.8;
+  filter: contrast(80%);
+}
+
+.ds-minion-icons {
+  display: flex;
+  gap: 2px;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.ds-minion-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.ds-minion-name {
+  font-size: 0.65rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.ds-minion-stats {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-weight: bold;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.ds-stat-atk {
+  background: #f39c12;
+  color: white;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+
+.ds-stat-hp {
+  background: #e74c3c;
+  color: white;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+
+/* Hand & Cards */
+.ds-hand {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 6px 4px 2px;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.ds-card {
+  width: 82px;
+  height: 110px;
+  background: var(--color-surface, #ffffff);
+  border: 2px solid var(--color-border, #dfe6e9);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px;
+  box-sizing: border-box;
+  position: relative;
+  flex-shrink: 0;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.ds-card.playable {
+  border-color: #0984e3;
+  box-shadow: 0 4px 12px rgba(9, 132, 227, 0.4);
+  cursor: pointer;
+  transform: translateY(-4px);
+}
+
+.ds-card.playable:hover {
+  transform: translateY(-10px) scale(1.06);
+  z-index: 20;
+}
+
+.ds-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ds-card-cost {
+  background: #0984e3;
+  color: white;
+  font-weight: bold;
+  font-size: 0.75rem;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ds-card-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.ds-card-emoji {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.ds-card-name {
+  font-size: 0.65rem;
+  font-weight: bold;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Action controls */
+.ds-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ds-btn {
+  background: #0984e3;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.ds-btn:hover:not(:disabled) {
+  background: #74b9ff;
+  transform: scale(1.03);
+}
+
+.ds-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ds-btn-endturn {
+  background: #6c5ce7;
+  padding: 8px 16px;
+}
+
+.ds-btn-endturn.sparkle {
+  background: #00b894;
+  animation: ds-sparkle 1s infinite alternate;
+}
+
+@keyframes ds-target-pulse {
+  from {
+    box-shadow: 0 0 4px #e74c3c;
+  }
+  to {
+    box-shadow: 0 0 14px #e74c3c;
+  }
+}
+
+@keyframes ds-sparkle {
+  from {
+    box-shadow: 0 0 6px #00b894;
+  }
+  to {
+    box-shadow: 0 0 18px #00b894;
+    transform: scale(1.04);
+  }
+}
+

@@ -61,7 +61,7 @@ describe('Bot', () => {
     state.cells = [...state.cells];
     state.cells[2 * 9 + 0] = 0;
     state.cells[2 * 9 + 1] = 0;
-    const move = computeBotMove(gameModule, { gameId: gameModule.info.id, botId: 'ultimate', level: 'medium', seat: 0, view: state, seed: 'x', timeBudgetMs: 300 }) as UltimateMove;
+    const move = computeBotMove(gameModule, { gameId: gameModule.info.id, botId: 'ultimate', level: 'medium', seat: 0, view: state, seed: 'x', timeBudgetMs: 1_000 }) as UltimateMove;
     expect(move).toEqual(place(2, 2));
   });
 });

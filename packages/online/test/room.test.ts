@@ -9,6 +9,8 @@ import {
   PROTOCOL_VERSION,
   Room,
   SIGNAL_INTERVAL_MS,
+  SIGNAL_MAX_PER_WINDOW,
+  SIGNAL_WINDOW_MS,
   parseClientMessage,
   type ClientMessage,
   type GameMessage,
@@ -491,6 +493,26 @@ describe('Signale und Raumleitung', () => {
     expect(anna.last('error')?.code).toBe('notAllowed');
     anna.send({ type: 'say', phrase: 'goodGame' });
     expect(ben.last('signal')?.value).toBe('goodGame');
+  });
+
+  it('Signale sind pro Zeitfenster begrenzt (Spam-Schutz)', () => {
+    const [anna, ben] = twoPlayers(env);
+    for (let i = 0; i < SIGNAL_MAX_PER_WINDOW; i++) {
+      if (i > 0) env.advance(SIGNAL_INTERVAL_MS);
+      ben.clear();
+      anna.send({ type: 'react', emoji: '👍' });
+      expect(ben.last('signal')?.value).toBe('👍');
+    }
+    // Das nächste Signal im selben Fenster wird verworfen
+    env.advance(SIGNAL_INTERVAL_MS);
+    ben.clear();
+    anna.send({ type: 'react', emoji: '🎉' });
+    expect(ben.last('signal')).toBeUndefined();
+
+    // Sobald das älteste Signal aus dem 60-Sekunden-Fenster fällt, ist wieder eins erlaubt
+    env.advance(SIGNAL_WINDOW_MS);
+    anna.send({ type: 'react', emoji: '🎉' });
+    expect(ben.last('signal')?.value).toBe('🎉');
   });
 
   it('wer entfernt wurde, kommt nicht wieder herein', () => {
