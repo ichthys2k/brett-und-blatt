@@ -53,6 +53,7 @@ const de = {
   'play.resume': 'Weiter',
   'play.resign': 'Aufgeben',
   'play.resignConfirm': 'Wirklich aufgeben?',
+  'play.resignConfirmNamed': '{name}: wirklich aufgeben?',
   'play.restart': 'Neu starten',
   'play.rematch': 'Revanche',
   'play.settings': 'Einstellungen',

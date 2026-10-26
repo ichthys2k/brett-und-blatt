@@ -42,5 +42,7 @@ export interface GameSession<M = unknown, V = unknown> {
   canUndo(): boolean;
   undo(): boolean;
   hint(seat: SeatId): Promise<M | null>;
+  /** Kann dieser Platz gerade aufgeben? (Nicht, wenn er schon ausgeschieden ist.) */
+  canResign(seat: SeatId): boolean;
   resign(seat: SeatId): void;
 }

@@ -211,7 +211,11 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
     return module.isLegal ? module.isLegal(this.message.view, seat, move) : moves.some((m) => sameValue(m, move));
   }
 
+  canResign(seat: SeatId): boolean {
+    return seat === this.message.yourSeat && !this.message.result && this.message.canResign;
+  }
+
   resign(seat: SeatId): void {
-    if (seat === this.message.yourSeat) this.deps.send({ type: 'resign' });
+    if (this.canResign(seat)) this.deps.send({ type: 'resign' });
   }
 }
