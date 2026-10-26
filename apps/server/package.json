@@ -20,6 +20,7 @@
     "@brett-und-blatt/game-color-and-shape": "workspace:*",
     "@brett-und-blatt/game-color-sorter": "workspace:*",
     "@brett-und-blatt/game-dominoes": "workspace:*",
+    "@brett-und-blatt/game-doppelkopf": "workspace:*",
     "@brett-und-blatt/game-four-in-a-row": "workspace:*",
     "@brett-und-blatt/game-four-player-chess": "workspace:*",
     "@brett-und-blatt/game-go": "workspace:*",
@@ -28,6 +29,8 @@
     "@brett-und-blatt/game-pairs": "workspace:*",
     "@brett-und-blatt/game-quartett": "workspace:*",
     "@brett-und-blatt/game-reversi": "workspace:*",
+    "@brett-und-blatt/game-schafkopf": "workspace:*",
+    "@brett-und-blatt/game-skat": "workspace:*",
     "@brett-und-blatt/game-tic-tac-toe": "workspace:*",
     "@brett-und-blatt/game-ultimate-tic-tac-toe": "workspace:*"
   },

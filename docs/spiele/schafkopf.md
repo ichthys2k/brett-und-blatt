@@ -134,7 +134,13 @@ type SchafkopfMove =
 - `playerView` verrät den Partner nicht vor der Rufsau, auch nicht dem Rufer.
 - Bot-gegen-Bot-Serien in allen Optionen.
 
+## Umsetzung (Oktober 2026)
+
+- `packages/games/schafkopf/src/rules.ts`: Bayerisches Schafkopf (Kurzes Blatt mit 24 Karten und langes Blatt mit 32 Karten; Sauspiel mit geheimer Rufsau und Rufbarkeitsprüfung, Davonlaufen mit 4 Karten der Ruffarbe, Schmierverbot, Wenz, Solo, Tout, Ramsch mit Jungfrau, Klopfen / Stoß mit Verdopplung, 8 Stiche, Serienabrechnung).
+- `packages/games/schafkopf/src/bots.ts`: Schafkopf-Bot mit Handstärke-Bewertung für Sauspiel/Wenz/Solo, Rufsau-Findung und Stichspiel mit Partnerschmieren.
+- `packages/games/schafkopf/src/ui/index.tsx`: Ansagedialog („Weiter“ / „Ich würde spielen“ mit Kacheln), Klopfen-Knopf, Anzeige der gerufenen Sau, `TrickTable`-Stichtisch mit bayerischem Kartenbild (Eichel, Gras, Herz, Schellen) und Serienliste.
+- Server-Integration in `apps/server/src/games.ts` für Online-Partien.
+
 ## Offene Punkte
 
-- Referenz der Schafkopfschule prüfen: Rangfolge der Spiele, Kartenreihenfolge im Bettel, Ramsch-Sonderfälle, Laufende im kurzen Blatt, Stoß-Zeitpunkt.
-- Bayerisches Blatt gestalten (gemeinsame Vorlage mit dem deutschen Blatt für Skat).
+- Weitere Sondervarianten (Geier, Farbwenz, Bettel).

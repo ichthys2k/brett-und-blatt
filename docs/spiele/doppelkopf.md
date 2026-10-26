@@ -137,7 +137,13 @@ type DokoMove =
 - `playerView` verrät keine fremden Teams vor der Aufdeckung.
 - Bot-gegen-Bot-Serien.
 
+## Umsetzung (Oktober 2026)
+
+- `packages/games/doppelkopf/src/rules.ts`: DDV-Standard (48 Karten ohne Neunen / 9 bis Ass doppelt; Dulle H10 höchster Trumpf vor Kreuz-Damen; Vorbehaltsabfrage, Normalspiel mit geheimen Re-Parteien über Kreuz-Damen, Hochzeit mit Partnerfindung in den ersten drei Stichen, Soli: Damen-, Buben-, Fleischlos-, Farbsolo; Ansagen Re/Kontra, keine 90, keine 60; Sonderpunkte: Fuchs gefangen, Doppelkopf, Karlchen im 12. Stich; 4er- und 5er-Tisch mit Geberaussetzen).
+- `packages/games/doppelkopf/src/bots.ts`: Doppelkopf-Bot mit Vorbehaltsevaluation (Hochzeit bei 2 Kreuz-Damen), Trumpf- und Fehlfarbenbedienung.
+- `packages/games/doppelkopf/src/ui/index.tsx`: Vorbehaltsabfrage („Gesund“ / „Vorbehalt“), Solo-Auswahl, Ansage-Knöpfe vor Kartenausspielung, Anzeige der bekannten Re-Mitglieder, `TrickTable` und Abrechnung.
+- Server-Integration in `apps/server/src/games.ts` für Online-Partien.
+
 ## Offene Punkte
 
-- TSR-Text des DDV beschaffen und prüfen: genaue Ansage- und Absagefristen, Gewinngrenzen bei einseitigen Ansagen, Erwiderungen, Hochzeit-Klärungsstich, Wertung der Soli, Vorführung.
-- Fünfertisch: Bekommt der aussetzende Geber die Punkte nach TSR?
+- Pflichtsoli-Zwangsserie im Turniermodus mit genauer Vorführung.

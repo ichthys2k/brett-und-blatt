@@ -59,6 +59,15 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Etappe 4** (26.10.2026): **Go** (`packages/games/go`, 9/13/19, Superko, Auszählphase mit Vorschlag, Flächenwertung, Vorgabe, Atari-Go, SGF-Export, MCTS mit RAVE; Engine-Zeitvorgabe `byoyomi` und `timePresetsFor(options)`), **Farbe & Form** (`packages/games/color-and-shape`, Qwirkle-artig) und **Domino** (`packages/games/dominoes`, Doppel-6: Block, Ziehen, Fünfer). Pläne in `docs/spiele/go.md`, `farbe-und-form.md`, `domino.md`. Offen: Go-Fernpartie, SGF-Import, Domino-Spinner.
 
+**Etappe 5** (26.10.2026): **Stichspiele** abgeschlossen.
+- Neuer Stich-Kern (`packages/engine/src/tricks.ts`): Kontrakte, Trumpf- und Fehlfarben, Bedienpflicht, Stichsiegerermittlung mit Vorrang der zuerst gespielten Karte bei identischen Kartenwerten, Standardaugen.
+- Neuer Serien-Rahmen (`packages/engine/src/series.ts`): Geberrotation, Aussetzen am Mehrpersonentisch, Serienstände.
+- Neues UI-Zubehör (`packages/ui`): Erweiterung von `PlayingCard` um Turnierbild (vierfarbig) und bayerisches/deutsches Blatt (Eichel, Gras, Herz, Schellen) mit klaren SVG-Farbsymbolen; `TrickTable` zur räumlichen Anordnung gespielter Stiche um den Spieltisch.
+- **Skat** (`packages/games/skat`): Vollständige ISkO-Regeln (Reizen nach Vorhand/Mittelhand/Hinterhand, Skataufnahme & Drücken, Handspiele, Ouvert, Schneider/Schwarz, Spitzenermittlung mit Skat, 10 Stiche, Seeger-Fabian-Wertung für 3er- und 4er-Tisch mit Geberaussetzen).
+- **Schafkopf** (`packages/games/schafkopf`): Bayerisches Schafkopf (Kurzes Blatt 24 Karten und langes Blatt 32 Karten, Sauspiel mit geheimer Rufsau und Rufbarkeitsprüfung, Davonlaufen mit 4 Karten, Schmierverbot, Wenz, Solo, Tout, Ramsch mit Jungfrau, Klopfen / Stoß mit Verdopplung, Serienabrechnung).
+- **Doppelkopf** (`packages/games/doppelkopf`): DDV-Standard (48 Karten, Dulle Herz-10 als höchster Trumpf vor Kreuz-Damen, Vorbehaltsabfrage, Normalspiel mit geheimen Re-Parteien, Hochzeit mit Partnerfindung in den ersten 3 Stichen, Soli: Damen-, Buben-, Fleischlos-, Farbsolo, Ansagen Re/Kontra, keine 90, keine 60, Sonderpunkte: Fuchs, Doppelkopf, Karlchen im 12. Stich, 4er- und 5er-Tisch).
+- Alle drei Spiele sind im Spieleserver (`apps/server/src/games.ts`) für Online-Mehrspieler registriert.
+
 **Bekannte offene Punkte:**
 - Solitaire: lösbare Spiele für Spider und Pyramide fehlen.
 - Musik: erst 4 von 20 Stücken da (Denkraum); die übrigen Playlists spielen bis dahin alle vorhandenen Stücke. Titel und Prompts im Konzept-Doc.
@@ -77,7 +86,7 @@ Entscheidungen: erst Infrastruktur mit vorhandenen Spielen, dann neue Spiele; h�
 
 Ursprüngliche Eckpunkte: Cloudflare Workers mit Durable Objects (ein Objekt pro Raum, Daten in der EU per `jurisdiction('eu')`, Gratis-Tarif), neues Paket `apps/server` mit dünnem Cloudflare-Adapter, Räume mit Emoji-Code/Link/QR, Wiedereinstieg, Bot-Ersatz für Abwesende, Server-Uhr, flüchtige Signale. Erste Online-Spiele: Schiffe versenken, Quartett, Mäxle, Bingo (Klassen-Modus). Details im Konzept (Fahrplan, Muster, Zeitlimits) und in den Spielplänen. Für Cloudflare braucht es ein Konto von Cornelius – Anmeldung und Zugangsdaten macht er selbst.
 
-Danach laut Fahrplan: Etappe 4 (Go, Domino, Farbe & Form), 5 (Skat, Schafkopf, Doppelkopf), 6 (Emojistone; der Emoji-Sortierer ist als Farbensortierer vorgezogen). Seine Originalspiele liegen in `~/code/4playerchess` und `~/code/emojiclicker/minigames/` (nur als Vorlage lesen).
+Danach laut Fahrplan: Etappe 6 (Emojistone; der Emoji-Sortierer ist als Farbensortierer vorgezogen), Etappe 7 (Scrabble, Uno-artig, Poker, Binokel, Dame, Mensch ärgere dich nicht und die Ideenliste im Konzept). Seine Originalspiele liegen in `~/code/4playerchess` und `~/code/emojiclicker/minigames/` (nur als Vorlage lesen).
 
 ## Hinweise zum Rechnerwechsel
 
