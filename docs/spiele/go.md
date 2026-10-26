@@ -110,6 +110,15 @@ type GoMove =
 - SGF hin und zurück ohne Verlust.
 - **Bot:** schlägt einen Stein in Atari, wenn möglich; der schwere Bot gewinnt auf 9×9 gegen den leichten fast immer.
 
+## Umsetzung (Oktober 2026)
+
+- `src/board.ts`: schnelles Brett (Gruppen, Freiheiten, Zobrist-Prüfsummen, Flächenwertung) und Zufallspartien (`Playout`, wiederverwendbar, eigener schneller Zufall aus dem Seed-Rng). Die Gebietsschätzung (`estimateOwnership`) liefert den Vorschlag für tote Steine und die Lernhilfe.
+- `src/rules.ts`: Positional Superko über die Prüfsummen; `legalMoves` prüft schnell über die Freiheiten der Nachbargruppen. In der Auszählphase stehen dort nur Zustimmen und Weiterspielen, das Markieren prüft `isLegal`. Zeitablauf geht über `resignMove(…, 'time')`: im Spiel verloren, in der Auszählung gilt der Vorschlag als bestätigt. SGF-Export (Import-Parser für Tests vorhanden, in der Oberfläche noch nicht).
+- `src/bots.ts`: MCTS mit RAVE und Vorwissen (Schlagen/Retten gut, Selbst-Atari und erste Linie schlecht, auf großen Brettern dritte/vierte Linie gut). Der Bot passt, wenn der Gegner gepasst hat und die Auszählung für ihn spricht oder wenn der beste Zug auf einem entschiedenen Punkt läge. Etwa 9 000 Zufallspartien/s auf 9 × 9, 2 000/s auf 19 × 19.
+- Engine: neue Zeitvorgabe `byoyomi` (Hauptzeit, dann Perioden) und `timePresetsFor(options)` – größere Bretter haben längere Zeiten.
+- Oberfläche: Linien per CSS im `GridBoard`; unter 30 px pro Punkt erst Vorschau-Stein, dann „Setzen“ oder zweites Tippen; unter 26 px Lupe (190 %).
+- Noch nicht: Fernpartie, SGF-Import in der Oberfläche, KataGo.
+
 ## Offene Punkte
 
 - Prüfen, ob KataGo auf warpdrive sinnvoll läuft (CPU-Version).

@@ -14,6 +14,8 @@ export function describeTime(control: TimeControl): string {
     }
     case 'chessClock':
       return t('time.chessClock', { min: control.baseMs / 60_000, inc: control.incrementMs / 1000 });
+    case 'byoyomi':
+      return t('time.byoyomi', { min: control.mainMs / 60_000, n: control.periods, s: control.periodMs / 1000 });
   }
 }
 

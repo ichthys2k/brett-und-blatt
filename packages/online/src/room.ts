@@ -9,6 +9,7 @@ import {
   type SessionChange,
   type SessionConfig,
   type SessionSnapshot,
+  timePresetsOf,
 } from '@brett-und-blatt/engine';
 import { cleanAvatar, cleanName } from './names';
 import {
@@ -470,7 +471,7 @@ export class Room {
       seats: publicSeats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name })),
       options: resolveOptions(module, this.lobby.options),
       seed: this.deps.randomSeed(),
-      time: module.timePresets[this.lobby.time],
+      time: timePresetsOf(module, this.lobby.options)[this.lobby.time],
     };
     const session = new LocalSession(module, config, this.sessionDeps());
     // Die Versionen zählen über Partien hinweg weiter, damit kein alter Zug in eine neue Partie rutscht.
