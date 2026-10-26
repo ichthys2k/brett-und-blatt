@@ -10,7 +10,7 @@
 | Aufwand | Regeln M, Oberfläche M, Bot M, Inhalte L (vier Sets recherchieren) |
 | Etappe | 3 |
 
-> **Stand 26.10.2026:** gebaut in `packages/games/quartett` (Trumpf und Sammeln, Bots in drei Stufen, online spielbar). Die vier Sets liegen als **Entwurf** in `content/quartett/` (`"status": "Entwurf"`): Werte für Tiere, Weltraum und Dinosaurier sind gerundete Schätzungen mit Quellenhinweis je Karte, aber noch nicht einzeln nachgeprüft; die Bibel-Zahlen sind in der gemeinfreien Menge-Bibel (1939) ausgezählt, weil die Lutherbibel 2017 nicht frei vorliegt. Cornelius prüft und bestätigt die Werte. Laute fehlen noch (Soundeffekte gibt Cornelius später vor), deshalb gibt es die Option „Laute“ noch nicht.
+> **Stand 26.10.2026:** gebaut in `packages/games/quartett` (Trumpf und Sammeln, Bots in drei Stufen, online spielbar). Die vier Sets in `content/quartett/` hat Cornelius am 26.10.2026 bestätigt. Werte für Tiere, Weltraum und Dinosaurier sind gerundet, mit Quellenhinweis je Karte; die Bibel-Zahlen sind in der gemeinfreien Menge-Bibel (1939) ausgezählt, weil die Lutherbibel 2017 nicht frei vorliegt. Ein neues, noch ungeprüftes Set bekommt `"status": "Entwurf"` (wird an der Karte angezeigt). Laute fehlen noch (Soundeffekte gibt Cornelius später vor), deshalb gibt es die Option „Laute“ noch nicht.
 
 Ein Modul mit **zwei Spielweisen**, die dieselben Kartensets nutzen:
 
