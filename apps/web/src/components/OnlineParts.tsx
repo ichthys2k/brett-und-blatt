@@ -1,4 +1,17 @@
-import { AVATARS, MAX_NAME_LENGTH, PHRASES, REACTIONS, ROOM_CODE_LENGTH, ROOM_EMOJIS, SIGNAL_INTERVAL_MS, SIGNAL_MAX_PER_WINDOW, SIGNAL_WINDOW_MS, type MemberInfo } from '@brett-und-blatt/online';
+import {
+  AVATARS,
+  AVATAR_CATEGORIES,
+  MAX_NAME_LENGTH,
+  PHRASES,
+  REACTIONS,
+  ROOM_CODE_LENGTH,
+  ROOM_EMOJIS,
+  SIGNAL_INTERVAL_MS,
+  SIGNAL_MAX_PER_WINDOW,
+  SIGNAL_WINDOW_MS,
+  type AvatarCategoryId,
+  type MemberInfo,
+} from '@brett-und-blatt/online';
 import { useEffect, useMemo, useState } from 'react';
 import { renderSVG } from 'uqr';
 import { t, type MessageKey } from '../i18n';
@@ -11,50 +24,150 @@ export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile
   const [name, setName] = useState(initial?.name ?? '');
   const [avatar, setAvatar] = useState(initial?.avatar ?? AVATARS[0]);
   const [error, setError] = useState(false);
+
+  // Kategorie des aktuellen Avatars für die anfängliche Tab-Auswahl ermitteln
+  const initialCat = useMemo<AvatarCategoryId | 'all'>(() => {
+    const found = AVATAR_CATEGORIES.find((c) => (c.emojis as readonly string[]).includes(initial?.avatar ?? ''));
+    return found ? found.id : 'mammals';
+  }, [initial?.avatar]);
+
+  const [category, setCategory] = useState<AvatarCategoryId | 'all'>(initialCat);
+
+  const displayedAvatars = useMemo(() => {
+    if (category === 'all') return AVATARS;
+    const cat = AVATAR_CATEGORIES.find((c) => c.id === category);
+    return cat ? cat.emojis : AVATARS;
+  }, [category]);
+
   const submit = () => {
     const trimmed = name.trim();
     if (!trimmed) return setError(true);
     onSave({ name: trimmed, avatar });
   };
+
+  const pickRandom = () => {
+    const next = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+    setAvatar(next);
+    if (category !== 'all') {
+      const cat = AVATAR_CATEGORIES.find((c) => (c.emojis as readonly string[]).includes(next));
+      if (cat) setCategory(cat.id);
+    }
+  };
+
   return (
     <form
-      className="space-y-3"
+      className="space-y-4"
       onSubmit={(event) => {
         event.preventDefault();
         submit();
       }}
     >
-      <label className="block space-y-1">
-        <span className="text-sm font-medium">{t('online.name')}</span>
-        <input
-          className="min-h-11 w-full rounded-xl border border-line bg-surface px-3"
-          value={name}
-          maxLength={MAX_NAME_LENGTH}
-          placeholder={t('online.namePlaceholder')}
-          autoComplete="nickname"
-          onChange={(event) => {
-            setName(event.target.value);
-            setError(false);
-          }}
-        />
-      </label>
+      <div className="flex items-end gap-3">
+        <label className="block flex-1 space-y-1">
+          <span className="text-sm font-medium">{t('online.name')}</span>
+          <input
+            className="min-h-11 w-full rounded-xl border border-line bg-surface px-3"
+            value={name}
+            maxLength={MAX_NAME_LENGTH}
+            placeholder={t('online.namePlaceholder')}
+            autoComplete="nickname"
+            onChange={(event) => {
+              setName(event.target.value);
+              setError(false);
+            }}
+          />
+        </label>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-xs text-muted">{t('online.avatar')}</span>
+          <div
+            className="grid size-11 place-items-center rounded-xl bg-accent/20 text-2xl ring-2 ring-accent shadow-sm"
+            aria-label={`Ausgewählt: ${avatar}`}
+            title={`Ausgewählt: ${avatar}`}
+          >
+            {avatar}
+          </div>
+        </div>
+      </div>
       {error && <p className="text-sm text-danger">{t('online.badName')}</p>}
-      <fieldset className="space-y-1">
-        <legend className="text-sm font-medium">{t('online.avatar')}</legend>
-        <div className="flex flex-wrap gap-1">
-          {AVATARS.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              aria-pressed={emoji === avatar}
-              className={`grid size-11 place-items-center rounded-xl text-2xl ${emoji === avatar ? 'bg-accent/20 ring-2 ring-accent' : 'bg-surface-2'}`}
-              onClick={() => setAvatar(emoji)}
-            >
-              {emoji}
-            </button>
-          ))}
+
+      <fieldset className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <legend className="text-sm font-medium">{t('online.avatar')}</legend>
+          <button
+            type="button"
+            onClick={pickRandom}
+            className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink transition hover:bg-surface-3 active:scale-95"
+            title={t('online.avatarRandom')}
+          >
+            <span aria-hidden="true">🎲</span>
+            <span>{t('online.avatarRandom')}</span>
+          </button>
+        </div>
+
+        {/* Kategorie-Filterleiste */}
+        <div
+          role="tablist"
+          aria-label="Avatar-Kategorien"
+          className="flex gap-1 overflow-x-auto pb-1 text-xs"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={category === 'all'}
+            onClick={() => setCategory('all')}
+            className={`flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 font-medium transition ${
+              category === 'all'
+                ? 'bg-accent text-accent-ink shadow-sm'
+                : 'bg-surface-2 text-ink hover:bg-surface-3'
+            }`}
+          >
+            <span>{t('online.avatarAll')}</span>
+            <span className="opacity-70">({AVATARS.length})</span>
+          </button>
+          {AVATAR_CATEGORIES.map((cat) => {
+            const active = category === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setCategory(cat.id)}
+                className={`flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 font-medium transition ${
+                  active
+                    ? 'bg-accent text-accent-ink shadow-sm'
+                    : 'bg-surface-2 text-ink hover:bg-surface-3'
+                }`}
+              >
+                <span aria-hidden="true">{cat.icon}</span>
+                <span>{t(`online.avatarCat.${cat.id}` as MessageKey)}</span>
+                <span className="opacity-70">({cat.emojis.length})</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Avatar Raster */}
+        <div className="flex max-h-60 flex-wrap gap-1 overflow-y-auto rounded-xl border border-line/50 bg-surface/50 p-1.5 sm:max-h-72">
+          {displayedAvatars.map((emoji) => {
+            const isSelected = emoji === avatar;
+            return (
+              <button
+                key={emoji}
+                type="button"
+                aria-pressed={isSelected}
+                className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl transition hover:scale-105 active:scale-95 ${
+                  isSelected ? 'bg-accent/20 ring-2 ring-accent' : 'bg-surface-2 hover:bg-surface-3'
+                }`}
+                onClick={() => setAvatar(emoji)}
+              >
+                {emoji}
+              </button>
+            );
+          })}
         </div>
       </fieldset>
+
       <Button variant="primary" type="submit" className="w-full">
         {submitLabel}
       </Button>
