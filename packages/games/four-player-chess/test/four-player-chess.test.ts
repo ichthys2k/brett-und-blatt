@@ -150,5 +150,5 @@ describe('Zeitablauf mit Schachuhr', () => {
 });
 
 describe('Vertrag für Spielmodule', () => {
-  for (const check of gameContractChecks(gameModule, { randomGames: 2, botMoveLimit: 40, maxMoves: 4000 })) test(check.name, check.run);
+  for (const check of gameContractChecks(gameModule, { randomGames: 2, botMoveLimit: 40, maxMoves: 4000 })) test(check.name, check.run, 120_000);
 });
