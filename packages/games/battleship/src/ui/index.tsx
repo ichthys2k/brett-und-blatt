@@ -1,11 +1,29 @@
 import { Rng, type SeatId } from '@brett-und-blatt/engine';
 import { useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { CELLS, FLEETS, SIZE, colOf, fleetProblem, knownWater, neighbors8, opponentOf, randomFleet, rowOf, salvoSize, shipCells, type BattleshipMove, type BattleshipState, type Shot } from '../rules';
+import {
+  CELLS,
+  FLEETS,
+  SIZE,
+  colLabels,
+  colOf,
+  fleetProblem,
+  formatCoord,
+  knownWater,
+  neighbors8,
+  opponentOf,
+  randomFleet,
+  rowLabels,
+  rowOf,
+  salvoSize,
+  shipCells,
+  type BattleshipMove,
+  type BattleshipState,
+  type CoordMode,
+  type Shot,
+} from '../rules';
 import './styles.css';
 
-const LETTERS = 'ABCDEFGHIJ';
-const coord = (cell: number) => `${LETTERS[colOf(cell)]}${rowOf(cell) + 1}`;
 const SHIP_NAMES: Record<number, string> = { 5: 'Schlachtschiff', 4: 'Kreuzer', 3: 'Zerstörer', 2: 'U-Boot' };
 
 interface CellLook {
@@ -18,6 +36,7 @@ interface CellLook {
 function Sea({
   size,
   label,
+  coords = 'classic',
   look,
   active,
   onCell,
@@ -26,23 +45,30 @@ function Sea({
 }: {
   size: number;
   label: string;
+  coords?: CoordMode;
   look: (cell: number) => CellLook;
   active?: (cell: number) => boolean;
   onCell?: (cell: number) => void;
   onHover?: (cell: number | null) => void;
   className?: string;
 }) {
+  const xLabels = colLabels(coords);
+  const yLabels = rowLabels(coords);
   const cells: ReactNode[] = [];
   for (let cell = 0; cell < CELLS; cell++) {
     const { className: cellClass, content, label: cellLabel } = look(cell);
     const enabled = active?.(cell) ?? false;
+    const axisBorder =
+      coords === 'quadrants4'
+        ? `${colOf(cell) === 4 ? 'bs-axis-r' : ''} ${colOf(cell) === 5 ? 'bs-axis-l' : ''} ${rowOf(cell) === 4 ? 'bs-axis-b' : ''} ${rowOf(cell) === 5 ? 'bs-axis-t' : ''}`
+        : '';
     cells.push(
       <button
         key={cell}
         type="button"
-        className={`bs-cell ${cellClass}`}
+        className={`bs-cell ${axisBorder} ${cellClass}`}
         disabled={!enabled}
-        aria-label={`${coord(cell)}: ${cellLabel}`}
+        aria-label={`${formatCoord(cell, coords)}: ${cellLabel}`}
         onClick={enabled ? () => onCell?.(cell) : undefined}
         onPointerEnter={onHover ? () => onHover(cell) : undefined}
       >
@@ -51,19 +77,35 @@ function Sea({
     );
   }
   return (
-    <div className={`bs-sea-frame ${className}`} style={{ width: size, height: size }}>
+    <div className={`bs-sea-frame ${coords !== 'classic' ? `bs-coords-${coords}` : ''} ${className}`} style={{ width: size, height: size }}>
       <div className="bs-letters" aria-hidden="true">
-        {[...LETTERS].map((l) => (
+        {xLabels.map((l) => (
           <span key={l}>{l}</span>
         ))}
       </div>
       <div className="bs-numbers" aria-hidden="true">
-        {Array.from({ length: SIZE }, (_, i) => (
-          <span key={i}>{i + 1}</span>
+        {yLabels.map((l) => (
+          <span key={l}>{l}</span>
         ))}
       </div>
       <div className="bs-sea" role="group" aria-label={label} onPointerLeave={onHover ? () => onHover(null) : undefined}>
         {cells}
+        {coords === 'quadrants4' && (
+          <div className="bs-axes-overlay" aria-hidden="true">
+            <span className="bs-quad bs-quad-1">I</span>
+            <span className="bs-quad bs-quad-2">II</span>
+            <span className="bs-quad bs-quad-3">III</span>
+            <span className="bs-quad bs-quad-4">IV</span>
+            <span className="bs-axis-label bs-axis-x">x</span>
+            <span className="bs-axis-label bs-axis-y">y</span>
+          </div>
+        )}
+        {coords === 'quadrant1' && (
+          <div className="bs-axes-overlay bs-axes-q1" aria-hidden="true">
+            <span className="bs-axis-label bs-axis-x">x →</span>
+            <span className="bs-axis-label bs-axis-y">↑ y</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -195,7 +237,7 @@ function Placement({ view, size, onDone, hint }: { view: BattleshipState; size: 
 
   return (
     <div className="bs-placement">
-      <Sea size={size} label="Dein Meer – Schiffe aufstellen" look={look} active={() => true} onCell={place} onHover={setHover} />
+      <Sea size={size} coords={view.coords} label="Dein Meer – Schiffe aufstellen" look={look} active={() => true} onCell={place} onHover={setHover} />
       <div className="bs-shipyard" role="group" aria-label="Deine Schiffe">
         {sizes.map((length, i) => (
           <button
@@ -258,14 +300,14 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint }: Bo
     return (
       <div ref={ref} className="bs-table bs-center">
         <p className="bs-help">{waitingFor.length > 0 ? `${waitingFor.map(name).join(' und ')} stellt noch auf …` : ''}</p>
-        {viewer !== 'spectator' && view.placed[viewer] && <Sea size={size} label="Deine Flotte" look={ownLook(view, viewer)} />}
+        {viewer !== 'spectator' && view.placed[viewer] && <Sea size={size} coords={view.coords} label="Deine Flotte" look={ownLook(view, viewer)} />}
       </div>
     );
   }
 
   const last = [...events].reverse().find((e) => e.type === 'shot') as { seat: SeatId; result: string; cell: number } | undefined;
   const sunkNow = events.some((e) => e.type === 'sunk');
-  const news = last ? `${name(last.seat)}: ${coord(last.cell)} – ${sunkNow ? 'versenkt!' : last.result === 'water' ? 'Wasser' : 'Treffer!'}` : null;
+  const news = last ? `${name(last.seat)}: ${formatCoord(last.cell, view.coords)} – ${sunkNow ? 'versenkt!' : last.result === 'water' ? 'Wasser' : 'Treffer!'}` : null;
   const shots = view.salvo && canShoot && viewer !== 'spectator' ? salvoSize(view, viewer) - view.aim.length : null;
 
   if (viewer === 'spectator') {
@@ -277,7 +319,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint }: Bo
           {[0, 1].map((seat) => (
             <section key={seat} className="bs-side">
               <h3>Meer von {name(seat)}</h3>
-              <Sea size={size} label={`Meer von ${name(seat)}`} look={targetLook(view, seat)} />
+              <Sea size={size} coords={view.coords} label={`Meer von ${name(seat)}`} look={targetLook(view, seat)} />
               <FleetBar view={view} owner={seat} label={`Flotte von ${name(seat)}`} />
             </section>
           ))}
@@ -297,6 +339,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint }: Bo
       <h3>Meer von {name(target)}</h3>
       <Sea
         size={big}
+        coords={view.coords}
         label={`Meer von ${name(target)} – hierhin schießt du`}
         look={(cell) => {
           const l = look(cell);
@@ -314,7 +357,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint }: Bo
       <button type="button" className="bs-toggle" disabled={wide} onClick={() => setOwnBig(!ownBig)} aria-expanded={wide || ownBig}>
         Deine Flotte {wide ? '' : ownBig ? '▴' : '▾'}
       </button>
-      <Sea size={small} label="Dein Meer" look={ownLook(view, viewer)} />
+      <Sea size={small} coords={view.coords} label="Dein Meer" look={ownLook(view, viewer)} />
     </section>
   );
 

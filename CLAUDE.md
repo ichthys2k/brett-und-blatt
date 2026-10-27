@@ -86,17 +86,33 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Web-Oberfläche mit Koordinaten (a1–h8), perspektivischer Drehung, Pointer-Drag & Drop, Zughistorie-Modal, Material-Schlagleiste und Hervorhebung schlagpflichtiger Steine.
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`) für Online-Mehrspieler und Playlist „Denkraum“. Plan in `docs/spiele/dame.md`.
 - **Nicht ärgern!** (`packages/games/ludo`, 2–4 Plätze):
-  - Spielplan erarbeitet und in `docs/spiele/ludo.md` dokumentiert (Klassisch 40 Felder, Schlagpflicht, 3 Versuche bei leerer Strecke, Heuristik-Bot „Würfelmeister“, 3D-Würfel & SVG-Kreuzbrett).
+  - Vollständiges Regelwerk nach klassischem Standard: 40-Felder-Rundkurs, 4 Ecken-Ställe, 4 Zielhäuschen, Startfeld räumen bei 6, Kettenwürfe bei 6, 3 Versuche bei leerer Strecke, Schlagpflicht mit Vorrangkaskade.
+  - Heuristischer Taktik-Bot „Würfelmeister“ in 3 Stufen (leicht, mittel, schwer mit Gefahrenanalyse und Reuewert).
+  - Web-Oberfläche mit 11×11-SVG-Kreuzbrett, Okabe-Ito-Farben und Formsymbolen (●, ▲, ■, ★) für Barrierefreiheit, integriertem 3D-Würfel, pulsierenden Ringen für bewegliche Figuren und vollständiger Audio-Einbindung (`wuerfeln`, `stein-schlagen`, `stein-heraus` etc.).
+  - Registriert auf dem Spieleserver (`apps/server/src/games.ts`) für Online-Mehrspieler und Playlist „Spielabend“. Plan in `docs/spiele/ludo.md`.
 - **Wortgitter** (`packages/games/scrabble`, 2–4 Plätze):
   - Spielplan erarbeitet und in `docs/spiele/scrabble.md` dokumentiert (15×15 Brett mit 3W/2W/3B/2B-Multiplikatoren, 102 Steine deutsches Blatt, binäres DAWG-Wörterbuch mit < 200 KB für Browser und Cloudflare Worker, Gordon/Appel-Jacobson-Wortsuch-Bot „Wortmeister“ in 3 Stufen, ZoomBoard & Dual-Input-Steuerung).
 - **Binokel** (`packages/games/binokel`, 3–4 Plätze):
   - Spielplan erarbeitet und in `docs/spiele/binokel.md` dokumentiert (schwäbisches Traditionsspiel, 40/48 Karten doppeltes Blatt, Reizen, Dabb-Tausch & Drücken, Meldebilder mit Vorrang-Erkennung, Überstich- und Trumpfzwang, Durchmarsch, Bot „Schwaben-Ass“ mit PIMC).
+- **Poker** (`packages/games/poker`, 2–10 Plätze):
+  - Texas Hold'em mit No Limit, Pot Limit und Fixed Limit, Turnier-Modus (steigende Blinds nach Händen, Ante) und Offenem Tisch (20/50 Hände), wählbarem Thema (Chips, Bohnen, Streichhölzer) und Lernhilfe (deutsche Handnamen).
+  - Schneller Bitmasken-Handbewerter (`eval.ts`), Haupt- und Side-Pot-Zerlegung mit Rest-Chip-Regel (`pots.ts`), Bot „Pokerface“ in 3 Stufen (Chen-Starthandbewertung, Push-or-Fold, Monte-Carlo-Equity mit Range-Schätzung).
+  - **Laufender Ein- und Ausstieg am Tisch (`joinMidGame: true`, `seatChangeMove`):** Freie Stühle bleiben beim Start erhalten; neue Spieler können sich jederzeit im laufenden Betrieb an den Tisch setzen (`joinSeat`, Status `waiting`) und spielen automatisch ab der nächsten Hand mit; wer aufsteht (`leaveSeat`), passt die laufende Hand und gibt den Platz für die nächste Runde wieder frei. Öffentliche Pokertische mit freien Plätzen bleiben auch während der laufenden Partie auf der Startseite sichtbar.
+  - Registriert auf dem Spieleserver (`apps/server/src/games.ts`) und in Playlist „Kartentisch“. Plan in `docs/spiele/poker.md`.
 
 **Bekannte offene Punkte:**
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
 - Drag & Drop: Universeller Pointer-Drag (`usePointerDrag`), Reise-Animationen (`useSpawnAnimation`) und sanfte Gleit-Animationen für ziehende Figuren (`useGridMoveAnimation`, 280 ms mit `onAnimationEnd`-Cleanup) in `packages/ui/src/dnd`. Gleiten aktiviert für Schach (inkl. Rochade und gedrehtem Brett), Vierer-Schach (alle 4 Perspektiven & Rochade) und Dame. Barrierefreiheit (Tastatur und Klick/Tap) bleibt vollständig erhalten.
 - Siegesklang: Fröhlicher Sound `arcade_level_win` im Audio-Katalog bei jedem Rundensieg (`useGameSounds`), trauriges Wah-Wah-Niederlagegeräusch nur noch bei echtem Partieverlust.
 - Online-Revanche direkt am Tisch: Die Raumleitung kann nach Spielende sofort eine Revanche starten (`start` mit `rotate: true`; bei 2 Spielern mit automatischem Platz-/Farbwechsel), oder während der Partie neu starten – ohne Umweg über die Lobby.
+- **Mathe-Übungen für Klasse 5 & 6 (Optionen A & B, 27.10.2026):**
+  - Sieben Mathe-Inhaltspakete unter `content/paare/` (für Bingo, Paare finden und Schwarzer Peter): `einmaleins` (Kleines Einmaleins), `grosses-einmaleins` (Großes Einmaleins), `kopfrechnen` (Potenzen & Rechengesetze), `groessen` (Größen & Einheiten), `teilbarkeit` (Teiler, ggT & kgV), `brueche` (Brüche, Komma & Prozent) und `ganze-zahlen` (Negative Zahlen).
+  - Neues Mathe-Quartett-Set `content/quartett/geometrie.json` („📐 Geometrie & Körper“, 32 Karten in 8 Gruppen mit Ecken, Kanten, Flächen, Symmetrien und Fläche/Oberfläche).
+  - Klassen-Lobby: Online-Nachricht `fillSeats` und Schaltfläche „🪑 Alle verteilen“ für die Raumleitung, um eine Schulklasse mit einem Klick zufällig auf freie Plätze zu setzen; Bingo-Standardplätze auf 30 erhöht.
+  - **Option B (Mathe-Modi in Klassikern):**
+    - **Schiffe versenken** (`packages/games/battleship`): Option `coords` mit `classic` (`A1–J10`), `quadrant1` (`P(1|1)–P(10|10)`) und `quadrants4` (`P(-5|-5)–P(5|5)` inklusive hervorgehobenem Achsenkreuz $x, y$ und Quadrantenbeschriftung `I–IV`).
+    - **Domino** (`packages/games/dominoes`): Option `display` mit `pips` (Augen 0–6), `terms` (Rechenterme Kl. 5) und `fractions` (Brüche & Dezimalzahlen Kl. 6) direkt auf den SVG-Dominosteinen.
+    - **Eins!** (`packages/games/uno`): Option `mathLabels` („Mathe-Karten“), bei der Zahlenkarten 0–9 Kopfrechenaufgaben, Potenzen und Brüche statt der Ziffer zeigen.
 
 ## Nächste Schritte
 

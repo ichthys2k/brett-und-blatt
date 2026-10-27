@@ -23,7 +23,7 @@
 
 | Option | Werte | Standard |
 |---|---|---|
-| Kartenset | Tiere, Einmaleins (Aufgabe ↔ Ergebnis), Englisch (Wort ↔ Übersetzung) | Tiere |
+| Kartenset | Tiere, Kleines Einmaleins, Großes Einmaleins, Potenzen & Rechengesetze, Größen & Einheiten, Teiler, ggT & kgV, Brüche, Komma & Prozent, Negative Zahlen, Englisch | Tiere |
 | Anzahl Paare | 8, 12, 16 | 12 |
 
 ## Spielmodell

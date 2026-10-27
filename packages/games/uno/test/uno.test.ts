@@ -1,7 +1,7 @@
 import { isLegalMove, LocalSession, inlineBotRunner, Rng } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
-import { gameModule } from '../src';
+import { gameModule, mathCardLabel, UNO_MATH_POOL } from '../src';
 import { canPlayCard, canStackCard, isLegal, setup } from '../src/rules';
 import type { UnoCard } from '../src/types';
 
@@ -188,5 +188,18 @@ describe('Eins! Regeln & Varianten', () => {
     expect(success).toBe(true);
 
     session.dispose();
+  });
+
+  it('Mathe-Karten (mathLabels: on) liefern für Ziffern 0–9 passende Rechenterme und für Sonderkarten null', () => {
+    const state = gameModule.setup(2, { mathLabels: 'on' }, 'math-seed');
+    expect(state.options.mathLabels).toBe('on');
+    for (let d = 0; d <= 9; d++) {
+      const key = String(d);
+      const expr = mathCardLabel(key, `card_${d}_red`);
+      expect(expr).toBeTruthy();
+      expect(UNO_MATH_POOL[key]).toContain(expr);
+    }
+    expect(mathCardLabel('skip', 'card_skip')).toBeNull();
+    expect(mathCardLabel('wild', 'card_wild')).toBeNull();
   });
 });

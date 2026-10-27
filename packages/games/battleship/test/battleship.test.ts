@@ -1,7 +1,7 @@
 import { Rng, computeBotMove, hashSeed, resolveOptions, type BotLevel, type Options } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
-import { fleetProblem, gameModule, knownWater, openCells, randomFleet, shipCells, type BattleshipMove, type BattleshipState } from '../src';
+import { colLabels, fleetProblem, formatCoord, gameModule, knownWater, openCells, randomFleet, rowLabels, shipCells, type BattleshipMove, type BattleshipState } from '../src';
 
 function start(options: Options = {}, seed = 'test'): BattleshipState {
   return gameModule.setup(2, resolveOptions(gameModule, options), seed);
@@ -131,6 +131,30 @@ describe('Schießen', () => {
     expect(gameModule.playerView(state, 1).fleets[1]).toHaveLength(10);
     expect(gameModule.playerView(state, 'spectator').fleets.flat()).toEqual([]);
     expect(gameModule.playerView(state, 0).rng).toEqual([0, 0, 0, 0]);
+  });
+
+  it('formatiert Koordinaten klassisch, im 1. Quadranten und in 4 Quadranten', () => {
+    expect(start().coords).toBe('classic');
+    expect(start({ coords: 'quadrant1' }).coords).toBe('quadrant1');
+    expect(start({ coords: 'quadrants4' }).coords).toBe('quadrants4');
+
+    // Zelle 0 (links oben): A1, P(1 | 10), P(−5 | +5)
+    expect(formatCoord(0, 'classic')).toBe('A1');
+    expect(formatCoord(0, 'quadrant1')).toBe('P(1 | 10)');
+    expect(formatCoord(0, 'quadrants4')).toBe('P(−5 | +5)');
+
+    // Zelle 90 (links unten = Ursprungsnähe im 1. Quadranten): A10, P(1 | 1), P(−5 | −5)
+    expect(formatCoord(90, 'classic')).toBe('A10');
+    expect(formatCoord(90, 'quadrant1')).toBe('P(1 | 1)');
+    expect(formatCoord(90, 'quadrants4')).toBe('P(−5 | −5)');
+
+    // Zelle 45 (Spalte 5 = +1, Zeile 4 = +1 -> I. Quadrant): F5, P(6 | 6), P(+1 | +1)
+    expect(formatCoord(45, 'classic')).toBe('F5');
+    expect(formatCoord(45, 'quadrant1')).toBe('P(6 | 6)');
+    expect(formatCoord(45, 'quadrants4')).toBe('P(+1 | +1)');
+
+    expect(colLabels('quadrants4')).toEqual(['−5', '−4', '−3', '−2', '−1', '+1', '+2', '+3', '+4', '+5']);
+    expect(rowLabels('quadrants4')).toEqual(['+5', '+4', '+3', '+2', '+1', '−1', '−2', '−3', '−4', '−5']);
   });
 });
 

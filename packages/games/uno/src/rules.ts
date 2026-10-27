@@ -24,7 +24,33 @@ export const defaultOptions: UnoOptions = {
   drawRule: 'one',
   callUno: 'on',
   mercyLimit: 0,
+  mathLabels: 'off',
 };
+
+/** Aufgaben-Pool (Klasse 5/6: Kopfrechnen, Potenzen, Brüche, Dezimalzahlen) für Zahlenkarten 0–9. */
+export const UNO_MATH_POOL: Record<string, readonly string[]> = {
+  '0': ['0 · 9', '7 − 7', '0 : 5', '12 − 3·4', '0/8', '5 − 5', '2³ − 8', '0 · 15'],
+  '1': ['9 : 9', '4/4', '10⁰', '15 − 14', '7/7', '2³ − 7', '0,5 + 0,5', '18 : 18'],
+  '2': ['14 : 7', '6/3', '1,5 + 0,5', '20 : 10', '11 − 9', '1/2 · 4', '18 : 9', '8/4'],
+  '3': ['21 : 7', '9/3', '12 : 4', '2,5 + 0,5', '27 : 9', '15 − 12', '1/3 · 9', '24 : 8'],
+  '4': ['2²', '28 : 7', '12/3', '3,2 + 0,8', '36 : 9', '20 : 5', '1/2 · 8', '16 : 4'],
+  '5': ['35 : 7', '15/3', '2,5 · 2', '45 : 9', '20 : 4', '13 − 8', '1/2 · 10', '30 : 6'],
+  '6': ['42 : 7', '2 · 3', '18 : 3', '54 : 9', '24 : 4', '4,5 + 1,5', '3/4 · 8', '12/2'],
+  '7': ['49 : 7', '21 : 3', '63 : 9', '15 − 8', '3,5 · 2', '28 : 4', '14/2', '4,2 + 2,8'],
+  '8': ['2³', '56 : 7', '72 : 9', '24 : 3', '32 : 4', '16/2', '6,4 + 1,6', '4 · 2'],
+  '9': ['3²', '63 : 7', '81 : 9', '27 : 3', '36 : 4', '18/2', '4,5 · 2', '15 − 6'],
+};
+
+/** Liefert für eine Zahlenkarte (0–9) deterministisch anhand der Karten-ID einen Rechenterm. */
+export function mathCardLabel(type: string, cardId: string): string | null {
+  const pool = UNO_MATH_POOL[type];
+  if (!pool || pool.length === 0) return null;
+  let hash = 0;
+  for (let i = 0; i < cardId.length; i++) {
+    hash = (hash * 31 + cardId.charCodeAt(i)) >>> 0;
+  }
+  return pool[hash % pool.length]!;
+}
 
 /** Holt die sichtbare Kartenseite (Vorderseite oder Rückseite bei Flip Dark). */
 export function getActiveFace(card: UnoCard, side: 'light' | 'dark'): CardFace {

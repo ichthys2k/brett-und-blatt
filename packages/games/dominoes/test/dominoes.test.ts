@@ -1,7 +1,7 @@
 import { computeBotMove, resolveOptions, type BotLevel, type Options } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
-import { endSum, gameModule, STONES, type DominoMove, type DominoState, type StoneId } from '../src';
+import { endSum, FRACTION_POOL, gameModule, halfLabel, STONES, TERM_POOL, type DominoMove, type DominoState, type StoneId } from '../src';
 
 const id = (a: number, b: number): StoneId => STONES.findIndex(([x, y]) => x === Math.min(a, b) && y === Math.max(a, b));
 const start = (options: Options = {}, seats = 2, seed = 'test') => gameModule.setup(seats, resolveOptions(gameModule, options), seed);
@@ -105,6 +105,22 @@ describe('Regeln', () => {
     expect(view.hands[0]!.every((x) => x === null)).toBe(true);
     expect(view.boneyard.every((x) => x === null)).toBe(true);
     expect(view.rng).toEqual([0, 0, 0, 0]);
+  });
+
+  it('Mathe-Darstellungen (Terme & Brüche) liefern deterministische Beschriftungen für Werte 0..6', () => {
+    const sTerms = start({ display: 'terms' });
+    expect(sTerms.display).toBe('terms');
+    const sFractions = start({ display: 'fractions' });
+    expect(sFractions.display).toBe('fractions');
+
+    for (let pip = 0 as const; pip <= 6; pip++) {
+      const p = pip as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+      expect(TERM_POOL[p].length).toBeGreaterThanOrEqual(4);
+      expect(FRACTION_POOL[p].length).toBeGreaterThanOrEqual(4);
+      expect(halfLabel(p, 'pips', 0, 0)).toBe(String(p));
+      expect(TERM_POOL[p]).toContain(halfLabel(p, 'terms', 3, 1));
+      expect(FRACTION_POOL[p]).toContain(halfLabel(p, 'fractions', 5, 0));
+    }
   });
 });
 

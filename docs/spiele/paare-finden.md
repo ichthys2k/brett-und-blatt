@@ -34,13 +34,17 @@ Ein Paar besteht aus zwei Seiten, die **gleich** oder **zusammengehörig** sein 
 }
 ```
 
-Erste Sets:
+Erste Sets (`content/paare/`):
 
-- Emojis (gleiche Paare)
-- Tiere mit Lauten aus Emojistone
-- Einmaleins
-- Vokabeln Deutsch–Englisch
-- Biblische Begriffe, z. B. Person ↔ Geschichte
+- Tiere (Emojis)
+- Kleines Einmaleins (`einmaleins.json`)
+- Großes Einmaleins (`grosses-einmaleins.json`)
+- Potenzen & Rechengesetze (`kopfrechnen.json`)
+- Größen & Einheiten (`groessen.json`)
+- Teiler, ggT & kgV (`teilbarkeit.json`)
+- Brüche, Komma & Prozent (`brueche.json`)
+- Negative Zahlen (`ganze-zahlen.json`)
+- Vokabeln Deutsch–Englisch (`englisch.json`)
 
 ## Optionen in der Lobby
 

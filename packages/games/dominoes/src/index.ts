@@ -3,8 +3,8 @@ import { dominoBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, eventView, isLegal, legalMoves, playerView, result, sampleHidden, setup, type DominoMove, type DominoState } from './rules';
 
-export type { ChainStone, DominoMove, DominoState, DominoVariant, RoundSummary, StoneId } from './rules';
-export { endSum, ends, isDouble, pipsOf, playsFor, STONES } from './rules';
+export type { ChainStone, DominoDisplay, DominoMove, DominoState, DominoVariant, RoundSummary, StoneId } from './rules';
+export { endSum, ends, FRACTION_POOL, halfLabel, isDouble, pipsOf, playsFor, STONES, TERM_POOL } from './rules';
 
 export const gameModule: GameModule<DominoState, DominoMove> = {
   info: meta,
@@ -19,6 +19,17 @@ export const gameModule: GameModule<DominoState, DominoMove> = {
         { value: 'fives', label: 'Fünfer' },
       ],
       default: 'draw',
+    },
+    {
+      id: 'display',
+      label: 'Darstellung',
+      description: 'Im Mathe-Modus stehen auf den Steinen Rechenterme oder Brüche für die Werte 0 bis 6.',
+      choices: [
+        { value: 'pips', label: 'Augen (0–6)' },
+        { value: 'terms', label: 'Rechenterme (Kl. 5)' },
+        { value: 'fractions', label: 'Brüche & Dezimal (Kl. 6)' },
+      ],
+      default: 'pips',
     },
     {
       id: 'target',

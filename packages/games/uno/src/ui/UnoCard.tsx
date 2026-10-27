@@ -1,5 +1,5 @@
 import React from 'react';
-import { getActiveFace } from '../rules';
+import { getActiveFace, mathCardLabel } from '../rules';
 import type { CardFace, UnoCard, UnoColor } from '../types';
 
 export interface UnoCardViewProps {
@@ -11,6 +11,7 @@ export interface UnoCardViewProps {
   highlight?: boolean;
   selected?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  mathMode?: boolean;
   onClick?: () => void;
   className?: string;
 }
@@ -27,7 +28,13 @@ const COLOR_MAP: Record<UnoColor, { bg: string; text: string; name: string }> = 
   wild: { bg: '#18181b', text: '#ffffff', name: 'Farbe wählbar' },
 };
 
-function formatCardSymbol(face: CardFace): { center: React.ReactNode; corner: React.ReactNode } {
+function formatCardSymbol(face: CardFace, mathExpr: string | null): { center: React.ReactNode; corner: React.ReactNode } {
+  if (mathExpr) {
+    return {
+      center: <span className="text-xs sm:text-sm font-black tracking-tight text-center leading-tight px-0.5">{mathExpr}</span>,
+      corner: '?',
+    };
+  }
   if (face.animal) {
     return { center: <span className="text-3xl sm:text-4xl">{face.animal}</span>, corner: face.type };
   }
@@ -87,6 +94,7 @@ export const UnoCardView: React.FC<UnoCardViewProps> = ({
   highlight = false,
   selected = false,
   size = 'md',
+  mathMode = false,
   onClick,
   className = '',
 }) => {
@@ -102,21 +110,28 @@ export const UnoCardView: React.FC<UnoCardViewProps> = ({
   if (isBack || !face) {
     const isDark = side === 'dark';
     return (
-      <div
-        className={`relative select-none rounded-xl border-2 border-white/20 shadow-md flex items-center justify-center font-black ${
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={onClick}
+        className={`relative select-none rounded-xl border-2 border-white/20 shadow-md flex items-center justify-center font-black transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-yellow-400 ${
           isDark ? 'bg-gradient-to-br from-purple-900 to-zinc-950 text-teal-400' : 'bg-gradient-to-br from-red-600 to-zinc-900 text-yellow-300'
-        } ${sizeClasses} ${className}`}
+        } ${sizeClasses} ${
+          highlight ? 'ring-2 ring-yellow-400 shadow-xl cursor-pointer hover:brightness-110' : ''
+        } ${disabled ? 'opacity-70 cursor-default' : 'cursor-pointer active:scale-95'} ${className}`}
+        title={onClick && !disabled ? 'Karte ziehen' : 'Nachziehstapel'}
       >
         <div className="w-4/5 h-4/5 rounded-full border border-white/30 flex items-center justify-center -rotate-12 bg-black/40 shadow-inner">
           <span className="font-extrabold tracking-tighter text-sm sm:text-base drop-shadow">Eins!</span>
         </div>
-      </div>
+      </button>
     );
   }
 
   const colorInfo = COLOR_MAP[face.color] ?? COLOR_MAP.wild;
   const isWild = face.color === 'wild';
-  const symbols = formatCardSymbol(face);
+  const mathExpr = mathMode ? mathCardLabel(face.type, card?.id ?? face.type) : null;
+  const symbols = formatCardSymbol(face, mathExpr);
 
   return (
     <button
@@ -132,7 +147,7 @@ export const UnoCardView: React.FC<UnoCardViewProps> = ({
         backgroundColor: isWild ? '#18181b' : colorInfo.bg,
         borderColor: isWild ? '#a1a1aa' : '#ffffff44',
       }}
-      title={`${colorInfo.name} ${face.type}`}
+      title={`${colorInfo.name} ${mathExpr ?? face.type}`}
     >
       {/* Obere linke Ecke */}
       <div className="text-left font-black leading-none drop-shadow-sm text-white">{symbols.corner}</div>

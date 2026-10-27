@@ -5,6 +5,31 @@ export const SIZE = 10;
 export const CELLS = SIZE * SIZE;
 
 export type FleetKind = 'classic' | 'small';
+export type CoordMode = 'classic' | 'quadrant1' | 'quadrants4';
+
+const LETTERS = 'ABCDEFGHIJ';
+const QUADRANT4_X = ['−5', '−4', '−3', '−2', '−1', '+1', '+2', '+3', '+4', '+5'] as const;
+const QUADRANT4_Y = ['+5', '+4', '+3', '+2', '+1', '−1', '−2', '−3', '−4', '−5'] as const;
+
+export function colLabels(mode: CoordMode = 'classic'): readonly string[] {
+  if (mode === 'quadrant1') return ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+  if (mode === 'quadrants4') return QUADRANT4_X;
+  return [...LETTERS];
+}
+
+export function rowLabels(mode: CoordMode = 'classic'): readonly string[] {
+  if (mode === 'quadrant1') return ['10', '9', '8', '7', '6', '5', '4', '3', '2', '1'];
+  if (mode === 'quadrants4') return QUADRANT4_Y;
+  return ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+}
+
+export function formatCoord(cell: number, mode: CoordMode = 'classic'): string {
+  const c = colOf(cell);
+  const r = rowOf(cell);
+  if (mode === 'quadrant1') return `P(${c + 1} | ${SIZE - r})`;
+  if (mode === 'quadrants4') return `P(${QUADRANT4_X[c]} | ${QUADRANT4_Y[r]})`;
+  return `${LETTERS[c]}${r + 1}`;
+}
 
 /** Schiffsgrößen je Flotte, groß zuerst. */
 export const FLEETS: Record<FleetKind, readonly number[]> = {
@@ -27,6 +52,7 @@ export interface Shot {
 
 export interface BattleshipState {
   fleetKind: FleetKind;
+  coords: CoordMode;
   /** Schiffe dürfen sich nicht berühren, auch nicht über Eck (Papierversion). */
   noTouch: boolean;
   /** Nach einem Treffer noch einmal schießen. */
@@ -139,9 +165,11 @@ export function randomFleet(kind: FleetKind, noTouch: boolean, rng: Rng): number
 
 export function setup(seats: number, options: Options, seed: string): BattleshipState {
   const fleetKind: FleetKind = options.fleet === 'small' ? 'small' : 'classic';
+  const coords: CoordMode = options.coords === 'quadrant1' || options.coords === 'quadrants4' ? options.coords : 'classic';
   const noTouch = fleetKind === 'classic';
   return {
     fleetKind,
+    coords,
     noTouch,
     again: options.again !== 'off',
     salvo: options.salvo === 'on',

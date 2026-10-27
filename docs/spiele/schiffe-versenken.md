@@ -37,6 +37,7 @@
 | Nach Treffer weiter | an, aus | an |
 | Salvenmodus | aus, an (so viele Schüsse pro Runde wie eigene Schiffe übrig) | aus |
 | Komfort | Wasser um versenkte Schiffe automatisch markieren (folgt aus dem Berührverbot) | an |
+| Koordinaten | Klassisch (`A1–J10`), 1. Quadrant (`P(1\|1)–P(10\|10)`), 4 Quadranten (`P(-5\|-5)–P(5\|5)` mit Achsenkreuz und Quadrantenziffern `I–IV`) | Klassisch |
 
 ## Umsetzung (Oktober 2026)
 

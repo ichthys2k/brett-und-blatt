@@ -85,6 +85,8 @@ export interface UnoOptions {
   callUno: 'on' | 'off';
   /** Handkartenlimit bis K.O. (z. B. 25 bei No Mercy). 0 = deaktiviert. */
   mercyLimit: number;
+  /** Mathe-Karten: Zahlenkarten (0–9) zeigen Rechenterme & Brüche statt der Ziffer. */
+  mathLabels?: 'off' | 'on';
 }
 
 export interface UnoState {

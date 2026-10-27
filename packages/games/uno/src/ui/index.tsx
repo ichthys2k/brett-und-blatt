@@ -210,7 +210,13 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
             onClick={() => onMove({ type: 'draw' })}
             className="hover:scale-105 transition-transform"
           />
-          <span className="text-xs font-semibold text-zinc-400">{state.stock.length} Stapel</span>
+          <span className="text-xs font-semibold text-zinc-400">
+            {canDraw && isActor
+              ? state.pendingDraw > 0
+                ? `+${state.pendingDraw} ziehen (${state.stock.length})`
+                : `Ziehen (${state.stock.length})`
+              : `${state.stock.length} Stapel`}
+          </span>
         </div>
 
         {/* Ablagestapel */}
@@ -219,6 +225,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
             card={topDiscard}
             side={side}
             size="lg"
+            mathMode={state.options.mathLabels === 'on'}
             disabled
             className="shadow-2xl"
           />
@@ -241,15 +248,27 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
 
       {/* 3. Unterer Bereich: Eigene Hand und Aktionen */}
       <div className="w-full flex flex-col items-center gap-2">
-        {/* Aktionsleiste (Passen / "EINS!"-Button) */}
-        <div className="flex items-center justify-between w-full px-4 max-w-lg">
-          {canPass ? (
+        {/* Aktionsleiste (Ziehen / Passen / "EINS!"-Button) */}
+        <div className="flex items-center justify-between w-full px-4 max-w-lg min-h-10">
+          {canPass && isActor ? (
             <button
               type="button"
               onClick={() => onMove({ type: 'pass' })}
               className="px-4 py-1.5 rounded-lg bg-zinc-700 text-white hover:bg-zinc-600 text-sm font-bold shadow active:scale-95 cursor-pointer"
             >
               Passen
+            </button>
+          ) : canDraw && isActor ? (
+            <button
+              type="button"
+              onClick={() => onMove({ type: 'draw' })}
+              className={`px-4 py-1.5 rounded-lg text-sm font-bold shadow active:scale-95 cursor-pointer transition-all ${
+                playableCardIds.size === 0
+                  ? 'bg-yellow-500 text-zinc-950 hover:bg-yellow-400 ring-2 ring-yellow-300'
+                  : 'bg-zinc-700 text-white hover:bg-zinc-600'
+              }`}
+            >
+              {state.pendingDraw > 0 ? `+${state.pendingDraw} Strafkarten ziehen` : 'Karte ziehen'}
             </button>
           ) : (
             <div />
@@ -281,6 +300,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                   card={card}
                   side={side}
                   size="md"
+                  mathMode={state.options.mathLabels === 'on'}
                   highlight={isPlayable}
                   disabled={!isPlayable}
                   onClick={() => handleCardClick(card)}

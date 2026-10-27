@@ -14,6 +14,36 @@ export const pipsOf = (stone: StoneId) => STONES[stone]![0] + STONES[stone]![1];
 export const isDouble = (stone: StoneId) => STONES[stone]![0] === STONES[stone]![1];
 
 export type DominoVariant = 'block' | 'draw' | 'fives';
+export type DominoDisplay = 'pips' | 'terms' | 'fractions';
+
+export const TERM_POOL: Record<number, readonly string[]> = {
+  0: ['5 − 5', '0 · 9', '8 − 8', '6 − 6', '3 − 3', '0 : 7', '4 − 4'],
+  1: ['7 : 7', '9 − 8', '5⁰', '12 − 11', '6 : 6', '4 − 3', '10 − 9'],
+  2: ['10 : 5', '8 : 4', '6 − 4', '14 : 7', '9 − 7', '18 : 9', '11 − 9'],
+  3: ['12 : 4', '15 : 5', '9 − 6', '21 : 7', '11 − 8', '27 : 9', '18 : 6'],
+  4: ['2²', '12 : 3', '20 : 5', '11 − 7', '28 : 7', '16 : 4', '13 − 9'],
+  5: ['15 : 3', '20 : 4', '12 − 7', '35 : 7', '14 − 9', '45 : 9', '25 : 5'],
+  6: ['2 · 3', '18 : 3', '24 : 4', '15 − 9', '42 : 7', '30 : 5', '14 − 8'],
+};
+
+export const FRACTION_POOL: Record<number, readonly string[]> = {
+  0: ['0/4', '0,0', '0 %', '0/8', '0/3', '0/5', '0/10'],
+  1: ['2/2', '100 %', '4/4', '0,5 · 2', '3/3', '0,25 · 4', '5/5'],
+  2: ['4/2', '6/3', '8/4', '1,5 + 0,5', '10/5', '2,5 − 0,5', '12/6'],
+  3: ['6/2', '9/3', '12/4', '1,5 · 2', '15/5', '2,5 + 0,5', '18/6'],
+  4: ['8/2', '12/3', '16/4', '2,5 + 1,5', '20/5', '0,5 · 8', '24/6'],
+  5: ['10/2', '15/3', '20/4', '2,5 · 2', '25/5', '3,5 + 1,5', '30/6'],
+  6: ['12/2', '18/3', '24/4', '1,5 · 4', '30/5', '4,5 + 1,5', '36/6'],
+};
+
+/** Liefert die Beschriftung einer Steinhälfte im gewählten Darstellungsmodus. */
+export function halfLabel(value: number, display: DominoDisplay = 'pips', stone: StoneId = 0, side: 0 | 1 = 0): string {
+  if (display === 'pips') return String(value);
+  const pool = display === 'fractions' ? FRACTION_POOL[value] : TERM_POOL[value];
+  if (!pool || pool.length === 0) return String(value);
+  const index = (stone * 3 + side * 5 + value) % pool.length;
+  return pool[index]!;
+}
 
 /** Ein Stein in der Kette, mit der Augenzahl links und rechts so, wie er liegt. */
 export interface ChainStone {
@@ -36,6 +66,7 @@ export interface RoundSummary {
 export interface DominoState {
   seats: number;
   variant: DominoVariant;
+  display: DominoDisplay;
   target: number;
   spinner: boolean;
   round: number;
@@ -106,10 +137,12 @@ function deal(state: Omit<DominoState, 'chain' | 'spinnerIndex' | 'upBranch' | '
 
 export function setup(seats: number, options: Options, seed: string): DominoState {
   const variant: DominoVariant = options.variant === 'block' ? 'block' : options.variant === 'fives' ? 'fives' : 'draw';
+  const display: DominoDisplay = options.display === 'terms' || options.display === 'fractions' ? options.display : 'pips';
   const spinner = variant === 'fives' && options.spinner === 'yes';
   return deal({
     seats,
     variant,
+    display,
     target: Number(options.target ?? 100),
     spinner,
     round: 1,

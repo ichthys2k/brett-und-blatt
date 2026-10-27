@@ -17,6 +17,7 @@
 - Rundenende: Wer zuerst leer ist, bekommt die Augen der anderen (Fünfer: auf 5 gerundet). Passen alle nacheinander (gesperrt), gewinnt die wenigsten Augen; bei Gleichstand punktet niemand.
 - **Fünfer-Domino (All Fives):** Nach jedem Anlegen zählen die offenen Enden zusammen; ist die Summe ein Vielfaches von 5, gibt es sofort so viele Punkte. Ein Pasch am Ende zählt doppelt. Mit optionaler „Spinner“-Regel (der erste Pasch öffnet nach Belegen beider Hauptseiten zwei zusätzliche vertikale Äste).
 - Ziel 50, 100, 150 oder 250 Punkte; wer es erreicht, gewinnt sofort.
+- **Darstellung (Mathe-Modus):** Neben klassischen Augen (`pips`, 0–6) können auf den Steinhälften **Rechenterme (Kl. 5)** (`terms`, z. B. `18 : 3`, `2²`, `15 − 9`) oder **Brüche & Dezimalzahlen (Kl. 6)** (`fractions`, z. B. `12/2`, `1,5 · 4`, `100 %`) angezeigt werden. Angelegt wird an wertgleiche Steinhälften.
 
 ## Umsetzung
 

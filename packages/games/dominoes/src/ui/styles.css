@@ -36,9 +36,19 @@
   flex: none;
 }
 
+.dm-stone.dm-stone-math {
+  width: 4.4rem;
+  height: 2.2rem;
+}
+
 .dm-stone.dm-upright {
   width: 1.8rem;
   height: 3.6rem;
+}
+
+.dm-stone.dm-stone-math.dm-upright {
+  width: 2.2rem;
+  height: 4.4rem;
 }
 
 /* Quer stehende Steine: das SVG wird gedreht. */
@@ -53,6 +63,13 @@
   width: 3.6rem;
   height: 1.8rem;
   margin: 0 -0.9rem;
+}
+
+.dm-chain .dm-stone-math.dm-upright,
+.dm-hand .dm-stone-math.dm-upright {
+  width: 4.4rem;
+  height: 2.2rem;
+  margin: 0 -1.1rem;
 }
 
 .dm-spinner-col {
@@ -77,6 +94,13 @@
 
 .dm-pip {
   fill: #1d1d22;
+}
+
+.dm-math-text {
+  fill: #1d1d22;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .dm-last .dm-face {

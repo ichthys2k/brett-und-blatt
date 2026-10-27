@@ -26,6 +26,7 @@ Das bunte Ablegespiel für Familie und Freunde: Passend zur Farbe oder Zahl able
 - **Zwischenwerfen (Jump-in):** Wer eine identische Karte (Farbe + Wert) hat, darf sie sofort außerhalb der Reihe ablegen.
 - **Nachziehen:** 1 Karte ziehen oder so lange ziehen, bis eine passende kommt (`untilMatch`).
 - **„Eins!“ rufen:** Wer die vorletzte Karte legt, muss „Eins!“ rufen; vergisst er es und wird ertappt, drohen 2 Strafkarten.
+- **Mathe-Karten (`mathLabels`):** Im Modus „An (Kopfrechnen & Brüche)“ zeigen Zahlenkarten (`0–9`) in der Kartenmitte Rechenterme, Potenzen und Brüche (Klasse 5/6, z. B. `42 : 7`, `2³`, `3/4 · 8`) statt der Ziffer; in den Ecken steht `?`, sodass vor dem Ablegen im Kopf gerechnet werden muss.
 
 ## Umsetzung
 

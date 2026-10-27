@@ -10,7 +10,7 @@
 | Aufwand | Regeln M, Oberfläche M, Bot M, Inhalte L (vier Sets recherchieren) |
 | Etappe | 3 |
 
-> **Stand 26.10.2026:** gebaut in `packages/games/quartett` (Trumpf und Sammeln, Bots in drei Stufen, online spielbar). Die vier Sets in `content/quartett/` hat Cornelius am 26.10.2026 bestätigt. Werte für Tiere, Weltraum und Dinosaurier sind gerundet, mit Quellenhinweis je Karte; die Bibel-Zahlen sind in der gemeinfreien Menge-Bibel (1939) ausgezählt, weil die Lutherbibel 2017 nicht frei vorliegt. Ein neues, noch ungeprüftes Set bekommt `"status": "Entwurf"` (wird an der Karte angezeigt). Laute fehlen noch (Soundeffekte gibt Cornelius später vor), deshalb gibt es die Option „Laute“ noch nicht.
+> **Stand 27.10.2026:** gebaut in `packages/games/quartett` (Trumpf und Sammeln, Bots in drei Stufen, online spielbar). Fünf Sets in `content/quartett/`: Tiere, Weltraum, Biblische Personen, Dinosaurier und **Geometrie & Körper** (für den Mathematikunterricht Klasse 5/6). Werte für Tiere, Weltraum und Dinosaurier sind gerundet, mit Quellenhinweis je Karte; die Bibel-Zahlen sind in der gemeinfreien Menge-Bibel (1939) ausgezählt, weil die Lutherbibel 2017 nicht frei vorliegt; die Geometrie-Werte sind mathematisch exakt für $a = 10\,\text{cm}$ berechnet. Ein neues, noch ungeprüftes Set bekommt `"status": "Entwurf"` (wird an der Karte angezeigt). Laute fehlen noch (Soundeffekte gibt Cornelius später vor), deshalb gibt es die Option „Laute“ noch nicht.
 
 Ein Modul mit **zwei Spielweisen**, die dieselben Kartensets nutzen:
 
@@ -44,6 +44,7 @@ Ein Set hat 32 Karten in 8 Gruppen (A–H) zu je 4 Karten (1–4). Jede Karte ha
 | **Weltraum und Planeten** | Durchmesser, Masse, Entfernung zur Sonne, Temperatur, Anzahl Monde, Umlaufzeit | Planeten, Zwergplaneten, Monde, Sterne; gut für Mathe und NwT |
 | **Biblische Personen** | Erwähnungen in der Bibel, Zahl der Bücher mit Erwähnung, ungefähre Lebenszeit, AT oder NT | Nur Werte, die für alle 32 Personen belegbar sind; Zählung nach Lutherbibel 2017 |
 | **Dinosaurier** | Länge, Gewicht, Höhe, Zeitalter (Mio. Jahre), Jahr des ersten Fundes | Bei Kindern beliebt; Schätzwerte als solche kennzeichnen |
+| **Geometrie & Körper** | Ecken, Seiten / Kanten, Flächen, Symmetrien, Fläche / Oberfläche ($\text{cm}^2$ bei $a = 10\,\text{cm}$) | Ebene Figuren, Vielecke, Platonische Körper, Prismen, Pyramiden und runde Körper für Mathe Kl. 5/6 |
 
 Regel für Sets: Jede Karte hat **alle** Werte des Sets. Leere Werte sind nicht erlaubt, damit jede Eigenschaft immer wählbar ist.
 
@@ -68,7 +69,7 @@ Regel für Sets: Jede Karte hat **alle** Werte des Sets. Leere Werte sind nicht 
 | Option | Werte | Standard |
 |---|---|---|
 | Spielweise | Trumpf, Sammeln | Trumpf |
-| Kartenset | Tiere, Weltraum, Biblische Personen, Dinosaurier, später eigene | Tiere |
+| Kartenset | Tiere, Weltraum, Biblische Personen, Dinosaurier, Geometrie & Körper, später eigene | Tiere |
 | Rundenlimit (Trumpf) | 15, 30, 50, unbegrenzt | 30 |
 | Aufgedeckte Karten zeigen (Trumpf) | 1, 2, 3 Sekunden | 2 Sekunden |
 | Laute | an, aus (kommt mit den Soundeffekten) | an |

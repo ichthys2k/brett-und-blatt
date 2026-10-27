@@ -185,10 +185,22 @@ describe('Markieren und Bingo', () => {
 });
 
 describe('Lern-Bingo', () => {
+  const files = import.meta.glob<{ id: string; name: string; license: string; pairs: { a: string; b: string }[] }>('../../../../content/paare/*.json', { eager: true, import: 'default' });
+  const idOf = (path: string) => path.slice(path.lastIndexOf('/') + 1).replace('.json', '');
+
+  it('jede Datei in content/paare ist eingebunden und hat Lizenzangabe', () => {
+    expect(Object.keys(files).map(idOf).sort()).toEqual(Object.keys(PACKS).sort());
+    for (const [path, pack] of Object.entries(files)) {
+      expect(pack.id).toBe(idOf(path));
+      expect(pack.license).toBe('CC-BY-SA-4.0');
+    }
+  });
+
   it('die Kartenseiten jedes Pakets sind eindeutig und reichen für 5 × 5', () => {
     for (const pack of Object.values(PACKS)) {
-      expect(new Set(pack.pairs.map((p) => p.b)).size).toBe(pack.pairs.length);
-      expect(pack.pairs.length).toBeGreaterThanOrEqual(24);
+      expect(new Set(pack.pairs.map((p) => p.a)).size, `${pack.id}: a-Seiten eindeutig`).toBe(pack.pairs.length);
+      expect(new Set(pack.pairs.map((p) => p.b)).size, `${pack.id}: b-Seiten eindeutig`).toBe(pack.pairs.length);
+      expect(pack.pairs.length, `${pack.id}: mindestens 24 Paare`).toBeGreaterThanOrEqual(24);
     }
   });
 

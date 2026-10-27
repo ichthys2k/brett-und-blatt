@@ -1,8 +1,10 @@
 import { Rng, type GameModule, type OptionSpec } from '@brett-und-blatt/engine';
 import { unoBot } from './bots';
 import { meta } from './meta';
-import { applyMove, currentPlayers, defaultOptions, isLegal, legalMoves, playerView, result, sampleHidden, setup } from './rules';
+import { applyMove, currentPlayers, defaultOptions, isLegal, legalMoves, mathCardLabel, playerView, result, sampleHidden, setup, UNO_MATH_POOL } from './rules';
 import type { UnoMove, UnoOptions, UnoState } from './types';
+
+export { mathCardLabel, UNO_MATH_POOL };
 
 export const options: OptionSpec[] = [
   {
@@ -69,6 +71,16 @@ export const options: OptionSpec[] = [
     ],
     default: defaultOptions.callUno,
   },
+  {
+    id: 'mathLabels',
+    label: 'Mathe-Karten',
+    description: 'Zahlenkarten (0–9) zeigen Kopfrechenaufgaben, Potenzen und Brüche (Klasse 5/6) statt der Ziffer.',
+    choices: [
+      { value: 'off', label: 'Aus (Ziffern 0–9)' },
+      { value: 'on', label: 'An (Kopfrechnen & Brüche)' },
+    ],
+    default: defaultOptions.mathLabels ?? 'off',
+  },
 ];
 
 export const gameModule: GameModule<UnoState, UnoMove> = {
@@ -88,6 +100,7 @@ export const gameModule: GameModule<UnoState, UnoMove> = {
       jumpIn: (opts?.jumpIn as UnoOptions['jumpIn']) ?? defaultOptions.jumpIn,
       drawRule: (opts?.drawRule as UnoOptions['drawRule']) ?? defaultOptions.drawRule,
       callUno: (opts?.callUno as UnoOptions['callUno']) ?? defaultOptions.callUno,
+      mathLabels: (opts?.mathLabels as UnoOptions['mathLabels']) ?? defaultOptions.mathLabels,
     };
     return setup(seats, rng, parsedOptions);
   },

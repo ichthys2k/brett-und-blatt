@@ -28,7 +28,7 @@ Bingo ist das erste Spiel, bei dem **alle gleichzeitig** handeln, und das erste 
 
 | Option | Werte | Standard |
 |---|---|---|
-| Inhalt | Zahlen 1–75, Einmaleins, Englisch, Tiere, … (alle Inhaltspakete) | Zahlen 1–75 |
+| Inhalt | Zahlen 1–75, Kleines Einmaleins, Großes Einmaleins, Potenzen & Rechengesetze, Größen & Einheiten, Teiler, ggT & kgV, Brüche, Komma & Prozent, Negative Zahlen, Englisch, Tiere | Zahlen 1–75 |
 | Kartengröße | 3 × 3, 4 × 4, 5 × 5 (nur Lern-Bingo; Zahlen immer 5 × 5) | 5 × 5 |
 | Ziel | eine Reihe, zwei Reihen, vier Ecken, volle Karte | eine Reihe |
 | Markieren | selbst, automatisch | selbst |
@@ -50,7 +50,7 @@ Umgesetzt in `packages/games/bingo`, lokal und online. Entscheidungen von Cornel
 - **Hot-Seat:** alle Karten der Menschen nebeneinander (neue optionale `BoardProps.humanSeats`).
 - **Zeit-Voreinstellungen** haben keine Wirkung (alle „ohne Zeitlimit“).
 - **Tafel für den Beamer:** Knopf „📺 Tafel“ öffnet das Vollbild mit großer Kugel, allen gezogenen Einträgen, den zehn Besten und online dem QR-Code samt Raumcode (neue optionale `BoardProps.invite`). Die Spielleitung kann dort auch ziehen.
-- Noch offen: automatische Platzvergabe beim Beitreten, eigene Bingo-Inhaltspakete.
+- **Klassen-Modus & Mathe-Pakete:** Beim Auswählen von Bingo im Online-Raum öffnen sich standardmäßig 30 Plätze; mit dem Knopf „🪑 Alle verteilen“ setzt die Raumleitung alle beigetretenen Schülerinnen und Schüler auf einen Schlag auf freie Plätze. Für den Mathematikunterricht (Klasse 5/6) stehen sieben Pakete bereit: Kleines Einmaleins, Großes Einmaleins, Potenzen & Rechengesetze, Größen & Einheiten, Teiler, ggT & kgV, Brüche, Komma & Prozent sowie Negative Zahlen.
 
 ## Spielmodell
 

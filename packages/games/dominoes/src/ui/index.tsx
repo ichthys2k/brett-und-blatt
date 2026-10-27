@@ -1,7 +1,7 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import { usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useState } from 'react';
-import { isDouble, pipsOf, STONES, type DominoMove, type DominoState, type StoneId } from '../rules';
+import { halfLabel, isDouble, pipsOf, STONES, type DominoDisplay, type DominoMove, type DominoState, type StoneId } from '../rules';
 import './styles.css';
 
 /** Augenpositionen in einem Feld von 100 × 100. */
@@ -15,7 +15,25 @@ const PIPS: Record<number, [number, number][]> = {
   6: [[28, 24], [72, 24], [28, 50], [72, 50], [28, 76], [72, 76]],
 };
 
-function Half({ n, x }: { n: number; x: number }) {
+function Half({ n, x, text, upright }: { n: number; x: number; text?: string; upright?: boolean }) {
+  if (text !== undefined) {
+    const fontSize = text.length > 6 ? 19 : text.length > 4 ? 22 : 26;
+    return (
+      <g transform={`translate(${x} 0)`}>
+        <text
+          x="50"
+          y="50"
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={fontSize}
+          className="dm-math-text"
+          transform={upright ? 'rotate(-90 50 50)' : undefined}
+        >
+          {text}
+        </text>
+      </g>
+    );
+  }
   return (
     <g transform={`translate(${x} 0)`}>
       {PIPS[n]!.map(([cx, cy], i) => (
@@ -26,18 +44,43 @@ function Half({ n, x }: { n: number; x: number }) {
 }
 
 /** Ein Dominostein, waagerecht mit `left` links; Pasche stehen quer (`upright`). */
-export function Stone({ left, right, upright, className = '', label }: { left: number; right: number; upright?: boolean; className?: string; label?: string }) {
+export function Stone({
+  left,
+  right,
+  stone,
+  display = 'pips',
+  upright,
+  className = '',
+  label,
+}: {
+  left: number;
+  right: number;
+  stone?: StoneId;
+  display?: DominoDisplay;
+  upright?: boolean;
+  className?: string;
+  label?: string;
+}) {
+  const sId = stone ?? 0;
+  const orig = STONES[sId];
+  const swapped = orig ? orig[0] !== left || orig[1] !== right : false;
+  const leftText = display !== 'pips' ? halfLabel(left, display, sId, swapped ? 1 : 0) : undefined;
+  const rightText = display !== 'pips' ? halfLabel(right, display, sId, swapped ? 0 : 1) : undefined;
   return (
-    <svg viewBox="0 0 200 100" className={`dm-stone ${upright ? 'dm-upright' : ''} ${className}`} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
+    <svg viewBox="0 0 200 100" className={`dm-stone ${upright ? 'dm-upright' : ''} ${display !== 'pips' ? 'dm-stone-math' : ''} ${className}`} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
       <rect x="2" y="2" width="196" height="96" rx="14" className="dm-face" />
       <line x1="100" y1="12" x2="100" y2="88" className="dm-bar" />
-      <Half n={left} x={0} />
-      <Half n={right} x={100} />
+      <Half n={left} x={0} text={leftText} upright={upright} />
+      <Half n={right} x={100} text={rightText} upright={upright} />
     </svg>
   );
 }
 
-const stoneName = (s: StoneId) => `[${STONES[s]![0]}|${STONES[s]![1]}]`;
+const stoneName = (s: StoneId, display: DominoDisplay = 'pips') => {
+  const [a, b] = STONES[s]!;
+  if (display === 'pips') return `[${a}|${b}]`;
+  return `[${halfLabel(a, display, s, 0)} = ${a} | ${halfLabel(b, display, s, 1)} = ${b}]`;
+};
 
 function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps<DominoState, DominoMove>) {
   const seat = typeof viewer === 'number' ? viewer : null;
@@ -135,7 +178,7 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
               {summary.hands.map((h, s) =>
                 h.length === 0 ? null : (
                   <span key={s} className="dm-reveal-row">
-                    {name(s)}: {h.map((st) => stoneName(st)).join(' ')} ({h.reduce((sum, st) => sum + pipsOf(st), 0)} Augen)
+                    {name(s)}: {h.map((st) => stoneName(st, view.display)).join(' ')} ({h.reduce((sum, st) => sum + pipsOf(st), 0)} Augen)
                   </span>
                 ),
               )}
@@ -149,6 +192,8 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
             const stoneEl = (
               <Stone
                 key={`${c.stone}-${i}`}
+                stone={c.stone}
+                display={view.display}
                 left={c.left}
                 right={c.right}
                 upright={isDouble(c.stone)}
@@ -163,11 +208,11 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
               <div key={`spinner-col-${i}`} className="dm-spinner-col">
                 {endButton('up')}
                 {view.upBranch?.slice().reverse().map((b, bi) => (
-                  <Stone key={`up-${b.stone}-${bi}`} left={b.right} right={b.left} upright className={view.lastPlayed?.stone === b.stone ? 'dm-last' : ''} />
+                  <Stone key={`up-${b.stone}-${bi}`} stone={b.stone} display={view.display} left={b.right} right={b.left} upright className={view.lastPlayed?.stone === b.stone ? 'dm-last' : ''} />
                 ))}
                 {stoneEl}
                 {view.downBranch?.map((b, bi) => (
-                  <Stone key={`down-${b.stone}-${bi}`} left={b.left} right={b.right} upright className={view.lastPlayed?.stone === b.stone ? 'dm-last' : ''} />
+                  <Stone key={`down-${b.stone}-${bi}`} stone={b.stone} display={view.display} left={b.left} right={b.right} upright className={view.lastPlayed?.stone === b.stone ? 'dm-last' : ''} />
                 ))}
                 {endButton('down')}
               </div>
@@ -211,7 +256,7 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
                 disabled={!isPlayable}
                 data-selected={selected === stone || undefined}
                 data-hint={hintStone === stone || undefined}
-                aria-label={`${stoneName(stone)}${isPlayable ? '' : ', passt nicht'}`}
+                aria-label={`${stoneName(stone, view.display)}${isPlayable ? '' : ', passt nicht'}`}
                 onClick={() => tapStone(stone)}
                 onPointerDown={dragBind?.onPointerDown}
                 style={{
@@ -221,7 +266,7 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
                   touchAction: isPlayable ? 'none' : undefined,
                 }}
               >
-                <Stone left={a} right={b} upright />
+                <Stone stone={stone} display={view.display} left={a} right={b} upright />
               </button>
             );
           })}
