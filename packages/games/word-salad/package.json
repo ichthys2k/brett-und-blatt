@@ -1,0 +1,21 @@
+{
+  "name": "@brett-und-blatt/game-word-salad",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "exports": {
+    ".": "./src/index.ts",
+    "./rules": "./src/rules.ts",
+    "./ui": "./src/ui/index.tsx"
+  },
+  "dependencies": {
+    "@brett-und-blatt/engine": "workspace:*",
+    "@brett-und-blatt/ui": "workspace:*",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "vitest": "^4.0.18"
+  }
+}

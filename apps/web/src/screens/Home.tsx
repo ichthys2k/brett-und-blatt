@@ -60,7 +60,7 @@ const CATEGORIES: readonly CategorySpec[] = [
     icon: '🎲',
     title: 'Familien-, Lege- & Gesellschaftsspiele',
     subtitle: 'Gemeinsam würfeln, kombinieren, merken und raten – auch in großer Runde.',
-    gameIds: ['hangman', 'bible-quiz', 'ludo', 'dominoes', 'color-and-shape', 'battleship', 'maexle', 'pairs', 'bingo'],
+    gameIds: ['word-salad', 'hangman', 'bible-quiz', 'ludo', 'dominoes', 'color-and-shape', 'battleship', 'maexle', 'pairs', 'bingo'],
   },
   {
     id: 'math',
@@ -152,6 +152,15 @@ const MATH_CLASSIC_PRESETS: readonly MathPresetCard[] = [
     title: 'Mathe-Galgenmännchen',
     description: 'Mathematische Fachbegriffe aus Geometrie, Arithmetik und Bruchrechnung (Kl. 5/6) Buchstabe für Buchstabe erraten.',
     badge: '1–8 Spieler · Fachbegriffe Kl. 5/6',
+    params: { category: 'mathe' },
+  },
+  {
+    id: 'math-word-salad',
+    gameId: 'word-salad',
+    emoji: '🥗',
+    title: 'Mathe-Wort-Salat',
+    description: 'Aus langen Mathe-Stammwörtern wie KOORDINATENSYSTEM oder RECHENDREIECK möglichst viele Teilwörter bilden.',
+    badge: '1–30 Spieler · Wortjagd',
     params: { category: 'mathe' },
   },
 ];

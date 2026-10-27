@@ -56,5 +56,11 @@
   "fs-hand-quartett": { "file": "fs_hand_four_of_a_kind.mp3", "end": 1.3, "gain": 1.2 },
   "fs-hand-farbenstrasse": { "file": "fs_hand_straight_flush.mp3", "end": 2.0, "gain": 1.2 },
   "fs-hand-farbenlauf-deluxe": { "file": "fs_hand_royal_flush.mp3", "end": 2.0, "gain": 1.2 },
-  "fs-hand-quintett": { "file": "fs_hand_five_of_a_kind.mp3", "end": 1.7, "gain": 1.2 }
+  "fs-hand-quintett": { "file": "fs_hand_five_of_a_kind.mp3", "end": 1.7, "gain": 1.2 },
+  "poker-check": { "file": "click_wooden.mp3", "end": 0.25, "gain": 0.9, "rate": 1.15 },
+  "poker-fold": { "file": "ds_swipe.mp3", "end": 0.32, "gain": 0.9, "rate": 0.9 },
+  "poker-call": { "file": "fs_coin.mp3", "end": 0.28, "gain": 0.95, "rate": 0.95 },
+  "poker-bet": { "file": "fs_coin.mp3", "end": 0.3, "gain": 1.15, "rate": 1.05 },
+  "poker-raise": { "file": "fs_coin.mp3", "end": 0.3, "gain": 1.25, "rate": 1.2 },
+  "poker-all-in": { "file": "stone_impact.mp3", "end": 0.65, "gain": 0.75, "rate": 1.15 }
 }

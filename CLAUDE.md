@@ -77,7 +77,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Vollständige Uno-Varianten-Engine mit 5 Decks: Classic (108 Karten), No Mercy (168 Karten, bis +10 und Ausscheiden bei 25 Karten), Flip (112 beidseitige Karten Hell/Dunkel), All Wild (112 Aktionskarten) und Junior (36 Tierkarten für Kinder).
   - Umfangreiche Regeloptionen: Stacking (aus, gleichartig, progressiv), 7-0 Handtausch, Jump-In, Ziehen bis passend, Farbwahl-Einschränkungen und "Eins!" rufen / anprangern.
   - Heuristischer Taktik-Bot („Kartenhai“) in drei Schwierigkeitsstufen (einfach, mittel, schwer).
-  - Vollständig responsive Web-Oberfläche mit SVG-Karten, Farbwahlmodal, Richtungswechsel-Animation, 3D-Flip-Wendung und pulsierendem "Eins!"-Aktionsknopf.
+  - Vollständig responsive Web-Oberfläche mit SVG-Karten, Pointer Drag & Drop (`usePointerDrag`), sichtbaren kaskadierenden Flug-Animationen beim Legen und Ziehen von Karten (inkl. Aufprall-Impuls und organischem Ablagewinkel), Farbwahlmodal, Richtungswechsel-Animation, 3D-Flip-Wendung und pulsierendem "Eins!"-Aktionsknopf.
   - Registriert für Online-Mehrspieler auf dem Spieleserver (`apps/server/src/games.ts`). Plan in `docs/spiele/uno.md`.
 - **Dame** (`packages/games/checkers`):
   - Drei Regelsätze: Klassisch Deutsch (8×8, 12 Steine, fliegende Dame, einfache Steine schlagen nur vorwärts, Schlagpflicht mit freier Wahl), International (10×10, 20 Steine, fliegende Dame, Steine schlagen rückwärts, Mehrschlagpflicht) und Englisch / American Checkers (8×8, 12 Steine, Dame zieht nur 1 Feld, kein Rückwärtsschlagen).
@@ -98,6 +98,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Texas Hold'em mit No Limit, Pot Limit und Fixed Limit, Turnier-Modus (steigende Blinds nach Händen, Ante) und Offenem Tisch (20/50 Hände), wählbarem Thema (Chips, Bohnen, Streichhölzer) und Lernhilfe (deutsche Handnamen).
   - Schneller Bitmasken-Handbewerter (`eval.ts`), Haupt- und Side-Pot-Zerlegung mit Rest-Chip-Regel (`pots.ts`), Bot „Pokerface“ in 3 Stufen (Chen-Starthandbewertung, Push-or-Fold, Monte-Carlo-Equity mit Range-Schätzung).
   - **Laufender Ein- und Ausstieg am Tisch (`joinMidGame: true`, `seatChangeMove`):** Freie Stühle bleiben beim Start erhalten; neue Spieler können sich jederzeit im laufenden Betrieb an den Tisch setzen (`joinSeat`, Status `waiting`) und spielen automatisch ab der nächsten Hand mit; wer aufsteht (`leaveSeat`), passt die laufende Hand und gibt den Platz für die nächste Runde wieder frei. Öffentliche Pokertische mit freien Plätzen bleiben auch während der laufenden Partie auf der Startseite sichtbar.
+  - Vollständige Vertonung aller Aktionen und Spielphasen (All-in mit Tisch-Push und Chip-Kaskade, Fold-Muck-Swipe, Schieben, Call/Bet/Raise in aufsteigender Tonhöhe, Showdown-Trommelwirbel, Handgewinn-Pot-Auszahlung, Blind-Gong und Ausscheiden).
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`) und in Playlist „Kartentisch“. Plan in `docs/spiele/poker.md`.
 - **Bibel-Quiz** (`packages/games/bible-quiz`, 1–30 Plätze):
   - Emoji-Bibelquiz nach Cornelius' Vorlage aus *Der Große Preis* mit allen 168 kuratierten Fragen in 5 Themenbereichen (Altes Testament, Neues Testament, Gleichnisse, Personen, Verse & Zitate) und 3 Schwierigkeitsstufen.
@@ -109,6 +110,11 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Drei SVG-Darstellungen (*Schneemann* schmilzt, *Blume* verliert Blütenblätter, *Klassischer Galgen*) und 4 Wortpakete (*Alltag & Schule*, *Tiere & Natur*, *Knifflige Wörter*, *Mathe-Fachbegriffe Kl. 5/6*) mit insgesamt über 180 kuratierten deutschen Begriffen (`A–Z`, `Ä`, `Ö`, `Ü`, `ß → SS`).
   - Intelligenter Bot „Buchstabenfuchs“ mit Musterabgleich und deutscher Buchstabenhäufigkeit in 3 Stufen.
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`), in *Familien-, Lege- & Gesellschaftsspiele*, als Mathe-Direktwahl „Mathe-Galgenmännchen“ und in Playlist „Spielabend“. Plan in `docs/spiele/galgenmaennchen.md`.
+- **Wort-Salat** (`packages/games/word-salad`, 1–30 Plätze):
+  - Teilwort-Jagd aus *Der Große Preis* (`br_words`): Aus den Buchstabenkacheln eines langen Stammwortes (z. B. *Sonnenblume*, *Taschenlampe*, *Schmetterling*, *Koordinatensystem*) möglichst viele echte deutsche Teilwörter legen.
+  - Zwei Modi (*Wörterjagd* nach Wortlänge und *Exklusiv-Bonus* mit doppelten Punkten für einzigartige Funde ⭐), 3 Stammwort-Pakete (*Bunter Mix*, *Natur & Tiere*, *Mathe & Geometrie Kl. 5/6*), geheime eigene Wortliste während der Runde (`playerView`) und Runden-Auswertung mit unentdeckten Perlen.
+  - Bot „Wortakrobat“ mit realistischen Tipp-Pausen (`delayMs`) in 3 Schwierigkeitsstufen.
+  - Registriert auf dem Spieleserver (`apps/server/src/games.ts`), in *Familien-, Lege- & Gesellschaftsspiele*, als Mathe-Direktwahl „Mathe-Wort-Salat“ und in Playlist „Spielabend“. Plan in `docs/spiele/wort-salat.md`.
 
 **Bekannte offene Punkte:**
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.

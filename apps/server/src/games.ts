@@ -30,10 +30,11 @@ import { gameModule as targetNumber } from '@brett-und-blatt/game-target-number'
 import { gameModule as ticTacToe } from '@brett-und-blatt/game-tic-tac-toe';
 import { gameModule as ultimateTicTacToe } from '@brett-und-blatt/game-ultimate-tic-tac-toe';
 import { gameModule as uno } from '@brett-und-blatt/game-uno';
+import { gameModule as wordSalad } from '@brett-und-blatt/game-word-salad';
 
 /**
  * Die Spiele, die online angeboten werden: alle für mehrere Personen. Ein neues
  * Mehrspieler-Spiel muss hier (und in package.json) eingetragen werden – ein Test
  * im Server-Paket erinnert daran.
  */
-export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, duckRally, factorGrid, fourInARow, fourPlayerChess, go, hangman, ludo, maexle, mill, numberWall, pairs, poker, quartett, reversi, schafkopf, skat, targetNumber, ticTacToe, ultimateTicTacToe, uno];
+export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, duckRally, factorGrid, fourInARow, fourPlayerChess, go, hangman, ludo, maexle, mill, numberWall, pairs, poker, quartett, reversi, schafkopf, skat, targetNumber, ticTacToe, ultimateTicTacToe, uno, wordSalad];

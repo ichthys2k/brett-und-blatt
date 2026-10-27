@@ -34,5 +34,5 @@ Das bunte Ablegespiel für Familie und Freunde: Passend zur Farbe oder Zahl able
 - Deterministische Spielleitung ohne Seiteneffekte mit `Rng`-Zufallszustand (`rng`, in der Sicht genullt).
 - `sampleHidden`: Füllt unbekannte fremde Hände und den Nachziehstapel für Bot-Simulationen auf.
 - KI-Bot `unoBot` in drei Stufen (`easy`, `medium`, `hard`) mit Taktiken für Farbwahl, Aussetzen, Farbmehrheiten und Anprangern.
-- Oberfläche: Responsive Handkarten-Fächer, Richtungsring mit CSS-Animation, pulsierender „Eins!“-Button, Anpranger-Knöpfe bei Mitspielern, Farbwahl-Modal.
+- Oberfläche: Responsive Handkarten-Fächer mit Pointer Drag & Drop (`usePointerDrag`), sichtbare kaskadierende Flug-Animationen beim Kartenlegen und Nachziehen (inkl. Aufprall-Impuls und organischem Ablagewinkel), Richtungsring mit CSS-Animation, pulsierender „Eins!“-Button, Anpranger-Knöpfe bei Mitspielern, Farbwahl-Modal.
 - Registriert auf dem Cloudflare-Spieleserver (`apps/server/src/games.ts` und `package.json`).

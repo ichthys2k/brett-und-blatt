@@ -1,5 +1,6 @@
 import { inlineBotRunner, LocalSession, type CardId } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
+import { soundCatalog, soundsForEvents } from '@brett-und-blatt/ui';
 import { describe, expect, test } from 'vitest';
 import {
   bestFive,
@@ -23,6 +24,7 @@ import {
   type PokerState,
   type PokerView,
 } from '../src';
+import { gameUi } from '../src/ui';
 
 describe('Poker – Vertrag', () => {
   const checks = gameContractChecks(gameModule, {
@@ -206,3 +208,53 @@ describe('Poker – Im laufenden Betrieb hinzukommen und verlassen (ab nächster
     session.dispose();
   });
 });
+
+describe('Poker – Sound-Effekte & Ereignisse', () => {
+  test('ordnet allen Poker-Ereignissen eigene, gültige Katalog-Klänge zu', () => {
+    const map = gameUi.sounds!;
+    expect(soundsForEvents([{ type: 'fold', seat: 0 }], map)).toEqual(['poker-fold']);
+    expect(soundsForEvents([{ type: 'check', seat: 0 }], map)).toEqual(['poker-check']);
+    expect(soundsForEvents([{ type: 'call', seat: 0, amount: 20 }], map)).toEqual(['poker-call']);
+    expect(soundsForEvents([{ type: 'bet', seat: 0, amount: 40 }], map)).toEqual(['poker-bet']);
+    expect(soundsForEvents([{ type: 'raise', seat: 0, to: 80 }], map)).toEqual(['poker-raise', 'fs-pop']);
+    expect(soundsForEvents([{ type: 'allIn', seat: 0, to: 1000 }], map)).toEqual(['poker-all-in', 'fs-auszahlung']);
+    expect(soundsForEvents([{ type: 'street', street: 'flop' }], map)).toEqual(['drachen-karte-ziehen', 'karte-ziehen']);
+    expect(soundsForEvents([{ type: 'street', street: 'turn' }], map)).toEqual(['drachen-karte-ziehen']);
+    expect(soundsForEvents([{ type: 'handEnd', handNumber: 1, winners: [0], showdown: false }], map)).toEqual([
+      'fs-auszahlung',
+      'paar',
+    ]);
+    expect(soundsForEvents([{ type: 'handEnd', handNumber: 1, winners: [0], showdown: true }], map)).toEqual([
+      'aufdecken',
+      'stapel-fertig',
+      'fs-auszahlung',
+    ]);
+    expect(soundsForEvents([{ type: 'eliminated', seats: [1] }], map)).toEqual(['leben-weg']);
+    expect(soundsForEvents([{ type: 'blindLevelUp', level: 2, smallBlind: 15, bigBlind: 30 }], map)).toEqual(['schach']);
+    expect(soundsForEvents([{ type: 'deal', handNumber: 2, button: 1 }], map)).toEqual(['fs-mischen']);
+    expect(soundsForEvents([{ type: 'joined', seat: 2 }], map)).toEqual(['stein-heraus']);
+    expect(soundsForEvents([{ type: 'left', seat: 2 }], map)).toEqual(['karte-legen']);
+
+    // Bei einem All-in-Showdown mit Ausscheiden entsteht die vollständige Klangkette in der richtigen Reihenfolge.
+    const showdownEvents = [
+      { type: 'call', seat: 1, amount: 980 },
+      { type: 'street', street: 'runout', count: 5 },
+      { type: 'handEnd', handNumber: 1, winners: [0], showdown: true, eliminated: [1] },
+      { type: 'eliminated', seats: [1] },
+    ];
+    const chain = soundsForEvents(showdownEvents, map);
+    expect(chain).toEqual([
+      'poker-call',
+      'drachen-karte-ziehen',
+      'karte-ziehen',
+      'aufdecken',
+      'stapel-fertig',
+      'fs-auszahlung',
+      'leben-weg',
+    ]);
+    for (const name of chain) {
+      expect(soundCatalog[name]).toBeDefined();
+    }
+  });
+});
+

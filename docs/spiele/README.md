@@ -40,6 +40,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Rechenmauer](rechenmauer.md) | 1–30 | gleichzeitig | Pyramidenmauer, Auswahl-Chips, Dreieckslöser | M | M | S | Mathe (Kl. 5/6) |
 | [Enten-Rallye](enten-rallye.md) | 1–30 | gleichzeitig, parallel | Gummienten-Fluss, Splitscreen-Ziffernblock, Gleichungen | M | M | S | Mathe (Kl. 5/6) |
 | [Galgenmännchen](galgenmaennchen.md) | 1–8 | verdeckt, offen / gleichzeitig | SVG-Schneemann/Blume/Galgen, Buchstaben-Tastatur, Wortlisten | M | M | S | 7 / Familie & Mathe |
+| [Wort-Salat](wort-salat.md) | 1–30 | gleichzeitig, verdeckt | Buchstabenkacheln, Stammwort-Katalog, Exklusiv-Bonus | M | M | S | 7 / Familie & Mathe |
 | [Bibel-Quiz](bibelquiz.md) | 1–30 | gleichzeitig | Emoji-Quiz, simultane Eingabe, BibelServer | S | M | S | 7 / Familie |
 
 ## Gemeinsame Bausteine

@@ -386,6 +386,7 @@ function startHand(state: PokerState, events: GameEvent[]): void {
     return;
   }
 
+  const prevLevel = state.levelIndex;
   state.handNumber += 1;
   state.levelIndex =
     state.mode === 'tournament'
@@ -398,6 +399,14 @@ function startHand(state: PokerState, events: GameEvent[]): void {
     state.anteMode === 'always' || (state.anteMode === 'level4' && state.levelIndex >= 3)
       ? blindSpec.ante
       : 0;
+  if (state.handNumber > 1 && state.levelIndex > prevLevel) {
+    events.push({
+      type: 'blindLevelUp',
+      level: state.levelIndex + 1,
+      smallBlind: state.smallBlind,
+      bigBlind: state.bigBlind,
+    });
+  }
 
   const button = nextSeatFrom(state.seats, state.button, (s) => s.status === 'active' && s.chips > 0) ?? playable[0]!.seat;
   state.button = button;
@@ -509,8 +518,11 @@ function advanceIfRoundComplete(state: PokerState, lastActor: SeatId, events: Ga
       shownHands: [],
       showdown: false,
     };
-    markEliminations(state);
-    events.push({ type: 'handEnd', handNumber: state.handNumber, winners: [winner], showdown: false });
+    const eliminated = markEliminations(state);
+    events.push({ type: 'handEnd', handNumber: state.handNumber, winners: [winner], showdown: false, eliminated });
+    if (eliminated.length > 0) {
+      events.push({ type: 'eliminated', seats: eliminated });
+    }
     startHand(state, events);
     return;
   }
@@ -574,9 +586,14 @@ function advanceIfRoundComplete(state: PokerState, lastActor: SeatId, events: Ga
 }
 
 function runOutAndShowdown(state: PokerState, events: GameEvent[]): void {
+  let dealt = 0;
   while (state.board.length < 5 && state.deck.length > 0) {
     state.board.push(state.deck[0]!);
     state.deck = state.deck.slice(1);
+    dealt += 1;
+  }
+  if (dealt > 0) {
+    events.push({ type: 'street', street: 'runout', count: dealt });
   }
 
   const committed = state.seats.map((s) => s.totalCommitted);
@@ -615,14 +632,17 @@ function runOutAndShowdown(state: PokerState, events: GameEvent[]): void {
     showdown: true,
   };
 
-  markEliminations(state);
-  events.push({ type: 'handEnd', handNumber: state.handNumber, winners: allWinners, showdown: true });
+  const eliminated = markEliminations(state);
+  events.push({ type: 'handEnd', handNumber: state.handNumber, winners: allWinners, showdown: true, eliminated });
+  if (eliminated.length > 0) {
+    events.push({ type: 'eliminated', seats: eliminated });
+  }
   startHand(state, events);
 }
 
-function markEliminations(state: PokerState): void {
+function markEliminations(state: PokerState): SeatId[] {
   const busted = state.seats.filter((s) => s.status === 'active' && s.chips <= 0);
-  if (busted.length === 0) return;
+  if (busted.length === 0) return [];
   const remainingActive = state.seats.filter((s) => s.status === 'active' && s.chips > 0).length;
   // Wer mit mehr Chips in die Hand ging, erhält bei gleichzeitigem Ausscheiden den besseren Platz.
   const sortedBusted = [...busted].sort((a, b) => b.handStartChips - a.handStartChips);
@@ -630,6 +650,7 @@ function markEliminations(state: PokerState): void {
     s.status = 'eliminated';
     s.place = remainingActive + idx + 1;
   });
+  return sortedBusted.map((s) => s.seat);
 }
 
 /** Berechnet den aktuellen Gesamtpot (inklusive laufender Einsätze dieser Straße). */

@@ -651,14 +651,25 @@ export const gameUi: GameUi<PokerView, PokerMove> = {
   Board,
   SeatSymbol,
   sounds: {
-    deal: 'mischen',
-    street: 'karte-ziehen',
-    bet: 'stein-setzen',
-    raise: 'stein-setzen',
-    call: 'stein-setzen',
-    check: 'karte-legen',
-    fold: 'karte-legen',
-    allIn: 'schach',
+    deal: 'fs-mischen',
+    blindLevelUp: 'schach',
+    street: (event) =>
+      event.street === 'flop' || event.street === 'runout'
+        ? ['drachen-karte-ziehen', 'karte-ziehen']
+        : 'drachen-karte-ziehen',
+    check: 'poker-check',
+    fold: 'poker-fold',
+    call: 'poker-call',
+    bet: 'poker-bet',
+    raise: () => ['poker-raise', 'fs-pop'],
+    allIn: () => ['poker-all-in', 'fs-auszahlung'],
+    handEnd: (event) =>
+      event.showdown
+        ? ['aufdecken', 'stapel-fertig', 'fs-auszahlung']
+        : ['fs-auszahlung', 'paar'],
+    eliminated: 'leben-weg',
+    joined: 'stein-heraus',
+    left: 'karte-legen',
   },
   seatLabel: (seat) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) => {

@@ -116,17 +116,29 @@ type PokerMove =
 
 **Bei Zeitablauf** (`timeoutMove`): schieben, wenn möglich, sonst passen.
 
-## Oberfläche
+## Oberfläche & Audio
 
 - **Ovaler Tisch** mit bis zu 10 Plätzen ringsum; eigener Platz unten, Gegner kompakt oben/seitlich; freie Stühle mit direktem Knopf **„+ Hinsetzen (nächste Hand)“**, wartende Stühle mit Abzeichen **„Ab nächster Hand dabei“**.
 - **Mitte:** Gemeinschaftskarten, Pot(s) mit Betrag, Dealer-Knopf, SB/BB-Marken.
 - **Aktionsleiste:** Passen · Schieben/Mitgehen (mit Betrag) · Setzen/Erhöhen mit Schieberegler und Schnellknöpfen (Min, ½ Pot, ¾ Pot, Pot, All-in), dazu +/− sowie **„Aufstehen“**-Knopf zum Verlassen des Platzes.
 - **Hot-Seat ohne Übergabe-Bildschirm** (`privateViews: false`): Handkarten liegen im Hot-Seat verdeckt und sind sichtbar, solange man „Karten ansehen“ gedrückt hält.
+- **Ausführliche Soundeffekte:**
+  - `deal`: echtes Kartenmischen (`fs-mischen`).
+  - `street`: knackiges Aufdecken von Flop (2 Karten-Flips), Turn, River und All-in-Runouts (`drachen-karte-ziehen`, `karte-ziehen`).
+  - `check`: kurzes, helles Klopfen auf den Tisch (`poker-check`).
+  - `fold`: Karten verdeckt in den Muck schieben (`poker-fold`).
+  - `call` & `bet`: gezielte Chip-Klänge in aufsteigender Tonhöhe (`poker-call`, `poker-bet`).
+  - `raise`: Erhöhen mit höherem Münz-Ton und Akzent (`poker-raise`, `fs-pop`).
+  - `allIn`: satter Tisch-Push + Chip-Kaskade (`poker-all-in`, `fs-auszahlung`).
+  - `handEnd`: Pot-Gewinn ohne Showdown (`fs-auszahlung`, `paar`) bzw. mit Showdown mit Trommelwirbel und Gewinnglanz (`aufdecken`, `stapel-fertig`, `fs-auszahlung`).
+  - `eliminated`: Ausscheiden bei Chipverlust (`leben-weg`).
+  - `blindLevelUp`: Gong bei Blind-Erhöhung im Turnier (`schach`).
+  - `joined` / `left`: Audio-Feedback beim Hinsetzen (`stein-heraus`) und Aufstehen (`karte-legen`).
 
 ## Entscheidungen (27.10.2026)
 
 - Erste Veröffentlichung: Schritt 1 (Texas Hold'em inkl. laufendem Tisch-Ein- und Ausstieg).
 - Thema: Chips als Standard, Bohnen und Streichhölzer wählbar.
 - Lernhilfe: Handname als Standard.
-- Klänge: vorhandene Kartenklänge; Playlist „Kartentisch“.
+- Klänge: Feine Abstufung aller Aktionen und Hand-Enden im Katalog (`catalog.json`); Playlist „Kartentisch“.
 - Bot-Name: „Pokerface“.
