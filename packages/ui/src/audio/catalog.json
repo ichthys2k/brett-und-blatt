@@ -22,7 +22,7 @@
   "treffer": { "file": "arcade_explosion_1.mp3", "end": 0.28, "gain": 0.45 },
   "versenkt": { "file": "stone_impact.mp3", "end": 2.3, "gain": 0.7 },
   "schiff-setzen": { "file": "ui_grid_snap.mp3", "end": 0.37, "gain": 3 },
-  "sieg": { "file": "hit_orchestra_win.mp3", "end": 1.35, "gain": 0.65 },
+  "sieg": { "file": "arcade_level_win.mp3", "gain": 1.1 },
   "niederlage": { "file": "hit_brass_fail.mp3", "end": 1.67, "gain": 0.5 },
   "unentschieden": { "file": "hit_chimes_bar.mp3", "end": 0.76, "gain": 0.95 },
   "dein-zug": { "file": "correct_double.mp3", "end": 1.68, "gain": 0.6 },

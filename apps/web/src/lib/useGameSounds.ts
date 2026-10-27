@@ -71,9 +71,9 @@ export function useGameSounds(session: GameSession, sounds: SoundMap | undefined
   }, [session, online, yourSeat]);
 }
 
-/** Aus Sicht der Menschen an diesem Gerät; ohne Menschen (nur Bots) klingt jeder Sieg fröhlich. */
-function resultSound(result: Result, local: SeatId[]): SoundName {
+/** Bei einem Rundensieg ertönt immer der Siegesklang; Niederlagenklang nur bei echtem Partieverlust (z. B. Solitaire). */
+function resultSound(result: Result, _local: SeatId[]): SoundName {
   if (result.kind === 'draw') return 'unentschieden';
   if (result.kind === 'loss') return 'niederlage';
-  return local.length === 0 || result.winners.some((seat) => local.includes(seat)) ? 'sieg' : 'niederlage';
+  return 'sieg';
 }

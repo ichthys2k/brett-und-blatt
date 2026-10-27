@@ -310,6 +310,5 @@ export const gameUi: GameUi<UnoState, UnoMove> = {
     skip: 'karte-legen',
     reverse: 'karte-legen',
     flip: 'drachen-karte-ziehen',
-    win: 'sieg',
   },
 };
