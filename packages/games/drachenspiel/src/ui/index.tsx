@@ -5,6 +5,7 @@ import { CARDS_DB, STAR_CARD } from '../cards';
 import { DECK_THEMES, DECK_THEME_IDS } from '../decks';
 import type { DeckThemeId, DrachenspielMove, DrachenspielView, Minion } from '../types';
 import { playCreatureAudio } from './audio';
+import { getCardFullTitle, getCardTraits, getMinionFullTitle, getMinionTraits, type TraitInfo } from './traits';
 import './styles.css';
 
 const LABELS = ['Blau', 'Rot'];
@@ -13,6 +14,24 @@ type DrachenDragItem =
   | { kind: 'card'; handIndex: number }
   | { kind: 'minion'; minionId: string };
 
+function TraitBadge({ trait, isOpponent }: { trait: TraitInfo; isOpponent?: boolean }) {
+  return (
+    <span
+      className={`ds-trait-badge ${isOpponent ? 'ds-trait-opponent' : ''}`}
+      title={trait.fullTitle}
+      aria-label={`${trait.name}: ${trait.description}`}
+    >
+      <span className="ds-trait-emoji">{trait.emoji}</span>
+      <span className="ds-trait-tooltip" role="tooltip">
+        <strong className="ds-trait-tooltip-title">
+          {trait.emoji} {trait.name}
+        </strong>
+        <span className="ds-trait-tooltip-desc">{trait.description}</span>
+      </span>
+    </span>
+  );
+}
+
 function MinionView({
   minion,
   isOwner,
@@ -20,8 +39,11 @@ function MinionView({
   isSelected,
   isTargetable,
   attackAnim,
+  attackVector,
   damageAmount,
   healAmount,
+  isDying,
+  isImpacted,
   onClick,
   onPointerDown,
   dropTarget,
@@ -29,6 +51,7 @@ function MinionView({
   isDragged,
   isSnapping,
   dragTransform,
+  elementRef,
 }: {
   minion: Minion;
   isOwner: boolean;
@@ -36,8 +59,11 @@ function MinionView({
   isSelected: boolean;
   isTargetable: boolean;
   attackAnim?: 'up' | 'down' | null;
+  attackVector?: { dx: number; dy: number } | null;
   damageAmount?: number | null;
   healAmount?: number | null;
+  isDying?: boolean;
+  isImpacted?: boolean;
   onClick: () => void;
   onPointerDown?: (e: ReactPointerEvent<HTMLElement>) => void;
   dropTarget?: string;
@@ -45,15 +71,20 @@ function MinionView({
   isDragged?: boolean;
   isSnapping?: boolean;
   dragTransform?: string;
+  elementRef?: (el: HTMLElement | null) => void;
 }) {
+  const traits = getMinionTraits(minion);
   const classes = [
-    'ds-minion bub-animate-drop',
+    'ds-minion',
+    !isDying && 'bub-animate-drop',
     canAttack && 'can-attack',
     isSelected && 'selected',
     isTargetable && 'targetable',
     attackAnim === 'up' && 'ds-attacking-up',
     attackAnim === 'down' && 'ds-attacking-down',
-    damageAmount && 'bub-animate-shake',
+    attackVector && 'ds-attacking',
+    (damageAmount || isImpacted) && 'bub-animate-shake ds-hit-impact',
+    isDying && 'ds-minion-dying',
     minion.taunt && 'taunt',
     minion.bubble && 'bubble',
     minion.stealth && 'stealth',
@@ -65,21 +96,28 @@ function MinionView({
 
   return (
     <div
+      ref={elementRef}
       className={classes}
-      onClick={onClick}
-      onPointerDown={onPointerDown}
+      onClick={isDying ? undefined : onClick}
+      onPointerDown={isDying ? undefined : onPointerDown}
       style={{
+        ...(attackVector
+          ? ({
+              '--atk-dx': `${attackVector.dx}px`,
+              '--atk-dy': `${attackVector.dy}px`,
+            } as CSSProperties)
+          : {}),
         transform: dragTransform,
-        position: isDragged ? 'relative' : undefined,
-        zIndex: isDragged ? 1000 : undefined,
+        position: isDragged || attackVector ? 'relative' : undefined,
+        zIndex: isDragged ? 1000 : attackVector ? 60 : undefined,
         touchAction: canAttack ? 'none' : undefined,
       }}
-      data-drop-target={dropTarget}
+      data-drop-target={isDying ? undefined : dropTarget}
       data-drop-active={dropActive ? 'true' : undefined}
-      role="button"
-      tabIndex={0}
-      aria-label={`${minion.name}, Angriff ${minion.attack}, Leben ${minion.health}`}
-      title={minion.quote ?? undefined}
+      role={isDying ? undefined : 'button'}
+      tabIndex={isDying ? undefined : 0}
+      aria-label={`${minion.name}, Angriff ${minion.attack}, Leben ${minion.health}${traits.length > 0 ? ` [${traits.map((t) => t.name).join(', ')}]` : ''}`}
+      title={getMinionFullTitle(minion)}
     >
       {damageAmount !== null && damageAmount !== undefined && (
         <span className="bub-floating-badge ds-damage-badge">-{damageAmount}</span>
@@ -88,11 +126,9 @@ function MinionView({
         <span className="bub-floating-badge ds-heal-badge">+{healAmount}</span>
       )}
       <div className="ds-minion-icons">
-        {minion.taunt && <span title="Beschützer">🛡️</span>}
-        {minion.bubble && <span title="Schutzblase">🫧</span>}
-        {minion.poisonous && <span title="Giftig">🧪</span>}
-        {minion.stealth && <span title="Versteckt">🌙</span>}
-        {minion.deathrattle && <span title="Abschied">👋</span>}
+        {traits.map((trait) => (
+          <TraitBadge key={trait.id} trait={trait} isOpponent={!isOwner} />
+        ))}
       </div>
       <div className="ds-minion-emoji">{minion.emoji}</div>
       <div className="ds-minion-name">{minion.name}</div>
@@ -123,8 +159,43 @@ function Board({
       amount: number;
     }>
   >([]);
-  const [attacking, setAttacking] = useState<Map<string, 'up' | 'down'>>(new Map());
+  const [attacking, setAttacking] = useState<Map<string, { dx: number; dy: number }>>(new Map());
+  const [impactedIds, setImpactedIds] = useState<Set<string>>(new Set());
+  const [dyingMinions, setDyingMinions] = useState<Array<{ minion: Minion; seat: SeatId; originalIndex: number }>>([]);
+
   const seenEventsRef = useRef<GameEvent[] | null>(null);
+  const minionElsRef = useRef<Map<string, HTMLElement>>(new Map());
+  const heroElsRef = useRef<Map<SeatId, HTMLElement>>(new Map());
+  const prevViewRef = useRef<DrachenspielView>(view);
+  const prevEventsRef = useRef<GameEvent[] | null>(null);
+
+  // Synchrones Festhalten von Minions, die in diesem Zug besiegt wurden
+  if (events !== prevEventsRef.current) {
+    prevEventsRef.current = events;
+    const prevView = prevViewRef.current;
+    if (events && events.length > 0 && prevView) {
+      const deadEvents = events.filter((e) => e.type === 'minionLeft') as Array<
+        GameEvent & { minionId: string; name: string }
+      >;
+      if (deadEvents.length > 0) {
+        const nextDying: Array<{ minion: Minion; seat: SeatId; originalIndex: number }> = [];
+        for (const de of deadEvents) {
+          for (const seat of [0, 1] as SeatId[]) {
+            const idx = prevView.players[seat].board.findIndex((m) => m.id === de.minionId);
+            if (idx !== -1) {
+              const m = prevView.players[seat].board[idx];
+              if (!nextDying.some((d) => d.minion.id === m.id)) {
+                nextDying.push({ minion: m, seat, originalIndex: idx });
+              }
+            }
+          }
+        }
+        if (nextDying.length > 0) {
+          setDyingMinions(nextDying);
+        }
+      }
+    }
+  }
 
   // Determine active viewer seat (default to player 0 if spectator)
   const mySeat: SeatId = typeof viewer === 'number' ? viewer : 0;
@@ -196,6 +267,7 @@ function Board({
               const def = CARDS_DB[card.defId];
               if (!def) return null;
               const isDiscarded = mulliganDiscard.has(idx);
+              const cardTraits = getCardTraits(def);
               return (
                 <div
                   key={card.uid}
@@ -203,9 +275,16 @@ function Board({
                   onClick={() => toggleDiscard(idx)}
                   role="button"
                   tabIndex={0}
+                  aria-label={`${def.name}, Kosten ${def.cost}${cardTraits.length > 0 ? ` [${cardTraits.map((t) => t.name).join(', ')}]` : ''}`}
+                  title={getCardFullTitle(def)}
                 >
                   <div className="ds-card-top">
                     <span className="ds-card-cost">{def.cost}</span>
+                    <div className="ds-card-traits">
+                      {cardTraits.map((trait) => (
+                        <TraitBadge key={trait.id} trait={trait} />
+                      ))}
+                    </div>
                   </div>
                   <div className="ds-card-center">
                     <span className="ds-card-emoji">{def.emoji}</span>
@@ -244,12 +323,17 @@ function Board({
 
   // Play Phase
   useEffect(() => {
+    prevViewRef.current = view;
+  }, [view]);
+
+  useEffect(() => {
     if (seenEventsRef.current === events) return;
     seenEventsRef.current = events;
     if (!events || events.length === 0) return;
 
     const newEffects: typeof effects = [];
-    const newAttacking = new Map<string, 'up' | 'down'>();
+    const newAttacking = new Map<string, { dx: number; dy: number }>();
+    const newImpacted = new Set<string>();
 
     for (const e of events) {
       if (e.type === 'cardPlayed') {
@@ -259,10 +343,48 @@ function Board({
           playCreatureAudio(def.name, 'play', def.sound);
         }
       } else if (e.type === 'attack') {
-        const attackerId = (e as unknown as { attackerId: string }).attackerId;
-        const isFromMe = me.board.some((m) => m.id === attackerId);
-        newAttacking.set(attackerId, isFromMe ? 'up' : 'down');
-        const minion = me.board.find((m) => m.id === attackerId) ?? opp.board.find((m) => m.id === attackerId);
+        const atk = e as unknown as {
+          attackerId: string;
+          target: { kind: 'minion'; id: string } | { kind: 'hero' };
+        };
+        const attackerId = atk.attackerId;
+        const target = atk.target;
+
+        const isFromMe =
+          me.board.some((m) => m.id === attackerId) ||
+          dyingMinions.some((d) => d.seat === mySeat && d.minion.id === attackerId);
+
+        const targetSeat = (isFromMe ? oppSeat : mySeat) as SeatId;
+
+        // Positionen im DOM messen
+        const attackerEl = minionElsRef.current.get(attackerId);
+        let targetEl: HTMLElement | undefined;
+        if (target.kind === 'minion') {
+          targetEl = minionElsRef.current.get(target.id);
+          newImpacted.add(target.id);
+        } else {
+          targetEl = heroElsRef.current.get(targetSeat);
+          newImpacted.add(`hero-${targetSeat}`);
+        }
+
+        let vector = { dx: 0, dy: isFromMe ? -120 : 120 };
+        if (attackerEl && targetEl) {
+          const aRect = attackerEl.getBoundingClientRect();
+          const tRect = targetEl.getBoundingClientRect();
+          const ax = aRect.left + aRect.width / 2;
+          const ay = aRect.top + aRect.height / 2;
+          const tx = tRect.left + tRect.width / 2;
+          const ty = tRect.top + tRect.height / 2;
+          vector = { dx: Math.round(tx - ax), dy: Math.round(ty - ay) };
+        }
+
+        newAttacking.set(attackerId, vector);
+
+        const minion =
+          me.board.find((m) => m.id === attackerId) ??
+          opp.board.find((m) => m.id === attackerId) ??
+          dyingMinions.find((d) => d.minion.id === attackerId)?.minion;
+
         if (minion) {
           playCreatureAudio(minion.name, 'attack', minion.sound);
         }
@@ -270,7 +392,12 @@ function Board({
         const left = e as unknown as { minionId: string; name: string };
         playCreatureAudio(left.name, 'death');
       } else if (e.type === 'damage') {
-        const dmg = e as unknown as { targetType: 'hero' | 'minion'; targetSeat?: SeatId; targetId?: string; amount: number };
+        const dmg = e as unknown as {
+          targetType: 'hero' | 'minion';
+          targetSeat?: SeatId;
+          targetId?: string;
+          amount: number;
+        };
         newEffects.push({
           type: 'damage',
           targetKind: dmg.targetType,
@@ -278,8 +405,18 @@ function Board({
           targetId: dmg.targetId,
           amount: dmg.amount,
         });
+        if (dmg.targetType === 'minion' && dmg.targetId) {
+          newImpacted.add(dmg.targetId);
+        } else if (dmg.targetType === 'hero' && dmg.targetSeat !== undefined) {
+          newImpacted.add(`hero-${dmg.targetSeat}`);
+        }
       } else if (e.type === 'heal') {
-        const heal = e as unknown as { targetType: 'hero' | 'minion'; targetSeat?: SeatId; targetId?: string; amount: number };
+        const heal = e as unknown as {
+          targetType: 'hero' | 'minion';
+          targetSeat?: SeatId;
+          targetId?: string;
+          amount: number;
+        };
         newEffects.push({
           type: 'heal',
           targetKind: heal.targetType,
@@ -287,19 +424,25 @@ function Board({
           targetId: heal.targetId,
           amount: heal.amount,
         });
+      } else if (e.type === 'bubblePopped') {
+        const pop = e as unknown as { minionId: string };
+        newImpacted.add(pop.minionId);
       }
     }
 
-    if (newEffects.length > 0 || newAttacking.size > 0) {
+    if (newEffects.length > 0 || newAttacking.size > 0 || newImpacted.size > 0) {
       setEffects(newEffects);
       setAttacking(newAttacking);
+      setImpactedIds(newImpacted);
       const timer = window.setTimeout(() => {
         setEffects([]);
         setAttacking(new Map());
-      }, 550);
+        setImpactedIds(new Set());
+        setDyingMinions([]);
+      }, 580);
       return () => window.clearTimeout(timer);
     }
-  }, [events, me.board]);
+  }, [events, me.board, opp.board, dyingMinions, mySeat, oppSeat]);
 
   const oppHeroDmg = effects.find((e) => e.targetKind === 'hero' && e.targetSeat === oppSeat && e.type === 'damage')?.amount;
   const oppHeroHeal = effects.find((e) => e.targetKind === 'hero' && e.targetSeat === oppSeat && e.type === 'heal')?.amount;
@@ -396,12 +539,40 @@ function Board({
 
   const canPlayOrAttack = playableCardIndices.size > 0 || me.board.some((m) => m.canAttack && !m.hasAttacked);
 
+  const myDying = dyingMinions.filter((d) => d.seat === mySeat);
+  const myDisplayMinions: Array<{ minion: Minion; isDying: boolean }> = me.board.map((m) => ({
+    minion: m,
+    isDying: false,
+  }));
+  for (const d of myDying) {
+    if (!myDisplayMinions.some((item) => item.minion.id === d.minion.id)) {
+      const idx = Math.min(d.originalIndex, myDisplayMinions.length);
+      myDisplayMinions.splice(idx, 0, { minion: d.minion, isDying: true });
+    }
+  }
+
+  const oppDying = dyingMinions.filter((d) => d.seat === oppSeat);
+  const oppDisplayMinions: Array<{ minion: Minion; isDying: boolean }> = opp.board.map((m) => ({
+    minion: m,
+    isDying: false,
+  }));
+  for (const d of oppDying) {
+    if (!oppDisplayMinions.some((item) => item.minion.id === d.minion.id)) {
+      const idx = Math.min(d.originalIndex, oppDisplayMinions.length);
+      oppDisplayMinions.splice(idx, 0, { minion: d.minion, isDying: true });
+    }
+  }
+
   return (
     <div className="ds-arena">
       {/* Opponent Zone */}
       <div className="ds-opponent-zone">
         <div
-          className={`ds-hero-card ${canTargetHero ? 'targetable' : ''} ${oppHeroDmg ? 'bub-animate-shake' : ''}`}
+          ref={(el) => {
+            if (el) heroElsRef.current.set(oppSeat, el);
+            else heroElsRef.current.delete(oppSeat);
+          }}
+          className={`ds-hero-card ${canTargetHero ? 'targetable' : ''} ${oppHeroDmg || impactedIds.has(`hero-${oppSeat}`) ? 'bub-animate-shake ds-hit-impact' : ''}`}
           onClick={handleHeroClick}
           role={canTargetHero ? 'button' : undefined}
           tabIndex={canTargetHero ? 0 : undefined}
@@ -409,6 +580,7 @@ function Board({
           style={{ position: 'relative' }}
           data-drop-target="enemy-hero"
           data-drop-active={dragState.isDragging && dragState.targetId === 'enemy-hero' && canTargetHero ? 'true' : undefined}
+          data-hero-seat={oppSeat}
         >
           {oppHeroDmg !== undefined && (
             <span className="bub-floating-badge ds-damage-badge">-{oppHeroDmg}</span>
@@ -437,15 +609,17 @@ function Board({
       {/* Boards */}
       <div className="ds-board-container">
         {/* Enemy Board */}
-        <div className={`ds-board-row ${opp.board.length === 0 ? 'empty-hint' : ''}`}>
-          {opp.board.length === 0 ? (
+        <div className={`ds-board-row ${oppDisplayMinions.length === 0 ? 'empty-hint' : ''}`}>
+          {oppDisplayMinions.length === 0 ? (
             <span>Keine gegnerischen Tiere auf dem Feld</span>
           ) : (
-            opp.board.map((m) => {
+            oppDisplayMinions.map((item) => {
+              const m = item.minion;
               const dmg = effects.find((e) => e.targetKind === 'minion' && e.targetId === m.id && e.type === 'damage')?.amount;
               const heal = effects.find((e) => e.targetKind === 'minion' && e.targetId === m.id && e.type === 'heal')?.amount;
-              const atk = attacking.get(m.id);
-              const isTargetable = targetableMinionIds.has(m.id);
+              const atkVector = attacking.get(m.id);
+              const isTargetable = !item.isDying && targetableMinionIds.has(m.id);
+              const isImpacted = impactedIds.has(m.id);
               return (
                 <MinionView
                   key={m.id}
@@ -454,12 +628,18 @@ function Board({
                   canAttack={false}
                   isSelected={false}
                   isTargetable={isTargetable}
-                  attackAnim={atk}
+                  attackVector={atkVector}
                   damageAmount={dmg}
                   healAmount={heal}
-                  onClick={() => handleMinionClick(m, false)}
-                  dropTarget={`minion-${m.id}`}
-                  dropActive={dragState.isDragging && dragState.targetId === `minion-${m.id}` && isTargetable}
+                  isDying={item.isDying}
+                  isImpacted={isImpacted}
+                  onClick={() => !item.isDying && handleMinionClick(m, false)}
+                  dropTarget={!item.isDying ? `minion-${m.id}` : undefined}
+                  dropActive={!item.isDying && dragState.isDragging && dragState.targetId === `minion-${m.id}` && isTargetable}
+                  elementRef={(el) => {
+                    if (el) minionElsRef.current.set(m.id, el);
+                    else minionElsRef.current.delete(m.id);
+                  }}
                 />
               );
             })
@@ -468,37 +648,45 @@ function Board({
 
         {/* Player Board */}
         <div
-          className={`ds-board-row ${me.board.length === 0 ? 'empty-hint' : ''}`}
+          className={`ds-board-row ${myDisplayMinions.length === 0 ? 'empty-hint' : ''}`}
           data-drop-target="battlefield"
           data-drop-active={dragState.isDragging && dragState.targetId === 'battlefield' && dragState.item?.kind === 'card' ? 'true' : undefined}
         >
-          {me.board.length === 0 ? (
+          {myDisplayMinions.length === 0 ? (
             <span>Spiele Tiere aus deiner Hand aus</span>
           ) : (
-            me.board.map((m) => {
+            myDisplayMinions.map((item) => {
+              const m = item.minion;
               const dmg = effects.find((e) => e.targetKind === 'minion' && e.targetId === m.id && e.type === 'damage')?.amount;
               const heal = effects.find((e) => e.targetKind === 'minion' && e.targetId === m.id && e.type === 'heal')?.amount;
-              const atk = attacking.get(m.id);
-              const canAttack = isMyTurn && m.canAttack && !m.hasAttacked;
-              const isMinionDragged = (dragState.isDragging || dragState.snapping) && dragState.item?.kind === 'minion' && dragState.item.minionId === m.id;
+              const atkVector = attacking.get(m.id);
+              const canAttack = !item.isDying && isMyTurn && m.canAttack && !m.hasAttacked;
+              const isMinionDragged = !item.isDying && (dragState.isDragging || dragState.snapping) && dragState.item?.kind === 'minion' && dragState.item.minionId === m.id;
               const dragTransform = isMinionDragged ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)` : undefined;
               const minionDragBind = canAttack ? bindDrag({ kind: 'minion', minionId: m.id }) : undefined;
+              const isImpacted = impactedIds.has(m.id);
               return (
                 <MinionView
                   key={m.id}
                   minion={m}
                   isOwner={true}
                   canAttack={canAttack}
-                  isSelected={selectedAttackerId === m.id || draggedMinionId === m.id}
+                  isSelected={!item.isDying && (selectedAttackerId === m.id || draggedMinionId === m.id)}
                   isTargetable={false}
-                  attackAnim={atk}
+                  attackVector={atkVector}
                   damageAmount={dmg}
                   healAmount={heal}
-                  onClick={() => handleMinionClick(m, true)}
+                  isDying={item.isDying}
+                  isImpacted={isImpacted}
+                  onClick={() => !item.isDying && handleMinionClick(m, true)}
                   onPointerDown={minionDragBind?.onPointerDown}
                   isDragged={isMinionDragged}
                   isSnapping={dragState.snapping && isMinionDragged}
                   dragTransform={dragTransform}
+                  elementRef={(el) => {
+                    if (el) minionElsRef.current.set(m.id, el);
+                    else minionElsRef.current.delete(m.id);
+                  }}
                 />
               );
             })
@@ -509,8 +697,13 @@ function Board({
       {/* Player Actions & Hero Bar */}
       <div className="ds-player-zone">
         <div
-          className={`ds-hero-card ${myHeroDmg ? 'bub-animate-shake' : ''}`}
+          ref={(el) => {
+            if (el) heroElsRef.current.set(mySeat, el);
+            else heroElsRef.current.delete(mySeat);
+          }}
+          className={`ds-hero-card ${myHeroDmg || impactedIds.has(`hero-${mySeat}`) ? 'bub-animate-shake ds-hit-impact' : ''}`}
           style={{ position: 'relative' }}
+          data-hero-seat={mySeat}
         >
           {myHeroDmg !== undefined && (
             <span className="bub-floating-badge ds-damage-badge">-{myHeroDmg}</span>
@@ -555,6 +748,8 @@ function Board({
           const cardDragTransform = isCardDragged ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)` : undefined;
           const cardDragBind = isPlayable ? bindDrag({ kind: 'card', handIndex: idx }) : undefined;
 
+          const cardTraits = getCardTraits(def);
+
           return (
             <div
               key={card.uid}
@@ -572,22 +767,16 @@ function Board({
               onPointerDown={cardDragBind?.onPointerDown}
               role={isPlayable ? 'button' : undefined}
               tabIndex={isPlayable ? 0 : undefined}
-              aria-label={`${def.name}, Kosten ${def.cost}`}
-              title={def.quote}
+              aria-label={`${def.name}, Kosten ${def.cost}${cardTraits.length > 0 ? ` [${cardTraits.map((t) => t.name).join(', ')}]` : ''}`}
+              title={getCardFullTitle(def)}
             >
               <div className="ds-card-top">
                 <span className="ds-card-cost">{def.cost}</span>
-                {def.abilities && def.abilities.length > 0 && (
-                  <span style={{ fontSize: '0.7rem' }}>
-                    {def.abilities[0].type === 'taunt' && '🛡️'}
-                    {def.abilities[0].type === 'rush' && '⚡'}
-                    {def.abilities[0].type === 'bubble' && '🫧'}
-                    {def.abilities[0].type === 'poisonous' && '🧪'}
-                    {def.abilities[0].type === 'stealth' && '🌙'}
-                    {def.abilities[0].type === 'battlecry' && '🎺'}
-                    {def.abilities[0].type === 'deathrattle' && '👋'}
-                  </span>
-                )}
+                <div className="ds-card-traits">
+                  {cardTraits.map((trait) => (
+                    <TraitBadge key={trait.id} trait={trait} />
+                  ))}
+                </div>
               </div>
               <div className="ds-card-center">
                 <span className="ds-card-emoji">{def.emoji}</span>

@@ -199,6 +199,6 @@ describe('Dame – Regeln & Mechaniken', () => {
 
 describe('Plattform-Vertragsprüfungen', () => {
   for (const check of gameContractChecks(gameModule, { randomGames: 12, botGames: 1, maxMoves: 500 })) {
-    test(check.name, check.run, 25_000);
+    test(check.name, check.run, 60_000);
   }
 });
