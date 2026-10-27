@@ -92,7 +92,7 @@ Die allgemeine MCTS wäre bei vier Spielern auf 160 Feldern zu langsam. Der Zufa
 
 - **Kreuzbrett** über das Gitterbrett. Es ist so gedreht, dass die eigene Farbe unten sitzt. Im Hot-Seat ist das die Farbe am Zug, online der eigene Platz.
 - **Figuren** als Textzeichen in den vier Farben; ausgeschiedene Figuren sind grau.
-- **Ziehen:** Figur antippen, dann das Ziel. Im Teammodus erscheint bei einer Umwandlung eine Auswahl.
+- **Ziehen:** Figur antippen, dann das Ziel. Figuren gleiten flüssig über das 14×14-Raster (`useGridMoveAnimation`, inkl. aller 4 Perspektiven und Rochade). Im Teammodus erscheint bei einer Umwandlung eine Auswahl.
 - **Hervorhebungen:** letzter Zug, schlagbare Figuren, Zielpunkte.
 - **Lupe** (🔍 in der freien Ecke oben rechts) ab Feldern unter 36 px. Sie vergrößert das Brett auf 170 % in einem verschiebbaren Ausschnitt, der unten in der Mitte beginnt. Die Einstellung merkt sich jedes Gerät in `localStorage`.
 - **Knopf „🏆 Sieg beanspruchen“**, sobald das erlaubt ist.

@@ -508,6 +508,26 @@ button.bub-net-point:not(:disabled) {
   pointer-events: none;
 }
 
+/* Gleit-Animation für ziehende Spielfiguren auf dem GridBoard (Schach, Vierer-Schach, Dame etc.) */
+@keyframes bub-piece-slide {
+  from {
+    transform: translate(var(--slide-dx, 0%), var(--slide-dy, 0%));
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+.bub-cell-sliding {
+  z-index: 10 !important;
+}
+
+.bub-piece-slide {
+  animation: bub-piece-slide 0.18s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+  will-change: transform;
+  pointer-events: none;
+}
+
 [data-drop-target] {
   transition: box-shadow 0.15s ease-out, border-color 0.15s ease-out, background-color 0.15s ease-out;
 }
@@ -520,5 +540,8 @@ button.bub-net-point:not(:disabled) {
   .bub-dragging,
   .bub-snapping {
     transition: none !important;
+  }
+  .bub-piece-slide {
+    animation: none !important;
   }
 }

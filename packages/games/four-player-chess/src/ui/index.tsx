@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { FitBox, GridBoard, useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { FitBox, GridBoard, useElementSize, useGridMoveAnimation, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { COLORS, type Color, type FourChessMove, type FourChessState, type Piece } from '../rules';
 import './styles.css';
@@ -85,13 +85,47 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   const targets = new Set(selected === null ? [] : moves.filter((m) => m.f === selected).map((m) => m.to));
   const hintMove = hint && hint.t === 'm' ? hint : null;
 
+  const toDisplayCoord = (pos: number | string) => {
+    const index = Number(pos);
+    if (index < 0 || index >= 196) return null;
+    const row = Math.floor(index / 14);
+    const col = index % 14;
+    switch (perspective) {
+      case 'r':
+        return { col, row };
+      case 'y':
+        return { col: 13 - col, row: 13 - row };
+      case 'b':
+        return { col: row, row: 13 - col };
+      case 'g':
+        return { col: 13 - row, row: col };
+    }
+  };
+
+  const lastMoveObj = view.lastMove ? { from: view.lastMove.from, to: view.lastMove.to } : null;
+  const extraMoves = (view.lastMove as unknown as { castle?: { from: number; to: number } } | null)?.castle
+    ? [(view.lastMove as unknown as { castle: { from: number; to: number } }).castle]
+    : undefined;
+
+  const { getSlideProps } = useGridMoveAnimation({
+    lastMove: lastMoveObj,
+    extraMoves,
+    toDisplayCoord,
+    moveKey: view.ply ?? view.log.length,
+  });
+
   const tap = (index: number) => {
     if (selected !== null && targets.has(index)) {
       const options = moves.filter((m) => m.f === selected && m.to === index);
-      if (options.length > 1) setPromotion(options);
-      else if (options[0]) onMove(options[0]);
+      if (options.length > 1) {
+        setPromotion(options);
+      } else if (options[0]) {
+        setPromotion(null);
+        onMove(options[0]);
+      }
       return;
     }
+    setPromotion(null);
     setSelected(movable.has(index) && index !== selected ? index : null);
   };
 
@@ -109,11 +143,23 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                 const index = toBoard(dc, dr, perspective);
                 const piece = view.board[index];
                 if (!onBoard(Math.floor(index / 14), index % 14)) return null;
-                return piece ? <span className={`fc-piece fc-${piece.d ? 'dead' : piece.c}`}>{GLYPHS[piece.t]}</span> : targets.has(index) ? <span className="fc-dot" /> : null;
+                const slide = getSlideProps(index);
+                return piece ? (
+                  <span
+                    key={slide.isSliding ? `slide-${view.ply ?? view.log.length}` : undefined}
+                    className={`fc-piece fc-${piece.d ? 'dead' : piece.c} ${slide.pieceClassName ?? ''}`}
+                    style={slide.style}
+                  >
+                    {GLYPHS[piece.t]}
+                  </span>
+                ) : targets.has(index) ? (
+                  <span className="fc-dot" />
+                ) : null;
               }}
               isActive={(dc, dr) => {
                 const index = toBoard(dc, dr, perspective);
-                return movable.has(index) || targets.has(index);
+                if (!onBoard(Math.floor(index / 14), index % 14)) return false;
+                return movable.has(index) || targets.has(index) || selected !== null;
               }}
               onActivate={(dc, dr) => tap(toBoard(dc, dr, perspective))}
               cellClassName={(dc, dr) => {
@@ -121,7 +167,9 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                 const row = Math.floor(index / 14);
                 const col = index % 14;
                 if (!onBoard(row, col)) return 'fc-off';
+                const slide = getSlideProps(index);
                 const classes = [(row + col) % 2 === 0 ? 'fc-light' : 'fc-dark'];
+                if (slide.cellClassName) classes.push(slide.cellClassName);
                 if (index === selected) classes.push('fc-selected');
                 if (targets.has(index) && view.board[index]) classes.push('fc-capture');
                 if (view.lastMove && (view.lastMove.from === index || view.lastMove.to === index)) classes.push('fc-last');
@@ -147,12 +195,34 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
           </button>
         )}
         {promotion && (
-          <div className="fc-promotion" role="dialog" aria-label="Umwandlung wählen">
-            {promotion.map((m) => (
-              <button key={m.pr} type="button" className={`fc-piece fc-${m.p}`} onClick={() => onMove(m)} aria-label={PIECE_NAMES[m.pr ?? 'Q']}>
-                {GLYPHS[m.pr ?? 'Q']}
+          <div className="fc-promotion-backdrop" onClick={() => setPromotion(null)}>
+            <div className="fc-promotion" role="dialog" aria-label="Umwandlung wählen" onClick={(e) => e.stopPropagation()}>
+              <div className="fc-promotion-choices">
+                {promotion.map((m) => (
+                  <button
+                    key={m.pr}
+                    type="button"
+                    className={`fc-piece fc-${m.p}`}
+                    onClick={() => {
+                      setPromotion(null);
+                      onMove(m);
+                    }}
+                    aria-label={PIECE_NAMES[m.pr ?? 'Q']}
+                  >
+                    {GLYPHS[m.pr ?? 'Q']}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="fc-promotion-cancel"
+                onClick={() => setPromotion(null)}
+                aria-label="Abbrechen"
+                title="Abbrechen"
+              >
+                ✕
               </button>
-            ))}
+            </div>
           </div>
         )}
       </div>

@@ -71,12 +71,9 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - **Doppelkopf** (`packages/games/doppelkopf`): DDV-Standard (48 Karten, Dulle Herz-10 als höchster Trumpf vor Kreuz-Damen, Vorbehaltsabfrage, Normalspiel mit geheimen Re-Parteien, Hochzeit mit Partnerfindung in den ersten 3 Stichen, Soli: Damen-, Buben-, Fleischlos-, Farbsolo, Ansagen Re/Kontra, keine 90, keine 60, Sonderpunkte: Fuchs, Doppelkopf, Karlchen im 12. Stich, 4er- und 5er-Tisch).
 - Alle drei Spiele sind im Spieleserver (`apps/server/src/games.ts`) für Online-Mehrspieler registriert.
 
-**Etappe 7** (27.10.2026): **Eins!** (`packages/games/uno`, 2–10 Plätze).
-- Vollständige Uno-Varianten-Engine mit 5 Decks: Classic (108 Karten), No Mercy (168 Karten, bis +10 und Ausscheiden bei 25 Karten), Flip (112 beidseitige Karten Hell/Dunkel), All Wild (112 Aktionskarten) und Junior (36 Tierkarten für Kinder).
-- Umfangreiche Regeloptionen: Stacking (aus, gleichartig, progressiv), 7-0 Handtausch, Jump-In, Ziehen bis passend, Farbwahl-Einschränkungen und "Eins!" rufen / anprangern.
-- Heuristischer Taktik-Bot („Kartenhai“) in drei Schwierigkeitsstufen (einfach, mittel, schwer).
-- Vollständig responsive Web-Oberfläche mit SVG-Karten, Farbwahlmodal, Richtungswechsel-Animation, 3D-Flip-Wendung und pulsierendem "Eins!"-Aktionsknopf.
-- Registriert für Online-Mehrspieler auf dem Spieleserver (`apps/server/src/games.ts`). Plan in `docs/spiele/uno.md`.
+**Etappe 7** (27.10.2026): **Eins!** und **Dame**.
+- **Eins!** (`packages/games/uno`, 2–10 Plätze): Vollständige Uno-Varianten-Engine mit 5 Decks (Classic, No Mercy, Flip, All Wild, Junior), umfangreichen Hausregeln, Taktik-Bot („Kartenhai“) und responsivem SVG-Kartenfächer. Plan in `docs/spiele/uno.md`.
+- **Dame** (`packages/games/checkers`, 2 Plätze): Standard „Klassisch Deutsch“ (fliegende Dame, Steine schlagen nur vorwärts, freie Schlagwahl) sowie Optionen für International (Mehrheitszwang, Rückwärtsschlag) und Checkers / Englisch (kurze Dame) sowie 8×8 (12 Steine) und 10×10 (20 Steine). Negamax-Suchbot mit Alpha-Beta-Schnitt, iterativer Vertiefung und PST. Edle Holz-/Schiefer-Oberfläche mit `GridBoard`, Pointer Drag & Drop (`usePointerDrag`, `useGridMoveAnimation`), Schlagleiste (`CaptureStrip`), Notationsverlauf und Klängen. Registriert für Online-Mehrspieler. Plan in `docs/spiele/dame.md`.
 
 **Bekannte offene Punkte:**
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.

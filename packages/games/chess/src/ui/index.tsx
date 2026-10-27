@@ -1,6 +1,6 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { FitBox, GridBoard, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
-import { useState } from 'react';
+import { FitBox, GridBoard, useGridMoveAnimation, usePointerDrag, type BoardProps, type GameUi, type MoveAnimationItem } from '@brett-und-blatt/ui';
+import { useRef, useState } from 'react';
 import type { ChessMove, ChessState, Promotion } from '../rules';
 import './styles.css';
 
@@ -95,6 +95,44 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   const hinted = hint ? [squareIndex(hint.from), squareIndex(hint.to)] : [];
   const checkedKing = view.inCheck ? board.findIndex((p) => p?.type === 'k' && p.white === whiteToMove) : -1;
 
+  const wasDraggedRef = useRef(false);
+  const wasDragged = wasDraggedRef.current;
+  wasDraggedRef.current = false;
+
+  const lastMoveObj = view.lastMove ? { from: squareIndex(view.lastMove.from), to: squareIndex(view.lastMove.to) } : null;
+
+  let extraMoves: MoveAnimationItem[] | undefined;
+  if (lastMoveObj) {
+    const from = lastMoveObj.from;
+    const to = lastMoveObj.to;
+    // Rochade (Castling): König zieht 2 Felder waagerecht, Turm gleitet mit
+    if (from === 60 && to === 62) {
+      extraMoves = [{ from: 63, to: 61 }];
+    } else if (from === 60 && to === 58) {
+      extraMoves = [{ from: 56, to: 59 }];
+    } else if (from === 4 && to === 6) {
+      extraMoves = [{ from: 7, to: 5 }];
+    } else if (from === 4 && to === 2) {
+      extraMoves = [{ from: 0, to: 3 }];
+    }
+  }
+
+  const toDisplayCoord = (pos: number | string) => {
+    const index = typeof pos === 'string' ? squareIndex(pos) : pos;
+    if (index < 0 || index >= 64) return null;
+    const r = Math.floor(index / 8);
+    const c = index % 8;
+    return flipped ? { col: 7 - c, row: 7 - r } : { col: c, row: r };
+  };
+
+  const { getSlideProps } = useGridMoveAnimation({
+    lastMove: lastMoveObj,
+    extraMoves,
+    toDisplayCoord,
+    wasDragged,
+    moveKey: view.history.length,
+  });
+
   const { dragState, bindDrag } = usePointerDrag<number>({
     threshold: 6,
     onDrop: (fromIndex, targetId) => {
@@ -105,6 +143,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
         setPromotion(PROMOTIONS.map((p) => options.find((o) => o.promotion === p)).filter((o): o is ChessMove => !!o));
         return true;
       } else if (options[0]) {
+        wasDraggedRef.current = true;
         onMove(options[0]);
         return true;
       }
@@ -138,14 +177,17 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
           renderCell={(dc, dr) => {
             const index = toBoard(dc, dr);
             const piece = board[index];
+            const slide = getSlideProps(index);
             const isDragged = (dragState.isDragging || dragState.snapping) && dragState.item === index;
             const pieceTransform = isDragged ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)` : undefined;
             return (
               <>
                 {piece ? (
                   <span
-                    className={`ch-piece ${piece.white ? 'ch-white' : 'ch-black'} ${isDragged ? 'bub-dragging' : ''} ${dragState.snapping && isDragged ? 'bub-snapping' : ''}`}
+                    key={slide.isSliding ? `slide-${view.history.length}` : undefined}
+                    className={`ch-piece ${piece.white ? 'ch-white' : 'ch-black'} ${isDragged ? 'bub-dragging' : ''} ${dragState.snapping && isDragged ? 'bub-snapping' : ''} ${slide.pieceClassName ?? ''}`}
                     style={{
+                      ...slide.style,
                       transform: pieceTransform,
                       position: isDragged ? 'relative' : undefined,
                       zIndex: isDragged ? 1000 : undefined,
@@ -180,7 +222,9 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
           }}
           cellClassName={(dc, dr) => {
             const index = toBoard(dc, dr);
+            const slide = getSlideProps(index);
             const classes = [(Math.floor(index / 8) + (index % 8)) % 2 === 0 ? 'ch-light' : 'ch-dark'];
+            if (slide.cellClassName) classes.push(slide.cellClassName);
             if (last.includes(index)) classes.push('ch-last');
             if (index === checkedKing) classes.push('ch-check');
             if (index === selected || index === dragSource) classes.push('ch-selected');

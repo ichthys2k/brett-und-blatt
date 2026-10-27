@@ -96,7 +96,7 @@ Zusätzlich gibt es den Zufallsbot zum Testen. Gemessen auf Cloudflare (Gratis-T
 ## Oberfläche
 
 - **Brett** über das Gitterbrett mit Figuren als Textzeichen (♚︎ usw.). Das Zeichen U+FE0E verhindert, dass Handys sie als bunte Emojis zeigen.
-- **Ziehen:** Figur antippen, dann das leuchtende Zielfeld. Bei einer Umwandlung erscheint eine Auswahl mit vier Figuren.
+- **Ziehen:** Figur antippen, dann das leuchtende Zielfeld (oder per Drag & Drop ziehen). Figuren gleiten geschmeidig zum Zielfeld (`useGridMoveAnimation`, inkl. beider Figuren bei Rochade). Bei einer Umwandlung erscheint eine Auswahl mit vier Figuren.
 - **Hervorhebungen:** letzter Zug, König im Schach, Tipp-Zug.
 - **Leisten mit geschlagenen Figuren** über und unter dem Brett, dazu der Materialvorsprung (+3 usw.). Umgewandelte Bauern werden dabei richtig verrechnet.
 - **Partieverlauf** in deutscher Notation (S, L, T, D statt N, B, R, Q) zum Aufklappen.
