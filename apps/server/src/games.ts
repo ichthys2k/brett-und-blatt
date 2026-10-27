@@ -9,17 +9,20 @@ import { gameModule as colorSorter } from '@brett-und-blatt/game-color-sorter';
 import { gameModule as dominoes } from '@brett-und-blatt/game-dominoes';
 import { gameModule as doppelkopf } from '@brett-und-blatt/game-doppelkopf';
 import { gameModule as drachenspiel } from '@brett-und-blatt/game-drachenspiel';
+import { gameModule as factorGrid } from '@brett-und-blatt/game-factor-grid';
 import { gameModule as fourInARow } from '@brett-und-blatt/game-four-in-a-row';
 import { gameModule as fourPlayerChess } from '@brett-und-blatt/game-four-player-chess';
 import { gameModule as go } from '@brett-und-blatt/game-go';
 import { gameModule as maexle } from '@brett-und-blatt/game-maexle';
 import { gameModule as mill } from '@brett-und-blatt/game-mill';
+import { gameModule as numberWall } from '@brett-und-blatt/game-number-wall';
 import { gameModule as pairs } from '@brett-und-blatt/game-pairs';
 import { gameModule as poker } from '@brett-und-blatt/game-poker';
 import { gameModule as quartett } from '@brett-und-blatt/game-quartett';
 import { gameModule as reversi } from '@brett-und-blatt/game-reversi';
 import { gameModule as schafkopf } from '@brett-und-blatt/game-schafkopf';
 import { gameModule as skat } from '@brett-und-blatt/game-skat';
+import { gameModule as targetNumber } from '@brett-und-blatt/game-target-number';
 import { gameModule as ticTacToe } from '@brett-und-blatt/game-tic-tac-toe';
 import { gameModule as ultimateTicTacToe } from '@brett-und-blatt/game-ultimate-tic-tac-toe';
 import { gameModule as uno } from '@brett-und-blatt/game-uno';
@@ -29,4 +32,4 @@ import { gameModule as uno } from '@brett-und-blatt/game-uno';
  * Mehrspieler-Spiel muss hier (und in package.json) eingetragen werden – ein Test
  * im Server-Paket erinnert daran.
  */
-export const onlineGames: AnyGameModule[] = [battleship, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, fourInARow, fourPlayerChess, go, maexle, mill, pairs, poker, quartett, reversi, schafkopf, skat, ticTacToe, ultimateTicTacToe, uno];
+export const onlineGames: AnyGameModule[] = [battleship, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, factorGrid, fourInARow, fourPlayerChess, go, maexle, mill, numberWall, pairs, poker, quartett, reversi, schafkopf, skat, targetNumber, ticTacToe, ultimateTicTacToe, uno];

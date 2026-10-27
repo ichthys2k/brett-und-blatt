@@ -35,6 +35,9 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Nicht ärgern!](ludo.md) | 2–4 | offen | SVG-Kreuzbrett, 3D-Würfel, Heuristik-Bot | M | M | M | 7 |
 | [Wortgitter](scrabble.md) (Scrabble) | 2–4 | verdeckt | 15×15 Gitterbrett, ZoomBoard, DAWG-Wörterbuch | M | L | L | 7 |
 | [Poker](poker.md) | 2–10 | verdeckt, Bluff | Karten, Handbewertung, Setzrunde, Side-Pots | L | L | XL | 7 |
+| [Zielzahl](zielzahl.md) | 1–30 | gleichzeitig | Zahlenkarten, geklammerter Rechenterm, 24-Löser | M | M | M | Mathe (Kl. 5/6) |
+| [Teiler-Duell](teiler-duell.md) | 1–2 | offen | Zahlengitter, Teiler-/Vielfachen-Vorschau | S | M | M | Mathe (Kl. 5/6) |
+| [Rechenmauer](rechenmauer.md) | 1–30 | gleichzeitig | Pyramidenmauer, Auswahl-Chips, Dreieckslöser | M | M | S | Mathe (Kl. 5/6) |
 
 ## Gemeinsame Bausteine
 

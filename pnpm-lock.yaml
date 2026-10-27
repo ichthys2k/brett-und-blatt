@@ -217,6 +217,9 @@ importers:
       '@brett-und-blatt/game-drachenspiel':
         specifier: workspace:*
         version: link:../../packages/games/drachenspiel
+      '@brett-und-blatt/game-factor-grid':
+        specifier: workspace:*
+        version: link:../../packages/games/factor-grid
       '@brett-und-blatt/game-four-in-a-row':
         specifier: workspace:*
         version: link:../../packages/games/four-in-a-row
@@ -232,6 +235,9 @@ importers:
       '@brett-und-blatt/game-mill':
         specifier: workspace:*
         version: link:../../packages/games/mill
+      '@brett-und-blatt/game-number-wall':
+        specifier: workspace:*
+        version: link:../../packages/games/number-wall
       '@brett-und-blatt/game-pairs':
         specifier: workspace:*
         version: link:../../packages/games/pairs
@@ -250,6 +256,9 @@ importers:
       '@brett-und-blatt/game-skat':
         specifier: workspace:*
         version: link:../../packages/games/skat
+      '@brett-und-blatt/game-target-number':
+        specifier: workspace:*
+        version: link:../../packages/games/target-number
       '@brett-und-blatt/game-tic-tac-toe':
         specifier: workspace:*
         version: link:../../packages/games/tic-tac-toe
@@ -454,6 +463,19 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1
 
+  packages/games/factor-grid:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
   packages/games/four-in-a-row:
     dependencies:
       '@brett-und-blatt/engine':
@@ -493,6 +515,19 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1
 
+  packages/games/ludo:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
   packages/games/maexle:
     dependencies:
       '@brett-und-blatt/engine':
@@ -507,6 +542,19 @@ importers:
         version: 19.3.1
 
   packages/games/mill:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/number-wall:
     dependencies:
       '@brett-und-blatt/engine':
         specifier: workspace:*
@@ -598,6 +646,19 @@ importers:
         version: 19.3.1
 
   packages/games/solitaire:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/target-number:
     dependencies:
       '@brett-und-blatt/engine':
         specifier: workspace:*

@@ -413,8 +413,9 @@ export class Room {
         const module = this.deps.findGame(message.gameId);
         if (!isHost || this.phase !== 'lobby' || !module) return deny();
         const { min, max } = module.info.players;
-        // Bei Bingo gleich 30 Plätze öffnen (freie Plätze fallen beim Start ohnehin weg), bei Spielen mit laufendem Einstieg (Poker) 6 Plätze.
-        const defaultSeats = message.gameId === 'bingo' ? Math.min(max, MAX_SEATS) : module.info.joinMidGame ? Math.min(max, 6) : min;
+        // Bei Klassen-Simultanspielen (Bingo, Zielzahl, Rechenmauer) gleich 30 Plätze öffnen, bei Spielen mit laufendem Einstieg (Poker) 6 Plätze.
+        const isClassGame = message.gameId === 'bingo' || message.gameId === 'target-number' || message.gameId === 'number-wall';
+        const defaultSeats = isClassGame ? Math.min(max, MAX_SEATS) : module.info.joinMidGame ? Math.min(max, 6) : min;
         const count = Math.min(Math.min(max, MAX_SEATS), Math.max(defaultSeats, this.lobby.seats.length));
         this.lobby = { gameId: message.gameId, options: resolveOptions(module), time: this.lobby.time, seats: this.resizeSeats(count), isPublic: this.lobby.isPublic };
         return this.broadcastRoom();
