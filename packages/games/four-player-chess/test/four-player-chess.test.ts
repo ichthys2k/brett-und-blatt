@@ -21,12 +21,37 @@ describe('Anbindung an die Schnittstelle', () => {
     expect(events[0]).toMatchObject({ type: 'moved' });
   });
 
+  it('en passant meldet captured: P im moved-Event', () => {
+    const state = gameModule.setup(4, resolveOptions(gameModule), 'ep');
+    // Brett manipulieren: Rot Bauer auf f2 (173), Blau Bauer auf e4 (144)
+    state.board.fill(null);
+    state.board[173] = { c: 'r', t: 'P' };
+    state.board[144] = { c: 'b', t: 'P' };
+    state.board[13 * 14 + 7] = { c: 'r', t: 'K' };
+    state.board[7 * 14 + 0] = { c: 'b', t: 'K' };
+    state.board[0 * 14 + 6] = { c: 'y', t: 'K' };
+    state.board[6 * 14 + 13] = { c: 'g', t: 'K' };
+    // Rot zieht Doppelschritt f2 -> f4 (173 -> 145)
+    const { state: s1 } = gameModule.applyMove(state, 0, { t: 'm', p: 'r', f: 173, to: 145 });
+    // Blau schlägt en passant e4 -> f3 (144 -> 159)
+    const { events } = gameModule.applyMove(s1, 1, { t: 'm', p: 'b', f: 144, to: 159 });
+    expect(events[0]).toMatchObject({ type: 'moved', from: 144, to: 159, color: 'b', captured: 'P' });
+  });
+
   it('der Bot liefert erlaubte Züge im Format der Schnittstelle', () => {
     const state = gameModule.setup(4, resolveOptions(gameModule), 'bot');
     for (const level of ['easy', 'medium', 'hard'] as const) {
       const move = computeBotMove(gameModule, { gameId: 'four-player-chess', botId: 'four-player-chess', level, seat: 0, view: state, seed: level, timeBudgetMs: 10 }) as FourChessMove;
       expect(gameModule.legalMoves(state, 0)).toContainEqual(move);
     }
+  });
+
+  it('der Easy-Bot beansprucht den Sieg vorrangig', () => {
+    const state = gameModule.setup(4, resolveOptions(gameModule), 'claim');
+    state.active = { r: true, b: true, y: false, g: false };
+    state.scores = { r: 30, b: 5, y: 0, g: 0 };
+    const move = computeBotMove(gameModule, { gameId: 'four-player-chess', botId: 'four-player-chess', level: 'easy', seat: 0, view: state, seed: 'easy-claim', timeBudgetMs: 10 });
+    expect(move).toEqual({ t: 'claim', p: 'r' });
   });
 });
 
@@ -64,8 +89,8 @@ describe('Aufgeben', () => {
     session.resign(1);
     expect(session.result).toBeNull();
     session.resign(3);
-    // Es gewinnt, wer die meisten Punkte hat – hier steht es überall 0, also alle.
-    expect(session.result).toMatchObject({ kind: 'win', winners: [0, 1, 2, 3], reason: 'last' });
+    // Wer aufgegeben hat, kann nicht gewinnen: Es gewinnt Gelb (Platz 2) als einziger verbliebener Spieler.
+    expect(session.result).toMatchObject({ kind: 'win', winners: [2], reason: 'last' });
   });
 
   it('lässt sich nachspielen und zurücknehmen', () => {

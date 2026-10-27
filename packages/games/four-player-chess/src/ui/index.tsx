@@ -88,10 +88,15 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   const tap = (index: number) => {
     if (selected !== null && targets.has(index)) {
       const options = moves.filter((m) => m.f === selected && m.to === index);
-      if (options.length > 1) setPromotion(options);
-      else if (options[0]) onMove(options[0]);
+      if (options.length > 1) {
+        setPromotion(options);
+      } else if (options[0]) {
+        setPromotion(null);
+        onMove(options[0]);
+      }
       return;
     }
+    setPromotion(null);
     setSelected(movable.has(index) && index !== selected ? index : null);
   };
 
@@ -113,7 +118,8 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
               }}
               isActive={(dc, dr) => {
                 const index = toBoard(dc, dr, perspective);
-                return movable.has(index) || targets.has(index);
+                if (!onBoard(Math.floor(index / 14), index % 14)) return false;
+                return movable.has(index) || targets.has(index) || selected !== null;
               }}
               onActivate={(dc, dr) => tap(toBoard(dc, dr, perspective))}
               cellClassName={(dc, dr) => {
@@ -147,12 +153,34 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
           </button>
         )}
         {promotion && (
-          <div className="fc-promotion" role="dialog" aria-label="Umwandlung wählen">
-            {promotion.map((m) => (
-              <button key={m.pr} type="button" className={`fc-piece fc-${m.p}`} onClick={() => onMove(m)} aria-label={PIECE_NAMES[m.pr ?? 'Q']}>
-                {GLYPHS[m.pr ?? 'Q']}
+          <div className="fc-promotion-backdrop" onClick={() => setPromotion(null)}>
+            <div className="fc-promotion" role="dialog" aria-label="Umwandlung wählen" onClick={(e) => e.stopPropagation()}>
+              <div className="fc-promotion-choices">
+                {promotion.map((m) => (
+                  <button
+                    key={m.pr}
+                    type="button"
+                    className={`fc-piece fc-${m.p}`}
+                    onClick={() => {
+                      setPromotion(null);
+                      onMove(m);
+                    }}
+                    aria-label={PIECE_NAMES[m.pr ?? 'Q']}
+                  >
+                    {GLYPHS[m.pr ?? 'Q']}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="fc-promotion-cancel"
+                onClick={() => setPromotion(null)}
+                aria-label="Abbrechen"
+                title="Abbrechen"
+              >
+                ✕
               </button>
-            ))}
+            </div>
           </div>
         )}
       </div>

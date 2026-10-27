@@ -20,12 +20,13 @@ const fourChessBot: BotDefinition<FourChessState, FourChessMove> = {
   chooseMove(ctx) {
     const state = stateFor(ctx);
     const moves = legalMoves(state, ctx.seat);
-    if (ctx.level === 'easy' && ctx.rng.chance(0.4)) return ctx.rng.pick(moves.filter((m) => m.t === 'm'));
     const claim = moves.find((m) => m.t === 'claim');
     if (claim) return claim;
-    // Der alte Bot rechnet mit Zufall im Bereich 0–1 und gewichtet ihn selbst; „schwer“ dämpft ihn.
+    const moveMoves = moves.filter((m): m is Extract<FourChessMove, { t: 'm' }> => m.t === 'm');
+    if (ctx.level === 'easy' && ctx.rng.chance(0.4) && moveMoves.length > 0) return ctx.rng.pick(moveMoves);
+    // Der Bot rechnet mit Zufall im Bereich 0–1 und gewichtet ihn selbst; „schwer“ dämpft ihn.
     const noise = ctx.level === 'hard' ? 0.3 : 1;
-    const action = chooseBotMove(state, COLORS[ctx.seat], () => ctx.rng.next() * noise) as FourChessMove | null;
+    const action = chooseBotMove(state, COLORS[ctx.seat], () => ctx.rng.next() * noise);
     if (!action || action.t !== 'm') return ctx.rng.pick(moves);
     // Im Modus „Jeder gegen jeden“ wird automatisch zur Dame umgewandelt – ohne Angabe.
     const normalized: FourChessMove = state.mode === 'teams' ? action : { t: 'm', p: action.p, f: action.f, to: action.to };

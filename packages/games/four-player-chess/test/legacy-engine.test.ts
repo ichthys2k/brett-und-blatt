@@ -1,21 +1,22 @@
-// @ts-nocheck – Regeltests aus dem Projekt 4playerchess, auf Vitest umgestellt.
-import { test } from 'vitest';
-import assert from 'node:assert/strict';
+// Regeltests aus dem Projekt 4playerchess, auf Vitest umgestellt.
+import { assert, test } from 'vitest';
 import {
     COLORS, newGame, replay, applyAction, legalMoves, canClaim, findKing, inCheck, idx,
+    type FourChessState, type Color, type GameMode, type FourChessAction,
 } from '../src/legacy/engine';
 import { chooseBotMove } from '../src/legacy/bot';
 
 // Feldnamen wie im Spiel: Linien a–n von links, Reihen 1–14 von unten (Sicht Rot).
-const at = name => idx(14 - Number(name.slice(1)), name.charCodeAt(0) - 97);
-const move = (s, p, from, to, extra = {}) => applyAction(s, { t: 'm', p, f: at(from), to: at(to), ...extra });
-const piece = (s, name) => s.board[at(name)];
+const at = (name: string): number => idx(14 - Number(name.slice(1)), name.charCodeAt(0) - 97);
+const move = (s: FourChessState, p: Color, from: string, to: string, extra: Partial<FourChessAction> = {}): boolean =>
+    applyAction(s, { t: 'm', p, f: at(from), to: at(to), ...extra } as FourChessAction);
+const piece = (s: FourChessState, name: string) => s.board[at(name)];
 
 /** Leeres Brett mit den angegebenen Figuren. Ohne Angabe stehen die vier Könige auf ihren Startfeldern. */
-function custom(mode, pieces, turn = 'r') {
+function custom(mode: GameMode, pieces: [string, Color, string | null][], turn: Color = 'r'): FourChessState {
     const s = newGame(mode);
     s.board.fill(null);
-    const list = [['h1', 'r', 'K'], ['a7', 'b', 'K'], ['g14', 'y', 'K'], ['n8', 'g', 'K'], ...pieces];
+    const list: [string, Color, any][] = [['h1', 'r', 'K'], ['a7', 'b', 'K'], ['g14', 'y', 'K'], ['n8', 'g', 'K'], ...pieces];
     for (const [sq, c, t] of list) s.board[at(sq)] = t ? { c, t } : null;
     s.castle = { r: [], b: [], y: [], g: [] };
     s.turn = turn;
@@ -23,7 +24,7 @@ function custom(mode, pieces, turn = 'r') {
     return s;
 }
 
-function seededRandom(seed) {
+function seededRandom(seed: number) {
     return () => {
         seed = (seed * 1103515245 + 12345) % 2147483648;
         return seed / 2147483648;
@@ -33,10 +34,10 @@ function seededRandom(seed) {
 test('Startaufstellung: Könige gegenüber den Damen, je 20 Züge', () => {
     const s = newGame();
     assert.equal(s.board.filter(Boolean).length, 64);
-    for (const [sq, c] of [['h1', 'r'], ['a7', 'b'], ['g14', 'y'], ['n8', 'g']]) {
+    for (const [sq, c] of [['h1', 'r'], ['a7', 'b'], ['g14', 'y'], ['n8', 'g']] as [string, Color][]) {
         assert.deepEqual(piece(s, sq), { c, t: 'K' });
     }
-    for (const [sq, c] of [['g1', 'r'], ['a8', 'b'], ['h14', 'y'], ['n7', 'g']]) {
+    for (const [sq, c] of [['g1', 'r'], ['a8', 'b'], ['h14', 'y'], ['n7', 'g']] as [string, Color][]) {
         assert.deepEqual(piece(s, sq), { c, t: 'Q' });
     }
     for (const c of COLORS) assert.equal(legalMoves(s, c).length, 20, `Farbe ${c}`);
@@ -57,25 +58,25 @@ test('Rochade kurz und lang für Rot', () => {
     let s = custom('ffa', [['k1', 'r', 'R']]);
     s.castle.r = [at('k1')];
     assert.ok(move(s, 'r', 'h1', 'j1'));
-    assert.equal(piece(s, 'i1').t, 'R');
+    assert.equal(piece(s, 'i1')?.t, 'R');
     assert.equal(piece(s, 'k1'), null);
 
     s = custom('ffa', [['d1', 'r', 'R']]);
     s.castle.r = [at('d1')];
     assert.ok(move(s, 'r', 'h1', 'f1'));
-    assert.equal(piece(s, 'g1').t, 'R');
-    assert.equal(s.log.at(-1).text, 'O-O-O+', 'Turm auf g1 gibt Schach gegen Gelb auf g14');
+    assert.equal(piece(s, 'g1')?.t, 'R');
+    assert.equal(s.log.at(-1)?.text, 'O-O-O+', 'Turm auf g1 gibt Schach gegen Gelb auf g14');
 });
 
 test('Rochade für Blau (seitlich)', () => {
     const s = custom('ffa', [['a4', 'b', 'R']], 'b');
     s.castle.b = [at('a4')];
     assert.ok(move(s, 'b', 'a7', 'a5'));
-    assert.equal(piece(s, 'a6').t, 'R');
+    assert.equal(piece(s, 'a6')?.t, 'R');
 });
 
 test('Keine Rochade über ein angegriffenes Feld – außer der Angreifer ist Teampartner', () => {
-    const pieces = [['k1', 'r', 'R'], ['i14', 'y', 'R']];
+    const pieces: [string, Color, string | null][] = [['k1', 'r', 'R'], ['i14', 'y', 'R']];
     const ffa = custom('ffa', pieces);
     ffa.castle.r = [at('k1')];
     assert.ok(!legalMoves(ffa).some(m => m.castle));
@@ -90,7 +91,7 @@ test('En passant über Kreuz und Verfall der Möglichkeit', () => {
     assert.ok(move(s, 'r', 'f2', 'f4'));
     assert.ok(move(s, 'b', 'e4', 'f3'), 'Blau schlägt en passant');
     assert.equal(piece(s, 'f4'), null);
-    assert.equal(piece(s, 'f3').c, 'b');
+    assert.equal(piece(s, 'f3')?.c, 'b');
 
     s = custom('ffa', [['f2', 'r', 'P'], ['e4', 'b', 'P']]);
     move(s, 'r', 'f2', 'f4');
@@ -112,14 +113,14 @@ test('Umwandlung im FFA auf der 8. Reihe, immer zur 1-Punkt-Dame', () => {
 test('Umwandlung im Teammodus auf der 11. Reihe mit freier Wahl', () => {
     const s = custom('teams', [['f10', 'r', 'P'], ['j7', 'r', 'P']]);
     assert.ok(move(s, 'r', 'f10', 'f11', { pr: 'N' }));
-    assert.equal(piece(s, 'f11').t, 'N');
+    assert.equal(piece(s, 'f11')?.t, 'N');
     const t = custom('teams', [['f7', 'r', 'P']]);
     assert.ok(move(t, 'r', 'f7', 'f8'));
-    assert.equal(piece(t, 'f8').t, 'P', 'auf der 8. Reihe noch keine Umwandlung');
+    assert.equal(piece(t, 'f8')?.t, 'P', 'auf der 8. Reihe noch keine Umwandlung');
 });
 
 // Blau steht in der Ecke a11; Rot setzt mit dem Turm auf a5 matt.
-const MATE = [['a7', 'b', null], ['a11', 'b', 'K'], ['b6', 'r', 'R'], ['f5', 'r', 'R']];
+const MATE: [string, Color, string | null][] = [['a7', 'b', null], ['a11', 'b', 'K'], ['b6', 'r', 'R'], ['f5', 'r', 'R']];
 
 test('Schachmatt im FFA: +20, Figuren werden grau, Blau wird übersprungen', () => {
     const s = custom('ffa', MATE);
@@ -128,13 +129,14 @@ test('Schachmatt im FFA: +20, Figuren werden grau, Blau wird übersprungen', () 
     assert.equal(s.active.b, false);
     assert.equal(s.out.b, 'mate');
     assert.equal(s.turn, 'y');
-    assert.ok(piece(s, 'a11').d, 'König von Blau ist jetzt tot');
+    assert.ok(piece(s, 'a11')?.d, 'König von Blau ist jetzt tot');
     assert.equal(s.result, null);
 });
 
 test('Schachmatt im Teammodus beendet das Spiel', () => {
     const s = custom('teams', MATE);
     assert.ok(move(s, 'r', 'f5', 'a5'));
+    assert.ok(s.result);
     assert.deepEqual(s.result.winners, ['r', 'y']);
     assert.equal(s.result.reason, 'mate');
 });
@@ -150,6 +152,7 @@ test('Patt im FFA: +20 für den Pattgesetzten', () => {
 test('Patt im Teammodus ist unentschieden', () => {
     const s = custom('teams', [['a7', 'b', null], ['a11', 'b', 'K'], ['b6', 'r', 'R'], ['f10', 'r', 'R']]);
     move(s, 'r', 'h1', 'h2');
+    assert.ok(s.result);
     assert.deepEqual(s.result.winners, []);
 });
 
@@ -183,13 +186,15 @@ test('Aufgeben im FFA: Figuren grau, letzter Spieler beendet das Spiel', () => {
     const s = newGame();
     assert.ok(applyAction(s, { t: 'resign', p: 'b' }));
     assert.equal(s.turn, 'r');
-    assert.ok(piece(s, 'a7').d);
+    assert.ok(piece(s, 'a7')?.d);
     move(s, 'r', 'e2', 'e4');
     assert.equal(s.turn, 'y', 'Blau wird übersprungen');
     applyAction(s, { t: 'resign', p: 'y' });
     assert.equal(s.turn, 'g');
     applyAction(s, { t: 'resign', p: 'g' });
+    assert.ok(s.result);
     assert.equal(s.result.reason, 'last');
+    assert.deepEqual(s.result.winners, ['r']);
     assert.equal(applyAction(s, { t: 'resign', p: 'r' }), false, 'nach Spielende geht nichts mehr');
 });
 
@@ -203,32 +208,34 @@ test('Sieg beanspruchen bei 21 Punkten Vorsprung', () => {
     assert.ok(!canClaim(s, 'y'));
     assert.ok(applyAction(s, { t: 'claim', p: 'r' }));
     assert.equal(s.scores.y, 29);
+    assert.ok(s.result);
     assert.deepEqual(s.result.winners, ['r']);
 });
 
 test('Dreifache Stellungswiederholung: Spielende, +10 für alle', () => {
     const s = newGame();
-    const out = [['r', 'e1', 'd3'], ['b', 'a5', 'c4'], ['y', 'e14', 'd12'], ['g', 'n5', 'l4']];
+    const out: [Color, string, string][] = [['r', 'e1', 'd3'], ['b', 'a5', 'c4'], ['y', 'e14', 'd12'], ['g', 'n5', 'l4']];
     for (let round = 0; round < 2; round++) {
         for (const [p, a, b] of out) assert.ok(move(s, p, a, b));
         for (const [p, a, b] of out) assert.ok(move(s, p, b, a));
     }
+    assert.ok(s.result);
     assert.equal(s.result.reason, 'repetition');
     for (const c of COLORS) assert.equal(s.scores[c], 10);
 });
 
-for (const mode of ['ffa', 'teams']) {
+for (const mode of ['ffa', 'teams'] as const) {
     test(`Zufallspartien (${mode}) laufen fehlerfrei und lassen sich exakt nachspielen`, () => {
         for (let game = 0; game < 6; game++) {
             const random = seededRandom(1000 + game);
             const s = newGame(mode);
-            const actions = [];
+            const actions: FourChessAction[] = [];
             while (!s.result && actions.length < 4000) {
                 const moves = legalMoves(s);
                 assert.ok(moves.length > 0, 'wer am Zug ist, hat einen Zug');
-                const m = moves[Math.floor(random() * moves.length)];
-                const action = { t: 'm', p: s.turn, f: m.from, to: m.to };
-                if (m.promote) action.pr = 'QRBN'[Math.floor(random() * 4)];
+                const m = moves[Math.floor(random() * moves.length)]!;
+                const action: FourChessAction = { t: 'm', p: s.turn, f: m.from, to: m.to };
+                if (m.promote) action.pr = ('QRBN'[Math.floor(random() * 4)] as 'Q' | 'R' | 'B' | 'N');
                 assert.ok(applyAction(s, action));
                 actions.push(action);
                 for (const c of COLORS) {
@@ -248,20 +255,41 @@ for (const mode of ['ffa', 'teams']) {
 test('Computergegner: schlägt eine ungedeckte Dame und findet ein Matt', () => {
     const s = custom('ffa', [['f5', 'r', 'R'], ['j5', 'b', 'Q']]);
     const a = chooseBotMove(s);
+    assert.ok(a);
     assert.equal(a.to, at('j5'));
 
     const mate = custom('ffa', MATE);
     const b = chooseBotMove(mate);
+    assert.ok(b);
     assert.deepEqual([b.f, b.to], [at('f5'), at('a5')]);
 });
 
+test('Computergegner: bewertet umgewandelte 1-Punkt-Dame mit 1 statt 9 Punkten', () => {
+    // Rot hat einen Turm auf f5. Er kann schlagen:
+    // 1) echte Dame von Blau auf j5 (9 Punkte, horizontal)
+    // 2) umgewandelte Dame von Grün auf f8 (1 Punkt, vertikal)
+    const s = custom('ffa', [
+        ['f5', 'r', 'R'],
+        ['j5', 'b', 'Q'],
+        ['f8', 'g', 'Q'],
+    ]);
+    const pieceG = s.board[at('f8')];
+    assert.ok(pieceG);
+    pieceG.pr = true;
+    const m = chooseBotMove(s, 'r', () => 0);
+    assert.ok(m);
+    assert.equal(m.to, at('j5'), 'Bot bevorzugt die echte 9-Punkte-Dame gegenüber der 1-Punkt-Dame');
+});
+
 test('Vier Computergegner spielen eine Partie zu Ende', () => {
-    for (const mode of ['ffa', 'teams']) {
+    for (const mode of ['ffa', 'teams'] as const) {
         const random = seededRandom(7);
         const s = newGame(mode);
         let plies = 0;
         while (!s.result && plies < 3000) {
-            assert.ok(applyAction(s, chooseBotMove(s, s.turn, random)));
+            const m = chooseBotMove(s, s.turn, random);
+            assert.ok(m);
+            assert.ok(applyAction(s, m));
             plies++;
         }
         assert.ok(s.result, `${mode}: Partie beendet nach ${plies} Halbzügen`);
