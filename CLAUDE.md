@@ -117,6 +117,9 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
     - **Zielzahl** (`packages/games/target-number`, 1–30 Plätze): „24“ & Countdown-Zahlenrunde mit 4 bis 6 Zahlenkarten, interaktivem Aufbau des geklammerten Rechenterms, Bot „Rechenfuchs“ und Musterlösungs-Anzeige. Plan in `docs/spiele/zielzahl.md`.
     - **Teiler-Duell** (`packages/games/factor-grid`, 1–2 Plätze): „Steuereintreiber“ (Taxman) und „Teiler & Vielfache“ (Juniper Green) auf Zahlenbrettern bis 20, 30 oder 50 mit Live-Teilervorschau und Bot „Zahlengenie“. Plan in `docs/spiele/teiler-duell.md`.
     - **Rechenmauer** (`packages/games/number-wall`, 1–30 Plätze): 3- und 4-stufige Zahlenmauern zum Vorwärts- und Rückwärtsrechnen mit natürlichen Zahlen, ganzen Zahlen (mit Minus), Dezimalzahlen und Einmaleins-Produkten sowie Bot „Mauerbaumeister“. Plan in `docs/spiele/rechenmauer.md`.
+  - **Option D (Rubriken-Strukturierung, Mathe-Direktwahl & Tafel-QR-Code):**
+    - Startseite (`apps/web/src/screens/Home.tsx`) nach 4 Spieltypen-Rubriken gegliedert (*Strategie- & Brettspiele*, *Karten- & Stichspiele*, *Familien-, Lege- & Gesellschaftsspiele*, *Mathe- & Rechenspiele Kl. 5/6*) inklusive Schnellfilter-Leiste (`#/?filter=mathe`) und 7 Direktwahl-Kacheln für die Mathe-Modi der Klassiker.
+    - URL-Parameter für Spieleinrichtungen (`#/neu/<id>?option=wert` und `&autostart=1` in `router.ts` und `Setup.tsx`) sowie ausklappbarer Bereich „🔗 Übungslink & QR-Code (für Tafel / Arbeitsblatt)“ in `Setup.tsx`.
 
 ## Nächste Schritte
 

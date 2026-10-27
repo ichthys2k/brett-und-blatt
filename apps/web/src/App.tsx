@@ -11,7 +11,7 @@ export function App() {
   const route = useRoute();
   switch (route.name) {
     case 'setup':
-      return <Setup key={route.gameId} gameId={route.gameId} />;
+      return <Setup key={`${route.gameId}-${JSON.stringify(route.params ?? {})}`} gameId={route.gameId} params={route.params} />;
     case 'play':
       return <Play />;
     case 'online':
@@ -25,6 +25,6 @@ export function App() {
     case 'privacy':
       return <Datenschutz />;
     default:
-      return <Home />;
+      return <Home initialFilter={route.filter} />;
   }
 }

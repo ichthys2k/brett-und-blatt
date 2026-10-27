@@ -2,6 +2,7 @@ import { BOT_LEVELS, randomSeed, resolveOptions, timePresetsOf, type BotLevel, t
 import { useEffect, useState } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { HowToList } from '../components/HowTo';
+import { QrCode } from '../components/OnlineParts';
 import { t } from '../i18n';
 import { startGame } from '../lib/activeGame';
 import { describeTime, levelLabel } from '../lib/format';
@@ -33,16 +34,19 @@ function defaultDraft(game: LoadedGame): SetupDraft {
   };
 }
 
-/** Gespeicherte Einstellungen nur übernehmen, wenn sie zum aktuellen Spiel passen. */
-function restoreDraft(game: LoadedGame): SetupDraft {
+/** Gespeicherte Einstellungen nur übernehmen, wenn sie zum aktuellen Spiel passen. URL-Parameter überschreiben gezielt einzelne Optionen. */
+function restoreDraft(game: LoadedGame, params?: Record<string, string>): SetupDraft {
   const saved = storage.loadSetup<SetupDraft>(game.info.id);
   const fallback = defaultDraft(game);
-  if (!saved || !Array.isArray(saved.seats)) return fallback;
+  const mergedOptions = resolveOptions(game.module, { ...(saved?.options ?? {}), ...(params ?? {}) });
+  if (!saved || !Array.isArray(saved.seats)) {
+    return { ...fallback, options: mergedOptions };
+  }
   const { min, max } = game.info.players;
   const seats = saved.seats.filter((s) => s && (s.kind === 'human' || s.kind === 'bot')).slice(0, max);
   return {
     seats: seats.length >= min ? seats.map((s) => ({ kind: s.kind, name: String(s.name ?? ''), level: BOT_LEVELS.includes(s.level) ? s.level : 'medium' })) : fallback.seats,
-    options: resolveOptions(game.module, saved.options),
+    options: mergedOptions,
     time: TIME_PRESETS.includes(saved.time) ? saved.time : fallback.time,
   };
 }
@@ -57,17 +61,30 @@ function toSeatConfigs(seats: SeatDraft[]): SeatConfig[] {
   });
 }
 
-export function Setup({ gameId }: { gameId: string }) {
+export function Setup({ gameId, params }: { gameId: string; params?: Record<string, string> }) {
   const [game, setGame] = useState<LoadedGame | null>(null);
   const [draft, setDraft] = useState<SetupDraft | null>(null);
+  const [copiedKind, setCopiedKind] = useState<'setup' | 'autostart' | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     loadGame(gameId).then(
-      (loaded) => {
+      async (loaded) => {
         if (cancelled) return;
+        const restored = restoreDraft(loaded, params);
         setGame(loaded);
-        setDraft(restoreDraft(loaded));
+        setDraft(restored);
+        if (params?.autostart === '1') {
+          storage.saveSetup(loaded.info.id, restored);
+          await startGame({
+            gameId: loaded.info.id,
+            seats: toSeatConfigs(restored.seats),
+            options: loaded.ui.prepareOptions ? loaded.ui.prepareOptions(restored.options) : restored.options,
+            seed: randomSeed(),
+            time: timePresetsOf(loaded.module, restored.options)[restored.time],
+          });
+          if (!cancelled) navigate(paths.play);
+        }
       },
       () => !cancelled && navigate(paths.home),
     );
@@ -201,6 +218,50 @@ export function Setup({ gameId }: { gameId: string }) {
           onChange={(time) => update({ time })}
         />
       </Section>
+
+      {/* Übungslink & QR-Code für Unterricht / Tafel / Arbeitsblatt */}
+      {(() => {
+        const publicOpts: Record<string, string> = {};
+        for (const spec of visibleOptions) {
+          const val = draft.options[spec.id] ?? spec.default;
+          if (val) publicOpts[spec.id] = val;
+        }
+        const baseOrigin = `${window.location.origin}${window.location.pathname}`;
+        const setupUrl = `${baseOrigin}${paths.setup(info.id, publicOpts)}`;
+        const autostartUrl = `${baseOrigin}${paths.setup(info.id, { ...publicOpts, autostart: '1' })}`;
+
+        const copyLink = async (url: string, kind: 'setup' | 'autostart') => {
+          try {
+            await navigator.clipboard.writeText(url);
+            setCopiedKind(kind);
+            window.setTimeout(() => setCopiedKind(null), 2000);
+          } catch {
+            // Fallback ignorieren
+          }
+        };
+
+        return (
+          <details className="rounded-2xl border border-line bg-surface p-3 shadow-sm">
+            <summary className="cursor-pointer font-semibold">
+              🔗 Übungslink & QR-Code (für Tafel / Arbeitsblatt)
+            </summary>
+            <div className="space-y-3 pt-3 text-center">
+              <p className="text-xs text-muted">
+                Teile genau diese Spieleinstellung per QR-Code am Beamer oder als Direktlink (z. B. in WebUntis oder auf einem Arbeitsblatt):
+              </p>
+              <QrCode text={setupUrl} label={`QR-Code für ${info.name}`} />
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button onClick={() => copyLink(setupUrl, 'setup')}>
+                  {copiedKind === 'setup' ? '✓ Link kopiert!' : '🔗 Link zur Einrichtung kopieren'}
+                </Button>
+                <Button onClick={() => copyLink(autostartUrl, 'autostart')}>
+                  {copiedKind === 'autostart' ? '✓ Direktstart kopiert!' : '🚀 Direktstart-Link kopieren'}
+                </Button>
+              </div>
+            </div>
+          </details>
+        );
+      })()}
 
       <Button variant="primary" className="mt-auto w-full text-lg" onClick={start}>
         {t('setup.start')}
