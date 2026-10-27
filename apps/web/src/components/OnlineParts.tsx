@@ -9,10 +9,9 @@ import {
   SIGNAL_INTERVAL_MS,
   SIGNAL_MAX_PER_WINDOW,
   SIGNAL_WINDOW_MS,
-  type AvatarCategoryId,
   type MemberInfo,
 } from '@brett-und-blatt/online';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { renderSVG } from 'uqr';
 import { t, type MessageKey } from '../i18n';
 import type { Signal } from '../lib/online';
@@ -24,20 +23,15 @@ export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile
   const [name, setName] = useState(initial?.name ?? '');
   const [avatar, setAvatar] = useState(initial?.avatar ?? AVATARS[0]);
   const [error, setError] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
 
-  // Kategorie des aktuellen Avatars für die anfängliche Tab-Auswahl ermitteln
-  const initialCat = useMemo<AvatarCategoryId | 'all'>(() => {
-    const found = AVATAR_CATEGORIES.find((c) => (c.emojis as readonly string[]).includes(initial?.avatar ?? ''));
-    return found ? found.id : 'mammals';
-  }, [initial?.avatar]);
-
-  const [category, setCategory] = useState<AvatarCategoryId | 'all'>(initialCat);
-
-  const displayedAvatars = useMemo(() => {
-    if (category === 'all') return AVATARS;
-    const cat = AVATAR_CATEGORIES.find((c) => c.id === category);
-    return cat ? cat.emojis : AVATARS;
-  }, [category]);
+  // Beim ersten Rendern zum bereits ausgewählten Avatar scrollen
+  useEffect(() => {
+    if (avatar) {
+      const el = listRef.current?.querySelector<HTMLElement>(`[data-avatar="${CSS.escape(avatar)}"]`);
+      el?.scrollIntoView({ block: 'nearest' });
+    }
+  }, []);
 
   const submit = () => {
     const trimmed = name.trim();
@@ -48,10 +42,10 @@ export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile
   const pickRandom = () => {
     const next = AVATARS[Math.floor(Math.random() * AVATARS.length)];
     setAvatar(next);
-    if (category !== 'all') {
-      const cat = AVATAR_CATEGORIES.find((c) => (c.emojis as readonly string[]).includes(next));
-      if (cat) setCategory(cat.id);
-    }
+    requestAnimationFrame(() => {
+      const el = listRef.current?.querySelector<HTMLElement>(`[data-avatar="${CSS.escape(next)}"]`);
+      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
   };
 
   return (
@@ -104,67 +98,39 @@ export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile
           </button>
         </div>
 
-        {/* Kategorie-Filterleiste */}
+        {/* Alle Kategorien untereinander im gemeinsamen Scrollbereich */}
         <div
-          role="tablist"
-          aria-label="Avatar-Kategorien"
-          className="flex gap-1 overflow-x-auto pb-1 text-xs"
+          ref={listRef}
+          className="flex max-h-72 flex-col gap-4 overflow-y-auto rounded-xl border border-line/50 bg-surface/50 p-2 sm:max-h-84"
         >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={category === 'all'}
-            onClick={() => setCategory('all')}
-            className={`flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 font-medium transition ${
-              category === 'all'
-                ? 'bg-accent text-accent-ink shadow-sm'
-                : 'bg-surface-2 text-ink hover:bg-surface-3'
-            }`}
-          >
-            <span>{t('online.avatarAll')}</span>
-            <span className="opacity-70">({AVATARS.length})</span>
-          </button>
-          {AVATAR_CATEGORIES.map((cat) => {
-            const active = category === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setCategory(cat.id)}
-                className={`flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 font-medium transition ${
-                  active
-                    ? 'bg-accent text-accent-ink shadow-sm'
-                    : 'bg-surface-2 text-ink hover:bg-surface-3'
-                }`}
-              >
+          {AVATAR_CATEGORIES.map((cat) => (
+            <div key={cat.id} className="space-y-1.5">
+              <div className="sticky top-0 z-10 -mx-1 -mt-1 flex items-center gap-1.5 rounded-lg border-b border-line/40 bg-surface/95 px-2.5 py-1.5 text-xs font-semibold text-muted backdrop-blur-xs">
                 <span aria-hidden="true">{cat.icon}</span>
                 <span>{t(`online.avatarCat.${cat.id}` as MessageKey)}</span>
-                <span className="opacity-70">({cat.emojis.length})</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Avatar Raster */}
-        <div className="flex max-h-60 flex-wrap gap-1 overflow-y-auto rounded-xl border border-line/50 bg-surface/50 p-1.5 sm:max-h-72">
-          {displayedAvatars.map((emoji) => {
-            const isSelected = emoji === avatar;
-            return (
-              <button
-                key={emoji}
-                type="button"
-                aria-pressed={isSelected}
-                className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl transition hover:scale-105 active:scale-95 ${
-                  isSelected ? 'bg-accent/20 ring-2 ring-accent' : 'bg-surface-2 hover:bg-surface-3'
-                }`}
-                onClick={() => setAvatar(emoji)}
-              >
-                {emoji}
-              </button>
-            );
-          })}
+                <span className="text-[11px] opacity-70">({cat.emojis.length})</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {cat.emojis.map((emoji) => {
+                  const isSelected = emoji === avatar;
+                  return (
+                    <button
+                      key={emoji}
+                      type="button"
+                      data-avatar={emoji}
+                      aria-pressed={isSelected}
+                      className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl transition hover:scale-105 active:scale-95 ${
+                        isSelected ? 'bg-accent/20 ring-2 ring-accent' : 'bg-surface-2 hover:bg-surface-3'
+                      }`}
+                      onClick={() => setAvatar(emoji)}
+                    >
+                      {emoji}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </fieldset>
 
