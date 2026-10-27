@@ -2,6 +2,21 @@ import { cardRank, cardSuit, type CardId, type Rank, type Suit } from './cards.j
 
 export type EffectiveSuit = Suit | 'TRUMP';
 
+export interface TrickRulesConfig {
+  /** Gibt an, ob es im Spiel Trümpfe gibt. */
+  hasTrumps?: boolean;
+  /** Farbzwang: Muss die angespielte Farbe bedient werden, falls möglich. */
+  mustFollowSuit?: boolean;
+  /** Überstichzwang: Muss eine höhere Karte derselben effektiven Farbe gespielt werden, falls möglich. */
+  mustOvertake?: boolean;
+  /** Trumpfzwang: Falls nicht bedient werden kann, muss ein Trumpf gespielt werden, falls vorhanden. */
+  mustTrump?: boolean;
+  /** Übertrumpfzwang: Falls bereits ein Trumpf im Stich liegt, muss übertrumpft werden, falls möglich. */
+  overtakeTrump?: boolean;
+  /** Abwurf nur erlaubt, wenn weder bedienen noch trumpfen möglich. */
+  allowDiscardWhenVoid?: boolean;
+}
+
 export interface TrickContract {
   /** Prüft, ob eine Karte in diesem Vertrag ein Trumpf ist. */
   isTrump: (card: CardId) => boolean;
@@ -16,6 +31,8 @@ export interface TrickContract {
    * Höhere Zahl sticht niedrigere Zahl.
    */
   cardPower: (card: CardId) => number;
+  /** Optionale erweiterte Spielregeln (z. B. für Binokel). */
+  rules?: TrickRulesConfig;
 }
 
 export interface PlayedCard {
@@ -66,8 +83,10 @@ export function trickPoints(cards: (CardId | PlayedCard)[]): number {
  * Ermittelt alle legal spielbaren Karten aus der Hand für den aktuellen Stich nach Bedienpflicht.
  * - Ist der Stich leer (Ausspiel), darf jede Karte der Hand gespielt werden (sofern keine Spezialregel widerspricht).
  * - Liegt bereits mindestens eine Karte, muss die effektive Farbe der ersten Karte (Lead Suit) bedient werden,
- *   falls der Spieler mindestens eine Karte dieser effektiven Farbe auf der Hand hat.
+ *   falls der Spieler mindestens eine Karte dieser effektive Farbe auf der Hand hat.
  * - Hat der Spieler keine passende Karte, darf er jede beliebige Karte spielen (abwerfen oder stechen).
+ * 
+ * Unterstützt erweiterte Regeln für Binokel (Überstichzwang, Trumpfzwang, Übertrumpfzwang).
  */
 export function legalCards(
   hand: CardId[],
@@ -84,16 +103,107 @@ export function legalCards(
     return [...hand];
   }
 
+  const rules = contract.rules || {};
+  const mustFollowSuit = rules.mustFollowSuit !== false;
+  const mustOvertake = rules.mustOvertake === true;
+  const mustTrump = rules.mustTrump === true;
+  const overtakeTrump = rules.overtakeTrump === true;
+  const hasTrumps = rules.hasTrumps !== false;
+
   const leadCard = currentTrick[0].card;
   const leadSuit = contract.effectiveSuit(leadCard);
-  const matchingCards = hand.filter((c) => contract.effectiveSuit(c) === leadSuit);
 
-  const candidateCards = matchingCards.length > 0 ? matchingCards : hand;
+  // Prüfe, ob bereits ein Trumpf im Stich liegt
+  const hasTrumpInTrick = currentTrick.some((pc) => contract.isTrump(pc.card));
+  const currentTrumpPower = hasTrumpInTrick
+    ? Math.max(...currentTrick.filter((pc) => contract.isTrump(pc.card)).map((pc) => contract.cardPower(pc.card)))
+    : -Infinity;
+
+  // Farbzwang: Karten der angespielten Farbe
+  const followSuitCards = mustFollowSuit
+    ? hand.filter((c) => contract.effectiveSuit(c) === leadSuit && !contract.isTrump(c))
+    : [];
+  // Auch Trümpfe, wenn Lead-Suit TRUMP ist
+  if (leadSuit === 'TRUMP') {
+    const trumpCardsOnHand = hand.filter((c) => contract.isTrump(c));
+    if (trumpCardsOnHand.length > 0) {
+      // Übertrumpfpflicht wenn bereits Trumpf liegt
+      if (overtakeTrump || (mustOvertake && hasTrumpInTrick)) {
+        const higher = trumpCardsOnHand.filter((c) => contract.cardPower(c) > currentTrumpPower);
+        if (higher.length > 0) {
+          let result = higher;
+          if (customFilter) {
+            const filtered = result.filter((c) => customFilter(c, hand, currentTrick));
+            if (filtered.length > 0) return filtered;
+          }
+          return result;
+        }
+      }
+      // Muss Trumpf bedienen/legen
+      if (customFilter) {
+        const filtered = trumpCardsOnHand.filter((c) => customFilter(c, hand, currentTrick));
+        if (filtered.length > 0) return filtered;
+      }
+      return trumpCardsOnHand;
+    }
+  }
+
+  if (followSuitCards.length > 0) {
+    // Überstichzwang in der angespielten Farbe
+    if (mustOvertake && !hasTrumpInTrick) {
+      // Höchste Karte im Stich ermitteln (nur Fehlfarben)
+      const highestInLeadSuit = Math.max(
+        ...currentTrick
+          .filter((pc) => contract.effectiveSuit(pc.card) === leadSuit && !contract.isTrump(pc.card))
+          .map((pc) => contract.cardPower(pc.card)),
+      );
+      const higher = followSuitCards.filter((c) => contract.cardPower(c) > highestInLeadSuit);
+      if (higher.length > 0) {
+        let result = higher;
+        if (customFilter) {
+          const filtered = result.filter((c) => customFilter(c, hand, currentTrick));
+          if (filtered.length > 0) return filtered;
+        }
+        return result;
+      }
+    }
+    if (customFilter) {
+      const filtered = followSuitCards.filter((c) => customFilter(c, hand, currentTrick));
+      if (filtered.length > 0) return filtered;
+    }
+    return followSuitCards;
+  }
+
+  // Keine passende Farbe zum Bedienen
+  if (hasTrumps && mustTrump) {
+    const trumpCards = hand.filter((c) => contract.isTrump(c));
+    if (trumpCards.length > 0) {
+      // Übertrumpfpflicht wenn bereits Trumpf liegt
+      if (overtakeTrump || (mustOvertake && hasTrumpInTrick)) {
+        const higher = trumpCards.filter((c) => contract.cardPower(c) > currentTrumpPower);
+        if (higher.length > 0) {
+          let result = higher;
+          if (customFilter) {
+            const filtered = result.filter((c) => customFilter(c, hand, currentTrick));
+            if (filtered.length > 0) return filtered;
+          }
+          return result;
+        }
+      }
+      if (customFilter) {
+        const filtered = trumpCards.filter((c) => customFilter(c, hand, currentTrick));
+        if (filtered.length > 0) return filtered;
+      }
+      return trumpCards;
+    }
+  }
+
+  // Weder bedienen noch trumpfen möglich
   if (customFilter) {
-    const filtered = candidateCards.filter((c) => customFilter(c, hand, currentTrick));
+    const filtered = hand.filter((c) => customFilter(c, hand, currentTrick));
     if (filtered.length > 0) return filtered;
   }
-  return candidateCards;
+  return [...hand];
 }
 
 /**
