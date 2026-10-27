@@ -73,12 +73,26 @@ check(foreign.status === 403, 'fremde Seiten dürfen keine Räume anlegen');
 const missing = await fetch(`${base}/rooms/${encodeURIComponent('🐶🐶🐶🐶')}`);
 check((await missing.json()).exists === false, 'ein unbekannter Code führt ins Leere');
 
+const openInitial = await fetch(`${base}/rooms/open`, { headers: { Origin: origin } });
+check(openInitial.status === 200, 'GET /rooms/open antwortet mit 200');
+
 const anna = await client(code, 'Anna');
 const ben = await client(code, 'Ben');
 check(anna.you === 'm1' && ben.you === 'm2', 'beide angemeldet, Anna leitet den Raum');
 
 // Lobby: Tic-Tac-Toe, beide setzen sich – Ben erst, wenn das Spiel gewählt ist (sonst gibt es Platz 2 noch nicht).
 await anna.step({ type: 'setGame', gameId: 'tic-tac-toe' }, (m) => m.lobby.gameId === 'tic-tac-toe' && m.lobby.seats.length === 2);
+const openWithGame = await (await fetch(`${base}/rooms/open`, { headers: { Origin: origin } })).json();
+check(openWithGame.some((r) => r.code === code && r.gameId === 'tic-tac-toe'), 'öffentlicher Raum mit Spiel erscheint in /rooms/open');
+
+await anna.step({ type: 'setPublic', isPublic: false }, (m) => m.lobby.isPublic === false);
+const openPrivate = await (await fetch(`${base}/rooms/open`, { headers: { Origin: origin } })).json();
+check(!openPrivate.some((r) => r.code === code), 'privater Raum verschwindet aus /rooms/open');
+
+await anna.step({ type: 'setPublic', isPublic: true }, (m) => m.lobby.isPublic === true);
+const openPublicAgain = await (await fetch(`${base}/rooms/open`, { headers: { Origin: origin } })).json();
+check(openPublicAgain.some((r) => r.code === code), 'wieder öffentlicher Raum erscheint erneut in /rooms/open');
+
 await anna.step({ type: 'takeSeat', index: 0 }, (m) => m.lobby.seats[0]?.memberId === 'm1');
 await ben.step({ type: 'takeSeat', index: 1 }, (m) => m.lobby.seats[1]?.memberId === 'm2');
 let annaGame = anna.next((m) => m.type === 'game');
@@ -86,6 +100,8 @@ let benGame = ben.next((m) => m.type === 'game');
 anna.send({ type: 'start' });
 let games = { Anna: await annaGame, Ben: await benGame };
 check(games.Anna.yourSeat === 0 && games.Ben.yourSeat === 1, 'Partie gestartet, jeder kennt seinen Platz');
+const openStarted = await (await fetch(`${base}/rooms/open`, { headers: { Origin: origin } })).json();
+check(!openStarted.some((r) => r.code === code), 'gestarteter Raum verschwindet aus /rooms/open');
 
 // Ganze Partie: Wer dran ist, nimmt den ersten erlaubten Zug.
 for (let turn = 0; turn < 9 && !games.Anna.result; turn++) {

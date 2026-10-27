@@ -173,7 +173,12 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
           ←
         </Button>
         <div className="min-w-0">
-          <p className="text-sm text-muted">{t('online.room')}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted">{t('online.room')}</p>
+            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${lobby.isPublic ? 'border-accent/40 bg-accent/10 text-accent' : 'border-line bg-surface text-muted'}`}>
+              {lobby.isPublic ? `🌐 ${t('online.badge.public')}` : `🔒 ${t('online.badge.private')}`}
+            </span>
+          </div>
           <h1 className="text-3xl tracking-widest">{room.code}</h1>
         </div>
       </header>
@@ -189,6 +194,23 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
           </Button>
         </div>
         {showQr && <QrCode text={link} label={`${t('online.qr')}: ${link}`} />}
+        {isHost && (
+          <label className="flex cursor-pointer select-none items-center gap-3 border-t border-line pt-2">
+            <input
+              type="checkbox"
+              checked={lobby.isPublic}
+              onChange={(e) => send({ type: 'setPublic', isPublic: e.target.checked })}
+              className="h-4 w-4 rounded accent-accent"
+            />
+            <div className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">{t('online.publicListing')}</span>
+              <span className="block text-xs text-muted">{t('online.publicListingHint')}</span>
+            </div>
+            <span className="text-xl" aria-hidden="true">
+              🌐
+            </span>
+          </label>
+        )}
       </section>
 
       <Section title={t('online.game')}>

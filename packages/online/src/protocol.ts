@@ -20,6 +20,21 @@ export interface LobbySettings {
   options: Options;
   time: TimePresetId;
   seats: LobbySeat[];
+  isPublic: boolean;
+}
+
+/** Kompakte Übersicht für offene Spiele auf dem Startbildschirm. */
+export interface OpenRoomListing {
+  code: string;
+  gameId: string;
+  gameName: string;
+  gameEmoji: string;
+  hostName: string;
+  hostAvatar: string;
+  totalSeats: number;
+  filledSeats: number;
+  createdAt: number;
+  updatedAt: number;
 }
 
 /** Ein Mitglied des Raums, wie es alle sehen. Die geheime Kennung steht nie darin. */
@@ -164,6 +179,7 @@ export type ClientMessage =
   | { type: 'setTime'; time: TimePresetId }
   | { type: 'setSeatCount'; count: number }
   | { type: 'setSeat'; index: number; seat: 'open' | { bot: BotLevel } }
+  | { type: 'setPublic'; isPublic: boolean }
   | { type: 'takeSeat'; index: number }
   | { type: 'leaveSeat' }
   | { type: 'kick'; memberId: string }
@@ -272,6 +288,8 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       if (m.seat === 'open') return { type: 'setSeat', index: m.index, seat: 'open' };
       return isRecord(m.seat) && isLevel(m.seat.bot) ? { type: 'setSeat', index: m.index, seat: { bot: m.seat.bot } } : null;
     }
+    case 'setPublic':
+      return typeof m.isPublic === 'boolean' ? { type: 'setPublic', isPublic: m.isPublic } : null;
     case 'takeSeat':
       return isInt(m.index, 0, MAX_SEATS - 1) ? { type: 'takeSeat', index: m.index } : null;
     case 'kick':

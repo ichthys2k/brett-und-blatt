@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
-import { Room, parseRoomCode, randomRoomCode, serverBotRunner, type RoomDeps, type RoomSnapshot, type ServerMessage } from '@brett-und-blatt/online';
+import { Room, parseRoomCode, randomRoomCode, serverBotRunner, type OpenRoomListing, type RoomDeps, type RoomSnapshot, type ServerMessage } from '@brett-und-blatt/online';
 import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
 import { onlineGames } from './games';
 
@@ -8,6 +8,7 @@ import { onlineGames } from './games';
  * steckt in `packages/online` (Klasse `Room`) und in den Spielmodulen.
  *
  * - `POST /rooms` erstellt einen Raum und antwortet mit seinem Emoji-Code.
+ * - `GET /rooms` bzw. `GET /rooms/open` liefert offene Spiele der letzten 60 Minuten.
  * - `GET /rooms/<code>` mit WebSocket-Upgrade betritt einen Raum.
  *
  * Jeder Raum ist ein eigenes Durable Object (ein kleiner Server mit Speicher),
@@ -16,6 +17,7 @@ import { onlineGames } from './games';
 
 interface Env {
   ROOMS: DurableObjectNamespace<GameRoom>;
+  LOBBY_REGISTRY: DurableObjectNamespace<LobbyRegistry>;
   ALLOWED_ORIGINS: string;
   /** "eu" im echten Betrieb. Nur der lokale Testserver kennt keine Jurisdiktionen und setzt "none". */
   ROOM_JURISDICTION: string;
@@ -44,6 +46,11 @@ function roomStub(env: Env, code: string): DurableObjectStub<GameRoom> {
   return namespace.get(namespace.idFromName(code));
 }
 
+function registryStub(env: Env): DurableObjectStub<LobbyRegistry> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.LOBBY_REGISTRY : env.LOBBY_REGISTRY.jurisdiction('eu');
+  return namespace.get(namespace.idFromName('global'));
+}
+
 function corsHeaders(request: Request, env: Env): Record<string, string> {
   const origin = request.headers.get('Origin') ?? '';
   const allowed = env.ALLOWED_ORIGINS.split(',').map((o) => o.trim());
@@ -68,12 +75,25 @@ export default {
 
     if (url.pathname === '/rooms' && request.method === 'POST') {
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      let isPublic = true;
+      try {
+        const body = (await request.json()) as { isPublic?: boolean };
+        if (typeof body?.isPublic === 'boolean') isPublic = body.isPublic;
+      } catch {
+        // Leerer Body: Standard beibehalten
+      }
       // Ein freier Code ist fast immer der erste; zur Sicherheit ein paar Versuche.
       for (let attempt = 0; attempt < 5; attempt++) {
         const code = randomRoomCode(randomInt);
-        if (await roomStub(env, code).create(code)) return json({ code }, 201, cors);
+        if (await roomStub(env, code).create(code, isPublic)) return json({ code }, 201, cors);
       }
       return json({ error: 'busy' }, 503, cors);
+    }
+
+    if ((url.pathname === '/rooms' || url.pathname === '/rooms/open') && request.method === 'GET') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const rooms = await registryStub(env).listOpen();
+      return json(rooms, 200, cors);
     }
 
     const match = /^\/rooms\/([^/]+)$/.exec(url.pathname);
@@ -118,9 +138,9 @@ export class GameRoom extends DurableObject<Env> {
   }
 
   /** Legt den Raum an. false, wenn es ihn unter diesem Code schon gibt. */
-  async create(code: string): Promise<boolean> {
+  async create(code: string, isPublic = true): Promise<boolean> {
     if (this.room) return false;
-    this.room = new Room(code, this.deps());
+    this.room = new Room(code, this.deps(), isPublic);
     await this.persist();
     return true;
   }
@@ -159,8 +179,10 @@ export class GameRoom extends DurableObject<Env> {
     if (!room) return;
     // Lange niemand da: Raum samt allen Daten löschen.
     if (Date.now() >= room.expiresAt() && room.connectionCount === 0) {
+      const code = room.code;
       this.room = null;
       await this.ctx.storage.deleteAll();
+      await registryStub(this.env).removeRoom(code);
       return;
     }
     // tick() meldet die Änderung selbst (changed → persist); ein zweites Speichern wäre doppelt.
@@ -216,5 +238,76 @@ export class GameRoom extends DurableObject<Env> {
     await this.ctx.storage.put('room', room.snapshot());
     const wake = room.nextWakeup();
     if (wake !== null) await this.ctx.storage.setAlarm(Math.max(wake, Date.now() + 50));
+    await this.syncRegistry();
+  }
+
+  private async syncRegistry(): Promise<void> {
+    try {
+      const room = this.room;
+      const reg = registryStub(this.env);
+      if (room) {
+        const listing = room.publicListing();
+        if (listing) {
+          await reg.updateRoom(listing);
+        } else {
+          await reg.removeRoom(room.code);
+        }
+      }
+    } catch (err) {
+      console.error('LobbyRegistry sync failed:', err);
+    }
+  }
+}
+
+/**
+ * Zentrale Übersicht aller aktuell offenen Räume auf dem Server.
+ * Speichert Listings in SQLite und filtert veraltete (> 60 min) automatisch aus.
+ */
+export class LobbyRegistry extends DurableObject<Env> {
+  private listings = new Map<string, OpenRoomListing>();
+
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    ctx.blockConcurrencyWhile(async () => {
+      const saved = await ctx.storage.get<Record<string, OpenRoomListing>>('listings');
+      if (saved) {
+        for (const [code, item] of Object.entries(saved)) {
+          this.listings.set(code, item);
+        }
+      }
+    });
+  }
+
+  async updateRoom(listing: OpenRoomListing): Promise<void> {
+    this.listings.set(listing.code, listing);
+    await this.persist();
+  }
+
+  async removeRoom(code: string): Promise<void> {
+    if (this.listings.delete(code)) {
+      await this.persist();
+    }
+  }
+
+  async listOpen(maxAgeMs = 60 * 60 * 1000): Promise<OpenRoomListing[]> {
+    const now = Date.now();
+    let changed = false;
+    const result: OpenRoomListing[] = [];
+    for (const [code, item] of this.listings.entries()) {
+      if (now - item.updatedAt > maxAgeMs) {
+        this.listings.delete(code);
+        changed = true;
+      } else {
+        result.push(item);
+      }
+    }
+    if (changed) {
+      await this.persist();
+    }
+    return result.sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+
+  private async persist(): Promise<void> {
+    await this.ctx.storage.put('listings', Object.fromEntries(this.listings));
   }
 }

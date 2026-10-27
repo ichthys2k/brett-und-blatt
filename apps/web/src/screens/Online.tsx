@@ -14,12 +14,13 @@ export function Online() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pasted, setPasted] = useState('');
+  const [isPublic, setIsPublic] = useState(true);
 
   const create = async () => {
     setBusy(true);
     setError(null);
     try {
-      navigate(paths.room(await createRoom()));
+      navigate(paths.room(await createRoom({ isPublic })));
     } catch {
       setError(t('online.serverError'));
     } finally {
@@ -79,9 +80,20 @@ export function Online() {
             </Button>
           </section>
 
-          <Button variant="primary" className="w-full" disabled={busy} onClick={create}>
-            ➕ {t('online.create')}
-          </Button>
+          <div className="space-y-2">
+            <Button variant="primary" className="w-full" disabled={busy} onClick={create}>
+              ➕ {t('online.create')}
+            </Button>
+            <label className="flex cursor-pointer select-none items-center justify-center gap-2 text-xs text-muted">
+              <input
+                type="checkbox"
+                checked={isPublic}
+                onChange={(e) => setIsPublic(e.target.checked)}
+                className="h-4 w-4 rounded accent-accent"
+              />
+              <span>{t('online.publicListing')}</span>
+            </label>
+          </div>
 
           <Section title={t('online.join')}>
             <p className="text-sm text-muted">{t('online.codeHint')}</p>

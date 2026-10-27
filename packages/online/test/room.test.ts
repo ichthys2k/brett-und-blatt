@@ -614,3 +614,79 @@ describe('Neustart des Servers', () => {
     expect(again.game().current).toEqual([0]);
   });
 });
+
+describe('Offene Spiele (publicListing)', () => {
+  it('liefert null ohne gewähltes Spiel oder wenn niemand verbunden ist', () => {
+    const env = setup();
+    expect(env.room.publicListing()).toBeNull();
+    const anna = env.client('anna');
+    anna.hello();
+    // Noch kein Spiel gewählt
+    expect(env.room.publicListing()).toBeNull();
+  });
+
+  it('liefert ein Listing, sobald ein Spiel gewählt ist und freie Plätze existieren', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    anna.hello();
+    anna.send({ type: 'setGame', gameId: 'tic-tac-toe' });
+    const listing = env.room.publicListing();
+    expect(listing).not.toBeNull();
+    expect(listing?.gameId).toBe('tic-tac-toe');
+    expect(listing?.gameName).toBe(ticTacToe.info.name);
+    expect(listing?.hostName).toBe('anna');
+    expect(listing?.totalSeats).toBe(2);
+    expect(listing?.filledSeats).toBe(0);
+  });
+
+  it('liefert null, wenn der Raum privat geschaltet wird', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    anna.hello();
+    anna.send({ type: 'setGame', gameId: 'tic-tac-toe' });
+    expect(env.room.publicListing()).not.toBeNull();
+
+    anna.send({ type: 'setPublic', isPublic: false });
+    expect(env.room.publicListing()).toBeNull();
+
+    anna.send({ type: 'setPublic', isPublic: true });
+    expect(env.room.publicListing()).not.toBeNull();
+  });
+
+  it('liefert null, sobald das Spiel gestartet wurde oder alle Plätze belegt sind', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    anna.hello();
+    ben.hello();
+    anna.send({ type: 'setGame', gameId: 'tic-tac-toe' });
+    anna.send({ type: 'takeSeat', index: 0 });
+    ben.send({ type: 'takeSeat', index: 1 });
+    // Alle Plätze belegt
+    expect(env.room.publicListing()).toBeNull();
+
+    // Platz wieder frei
+    ben.send({ type: 'leaveSeat' });
+    expect(env.room.publicListing()).not.toBeNull();
+
+    // Ben nimmt wieder Platz und Spiel startet
+    ben.send({ type: 'takeSeat', index: 1 });
+    anna.send({ type: 'start' });
+    expect(env.room.publicListing()).toBeNull();
+  });
+
+  it('liefert null, wenn alle Mitglieder die Verbindung trennen', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    anna.hello();
+    anna.send({ type: 'setGame', gameId: 'tic-tac-toe' });
+    expect(env.room.publicListing()).not.toBeNull();
+
+    env.room.disconnect('anna');
+    expect(env.room.publicListing()).toBeNull();
+
+    env.room.reattach('anna', 'm1');
+    expect(env.room.publicListing()).not.toBeNull();
+  });
+});
+

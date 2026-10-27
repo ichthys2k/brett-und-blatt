@@ -1,4 +1,4 @@
-import { OnlineSession, PROTOCOL_VERSION, type ClientMessage, type GameMessage, type RoomMessage, type ServerMessage } from '@brett-und-blatt/online';
+import { OnlineSession, PROTOCOL_VERSION, type ClientMessage, type GameMessage, type OpenRoomListing, type RoomMessage, type ServerMessage } from '@brett-und-blatt/online';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createBotRunner } from './botRunner';
 import { notifyTurn } from './notifications';
@@ -6,14 +6,20 @@ import { loadGame, type LoadedGame } from './registry';
 import { sound } from './sound';
 import { storage, type Profile } from './storage';
 
+export type { OpenRoomListing };
+
 /**
  * Adresse des Spieleservers. Beim Bauen über VITE_GAME_SERVER festgelegt; im
  * Dev-Modus der lokale Server (`wrangler dev`). Ohne Adresse gibt es keine Online-Spiele.
  */
 export const GAME_SERVER: string | null = import.meta.env.VITE_GAME_SERVER || (import.meta.env.DEV ? 'http://127.0.0.1:8787' : null);
 
-export async function createRoom(): Promise<string> {
-  const response = await fetch(`${GAME_SERVER}/rooms`, { method: 'POST' });
+export async function createRoom(options?: { isPublic?: boolean }): Promise<string> {
+  const response = await fetch(`${GAME_SERVER}/rooms`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ isPublic: options?.isPublic ?? true }),
+  });
   if (!response.ok) throw new Error(`Server antwortet mit ${response.status}`);
   return ((await response.json()) as { code: string }).code;
 }
@@ -21,6 +27,17 @@ export async function createRoom(): Promise<string> {
 export async function roomExists(code: string): Promise<boolean> {
   const response = await fetch(`${GAME_SERVER}/rooms/${encodeURIComponent(code)}`);
   return response.ok && ((await response.json()) as { exists: boolean }).exists;
+}
+
+export async function fetchOpenRooms(): Promise<OpenRoomListing[]> {
+  if (!GAME_SERVER) return [];
+  try {
+    const response = await fetch(`${GAME_SERVER}/rooms/open`);
+    if (!response.ok) return [];
+    return (await response.json()) as OpenRoomListing[];
+  } catch {
+    return [];
+  }
 }
 
 export type ConnectionStatus = 'connecting' | 'open' | 'reconnecting' | 'gone' | 'kicked' | 'outdated' | 'left';

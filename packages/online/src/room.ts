@@ -23,6 +23,7 @@ import {
   type GameMessage,
   type LobbySettings,
   type MemberInfo,
+  type OpenRoomListing,
   type PublicSeat,
   type RoomMessage,
   type RoomPhase,
@@ -108,6 +109,7 @@ export interface RoomSnapshot {
   nextMember: number;
   lastVersion: number;
   rounds: number;
+  createdAt?: number;
   lastActivity: number;
   game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; time: LobbySettings['time']; version: number; round: number } | null;
 }
@@ -125,18 +127,22 @@ export class Room {
   private kicked = new Set<string>();
   private hostId: string | null = null;
   private phase: RoomPhase = 'lobby';
-  private lobby: LobbySettings = { gameId: null, options: {}, time: 'relaxed', seats: [] };
+  private lobby: LobbySettings;
   private game: Game | null = null;
   private nextMember = 1;
   private lastVersion = 0;
   /** Wie viele Partien in diesem Raum schon begonnen haben. */
   private rounds = 0;
+  private createdAt: number;
   private lastActivity: number;
 
   constructor(
     readonly code: string,
     private deps: RoomDeps,
+    isPublic = true,
   ) {
+    this.lobby = { gameId: null, options: {}, time: 'relaxed', seats: [], isPublic };
+    this.createdAt = deps.now();
     this.lastActivity = deps.now();
   }
 
@@ -249,6 +255,36 @@ export class Room {
     return this.connections.size;
   }
 
+  /**
+   * Erzeugt ein kompaktes Listing für die Startseite, sofern der Raum öffentlich,
+   * in der Lobby-Phase, mit gewähltem Spiel und mit freien Plätzen ist und
+   * mindestens ein Mitglied verbunden ist. Sonst null.
+   */
+  publicListing(): OpenRoomListing | null {
+    if (!this.lobby.isPublic) return null;
+    if (this.phase !== 'lobby') return null;
+    if (!this.lobby.gameId) return null;
+    const module = this.deps.findGame(this.lobby.gameId);
+    if (!module) return null;
+    const openSeats = this.lobby.seats.filter((s) => s.kind === 'human' && s.memberId === null).length;
+    if (openSeats === 0) return null;
+    const hasConnected = [...this.members.values()].some((m) => m.disconnectedAt === null);
+    if (!hasConnected) return null;
+    const host = this.hostId ? this.members.get(this.hostId) : undefined;
+    return {
+      code: this.code,
+      gameId: this.lobby.gameId,
+      gameName: module.info.name,
+      gameEmoji: module.info.emoji,
+      hostName: host?.name ?? 'Anonym',
+      hostAvatar: host?.avatar ?? '🎲',
+      totalSeats: this.lobby.seats.length,
+      filledSeats: this.lobby.seats.length - openSeats,
+      createdAt: this.createdAt,
+      updatedAt: this.lastActivity,
+    };
+  }
+
   snapshot(): RoomSnapshot {
     const game = this.game;
     return {
@@ -262,6 +298,7 @@ export class Room {
       nextMember: this.nextMember,
       lastVersion: this.lastVersion,
       rounds: this.rounds,
+      createdAt: this.createdAt,
       lastActivity: this.lastActivity,
       game: game ? { session: game.session.snapshot(), seatMembers: [...game.seatMembers], seats: game.seats, time: game.time, version: this.gameVersion(), round: game.round } : null,
     };
@@ -273,14 +310,16 @@ export class Room {
    * Abwesenheit laufen nahtlos weiter.
    */
   static restore(snapshot: RoomSnapshot, deps: RoomDeps): Room {
-    const room = new Room(snapshot.code, deps);
+    const isPublic = snapshot.lobby.isPublic ?? true;
+    const room = new Room(snapshot.code, deps, isPublic);
     room.hostId = snapshot.hostId;
     room.phase = snapshot.phase;
-    room.lobby = snapshot.lobby;
+    room.lobby = { ...snapshot.lobby, isPublic };
     room.kicked = new Set(snapshot.kicked);
     room.nextMember = snapshot.nextMember;
     room.lastVersion = snapshot.lastVersion;
     room.rounds = snapshot.rounds;
+    room.createdAt = snapshot.createdAt ?? snapshot.lastActivity;
     room.lastActivity = snapshot.lastActivity;
     const now = deps.now();
     for (const m of snapshot.members) {
@@ -373,9 +412,13 @@ export class Room {
         if (!isHost || this.phase !== 'lobby' || !module) return deny();
         const { min, max } = module.info.players;
         const count = Math.min(Math.min(max, MAX_SEATS), Math.max(min, this.lobby.seats.length));
-        this.lobby = { gameId: message.gameId, options: resolveOptions(module), time: this.lobby.time, seats: this.resizeSeats(count) };
+        this.lobby = { gameId: message.gameId, options: resolveOptions(module), time: this.lobby.time, seats: this.resizeSeats(count), isPublic: this.lobby.isPublic };
         return this.broadcastRoom();
       }
+      case 'setPublic':
+        if (!isHost || this.phase !== 'lobby') return deny();
+        this.lobby.isPublic = message.isPublic;
+        return this.broadcastRoom();
       case 'setOption': {
         const module = this.lobbyModule();
         const spec = module?.options.find((o) => o.id === message.id);
