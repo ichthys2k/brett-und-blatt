@@ -1,0 +1,115 @@
+/* Eins! Styles und Animationen */
+
+.uno-table {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  user-select: none;
+}
+
+.uno-center-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  position: relative;
+}
+
+.uno-direction-ring {
+  position: absolute;
+  inset: -12px;
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 9999px;
+  pointer-events: none;
+  animation: uno-spin 20s linear infinite;
+}
+
+.uno-direction-ring.reverse {
+  animation-direction: reverse;
+}
+
+@keyframes uno-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Farbkreis für Wunschfarbe */
+.uno-color-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 3D-Kartenwende bei Flip */
+.uno-flip-container {
+  perspective: 1000px;
+}
+
+.uno-flip-card {
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.uno-flip-card.dark {
+  transform: rotateY(180deg);
+}
+
+/* Handkarten-Fächer */
+.uno-hand-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  width: 100%;
+  overflow-x: auto;
+  padding: 1rem 0.5rem;
+  min-height: 120px;
+}
+
+.uno-hand-card-wrapper {
+  margin-left: -1.25rem;
+  transition: margin 0.2s ease, transform 0.2s ease;
+}
+
+.uno-hand-card-wrapper:first-child {
+  margin-left: 0;
+}
+
+.uno-hand-card-wrapper:hover {
+  margin-left: -0.25rem;
+  margin-right: 0.75rem;
+  z-index: 20;
+}
+
+/* Pulsierender EINS-Button */
+.uno-call-btn {
+  animation: uno-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes uno-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 10px rgba(234, 179, 8, 0);
+  }
+}
