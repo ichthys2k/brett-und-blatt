@@ -63,7 +63,25 @@ async function client(code, name, token = `${name}-${crypto.randomUUID()}`) {
   return c;
 }
 
-const created = await fetch(`${base}/rooms`, { method: 'POST', headers: { Origin: origin } });
+const preflight = await fetch(`${base}/rooms`, {
+  method: 'OPTIONS',
+  headers: {
+    Origin: origin,
+    'Access-Control-Request-Method': 'POST',
+    'Access-Control-Request-Headers': 'Content-Type',
+  },
+});
+const allowHeaders = preflight.headers.get('Access-Control-Allow-Headers') ?? '';
+check(
+  preflight.status === 204 && allowHeaders.toLowerCase().includes('content-type'),
+  'CORS-Preflight erlaubt Content-Type Header',
+);
+
+const created = await fetch(`${base}/rooms`, {
+  method: 'POST',
+  headers: { Origin: origin, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ isPublic: true }),
+});
 const { code } = await created.json();
 check(created.status === 201 && typeof code === 'string', `Raum erstellt: ${code}`);
 

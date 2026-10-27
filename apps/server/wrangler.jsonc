@@ -19,7 +19,7 @@
   ],
   "vars": {
     // Von diesen Seiten aus dürfen Räume erstellt und betreten werden.
-    "ALLOWED_ORIGINS": "https://spiele.lipponer.de,http://localhost:5173",
+    "ALLOWED_ORIGINS": "https://spiele.lipponer.de,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173",
     // Räume liegen in der EU. Der lokale Testserver kann das nicht und überschreibt es mit "none".
     "ROOM_JURISDICTION": "eu"
   }

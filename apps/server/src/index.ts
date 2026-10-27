@@ -54,7 +54,14 @@ function registryStub(env: Env): DurableObjectStub<LobbyRegistry> {
 function corsHeaders(request: Request, env: Env): Record<string, string> {
   const origin = request.headers.get('Origin') ?? '';
   const allowed = env.ALLOWED_ORIGINS.split(',').map((o) => o.trim());
-  return allowed.includes(origin) ? { 'Access-Control-Allow-Origin': origin, 'Access-Control-Allow-Methods': 'GET, POST', Vary: 'Origin' } : {};
+  return allowed.includes(origin)
+    ? {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        Vary: 'Origin',
+      }
+    : {};
 }
 
 /** Nur die eigene Web-App darf Räume anlegen und betreten. */
