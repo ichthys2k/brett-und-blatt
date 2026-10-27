@@ -27,6 +27,7 @@
     "@brett-und-blatt/game-four-in-a-row": "workspace:*",
     "@brett-und-blatt/game-four-player-chess": "workspace:*",
     "@brett-und-blatt/game-go": "workspace:*",
+    "@brett-und-blatt/game-ludo": "workspace:*",
     "@brett-und-blatt/game-maexle": "workspace:*",
     "@brett-und-blatt/game-mill": "workspace:*",
     "@brett-und-blatt/game-number-wall": "workspace:*",

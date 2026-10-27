@@ -229,6 +229,9 @@ importers:
       '@brett-und-blatt/game-go':
         specifier: workspace:*
         version: link:../../packages/games/go
+      '@brett-und-blatt/game-ludo':
+        specifier: workspace:*
+        version: link:../../packages/games/ludo
       '@brett-und-blatt/game-maexle':
         specifier: workspace:*
         version: link:../../packages/games/maexle
