@@ -126,6 +126,13 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private deadlineChanged: (() => void) | undefined;
   private consecutiveTimeouts: number[];
   private away = new Set<SeatId>();
+  private cachedViews = new Map<SeatId | 'spectator', V>();
+  private cachedMoves = new Map<SeatId, M[]>();
+
+  private invalidateCache(): void {
+    this.cachedViews.clear();
+    this.cachedMoves.clear();
+  }
 
   constructor(
     readonly module: GameModule<S, M, V>,
@@ -201,7 +208,12 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   }
 
   view(seat: SeatId | 'spectator'): V {
-    return this.module.playerView(this._state, seat);
+    let cached = this.cachedViews.get(seat);
+    if (cached === undefined) {
+      cached = this.module.playerView(this._state, seat);
+      this.cachedViews.set(seat, cached);
+    }
+    return cached;
   }
 
   currentSeats(): SeatId[] {
@@ -229,7 +241,12 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
 
   legalMoves(seat: SeatId): M[] {
     if (this.result || !this.currentSeats().includes(seat)) return [];
-    return this.module.legalMoves(this._state, seat);
+    let cached = this.cachedMoves.get(seat);
+    if (cached === undefined) {
+      cached = this.module.legalMoves(this._state, seat);
+      this.cachedMoves.set(seat, cached);
+    }
+    return cached;
   }
 
   clock(seat: SeatId): ClockReading {
@@ -352,6 +369,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     if (index < 0) return false;
     this._log = this._log.slice(0, index);
     this._state = replay<S, M>(this.module, this.config.seats.length, this.config.options, this.config.seed, this._log);
+    this.invalidateCache();
     this._forfeit = null;
     this.dropAllBots();
     this.config.seats.forEach((_, seat) => this.clocks.cancel(seat));
@@ -438,6 +456,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
 
   private endByForfeit(forfeit: Forfeit): void {
     this._forfeit = forfeit;
+    this.invalidateCache();
     this.clocks.stopAll(this.now());
     this.dropAllBots();
     this.bump();
@@ -447,6 +466,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private commit(actor: Actor, move: M, cause: MoveCause): void {
     const { state, events } = this.module.applyMove(this._state, actor, move);
     this._state = state;
+    this.invalidateCache();
     const entry: LogEntry<M> = { actor, move, cause };
     this._log.push(entry);
     if (actor !== 'system') this.clocks.stop(actor, this.now());
@@ -465,6 +485,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
       if (move === undefined) throw new Error('Die Spielleitung ist am Zug, hat aber keinen Systemzug.');
       const step = this.module.applyMove(this._state, 'system', move);
       this._state = step.state;
+      this.invalidateCache();
       events.push(...step.events);
       this._log.push({ actor: 'system', move, cause: 'system' });
     }

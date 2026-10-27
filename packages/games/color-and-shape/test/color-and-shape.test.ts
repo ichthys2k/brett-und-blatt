@@ -1,4 +1,4 @@
-import { computeBotMove, type BotLevel } from '@brett-und-blatt/engine';
+import { computeBotMove, inlineBotRunner, LocalSession, type BotLevel } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { checkPlacement, gameModule, placements, validLine, type ColorShapeState, type Placed, type TileId } from '../src';
@@ -76,6 +76,33 @@ describe('Regeln', () => {
     expect(view.hands[0]!.every((x) => x === null)).toBe(true);
     expect(view.bag.every((x) => x === null)).toBe(true);
     expect(gameModule.eventView!({ type: 'drew', seat: 0, tiles: [1, 2] }, 1)).toEqual({ type: 'drew', seat: 0, count: 2 });
+  });
+
+  it('Session mit Zugzeit: view() bleibt über Ticks stabil und Steine können gelegt werden', () => {
+    let time = 0;
+    const session = new LocalSession(
+      gameModule,
+      {
+        gameId: 'color-and-shape',
+        seats: [{ kind: 'human', name: 'Anna' }, { kind: 'human', name: 'Ben' }],
+        options: {},
+        seed: 'partie',
+        time: { kind: 'perMove', moveMs: 60_000 },
+      },
+      { botRunner: inlineBotRunner([gameModule]), now: () => time },
+    );
+
+    const v1 = session.view(0);
+    time += 200;
+    session.tick();
+    expect(session.view(0)).toBe(v1);
+
+    const turn = session.state.turn;
+    const hand = session.view(turn).hands[turn]!.filter((x): x is TileId => x !== null);
+    const validMoves = placements(session.state, hand);
+    expect(validMoves.length).toBeGreaterThan(0);
+    expect(session.submit(turn, { type: 'place', tiles: validMoves[0]!.tiles })).toBe(true);
+    session.dispose();
   });
 });
 

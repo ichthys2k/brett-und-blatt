@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { AWAY_AFTER_TIMEOUTS, LocalSession, inlineBotRunner, type BotRunner, type SessionConfig } from '../src';
-import { nim } from './nim';
+import { AWAY_AFTER_TIMEOUTS, LocalSession, inlineBotRunner, type BotRunner, type GameModule, type SessionConfig } from '../src';
+import { nim, type NimMove, type NimState } from './nim';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -260,6 +260,40 @@ describe('Bedenkpause der Bots (delayMs)', () => {
     session.tick();
     expect(session.log).toHaveLength(0);
     expect(session.nextDeadline()).toBeNull();
+    session.dispose();
+  });
+
+  it('hält Referenzen für view() und legalMoves() stabil, solange der Zustand unverändert ist', () => {
+    const hiddenNim: GameModule<NimState, NimMove> = {
+      ...nim,
+      playerView: (s) => ({ ...s }),
+    };
+    let time = 0;
+    const session = new LocalSession(
+      hiddenNim,
+      {
+        gameId: 'nim',
+        seats: [{ kind: 'human', name: 'Anna' }, { kind: 'human', name: 'Ben' }],
+        options: {},
+        seed: 'test',
+        time: { kind: 'perMove', moveMs: 10_000 },
+      },
+      { botRunner: inlineBotRunner([hiddenNim]), now: () => time },
+    );
+
+    const v1 = session.view(0);
+    const m1 = session.legalMoves(0);
+
+    // Ticks und Zeitablauf verändern den Spielzustand nicht:
+    time += 200;
+    session.tick();
+
+    expect(session.view(0)).toBe(v1);
+    expect(session.legalMoves(0)).toBe(m1);
+
+    // Nach einem Zug ändern sich die Referenzen:
+    session.submit(0, { take: 1 });
+    expect(session.view(0)).not.toBe(v1);
     session.dispose();
   });
 });

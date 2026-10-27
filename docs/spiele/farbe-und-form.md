@@ -26,6 +26,7 @@
 - Bot: leicht (oft zufällig), mittel (gierig), schwer (Punkte + Wert des Rest-Bänkchens, vermeidet Fünferreihen für den Gegner, tauscht ein schlechtes Bänkchen).
 - Farben nach Okabe-Ito, zusätzlich durch die Form unterscheidbar.
 - Steuerung: Steine auf der Bank können angetippt oder per Drag & Drop direkt auf gültige Rasterfelder des Bretts gezogen werden.
+- Bei Rundenzeit/Zugzeit: Session-Caching und Board-Entwurfsüberwachung schützen gelegte Steine vor dem Zurücksetzen durch Timer-Ticks.
 
 ## Offen
 

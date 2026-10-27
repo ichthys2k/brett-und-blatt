@@ -45,9 +45,13 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
   const [selected, setSelected] = useState<TileId | null>(null);
   const [swapMode, setSwapMode] = useState(false);
   const [swapTiles, setSwapTiles] = useState<TileId[]>([]);
-  const [lastView, setLastView] = useState(view);
-  if (lastView !== view) {
-    setLastView(view);
+  const [lastBoard, setLastBoard] = useState(view.board);
+  const [lastTurn, setLastTurn] = useState(view.turn);
+  const [lastViewer, setLastViewer] = useState(viewer);
+  if (lastBoard !== view.board || lastTurn !== view.turn || lastViewer !== viewer) {
+    setLastBoard(view.board);
+    setLastTurn(view.turn);
+    setLastViewer(viewer);
     setPending([]);
     setSelected(null);
     setSwapMode(false);
