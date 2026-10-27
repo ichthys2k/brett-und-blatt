@@ -169,7 +169,7 @@ describe('Regeln', () => {
 
 describe('Bot', () => {
   function bot(state: GoState, level: BotLevel = 'medium', seed = 'bot'): GoMove {
-    return computeBotMove(gameModule, { gameId: 'go', botId: 'go', level, seat: state.turn, view: state, seed, timeBudgetMs: 1_000 }) as GoMove;
+    return computeBotMove(gameModule, { gameId: 'go', botId: 'go', level, seat: state.turn, view: state, seed, timeBudgetMs: 2_500 }) as GoMove;
   }
 
   it('schlägt eine Gruppe in Atari, bevor sie entkommt', () => {

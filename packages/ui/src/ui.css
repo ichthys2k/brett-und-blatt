@@ -523,7 +523,7 @@ button.bub-net-point:not(:disabled) {
 }
 
 .bub-piece-slide {
-  animation: bub-piece-slide 0.18s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+  animation: bub-piece-slide var(--slide-duration, 0.28s) cubic-bezier(0.2, 0.8, 0.25, 1) both;
   will-change: transform;
   pointer-events: none;
 }

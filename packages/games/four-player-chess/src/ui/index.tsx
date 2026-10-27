@@ -212,9 +212,10 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                 const slide = getSlideProps(index);
                 return piece ? (
                   <span
-                    key={slide.isSliding ? `slide-${view.ply ?? view.log.length}` : undefined}
+                    key={slide.isSliding ? `slide-${index}` : undefined}
                     className={`fc-piece fc-${piece.d ? 'dead' : piece.c} ${slide.pieceClassName ?? ''}`}
                     style={slide.style}
+                    onAnimationEnd={slide.onAnimationEnd}
                   >
                     {GLYPHS[piece.t]}
                   </span>

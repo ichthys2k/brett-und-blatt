@@ -256,7 +256,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
               <>
                 {piece ? (
                   <span
-                    key={slide.isSliding ? `slide-${view.history.length}` : undefined}
+                    key={slide.isSliding ? `slide-${index}` : undefined}
                     className={`ch-piece ${piece.white ? 'ch-white' : 'ch-black'} ${isDragged ? 'bub-dragging' : ''} ${dragState.snapping && isDragged ? 'bub-snapping' : ''} ${slide.pieceClassName ?? ''}`}
                     style={{
                       ...slide.style,
@@ -264,6 +264,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                       position: isDragged ? 'relative' : undefined,
                       zIndex: isDragged ? 1000 : undefined,
                     }}
+                    onAnimationEnd={slide.onAnimationEnd}
                   >
                     {GLYPHS[piece.type]}
                   </span>

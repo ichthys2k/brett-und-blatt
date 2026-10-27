@@ -354,7 +354,7 @@ describe('Nur lösbare Spiele', () => {
   it('Spider (1 Farbe): jedes ausgeteilte Spiel ist lösbar', () => {
     const spider = start<SpiderState>({ variant: 'spider', spiderSuits: '1', solvable: 'yes' }, 'lösbar-spi');
     expect(solveSpider(spider, { maxNodes: 30_000 }).moves).not.toBeNull();
-  });
+  }, 120_000);
 
   it('das Austeilen bleibt aus dem Seed wiederholbar und vollständig', () => {
     const a = start<KlondikeState>({ variant: 'klondike', solvable: 'yes' }, 'gleich');

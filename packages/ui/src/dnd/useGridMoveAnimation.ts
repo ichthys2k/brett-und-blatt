@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 
 export interface MoveAnimationItem {
   from: number | string;
@@ -12,7 +12,7 @@ export interface UseGridMoveAnimationOptions {
   toDisplayCoord: (pos: number | string) => { col: number; row: number } | null;
   /** Zusätzliche Züge beim selben Schritt (z. B. Turm bei Rochade) */
   extraMoves?: MoveAnimationItem[];
-  /** Dauer der Animation in ms (Standard: 180ms) */
+  /** Dauer der Animation in ms (Standard: 280ms) */
   durationMs?: number;
   /** Wurde der letzte Zug bereits per Pointer-Drag bewegt? Dann keine doppelte Animation */
   wasDragged?: boolean;
@@ -25,11 +25,13 @@ export interface CellSlideProps {
   style?: CSSProperties;
   cellClassName?: string;
   pieceClassName?: string;
+  onAnimationEnd?: () => void;
 }
 
 export interface ActiveSlide {
   dx: number;
   dy: number;
+  durationMs: number;
 }
 
 /**
@@ -40,7 +42,7 @@ export function useGridMoveAnimation({
   lastMove,
   toDisplayCoord,
   extraMoves,
-  durationMs = 180,
+  durationMs = 280,
   wasDragged = false,
   moveKey,
 }: UseGridMoveAnimationOptions) {
@@ -48,44 +50,64 @@ export function useGridMoveAnimation({
   const lastProcessedKeyRef = useRef<string | number | null>(null);
   const timerRef = useRef<number | null>(null);
 
+  // Instabile Callback-/Objekt-Referenzen in Ref halten, damit Re-Renders (z. B. durch Hover, Drag, Uhren) den Timer nicht abbrechen
+  const paramsRef = useRef({ lastMove, toDisplayCoord, extraMoves, wasDragged, durationMs });
+  paramsRef.current = { lastMove, toDisplayCoord, extraMoves, wasDragged, durationMs };
+
   // Eindeutiger Schlüssel des aktuellen Zugs
   const currentKey = moveKey !== undefined ? moveKey : lastMove ? `${lastMove.from}->${lastMove.to}` : null;
 
+  const clearAnimation = useCallback(() => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setSlidingMap(new Map());
+  }, []);
+
   useEffect(() => {
-    if (!lastMove || currentKey === null || currentKey === lastProcessedKeyRef.current) {
+    // Nur bei echtem Zugwechsel ausführen
+    if (currentKey === null || currentKey === lastProcessedKeyRef.current) {
       return;
     }
     lastProcessedKeyRef.current = currentKey;
 
-    // Wurde der Zug bereits mit dem Pointer gezogen, entfällt das Zurückspringen
-    if (wasDragged) {
-      setSlidingMap(new Map());
+    const {
+      lastMove: currentMove,
+      toDisplayCoord: getCoord,
+      extraMoves: extras,
+      wasDragged: dragged,
+      durationMs: duration,
+    } = paramsRef.current;
+
+    if (!currentMove || dragged) {
+      clearAnimation();
       return;
     }
 
     // Bei Barrierefreiheits-Einstellung prefers-reduced-motion nicht animieren
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      setSlidingMap(new Map());
+      clearAnimation();
       return;
     }
 
-    const allMoves = [lastMove, ...(extraMoves ?? [])];
+    const allMoves = [currentMove, ...(extras ?? [])];
     const newMap = new Map<string | number, ActiveSlide>();
 
     for (const m of allMoves) {
-      const fromCoord = toDisplayCoord(m.from);
-      const toCoord = toDisplayCoord(m.to);
+      const fromCoord = getCoord(m.from);
+      const toCoord = getCoord(m.to);
       if (!fromCoord || !toCoord) continue;
 
       const dx = fromCoord.col - toCoord.col;
       const dy = fromCoord.row - toCoord.row;
       if (dx === 0 && dy === 0) continue;
 
-      newMap.set(m.to, { dx, dy });
+      newMap.set(m.to, { dx, dy, durationMs: duration });
     }
 
     if (newMap.size === 0) {
-      setSlidingMap(new Map());
+      clearAnimation();
       return;
     }
 
@@ -95,18 +117,20 @@ export function useGridMoveAnimation({
       window.clearTimeout(timerRef.current);
     }
 
+    // Sicherheits-Timer: spätestens nach Animationsdauer + 30ms wird aufgeräumt
     timerRef.current = window.setTimeout(() => {
       setSlidingMap(new Map());
       timerRef.current = null;
-    }, durationMs + 20);
+    }, duration + 30);
 
     return () => {
+      // Nur wenn ein neuer Zug ansteht oder die Komponente unmountet wird
       if (timerRef.current !== null) {
         window.clearTimeout(timerRef.current);
         timerRef.current = null;
       }
     };
-  }, [currentKey, lastMove, extraMoves, wasDragged, toDisplayCoord, durationMs]);
+  }, [currentKey, clearAnimation]);
 
   const getSlideProps = (pos: number | string): CellSlideProps => {
     const slide = slidingMap.get(pos);
@@ -118,14 +142,17 @@ export function useGridMoveAnimation({
       style: {
         '--slide-dx': `${slide.dx * 100}%`,
         '--slide-dy': `${slide.dy * 100}%`,
+        '--slide-duration': `${slide.durationMs}ms`,
       } as CSSProperties,
       cellClassName: 'bub-cell-sliding',
       pieceClassName: 'bub-piece-slide',
+      onAnimationEnd: clearAnimation,
     };
   };
 
   return {
     getSlideProps,
     hasSlidingPieces: slidingMap.size > 0,
+    clearAnimation,
   };
 }

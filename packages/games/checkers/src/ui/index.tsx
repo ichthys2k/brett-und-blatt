@@ -2,11 +2,13 @@ import type { SeatId } from '@brett-und-blatt/engine';
 import {
   FitBox,
   GridBoard,
+  useGridMoveAnimation,
   usePointerDrag,
   type BoardProps,
+  type CellSlideProps,
   type GameUi,
 } from '@brett-und-blatt/ui';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   countPieces,
   isDarkSquare,
@@ -25,20 +27,25 @@ function PieceView({
   isDragged,
   isMustCapture,
   dragTransform,
+  slide,
 }: {
   piece: CheckersPiece;
   isDragged?: boolean;
   isMustCapture?: boolean;
   dragTransform?: string;
+  slide?: CellSlideProps;
 }) {
   return (
     <span
-      className={`dk-piece ${piece.seat === 0 ? 'dk-white' : 'dk-black'} ${isMustCapture ? 'dk-must-capture' : ''} ${isDragged ? 'bub-dragging' : ''}`}
+      key={slide?.isSliding ? `slide-${piece.seat}` : undefined}
+      className={`dk-piece ${piece.seat === 0 ? 'dk-white' : 'dk-black'} ${isMustCapture ? 'dk-must-capture' : ''} ${isDragged ? 'bub-dragging' : ''} ${slide?.pieceClassName ?? ''}`}
       style={{
+        ...slide?.style,
         transform: dragTransform,
         position: isDragged ? 'relative' : undefined,
         zIndex: isDragged ? 1000 : undefined,
       }}
+      onAnimationEnd={slide?.onAnimationEnd}
       aria-label={`${LABELS[piece.seat]} ${piece.king ? 'Dame' : 'Stein'}`}
     >
       {piece.king && <span className="dk-crown" aria-hidden="true">👑</span>}
@@ -107,6 +114,25 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   const last = view.lastMove ? [view.lastMove.from, view.lastMove.to] : [];
   const hinted = hint ? [hint.from, hint.to] : [];
 
+  const wasDraggedRef = useRef(false);
+  const wasDragged = wasDraggedRef.current;
+  wasDraggedRef.current = false;
+
+  const toDisplayCoord = (pos: number | string) => {
+    const index = Number(pos);
+    if (index < 0 || index >= size * size) return null;
+    const r = Math.floor(index / size);
+    const c = index % size;
+    return flipped ? { col: size - 1 - c, row: size - 1 - r } : { col: c, row: r };
+  };
+
+  const { getSlideProps } = useGridMoveAnimation({
+    lastMove: view.lastMove,
+    toDisplayCoord,
+    wasDragged,
+    moveKey: view.history.length,
+  });
+
   const { dragState, bindDrag } = usePointerDrag<number>({
     threshold: 6,
     onDrop: (fromIndex, targetId) => {
@@ -114,6 +140,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
       const toIndex = Number(targetId);
       const options = legalMoves.filter((m) => m.from === fromIndex && m.to === toIndex);
       if (options[0]) {
+        wasDraggedRef.current = true;
         onMove(options[0]);
         return true;
       }
@@ -163,6 +190,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
           renderCell={(dc, dr) => {
             const index = toBoard(dc, dr);
             const piece = view.cells[index];
+            const slide = getSlideProps(index);
             const isDragged = (dragState.isDragging || dragState.snapping) && dragState.item === index;
             const pieceTransform = isDragged
               ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)`
@@ -178,6 +206,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                     isDragged={isDragged}
                     isMustCapture={isMustCap}
                     dragTransform={pieceTransform}
+                    slide={slide}
                   />
                 ) : effectiveTargets.has(index) ? (
                   <span className={isCapturing ? 'dk-capture-dot' : 'dk-dot'} />
@@ -215,9 +244,11 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
           }}
           cellClassName={(dc, dr) => {
             const index = toBoard(dc, dr);
+            const slide = getSlideProps(index);
             const col = index % size;
             const row = Math.floor(index / size);
             const classes = [isDarkSquare(col, row) ? 'dk-dark' : 'dk-light'];
+            if (slide.cellClassName) classes.push(slide.cellClassName);
             if (last.includes(index)) classes.push('dk-last');
             if (index === selected || index === dragSource) classes.push('dk-selected');
             if (hinted.includes(index)) classes.push('dk-hint');
