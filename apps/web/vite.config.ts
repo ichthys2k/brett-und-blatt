@@ -35,7 +35,7 @@ export default defineConfig({
         // Alles vorab speichern: Solo und Hot-Seat funktionieren dann ohne Internet (Klänge zusammen etwa 1 MB).
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,mp3}'],
         // Musik ist zu groß zum Vorab-Speichern: Sie kommt beim ersten Abspielen in einen eigenen Speicher.
-        globIgnores: ['**/klaenge/musik/**'],
+        globIgnores: ['**/klaenge/musik/**', '**/klaenge/duck-rally/**'],
         navigateFallback: 'index.html',
         runtimeCaching: [
           {

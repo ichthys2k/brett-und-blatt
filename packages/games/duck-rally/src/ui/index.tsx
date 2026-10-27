@@ -1,6 +1,6 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   rankRacers,
   result,
@@ -9,6 +9,41 @@ import {
   type RacerState,
 } from '../rules';
 import './styles.css';
+
+const DUCK_RALLY_AUDIO_BASE = `${import.meta.env.BASE_URL}klaenge/duck-rally/`;
+
+const LEADER_TRACKS_BY_COLOR: Record<string, string> = {
+  '#facc15': 'gelbe_ente.mp3',
+  '#ef4444': 'rote_ente.mp3',
+  '#3b82f6': 'blaue_ente.mp3',
+  '#10b981': 'gruene_ente.mp3',
+};
+
+const LEAD_ANNOUNCE_BY_COLOR: Record<string, string> = {
+  '#facc15': 'lead_team_gelb.mp3',
+  '#ef4444': 'lead_team_rot.mp3',
+  '#3b82f6': 'lead_team_blau.mp3',
+  '#10b981': 'lead_team_gruen.mp3',
+};
+
+const WINNER_ANNOUNCE_BY_COLOR: Record<string, string> = {
+  '#facc15': 'winner_team_gelb.mp3',
+  '#ef4444': 'winner_team_rot.mp3',
+  '#3b82f6': 'winner_team_blau.mp3',
+  '#10b981': 'winner_team_gruen.mp3',
+};
+
+function getLeaderTrackFile(color: string): string {
+  return LEADER_TRACKS_BY_COLOR[color] ?? 'war drum.mp3';
+}
+
+function getLeadAnnounceFile(color: string): string {
+  return LEAD_ANNOUNCE_BY_COLOR[color] ?? null;
+}
+
+function getWinnerAnnounceFile(color: string): string {
+  return WINNER_ANNOUNCE_BY_COLOR[color] ?? 'outro_winner.mp3';
+}
 
 /** Barrierefreie, kräftige Entenfarben (Okabe-Ito-inspiriert + erweiterte Palette). */
 const DUCK_COLORS = [
@@ -460,104 +495,264 @@ function Board({
   // Bei mehr als 4 Menschen im Hot-Seat: umschaltbarer Tab, bis 4 Menschen echter Splitscreen
   const [activeTabSeat, setActiveTabSeat] = useState<SeatId>(0);
 
-  // Welche Bahnen werden im Fluss angezeigt? (Bis 8 Plätze alle; darüber Top 5 + eigener Platz)
-  const visibleLanes = useMemo(() => {
-    if (view.racers.length <= 8) return view.racers;
-    const ranked = rankRacers(view);
-    const top = ranked.slice(0, 5);
-    if (!top.some((r) => r.seat === mySeat)) {
-      const mine = view.racers[mySeat];
-      if (mine) top.push(mine);
-    }
-    return top.sort((a, b) => a.seat - b.seat);
-  }, [view, mySeat]);
+  // Alle Bahnen anzeigen, damit auch bei vielen Spielern alles sichtbar bleibt
+  const visibleLanes = view.racers;
 
-  const duckSizePx = visibleLanes.length <= 2 ? 52 : visibleLanes.length <= 4 ? 44 : 34;
+  const duckSizePx =
+    visibleLanes.length <= 2
+      ? 52
+      : visibleLanes.length <= 4
+        ? 44
+        : visibleLanes.length <= 8
+          ? 34
+          : visibleLanes.length <= 16
+            ? 28
+            : 24;
 
   // Führende Ente für den farbigen Fluss-Rahmen bestimmen
+  const rankedForLeader = useMemo(() => rankRacers(view), [view]);
   const leaderSeat = useMemo(() => {
-    const ranked = rankRacers(view);
-    return ranked[0]?.solvedCount ? ranked[0].seat : null;
-  }, [view]);
+    const top = rankedForLeader[0];
+    if (!top || top.solvedCount <= 0) return null;
+    // Bei Gleichstand nicht wechseln (wie im Original)
+    const second = rankedForLeader[1];
+    if (second && second.solvedCount === top.solvedCount) return null;
+    return top.seat;
+  }, [rankedForLeader]);
+
+  const currentLeaderRef = useRef<SeatId | null>(null);
+  const prevLeaderRef = useRef<SeatId | null>(null);
+  const hasPlayedFirstLeadRef = useRef(false);
+  const victoryStartedRef = useRef(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const masterGainRef = useRef<GainNode | null>(null);
+  const leaderAudiosRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const leaderGainsRef = useRef<Map<string, GainNode>>(new Map());
+  const announceRef = useRef<HTMLAudioElement | null>(null);
+  const victoryRef = useRef<HTMLAudioElement | null>(null);
+
+  const ensureAudioContext = useCallback(() => {
+    if (audioCtxRef.current) return audioCtxRef.current;
+    const Ctx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined;
+    if (!Ctx) return null;
+    const ctx = new Ctx();
+    audioCtxRef.current = ctx;
+    const master = ctx.createGain();
+    master.gain.value = 0.6;
+    master.connect(ctx.destination);
+    masterGainRef.current = master;
+    return ctx;
+  }, []);
+
+  const ensureLeaderAudio = useCallback(
+    (color: string) => {
+      const ctx = ensureAudioContext();
+      if (!ctx || !masterGainRef.current) return null;
+      if (leaderAudiosRef.current.has(color)) return leaderAudiosRef.current.get(color)!;
+      const el = new Audio();
+      el.src = DUCK_RALLY_AUDIO_BASE + getLeaderTrackFile(color);
+      el.loop = true;
+      el.preload = 'auto';
+      const srcNode = ctx.createMediaElementSource(el);
+      const gainNode = ctx.createGain();
+      gainNode.gain.value = 0;
+      srcNode.connect(gainNode).connect(masterGainRef.current);
+      leaderAudiosRef.current.set(color, el);
+      leaderGainsRef.current.set(color, gainNode);
+      return el;
+    },
+    [ensureAudioContext],
+  );
+
+  const playAnnounce = useCallback((file: string | null) => {
+    if (!file) return;
+    const ctx = ensureAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') void ctx.resume();
+    if (announceRef.current) {
+      announceRef.current.pause();
+      announceRef.current.currentTime = 0;
+    }
+    const el = new Audio(DUCK_RALLY_AUDIO_BASE + file);
+    el.volume = 0.8;
+    announceRef.current = el;
+    void el.play().catch(() => {});
+  }, [ensureAudioContext]);
+
+  const startVictoryMusic = useCallback(() => {
+    if (victoryStartedRef.current) return;
+    victoryStartedRef.current = true;
+    const ctx = ensureAudioContext();
+    if (ctx && ctx.state === 'suspended') void ctx.resume();
+    // Sieger-Ente ermitteln
+    const top = rankedForLeader[0];
+    const winnerSeat = top?.seat ?? leaderSeat ?? 0;
+    const winnerColor = duckColorOf(winnerSeat);
+    const announceFile = getWinnerAnnounceFile(winnerColor);
+    // Victory_Lap abspielen
+    if (victoryRef.current) {
+      victoryRef.current.pause();
+      victoryRef.current.currentTime = 0;
+    }
+    const vic = new Audio(DUCK_RALLY_AUDIO_BASE + 'Victory_Lap.mp3');
+    vic.loop = false;
+    vic.volume = 0.7;
+    victoryRef.current = vic;
+    void vic.play().catch(() => {});
+    // Kurze Verzögerung wie im Original, dann Siegeransage
+    window.setTimeout(() => playAnnounce(announceFile), 800);
+    // Leader-Musik ausblenden
+    for (const [, g] of leaderGainsRef.current.entries()) {
+      const gain = g.gain;
+      const ctx = audioCtxRef.current ?? ensureAudioContext();
+      if (!ctx) continue;
+      const now = ctx.currentTime;
+      gain.cancelScheduledValues(now);
+      gain.setValueAtTime(gain.value, now);
+      gain.linearRampToValueAtTime(0, now + 0.8);
+    }
+  }, [ensureAudioContext, leaderSeat, playAnnounce, rankedForLeader]);
+
+  useEffect(() => {
+    // Nur im Rennen Musik steuern
+    if (gameResult) {
+      startVictoryMusic();
+      return;
+    }
+    if (view.racers.length === 0) return;
+    const ctx = ensureAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      const unlock = () => {
+        if (ctx.state === 'suspended') void ctx.resume();
+        window.removeEventListener('pointerdown', unlock);
+        window.removeEventListener('keydown', unlock);
+      };
+      window.addEventListener('pointerdown', unlock, { once: true });
+      window.addEventListener('keydown', unlock, { once: true });
+    }
+
+    if (leaderSeat === null) {
+      // Kein eindeutiger Führender -> alle leise
+      for (const [, g] of leaderGainsRef.current.entries()) {
+        const gain = g.gain;
+        const ctx = audioCtxRef.current ?? ensureAudioContext();
+        if (!ctx) continue;
+        const now = ctx.currentTime;
+        gain.cancelScheduledValues(now);
+        gain.setValueAtTime(gain.value, now);
+        gain.linearRampToValueAtTime(0, now + 0.6);
+      }
+      currentLeaderRef.current = null;
+      return;
+    }
+
+    const leaderColor = duckColorOf(leaderSeat);
+    ensureLeaderAudio(leaderColor);
+
+    // Crossfade
+    for (const [color, g] of leaderGainsRef.current.entries()) {
+      const gain = g.gain;
+      const ctx = audioCtxRef.current ?? ensureAudioContext();
+      if (!ctx) continue;
+      const now = ctx.currentTime;
+      gain.cancelScheduledValues(now);
+      const target = color === leaderColor ? 0.7 : 0;
+      gain.setValueAtTime(gain.value, now);
+      gain.linearRampToValueAtTime(target, now + 1.0);
+    }
+
+    // Führungswechsel-Ansage
+    if (
+      leaderSeat !== currentLeaderRef.current &&
+      prevLeaderRef.current !== null &&
+      currentLeaderRef.current !== null &&
+      hasPlayedFirstLeadRef.current
+    ) {
+      const announce = getLeadAnnounceFile(leaderColor);
+      playAnnounce(announce);
+    } else if (currentLeaderRef.current === null && leaderSeat !== null) {
+      hasPlayedFirstLeadRef.current = true;
+    }
+
+    // Track abspielen falls pausiert
+    const el = leaderAudiosRef.current.get(leaderColor);
+    if (el && el.paused) void el.play().catch(() => {});
+
+    prevLeaderRef.current = currentLeaderRef.current;
+    currentLeaderRef.current = leaderSeat;
+  }, [ensureAudioContext, ensureLeaderAudio, gameResult, leaderSeat, playAnnounce, startVictoryMusic, view]);
 
   return (
     <div className="dr-root">
-      {/* 1. Oben: Animierter Enten-Fluss */}
-      <div
-        className="dr-river"
-        style={{
-          borderColor: leaderSeat !== null ? duckColorOf(leaderSeat) : '#1d4ed8',
-        }}
-      >
-        <div className="dr-river-waves" />
-        <div className="dr-bank-top" />
-        <div className="dr-bank-bottom" />
-
-        <div className="pointer-events-none absolute top-3 left-3 z-3 text-[11px] font-extrabold tracking-wider text-white/60">
-          ◀ START
-        </div>
-        <div className="dr-finish-line" />
-        <div className="pointer-events-none absolute right-2 bottom-3 z-3 text-[11px] font-extrabold text-white/85">
-          ZIEL 🏁
-        </div>
-
-        {visibleLanes.map((racer) => {
-          const progress = Math.min(100, (racer.solvedCount / view.target) * 100);
-          const color = duckColorOf(racer.seat);
-          const leftCalc = `calc(14px + (${progress} / 100) * (100% - ${duckSizePx}px - 68px))`;
-
-          return (
-            <div key={racer.seat} className="dr-lane">
-              <div className="dr-lane-info">
-                <span
-                  className="inline-block h-2.5 w-2.5 flex-none rounded-full"
-                  style={{ backgroundColor: color }}
-                />
-                <span className="truncate">{nameOf(racer.seat)}</span>
-                <span className="opacity-80">
-                  {racer.solvedCount}/{view.target}
-                </span>
-              </div>
-
-              <div
-                className={`dr-duck-wrap ${racer.lastResult === 'correct' && racer.solvedCount > 0 ? 'dr-duck-boosting' : ''}`}
-                style={{ left: leftCalc, width: duckSizePx, height: duckSizePx }}
-              >
-                <RubberDuckSVG color={color} size={duckSizePx} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* 2. Unten: Siegertreppchen bei Spielende, sonst Cockpit(s) */}
       {gameResult ? (
         <VictoryPodium view={view} seatNames={seatNames} />
       ) : humanSeats && humanSeats.length > 1 ? (
         humanSeats.length <= 4 ? (
           /* Hot-Seat Splitscreen für 2–4 Spieler am selben Gerät / Smartboard */
-          <div
-            className="dr-cockpit-grid"
-            style={{
-              gridTemplateColumns: `repeat(${humanSeats.length}, minmax(200px, 1fr))`,
-              overflowX: 'auto',
-            }}
-          >
-            {humanSeats.map((hs) => {
-              const racer = view.racers[hs.seat];
-              if (!racer) return null;
-              return (
-                <RacerCockpit
-                  key={hs.seat}
-                  racer={racer}
-                  target={view.target}
-                  name={nameOf(hs.seat)}
-                  canPlay={hs.legalMoves.length > 0}
-                  enableKeyboard={false}
-                  onSubmit={(val) => hs.onMove({ type: 'answer', value: val })}
-                />
-              );
-            })}
+          <div className="dr-layout">
+            <div className="dr-cockpit-panel">
+              {humanSeats.map((hs) => {
+                const racer = view.racers[hs.seat];
+                if (!racer) return null;
+                return (
+                  <RacerCockpit
+                    key={hs.seat}
+                    racer={racer}
+                    target={view.target}
+                    name={nameOf(hs.seat)}
+                    canPlay={hs.legalMoves.length > 0}
+                    enableKeyboard={false}
+                    onSubmit={(val) => hs.onMove({ type: 'answer', value: val })}
+                  />
+                );
+              })}
+            </div>
+            <div
+              className="dr-river"
+              style={{
+                borderColor: leaderSeat !== null ? duckColorOf(leaderSeat) : '#1d4ed8',
+              }}
+            >
+              <div className="dr-river-waves" />
+              <div className="dr-bank-top" />
+              <div className="dr-bank-bottom" />
+
+              <div className="pointer-events-none absolute top-3 left-3 z-3 text-[11px] font-extrabold tracking-wider text-white/60">
+                ◀ START
+              </div>
+              <div className="dr-finish-line" />
+              <div className="pointer-events-none absolute right-2 bottom-3 z-3 text-[11px] font-extrabold text-white/85">
+                ZIEL 🏁
+              </div>
+
+              {visibleLanes.map((racer) => {
+                const progress = Math.min(100, (racer.solvedCount / view.target) * 100);
+                const color = duckColorOf(racer.seat);
+                const leftCalc = `calc(14px + (${progress} / 100) * (100% - ${duckSizePx}px - 68px))`;
+
+                return (
+                  <div key={racer.seat} className="dr-lane">
+                    <div className="dr-lane-info">
+                      <span
+                        className="inline-block h-2.5 w-2.5 flex-none rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="truncate">{nameOf(racer.seat)}</span>
+                      <span className="opacity-80">
+                        {racer.solvedCount}/{view.target}
+                      </span>
+                    </div>
+
+                    <div
+                      className={`dr-duck-wrap ${racer.lastResult === 'correct' && racer.solvedCount > 0 ? 'dr-duck-boosting' : ''}`}
+                      style={{ left: leftCalc, width: duckSizePx, height: duckSizePx }}
+                    >
+                      <RubberDuckSVG color={color} size={duckSizePx} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ) : (
           /* Ab 5+ Menschen an einem Gerät: Schnellwahl-Leiste + aktives Cockpit */
@@ -600,17 +795,65 @@ function Board({
         )
       ) : (
         /* Einzel-Cockpit (Solo, gegen Bots oder Online am eigenen Gerät) */
-        <div className="dr-cockpit-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr)' }}>
-          {view.racers[mySeat] && (
-            <RacerCockpit
-              racer={view.racers[mySeat]!}
-              target={view.target}
-              name={nameOf(mySeat)}
-              canPlay={legalMoves.length > 0}
-              enableKeyboard={true}
-              onSubmit={(val) => onMove({ type: 'answer', value: val })}
-            />
-          )}
+        <div className="dr-layout">
+          <div className="dr-cockpit-panel">
+            {view.racers[mySeat] && (
+              <RacerCockpit
+                racer={view.racers[mySeat]!}
+                target={view.target}
+                name={nameOf(mySeat)}
+                canPlay={legalMoves.length > 0}
+                enableKeyboard={true}
+                onSubmit={(val) => onMove({ type: 'answer', value: val })}
+              />
+            )}
+          </div>
+          <div
+            className="dr-river"
+            style={{
+              borderColor: leaderSeat !== null ? duckColorOf(leaderSeat) : '#1d4ed8',
+            }}
+          >
+            <div className="dr-river-waves" />
+            <div className="dr-bank-top" />
+            <div className="dr-bank-bottom" />
+
+            <div className="pointer-events-none absolute top-3 left-3 z-3 text-[11px] font-extrabold tracking-wider text-white/60">
+              ◀ START
+            </div>
+            <div className="dr-finish-line" />
+            <div className="pointer-events-none absolute right-2 bottom-3 z-3 text-[11px] font-extrabold text-white/85">
+              ZIEL 🏁
+            </div>
+
+            {visibleLanes.map((racer) => {
+              const progress = Math.min(100, (racer.solvedCount / view.target) * 100);
+              const color = duckColorOf(racer.seat);
+              const leftCalc = `calc(14px + (${progress} / 100) * (100% - ${duckSizePx}px - 68px))`;
+
+              return (
+                <div key={racer.seat} className="dr-lane">
+                  <div className="dr-lane-info">
+                    <span
+                      className="inline-block h-2.5 w-2.5 flex-none rounded-full"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="truncate">{nameOf(racer.seat)}</span>
+                    <span className="opacity-80">
+                      {racer.solvedCount}/{view.target}
+                    </span>
+                  </div>
+
+                  <div
+                    className={`dr-duck-wrap ${racer.lastResult === 'correct' && racer.solvedCount > 0 ? 'dr-duck-boosting' : ''}`}
+                    style={{ left: leftCalc, width: duckSizePx, height: duckSizePx }}
+                  >
+                    <RubberDuckSVG color={color} size={duckSizePx} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
