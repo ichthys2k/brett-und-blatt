@@ -367,6 +367,44 @@ describe('Partie', () => {
     expect(ben.room().phase).toBe('playing');
   });
 
+  it('Raumleitung kann direkt nach Spielende eine Revanche starten (ohne Lobby) mit Platzwechsel', () => {
+    const [anna, ben] = twoPlayers(env);
+    expect(anna.room().lobby.seats[0]).toEqual({ kind: 'human', memberId: 'm1' });
+    expect(anna.room().lobby.seats[1]).toEqual({ kind: 'human', memberId: 'm2' });
+    ben.send({ type: 'resign' });
+    expect(anna.room().phase).toBe('finished');
+
+    // Direkt Revanche starten mit rotate: true
+    anna.send({ type: 'start', rotate: true });
+    expect(anna.room().phase).toBe('playing');
+    expect(anna.game().round).toBe(2);
+    // Plätze wurden getauscht (Ben beginnt, Anna auf Platz 1)
+    expect(anna.room().lobby.seats[0]).toEqual({ kind: 'human', memberId: 'm2' });
+    expect(anna.room().lobby.seats[1]).toEqual({ kind: 'human', memberId: 'm1' });
+    expect(anna.game().yourSeat).toBe(1);
+    expect(ben.game().yourSeat).toBe(0);
+  });
+
+  it('Raumleitung kann während laufender Partie direkt neu starten (ohne Platzwechsel)', () => {
+    const [anna, ben] = twoPlayers(env);
+    expect(anna.room().phase).toBe('playing');
+    expect(anna.game().round).toBe(1);
+    anna.send({ type: 'start', rotate: false });
+    expect(anna.room().phase).toBe('playing');
+    expect(anna.game().round).toBe(2);
+    expect(anna.room().lobby.seats[0]).toEqual({ kind: 'human', memberId: 'm1' });
+    expect(anna.room().lobby.seats[1]).toEqual({ kind: 'human', memberId: 'm2' });
+  });
+
+  it('Nicht-Raumleitung darf keine Partie starten', () => {
+    const [anna, ben] = twoPlayers(env);
+    ben.send({ type: 'resign' });
+    expect(anna.room().phase).toBe('finished');
+    ben.send({ type: 'start' });
+    expect(ben.last('error')?.code).toBe('notAllowed');
+    expect(anna.room().phase).toBe('finished');
+  });
+
   it('Aufgeben im Spiel mit resignMove: nur dieser Platz scheidet aus', () => {
     const anna = env.client('anna');
     const ben = env.client('ben');

@@ -106,6 +106,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
           online={{
             yourSeat: session.yourSeat,
             isHost,
+            onRestart: (rotate: boolean) => connection.send({ type: 'start', rotate }),
             onLobby: () => connection.send({ type: 'toLobby' }),
             onLeave: leave,
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },

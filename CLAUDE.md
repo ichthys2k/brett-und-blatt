@@ -90,6 +90,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
 - Drag & Drop: Universeller Pointer-Drag (`usePointerDrag`), Reise-Animationen (`useSpawnAnimation`) und sanfte Gleit-Animationen für ziehende Figuren (`useGridMoveAnimation`, 280 ms mit `onAnimationEnd`-Cleanup) in `packages/ui/src/dnd`. Gleiten aktiviert für Schach (inkl. Rochade und gedrehtem Brett), Vierer-Schach (alle 4 Perspektiven & Rochade) und Dame. Barrierefreiheit (Tastatur und Klick/Tap) bleibt vollständig erhalten.
 - Siegesklang: Fröhlicher Sound `arcade_level_win` im Audio-Katalog bei jedem Rundensieg (`useGameSounds`), trauriges Wah-Wah-Niederlagegeräusch nur noch bei echtem Partieverlust.
+- Online-Revanche direkt am Tisch: Die Raumleitung kann nach Spielende sofort eine Revanche starten (`start` mit `rotate: true`; bei 2 Spielern mit automatischem Platz-/Farbwechsel), oder während der Partie neu starten – ohne Umweg über die Lobby.
 
 ## Nächste Schritte
 

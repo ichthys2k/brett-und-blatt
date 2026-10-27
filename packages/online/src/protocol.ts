@@ -183,7 +183,7 @@ export type ClientMessage =
   | { type: 'takeSeat'; index: number }
   | { type: 'leaveSeat' }
   | { type: 'kick'; memberId: string }
-  | { type: 'start' }
+  | { type: 'start'; rotate?: boolean }
   /** Nach dem Ende: zurück in die Lobby (nur die Raumleitung). */
   | { type: 'toLobby' }
   // Partie
@@ -300,8 +300,9 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return isString(m.emoji, 20) ? { type: 'react', emoji: m.emoji } : null;
     case 'say':
       return isString(m.phrase, 40) ? { type: 'say', phrase: m.phrase } : null;
-    case 'leaveSeat':
     case 'start':
+      return { type: 'start', ...(typeof m.rotate === 'boolean' ? { rotate: m.rotate } : {}) };
+    case 'leaveSeat':
     case 'toLobby':
     case 'resign':
     case 'returnSeat':

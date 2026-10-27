@@ -60,6 +60,7 @@ function resultTitle(result: Result, session: GameSession, online?: OnlineTableP
 export interface OnlineTableProps {
   yourSeat: SeatId | null;
   isHost: boolean;
+  onRestart?(rotate: boolean): void;
   onLobby(): void;
   onLeave(): void;
   /** Z. B. die Leiste mit Emoji-Reaktionen. */
@@ -291,15 +292,45 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           {online ? (
             result ? (
               online.isHost ? (
-                <Button variant="primary" onClick={online.onLobby}>
-                  {t('online.toLobby')}
-                </Button>
+                <>
+                  {online.onRestart && (
+                    <Button variant="primary" onClick={() => online.onRestart?.(true)}>
+                      {t('play.rematch')}
+                    </Button>
+                  )}
+                  <Button variant={online.onRestart ? 'secondary' : 'primary'} onClick={online.onLobby}>
+                    {t('online.toLobby')}
+                  </Button>
+                </>
               ) : (
                 <p className="text-sm text-muted">{t('online.waitForHost')}</p>
               )
             ) : (
               <>
                 {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
+                {online.isHost && online.onRestart && (
+                  <Button
+                    onClick={() => {
+                      if (window.confirm(t('play.restartConfirm'))) {
+                        online.onRestart?.(false);
+                      }
+                    }}
+                  >
+                    {t('play.restart')}
+                  </Button>
+                )}
+                {online.isHost && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      if (window.confirm(t('online.toLobbyConfirm'))) {
+                        online.onLobby();
+                      }
+                    }}
+                  >
+                    {t('online.toLobby')}
+                  </Button>
+                )}
                 {canResign && (
                   <Button variant="ghost" onClick={resign}>
                     {t('play.resign')}

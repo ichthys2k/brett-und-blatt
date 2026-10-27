@@ -465,9 +465,20 @@ export class Room {
         }
         return this.removeMember(target);
       }
-      case 'start':
-        if (!isHost || this.phase !== 'lobby') return deny();
+      case 'start': {
+        if (!isHost) return deny();
+        const activeSeats = this.lobby.seats.filter((s) => s.kind === 'bot' || s.memberId !== null);
+        if (message.rotate && activeSeats.length === 2) {
+          const firstIndex = this.lobby.seats.findIndex((s) => s.kind === 'bot' || s.memberId !== null);
+          const secondIndex = this.lobby.seats.findIndex((s, i) => i > firstIndex && (s.kind === 'bot' || s.memberId !== null));
+          if (firstIndex >= 0 && secondIndex >= 0) {
+            const temp = this.lobby.seats[firstIndex]!;
+            this.lobby.seats[firstIndex] = this.lobby.seats[secondIndex]!;
+            this.lobby.seats[secondIndex] = temp;
+          }
+        }
         return this.start(connectionId);
+      }
       case 'toLobby':
         if (!isHost || this.phase === 'lobby') return deny();
         this.endGame();
@@ -527,6 +538,12 @@ export class Room {
     const seats = this.lobby.seats.filter((s) => s.kind === 'bot' || s.memberId !== null);
     if (seats.length < module.info.players.min) {
       return this.error(connectionId, 'notAllowed', 'Es sind noch Plätze frei.');
+    }
+    if (this.game) {
+      this.lastVersion = this.gameVersion();
+      this.game.unsubscribe();
+      this.game.session.dispose();
+      this.game = null;
     }
     const publicSeats: PublicSeat[] = seats.map((seat) =>
       seat.kind === 'bot'
