@@ -11,6 +11,18 @@ export const botDrachenhueter: BotDefinition<
   id: 'drachenhueter',
   name: 'Drachenhüter',
   levels: ['easy', 'medium', 'hard'],
+  delayMs({ move, level }) {
+    if (move.type === 'attack') {
+      return level === 'easy' ? 750 : level === 'medium' ? 650 : 600;
+    }
+    if (move.type === 'playCard') {
+      return level === 'easy' ? 500 : 400;
+    }
+    if (move.type === 'endTurn') {
+      return 350;
+    }
+    return 350;
+  },
   chooseMove(ctx: BotContext<DrachenspielState, DrachenspielMove, DrachenspielView>): DrachenspielMove {
     // If in deck selection or mulligan, handle straightforwardly
     if (ctx.view.phase === 'deckSelection') {

@@ -567,26 +567,70 @@
 }
 
 .ds-minion.ds-attacking {
-  animation: ds-attack-strike 0.52s cubic-bezier(0.2, 0.8, 0.25, 1);
+  animation: ds-attack-strike 0.52s cubic-bezier(0.2, 0.8, 0.25, 1) !important;
   z-index: 60 !important;
+  pointer-events: none !important;
 }
 
 /* Fallback falls keine Vektorkoordinaten vorliegen */
 .ds-attacking-up {
   --atk-dx: 0px;
   --atk-dy: -100px;
-  animation: ds-attack-strike 0.52s cubic-bezier(0.2, 0.8, 0.25, 1);
+  animation: ds-attack-strike 0.52s cubic-bezier(0.2, 0.8, 0.25, 1) !important;
   z-index: 60 !important;
+  pointer-events: none !important;
 }
 
 .ds-attacking-down {
   --atk-dx: 0px;
   --atk-dy: 100px;
-  animation: ds-attack-strike 0.52s cubic-bezier(0.2, 0.8, 0.25, 1);
+  animation: ds-attack-strike 0.52s cubic-bezier(0.2, 0.8, 0.25, 1) !important;
   z-index: 60 !important;
+  pointer-events: none !important;
 }
 
-/* Sterbende Minions: Bleiben für die Animation sichtbar und verblassen nach dem Treffer */
+/* Angreifer, der beim Schlag durch Gegenschaden besiegt wird: Vorstoß, Aufprall, danach Verblassen */
+@keyframes ds-attack-strike-and-die {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    opacity: 1;
+    z-index: 60;
+  }
+  16% {
+    transform: translate3d(calc(var(--atk-dx, 0px) * -0.1), calc(var(--atk-dy, -30px) * -0.1), 0) scale(1.06);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    opacity: 1;
+    z-index: 60;
+  }
+  48% {
+    transform: translate3d(calc(var(--atk-dx, 0px) * 0.82), calc(var(--atk-dy, -30px) * 0.82), 0) scale(1.16);
+    box-shadow: 0 10px 24px rgba(231, 76, 60, 0.55);
+    border-color: #e74c3c;
+    opacity: 1;
+    z-index: 60;
+  }
+  60% {
+    transform: translate3d(calc(var(--atk-dx, 0px) * 0.78), calc(var(--atk-dy, -30px) * 0.78), 0) scale(1.1);
+    opacity: 0.9;
+    filter: brightness(1.2);
+    z-index: 60;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.8);
+    opacity: 0;
+    filter: grayscale(100%);
+    z-index: 1;
+  }
+}
+
+.ds-minion.ds-attacking.ds-minion-dying {
+  animation: ds-attack-strike-and-die 0.55s cubic-bezier(0.2, 0.8, 0.25, 1) forwards !important;
+  z-index: 60 !important;
+  pointer-events: none !important;
+}
+
+/* Sterbende Minions (Verteidiger): Bleiben für die Animation sichtbar und verblassen nach dem Treffer */
 @keyframes ds-minion-fade {
   0% {
     opacity: 1;
@@ -615,7 +659,7 @@
   pointer-events: none !important;
 }
 
-/* Treffer-Impuls am Ziel */
+/* Treffer-Impuls am Ziel – synchron zum Einschlag (~160ms Verzögerung) */
 @keyframes ds-impact-flash {
   0% {
     filter: brightness(1);
@@ -629,7 +673,12 @@
 }
 
 .ds-hit-impact {
-  animation: ds-impact-flash 0.35s ease-out;
+  animation: ds-impact-flash 0.35s ease-out 0.16s both;
+}
+
+.ds-minion.ds-hit-impact.bub-animate-shake,
+.ds-hero-card.ds-hit-impact.bub-animate-shake {
+  animation: bub-shake 0.25s ease-in-out 0.16s both, ds-impact-flash 0.35s ease-out 0.16s both !important;
 }
 
 .ds-bubble-pop {
@@ -646,6 +695,7 @@
   color: #ff4757;
   font-size: 1.5rem;
   -webkit-text-stroke: 1px #800000;
+  animation-delay: 0.16s;
 }
 
 .ds-heal-badge {
@@ -656,13 +706,16 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ds-minion.ds-attacking,
+  .ds-minion.ds-attacking.ds-minion-dying,
   .ds-attacking-up,
   .ds-attacking-down,
   .ds-bubble-pop,
   .ds-minion.ds-minion-dying,
-  .ds-hit-impact {
+  .ds-hit-impact,
+  .ds-damage-badge {
     animation: none !important;
     transform: none !important;
+    animation-delay: 0s !important;
   }
 }
 

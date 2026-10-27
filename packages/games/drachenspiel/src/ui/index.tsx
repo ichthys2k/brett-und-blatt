@@ -74,16 +74,18 @@ function MinionView({
   elementRef?: (el: HTMLElement | null) => void;
 }) {
   const traits = getMinionTraits(minion);
+  const isAttacking = Boolean(attackVector || attackAnim);
+  const isTargetHit = !isAttacking && (damageAmount || isImpacted);
+
   const classes = [
     'ds-minion',
-    !isDying && 'bub-animate-drop',
-    canAttack && 'can-attack',
-    isSelected && 'selected',
+    canAttack && !isAttacking && 'can-attack',
+    isSelected && !isAttacking && 'selected',
     isTargetable && 'targetable',
     attackAnim === 'up' && 'ds-attacking-up',
     attackAnim === 'down' && 'ds-attacking-down',
     attackVector && 'ds-attacking',
-    (damageAmount || isImpacted) && 'bub-animate-shake ds-hit-impact',
+    isTargetHit && 'bub-animate-shake ds-hit-impact',
     isDying && 'ds-minion-dying',
     minion.taunt && 'taunt',
     minion.bubble && 'bubble',
@@ -107,9 +109,9 @@ function MinionView({
               '--atk-dy': `${attackVector.dy}px`,
             } as CSSProperties)
           : {}),
-        transform: dragTransform,
-        position: isDragged || attackVector ? 'relative' : undefined,
-        zIndex: isDragged ? 1000 : attackVector ? 60 : undefined,
+        transform: isAttacking ? undefined : dragTransform,
+        position: isDragged || isAttacking ? 'relative' : undefined,
+        zIndex: isDragged ? 1000 : isAttacking ? 60 : undefined,
         touchAction: canAttack ? 'none' : undefined,
       }}
       data-drop-target={isDying ? undefined : dropTarget}
@@ -168,6 +170,11 @@ function Board({
   const heroElsRef = useRef<Map<SeatId, HTMLElement>>(new Map());
   const prevViewRef = useRef<DrachenspielView>(view);
   const prevEventsRef = useRef<GameEvent[] | null>(null);
+  const animationTimerRef = useRef<number | null>(null);
+  const viewRef = useRef<DrachenspielView>(view);
+  viewRef.current = view;
+  const dyingMinionsRef = useRef(dyingMinions);
+  dyingMinionsRef.current = dyingMinions;
 
   // Synchrones Festhalten von Minions, die in diesem Zug besiegt wurden
   if (events !== prevEventsRef.current) {
@@ -327,9 +334,26 @@ function Board({
   }, [view]);
 
   useEffect(() => {
+    return () => {
+      if (animationTimerRef.current !== null) {
+        window.clearTimeout(animationTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (seenEventsRef.current === events) return;
     seenEventsRef.current = events;
     if (!events || events.length === 0) return;
+
+    if (animationTimerRef.current !== null) {
+      window.clearTimeout(animationTimerRef.current);
+      animationTimerRef.current = null;
+    }
+
+    const currentView = viewRef.current;
+    const currentMe = currentView.players[mySeat];
+    const currentOpp = currentView.players[oppSeat];
 
     const newEffects: typeof effects = [];
     const newAttacking = new Map<string, { dx: number; dy: number }>();
@@ -351,8 +375,8 @@ function Board({
         const target = atk.target;
 
         const isFromMe =
-          me.board.some((m) => m.id === attackerId) ||
-          dyingMinions.some((d) => d.seat === mySeat && d.minion.id === attackerId);
+          currentMe.board.some((m) => m.id === attackerId) ||
+          dyingMinionsRef.current.some((d) => d.seat === mySeat && d.minion.id === attackerId);
 
         const targetSeat = (isFromMe ? oppSeat : mySeat) as SeatId;
 
@@ -367,23 +391,46 @@ function Board({
           newImpacted.add(`hero-${targetSeat}`);
         }
 
-        let vector = { dx: 0, dy: isFromMe ? -120 : 120 };
+        let vector = { dx: 0, dy: isFromMe ? -140 : 140 };
         if (attackerEl && targetEl) {
+          // Temporär transform & transition neutralisieren, um den tatsächlichen Home-Slot zu messen
+          const prevAtkTransform = attackerEl.style.transform;
+          const prevAtkTransition = attackerEl.style.transition;
+          attackerEl.style.transform = 'none';
+          attackerEl.style.transition = 'none';
           const aRect = attackerEl.getBoundingClientRect();
+          attackerEl.style.transform = prevAtkTransform;
+          attackerEl.style.transition = prevAtkTransition;
+
+          const prevTgtTransform = targetEl.style.transform;
+          const prevTgtTransition = targetEl.style.transition;
+          targetEl.style.transform = 'none';
+          targetEl.style.transition = 'none';
           const tRect = targetEl.getBoundingClientRect();
+          targetEl.style.transform = prevTgtTransform;
+          targetEl.style.transition = prevTgtTransition;
+
           const ax = aRect.left + aRect.width / 2;
           const ay = aRect.top + aRect.height / 2;
           const tx = tRect.left + tRect.width / 2;
           const ty = tRect.top + tRect.height / 2;
-          vector = { dx: Math.round(tx - ax), dy: Math.round(ty - ay) };
+          const dx = Math.round(tx - ax);
+          const dy = Math.round(ty - ay);
+
+          // Mindestabstands-Prüfung: Falls fast identisch gemessen, nutze verlässlichen Richtungs-Fallback
+          if (Math.hypot(dx, dy) < 20) {
+            vector = { dx: 0, dy: isFromMe ? -140 : 140 };
+          } else {
+            vector = { dx, dy };
+          }
         }
 
         newAttacking.set(attackerId, vector);
 
         const minion =
-          me.board.find((m) => m.id === attackerId) ??
-          opp.board.find((m) => m.id === attackerId) ??
-          dyingMinions.find((d) => d.minion.id === attackerId)?.minion;
+          currentMe.board.find((m) => m.id === attackerId) ??
+          currentOpp.board.find((m) => m.id === attackerId) ??
+          dyingMinionsRef.current.find((d) => d.minion.id === attackerId)?.minion;
 
         if (minion) {
           playCreatureAudio(minion.name, 'attack', minion.sound);
@@ -434,15 +481,15 @@ function Board({
       setEffects(newEffects);
       setAttacking(newAttacking);
       setImpactedIds(newImpacted);
-      const timer = window.setTimeout(() => {
+      animationTimerRef.current = window.setTimeout(() => {
         setEffects([]);
         setAttacking(new Map());
         setImpactedIds(new Set());
         setDyingMinions([]);
-      }, 580);
-      return () => window.clearTimeout(timer);
+        animationTimerRef.current = null;
+      }, 620);
     }
-  }, [events, me.board, opp.board, dyingMinions, mySeat, oppSeat]);
+  }, [events, mySeat, oppSeat]);
 
   const oppHeroDmg = effects.find((e) => e.targetKind === 'hero' && e.targetSeat === oppSeat && e.type === 'damage')?.amount;
   const oppHeroHeal = effects.find((e) => e.targetKind === 'hero' && e.targetSeat === oppSeat && e.type === 'heal')?.amount;
