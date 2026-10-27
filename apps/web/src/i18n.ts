@@ -140,6 +140,7 @@ const de = {
   'online.seatOpen': 'frei',
   'online.sitHere': 'Hier sitzen',
   'online.standUp': 'Aufstehen',
+  'online.fillSeats': 'Alle verteilen ({n})',
   'online.makeBot': 'Computer',
   'online.makeOpen': 'Platz öffnen',
   'online.start': 'Partie starten',

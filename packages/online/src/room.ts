@@ -411,7 +411,9 @@ export class Room {
         const module = this.deps.findGame(message.gameId);
         if (!isHost || this.phase !== 'lobby' || !module) return deny();
         const { min, max } = module.info.players;
-        const count = Math.min(Math.min(max, MAX_SEATS), Math.max(min, this.lobby.seats.length));
+        // Bei Bingo gleich 30 Plätze öffnen (freie Plätze fallen beim Start ohnehin weg), damit eine ganze Klasse sofort Platz nehmen kann.
+        const defaultSeats = message.gameId === 'bingo' ? Math.min(max, MAX_SEATS) : min;
+        const count = Math.min(Math.min(max, MAX_SEATS), Math.max(defaultSeats, this.lobby.seats.length));
         this.lobby = { gameId: message.gameId, options: resolveOptions(module), time: this.lobby.time, seats: this.resizeSeats(count), isPublic: this.lobby.isPublic };
         return this.broadcastRoom();
       }
@@ -453,6 +455,10 @@ export class Room {
       case 'leaveSeat':
         if (this.phase !== 'lobby') return deny();
         this.unseat(member.id);
+        return this.broadcastRoom();
+      case 'fillSeats':
+        if (!isHost || this.phase !== 'lobby' || !this.lobby.gameId) return deny();
+        this.fillOpenSeats();
         return this.broadcastRoom();
       case 'kick': {
         const target = this.members.get(message.memberId);
@@ -635,6 +641,31 @@ export class Room {
 
   private unseat(memberId: string): void {
     for (const seat of this.lobby.seats) if (seat.kind === 'human' && seat.memberId === memberId) seat.memberId = null;
+  }
+
+  /**
+   * Verteilt alle verbundenen Mitglieder ohne Platz auf die freien Plätze (ggf. wird die
+   * Platzzahl bis zum Spielmaximum erhöht). Ideal für den Klassen-Modus, wenn viele
+   * Schülerinnen und Schüler gleichzeitig per QR-Code beitreten.
+   */
+  private fillOpenSeats(): void {
+    const module = this.lobbyModule();
+    if (!module) return;
+    const seated = new Set(this.lobby.seats.flatMap((s) => (s.kind === 'human' && s.memberId ? [s.memberId] : [])));
+    const unseated = [...this.members.values()].filter((m) => m.disconnectedAt === null && !seated.has(m.id));
+    if (unseated.length === 0) return;
+
+    const maxSeats = Math.min(module.info.players.max, MAX_SEATS);
+    let next = 0;
+    for (const seat of this.lobby.seats) {
+      if (next >= unseated.length) break;
+      if (seat.kind === 'human' && seat.memberId === null) {
+        seat.memberId = unseated[next++]!.id;
+      }
+    }
+    while (next < unseated.length && this.lobby.seats.length < maxSeats) {
+      this.lobby.seats.push({ kind: 'human', memberId: unseated[next++]!.id });
+    }
   }
 
   private removeMember(member: Member): void {

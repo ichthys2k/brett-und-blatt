@@ -114,6 +114,10 @@ export function Setup({ gameId }: { gameId: string }) {
         </div>
       </header>
 
+      <Button variant="primary" className="w-full text-lg" onClick={start}>
+        {t('setup.start')}
+      </Button>
+
       <details className="rounded-2xl border border-line bg-surface p-3 shadow-sm">
         <summary className="cursor-pointer font-semibold">📖 {t('howto.title')}</summary>
         <div className="pt-3">

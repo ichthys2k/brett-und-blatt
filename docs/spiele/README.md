@@ -31,6 +31,10 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Doppelkopf](doppelkopf.md) | 4–5 | verdeckt | Stich-Kern, Serie, Kartenblätter | XL | L | XL | 5 |
 | [Eins!](uno.md) | 2–10 | verdeckt | Karten, Ablage, Varianten-Decks, Aktionen | M | M | M | 7 |
 | [Dame](dame.md) | 2 | offen | Gitterbrett, Drag & Drop, Negamax | M | M | M | 7 |
+| [Binokel](binokel.md) | 3–4 | verdeckt | Stich-Kern, Serie, Kartenblätter, Meldebilder | L | L | XL | 7 |
+| [Nicht ärgern!](ludo.md) | 2–4 | offen | SVG-Kreuzbrett, 3D-Würfel, Heuristik-Bot | M | M | M | 7 |
+| [Wortgitter](scrabble.md) (Scrabble) | 2–4 | verdeckt | 15×15 Gitterbrett, ZoomBoard, DAWG-Wörterbuch | M | L | L | 7 |
+| [Poker](poker.md) | 2–10 | verdeckt, Bluff | Karten, Handbewertung, Setzrunde, Side-Pots | L | L | XL | 7 |
 
 ## Gemeinsame Bausteine
 
@@ -50,6 +54,7 @@ Die zwölf Spiele teilen sich wenige Bausteine. Jeder davon entsteht beim ersten
 | **Minimax mit Alpha-Beta**, iterative Vertiefung, Zeitgrenze | `packages/engine/bots` | Vier in einer Reihe, Mühle, Reversi | Vier in einer Reihe |
 | **MCTS** (Monte-Carlo-Baumsuche) | `packages/engine/bots` | UTTT, Go, allgemeiner Bot | UTTT |
 | **Determinisierte MCTS** für verdeckte Informationen | `packages/engine/bots` | Stichspiele, Quartett | Skat |
+| **DAWG-Wörterbuch:** Kompakter binärer Wortgraph für Validierung und Suche | `packages/engine/words` | Scrabble / Wortgitter, später Boggle, Worträtsel | Wortgitter |
 
 ## Reihenfolge und Begründung
 

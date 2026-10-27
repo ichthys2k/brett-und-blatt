@@ -266,6 +266,26 @@ describe('Raum und Lobby', () => {
       { kind: 'human', memberId: 'm1' },
     ]);
   });
+
+  it('fillSeats verteilt alle verbundenen Mitglieder ohne Platz und erweitert bei Bedarf die Platzzahl', () => {
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    const cleo = env.client('cleo');
+    [anna, ben, cleo].forEach((c) => c.hello());
+    anna.send({ type: 'setGame', gameId: 'black-peter' });
+    // Standardmäßig hat Schwarzer Peter 2 Plätze (min = 2, max = 6)
+    expect(anna.room().lobby.seats).toHaveLength(2);
+    // Nicht-Raumleitung darf fillSeats nicht aufrufen
+    ben.send({ type: 'fillSeats' });
+    expect(ben.last('error')?.code).toBe('notAllowed');
+    // Raumleitung verteilt alle 3 Mitglieder -> Plätze wachsen auf 3
+    anna.send({ type: 'fillSeats' });
+    expect(anna.room().lobby.seats).toEqual([
+      { kind: 'human', memberId: 'm1' },
+      { kind: 'human', memberId: 'm2' },
+      { kind: 'human', memberId: 'm3' },
+    ]);
+  });
 });
 
 describe('Partie', () => {

@@ -1,5 +1,11 @@
+import brueche from '../../../../content/paare/brueche.json';
 import einmaleins from '../../../../content/paare/einmaleins.json';
 import englisch from '../../../../content/paare/englisch.json';
+import ganzeZahlen from '../../../../content/paare/ganze-zahlen.json';
+import groessen from '../../../../content/paare/groessen.json';
+import grossesEinmaleins from '../../../../content/paare/grosses-einmaleins.json';
+import kopfrechnen from '../../../../content/paare/kopfrechnen.json';
+import teilbarkeit from '../../../../content/paare/teilbarkeit.json';
 import tiere from '../../../../content/paare/tiere.json';
 
 /**
@@ -12,7 +18,17 @@ export interface BingoPack {
   pairs: { a: string; b: string }[];
 }
 
-export const PACKS: Record<string, BingoPack> = { einmaleins, englisch, tiere };
+export const PACKS: Record<string, BingoPack> = {
+  einmaleins,
+  'grosses-einmaleins': grossesEinmaleins,
+  kopfrechnen,
+  groessen,
+  teilbarkeit,
+  brueche,
+  'ganze-zahlen': ganzeZahlen,
+  englisch,
+  tiere,
+};
 
 /** Zahlen-Bingo: 75 Zahlen in fünf Spalten B, I, N, G, O zu je 15. */
 export const NUMBERS = 'zahlen';

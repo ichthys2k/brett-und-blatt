@@ -156,6 +156,10 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
   const filled = lobby.seats.filter((seat) => seat.kind === 'bot' || seat.memberId !== null).length;
   const ready = game !== null && filled >= game.info.players.min;
   const openSeats = lobby.seats.length - filled;
+  const seatedIds = new Set(lobby.seats.flatMap((seat) => (seat.kind === 'human' && seat.memberId ? [seat.memberId] : [])));
+  const unseatedConnected = room.members.filter((m) => m.connected && !seatedIds.has(m.id)).length;
+  const canGrowSeats = game !== null && lobby.seats.length < Math.min(game.info.players.max, MAX_SEATS);
+  const canFillSeats = isHost && unseatedConnected > 0 && (openSeats > 0 || canGrowSeats);
 
   const copy = async () => {
     try {
@@ -245,14 +249,23 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
       {game && (
         <>
           <Section title={t('online.seats')}>
-            {isHost && game.info.players.min < Math.min(game.info.players.max, MAX_SEATS) && (
-              <PlayerCount
-                label={t('setup.playerCount')}
-                value={lobby.seats.length}
-                min={game.info.players.min}
-                max={Math.min(game.info.players.max, MAX_SEATS)}
-                onChange={(count) => send({ type: 'setSeatCount', count })}
-              />
+            {isHost && (game.info.players.min < Math.min(game.info.players.max, MAX_SEATS) || canFillSeats) && (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                {game.info.players.min < Math.min(game.info.players.max, MAX_SEATS) && (
+                  <PlayerCount
+                    label={t('setup.playerCount')}
+                    value={lobby.seats.length}
+                    min={game.info.players.min}
+                    max={Math.min(game.info.players.max, MAX_SEATS)}
+                    onChange={(count) => send({ type: 'setSeatCount', count })}
+                  />
+                )}
+                {canFillSeats && (
+                  <Button variant="secondary" className="min-h-9 text-sm" onClick={() => send({ type: 'fillSeats' })}>
+                    🪑 {t('online.fillSeats', { n: unseatedConnected })}
+                  </Button>
+                )}
+              </div>
             )}
             <ol className="space-y-2">
               {lobby.seats.map((seat, index) => (

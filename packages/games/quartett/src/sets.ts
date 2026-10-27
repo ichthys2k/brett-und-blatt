@@ -1,5 +1,6 @@
 import bibel from '../../../../content/quartett/bibel.json';
 import dinosaurier from '../../../../content/quartett/dinosaurier.json';
+import geometrie from '../../../../content/quartett/geometrie.json';
 import tiere from '../../../../content/quartett/tiere.json';
 import weltraum from '../../../../content/quartett/weltraum.json';
 
@@ -48,6 +49,7 @@ export const CARD_SETS: Record<string, CardSet> = {
   weltraum: weltraum as CardSet,
   bibel: bibel as CardSet,
   dinosaurier: dinosaurier as CardSet,
+  geometrie: geometrie as CardSet,
 };
 
 export const SET_IDS = Object.keys(CARD_SETS);

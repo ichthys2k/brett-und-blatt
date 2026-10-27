@@ -1,9 +1,10 @@
 import { generalBots, type BotDefinition, type BotLevel, type GameModule } from '@brett-und-blatt/engine';
+import { faceOf, PAIR_SETS } from './content';
 import { meta } from './meta';
 import { applyMove, currentPlayers, legalMoves, playerView, result, sampleHidden, setup, type Face, type PairsMove, type PairsState } from './rules';
 
 export type { CardStatus, Face, PairsMove, PairsState } from './rules';
-export { faceOf, PAIR_SETS } from './content';
+export { faceOf, PAIR_SETS };
 
 /**
  * Gedächtnis je Stufe: Wie viele Aufdeck-Schritte zurück sich der Bot erinnert
@@ -63,11 +64,7 @@ export const gameModule: GameModule<PairsState, PairsMove> = {
     {
       id: 'set',
       label: 'Kartenset',
-      choices: [
-        { value: 'tiere', label: 'Tiere' },
-        { value: 'einmaleins', label: 'Einmaleins' },
-        { value: 'englisch', label: 'Englisch' },
-      ],
+      choices: Object.values(PAIR_SETS).map((set) => ({ value: set.id, label: set.name })),
       default: 'tiere',
     },
     {

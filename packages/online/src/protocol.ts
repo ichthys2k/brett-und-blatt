@@ -182,6 +182,7 @@ export type ClientMessage =
   | { type: 'setPublic'; isPublic: boolean }
   | { type: 'takeSeat'; index: number }
   | { type: 'leaveSeat' }
+  | { type: 'fillSeats' }
   | { type: 'kick'; memberId: string }
   | { type: 'start'; rotate?: boolean }
   /** Nach dem Ende: zurück in die Lobby (nur die Raumleitung). */
@@ -303,6 +304,7 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     case 'start':
       return { type: 'start', ...(typeof m.rotate === 'boolean' ? { rotate: m.rotate } : {}) };
     case 'leaveSeat':
+    case 'fillSeats':
     case 'toLobby':
     case 'resign':
     case 'returnSeat':

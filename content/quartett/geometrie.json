@@ -1,0 +1,492 @@
+{
+  "id": "geometrie",
+  "name": "Geometrie & Körper",
+  "emoji": "📐",
+  "license": "CC-BY-SA-4.0",
+  "description": "Ebene Figuren, regelmäßige Vielecke und geometrische Körper im Vergleich.",
+  "note": "Alle Werte gelten für eine Grundkante bzw. einen Radius von a = 10 cm (bei Rechteck, Quader, Dreiecksprisma, Zylinder, Kegel und Halbkugel mit Höhe bzw. zweiter Seite b = 20 cm). Bei ebenen Figuren zählt das Innere als 1 Fläche; bei gekrümmten Rändern sind Ecken und Kanten 0, Symmetrieachsen bei Kreisen/Kugeln auf 100 begrenzt.",
+  "properties": [
+    {
+      "id": "vertices",
+      "label": "Ecken",
+      "unit": "",
+      "higherWins": true
+    },
+    {
+      "id": "edges",
+      "label": "Seiten / Kanten",
+      "unit": "",
+      "higherWins": true
+    },
+    {
+      "id": "faces",
+      "label": "Flächen",
+      "unit": "",
+      "higherWins": true
+    },
+    {
+      "id": "symmetries",
+      "label": "Symmetrien",
+      "unit": "",
+      "higherWins": true
+    },
+    {
+      "id": "area",
+      "label": "Fläche / Oberfläche",
+      "unit": "cm²",
+      "higherWins": true
+    }
+  ],
+  "groups": [
+    {
+      "id": "A",
+      "name": "Besondere Vierecke"
+    },
+    {
+      "id": "B",
+      "name": "Dreiecke & Kreise"
+    },
+    {
+      "id": "C",
+      "name": "Regelmäßige Vielecke"
+    },
+    {
+      "id": "D",
+      "name": "Platonische Körper"
+    },
+    {
+      "id": "E",
+      "name": "Prismen"
+    },
+    {
+      "id": "F",
+      "name": "Pyramiden"
+    },
+    {
+      "id": "G",
+      "name": "Runde Körper"
+    },
+    {
+      "id": "H",
+      "name": "Sterne & Große Vielecke"
+    }
+  ],
+  "cards": [
+    {
+      "id": "A1",
+      "name": "Quadrat",
+      "emoji": "🟦",
+      "values": {
+        "vertices": 4,
+        "edges": 4,
+        "faces": 1,
+        "symmetries": 4,
+        "area": 100
+      },
+      "source": "Geometrische Grundformel (a = 10 cm): A = a² = 100 cm², 4 Symmetrieachsen."
+    },
+    {
+      "id": "A2",
+      "name": "Rechteck (10 × 20 cm)",
+      "emoji": "▭",
+      "values": {
+        "vertices": 4,
+        "edges": 4,
+        "faces": 1,
+        "symmetries": 2,
+        "area": 200
+      },
+      "source": "Geometrische Grundformel (a = 10 cm, b = 20 cm): A = a · b = 200 cm², 2 Symmetrieachsen."
+    },
+    {
+      "id": "A3",
+      "name": "Raute (60°-Winkel)",
+      "emoji": "🔶",
+      "values": {
+        "vertices": 4,
+        "edges": 4,
+        "faces": 1,
+        "symmetries": 2,
+        "area": 87
+      },
+      "source": "Geometrische Grundformel (a = 10 cm, α = 60°): A = a² · sin(60°) ≈ 87 cm², 2 Diagonalen als Symmetrieachsen."
+    },
+    {
+      "id": "A4",
+      "name": "Gleichschenkliges Trapez",
+      "emoji": "⏢",
+      "values": {
+        "vertices": 4,
+        "edges": 4,
+        "faces": 1,
+        "symmetries": 1,
+        "area": 130
+      },
+      "source": "Geometrische Grundformel (Grundseiten 20 cm und 10 cm, Schenkel 10 cm): A = 15 · √75 ≈ 130 cm², 1 Symmetrieachse."
+    },
+    {
+      "id": "B1",
+      "name": "Gleichseitiges Dreieck",
+      "emoji": "🔺",
+      "values": {
+        "vertices": 3,
+        "edges": 3,
+        "faces": 1,
+        "symmetries": 3,
+        "area": 43
+      },
+      "source": "Geometrische Grundformel (a = 10 cm): A = (√3 / 4) · a² ≈ 43 cm², 3 Symmetrieachsen."
+    },
+    {
+      "id": "B2",
+      "name": "Rechtwinkliges Dreieck (3-4-5)",
+      "emoji": "📐",
+      "values": {
+        "vertices": 3,
+        "edges": 3,
+        "faces": 1,
+        "symmetries": 0,
+        "area": 60
+      },
+      "source": "Ägyptisches Dreieck mit Seiten 10 cm, 12 cm (Katheten) und 15,6 cm: A = (10 · 12) / 2 = 60 cm²."
+    },
+    {
+      "id": "B3",
+      "name": "Halbkreis (r = 10 cm)",
+      "emoji": "🌓",
+      "values": {
+        "vertices": 2,
+        "edges": 2,
+        "faces": 1,
+        "symmetries": 1,
+        "area": 157
+      },
+      "source": "Geometrische Grundformel (r = 10 cm): A = ½ · π · r² ≈ 157 cm², 1 Symmetrieachse."
+    },
+    {
+      "id": "B4",
+      "name": "Kreis (r = 10 cm)",
+      "emoji": "⚪",
+      "values": {
+        "vertices": 0,
+        "edges": 1,
+        "faces": 1,
+        "symmetries": 100,
+        "area": 314
+      },
+      "source": "Geometrische Grundformel (r = 10 cm): A = π · r² ≈ 314 cm²; unendlich viele Symmetrieachsen (Wert 100)."
+    },
+    {
+      "id": "C1",
+      "name": "Regelmäßiges Fünfeck",
+      "emoji": "⬠",
+      "values": {
+        "vertices": 5,
+        "edges": 5,
+        "faces": 1,
+        "symmetries": 5,
+        "area": 172
+      },
+      "source": "Regelmäßiges Pentagon (a = 10 cm): A ≈ 1,72 · a² = 172 cm², 5 Symmetrieachsen."
+    },
+    {
+      "id": "C2",
+      "name": "Regelmäßiges Sechseck",
+      "emoji": "⬡",
+      "values": {
+        "vertices": 6,
+        "edges": 6,
+        "faces": 1,
+        "symmetries": 6,
+        "area": 260
+      },
+      "source": "Regelmäßiges Hexagon (a = 10 cm, 6 gleichseitige Dreiecke): A = (3√3 / 2) · a² ≈ 260 cm²."
+    },
+    {
+      "id": "C3",
+      "name": "Regelmäßiges Achteck",
+      "emoji": "🛑",
+      "values": {
+        "vertices": 8,
+        "edges": 8,
+        "faces": 1,
+        "symmetries": 8,
+        "area": 483
+      },
+      "source": "Regelmäßiges Oktogon (a = 10 cm): A = 2 · (1 + √2) · a² ≈ 483 cm², 8 Symmetrieachsen."
+    },
+    {
+      "id": "C4",
+      "name": "Regelmäßiges Zehneck",
+      "emoji": "🔟",
+      "values": {
+        "vertices": 10,
+        "edges": 10,
+        "faces": 1,
+        "symmetries": 10,
+        "area": 769
+      },
+      "source": "Regelmäßiges Dekagon (a = 10 cm): A ≈ 7,69 · a² = 769 cm², 10 Symmetrieachsen."
+    },
+    {
+      "id": "D1",
+      "name": "Tetraeder (Vierflächner)",
+      "emoji": "⛰️",
+      "values": {
+        "vertices": 4,
+        "edges": 6,
+        "faces": 4,
+        "symmetries": 6,
+        "area": 173
+      },
+      "source": "Platonischer Körper aus 4 gleichseitigen Dreiecken (a = 10 cm): O = √3 · a² ≈ 173 cm², 6 Symmetrieebenen."
+    },
+    {
+      "id": "D2",
+      "name": "Würfel (Hexaeder)",
+      "emoji": "🧊",
+      "values": {
+        "vertices": 8,
+        "edges": 12,
+        "faces": 6,
+        "symmetries": 9,
+        "area": 600
+      },
+      "source": "Platonischer Körper aus 6 Quadraten (a = 10 cm): O = 6 · a² = 600 cm², 9 Symmetrieebenen."
+    },
+    {
+      "id": "D3",
+      "name": "Oktaeder (Achtflächner)",
+      "emoji": "💎",
+      "values": {
+        "vertices": 6,
+        "edges": 12,
+        "faces": 8,
+        "symmetries": 9,
+        "area": 346
+      },
+      "source": "Platonischer Körper aus 8 gleichseitigen Dreiecken (a = 10 cm): O = 2√3 · a² ≈ 346 cm², 9 Symmetrieebenen."
+    },
+    {
+      "id": "D4",
+      "name": "Ikosaeder (Zwanzigflächner)",
+      "emoji": "🎲",
+      "values": {
+        "vertices": 12,
+        "edges": 30,
+        "faces": 20,
+        "symmetries": 15,
+        "area": 866
+      },
+      "source": "Platonischer Körper aus 20 gleichseitigen Dreiecken (a = 10 cm): O = 5√3 · a² ≈ 866 cm², 15 Symmetrieebenen."
+    },
+    {
+      "id": "E1",
+      "name": "Dreiecksprisma (Toblerone-Form)",
+      "emoji": "⛺",
+      "values": {
+        "vertices": 6,
+        "edges": 9,
+        "faces": 5,
+        "symmetries": 4,
+        "area": 687
+      },
+      "source": "Gerades Prisma (Grundkante 10 cm, Höhe 20 cm): O = 2 · 43,3 + 3 · 200 ≈ 687 cm², 4 Symmetrieebenen."
+    },
+    {
+      "id": "E2",
+      "name": "Quader (10 × 10 × 20 cm)",
+      "emoji": "📦",
+      "values": {
+        "vertices": 8,
+        "edges": 12,
+        "faces": 6,
+        "symmetries": 5,
+        "area": 1000
+      },
+      "source": "Quadratische Säule (10 × 10 × 20 cm): O = 2 · 100 + 4 · 200 = 1000 cm², 5 Symmetrieebenen."
+    },
+    {
+      "id": "E3",
+      "name": "Fünfecksprisma",
+      "emoji": "🏛️",
+      "values": {
+        "vertices": 10,
+        "edges": 15,
+        "faces": 7,
+        "symmetries": 6,
+        "area": 1344
+      },
+      "source": "Gerades Prisma (a = 10 cm, h = 20 cm): O = 2 · 172 + 5 · 200 = 1344 cm², 6 Symmetrieebenen."
+    },
+    {
+      "id": "E4",
+      "name": "Sechsecksprisma (Bienenzelle)",
+      "emoji": "🍯",
+      "values": {
+        "vertices": 12,
+        "edges": 18,
+        "faces": 8,
+        "symmetries": 7,
+        "area": 1720
+      },
+      "source": "Gerades Prisma (a = 10 cm, h = 20 cm): O = 2 · 260 + 6 · 200 = 1720 cm², 7 Symmetrieebenen."
+    },
+    {
+      "id": "F1",
+      "name": "Quadratische Pyramide",
+      "emoji": "🏜️",
+      "values": {
+        "vertices": 5,
+        "edges": 8,
+        "faces": 5,
+        "symmetries": 4,
+        "area": 273
+      },
+      "source": "Johnson-Pyramide J1 aus 1 Quadrat und 4 gleichseitigen Dreiecken (a = 10 cm): O = 100 + 173 = 273 cm²."
+    },
+    {
+      "id": "F2",
+      "name": "Fünfeckspyramide",
+      "emoji": "🎪",
+      "values": {
+        "vertices": 6,
+        "edges": 10,
+        "faces": 6,
+        "symmetries": 5,
+        "area": 389
+      },
+      "source": "Johnson-Pyramide J2 aus 1 Fünfeck und 5 gleichseitigen Dreiecken (a = 10 cm): O = 172 + 217 = 389 cm²."
+    },
+    {
+      "id": "F3",
+      "name": "Sechseckspyramide (h = 20 cm)",
+      "emoji": "🗼",
+      "values": {
+        "vertices": 7,
+        "edges": 12,
+        "faces": 7,
+        "symmetries": 6,
+        "area": 886
+      },
+      "source": "Gerade Pyramide (Grundkante 10 cm, Höhe 20 cm): Grundfläche 260 cm² + Mantel 626 cm² = 886 cm²."
+    },
+    {
+      "id": "F4",
+      "name": "Pyramidenstumpf (unten 20, oben 10 cm)",
+      "emoji": "🧱",
+      "values": {
+        "vertices": 8,
+        "edges": 12,
+        "faces": 6,
+        "symmetries": 4,
+        "area": 1100
+      },
+      "source": "Quadratischer Stumpf (Grundflächen 400 cm² und 100 cm², Seitenhöhe 10 cm): O = 400 + 100 + 4 · 150 = 1100 cm²."
+    },
+    {
+      "id": "G1",
+      "name": "Zylinder (r = 10, h = 20 cm)",
+      "emoji": "🥫",
+      "values": {
+        "vertices": 0,
+        "edges": 2,
+        "faces": 3,
+        "symmetries": 100,
+        "area": 1885
+      },
+      "source": "Gerader Kreiszylinder (r = 10 cm, h = 20 cm): O = 2πr² + 2πrh = 600π ≈ 1885 cm²."
+    },
+    {
+      "id": "G2",
+      "name": "Kegel (r = 10, h = 20 cm)",
+      "emoji": "🍦",
+      "values": {
+        "vertices": 1,
+        "edges": 1,
+        "faces": 2,
+        "symmetries": 100,
+        "area": 1017
+      },
+      "source": "Gerader Kreiskegel (r = 10 cm, h = 20 cm, s ≈ 22,36 cm): O = πr(r + s) ≈ 1017 cm²."
+    },
+    {
+      "id": "G3",
+      "name": "Halbkugel (r = 10 cm)",
+      "emoji": "🥣",
+      "values": {
+        "vertices": 0,
+        "edges": 1,
+        "faces": 2,
+        "symmetries": 100,
+        "area": 942
+      },
+      "source": "Massive Halbkugel mit Kreisboden (r = 10 cm): O = 3 · π · r² ≈ 942 cm²."
+    },
+    {
+      "id": "G4",
+      "name": "Kugel (r = 10 cm)",
+      "emoji": "⚽",
+      "values": {
+        "vertices": 0,
+        "edges": 0,
+        "faces": 1,
+        "symmetries": 100,
+        "area": 1257
+      },
+      "source": "Geometrische Kugeloberfläche (r = 10 cm): O = 4 · π · r² ≈ 1257 cm²."
+    },
+    {
+      "id": "H1",
+      "name": "Regelmäßiges Zwölfeck",
+      "emoji": "🕛",
+      "values": {
+        "vertices": 12,
+        "edges": 12,
+        "faces": 1,
+        "symmetries": 12,
+        "area": 1120
+      },
+      "source": "Regelmäßiges Dodekagon (a = 10 cm): A = 3 · (2 + √3) · a² ≈ 1120 cm², 12 Symmetrieachsen."
+    },
+    {
+      "id": "H2",
+      "name": "Fünfzackiger Stern (Pentagramm)",
+      "emoji": "⭐",
+      "values": {
+        "vertices": 10,
+        "edges": 10,
+        "faces": 1,
+        "symmetries": 5,
+        "area": 388
+      },
+      "source": "Regelmäßiger 5-Stern (Außenkante a = 10 cm): Innenfünfeck 172 cm² + 5 Zacken à 43,3 cm² = 388 cm²."
+    },
+    {
+      "id": "H3",
+      "name": "Sechszackiger Stern (Hexagramm)",
+      "emoji": "✡️",
+      "values": {
+        "vertices": 12,
+        "edges": 12,
+        "faces": 1,
+        "symmetries": 6,
+        "area": 520
+      },
+      "source": "Regelmäßiger 6-Stern (12 gleichseitige Dreiecke mit a = 10 cm): A = 12 · 43,3 ≈ 520 cm², 6 Symmetrieachsen."
+    },
+    {
+      "id": "H4",
+      "name": "Dodekaeder (Zwölfflächner)",
+      "emoji": "🔮",
+      "values": {
+        "vertices": 20,
+        "edges": 30,
+        "faces": 12,
+        "symmetries": 15,
+        "area": 2065
+      },
+      "source": "Platonischer Körper aus 12 regelmäßigen Fünfecken (a = 10 cm): O = 12 · 172,05 ≈ 2065 cm², 15 Symmetrieebenen."
+    }
+  ]
+}

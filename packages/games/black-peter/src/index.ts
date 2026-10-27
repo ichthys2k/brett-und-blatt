@@ -1,11 +1,11 @@
 import { generalBots, type BotDefinition, type BotLevel, type GameModule } from '@brett-und-blatt/engine';
-import { PETER } from './content';
+import { faceOf, PAIR_SETS, PETER } from './content';
 import { meta } from './meta';
 import { applyMove, currentPlayers, legalMoves, playerView, result, sampleHidden, setup, type BlackPeterMove, type BlackPeterState } from './rules';
 
 export type { BlackPeterMove, BlackPeterState, Card } from './rules';
 export { sourceOf } from './rules';
-export { faceOf, PAIR_SETS, PETER } from './content';
+export { faceOf, PAIR_SETS, PETER };
 
 /** Wie oft der Bot vor dem Ziehen seine Hand mischt – mit dem Peter auf der Hand öfter. */
 const SHUFFLE_CHANCE: Record<BotLevel, { normal: number; peter: number }> = {
@@ -35,11 +35,7 @@ export const gameModule: GameModule<BlackPeterState, BlackPeterMove> = {
     {
       id: 'set',
       label: 'Kartenset',
-      choices: [
-        { value: 'tiere', label: 'Tiere' },
-        { value: 'einmaleins', label: 'Einmaleins' },
-        { value: 'englisch', label: 'Englisch' },
-      ],
+      choices: Object.values(PAIR_SETS).map((set) => ({ value: set.id, label: set.name })),
       default: 'tiere',
     },
     {

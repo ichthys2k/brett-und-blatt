@@ -85,6 +85,12 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Negamax-Suchbot mit Piece-Square-Tables (PST), iterativem Vertiefen und Quiescence-Erweiterung für Schlagketten in 3 Stufen (leicht, mittel, schwer).
   - Web-Oberfläche mit Koordinaten (a1–h8), perspektivischer Drehung, Pointer-Drag & Drop, Zughistorie-Modal, Material-Schlagleiste und Hervorhebung schlagpflichtiger Steine.
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`) für Online-Mehrspieler und Playlist „Denkraum“. Plan in `docs/spiele/dame.md`.
+- **Nicht ärgern!** (`packages/games/ludo`, 2–4 Plätze):
+  - Spielplan erarbeitet und in `docs/spiele/ludo.md` dokumentiert (Klassisch 40 Felder, Schlagpflicht, 3 Versuche bei leerer Strecke, Heuristik-Bot „Würfelmeister“, 3D-Würfel & SVG-Kreuzbrett).
+- **Wortgitter** (`packages/games/scrabble`, 2–4 Plätze):
+  - Spielplan erarbeitet und in `docs/spiele/scrabble.md` dokumentiert (15×15 Brett mit 3W/2W/3B/2B-Multiplikatoren, 102 Steine deutsches Blatt, binäres DAWG-Wörterbuch mit < 200 KB für Browser und Cloudflare Worker, Gordon/Appel-Jacobson-Wortsuch-Bot „Wortmeister“ in 3 Stufen, ZoomBoard & Dual-Input-Steuerung).
+- **Binokel** (`packages/games/binokel`, 3–4 Plätze):
+  - Spielplan erarbeitet und in `docs/spiele/binokel.md` dokumentiert (schwäbisches Traditionsspiel, 40/48 Karten doppeltes Blatt, Reizen, Dabb-Tausch & Drücken, Meldebilder mit Vorrang-Erkennung, Überstich- und Trumpfzwang, Durchmarsch, Bot „Schwaben-Ass“ mit PIMC).
 
 **Bekannte offene Punkte:**
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
