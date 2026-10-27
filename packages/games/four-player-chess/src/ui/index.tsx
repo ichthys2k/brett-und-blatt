@@ -1,7 +1,8 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import { FitBox, GridBoard, useElementSize, useGridMoveAnimation, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { COLORS, type Color, type FourChessMove, type FourChessState, type Piece } from '../rules';
+import { getCheckWarning, type CheckWarning } from './checkWarning';
 import './styles.css';
 
 const NAMES: Record<Color, string> = { r: 'Rot', b: 'Blau', y: 'Gelb', g: 'Grün' };
@@ -49,12 +50,20 @@ function readZoom(): boolean {
 function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProps<FourChessState, FourChessMove>) {
   const [selected, setSelected] = useState<number | null>(null);
   const [promotion, setPromotion] = useState<MoveMove[] | null>(null);
+  const [warning, setWarning] = useState<CheckWarning | null>(null);
   const [lastView, setLastView] = useState(view);
   if (lastView !== view) {
     setLastView(view);
     setSelected(null);
     setPromotion(null);
+    setWarning(null);
   }
+
+  useEffect(() => {
+    if (!warning) return;
+    const id = window.setTimeout(() => setWarning(null), 6000);
+    return () => window.clearTimeout(id);
+  }, [warning]);
 
   // Lupe: Auf kleinen Bildschirmen sind die Felder nur gut 25 px groß. Vergrößert lässt sich das Brett mit dem Finger verschieben.
   const [zoomed, setZoomed] = useState(readZoom);
@@ -115,7 +124,9 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   });
 
   const tap = (index: number) => {
+    // 1. Zielfeld für bereits ausgewählte Figur angetippt
     if (selected !== null && targets.has(index)) {
+      setWarning(null);
       const options = moves.filter((m) => m.f === selected && m.to === index);
       if (options.length > 1) {
         setPromotion(options);
@@ -125,8 +136,63 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
       }
       return;
     }
+
     setPromotion(null);
-    setSelected(movable.has(index) && index !== selected ? index : null);
+
+    // 2. Ungültiges Zielfeld für bereits ausgewählte Figur angetippt?
+    if (selected !== null && index !== selected) {
+      const piece = view.board[index];
+      const ownPiece = piece && !piece.d && piece.c === view.turn;
+      if (ownPiece && movable.has(index)) {
+        setWarning(null);
+        setSelected(index);
+        return;
+      }
+      const warn = getCheckWarning(view, selected, index, legalMoves);
+      if (warn) {
+        setWarning(warn);
+        return;
+      }
+      if (ownPiece) {
+        const pieceWarn = getCheckWarning(view, index, null, legalMoves);
+        if (pieceWarn) {
+          setWarning(pieceWarn);
+          setSelected(null);
+          return;
+        }
+      }
+      setWarning(null);
+      setSelected(null);
+      return;
+    }
+
+    // 3. Wenn dieselbe Figur erneut angetippt wird: abwählen
+    if (index === selected) {
+      setSelected(null);
+      setWarning(null);
+      return;
+    }
+
+    // 4. Neue eigene Figur angetippt
+    if (movable.has(index)) {
+      setWarning(null);
+      setSelected(index);
+      return;
+    }
+
+    // 5. Eigene Figur angetippt, die sich nicht bewegen darf: Erklärung ermitteln
+    const piece = view.board[index];
+    if (piece && !piece.d && piece.c === view.turn) {
+      const warn = getCheckWarning(view, index, null, legalMoves);
+      if (warn) {
+        setWarning(warn);
+        setSelected(null);
+        return;
+      }
+    }
+
+    setSelected(null);
+    setWarning(null);
   };
 
   return (
@@ -159,7 +225,9 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
               isActive={(dc, dr) => {
                 const index = toBoard(dc, dr, perspective);
                 if (!onBoard(Math.floor(index / 14), index % 14)) return false;
-                return movable.has(index) || targets.has(index) || selected !== null;
+                const piece = view.board[index];
+                const isOwnPiece = piece && !piece.d && piece.c === view.turn;
+                return movable.has(index) || targets.has(index) || isOwnPiece || selected !== null;
               }}
               onActivate={(dc, dr) => tap(toBoard(dc, dr, perspective))}
               cellClassName={(dc, dr) => {
@@ -174,6 +242,9 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                 if (targets.has(index) && view.board[index]) classes.push('fc-capture');
                 if (view.lastMove && (view.lastMove.from === index || view.lastMove.to === index)) classes.push('fc-last');
                 if (hintMove && (hintMove.f === index || hintMove.to === index)) classes.push('fc-hint');
+                if (warning?.pinnedSquare === index) classes.push('fc-pinned');
+                if (warning?.kingSquare === index) classes.push('fc-warn-king');
+                if (warning?.attackerSquares?.includes(index)) classes.push('fc-warn-attacker');
                 return classes.join(' ');
               }}
               cellLabel={(dc, dr) => {
@@ -184,6 +255,21 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
             />
           </div>
         </div>
+        {warning && (
+          <div className="fc-warning-banner" role="alert" aria-live="polite">
+            <span className="fc-warning-icon">⚠️</span>
+            <span className="fc-warning-text">{warning.text}</span>
+            <button
+              type="button"
+              className="fc-warning-close"
+              onClick={() => setWarning(null)}
+              aria-label="Hinweis schließen"
+              title="Schließen"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         {(zoomed || (cellSize > 0 && cellSize < ZOOM_BELOW)) && (
           <button type="button" className="fc-lens" aria-pressed={zoomed} aria-label={zoomed ? 'Brett verkleinern' : 'Brett vergrößern'} title={zoomed ? 'Brett verkleinern' : 'Brett vergrößern'} onClick={() => toggleZoom(!zoomed)}>
             {zoomed ? '⊖' : '🔍'}

@@ -94,6 +94,7 @@ Die allgemeine MCTS wäre bei vier Spielern auf 160 Feldern zu langsam. Der Zufa
 - **Figuren** als Textzeichen in den vier Farben; ausgeschiedene Figuren sind grau.
 - **Ziehen:** Figur antippen, dann das Ziel. Figuren gleiten flüssig über das 14×14-Raster (`useGridMoveAnimation`, inkl. aller 4 Perspektiven und Rochade). Im Teammodus erscheint bei einer Umwandlung eine Auswahl.
 - **Hervorhebungen:** letzter Zug, schlagbare Figuren, Zielpunkte.
+- **Schach- & Fesselungswarnung:** Versucht man eine gefesselte Figur zu bewegen oder den König ins Schach zu ziehen, erklärt ein kurzer Warnhinweis (z. B. mit Angabe von Angreiferfigur, gegnerischer Farbe und Feld) den Grund. Auf dem Kreuzbrett werden die gefesselte Figur, der eigene König und die gegnerische Angreiferfigur farblich hervorgehoben.
 - **Lupe** (🔍 in der freien Ecke oben rechts) ab Feldern unter 36 px. Sie vergrößert das Brett auf 170 % in einem verschiebbaren Ausschnitt, der unten in der Mitte beginnt. Die Einstellung merkt sich jedes Gerät in `localStorage`.
 - **Knopf „🏆 Sieg beanspruchen“**, sobald das erlaubt ist.
 - **Spieler-Chips** mit Farbe und Punkten bzw. Team, dazu der Grund des Ausscheidens. Im Querformat stehen sie bei drei oder mehr Spielern kompakt zu zweit (`data-crowded`).
@@ -107,6 +108,7 @@ Die allgemeine MCTS wäre bei vier Spielern auf 160 Feldern zu langsam. Der Zufa
 
 - `test/legacy-engine.test.ts` (übernommen und ergänzt): Startaufstellung, Zugreihenfolge, Rochade (auch seitlich und mit Teampartner als „Angreifer“), en passant über Kreuz, Umwandlung in beiden Spielarten, Matt und Patt in beiden Spielarten, König schlagen, Teampartner nicht schlagbar, Doppelschach-Punkte, Aufgeben, Sieg beanspruchen, Wiederholung, Zufallspartien mit exaktem Nachspielen, Bot findet Matt und schlägt eine ungedeckte Dame, vier Bots spielen eine Partie zu Ende.
 - `test/four-player-chess.test.ts`: Anbindung an die Schnittstelle (20 Eröffnungszüge, alter Spielstand bleibt unverändert, Bot-Züge im richtigen Format), Aufgeben (nur die eigene Farbe scheidet aus, auch ohne am Zug zu sein; Teammodus: Team verliert; Nachspielen und Zurücknehmen), Zeitablauf mit Schachuhr (nur die eigene Farbe bzw. das Team scheidet aus) und `gameContractChecks`.
+- `test/check-warning.test.ts`: Fesselungserkennung über Kreuz (auch über alle vier Himmelsrichtungen), Fesselungslinie, bestehendes Schachgebot und verbotener Zug ins Schach.
 
 ## Aufgeben
 

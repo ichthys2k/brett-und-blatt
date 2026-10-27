@@ -98,6 +98,7 @@ Zusätzlich gibt es den Zufallsbot zum Testen. Gemessen auf Cloudflare (Gratis-T
 - **Brett** über das Gitterbrett mit Figuren als Textzeichen (♚︎ usw.). Das Zeichen U+FE0E verhindert, dass Handys sie als bunte Emojis zeigen.
 - **Ziehen:** Figur antippen, dann das leuchtende Zielfeld (oder per Drag & Drop ziehen). Figuren gleiten geschmeidig zum Zielfeld (`useGridMoveAnimation`, inkl. beider Figuren bei Rochade). Bei einer Umwandlung erscheint eine Auswahl mit vier Figuren.
 - **Hervorhebungen:** letzter Zug, König im Schach, Tipp-Zug.
+- **Schach- & Fesselungswarnung:** Versucht man eine gefesselte Figur zu bewegen oder den König ins Schach zu ziehen, erklärt ein kurzer Warnhinweis mit Feldsymbolen den Grund. Auf dem Brett werden die gefesselte Figur, der eigene König und die gegnerische Angreiferfigur farblich hervorgehoben.
 - **Leisten mit geschlagenen Figuren** über und unter dem Brett, dazu der Materialvorsprung (+3 usw.). Umgewandelte Bauern werden dabei richtig verrechnet.
 - **Partieverlauf** in deutscher Notation (S, L, T, D statt N, B, R, Q) zum Aufklappen.
 - **Brett drehen** je nach Option. Online steht die eigene Farbe immer unten.
@@ -109,12 +110,13 @@ Zusätzlich gibt es den Zufallsbot zum Testen. Gemessen auf Cloudflare (Gratis-T
 
 ## Tests
 
-Vorhanden in `test/chess.test.ts`:
+Vorhanden in `test/chess.test.ts` und `test/check-warning.test.ts`:
 
 - Weiß hat zu Beginn genau 20 Züge.
 - Schäfermatt, Patt und dreifache Stellungswiederholung werden erkannt.
 - Eine Umwandlung bietet vier Figuren an; unerlaubte Züge werden abgelehnt.
 - **Bot:** findet ein Matt in einem Zug, schlägt eine ungedeckte Dame und rechnet in der Eröffnung genug Stellungen pro Sekunde.
+- **Fesselung & Schach:** `check-warning.test.ts` prüft Fesselungserkennung (Turm/Läufer/Dame), Fesselungslinien, Schachgebote und Rochade-Einschränkungen (König im Schach oder zieht durch Schach).
 - Allgemeine Prüfungen `gameContractChecks`.
 
 ## Offene Punkte

@@ -1,7 +1,8 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import { FitBox, GridBoard, useGridMoveAnimation, usePointerDrag, type BoardProps, type GameUi, type MoveAnimationItem } from '@brett-und-blatt/ui';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ChessMove, ChessState, Promotion } from '../rules';
+import { getCheckWarning, type CheckWarning } from './checkWarning';
 import './styles.css';
 
 type PieceType = 'k' | 'q' | 'r' | 'b' | 'n' | 'p';
@@ -71,12 +72,21 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   const [selected, setSelected] = useState<number | null>(null);
   const [promotion, setPromotion] = useState<ChessMove[] | null>(null);
   const [showMoves, setShowMoves] = useState(false);
+  const [warning, setWarning] = useState<CheckWarning | null>(null);
   const [lastView, setLastView] = useState(view);
   if (lastView !== view) {
     setLastView(view);
     setSelected(null);
     setPromotion(null);
+    setWarning(null);
   }
+
+  useEffect(() => {
+    if (!warning) return;
+    const id = window.setTimeout(() => setWarning(null), 6000);
+    return () => window.clearTimeout(id);
+  }, [warning]);
+
   // Bei festem Brett: Wechselt der Betrachter zwischen beiden Farben (zwei Menschen), bleibt Weiß unten.
   const [anchor, setAnchor] = useState(typeof viewer === 'number' ? viewer : 0);
   if (typeof viewer === 'number' && viewer !== anchor && anchor !== 0) setAnchor(0);
@@ -140,13 +150,17 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
       const toIndex = Number(targetId);
       const options = moves.filter((m) => m.from === fromIndex && m.to === toIndex).map((m) => m.move);
       if (options.length > 1) {
+        setWarning(null);
         setPromotion(PROMOTIONS.map((p) => options.find((o) => o.promotion === p)).filter((o): o is ChessMove => !!o));
         return true;
       } else if (options[0]) {
         wasDraggedRef.current = true;
+        setWarning(null);
         onMove(options[0]);
         return true;
       }
+      const warn = getCheckWarning(view.fen, fromIndex, toIndex, legalMoves);
+      if (warn) setWarning(warn);
       return false;
     },
   });
@@ -156,13 +170,71 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   const effectiveTargets = dragTargets ?? targets;
 
   const tap = (index: number) => {
+    // 1. Zielfeld für bereits ausgewählte Figur angetippt
     if (selected !== null && targets.has(index)) {
+      setWarning(null);
       const options = moves.filter((m) => m.from === selected && m.to === index).map((m) => m.move);
       if (options.length > 1) setPromotion(PROMOTIONS.map((p) => options.find((o) => o.promotion === p)).filter((o): o is ChessMove => !!o));
       else if (options[0]) onMove(options[0]);
       return;
     }
-    setSelected(movable.has(index) && index !== selected ? index : null);
+
+    // 2. Ungültiges Zielfeld für bereits ausgewählte Figur angetippt?
+    if (selected !== null && index !== selected) {
+      const ownPiece = board[index]?.white === whiteToMove;
+      // Falls es eine andere eigene Figur ist, die selbst ziehen kann: neue Figur auswählen
+      if (ownPiece && movable.has(index)) {
+        setWarning(null);
+        setSelected(index);
+        return;
+      }
+      // Prüfen, ob der Zugversuch von 'selected' nach 'index' am Schachgebot scheitert
+      const warn = getCheckWarning(view.fen, selected, index, legalMoves);
+      if (warn) {
+        setWarning(warn);
+        return;
+      }
+      // Andernfalls: Klick auf unbewegliche eigene Figur prüfen
+      if (ownPiece) {
+        const pieceWarn = getCheckWarning(view.fen, index, null, legalMoves);
+        if (pieceWarn) {
+          setWarning(pieceWarn);
+          setSelected(null);
+          return;
+        }
+      }
+      setWarning(null);
+      setSelected(null);
+      return;
+    }
+
+    // 3. Wenn dieselbe Figur erneut angetippt wird: abwählen
+    if (index === selected) {
+      setSelected(null);
+      setWarning(null);
+      return;
+    }
+
+    // 4. Neue eigene Figur angetippt
+    if (movable.has(index)) {
+      setWarning(null);
+      setSelected(index);
+      return;
+    }
+
+    // 5. Eigene Figur angetippt, die sich nicht bewegen darf: Erklärung ermitteln
+    const piece = board[index];
+    if (piece && piece.white === whiteToMove) {
+      const warn = getCheckWarning(view.fen, index, null, legalMoves);
+      if (warn) {
+        setWarning(warn);
+        setSelected(null);
+        return;
+      }
+    }
+
+    setSelected(null);
+    setWarning(null);
   };
 
   return (
@@ -205,15 +277,19 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
           }}
           isActive={(dc, dr) => {
             const index = toBoard(dc, dr);
-            return movable.has(index) || effectiveTargets.has(index);
+            const piece = board[index];
+            const isOwnPiece = piece && piece.white === whiteToMove;
+            return movable.has(index) || effectiveTargets.has(index) || isOwnPiece || selected !== null;
           }}
           onActivate={(dc, dr) => tap(toBoard(dc, dr))}
           cellProps={(dc, dr) => {
             const index = toBoard(dc, dr);
+            const piece = board[index];
+            const isOwnPiece = piece && piece.white === whiteToMove;
             const isMovable = movable.has(index);
             const isTarget = dragTargets !== null && dragTargets.has(index);
             const isDropActive = isTarget && dragState.targetId === String(index);
-            const dragBind = isMovable ? bindDrag(index) : undefined;
+            const dragBind = isMovable || isOwnPiece ? bindDrag(index) : undefined;
             return {
               'data-drop-target': String(index),
               'data-drop-active': isDropActive ? 'true' : undefined,
@@ -230,6 +306,9 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
             if (index === selected || index === dragSource) classes.push('ch-selected');
             if (effectiveTargets.has(index) && board[index]) classes.push('ch-capture');
             if (hinted.includes(index)) classes.push('ch-hint');
+            if (warning?.pinnedSquare === index) classes.push('ch-pinned');
+            if (warning?.kingSquare === index) classes.push('ch-warn-king');
+            if (warning?.attackerSquares?.includes(index)) classes.push('ch-warn-attacker');
             return classes.join(' ');
           }}
           cellLabel={(dc, dr) => {
@@ -238,6 +317,21 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
             return `${squareName(index)}: ${piece ? `${piece.white ? 'weißer' : 'schwarzer'} ${PIECE_NAMES[piece.type]}` : 'frei'}`;
           }}
         />
+        {warning && (
+          <div className="ch-warning-banner" role="alert" aria-live="polite">
+            <span className="ch-warning-icon">⚠️</span>
+            <span className="ch-warning-text">{warning.text}</span>
+            <button
+              type="button"
+              className="ch-warning-close"
+              onClick={() => setWarning(null)}
+              aria-label="Hinweis schließen"
+              title="Schließen"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         <div className="ch-bottom">
           <CaptureStrip board={board} white={!flipped} lead={materialLead(view.fen, !flipped)} />
           {view.history.length > 0 && (

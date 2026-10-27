@@ -195,3 +195,100 @@
   font-size: 1.3rem;
   cursor: pointer;
 }
+
+/* Warnung und Fesselung */
+.fc-warning-banner {
+  position: absolute;
+  left: 0.5rem;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-warning);
+  color: var(--color-ink);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
+  font-size: max(0.75rem, 2.8cqw);
+  line-height: 1.3;
+  animation: fc-banner-in 0.2s ease-out;
+}
+
+@keyframes fc-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fc-warning-icon {
+  flex: none;
+  font-size: 1.2em;
+}
+
+.fc-warning-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.fc-warning-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.fc-warning-close:hover {
+  background: var(--color-surface-2);
+  color: var(--color-ink);
+}
+
+/* Feldeffekte für Fesselung und Bedrohung */
+.fc-pinned {
+  box-shadow: inset 0 0 0 3px var(--color-warning) !important;
+  animation: fc-pulse-warning 1.8s infinite ease-in-out;
+}
+
+.fc-warn-king {
+  box-shadow: inset 0 0 0 3px var(--color-danger) !important;
+  animation: fc-pulse-danger 1.8s infinite ease-in-out;
+}
+
+.fc-warn-attacker {
+  box-shadow: inset 0 0 0 3px var(--color-danger) !important;
+  background: rgb(220 38 38 / 0.22) !important;
+}
+
+@keyframes fc-pulse-warning {
+  0%, 100% {
+    box-shadow: inset 0 0 0 3px var(--color-warning);
+  }
+  50% {
+    box-shadow: inset 0 0 0 5px var(--color-warning), inset 0 0 12px var(--color-warning);
+  }
+}
+
+@keyframes fc-pulse-danger {
+  0%, 100% {
+    box-shadow: inset 0 0 0 3px var(--color-danger);
+  }
+  50% {
+    box-shadow: inset 0 0 0 5px var(--color-danger), inset 0 0 12px var(--color-danger);
+  }
+}
+
