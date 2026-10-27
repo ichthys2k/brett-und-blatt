@@ -1,4 +1,4 @@
-import { Rng, type GameEvent, type MoveResult } from '@brett-und-blatt/engine';
+import { Rng, type Actor, type GameEvent, type MoveResult } from '@brett-und-blatt/engine';
 import { buildAllWildDeck } from './decks/allWild';
 import { buildClassicDeck } from './decks/classic';
 import { buildFlipDeck } from './decks/flip';
@@ -209,6 +209,81 @@ export function currentPlayers(state: UnoState): number[] {
   return players;
 }
 
+/** Prüft, ob ein Zug unter den aktuellen Spielregeln erlaubt ist. */
+export function isLegal(state: UnoState, actor: Actor, move: UnoMove): boolean {
+  if (typeof actor !== 'number' || state.winner !== null || state.eliminated[actor]) return false;
+
+  const topCard = state.discard[state.discard.length - 1];
+  const hand = state.hands[actor];
+  if (!hand) return false;
+  const side = state.activeSide;
+  const isTurn = actor === state.turn;
+
+  if (move.type === 'draw') {
+    if (!isTurn) return false;
+    return state.pendingDraw > 0 || !state.hasDrawn;
+  }
+
+  if (move.type === 'pass') {
+    if (!isTurn) return false;
+    return state.hasDrawn && state.pendingDraw === 0;
+  }
+
+  if (move.type === 'catchUno') {
+    if (state.options.callUno !== 'on') return false;
+    const target = move.target;
+    return (
+      typeof target === 'number' &&
+      target >= 0 &&
+      target < state.hands.length &&
+      target !== actor &&
+      !state.eliminated[target] &&
+      state.hands[target].length === 1 &&
+      !state.unoProtection[target]
+    );
+  }
+
+  if (move.type === 'jumpIn') {
+    if (state.options.jumpIn !== 'on' || state.pendingDraw > 0 || !topCard) return false;
+    const card = hand.find((c) => c.id === move.cardId);
+    if (!card) return false;
+    return isIdenticalCard(card, topCard, side);
+  }
+
+  if (move.type === 'play') {
+    if (!isTurn) return false;
+    const card = hand.find((c) => c.id === move.cardId);
+    if (!card) return false;
+    const face = getActiveFace(card, side);
+
+    if (state.pendingDraw > 0) {
+      if (state.options.stacking === 'off') return false;
+      if (!canStackCard(card, topCard, side, state.options.stacking)) return false;
+    } else {
+      if (!canPlayCard(card, topCard, state.activeColor, side)) return false;
+    }
+
+    if (face.color === 'wild') {
+      const validColors: readonly UnoColor[] = side === 'dark' ? DARK_COLORS : LIGHT_COLORS;
+      if (!move.chosenColor || !validColors.includes(move.chosenColor)) return false;
+    }
+
+    if (face.type === '7' && state.options.sevenZero === 'on') {
+      const otherSeats = state.hands
+        .map((_, idx) => idx)
+        .filter((idx) => idx !== actor && !state.eliminated[idx]);
+      if (otherSeats.length > 0) {
+        const target = move.targetPlayer;
+        if (typeof target !== 'number' || !otherSeats.includes(target)) return false;
+      }
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 /** Ermittelt alle legalen Züge für einen bestimmten Spieler. */
 export function legalMoves(state: UnoState, actor: number): UnoMove[] {
   if (state.winner !== null || state.eliminated[actor]) return [];
@@ -218,14 +293,26 @@ export function legalMoves(state: UnoState, actor: number): UnoMove[] {
   const hand = state.hands[actor];
   const side = state.activeSide;
   const isTurn = actor === state.turn;
+  const willHaveOne = hand.length === 2;
+
+  const pushPlay = (base: { cardId: string; chosenColor?: UnoColor; targetPlayer?: number }) => {
+    if (willHaveOne) {
+      moves.push({ type: 'play', ...base, callUno: true });
+    } else {
+      moves.push({ type: 'play', ...base });
+    }
+  };
 
   // 1. Jump-In außerhalb der Reihe
   if (!isTurn) {
     if (state.options.jumpIn === 'on' && state.pendingDraw === 0 && topCard) {
       for (const card of hand) {
         if (isIdenticalCard(card, topCard, side)) {
-          const callUno = hand.length === 2;
-          moves.push({ type: 'jumpIn', cardId: card.id, callUno });
+          if (willHaveOne) {
+            moves.push({ type: 'jumpIn', cardId: card.id, callUno: true });
+          } else {
+            moves.push({ type: 'jumpIn', cardId: card.id });
+          }
         }
       }
     }
@@ -247,15 +334,14 @@ export function legalMoves(state: UnoState, actor: number): UnoMove[] {
       for (const card of hand) {
         if (canStackCard(card, topCard, side, state.options.stacking)) {
           const face = getActiveFace(card, side);
-          const callUno = hand.length === 2;
 
           if (face.color === 'wild') {
             const colors = side === 'dark' ? DARK_COLORS : LIGHT_COLORS;
             for (const col of colors) {
-              moves.push({ type: 'play', cardId: card.id, chosenColor: col, callUno });
+              pushPlay({ cardId: card.id, chosenColor: col });
             }
           } else {
-            moves.push({ type: 'play', cardId: card.id, callUno });
+            pushPlay({ cardId: card.id });
           }
         }
       }
@@ -270,7 +356,6 @@ export function legalMoves(state: UnoState, actor: number): UnoMove[] {
   for (const card of hand) {
     if (canPlayCard(card, topCard, state.activeColor, side)) {
       const face = getActiveFace(card, side);
-      const callUno = hand.length === 2;
 
       // 7er-Handtausch bei Option sevenZero
       if (face.type === '7' && state.options.sevenZero === 'on') {
@@ -278,7 +363,7 @@ export function legalMoves(state: UnoState, actor: number): UnoMove[] {
           .map((_, idx) => idx)
           .filter((idx) => idx !== actor && !state.eliminated[idx]);
         for (const target of otherSeats) {
-          moves.push({ type: 'play', cardId: card.id, targetPlayer: target, callUno });
+          pushPlay({ cardId: card.id, targetPlayer: target });
         }
         continue;
       }
@@ -287,10 +372,10 @@ export function legalMoves(state: UnoState, actor: number): UnoMove[] {
       if (face.color === 'wild') {
         const colors = side === 'dark' ? DARK_COLORS : LIGHT_COLORS;
         for (const col of colors) {
-          moves.push({ type: 'play', cardId: card.id, chosenColor: col, callUno });
+          pushPlay({ cardId: card.id, chosenColor: col });
         }
       } else {
-        moves.push({ type: 'play', cardId: card.id, callUno });
+        pushPlay({ cardId: card.id });
       }
     }
   }
@@ -312,6 +397,9 @@ export function applyMove(
   actor: number,
   move: UnoMove,
 ): MoveResult<UnoState> {
+  if (!isLegal(state, actor, move)) {
+    throw new Error('Dieser Zug ist nicht erlaubt.');
+  }
   const next = JSON.parse(JSON.stringify(state)) as UnoState;
   const rng = new Rng(next.rng);
   const events: GameEvent[] = [];

@@ -1,8 +1,8 @@
-import { Rng } from '@brett-und-blatt/engine';
+import { isLegalMove, LocalSession, inlineBotRunner, Rng } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { gameModule } from '../src';
-import { canPlayCard, canStackCard, setup } from '../src/rules';
+import { canPlayCard, canStackCard, isLegal, setup } from '../src/rules';
 import type { UnoCard } from '../src/types';
 
 import { playRandomGame } from '@brett-und-blatt/engine/testing';
@@ -159,5 +159,34 @@ describe('Eins! Regeln & Varianten', () => {
     // Spieler 0 hat nun die 3 Karten von Spieler 1, Spieler 1 hat die verbliebene 1 Karte von Spieler 0
     expect(next.hands[0]).toHaveLength(3);
     expect(next.hands[1]).toHaveLength(1);
+  });
+
+  it('erlaubt das Spielen von Karten in einer echten LocalSession ohne callUno-Feld', () => {
+    const session = new LocalSession(
+      gameModule,
+      {
+        gameId: 'uno',
+        seats: [{ kind: 'human', name: 'Ich' }, { kind: 'bot', name: 'Bot' }],
+        options: {},
+        seed: 'partie-1',
+        time: { kind: 'perMove', moveMs: 60_000 },
+      },
+      { botRunner: inlineBotRunner([gameModule]) },
+    );
+
+    const moves = session.legalMoves(0);
+    const playMove = moves.find((m) => m.type === 'play');
+    expect(playMove).toBeDefined();
+
+    // Zug ohne callUno (so wie die UI ihn sendet)
+    const success = session.submit(0, {
+      type: 'play',
+      cardId: (playMove as { cardId: string }).cardId,
+      chosenColor: (playMove as any).chosenColor,
+      targetPlayer: (playMove as any).targetPlayer,
+    });
+    expect(success).toBe(true);
+
+    session.dispose();
   });
 });

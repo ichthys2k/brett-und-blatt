@@ -14,6 +14,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   seatNames,
 }) => {
   const [selectedWildCard, setSelectedWildCard] = useState<UnoCard | null>(null);
+  const [selectedSevenCard, setSelectedSevenCard] = useState<UnoCard | null>(null);
   const [callUnoToggled, setCallUnoToggled] = useState<boolean>(false);
 
   const actor = typeof viewer === 'number' ? viewer : null;
@@ -54,20 +55,35 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
       return;
     }
 
-    // Bei regulärem Legen oder Jump-In
-    const matchingMoves = moves.filter(
-      (m): m is Extract<UnoMove, { type: 'play' | 'jumpIn' }> =>
-        (m.type === 'play' || m.type === 'jumpIn') && m.cardId === card.id,
-    );
-    const move = matchingMoves[0];
-    if (move) {
-      const willHaveOne = myHand.length === 2;
-      onMove({
-        ...move,
-        callUno: willHaveOne ? (callUnoToggled || myHand.length === 2) : undefined,
-      });
-      setCallUnoToggled(false);
+    // 7er-Handtausch bei Option sevenZero
+    if (face.type === '7' && state.options.sevenZero === 'on') {
+      const otherSeats = state.hands
+        .map((_, idx) => idx)
+        .filter((idx) => idx !== actor && !state.eliminated[idx]);
+      if (otherSeats.length === 1) {
+        const willHaveOne = myHand.length === 2;
+        onMove({
+          type: 'play',
+          cardId: card.id,
+          targetPlayer: otherSeats[0],
+          ...(willHaveOne ? { callUno: callUnoToggled } : {}),
+        });
+        setCallUnoToggled(false);
+      } else if (otherSeats.length > 1) {
+        setSelectedSevenCard(card);
+      }
+      return;
     }
+
+    // Reguläres Legen oder Jump-In
+    const moveType = isActor ? 'play' : 'jumpIn';
+    const willHaveOne = myHand.length === 2;
+    onMove({
+      type: moveType,
+      cardId: card.id,
+      ...(willHaveOne ? { callUno: callUnoToggled } : {}),
+    });
+    setCallUnoToggled(false);
   };
 
   // Farbwahl bestätigen
@@ -78,9 +94,23 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
       type: 'play',
       cardId: selectedWildCard.id,
       chosenColor,
-      callUno: willHaveOne ? (callUnoToggled || myHand.length === 2) : undefined,
+      ...(willHaveOne ? { callUno: callUnoToggled } : {}),
     });
     setSelectedWildCard(null);
+    setCallUnoToggled(false);
+  };
+
+  // 7er-Tauschziel bestätigen
+  const handleSevenTargetSelect = (targetPlayer: number) => {
+    if (!selectedSevenCard) return;
+    const willHaveOne = myHand.length === 2;
+    onMove({
+      type: 'play',
+      cardId: selectedSevenCard.id,
+      targetPlayer,
+      ...(willHaveOne ? { callUno: callUnoToggled } : {}),
+    });
+    setSelectedSevenCard(null);
     setCallUnoToggled(false);
   };
 
@@ -282,6 +312,38 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
             <button
               type="button"
               onClick={() => setSelectedWildCard(null)}
+              className="text-xs text-zinc-400 hover:text-white mt-1 cursor-pointer"
+            >
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 5. 7er-Handtausch Modal */}
+      {selectedSevenCard && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-white/20 p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 max-w-xs w-full text-center">
+            <h3 className="text-lg font-extrabold text-white">Mit wem Handkarten tauschen?</h3>
+            <div className="flex flex-col gap-2 w-full">
+              {state.hands
+                .map((hand, idx) => ({ hand, idx }))
+                .filter(({ idx }) => idx !== actor && !state.eliminated[idx])
+                .map(({ hand, idx }) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSevenTargetSelect(idx)}
+                    className="py-2.5 px-4 rounded-xl font-bold text-white bg-zinc-800 hover:bg-zinc-700 active:scale-95 transition-all flex items-center justify-between border border-white/20 cursor-pointer"
+                  >
+                    <span>{seatNames[idx] ?? `Spieler ${idx + 1}`}</span>
+                    <span className="text-xs text-zinc-400 font-normal">{hand.length} Karten</span>
+                  </button>
+                ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedSevenCard(null)}
               className="text-xs text-zinc-400 hover:text-white mt-1 cursor-pointer"
             >
               Abbrechen

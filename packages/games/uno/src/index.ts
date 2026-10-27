@@ -1,7 +1,7 @@
 import { Rng, type GameModule, type OptionSpec } from '@brett-und-blatt/engine';
 import { unoBot } from './bots';
 import { meta } from './meta';
-import { applyMove, currentPlayers, defaultOptions, legalMoves, playerView, result, sampleHidden, setup } from './rules';
+import { applyMove, currentPlayers, defaultOptions, isLegal, legalMoves, playerView, result, sampleHidden, setup } from './rules';
 import type { UnoMove, UnoOptions, UnoState } from './types';
 
 export const options: OptionSpec[] = [
@@ -93,6 +93,7 @@ export const gameModule: GameModule<UnoState, UnoMove> = {
   },
   currentPlayers,
   legalMoves,
+  isLegal,
   applyMove,
   playerView,
   sampleHidden,
