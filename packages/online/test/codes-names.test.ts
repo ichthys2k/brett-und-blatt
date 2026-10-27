@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AVATARS, MAX_NAME_LENGTH, ROOM_EMOJIS, cleanAvatar, cleanName, parseRoomCode, randomRoomCode } from '../src';
+import { AVATARS, AVATAR_CATEGORIES, MAX_NAME_LENGTH, ROOM_EMOJIS, cleanAvatar, cleanName, parseRoomCode, randomRoomCode } from '../src';
 
 describe('Raumcodes', () => {
   it('16 verschiedene Emojis aus je einem Zeichen', () => {
@@ -44,8 +44,22 @@ describe('Spitznamen', () => {
     for (const name of ['Heiland', 'Benedikt', 'Mia-Sophie', 'Jürgen', 'Zoë', 'Team 7c']) expect(cleanName(name)).toBe(name);
   });
 
+  it('enthält genau 200 eindeutige Avatare und 9 Kategorien', () => {
+    expect(AVATARS.length).toBe(200);
+    expect(new Set(AVATARS).size).toBe(200);
+    expect(AVATARS[0]).toBe('🦊');
+
+    const categorized = AVATAR_CATEGORIES.flatMap((c) => c.emojis);
+    expect(categorized.length).toBe(200);
+    expect(new Set(categorized).size).toBe(200);
+    for (const emoji of AVATARS) {
+      expect(categorized).toContain(emoji);
+    }
+  });
+
   it('unbekannte Avatare werden durch den ersten ersetzt', () => {
     expect(cleanAvatar('🐼')).toBe('🐼');
+    expect(cleanAvatar('🦖')).toBe('🦖');
     expect(cleanAvatar('💩')).toBe(AVATARS[0]);
   });
 });
