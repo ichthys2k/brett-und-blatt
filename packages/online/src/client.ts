@@ -105,6 +105,7 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
   /** Neuer Stand vom Server. */
   update(message: GameMessage): void {
     this.message = message;
+    this.config.seats = message.seats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name }));
     this.receivedAt = this.now();
     this.waiting = false;
     this._version++;
@@ -231,5 +232,29 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
 
   resign(seat: SeatId): void {
     if (this.canResign(seat)) this.deps.send({ type: 'resign' });
+  }
+
+  canJoinSeat(seat: SeatId): boolean {
+    if (this.message.yourSeat !== null || this.message.result) return false;
+    const publicSeat = this.message.seats[seat];
+    if (publicSeat && (publicSeat.kind !== 'human' || publicSeat.memberId !== null)) return false;
+    return Boolean(this.deps.module.seatChangeMove && this.deps.module.seatChangeMove(this.message.view, seat, true) !== null);
+  }
+
+  joinSeat(seat: SeatId): boolean {
+    if (!this.canJoinSeat(seat)) return false;
+    this.deps.send({ type: 'takeSeat', index: seat });
+    return true;
+  }
+
+  canLeaveSeat(seat: SeatId): boolean {
+    if (seat !== this.message.yourSeat || this.message.result) return false;
+    return Boolean(this.deps.module.seatChangeMove && this.deps.module.seatChangeMove(this.message.view, seat, false) !== null);
+  }
+
+  leaveSeat(seat: SeatId): boolean {
+    if (!this.canLeaveSeat(seat)) return false;
+    this.deps.send({ type: 'leaveSeat' });
+    return true;
   }
 }

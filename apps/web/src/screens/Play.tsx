@@ -379,6 +379,10 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           viewer={viewer}
           seatNames={seats.map((seat) => seat.name)}
           invite={online?.invite}
+          canJoinSeat={session.canJoinSeat ? (seat) => session.canJoinSeat!(seat) : undefined}
+          onJoinSeat={session.joinSeat ? (seat, kind, name) => session.joinSeat!(seat, kind, name) : undefined}
+          canLeaveSeat={session.canLeaveSeat ? (seat) => session.canLeaveSeat!(seat) : undefined}
+          onLeaveSeat={session.leaveSeat ? (seat) => session.leaveSeat!(seat) : undefined}
           humanSeats={
             !online && !needsHandover && humans.length > 1
               ? humans.map((seat) => ({ seat, legalMoves: session.isAway(seat) || session.paused ? [] : session.legalMoves(seat), onMove: (move: unknown) => session.submit(seat, move) }))

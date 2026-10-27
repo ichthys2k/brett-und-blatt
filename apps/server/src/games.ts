@@ -15,6 +15,7 @@ import { gameModule as go } from '@brett-und-blatt/game-go';
 import { gameModule as maexle } from '@brett-und-blatt/game-maexle';
 import { gameModule as mill } from '@brett-und-blatt/game-mill';
 import { gameModule as pairs } from '@brett-und-blatt/game-pairs';
+import { gameModule as poker } from '@brett-und-blatt/game-poker';
 import { gameModule as quartett } from '@brett-und-blatt/game-quartett';
 import { gameModule as reversi } from '@brett-und-blatt/game-reversi';
 import { gameModule as schafkopf } from '@brett-und-blatt/game-schafkopf';
@@ -28,4 +29,4 @@ import { gameModule as uno } from '@brett-und-blatt/game-uno';
  * Mehrspieler-Spiel muss hier (und in package.json) eingetragen werden – ein Test
  * im Server-Paket erinnert daran.
  */
-export const onlineGames: AnyGameModule[] = [battleship, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, fourInARow, fourPlayerChess, go, maexle, mill, pairs, quartett, reversi, schafkopf, skat, ticTacToe, ultimateTicTacToe, uno];
+export const onlineGames: AnyGameModule[] = [battleship, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, fourInARow, fourPlayerChess, go, maexle, mill, pairs, poker, quartett, reversi, schafkopf, skat, ticTacToe, ultimateTicTacToe, uno];

@@ -81,12 +81,37 @@ const correspondenceGame: AnyGameModule = {
       : ticTacToe.timePresets,
 };
 
+const joinableGame: GameModule<RoundState, RoundMove | { join: number }> = {
+  ...round,
+  info: { ...round.info, id: 'offener-tisch', name: 'Offener Tisch', players: { min: 2, max: 6 }, joinMidGame: true },
+  options: [{ id: 'emptySeats', label: 'Frei', hidden: true, pattern: '^[0-9,]*$', choices: [{ value: '', label: 'Keine' }], default: '' }],
+  setup: (seats, opts) => {
+    const empty = new Set((opts.emptySeats ?? '').split(',').filter(Boolean).map(Number));
+    return { turn: 0, out: Array.from({ length: seats }, (_, i) => empty.has(i)) };
+  },
+  applyMove: (state, actor, move) => {
+    if (move === 'pass') return { state: { ...state, turn: nextIn(state, state.turn) }, events: [] };
+    if ('join' in move) {
+      const out = state.out.map((o, s) => (s === move.join ? false : o));
+      return { state: { ...state, out }, events: [{ type: 'joined', seat: move.join }] };
+    }
+    const out = state.out.map((o, s) => o || s === move.resign);
+    const next = { turn: state.turn, out };
+    return { state: { ...next, turn: out[state.turn] ? nextIn(next, state.turn) : state.turn }, events: [{ type: 'resigned', seat: actor }] };
+  },
+  seatChangeMove: (state, seat, active) => {
+    if (active) return state.out[seat] ? { join: seat } : null;
+    return !state.out[seat] ? { resign: seat } : null;
+  },
+};
+
 const modules = new Map<string, AnyGameModule>([
   [round.info.id, round],
   [ticTacToe.info.id, ticTacToe],
   [blackPeter.info.id, blackPeter],
   [together.info.id, together],
   [correspondenceGame.info.id, correspondenceGame],
+  [joinableGame.info.id, joinableGame],
 ]);
 
 /** Ein Raum mit nachgebauten Verbindungen und einer Uhr, die man vorstellen kann. */
@@ -745,6 +770,42 @@ describe('Offene Spiele (publicListing)', () => {
 
     env.room.reattach('anna', 'm1');
     expect(env.room.publicListing()).not.toBeNull();
+  });
+
+  it('erlaubt bei Spielen mit joinMidGame (z. B. Poker) das Hinsetzen und Aufstehen im laufenden Betrieb', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    const clara = env.client('clara');
+    anna.hello();
+    ben.hello();
+
+    anna.send({ type: 'setGame', gameId: 'offener-tisch' });
+    // Standardmäßig werden 6 Plätze geöffnet
+    expect(anna.room().lobby.seats).toHaveLength(6);
+
+    anna.send({ type: 'takeSeat', index: 0 });
+    ben.send({ type: 'takeSeat', index: 1 });
+    anna.send({ type: 'start' });
+
+    expect(anna.room().phase).toBe('playing');
+    // Freie Plätze 2..5 sind weiterhin offen; der Raum bleibt im publicListing sichtbar!
+    const listing = env.room.publicListing();
+    expect(listing).not.toBeNull();
+    expect(listing?.totalSeats).toBe(6);
+    expect(listing?.filledSeats).toBe(2);
+
+    // Clara kommt während der laufenden Partie in den Raum und setzt sich auf Platz 2.
+    clara.hello();
+    expect(clara.game().yourSeat).toBeNull();
+    clara.send({ type: 'takeSeat', index: 2 });
+    expect(clara.game().yourSeat).toBe(2);
+    expect(env.room.publicListing()?.filledSeats).toBe(3);
+
+    // Clara steht wieder vom Tisch auf -> Platz 2 wird wieder frei.
+    clara.send({ type: 'leaveSeat' });
+    expect(clara.game().yourSeat).toBeNull();
+    expect(env.room.publicListing()?.filledSeats).toBe(2);
   });
 });
 

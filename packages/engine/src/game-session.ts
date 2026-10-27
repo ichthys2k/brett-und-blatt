@@ -1,6 +1,6 @@
 import type { ClockReading } from './clock';
-import type { SessionChange, SessionConfig } from './session';
-import type { Result, SeatId } from './types';
+import type { BotLevel, SeatId, Result } from './types';
+import type { SeatKind, SessionChange, SessionConfig } from './session';
 
 /**
  * Was die Oberfläche über eine Partie wissen darf. Der Seed fehlt absichtlich:
@@ -45,4 +45,12 @@ export interface GameSession<M = unknown, V = unknown> {
   /** Kann dieser Platz gerade aufgeben? (Nicht, wenn er schon ausgeschieden ist.) */
   canResign(seat: SeatId): boolean;
   resign(seat: SeatId): void;
+  /** Kann dieser Platz im laufenden Betrieb eingenommen werden (Spiele mit `joinMidGame`)? */
+  canJoinSeat?(seat: SeatId): boolean;
+  /** Nimmt einen freien Platz für die nächste Runde ein. */
+  joinSeat?(seat: SeatId, kind?: SeatKind, name?: string, level?: BotLevel): boolean;
+  /** Kann dieser Platz den Tisch im laufenden Betrieb verlassen? */
+  canLeaveSeat?(seat: SeatId): boolean;
+  /** Verlässt den Platz im laufenden Betrieb (laufende Hand wird gepasst, Platz ab nächster Runde frei). */
+  leaveSeat?(seat: SeatId, nextName?: string): boolean;
 }

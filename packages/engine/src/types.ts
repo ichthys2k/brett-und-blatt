@@ -30,6 +30,11 @@ export interface GameInfo {
   ruleVersion: number;
   /** Bietet die Oberfläche einen „Tipp“-Knopf an? Der Tipp kommt vom Standard-Bot. */
   hints?: boolean;
+  /**
+   * Dürfen Mitspieler auch im laufenden Betrieb an freie Plätze hinzukommen oder ihren
+   * Platz verlassen, um ab der nächsten Runde mitzuspielen (z. B. Poker)?
+   */
+  joinMidGame?: boolean;
   /** Kurze Anleitung „So geht's“: die wichtigsten Regeln in wenigen Sätzen, je ein Punkt pro Eintrag. */
   howToPlay: string[];
 }
@@ -165,6 +170,12 @@ export interface GameModule<S, M, V = S> {
    * Mit `reason: 'time'` gilt dasselbe bei abgelaufener Schachuhr.
    */
   resignMove?(state: S, seat: SeatId, reason?: 'resign' | 'time'): M | null;
+  /**
+   * Für Spiele mit `joinMidGame`: Systemzug, mit dem ein Platz im laufenden Betrieb für die
+   * nächste Runde hinzukommt (`active = true`) oder den Tisch verlässt (`active = false`).
+   * Wird mit `actor = 'system'` ausgeführt und im Zugprotokoll gespeichert.
+   */
+  seatChangeMove?(state: S, seat: SeatId, active: boolean): M | null;
   /** Standardzug bei Zeitablauf; fehlt er, zieht der Bot. */
   timeoutMove?(state: S, seat: SeatId): M;
   /** Pflicht bei verdeckten Informationen: füllt Unbekanntes passend zur Sicht auf. */

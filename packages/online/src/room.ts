@@ -262,11 +262,13 @@ export class Room {
    */
   publicListing(): OpenRoomListing | null {
     if (!this.lobby.isPublic) return null;
-    if (this.phase !== 'lobby') return null;
     if (!this.lobby.gameId) return null;
     const module = this.deps.findGame(this.lobby.gameId);
     if (!module) return null;
-    const openSeats = this.lobby.seats.filter((s) => s.kind === 'human' && s.memberId === null).length;
+    const playingJoinable = this.phase === 'playing' && Boolean(module.info.joinMidGame) && Boolean(this.game && !this.game.session.result);
+    if (this.phase !== 'lobby' && !playingJoinable) return null;
+    const seats = playingJoinable && this.game ? this.game.seats : this.lobby.seats;
+    const openSeats = seats.filter((s) => s.kind === 'human' && s.memberId === null).length;
     if (openSeats === 0) return null;
     const hasConnected = [...this.members.values()].some((m) => m.disconnectedAt === null);
     if (!hasConnected) return null;
@@ -278,8 +280,8 @@ export class Room {
       gameEmoji: module.info.emoji,
       hostName: host?.name ?? 'Anonym',
       hostAvatar: host?.avatar ?? '🎲',
-      totalSeats: this.lobby.seats.length,
-      filledSeats: this.lobby.seats.length - openSeats,
+      totalSeats: seats.length,
+      filledSeats: seats.length - openSeats,
       createdAt: this.createdAt,
       updatedAt: this.lastActivity,
     };
@@ -411,8 +413,8 @@ export class Room {
         const module = this.deps.findGame(message.gameId);
         if (!isHost || this.phase !== 'lobby' || !module) return deny();
         const { min, max } = module.info.players;
-        // Bei Bingo gleich 30 Plätze öffnen (freie Plätze fallen beim Start ohnehin weg), damit eine ganze Klasse sofort Platz nehmen kann.
-        const defaultSeats = message.gameId === 'bingo' ? Math.min(max, MAX_SEATS) : min;
+        // Bei Bingo gleich 30 Plätze öffnen (freie Plätze fallen beim Start ohnehin weg), bei Spielen mit laufendem Einstieg (Poker) 6 Plätze.
+        const defaultSeats = message.gameId === 'bingo' ? Math.min(max, MAX_SEATS) : module.info.joinMidGame ? Math.min(max, 6) : min;
         const count = Math.min(Math.min(max, MAX_SEATS), Math.max(defaultSeats, this.lobby.seats.length));
         this.lobby = { gameId: message.gameId, options: resolveOptions(module), time: this.lobby.time, seats: this.resizeSeats(count), isPublic: this.lobby.isPublic };
         return this.broadcastRoom();
@@ -446,16 +448,43 @@ export class Room {
         return this.broadcastRoom();
       }
       case 'takeSeat': {
+        if (this.phase === 'playing' && this.game?.module.info.joinMidGame) {
+          if (this.seatOf(member.id) !== null) return deny();
+          const index = message.index;
+          const target = this.game.seats[index];
+          const canGrow = index === this.game.seats.length && index < Math.min(this.game.module.info.players.max, MAX_SEATS);
+          if (!target && !canGrow) return deny();
+          if (target && (target.kind !== 'human' || target.memberId !== null)) return deny();
+          this.game.seatMembers[index] = member.id;
+          this.game.seats[index] = { kind: 'human', name: member.name, memberId: member.id };
+          if (this.game.seatMoved) this.game.seatMoved[index] = this.gameVersion();
+          while (this.lobby.seats.length <= index) this.lobby.seats.push({ kind: 'human', memberId: null });
+          this.lobby.seats[index] = { kind: 'human', memberId: member.id };
+          if (!this.game.session.joinSeat(index, 'human', member.name)) {
+            this.game.seatMembers[index] = null;
+            this.game.seats[index] = { kind: 'human', name: 'Frei', memberId: null };
+            this.lobby.seats[index] = { kind: 'human', memberId: null };
+            return deny();
+          }
+          return this.broadcastRoom();
+        }
         const seat = this.lobby.seats[message.index];
         if (this.phase !== 'lobby' || seat?.kind !== 'human' || seat.memberId !== null) return deny();
         this.unseat(member.id);
         seat.memberId = member.id;
         return this.broadcastRoom();
       }
-      case 'leaveSeat':
+      case 'leaveSeat': {
+        if (this.phase === 'playing' && this.game?.module.info.joinMidGame) {
+          const seat = this.seatOf(member.id);
+          if (seat === null || !this.game.session.canLeaveSeat(seat)) return deny();
+          this.freeRunningSeat(seat);
+          return this.broadcastRoom();
+        }
         if (this.phase !== 'lobby') return deny();
         this.unseat(member.id);
         return this.broadcastRoom();
+      }
       case 'fillSeats':
         if (!isHost || this.phase !== 'lobby' || !this.lobby.gameId) return deny();
         this.fillOpenSeats();
@@ -540,11 +569,16 @@ export class Room {
     const module = this.lobbyModule();
     if (!module) return this.error(connectionId, 'notAllowed', 'Bitte zuerst ein Spiel wählen.');
     // Freie Plätze bleiben weg, solange genug Spieler übrig sind – bei 30 Plätzen fürs Bingo muss
-    // die Raumleitung so nicht genau abzählen, wer mitspielt.
-    const seats = this.lobby.seats.filter((s) => s.kind === 'bot' || s.memberId !== null);
-    if (seats.length < module.info.players.min) {
+    // die Raumleitung so nicht genau abzählen, wer mitspielt. Bei Spielen mit laufendem Einstieg
+    // (z. B. Poker) bleiben freie Plätze am Tisch erhalten, damit Nachzügler einsteigen können.
+    const occupied = this.lobby.seats.filter((s) => s.kind === 'bot' || s.memberId !== null);
+    if (occupied.length < module.info.players.min) {
       return this.error(connectionId, 'notAllowed', 'Es sind noch Plätze frei.');
     }
+    const seats = module.info.joinMidGame ? this.lobby.seats : occupied;
+    const emptyIndices = module.info.joinMidGame
+      ? seats.map((s, i) => (s.kind === 'human' && s.memberId === null ? i : -1)).filter((i) => i >= 0)
+      : [];
     if (this.game) {
       this.lastVersion = this.gameVersion();
       this.game.unsubscribe();
@@ -554,12 +588,15 @@ export class Room {
     const publicSeats: PublicSeat[] = seats.map((seat) =>
       seat.kind === 'bot'
         ? { kind: 'bot', name: 'Computer', level: seat.level, memberId: null }
-        : { kind: 'human', name: this.members.get(seat.memberId ?? '')?.name ?? '?', memberId: seat.memberId },
+        : seat.memberId === null
+          ? { kind: 'human', name: 'Frei', memberId: null }
+          : { kind: 'human', name: this.members.get(seat.memberId)?.name ?? '?', memberId: seat.memberId },
     );
+    const resolvedOptions = resolveOptions(module, this.lobby.options);
     const config: SessionConfig = {
       gameId: module.info.id,
       seats: publicSeats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name })),
-      options: resolveOptions(module, this.lobby.options),
+      options: emptyIndices.length > 0 ? { ...resolvedOptions, emptySeats: emptyIndices.join(',') } : resolvedOptions,
       seed: this.deps.randomSeed(),
       time: timePresetsOf(module, this.lobby.options)[this.lobby.time],
     };
@@ -668,10 +705,29 @@ export class Room {
     }
   }
 
+  private freeRunningSeat(seat: SeatId): void {
+    if (!this.game) return;
+    const memberId = this.game.seatMembers[seat];
+    if (memberId) {
+      const m = this.members.get(memberId);
+      if (m) m.awayByDisconnect = false;
+    }
+    this.game.seatMembers[seat] = null;
+    this.game.seats[seat] = { kind: 'human', name: 'Frei', memberId: null };
+    if (this.lobby.seats[seat]?.kind === 'human') this.lobby.seats[seat] = { kind: 'human', memberId: null };
+    this.game.session.leaveSeat(seat, 'Frei');
+  }
+
   private removeMember(member: Member): void {
     this.unseat(member.id);
     const seat = this.seatOf(member.id);
-    if (seat !== null && this.phase === 'playing') this.game?.session.markAway(seat);
+    if (seat !== null && this.phase === 'playing') {
+      if (this.game?.module.info.joinMidGame && this.game.session.canLeaveSeat(seat)) {
+        this.freeRunningSeat(seat);
+      } else {
+        this.game?.session.markAway(seat);
+      }
+    }
     this.members.delete(member.id);
     this.tokens.delete(member.token);
     if (this.hostId === member.id) this.hostId = [...this.members.values()].find((m) => m.disconnectedAt === null)?.id ?? this.members.keys().next().value ?? null;

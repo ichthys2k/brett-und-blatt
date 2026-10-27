@@ -106,7 +106,29 @@ export class Clocks {
 
   /** Bricht einen Zug ab, ohne Zeit zu verbuchen (z. B. nach „Zug zurück“). */
   cancel(seat: SeatId): void {
-    this.clock(seat).startedAt = null;
+    const clock = this.seats[seat];
+    if (clock) clock.startedAt = null;
+  }
+
+  /** Setzt die Uhr eines Platzes auf den Startzustand zurück (oder legt sie an, falls der Tisch wächst). */
+  resetSeat(seat: SeatId): void {
+    const control = this.control;
+    while (this.seats.length <= seat) {
+      this.seats.push({
+        remainingMs: control.kind === 'chessClock' ? control.baseMs : control.kind === 'byoyomi' ? control.mainMs : 0,
+        bankMs: control.kind === 'perMove' ? (control.bankMs ?? 0) : 0,
+        startedAt: null,
+        moves: 0,
+        ...(control.kind === 'byoyomi' ? { periods: control.periods } : {}),
+      });
+    }
+    this.seats[seat] = {
+      remainingMs: control.kind === 'chessClock' ? control.baseMs : control.kind === 'byoyomi' ? control.mainMs : 0,
+      bankMs: control.kind === 'perMove' ? (control.bankMs ?? 0) : 0,
+      startedAt: null,
+      moves: 0,
+      ...(control.kind === 'byoyomi' ? { periods: control.periods } : {}),
+    };
   }
 
   stopAll(now: number): void {

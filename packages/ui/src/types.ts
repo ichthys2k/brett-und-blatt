@@ -24,6 +24,11 @@ export interface BoardProps<V, M> {
   humanSeats?: { seat: SeatId; legalMoves: M[]; onMove: (move: M) => void }[];
   /** Nur online: Raumcode und Einladungslink, z. B. für eine Tafel mit QR-Code am Beamer. */
   invite?: { code: string; link: string };
+  /** Für Spiele mit laufendem Ein- und Ausstieg (`joinMidGame`): freie Plätze einnehmen oder den eigenen Platz verlassen. */
+  canJoinSeat?: (seat: SeatId) => boolean;
+  onJoinSeat?: (seat: SeatId, kind?: 'human' | 'bot', name?: string) => void;
+  canLeaveSeat?: (seat: SeatId) => boolean;
+  onLeaveSeat?: (seat: SeatId) => void;
 }
 
 /** Was ein Spiel der Oberfläche liefert. Die Plattform findet es über den Export `gameUi`. */

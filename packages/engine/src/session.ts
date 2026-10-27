@@ -17,6 +17,8 @@ export interface SeatConfig {
 export interface SessionConfig {
   gameId: string;
   seats: SeatConfig[];
+  /** Ursprüngliche Platzzahl beim Start, falls im laufenden Spiel Plätze hinzukamen. */
+  initialSeats?: number;
   options: Options;
   seed: string;
   time: TimeControl;
@@ -155,7 +157,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     this.consecutiveTimeouts = config.seats.map(() => 0);
     this._log = [...log];
     this._forfeit = forfeit;
-    this._state = replay<S, M>(module, config.seats.length, this.config.options, config.seed, this._log);
+    this._state = replay<S, M>(module, config.initialSeats ?? config.seats.length, this.config.options, config.seed, this._log);
     if (runtime) {
       this.clocks.load(runtime.clocks);
       runtime.away.forEach((seat) => this.away.add(seat));
@@ -368,7 +370,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     }
     if (index < 0) return false;
     this._log = this._log.slice(0, index);
-    this._state = replay<S, M>(this.module, this.config.seats.length, this.config.options, this.config.seed, this._log);
+    this._state = replay<S, M>(this.module, this.config.initialSeats ?? this.config.seats.length, this.config.options, this.config.seed, this._log);
     this.invalidateCache();
     this._forfeit = null;
     this.dropAllBots();
@@ -413,6 +415,45 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     } else {
       this.endByForfeit({ seat, reason: 'resign' });
     }
+  }
+
+  canJoinSeat(seat: SeatId): boolean {
+    if (this._disposed || this.result || !this.module.seatChangeMove) return false;
+    return this.module.seatChangeMove(this._state, seat, true) !== null;
+  }
+
+  joinSeat(seat: SeatId, kind: SeatKind = 'human', name?: string, level: BotLevel = 'medium'): boolean {
+    if (!this.canJoinSeat(seat)) return false;
+    const move = this.module.seatChangeMove!(this._state, seat, true);
+    if (!move) return false;
+    if (seat >= this.config.seats.length) {
+      this.config.initialSeats ??= this.config.seats.length;
+    }
+    const defaultName = kind === 'bot' ? `Bot ${seat + 1}` : `Spieler ${seat + 1}`;
+    this.config.seats[seat] = kind === 'bot' ? { kind: 'bot', name: name ?? defaultName, level } : { kind: 'human', name: name ?? defaultName };
+    this.away.delete(seat);
+    this.consecutiveTimeouts[seat] = 0;
+    this.clocks.resetSeat(seat);
+    this.commit('system', move, 'system');
+    return true;
+  }
+
+  canLeaveSeat(seat: SeatId): boolean {
+    if (this._disposed || this.result || !this.module.seatChangeMove) return false;
+    return this.module.seatChangeMove(this._state, seat, false) !== null;
+  }
+
+  leaveSeat(seat: SeatId, nextName = 'Frei'): boolean {
+    if (!this.canLeaveSeat(seat)) return false;
+    const move = this.module.seatChangeMove!(this._state, seat, false);
+    if (!move) return false;
+    this.dropBot(seat);
+    this.away.delete(seat);
+    this.consecutiveTimeouts[seat] = 0;
+    this.clocks.resetSeat(seat);
+    this.config.seats[seat] = { kind: 'human', name: nextName };
+    this.commit('system', move, 'system');
+    return true;
   }
 
   snapshot(): SessionSnapshot<M> {
