@@ -1,0 +1,21 @@
+{
+  "name": "@brett-und-blatt/game-gomoku",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./ui": "./src/ui/index.tsx"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "dependencies": {
+    "@brett-und-blatt/engine": "workspace:*",
+    "@brett-und-blatt/ui": "workspace:*"
+  }
+}

@@ -28,6 +28,7 @@
     "@brett-und-blatt/game-factor-grid": "workspace:*",
     "@brett-und-blatt/game-four-in-a-row": "workspace:*",
     "@brett-und-blatt/game-four-player-chess": "workspace:*",
+    "@brett-und-blatt/game-gomoku": "workspace:*",
     "@brett-und-blatt/game-go": "workspace:*",
     "@brett-und-blatt/game-hangman": "workspace:*",
     "@brett-und-blatt/game-ludo": "workspace:*",
@@ -40,11 +41,14 @@
     "@brett-und-blatt/game-reversi": "workspace:*",
     "@brett-und-blatt/game-schafkopf": "workspace:*",
     "@brett-und-blatt/game-skat": "workspace:*",
+    "@brett-und-blatt/game-binokel": "workspace:*",
     "@brett-und-blatt/game-target-number": "workspace:*",
     "@brett-und-blatt/game-tic-tac-toe": "workspace:*",
     "@brett-und-blatt/game-ultimate-tic-tac-toe": "workspace:*",
     "@brett-und-blatt/game-uno": "workspace:*",
-    "@brett-und-blatt/game-word-salad": "workspace:*"
+    "@brett-und-blatt/game-kniffel": "workspace:*",
+    "@brett-und-blatt/game-word-salad": "workspace:*",
+    "@brett-und-blatt/game-ligretto": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261010.1",
