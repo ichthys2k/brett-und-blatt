@@ -99,6 +99,16 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Schneller Bitmasken-Handbewerter (`eval.ts`), Haupt- und Side-Pot-Zerlegung mit Rest-Chip-Regel (`pots.ts`), Bot „Pokerface“ in 3 Stufen (Chen-Starthandbewertung, Push-or-Fold, Monte-Carlo-Equity mit Range-Schätzung).
   - **Laufender Ein- und Ausstieg am Tisch (`joinMidGame: true`, `seatChangeMove`):** Freie Stühle bleiben beim Start erhalten; neue Spieler können sich jederzeit im laufenden Betrieb an den Tisch setzen (`joinSeat`, Status `waiting`) und spielen automatisch ab der nächsten Hand mit; wer aufsteht (`leaveSeat`), passt die laufende Hand und gibt den Platz für die nächste Runde wieder frei. Öffentliche Pokertische mit freien Plätzen bleiben auch während der laufenden Partie auf der Startseite sichtbar.
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`) und in Playlist „Kartentisch“. Plan in `docs/spiele/poker.md`.
+- **Bibel-Quiz** (`packages/games/bible-quiz`, 1–30 Plätze):
+  - Emoji-Bibelquiz nach Cornelius' Vorlage aus *Der Große Preis* mit allen 168 kuratierten Fragen in 5 Themenbereichen (Altes Testament, Neues Testament, Gleichnisse, Personen, Verse & Zitate) und 3 Schwierigkeitsstufen.
+  - Simultaner Mehrspieler-Modus (verdecktes Antworten, gemeinsame Auflösung mit biblischem Lobruf, Erklärung und BibelServer.com-Direktlink, Rundenweiterschaltung durch die Spielleitung), Hot-Seat und Solo-Modus.
+  - Einstellbare Fragenanzahl (5, 10, 15, 20, alle), Schwierigkeitsverlauf (steigend, gemischt, feste Stufe), Themenfilter, Serie-Boni (ab 3 richtigen Antworten in Folge) und Bot „Bibelkenner“ in 3 Stufen.
+  - Registriert auf dem Spieleserver (`apps/server/src/games.ts`), in der Rubrik *Familien-, Lege- & Gesellschaftsspiele* auf der Startseite und in Playlist „Spielabend“. Plan in `docs/spiele/bibelquiz.md`.
+- **Galgenmännchen** (`packages/games/hangman`, 1–8 Plätze):
+  - Wortrate-Klassiker aus *Der Große Preis* mit zwei Spielmodi: *Gemeinsam (Reihum)* an einem geteilten Geheimwort und *Wettrennen (Gleichzeitig)* mit identischer Wortfolge und geheimer Maske.
+  - Drei SVG-Darstellungen (*Schneemann* schmilzt, *Blume* verliert Blütenblätter, *Klassischer Galgen*) und 4 Wortpakete (*Alltag & Schule*, *Tiere & Natur*, *Knifflige Wörter*, *Mathe-Fachbegriffe Kl. 5/6*) mit insgesamt über 180 kuratierten deutschen Begriffen (`A–Z`, `Ä`, `Ö`, `Ü`, `ß → SS`).
+  - Intelligenter Bot „Buchstabenfuchs“ mit Musterabgleich und deutscher Buchstabenhäufigkeit in 3 Stufen.
+  - Registriert auf dem Spieleserver (`apps/server/src/games.ts`), in *Familien-, Lege- & Gesellschaftsspiele*, als Mathe-Direktwahl „Mathe-Galgenmännchen“ und in Playlist „Spielabend“. Plan in `docs/spiele/galgenmaennchen.md`.
 
 **Bekannte offene Punkte:**
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
@@ -113,10 +123,11 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
     - **Schiffe versenken** (`packages/games/battleship`): Option `coords` mit `classic` (`A1–J10`), `quadrant1` (`P(1|1)–P(10|10)`) und `quadrants4` (`P(-5|-5)–P(5|5)` inklusive hervorgehobenem Achsenkreuz $x, y$ und Quadrantenbeschriftung `I–IV`).
     - **Domino** (`packages/games/dominoes`): Option `display` mit `pips` (Augen 0–6), `terms` (Rechenterme Kl. 5) und `fractions` (Brüche & Dezimalzahlen Kl. 6) direkt auf den SVG-Dominosteinen.
     - **Eins!** (`packages/games/uno`): Option `mathLabels` („Mathe-Karten“), bei der Zahlenkarten 0–9 Kopfrechenaufgaben, Potenzen und Brüche statt der Ziffer zeigen.
-  - **Option C (Drei eigenständige Mathe-Spiele für Klasse 5 & 6):**
+  - **Option C (Eigenständige Mathe-Spiele für Klasse 5 & 6):**
     - **Zielzahl** (`packages/games/target-number`, 1–30 Plätze): „24“ & Countdown-Zahlenrunde mit 4 bis 6 Zahlenkarten, interaktivem Aufbau des geklammerten Rechenterms, Bot „Rechenfuchs“ und Musterlösungs-Anzeige. Plan in `docs/spiele/zielzahl.md`.
     - **Teiler-Duell** (`packages/games/factor-grid`, 1–2 Plätze): „Steuereintreiber“ (Taxman) und „Teiler & Vielfache“ (Juniper Green) auf Zahlenbrettern bis 20, 30 oder 50 mit Live-Teilervorschau und Bot „Zahlengenie“. Plan in `docs/spiele/teiler-duell.md`.
     - **Rechenmauer** (`packages/games/number-wall`, 1–30 Plätze): 3- und 4-stufige Zahlenmauern zum Vorwärts- und Rückwärtsrechnen mit natürlichen Zahlen, ganzen Zahlen (mit Minus), Dezimalzahlen und Einmaleins-Produkten sowie Bot „Mauerbaumeister“. Plan in `docs/spiele/rechenmauer.md`.
+    - **Enten-Rallye** (`packages/games/duck-rally`, 1–30 Plätze): Kopfrechen-Wettrennen mit Gummienten aus *Der Große Preis* (Grundrechenarten, Gleichungen mit $x$, Prozentrechnung und Primzahlen-Erkennung), fairem 3er-Block-Aufgabenstrom, Hot-Seat-Splitscreen für bis zu 4 Spieler am selben Gerät/Smartboard, Siegertreppchen und Bot „Renn-Ente“. Plan in `docs/spiele/enten-rallye.md`.
   - **Option D (Rubriken-Strukturierung, Mathe-Direktwahl & Tafel-QR-Code):**
     - Startseite (`apps/web/src/screens/Home.tsx`) nach 4 Spieltypen-Rubriken gegliedert (*Strategie- & Brettspiele*, *Karten- & Stichspiele*, *Familien-, Lege- & Gesellschaftsspiele*, *Mathe- & Rechenspiele Kl. 5/6*) inklusive Schnellfilter-Leiste (`#/?filter=mathe`) und 7 Direktwahl-Kacheln für die Mathe-Modi der Klassiker.
     - URL-Parameter für Spieleinrichtungen (`#/neu/<id>?option=wert` und `&autostart=1` in `router.ts` und `Setup.tsx`) sowie ausklappbarer Bereich „🔗 Übungslink & QR-Code (für Tafel / Arbeitsblatt)“ in `Setup.tsx`.

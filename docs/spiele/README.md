@@ -38,6 +38,9 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Zielzahl](zielzahl.md) | 1–30 | gleichzeitig | Zahlenkarten, geklammerter Rechenterm, 24-Löser | M | M | M | Mathe (Kl. 5/6) |
 | [Teiler-Duell](teiler-duell.md) | 1–2 | offen | Zahlengitter, Teiler-/Vielfachen-Vorschau | S | M | M | Mathe (Kl. 5/6) |
 | [Rechenmauer](rechenmauer.md) | 1–30 | gleichzeitig | Pyramidenmauer, Auswahl-Chips, Dreieckslöser | M | M | S | Mathe (Kl. 5/6) |
+| [Enten-Rallye](enten-rallye.md) | 1–30 | gleichzeitig, parallel | Gummienten-Fluss, Splitscreen-Ziffernblock, Gleichungen | M | M | S | Mathe (Kl. 5/6) |
+| [Galgenmännchen](galgenmaennchen.md) | 1–8 | verdeckt, offen / gleichzeitig | SVG-Schneemann/Blume/Galgen, Buchstaben-Tastatur, Wortlisten | M | M | S | 7 / Familie & Mathe |
+| [Bibel-Quiz](bibelquiz.md) | 1–30 | gleichzeitig | Emoji-Quiz, simultane Eingabe, BibelServer | S | M | S | 7 / Familie |
 
 ## Gemeinsame Bausteine
 

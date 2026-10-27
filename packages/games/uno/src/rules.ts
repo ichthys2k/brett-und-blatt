@@ -462,6 +462,11 @@ export function applyMove(
       giveCards(target, 2);
       next.unoProtection[target] = true; // Jetzt geschützt
       events.push({ type: 'caughtUno', actor, target });
+      next.lastAction = {
+        player: actor,
+        text: `Ertappt! +2 Strafkarten an Spieler ${target + 1}`,
+        target,
+      };
     }
     return finish();
   }
@@ -470,8 +475,13 @@ export function applyMove(
   if (move.type === 'draw') {
     // Falls ein Strafstapel aktiv ist (z. B. +2, +4)
     if (next.pendingDraw > 0) {
-      giveCards(actor, next.pendingDraw);
-      events.push({ type: 'drewPenalty', player: actor, count: next.pendingDraw });
+      const count = next.pendingDraw;
+      giveCards(actor, count);
+      events.push({ type: 'drewPenalty', player: actor, count });
+      next.lastAction = {
+        player: actor,
+        text: `+${count} Strafkarten gezogen`,
+      };
       next.pendingDraw = 0;
       next.hasDrawn = false;
       next.turn = getNextPlayer(actor, next.direction, total, next.eliminated);
@@ -483,6 +493,10 @@ export function applyMove(
     if (card) {
       next.hands[actor].push(card);
       events.push({ type: 'drewCard', player: actor });
+      next.lastAction = {
+        player: actor,
+        text: 'Karte gezogen',
+      };
     }
 
     if (next.options.drawRule === 'one') {
@@ -511,6 +525,10 @@ export function applyMove(
   if (move.type === 'pass') {
     next.hasDrawn = false;
     next.turn = getNextPlayer(actor, next.direction, total, next.eliminated);
+    next.lastAction = {
+      player: actor,
+      text: 'Gepasst',
+    };
     return finish();
   }
 
@@ -522,6 +540,20 @@ export function applyMove(
     const [card] = next.hands[actor].splice(cardIndex, 1);
     next.discard.push(card);
     const face = getActiveFace(card, side);
+
+    events.push({
+      type: 'cardPlayed',
+      player: actor,
+      card,
+      jumpIn: move.type === 'jumpIn',
+    });
+
+    next.lastAction = {
+      player: actor,
+      text: move.type === 'jumpIn' ? 'Jump-In gelegt' : 'Karte gelegt',
+      card,
+      ...(move.type === 'play' && move.targetPlayer !== undefined ? { target: move.targetPlayer } : {}),
+    };
 
     // "Eins!"-Schutz verwalten
     if (next.hands[actor].length === 1) {

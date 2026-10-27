@@ -60,14 +60,14 @@ const CATEGORIES: readonly CategorySpec[] = [
     icon: '🎲',
     title: 'Familien-, Lege- & Gesellschaftsspiele',
     subtitle: 'Gemeinsam würfeln, kombinieren, merken und raten – auch in großer Runde.',
-    gameIds: ['ludo', 'dominoes', 'color-and-shape', 'battleship', 'maexle', 'pairs', 'bingo'],
+    gameIds: ['hangman', 'bible-quiz', 'ludo', 'dominoes', 'color-and-shape', 'battleship', 'maexle', 'pairs', 'bingo'],
   },
   {
     id: 'math',
     icon: '📐',
     title: 'Mathe- & Rechenspiele (Kl. 5/6)',
     subtitle: 'Kopfrechnen, Klammerterme, Teiler, Vielfache und Zahlenmauern spielerisch trainieren.',
-    gameIds: ['target-number', 'factor-grid', 'number-wall'],
+    gameIds: ['duck-rally', 'target-number', 'factor-grid', 'number-wall'],
   },
 ];
 
@@ -144,6 +144,15 @@ const MATH_CLASSIC_PRESETS: readonly MathPresetCard[] = [
     description: 'Aufgabe und passende Lösung als Kartenpaare ablegen – wer behält am Ende den Schwarzen Peter?',
     badge: '2–6 Spieler · 7 Themenpakete',
     params: { content: 'kopfrechnen' },
+  },
+  {
+    id: 'math-hangman',
+    gameId: 'hangman',
+    emoji: '🔤',
+    title: 'Mathe-Galgenmännchen',
+    description: 'Mathematische Fachbegriffe aus Geometrie, Arithmetik und Bruchrechnung (Kl. 5/6) Buchstabe für Buchstabe erraten.',
+    badge: '1–8 Spieler · Fachbegriffe Kl. 5/6',
+    params: { category: 'mathe' },
   },
 ];
 

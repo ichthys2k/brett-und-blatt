@@ -190,6 +190,9 @@ importers:
       '@brett-und-blatt/game-battleship':
         specifier: workspace:*
         version: link:../../packages/games/battleship
+      '@brett-und-blatt/game-bible-quiz':
+        specifier: workspace:*
+        version: link:../../packages/games/bible-quiz
       '@brett-und-blatt/game-bingo':
         specifier: workspace:*
         version: link:../../packages/games/bingo
@@ -217,6 +220,9 @@ importers:
       '@brett-und-blatt/game-drachenspiel':
         specifier: workspace:*
         version: link:../../packages/games/drachenspiel
+      '@brett-und-blatt/game-duck-rally':
+        specifier: workspace:*
+        version: link:../../packages/games/duck-rally
       '@brett-und-blatt/game-factor-grid':
         specifier: workspace:*
         version: link:../../packages/games/factor-grid
@@ -229,6 +235,9 @@ importers:
       '@brett-und-blatt/game-go':
         specifier: workspace:*
         version: link:../../packages/games/go
+      '@brett-und-blatt/game-hangman':
+        specifier: workspace:*
+        version: link:../../packages/games/hangman
       '@brett-und-blatt/game-ludo':
         specifier: workspace:*
         version: link:../../packages/games/ludo
@@ -331,6 +340,19 @@ importers:
   packages/engine: {}
 
   packages/games/battleship:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/bible-quiz:
     dependencies:
       '@brett-und-blatt/engine':
         specifier: workspace:*
@@ -466,6 +488,19 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1
 
+  packages/games/duck-rally:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
   packages/games/factor-grid:
     dependencies:
       '@brett-und-blatt/engine':
@@ -506,6 +541,19 @@ importers:
         version: 19.3.1
 
   packages/games/go:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/hangman:
     dependencies:
       '@brett-und-blatt/engine':
         specifier: workspace:*

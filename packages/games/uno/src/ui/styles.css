@@ -113,3 +113,111 @@
     box-shadow: 0 0 0 10px rgba(234, 179, 8, 0);
   }
 }
+
+/* Ablagestapel Drop-Target */
+.uno-discard-zone {
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.uno-discard-zone.drag-over {
+  transform: scale(1.08);
+}
+
+.uno-discard-zone.drag-over::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border: 3px dashed #facc15;
+  border-radius: 18px;
+  animation: uno-drop-glow 1s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes uno-drop-glow {
+  0% {
+    box-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+    border-color: #facc15;
+  }
+  100% {
+    box-shadow: 0 0 24px rgba(250, 204, 21, 0.9);
+    border-color: #ffffff;
+  }
+}
+
+/* Drag & Drop für Handkarten */
+.uno-card-dragging {
+  cursor: grabbing !important;
+  z-index: 60 !important;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.8) !important;
+  pointer-events: none;
+  opacity: 0.96;
+}
+
+.uno-card-snapping {
+  transition: transform 0.18s cubic-bezier(0.25, 1, 0.5, 1) !important;
+  pointer-events: none;
+}
+
+/* Fliegende Karten (Animation Layer) */
+.uno-flying-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 70;
+}
+
+.uno-flying-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform, opacity;
+  animation: uno-fly 0.28s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes uno-fly {
+  0% {
+    transform: translate3d(var(--fly-start-x), var(--fly-start-y), 0)
+               scale(var(--fly-scale-start, 1))
+               rotate(var(--fly-rot-start, 0deg));
+    opacity: 0.92;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--fly-end-x), var(--fly-end-y), 0)
+               scale(var(--fly-scale-end, 1))
+               rotate(var(--fly-rot-end, 0deg));
+    opacity: 1;
+  }
+}
+
+/* Aufprall-Effekt für Ablagestapel beim Landen einer Karte */
+.uno-card-landing {
+  animation: uno-card-bounce 0.24s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes uno-card-bounce {
+  0% {
+    transform: scale(0.95);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uno-flying-card {
+    animation-duration: 0.01s !important;
+  }
+  .uno-card-landing {
+    animation: none !important;
+  }
+}
+

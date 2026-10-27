@@ -1,0 +1,2373 @@
+export type QuestionCategory =
+  | "Altes Testament"
+  | "Neues Testament"
+  | "Gleichnisse"
+  | "Personen"
+  | "Verse";
+
+export type QuestionDifficulty = 1 | 2 | 3;
+
+export interface BibleQuestion {
+  id: number;
+  category: QuestionCategory;
+  difficulty: QuestionDifficulty;
+  emojis: string;
+  options: readonly [string, string, string, string];
+  info: string;
+  bibleLink?: string;
+}
+
+export const QUESTIONS: readonly BibleQuestion[] = [
+  {
+    "id": 1,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🌊🚢🦁🦒",
+    "options": [
+      "Arche Noah",
+      "Sturm auf dem See",
+      "Die Schöpfung",
+      "Jona"
+    ],
+    "info": "Gott beauftragte Noah, eine Arche zu bauen, um seine Familie und die Tiere vor der Sintflut zu retten. Als Zeichen des Bundes setzte Gott den Regenbogen in die Wolken.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose6"
+  },
+  {
+    "id": 2,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🦁🦁😇👑",
+    "options": [
+      "Daniel in der Löwengrube",
+      "David und Goliath",
+      "König Salomo",
+      "Samson"
+    ],
+    "info": "Daniel wurde in die Löwengrube geworfen, weil er zu Gott betete statt zum König. Gott sandte einen Engel, der den Löwen das Maul zuhielt, und Daniel überlebte unverletzt.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Daniel6"
+  },
+  {
+    "id": 3,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🍎🐍🌳👫",
+    "options": [
+      "Der Sündenfall (Adam & Eva)",
+      "Die Schöpfung",
+      "Noah",
+      "Kain und Abel"
+    ],
+    "info": "Die Schlange verführte Eva, die verbotene Frucht vom Baum der Erkenntnis zu essen. Dies führte zur Vertreibung von Adam und Eva aus dem Garten Eden.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose3"
+  },
+  {
+    "id": 4,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🗡️🤕🧒🗿",
+    "options": [
+      "David gegen Goliath",
+      "Kain und Abel",
+      "Joseph und seine Brüder",
+      "Turmbau zu Babel"
+    ],
+    "info": "Der junge Hirte David besiegte den Riesen Goliath mit nur einer Steinschleuder und Gottvertrauen. Er wurde später der größte König Israels.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Samuel17"
+  },
+  {
+    "id": 5,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🧗🧱🗼🗣️",
+    "options": [
+      "Turmbau zu Babel",
+      "Jericho",
+      "Tempelbau",
+      "Jakobsleiter"
+    ],
+    "info": "Die Menschen wollten einen Turm bauen, der bis in den Himmel reicht, um sich selbst einen Namen zu machen. Gott verwirrte ihre Sprache, sodass sie sich nicht mehr verstanden.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose11"
+  },
+  {
+    "id": 6,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🌊🚶‍♂️🪄🔴",
+    "options": [
+      "Teilung des Roten Meeres",
+      "Jesus geht auf Wasser",
+      "Taufe im Jordan",
+      "Sintflut"
+    ],
+    "info": "Auf der Flucht aus Ägypten teilte Mose mit Gottes Hilfe das Rote Meer. Das Volk Israel konnte trockenen Fußes hindurchziehen, während die Verfolger untergingen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Mose14"
+  },
+  {
+    "id": 7,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🐋🙏🏖️🌳",
+    "options": [
+      "Jona und der Wal",
+      "Teilung des Meeres",
+      "Paulus Schiffbruch",
+      "Fischzug"
+    ],
+    "info": "Jona wollte vor Gott fliehen, wurde aber von einem großen Fisch verschluckt. Nach drei Tagen Gebet spie der Fisch ihn an Land, und er ging nach Ninive.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Jona2"
+  },
+  {
+    "id": 8,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🧥🎨👬😢",
+    "options": [
+      "Joseph und sein buntes Gewand",
+      "Der verlorene Sohn",
+      "David und Jonathan",
+      "Esau und Jakob"
+    ],
+    "info": "Joseph war der Lieblingssohn Jakobs und bekam ein prächtiges Gewand. Aus Neid verkauften ihn seine Brüder nach Ägypten, wo er später zum Herrscher aufstieg.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose37"
+  },
+  {
+    "id": 9,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🎺🧱🏚️7️⃣",
+    "options": [
+      "Fall von Jericho",
+      "Tempelbau",
+      "Offenbarung",
+      "7 Plagen"
+    ],
+    "info": "Die Israeliten zogen sieben Tage lang um Jericho herum. Am siebten Tag bliesen die Priester die Posaunen, das Volk schrie, und die Mauern stürzten ein.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Josua6"
+  },
+  {
+    "id": 10,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "👵👶🤣⛺",
+    "options": [
+      "Sara lacht (Geburt Isaaks)",
+      "Hagar und Ismael",
+      "Ruth und Noomi",
+      "Geburt Jesu"
+    ],
+    "info": "Als Gott der 90-jährigen Sara einen Sohn versprach, lachte sie ungläubig. Doch Gott hielt sein Wort, und sie gebar Isaak, dessen Name 'Er lacht' bedeutet.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose18"
+  },
+  {
+    "id": 11,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🔥🌿👣⛰️",
+    "options": [
+      "Der brennende Dornbusch",
+      "Elia am Horeb",
+      "Sodom und Gomorra",
+      "Bergpredigt"
+    ],
+    "info": "Mose sah einen Dornbusch, der brannte, aber nicht verzehrt wurde. Dort offenbarte sich Gott als 'Ich bin der ich bin' und berief Mose zur Rettung Israels.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Mose3"
+  },
+  {
+    "id": 12,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🥣🔴👬🤥",
+    "options": [
+      "Jakob stiehlt Erstgeburtsrecht (Linsengericht)",
+      "Joseph in Ägypten",
+      "Kain und Abel",
+      "Speisung der 5000"
+    ],
+    "info": "Esau verkaufte sein Erstgeburtsrecht an Jakob für ein Linsengericht, weil er hungrig war. Später erschlich sich Jakob auch den Segen des Vaters Isaak.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose25"
+  },
+  {
+    "id": 13,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "💇‍♂️💪🏛️👀",
+    "options": [
+      "Samson und Delila",
+      "Salomons Tempel",
+      "Simson und der Löwe",
+      "David wird König"
+    ],
+    "info": "Samson verriet Delila, dass seine übermenschliche Kraft in seinen Haaren lag. Als sie ihm die Haare schnitt, verlor er seine Kraft und wurde gefangen genommen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Richter16"
+  },
+  {
+    "id": 14,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "🔥🌪️🏎️🆙",
+    "options": [
+      "Himmelfahrt des Elia",
+      "Pfingsten",
+      "Hesekiels Vision",
+      "Untergang Sodoms"
+    ],
+    "info": "Der Prophet Elia wurde am Ende seines Lebens in einem feurigen Wagen durch einen Wirbelsturm in den Himmel entrückt. Sein Mantel fiel auf Elischa.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Koenige2"
+  },
+  {
+    "id": 15,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "🪜😇😴☁️",
+    "options": [
+      "Jakobs Himmelsleiter",
+      "Turmbau zu Babel",
+      "Offenbarung",
+      "Verklärung Jesu"
+    ],
+    "info": "Jakob träumte von einer Leiter, die bis in den Himmel reichte und auf der Engel auf und nieder stiegen. Gott erneuerte dort sein Versprechen an Abraham.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose28"
+  },
+  {
+    "id": 16,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "🐻🐻👩‍🦲🤬",
+    "options": [
+      "Elisa und die Bären",
+      "David und der Bär",
+      "Daniel",
+      "Simson"
+    ],
+    "info": "Als Kinder den Propheten Elisa wegen seiner Glatze verspotteten, verfluchte er sie. Daraufhin kamen zwei Bären aus dem Wald und zerrissen 42 von ihnen (2. Könige 2,23-24).",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Koenige2"
+  },
+  {
+    "id": 17,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "💀🦴🔮👻",
+    "options": [
+      "Die Totenbeschwörerin von Endor",
+      "Auferstehung",
+      "Hesekiels Totenfeld",
+      "Lazarus"
+    ],
+    "info": "König Saul suchte verzweifelt Rat bei einer Totenbeschwörerin. Sie rief den Geist des Propheten Samuel herauf, der Saul jedoch sein nahes Ende prophezeite.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Samuel28"
+  },
+  {
+    "id": 18,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "🐑🔪🚫🐏",
+    "options": [
+      "Opferung Isaaks",
+      "Kain und Abel",
+      "Passahfest",
+      "Sündenbock"
+    ],
+    "info": "Gott prüfte Abraham und befahl ihm, seinen Sohn Isaak zu opfern. Im letzten Moment griff Gott ein und stellte einen Widder als Ersatzopfer bereit.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose22"
+  },
+  {
+    "id": 19,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "👶🌟🐴👑",
+    "options": [
+      "Geburt Jesu",
+      "Einzug in Jerusalem",
+      "Die drei Weisen",
+      "Flucht nach Ägypten"
+    ],
+    "info": "Jesus wurde in einem Stall in Bethlehem geboren, weil in der Herberge kein Platz war. Ein Stern führte Weise aus dem Morgenland zu ihm.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas2"
+  },
+  {
+    "id": 20,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "✝️💀🔨🩸",
+    "options": [
+      "Kreuzigung Jesu",
+      "Stephanus Steinigung",
+      "Paulus Enthauptung",
+      "Abraham Opfer"
+    ],
+    "info": "Jesus starb am Kreuz auf Golgatha, um die Sünden der Welt zu tragen. Der Vorhang im Tempel zerriss von oben bis unten.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus15"
+  },
+  {
+    "id": 21,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "🥖🐟🧺🧺",
+    "options": [
+      "Speisung der 5000",
+      "Letztes Abendmahl",
+      "Hochzeit zu Kana",
+      "Fischzug"
+    ],
+    "info": "Mit nur fünf Broten und zwei Fischen speiste Jesus über 5000 Menschen. Am Ende blieben sogar noch zwölf Körbe voller Reste übrig.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus6"
+  },
+  {
+    "id": 22,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "💧➡️🍷💒",
+    "options": [
+      "Hochzeit zu Kana (Wasser zu Wein)",
+      "Das letzte Abendmahl",
+      "Taufe Jesu",
+      "Frau am Jakobsbrunnen"
+    ],
+    "info": "Auf einer Hochzeit ging der Wein aus. Jesus vollbrachte sein erstes Wunder und verwandelte sechs Wasserkrüge in den besten Wein.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes2"
+  },
+  {
+    "id": 23,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "🌊🚶‍♂️⛵👻",
+    "options": [
+      "Jesus geht auf dem Wasser",
+      "Sturmstillung",
+      "Jona",
+      "Paulus Schiffbruch"
+    ],
+    "info": "Die Jünger waren im Sturm auf dem See, als Jesus ihnen auf dem Wasser entgegenkam. Petrus stieg aus dem Boot, sank aber, als er zweifelte.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus14"
+  },
+  {
+    "id": 24,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "🕊️💧👮‍♂️🔊",
+    "options": [
+      "Taufe Jesu",
+      "Pfingsten",
+      "Johannes der Täufer",
+      "Verklärung"
+    ],
+    "info": "Als Johannes Jesus im Jordan taufte, öffnete sich der Himmel. Der Heilige Geist kam wie eine Taube herab und Gott sprach: 'Dies ist mein geliebter Sohn'.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus3"
+  },
+  {
+    "id": 25,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🍞🍷🗓️💔",
+    "options": [
+      "Das letzte Abendmahl",
+      "Hochzeit zu Kana",
+      "Speisung der 4000",
+      "Emmausjünger"
+    ],
+    "info": "Am Abend vor seinem Tod feierte Jesus das Passahmahl mit seinen Jüngern. Er setzte Brot und Wein als Zeichen für seinen Leib und sein Blut ein.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas22"
+  },
+  {
+    "id": 26,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "👀🚫🐓🐓",
+    "options": [
+      "Verleugnung durch Petrus",
+      "Judas Verrat",
+      "Gethsemane",
+      "Pfingsten"
+    ],
+    "info": "Jesus sagte voraus, dass Petrus ihn dreimal verleugnen würde, bevor der Hahn kräht. Als es geschah, erinnerte sich Petrus und weinte bitterlich.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas22"
+  },
+  {
+    "id": 27,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "💰💋⚔️👂",
+    "options": [
+      "Gefangennahme Jesu (Judaskuss)",
+      "Verleugnung Petrus",
+      "Der reiche Jüngling",
+      "Tempelreinigung"
+    ],
+    "info": "Judas verriet Jesus mit einem Kuss an die Soldaten. Petrus schlug daraufhin einem Diener des Hohepriesters das Ohr ab, doch Jesus heilte ihn.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus26"
+  },
+  {
+    "id": 28,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🔥👅💨🗣️",
+    "options": [
+      "Pfingsten (Ausgießung d. Geistes)",
+      "Brennender Dornbusch",
+      "Turmbau zu Babel",
+      "Verklärung"
+    ],
+    "info": "Zu Pfingsten kam der Heilige Geist mit Brausen und Feuerzungen auf die Jünger. Sie begannen in fremden Sprachen zu predigen, dass Jesus der Herr ist.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte2"
+  },
+  {
+    "id": 29,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🐎✨👀🚫",
+    "options": [
+      "Bekehrung des Paulus (Damaskus)",
+      "Einzug in Jerusalem",
+      "Offenbarung",
+      "Himmelfahrt"
+    ],
+    "info": "Saulus verfolgte Christen, bis ihm Jesus in einem hellen Licht erschien. Er erblindete drei Tage lang und wurde danach zum Apostel Paulus.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte9"
+  },
+  {
+    "id": 30,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🩹🤕🏨💰",
+    "options": [
+      "Der barmherzige Samariter",
+      "Heilung des Blinden",
+      "Der reiche Jüngling",
+      "Lazarus"
+    ],
+    "info": "Ein Mann fiel unter die Räuber. Priester und Levit gingen vorbei, aber ein verachteter Samariter half ihm und bezahlte für seine Pflege.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas10"
+  },
+  {
+    "id": 31,
+    "category": "Neues Testament",
+    "difficulty": 3,
+    "emojis": "☁️🆙👋🏔️",
+    "options": [
+      "Himmelfahrt Jesu",
+      "Verklärung",
+      "Bergpredigt",
+      "Mose am Sinai"
+    ],
+    "info": "40 Tage nach der Auferstehung fuhr Jesus vor den Augen seiner Jünger in den Himmel auf. Engel versprachen, dass er ebenso wiederkommen würde.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte1"
+  },
+  {
+    "id": 32,
+    "category": "Neues Testament",
+    "difficulty": 3,
+    "emojis": "🧟‍♂️🤕🤚🚪",
+    "options": [
+      "Der ungläubige Thomas",
+      "Auferstehung",
+      "Lazarus",
+      "Heilung eines Aussätzigen"
+    ],
+    "info": "Thomas war nicht da, als der auferstandene Jesus erschien, und zweifelte. Acht Tage später durfte er Jesu Wunden berühren und glaubte.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes20"
+  },
+  {
+    "id": 33,
+    "category": "Neues Testament",
+    "difficulty": 3,
+    "emojis": "🚢⚓🐍🔥",
+    "options": [
+      "Paulus auf Malta (Schlangenbiss)",
+      "Jona",
+      "Sturmstillung",
+      "Moses Schlange"
+    ],
+    "info": "Nach einem Schiffbruch auf Malta wurde Paulus beim Feuermachen von einer Viper gebissen. Die Einheimischen erwarteten seinen Tod, doch er blieb unverletzt.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte28"
+  },
+  {
+    "id": 34,
+    "category": "Neues Testament",
+    "difficulty": 3,
+    "emojis": "📜🦁🐑🐉",
+    "options": [
+      "Offenbarung des Johannes",
+      "Daniel",
+      "Schöpfung",
+      "Der gute Hirte"
+    ],
+    "info": "In der Offenbarung sieht Johannes den kosmischen Kampf zwischen Gut und Böse. Das Lamm Gottes (Jesus) besiegt am Ende den Drachen und das Tier.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Offenbarung"
+  },
+  {
+    "id": 35,
+    "category": "Neues Testament",
+    "difficulty": 3,
+    "emojis": "🌳🔍👤💰",
+    "options": [
+      "Zachäus auf dem Baum",
+      "Gleichnis vom Senfkorn",
+      "Nathan unter dem Feigenbaum",
+      "Der reiche Jüngling"
+    ],
+    "info": "Der kleine Zöllner Zachäus kletterte auf einen Maulbeerfeigenbaum, um Jesus zu sehen. Jesus kehrte bei ihm ein, und Zachäus änderte sein Leben.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas19"
+  },
+  {
+    "id": 36,
+    "category": "Neues Testament",
+    "difficulty": 3,
+    "emojis": "🤐✍️🤰👶",
+    "options": [
+      "Zacharias verstummt (Geburt Johannes)",
+      "Maria Verkündigung",
+      "Josephs Traum",
+      "Schöpfung"
+    ],
+    "info": "Weil der Priester Zacharias dem Engel nicht glaubte, dass er im hohen Alter Sohn bekommen würde, blieb er stumm bis zur Geburt von Johannes dem Täufer.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas1"
+  },
+  {
+    "id": 37,
+    "category": "Gleichnisse",
+    "difficulty": 1,
+    "emojis": "🐷💍🏃‍♂️🏡",
+    "options": [
+      "Der verlorene Sohn",
+      "Der barmherzige Samariter",
+      "Noah",
+      "Joseph"
+    ],
+    "info": "Ein Sohn verprasste sein Erbe und landete bei den Schweinen. Als er reuig zurückkehrte, rannte ihm der Vater entgegen und feierte ein Fest.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas15"
+  },
+  {
+    "id": 38,
+    "category": "Gleichnisse",
+    "difficulty": 1,
+    "emojis": "🐑🔍🎉1️⃣",
+    "options": [
+      "Das verlorene Schaf",
+      "Der gute Hirte",
+      "Lamm Gottes",
+      "Opferung Isaaks"
+    ],
+    "info": "Ein Hirte lässt 99 Schafe zurück, um das eine verlorene zu suchen. So freut sich der Himmel mehr über einen Sünder, der Buße tut.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas15"
+  },
+  {
+    "id": 39,
+    "category": "Gleichnisse",
+    "difficulty": 2,
+    "emojis": "🏗️🪨🏗️🏖️",
+    "options": [
+      "Haus auf Fels und Sand",
+      "Turmbau zu Babel",
+      "Tempelbau",
+      "Jericho"
+    ],
+    "info": "Wer Jesu Worte hört und tut, baut sein Haus auf Fels. Wer nur hört, baut auf Sand – im Sturm wird dieses Haus einstürzen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus7"
+  },
+  {
+    "id": 40,
+    "category": "Gleichnisse",
+    "difficulty": 2,
+    "emojis": "🌱🐦☀️🌵",
+    "options": [
+      "Vierfaches Ackerfeld",
+      "Senfkorn",
+      "Unkraut im Weizen",
+      "Schöpfung"
+    ],
+    "info": "Der Sämann sät das Wort Gottes. Manche Herzen sind hart wie der Weg, andere beständig wie guter Boden, der Frucht bringt.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus4"
+  },
+  {
+    "id": 41,
+    "category": "Gleichnisse",
+    "difficulty": 3,
+    "emojis": "💡🧺🚫👀",
+    "options": [
+      "Licht unter dem Scheffel",
+      "Das verlorene Geldstück",
+      "Die zehn Jungfrauen",
+      "Salz der Erde"
+    ],
+    "info": "Niemand zündet ein Licht an und stellt es unter einen Scheffel. Christen sollen ihr Licht leuchten lassen, damit andere Gott preisen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus5"
+  },
+  {
+    "id": 42,
+    "category": "Gleichnisse",
+    "difficulty": 3,
+    "emojis": "👰‍♀️🕯️😴🚪",
+    "options": [
+      "Die zehn Jungfrauen",
+      "Hochzeit zu Kana",
+      "Die Ehebrecherin",
+      "Pfingsten"
+    ],
+    "info": "Zehn Jungfrauen warteten auf den Bräutigam. Fünf waren klug und nahmen Öl mit, fünf waren töricht. Als er kam, war die Tür für die Törichten verschlossen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus25"
+  },
+  {
+    "id": 43,
+    "category": "Personen",
+    "difficulty": 1,
+    "emojis": "🤴🎸🐑🗡️",
+    "options": [
+      "David",
+      "Salomo",
+      "Saul",
+      "Mose"
+    ],
+    "info": "David war Hirte, Musiker, Krieger und König. Er schrieb viele Psalmen und wird als 'Mann nach dem Herzen Gottes' bezeichnet.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Samuel16"
+  },
+  {
+    "id": 44,
+    "category": "Personen",
+    "difficulty": 1,
+    "emojis": "🦁💪🍯💇‍♂️",
+    "options": [
+      "Samson",
+      "Daniel",
+      "David",
+      "Goliath"
+    ],
+    "info": "Samson war ein Richter mit gewaltiger Kraft. Er tötete einen Löwen mit bloßen Händen und aß Honig aus dem Kadaver.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Richter14"
+  },
+  {
+    "id": 45,
+    "category": "Personen",
+    "difficulty": 2,
+    "emojis": "👑💍👸🇮🇱",
+    "options": [
+      "Ester",
+      "Ruth",
+      "Maria",
+      "Batseba"
+    ],
+    "info": "Königin Ester riskierte ihr Leben, um vor den persischen König zu treten. Damit rettete sie ihr jüdisches Volk vor der Vernichtung durch Haman.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Esther4"
+  },
+  {
+    "id": 46,
+    "category": "Personen",
+    "difficulty": 2,
+    "emojis": "🧱😭🍷🤴",
+    "options": [
+      "Nehemia",
+      "Esra",
+      "Jeremia",
+      "Daniel"
+    ],
+    "info": "Nehemia war Mundschenk des Königs und weinte über die zerstörten Mauern Jerusalems. Er kehrte zurück und baute die Stadtmauer in 52 Tagen wieder auf.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Nehemia2"
+  },
+  {
+    "id": 47,
+    "category": "Verse",
+    "difficulty": 1,
+    "emojis": "🐑🌿🥣🍷",
+    "options": [
+      "Der Herr ist mein Hirte (Ps 23)",
+      "Das Abendmahl",
+      "Speisung der 5000",
+      "Lamm Gottes"
+    ],
+    "info": "'Der Herr ist mein Hirte, mir wird nichts mangeln...' (Psalm 23) \n\nBedeutung: Dieser Psalm drückt vollkommenes Vertrauen in Gottes Versorgung und Führung aus. Egal wie dunkel das Tal ist, Gott ist bei uns und gibt uns, was wir brauchen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Psalm23"
+  },
+  {
+    "id": 48,
+    "category": "Verse",
+    "difficulty": 1,
+    "emojis": "❤️🎹🥁🔔",
+    "options": [
+      "Die Liebe (1. Kor 13)",
+      "Lobpreis im Tempel",
+      "Davids Harfenspiel",
+      "Posaunen von Jericho"
+    ],
+    "info": "'...hätte die Liebe nicht, so wäre ich ein tönendes Erz...' (1. Kor 13) \n\nBedeutung: Ohne Liebe ist alles Handeln wertlos, egal wie talentiert oder spirituell man ist. Liebe ist das wichtigste Kennzeichen eines Christen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Korinther13"
+  },
+  {
+    "id": 49,
+    "category": "Verse",
+    "difficulty": 1,
+    "emojis": "💡🌎⛰️🏠",
+    "options": [
+      "Ihr seid das Licht der Welt",
+      "Bergpredigt",
+      "Haus auf dem Fels",
+      "Schöpfung"
+    ],
+    "info": "'Ihr seid das Licht der Welt...' (Matthäus 5,14) \n\nBedeutung: Als Christen sollen wir Gottes Wesen in der Welt widerspiegeln. Unsere guten Taten sollen sichtbar sein und anderen Orientierung geben, wie eine Stadt auf einem Berg.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus5"
+  },
+  {
+    "id": 50,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "🦶💡🛣️🔦",
+    "options": [
+      "Dein Wort ist meines Fußes Leuchte",
+      "Licht der Welt",
+      "Emmaus Jünger",
+      "Paulus Reise"
+    ],
+    "info": "'Dein Wort ist meines Fußes Leuchte...' (Psalm 119,105) \n\nBedeutung: Gottes Wort gibt Orientierung für den nächsten Schritt im Leben. Es beleuchtet vielleicht nicht den ganzen Weg auf einmal, aber genug, um nicht zu stolpern.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Psalm119"
+  },
+  {
+    "id": 51,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "🍎❤️☮️😌",
+    "options": [
+      "Die Früchte des Geistes",
+      "Adam und Eva",
+      "Hohelied der Liebe",
+      "Die Bergpredigt"
+    ],
+    "info": "'Die Frucht des Geistes aber ist Liebe, Freude, Friede...' (Galater 5,22) \n\nBedeutung: Das sind keine Regeln, die wir abarbeiten, sondern Eigenschaften, die der Heilige Geist in uns wachsen lässt, wenn wir mit Gott leben.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Galater5"
+  },
+  {
+    "id": 52,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "🐫🪡👁️🚫",
+    "options": [
+      "Eher geht ein Kamel durch ein Nadelöhr",
+      "Die drei Weisen",
+      "Einzug in Jerusalem",
+      "Reicher Jüngling"
+    ],
+    "info": "'Es ist leichter, dass ein Kamel durch ein Nadelöhr gehe...' (Markus 10,25) \n\nBedeutung: Reichtum kann ein Hindernis sein, weil man leicht mehr auf sein Geld vertraut als auf Gott. Errettung ist menschlich unmöglich, aber für Gott ist alles möglich.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus10"
+  },
+  {
+    "id": 53,
+    "category": "Verse",
+    "difficulty": 3,
+    "emojis": "🦅🆙🏃‍♂️🚫",
+    "options": [
+      "Auffahren mit Flügeln wie Adler",
+      "Arche Noah",
+      "Elia und die Raben",
+      "Auszug aus Ägypten"
+    ],
+    "info": "'Die auf den HERRN harren, kriegen neue Kraft...' (Jesaja 40,31) \n\nBedeutung: Wer geduldig auf Gott vertraut, bekommt übernatürliche Kraft. Gott hilft uns, über schwierige Umstände hinwegzuschweben wie ein Adler, statt aufzugeben.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Jesaja40"
+  },
+  {
+    "id": 54,
+    "category": "Verse",
+    "difficulty": 3,
+    "emojis": "⚔️🛡️⛑️👟",
+    "options": [
+      "Die Waffenrüstung Gottes",
+      "David und Goliath",
+      "Fall von Jericho",
+      "Soldaten am Kreuz"
+    ],
+    "info": "'Zieht an die Waffenrüstung Gottes...' (Epheser 6) \n\nBedeutung: Wir stehen in einem geistlichen Kampf. Wahrheit, Gerechtigkeit, Frieden, Glaube und Gottes Wort sind unsere Werkzeuge, um gegen das Böse zu bestehen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Epheser6"
+  },
+  {
+    "id": 55,
+    "category": "Verse",
+    "difficulty": 3,
+    "emojis": "🦊🕳️🐦☁️",
+    "options": [
+      "Füchse haben Gruben...",
+      "Schöpfung",
+      "Noah",
+      "Elia"
+    ],
+    "info": "'Der Menschensohn hat nichts, wo er sein Haupt hinlege.' (Matthäus 8,20) \n\nBedeutung: Jesus zu folgen bedeutet oft, auf Sicherheit und Komfort zu verzichten. Er selbst lebte ohne festes Zuhause, ganz abhängig von Gottes Versorgung.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus8"
+  },
+  {
+    "id": 56,
+    "category": "Verse",
+    "difficulty": 3,
+    "emojis": "👀🦷👀🦷",
+    "options": [
+      "Auge um Auge",
+      "Daniel in der Grube",
+      "Schöpfung",
+      "Verlorener Sohn"
+    ],
+    "info": "'Ich aber sage euch, dass ihr nicht widerstreben sollt dem Übel.' (Matthäus 5,38) \n\nBedeutung: Jesus hebt das alte Prinzip der Vergeltung auf. Christen sollen Böses nicht mit Bösem vergelten, sondern mit radikaler Liebe und Vergebung reagieren.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus5"
+  },
+  {
+    "id": 57,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🔪👦🐑🚫",
+    "options": [
+      "Abrahams Opferung",
+      "Passah",
+      "Kain und Abel",
+      "Priesterdienst"
+    ],
+    "info": "Gott stellte Abrahams Glauben auf die Probe. Als er bereit war, zu gehorchen, hielt Gott ihn zurück und segnete ihn reich.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose22"
+  },
+  {
+    "id": 58,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🌍🌙☀️⭐",
+    "options": [
+      "Die Schöpfung",
+      "Josephs Traum",
+      "Jüngstes Gericht",
+      "Himmel"
+    ],
+    "info": "Am Anfang schuf Gott Himmel und Erde. Er sprach, und es wurde Licht, Land, Meer und alle Lebewesen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose1"
+  },
+  {
+    "id": 59,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "💑🌾👣🛌",
+    "options": [
+      "Ruth und Boas",
+      "Adam und Eva",
+      "Hohelied",
+      "Esther"
+    ],
+    "info": "Ruth blieb ihrer Schwiegermutter treu. Auf dem Feld von Boas fand sie Gunst, und wurde so zur Urgroßmutter von König David.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Ruth2"
+  },
+  {
+    "id": 60,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "🍯🦁❓🎁",
+    "options": [
+      "Samsons Rätsel",
+      "Daniel",
+      "Johannes der Täufer",
+      "Davids Salbung"
+    ],
+    "info": "Samson stellte den Philistern ein Rätsel über den Löwen, den er getötet hatte: 'Vom Fresser kam Fraß, vom Starken kam Süßes'.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Richter14"
+  },
+  {
+    "id": 61,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🎺🏺🔥🗡️",
+    "options": [
+      "Gideons 300",
+      "Fall von Jericho",
+      "Elia auf dem Karmel",
+      "Tempelzerstörung"
+    ],
+    "info": "Gideon besiegte mit nur 300 Mann eine riesige Armee, indem sie Krüge zerschlugen, Posaunen bliesen und Fackeln schwenkten, um Verwirrung zu stiften.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Richter7"
+  },
+  {
+    "id": 62,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "👴👵👶🕍",
+    "options": [
+      "Simeon und Hanna (Darstellung Jesu)",
+      "Abraham und Sara",
+      "Geburt Johannes",
+      "Eltern Jesu"
+    ],
+    "info": "Simeon und Hanna warteten im Tempel auf den Messias. Als sie das Jesuskind sahen, priesen sie Gott, denn ihre Augen hatten das Heil gesehen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas2"
+  },
+  {
+    "id": 63,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🎣🐟💰👄",
+    "options": [
+      "Die Tempelsteuer im Fischmaul",
+      "Jona",
+      "Sturmstillung",
+      "Petrus Berufung"
+    ],
+    "info": "Um keinen Anstoß zu erregen, wies Jesus Petrus an, zu fischen. Im Maul des ersten Fisches fand Petrus eine Münze für die Tempelsteuer.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus17"
+  },
+  {
+    "id": 64,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "👨‍🦯👀✨🏞️",
+    "options": [
+      "Heilung des Blindgeborenen",
+      "Paulus Bekehrung",
+      "Bartimäus",
+      "Verklärung"
+    ],
+    "info": "Jesus machte einen Teig aus Erde und Speichel und strich ihn auf die Augen eines Blinden. Als dieser sich im Teich Siloah wusch, konnte er sehen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes9"
+  },
+  {
+    "id": 65,
+    "category": "Neues Testament",
+    "difficulty": 3,
+    "emojis": "📄🧛‍♂️🛑🚐",
+    "options": [
+      "Der Kämmerer aus Äthiopien",
+      "Der barmherzige Samariter",
+      "Paulus Reise",
+      "Einzug Jerusalem"
+    ],
+    "info": "Philippus wurde zu einem Wagen geführt, in dem ein Kämmerer Jesaja las. Er erklärte ihm das Evangelium, und der Kämmerer ließ sich taufen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte8"
+  },
+  {
+    "id": 66,
+    "category": "Personen",
+    "difficulty": 2,
+    "emojis": "🩸🚑👩🙏",
+    "options": [
+      "Die blutflüssige Frau",
+      "Maria Magdalena",
+      "Martha",
+      "Lydia"
+    ],
+    "info": "Eine Frau litt 12 Jahre an Blutfluss. Sie berührte im Gedränge den Saum von Jesu Gewand und wurde sofort gesund durch ihren Glauben.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus5"
+  },
+  {
+    "id": 67,
+    "category": "Personen",
+    "difficulty": 1,
+    "emojis": "🌳🧔💰⏬",
+    "options": [
+      "Zachäus",
+      "Adam",
+      "Nathanael",
+      "Judas"
+    ],
+    "info": "Zachäus war klein und reich. Er kletterte auf einen Baum, um Jesus zu sehen. Jesus rief ihn herunter und ging in sein Haus.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas19"
+  },
+  {
+    "id": 68,
+    "category": "Personen",
+    "difficulty": 2,
+    "emojis": "⛺🧔🔨🔪",
+    "options": [
+      "Jael und Sisera",
+      "Abraham",
+      "Bau der Stiftshütte",
+      "Jesus als Zimmermann"
+    ],
+    "info": "Jael tötete den feindlichen Heerführer Sisera, als dieser in ihrem Zelt schlief, und erfüllte so Deboras Prophezeiung.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Richter4"
+  },
+  {
+    "id": 69,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🔟📜⛰️⚡",
+    "options": [
+      "Die 10 Gebote",
+      "Bergpredigt",
+      "Gesetzgebung Sinai",
+      "Goldenes Kalb"
+    ],
+    "info": "Mose erhielt auf dem Berg Sinai zwei Steintafeln mit den zehn Geboten, die Gottes Willen für das Volk Israel zusammenfassten.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Mose20"
+  },
+  {
+    "id": 70,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🐂✨💃😡",
+    "options": [
+      "Das goldene Kalb",
+      "Opferfest",
+      "Baal Kult",
+      "Tempelweihe"
+    ],
+    "info": "Während Mose auf dem Berg war, baute Aaron ein goldenes Kalb. Das Volk tanzte darum, was Mose bei seiner Rückkehr zornig machte.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Mose32"
+  },
+  {
+    "id": 71,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🍇👀🏰🧱",
+    "options": [
+      "Kundschafter in Kanaan",
+      "Weinberg Nabots",
+      "Jericho",
+      "Landnahme"
+    ],
+    "info": "Zwölf Kundschafter erkundeten das verheißene Land. Zehn warnten vor Riesen, aber Josua und Kaleb vertrauten auf Gottes Sieg.",
+    "bibleLink": "https://www.bibelserver.com/HFA/4.Mose13"
+  },
+  {
+    "id": 72,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "🐝🌴👩‍⚖️⚔️",
+    "options": [
+      "Richterin Debora",
+      "Jael",
+      "Rut",
+      "Esther"
+    ],
+    "info": "Debora war eine Prophetin und Richterin in Israel. Sie zog mit Barak in den Kampf und prophezeite den Sieg über Sisera.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Richter4"
+  },
+  {
+    "id": 73,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🐑💧🌃🌤️",
+    "options": [
+      "Gideons Vlies",
+      "Jakobs Traum",
+      "Schöpfung",
+      "Wetterwunder"
+    ],
+    "info": "Gideon bat Gott um ein Zeichen: Einmal sollte nur das Vlies nass sein, einmal nur der Boden. Gott gewährte beides.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Richter6"
+  },
+  {
+    "id": 74,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🛏️👂👦🕍",
+    "options": [
+      "Samuels Berufung",
+      "David",
+      "Eli",
+      "Josia"
+    ],
+    "info": "Der kleine Samuel hörte nachts eine Stimme. Priester Eli erklärte ihm, dass Gott ihn rief. Samuel antwortete: 'Rede, dein Diener hört.'",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Samuel3"
+  },
+  {
+    "id": 75,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "👶⚔️🤱🤱",
+    "options": [
+      "Salomos Urteil",
+      "Mose im Korb",
+      "Geburt Jesu",
+      "Rahels Kinder"
+    ],
+    "info": "Zwei Frauen stritten um ein Baby. Salomo schlug vor, es zu teilen. Die wahre Mutter verzichtete lieber, um das Kind zu retten.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Koenige3"
+  },
+  {
+    "id": 76,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "👸🐫🎁👑",
+    "options": [
+      "Königin von Saba",
+      "Ester",
+      "Rebekka",
+      "Batseba"
+    ],
+    "info": "Die Königin von Saba kam mit Reichtümern, um Salomos Weisheit zu testen. Sie war überwältigt von dem, was sie sah und hörte.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Koenige10"
+  },
+  {
+    "id": 77,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🛁👀🤴💔",
+    "options": [
+      "David und Batseba",
+      "Samson und Delila",
+      "Ahab und Isebel",
+      "Salomo und Frauen"
+    ],
+    "info": "König David sah Batseba beim Baden, begehrte sie und beging Ehebruch. Um es zu vertuschen, schickte er ihren Mann in den Tod.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Samuel11"
+  },
+  {
+    "id": 78,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🛁🌊🤒🛀",
+    "options": [
+      "Naamans Heilung",
+      "Teich Betesda",
+      "Taufe Jesu",
+      "Sintflut"
+    ],
+    "info": "Der Feldhauptmann Naaman hatte Aussatz. Elisa schickte ihn in den Jordan, um sich siebenmal zu waschen, und er wurde gesund.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Koenige5"
+  },
+  {
+    "id": 79,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "👑📜😭🕍",
+    "options": [
+      "Josia findet das Gesetzbuch",
+      "Esra",
+      "Nehemia",
+      "David"
+    ],
+    "info": "Der junge König Josia ließ den Tempel renovieren. Dabei fand man das Buch des Gesetzes. Josia zerriss seine Kleider und tat Buße.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Koenige22"
+  },
+  {
+    "id": 80,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "✍️✋🧱🧱",
+    "options": [
+      "Belsazars Fest",
+      "Daniel",
+      "Nebukadnezar",
+      "10 Gebote"
+    ],
+    "info": "König Belsazar entweihte Tempelgefäße. Eine Geisterhand schrieb 'Mene Mene Tekel' an die Wand: Sein Reich war verwogen und geteilt.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Daniel5"
+  },
+  {
+    "id": 81,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🔥🚶‍♂️🚶‍♂️🚶‍♂️👼",
+    "options": [
+      "Drei Männer im Feuerofen",
+      "Brennender Dornbusch",
+      "Sodom",
+      "Opferung Isaaks"
+    ],
+    "info": "Schadrach, Meschach und Abed-Nego weigerten sich, das Standbild anzubeten. Im Feuerofen beschützte sie ein Engel.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Daniel3"
+  },
+  {
+    "id": 82,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🌴🌞🐛😠",
+    "options": [
+      "Jona und die Rizinusstaude",
+      "Adam und Eva",
+      "Elia",
+      "Mose"
+    ],
+    "info": "Jona freute sich über den Schatten einer Pflanze. Als sie verdorrte, war er zornig. Gott nutzte dies, um ihm Barmherzigkeit zu erklären.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Jona4"
+  },
+  {
+    "id": 83,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "🕊️💩🍞🌧️",
+    "options": [
+      "Elia am Bach Krit",
+      "Sintflut",
+      "Manna",
+      "Speisung der 5000"
+    ],
+    "info": "Während der Dürre versorgten Raben den Propheten Elia am Bach Krit morgens und abends mit Brot und Fleisch.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Koenige17"
+  },
+  {
+    "id": 84,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🧔🍷🍷🍇🤢",
+    "options": [
+      "Noahs Trunkenheit",
+      "Hochzeit Kana",
+      "Abendmahl",
+      "Weinberg Nabot"
+    ],
+    "info": "Nach der Sintflut pflanzte Noah einen Weinberg und betrank sich. Sein Sohn Ham sah ihn entblößt, was zu einem Fluch führte.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose9"
+  },
+  {
+    "id": 85,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "👬🏹🤝😭",
+    "options": [
+      "David und Jonathan",
+      "Kain und Abel",
+      "Jakob und Esau",
+      "Paulus und Barnabas"
+    ],
+    "info": "Jonathan, der Sohn von König Saul, schloss einen tiefen Freundschaftsbund mit David und schützte ihn vor seinem Vater.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Samuel20"
+  },
+  {
+    "id": 86,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🍲🧑‍🍳👀🤥",
+    "options": [
+      "Jakob täuscht Isaak",
+      "Esau und Linsen",
+      "Joseph",
+      "Elia"
+    ],
+    "info": "Jakob verkleidete sich mit Fellen, um wie sein Bruder Esau zu wirken, und erschlich sich so den Erstgeburtssegen seines blinden Vaters.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose27"
+  },
+  {
+    "id": 87,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "🦅🥩🍲🤴",
+    "options": [
+      "Daniel und die Speisegebote",
+      "Petrus Vision",
+      "Elia",
+      "Mannam"
+    ],
+    "info": "Daniel und seine Freunde weigerten sich, die unreinen Speisen des Königs zu essen. Sie blieben treu und waren gesünder als alle anderen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Daniel1"
+  },
+  {
+    "id": 88,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "👄🔥👼🧼",
+    "options": [
+      "Jesajas Berufung",
+      "Pfingsten",
+      "Brennender Dornbusch",
+      "Elia"
+    ],
+    "info": "Ein Engel berührte Jesajas Lippen mit einer glühenden Kohle vom Altar, um seine Schuld zu sühnen, bevor er als Prophet ausgesandt wurde.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Jesaja6"
+  },
+  {
+    "id": 89,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🤕🐍🥉🎋",
+    "options": [
+      "Die eiserne Schlange",
+      "Garten Eden",
+      "Stab des Aaron",
+      "Pharaos Zauberer"
+    ],
+    "info": "Als das Volk von Schlangen gebissen wurde, ließ Mose eine bronzene Schlange aufrichten. Wer sie ansah, blieb am Leben.",
+    "bibleLink": "https://www.bibelserver.com/HFA/4.Mose21"
+  },
+  {
+    "id": 90,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🗡️👂🐴😱",
+    "options": [
+      "Bileam und die Eselin",
+      "Einzug Jerusalem",
+      "Flucht nach Ägypten",
+      "Absalom"
+    ],
+    "info": "Der Prophet Bileam schlug seine Eselin, weil sie bockte. Da gab Gott ihr die Sprache, um ihn vor einem Engel mit Schwert zu warnen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/4.Mose22"
+  },
+  {
+    "id": 91,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "💇‍♂️🌳😵🗡️",
+    "options": [
+      "Absaloms Tod",
+      "Judas",
+      "Samsons Tod",
+      "Baum der Erkenntnis"
+    ],
+    "info": "Davids Sohn Absalom blieb mit seinen langen Haaren an einer Eiche hängen, als er auf einem Maultier ritt. Dort wurde er getötet.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Samuel18"
+  },
+  {
+    "id": 92,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "🌾🛌💤👟",
+    "options": [
+      "Boas und Rut",
+      "Jakob",
+      "Ismael",
+      "Joseph"
+    ],
+    "info": "Rut legte sich nachts zu Boas' Füßen auf die Tenne, um ihn als 'Löser' für ihre Familie zu bitten.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Ruth3"
+  },
+  {
+    "id": 93,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🧔🦁🧔🐻",
+    "options": [
+      "David als Hirte",
+      "Daniel",
+      "Samson",
+      "Mose"
+    ],
+    "info": "Bevor David Goliath besiegte, hatte er als Hirte bereits Löwen und Bären getötet, um seine Schafherde zu schützen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Samuel17"
+  },
+  {
+    "id": 94,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "😈🍞🏰⛰️",
+    "options": [
+      "Versuchung Jesu",
+      "Speisung der 5000",
+      "Abendmahl",
+      "Verklärung"
+    ],
+    "info": "Der Teufel versuchte Jesus in der Wüste dreimal: Steine zu Brot zu machen, sich vom Tempel zu stürzen und ihn anzubeten.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus4"
+  },
+  {
+    "id": 95,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "🐟🕸️🛶👥",
+    "options": [
+      "Berufung der Jünger",
+      "Jona",
+      "Paulus Reise",
+      "Sturmstillung"
+    ],
+    "info": "Jesus rief Petrus, Andreas, Jakobus und Johannes beim Fischen: 'Kommt, ich will euch zu Menschenfischern machen.'",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus1"
+  },
+  {
+    "id": 96,
+    "category": "Neues Testament",
+    "difficulty": 3,
+    "emojis": "⛰️😊😢🕊️",
+    "options": [
+      "Seligpreisungen",
+      "10 Gebote",
+      "Himmelfahrt",
+      "Pfingsten"
+    ],
+    "info": "In der Bergpredigt pries Jesus die Armen, Trauernden und Sanftmütigen selig, denn ihnen gehört das Himmelreich.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus5"
+  },
+  {
+    "id": 97,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "👮‍♂️🏠🤕🗣️",
+    "options": [
+      "Hauptmann von Kapernaum",
+      "Kornelius",
+      "Zachäus",
+      "Jairus"
+    ],
+    "info": "Ein römischer Hauptmann glaubte, dass Jesus nur ein Wort sprechen müsse, um seinen Diener zu heilen. Jesus lobte diesen großen Glauben.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus8"
+  },
+  {
+    "id": 98,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "👧🛌🙏🥪",
+    "options": [
+      "Auferweckung der Tochter des Jairus",
+      "Lazarus",
+      "Witwe von Nain",
+      "Tabita"
+    ],
+    "info": "Alle lachten Jesus aus, als er sagte: 'Das Kind ist nicht gestorben, es schläft nur.' Er nahm ihre Hand und sie stand auf.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus5"
+  },
+  {
+    "id": 99,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "😴🌊🛶😱",
+    "options": [
+      "Sturmstillung",
+      "Jona",
+      "Paulus Schiffbruch",
+      "Jesus auf dem Wasser"
+    ],
+    "info": "Jesus schlief hinten im Boot auf einem Kissen, während der Sturm tobte. Er stand auf, bedrohte den Wind, und es wurde ganz still.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus4"
+  },
+  {
+    "id": 100,
+    "category": "Neues Testament",
+    "difficulty": 3,
+    "emojis": "👻🐖🌊📉",
+    "options": [
+      "Die Besessenen von Gerasa",
+      "Verlorener Sohn",
+      "Jona",
+      "Daniel"
+    ],
+    "info": "Jesus trieb Dämonen ('Legion') aus einem Mann aus. Sie fuhren in eine Herde von 2000 Säuen, die sich ins Meer stürzte.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus5"
+  },
+  {
+    "id": 101,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "💃🍽️🤴🗡️",
+    "options": [
+      "Enthauptung Johannes d. Täufers",
+      "Salome",
+      "Ester",
+      "Jael"
+    ],
+    "info": "Die Tochter der Herodias tanzte für Herodes und wünschte sich auf Rat ihrer Mutter den Kopf von Johannes dem Täufer auf einem Tablett.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus6"
+  },
+  {
+    "id": 102,
+    "category": "Neues Testament",
+    "difficulty": 3,
+    "emojis": "⛰️✨⛺👻",
+    "options": [
+      "Verklärung Jesu",
+      "Himmelfahrt",
+      "Mose am Sinai",
+      "Auferstehung"
+    ],
+    "info": "Auf einem hohen Berg leuchtete Jesu Gesicht wie die Sonne. Mose und Elia erschienen und redeten mit ihm.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus17"
+  },
+  {
+    "id": 103,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "🧹🥘👂🧘‍♀️",
+    "options": [
+      "Maria und Martha",
+      "Rut und Noomi",
+      "Elisabeth und Maria",
+      "Lydia"
+    ],
+    "info": "Martha machte sich viel Sorgen um die Bewirtung, während Maria Jesus zuhörte. Jesus sagte, Maria habe das gute Teil erwählt.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas10"
+  },
+  {
+    "id": 104,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "⚰️🪨🚶‍♂️🤕",
+    "options": [
+      "Auferweckung des Lazarus",
+      "Jairus Tochter",
+      "Jüngling von Nain",
+      "Auferstehung Jesu"
+    ],
+    "info": "Lazarus war schon vier Tage tot. Jesus rief: 'Lazarus, komm heraus!', und er kam gebunden in Grabtüchern heraus.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes11"
+  },
+  {
+    "id": 105,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🦶💧🧖‍♂️👔",
+    "options": [
+      "Fußwaschung",
+      "Taufe",
+      "Salbung",
+      "Heilung am Teich"
+    ],
+    "info": "Vor dem Passahfest wusch Jesus seinen Jüngern die Füße, um ihnen ein Beispiel der Demut und des Dienens zu geben.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes13"
+  },
+  {
+    "id": 106,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🌳🙏😴😰",
+    "options": [
+      "Gethsemane",
+      "Verklärung",
+      "Garten Eden",
+      "Wüste"
+    ],
+    "info": "Jesus betete in Todesangst: 'Vater, wenn es möglich ist, gehe dieser Kelch an mir vorüber.' Seine Jünger schliefen ein.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus26"
+  },
+  {
+    "id": 107,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🏛️🤴🚿🤷‍♂️",
+    "options": [
+      "Jesus vor Pilatus",
+      "Paulus vor Festus",
+      "Stephanus",
+      "Daniel"
+    ],
+    "info": "Pilatus fand keine Schuld an Jesus, aber das Volk forderte die Kreuzigung. Er wusch seine Hände in Unschuld.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus27"
+  },
+  {
+    "id": 108,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "✝️🚶‍♂️🏋️‍♂️🌍",
+    "options": [
+      "Simon von Kyrene",
+      "Joseph von Arimathäa",
+      "Petrus",
+      "Johannes"
+    ],
+    "info": "Die römischen Soldaten zwangen einen Mann namens Simon von Kyrene, das Kreuz für Jesus zu tragen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas23"
+  },
+  {
+    "id": 109,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "🛑🏃‍♀️👼🌅",
+    "options": [
+      "Frauen am leeren Grab",
+      "Himmelfahrt",
+      "Maria Verkündigung",
+      "Pfingsten"
+    ],
+    "info": "Maria Magdalena und andere Frauen kamen früh zum Grab. Ein Engel sagte ihnen: 'Er ist nicht hier, er ist auferstanden.'",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus28"
+  },
+  {
+    "id": 110,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🚶‍♂️🚶‍♂️🍞👀",
+    "options": [
+      "Emmausjünger",
+      "Aussendung der 70",
+      "Wanderung durch die Wüste",
+      "Missionsreise"
+    ],
+    "info": "Zwei Jünger erkannten den auferstandenen Jesus erst, als er mit ihnen das Brot brach. Da verschwand er vor ihren Augen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas24"
+  },
+  {
+    "id": 111,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🪨🤴😇👀",
+    "options": [
+      "Steinigung des Stephanus",
+      "Paulus in Lystra",
+      "Jeremia",
+      "Nabots Weinberg"
+    ],
+    "info": "Stephanus sah den Himmel offen, während er gesteinigt wurde. Er betete: 'Herr, rechne ihnen diese Sünde nicht an!'",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte7"
+  },
+  {
+    "id": 112,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🚔⛓️👼🔦",
+    "options": [
+      "Petrus Befreiung aus dem Gefängnis",
+      "Paulus und Silas",
+      "Joseph im Kerker",
+      "Johannes auf Patmos"
+    ],
+    "info": "Ein Engel weckte Petrus, die Ketten fielen ab, und die eisernen Tore öffneten sich von selbst.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte12"
+  },
+  {
+    "id": 113,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "🎶🏚️⛓️🔓",
+    "options": [
+      "Paulus und Silas",
+      "Jericho",
+      "Petrus Befreiung",
+      "David Harfe"
+    ],
+    "info": "Um Mitternacht lobten Paulus und Silas Gott im Gefängnis. Ein Erdbeben öffnete alle Türen und löste die Fesseln.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte16"
+  },
+  {
+    "id": 114,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "💰😔🏃‍♂️🔙",
+    "options": [
+      "Der reiche Jüngling",
+      "Verlorener Sohn",
+      "Zachäus",
+      "Judas"
+    ],
+    "info": "Jesus sagte: 'Verkaufe alles und folge mir nach.' Der junge Mann ging traurig weg, denn er hatte viele Güter.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus10"
+  },
+  {
+    "id": 115,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "👵🪙🪙⚖️",
+    "options": [
+      "Das Scherflein der Witwe",
+      "Verlorener Groschen",
+      "Tempelsteuer",
+      "Talente"
+    ],
+    "info": "Eine arme Witwe legte zwei kleine Münzen in den Opferkasten. Jesus sagte, sie habe mehr gegeben als alle Reichen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus12"
+  },
+  {
+    "id": 116,
+    "category": "Neues Testament",
+    "difficulty": 1,
+    "emojis": "🛑👶🤗👑",
+    "options": [
+      "Jesus segnet die Kinder",
+      "Kindermord",
+      "Samuel",
+      "Mose"
+    ],
+    "info": "Die Jünger wehrten die Kinder ab, aber Jesus sagte: 'Lasset die Kinder zu mir kommen, denn ihnen gehört das Reich Gottes.'",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus10"
+  },
+  {
+    "id": 117,
+    "category": "Neues Testament",
+    "difficulty": 3,
+    "emojis": "🌑👨‍🏫👶❓",
+    "options": [
+      "Nikodemus (Wiedergeburt)",
+      "Zachäus",
+      "Gamaliel",
+      "Joseph von Arimathäa"
+    ],
+    "info": "Nikodemus kam nachts zu Jesus. Jesus erklärte ihm, dass man 'von neuem geboren' werden muss, um das Reich Gottes zu sehen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes3"
+  },
+  {
+    "id": 118,
+    "category": "Neues Testament",
+    "difficulty": 2,
+    "emojis": "👵🧛‍♀️📝👗",
+    "options": [
+      "Tabita (Dorkas)",
+      "Lydia",
+      "Priscilla",
+      "Maria"
+    ],
+    "info": "Tabita tat viel Gutes und nähte Kleider für Witwen. Als sie starb, betete Petrus, und sie wurde wieder lebendig.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte9"
+  },
+  {
+    "id": 119,
+    "category": "Gleichnisse",
+    "difficulty": 2,
+    "emojis": "🧹🕯️🪙🎉",
+    "options": [
+      "Der verlorene Groschen",
+      "Die zehn Jungfrauen",
+      "Der verborgene Schatz",
+      "Scherflein der Witwe"
+    ],
+    "info": "Eine Frau zündet ein Licht an und fegt das ganze Haus, bis sie die eine verlorene Münze findet, und freut sich mit den Nachbarn.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas15"
+  },
+  {
+    "id": 120,
+    "category": "Gleichnisse",
+    "difficulty": 2,
+    "emojis": "💰📈📉🏝️",
+    "options": [
+      "Die anvertrauten Talente",
+      "Der ungetreue Verwalter",
+      "Arbeiter im Weinberg",
+      "Schatz im Acker"
+    ],
+    "info": "Ein Herr verreiste und gab seinen Dienern Geld. Zwei wirtschafteten gut, aber einer vergrub sein Talent aus Angst.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus25"
+  },
+  {
+    "id": 121,
+    "category": "Gleichnisse",
+    "difficulty": 2,
+    "emojis": "🌾🌿🔥🍞",
+    "options": [
+      "Unkraut unter dem Weizen",
+      "Sämann",
+      "Feigenbaum",
+      "Senfkorn"
+    ],
+    "info": "Ein Feind säte Unkraut mitten in den Weizen. Der Herr ließ beides wachsen bis zur Ernte, wo das Unkraut verbrannt wurde.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus13"
+  },
+  {
+    "id": 122,
+    "category": "Gleichnisse",
+    "difficulty": 2,
+    "emojis": "🏗️🌾🚜💀",
+    "options": [
+      "Der reiche Kornbauer",
+      "Turmbau",
+      "Haus auf Sand",
+      "Verlorener Sohn"
+    ],
+    "info": "Ein Reicher baute größere Scheunen für seine Ernte und dachte, er hätte ausgesorgt. Doch Gott sprach: 'Du Narr! Diese Nacht wird deine Seele gefordert.'",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas12"
+  },
+  {
+    "id": 123,
+    "category": "Gleichnisse",
+    "difficulty": 2,
+    "emojis": "🙏🛐😤😇",
+    "options": [
+      "Pharisäer und Zöllner",
+      "Barmherziger Samariter",
+      "Richter und Witwe",
+      "Jesus im Tempel"
+    ],
+    "info": "Der Pharisäer dankte Gott, dass er so toll ist. Der Zöllner aber schlug an seine Brust und bat: 'Gott, sei mir Sünder gnädig!'",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas18"
+  },
+  {
+    "id": 124,
+    "category": "Gleichnisse",
+    "difficulty": 3,
+    "emojis": "🤴🤲🤝🤬⛓️",
+    "options": [
+      "Der unbarmherzige Knecht",
+      "Der verlorene Sohn",
+      "Der barmherzige Samariter",
+      "Talente"
+    ],
+    "info": "Dem Knecht wurde eine riesige Schuld erlassen, doch er selbst würgte seinen Mitknecht wegen ein paar Pfennigen. Da wurde der König zornig.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus18"
+  },
+  {
+    "id": 125,
+    "category": "Gleichnisse",
+    "difficulty": 2,
+    "emojis": "🍇⌚💰🤝",
+    "options": [
+      "Arbeiter im Weinberg",
+      "Die bösen Weingärtner",
+      "Weinstock",
+      "Verlorener Groschen"
+    ],
+    "info": "Der Hausherr stellte Arbeiter zu verschiedenen Stunden ein. Am Ende bekamen alle den gleichen Lohn, was die Ersten ärgerte.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus20"
+  },
+  {
+    "id": 126,
+    "category": "Gleichnisse",
+    "difficulty": 1,
+    "emojis": "🌱🌳🐦☀️",
+    "options": [
+      "Das Senfkorn",
+      "Feigenbaum",
+      "Sämann",
+      "Weinstock"
+    ],
+    "info": "Das Reich Gottes gleicht einem Senfkorn. Es ist das kleinste aller Samenkörner, wird aber zu einem Baum, in dem Vögel nisten.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus13"
+  },
+  {
+    "id": 127,
+    "category": "Gleichnisse",
+    "difficulty": 3,
+    "emojis": "🌙🚪🍞😴",
+    "options": [
+      "Der bittende Freund",
+      "Mitternachtsruf",
+      "Jungfrauen",
+      "Gastmahl"
+    ],
+    "info": "Weil der Freund um Mitternacht unverschämt lange klopft, steht der Mann doch auf und gibt ihm Brot - nicht aus Freundschaft, sondern wegen der Hartnäckigkeit.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas11"
+  },
+  {
+    "id": 128,
+    "category": "Gleichnisse",
+    "difficulty": 3,
+    "emojis": "🍇🔨🏃‍♂️🔥",
+    "options": [
+      "Die bösen Weingärtner",
+      "Arbeiter im Weinberg",
+      "Feigenbaum",
+      "Unkraut"
+    ],
+    "info": "Die Weingärtner töteten die Knechte und schließlich den Sohn des Besitzers, um das Erbe zu stehlen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Markus12"
+  },
+  {
+    "id": 129,
+    "category": "Personen",
+    "difficulty": 1,
+    "emojis": "🦗🍯🏜️🗣️",
+    "options": [
+      "Johannes der Täufer",
+      "Elia",
+      "Mose",
+      "Jesus"
+    ],
+    "info": "Johannes trug Kleidung aus Kamelhaar, aß Heuschrecken und wilden Honig und predigte Buße in der Wüste.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus3"
+  },
+  {
+    "id": 130,
+    "category": "Personen",
+    "difficulty": 1,
+    "emojis": "🧾💰➡️✍️",
+    "options": [
+      "Matthäus (Levi)",
+      "Judas",
+      "Zachäus",
+      "Petrus"
+    ],
+    "info": "Jesus sah den Zöllner Levi am Zoll sitzen und sagte 'Folge mir nach!'. Er stand auf, verließ alles und wurde ein Jünger.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas5"
+  },
+  {
+    "id": 131,
+    "category": "Personen",
+    "difficulty": 2,
+    "emojis": "💔👻👻👻👻👻👻👻",
+    "options": [
+      "Maria Magdalena",
+      "Maria (Mutter Jesu)",
+      "Martha",
+      "Salome"
+    ],
+    "info": "Jesus hatte sieben Dämonen bei ihr ausgetrieben. Sie folgte ihm nach und war die Erste, die den Auferstandenen sah.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Lukas8"
+  },
+  {
+    "id": 132,
+    "category": "Personen",
+    "difficulty": 2,
+    "emojis": "👴👴👴👴💀",
+    "options": [
+      "Methusalem",
+      "Adam",
+      "Noah",
+      "Abraham"
+    ],
+    "info": "Methusalem wurde 969 Jahre alt – älter als jeder andere Mensch in der Bibel.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose5"
+  },
+  {
+    "id": 133,
+    "category": "Personen",
+    "difficulty": 2,
+    "emojis": "🧂👀🏃‍♀️🧂",
+    "options": [
+      "Lots Frau",
+      "Sara",
+      "Ester",
+      "Rut"
+    ],
+    "info": "Sie schaute sich auf der Flucht aus Sodom um, obwohl es verboten war, und erstarrte zur Salzsäule.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose19"
+  },
+  {
+    "id": 134,
+    "category": "Personen",
+    "difficulty": 2,
+    "emojis": "🪜🏰🔴🪢",
+    "options": [
+      "Rahab",
+      "Rut",
+      "Ester",
+      "Jael"
+    ],
+    "info": "Die Hure Rahab versteckte die Kundschafter in Jericho und ließ sie an einem roten Seil die Mauer hinab. Sie wurde verschont.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Josua2"
+  },
+  {
+    "id": 135,
+    "category": "Personen",
+    "difficulty": 3,
+    "emojis": "🚶‍♂️☁️🚫💀",
+    "options": [
+      "Henoch",
+      "Elia",
+      "Mose",
+      "Lazarus"
+    ],
+    "info": "Henoch lebte in enger Gemeinschaft mit Gott. Dann war er nicht mehr da, denn Gott hatte ihn zu sich genommen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose5"
+  },
+  {
+    "id": 136,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "🏛️💪👀😵",
+    "options": [
+      "Samsons Tod",
+      "Goliaths Tod",
+      "Jericho",
+      "Tempel"
+    ],
+    "info": "Der blinde Samson stemmte sich gegen die Säulen des Tempels und brachte ihn zum Einsturz, wobei er mehr Philister tötete als zu Lebzeiten.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Richter16"
+  },
+  {
+    "id": 137,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "🧺🌊👸👶",
+    "options": [
+      "Mose im Schilfkorb",
+      "Noah",
+      "Jesus",
+      "Samuel"
+    ],
+    "info": "Jochebed versteckte ihr Baby in einem Korb im Nil. Die Tochter des Pharao fand ihn, nannte ihn Mose und adoptierte ihn.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Mose2"
+  },
+  {
+    "id": 138,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "🔥🌧️🏃‍♂️🐎",
+    "options": [
+      "Elia am Karmel",
+      "Mose am Sinai",
+      "Gideon",
+      "Simson"
+    ],
+    "info": "Elia forderte 450 Baals-Propheten heraus. Feuer fiel vom Himmel auf sein Opfer. Danach betete er um Regen, und er kam.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Koenige18"
+  },
+  {
+    "id": 139,
+    "category": "Personen",
+    "difficulty": 3,
+    "emojis": "🤝🫂🩹💊",
+    "options": [
+      "Barnabas",
+      "Lukas",
+      "Paulus",
+      "Timotheus"
+    ],
+    "info": "Sein Name bedeutet 'Sohn des Trostes'. Er setzte sich für Paulus ein und begleitete ihn auf der ersten Missionsreise.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte4"
+  },
+  {
+    "id": 140,
+    "category": "Personen",
+    "difficulty": 3,
+    "emojis": "👨‍⚕️✍️🚶‍♂️🚢",
+    "options": [
+      "Lukas",
+      "Matthäus",
+      "Markus",
+      "Johannes"
+    ],
+    "info": "Lukas war Arzt und begleitete Paulus. Er schrieb das Lukasevangelium und die Apostelgeschichte.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Kolosser4"
+  },
+  {
+    "id": 141,
+    "category": "Personen",
+    "difficulty": 3,
+    "emojis": "⛺💑👩‍🏫🗣️",
+    "options": [
+      "Priscilla und Aquila",
+      "Maria und Josef",
+      "Elisabeth und Zacharias",
+      "Ananias und Saphira"
+    ],
+    "info": "Ein Ehepaar, das Zelte machte und Paulus unterstützte. Sie unterwiesen sogar den gelehrten Apollos genauer im Glauben.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte18"
+  },
+  {
+    "id": 142,
+    "category": "Personen",
+    "difficulty": 3,
+    "emojis": "💰🤥💀💀",
+    "options": [
+      "Ananias und Saphira",
+      "Adam und Eva",
+      "Ahab und Isebel",
+      "Priscilla und Aquila"
+    ],
+    "info": "Sie logen über den Erlös ihres Grundstücks, um frömmer zu wirken. Beide fielen tot um, als Petrus sie konfrontierte.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Apostelgeschichte5"
+  },
+  {
+    "id": 143,
+    "category": "Personen",
+    "difficulty": 2,
+    "emojis": "👨‍👦📜👵🙏",
+    "options": [
+      "Timotheus",
+      "Titus",
+      "Samuel",
+      "Johannes Mark"
+    ],
+    "info": "Ein junger Mitarbeiter von Paulus. Er lernte den Glauben von seiner Mutter Eunike und Großmutter Lois.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Timotheus1"
+  },
+  {
+    "id": 144,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "📣📖👨💡",
+    "options": [
+      "Im Anfang war das Wort",
+      "Schöpfung",
+      "Pfingsten",
+      "Johannes Brief"
+    ],
+    "info": "'Im Anfang war das Wort, und das Wort war bei Gott, und Gott war das Wort.' (Johannes 1,1)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes1"
+  },
+  {
+    "id": 145,
+    "category": "Verse",
+    "difficulty": 1,
+    "emojis": "❤️🌍✝️🧬",
+    "options": [
+      "So sehr hat Gott die Welt geliebt",
+      "Schöpfung",
+      "Nächstenliebe",
+      "Abendmahl"
+    ],
+    "info": "'Denn so sehr hat Gott die Welt geliebt, dass er seinen eingeborenen Sohn gab...' (Johannes 3,16) - Der wohl bekannteste Vers der Bibel.",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes3"
+  },
+  {
+    "id": 146,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "🛣️💡🧬🕐",
+    "options": [
+      "Ich bin der Weg, die Wahrheit...",
+      "Licht der Welt",
+      "Guter Hirte",
+      "Weinstock"
+    ],
+    "info": "Jesus spricht: 'Ich bin der Weg und die Wahrheit und das Leben; niemand kommt zum Vater denn durch mich.'",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes14"
+  },
+  {
+    "id": 147,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "😟📦🚮🤲",
+    "options": [
+      "Werft alle eure Sorge auf ihn",
+      "Sorgt nicht",
+      "Joch ist sanft",
+      "Gebet"
+    ],
+    "info": "'Alle eure Sorge werft auf ihn; denn er sorgt für euch.' (1. Petrus 5,7)",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Petrus5"
+  },
+  {
+    "id": 148,
+    "category": "Verse",
+    "difficulty": 1,
+    "emojis": "👨☁️🍞😈",
+    "options": [
+      "Vaterunser",
+      "10 Gebote",
+      "Glaubensbekenntnis",
+      "Priestersegen"
+    ],
+    "info": "Das Gebet, das Jesus seine Jünger lehrte: 'Unser Vater im Himmel... Dein Wille geschehe...'",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus6"
+  },
+  {
+    "id": 149,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "☮️🕊️👶👨‍👧‍👦",
+    "options": [
+      "Selig sind die Friedensstifter",
+      "Frucht des Geistes",
+      "Liebe",
+      "Sanftmut"
+    ],
+    "info": "'Selig sind die Friedensstifter; denn sie werden Gottes Kinder heißen.' (Matthäus 5,9)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus5"
+  },
+  {
+    "id": 150,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "👑1️⃣🍞👗",
+    "options": [
+      "Trachtet zuerst nach dem Reich Gottes",
+      "Sorgt nicht",
+      "Vaterunser",
+      "Salomo"
+    ],
+    "info": "'Trachtet zuerst nach dem Reich Gottes... so wird euch das alles zufallen.' (Matthäus 6,33)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus6"
+  },
+  {
+    "id": 151,
+    "category": "Verse",
+    "difficulty": 3,
+    "emojis": "👩🚫💍🪨",
+    "options": [
+      "Wer ohne Sünde ist...",
+      "Ehebrecherin",
+      "Stephanus",
+      "Gesetz"
+    ],
+    "info": "'Wer unter euch ohne Sünde ist, der werfe den ersten Stein auf sie.' (Johannes 8,7)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes8"
+  },
+  {
+    "id": 152,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "2️⃣3️⃣🙏⛪",
+    "options": [
+      "Wo zwei oder drei versammelt sind",
+      "Tempel",
+      "Pfingsten",
+      "Abendmahl"
+    ],
+    "info": "'Wo zwei oder drei versammelt sind in meinem Namen, da bin ich mitten unter ihnen.' (Matthäus 18,20)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus18"
+  },
+  {
+    "id": 153,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "✊🚪👂🍽️",
+    "options": [
+      "Siehe, ich stehe vor der Tür",
+      "Guter Hirte",
+      "Verlorener Sohn",
+      "Wiederkunft"
+    ],
+    "info": "'Siehe, ich stehe vor der Tür und klopfe an.' (Offenbarung 3,20)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Offenbarung3"
+  },
+  {
+    "id": 154,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "💪🏋️‍♂️Christus",
+    "options": [
+      "Alles vermag ich durch den...",
+      "David",
+      "Samson",
+      "Glaube versetzt Berge"
+    ],
+    "info": "'Ich vermag alles durch den, der mich mächtig macht.' (Philipper 4,13)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Philipper4"
+  },
+  {
+    "id": 155,
+    "category": "Verse",
+    "difficulty": 1,
+    "emojis": "🐑🎒🌍🛁",
+    "options": [
+      "Siehe, das Lamm Gottes",
+      "Guter Hirte",
+      "Isaak",
+      "Passah"
+    ],
+    "info": "Johannes der Täufer über Jesus: 'Siehe, das ist Gottes Lamm, das der Welt Sünde trägt!'",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes1"
+  },
+  {
+    "id": 156,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "🍇🌿✂️🔥",
+    "options": [
+      "Ich bin der Weinstock",
+      "Gleichnis vom Weinberg",
+      "Sämann",
+      "Feigenbaum"
+    ],
+    "info": "'Ich bin der Weinstock, ihr seid die Reben. Wer in mir bleibt und ich in ihm, der bringt viel Frucht.'",
+    "bibleLink": "https://www.bibelserver.com/HFA/Johannes15"
+  },
+  {
+    "id": 157,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "😫🎒🛌😌",
+    "options": [
+      "Kommt her zu mir alle...",
+      "Sabbat",
+      "Guter Samariter",
+      "Krankenheilung"
+    ],
+    "info": "'Kommt her zu mir, alle, die ihr mühselig und beladen seid; ich will euch erquicken.' (Matthäus 11,28)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus11"
+  },
+  {
+    "id": 158,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "📏🥇❤️👯",
+    "options": [
+      "Die Goldene Regel",
+      "10 Gebote",
+      "Liebesgebot",
+      "Bergpredigt"
+    ],
+    "info": "'Alles nun, was ihr wollt, dass euch die Leute tun sollen, das tut ihnen auch!' (Matthäus 7,12)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Matthaeus7"
+  },
+  {
+    "id": 159,
+    "category": "Verse",
+    "difficulty": 3,
+    "emojis": "🎁😈💀🎁😇🧬",
+    "options": [
+      "Der Lohn der Sünde",
+      "Verlorener Sohn",
+      "Sündenfall",
+      "Jüngstes Gericht"
+    ],
+    "info": "'Der Lohn der Sünde ist der Tod; die Gabe Gottes aber ist das ewige Leben.' (Römer 6,23)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Roemer6"
+  },
+  {
+    "id": 160,
+    "category": "Verse",
+    "difficulty": 3,
+    "emojis": "👀🚫⚓👍",
+    "options": [
+      "Glaube ist eine feste Zuversicht",
+      "Zweifel",
+      "Thomas",
+      "Hoffnung"
+    ],
+    "info": "'Es ist aber der Glaube eine feste Zuversicht auf das, was man hofft, und ein Nichtzweifeln an dem, was man nicht sieht.'",
+    "bibleLink": "https://www.bibelserver.com/HFA/Hebraeer11"
+  },
+  {
+    "id": 161,
+    "category": "Verse",
+    "difficulty": 3,
+    "emojis": "🅰️🔚🏁👑",
+    "options": [
+      "Alpha und Omega",
+      "Schöpfung",
+      "Offenbarung",
+      "Anfang und Ende"
+    ],
+    "info": "'Ich bin das A und das O, der Erste und der Letzte, der Anfang und das Ende.' (Offenbarung 22,13)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Offenbarung22"
+  },
+  {
+    "id": 162,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "😱🚫🤝💪",
+    "options": [
+      "Fürchte dich nicht",
+      "Gideon",
+      "Josua",
+      "Maria"
+    ],
+    "info": "'Fürchte dich nicht, ich bin mit dir; weiche nicht, denn ich bin dein Gott.' (Jesaja 41,10)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Jesaja41"
+  },
+  {
+    "id": 163,
+    "category": "Verse",
+    "difficulty": 2,
+    "emojis": "💡🚑🏰🛡️",
+    "options": [
+      "Der Herr ist mein Licht",
+      "Guter Hirte",
+      "Burg",
+      "Schild"
+    ],
+    "info": "'Der Herr ist mein Licht und mein Heil; vor wem sollte ich mich fürchten?' (Psalm 27)",
+    "bibleLink": "https://www.bibelserver.com/HFA/Psalm27"
+  },
+  {
+    "id": 164,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "⛰️👀🛑💀",
+    "options": [
+      "Mose auf dem Berg Nebo",
+      "Himmelfahrt",
+      "Verklärung",
+      "Sinai"
+    ],
+    "info": "Mose durfte das verheißene Land vom Berg Nebo aus sehen, aber nicht hineingehen. Er starb dort im Alter von 120 Jahren.",
+    "bibleLink": "https://www.bibelserver.com/HFA/5.Mose34"
+  },
+  {
+    "id": 165,
+    "category": "Altes Testament",
+    "difficulty": 2,
+    "emojis": "💃🥁🌊🎤",
+    "options": [
+      "Mirjam",
+      "Debora",
+      "Hanna",
+      "Maria"
+    ],
+    "info": "Moses Schwester Mirjam nahm das Tamburin und tanzte mit den Frauen, um Gott für die Rettung am Schilfmeer zu preisen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/2.Mose15"
+  },
+  {
+    "id": 166,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "🎋🌱🌸🕍",
+    "options": [
+      "Aarons Stab grünt",
+      "Brennender Dornbusch",
+      "Jonas Rizinus",
+      "Feigenbaum"
+    ],
+    "info": "Um zu zeigen, wen Gott erwählt hat, ließ er den Stab von Aaron über Nacht knospen, blühen und Mandeln tragen.",
+    "bibleLink": "https://www.bibelserver.com/HFA/4.Mose17"
+  },
+  {
+    "id": 167,
+    "category": "Altes Testament",
+    "difficulty": 3,
+    "emojis": "😡🔥🌍🕳️",
+    "options": [
+      "Korach",
+      "Sodom",
+      "Jericho",
+      "Absalom"
+    ],
+    "info": "Korach rebellierte gegen Mose. Die Erde tat ihren Mund auf und verschlang ihn und seine Anhänger lebendig.",
+    "bibleLink": "https://www.bibelserver.com/HFA/4.Mose16"
+  },
+  {
+    "id": 168,
+    "category": "Altes Testament",
+    "difficulty": 1,
+    "emojis": "1️⃣2️⃣⛺👦",
+    "options": [
+      "Die 12 Stämme Israels",
+      "12 Jünger",
+      "12 Kundschafter",
+      "12 Körbe"
+    ],
+    "info": "Die 12 Stämme Israels gehen auf die 12 Söhne Jakobs (Israel) zurück, darunter Juda, Josef, Benjamin und Levi.",
+    "bibleLink": "https://www.bibelserver.com/HFA/1.Mose49"
+  }
+];
