@@ -30,6 +30,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Schafkopf](schafkopf.md) | 4 | verdeckt | Stich-Kern, Serie, Kartenblätter | L | L | XL | 5 |
 | [Doppelkopf](doppelkopf.md) | 4–5 | verdeckt | Stich-Kern, Serie, Kartenblätter | XL | L | XL | 5 |
 | [Eins!](uno.md) | 2–10 | verdeckt | Karten, Ablage, Varianten-Decks, Aktionen | M | M | M | 7 |
+| [Dame](dame.md) | 2 | offen | Gitterbrett, Drag & Drop, Negamax | M | M | M | 7 |
 
 ## Gemeinsame Bausteine
 

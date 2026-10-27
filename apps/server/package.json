@@ -16,6 +16,7 @@
     "@brett-und-blatt/game-battleship": "workspace:*",
     "@brett-und-blatt/game-bingo": "workspace:*",
     "@brett-und-blatt/game-black-peter": "workspace:*",
+    "@brett-und-blatt/game-checkers": "workspace:*",
     "@brett-und-blatt/game-chess": "workspace:*",
     "@brett-und-blatt/game-color-and-shape": "workspace:*",
     "@brett-und-blatt/game-color-sorter": "workspace:*",

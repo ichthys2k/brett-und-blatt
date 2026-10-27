@@ -1,0 +1,266 @@
+.dk-wrap {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: 100%;
+  height: 100%;
+  gap: 0.35rem;
+  container-type: inline-size;
+}
+
+.dk-board {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Leisten über und unter dem Brett: geschlagene Steine, Vorsprung, Züge */
+.dk-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: max(0.85rem, 3.8cqw);
+  line-height: 1;
+}
+
+.dk-taken-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.dk-mini-stone {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.dk-mini-white {
+  background: radial-gradient(circle at 35% 35%, #ffffff, #ded5c4 70%, #b8ab94 100%);
+  border: 1px solid #8c7e68;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.dk-mini-black {
+  background: radial-gradient(circle at 35% 35%, #4a4a4a, #242424 70%, #111111 100%);
+  border: 1px solid #000000;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.dk-lead {
+  font-size: 0.85em;
+  font-weight: 700;
+  color: var(--color-muted);
+}
+
+.dk-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.dk-moves-button {
+  flex: none;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: max(0.8rem, 3.4cqw);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.dk-moves-button:hover {
+  background: var(--color-line);
+}
+
+.dk-moves {
+  position: absolute;
+  inset: 6% 8%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: var(--color-surface);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  z-index: 100;
+}
+
+.dk-moves h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.dk-moves ol {
+  flex: 1;
+  margin: 0;
+  padding-left: 2rem;
+  overflow-y: auto;
+  list-style: decimal;
+  font-variant-numeric: tabular-nums;
+  font-family: monospace, sans-serif;
+  font-size: 0.95rem;
+}
+
+.dk-moves li span {
+  display: inline-block;
+  min-width: 5.5rem;
+}
+
+.dk-moves button.dk-close {
+  align-self: center;
+  padding: 0.4rem 1.4rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Spielfeld-Zellen */
+.dk-board .bub-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  touch-action: none;
+  background: none;
+}
+
+.dk-board .bub-cell.dk-light {
+  background: var(--color-board-light, #e3c8a0);
+}
+
+.dk-board .bub-cell.dk-dark {
+  background: var(--color-board-dark, #8b5526);
+}
+
+.dk-board .bub-cell.dk-last {
+  background: #a9803a;
+}
+
+.dk-board .bub-cell.dk-selected {
+  background: #b59247;
+}
+
+.dk-board .bub-cell.dk-hint {
+  outline: 3px solid var(--color-accent, #3b82f6);
+  outline-offset: -3px;
+}
+
+/* Steine */
+.dk-piece {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.dk-piece.dk-white {
+  background: radial-gradient(circle at 35% 35%, #ffffff, #ede7dc 65%, #c8bcab 100%);
+  border: 2px solid #8e806c;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.8), inset 0 0 0 3px #d6ccbe;
+  color: #7a6e5d;
+}
+
+.dk-piece.dk-black {
+  background: radial-gradient(circle at 35% 35%, #4d4d4d, #222222 65%, #0f0f0f 100%);
+  border: 2px solid #000000;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.25), inset 0 0 0 3px #363636;
+  color: #ffcc00;
+}
+
+.dk-crown {
+  font-size: clamp(0.9rem, 4.2cqw, 1.8rem);
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.dk-must-capture {
+  box-shadow: 0 0 0 3px #f59e0b, 0 3px 6px rgba(0, 0, 0, 0.4) !important;
+  animation: dk-pulse 1.2s infinite ease-in-out;
+}
+
+@keyframes dk-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+/* Zielfeld-Markierung */
+.dk-dot {
+  width: 32%;
+  height: 32%;
+  border-radius: 50%;
+  background: rgba(40, 160, 60, 0.65);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.dk-capture-dot {
+  width: 40%;
+  height: 40%;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.75);
+  box-shadow: 0 0 6px rgba(220, 38, 38, 0.6);
+  pointer-events: none;
+}
+
+/* Koordinaten-Beschriftung */
+.dk-coord {
+  position: absolute;
+  font-size: max(0.6rem, 2.4cqw);
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.dk-rank {
+  top: 4%;
+  left: 6%;
+}
+
+.dk-file {
+  bottom: 4%;
+  right: 6%;
+}
+
+.dk-dark .dk-coord {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.dk-light .dk-coord {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Symbol für Spieler-Anzeige */
+.dk-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  vertical-align: middle;
+}

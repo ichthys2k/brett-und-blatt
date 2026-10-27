@@ -7,4 +7,4 @@
  * Spitzen bis 1,6 s (Reversi, Mühle, Vier in einer Reihe, Schach).
  */
 export const BOT_BUDGET_MS = { easy: 100, medium: 300, hard: 800 };
-export const BOT_STEP_MS: Record<string, number> = { chess: 140, reversi: 35, mill: 16, 'four-in-a-row': 7, go: 2 };
+export const BOT_STEP_MS: Record<string, number> = { chess: 140, checkers: 25, reversi: 35, mill: 16, 'four-in-a-row': 7, go: 2 };
