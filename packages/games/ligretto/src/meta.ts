@@ -11,8 +11,9 @@ export const meta: GameInfo = {
   emoji: '⚡',
   players: { min: 2, max: 8 },
   modes: ['hotseat', 'online'],
-  patterns: ['open'],
+  patterns: ['simultaneous'],
   hiddenInformation: true,
+  privateViews: true,
   ruleVersion: 1,
   howToPlay: [
     'Jeder hat einen verdeckten Ligretto-Stapel, einen offenen Handstapel und eine offene Hand.',
