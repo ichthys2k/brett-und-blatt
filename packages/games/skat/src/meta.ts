@@ -10,7 +10,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['hidden'],
   hiddenInformation: true,
-  ruleVersion: 1,
+  ruleVersion: 2,
   howToPlay: [
     'Skat wird mit 32 Karten zu dritt gespielt (am Vierertisch setzt der Geber jeweils aus). Jeder erhält 10 Karten, 2 Karten liegen verdeckt im Skat.',
     'Reizen: Mittelhand sagt Vorhand Reizwerte an (18, 20, 22, 24...), Vorhand hört („Ja“) oder passt. Danach sagt Hinterhand dem Verbleibenden an. Wer das Reizen gewinnt, wird Alleinspieler.',

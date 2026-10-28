@@ -7,11 +7,11 @@
   box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.18);
 }
 
-.gomoku-board .grid-board__cell {
+.gomoku-board .bub-cell {
   position: relative;
 }
 
-.gomoku-board .grid-board__cell::before {
+.gomoku-board .bub-cell::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -22,7 +22,7 @@
   pointer-events: none;
 }
 
-.gomoku-board .grid-board__cell::after {
+.gomoku-board .bub-cell::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -31,6 +31,23 @@
   width: 1px;
   background: rgb(80 60 40 / 0.6);
   pointer-events: none;
+}
+
+/* Linien enden an den äußeren Kreuzungspunkten (15 × 15 Felder). */
+.gomoku-board .bub-cell:nth-child(15n + 1)::before {
+  left: 50%;
+}
+
+.gomoku-board .bub-cell:nth-child(15n)::before {
+  right: 50%;
+}
+
+.gomoku-board .bub-cell:nth-child(-n + 15)::after {
+  top: 50%;
+}
+
+.gomoku-board .bub-cell:nth-last-child(-n + 15)::after {
+  bottom: 50%;
 }
 
 .gomoku-stone {

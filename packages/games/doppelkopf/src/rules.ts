@@ -12,6 +12,7 @@ import {
   trickPoints,
   trickWinner,
   Rng,
+  type RngState,
   type Actor,
   type CardId,
   type MoveResult,
@@ -107,6 +108,8 @@ export interface DokoState {
   // Gesamtstände
   scores: Record<number, number>;
   history: DokoSummary[];
+  /** Zufallsstrom zum Geben der nächsten Spiele (aus dem Seed; in Sichten genullt). */
+  dealRng: RngState;
 }
 
 export const DOKO_RANKS: Rank[] = [9, 10, 11, 12, 13, 1];
@@ -195,6 +198,7 @@ export function setup(
 
     scores,
     history: [],
+    dealRng: rng.state,
   };
 }
 
@@ -546,14 +550,8 @@ function advanceToNextGame(state: DokoState): DokoState {
   const nextDealer = nextDealerIndex(state.dealerSeat, state.playerCount);
   const activeSeats = getActivePlayers(nextDealer, state.playerCount, 4);
 
-  const deck = createDokoDeck();
-  const seed = (state.gameNumber * 997 + nextDealer * 31) % 100000;
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = (seed + i * 37) % (i + 1);
-    const tmp = deck[i];
-    deck[i] = deck[j];
-    deck[j] = tmp;
-  }
+  const rng = new Rng(state.dealRng);
+  const deck = rng.shuffle(createDokoDeck());
 
   const hands: Record<number, CardId[]> = {};
   for (let i = 0; i < 4; i++) {
@@ -571,6 +569,7 @@ function advanceToNextGame(state: DokoState): DokoState {
 
   return {
     ...state,
+    dealRng: rng.state,
     gameNumber: nextGameNum,
     dealerSeat: nextDealer,
     activeSeats,
@@ -625,6 +624,7 @@ export function playerView(state: DokoState, seat: SeatId | 'spectator'): DokoSt
     ...state,
     hands: maskedHands,
     reTeam: visibleReTeam,
+    dealRng: [0, 0, 0, 0],
   };
 }
 

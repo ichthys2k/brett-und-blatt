@@ -1,4 +1,4 @@
-import { cardId } from '@brett-und-blatt/engine';
+import { cardId, resolveOptions, Rng } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { gameModule } from '../src/index.js';
@@ -63,5 +63,32 @@ describe('Skat-Reizwerte und Spitzen', () => {
     expect(calculateGameValue({ gameType: 'null', hand: true }, [])).toBe(35);
     expect(calculateGameValue({ gameType: 'null', ouvert: true }, [])).toBe(46);
     expect(calculateGameValue({ gameType: 'null', hand: true, ouvert: true }, [])).toBe(59);
+  });
+});
+
+/** Spielt mit Zufallszügen bis zum Beginn des zweiten Spiels der Serie. */
+function secondDeal(seats: number, seed: string): any {
+  const rng = Rng.fromSeed(seed, 'test');
+  let state: any = gameModule.setup(seats, resolveOptions(gameModule), seed);
+  for (let i = 0; i < 2_000 && state.gameNumber < 2; i++) {
+    const actor = rng.pick(gameModule.currentPlayers(state));
+    const moves = gameModule.legalMoves(state, actor);
+    state = gameModule.applyMove(state, actor, actor === 'system' ? moves[0] : rng.pick(moves)).state;
+  }
+  expect(state.gameNumber).toBe(2);
+  return state;
+}
+
+describe('Geben und Geheimnisse', () => {
+  it('jede Serie gibt ab dem zweiten Spiel andere Karten', () => {
+    const a = secondDeal(3, 'serie-a');
+    const b = secondDeal(3, 'serie-b');
+    expect(a.hands).not.toEqual(b.hands);
+  });
+
+  it('die Sicht verrät den Zufallsstrom fürs Geben nicht', () => {
+    const state = secondDeal(3, 'serie-c');
+    expect(gameModule.playerView(state, 0).dealRng).toEqual([0, 0, 0, 0]);
+    expect(gameModule.playerView(state, 'spectator').dealRng).toEqual([0, 0, 0, 0]);
   });
 });

@@ -12,8 +12,13 @@ export const kniffelBot: BotDefinition<KniffelState, KniffelMove> = {
     
     const rollMove = moves.find((m: any) => m.type === 'roll');
     if (rollMove && view.rollsLeft > 0) {
-      // Just roll - UI/bots can manage holds separately, but legalMoves only gives roll/score
-      // Keep it simple
+      // Ein Kniffel oder eine große Straße wird sofort eingetragen, sonst weiter würfeln.
+      // (Würfel halten kann der Bot noch nicht.)
+      if (ctx.level !== 'easy' && view.dice) {
+        const open = (cat: 'kniffel' | 'largeStraight') => moves.some((m: any) => m.type === 'score' && m.category === cat);
+        if (open('kniffel') && calculateScore('kniffel', view.dice.values) === 50) return { type: 'score', category: 'kniffel' };
+        if (open('largeStraight') && calculateScore('largeStraight', view.dice.values) === 40) return { type: 'score', category: 'largeStraight' };
+      }
       return rollMove;
     }
 

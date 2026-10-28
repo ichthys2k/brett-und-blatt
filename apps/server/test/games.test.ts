@@ -6,9 +6,9 @@ import { onlineGames } from '../src/games';
 const metas = import.meta.glob<GameInfo>('../../../packages/games/*/src/meta.ts', { eager: true, import: 'meta' });
 
 describe('Spiele auf dem Server', () => {
-  it('jedes Spiel für mehrere Personen wird online angeboten', () => {
+  it('jedes fertige Spiel für mehrere Personen wird online angeboten', () => {
     const multiplayer = Object.values(metas)
-      .filter((info) => info.players.max >= 2)
+      .filter((info) => info.players.max >= 2 && !info.draft)
       .map((info) => info.id);
     expect(onlineGames.map((m) => m.info.id).sort()).toEqual(multiplayer.sort());
   });

@@ -10,7 +10,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['hidden'],
   hiddenInformation: true,
-  ruleVersion: 1,
+  ruleVersion: 2,
   howToPlay: [
     'Doppelkopf wird zu viert mit 48 Karten gespielt (9 bis Ass doppelt). Jeder Spieler erhält 12 Karten (am 5er-Tisch setzt der Geber jeweils aus).',
     'Teams: Wer eine Kreuz-Dame hat, spielt im Team „Re“, die beiden anderen spielen „Kontra“. Die Teams sind zu Beginn geheim und klären sich erst im Verlauf der Partie.',

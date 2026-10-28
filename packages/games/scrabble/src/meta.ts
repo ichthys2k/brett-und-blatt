@@ -11,6 +11,8 @@ export const meta: GameInfo = {
   patterns: ['hidden'],
   hiddenInformation: true,
   privateViews: true,
+  // Noch nicht spielbar (Prüfbericht vom 28.10.2026) – erst nach der Reparatur wieder freigeben.
+  draft: true,
   ruleVersion: 1,
   hints: true,
   howToPlay: [

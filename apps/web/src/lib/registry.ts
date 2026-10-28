@@ -10,10 +10,12 @@ export interface LoadedGame {
   ui: GameUi;
 }
 
-export const games = gameInfos;
+/** Alle Spiele, die angeboten werden – ohne Entwürfe (`draft`), die noch in Arbeit sind. */
+export const games = gameInfos.filter((game) => !game.draft);
 
+/** Findet auch Entwürfe, damit sie sich über `#/neu/<id>` testen lassen. */
 export function findGame(id: string): GameInfo | undefined {
-  return games.find((game) => game.id === id);
+  return gameInfos.find((game) => game.id === id);
 }
 
 const cache = new Map<string, Promise<LoadedGame>>();

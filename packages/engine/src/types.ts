@@ -35,6 +35,11 @@ export interface GameInfo {
    * Platz verlassen, um ab der nächsten Runde mitzuspielen (z. B. Poker)?
    */
   joinMidGame?: boolean;
+  /**
+   * Noch in Arbeit: Das Spiel erscheint nicht auf der Startseite, nicht in der Online-Lobby und
+   * nicht auf dem Spieleserver. Zum Testen bleibt es über `#/neu/<id>` erreichbar.
+   */
+  draft?: boolean;
   /** Kurze Anleitung „So geht's“: die wichtigsten Regeln in wenigen Sätzen, je ein Punkt pro Eintrag. */
   howToPlay: string[];
 }

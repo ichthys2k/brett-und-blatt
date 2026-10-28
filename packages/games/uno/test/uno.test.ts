@@ -203,3 +203,16 @@ describe('Eins! Regeln & Varianten', () => {
     expect(mathCardLabel('wild', 'card_wild')).toBeNull();
   });
 });
+
+describe('Geheimnisse', () => {
+  it('fremde Handkarten tragen keine echten Kennungen', () => {
+    const state = gameModule.setup(3, {}, 'kennungen');
+    const view = gameModule.playerView(state, 0);
+    const realIds = new Set(state.hands.flat().map((c) => c.id));
+    expect(view.hands[0]).toEqual(state.hands[0]);
+    for (const seat of [1, 2]) {
+      expect(view.hands[seat]).toHaveLength(state.hands[seat].length);
+      for (const card of view.hands[seat]) expect(realIds.has(card.id)).toBe(false);
+    }
+  });
+});

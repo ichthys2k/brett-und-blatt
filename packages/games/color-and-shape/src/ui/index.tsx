@@ -27,8 +27,8 @@ export const tileName = (tile: TileId) => `${COLOR_NAMES[colorOf(tile)]}er ${SHA
 
 export function Tile({ tile, className = '' }: { tile: TileId; className?: string }) {
   return (
-    <svg viewBox="0 0 100 100" className={`cs-tile ${className}`} aria-hidden="true">
-      <rect x="2" y="2" width="96" height="96" rx="14" className="cs-tile-bg" />
+    <svg viewBox="0 0 100 100" className={`ff-tile ${className}`} aria-hidden="true">
+      <rect x="2" y="2" width="96" height="96" rx="14" className="ff-tile-bg" />
       <g fill={COLOR_VALUES[colorOf(tile)]}>{SHAPE_PATHS[shapeOf(tile)]}</g>
     </svg>
   );
@@ -146,25 +146,25 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
   const hintRack = new Set(hint?.type === 'swap' ? hint.tiles : hintTiles.map((p) => p.tile));
 
   return (
-    <div className="cs-layout">
-      <div className="cs-area" ref={areaRef}>
-        <div className="cs-scroll" ref={scrollRef}>
-          <div className="cs-table" style={{ width: cols * cell, height: rows * cell }}>
+    <div className="ff-layout">
+      <div className="ff-area" ref={areaRef}>
+        <div className="ff-scroll" ref={scrollRef}>
+          <div className="ff-table" style={{ width: cols * cell, height: rows * cell }}>
             <GridBoard
               cols={cols}
               rows={rows}
               label="Tisch"
-              className="cs-board"
+              className="ff-board"
               renderCell={(c, r) => {
                 const x = c + minX;
                 const y = r + minY;
                 const tile = map.get(`${x},${y}`);
                 if (tile !== undefined) return <Tile tile={tile} />;
                 const own = pendingAt(x, y);
-                if (own) return <Tile tile={own.tile} className="cs-pending" />;
+                if (own) return <Tile tile={own.tile} className="ff-pending" />;
                 const ghost = pending.length === 0 ? hintTiles.find((p) => p.x === x && p.y === y) : undefined;
-                if (ghost) return <Tile tile={ghost.tile} className="cs-ghost" />;
-                return targets.has(`${x},${y}`) ? <span className="cs-dot" /> : null;
+                if (ghost) return <Tile tile={ghost.tile} className="ff-ghost" />;
+                return targets.has(`${x},${y}`) ? <span className="ff-dot" /> : null;
               }}
               isActive={(c, r) => {
                 const x = c + minX;
@@ -183,7 +183,7 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
                   'data-drop-active': isDropActive ? 'true' : undefined,
                 };
               }}
-              cellClassName={(c, r) => (lastPlaced.has(`${c + minX},${r + minY}`) ? 'cs-last' : '')}
+              cellClassName={(c, r) => (lastPlaced.has(`${c + minX},${r + minY}`) ? 'ff-last' : '')}
               cellLabel={(c, r) => {
                 const x = c + minX;
                 const y = r + minY;
@@ -196,7 +196,7 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
       </div>
 
       {seat !== null && (
-        <div className="cs-rack" role="group" aria-label="Dein Bänkchen">
+        <div className="ff-rack" role="group" aria-label="Dein Bänkchen">
           {rack.map((tile) => {
             const isDragged = (dragState.isDragging || dragState.snapping) && dragState.item === tile;
             const dragTransform = isDragged ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)` : undefined;
@@ -205,7 +205,7 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
               <button
                 key={tile}
                 type="button"
-                className={`cs-rack-tile ${isDragged ? 'bub-dragging' : ''} ${dragState.snapping && isDragged ? 'bub-snapping' : ''}`}
+                className={`ff-rack-tile ${isDragged ? 'bub-dragging' : ''} ${dragState.snapping && isDragged ? 'bub-snapping' : ''}`}
                 data-selected={selected === tile || swapTiles.includes(tile) || undefined}
                 data-hint={hintRack.has(tile) || undefined}
                 disabled={!myTurn}
@@ -227,38 +227,38 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
         </div>
       )}
 
-      <div className="cs-bar" aria-live="polite">
-        <span className="cs-info">
+      <div className="ff-bar" aria-live="polite">
+        <span className="ff-info">
           {swapMode ? 'Steine zum Tauschen wählen' : check ? (check.ok ? `${check.points} Punkte` : check.reason) : myTurn ? (selected !== null ? 'Feld antippen' : 'Stein wählen') : ''}
           <small>Beutel: {view.bag.length}</small>
         </span>
         {myTurn && !swapMode && pending.length > 0 && (
           <>
-            <button type="button" className="cs-button" onClick={() => setPending([])}>
+            <button type="button" className="ff-button" onClick={() => setPending([])}>
               Zurück
             </button>
-            <button type="button" className="cs-button cs-primary" disabled={!check?.ok} onClick={() => onMove({ type: 'place', tiles: pending })}>
+            <button type="button" className="ff-button ff-primary" disabled={!check?.ok} onClick={() => onMove({ type: 'place', tiles: pending })}>
               Legen
             </button>
           </>
         )}
         {myTurn && pending.length === 0 && canSwap && !swapMode && (
-          <button type="button" className={`cs-button ${hint?.type === 'swap' ? 'cs-primary' : ''}`} onClick={() => (setSwapMode(true), setSelected(null))}>
+          <button type="button" className={`ff-button ${hint?.type === 'swap' ? 'ff-primary' : ''}`} onClick={() => (setSwapMode(true), setSelected(null))}>
             Tauschen
           </button>
         )}
         {swapMode && (
           <>
-            <button type="button" className="cs-button" onClick={() => (setSwapMode(false), setSwapTiles([]))}>
+            <button type="button" className="ff-button" onClick={() => (setSwapMode(false), setSwapTiles([]))}>
               Abbrechen
             </button>
-            <button type="button" className="cs-button cs-primary" disabled={!swapAllowed} onClick={() => onMove({ type: 'swap', tiles: swapTiles })}>
+            <button type="button" className="ff-button ff-primary" disabled={!swapAllowed} onClick={() => onMove({ type: 'swap', tiles: swapTiles })}>
               {swapTiles.length || ''} tauschen
             </button>
           </>
         )}
         {pass && (
-          <button type="button" className="cs-button cs-primary" onClick={() => onMove(pass)}>
+          <button type="button" className="ff-button ff-primary" onClick={() => onMove(pass)}>
             Passen
           </button>
         )}
@@ -270,7 +270,7 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
 function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string }) {
   // Jeder Platz bekommt einen eigenen Stein als Zeichen.
   const tiles = [3 * 6 * 4 + 0, 0 * 18 + 3 * 3, 3 * 18 + 2 * 3, 2 * 18 + 5 * 3];
-  return <Tile tile={tiles[seat % tiles.length]!} className={`cs-symbol ${className}`} />;
+  return <Tile tile={tiles[seat % tiles.length]!} className={`ff-symbol ${className}`} />;
 }
 
 export const gameUi: GameUi<ColorShapeState, ColorShapeMove> = {

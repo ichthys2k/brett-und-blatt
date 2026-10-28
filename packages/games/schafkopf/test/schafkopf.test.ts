@@ -1,4 +1,4 @@
-import { cardId } from '@brett-und-blatt/engine';
+import { cardId, resolveOptions, Rng } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { gameModule } from '../src/index.js';
@@ -74,5 +74,39 @@ describe('Schafkopf Regeln & Kartendecks', () => {
     state.partnerRevealed = true;
     expect(playerView(state, 0).partnerSeat).toBe(2);
     expect(playerView(state, 1).partnerSeat).toBe(2);
+  });
+});
+
+/** Spielt mit Zufallszügen bis zum Beginn des zweiten Spiels der Serie. */
+function secondDeal(seats: number, seed: string): any {
+  const rng = Rng.fromSeed(seed, 'test');
+  let state: any = gameModule.setup(seats, resolveOptions(gameModule), seed);
+  for (let i = 0; i < 2_000 && state.gameNumber < 2; i++) {
+    const actor = rng.pick(gameModule.currentPlayers(state));
+    const moves = gameModule.legalMoves(state, actor);
+    state = gameModule.applyMove(state, actor, actor === 'system' ? moves[0] : rng.pick(moves)).state;
+  }
+  expect(state.gameNumber).toBe(2);
+  return state;
+}
+
+describe('Geben und Geheimnisse', () => {
+  it('jede Serie gibt ab dem zweiten Spiel andere Karten', () => {
+    const a = secondDeal(4, 'serie-a');
+    const b = secondDeal(4, 'serie-b');
+    expect(a.hands).not.toEqual(b.hands);
+  });
+
+  it('die Sicht verrät den Zufallsstrom fürs Geben nicht', () => {
+    const state = secondDeal(4, 'serie-c');
+    expect(gameModule.playerView(state, 0).dealRng).toEqual([0, 0, 0, 0]);
+    expect(gameModule.playerView(state, 'spectator').dealRng).toEqual([0, 0, 0, 0]);
+  });
+
+  it('fremde Ausgangsblätter bleiben verdeckt', () => {
+    const state: any = gameModule.setup(4, resolveOptions(gameModule), 'blatt');
+    const view: any = gameModule.playerView(state, 0);
+    expect(view.initialHands[0]).toEqual(state.initialHands[0]);
+    for (const seat of [1, 2, 3]) expect(view.initialHands[seat]).toEqual([]);
   });
 });

@@ -9,7 +9,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['open'],
   hiddenInformation: false,
-  ruleVersion: 1,
+  ruleVersion: 2,
   howToPlay: [
     'Pro Runde hast du bis zu drei Würfe. Du kannst nach jedem Wurf Würfel zum Beiseitelegen auswählen.',
     'Trage das Ergebnis nach dem letzten oder einem früheren Wurf in eine freie Kategorie der Wertungstafel ein.',

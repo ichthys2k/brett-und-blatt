@@ -127,11 +127,22 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - **Ligretto** (`packages/games/ligretto`, 2–8 Plätze, am 28.10. neu geschrieben): Echtzeit nach Originalregeln – Ligretto-Stapel (10), Reihe (5/4/3), Hand mit Talon in Dreierschritten, Mittelstapel 1–10 mit festen Kennungen, „Festgefahren“ mit Stillstandsregel, Wertung +1/−2 über mehrere Runden. Gleichzeitige Züge weichen auf einen anderen passenden Stapel aus (`isLegal` großzügiger als `legalMoves`). Bot „Flinke Hand“ mit `delayMs` je Stufe, eigene Kartenoberfläche mit Tippen/Ziehen und Flug-Animationen, Klänge und Playlist „Spielabend“. Nur allein gegen Bots oder online (kein Hot-Seat). Online meldet ein verlorenes Wettrennen `tooLate` („Zu spät – jemand war schneller.“) als neutralen Hinweis statt `illegalMove`. Regeltests und `gameContractChecks`. Plan in `docs/spiele/ligretto.md`.
 - **Kniffel** (`packages/games/kniffel`, 1–6 Plätze): Fünf Würfel, drei Würfe, Würfel halten, 13 Kategorien mit oberem Bonus (63 → +35), Bot in drei Stufen (wählt nur die Kategorie, hält keine Würfel), Regeltests und `gameContractChecks`, online registriert, auf der Startseite ohne feste Rubrik (landet unter Familie). Plan in `docs/spiele/kniffel.md`.
 
+**Prüfbericht und Etappe 1 der Korrekturen (28.10.2026):** Alle Spiele wurden mit Zufallspartien über alle Optionen, Bot-Läufen, Lecksuche und im Browser geprüft (Bericht „Brett & Blatt – Prüfbericht aller Spiele“ in Claude). Etappe 1 ist umgesetzt:
+- Neues Feld `draft` in `GameInfo`: Entwürfe fehlen auf der Startseite, in der Online-Lobby und auf dem Server (`apps/server/src/games.ts`, Test beachtet `draft`), bleiben über `#/neu/<id>` testbar. **Wortgitter und Binokel sind Entwürfe**, bis sie repariert sind.
+- Skat, Schafkopf, Doppelkopf: Ab dem zweiten Spiel einer Serie wurde mit einer festen Formel aus Spielnummer und Geber „gemischt“ – jede Serie hatte dieselben Blätter. Jetzt Zufallsstrom `dealRng` aus dem Seed, in Sichten genullt (`ruleVersion` 2).
+- Schafkopf: `initialHands` verriet allen alle Blätter; fremde Ausgangsblätter sind bis zum Rundenende leer.
+- Eins!: Kennungen fremder Handkarten (vor dem Mischen fortlaufend vergeben) werden in der Sicht ersetzt.
+- Kniffel: Würfel halten geht (`isLegal`), Eintragen nach jedem Wurf, `rng` aus der Sicht genommen (+ `sampleHidden`), Bot trägt Kniffel und große Straße sofort ein (`ruleVersion` 2).
+- Gomoku: Gitterlinien sichtbar (CSS zielte auf eine nicht vorhandene Klasse), Vertragsprüfungen laufen jetzt wirklich.
+- Farbe & Form: Klassenpräfix `ff-` statt `cs-` (kollidierte mit Farbensortierer: nach einer Partie Farbensortierer zerfiel das Brett). Unbenutzte Tic-Tac-Toe-CSS-Kopien in den Stichspielen entfernt.
+
 **Bekannte offene Punkte:**
-- **Binokel fertigstellen** (siehe oben): Oberfläche, `playerView`, Bot, Tests. Bis dahin steht ein unspielbares Spiel auf spiele.lipponer.de.
-- **Kniffel:** `playerView` gibt den Zustand samt `rng` an die Browser – online lassen sich damit die nächsten Würfe vorhersagen (Grundsatz „Der Seed geht nie an Browser“). Bot hält keine Würfel.
+- **Binokel und Wortgitter fertigstellen** (beide `draft`): siehe Prüfbericht. Wortgitter: Oberfläche ohne Funktion, Startfeld (4,4) statt H8, Bot stürzt ab, `legalMoves` ohne Wörter. Binokel: Platzhalter-Oberfläche, Regeln laufen fest, Sicht zeigt alles, keine Tests.
+- **Stichspiele:** Handkarten riesig (`PlayingCard` ohne Breite), erlaubte Karten nicht markiert, keine Ereignisse/Klänge; Skat-Bot sagt fast immer Grand an und verliert; Bot-Stufen ungenutzt.
+- **Kniffel:** Bot hält noch keine Würfel; Tafeln der Mitspieler nicht sichtbar; im Dunkelmodus schwer lesbar. Name ist eine Marke (ebenso Ligretto).
+- **Bibel-Quiz:** Die richtige Antwort steht in der Sicht – aber auch im ausgelieferten Fragenkatalog (Option 0 ist richtig). Verbergen nützt erst, wenn die Fragen nicht mehr im Browser-Bundle liegen.
 - **Klänge der Enten-Rallye:** 15 MP3s (18 MB) liegen direkt im öffentlichen Repo unter `apps/web/public/klaenge/duck-rally/`. Herkunft und Lizenz klären – ElevenLabs-Klänge gehören ins private Klang-Repo, Suno-Musik darf mit Nennung (CC BY-SA) ins Repo.
-- **Startseite:** Gomoku, Kniffel, Binokel und Wortgitter sind in `Home.tsx` keiner Rubrik zugeordnet und landen automatisch unter *Familie*.
+- **Startseite:** Gomoku und Kniffel sind in `Home.tsx` keiner Rubrik zugeordnet und landen automatisch unter *Familie*.
 
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
 - Drag & Drop: Universeller Pointer-Drag (`usePointerDrag`), Reise-Animationen (`useSpawnAnimation`) und sanfte Gleit-Animationen für ziehende Figuren (`useGridMoveAnimation`, 280 ms mit `onAnimationEnd`-Cleanup) in `packages/ui/src/dnd`. Gleiten aktiviert für Schach (inkl. Rochade und gedrehtem Brett), Vierer-Schach (alle 4 Perspektiven & Rochade) und Dame. Barrierefreiheit (Tastatur und Klick/Tap) bleibt vollständig erhalten.
@@ -156,10 +167,10 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 ## Nächste Schritte
 
-1. Binokel fertigstellen oder bis dahin aus Startseite und Server herausnehmen.
-2. Kniffel: `rng` aus `playerView` entfernen (wie bei Mäxle über `sampleHidden`), Bot mit Würfelhalten.
-3. Herkunft der Enten-Rallye-Klänge klären.
-4. Gomoku, Kniffel, Binokel und Wortgitter einer Rubrik auf der Startseite zuordnen.
+Korrekturplan aus dem Prüfbericht:
+1. Etappe 2 – Prüfnetz: Geheimnis-Prüfungen in `gameContractChecks`, Repo-Test „jedes Spiel führt die Vertragsprüfungen aus“, Browser-Rauchtest aller Spiele in der CI, Prüfung auf doppelte CSS-Klassen.
+2. Etappe 3 – Reparaturen: Stichspiel-Oberflächen und Skat-Bot, Kniffel-Bot und -Tafeln, Wortgitter, Binokel, Kleinigkeiten (Poker-Side-Pots, Spielerchip Nicht ärgern!, Kontrast Wort-Salat).
+3. Etappe 4 – Rechtliches: Kniffel und Ligretto umbenennen, Enten-Rallye-Klänge, Wörterbuch-Lizenz.
 
 **Arbeitsweise seit 27.10.2026:** Ein Teil der Arbeit kam direkt auf `main` statt über einen PR. Jeder Push dort veröffentlicht sofort; rote CI-Läufe (z. B. am 28.10. vier in Folge) bedeuten, dass in der Zeit nichts veröffentlicht wurde. Zweige mit PR bleiben der empfohlene Weg.
 

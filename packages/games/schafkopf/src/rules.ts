@@ -12,6 +12,7 @@ import {
   trickPoints,
   trickWinner,
   Rng,
+  type RngState,
   type Actor,
   type CardId,
   type MoveResult,
@@ -111,6 +112,8 @@ export interface SchafkopfState {
   // Gesamtwertung
   scores: Record<number, number>;
   history: SchafkopfSummary[];
+  /** Zufallsstrom zum Geben der nächsten Spiele (aus dem Seed; in Sichten genullt). */
+  dealRng: RngState;
 }
 
 export const SCHAFKOPF_RANKS_LONG: Rank[] = [7, 8, 9, 10, 11, 12, 13, 1];
@@ -207,6 +210,7 @@ export function setup(
 
     scores,
     history: [],
+    dealRng: rng.state,
   };
 }
 
@@ -622,14 +626,8 @@ function advanceToNextGame(state: SchafkopfState): SchafkopfState {
   const nextGameNum = state.gameNumber + 1;
   const nextDealer = nextDealerIndex(state.dealerSeat, 4);
 
-  const deck = createSchafkopfDeck(state.sheet);
-  const seed = (state.gameNumber * 997 + nextDealer * 31) % 100000;
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = (seed + i * 37) % (i + 1);
-    const tmp = deck[i];
-    deck[i] = deck[j];
-    deck[j] = tmp;
-  }
+  const rng = new Rng(state.dealRng);
+  const deck = rng.shuffle(createSchafkopfDeck(state.sheet));
 
   const cardsPerPlayer = state.sheet === 'short' ? 6 : 8;
   const hands: Record<number, CardId[]> = {};
@@ -642,6 +640,7 @@ function advanceToNextGame(state: SchafkopfState): SchafkopfState {
 
   return {
     ...state,
+    dealRng: rng.state,
     gameNumber: nextGameNum,
     dealerSeat: nextDealer,
     phase: 'bidding',
@@ -685,10 +684,18 @@ export function playerView(state: SchafkopfState, seat: SeatId | 'spectator'): S
   // Auch der Rufer kennt ihn nicht!
   const partnerVisible = state.partnerRevealed || player === state.partnerSeat || state.phase === 'roundOver';
 
+  // Die Ausgangsblätter der anderen bleiben bis zum Rundenende verdeckt.
+  const initialHands: Record<number, CardId[]> = {};
+  for (let s = 0; s < 4; s++) {
+    initialHands[s] = s === player || state.phase === 'roundOver' ? [...(state.initialHands[s] || [])] : [];
+  }
+
   return {
     ...state,
     hands: maskedHands,
+    initialHands,
     partnerSeat: partnerVisible ? state.partnerSeat : null,
+    dealRng: [0, 0, 0, 0],
   };
 }
 

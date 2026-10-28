@@ -806,9 +806,11 @@ export function playerView(state: UnoState, seat: number | 'spectator'): UnoStat
       if (idx === seat || isOver) {
         return hand;
       }
-      // Für Mitspieler: Karteninfo verbergen, aber bei Flip die Rückseite sichtbar lassen
-      return hand.map((c) => ({
-        id: c.id,
+      // Für Mitspieler: Karteninfo verbergen, aber bei Flip die Rückseite sichtbar lassen.
+      // Auch die Kennung wird ersetzt: Sie wird vor dem Mischen fortlaufend vergeben und
+      // verriete sonst, welche Karte es ist.
+      return hand.map((c, i) => ({
+        id: `verdeckt-${idx}-${i}`,
         front: side === 'dark' ? { color: 'wild', type: 'wild' } : (c.back ?? { color: 'wild', type: 'wild' }),
         back: side === 'light' ? (c.back ?? { color: 'wild', type: 'wild' }) : { color: 'wild', type: 'wild' },
       }));

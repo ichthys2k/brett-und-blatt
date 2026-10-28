@@ -1,3 +1,4 @@
+import { isLegalMove } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it } from 'vitest';
 import { calculateScore, gameModule } from '../src';
@@ -59,6 +60,38 @@ describe('Spielablauf', () => {
     expect(state.turn).toBe(1);
     expect(state.rollsLeft).toBe(3);
     expect(state.dice).toBeNull();
+  });
+
+  it('nach dem ersten Wurf darf man schon eintragen', () => {
+    let state = gameModule.setup(2, {}, 'früh');
+    state = gameModule.applyMove(state, 0, { type: 'roll' }).state;
+    const moves = gameModule.legalMoves(state, 0);
+    expect(moves.some((m) => m.type === 'roll')).toBe(true);
+    expect(moves.filter((m) => m.type === 'score')).toHaveLength(13);
+  });
+
+  it('gehaltene Würfel bleiben beim nächsten Wurf liegen', () => {
+    let state = gameModule.setup(2, {}, 'halten');
+    expect(isLegalMove(gameModule, state, 0, { type: 'toggleHold', index: 0 })).toBe(false);
+    state = gameModule.applyMove(state, 0, { type: 'roll' }).state;
+    const first = state.dice!.values;
+    for (const index of [0, 2]) {
+      expect(isLegalMove(gameModule, state, 0, { type: 'toggleHold', index })).toBe(true);
+      state = gameModule.applyMove(state, 0, { type: 'toggleHold', index }).state;
+    }
+    expect(isLegalMove(gameModule, state, 1, { type: 'toggleHold', index: 1 })).toBe(false);
+    state = gameModule.applyMove(state, 0, { type: 'roll' }).state;
+    expect(state.dice!.values[0]).toBe(first[0]);
+    expect(state.dice!.values[2]).toBe(first[2]);
+    state = gameModule.applyMove(state, 0, { type: 'roll' }).state;
+    // Nach dem letzten Wurf wird nur noch eingetragen.
+    expect(isLegalMove(gameModule, state, 0, { type: 'toggleHold', index: 1 })).toBe(false);
+  });
+
+  it('die Sicht verrät den Zufallszustand nicht', () => {
+    const state = gameModule.setup(2, {}, 'geheim');
+    expect(gameModule.playerView(state, 1).rng).toEqual([0, 0, 0, 0]);
+    expect(gameModule.playerView(state, 'spectator').rng).toEqual([0, 0, 0, 0]);
   });
 });
 

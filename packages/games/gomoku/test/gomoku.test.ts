@@ -3,11 +3,11 @@ import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { gameModule } from '../src';
 import { applyMove, legalMoves, result, setup } from '../src/rules';
 
-describe('gomoku', () => {
-  it('verifiziert das Spielmodul über die allgemeinen Prüfungen', () => {
-    gameContractChecks(gameModule);
-  });
+describe('gomoku: allgemeine Prüfungen', () => {
+  for (const check of gameContractChecks(gameModule)) it(check.name, check.run);
+});
 
+describe('gomoku', () => {
   it('erkennt einen horizontalen Fünfer', () => {
     let state = setup();
     for (let i = 0; i < 5; i++) {

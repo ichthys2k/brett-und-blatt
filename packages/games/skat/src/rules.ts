@@ -12,6 +12,7 @@ import {
   trickPoints,
   trickWinner,
   Rng,
+  type RngState,
   type Actor,
   type CardId,
   type MoveResult,
@@ -109,6 +110,8 @@ export interface SkatState {
   // Historie und Gesamtpunkte
   scores: Record<number, number>; // seat -> Punkte
   history: GameSummary[];
+  /** Zufallsstrom zum Geben der nächsten Spiele (aus dem Seed; in Sichten genullt). */
+  dealRng: RngState;
 }
 
 export const SKAT_BASE_VALUES: Record<SkatGameType, number> = {
@@ -302,6 +305,7 @@ export function setup(
 
     scores,
     history: [],
+    dealRng: rng.state,
   };
 }
 
@@ -761,14 +765,8 @@ function advanceToNextGame(state: SkatState): SkatState {
   const nextDealer = nextDealerIndex(state.dealerSeat, state.playerCount);
   const activeSeats = getActivePlayers(nextDealer, state.playerCount, 3);
 
-  const deck = createSkatDeck();
-  const seed = (state.gameNumber * 997 + nextDealer * 31) % 100000;
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = (seed + i * 37) % (i + 1);
-    const tmp = deck[i];
-    deck[i] = deck[j];
-    deck[j] = tmp;
-  }
+  const rng = new Rng(state.dealRng);
+  const deck = rng.shuffle(createSkatDeck());
 
   const hands: Record<number, CardId[]> = {};
   for (const s of activeSeats) hands[s] = [];
@@ -791,6 +789,7 @@ function advanceToNextGame(state: SkatState): SkatState {
 
   return {
     ...state,
+    dealRng: rng.state,
     gameNumber: nextGameNum,
     dealerSeat: nextDealer,
     activeSeats,
@@ -854,6 +853,7 @@ export function playerView(state: SkatState, seat: SeatId | 'spectator'): SkatSt
     discardedCards: isDeclarer || state.phase === 'roundOver' ? state.discardedCards : [],
     declarerEyes,
     opponentEyes,
+    dealRng: [0, 0, 0, 0],
   };
 }
 

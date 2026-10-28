@@ -28,19 +28,17 @@ import { gameModule as quartett } from '@brett-und-blatt/game-quartett';
 import { gameModule as reversi } from '@brett-und-blatt/game-reversi';
 import { gameModule as schafkopf } from '@brett-und-blatt/game-schafkopf';
 import { gameModule as skat } from '@brett-und-blatt/game-skat';
-import { gameModule as binokel } from '@brett-und-blatt/game-binokel';
 import { gameModule as targetNumber } from '@brett-und-blatt/game-target-number';
 import { gameModule as ticTacToe } from '@brett-und-blatt/game-tic-tac-toe';
 import { gameModule as ultimateTicTacToe } from '@brett-und-blatt/game-ultimate-tic-tac-toe';
 import { gameModule as uno } from '@brett-und-blatt/game-uno';
 import { gameModule as kniffel } from '@brett-und-blatt/game-kniffel';
 import { gameModule as wordSalad } from '@brett-und-blatt/game-word-salad';
-import { gameModule as scrabble } from '@brett-und-blatt/game-scrabble';
 import { gameModule as ligretto } from '@brett-und-blatt/game-ligretto';
 
 /**
  * Die Spiele, die online angeboten werden: alle für mehrere Personen. Ein neues
  * Mehrspieler-Spiel muss hier (und in package.json) eingetragen werden – ein Test
- * im Server-Paket erinnert daran.
+ * im Server-Paket erinnert daran. Entwürfe (`draft` im Steckbrief) bleiben draußen.
  */
-export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, duckRally, factorGrid, fourInARow, fourPlayerChess, go, gomoku, hangman, ludo, ligretto, maexle, mauMau, mill, numberWall, pairs, poker, quartett, reversi, schafkopf, skat, binokel, scrabble, targetNumber, ticTacToe, ultimateTicTacToe, uno, wordSalad, kniffel];
+export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, duckRally, factorGrid, fourInARow, fourPlayerChess, go, gomoku, hangman, ludo, ligretto, maexle, mauMau, mill, numberWall, pairs, poker, quartett, reversi, schafkopf, skat, targetNumber, ticTacToe, ultimateTicTacToe, uno, wordSalad, kniffel];

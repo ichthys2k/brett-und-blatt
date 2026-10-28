@@ -1,4 +1,4 @@
-import { Rng, type Actor, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
+import { Rng, sameValue, type Actor, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
 
 export type DieValue = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -200,6 +200,13 @@ export function legalMoves(state: KniffelState, actor: Actor): KniffelMove[] {
   const moves: KniffelMove[] = [];
   if (state.phase === 'roll' && state.rollsLeft > 0) {
     moves.push({ type: 'roll' });
+    // Nach dem ersten Wurf darf man jederzeit eintragen, nicht erst nach dem dritten.
+    if (state.dice) {
+      const sheet = state.sheets[state.turn]!;
+      for (const cat of ALL_CATEGORIES) {
+        if (typeof sheet.scores[cat] !== 'number') moves.push({ type: 'score', category: cat });
+      }
+    }
     return moves;
   }
   if ((state.phase === 'score' || state.rollsLeft === 0) && state.dice) {
@@ -350,6 +357,32 @@ export function evaluate(state: KniffelState, seat: SeatId): number {
   return state.sheets[seat]?.total ?? 0;
 }
 
+/**
+ * Würfel halten steht nicht in `legalMoves` (sonst würfeln Zufallsbots endlos hin und her),
+ * ist aber nach jedem Wurf vor dem letzten erlaubt.
+ */
+export function isLegal(state: KniffelState, actor: Actor, move: KniffelMove): boolean {
+  if (move.type === 'toggleHold') {
+    return (
+      actor === state.turn &&
+      !state.finished &&
+      state.phase === 'roll' &&
+      state.rollsLeft > 0 &&
+      state.dice !== null &&
+      Number.isInteger(move.index) &&
+      move.index >= 0 &&
+      move.index < 5
+    );
+  }
+  return legalMoves(state, actor).some((m) => sameValue(m, move));
+}
+
+/** Der Zufallszustand bleibt geheim, sonst ließen sich online die nächsten Würfe ausrechnen. */
 export function playerView(state: KniffelState, _seat: SeatId | 'spectator'): KniffelState {
-  return state;
+  return { ...state, rng: [0, 0, 0, 0] };
+}
+
+/** Für Bots: einen beliebigen neuen Zufallszustand einsetzen. */
+export function sampleHidden(view: KniffelState, _seat: SeatId, rng: Rng): KniffelState {
+  return { ...view, rng: rng.state };
 }
