@@ -1,0 +1,554 @@
+/* Mau-Mau – Tisch, Handkarten und Animationen */
+
+.mau-table {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  min-height: 31rem;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: clamp(0.6rem, 2vw, 1.4rem);
+  overflow: hidden;
+  color: #f8fafc;
+  user-select: none;
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(255, 255, 255, 0.09) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 110%, #176b56 0%, #0f4f41 46%, #0a3a31 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 -18px 50px rgba(0, 0, 0, 0.22);
+}
+
+.mau-table::before {
+  content: '';
+  position: absolute;
+  inset: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.1rem;
+  pointer-events: none;
+}
+
+.mau-opponents {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 0.55rem;
+  width: 100%;
+  z-index: 2;
+}
+
+.mau-opponent {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.75rem;
+  background: rgba(2, 20, 16, 0.38);
+  backdrop-filter: blur(4px);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.mau-opponent-active {
+  border-color: rgba(250, 204, 21, 0.82);
+  background: rgba(250, 204, 21, 0.16);
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.25), 0 0 18px rgba(250, 204, 21, 0.16);
+}
+
+.mau-opponent-card {
+  width: 1.85rem;
+  flex: none;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
+}
+
+.mau-badge {
+  flex: none;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  background: #facc15;
+  color: #422006;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.mau-catch {
+  flex: none;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 0.45rem;
+  background: #b91c1c;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.mau-catch:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.mau-center {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 10rem;
+  z-index: 2;
+}
+
+.mau-direction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  background: rgba(2, 20, 16, 0.25);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.mau-direction > span {
+  font-size: 1rem;
+  line-height: 1;
+  animation: mau-spin 14s linear infinite;
+}
+
+.mau-direction[data-reverse='true'] > span {
+  animation-direction: reverse;
+}
+
+.mau-direction small {
+  font-size: 0.62rem;
+  opacity: 0.72;
+}
+
+@keyframes mau-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mau-piles {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(0.6rem, 3vw, 1.5rem);
+  width: 100%;
+}
+
+.mau-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: clamp(4.2rem, 15vw, 5.5rem);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.74);
+  text-align: center;
+}
+
+.mau-pile .bub-card {
+  width: 100%;
+  filter: drop-shadow(0 7px 10px rgba(0, 0, 0, 0.3));
+}
+
+.mau-pile-clickable {
+  cursor: pointer;
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+.mau-pile-clickable:hover {
+  transform: translateY(-3px) rotate(-1deg);
+  filter: drop-shadow(0 11px 14px rgba(0, 0, 0, 0.36));
+}
+
+.mau-discard {
+  position: relative;
+  padding: 0.35rem;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 0.9rem;
+  transition: border-color 130ms ease, background 130ms ease;
+}
+
+.mau-discard.drag-over {
+  border-color: #facc15;
+  background: rgba(250, 204, 21, 0.12);
+}
+
+.mau-discard::after {
+  content: '';
+  position: absolute;
+  inset: -0.45rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.mau-top-card {
+  width: 100%;
+  transition: transform 180ms ease;
+}
+
+.mau-card-landing {
+  animation: mau-land 240ms cubic-bezier(0.2, 1.5, 0.45, 1);
+}
+
+@keyframes mau-land {
+  0% {
+    transform: scale(1.08) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.mau-suit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.12rem;
+  min-width: 4rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1f2937;
+  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.22);
+}
+
+.mau-suit > span {
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.mau-suit small {
+  font-size: 0.6rem;
+  color: #6b7280;
+  line-height: 1.1;
+}
+
+.mau-last-action {
+  max-width: 90%;
+  padding: 0.22rem 0.7rem;
+  border-radius: 9999px;
+  background: rgba(2, 20, 16, 0.36);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.7rem;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mau-penalty {
+  max-width: 92%;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid rgba(252, 165, 165, 0.55);
+  border-radius: 0.6rem;
+  background: rgba(127, 29, 29, 0.55);
+  color: #fecaca;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.mau-hand-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  z-index: 3;
+}
+
+.mau-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+}
+
+.mau-button,
+.mau-call,
+.mau-cancel {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 130ms ease,
+    transform 130ms ease,
+    border-color 130ms ease;
+}
+
+.mau-button {
+  padding: 0.35rem 0.8rem;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.mau-button:hover {
+  background: rgba(255, 255, 255, 0.24);
+  transform: translateY(-1px);
+}
+
+.mau-button-warn {
+  border-color: rgba(253, 230, 138, 0.7);
+  background: rgba(202, 138, 4, 0.5);
+}
+
+.mau-button-muted {
+  background: rgba(2, 20, 16, 0.28);
+}
+
+.mau-call {
+  padding: 0.35rem 0.75rem;
+  background: #facc15;
+  color: #422006;
+  border-color: #fde68a;
+}
+
+.mau-call:hover {
+  background: #fde047;
+  transform: translateY(-1px);
+}
+
+.mau-call-active {
+  background: #16a34a;
+  border-color: #86efac;
+  color: #fff;
+}
+
+.mau-hand {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  min-height: 7.4rem;
+  padding: 1.2rem 0 0.1rem;
+  overflow: visible;
+}
+
+.mau-hand-card {
+  flex: none;
+  width: clamp(3.35rem, 13.5vw, 4.75rem);
+  touch-action: none;
+  cursor: grab;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.mau-hand-card + .mau-hand-card {
+  margin-left: clamp(-2.1rem, -4.2vw, -0.55rem);
+}
+
+.mau-hand-card:hover {
+  z-index: 40;
+}
+
+.mau-hand-card:hover .bub-card {
+  transform: translateY(-0.55rem);
+  transition: transform 160ms ease;
+}
+
+.mau-hand-card .bub-card {
+  width: 100%;
+  filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.28));
+}
+
+.mau-hand-card .bub-card-hint {
+  filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.75)) drop-shadow(0 5px 7px rgba(0, 0, 0, 0.28));
+}
+
+.mau-card-dragging {
+  cursor: grabbing;
+  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.35));
+}
+
+.mau-card-snapping {
+  transition: transform 180ms cubic-bezier(0.2, 1.1, 0.4, 1);
+}
+
+.mau-flying-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 80;
+}
+
+.mau-flying-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  animation-name: mau-fly;
+  animation-timing-function: cubic-bezier(0.22, 0.9, 0.3, 1);
+  animation-fill-mode: both;
+  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.3));
+}
+
+.mau-flying-card .bub-card {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes mau-fly {
+  0% {
+    transform: translate(var(--fly-start-x), var(--fly-start-y)) rotate(var(--fly-rot-start));
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--fly-end-x), var(--fly-end-y)) rotate(var(--fly-rot-end));
+    opacity: 0.96;
+  }
+}
+
+.mau-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+.mau-modal {
+  width: min(22rem, 100%);
+  padding: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1rem;
+  background: #fff;
+  color: #1f2937;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.35);
+}
+
+.mau-modal h3 {
+  margin: 0 0 0.7rem;
+  font-size: 1rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.mau-suit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.mau-suit-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.65rem 0.4rem;
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  color: #1f2937;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background 120ms ease;
+}
+
+.mau-suit-choice:hover {
+  transform: translateY(-2px);
+  background: #f1f5f9;
+}
+
+.mau-cancel {
+  display: block;
+  margin: 0.8rem auto 0;
+  padding: 0.3rem 0.8rem;
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.mau-cancel:hover {
+  background: #d1d5db;
+}
+
+@media (max-width: 640px) {
+  .mau-table {
+    min-height: 29rem;
+    border-radius: 1rem;
+  }
+
+  .mau-direction small {
+    display: none;
+  }
+
+  .mau-pile {
+    width: clamp(4rem, 20vw, 5rem);
+  }
+
+  .mau-hand {
+    min-height: 6.6rem;
+    padding-top: 1rem;
+  }
+
+  .mau-hand-card {
+    width: clamp(3.1rem, 16vw, 4rem);
+  }
+
+  .mau-hand-card + .mau-hand-card {
+    margin-left: -1.55rem;
+  }
+
+  .mau-opponent {
+    padding: 0.28rem 0.42rem;
+  }
+
+  .mau-catch {
+    font-size: 0.58rem;
+    padding: 0.2rem 0.32rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mau-direction > span,
+  .mau-card-landing,
+  .mau-flying-card {
+    animation: none !important;
+  }
+
+  .mau-hand-card,
+  .mau-hand-card .bub-card,
+  .mau-top-card {
+    transition: none;
+  }
+}

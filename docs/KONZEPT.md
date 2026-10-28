@@ -200,8 +200,8 @@ brett-und-blatt/
 | 3 Online ✅ | Cloudflare-Server, Räume, Wiedereinstieg, Bot-Ersatz, Server-Uhr, flüchtige Signale | Schiffe versenken, Quartett, Mäxle, Bingo (Klassen-Modus) |
 | 4 Großes Brett ✅ | Zoombares Brett, Byo-yomi, Auszählphase, Fernpartie, Bänkchen für Steine | Go, Domino, Farbe & Form (Qwirkle-artig) |
 | 5 Stichspiele ✅ | Stich-Kern, Serien-Rahmen, Reizen und Ansagen | Skat, Schafkopf, Doppelkopf |
-| 6 Eigene Spiele | Parallel-Modus mit Match-Engine | Farbensortierer (früher Emoji-Sortierer, vorgezogen), Emojistone |
-| danach | | Scrabble, Uno-artig, Poker, Binokel, Dame, Mensch ärgere dich nicht und die Ideenliste |
+| 6 Eigene Spiele ✅ | Parallel-Modus mit Match-Engine | Farbensortierer, Drachenspiel (Emojistone) |
+| 7 Komplett ✅ | Vollausbau + Familie/Mathe | Eins! (Uno), Dame, Nicht ärgern! (Ludo), Poker, Binokel, Wortgitter/Scrabble, Bibel-Quiz, Galgenmännchen, Wort-Salat, Mathe-Module (Zielzahl, Teiler-Duell, Rechenmauer, Enten-Rallye) |
 
 Die Pläne der einzelnen Spiele stehen in [`spiele/`](spiele/README.md).
 

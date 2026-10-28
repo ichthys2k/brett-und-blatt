@@ -267,6 +267,7 @@ export function Home({ initialFilter }: { initialFilter?: string }) {
   const [snapshot, setSnapshot] = useState(() => storage.loadActive());
   const [openRooms, setOpenRooms] = useState<OpenRoomListing[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterId>(() => {
     if (
       initialFilter === 'board' ||
@@ -316,13 +317,37 @@ export function Home({ initialFilter }: { initialFilter?: string }) {
     return groups;
   }, []);
 
-  const visibleGroups = useMemo(
-    () =>
-      activeFilter === 'all'
-        ? categorizedGames
-        : categorizedGames.filter((g) => g.id === activeFilter),
-    [activeFilter, categorizedGames],
-  );
+  const filteredGamesBySearch = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return null;
+    return games.filter((game) => {
+      if (game.name.toLowerCase().includes(query)) return true;
+      if (game.description.toLowerCase().includes(query)) return true;
+      if (game.id.toLowerCase().includes(query)) return true;
+      if (game.howToPlay.some((rule) => rule.toLowerCase().includes(query))) return true;
+      return false;
+    });
+  }, [searchQuery]);
+
+  const visibleGroups = useMemo(() => {
+    if (filteredGamesBySearch !== null) {
+      if (filteredGamesBySearch.length === 0) {
+        return [];
+      }
+      return [
+        {
+          id: 'search' as CategoryId,
+          icon: '🔍',
+          title: 'Suchergebnisse',
+          subtitle: `${filteredGamesBySearch.length} ${filteredGamesBySearch.length === 1 ? 'Spiel' : 'Spiele'} gefunden`,
+          games: filteredGamesBySearch,
+        },
+      ];
+    }
+    return activeFilter === 'all'
+      ? categorizedGames
+      : categorizedGames.filter((g) => g.id === activeFilter);
+  }, [activeFilter, categorizedGames, filteredGamesBySearch]);
 
   const loadRooms = () => {
     if (!GAME_SERVER) return;
@@ -399,78 +424,127 @@ export function Home({ initialFilter }: { initialFilter?: string }) {
         </section>
       )}
 
-      {/* Rubrik-Filterleiste */}
-      <nav aria-label="Spielkategorien" className="flex flex-wrap gap-2">
-        {FILTER_TABS.map((tab) => {
-          const isSelected = activeFilter === tab.id;
-          return (
+      {/* Suche */}
+      <section className="space-y-2">
+        <label htmlFor="game-search" className="sr-only">
+          Spiele nach Stichwort suchen
+        </label>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg" aria-hidden="true">
+            🔍
+          </span>
+          <input
+            id="game-search"
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Spiele nach Name, Beschreibung oder Regeln suchen..."
+            className="w-full rounded-2xl border border-line bg-surface py-2.5 pl-10 pr-4 text-sm shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+            aria-label="Spiele nach Stichwort suchen"
+          />
+          {searchQuery && (
             <button
-              key={tab.id}
               type="button"
-              aria-pressed={isSelected}
-              onClick={() => setActiveFilter(tab.id)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition cursor-pointer ${
-                isSelected
-                  ? 'border-accent bg-accent text-white shadow-xs'
-                  : 'border-line bg-surface text-ink hover:border-accent/50'
-              }`}
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-xs text-muted hover:text-foreground"
+              aria-label="Suche zurücksetzen"
             >
-              <span aria-hidden="true">{tab.icon}</span>
-              <span>{tab.label}</span>
+              ✕
             </button>
-          );
-        })}
-      </nav>
+          )}
+        </div>
+      </section>
+
+      {/* Rubrik-Filterleiste */}
+      {!searchQuery.trim() && (
+        <nav aria-label="Spielkategorien" className="flex flex-wrap gap-2">
+          {FILTER_TABS.map((tab) => {
+            const isSelected = activeFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => setActiveFilter(tab.id)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition cursor-pointer ${
+                  isSelected
+                    ? 'border-accent bg-accent text-white shadow-xs'
+                    : 'border-line bg-surface text-ink hover:border-accent/50'
+                }`}
+              >
+                <span aria-hidden="true">{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       {/* Strukturierte Spieleliste nach Rubriken */}
       <div className="space-y-8">
-        {visibleGroups.map((group) => (
-          <section key={group.id} className="space-y-3">
-            <div className="space-y-0.5">
-              <h2 className="flex items-center gap-2 text-lg font-bold">
-                <span aria-hidden="true">{group.icon}</span>
-                <span>{group.title}</span>
-                <span className="text-xs font-normal text-muted">({group.games.length})</span>
-              </h2>
-              <p className="text-xs text-muted">{group.subtitle}</p>
-            </div>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {group.games.map((info) => (
-                <GameCard key={info.id} info={info} />
-              ))}
-            </ul>
-
-            {/* In der Mathe-Rubrik zusätzlich die vorgefertigten Mathe-Modi der Klassiker anzeigen */}
-            {group.id === 'math' && (
-              <div className="pt-3 space-y-2.5">
-                <h3 className="text-sm font-semibold text-muted">
-                  📐 Mathe-Modi in beliebten Klassikern (mit Voreinstellung starten):
-                </h3>
-                <ul className="grid gap-3 sm:grid-cols-2">
-                  {MATH_CLASSIC_PRESETS.map((preset) => (
-                    <li key={preset.id}>
-                      <a
-                        href={paths.setup(preset.gameId, preset.params)}
-                        className="flex h-full items-start gap-4 rounded-2xl border border-accent/35 bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
-                      >
-                        <span className="text-4xl leading-none" aria-hidden="true">
-                          {preset.emoji}
-                        </span>
-                        <span className="min-w-0 space-y-1">
-                          <span className="block font-semibold">{preset.title}</span>
-                          <span className="block text-sm text-muted">{preset.description}</span>
-                          <span className="inline-block rounded-full bg-accent/15 px-2 py-0.5 text-[11px] font-semibold text-accent">
-                            {preset.badge}
-                          </span>
-                        </span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+        {visibleGroups.length === 0 && searchQuery.trim() ? (
+          <section className="rounded-2xl border border-line bg-surface p-6 text-center shadow-sm">
+            <p className="text-lg font-semibold">Keine Spiele gefunden</p>
+            <p className="mt-1 text-sm text-muted">
+              Für „{searchQuery}“ wurden keine passenden Spiele gefunden. Versuche einen anderen Suchbegriff.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-line px-4 py-1.5 text-sm font-semibold hover:border-accent/50"
+            >
+              Suche zurücksetzen
+            </button>
           </section>
-        ))}
+        ) : (
+          visibleGroups.map((group) => (
+            <section key={group.id} className="space-y-3">
+              <div className="space-y-0.5">
+                <h2 className="flex items-center gap-2 text-lg font-bold">
+                  <span aria-hidden="true">{group.icon}</span>
+                  <span>{group.title}</span>
+                  <span className="text-xs font-normal text-muted">({group.games.length})</span>
+                </h2>
+                <p className="text-xs text-muted">{group.subtitle}</p>
+              </div>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {group.games.map((info) => (
+                  <GameCard key={info.id} info={info} />
+                ))}
+              </ul>
+
+              {/* In der Mathe-Rubrik zusätzlich die vorgefertigten Mathe-Modi der Klassiker anzeigen */}
+              {group.id === 'math' && !searchQuery.trim() && (
+                <div className="pt-3 space-y-2.5">
+                  <h3 className="text-sm font-semibold text-muted">
+                    📐 Mathe-Modi in beliebten Klassikern (mit Voreinstellung starten):
+                  </h3>
+                  <ul className="grid gap-3 sm:grid-cols-2">
+                    {MATH_CLASSIC_PRESETS.map((preset) => (
+                      <li key={preset.id}>
+                        <a
+                          href={paths.setup(preset.gameId, preset.params)}
+                          className="flex h-full items-start gap-4 rounded-2xl border border-accent/35 bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
+                        >
+                          <span className="text-4xl leading-none" aria-hidden="true">
+                            {preset.emoji}
+                          </span>
+                          <span className="min-w-0 space-y-1">
+                            <span className="block font-semibold">{preset.title}</span>
+                            <span className="block text-sm text-muted">{preset.description}</span>
+                            <span className="inline-block rounded-full bg-accent/15 px-2 py-0.5 text-[11px] font-semibold text-accent">
+                              {preset.badge}
+                            </span>
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+          ))
+        )}
       </div>
 
       <footer className="mt-auto space-y-2 text-xs text-muted">
