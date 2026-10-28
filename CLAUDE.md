@@ -146,12 +146,12 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - PWA: Tierstimmen (Drachenspiel, ~14 MB) und Enten-Rallye-Ton werden nicht mehr vorab gespeichert, sondern beim ersten Abspielen in eigene Speicher (`tiere`, `enten-rallye`); vorab nur noch ~6,4 MB statt 19 MB. Die Enten-Rallye spielt über `<audio>` (Range-Anfragen) und lädt ihre Dateien deshalb einmal ganz vor (`RallyAudio.prefetch`); der Service Worker bedient die Stücke aus dem Speicher (`rangeRequests`).
 - Bibel-Quiz: Die Sicht verbirgt Lösung, Erklärung und Bibellink bis zur Auflösung (`solutionOf` für Bot und `sampleHidden`).
 - Sonderspiele der Stichspiel-Bots über `winsAllTricks` und `nullDangerSuits`/`nullTrickCard` im Stich-Kern: Skat-Bot spielt Null (bis 23, drückt gefährliche Farben), Schafkopf-Bot sagt Tout an, wenn alle Stiche sicher sind, und Bettel (nur mit „alle Spiele“), Binokel-Bot drückt für Durch und sagt es an.
+- Git-Geschichte bereinigt: Die 15 Enten-Rallye-MP3s (Commit „Spielupdates und Klänge hinzugefügt“) sind per `git filter-branch` aus allen Commits entfernt und `main` neu hochgeladen (Force-Push); alle Commits ab dort haben neue Kennungen. Alte Zweige auf GitHub sind gelöscht. **Andere Rechner:** `git fetch && git reset --hard origin/main` (vorher nicht committete Änderungen sichern) oder neu klonen.
 - Schafkopf-Regeln (`ruleVersion` 3): Geier, Farbwenz und Bettel ließen sich reizen, aber nur als Solo ansagen – jetzt richtig; Bettel ist ohne Stich gewonnen, Tout nur mit allen Stichen und zählt doppelt (vorher wie ein normales Spiel nach Augen).
 
 **Bekannte offene Punkte:**
 - **Stichspiel-Bots** spielen nach Faustregeln, ohne Suche (Skat, Schafkopf, Doppelkopf, Binokel). Skat-Hand-, Schneider-, Schwarz- und Ouvert-Ansagen, Geier und Farbwenz macht kein Bot.
 - **Bibel-Quiz:** Der Fragenkatalog mit Antworten und Erklärungen liegt im Browser-Bundle (Option 0 ist richtig). Wer den Programmcode durchsucht, findet die Lösung; ganz verbergen ginge nur, wenn der Spieleserver die Fragen liefert – dann bräuchten Solo und Hot-Seat Internet.
-- **Enten-Rallye-Klänge in der Git-Geschichte:** Die 15 MP3s liegen jetzt im privaten Klang-Repo, stecken aber noch in alten Commits des öffentlichen Repos. Ganz entfernen ginge nur durch Umschreiben der Geschichte (Force-Push) – nur auf Anweisung von Cornelius.
 
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
 - Drag & Drop: Universeller Pointer-Drag (`usePointerDrag`), Reise-Animationen (`useSpawnAnimation`) und sanfte Gleit-Animationen für ziehende Figuren (`useGridMoveAnimation`, 280 ms mit `onAnimationEnd`-Cleanup) in `packages/ui/src/dnd`. Gleiten aktiviert für Schach (inkl. Rochade und gedrehtem Brett), Vierer-Schach (alle 4 Perspektiven & Rochade) und Dame. Barrierefreiheit (Tastatur und Klick/Tap) bleibt vollständig erhalten.
@@ -177,7 +177,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 ## Nächste Schritte
 
 Korrekturplan aus dem Prüfbericht:
-1. ✅ Etappe 1 – Lecks und Kaputtes (veröffentlicht 28.10.2026, Commit `88afee3`).
+1. ✅ Etappe 1 – Lecks und Kaputtes (veröffentlicht 28.10.2026, Commit `2ff0822`).
 2. ✅ Etappe 2 – Prüfnetz (28.10.2026): Geheimnis-Prüfungen in `gameContractChecks` (`checkSecrets`), `tests/repo.test.ts` (Vertragsprüfung je fertigem Spiel wirklich ausgeführt, Ordner = id, keine CSS-Klasse in zwei Spielen), Browser-Rauchtest `scripts/rauchtest.mjs` in der CI, Prüfstand `tests/pruefstand.test.ts`. Dabei behoben: Handkarten der Stichspiele haben feste Breite (zwei Reihen auf dem Handy) und erlaubte Karten sind markiert; Mau-Mau-Klasse `drag-over` → `mau-drag-over`.
 3. Etappe 3 – Reparaturen.
    - ✅ Teil 1 (28.10.2026):
