@@ -8,6 +8,9 @@ const THINK_MS: Record<BotLevel, [number, number]> = {
   hard: [1_400, 1_100],
 };
 
+/** Dauer des Countdowns zu Beginn (3 × 1 s); die Oberfläche sperrt so lange die Eingabe. */
+const COUNTDOWN_MS = 3_000;
+
 /** Wahrscheinlichkeit eines Tipp-/Rechenfehlers beim ersten Versuch einer Stufe. */
 const MISTAKE_CHANCE: Record<BotLevel, number> = {
   easy: 0.15,
@@ -49,6 +52,8 @@ export const duckRallyBot: BotDefinition<DuckRallyState, DuckRallyMove> = {
     const [base, spread] = THINK_MS[level];
     // Gleichungen und Prozentaufgaben dauern auch für Menschen einen kleinen Moment länger
     const extra = problem?.kind === 'algebra' || problem?.kind === 'percent' ? 600 : 0;
-    return base + Math.floor(rng.next() * spread) + extra;
+    // Zu Beginn zählt die Oberfläche „3, 2, 1, los!“ herunter – so lange wartet auch der Bot.
+    const fresh = view.racers.every((r) => r.solvedCount === 0 && r.mistakes === 0);
+    return base + Math.floor(rng.next() * spread) + extra + (fresh ? COUNTDOWN_MS : 0);
   },
 };

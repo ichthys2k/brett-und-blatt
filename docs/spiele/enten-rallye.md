@@ -38,3 +38,14 @@
   - **Solo & Online:** Großes Aufgabenfeld mit Touch-Ziffernblock (`0–9`, `⌫`, `GO!`), voller Tastaturunterstützung und 2×3-Auswahlkacheln bei Primzahl-Aufgaben.
   - **Hot-Seat (bis 4 Spieler am selben Gerät / Smartboard):** Gleichzeitige Splitscreen-Ansicht mit eigenem Ziffernblock pro Ente.
 - **Siegertreppchen:** Podest für Platz 1–3 mit gelösten Aufgaben, Serien-Rekord und Fehlerquote.
+
+## Ton (28.10.2026)
+
+Wie im Original aus „Großer Preis“ (`KopfrechenArena.jsx`), umgesetzt in `src/ui/audio.ts` (`RallyAudio`, eigener AudioContext mit Musik- und Stimmweg, Begrenzer):
+
+- **Keine allgemeine Playlist:** `meta.ownMusic = true`; die App spielt dann keine Playlist-Musik und zeigt im Lautsprecher-Menü keine Playlist. Lautstärken kommen über `BoardProps.audio` aus den Ton-Einstellungen (online nur bei der Raumleitung, wie die übrige Musik).
+- **Lied der führenden Ente** (gelb, rot, blau, grün; ab der fünften Farbe „war drum“), mit 1 s Überblendung; bei Gleichstand bleibt das bisherige Lied.
+- **Ansager:** Countdown „3, 2, 1, los!“ zu Beginn (Eingabe gesperrt, Bots warten 3 s länger), Führungswechsel (`lead_team_*`), Fortschritt der vordersten Ente bei 50, 75 und 90 % (`progress_*`), Sieger (`winner_team_*`, sonst `outro_winner`). Während einer Ansage wird die Musik leiser; die Ansagen wurden im Klang-Repo auf etwa −14 LUFS angehoben (vorher rund 9 dB leiser als die Musik).
+- **Quaken** bei jeder richtigen Antwort (`ente_variante_6`).
+- **Siegesmusik** „Victory Lap“; sie und alles andere stoppt, wenn man das Spiel verlässt, und eine Revanche startet wieder mit Countdown.
+- Dateien im privaten Klang-Repo unter `duck-rally/`.

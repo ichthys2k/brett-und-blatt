@@ -112,7 +112,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const playMusic = !isClient || Boolean(soundSettings.clientMusic);
 
   useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined);
-  useGameMusic(info.id, playMusic);
+  useGameMusic(info.id, playMusic && !info.ownMusic);
 
   // Uhren prüfen und anzeigen.
   useEffect(() => {
@@ -222,7 +222,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           <Button variant="ghost" className="ml-auto px-3 text-lg" aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
             ?
           </Button>
-          <SoundControl gameId={info.id} isClient={isClient} />
+          <SoundControl gameId={info.id} isClient={isClient} ownMusic={info.ownMusic} />
           {session.timed && !result && !online && (
             <Button
               variant="ghost"
@@ -398,6 +398,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           hint={hint}
           viewer={viewer}
           seatNames={seats.map((seat) => seat.name)}
+          audio={{ muted: soundSettings.muted, music: playMusic ? soundSettings.music : 0, effects: soundSettings.effects }}
           invite={online?.invite}
           canJoinSeat={session.canJoinSeat ? (seat) => session.canJoinSeat!(seat) : undefined}
           onJoinSeat={session.joinSeat ? (seat, kind, name) => session.joinSeat!(seat, kind, name) : undefined}

@@ -22,6 +22,11 @@ export interface BoardProps<V, M> {
    * Für Spiele, in denen alle gleichzeitig handeln (Bingo: mehrere Karten nebeneinander).
    */
   humanSeats?: { seat: SeatId; legalMoves: M[]; onMove: (move: M) => void }[];
+  /**
+   * Lautstärken aus den Ton-Einstellungen (0–1) für Spiele mit eigener Musik (`GameInfo.ownMusic`).
+   * `music` ist 0, wenn auf diesem Gerät keine Musik laufen soll (online nur bei der Raumleitung).
+   */
+  audio?: { muted: boolean; music: number; effects: number };
   /** Nur online: Raumcode und Einladungslink, z. B. für eine Tafel mit QR-Code am Beamer. */
   invite?: { code: string; link: string };
   /** Für Spiele mit laufendem Ein- und Ausstieg (`joinMidGame`): freie Plätze einnehmen oder den eigenen Platz verlassen. */

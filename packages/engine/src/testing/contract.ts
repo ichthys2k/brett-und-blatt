@@ -14,6 +14,11 @@ export interface ContractOptions {
   botGames?: number;
   /** Partien, die länger dauern, gelten als Fehler. */
   maxMoves?: number;
+  /**
+   * Geheimnis-Prüfung nach so vielen Zügen beenden (Standard: höchstens 2000). Sie sieht alle
+   * paar Züge in jede Sicht – bei sehr langen Partien (Echtzeit) sonst minutenlang.
+   */
+  secretMoves?: number;
   /** Bot-Partien nach so vielen Zügen abbrechen (für Spiele mit langsamen Bots oder sehr langen Partien). */
   botMoveLimit?: number;
   seed?: string;
@@ -99,7 +104,7 @@ export function gameContractChecks(module: AnyGameModule, options: ContractOptio
       run() {
         forEachSetup((seats, opts, label) => {
           for (let g = 0; g < Math.min(gamesPerSetup, 2); g++) {
-            checkSecrets(module, seats, opts, `${seed}/geheim/${label}/${g}`, maxMoves, (options.sampleHiddenApproximate ?? module.sampleHiddenApproximate) !== undefined);
+            checkSecrets(module, seats, opts, `${seed}/geheim/${label}/${g}`, options.secretMoves ?? Math.min(maxMoves, 2_000), (options.sampleHiddenApproximate ?? module.sampleHiddenApproximate) !== undefined);
           }
         });
       },

@@ -40,6 +40,11 @@ export interface GameInfo {
    * nicht auf dem Spieleserver. Zum Testen bleibt es über `#/neu/<id>` erreichbar.
    */
   draft?: boolean;
+  /**
+   * Das Spiel bringt eigene Musik mit (z. B. Enten-Rallye): Die allgemeine Playlist läuft dann
+   * nicht, und die Oberfläche spielt ihre Musik selbst (Lautstärken über `BoardProps.audio`).
+   */
+  ownMusic?: boolean;
   /** Kurze Anleitung „So geht's“: die wichtigsten Regeln in wenigen Sätzen, je ein Punkt pro Eintrag. */
   howToPlay: string[];
 }

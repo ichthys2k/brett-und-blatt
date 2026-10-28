@@ -1,6 +1,6 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   rankRacers,
   result,
@@ -8,9 +8,8 @@ import {
   type DuckRallyState,
   type RacerState,
 } from '../rules';
+import { RallyAudio } from './audio';
 import './styles.css';
-
-const DUCK_RALLY_AUDIO_BASE = `${import.meta.env.BASE_URL}klaenge/duck-rally/`;
 
 const LEADER_TRACKS_BY_COLOR: Record<string, string> = {
   '#facc15': 'gelbe_ente.mp3',
@@ -37,9 +36,15 @@ function getLeaderTrackFile(color: string): string {
   return LEADER_TRACKS_BY_COLOR[color] ?? 'war drum.mp3';
 }
 
-function getLeadAnnounceFile(color: string): string {
+function getLeadAnnounceFile(color: string): string | null {
   return LEAD_ANNOUNCE_BY_COLOR[color] ?? null;
 }
+
+/** Countdown zu Beginn: 3, 2, 1 im Sekundentakt, dann „Los!“. */
+export const COUNTDOWN_FROM = 3;
+const COUNTDOWN_STEP_MS = 1000;
+/** Ansagen beim Fortschritt der vordersten Ente. */
+const PROGRESS_MARKS = [0.5, 0.75, 0.9];
 
 function getWinnerAnnounceFile(color: string): string {
   return WINNER_ANNOUNCE_BY_COLOR[color] ?? 'outro_winner.mp3';
@@ -492,6 +497,8 @@ function Board({
   onMove,
   seatNames,
   humanSeats,
+  events,
+  audio,
 }: BoardProps<DuckRallyState, DuckRallyMove>) {
   const gameResult = result(view);
   const mySeat: SeatId = typeof viewer === 'number' ? viewer : 0;
@@ -525,167 +532,96 @@ function Board({
     return top.seat;
   }, [rankedForLeader]);
 
-  const currentLeaderRef = useRef<SeatId | null>(null);
-  const prevLeaderRef = useRef<SeatId | null>(null);
-  const hasPlayedFirstLeadRef = useRef(false);
-  const victoryStartedRef = useRef(false);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const masterGainRef = useRef<GainNode | null>(null);
-  const leaderAudiosRef = useRef<Map<string, HTMLAudioElement>>(new Map());
-  const leaderGainsRef = useRef<Map<string, GainNode>>(new Map());
-  const announceRef = useRef<HTMLAudioElement | null>(null);
-  const victoryRef = useRef<HTMLAudioElement | null>(null);
-
-  const ensureAudioContext = useCallback(() => {
-    if (audioCtxRef.current) return audioCtxRef.current;
-    const Ctx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined;
-    if (!Ctx) return null;
-    const ctx = new Ctx();
-    audioCtxRef.current = ctx;
-    const master = ctx.createGain();
-    master.gain.value = 0.6;
-    master.connect(ctx.destination);
-    masterGainRef.current = master;
-    return ctx;
-  }, []);
-
-  const ensureLeaderAudio = useCallback(
-    (color: string) => {
-      const ctx = ensureAudioContext();
-      if (!ctx || !masterGainRef.current) return null;
-      if (leaderAudiosRef.current.has(color)) return leaderAudiosRef.current.get(color)!;
-      const el = new Audio();
-      el.src = DUCK_RALLY_AUDIO_BASE + getLeaderTrackFile(color);
-      el.loop = true;
-      el.preload = 'auto';
-      const srcNode = ctx.createMediaElementSource(el);
-      const gainNode = ctx.createGain();
-      gainNode.gain.value = 0;
-      srcNode.connect(gainNode).connect(masterGainRef.current);
-      leaderAudiosRef.current.set(color, el);
-      leaderGainsRef.current.set(color, gainNode);
-      return el;
-    },
-    [ensureAudioContext],
-  );
-
-  const playAnnounce = useCallback((file: string | null) => {
-    if (!file) return;
-    const ctx = ensureAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') void ctx.resume();
-    if (announceRef.current) {
-      announceRef.current.pause();
-      announceRef.current.currentTime = 0;
-    }
-    const el = new Audio(DUCK_RALLY_AUDIO_BASE + file);
-    el.volume = 0.8;
-    announceRef.current = el;
-    void el.play().catch(() => {});
-  }, [ensureAudioContext]);
-
-  const startVictoryMusic = useCallback(() => {
-    if (victoryStartedRef.current) return;
-    victoryStartedRef.current = true;
-    const ctx = ensureAudioContext();
-    if (ctx && ctx.state === 'suspended') void ctx.resume();
-    // Sieger-Ente ermitteln
-    const top = rankedForLeader[0];
-    const winnerSeat = top?.seat ?? leaderSeat ?? 0;
-    const winnerColor = duckColorOf(winnerSeat);
-    const announceFile = getWinnerAnnounceFile(winnerColor);
-    // Victory_Lap abspielen
-    if (victoryRef.current) {
-      victoryRef.current.pause();
-      victoryRef.current.currentTime = 0;
-    }
-    const vic = new Audio(DUCK_RALLY_AUDIO_BASE + 'Victory_Lap.mp3');
-    vic.loop = false;
-    vic.volume = 0.7;
-    victoryRef.current = vic;
-    void vic.play().catch(() => {});
-    // Kurze Verzögerung wie im Original, dann Siegeransage
-    window.setTimeout(() => playAnnounce(announceFile), 800);
-    // Leader-Musik ausblenden
-    for (const [, g] of leaderGainsRef.current.entries()) {
-      const gain = g.gain;
-      const ctx = audioCtxRef.current ?? ensureAudioContext();
-      if (!ctx) continue;
-      const now = ctx.currentTime;
-      gain.cancelScheduledValues(now);
-      gain.setValueAtTime(gain.value, now);
-      gain.linearRampToValueAtTime(0, now + 0.8);
-    }
-  }, [ensureAudioContext, leaderSeat, playAnnounce, rankedForLeader]);
-
+  // ---------------------------------------------------------------------------
+  // Ton: Lieder der führenden Ente, Ansager, Quaken, Siegesmusik (siehe audio.ts)
+  // ---------------------------------------------------------------------------
+  const audioRef = useRef<RallyAudio | null>(null);
+  if (audioRef.current === null && typeof window !== 'undefined') audioRef.current = new RallyAudio();
+  // Beim Verlassen des Spiels verstummt alles – auch die Siegesmusik.
+  useEffect(() => () => audioRef.current?.dispose(), []);
   useEffect(() => {
-    // Nur im Rennen Musik steuern
-    if (gameResult) {
-      startVictoryMusic();
-      return;
+    audioRef.current?.setVolumes(audio ?? { muted: false, music: 0.4, effects: 0.7 });
+  }, [audio?.muted, audio?.music, audio?.effects]);
+
+  // Countdown „3, 2, 1, los!“ zu Beginn eines frischen Rennens (die Bots warten so lange).
+  const freshRace = !gameResult && view.racers.every((r) => r.solvedCount === 0 && r.mistakes === 0);
+  const [countdown, setCountdown] = useState<number | 'LOS' | null>(() => (freshRace ? COUNTDOWN_FROM : null));
+  useEffect(() => {
+    if (countdown === null) return;
+    const file = countdown === 'LOS' ? 'countdown_00.mp3' : `countdown_0${countdown}.mp3`;
+    audioRef.current?.announce(file);
+    const timer = window.setTimeout(
+      () => setCountdown(countdown === 'LOS' ? null : countdown === 1 ? 'LOS' : countdown - 1),
+      countdown === 'LOS' ? 700 : COUNTDOWN_STEP_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [countdown]);
+  const racing = countdown === null || countdown === 'LOS';
+
+  // Führende Ente mit „Gedächtnis“: Bei Gleichstand bleibt die bisherige vorn (wie im Original).
+  const stickyLeaderRef = useRef<SeatId | null>(null);
+  const topSolved = rankedForLeader[0]?.solvedCount ?? 0;
+  if (topSolved <= 0) stickyLeaderRef.current = null;
+  else if (leaderSeat !== null) stickyLeaderRef.current = leaderSeat;
+  const musicLeader = stickyLeaderRef.current;
+
+  const announcedLeaderRef = useRef<SeatId | null>(musicLeader);
+  useEffect(() => {
+    if (gameResult || !racing) return;
+    audioRef.current?.setLeaderTrack(musicLeader === null ? null : getLeaderTrackFile(duckColorOf(musicLeader)));
+    const previous = announcedLeaderRef.current;
+    if (musicLeader !== null && musicLeader !== previous) {
+      // Den ersten Führenden nennt der Ansager nicht, erst jeden Wechsel.
+      if (previous !== null) audioRef.current?.announce(getLeadAnnounceFile(duckColorOf(musicLeader)));
+      announcedLeaderRef.current = musicLeader;
     }
-    if (view.racers.length === 0) return;
-    const ctx = ensureAudioContext();
-    if (ctx && ctx.state === 'suspended') {
-      const unlock = () => {
-        if (ctx.state === 'suspended') void ctx.resume();
-        window.removeEventListener('pointerdown', unlock);
-        window.removeEventListener('keydown', unlock);
-      };
-      window.addEventListener('pointerdown', unlock, { once: true });
-      window.addEventListener('keydown', unlock, { once: true });
+  }, [gameResult, racing, musicLeader]);
+
+  // Fortschritt der vordersten Ente: 50, 75 und 90 Prozent der Strecke.
+  const progress = view.target > 0 ? topSolved / view.target : 0;
+  const announcedProgressRef = useRef(new Set(PROGRESS_MARKS.filter((mark) => progress >= mark)));
+  useEffect(() => {
+    if (gameResult) return;
+    const due = PROGRESS_MARKS.filter((mark) => progress >= mark && !announcedProgressRef.current.has(mark));
+    if (due.length === 0) return;
+    for (const mark of due) announcedProgressRef.current.add(mark);
+    audioRef.current?.announce(`progress_${Math.round(Math.max(...due) * 100)}.mp3`);
+  }, [gameResult, progress]);
+
+  // Quaken bei jeder richtigen Antwort.
+  useEffect(() => {
+    if (events.some((event) => event.type === 'boost')) audioRef.current?.quack();
+  }, [events]);
+
+  // Sieg: Siegesmusik und Ansage der Siegerfarbe.
+  const victoryPlayedRef = useRef(false);
+  useEffect(() => {
+    if (!gameResult || victoryPlayedRef.current) return;
+    victoryPlayedRef.current = true;
+    const winner = rankedForLeader[0]?.seat ?? 0;
+    audioRef.current?.victoryLap(getWinnerAnnounceFile(duckColorOf(winner)));
+  }, [gameResult, rankedForLeader]);
+
+  // „Neu starten“ ohne neues Spielfeld: Ein frisches Rennen setzt Ton und Countdown zurück.
+  const wasFreshRef = useRef(freshRace);
+  useEffect(() => {
+    if (freshRace && !wasFreshRef.current) {
+      audioRef.current?.stopVictory();
+      audioRef.current?.setLeaderTrack(null);
+      victoryPlayedRef.current = false;
+      announcedLeaderRef.current = null;
+      announcedProgressRef.current.clear();
+      setCountdown(COUNTDOWN_FROM);
     }
+    wasFreshRef.current = freshRace;
+  }, [freshRace]);
 
-    if (leaderSeat === null) {
-      // Kein eindeutiger Führender -> alle leise
-      for (const [, g] of leaderGainsRef.current.entries()) {
-        const gain = g.gain;
-        const ctx = audioCtxRef.current ?? ensureAudioContext();
-        if (!ctx) continue;
-        const now = ctx.currentTime;
-        gain.cancelScheduledValues(now);
-        gain.setValueAtTime(gain.value, now);
-        gain.linearRampToValueAtTime(0, now + 0.6);
-      }
-      currentLeaderRef.current = null;
-      return;
-    }
-
-    const leaderColor = duckColorOf(leaderSeat);
-    ensureLeaderAudio(leaderColor);
-
-    // Crossfade
-    for (const [color, g] of leaderGainsRef.current.entries()) {
-      const gain = g.gain;
-      const ctx = audioCtxRef.current ?? ensureAudioContext();
-      if (!ctx) continue;
-      const now = ctx.currentTime;
-      gain.cancelScheduledValues(now);
-      const target = color === leaderColor ? 0.7 : 0;
-      gain.setValueAtTime(gain.value, now);
-      gain.linearRampToValueAtTime(target, now + 1.0);
-    }
-
-    // Führungswechsel-Ansage
-    if (
-      leaderSeat !== currentLeaderRef.current &&
-      prevLeaderRef.current !== null &&
-      currentLeaderRef.current !== null &&
-      hasPlayedFirstLeadRef.current
-    ) {
-      const announce = getLeadAnnounceFile(leaderColor);
-      playAnnounce(announce);
-    } else if (currentLeaderRef.current === null && leaderSeat !== null) {
-      hasPlayedFirstLeadRef.current = true;
-    }
-
-    // Track abspielen falls pausiert
-    const el = leaderAudiosRef.current.get(leaderColor);
-    if (el && el.paused) void el.play().catch(() => {});
-
-    prevLeaderRef.current = currentLeaderRef.current;
-    currentLeaderRef.current = leaderSeat;
-  }, [ensureAudioContext, ensureLeaderAudio, gameResult, leaderSeat, playAnnounce, startVictoryMusic, view]);
+  const countdownOverlay =
+    countdown !== null ? (
+      <div className="dr-countdown" aria-live="assertive">
+        <span key={String(countdown)}>{countdown === 'LOS' ? 'LOS!' : countdown}</span>
+      </div>
+    ) : null;
 
   return (
     <div className="dr-root">
@@ -705,7 +641,7 @@ function Board({
                     racer={racer}
                     target={view.target}
                     name={nameOf(hs.seat)}
-                    canPlay={hs.legalMoves.length > 0}
+                    canPlay={racing && hs.legalMoves.length > 0}
                     enableKeyboard={false}
                     compact={humanSeats.length >= 3}
                     onSubmit={(val) => hs.onMove({ type: 'answer', value: val })}
@@ -720,6 +656,7 @@ function Board({
               }}
             >
               <div className="dr-river-waves" />
+              {countdownOverlay}
               <div className="dr-bank-top" />
               <div className="dr-bank-bottom" />
 
@@ -791,7 +728,7 @@ function Board({
                   racer={racer}
                   target={view.target}
                   name={nameOf(activeHs.seat)}
-                  canPlay={activeHs.legalMoves.length > 0}
+                  canPlay={racing && activeHs.legalMoves.length > 0}
                   enableKeyboard={true}
                   compact
                   onSubmit={(val) => activeHs.onMove({ type: 'answer', value: val })}
@@ -809,7 +746,7 @@ function Board({
                 racer={view.racers[mySeat]!}
                 target={view.target}
                 name={nameOf(mySeat)}
-                canPlay={legalMoves.length > 0}
+                canPlay={racing && legalMoves.length > 0}
                 enableKeyboard={true}
                 onSubmit={(val) => onMove({ type: 'answer', value: val })}
               />
@@ -822,6 +759,7 @@ function Board({
             }}
           >
             <div className="dr-river-waves" />
+              {countdownOverlay}
             <div className="dr-bank-top" />
             <div className="dr-bank-bottom" />
 
@@ -876,8 +814,8 @@ export const gameUi: GameUi<DuckRallyState, DuckRallyMove> = {
     if (!r) return '';
     return `${r.solvedCount}/${view.target}${r.streak >= 2 ? ` · 🔥${r.streak}` : ''}`;
   },
+  // Das Quaken bei richtigen Antworten spielt die Oberfläche selbst (audio.ts).
   sounds: {
-    boost: 'paar',
     mistake: 'kein-paar',
   },
 };

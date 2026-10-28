@@ -11,8 +11,10 @@ export const meta: GameInfo = {
   hiddenInformation: true,
   privateViews: false,
   ruleVersion: 1,
+  // Eigene Musik: das Lied der führenden Ente, Ansager und Siegesmusik (ui/audio.ts).
+  ownMusic: true,
   howToPlay: [
-    'Jede Spielerin und jeder Spieler steuert eine farbige Gummiente im Fluss Richtung Ziellinie 🏁.',
+    'Nach dem Countdown „3, 2, 1, los!“ geht es gleichzeitig los. Jede Spielerin und jeder Spieler steuert eine farbige Gummiente im Fluss Richtung Ziellinie 🏁.',
     'Löse die angezeigte Mathe-Aufgabe über das Zahlenfeld (oder die Tastatur) und bestätige mit „GO!“ – bei Primzahl-Aufgaben tippst du direkt auf die einzige Primzahl unter den sechs Zahlen.',
     'Alle Enten bekommen über das Rennen hinweg dieselben Aufgaben (in 3er-Blöcken leicht gemischt, damit niemand beim Nachbarn abschreiben kann).',
     'Jede richtige Antwort gibt deiner Ente einen Schwimm-Schub nach vorn! Bei einer falschen Antwort reißt deine Serie ab und es erscheint eine neue Ersatz-Aufgabe.',

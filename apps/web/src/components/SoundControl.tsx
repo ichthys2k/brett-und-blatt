@@ -67,7 +67,7 @@ export function VolumeControls({ showClientOption }: { showClientOption?: boolea
 }
 
 /** Lautsprecher-Knopf im Spiel: Lautstärken, Playlist, laufendes Stück. */
-export function SoundControl({ gameId, isClient }: { gameId: string; isClient?: boolean }) {
+export function SoundControl({ gameId, isClient, ownMusic }: { gameId: string; isClient?: boolean; ownMusic?: boolean }) {
   const settings = useSoundSettings();
   const prefs = useMusicPrefs();
   const current = useCurrentTrack();
@@ -77,7 +77,8 @@ export function SoundControl({ gameId, isClient }: { gameId: string; isClient?: 
   const musicActive = !isClient || Boolean(settings.clientMusic);
   const silent = settings.muted || (settings.effects === 0 && (!musicActive || settings.music === 0));
   const playlistId = playlistFor(gameId, prefs);
-  const musicOn = !settings.muted && settings.music > 0 && musicTracks.length > 0 && musicActive;
+  // Spiele mit eigener Musik haben keine Playlist zur Auswahl.
+  const musicOn = !ownMusic && !settings.muted && settings.music > 0 && musicTracks.length > 0 && musicActive;
 
   useEffect(() => {
     if (!open) return;
