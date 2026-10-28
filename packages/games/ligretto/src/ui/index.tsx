@@ -1,5 +1,13 @@
 import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
-import type { LigrettoMove, LigrettoState } from '../rules';
+import { PlayingCard } from '@brett-und-blatt/ui';
+import type { LigrettoMove, LigrettoState, Suit } from '../rules';
+
+function suitToCardSuit(suit: Suit): 'hearts' | 'diamonds' | 'clubs' | 'spades' {
+  if (suit === 'red') return 'hearts';
+  if (suit === 'yellow') return 'diamonds';
+  if (suit === 'green') return 'clubs';
+  return 'spades';
+}
 
 function Board({ view, legalMoves, onMove, viewer }: BoardProps<LigrettoState, LigrettoMove>) {
   const s = view as LigrettoState;
@@ -30,40 +38,38 @@ function Board({ view, legalMoves, onMove, viewer }: BoardProps<LigrettoState, L
 
       <div className="flex-1 flex flex-col items-center justify-center gap-2">
         <div className="text-sm font-semibold">Mittelfeld</div>
-        <div className="flex flex-wrap gap-2 justify-center">
+        <div className="flex flex-wrap gap-3 justify-center">
           {s.centerPiles.length === 0 && (
             <div className="text-xs text-gray-500">Warte auf erste 1...</div>
           )}
           {s.centerPiles.map((cp, i) => (
-            <div
-              key={i}
-              className="w-16 h-24 border-2 border-gray-400 rounded flex items-center justify-center text-lg font-bold"
-              style={{ backgroundColor: cp.suit === 'red' ? '#fecaca' : cp.suit === 'yellow' ? '#fef3c7' : cp.suit === 'green' ? '#dcfce7' : cp.suit === 'blue' ? '#dbeafe' : '#f3f4f6' }}
-            >
-              {cp.suit ? `${cp.suit[0].toUpperCase()}${cp.top}` : '?'}
+            <div key={i} className="relative">
+              {cp.suit ? (
+                <PlayingCard card={{ suit: suitToCardSuit(cp.suit), rank: String(cp.top) as any }} />
+              ) : (
+                <div className="w-[72px] h-[100px] border-2 border-dashed border-gray-400 rounded-lg"></div>
+              )}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="border-t pt-4 space-y-2">
+      <div className="border-t pt-4 space-y-3">
         <div className="text-sm font-semibold">Deine Karten</div>
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-end">
           <div className="flex flex-col items-center">
-            <div className="text-xs">Ligretto ({player.stock.length})</div>
-            <div className="w-12 h-16 bg-blue-800 rounded border-2 border-blue-900"></div>
+            <div className="text-xs mb-1">Ligretto ({player.stock.length})</div>
+            <div className="w-[72px] h-[100px] bg-gradient-to-br from-blue-700 to-blue-900 rounded-lg border-2 border-blue-950 shadow"></div>
           </div>
           <div className="flex flex-col items-center">
-            <div className="text-xs">Ablage ({player.pile.length})</div>
+            <div className="text-xs mb-1">Ablage ({player.pile.length})</div>
             {player.pile.length > 0 ? (
-              <div className="w-12 h-16 bg-white border-2 border-gray-400 rounded flex items-center justify-center text-xs font-bold">
-                {player.pile[player.pile.length - 1].suit[0].toUpperCase()}{player.pile[player.pile.length - 1].value}
-              </div>
+              <PlayingCard card={{ suit: suitToCardSuit(player.pile[player.pile.length - 1].suit), rank: String(player.pile[player.pile.length - 1].value) as any }} />
             ) : (
-              <div className="w-12 h-16 border-2 border-dashed border-gray-300 rounded"></div>
+              <div className="w-[72px] h-[100px] border-2 border-dashed border-gray-300 rounded-lg"></div>
             )}
           </div>
-          <div className="flex-1 flex gap-2 flex-wrap">
+          <div className="flex-1 flex gap-2 flex-wrap items-end">
             {player.hand.map((card) => {
               const canPlay = playHandMoves.some((m) => m.type === 'playFromHand' && m.cardId === card.id);
               return (
@@ -74,11 +80,9 @@ function Board({ view, legalMoves, onMove, viewer }: BoardProps<LigrettoState, L
                     if (m) onMove(m);
                   }}
                   disabled={!canPlay}
-                  className={`w-12 h-16 rounded border-2 flex items-center justify-center text-xs font-bold ${
-                    canPlay ? 'bg-white border-green-500 cursor-pointer' : 'bg-gray-100 border-gray-300'
-                  }`}
+                  className={`p-0 border-0 bg-transparent ${canPlay ? 'cursor-pointer hover:scale-105 transition-transform' : 'opacity-60'}`}
                 >
-                  {card.suit[0].toUpperCase()}{card.value}
+                  <PlayingCard card={{ suit: suitToCardSuit(card.suit), rank: String(card.value) as any }} />
                 </button>
               );
             })}
