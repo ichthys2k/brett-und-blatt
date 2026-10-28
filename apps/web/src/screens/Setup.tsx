@@ -150,11 +150,11 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
           {draft.seats.map((seat, index) => (
             <li key={index} className="space-y-2 rounded-2xl border border-line bg-surface p-3 shadow-sm">
               <div className="flex items-center gap-3">
-                <ui.SeatSymbol seat={index} className="block size-8 flex-none" />
-                <span className="text-sm text-muted">{ui.seatLabel(index)}</span>
+                <ui.SeatSymbol seat={index} seats={draft.seats.length} className="block size-8 flex-none" />
+                <span className="text-sm text-muted">{ui.seatLabel(index, draft.seats.length)}</span>
                 <div className="ml-auto w-48">
                   <Segmented
-                    label={`${ui.seatLabel(index)}: ${t('setup.human')} oder ${t('setup.bot')}`}
+                    label={`${ui.seatLabel(index, draft.seats.length)}: ${t('setup.human')} oder ${t('setup.bot')}`}
                     value={seat.kind}
                     choices={[
                       { value: 'human', label: t('setup.human') },
@@ -167,7 +167,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
               {seat.kind === 'human' ? (
                 <input
                   className="min-h-11 w-full rounded-xl border border-line bg-bg px-3"
-                  aria-label={`${t('setup.name')} (${ui.seatLabel(index)})`}
+                  aria-label={`${t('setup.name')} (${ui.seatLabel(index, draft.seats.length)})`}
                   placeholder={t('setup.defaultName', { n: index + 1 })}
                   maxLength={24}
                   value={seat.name}
@@ -175,7 +175,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
                 />
               ) : (
                 <Segmented
-                  label={`Stärke (${ui.seatLabel(index)})`}
+                  label={`Stärke (${ui.seatLabel(index, draft.seats.length)})`}
                   value={seat.level}
                   choices={BOT_LEVELS.map((level) => ({ value: level, label: levelLabel(level) }))}
                   onChange={(level) => updateSeat(index, { level })}

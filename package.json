@@ -15,11 +15,14 @@
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json && tsc -p apps/server/tsconfig.json",
     "check": "pnpm typecheck && pnpm test && pnpm build",
-    "neues-spiel": "node scripts/new-game.mjs"
+    "neues-spiel": "node scripts/new-game.mjs",
+    "rauchtest": "node scripts/rauchtest.mjs",
+    "pruefstand": "vitest run tests/pruefstand.test.ts"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "playwright": "1.63.0",
     "typescript": "~6.0.3",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"

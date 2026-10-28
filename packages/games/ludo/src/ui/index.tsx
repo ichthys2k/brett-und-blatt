@@ -557,8 +557,8 @@ function Board({ view, legalMoves, onMove }: BoardProps<LudoState, LudoMove>) {
   );
 }
 
-function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string }) {
-  const cIdx = colorIndex(seat, 4);
+function SeatSymbol({ seat, seats = 4, className = '' }: { seat: SeatId; seats?: number; className?: string }) {
+  const cIdx = colorIndex(seat, seats);
   const style = PLAYER_STYLES[cIdx];
 
   return (
@@ -566,9 +566,9 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
       className={`inline-flex items-center justify-center font-bold ${className}`}
       style={{ color: style.fill }}
       title={`${style.name} (${style.symbolName})`}
+      aria-label={style.name}
     >
-      <span className="mr-1">{style.symbol}</span>
-      <span>{style.name}</span>
+      {style.symbol}
     </span>
   );
 }
@@ -585,5 +585,5 @@ export const gameUi: GameUi<LudoState, LudoMove> = {
     goalMoved: 'stein-setzen',
     win: 'sieg',
   },
-  seatLabel: (seat) => PLAYER_STYLES[colorIndex(seat, 4)].name,
+  seatLabel: (seat, seats = 4) => PLAYER_STYLES[colorIndex(seat, seats)].name,
 };

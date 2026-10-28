@@ -185,6 +185,11 @@ export interface GameModule<S, M, V = S> {
   timeoutMove?(state: S, seat: SeatId): M;
   /** Pflicht bei verdeckten Informationen: füllt Unbekanntes passend zur Sicht auf. */
   sampleHidden?(view: V, seat: SeatId, rng: Rng): S;
+  /**
+   * Gesetzt, wenn `playerView(sampleHidden(Sicht))` die Sicht nur ungefähr wiederherstellt –
+   * mit kurzer Begründung. Die Vertragsprüfung überspringt dann diesen Vergleich.
+   */
+  sampleHiddenApproximate?: string;
   /** Stellungsbewertung aus Sicht von `seat` für Suchbots. */
   evaluate?(state: S, seat: SeatId): number;
   /**

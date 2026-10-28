@@ -24,6 +24,7 @@ import {
   type Suit,
   type Trick,
   SUITS,
+  trickGameEvents,
 } from '@brett-und-blatt/engine';
 
 export type SkatPhase =
@@ -438,7 +439,7 @@ export function getContract(state: SkatState) {
 export function applyMove(state: SkatState, actor: Actor, move: SkatMove): MoveResult<SkatState> {
   const player = Number(actor);
   const nextState = applySkatMove(state, move, player);
-  return { state: nextState, events: [] };
+  return { state: nextState, events: trickGameEvents(state, nextState, player, move as { type: string; card?: CardId }) };
 }
 
 function applySkatMove(state: SkatState, move: SkatMove, player: number): SkatState {

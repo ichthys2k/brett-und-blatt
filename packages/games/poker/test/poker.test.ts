@@ -6,6 +6,7 @@ import {
   bestFive,
   buildPots,
   categoryOf,
+  currentPots,
   describeValue,
   evaluateHand,
   FLUSH,
@@ -115,6 +116,15 @@ describe('Poker – Pots & Side-Pots', () => {
 });
 
 describe('Poker – Setzrunden & Varianten-Strukturen', () => {
+  test('Laufende Einsätze ohne All-in ergeben keinen Nebenpot', () => {
+    const state = gameModule.setup(4, {}, 'pots-test');
+    // Blinds sind gesetzt, die anderen haben noch nicht gehandelt: ein einziger Pot.
+    const pots = currentPots(state);
+    expect(pots).toHaveLength(1);
+    expect(pots[0]!.amount).toBe(state.seats.reduce((sum, s) => sum + s.totalCommitted, 0));
+    expect(pots[0]!.eligible).toHaveLength(4);
+  });
+
   test('Heads-up: Dealer ist Small Blind und handelt vor dem Flop zuerst, ab dem Flop zuletzt', () => {
     const state = gameModule.setup(2, {}, 'headsup-test');
     expect(state.smallBlindSeat).toBe(state.button);

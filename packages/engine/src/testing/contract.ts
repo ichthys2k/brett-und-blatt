@@ -17,6 +17,11 @@ export interface ContractOptions {
   /** Bot-Partien nach so vielen Zügen abbrechen (für Spiele mit langsamen Bots oder sehr langen Partien). */
   botMoveLimit?: number;
   seed?: string;
+  /**
+   * Spiele, bei denen `playerView(sampleHidden(Sicht))` die Sicht nicht genau wiederherstellt
+   * (z. B. weil die Stichprobe öffentliche Kartenrückseiten neu würfelt), mit kurzer Begründung.
+   */
+  sampleHiddenApproximate?: string;
   /** Eigene Prüfung, dass eine Sicht nichts verrät; gibt eine Fehlermeldung oder null zurück. */
   checkView?: (state: unknown, view: unknown, seat: SeatId) => string | null;
 }
@@ -85,6 +90,16 @@ export function gameContractChecks(module: AnyGameModule, options: ContractOptio
             const again = replay(module, seats, opts, gameSeed, log);
             assert(sameValue(state, again), `${label}: Wiederholung weicht ab`);
             assert(sameValue(module.setup(seats, opts, gameSeed), module.setup(seats, opts, gameSeed)), `${label}: setup ist nicht wiederholbar`);
+          }
+        });
+      },
+    },
+    {
+      name: 'Sichten verraten keinen Zufallszustand und verbergen, was verdeckt ist',
+      run() {
+        forEachSetup((seats, opts, label) => {
+          for (let g = 0; g < Math.min(gamesPerSetup, 2); g++) {
+            checkSecrets(module, seats, opts, `${seed}/geheim/${label}/${g}`, maxMoves, (options.sampleHiddenApproximate ?? module.sampleHiddenApproximate) !== undefined);
           }
         });
       },
@@ -196,6 +211,94 @@ export function playRandomGame(
     assert(result.winners.every((w) => Number.isInteger(w) && w >= 0 && w < seats), 'Ungültige Gewinner');
   }
   return { state, log };
+}
+
+/**
+ * Spielt eine Zufallspartie und prüft unterwegs jede Sicht:
+ * - Kein Zufallszustand (`rng`, `seed` …) gelangt in eine Sicht – sonst ließe sich online die Zukunft ausrechnen.
+ * - Bei verdeckten Spielen unterscheidet sich die Sicht irgendwann vom vollständigen Stand.
+ * - `sampleHidden` liefert einen Stand, aus dem dieselbe Sicht entsteht (sonst planen Bots mit falschen Annahmen).
+ */
+export function checkSecrets(
+  module: AnyGameModule,
+  seats: number,
+  options: Options,
+  seed: string,
+  maxMoves = 2_000,
+  approximateSample = false,
+): void {
+  const rng = Rng.fromSeed(seed, 'geheim');
+  let state = module.setup(seats, options, seed);
+  let hidSomething = false;
+  for (let step = 0; step <= maxMoves; step++) {
+    if (module.result(state)) break;
+    if (step % 5 === 0) {
+      const viewers: (SeatId | 'spectator')[] = [...Array(seats).keys(), 'spectator'];
+      for (const viewer of viewers) {
+        const view = module.playerView(state, viewer);
+        const leak = findRandomState(view);
+        assert(leak === null, `Sicht von ${String(viewer)} enthält Zufallszustand (${leak}) – online ließe sich die Zukunft vorhersagen`);
+        if (!sameValue(view, state)) hidSomething = true;
+        if (module.sampleHidden && viewer !== 'spectator' && !approximateSample && module.info.hiddenInformation) {
+          const sampled = module.sampleHidden(view, viewer, Rng.fromSeed(`${seed}/${step}`, 'stichprobe'));
+          const again = module.playerView(sampled, viewer);
+          assert(sameValue(again, view), `Schritt ${step}, Platz ${viewer}: playerView(sampleHidden(Sicht)) weicht ab bei ${firstDifference(view, again)}`);
+        }
+      }
+    }
+    const actors = module.currentPlayers(state);
+    if (actors.length === 0) break;
+    const actor = rng.pick(actors);
+    const moves = module.legalMoves(state, actor);
+    if (moves.length === 0) break;
+    state = module.applyMove(state, actor, actor === 'system' ? moves[0] : rng.pick(moves)).state;
+  }
+  // Allein gespielt (Solitaire) gibt es niemanden, vor dem etwas zu verbergen wäre.
+  if (module.info.hiddenInformation && module.info.players.max >= 2) {
+    assert(hidSomething, 'hiddenInformation ist gesetzt, aber keine Sicht verbirgt etwas – playerView gibt den ganzen Stand weiter');
+  }
+}
+
+const RANDOM_KEYS = /^(rng|rngs|rngState|seed|dealRng|shuffleSeed)$/i;
+
+/** Findet einen Zufallszustand in einer Sicht: ein Feld wie `rng` mit Inhalt (genullte Zustände sind erlaubt). */
+function findRandomState(value: unknown, path = 'Sicht'): string | null {
+  if (value === null || typeof value !== 'object') return null;
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length && i < 200; i++) {
+      const found = findRandomState(value[i], `${path}[${i}]`);
+      if (found) return found;
+    }
+    return null;
+  }
+  for (const [key, entry] of Object.entries(value)) {
+    if (RANDOM_KEYS.test(key) && entry !== null && entry !== undefined && entry !== '') {
+      if (!allZero(entry)) return `${path}.${key}`;
+    }
+    const found = findRandomState(entry, `${path}.${key}`);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** Genullter Zufallszustand: nur Nullen, auch verschachtelt (z. B. `{ deal: [0, 0, 0, 0], shop: [0, 0, 0, 0] }`). */
+function allZero(value: unknown): boolean {
+  if (value === 0) return true;
+  if (Array.isArray(value)) return value.every(allZero);
+  if (value !== null && typeof value === 'object') return Object.values(value).every(allZero);
+  return false;
+}
+
+/** Pfad der ersten Abweichung zweier JSON-Werte, für lesbare Fehlermeldungen. */
+function firstDifference(a: unknown, b: unknown, path = 'Sicht'): string {
+  if (a && b && typeof a === 'object' && typeof b === 'object' && Array.isArray(a) === Array.isArray(b)) {
+    for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) {
+      const x = (a as Record<string, unknown>)[key];
+      const y = (b as Record<string, unknown>)[key];
+      if (!sameValue(x, y)) return firstDifference(x, y, `${path}.${key}`);
+    }
+  }
+  return `${path}: ${canonicalJson(a).slice(0, 60)} ≠ ${canonicalJson(b).slice(0, 60)}`;
 }
 
 /** Voreinstellung plus jede andere Auswahl jeder Option einzeln. */

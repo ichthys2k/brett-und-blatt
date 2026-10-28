@@ -21,13 +21,12 @@ Nachträglich angelegt (28.10.2026) aus dem vorhandenen Code.
 ## Umsetzung
 
 - `src/rules.ts`: Zustand mit `phase` (`roll`/`score`), `rollsLeft`, Würfeln und Tafeln je Spieler; `calculateScore` je Kategorie; Würfeln über den Seed-Rng im Zustand.
-- `src/bots.ts`: Bot in drei Stufen. Leicht trägt zufällig ein, mittel nimmt die höchste Punktzahl, schwer bevorzugt Kniffel und Straßen und streicht bei 0 Punkten eine obere Kategorie. Der Bot würfelt immer alle drei Male und hält keine Würfel.
-- `src/ui/index.tsx`, `src/ui/styles.css`: Würfel zum Halten antippen, Wertungstafel mit Vorschau.
+- `src/bots.ts` (28.10.2026 neu): Bot in drei Stufen mit Würfelhalten (`toggleHold` über `isLegal`). Leicht hält nur nach dem ersten Wurf und trägt meist die meisten Punkte ein (Schnitt etwa 105). Mittel hält nach Faustregel (Straßen-Lauf oder beste Augenzahl), bewertet Kategorien mit Rücksicht auf den oberen Bonus und die Chance (etwa 175). Schwer prüft alle 32 Halte-Muster per Stichprobe; die Stichprobe hängt nur vom Wurf ab, damit mehrere Halte-Schritte dasselbe Ziel verfolgen (etwa 180).
+- `src/ui/index.tsx`, `src/ui/styles.css`: Würfel mit Augen zum Halten antippen, Wertungstafel als Tabelle mit allen Spielern (Spalte des Spielers am Zug hervorgehoben, mögliche Punkte zum Antippen), Farben über Theme-Tokens.
 - `test/kniffel.test.ts`: Wertung aller Kategorien, Würfeln, Zugwechsel, `gameContractChecks`.
 - Eingetragen im Spieleserver; keine Optionen.
 
 ## Offene Punkte
 
-- `playerView` gibt den Zustand samt `rng` an die Browser. Online lässt sich damit vorhersagen, was als Nächstes fällt. Lösung wie bei Mäxle: `rng` in der Sicht ausblenden und `sampleHidden` ergänzen.
-- Bot: Würfel halten (z. B. nach erwartetem Wert je Kategorie).
+- Name „Kniffel“ ist eine Marke – Umbenennung geplant (Etappe 4 des Korrekturplans).
 - Startseite: keiner Rubrik zugeordnet (landet unter *Familie*), keine Playlist.

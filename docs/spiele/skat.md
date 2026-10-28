@@ -195,10 +195,12 @@ Der aufwendigste Bot der Sammlung. Er hat drei Teile.
 - `packages/engine/src/tricks.ts` & `series.ts`: Universeller Stich-Kern (Bedienpflicht, Trumpf- und Fehlfarben, Stichsieger, Augen zählen) und Serien-Rahmen (Geberrotation, aktive Spieler am 4er-Tisch, Serienabrechnung).
 - `packages/ui/src/cards/PlayingCard.tsx` & `TrickTable.tsx`: Unterstützung für 4-Farben- und Deutsches Blatt; räumliche Tischanordnung von Stichen je nach Sitzplatz.
 - `packages/games/skat/src/rules.ts`: Vollständige ISkO-Regeln (Reizen mit Vorhand/Mittelhand/Hinterhand, Skataufnahme und Drücken, Handspiele, Farbspiele/Grand/Null mit Ouvert und Schneider/Schwarz, Spitzenermittlung mit Skat, Überreizungsauswertung, 10 Stiche, Seeger-Fabian-Abrechnung für 3er- und 4er-Tisch).
-- `packages/games/skat/src/bots.ts`: Eigener Skat-Bot mit Handbewertung für das Reizen, Skat-Drückheuristik und Stichspiel mit Trumpf- und Fehlfarbenabwurf.
+- `packages/games/skat/src/bots.ts` (28.10.2026 neu geschrieben, statt der geplanten Simulation zunächst Faustregeln): Handbewertung je Spielart (Buben gewichtet, Trümpfe, Asse, Zehnen, blanke Farben); gereizt wird nur bis zum Wert des besten Spiels mit den eigenen Spitzen. Skat wird immer aufgenommen, gedrückt wird ohne Buben und ohne zu überreizen. Im Spiel: Alleinspieler zieht Trümpfe, dann Asse; Gegenspieler spielen Asse oder billig aus, schmieren dem Partner, stechen billig. Leicht reizt waghalsig und spielt jede dritte Karte zufällig, schwer reizt vorsichtiger und zählt die gefallenen Trümpfe. Null und Ansagen spielt der Bot nie. Gemessen: Alleinspieler gewinnen etwa die Hälfte ihrer Spiele (vorher sagte der Bot fast immer Grand an und verlor). Test in `test/skat.test.ts`.
+- Hand sortiert (`sortHand` aus der Engine) und Ereignisse mit Klängen (`trickGameEvents`).
 - `packages/games/skat/src/ui/index.tsx`: Reizdialog, Skat-Drücken, Spielansage-Auswahl, Kartenausspielung mit Hervorhebung legaler Karten, Stichanzeige im `TrickTable` und Ergebnisliste.
 - Server-Integration in `apps/server/src/games.ts` für Online-Partien.
 
 ## Offene Punkte
 
 - ISkO-Sonderfälle (z. B. falsches Beanspruchen / Schenken).
+- Bot: Null-Spiele, Schneider-Ansagen und simulationsbasiertes Reizen/Spielen (wie oben geplant) fehlen noch.

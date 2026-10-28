@@ -500,3 +500,38 @@ export function createDokoContract(
     },
   };
 }
+
+/**
+ * Sortiert eine Hand zum Anzeigen: erst die Trümpfe (stärkster zuerst), dann die Fehlfarben
+ * in der Reihenfolge `suitOrder` (schwarz und rot im Wechsel), innerhalb jeder Farbe absteigend.
+ * Verdeckte Karten (keine Kartenkennung) bleiben, wie sie sind.
+ */
+export function sortHand(cards: readonly CardId[], contract: TrickContract, suitOrder: readonly Suit[] = ['C', 'H', 'S', 'D']): CardId[] {
+  if (cards.some((card) => !/^[CDHS]\d+(\.\d+)?$/.test(card))) return [...cards];
+  const group = (card: CardId) => (contract.isTrump(card) ? -1 : suitOrder.indexOf(cardSuit(card)));
+  return [...cards].sort((a, b) => group(a) - group(b) || contract.cardPower(b) - contract.cardPower(a) || (a < b ? -1 : a > b ? 1 : 0));
+}
+
+/** Was ein Stichspiel-Stand für die Ereignisse mindestens enthält. */
+export interface TrickGameShape {
+  gameNumber: number;
+  phase: string;
+  currentTrick: Trick;
+  completedTricks: { winner: number }[];
+}
+
+/**
+ * Ereignisse eines Zugs in einem Stichspiel, aus dem Stand davor und danach abgeleitet:
+ * `cardPlayed` (offen gespielte Karte), `trickTaken`, `announced` (Reizen, Ansagen,
+ * Vorbehalte – ohne verdeckte Karten) und `newDeal`. Nichts davon verrät Geheimes.
+ */
+export function trickGameEvents(prev: TrickGameShape, next: TrickGameShape, seat: number, move: { type: string; card?: CardId }): { type: string; [key: string]: unknown }[] {
+  const events: { type: string; [key: string]: unknown }[] = [];
+  if (move.type === 'play' && move.card) events.push({ type: 'cardPlayed', seat, card: move.card });
+  else if (move.type !== 'nextGame' && move.type !== 'discard') events.push({ type: 'announced', seat, call: move.type });
+  if (next.completedTricks.length > prev.completedTricks.length && next.gameNumber === prev.gameNumber) {
+    events.push({ type: 'trickTaken', winner: next.completedTricks[next.completedTricks.length - 1]!.winner });
+  }
+  if (next.gameNumber !== prev.gameNumber) events.push({ type: 'newDeal', game: next.gameNumber });
+  return events;
+}

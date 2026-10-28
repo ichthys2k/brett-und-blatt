@@ -1,7 +1,8 @@
-import { isLegalMove } from '@brett-und-blatt/engine';
+import { computeBotMove, isLegalMove } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it } from 'vitest';
 import { calculateScore, gameModule } from '../src';
+import type { KniffelMove } from '../src/rules';
 
 describe('Kniffel-Auswertung', () => {
   it('Einser bis Sechser', () => {
@@ -99,4 +100,30 @@ describe('Vertrag für Spielmodule', () => {
   for (const check of gameContractChecks(gameModule)) {
     it(check.name, check.run);
   }
+});
+
+describe('Kniffel-Bot', () => {
+  const average = (level: 'easy' | 'medium' | 'hard', games: number) => {
+    let sum = 0;
+    for (let g = 0; g < games; g++) {
+      let state = gameModule.setup(1, {}, `bot-${level}-${g}`);
+      for (let i = 0; i < 400 && !gameModule.result(state); i++) {
+        const move = computeBotMove(gameModule, { gameId: 'kniffel', botId: 'kniffel', level, seat: 0, view: gameModule.playerView(state, 0), seed: `${g}/${i}`, timeBudgetMs: 50 }) as KniffelMove;
+        expect(isLegalMove(gameModule, state, 0, move)).toBe(true);
+        state = gameModule.applyMove(state, 0, move).state;
+      }
+      expect(gameModule.result(state)).not.toBeNull();
+      sum += state.sheets[0]!.total;
+    }
+    return sum / games;
+  };
+
+  it('hält Würfel und spielt auf höheren Stufen besser', () => {
+    const easy = average('easy', 6);
+    const medium = average('medium', 6);
+    const hard = average('hard', 6);
+    expect(easy).toBeGreaterThan(80);
+    expect(medium).toBeGreaterThan(easy + 20);
+    expect(hard).toBeGreaterThan(170);
+  }, 60_000);
 });

@@ -13,7 +13,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - **Commit-Adresse:** immer `855814+ichthys2k@users.noreply.github.com` (steht in der lokalen Git-Konfiguration des Repos; vor dem ersten Commit auf einem neuen Rechner mit `git config user.email` prüfen).
 - **Keine Geheimnisse ins Repo:** keine `.env`, Tokens oder Zugangsdaten. Für Cloudflare später nur `.dev.vars`/Wrangler-Secrets (sind in `.gitignore`).
 - **Nichts außerhalb dieses Repos anfassen**, was nicht zur Aufgabe gehört – insbesondere keine Dateien mit Zugangsdaten in anderen Projekten (z. B. im Blog-Repo) lesen.
-- Vor dem Abschluss einer Aufgabe: `corepack pnpm check` (Typprüfung, alle Tests, Build) und die Änderung im Browser ansehen.
+- Vor dem Abschluss einer Aufgabe: `corepack pnpm check` (Typprüfung, alle Tests, Build) und die Änderung im Browser ansehen. Bei neuen oder geänderten Spielen zusätzlich `corepack pnpm rauchtest` (Browser) und `PRUEFSTAND=1 PRUEFSTAND_SPIELE=<id> corepack pnpm pruefstand`.
 
 ## Werkzeuge und Befehle
 
@@ -25,17 +25,19 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - `corepack pnpm --filter @brett-und-blatt/web dev` – Dev-Server auf http://localhost:5173
   - `corepack pnpm --filter @brett-und-blatt/server dev` – Spieleserver lokal auf http://127.0.0.1:8787 (Wrangler, kein Konto nötig; für Telemetrie aus `WRANGLER_SEND_METRICS=false` davor)
   - `node apps/server/scripts/smoke.mjs` – Rauchtest gegen den laufenden Spieleserver (zwei nachgebaute Browser: Raum, Partie, Wiedereinstieg, Bot, Zeitablauf)
+  - `corepack pnpm rauchtest` – nach `corepack pnpm build`: startet jedes fertige Spiel im Browser (Playwright, Handy-Hochformat), erst frisch, dann alle nacheinander in derselben Seite; meldet Fehler, zu hohe Seiten und CSS-Kollisionen. Einmal je Rechner vorher `corepack pnpm exec playwright install chromium`. Mit Spiel-ids als Argumenten nur diese.
+  - `PRUEFSTAND=1 corepack pnpm pruefstand` – gründlicher Prüfstand (`tests/pruefstand.test.ts`, alle Spiele etwa 20 min, mit `PRUEFSTAND_SPIELE=skat,uno` nur einzelne): Zufallspartien über alle Optionen und Platzzahlen mit Proben unerlaubter Züge, Geheimnis-Prüfung, jeder Bot auf jeder Stufe mit Zeitmessung, Standard-Bot gegen Zufall. Mit `--disable-console-intercept` erscheint je Spiel eine Kennzahlenzeile.
 - Typprüfung umfasst zwei Konfigurationen: `tsconfig.json` (Browser, Tests) und `apps/server/tsconfig.json` (Cloudflare-Typen). `pnpm typecheck` ruft beide auf.
 - pnpm installiert neue Paketversionen erst nach einer Wartefrist (Lieferketten-Schutz). **Keine `minimumReleaseAgeExclude`-Ausnahmen eintragen**, sondern ältere Versionen wählen. Installationsskripte sind nur für `esbuild` und `workerd` freigegeben (`allowBuilds` in `pnpm-workspace.yaml`).
 - Die Root-Skripte in `package.json` rufen intern `pnpm` auf; ohne pnpm im PATH funktionieren sie nur, wenn man stattdessen die Befehle oben direkt nutzt.
 - Neue Spielordner findet der laufende Dev-Server nicht: **Dev-Server neu starten**, wenn ein Spiel hinzukommt.
-- GitHub: `gh` CLI (auf jedem Rechner einmal `gh auth login`). CI: `.github/workflows/ci.yml` prüft jeden Push und veröffentlicht `main`: zuerst den Spieleserver auf Cloudflare (`wrangler deploy` mit dem Secret `CLOUDFLARE_API_TOKEN`; die Konto-ID steht in `apps/server/wrangler.jsonc`), danach die Web-App über GitHub Pages (eigene Domain, HTTPS erzwungen). Schlägt der Server-Schritt fehl, bleibt auch die Web-App auf dem alten Stand. Von Hand geht weiterhin `corepack pnpm --filter @brett-und-blatt/server run deploy` (mit `run`, sonst greift pnpms eingebautes `deploy`).
+- GitHub: `gh` CLI (auf jedem Rechner einmal `gh auth login`). CI: `.github/workflows/ci.yml` prüft jeden Push (Typprüfung, Tests, Build, Browser-Rauchtest) und veröffentlicht `main`: zuerst den Spieleserver auf Cloudflare (`wrangler deploy` mit dem Secret `CLOUDFLARE_API_TOKEN`; die Konto-ID steht in `apps/server/wrangler.jsonc`), danach die Web-App über GitHub Pages (eigene Domain, HTTPS erzwungen). Schlägt der Server-Schritt fehl, bleibt auch die Web-App auf dem alten Stand. Von Hand geht weiterhin `corepack pnpm --filter @brett-und-blatt/server run deploy` (mit `run`, sonst greift pnpms eingebautes `deploy`).
 
 ## Technik in Kürze
 
 - Monorepo mit pnpm-Workspaces: `apps/web` (React 19, Vite 8, Tailwind 4, PWA), `apps/server` (Cloudflare-Worker, dünner Adapter um `packages/online`), `packages/engine` (Spielmodul-Schnittstelle, Zufall, lokale Spielleitung, Uhren, allgemeine Bots, Vertragsprüfungen), `packages/online` (Online-Spielleitung ohne Anbieterbindung: Raum, Nachrichtenformat, Raumcodes), `packages/ui` (Baukasten: GridBoard, NetBoard, FitBox, PlayerChip, Karten), `packages/games/<id>` (ein Ordner pro Spiel), `content/` (Inhaltspakete, z. B. Paare).
 - **Spielmodul** `GameModule<S, M, V>`: `info`, `options` (optional mit `when` für bedingte Anzeige; `hidden` + `pattern` für verborgene Optionen, die die Oberfläche über `GameUi.prepareOptions` füllt), `timePresets`, `setup`, `currentPlayers`, `legalMoves`, `applyMove`, `playerView`, `result`, `bots` u. a. Spielstand ist reines JSON, Zufall nur über den Seed-Rng.
-- **Jedes Spiel** hat `src/meta.ts` (mit Pflicht-Kurzanleitung `howToPlay`), `src/rules.ts`, `src/index.ts`, `src/ui/index.tsx` und `test/<id>.test.ts` mit den allgemeinen Prüfungen `gameContractChecks`. Die Web-App findet Spiele automatisch; **Ordnername = `id`**. **Mehrspieler-Spiele (ab 2 Plätzen) zusätzlich im Server eintragen:** in `apps/server/src/games.ts` (`onlineGames`) und als Abhängigkeit in `apps/server/package.json`, danach `corepack pnpm install` – sonst schlägt `apps/server/test/games.test.ts` fehl. Bei einem eigenen Bot ggf. Schrittweite in `apps/server/src/bots.ts` (`BOT_STEP_MS`) messen.
+- **Jedes Spiel** hat `src/meta.ts` (mit Pflicht-Kurzanleitung `howToPlay`), `src/rules.ts`, `src/index.ts`, `src/ui/index.tsx` und `test/<id>.test.ts` mit den allgemeinen Prüfungen – **ausgeführt** mit `for (const check of gameContractChecks(gameModule)) it(check.name, check.run)`; ein bloßer Aufruf prüft nichts (`tests/repo.test.ts` passt darauf auf). Die Prüfungen umfassen auch Geheimnisse: kein Zufallszustand in Sichten (`rng` u. ä. in `playerView` nullen), verdeckte Mehrspieler-Spiele müssen etwas verbergen, `playerView(sampleHidden(Sicht))` muss die Sicht ergeben (sonst `sampleHiddenApproximate` mit Begründung). CSS-Klassen tragen ein eigenes Spielpräfix – keine Klasse darf in zwei Spielen vorkommen (ebenfalls `tests/repo.test.ts`). Noch nicht spielbare Spiele bekommen `draft: true` im Steckbrief. Die Web-App findet Spiele automatisch; **Ordnername = `id`**. **Mehrspieler-Spiele (ab 2 Plätzen) zusätzlich im Server eintragen:** in `apps/server/src/games.ts` (`onlineGames`) und als Abhängigkeit in `apps/server/package.json`, danach `corepack pnpm install` – sonst schlägt `apps/server/test/games.test.ts` fehl. Bei einem eigenen Bot ggf. Schrittweite in `apps/server/src/bots.ts` (`BOT_STEP_MS`) messen.
 - **Klänge:** `gameUi.sounds` (Ereignis → Klangname), Katalog `packages/ui/src/audio/catalog.json`, Abspielen über `SoundPlayer` (`apps/web/src/lib/sound.ts`, `useGameSounds.ts`). Die MP3s liegen im **privaten** Repo `ichthys2k/brett-und-blatt-klaenge` (ElevenLabs-Lizenz: nicht ins öffentliche Repo kopieren!); `apps/web/klaenge.ts` baut nur die benötigten ein (aus `KLAENGE_DIR` oder `../brett-und-blatt-klaenge`, jeweils `effekte/` und `musik/`), die CI holt sie per Secret `KLAENGE_DEPLOY_KEY`. Neue Klänge nur nach Auswahl durch Cornelius. **Musik:** Playlists und Stücke in `packages/ui/src/audio/music.json` (Spiel → Playlist über `games`), `MusicPlayer` (zwei Abspieler mit Überblenden über Web Audio, lädt nur laufendes und nächstes Stück), Einstellungen in `apps/web/src/lib/music.ts`, Seite `#/ton`. Die Stücke (Suno, CC BY-SA 4.0) liegen in `musik/` im Klang-Repo; ein neues Stück dort ablegen und im Katalog eintragen.
 - Bots laufen im Web Worker; Tipp-Knopf = Standard-Bot auf Stufe „schwer“ mit 1,5 s Budget.
 - Fremdcode: `chess.js` (BSD-2-Clause) – Lizenztext in `THIRD_PARTY.md`. Neue Fremdbibliotheken dort ergänzen.
@@ -138,8 +140,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Bekannte offene Punkte:**
 - **Binokel und Wortgitter fertigstellen** (beide `draft`): siehe Prüfbericht. Wortgitter: Oberfläche ohne Funktion, Startfeld (4,4) statt H8, Bot stürzt ab, `legalMoves` ohne Wörter. Binokel: Platzhalter-Oberfläche, Regeln laufen fest, Sicht zeigt alles, keine Tests.
-- **Stichspiele:** Handkarten riesig (`PlayingCard` ohne Breite), erlaubte Karten nicht markiert, keine Ereignisse/Klänge; Skat-Bot sagt fast immer Grand an und verliert; Bot-Stufen ungenutzt.
-- **Kniffel:** Bot hält noch keine Würfel; Tafeln der Mitspieler nicht sichtbar; im Dunkelmodus schwer lesbar. Name ist eine Marke (ebenso Ligretto).
+- **Stichspiele:** Schafkopf- und Doppelkopf-Bots spielen noch schwach und nutzen die Stufen nicht (Skat ist erledigt, siehe Etappe 3).
+- **Kniffel und Ligretto:** Die Namen sind Marken (Umbenennung in Etappe 4).
 - **Bibel-Quiz:** Die richtige Antwort steht in der Sicht – aber auch im ausgelieferten Fragenkatalog (Option 0 ist richtig). Verbergen nützt erst, wenn die Fragen nicht mehr im Browser-Bundle liegen.
 - **Klänge der Enten-Rallye:** 15 MP3s (18 MB) liegen direkt im öffentlichen Repo unter `apps/web/public/klaenge/duck-rally/`. Herkunft und Lizenz klären – ElevenLabs-Klänge gehören ins private Klang-Repo, Suno-Musik darf mit Nennung (CC BY-SA) ins Repo.
 - **Startseite:** Gomoku und Kniffel sind in `Home.tsx` keiner Rubrik zugeordnet und landen automatisch unter *Familie*.
@@ -168,9 +170,18 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 ## Nächste Schritte
 
 Korrekturplan aus dem Prüfbericht:
-1. Etappe 2 – Prüfnetz: Geheimnis-Prüfungen in `gameContractChecks`, Repo-Test „jedes Spiel führt die Vertragsprüfungen aus“, Browser-Rauchtest aller Spiele in der CI, Prüfung auf doppelte CSS-Klassen.
-2. Etappe 3 – Reparaturen: Stichspiel-Oberflächen und Skat-Bot, Kniffel-Bot und -Tafeln, Wortgitter, Binokel, Kleinigkeiten (Poker-Side-Pots, Spielerchip Nicht ärgern!, Kontrast Wort-Salat).
-3. Etappe 4 – Rechtliches: Kniffel und Ligretto umbenennen, Enten-Rallye-Klänge, Wörterbuch-Lizenz.
+1. ✅ Etappe 1 – Lecks und Kaputtes (veröffentlicht 28.10.2026, Commit `88afee3`).
+2. ✅ Etappe 2 – Prüfnetz (28.10.2026): Geheimnis-Prüfungen in `gameContractChecks` (`checkSecrets`), `tests/repo.test.ts` (Vertragsprüfung je fertigem Spiel wirklich ausgeführt, Ordner = id, keine CSS-Klasse in zwei Spielen), Browser-Rauchtest `scripts/rauchtest.mjs` in der CI, Prüfstand `tests/pruefstand.test.ts`. Dabei behoben: Handkarten der Stichspiele haben feste Breite (zwei Reihen auf dem Handy) und erlaubte Karten sind markiert; Mau-Mau-Klasse `drag-over` → `mau-drag-over`.
+3. Etappe 3 – Reparaturen.
+   - ✅ Teil 1 (28.10.2026):
+     - Stichspiele: Hand sortiert (`sortHand` in `packages/engine/src/tricks.ts`: Trümpfe, dann Farben, nach Stärke), Ereignisse `cardPlayed`/`trickTaken`/`announced`/`newDeal` (`trickGameEvents`) mit Klängen.
+     - Skat-Bot neu (`skat/src/bots.ts`): Handbewertung je Spiel, reizt nur bis zum Wert des besten Spiels, drückt sinnvoll, überreizt nie, spielt nach Faustregeln (Trumpf ziehen, Asse, schmieren, billig stechen). Stufen: leicht waghalsig mit Zufallskarten, schwer zählt Trümpfe. Alleinspieler gewinnen etwa die Hälfte statt fast nie.
+     - Kniffel: Bot hält Würfel (mittel: Faustregel, schwer: alle 32 Halte-Muster per Stichprobe, im Schnitt etwa 180 Punkte), Tafel als Tabelle mit allen Spielern, Würfel mit Augen, Farben über Theme-Tokens (Dunkelmodus).
+     - Poker: Nebenpots in der Anzeige nur noch an All-in-Grenzen (`currentPots`), nicht schon bei laufenden Einsätzen.
+     - Nicht ärgern!: Spielerchip zeigt nur das Formsymbol; `SeatSymbol` und `seatLabel` bekommen jetzt optional die Platzzahl (`seats`), damit bei zwei Spielern die richtige Farbe (gegenüber) erscheint.
+     - Wort-Salat: CSS nutzte nicht vorhandene Variablen (`--color-text` u. a.) – jetzt Theme-Tokens, lesbar im Dunkelmodus.
+   - Teil 2: Wortgitter, Binokel, Schafkopf- und Doppelkopf-Bots.
+4. Etappe 4 – Rechtliches: Kniffel und Ligretto umbenennen, Enten-Rallye-Klänge, Wörterbuch-Lizenz.
 
 **Arbeitsweise seit 27.10.2026:** Ein Teil der Arbeit kam direkt auf `main` statt über einen PR. Jeder Push dort veröffentlicht sofort; rote CI-Läufe (z. B. am 28.10. vier in Folge) bedeuten, dass in der Zeit nichts veröffentlicht wurde. Zweige mit PR bleiben der empfohlene Weg.
 

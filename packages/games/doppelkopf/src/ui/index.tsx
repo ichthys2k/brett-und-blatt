@@ -1,12 +1,16 @@
-import { cardSuit, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
+import { sortHand, cardSuit, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
 import { CardFan, PlayingCard, TrickTable, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import {
+  getContract,
   type DokoAnnouncement,
   type DokoContract,
   type DokoContractType,
   type DokoMove,
   type DokoState,
 } from '../rules.js';
+
+/** Breite einer Handkarte: groß genug zum Tippen, klein genug für zwei Reihen auf dem Handy. */
+const HAND_CARD_WIDTH = 'clamp(44px, 11vw, 76px)';
 
 export function DokoBoard({
   view,
@@ -16,7 +20,8 @@ export function DokoBoard({
   seatNames,
 }: BoardProps<DokoState, DokoMove>) {
   const mySeat: number = typeof viewer === 'number' ? viewer : view.activeSeats[0];
-  const myHand: CardId[] = view.hands[mySeat] || [];
+  // Sortiert nach dem laufenden Spiel (vor der Ansage nach dem üblichen Standardspiel).
+  const myHand: CardId[] = sortHand(view.hands[mySeat] || [], getContract(view));
   const isMyRe = view.reTeam.includes(mySeat);
 
   const displayTrick = useTrickDisplay(view.currentTrick, view.completedTricks);
@@ -48,6 +53,9 @@ export function DokoBoard({
     type: 'announce';
     call: DokoAnnouncement;
   }[];
+
+  // Erlaubte Karten heben sich ab; unerlaubte Klicks lehnt die Spielleitung ohnehin ab.
+  const playableCards = new Set(legalMoves.flatMap((m) => (m.type === 'play' ? [m.card] : [])));
 
   return (
     <div className="flex flex-col w-full max-w-4xl mx-auto p-2 sm:p-4 gap-4">
@@ -170,10 +178,11 @@ export function DokoBoard({
         <div className="w-full flex justify-center overflow-x-auto pb-2">
           <div className="flex flex-wrap justify-center gap-1 sm:gap-1.5 max-w-full">
             {myHand.map((card: CardId, idx: number) => (
-              <div key={`${card}-${idx}`} className="transition-transform hover:-translate-y-2">
+              <div key={`${card}-${idx}`} className="transition-transform hover:-translate-y-2" style={{ width: HAND_CARD_WIDTH }}>
                 <PlayingCard
                   card={card === 'back' ? null : card}
                   deckStyle={view.deckStyle}
+                  highlight={playableCards.has(card) ? 'target' : null}
                   onClick={() => {
                     if (view.phase === 'play' && card !== 'back') {
                       onMove({ type: 'play', card });
@@ -268,6 +277,7 @@ function formatAnnouncement(call: DokoAnnouncement): string {
 
 export const gameUi: GameUi<DokoState, DokoMove> = {
   Board: DokoBoard,
+  sounds: { cardPlayed: 'karte-legen', trickTaken: 'karte-ziehen', announced: 'ansage', newDeal: 'mischen' },
   SeatSymbol: ({ className }) => <span className={className}>🎴</span>,
   seatLabel: (seat: SeatId) => `Spieler ${seat + 1}`,
   seatDetail: (view: DokoState, seat: SeatId) => {

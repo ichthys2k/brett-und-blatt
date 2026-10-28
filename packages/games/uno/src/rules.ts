@@ -778,12 +778,22 @@ export function sampleHidden(view: UnoState, seat: number | 'spectator', rng: Rn
   const pool = rng.shuffle(fullDeck.filter((c) => !knownCardIds.has(c.id)));
 
   // Auf fremde Hände verteilen
+  // Jede Karte passend zu dem, was man von ihr sieht (bei Flip die sichtbare Seite).
+  const looks = (c: UnoCard, s: number, i: number) => JSON.stringify([maskCard(c, next.activeSide, s, i).front, maskCard(c, next.activeSide, s, i).back]);
   for (let s = 0; s < next.hands.length; s++) {
-    if (s === targetSeat) continue;
-    const count = next.hands[s].length;
+    if (s === targetSeat || next.winner !== null) continue;
+    const seen = next.hands[s];
     next.hands[s] = [];
-    for (let i = 0; i < count; i++) {
-      const c = pool.pop();
+    for (let i = 0; i < seen.length; i++) {
+      const wanted = JSON.stringify([seen[i]!.front, seen[i]!.back]);
+      let at = -1;
+      for (let k = pool.length - 1; k >= 0; k--) {
+        if (looks(pool[k]!, s, i) === wanted) {
+          at = k;
+          break;
+        }
+      }
+      const [c] = pool.splice(at >= 0 ? at : pool.length - 1, 1);
       if (c) next.hands[s].push(c);
     }
   }
@@ -792,6 +802,15 @@ export function sampleHidden(view: UnoState, seat: number | 'spectator', rng: Rn
   next.stock = pool;
   next.rng = rng.state;
   return next;
+}
+
+/** Wie eine fremde Handkarte für die anderen aussieht (bei Flip bleibt die sichtbare Seite). */
+function maskCard(c: UnoCard, side: UnoState['activeSide'], seat: number, index: number): UnoCard {
+  return {
+    id: `verdeckt-${seat}-${index}`,
+    front: side === 'dark' ? { color: 'wild', type: 'wild' } : (c.back ?? { color: 'wild', type: 'wild' }),
+    back: side === 'light' ? (c.back ?? { color: 'wild', type: 'wild' }) : { color: 'wild', type: 'wild' },
+  } as UnoCard;
 }
 
 /** Sicht eines Spielers: verbirgt verdeckte Handkarten der Mitspieler. */
@@ -809,11 +828,7 @@ export function playerView(state: UnoState, seat: number | 'spectator'): UnoStat
       // Für Mitspieler: Karteninfo verbergen, aber bei Flip die Rückseite sichtbar lassen.
       // Auch die Kennung wird ersetzt: Sie wird vor dem Mischen fortlaufend vergeben und
       // verriete sonst, welche Karte es ist.
-      return hand.map((c, i) => ({
-        id: `verdeckt-${idx}-${i}`,
-        front: side === 'dark' ? { color: 'wild', type: 'wild' } : (c.back ?? { color: 'wild', type: 'wild' }),
-        back: side === 'light' ? (c.back ?? { color: 'wild', type: 'wild' }) : { color: 'wild', type: 'wild' },
-      }));
+      return hand.map((c, i) => maskCard(c, side, idx, i));
     }),
     stock: Array.from({ length: state.stock.length }, (_, i) => ({
       id: `stock_${i}`,

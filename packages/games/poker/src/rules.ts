@@ -660,10 +660,27 @@ export function totalPot(state: PokerState): number {
 
 /** Aktuelle Pots für die Anzeige auf dem Tisch. */
 export function currentPots(state: PokerState): Pot[] {
-  return buildPots(
-    state.seats.map((s) => s.totalCommitted),
-    state.seats.map((s) => s.inHand && !s.folded),
-  );
+  // Während der Setzrunde entstehen ungleiche Einsätze, nur weil noch nicht alle nachgezogen
+  // haben. Ein Nebenpot entsteht aber nur an der Grenze eines All-in-Spielers.
+  const active = state.seats.map((s, seat) => ({ seat, c: s.totalCommitted, live: s.inHand && !s.folded, allIn: s.allIn }));
+  const total = active.reduce((sum, s) => sum + s.c, 0);
+  if (total <= 0) return [];
+  const levels = [...new Set(active.filter((s) => s.live && s.allIn && s.c > 0).map((s) => s.c))].sort((a, b) => a - b);
+  const pots: Pot[] = [];
+  let prev = 0;
+  for (const level of levels) {
+    const amount = active.reduce((sum, s) => sum + Math.max(0, Math.min(s.c, level) - prev), 0);
+    const eligible = active.filter((s) => s.live && (!s.allIn || s.c >= level)).map((s) => s.seat);
+    if (amount > 0) pots.push({ amount, eligible });
+    prev = level;
+  }
+  const rest = active.reduce((sum, s) => sum + Math.max(0, s.c - prev), 0);
+  const restEligible = active.filter((s) => s.live && !s.allIn).map((s) => s.seat);
+  if (rest > 0) {
+    if (restEligible.length > 0 || pots.length === 0) pots.push({ amount: rest, eligible: restEligible.length > 0 ? restEligible : active.filter((s) => s.live).map((s) => s.seat) });
+    else pots[pots.length - 1]!.amount += rest;
+  }
+  return pots;
 }
 
 /** Grenzen für einen Einsatz oder eine Erhöhung des Spielers am Zug (`to` = Gesamteinsatz auf dieser Straße). */

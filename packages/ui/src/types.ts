@@ -35,9 +35,10 @@ export interface BoardProps<V, M> {
 export interface GameUi<V = unknown, M = unknown> {
   Board: ComponentType<BoardProps<V, M>>;
   /** Kleines Zeichen für einen Platz, z. B. Kreuz oder roter Stein. */
-  SeatSymbol: ComponentType<{ seat: SeatId; className?: string }>;
+  /** `seats` = Zahl der Plätze am Tisch, falls die Farbe davon abhängt (z. B. Gegenüber bei zwei Spielern). */
+  SeatSymbol: ComponentType<{ seat: SeatId; seats?: number; className?: string }>;
   /** Name der Farbe bzw. des Zeichens eines Platzes, z. B. „Rot“. */
-  seatLabel: (seat: SeatId) => string;
+  seatLabel: (seat: SeatId, seats?: number) => string;
   /** Zusatz in der Spielerleiste aus der öffentlichen Sicht, z. B. „12 Punkte“ oder „5 Karten“. */
   seatDetail?: (view: V, seat: SeatId) => string | null;
   /** Klänge zu den Ereignissen, z. B. `{ placed: 'stein-setzen' }`. Sieg, Niederlage und Zeit vertont die Plattform selbst. */

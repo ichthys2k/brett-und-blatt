@@ -1,7 +1,8 @@
-import { cardEyePoints, cardSuit, type CardId, type SeatId } from '@brett-und-blatt/engine';
+import { sortHand, cardEyePoints, cardSuit, type CardId, type SeatId } from '@brett-und-blatt/engine';
 import { CardFan, PlayingCard, TrickTable, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import {
+  getContract,
   ALL_BID_VALUES,
   SKAT_BASE_VALUES,
   calculateGameValue,
@@ -13,6 +14,9 @@ import {
   type SkatState,
 } from '../rules.js';
 
+/** Breite einer Handkarte: groß genug zum Tippen, klein genug für zwei Reihen auf dem Handy. */
+const HAND_CARD_WIDTH = 'clamp(44px, 11vw, 76px)';
+
 export function SkatBoard({
   view,
   legalMoves,
@@ -22,7 +26,8 @@ export function SkatBoard({
 }: BoardProps<SkatState, SkatMove>) {
   const mySeat: number = typeof viewer === 'number' ? viewer : view.activeSeats[0];
   const isDeclarer = mySeat === view.declarerSeat;
-  const myHand: CardId[] = view.hands[mySeat] || [];
+  // Sortiert nach dem laufenden Spiel (vor der Ansage nach dem üblichen Standardspiel).
+  const myHand: CardId[] = sortHand(view.hands[mySeat] || [], getContract(view));
 
   const [selectedToDiscard, setSelectedToDiscard] = useState<CardId[]>([]);
   const [selectedGameType, setSelectedGameType] = useState<SkatGameType>('grand');
@@ -45,6 +50,9 @@ export function SkatBoard({
       isWinner: isWin,
     };
   });
+
+  // Erlaubte Karten heben sich ab; unerlaubte Klicks lehnt die Spielleitung ohnehin ab.
+  const playableCards = new Set(legalMoves.flatMap((m) => (m.type === 'play' ? [m.card] : [])));
 
   return (
     <div className="flex flex-col w-full max-w-4xl mx-auto p-2 sm:p-4 gap-4">
@@ -237,10 +245,11 @@ export function SkatBoard({
             {myHand.map((card: CardId, idx: number) => {
               const isSelected = selectedToDiscard.includes(card);
               return (
-                <div key={`${card}-${idx}`} className="transition-transform hover:-translate-y-2">
+                <div key={`${card}-${idx}`} className="transition-transform hover:-translate-y-2" style={{ width: HAND_CARD_WIDTH }}>
                   <PlayingCard
                     card={card === 'back' ? null : card}
                     deckStyle={view.deckStyle}
+                    highlight={playableCards.has(card) ? 'target' : null}
                     selected={isSelected}
                     onClick={() => {
                       if (view.phase === 'discard' && isDeclarer) {
@@ -325,6 +334,7 @@ function formatDeclaration(decl: SkatDeclaration): string {
 
 export const gameUi: GameUi<SkatState, SkatMove> = {
   Board: SkatBoard,
+  sounds: { cardPlayed: 'karte-legen', trickTaken: 'karte-ziehen', announced: 'ansage', newDeal: 'mischen' },
   SeatSymbol: ({ className }) => <span className={className}>🃏</span>,
   seatLabel: (seat: SeatId) => `Spieler ${seat + 1}`,
   seatDetail: (view: SkatState, seat: SeatId) => {

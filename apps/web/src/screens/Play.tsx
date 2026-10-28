@@ -255,8 +255,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             <PlayerChip
               key={index}
               name={seat.name}
-              symbol={<ui.SeatSymbol seat={index} />}
-  detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index))}
+              symbol={<ui.SeatSymbol seat={index} seats={seats.length} />}
+  detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index, seats.length)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index, seats.length))}
               active={!result && current.includes(index)}
               thinking={session.isThinking(index) && seat.kind === 'bot'}
               away={session.isAway(index)}

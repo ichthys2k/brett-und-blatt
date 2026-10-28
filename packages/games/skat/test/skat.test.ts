@@ -1,4 +1,4 @@
-import { cardId, resolveOptions, Rng } from '@brett-und-blatt/engine';
+import { cardId, computeBotMove, resolveOptions, Rng } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { gameModule } from '../src/index.js';
@@ -7,6 +7,7 @@ import {
   calculateGameValue,
   countSpitzen,
   nextPossibleBid,
+  type SkatMove,
 } from '../src/rules.js';
 
 describe('Vertrag für Spielmodule', () => {
@@ -91,4 +92,28 @@ describe('Geben und Geheimnisse', () => {
     expect(gameModule.playerView(state, 0).dealRng).toEqual([0, 0, 0, 0]);
     expect(gameModule.playerView(state, 'spectator').dealRng).toEqual([0, 0, 0, 0]);
   });
+});
+
+describe('Skat-Bot', () => {
+  it('überreizt nicht und gewinnt einen guten Teil seiner Spiele', () => {
+    let won = 0;
+    let played = 0;
+    for (const seed of ['bot-a', 'bot-b', 'bot-c']) {
+      let state: any = gameModule.setup(3, resolveOptions(gameModule), seed);
+      for (let i = 0; i < 6_000 && !gameModule.result(state); i++) {
+        const seat = gameModule.currentPlayers(state)[0] as number;
+        const move = computeBotMove(gameModule, { gameId: 'skat', botId: 'skat', level: 'hard', seat, view: gameModule.playerView(state, seat), seed: `${seed}/${i}`, timeBudgetMs: 50 }) as SkatMove;
+        state = gameModule.applyMove(state, seat, move).state;
+      }
+      for (const game of state.history) {
+        if (!game.declaration) continue;
+        expect(game.overbid).toBe(false);
+        played++;
+        if (game.won) won++;
+      }
+    }
+    expect(played).toBeGreaterThan(5);
+    // Der alte Bot sagte fast immer Grand an und verlor fast alles.
+    expect(won / played).toBeGreaterThan(0.35);
+  }, 120_000);
 });

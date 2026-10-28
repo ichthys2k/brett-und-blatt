@@ -25,6 +25,7 @@ import {
   type Trick,
   type TrickContract,
   SUITS,
+  trickGameEvents,
 } from '@brett-und-blatt/engine';
 
 export type DokoPhase =
@@ -316,7 +317,7 @@ export function getContract(state: DokoState): TrickContract {
 export function applyMove(state: DokoState, actor: Actor, move: DokoMove): MoveResult<DokoState> {
   const player = Number(actor);
   const nextState = applyDokoMove(state, move, player);
-  return { state: nextState, events: [] };
+  return { state: nextState, events: trickGameEvents(state, nextState, player, move as { type: string; card?: CardId }) };
 }
 
 function applyDokoMove(state: DokoState, move: DokoMove, player: number): DokoState {

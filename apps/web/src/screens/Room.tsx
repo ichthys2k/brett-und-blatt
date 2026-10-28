@@ -275,7 +275,7 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
             )}
             <ol className="space-y-2">
               {lobby.seats.map((seat, index) => (
-                <SeatRow key={index} compact={lobby.seats.length > 10} index={index} seat={seat} game={game} isHost={isHost} you={state.you} mySeat={mySeat} member={seat.kind === 'human' ? memberName(seat.memberId) : undefined} send={send} />
+                <SeatRow key={index} compact={lobby.seats.length > 10} seatCount={lobby.seats.length} index={index} seat={seat} game={game} isHost={isHost} you={state.you} mySeat={mySeat} member={seat.kind === 'human' ? memberName(seat.memberId) : undefined} send={send} />
               ))}
             </ol>
           </Section>
@@ -357,6 +357,7 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
 
 function SeatRow({
   compact,
+  seatCount,
   index,
   seat,
   game,
@@ -368,6 +369,7 @@ function SeatRow({
 }: {
   /** Viele Plätze (Bingo bis 30): eine Zeile je Platz, Bot-Auswahl als Klappliste. */
   compact: boolean;
+  seatCount: number;
   index: number;
   seat: LobbySeat;
   game: LoadedGame;
@@ -382,8 +384,8 @@ function SeatRow({
   return (
     <li className={`space-y-2 border shadow-sm ${compact ? 'rounded-xl px-3 py-1.5' : 'rounded-2xl p-3'} ${mine ? 'border-accent bg-accent/5' : 'border-line bg-surface'}`}>
       <div className={`flex items-center ${compact ? 'gap-2' : 'flex-wrap gap-3'}`}>
-        <ui.SeatSymbol seat={index} className={`block flex-none ${compact ? 'size-6' : 'size-8'}`} />
-        <span className="text-sm whitespace-nowrap text-muted">{ui.seatLabel(index)}</span>
+        <ui.SeatSymbol seat={index} seats={seatCount} className={`block flex-none ${compact ? 'size-6' : 'size-8'}`} />
+        <span className="text-sm whitespace-nowrap text-muted">{ui.seatLabel(index, seatCount)}</span>
         <span className={`flex-1 font-medium ${compact ? 'min-w-0 truncate' : ''}`}>
           {seat.kind === 'bot' ? (compact ? '🤖' : `🤖 ${t('setup.bot')} · ${levelLabel(seat.level)}`) : member ? `${member.avatar} ${member.name}` : compact && isHost ? '' : t('online.seatOpen')}
         </span>
@@ -400,7 +402,7 @@ function SeatRow({
         {compact && isHost && (seat.kind === 'bot' || seat.memberId === null) && (
           <select
             className="min-h-9 rounded-lg border border-line bg-bg px-2 text-sm"
-            aria-label={`${ui.seatLabel(index)}: ${t('online.seatOpen')} oder ${t('setup.bot')}`}
+            aria-label={`${ui.seatLabel(index, seatCount)}: ${t('online.seatOpen')} oder ${t('setup.bot')}`}
             value={seat.kind === 'bot' ? seat.level : 'open'}
             onChange={(event) => send({ type: 'setSeat', index, seat: event.target.value === 'open' ? 'open' : { bot: event.target.value as (typeof BOT_LEVELS)[number] } })}
           >
@@ -415,7 +417,7 @@ function SeatRow({
       </div>
       {!compact && isHost && (seat.kind === 'bot' || seat.memberId === null) && (
         <Segmented
-          label={`${ui.seatLabel(index)}: ${t('online.seatOpen')} oder ${t('setup.bot')}`}
+          label={`${ui.seatLabel(index, seatCount)}: ${t('online.seatOpen')} oder ${t('setup.bot')}`}
           value={seat.kind === 'bot' ? seat.level : 'open'}
           choices={[{ value: 'open', label: t('online.seatOpen') }, ...BOT_LEVELS.map((level) => ({ value: level, label: `🤖 ${levelLabel(level)}` }))]}
           onChange={(value) => send({ type: 'setSeat', index, seat: value === 'open' ? 'open' : { bot: value as (typeof BOT_LEVELS)[number] } })}

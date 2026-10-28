@@ -194,7 +194,7 @@
   transition: border-color 130ms ease, background 130ms ease;
 }
 
-.mau-discard.drag-over {
+.mau-discard.mau-drag-over {
   border-color: #facc15;
   background: rgba(250, 204, 21, 0.12);
 }

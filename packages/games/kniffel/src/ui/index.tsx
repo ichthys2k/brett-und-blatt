@@ -1,6 +1,5 @@
 import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
 import {
-  ALL_CATEGORIES,
   CATEGORY_LABELS,
   LOWER_CATEGORIES,
   UPPER_CATEGORIES,
@@ -13,139 +12,125 @@ import './styles.css';
 
 const nameOf = (names: string[], seat: number) => names[seat] ?? `Platz ${seat + 1}`;
 
+/** Augen eines Würfels als Punkte (Positionen im 3×3-Raster). */
+const PIPS: Record<number, number[]> = {
+  1: [4],
+  2: [0, 8],
+  3: [0, 4, 8],
+  4: [0, 2, 6, 8],
+  5: [0, 2, 4, 6, 8],
+  6: [0, 2, 3, 5, 6, 8],
+};
+
+function Die({ value }: { value: number }) {
+  return (
+    <span className="kniffel-pips" aria-hidden="true">
+      {Array.from({ length: 9 }, (_, i) => (
+        <span key={i} className={PIPS[value]?.includes(i) ? 'kniffel-pip' : ''} />
+      ))}
+    </span>
+  );
+}
+
 function Board({ view, legalMoves, onMove, viewer, seatNames }: BoardProps<KniffelState, KniffelMove>) {
-  const seat = viewer === 'spectator' ? view.turn : viewer;
-  const sheet = view.sheets[seat];
-  const canRoll = legalMoves.some((m) => m.type === 'roll');
-  const rollCount = legalMoves.filter((m) => m.type === 'roll').length > 0 ? 1 : 0;
+  const myTurn = viewer !== 'spectator' && viewer === view.turn && !view.finished;
+  const canRoll = myTurn && legalMoves.some((m) => m.type === 'roll');
+  const canHold = myTurn && view.phase === 'roll' && view.rollsLeft > 0 && view.dice !== null;
+  const scorable = new Set(myTurn ? legalMoves.flatMap((m) => (m.type === 'score' ? [m.category] : [])) : []);
+  const seats = view.sheets.map((_, seat) => seat);
 
-  const handleDieClick = (index: number) => {
-    if (view.phase === 'score') return;
-    if (!view.dice) return;
-    onMove({ type: 'toggleHold', index });
-  };
-
-  const handleScoreClick = (category: Category) => {
-    if (viewer !== 'spectator' && viewer === view.turn) {
-      const canScore = legalMoves.some((m) => m.type === 'score' && m.category === category);
-      if (canScore && view.dice) {
-        onMove({ type: 'score', category });
-      }
+  const cell = (seat: number, category: Category) => {
+    const filled = view.sheets[seat]!.scores[category];
+    if (typeof filled === 'number') return <span>{filled}</span>;
+    if (seat === view.turn && scorable.has(category) && view.dice) {
+      const potential = calculateScore(category, view.dice.values);
+      return (
+        <button type="button" className="kniffel-fill" data-zero={potential === 0 ? 'true' : undefined} onClick={() => onMove({ type: 'score', category })} aria-label={`${CATEGORY_LABELS[category]} mit ${potential} Punkten eintragen`}>
+          {potential}
+        </button>
+      );
     }
+    return null;
   };
 
-  const getPotentialScore = (category: Category) => {
-    if (!view.dice) return null;
-    return calculateScore(category, view.dice.values);
-  };
+  const row = (category: Category) => (
+    <tr key={category}>
+      <th scope="row">{CATEGORY_LABELS[category]}</th>
+      {seats.map((seat) => (
+        <td key={seat} data-turn={seat === view.turn ? 'true' : undefined}>
+          {cell(seat, category)}
+        </td>
+      ))}
+    </tr>
+  );
+
+  const sumRow = (label: string, pick: (seat: number) => number, strong = false) => (
+    <tr className={strong ? 'kniffel-total' : 'kniffel-sum'}>
+      <th scope="row">{label}</th>
+      {seats.map((seat) => (
+        <td key={seat} data-turn={seat === view.turn ? 'true' : undefined}>
+          {pick(seat)}
+        </td>
+      ))}
+    </tr>
+  );
+
+  const status = view.finished
+    ? 'Spiel beendet'
+    : !view.dice
+      ? `${nameOf(seatNames, view.turn)} würfelt`
+      : view.rollsLeft > 0
+        ? `${view.rollsLeft} ${view.rollsLeft === 1 ? 'Wurf' : 'Würfe'} übrig – Würfel antippen zum Halten`
+        : 'Kategorie wählen';
 
   return (
     <div className="kniffel">
-      <div className="kniffel-header">
-        <div>
-          <strong>{nameOf(seatNames, view.turn)}</strong> ist am Zug
-        </div>
-        <div className="kniffel-phase">
-          {view.finished
-            ? 'Spiel beendet'
-            : view.phase === 'roll'
-              ? view.rollsLeft === 3
-                ? 'Erstwurf'
-                : `${view.rollsLeft} Wurf${view.rollsLeft === 1 ? '' : 'e'} übrig`
-              : 'Kategorie wählen'}
-        </div>
-      </div>
-
       <div className="kniffel-dice-area">
-        {view.dice ? (
-          <div className="kniffel-dice">
-            {view.dice.values.map((v, i) => (
-              <button
-                key={i}
-                className={`kniffel-die ${view.dice!.held[i] ? 'kniffel-die-held' : ''}`}
-                onClick={() => handleDieClick(i)}
-                disabled={view.phase === 'score' || (viewer as any) !== view.turn || viewer === 'spectator'}
-                title={view.dice!.held[i] ? 'Freigeben' : 'Beiseitelegen'}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="kniffel-dice">Noch nicht gewürfelt</div>
-        )}
-        {canRoll && viewer === view.turn && !view.finished ? (
-          <button className="kniffel-roll-btn" onClick={() => onMove({ type: 'roll' })}>
+        <div className="kniffel-status">{status}</div>
+        <div className="kniffel-dice">
+          {(view.dice?.values ?? [1, 2, 3, 4, 5]).map((value, i) => (
+            <button
+              key={i}
+              type="button"
+              className="kniffel-die"
+              data-held={view.dice?.held[i] ? 'true' : undefined}
+              data-empty={view.dice ? undefined : 'true'}
+              onClick={() => canHold && onMove({ type: 'toggleHold', index: i })}
+              disabled={!canHold}
+              aria-pressed={view.dice?.held[i] ?? false}
+              aria-label={view.dice ? `Würfel ${i + 1}: ${value}${view.dice.held[i] ? ', gehalten' : ''}` : `Würfel ${i + 1}`}
+            >
+              {view.dice ? <Die value={value} /> : null}
+            </button>
+          ))}
+        </div>
+        {canRoll ? (
+          <button type="button" className="kniffel-roll" onClick={() => onMove({ type: 'roll' })}>
             {view.rollsLeft === 3 ? 'Würfeln' : `Nochmal würfeln (${view.rollsLeft})`}
           </button>
         ) : null}
-        {view.phase === 'score' && viewer === view.turn && !view.finished ? (
-          <div>Wähle eine Kategorie zum Eintragen</div>
-        ) : null}
       </div>
 
-      <div className="kniffel-score-grid">
-        <div className="kniffel-section">
-          <div className="kniffel-section-title">Obere Sektion</div>
-          {UPPER_CATEGORIES.map((cat) => {
-            const filled = typeof sheet.scores[cat] === 'number';
-            const isMyTurn = viewer === view.turn && !view.finished;
-            const canScore = legalMoves.some((m) => m.type === 'score' && m.category === cat);
-            const potential = !filled && isMyTurn && canScore && view.dice ? getPotentialScore(cat) : null;
-            return (
-              <div
-                key={cat}
-                className={`kniffel-row ${!filled && isMyTurn && canScore ? 'kniffel-row-fillable' : ''} ${!filled && !canScore && isMyTurn ? 'kniffel-row-disabled' : ''}`}
-                onClick={() => handleScoreClick(cat)}
-              >
-                <div className="kniffel-row-label">{CATEGORY_LABELS[cat]}</div>
-                <div className="kniffel-row-value">{filled ? sheet.scores[cat] : potential !== null ? (potential as any) : ''}</div>
-                <div className="kniffel-row-score">{filled ? sheet.scores[cat] : potential !== null ? (potential as any) : ''}</div>
-              </div>
-            );
-          })}
-          <div className="kniffel-total">
-            <span>Zwischensumme</span>
-            <span>{sheet.upperSum}</span>
-          </div>
-          <div className="kniffel-total">
-            <span>Bonus (≥63)</span>
-            <span>{sheet.upperBonus}</span>
-          </div>
-        </div>
-
-        <div className="kniffel-section">
-          <div className="kniffel-section-title">Untere Sektion</div>
-          {LOWER_CATEGORIES.map((cat) => {
-            const filled = typeof sheet.scores[cat] === 'number';
-            const isMyTurn = viewer === view.turn && !view.finished;
-            const canScore = legalMoves.some((m) => m.type === 'score' && m.category === cat);
-            const potential = !filled && isMyTurn && canScore && view.dice ? getPotentialScore(cat) : null;
-            return (
-              <div
-                key={cat}
-                className={`kniffel-row ${!filled && isMyTurn && canScore ? 'kniffel-row-fillable' : ''} ${!filled && !canScore && isMyTurn ? 'kniffel-row-disabled' : ''}`}
-                onClick={() => handleScoreClick(cat)}
-              >
-                <div className="kniffel-row-label">{CATEGORY_LABELS[cat]}</div>
-                <div className="kniffel-row-value">{filled ? sheet.scores[cat] : ''}</div>
-                <div className="kniffel-row-score">{filled ? sheet.scores[cat] : potential !== null ? potential : ''}</div>
-              </div>
-            );
-          })}
-          <div className="kniffel-total">
-            <span>Obere Summe inkl. Bonus</span>
-            <span>{sheet.upperSum + sheet.upperBonus}</span>
-          </div>
-          <div className="kniffel-total">
-            <span>Untere Summe</span>
-            <span>{sheet.lowerSum}</span>
-          </div>
-          <div className="kniffel-total">
-            <span>Gesamt</span>
-            <span>{sheet.total}</span>
-          </div>
-        </div>
+      <div className="kniffel-sheet-wrap">
+        <table className="kniffel-sheet">
+          <thead>
+            <tr>
+              <th scope="col" />
+              {seats.map((seat) => (
+                <th key={seat} scope="col" data-turn={seat === view.turn ? 'true' : undefined}>
+                  {nameOf(seatNames, seat)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {UPPER_CATEGORIES.map(row)}
+            {sumRow('Summe oben', (s) => view.sheets[s]!.upperSum)}
+            {sumRow('Bonus (ab 63)', (s) => view.sheets[s]!.upperBonus)}
+            {LOWER_CATEGORIES.map(row)}
+            {sumRow('Gesamt', (s) => view.sheets[s]!.total, true)}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -153,6 +138,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames }: BoardProps<Kniff
 
 export const gameUi: GameUi<KniffelState, KniffelMove> = {
   Board,
-  SeatSymbol: () => <span>🎲</span>,
+  SeatSymbol: ({ className = '' }) => <span className={className}>🎲</span>,
   seatLabel: (seat) => `Spieler ${seat + 1}`,
+  sounds: { rolled: 'wuerfeln', scored: 'stein-setzen' },
 };

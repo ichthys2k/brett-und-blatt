@@ -11,6 +11,7 @@ Freie Spielesammlung im Browser (Karten- und Brettspiele für Handy und Desktop)
 - **Commit, Hochladen (Push) und Merge nur auf Cornelius' ausdrückliches Wort** – jeweils einzeln, **oder komplett in einem Schritt durch den Befehl „deploy“** (committen, nach `main` mergen und pushen). Ein „Commit“ alleine erlaubt noch keinen Push.
 - **Jeder Push auf `main` veröffentlicht sofort:** Die CI (`.github/workflows/ci.yml`) prüft, veröffentlicht dann den Spieleserver auf Cloudflare und danach die Web-App über GitHub Pages. Arbeite auf einem eigenen Zweig.
 - **Vor jedem Commit:** `corepack pnpm check` (Typprüfung, alle Tests, Build) muss grün sein, und die Änderung im Browser ansehen (`corepack pnpm --filter @brett-und-blatt/web dev`, http://localhost:5173).
+- **Ein Spiel gilt erst als fertig,** wenn seine Tests die Vertragsprüfungen wirklich ausführen (`for (const check of gameContractChecks(gameModule)) it(check.name, check.run)`), `corepack pnpm rauchtest` (Browser) und `PRUEFSTAND=1 PRUEFSTAND_SPIELE=<id> corepack pnpm pruefstand` grün sind und man es selbst im Browser gegen den Bot gespielt hat. Unfertige Spiele bekommen `draft: true` im Steckbrief und bleiben so von Startseite und Server fern. CSS-Klassen immer mit eigenem Spielpräfix.
 - **Commit-Adresse:** `855814+ichthys2k@users.noreply.github.com` (vorher mit `git config user.email` prüfen).
 - **Keine Geheimnisse ins Repo** (`.env`, Tokens, Zugangsdaten). Nichts außerhalb dieses Repos anfassen, was nicht zur Aufgabe gehört.
 - **Klänge:** Die MP3s liegen im **privaten** Repo `ichthys2k/brett-und-blatt-klaenge` (ElevenLabs-Lizenz) und dürfen nie ins öffentliche Repo kopiert werden. Nur die CI holt sie per Secret. Lokal läuft alles auch ohne – fehlende Klänge sind dann nur ein Hinweis. Neue Klänge nur nach Auswahl durch Cornelius.
@@ -26,6 +27,8 @@ corepack pnpm neues-spiel <id> "<Name>"               # neues Spiel aus der Vorl
 corepack pnpm --filter @brett-und-blatt/web dev       # Web-App, http://localhost:5173
 corepack pnpm --filter @brett-und-blatt/server dev    # Spieleserver, http://127.0.0.1:8787
 node apps/server/scripts/smoke.mjs                    # Rauchtest gegen den lokalen Server
+corepack pnpm rauchtest                               # nach dem Build: jedes Spiel im Browser starten
+PRUEFSTAND=1 corepack pnpm pruefstand                 # gründlicher Prüfstand (PRUEFSTAND_SPIELE=<id> für einzelne)
 ```
 
 Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrspieler-Spiele (ab 2 Plätzen) zusätzlich in `apps/server/src/games.ts` und `apps/server/package.json` eintragen.
@@ -45,6 +48,8 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 - ✅ Etappe 6 Eigene Spiele: abgeschlossen – Farbensortierer und Drachenspiel (Emojistone) sind live.
 - ✅ Etappe 7: **Eins!** (Uno), **Mau-Mau**, **Dame** (Checkers), **Nicht ärgern!** (Ludo), **Poker** (Texas Hold'em), **Wortgitter/Scrabble**, sowie **Bibel-Quiz**, **Galgenmännchen**, **Wort-Salat**. **Binokel** ist eingetragen und online, aber noch unfertig (Oberfläche ist ein Platzhalter, `playerView` verdeckt nichts, keine Tests).
 - ✅ Weitere Spiele: **Gomoku** (Fünf in einer Reihe), **Ligretto** (Reaktionsspiel), **Kniffel**. Mathe-Übungen für Klasse 5 & 6 (Zielzahl, Teiler-Duell, Rechenmauer, Enten-Rallye) und erweiterte Mathe-Modi in Klassikern umgesetzt.
+
+- Korrekturplan aus dem Prüfbericht (28.10.2026): ✅ Etappe 1 Lecks, ✅ Etappe 2 Prüfnetz, Etappe 3 Reparaturen (Teil 1 fertig: Stichspiele, Skat-Bot, Kniffel, Poker, Nicht ärgern!, Wort-Salat; offen: Wortgitter, Binokel, Schafkopf-/Doppelkopf-Bots), Etappe 4 Rechtliches. Details in `CLAUDE.md`.
 
 Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; alle 20 Musikstücke sind eingetragen. Offene Punkte und nächste Schritte stehen in `CLAUDE.md`.
 

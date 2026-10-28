@@ -23,6 +23,7 @@
     "packages/online/src",
     "packages/online/test",
     "apps/server/test",
+    "tests",
     "packages/games/*/src",
     "packages/games/*/test",
     "apps/web/src"

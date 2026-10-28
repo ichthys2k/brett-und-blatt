@@ -1,12 +1,16 @@
-import { cardId, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
+import { sortHand, cardId, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
 import { CardFan, PlayingCard, TrickTable, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import {
+  getContract,
   type SchafkopfContract,
   type SchafkopfGameType,
   type SchafkopfMove,
   type SchafkopfState,
 } from '../rules.js';
+
+/** Breite einer Handkarte: groß genug zum Tippen, klein genug für zwei Reihen auf dem Handy. */
+const HAND_CARD_WIDTH = 'clamp(44px, 11vw, 76px)';
 
 export function SchafkopfBoard({
   view,
@@ -16,7 +20,8 @@ export function SchafkopfBoard({
   seatNames,
 }: BoardProps<SchafkopfState, SchafkopfMove>) {
   const mySeat: number = typeof viewer === 'number' ? viewer : 0;
-  const myHand: CardId[] = view.hands[mySeat] || [];
+  // Sortiert nach dem laufenden Spiel (vor der Ansage nach dem üblichen Standardspiel).
+  const myHand: CardId[] = sortHand(view.hands[mySeat] || [], getContract(view));
   const isDeclarer = mySeat === view.declarerSeat;
   const isPartner = mySeat === view.partnerSeat;
 
@@ -44,6 +49,9 @@ export function SchafkopfBoard({
       isWinner: isWin,
     };
   });
+
+  // Erlaubte Karten heben sich ab; unerlaubte Klicks lehnt die Spielleitung ohnehin ab.
+  const playableCards = new Set(legalMoves.flatMap((m) => (m.type === 'play' ? [m.card] : [])));
 
   return (
     <div className="flex flex-col w-full max-w-4xl mx-auto p-2 sm:p-4 gap-4">
@@ -197,10 +205,11 @@ export function SchafkopfBoard({
         <div className="w-full flex justify-center overflow-x-auto pb-2">
           <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
             {myHand.map((card: CardId, idx: number) => (
-              <div key={`${card}-${idx}`} className="transition-transform hover:-translate-y-2">
+              <div key={`${card}-${idx}`} className="transition-transform hover:-translate-y-2" style={{ width: HAND_CARD_WIDTH }}>
                 <PlayingCard
                   card={card === 'back' ? null : card}
                   deckStyle={view.deckStyle}
+                  highlight={playableCards.has(card) ? 'target' : null}
                   onClick={() => {
                     if (view.phase === 'play' && card !== 'back') {
                       onMove({ type: 'play', card });
@@ -294,6 +303,7 @@ function formatContract(contract: SchafkopfContract): string {
 
 export const gameUi: GameUi<SchafkopfState, SchafkopfMove> = {
   Board: SchafkopfBoard,
+  sounds: { cardPlayed: 'karte-legen', trickTaken: 'karte-ziehen', announced: 'ansage', newDeal: 'mischen' },
   SeatSymbol: ({ className }) => <span className={className}>🎴</span>,
   seatLabel: (seat: SeatId) => `Spieler ${seat + 1}`,
   seatDetail: (view: SchafkopfState, seat: SeatId) => {

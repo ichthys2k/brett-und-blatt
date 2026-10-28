@@ -8,7 +8,11 @@ import type { UnoCard } from '../src/types';
 import { playRandomGame } from '@brett-und-blatt/engine/testing';
 
 describe('Eins! Vertrag', () => {
-  for (const check of gameContractChecks(gameModule, { seatCounts: [2, 4], randomGames: 20, maxMoves: 4_000 })) {
+  for (const check of gameContractChecks(gameModule, {
+    seatCounts: [2, 4],
+    randomGames: 20,
+    maxMoves: 4_000,
+  })) {
     test(check.name, check.run, 120_000);
   }
 });

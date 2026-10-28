@@ -60,7 +60,8 @@ Das legt eine Kopie der Vorlage Tic-Tac-Toe an. Die Kopie ist sofort spielbar un
 - **Unzählbare Züge:** Lässt sich ein Zug nicht sinnvoll aufzählen (z. B. eine ganze Flotte aufstellen), prüft `isLegal` ihn direkt; `legalMoves` liefert dann nur Beispiele.
 - **Anleitung ist Pflicht:** `howToPlay` im Steckbrief erklärt die wichtigsten Regeln in wenigen kurzen Sätzen. Sie erscheint beim Einrichten und im Spiel hinter dem „?“-Knopf.
 - **Bots sind Pflicht:** Jedes Spiel ist gegen den Computer spielbar. Der erste Bot in `bots` ist der Standard; die allgemeinen Bots (`generalBots()`) funktionieren mit jedem Spiel.
-- **Prüfungen:** Jeder Spieltest bindet `gameContractChecks(gameModule)` ein. Sie spielen viele Zufalls- und Bot-Partien und prüfen dabei die Regeln oben.
+- **Prüfungen:** Jeder Spieltest führt die allgemeinen Prüfungen aus: `for (const check of gameContractChecks(gameModule)) it(check.name, check.run)` – der bloße Aufruf `gameContractChecks(gameModule)` prüft nichts. Sie spielen viele Zufalls- und Bot-Partien und prüfen dabei die Regeln oben, auch dass Sichten nichts Geheimes verraten. Vor dem Fertigmelden außerdem `corepack pnpm rauchtest` und `PRUEFSTAND=1 PRUEFSTAND_SPIELE=<id> corepack pnpm pruefstand`.
+- **CSS:** Alle Klassen eines Spiels mit eigenem Präfix (z. B. `ff-` für Farbe & Form). Die CSS bleibt nach dem ersten Öffnen global aktiv; doppelte Klassen meldet `tests/repo.test.ts`.
 
 ### Klänge
 

@@ -55,6 +55,14 @@ jobs:
           # Gesetzt, wenn die Klänge geholt wurden – dann bricht der Build ab, falls eine Datei fehlt.
           KLAENGE_DIR: ${{ env.HAS_KLAENGE == 'true' && format('{0}/klaenge-repo', github.workspace) || '' }}
 
+      # Jedes Spiel einmal frisch und einmal nach allen anderen im Browser starten
+      # (Abstürze, riesige Seiten, CSS-Kollisionen zwischen Spielen).
+      - name: Browser für den Rauchtest installieren
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Rauchtest im Browser
+        run: node scripts/rauchtest.mjs
+
       - name: Gebaute App für GitHub Pages bereitstellen
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v5

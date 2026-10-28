@@ -25,6 +25,7 @@ import {
   type Trick,
   type TrickContract,
   SUITS,
+  trickGameEvents,
 } from '@brett-und-blatt/engine';
 
 export type SchafkopfPhase =
@@ -371,7 +372,7 @@ export function getContract(state: SchafkopfState): TrickContract {
 export function applyMove(state: SchafkopfState, actor: Actor, move: SchafkopfMove): MoveResult<SchafkopfState> {
   const player = Number(actor);
   const nextState = applySchafkopfMove(state, move, player);
-  return { state: nextState, events: [] };
+  return { state: nextState, events: trickGameEvents(state, nextState, player, move as { type: string; card?: CardId }) };
 }
 
 function applySchafkopfMove(state: SchafkopfState, move: SchafkopfMove, player: number): SchafkopfState {

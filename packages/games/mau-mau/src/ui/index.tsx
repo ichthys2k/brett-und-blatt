@@ -422,7 +422,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
           <div
             ref={discardRef}
             data-drop-target="discard"
-            className={`mau-pile mau-discard ${dragState.isDragging && dragState.targetId === 'discard' ? 'drag-over' : ''} ${
+            className={`mau-pile mau-discard ${dragState.isDragging && dragState.targetId === 'discard' ? 'mau-drag-over' : ''} ${
               discardLanding ? 'mau-card-landing' : ''
             }`}
           >
