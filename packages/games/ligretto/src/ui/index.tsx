@@ -106,9 +106,11 @@ function Board({ view, legalMoves, onMove, viewer }: BoardProps<LigrettoState, L
   );
 }
 
-export const ui: GameUi<LigrettoState, LigrettoMove> = {
+export const gameUi: GameUi<LigrettoState, LigrettoMove> = {
   Board,
   SeatSymbol: () => <span>⚡</span>,
   seatLabel: (seat) => `Spieler ${seat + 1}`,
   sounds: {},
 };
+
+export const ui = gameUi;
