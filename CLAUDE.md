@@ -91,7 +91,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Web-Oberfläche mit 11×11-SVG-Kreuzbrett, Okabe-Ito-Farben und Formsymbolen (●, ▲, ■, ★) für Barrierefreiheit, integriertem 3D-Würfel, pulsierenden Ringen für bewegliche Figuren und vollständiger Audio-Einbindung (`wuerfeln`, `stein-schlagen`, `stein-heraus` etc.).
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`) für Online-Mehrspieler und Playlist „Spielabend“. Plan in `docs/spiele/ludo.md`.
 - **Wortgitter** (`packages/games/scrabble`, 2–4 Plätze):
-  - Spielplan erarbeitet und in `docs/spiele/scrabble.md` dokumentiert (15×15 Brett mit 3W/2W/3B/2B-Multiplikatoren, 102 Steine deutsches Blatt, binäres DAWG-Wörterbuch mit < 200 KB für Browser und Cloudflare Worker, Gordon/Appel-Jacobson-Wortsuch-Bot „Wortmeister“ in 3 Stufen, ZoomBoard & Dual-Input-Steuerung).
+  - Implementiert (15×15 Brett mit 3W/2W/3B/2B-Multiplikatoren, 102 Steine deutsches Blatt, Wörterbuch, Bot „Wortmeister“ in 3 Stufen). Registriert für Online-Mehrspieler. Plan in `docs/spiele/scrabble.md`.
 - **Binokel** (`packages/games/binokel`, 3–4 Plätze):
   - Spielplan erarbeitet und in `docs/spiele/binokel.md` dokumentiert (schwäbisches Traditionsspiel, 40/48 Karten doppeltes Blatt, Reizen, Dabb-Tausch & Drücken, Meldebilder mit Vorrang-Erkennung, Überstich- und Trumpfzwang, Durchmarsch, Bot „Schwaben-Ass“ mit PIMC).
 - **Poker** (`packages/games/poker`, 2–10 Plätze):
