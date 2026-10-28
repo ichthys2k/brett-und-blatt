@@ -1,68 +1,40 @@
 import type { GameModule } from '@brett-und-blatt/engine';
-import { generalBots } from '@brett-und-blatt/engine';
 import { scrabbleBot } from './bots';
 import { meta } from './meta';
 import {
   applyMove,
-  sampleHidden,
   currentPlayers,
   evaluate,
   isLegal,
   legalMoves,
   playerView,
   result,
+  sampleHidden,
   setup,
   type ScrabbleMove,
   type ScrabbleState,
-  type ScrabbleView,
 } from './rules';
 
-export type { ScrabbleMove, ScrabbleState, ScrabbleView } from './rules';
+export type { BoardCell, LastMove, PlacedTile, ScrabbleMove, ScrabbleState } from './rules';
+export { checkPlay, EXCHANGE_MIN_BAG } from './rules';
 export { scrabbleBot } from './bots';
 export { isValidWord } from './dict';
 
-export const gameModule: any = {
+export const gameModule: GameModule<ScrabbleState, ScrabbleMove> = {
   info: meta,
   options: [
     {
-      id: 'dictionary',
-      label: 'Wörterbuch',
-      choices: [
-        { value: 'de', label: 'Deutsch (Standard)' },
-        { value: 'en', label: 'Englisch (SOWPODS)' },
-      ],
-      default: 'de',
-    },
-    {
-      id: 'checkMode',
-      label: 'Prüfmodus',
-      choices: [
-        { value: 'immediate', label: 'Sofortprüfung' },
-        { value: 'challenge', label: 'Challenge (Anfechten)' },
-      ],
-      default: 'immediate',
-    },
-    {
-      id: 'jokerSwap',
-      label: 'Joker-Tausch',
-      choices: [
-        { value: 'off', label: 'Aus' },
-        { value: 'on', label: 'An' },
-      ],
-      default: 'off',
-    },
-    {
       id: 'rackSize',
-      label: 'Bänkchengröße',
+      label: 'Bänkchen',
       choices: [
         { value: '7', label: '7 Steine' },
-        { value: '8', label: '8 Steine' },
+        { value: '8', label: '8 Steine (leichter)' },
       ],
       default: '7',
     },
     {
       id: 'bingoBonus',
-      label: 'Bingo-Prämie',
+      label: 'Prämie für 7 Steine',
       choices: [
         { value: '50', label: '50 Punkte' },
         { value: '0', label: 'Aus' },
@@ -72,8 +44,8 @@ export const gameModule: any = {
   ],
   timePresets: {
     relaxed: { kind: 'none' },
-    normal: { kind: 'chessClock', baseMs: 15 * 60 * 1000, incrementMs: 10 * 1000 },
-    fast: { kind: 'perMove', moveMs: 60 * 1000 },
+    normal: { kind: 'chessClock', baseMs: 15 * 60_000, incrementMs: 10_000 },
+    fast: { kind: 'perMove', moveMs: 90_000 },
   },
   setup,
   currentPlayers,
@@ -84,5 +56,6 @@ export const gameModule: any = {
   result,
   evaluate,
   sampleHidden,
-  bots: [scrabbleBot, ...generalBots<ScrabbleState, ScrabbleMove, ScrabbleView>()],
-} as any;
+  timeoutMove: () => ({ type: 'pass' }),
+  bots: [scrabbleBot],
+};

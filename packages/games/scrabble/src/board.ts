@@ -103,16 +103,3 @@ export function indexOf(row: number, col: number): number {
 export function rowColOf(index: number): [number, number] {
   return [Math.floor(index / BOARD_SIZE), index % BOARD_SIZE];
 }
-
-export function isEmptyBoard(board: (BoardCell | null)[]): boolean {
-  return board.every((c) => c === null);
-}
-
-export interface BoardCell {
-  letter: Letter;
-  isBlank: boolean;
-  placedBy: number;
-  turn: number;
-}
-
-import type { Letter } from './letters';

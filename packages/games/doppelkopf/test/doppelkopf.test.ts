@@ -86,3 +86,19 @@ describe('Geben und Geheimnisse', () => {
     expect(gameModule.playerView(state, 'spectator').dealRng).toEqual([0, 0, 0, 0]);
   });
 });
+
+describe('Doppelkopf-Bot', () => {
+  it('spielt Serien regelgerecht auf allen Stufen', async () => {
+    const { computeBotMove, isLegalMove } = await import('@brett-und-blatt/engine');
+    for (const level of ['easy', 'medium', 'hard'] as const) {
+      let s = gameModule.setup(4, {}, `bot-${level}`);
+      for (let i = 0; i < 3000 && !gameModule.result(s); i++) {
+        const seat = gameModule.currentPlayers(s)[0] as number;
+        const move = computeBotMove(gameModule, { gameId: 'doppelkopf', botId: 'doppelkopf', level, seat, view: gameModule.playerView(s, seat), seed: `${i}`, timeBudgetMs: 50 }) as never;
+        expect(isLegalMove(gameModule, s, seat, move)).toBe(true);
+        s = gameModule.applyMove(s, seat, move).state;
+      }
+      expect(gameModule.result(s)).not.toBeNull();
+    }
+  }, 60_000);
+});

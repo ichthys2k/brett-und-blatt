@@ -97,11 +97,14 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Heuristischer Taktik-Bot „Würfelmeister“ in 3 Stufen (leicht, mittel, schwer mit Gefahrenanalyse und Reuewert).
   - Web-Oberfläche mit 11×11-SVG-Kreuzbrett, Okabe-Ito-Farben und Formsymbolen (●, ▲, ■, ★) für Barrierefreiheit, integriertem 3D-Würfel, pulsierenden Ringen für bewegliche Figuren und vollständiger Audio-Einbindung (`wuerfeln`, `stein-schlagen`, `stein-heraus` etc.).
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`) für Online-Mehrspieler und Playlist „Spielabend“. Plan in `docs/spiele/ludo.md`.
-- **Wortgitter** (`packages/games/scrabble`, 2–4 Plätze):
-  - Implementiert (15×15 Brett mit 3W/2W/3B/2B-Multiplikatoren, 102 Steine deutsches Blatt, Wörterbuch, Bot „Wortmeister“ in 3 Stufen). Registriert für Online-Mehrspieler. Plan in `docs/spiele/scrabble.md`.
-- **Binokel** (`packages/games/binokel`, 3–4 Plätze) – **unfertig, aber schon live:**
-  - Fertig: Regeln (`rules.ts`: Reizen, Dabb-Tausch & Drücken, Durchmarsch), Meldebilder (`melds.ts`), Blatt mit 40/48 Karten (`cards.ts`), Engine um Überstich- und Trumpfzwang erweitert; im Spieleserver und auf der Startseite (Rubrik Familie, da keiner Rubrik zugeordnet) eingetragen.
-  - Offen: Oberfläche ist nur ein Platzhalter (`src/ui/index.tsx` zeigt das Wort „Binokel“), Bot „Schwaben-Ass“ nimmt auf allen Stufen den ersten erlaubten Zug, `playerView` gibt den ganzen Stand weiter (online sähe jeder alle Hände und den Dabb), kein Testordner (`gameContractChecks` fehlt). Plan in `docs/spiele/binokel.md`.
+- **Wortgitter** (`packages/games/scrabble`, 2–4 Plätze, am 28.10. neu geschrieben):
+  - Regeln: 15×15 mit Prämienfeldern, erster Zug über H8 (★ zählt doppelt), eine Linie, lückenlos, angelegt; alle Quer- und Hauptwörter werden geprüft; Joker zählen 0; 50 Punkte für 7 Steine; Tauschen ab 7 Steinen im Beutel; Ende bei leerem Beutel und leerem Bänkchen oder nach sechs Zügen ohne Punkte (Reststeine werden verrechnet). Fremde Bänkchen und Beutel sind verdeckt (`sampleHidden`).
+  - Zuggenerator nach Appel & Jacobson (`src/movegen.ts`, Präfixbaum in `src/dict.ts`): `legalMoves` liefert alle Legungen (meist < 50 ms). Bot „Wortmeister“: leicht wählt ein mittelmäßiges Wort, mittel das punktstärkste, schwer bewertet zusätzlich den Rest auf dem Bänkchen und tauscht schlechte Bänkchen.
+  - Oberfläche: Steine antippen oder aufs Brett ziehen, Joker mit Buchstabenwahl, Vorschau mit Wörtern und Punkten, Mischen, Tauschen, Passen.
+  - Wörterbuch `src/dict/words-de.json` (Herkunft und Lizenz unklar, enthält Namen und Englisches); beim Laden fallen Wörter ohne Selbstlaut weg, Wörter aus zwei Buchstaben nur nach Liste. Plan in `docs/spiele/scrabble.md`.
+- **Binokel** (`packages/games/binokel`, 3 Plätze, am 28.10. neu geschrieben):
+  - Doppeltes Blatt mit 40 oder 48 Karten, Reizen reihum in Zehnerschritten, offener Dabb, Drücken, Trumpf, Durch oder Abgehen; Meldungen automatisch (`src/melds.ts`: Familien, Paare, Rundgang, vier und acht Gleiche, Binokel, Dissle), zählen nur mit Stich; Farb-, Überstich- und Trumpfzwang über den Stich-Kern; Abrechnung bis 1000/1500 Punkte, spätestens nach 24 Spielen.
+  - Bot „Schwaben-Ass“ (schätzt Meldungen und Stichaugen je Trumpf, drückt kurze Farben, geht ab, Faustregeln im Stich). Oberfläche mit Reizknöpfen, Dabb, Drückauswahl, Meldeübersicht, Stichtisch und Abrechnung. Plan in `docs/spiele/binokel.md`.
 - **Poker** (`packages/games/poker`, 2–10 Plätze):
   - Texas Hold'em mit No Limit, Pot Limit und Fixed Limit, Turnier-Modus (steigende Blinds nach Händen, Ante) und Offenem Tisch (20/50 Hände), wählbarem Thema (Chips, Bohnen, Streichhölzer) und Lernhilfe (deutsche Handnamen).
   - Schneller Bitmasken-Handbewerter (`eval.ts`), Haupt- und Side-Pot-Zerlegung mit Rest-Chip-Regel (`pots.ts`), Bot „Pokerface“ in 3 Stufen (Chen-Starthandbewertung, Push-or-Fold, Monte-Carlo-Equity mit Range-Schätzung).
@@ -130,7 +133,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - **Kniffel** (`packages/games/kniffel`, 1–6 Plätze): Fünf Würfel, drei Würfe, Würfel halten, 13 Kategorien mit oberem Bonus (63 → +35), Bot in drei Stufen (wählt nur die Kategorie, hält keine Würfel), Regeltests und `gameContractChecks`, online registriert, auf der Startseite ohne feste Rubrik (landet unter Familie). Plan in `docs/spiele/kniffel.md`.
 
 **Prüfbericht und Etappe 1 der Korrekturen (28.10.2026):** Alle Spiele wurden mit Zufallspartien über alle Optionen, Bot-Läufen, Lecksuche und im Browser geprüft (Bericht „Brett & Blatt – Prüfbericht aller Spiele“ in Claude). Etappe 1 ist umgesetzt:
-- Neues Feld `draft` in `GameInfo`: Entwürfe fehlen auf der Startseite, in der Online-Lobby und auf dem Server (`apps/server/src/games.ts`, Test beachtet `draft`), bleiben über `#/neu/<id>` testbar. **Wortgitter und Binokel sind Entwürfe**, bis sie repariert sind.
+- Neues Feld `draft` in `GameInfo`: Entwürfe fehlen auf der Startseite, in der Online-Lobby und auf dem Server (`apps/server/src/games.ts`, Test beachtet `draft`), bleiben über `#/neu/<id>` testbar. Wortgitter und Binokel waren bis zur Neufassung in Etappe 3 Entwürfe.
 - Skat, Schafkopf, Doppelkopf: Ab dem zweiten Spiel einer Serie wurde mit einer festen Formel aus Spielnummer und Geber „gemischt“ – jede Serie hatte dieselben Blätter. Jetzt Zufallsstrom `dealRng` aus dem Seed, in Sichten genullt (`ruleVersion` 2).
 - Schafkopf: `initialHands` verriet allen alle Blätter; fremde Ausgangsblätter sind bis zum Rundenende leer.
 - Eins!: Kennungen fremder Handkarten (vor dem Mischen fortlaufend vergeben) werden in der Sicht ersetzt.
@@ -139,12 +142,11 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - Farbe & Form: Klassenpräfix `ff-` statt `cs-` (kollidierte mit Farbensortierer: nach einer Partie Farbensortierer zerfiel das Brett). Unbenutzte Tic-Tac-Toe-CSS-Kopien in den Stichspielen entfernt.
 
 **Bekannte offene Punkte:**
-- **Binokel und Wortgitter fertigstellen** (beide `draft`): siehe Prüfbericht. Wortgitter: Oberfläche ohne Funktion, Startfeld (4,4) statt H8, Bot stürzt ab, `legalMoves` ohne Wörter. Binokel: Platzhalter-Oberfläche, Regeln laufen fest, Sicht zeigt alles, keine Tests.
-- **Stichspiele:** Schafkopf- und Doppelkopf-Bots spielen noch schwach und nutzen die Stufen nicht (Skat ist erledigt, siehe Etappe 3).
+- **Wortgitter-Wörterbuch:** Herkunft und Lizenz unbekannt, Güte mäßig (Namen, Englisches) – in Etappe 4 durch eine freie Liste ersetzen.
+- **Stichspiel-Bots** spielen nach Faustregeln, ohne Suche (Skat, Schafkopf, Doppelkopf, Binokel); Null, Bettel, Tout und Durch sagen sie nie an.
 - **Kniffel und Ligretto:** Die Namen sind Marken (Umbenennung in Etappe 4).
 - **Bibel-Quiz:** Die richtige Antwort steht in der Sicht – aber auch im ausgelieferten Fragenkatalog (Option 0 ist richtig). Verbergen nützt erst, wenn die Fragen nicht mehr im Browser-Bundle liegen.
 - **Klänge der Enten-Rallye:** 15 MP3s (18 MB) liegen direkt im öffentlichen Repo unter `apps/web/public/klaenge/duck-rally/`. Herkunft und Lizenz klären – ElevenLabs-Klänge gehören ins private Klang-Repo, Suno-Musik darf mit Nennung (CC BY-SA) ins Repo.
-- **Startseite:** Gomoku und Kniffel sind in `Home.tsx` keiner Rubrik zugeordnet und landen automatisch unter *Familie*.
 
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
 - Drag & Drop: Universeller Pointer-Drag (`usePointerDrag`), Reise-Animationen (`useSpawnAnimation`) und sanfte Gleit-Animationen für ziehende Figuren (`useGridMoveAnimation`, 280 ms mit `onAnimationEnd`-Cleanup) in `packages/ui/src/dnd`. Gleiten aktiviert für Schach (inkl. Rochade und gedrehtem Brett), Vierer-Schach (alle 4 Perspektiven & Rochade) und Dame. Barrierefreiheit (Tastatur und Klick/Tap) bleibt vollständig erhalten.
@@ -180,7 +182,11 @@ Korrekturplan aus dem Prüfbericht:
      - Poker: Nebenpots in der Anzeige nur noch an All-in-Grenzen (`currentPots`), nicht schon bei laufenden Einsätzen.
      - Nicht ärgern!: Spielerchip zeigt nur das Formsymbol; `SeatSymbol` und `seatLabel` bekommen jetzt optional die Platzzahl (`seats`), damit bei zwei Spielern die richtige Farbe (gegenüber) erscheint.
      - Wort-Salat: CSS nutzte nicht vorhandene Variablen (`--color-text` u. a.) – jetzt Theme-Tokens, lesbar im Dunkelmodus.
-   - Teil 2: Wortgitter, Binokel, Schafkopf- und Doppelkopf-Bots.
+   - ✅ Teil 2 (28.10.2026):
+     - Wortgitter und Binokel neu geschrieben (siehe oben), kein `draft` mehr, wieder im Spieleserver.
+     - Schafkopf-Bot: Spielwahl nach Trumpfstärke (Sauspiel, Wenz, Solo), ruft die Sau einer kurzen Farbe, stößt mit starkem Blatt, Faustregeln im Stich, Bettel und Ramsch eigens. Gegen den alten Bot klar überlegen.
+     - Doppelkopf-Bot: Solo und Hochzeit nur mit passendem Blatt, Re/Kontra bei starker Hand, Teams erst bekannt, wenn sie sich zeigen, Faustregeln im Stich. Gegen den alten Bot leicht überlegen.
+     - Startseite: Binokel, Wortgitter, Gomoku und Kniffel in ihren Rubriken.
 4. Etappe 4 – Rechtliches: Kniffel und Ligretto umbenennen, Enten-Rallye-Klänge, Wörterbuch-Lizenz.
 
 **Arbeitsweise seit 27.10.2026:** Ein Teil der Arbeit kam direkt auf `main` statt über einen PR. Jeder Push dort veröffentlicht sofort; rote CI-Läufe (z. B. am 28.10. vier in Folge) bedeuten, dass in der Zeit nichts veröffentlicht wurde. Zweige mit PR bleiben der empfohlene Weg.
@@ -200,7 +206,7 @@ Entscheidungen: erst Infrastruktur mit vorhandenen Spielen, dann neue Spiele; h�
 
 Ursprüngliche Eckpunkte: Cloudflare Workers mit Durable Objects (ein Objekt pro Raum, Daten in der EU per `jurisdiction('eu')`, Gratis-Tarif), neues Paket `apps/server` mit dünnem Cloudflare-Adapter, Räume mit Emoji-Code/Link/QR, Wiedereinstieg, Bot-Ersatz für Abwesende, Server-Uhr, flüchtige Signale. Erste Online-Spiele: Schiffe versenken, Quartett, Mäxle, Bingo (Klassen-Modus). Details im Konzept (Fahrplan, Muster, Zeitlimits) und in den Spielplänen. Für Cloudflare braucht es ein Konto von Cornelius – Anmeldung und Zugangsdaten macht er selbst.
 
-Alle Etappen 1–7 sind abgeschlossen (Binokel noch unfertig, siehe oben). Originalspiele liegen in `~/code/4playerchess` und `~/code/emojiclicker/minigames/` (nur als Vorlage lesen).
+Alle Etappen 1–7 sind abgeschlossen. Originalspiele liegen in `~/code/4playerchess` und `~/code/emojiclicker/minigames/` (nur als Vorlage lesen).
 
 ## Hinweise zum Rechnerwechsel
 

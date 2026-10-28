@@ -1,42 +1,22 @@
-import { generalBots, sameValue, type Actor, type GameModule } from '@brett-und-blatt/engine';
-import { binokelBot } from './bot/index.js';
-import { meta } from './meta.js';
-import {
-  applyMove,
-  currentPlayers,
-  legalMoves,
-  playerView,
-  result,
-  sampleHidden,
-  setup,
-  type BinokelMove,
-  type BinokelPhase,
-  type BinokelState,
-} from './rules.js';
+import type { GameModule } from '@brett-und-blatt/engine';
+import { binokelBot } from './bot/index';
+import { meta } from './meta';
+import { applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type BinokelMove, type BinokelState } from './rules';
 
-export type { BinokelMove, BinokelPhase, BinokelState } from './rules.js';
-export * from './types.js';
-export * from './cards.js';
-export * from './melds.js';
+export type { BinokelMove, BinokelPhase, BinokelState, RoundResult } from './rules';
+export { findMelds, meldPoints, type Meld } from './melds';
+export { binokelContract, createDeck, SUIT_NAMES, SUITS } from './cards';
+export { binokelBot } from './bot/index';
 
 export const gameModule: GameModule<BinokelState, BinokelMove> = {
   info: meta,
   options: [
     {
-      id: 'tableSize',
-      label: 'Tischformat',
-      choices: [
-        { value: '3', label: '3 Spieler' },
-        { value: '4', label: '4 Spieler (Geber setzt aus)' },
-      ],
-      default: '3',
-    },
-    {
       id: 'deckSize',
       label: 'Kartendeck',
       choices: [
-        { value: '40', label: '40 Karten (ohne 7er)' },
-        { value: '48', label: '48 Karten (mit 7er / Dissle)' },
+        { value: '40', label: '40 Karten (ohne Siebener)' },
+        { value: '48', label: '48 Karten (mit Siebenern / Dissle)' },
       ],
       default: '40',
     },
@@ -53,29 +33,29 @@ export const gameModule: GameModule<BinokelState, BinokelMove> = {
     },
     {
       id: 'targetScore',
-      label: 'Zielpunktzahl',
+      label: 'Gespielt wird bis',
       choices: [
         { value: '1000', label: '1000 Punkte' },
         { value: '1500', label: '1500 Punkte' },
       ],
-      default: '1500',
+      default: '1000',
     },
     {
       id: 'allowDurch',
-      label: 'Durch-Ansage',
+      label: 'Durch ansagen',
       choices: [
-        { value: 'true', label: 'An' },
-        { value: 'false', label: 'Aus' },
+        { value: 'true', label: 'Erlaubt' },
+        { value: 'false', label: 'Nicht erlaubt' },
       ],
       default: 'true',
     },
     {
       id: 'foldCompensation',
-      label: 'Gutschrift bei Abgehen',
+      label: 'Wenn der Spielmacher abgeht',
       choices: [
-        { value: 'fifty', label: '50 Punkte für Gegner' },
-        { value: 'half', label: 'Halbes Gebot für Gegner' },
-        { value: 'none', label: '0 Punkte' },
+        { value: 'fifty', label: 'Gegner bekommen je 50' },
+        { value: 'half', label: 'Gegner bekommen je das halbe Gebot' },
+        { value: 'none', label: 'Gegner bekommen nur ihre Meldungen' },
       ],
       default: 'fifty',
     },
@@ -88,16 +68,10 @@ export const gameModule: GameModule<BinokelState, BinokelMove> = {
   setup,
   currentPlayers,
   legalMoves,
-  isLegal(state: BinokelState, actor: Actor, move: BinokelMove): boolean {
-    if (actor === 'system') return false;
-    return legalMoves(state, actor).some((m) => sameValue(m, move));
-  },
+  isLegal,
   applyMove,
   playerView,
   result,
   sampleHidden,
-  bots: [binokelBot, ...generalBots<BinokelState, BinokelMove, BinokelState>()],
+  bots: [binokelBot],
 };
-
-export { binokelBot } from './bot/index.js';
-export { gameModule as default };

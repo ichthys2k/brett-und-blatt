@@ -1,335 +1,385 @@
-import type { Actor, CardId, MoveResult, Options, SeatId, Suit } from '@brett-und-blatt/engine';
-import { Rng } from '@brett-und-blatt/engine';
-import { cardRank, cardSuit, legalCards as baseLegalCards } from '@brett-und-blatt/engine';
-import { createBinokelDeck } from './cards.js';
-import type { BinokelMove, BinokelOptions, BinokelPhase, BinokelState } from './types.js';
-export type { BinokelMove, BinokelPhase, BinokelState } from './types.js';
+import {
+  legalCards,
+  Rng,
+  trickGameEvents,
+  trickWinner,
+  type Actor,
+  type CardId,
+  type MoveResult,
+  type Options,
+  type PlayedCard,
+  type Result,
+  type RngState,
+  type SeatId,
+  type Suit,
+} from '@brett-und-blatt/engine';
+import { binokelContract, createDeck, eyes, SUITS } from './cards';
+import { findMelds, meldPoints, type Meld } from './melds';
 
-export const DEFAULT_OPTIONS: Required<BinokelOptions> = {
-  tableSize: '3',
-  deckSize: 40,
-  cardStyle: 'swabian',
-  minBid: 150,
-  targetScore: 1500,
-  allowDurch: true,
-  foldCompensation: 'fifty',
-  helpMeld: true,
-  helpLegals: true,
-  countEyes: true,
-};
+export const SEATS = 3;
 
-export function setup(seats: number, options: Options = {}, seed: string = 'binokel'): BinokelState {
-  const rng = Rng.fromSeed(seed);
-  const opts = { ...DEFAULT_OPTIONS, ...(options as BinokelOptions) } as Required<BinokelOptions>;
-  if (typeof opts.allowDurch === 'string') opts.allowDurch = opts.allowDurch === 'true';
-  if (typeof opts.deckSize === 'string') opts.deckSize = Number(opts.deckSize) as 40 | 48;
-  if (typeof opts.minBid === 'string') opts.minBid = Number(opts.minBid) as any;
-  if (typeof opts.targetScore === 'string') opts.targetScore = Number(opts.targetScore) as any;
+export type BinokelPhase = 'bidding' | 'discard' | 'declare' | 'play' | 'roundOver' | 'finished';
 
-  const seatIds: SeatId[] = Array.from({ length: seats }, (_, i) => i as SeatId);
-  const hands: Record<SeatId, CardId[]> = {};
-  for (const s of seatIds) hands[s] = [];
-  const deck = rng.shuffle(createBinokelDeck(opts.deckSize));
-  const dabbCount = opts.deckSize === 48 ? 3 : 4;
-  const active = seatIds.slice(0, 3);
-  let idx = 0;
-  const dealRounds = opts.deckSize === 48 ? 5 : 4;
-  for (let r = 0; r < dealRounds; r++) {
-    for (const p of active) {
-      if (idx < deck.length - dabbCount) hands[p].push(deck[idx++]);
-    }
-  }
-  const dabb: CardId[] = deck.slice(deck.length - dabbCount);
-  const pressedCards: Record<SeatId, CardId[]> = {};
-  for (const s of seatIds) pressedCards[s] = [];
-  const passed = new Set<SeatId>();
-  const meldPointsDeclared: Record<SeatId, number> = {};
-  const meldPointsScored: Record<SeatId, number> = {};
-  const stichMade: Record<SeatId, boolean> = {};
-  const tricksWon: Record<SeatId, CardId[][]> = {};
-  const trickPoints: Record<SeatId, number> = {};
-  const scores: Record<SeatId, number> = {};
-  const roundScores: Record<SeatId, number> = {};
-  for (const s of seatIds) {
-    meldPointsDeclared[s] = 0;
-    meldPointsScored[s] = 0;
-    stichMade[s] = false;
-    tricksWon[s] = [];
-    trickPoints[s] = 0;
-    scores[s] = 0;
-    roundScores[s] = 0;
-  }
-  return {
-    phase: 'bidding',
-    options: opts,
-    seats: seatIds,
-    dealerSeat: 0 as SeatId,
-    hands,
-    dabb,
-    dabbRevealed: false,
-    declarer: null,
-    highestBid: null,
-    bidHistory: [],
-    passed,
-    trumpSuit: null,
-    isDurch: false,
-    pressedCards,
-    melds: [],
-    meldPointsDeclared,
-    meldPointsScored,
-    stichMade,
-    trickCards: [],
-    tricksWon,
-    trickPoints,
-    lastTrick: null,
-    lastTrickWinner: null,
-    scores,
-    roundScores,
-    gameEnded: false,
-    winner: null,
-    log: [],
-  };
+export interface RoundResult {
+  gameNumber: number;
+  declarer: number | null;
+  bid: number | null;
+  kind: 'normal' | 'durch' | 'fold' | 'passedOut';
+  trump: Suit | null;
+  /** Gemeldete Punkte je Platz (zählen nur mit Stich). */
+  melds: number[];
+  /** Erzielte Augen je Platz (beim Spielmacher samt gedrückter Karten). */
+  eyes: number[];
+  madeTrick: boolean[];
+  /** Punkte dieser Runde je Platz. */
+  points: number[];
+  won: boolean | null;
 }
 
-export function currentPlayers(state: BinokelState): SeatId[] {
-  if (state.phase === 'bidding') {
-    return state.seats.filter((p) => !state.passed.has(p));
+export interface BinokelState {
+  deckSize: 40 | 48;
+  minBid: number;
+  target: number;
+  allowDurch: boolean;
+  foldBonus: 'fifty' | 'half' | 'none';
+  dealRng: RngState;
+  gameNumber: number;
+  dealer: number;
+  phase: BinokelPhase;
+  /** Handkarten; fremde sind in der Sicht `null`. */
+  hands: (CardId | null)[][];
+  /** Der Dabb – verdeckt, bis das Reizen entschieden ist. */
+  dabb: (CardId | null)[];
+  dabbOpen: boolean;
+  /** Gedrückte Karten – nur der Spielmacher kennt sie. */
+  pressed: (CardId | null)[];
+  bid: number | null;
+  bidder: number | null;
+  passed: boolean[];
+  speaker: number;
+  declarer: number | null;
+  trump: Suit | null;
+  durch: boolean;
+  melds: Meld[][];
+  leader: number;
+  currentTrick: PlayedCard[];
+  completedTricks: { winner: number; cards: PlayedCard[] }[];
+  scores: number[];
+  lastRound: RoundResult | null;
+}
+
+export type BinokelMove =
+  | { type: 'bid'; value: number }
+  | { type: 'pass' }
+  | { type: 'discard'; cards: CardId[] }
+  | { type: 'declareTrump'; suit: Suit }
+  | { type: 'declareDurch' }
+  | { type: 'fold' }
+  | { type: 'play'; card: CardId }
+  | { type: 'nextGame' };
+
+export const DURCH_VALUE = 1000;
+export const LAST_TRICK_BONUS = 10;
+const MAX_BID = 2000;
+/** Spätestens nach so vielen Spielen ist Schluss, auch wenn niemand das Ziel erreicht. */
+export const MAX_GAMES = 24;
+
+const vorhand = (dealer: number) => (dealer + 1) % SEATS;
+export const dabbSize = (deckSize: 40 | 48) => (deckSize === 48 ? 3 : 4);
+const own = (cards: readonly (CardId | null)[]) => cards.filter((c): c is CardId => c !== null);
+
+function deal(base: Omit<BinokelState, 'hands' | 'dabb' | 'dealRng'>, dealRng: RngState): BinokelState {
+  const rng = new Rng(dealRng);
+  const deck = rng.shuffle(createDeck(base.deckSize));
+  const d = dabbSize(base.deckSize);
+  const dabb = deck.splice(0, d);
+  const per = deck.length / SEATS;
+  const hands = Array.from({ length: SEATS }, (_, s) => deck.slice(s * per, (s + 1) * per));
+  return { ...base, hands, dabb, dealRng: rng.state };
+}
+
+function freshRound(state: Omit<BinokelState, 'hands' | 'dabb' | 'dealRng'> & { dealRng: RngState }, dealer: number, gameNumber: number): BinokelState {
+  const { dealRng, ...rest } = state;
+  return deal(
+    {
+      ...rest,
+      gameNumber,
+      dealer,
+      phase: 'bidding',
+      dabbOpen: false,
+      pressed: [],
+      bid: null,
+      bidder: null,
+      passed: [false, false, false],
+      speaker: vorhand(dealer),
+      declarer: null,
+      trump: null,
+      durch: false,
+      melds: [[], [], []],
+      leader: vorhand(dealer),
+      currentTrick: [],
+      completedTricks: [],
+    },
+    dealRng,
+  );
+}
+
+export function setup(_seats: number, options: Options, seed: string): BinokelState {
+  const deckSize = String(options.deckSize ?? '40') === '48' ? 48 : 40;
+  const base = {
+    deckSize,
+    minBid: Number(options.minBid ?? 150) || 150,
+    target: Number(options.targetScore ?? 1500) || 1500,
+    allowDurch: String(options.allowDurch ?? 'true') !== 'false',
+    foldBonus: (['fifty', 'half', 'none'].includes(String(options.foldCompensation)) ? options.foldCompensation : 'fifty') as BinokelState['foldBonus'],
+    dealRng: Rng.fromSeed(seed, 'geben').state,
+    scores: [0, 0, 0],
+    lastRound: null,
+  } as const;
+  return freshRound(base as unknown as BinokelState, 0, 1);
+}
+
+export function currentPlayers(state: BinokelState): Actor[] {
+  switch (state.phase) {
+    case 'bidding':
+      return [state.speaker];
+    case 'discard':
+    case 'declare':
+      return [state.declarer!];
+    case 'play':
+      return [(state.leader + state.currentTrick.length) % SEATS];
+    case 'roundOver':
+      return [vorhand(state.dealer)];
+    default:
+      return [];
   }
-  if (state.phase === 'dabbDecision') return state.declarer !== null ? [state.declarer] : [];
-  if (state.phase === 'trumpChoice') return state.declarer !== null && !state.isDurch ? [state.declarer] : [];
-  if (state.phase === 'meld') return state.seats.slice(0, 3);
-  if (state.phase === 'play') {
-    if (state.trickCards.length === 0) {
-      if (state.isDurch && state.declarer !== null) return [state.declarer];
-      return [state.seats[0]];
+}
+
+const nextBid = (state: BinokelState) => (state.bid === null ? state.minBid : state.bid + 10);
+
+export function legalCardsFor(state: BinokelState, seat: number): CardId[] {
+  return legalCards(own(state.hands[seat]!), state.currentTrick, binokelContract(state.trump));
+}
+
+/** Alle Möglichkeiten, k Karten aus der Hand zu wählen. */
+function combinations(cards: CardId[], k: number): CardId[][] {
+  const out: CardId[][] = [];
+  const pick = (start: number, chosen: CardId[]) => {
+    if (chosen.length === k) {
+      out.push([...chosen]);
+      return;
     }
-    const last = state.trickCards[state.trickCards.length - 1].player;
-    const idx = state.seats.indexOf(last);
-    return [state.seats[(idx + 1) % state.seats.length]];
-  }
-  return [];
+    for (let i = start; i <= cards.length - (k - chosen.length); i++) {
+      chosen.push(cards[i]!);
+      pick(i + 1, chosen);
+      chosen.pop();
+    }
+  };
+  pick(0, []);
+  return out;
 }
 
 export function legalMoves(state: BinokelState, actor: Actor): BinokelMove[] {
-  const player = actor as SeatId;
-  if (state.phase === 'bidding') {
-    if (state.passed.has(player)) return [];
-    const moves: BinokelMove[] = [{ type: 'pass' }];
-    const min = state.options.minBid;
-    const start = state.highestBid === null ? min : state.highestBid + 10;
-    for (let v = start; v <= 300; v += 10) moves.push({ type: 'bid', value: v });
-    return moves;
-  }
-  if (state.phase === 'dabbDecision' && state.declarer === player) {
-    const moves: BinokelMove[] = [{ type: 'takeDabb' }];
-    if (state.options.allowDurch) {
-      moves.push({ type: 'declareDurch', variant: 'simple' });
-      moves.push({ type: 'declareDurch', variant: 'open' });
-      moves.push({ type: 'declareDurch', variant: 'hand' });
+  if (!currentPlayers(state).includes(actor)) return [];
+  const seat = actor as number;
+  switch (state.phase) {
+    case 'bidding': {
+      const next = nextBid(state);
+      return [{ type: 'pass' }, ...[0, 10, 20, 50].map((extra) => ({ type: 'bid' as const, value: next + extra })).filter((m) => m.value <= MAX_BID)];
     }
-    moves.push({ type: 'fold' });
-    return moves;
+    case 'discard':
+      return combinations(own(state.hands[seat]!), state.dabb.length).map((cards) => ({ type: 'discard', cards }));
+    case 'declare':
+      return [
+        ...SUITS.map((suit) => ({ type: 'declareTrump' as const, suit })),
+        ...(state.allowDurch ? [{ type: 'declareDurch' as const }] : []),
+        { type: 'fold' },
+      ];
+    case 'play':
+      return legalCardsFor(state, seat).map((card) => ({ type: 'play', card }));
+    case 'roundOver':
+      return [{ type: 'nextGame' }];
+    default:
+      return [];
   }
-  if (state.phase === 'trumpChoice' && state.declarer === player && !state.isDurch) {
-    return [
-      { type: 'declareTrump', suit: 'C' },
-      { type: 'declareTrump', suit: 'S' },
-      { type: 'declareTrump', suit: 'H' },
-      { type: 'declareTrump', suit: 'D' },
-    ];
-  }
-  if (state.phase === 'meld') {
-    const already = state.melds.some((m) => m.owner === player);
-    if (!already) return [{ type: 'confirmMelds', melds: [] }];
-    return [];
-  }
-  if (state.phase === 'play') {
-    const hand = state.hands[player] || [];
-    if (state.trickCards.length === 0) {
-      return hand.map((card) => ({ type: 'play', card }));
-    }
-    const leadCard = state.trickCards[0].card;
-    const isTrumpCard = (c: CardId) => (state.trumpSuit && !state.isDurch ? cardSuit(c) === state.trumpSuit : false);
-    const effectiveSuit = (c: CardId) => (isTrumpCard(c) ? ('TRUMP' as const) : cardSuit(c));
-    const contract: any = {
-      isTrump: isTrumpCard,
-      effectiveSuit,
-      cardPower: (c: CardId) => {
-        const r = cardRank(c);
-        if (state.isDurch) {
-          return r === 1 ? 14 : r === 10 ? 13 : r === 13 ? 12 : r === 12 ? 11 : r === 11 ? 10 : r;
-        }
-        const t = isTrumpCard(c);
-        const base = r === 1 ? 14 : r === 10 ? 13 : r === 13 ? 12 : r === 12 ? 11 : r === 11 ? 10 : r;
-        return t ? 100 + base : base;
-      },
-      rules: state.isDurch
-        ? { hasTrumps: false, mustFollowSuit: true, mustOvertake: true }
-        : { hasTrumps: true, mustFollowSuit: true, mustOvertake: true, mustTrump: true, overtakeTrump: true },
-    };
-    return baseLegalCards(hand, state.trickCards as any, contract).map((card) => ({ type: 'play', card }));
-  }
-  return [];
 }
+
+export function isLegal(state: BinokelState, actor: Actor, move: BinokelMove): boolean {
+  if (!currentPlayers(state).includes(actor)) return false;
+  const seat = actor as number;
+  switch (move.type) {
+    case 'bid':
+      return state.phase === 'bidding' && Number.isInteger(move.value) && move.value % 10 === 0 && move.value >= nextBid(state) && move.value <= MAX_BID;
+    case 'discard': {
+      if (state.phase !== 'discard' || !Array.isArray(move.cards) || move.cards.length !== state.dabb.length) return false;
+      const hand = own(state.hands[seat]!);
+      return new Set(move.cards).size === move.cards.length && move.cards.every((c) => hand.includes(c));
+    }
+    case 'play':
+      return state.phase === 'play' && legalCardsFor(state, seat).includes(move.card);
+    default:
+      return legalMoves(state, actor).some((m) => m.type === move.type && (m.type !== 'declareTrump' || (move.type === 'declareTrump' && m.suit === move.suit)));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Abrechnung
+// ---------------------------------------------------------------------------
+
+function finishRound(state: BinokelState, kind: RoundResult['kind']): BinokelState {
+  const declarer = state.declarer;
+  const melds = state.melds.map(meldPoints);
+  const eyesBy = [0, 0, 0];
+  const madeTrick = [false, false, false];
+  for (const t of state.completedTricks) {
+    madeTrick[t.winner] = true;
+    eyesBy[t.winner] += t.cards.reduce((sum, p) => sum + eyes(p.card), 0);
+  }
+  const complete = state.hands.every((h) => h.length === 0);
+  const last = state.completedTricks.at(-1);
+  if (complete && last) eyesBy[last.winner] += LAST_TRICK_BONUS;
+  if (declarer !== null) eyesBy[declarer] += own(state.pressed).reduce((sum, c) => sum + eyes(c), 0);
+
+  const points = [0, 0, 0];
+  let won: boolean | null = null;
+  if (kind === 'passedOut' || declarer === null) {
+    // niemand reizt: keine Punkte
+  } else if (kind === 'fold') {
+    const bonus = state.foldBonus === 'fifty' ? 50 : state.foldBonus === 'half' ? Math.round(state.bid! / 20) * 10 : 0;
+    for (let s = 0; s < SEATS; s++) points[s] = s === declarer ? -state.bid! : melds[s]! + bonus;
+    won = false;
+  } else if (kind === 'durch') {
+    won = state.completedTricks.every((t) => t.winner === declarer) && complete;
+    points[declarer] = won ? DURCH_VALUE : -DURCH_VALUE;
+  } else {
+    for (let s = 0; s < SEATS; s++) if (s !== declarer && madeTrick[s]) points[s] = eyesBy[s]! + melds[s]!;
+    const total = eyesBy[declarer]! + (madeTrick[declarer] ? melds[declarer]! : 0);
+    won = total >= state.bid!;
+    points[declarer] = won ? total : -2 * state.bid!;
+  }
+
+  const scores = state.scores.map((sc, s) => sc + points[s]!);
+  const lastRound: RoundResult = { gameNumber: state.gameNumber, declarer, bid: state.bid, kind, trump: state.trump, melds, eyes: eyesBy, madeTrick, points, won };
+  const finished = (kind !== 'passedOut' && scores.some((s) => s >= state.target)) || state.gameNumber >= MAX_GAMES;
+  return { ...state, scores, lastRound, phase: finished ? 'finished' : 'roundOver' };
+}
+
+// ---------------------------------------------------------------------------
+// Züge
+// ---------------------------------------------------------------------------
 
 export function applyMove(state: BinokelState, actor: Actor, move: BinokelMove): MoveResult<BinokelState> {
-  const clone: BinokelState = structuredClone(state);
-  const res = applyMoveInner(clone, actor, move);
-  return { state: res, events: [] };
+  if (!isLegal(state, actor, move)) throw new Error('Unerlaubter Zug.');
+  const seat = actor as number;
+  let next: BinokelState = state;
+
+  switch (move.type) {
+    case 'bid':
+    case 'pass': {
+      const passed = [...state.passed];
+      let bid = state.bid;
+      let bidder = state.bidder;
+      if (move.type === 'pass') passed[seat] = true;
+      else {
+        bid = move.value;
+        bidder = seat;
+      }
+      const active = passed.filter((p) => !p).length;
+      if (active === 0) {
+        // Alle haben gepasst: neu geben.
+        next = finishRound({ ...state, passed, declarer: null }, 'passedOut');
+      } else if (active === 1 && bidder !== null && !passed[bidder]) {
+        const hands = state.hands.map((h, s) => (s === bidder ? [...h, ...state.dabb] : h));
+        next = { ...state, passed, bid, bidder, declarer: bidder, hands, dabbOpen: true, phase: 'discard' };
+      } else {
+        let speaker = (seat + 1) % SEATS;
+        while (passed[speaker]) speaker = (speaker + 1) % SEATS;
+        next = { ...state, passed, bid, bidder, speaker };
+      }
+      break;
+    }
+    case 'discard': {
+      const hand = own(state.hands[seat]!).filter((c) => !move.cards.includes(c));
+      next = { ...state, hands: state.hands.map((h, s) => (s === seat ? hand : h)), pressed: [...move.cards], phase: 'declare' };
+      break;
+    }
+    case 'declareTrump': {
+      const melds = state.hands.map((h) => findMelds(own(h), move.suit));
+      next = { ...state, trump: move.suit, melds, phase: 'play', leader: vorhand(state.dealer) };
+      break;
+    }
+    case 'declareDurch':
+      next = { ...state, durch: true, trump: null, phase: 'play', leader: state.declarer! };
+      break;
+    case 'fold': {
+      const melds = state.hands.map((h, s) => (s === state.declarer ? [] : findMelds(own(h), null)));
+      next = finishRound({ ...state, melds }, 'fold');
+      break;
+    }
+    case 'play': {
+      const hands = state.hands.map((h, s) => {
+        if (s !== seat) return h;
+        const i = h.indexOf(move.card);
+        return [...h.slice(0, i), ...h.slice(i + 1)];
+      });
+      const trick = [...state.currentTrick, { player: seat, card: move.card }];
+      next = { ...state, hands, currentTrick: trick };
+      if (trick.length === SEATS) {
+        const winner = trickWinner(trick, binokelContract(state.trump)).player;
+        next = { ...next, currentTrick: [], completedTricks: [...state.completedTricks, { winner, cards: trick }], leader: winner };
+        const done = hands.every((h) => h.length === 0);
+        if (state.durch && winner !== state.declarer) next = finishRound(next, 'durch');
+        else if (done) next = finishRound(next, state.durch ? 'durch' : 'normal');
+      }
+      break;
+    }
+    case 'nextGame': {
+      const dealer = (state.dealer + 1) % SEATS;
+      next = freshRound({ ...state, lastRound: state.lastRound }, dealer, state.gameNumber + 1);
+      break;
+    }
+  }
+  return { state: next, events: trickGameEvents(state, next, seat, move as { type: string; card?: CardId }) };
 }
 
-function applyMoveInner(state: BinokelState, actor: Actor, move: BinokelMove): BinokelState {
-  const player = actor as SeatId;
-  if (move.type === 'pass' && state.phase === 'bidding') {
-    state.passed.add(player);
-    state.bidHistory.push({ player, value: 'pass' });
-    const active = state.seats.filter((p) => !state.passed.has(p));
-    if (active.length === 1) {
-      state.declarer = active[0] as SeatId;
-      state.highestBid = state.highestBid ?? state.options.minBid;
-      state.phase = 'dabbDecision';
-      state.dabbRevealed = false;
-    } else if (active.length === 0) {
-      state.passed.clear();
-      state.highestBid = null;
-      state.bidHistory = [];
-    }
-    return state;
-  }
-  if (move.type === 'bid' && state.phase === 'bidding') {
-    state.highestBid = move.value;
-    state.bidHistory.push({ player, value: move.value });
-    return state;
-  }
-  if (move.type === 'takeDabb' && state.phase === 'dabbDecision' && state.declarer === player) {
-    state.hands[player] = [...(state.hands[player] || []), ...state.dabb];
-    state.dabbRevealed = true;
-    state.phase = 'trumpChoice';
-    return state;
-  }
-  if (move.type === 'declareDurch' && state.phase === 'dabbDecision' && state.declarer === player) {
-    state.isDurch = { variant: move.variant, from: player };
-    state.dabbRevealed = true;
-    state.phase = 'meld';
-    return state;
-  }
-  if (move.type === 'fold' && state.phase === 'dabbDecision' && state.declarer === player) {
-    const bid = state.highestBid ?? state.options.minBid;
-    const penalty = state.options.foldCompensation === 'half' ? Math.floor(bid / 2) : bid;
-    state.scores[player] = (state.scores[player] || 0) - penalty;
-    for (const p of state.seats) {
-      if (p !== player) state.scores[p] = (state.scores[p] || 0) + (state.options.foldCompensation === 'fifty' ? 50 : 0);
-    }
-    state.phase = 'scoring';
-    return state;
-  }
-  if (move.type === 'declareTrump' && state.phase === 'trumpChoice' && state.declarer === player) {
-    state.trumpSuit = move.suit;
-    state.phase = 'meld';
-    return state;
-  }
-  if (move.type === 'confirmMelds' && state.phase === 'meld') {
-    for (const m of move.melds) {
-      if (m.owner === player) {
-        state.melds.push(m);
-        state.meldPointsDeclared[player] = (state.meldPointsDeclared[player] || 0) + m.points;
-      }
-    }
-    state.phase = 'play';
-    state.trickCards = [];
-    return state;
-  }
-  if (move.type === 'play' && state.phase === 'play') {
-    const hand = state.hands[player] || [];
-    if (!hand.includes(move.card)) return state;
-    state.hands[player] = hand.filter((c) => c !== move.card);
-    state.trickCards.push({ player, card: move.card });
-    if (state.trickCards.length === 3) {
-      const leadCard = state.trickCards[0].card;
-      const isTrumpCard = (c: CardId) => (state.trumpSuit && !state.isDurch ? cardSuit(c) === state.trumpSuit : false);
-      const leadSuit = cardSuit(leadCard);
-      let winner = state.trickCards[0];
-      let winnerPower = 0;
-      const power = (c: CardId) => {
-        if (state.isDurch) {
-          const r = cardRank(c);
-          return r === 1 ? 14 : r === 10 ? 13 : r === 13 ? 12 : r === 12 ? 11 : r === 11 ? 10 : r;
-        }
-        const t = isTrumpCard(c);
-        const r = cardRank(c);
-        const base = r === 1 ? 14 : r === 10 ? 13 : r === 13 ? 12 : r === 12 ? 11 : r === 11 ? 10 : r;
-        return t ? 100 + base : base;
-      };
-      winnerPower = power(winner.card);
-      for (let i = 1; i < state.trickCards.length; i++) {
-        const tc = state.trickCards[i];
-        const p = power(tc.card);
-        const tcTrump = isTrumpCard(tc.card);
-        const wTrump = isTrumpCard(winner.card);
-        if (tcTrump && !wTrump) {
-          winner = tc;
-          winnerPower = p;
-        } else if (tcTrump && wTrump && p > winnerPower) {
-          winner = tc;
-          winnerPower = p;
-        } else if (!tcTrump && !wTrump) {
-          if (cardSuit(tc.card) === leadSuit && p > winnerPower) {
-            winner = tc;
-            winnerPower = p;
-          }
-        }
-      }
-      state.lastTrick = [...state.trickCards];
-      state.lastTrickWinner = winner.player;
-      state.stichMade[winner.player as SeatId] = true;
-      const wp = winner.player as SeatId;
-      if (!state.tricksWon[wp]) state.tricksWon[wp] = [];
-      state.tricksWon[wp].push(state.trickCards.map((x) => x.card));
-      let pts = 0;
-      for (const tc of state.trickCards) pts += eyePoints(tc.card);
-      if (state.trickCards.length === 3) pts += 10;
-      state.trickPoints[wp] = (state.trickPoints[wp] || 0) + pts;
-      if (state.isDurch && wp !== state.declarer) {
-        state.phase = 'scoring';
-        state.trickCards = [];
-        return state;
-      }
-      state.trickCards = [];
-      const totalStiche = state.seats.reduce((sum: number, p: SeatId) => sum + ((state.tricksWon[p] as any[])?.length || 0), 0);
-      if (totalStiche === 12 || (Object.values(state.hands) as CardId[][]).every((h) => h.length === 0)) {
-        state.phase = 'scoring';
-      }
-    }
-    return state;
-  }
-  return state;
+export function result(state: BinokelState): Result | null {
+  if (state.phase !== 'finished') return null;
+  const best = Math.max(...state.scores);
+  const winners = state.scores.flatMap((s, seat) => (s === best ? [seat] : []));
+  return winners.length === 1 ? { kind: 'win', winners } : { kind: 'draw' };
 }
 
-function eyePoints(card: CardId): number {
-  const r = cardRank(card);
-  if (r === 1) return 11;
-  if (r === 10) return 10;
-  if (r === 13) return 4;
-  if (r === 12) return 3;
-  if (r === 11) return 2;
-  return 0;
-}
-
+/** Fremde Hände, der Dabb bis zum Aufdecken und die gedrückten Karten bleiben verdeckt. */
 export function playerView(state: BinokelState, seat: SeatId | 'spectator'): BinokelState {
-  return state;
+  const roundDone = state.phase === 'roundOver' || state.phase === 'finished';
+  return {
+    ...state,
+    hands: state.hands.map((h, s) => (s === seat ? h : h.map(() => null))),
+    dabb: state.dabbOpen ? state.dabb : state.dabb.map(() => null),
+    pressed: seat === state.declarer || roundDone ? state.pressed : state.pressed.map(() => null),
+    dealRng: [0, 0, 0, 0],
+  };
 }
 
-export function result(state: BinokelState) {
-  if (state.phase !== 'scoring' && !state.gameEnded) return null;
-  const scores = state.scores;
-  const entries = Object.entries(scores)
-    .map(([p, s]) => ({ player: p, score: s as number }))
-    .sort((a, b) => (b.score as number) - (a.score as number));
-  const max = entries[0]?.score ?? 0;
-  const winners = entries.filter((e) => e.score === max).map((e) => Number(e.player));
-  return { kind: 'win' as const, winners };
-}
-
-export function sampleHidden(state: BinokelState, seat: SeatId, rng: Rng): BinokelState {
-  return state;
+/**
+ * Für Bots: unbekannte Karten zufällig verteilen. Gemeldete Karten bleiben bei ihrem Besitzer.
+ * Abwürfe und Farbfreiheiten werden nicht berücksichtigt – die Sicht stimmt trotzdem genau.
+ */
+export function sampleHidden(view: BinokelState, seat: SeatId, rng: Rng): BinokelState {
+  const known = new Set<CardId>();
+  for (const c of own(view.hands[seat] ?? [])) known.add(c);
+  for (const t of view.completedTricks) for (const p of t.cards) known.add(p.card);
+  for (const p of view.currentTrick) known.add(p.card);
+  for (const c of own(view.pressed)) known.add(c);
+  const reserved = view.melds.map((ms, s) => (s === seat ? [] : [...new Set(ms.flatMap((m) => m.cards))].filter((c) => !known.has(c))));
+  for (const r of reserved) for (const c of r) known.add(c);
+  const pool = rng.shuffle(createDeck(view.deckSize).filter((c) => !known.has(c)));
+  const hands = view.hands.map((h, s) => {
+    if (s === seat) return h;
+    const mine = [...reserved[s]!];
+    return h.map(() => mine.pop() ?? pool.pop() ?? null);
+  });
+  const dabb = view.dabbOpen ? view.dabb : view.dabb.map(() => pool.pop() ?? null);
+  const pressed = view.pressed.map((c) => c ?? pool.pop() ?? null);
+  return { ...view, hands, dabb, pressed, dealRng: rng.state };
 }

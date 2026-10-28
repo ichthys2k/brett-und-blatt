@@ -2,6 +2,7 @@ import type { AnyGameModule } from '@brett-und-blatt/engine';
 import { gameModule as battleship } from '@brett-und-blatt/game-battleship';
 import { gameModule as bibleQuiz } from '@brett-und-blatt/game-bible-quiz';
 import { gameModule as bingo } from '@brett-und-blatt/game-bingo';
+import { gameModule as binokel } from '@brett-und-blatt/game-binokel';
 import { gameModule as blackPeter } from '@brett-und-blatt/game-black-peter';
 import { gameModule as checkers } from '@brett-und-blatt/game-checkers';
 import { gameModule as chess } from '@brett-und-blatt/game-chess';
@@ -27,6 +28,7 @@ import { gameModule as poker } from '@brett-und-blatt/game-poker';
 import { gameModule as quartett } from '@brett-und-blatt/game-quartett';
 import { gameModule as reversi } from '@brett-und-blatt/game-reversi';
 import { gameModule as schafkopf } from '@brett-und-blatt/game-schafkopf';
+import { gameModule as scrabble } from '@brett-und-blatt/game-scrabble';
 import { gameModule as skat } from '@brett-und-blatt/game-skat';
 import { gameModule as targetNumber } from '@brett-und-blatt/game-target-number';
 import { gameModule as ticTacToe } from '@brett-und-blatt/game-tic-tac-toe';
@@ -41,4 +43,4 @@ import { gameModule as ligretto } from '@brett-und-blatt/game-ligretto';
  * Mehrspieler-Spiel muss hier (und in package.json) eingetragen werden – ein Test
  * im Server-Paket erinnert daran. Entwürfe (`draft` im Steckbrief) bleiben draußen.
  */
-export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, duckRally, factorGrid, fourInARow, fourPlayerChess, go, gomoku, hangman, ludo, ligretto, maexle, mauMau, mill, numberWall, pairs, poker, quartett, reversi, schafkopf, skat, targetNumber, ticTacToe, ultimateTicTacToe, uno, wordSalad, kniffel];
+export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, binokel, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, duckRally, factorGrid, fourInARow, fourPlayerChess, go, gomoku, hangman, ludo, ligretto, maexle, mauMau, mill, numberWall, pairs, poker, quartett, reversi, schafkopf, scrabble, skat, targetNumber, ticTacToe, ultimateTicTacToe, uno, wordSalad, kniffel];

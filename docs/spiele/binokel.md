@@ -241,11 +241,15 @@ Der Binokel-Bot ist in drei Stufen unterteilt:
 
 ---
 
-## Umsetzungsstand (28.10.2026)
+## Umsetzungsstand (28.10.2026, Neufassung)
 
-- **Fertig:** Regeln in `src/rules.ts` (Reizen, Dabb-Entscheidung, Trumpfwahl, Melden, Stichspiel, Durchmarsch), Meldebilder in `src/melds.ts`, Blatt mit 40/48 Karten in `src/cards.ts`, Engine-Erweiterung um Überstich- und Trumpfzwang. Eingetragen im Spieleserver und damit live; auf der Startseite unter *Familie* (keiner Rubrik zugeordnet).
-- **Offen:**
-  - Oberfläche: `src/ui/index.tsx` ist ein Platzhalter (zeigt nur „Binokel“).
-  - Sicht: `playerView` gibt den ganzen Stand zurück – Hände und Dabb wären online für alle sichtbar.
-  - Bot „Schwaben-Ass“: nimmt auf allen Stufen den ersten erlaubten Zug, meldet nichts; PIMC aus Abschnitt 4 fehlt.
-  - Tests: kein Testordner, auch keine `gameContractChecks`.
+Die erste Fassung war nicht spielbar (Platzhalter-Oberfläche, Zustand mit `Set`, Kartenkennungen ohne Kopie-Nummer, offene Sicht, keine Tests). Sie wurde in Etappe 3 des Korrekturplans neu geschrieben:
+
+- `src/cards.ts`: doppeltes Blatt als `C1.1`, `C1.2` … (40 oder 48 Karten), Rangfolge, Stichvertrag mit Farb-, Überstich-, Trumpf- und Übertrumpfzwang (`binokelContract`).
+- `src/melds.ts`: Meldungen je Gruppe ohne Doppelzählung innerhalb einer Gruppe – Familie 100/150, doppelte Trumpf-Familie 1000, Paar 20/40, Rundgang +100 (auf vier freie Paare), vier Gleiche 100/80/60/40, acht Gleiche 1000, Binokel 40, doppelter Binokel 300, Dissle je 10.
+- `src/rules.ts`: Reizen reihum (jeder bietet oder ist „weg“), offener Dabb für den Spielmacher, Drücken, Trumpf/Durch/Abgehen, Meldungen automatisch, Stichspiel, Abrechnung wie oben (Meldungen nur mit Stich, verfehltes Gebot doppelt, Abgehen einfach plus Gutschrift, Durch ±1000). Partie bis 1000/1500 Punkte, spätestens nach 24 Spielen. Sicht verdeckt fremde Hände, den Dabb bis zum Aufdecken und die gedrückten Karten; `sampleHidden` lässt gemeldete Karten beim Besitzer.
+- `src/bot/index.ts`: „Schwaben-Ass“ – Handwert je Trumpf (Meldungen + geschätzte Augen), reizt bis zu dieser Schätzung (leicht ×1,1, mittel ×0,95, schwer ×0,9), drückt Karten kurzer Farben, geht bei hoffnungslosem Blatt ab, im Stich Faustregeln (Gegenspieler sichern zuerst einen Stich für ihre Meldung, schmieren dem Mitspieler).
+- `src/ui/index.tsx`: Reizknöpfe, Dabb, Drückauswahl, Trumpfwahl mit Meldevorschau, Meldeübersicht, Stichtisch, Abrechnungstabelle.
+- `test/binokel.test.ts`: Vertragsprüfungen, Meldungen, Stichregeln, ganze Partien der Bots, Gewinnquote der Spielmacher.
+
+**Noch offen:** Vierertisch und Kreuzbinokel, offener Durch und Hand-Durch, Melden von Hand statt automatisch, Lernhilfen als Optionen, Bot mit Suche (PIMC).

@@ -1,117 +1,71 @@
-import type { CardId, Suit } from '@brett-und-blatt/engine';
-import { cardRank, cardSuit } from '@brett-und-blatt/engine';
-import type { DeclaredMeld, MeldType } from './types.js';
+import { cardRank, cardSuit, type CardId, type Suit } from '@brett-und-blatt/engine';
+import { SUIT_NAMES, SUITS } from './cards';
 
-function groupBySuit(cards: CardId[]): Record<Suit, CardId[]> {
-  const map: Record<Suit, CardId[]> = { C: [], S: [], H: [], D: [] };
-  for (const c of cards) map[cardSuit(c)].push(c);
-  return map;
+export interface Meld {
+  label: string;
+  points: number;
+  cards: CardId[];
 }
 
-function hasRank(cards: CardId[], rank: number): boolean {
-  return cards.some((c) => cardRank(c) === rank);
-}
+const take = (cards: CardId[], suit: Suit | null, rank: number, n: number): CardId[] =>
+  cards.filter((c) => (suit === null || cardSuit(c) === suit) && cardRank(c) === rank).slice(0, n);
 
-function countRank(cards: CardId[], rank: number): number {
-  return cards.filter((c) => cardRank(c) === rank).length;
-}
+/**
+ * Bestes Meldebild einer Hand. Eine Karte zählt in jeder Gruppe höchstens einmal, darf aber
+ * in mehreren Gruppen stecken (z. B. der Grün-Ober in Familie, vier Obern und Binokel).
+ */
+export function findMelds(hand: readonly CardId[], trump: Suit | null): Meld[] {
+  const cards = [...hand];
+  const melds: Meld[] = [];
+  const count = (suit: Suit | null, rank: number) => cards.filter((c) => (suit === null || cardSuit(c) === suit) && cardRank(c) === rank).length;
 
-export function findAllMelds(hand: CardId[], deckSize: 40 | 48, trumpSuit: Suit | null): DeclaredMeld[] {
-  const melds: DeclaredMeld[] = [];
-  const bySuit = groupBySuit(hand);
-
-  // Familie and pairs
-  for (const suit of ['C', 'S', 'H', 'D'] as Suit[]) {
-    const cards = bySuit[suit];
-    const hasA = hasRank(cards, 1);
-    const has10 = hasRank(cards, 10);
-    const hasK = hasRank(cards, 13);
-    const hasQ = hasRank(cards, 12); // Ober
-    const hasJ = hasRank(cards, 11); // Unter
-    const isTrump = trumpSuit === suit;
-
-    // Familie
-    if (hasA && has10 && hasK && hasQ && hasJ) {
-      const famCards = cards.filter((c) => [1, 10, 11, 12, 13].includes(cardRank(c)));
-      if (isTrump && deckSize >= 40) {
-        melds.push({ type: 'trumpFamily', cards: famCards, points: 150, owner: '' as any });
-      } else {
-        melds.push({ type: 'family', cards: famCards, points: 100, owner: '' as any });
+  // Gruppe 1: Familien und Paare je Farbe, dazu der Rundgang.
+  const leftoverPair: Partial<Record<Suit, CardId[]>> = {};
+  for (const suit of SUITS) {
+    const isTrump = suit === trump;
+    const families = Math.min(...[1, 10, 13, 12, 11].map((r) => count(suit, r)));
+    const pool = cards.filter((c) => cardSuit(c) === suit);
+    if (families === 2 && isTrump) {
+      melds.push({ label: `Doppelte Familie ${SUIT_NAMES[suit]}`, points: 1000, cards: pool.filter((c) => [1, 10, 13, 12, 11].includes(cardRank(c))) });
+    } else {
+      for (let f = 0; f < families; f++) {
+        const famCards = [1, 10, 13, 12, 11].map((r) => take(pool, suit, r, f + 1)[f]!);
+        melds.push({ label: `${isTrump ? 'Trumpf-Familie' : 'Familie'} ${SUIT_NAMES[suit]}`, points: isTrump ? 150 : 100, cards: famCards });
       }
     }
-    // Paare (if not fully in family context - simplified)
-    if (hasK && hasQ) {
-      const pairCards = cards.filter((c) => cardRank(c) === 12 || cardRank(c) === 13);
-      if (isTrump) {
-        melds.push({ type: 'trumpPair', cards: pairCards, points: 40, owner: '' as any });
-      } else {
-        melds.push({ type: 'pair', cards: pairCards, points: 20, owner: '' as any });
-      }
+    const pairs = Math.min(count(suit, 13), count(suit, 12)) - families;
+    for (let p = 0; p < pairs; p++) {
+      const pairCards = [take(pool, suit, 13, 2)[families + p]!, take(pool, suit, 12, 2)[families + p]!];
+      melds.push({ label: `${isTrump ? 'Trumpf-Paar' : 'Paar'} ${SUIT_NAMES[suit]}`, points: isTrump ? 40 : 20, cards: pairCards });
+      if (p === 0) leftoverPair[suit] = pairCards;
     }
   }
-
-  // Rundgang
-  let pairCount = 0;
-  const roundCards: CardId[] = [];
-  for (const suit of ['C', 'S', 'H', 'D'] as Suit[]) {
-    const cards = bySuit[suit];
-    if (hasRank(cards, 12) && hasRank(cards, 13)) {
-      pairCount++;
-      roundCards.push(...cards.filter((c) => cardRank(c) === 12 || cardRank(c) === 13));
-    }
-  }
-  if (pairCount === 4) {
-    melds.push({ type: 'round', cards: roundCards, points: 240, owner: '' as any });
+  if (SUITS.every((s) => leftoverPair[s])) {
+    melds.push({ label: 'Rundgang', points: 100, cards: SUITS.flatMap((s) => leftoverPair[s]!) });
   }
 
-  // Vierer
-  for (const rank of [1, 13, 12, 11]) {
-    const allCards = hand.filter((c) => cardRank(c) === rank);
-    if (allCards.length >= 4) {
-      if (rank === 1) melds.push({ type: 'fourAces', cards: allCards.slice(0, 4), points: 100, owner: '' as any });
-      if (rank === 13) melds.push({ type: 'fourKings', cards: allCards.slice(0, 4), points: 80, owner: '' as any });
-      if (rank === 12) melds.push({ type: 'fourQueens', cards: allCards.slice(0, 4), points: 60, owner: '' as any });
-      if (rank === 11) melds.push({ type: 'fourJacks', cards: allCards.slice(0, 4), points: 40, owner: '' as any });
-    }
-    if (allCards.length === 8) {
-      melds.push({ type: 'eightOfRank', cards: allCards, points: 1000, owner: '' as any });
-    }
+  // Gruppe 2: gleiche Ränge.
+  const RANKS: [number, string, number][] = [
+    [1, 'Sauen', 100],
+    [13, 'Könige', 80],
+    [12, 'Ober', 60],
+    [11, 'Unter', 40],
+  ];
+  for (const [rank, name, points] of RANKS) {
+    if (count(null, rank) === 8) melds.push({ label: `Acht ${name}`, points: 1000, cards: take(cards, null, rank, 8) });
+    else if (SUITS.every((s) => count(s, rank) > 0)) melds.push({ label: `Vier ${name}`, points, cards: SUITS.map((s) => take(cards, s, rank, 1)[0]!) });
   }
 
-  // Binokel
-  const binokelCards: CardId[] = [];
-  for (const c of hand) {
-    const s = cardSuit(c);
-    const r = cardRank(c);
-    if ((s === 'S' && r === 12) || (s === 'D' && r === 11)) binokelCards.push(c);
-  }
-  if (binokelCards.length === 2) {
-    melds.push({ type: 'binokel', cards: binokelCards, points: 40, owner: '' as any });
-  } else if (binokelCards.length >= 4) {
-    melds.push({ type: 'doubleBinokel', cards: binokelCards.slice(0, 4), points: 300, owner: '' as any });
-  }
+  // Gruppe 3: Binokel (Grün-Ober und Schellen-Unter).
+  const ober = take(cards, 'S', 12, 2);
+  const unter = take(cards, 'D', 11, 2);
+  if (ober.length === 2 && unter.length === 2) melds.push({ label: 'Doppelter Binokel', points: 300, cards: [...ober, ...unter] });
+  else if (ober.length > 0 && unter.length > 0) melds.push({ label: 'Binokel', points: 40, cards: [ober[0]!, unter[0]!] });
 
-  // Dissle
-  if (deckSize === 48 && trumpSuit) {
-    const dissle = hand.filter((c) => cardSuit(c) === trumpSuit && cardRank(c) === 7);
-    if (dissle.length === 1) melds.push({ type: 'dissle', cards: dissle, points: 10, owner: '' as any });
-    if (dissle.length >= 2) melds.push({ type: 'dissle', cards: dissle.slice(0, 2), points: 20, owner: '' as any });
-  }
+  // Gruppe 4: Dissle (Trumpf-Sieben).
+  if (trump) for (const seven of take(cards, trump, 7, 2)) melds.push({ label: 'Dissle', points: 10, cards: [seven] });
 
   return melds;
 }
 
-export function bestMeldSet(hand: CardId[], deckSize: 40 | 48, trumpSuit: Suit | null): DeclaredMeld[] {
-  const all = findAllMelds(hand, deckSize, trumpSuit);
-  // simple greedy: take highest point melds not conflicting
-  const used = new Set<string>();
-  const result: DeclaredMeld[] = [];
-  const sorted = [...all].sort((a, b) => b.points - a.points);
-  for (const m of sorted) {
-    const conflict = m.cards.some((c) => used.has(c));
-    if (conflict) continue;
-    for (const c of m.cards) used.add(c);
-    result.push(m);
-  }
-  return result;
-}
+export const meldPoints = (melds: readonly Meld[]) => melds.reduce((sum, m) => sum + m.points, 0);

@@ -1,546 +1,358 @@
 import type { Actor, GameEvent, MoveResult, Options, Result, SeatId } from '@brett-und-blatt/engine';
-import { Rng } from '@brett-und-blatt/engine';
-import { BOARD_SIZE, isEmptyBoard, squareTypeAt, type BoardCell } from './board';
+import { Rng, type RngState } from '@brett-und-blatt/engine';
+import { BOARD_SIZE, CENTER, squareTypeAt } from './board';
 import { isValidWord } from './dict';
-import { createBag, LETTER_VALUES, RACK_SIZE, type Letter, type Tile } from './letters';
+import { createBag, LETTER_VALUES, type Letter, type Tile } from './letters';
+import { generatePlays } from './movegen';
 
-export type { BoardCell } from './board';
 export type { Letter, Tile } from './letters';
 
-export interface ScrabbleState {
-  board: (BoardCell | null)[];
-  racks: Tile[][];
-  bag: Tile[];
-  scores: number[];
-  consecutivePasses: number;
-  turn: SeatId;
-  phase: 'play' | 'challenge';
-  lastMove?: {
-    actor: SeatId;
-    move: ScrabbleMove;
-    words: Array<{ word: string; score: number }>;
-    score: number;
-  };
-  options: ScrabbleOptions;
-  moveCount: number;
+/** Ein liegender Stein. Joker tragen den gewählten Buchstaben und zählen 0 Punkte. */
+export interface BoardCell {
+  letter: Letter;
+  blank: boolean;
+  by: number;
 }
 
-export interface ScrabbleOptions {
-  dictionary: 'de' | 'en';
-  checkMode: 'immediate' | 'challenge';
-  jokerSwap: boolean;
-  rackSize: number;
-  bingoBonus: number;
-}
-
-export type PlacedTile = {
+export interface PlacedTile {
   row: number;
   col: number;
   letter: Letter;
-  isBlank?: boolean;
-};
+  blank?: boolean;
+}
+
+export interface LastMove {
+  seat: number;
+  kind: 'play' | 'exchange' | 'pass';
+  cells: number[];
+  words: { word: string; score: number }[];
+  score: number;
+  count: number;
+}
+
+export interface ScrabbleState {
+  seats: number;
+  board: (BoardCell | null)[];
+  /** Bänkchen; fremde Steine sind in der Sicht `null`. */
+  racks: (Tile | null)[][];
+  /** Beutel; in der Sicht nur noch als Anzahl (`null`-Einträge). */
+  bag: (Tile | null)[];
+  rng: RngState;
+  scores: number[];
+  turn: number;
+  /** Züge ohne Punkte in Folge (Passen, Tauschen). */
+  scoreless: number;
+  moveCount: number;
+  rackSize: number;
+  bingoBonus: number;
+  lastMove: LastMove | null;
+  /** Endstand nach Verrechnung der Reststeine, sobald die Partie vorbei ist. */
+  final: number[] | null;
+}
 
 export type ScrabbleMove =
   | { type: 'play'; tiles: PlacedTile[] }
-  | { type: 'exchange'; letters: Tile[] }
-  | { type: 'pass' }
-  | { type: 'challenge'; challenge: boolean };
+  | { type: 'exchange'; tiles: Tile[] }
+  | { type: 'pass' };
 
-export interface ScrabbleView {
-  board: (BoardCell | null)[];
-  myRack: Tile[];
-  rackSizes: number[];
-  scores: number[];
-  turn: SeatId;
-  phase: 'play' | 'challenge';
-  bagCount: number;
-  consecutivePasses: number;
-  options: ScrabbleOptions;
-  lastMove?: ScrabbleState['lastMove'];
-}
+/** Mindestzahl Steine im Beutel, damit getauscht werden darf. */
+export const EXCHANGE_MIN_BAG = 7;
+export const BINGO_TILES = 7;
 
-export const id = 'scrabble';
-export const name = 'Scrabble';
-export const minSeats = 2;
-export const maxSeats = 4;
-export const tags = ['wort', 'online'];
+const idx = (row: number, col: number) => row * BOARD_SIZE + col;
+const inside = (row: number, col: number) => row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
 
-function defaultOptions(): ScrabbleOptions {
+export function setup(seats: number, options: Options, seed: string): ScrabbleState {
+  const rng = Rng.fromSeed(seed, 'beutel');
+  const bag: Tile[] = rng.shuffle(createBag());
+  const rackSize = Number(options.rackSize ?? 7) === 8 ? 8 : 7;
+  const racks = Array.from({ length: seats }, () => bag.splice(bag.length - rackSize, rackSize));
   return {
-    dictionary: 'de',
-    checkMode: 'immediate',
-    jokerSwap: false,
-    rackSize: RACK_SIZE,
-    bingoBonus: 50,
-  };
-}
-
-function shuffleBag(bag: Tile[], rng: any): Tile[] {
-  const arr = [...bag];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const r = typeof rng.next === 'function' ? rng.next() : Math.random();
-    const j = Math.floor(r * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function drawTiles(bag: Tile[], count: number): { drawn: Tile[]; rest: Tile[] } {
-  const drawn = bag.slice(0, count);
-  const rest = bag.slice(count);
-  return { drawn, rest };
-}
-
-export function setup(seats: number, options: Options = {}, seed: string = ''): ScrabbleState {
-  const rng: any = (Rng as any).fromSeed ? (Rng as any).fromSeed(seed || 'x', 'scrabble-setup') : (new (Rng as any)(seed || 'x'));
-  let bag = shuffleBag(createBag(), rng);
-  const racks: Tile[][] = [];
-  const rackSize = (options as any)?.rackSize ?? RACK_SIZE;
-  for (let s = 0; s < seats; s++) {
-    const { drawn, rest } = drawTiles(bag, rackSize);
-    racks.push(drawn);
-    bag = rest;
-  }
-  const opts = { ...defaultOptions(), ...(options as any) };
-  return {
+    seats,
     board: Array(BOARD_SIZE * BOARD_SIZE).fill(null),
     racks,
     bag,
+    rng: rng.state,
     scores: Array(seats).fill(0),
-    consecutivePasses: 0,
-    turn: 0 as SeatId,
-    phase: 'play',
-    options: opts,
+    turn: 0,
+    scoreless: 0,
     moveCount: 0,
+    rackSize,
+    bingoBonus: String(options.bingoBonus ?? '50') === '0' ? 0 : 50,
+    lastMove: null,
+    final: null,
   };
 }
 
 export function currentPlayers(state: ScrabbleState): Actor[] {
-  if (result(state)) return [];
-  return [state.turn];
+  return state.final ? [] : [state.turn];
 }
 
-function getWordsForMove(board: (BoardCell | null)[], tiles: PlacedTile[]): Array<{ word: string; positions: { r: number; c: number }[] }> {
-  if (tiles.length === 0) return [];
-  const rows = new Set(tiles.map((t) => t.row));
-  const cols = new Set(tiles.map((t) => t.col));
-  const isHorizontal = rows.size === 1;
-  const results: Array<{ word: string; positions: { r: number; c: number }[] }> = [];
+// ---------------------------------------------------------------------------
+// Wörter und Wertung
+// ---------------------------------------------------------------------------
 
-  const isEmpty = isEmptyBoard(board);
-  if (isEmpty && !tiles.some((t) => t.row === 4 && t.col === 4)) {
-    return [];
-  }
+export type PlayCheck =
+  | { ok: true; words: { word: string; score: number; cells: number[] }[]; score: number; bingo: boolean }
+  | { ok: false; reason: string };
 
-  if (tiles.length === 1) {
-    const t = tiles[0];
-    let c = t.col;
-    while (c > 0 && board[t.row * BOARD_SIZE + (c - 1)]) c--;
-    const positions: { r: number; c: number }[] = [];
-    while (c < BOARD_SIZE && (board[t.row * BOARD_SIZE + c] || tiles.some((tt) => tt.row === t.row && tt.col === c))) {
-      positions.push({ r: t.row, c });
-      c++;
-    }
-    if (positions.length >= 1) {
-      let word = '';
-      for (const p of positions) {
-        const placed = tiles.find((tt) => tt.row === p.r && tt.col === p.c);
-        if (placed) word += placed.isBlank ? placed.letter.toLowerCase() : placed.letter;
-        else {
-          const cell = board[p.r * BOARD_SIZE + p.c];
-          if (cell) word += cell.letter;
-        }
-      }
-      if (word.length > 1) results.push({ word, positions });
-    }
-    let r2 = t.row;
-    while (r2 > 0 && board[(r2 - 1) * BOARD_SIZE + t.col]) r2--;
-    const positions2: { r: number; c: number }[] = [];
-    while (r2 < BOARD_SIZE && (board[r2 * BOARD_SIZE + t.col] || tiles.some((tt) => tt.row === r2 && tt.col === t.col))) {
-      positions2.push({ r: r2, c: t.col });
-      r2++;
-    }
-    if (positions2.length >= 1) {
-      let word = '';
-      for (const p of positions2) {
-        const placed = tiles.find((tt) => tt.row === p.r && tt.col === p.c);
-        if (placed) word += placed.isBlank ? placed.letter.toLowerCase() : placed.letter;
-        else {
-          const cell = board[p.r * BOARD_SIZE + p.c];
-          if (cell) word += cell.letter;
-        }
-      }
-      if (word.length > 1 && !results.some((r) => r.positions.length === word.length && r.positions[0].r === positions2[0].r)) {
-        results.push({ word, positions: positions2 });
-      }
-    }
-    return results;
-  }
-
-  if (isHorizontal) {
-    const row = tiles[0].row;
-    let startCol = Math.min(...tiles.map((t) => t.col));
-    while (startCol > 0 && board[row * BOARD_SIZE + (startCol - 1)]) startCol--;
-    let endCol = Math.max(...tiles.map((t) => t.col));
-    while (endCol < BOARD_SIZE - 1 && board[row * BOARD_SIZE + (endCol + 1)]) endCol++;
-    const positions: { r: number; c: number }[] = [];
-    for (let c = startCol; c <= endCol; c++) positions.push({ r: row, c });
-    let word = '';
-    for (const p of positions) {
-      const placed = tiles.find((tt) => tt.row === p.r && tt.col === p.c);
-      if (placed) word += placed.isBlank ? placed.letter.toLowerCase() : placed.letter;
-      else {
-        const cell = board[p.r * BOARD_SIZE + p.c];
-        if (cell) word += cell.letter;
-      }
-    }
-    if (word.length >= 1) results.push({ word, positions });
-  } else {
-    const col = tiles[0].col;
-    let startRow = Math.min(...tiles.map((t) => t.row));
-    while (startRow > 0 && board[(startRow - 1) * BOARD_SIZE + col]) startRow--;
-    let endRow = Math.max(...tiles.map((t) => t.row));
-    while (endRow < BOARD_SIZE - 1 && board[(endRow + 1) * BOARD_SIZE + col]) endRow++;
-    const positions: { r: number; c: number }[] = [];
-    for (let r = startRow; r <= endRow; r++) positions.push({ r, c: col });
-    let word = '';
-    for (const p of positions) {
-      const placed = tiles.find((tt) => tt.row === p.r && tt.col === p.c);
-      if (placed) word += placed.isBlank ? placed.letter.toLowerCase() : placed.letter;
-      else {
-        const cell = board[p.r * BOARD_SIZE + p.c];
-        if (cell) word += cell.letter;
-      }
-    }
-    if (word.length >= 1) results.push({ word, positions });
-  }
-
-  for (const placed of tiles) {
-    if (isHorizontal) {
-      let r = placed.row;
-      while (r > 0 && board[(r - 1) * BOARD_SIZE + placed.col]) r--;
-      const positions: { r: number; c: number }[] = [];
-      while (r < BOARD_SIZE && (board[r * BOARD_SIZE + placed.col] || (r === placed.row && tiles.some((tt) => tt.row === r && tt.col === placed.col)))) {
-        positions.push({ r, c: placed.col });
-        r++;
-      }
-      if (positions.length > 1) {
-        let word = '';
-        for (const p of positions) {
-          const pplaced = tiles.find((tt) => tt.row === p.r && tt.col === p.c);
-          if (pplaced) word += pplaced.isBlank ? pplaced.letter.toLowerCase() : pplaced.letter;
-          else {
-            const cell = board[p.r * BOARD_SIZE + p.c];
-            if (cell) word += cell.letter;
-          }
-        }
-        if (!results.some((res) => res.word === word)) {
-          results.push({ word, positions });
-        }
-      }
-    } else {
-      let c = placed.col;
-      while (c > 0 && board[placed.row * BOARD_SIZE + (c - 1)]) c--;
-      const positions: { r: number; c: number }[] = [];
-      while (c < BOARD_SIZE && (board[placed.row * BOARD_SIZE + c] || (c === placed.col && tiles.some((tt) => tt.row === placed.row && tt.col === c)))) {
-        positions.push({ r: placed.row, c });
-        c++;
-      }
-      if (positions.length > 1) {
-        let word = '';
-        for (const p of positions) {
-          const pplaced = tiles.find((tt) => tt.row === p.r && tt.col === p.c);
-          if (pplaced) word += pplaced.isBlank ? pplaced.letter.toLowerCase() : pplaced.letter;
-          else {
-            const cell = board[p.r * BOARD_SIZE + p.c];
-            if (cell) word += cell.letter;
-          }
-        }
-        if (!results.some((res) => res.word === word)) {
-          results.push({ word, positions });
-        }
-      }
-    }
-  }
-  return results;
-}
-
-function scoreWord(word: string, positions: { r: number; c: number }[], board: (BoardCell | null)[], placedTiles: PlacedTile[]): number {
-  let wordScore = 0;
-  let wordMultiplier = 1;
-  for (const p of positions) {
-    const placed = placedTiles.find((tt) => tt.row === p.r && tt.col === p.c);
-    if (placed) {
-      let letterScore = 0;
-      if (!placed.isBlank) letterScore = LETTER_VALUES[placed.letter as Letter] || 0;
-      const st = squareTypeAt(p.r, p.c);
-      if (st === 'dl') letterScore *= 2;
-      else if (st === 'tl') letterScore *= 3;
-      else if (st === 'dw') wordMultiplier *= 2;
-      else if (st === 'tw') wordMultiplier *= 3;
-      wordScore += letterScore;
-    } else {
-      const cell = board[p.r * BOARD_SIZE + p.c];
-      if (cell) wordScore += LETTER_VALUES[cell.letter as Letter] || 0;
-    }
-  }
-  return wordScore * wordMultiplier;
-}
-
-export function legalMoves(state: ScrabbleState, actor?: Actor): ScrabbleMove[] {
-  if (actor !== undefined && actor !== state.turn) return [];
-  if (result(state)) return [];
-  const moves: ScrabbleMove[] = [{ type: 'pass' }];
-  const rack = state.racks[state.turn];
-  if (state.bag.length >= 1 && rack.length > 0) {
-    for (let i = 0; i < Math.min(rack.length, 3); i++) {
-      moves.push({ type: 'exchange', letters: [rack[i]] });
-    }
-  }
-  return moves;
-}
-
-export function isLegal(state: ScrabbleState, actor: Actor, move: ScrabbleMove): boolean {
-  if (move.type === 'pass') return actor === state.turn && !result(state);
-  if (move.type === 'exchange') return actor === state.turn && !result(state) && move.letters.length > 0;
-  if (move.type === 'challenge') return actor === state.turn && !result(state);
-  if (move.type === 'play') {
-    if (actor !== state.turn || result(state)) return false;
-    return tilesValid(state, actor, move.tiles);
-  }
-  return false;
-}
-
-function tilesValid(state: ScrabbleState, actor: Actor, tiles: PlacedTile[]): boolean {
-  if (!tiles || tiles.length === 0) return false;
-  const isEmpty = isEmptyBoard(state.board);
-  if (isEmpty && !tiles.some((t) => t.row === 4 && t.col === 4)) return false;
-  const rows = new Set(tiles.map((t) => t.row));
-  const cols = new Set(tiles.map((t) => t.col));
-  if (rows.size > 1 && cols.size > 1) return false;
+/**
+ * Prüft eine Legung auf dem Brett (ohne Bänkchen): eine Linie, lückenlos, angelegt bzw. über
+ * die Mitte, alle entstandenen Wörter im Wörterbuch. Liefert Wörter und Punkte.
+ */
+export function checkPlay(board: readonly (BoardCell | null)[], tiles: readonly PlacedTile[], bingoBonus = 50): PlayCheck {
+  if (tiles.length === 0) return { ok: false, reason: 'Lege mindestens einen Stein.' };
+  const placed = new Map<number, PlacedTile>();
   for (const t of tiles) {
-    if (t.row < 0 || t.row >= BOARD_SIZE || t.col < 0 || t.col >= BOARD_SIZE) return false;
-    if (state.board[t.row * BOARD_SIZE + t.col]) return false;
+    if (!inside(t.row, t.col)) return { ok: false, reason: 'Außerhalb des Bretts.' };
+    if (!(t.letter in LETTER_VALUES)) return { ok: false, reason: 'Unbekannter Buchstabe.' };
+    const i = idx(t.row, t.col);
+    if (board[i] || placed.has(i)) return { ok: false, reason: 'Das Feld ist schon belegt.' };
+    placed.set(i, t);
   }
-  if (!isEmpty) {
-    let connected = false;
-    for (const t of tiles) {
-      const adj = [
+  const sameRow = tiles.every((t) => t.row === tiles[0]!.row);
+  const sameCol = tiles.every((t) => t.col === tiles[0]!.col);
+  if (!sameRow && !sameCol) return { ok: false, reason: 'Alle Steine in eine Reihe oder Spalte.' };
+
+  const letterAt = (row: number, col: number): Letter | null => {
+    if (!inside(row, col)) return null;
+    const i = idx(row, col);
+    return placed.get(i)?.letter ?? board[i]?.letter ?? null;
+  };
+
+  // Lückenlos zwischen erstem und letztem neuen Stein.
+  const horizontal = tiles.length > 1 ? sameRow : true;
+  const along = (t: PlacedTile) => (horizontal ? t.col : t.row);
+  const lo = Math.min(...tiles.map(along));
+  const hi = Math.max(...tiles.map(along));
+  const fixed = horizontal ? tiles[0]!.row : tiles[0]!.col;
+  for (let p = lo; p <= hi; p++) {
+    if (!(horizontal ? letterAt(fixed, p) : letterAt(p, fixed))) return { ok: false, reason: 'Die Steine müssen lückenlos liegen.' };
+  }
+
+  const empty = board.every((c) => c === null);
+  if (empty) {
+    if (!placed.has(idx(CENTER, CENTER))) return { ok: false, reason: 'Das erste Wort muss über das Mittelfeld ★ gehen.' };
+    if (tiles.length < 2) return { ok: false, reason: 'Das erste Wort braucht mindestens zwei Buchstaben.' };
+  } else {
+    const touches = tiles.some((t) =>
+      [
         [t.row - 1, t.col],
         [t.row + 1, t.col],
         [t.row, t.col - 1],
         [t.row, t.col + 1],
-      ];
-      for (const [ar, ac] of adj) {
-        if (ar >= 0 && ar < BOARD_SIZE && ac >= 0 && ac < BOARD_SIZE) {
-          if (state.board[ar * BOARD_SIZE + ac]) {
-            connected = true;
-            break;
-          }
-        }
-      }
-      if (connected) break;
+      ].some(([r, c]) => inside(r!, c!) && board[idx(r!, c!)]),
+    );
+    if (!touches) return { ok: false, reason: 'Lege an die vorhandenen Steine an.' };
+  }
+
+  const wordAt = (row: number, col: number, dr: number, dc: number) => {
+    let r = row;
+    let c = col;
+    while (letterAt(r - dr, c - dc)) {
+      r -= dr;
+      c -= dc;
     }
-    if (!connected) return false;
-  }
-  const rack = [...(state.racks[actor as number] || [])];
-  for (const t of tiles) {
-    const idx = rack.findIndex((rt) => {
-      if (typeof rt === 'string') {
-        if (t.isBlank && rt === '?') return true;
-        if (!t.isBlank && rt === t.letter) return true;
-        return false;
+    const cells: number[] = [];
+    let word = '';
+    let sum = 0;
+    let mult = 1;
+    while (letterAt(r, c)) {
+      const i = idx(r, c);
+      const fresh = placed.get(i);
+      word += letterAt(r, c);
+      cells.push(i);
+      if (fresh) {
+        let value = fresh.blank ? 0 : LETTER_VALUES[fresh.letter];
+        const square = squareTypeAt(r, c);
+        if (square === 'dl') value *= 2;
+        else if (square === 'tl') value *= 3;
+        else if (square === 'dw' || square === 'star') mult *= 2;
+        else if (square === 'tw') mult *= 3;
+        sum += value;
+      } else {
+        const cell = board[i]!;
+        sum += cell.blank ? 0 : LETTER_VALUES[cell.letter];
       }
+      r += dr;
+      c += dc;
+    }
+    return { word, score: sum * mult, cells };
+  };
+
+  const words: { word: string; score: number; cells: number[] }[] = [];
+  const first = tiles[0]!;
+  const directions: [number, number][] = tiles.length > 1 ? [horizontal ? [0, 1] : [1, 0]] : [[0, 1], [1, 0]];
+  for (const [dr, dc] of directions) {
+    const main = wordAt(first.row, first.col, dr, dc);
+    if (main.word.length > 1) words.push(main);
+  }
+  if (tiles.length > 1) {
+    const [dr, dc] = horizontal ? [1, 0] : [0, 1];
+    for (const t of tiles) {
+      const cross = wordAt(t.row, t.col, dr, dc);
+      if (cross.word.length > 1) words.push(cross);
+    }
+  }
+  if (words.length === 0) return { ok: false, reason: 'Es entsteht kein Wort.' };
+  const wrong = words.find((w) => !isValidWord(w.word));
+  if (wrong) return { ok: false, reason: `„${wrong.word}“ steht nicht im Wörterbuch.` };
+  const bingo = tiles.length >= BINGO_TILES;
+  const score = words.reduce((sum, w) => sum + w.score, 0) + (bingo ? bingoBonus : 0);
+  return { ok: true, words, score, bingo };
+}
+
+/** Nimmt die Steine vom Bänkchen; null, wenn sie nicht darauf liegen. */
+function takeFromRack(rack: readonly (Tile | null)[], tiles: readonly Tile[]): (Tile | null)[] | null {
+  const rest = [...rack];
+  for (const t of tiles) {
+    const i = rest.indexOf(t);
+    if (i < 0) return null;
+    rest.splice(i, 1);
+  }
+  return rest;
+}
+
+const rackTile = (t: PlacedTile): Tile => (t.blank ? '?' : t.letter);
+
+// ---------------------------------------------------------------------------
+// Züge
+// ---------------------------------------------------------------------------
+
+/**
+ * Alle Legungen, die das Bänkchen erlaubt, dazu Passen und – bei vollem Beutel – Tauschen
+ * des ganzen Bänkchens (beliebige Teilmengen prüft `isLegal`).
+ */
+export function legalMoves(state: ScrabbleState, actor: Actor): ScrabbleMove[] {
+  if (state.final || actor !== state.turn) return [];
+  const rack = state.racks[state.turn]!.filter((t): t is Tile => t !== null);
+  const moves: ScrabbleMove[] = generatePlays(state.board, rack).map((tiles) => ({ type: 'play', tiles }));
+  if (state.bag.length >= EXCHANGE_MIN_BAG && rack.length > 0) moves.push({ type: 'exchange', tiles: rack });
+  moves.push({ type: 'pass' });
+  return moves;
+}
+
+export function isLegal(state: ScrabbleState, actor: Actor, move: ScrabbleMove): boolean {
+  if (state.final || actor !== state.turn) return false;
+  const rack = state.racks[state.turn]!;
+  switch (move.type) {
+    case 'pass':
+      return true;
+    case 'exchange':
+      return (
+        Array.isArray(move.tiles) &&
+        move.tiles.length > 0 &&
+        state.bag.length >= EXCHANGE_MIN_BAG &&
+        takeFromRack(rack, move.tiles) !== null
+      );
+    case 'play':
+      return (
+        Array.isArray(move.tiles) &&
+        takeFromRack(rack, move.tiles.map(rackTile)) !== null &&
+        checkPlay(state.board, move.tiles, state.bingoBonus).ok
+      );
+    default:
       return false;
-    });
-    if (idx < 0) return false;
-    rack.splice(idx, 1);
   }
-  const words = getWordsForMove(state.board, tiles);
-  if (words.length === 0) return false;
-  for (const w of words) {
-    if (w.word.length < 2) return false;
-    if (!isValidWord(w.word)) return false;
-  }
-  return true;
+}
+
+const rackPoints = (rack: readonly (Tile | null)[]) => rack.reduce((sum, t) => sum + (t && t !== '?' ? LETTER_VALUES[t] : 0), 0);
+
+/** Endabrechnung: Reststeine abziehen; wer ausgespielt hat, bekommt die Reste der anderen. */
+function finish(state: ScrabbleState, finisher: number | null): number[] {
+  const rests = state.racks.map(rackPoints);
+  const total = rests.reduce((a, b) => a + b, 0);
+  return state.scores.map((score, seat) => (seat === finisher ? score + total : score - rests[seat]!));
 }
 
 export function applyMove(state: ScrabbleState, actor: Actor, move: ScrabbleMove): MoveResult<ScrabbleState> {
-  if (actor !== state.turn) throw new Error('Du bist nicht am Zug.');
-  if (result(state)) throw new Error('Spiel ist vorbei.');
+  if (!isLegal(state, actor, move)) throw new Error('Unerlaubter Zug.');
+  const seat = state.turn;
+  const next: ScrabbleState = { ...state, turn: (seat + 1) % state.seats, moveCount: state.moveCount + 1 };
   const events: GameEvent[] = [];
 
   if (move.type === 'pass') {
-    const ns = { ...state, consecutivePasses: state.consecutivePasses + 1, turn: ((state.turn + 1) % state.racks.length) as SeatId, moveCount: state.moveCount + 1 };
-    events.push({ type: 'pass', seat: actor });
-    return { state: ns, events };
-  }
-
-  if (move.type === 'exchange') {
-    const rack = [...(state.racks[actor as number] || [])];
-    const toExchange = move.letters;
-    for (const ex of toExchange) {
-      const idx = rack.findIndex((t) => {
-        if (typeof t === 'string') {
-          if (typeof ex === 'string') return t === ex;
-          return false;
-        }
-        return false;
-      });
-      if (idx >= 0) rack.splice(idx, 1);
-    }
-    let bagArr = shuffleBag(state.bag, {});
-    const { drawn, rest } = drawTiles(bagArr, toExchange.length);
-    bagArr = rest;
-    for (const d of drawn) rack.push(d);
-    const racks = state.racks.map((r, i) => (i === actor ? rack : r));
-    const ns = { ...state, racks, bag: bagArr, consecutivePasses: 0, turn: ((state.turn + 1) % state.racks.length) as SeatId, moveCount: state.moveCount + 1 };
-    events.push({ type: 'exchange', seat: actor, count: toExchange.length });
-    return { state: ns, events };
-  }
-
-  if (move.type === 'play') {
-    if (!tilesValid(state, actor, move.tiles)) throw new Error('Ungültiger Zug.');
-    const tiles = move.tiles;
-    const words = getWordsForMove(state.board, tiles);
-    let totalScore = 0;
-    for (const w of words) {
-      totalScore += scoreWord(w.word, w.positions, state.board, tiles);
-    }
-    if (tiles.length === 7) totalScore += (state.options.bingoBonus as number) || 50;
+    next.scoreless = state.scoreless + 1;
+    next.lastMove = { seat, kind: 'pass', cells: [], words: [], score: 0, count: 0 };
+    events.push({ type: 'passed', seat });
+  } else if (move.type === 'exchange') {
+    const rng = new Rng(state.rng);
+    const bag = [...state.bag];
+    const drawn = bag.splice(bag.length - move.tiles.length, move.tiles.length);
+    const rack = [...takeFromRack(state.racks[seat]!, move.tiles)!, ...drawn];
+    next.bag = rng.shuffle([...bag, ...move.tiles]);
+    next.rng = rng.state;
+    next.racks = state.racks.map((r, s) => (s === seat ? rack : r));
+    next.scoreless = state.scoreless + 1;
+    next.lastMove = { seat, kind: 'exchange', cells: [], words: [], score: 0, count: move.tiles.length };
+    events.push({ type: 'exchanged', seat, count: move.tiles.length });
+  } else {
+    const check = checkPlay(state.board, move.tiles, state.bingoBonus);
+    if (!check.ok) throw new Error(check.reason);
     const board = [...state.board];
-    for (const t of tiles) {
-      board[t.row * BOARD_SIZE + t.col] = { letter: t.letter, isBlank: !!t.isBlank, placedBy: actor as number, turn: state.moveCount } as any;
-    }
-    let bagDraw = state.bag;
-    const { drawn, rest } = drawTiles(bagDraw, tiles.length);
-    bagDraw = rest;
-    const rack = [...(state.racks[actor as number] || [])];
-    for (const t of tiles) {
-      const idx = rack.findIndex((rt) => {
-        if (typeof rt === 'string') {
-          if (t.isBlank && rt === '?') return true;
-          if (!t.isBlank && rt === t.letter) return true;
-          return false;
-        }
-        return false;
-      });
-      if (idx >= 0) rack.splice(idx, 1);
-    }
-    const newRack = [...rack, ...drawn];
-    const racksArr = state.racks.map((r, i) => (i === actor ? newRack : r));
-    const scores = state.scores.map((s, i) => (i === actor ? s + totalScore : s));
-    const ns: ScrabbleState = {
-      ...state,
-      board,
-      racks: racksArr,
-      bag: bagDraw,
-      scores,
-      consecutivePasses: 0,
-      turn: ((state.turn + 1) % state.racks.length) as SeatId,
-      phase: 'play',
-      lastMove: { actor, move, words: words.map((w) => ({ word: w.word, score: scoreWord(w.word, w.positions, board, tiles) })), score: totalScore },
-      moveCount: state.moveCount + 1,
+    for (const t of move.tiles) board[idx(t.row, t.col)] = { letter: t.letter, blank: !!t.blank, by: seat };
+    const bag = [...state.bag];
+    const left = takeFromRack(state.racks[seat]!, move.tiles.map(rackTile))!;
+    const drawn = bag.splice(Math.max(0, bag.length - move.tiles.length), move.tiles.length);
+    next.board = board;
+    next.bag = bag;
+    next.racks = state.racks.map((r, s) => (s === seat ? [...left, ...drawn] : r));
+    next.scores = state.scores.map((sc, s) => (s === seat ? sc + check.score : sc));
+    next.scoreless = 0;
+    next.lastMove = {
+      seat,
+      kind: 'play',
+      cells: move.tiles.map((t) => idx(t.row, t.col)),
+      words: check.words.map(({ word, score }) => ({ word, score })),
+      score: check.score,
+      count: move.tiles.length,
     };
-    events.push({ type: 'play', seat: actor, words: words.map((w) => w.word), score: totalScore });
-    return { state: ns, events };
+    events.push({ type: 'played', seat, words: check.words.map((w) => w.word), score: check.score, bingo: check.bingo });
   }
 
-  if (move.type === 'challenge') {
-    const ns = { ...state, turn: ((state.turn + 1) % state.racks.length) as SeatId, moveCount: state.moveCount + 1 };
-    events.push({ type: 'challenge', seat: actor });
-    return { state: ns, events };
-  }
-
-  throw new Error('Unbekannter Zug.');
-}
-
-export function playerView(state: ScrabbleState, seat: SeatId | 'spectator'): ScrabbleView {
-  if (seat === 'spectator') {
-    return {
-      board: state.board,
-      myRack: [],
-      rackSizes: state.racks.map((r) => r.length),
-      scores: state.scores,
-      turn: state.turn,
-      phase: state.phase,
-      bagCount: state.bag.length,
-      consecutivePasses: state.consecutivePasses,
-      options: state.options,
-      lastMove: state.lastMove,
-    };
-  }
-  return {
-    board: state.board,
-    myRack: state.racks[seat] || [],
-    rackSizes: state.racks.map((r) => r.length),
-    scores: state.scores,
-    turn: state.turn,
-    phase: state.phase,
-    bagCount: state.bag.length,
-    consecutivePasses: state.consecutivePasses,
-    options: state.options,
-    lastMove: state.lastMove,
-  };
-}
-
-export function view(state: ScrabbleState, seat: SeatId): ScrabbleView {
-  return playerView(state, seat);
+  const emptied = next.racks[seat]!.length === 0 && next.bag.length === 0;
+  if (emptied) next.final = finish(next, seat);
+  else if (next.scoreless >= Math.max(6, state.seats * 2)) next.final = finish(next, null);
+  if (next.final) events.push({ type: 'gameOver' });
+  return { state: next, events };
 }
 
 export function result(state: ScrabbleState): Result | null {
-  if (state.consecutivePasses >= state.racks.length * 2) {
-    const finalScores = [...state.scores];
-    let totalRemaining = 0;
-    for (let i = 0; i < state.racks.length; i++) {
-      for (const t of state.racks[i]) {
-        if (typeof t === 'string' && t !== '?') totalRemaining += LETTER_VALUES[t as Letter] || 0;
-      }
-    }
-    for (let i = 0; i < state.racks.length; i++) {
-      if (state.racks[i].length === 0) {
-        finalScores[i] += totalRemaining;
-      } else {
-        let sub = 0;
-        for (const t of state.racks[i]) {
-          if (typeof t === 'string' && t !== '?') sub += LETTER_VALUES[t as Letter] || 0;
-        }
-        finalScores[i] -= sub;
-      }
-    }
-    const maxScore = Math.max(...finalScores);
-    const winners = finalScores.map((s, i) => (s === maxScore ? i : -1)).filter((i) => i >= 0) as SeatId[];
-    if (winners.length === 1) return { kind: 'win', winners };
-    return { kind: 'draw' };
-  }
-  if (state.bag.length === 0) {
-    for (let i = 0; i < state.racks.length; i++) {
-      if (state.racks[i].length === 0) {
-        const finalScores = [...state.scores];
-        let totalRemaining = 0;
-        for (let j = 0; j < state.racks.length; j++) {
-          if (j !== i) {
-            for (const t of state.racks[j]) {
-              if (typeof t === 'string' && t !== '?') totalRemaining += LETTER_VALUES[t as Letter] || 0;
-            }
-          }
-        }
-        finalScores[i] += totalRemaining;
-        const maxScore = Math.max(...finalScores);
-        const winners = finalScores.map((s, j) => (s === maxScore ? j : -1)).filter((j) => j >= 0) as SeatId[];
-        if (winners.length === 1) return { kind: 'win', winners };
-        return { kind: 'draw' };
-      }
-    }
-  }
-  return null;
+  if (!state.final) return null;
+  const best = Math.max(...state.final);
+  const winners = state.final.flatMap((score, seat) => (score === best ? [seat] : []));
+  return winners.length === 1 ? { kind: 'win', winners } : { kind: 'draw' };
 }
 
 export function evaluate(state: ScrabbleState, seat: SeatId): number {
-  return state.scores[seat] - state.scores.reduce((a, b, i) => (i === seat ? a : a + b), 0) / Math.max(1, state.racks.length - 1);
+  const scores = state.final ?? state.scores;
+  const others = scores.filter((_, s) => s !== seat);
+  return (scores[seat]! - Math.max(...others)) / 100;
 }
 
-export function sampleHidden(view: ScrabbleView, _seat: SeatId, rng: Rng): ScrabbleState {
-  const state = view as any;
-  return state;
+/** Fremde Bänkchen und der Beutel bleiben verdeckt, ebenso der Zufallszustand. */
+export function playerView(state: ScrabbleState, seat: SeatId | 'spectator'): ScrabbleState {
+  return {
+    ...state,
+    racks: state.racks.map((rack, s) => (s === seat || state.final ? rack : rack.map(() => null))),
+    bag: state.bag.map(() => null),
+    rng: [0, 0, 0, 0],
+  };
 }
+
+/** Für Bots: die unbekannten Steine zufällig auf fremde Bänkchen und den Beutel verteilen. */
+export function sampleHidden(view: ScrabbleState, seat: SeatId, rng: Rng): ScrabbleState {
+  const unknown: Tile[] = createBag();
+  const remove = (t: Tile) => {
+    const i = unknown.indexOf(t);
+    if (i >= 0) unknown.splice(i, 1);
+  };
+  for (const cell of view.board) if (cell) remove(cell.blank ? '?' : cell.letter);
+  for (const t of view.racks[seat] ?? []) if (t) remove(t);
+  const pool = rng.shuffle(unknown);
+  const racks = view.racks.map((rack, s) => (s === seat ? rack : rack.map((t) => t ?? pool.pop() ?? null)));
+  return { ...view, racks, bag: view.bag.map(() => pool.pop() ?? null), rng: rng.state };
+}
+
+/** Wie viele Punkte die Steine auf dem Bänkchen wert sind (für die Anzeige). */
+export { rackPoints };

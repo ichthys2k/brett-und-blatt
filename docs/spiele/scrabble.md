@@ -192,3 +192,16 @@ Basierend auf Gordon's GADDAG- und Appel-Jacobson-DAWG-Suche mit Ankerfeldern un
 - Legeregeln: Erstzug über H8; Mindestlänge 2; lückenloser Verbund; Erkennung aller orthogonalen Querwörter.
 - Wertung: Buchstaben- und Wortmultiplikatoren (inkl. mehrfacher Multiplikatoren wie 3W × 3W = 9×); einmalige Gültigkeit von Prämienfeldern; Bingo-Bonus (+50 Punkte); Blanko zählt 0 Punkte.
 - Tausch- und Pass-Regeln; Endabrechnung bei leerem Beutel vs. Pass-Remis.
+
+## Umsetzungsstand (28.10.2026, Neufassung)
+
+Die erste Fassung war nicht spielbar (Oberfläche ohne Funktion, Startfeld (4,4) statt H8, `legalMoves` ohne Legungen, Bot stürzte ab, Bänkchen offen). In Etappe 3 des Korrekturplans neu geschrieben:
+
+- `src/rules.ts`: `checkPlay` prüft eine Legung (eine Linie, lückenlos, über H8 bzw. angelegt, alle Wörter im Wörterbuch) und wertet sie (Prämien nur für neue Steine, Joker 0, 50 Punkte für 7 Steine). Tauschen ab 7 Steinen im Beutel (Beutel wird mit dem Zufallsstrom im Zustand gemischt), Passen, Ende bei leerem Beutel und leerem Bänkchen oder nach max(6, 2 × Plätze) Zügen ohne Punkte; Reststeine werden verrechnet (`final`). Sicht verdeckt fremde Bänkchen, Beutel und Zufallsstrom.
+- `src/movegen.ts`: Zuggenerator nach Appel & Jacobson mit Querprüfungen; senkrechte Legungen auf dem gespiegelten Brett. `legalMoves` liefert alle Legungen, das ganze Bänkchen zum Tauschen und Passen; beliebige Tauschmengen erlaubt `isLegal`.
+- `src/dict.ts`: Präfixbaum statt DAWG. Wörter ohne Selbstlaut fallen weg, Wörter aus zwei Buchstaben nur nach einer kleinen Liste.
+- `src/bots.ts`: „Wortmeister“ – leicht ein mittelmäßiges Wort (30.–70. Perzentil), mittel das punktstärkste, schwer Punkte plus Bewertung des Rests (Joker, S, E behalten; Dubletten, Q ohne U meiden; Selbstlaute ausgewogen) und Tauschen bei schwachem Zug.
+- `src/ui/`: Brett mit Prämienfeldern, Steine antippen oder ziehen (`usePointerDrag`), Joker-Buchstabenwahl, Vorschau mit Wörtern und Punkten bzw. Fehlergrund, Mischen, Tauschen, Passen, Tipp als Geisterbuchstaben.
+- Optionen: Bänkchen 7/8 Steine, Prämie für 7 Steine an/aus. Englisches Wörterbuch, Anfechten und Joker-Tausch sind gestrichen.
+
+**Noch offen (Etappe 4):** Das Wörterbuch `src/dict/words-de.json` hat unklare Herkunft und Lizenz und enthält Namen und englische Wörter. Ersatz durch eine frei lizenzierte Liste (z. B. aus igerman98) mit Quelle in `THIRD_PARTY.md`.

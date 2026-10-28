@@ -110,3 +110,28 @@ describe('Geben und Geheimnisse', () => {
     for (const seat of [1, 2, 3]) expect(view.initialHands[seat]).toEqual([]);
   });
 });
+
+describe('Schafkopf-Bot', () => {
+  it('spielt Serien regelgerecht und gewinnt als Spieler einen guten Teil', async () => {
+    const { computeBotMove, isLegalMove } = await import('@brett-und-blatt/engine');
+    let played = 0;
+    let won = 0;
+    for (let g = 0; g < 4; g++) {
+      let s = gameModule.setup(4, {}, `bot-${g}`);
+      for (let i = 0; i < 3000 && !gameModule.result(s); i++) {
+        const seat = gameModule.currentPlayers(s)[0] as number;
+        const move = computeBotMove(gameModule, { gameId: 'schafkopf', botId: 'schafkopf', level: 'medium', seat, view: gameModule.playerView(s, seat), seed: `${g}/${i}`, timeBudgetMs: 50 }) as never;
+        expect(isLegalMove(gameModule, s, seat, move)).toBe(true);
+        s = gameModule.applyMove(s, seat, move).state;
+      }
+      expect(gameModule.result(s)).not.toBeNull();
+      for (const h of s.history) {
+        if (h.contract.gameType === 'ramsch') continue;
+        played++;
+        if (h.won) won++;
+      }
+    }
+    expect(played).toBeGreaterThan(10);
+    expect(won / played).toBeGreaterThan(0.45);
+  }, 60_000);
+});
