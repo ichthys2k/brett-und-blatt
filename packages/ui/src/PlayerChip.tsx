@@ -38,10 +38,12 @@ export interface PlayerChipProps {
   away?: boolean;
   winner?: boolean;
   clock: ClockReading | null;
+  /** Punktestand – steht als eigenes Abzeichen rechts und wird nie abgeschnitten. */
+  score?: number | string | null;
 }
 
 /** Ein Platz in der Spielerleiste: Zeichen mit Uhr-Ring, Name, Zustand. */
-export function PlayerChip({ name, symbol, detail, active, thinking, away, winner, clock }: PlayerChipProps) {
+export function PlayerChip({ name, symbol, detail, active, thinking, away, winner, clock, score }: PlayerChipProps) {
   const time = clock && clock.kind !== 'none' && clock.running ? formatClock(clock) : null;
   return (
     <div className="bub-chip" data-active={active || undefined} data-winner={winner || undefined} aria-current={active ? 'true' : undefined}>
@@ -53,6 +55,11 @@ export function PlayerChip({ name, symbol, detail, active, thinking, away, winne
         </span>
         <span className="bub-chip-detail">{away ? 'abwesend – Computer spielt' : thinking ? 'denkt nach …' : (time ?? detail ?? '')}</span>
       </span>
+      {score !== undefined && score !== null && (
+        <span className="bub-chip-score" aria-label={`${score} Punkte`} title={`${score} Punkte`}>
+          {score}
+        </span>
+      )}
     </div>
   );
 }

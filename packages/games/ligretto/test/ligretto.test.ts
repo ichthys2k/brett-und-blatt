@@ -5,7 +5,9 @@ import { gameModule } from '../src';
 import { applyMove, fullDeck, legalMoves, playerView, rowSize, sampleHidden, setup, totals, type Card, type LigrettoState } from '../src/rules';
 
 describe('ligretto: allgemeine Prüfungen', () => {
-  for (const check of gameContractChecks(gameModule, { randomGames: 12, maxMoves: 20_000 })) test(check.name, check.run);
+  // Lange Echtzeitpartien mit bis zu acht Plätzen: Die Geheimnis-Prüfung braucht auf langsamen
+  // CI-Rechnern über eine Minute – deshalb mehr Zeit als der allgemeine Grenzwert.
+  for (const check of gameContractChecks(gameModule, { randomGames: 12, maxMoves: 20_000 })) test(check.name, check.run, 240_000);
 });
 
 function card(owner: number, suit: Card['suit'], value: number): Card {

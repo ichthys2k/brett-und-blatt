@@ -41,6 +41,8 @@ export interface GameUi<V = unknown, M = unknown> {
   seatLabel: (seat: SeatId, seats?: number) => string;
   /** Zusatz in der Spielerleiste aus der öffentlichen Sicht, z. B. „12 Punkte“ oder „5 Karten“. */
   seatDetail?: (view: V, seat: SeatId) => string | null;
+  /** Punktestand eines Platzes, der in der Spielerleiste immer sichtbar bleibt (auch bei laufender Uhr). */
+  seatScore?: (view: V, seat: SeatId) => number | string | null;
   /** Klänge zu den Ereignissen, z. B. `{ placed: 'stein-setzen' }`. Sieg, Niederlage und Zeit vertont die Plattform selbst. */
   sounds?: SoundMap;
   /**

@@ -135,7 +135,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   }, [session, isOnline]);
 
   const seats = session.config.seats;
-  /** Ab drei Spielern wird die linke Spalte im Querformat breiter und die Spieler stehen zu zweit nebeneinander. */
+  /** Ab drei Spielern wird die linke Spalte im Querformat breiter; auf flachen Handy-Bildschirmen stehen die Spieler zu zweit nebeneinander. */
   const crowded = seats.length > 2;
   /** Sehr viele Spieler (Bingo bis 30): eine Zeile zum Wischen statt vieler umbrechender Reihen. */
   const many = seats.length > 10;
@@ -169,6 +169,17 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     setHint(move);
     setHintMissing(move === null);
   };
+
+  // Deutlich zeigen, wenn ein Mensch an diesem Gerät dran ist (nur bei Spielen, in denen reihum gezogen wird).
+  const yourMove = !result && !session.paused && handoverSeat === null && actingSeat !== undefined && current.length === 1 && seats.length > 1;
+  useEffect(() => {
+    if (!yourMove) return;
+    const before = document.title;
+    document.title = `● ${t('play.yourTurn')} – ${before}`;
+    return () => {
+      document.title = before;
+    };
+  }, [yourMove]);
 
   let status: string;
   if (result) status = resultTitle(result, session, online);
@@ -246,7 +257,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         )}
 
         <section
-          className={`flex flex-none gap-2 px-3 ${many ? 'overflow-x-auto pb-1 side:flex-col side:overflow-x-visible side:max-h-60 side:overflow-y-auto' : 'flex-wrap'} ${crowded && !many ? 'side:grid side:grid-cols-2' : 'side:flex-col'}`}
+          className={`bub-players flex flex-none gap-2 px-3 ${many ? 'overflow-x-auto pb-1 side:flex-col side:overflow-x-visible side:max-h-60 side:overflow-y-auto' : 'flex-wrap'} ${crowded && !many ? 'side:flex-col flat:grid flat:grid-cols-2' : 'side:flex-col'}`}
           data-crowded={crowded || undefined}
           data-many={many || undefined}
           aria-label="Spieler"
@@ -256,7 +267,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               key={index}
               name={seat.name}
               symbol={<ui.SeatSymbol seat={index} seats={seats.length} />}
-  detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index, seats.length)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index, seats.length))}
+              score={ui.seatScore?.(publicView, index)}
+              detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index, seats.length)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index, seats.length))}
               active={!result && current.includes(index)}
               thinking={session.isThinking(index) && seat.kind === 'bot'}
               away={session.isAway(index)}
@@ -267,7 +279,14 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         </section>
 
         <p className="flex-none py-2 text-center font-medium" aria-live="polite">
-          {status}
+          {yourMove ? (
+            <span key={`${session.version}`} className="bub-your-turn">
+              <span aria-hidden="true">👉</span>
+              {status}
+            </span>
+          ) : (
+            status
+          )}
           {result?.reason === 'time' && ` (${t('play.reason.time')})`}
           {result?.reason === 'resign' && ` (${t('play.reason.resign')})`}
         </p>
@@ -369,6 +388,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       </div>
 
       <main className="relative order-1 min-h-0 min-w-0 flex-1 px-3 side:py-2 side:px-4">
+        {yourMove && <div key={`${session.version}`} className="bub-turn-frame" aria-hidden="true" />}
         <ui.Board
           view={session.view(viewer)}
           legalMoves={legalMoves}
