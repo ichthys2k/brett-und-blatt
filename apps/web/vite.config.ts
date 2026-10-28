@@ -32,12 +32,22 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Alles vorab speichern: Solo und Hot-Seat funktionieren dann ohne Internet (Klänge zusammen etwa 1 MB).
+        // Alles vorab speichern: Solo und Hot-Seat funktionieren dann ohne Internet (Effekte zusammen etwa 1 MB).
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,mp3}'],
-        // Musik ist zu groß zum Vorab-Speichern: Sie kommt beim ersten Abspielen in einen eigenen Speicher.
-        globIgnores: ['**/klaenge/musik/**', '**/klaenge/duck-rally/**'],
+        // Musik, Tierstimmen (Drachenspiel, rund 14 MB) und Enten-Rallye-Ton sind zu groß zum Vorab-Speichern:
+        // Sie kommen beim ersten Abspielen in einen eigenen Speicher.
+        globIgnores: ['**/klaenge/musik/**', '**/klaenge/tiere/**', '**/klaenge/duck-rally/**'],
         navigateFallback: 'index.html',
         runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.includes('/klaenge/tiere/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'tiere',
+              expiration: { maxEntries: 400, purgeOnQuotaError: true },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             urlPattern: ({ url }) => url.pathname.includes('/klaenge/musik/'),
             handler: 'CacheFirst',
