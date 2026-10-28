@@ -190,6 +190,8 @@ Korrekturplan aus dem Prüfbericht:
    - ✅ Wortgitter-Wörterbuch durch „german-wordlist“ (CC0) ersetzt, Quelle in `THIRD_PARTY.md`.
    - ✅ Enten-Rallye-Klänge ins private Klang-Repo verschoben (Ordner `duck-rally/`, Commit `01cb87d` dort); `apps/web/klaenge.ts` übernimmt `tiere/` und `duck-rally/` ganz (bei Bedarf geladen).
 
+**Schach-Feinschliff nach Betatest (28.10.2026, Zweig `claude/schach-feinschliff`):** Für Schach und Vierer-Schach deutliche Schachanzeige (König, Angreifer, Pfeil, Satz), Chronik mit Rückblick, Trophäenecken bzw. fliegende Figuren beim Schlagen, Vorziehen von Zügen, Warnhinweise unter statt über dem Brett. Für alle Spiele: „Du bist dran“ als Plakette mit leuchtendem Rahmen ums Spielfeld und Tab-Titel, Punkte-Abzeichen im Spieler-Chip (`GameUi.seatScore`). Details in `docs/spiele/schach.md` und `vierer-schach.md`.
+
 **Arbeitsweise seit 27.10.2026:** Ein Teil der Arbeit kam direkt auf `main` statt über einen PR. Jeder Push dort veröffentlicht sofort; rote CI-Läufe (z. B. am 28.10. vier in Folge) bedeuten, dass in der Zeit nichts veröffentlicht wurde. Zweige mit PR bleiben der empfohlene Weg.
 
 ## Rückblick Etappe 3 – Online

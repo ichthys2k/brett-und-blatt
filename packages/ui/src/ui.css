@@ -88,6 +88,24 @@ button.bub-cell:focus-visible {
   text-overflow: ellipsis;
 }
 
+.bub-chip-score {
+  flex: none;
+  margin-left: auto;
+  min-width: 1.7rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.bub-chip[data-active] .bub-chip-score {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
 .bub-chip-detail {
   font-size: 0.8rem;
   color: var(--color-muted);

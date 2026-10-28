@@ -97,7 +97,12 @@ Die allgemeine MCTS wäre bei vier Spielern auf 160 Feldern zu langsam. Der Zufa
 - **Schach- & Fesselungswarnung:** Versucht man eine gefesselte Figur zu bewegen oder den König ins Schach zu ziehen, erklärt ein kurzer Warnhinweis (z. B. mit Angabe von Angreiferfigur, gegnerischer Farbe und Feld) den Grund. Auf dem Kreuzbrett werden die gefesselte Figur, der eigene König und die gegnerische Angreiferfigur farblich hervorgehoben.
 - **Lupe** (🔍 in der freien Ecke oben rechts) ab Feldern unter 36 px. Sie vergrößert das Brett auf 170 % in einem verschiebbaren Ausschnitt, der unten in der Mitte beginnt. Die Einstellung merkt sich jedes Gerät in `localStorage`.
 - **Knopf „🏆 Sieg beanspruchen“**, sobald das erlaubt ist.
-- **Spieler-Chips** mit Farbe und Punkten bzw. Team, dazu der Grund des Ausscheidens. Im Querformat stehen sie bei drei oder mehr Spielern kompakt zu zweit (`data-crowded`).
+- **Spieler-Chips** mit Farbe, Team bzw. „Schach!“ und eigenem Punkte-Abzeichen (`seatScore`, wird nie abgeschnitten, auch nicht bei laufender Uhr), dazu der Grund des Ausscheidens. Im Querformat stehen sie bei drei oder mehr Spielern kompakt zu zweit (`data-crowded`).
+- **Schachanzeige (28.10.2026):** Jeder König im Schach leuchtet rot, die angreifenden Figuren sind rot umrandet, ein gestrichelter Pfeil führt vom Angreifer zum König (`checks()` in `src/ui/history.ts`). Unter dem Brett steht z. B. „Schach! Dein König wird von der Dame von Blau angegriffen.“
+- **Trophäenecken:** Jede freie Brettecke gehört einer Farbe (links vom eigenen Rand). Dort stehen Punkte und alle geschlagenen Figuren in der Farbe des Opfers; beim Schlagen fliegt die Figur vom Feld in die Ecke.
+- **Chronik (📜) und Rückblick:** Liste aller Züge mit Figur, Feldern, geschlagener Figur samt Farbe, Schach und Punkten, dazwischen Ereignisse (matt, aufgegeben …). Ein Eintrag zeigt die Stellung nach diesem Zug; ◀ ▶ (oder Pfeiltasten) blättern, „Zur Partie“ (Esc) kehrt zurück. Dafür speichert das Log jetzt `action`, `piece` und `captured`; ältere Spielstände haben eine Chronik ohne Rückblick.
+- **Vorziehen:** Wer nicht am Zug ist, kann eine eigene Figur und ein Ziel vormerken (blau gestrichelt). Sobald man dran ist, wird der Zug ausgeführt – oder mit Hinweis verworfen, wenn er nicht mehr erlaubt ist. Nur für einen festen Platz (allein gegen Bots, online), nicht im Hot-Seat.
+- **Warnhinweise** liegen in der Leiste unter dem Brett statt über den Feldern; auf dem Desktop mit begrenzter Schriftgröße.
 
 ## Hot-Seat und Online
 
@@ -108,6 +113,7 @@ Die allgemeine MCTS wäre bei vier Spielern auf 160 Feldern zu langsam. Der Zufa
 
 - `test/legacy-engine.test.ts` (übernommen und ergänzt): Startaufstellung, Zugreihenfolge, Rochade (auch seitlich und mit Teampartner als „Angreifer“), en passant über Kreuz, Umwandlung in beiden Spielarten, Matt und Patt in beiden Spielarten, König schlagen, Teampartner nicht schlagbar, Doppelschach-Punkte, Aufgeben, Sieg beanspruchen, Wiederholung, Zufallspartien mit exaktem Nachspielen, Bot findet Matt und schlägt eine ungedeckte Dame, Bot bewertet 1-Punkt-Dame mit 1 statt 9 Punkten, vier Bots spielen eine Partie zu Ende.
 - `test/four-player-chess.test.ts`: Anbindung an die Schnittstelle (20 Eröffnungszüge, alter Spielstand bleibt unverändert, Bot-Züge im richtigen Format, En-Passant-Schlagereignis mit Klang), Aufgeben (nur die eigene Farbe scheidet aus, auch ohne am Zug zu sein; vorzeitiges Ausscheiden disqualifiziert vom Sieg; Teammodus: Team verliert; Nachspielen und Zurücknehmen), Zeitablauf mit Schachuhr (nur die eigene Farbe bzw. das Team scheidet aus) und `gameContractChecks`.
+- `test/history.test.ts`: Rückblick spielt jede Stellung nach (beide Spielarten, mit Aufgeben), Trophäen stimmen mit den Schlagzügen überein, alte Spielstände ohne Aktionen, Angreifer bei Schach.
 - `test/check-warning.test.ts`: Fesselungserkennung über Kreuz (auch über alle vier Himmelsrichtungen), Fesselungslinie, bestehendes Schachgebot und verbotener Zug ins Schach.
 
 ## Aufgeben
@@ -116,6 +122,6 @@ Aufgeben ist ein Spielzug `{ t: 'resign', p: Farbe }`, den die Spielleitung übe
 
 ## Offene Punkte
 
-- **Protokoll anzeigen:** Die Engine schreibt Züge und Ereignisse mit Punkten ins `log`. Die Oberfläche zeigt es noch nicht.
+- **Protokoll anzeigen:** Erledigt – Chronik mit Rückblick (siehe Oberfläche).
 - **Typisieren:** Erledigt – `src/legacy/engine.ts`, `bot.ts` und `test/legacy-engine.test.ts` sind vollständig in TypeScript typisiert (`@ts-nocheck` entfernt).
 - **Stärkerer Bot:** eine flache Suche (zwei bis vier Halbzüge, „paranoid“ oder „max-n“) über den Faustregeln.

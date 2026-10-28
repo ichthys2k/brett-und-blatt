@@ -55,7 +55,7 @@
   background: var(--color-surface);
   color: var(--color-ink);
   font: inherit;
-  font-size: max(0.8rem, 3.4cqw);
+  font-size: clamp(0.75rem, 2.6cqw, 1rem);
   cursor: pointer;
 }
 
@@ -71,8 +71,28 @@
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
 }
 
+.ch-moves {
+  z-index: 30;
+  font-size: 0.85rem;
+  color: var(--color-ink);
+}
+
+.ch-log-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+}
+
+.ch-log-head span {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
 .ch-moves ol {
   flex: 1;
+  min-height: 0;
   margin: 0;
   padding-left: 2.2rem;
   overflow-y: auto;
@@ -80,12 +100,77 @@
   font-variant-numeric: tabular-nums;
 }
 
-.ch-moves li span {
-  display: inline-block;
-  min-width: 5rem;
+.ch-moves li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.25rem;
 }
 
-.ch-moves button {
+.ch-log-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0.2rem 0.35rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+button.ch-log-cell {
+  cursor: pointer;
+}
+
+button.ch-log-cell:hover {
+  background: var(--color-surface-2);
+}
+
+.ch-log-cell.ch-log-hit {
+  background: color-mix(in srgb, var(--color-danger) 9%, transparent);
+}
+
+.ch-log-move {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.ch-log-glyph {
+  font-size: 1.3em;
+  line-height: 1;
+  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'DejaVu Sans', serif;
+  paint-order: stroke fill;
+}
+
+.ch-log-san {
+  font-weight: 600;
+}
+
+.ch-log-capture {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.ch-log-note {
+  color: var(--color-muted);
+  font-size: 0.9em;
+}
+
+.ch-log-check {
+  padding: 0 0.4em;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 0.8em;
+  font-weight: 700;
+}
+
+.ch-log-close {
   align-self: center;
   padding: 0.4rem 1.2rem;
   border: 1px solid var(--color-line);
@@ -94,6 +179,177 @@
   color: var(--color-ink);
   font: inherit;
   cursor: pointer;
+}
+
+.ch-board-area {
+  position: relative;
+}
+
+/* Rückblick-Leiste über dem Brett */
+.ch-review {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: clamp(0.72rem, 2.6cqw, 0.95rem);
+  font-weight: 600;
+}
+
+.ch-review span {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ch-review button {
+  flex: none;
+  padding: 0 0.6rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.ch-review button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ch-reviewing {
+  filter: saturate(0.8);
+}
+
+/* Schach: König, Angreifer, Pfeile, Ansage */
+.ch-board .bub-cell.ch-checker {
+  outline: 3px solid #d62828;
+  outline-offset: -3px;
+}
+
+.ch-arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.ch-arrow {
+  stroke: #d62828;
+  stroke-width: 0.12;
+  stroke-linecap: round;
+  stroke-dasharray: 0.4 0.2;
+  opacity: 0.9;
+  animation: ch-arrow-run 0.9s linear infinite;
+}
+
+@keyframes ch-arrow-run {
+  to {
+    stroke-dashoffset: -0.6;
+  }
+}
+
+.ch-arrowhead {
+  fill: #d62828;
+}
+
+.ch-check-pill {
+  min-width: 0;
+  padding: 0.1em 0.6em;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: clamp(0.72rem, 2.4cqw, 0.9rem);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: ch-check-pill 1.6s ease-in-out infinite;
+}
+
+@keyframes ch-check-pill {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(214 40 40 / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 0.35em rgb(214 40 40 / 0);
+  }
+}
+
+/* Vorgemerkter Zug (blau) */
+.ch-premove-text {
+  min-width: 0;
+  color: #2f6fdb;
+  font-size: clamp(0.72rem, 2.4cqw, 0.9rem);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ch-board .bub-cell.ch-selected-pre,
+.ch-board .bub-cell.ch-capture-pre {
+  box-shadow: inset 0 0 0 3px #2f6fdb;
+}
+
+.ch-board .bub-cell.ch-premove {
+  background-image: linear-gradient(rgb(47 111 219 / 0.38), rgb(47 111 219 / 0.38));
+  outline: 2px dashed #2f6fdb;
+  outline-offset: -3px;
+}
+
+.ch-dot-pre {
+  background: rgb(47 111 219 / 0.55);
+}
+
+/* Geschlagene Figur rutscht in die Leiste */
+.ch-fly {
+  position: absolute;
+  z-index: 15;
+  left: var(--x1);
+  top: var(--y1);
+  translate: -50% -50%;
+  font-size: 9cqw;
+  line-height: 1;
+  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'DejaVu Sans', serif;
+  paint-order: stroke fill;
+  pointer-events: none;
+  animation: ch-fly 0.75s cubic-bezier(0.5, 0, 0.3, 1) both;
+}
+
+@keyframes ch-fly {
+  0% {
+    left: var(--x0);
+    top: var(--y0);
+    scale: 1;
+    opacity: 1;
+  }
+  25% {
+    left: var(--x0);
+    top: var(--y0);
+    scale: 1.35;
+    rotate: -12deg;
+  }
+  100% {
+    left: var(--x1);
+    top: var(--y1);
+    scale: 0.45;
+    rotate: 15deg;
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-arrow,
+  .ch-check-pill {
+    animation: none;
+  }
 }
 
 .ch-board .bub-cell {
@@ -223,9 +479,9 @@
 /* Warnung und Fesselung */
 .ch-warning-banner {
   position: absolute;
-  left: 0.5rem;
-  right: 0.5rem;
-  bottom: 2.6rem;
+  left: 0;
+  right: 0;
+  top: 0;
   z-index: 20;
   display: flex;
   align-items: center;
@@ -236,7 +492,7 @@
   border: 1px solid var(--color-warning);
   color: var(--color-ink);
   box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
-  font-size: max(0.75rem, 3.2cqw);
+  font-size: clamp(0.75rem, 2.4cqw, 0.9rem);
   line-height: 1.3;
   animation: ch-banner-in 0.2s ease-out;
 }

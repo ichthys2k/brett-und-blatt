@@ -100,7 +100,10 @@ Zusätzlich gibt es den Zufallsbot zum Testen. Gemessen auf Cloudflare (Gratis-T
 - **Hervorhebungen:** letzter Zug, König im Schach, Tipp-Zug.
 - **Schach- & Fesselungswarnung:** Versucht man eine gefesselte Figur zu bewegen oder den König ins Schach zu ziehen, erklärt ein kurzer Warnhinweis mit Feldsymbolen den Grund. Auf dem Brett werden die gefesselte Figur, der eigene König und die gegnerische Angreiferfigur farblich hervorgehoben.
 - **Leisten mit geschlagenen Figuren** über und unter dem Brett, dazu der Materialvorsprung (+3 usw.). Umgewandelte Bauern werden dabei richtig verrechnet.
-- **Partieverlauf** in deutscher Notation (S, L, T, D statt N, B, R, Q) zum Aufklappen.
+- **Chronik (📜)** in deutscher Notation (S, L, T, D statt N, B, R, Q), mit geschlagenen Figuren als Zeichen. Ein Zug zeigt die Stellung danach (Rückblick mit ◀ ▶, Pfeiltasten, Esc). Geschlagene Figuren fliegen in die Leiste am Brettrand.
+- **Schachanzeige (28.10.2026):** König rot, Angreifer rot umrandet, gestrichelter Pfeil vom Angreifer zum König, dazu „Schach! Dein König wird vom Läufer auf b4 angegriffen.“ unter dem Brett und „Schach durch Läufer!“ im Spieler-Chip.
+- **Vorziehen:** Wer nicht am Zug ist, merkt einen Zug vor (blau gestrichelt); er wird ausgeführt, sobald man dran ist, oder mit Hinweis verworfen. Nur mit festem Platz (gegen den Bot, online).
+- **Warnhinweise** liegen über der Leiste unter dem Brett, nicht mehr über den Feldern.
 - **Brett drehen** je nach Option. Online steht die eigene Farbe immer unten.
 
 ## Hot-Seat und Online

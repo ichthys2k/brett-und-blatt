@@ -33,6 +33,11 @@ export interface LogEntry {
   color: Color | null;
   text: string;
   points?: number;
+  /** Die Aktion, die diesen Eintrag ausgelöst hat – damit lässt sich jede Stellung nachspielen (fehlt in älteren Spielständen). */
+  action?: FourChessAction;
+  /** Bei Zügen: die gezogene Figur und – wenn geschlagen wurde – die geschlagene Figur. */
+  piece?: PieceType;
+  captured?: { c: Color; t: PieceType; dead?: boolean };
 }
 
 export interface GameResult {
@@ -489,7 +494,8 @@ function applyMove(state: FourChessState, a: Extract<FourChessAction, { t: 'm' }
   state.lastMoved[color] = state.ply++;
   state.lastMove = { from: m.from, to: m.to, color };
 
-  const entry: LogEntry = { type: 'move', color, text: moveText(piece, m, victim, promoType), points: 0 };
+  const entry: LogEntry = { type: 'move', color, text: moveText(piece, m, victim, promoType), points: 0, action: { ...a }, piece: piece.t };
+  if (victim) entry.captured = victim.d ? { c: victim.c, t: victim.t, dead: true } : { c: victim.c, t: victim.t };
   state.log.push(entry);
   if (victim && !victim.d) entry.points = (entry.points ?? 0) + (victim.t === 'K' ? POINTS.K : victim.pr ? 1 : POINTS[victim.t]);
 
@@ -523,7 +529,7 @@ function applyResign(state: FourChessState, color: Color, reason: 'resign' | 'ti
   if (!state.active[color]) return false;
   const wasTurn = state.turn === color;
   eliminate(state, color, reason);
-  logEvent(state, color, reason === 'time' ? `${COLOR_NAMES[color]} hat keine Zeit mehr` : `${COLOR_NAMES[color]} gibt auf`);
+  logEvent(state, color, reason === 'time' ? `${COLOR_NAMES[color]} hat keine Zeit mehr` : `${COLOR_NAMES[color]} gibt auf`, reason === 'time' ? { t: 'resign', p: color, time: true } : { t: 'resign', p: color });
   if (state.mode === 'teams') {
     state.result = { reason, winners: (COLORS as Color[]).filter((c) => TEAM_OF[c] !== TEAM_OF[color]), loser: color };
   } else if (wasTurn) {
@@ -550,7 +556,7 @@ function applyClaim(state: FourChessState, color: Color): boolean {
   const other = activeColors(state).find((c) => c !== color);
   if (!other) return false;
   state.scores[other] += 20;
-  logEvent(state, color, `${COLOR_NAMES[color]} beansprucht den Sieg (+20 für ${COLOR_NAMES[other]})`);
+  logEvent(state, color, `${COLOR_NAMES[color]} beansprucht den Sieg (+20 für ${COLOR_NAMES[other]})`, { t: 'claim', p: color });
   finishFfa(state, 'claim');
   return true;
 }
@@ -693,8 +699,8 @@ function finishFfa(state: FourChessState, reason: string): void {
   state.result = { reason, winners: eligible.filter((c) => state.scores[c] === top), ranking };
 }
 
-function logEvent(state: FourChessState, color: Color | null, text: string): void {
-  state.log.push({ type: 'event', color, text });
+function logEvent(state: FourChessState, color: Color | null, text: string, action?: FourChessAction): void {
+  state.log.push(action ? { type: 'event', color, text, action } : { type: 'event', color, text });
 }
 
 function positionKey(state: FourChessState): string {
