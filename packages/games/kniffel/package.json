@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "AGPL-3.0-or-later",
-  "description": "Kniffel – das Lehrbeispiel und die Vorlage für neue Spiele",
+  "description": "Würfelblock – Würfelspiel mit Wertungstafel",
   "exports": {
     ".": "./src/index.ts",
     "./meta": "./src/meta.ts",

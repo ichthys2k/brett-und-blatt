@@ -1,5 +1,7 @@
 # Kniffel
 
+> **Name:** Seit 28.10.2026 heißt das Spiel in der App **Würfelblock** (Kategorie „Fünferpasch“ statt „Kniffel“, Bot „Würfelkönig“), weil „Kniffel“ eine Marke ist. Die id `kniffel` bleibt.
+
 | Steckbrief | |
 |---|---|
 | Spieler | 1–6 |

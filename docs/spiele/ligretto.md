@@ -1,5 +1,7 @@
 # Ligretto
 
+> **Name:** Seit 28.10.2026 heißt das Spiel in der App **Kartenblitz** (Blitzstapel statt Ligretto-Stapel), weil „Ligretto“ eine Marke ist. Die id `ligretto` bleibt.
+
 *Echtzeit-Kartenspiel für 2–8 Spieler – alle legen gleichzeitig.*
 
 ## Überblick

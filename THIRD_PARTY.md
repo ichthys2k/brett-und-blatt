@@ -62,3 +62,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## german-wordlist
+
+Wörterbuch für Wortgitter (`packages/games/scrabble/src/dict/dawg.ts`, gebaut mit `packages/games/scrabble/scripts/build-dict.mjs`): „german-wordlist“, die Wortliste des Spiels Tanglet. https://github.com/enz/german-wordlist (Stand Commit `1071d87`, 13.09.2026). Großgeschrieben, ß als SS, nur Wörter aus 2 bis 15 Buchstaben A–Z und ÄÖÜ.
+
+Lizenz: CC0 1.0 Universal (gemeinfrei, keine Bedingungen). https://creativecommons.org/publicdomain/zero/1.0/

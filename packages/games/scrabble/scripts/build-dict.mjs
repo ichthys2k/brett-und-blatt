@@ -1,79 +1,103 @@
 #!/usr/bin/env node
-import { writeFileSync, mkdirSync } from 'node:fs';
+/**
+ * Baut das Wörterbuch für Wortgitter als minimierten Wortgraphen (DAWG).
+ *
+ * Quelle: „german-wordlist“ von Tanglet (https://github.com/enz/german-wordlist), CC0 1.0.
+ * Aufruf: node scripts/build-dict.mjs <Pfad zur Datei „words“>
+ *
+ * Regeln: Großschreibung, ß → SS, nur A–Z und ÄÖÜ, 2 bis 15 Buchstaben.
+ * Ausgabe: src/dict/dawg.ts mit dem Graphen als Base64-Text.
+ *
+ * Format: ein Uint32 je Kante, Kanten eines Knotens hintereinander.
+ *   Bits 0–4   Buchstabe (Index in ALPHABET)
+ *   Bit 5      letzte Kante dieses Knotens
+ *   Bit 6      Wortende nach dieser Kante
+ *   Bits 7–31  Index der ersten Kante des Zielknotens (0 = Knoten ohne Kanten)
+ * Der Wurzelknoten beginnt bei Index 1 (Index 0 ist ein Platzhalter).
+ */
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-mkdirSync(join(root, 'src/dict'), { recursive: true });
+const source = process.argv[2];
+if (!source) {
+  console.error('Aufruf: node scripts/build-dict.mjs <Pfad zur Datei „words“>');
+  process.exit(1);
+}
 
 const words = new Set();
+for (const line of readFileSync(source, 'utf8').split('\n')) {
+  const word = line.trim().toUpperCase().replaceAll('ß', 'SS').replaceAll('ẞ', 'SS');
+  if (/^[A-ZÄÖÜ]{2,15}$/.test(word)) words.add(word);
+}
+const sorted = [...words].sort();
 
-const basic = [
-  'AB', 'AN', 'AS', 'AT', 'AU', 'DA', 'DE', 'DO', 'DU', 'EH', 'EI', 'EN', 'ER', 'ES',
-  'HA', 'HE', 'HI', 'HO', 'ICH', 'IM', 'IN', 'IS', 'IST', 'JA', 'JE', 'KO', 'LA', 'LE', 'LO', 'LU',
-  'MA', 'ME', 'MI', 'MO', 'MU', 'NA', 'NE', 'NI', 'NO', 'NU', 'OB', 'OH', 'PA', 'PE', 'PI', 'PO',
-  'RE', 'SA', 'SE', 'SI', 'SO', 'ST', 'SU', 'TA', 'TE', 'TI', 'TO', 'TU', 'UM', 'UN', 'UR', 'US',
-  'VE', 'VO', 'VON', 'VOR', 'WA', 'WE', 'WO', 'ZU',
-  'ACH', 'ACT', 'AHA', 'AKT', 'ALL', 'ALT', 'AMT', 'AND', 'ARM', 'ART', 'ASS', 'AST', 'AUF', 'AUS',
-  'BAD', 'BAH', 'BAN', 'BAR', 'BAU', 'BEI', 'BIN', 'BIS', 'BIT', 'BOT', 'BOX', 'BRI', 'BUB', 'BUS',
-  'BUT', 'CAP', 'CAR', 'CHI', 'COD', 'COL', 'COM', 'CON', 'COP', 'CUP', 'CUT', 'DAB', 'DACH',
-  'DAM', 'DAN', 'DAR', 'DAS', 'DAT', 'DAU', 'DECK', 'DEIN', 'DEL', 'DEM', 'DEN', 'DER', 'DES',
-  'DET', 'DICH', 'DIE', 'DIES', 'DIN', 'DIR', 'DIS', 'DOC', 'DOG', 'DOM', 'DON', 'DOS', 'DOT',
-  'DUAL', 'DUCH', 'DUFT', 'DUMM', 'DURCH', 'EBEN', 'ECKE', 'EDEL', 'EHER', 'EHRE', 'EICH', 'EIER',
-  'EIGEN', 'EIL', 'EIN', 'EINE', 'EINER', 'EINES', 'EINS', 'EIS', 'ELF', 'END', 'ENDE', 'ENG',
-  'ENGE', 'ERDE', 'ERST', 'ESSE', 'ETWA', 'EUCH', 'EUER', 'EULE', 'EURO', 'EXAM', 'FACH', 'FAHR',
-  'FALL', 'FALS', 'FAN', 'FANG', 'FAR', 'FAST', 'FAUL', 'FAX', 'FEHL', 'FEIN', 'FELD', 'FELL',
-  'FERN', 'FEST', 'FEUER', 'FIEL', 'FILM', 'FIND', 'FISCH', 'FLACH', 'FLAG', 'FLIEG', 'FLUG',
-  'FLUSS', 'FOLGE', 'FORM', 'FORST', 'FORT', 'FRAGE', 'FRAU', 'FREI', 'FREMD', 'FREUND', 'FRIED',
-  'FROH', 'FRÜH', 'FUCHS', 'FUHR', 'FÜNF', 'FÜR', 'FUSS', 'GAB', 'GANG', 'GANZ', 'GAR', 'GART',
-  'GARTEN', 'GAST', 'GEB', 'GEBEN', 'GEGEN', 'GEH', 'GEHEN', 'GEIST', 'GELD', 'GELE', 'GELT',
-  'GENAU', 'GERADE', 'GERN', 'GESETZ', 'GIB', 'GIBT', 'GILT', 'GING', 'GLAS', 'GLAUB', 'GLEICH',
-  'GLÜCK', 'GOLD', 'GOTT', 'GRAB', 'GRAD', 'GRAF', 'GRAS', 'GRAU', 'GREIF', 'GRENZ', 'GROSS',
-  'GRÜN', 'GUT', 'HAAR', 'HAB', 'HABEN', 'HALB', 'HALT', 'HAND', 'HART', 'HAUS', 'HEIM', 'HEISS',
-  'HELD', 'HELF', 'HELL', 'HELM', 'HER', 'HERR', 'HERZ', 'HEUTE', 'HILF', 'HIN', 'HINTER', 'HOCH',
-  'HOFF', 'HOHE', 'HOL', 'HOLZ', 'HÖR', 'HUND', 'HUT', 'IDEAL', 'IHM', 'IHN', 'IHRE', 'IMMER',
-  'INNEN', 'JAHR', 'JEDE', 'JEDER', 'JETZT', 'JUNG', 'JUNGE', 'KALT', 'KAM', 'KAMPF', 'KANN',
-  'KARTE', 'KATZE', 'KAUF', 'KEIN', 'KENN', 'KERN', 'KIND', 'KINO', 'KIRCHE', 'KLAR', 'KLEIN',
-  'KLEID', 'KLUG', 'KOCH', 'KÖNIG', 'KOPF', 'KRAFT', 'KRANK', 'KREIS', 'KREUZ', 'KRIEG', 'KUH',
-  'KUNST', 'KURZ', 'LACH', 'LADEN', 'LAGE', 'LAND', 'LANG', 'LASS', 'LAUF', 'LAUT', 'LEBEN',
-  'LEDER', 'LEER', 'LEGE', 'LEHR', 'LEICHT', 'LEID', 'LEIN', 'LEIT', 'LERN', 'LESE', 'LETZT',
-  'LEUTE', 'LICHT', 'LIEB', 'LIEGT', 'LIED', 'LIEF', 'LIES', 'LINK', 'LOCH', 'LOHN', 'LOS', 'LUFT',
-  'LUST', 'MACH', 'MACHE', 'MAL', 'MANN', 'MARK', 'MAUS', 'MEER', 'MEHR', 'MEIN', 'MELD', 'MENSCH',
-  'MESS', 'MICH', 'MILCH', 'MIT', 'MITTE', 'MOCHT', 'MOND', 'MORGEN', 'MÜDE', 'MUND', 'MUSIK',
-  'MUSS', 'MUT', 'NACH', 'NAH', 'NAME', 'NATUR', 'NEBEL', 'NEIN', 'NETZ', 'NEU', 'NEUN', 'NICHT',
-  'NIE', 'NIMM', 'NOCH', 'NORD', 'NOT', 'NUN', 'NUR', 'OBEN', 'OBER', 'OBST', 'ODER', 'OFEN',
-  'OFFEN', 'OFT', 'OHNE', 'OHR', 'ONKEL', 'ORT', 'OST', 'PAPIER', 'PARK', 'PASS', 'PAUSE', 'PFERD',
-  'PFUND', 'PILZ', 'PLATZ', 'POLIT', 'POST', 'PREIS', 'PRINZ', 'PROB', 'PROF', 'PUNKT', 'PUTZ',
-  'QUER', 'RAD', 'RAHMEN', 'RAND', 'RAT', 'RAUB', 'RAUCH', 'RAUM', 'RECHN', 'RECHT', 'RED', 'REGEN',
-  'REICH', 'REIH', 'REIN', 'REIS', 'REIT', 'REIZ', 'RENN', 'REST', 'RICH', 'RIECH', 'RING',
-  'ROCK', 'ROHR', 'ROLL', 'ROS', 'ROSA', 'ROST', 'ROT', 'RUHE', 'RUF', 'RUND', 'RUNDE', 'RÜCK',
-  'SACH', 'SAFT', 'SAG', 'SAGE', 'SAH', 'SALZ', 'SAND', 'SANG', 'SANK', 'SATZ', 'SAU', 'SAUER',
-  'SCH', 'SCHAD', 'SCHAFF', 'SCHAL', 'SCHAU', 'SCHEIN', 'SCHIFF', 'SCHILD', 'SCHLAF', 'SCHLAG',
-  'SCHLUSS', 'SCHON', 'SCHREIB', 'SCHUH', 'SCHUL', 'SCHULE', 'SCHUTZ', 'SCHWARZ', 'SCHWEIN',
-  'SCHWER', 'SCHWIM', 'SECHS', 'SEE', 'SEH', 'SEHE', 'SEHR', 'SEI', 'SEID', 'SEIN', 'SEINE',
-  'SEIT', 'SEITE', 'SELB', 'SEND', 'SETZ', 'SICH', 'SIE', 'SIEB', 'SIEBEN', 'SIEG', 'SIEH',
-  'SIEHT', 'SIN', 'SING', 'SITZ', 'SOFA', 'SOHN', 'SOLL', 'SOMMER', 'SONN', 'SONNE', 'SONST',
-  'SORG', 'SOWIE', 'SPAZ', 'SPEI', 'SPIEL', 'SPIN', 'SPITZ', 'SPORT', 'SPRACH', 'SPRING', 'SPRUCH',
-  'STAAT', 'STADT', 'STAHL', 'STALL', 'STAMM', 'STAND', 'STARK', 'STATT', 'STEH', 'STEHT',
-  'STEIN', 'STELL', 'STERN', 'STICH', 'STIEG', 'STILL', 'STOCK', 'STOFF', 'STOLZ', 'STOP',
-  'STOR', 'STRAND', 'STRASS', 'STROM', 'STÜCK', 'STUND', 'STURM', 'SUCH', 'SÜD', 'SÜSS', 'TAG',
-  'TAFEL', 'TANZ', 'TASCHE', 'TAUB', 'TEIL', 'TELE', 'TELL', 'TEST', 'TEUF', 'TIEF', 'TIER',
-  'TISCH', 'TOCHTER', 'TOD', 'TOLL', 'TON', 'TOPF', 'TOR', 'TOT', 'TRA', 'TRAG', 'TRAUM',
-  'TREFF', 'TREIB', 'TRET', 'TREU', 'TRINK', 'TROCK', 'TRUG', 'TUCH', 'TUN', 'TURM', 'ÜBER',
-  'UHR', 'UM', 'UND', 'UNS', 'UNT', 'UNTER', 'URLAUB', 'VATER', 'VERB', 'VERD', 'VERG', 'VERL',
-  'VERM', 'VERS', 'VERT', 'VIEL', 'VIER', 'VOGEL', 'VOLL', 'VOM', 'VON', 'VOR', 'WACH', 'WAGEN',
-  'WAHL', 'WAHR', 'WALD', 'WAND', 'WANN', 'WAR', 'WARE', 'WARM', 'WARN', 'WARUM', 'WAS', 'WASCH',
-  'WASSER', 'WEG', 'WEH', 'WEHR', 'WEIB', 'WEICH', 'WEIL', 'WEIN', 'WEIS', 'WEISS', 'WEIT',
-  'WELCH', 'WELT', 'WEN', 'WEND', 'WENIG', 'WENN', 'WER', 'WERD', 'WERDE', 'WERF', 'WERK',
-  'WERT', 'WESEN', 'WETT', 'WETTER', 'WIEDER', 'WIE', 'WILD', 'WILL', 'WIND', 'WINTER', 'WIR',
-  'WIRD', 'WIRK', 'WIRKLICH', 'WIRT', 'WISSEN', 'WITZ', 'WO', 'WOCHE', 'WOHL', 'WOHN', 'WOLF',
-  'WOLL', 'WORT', 'WOZU', 'WUND', 'WUNSCH', 'WURD', 'WURDE', 'WURF', 'WURM', 'ZAHN', 'ZEICH',
-  'ZEIG', 'ZEIT', 'ZELT', 'ZEUG', 'ZIEH', 'ZIEL', 'ZIMM', 'ZIMMER', 'ZOG', 'ZOLL', 'ZORN',
-  'ZU', 'ZUG', 'ZUM', 'ZUR', 'ZURÜCK', 'ZUS', 'ZUSAM', 'ZWEI', 'ZWERG', 'ZWISCHEN',
-];
+// Präfixbaum aufbauen und dabei von unten minimieren (Daciuk et al.).
+const register = new Map();
+let nextId = 0;
+const newNode = () => ({ id: nextId++, end: false, edges: [] }); // edges: [letter, node]
+const signature = (node) => `${node.end ? 1 : 0}|${node.edges.map(([l, n]) => `${l}:${n.id}`).join(',')}`;
+function minimize(node, downTo) {
+  // Ersetzt Kinder ab Tiefe downTo des letzten Pfads durch registrierte Gleiche.
+  while (path.length > downTo) {
+    const [parent, letter, child] = path.pop();
+    const sig = signature(child);
+    const existing = register.get(sig);
+    if (existing) parent.edges[parent.edges.length - 1] = [letter, existing];
+    else register.set(sig, child);
+  }
+}
+const rootNode = newNode();
+let path = []; // [parent, letter, child]
+let previous = '';
+for (const word of sorted) {
+  let common = 0;
+  while (common < word.length && common < previous.length && word[common] === previous[common]) common++;
+  minimize(rootNode, common);
+  let node = path.length ? path[path.length - 1][2] : rootNode;
+  for (let i = common; i < word.length; i++) {
+    const child = newNode();
+    node.edges.push([word[i], child]);
+    path.push([node, word[i], child]);
+    node = child;
+  }
+  node.end = true;
+  previous = word;
+}
+minimize(rootNode, 0);
 
-for (const w of basic) words.add(w);
+// Serialisieren: jeder Knoten mit Kanten bekommt einen Block; Wortende steht an der Kante.
+const offsets = new Map();
+const order = [];
+const visit = (node) => {
+  if (offsets.has(node) || node.edges.length === 0) return;
+  offsets.set(node, -1);
+  order.push(node);
+  for (const [, child] of node.edges) visit(child);
+};
+visit(rootNode);
+let cursor = 1;
+for (const node of order) {
+  offsets.set(node, cursor);
+  cursor += node.edges.length;
+}
+if (cursor >= 2 ** 25) throw new Error('Wörterbuch zu groß für das Format');
+const data = new Uint32Array(cursor);
+for (const node of order) {
+  const start = offsets.get(node);
+  node.edges.forEach(([letter, child], i) => {
+    const target = child.edges.length ? offsets.get(child) : 0;
+    data[start + i] =
+      ALPHABET.indexOf(letter) | (i === node.edges.length - 1 ? 1 << 5 : 0) | (child.end ? 1 << 6 : 0) | (target << 7);
+  });
+}
+if (offsets.get(rootNode) !== 1) throw new Error('Wurzel muss bei 1 beginnen');
 
-const wordArray = Array.from(words).filter(w => w.length >= 2 && w.length <= 15);
-writeFileSync(join(root, 'src/dict/words-de.json'), JSON.stringify(wordArray.sort()));
-console.log(`Wrote ${wordArray.length} words`);
+const base64 = Buffer.from(data.buffer).toString('base64');
+writeFileSync(
+  join(root, 'src/dict/dawg.ts'),
+  `// Erzeugt von scripts/build-dict.mjs – nicht von Hand ändern.\n// Quelle: german-wordlist (https://github.com/enz/german-wordlist), CC0 1.0.\nexport const WORD_COUNT = ${sorted.length};\nexport const DAWG_BASE64 =\n  '${base64}';\n`,
+);
+console.log(`${sorted.length} Wörter, ${cursor} Kanten, ${(base64.length / 1024 / 1024).toFixed(2)} MB Base64`);

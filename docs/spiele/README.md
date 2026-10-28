@@ -44,8 +44,8 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Wort-Salat](wort-salat.md) | 1–30 | gleichzeitig, verdeckt | Buchstabenkacheln, Stammwort-Katalog, Exklusiv-Bonus | M | M | S | 7 / Familie & Mathe |
 | [Bibel-Quiz](bibelquiz.md) | 1–30 | gleichzeitig | Emoji-Quiz, simultane Eingabe, BibelServer | S | M | S | 7 / Familie |
 | [Gomoku](gomoku.md) | 2 | offen | Gitterbrett 15×15 | S | S | M | Nachtrag |
-| [Ligretto](ligretto.md) | 2–8 | gleichzeitig (Echtzeit) | eigene Zahlenkarten, Mittelstapel, Reaktions-Bot mit Bedenkpause | M | M | S | Nachtrag |
-| [Kniffel](kniffel.md) | 1–6 | offen | Würfel, Wertungstafel | S | M | S | Nachtrag |
+| [Kartenblitz](ligretto.md) (früher Ligretto) | 2–8 | gleichzeitig (Echtzeit) | eigene Zahlenkarten, Mittelstapel, Reaktions-Bot mit Bedenkpause | M | M | S | Nachtrag |
+| [Würfelblock](kniffel.md) (früher Kniffel) | 1–6 | offen | Würfel, Wertungstafel | S | M | S | Nachtrag |
 
 ## Gemeinsame Bausteine
 

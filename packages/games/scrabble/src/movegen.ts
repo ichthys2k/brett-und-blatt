@@ -1,5 +1,5 @@
 import { BOARD_SIZE, CENTER } from './board';
-import { trieRoot, type TrieNode } from './dict';
+import { forEachEdge, ROOT, step, type DictNode } from './dict';
 import type { Letter, Tile } from './letters';
 import type { BoardCell, PlacedTile } from './rules';
 
@@ -24,16 +24,22 @@ function crossChecks(grid: Grid): (Set<string> | null)[] {
       let down = '';
       for (let rr = r + 1; rr < N && grid[rr * N + c]; rr++) down += grid[rr * N + c];
       if (!up && !down) continue;
-      // Präfix „up“ im Baum suchen, dann jeden Buchstaben samt „down“ prüfen.
+      // Präfix „up“ im Graphen suchen, dann jeden Buchstaben samt „down“ prüfen.
       const allowed = new Set<string>();
-      let node: TrieNode | undefined = trieRoot;
-      for (const ch of up) node = node?.next.get(ch);
-      if (node) {
-        for (const [ch, child] of node.next) {
-          let n: TrieNode | undefined = child;
-          for (const d of down) n = n?.next.get(d);
-          if (n?.end) allowed.add(ch);
-        }
+      let node: DictNode | null = ROOT;
+      for (const ch of up) node = node === null ? null : (step(node, ch)?.node ?? null);
+      if (node !== null) {
+        forEachEdge(node, (ch, child, endHere) => {
+          let n: DictNode = child;
+          let end = endHere;
+          for (const d of down) {
+            const next = step(n, d);
+            if (!next) return;
+            n = next.node;
+            end = next.end;
+          }
+          if (end) allowed.add(ch);
+        });
       }
       checks[r * N + c] = allowed;
     }
@@ -62,53 +68,53 @@ function generateRows(grid: Grid, rack: Tile[], emptyBoard: boolean, emit: (row:
       counts.set(tile, counts.get(tile)! + 1);
     };
 
-    const extendRight = (node: TrieNode, col: number, anchor: number) => {
+    // `end`: Endet mit dem zuletzt gelegten Buchstaben ein Wort?
+    const extendRight = (node: DictNode, end: boolean, col: number, anchor: number) => {
       const here = at(r, col);
       if (col >= N || !here) {
-        if (node.end && col > anchor && placed.length > 0) emit(r, placed.map((p) => ({ ...p })));
+        if (end && col > anchor && placed.length > 0) emit(r, placed.map((p) => ({ ...p })));
         if (col >= N) return;
         const allowed = checks[r * N + col];
-        for (const [ch, child] of node.next) {
-          if (allowed && !allowed.has(ch)) continue;
+        forEachEdge(node, (ch, child, childEnd) => {
+          if (allowed && !allowed.has(ch)) return;
           if ((counts.get(ch) ?? 0) > 0) {
             use(ch);
             placed.push({ col, letter: ch as Letter, blank: false });
-            extendRight(child, col + 1, anchor);
+            extendRight(child, childEnd, col + 1, anchor);
             placed.pop();
             unuse(ch);
           }
           if ((counts.get('?') ?? 0) > 0) {
             use('?');
             placed.push({ col, letter: ch as Letter, blank: true });
-            extendRight(child, col + 1, anchor);
+            extendRight(child, childEnd, col + 1, anchor);
             placed.pop();
             unuse('?');
           }
-        }
+        });
       } else {
-        const child = node.next.get(here);
-        if (child) extendRight(child, col + 1, anchor);
+        const next = step(node, here);
+        if (next) extendRight(next.node, next.end, col + 1, anchor);
       }
     };
 
     // Linke Teile aus dem Bänkchen auf freie Felder ohne Nachbarn links vom Anker.
-    const leftPart = (node: TrieNode, limit: number, anchor: number, length: number) => {
-      // Die bisher gelegten linken Steine liegen auf anchor-length … anchor-1.
-      extendRight(node, anchor, anchor);
+    const leftPart = (node: DictNode, end: boolean, limit: number, anchor: number) => {
+      extendRight(node, end, anchor, anchor);
       if (limit <= 0) return;
-      for (const [ch, child] of node.next) {
+      forEachEdge(node, (ch, child, childEnd) => {
         for (const tile of [ch, '?']) {
           if ((counts.get(tile) ?? 0) <= 0) continue;
           use(tile);
           // Vorne einfügen: alle bisherigen linken Steine rücken eins nach links.
           for (const p of placed) p.col -= 1;
           placed.push({ col: anchor - 1, letter: ch as Letter, blank: tile === '?' });
-          leftPart(child, limit - 1, anchor, length + 1);
+          leftPart(child, childEnd, limit - 1, anchor);
           placed.pop();
           for (const p of placed) p.col += 1;
           unuse(tile);
         }
-      }
+      });
     };
 
     for (let c = 0; c < N; c++) {
@@ -117,13 +123,18 @@ function generateRows(grid: Grid, rack: Tile[], emptyBoard: boolean, emit: (row:
         // Links liegt schon ein Wortanfang: der ist fest.
         let start = c - 1;
         while (at(r, start - 1)) start--;
-        let node: TrieNode | undefined = trieRoot;
-        for (let k = start; k < c; k++) node = node?.next.get(at(r, k)!);
-        if (node) extendRight(node, c, c);
+        let node: DictNode | null = ROOT;
+        let end = false;
+        for (let k = start; k < c && node !== null; k++) {
+          const next = step(node, at(r, k)!);
+          node = next?.node ?? null;
+          end = next?.end ?? false;
+        }
+        if (node !== null) extendRight(node, end, c, c);
       } else {
         let limit = 0;
         while (c - limit - 1 >= 0 && !at(r, c - limit - 1) && !isAnchor(c - limit - 1)) limit++;
-        leftPart(trieRoot, Math.min(limit, rack.length - 1), c, 0);
+        leftPart(ROOT, false, Math.min(limit, rack.length - 1), c);
       }
     }
   }

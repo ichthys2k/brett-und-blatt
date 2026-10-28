@@ -174,7 +174,7 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames }: BoardPro
             <span className="lg-other-name">{seatNames[seat] ?? `Spieler ${seat + 1}`}</span>
             <span className="lg-other-cards">
               {p.ligrettoTop ? <CardFace card={p.ligrettoTop} small /> : <CardBack small />}
-              <span className="lg-other-count" title="Karten im Ligretto-Stapel">
+              <span className="lg-other-count" title="Karten im Blitzstapel">
                 {p.ligrettoCount}
               </span>
             </span>
@@ -220,8 +220,8 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames }: BoardPro
           </div>
           <div className="lg-zone">
             <div className="lg-group">
-              <span className="lg-label">Ligretto</span>
-              {handCard({ from: 'ligretto' }, mine.ligrettoTop, { count: mine.ligrettoCount, label: 'Ligretto-Stapel' })}
+              <span className="lg-label">Blitz</span>
+              {handCard({ from: 'ligretto' }, mine.ligrettoTop, { count: mine.ligrettoCount, label: 'Blitzstapel' })}
             </div>
             <div className="lg-group lg-row-group">
               <span className="lg-label">Reihe</span>
@@ -293,14 +293,14 @@ function RoundOverlay({ view, seatNames, me, canReady, onReady }: { view: Ligret
     <div className="lg-overlay">
       <div className="lg-overlay-box">
         <p className="lg-overlay-title">
-          {last?.endedBy !== null && last?.endedBy !== undefined ? `Ligretto! ${name(last.endedBy)} ist fertig.` : 'Runde vorbei'}
+          {last?.endedBy !== null && last?.endedBy !== undefined ? `Blitz! ${name(last.endedBy)} ist fertig.` : 'Runde vorbei'}
         </p>
         <table className="lg-scores">
           <thead>
             <tr>
               <th />
               <th title="Karten in der Mitte">+</th>
-              <th title="Karten im Ligretto-Stapel (×2)">−</th>
+              <th title="Karten im Blitzstapel (×2)">−</th>
               <th>Runde {last?.round}</th>
               <th>Gesamt</th>
             </tr>

@@ -43,7 +43,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   fullHouse: 'Full House',
   smallStraight: 'Kleine Straße',
   largeStraight: 'Große Straße',
-  kniffel: 'Kniffel',
+  kniffel: 'Fünferpasch',
   chance: 'Chance',
 };
 

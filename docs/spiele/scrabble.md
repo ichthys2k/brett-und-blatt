@@ -199,9 +199,9 @@ Die erste Fassung war nicht spielbar (Oberfläche ohne Funktion, Startfeld (4,4)
 
 - `src/rules.ts`: `checkPlay` prüft eine Legung (eine Linie, lückenlos, über H8 bzw. angelegt, alle Wörter im Wörterbuch) und wertet sie (Prämien nur für neue Steine, Joker 0, 50 Punkte für 7 Steine). Tauschen ab 7 Steinen im Beutel (Beutel wird mit dem Zufallsstrom im Zustand gemischt), Passen, Ende bei leerem Beutel und leerem Bänkchen oder nach max(6, 2 × Plätze) Zügen ohne Punkte; Reststeine werden verrechnet (`final`). Sicht verdeckt fremde Bänkchen, Beutel und Zufallsstrom.
 - `src/movegen.ts`: Zuggenerator nach Appel & Jacobson mit Querprüfungen; senkrechte Legungen auf dem gespiegelten Brett. `legalMoves` liefert alle Legungen, das ganze Bänkchen zum Tauschen und Passen; beliebige Tauschmengen erlaubt `isLegal`.
-- `src/dict.ts`: Präfixbaum statt DAWG. Wörter ohne Selbstlaut fallen weg, Wörter aus zwei Buchstaben nur nach einer kleinen Liste.
+- `src/dict.ts`: minimierter Wortgraph (DAWG, `src/dict/dawg.ts`, 257 000 Kanten, 1,3 MB als Base64, erst bei Bedarf entpackt), gebaut von `scripts/build-dict.mjs` aus der „german-wordlist“ von Tanglet (CC0, rund 590 000 Wortformen nach Scrabble-Regeln, ß als SS).
 - `src/bots.ts`: „Wortmeister“ – leicht ein mittelmäßiges Wort (30.–70. Perzentil), mittel das punktstärkste, schwer Punkte plus Bewertung des Rests (Joker, S, E behalten; Dubletten, Q ohne U meiden; Selbstlaute ausgewogen) und Tauschen bei schwachem Zug.
 - `src/ui/`: Brett mit Prämienfeldern, Steine antippen oder ziehen (`usePointerDrag`), Joker-Buchstabenwahl, Vorschau mit Wörtern und Punkten bzw. Fehlergrund, Mischen, Tauschen, Passen, Tipp als Geisterbuchstaben.
 - Optionen: Bänkchen 7/8 Steine, Prämie für 7 Steine an/aus. Englisches Wörterbuch, Anfechten und Joker-Tausch sind gestrichen.
 
-**Noch offen (Etappe 4):** Das Wörterbuch `src/dict/words-de.json` hat unklare Herkunft und Lizenz und enthält Namen und englische Wörter. Ersatz durch eine frei lizenzierte Liste (z. B. aus igerman98) mit Quelle in `THIRD_PARTY.md`.
+**Wörterbuch (Etappe 4, 28.10.2026):** Die frühere Liste `words-de.json` (unklare Herkunft, Namen und Englisches) ist ersetzt; Quelle und Lizenz stehen in `THIRD_PARTY.md`. Zugsuche mit zwei Jokern dauert im schlimmsten Fall knapp eine Sekunde.

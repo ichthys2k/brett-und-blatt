@@ -12,7 +12,7 @@ import { UPPER_CATEGORIES, calculateScore, type Category, type DieValue, type Kn
  */
 export const kniffelBot: BotDefinition<KniffelState, KniffelMove> = {
   id: 'kniffel',
-  name: 'Kniffel-Bot',
+  name: 'Würfelkönig',
   levels: ['easy', 'medium', 'hard'],
   chooseMove(ctx: BotContext<KniffelState, KniffelMove, KniffelState>): KniffelMove {
     const { view, rng, level } = ctx;
