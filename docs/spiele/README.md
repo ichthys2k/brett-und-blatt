@@ -32,7 +32,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Eins!](uno.md) | 2–10 | verdeckt | Karten, Ablage, Varianten-Decks, Aktionen | M | M | M | 7 |
 | [Mau-Mau](mau-mau.md) | 2–5 | verdeckt | Karten, Ablage, 32er-Blatt, Sonderregeln | S | M | M | 7 (Nachtrag) |
 | [Dame](dame.md) | 2 | offen | Gitterbrett, Drag & Drop, Negamax | M | M | M | 7 |
-| [Binokel](binokel.md) | 3–4 | verdeckt | Stich-Kern, Serie, Kartenblätter, Meldebilder | L | L | XL | 7 |
+| [Binokel](binokel.md) (unfertig) | 3–4 | verdeckt | Stich-Kern, Serie, Kartenblätter, Meldebilder | L | L | XL | 7 |
 | [Nicht ärgern!](ludo.md) | 2–4 | offen | SVG-Kreuzbrett, 3D-Würfel, Heuristik-Bot | M | M | M | 7 |
 | [Wortgitter](scrabble.md) (Scrabble) | 2–4 | verdeckt | 15×15 Gitterbrett, ZoomBoard, DAWG-Wörterbuch | M | L | L | 7 |
 | [Poker](poker.md) | 2–10 | verdeckt, Bluff | Karten, Handbewertung, Setzrunde, Side-Pots | L | L | XL | 7 |
@@ -43,6 +43,9 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Galgenmännchen](galgenmaennchen.md) | 1–8 | verdeckt, offen / gleichzeitig | SVG-Schneemann/Blume/Galgen, Buchstaben-Tastatur, Wortlisten | M | M | S | 7 / Familie & Mathe |
 | [Wort-Salat](wort-salat.md) | 1–30 | gleichzeitig, verdeckt | Buchstabenkacheln, Stammwort-Katalog, Exklusiv-Bonus | M | M | S | 7 / Familie & Mathe |
 | [Bibel-Quiz](bibelquiz.md) | 1–30 | gleichzeitig | Emoji-Quiz, simultane Eingabe, BibelServer | S | M | S | 7 / Familie |
+| [Gomoku](gomoku.md) | 2 | offen | Gitterbrett 15×15 | S | S | M | Nachtrag |
+| [Ligretto](ligretto.md) | 2–8 | gleichzeitig (Echtzeit) | eigene Zahlenkarten, Mittelstapel, Reaktions-Bot mit Bedenkpause | M | M | S | Nachtrag |
+| [Kniffel](kniffel.md) | 1–6 | offen | Würfel, Wertungstafel | S | M | S | Nachtrag |
 
 ## Gemeinsame Bausteine
 

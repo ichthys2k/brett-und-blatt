@@ -40,7 +40,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - Bots laufen im Web Worker; Tipp-Knopf = Standard-Bot auf Stufe „schwer“ mit 1,5 s Budget.
 - Fremdcode: `chess.js` (BSD-2-Clause) – Lizenztext in `THIRD_PARTY.md`. Neue Fremdbibliotheken dort ergänzen.
 
-## Stand (Oktober 2026)
+## Stand (28. Oktober 2026)
 
 **Fertig und veröffentlicht:** Etappe 1 und 2 sowie Schach (Commit `1cc2d29`). Spielbar: Tic-Tac-Toe, Vier in einer Reihe, Ultimate Tic-Tac-Toe, Reversi, Mühle, Paare finden, Schwarzer Peter, Solitaire (Klondike, FreeCell, Spider, Pyramide), Vierer-Schach, Schach – jeweils mit Bots in drei Stufen, Hot-Seat, Zeitlimits und Kurzanleitung.
 
@@ -97,8 +97,9 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`) für Online-Mehrspieler und Playlist „Spielabend“. Plan in `docs/spiele/ludo.md`.
 - **Wortgitter** (`packages/games/scrabble`, 2–4 Plätze):
   - Implementiert (15×15 Brett mit 3W/2W/3B/2B-Multiplikatoren, 102 Steine deutsches Blatt, Wörterbuch, Bot „Wortmeister“ in 3 Stufen). Registriert für Online-Mehrspieler. Plan in `docs/spiele/scrabble.md`.
-- **Binokel** (`packages/games/binokel`, 3–4 Plätze):
-  - Spielplan erarbeitet und in `docs/spiele/binokel.md` dokumentiert (schwäbisches Traditionsspiel, 40/48 Karten doppeltes Blatt, Reizen, Dabb-Tausch & Drücken, Meldebilder mit Vorrang-Erkennung, Überstich- und Trumpfzwang, Durchmarsch, Bot „Schwaben-Ass“ mit PIMC).
+- **Binokel** (`packages/games/binokel`, 3–4 Plätze) – **unfertig, aber schon live:**
+  - Fertig: Regeln (`rules.ts`: Reizen, Dabb-Tausch & Drücken, Durchmarsch), Meldebilder (`melds.ts`), Blatt mit 40/48 Karten (`cards.ts`), Engine um Überstich- und Trumpfzwang erweitert; im Spieleserver und auf der Startseite (Rubrik Familie, da keiner Rubrik zugeordnet) eingetragen.
+  - Offen: Oberfläche ist nur ein Platzhalter (`src/ui/index.tsx` zeigt das Wort „Binokel“), Bot „Schwaben-Ass“ nimmt auf allen Stufen den ersten erlaubten Zug, `playerView` gibt den ganzen Stand weiter (online sähe jeder alle Hände und den Dabb), kein Testordner (`gameContractChecks` fehlt). Plan in `docs/spiele/binokel.md`.
 - **Poker** (`packages/games/poker`, 2–10 Plätze):
   - Texas Hold'em mit No Limit, Pot Limit und Fixed Limit, Turnier-Modus (steigende Blinds nach Händen, Ante) und Offenem Tisch (20/50 Hände), wählbarem Thema (Chips, Bohnen, Streichhölzer) und Lernhilfe (deutsche Handnamen).
   - Schneller Bitmasken-Handbewerter (`eval.ts`), Haupt- und Side-Pot-Zerlegung mit Rest-Chip-Regel (`pots.ts`), Bot „Pokerface“ in 3 Stufen (Chen-Starthandbewertung, Push-or-Fold, Monte-Carlo-Equity mit Range-Schätzung).
@@ -121,7 +122,17 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Bot „Wortakrobat“ mit realistischen Tipp-Pausen (`delayMs`) in 3 Schwierigkeitsstufen.
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`), in *Familien-, Lege- & Gesellschaftsspiele*, als Mathe-Direktwahl „Mathe-Wort-Salat“ und in Playlist „Spielabend“. Plan in `docs/spiele/wort-salat.md`.
 
+**Weitere Spiele (27./28.10.2026):**
+- **Gomoku** (`packages/games/gomoku`, 2 Plätze): Fünf in einer Reihe auf 15×15 (Freigomoku ohne Renju-Verbote), Bot in drei Stufen, Tests mit `gameContractChecks`, online registriert. Plan in `docs/spiele/gomoku.md`.
+- **Ligretto** (`packages/games/ligretto`, 2–8 Plätze, am 28.10. neu geschrieben): Echtzeit nach Originalregeln – Ligretto-Stapel (10), Reihe (5/4/3), Hand mit Talon in Dreierschritten, Mittelstapel 1–10 mit festen Kennungen, „Festgefahren“ mit Stillstandsregel, Wertung +1/−2 über mehrere Runden. Gleichzeitige Züge weichen auf einen anderen passenden Stapel aus (`isLegal` großzügiger als `legalMoves`). Bot „Flinke Hand“ mit `delayMs` je Stufe, eigene Kartenoberfläche mit Tippen/Ziehen und Flug-Animationen, Klänge und Playlist „Spielabend“. Nur allein gegen Bots oder online (kein Hot-Seat). Online meldet ein verlorenes Wettrennen `tooLate` („Zu spät – jemand war schneller.“) als neutralen Hinweis statt `illegalMove`. Regeltests und `gameContractChecks`. Plan in `docs/spiele/ligretto.md`.
+- **Kniffel** (`packages/games/kniffel`, 1–6 Plätze): Fünf Würfel, drei Würfe, Würfel halten, 13 Kategorien mit oberem Bonus (63 → +35), Bot in drei Stufen (wählt nur die Kategorie, hält keine Würfel), Regeltests und `gameContractChecks`, online registriert, auf der Startseite ohne feste Rubrik (landet unter Familie). Plan in `docs/spiele/kniffel.md`.
+
 **Bekannte offene Punkte:**
+- **Binokel fertigstellen** (siehe oben): Oberfläche, `playerView`, Bot, Tests. Bis dahin steht ein unspielbares Spiel auf spiele.lipponer.de.
+- **Kniffel:** `playerView` gibt den Zustand samt `rng` an die Browser – online lassen sich damit die nächsten Würfe vorhersagen (Grundsatz „Der Seed geht nie an Browser“). Bot hält keine Würfel.
+- **Klänge der Enten-Rallye:** 15 MP3s (18 MB) liegen direkt im öffentlichen Repo unter `apps/web/public/klaenge/duck-rally/`. Herkunft und Lizenz klären – ElevenLabs-Klänge gehören ins private Klang-Repo, Suno-Musik darf mit Nennung (CC BY-SA) ins Repo.
+- **Startseite:** Gomoku, Kniffel, Binokel und Wortgitter sind in `Home.tsx` keiner Rubrik zugeordnet und landen automatisch unter *Familie*.
+
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
 - Drag & Drop: Universeller Pointer-Drag (`usePointerDrag`), Reise-Animationen (`useSpawnAnimation`) und sanfte Gleit-Animationen für ziehende Figuren (`useGridMoveAnimation`, 280 ms mit `onAnimationEnd`-Cleanup) in `packages/ui/src/dnd`. Gleiten aktiviert für Schach (inkl. Rochade und gedrehtem Brett), Vierer-Schach (alle 4 Perspektiven & Rochade) und Dame. Barrierefreiheit (Tastatur und Klick/Tap) bleibt vollständig erhalten.
 - Siegesklang: Fröhlicher Sound `arcade_level_win` im Audio-Katalog bei jedem Rundensieg (`useGameSounds`), trauriges Wah-Wah-Niederlagegeräusch nur noch bei echtem Partieverlust.
@@ -145,6 +156,15 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 ## Nächste Schritte
 
+1. Binokel fertigstellen oder bis dahin aus Startseite und Server herausnehmen.
+2. Kniffel: `rng` aus `playerView` entfernen (wie bei Mäxle über `sampleHidden`), Bot mit Würfelhalten.
+3. Herkunft der Enten-Rallye-Klänge klären.
+4. Gomoku, Kniffel, Binokel und Wortgitter einer Rubrik auf der Startseite zuordnen.
+
+**Arbeitsweise seit 27.10.2026:** Ein Teil der Arbeit kam direkt auf `main` statt über einen PR. Jeder Push dort veröffentlicht sofort; rote CI-Läufe (z. B. am 28.10. vier in Folge) bedeuten, dass in der Zeit nichts veröffentlicht wurde. Zweige mit PR bleiben der empfohlene Weg.
+
+## Rückblick Etappe 3 – Online
+
 **Etappe 3 – Online** (begonnen am 25.10.2026). Mit Cornelius abgestimmter Ablauf:
 
 1. ✅ **Phase 1 – Fundament** (ohne Cloudflare): gemeinsame Schnittstelle `GameSession` (Engine, `Play.tsx` nutzt nur sie); neues Paket `packages/online` mit Nachrichtenformat (`protocol.ts`, jede Browser-Nachricht wird geprüft), Raum (`room.ts`: Lobby, Plätze, Start, Züge mit Versionsprüfung, Sicht je Platz, `eventView`-Filter, Server-Uhr mit 1 s Kulanz, Bot-Ersatz nach 20 s ohne Verbindung, Wiedereinstieg per geheimer Geräte-Kennung, Raumleitung wechselt nach 60 s, Entfernen, Emoji-Reaktionen und Schnellnachrichten, Speichern/Wiederherstellen), Emoji-Raumcodes (4 aus 16, früher 4 aus 64 bzw. 6 aus 16) und Spitznamen-Filter. `LocalSession` hat dafür `graceMs`, `botBudgetMs`, `nextDeadline()`, `markAway()`. **Der Seed geht nie an Browser.**
@@ -158,7 +178,7 @@ Entscheidungen: erst Infrastruktur mit vorhandenen Spielen, dann neue Spiele; h�
 
 Ursprüngliche Eckpunkte: Cloudflare Workers mit Durable Objects (ein Objekt pro Raum, Daten in der EU per `jurisdiction('eu')`, Gratis-Tarif), neues Paket `apps/server` mit dünnem Cloudflare-Adapter, Räume mit Emoji-Code/Link/QR, Wiedereinstieg, Bot-Ersatz für Abwesende, Server-Uhr, flüchtige Signale. Erste Online-Spiele: Schiffe versenken, Quartett, Mäxle, Bingo (Klassen-Modus). Details im Konzept (Fahrplan, Muster, Zeitlimits) und in den Spielplänen. Für Cloudflare braucht es ein Konto von Cornelius – Anmeldung und Zugangsdaten macht er selbst.
 
-Alle Etappen 1–7 sind abgeschlossen. Originalspiele liegen in `~/code/4playerchess` und `~/code/emojiclicker/minigames/` (nur als Vorlage lesen).
+Alle Etappen 1–7 sind abgeschlossen (Binokel noch unfertig, siehe oben). Originalspiele liegen in `~/code/4playerchess` und `~/code/emojiclicker/minigames/` (nur als Vorlage lesen).
 
 ## Hinweise zum Rechnerwechsel
 
