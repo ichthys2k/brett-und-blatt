@@ -56,6 +56,8 @@ export interface RoomState {
   room: RoomMessage | null;
   game: { session: OnlineSession; loaded: LoadedGame } | null;
   error: string | null;
+  /** Kurzer, freundlicher Hinweis ohne Fehler, z. B. „Zu spät – jemand war schneller.“ */
+  notice: string | null;
   signals: Signal[];
 }
 
@@ -67,7 +69,7 @@ let botRunner: ReturnType<typeof createBotRunner> | null = null;
  * nicht von allen gleichzeitig überrannt wird.
  */
 export class RoomConnection {
-  state: RoomState = { status: 'connecting', you: null, room: null, game: null, error: null, signals: [] };
+  state: RoomState = { status: 'connecting', you: null, room: null, game: null, error: null, notice: null, signals: [] };
   private ws: WebSocket | null = null;
   private listeners = new Set<() => void>();
   private retries = 0;
@@ -183,6 +185,11 @@ export class RoomConnection {
         // Veraltete Züge löst der Server selbst auf – kein Grund für eine Meldung.
         if (message.code === 'staleMove') return;
         if (message.code === 'protocol') return this.set({ status: 'outdated' });
+        if (message.code === 'tooLate') {
+          this.set({ notice: message.message });
+          window.setTimeout(() => this.state.notice === message.message && this.set({ notice: null }), 1500);
+          return;
+        }
         this.set({ error: message.message });
         window.setTimeout(() => this.state.error === message.message && this.set({ error: null }), 4000);
         return;

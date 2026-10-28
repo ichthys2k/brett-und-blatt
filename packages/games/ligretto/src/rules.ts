@@ -1,298 +1,415 @@
 /**
  * Die Regeln von Ligretto.
+ *
+ * Jeder Platz hat ein eigenes Blatt mit 40 Karten (vier Farben, 1–10). Ausgelegt werden ein
+ * Ligretto-Stapel mit 10 Karten (oberste offen), eine offene Reihe (5/4/3 Karten bei 2/3/ab 4
+ * Plätzen) und der Rest als verdeckte Hand, die man in Dreierschritten auf den eigenen Talon
+ * umblättert. Alle spielen gleichzeitig: Die oberste Ligretto-Karte, jede Karte der Reihe und
+ * die oberste Talon-Karte dürfen in die Mitte. Dort beginnt jeder Stapel mit einer 1 und wächst
+ * in derselben Farbe bis 10; volle Stapel werden abgeräumt. Eine Lücke in der Reihe füllt sofort
+ * der Ligretto-Stapel. Wer seinen Ligretto-Stapel leer hat, beendet die Runde.
+ *
+ * Wertung je Runde: +1 für jede eigene Karte in der Mitte, −2 für jede Karte im Ligretto-Stapel.
  */
-import { Rng, hashSeed, type Actor, type GameEvent, type MoveResult, type Result, type SeatId } from '@brett-und-blatt/engine';
+import { Rng, type Actor, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
 
 export type Suit = 'red' | 'yellow' | 'green' | 'blue';
 
 export const SUITS: readonly Suit[] = ['red', 'yellow', 'green', 'blue'];
 
+export const LIGRETTO_SIZE = 10;
+export const TOP_VALUE = 10;
+
 export interface Card {
+  /** Eindeutig am Tisch: Besitzer, Farbe, Wert. */
   id: string;
   suit: Suit;
   value: number;
+  owner: SeatId;
 }
 
 export interface PlayerState {
-  stock: Card[];
-  pile: Card[];
+  /** Index 0 ist die oberste, offene Karte. */
+  ligretto: Card[];
+  /** Offene Reihe; null nur kurz, wenn der Ligretto-Stapel leer ist. */
+  row: (Card | null)[];
+  /** Verdeckt, Index 0 wird als Nächstes umgeblättert. */
   hand: Card[];
+  /** Offen, die letzte Karte liegt oben. */
+  talon: Card[];
+  /** Karten, die dieser Platz in der laufenden Runde in die Mitte gelegt hat. */
+  played: number;
+  /** „Ich komme nicht weiter“ – bis sich in der Mitte etwas tut oder alle festhängen. */
+  stuck: boolean;
+  /** Wie oft seit der letzten Änderung in der Mitte umgeblättert wurde (für Bots und Hinweise). */
+  idleFlips: number;
+  /** Nach dem Rundenende: bereit für die nächste Runde. */
+  ready: boolean;
 }
 
 export interface CenterPile {
-  suit: Suit | null;
-  top: number;
-  count: number;
+  /** Feste Kennung, damit gleichzeitige Züge nicht auf einem anderen Stapel landen. */
+  id: number;
+  suit: Suit;
+  cards: Card[];
+}
+
+export type Goal = 'r1' | 'r3' | 'r5' | 'p50' | 'p99';
+
+export interface RoundSummary {
+  round: number;
+  endedBy: SeatId | null;
+  /** Punkte dieser Runde je Platz, dazu die Aufschlüsselung. */
+  points: number[];
+  played: number[];
+  left: number[];
 }
 
 export interface LigrettoState {
   phase: 'play' | 'roundEnd' | 'gameEnd';
   players: PlayerState[];
-  centerPiles: CenterPile[];
+  center: CenterPile[];
+  /** Abgeräumte volle Stapel (für Bots und die Anzeige der Menge). */
+  cleared: Card[];
+  nextPileId: number;
   round: number;
-  endedBy: SeatId | null;
+  goal: Goal;
+  /** 3 = klassisch, 1 = Handkarten einzeln umblättern (leichter). */
+  flipCount: number;
+  /** Punkte je Platz und Runde. */
   scores: number[][];
-  targetScore: number;
-  winner: SeatId | null;
-  rng: [number, number, number, number];
+  lastRound: RoundSummary | null;
+  rng: RngState;
 }
 
-export type LigrettoMove =
-  | { type: 'playFromHand'; cardId: string; centerIndex: number }
-  | { type: 'playFromPile'; centerIndex: number }
-  | { type: 'flip' }
-  | { type: 'callLigretto' };
+export type CardSource = { from: 'ligretto' } | { from: 'talon' } | { from: 'row'; slot: number };
 
-function makeDeck(seed: string): Card[] {
-  const rng = new Rng(hashSeed(seed));
+export type LigrettoMove =
+  /** `pile` ist die Kennung eines Mittelstapels oder null für einen neuen Stapel (nur mit einer 1). */
+  | { type: 'play'; source: CardSource; pile: number | null }
+  | { type: 'flip' }
+  | { type: 'stuck' }
+  | { type: 'ready' };
+
+export const GOALS: { value: Goal; label: string }[] = [
+  { value: 'r1', label: 'Eine Runde' },
+  { value: 'r3', label: '3 Runden' },
+  { value: 'r5', label: '5 Runden' },
+  { value: 'p50', label: 'Bis 50 Punkte' },
+  { value: 'p99', label: 'Bis 99 Punkte' },
+];
+
+export function rowSize(seats: number): number {
+  if (seats <= 2) return 5;
+  if (seats === 3) return 4;
+  return 3;
+}
+
+export function fullDeck(owner: SeatId): Card[] {
   const cards: Card[] = [];
   for (const suit of SUITS) {
-    for (let v = 1; v <= 10; v++) {
-      cards.push({ id: `${suit}-${v}-${rng.int(1000000)}`, suit, value: v });
-    }
-  }
-  for (let i = cards.length - 1; i > 0; i--) {
-    const j = rng.int(i + 1);
-    [cards[i], cards[j]] = [cards[j], cards[i]];
+    for (let value = 1; value <= TOP_VALUE; value++) cards.push({ id: `${owner}-${suit}-${value}`, suit, value, owner });
   }
   return cards;
 }
 
-function dealDeck(deck: Card[]): PlayerState {
-  const stock = deck.slice(0, 10);
-  const rest = deck.slice(10);
-  const hand: Card[] = rest.slice(0, 3);
-  return { stock, pile: [], hand };
+function deal(owner: SeatId, seats: number, rng: Rng): PlayerState {
+  const deck = rng.shuffle(fullDeck(owner));
+  const ligretto = deck.slice(0, LIGRETTO_SIZE);
+  const size = rowSize(seats);
+  const row = deck.slice(LIGRETTO_SIZE, LIGRETTO_SIZE + size);
+  const hand = deck.slice(LIGRETTO_SIZE + size);
+  return { ligretto, row, hand, talon: [], played: 0, stuck: false, idleFlips: 0, ready: false };
 }
 
-export function setup(seats: number): LigrettoState {
-  const players: PlayerState[] = [];
-  for (let i = 0; i < seats; i++) {
-    const deck = makeDeck(`ligretto-${i}`);
-    players.push(dealDeck(deck));
-  }
-  const rng = new Rng(hashSeed('ligretto-center'));
+export function setup(seats: number, options: Options, seed: string): LigrettoState {
+  const rng = Rng.fromSeed(seed, 'ligretto');
+  const goal = (GOALS.some((g) => g.value === options.goal) ? options.goal : 'r3') as Goal;
   return {
     phase: 'play',
-    players,
-    centerPiles: [],
+    players: Array.from({ length: seats }, (_, seat) => deal(seat, seats, rng)),
+    center: [],
+    cleared: [],
+    nextPileId: 0,
     round: 1,
-    endedBy: null,
-    scores: Array(seats).fill(0).map(() => []),
-    targetScore: 99,
-    winner: null,
+    goal,
+    flipCount: options.flip === 'one' ? 1 : 3,
+    scores: Array.from({ length: seats }, () => []),
+    lastRound: null,
     rng: rng.state,
   };
 }
 
 export function currentPlayers(state: LigrettoState): Actor[] {
-  if (state.phase !== 'play') return [];
-  return state.players.map((_, i) => i as Actor);
+  if (state.phase === 'play') return seatsWhere(state, (p) => !p.stuck);
+  if (state.phase === 'roundEnd') return seatsWhere(state, (p) => !p.ready);
+  return [];
 }
 
-function canPlayToCenter(state: LigrettoState, card: Card): number | null {
-  for (let i = 0; i < state.centerPiles.length; i++) {
-    const pile = state.centerPiles[i];
-    if (pile.suit === card.suit && pile.top + 1 === card.value) {
-      return i;
-    }
+function seatsWhere(state: LigrettoState, test: (p: PlayerState) => boolean): SeatId[] {
+  const seats: SeatId[] = [];
+  state.players.forEach((p, seat) => {
+    if (test(p)) seats.push(seat);
+  });
+  return seats;
+}
+
+/** Die Karte an einer Quelle, falls dort eine liegt. */
+export function cardAt(player: PlayerState, source: CardSource): Card | null {
+  if (source.from === 'ligretto') return player.ligretto[0] ?? null;
+  if (source.from === 'talon') return player.talon[player.talon.length - 1] ?? null;
+  return player.row[source.slot] ?? null;
+}
+
+/** Alle Quellen eines Platzes in fester Reihenfolge: Ligretto, Reihe, Talon. */
+export function sources(player: PlayerState): CardSource[] {
+  const list: CardSource[] = [{ from: 'ligretto' }];
+  player.row.forEach((_, slot) => list.push({ from: 'row', slot }));
+  list.push({ from: 'talon' });
+  return list;
+}
+
+/** Auf welche Stapel passt eine Karte? null steht für einen neuen Stapel. */
+export function targetsFor(center: readonly Pick<CenterPile, 'id' | 'suit' | 'cards'>[], card: Pick<Card, 'suit' | 'value'>): (number | null)[] {
+  if (card.value === 1) return [null];
+  const targets: number[] = [];
+  for (const pile of center) {
+    if (pile.suit === card.suit && pile.cards.length === card.value - 1) targets.push(pile.id);
   }
-  if (card.value === 1) {
-    for (let i = 0; i < state.centerPiles.length; i++) {
-      if (state.centerPiles[i].suit === null) return i;
-    }
-    return -1;
-  }
-  return null;
+  return targets;
+}
+
+export function canFlip(player: PlayerState): boolean {
+  return player.hand.length > 0 || player.talon.length > 1;
 }
 
 export function legalMoves(state: LigrettoState, actor: Actor): LigrettoMove[] {
-  if (state.phase !== 'play') return [];
-  const seat = actor as SeatId;
-  const p = state.players[seat];
+  if (actor === 'system') return [];
+  const player = state.players[actor];
+  if (!player) return [];
+  if (state.phase === 'roundEnd') return player.ready ? [] : [{ type: 'ready' }];
+  if (state.phase !== 'play' || player.stuck) return [];
   const moves: LigrettoMove[] = [];
-
-  for (const card of p.hand) {
-    const idx = canPlayToCenter(state, card);
-    if (idx !== null) {
-      moves.push({ type: 'playFromHand', cardId: card.id, centerIndex: idx === -1 ? state.centerPiles.length : idx });
-    }
+  for (const source of sources(player)) {
+    const card = cardAt(player, source);
+    if (!card) continue;
+    for (const pile of targetsFor(state.center, card)) moves.push({ type: 'play', source, pile });
   }
-  if (p.pile.length > 0) {
-    const top = p.pile[p.pile.length - 1];
-    const idx = canPlayToCenter(state, top);
-    if (idx !== null) {
-      moves.push({ type: 'playFromPile', centerIndex: idx === -1 ? state.centerPiles.length : idx });
-    }
-  }
-  if (p.stock.length > 0 && p.hand.length < 3) {
-    moves.push({ type: 'flip' });
-  }
-  if (p.stock.length === 0 && p.pile.length === 0 && p.hand.length === 0) {
-    moves.push({ type: 'callLigretto' });
-  }
-
+  if (canFlip(player)) moves.push({ type: 'flip' });
+  moves.push({ type: 'stuck' });
   return moves;
 }
 
-export function applyMove(state: LigrettoState, actor: Actor, move: LigrettoMove): MoveResult<LigrettoState> {
-  if (state.phase !== 'play') throw new Error('Kein Zug möglich.');
-  const seat = actor as SeatId;
-  const events: GameEvent[] = [];
-  const newState: LigrettoState = {
-    ...state,
-    players: state.players.map((pl, i) => (i === seat ? { stock: [...pl.stock], pile: [...pl.pile], hand: [...pl.hand] } : pl)),
-    centerPiles: state.centerPiles.map((cp) => ({ ...cp })),
-    scores: state.scores.map((s) => [...s]),
-  };
-  const p = newState.players[seat];
-
-  if (move.type === 'playFromHand') {
-    const cardIdx = p.hand.findIndex((c) => c.id === move.cardId);
-    if (cardIdx < 0) throw new Error('Karte nicht in der Hand.');
-    const card = p.hand[cardIdx];
-    let cIdx = move.centerIndex;
-    if (cIdx === -1 || cIdx >= newState.centerPiles.length || newState.centerPiles[cIdx].suit === null) {
-      if (card.value !== 1) throw new Error('Nur 1 auf leeren Stapel.');
-      newState.centerPiles.push({ suit: card.suit, top: card.value, count: 1 });
-      cIdx = newState.centerPiles.length - 1;
-    } else {
-      const cp = newState.centerPiles[cIdx];
-      if (cp.suit !== card.suit || cp.top + 1 !== card.value) throw new Error('Nicht passend.');
-      cp.top = card.value;
-      cp.count++;
-    }
-    p.hand.splice(cardIdx, 1);
-    events.push({ type: 'played', seat, card: card.id, centerIndex: cIdx });
-  } else if (move.type === 'playFromPile') {
-    if (p.pile.length === 0) throw new Error('Kein Stapel.');
-    const card = p.pile[p.pile.length - 1];
-    let cIdx = move.centerIndex;
-    if (cIdx === -1 || cIdx >= newState.centerPiles.length || newState.centerPiles[cIdx].suit === null) {
-      if (card.value !== 1) throw new Error('Nur 1 auf leeren Stapel.');
-      newState.centerPiles.push({ suit: card.suit, top: card.value, count: 1 });
-      cIdx = newState.centerPiles.length - 1;
-    } else {
-      const cp = newState.centerPiles[cIdx];
-      if (cp.suit !== card.suit || cp.top + 1 !== card.value) throw new Error('Nicht passend.');
-      cp.top = card.value;
-      cp.count++;
-    }
-    p.pile.pop();
-    events.push({ type: 'played', seat, card: card.id, centerIndex: cIdx, fromPile: true });
-  } else if (move.type === 'flip') {
-    if (p.stock.length === 0) throw new Error('Nichts mehr umzudrehen.');
-    if (p.hand.length >= 3) throw new Error('Hand ist voll.');
-    const card = p.stock.shift()!;
-    p.hand.push(card);
-    events.push({ type: 'flipped', seat, card: card.id });
-  } else if (move.type === 'callLigretto') {
-    if (p.stock.length > 0 || p.pile.length > 0 || p.hand.length > 0) {
-      throw new Error('Du hast noch Karten.');
-    }
-    newState.phase = 'roundEnd';
-    newState.endedBy = seat;
-    events.push({ type: 'ligretto', seat });
-  } else {
-    throw new Error('Unbekannter Zug.');
-  }
-
-  if (newState.phase === 'play' && p.stock.length === 0 && p.pile.length === 0 && p.hand.length === 0 && newState.endedBy === null) {
-    newState.phase = 'roundEnd';
-    newState.endedBy = seat;
-    events.push({ type: 'ligretto', seat });
-  }
-
-  if (newState.phase === 'roundEnd' && newState.endedBy !== null) {
-    const endedSeat = newState.endedBy;
-    const roundScores: number[] = Array(newState.players.length).fill(0);
-    let otherCards = 0;
-    for (let j = 0; j < newState.players.length; j++) {
-      if (j !== endedSeat) {
-        otherCards += newState.players[j].stock.length + newState.players[j].pile.length + newState.players[j].hand.length;
-      }
-    }
-    roundScores[endedSeat] = otherCards * 10;
-    newState.scores[endedSeat] = [...(newState.scores[endedSeat] || []), roundScores[endedSeat]];
-    for (let i = 0; i < newState.players.length; i++) {
-      if (i !== endedSeat) {
-        newState.scores[i] = [...(newState.scores[i] || []), roundScores[i]];
-      }
-    }
-    const totals = newState.scores.map((s) => s.reduce((a, b) => a + b, 0));
-    if (totals.some((t) => t >= newState.targetScore)) {
-      newState.phase = 'gameEnd';
-      const maxScore = Math.max(...totals);
-      const winners = totals.map((t, i) => (t === maxScore ? i : -1)).filter((i) => i >= 0);
-      newState.winner = winners[0] ?? null;
-    } else {
-      newState.round++;
-      newState.phase = 'play';
-      newState.endedBy = null;
-      newState.centerPiles = [];
-      for (let i = 0; i < newState.players.length; i++) {
-        const deck = makeDeck(`ligretto-${i}-r${newState.round}`);
-        newState.players[i] = dealDeck(deck);
-      }
-    }
-  }
-
-  return { state: newState, events };
+/**
+ * Gleichzeitiges Spiel: Hat jemand den gewünschten Stapel gerade weitergelegt, landet die Karte
+ * auf einem anderen passenden Stapel. Erst wenn sie nirgends mehr passt, ist der Zug ungültig.
+ */
+export function isLegal(state: LigrettoState, actor: Actor, move: LigrettoMove): boolean {
+  if (move.type !== 'play') return legalMoves(state, actor).some((m) => m.type === move.type);
+  if (actor === 'system' || state.phase !== 'play') return false;
+  const player = state.players[actor];
+  if (!player || player.stuck) return false;
+  const card = cardAt(player, move.source);
+  return card !== null && targetsFor(state.center, card).length > 0;
 }
 
-export function playerView(state: LigrettoState, seat: SeatId | 'spectator'): LigrettoState {
-  if (seat === 'spectator') {
-    return state;
-  }
-  const s = seat as number;
-  return {
+function resolveTarget(state: LigrettoState, card: Card, wanted: number | null): number | null {
+  const targets = targetsFor(state.center, card);
+  return targets.includes(wanted) ? wanted : targets[0]!;
+}
+
+function clonePlayer(p: PlayerState): PlayerState {
+  return { ...p, ligretto: [...p.ligretto], row: [...p.row], hand: [...p.hand], talon: [...p.talon] };
+}
+
+export function applyMove(state: LigrettoState, actor: Actor, move: LigrettoMove): MoveResult<LigrettoState> {
+  if (!isLegal(state, actor, move)) throw new Error('Dieser Zug ist gerade nicht erlaubt.');
+  const seat = actor as SeatId;
+  const next: LigrettoState = {
     ...state,
-    players: state.players.map((p, i) => {
-      if (i === s) {
-        return p;
-      }
-      return {
-        stock: [],
-        pile: p.pile.length > 0 ? [p.pile[p.pile.length - 1]] : [],
-        hand: [],
-      };
-    }),
-    rng: [0, 0, 0, 0],
+    players: state.players.map((p, i) => (i === seat ? clonePlayer(p) : p)),
+    center: [...state.center],
+    scores: state.scores.map((s) => [...s]),
   };
+  const player = next.players[seat]!;
+  const events: GameEvent[] = [];
+
+  if (move.type === 'ready') {
+    player.ready = true;
+    if (next.players.every((p) => p.ready)) startRound(next, events);
+    return { state: next, events };
+  }
+
+  if (move.type === 'stuck') {
+    player.stuck = true;
+    events.push({ type: 'stuck', seat });
+    if (next.players.every((p) => p.stuck)) unjam(next, events);
+    return { state: next, events };
+  }
+
+  if (move.type === 'flip') {
+    if (player.hand.length === 0) {
+      // Talon umdrehen: Die zuerst umgeblätterte Karte kommt wieder als Erste.
+      player.hand = player.talon;
+      player.talon = [];
+      events.push({ type: 'turnedOver', seat });
+    }
+    const flipped = player.hand.splice(0, state.flipCount);
+    player.talon.push(...flipped);
+    player.idleFlips++;
+    events.push({ type: 'flipped', seat, card: player.talon[player.talon.length - 1] });
+    return { state: next, events };
+  }
+
+  // Karte in die Mitte
+  const { source } = move;
+  const card = cardAt(player, source)!;
+  if (source.from === 'ligretto') player.ligretto.shift();
+  else if (source.from === 'talon') player.talon.pop();
+  else player.row[source.slot] = player.ligretto.shift() ?? null;
+  player.played++;
+
+  let pileId: number;
+  const target = resolveTarget(state, card, move.pile);
+  if (target === null) {
+    pileId = next.nextPileId++;
+    next.center.push({ id: pileId, suit: card.suit, cards: [card] });
+  } else {
+    pileId = target;
+    const index = next.center.findIndex((p) => p.id === pileId);
+    const pile = next.center[index]!;
+    next.center[index] = { ...pile, cards: [...pile.cards, card] };
+  }
+  events.push({ type: 'played', seat, card, source, pile: pileId });
+
+  const pile = next.center.find((p) => p.id === pileId)!;
+  if (pile.cards.length === TOP_VALUE) {
+    next.center = next.center.filter((p) => p.id !== pileId);
+    next.cleared = [...next.cleared, ...pile.cards];
+    events.push({ type: 'pileCleared', pile: pileId, seat });
+  }
+
+  // Neue Karte in der Mitte: Wer festhing, kann vielleicht wieder.
+  next.players = next.players.map((p) => (p.stuck || p.idleFlips > 0 ? { ...p, stuck: false, idleFlips: 0 } : p));
+
+  if (next.players[seat]!.ligretto.length === 0) endRound(next, seat, events);
+  return { state: next, events };
+}
+
+/**
+ * Niemand kommt weiter: Alle legen die oberste Ligretto-Karte unter ihren Stapel und die
+ * oberste Talon-Karte unter ihre Hand – so taucht beim nächsten Durchblättern anderes auf.
+ */
+function unjam(state: LigrettoState, events: GameEvent[]): void {
+  state.players = state.players.map((p) => {
+    const q = clonePlayer(p);
+    if (q.ligretto.length > 1) q.ligretto.push(q.ligretto.shift()!);
+    if (q.talon.length > 0) q.hand.push(q.talon.pop()!);
+    q.stuck = false;
+    q.idleFlips = 0;
+    return q;
+  });
+  events.push({ type: 'unjammed' });
+}
+
+function endRound(state: LigrettoState, endedBy: SeatId | null, events: GameEvent[]): void {
+  const played = state.players.map((p) => p.played);
+  const left = state.players.map((p) => p.ligretto.length);
+  const points = state.players.map((_, i) => played[i]! - 2 * left[i]!);
+  state.scores = state.scores.map((s, i) => [...s, points[i]!]);
+  state.lastRound = { round: state.round, endedBy, points, played, left };
+  events.push({ type: 'ligretto', seat: endedBy, points });
+  state.phase = isGameOver(state) ? 'gameEnd' : 'roundEnd';
+  state.players = state.players.map((p) => ({ ...p, stuck: false, idleFlips: 0, ready: false }));
+}
+
+function startRound(state: LigrettoState, events: GameEvent[]): void {
+  const rng = new Rng(state.rng);
+  const seats = state.players.length;
+  state.players = state.players.map((_, seat) => deal(seat, seats, rng));
+  state.rng = rng.state;
+  state.center = [];
+  state.cleared = [];
+  state.round++;
+  state.phase = 'play';
+  events.push({ type: 'roundStarted', round: state.round });
+}
+
+export function totals(scores: number[][]): number[] {
+  return scores.map((s) => s.reduce((a, b) => a + b, 0));
+}
+
+function isGameOver(state: LigrettoState): boolean {
+  const kind = state.goal[0];
+  const n = Number(state.goal.slice(1));
+  if (kind === 'r') return state.round >= n;
+  return totals(state.scores).some((t) => t >= n);
 }
 
 export function result(state: LigrettoState): Result | null {
-  if (state.phase === 'gameEnd') {
-    if (state.winner !== null) {
-      const totals = state.scores.map((s) => s.reduce((a, b) => a + b, 0));
-      const maxScore = Math.max(...totals);
-      const winners = totals.map((t, i) => (t === maxScore ? i : -1)).filter((i) => i >= 0);
-      if (winners.length === 1) return { kind: 'win', winners };
-      return { kind: 'draw' };
-    }
-    return { kind: 'draw' };
-  }
-  return null;
+  if (state.phase !== 'gameEnd') return null;
+  const sums = totals(state.scores);
+  const best = Math.max(...sums);
+  const winners = sums.flatMap((t, i) => (t === best ? [i] : []));
+  if (winners.length === sums.length) return { kind: 'draw' };
+  return { kind: 'win', winners };
 }
 
-export function sampleHidden(view: LigrettoState, seat: SeatId, rng: Rng): LigrettoState {
-  const s = seat as number;
-  const newView: LigrettoState = JSON.parse(JSON.stringify(view));
-  for (let i = 0; i < newView.players.length; i++) {
-    if (i !== s) {
-      newView.players[i].stock = Array(10).fill(0).map((_, idx) => ({
-        id: `unknown-${i}-${idx}`,
-        suit: rng.pick(SUITS) as Suit,
-        value: rng.int(10) + 1,
-      }));
-      if (newView.players[i].pile.length === 0 && rng.chance(0.5)) {
-        newView.players[i].pile = [{
-          id: `unknown-pile-${i}`,
-          suit: rng.pick(SUITS) as Suit,
-          value: rng.int(10) + 1,
-        }];
-      }
-    }
-  }
-  return newView;
+/** Was ein Platz von einem Mitspieler sieht – das Gleiche, was am echten Tisch offen liegt. */
+export interface PlayerView {
+  ligrettoTop: Card | null;
+  ligrettoCount: number;
+  row: (Card | null)[];
+  talonTop: Card | null;
+  talonCount: number;
+  handCount: number;
+  played: number;
+  stuck: boolean;
+  idleFlips: number;
+  ready: boolean;
+}
+
+export interface LigrettoView extends Omit<LigrettoState, 'players' | 'rng'> {
+  players: PlayerView[];
+}
+
+export function viewOfPlayer(p: PlayerState): PlayerView {
+  return {
+    ligrettoTop: p.ligretto[0] ?? null,
+    ligrettoCount: p.ligretto.length,
+    row: p.row,
+    talonTop: p.talon[p.talon.length - 1] ?? null,
+    talonCount: p.talon.length,
+    handCount: p.hand.length,
+    played: p.played,
+    stuck: p.stuck,
+    idleFlips: p.idleFlips,
+    ready: p.ready,
+  };
+}
+
+/** Am Tisch ist alles Offene für alle sichtbar; verdeckt bleiben nur Stapel- und Handreihenfolge. */
+export function playerView(state: LigrettoState, _seat: SeatId | 'spectator'): LigrettoView {
+  const { rng: _rng, players, ...rest } = state;
+  return { ...rest, players: players.map(viewOfPlayer) };
+}
+
+/** Füllt die verdeckten Karten mit den noch fehlenden Karten des jeweiligen Blatts auf. */
+export function sampleHidden(view: LigrettoView, _seat: SeatId, rng: Rng): LigrettoState {
+  const seen = new Set<string>();
+  for (const pile of view.center) for (const c of pile.cards) seen.add(c.id);
+  for (const c of view.cleared) seen.add(c.id);
+  const players = view.players.map((p, owner): PlayerState => {
+    const visible = [p.ligrettoTop, p.talonTop, ...p.row].filter((c): c is Card => c !== null);
+    for (const c of visible) seen.add(c.id);
+    const unknown = rng.shuffle(fullDeck(owner).filter((c) => !seen.has(c.id)));
+    const take = (n: number) => unknown.splice(0, Math.max(0, n));
+    const ligretto = p.ligrettoTop ? [p.ligrettoTop, ...take(p.ligrettoCount - 1)] : [];
+    const talonRest = take(p.talonCount - (p.talonTop ? 1 : 0));
+    const talon = p.talonTop ? [...talonRest, p.talonTop] : talonRest;
+    const hand = take(p.handCount);
+    return { ligretto, row: [...p.row], hand, talon, played: p.played, stuck: p.stuck, idleFlips: p.idleFlips, ready: p.ready };
+  });
+  const { players: _players, ...rest } = view;
+  return { ...rest, players, rng: [...rng.state] as RngState };
 }

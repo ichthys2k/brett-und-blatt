@@ -89,10 +89,16 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
     <p className="fixed inset-x-0 bottom-0 z-30 bg-warning px-3 py-2 text-center text-sm font-medium text-white">{t('online.reconnecting')}</p>
   );
   const toasts = <SignalToasts signals={state.signals} members={room.members} />;
-  const errorBox = state.error && (
+  const errorBox = state.error ? (
     <p role="alert" className="fixed inset-x-3 top-3 z-30 mx-auto max-w-md rounded-xl bg-danger px-3 py-2 text-center text-sm text-white shadow-md">
       {state.error}
     </p>
+  ) : (
+    state.notice && (
+      <p role="status" className="pointer-events-none fixed inset-x-3 top-3 z-30 mx-auto w-fit max-w-md rounded-xl bg-surface px-3 py-2 text-center text-sm font-medium shadow-md">
+        {state.notice}
+      </p>
+    )
   );
 
   if (state.game && room.phase !== 'lobby') {

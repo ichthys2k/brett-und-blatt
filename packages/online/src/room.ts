@@ -527,7 +527,12 @@ export class Room {
           this.error(connectionId, 'staleMove', 'Der Spielstand hat sich inzwischen geändert.');
           return this.sendGame(connectionId, []);
         }
-        if (!session.submit(seat, message.move)) return this.error(connectionId, 'illegalMove', 'Dieser Zug ist nicht erlaubt.');
+        if (!session.submit(seat, message.move)) {
+          // Mit älterer Version angenommen, aber jetzt nicht mehr möglich: Jemand anderes war schneller
+          // (z. B. bei Ligretto auf denselben Stapel) – das ist kein Fehler des Spielers.
+          if (message.version !== this.gameVersion()) return this.error(connectionId, 'tooLate', 'Zu spät – jemand war schneller.');
+          return this.error(connectionId, 'illegalMove', 'Dieser Zug ist nicht erlaubt.');
+        }
         return;
       }
       case 'resign': {

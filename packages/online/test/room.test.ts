@@ -355,6 +355,10 @@ describe('Partie', () => {
     expect(anna.game().current).toEqual([0, 1]);
     anna.send({ type: 'move', version: anna.game().version, move: 3 });
     expect(ben.game().version).toBeGreaterThan(seen);
+    // Passt ein Zug mit älterer Version nicht mehr, war jemand schneller – kein „nicht erlaubt“.
+    ben.send({ type: 'move', version: seen, move: 99 });
+    expect(ben.last('error')?.code).toBe('tooLate');
+    ben.clear();
     // Ben hat den Stand vor Annas Zug gesehen – sein Zug zählt trotzdem.
     ben.send({ type: 'move', version: seen, move: 2 });
     expect(ben.last('error')).toBeUndefined();

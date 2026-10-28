@@ -1,60 +1,39 @@
 # Ligretto
 
-*Reaktionsspiel für 2–8 Spieler – gleichzeitig, schnell.*
+*Echtzeit-Kartenspiel für 2–8 Spieler – alle legen gleichzeitig.*
 
 ## Überblick
 
-Ligretto ist ein reines Reaktionsspiel. Jeder Spieler hat seinen eigenen verdeckten Ligretto-Stapel, einen offenen Ablagestapel und eine offene Hand. In der Mitte liegen beliebig viele offene Mittelfeldstapel. Auf jeden Mittelfeldstapel darf nur in aufsteigender Reihenfolge der gleichen Farbe (meist 1→2→3→4→5) gelegt werden. Wer als Erster seinen Ligretto-Stapel komplett abgelegt hat, ruft „Ligretto!“ und die Runde endet.
+Jeder Spieler hat ein eigenes Blatt mit 40 Karten (Rot, Gelb, Grün, Blau, je 1–10). Alle spielen gleichzeitig und legen Karten auf gemeinsame Stapel in der Mitte. Wer als Erster seinen Ligretto-Stapel los ist, beendet die Runde.
 
-## Regeln (klassisch)
+## Regeln (wie im Original)
 
-- **Kartendeck:** Pro Spieler ein separates Ligretto-Deck gleicher Karten (z. B. 40 Karten pro Deck, nummeriert 1–10 in 4 Farben). Für Online/Hot-Seat werden pro Spieler die eigenen Karten gemischt.
-- **Auslage je Spieler:** Ligretto-Stapel verdeckt (Ziel, leer machen), Handstapel offen (oberste Karte sichtbar), Hand mit 1–3 offenen Karten zum Sofortlegen.
-- **Mittelfeld:** Beliebig viele Stapel. Auf einen leeren Platz kann eine Karte mit der Zahl **1** gelegt werden. Ansonsten nur fortlaufend +1 der gleichen Farbe.
-- **Sofortiges Legen:** Jeder darf jederzeit beliebige passende Karten von seiner Hand oder von der Oberseite seines offenen Handstapels auf irgendeinen passenden Mittelfeldstapel legen. Kein fester Zugreigen.
-- **Umblättern:** Wenn die Hand leer ist oder nach Wunsch, kann die oberste Karte des verdeckten Ligretto-Stapels auf den offenen Handstapel umgedreht werden (oder automatisch aufgefüllt).
-- **Ligretto rufen:** Wenn der eigene Ligretto-Stapel leer ist, darf/ruf „Ligretto!“. Die Runde endet sofort. 
-- **Punktewertung (klassisch):** Der Ligretto-Rufer erhält +10 Punkte pro Karte, die sich noch in den Ligretto-Stapeln der anderen Spieler befindet. Für jede eigene Karte, die im Mittelfeld liegt, erhält er -1 Punkt (oder je nach Variante +1 pro abgelegte Karte). Andere Spieler erhalten nur Punkte für Karten, die sie im Mittelfeld abgelegt haben.
+- **Auslage je Spieler:** Ligretto-Stapel mit 10 Karten (die oberste liegt offen), eine offene **Reihe** (bei 2 Spielern 5 Karten, bei 3 Spielern 4, ab 4 Spielern 3) und der Rest als verdeckte **Hand** (25–27 Karten).
+- **Hand und Talon:** Die Hand wird in Dreierschritten auf den eigenen Talon umgeblättert; nur die oberste Talon-Karte ist spielbar. Ist die Hand leer, wird der Talon wieder umgedreht.
+- **Mitte:** Jeder Stapel beginnt mit einer **1** und wächst in derselben Farbe bis **10**. Volle Stapel werden abgeräumt. Jeder darf auf jeden Stapel legen.
+- **Spielbar** sind die oberste Ligretto-Karte, jede Karte der Reihe und die oberste Talon-Karte. Eine Lücke in der Reihe füllt sich sofort mit der obersten Ligretto-Karte.
+- **Rundenende:** Wer seinen Ligretto-Stapel leer hat, beendet die Runde („Ligretto!“).
+- **Wertung:** +1 Punkt je eigener Karte in der Mitte, −2 je Karte, die noch im eigenen Ligretto-Stapel liegt.
+- **Stillstand:** Kommt niemand mehr weiter, legen alle ihre oberste Ligretto-Karte unter den Stapel (und die oberste Talon-Karte unter die Hand).
 
 ## Umsetzung in Brett & Blatt
 
-- **Muster:** Gleichzeitige Züge. Alle aktiven Spieler sind gleichzeitig am Zug (`currentPlayers` liefert alle).
-- **Verdeckte Information:** Nur die eigene Hand/Stapel für den Spieler sichtbar. Das Mittelfeld ist für alle offen. `playerView` blendet alles Verdeckte aus.
-- **Züge:** `playToCenter` (Karte von eigener Hand oder vom offenen Handstapel auf passenden Mittelfeldstapel), `flip` (umdrehen vom Ligretto-Stapel), `callLigretto` (Runde beenden, wenn Ligretto-Stapel leer).
-- **Konfliktauflösung:** Kommen mehrere Züge gleichzeitig an, wendet der Server sie in **Eingangsreihenfolge** an und prüft nach jeder Anwendung erneut die Legalität. Trifft Zug A zuerst auf Stapel X und füllt/legt erfolgreich, kann Zug B für denselben Stapel nicht mehr passen.
-- **Determinismus:** Kein `Math.random()` in Regeln; Mischen erfolgt über `Rng` aus dem Seed. Spielstand ist reines JSON.
-- **Bots:** Reaktionsbasierter Bot – scannt ständig nach passenden Karten, wählt eine aus und führt sie mit Verzögerung aus (150–600 ms je Schwierigkeitsstufe), um menschlich zu wirken.
+Neu geschrieben am 28.10.2026 (Regelversion 2); die erste Fassung hatte keine Reihe, keinen Talon, mischte immer gleich und konnte festhängen.
 
-## Spielmodul
+- **Muster:** `simultaneous`. `currentPlayers` liefert in der Spielphase alle, die nicht „festgefahren“ sind, beim Rundenende alle, die noch nicht bereit sind.
+- **Züge:** `play` (Quelle `ligretto` / `row` mit `slot` / `talon`, Ziel `pile` = Stapelkennung oder `null` für einen neuen Stapel mit einer 1), `flip` (umblättern bzw. Talon umdrehen), `stuck` („Festgefahren“), `ready` (nächste Runde).
+- **Gleichzeitige Züge:** Mittelstapel haben feste Kennungen (`nextPileId`), abgeräumte Stapel verschieben nichts. `isLegal` ist großzügiger als `legalMoves`: Ist der gewünschte Stapel inzwischen weitergelegt, landet die Karte auf einem anderen passenden Stapel; erst wenn sie nirgends mehr passt, wird der Zug abgelehnt. Online greift dazu `stillValid` im Raum.
+- **Festgefahren:** Wer `stuck` meldet, scheidet aus `currentPlayers` aus, bis eine Karte in die Mitte kommt (dann werden alle Markierungen gelöscht). Melden alle, greift die Stillstandsregel (`unjam`). So hat jeder aktive Platz immer mindestens einen Zug.
+- **Sicht:** Am echten Tisch liegt fast alles offen. `playerView` zeigt deshalb allen dasselbe (`privateViews: false`): oberste Ligretto-Karte und Anzahl, Reihe, oberste Talon-Karte, Anzahl der Handkarten. Verdeckt bleiben nur die Reihenfolgen und der Zufallsstand. `sampleHidden` füllt mit den fehlenden Karten des jeweiligen Blatts auf.
+- **Optionen:** Spieldauer (1/3/5 Runden, bis 50/99 Punkte; Standard 3 Runden) und Umblättern (je drei, klassisch, oder einzeln, leichter).
+- **Zeit:** Gemütlich ohne Uhr; Normal 60 s, Schnell 30 s – die Uhr misst nur, wie lange jemand gar nichts tut, dann zieht der Bot einmal für ihn.
+- **Modi:** Allein gegen Bots und online. Kein Hot-Seat (Echtzeit an einem Gerät geht nicht reihum).
+- **Bot „Flinke Hand“:** reagiert mit Bedenkpause (`delayMs`): Legen leicht 2,3–3,9 s, mittel 1,5–2,5 s, schwer 0,85–1,45 s; Umblättern schneller. Bevorzugt Ligretto-Karte vor Reihe vor Talon, übersieht auf „leicht“ (35 %) und „mittel“ (12 %) manchmal eine Karte und meldet „Festgefahren“, wenn er die Hand einmal ohne Änderung in der Mitte durchgeblättert hat. Simuliert dauert eine Runde mit zwei schweren Bots 30–80 s.
+- **Oberfläche:** Eigene farbige Zahlenkarten mit Formsymbol je Farbe (● ▲ ■ ★) für Farbenblinde; Tippen legt auf den ersten passenden Stapel, Ziehen (`usePointerDrag`) auf einen bestimmten. Gelegte Karten fliegen von ihrer Quelle (bzw. vom Mitspieler-Chip) in die Mitte, volle Stapel blitzen beim Abräumen auf. Mitspieler als wischbare Leiste mit oberster Ligretto-Karte und Restzahl. Kartengröße über Container-Abmessungen (`cqi`/`cqh`), damit Handy hoch/quer und Desktop passen. Rundenende als Tabelle (+, −, Runde, Gesamt) mit „Nächste Runde“.
 
-- **Ordner:** `packages/games/ligretto/`
-- **Spieler:** 2–8
-- **Modi:** `hotseat`, `online` (Klassen-/Rundenmodus)
-- **Regelversion:** 1
-
-## UI-Idee
-
-- **Mittelfeld:** Groß, zentral, Stapel stapeln sich vertikal; Zahl/Farbe gut erkennbar
-- **Eigene Zone:** Unten – Ligretto-Stapel (verdeckt), Handstapel (offen), Handkarten in einem Fächer
-- **Sofort-Feedback:** Hervorhebung passender Karten, kurze Animation beim Ablegen, „Ligretto!“-Button/-Hinweis
-- **Übergabe:** Nicht nötig bei Online, bei Hot-Seat kann Übergabe für verdeckte Infos vermieden werden, da jeder nur seine eigene Zone sieht
-- **Mobil:** Optimiert für schnelles Tippen
-
-## Implementierungsplan
-
-1. **Gerüst** – `pnpm neues-spiel ligretto "Ligretto"` erledigt ✓
-2. **Meta** – Spieleranzahl 2–8, Modi hotseat/online, Muster simultaneous/open, howToPlay
-3. **Regeln** – Typen, Setup, Mischen pro Spieler, legalMoves für simultanes Spiel, applyMove mit Reihenfolgeprüfung, playerView, callLigretto, Rundenende/Punkte
-4. **Bots** – Reaktionsbot mit Scan + verzögerte Züge
-5. **UI** – Mittelfeld + eigene Zone, schnelle Interaktion
-6. **Server** – In games.ts + package.json eingetragen ✓, `pnpm install` erledigt
-7. **Tests** – gameContractChecks + Konfliktauflösung, Ligretto-Ruf
-8. **Integration** – Sounds, evtl. Playlist „Spielabend“
+- **Klänge** (`gameUi.sounds`): Karte legen `karte-legen`, Umblättern `karte-ziehen`, Talon umdrehen / Stillstand / neue Runde `mischen`, voller Stapel `stapel-fertig`, „Ligretto!“ `muehle` (Marimba). **Musik:** Playlist „Spielabend“ (fröhlich und verspielt).
+- **Wettrennen online:** Nimmt der Raum einen Zug mit älterer Version an (`stillValid`), der jetzt nicht mehr passt, meldet er `tooLate` („Zu spät – jemand war schneller.“) statt `illegalMove`. Die Web-App zeigt das 1,5 s als neutralen Hinweis (`notice` in `apps/web/src/lib/online.ts`), nicht als rote Fehlermeldung.
 
 ## Offene Punkte
 
-- **Punktevergabe:** Exakte Variante festlegen (klassisch vs vereinfachte Variante)
-- **Handgröße:** 1, 2 oder 3 Karten zum Ablegen
-- **Anzahl Decks:** Pro Spieler eigenes Deck oder gemeinsames? Klassisch eigenes Deck
-- **Runden/Spielende:** Mehrere Runden bis Zielpunktzahl oder bis X Runden
-- **„Speed“-Aspekte:** Server-Taktung für simultane Phase, Animationen für viele gleichzeitige Legungen
+- **Geteilter Bildschirm** für mehrere Menschen an einem Tablet (wie Enten-Rallye) – bewusst zurückgestellt.

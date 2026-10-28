@@ -247,7 +247,7 @@ export type ServerMessage =
   | { type: 'kicked' }
   | { type: 'pong'; serverNow: number };
 
-export type ErrorCode = 'badMessage' | 'protocol' | 'notAllowed' | 'roomFull' | 'badName' | 'notReady' | 'staleMove' | 'illegalMove';
+export type ErrorCode = 'badMessage' | 'protocol' | 'notAllowed' | 'roomFull' | 'badName' | 'notReady' | 'staleMove' | 'illegalMove' | 'tooLate';
 
 // ---------------------------------------------------------------------------
 // Prüfen eingehender Nachrichten: Alles vom Browser ist erst einmal unbekannt.
