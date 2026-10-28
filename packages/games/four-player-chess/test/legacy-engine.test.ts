@@ -354,6 +354,23 @@ test('Computergegner: opfert keinen Turm für eine 1-Punkt umgewandelte Dame', (
   assert.notEqual(a?.to, at('j5'));
 });
 
+test('Computergegner: bewertet umgewandelte 1-Punkt-Dame mit 1 statt 9 Punkten', () => {
+    // Rot hat einen Turm auf f5. Er kann schlagen:
+    // 1) echte Dame von Blau auf j5 (9 Punkte, horizontal)
+    // 2) umgewandelte Dame von Grün auf f8 (1 Punkt, vertikal)
+    const s = custom('ffa', [
+        ['f5', 'r', 'R'],
+        ['j5', 'b', 'Q'],
+        ['f8', 'g', 'Q'],
+    ]);
+    const pieceG = s.board[at('f8')];
+    assert.ok(pieceG);
+    pieceG.pr = true;
+    const m = chooseBotMove(s, 'r', () => 0);
+    assert.ok(m);
+    assert.equal(m.to, at('j5'), 'Bot bevorzugt die echte 9-Punkte-Dame gegenüber der 1-Punkt-Dame');
+});
+
 test('Vier Computergegner spielen eine Partie zu Ende', () => {
   for (const mode of ['ffa', 'teams'] as const) {
     const random = seededRandom(7);
