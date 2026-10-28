@@ -1,12 +1,13 @@
+import { cardId } from '@brett-und-blatt/engine';
 import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
 import { PlayingCard } from '@brett-und-blatt/ui';
 import type { LigrettoMove, LigrettoState, Suit } from '../rules';
 
-function suitToCardSuit(suit: Suit): 'hearts' | 'diamonds' | 'clubs' | 'spades' {
-  if (suit === 'red') return 'hearts';
-  if (suit === 'yellow') return 'diamonds';
-  if (suit === 'green') return 'clubs';
-  return 'spades';
+function suitToCardSuit(suit: Suit): 'C' | 'D' | 'H' | 'S' {
+  if (suit === 'red') return 'H';
+  if (suit === 'yellow') return 'D';
+  if (suit === 'green') return 'C';
+  return 'S';
 }
 
 function Board({ view, legalMoves, onMove, viewer }: BoardProps<LigrettoState, LigrettoMove>) {
@@ -45,7 +46,7 @@ function Board({ view, legalMoves, onMove, viewer }: BoardProps<LigrettoState, L
           {s.centerPiles.map((cp, i) => (
             <div key={i} className="relative">
               {cp.suit ? (
-                <PlayingCard card={{ suit: suitToCardSuit(cp.suit), rank: String(cp.top) as any }} />
+                <PlayingCard card={cardId(suitToCardSuit(cp.suit), cp.top)} />
               ) : (
                 <div className="w-[72px] h-[100px] border-2 border-dashed border-gray-400 rounded-lg"></div>
               )}
@@ -64,7 +65,7 @@ function Board({ view, legalMoves, onMove, viewer }: BoardProps<LigrettoState, L
           <div className="flex flex-col items-center">
             <div className="text-xs mb-1">Ablage ({player.pile.length})</div>
             {player.pile.length > 0 ? (
-              <PlayingCard card={{ suit: suitToCardSuit(player.pile[player.pile.length - 1].suit), rank: String(player.pile[player.pile.length - 1].value) as any }} />
+              <PlayingCard card={cardId(suitToCardSuit(player.pile[player.pile.length - 1].suit), player.pile[player.pile.length - 1].value)} />
             ) : (
               <div className="w-[72px] h-[100px] border-2 border-dashed border-gray-300 rounded-lg"></div>
             )}
@@ -82,7 +83,7 @@ function Board({ view, legalMoves, onMove, viewer }: BoardProps<LigrettoState, L
                   disabled={!canPlay}
                   className={`p-0 border-0 bg-transparent ${canPlay ? 'cursor-pointer hover:scale-105 transition-transform' : 'opacity-60'}`}
                 >
-                  <PlayingCard card={{ suit: suitToCardSuit(card.suit), rank: String(card.value) as any }} />
+                  <PlayingCard card={cardId(suitToCardSuit(card.suit), card.value)} />
                 </button>
               );
             })}
