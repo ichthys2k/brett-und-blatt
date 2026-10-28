@@ -143,4 +143,6 @@ type SchafkopfMove =
 
 ## Offene Punkte
 
-- Weitere Sondervarianten (Geier, Farbwenz, Bettel).
+- ✅ Geier, Farbwenz und Bettel (mit Option „alle Spiele“) lassen sich ansagen; Bettel ist ohne Stich gewonnen, Tout nur mit allen Stichen und zählt doppelt (`ruleVersion` 3, 28.10.2026).
+- ✅ Bot sagt Tout an, wenn alle Stiche sicher sind (`winsAllTricks`), und spielt Bettel mit gedeckten niedrigen Karten; Geier und Farbwenz wählt er nie.
+- Bettel und Tout enden nicht vorzeitig, wenn sie verloren sind – die Runde wird ausgespielt.

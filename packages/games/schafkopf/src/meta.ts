@@ -10,7 +10,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['hidden'],
   hiddenInformation: true,
-  ruleVersion: 2,
+  ruleVersion: 3,
   howToPlay: [
     'Schafkopf wird zu viert mit 32 Karten (langes Blatt) oder 24 Karten (kurzes Blatt) im bayerischen Bild gespielt: Eichel, Gras, Herz und Schellen. Jeder erhält 8 Karten (kurz: 6 Karten).',
     'Spielansage: Reihum ab Vorhand sagt jeder „weiter“ oder „ich würde spielen“. Wollen mehrere spielen, gilt die Rangfolge Sauspiel < Wenz < Farbsolo < Tout.',

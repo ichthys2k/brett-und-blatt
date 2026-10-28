@@ -142,9 +142,15 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - Gomoku: Gitterlinien sichtbar (CSS zielte auf eine nicht vorhandene Klasse), Vertragsprüfungen laufen jetzt wirklich.
 - Farbe & Form: Klassenpräfix `ff-` statt `cs-` (kollidierte mit Farbensortierer: nach einer Partie Farbensortierer zerfiel das Brett). Unbenutzte Tic-Tac-Toe-CSS-Kopien in den Stichspielen entfernt.
 
+**Nachträge (28.10.2026, abends):**
+- PWA: Tierstimmen (Drachenspiel, ~14 MB) und Enten-Rallye-Ton werden nicht mehr vorab gespeichert, sondern beim ersten Abspielen in eigene Speicher (`tiere`, `enten-rallye`); vorab nur noch ~6,4 MB statt 19 MB. Die Enten-Rallye spielt über `<audio>` (Range-Anfragen) und lädt ihre Dateien deshalb einmal ganz vor (`RallyAudio.prefetch`); der Service Worker bedient die Stücke aus dem Speicher (`rangeRequests`).
+- Bibel-Quiz: Die Sicht verbirgt Lösung, Erklärung und Bibellink bis zur Auflösung (`solutionOf` für Bot und `sampleHidden`).
+- Sonderspiele der Stichspiel-Bots über `winsAllTricks` und `nullDangerSuits`/`nullTrickCard` im Stich-Kern: Skat-Bot spielt Null (bis 23, drückt gefährliche Farben), Schafkopf-Bot sagt Tout an, wenn alle Stiche sicher sind, und Bettel (nur mit „alle Spiele“), Binokel-Bot drückt für Durch und sagt es an.
+- Schafkopf-Regeln (`ruleVersion` 3): Geier, Farbwenz und Bettel ließen sich reizen, aber nur als Solo ansagen – jetzt richtig; Bettel ist ohne Stich gewonnen, Tout nur mit allen Stichen und zählt doppelt (vorher wie ein normales Spiel nach Augen).
+
 **Bekannte offene Punkte:**
-- **Stichspiel-Bots** spielen nach Faustregeln, ohne Suche (Skat, Schafkopf, Doppelkopf, Binokel); Null, Bettel, Tout und Durch sagen sie nie an.
-- **Bibel-Quiz:** Die richtige Antwort steht in der Sicht – aber auch im ausgelieferten Fragenkatalog (Option 0 ist richtig). Verbergen nützt erst, wenn die Fragen nicht mehr im Browser-Bundle liegen.
+- **Stichspiel-Bots** spielen nach Faustregeln, ohne Suche (Skat, Schafkopf, Doppelkopf, Binokel). Skat-Hand-, Schneider-, Schwarz- und Ouvert-Ansagen, Geier und Farbwenz macht kein Bot.
+- **Bibel-Quiz:** Der Fragenkatalog mit Antworten und Erklärungen liegt im Browser-Bundle (Option 0 ist richtig). Wer den Programmcode durchsucht, findet die Lösung; ganz verbergen ginge nur, wenn der Spieleserver die Fragen liefert – dann bräuchten Solo und Hot-Seat Internet.
 - **Enten-Rallye-Klänge in der Git-Geschichte:** Die 15 MP3s liegen jetzt im privaten Klang-Repo, stecken aber noch in alten Commits des öffentlichen Repos. Ganz entfernen ginge nur durch Umschreiben der Geschichte (Force-Push) – nur auf Anweisung von Cornelius.
 
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.

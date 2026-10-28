@@ -135,3 +135,48 @@ describe('Schafkopf-Bot', () => {
     expect(won / played).toBeGreaterThan(0.45);
   }, 60_000);
 });
+
+describe('Sonderspiele Bettel und Tout', () => {
+  /** Reizt mit „wantToPlay“ für Vorhand, sagt `contract` an und spielt mit Zufallszügen zu Ende. */
+  function playOut(contractType: 'bettel' | 'wenz', tout: boolean, seed: string): SchafkopfState {
+    const rng = Rng.fromSeed(seed, 'test');
+    let state = setup(4, resolveOptions(gameModule, { extras: 'all' }), seed);
+    for (let turn = 0; turn < 4; turn++) {
+      const seat = gameModule.currentPlayers(state)[0] as number;
+      const move = turn === 0 ? { type: 'wantToPlay' as const, contractType } : { type: 'pass' as const };
+      state = gameModule.applyMove(state, seat, move).state;
+    }
+    expect(state.phase).toBe('declare');
+    const declarer = state.declarerSeat!;
+    const declare = gameModule.legalMoves(state, declarer).find((m) => m.type === 'declare' && m.contract.gameType === contractType && !!m.contract.tout === tout);
+    expect(declare).toBeDefined();
+    state = gameModule.applyMove(state, declarer, declare!).state;
+    for (let i = 0; i < 200 && state.phase !== 'roundOver'; i++) {
+      const seat = gameModule.currentPlayers(state)[0] as number;
+      const moves = gameModule.legalMoves(state, seat).filter((m) => m.type !== 'double' || state.phase !== 'doubling');
+      state = gameModule.applyMove(state, seat, rng.pick(moves)).state;
+    }
+    expect(state.phase).toBe('roundOver');
+    return state;
+  }
+
+  it('Bettel lässt sich ansagen und ist gewonnen, wenn der Spieler keinen Stich macht', () => {
+    for (const seed of ['bettel-a', 'bettel-b', 'bettel-c', 'bettel-d']) {
+      const state = playOut('bettel', false, seed);
+      const last = state.history[state.history.length - 1]!;
+      expect(last.contract.gameType).toBe('bettel');
+      const tricks = state.completedTricks.filter((t) => t.winner === state.declarerSeat).length;
+      expect(last.won).toBe(tricks === 0);
+    }
+  });
+
+  it('Tout ist nur mit allen Stichen gewonnen und zählt doppelt', () => {
+    for (const seed of ['tout-a', 'tout-b', 'tout-c']) {
+      const state = playOut('wenz', true, seed);
+      const last = state.history[state.history.length - 1]!;
+      const tricks = state.completedTricks.filter((t) => t.winner === state.declarerSeat).length;
+      expect(last.won).toBe(tricks === state.completedTricks.length);
+      expect(Math.abs(last.scorePerPlayer[state.declarerSeat!]!)).toBe(3 * 100);
+    }
+  });
+});

@@ -535,3 +535,70 @@ export function trickGameEvents(prev: TrickGameShape, next: TrickGameShape, seat
   if (next.gameNumber !== prev.gameNumber) events.push({ type: 'newDeal', game: next.gameNumber });
   return events;
 }
+
+// ---------------------------------------------------------------------------
+// Bewertung für Sonderspiele (Bots)
+// ---------------------------------------------------------------------------
+
+const groupPower = (contract: TrickContract, card: CardId) => contract.cardPower(card) + (contract.isTrump(card) ? 1000 : 0);
+
+/**
+ * Macht diese Hand sicher jeden Stich, wenn sie anfangs ausspielt (Tout, Durch)?
+ * Bedingung (vorsichtig): Die eigenen Trümpfe, die höher sind als jeder fremde, reichen, um
+ * alle fremden Trümpfe herauszuziehen (mindestens einer je Runde), und in jeder Fehlfarbe ist
+ * schon die niedrigste eigene Karte mindestens so hoch wie jede fremde – bei gleich hohen
+ * Karten gewinnt die zuerst gespielte, und ausspielen tut immer diese Hand.
+ */
+export function winsAllTricks(hand: readonly CardId[], deck: readonly CardId[], contract: TrickContract): boolean {
+  const own = new Set(hand);
+  const others = deck.filter((c) => !own.has(c));
+  const otherTrumps = others.filter((c) => contract.isTrump(c));
+  if (otherTrumps.length > 0) {
+    const best = Math.max(...otherTrumps.map((c) => groupPower(contract, c)));
+    const masters = hand.filter((c) => contract.isTrump(c) && groupPower(contract, c) >= best).length;
+    if (masters < otherTrumps.length) return false;
+  }
+  for (const card of hand) {
+    if (contract.isTrump(card)) continue;
+    const suit = contract.effectiveSuit(card);
+    const power = contract.cardPower(card);
+    if (others.some((c) => contract.effectiveSuit(c) === suit && contract.cardPower(c) > power)) return false;
+  }
+  return true;
+}
+
+/**
+ * Wie viele Farben sind für Null bzw. Bettel gefährlich? Faustregel: Die i-t niedrigste eigene
+ * Karte einer Farbe (ab 0 gezählt) ist gedeckt, wenn höchstens i fremde Karten dieser Farbe
+ * darunter liegen – also blanke Sieben, Sieben-Neun, Sieben-Acht-Zehn usw. Fehlt eine Farbe,
+ * ist sie sicher. Gedacht für Verträge ohne Trumpf.
+ */
+export function nullDangerSuits(hand: readonly CardId[], deck: readonly CardId[], contract: TrickContract): number {
+  const own = new Set(hand);
+  const others = deck.filter((c) => !own.has(c));
+  let danger = 0;
+  for (const suit of new Set(hand.map((c) => contract.effectiveSuit(c)))) {
+    const mine = hand.filter((c) => contract.effectiveSuit(c) === suit).map((c) => contract.cardPower(c)).sort((a, b) => a - b);
+    const theirs = others.filter((c) => contract.effectiveSuit(c) === suit).map((c) => contract.cardPower(c));
+    if (mine.some((power, i) => theirs.filter((p) => p < power).length > i)) danger++;
+  }
+  return danger;
+}
+
+/**
+ * Karte für Null bzw. Bettel: Der Alleinspieler darf keinen Stich machen, die Gegner wollen
+ * ihn dazu zwingen. Alleinspieler: unter dem höchsten Stich bleiben, mit möglichst hoher Karte;
+ * ausspielen klein. Gegner: liegt der Alleinspieler vorn, nicht überstechen; sonst klein halten,
+ * damit er nicht darunter bleiben kann; ohne passende Farbe die höchste Karte abwerfen.
+ */
+export function nullTrickCard(cards: readonly CardId[], trick: Trick, seat: number, declarer: number | null, contract: TrickContract): CardId {
+  const asc = [...cards].sort((a, b) => contract.cardPower(a) - contract.cardPower(b));
+  const highest = asc[asc.length - 1]!;
+  if (trick.length === 0) return asc[0]!;
+  const losing = asc.filter((c) => trickWinner([...trick, { player: seat, card: c }], contract).player !== seat);
+  if (seat === declarer) return losing.length > 0 ? losing[losing.length - 1]! : highest;
+  const follows = cards.some((c) => contract.effectiveSuit(c) === contract.effectiveSuit(trick[0]!.card));
+  if (!follows) return highest;
+  if (trickWinner(trick, contract).player === declarer) return losing.length > 0 ? losing[losing.length - 1]! : asc[0]!;
+  return asc[0]!;
+}

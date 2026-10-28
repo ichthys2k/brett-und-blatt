@@ -252,4 +252,6 @@ Die erste Fassung war nicht spielbar (Platzhalter-Oberfläche, Zustand mit `Set`
 - `src/ui/index.tsx`: Reizknöpfe, Dabb, Drückauswahl, Trumpfwahl mit Meldevorschau, Meldeübersicht, Stichtisch, Abrechnungstabelle.
 - `test/binokel.test.ts`: Vertragsprüfungen, Meldungen, Stichregeln, ganze Partien der Bots, Gewinnquote der Spielmacher.
 
+- Bot spielt Durch (28.10.2026): drückt alle Karten, die ein fremder Stich überbieten könnte, und sagt Durch an, wenn danach jeder Stich sicher ist (`winsAllTricks`, nicht auf „leicht“).
+
 **Noch offen:** Vierertisch und Kreuzbinokel, offener Durch und Hand-Durch, Melden von Hand statt automatisch, Lernhilfen als Optionen, Bot mit Suche (PIMC).

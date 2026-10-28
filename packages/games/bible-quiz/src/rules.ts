@@ -148,6 +148,28 @@ function buildRoundQuestion(raw: BibleQuestion, rng: Rng): RoundQuestion {
   };
 }
 
+const byId = new Map(QUESTIONS.map((q) => [q.id, q]));
+
+/**
+ * Richtige Antwort und Erklärung einer Frage aus dem Katalog (dort ist Option 0 richtig).
+ * Die Sicht verbirgt beides während der Fragephase; Bots und `sampleHidden` holen es von hier.
+ */
+export function solutionOf(question: RoundQuestion): Pick<RoundQuestion, 'correctOptionIndex' | 'info' | 'bibleLink'> {
+  const raw = byId.get(question.questionId);
+  if (!raw) return { correctOptionIndex: question.correctOptionIndex, info: question.info, bibleLink: question.bibleLink };
+  return {
+    correctOptionIndex: question.shuffledOptions.indexOf(raw.options[0]),
+    info: raw.info,
+    ...(raw.bibleLink ? { bibleLink: raw.bibleLink } : {}),
+  };
+}
+
+/** Frage ohne Lösung: so sieht sie jeder, bis alle geantwortet haben. */
+function withoutSolution(question: RoundQuestion): RoundQuestion {
+  const { bibleLink: _link, ...rest } = question;
+  return { ...rest, correctOptionIndex: -1, info: '' };
+}
+
 function planQuestions(
   pool: BibleQuestion[],
   difficultyOpt: string,
@@ -402,10 +424,11 @@ export function playerView(state: BibleQuizState, viewer: SeatId | 'spectator'):
     };
   }
 
-  // Phase 'question': Verberge gegnerische Antworten und zukünftige Fragen
+  // Phase 'question': Verberge Lösung, gegnerische Antworten und zukünftige Fragen
   return {
     ...state,
     rng: [0, 0, 0, 0],
+    currentQuestion: withoutSolution(state.currentQuestion),
     plannedQuestionIds: state.plannedQuestionIds.slice(0, state.currentRound),
     answers: state.answers.map((ans, idx) => {
       if (!ans) return null;
@@ -425,9 +448,12 @@ export function sampleHidden(
   viewer: SeatId,
   rng: Rng,
 ): BibleQuizState {
+  const currentQuestion =
+    view.phase === 'question' ? { ...view.currentQuestion, ...solutionOf(view.currentQuestion) } : view.currentQuestion;
   return {
     ...view,
     rng: rng.state,
+    currentQuestion,
     plannedQuestionIds: Array.from(
       { length: view.totalRounds },
       (_, idx) => view.plannedQuestionIds[idx] ?? ((idx + 1) % QUESTIONS.length) + 1,
@@ -435,7 +461,7 @@ export function sampleHidden(
     answers: view.answers.map((ans, idx) => {
       if (!ans || idx === viewer || ans.chosenIndex !== null) return ans;
       const dummyChosen = rng.int(4);
-      const isCorrect = dummyChosen === view.currentQuestion.correctOptionIndex;
+      const isCorrect = dummyChosen === currentQuestion.correctOptionIndex;
       const basePoints =
         view.currentQuestion.difficulty === 3 ? 30 : view.currentQuestion.difficulty === 2 ? 20 : 10;
       return {

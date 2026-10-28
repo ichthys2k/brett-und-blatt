@@ -164,6 +164,25 @@ export class RallyAudio {
     this.victory?.pause();
   }
 
+  /**
+   * Lädt die Dateien einmal ganz und nacheinander im Hintergrund, damit der Service Worker sie
+   * speichert – `<audio>` selbst fragt nur Stücke an, die er nicht speichert. Danach klingt das
+   * Spiel auch offline. Bereits gespeicherte Dateien liefert der Service Worker ohne Netz.
+   */
+  prefetch(files: readonly string[]): void {
+    if (typeof navigator === 'undefined' || !navigator.serviceWorker?.controller) return;
+    const queue = [...new Set([...files, 'ente_variante_6.mp3', 'Victory_Lap.mp3'])];
+    const next = (): void => {
+      const file = queue.shift();
+      if (!file || this.disposed) return;
+      void fetch(BASE + file, { priority: 'low' } as RequestInit)
+        .then((response) => response.arrayBuffer())
+        .catch(() => {})
+        .then(next);
+    };
+    next();
+  }
+
   /** Alles anhalten und freigeben – beim Verlassen des Spiels. */
   dispose(): void {
     this.disposed = true;

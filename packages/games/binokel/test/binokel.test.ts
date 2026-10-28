@@ -90,3 +90,18 @@ describe('Binokel – Partie', () => {
     expect(folded / played).toBeLessThan(0.4);
   }, 60_000);
 });
+
+describe('Binokel – Bot und Durch', () => {
+  it('drückt die schwachen Karten und spielt Durch, wenn jeder Stich sicher ist', () => {
+    const masters = ['C', 'S', 'H', 'D'].flatMap((s) => [c(s as 'C', 1), c(s as 'C', 1, 2)]).concat([c('C', 10), c('C', 10, 2), c('S', 10), c('S', 10, 2)]);
+    const weak = [c('H', 13), c('D', 12), c('D', 11), c('S', 11)];
+    let state = gameModule.setup(3, { deckSize: '40', allowDurch: 'true' }, 'durch') as BinokelState;
+    state = { ...state, phase: 'discard', declarer: 0, bid: 300, dabb: [], hands: state.hands.map((h, s) => (s === 0 ? [...masters, ...weak] : h)) };
+    const ask = (s: BinokelState) => computeBotMove(gameModule, { gameId: 'binokel', botId: 'binokel', level: 'hard', seat: 0, view: gameModule.playerView(s, 0), seed: 'd', timeBudgetMs: 50 }) as BinokelMove;
+    const discard = ask({ ...state, dabb: weak });
+    expect(discard.type).toBe('discard');
+    expect([...(discard as { cards: CardId[] }).cards].sort()).toEqual([...weak].sort());
+    const declare = { ...state, phase: 'declare' as const, hands: state.hands.map((h, s) => (s === 0 ? masters : h)), pressed: weak };
+    expect(ask(declare)).toEqual({ type: 'declareDurch' });
+  });
+});

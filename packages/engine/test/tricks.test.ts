@@ -6,8 +6,10 @@ import {
   createSchafkopfContract,
   createSkatContract,
   legalCards,
+  nullDangerSuits,
   trickPoints,
   trickWinner,
+  winsAllTricks,
   type PlayedCard,
 } from '../src/index.js';
 
@@ -136,5 +138,24 @@ describe('Doppelkopf-Verträge', () => {
       { player: 3, card: cardId('D', 1, 1) }, // Karo-Ass
     ];
     expect(trickWinner(trick, contract).player).toBe(0);
+  });
+});
+
+describe('Bewertung für Sonderspiele', () => {
+  const deck = (['C', 'S', 'H', 'D'] as const).flatMap((s) => ([7, 8, 9, 10, 11, 12, 13, 1] as const).map((r) => cardId(s, r)));
+
+  it('nullDangerSuits erkennt gedeckte und gefährliche Farben', () => {
+    const nul = createSkatContract('null');
+    expect(nullDangerSuits([cardId('C', 7), cardId('C', 9), cardId('S', 7)], deck, nul)).toBe(0);
+    expect(nullDangerSuits([cardId('C', 8)], deck, nul)).toBe(1);
+    expect(nullDangerSuits([cardId('C', 7), cardId('C', 8), cardId('C', 10), cardId('H', 1)], deck, nul)).toBe(1);
+  });
+
+  it('winsAllTricks erkennt eine sichere Hand', () => {
+    const grand = createSkatContract('grand');
+    const hand = [cardId('C', 11), cardId('S', 11), cardId('H', 11), cardId('D', 11), cardId('C', 1), cardId('C', 10), cardId('S', 1), cardId('S', 10), cardId('H', 1), cardId('H', 10)];
+    expect(winsAllTricks(hand, deck, grand)).toBe(true);
+    expect(winsAllTricks([...hand.slice(0, 9), cardId('H', 9)], deck, grand)).toBe(false);
+    expect(winsAllTricks([...hand.slice(1), cardId('D', 1)], deck, grand)).toBe(false);
   });
 });

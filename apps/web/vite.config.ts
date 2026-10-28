@@ -49,6 +49,19 @@ export default defineConfig({
             },
           },
           {
+            // Die Enten-Rallye spielt über <audio>, das in Stücken (Range) anfragt. Gespeichert wird nur die
+            // ganze Datei, die das Spiel im Hintergrund vorlädt (`RallyAudio.prefetch`); `rangeRequests`
+            // schneidet daraus die angefragten Stücke.
+            urlPattern: ({ url }) => url.pathname.includes('/klaenge/duck-rally/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'enten-rallye',
+              rangeRequests: true,
+              expiration: { maxEntries: 40, purgeOnQuotaError: true },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          {
             urlPattern: ({ url }) => url.pathname.includes('/klaenge/musik/'),
             handler: 'CacheFirst',
             options: {

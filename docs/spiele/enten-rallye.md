@@ -48,4 +48,4 @@ Wie im Original aus „Großer Preis“ (`KopfrechenArena.jsx`), umgesetzt in `s
 - **Ansager:** Countdown „3, 2, 1, los!“ zu Beginn (Eingabe gesperrt, Bots warten 3 s länger), Führungswechsel (`lead_team_*`), Fortschritt der vordersten Ente bei 50, 75 und 90 % (`progress_*`), Sieger (`winner_team_*`, sonst `outro_winner`). Während einer Ansage wird die Musik leiser; die Ansagen wurden im Klang-Repo auf etwa −14 LUFS angehoben (vorher rund 9 dB leiser als die Musik).
 - **Quaken** bei jeder richtigen Antwort (`ente_variante_6`).
 - **Siegesmusik** „Victory Lap“; sie und alles andere stoppt, wenn man das Spiel verlässt, und eine Revanche startet wieder mit Countdown.
-- Dateien im privaten Klang-Repo unter `duck-rally/`.
+- Dateien im privaten Klang-Repo unter `duck-rally/`. Offline: Bei eingeschaltetem Ton lädt das Spiel alle Dateien einmal ganz vor (`RallyAudio.prefetch`), der Service Worker legt sie im Speicher `enten-rallye` ab und bedient daraus auch die Stück-Anfragen von `<audio>`.

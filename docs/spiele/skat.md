@@ -203,4 +203,5 @@ Der aufwendigste Bot der Sammlung. Er hat drei Teile.
 ## Offene Punkte
 
 - ISkO-Sonderfälle (z. B. falsches Beanspruchen / Schenken).
-- Bot: Null-Spiele, Schneider-Ansagen und simulationsbasiertes Reizen/Spielen (wie oben geplant) fehlen noch.
+- Bot: Schneider-, Hand- und Ouvert-Ansagen sowie simulationsbasiertes Reizen/Spielen (wie oben geplant) fehlen noch.
+- ✅ Bot spielt Null (28.10.2026): reizt bis 23, wenn höchstens eine kurze gefährliche Farbe da ist (`nullDangerSuits`), drückt sie weg und duckt sich im Stich; die Gegner zwingen ihn zum Stechen (`nullTrickCard`). In 169 Bot-Spielen 4 Null, 2 gewonnen.

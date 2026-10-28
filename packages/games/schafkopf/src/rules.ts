@@ -295,9 +295,16 @@ export function legalMoves(state: SchafkopfState, actor: Actor): SchafkopfMove[]
           moves.push({ type: 'declare', contract: { gameType: 'solo', trumpSuit: s } });
         }
       }
-    } else if (highestBid === 'wenz') {
-      moves.push({ type: 'declare', contract: { gameType: 'wenz' } });
-      moves.push({ type: 'declare', contract: { gameType: 'wenz', tout: true } });
+    } else if (highestBid === 'wenz' || highestBid === 'geier') {
+      moves.push({ type: 'declare', contract: { gameType: highestBid } });
+      moves.push({ type: 'declare', contract: { gameType: highestBid, tout: true } });
+    } else if (highestBid === 'bettel') {
+      moves.push({ type: 'declare', contract: { gameType: 'bettel' } });
+    } else if (highestBid === 'farbwenz') {
+      for (const s of SUITS) {
+        moves.push({ type: 'declare', contract: { gameType: 'farbwenz', trumpSuit: s } });
+        moves.push({ type: 'declare', contract: { gameType: 'farbwenz', trumpSuit: s, tout: true } });
+      }
     } else {
       // Solo
       for (const s of SUITS) {
@@ -571,13 +578,19 @@ function finishGame(state: SchafkopfState): SchafkopfState {
       scoreDiffs[s] = s === loser ? -30 : 10;
     }
   } else {
-    won = state.declarerEyes >= 61;
+    // Bettel: kein einziger Stich; Tout: alle Stiche (zählt doppelt); sonst 61 Augen.
+    const declarerTricks = state.completedTricks.filter((t) => t.winner === declarer).length;
+    const bettel = state.contract?.gameType === 'bettel';
+    const tout = state.contract?.tout === true;
+    if (bettel) won = declarerTricks === 0;
+    else if (tout) won = declarerTricks === state.completedTricks.length;
+    else won = state.declarerEyes >= 61;
     const baseVal = isSauspiel ? 10 : 50;
 
     // Laufende ab 3 im Sauspiel/Solo, ab 2 bei Wenz
     const laufendeBonus = 0; // Standard 0 für Basistarif
-    const schneiderBonus = state.opponentEyes <= 30 || state.declarerEyes <= 30 ? 10 : 0;
-    const gamePoints = (baseVal + laufendeBonus + schneiderBonus) * state.multiplier;
+    const schneiderBonus = !bettel && !tout && (state.opponentEyes <= 30 || state.declarerEyes <= 30) ? 10 : 0;
+    const gamePoints = (baseVal + laufendeBonus + schneiderBonus) * (tout ? 2 : 1) * state.multiplier;
 
     if (isSauspiel) {
       for (let s = 0; s < 4; s++) {

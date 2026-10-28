@@ -1,7 +1,7 @@
 import { resolveOptions, type Options } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
-import { QUESTIONS, gameModule, quizBot } from '../src';
+import { QUESTIONS, gameModule, quizBot, solutionOf } from '../src';
 
 const start = (options: Options = {}, seats = 2, seed = 'test-seed') =>
   gameModule.setup(seats, resolveOptions(gameModule, options), seed);
@@ -36,6 +36,20 @@ describe('Bibel-Quiz – Regeln', () => {
     expect(res.state.answers[0]?.pointsEarned).toBe(expectedBase);
     expect(res.state.scores[0]).toBe(expectedBase);
     expect(res.state.streaks[0]).toBe(1);
+  });
+
+  it('verrät die Lösung erst bei der Auflösung', () => {
+    const s = start({ rounds: '5' }, 2, 'secret-test');
+    const view = gameModule.playerView(s, 0);
+    expect(view.currentQuestion.correctOptionIndex).toBe(-1);
+    expect(view.currentQuestion.info).toBe('');
+    expect(view.currentQuestion.bibleLink).toBeUndefined();
+    expect(solutionOf(view.currentQuestion).correctOptionIndex).toBe(s.currentQuestion.correctOptionIndex);
+
+    let state = s;
+    for (const seat of [0, 1]) state = gameModule.applyMove(state, seat, { type: 'answer', optionIndex: 0 }).state;
+    expect(state.phase).toBe('reveal');
+    expect(gameModule.playerView(state, 0).currentQuestion).toEqual(s.currentQuestion);
   });
 
   it('wartet im Mehrspieler auf alle Antworten und verbirgt fremde Antworten vorher', () => {

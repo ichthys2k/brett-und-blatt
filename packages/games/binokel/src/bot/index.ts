@@ -1,12 +1,13 @@
-import { cardRank, cardSuit, trickWinner, type BotContext, type BotDefinition, type BotLevel, type CardId, type Suit } from '@brett-und-blatt/engine';
-import { binokelContract, eyes, power, SUITS } from '../cards';
+import { cardRank, cardSuit, trickWinner, winsAllTricks, type BotContext, type BotDefinition, type BotLevel, type CardId, type Suit } from '@brett-und-blatt/engine';
+import { binokelContract, createDeck, eyes, power, SUITS } from '../cards';
 import { findMelds, meldPoints } from '../melds';
 import { legalCardsFor, legalMoves, type BinokelMove, type BinokelState } from '../rules';
 
 /**
  * Bot „Schwaben-Ass“: schätzt Meldungen und Stichaugen je Trumpffarbe, reizt bis zu dieser
  * Schätzung, drückt Karten aus kurzen Farben, geht bei hoffnungslosem Blatt ab und spielt im
- * Stich nach Faustregeln (Gegenspieler sichern zuerst einen Stich für ihre Meldungen).
+ * Stich nach Faustregeln (Gegenspieler sichern zuerst einen Stich für ihre Meldungen). Kann er
+ * nach dem Drücken jeden Stich sicher machen, spielt er Durch.
  *
  * Stufen: „leicht“ reizt waghalsig und spielt manchmal zufällig, „mittel“ reizt bis knapp
  * unter die Schätzung, „schwer“ reizt vorsichtiger und zählt die gefallenen Trümpfe.
@@ -28,9 +29,13 @@ export const binokelBot: BotDefinition<BinokelState, BinokelMove> = {
         const next = view.bid === null ? view.minBid : view.bid + 10;
         return next <= limit ? { type: 'bid', value: next } : { type: 'pass' };
       }
-      case 'discard':
-        return { type: 'discard', cards: chooseDiscard(hand, view.dabb.length) };
+      case 'discard': {
+        const durch = view.allowDurch && level !== 'easy' ? durchDiscard(hand, view.dabb.length, view.deckSize) : null;
+        return { type: 'discard', cards: durch ?? chooseDiscard(hand, view.dabb.length) };
+      }
       case 'declare': {
+        const pressedCards = view.pressed.filter((c): c is CardId => c !== null);
+        if (view.allowDurch && level !== 'easy' && sureDurch(hand, pressedCards, view.deckSize)) return { type: 'declareDurch' };
         const best = bestTrump(hand);
         const pressed = view.pressed.filter((c): c is CardId => c !== null).reduce((s, c) => s + eyes(c), 0);
         const expected = best.value + pressed;
@@ -87,6 +92,27 @@ function biddingLimit(hand: readonly CardId[], level: BotLevel): number {
   // Der Dabb bringt im Schnitt etwas dazu.
   const value = (bestTrump(hand).value + 15) * FACTOR[level];
   return Math.floor(value / 10) * 10;
+}
+
+const DURCH_CONTRACT = binokelContract(null);
+
+/** Macht die Hand ohne Trumpf sicher jeden Stich? Gedrückte Karten sind aus dem Spiel. */
+function sureDurch(hand: readonly CardId[], pressed: readonly CardId[], deckSize: 40 | 48): boolean {
+  const deck = createDeck(deckSize).filter((c) => !pressed.includes(c));
+  return winsAllTricks(hand, deck, DURCH_CONTRACT);
+}
+
+/**
+ * Drücken für Durch: alle Karten weg, die ein fremder Stich überbieten könnte, aufgefüllt mit
+ * den augenärmsten. Null, wenn danach nicht jeder Stich sicher ist.
+ */
+function durchDiscard(hand: readonly CardId[], count: number, deckSize: 40 | 48): CardId[] | null {
+  const others = createDeck(deckSize).filter((c) => !hand.includes(c));
+  const weak = hand.filter((c) => others.some((o) => cardSuit(o) === cardSuit(c) && power(o) > power(c)));
+  if (weak.length > count) return null;
+  const fill = hand.filter((c) => !weak.includes(c)).sort((a, b) => eyes(a) - eyes(b));
+  const pressed = [...weak, ...fill.slice(0, count - weak.length)];
+  return sureDurch(hand.filter((c) => !pressed.includes(c)), pressed, deckSize) ? pressed : null;
 }
 
 /** Drücken: Meldekarten, Trümpfe und Sauen behalten; kurze Farben frei machen, Zehnen sichern. */

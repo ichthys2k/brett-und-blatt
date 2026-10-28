@@ -32,6 +32,22 @@ const WINNER_ANNOUNCE_BY_COLOR: Record<string, string> = {
   '#10b981': 'winner_team_gruen.mp3',
 };
 
+/** Alle Dateien, die die Oberfläche abspielt – zum Vorladen (siehe `RallyAudio.prefetch`). */
+const PREFETCH_FILES = [
+  'countdown_03.mp3',
+  'countdown_02.mp3',
+  'countdown_01.mp3',
+  'countdown_00.mp3',
+  ...Object.values(LEAD_ANNOUNCE_BY_COLOR),
+  'progress_50.mp3',
+  'progress_75.mp3',
+  'progress_90.mp3',
+  ...Object.values(WINNER_ANNOUNCE_BY_COLOR),
+  'outro_winner.mp3',
+  ...Object.values(LEADER_TRACKS_BY_COLOR),
+  'war drum.mp3',
+];
+
 function getLeaderTrackFile(color: string): string {
   return LEADER_TRACKS_BY_COLOR[color] ?? 'war drum.mp3';
 }
@@ -542,6 +558,10 @@ function Board({
   useEffect(() => {
     audioRef.current?.setVolumes(audio ?? { muted: false, music: 0.4, effects: 0.7 });
   }, [audio?.muted, audio?.music, audio?.effects]);
+  // Bei eingeschaltetem Ton alle Dateien einmal vorladen – dann klingt das Spiel auch offline.
+  useEffect(() => {
+    if (!audio?.muted) audioRef.current?.prefetch(PREFETCH_FILES);
+  }, [audio?.muted]);
 
   // Countdown „3, 2, 1, los!“ zu Beginn eines frischen Rennens (die Bots warten so lange).
   const freshRace = !gameResult && view.racers.every((r) => r.solvedCount === 0 && r.mistakes === 0);

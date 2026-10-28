@@ -1,5 +1,5 @@
 import type { BotDefinition } from '@brett-und-blatt/engine';
-import type { BibleQuizMove, BibleQuizState } from './rules';
+import { solutionOf, type BibleQuizMove, type BibleQuizState } from './rules';
 
 export const quizBot: BotDefinition<BibleQuizState, BibleQuizMove> = {
   id: 'bibelkenner',
@@ -10,7 +10,8 @@ export const quizBot: BotDefinition<BibleQuizState, BibleQuizMove> = {
       return { type: 'next' };
     }
 
-    const correctIdx = ctx.view.currentQuestion.correctOptionIndex;
+    // Die Sicht verbirgt die Lösung bis zur Auflösung – der Bibelkenner kennt den Katalog.
+    const correctIdx = solutionOf(ctx.view.currentQuestion).correctOptionIndex;
     const threshold = ctx.level === 'hard' ? 0.95 : ctx.level === 'medium' ? 0.75 : 0.5;
 
     if (ctx.rng.chance(threshold)) {

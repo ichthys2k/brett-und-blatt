@@ -2,6 +2,9 @@ import {
   cardEyePoints,
   cardRank,
   cardSuit,
+  createSkatContract,
+  nullDangerSuits,
+  nullTrickCard,
   trickWinner,
   type BotContext,
   type BotDefinition,
@@ -10,7 +13,7 @@ import {
   type Suit,
   type TrickContract,
 } from '@brett-und-blatt/engine';
-import { calculateGameValue, getContract, legalMoves, type SkatGameType, type SkatMove, type SkatState } from './rules.js';
+import { calculateGameValue, createSkatDeck, getContract, legalMoves, type SkatGameType, type SkatMove, type SkatState } from './rules.js';
 
 const SUITS: Suit[] = ['C', 'S', 'H', 'D'];
 
@@ -18,7 +21,8 @@ const SUITS: Suit[] = ['C', 'S', 'H', 'D'];
  * Skat-Bot: bewertet die Hand nach Trümpfen, Assen und blanken Farben, reizt nur so weit,
  * wie das gewählte Spiel tatsächlich wert ist, drückt die Karten, die das Spiel am meisten
  * stärken, und spielt im Stich nach einfachen Faustregeln (Trumpf ziehen, Asse holen,
- * dem Partner schmieren, billig stechen).
+ * dem Partner schmieren, billig stechen). Mit lauter niedrigen, gedeckten Karten spielt er
+ * Null (bis 23 gereizt); dort drückt er die gefährlichen hohen Karten und duckt sich im Stich.
  *
  * Stufen: „leicht“ reizt waghalsig und spielt jede dritte Karte zufällig, „mittel“ spielt
  * nach den Faustregeln, „schwer“ reizt vorsichtiger und zählt die gefallenen Trümpfe.
@@ -108,28 +112,54 @@ function bestGame(hand: CardId[], level: BotLevel): { gameType: Exclude<SkatGame
   return best;
 }
 
+const NULL_CONTRACT = createSkatContract('null');
+const DECK = createSkatDeck();
+const NULL_VALUE = 23;
+
+/** Gefährliche Farben für ein Null-Spiel (siehe `nullDangerSuits`). */
+const nullDanger = (hand: CardId[]) => nullDangerSuits(hand, DECK, NULL_CONTRACT);
+
+/** Wie gut passt die Hand zu Null? Auf derselben Skala wie `handStrength`. */
+const nullScore = (hand: CardId[]) => 8 - 4 * nullDanger(hand);
+
 /** Bis zu welchem Wert reizt der Bot? Das beste spielbare Spiel mit seinen Spitzen (ohne Skat). */
 function biddingLimit(hand: CardId[], level: BotLevel): number {
   const game = bestGame(hand, level);
-  if (!game) return 0;
   // Mit dem Skat kann ein weiterer Spitzen-Faktor dazukommen oder verloren gehen – nicht darauf bauen.
-  return calculateGameValue({ gameType: game.gameType }, hand);
+  const suitLimit = game ? calculateGameValue({ gameType: game.gameType }, hand) : 0;
+  return Math.max(suitLimit, nullPlayable(hand, level) ? NULL_VALUE : 0);
+}
+
+/**
+ * Null mit Skat: ohne gefährliche Farbe, oder mit einer, die höchstens zwei Karten hat –
+ * die drückt der Bot nach dem Aufnehmen weg. „Leicht“ wagt jede einzelne gefährliche Farbe.
+ */
+function nullPlayable(hand: CardId[], level: BotLevel): boolean {
+  const danger = nullDanger(hand);
+  if (danger === 0) return true;
+  if (danger > 1) return false;
+  if (level === 'easy') return true;
+  return SUITS.some((suit) => {
+    const rest = hand.filter((c) => cardSuit(c) !== suit);
+    return hand.length - rest.length <= 2 && nullDanger(rest) === 0;
+  });
 }
 
 function chooseDiscard(hand: CardId[], moves: SkatMove[], bid: number): SkatMove {
   let best: { move: SkatMove; score: number } | null = null;
   for (const move of moves) {
     if (move.type !== 'discard') continue;
-    if (move.cards.some(isJack)) continue; // Buben drückt man nicht
     const rest = hand.filter((c) => !move.cards.includes(c));
-    let score = -Infinity;
-    for (const gameType of ['grand', ...SUITS] as Exclude<SkatGameType, 'null'>[]) {
-      const value = calculateGameValue({ gameType }, hand);
-      if (value < bid) continue; // Spiel würde überreizt
-      score = Math.max(score, handStrength(rest, gameType));
+    let score = bid <= NULL_VALUE ? nullScore(rest) : -Infinity;
+    if (!move.cards.some(isJack)) {
+      // Buben drückt man nur für Null.
+      for (const gameType of ['grand', ...SUITS] as Exclude<SkatGameType, 'null'>[]) {
+        const value = calculateGameValue({ gameType }, hand);
+        if (value < bid) continue; // Spiel würde überreizt
+        // Gedrückte Augen zählen für den Alleinspieler.
+        score = Math.max(score, handStrength(rest, gameType) + (cardEyePoints(move.cards[0]) + cardEyePoints(move.cards[1])) / 20);
+      }
     }
-    // Gedrückte Augen zählen für den Alleinspieler.
-    score += (cardEyePoints(move.cards[0]) + cardEyePoints(move.cards[1])) / 20;
     if (!best || score > best.score) best = { move, score };
   }
   return best?.move ?? moves[0]!;
@@ -141,10 +171,11 @@ function chooseDeclaration(hand: CardId[], discarded: CardId[], bid: number, mov
   for (const move of moves) {
     if (move.type !== 'declare') continue;
     const d = move.declaration;
-    if (d.gameType === 'null' || d.schneider || d.schwarz || d.ouvert) continue;
+    if (d.schneider || d.schwarz || d.ouvert) continue;
     const value = calculateGameValue(d, all);
     const overbid = value < bid;
-    const score = handStrength(hand, d.gameType) - (overbid ? 100 : 0) + value / 100;
+    const strength = d.gameType === 'null' ? nullScore(hand) : handStrength(hand, d.gameType);
+    const score = strength - (overbid ? 100 : 0) + value / 100;
     if (!best || score > best.score) best = { move, score };
   }
   return best?.move ?? moves[0]!;
@@ -154,6 +185,8 @@ function chooseDeclaration(hand: CardId[], discarded: CardId[], bid: number, mov
 // Kartenspiel
 // ---------------------------------------------------------------------------
 
+const play = (card: CardId): SkatMove => ({ type: 'play', card });
+
 function choosePlay(ctx: BotContext<SkatState, SkatMove, SkatState>, state: SkatState, seat: number, moves: SkatMove[]): SkatMove {
   const cards = moves.flatMap((m) => (m.type === 'play' ? [m.card] : []));
   if (cards.length === 0) return moves[0]!;
@@ -162,7 +195,7 @@ function choosePlay(ctx: BotContext<SkatState, SkatMove, SkatState>, state: Skat
   const contract = getContract(state);
   const isDeclarer = seat === state.declarerSeat;
   const trick = state.currentTrick;
-  const play = (card: CardId): SkatMove => ({ type: 'play', card });
+  if (state.declaration?.gameType === 'null') return play(nullTrickCard(cards, trick, seat, state.declarerSeat, contract));
   const power = (c: CardId) => contract.cardPower(c) + (contract.isTrump(c) ? 1000 : 0);
   const cheapest = (list: CardId[]) => [...list].sort((a, b) => cardEyePoints(a) - cardEyePoints(b) || power(a) - power(b))[0]!;
   const richest = (list: CardId[]) => [...list].sort((a, b) => cardEyePoints(b) - cardEyePoints(a) || power(a) - power(b))[0]!;

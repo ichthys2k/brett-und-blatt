@@ -44,3 +44,4 @@
 - Alle Spieler erhalten dieselben Fragen und Optionen (in identischer, deterministisch gemischter Reihenfolge).
 - Die Abgabe erfolgt simultan und verdeckt: Andere Spieler sehen nur, dass ein Mitspieler geantwortet hat (`submitted: true`), aber nicht welche Antwort gewählt wurde.
 - Die Auflösung erfolgt gemeinsam für alle. In Online-Räumen schaltet die Spielleitung (Platz 1) zur nächsten Frage weiter; solo kann jeder im eigenen Tempo weiterklicken.
+- Die Sicht verbirgt während der Fragephase Lösung, Erklärung und Bibellink (`solutionOf` liefert sie Bot und `sampleHidden`). Der Fragenkatalog selbst liegt weiter im Browser-Bundle – wer den Programmcode durchsucht, findet die Antworten.

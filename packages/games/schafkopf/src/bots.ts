@@ -4,7 +4,10 @@ import {
   cardRank,
   cardSuit,
   createSchafkopfContract,
+  nullDangerSuits,
+  nullTrickCard,
   trickWinner,
+  winsAllTricks,
   type BotContext,
   type BotDefinition,
   type BotLevel,
@@ -12,12 +15,13 @@ import {
   type Suit,
   type TrickContract,
 } from '@brett-und-blatt/engine';
-import { getContract, legalMoves, type SchafkopfContract, type SchafkopfGameType, type SchafkopfMove, type SchafkopfState } from './rules.js';
+import { createSchafkopfDeck, getContract, legalMoves, type SchafkopfContract, type SchafkopfGameType, type SchafkopfMove, type SchafkopfState } from './rules.js';
 
 /**
  * Schafkopf-Bot: bewertet die Hand für Sauspiel, Wenz und Solo, spielt nur, wenn das Blatt
  * reicht, ruft die Sau einer kurzen Farbe und spielt im Stich nach Faustregeln
- * (Trumpf ziehen, Ruffarbe suchen, dem Mitspieler schmieren, billig stechen).
+ * (Trumpf ziehen, Ruffarbe suchen, dem Mitspieler schmieren, billig stechen). Sind alle Stiche
+ * sicher, sagt er Tout an; mit lauter gedeckten niedrigen Karten spielt er Bettel (wenn erlaubt).
  *
  * Stufen: „leicht“ spielt waghalsig und legt manchmal zufällige Karten, „mittel“ nach den
  * Faustregeln, „schwer“ ist beim Ansagen vorsichtiger und stößt mit starkem Blatt.
@@ -35,12 +39,12 @@ export const schafkopfBot: BotDefinition<SchafkopfState, SchafkopfMove> = {
 
     switch (state.phase) {
       case 'bidding': {
-        const wish = chooseGame(hand, level);
+        const wish = chooseGame(hand, level) ?? (state.allowExtras && bettelPlayable(hand, state.sheet, level) ? 'bettel' : null);
         const move = wish && moves.find((m) => m.type === 'wantToPlay' && m.contractType === wish);
         return move || { type: 'pass' };
       }
       case 'declare':
-        return chooseDeclaration(hand, moves);
+        return chooseDeclaration(hand, moves, state.sheet, level);
       case 'doubling': {
         if (level === 'easy' || seat === state.declarerSeat) return { type: 'skipDoubling' };
         const contract = getContract(state);
@@ -101,7 +105,20 @@ function chooseGame(hand: readonly CardId[], level: BotLevel): SchafkopfGameType
   return null;
 }
 
-function chooseDeclaration(hand: readonly CardId[], moves: SchafkopfMove[]): SchafkopfMove {
+/** Bettel: keine gefährliche Farbe – „leicht“ wagt auch eine. */
+function bettelPlayable(hand: readonly CardId[], sheet: 'long' | 'short', level: BotLevel): boolean {
+  return nullDangerSuits(hand, createSchafkopfDeck(sheet), createSchafkopfContract('bettel')) <= (level === 'easy' ? 1 : 0);
+}
+
+function chooseDeclaration(hand: readonly CardId[], moves: SchafkopfMove[], sheet: 'long' | 'short', level: BotLevel): SchafkopfMove {
+  // Tout, wenn jeder Stich sicher ist („leicht“ übersieht das).
+  if (level !== 'easy') {
+    const deck = createSchafkopfDeck(sheet);
+    const tout = moves.find(
+      (m) => m.type === 'declare' && m.contract.tout && winsAllTricks(hand, deck, createSchafkopfContract(m.contract.gameType, m.contract.trumpSuit ?? 'H')),
+    );
+    if (tout) return tout;
+  }
   let best: { move: SchafkopfMove; score: number } | null = null;
   for (const move of moves) {
     if (move.type !== 'declare') continue;
@@ -150,12 +167,7 @@ function choosePlay(ctx: BotContext<SchafkopfState, SchafkopfMove, SchafkopfStat
   };
 
   const trick = state.currentTrick;
-  if (bettel) {
-    // Bettel: niemals stechen, wenn es sich vermeiden lässt.
-    const losing = trick.length === 0 ? cards : cards.filter((c) => trickWinner([...trick, { player: seat, card: c }], contract).player !== seat);
-    const pool = losing.length > 0 ? losing : cards;
-    return [...pool].sort((a, b) => power(b) - power(a))[0]!;
-  }
+  if (bettel) return nullTrickCard(cards, trick, seat, state.declarerSeat, contract);
   if (ramsch) {
     // Ramsch: möglichst wenig Augen einsammeln.
     const losing = trick.length === 0 ? cards : cards.filter((c) => trickWinner([...trick, { player: seat, card: c }], contract).player !== seat);
