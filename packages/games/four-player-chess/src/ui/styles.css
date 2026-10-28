@@ -1,16 +1,7 @@
 .fc-wrap {
   position: relative;
-  display: grid;
-  grid-template-rows: minmax(0, 14fr) minmax(0, 1fr);
   width: 100%;
   height: 100%;
-  container: fc-wrap / inline-size;
-}
-
-/* Brett mit Ecken, Pfeilen und Hinweisen */
-.fc-area {
-  position: relative;
-  min-height: 0;
 }
 
 .fc-board {
@@ -178,7 +169,6 @@
 }
 
 .fc-zoom {
-  position: relative;
   width: 100%;
   height: 100%;
 }
@@ -188,7 +178,45 @@
   height: 170%;
 }
 
+/* Der Knopf sitzt in der freien Ecke oben rechts. */
+.fc-lens {
+  position: absolute;
+  top: 1%;
+  right: 1%;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+  color: var(--color-ink);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
 /* Warnung und Fesselung */
+.fc-warning-banner {
+  position: absolute;
+  left: 0.5rem;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-warning);
+  color: var(--color-ink);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
+  font-size: max(0.75rem, 2.8cqw);
+  line-height: 1.3;
+  animation: fc-banner-in 0.2s ease-out;
+}
+
 @keyframes fc-banner-in {
   from {
     opacity: 0;
@@ -264,465 +292,3 @@
   }
 }
 
-
-/* Warnhinweis: auf dem Handy unter dem Brett, auf größeren Brettern über der Leiste unter dem Brett – nie über den Feldern. */
-.fc-warning-banner {
-  position: absolute;
-  left: 0.4rem;
-  right: 0.4rem;
-  top: calc(100% + 0.15rem);
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.5rem;
-  border-radius: 10px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-warning);
-  color: var(--color-ink);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.25);
-  font-size: 0.8rem;
-  line-height: 1.3;
-  animation: fc-banner-in 0.2s ease-out;
-}
-
-@container fc-wrap (min-width: 520px) {
-  .fc-warning-banner {
-    top: auto;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    min-height: calc(100% / 15);
-    padding: 0.2rem 0.6rem;
-    font-size: clamp(0.75rem, 1.7cqw, 0.9rem);
-    box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
-  }
-}
-
-/* Leiste unter dem Brett: letzter Zug, Schach, vorgemerkter Zug, Rückblick, Knöpfe */
-.fc-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-width: 0;
-  min-height: 0;
-  padding: 0 0.15rem;
-  font-size: clamp(0.72rem, 2.3cqw, 1rem);
-  line-height: 1.2;
-}
-
-.fc-bar-text {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.fc-bar-review .fc-bar-text {
-  text-align: center;
-  font-weight: 600;
-}
-
-.fc-bar-check {
-  display: inline-block;
-  max-width: 100%;
-  padding: 0.1em 0.6em;
-  border-radius: 999px;
-  background: var(--color-danger);
-  color: #fff;
-  font-weight: 700;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  vertical-align: middle;
-  animation: fc-check-pill 1.6s ease-in-out infinite;
-}
-
-@keyframes fc-check-pill {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgb(214 40 40 / 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 0.35em rgb(214 40 40 / 0);
-  }
-}
-
-.fc-bar-premove {
-  color: #2f6fdb;
-  font-weight: 600;
-}
-
-.fc-tool {
-  flex: none;
-  display: grid;
-  place-items: center;
-  min-width: 2rem;
-  height: min(2rem, 90%);
-  min-height: 1.6rem;
-  padding: 0 0.4rem;
-  border: 1px solid var(--color-line);
-  border-radius: 999px;
-  background: var(--color-surface);
-  color: var(--color-ink);
-  font: inherit;
-  cursor: pointer;
-}
-
-.fc-tool:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.fc-tool[aria-pressed='true'] {
-  border-color: var(--color-accent);
-}
-
-.fc-tool-wide {
-  padding: 0 0.8rem;
-  font-weight: 600;
-}
-
-/* Schach: angegriffener König, Angreifer und Pfeile */
-.fc-board .bub-cell.fc-check {
-  background-image: radial-gradient(circle, rgb(255 77 77 / 0.95) 0%, rgb(214 40 40 / 0.6) 45%, transparent 75%);
-}
-
-.fc-board .bub-cell.fc-checker {
-  outline: 3px solid #d62828;
-  outline-offset: -3px;
-}
-
-.fc-arrows {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 5;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.fc-arrow {
-  stroke: #d62828;
-  stroke-width: 0.13;
-  stroke-linecap: round;
-  opacity: 0.7;
-}
-
-.fc-arrow-own {
-  stroke-width: 0.2;
-  opacity: 0.9;
-  stroke-dasharray: 0.5 0.25;
-  animation: fc-arrow-run 0.9s linear infinite;
-}
-
-@keyframes fc-arrow-run {
-  to {
-    stroke-dashoffset: -0.75;
-  }
-}
-
-.fc-arrowhead {
-  fill: #d62828;
-}
-
-/* Vorgemerkter Zug (blau) */
-.fc-board .bub-cell.fc-selected-pre {
-  box-shadow: inset 0 0 0 3px #2f6fdb;
-}
-
-.fc-board .bub-cell.fc-capture-pre {
-  box-shadow: inset 0 0 0 3px #2f6fdb;
-}
-
-.fc-board .bub-cell.fc-premove {
-  background-image: linear-gradient(rgb(47 111 219 / 0.38), rgb(47 111 219 / 0.38));
-  outline: 2px dashed #2f6fdb;
-  outline-offset: -3px;
-}
-
-.fc-dot-pre {
-  background: rgb(47 111 219 / 0.55);
-}
-
-.fc-reviewing {
-  filter: saturate(0.8);
-}
-
-/* Trophäenecken: Wer hat was geschlagen – und wie viele Punkte? */
-.fc-corner {
-  position: absolute;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6cqw;
-  width: calc(300% / 14);
-  height: calc(300% / 14);
-  padding: 1cqw;
-  border-radius: 1.2cqw;
-  overflow: hidden;
-  pointer-events: none;
-  transition: background-color 0.3s;
-}
-
-.fc-corner-bl {
-  left: 0;
-  bottom: 0;
-  justify-content: flex-end;
-}
-
-.fc-corner-tl {
-  left: 0;
-  top: 0;
-}
-
-.fc-corner-tr {
-  right: 0;
-  top: 0;
-}
-
-.fc-corner-br {
-  right: 0;
-  bottom: 0;
-  justify-content: flex-end;
-}
-
-.fc-corner-turn {
-  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-accent) 55%, transparent);
-}
-
-.fc-corner-out {
-  opacity: 0.55;
-}
-
-.fc-corner-head {
-  display: flex;
-  align-items: center;
-  gap: 0.8cqw;
-  font-size: 3.6cqw;
-  line-height: 1;
-}
-
-.fc-corner-score {
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-ink);
-}
-
-.fc-corner-trophies {
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  font-size: 2.7cqw;
-  line-height: 1.05;
-}
-
-.fc-glyph {
-  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'DejaVu Sans', serif;
-  -webkit-text-stroke: 0.4px rgb(0 0 0 / 0.7);
-  paint-order: stroke fill;
-}
-
-/* Geschlagene Figur fliegt in die Ecke */
-.fc-fly {
-  position: absolute;
-  z-index: 15;
-  left: var(--x1);
-  top: var(--y1);
-  translate: -50% -50%;
-  font-size: 6cqw;
-  line-height: 1;
-  font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'DejaVu Sans', serif;
-  -webkit-text-stroke: 0.6px rgb(0 0 0 / 0.7);
-  paint-order: stroke fill;
-  pointer-events: none;
-  animation: fc-fly 0.8s cubic-bezier(0.5, 0, 0.3, 1) both;
-}
-
-@keyframes fc-fly {
-  0% {
-    left: var(--x0);
-    top: var(--y0);
-    scale: 1;
-    rotate: 0deg;
-    opacity: 1;
-  }
-  25% {
-    left: var(--x0);
-    top: var(--y0);
-    scale: 1.5;
-    rotate: -12deg;
-  }
-  100% {
-    left: var(--x1);
-    top: var(--y1);
-    scale: 0.45;
-    rotate: 20deg;
-    opacity: 0.3;
-  }
-}
-
-/* Chronik */
-.fc-log {
-  position: absolute;
-  inset: 4%;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border-radius: 14px;
-  background: var(--color-surface);
-  color: var(--color-ink);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
-  font-size: 0.85rem;
-}
-
-.fc-log-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.25rem 0.75rem;
-}
-
-.fc-log-tip {
-  font-size: 0.75rem;
-  color: var(--color-muted);
-}
-
-.fc-log ol {
-  flex: 1;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  overflow-y: auto;
-  list-style: none;
-}
-
-.fc-log li > button,
-.fc-log li > div {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  width: 100%;
-  padding: 0.25rem 0.35rem;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-}
-
-.fc-log li > button {
-  cursor: pointer;
-}
-
-.fc-log li > button:hover {
-  background: var(--color-surface-2);
-}
-
-.fc-log li.fc-log-hit > * {
-  background: color-mix(in srgb, var(--color-danger) 9%, transparent);
-}
-
-.fc-log-no {
-  flex: none;
-  min-width: 1.8rem;
-  text-align: right;
-  color: var(--color-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.fc-log-dot {
-  flex: none;
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-}
-
-.fc-dot-r {
-  background: #d62828;
-}
-
-.fc-dot-b {
-  background: #1c5fd4;
-}
-
-.fc-dot-y {
-  background: #e6a800;
-}
-
-.fc-dot-g {
-  background: #2b8a3e;
-}
-
-.fc-log-move {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.3rem;
-  min-width: 0;
-}
-
-.fc-log-move .fc-glyph,
-.fc-bar .fc-glyph {
-  font-size: 1.35em;
-  line-height: 1;
-}
-
-.fc-log-squares {
-  font-variant-numeric: tabular-nums;
-}
-
-.fc-log-capture {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-weight: 600;
-}
-
-.fc-log-victim {
-  font-weight: 400;
-  color: var(--color-muted);
-}
-
-.fc-log-check {
-  padding: 0 0.4em;
-  border-radius: 999px;
-  background: var(--color-danger);
-  color: #fff;
-  font-size: 0.85em;
-  font-weight: 700;
-}
-
-.fc-log-points {
-  font-weight: 700;
-  color: var(--color-accent);
-}
-
-.fc-log-event {
-  font-style: italic;
-  color: var(--color-muted);
-}
-
-.fc-log-close {
-  align-self: center;
-  padding: 0.4rem 1.2rem;
-  border: 1px solid var(--color-line);
-  border-radius: 999px;
-  background: var(--color-bg);
-  color: var(--color-ink);
-  font: inherit;
-  cursor: pointer;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fc-arrow-own,
-  .fc-bar-check {
-    animation: none;
-  }
-}
