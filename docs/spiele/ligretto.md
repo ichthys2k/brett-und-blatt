@@ -58,3 +58,8 @@ Ligretto ist ein reines Reaktionsspiel. Jeder Spieler hat seinen eigenen verdeck
 - **Anzahl Decks:** Pro Spieler eigenes Deck oder gemeinsames? Klassisch eigenes Deck
 - **Runden/Spielende:** Mehrere Runden bis Zielpunktzahl oder bis X Runden
 - **„Speed“-Aspekte:** Server-Taktung für simultane Phase, Animationen für viele gleichzeitige Legungen
+
+## Umsetzungsstand (28.10.2026)
+
+- **Fertig:** Regeln mit gleichzeitigen Zügen (`playFromHand`, `playFromPile`, `flip`, `callLigretto`), Wertung über mehrere Runden, `playerView` blendet fremde Stapel und Hände aus, Reaktions-Bot in drei Stufen, Oberfläche mit `PlayingCard`, Server-Eintrag, Startseite (*Karten- & Stichspiele*).
+- **Offen:** Zuschauer erhalten den vollen Stand samt `rng`; Tests nur `gameContractChecks` (Konfliktauflösung und Ligretto-Ruf ungetestet, Schritt 7 im Plan); die offenen Regelpunkte oben sind noch nicht festgehalten; keine Playlist.

@@ -238,3 +238,14 @@ Der Binokel-Bot ist in drei Stufen unterteilt:
 - **Stich-Bedingung:** Verifikation, dass stichlose Spieler 0 Meldepunkte gutgeschrieben bekommen.
 - **Durch-Regeln:** Vorzeitiges Partiende bei Stichverlust im Durchmarsch.
 - **Vertragsprüfung:** Standardmäßige `gameContractChecks` (deterministischer Rng, Replay-Fähigkeit, Serialization-Integrität).
+
+---
+
+## Umsetzungsstand (28.10.2026)
+
+- **Fertig:** Regeln in `src/rules.ts` (Reizen, Dabb-Entscheidung, Trumpfwahl, Melden, Stichspiel, Durchmarsch), Meldebilder in `src/melds.ts`, Blatt mit 40/48 Karten in `src/cards.ts`, Engine-Erweiterung um Überstich- und Trumpfzwang. Eingetragen im Spieleserver und damit live; auf der Startseite unter *Familie* (keiner Rubrik zugeordnet).
+- **Offen:**
+  - Oberfläche: `src/ui/index.tsx` ist ein Platzhalter (zeigt nur „Binokel“).
+  - Sicht: `playerView` gibt den ganzen Stand zurück – Hände und Dabb wären online für alle sichtbar.
+  - Bot „Schwaben-Ass“: nimmt auf allen Stufen den ersten erlaubten Zug, meldet nichts; PIMC aus Abschnitt 4 fehlt.
+  - Tests: kein Testordner, auch keine `gameContractChecks`.

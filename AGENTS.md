@@ -43,9 +43,10 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 - ✅ Etappe 1 Fundament, ✅ Etappe 2 Offline-Sammlung, ✅ Etappe 3 Online (Schiffe versenken, Quartett, Mäxle, Bingo), ✅ Etappe 4 Großes Brett (Go, Domino, Farbe & Form).
 - ✅ Etappe 5 Stichspiele (Skat, Schafkopf, Doppelkopf): Stich-Kern und Serien-Rahmen in der Engine, 4-Farben- und Bayerisch/Deutsches Blatt, Skat (ISkO, Seeger-Fabian), Schafkopf (Sauspiel, Wenz, Solo, Ramsch), Doppelkopf (DDV, Soli, Hochzeit, Ansagen).
 - ✅ Etappe 6 Eigene Spiele: abgeschlossen – Farbensortierer und Drachenspiel (Emojistone) sind live.
-- ✅ Etappe 7: abgeschlossen – **Eins!** (Uno), **Mau-Mau**, **Dame** (Checkers), **Nicht ärgern!** (Ludo), **Poker** (Texas Hold'em), **Binokel**, **Wortgitter/Scrabble**, sowie **Bibel-Quiz**, **Galgenmännchen**, **Wort-Salat**. Mathe-Übungen für Klasse 5 & 6 (Zielzahl, Teiler-Duell, Rechenmauer, Enten-Rallye) und erweiterte Mathe-Modi in Klassikern umgesetzt.
+- ✅ Etappe 7: **Eins!** (Uno), **Mau-Mau**, **Dame** (Checkers), **Nicht ärgern!** (Ludo), **Poker** (Texas Hold'em), **Wortgitter/Scrabble**, sowie **Bibel-Quiz**, **Galgenmännchen**, **Wort-Salat**. **Binokel** ist eingetragen und online, aber noch unfertig (Oberfläche ist ein Platzhalter, `playerView` verdeckt nichts, keine Tests).
+- ✅ Weitere Spiele: **Gomoku** (Fünf in einer Reihe), **Ligretto** (Reaktionsspiel), **Kniffel**. Mathe-Übungen für Klasse 5 & 6 (Zielzahl, Teiler-Duell, Rechenmauer, Enten-Rallye) und erweiterte Mathe-Modi in Klassikern umgesetzt.
 
-Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; Musikstücke werden ergänzt.
+Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; alle 20 Musikstücke sind eingetragen. Offene Punkte und nächste Schritte stehen in `CLAUDE.md`.
 
 ## Zum Abschluss einer Aufgabe
 
