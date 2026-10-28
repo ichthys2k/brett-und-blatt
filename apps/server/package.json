@@ -48,6 +48,7 @@
     "@brett-und-blatt/game-uno": "workspace:*",
     "@brett-und-blatt/game-kniffel": "workspace:*",
     "@brett-und-blatt/game-word-salad": "workspace:*",
+    "@brett-und-blatt/game-scrabble": "workspace:*",
     "@brett-und-blatt/game-ligretto": "workspace:*"
   },
   "devDependencies": {

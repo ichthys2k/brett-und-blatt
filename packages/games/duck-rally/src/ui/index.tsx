@@ -197,6 +197,7 @@ function RacerCockpit({
   name,
   canPlay,
   enableKeyboard,
+  compact,
   onSubmit,
 }: {
   racer: RacerState;
@@ -204,6 +205,7 @@ function RacerCockpit({
   name: string;
   canPlay: boolean;
   enableKeyboard: boolean;
+  compact?: boolean;
   onSubmit: (value: number) => void;
 }) {
   const [input, setInput] = useState('');
@@ -280,11 +282,14 @@ function RacerCockpit({
   }, [enableKeyboard, canPlay, isFinished, problem, input, onSubmit]);
 
   return (
-    <div className="dr-cockpit-card" style={{ borderTopColor: color }}>
+    <div
+      className={`dr-cockpit-card ${compact ? 'dr-cockpit-card-compact' : ''}`}
+      style={{ borderTopColor: color }}
+    >
       {/* Kopfzeile mit Enten-Badge, Etappe & Serie */}
-      <div className="mb-1.5 flex items-center justify-between gap-2 text-xs">
+      <div className="mb-1 flex items-center justify-between gap-2 text-xs">
         <span
-          className="inline-flex items-center gap-1.5 truncate rounded-full px-2.5 py-0.5 font-extrabold text-slate-950 shadow-xs"
+          className="inline-flex items-center gap-1.5 truncate rounded-full px-2 py-0.5 font-extrabold text-slate-950 shadow-xs"
           style={{ backgroundColor: color }}
         >
           🦆 {name} ({progressPct} %)
@@ -292,7 +297,7 @@ function RacerCockpit({
         <span className="font-semibold text-muted">
           {isFinished ? '🏁 Im Ziel!' : `Aufgabe ${racer.solvedCount + 1} / ${target}`}
           {racer.streak >= 2 && (
-            <span className="ml-1.5 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+            <span className="ml-1 rounded-full bg-amber-500/20 px-1 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
               🔥 {racer.streak}
             </span>
           )}
@@ -315,13 +320,13 @@ function RacerCockpit({
           <div
             className={`dr-problem-box ${flashWrong ? 'dr-problem-box-wrong' : ''} ${flashCorrect ? 'dr-problem-box-correct' : ''}`}
           >
-            <div className="text-center text-lg font-extrabold tracking-tight sm:text-xl">
+            <div className={`text-center font-extrabold tracking-tight ${compact ? 'text-base' : 'text-lg sm:text-xl'}`}>
               {problem.prompt}
             </div>
 
             {problem.kind !== 'prime' && (
               <div
-                className={`mt-1.5 flex min-h-9 min-w-24 items-center justify-center rounded-lg border-2 bg-surface px-3 text-lg font-black ${
+                className={`mt-1 flex min-h-8 min-w-20 items-center justify-center rounded-lg border-2 bg-surface px-2 text-base font-black ${compact ? 'text-base' : 'text-lg'} ${
                   flashWrong ? 'border-red-500 text-red-500' : 'border-line text-ink'
                 }`}
                 aria-live="polite"
@@ -333,13 +338,13 @@ function RacerCockpit({
 
           {/* Eingabebereich: 6er-Primzahl-Auswahl oder 3x4 Touch-Ziffernblock */}
           {problem.kind === 'prime' && problem.options ? (
-            <div className="dr-prime-grid">
+            <div className={`dr-prime-grid ${compact ? 'dr-prime-grid-compact' : ''}`}>
               {problem.options.map((opt) => (
                 <button
                   key={opt}
                   type="button"
                   disabled={!canPlay}
-                  className="dr-key-btn border-2 py-2.5 text-base font-black"
+                  className={`dr-key-btn border-2 ${compact ? 'py-1.5 text-sm' : 'py-2 text-base'} font-black`}
                   style={{ borderColor: color }}
                   onClick={() => onSubmit(opt)}
                 >
@@ -348,7 +353,7 @@ function RacerCockpit({
               ))}
             </div>
           ) : (
-            <div className="dr-numpad">
+            <div className={`dr-numpad ${compact ? 'dr-numpad-compact' : ''}`}>
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
                 <button
                   key={digit}
@@ -687,8 +692,8 @@ function Board({
       {gameResult ? (
         <VictoryPodium view={view} seatNames={seatNames} />
       ) : humanSeats && humanSeats.length > 1 ? (
-        humanSeats.length <= 4 ? (
-          /* Hot-Seat Splitscreen für 2–4 Spieler am selben Gerät / Smartboard */
+        humanSeats.length <= 6 ? (
+          /* Hot-Seat Splitscreen für 2–6 Spieler am selben Gerät / Smartboard */
           <div className="dr-layout">
             <div className="dr-cockpit-panel">
               {humanSeats.map((hs) => {
@@ -702,6 +707,7 @@ function Board({
                     name={nameOf(hs.seat)}
                     canPlay={hs.legalMoves.length > 0}
                     enableKeyboard={false}
+                    compact={humanSeats.length >= 3}
                     onSubmit={(val) => hs.onMove({ type: 'answer', value: val })}
                   />
                 );
@@ -755,7 +761,7 @@ function Board({
             </div>
           </div>
         ) : (
-          /* Ab 5+ Menschen an einem Gerät: Schnellwahl-Leiste + aktives Cockpit */
+          /* Ab 7+ Menschen an einem Gerät: Schnellwahl-Leiste + aktives Cockpit */
           <div className="flex min-h-0 flex-1 flex-col gap-2">
             <div className="flex flex-wrap gap-1.5">
               {humanSeats.map((hs) => {
@@ -787,6 +793,7 @@ function Board({
                   name={nameOf(activeHs.seat)}
                   canPlay={activeHs.legalMoves.length > 0}
                   enableKeyboard={true}
+                  compact
                   onSubmit={(val) => activeHs.onMove({ type: 'answer', value: val })}
                 />
               );

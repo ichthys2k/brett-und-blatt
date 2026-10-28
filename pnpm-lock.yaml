@@ -196,6 +196,9 @@ importers:
       '@brett-und-blatt/game-bingo':
         specifier: workspace:*
         version: link:../../packages/games/bingo
+      '@brett-und-blatt/game-binokel':
+        specifier: workspace:*
+        version: link:../../packages/games/binokel
       '@brett-und-blatt/game-black-peter':
         specifier: workspace:*
         version: link:../../packages/games/black-peter
@@ -235,9 +238,18 @@ importers:
       '@brett-und-blatt/game-go':
         specifier: workspace:*
         version: link:../../packages/games/go
+      '@brett-und-blatt/game-gomoku':
+        specifier: workspace:*
+        version: link:../../packages/games/gomoku
       '@brett-und-blatt/game-hangman':
         specifier: workspace:*
         version: link:../../packages/games/hangman
+      '@brett-und-blatt/game-kniffel':
+        specifier: workspace:*
+        version: link:../../packages/games/kniffel
+      '@brett-und-blatt/game-ligretto':
+        specifier: workspace:*
+        version: link:../../packages/games/ligretto
       '@brett-und-blatt/game-ludo':
         specifier: workspace:*
         version: link:../../packages/games/ludo
@@ -265,6 +277,9 @@ importers:
       '@brett-und-blatt/game-schafkopf':
         specifier: workspace:*
         version: link:../../packages/games/schafkopf
+      '@brett-und-blatt/game-scrabble':
+        specifier: workspace:*
+        version: link:../../packages/games/scrabble
       '@brett-und-blatt/game-skat':
         specifier: workspace:*
         version: link:../../packages/games/skat
@@ -379,6 +394,19 @@ importers:
       uqr:
         specifier: 0.1.3
         version: 0.1.3
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/binokel:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
     devDependencies:
       react:
         specifier: ^19.3.1
@@ -556,6 +584,15 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1
 
+  packages/games/gomoku:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+
   packages/games/hangman:
     dependencies:
       '@brett-und-blatt/engine':
@@ -568,6 +605,34 @@ importers:
       react:
         specifier: ^19.3.1
         version: 19.3.1
+
+  packages/games/kniffel:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/ligretto:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+      react:
+        specifier: ^19.0.0
+        version: 19.3.1
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.1(react@19.3.1)
 
   packages/games/ludo:
     dependencies:
@@ -674,6 +739,19 @@ importers:
         version: 19.3.1
 
   packages/games/schafkopf:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/scrabble:
     dependencies:
       '@brett-und-blatt/engine':
         specifier: workspace:*

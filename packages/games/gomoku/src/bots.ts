@@ -1,4 +1,4 @@
-import type { BotDefinition } from '@brett-und-blatt/engine';
+import { Rng, type BotContext, type BotDefinition } from '@brett-und-blatt/engine';
 import type { GomokuMove, GomokuState } from './types';
 import { applyMove, legalMoves, result, WIN_LENGTH, DIRECTIONS, BOARD_SIZE } from './rules';
 
@@ -45,12 +45,13 @@ function evaluateMove(state: GomokuState, move: GomokuMove, seat: number): numbe
 export const gomokuBotEasy: BotDefinition<GomokuState, GomokuMove> = {
   id: 'gomoku-easy',
   name: 'Anfänger',
-  levels: ['leicht'],
-  think(state, actor) {
-    const moves = legalMoves(state as GomokuState, actor);
-    if (moves.length === 0) return null;
+  levels: ['easy'],
+  chooseMove(ctx: BotContext<GomokuState, GomokuMove, GomokuState>): GomokuMove {
+    const { view, seat, rng } = ctx;
+    const moves = legalMoves(view as GomokuState, seat);
+    if (moves.length === 0) throw new Error('Kein Zug');
     const center = Math.floor((BOARD_SIZE * BOARD_SIZE) / 2);
-    const move = moves.find((m) => m.cell === center) ?? moves[Math.floor(Math.random() * moves.length)];
+    const move = moves.find((m: any) => m.cell === center) ?? moves[rng.int(moves.length)]!;
     return move;
   },
 };
@@ -58,35 +59,36 @@ export const gomokuBotEasy: BotDefinition<GomokuState, GomokuMove> = {
 export const gomokuBotMedium: BotDefinition<GomokuState, GomokuMove> = {
   id: 'gomoku-medium',
   name: 'Fortgeschritten',
-  levels: ['mittel'],
-  think(state, actor) {
-    const s = state as GomokuState;
-    const moves = legalMoves(s, actor);
-    if (moves.length === 0) return null;
+  levels: ['medium'],
+  chooseMove(ctx: BotContext<GomokuState, GomokuMove, GomokuState>): GomokuMove {
+    const { view, seat } = ctx;
+    const s = view as GomokuState;
+    const moves = legalMoves(s, seat);
+    if (moves.length === 0) throw new Error('Kein Zug');
     
     for (const move of moves) {
       try {
-        const testState = applyMove(structuredClone(s), actor, move).state;
+        const testState = applyMove(JSON.parse(JSON.stringify(s)), seat, move).state;
         if (result(testState)?.kind === 'win') {
           return move;
         }
       } catch {}
     }
     
-    const opponent = 1 - actor;
+    const opponent = (1 - seat) as any;
     for (const move of moves) {
       try {
-        const testState = applyMove(structuredClone(s), opponent, move).state;
+        const testState = applyMove(JSON.parse(JSON.stringify(s)), opponent, move).state;
         if (result(testState)?.kind === 'win') {
           return move;
         }
       } catch {}
     }
     
-    let bestMove = moves[0];
+    let bestMove = moves[0]!;
     let bestScore = -Infinity;
     for (const move of moves) {
-      const score = evaluateMove(s, move, actor);
+      const score = evaluateMove(s, move as any, seat as any);
       if (score > bestScore) {
         bestScore = score;
         bestMove = move;
@@ -100,25 +102,26 @@ export const gomokuBotMedium: BotDefinition<GomokuState, GomokuMove> = {
 export const gomokuBotHard: BotDefinition<GomokuState, GomokuMove> = {
   id: 'gomoku-hard',
   name: 'Meister',
-  levels: ['schwer'],
-  think(state, actor) {
-    const s = state as GomokuState;
-    const moves = legalMoves(s, actor);
-    if (moves.length === 0) return null;
+  levels: ['hard'],
+  chooseMove(ctx: BotContext<GomokuState, GomokuMove, GomokuState>): GomokuMove {
+    const { view, seat } = ctx;
+    const s = view as GomokuState;
+    const moves = legalMoves(s, seat);
+    if (moves.length === 0) throw new Error('Kein Zug');
     
     for (const move of moves) {
       try {
-        const testState = applyMove(structuredClone(s), actor, move).state;
+        const testState = applyMove(JSON.parse(JSON.stringify(s)), seat, move).state;
         if (result(testState)?.kind === 'win') {
           return move;
         }
       } catch {}
     }
     
-    const opponent = 1 - actor;
+    const opponent = (1 - seat) as any;
     for (const move of moves) {
       try {
-        const testState = applyMove(structuredClone(s), opponent, move).state;
+        const testState = applyMove(JSON.parse(JSON.stringify(s)), opponent, move).state;
         if (result(testState)?.kind === 'win') {
           return move;
         }
@@ -126,21 +129,21 @@ export const gomokuBotHard: BotDefinition<GomokuState, GomokuMove> = {
     }
     
     const candidates = moves
-      .map((move) => ({ move, score: evaluateMove(s, move, actor) }))
-      .filter((c) => c.score > 0)
-      .sort((a, b) => b.score - a.score)
+      .map((move: any) => ({ move, score: evaluateMove(s, move, seat as any) }))
+      .filter((c: any) => c.score > 0)
+      .sort((a: any, b: any) => b.score - a.score)
       .slice(0, 20);
     
     if (candidates.length === 0) {
       const center = Math.floor((BOARD_SIZE * BOARD_SIZE) / 2);
-      const move = moves.find((m) => m.cell === center) ?? moves[0];
+      const move = moves.find((m: any) => m.cell === center) ?? moves[0]!;
       return move;
     }
     
     let bestMove = candidates[0].move;
     let bestScore = -Infinity;
     for (const { move } of candidates) {
-      const score = evaluateMove(s, move, actor);
+      const score = evaluateMove(s, move, seat as any);
       if (score > bestScore) {
         bestScore = score;
         bestMove = move;
