@@ -79,6 +79,11 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Heuristischer Taktik-Bot („Kartenhai“) in drei Schwierigkeitsstufen (einfach, mittel, schwer).
   - Vollständig responsive Web-Oberfläche mit SVG-Karten, Pointer Drag & Drop (`usePointerDrag`), sichtbaren kaskadierenden Flug-Animationen beim Legen und Ziehen von Karten (inkl. Aufprall-Impuls und organischem Ablagewinkel), Farbwahlmodal, Richtungswechsel-Animation, 3D-Flip-Wendung und pulsierendem "Eins!"-Aktionsknopf.
   - Registriert für Online-Mehrspieler auf dem Spieleserver (`apps/server/src/games.ts`). Plan in `docs/spiele/uno.md`.
+- **Mau-Mau** (`packages/games/mau-mau`, 2–5 Plätze, Nachtrag zu Etappe 7):
+  - Klassisches 32er-Blatt mit 5 Handkarten, Farb-/Wertpassung, 7er-Strafen (stapelbar), 8er-Aussetzen, 9er-Richtungswechsel, optionalem Ass-Zusatzzug und Buben-Wunschfarbe.
+  - Optionen für Kartenbild (französisch/vierfarbig/deutsch), 7er stapeln, 9er, Ass, Bube auf alles, Bube auf Bube, „Mau!“-Rufen und Nachziehen (eine Karte oder bis passend).
+  - Bot „Mau-Mau-Meister“ in drei Stufen, responsive Filz-Oberfläche mit Handkartenfächer, Drag & Drop, Flug-Animationen, Wunschfarben-Modal und Anpranger-Knopf.
+  - Registriert für Online-Mehrspieler auf dem Spieleserver (`apps/server/src/games.ts`) und in Playlist „Kartentisch“. Plan in `docs/spiele/mau-mau.md`.
 - **Dame** (`packages/games/checkers`):
   - Drei Regelsätze: Klassisch Deutsch (8×8, 12 Steine, fliegende Dame, einfache Steine schlagen nur vorwärts, Schlagpflicht mit freier Wahl), International (10×10, 20 Steine, fliegende Dame, Steine schlagen rückwärts, Mehrschlagpflicht) und Englisch / American Checkers (8×8, 12 Steine, Dame zieht nur 1 Feld, kein Rückwärtsschlagen).
   - Schlagzwang-Erkennung mit Mehrfachschlägen, automatische Umwandlung, 3-fache Stellungswiederholung und 40-Halbzüge-Remis ohne Schlag oder Steinzug.

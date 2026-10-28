@@ -94,13 +94,13 @@ describe('Mau-Mau Regeln', () => {
       cardId: cardId('H', 7),
     });
     expect(afterStack.pendingDraw).toBe(4);
-    expect(afterStack.turn).toBe(0);
+    expect(afterStack.turn).toBe(2);
 
-    const before = afterStack.hands[0]!.length;
-    const { state: afterDraw } = gameModule.applyMove(afterStack, 0, { type: 'draw' });
+    const before = afterStack.hands[2]!.length;
+    const { state: afterDraw } = gameModule.applyMove(afterStack, 2, { type: 'draw' });
     expect(afterDraw.pendingDraw).toBe(0);
-    expect(afterDraw.hands[0]).toHaveLength(before + 4);
-    expect(afterDraw.turn).toBe(1);
+    expect(afterDraw.hands[2]).toHaveLength(before + 4);
+    expect(afterDraw.turn).toBe(0);
   });
 
   it('7 ohne Stapeln lässt den Nächsten zwei Karten ziehen und setzt ihn aus', () => {
@@ -195,6 +195,32 @@ describe('Mau-Mau Regeln', () => {
     expect(called.mauProtection[0]).toBe(true);
     expect(legalMoves(called, 1).some((m) => m.type === 'catchMau')).toBe(false);
     expect(isLegal(called, 1, { type: 'catchMau', target: 0 })).toBe(false);
+  });
+
+  it('ein alter Mau-Schutz erlischt, wenn der Spieler wieder Karten aufnimmt', () => {
+    const state = fresh(2);
+    setTop(state, 'H5', 'H');
+    state.hands[0] = [cardId('H', 6), cardId('C', 5)];
+    state.hands[1] = [cardId('C', 2), cardId('D', 3)];
+
+    const { state: protectedState } = gameModule.applyMove(state, 0, {
+      type: 'play',
+      cardId: cardId('H', 6),
+      callMau: true,
+    });
+    expect(protectedState.mauProtection[0]).toBe(true);
+    expect(protectedState.turn).toBe(1);
+
+    // Spieler 0 ist nicht am Zug; der Schutz wird erst beim eigenen Ziehen zurückgesetzt.
+    const next = JSON.parse(JSON.stringify(protectedState)) as MauMauState;
+    next.turn = 0;
+    next.hands[0] = [cardId('C', 5)];
+    next.hasDrawn = false;
+    next.stock = [cardId('C', 7)];
+
+    const { state: afterDraw } = gameModule.applyMove(next, 0, { type: 'draw' });
+    expect(afterDraw.hands[0]).toHaveLength(2);
+    expect(afterDraw.mauProtection[0]).toBe(false);
   });
 
   it('die letzte Karte gewinnt sofort, auch wenn sie eine 7 ist', () => {

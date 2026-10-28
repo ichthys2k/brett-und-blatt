@@ -48,6 +48,7 @@ const CATEGORIES: readonly CategorySpec[] = [
       'doppelkopf',
       'poker',
       'uno',
+      'mau-mau',
       'drachenspiel',
       'color-sorter',
       'solitaire',

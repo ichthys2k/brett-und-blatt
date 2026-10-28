@@ -4,7 +4,7 @@ export const meta: GameInfo = {
   id: 'mau-mau',
   name: 'Mau-Mau',
   description:
-    'Das klassische Ablegespiel mit 32 Karten: Passend zur Farbe oder zum Wert legen, mit 7er-Strafen, Aussetzen und Buben-Wunsch. Wer zuerst leer ist, ruft „Mau!“',
+    'Das klassische Ablegespiel mit 32 Karten: Passend zur Farbe oder zum Wert legen, mit 7er-Strafen, Aussetzen und Buben-Wunsch. Vor der letzten Karte heißt es „Mau!“',
   emoji: '♠️',
   players: { min: 2, max: 5 },
   modes: ['solo', 'hotseat', 'online'],

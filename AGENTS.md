@@ -43,7 +43,7 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 - ✅ Etappe 1 Fundament, ✅ Etappe 2 Offline-Sammlung, ✅ Etappe 3 Online (Schiffe versenken, Quartett, Mäxle, Bingo), ✅ Etappe 4 Großes Brett (Go, Domino, Farbe & Form).
 - ✅ Etappe 5 Stichspiele (Skat, Schafkopf, Doppelkopf): Stich-Kern und Serien-Rahmen in der Engine, 4-Farben- und Bayerisch/Deutsches Blatt, Skat (ISkO, Seeger-Fabian), Schafkopf (Sauspiel, Wenz, Solo, Ramsch), Doppelkopf (DDV, Soli, Hochzeit, Ansagen).
 - ✅ Etappe 6 Eigene Spiele: abgeschlossen – Farbensortierer und Drachenspiel (Emojistone) sind live.
-- ✅ Etappe 7: abgeschlossen – **Eins!** (Uno), **Dame** (Checkers), **Nicht ärgern!** (Ludo), **Poker** (Texas Hold'em), **Binokel**, **Wortgitter/Scrabble**, sowie **Bibel-Quiz**, **Galgenmännchen**, **Wort-Salat**. Mathe-Übungen für Klasse 5 & 6 (Zielzahl, Teiler-Duell, Rechenmauer, Enten-Rallye) und erweiterte Mathe-Modi in Klassikern umgesetzt.
+- ✅ Etappe 7: abgeschlossen – **Eins!** (Uno), **Mau-Mau**, **Dame** (Checkers), **Nicht ärgern!** (Ludo), **Poker** (Texas Hold'em), **Binokel**, **Wortgitter/Scrabble**, sowie **Bibel-Quiz**, **Galgenmännchen**, **Wort-Salat**. Mathe-Übungen für Klasse 5 & 6 (Zielzahl, Teiler-Duell, Rechenmauer, Enten-Rallye) und erweiterte Mathe-Modi in Klassikern umgesetzt.
 
 Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; Musikstücke werden ergänzt.
 

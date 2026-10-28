@@ -265,6 +265,8 @@ export function applyMove(state: MauMauState, actor: number, move: MauMauMove): 
       next.hands[target]!.push(card);
       drawn.push(card);
     }
+    // Wer wieder mehrere Karten hat, ist nicht mehr durch einen alten Mau-Ruf geschützt.
+    if (next.hands[target]!.length !== 1) next.mauProtection[target] = false;
     return drawn;
   };
 
@@ -315,6 +317,7 @@ export function applyMove(state: MauMauState, actor: number, move: MauMauMove): 
     }
 
     events.push({ type: 'drewCard', player: actor, count: drawnCount });
+    if (drawnCount > 0) next.mauProtection[actor] = false;
     next.lastAction = {
       player: actor,
       text: drawnCount === 1 ? 'Karte gezogen' : `${drawnCount} Karten gezogen`,

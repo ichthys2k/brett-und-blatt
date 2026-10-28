@@ -256,6 +256,9 @@ importers:
       '@brett-und-blatt/game-maexle':
         specifier: workspace:*
         version: link:../../packages/games/maexle
+      '@brett-und-blatt/game-mau-mau':
+        specifier: workspace:*
+        version: link:../../packages/games/mau-mau
       '@brett-und-blatt/game-mill':
         specifier: workspace:*
         version: link:../../packages/games/mill

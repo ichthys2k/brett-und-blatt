@@ -19,6 +19,7 @@ import { gameModule as gomoku } from '@brett-und-blatt/game-gomoku';
 import { gameModule as hangman } from '@brett-und-blatt/game-hangman';
 import { gameModule as ludo } from '@brett-und-blatt/game-ludo';
 import { gameModule as maexle } from '@brett-und-blatt/game-maexle';
+import { gameModule as mauMau } from '@brett-und-blatt/game-mau-mau';
 import { gameModule as mill } from '@brett-und-blatt/game-mill';
 import { gameModule as numberWall } from '@brett-und-blatt/game-number-wall';
 import { gameModule as pairs } from '@brett-und-blatt/game-pairs';
@@ -42,4 +43,4 @@ import { gameModule as ligretto } from '@brett-und-blatt/game-ligretto';
  * Mehrspieler-Spiel muss hier (und in package.json) eingetragen werden – ein Test
  * im Server-Paket erinnert daran.
  */
-export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, duckRally, factorGrid, fourInARow, fourPlayerChess, go, gomoku, hangman, ludo, ligretto, maexle, mill, numberWall, pairs, poker, quartett, reversi, schafkopf, skat, binokel, scrabble, targetNumber, ticTacToe, ultimateTicTacToe, uno, wordSalad, kniffel];
+export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, bingo, blackPeter, checkers, chess, colorAndShape, colorSorter, dominoes, doppelkopf, drachenspiel, duckRally, factorGrid, fourInARow, fourPlayerChess, go, gomoku, hangman, ludo, ligretto, maexle, mauMau, mill, numberWall, pairs, poker, quartett, reversi, schafkopf, skat, binokel, scrabble, targetNumber, ticTacToe, ultimateTicTacToe, uno, wordSalad, kniffel];
