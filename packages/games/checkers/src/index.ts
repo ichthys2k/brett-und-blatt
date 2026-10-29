@@ -6,6 +6,7 @@ import {
   countPieces,
   currentPlayers,
   evaluate,
+  isLegal,
   legalMoves,
   result,
   setup,
@@ -15,7 +16,7 @@ import {
   type CheckersVariant,
 } from './rules';
 
-export type { CheckersMove, CheckersPiece, CheckersState, CheckersVariant } from './rules';
+export type { CheckersMove, CheckersPiece, CheckersState, CheckersStep, CheckersVariant } from './rules';
 export { countPieces, isDarkSquare, squareIndex, squareName } from './rules';
 
 /**
@@ -73,6 +74,7 @@ export const gameModule: GameModule<CheckersState, CheckersMove> = {
   setup,
   currentPlayers,
   legalMoves,
+  isLegal,
   applyMove,
   playerView: (state) => state,
   result,

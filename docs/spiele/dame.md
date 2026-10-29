@@ -90,3 +90,7 @@
 - Umwandlung zur Dame bei Erreichen der Grundreihe.
 - Niederlage bei Materialverlust und Blockade; Remis durch Wiederholung und Zugzähler.
 - Vollständige Plattform-Vertragsprüfungen (`gameContractChecks`).
+
+## Remis anbieten (29.10.2026)
+
+Wie im Schach (`draw-offer.ts` in der Engine, `DrawOfferBar`): Wer am Zug ist, bietet an, der Gegner nimmt an oder lehnt ab. Brettzüge heißen jetzt `CheckersStep`, `CheckersMove` umfasst auch die Remis-Züge; die Suche nutzt `boardMoves`. Der Bot nimmt an, wenn er nach `evaluate` zurückliegt (Stein = 100; leicht ab 0, mittel ab −150, schwer ab −300). Das Brett richtet sich nach der Zeilenhöhe, Spielfeld 8 : 10.

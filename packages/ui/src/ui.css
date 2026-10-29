@@ -563,3 +563,47 @@ button.bub-net-point:not(:disabled) {
     animation: none !important;
   }
 }
+
+/* Remis-Angebot (Schach, Dame) */
+
+.bub-draw {
+  display: flex;
+  min-height: 2.4rem;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.4rem 0.75rem;
+  border: 2px solid var(--color-accent);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  font-size: 0.95rem;
+}
+
+.bub-draw-quiet {
+  border-color: transparent;
+  background: none;
+  padding: 0;
+}
+
+.bub-draw-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bub-draw button {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.bub-draw .bub-draw-yes {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}

@@ -49,6 +49,7 @@ const de = {
   'play.draw': 'Unentschieden',
   'play.reason.time': 'Zeit abgelaufen',
   'play.reason.resign': 'Aufgegeben',
+  'play.reason.agreement': 'Remis durch Einigung',
   'play.undo': 'Zug zurück',
   'play.pause': 'Pause',
   'play.resume': 'Weiter',

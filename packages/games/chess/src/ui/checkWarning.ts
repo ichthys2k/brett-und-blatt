@@ -4,7 +4,7 @@
  * den eigenen König im Schach belassen bzw. ins Schach setzen würde.
  */
 import { Chess, type Color, type PieceSymbol, type Square } from 'chess.js';
-import type { ChessMove } from '../rules';
+import type { BoardMove } from '../rules';
 
 export interface CheckWarning {
   text: string;
@@ -55,7 +55,7 @@ export function getCheckWarning(
   fen: string,
   fromIndex: number,
   toIndex: number | null,
-  legalMoves: ChessMove[]
+  legalMoves: BoardMove[]
 ): CheckWarning | null {
   const chess = new Chess(fen);
   const activeColor: Color = fen.split(' ')[1] === 'w' ? 'w' : 'b';

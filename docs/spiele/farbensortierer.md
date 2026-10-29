@@ -251,10 +251,12 @@ Neu in der Engine wird dafür vermutlich nur wenig nötig: gleichzeitige Züge u
 
 ## Offene Punkte (für Cornelius)
 
-- Name bestätigen: „Farbensortierer“ statt „Emoji-Sortierer“ im Fahrplan; Ordner/Kennung `color-sorter`.
-- Ersatznamen für Kleine/Große Blende (Vorschlag Vorhut/Wächter), „Neu sortieren“, „Sternen-Welle“, „Ordnungsbonus“, Lieferung, Werkzeug, Sticker, Traumkarten, Sortierstufen.
-- Token-Symbol 🔩 statt Münze?
-- Meta-Währung: Name (Farbtropfen 💧?) und was es im Atelier zu kaufen gibt; Mengen je Belohnung.
-- Planungsnotiz `~/code/emojiclicker/docs/farbsortierer-expansion.md` einbeziehen (noch nicht ausgewertet).
-- Standardmodus online: Duell mit 4 Leben?
-- Vorziehen vor Etappe 4/5 oder bei Etappe 6 lassen?
+Die Vorschläge sind so umgesetzt und live (Stand 29.10.2026); offen ist nur noch die ausdrückliche Bestätigung:
+- Name „Farbensortierer“ (Kennung `color-sorter`).
+- Ersatznamen: Vorhut/Wächter statt Kleiner/Großer Blende, „Neu sortieren“, „Sternen-Welle“, „Ordnungsbonus“, Lieferung, Werkzeug, Sticker, Traumkarten, Sortierstufen.
+- Token 🔩 statt Münze; Meta-Währung Farbtropfen 💧 mit Atelier.
+- Standardmodus online: Duell mit 4 Leben.
+
+Noch nicht erledigt:
+- Planungsnotiz `~/code/emojiclicker/docs/farbsortierer-expansion.md` auswerten.
+- ✅ Vorziehen: aus Etappe 6 vorgezogen und am 26.10.2026 fertig.

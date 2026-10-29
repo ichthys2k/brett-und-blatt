@@ -108,6 +108,7 @@ type GoMove =
 - **Atari-Go:** Sieg mit dem ersten Schlag.
 - Auszählphase: Markieren, Einigung, Fortsetzung.
 - SGF hin und zurück ohne Verlust.
+- SGF über die Einrichtung (29.10.2026 behoben): Der Import landete nie in den Einstellungen (`SetupExtra` bekam nur eine Kopie, jetzt `setOption`), und Optionswerte über 256 Zeichen oder mit Zeilenumbruch wurden verworfen (jetzt `maxLength: 8000`, Muster `[\s\S]*`). Regressionstest in `test/go.test.ts`.
 - **Bot:** schlägt einen Stein in Atari, wenn möglich; der schwere Bot gewinnt auf 9×9 gegen den leichten fast immer.
 
 ## Umsetzung (Oktober 2026)
@@ -120,4 +121,4 @@ type GoMove =
 
 ## Offene Punkte
 
-- Prüfen, ob KataGo auf warpdrive sinnvoll läuft (CPU-Version).
+- ~~Prüfen, ob KataGo auf warpdrive sinnvoll läuft (CPU-Version).~~ Entfällt (Entscheidung Cornelius, 29.10.2026).

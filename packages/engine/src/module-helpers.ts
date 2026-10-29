@@ -17,7 +17,7 @@ export function timePresetsOf(module: AnyGameModule, options: Options = {}): Tim
 }
 
 function matchesPattern(spec: OptionSpec, value: string): boolean {
-  return spec.pattern !== undefined && typeof value === 'string' && value.length <= 256 && new RegExp(`^(?:${spec.pattern})$`).test(value);
+  return spec.pattern !== undefined && typeof value === 'string' && value.length <= (spec.maxLength ?? 256) && new RegExp(`^(?:${spec.pattern})$`).test(value);
 }
 
 export function seatActors(actors: Actor[]): SeatId[] {

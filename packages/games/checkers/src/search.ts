@@ -2,9 +2,9 @@ import type { BotLevel, SeatId } from '@brett-und-blatt/engine';
 import {
   applyMove,
   evaluate,
-  legalMoves,
+  boardMoves,
   result,
-  type CheckersMove,
+  type CheckersStep,
   type CheckersState,
 } from './rules';
 
@@ -30,7 +30,7 @@ export const BOT_LEVELS: Record<BotLevel, { depth: number; maxMs: number; noise:
  * Sortiert Züge für effizienten Alpha-Beta-Schnitt:
  * Schlagzüge mit den meisten Opfern zuerst, danach Züge vorwärts bzw. Damenzüge.
  */
-export function orderCheckersMoves(moves: CheckersMove[]): CheckersMove[] {
+export function orderCheckersMoves(moves: CheckersStep[]): CheckersStep[] {
   return [...moves].sort((a, b) => {
     const aCaps = a.captures?.length ?? 0;
     const bCaps = b.captures?.length ?? 0;
@@ -49,14 +49,14 @@ export class CheckersSearch {
 
   constructor(private readonly rootState: CheckersState) {}
 
-  bestMove(options: SearchOptions): CheckersMove {
+  bestMove(options: SearchOptions): CheckersStep {
     this.now = options.now ?? (() => Date.now());
     this.deadline = this.now() + options.timeBudgetMs;
     this.nodes = 0;
     const random = options.random ?? Math.random;
 
     const actor = this.rootState.turn;
-    let rootMoves = orderCheckersMoves(legalMoves(this.rootState, actor));
+    let rootMoves = orderCheckersMoves(boardMoves(this.rootState, actor));
     if (rootMoves.length === 0) throw new Error('Keine erlaubten Züge.');
     if (rootMoves.length === 1) return rootMoves[0]!;
 
@@ -65,7 +65,7 @@ export class CheckersSearch {
     for (let depth = 1; depth <= options.maxDepth; depth++) {
       try {
         let bestScore = -Infinity;
-        const scored: { move: CheckersMove; score: number }[] = [];
+        const scored: { move: CheckersStep; score: number }[] = [];
 
         for (const move of rootMoves) {
           if ((++this.nodes & 511) === 0 && this.now() > this.deadline) throw new TimeUp();
@@ -118,7 +118,7 @@ export class CheckersSearch {
       return evaluate(state, currentSeat);
     }
 
-    const moves = orderCheckersMoves(legalMoves(state, currentSeat));
+    const moves = orderCheckersMoves(boardMoves(state, currentSeat));
     if (moves.length === 0) {
       return -WIN_SCORE + ply;
     }

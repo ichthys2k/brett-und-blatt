@@ -144,5 +144,5 @@ Umgesetzt ist eine gemeinsame Vorgabe für beide Spielweisen (Zeitvorgaben gelte
 
 ## Offene Punkte
 
-- Werte für die vier Sets recherchieren und mit Quellen belegen. Biblische Personen prüfst du als Religionslehrer.
+- Werte der Sets sind mit Quellen hinterlegt (PR #20, die Set-Prüfung verlangt Quellen); eine inhaltliche Durchsicht, besonders der biblischen Personen, macht Cornelius später selbst.
 - Später: ein Editor für eigene Sets, z. B. von einer Klasse erstellt.

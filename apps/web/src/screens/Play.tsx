@@ -289,6 +289,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           )}
           {result?.reason === 'time' && ` (${t('play.reason.time')})`}
           {result?.reason === 'resign' && ` (${t('play.reason.resign')})`}
+          {result?.reason === 'agreement' && ` (${t('play.reason.agreement')})`}
         </p>
 
 

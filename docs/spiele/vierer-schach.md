@@ -122,6 +122,6 @@ Aufgeben ist ein Spielzug `{ t: 'resign', p: Farbe }`, den die Spielleitung übe
 
 ## Offene Punkte
 
-- **Protokoll anzeigen:** Erledigt – Chronik mit Rückblick (siehe Oberfläche).
-- **Typisieren:** Erledigt – `src/legacy/engine.ts`, `bot.ts` und `test/legacy-engine.test.ts` sind vollständig in TypeScript typisiert (`@ts-nocheck` entfernt).
+- ✅ **Protokoll anzeigen:** Chronik mit Rückblick (siehe Oberfläche).
+- ✅ **Typisieren:** `src/legacy/engine.ts`, `bot.ts` und `test/legacy-engine.test.ts` sind vollständig in TypeScript typisiert (`@ts-nocheck` entfernt).
 - **Stärkerer Bot:** eine flache Suche (zwei bis vier Halbzüge, „paranoid“ oder „max-n“) über den Faustregeln.

@@ -34,6 +34,12 @@ function defaultDraft(game: LoadedGame): SetupDraft {
   };
 }
 
+/** Verborgene Optionen (z. B. eine eingefügte Partie) gelten nur für diese eine Partie und werden nicht gespeichert. */
+function withoutHidden(module: LoadedGame['module'], draft: SetupDraft): SetupDraft {
+  const hidden = new Set(module.options.filter((spec) => spec.hidden).map((spec) => spec.id));
+  return { ...draft, options: Object.fromEntries(Object.entries(draft.options).filter(([id]) => !hidden.has(id))) };
+}
+
 /** Gespeicherte Einstellungen nur übernehmen, wenn sie zum aktuellen Spiel passen. URL-Parameter überschreiben gezielt einzelne Optionen. */
 function restoreDraft(game: LoadedGame, params?: Record<string, string>): SetupDraft {
   const saved = storage.loadSetup<SetupDraft>(game.info.id);
@@ -75,7 +81,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
         setGame(loaded);
         setDraft(restored);
         if (params?.autostart === '1') {
-          storage.saveSetup(loaded.info.id, restored);
+          storage.saveSetup(loaded.info.id, withoutHidden(loaded.module, restored));
           await startGame({
             gameId: loaded.info.id,
             seats: toSeatConfigs(restored.seats),
@@ -100,12 +106,14 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
     (spec) => !spec.hidden && (!spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(draft.options[id] ?? module.options.find((o) => o.id === id)?.default ?? ''))),
   );
   const update = (change: Partial<SetupDraft>) => setDraft({ ...draft, ...change });
+  // Funktional, damit mehrere Werte nacheinander (z. B. SGF, Brettgröße, Komi) alle ankommen.
+  const setOption = (id: string, value: string) => setDraft((d) => (d ? { ...d, options: { ...d.options, [id]: value } } : d));
   const updateSeat = (index: number, change: Partial<SeatDraft>) => update({ seats: draft.seats.map((s, i) => (i === index ? { ...s, ...change } : s)) });
   const setCount = (count: number) =>
     update({ seats: Array.from({ length: count }, (_, i) => draft.seats[i] ?? { kind: 'bot', name: '', level: 'medium' }) });
 
   const start = async () => {
-    storage.saveSetup(info.id, draft);
+    storage.saveSetup(info.id, withoutHidden(module, draft));
     await startGame({
       gameId: info.id,
       seats: toSeatConfigs(draft.seats),
@@ -208,7 +216,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
         </Section>
       )}
 
-      {ui.SetupExtra && <ui.SetupExtra options={resolveOptions(module, draft.options)} seats={draft.seats.length} />}
+      {ui.SetupExtra && <ui.SetupExtra options={resolveOptions(module, draft.options)} seats={draft.seats.length} setOption={setOption} />}
 
       <Section title={t('setup.time')}>
         <Segmented

@@ -6,7 +6,21 @@
  * verändern. Sie weiß nichts von Bildschirm, Uhr oder Netzwerk – darum läuft
  * derselbe Code im Browser, im Bot-Worker, in den Tests und später auf dem Server.
  */
-import type { Actor, GameEvent, MoveResult, Options, Result, SeatId } from '@brett-und-blatt/engine';
+import {
+  applyDrawMove,
+  drawResponder,
+  drawResponses,
+  isDrawMove,
+  isDrawMoveLegal,
+  type Actor,
+  type DrawMove,
+  type DrawOffer,
+  type GameEvent,
+  type MoveResult,
+  type Options,
+  type Result,
+  type SeatId,
+} from '@brett-und-blatt/engine';
 
 export type CheckersVariant = 'german' | 'international' | 'english';
 
@@ -22,7 +36,7 @@ export interface CheckersState {
   cells: (CheckersPiece | null)[];
   turn: SeatId;
   winner: SeatId | null;
-  end: 'captured' | 'blocked' | 'repetition' | 'drawMoves' | null;
+  end: 'captured' | 'blocked' | 'repetition' | 'drawMoves' | 'agreement' | null;
   /** Wie oft jede Stellung vorkam (für 3-fache Wiederholung). */
   positions: Record<string, number>;
   /** Partieverlauf in algebraischer Schreibweise, z. B. ["c3-d4", "d6-c5", "b2-c3", "c5:e3:g5"]. */
@@ -32,9 +46,11 @@ export interface CheckersState {
   sinceCaptureOrAdvance: number;
   variant: CheckersVariant;
   rotate?: boolean;
+  /** Offenes Remis-Angebot (fehlt in älteren Spielständen = keins). */
+  drawOffer?: DrawOffer;
 }
 
-export interface CheckersMove {
+export interface CheckersStep {
   type: 'move';
   from: number;
   to: number;
@@ -45,6 +61,9 @@ export interface CheckersMove {
   /** Algebraische Notation, z. B. "c3-d4" oder "c3:e5:g7". */
   san: string;
 }
+
+/** Ein Zug auf dem Brett oder Remis anbieten, annehmen, ablehnen. */
+export type CheckersMove = CheckersStep | DrawMove;
 
 const FILES = 'abcdefghij';
 
@@ -113,7 +132,8 @@ export function setup(_seats = 2, options: Options = {}): CheckersState {
 }
 
 export function currentPlayers(state: CheckersState): Actor[] {
-  return state.end !== null ? [] : [state.turn];
+  if (state.end !== null) return [];
+  return [drawResponder(state.drawOffer) ?? state.turn];
 }
 
 const ALL_DIRECTIONS: readonly [number, number][] = [
@@ -139,7 +159,7 @@ function collectCaptures(
   piece: CheckersPiece,
   captured: number[],
   path: number[],
-  results: CheckersMove[],
+  results: CheckersStep[],
 ): void {
   const col = current % size;
   const row = Math.floor(current / size);
@@ -251,15 +271,39 @@ function collectCaptures(
   }
 }
 
+/** Alle erlaubten Züge; solange ein Remis-Angebot offen ist, nur Annehmen und Ablehnen. */
+export function legalMoves(state: CheckersState, actor: Actor): CheckersMove[] {
+  if (state.end !== null) return [];
+  if (drawResponder(state.drawOffer) !== null) return drawResponses(state.drawOffer, actor);
+  return boardMoves(state, actor);
+}
+
+/** Wie `legalMoves`, lässt aber zusätzlich „Remis anbieten“ zu (siehe `draw-offer.ts` in der Engine). */
+export function isLegal(state: CheckersState, actor: Actor, move: CheckersMove): boolean {
+  if (state.end !== null) return false;
+  if (isDrawMove(move)) return isDrawMoveLegal(state.drawOffer, actor, move, state.turn, state.history.length);
+  return drawResponder(state.drawOffer) === null && findStep(boardMoves(state, actor), move) !== undefined;
+}
+
+function findStep(moves: CheckersStep[], move: CheckersStep): CheckersStep | undefined {
+  return moves.find(
+    (m) =>
+      m.from === move.from &&
+      m.to === move.to &&
+      JSON.stringify(m.captures ?? []) === JSON.stringify(move.captures ?? []) &&
+      JSON.stringify(m.path ?? []) === JSON.stringify(move.path ?? []),
+  );
+}
+
 /**
- * Ermittelt alle legalen Züge.
+ * Alle Brettzüge ohne Remis-Züge – für die Regeln und die Suche des Bots.
  * Bei Schlagpflicht: Gibt es Schlagzüge, DÜRFEN nur Schlagzüge ausgeführt werden.
  */
-export function legalMoves(state: CheckersState, actor: Actor): CheckersMove[] {
+export function boardMoves(state: CheckersState, actor: Actor): CheckersStep[] {
   if (state.end !== null || actor !== state.turn) return [];
 
   const { cells, size, variant } = state;
-  const allCaptures: CheckersMove[] = [];
+  const allCaptures: CheckersStep[] = [];
 
   for (let i = 0; i < cells.length; i++) {
     const piece = cells[i];
@@ -281,7 +325,7 @@ export function legalMoves(state: CheckersState, actor: Actor): CheckersMove[] {
   }
 
   // Keine Schläge möglich: Einfache Züge
-  const simpleMoves: CheckersMove[] = [];
+  const simpleMoves: CheckersStep[] = [];
   const forwardDr = actor === 0 ? -1 : 1;
 
   for (let i = 0; i < cells.length; i++) {
@@ -345,9 +389,9 @@ export function legalMoves(state: CheckersState, actor: Actor): CheckersMove[] {
   return simpleMoves;
 }
 
-function deduplicateMoves(moves: CheckersMove[]): CheckersMove[] {
+function deduplicateMoves(moves: CheckersStep[]): CheckersStep[] {
   const seen = new Set<string>();
-  const list: CheckersMove[] = [];
+  const list: CheckersStep[] = [];
   for (const m of moves) {
     const key = `${m.from}->${m.to}:${(m.captures ?? []).join(',')}:${(m.path ?? []).join(',')}`;
     if (!seen.has(key)) {
@@ -359,16 +403,15 @@ function deduplicateMoves(moves: CheckersMove[]): CheckersMove[] {
 }
 
 export function applyMove(state: CheckersState, actor: Actor, move: CheckersMove): MoveResult<CheckersState> {
-  if (state.end !== null || actor !== state.turn) throw new Error('Du bist nicht am Zug.');
+  if (state.end !== null || !isLegal(state, actor, move)) throw new Error('Du bist nicht am Zug.');
+  if (isDrawMove(move)) {
+    const draw = applyDrawMove(state.drawOffer, actor as SeatId, move, state.history.length);
+    const events: GameEvent[] = [draw.event];
+    if (draw.agreed) events.push({ type: 'over', end: 'agreement', winner: null });
+    return { state: { ...state, drawOffer: draw.offer, ...(draw.agreed ? { end: 'agreement' as const } : {}) }, events };
+  }
 
-  const moves = legalMoves(state, actor);
-  const legal = moves.find(
-    (m) =>
-      m.from === move.from &&
-      m.to === move.to &&
-      JSON.stringify(m.captures ?? []) === JSON.stringify(move.captures ?? []) &&
-      JSON.stringify(m.path ?? []) === JSON.stringify(move.path ?? []),
-  );
+  const legal = findStep(boardMoves(state, actor), move);
 
   if (!legal) {
     throw new Error('Dieser Zug ist nicht erlaubt.');
@@ -384,7 +427,7 @@ export function applyMove(state: CheckersState, actor: Actor, move: CheckersMove
 
   // Geschlagene Steine entfernen
   const events: GameEvent[] = [];
-  const opponent: SeatId = (1 - actor) as SeatId;
+  const opponent: SeatId = (1 - (actor as SeatId)) as SeatId;
 
   if (move.captures && move.captures.length > 0) {
     for (const cap of move.captures) {
@@ -447,7 +490,7 @@ export function applyMove(state: CheckersState, actor: Actor, move: CheckersMove
       winner: null,
     };
 
-    const nextLegal = legalMoves(candidateState, opponent);
+    const nextLegal = boardMoves(candidateState, opponent);
     if (nextLegal.length === 0) {
       // Gegner ist blockiert
       nextEnd = 'blocked';
@@ -481,7 +524,7 @@ export function applyMove(state: CheckersState, actor: Actor, move: CheckersMove
 
 export function result(state: CheckersState): Result | null {
   if (state.winner !== null) return { kind: 'win', winners: [state.winner], reason: state.end ?? undefined };
-  if (state.end === 'repetition' || state.end === 'drawMoves') return { kind: 'draw', reason: state.end };
+  if (state.end === 'repetition' || state.end === 'drawMoves' || state.end === 'agreement') return { kind: 'draw', reason: state.end };
   return null;
 }
 
@@ -506,7 +549,7 @@ export function countPieces(cells: readonly (CheckersPiece | null)[]): [
 export function evaluate(state: CheckersState, seat: SeatId): number {
   if (state.winner === seat) return 100_000;
   if (state.winner !== null) return -100_000;
-  if (state.end === 'repetition' || state.end === 'drawMoves') return 0;
+  if (state.end === 'repetition' || state.end === 'drawMoves' || state.end === 'agreement') return 0;
 
   const opponent = (1 - seat) as SeatId;
   const [whiteCount, blackCount] = countPieces(state.cells);

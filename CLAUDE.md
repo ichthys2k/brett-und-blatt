@@ -25,7 +25,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - `corepack pnpm --filter @brett-und-blatt/web dev` – Dev-Server auf http://localhost:5173
   - `corepack pnpm --filter @brett-und-blatt/server dev` – Spieleserver lokal auf http://127.0.0.1:8787 (Wrangler, kein Konto nötig; für Telemetrie aus `WRANGLER_SEND_METRICS=false` davor)
   - `node apps/server/scripts/smoke.mjs` – Rauchtest gegen den laufenden Spieleserver (zwei nachgebaute Browser: Raum, Partie, Wiedereinstieg, Bot, Zeitablauf)
-  - `corepack pnpm rauchtest` – nach `corepack pnpm build`: startet jedes fertige Spiel im Browser (Playwright, Handy-Hochformat), erst frisch, dann alle nacheinander in derselben Seite; meldet Fehler, zu hohe Seiten und CSS-Kollisionen. Einmal je Rechner vorher `corepack pnpm exec playwright install chromium`. Mit Spiel-ids als Argumenten nur diese.
+  - `corepack pnpm rauchtest` – nach `corepack pnpm build`: startet jedes fertige Spiel im Browser (Playwright, Handy-Hochformat), erst frisch, dann alle nacheinander in derselben Seite; meldet Fehler, zu hohe Seiten und CSS-Kollisionen. Einmal je Rechner vorher `corepack pnpm exec playwright install chromium` – oder ein vorhandenes Chromium nutzen: `RAUCHTEST_CHROMIUM=/usr/bin/chromium corepack pnpm rauchtest` (so auf dem Desktop). Mit Spiel-ids als Argumenten nur diese.
   - `PRUEFSTAND=1 corepack pnpm pruefstand` – gründlicher Prüfstand (`tests/pruefstand.test.ts`, alle Spiele etwa 20 min, mit `PRUEFSTAND_SPIELE=skat,uno` nur einzelne): Zufallspartien über alle Optionen und Platzzahlen mit Proben unerlaubter Züge, Geheimnis-Prüfung, jeder Bot auf jeder Stufe mit Zeitmessung, Standard-Bot gegen Zufall. Mit `--disable-console-intercept` erscheint je Spiel eine Kennzahlenzeile. Die Geheimnis-Prüfung in `gameContractChecks` endet nach höchstens 2000 Zügen (`secretMoves`), damit lange Echtzeit-Partien die CI nicht über 60 s treiben.
 - Typprüfung umfasst zwei Konfigurationen: `tsconfig.json` (Browser, Tests) und `apps/server/tsconfig.json` (Cloudflare-Typen). `pnpm typecheck` ruft beide auf.
 - pnpm installiert neue Paketversionen erst nach einer Wartefrist (Lieferketten-Schutz). **Keine `minimumReleaseAgeExclude`-Ausnahmen eintragen**, sondern ältere Versionen wählen. Installationsskripte sind nur für `esbuild` und `workerd` freigegeben (`allowBuilds` in `pnpm-workspace.yaml`).
@@ -175,6 +175,17 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
     - URL-Parameter für Spieleinrichtungen (`#/neu/<id>?option=wert` und `&autostart=1` in `router.ts` und `Setup.tsx`) sowie ausklappbarer Bereich „🔗 Übungslink & QR-Code (für Tafel / Arbeitsblatt)“ in `Setup.tsx`.
 
 ## Nächste Schritte
+
+**Fahrplan ab 29.10.2026** (mit Cornelius abgestimmt; Reihenfolge A → B1 → B2 → C1 → C2 → D1 → B3 → C3 → E). Jeder Schritt auf eigenem Zweig, mit Tests, `corepack pnpm check`, bei Spieländerungen Prüfstand, Blick im Browser, Doku-Nachtrag; veröffentlicht wird auf „deploy“.
+
+- ✅ **B1 Remis** (29.10.2026): Schach und Dame, Engine-Baustein `draw-offer.ts`, Leiste `DrawOfferBar`, Ergebnis-Grund „Remis durch Einigung“ (`agreement`). Details in `docs/spiele/schach.md` und `dame.md`.
+- ✅ **B2 PGN** (29.10.2026): Schach-Partien kopieren/speichern (Chronik) und über die Einrichtung fortsetzen. Dabei behoben: `SetupExtra` bekommt `setOption` (vorher wirkte nichts, was es setzte – auch der Go-SGF-Import nicht), Optionen können `maxLength` haben (vorher fest 256 Zeichen), verborgene Optionen werden nicht mehr in den gespeicherten Einstellungen gemerkt.
+- ✅ **A – Doku an den Code angleichen:** Jeden „offen“-Punkt in `docs/spiele/` am Code prüfen und abhaken oder stehen lassen.
+- **B – Schach:** B1 Remis anbieten/annehmen (Hot-Seat und online, Bot nimmt bei klar schlechterer Stellung an; auch Dame). B2 PGN kopieren und einfügen (`chess.js`). B3 Eröffnungsbuch für „mittel“ und „schwer“.
+- **C – Stichspiele:** C1 Schafkopf: Bettel und Tout enden sofort, wenn verloren. C2 Skat-Bot sagt Hand und Schneider an. C3 PIMC-Bot (Stichproben-Suche) als gemeinsamer Baustein im Stich-Kern für Skat, Schafkopf, Doppelkopf, Binokel auf „schwer“ – Maßstab: schlägt im Prüfstand den alten Bot, ≤ 1,5 s je Zug auf Cloudflare.
+- **D – Klassenzimmer:** D1 Kartenblitz mit geteiltem Bildschirm (wie Enten-Rallye). D2 Bibel-Quiz holt die Fragen vom Spieleserver (von Cornelius entschieden, 29.10.2026), damit der Katalog nicht mehr im Browser-Bundle liegt.
+- **E – Spieltiefe:** Vierer-Schach-Bot mit Vorausschau, Binokel-Vierertisch/Kreuzbinokel, Doppelkopf-Pflichtsoli, Drachenspiel-Zauberkarten.
+- **Entscheidungen (29.10.2026):** Bibel-Quiz vom Server – ja (D2). Chromium für den Rauchtest ist auf dem Desktop installiert. Quartett-Werte prüft Cornelius später selbst. KataGo entfällt. Farbensortierer geht Cornelius separat an.
 
 Korrekturplan aus dem Prüfbericht:
 1. ✅ Etappe 1 – Lecks und Kaputtes (veröffentlicht 28.10.2026, Commit `2ff0822`).

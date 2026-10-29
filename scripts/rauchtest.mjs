@@ -79,7 +79,8 @@ async function startGame(page, id) {
 }
 
 await waitForServer();
-const browser = await chromium.launch();
+// Ein vorhandenes Chromium (z. B. /usr/bin/chromium) statt des von Playwright geladenen nutzen.
+const browser = await chromium.launch(process.env.RAUCHTEST_CHROMIUM ? { executablePath: process.env.RAUCHTEST_CHROMIUM } : {});
 const problems = [];
 try {
   // Erst jedes Spiel frisch laden und messen …

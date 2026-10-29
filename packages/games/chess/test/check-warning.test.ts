@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { getCheckWarning, squareIndex } from '../src/ui/checkWarning';
-import { legalMoves, setup } from '../src/rules';
+import { legalMoves, setup, type BoardMove, type ChessState } from '../src/rules';
+
+const boardMoves = (state: ChessState, seat: number) => legalMoves(state, seat).filter((m): m is BoardMove => m.type === 'move');
 
 describe('Schach Fesselungs- und Warnungslogik (checkWarning)', () => {
   it('erkennt eine absolute Fesselung eines Springers an den König', () => {
     // Weißer König e1, Weißer Springer e2, Schwarzer Turm e8, Schwarzer König a8
     const fen = 'k3r3/8/8/8/8/8/4N3/4K3 w - - 0 1';
     const state = { ...setup(), fen };
-    const moves = legalMoves(state, 0);
+    const moves = boardMoves(state, 0);
 
     // Klick auf den gefesselten Springer e2
     const warning = getCheckWarning(fen, squareIndex('e2'), null, moves);
@@ -29,7 +31,7 @@ describe('Schach Fesselungs- und Warnungslogik (checkWarning)', () => {
     // Weißer König e1, Weißer Turm e3, Schwarze Dame e8, Schwarzer König a8
     const fen = 'k3q3/8/8/8/8/4R3/8/4K3 w - - 0 1';
     const state = { ...setup(), fen };
-    const moves = legalMoves(state, 0);
+    const moves = boardMoves(state, 0);
 
     // Turm darf entlang der e-Linie ziehen, z. B. nach e4
     expect(moves.some((m) => m.from === 'e3' && m.to === 'e4')).toBe(true);
@@ -51,7 +53,7 @@ describe('Schach Fesselungs- und Warnungslogik (checkWarning)', () => {
     // Weißer König e1, Schwarzer Turm e8 (Schach!), Weißer Springer a1, Schwarzer König a8
     const fen = 'k3r3/8/8/8/8/8/8/N3K3 w - - 0 1';
     const state = { ...setup(), fen };
-    const moves = legalMoves(state, 0);
+    const moves = boardMoves(state, 0);
 
     // Springer a1 kann das Schach nicht abwehren
     const warning = getCheckWarning(fen, squareIndex('a1'), null, moves);
@@ -64,7 +66,7 @@ describe('Schach Fesselungs- und Warnungslogik (checkWarning)', () => {
     // Weißer König e1, Schwarzer Turm d8, Schwarzer König a8
     const fen = 'k2r4/8/8/8/8/8/8/4K3 w - - 0 1';
     const state = { ...setup(), fen };
-    const moves = legalMoves(state, 0);
+    const moves = boardMoves(state, 0);
 
     // König will nach d1 ziehen (wird von d8-Turm kontrolliert)
     const warning = getCheckWarning(fen, squareIndex('e1'), squareIndex('d1'), moves);
@@ -78,7 +80,7 @@ describe('Schach Fesselungs- und Warnungslogik (checkWarning)', () => {
     // Weißer König e1, Turm h1, Schwarzer Läufer a6 (kontrolliert f1), Schwarzer König e8
     const fen = 'r3k2r/8/b7/8/8/8/8/R3K2R w KQkq - 0 1';
     const state = { ...setup(), fen };
-    const moves = legalMoves(state, 0);
+    const moves = boardMoves(state, 0);
 
     // Kurze Rochade e1 -> g1 führt über das von a6 kontrollierte f1
     const warning = getCheckWarning(fen, squareIndex('e1'), squareIndex('g1'), moves);

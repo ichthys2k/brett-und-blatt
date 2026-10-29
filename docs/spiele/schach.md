@@ -124,7 +124,7 @@ Vorhanden in `test/chess.test.ts` und `test/check-warning.test.ts`:
 
 ## Offene Punkte
 
-- Remis anbieten und annehmen (braucht eine Absprache zwischen beiden Spielern, online wie im Hot-Seat).
-- Partie als PGN herunterladen bzw. einfügen.
+- ✅ Remis anbieten und annehmen (29.10.2026): Wer am Zug ist, bietet statt zu ziehen an; der Gegner ist dann dran und nimmt an oder lehnt ab. Danach erst nach 10 Halbzügen wieder. Baustein `draw-offer.ts` in der Engine (Züge `offerDraw`/`acceptDraw`/`declineDraw`, „anbieten“ nur über `isLegal`, damit Bots und Zufallspartien nie anbieten), Leiste `DrawOfferBar` in `packages/ui`. Der Bot nimmt an, wenn er nach seiner Bewertung zurückliegt (leicht ab ausgeglichen, mittel ab −1,5, schwer ab −3 Bauern). Spielfeld jetzt 8 : 10 für die Remis-Zeile.
+- ✅ Partie als PGN (29.10.2026): In der Chronik „📋 PGN kopieren“ und „💾 Speichern“ (`toPgn` mit Namen, Datum, Ergebnis); ist die Zwischenablage gesperrt, erscheint die Partie zum Kopieren von Hand. In der Einrichtung „📥 PGN-Partie fortsetzen“ (`PgnSetup`, Text oder Datei, sofortige Prüfung) – `loadFromPgn` spielt die Partie Zug für Zug mit den eigenen Regeln nach, nur ab Grundstellung. Verborgene Option `pgn` (bis 8000 Zeichen), wirkt nur am eigenen Gerät, wird nicht gespeichert.
 - Eröffnungsbuch für „mittel“ und „schwer“, damit die ersten Züge abwechslungsreicher sind.
 - Stockfish als zusätzlicher, starker Bot (Lizenz prüfen, siehe oben).

@@ -203,3 +203,14 @@ describe('Bot', () => {
 describe('Vertrag', () => {
   for (const check of gameContractChecks(gameModule, { randomGames: 12, botMoveLimit: 30 })) test(check.name, check.run, 120_000);
 });
+
+describe('SGF über die Einrichtung', () => {
+  it('übernimmt lange, mehrzeilige SGF-Partien als Option', () => {
+    const moves = Array.from({ length: 40 }, (_, i) => `;${i % 2 ? 'W' : 'B'}[${String.fromCharCode(97 + (i % 9))}${String.fromCharCode(97 + Math.floor(i / 9))}]`).join('\n');
+    const sgf = `(;GM[1]FF[4]SZ[9]KM[7.5]\n${moves})`;
+    expect(sgf.length).toBeGreaterThan(256);
+    const options = resolveOptions(gameModule, { sgf, size: '9' });
+    expect(options.sgf).toBe(sgf);
+    expect((gameModule.setup(2, options, 'sgf') as GoState).record.length).toBe(40);
+  });
+});
