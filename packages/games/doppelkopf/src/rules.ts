@@ -4,6 +4,8 @@ import {
   cardRank,
   cardSuit,
   createDokoContract,
+  dealUnknown,
+  knownVoids,
   getActivePlayers,
   handToSeat,
   legalCards,
@@ -12,6 +14,7 @@ import {
   trickPoints,
   trickWinner,
   Rng,
+  type EffectiveSuit,
   type RngState,
   type Actor,
   type CardId,
@@ -642,22 +645,41 @@ export function sampleHidden(view: DokoState, seat: SeatId, rng: Rng): DokoState
   }
 
   const allCards = createDokoDeck();
-  const unknownPool = rng.shuffle(allCards.filter((c) => !knownCards.has(c)));
+  const unknown = allCards.filter((c) => !knownCards.has(c));
+  const others = view.activeSeats.filter((s) => s !== seat);
+  const needs = new Map<number, number>();
+  for (const s of others) needs.set(s, (view.hands[s] || []).filter((c) => c === 'back').length);
+  // Wer eine Farbe nicht bedient hat, besitzt von ihr keine Karte mehr.
+  const contract = getContract(view);
+  const voids = view.phase === 'play' ? knownVoids(view.completedTricks, view.currentTrick, contract) : new Map<number, Set<EffectiveSuit>>();
+  const dealt = dealUnknown(unknown, needs, voids, contract, rng);
 
-  let poolIdx = 0;
   const sampledHands: Record<number, CardId[]> = {};
   for (const s of view.activeSeats) {
     if (s === seat) {
       sampledHands[s] = [...(view.hands[s] || [])];
     } else {
-      const origHand = view.hands[s] || [];
-      sampledHands[s] = origHand.map((c) => (c === 'back' ? unknownPool[poolIdx++] : c));
+      const fill = [...(dealt.get(s) ?? [])];
+      sampledHands[s] = (view.hands[s] || []).map((c) => (c === 'back' ? fill.pop()! : c));
     }
+  }
+
+  // Im Normalspiel gehören die Kreuz-Damen zum Re-Team: Das Team der Stichprobe richtet sich nach den
+  // gezogenen Karten (die Sicht kennt nur die offen gezeigten Re-Spieler).
+  let reTeam = view.reTeam;
+  if (view.contract.type === 'normal') {
+    const played = [...view.completedTricks.flatMap((t) => t.cards), ...view.currentTrick];
+    const holdsQueen = (s: number) =>
+      sampledHands[s]!.some((c) => cardSuit(c) === 'C' && cardRank(c) === 12) || played.some((p) => p.player === s && cardSuit(p.card) === 'C' && cardRank(p.card) === 12);
+    reTeam = view.activeSeats.filter(holdsQueen);
+  } else if (view.contract.soloist !== undefined) {
+    reTeam = Array.from(new Set([view.contract.soloist, ...view.reTeam]));
   }
 
   return {
     ...view,
     hands: sampledHands,
+    reTeam,
   };
 }
 

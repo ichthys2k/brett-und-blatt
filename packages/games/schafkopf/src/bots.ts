@@ -14,6 +14,7 @@ import {
   type CardId,
   type Suit,
   type TrickContract,
+  pimcMove,
 } from '@brett-und-blatt/engine';
 import { createSchafkopfDeck, getContract, legalMoves, type SchafkopfContract, type SchafkopfGameType, type SchafkopfMove, type SchafkopfState } from './rules.js';
 
@@ -26,7 +27,7 @@ import { createSchafkopfDeck, getContract, legalMoves, type SchafkopfContract, t
  * Stufen: „leicht“ spielt waghalsig und legt manchmal zufällige Karten, „mittel“ nach den
  * Faustregeln, „schwer“ ist beim Ansagen vorsichtiger und stößt mit starkem Blatt.
  */
-export const schafkopfBot: BotDefinition<SchafkopfState, SchafkopfMove> = {
+export const schafkopfHeuristicBot: BotDefinition<SchafkopfState, SchafkopfMove> = {
   id: 'schafkopf',
   name: 'Schafkopf-Bot',
   levels: ['easy', 'medium', 'hard'],
@@ -218,3 +219,28 @@ function choosePlay(ctx: BotContext<SchafkopfState, SchafkopfMove, SchafkopfStat
   }
   return cheapest(cards);
 }
+
+/**
+ * Der Schafkopf-Bot der Spielliste: Spielwahl, Ansagen und Stoßen nach den Faustregeln oben; beim Kartenspielen
+ * rechnet „schwer“ per Stichproben-Suche (`pimcMove`) mehrere mögliche Verteilungen der verdeckten Karten
+ * durch (Farben, die jemand nicht bedient hat, werden ihm nicht zugeteilt) und spielt die beste Karte.
+ */
+export const schafkopfBot: BotDefinition<SchafkopfState, SchafkopfMove> = {
+  ...schafkopfHeuristicBot,
+  chooseMove(ctx) {
+    if (ctx.level !== 'hard' || ctx.view.phase !== 'play') return schafkopfHeuristicBot.chooseMove(ctx);
+    return pimcMove(ctx, {
+      heuristic: schafkopfHeuristicBot,
+      isPlaying: (state) => state.phase === 'play',
+      // Spielausgang vor Augen der eigenen Partei (Spieler und Partner gegen die anderen).
+      score: (state, seat) => {
+        // Im Ramsch gibt es keine Parteien: dort zählt nur das Ergebnis.
+        if (state.contract?.gameType === 'ramsch') return state.scores[seat] ?? 0;
+        const declarerSide = seat === state.declarerSeat || seat === state.partnerSeat;
+        return (state.scores[seat] ?? 0) + 0.3 * (declarerSide ? state.declarerEyes : state.opponentEyes);
+      },
+      candidates: (moves) => moves.filter((m) => m.type === 'play'),
+      samples: 30,
+    });
+  },
+};

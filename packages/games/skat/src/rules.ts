@@ -4,6 +4,8 @@ import {
   cardRank,
   cardSuit,
   createSkatContract,
+  dealUnknown,
+  knownVoids,
   getActivePlayers,
   handToSeat,
   legalCards,
@@ -12,6 +14,7 @@ import {
   trickPoints,
   trickWinner,
   Rng,
+  type EffectiveSuit,
   type RngState,
   type Actor,
   type CardId,
@@ -877,28 +880,27 @@ export function sampleHidden(view: SkatState, seat: SeatId, rng: Rng): SkatState
   }
 
   const allCards = createSkatDeck();
-  const unknownPool = rng.shuffle(allCards.filter((c) => !knownCards.has(c)));
+  const unknown = allCards.filter((c) => !knownCards.has(c));
+  const others = view.activeSeats.filter((s) => s !== seat);
+  const needs = new Map<number, number>();
+  for (const s of others) needs.set(s, (view.hands[s] || []).filter((c) => c === 'back').length);
+  needs.set(-1, view.skat.filter((c) => c === 'back').length);
+  // Wer eine Farbe nicht bedient hat, besitzt von ihr keine Karte mehr.
+  const voids = view.phase === 'play' && view.declaration ? knownVoids(view.completedTricks, view.currentTrick, getContract(view)) : new Map<number, Set<EffectiveSuit>>();
+  const dealt = dealUnknown(unknown, needs, voids, view.declaration ? getContract(view) : createSkatContract('grand'), rng);
 
-  let poolIdx = 0;
   const sampledHands: Record<number, CardId[]> = {};
   for (const s of view.activeSeats) {
     if (s === seat) {
       sampledHands[s] = [...(view.hands[s] || [])];
     } else {
-      const origHand = view.hands[s] || [];
-      sampledHands[s] = origHand.map((c) => {
-        if (c === 'back') {
-          return unknownPool[poolIdx++];
-        }
-        return c;
-      });
+      const fill = [...(dealt.get(s) ?? [])];
+      sampledHands[s] = (view.hands[s] || []).map((c) => (c === 'back' ? fill.pop()! : c));
     }
   }
 
-  let sampledSkat = [...view.skat];
-  if (sampledSkat.includes('back')) {
-    sampledSkat = sampledSkat.map((c) => (c === 'back' ? unknownPool[poolIdx++] : c));
-  }
+  const fillSkat = [...(dealt.get(-1) ?? [])];
+  const sampledSkat = view.skat.map((c) => (c === 'back' ? fillSkat.pop()! : c));
 
   return {
     ...view,

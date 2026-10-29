@@ -150,7 +150,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - Schafkopf-Regeln (`ruleVersion` 3): Geier, Farbwenz und Bettel ließen sich reizen, aber nur als Solo ansagen – jetzt richtig; Bettel ist ohne Stich gewonnen, Tout nur mit allen Stichen und zählt doppelt (vorher wie ein normales Spiel nach Augen).
 
 **Bekannte offene Punkte:**
-- **Stichspiel-Bots** spielen nach Faustregeln, ohne Suche (Skat, Schafkopf, Doppelkopf, Binokel). Skat-Schwarz- und Ouvert-Ansagen, Geier und Farbwenz macht kein Bot.
+- **Stichspiel-Bots** spielen beim Reizen und Ansagen nach Faustregeln; das Kartenspiel rechnet auf „schwer“ in Skat, Schafkopf und Binokel per Stichproben-Suche, in Doppelkopf nur nach Faustregeln. Skat-Schwarz- und Ouvert-Ansagen, Geier und Farbwenz macht kein Bot.
 - **Gomoku-Bot** beschleunigt: `findWinLine` prüft nur noch Linien durch den gesetzten Stein statt das ganze Brett (O(b²) → O(1) je Zug), Kandidatenfelder auf Nachbarschaft (≤ 2) begrenzt, Vertragsprüfung mit `randomGames: 8, botMoveLimit: 60`. Testzeit 10 s → 2,2 s; Prüfstand grün.
 - **Bibel-Quiz:** Der Fragenkatalog mit Antworten und Erklärungen liegt in `content/bibelquiz/fragen.json` und kommt zur Laufzeit vom Spieleserver (`GET /bibelquiz/fragen`, Rückfall: mitgelieferte Datei `bibelquiz/fragen.json`) – nicht mehr im JS-Bundle (Option 0 ist richtig). Wer die Fragen im Browser durchsucht, findet die Lösungen weiterhin; ganz verbergen ließe sich das nur mit einer Prüfung auf dem Server bei jeder Antwort.
 
@@ -179,6 +179,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Fahrplan ab 29.10.2026** (mit Cornelius abgestimmt; Reihenfolge A → B1 → B2 → C1 → C2 → D1 → B3 → C3 → E). Jeder Schritt auf eigenem Zweig, mit Tests, `corepack pnpm check`, bei Spieländerungen Prüfstand, Blick im Browser, Doku-Nachtrag; veröffentlicht wird auf „deploy“.
 
+- ✅ **C3 Stichproben-Bot** (29.10.2026): `pimcMove` (Engine) rechnet auf „schwer“ das Kartenspiel in Skat, Schafkopf und Binokel mit 30 Zufallsverteilungen der verdeckten Karten durch (Farbenlücken beachtet, `dealUnknown`/`knownVoids`), gemessen an gleichen Blättern gegen die Faustregeln: Skat +4,3, Schafkopf +4,2, Binokel +9,8 Punkte je Spiel; ≤ 60 ms je Zug. Doppelkopf: kein Gewinn, bleibt bei den Faustregeln (nur bessere Verteilung in `sampleHidden`).
 - ✅ **B1 Remis** (29.10.2026): Schach und Dame, Engine-Baustein `draw-offer.ts`, Leiste `DrawOfferBar`, Ergebnis-Grund „Remis durch Einigung“ (`agreement`). Details in `docs/spiele/schach.md` und `dame.md`.
 - ✅ **B3 Eröffnungsbuch** (29.10.2026): Schach-Bot „mittel“/„schwer“ spielt in bekannten Eröffnungsstellungen einen Buchzug (`packages/games/chess/src/book.ts`, 42 Hauptvarianten).
 - ✅ **D2 Bibel-Quiz-Katalog vom Server** (29.10.2026): Die 168 Fragen liegen in `content/bibelquiz/fragen.json`; der Spieleserver liefert sie unter `GET /bibelquiz/fragen` (mit Inhaltsversion), die Web-App holt sie über den neuen Haken `GameModule.prepare` (einmal, auch im Bot-Worker) und nimmt ohne Server die mitgelieferte Datei `bibelquiz/fragen.json` (Vite-Plugin `apps/web/kataloge.ts`, von der PWA vorab gespeichert). Das JS-Paket ist dadurch rund 57 KB kleiner (etwa 18 KB gzip); `tests/repo.test.ts` verhindert einen statischen Import.

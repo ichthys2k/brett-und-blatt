@@ -12,6 +12,7 @@ import {
   type CardId,
   type Suit,
   type TrickContract,
+  pimcMove,
 } from '@brett-und-blatt/engine';
 import { calculateGameValue, createSkatDeck, getContract, legalMoves, type SkatGameType, type SkatMove, type SkatState } from './rules.js';
 
@@ -29,7 +30,7 @@ const SUITS: Suit[] = ['C', 'S', 'H', 'D'];
  * Stufen: „leicht“ reizt waghalsig und spielt jede dritte Karte zufällig, „mittel“ spielt
  * nach den Faustregeln, „schwer“ reizt vorsichtiger und zählt die gefallenen Trümpfe.
  */
-export const skatBot: BotDefinition<SkatState, SkatMove> = {
+export const skatHeuristicBot: BotDefinition<SkatState, SkatMove> = {
   id: 'skat',
   name: 'Skat-Bot',
   levels: ['easy', 'medium', 'hard'],
@@ -258,3 +259,24 @@ function trumpsStillOut(state: SkatState, seat: number, contract: TrickContract)
   for (const p of state.currentTrick) if (contract.isTrump(p.card)) seen.add(p.card);
   return total - seen.size;
 }
+
+/**
+ * Der Skat-Bot der Spielliste: Reizen, Drücken und Ansagen nach den Faustregeln oben; beim Kartenspielen
+ * rechnet „schwer“ per Stichproben-Suche (`pimcMove`) mehrere mögliche Verteilungen der verdeckten Karten
+ * durch und spielt die Karte mit dem besten Durchschnitt.
+ */
+export const skatBot: BotDefinition<SkatState, SkatMove> = {
+  ...skatHeuristicBot,
+  chooseMove(ctx) {
+    if (ctx.level !== 'hard' || ctx.view.phase !== 'play') return skatHeuristicBot.chooseMove(ctx);
+    return pimcMove(ctx, {
+      heuristic: skatHeuristicBot,
+      isPlaying: (state) => state.phase === 'play',
+      // Der Spielausgang zählt vor allem; die Augen der eigenen Seite entscheiden bei Gleichstand und
+      // zeigen früh, ob Schneider oder Schwarz in Reichweite ist.
+      score: (state, seat) => (state.scores[seat] ?? 0) + 0.3 * (seat === state.declarerSeat ? state.declarerEyes : 120 - state.declarerEyes),
+      candidates: (moves) => moves.filter((m) => m.type === 'play'),
+      samples: 30,
+    });
+  },
+};

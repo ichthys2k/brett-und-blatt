@@ -252,6 +252,7 @@ Die erste Fassung war nicht spielbar (Platzhalter-Oberfläche, Zustand mit `Set`
 - `src/ui/index.tsx`: Reizknöpfe, Dabb, Drückauswahl, Trumpfwahl mit Meldevorschau, Meldeübersicht, Stichtisch, Abrechnungstabelle.
 - `test/binokel.test.ts`: Vertragsprüfungen, Meldungen, Stichregeln, ganze Partien der Bots, Gewinnquote der Spielmacher.
 
+- ✅ Kartenspiel per Stichproben-Suche (`pimcMove` in `packages/engine/src/bots/pimc.ts`): Auf „schwer“ verteilt der Bot die verdeckten Karten 30-mal zufällig (`dealUnknown`: wer eine Farbe nicht bedient hat, bekommt von ihr keine Karte, `knownVoids`), spielt jede mögliche eigene Karte mit den Faustregeln zu Ende und nimmt die Karte mit dem besten Durchschnitt (Spielausgang plus nur der Spielstand; alle Karten werden an denselben Verteilungen verglichen). Gemessen an je gleichen Blättern gegen die reinen Faustregeln (150 Blätter): **+9,8 Punkte je Runde (±1,7)**, 76 von 150 Blättern besser, 18 schlechter; 7 ms je Zug, Spitze 57 ms. Dort zählt `sampleHidden` die Meldungen anderer Spieler mit; Farbenlücken werden noch nicht ausgenutzt.
 - Bot spielt Durch (28.10.2026): drückt alle Karten, die ein fremder Stich überbieten könnte, und sagt Durch an, wenn danach jeder Stich sicher ist (`winsAllTricks`, nicht auf „leicht“).
 
 **Noch offen:** Vierertisch und Kreuzbinokel, offener Durch und Hand-Durch, Melden von Hand statt automatisch, Lernhilfen als Optionen, Bot mit Suche (PIMC).
