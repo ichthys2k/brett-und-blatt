@@ -218,7 +218,7 @@ Legespiel für 2–4 Personen mit 108 Steinen (6 Farben × 6 Formen, je dreimal)
 
 Weitere passende Spiele aus dem Brainstorming:
 
-- **Kartenspiele:** Sechsundsechzig, Herz, Pik, Stiche raten, Rommé, Canasta, Gin Rommé, Präsident, Mogeln, Sieben legen, Durak, Krieg, Feuerwerk (kooperativ), Gedankenlesen (kooperativ, Echtzeit), Speed (Echtzeit)
+- **Kartenspiele:** Sechsundsechzig, Herz, Pik, Stiche raten, Rommé, Canasta, Gin Rommé, Präsident („Arschloch“, Plan in `spiele/praesident.md`), Mogeln, Sieben legen, Durak, Krieg, Feuerwerk (kooperativ), Gedankenlesen (kooperativ, Echtzeit), Speed (Echtzeit, Plan in `spiele/speed.md`), Fix gefunden! (Dobble-artig, Plan in `spiele/fix-gefunden.md`), Tiefflug (Skyjo-artig mit Junior, Plan in `spiele/tiefflug.md`)
 - **Brettspiele:** Gomoku, Hex, Mancala, Hnefatafl, Backgammon, Sternhalma, Barrikade, Leiterspiel, Polyomino-Legespiel, Straßenhandel, Inselsiedler, Verdeckte Armeen, Yacht
 
 ## Offene Punkte

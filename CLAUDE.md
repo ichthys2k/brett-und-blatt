@@ -190,6 +190,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - **C – Stichspiele:** C1 Schafkopf: Bettel und Tout enden sofort, wenn verloren. C2 Skat-Bot sagt Hand und Schneider an. C3 PIMC-Bot (Stichproben-Suche) als gemeinsamer Baustein im Stich-Kern für Skat, Schafkopf, Doppelkopf, Binokel auf „schwer“ – Maßstab: schlägt im Prüfstand den alten Bot, ≤ 1,5 s je Zug auf Cloudflare.
 - **D – Klassenzimmer:** D1 Kartenblitz mit geteiltem Bildschirm (wie Enten-Rallye). D2 Bibel-Quiz holt die Fragen vom Spieleserver (von Cornelius entschieden, 29.10.2026), damit der Katalog nicht mehr im Browser-Bundle liegt.
 - **E – Spieltiefe:** Vierer-Schach-Bot mit Vorausschau, Binokel-Vierertisch/Kreuzbinokel, Doppelkopf-Pflichtsoli, Drachenspiel-Zauberkarten.
+- ✅ **F1 Speed** (29.10.2026, `packages/games/speed`): Echtzeit für zwei, Bot „Flinker Finger“, geteilter Bildschirm am Tablet, online registriert; Hände offen (geteilter Bildschirm). Details in `docs/spiele/speed.md`.
+- **F – Neue Spiele (Ideen 29.10.2026, Pläne fertig):** Speed ✅ (`docs/spiele/speed.md`), Fix gefunden! – Dobble-artig (`fix-gefunden.md`), Tiefflug – Skyjo-artig mit Junior (`tiefflug.md`), Präsident – bekannt als „Arschloch“ (`praesident.md`). Namen und Junior-Regeln klärt Cornelius.
 - **Entscheidungen (29.10.2026):** Bibel-Quiz vom Server – ja (D2). Chromium für den Rauchtest ist auf dem Desktop installiert. Quartett-Werte prüft Cornelius später selbst. KataGo entfällt. Farbensortierer geht Cornelius separat an.
 
 Korrekturplan aus dem Prüfbericht:
