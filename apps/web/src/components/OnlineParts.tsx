@@ -1,6 +1,5 @@
 import {
   AVATARS,
-  AVATAR_CATEGORIES,
   MAX_NAME_LENGTH,
   PHRASES,
   REACTIONS,
@@ -98,39 +97,28 @@ export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile
           </button>
         </div>
 
-        {/* Alle Kategorien untereinander im gemeinsamen Scrollbereich */}
+        {/* Flache Auswahl ohne Kategorien */}
         <div
           ref={listRef}
-          className="flex max-h-72 flex-col gap-4 overflow-y-auto rounded-xl border border-line/50 bg-surface/50 p-2 sm:max-h-84"
+          className="flex max-h-72 flex-wrap gap-1 overflow-y-auto rounded-xl border border-line/50 bg-surface/50 p-2 sm:max-h-84"
         >
-          {AVATAR_CATEGORIES.map((cat) => (
-            <div key={cat.id} className="space-y-1.5">
-              <div className="sticky top-0 z-10 -mx-1 -mt-1 flex items-center gap-1.5 rounded-lg border-b border-line/40 bg-surface/95 px-2.5 py-1.5 text-xs font-semibold text-muted backdrop-blur-xs">
-                <span aria-hidden="true">{cat.icon}</span>
-                <span>{t(`online.avatarCat.${cat.id}` as MessageKey)}</span>
-                <span className="text-[11px] opacity-70">({cat.emojis.length})</span>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {cat.emojis.map((emoji) => {
-                  const isSelected = emoji === avatar;
-                  return (
-                    <button
-                      key={emoji}
-                      type="button"
-                      data-avatar={emoji}
-                      aria-pressed={isSelected}
-                      className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl transition hover:scale-105 active:scale-95 ${
-                        isSelected ? 'bg-accent/20 ring-2 ring-accent' : 'bg-surface-2 hover:bg-surface-3'
-                      }`}
-                      onClick={() => setAvatar(emoji)}
-                    >
-                      {emoji}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+          {AVATARS.map((emoji) => {
+            const isSelected = emoji === avatar;
+            return (
+              <button
+                key={emoji}
+                type="button"
+                data-avatar={emoji}
+                aria-pressed={isSelected}
+                className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl transition hover:scale-105 active:scale-95 ${
+                  isSelected ? 'bg-accent/20 ring-2 ring-accent' : 'bg-surface-2 hover:bg-surface-3'
+                }`}
+                onClick={() => setAvatar(emoji)}
+              >
+                {emoji}
+              </button>
+            );
+          })}
         </div>
       </fieldset>
 

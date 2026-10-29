@@ -5,69 +5,22 @@
  * `avatare/` und werden erst beim Beitritt geladen.
  *
  * Die Liste ist absichtlich auf Tiere mit Ton begrenzt: Wer hier steht, hat
- * garantiert eine Datei. Kein Avatar ohne Klang.
+ * garantiert eine Datei. Kein Avatar ohne Klang. Die Auswahl ist flach – ohne
+ * Kategorien.
  */
 
 export const AVATARS = [
-  // 🐾 Säugetiere & Landtiere (51)
+  // 76 Tiere mit Ton (Säugetiere, Vögel, Meerestiere, Insekten, Fantasie)
   '🦊', '🐶', '🐱', '🐭', '🐹', '🐰', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐵', '🐆', '🦓', '🐘', '🦛', '🦏', '🐪',
   '🦒', '🦘', '🐑', '🦙', '🐐', '🦌', '🦨', '🦡', '🦦', '🦥', '🐿️', '🐅', '🦍', '🦧', '🐫', '🐃', '🐂', '🐄', '🐎', '🐖',
   '🐏', '🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐈‍⬛', '🐇', '🦝', '🐁', '🐀',
-
-  // 🦅 Vögel (8)
   '🦆', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊️',
-
-  // 🐙 Meere & Amphibien (13)
   '🐸', '🐢', '🐙', '🦑', '🦐', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🦈', '🐊',
-
-  // 🐝 Insekten & Krabbeltiere (3)
   '🐝', '🐛', '🦋',
-
-  // 🧙 Fantasie (1)
   '🦄',
 ] as const;
 
 export type Avatar = (typeof AVATARS)[number];
-
-export type AvatarCategoryId = 'mammals' | 'birds' | 'sea' | 'bugs' | 'fantasy';
-
-export interface AvatarCategory {
-  id: AvatarCategoryId;
-  icon: string;
-  emojis: readonly Avatar[];
-}
-
-export const AVATAR_CATEGORIES: readonly AvatarCategory[] = [
-  {
-    id: 'mammals',
-    icon: '🐾',
-    emojis: [
-      '🦊', '🐶', '🐱', '🐭', '🐹', '🐰', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐵', '🐆', '🦓', '🐘', '🦛', '🦏', '🐪',
-      '🦒', '🦘', '🐑', '🦙', '🐐', '🦌', '🦨', '🦡', '🦦', '🦥', '🐿️', '🐅', '🦍', '🦧', '🐫', '🐃', '🐂', '🐄', '🐎', '🐖',
-      '🐏', '🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐈‍⬛', '🐇', '🦝', '🐁', '🐀',
-    ],
-  },
-  {
-    id: 'birds',
-    icon: '🦅',
-    emojis: ['🦆', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊️'],
-  },
-  {
-    id: 'sea',
-    icon: '🐙',
-    emojis: ['🐸', '🐢', '🐙', '🦑', '🦐', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🦈', '🐊'],
-  },
-  {
-    id: 'bugs',
-    icon: '🐝',
-    emojis: ['🐝', '🐛', '🦋'],
-  },
-  {
-    id: 'fantasy',
-    icon: '🧙',
-    emojis: ['🦄'],
-  },
-];
 
 export interface AvatarSound {
   /** Dateiname ohne Endung. Die MP3s heißen `<slug>-laut.mp3` und `<slug>-stimme.mp3`. */

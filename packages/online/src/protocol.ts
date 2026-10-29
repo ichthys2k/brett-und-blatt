@@ -68,8 +68,8 @@ export type Reaction = (typeof REACTIONS)[number];
  * Avatare und ihre Klänge stehen in avatars.ts; hier nur der Weg nach außen,
  * damit Importe aus dem Online-Paket unverändert bleiben.
  */
-export { AVATARS, AVATAR_CATEGORIES, AVATAR_SOUNDS } from './avatars';
-export type { Avatar, AvatarCategory, AvatarCategoryId, AvatarSound } from './avatars';
+export { AVATARS, AVATAR_SOUNDS } from './avatars';
+export type { Avatar, AvatarSound } from './avatars';
 
 // ---------------------------------------------------------------------------
 // Browser → Server
