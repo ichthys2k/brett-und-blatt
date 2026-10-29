@@ -149,6 +149,13 @@ export function isLegal(state: MauMauState, actor: Actor, move: MauMauMove): boo
     );
   }
 
+  if (move.type === 'callMau') {
+    if (state.options.mauCall !== 'on') return false;
+    const hand = state.hands[actor];
+    if (!hand) return false;
+    return hand.length === 1 && !state.mauProtection[actor];
+  }
+
   if (move.type === 'play') {
     if (!isTurn) return false;
     const card = hand.find((c) => c === move.cardId);
@@ -269,6 +276,16 @@ export function applyMove(state: MauMauState, actor: number, move: MauMauMove): 
     if (next.hands[target]!.length !== 1) next.mauProtection[target] = false;
     return drawn;
   };
+
+  // 0. Eigenen „Mau!“-Ruf nachträglich abgeben (auch außer der Reihe).
+  if (move.type === 'callMau') {
+    if (next.hands[actor]!.length === 1 && !next.mauProtection[actor]) {
+      next.mauProtection[actor] = true;
+      events.push({ type: 'calledMau', player: actor });
+      next.lastAction = { player: actor, text: 'Mau! gerufen' };
+    }
+    return finish();
+  }
 
   // 1. „Mau!“ vergessen und ertappt.
   if (move.type === 'catchMau') {

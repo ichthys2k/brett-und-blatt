@@ -82,6 +82,16 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   // Kann der Spieler passen?
   const canPass = moves.some((m) => m.type === 'pass');
 
+  const canCallUno = useMemo(
+    () =>
+      state.options.callUno === 'on' &&
+      actor !== null &&
+      myHand.length === 1 &&
+      !(state.eliminated[actor]) &&
+      !state.unoProtection[actor],
+    [state.options.callUno, actor, myHand.length, state.eliminated, state.unoProtection],
+  );
+
   // Oberste Karte auf dem Ablagestapel & natürlicher Drehwinkel
   const topDiscard = state.discard[state.discard.length - 1];
   const topTilt = topDiscard ? cardTilt(topDiscard.id) : 0;
@@ -585,6 +595,16 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
               }`}
             >
               {callUnoToggled ? '✓ EINS! aktiviert' : '🚨 EINS! rufen'}
+            </button>
+          )}
+
+          {canCallUno && (
+            <button
+              type="button"
+              onClick={() => onMove({ type: 'callUno' })}
+              className="uno-call-btn px-5 py-2 rounded-full font-black text-sm tracking-wider shadow-xl transition-all cursor-pointer bg-yellow-400 text-zinc-950 ring-4 ring-yellow-200"
+            >
+              📣 EINS! rufen
             </button>
           )}
         </div>

@@ -220,10 +220,14 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
 
   /** Darf der eigene Platz diesen Zug machen? Spiele mit `isLegal` prüfen ihn an der eigenen Sicht. */
   private allows(seat: SeatId, move: M): boolean {
-    const moves = this.legalMoves(seat);
-    if (moves.length === 0) return false;
+    if (seat !== this.message.yourSeat) return false;
     const { module } = this.deps;
-    return module.isLegal ? module.isLegal(this.message.view, seat, move) : moves.some((m) => sameValue(m, move));
+    const moves = this.legalMoves(seat);
+    const moveType = (move as { type?: unknown })?.type;
+    const isSelfCall = moveType === 'callMau' || moveType === 'callUno';
+    if (moves.length === 0 && !isSelfCall) return false;
+    if (module.isLegal) return module.isLegal(this.message.view, seat, move);
+    return moves.some((m) => sameValue(m, move));
   }
 
   canResign(seat: SeatId): boolean {

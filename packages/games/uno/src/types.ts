@@ -129,6 +129,7 @@ export type UnoMove =
   | { type: 'draw' }
   | { type: 'pass' }
   | { type: 'catchUno'; target: number }
+  | { type: 'callUno' }
   | {
       type: 'jumpIn';
       cardId: string;
