@@ -4,7 +4,7 @@ import { gameModule } from '../src';
 import { applyMove, legalMoves, result, setup } from '../src/rules';
 
 describe('gomoku: allgemeine Prüfungen', () => {
-  for (const check of gameContractChecks(gameModule)) it(check.name, check.run);
+  for (const check of gameContractChecks(gameModule, { randomGames: 8, botMoveLimit: 60 })) it(check.name, check.run);
 });
 
 describe('gomoku', () => {

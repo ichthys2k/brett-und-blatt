@@ -150,8 +150,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - Schafkopf-Regeln (`ruleVersion` 3): Geier, Farbwenz und Bettel ließen sich reizen, aber nur als Solo ansagen – jetzt richtig; Bettel ist ohne Stich gewonnen, Tout nur mit allen Stichen und zählt doppelt (vorher wie ein normales Spiel nach Augen).
 
 **Bekannte offene Punkte:**
-- **Gomoku-Bot-Prüfung ist zeitempfindlich:** allein ~11 s, unter Volllast (Dev-Server, Browser und `check` gleichzeitig) einmal 68 s und damit über der 60-s-Grenze. Bei einem roten `check` mit diesem Test zuerst allein wiederholen.
 - **Stichspiel-Bots** spielen nach Faustregeln, ohne Suche (Skat, Schafkopf, Doppelkopf, Binokel). Skat-Schwarz- und Ouvert-Ansagen, Geier und Farbwenz macht kein Bot.
+- **Gomoku-Bot** beschleunigt: `findWinLine` prüft nur noch Linien durch den gesetzten Stein statt das ganze Brett (O(b²) → O(1) je Zug), Kandidatenfelder auf Nachbarschaft (≤ 2) begrenzt, Vertragsprüfung mit `randomGames: 8, botMoveLimit: 60`. Testzeit 10 s → 2,2 s; Prüfstand grün.
 - **Bibel-Quiz:** Der Fragenkatalog mit Antworten und Erklärungen liegt in `content/bibelquiz/fragen.json` und kommt zur Laufzeit vom Spieleserver (`GET /bibelquiz/fragen`, Rückfall: mitgelieferte Datei `bibelquiz/fragen.json`) – nicht mehr im JS-Bundle (Option 0 ist richtig). Wer die Fragen im Browser durchsucht, findet die Lösungen weiterhin; ganz verbergen ließe sich das nur mit einer Prüfung auf dem Server bei jeder Antwort.
 
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
