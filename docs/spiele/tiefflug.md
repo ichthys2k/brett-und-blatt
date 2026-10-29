@@ -2,7 +2,7 @@
 
 *Familien-Kartenspiel für 2–8 Spieler: zwölf verdeckte Karten im Raster, tauschen, aufdecken, Spalten abräumen – die niedrigste Summe gewinnt.*
 
-> **Name:** „Skyjo“ ist eine Marke von Magilano. Arbeitsname **„Tiefflug“** (wer am tiefsten fliegt, gewinnt), id `low-flight`.
+> **Name:** „Skyjo“ ist eine Marke von Magilano. Eigener Name **„Tiefflug“** (wer am tiefsten fliegt, gewinnt; von Cornelius bestätigt 29.10.2026), id `low-flight`.
 
 | Steckbrief | |
 |---|---|
@@ -85,8 +85,32 @@ Gemütlich (ohne Uhr), Normal 30 s je Zug, Schnell 15 s.
 - Junior-Regelsatz eigens.
 - `gameContractChecks`, Prüfstand, Bot schwer gegen Zufall.
 
+## Umsetzung (29.10.2026)
+
+- **Regeln** (`src/rules.ts`):
+  - Grundspiel wie oben, 150 Karten.
+  - Abweichung: Zu Rundenbeginn wird **reihum** statt gleichzeitig aufgedeckt (einfacher für Hot-Seat und online; verrät nichts, weil verdeckte Karten für alle verdeckt sind).
+  - Runde 1 beginnt, wer die höchste offene Summe zeigt, später wer die vorige Runde beendet hat.
+  - Ist der Stapel leer, wird die Ablage ohne oberste Karte gemischt.
+  - Abgeräumte Spalten gehen auf die Ablage; auch beim Aufdecken am Rundenende wird abgeräumt.
+  - Verdopplung nur, wenn die Summe des Beenders positiv ist und er nicht allein die niedrigste hat.
+- **Optionen:** Spielart Klassisch/Junior, Spieldauer bis 100 (Standard) oder 50 Punkte, 3 Runden oder eine Runde. Verdopplung an/aus, Zeilen abräumen.
+- **Junior** (eigene Fassung, entschieden 29.10.2026): Obstkarten 1–5 (🍒 🍓 🍋 🍎 🍉, je 18 = 90 Karten, Früchte zum Abzählen auf der Karte), Raster 3 × 3, eine Karte zu Beginn aufdecken. Die niedrigste Summe gewinnt wie im Grundspiel, keine Verdopplung, 3 Runden (oder eine).
+- **Sicht:** Verdeckte Werte sind für alle `null`, auch für den Besitzer (`privateViews: false`, darum kein Übergabe-Bildschirm). Die gezogene Karte und die ganze Ablage sind offen, der Stapel nur als Anzahl. `sampleHidden` verteilt die ungesehenen Werte auf Raster und Stapel.
+- **Bot „Wolkenspringer“** (`src/bots.ts`):
+  - leicht: Ablage nur bei ≤ 2, tauscht gegen die höchste offene Karte, wirft hohe Karten ab.
+  - mittel: bewertet jede Platzierung danach, wie stark die Spaltensumme sinkt; abgeräumte Spalten zählen mit. Verdeckte Karten setzt er mit dem Erwartungswert der ungesehenen Karten minus 1,5 an (in Probepartien am besten), dazu kommt ein Bonus für den Aufbau gleicher Spalten.
+  - schwer: zusätzlich Vorsicht beim Rundenende – deckt die letzte Karte nur auf, wenn die eigene Summe klar unter der geschätzten der anderen liegt (sonst droht die Verdopplung).
+  - Gemessen in 80 Partien zu zweit: mittel gewinnt 60 gegen leicht, schwer 67 gegen leicht und 46 gegen mittel.
+- **Oberfläche** (`src/ui/`, Präfix `lf-`):
+  - Himmel-Hintergrund (Junior gelb), Mitspieler-Raster verkleinert oben mit Summe der offenen Karten, Stapel – gezogene Karte – Ablage in der Mitte, eigenes Raster unten.
+  - Antippen: Stapel oder Ablage, dann ein Feld zum Tauschen. Zum Abwerfen die Ablage oder „Abwerfen & aufdecken“ antippen, dann eine verdeckte Karte.
+  - Karten nach Wert gefärbt, die Zahl groß darauf (lesbar ohne Farbe). Aufdeck-Animation, Tipp-Hervorhebung, Rundenende-Tabelle mit hervorgehobener Verdopplung.
+- **Klänge** aus dem Katalog: `aufdecken`, `karte-ziehen`, `karte-legen`, `paar` (Spalte abgeräumt), `ansage` (letzte Runde), `mischen`. Playlist „Spielabend“, Rubrik Familie, online eingetragen.
+
 ## Offene Punkte
 
-- Endgültiger Name („Tiefflug“, „Minus-Mix“, „Zwölferraster“?).
-- Junior-Regeln mit Cornelius klären (Originalschachtel?).
+- Gedächtnis-Modus (Ablage nur kurz sichtbar).
+- Diagonalen abräumen.
 - Skyjo Action (Aktionskarten) als spätere Erweiterung?
+- Junior mit Originalregeln abgleichen, falls Cornelius sie nachliefert.
