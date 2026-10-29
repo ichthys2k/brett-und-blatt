@@ -245,7 +245,7 @@ export function SkatBoard({
             {myHand.map((card: CardId, idx: number) => {
               const isSelected = selectedToDiscard.includes(card);
               return (
-                <div key={`${card}-${idx}`} className="transition-transform hover:-translate-y-2" style={{ width: HAND_CARD_WIDTH }}>
+                <div key={card === 'back' ? `back-${idx}` : card} className="transition-transform hover:-translate-y-2" style={{ width: HAND_CARD_WIDTH }}>
                   <PlayingCard
                     card={card === 'back' ? null : card}
                     deckStyle={view.deckStyle}

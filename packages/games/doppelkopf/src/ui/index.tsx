@@ -178,7 +178,7 @@ export function DokoBoard({
         <div className="w-full flex justify-center overflow-x-auto pb-2">
           <div className="flex flex-wrap justify-center gap-1 sm:gap-1.5 max-w-full">
             {myHand.map((card: CardId, idx: number) => (
-              <div key={`${card}-${idx}`} className="transition-transform hover:-translate-y-2" style={{ width: HAND_CARD_WIDTH }}>
+              <div key={card === 'back' ? `back-${idx}` : card} className="transition-transform hover:-translate-y-2" style={{ width: HAND_CARD_WIDTH }}>
                 <PlayingCard
                   card={card === 'back' ? null : card}
                   deckStyle={view.deckStyle}

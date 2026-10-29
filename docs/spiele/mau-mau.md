@@ -22,7 +22,7 @@ Das klassische deutsche Ablegespiel mit 32 Karten: Wer in Farbe oder Wert passt,
 - **9:** Die Spielrichtung wechselt. Bei zwei Spielern wirkt die 9 wie Aussetzen.
 - **Ass:** Optional darf der Spieler sofort noch eine Karte legen (Standard: aus).
 - **Bube:** Er darf standardmäßig auf jede Karte gelegt werden. Der Spieler bestimmt die neue Farbe. „Bube auf Bube“ ist standardmäßig verboten.
-- **„Mau!“:** Wer seine vorletzte Karte legt, muss rufen. Wer es vergisst, kann vom nächsten Spieler angemahnt werden und zieht eine Strafkarte. Die Regel lässt sich abschalten.
+- **„Mau!“:** Wer seine vorletzte Karte legt, muss rufen. Er hat dafür 3 Sekunden (auch nach dem Legen noch per „📣 Mau! rufen“); danach löst die Oberfläche die Strafe von 2 Karten automatisch aus (`catchMau`, auch gegen sich selbst; `useCallDeadline` in `packages/ui`). Die Regel lässt sich abschalten.
 - **Ende:** Wer zuerst keine Karten mehr hat, gewinnt. Es gibt eine Runde pro Partie, keine Restkartenwertung und keine Mehrrunden-Serie.
 
 ## Optionen
@@ -61,7 +61,7 @@ Der Standard-Bot heißt **Mau-Mau-Meister** und spielt in drei Stufen:
 - Grüner Filz-Tisch mit Richtungsanzeige, Talon, Ablage und aktiver Wunschfarbe.
 - Handkarten als Fächer mit `PlayingCard`, `usePointerDrag` und Klick/Tap-Bedienung.
 - Flug-Animationen beim Legen und Ziehen, Aufprall-Impuls auf der Ablage, organischer Ablagewinkel.
-- „Mau!“-Knopf bei zwei Handkarten, Anpranger-Knopf bei Mitspielern mit einer Karte.
+- „Mau!“-Knopf bei zwei Handkarten, kein Anpranger-Knopf mehr, die Frist läuft von allein.
 - Wunschfarben-Modal für Buben, Hervorhebung aller spielbaren Karten.
 - Responsive für Handy, Tablet und Desktop; `prefers-reduced-motion` schaltet die Fluganimationen ab.
 

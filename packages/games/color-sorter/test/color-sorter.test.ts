@@ -4,7 +4,8 @@ import { describe, expect, it, test } from 'vitest';
 import { detectHand, gameModule, handLabel, scoreHand, type Card, type RunState, type SorterMove, type SorterState } from '../src';
 import { MODS } from '../src/mods';
 import { altTag } from '../src/rules';
-import { describeMod } from '../src/ui/texts';
+import { DREAMS, NAILS, SPELLS, TAGS, TOOLS } from '../src/content';
+import { describeConsumable, describeMod, describeTool } from '../src/ui/texts';
 
 function start(seats = 1, options: Options = {}, seed = 'test'): SorterState {
   return gameModule.setup(seats, resolveOptions(gameModule, options), seed);
@@ -472,4 +473,36 @@ describe('Vertrag für Spielmodule', () => {
     maxMoves: 6000,
   }))
     test(check.name, check.run, 120_000);
+});
+
+describe('Umsortieren', () => {
+  it('moveCard verschiebt eine Handkarte, ohne sie zu verändern', () => {
+    let state = start();
+    state = play(state, 0, { type: 'start' });
+    const before = state.runs[0]!.hand.map((card) => card.id);
+    expect(gameModule.isLegal?.(state, 0, { type: 'moveCard', from: 0, to: before.length - 1 })).toBe(true);
+    state = play(state, 0, { type: 'moveCard', from: 0, to: before.length - 1 });
+    expect(state.runs[0]!.hand.map((card) => card.id)).toEqual([...before.slice(1), before[0]]);
+    expect(gameModule.isLegal?.(state, 0, { type: 'moveCard', from: 0, to: 0 })).toBe(false);
+    expect(gameModule.isLegal?.(state, 0, { type: 'moveCard', from: 0, to: before.length })).toBe(false);
+  });
+
+  it('moveMod springt an jede Stelle', () => {
+    const state = start();
+    const run = runWith(state, { mods: ['juggler', 'fiddler', 'earlyBird'].map((key, uid) => ({ uid, key })) as RunState['mods'] });
+    const next = { ...state, runs: [run] };
+    const moved = play(next, 0, { type: 'moveMod', from: 0, to: 2 });
+    expect(moved.runs[0]!.mods.map((m) => m.key)).toEqual(['fiddler', 'earlyBird', 'juggler']);
+  });
+});
+
+describe('Sprechblasen', () => {
+  it('jeder Narr, jedes Kunststück, jede Übung, Kuriosität, jedes Privileg und jeder Gefallen hat eine Beschreibung', () => {
+    for (const key of Object.keys(MODS)) expect(describeMod({ key }).text, `Narr ${key}`).not.toBe('');
+    for (const key of Object.keys(SPELLS)) expect(describeConsumable({ kind: 'spell', key }).text, `Kunststück ${key}`).not.toBe('');
+    for (const key of Object.keys(NAILS)) expect(describeConsumable({ kind: 'nail', key }).text, `Übung ${key}`).not.toBe('');
+    for (const key of Object.keys(DREAMS)) expect(describeConsumable({ kind: 'dream', key }).text, `Kuriosität ${key}`).not.toBe('');
+    for (const key of Object.keys(TOOLS)) expect(describeTool(key).text, `Privileg ${key}`).not.toBe('');
+    for (const tag of Object.values(TAGS)) expect(tag.text, `Gefallen ${tag.key}`).not.toBe('');
+  });
 });

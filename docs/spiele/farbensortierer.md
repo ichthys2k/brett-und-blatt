@@ -608,3 +608,9 @@ Neu in der Engine wird dafür vermutlich nur wenig nötig: gleichzeitige Züge u
 - Standardmodus online: Wettstreit mit 4 Herzen.
 - Planungsnotiz `~/code/emojiclicker/docs/farbsortierer-expansion.md` auswerten.
 - ✅ Vorziehen: aus Etappe 6 vorgezogen und am 26.10.2026 fertig.
+
+## Bedienung am Großbildschirm (29.10.2026)
+
+- **Bühnen-Layout** (`cs-bigmode`, ab 900 × 540 px Brettgröße): links Thron und Info, oben die Narrenbank (große Kacheln, Tasche rechts), in der Mitte die Bühne (Wertungsvorschau, Ablagefläche zum Vorführen), unten die Hand. Ab 1500 px Breite stehen Vorführen und Tauschen links und rechts neben der Hand, darunter unter ihr (`cs-bigtight`), damit die Karten breiter werden. Kleinere und hochformatige Bildschirme behalten ihr bisheriges Layout.
+- **Sprechblasen** (`ui/Hover.tsx`): Maus (nach 120 ms) und Tastaturfokus zeigen zu jeder Karte und Kachel Name, Wirkung, Preis und Verkaufswert; Berührung nutzt weiter die Info-Box. Eine Prüfung stellt sicher, dass jeder Katalogeintrag eine Beschreibung hat.
+- **Ziehen** (`usePointerDrag`): Handkarten und Narren umsortieren (neuer Zug `moveCard { from, to }`, `ruleVersion` 4; `moveMod` springt an jede Stelle), Auswahl auf die Bühne = Vorführen, auf „Tauschen“ ablegen, Kunststück auf „Anwenden“, Narr oder Kunststück auf „Verkaufen“, Angebot auf die Bank oder „Nehmen“ = Kaufen. Die Zonen erscheinen nur während des Ziehens (`cs-dropbar`). Klick und Tastatur bleiben vollständig erhalten.

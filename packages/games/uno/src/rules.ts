@@ -262,7 +262,6 @@ export function isLegal(state: UnoState, actor: Actor, move: UnoMove): boolean {
       typeof target === 'number' &&
       target >= 0 &&
       target < state.hands.length &&
-      target !== actor &&
       !state.eliminated[target] &&
       state.hands[target].length === 1 &&
       !state.unoProtection[target]
@@ -356,7 +355,7 @@ export function legalMoves(state: UnoState, actor: number): UnoMove[] {
   // 2. Anprangern eines Gegners mit 1 Karte, der nicht "Eins!" gerufen hat
   if (state.options.callUno === 'on') {
     for (let s = 0; s < state.hands.length; s++) {
-      if (s !== actor && !state.eliminated[s] && state.hands[s].length === 1 && !state.unoProtection[s]) {
+      if (!state.eliminated[s] && state.hands[s].length === 1 && !state.unoProtection[s]) {
         moves.push({ type: 'catchUno', target: s });
       }
     }

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { useCallDeadline, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { getActiveFace } from '../rules';
 import { DARK_COLORS, LIGHT_COLORS, type UnoCard, type UnoColor, type UnoMove, type UnoState } from '../types';
 import './styles.css';
@@ -76,6 +76,22 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
         .map((m) => (m as { cardId: string }).cardId),
     );
   }, [moves]);
+
+  // Wer die vorletzte Karte gelegt hat, muss binnen 3 Sekunden „Eins!“ rufen – sonst 2 Strafkarten.
+  const dueSeats = useMemo(
+    () =>
+      state.options.callUno === 'on' && state.winner === null
+        ? state.hands.flatMap((hand, seat) =>
+            hand.length === 1 && !state.eliminated[seat] && !state.unoProtection[seat] ? [seat] : [],
+          )
+        : [],
+    [state.options.callUno, state.winner, state.hands, state.eliminated, state.unoProtection],
+  );
+  useCallDeadline(dueSeats, (seat) => {
+    if (viewer === seat || (activeSeat !== null && activeSeat === viewer)) {
+      onMove({ type: 'catchUno', target: seat });
+    }
+  });
 
   // Kann der Spieler ziehen?
   const canDraw = moves.some((m) => m.type === 'draw');
@@ -376,10 +392,6 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
     setCallUnoToggled(false);
   };
 
-  // Anprangern (catchUno)
-  const handleCatchUno = (target: number) => {
-    onMove({ type: 'catchUno', target });
-  };
 
   const availableColors = isDark ? DARK_COLORS : LIGHT_COLORS;
 
@@ -451,8 +463,6 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
           const isTurn = state.turn === idx;
           const isEliminated = state.eliminated[idx];
           const hasUno = hand.length === 1;
-          const isProtected = state.unoProtection[idx];
-          const canCatch = isActor && hasUno && !isProtected && state.options.callUno === 'on';
 
           return (
             <div
@@ -478,16 +488,6 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                   <span className="px-1.5 py-0.5 text-xs font-black rounded bg-red-600 text-white animate-bounce">
                     Eins!
                   </span>
-                  {canCatch && (
-                    <button
-                      type="button"
-                      onClick={() => handleCatchUno(idx)}
-                      className="px-2 py-0.5 text-xs font-black rounded bg-yellow-500 text-black hover:bg-yellow-400 cursor-pointer shadow active:scale-95"
-                      title="Anprangern: +2 Strafkarten!"
-                    >
-                      Ertappen!
-                    </button>
-                  )}
                 </div>
               )}
             </div>
