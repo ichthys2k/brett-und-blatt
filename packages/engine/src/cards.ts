@@ -1,3 +1,4 @@
+import type { OptionSpec } from './types';
 /**
  * Französisches Blatt für die Regeln: Karten sind kurze Texte wie „H7.1“
  * (Herz 7 aus dem ersten Kartenspiel). So bleiben Spielstände reines JSON,
@@ -55,4 +56,29 @@ export function createDeck(copies = 1, suits: Suit[] = SUITS): CardId[] {
     }
   }
   return deck;
+}
+
+/** Kartenbild: Turnierblatt (vierfarbig), französisch, deutsch, einfache Farben (wie Uno) – `bavarian` nur für Altbestand. */
+export type DeckStyle = 'french' | 'four-color' | 'bavarian' | 'german' | 'simple';
+
+/** Gemeinsame Auswahl „Kartenbild“ für alle Spiele mit Kartenblatt. */
+export const DECK_STYLE_CHOICES: { value: DeckStyle; label: string }[] = [
+  { value: 'four-color', label: 'Turnierblatt (vierfarbig)' },
+  { value: 'french', label: 'Französisches Blatt (rot/schwarz)' },
+  { value: 'german', label: 'Deutsches Blatt (Eichel/Gras/Herz/Schellen)' },
+  { value: 'simple', label: 'Einfache Farben (blau/gelb/rot/grün)' },
+];
+
+/** Standard in allen Spielen: das Turnierblatt. */
+export const DEFAULT_DECK_STYLE: DeckStyle = 'four-color';
+
+/** Liest einen Optionswert als Kartenbild; Unbekanntes ergibt das Turnierblatt, „bayerisch“ das deutsche Blatt. */
+export function parseDeckStyle(value: unknown): DeckStyle {
+  if (value === 'bavarian') return 'german';
+  return DECK_STYLE_CHOICES.some((c) => c.value === value) ? (value as DeckStyle) : DEFAULT_DECK_STYLE;
+}
+
+/** Fertige Option „Kartenbild“ für `GameModule.options`. */
+export function deckStyleOption(id = 'deckStyle'): OptionSpec {
+  return { id, label: 'Kartenbild', choices: DECK_STYLE_CHOICES, default: DEFAULT_DECK_STYLE };
 }

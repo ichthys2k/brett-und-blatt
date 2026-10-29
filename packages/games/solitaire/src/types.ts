@@ -1,4 +1,4 @@
-import type { CardId } from '@brett-und-blatt/engine';
+import type { CardId, DeckStyle } from '@brett-und-blatt/engine';
 
 /** Ein Stapel mit verdeckten Karten unten und offenen darüber. In der Sicht sind verdeckte Karten null. */
 export interface Pile {
@@ -7,6 +7,7 @@ export interface Pile {
 }
 
 interface Base {
+  deckStyle?: DeckStyle;
   moveCount: number;
   lastMove: SolitaireMove | null;
 }

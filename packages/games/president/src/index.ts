@@ -1,4 +1,4 @@
-import type { GameModule } from '@brett-und-blatt/engine';
+import { deckStyleOption, type GameModule } from '@brett-und-blatt/engine';
 import { presidentBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type PresidentMove, type PresidentState, type PresidentView } from './rules';
@@ -34,16 +34,7 @@ export const gameModule: GameModule<PresidentState, PresidentMove, PresidentView
       ],
       default: 'auto',
     },
-    {
-      id: 'deckStyle',
-      label: 'Kartenbild',
-      choices: [
-        { value: 'french', label: 'Französisch' },
-        { value: 'four-color', label: 'Vierfarbig' },
-        { value: 'german', label: 'Deutsch' },
-      ],
-      default: 'french',
-    },
+    deckStyleOption(),
     {
       id: 'titles',
       label: 'Titel',

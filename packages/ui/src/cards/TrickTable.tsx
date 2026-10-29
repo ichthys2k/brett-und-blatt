@@ -79,7 +79,7 @@ export interface TrickTableProps {
 export function TrickTable({
   slots,
   bottomSeat = 0,
-  deckStyle = 'french',
+  deckStyle = 'four-color',
   cardWidth = 72,
   className = '',
   collecting = false,

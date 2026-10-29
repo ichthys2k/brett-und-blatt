@@ -10,14 +10,13 @@
  * leer, werden die Ablagestapel (ohne die obersten Karten) gemischt und neu verteilt.
  * Wer zuerst Hand und Nachziehstapel leer hat, gewinnt die Runde.
  */
-import { Rng, cardRank, createDeck, type Actor, type CardId, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
+import { Rng, parseDeckStyle, type DeckStyle, cardRank, createDeck, type Actor, type CardId, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
 
 export const HAND_SIZE = 5;
 export const DRAW_SIZE = 15;
 export const SIDE_SIZE = 5;
 
 export type Goal = 'r1' | 'b3' | 'b5';
-export type DeckStyle = 'french' | 'four-color';
 
 export const GOALS: { value: Goal; label: string }[] = [
   { value: 'r1', label: 'Eine Runde' },
@@ -110,7 +109,7 @@ export function setup(seats: number, options: Options, seed: string): SpeedState
     sides: [[], []],
     wrap: options.wrap !== 'off',
     goal,
-    deckStyle: options.deck === 'four-color' ? 'four-color' : 'french',
+    deckStyle: parseDeckStyle(options.deck),
     round: 1,
     lastRound: null,
     rng: rng.state,

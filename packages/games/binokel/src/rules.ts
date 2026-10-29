@@ -12,6 +12,8 @@ import {
   type RngState,
   type SeatId,
   type Suit,
+  parseDeckStyle,
+  type DeckStyle,
 } from '@brett-und-blatt/engine';
 import { binokelContract, createDeck, eyes, SUITS } from './cards';
 import { findMelds, meldPoints, type Meld } from './melds';
@@ -37,6 +39,7 @@ export interface RoundResult {
 }
 
 export interface BinokelState {
+  deckStyle: DeckStyle;
   deckSize: 40 | 48;
   minBid: number;
   target: number;
@@ -127,6 +130,7 @@ function freshRound(state: Omit<BinokelState, 'hands' | 'dabb' | 'dealRng'> & { 
 export function setup(_seats: number, options: Options, seed: string): BinokelState {
   const deckSize = String(options.deckSize ?? '40') === '48' ? 48 : 40;
   const base = {
+    deckStyle: parseDeckStyle(options.deckStyle),
     deckSize,
     minBid: Number(options.minBid ?? 150) || 150,
     target: Number(options.targetScore ?? 1500) || 1500,

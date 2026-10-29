@@ -1,4 +1,4 @@
-import type { GameModule } from '@brett-und-blatt/engine';
+import { deckStyleOption, type GameModule } from '@brett-und-blatt/engine';
 import { binokelBot } from './bot/index';
 import { meta } from './meta';
 import { applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type BinokelMove, type BinokelState } from './rules';
@@ -11,6 +11,7 @@ export { binokelBot } from './bot/index';
 export const gameModule: GameModule<BinokelState, BinokelMove> = {
   info: meta,
   options: [
+    deckStyleOption(),
     {
       id: 'deckSize',
       label: 'Kartendeck',

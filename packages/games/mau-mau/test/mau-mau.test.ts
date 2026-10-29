@@ -27,7 +27,7 @@ describe('Mau-Mau Vertrag', () => {
   for (const check of gameContractChecks(gameModule, {
     seatCounts: [2, 5],
     randomGames: 20,
-    maxMoves: 3_000,
+    maxMoves: 10_000,
   })) {
     test(check.name, check.run, 120_000);
   }

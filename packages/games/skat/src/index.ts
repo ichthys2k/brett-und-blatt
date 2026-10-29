@@ -1,4 +1,4 @@
-import { generalBots, sameValue, type Actor, type GameModule } from '@brett-und-blatt/engine';
+import { deckStyleOption, generalBots, sameValue, type Actor, type GameModule } from '@brett-und-blatt/engine';
 import { skatBot } from './bots.js';
 import { meta } from './meta.js';
 import {
@@ -51,16 +51,7 @@ export const gameModule: GameModule<SkatState, SkatMove> = {
       ],
       default: '12',
     },
-    {
-      id: 'deckStyle',
-      label: 'Kartenblatt',
-      choices: [
-        { value: 'four-color', label: 'Turnierblatt (vierfarbig)' },
-        { value: 'french', label: 'Französisches Blatt (rot/schwarz)' },
-        { value: 'german', label: 'Deutsches Blatt (Eichel/Gras)' },
-      ],
-      default: 'four-color',
-    },
+    deckStyleOption(),
     {
       id: 'countEyes',
       label: 'Lernhilfe: Augen mitzählen',

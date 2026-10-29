@@ -33,6 +33,8 @@ const SUIT_LABELS: Record<MauMauDeckStyle, Record<Suit, string>> = {
   french: { C: 'Kreuz', D: 'Karo', H: 'Herz', S: 'Pik' },
   'four-color': { C: 'Kreuz', D: 'Karo', H: 'Herz', S: 'Pik' },
   german: { C: 'Eichel', D: 'Schellen', H: 'Herz', S: 'Gras' },
+  bavarian: { C: 'Eichel', D: 'Schellen', H: 'Herz', S: 'Gras' },
+  simple: { C: 'Grün', D: 'Gelb', H: 'Rot', S: 'Blau' },
 };
 
 const SUIT_COLORS: Record<Suit, string> = {

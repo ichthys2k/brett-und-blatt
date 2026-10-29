@@ -1,3 +1,4 @@
+import { DECK_STYLE_CHOICES, parseDeckStyle, type DeckStyle } from '@brett-und-blatt/engine';
 import { useSyncExternalStore } from 'react';
 import { BOSSES, DREAMS, NAILS, SPELLS, TOOLS } from '../content';
 import { runDrops, type DropLine } from '../drops';
@@ -33,14 +34,14 @@ export interface Progress {
 const KEY = 'brett-und-blatt:farbensortierer';
 const DECK_KEY = 'brett-und-blatt:farbensortierer:kartenbild';
 
-/** Kartenbild je Gerät: französisch (Standard) oder vierfarbig. */
-export type CardLook = 'french' | 'four-color';
+/** Kartenbild je Gerät: Standard ist das Turnierblatt (vierfarbig). */
+export type CardLook = DeckStyle;
 
 export function readCardLook(): CardLook {
   try {
-    return window.localStorage.getItem(DECK_KEY) === 'four-color' ? 'four-color' : 'french';
+    return parseDeckStyle(window.localStorage.getItem(DECK_KEY));
   } catch {
-    return 'french';
+    return parseDeckStyle(null);
   }
 }
 
