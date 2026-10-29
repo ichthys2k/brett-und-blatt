@@ -147,3 +147,4 @@ type DokoMove =
 ## Offene Punkte
 
 - Pflichtsoli-Zwangsserie im Turniermodus mit genauer Vorführung.
+- Stichproben-Suche (PIMC) getestet und **nicht übernommen** (29.10.2026): Bei 400 Blättern kein Gewinn (−0,15 ± 0,12 Punkte je Spiel), auch mit 80 Verteilungen nicht. Der Bot spielt weiter nach den Faustregeln. Behalten wurde die bessere Kartenverteilung in `sampleHidden` (Farbenlücken, Team nach Kreuz-Damen); `pimcMove` lässt sich bei Bedarf mit `dokoHeuristicBot` als Rollout-Bot wieder anschließen. Mögliche Ursache: Die Team-Unsicherheit macht die Schätzungen sehr verrauscht.

@@ -4,6 +4,8 @@ import {
   cardRank,
   cardSuit,
   createSchafkopfContract,
+  dealUnknown,
+  knownVoids,
   getActivePlayers,
   handToSeat,
   legalCards,
@@ -12,6 +14,7 @@ import {
   trickPoints,
   trickWinner,
   Rng,
+  type EffectiveSuit,
   type RngState,
   type Actor,
   type CardId,
@@ -731,16 +734,21 @@ export function sampleHidden(view: SchafkopfState, seat: SeatId, rng: Rng): Scha
   }
 
   const allCards = createSchafkopfDeck(view.sheet);
-  const unknownPool = rng.shuffle(allCards.filter((c) => !knownCards.has(c)));
+  const unknown = allCards.filter((c) => !knownCards.has(c));
+  const needs = new Map<number, number>();
+  for (let s = 0; s < 4; s++) if (s !== seat) needs.set(s, (view.hands[s] || []).filter((c) => c === 'back').length);
+  // Wer eine Farbe nicht bedient hat, besitzt von ihr keine Karte mehr.
+  const contract = getContract(view);
+  const voids = view.phase === 'play' && view.contract ? knownVoids(view.completedTricks, view.currentTrick, contract) : new Map<number, Set<EffectiveSuit>>();
+  const dealt = dealUnknown(unknown, needs, voids, contract, rng);
 
-  let poolIdx = 0;
   const sampledHands: Record<number, CardId[]> = {};
   for (let s = 0; s < 4; s++) {
     if (s === seat) {
       sampledHands[s] = [...(view.hands[s] || [])];
     } else {
-      const origHand = view.hands[s] || [];
-      sampledHands[s] = origHand.map((c) => (c === 'back' ? unknownPool[poolIdx++] : c));
+      const fill = [...(dealt.get(s) ?? [])];
+      sampledHands[s] = (view.hands[s] || []).map((c) => (c === 'back' ? fill.pop()! : c));
     }
   }
 

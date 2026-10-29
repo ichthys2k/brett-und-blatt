@@ -1,4 +1,4 @@
-import { cardRank, cardSuit, trickWinner, winsAllTricks, type BotContext, type BotDefinition, type BotLevel, type CardId, type Suit } from '@brett-und-blatt/engine';
+import { cardRank, cardSuit, pimcMove, trickWinner, winsAllTricks, type BotContext, type BotDefinition, type BotLevel, type CardId, type Suit } from '@brett-und-blatt/engine';
 import { binokelContract, createDeck, eyes, power, SUITS } from '../cards';
 import { findMelds, meldPoints } from '../melds';
 import { legalCardsFor, legalMoves, type BinokelMove, type BinokelState } from '../rules';
@@ -12,7 +12,7 @@ import { legalCardsFor, legalMoves, type BinokelMove, type BinokelState } from '
  * Stufen: „leicht“ reizt waghalsig und spielt manchmal zufällig, „mittel“ reizt bis knapp
  * unter die Schätzung, „schwer“ reizt vorsichtiger und zählt die gefallenen Trümpfe.
  */
-export const binokelBot: BotDefinition<BinokelState, BinokelMove> = {
+export const binokelHeuristicBot: BotDefinition<BinokelState, BinokelMove> = {
   id: 'binokel',
   name: 'Schwaben-Ass',
   levels: ['easy', 'medium', 'hard'],
@@ -194,3 +194,22 @@ function trumpsOut(view: BinokelState, seat: number): number {
   for (const p of view.currentTrick) if (cardSuit(p.card) === view.trump) seen++;
   return total - seen;
 }
+
+/**
+ * Der Binokel-Bot der Spielliste: Reizen, Drücken, Trumpf und Durch nach den Faustregeln oben; beim Kartenspielen
+ * rechnet „schwer“ per Stichproben-Suche (`pimcMove`) mehrere mögliche Verteilungen der verdeckten Karten durch
+ * (die Meldungen anderer Spieler werden dabei berücksichtigt) und spielt die beste Karte.
+ */
+export const binokelBot: BotDefinition<BinokelState, BinokelMove> = {
+  ...binokelHeuristicBot,
+  chooseMove(ctx) {
+    if (ctx.level !== 'hard' || ctx.view.phase !== 'play') return binokelHeuristicBot.chooseMove(ctx);
+    return pimcMove(ctx, {
+      heuristic: binokelHeuristicBot,
+      isPlaying: (state) => state.phase === 'play',
+      score: (state, seat) => state.scores[seat] ?? 0,
+      candidates: (moves) => moves.filter((m) => m.type === 'play'),
+      samples: 30,
+    });
+  },
+};

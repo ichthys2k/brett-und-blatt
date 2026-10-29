@@ -1,4 +1,4 @@
-import { cardId, computeBotMove, resolveOptions, Rng } from '@brett-und-blatt/engine';
+import { cardId, computeBotMove, knownVoids, resolveOptions, Rng } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { gameModule } from '../src/index.js';
@@ -6,6 +6,7 @@ import {
   ALL_BID_VALUES,
   calculateGameValue,
   countSpitzen,
+  getContract,
   nextPossibleBid,
   type SkatMove,
 } from '../src/rules.js';
@@ -143,5 +144,35 @@ describe('Skat-Bot: Hand und Schneider', () => {
     const plain = [c('C', 11), c('H', 11), c('C', 1), c('C', 10), c('C', 9), c('C', 8), c('S', 7), c('H', 8), c('D', 7), c('D', 9)];
     const { state, ask } = decision(plain);
     expect(ask(state)).toEqual({ type: 'takeSkat' });
+  });
+});
+
+describe('Skat: Stichproben der verdeckten Karten', () => {
+  it('weist einem Spieler keine Farbe zu, die er nachweislich nicht bedient hat', () => {
+    let checked = 0;
+    for (const seed of ['void-a', 'void-b', 'void-c', 'void-d', 'void-e', 'void-f']) {
+      let state: any = gameModule.setup(3, resolveOptions(gameModule), seed);
+      for (let i = 0; i < 3000 && state.phase !== 'roundOver' && state.phase !== 'passedOut'; i++) {
+        const seat = gameModule.currentPlayers(state)[0] as number;
+        if (state.phase === 'play' && state.completedTricks.length >= 3 && state.declaration?.gameType !== 'null') {
+          const contract = getContract(state);
+          const voids = knownVoids(state.completedTricks, state.currentTrick, contract);
+          const viewer = seat;
+          const view = gameModule.playerView(state, viewer);
+          for (let k = 0; k < 10; k++) {
+            const sampled = gameModule.sampleHidden!(view, viewer, Rng.fromSeed(`${seed}-${k}`, 'test')) as any;
+            for (const [s, suits] of voids) {
+              if (s === viewer) continue;
+              for (const c of sampled.hands[s]) expect(suits.has(contract.effectiveSuit(c))).toBe(false);
+            }
+          }
+          if (voids.size > 0) checked++;
+          break;
+        }
+        const move = computeBotMove(gameModule, { gameId: 'skat', botId: 'skat', level: 'medium', seat, view: gameModule.playerView(state, seat), seed: `${seed}/${i}`, timeBudgetMs: 20 }) as SkatMove;
+        state = gameModule.applyMove(state, seat, move).state;
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 });
