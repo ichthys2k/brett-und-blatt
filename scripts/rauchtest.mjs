@@ -6,7 +6,8 @@
 //   node scripts/rauchtest.mjs                        # optional: Spiel-ids als Argumente
 //
 // Geprüft wird je Spiel (Handy-Hochformat 390 × 844):
-// - keine unbehandelten Fehler und keine Fehler in der Konsole (fehlende Klangdateien ausgenommen),
+// - keine unbehandelten Fehler und keine Fehler in der Konsole (fehlende Klangdateien und der
+//   optionale Abruf des Bibel-Quiz-Katalogs vom Spieleserver ausgenommen),
 // - die Partie startet (Seite #/partie, Spielfeld mit sichtbarem Inhalt),
 // - die Seite bleibt höchstens dreimal so hoch wie der Bildschirm (fängt z. B. riesige Handkarten),
 // - nach dem Start eines anderen Spiels bleibt das Spielfeld so groß wie beim frischen Laden
@@ -90,7 +91,10 @@ try {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => {
-      if (m.type() === 'error' && !/Failed to load resource|klaenge|\.mp3/i.test(m.text())) errors.push(m.text());
+      // Der Fragenkatalog des Bibel-Quiz ist optional: Die App nimmt die mitgelieferte Datei,
+      // wenn der Spieleserver aus dieser Herkunft nicht erlaubt oder (noch) nicht erreichbar ist.
+      // Der Browser meldet diesen fehlgeschlagenen Abruf als Konsolenfehler – das Spiel startet trotzdem.
+      if (m.type() === 'error' && !/Failed to load resource|klaenge|\.mp3|bibelquiz\/fragen/i.test(m.text())) errors.push(m.text());
     });
     try {
       const m = await startGame(page, id);
