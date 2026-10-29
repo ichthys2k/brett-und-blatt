@@ -269,8 +269,15 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   /** Ein Mensch macht einen Zug. Gibt false zurück, wenn der Zug gerade nicht erlaubt ist. */
   submit(seat: SeatId, move: M): boolean {
     if (this._disposed || this._paused || this.result) return false;
-    if (!this.isHuman(seat) || !this.currentSeats().includes(seat)) return false;
-    if (!isLegalMove(this.module, this._state, seat, move)) return false;
+    if (!this.isHuman(seat)) return false;
+    if (!this.currentSeats().includes(seat)) {
+      // Außer-der-Reihe-Reaktionszüge: nur die Selbstaufrufe „Mau!“/„Eins!“ (callMau/callUno).
+      const moveType = (move as { type?: unknown })?.type;
+      if (moveType !== 'callMau' && moveType !== 'callUno') return false;
+      if (!(this.module.isLegal?.(this._state, seat, move) ?? false)) return false;
+    } else {
+      if (!isLegalMove(this.module, this._state, seat, move)) return false;
+    }
     this.away.delete(seat);
     this.consecutiveTimeouts[seat] = 0;
     this.dropBot(seat);

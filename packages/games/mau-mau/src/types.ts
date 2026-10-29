@@ -58,4 +58,5 @@ export type MauMauMove =
     }
   | { type: 'draw' }
   | { type: 'pass' }
-  | { type: 'catchMau'; target: number };
+  | { type: 'catchMau'; target: number }
+  | { type: 'callMau' };

@@ -406,7 +406,10 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         <ui.Board
           view={session.view(viewer)}
           legalMoves={legalMoves}
-          onMove={(move) => actingSeat !== undefined && session.submit(actingSeat, move)}
+          onMove={(move) => {
+            const seat = actingSeat !== undefined ? actingSeat : (typeof viewer === 'number' ? viewer : undefined);
+            return seat !== undefined && session.submit(seat, move);
+          }}
           events={events}
           activeSeat={current[0] ?? null}
           hint={hint}

@@ -269,6 +269,14 @@ export function isLegal(state: UnoState, actor: Actor, move: UnoMove): boolean {
     );
   }
 
+  if (move.type === 'callUno') {
+    if (state.options.callUno !== 'on') return false;
+    if (state.eliminated[actor]) return false;
+    const hand = state.hands[actor];
+    if (!hand) return false;
+    return hand.length === 1 && !state.unoProtection[actor];
+  }
+
   if (move.type === 'jumpIn') {
     if (state.options.jumpIn !== 'on' || state.pendingDraw > 0 || !topCard) return false;
     const card = hand.find((c) => c.id === move.cardId);
@@ -454,6 +462,16 @@ export function applyMove(
       }
     }
   };
+
+  // 0. Eigenen „Eins!“-Ruf nachträglich abgeben (auch außer der Reihe).
+  if (move.type === 'callUno') {
+    if (next.hands[actor].length === 1 && !next.unoProtection[actor]) {
+      next.unoProtection[actor] = true;
+      events.push({ type: 'calledUno', player: actor });
+      next.lastAction = { player: actor, text: 'Eins! gerufen' };
+    }
+    return finish();
+  }
 
   // 1. Anprangern (catchUno)
   if (move.type === 'catchUno') {

@@ -128,4 +128,7 @@ export const mauMauBot: BotDefinition<MauMauState, MauMauMove> = {
 
     return scored[0]!.move;
   },
+  delayMs(ctx) {
+    return ctx.move.type === 'catchMau' ? 2000 : 0;
+  },
 };
