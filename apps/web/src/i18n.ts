@@ -27,6 +27,7 @@ const de = {
   'setup.time': 'Zeit',
   'setup.start': 'Los geht’s',
   'setup.loading': 'Spiel wird geladen …',
+  'setup.failed': 'Das Spiel ließ sich nicht laden. Bitte prüfe die Verbindung und lade die Seite neu.',
   'level.easy': 'leicht',
   'level.medium': 'mittel',
   'level.hard': 'schwer',

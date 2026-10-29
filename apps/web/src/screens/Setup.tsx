@@ -70,6 +70,7 @@ function toSeatConfigs(seats: SeatDraft[]): SeatConfig[] {
 export function Setup({ gameId, params }: { gameId: string; params?: Record<string, string> }) {
   const [game, setGame] = useState<LoadedGame | null>(null);
   const [draft, setDraft] = useState<SetupDraft | null>(null);
+  const [failed, setFailed] = useState(false);
   const [copiedKind, setCopiedKind] = useState<'setup' | 'autostart' | null>(null);
 
   useEffect(() => {
@@ -92,13 +93,14 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
           if (!cancelled) navigate(paths.play);
         }
       },
-      () => !cancelled && navigate(paths.home),
+      () => !cancelled && setFailed(true),
     );
     return () => {
       cancelled = true;
     };
   }, [gameId]);
 
+  if (failed) return <p className="p-6 text-center text-muted">{t('setup.failed')}</p>;
   if (!game || !draft) return <p className="p-6 text-center text-muted">{t('setup.loading')}</p>;
 
   const { info, module, ui } = game;

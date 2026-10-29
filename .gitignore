@@ -34,3 +34,6 @@ pnpm-debug.log*
 
 # Lokale Einstellungen für Claude Code
 .claude/
+
+# OpenChamber: lokaler Sitzungszustand und Aufnahmen der Browser-Vorschau
+.openchamber/

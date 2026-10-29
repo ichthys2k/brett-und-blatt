@@ -37,7 +37,39 @@ export function legalMoves(state: GomokuState, actor: Actor): GomokuMove[] {
   return moves;
 }
 
-function findWinLine(board: (number | null)[], size: number, seat: number): number[] | null {
+export function findWinLine(board: (number | null)[], size: number, seat: number, lastCell?: number): number[] | null {
+  // Schneller Pfad: nur Linien durch den gerade gesetzten Stein prüfen.
+  if (lastCell !== undefined) {
+    const col = lastCell % size;
+    const row = Math.floor(lastCell / size);
+    for (const [dc, dr] of DIRECTIONS) {
+      const line: number[] = [];
+      for (let i = 1; i < WIN_LENGTH; i++) {
+        const c = col - dc * i;
+        const r = row - dr * i;
+        if (c < 0 || c >= size || r < 0 || r >= size) break;
+        const idx = r * size + c;
+        if (board[idx] === seat) line.unshift(idx);
+        else break;
+      }
+      line.push(lastCell);
+      for (let i = 1; i < WIN_LENGTH; i++) {
+        const c = col + dc * i;
+        const r = row + dr * i;
+        if (c < 0 || c >= size || r < 0 || r >= size) break;
+        const idx = r * size + c;
+        if (board[idx] === seat) line.push(idx);
+        else break;
+      }
+      if (line.length >= WIN_LENGTH) {
+        const idx = line.indexOf(lastCell);
+        const start = Math.max(0, Math.min(idx - 2, line.length - WIN_LENGTH));
+        return line.slice(start, start + WIN_LENGTH);
+      }
+    }
+    return null;
+  }
+
   const total = size * size;
   for (let start = 0; start < total; start++) {
     const col = start % size;
@@ -74,7 +106,7 @@ export function applyMove(state: GomokuState, actor: Actor, move: GomokuMove): M
   board[move.cell] = actor;
   const events: GameEvent[] = [{ type: 'placed', cell: move.cell, seat: actor }];
 
-  const winLine = findWinLine(board, state.size, actor);
+  const winLine = findWinLine(board, state.size, actor, move.cell);
   if (winLine) {
     events.push({ type: 'win', seat: actor, line: [...winLine] });
   }

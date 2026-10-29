@@ -2,6 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { kataloge } from './kataloge.ts';
 import { klaenge } from './klaenge.ts';
 
 export default defineConfig({
@@ -11,6 +12,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     klaenge(),
+    kataloge(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
@@ -33,7 +35,7 @@ export default defineConfig({
       },
       workbox: {
         // Alles vorab speichern: Solo und Hot-Seat funktionieren dann ohne Internet (Effekte zusammen etwa 1 MB).
-        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,mp3}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,mp3,json}'],
         // Musik, Tierstimmen (Drachenspiel, rund 14 MB) und Enten-Rallye-Ton sind zu groß zum Vorab-Speichern:
         // Sie kommen beim ersten Abspielen in einen eigenen Speicher.
         globIgnores: ['**/klaenge/musik/**', '**/klaenge/tiere/**', '**/klaenge/duck-rally/**'],

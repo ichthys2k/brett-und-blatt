@@ -3,16 +3,12 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createBotRunner } from './botRunner';
 import { notifyTurn } from './notifications';
 import { loadGame, type LoadedGame } from './registry';
+import { GAME_SERVER } from './server';
 import { sound } from './sound';
 import { storage, type Profile } from './storage';
 
 export type { OpenRoomListing };
-
-/**
- * Adresse des Spieleservers. Beim Bauen über VITE_GAME_SERVER festgelegt; im
- * Dev-Modus der lokale Server (`wrangler dev`). Ohne Adresse gibt es keine Online-Spiele.
- */
-export const GAME_SERVER: string | null = import.meta.env.VITE_GAME_SERVER || (import.meta.env.DEV ? 'http://127.0.0.1:8787' : null);
+export { GAME_SERVER };
 
 export async function createRoom(options?: { isPublic?: boolean }): Promise<string> {
   const response = await fetch(`${GAME_SERVER}/rooms`, {
