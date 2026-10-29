@@ -38,4 +38,4 @@ Neu geschrieben am 28.10.2026 (Regelversion 2); die erste Fassung hatte keine Re
 
 ## Offene Punkte
 
-- **Geteilter Bildschirm** für mehrere Menschen an einem Tablet (wie Enten-Rallye) – bewusst zurückgestellt.
+- ✅ **Geteilter Bildschirm** (29.10.2026): Mehrere Menschen an einem Gerät (Modus `hotseat`) bekommen je einen eigenen Bereich (`PlayerZone` in `src/ui/index.tsx`, eigene Zieh-Logik, eigene Züge über `BoardProps.humanSeats`). Die erste Hälfte sitzt oben und ist um 180° gedreht (Spieler gegenüber am Tablet), die anderen unten, die Mitte dazwischen; Bots erscheinen als kleine Einträge. Im gedrehten Bereich wird die Ziehrichtung umgekehrt. Am Rundenende hat jeder Mensch seinen eigenen „Nächste Runde“-Knopf. Gut spielbar bis vier Spieler (dann Karten etwa 33 px breit auf einem 1024er-Tablet). Dafür unterscheidet `usePointerDrag` jetzt Finger (`pointerId`), damit gleichzeitiges Ziehen sich nicht stört.

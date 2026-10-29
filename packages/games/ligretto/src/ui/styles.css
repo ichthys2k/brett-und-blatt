@@ -507,3 +507,41 @@
     animation: none;
   }
 }
+
+/* Geteilter Bildschirm: mehrere Spieler an einem Tablet. Wer gegenübersitzt, bekommt einen gedrehten Bereich. */
+
+.lg-split {
+  --card-w: clamp(28px, min(10cqi, 7.5cqh), 80px);
+  --center-w: clamp(26px, min(9cqi, 7cqh), 70px);
+  max-width: none;
+}
+
+/* Drei oder vier Spieler: zwei Bereiche nebeneinander, die Karten werden schmaler. */
+.lg-split-3,
+.lg-split-4 {
+  --card-w: clamp(24px, min(5.2cqi, 7cqh), 64px);
+}
+
+.lg-zones {
+  flex: none;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.lg-split .lg-mine {
+  padding: 0.35rem 0.4rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.lg-rotated {
+  transform: rotate(180deg);
+}
+
+.lg-zone-name {
+  margin-right: 0.5rem;
+  font-size: 0.85rem;
+  color: #fde68a;
+}
