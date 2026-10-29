@@ -1,4 +1,4 @@
-import { generalBots, sameValue, type Actor, type GameModule } from '@brett-und-blatt/engine';
+import { deckStyleOption, generalBots, sameValue, type Actor, type GameModule } from '@brett-und-blatt/engine';
 import { dokoBot } from './bots.js';
 import { meta } from './meta.js';
 import {
@@ -50,16 +50,7 @@ export const gameModule: GameModule<DokoState, DokoMove> = {
       ],
       default: '12',
     },
-    {
-      id: 'deckStyle',
-      label: 'Kartenbild',
-      choices: [
-        { value: 'four-color', label: 'Turnierblatt (vierfarbig)' },
-        { value: 'french', label: 'Französisches Standardblatt' },
-        { value: 'german', label: 'Deutsches Blatt' },
-      ],
-      default: 'four-color',
-    },
+    deckStyleOption(),
     {
       id: 'mandatorySolo',
       label: 'Pflichtsolo',

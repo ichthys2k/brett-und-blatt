@@ -1,4 +1,4 @@
-import type { GameModule } from '@brett-und-blatt/engine';
+import { deckStyleOption, type GameModule } from '@brett-und-blatt/engine';
 import { speedBot } from './bots';
 import { meta } from './meta';
 import { GOALS, applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type SpeedMove, type SpeedState, type SpeedView } from './rules';
@@ -19,15 +19,7 @@ export const gameModule: GameModule<SpeedState, SpeedMove, SpeedView> = {
       ],
       default: 'on',
     },
-    {
-      id: 'deck',
-      label: 'Kartenbild',
-      choices: [
-        { value: 'french', label: 'Französisch' },
-        { value: 'four-color', label: 'Vierfarbig' },
-      ],
-      default: 'french',
-    },
+    deckStyleOption('deck'),
   ],
   // Echtzeit: Die Uhr misst nur, wie lange jemand gar nichts tut – dann hilft der Bot aus.
   timePresets: {

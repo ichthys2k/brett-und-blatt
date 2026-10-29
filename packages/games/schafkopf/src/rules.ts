@@ -29,6 +29,8 @@ import {
   type TrickContract,
   SUITS,
   trickGameEvents,
+  parseDeckStyle,
+  type DeckStyle,
 } from '@brett-und-blatt/engine';
 
 export type SchafkopfPhase =
@@ -81,7 +83,7 @@ export interface SchafkopfState {
   gameNumber: number;
   dealerSeat: number;
   activeSeats: number[]; // [0, 1, 2, 3]
-  deckStyle: 'bavarian' | 'four-color' | 'french';
+  deckStyle: DeckStyle;
   sheet: 'long' | 'short';
   allowExtras: boolean;
   doublingEnabled: boolean;
@@ -155,7 +157,7 @@ export function setup(
 ): SchafkopfState {
   const totalGames = Number(options.rounds || '12');
   const sheet = options.sheet === 'short' ? 'short' : 'long';
-  const deckStyle = (options.deckStyle as SchafkopfState['deckStyle']) || 'bavarian';
+  const deckStyle = parseDeckStyle(options.deckStyle);
   const allowExtras = options.extras === 'all';
   const doublingEnabled = options.doubling !== 'false';
   const ifAllPass = options.ifAllPass === 'ramsch' ? 'ramsch' : 'redeal';

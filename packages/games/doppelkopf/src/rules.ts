@@ -29,6 +29,8 @@ import {
   type TrickContract,
   SUITS,
   trickGameEvents,
+  parseDeckStyle,
+  type DeckStyle,
 } from '@brett-und-blatt/engine';
 
 export type DokoPhase =
@@ -78,7 +80,7 @@ export interface DokoState {
   gameNumber: number;
   dealerSeat: number;
   activeSeats: number[]; // 4 aktive Plätze
-  deckStyle: 'four-color' | 'french' | 'german';
+  deckStyle: DeckStyle;
   mandatorySolo: boolean;
 
   phase: DokoPhase;
@@ -141,7 +143,7 @@ export function setup(
 ): DokoState {
   const tablePlayers = seats;
   const totalGames = Number(options.rounds || '12');
-  const deckStyle = (options.deckStyle as DokoState['deckStyle']) || 'four-color';
+  const deckStyle = parseDeckStyle(options.deckStyle);
   const mandatorySolo = options.mandatorySolo === 'true';
 
   const dealerSeat = 0;

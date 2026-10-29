@@ -28,6 +28,8 @@ import {
   type Trick,
   SUITS,
   trickGameEvents,
+  parseDeckStyle,
+  type DeckStyle,
 } from '@brett-und-blatt/engine';
 
 export type SkatPhase =
@@ -81,7 +83,7 @@ export interface SkatState {
   gameNumber: number; // 1-basiert
   dealerSeat: number;
   activeSeats: number[]; // 3 aktive Sitze: [Vorhand, Mittelhand, Hinterhand]
-  deckStyle: 'four-color' | 'french' | 'german';
+  deckStyle: DeckStyle;
   countEyes: boolean;
 
   // Runden-Zustand
@@ -245,7 +247,7 @@ export function setup(
 ): SkatState {
   const tablePlayers = seats;
   const totalGames = Number(options.rounds || '12');
-  const deckStyle = (options.deckStyle as SkatState['deckStyle']) || 'four-color';
+  const deckStyle = parseDeckStyle(options.deckStyle);
   const countEyes = options.countEyes === 'true';
 
   const dealerSeat = 0;

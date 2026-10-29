@@ -1,4 +1,4 @@
-import { Rng, type GameModule, type OptionSpec } from '@brett-und-blatt/engine';
+import { Rng, deckStyleOption, parseDeckStyle, type GameModule, type OptionSpec } from '@brett-und-blatt/engine';
 import { mauMauBot } from './bots';
 import { meta } from './meta';
 import {
@@ -15,17 +15,7 @@ import {
 import type { MauMauMove, MauMauOptions, MauMauState } from './types';
 
 export const options: OptionSpec[] = [
-  {
-    id: 'deckStyle',
-    label: 'Kartenbild',
-    description: 'Französisches Blatt, vierfarbiges Turnierbild oder deutsches Blatt.',
-    choices: [
-      { value: 'french', label: 'Französisch' },
-      { value: 'four-color', label: 'Vierfarben' },
-      { value: 'german', label: 'Deutsch' },
-    ],
-    default: defaultOptions.deckStyle,
-  },
+  deckStyleOption(),
   {
     id: 'sevenStack',
     label: '7er stapeln',
@@ -109,7 +99,7 @@ export const gameModule: GameModule<MauMauState, MauMauMove> = {
   setup(seats, opts, seed) {
     const rng = Rng.fromSeed(seed);
     const parsed: Partial<MauMauOptions> = {
-      deckStyle: (opts?.deckStyle as MauMauOptions['deckStyle']) ?? defaultOptions.deckStyle,
+      deckStyle: parseDeckStyle(opts?.deckStyle),
       sevenStack: (opts?.sevenStack as MauMauOptions['sevenStack']) ?? defaultOptions.sevenStack,
       nineReverse: (opts?.nineReverse as MauMauOptions['nineReverse']) ?? defaultOptions.nineReverse,
       aceExtraTurn: (opts?.aceExtraTurn as MauMauOptions['aceExtraTurn']) ?? defaultOptions.aceExtraTurn,

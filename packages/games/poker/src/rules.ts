@@ -11,6 +11,9 @@ import {
   type RngState,
   type SeatId,
   type TimePresets,
+  parseDeckStyle,
+  deckStyleOption,
+  type DeckStyle,
 } from '@brett-und-blatt/engine';
 import { bestFive, describeValue } from './eval';
 import { buildPots, settlePots, type Pot, type PotAward } from './pots';
@@ -81,7 +84,7 @@ export interface PokerState {
   handsPerLevel: number;
   anteMode: 'none' | 'level4' | 'always';
   theme: ChipTheme;
-  deckStyle: 'fourColor' | 'classic';
+  deckStyle: DeckStyle;
   aid: 'name' | 'none';
   seats: PokerSeat[];
   stats: PlayerStats[];
@@ -192,15 +195,7 @@ export const options: OptionSpec[] = [
     ],
     default: 'chips',
   },
-  {
-    id: 'deckStyle',
-    label: 'Kartenbild',
-    choices: [
-      { value: 'fourColor', label: 'Vierfarbig' },
-      { value: 'classic', label: 'Klassisch' },
-    ],
-    default: 'fourColor',
-  },
+  deckStyleOption(),
   {
     id: 'aid',
     label: 'Lernhilfe',
@@ -247,7 +242,7 @@ export function setup(seatCount: number, opts: Options, seed: string): PokerStat
   const maxHands = mode === 'hands20' ? 20 : mode === 'hands50' ? 50 : 75;
   const anteMode = opts.ante === 'none' || opts.ante === 'always' ? opts.ante : 'level4';
   const theme: ChipTheme = opts.theme === 'beans' || opts.theme === 'matches' ? opts.theme : 'chips';
-  const deckStyle = opts.deckStyle === 'classic' ? 'classic' : 'fourColor';
+  const deckStyle = parseDeckStyle(opts.deckStyle === 'classic' ? 'french' : opts.deckStyle === 'fourColor' ? 'four-color' : opts.deckStyle);
   const aid = opts.aid === 'none' ? 'none' : 'name';
 
   const emptySet = parseEmptySeats(opts.emptySeats, seatCount);

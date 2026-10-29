@@ -194,7 +194,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - **E – Spieltiefe:** Vierer-Schach-Bot mit Vorausschau, Binokel-Vierertisch/Kreuzbinokel, Doppelkopf-Pflichtsoli, Drachenspiel-Zauberkarten.
 - ✅ **F1 Speed** (29.10.2026, `packages/games/speed`): Echtzeit für zwei, Bot „Flinker Finger“, geteilter Bildschirm am Tablet, online registriert; Hände offen (geteilter Bildschirm). Details in `docs/spiele/speed.md`.
 - ✅ **F2 Präsident** (29.10.2026, `packages/games/president`, 3–8 Plätze): bekannt als „Arschloch“, übliche Regeln (32/52 Karten, Ass hoch, Wiedereinstieg nach Passen, Tausch 2/1 Karten), Hausregeln als Optionen, Bot „Kartenkanzler“ (schwer mit Stichprobensuche im Endspiel), online registriert. Details in `docs/spiele/praesident.md`.
-- **F – Neue Spiele (Ideen 29.10.2026, Pläne fertig):** Speed ✅, Präsident ✅, Fix gefunden! – Dobble-artig (`fix-gefunden.md`), Tiefflug – Skyjo-artig mit Junior (`tiefflug.md`). Namen bestätigt (29.10.); Junior-Regeln klärt Cornelius.
+- ✅ **F3 Tiefflug** (29.10.2026, `packages/games/low-flight`, 2–8 Plätze): Skyjo-artig, 150 Karten, Spalten (optional Zeilen) abräumen, Verdopplung, bis 100/50 Punkte oder 3/1 Runden; Junior mit Obstkarten 1–5 im 3×3-Raster (eigene Fassung, niedrigste Summe gewinnt). Bot „Wolkenspringer“, online registriert. Details in `docs/spiele/tiefflug.md`.
+- **F – Neue Spiele (Ideen 29.10.2026, Pläne fertig):** Speed ✅, Präsident ✅, Tiefflug ✅, Fix gefunden! – Dobble-artig (`fix-gefunden.md`). Namen bestätigt (29.10.).
 - **Entscheidungen (29.10.2026):** Bibel-Quiz vom Server – ja (D2). Chromium für den Rauchtest ist auf dem Desktop installiert. Quartett-Werte prüft Cornelius später selbst. KataGo entfällt. Farbensortierer geht Cornelius separat an.
 
 Korrekturplan aus dem Prüfbericht:

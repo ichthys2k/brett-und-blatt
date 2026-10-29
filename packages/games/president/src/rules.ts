@@ -8,10 +8,9 @@
  * gibt der Bettler dem Präsidenten seine zwei besten Karten und bekommt zwei beliebige zurück
  * (Vize-Bettler und Vize je eine); der Bettler beginnt.
  */
-import { Rng, cardRank, cardSuit, createDeck, type Actor, type CardId, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
+import { Rng, parseDeckStyle, type DeckStyle, cardRank, cardSuit, createDeck, type Actor, type CardId, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
 
 export type DeckChoice = 'auto' | '32' | '52';
-export type DeckStyle = 'french' | 'four-color' | 'german';
 export type Titles = 'president' | 'court';
 
 export interface PresidentOptions {
@@ -33,7 +32,7 @@ export interface PresidentOptions {
 
 export const DEFAULT_OPTIONS: PresidentOptions = {
   deck: 'auto',
-  deckStyle: 'french',
+  deckStyle: 'four-color',
   twoHigh: false,
   reenter: true,
   sameSkips: false,
@@ -184,7 +183,7 @@ function parseOptions(options: Options): PresidentOptions {
   const rounds = Number(options.rounds);
   return {
     deck: options.deck === '32' || options.deck === '52' ? options.deck : 'auto',
-    deckStyle: options.deckStyle === 'four-color' || options.deckStyle === 'german' ? options.deckStyle : 'french',
+    deckStyle: parseDeckStyle(options.deckStyle),
     twoHigh: options.twoHigh === 'on',
     reenter: options.passing !== 'out',
     sameSkips: options.sameSkips === 'on',

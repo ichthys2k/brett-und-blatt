@@ -93,7 +93,7 @@ function Board({
     setPeeking(false);
   }, [activeSeat, view.handNumber]);
 
-  const deckStyle: DeckStyle = view.deckStyle === 'fourColor' ? 'four-color' : 'french';
+  const deckStyle: DeckStyle = view.deckStyle;
   const unit = themeUnit(view.theme);
   const potTotal = totalPot(view);
   const pots = currentPots(view);

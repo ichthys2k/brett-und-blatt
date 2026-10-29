@@ -1,7 +1,7 @@
-import type { CardId, RngState, Suit } from '@brett-und-blatt/engine';
+import type { CardId, DeckStyle, RngState, Suit } from '@brett-und-blatt/engine';
 
 /** Darstellung des Blattes. Die Regeln arbeiten immer mit den französischen Farben C/D/H/S. */
-export type MauMauDeckStyle = 'french' | 'four-color' | 'german';
+export type MauMauDeckStyle = DeckStyle;
 
 export interface MauMauOptions {
   deckStyle: MauMauDeckStyle;

@@ -1,4 +1,4 @@
-import { cardRank, SUITS, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
+import { cardRank, SUITS, type CardId, type DeckStyle, type SeatId, type Suit } from '@brett-und-blatt/engine';
 import {
   PlayingCard,
   SuitShape,
@@ -73,7 +73,9 @@ function PlacedCard({
   bindDrag,
   isDragged,
   isSnapping,
+  deckStyle,
 }: {
+  deckStyle: DeckStyle;
   p: Placed;
   z: number;
   cardW: number;
@@ -120,6 +122,7 @@ function PlacedCard({
         highlight={p.highlight ?? null}
         label={p.card === null && p.onClick ? 'Talon: Karten ziehen' : undefined}
         anim={p.anim}
+        deckStyle={deckStyle}
       />
     </span>
   );
@@ -489,6 +492,7 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<SolitaireState, So
                 bindDrag={bindDrag}
                 isDragged={isDragged}
                 isSnapping={isSnapping}
+                deckStyle={view.deckStyle ?? 'four-color'}
               />
             );
           })}

@@ -1,29 +1,28 @@
-import { sortHand, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
+import { sortHand, type CardId, type DeckStyle, type SeatId, type Suit } from '@brett-und-blatt/engine';
 import { cardSuitColor, PlayingCard, SuitShape, TrickTable, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import { binokelContract, SUIT_NAMES, SUITS } from '../cards';
 import { findMelds, meldPoints } from '../melds';
 import { type BinokelMove, type BinokelState } from '../rules';
 
-const DECK = 'german' as const;
 const HAND_CARD_WIDTH = 'clamp(42px, 10.5vw, 72px)';
 
 const panel = 'rounded-xl border border-line bg-surface p-3 shadow-sm';
 const button = 'rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm font-semibold hover:brightness-95 disabled:opacity-40';
 const primary = 'rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-accent-ink shadow hover:brightness-110 disabled:opacity-40';
 
-function SuitIcon({ suit, className = 'h-4 w-4' }: { suit: Suit; className?: string }) {
+function SuitIcon({ suit, deck = 'four-color', className = 'h-4 w-4' }: { suit: Suit; deck?: DeckStyle; className?: string }) {
   return (
-    <svg viewBox="0 0 100 100" className={`inline-block ${className}`} fill={cardSuitColor(suit, DECK)} aria-hidden="true">
-      <SuitShape suit={suit} deckStyle={DECK} />
+    <svg viewBox="0 0 100 100" className={`inline-block ${className}`} fill={cardSuitColor(suit, deck)} aria-hidden="true">
+      <SuitShape suit={suit} deckStyle={deck} />
     </svg>
   );
 }
 
-function SuitLabel({ suit }: { suit: Suit }) {
+function SuitLabel({ suit, deck }: { suit: Suit; deck: DeckStyle }) {
   return (
     <span className="inline-flex items-center gap-1">
-      <SuitIcon suit={suit} />
+      <SuitIcon suit={suit} deck={deck} />
       {SUIT_NAMES[suit]}
     </span>
   );
@@ -76,7 +75,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
         {view.declarer !== null ? (
           <span>
             Spielmacher: <strong>{name(view.declarer)}</strong> mit {view.bid}
-            {view.durch ? ' · Durch' : view.trump ? <> · Trumpf <SuitLabel suit={view.trump} /></> : ''}
+            {view.durch ? ' · Durch' : view.trump ? <> · Trumpf <SuitLabel suit={view.trump} deck={view.deckStyle} /></> : ''}
           </span>
         ) : view.phase === 'bidding' ? (
           <span>Reizen: {view.bid !== null ? `${view.bid} von ${name(view.bidder!)}` : 'noch kein Gebot'}</span>
@@ -90,7 +89,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
           <span className="text-xs text-muted">Dabb</span>
           {view.dabb.map((card, i) => (
             <div key={i} style={{ width: 44 }}>
-              <PlayingCard card={card} deckStyle={DECK} />
+              <PlayingCard card={card} deckStyle={view.deckStyle} />
             </div>
           ))}
         </div>
@@ -134,7 +133,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
           <div className="mb-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {SUITS.map((suit) => (
               <button key={suit} type="button" className={hint?.type === 'declareTrump' && hint.suit === suit ? primary : button} onClick={() => onMove({ type: 'declareTrump', suit })}>
-                <SuitLabel suit={suit} /> ({meldPoints(findMelds(hand, suit))})
+                <SuitLabel suit={suit} deck={view.deckStyle} /> ({meldPoints(findMelds(hand, suit))})
               </button>
             ))}
           </div>
@@ -168,7 +167,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
         </div>
       )}
 
-      <TrickTable slots={slots} bottomSeat={mySeat} deckStyle={DECK} cardWidth={72} collecting={display.collecting} />
+      <TrickTable slots={slots} bottomSeat={mySeat} deckStyle={view.deckStyle} cardWidth={72} collecting={display.collecting} />
 
       {/* Eigene Hand */}
       {viewer !== 'spectator' && (
@@ -177,7 +176,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
             <div key={card} className="transition-transform hover:-translate-y-1" style={{ width: HAND_CARD_WIDTH }}>
               <PlayingCard
                 card={card}
-                deckStyle={DECK}
+                deckStyle={view.deckStyle}
                 selected={selected.includes(card)}
                 highlight={card === hintCard ? 'hint' : playable.has(card) ? 'target' : null}
                 onClick={discarding || playable.has(card) ? () => tapCard(card) : undefined}

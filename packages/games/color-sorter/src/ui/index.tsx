@@ -1,4 +1,4 @@
-import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
+import { DECK_STYLE_CHOICES, type GameEvent, type SeatId } from '@brett-und-blatt/engine';
 import { useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { handLabel, HAND_TYPES, HANDS } from '../cards';
@@ -189,7 +189,8 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const [showLevels, setShowLevels] = useState(false);
   const [look, setLook] = useState<CardLook>(readCardLook);
   const toggleLook = () => {
-    const next = look === 'french' ? 'four-color' : 'french';
+    const order = DECK_STYLE_CHOICES.map((c) => c.value);
+    const next = order[(order.indexOf(look) + 1) % order.length]!;
     writeCardLook(next);
     setLook(next);
   };
@@ -310,7 +311,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
         <button type="button" className="cs-link" onClick={() => setShowLevels((v) => !v)}>
           📋 Kombis
         </button>
-        <button type="button" className="cs-link" onClick={toggleLook} title={look === 'french' ? 'Kartenbild: französisch – antippen für vierfarbig' : 'Kartenbild: vierfarbig – antippen für französisch'}>
+        <button type="button" className="cs-link" onClick={toggleLook} title={`Kartenbild: ${DECK_STYLE_CHOICES.find((c) => c.value === look)?.label ?? ''} – antippen zum Wechseln`}>
           🂠 Kartenbild
         </button>
       </div>

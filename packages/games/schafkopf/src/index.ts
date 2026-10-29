@@ -1,4 +1,4 @@
-import { generalBots, sameValue, type Actor, type GameModule } from '@brett-und-blatt/engine';
+import { deckStyleOption, generalBots, sameValue, type Actor, type GameModule } from '@brett-und-blatt/engine';
 import { schafkopfBot } from './bots.js';
 import { meta } from './meta.js';
 import {
@@ -53,16 +53,7 @@ export const gameModule: GameModule<SchafkopfState, SchafkopfMove> = {
       ],
       default: '12',
     },
-    {
-      id: 'deckStyle',
-      label: 'Kartenbild',
-      choices: [
-        { value: 'bavarian', label: 'Bayerisches Blatt (Eichel/Gras/Herz/Schellen)' },
-        { value: 'four-color', label: 'Vierfarbiges Turnierblatt' },
-        { value: 'french', label: 'Französisches Standardblatt' },
-      ],
-      default: 'bavarian',
-    },
+    deckStyleOption(),
     {
       id: 'extras',
       label: 'Zusatzspiele',

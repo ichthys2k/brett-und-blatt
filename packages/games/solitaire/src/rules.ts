@@ -1,4 +1,4 @@
-import { cardRank, createDeck, Rng, sameValue, type Actor, type CardId, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
+import { cardRank, parseDeckStyle, createDeck, Rng, sameValue, type Actor, type CardId, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { applyFreeCell, freeCellMoves, freeCellTrivial, freeCellWon, setupFreeCell } from './freecell';
 import { applyKlondike, klondikeMoves, klondikeTrivial, klondikeWon, setupKlondike } from './klondike';
 import { applyPyramid, pyramidMoves, pyramidWon, setupPyramid } from './pyramid';
@@ -10,6 +10,10 @@ import type { Pile, SolitaireMove, SolitaireState } from './types';
 export const MOVE_LIMIT = 1500;
 
 export function setup(_seats: number, options: Options, seed: string): SolitaireState {
+  return { ...setupGame(options, seed), deckStyle: parseDeckStyle(options.deckStyle) };
+}
+
+function setupGame(options: Options, seed: string): SolitaireState {
   const rng = Rng.fromSeed(seed, 'mischen');
   const solvable = options.solvable === 'yes';
   switch (options.variant) {

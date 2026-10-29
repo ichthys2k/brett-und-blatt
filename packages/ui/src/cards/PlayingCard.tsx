@@ -1,12 +1,20 @@
-import { cardName, cardRank, cardSuit, isRed, rankLabel, type CardId, type Suit } from '@brett-und-blatt/engine';
+import { cardName, cardRank, cardSuit, isRed, rankLabel, type CardId, type DeckStyle, type Suit } from '@brett-und-blatt/engine';
 import type { CSSProperties, MouseEventHandler } from 'react';
 
-export type DeckStyle = 'french' | 'four-color' | 'bavarian' | 'german';
+export type { DeckStyle };
+
+/** Hintergrundfarbe je Farbe im Stil „einfache Farben“ (wie bei Uno) und passende Schriftfarbe. */
+const SIMPLE_COLORS: Record<Suit, { bg: string; fg: string }> = {
+  H: { bg: '#d32f2f', fg: '#fff' },
+  D: { bg: '#fbc02d', fg: '#1f2328' },
+  S: { bg: '#1565c0', fg: '#fff' },
+  C: { bg: '#2e7d32', fg: '#fff' },
+};
 
 /** Farbzeichen als SVG-Pfade (Feld 0–100) */
 export function SuitShape({
   suit,
-  deckStyle = 'french',
+  deckStyle = 'four-color',
   x = 0,
   y = 0,
   size = 100,
@@ -74,6 +82,8 @@ export function SuitShape({
 }
 
 export function cardSuitColor(suit: Suit, deckStyle: DeckStyle = 'french'): string {
+  if (deckStyle === 'simple') return SIMPLE_COLORS[suit].bg;
+
   if (deckStyle === 'four-color') {
     switch (suit) {
       case 'C':
@@ -148,7 +158,7 @@ export function PlayingCard({
   className = '',
   style,
   label,
-  deckStyle = 'french',
+  deckStyle = 'four-color',
   anim,
 }: PlayingCardProps) {
   const animClass = anim ? `bub-animate-${anim}` : '';
@@ -166,15 +176,25 @@ export function PlayingCard({
   );
 }
 
-function CardFace({ card, deckStyle = 'french' }: { card: CardId; deckStyle?: DeckStyle }) {
+function CardFace({ card, deckStyle = 'four-color' }: { card: CardId; deckStyle?: DeckStyle }) {
   const suit = cardSuit(card);
   const rank = cardRank(card);
   const label = getRankLabel(rank, deckStyle);
-  const color = cardSuitColor(suit, deckStyle);
+  const simple = deckStyle === 'simple';
+  const color = simple ? SIMPLE_COLORS[suit].fg : cardSuitColor(suit, deckStyle);
 
   return (
     <svg viewBox="0 0 250 350" className="bub-card-face" aria-hidden="true">
-      <rect x="2" y="2" width="246" height="346" rx="20" fill="#fff" stroke="#c9c2b6" strokeWidth="3" />
+      <rect
+        x="2"
+        y="2"
+        width="246"
+        height="346"
+        rx="20"
+        fill={simple ? SIMPLE_COLORS[suit].bg : '#fff'}
+        stroke={simple ? 'rgba(0,0,0,.35)' : '#c9c2b6'}
+        strokeWidth="3"
+      />
       <g fill={color}>
         <text x="20" y="72" fontSize="70" fontWeight="700" fontFamily="system-ui, sans-serif" letterSpacing="-4">
           {label}

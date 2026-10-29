@@ -9,7 +9,7 @@ import type { Card, Color, ViewCard } from '../types';
 export const BackContext = createContext('🃏');
 
 /** Kartenbild (französisch oder vierfarbig), je Gerät gewählt. */
-export const DeckStyleContext = createContext<DeckStyle>('french');
+export const DeckStyleContext = createContext<DeckStyle>('four-color');
 
 const SUIT: Record<Color, Suit> = { h: 'H', s: 'S', d: 'D', c: 'C' };
 

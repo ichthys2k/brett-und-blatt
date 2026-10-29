@@ -49,7 +49,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Speed](speed.md) | 2 | gleichzeitig (Echtzeit) | Spielkarten, Echtzeit-Muster von Kartenblitz, geteilter Bildschirm | S | M | S | ✅ 29.10. |
 | [Fix gefunden!](fix-gefunden.md) (geplant, Dobble-artig) | 1–8 (30) | gleichzeitig (Echtzeit) | Symbolkarten aus projektiver Ebene, Symbolpakete inkl. Mathe | M | M | S | Ideen 29.10. |
 | [Präsident](praesident.md) („Arschloch“) | 3–8 | verdeckt, Kartentausch | Spielkarten, Handfächer | S | M | M | ✅ 29.10. |
-| [Tiefflug](tiefflug.md) (geplant, Skyjo-artig, mit Junior) | 2–8 | verdeckt (für alle) | Zahlenkarten, Raster 3×4, Serienwertung | S | M | M | Ideen 29.10. |
+| [Tiefflug](tiefflug.md) (Skyjo-artig, mit Junior) | 2–8 | verdeckt (für alle) | Zahlenkarten, Raster 3×4, Serienwertung | S | M | M | ✅ 29.10. |
 
 ## Gemeinsame Bausteine
 

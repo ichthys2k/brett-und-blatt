@@ -1,4 +1,4 @@
-import { randomBot, type BotDefinition, type GameModule } from '@brett-und-blatt/engine';
+import { deckStyleOption, randomBot, type BotDefinition, type GameModule } from '@brett-und-blatt/engine';
 import { solitaireBot } from './bot';
 import { meta } from './meta';
 import { applyMove, currentPlayers, legalMoves, playerView, result, sampleHidden, setup } from './rules';
@@ -12,6 +12,7 @@ export { MOVE_LIMIT } from './rules';
 export const gameModule: GameModule<SolitaireState, SolitaireMove> = {
   info: meta,
   options: [
+    deckStyleOption(),
     {
       id: 'variant',
       label: 'Variante',

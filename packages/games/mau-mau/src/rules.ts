@@ -14,7 +14,7 @@ import type { MauMauMove, MauMauOptions, MauMauState } from './types';
 
 /** Standard-Optionen für Mau-Mau. */
 export const defaultOptions: MauMauOptions = {
-  deckStyle: 'french',
+  deckStyle: 'four-color',
   sevenStack: 'on',
   nineReverse: 'on',
   aceExtraTurn: 'off',
