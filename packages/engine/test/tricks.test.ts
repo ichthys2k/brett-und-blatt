@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   cardEyePoints,
   cardId,
+  cardSuit,
+  Rng,
   createDokoContract,
   createSchafkopfContract,
   createSkatContract,
+  dealUnknown,
+  knownVoids,
   legalCards,
   nullDangerSuits,
   trickPoints,
@@ -157,5 +161,43 @@ describe('Bewertung für Sonderspiele', () => {
     expect(winsAllTricks(hand, deck, grand)).toBe(true);
     expect(winsAllTricks([...hand.slice(0, 9), cardId('H', 9)], deck, grand)).toBe(false);
     expect(winsAllTricks([...hand.slice(1), cardId('D', 1)], deck, grand)).toBe(false);
+  });
+});
+
+describe('Verdeckte Karten verteilen', () => {
+  const nul = createSkatContract('null');
+  const play = (player: number, card: ReturnType<typeof cardId>): PlayedCard => ({ player, card });
+
+  it('knownVoids: wer nicht bedient, hat die Farbe nicht mehr', () => {
+    const voids = knownVoids(
+      [{ cards: [play(0, cardId('C', 7)), play(1, cardId('S', 8)), play(2, cardId('C', 9))] }],
+      [play(1, cardId('H', 7)), play(2, cardId('H', 8)), play(0, cardId('D', 9))],
+      nul,
+    );
+    expect([...(voids.get(1) ?? [])]).toEqual(['C']);
+    expect(voids.get(2)).toBeUndefined();
+    expect([...(voids.get(0) ?? [])]).toEqual(['H']);
+  });
+
+  it('dealUnknown beachtet leere Farben und die geforderten Anzahlen', () => {
+    const pool = (['C', 'S', 'H', 'D'] as const).flatMap((s) => ([7, 8, 9, 10] as const).map((r) => cardId(s, r)));
+    const voids = new Map([[1, new Set(['C', 'S'] as const)]]);
+    for (let i = 0; i < 50; i++) {
+      const rng = Rng.fromSeed(`deal-${i}`, 'test');
+      const dealt = dealUnknown(pool, new Map([[0, 8], [1, 4], [-1, 4]]), voids, nul, rng);
+      expect(dealt.get(0)).toHaveLength(8);
+      expect(dealt.get(1)).toHaveLength(4);
+      expect(dealt.get(-1)).toHaveLength(4);
+      expect(dealt.get(1)!.every((c) => ['H', 'D'].includes(cardSuit(c)))).toBe(true);
+      expect(new Set([...dealt.values()].flat()).size).toBe(16);
+    }
+  });
+
+  it('dealUnknown verteilt trotzdem, wenn die Farben nicht aufgehen', () => {
+    const pool = [cardId('C', 7), cardId('C', 8)];
+    const voids = new Map([[0, new Set(['C'] as const)]]);
+    const dealt = dealUnknown(pool, new Map([[0, 1], [1, 1]]), voids, nul, Rng.fromSeed('x', 'test'));
+    expect(dealt.get(0)).toHaveLength(1);
+    expect(dealt.get(1)).toHaveLength(1);
   });
 });

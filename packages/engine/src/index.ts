@@ -27,4 +27,5 @@ export {
 export { mctsSearch, type MctsOptions } from './bots/mcts';
 export { alphaBetaSearch, WIN_SCORE, type AlphaBetaOptions, type AlphaBetaResult } from './bots/alphabeta';
 export { generalBot, generalBots, randomBot, stateFor } from './bots/general';
+export { pimcMove, type PimcOptions } from './bots/pimc';
 export { computeBotMove, inlineBotRunner } from './bots/runner';

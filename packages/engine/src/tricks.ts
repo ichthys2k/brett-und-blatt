@@ -602,3 +602,70 @@ export function nullTrickCard(cards: readonly CardId[], trick: Trick, seat: numb
   if (trickWinner(trick, contract).player === declarer) return losing.length > 0 ? losing[losing.length - 1]! : asc[0]!;
   return asc[0]!;
 }
+
+// ---------------------------------------------------------------------------
+// Verdeckte Karten verteilen (Bots, die Stichproben ziehen)
+// ---------------------------------------------------------------------------
+
+/**
+ * Welche Farben hat ein Platz nachweislich nicht mehr? Wer eine angespielte (effektive) Farbe nicht
+ * bedient, hat keine Karte dieser Farbe mehr – Bedienpflicht vorausgesetzt (Skat, Schafkopf, Doppelkopf,
+ * Binokel). `tricks` sind die abgeschlossenen Stiche, `current` der laufende.
+ */
+export function knownVoids(tricks: readonly { cards: readonly PlayedCard[] }[], current: readonly PlayedCard[], contract: TrickContract): Map<number, Set<EffectiveSuit>> {
+  const voids = new Map<number, Set<EffectiveSuit>>();
+  for (const cards of [...tricks.map((t) => t.cards), current]) {
+    const lead = cards[0];
+    if (!lead) continue;
+    const suit = contract.effectiveSuit(lead.card);
+    for (const played of cards.slice(1)) {
+      if (contract.effectiveSuit(played.card) === suit) continue;
+      if (!voids.has(played.player)) voids.set(played.player, new Set());
+      voids.get(played.player)!.add(suit);
+    }
+  }
+  return voids;
+}
+
+/**
+ * Verteilt die unbekannten Karten (`pool`, bereits gemischt) auf die Plätze: `needs` sagt, wie viele
+ * Karten jeder Platz noch bekommt (Schlüssel `-1` o. ä. dürfen auch Skat oder Dabb sein), `voids`
+ * welche Farben ein Platz nicht haben kann. Gelingt das nicht in einigen Versuchen, wird ohne
+ * Rücksicht auf die Farben verteilt – so bleibt die Stichprobe immer gültig.
+ */
+export function dealUnknown(
+  pool: readonly CardId[],
+  needs: ReadonlyMap<number, number>,
+  voids: ReadonlyMap<number, ReadonlySet<EffectiveSuit>>,
+  contract: TrickContract,
+  rng: { shuffle<T>(items: readonly T[]): T[] },
+): Map<number, CardId[]> {
+  const seats = [...needs.keys()].filter((s) => (needs.get(s) ?? 0) > 0).sort((a, b) => (voids.get(b)?.size ?? 0) - (voids.get(a)?.size ?? 0));
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const rest = rng.shuffle(pool);
+    const dealt = new Map<number, CardId[]>();
+    let ok = true;
+    for (const seat of seats) {
+      const need = needs.get(seat)!;
+      const banned = voids.get(seat);
+      const mine: CardId[] = [];
+      const keep: CardId[] = [];
+      for (const card of rest) {
+        if (mine.length < need && !(banned && banned.has(contract.effectiveSuit(card)))) mine.push(card);
+        else keep.push(card);
+      }
+      if (mine.length < need) {
+        ok = false;
+        break;
+      }
+      dealt.set(seat, mine);
+      rest.length = 0;
+      rest.push(...keep);
+    }
+    if (ok) return dealt;
+  }
+  const rest = rng.shuffle(pool);
+  const dealt = new Map<number, CardId[]>();
+  for (const seat of seats) dealt.set(seat, rest.splice(0, needs.get(seat)!));
+  return dealt;
+}
