@@ -9,6 +9,8 @@ export type SeatKind = 'human' | 'bot';
 export interface SeatConfig {
   kind: SeatKind;
   name: string;
+  /** Ausgewähltes Emoji des Spielers (Avatar), erscheint beim Spielernamen. */
+  avatar?: string;
   /** Nur bei Bots: Stärke und welcher Bot (sonst der Standard-Bot des Spiels). */
   level?: BotLevel;
   botId?: string;
@@ -267,8 +269,15 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   /** Ein Mensch macht einen Zug. Gibt false zurück, wenn der Zug gerade nicht erlaubt ist. */
   submit(seat: SeatId, move: M): boolean {
     if (this._disposed || this._paused || this.result) return false;
-    if (!this.isHuman(seat) || !this.currentSeats().includes(seat)) return false;
-    if (!isLegalMove(this.module, this._state, seat, move)) return false;
+    if (!this.isHuman(seat)) return false;
+    if (!this.currentSeats().includes(seat)) {
+      // Außer-der-Reihe-Reaktionszüge: nur die Selbstaufrufe „Mau!“/„Eins!“ (callMau/callUno).
+      const moveType = (move as { type?: unknown })?.type;
+      if (moveType !== 'callMau' && moveType !== 'callUno') return false;
+      if (!(this.module.isLegal?.(this._state, seat, move) ?? false)) return false;
+    } else {
+      if (!isLegalMove(this.module, this._state, seat, move)) return false;
+    }
     this.away.delete(seat);
     this.consecutiveTimeouts[seat] = 0;
     this.dropBot(seat);
@@ -422,7 +431,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     return this.module.seatChangeMove(this._state, seat, true) !== null;
   }
 
-  joinSeat(seat: SeatId, kind: SeatKind = 'human', name?: string, level: BotLevel = 'medium'): boolean {
+  joinSeat(seat: SeatId, kind: SeatKind = 'human', name?: string, level: BotLevel = 'medium', avatar?: string): boolean {
     if (!this.canJoinSeat(seat)) return false;
     const move = this.module.seatChangeMove!(this._state, seat, true);
     if (!move) return false;
@@ -430,7 +439,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
       this.config.initialSeats ??= this.config.seats.length;
     }
     const defaultName = kind === 'bot' ? `Bot ${seat + 1}` : `Spieler ${seat + 1}`;
-    this.config.seats[seat] = kind === 'bot' ? { kind: 'bot', name: name ?? defaultName, level } : { kind: 'human', name: name ?? defaultName };
+    this.config.seats[seat] = kind === 'bot' ? { kind: 'bot', name: name ?? defaultName, level, avatar } : { kind: 'human', name: name ?? defaultName, avatar };
     this.away.delete(seat);
     this.consecutiveTimeouts[seat] = 0;
     this.clocks.resetSeat(seat);

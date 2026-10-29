@@ -96,7 +96,7 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
     this.control = timePresetsOf(deps.module, first.options)[first.time];
     this.config = {
       gameId: first.gameId,
-      seats: first.seats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name })),
+      seats: first.seats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name, avatar: seat.avatar })),
       options: first.options,
       time: this.control,
     };
@@ -105,7 +105,7 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
   /** Neuer Stand vom Server. */
   update(message: GameMessage): void {
     this.message = message;
-    this.config.seats = message.seats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name }));
+    this.config.seats = message.seats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name, avatar: seat.avatar }));
     this.receivedAt = this.now();
     this.waiting = false;
     this._version++;
@@ -220,10 +220,14 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
 
   /** Darf der eigene Platz diesen Zug machen? Spiele mit `isLegal` prüfen ihn an der eigenen Sicht. */
   private allows(seat: SeatId, move: M): boolean {
-    const moves = this.legalMoves(seat);
-    if (moves.length === 0) return false;
+    if (seat !== this.message.yourSeat) return false;
     const { module } = this.deps;
-    return module.isLegal ? module.isLegal(this.message.view, seat, move) : moves.some((m) => sameValue(m, move));
+    const moves = this.legalMoves(seat);
+    const moveType = (move as { type?: unknown })?.type;
+    const isSelfCall = moveType === 'callMau' || moveType === 'callUno';
+    if (moves.length === 0 && !isSelfCall) return false;
+    if (module.isLegal) return module.isLegal(this.message.view, seat, move);
+    return moves.some((m) => sameValue(m, move));
   }
 
   canResign(seat: SeatId): boolean {

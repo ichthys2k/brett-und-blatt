@@ -125,4 +125,7 @@ export const unoBot: BotDefinition<UnoState, UnoMove> = {
     scored.sort((a, b) => b.score - a.score);
     return scored[0]?.move ?? playMoves[0];
   },
+  delayMs(ctx) {
+    return ctx.move.type === 'catchUno' ? 2000 : 0;
+  },
 };

@@ -105,6 +105,15 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
     [moves],
   );
 
+  const canCallMau = useMemo(
+    () =>
+      state.options.mauCall === 'on' &&
+      actor !== null &&
+      myHand.length === 1 &&
+      !state.mauProtection[actor],
+    [state.options.mauCall, actor, myHand.length, state.mauProtection],
+  );
+
   const canDraw = moves.some((m) => m.type === 'draw');
   const canPass = moves.some((m) => m.type === 'pass');
   const topDiscard = state.discard[state.discard.length - 1];
@@ -477,6 +486,16 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
               onClick={() => setCallMauToggled((value) => !value)}
             >
               {callMauToggled ? '✓ Mau! gerufen' : 'Mau! rufen'}
+            </button>
+          )}
+
+          {canCallMau && (
+            <button
+              type="button"
+              className="mau-call mau-call-active"
+              onClick={() => onMove({ type: 'callMau' })}
+            >
+              📣 Mau! rufen
             </button>
           )}
         </div>

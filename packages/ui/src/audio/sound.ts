@@ -134,28 +134,32 @@ export class SoundPlayer {
    * @param file Relativer Pfad unter baseUrl, z. B. „tiere/drache/01_Der Drache.mp3“.
    * @param volume Anteil an der eingestellten Lautstärke.
    * @param delay Verzögerung in Sekunden.
+   * @returns Länge des abgespielten Ausschnitts in Sekunden, 0 wenn nichts kam.
    */
-  playFile(file: string, { volume = 1, delay = 0, gain = 1, rate = 1 }: { volume?: number; delay?: number; gain?: number; rate?: number } = {}): void {
-    if (this.volume() === 0) return;
+  async playFile(
+    file: string,
+    { volume = 1, delay = 0, gain = 1, rate = 1 }: { volume?: number; delay?: number; gain?: number; rate?: number } = {},
+  ): Promise<number> {
+    if (this.volume() === 0) return 0;
     const context = this.ensureContext();
-    if (!context || context.state !== 'running') return;
-    void this.buffer(file).then((buffer) => {
-      if (!buffer || !this.output) return;
-      const source = context.createBufferSource();
-      source.buffer = buffer;
-      source.playbackRate.value = rate;
-      const gainNode = context.createGain();
-      source.connect(gainNode).connect(this.output);
-      const length = buffer.duration;
-      const at = context.currentTime + delay;
-      const end = at + length / source.playbackRate.value;
-      const level = gain * volume;
-      gainNode.gain.setValueAtTime(level, at);
-      gainNode.gain.setValueAtTime(level, Math.max(at, end - FADE_S));
-      gainNode.gain.linearRampToValueAtTime(0, end);
-      source.start(at, 0, length);
-      source.stop(end + 0.05);
-    });
+    if (!context || context.state !== 'running') return 0;
+    const buffer = await this.buffer(file);
+    if (!buffer || !this.output) return 0;
+    const source = context.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = rate;
+    const gainNode = context.createGain();
+    source.connect(gainNode).connect(this.output);
+    const length = buffer.duration;
+    const at = context.currentTime + delay;
+    const end = at + length / source.playbackRate.value;
+    const level = gain * volume;
+    gainNode.gain.setValueAtTime(level, at);
+    gainNode.gain.setValueAtTime(level, Math.max(at, end - FADE_S));
+    gainNode.gain.linearRampToValueAtTime(0, end);
+    source.start(at, 0, length);
+    source.stop(end + 0.05);
+    return length / source.playbackRate.value;
   }
 
   private volume(): number {

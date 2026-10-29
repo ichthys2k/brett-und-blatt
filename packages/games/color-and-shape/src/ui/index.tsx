@@ -41,6 +41,8 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
   const seat = typeof viewer === 'number' ? viewer : null;
   const hand = (seat !== null ? view.hands[seat] : [])?.filter((t): t is TileId => t !== null) ?? [];
   const myTurn = legalMoves.length > 0;
+  /** Planen im Vorfeld ist erlaubt, sobald es der eigene Platz ist und das Spiel läuft – auch wenn man noch nicht am Zug ist. */
+  const canPlan = seat !== null && !view.over;
   const [pending, setPending] = useState<Placed[]>([]);
   const [selected, setSelected] = useState<TileId | null>(null);
   const [swapMode, setSwapMode] = useState(false);
@@ -48,14 +50,32 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
   const [lastBoard, setLastBoard] = useState(view.board);
   const [lastTurn, setLastTurn] = useState(view.turn);
   const [lastViewer, setLastViewer] = useState(viewer);
-  if (lastBoard !== view.board || lastTurn !== view.turn || lastViewer !== viewer) {
+  if (lastViewer !== viewer) {
+    setLastViewer(viewer);
     setLastBoard(view.board);
     setLastTurn(view.turn);
-    setLastViewer(viewer);
     setPending([]);
     setSelected(null);
     setSwapMode(false);
     setSwapTiles([]);
+  } else if (lastBoard !== view.board || lastTurn !== view.turn) {
+    setLastBoard(view.board);
+    setLastTurn(view.turn);
+    // Beim Zugwechsel (oder wenn der Gegner Steine gelegt hat) überlebt ein gültiger Entwurf; ein ungültiger wird verworfen.
+    if (pending.length > 0) {
+      const check = checkPlacement(view.board, hand, pending, boardMap(view.board));
+      if (!check.ok) {
+        setPending([]);
+        setSelected(null);
+      }
+    }
+    if (swapMode) {
+      const validSwap = swapTiles.length > 0 && swapTiles.every((t) => hand.includes(t));
+      if (!validSwap) {
+        setSwapMode(false);
+        setSwapTiles([]);
+      }
+    }
   }
 
   const map = useMemo(() => boardMap(view.board), [view.board]);
@@ -112,7 +132,7 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
   const pendingAt = (x: number, y: number) => pending.find((p) => p.x === x && p.y === y);
   const check = pending.length > 0 ? checkPlacement(view.board, hand, pending, map) : null;
   const canPlaceAt = (x: number, y: number) => {
-    if (!myTurn || activeTile === null || swapMode || map.has(`${x},${y}`) || pendingAt(x, y)) return false;
+    if (!canPlan || activeTile === null || swapMode || map.has(`${x},${y}`) || pendingAt(x, y)) return false;
     return checkPlacement(view.board, hand, [...pending, { x, y, tile: activeTile }], map).ok;
   };
   const targets = new Set<string>();
@@ -130,7 +150,7 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
   };
 
   const tapRack = (tile: TileId) => {
-    if (!myTurn) return;
+    if (!canPlan) return;
     if (swapMode) {
       setSwapTiles(swapTiles.includes(tile) ? swapTiles.filter((t) => t !== tile) : [...swapTiles, tile]);
       return;
@@ -199,8 +219,11 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
         <div className="ff-rack" role="group" aria-label="Dein Bänkchen">
           {rack.map((tile) => {
             const isDragged = (dragState.isDragging || dragState.snapping) && dragState.item === tile;
-            const dragTransform = isDragged ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)` : undefined;
-            const dragBind = myTurn && !swapMode ? bindDrag(tile) : undefined;
+            // Die CSS-Vergrößerung (scale 1.15) wird als äußere Transformation angewandt und würde
+            // die Verschiebung mit skalieren – daher den Versatz durch den Faktor teilen, damit der
+            // Stein exakt dem Mauszeiger folgt.
+            const dragTransform = isDragged ? `translate3d(${(dragState.delta.x / 1.15).toFixed(1)}px, ${(dragState.delta.y / 1.15).toFixed(1)}px, 0)` : undefined;
+            const dragBind = canPlan && !swapMode ? bindDrag(tile) : undefined;
             return (
               <button
                 key={tile}
@@ -208,7 +231,7 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
                 className={`ff-rack-tile ${isDragged ? 'bub-dragging' : ''} ${dragState.snapping && isDragged ? 'bub-snapping' : ''}`}
                 data-selected={selected === tile || swapTiles.includes(tile) || undefined}
                 data-hint={hintRack.has(tile) || undefined}
-                disabled={!myTurn}
+                disabled={!canPlan}
                 aria-pressed={selected === tile || swapTiles.includes(tile)}
                 aria-label={tileName(tile)}
                 onClick={() => tapRack(tile)}
@@ -217,7 +240,7 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
                   transform: dragTransform,
                   position: isDragged ? 'relative' : undefined,
                   zIndex: isDragged ? 1000 : undefined,
-                  touchAction: myTurn && !swapMode ? 'none' : undefined,
+                  touchAction: canPlan && !swapMode ? 'none' : undefined,
                 }}
               >
                 <Tile tile={tile} />
@@ -229,7 +252,7 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
 
       <div className="ff-bar" aria-live="polite">
         <span className="ff-info">
-          {swapMode ? 'Steine zum Tauschen wählen' : check ? (check.ok ? `${check.points} Punkte` : check.reason) : myTurn ? (selected !== null ? 'Feld antippen' : 'Stein wählen') : ''}
+          {swapMode ? 'Steine zum Tauschen wählen' : check ? (check.ok ? `${check.points} Punkte` : check.reason) : canPlan ? (selected !== null ? 'Feld antippen' : (myTurn ? 'Stein wählen' : (pending.length > 0 ? '⏳ Vorgemerkt' : 'Stein wählen'))) : ''}
           <small>Beutel: {view.bag.length}</small>
         </span>
         {myTurn && !swapMode && pending.length > 0 && (
@@ -237,12 +260,17 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
             <button type="button" className="ff-button" onClick={() => setPending([])}>
               Zurück
             </button>
-            <button type="button" className="ff-button ff-primary" disabled={!check?.ok} onClick={() => onMove({ type: 'place', tiles: pending })}>
+            <button type="button" className="ff-button ff-primary" disabled={!check?.ok} onClick={() => { onMove({ type: 'place', tiles: pending }); setPending([]); }}>
               Legen
             </button>
           </>
         )}
-        {myTurn && pending.length === 0 && canSwap && !swapMode && (
+        {!myTurn && canPlan && pending.length > 0 && (
+          <button type="button" className="ff-button" onClick={() => setPending([])}>
+            Entwurf verwerfen
+          </button>
+        )}
+        {canPlan && pending.length === 0 && canSwap && !swapMode && (
           <button type="button" className={`ff-button ${hint?.type === 'swap' ? 'ff-primary' : ''}`} onClick={() => (setSwapMode(true), setSelected(null))}>
             Tauschen
           </button>
@@ -252,7 +280,7 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
             <button type="button" className="ff-button" onClick={() => (setSwapMode(false), setSwapTiles([]))}>
               Abbrechen
             </button>
-            <button type="button" className="ff-button ff-primary" disabled={!swapAllowed} onClick={() => onMove({ type: 'swap', tiles: swapTiles })}>
+            <button type="button" className="ff-button ff-primary" disabled={!swapAllowed} onClick={() => { onMove({ type: 'swap', tiles: swapTiles }); setSwapTiles([]); setSwapMode(false); }}>
               {swapTiles.length || ''} tauschen
             </button>
           </>

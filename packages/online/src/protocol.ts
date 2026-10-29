@@ -51,6 +51,7 @@ export type RoomPhase = 'lobby' | 'playing' | 'finished';
 export interface PublicSeat {
   kind: 'human' | 'bot';
   name: string;
+  avatar?: string;
   level?: BotLevel;
   memberId: string | null;
 }
@@ -63,108 +64,12 @@ export type Phrase = (typeof PHRASES)[number];
 export const REACTIONS = ['👍', '👏', '😂', '😮', '🤔', '😏', '🤨', '😱', '🎉', '❤️'] as const;
 export type Reaction = (typeof REACTIONS)[number];
 
-/** Erlaubte Avatare (Emoji) – 200 sorgfältig kuratierte Emojis in 9 thematischen Kategorien. */
-export const AVATARS = [
-  // 🐾 Säugetiere & Landtiere (38)
-  '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐵', '🐶', '🐱', '🐭', '🐹', '🐰', '🐺', '🐗', '🐴', '🦓', '🦌', '🐮',
-  '🐷', '🐑', '🐐', '🐪', '🦒', '🐘', '🦏', '🦛', '🦘', '🦥', '🦦', '🦨', '🦡', '🦔', '🦇', '🐿️', '🦫', '🦙',
-  '🐆', '🦬',
-
-  // 🦅 Vögel & Gefieder (14)
-  '🦉', '🐧', '🦅', '🦆', '🦢', '🦜', '🦩', '🦚', '🦃', '🐓', '🐣', '🐦', '🕊️', '🦤',
-
-  // 🐙 Meeres- & Amphibientiere (17)
-  '🐙', '🐬', '🐢', '🐸', '🐳', '🐋', '🦈', '🦭', '🐊', '🐠', '🐟', '🐡', '🦞', '🦀', '🦐', '🦑', '🪼',
-
-  // 🐝 Insekten & Krabbeltiere (10)
-  '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦗', '🕷️', '🦂', '🪲',
-
-  // 🧙 Fantasie, Magie & Urzeit (21)
-  '🦄', '🦖', '🦕', '🐉', '🐲', '👾', '🤖', '👻', '👽', '🧟', '🧛', '🧙', '🧝', '🧞', '🧚', '🧜', '🦸', '🦹', '🥷', '🗿', '🔮',
-
-  // 😎 Gesichter, Rollen & Charaktere (21)
-  '😎', '🤠', '🥳', '🧐', '🤔', '🤓', '🤩', '😇', '🤡', '👑', '🧢', '🎩', '🕵️', '🧑‍🚀', '🧑‍🌾', '🧑‍🍳', '🧑‍🎨', '🧑‍🔬', '🧑‍🎤', '🧑‍🚒', '🤹',
-
-  // 🍕 Essen & Leckereien (27)
-  '🍎', '🍓', '🍒', '🥑', '🍌', '🍉', '🍇', '🍍', '🍑', '🍋', '🥕', '🌽', '🍄', '🧀', '🥐', '🍕', '🍔', '🌮', '🍣', '🍦', '🍩', '🍪', '🧁', '🥨', '🍿', '🥞', '🍫',
-
-  // 🎲 Spiele, Sport & Musik (27)
-  '🎲', '🎯', '🎮', '🕹️', '♟️', '🎳', '🏆', '🪁', '⚽', '🏀', '🎾', '🏐', '🏈', '🏓', '🏸', '🥊', '🛹', '🛼', '🎿', '🧗', '🏄', '🚴', '🎨', '🎸', '🥁', '🎷', '🎺',
-
-  // 🚀 Abenteuer, Natur & Kosmos (25)
-  '⭐', '🌟', '🌙', '☀️', '🌈', '⚡', '❄️', '🔥', '🌊', '🪐', '🚀', '🛸', '⛵', '⚓', '🏕️', '🏝️', '🌲', '🌵', '🌻', '🍀', '🍁', '💎', '🧭', '🎈', '🪄',
-] as const;
-
-export type Avatar = (typeof AVATARS)[number];
-
-export type AvatarCategoryId =
-  | 'mammals'
-  | 'birds'
-  | 'sea'
-  | 'bugs'
-  | 'fantasy'
-  | 'faces'
-  | 'food'
-  | 'games'
-  | 'nature';
-
-export interface AvatarCategory {
-  id: AvatarCategoryId;
-  icon: string;
-  emojis: readonly Avatar[];
-}
-
-export const AVATAR_CATEGORIES: readonly AvatarCategory[] = [
-  {
-    id: 'mammals',
-    icon: '🐾',
-    emojis: [
-      '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐵', '🐶', '🐱', '🐭', '🐹', '🐰', '🐺', '🐗', '🐴', '🦓', '🦌', '🐮',
-      '🐷', '🐑', '🐐', '🐪', '🦒', '🐘', '🦏', '🦛', '🦘', '🦥', '🦦', '🦨', '🦡', '🦔', '🦇', '🐿️', '🦫', '🦙',
-      '🐆', '🦬',
-    ],
-  },
-  {
-    id: 'birds',
-    icon: '🦅',
-    emojis: ['🦉', '🐧', '🦅', '🦆', '🦢', '🦜', '🦩', '🦚', '🦃', '🐓', '🐣', '🐦', '🕊️', '🦤'],
-  },
-  {
-    id: 'sea',
-    icon: '🐙',
-    emojis: ['🐙', '🐬', '🐢', '🐸', '🐳', '🐋', '🦈', '🦭', '🐊', '🐠', '🐟', '🐡', '🦞', '🦀', '🦐', '🦑', '🪼'],
-  },
-  {
-    id: 'bugs',
-    icon: '🐝',
-    emojis: ['🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦗', '🕷️', '🦂', '🪲'],
-  },
-  {
-    id: 'fantasy',
-    icon: '🧙',
-    emojis: ['🦄', '🦖', '🦕', '🐉', '🐲', '👾', '🤖', '👻', '👽', '🧟', '🧛', '🧙', '🧝', '🧞', '🧚', '🧜', '🦸', '🦹', '🥷', '🗿', '🔮'],
-  },
-  {
-    id: 'faces',
-    icon: '😎',
-    emojis: ['😎', '🤠', '🥳', '🧐', '🤔', '🤓', '🤩', '😇', '🤡', '👑', '🧢', '🎩', '🕵️', '🧑‍🚀', '🧑‍🌾', '🧑‍🍳', '🧑‍🎨', '🧑‍🔬', '🧑‍🎤', '🧑‍🚒', '🤹'],
-  },
-  {
-    id: 'food',
-    icon: '🍕',
-    emojis: ['🍎', '🍓', '🍒', '🥑', '🍌', '🍉', '🍇', '🍍', '🍑', '🍋', '🥕', '🌽', '🍄', '🧀', '🥐', '🍕', '🍔', '🌮', '🍣', '🍦', '🍩', '🍪', '🧁', '🥨', '🍿', '🥞', '🍫'],
-  },
-  {
-    id: 'games',
-    icon: '🎲',
-    emojis: ['🎲', '🎯', '🎮', '🕹️', '♟️', '🎳', '🏆', '🪁', '⚽', '🏀', '🎾', '🏐', '🏈', '🏓', '🏸', '🥊', '🛹', '🛼', '🎿', '🧗', '🏄', '🚴', '🎨', '🎸', '🥁', '🎷', '🎺'],
-  },
-  {
-    id: 'nature',
-    icon: '🚀',
-    emojis: ['⭐', '🌟', '🌙', '☀️', '🌈', '⚡', '❄️', '🔥', '🌊', '🪐', '🚀', '🛸', '⛵', '⚓', '🏕️', '🏝️', '🌲', '🌵', '🌻', '🍀', '🍁', '💎', '🧭', '🎈', '🪄'],
-  },
-];
+/*
+ * Avatare und ihre Klänge stehen in avatars.ts; hier nur der Weg nach außen,
+ * damit Importe aus dem Online-Paket unverändert bleiben.
+ */
+export { AVATARS, AVATAR_SOUNDS } from './avatars';
+export type { Avatar, AvatarSound } from './avatars';
 
 // ---------------------------------------------------------------------------
 // Browser → Server

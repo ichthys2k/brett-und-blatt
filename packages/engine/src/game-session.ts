@@ -48,7 +48,7 @@ export interface GameSession<M = unknown, V = unknown> {
   /** Kann dieser Platz im laufenden Betrieb eingenommen werden (Spiele mit `joinMidGame`)? */
   canJoinSeat?(seat: SeatId): boolean;
   /** Nimmt einen freien Platz für die nächste Runde ein. */
-  joinSeat?(seat: SeatId, kind?: SeatKind, name?: string, level?: BotLevel): boolean;
+  joinSeat?(seat: SeatId, kind?: SeatKind, name?: string, level?: BotLevel, avatar?: string): boolean;
   /** Kann dieser Platz den Tisch im laufenden Betrieb verlassen? */
   canLeaveSeat?(seat: SeatId): boolean;
   /** Verlässt den Platz im laufenden Betrieb (laufende Hand wird gepasst, Platz ab nächster Runde frei). */

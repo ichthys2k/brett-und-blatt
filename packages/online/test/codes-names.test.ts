@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AVATARS, AVATAR_CATEGORIES, MAX_NAME_LENGTH, ROOM_EMOJIS, cleanAvatar, cleanName, parseRoomCode, randomRoomCode } from '../src';
+import { AVATARS, AVATAR_SOUNDS, MAX_NAME_LENGTH, ROOM_EMOJIS, cleanAvatar, cleanName, parseRoomCode, randomRoomCode } from '../src';
 
 describe('Raumcodes', () => {
   it('16 verschiedene Emojis aus je einem Zeichen', () => {
@@ -44,22 +44,29 @@ describe('Spitznamen', () => {
     for (const name of ['Heiland', 'Benedikt', 'Mia-Sophie', 'Jürgen', 'Zoë', 'Team 7c']) expect(cleanName(name)).toBe(name);
   });
 
-  it('enthält genau 200 eindeutige Avatare und 9 Kategorien', () => {
-    expect(AVATARS.length).toBe(200);
-    expect(new Set(AVATARS).size).toBe(200);
+  it('enthält genau 76 eindeutige Avatare mit Ton', () => {
+    expect(AVATARS.length).toBe(76);
+    expect(new Set(AVATARS).size).toBe(76);
     expect(AVATARS[0]).toBe('🦊');
+  });
 
-    const categorized = AVATAR_CATEGORIES.flatMap((c) => c.emojis);
-    expect(categorized.length).toBe(200);
-    expect(new Set(categorized).size).toBe(200);
+  it('gibt jedem Avatar genau einen Klang mit eindeutigem Dateinamen', () => {
+    const slugs = new Set<string>();
     for (const emoji of AVATARS) {
-      expect(categorized).toContain(emoji);
+      const sound = AVATAR_SOUNDS[emoji];
+      expect(sound).toBeDefined();
+      expect(sound.label.length).toBeGreaterThan(0);
+      expect(sound.slug).toMatch(/^[a-z0-9]+(-[0-9]+)?$/);
+      expect(slugs.has(sound.slug)).toBe(false);
+      slugs.add(sound.slug);
     }
+    // Nur die Ente hat keine gesprochene Ansage, alle anderen schon.
+    expect(Object.values(AVATAR_SOUNDS).filter((sound) => sound.voice === false).length).toBe(1);
   });
 
   it('unbekannte Avatare werden durch den ersten ersetzt', () => {
     expect(cleanAvatar('🐼')).toBe('🐼');
-    expect(cleanAvatar('🦖')).toBe('🦖');
+    expect(cleanAvatar('🦄')).toBe('🦄');
     expect(cleanAvatar('💩')).toBe(AVATARS[0]);
   });
 });

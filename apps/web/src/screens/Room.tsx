@@ -1,9 +1,10 @@
 import { BOT_LEVELS, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
 import { MAX_SEATS, parseRoomCode, type LobbySeat, type RoomMessage } from '@brett-und-blatt/online';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { ProfileForm, QrCode, ReactionBar, SignalToasts } from '../components/OnlineParts';
 import { t } from '../i18n';
+import { announceAvatar } from '../lib/avatar-sounds';
 import { describeTime, levelLabel } from '../lib/format';
 import { requestNotificationPermission } from '../lib/notifications';
 import { useRoomConnection, type RoomConnection, type RoomState } from '../lib/online';
@@ -115,6 +116,10 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             onRestart: (rotate: boolean) => connection.send({ type: 'start', rotate }),
             onLobby: () => connection.send({ type: 'toLobby' }),
             onLeave: leave,
+            avatars: state.room?.lobby.seats.map((seat) => {
+              if (seat.kind !== 'human' || !seat.memberId) return null;
+              return state.room?.members.find((m) => m.id === seat.memberId)?.avatar ?? null;
+            }),
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
             extra: <ReactionBar onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} />,
           }}
@@ -154,6 +159,20 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
   const game = useLoadedGame(lobby.gameId);
   const [showQr, setShowQr] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Neue Mitglieder kündigen sich mit ihrem Tier an – nicht beim Öffnen der Lobby und
+  // nicht beim Wiederverbinden, denn dabei bleibt die Mitglieds-ID gleich.
+  const announced = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!announced.current) {
+      announced.current = new Set(room.members.map((member) => member.id));
+      return;
+    }
+    for (const member of room.members) {
+      if (announced.current.has(member.id)) continue;
+      announced.current.add(member.id);
+      announceAvatar(member.avatar);
+    }
+  }, [room.members]);
   const link = `${window.location.origin}${window.location.pathname}${paths.room(room.code)}`;
   const memberName = (id: string | null) => room.members.find((m) => m.id === id);
   const send = connection.send.bind(connection);
