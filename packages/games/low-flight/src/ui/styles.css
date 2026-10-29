@@ -1,0 +1,433 @@
+/* Tiefflug – Himmel, Raster und Zahlenkarten */
+
+.lf-table {
+  --lf-card: clamp(40px, min(14cqi, 9cqh), 84px);
+  --lf-small: clamp(18px, min(5.5cqi, 4cqh), 34px);
+  position: relative;
+  container-type: size;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  min-height: 24rem;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(0.5rem, 2vw, 1rem);
+  overflow: hidden;
+  color: #0f172a;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 1.5rem;
+  background: linear-gradient(180deg, #bae6fd 0%, #e0f2fe 55%, #f0f9ff 100%);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.1);
+}
+
+.lf-junior {
+  background: linear-gradient(180deg, #fde68a 0%, #fef3c7 55%, #fffbeb 100%);
+}
+
+/* Karten */
+
+.lf-card {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--lf-card);
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  border: 2px solid rgba(15, 23, 42, 0.25);
+  border-radius: 12% / 9%;
+  background: #fff;
+  color: #0f172a;
+  font-weight: 900;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.2);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.lf-num {
+  font-size: calc(var(--lf-card) * 0.42);
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.lf-corner {
+  position: absolute;
+  top: 4%;
+  left: 8%;
+  font-size: calc(var(--lf-card) * 0.18);
+  line-height: 1;
+}
+
+.lf-card-hidden {
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.12) 0 6px, transparent 6px 12px),
+    linear-gradient(160deg, #0369a1, #1e3a8a);
+  border-color: #1e3a8a;
+}
+
+.lf-back {
+  font-size: calc(var(--lf-card) * 0.32);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
+}
+
+.lf-tone-neg {
+  background: #1e3a8a;
+  color: #fff;
+}
+
+.lf-tone-neg .lf-num {
+  text-shadow: none;
+}
+
+.lf-tone-zero {
+  background: #7dd3fc;
+}
+
+.lf-tone-low {
+  background: #4ade80;
+}
+
+.lf-tone-mid {
+  background: #fde047;
+}
+
+.lf-tone-high {
+  background: #f87171;
+}
+
+/* Junior: Obstkarten mit Früchten zum Abzählen */
+
+.lf-fruit-1 {
+  background: #fecdd3;
+}
+
+.lf-fruit-2 {
+  background: #fbcfe8;
+}
+
+.lf-fruit-3 {
+  background: #fef08a;
+}
+
+.lf-fruit-4 {
+  background: #bbf7d0;
+}
+
+.lf-fruit-5 {
+  background: #a7f3d0;
+}
+
+.lf-junior .lf-card:not(.lf-card-hidden) {
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  padding-top: 6%;
+}
+
+.lf-junior .lf-num {
+  font-size: calc(var(--lf-card) * 0.28);
+}
+
+.lf-fruits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  max-width: 90%;
+  font-size: calc(var(--lf-card) * 0.2);
+  line-height: 1.05;
+}
+
+.lf-grid-small .lf-fruits,
+.lf-grid-small .lf-corner {
+  display: none;
+}
+
+.lf-grid-small .lf-card:not(.lf-card-hidden) {
+  align-content: center;
+  padding-top: 0;
+}
+
+/* Zustände */
+
+.lf-tap {
+  cursor: pointer;
+}
+
+.lf-tap:hover {
+  transform: translateY(-3px);
+}
+
+.lf-tap:focus-visible {
+  outline: 3px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+.lf-grid .lf-tap {
+  box-shadow:
+    0 0 0 2px #f59e0b,
+    0 2px 6px rgba(15, 23, 42, 0.25);
+}
+
+.lf-hint {
+  box-shadow:
+    0 0 0 3px #a855f7,
+    0 0 14px rgba(168, 85, 247, 0.6) !important;
+}
+
+.lf-armed {
+  box-shadow:
+    0 0 0 3px #ef4444,
+    0 0 14px rgba(239, 68, 68, 0.5);
+}
+
+.lf-fresh {
+  animation: lf-flip 420ms ease;
+}
+
+@keyframes lf-flip {
+  0% {
+    transform: rotateY(90deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+.lf-drawn {
+  animation: lf-pop 260ms ease;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.35);
+}
+
+@keyframes lf-pop {
+  from {
+    transform: scale(0.6) translateY(10px);
+    opacity: 0.4;
+  }
+}
+
+/* Raster */
+
+.lf-grid {
+  display: grid;
+  gap: clamp(3px, 1cqi, 8px);
+  justify-items: center;
+}
+
+.lf-grid-small {
+  gap: 2px;
+}
+
+.lf-grid-small .lf-card,
+.lf-grid-small .lf-gone {
+  width: var(--lf-small);
+  border-width: 1px;
+}
+
+.lf-grid-small .lf-num {
+  font-size: calc(var(--lf-small) * 0.5);
+}
+
+.lf-grid-small .lf-back {
+  font-size: calc(var(--lf-small) * 0.4);
+}
+
+.lf-gone {
+  width: var(--lf-card);
+  aspect-ratio: 5 / 7;
+  border: 2px dashed rgba(15, 23, 42, 0.15);
+  border-radius: 12% / 9%;
+}
+
+/* Mitspieler */
+
+.lf-others {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.lf-other,
+.lf-mine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.55);
+  border: 2px solid transparent;
+}
+
+.lf-active {
+  border-color: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+}
+
+.lf-other-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.lf-other-name {
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 800;
+}
+
+.lf-sum {
+  font-variant-numeric: tabular-nums;
+  color: #334155;
+}
+
+/* Mitte */
+
+.lf-center {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.6rem, 4cqi, 2rem);
+}
+
+.lf-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  color: #334155;
+}
+
+.lf-slot {
+  width: var(--lf-card);
+  aspect-ratio: 5 / 7;
+  border: 2px dashed rgba(15, 23, 42, 0.2);
+  border-radius: 12% / 9%;
+}
+
+.lf-status {
+  flex: none;
+  min-height: 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.lf-mine {
+  flex: none;
+  align-self: center;
+}
+
+.lf-button {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid rgba(15, 23, 42, 0.3);
+  border-radius: 9999px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.lf-button-on {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+
+.lf-button-main {
+  padding: 0.45rem 1.1rem;
+  background: #0369a1;
+  border-color: #0369a1;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+/* Rundenende */
+
+.lf-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(2px);
+}
+
+.lf-overlay-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  background: #f8fafc;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.3);
+}
+
+.lf-overlay-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.lf-scores {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lf-scores th,
+.lf-scores td {
+  padding: 0.25rem 0.6rem;
+  text-align: right;
+}
+
+.lf-scores td:first-child {
+  text-align: left;
+}
+
+.lf-row-me {
+  font-weight: 700;
+  color: #0369a1;
+}
+
+.lf-doubled {
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.lf-total {
+  font-weight: 800;
+}
+
+.lf-note {
+  max-width: 22rem;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lf-card {
+    transition: none;
+  }
+
+  .lf-fresh,
+  .lf-drawn {
+    animation: none;
+  }
+}
