@@ -1,7 +1,8 @@
 {
   "playlists": [
     { "id": "denkraum", "title": "Denkraum", "mood": "ruhig und konzentriert", "games": ["checkers", "chess", "four-player-chess", "mill", "reversi", "go", "factor-grid", "number-wall", "target-number", "gomoku"] },
-    { "id": "kartentisch", "title": "Kartentisch", "mood": "gesellig und leicht", "games": ["black-peter", "pairs", "quartett", "color-sorter", "skat", "schafkopf", "doppelkopf", "drachenspiel", "uno", "mau-mau", "poker", "binokel", "speed", "president"] },
+    { "id": "kartentisch", "title": "Kartentisch", "mood": "gesellig und leicht", "games": ["black-peter", "pairs", "quartett", "skat", "schafkopf", "doppelkopf", "drachenspiel", "uno", "mau-mau", "poker", "binokel", "speed", "president"] },
+    { "id": "narrenhof", "title": "Narrenhof", "mood": "verspielt und höfisch", "games": ["color-sorter"] },
     { "id": "patience", "title": "Patience", "mood": "gemütlich und verträumt", "games": ["solitaire"] },
     { "id": "spielabend", "title": "Spielabend", "mood": "fröhlich und verspielt", "games": ["bible-quiz", "hangman", "word-salad", "maexle", "battleship", "tic-tac-toe", "four-in-a-row", "ultimate-tic-tac-toe", "bingo", "dominoes", "color-and-shape", "ludo", "ligretto", "scrabble", "kniffel"] }
   ],
@@ -25,6 +26,10 @@
     { "id": "volle-fahrt", "title": "Volle Fahrt", "file": "volle-fahrt.mp3", "playlist": "spielabend" },
     { "id": "kunterbunt", "title": "Kunterbunt", "file": "kunterbunt.mp3", "playlist": "spielabend" },
     { "id": "seegang", "title": "Seegang", "file": "seegang.mp3", "playlist": "spielabend" },
-    { "id": "siegertreppchen", "title": "Siegertreppchen", "file": "siegertreppchen.mp3", "playlist": "spielabend" }
+    { "id": "siegertreppchen", "title": "Siegertreppchen", "file": "siegertreppchen.mp3", "playlist": "spielabend" },
+    { "id": "der-narrenhof", "title": "Der Narrenhof", "file": "der-narrenhof.mp3", "playlist": "narrenhof" },
+    { "id": "morgenaudienz", "title": "Morgenaudienz", "file": "morgenaudienz.mp3", "playlist": "narrenhof" },
+    { "id": "festmahl-im-rittersaal", "title": "Festmahl im Rittersaal", "file": "festmahl-im-rittersaal.mp3", "playlist": "narrenhof" },
+    { "id": "vor-dem-thron", "title": "Vor dem Thron", "file": "vor-dem-thron.mp3", "playlist": "narrenhof" }
   ]
 }
