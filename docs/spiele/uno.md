@@ -25,7 +25,7 @@ Das bunte Ablegespiel für Familie und Freunde: Passend zur Farbe oder Zahl able
 - **7-0 Tauschregel:** 7 tauscht die Hand mit einem Wunschspieler; 0 lässt alle Hände in Spielrichtung wandern.
 - **Zwischenwerfen (Jump-in):** Wer eine identische Karte (Farbe + Wert) hat, darf sie sofort außerhalb der Reihe ablegen.
 - **Nachziehen:** 1 Karte ziehen oder so lange ziehen, bis eine passende kommt (`untilMatch`).
-- **„Eins!“ rufen:** Wer die vorletzte Karte legt, muss „Eins!“ rufen; vergisst er es und wird ertappt, drohen 2 Strafkarten.
+- **„Eins!“ rufen:** Wer die vorletzte Karte legt, muss „Eins!“ rufen; hat er dafür 3 Sekunden (auch nach dem Legen noch), sonst zieht er automatisch 2 Strafkarten (`catchUno` löst die Oberfläche nach Ablauf aus; `useCallDeadline` in `packages/ui`).
 - **Mathe-Karten (`mathLabels`):** Im Modus „An (Kopfrechnen & Brüche)“ zeigen Zahlenkarten (`0–9`) in der Kartenmitte Rechenterme, Potenzen und Brüche (Klasse 5/6, z. B. `42 : 7`, `2³`, `3/4 · 8`) statt der Ziffer; in den Ecken steht `?`, sodass vor dem Ablegen im Kopf gerechnet werden muss.
 
 ## Umsetzung
@@ -34,5 +34,5 @@ Das bunte Ablegespiel für Familie und Freunde: Passend zur Farbe oder Zahl able
 - Deterministische Spielleitung ohne Seiteneffekte mit `Rng`-Zufallszustand (`rng`, in der Sicht genullt).
 - `sampleHidden`: Füllt unbekannte fremde Hände und den Nachziehstapel für Bot-Simulationen auf.
 - KI-Bot `unoBot` in drei Stufen (`easy`, `medium`, `hard`) mit Taktiken für Farbwahl, Aussetzen, Farbmehrheiten und Anprangern.
-- Oberfläche: Responsive Handkarten-Fächer mit Pointer Drag & Drop (`usePointerDrag`), sichtbare kaskadierende Flug-Animationen beim Kartenlegen und Nachziehen (inkl. Aufprall-Impuls und organischem Ablagewinkel), Richtungsring mit CSS-Animation, pulsierender „Eins!“-Button, Anpranger-Knöpfe bei Mitspielern, Farbwahl-Modal.
+- Oberfläche: Responsive Handkarten-Fächer mit Pointer Drag & Drop (`usePointerDrag`), sichtbare kaskadierende Flug-Animationen beim Kartenlegen und Nachziehen (inkl. Aufprall-Impuls und organischem Ablagewinkel), Richtungsring mit CSS-Animation, pulsierender „Eins!“-Button, Farbwahl-Modal.
 - Registriert auf dem Cloudflare-Spieleserver (`apps/server/src/games.ts` und `package.json`).

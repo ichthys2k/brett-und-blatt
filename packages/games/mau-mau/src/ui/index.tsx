@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cardRank, type CardId, type Suit } from '@brett-und-blatt/engine';
 import {
+  useCallDeadline,
   PlayingCard,
   SuitShape,
   usePointerDrag,
@@ -100,10 +101,6 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
   );
 
   const playableCardIds = useMemo(() => new Set(playMoves.map((m) => m.cardId)), [playMoves]);
-  const catchTargets = useMemo(
-    () => new Set(moves.filter((m) => m.type === 'catchMau').map((m) => m.target)),
-    [moves],
-  );
 
   const canCallMau = useMemo(
     () =>
@@ -113,6 +110,21 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
       !state.mauProtection[actor],
     [state.options.mauCall, actor, myHand.length, state.mauProtection],
   );
+
+  // Wer die vorletzte Karte gelegt hat, muss binnen 3 Sekunden „Mau!“ rufen – sonst 2 Strafkarten.
+  // Zuständig ist der Platz selbst oder, wer gerade am Gerät handelt (Hot-Seat, Bot-Gegner).
+  const dueSeats = useMemo(
+    () =>
+      state.options.mauCall === 'on' && state.winner === null
+        ? state.hands.flatMap((hand, seat) => (hand.length === 1 && !state.mauProtection[seat] ? [seat] : []))
+        : [],
+    [state.options.mauCall, state.winner, state.hands, state.mauProtection],
+  );
+  useCallDeadline(dueSeats, (seat) => {
+    if (viewer === seat || (activeSeat !== null && activeSeat === viewer)) {
+      onMove({ type: 'catchMau', target: seat });
+    }
+  });
 
   const canDraw = moves.some((m) => m.type === 'draw');
   const canPass = moves.some((m) => m.type === 'pass');
@@ -369,7 +381,6 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
           if (index === actor) return null;
           const isTurn = state.turn === index;
           const hasOne = hand.length === 1;
-          const canCatch = isActor && catchTargets.has(index);
 
           return (
             <div
@@ -391,16 +402,6 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
                 <p className="text-[11px] text-white/65">{hand.length} Karten</p>
               </div>
               {hasOne && <span className="mau-badge">Mau!</span>}
-              {canCatch && (
-                <button
-                  type="button"
-                  className="mau-catch"
-                  onClick={() => onMove({ type: 'catchMau', target: index })}
-                  title="Eine Strafkarte für den vergessenen Mau-Ruf"
-                >
-                  Mau vergessen!
-                </button>
-              )}
             </div>
           );
         })}

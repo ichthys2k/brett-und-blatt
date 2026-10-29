@@ -168,7 +168,7 @@ describe('Mau-Mau Regeln', () => {
     expect(next.discard.at(-1)).toBe(cardId('C', 11));
   });
 
-  it('„Mau!“ vergessen kostet eine Strafkarte, rechtzeitig gerufen schützt', () => {
+  it('„Mau!“ vergessen kostet zwei Strafkarten, rechtzeitig gerufen schützt', () => {
     const state = fresh(2);
     setTop(state, 'H5', 'H');
     state.hands[0] = [cardId('H', 6), cardId('C', 5)];
@@ -184,7 +184,9 @@ describe('Mau-Mau Regeln', () => {
 
     const before = silent.hands[0]!.length;
     const { state: caught } = gameModule.applyMove(silent, 1, { type: 'catchMau', target: 0 });
-    expect(caught.hands[0]).toHaveLength(before + 1);
+    expect(caught.hands[0]).toHaveLength(before + 2);
+    // Auch der Spieler selbst kann nach Ablauf der Frist die Strafe auslösen.
+    expect(isLegal(silent, 0, { type: 'catchMau', target: 0 })).toBe(true);
     expect(caught.mauProtection[0]).toBe(true);
 
     const { state: called } = gameModule.applyMove(state, 0, {
