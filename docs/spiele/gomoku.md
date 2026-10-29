@@ -35,6 +35,7 @@
 - **Anfänger:** Bevorzugt Zentrum, sonst zufällig
 - **Fortgeschritten:** Sucht sofortigen Gewinn, blockiert gegnerischen Gewinnzug, sonst heuristische Bewertung nach Reihenlängen
 - **Meister:** Wie Fortgeschritten, aber prüft nur vielversprechende Kandidaten (Nähe zu bestehenden Steinen)
+- **Leistung (29.10.2026):** `findWinLine` prüft nur noch Linien durch den gesetzten Stein statt das ganze Brett; die Bots beschränken sich auf Kandidatenfelder (≤ 2 Steine entfernt) und klonen den Zustand nicht mehr per JSON. Vertragsprüfung 10 s → 2,2 s, Prüfstand grün.
 
 ## UI
 - Holzbrett-Optik (15×15)
@@ -43,8 +44,8 @@
 - Wie bei Tic-Tac-Toe/GridBoard implementiert
 
 ## Tests
-- `corepack pnpm exec vitest run packages/games/gomoku/test/gomoku.test.ts` – 4 Tests, alle grün
-- `gameContractChecks` wird ausgeführt
+- `corepack pnpm exec vitest run packages/games/gomoku/test/gomoku.test.ts` – 9 Tests (3 Gewinnmuster + 6 allgemeine Prüfungen), alle grün
+- `gameContractChecks` wird ausgeführt (`randomGames: 8, botMoveLimit: 60`)
 
 ## Status
-Fertig – spielbar lokal (Solo/Hotseat) und online.
+Fertig – spielbar lokal (Solo/Hotseat) und online. Bot-Prüfung beschleunigt (s. CLAUDE.md).
