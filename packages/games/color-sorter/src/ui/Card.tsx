@@ -1,9 +1,10 @@
 import { cardId, type CardId, type Suit } from '@brett-und-blatt/engine';
 import { PlayingCard, type DeckStyle } from '@brett-und-blatt/ui';
 import { createContext, useContext, type CSSProperties, type MouseEventHandler, type ReactNode } from 'react';
-import { ACE, cardLabel } from '../cards';
+import { ACE, cardLabel, rankChips } from '../cards';
 import { ENHANCEMENTS, FOILS, SEALS } from '../content';
 import type { Card, Color, ViewCard } from '../types';
+import { useTipProps, type ExtraProps, type Tip } from './Hover';
 
 /** Emoji auf dem Kartenrücken (Schmuck aus dem Atelier). */
 export const BackContext = createContext('🃏');
@@ -30,6 +31,14 @@ export function cardDetails(card: Card): string[] {
   return lines;
 }
 
+/** Sprechblase zu einer Karte: Rang und Farbe, Witz, Veredelung, Glanz und Abzeichen. */
+export function cardTip(card: ViewCard): Tip {
+  if (!isOpen(card)) return { emoji: '🂠', title: 'Verdeckte Karte', lines: ['Rang und Farbe sind verborgen.'] };
+  const [title, ...rest] = cardDetails(card);
+  const lines = card.enh === 'granite' ? rest : [`Zählt ${rankChips(card.rank)} Witz`, ...rest];
+  return { title: title!, lines };
+}
+
 interface CardViewProps {
   card: ViewCard;
   selected?: boolean;
@@ -39,10 +48,14 @@ interface CardViewProps {
   onClick?: MouseEventHandler<HTMLButtonElement>;
   style?: CSSProperties;
   className?: string;
+  /** Ziehen und weitere Eigenschaften des Elements. */
+  extra?: ExtraProps;
+  /** Eigene Sprechblase statt der automatischen. */
+  tip?: Tip;
 }
 
 /** Spielkarte: die gemeinsame `PlayingCard`, darüber Schneiderei, Wappen und Glanz als Abzeichen. */
-export function CardView({ card, selected, dim, hint, pop, onClick, style, className = '' }: CardViewProps) {
+export function CardView({ card, selected, dim, hint, pop, onClick, style, className = '', extra, tip }: CardViewProps) {
   const open = isOpen(card);
   const backEmoji = useContext(BackContext);
   const deckStyle = useContext(DeckStyleContext);
@@ -56,6 +69,8 @@ export function CardView({ card, selected, dim, hint, pop, onClick, style, class
     className,
   ].join(' ');
   const label = open ? cardDetails(card).join('. ') : 'verdeckte Karte';
+  const props = useTipProps(tip ?? cardTip(card), extra);
+  const merged = { ...style, ...props.style };
   const body = open ? (
     <>
       {card.enh === 'granite' ? (
@@ -84,12 +99,12 @@ export function CardView({ card, selected, dim, hint, pop, onClick, style, class
     </span>
   );
   return onClick ? (
-    <button type="button" className={classes} style={style} onClick={onClick} aria-label={label} aria-pressed={selected || undefined}>
+    <button type="button" {...props} className={`${classes} ${props.className ?? ''}`} style={merged} onClick={onClick} aria-label={label} aria-pressed={selected || undefined}>
       {body}
       {pop && <span className="cs-pop">{pop}</span>}
     </button>
   ) : (
-    <span className={classes} style={style} role="img" aria-label={label}>
+    <span {...(props as object)} className={`${classes} ${props.className ?? ''}`} style={merged} role="img" aria-label={label}>
       {body}
       {pop && <span className="cs-pop">{pop}</span>}
     </span>
@@ -109,10 +124,13 @@ interface TileProps {
   onClick?: () => void;
   className?: string;
   label?: string;
+  tip?: Tip;
+  extra?: ExtraProps;
 }
 
 /** Kachel für Mods, Zauberkarten, Angebote und Lieferungen. */
-export function Tile({ emoji, title, sub, badge, tone = '', selected, hint, dim, pop, onClick, className = '', label }: TileProps) {
+export function Tile({ emoji, title, sub, badge, tone = '', selected, hint, dim, pop, onClick, className = '', label, tip, extra }: TileProps) {
+  const props = useTipProps(tip, extra);
   const classes = ['cs-tile', tone, selected ? 'cs-selected' : '', hint ? 'cs-hint' : '', dim ? 'cs-dim' : '', className].join(' ');
   const body = (
     <>
@@ -126,11 +144,11 @@ export function Tile({ emoji, title, sub, badge, tone = '', selected, hint, dim,
     </>
   );
   return onClick ? (
-    <button type="button" className={classes} onClick={onClick} aria-pressed={selected || undefined} aria-label={label}>
+    <button type="button" {...props} className={`${classes} ${props.className ?? ''}`} onClick={onClick} aria-pressed={selected || undefined} aria-label={label ?? (tip ? `${title}. ${tip.lines.join('. ')}` : undefined)}>
       {body}
     </button>
   ) : (
-    <span className={classes} aria-label={label}>
+    <span {...(props as object)} className={`${classes} ${props.className ?? ''}`} aria-label={label ?? (tip ? `${title}. ${tip.lines.join('. ')}` : undefined)}>
       {body}
     </span>
   );

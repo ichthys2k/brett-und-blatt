@@ -246,4 +246,5 @@ export type SorterMove =
   | { type: 'skipPack' }
   | { type: 'next' }
   | { type: 'sortHand'; by: 'rank' | 'color' }
+  | { type: 'moveCard'; from: number; to: number }
   | { type: 'rerollBoss' };

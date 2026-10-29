@@ -1,5 +1,5 @@
 import { DECK_STYLE_CHOICES, type GameEvent, type SeatId } from '@brett-und-blatt/engine';
-import { useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { useElementSize, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { handLabel, HAND_TYPES, HANDS } from '../cards';
 import { BOSS_REROLL_PRICE, BOSSES, creatureFor, DECKS, levelTarget, STAKES, TAGS, TOOL_PRICE } from '../content';
@@ -11,7 +11,8 @@ import { Atelier, SetupExtra } from './Atelier';
 import { award, discover, readCardLook, useProgress, wasAwarded, withUnlocks, writeCardLook, type CardLook } from './progress';
 import { previewHand, type ScoreStep } from '../scoring';
 import type { Card, HandType, Offer, RunState, SorterMove, SorterState, ViewCard } from '../types';
-import { BackContext, CardView, cardDetails, DeckStyleContext, isOpen, Tile } from './Card';
+import { BackContext, CardView, cardDetails, cardTip, DeckStyleContext, isOpen, Tile } from './Card';
+import { HoverProvider, tipFrom, type ExtraProps } from './Hover';
 import { describeConsumable, describeMod, describeOffer, describePack, describeTag, describeTool, formatMult, formatNumber, handName } from './texts';
 import { playBossSound, playEffect, playHandAnnouncement } from './audio';
 import './styles.css';
@@ -27,6 +28,17 @@ type Selected =
 
 const SEAT_COLORS = ['#d6336c', '#1c7ed6', '#2f9e44', '#f08c00', '#7048e8', '#0c8599', '#e8590c', '#5c940d'];
 const ROUND_NAMES = ['Morgenaudienz', 'Festmahl', 'Thronsaal'];
+
+/** Was gerade gezogen wird. Ziele tragen `data-drop-target`: hand:<i>, mod:<i>, bench, play, discard, use, sell, buy. */
+type DragItem =
+  | { kind: 'hand'; index: number }
+  | { kind: 'mod'; index: number }
+  | { kind: 'cons'; index: number }
+  | { kind: 'offer'; index: number }
+  | { kind: 'pack'; index: number }
+  | { kind: 'tool' };
+
+type DragProps = (item: DragItem, target?: string) => ExtraProps;
 
 const same = (a: number[], b: number[]) => a.length === b.length && [...a].sort((x, y) => x - y).every((v, i) => v === [...b].sort((x, y) => x - y)[i]);
 
@@ -197,9 +209,13 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const handKey = run ? `${run.phase}/${run.level}/${run.round}/${run.hand.map((c) => c.id).join(',')}/${run.pack?.items.length ?? ''}` : '';
   const [lastKey, setLastKey] = useState(handKey);
   const stale = lastKey !== handKey;
+  // Beim Umsortieren der Hand wandert die Auswahl mit den Karten mit.
+  const carry = useRef<number[] | null>(null);
   if (stale) {
     setLastKey(handKey);
-    setPicked([]);
+    const keep = carry.current;
+    carry.current = null;
+    setPicked(keep && run ? keep.flatMap((id) => { const at = run.hand.findIndex((c) => isOpen(c) && c.id === id); return at < 0 ? [] : [at]; }) : []);
     if (selected?.kind !== 'mod') setSelected(null);
   }
   // Nach einem Zug gehört die alte Auswahl zu einer anderen Hand.
@@ -208,7 +224,93 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const reveal = usePackReveal(events, viewer, run?.pack?.items.length ?? 0);
   const can = (move: SorterMove) => legalMoves.some((m) => JSON.stringify(m) === JSON.stringify(move));
   const find = (pred: (m: SorterMove) => boolean) => legalMoves.find(pred);
-  const wide = size.width > size.height * 1.25 && size.width > 640;
+  // Große Bildschirme: Bühnen-Layout mit Narrenbank oben, Bühne in der Mitte und der Hand unten.
+  const big = size.width >= 960 && size.height >= 540;
+  // Auf mittleren Bildschirmen stehen die Knöpfe unter der Hand, damit die Karten breiter werden.
+  const tight = big && size.width < 1500;
+  const wide = !big && size.width > size.height * 1.25 && size.width > 640;
+  const sortedPickNow = [...picked].sort((a, b) => a - b);
+  const drop = (item: DragItem, target: string | null): boolean => {
+    if (!run || !target) return false;
+    const [zone, rest] = target.split(':');
+    const at = Number(rest);
+    const handCards = (index: number) => (picked.includes(index) ? sortedPickNow : [index]);
+    if (item.kind === 'hand') {
+      if (run.phase !== 'play') return false;
+      if (zone === 'hand') {
+        if (at === item.index) return true;
+        carry.current = picked.flatMap((i) => { const c = run.hand[i]; return c && isOpen(c) ? [c.id] : []; });
+        playEffect('fs-karte-waehlen');
+        onMove({ type: 'moveCard', from: item.index, to: at });
+        return true;
+      }
+      if (zone === 'play' || zone === 'discard') {
+        const cards = handCards(item.index);
+        const move = find((m) => m.type === zone && same(m.cards, cards));
+        if (!move) return false;
+        playEffect(zone === 'play' ? 'fs-abschicken' : 'fs-verwerfen');
+        onMove(move);
+        return true;
+      }
+      return false;
+    }
+    if (item.kind === 'mod') {
+      if (zone === 'mod') {
+        if (at === item.index) return true;
+        if (run.phase === 'pack') return false;
+        onMove({ type: 'moveMod', from: item.index, to: at });
+        return true;
+      }
+      if (zone === 'sell') {
+        const sell = find((m) => m.type === 'sellMod' && m.index === item.index);
+        if (!sell) return false;
+        onMove(sell);
+        setSelected(null);
+        return true;
+      }
+      return false;
+    }
+    if (item.kind === 'cons') {
+      if (zone === 'sell') {
+        const sell = find((m) => m.type === 'sellConsumable' && m.index === item.index);
+        if (!sell) return false;
+        onMove(sell);
+        setSelected(null);
+        return true;
+      }
+      if (zone === 'use' || zone === 'hand' || zone === 'play') {
+        const use = find((m) => m.type === 'use' && m.index === item.index && same(m.cards, sortedPickNow));
+        if (!use) return false;
+        onMove(use);
+        setSelected(null);
+        return true;
+      }
+      return false;
+    }
+    if (zone !== 'buy' && zone !== 'bench' && zone !== 'mod') return false;
+    const buy = item.kind === 'offer' ? find((m) => m.type === 'buy' && m.index === item.index) : item.kind === 'pack' ? find((m) => m.type === 'buyPack' && m.index === item.index) : find((m) => m.type === 'buyTool');
+    if (!buy) return false;
+    onMove(buy);
+    setSelected(null);
+    return true;
+  };
+  const { dragState, bindDrag } = usePointerDrag<DragItem>({ onDrop: drop });
+  const dragging = dragState.isDragging ? dragState.item : null;
+  const dragProps: DragProps = (item, target) => {
+    const bound = bindDrag(item);
+    const indexOf = (d: DragItem) => ('index' in d ? d.index : -1);
+    const mine = !!dragging && dragging.kind === item.kind && indexOf(dragging) === indexOf(item);
+    const over = !!dragging && !!target && dragState.targetId === target && !mine;
+    return {
+      onPointerDown: bound.onPointerDown,
+      style: {
+        ...bound.style,
+        ...(mine ? { transform: `translate(${dragState.delta.x}px, ${dragState.delta.y}px) scale(1.08)`, transition: dragState.snapping ? 'transform 180ms ease' : 'none', zIndex: 200, pointerEvents: 'none' as const } : {}),
+      },
+      className: `${mine ? 'bub-dragging cs-dragging' : ''} ${over ? 'cs-drop-over' : ''}`,
+      'data-drop-target': target,
+    };
+  };
   const multi = view.runs.length > 1;
   const progress = useProgress();
   const [atelier, setAtelier] = useState(false);
@@ -238,8 +340,12 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
 
   // Kartengröße: acht Karten (mit Überlappung) passen in die Breite, dazu genug Höhe.
   const handCount = Math.max(effectiveHandSize(run), run.hand.length, 5);
-  const areaW = wide ? size.width * 0.58 : size.width;
-  const cardW = Math.max(40, Math.min(96, (areaW - 12) / (handCount * 0.86), size.height > 0 ? size.height / (wide ? 3.6 : 6.4) : 96));
+  const sideW = Math.min(352, Math.max(224, size.width * 0.18));
+  const handAvail = big ? size.width - sideW - 12 - (tight ? 0 : 224) - 24 : (wide ? size.width * 0.58 : size.width) - 12;
+  const cardW = big
+    ? Math.max(56, Math.min(180, handAvail / (handCount * 0.86 + 0.14), (size.height - (tight ? 200 : 160)) / 2.7))
+    : Math.max(40, Math.min(96, handAvail / (handCount * 0.86), size.height > 0 ? size.height / (wide ? 3.6 : 6.4) : 96));
+  const tileW = Math.max(60, Math.min(150, cardW * 0.78));
 
   const hintCards = hint && (hint.type === 'play' || hint.type === 'discard') ? hint.cards : [];
   const togglePick = (i: number) => {
@@ -320,7 +426,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
 
   // --- Mods und Verbrauchsgegenstände
   const modsRow = (
-    <div className="cs-row cs-mods" aria-label="Narren">
+    <div className="cs-row cs-mods" aria-label="Narren" data-drop-target="bench">
       {run.mods.map((mod, index) => {
         const d = describeMod(mod);
         return (
@@ -328,6 +434,8 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
             key={mod.uid}
             emoji={d.emoji}
             title={d.title}
+            tip={tipFrom(d, [`Verkauf: ${sellValue(mod)} 🥨`])}
+            extra={dragProps({ kind: 'mod', index }, `mod:${index}`)}
             tone={`${d.tone} ${mod.foil ? `cs-foil-${mod.foil}` : ''} ${mod.spent ? 'cs-dim' : ''}`}
             badge={mod.sticker ? { eternal: '📌', perishable: '⏳', rental: '🔑' }[mod.sticker] : mod.value !== undefined && modDef(mod.key).initial !== undefined ? formatMult(mod.value) : undefined}
             selected={selected?.kind === 'mod' && selected.index === index}
@@ -352,6 +460,8 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
             key={`c-${index}`}
             emoji={d.emoji}
             title={d.title}
+            tip={tipFrom(d, ['Verkauf: 1 🥨'])}
+            extra={dragProps({ kind: 'cons', index })}
             tone={d.tone}
             selected={selected?.kind === 'cons' && selected.index === index}
             onClick={() => setSelected(selected?.kind === 'cons' && selected.index === index ? null : { kind: 'cons', index })}
@@ -442,6 +552,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
     const discardMove = find((m) => m.type === 'discard' && same(m.cards, sortedPick));
     main = (
       <div className="cs-play">
+        <div className="cs-stagezone" data-drop-target="play">
         <div className="cs-score" aria-live="polite">
           <span className="cs-score-label">
             {preview
@@ -458,9 +569,11 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           <span className="cs-mult">{preview ? formatMult(preview.mult) : '–'}</span>
           {preview && <span className="cs-preview">= {formatNumber(preview.score)}</span>}
         </div>
+        {big && !preview && <span className="cs-muted cs-stagehint">Karten hierher ziehen zum Vorführen</span>}
+        </div>
         <div className="cs-hand" style={{ ['--cw' as string]: `${cardW}px` }}>
           {run.hand.map((card, i) => (
-            <CardView key={isOpen(card) ? card.id : `h${i}`} card={card as ViewCard} selected={picked.includes(i)} hint={hintCards.includes(i)} onClick={() => togglePick(i)} style={{ zIndex: i }} />
+            <CardView key={isOpen(card) ? card.id : `h${i}`} card={card as ViewCard} selected={picked.includes(i)} hint={hintCards.includes(i)} onClick={() => togglePick(i)} style={{ zIndex: i }} extra={dragProps({ kind: 'hand', index: i }, `hand:${i}`)} />
           ))}
         </div>
         <div className="cs-actions">
@@ -497,7 +610,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   } else if (run.phase === 'choose') {
     main = <ChoosePanel view={view} run={run} can={can} onMove={onMove} hint={hint} />;
   } else if (run.phase === 'shop' && run.shop) {
-    main = <ShopPanel run={run} can={can} find={find} onMove={onMove} hint={hint} selected={selected} setSelected={setSelected} />;
+    main = <ShopPanel run={run} can={can} find={find} onMove={onMove} hint={hint} selected={selected} setSelected={setSelected} dragProps={dragProps} />;
   } else if (run.phase === 'pack' && run.pack) {
     main = (
       <PackPanel
@@ -548,20 +661,58 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
     );
   }
 
+  // --- Ablagezonen: erscheinen nur während des Ziehens
+  const sellFor = (item: DragItem) => (item.kind === 'mod' ? (run.mods[item.index] ? sellValue(run.mods[item.index]!) : 0) : 1);
+  let zones: ReactNode = null;
+  if (dragging) {
+    const zone = (id: string, label: ReactNode, ok: boolean) => (
+      <div key={id} className={`cs-zone ${ok ? '' : 'cs-zone-off'} ${dragState.targetId === id ? 'cs-drop-over' : ''}`} data-drop-target={id}>
+        {label}
+      </div>
+    );
+    if (dragging.kind === 'hand' && run.phase === 'play' && round) {
+      const cards = picked.includes(dragging.index) ? sortedPick : [dragging.index];
+      zones = (
+        <>
+          {zone('play', '▶ Vorführen', !!find((m) => m.type === 'play' && same(m.cards, cards)))}
+          {zone('discard', `↻ Tauschen (${round.discardsLeft})`, !!find((m) => m.type === 'discard' && same(m.cards, cards)))}
+        </>
+      );
+    } else if (dragging.kind === 'mod' || dragging.kind === 'cons') {
+      const sellable = !!find((m) => (m.type === 'sellMod' || m.type === 'sellConsumable') && m.type === (dragging.kind === 'mod' ? 'sellMod' : 'sellConsumable') && m.index === dragging.index);
+      const usable = dragging.kind === 'cons' && !!find((m) => m.type === 'use' && m.index === dragging.index && same(m.cards, sortedPick));
+      zones = (
+        <>
+          {dragging.kind === 'cons' && run.phase === 'play' && zone('use', '✨ Anwenden', usable)}
+          {zone('sell', `🥨 Verkaufen (+${sellFor(dragging)})`, sellable)}
+        </>
+      );
+    } else if (dragging.kind === 'offer' || dragging.kind === 'pack' || dragging.kind === 'tool') {
+      const bought = find((m) => (dragging.kind === 'offer' ? m.type === 'buy' && m.index === dragging.index : dragging.kind === 'pack' ? m.type === 'buyPack' && m.index === dragging.index : m.type === 'buyTool'));
+      zones = zone('buy', dragging.kind === 'pack' ? '📦 Öffnen' : '👝 Nehmen', !!bought);
+    }
+  }
+  const dropbar = zones && <div className="cs-dropbar">{zones}</div>;
+
   const others = multi ? <OthersStrip view={view} me={run.seat} seatNames={seatNames} /> : null;
 
   return (
     <BackContext.Provider value={back}>
       <DeckStyleContext.Provider value={look}>
-      <div ref={ref} className={`cs-board ${wide ? 'cs-wide' : ''}`} data-theme={progress.theme} data-back={progress.back}>
+      <HoverProvider>
+      <div ref={ref} className={`cs-board ${wide ? 'cs-wide' : ''} ${big ? 'cs-bigmode' : ''} ${tight ? 'cs-bigtight' : ''}`} style={{ ['--tw' as string]: `${tileW}px`, ['--side' as string]: `${sideW}px` }} data-theme={progress.theme} data-back={progress.back}>
         <div className="cs-side">
           {header}
           {others}
-          {modsRow}
+          {!big && modsRow}
           {info}
           {view.lastDuel && run.phase === 'shop' && <DuelResult view={view} seatNames={seatNames} />}
         </div>
-        <div className="cs-mainarea">{main}</div>
+        {big && <div className="cs-bench">{modsRow}</div>}
+        <div className="cs-mainarea">
+          {dropbar}
+          {main}
+        </div>
         {showLevels && <LevelsTable run={run} onClose={() => setShowLevels(false)} />}
         {anim && (
           <button type="button" className="cs-anim" onClick={skip} aria-label="Wertung überspringen">
@@ -584,6 +735,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
         )}
         {atelierModal}
       </div>
+      </HoverProvider>
       </DeckStyleContext.Provider>
     </BackContext.Provider>
   );
@@ -714,9 +866,10 @@ interface ShopProps {
   hint: SorterMove | null;
   selected: Selected;
   setSelected: (s: Selected) => void;
+  dragProps: DragProps;
 }
 
-function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: ShopProps) {
+function ShopPanel({ run, can, find, onMove, hint, selected, setSelected, dragProps }: ShopProps) {
   const shop = run.shop!;
   const payout = run.lastPayout;
   const sel = selected;
@@ -793,6 +946,7 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
             <OfferTile
               key={index}
               offer={offer}
+              extra={dragProps({ kind: 'offer', index })}
               selected={sel?.kind === 'offer' && sel.index === index}
               hint={isHint({ type: 'buy', index })}
               onClick={() => setSelected(sel?.kind === 'offer' && sel.index === index ? null : { kind: 'offer', index })}
@@ -812,6 +966,8 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
               emoji={d.emoji}
               title={d.title}
               sub={`${pack.price} 🥨`}
+              tip={tipFrom(d, [`Preis: ${pack.price} 🥨`])}
+              extra={dragProps({ kind: 'pack', index })}
               tone={`${d.tone} cs-pack-${pack.size}`}
               selected={sel?.kind === 'pack' && sel.index === index}
               hint={isHint({ type: 'buyPack', index })}
@@ -825,6 +981,8 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
             title={describeTool(shop.tool).title}
             sub={`👑 ${Math.max(1, Math.floor(TOOL_PRICE * (run.tools.includes('sale') ? 0.75 : 1)))} 🥨`}
             label={`Königlicher Stand: ${describeTool(shop.tool).title}`}
+            tip={tipFrom(describeTool(shop.tool), ['Dauerhaftes Privileg für den ganzen Lauf'])}
+            extra={dragProps({ kind: 'tool' })}
             tone="cs-t-tool cs-royal"
             selected={sel?.kind === 'tool'}
             hint={isHint({ type: 'buyTool' })}
@@ -848,11 +1006,11 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
   );
 }
 
-function OfferTile({ offer, selected, hint, onClick, pop, className }: { offer: Offer; selected?: boolean; hint?: boolean; onClick?: () => void; pop?: ReactNode; className?: string }) {
+function OfferTile({ offer, selected, hint, onClick, pop, className, extra }: { offer: Offer; selected?: boolean; hint?: boolean; onClick?: () => void; pop?: ReactNode; className?: string; extra?: ExtraProps }) {
   if (offer.type === 'card')
     return (
       <span className={`cs-offer-card ${className ?? ''}`}>
-        <CardView card={offer.card} selected={selected} hint={hint} onClick={onClick ? () => onClick() : undefined} />
+        <CardView card={offer.card} selected={selected} hint={hint} onClick={onClick ? () => onClick() : undefined} extra={extra} tip={offer.price > 0 ? { ...cardTip(offer.card), lines: [...cardTip(offer.card).lines, `Preis: ${offer.price} 🥨`] } : undefined} />
         {offer.price > 0 && <span className="cs-tile-sub">{offer.price} 🥨</span>}
       </span>
     );
@@ -866,6 +1024,8 @@ function OfferTile({ offer, selected, hint, onClick, pop, className }: { offer: 
       sub={offer.price > 0 ? `${offer.price} 🥨` : undefined}
       badge={sticker}
       tone={`${d.tone} ${foil} ${className ?? ''}`}
+      tip={tipFrom(d, offer.price > 0 ? [`Preis: ${offer.price} 🥨`] : [])}
+      extra={extra}
       selected={selected}
       hint={hint}
       onClick={onClick}

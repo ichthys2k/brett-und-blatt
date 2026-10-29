@@ -1441,3 +1441,279 @@ button.cs-card {
 .cs-album .cs-facedown {
   font-size: 1rem;
 }
+
+/* Sprechblase beim Überfahren (Maus) oder Tastaturfokus; liegt außerhalb des Bretts im <body> */
+
+.cs-tip {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-width: min(20rem, calc(100vw - 16px));
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--color-surface);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 28%);
+  color: var(--color-ink);
+  font-size: 0.85rem;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.cs-tip-title {
+  font-size: 0.95rem;
+}
+
+.cs-tip-line {
+  color: var(--color-muted);
+}
+
+/* Beim Ziehen stört die Blase nur. */
+body:has(.cs-dragging) .cs-tip {
+  display: none;
+}
+
+/* Ziehen und Ablegen */
+
+.cs-mainarea {
+  position: relative;
+}
+
+button.cs-card,
+button.cs-tile {
+  touch-action: none;
+}
+
+.cs-dragging {
+  cursor: grabbing;
+  filter: drop-shadow(0 8px 10px rgb(0 0 0 / 35%));
+}
+
+.cs-dropbar {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 30;
+  display: flex;
+  gap: 0.6rem;
+  height: 45%;
+  min-height: 3.5rem;
+}
+
+.cs-zone {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  border: 2px dashed var(--cs-mustard);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-surface) 82%, var(--cs-mustard));
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.cs-zone-off {
+  border-color: var(--color-line);
+  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  color: var(--color-muted);
+}
+
+.cs-zone.cs-drop-over:not(.cs-zone-off) {
+  border-style: solid;
+  background: color-mix(in srgb, var(--cs-mustard) 40%, var(--color-surface));
+  transform: scale(1.02);
+}
+
+/* Einfügemarke: Wohin die gezogene Karte rutscht */
+.cs-card.cs-drop-over,
+.cs-tile.cs-drop-over {
+  outline: 3px solid var(--cs-mustard);
+  outline-offset: 2px;
+}
+
+/* Bühnen-Layout für große Bildschirme: links Thron und Info, oben die Narrenbank, in der Mitte die Bühne, unten die Hand */
+
+.cs-stagezone {
+  display: contents;
+}
+
+.cs-stagehint {
+  display: none;
+}
+
+.cs-board.cs-bigmode {
+  display: grid;
+  grid-template-columns: var(--side, 16rem) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    'side bench'
+    'side main';
+  gap: 0.6rem 0.75rem;
+  overflow: hidden;
+}
+
+.cs-bigmode .cs-side {
+  grid-area: side;
+  overflow-y: auto;
+}
+
+.cs-bigmode .cs-bench {
+  grid-area: bench;
+  min-width: 0;
+  padding: 0.5rem 0.75rem 0.7rem;
+  border-radius: 16px;
+  /* Holzbank mit Kante, auf der die Narren stehen */
+  background:
+    linear-gradient(180deg, transparent 82%, color-mix(in srgb, var(--cs-wine) 55%, #000) 82%),
+    color-mix(in srgb, var(--color-surface) 70%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cs-mustard) 40%, var(--color-line));
+}
+
+.cs-bigmode .cs-mods {
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 0.6rem;
+  overflow-x: auto;
+}
+
+.cs-bigmode .cs-mods .cs-sep {
+  height: calc(var(--tw) * 1.2);
+  margin-left: auto;
+}
+
+.cs-bigmode .cs-mods .cs-tile {
+  flex: none;
+  width: var(--tw);
+  min-height: calc(var(--tw) * 1.4);
+  border-radius: calc(var(--tw) * 0.12);
+}
+
+.cs-bigmode .cs-mods .cs-tile-emoji,
+.cs-bigmode .cs-offers .cs-tile-emoji {
+  font-size: calc(var(--tw) * 0.42);
+}
+
+.cs-bigmode .cs-mods .cs-tile-title,
+.cs-bigmode .cs-offers .cs-tile-title {
+  font-size: calc(var(--tw) * 0.15);
+}
+
+.cs-bigmode .cs-mods .cs-tile-sub,
+.cs-bigmode .cs-offers .cs-tile-sub {
+  font-size: calc(var(--tw) * 0.14);
+}
+
+.cs-bigmode .cs-mainarea {
+  grid-area: main;
+  flex: none;
+  justify-content: safe center;
+  overflow-y: auto;
+}
+
+/* Audienz: Bühne oben, darunter die Hand, Knöpfe links und rechts daneben */
+.cs-bigmode .cs-play {
+  display: grid;
+  flex: 1;
+  gap: 0.5rem 0.75rem;
+  grid-template-columns: 7rem auto 7rem;
+  justify-content: center;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'stage stage stage'
+    'play hand discard'
+    '. meta .';
+  min-height: 0;
+}
+
+.cs-bigmode .cs-stagezone {
+  display: flex;
+  grid-area: stage;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 2px dashed color-mix(in srgb, var(--cs-mustard) 40%, var(--color-line));
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--color-surface) 35%, transparent);
+}
+
+.cs-bigmode .cs-stagehint {
+  display: block;
+}
+
+.cs-bigmode .cs-score {
+  font-size: clamp(1rem, 2vw, 1.6rem);
+}
+
+.cs-bigmode .cs-hand {
+  grid-area: hand;
+  align-self: end;
+}
+
+.cs-bigmode .cs-actions {
+  display: contents;
+}
+
+.cs-bigmode .cs-actions > .cs-btn:first-child {
+  grid-area: play;
+  align-self: center;
+  justify-self: stretch;
+}
+
+.cs-bigmode .cs-actions > .cs-btn:nth-child(2) {
+  grid-area: discard;
+  align-self: center;
+  justify-self: stretch;
+}
+
+.cs-bigmode .cs-actions > .cs-sort {
+  grid-area: meta;
+  justify-self: center;
+}
+
+/* Jahrmarkt, Lieferung und Co. nutzen den Platz mit größeren Karten */
+.cs-bigmode .cs-offers .cs-tile {
+  width: calc(var(--tw) * 1.3);
+  min-height: calc(var(--tw) * 1.8);
+}
+
+.cs-bigmode .cs-offers .cs-tile-emoji {
+  font-size: calc(var(--tw) * 0.55);
+}
+
+.cs-bigmode .cs-offers {
+  gap: 0.8rem;
+}
+
+.cs-bigmode .cs-offer-card {
+  --cw: calc(var(--tw) * 1.3);
+}
+
+.cs-bigmode .cs-mainarea > .cs-panel {
+  margin-block: auto;
+}
+
+.cs-bigmode.cs-board .cs-dropbar {
+  height: 55%;
+}
+
+/* Mittlere Bildschirme: Knöpfe unter der Hand */
+.cs-bigmode.cs-bigtight .cs-play {
+  grid-template-columns: auto;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'stage'
+    'hand'
+    'play';
+  justify-content: center;
+}
+
+.cs-bigmode.cs-bigtight .cs-stagezone {
+  justify-self: stretch;
+}
+
+.cs-bigmode.cs-bigtight .cs-actions {
+  display: flex;
+  grid-area: play;
+}
