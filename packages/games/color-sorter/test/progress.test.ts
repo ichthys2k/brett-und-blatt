@@ -204,7 +204,8 @@ describe('Freischaltungen', () => {
     // Ein gesperrter Kartensatz wird zum Standard-Satz.
     expect(start(1, { deck: 'magic' }).deckKind).toBe('standard');
     expect(start(1, { deck: 'magic', unlocks: encodeUnlocks(['deck:magic']) }).deckKind).toBe('magic');
-    // Viele Läden: kein gesperrter Mod und kein gesperrtes Werkzeug.
+    // Viele Läden: kein gesperrter Mod und kein gesperrtes Werkzeug. Gefahren wird mit „mittel“ –
+    // der schwere Bot rechnet im Laden per Stichprobe und wäre für 20 Läufe zu langsam.
     for (let g = 0; g < 20; g++) {
       let state = start(1, {}, `pool/${g}`);
       for (let step = 0; step < 600 && !gameModule.result(state); step++) {
@@ -214,7 +215,7 @@ describe('Freischaltungen', () => {
         const move = computeBotMove(gameModule, {
           gameId: 'color-sorter',
           botId: 'color-sorter',
-          level: 'hard',
+          level: 'medium',
           seat: 0,
           view: gameModule.playerView(state, 0),
           seed: `${g}/${step}`,
