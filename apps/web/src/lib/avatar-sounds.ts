@@ -19,10 +19,16 @@ export function announceAvatar(avatar: string): void {
 
 async function play(slug: string, voice: boolean): Promise<void> {
   const laut = await sound.playFile(`avatare/${slug}-laut.mp3`, { volume: 0.9 });
-  if (!voice) return;
-  // Fehlt der Tierlaut, kommt die Ansage sofort.
-  const delay = laut > 0 ? GAP_S : 0;
-  const stimme = await sound.playFile(`avatare/${slug}-stimme.mp3`, { delay, volume: 1 });
-  // Warten, bis die Ansage durch ist, damit die nächste nicht hineinredet.
-  if (stimme > 0) await new Promise((resolve) => window.setTimeout(resolve, (delay + stimme) * 1000));
+  if (!voice) {
+    // Auch ohne Ansage die Warteschlange die Dauer des Tierlautes abwarten lassen.
+    if (laut > 0) await new Promise((resolve) => window.setTimeout(resolve, laut * 1000));
+    return;
+  }
+  // Zuerst den Tierlaut zu Ende spielen lassen, dann erst die Ansage.
+  const waitMs = (laut > 0 ? laut : 0) * 1000 + GAP_S * 1000;
+  await new Promise((resolve) => window.setTimeout(resolve, waitMs));
+  const stimme = await sound.playFile(`avatare/${slug}-stimme.mp3`, { volume: 1 });
+  // Die Warteschlange wartet die ganze Sequenz ab, damit beim nächsten Beitritt
+  // nichts überlappt.
+  if (stimme > 0) await new Promise((resolve) => window.setTimeout(resolve, stimme * 1000));
 }
