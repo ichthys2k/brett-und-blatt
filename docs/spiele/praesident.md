@@ -74,6 +74,34 @@ Gemütlich (ohne Uhr), Normal 30 s je Zug, Schnell 15 s.
 - Rangfolge (Ass/2 hoch, Revolution), legale Kombinationen, Passen und Wiedereinstieg, Stich abräumen, Ausgehen mit dem letzten Stich, Rangvergabe, Tausch (beste Karten, Anzahl je Spielerzahl), Hausregeln einzeln.
 - `gameContractChecks`, Prüfstand, Bot schwer gegen leicht.
 
+## Umsetzung (29.10.2026)
+
+Cornelius: „die üblichen Regeln“. Standard ist darum die verbreitete deutsche Form, alle Hausregeln sind abschaltbare Optionen und von Haus aus aus.
+
+- `src/rules.ts`:
+  - Blatt „automatisch“ (32 Karten bis fünf Spieler, 52 ab sechs) oder fest 32/52, reihum ausgeteilt. In der ersten Runde beginnt, wer die niedrigste Kreuzkarte hat.
+  - Legen: gleich viele Karten höheren Rangs, Ass hoch. Wer gepasst hat, darf später wieder legen, solange der Stich läuft; mit Option „Für den Stich draußen“ nicht.
+  - Ausgehen: Wer seine letzten Karten legt, ist draußen. Räumt sein Stich ab, beginnt der nächste Spieler, der noch Karten hat.
+  - Die Runde endet, wenn nur noch einer Karten hat.
+  - Punkte je Runde: +2 / +1 / 0 / −1 / −2 (Vize-Titel ab vier Spielern; zu dritt also +2 / 0 / −2). Spieldauer 3, 5 (Standard) oder 10 Runden; wer am Ende die meisten Punkte hat, gewinnt.
+- **Tausch** ab Runde 2:
+  - Der Bettler gibt automatisch seine zwei besten Karten ab, der Vize-Bettler (ab vier Spielern) seine beste.
+  - Präsident, danach Vize wählen nacheinander, was sie zurückgeben (Phase `exchange`, Zug `give`). Danach beginnt der Bettler.
+  - Die getauschten Karten sieht nur, wer beteiligt war. `sampleHidden` legt eigene abgegebene Karten zum Empfänger.
+- **Optionen:** Titel „Präsident … Bettler“ oder Königshof (König, Prinz, Bürger, Knecht, Bettler), Kartenbild französisch/vierfarbig/deutsch, Gleich legen (Nächster setzt aus), Achter räumt, Revolution, „2 hoch“ (nur 52 Karten).
+- **Bot „Kartenkanzler“** (`src/bots.ts`):
+  - leicht: legt die schwächste passende Gruppe und passt manchmal grundlos.
+  - mittel: Faustregeln – Gruppen nicht aufbrechen, Spitzenkarten aufheben, schwache Einzelkarten zuerst. Zählt Karten, um zu erkennen, wann der Rest sicher durchgeht.
+  - schwer: zusätzlich ab sechs Handkarten eine Stichprobensuche, die die Runde mit Faustregeln zu Ende spielt (≤ 0,6 s).
+  - Gemessen in 30 Partien zu viert: mittel schlägt leicht mit +92 Punkten, schwer schlägt mittel mit +70.
+- **Oberfläche** (`src/ui/`, Präfix `prs-`):
+  - weinroter Filz, Mitspieler mit Kartenzahl, Titel-Abzeichen und „passt“; in der Mitte die oberste und die vorige Legung mit Hinweis („Gesucht: Paar höher als 9“).
+  - Hand nach Rang gruppiert. Antippen wählt beim Bedienen gleich die nötige Anzahl dieses Rangs, dann „Legen“/„Passen“.
+  - Tausch mit Hinweis, was man bekommen hat. Zu Rundenbeginn steht kurz da, was getauscht wurde. Rundenende als Tabelle mit Titel, Rundenpunkten und Gesamtstand.
+- **Klänge** aus dem Katalog: `karte-legen`, `poker-check` (Klopfen beim Passen), `karte-ziehen`, `mischen`, `ansage` (ausgegangen, Revolution). Playlist „Kartentisch“.
+- Hot-Seat mit Übergabe-Bildschirm, online eingetragen.
+
 ## Offene Punkte
 
-- Standard-Hausregeln mit Cornelius abstimmen (wie wird es bei euch / in der Schule gespielt?).
+- Joker (52er-Blatt mit 2–3 Jokern) als Option.
+- Tauschphase mit fliegenden Karten zwischen den Beteiligten.

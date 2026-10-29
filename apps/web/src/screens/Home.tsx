@@ -58,6 +58,7 @@ const CATEGORIES: readonly CategorySpec[] = [
       'black-peter',
       'ligretto',
       'speed',
+      'president',
     ],
   },
   {
