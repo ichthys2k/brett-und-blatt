@@ -1,10 +1,10 @@
 import { createContext, useContext, type CSSProperties, type MouseEventHandler, type ReactNode } from 'react';
-import { cardLabel, COLOR_INFO, rankEmoji, rankName } from '../cards';
+import { cardLabel, COLOR_INFO, rankShort } from '../cards';
 import { ENHANCEMENTS, FOILS, SEALS } from '../content';
 import type { Card, ViewCard } from '../types';
 
 /** Emoji auf dem Kartenrücken (Schmuck aus dem Atelier). */
-export const BackContext = createContext('🎨');
+export const BackContext = createContext('🃏');
 
 export const isOpen = (card: ViewCard | Card): card is Card => !('hidden' in card);
 
@@ -14,7 +14,7 @@ export function cardDetails(card: Card): string[] {
   if (card.enh) lines.push(`${ENHANCEMENTS[card.enh].emoji} ${ENHANCEMENTS[card.enh].name}: ${ENHANCEMENTS[card.enh].text}`);
   if (card.foil) lines.push(`${FOILS[card.foil].emoji} ${FOILS[card.foil].name}: ${FOILS[card.foil].text}`);
   if (card.seal) lines.push(`${SEALS[card.seal].emoji} ${SEALS[card.seal].name}: ${SEALS[card.seal].text}`);
-  if (card.bonus) lines.push(`+${card.bonus} Chips dauerhaft`);
+  if (card.bonus) lines.push(`+${card.bonus} Witz dauerhaft`);
   return lines;
 }
 
@@ -29,7 +29,7 @@ interface CardViewProps {
   className?: string;
 }
 
-/** Emoji-Spielkarte: Farbe als Hintergrund und Form, Rang als großes Emoji. */
+/** Spielkarte: Rang und Farbzeichen in der Ecke, großes Farbzeichen in der Mitte (vierfarbig). */
 export function CardView({ card, selected, dim, hint, pop, onClick, style, className = '' }: CardViewProps) {
   const open = isOpen(card);
   const backEmoji = useContext(BackContext);
@@ -52,11 +52,11 @@ export function CardView({ card, selected, dim, hint, pop, onClick, style, class
       ) : (
         <>
           <span className="cs-corner" aria-hidden="true">
-            {rankName(card.rank).slice(0, card.rank >= 10 ? 1 : 2)}
+            {rankShort(card.rank)}
             <span className="cs-shape">{COLOR_INFO[card.color].shape}</span>
           </span>
-          <span className="cs-rank-big" aria-hidden="true">
-            {rankEmoji(card.rank)}
+          <span className="cs-suit-big" aria-hidden="true">
+            {COLOR_INFO[card.color].shape}
           </span>
         </>
       )}

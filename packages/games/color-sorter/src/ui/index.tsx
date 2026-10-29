@@ -5,7 +5,7 @@ import { handLabel, HAND_TYPES, HANDS } from '../cards';
 import { BOSS_REROLL_PRICE, BOSSES, creatureFor, DECKS, levelTarget, STAKES, TAGS, TOOL_PRICE } from '../content';
 import type { DropLine } from '../drops';
 import { modDef } from '../mods';
-import { bossFor, effectiveHandSize, FINAL_LEVEL, freeModSlots, HIDDEN_SCORE, isDuelLevel, modCapacity, sellValue, tableInfo } from '../rules';
+import { bonusCap, BONUS_STEP, bossFor, effectiveHandSize, FINAL_LEVEL, freeModSlots, HIDDEN_SCORE, isDuelLevel, modCapacity, sellValue, tableInfo } from '../rules';
 import { CARD_BACKS } from '../unlocks';
 import { Atelier, SetupExtra } from './Atelier';
 import { award, discover, useProgress, wasAwarded, withUnlocks } from './progress';
@@ -26,7 +26,7 @@ type Selected =
   | null;
 
 const SEAT_COLORS = ['#d6336c', '#1c7ed6', '#2f9e44', '#f08c00', '#7048e8', '#0c8599', '#e8590c', '#5c940d'];
-const ROUND_NAMES = ['Vorhut', 'Wächter', 'Boss'];
+const ROUND_NAMES = ['Morgenaudienz', 'Festmahl', 'Thronsaal'];
 
 const same = (a: number[], b: number[]) => a.length === b.length && [...a].sort((x, y) => x - y).every((v, i) => v === [...b].sort((x, y) => x - y)[i]);
 
@@ -105,7 +105,7 @@ function usePackReveal(events: GameEvent[], seat: SeatId | 'spectator', count: n
 // ---------------------------------------------------------------- Bausteine
 
 function Lives({ lives }: { lives: number }) {
-  return <span aria-label={`${lives} Leben`}>{'❤️'.repeat(Math.max(0, Math.min(lives, 8)))}</span>;
+  return <span aria-label={`${lives} ${lives === 1 ? 'Herz' : 'Herzen'}`}>{'❤️'.repeat(Math.max(0, Math.min(lives, 8)))}</span>;
 }
 
 function enemyOf(state: SorterState, run: RunState): { emoji: string; name: string; text?: string } {
@@ -113,8 +113,8 @@ function enemyOf(state: SorterState, run: RunState): { emoji: string; name: stri
   if (round?.duel || (run.round === 2 && isDuelLevel(state, run.level)))
     return {
       emoji: '⚔️',
-      name: 'Duell',
-      text: 'Wer weniger Punkte holt, verliert ein Leben.',
+      name: 'Wettstreit',
+      text: 'Wer weniger Applaus bekommt, verliert ein Herz.',
     };
   if (run.round === 2) {
     const boss = BOSSES[round?.boss ?? bossFor(state, run)]!;
@@ -197,7 +197,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
     if (mine) setEarned(mine.lines);
   }, [view, seat]);
   const atelierModal = atelier && <Atelier onClose={() => setAtelier(false)} />;
-  const back = CARD_BACKS.find((b) => b.key === progress.back)?.emoji ?? '🎨';
+  const back = CARD_BACKS.find((b) => b.key === progress.back)?.emoji ?? '🃏';
 
   if (!run)
     return (
@@ -259,17 +259,17 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
                 </span>
               </div>
             )}
-            {target === 0 && round && <span className="cs-duel-score">Deine Punkte: {formatNumber(round.score)}</span>}
+            {target === 0 && round && <span className="cs-duel-score">Dein Applaus: {formatNumber(round.score)}</span>}
           </div>
         </div>
       )}
       <div className="cs-stats">
-        <span title="Level und Runde">
+        <span title="Hoftag und Audienz">
           🗺️ {view.endless && run.level > FINAL_LEVEL ? `${run.level} ∞` : `${run.level}/${FINAL_LEVEL}`} · {ROUND_NAMES[run.round]}
         </span>
-        <span title="Token">🔩 {run.tokens} T</span>
+        <span title="Brezeln">🥨 {run.tokens}</span>
         {round && (
-          <span title="Hände und Verwerfen">
+          <span title="Vorführungen und Tauschen">
             ✋ {round.handsLeft} · 🗑️ {round.discardsLeft}
           </span>
         )}
@@ -283,7 +283,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
 
   // --- Mods und Verbrauchsgegenstände
   const modsRow = (
-    <div className="cs-row cs-mods" aria-label="Mods">
+    <div className="cs-row cs-mods" aria-label="Narren">
       {run.mods.map((mod, index) => {
         const d = describeMod(mod);
         return (
@@ -303,7 +303,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           />
         );
       })}
-      {run.mods.length === 0 && <span className="cs-muted cs-empty-note">Noch keine Mods</span>}
+      {run.mods.length === 0 && <span className="cs-muted cs-empty-note">Noch keine Narren</span>}
       <span className="cs-slots cs-muted">
         {run.mods.length}/{modCapacity(run)}
       </span>
@@ -321,8 +321,8 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           />
         );
       })}
-      <span className="cs-slots cs-muted" title="Zauber-, Nagel- und Traumkarten">
-        🧺 {run.consumables.length}/{run.consumableSlots}
+      <span className="cs-slots cs-muted" title="Narrentasche: Kunststücke, Übungen und Kuriositäten">
+        👝 {run.consumables.length}/{run.consumableSlots}
       </span>
     </div>
   );
@@ -357,7 +357,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
               ▶
             </Btn>
             <Btn disabled={!sell} onClick={() => sell && (onMove(sell), setSelected(null))}>
-              Verkaufen (+{sellValue(mod)} T)
+              Verkaufen (+{sellValue(mod)} 🥨)
             </Btn>
           </>
         }
@@ -377,7 +377,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           <>
             {d.text}
             {!use && run.phase === 'play' && <span className="cs-muted"> – wähle dafür passende Karten aus.</span>}
-            {!use && run.phase !== 'play' && item.kind !== 'nail' && <span className="cs-muted"> – Karten lassen sich nur während einer Runde auswählen.</span>}
+            {!use && run.phase !== 'play' && item.kind !== 'nail' && <span className="cs-muted"> – Karten lassen sich nur während einer Audienz auswählen.</span>}
           </>
         }
         onClose={() => setSelected(null)}
@@ -387,7 +387,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
               Anwenden
             </Btn>
             <Btn disabled={!sell} onClick={() => sell && (onMove(sell), setSelected(null))}>
-              Verkaufen (+1 T)
+              Verkaufen (+1 🥨)
             </Btn>
           </>
         }
@@ -411,7 +411,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
               ? handLabel(
                   preview.type,
                   pickedOpen.map((i) => run.hand[i] as Card),
-                ) + ` · Lvl ${run.handLevels[preview.type]}`
+                ) + ` · Stufe ${run.handLevels[preview.type]}`
               : picked.length
                 ? 'Verdeckte Karte dabei'
                 : 'Karten auswählen'}
@@ -428,10 +428,10 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
         </div>
         <div className="cs-actions">
           <Btn primary disabled={!playMove} hint={hint?.type === 'play'} onClick={() => playMove && (playEffect('fs-abschicken'), onMove(playMove))}>
-            Abschicken
+            Vorführen
           </Btn>
           <Btn disabled={!discardMove} hint={hint?.type === 'discard'} onClick={() => discardMove && (playEffect('fs-verwerfen'), onMove(discardMove))}>
-            Verwerfen ({round.discardsLeft})
+            Tauschen ({round.discardsLeft})
           </Btn>
           <span className="cs-sort">
             <button
@@ -481,7 +481,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
     main = (
       <div className="cs-panel cs-center">
         <p className="cs-big">⏳</p>
-        <p>{view.duel ? 'Du bist fertig. Gleich wird abgerechnet …' : `Treffpunkt Level ${run.level}: Warte auf die anderen, dann beginnt das Duell.`}</p>
+        <p>{view.duel ? 'Du bist fertig. Gleich wird abgerechnet …' : `Treffpunkt am ${run.level}. Hoftag: Warte auf die anderen, dann beginnt der Wettstreit.`}</p>
       </div>
     );
   }
@@ -493,20 +493,20 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
         <p className="cs-big">{won ? '🏆' : '🫠'}</p>
         <p>
           {run.phase === 'won'
-            ? 'Alle Level geschafft!'
+            ? 'Alle Hoftage geschafft – du bist Hofnarr!'
             : endlessRun
-              ? `Endlos-Modus: bis Level ${run.level} gekommen!`
+              ? `Endlos-Modus: bis Hoftag ${run.level} gekommen!`
               : run.phase === 'out'
-                ? `Ausgeschieden in Level ${run.level}.`
+                ? `Ausgeschieden an Hoftag ${run.level}.`
                 : won
                   ? 'Gewonnen – alle anderen sind raus!'
-                  : `Level ${run.level}`}
+                  : `Hoftag ${run.level}`}
         </p>
         <p className="cs-muted">
-          {run.bossesBeaten} Bosse besiegt · beste Hand {formatNumber(run.bestHand)} Punkte
+          {run.bossesBeaten} Herrschaften zum Lachen gebracht · beste Vorführung {formatNumber(run.bestHand)} Applaus
         </p>
         <DropsSummary lines={earned} pending={!view.winners} done={!!view.winners && wasAwarded(view, run.seat)} />
-        <Btn onClick={() => setAtelier(true)}>🎨 Atelier öffnen (💧 {progress.drops})</Btn>
+        <Btn onClick={() => setAtelier(true)}>🎓 Narrenschule öffnen (🔔 {progress.drops})</Btn>
       </div>
     );
   }
@@ -551,19 +551,19 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
 }
 
 function DropsSummary({ lines, pending, done }: { lines: DropLine[] | null; pending: boolean; done: boolean }) {
-  if (pending) return <p className="cs-small-text">💧 Farbtropfen gibt es, sobald die Partie zu Ende ist.</p>;
-  if (!lines) return done ? <p className="cs-small-text">💧 Farbtropfen für diese Partie sind schon gutgeschrieben.</p> : null;
+  if (pending) return <p className="cs-small-text">🔔 Glöckchen gibt es, sobald die Partie zu Ende ist.</p>;
+  if (!lines) return done ? <p className="cs-small-text">🔔 Glöckchen für diese Partie sind schon gutgeschrieben.</p> : null;
   const sum = lines.reduce((s, l) => s + l.amount, 0);
   return (
     <div className="cs-drops-box">
-      <strong>💧 +{sum} Farbtropfen</strong>
+      <strong>🔔 +{sum} Glöckchen</strong>
       {lines.map((l, i) => (
         <span key={i} className="cs-small-text">
           {l.once ? '🎯 ' : ''}
           {l.label}: +{l.amount}
         </span>
       ))}
-      {lines.length === 0 && <span className="cs-small-text">Diesmal keine – schaffe ein Level, dann gibt es welche.</span>}
+      {lines.length === 0 && <span className="cs-small-text">Diesmal keine – schaffe einen Hoftag, dann gibt es welche.</span>}
     </div>
   );
 }
@@ -584,9 +584,9 @@ function stepText(step: ScoreStep): string {
   if (step.debuffed) return '🚫';
   const parts: string[] = [];
   if (step.chips) parts.push(`${step.chips > 0 ? '+' : ''}${step.chips}`);
-  if (step.mult) parts.push(`+${formatMult(step.mult)} Mult`);
+  if (step.mult) parts.push(`+${formatMult(step.mult)} Lachen`);
   if (step.xmult !== undefined) parts.push(`×${formatMult(step.xmult)}`);
-  if (step.tokens) parts.push(`${step.tokens > 0 ? '+' : ''}${step.tokens} T`);
+  if (step.tokens) parts.push(`${step.tokens > 0 ? '+' : ''}${step.tokens} 🥨`);
   return parts.join(' ');
 }
 
@@ -609,7 +609,7 @@ function ChoosePanel({ view, run, can, onMove, hint }: { view: SorterState; run:
   return (
     <div className="cs-panel cs-center">
       <p className="cs-muted">
-        Level {run.level} · {ROUND_NAMES[run.round]}
+        Hoftag {run.level} · {ROUND_NAMES[run.round]}
       </p>
       <p className="cs-big" aria-hidden="true">
         {enemy.emoji}
@@ -617,7 +617,7 @@ function ChoosePanel({ view, run, can, onMove, hint }: { view: SorterState; run:
       <p className="cs-title">{enemy.name}</p>
       {enemy.text && <p>{enemy.text}</p>}
       <p>
-        Ziel: <strong>{formatNumber(target)}</strong> Punkte · Belohnung: {reward} T
+        Ziel: <strong>{formatNumber(target)}</strong> Applaus · Belohnung: {reward} 🥨
       </p>
       <div className="cs-actions">
         <Btn primary hint={hint?.type === 'start'} onClick={() => onMove({ type: 'start' })}>
@@ -625,18 +625,18 @@ function ChoosePanel({ view, run, can, onMove, hint }: { view: SorterState; run:
         </Btn>
         {tagInfo && (
           <Btn disabled={!can({ type: 'skip' })} hint={hint?.type === 'skip'} onClick={() => onMove({ type: 'skip' })}>
-            Überspringen: {tagInfo.emoji} {tagInfo.title}
+            Auslassen: {tagInfo.emoji} {tagInfo.title}
           </Btn>
         )}
       </div>
       {tagInfo && (
         <p className="cs-muted">
-          Sticker „{tagInfo.title}“: {tagInfo.text}
+          Gefallen „{tagInfo.title}“: {tagInfo.text}
         </p>
       )}
       {can({ type: 'rerollBoss' }) && (
         <Btn hint={hint?.type === 'rerollBoss'} onClick={() => (playEffect('fs-karte-waehlen'), onMove({ type: 'rerollBoss' }))}>
-          {run.tools.includes('scope2') ? '🛰️' : '🔭'} Anderen Boss wählen ({BOSS_REROLL_PRICE} T)
+          {run.tools.includes('scope2') ? '🛰️' : '🔭'} Andere Herrschaft bitten ({BOSS_REROLL_PRICE} 🥨)
         </Btn>
       )}
       {run.round === 0 && <BossPreview view={view} run={run} />}
@@ -645,11 +645,11 @@ function ChoosePanel({ view, run, can, onMove, hint }: { view: SorterState; run:
 }
 
 function BossPreview({ view, run }: { view: SorterState; run: RunState }) {
-  if (isDuelLevel(view, run.level)) return <p className="cs-muted">Am Ende dieses Levels wartet ein ⚔️ Duell.</p>;
+  if (isDuelLevel(view, run.level)) return <p className="cs-muted">Am Ende dieses Hoftags wartet ein ⚔️ Wettstreit.</p>;
   const boss = BOSSES[bossFor(view, run)]!;
   return (
     <p className="cs-muted">
-      Boss dieses Levels: {boss.emoji} {boss.name} – {boss.text}
+      Im Thronsaal wartet: {boss.emoji} {boss.name} – {boss.text}
     </p>
   );
 }
@@ -683,7 +683,7 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
         onClose={() => setSelected(null)}
         actions={
           <Btn primary disabled={!buy} onClick={() => buy && (onMove(buy), setSelected(null))}>
-            {buy ? `Kaufen (${offer.price} T)` : offer.price > run.tokens ? 'Zu wenig Token' : 'Kein Platz'}
+            {buy ? `Kaufen (${offer.price} 🥨)` : offer.price > run.tokens ? 'Zu wenig Brezeln' : 'Kein Platz'}
           </Btn>
         }
       />
@@ -700,7 +700,7 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
         onClose={() => setSelected(null)}
         actions={
           <Btn primary disabled={!buy} onClick={() => buy && (onMove(buy), setSelected(null))}>
-            {buy ? `Öffnen (${pack.price} T)` : 'Zu wenig Token'}
+            {buy ? `Öffnen (${pack.price} 🥨)` : 'Zu wenig Brezeln'}
           </Btn>
         }
       />
@@ -710,12 +710,12 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
     info = (
       <InfoBox
         emoji={d.emoji}
-        title={`Werkzeug: ${d.title}`}
+        title={`Privileg: ${d.title}`}
         text={d.text}
         onClose={() => setSelected(null)}
         actions={
           <Btn primary disabled={!can({ type: 'buyTool' })} onClick={() => (onMove({ type: 'buyTool' }), setSelected(null))}>
-            Kaufen ({Math.max(1, Math.floor(TOOL_PRICE * (run.tools.includes('bigSale') ? 0.5 : run.tools.includes('sale') ? 0.75 : 1)))} T)
+            Kaufen ({Math.max(1, Math.floor(TOOL_PRICE * (run.tools.includes('bigSale') ? 0.5 : run.tools.includes('sale') ? 0.75 : 1)))} 🥨)
           </Btn>
         }
       />
@@ -725,16 +725,16 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
   return (
     <div className="cs-panel cs-shop">
       <div className="cs-shop-head">
-        <strong>🏭 Sortier-Zentrale</strong>
+        <strong>🎪 Jahrmarkt</strong>
         {payout && (payout.reward || payout.hands || payout.bonus || payout.extra) ? (
           <span className="cs-payout">
-            Geschafft! +{payout.reward} T Belohnung
-            {payout.hands ? `, +${payout.hands} T übrige Hände` : ''}
-            {payout.bonus ? `, +${payout.bonus} T Ordnungsbonus` : ''}
-            {payout.extra ? `, ${payout.extra > 0 ? '+' : ''}${payout.extra} T Extras` : ''}
+            Geschafft! +{payout.reward} 🥨 Belohnung
+            {payout.hands ? `, +${payout.hands} 🥨 übrige Vorführungen` : ''}
+            {payout.bonus ? `, +${payout.bonus} 🥨 Vorratsbonus` : ''}
+            {payout.extra ? `, ${payout.extra > 0 ? '+' : ''}${payout.extra} 🥨 Extras` : ''}
           </span>
         ) : payout ? (
-          <span className="cs-payout cs-lost">Runde verloren – ein Leben weniger.</span>
+          <span className="cs-payout cs-lost">Audienz verloren – ein Herz weniger.</span>
         ) : null}
       </div>
       <div className="cs-row cs-offers">
@@ -761,7 +761,7 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
               key={index}
               emoji={d.emoji}
               title={d.title}
-              sub={`${pack.price} T`}
+              sub={`${pack.price} 🥨`}
               tone={`${d.tone} cs-pack-${pack.size}`}
               selected={sel?.kind === 'pack' && sel.index === index}
               hint={isHint({ type: 'buyPack', index })}
@@ -773,7 +773,7 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
           <Tile
             emoji={describeTool(shop.tool).emoji}
             title={describeTool(shop.tool).title}
-            sub="Werkzeug"
+            sub="Privileg"
             tone="cs-t-tool"
             selected={sel?.kind === 'tool'}
             hint={isHint({ type: 'buyTool' })}
@@ -784,14 +784,14 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
       {info}
       <div className="cs-actions">
         <Btn disabled={!can({ type: 'reroll' })} hint={hint?.type === 'reroll'} onClick={() => onMove({ type: 'reroll' })}>
-          🔄 Neu sortieren ({shop.rerollCost} T)
+          🚶 Weiterschlendern ({shop.rerollCost} 🥨)
         </Btn>
         <Btn primary hint={hint?.type === 'next'} onClick={() => onMove({ type: 'next' })}>
           Weiter ▶
         </Btn>
       </div>
       <p className="cs-muted cs-small-text">
-        Mod-Plätze frei: {freeModSlots(run)} · Ordnungsbonus: 1 T je 5 T (bis {run.tools.includes('book2') ? 20 : run.tools.includes('book') ? 10 : 5} T)
+        Narrenplätze frei: {freeModSlots(run)} · Vorratsbonus: 1 🥨 je {BONUS_STEP} 🥨 (bis {bonusCap(run)} 🥨)
       </p>
     </div>
   );
@@ -802,7 +802,7 @@ function OfferTile({ offer, selected, hint, onClick, pop, className }: { offer: 
     return (
       <span className={`cs-offer-card ${className ?? ''}`}>
         <CardView card={offer.card} selected={selected} hint={hint} onClick={onClick ? () => onClick() : undefined} />
-        {offer.price > 0 && <span className="cs-tile-sub">{offer.price} T</span>}
+        {offer.price > 0 && <span className="cs-tile-sub">{offer.price} 🥨</span>}
       </span>
     );
   const d = describeOffer(offer);
@@ -812,7 +812,7 @@ function OfferTile({ offer, selected, hint, onClick, pop, className }: { offer: 
     <Tile
       emoji={d.emoji}
       title={d.title}
-      sub={offer.price > 0 ? `${offer.price} T` : undefined}
+      sub={offer.price > 0 ? `${offer.price} 🥨` : undefined}
       badge={sticker}
       tone={`${d.tone} ${foil} ${className ?? ''}`}
       selected={selected}
@@ -849,15 +849,15 @@ function PackPanel({ run, find, onMove, hint, selected, setSelected, picked, tog
   const pack = run.pack!;
   const d = describePack({ kind: pack.kind, size: 'normal', price: 0 });
   const sorted = [...picked].sort((a, b) => a - b);
-  // Bühne: 0 Paket wackelt, 1 Klebeband reißt, ab 2 werden die Karten einzeln umgedreht.
+  // Bühne: 0 Bündel wackelt, 1 Schnur geht auf, ab 2 werden die Karten einzeln umgedreht.
   if (stage < 2) {
     return (
-      <button type="button" className="cs-panel cs-center cs-delivery" onClick={finish} aria-label="Lieferung öffnen">
+      <button type="button" className="cs-panel cs-center cs-delivery" onClick={finish} aria-label="Bündel aufschnüren">
         <span className={`cs-box ${stage === 0 ? 'cs-wobble' : 'cs-tear'}`} aria-hidden="true">
-          📦
+          {d.emoji}
         </span>
-        <span className="cs-title">{d.title} kommt an …</span>
-        <span className="cs-muted">Tippen zum Auspacken</span>
+        <span className="cs-title">{d.title} wird aufgeschnürt …</span>
+        <span className="cs-muted">Tippen zum Aufschnüren</span>
       </button>
     );
   }
@@ -937,7 +937,7 @@ function OthersStrip({ view, me, seatNames }: { view: SorterState; me: SeatId; s
             <span className="cs-dot" style={{ background: SEAT_COLORS[r.seat % SEAT_COLORS.length] }} />
             <strong>{seatNames[r.seat] ?? `Platz ${r.seat + 1}`}</strong>
             <span className="cs-muted">
-              L{r.level} {ROUND_NAMES[r.round]?.[0]} · {phaseText(r)}
+              Tag {r.level} {ROUND_NAMES[r.round]?.[0]} · {phaseText(r)}
             </span>
             {(view.mode === 'duel' || view.mode === 'showdown') && <Lives lives={r.lives} />}
             {r.current?.duel && (
@@ -945,7 +945,7 @@ function OthersStrip({ view, me, seatNames }: { view: SorterState; me: SeatId; s
                 ⚔️ {r.current.score === HIDDEN_SCORE ? '?' : formatNumber(r.current.score)}
               </span>
             )}
-            <span className="cs-other-mods" aria-label="Mods">
+            <span className="cs-other-mods" aria-label="Narren">
               {r.mods.map((m) => modDef(m.key).emoji).join('')}
             </span>
           </div>
@@ -958,7 +958,7 @@ function phaseText(run: RunState): string {
   return {
     choose: 'wählt',
     play: 'spielt',
-    shop: 'in der Zentrale',
+    shop: 'auf dem Jahrmarkt',
     pack: 'packt aus',
     wait: 'wartet',
     out: 'raus',
@@ -970,7 +970,7 @@ function DuelResult({ view, seatNames }: { view: SorterState; seatNames: string[
   const duel = view.lastDuel!;
   return (
     <div className="cs-duel">
-      <strong>⚔️ Duell Level {duel.level}</strong>
+      <strong>⚔️ Wettstreit an Hoftag {duel.level}</strong>
       {duel.scores.map((score, seat) =>
         score === null ? null : (
           <span key={seat} className={duel.losers.includes(seat) ? 'cs-lost' : ''}>
@@ -986,16 +986,16 @@ function DuelResult({ view, seatNames }: { view: SorterState; seatNames: string[
 function Overview({ view, seatNames, refEl }: { view: SorterState; seatNames: string[]; refEl: (el: HTMLDivElement | null) => void }) {
   return (
     <div ref={refEl} className="cs-board cs-overview">
-      <p className="cs-title">🎨 Farbensortierer</p>
+      <p className="cs-title">🃏 Narrenhof</p>
       <p className="cs-muted">
-        {DECKS.find((d) => d.key === view.deckKind)?.name} · Sortierstufe {STAKES[view.stake - 1]?.name}
+        {DECKS.find((d) => d.key === view.deckKind)?.name} · Hofrang {STAKES[view.stake - 1]?.name}
       </p>
       {view.runs.map((r) => (
         <div key={r.seat} className="cs-other">
           <span className="cs-dot" style={{ background: SEAT_COLORS[r.seat % SEAT_COLORS.length] }} />
           <strong>{seatNames[r.seat] ?? `Platz ${r.seat + 1}`}</strong>
           <span className="cs-muted">
-            Level {r.level} · {ROUND_NAMES[r.round]} · {phaseText(r)}
+            Hoftag {r.level} · {ROUND_NAMES[r.round]} · {phaseText(r)}
           </span>
           {view.runs.length > 1 && <Lives lives={r.lives} />}
           <span>{r.mods.map((m) => modDef(m.key).emoji).join('')}</span>
@@ -1019,8 +1019,8 @@ function LevelsTable({ run, onClose }: { run: RunState; onClose: () => void }) {
         <thead>
           <tr>
             <th>Kombi</th>
-            <th>Lvl</th>
-            <th>Chips × Mult</th>
+            <th>Stufe</th>
+            <th>Witz × Lachen</th>
             <th>gespielt</th>
           </tr>
         </thead>
@@ -1038,8 +1038,8 @@ function LevelsTable({ run, onClose }: { run: RunState; onClose: () => void }) {
         </tbody>
       </table>
       <p className="cs-muted cs-small-text">
-        Deck: {run.deck.length} Karten · Werkzeuge: {run.tools.length ? run.tools.map((k) => describeTool(k).emoji + ' ' + describeTool(k).title).join(', ') : 'keine'}
-        {run.stickers.length ? ` · Sticker: ${run.stickers.map((k) => TAGS[k]?.emoji).join(' ')}` : ''}
+        Deck: {run.deck.length} Karten · Privilegien: {run.tools.length ? run.tools.map((k) => describeTool(k).emoji + ' ' + describeTool(k).title).join(', ') : 'keine'}
+        {run.stickers.length ? ` · Gefallen: ${run.stickers.map((k) => TAGS[k]?.emoji).join(' ')}` : ''}
       </p>
     </div>
   );
@@ -1080,8 +1080,8 @@ export const gameUi: GameUi<SorterState, SorterMove> = {
     const run = view.runs[seat];
     if (!run) return null;
     const lives = view.mode === 'duel' || view.mode === 'showdown' ? ` · ${'❤️'.repeat(Math.max(0, run.lives))}` : '';
-    if (run.phase === 'out') return `raus in Level ${run.level}`;
+    if (run.phase === 'out') return `raus an Hoftag ${run.level}`;
     if (run.phase === 'won') return 'geschafft 🏆';
-    return `Level ${run.level} · ${ROUND_NAMES[run.round]}${lives}`;
+    return `Hoftag ${run.level} · ${ROUND_NAMES[run.round]}${lives}`;
   },
 };

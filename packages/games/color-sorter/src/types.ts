@@ -1,10 +1,10 @@
 import type { RngState, SeatId } from '@brett-und-blatt/engine';
 
-/** Die vier Farben: Rot, Gelb, Blau, Grün. */
-export type Color = 'r' | 'y' | 'b' | 'g';
-export const COLORS: Color[] = ['r', 'y', 'b', 'g'];
+/** Die vier Farben: Herz, Pik, Karo, Kreuz. */
+export type Color = 'h' | 's' | 'd' | 'c';
+export const COLORS: Color[] = ['h', 's', 'd', 'c'];
 
-/** Rang 1–13: 1–9 sind Zahlen, 10 Baby, 11 Mädchen, 12 Junge, 13 Santa (höchster Rang). */
+/** Rang 2–14: 2–10 sind Zahlen, 11 Bube, 12 Dame, 13 König, 14 Ass (höchster Rang). */
 export type Rank = number;
 
 /** Friseur-Salon: Veredelungen einer Spielkarte. */

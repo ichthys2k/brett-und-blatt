@@ -1,6 +1,6 @@
 import type { BotDefinition, BotLevel, Rng } from '@brett-und-blatt/engine';
 import { DREAMS, SPELLS } from './content';
-import { detectHand, HANDS } from './cards';
+import { ACE, detectHand, HANDS } from './cards';
 import { modDef, SOLO_TABLE, type TableInfo } from './mods';
 import { bossFor, legalMoves, MAX_SELECT, sellValue, tableInfo } from './rules';
 import { previewHand } from './scoring';
@@ -44,7 +44,7 @@ export function bestPlay(run: RunState, table: TableInfo = SOLO_TABLE): { cards:
 
 const NASTY_BOSSES = new Set(['cactus', 'croco', 'spider', 'bear', 'ape', 'dragon', 'snake', 'lion', 'unicorn', 'seaSerpent']);
 
-/** Welche Karten wegwerfen? Ziel: Farben-Satz oder Paare stärken. */
+/** Welche Karten wegwerfen? Ziel: Farbe oder Paare stärken. */
 function chooseDiscard(run: RunState, level: BotLevel, keep: number[]): number[] {
   const hand = run.hand as (Card | ViewCard)[];
   const open = hand.map((c, i) => (isOpen(c) ? i : -1)).filter((i) => i >= 0);
@@ -79,7 +79,7 @@ function targetsFor(item: Consumable, hand: (Card | ViewCard)[]): number[] | nul
   }
   if (item.key === 'hanged') return byRank.slice(-max);
   if (item.key === 'death') return open.length >= 2 ? [byRank[byRank.length - 1]!, byRank[0]!].sort((a, b) => a - b) : null;
-  if (item.key === 'strength') return byRank.filter((i) => (hand[i] as Card).rank < 13).slice(0, max);
+  if (item.key === 'strength') return byRank.filter((i) => (hand[i] as Card).rank < ACE).slice(0, max);
   return byRank.slice(0, max);
 }
 
@@ -189,7 +189,7 @@ function packMove(run: RunState, moves: SorterMove[]): SorterMove {
 }
 
 /**
- * Der Farbensortierer-Bot schätzt jede mögliche Auswahl mit der echten Wertung
+ * Der Narrenhof-Bot schätzt jede mögliche Auswahl mit der echten Wertung
  * (ohne Zufall) und spielt die beste. Er kennt nur seine Sicht – also nicht die
  * Reihenfolge des Stapels.
  *

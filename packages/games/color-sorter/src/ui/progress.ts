@@ -58,6 +58,14 @@ function empty(): Progress {
 const strings = (value: unknown, max = 500): string[] => (Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string').slice(-max) : []);
 const count = (value: unknown): number => (typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0);
 
+/** Narrenhof (29.10.2026): ersetzte Mods werden zu den neuen Narren auf demselben Platz – Freischaltungen bleiben erhalten. */
+const RENAMED_UNLOCKS: Record<string, string> = {
+  'mod:troubadour': 'mod:twoFaced',
+  'mod:bus': 'mod:herald',
+  'mod:egg': 'mod:royalCouple',
+  'mod:drunk': 'mod:monkey',
+};
+
 /** Prüft einen geladenen oder eingefügten Stand Feld für Feld. */
 export function sanitize(raw: unknown): Progress {
   const base = empty();
@@ -65,7 +73,9 @@ export function sanitize(raw: unknown): Progress {
   const r = raw as Record<string, unknown>;
   const album = (r.album ?? {}) as Record<string, unknown>;
   const stats = (r.stats ?? {}) as Record<string, unknown>;
-  const unlocked = strings(r.unlocked).filter((id) => UNLOCKABLE_BY_ID[id]);
+  const unlocked = strings(r.unlocked)
+    .map((id) => RENAMED_UNLOCKS[id] ?? id)
+    .filter((id) => UNLOCKABLE_BY_ID[id]);
   return {
     version: 1,
     drops: count(r.drops),

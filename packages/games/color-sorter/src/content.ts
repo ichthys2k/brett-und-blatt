@@ -1,6 +1,6 @@
 import type { Color, Enhancement, Foil, HandType, PackKind, PackSize, Seal, Sticker } from './types';
 
-// ---------------------------------------------------------------- Zauberkarten
+// ---------------------------------------------------------------- Kunststücke (Zauberkarten)
 
 export interface SpellDef {
   key: string;
@@ -16,9 +16,9 @@ export interface SpellDef {
 const spells: SpellDef[] = [
   {
     key: 'fool',
-    name: 'Der Narr',
-    emoji: '🃏',
-    text: 'Erzeugt die zuletzt benutzte Zauber- oder Nagelstudio-Karte (außer dem Narren)',
+    name: 'Da capo!',
+    emoji: '🔁',
+    text: 'Erzeugt das zuletzt benutzte Kunststück oder die zuletzt benutzte Übung (außer „Da capo!“)',
     targets: [0, 0],
   },
   {
@@ -33,7 +33,7 @@ const spells: SpellDef[] = [
     key: 'priestess',
     name: 'Die Hohepriesterin',
     emoji: '🔮',
-    text: 'Erzeugt bis zu 2 zufällige Nagelstudio-Karten',
+    text: 'Erzeugt bis zu 2 zufällige Übungen',
     targets: [0, 0],
   },
   {
@@ -48,7 +48,7 @@ const spells: SpellDef[] = [
     key: 'emperor',
     name: 'Der Herrscher',
     emoji: '🤴',
-    text: 'Erzeugt bis zu 2 zufällige Zauberkarten',
+    text: 'Erzeugt bis zu 2 zufällige Kunststücke',
     targets: [0, 0],
   },
   {
@@ -87,14 +87,14 @@ const spells: SpellDef[] = [
     key: 'hermit',
     name: 'Der Eremit',
     emoji: '🧙',
-    text: 'Verdoppelt deine Token (höchstens +20 T)',
+    text: 'Verdoppelt deine Brezeln (höchstens +20 🥨)',
     targets: [0, 0],
   },
   {
     key: 'wheel',
     name: 'Das Rad',
     emoji: '🎡',
-    text: 'Zu 1/4 bekommt ein zufälliger Mod eine Folie',
+    text: 'Zu 1/4 bekommt ein zufälliger Narr eine Folie',
     targets: [0, 0],
   },
   {
@@ -122,7 +122,7 @@ const spells: SpellDef[] = [
     key: 'temperance',
     name: 'Die Mäßigkeit',
     emoji: '🍵',
-    text: 'Gibt den Verkaufswert aller Mods als Token (höchstens 50 T)',
+    text: 'Gibt den Verkaufswert aller Narren als Brezeln (höchstens 50 🥨)',
     targets: [0, 0],
   },
   {
@@ -145,46 +145,46 @@ const spells: SpellDef[] = [
     key: 'star',
     name: 'Der Stern',
     emoji: '⭐',
-    text: 'Bis zu 3 Karten werden gelb',
+    text: 'Bis zu 3 Karten werden Karo',
     targets: [1, 3],
-    color: 'y',
+    color: 'd',
   },
   {
     key: 'moon',
     name: 'Der Mond',
     emoji: '🌙',
-    text: 'Bis zu 3 Karten werden blau',
+    text: 'Bis zu 3 Karten werden Pik',
     targets: [1, 3],
-    color: 'b',
+    color: 's',
   },
   {
     key: 'sun',
     name: 'Die Sonne',
     emoji: '☀️',
-    text: 'Bis zu 3 Karten werden rot',
+    text: 'Bis zu 3 Karten werden Herz',
     targets: [1, 3],
-    color: 'r',
+    color: 'h',
   },
   {
     key: 'judgement',
     name: 'Das Gericht',
     emoji: '📯',
-    text: 'Erzeugt einen zufälligen Mod (wenn Platz ist)',
+    text: 'Erzeugt einen zufälligen Narren (wenn Platz ist)',
     targets: [0, 0],
   },
   {
     key: 'world',
     name: 'Die Welt',
     emoji: '🌍',
-    text: 'Bis zu 3 Karten werden grün',
+    text: 'Bis zu 3 Karten werden Kreuz',
     targets: [1, 3],
-    color: 'g',
+    color: 'c',
   },
 ];
 export const SPELLS: Record<string, SpellDef> = Object.fromEntries(spells.map((s) => [s.key, s]));
 export const SPELL_KEYS = spells.map((s) => s.key);
 
-// ---------------------------------------------------------------- Nagelstudio
+// ---------------------------------------------------------------- Übungen (Nagelstudio)
 
 export interface NailDef {
   key: string;
@@ -194,29 +194,29 @@ export interface NailDef {
 }
 
 const nails: NailDef[] = [
-  { key: 'oil', name: 'Nagelöl', emoji: '🧴', hand: 'high' },
-  { key: 'clearCoat', name: 'Klarlack', emoji: '💅', hand: 'pair' },
-  { key: 'french', name: 'French Nails', emoji: '🤍', hand: 'twoPair' },
-  { key: 'babyboomer', name: 'Babyboomer', emoji: '👶', hand: 'three' },
-  { key: 'stiletto', name: 'Stiletto-Form', emoji: '👠', hand: 'straight' },
-  { key: 'fullcover', name: 'Fullcover', emoji: '🎨', hand: 'flush' },
-  { key: 'acrylic', name: 'Acryl-Modellage', emoji: '🏗️', hand: 'fullHouse' },
-  { key: 'nailArt', name: 'Nail Art', emoji: '🖼️', hand: 'four' },
+  { key: 'oil', name: 'Grimasse', emoji: '😝', hand: 'high' },
+  { key: 'clearCoat', name: 'Wortspiel', emoji: '🗣️', hand: 'pair' },
+  { key: 'french', name: 'Doppelsinn', emoji: '🔀', hand: 'twoPair' },
+  { key: 'babyboomer', name: 'Jonglage', emoji: '🤹', hand: 'three' },
+  { key: 'stiletto', name: 'Stelzenlauf', emoji: '🦯', hand: 'straight' },
+  { key: 'fullcover', name: 'Farbenspiel', emoji: '🎨', hand: 'flush' },
+  { key: 'acrylic', name: 'Menschenpyramide', emoji: '🤸', hand: 'fullHouse' },
+  { key: 'nailArt', name: 'Feuerspucken', emoji: '🔥', hand: 'four' },
   {
     key: 'fiberglass',
-    name: 'Fiberglas-Technik',
-    emoji: '🧵',
+    name: 'Seiltanz',
+    emoji: '🎪',
     hand: 'straightFlush',
   },
-  { key: 'glitter', name: 'Glitzer', emoji: '🌟', hand: 'five' },
-  { key: 'rhinestone', name: 'Strass', emoji: '💎', hand: 'flushHouse' },
-  { key: 'chrome', name: 'Chrom-Effekt', emoji: '🪩', hand: 'flushFive' },
+  { key: 'glitter', name: 'Narrenturm', emoji: '🗼', hand: 'five' },
+  { key: 'rhinestone', name: 'Feuerwerk', emoji: '🎆', hand: 'flushHouse' },
+  { key: 'chrome', name: 'Königsnummer', emoji: '👑', hand: 'flushFive' },
 ];
 export const NAILS: Record<string, NailDef> = Object.fromEntries(nails.map((n) => [n.key, n]));
 export const NAIL_KEYS = nails.map((n) => n.key);
 export const NAIL_FOR_HAND = Object.fromEntries(nails.map((n) => [n.hand, n.key])) as Record<HandType, string>;
 
-// ---------------------------------------------------------------- Traumkarten
+// ---------------------------------------------------------------- Kuriositäten (Traumkarten)
 
 export interface DreamDef {
   key: string;
@@ -239,7 +239,7 @@ const dreams: DreamDef[] = [
     key: 'snowman',
     name: 'Schneemann',
     emoji: '⛄',
-    text: 'Entfernt 1 zufällige Handkarte, dafür 2 veredelte Santas ins Deck',
+    text: 'Entfernt 1 zufällige Handkarte, dafür 2 veredelte Asse ins Deck',
     targets: [0, 0],
   },
   {
@@ -253,7 +253,7 @@ const dreams: DreamDef[] = [
     key: 'talisman',
     name: 'Talisman',
     emoji: '🏅',
-    text: '1 Karte bekommt ein Gold-Abzeichen',
+    text: '1 Karte bekommt ein Gold-Wappen',
     targets: [1, 1],
     seal: 'gold',
   },
@@ -261,7 +261,7 @@ const dreams: DreamDef[] = [
     key: 'dejaVu',
     name: 'Déjà-vu',
     emoji: '🔁',
-    text: '1 Karte bekommt ein rotes Abzeichen',
+    text: '1 Karte bekommt ein rotes Wappen',
     targets: [1, 1],
     seal: 'red',
   },
@@ -269,7 +269,7 @@ const dreams: DreamDef[] = [
     key: 'trance',
     name: 'Trance',
     emoji: '🌀',
-    text: '1 Karte bekommt ein blaues Abzeichen',
+    text: '1 Karte bekommt ein blaues Wappen',
     targets: [1, 1],
     seal: 'blue',
   },
@@ -277,7 +277,7 @@ const dreams: DreamDef[] = [
     key: 'medium',
     name: 'Medium',
     emoji: '🟣',
-    text: '1 Karte bekommt ein lila Abzeichen',
+    text: '1 Karte bekommt ein lila Wappen',
     targets: [1, 1],
     seal: 'purple',
   },
@@ -292,7 +292,7 @@ const dreams: DreamDef[] = [
     key: 'spook',
     name: 'Spukgestalt',
     emoji: '👻',
-    text: 'Erzeugt einen seltenen Mod, deine Token gehen auf 0',
+    text: 'Erzeugt einen seltenen Narren, deine Brezeln gehen auf 0',
     targets: [0, 0],
   },
   {
@@ -313,28 +313,28 @@ const dreams: DreamDef[] = [
     key: 'bubble',
     name: 'Seifenblase',
     emoji: '🫧',
-    text: 'Ein zufälliger Mod wird durchsichtig (+1 Mod-Platz), Handgröße −1',
+    text: 'Ein zufälliger Narr wird durchsichtig (+1 Narrenplatz), Handgröße −1',
     targets: [0, 0],
   },
   {
     key: 'cleanup',
     name: 'Großputz',
     emoji: '🧽',
-    text: 'Entfernt 5 zufällige Handkarten, dafür +20 T',
+    text: 'Entfernt 5 zufällige Handkarten, dafür +20 🥨',
     targets: [0, 0],
   },
   {
     key: 'mirror',
     name: 'Spiegel',
     emoji: '🪞',
-    text: 'Kopiert einen zufälligen Mod, alle anderen (nicht angeklebten) verschwinden',
+    text: 'Kopiert einen zufälligen Narren, alle anderen (nicht angeklebten) verschwinden',
     targets: [0, 0],
   },
   {
     key: 'spell',
     name: 'Bannkreis',
     emoji: '🪬',
-    text: 'Ein zufälliger Mod wird irisierend, alle anderen (nicht angeklebten) verschwinden',
+    text: 'Ein zufälliger Narr wird irisierend, alle anderen (nicht angeklebten) verschwinden',
     targets: [0, 0],
   },
   {
@@ -348,14 +348,14 @@ const dreams: DreamDef[] = [
     key: 'soul',
     name: 'Seele',
     emoji: '💫',
-    text: 'Erzeugt einen legendären Mod (wenn Platz ist)',
+    text: 'Erzeugt einen legendären Narren (wenn Platz ist)',
     targets: [0, 0],
   },
   {
     key: 'blackHole',
     name: 'Schwarzes Loch',
     emoji: '🕳️',
-    text: 'Alle Kombis steigen um 1 Level',
+    text: 'Alle Kombis steigen um 1 Stufe',
     targets: [0, 0],
   },
 ];
@@ -364,103 +364,103 @@ export const DREAMS: Record<string, DreamDef> = Object.fromEntries(dreams.map((d
 export const DREAM_KEYS = dreams.map((d) => d.key).filter((k) => k !== 'soul' && k !== 'blackHole');
 export const RARE_DREAMS = ['soul', 'blackHole'];
 
-// ---------------------------------------------------------------- Veredelungen, Folien, Abzeichen
+// ---------------------------------------------------------------- Schneiderei (Veredelungen), Glanz (Folien), Wappen (Abzeichen)
 
 export const ENHANCEMENTS: Record<Enhancement, { name: string; emoji: string; text: string }> = {
   granite: {
-    name: 'Granit-Look',
-    emoji: '🧱',
-    text: '50 Chips, kein Rang und keine Farbe, wird immer gewertet',
+    name: 'Pflasterstein',
+    emoji: '🪨',
+    text: '50 Witz, kein Rang und keine Farbe, wird immer gewertet',
   },
-  volume: { name: 'Volumen-Boost', emoji: '💇‍♀️', text: '+30 Chips' },
-  gloss: { name: 'Glossing', emoji: '✨', text: '+4 Mult' },
-  ombre: { name: 'Ombré', emoji: '🌈', text: 'Zählt als jede Farbe' },
+  volume: { name: 'Schellenbesatz', emoji: '🔔', text: '+30 Witz' },
+  gloss: { name: 'Schminke', emoji: '💄', text: '+4 Lachen' },
+  ombre: { name: 'Flickenmuster', emoji: '🧩', text: 'Zählt als jede Farbe' },
   gold: {
-    name: 'Gold-Strähnen',
-    emoji: '💛',
-    text: '+3 T, wenn sie am Rundenende in der Hand ist',
+    name: 'Goldstickerei',
+    emoji: '🧵',
+    text: '+3 🥨, wenn sie am Ende der Audienz in der Hand ist',
   },
   blond: {
-    name: 'Blondierung',
-    emoji: '👱',
-    text: '×2 Mult, löst sich zu 1/4 auf',
+    name: 'Glasperlen',
+    emoji: '🫧',
+    text: '×2 Lachen, löst sich zu 1/4 auf',
   },
   keratin: {
-    name: 'Keratin-Kur',
+    name: 'Kettenhemd',
     emoji: '🛡️',
-    text: '×1,5 Mult, solange sie in der Hand bleibt',
+    text: '×1,5 Lachen, solange sie in der Hand bleibt',
   },
   star: {
-    name: 'Sternen-Welle',
-    emoji: '🌠',
-    text: 'Zu 1/5: +20 Mult. Zu 1/15: +20 T',
+    name: 'Kleeblatt',
+    emoji: '🍀',
+    text: 'Zu 1/5: +20 Lachen. Zu 1/15: +20 🥨',
   },
 };
 
 export const FOILS: Record<Foil, { name: string; emoji: string; text: string; price: number }> = {
-  hot: { name: 'Heißfolie', emoji: '🔥', text: '+50 Chips', price: 2 },
-  holo: { name: 'Holo-Laminat', emoji: '💿', text: '+10 Mult', price: 3 },
-  iris: { name: 'Irisierender Lack', emoji: '🫧', text: '×1,5 Mult', price: 5 },
-  clear: { name: 'Durchsichtig', emoji: '👓', text: '+1 Mod-Platz', price: 5 },
+  hot: { name: 'Vergoldet', emoji: '✨', text: '+50 Witz', price: 2 },
+  holo: { name: 'Perlmutt', emoji: '🦪', text: '+10 Lachen', price: 3 },
+  iris: { name: 'Buntglas', emoji: '🪟', text: '×1,5 Lachen', price: 5 },
+  clear: { name: 'Unsichtbar', emoji: '👻', text: '+1 Narrenplatz', price: 5 },
 };
 
 export const SEALS: Record<Seal, { name: string; emoji: string; text: string }> = {
   gold: {
-    name: 'Gold-Abzeichen',
-    emoji: '🏅',
-    text: '+3 T, wenn die Karte gewertet wird',
+    name: 'Brezel-Wappen',
+    emoji: '🥨',
+    text: '+3 🥨, wenn die Karte gewertet wird',
   },
   red: {
-    name: 'Rotes Abzeichen',
+    name: 'Echo-Wappen',
     emoji: '🔁',
     text: 'Die Karte zählt doppelt',
   },
   blue: {
-    name: 'Blaues Abzeichen',
-    emoji: '🔷',
-    text: 'Bleibt sie am Rundenende in der Hand: Nagelstudio-Karte der letzten Kombi',
+    name: 'Eulen-Wappen',
+    emoji: '🦉',
+    text: 'Bleibt sie am Ende der Audienz in der Hand: Übung der letzten Kombi',
   },
   purple: {
-    name: 'Lila Abzeichen',
-    emoji: '🟪',
-    text: 'Beim Verwerfen: eine zufällige Zauberkarte',
+    name: 'Feder-Wappen',
+    emoji: '🪶',
+    text: 'Beim Tauschen: ein zufälliges Kunststück',
   },
 };
 
 export const STICKERS: Record<Sticker, { name: string; emoji: string; text: string }> = {
   eternal: {
-    name: 'Angeklebt',
+    name: 'Treu',
     emoji: '📌',
     text: 'Lässt sich nicht verkaufen oder entfernen',
   },
   perishable: {
-    name: 'Vergänglich',
-    emoji: '⏳',
-    text: 'Wirkt nach 5 Runden nicht mehr',
+    name: 'Müde',
+    emoji: '😴',
+    text: 'Wirkt nach 5 Audienzen nicht mehr',
   },
   rental: {
-    name: 'Geliehen',
-    emoji: '🔑',
-    text: 'Kostet 1 T, dafür 3 T je Runde',
+    name: 'Gastnarr',
+    emoji: '🧳',
+    text: 'Kostet 1 🥨, dafür 3 🥨 je Audienz',
   },
 };
 
-// ---------------------------------------------------------------- Lieferungen
+// ---------------------------------------------------------------- Bündel (Lieferungen)
 
 export const PACK_KINDS: Record<PackKind, { name: string; emoji: string; text: string }> = {
-  mods: { name: 'Mod-Kiste', emoji: '📦', text: 'Mods' },
+  mods: { name: 'Narrenkorb', emoji: '🧺', text: 'Narren' },
   spells: {
-    name: 'Zauber-Mappe',
-    emoji: '📜',
-    text: 'Zauberkarten – direkt auf deine Karten anwenden',
+    name: 'Trickbeutel',
+    emoji: '👝',
+    text: 'Kunststücke – direkt auf deine Karten anwenden',
   },
-  nails: { name: 'Nagellack-Set', emoji: '💅', text: 'Nagelstudio-Karten' },
+  nails: { name: 'Bücherbündel', emoji: '📚', text: 'Übungen' },
   dreams: {
-    name: 'Traum-Schachtel',
-    emoji: '🌙',
-    text: 'Traumkarten – direkt anwenden',
+    name: 'Wunderkiste',
+    emoji: '🏺',
+    text: 'Kuriositäten – direkt anwenden',
   },
-  cards: { name: 'Karten-Paket', emoji: '🎴', text: 'Spielkarten fürs Deck' },
+  cards: { name: 'Kartenbündel', emoji: '🎴', text: 'Spielkarten fürs Deck' },
 };
 
 export const PACK_SIZES: Record<
@@ -506,7 +506,7 @@ export const PACK_SIZE_WEIGHTS: [PackSize, number][] = [
   ['huge', 1],
 ];
 
-// ---------------------------------------------------------------- Werkzeuge
+// ---------------------------------------------------------------- Privilegien (Werkzeuge)
 
 export interface ToolDef {
   key: string;
@@ -523,116 +523,116 @@ export const BOSS_REROLL_PRICE = 5;
 const tools: ToolDef[] = [
   {
     key: 'magnet',
-    name: 'Magnet',
-    emoji: '🧲',
-    text: '+1 Angebot in der Sortier-Zentrale',
+    name: 'Marktrecht',
+    emoji: '🎪',
+    text: '+1 Angebot auf dem Jahrmarkt',
   },
   {
     key: 'superMagnet',
-    name: 'Supermagnet',
-    emoji: '🧲',
+    name: 'Großes Marktrecht',
+    emoji: '🎪',
     text: '+1 weiteres Angebot',
     requires: 'magnet',
   },
   {
     key: 'sale',
-    name: 'Rabatt',
+    name: 'Hoflieferant',
     emoji: '🏷️',
     text: 'Alles 25 % günstiger',
     requires: undefined,
   },
   {
     key: 'bigSale',
-    name: 'Großer Rabatt',
+    name: 'Königlicher Hoflieferant',
     emoji: '🏷️',
     text: 'Alles 50 % günstiger',
     requires: 'sale',
   },
   {
     key: 'tidy',
-    name: 'Ordnung',
-    emoji: '🧹',
-    text: 'Neu sortieren 2 T günstiger',
+    name: 'Kurze Wege',
+    emoji: '🚶',
+    text: 'Weiterschlendern 2 🥨 günstiger',
   },
   {
     key: 'tidy2',
-    name: 'Große Ordnung',
-    emoji: '🧹',
-    text: 'Neu sortieren weitere 2 T günstiger',
+    name: 'Abkürzung',
+    emoji: '🏃',
+    text: 'Weiterschlendern weitere 2 🥨 günstiger',
     requires: 'tidy',
   },
   {
     key: 'extraHand',
-    name: 'Zusatzhand',
-    emoji: '✋',
-    text: '+1 Hand je Runde',
+    name: 'Zugabe',
+    emoji: '👏',
+    text: '+1 Vorführung je Audienz',
   },
   {
     key: 'extraHand2',
-    name: 'Doppelhand',
+    name: 'Doppelte Zugabe',
     emoji: '🙌',
-    text: '+1 weitere Hand je Runde',
+    text: '+1 weitere Vorführung je Audienz',
     requires: 'extraHand',
   },
   {
     key: 'bin',
-    name: 'Papierkorb',
-    emoji: '🗑️',
-    text: '+1 Verwerfen je Runde',
+    name: 'Kartentisch',
+    emoji: '🃏',
+    text: '+1 Tauschen je Audienz',
   },
   {
     key: 'bin2',
-    name: 'Recyclinghof',
-    emoji: '🚛',
-    text: '+1 weiteres Verwerfen je Runde',
+    name: 'Großer Kartentisch',
+    emoji: '🎴',
+    text: '+1 weiteres Tauschen je Audienz',
     requires: 'bin',
   },
-  { key: 'bag', name: 'Große Tasche', emoji: '👜', text: '+1 Handgröße' },
+  { key: 'bag', name: 'Weite Ärmel', emoji: '👘', text: '+1 Handgröße' },
   {
     key: 'bag2',
-    name: 'Reisekoffer',
-    emoji: '🧳',
+    name: 'Zauberärmel',
+    emoji: '🥻',
     text: '+1 weitere Handgröße',
     requires: 'bag',
   },
   {
     key: 'basket',
-    name: 'Korb',
-    emoji: '🧺',
-    text: '+1 Platz für Verbrauchsgegenstände',
+    name: 'Größere Narrentasche',
+    emoji: '👝',
+    text: '+1 Platz in der Narrentasche',
   },
   {
     key: 'book',
-    name: 'Sparbuch',
-    emoji: '📒',
-    text: 'Ordnungsbonus bis 10 T',
+    name: 'Vorratskammer',
+    emoji: '🥫',
+    text: 'Vorratsbonus bis 8 🥨',
     requires: undefined,
   },
   {
     key: 'book2',
-    name: 'Goldenes Sparbuch',
-    emoji: '📔',
-    text: 'Ordnungsbonus bis 20 T',
+    name: 'Große Vorratskammer',
+    emoji: '🏰',
+    text: 'Vorratsbonus bis 16 🥨',
     requires: 'book',
   },
   {
     key: 'shelf',
-    name: 'Regal',
-    emoji: '🗄️',
-    text: '+1 Mod-Platz',
+    name: 'Zweite Narrenbank',
+    emoji: '🪑',
+    text: '+1 Narrenplatz',
     requires: 'magnet',
   },
   {
     key: 'scope',
-    name: 'Fernrohr',
-    emoji: '🔭',
-    text: `Boss einmal je Level neu wählen (${BOSS_REROLL_PRICE} T)`,
+    name: 'Bittschrift',
+    emoji: '📜',
+    text: `Einmal je Hoftag eine andere Herrschaft in den Thronsaal bitten (${BOSS_REROLL_PRICE} 🥨)`,
   },
   {
     key: 'scope2',
-    name: 'Satellit',
-    emoji: '🛰️',
-    text: `Boss beliebig oft neu wählen (je ${BOSS_REROLL_PRICE} T)`,
+    name: 'Gnadengesuch',
+    emoji: '📯',
+    text: `Beliebig oft eine andere Herrschaft bitten (je ${BOSS_REROLL_PRICE} 🥨)`,
     requires: 'scope',
   },
 ];
@@ -640,7 +640,7 @@ export const TOOLS: Record<string, ToolDef> = Object.fromEntries(tools.map((t) =
 export const TOOL_KEYS = tools.map((t) => t.key);
 export const TOOL_PRICE = 10;
 
-// ---------------------------------------------------------------- Sticker (fürs Überspringen)
+// ---------------------------------------------------------------- Gefallen (Sticker fürs Überspringen)
 
 export interface TagDef {
   key: string;
@@ -652,57 +652,57 @@ export interface TagDef {
 const tags: TagDef[] = [
   {
     key: 'modBox',
-    name: 'Mod-Kiste gratis',
-    emoji: '📦',
-    text: 'Öffnet sofort eine große Mod-Kiste',
+    name: 'Narrenkorb gratis',
+    emoji: '🧺',
+    text: 'Öffnet sofort einen großen Narrenkorb',
   },
   {
     key: 'spellBox',
-    name: 'Zauber-Mappe gratis',
-    emoji: '📜',
-    text: 'Öffnet sofort eine riesige Zauber-Mappe',
+    name: 'Trickbeutel gratis',
+    emoji: '👝',
+    text: 'Öffnet sofort einen riesigen Trickbeutel',
   },
   {
     key: 'nailBox',
-    name: 'Nagellack-Set gratis',
-    emoji: '💅',
-    text: 'Öffnet sofort ein riesiges Nagellack-Set',
+    name: 'Bücherbündel gratis',
+    emoji: '📚',
+    text: 'Öffnet sofort ein riesiges Bücherbündel',
   },
   {
     key: 'coupon',
-    name: 'Gutschein',
-    emoji: '✂️',
-    text: 'Angebote und Lieferungen im nächsten Laden kosten nichts',
+    name: 'Freier Eintritt',
+    emoji: '🎟️',
+    text: 'Angebote und Bündel auf dem nächsten Jahrmarkt kosten nichts',
   },
   {
     key: 'rare',
     name: 'Seltener Fund',
     emoji: '💎',
-    text: 'Im nächsten Laden liegt ein seltener Mod gratis',
+    text: 'Auf dem nächsten Jahrmarkt wartet ein seltener Narr gratis',
   },
   {
     key: 'foil',
-    name: 'Folienfund',
-    emoji: '💿',
-    text: 'Der erste Mod im nächsten Laden hat Holo-Laminat und ist gratis',
+    name: 'Perlmuttfund',
+    emoji: '🦪',
+    text: 'Der erste Narr auf dem nächsten Jahrmarkt glänzt in Perlmutt und ist gratis',
   },
   {
     key: 'stock',
-    name: 'Vorrat',
-    emoji: '📦',
-    text: '+25 T nach dem nächsten Boss',
+    name: 'Festschmaus',
+    emoji: '🍗',
+    text: '+25 🥨 nach dem nächsten Thronsaal',
   },
   {
     key: 'double',
-    name: 'Werkstattbonus',
-    emoji: '🔩',
-    text: 'Verdoppelt deine Token (höchstens +40 T)',
+    name: 'Doppelte Ration',
+    emoji: '🥨',
+    text: 'Verdoppelt deine Brezeln (höchstens +40 🥨)',
   },
 ];
 export const TAGS: Record<string, TagDef> = Object.fromEntries(tags.map((t) => [t.key, t]));
 export const TAG_KEYS = tags.map((t) => t.key);
 
-// ---------------------------------------------------------------- Kartensätze und Sortierstufen
+// ---------------------------------------------------------------- Narrenkappen (Kartensätze) und Hofränge (Sortierstufen)
 
 export interface DeckDef {
   key: string;
@@ -714,63 +714,63 @@ export interface DeckDef {
 export const DECKS: DeckDef[] = [
   {
     key: 'standard',
-    name: 'Standard-Satz',
-    emoji: '🗃️',
+    name: 'Schlichte Kappe',
+    emoji: '🧢',
     text: 'Ohne Besonderheiten',
   },
-  { key: 'red', name: 'Rot-Satz', emoji: '🟥', text: '+1 Verwerfen je Runde' },
-  { key: 'blue', name: 'Blau-Satz', emoji: '🟦', text: '+1 Hand je Runde' },
-  { key: 'yellow', name: 'Gelb-Satz', emoji: '🟨', text: '+10 T zu Beginn' },
+  { key: 'red', name: 'Wandergaukler', emoji: '🎒', text: '+1 Tauschen je Audienz' },
+  { key: 'blue', name: 'Klosterschüler', emoji: '📿', text: '+1 Vorführung je Audienz' },
+  { key: 'yellow', name: 'Bäckerskind', emoji: '🥐', text: '+10 🥨 zu Beginn' },
   {
     key: 'green',
-    name: 'Grün-Satz',
-    emoji: '🟩',
-    text: 'Kein Ordnungsbonus, dafür +2 T je übrige Hand und +1 T je übriges Verwerfen',
+    name: 'Bauernkind',
+    emoji: '🌾',
+    text: 'Kein Vorratsbonus, dafür +2 🥨 je übrige Vorführung und +1 🥨 je übriges Tauschen',
   },
   {
     key: 'black',
-    name: 'Schwarz-Satz',
-    emoji: '⬛',
-    text: '+1 Mod-Platz, −1 Hand je Runde',
+    name: 'Puppenspieler',
+    emoji: '🎎',
+    text: '+1 Narrenplatz, −1 Vorführung je Audienz',
   },
   {
     key: 'magic',
-    name: 'Zauber-Satz',
+    name: 'Zauberlehrling',
     emoji: '🪄',
-    text: 'Startet mit dem Korb und zweimal „Der Narr“',
+    text: 'Startet mit der größeren Narrentasche und zweimal „Da capo!“',
   },
 ];
 
 export const STAKES: { name: string; emoji: string; text: string }[] = [
-  { name: 'Weiß', emoji: '⚪', text: 'Normale Regeln' },
-  { name: 'Rot', emoji: '🔴', text: 'Die Vorhut bringt keine Grundbelohnung' },
-  { name: 'Grün', emoji: '🟢', text: 'Die Ziele wachsen schneller' },
+  { name: 'Lehrling', emoji: '🌱', text: 'Normale Regeln' },
+  { name: 'Geselle', emoji: '🌿', text: 'Die Morgenaudienz bringt keine Grundbelohnung' },
+  { name: 'Spaßmacher', emoji: '🎈', text: 'Die Ziele wachsen schneller' },
   {
-    name: 'Schwarz',
-    emoji: '⚫',
-    text: 'Mods können angeklebt sein (nicht verkaufbar)',
+    name: 'Hofnarr',
+    emoji: '🃏',
+    text: 'Narren können treu sein (nicht verkaufbar)',
   },
-  { name: 'Blau', emoji: '🔵', text: '−1 Verwerfen je Runde' },
-  { name: 'Lila', emoji: '🟣', text: 'Die Ziele wachsen noch schneller' },
+  { name: 'Oberhofnarr', emoji: '🎖️', text: '−1 Tauschen je Audienz' },
+  { name: 'Königsnarr', emoji: '👑', text: 'Die Ziele wachsen noch schneller' },
   {
-    name: 'Orange',
-    emoji: '🟠',
-    text: 'Mods können vergänglich sein (nach 5 Runden wirkungslos)',
+    name: 'Narrenmeister',
+    emoji: '🏅',
+    text: 'Narren können müde werden (nach 5 Audienzen wirkungslos)',
   },
   {
-    name: 'Gold',
-    emoji: '🟡',
-    text: 'Mods können geliehen sein (1 T, aber 3 T je Runde)',
+    name: 'Narrenkönig',
+    emoji: '🤴',
+    text: 'Narren können Gastnarren sein (1 🥨, aber 3 🥨 je Audienz)',
   },
 ];
 
 const TARGETS = [
-  [300, 800, 2000, 5000, 11000, 20000, 35000, 50000],
-  [300, 900, 2600, 8000, 20000, 36000, 60000, 100000],
-  [300, 1000, 3200, 9000, 25000, 60000, 110000, 200000],
+  [300, 750, 1900, 4600, 10000, 19000, 33000, 52000],
+  [300, 850, 2400, 6500, 15000, 30000, 55000, 90000],
+  [300, 950, 2900, 8200, 20000, 42000, 80000, 140000],
 ];
 
-/** Grundziel eines Levels (Vorhut); Wächter ×1,5, Boss ×2. */
+/** Grundziel eines Levels (Vorhut); Wächter ×1,5, Boss ×2,2. */
 export function levelTarget(level: number, stake: number): number {
   const table = TARGETS[stake >= 6 ? 2 : stake >= 3 ? 1 : 0]!;
   if (level <= table.length) return table[Math.max(0, level - 1)]!;
@@ -778,7 +778,7 @@ export function levelTarget(level: number, stake: number): number {
   return Math.round(table[table.length - 1]! * 3 ** (level - table.length));
 }
 
-// ---------------------------------------------------------------- Bosse
+// ---------------------------------------------------------------- Herrschaften (Bosse) und Höflinge
 
 export interface BossDef {
   key: string;
@@ -797,36 +797,36 @@ export interface BossDef {
 const bosses: BossDef[] = [
   {
     key: 'ratKing',
-    name: 'Rattenkönig',
+    name: 'Der Rattenkönig',
     emoji: '🐀',
-    text: '−1 T je gewertete Karte',
+    text: '−1 🥨 je gewertete Karte',
     minLevel: 2,
   },
   {
     key: 'spider',
-    name: 'Mutterspinne',
+    name: 'Gräfin Spinnweb',
     emoji: '🕷️',
     text: 'Es müssen genau 5 Karten gespielt werden',
     minLevel: 1,
   },
   {
     key: 'wolf',
-    name: 'Alpha-Wolf',
+    name: 'Ritter Isegrim',
     emoji: '🐺',
-    text: 'Grüne Karten zählen nicht',
+    text: 'Kreuz-Karten zählen nicht',
     minLevel: 1,
-    debuffColor: 'g',
+    debuffColor: 'c',
   },
   {
     key: 'boar',
-    name: 'Wilder Keiler',
+    name: 'Oberjäger Keiler',
     emoji: '🐗',
-    text: 'Wirft nach jeder Hand 2 zufällige Handkarten ab',
+    text: 'Wirft nach jeder Vorführung 2 zufällige Handkarten ab',
     minLevel: 1,
   },
   {
     key: 'bear',
-    name: 'Papa Bär',
+    name: 'Braun, der Bär',
     emoji: '🐻',
     text: 'Doppelt so hohes Ziel',
     minLevel: 2,
@@ -834,145 +834,145 @@ const bosses: BossDef[] = [
   },
   {
     key: 'croco',
-    name: 'Kroko-Boss',
+    name: 'Zöllner Kroko',
     emoji: '🐊',
-    text: 'Kein Verwerfen',
+    text: 'Kein Tauschen',
     minLevel: 2,
   },
   {
     key: 'snake',
-    name: 'Riesen-Schlange',
+    name: 'Kanzlerin Natter',
     emoji: '🐍',
     text: 'Jede Kombi-Art nur einmal',
     minLevel: 3,
   },
   {
     key: 'ape',
-    name: 'Riesen-Affe',
+    name: 'Gesandter Affe',
     emoji: '🦍',
-    text: 'Grund-Chips und -Mult der Kombi halbiert',
+    text: 'Grund-Witz und -Lachen der Kombi halbiert',
     minLevel: 2,
   },
   {
     key: 'cactus',
-    name: 'Kaktus-König',
+    name: 'König Kaktus aus dem Süden',
     emoji: '🌵',
-    text: 'Nur eine Hand',
+    text: 'Nur eine Vorführung',
     minLevel: 2,
   },
   {
     key: 'ghost',
-    name: 'Schloss-Gespenst',
+    name: 'Das Schlossgespenst',
     emoji: '🏰',
-    text: 'Die erste Hand wird verdeckt gezogen',
+    text: 'Die ersten Karten werden verdeckt gezogen',
     minLevel: 2,
   },
   {
     key: 'frog',
-    name: 'Frosch-König',
+    name: 'Der Froschkönig',
     emoji: '🐸',
     text: 'Bildkarten werden verdeckt gezogen',
     minLevel: 2,
   },
   {
     key: 'shark',
-    name: 'Hai-General',
+    name: 'Admiral Hai',
     emoji: '🦈',
-    text: 'Nach jeder Hand wird verdeckt nachgezogen',
+    text: 'Nach jeder Vorführung wird verdeckt nachgezogen',
     minLevel: 2,
   },
   {
     key: 'eagle',
-    name: 'Riesen-Adler',
+    name: 'Fürst Adler',
     emoji: '🦅',
-    text: 'Gelbe Karten zählen nicht',
+    text: 'Karo-Karten zählen nicht',
     minLevel: 1,
-    debuffColor: 'y',
+    debuffColor: 'd',
   },
   {
     key: 'guardian',
-    name: 'Wald-Wächter',
+    name: 'Förster Eiche',
     emoji: '🌳',
     text: 'Bildkarten zählen nicht',
     minLevel: 4,
   },
   {
     key: 'golem',
-    name: 'Fels-Golem',
+    name: 'Steinmetz Golem',
     emoji: '🗿',
-    text: 'Karten, die in diesem Level schon gespielt wurden, zählen nicht',
+    text: 'Karten, die an diesem Hoftag schon gespielt wurden, zählen nicht',
     minLevel: 1,
   },
   {
     key: 'lizard',
-    name: 'Feuer-Echse',
+    name: 'Feuerwerker Echse',
     emoji: '🦎',
-    text: 'Die gespielte Kombi verliert 1 Level',
+    text: 'Die gespielte Kombi verliert 1 Stufe',
     minLevel: 2,
   },
   {
     key: 'yeti',
-    name: 'Yeti',
+    name: 'Der Yeti aus dem Norden',
     emoji: '❄️',
-    text: 'Blaue Karten zählen nicht',
+    text: 'Pik-Karten zählen nicht',
     minLevel: 1,
-    debuffColor: 'b',
+    debuffColor: 's',
   },
   {
     key: 'storm',
-    name: 'Sturmvogel',
+    name: 'Bote Sturmvogel',
     emoji: '🌩️',
     text: 'Jede 7. Karte wird verdeckt gezogen',
     minLevel: 2,
   },
   {
     key: 'minotaur',
-    name: 'Minotaurus',
+    name: 'Kerkermeister Minotaurus',
     emoji: '🐂',
-    text: 'Rote Karten zählen nicht',
+    text: 'Herz-Karten zählen nicht',
     minLevel: 1,
-    debuffColor: 'r',
+    debuffColor: 'h',
   },
   {
     key: 'lion',
-    name: 'Goldener Löwe',
+    name: 'König Nobel',
     emoji: '🦁',
     text: 'Nur eine Kombi-Art',
     minLevel: 2,
   },
   {
     key: 'owl',
-    name: 'Uhu-Oma',
+    name: 'Hofgelehrte Uhu',
     emoji: '🦉',
     text: 'Handgröße −1',
     minLevel: 1,
   },
   {
     key: 'dragon',
-    name: 'Der Drache',
+    name: 'Drachenfürstin',
     emoji: '🐲',
-    text: 'Die Lieblings-Kombi (am häufigsten gespielt) bringt 0 Punkte',
+    text: 'Die Lieblings-Kombi (am häufigsten gespielt) bringt keinen Applaus',
     minLevel: 3,
   },
   {
     key: 'seaSerpent',
-    name: 'See-Schlange',
+    name: 'Seekönigin',
     emoji: '🐉',
-    text: 'Alle Karten zählen nicht, bis ein Mod verkauft wird',
+    text: 'Alle Karten zählen nicht, bis ein Narr verkauft wird',
     minLevel: 8,
     final: true,
   },
   {
     key: 'phoenix',
-    name: 'Phönix',
+    name: 'Feuerfürst Phönix',
     emoji: '☄️',
-    text: 'Mischt die Reihenfolge der Mods vor jeder Hand',
+    text: 'Mischt die Reihenfolge der Narren vor jeder Vorführung',
     minLevel: 8,
     final: true,
   },
   {
     key: 'unicorn',
-    name: 'Einhorn-Prinzessin',
+    name: 'Prinzessin Einhorn',
     emoji: '🦄',
     text: 'Dreimal so hohes Ziel',
     minLevel: 8,
@@ -983,28 +983,28 @@ const bosses: BossDef[] = [
 export const BOSSES: Record<string, BossDef> = Object.fromEntries(bosses.map((b) => [b.key, b]));
 export const BOSS_LIST = bosses;
 
-/** Tier-Gegner für Vorhut und Wächter (nur Gesicht und Name). */
+/** Höflinge und Edle für Morgenaudienz und Festmahl (nur Gesicht und Name). */
 export const CREATURES: { name: string; emoji: string }[] = [
-  { name: 'Mikrobe', emoji: '🦠' },
-  { name: 'Ameise', emoji: '🐜' },
-  { name: 'Marienkäfer', emoji: '🐞' },
-  { name: 'Schnecke', emoji: '🐌' },
-  { name: 'Maus', emoji: '🐭' },
-  { name: 'Igel', emoji: '🦔' },
-  { name: 'Hase', emoji: '🐰' },
-  { name: 'Fuchs', emoji: '🦊' },
-  { name: 'Waschbär', emoji: '🦝' },
-  { name: 'Eule', emoji: '🦉' },
-  { name: 'Pinguin', emoji: '🐧' },
-  { name: 'Krake', emoji: '🐙' },
-  { name: 'Biber', emoji: '🦫' },
-  { name: 'Panda', emoji: '🐼' },
-  { name: 'Koala', emoji: '🐨' },
-  { name: 'Tiger', emoji: '🐯' },
-  { name: 'Nashorn', emoji: '🦏' },
-  { name: 'Elefant', emoji: '🐘' },
-  { name: 'Mammut', emoji: '🦣' },
-  { name: 'T-Rex', emoji: '🦖' },
+  { name: 'Page Mikrobe', emoji: '🦠' },
+  { name: 'Diener Ameise', emoji: '🐜' },
+  { name: 'Zofe Marienkäfer', emoji: '🐞' },
+  { name: 'Bote Schnecke', emoji: '🐌' },
+  { name: 'Küchenmaus', emoji: '🐭' },
+  { name: 'Gärtner Igel', emoji: '🦔' },
+  { name: 'Lampe, der Hase', emoji: '🐰' },
+  { name: 'Reineke Fuchs', emoji: '🦊' },
+  { name: 'Wäscher Waschbär', emoji: '🦝' },
+  { name: 'Schreiberin Eule', emoji: '🦉' },
+  { name: 'Mundschenk Pinguin', emoji: '🐧' },
+  { name: 'Musikus Krake', emoji: '🐙' },
+  { name: 'Baumeister Biber', emoji: '🦫' },
+  { name: 'Freiherr Panda', emoji: '🐼' },
+  { name: 'Freifrau Koala', emoji: '🐨' },
+  { name: 'Graf Tiger', emoji: '🐯' },
+  { name: 'Ritter Nashorn', emoji: '🦏' },
+  { name: 'Herzog Elefant', emoji: '🐘' },
+  { name: 'Altkanzler Mammut', emoji: '🦣' },
+  { name: 'Kurfürst T-Rex', emoji: '🦖' },
 ];
 
 /** Gesicht des Gegners einer Runde – fest je Level und Runde. */

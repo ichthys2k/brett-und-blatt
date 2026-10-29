@@ -3,7 +3,7 @@ import { FINAL_LEVEL } from './rules';
 import type { SorterState } from './types';
 
 /**
- * Farbtropfen 💧 – die Meta-Währung über alle Läufe. Es gibt sie nur fürs Spielen: je geschafftes
+ * Glöckchen 🔔 (intern „drops“, früher Farbtropfen) – die Meta-Währung über alle Läufe. Es gibt sie nur fürs Spielen: je geschafftes
  * Level, für gewonnene Läufe und Duelle und einmalig für Herausforderungen. Kein Tagesbonus,
  * keine Serien, nie für echtes Geld.
  */
@@ -34,26 +34,26 @@ export const CHALLENGES: Challenge[] = [
   })),
   ...STAKES.map((s, i) => ({
     id: `stake:${i + 1}`,
-    label: `Erster Sieg auf Stufe ${s.emoji} ${s.name}`,
+    label: `Erster Sieg als ${s.emoji} ${s.name}`,
     amount: 3,
   })),
   {
     id: 'noDiscard',
-    label: 'Einen Lauf gewinnen, ohne zu verwerfen',
+    label: 'Ein Spiel gewinnen, ohne zu tauschen',
     amount: 5,
   },
   {
     id: 'fewMods',
-    label: 'Einen Lauf mit höchstens 2 Mods gewinnen',
+    label: 'Ein Spiel mit höchstens 2 Narren gewinnen',
     amount: 5,
   },
   {
     id: 'bigHand',
-    label: 'Eine Hand mit 100.000 Punkten oder mehr',
+    label: 'Eine Vorführung mit 100.000 Applaus oder mehr',
     amount: 3,
   },
-  { id: 'endless12', label: 'Im Endlos-Modus Level 12 erreichen', amount: 5 },
-  { id: 'duel', label: 'Das erste Duell gewinnen', amount: 2 },
+  { id: 'endless12', label: 'Im Endlos-Modus Hoftag 12 erreichen', amount: 5 },
+  { id: 'duel', label: 'Den ersten Wettstreit gewinnen', amount: 2 },
   { id: 'table', label: 'Eine Partie zu mehreren gewinnen', amount: 3 },
 ];
 const CHALLENGE_BY_ID: Record<string, Challenge> = Object.fromEntries(CHALLENGES.map((c) => [c.id, c]));
@@ -71,18 +71,18 @@ export function runDrops(state: SorterState, seat: number, done: ReadonlySet<str
   const levels = run.bossesBeaten;
   if (levels > 0)
     lines.push({
-      label: `${levels} Level geschafft`,
+      label: `${levels} ${levels === 1 ? 'Hoftag' : 'Hoftage'} geschafft`,
       amount: levels * DROPS_PER_LEVEL,
     });
   const won = seatWon(state, seat);
   if (won)
     lines.push({
-      label: state.runs.length > 1 ? 'Partie gewonnen' : 'Lauf gewonnen',
+      label: state.runs.length > 1 ? 'Partie gewonnen' : 'Spiel gewonnen',
       amount: DROPS_FOR_WIN,
     });
   if (run.duelsWon > 0)
     lines.push({
-      label: `${run.duelsWon} ${run.duelsWon === 1 ? 'Duell' : 'Duelle'} gewonnen`,
+      label: `${run.duelsWon} ${run.duelsWon === 1 ? 'Wettstreit' : 'Wettstreite'} gewonnen`,
       amount: run.duelsWon * DROPS_PER_DUEL,
     });
 

@@ -1,10 +1,10 @@
 /* Farbensortierer. Farben der App kommen aus --color-…; die vier Kartenfarben sind eigene Töne. */
 
 .cs-board {
-  --cs-r: #e5484d;
-  --cs-y: #f2b705;
-  --cs-b: #2f7ee8;
-  --cs-g: #2f9e57;
+  --cs-h: #e03131;
+  --cs-s: #343a40;
+  --cs-d: #1971c2;
+  --cs-c: #2f9e44;
   --cs-chips: #1c7ed6;
   --cs-mult: #e03131;
   position: relative;
@@ -115,7 +115,7 @@
 .cs-bar-fill {
   position: absolute;
   inset: 0 auto 0 0;
-  background: linear-gradient(90deg, var(--cs-r), var(--cs-y), var(--cs-g), var(--cs-b));
+  background: linear-gradient(90deg, var(--cs-h), var(--cs-d), var(--cs-c), var(--cs-s));
   transition: width 0.5s ease;
 }
 
@@ -479,7 +479,7 @@ button.cs-tile {
   padding: 0;
   border: 2px solid color-mix(in srgb, var(--tone) 70%, #000);
   border-radius: calc(var(--cw, 4rem) * 0.12);
-  background-color: color-mix(in srgb, var(--tone) 22%, #fff);
+  background-color: color-mix(in srgb, var(--tone) 8%, #fff);
   color: #1f2328;
   font: inherit;
   box-shadow: 0 2px 4px rgb(0 0 0 / 18%);
@@ -492,17 +492,17 @@ button.cs-card {
   cursor: pointer;
 }
 
-.cs-c-r {
-  --tone: var(--cs-r);
+.cs-c-h {
+  --tone: var(--cs-h);
 }
-.cs-c-y {
-  --tone: var(--cs-y);
+.cs-c-s {
+  --tone: var(--cs-s);
 }
-.cs-c-b {
-  --tone: var(--cs-b);
+.cs-c-d {
+  --tone: var(--cs-d);
 }
-.cs-c-g {
-  --tone: var(--cs-g);
+.cs-c-c {
+  --tone: var(--cs-c);
 }
 .cs-c-granite {
   --tone: #6c757d;
@@ -545,6 +545,13 @@ button.cs-card {
 
 .cs-rank-big {
   font-size: calc(var(--cw, 4rem) * 0.48);
+  line-height: 1;
+}
+
+.cs-suit-big {
+  color: var(--tone);
+  font-family: system-ui, sans-serif;
+  font-size: calc(var(--cw, 4rem) * 0.56);
   line-height: 1;
 }
 
@@ -886,10 +893,10 @@ button.cs-card {
 /* Atelier, Album, Farbtropfen */
 
 .cs-modal {
-  --cs-r: #e5484d;
-  --cs-y: #f2b705;
-  --cs-b: #2f7ee8;
-  --cs-g: #2f9e57;
+  --cs-h: #e03131;
+  --cs-s: #343a40;
+  --cs-d: #1971c2;
+  --cs-c: #2f9e44;
   position: fixed;
   inset: 0;
   z-index: 60;

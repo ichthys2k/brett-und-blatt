@@ -20,33 +20,34 @@ export function describeConsumable(item: Consumable): Described {
           text: def.text,
           tone: 'cs-t-spell',
         }
-      : { emoji: '✨', title: 'Zauberkarte', text: '', tone: 'cs-t-spell' };
+      : { emoji: '✨', title: 'Kunststück', text: '', tone: 'cs-t-spell' };
   }
   if (item.kind === 'nail') {
     const def = NAILS[item.key];
-    if (!def) return { emoji: '💅', title: 'Nagelstudio', text: '', tone: 'cs-t-nail' };
+    if (!def) return { emoji: '📖', title: 'Übung', text: '', tone: 'cs-t-nail' };
     const hand = HANDS[def.hand];
     return {
       emoji: def.emoji,
       title: def.name,
-      text: `${hand.name}: +1 Level (+${hand.chipsPerLevel} Chips, +${hand.multPerLevel} Mult)`,
+      text: `${hand.name}: +1 Stufe (+${hand.chipsPerLevel} Witz, +${hand.multPerLevel} Lachen)`,
       tone: 'cs-t-nail',
     };
   }
   const def = DREAMS[item.key];
-  return def ? { emoji: def.emoji, title: def.name, text: def.text, tone: 'cs-t-dream' } : { emoji: '🌙', title: 'Traumkarte', text: '', tone: 'cs-t-dream' };
+  return def ? { emoji: def.emoji, title: def.name, text: def.text, tone: 'cs-t-dream' } : { emoji: '🏺', title: 'Kuriosität', text: '', tone: 'cs-t-dream' };
 }
 
 export function describeMod(mod: Pick<ModInstance, 'key' | 'foil' | 'sticker' | 'value' | 'spent' | 'roundsLeft'>): Described {
   const def = modDef(mod.key);
   const extras: string[] = [];
-  if (mod.value !== undefined && def.initial !== undefined) extras.push(`Stand: ${Math.round(mod.value * 100) / 100}`);
+  if (def.status) extras.push(def.status(mod));
+  else if (mod.value !== undefined && def.initial !== undefined) extras.push(`Stand: ${Math.round(mod.value * 100) / 100}`);
   if (mod.foil) extras.push(`${FOILS[mod.foil].emoji} ${FOILS[mod.foil].name}: ${FOILS[mod.foil].text}`);
   if (mod.sticker)
     extras.push(
       `${STICKERS[mod.sticker].emoji} ${STICKERS[mod.sticker].name}: ${STICKERS[mod.sticker].text}${mod.sticker === 'perishable' && mod.roundsLeft !== undefined ? ` (noch ${mod.roundsLeft})` : ''}`,
     );
-  if (mod.spent) extras.push('Abgelaufen – wirkt nicht mehr');
+  if (mod.spent) extras.push('Müde – wirkt nicht mehr');
   return {
     emoji: def.emoji,
     title: def.name,

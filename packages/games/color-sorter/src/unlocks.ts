@@ -3,7 +3,7 @@ import { MODS } from './mods';
 import type { Rarity } from './types';
 
 /**
- * Freischaltungen im Atelier (Farbtropfen 💧). Sie gelten je Gerät und erweitern den Zufallspool
+ * Freischaltungen in der Narrenschule (intern „Atelier“, bezahlt mit Glöckchen 🔔, intern „drops“). Sie gelten je Gerät und erweitern den Zufallspool
  * für Mods, Werkzeuge und Kartensätze; Kartenrücken und Tisch-Themen sind reiner Schmuck.
  * Die Reihenfolge der Liste ist Teil des Speicherformats: nur hinten anfügen.
  */
@@ -29,8 +29,8 @@ export interface CosmeticDef {
 export const CARD_BACKS: CosmeticDef[] = [
   {
     key: 'classic',
-    name: 'Farbklecks',
-    emoji: '🎨',
+    name: 'Harlekin',
+    emoji: '🃏',
     text: 'Der Standard-Rücken',
   },
   { key: 'wave', name: 'Welle', emoji: '🌊', text: 'Blaugrüne Wellen' },
@@ -49,8 +49,8 @@ export const CARD_BACKS: CosmeticDef[] = [
 export const THEMES: CosmeticDef[] = [
   {
     key: 'workshop',
-    name: 'Werkstatt',
-    emoji: '🛠️',
+    name: 'Thronsaal',
+    emoji: '🏰',
     text: 'Der Standard-Tisch',
   },
   { key: 'forest', name: 'Wald', emoji: '🌲', text: 'Grüner Tisch mit Moos' },
@@ -63,7 +63,7 @@ export const THEMES: CosmeticDef[] = [
   },
 ];
 
-const LOCKED_MODS = ['twins', 'trio', 'family', 'tree', 'king', 'unicorn', 'painter', 'snail', 'echo', 'growth', 'banana', 'robot', 'troubadour', 'bus', 'egg', 'kidFan', 'drunk'];
+const LOCKED_MODS = ['twins', 'trio', 'family', 'tree', 'king', 'unicorn', 'painter', 'snail', 'echo', 'growth', 'banana', 'robot', 'twoFaced', 'herald', 'royalCouple', 'kidFan', 'monkey'];
 const LOCKED_DECKS = ['yellow', 'green', 'black', 'magic'];
 const LOCKED_TOOLS = ['superMagnet', 'bigSale', 'tidy2', 'extraHand2', 'bin2', 'bag2', 'book2', 'scope2'];
 
@@ -175,9 +175,9 @@ export function unlockLabel(u: Unlockable): { emoji: string; name: string } {
 }
 
 export const UNLOCK_KIND_NAMES: Record<UnlockKind, string> = {
-  mod: 'Mods',
-  deck: 'Kartensätze',
-  tool: 'Werkzeuge',
+  mod: 'Narren',
+  deck: 'Narrenkappen',
+  tool: 'Privilegien',
   back: 'Kartenrücken',
   theme: 'Tisch-Themen',
 };

@@ -98,7 +98,6 @@ export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng,
     steps.push({ src, id, ...effect, total: { chips, mult } });
   };
 
-  const hasHiker = active.some((m) => m.key === 'hiker');
   for (const card of scoring) {
     if (isDebuffed(card, run)) {
       steps.push({
@@ -129,7 +128,6 @@ export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng,
       if (boss?.key === 'ratKing') apply('card', card.id, { tokens: -1 });
       for (const mod of active) apply('card', card.id, modDef(mod.key).onCard?.(card, ctx, mod) ?? null);
     }
-    if (hasHiker) bonus[card.id] = (bonus[card.id] ?? 0) + 5;
     if (card.enh === 'blond' && rng.chance(1 / 4)) broken.push(card.id);
   }
 

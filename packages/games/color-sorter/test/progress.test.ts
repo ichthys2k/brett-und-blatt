@@ -59,7 +59,7 @@ describe('Endlos-Modus', () => {
     expect(gameModule.result(lost)).toEqual({
       kind: 'win',
       winners: [0],
-      reason: 'Endlos bis Level 9',
+      reason: 'Endlos bis Hoftag 9',
     });
   });
 
@@ -139,7 +139,7 @@ describe('Mehrspieler-Mods', () => {
         { uid: 2, key: 'chase' },
       ],
     };
-    const played = [c(5, 'r', 1)];
+    const played = [c(5, 'h', 1)];
     const plain = scoreHand(run, played, [], new Rng([1, 2, 3, 4]));
     const table = scoreHand(run, played, [], new Rng([1, 2, 3, 4]), {
       others: 2,
@@ -249,7 +249,7 @@ describe('Farbtropfen', () => {
     const { state } = bossRound(start(), 8, true);
     state.runs[0]!.bossesBeaten = 8;
     const lines = runDrops(state, 0, new Set());
-    expect(lines[0]).toEqual({ label: '8 Level geschafft', amount: 16 });
+    expect(lines[0]).toEqual({ label: '8 Hoftage geschafft', amount: 16 });
     expect(lines.some((l) => l.once === 'deck:standard')).toBe(true);
     expect(lines.some((l) => l.once === 'noDiscard')).toBe(true);
     const again = runDrops(state, 0, new Set(['deck:standard', 'noDiscard', 'stake:1', 'fewMods']));

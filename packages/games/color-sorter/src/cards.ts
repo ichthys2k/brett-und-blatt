@@ -1,39 +1,41 @@
-import type { Card, Color, HandType, Rank } from './types';
+import { COLORS, type Card, type Color, type HandType, type Rank } from './types';
 
 export const COLOR_INFO: Record<Color, { name: string; emoji: string; shape: string }> = {
-  r: { name: 'Rot', emoji: '🔴', shape: '●' },
-  y: { name: 'Gelb', emoji: '🟡', shape: '▲' },
-  b: { name: 'Blau', emoji: '🔵', shape: '■' },
-  g: { name: 'Grün', emoji: '🟢', shape: '◆' },
+  h: { name: 'Herz', emoji: '♥️', shape: '♥' },
+  s: { name: 'Pik', emoji: '♠️', shape: '♠' },
+  d: { name: 'Karo', emoji: '♦️', shape: '♦' },
+  c: { name: 'Kreuz', emoji: '♣️', shape: '♣' },
 };
 
-const RANK_EMOJI = ['', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '👶🏻', '👧🏻', '👦🏻', '🎅🏻'];
-const RANK_NAME = ['', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Baby', 'Mädchen', 'Junge', 'Santa'];
+const RANK_NAME = ['', '', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Bube', 'Dame', 'König', 'Ass'];
 
-export const SANTA = 13;
-
-export function rankEmoji(rank: Rank): string {
-  return RANK_EMOJI[rank] ?? '?';
-}
+export const JACK = 11;
+export const QUEEN = 12;
+export const KING = 13;
+export const ACE = 14;
 
 export function rankName(rank: Rank): string {
   return RANK_NAME[rank] ?? '?';
 }
 
-/** Bildkarten: Baby, Mädchen, Junge. Santa zählt wie das Ass nicht dazu. */
-export function isFace(rank: Rank): boolean {
-  return rank >= 10 && rank <= 12;
+/** Kurzzeichen für die Kartenecke: 2–10, B, D, K, A. */
+export function rankShort(rank: Rank): string {
+  return rank > 10 ? rankName(rank).slice(0, 1) : rankName(rank);
 }
 
-/** Chips einer Karte: Zahl = Wert, Bilder 10, Santa 11. */
+/** Bildkarten: Bube, Dame, König. Das Ass zählt nicht dazu. */
+export function isFace(rank: Rank): boolean {
+  return rank >= JACK && rank <= KING;
+}
+
+/** Witz einer Karte: ihr Rang (2–10, Bube 11, Dame 12, König 13, Ass 14). */
 export function rankChips(rank: Rank): number {
-  if (rank === SANTA) return 11;
-  return isFace(rank) ? 10 : rank;
+  return rank;
 }
 
 export function cardLabel(card: Card): string {
   if (card.enh === 'granite') return 'Granit-Karte';
-  return `${COLOR_INFO[card.color].name} ${rankName(card.rank)}`;
+  return `${COLOR_INFO[card.color].name}-${rankName(card.rank)}`;
 }
 
 export interface HandInfo {
@@ -49,97 +51,29 @@ export interface HandInfo {
 /** Reihenfolge von schwach nach stark. */
 export const HAND_TYPES: HandType[] = ['high', 'pair', 'twoPair', 'three', 'straight', 'flush', 'fullHouse', 'four', 'straightFlush', 'five', 'flushHouse', 'flushFive'];
 
+/** Eigene Werte (Narrenhof, 29.10.2026); die Karten bringen dafür ihren vollen Rang als Chips. */
 export const HANDS: Record<HandType, HandInfo> = {
-  high: {
-    name: 'Einzel-Wert',
-    chips: 5,
-    mult: 1,
-    chipsPerLevel: 10,
-    multPerLevel: 1,
-  },
-  pair: { name: 'Duo', chips: 10, mult: 2, chipsPerLevel: 15, multPerLevel: 1 },
-  twoPair: {
-    name: 'Doppel-Duo',
-    chips: 20,
-    mult: 2,
-    chipsPerLevel: 20,
-    multPerLevel: 1,
-  },
-  three: {
-    name: 'Triple',
-    chips: 30,
-    mult: 3,
-    chipsPerLevel: 20,
-    multPerLevel: 2,
-  },
-  straight: {
-    name: 'Zahlen-Lauf',
-    chips: 30,
-    mult: 4,
-    chipsPerLevel: 30,
-    multPerLevel: 3,
-  },
-  flush: {
-    name: 'Farben-Satz',
-    chips: 35,
-    mult: 4,
-    chipsPerLevel: 15,
-    multPerLevel: 2,
-  },
-  fullHouse: {
-    name: 'Kombi-Satz',
-    chips: 40,
-    mult: 4,
-    chipsPerLevel: 25,
-    multPerLevel: 2,
-  },
-  four: {
-    name: 'Quartett',
-    chips: 60,
-    mult: 7,
-    chipsPerLevel: 30,
-    multPerLevel: 3,
-  },
-  straightFlush: {
-    name: 'Farb-Kombination',
-    chips: 100,
-    mult: 8,
-    chipsPerLevel: 40,
-    multPerLevel: 4,
-  },
-  five: {
-    name: 'Quintett',
-    chips: 120,
-    mult: 12,
-    chipsPerLevel: 35,
-    multPerLevel: 3,
-    secret: true,
-  },
-  flushHouse: {
-    name: 'Farb-Kombi-Satz',
-    chips: 140,
-    mult: 14,
-    chipsPerLevel: 40,
-    multPerLevel: 4,
-    secret: true,
-  },
-  flushFive: {
-    name: 'Farb-Quintett',
-    chips: 160,
-    mult: 16,
-    chipsPerLevel: 50,
-    multPerLevel: 3,
-    secret: true,
-  },
+  high: { name: 'Hohe Karte', chips: 8, mult: 1, chipsPerLevel: 8, multPerLevel: 1 },
+  pair: { name: 'Paar', chips: 12, mult: 2, chipsPerLevel: 12, multPerLevel: 1 },
+  twoPair: { name: 'Zwei Paare', chips: 24, mult: 2, chipsPerLevel: 16, multPerLevel: 1 },
+  three: { name: 'Drilling', chips: 25, mult: 3, chipsPerLevel: 20, multPerLevel: 2 },
+  straight: { name: 'Straße', chips: 35, mult: 4, chipsPerLevel: 25, multPerLevel: 2 },
+  flush: { name: 'Farbe', chips: 40, mult: 4, chipsPerLevel: 18, multPerLevel: 2 },
+  fullHouse: { name: 'Full House', chips: 45, mult: 4, chipsPerLevel: 25, multPerLevel: 2 },
+  four: { name: 'Vierling', chips: 60, mult: 6, chipsPerLevel: 30, multPerLevel: 3 },
+  straightFlush: { name: 'Farbstraße', chips: 90, mult: 9, chipsPerLevel: 40, multPerLevel: 3 },
+  five: { name: 'Fünfling', chips: 110, mult: 11, chipsPerLevel: 35, multPerLevel: 3, secret: true },
+  flushHouse: { name: 'Full House in Farbe', chips: 130, mult: 13, chipsPerLevel: 40, multPerLevel: 4, secret: true },
+  flushFive: { name: 'Farb-Fünfling', chips: 150, mult: 15, chipsPerLevel: 50, multPerLevel: 4, secret: true },
 };
 
-/** Name der gespielten Kombi; ein Lauf 9 bis Santa in einer Farbe heißt „FarbenLauf Deluxe“. */
+/** Name der gespielten Kombi; eine Farbstraße von der 10 bis zum Ass heißt „Königsstraße“. */
 export function handLabel(type: HandType, cards: Card[]): string {
-  if (type === 'straightFlush' && cards.some((c) => c.rank === SANTA) && cards.some((c) => c.rank === 9)) return 'FarbenLauf Deluxe';
+  if (type === 'straightFlush' && cards.some((c) => c.rank === ACE) && cards.some((c) => c.rank === 10)) return 'Königsstraße';
   return HANDS[type].name;
 }
 
-/** Welche Kombis eine Kombi „enthält“ (für Mods wie „+8 Mult, wenn ein Duo dabei ist“). */
+/** Welche Kombis eine Kombi „enthält“ (für Mods wie „+8 Mult, wenn ein Paar dabei ist“). */
 export const CONTAINS: Record<HandType, HandType[]> = {
   high: ['high'],
   pair: ['pair'],
@@ -181,7 +115,7 @@ export function detectHand(played: Card[]): Detected {
   const groups = [...byRank.values()].sort((a, b) => b.length - a.length || played[b[0]!]!.rank - played[a[0]!]!.rank);
   const sizes = groups.map((g) => g.length);
 
-  const flush = normal.length === 5 && (['r', 'y', 'b', 'g'] as Color[]).some((c) => normal.every((i) => hasColor(played[i]!, c)));
+  const flush = normal.length === 5 && COLORS.some((c) => normal.every((i) => hasColor(played[i]!, c)));
   const ranks = normal.map((i) => played[i]!.rank).sort((a, b) => a - b);
   const straight = normal.length === 5 && new Set(ranks).size === 5 && ranks[4]! - ranks[0]! === 4;
   const all = withGranite(normal);
@@ -213,9 +147,9 @@ export function handBase(type: HandType, level: number): { chips: number; mult: 
   };
 }
 
-/** Das Standarddeck: 13 Ränge × 4 Farben. */
+/** Das Standarddeck: 52 Karten, 2 bis Ass in vier Farben. */
 export function standardDeck(): Omit<Card, 'id'>[] {
   const cards: Omit<Card, 'id'>[] = [];
-  for (const color of ['r', 'y', 'b', 'g'] as Color[]) for (let rank = 1; rank <= 13; rank++) cards.push({ rank, color });
+  for (const color of COLORS) for (let rank = 2; rank <= ACE; rank++) cards.push({ rank, color });
   return cards;
 }

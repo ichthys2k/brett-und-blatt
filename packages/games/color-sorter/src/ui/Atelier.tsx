@@ -18,7 +18,7 @@ function unlockText(u: Unlockable): string {
   return `${list.find((c) => c.key === u.key)!.text} (nur Schmuck)`;
 }
 
-/** Atelier-Lieferung: wackelt, reißt auf, zeigt den Fund. */
+/** Schulranzen (Atelier-Lieferung): wackelt, springt auf, zeigt den Fund. */
 function AtelierBox({ onDone }: { onDone: () => void }) {
   const progress = useProgress();
   const [stage, setStage] = useState<number | null>(null);
@@ -44,8 +44,8 @@ function AtelierBox({ onDone }: { onDone: () => void }) {
           <span className={`cs-box ${stage === 0 ? 'cs-wobble' : 'cs-tear'}`} aria-hidden="true">
             📦
           </span>
-          <span className="cs-title">Atelier-Lieferung kommt an …</span>
-          <span className="cs-muted">Tippen zum Auspacken</span>
+          <span className="cs-title">Der Schulranzen geht auf …</span>
+          <span className="cs-muted">Tippen zum Öffnen</span>
         </button>
       );
     const label = unlockLabel(found);
@@ -58,7 +58,7 @@ function AtelierBox({ onDone }: { onDone: () => void }) {
           <span className="cs-tile-title">{label.name}</span>
         </span>
         <p>
-          <strong>Neu im Atelier:</strong> {label.name} ({UNLOCK_KIND_NAMES[found.kind]})
+          <strong>Neu in der Narrenschule:</strong> {label.name} ({UNLOCK_KIND_NAMES[found.kind]})
         </p>
         <p className="cs-muted">{unlockText(found)}</p>
         <button
@@ -79,8 +79,8 @@ function AtelierBox({ onDone }: { onDone: () => void }) {
   return (
     <div className="cs-panel">
       <div className="cs-shop-head">
-        <strong>📦 Atelier-Lieferung</strong>
-        <span className="cs-muted">{ATELIER_BOX_PRICE} 💧</span>
+        <strong>🎒 Schulranzen</strong>
+        <span className="cs-muted">{ATELIER_BOX_PRICE} 🔔</span>
       </div>
       <p className="cs-small-text">Enthält eine zufällige Sache, die du noch nicht hast – nie etwas doppelt. Alles lässt sich unten auch gezielt freischalten.</p>
       {odds.length > 0 ? (
@@ -89,7 +89,7 @@ function AtelierBox({ onDone }: { onDone: () => void }) {
         <p className="cs-muted cs-small-text">Du hast schon alles freigeschaltet.</p>
       )}
       <button type="button" className="cs-btn cs-btn-primary" disabled={odds.length === 0 || progress.drops < ATELIER_BOX_PRICE} onClick={open}>
-        Auspacken ({ATELIER_BOX_PRICE} 💧)
+        Öffnen ({ATELIER_BOX_PRICE} 🔔)
       </button>
     </div>
   );
@@ -104,8 +104,8 @@ function AtelierShop() {
     <>
       <AtelierBox onDone={() => setTick((t) => t + 1)} />
       <p className="cs-muted cs-small-text">
-        Farbtropfen gibt es nur fürs Spielen: {DROPS_PER_LEVEL} 💧 je geschafftes Level, {DROPS_FOR_WIN} 💧 für einen gewonnenen Lauf, {DROPS_PER_DUEL} 💧 je gewonnenes Duell und einmalig für
-        Herausforderungen (siehe Album). Freischaltungen erweitern den Zufallspool deiner Läufe; online spielen alle mit der Grundausstattung, außer die Raumleitung wählt „Alles“.
+        Glöckchen gibt es nur fürs Spielen: {DROPS_PER_LEVEL} 🔔 je geschafften Hoftag, {DROPS_FOR_WIN} 🔔 für ein gewonnenes Spiel, {DROPS_PER_DUEL} 🔔 je gewonnenen Wettstreit und einmalig für
+        Herausforderungen (siehe Hofchronik). Freischaltungen erweitern den Zufallspool deiner Spiele; online spielen alle mit der Grundausstattung, außer die Raumleitung wählt „Alles“.
       </p>
       {kinds.map((kind) => {
         const items = UNLOCKABLES.filter((u) => u.kind === kind);
@@ -142,8 +142,8 @@ function AtelierShop() {
                         <span className="cs-muted">✓ frei</span>
                       )
                     ) : (
-                      <button type="button" className="cs-btn" disabled={progress.drops < u.price} onClick={() => buy(u.id)} aria-label={`${label.name} für ${u.price} Farbtropfen freischalten`}>
-                        🔓 {u.price} 💧
+                      <button type="button" className="cs-btn" disabled={progress.drops < u.price} onClick={() => buy(u.id)} aria-label={`${label.name} für ${u.price} Glöckchen freischalten`}>
+                        🔓 {u.price} 🔔
                       </button>
                     )}
                   </li>
@@ -180,7 +180,7 @@ const ALBUM_PAGES: {
 }[] = [
   {
     kind: 'mod',
-    title: 'Mods',
+    title: 'Narren',
     items: (['common', 'uncommon', 'rare', 'legendary'] as Rarity[]).flatMap((rarity) =>
       Object.values(MODS)
         .filter((m) => m.rarity === rarity)
@@ -195,7 +195,7 @@ const ALBUM_PAGES: {
   },
   {
     kind: 'spell',
-    title: 'Zauberkarten',
+    title: 'Kunststücke',
     items: Object.entries(SPELLS).map(([key, d]) => ({
       key,
       emoji: d.emoji,
@@ -206,7 +206,7 @@ const ALBUM_PAGES: {
   },
   {
     kind: 'nail',
-    title: 'Nagelstudio',
+    title: 'Übungen',
     items: Object.entries(NAILS).map(([key, d]) => ({
       key,
       emoji: d.emoji,
@@ -217,7 +217,7 @@ const ALBUM_PAGES: {
   },
   {
     kind: 'dream',
-    title: 'Traumkarten',
+    title: 'Kuriositäten',
     items: Object.entries(DREAMS).map(([key, d]) => ({
       key,
       emoji: d.emoji,
@@ -228,7 +228,7 @@ const ALBUM_PAGES: {
   },
   {
     kind: 'tool',
-    title: 'Werkzeuge',
+    title: 'Privilegien',
     items: Object.values(TOOLS).map((d) => ({
       key: d.key,
       emoji: d.emoji,
@@ -239,7 +239,7 @@ const ALBUM_PAGES: {
   },
   {
     kind: 'boss',
-    title: 'Bosse',
+    title: 'Herrschaften',
     items: BOSS_LIST.map((d) => ({
       key: d.key,
       emoji: d.emoji,
@@ -249,7 +249,7 @@ const ALBUM_PAGES: {
   },
   {
     kind: 'deck',
-    title: 'Kartensätze',
+    title: 'Narrenkappen',
     items: DECKS.map((d) => ({
       key: d.key,
       emoji: d.emoji,
@@ -268,7 +268,7 @@ function Album() {
       <section className="cs-panel">
         <strong>📊 Bestwerte</strong>
         <p className="cs-small-text">
-          {progress.stats.runs} Partien · {progress.stats.wins} gewonnen · höchstes Level {progress.stats.bestLevel} · beste Hand {formatNumber(progress.stats.bestHand)} Punkte · {progress.earned} 💧
+          {progress.stats.runs} Partien · {progress.stats.wins} gewonnen · höchster Hoftag {progress.stats.bestLevel} · beste Vorführung {formatNumber(progress.stats.bestHand)} Applaus · {progress.earned} 🔔
           verdient
         </p>
       </section>
@@ -323,7 +323,7 @@ function Album() {
             <li key={c.id} className={done.has(c.id) ? '' : 'cs-locked'}>
               <span aria-hidden="true">{done.has(c.id) ? '✅' : '⬜'}</span>
               <span>{c.label}</span>
-              <span className="cs-muted">+{c.amount} 💧</span>
+              <span className="cs-muted">+{c.amount} 🔔</span>
             </li>
           ))}
         </ul>
@@ -374,7 +374,7 @@ function SaveTab() {
   );
 }
 
-/** Atelier, Album und Sichern als Fenster über allem. */
+/** Narrenschule (Atelier), Hofchronik (Album) und Sichern als Fenster über allem. */
 export function Atelier({ onClose, start = 'atelier' }: { onClose: () => void; start?: Tab }) {
   const progress = useProgress();
   const [tab, setTab] = useState<Tab>(start);
@@ -384,12 +384,12 @@ export function Atelier({ onClose, start = 'atelier' }: { onClose: () => void; s
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
   return (
-    <div className="cs-modal" role="dialog" aria-modal="true" aria-label="Atelier">
+    <div className="cs-modal" role="dialog" aria-modal="true" aria-label="Narrenschule">
       <div className="cs-modal-inner">
         <div className="cs-info-head">
-          <strong className="cs-title">🎨 Atelier</strong>
-          <span className="cs-drops" aria-label={`${progress.drops} Farbtropfen`}>
-            💧 {progress.drops}
+          <strong className="cs-title">🎓 Narrenschule</strong>
+          <span className="cs-drops" aria-label={`${progress.drops} Glöckchen`}>
+            🔔 {progress.drops}
           </span>
           <button type="button" className="cs-x" onClick={onClose} aria-label="Schließen">
             ✕
@@ -399,7 +399,7 @@ export function Atelier({ onClose, start = 'atelier' }: { onClose: () => void; s
           {(
             [
               ['atelier', '🛍️ Freischalten'],
-              ['album', '📖 Album'],
+              ['album', '📜 Hofchronik'],
               ['save', '💾 Sichern'],
             ] as [Tab, string][]
           ).map(([id, label]) => (
@@ -418,7 +418,7 @@ export function Atelier({ onClose, start = 'atelier' }: { onClose: () => void; s
   );
 }
 
-/** Abschnitt in der Einrichtung: Farbtropfen, Atelier, Hinweis auf gesperrte Kartensätze. */
+/** Abschnitt in der Einrichtung: Glöckchen, Narrenschule, Hinweis auf gesperrte Narrenkappen. */
 export function SetupExtra({ options }: { options: Options; seats: number }) {
   const progress = useProgress();
   const [open, setOpen] = useState(false);
@@ -426,13 +426,13 @@ export function SetupExtra({ options }: { options: Options; seats: number }) {
   const deckLocked = options.pool !== 'all' && !!deck && UNLOCKABLES.some((u) => u.id === `deck:${deck.key}`) && !(options.pool === 'mine' && progress.unlocked.includes(`deck:${deck.key}`));
   return (
     <section className="cs-setup">
-      <h2 className="cs-setup-title">🎨 Atelier</h2>
+      <h2 className="cs-setup-title">🎓 Narrenschule</h2>
       <p>
-        Du hast <strong>💧 {progress.drops} Farbtropfen</strong>. Damit schaltest du neue Mods, Werkzeuge, Kartensätze und Schmuck frei.
+        Du hast <strong>🔔 {progress.drops} Glöckchen</strong>. Damit schaltest du neue Narren, Privilegien, Narrenkappen und Schmuck frei.
       </p>
-      {deckLocked && <p className="cs-warn">🔒 Der {deck!.name} ist noch gesperrt – du spielst mit dem Standard-Satz. Schalte ihn im Atelier frei oder wähle bei „Freischaltungen“ „Alles“.</p>}
+      {deckLocked && <p className="cs-warn">🔒 „{deck!.name}“ ist noch gesperrt – du spielst mit der schlichten Kappe. Schalte sie in der Narrenschule frei oder wähle bei „Freischaltungen“ „Alles“.</p>}
       <button type="button" className="cs-btn" onClick={() => setOpen(true)}>
-        Atelier und Album öffnen
+        Narrenschule und Hofchronik öffnen
       </button>
       {open && <Atelier onClose={() => setOpen(false)} />}
     </section>

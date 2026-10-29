@@ -1,5 +1,5 @@
 import { Rng, type Actor, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
-import { HAND_TYPES, handLabel, isFace, SANTA, standardDeck } from './cards';
+import { ACE, HAND_TYPES, handLabel, isFace, JACK, standardDeck } from './cards';
 import {
   BOSS_LIST,
   BOSS_REROLL_PRICE,
@@ -295,7 +295,7 @@ function nailPool(run: RunState): string[] {
 function randomCard(run: RunState, rng: Rng, opts: { rank?: number; enhanced?: boolean } = {}): Card {
   const card: Card = {
     id: run.nextId++,
-    rank: opts.rank ?? 1 + rng.int(13),
+    rank: opts.rank ?? 2 + rng.int(13),
     color: rng.pick(COLORS),
   };
   const enhancements: Enhancement[] = ['granite', 'volume', 'gloss', 'ombre', 'gold', 'blond', 'keratin', 'star'];
@@ -462,7 +462,8 @@ function addMod(run: RunState, key: string, extra: Partial<ModInstance> = {}): b
   if (def.initial !== undefined) mod.value = def.initial;
   if (mod.sticker === 'perishable') mod.roundsLeft = 5;
   for (const k of Object.keys(mod) as (keyof ModInstance)[]) if (mod[k] === undefined) delete mod[k];
-  run.mods = [...run.mods, mod];
+  // Das Hofäffchen ist eifersüchtig: Jeder neue Mod nimmt ihm alles.
+  run.mods = [...run.mods.map((m) => (m.key === 'monkey' && m.value ? { ...m, value: 0 } : m)), mod];
   return true;
 }
 
@@ -546,7 +547,7 @@ export function tableInfo(state: SorterState, seat: SeatId): TableInfo {
 
 function startRound(state: SorterState, run: RunState, duel: boolean, events: GameEvent[]): void {
   const boss = !duel && run.round === 2 ? bossFor(state, run) : null;
-  const factor = [1, 1.5, 2][run.round]! * (boss ? (BOSSES[boss]?.targetFactor ?? 1) : 1);
+  const factor = ROUND_FACTORS[run.round]! * (boss ? (BOSSES[boss]?.targetFactor ?? 1) : 1);
   const hands = Math.max(1, run.hands + passive(run, 'hands') + (run.tools.includes('extraHand') ? 1 : 0) + (run.tools.includes('extraHand2') ? 1 : 0));
   const discards = Math.max(0, run.discards + passive(run, 'discards') + (run.tools.includes('bin') ? 1 : 0) + (run.tools.includes('bin2') ? 1 : 0));
   run.current = {
@@ -585,14 +586,25 @@ function shuffleMods(run: RunState): void {
   run.rng.fx = fx.state;
 }
 
+/** Zielfaktor je Runde: Vorhut, Wächter, Boss. */
+const ROUND_FACTORS = [1, 1.5, 2.2];
+/** Grundbelohnung je Runde in Token. */
+const ROUND_REWARDS = [3, 4, 6];
+/** Ordnungsbonus: 1 T je so viele T im Vorrat … */
+export const BONUS_STEP = 6;
+
+/** … höchstens so viele (mit Sparbuch mehr). */
+export function bonusCap(run: RunState): number {
+  return run.tools.includes('book2') ? 16 : run.tools.includes('book') ? 8 : 4;
+}
+
 /** Abrechnung nach einer gewonnenen Runde, danach in die Sortier-Zentrale. */
 function winRound(state: SorterState, run: RunState, events: GameEvent[]): void {
   const round = run.current!;
   const green = state.deckKind === 'green';
-  const reward = round.duel ? 5 : run.round === 0 && state.stake >= 2 ? 0 : [3, 4, 5][run.round]!;
+  const reward = round.duel ? 5 : run.round === 0 && state.stake >= 2 ? 0 : ROUND_REWARDS[run.round]!;
   const hands = round.handsLeft * (green ? 2 : 1) + (green ? round.discardsLeft : 0);
-  const cap = run.tools.includes('book2') ? 20 : run.tools.includes('book') ? 10 : 5;
-  const bonus = green ? 0 : Math.min(cap, Math.floor(Math.max(0, run.tokens) / 5));
+  const bonus = green ? 0 : Math.min(bonusCap(run), Math.floor(Math.max(0, run.tokens) / BONUS_STEP));
   let extra = 0;
 
   // Karten, die in der Hand geblieben sind.
@@ -881,7 +893,7 @@ function useConsumable(state: SorterState, run: RunState, item: Consumable, targ
         for (const t of targets)
           updateCard(run, t.id, (c) => ({
             ...c,
-            rank: c.rank >= SANTA ? 1 : c.rank + 1,
+            rank: c.rank >= ACE ? 2 : c.rank + 1,
           }));
         break;
       case 'hanged':
@@ -919,21 +931,21 @@ function useConsumable(state: SorterState, run: RunState, item: Consumable, targ
         destroyRandom(1);
         addCards(
           run,
-          [10, 11, 12].map(() => randomCard(run, fx, { rank: 10 + fx.int(3), enhanced: true })),
+          [10, 11, 12].map(() => randomCard(run, fx, { rank: JACK + fx.int(3), enhanced: true })),
         );
         break;
       case 'snowman':
         destroyRandom(1);
         addCards(
           run,
-          [0, 1].map(() => randomCard(run, fx, { rank: SANTA, enhanced: true })),
+          [0, 1].map(() => randomCard(run, fx, { rank: ACE, enhanced: true })),
         );
         break;
       case 'numbers':
         destroyRandom(1);
         addCards(
           run,
-          [0, 1, 2, 3].map(() => randomCard(run, fx, { rank: 1 + fx.int(9), enhanced: true })),
+          [0, 1, 2, 3].map(() => randomCard(run, fx, { rank: 2 + fx.int(9), enhanced: true })),
         );
         break;
       case 'aura':
@@ -953,7 +965,7 @@ function useConsumable(state: SorterState, run: RunState, item: Consumable, targ
         break;
       }
       case 'equalizer': {
-        const rank = 1 + fx.int(13);
+        const rank = 2 + fx.int(13);
         for (const c of hand) updateCard(run, c.id, (x) => ({ ...x, rank }));
         run.handSize = Math.max(1, run.handSize - 1);
         break;
@@ -1492,11 +1504,11 @@ export function result(state: SorterState): Result | null {
   if (!state.winners) return null;
   if (state.mode === 'solo') {
     const level = state.runs[0]!.level;
-    if (!state.winners.length) return { kind: 'loss', reason: `Level ${level}` };
+    if (!state.winners.length) return { kind: 'loss', reason: `Hoftag ${level}` };
     return {
       kind: 'win',
       winners: [0],
-      reason: state.endless ? `Endlos bis Level ${level}` : 'geschafft',
+      reason: state.endless ? `Endlos bis Hoftag ${level}` : 'geschafft',
     };
   }
   return { kind: 'win', winners: state.winners };

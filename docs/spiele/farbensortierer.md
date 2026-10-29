@@ -53,6 +53,176 @@ Die Mechanik bleibt, die Verpackung ändert sich:
 - **Kein Einsatz-Gefühl:** Begriffe wie Blind, Ante, Stake, Jackpot, All-In, Zinsen, Kasse, Würfeln, Wette kommen nicht vor. Die Ideen-Kategorie „Glücksspiel & Casino“ aus `joker-ideen.md` wird umgedeutet (z. B. Einarmiger Bandit → 🤖 Sortierroboter mit derselben Wirkung) statt gestrichen.
 - **Zufall bleibt** (Mischen, Laden, Mods wie 🐛 Der Bug), aber es wird nie etwas gesetzt, das man verlieren kann.
 
+## Neues Thema: Narrenhof (Vorschlag, 29.10.2026, Schritte 1 bis 3 umgesetzt)
+
+Das Emoji-Blatt mit eigenen Kombi-Namen fühlt sich nicht griffig an, und die Welt ist zusammengewürfelt (Sortier-Zentrale, Nagelstudio, Friseur-Salon, Druckerei, Werkstatt). Vorschlag: **zurück zum vertrauten 52er-Blatt und zu den bekannten Kombi-Namen, aber in einer ganz eigenen Welt: einem Fabeltier-Königshof, an dem man als junger Narr die Herrschaften zum Lachen bringt.** Der Joker ist historisch der Narr, und König, Dame und Bube stehen schon auf den Karten. Die Spiel-id `color-sorter` bleibt (wie bei Kniffel/Ligretto), damit Links, Online-Räume und Spielstände weiter funktionieren.
+
+**Arbeitstitel:** **Narrenhof** (Alternativen: Narrenblatt, Hofnarr, Narrenkappe).
+
+**Geschichte in einem Satz:** Am Hof von König Nobel, dem Löwen, wird ein neuer Hofnarr gesucht. Acht Hoftage lang musst du Höflinge, Edle und zuletzt die Herrschaften selbst zum Lachen bringen, mit Karten, Kunststücken und einer bunten Truppe anderer Narren.
+
+Die Tierfiguren von König Nobels Hof stammen aus *Reineke Fuchs* (Goethe 1794, gemeinfrei). So bleiben die Tier-Gegner, die Bosse und die Tierstimmen aus `tiere/` erhalten.
+
+### Plagiats-Fingerabdrücke im jetzigen Stand
+
+Rechtlich frei sind Regeln und Mechaniken (Pokerhände, Grundwert × Multiplikator, Laden, Packs). Geschützt sein kann der **Ausdruck**: Optik, Namen, Texte, Bilder und die Auswahl und Anordnung der Inhalte. Der jetzige Stand ist dort an vielen Stellen eine **Übersetzung von Balatro**, nicht bloß eine Anlehnung:
+
+- **Zahlen:** Die Grundwerte *und* die Steigerung je Level aller 12 Kombis, die Ziele je Level (300, 800, 2.000 … 50.000), Belohnung 3/4/5 und Zinsen „1 je 5, höchstens 5“ sind identisch.
+- **Kataloge:** alle 22 Zauberkarten mit den Tarot-Namen und Balatro-Wirkungen, die Traumkarten mit übersetzten Namen (Familienfoto, Talisman, Déjà-vu, Trance, Medium, Aura, Spukgestalt, Seele, Schwarzes Loch), die vier Abzeichen in denselben Farben, die Sortierstufen in denselben acht Farben (Weiß, Rot, Grün, Schwarz, Blau, Lila, Orange, Gold), die Kartensätze nach Farben (Rot +1 Verwerfen, Blau +1 Hand, Gelb +10 …), die Aufkleber (angeklebt, vergänglich, geliehen) und die Werkzeug-Paare.
+- **Mods:** ein Teil ist Balatro-Joker mit deutschem Namen (Fröhlich, Verrückt, Wimpel, Eiswaffel, Popcorn, Busfahrt, Banane u. a.).
+
+Eine einzelne Übereinstimmung ist unproblematisch. Die **Summe** ist der Fingerabdruck. Das neue Thema löst die Namen, aber **Zahlen und ein Teil der Wirkungen sollten mit umgebaut werden** (siehe Werte unten). Die Mods werden Schritt für Schritt zu Narren mit eigenen Ideen, nicht nur umbenannt.
+
+### Begriffe
+
+| Balatro | Bisher (Farbensortierer) | **Narrenhof** | Begründung |
+|---|---|---|---|
+| Spielkarten | Emoji-Blatt (1–9, Baby, Mädchen, Junge, Santa; 🔴🟡🔵🟢) | **52er-Blatt** 2–10, Bube, Dame, König, Ass; ♥ ♦ ♠ ♣ (wählbar: französisch / vierfarbig) | vertraut, `PlayingCard` aus `packages/ui` ist fertig |
+| Play Hand | Abschicken | **Vorführen** (4 je Audienz) | |
+| Discard | Verwerfen | **Tauschen** (3 je Audienz) | |
+| Chips | Chips | **Witz** (blau) | die Pointe |
+| Mult | Mult | **Lachen** (rot, „× Lachen“) | |
+| Score | Punkte | **Applaus** 👏 = Witz × Lachen | „Witz 40 × Lachen 4 = 160 Applaus“ |
+| Ante | Level | **Hoftag** (1–8) | |
+| Small Blind | Vorhut | **Morgenaudienz** vor einem Höfling | |
+| Big Blind | Wächter | **Festmahl** vor einem Edlen | |
+| Boss Blind | Boss | **Thronsaal** vor einer **Herrschaft** mit **Marotte** (Boss-Regel) | „Der Bär mag keine Kreuze.“ |
+| Ziel (Blind-Wert) | Lebenspunkte des Tiers | **Applaus-Ziel**; die Miene der Herrschaft wandert mit dem Fortschritt 😐 → 🙂 → 😄 → 😂 | eigenes Bild statt Lebensbalken |
+| Geld ($) | Token 🔩 | **Brezeln** 🥨 | Narren wurden mit Essen entlohnt; kein Geld, schwäbisch |
+| Zinsen | Ordnungsbonus | **Vorratsbonus** (Privileg „Vorratskammer“ hebt die Obergrenze) | |
+| Shop | Sortier-Zentrale | **Jahrmarkt** (Stände) | |
+| Reroll | Neu sortieren | **Weiterschlendern** | |
+| Joker | Mods | **Narren**, 5 Plätze auf der **Narrenbank** | |
+| Joker-Seltenheit | gewöhnlich … legendär | gewöhnlich, ungewöhnlich, selten, **legendär** | bleibt verständlich |
+| Tarot | Zauberkarten | **Kunststücke** 🎭 (2 Plätze in der **Narrentasche**), verändern Karten | keine Tarot-Namen mehr |
+| Planet | Nagelstudio | **Übungen** 📖 („Übung: Jonglage“ → Drilling +1 Stufe); jede Kombi hat eine eigene Disziplin (siehe Kombis) | „Übung macht den Meister“ |
+| Spectral | Traumkarten | **Kuriositäten** 🏺 aus der Wunderkammer, starke Wirkung mit Preis | keine Okkult-Begriffe (Trance, Medium, Seele) |
+| Enhancement | Friseur-Salon | **Schneiderei** 🧵 (Verzierungen an Karten) | |
+| Edition | Druck-Technik | **Glanz**: Vergoldet, Perlmutt, Buntglas, **Unsichtbar** (+1 Narrenplatz) | |
+| Seal | Abzeichen (Gold/Rot/Blau/Lila) | **Wappen** mit Bild statt Farbe: 🥨 Brezel, 🔁 Echo, 🦉 Eule, 🪶 Feder | weg vom Farbschema |
+| Booster Pack | Lieferung | **Bündel** vom Markt: Narrenkorb, Trickbeutel, Bücherbündel, Wunderkiste, Kartenbündel; je klein, groß, riesig. Auspacken: Schnur aufknoten, Tuch wegziehen | |
+| Voucher | Werkzeug | **Privilegien** 📜, vom König verliehen, zweistufig (z. B. Marktrecht → Großes Marktrecht: +1 Stand) | |
+| Skip Blind + Tag | Abkürzung + Sticker | **Auslassen**, dafür schuldet dir der Hof einen **Gefallen** 🎀 („nächstes Bündel gratis“) | |
+| Deck | Kartensätze (Rot-, Blau-, Gelb-Satz …) | **Narrenkappen**: Jede Kappe ist eine Herkunft mit Startvorteil (Wandergaukler +1 Tauschen, Klosterschüler +1 Vorführen, Bäckerskind +10 🥨 …) | weg von den Balatro-Deckfarben |
+| Stake | Sortierstufen Weiß … Gold | **Hofränge**: Lehrling, Geselle, Spaßmacher, Hofnarr, Oberhofnarr, Königsnarr, Narrenmeister, Narrenkönig | weg von den Balatro-Farben |
+| Eternal / Perishable / Rental | Angeklebt / Vergänglich / Geliehen | **Treu** (unverkäuflich) / **Müde** (geht nach 5 Audienzen) / **Gastnarr** (kostet 🥨 je Audienz) | |
+| – | Farbtropfen 💧 | **Glöckchen** 🔔 (von der Narrenkappe) | |
+| – | Atelier | **Narrenschule** (Freischaltungen, Schmuck) | |
+| – | Atelier-Lieferung | **Schulranzen** (bringt eine noch gesperrte Sache, keine Dubletten, Quoten offen) | |
+| – | Album | **Hofchronik** | |
+| Multiplayer: PvP-Blind | Duell | **Wettstreit** (zwei Narren vor demselben Thron) | |
+| | Showdown / Überleben / Wettrennen | **Großer Wettstreit** / **Ausdauer** / **Wettlauf** | |
+| | Leben | **Herzen** ❤️ | |
+
+### Kombis
+
+Die Namen sind Kniffel- und Rommé-Vokabular, kein Casino-Wort. Jede Kombi bekommt eine Narren-Disziplin; die zugehörige Übungskarte steigert sie.
+
+| Kombi | Disziplin (Übung) | Witz | Lachen | +Witz je Stufe | +Lachen je Stufe |
+|---|---|---|---|---|---|
+| Hohe Karte | 😝 Grimasse | 8 | 1 | 8 | 1 |
+| Paar | 🗣️ Wortspiel | 12 | 2 | 12 | 1 |
+| Zwei Paare | 🔀 Doppelsinn | 24 | 2 | 16 | 1 |
+| Drilling | 🤹 Jonglage | 25 | 3 | 20 | 2 |
+| Straße | 🦯 Stelzenlauf | 35 | 4 | 25 | 2 |
+| Farbe | 🎨 Farbenspiel | 40 | 4 | 18 | 2 |
+| Full House | 🤸 Menschenpyramide | 45 | 4 | 25 | 2 |
+| Vierling | 🔥 Feuerspucken | 60 | 6 | 30 | 3 |
+| Farbstraße | 🎪 Seiltanz | 90 | 9 | 40 | 3 |
+| Fünfling *(versteckt)* | 🗼 Narrenturm | 110 | 11 | 35 | 3 |
+| Full House in Farbe *(versteckt)* | 🎆 Feuerwerk | 130 | 13 | 40 | 4 |
+| Farb-Fünfling *(versteckt)* | 👑 Königsnummer | 150 | 15 | 50 | 4 |
+
+**Kartenwerte (Witz je gewertete Karte):** Augenzahl 2–10, **Bube 11, Dame 12, König 13, Ass 14**. Das ist intuitiver als „alle Bilder 10, Ass 11“ (Wert = Rang) und hebt sich ab. Weil die Karten dadurch etwas mehr Witz bringen, liegen die Grundwerte von Hoher Karte bis Drilling nur leicht über bzw. unter dem alten Stand, und Vierling und Farbstraße haben weniger Lachen.
+
+**Ass in der Straße:** nur oben (10-B-D-K-A), wie bisher Santa. Die Farbstraße von der 10 bis zum Ass heißt **Königsstraße** (früher „FarbenLauf Deluxe“). Das ist einfacher zu erklären als „Ass auch unten“, kann aber als Option „Ass auch unten (A-2-3-4-5)“ dazukommen.
+
+### Ziele und Belohnungen
+
+| Hoftag | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| Grundziel | 300 | 750 | 1.900 | 4.600 | 10.000 | 19.000 | 33.000 | 52.000 |
+
+- Morgenaudienz ×1, Festmahl ×1,5, Thronsaal **×2,2** (Marotte und Ziel zusammen machen den Thronsaal zum Höhepunkt).
+- Belohnung: Morgen **3 🥨**, Festmahl **4 🥨**, Thronsaal **6 🥨**; dazu **1 🥨 je übrige Vorführung**.
+- **Vorratsbonus:** +1 🥨 je 6 🥨 im Vorrat, höchstens **+4** (Privilegien erhöhen die Obergrenze).
+- Unverändert (Grundmechanik, gut erprobt): 8 Handkarten, 1–5 auswählen, 4 Vorführungen, 3 Tausche, 5 Narrenplätze, Start mit 4 🥨.
+- **Alle Zahlen sind Startwerte.** Nach dem Umbau mit dem Bot nachmessen: Ziel bleibt „schwer schafft Hoftag 8 in mindestens 30 % der Läufe“, bei Bedarf die Ziele um ±10 % verschieben.
+
+### Die ersten 10 Narren
+
+Eigene Ideen aus der Narrenwelt, bewusst keine Balatro-Joker. Preise in 🥨. Umgesetzt ersetzen sie die zehn Mods, die Balatro-Joker am direktesten nachbildeten (Smiley, Wanderer, Wimpel, Eiswaffel, Popcorn, Goldei, Jongleur mit +1 Handgröße, Bastelkleber, Liedermacher, Busfahrt); Cornelius' eigene Mods aus dem Emoji-Sortierer bleiben. In der Umsetzung heißt die Morgenaudienz-Bedingung des Frühaufstehers „erste Audienz eines Hoftags“ (`run.round === 0`), das Hofäffchen verliert alles, sobald irgendein Narr dazukommt (auch durch Kunststücke), und der Herold wechselt die Kombi nach jeder gewonnenen Audienz nach einer festen Regel (`value`, nur die neun offenen Kombis).
+
+| Narr | Wirkung | Preis | Seltenheit |
+|---|---|---|---|
+| 🤹 Der Jongleur | +2 Lachen je gewertete Karte | 5 | gewöhnlich |
+| 🎻 Die Spielfrau | +30 Witz, wenn die Kombi genau 3 Karten wertet (Dreivierteltakt) | 5 | gewöhnlich |
+| 🐓 Der Frühaufsteher | in der Morgenaudienz ×2 Lachen, sonst +3 Lachen | 6 | gewöhnlich |
+| 🥨 Der Bäckerjunge | +1 🥨 für jeden gewerteten Buben | 5 | gewöhnlich |
+| 🪕 Der Bänkelsänger | +5 Witz für jede Vorführung, die du an diesem Hoftag schon gemacht hast (beginnt jeden Morgen bei 0) | 6 | gewöhnlich |
+| 🐒 Das Hofäffchen | +1 Lachen dauerhaft für jede Karte, die du tauschst (höchstens +20); eifersüchtig: verliert alles, wenn du einen weiteren Narren kaufst | 6 | ungewöhnlich |
+| 📚 Der Bücherwurm | +1 Lachen je Stufe der vorgeführten Kombi | 7 | ungewöhnlich |
+| 📯 Der Herold | ruft zu Beginn jeder Audienz eine Kombi aus; führst du sie vor: ×3 Lachen | 7 | ungewöhnlich |
+| 💑 Das Königspaar | ×2 Lachen, wenn König und Dame derselben Farbe gewertet werden | 8 | selten |
+| 🎭 Der Doppelgesichtige | die erste Vorführung jeder Audienz wertet alle Karten zweimal | 10 | selten |
+
+Der Herold bringt nebenbei die Kombi-Namen bei. Das Hofäffchen und der Bänkelsänger belohnen Spielweisen (viel tauschen bzw. viele kleine Vorführungen), die bisher kein Mod abdeckte. Die übrigen 40 Mods werden beim Umbau einzeln geprüft: Die Übersetzungen von Balatro-Jokern bekommen eine neue Idee, die eigenen (z. B. 🥧 Pi, 🐛 Der Bug, 404) werden passend umgekleidet (🥧 → „Der Rechenmeister“).
+
+### Herrschaften und Höflinge (Bosse und Gegner)
+
+Wirkungen bleiben, nur Name und Rolle ändern sich. Muster: **Hoftitel + Tier**. Beispiele:
+
+| Bisher | Narrenhof |
+|---|---|
+| 🦁 Goldener Löwe | **König Nobel** (Vorschlag: immer die Herrschaft von Hoftag 8) |
+| 🐺 Alpha-Wolf | Ritter Isegrim |
+| 🐻 Papa Bär | Braun, der Bär (Truchsess) |
+| 🕷️ Mutterspinne | Gräfin Spinnweb |
+| 🐸 Frosch-König | Der Froschkönig (Gast, Grimm gemeinfrei) |
+| 🦉 Uhu-Oma | Hofgelehrte Uhu |
+| 🐊 Kroko-Boss | Zöllner Kroko |
+| 🐍 Riesen-Schlange | Kanzlerin Natter |
+| 🦈 Hai-General | Admiral Hai |
+| 👻 Schloss-Gespenst | Das Schlossgespenst |
+| 🐉 Der Drache | Drachenfürstin |
+| 🦄 Einhorn-Prinzessin | Prinzessin Einhorn |
+
+Die übrigen 13 entsprechend (Gäste von weither wie „Yeti aus dem Norden“, „Feuerfürst Phönix“). Die 20 Tier-Gegner der Morgenaudienz und des Festmahls werden Höflinge und Edle („Page Maus“, „Zofe Marienkäfer“, „Freiherr Dachs“).
+
+### Optik
+
+- **Hintergrund:** Harlekin-Rauten in gedeckten Hoffarben (Weinrot, Senfgelb, Tannengrün) auf Stoff- bzw. Pergamentstruktur. **Kein** Wabern, kein CRT, keine Pixelschrift, kein grüner Filz.
+- **Oben:** der Thron mit der Herrschaft (Emoji groß) und ihrer **Miene** als Fortschritt statt Lebensbalken, darunter die Marotte als Spruchband.
+- **Mitte:** die Narrenbank (5 Plätze), Wertung als Spruchband „Witz × Lachen“, Applaus fliegt als 👏 zur Herrschaft, die Miene springt eine Stufe weiter.
+- **Unten:** die Hand mit `PlayingCard` aus `packages/ui`, Kartenrücken als Schmuck aus der Narrenschule.
+- **Jahrmarkt:** Marktstände mit Stoffdach; Bündel werden aufgeknotet.
+- **Klänge:** Die vorhandenen passen größtenteils (Karten, Wertung, Tierstimmen). Für Brezeln statt Münzen, Applaus, Lachen und Fanfare schlägt Claude Kandidaten aus dem Sound-Index vor; **Cornelius wählt aus**. Die Sprachaufnahmen der Kombis (`fs_hand_*`) sagen die alten Namen und müssten neu aufgenommen oder weggelassen werden.
+
+### Kurzanleitung (Entwurf für `howToPlay`)
+
+1. Du bist ein junger Narr am Hof von König Nobel. Du hast 8 Karten auf der Hand. Wähle bis zu 5 aus und führe sie vor: Paar, Drilling, Straße, Farbe, Full House … bringen Witz und Lachen. Applaus = Witz × Lachen.
+2. Jede Audienz hat ein Applaus-Ziel. Du hast 4 Vorführungen und 3-mal Tauschen. Ein Hoftag hat drei Audienzen: Morgenaudienz, Festmahl und Thronsaal, wo die Herrschaft eine Marotte hat. Morgenaudienz und Festmahl darfst du auslassen, dann schuldet dir der Hof einen Gefallen.
+3. Nach jeder Audienz bekommst du Brezeln 🥨 für den Jahrmarkt: Narren helfen dir dauerhaft, Kunststücke verändern deine Karten, Übungen machen eine Kombi stärker, Bündel enthalten eine Auswahl, Privilegien gelten bis zum Ende.
+4. Bringst du am achten Hoftag König Nobel zum Lachen, wirst du Hofnarr.
+5. Zu mehreren spielt jeder seinen eigenen Lauf mit denselben Karten. Ab Hoftag 2 ersetzt ein Wettstreit den Thronsaal: Wer weniger Applaus bekommt, verliert ein Herz. Wer zuletzt noch Herzen hat, gewinnt.
+
+### Umbau in Schritten
+
+1. ✅ **Blatt und Kombis** (29.10.2026): Farben intern `h/s/d/c` (früher `r/y/b/g`: Rot → Herz, Blau → Pik, Gelb → Karo, Grün → Kreuz), Ränge 2–14 (`JACK`, `QUEEN`, `KING`, `ACE` in `src/cards.ts`), Witz = Rang, neue Kombi-Tabelle und -Namen. Mods, Bosse, Zauber- und Traumkarten, die Farben oder Ränge nennen, zeigen auf das neue Blatt (Santa → Ass, Baby → 10 bzw. Bildkarte, „blaue Karte“ → Pik usw.). Die Karten zeigen Rang und Farbzeichen in vier Farben (♥ rot, ♠ schwarz, ♦ blau, ♣ grün); das eigentliche Hof-Aussehen folgt in Schritt 5. `ruleVersion` 2.
+2. ✅ **Zahlen** (29.10.2026): Ziele, Rundenfaktoren (`ROUND_FACTORS` 1 / 1,5 / 2,2), Belohnungen (`ROUND_REWARDS` 3 / 4 / 6) und Ordnungsbonus (`BONUS_STEP` 6, `bonusCap` 4 / 8 / 16) wie in den Tabellen oben. **Messung** (100 Solo-Läufe, Bot mit 10 ms je Zug): vorher erreichte der mittlere Bot im Schnitt Level 3,6 und der schwere 3,3, jetzt 3,7 bzw. 3,5; kein Bot gewinnt einen Lauf, weder vorher noch nachher. Der Schwierigkeitsgrad ist also etwa gleich geblieben, das Ziel „schwer schafft Level 8 in 30 %“ verfehlt der Bot aber schon immer. Der schwere Bot ist sogar schwächer als der mittlere, und mehr Rechenzeit (500 ms) hilft kaum. Das ist eine eigene Baustelle (Laden- und Mod-Strategie des Bots), unabhängig vom Thema.
+3. ✅ **Namen und Texte** (29.10.2026): Spielname **Narrenhof** (🃏, id bleibt `color-sorter`), alle Begriffe der Tabelle oben in allen Texten, Kurzanleitung neu. Neue Einzelnamen: Übungen nach Disziplin (Grimasse … Königsnummer), Schneiderei (🪨 Pflasterstein, 🔔 Schellenbesatz, 💄 Schminke, 🧩 Flickenmuster, 🧵 Goldstickerei, 🫧 Glasperlen, 🛡️ Kettenhemd, 🍀 Kleeblatt), Glanz (✨ Vergoldet, 🦪 Perlmutt, 🪟 Buntglas, 👻 Unsichtbar), Wappen (🥨 Brezel, 🔁 Echo, 🦉 Eulen, 🪶 Feder), Bündel (🧺 Narrenkorb, 👝 Trickbeutel, 📚 Bücherbündel, 🏺 Wunderkiste, 🎴 Kartenbündel), Privilegien (Marktrecht, Hoflieferant, Kurze Wege, Zugabe, Kartentisch, Weite Ärmel, Größere Narrentasche, Vorratskammer, Zweite Narrenbank, Bittschrift/Gnadengesuch), Gefallen, Narrenkappen (Schlichte Kappe, Wandergaukler, Klosterschüler, Bäckerskind, Bauernkind, Puppenspieler, Zauberlehrling), Hofränge (Lehrling bis Narrenkönig), Aufkleber (Treu, Müde, Gastnarr), alle 48 übrigen Mods als Narren-Figuren (z. B. 🤡 Der Spaßmacher, 🥧 Der Rechenmeister, 🤪 Der Tollpatsch, 😇 Der Schutzengel), 25 Herrschaften und 20 Höflinge (z. B. König Nobel, Ritter Isegrim, Reineke Fuchs). Die Zauberkarte „Der Narr“ heißt „Da capo!“, damit sie nicht mit den Narren verwechselt wird; die übrigen Tarot- und Traumkarten-Namen folgen in Schritt 4. Kartenrücken „Harlekin“ und Tisch „Thronsaal“ sind die neuen Standards. **Intern bleiben die englischen Bezeichner** (`mods`, `tokens`, `spells`, `nails`, `dreams`, `tools`, `tags`, `stakes`, `drops`, `level`, `round`), damit Spielstände, Freischaltungen und Online-Räume weiter passen. Die 10 neuen Narren haben eigene Tests; gekaufte Freischaltungen ersetzter Mods gehen auf die neuen Narren an derselben Stelle über (`RENAMED_UNLOCKS` in `ui/progress.ts`). **Offen:** Die Sprachaufnahmen der Kombis (`fs_hand_*`) sagen noch die alten Namen („Duo“, „Triple“ …).
+4. **Kataloge entbalatroisieren**: Kunststücke (statt Tarot), Kuriositäten (statt Spectral), Wappen, Narrenkappen, Hofränge, Privilegien. Wirkungen dabei teilweise neu denken, nicht nur umbenennen.
+5. **Optik** (`ui/styles.css`, `ui/Card.tsx` → `PlayingCard`), Miene als Fortschritt.
+6. **`ruleVersion` 2** und Übernahme des Fortschritts: Farbtropfen werden zu Glöckchen im Verhältnis 1:1, Freischaltungen behalten ihre Schlüssel (`localStorage` bleibt `brett-und-blatt:farbensortierer`, „Sichern“-Texte `FS1:` weiter lesbar).
+7. **Bot nachmessen**, Ziele justieren, `corepack pnpm check`, Rauchtest und Prüfstand.
+
+### Offen für Cornelius
+
+- Name: Narrenhof, Narrenblatt, Hofnarr oder anders?
+- Brezeln 🥨 als Währung und Glöckchen 🔔 als Meta-Währung in Ordnung?
+- König Nobel fest als letzte Herrschaft (Hoftag 8) oder zufällig wie bisher?
+- Neue Sprachaufnahmen für die Kombi-Namen oder ohne Ansage?
+
 ## Karten
 
 - **52 Karten:** 13 Ränge × 4 Farben.
@@ -251,7 +421,7 @@ Neu in der Engine wird dafür vermutlich nur wenig nötig: gleichzeitige Züge u
 
 ## Offene Punkte (für Cornelius)
 
-- Name bestätigen: „Farbensortierer“ statt „Emoji-Sortierer“ im Fahrplan; Ordner/Kennung `color-sorter`.
+- Name und Thema: siehe „Neues Thema: Narrenhof“ oben (Vorschlag vom 29.10.2026); Ordner/Kennung `color-sorter` bleibt.
 - Ersatznamen für Kleine/Große Blende (Vorschlag Vorhut/Wächter), „Neu sortieren“, „Sternen-Welle“, „Ordnungsbonus“, Lieferung, Werkzeug, Sticker, Traumkarten, Sortierstufen.
 - Token-Symbol 🔩 statt Münze?
 - Meta-Währung: Name (Farbtropfen 💧?) und was es im Atelier zu kaufen gibt; Mengen je Belohnung.

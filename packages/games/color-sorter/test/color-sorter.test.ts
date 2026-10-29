@@ -2,12 +2,14 @@ import { computeBotMove, resolveOptions, Rng, type Options } from '@brett-und-bl
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { detectHand, gameModule, handLabel, scoreHand, type Card, type RunState, type SorterMove, type SorterState } from '../src';
+import { MODS } from '../src/mods';
+import { describeMod } from '../src/ui/texts';
 
 function start(seats = 1, options: Options = {}, seed = 'test'): SorterState {
   return gameModule.setup(seats, resolveOptions(gameModule, options), seed);
 }
 
-const c = (rank: number, color: Card['color'], extra: Partial<Card> = {}): Card => ({ id: rank * 10 + 'rybg'.indexOf(color), rank, color, ...extra });
+const c = (rank: number, color: Card['color'], extra: Partial<Card> = {}): Card => ({ id: rank * 10 + 'hsdc'.indexOf(color), rank, color, ...extra });
 
 function play(state: SorterState, seat: number, move: SorterMove): SorterState {
   return gameModule.applyMove(state, seat, move).state;
@@ -20,36 +22,38 @@ function runWith(state: SorterState, change: Partial<RunState>): RunState {
 
 describe('Kombis', () => {
   it('erkennt alle Kombis', () => {
-    expect(detectHand([c(5, 'r')]).type).toBe('high');
-    expect(detectHand([c(5, 'r'), c(5, 'b')]).type).toBe('pair');
-    expect(detectHand([c(5, 'r'), c(5, 'b'), c(7, 'g'), c(7, 'y')]).type).toBe('twoPair');
-    expect(detectHand([c(5, 'r'), c(5, 'b'), c(5, 'g')]).type).toBe('three');
-    expect(detectHand([c(1, 'r'), c(2, 'b'), c(3, 'g'), c(4, 'y'), c(5, 'r')]).type).toBe('straight');
-    expect(detectHand([c(1, 'r'), c(3, 'r'), c(6, 'r'), c(8, 'r'), c(12, 'r')]).type).toBe('flush');
-    expect(detectHand([c(5, 'r'), c(5, 'b'), c(5, 'g'), c(8, 'y'), c(8, 'r')]).type).toBe('fullHouse');
-    expect(detectHand([c(5, 'r'), c(5, 'b'), c(5, 'g'), c(5, 'y')]).type).toBe('four');
-    expect(detectHand([c(4, 'g'), c(5, 'g'), c(6, 'g'), c(7, 'g'), c(8, 'g')]).type).toBe('straightFlush');
-    expect(detectHand([c(5, 'r'), c(5, 'b'), c(5, 'g'), c(5, 'y'), c(5, 'r', { id: 99 })]).type).toBe('five');
-    expect(detectHand([c(5, 'r'), c(5, 'r', { id: 1 }), c(5, 'r', { id: 2 }), c(8, 'r'), c(8, 'r', { id: 3 })]).type).toBe('flushHouse');
+    expect(detectHand([c(5, 'h')]).type).toBe('high');
+    expect(detectHand([c(5, 'h'), c(5, 's')]).type).toBe('pair');
+    expect(detectHand([c(5, 'h'), c(5, 's'), c(7, 'c'), c(7, 'd')]).type).toBe('twoPair');
+    expect(detectHand([c(5, 'h'), c(5, 's'), c(5, 'c')]).type).toBe('three');
+    expect(detectHand([c(2, 'h'), c(3, 's'), c(4, 'c'), c(5, 'd'), c(6, 'h')]).type).toBe('straight');
+    expect(detectHand([c(2, 'h'), c(3, 'h'), c(6, 'h'), c(8, 'h'), c(12, 'h')]).type).toBe('flush');
+    expect(detectHand([c(5, 'h'), c(5, 's'), c(5, 'c'), c(8, 'd'), c(8, 'h')]).type).toBe('fullHouse');
+    expect(detectHand([c(5, 'h'), c(5, 's'), c(5, 'c'), c(5, 'd')]).type).toBe('four');
+    expect(detectHand([c(4, 'c'), c(5, 'c'), c(6, 'c'), c(7, 'c'), c(8, 'c')]).type).toBe('straightFlush');
+    expect(detectHand([c(5, 'h'), c(5, 's'), c(5, 'c'), c(5, 'd'), c(5, 'h', { id: 99 })]).type).toBe('five');
+    expect(detectHand([c(5, 'h'), c(5, 'h', { id: 1 }), c(5, 'h', { id: 2 }), c(8, 'h'), c(8, 'h', { id: 3 })]).type).toBe('flushHouse');
   });
 
-  it('Santa ist der höchste Rang: 9 bis Santa in einer Farbe ist FarbenLauf Deluxe', () => {
-    const cards = [c(9, 'b'), c(10, 'b'), c(11, 'b'), c(12, 'b'), c(13, 'b')];
+  it('Das Ass ist der höchste Rang: 10 bis Ass in einer Farbe ist die Königsstraße', () => {
+    const cards = [c(10, 's'), c(11, 's'), c(12, 's'), c(13, 's'), c(14, 's')];
     const { type } = detectHand(cards);
     expect(type).toBe('straightFlush');
-    expect(handLabel(type, cards)).toBe('FarbenLauf Deluxe');
-    // Kein Herumlaufen: Junge, Santa, 1, 2, 3 ist kein Lauf.
-    expect(detectHand([c(12, 'r'), c(13, 'b'), c(1, 'g'), c(2, 'y'), c(3, 'r')]).type).toBe('high');
+    expect(handLabel(type, cards)).toBe('Königsstraße');
+    expect(handLabel(type, [c(9, 's'), c(10, 's'), c(11, 's'), c(12, 's'), c(13, 's')])).toBe('Farbstraße');
+    // Kein Herumlaufen: König, Ass, 2, 3, 4 ist keine Straße, A-2-3-4-5 auch nicht.
+    expect(detectHand([c(13, 'h'), c(14, 's'), c(2, 'c'), c(3, 'd'), c(4, 'h')]).type).toBe('high');
+    expect(detectHand([c(14, 'h'), c(2, 's'), c(3, 'c'), c(4, 'd'), c(5, 'h')]).type).toBe('high');
   });
 
   it('wertet nur die Karten der Kombi, Granit immer', () => {
-    const played = [c(5, 'r'), c(5, 'b'), c(9, 'g'), c(2, 'y', { enh: 'granite' })];
+    const played = [c(5, 'h'), c(5, 's'), c(9, 'c'), c(2, 'd', { enh: 'granite' })];
     expect(detectHand(played).scoring).toEqual([0, 1, 3]);
-    expect(detectHand([c(3, 'r'), c(9, 'b')]).scoring).toEqual([1]);
+    expect(detectHand([c(3, 'h'), c(9, 's')]).scoring).toEqual([1]);
   });
 
   it('Ombré zählt als jede Farbe', () => {
-    expect(detectHand([c(1, 'r'), c(3, 'r'), c(6, 'b', { enh: 'ombre' }), c(8, 'r'), c(12, 'r')]).type).toBe('flush');
+    expect(detectHand([c(2, 'h'), c(3, 'h'), c(6, 's', { enh: 'ombre' }), c(8, 'h'), c(12, 'h')]).type).toBe('flush');
   });
 });
 
@@ -57,27 +61,28 @@ describe('Wertung', () => {
   const state = start();
   const rng = () => new Rng([1, 2, 3, 4]);
 
-  it('Chips × Mult: Duo aus zwei 5ern ist (10 + 5 + 5) × 2', () => {
-    const result = scoreHand(runWith(state, {}), [c(5, 'r'), c(5, 'b')], [], rng());
-    expect(result.score).toBe(40);
+  it('Chips × Mult: Paar aus zwei 5ern ist (12 + 5 + 5) × 2', () => {
+    const result = scoreHand(runWith(state, {}), [c(5, 'h'), c(5, 's')], [], rng());
+    expect(result.score).toBe(44);
   });
 
-  it('Bildkarten zählen 10, Santa 11', () => {
-    expect(scoreHand(runWith(state, {}), [c(13, 'r')], [], rng()).score).toBe((5 + 11) * 1);
-    expect(scoreHand(runWith(state, {}), [c(11, 'r')], [], rng()).score).toBe((5 + 10) * 1);
+  it('Karten zählen ihren Rang: Bube 11, Dame 12, König 13, Ass 14', () => {
+    expect(scoreHand(runWith(state, {}), [c(14, 'h')], [], rng()).score).toBe((8 + 14) * 1);
+    expect(scoreHand(runWith(state, {}), [c(11, 'h')], [], rng()).score).toBe((8 + 11) * 1);
+    expect(scoreHand(runWith(state, {}), [c(2, 'h')], [], rng()).score).toBe((8 + 2) * 1);
   });
 
   it('Veredelungen, Folien und Abzeichen', () => {
     const run = runWith(state, {});
-    expect(scoreHand(run, [c(5, 'r', { enh: 'volume' })], [], rng()).score).toBe(5 + 5 + 30);
-    expect(scoreHand(run, [c(5, 'r', { enh: 'gloss' })], [], rng()).score).toBe((5 + 5) * 5);
-    expect(scoreHand(run, [c(5, 'r', { foil: 'iris' })], [], rng()).score).toBe(15);
-    expect(scoreHand(run, [c(5, 'r', { seal: 'red' })], [], rng()).score).toBe(5 + 5 + 5);
-    expect(scoreHand(run, [c(5, 'r')], [c(9, 'b', { enh: 'keratin' })], rng()).score).toBe(15);
+    expect(scoreHand(run, [c(5, 'h', { enh: 'volume' })], [], rng()).score).toBe(8 + 5 + 30);
+    expect(scoreHand(run, [c(5, 'h', { enh: 'gloss' })], [], rng()).score).toBe((8 + 5) * 5);
+    expect(scoreHand(run, [c(5, 'h', { foil: 'iris' })], [], rng()).score).toBe(Math.floor(13 * 1.5));
+    expect(scoreHand(run, [c(5, 'h', { seal: 'red' })], [], rng()).score).toBe(8 + 5 + 5);
+    expect(scoreHand(run, [c(5, 'h')], [c(9, 's', { enh: 'keratin' })], rng()).score).toBe(Math.floor(13 * 1.5));
   });
 
   it('Mods wirken von links nach rechts: erst +Mult, dann ×Mult ist mehr', () => {
-    const pair = [c(5, 'r'), c(5, 'b')];
+    const pair = [c(5, 'h'), c(5, 's')];
     const plusThenTimes = runWith(state, {
       mods: [
         { uid: 1, key: 'jolly' },
@@ -90,13 +95,13 @@ describe('Wertung', () => {
         { uid: 1, key: 'jolly' },
       ],
     });
-    expect(scoreHand(plusThenTimes, pair, [], rng()).score).toBe(20 * (2 + 8) * 2);
-    expect(scoreHand(timesThenPlus, pair, [], rng()).score).toBe(20 * (2 * 2 + 8));
+    expect(scoreHand(plusThenTimes, pair, [], rng()).score).toBe(22 * (2 + 8) * 2);
+    expect(scoreHand(timesThenPlus, pair, [], rng()).score).toBe(22 * (2 * 2 + 8));
   });
 
   it('Farb-Mods zählen gewertete Karten der Farbe', () => {
     const run = runWith(state, { mods: [{ uid: 1, key: 'inLove' }] });
-    expect(scoreHand(run, [c(5, 'r'), c(5, 'b')], [], rng()).score).toBe(20 * (2 + 3));
+    expect(scoreHand(run, [c(5, 'h'), c(5, 's')], [], rng()).score).toBe(22 * (2 + 3));
   });
 
   it('Boss-Farbe zählt nicht', () => {
@@ -114,7 +119,97 @@ describe('Wertung', () => {
         faceDown: [],
       },
     });
-    expect(scoreHand(run, [c(5, 'r'), c(5, 'b')], [], rng()).score).toBe((10 + 5) * 2);
+    expect(scoreHand(run, [c(5, 'h'), c(5, 's')], [], rng()).score).toBe((12 + 5) * 2);
+  });
+});
+
+describe('Narren', () => {
+  const state = start();
+  const rng = () => new Rng([1, 2, 3, 4]);
+  const round = (extra: Partial<NonNullable<RunState['current']>> = {}): RunState['current'] => ({
+    target: 1,
+    score: 0,
+    handsLeft: 4,
+    discardsLeft: 3,
+    boss: null,
+    duel: false,
+    playedTypes: [],
+    firstDone: false,
+    silenced: false,
+    faceDown: [],
+    ...extra,
+  });
+  const withMod = (key: string, change: Partial<RunState> = {}, value?: number) => runWith(state, { mods: [{ uid: 1, key, ...(value === undefined ? {} : { value }) }], ...change });
+  const pair = [c(5, 'h'), c(5, 's')];
+
+  it('Jongleur: +2 Mult je gewertete Karte', () => {
+    expect(scoreHand(withMod('juggler'), pair, [], rng()).score).toBe(22 * (2 + 2 + 2));
+  });
+
+  it('Spielfrau: +30 Chips nur bei genau 3 gewerteten Karten', () => {
+    expect(scoreHand(withMod('fiddler'), [c(5, 'h'), c(5, 's'), c(5, 'c')], [], rng()).score).toBe((25 + 15 + 30) * 3);
+    expect(scoreHand(withMod('fiddler'), pair, [], rng()).score).toBe(22 * 2);
+  });
+
+  it('Frühaufsteher: erste Runde ×2, sonst +3 Mult', () => {
+    expect(scoreHand(withMod('earlyBird', { round: 0 }), pair, [], rng()).score).toBe(22 * 4);
+    expect(scoreHand(withMod('earlyBird', { round: 1 }), pair, [], rng()).score).toBe(22 * 5);
+  });
+
+  it('Bäckerjunge: +1 T je gewerteter Bube', () => {
+    expect(scoreHand(withMod('baker'), [c(11, 'h'), c(11, 's')], [], rng()).tokens).toBe(2);
+    expect(scoreHand(withMod('baker'), pair, [], rng()).tokens).toBe(0);
+  });
+
+  it('Bänkelsänger: +5 Chips je schon gespielte Hand, neues Level beginnt bei 0', () => {
+    const result = scoreHand(withMod('balladeer', {}, 3), pair, [], rng());
+    expect(result.score).toBe((22 + 15) * 2);
+    expect(result.mods[0]!.value).toBe(4);
+    expect(MODS.balladeer!.onRoundEnd!({ uid: 1, key: 'balladeer', value: 4 }, runWith(state, { round: 2 })).mod?.value).toBe(0);
+    expect(MODS.balladeer!.onRoundEnd!({ uid: 1, key: 'balladeer', value: 4 }, runWith(state, { round: 1 })).mod).toBeUndefined();
+  });
+
+  it('Hofäffchen: wächst beim Verwerfen bis +20 und verliert alles, wenn ein Mod dazukommt', () => {
+    const run = runWith(state, {});
+    expect(MODS.monkey!.onDiscard!([c(2, 'h'), c(3, 'h')], { uid: 1, key: 'monkey', value: 19 }, run).mod?.value).toBe(20);
+    expect(scoreHand(withMod('monkey', {}, 6), pair, [], rng()).score).toBe(22 * (2 + 6));
+    const shopState = structuredClone(state);
+    const own = shopState.runs[0]!;
+    own.phase = 'shop';
+    own.tokens = 10;
+    own.mods = [{ uid: 1, key: 'monkey', value: 7 }];
+    own.shop = { ...own.shop!, offers: [{ type: 'mod', key: 'jolly', price: 1 }], packs: [], tool: null };
+    const after = play(shopState, 0, { type: 'buy', index: 0 }).runs[0]!;
+    expect(after.mods.map((m) => [m.key, m.value ?? 0])).toEqual([
+      ['monkey', 0],
+      ['jolly', 0],
+    ]);
+  });
+
+  it('Bücherwurm: +1 Mult je Level der Kombi', () => {
+    const levels = { ...state.runs[0]!.handLevels, pair: 3 };
+    // Paar auf Level 3: 12 + 2 × 12 Chips, 2 + 2 Mult
+    expect(scoreHand(withMod('bookworm', { handLevels: levels }), pair, [], rng()).score).toBe((36 + 10) * (4 + 3));
+  });
+
+  it('Herold: ×3 Mult für die ausgerufene Kombi, auch als Teil einer größeren', () => {
+    expect(describeMod({ key: 'herald', value: 1 }).text).toContain('Ausgerufen: Paar');
+    expect(scoreHand(withMod('herald', {}, 1), pair, [], rng()).score).toBe(22 * 6);
+    const full = [c(5, 'h'), c(5, 's'), c(5, 'c'), c(8, 'd'), c(8, 'h')];
+    expect(scoreHand(withMod('herald', {}, 1), full, [], rng()).score).toBe((45 + 31) * 12);
+    expect(scoreHand(withMod('herald', {}, 3), pair, [], rng()).score).toBe(22 * 2);
+  });
+
+  it('Königspaar: ×2 Mult bei König und Dame derselben Farbe', () => {
+    const same = [c(13, 'h'), c(12, 'h'), c(2, 'h'), c(6, 'h'), c(9, 'h')];
+    expect(scoreHand(withMod('royalCouple'), same, [], rng()).score).toBe((40 + 42) * 8);
+    const mixed = [c(13, 'h'), c(13, 'c'), c(12, 's'), c(12, 'd')];
+    expect(scoreHand(withMod('royalCouple'), mixed, [], rng()).score).toBe((24 + 50) * 2);
+  });
+
+  it('Doppelgesichtiger: die erste Hand einer Runde wertet alle Karten zweimal', () => {
+    expect(scoreHand(withMod('twoFaced', { current: round() }), pair, [], rng()).score).toBe((12 + 20) * 2);
+    expect(scoreHand(withMod('twoFaced', { current: round({ firstDone: true }) }), pair, [], rng()).score).toBe(22 * 2);
   });
 });
 
@@ -158,7 +253,7 @@ describe('Ablauf', () => {
     const own = gameModule.playerView(state, 0).runs[0]!;
     expect(own.pileCount).toBe(44);
     expect(own.rng.deal).toEqual([0, 0, 0, 0]);
-    const ranks = own.pile.map((card) => card.rank + 100 * 'rybg'.indexOf(card.color));
+    const ranks = own.pile.map((card) => card.rank + 100 * 'hsdc'.indexOf(card.color));
     expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
   });
 
