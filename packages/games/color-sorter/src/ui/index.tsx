@@ -5,7 +5,7 @@ import { handLabel, HAND_TYPES, HANDS } from '../cards';
 import { BOSS_REROLL_PRICE, BOSSES, creatureFor, DECKS, levelTarget, STAKES, TAGS, TOOL_PRICE } from '../content';
 import type { DropLine } from '../drops';
 import { modDef } from '../mods';
-import { bonusCap, BONUS_STEP, bossFor, effectiveHandSize, FINAL_LEVEL, freeModSlots, HIDDEN_SCORE, isDuelLevel, modCapacity, sellValue, tableInfo } from '../rules';
+import { altTag, bonusCap, BONUS_STEP, bossFor, effectiveHandSize, FINAL_LEVEL, freeModSlots, HIDDEN_SCORE, isDuelLevel, modCapacity, ROUND_FACTORS, ROUND_REWARDS, sellValue, tableInfo } from '../rules';
 import { CARD_BACKS } from '../unlocks';
 import { Atelier, SetupExtra } from './Atelier';
 import { award, discover, useProgress, wasAwarded, withUnlocks } from './progress';
@@ -117,6 +117,10 @@ function enemyOf(state: SorterState, run: RunState): { emoji: string; name: stri
       text: 'Wer weniger Applaus bekommt, verliert ein Herz.',
     };
   if (run.round === 2) {
+    if (round?.calm) {
+      const calm = BOSSES[round.calm]!;
+      return { emoji: calm.emoji, name: calm.name, text: 'Heute gut gelaunt – ohne Marotte.' };
+    }
     const boss = BOSSES[round?.boss ?? bossFor(state, run)]!;
     return { emoji: boss.emoji, name: boss.name, text: boss.text };
   }
@@ -127,7 +131,7 @@ function targetFor(state: SorterState, run: RunState): number {
   if (run.current) return run.current.target;
   if (run.round === 2 && isDuelLevel(state, run.level)) return 0;
   const boss = run.round === 2 ? BOSSES[bossFor(state, run)] : undefined;
-  return Math.round(levelTarget(run.level, state.stake) * [1, 1.5, 2][run.round]! * (boss?.targetFactor ?? 1));
+  return Math.round(levelTarget(run.level, state.stake) * ROUND_FACTORS[run.round]! * (boss?.targetFactor ?? 1));
 }
 
 function InfoBox({ title, emoji, text, actions, onClose }: { title: string; emoji: string; text: ReactNode; actions?: ReactNode; onClose: () => void }) {
@@ -597,7 +601,8 @@ function ChoosePanel({ view, run, can, onMove, hint }: { view: SorterState; run:
   const target = targetFor(view, run);
   const tag = run.round < 2 ? (view.tags[(run.level - 1) * 2 + run.round] ?? null) : null;
   const tagInfo = tag ? describeTag(tag) : null;
-  const reward = run.round === 0 && view.stake >= 2 ? 0 : [3, 4, 5][run.round];
+  const reward = run.round === 0 && view.stake >= 2 ? 0 : ROUND_REWARDS[run.round];
+  const alt = tag && can({ type: 'skip', alt: true }) ? describeTag(altTag(tag, run.level)) : null;
 
   useEffect(() => {
     if (run.round === 2) {
@@ -628,15 +633,25 @@ function ChoosePanel({ view, run, can, onMove, hint }: { view: SorterState; run:
             Auslassen: {tagInfo.emoji} {tagInfo.title}
           </Btn>
         )}
+        {alt && (
+          <Btn hint={hint?.type === 'skip' && hint.alt} onClick={() => onMove({ type: 'skip', alt: true })}>
+            Auslassen: {alt.emoji} {alt.title}
+          </Btn>
+        )}
       </div>
       {tagInfo && (
         <p className="cs-muted">
           Gefallen „{tagInfo.title}“: {tagInfo.text}
         </p>
       )}
+      {alt && (
+        <p className="cs-muted">
+          Oder dank Wanderbühne „{alt.title}“: {alt.text}
+        </p>
+      )}
       {can({ type: 'rerollBoss' }) && (
         <Btn hint={hint?.type === 'rerollBoss'} onClick={() => (playEffect('fs-karte-waehlen'), onMove({ type: 'rerollBoss' }))}>
-          {run.tools.includes('scope2') ? '🛰️' : '🔭'} Andere Herrschaft bitten ({BOSS_REROLL_PRICE} 🥨)
+          📜 Andere Herrschaft bitten ({BOSS_REROLL_PRICE} 🥨)
         </Btn>
       )}
       {run.round === 0 && <BossPreview view={view} run={run} />}
@@ -715,7 +730,7 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
         onClose={() => setSelected(null)}
         actions={
           <Btn primary disabled={!can({ type: 'buyTool' })} onClick={() => (onMove({ type: 'buyTool' }), setSelected(null))}>
-            Kaufen ({Math.max(1, Math.floor(TOOL_PRICE * (run.tools.includes('bigSale') ? 0.5 : run.tools.includes('sale') ? 0.75 : 1)))} 🥨)
+            Kaufen ({Math.max(1, Math.floor(TOOL_PRICE * (run.tools.includes('sale') ? 0.75 : 1)))} 🥨)
           </Btn>
         }
       />

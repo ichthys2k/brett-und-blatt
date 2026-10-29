@@ -58,12 +58,24 @@ function empty(): Progress {
 const strings = (value: unknown, max = 500): string[] => (Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string').slice(-max) : []);
 const count = (value: unknown): number => (typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0);
 
-/** Narrenhof (29.10.2026): ersetzte Mods werden zu den neuen Narren auf demselben Platz – Freischaltungen bleiben erhalten. */
+/** Narrenhof (29.10.2026): ersetzte Narren und Privilegien werden zu ihren Nachfolgern auf demselben Platz – Freischaltungen bleiben erhalten. */
 const RENAMED_UNLOCKS: Record<string, string> = {
-  'mod:troubadour': 'mod:twoFaced',
+  'mod:troubadour': 'mod:santaClaus',
   'mod:bus': 'mod:herald',
-  'mod:egg': 'mod:royalCouple',
+  'mod:egg': 'mod:collector',
   'mod:drunk': 'mod:monkey',
+  // Schritt 4: entfallene Narren und zweite Stufen der Privilegien
+  'mod:trio': 'mod:santaFan',
+  'mod:growth': 'mod:broccoli',
+  'mod:banana': 'mod:apple',
+  'tool:superMagnet': 'tool:courtHerald',
+  'tool:bigSale': 'tool:diploma',
+  'tool:tidy2': 'tool:breadRight',
+  'tool:extraHand2': 'tool:touringStage',
+  'tool:bin2': 'tool:shelf',
+  'tool:bag2': 'tool:basket',
+  'tool:book2': 'tool:book',
+  'tool:scope2': 'tool:scope',
 };
 
 /** Prüft einen geladenen oder eingefügten Stand Feld für Feld. */

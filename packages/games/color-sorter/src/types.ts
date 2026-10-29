@@ -124,6 +124,10 @@ export interface RoundState {
   silenced: boolean;
   /** Karten-ids, die verdeckt liegen. */
   faceDown: number[];
+  /** Tauschen zu Beginn der Audienz (Brotrecht). */
+  startDiscards?: number;
+  /** Herrschaft, die dank Maskenball oder Kompass ohne Marotte kommt (nur zur Anzeige). */
+  calm?: string;
 }
 
 export interface Payout {
@@ -227,7 +231,7 @@ export interface SorterState {
 
 export type SorterMove =
   | { type: 'start' }
-  | { type: 'skip' }
+  | { type: 'skip'; alt?: boolean }
   | { type: 'play'; cards: number[] }
   | { type: 'discard'; cards: number[] }
   | { type: 'use'; index: number; cards: number[] }

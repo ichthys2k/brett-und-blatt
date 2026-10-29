@@ -10,175 +10,34 @@ export interface SpellDef {
   /** Wie viele Handkarten ausgewählt sein müssen: [mindestens, höchstens]. */
   targets: [number, number];
   enhance?: Enhancement;
-  color?: Color;
 }
 
 const spells: SpellDef[] = [
+  // Verkleiden: Karten bekommen eine Verzierung aus der Schneiderei.
+  { key: 'magician', name: 'Glücksklee anstecken', emoji: '🍀', text: 'Bis zu 2 Karten bekommen ein Kleeblatt', targets: [1, 2], enhance: 'star' },
+  { key: 'empress', name: 'Schminkkasten', emoji: '💄', text: 'Bis zu 3 Karten bekommen Schminke', targets: [1, 3], enhance: 'gloss' },
+  { key: 'hierophant', name: 'Pflastern', emoji: '🪨', text: '1 Karte wird zum Pflasterstein, dafür +2 🥨', targets: [1, 1], enhance: 'granite' },
+  { key: 'tower', name: 'Schellen annähen', emoji: '🔔', text: 'Bis zu 2 Karten bekommen einen Schellenbesatz', targets: [1, 2], enhance: 'volume' },
+  { key: 'lovers', name: 'Flickschneiderei', emoji: '🧩', text: '1 Karte bekommt ein Flickenmuster (zählt als jede Farbe)', targets: [1, 1], enhance: 'ombre' },
+  { key: 'chariot', name: 'Rüstkammer', emoji: '🛡️', text: '1 Karte bekommt ein Kettenhemd', targets: [1, 1], enhance: 'keratin' },
+  { key: 'justice', name: 'Perlenschnur', emoji: '🫧', text: '1 Karte bekommt Glasperlen', targets: [1, 1], enhance: 'blond' },
+  { key: 'devil', name: 'Goldfaden', emoji: '🧵', text: '1 Karte bekommt eine Goldstickerei', targets: [1, 1], enhance: 'gold' },
+  // Kartentricks
+  { key: 'dye', name: 'Färberei', emoji: '🎨', text: 'Wähle 2 bis 4 Karten: Alle bekommen die Farbe der linken', targets: [2, 4] },
+  { key: 'strength', name: 'Purzelbaum', emoji: '🤸', text: 'Die linke gewählte Karte steigt um einen Rang, eine zweite fällt um einen Rang', targets: [1, 2] },
+  { key: 'swap', name: 'Vertauscht!', emoji: '🔀', text: '2 Karten tauschen ihre Ränge', targets: [2, 2] },
+  { key: 'hanged', name: 'Ausmisten', emoji: '🧹', text: 'Bis zu 2 Karten verlassen das Deck, +1 🥨 je Karte', targets: [1, 2] },
+  // Hofgeschäfte
+  { key: 'harvest', name: 'Erntedank', emoji: '🌾', text: '+2 🥨 je Herrschaft, die du schon zum Lachen gebracht hast (höchstens 16)', targets: [0, 0] },
+  { key: 'polish', name: 'Polierlappen', emoji: '🧽', text: 'Der erste Narr ohne Glanz (von links) bekommt Perlmutt', targets: [0, 0] },
+  { key: 'priestess', name: 'Schulstunde', emoji: '📖', text: 'Erzeugt die Übung deiner meistgespielten Kombi', targets: [0, 0] },
+  { key: 'judgement', name: 'Einladung', emoji: '✉️', text: 'Ein zufälliger gewöhnlicher Narr kommt dazu (wenn Platz ist)', targets: [0, 0] },
   {
     key: 'fool',
     name: 'Da capo!',
     emoji: '🔁',
     text: 'Erzeugt das zuletzt benutzte Kunststück oder die zuletzt benutzte Übung (außer „Da capo!“)',
     targets: [0, 0],
-  },
-  {
-    key: 'magician',
-    name: 'Der Magier',
-    emoji: '🎩',
-    text: 'Bis zu 2 Karten bekommen eine Sternen-Welle',
-    targets: [1, 2],
-    enhance: 'star',
-  },
-  {
-    key: 'priestess',
-    name: 'Die Hohepriesterin',
-    emoji: '🔮',
-    text: 'Erzeugt bis zu 2 zufällige Übungen',
-    targets: [0, 0],
-  },
-  {
-    key: 'empress',
-    name: 'Die Herrscherin',
-    emoji: '👸',
-    text: 'Bis zu 2 Karten bekommen Glossing',
-    targets: [1, 2],
-    enhance: 'gloss',
-  },
-  {
-    key: 'emperor',
-    name: 'Der Herrscher',
-    emoji: '🤴',
-    text: 'Erzeugt bis zu 2 zufällige Kunststücke',
-    targets: [0, 0],
-  },
-  {
-    key: 'hierophant',
-    name: 'Der Hierophant',
-    emoji: '🕍',
-    text: 'Bis zu 2 Karten bekommen den Granit-Look',
-    targets: [1, 2],
-    enhance: 'granite',
-  },
-  {
-    key: 'lovers',
-    name: 'Die Liebenden',
-    emoji: '💑',
-    text: '1 Karte bekommt Ombré (zählt als jede Farbe)',
-    targets: [1, 1],
-    enhance: 'ombre',
-  },
-  {
-    key: 'chariot',
-    name: 'Der Wagen',
-    emoji: '🏇',
-    text: '1 Karte bekommt eine Keratin-Kur',
-    targets: [1, 1],
-    enhance: 'keratin',
-  },
-  {
-    key: 'justice',
-    name: 'Die Gerechtigkeit',
-    emoji: '⚖️',
-    text: '1 Karte bekommt eine Blondierung',
-    targets: [1, 1],
-    enhance: 'blond',
-  },
-  {
-    key: 'hermit',
-    name: 'Der Eremit',
-    emoji: '🧙',
-    text: 'Verdoppelt deine Brezeln (höchstens +20 🥨)',
-    targets: [0, 0],
-  },
-  {
-    key: 'wheel',
-    name: 'Das Rad',
-    emoji: '🎡',
-    text: 'Zu 1/4 bekommt ein zufälliger Narr eine Folie',
-    targets: [0, 0],
-  },
-  {
-    key: 'strength',
-    name: 'Die Kraft',
-    emoji: '💪',
-    text: 'Bis zu 2 Karten steigen um einen Rang',
-    targets: [1, 2],
-  },
-  {
-    key: 'hanged',
-    name: 'Der Gehängte',
-    emoji: '🙃',
-    text: 'Bis zu 2 Karten werden aus dem Deck entfernt',
-    targets: [1, 2],
-  },
-  {
-    key: 'death',
-    name: 'Der Tod',
-    emoji: '💀',
-    text: '2 Karten wählen: Die linke wird zur Kopie der rechten',
-    targets: [2, 2],
-  },
-  {
-    key: 'temperance',
-    name: 'Die Mäßigkeit',
-    emoji: '🍵',
-    text: 'Gibt den Verkaufswert aller Narren als Brezeln (höchstens 50 🥨)',
-    targets: [0, 0],
-  },
-  {
-    key: 'devil',
-    name: 'Der Teufel',
-    emoji: '😈',
-    text: '1 Karte bekommt Gold-Strähnen',
-    targets: [1, 1],
-    enhance: 'gold',
-  },
-  {
-    key: 'tower',
-    name: 'Der Turm',
-    emoji: '🗼',
-    text: '1 Karte bekommt einen Volumen-Boost',
-    targets: [1, 1],
-    enhance: 'volume',
-  },
-  {
-    key: 'star',
-    name: 'Der Stern',
-    emoji: '⭐',
-    text: 'Bis zu 3 Karten werden Karo',
-    targets: [1, 3],
-    color: 'd',
-  },
-  {
-    key: 'moon',
-    name: 'Der Mond',
-    emoji: '🌙',
-    text: 'Bis zu 3 Karten werden Pik',
-    targets: [1, 3],
-    color: 's',
-  },
-  {
-    key: 'sun',
-    name: 'Die Sonne',
-    emoji: '☀️',
-    text: 'Bis zu 3 Karten werden Herz',
-    targets: [1, 3],
-    color: 'h',
-  },
-  {
-    key: 'judgement',
-    name: 'Das Gericht',
-    emoji: '📯',
-    text: 'Erzeugt einen zufälligen Narren (wenn Platz ist)',
-    targets: [0, 0],
-  },
-  {
-    key: 'world',
-    name: 'Die Welt',
-    emoji: '🌍',
-    text: 'Bis zu 3 Karten werden Kreuz',
-    targets: [1, 3],
-    color: 'c',
   },
 ];
 export const SPELLS: Record<string, SpellDef> = Object.fromEntries(spells.map((s) => [s.key, s]));
@@ -224,143 +83,26 @@ export interface DreamDef {
   emoji: string;
   text: string;
   targets: [number, number];
-  seal?: Seal;
 }
 
 const dreams: DreamDef[] = [
-  {
-    key: 'familyPhoto',
-    name: 'Familienfoto',
-    emoji: '📸',
-    text: 'Entfernt 1 zufällige Handkarte, dafür 3 veredelte Bildkarten ins Deck',
-    targets: [0, 0],
-  },
-  {
-    key: 'snowman',
-    name: 'Schneemann',
-    emoji: '⛄',
-    text: 'Entfernt 1 zufällige Handkarte, dafür 2 veredelte Asse ins Deck',
-    targets: [0, 0],
-  },
-  {
-    key: 'numbers',
-    name: 'Zahlenzauber',
-    emoji: '🔢',
-    text: 'Entfernt 1 zufällige Handkarte, dafür 4 veredelte Zahlenkarten ins Deck',
-    targets: [0, 0],
-  },
-  {
-    key: 'talisman',
-    name: 'Talisman',
-    emoji: '🏅',
-    text: '1 Karte bekommt ein Gold-Wappen',
-    targets: [1, 1],
-    seal: 'gold',
-  },
-  {
-    key: 'dejaVu',
-    name: 'Déjà-vu',
-    emoji: '🔁',
-    text: '1 Karte bekommt ein rotes Wappen',
-    targets: [1, 1],
-    seal: 'red',
-  },
-  {
-    key: 'trance',
-    name: 'Trance',
-    emoji: '🌀',
-    text: '1 Karte bekommt ein blaues Wappen',
-    targets: [1, 1],
-    seal: 'blue',
-  },
-  {
-    key: 'medium',
-    name: 'Medium',
-    emoji: '🟣',
-    text: '1 Karte bekommt ein lila Wappen',
-    targets: [1, 1],
-    seal: 'purple',
-  },
-  {
-    key: 'aura',
-    name: 'Aura',
-    emoji: '✨',
-    text: '1 Karte bekommt eine zufällige Folie',
-    targets: [1, 1],
-  },
-  {
-    key: 'spook',
-    name: 'Spukgestalt',
-    emoji: '👻',
-    text: 'Erzeugt einen seltenen Narren, deine Brezeln gehen auf 0',
-    targets: [0, 0],
-  },
-  {
-    key: 'swirl',
-    name: 'Farbwirbel',
-    emoji: '🌪️',
-    text: 'Alle Handkarten bekommen dieselbe zufällige Farbe',
-    targets: [0, 0],
-  },
-  {
-    key: 'equalizer',
-    name: 'Gleichmacher',
-    emoji: '🟰',
-    text: 'Alle Handkarten bekommen denselben zufälligen Rang, Handgröße −1',
-    targets: [0, 0],
-  },
-  {
-    key: 'bubble',
-    name: 'Seifenblase',
-    emoji: '🫧',
-    text: 'Ein zufälliger Narr wird durchsichtig (+1 Narrenplatz), Handgröße −1',
-    targets: [0, 0],
-  },
-  {
-    key: 'cleanup',
-    name: 'Großputz',
-    emoji: '🧽',
-    text: 'Entfernt 5 zufällige Handkarten, dafür +20 🥨',
-    targets: [0, 0],
-  },
-  {
-    key: 'mirror',
-    name: 'Spiegel',
-    emoji: '🪞',
-    text: 'Kopiert einen zufälligen Narren, alle anderen (nicht angeklebten) verschwinden',
-    targets: [0, 0],
-  },
-  {
-    key: 'spell',
-    name: 'Bannkreis',
-    emoji: '🪬',
-    text: 'Ein zufälliger Narr wird irisierend, alle anderen (nicht angeklebten) verschwinden',
-    targets: [0, 0],
-  },
-  {
-    key: 'clone',
-    name: 'Klon',
-    emoji: '🧬',
-    text: '2 Kopien einer Karte ins Deck',
-    targets: [1, 1],
-  },
-  {
-    key: 'soul',
-    name: 'Seele',
-    emoji: '💫',
-    text: 'Erzeugt einen legendären Narren (wenn Platz ist)',
-    targets: [0, 0],
-  },
-  {
-    key: 'blackHole',
-    name: 'Schwarzes Loch',
-    emoji: '🕳️',
-    text: 'Alle Kombis steigen um 1 Stufe',
-    targets: [0, 0],
-  },
+  { key: 'familyPhoto', name: 'Ahnengalerie', emoji: '🖼️', text: 'Entfernt 1 zufällige Handkarte, dafür 3 verzierte Bildkarten ins Deck', targets: [0, 0] },
+  { key: 'snowman', name: 'Asse im Ärmel', emoji: '🗡️', text: 'Entfernt 1 zufällige Handkarte, dafür 2 verzierte Asse ins Deck', targets: [0, 0] },
+  { key: 'numbers', name: 'Zahlenrolle', emoji: '📜', text: 'Entfernt 1 zufällige Handkarte, dafür 4 verzierte Zahlenkarten ins Deck', targets: [0, 0] },
+  { key: 'crestBook', name: 'Wappenbuch', emoji: '📕', text: 'Bis zu 2 Karten bekommen je ein zufälliges Wappen', targets: [1, 2] },
+  { key: 'aura', name: 'Polierstein', emoji: '💎', text: '1 Karte bekommt zufälligen Glanz', targets: [1, 1] },
+  { key: 'spook', name: 'Flaschengeist', emoji: '🧞', text: 'Erzeugt einen seltenen Narren, deine Brezeln gehen auf 0', targets: [0, 0] },
+  { key: 'swirl', name: 'Färbekessel', emoji: '🫕', text: 'Alle Handkarten bekommen dieselbe zufällige Farbe', targets: [0, 0] },
+  { key: 'bubble', name: 'Tarnkappe', emoji: '🎩', text: 'Ein zufälliger Narr wird unsichtbar (+1 Narrenplatz), Handgröße −1', targets: [0, 0] },
+  { key: 'cleanup', name: 'Kehraus', emoji: '🔥', text: 'Entfernt 5 zufällige Handkarten, dafür +20 🥨', targets: [0, 0] },
+  { key: 'magicMirror', name: 'Zauberspiegel', emoji: '🪞', text: 'Der linke Narr wird verdoppelt, ein zufälliger anderer (nicht treuer) geht', targets: [0, 0] },
+  { key: 'hourglass', name: 'Sanduhr', emoji: '⏳', text: '+1 Vorführung in der nächsten Audienz, dafür Handgröße −1 dauerhaft', targets: [0, 0] },
+  { key: 'compass', name: 'Kompass', emoji: '🧭', text: 'Die nächste Herrschaft im Thronsaal hat keine Marotte', targets: [0, 0] },
+  { key: 'soul', name: 'Krone des Narrenkönigs', emoji: '👑', text: 'Erzeugt einen legendären Narren (wenn Platz ist)', targets: [0, 0] },
+  { key: 'blackHole', name: 'Große Bibliothek', emoji: '🏛️', text: 'Alle Kombis steigen um 1 Stufe', targets: [0, 0] },
 ];
 export const DREAMS: Record<string, DreamDef> = Object.fromEntries(dreams.map((d) => [d.key, d]));
-/** „Seele“ und „Schwarzes Loch“ sind selten und gibt es nur in Lieferungen. */
+/** Krone und Große Bibliothek sind selten und gibt es nur in Bündeln. */
 export const DREAM_KEYS = dreams.map((d) => d.key).filter((k) => k !== 'soul' && k !== 'blackHole');
 export const RARE_DREAMS = ['soul', 'blackHole'];
 
@@ -513,128 +255,26 @@ export interface ToolDef {
   name: string;
   emoji: string;
   text: string;
-  /** Erst nach diesem Werkzeug erhältlich. */
-  requires?: string;
 }
 
 /** Preis fürs Neuwählen des Bosses. */
 export const BOSS_REROLL_PRICE = 5;
 
 const tools: ToolDef[] = [
-  {
-    key: 'magnet',
-    name: 'Marktrecht',
-    emoji: '🎪',
-    text: '+1 Angebot auf dem Jahrmarkt',
-  },
-  {
-    key: 'superMagnet',
-    name: 'Großes Marktrecht',
-    emoji: '🎪',
-    text: '+1 weiteres Angebot',
-    requires: 'magnet',
-  },
-  {
-    key: 'sale',
-    name: 'Hoflieferant',
-    emoji: '🏷️',
-    text: 'Alles 25 % günstiger',
-    requires: undefined,
-  },
-  {
-    key: 'bigSale',
-    name: 'Königlicher Hoflieferant',
-    emoji: '🏷️',
-    text: 'Alles 50 % günstiger',
-    requires: 'sale',
-  },
-  {
-    key: 'tidy',
-    name: 'Kurze Wege',
-    emoji: '🚶',
-    text: 'Weiterschlendern 2 🥨 günstiger',
-  },
-  {
-    key: 'tidy2',
-    name: 'Abkürzung',
-    emoji: '🏃',
-    text: 'Weiterschlendern weitere 2 🥨 günstiger',
-    requires: 'tidy',
-  },
-  {
-    key: 'extraHand',
-    name: 'Zugabe',
-    emoji: '👏',
-    text: '+1 Vorführung je Audienz',
-  },
-  {
-    key: 'extraHand2',
-    name: 'Doppelte Zugabe',
-    emoji: '🙌',
-    text: '+1 weitere Vorführung je Audienz',
-    requires: 'extraHand',
-  },
-  {
-    key: 'bin',
-    name: 'Kartentisch',
-    emoji: '🃏',
-    text: '+1 Tauschen je Audienz',
-  },
-  {
-    key: 'bin2',
-    name: 'Großer Kartentisch',
-    emoji: '🎴',
-    text: '+1 weiteres Tauschen je Audienz',
-    requires: 'bin',
-  },
+  { key: 'magnet', name: 'Marktrecht', emoji: '🎪', text: '+1 Angebot auf dem Jahrmarkt' },
+  { key: 'sale', name: 'Hoflieferant', emoji: '🏷️', text: 'Alles 25 % günstiger' },
+  { key: 'tidy', name: 'Kurze Wege', emoji: '🚶', text: 'Weiterschlendern 2 🥨 günstiger' },
+  { key: 'extraHand', name: 'Zugabe', emoji: '👏', text: '+1 Vorführung je Audienz' },
+  { key: 'bin', name: 'Kartentisch', emoji: '🃏', text: '+1 Tauschen je Audienz' },
   { key: 'bag', name: 'Weite Ärmel', emoji: '👘', text: '+1 Handgröße' },
-  {
-    key: 'bag2',
-    name: 'Zauberärmel',
-    emoji: '🥻',
-    text: '+1 weitere Handgröße',
-    requires: 'bag',
-  },
-  {
-    key: 'basket',
-    name: 'Größere Narrentasche',
-    emoji: '👝',
-    text: '+1 Platz in der Narrentasche',
-  },
-  {
-    key: 'book',
-    name: 'Vorratskammer',
-    emoji: '🥫',
-    text: 'Vorratsbonus bis 8 🥨',
-    requires: undefined,
-  },
-  {
-    key: 'book2',
-    name: 'Große Vorratskammer',
-    emoji: '🏰',
-    text: 'Vorratsbonus bis 16 🥨',
-    requires: 'book',
-  },
-  {
-    key: 'shelf',
-    name: 'Zweite Narrenbank',
-    emoji: '🪑',
-    text: '+1 Narrenplatz',
-    requires: 'magnet',
-  },
-  {
-    key: 'scope',
-    name: 'Bittschrift',
-    emoji: '📜',
-    text: `Einmal je Hoftag eine andere Herrschaft in den Thronsaal bitten (${BOSS_REROLL_PRICE} 🥨)`,
-  },
-  {
-    key: 'scope2',
-    name: 'Gnadengesuch',
-    emoji: '📯',
-    text: `Beliebig oft eine andere Herrschaft bitten (je ${BOSS_REROLL_PRICE} 🥨)`,
-    requires: 'scope',
-  },
+  { key: 'basket', name: 'Größere Narrentasche', emoji: '👝', text: '+1 Platz in der Narrentasche' },
+  { key: 'book', name: 'Vorratskammer', emoji: '🥫', text: 'Vorratsbonus bis 8 🥨' },
+  { key: 'shelf', name: 'Zweite Narrenbank', emoji: '🪑', text: '+1 Narrenplatz, −1 Handgröße' },
+  { key: 'scope', name: 'Bittschrift', emoji: '📜', text: `Einmal je Hoftag eine andere Herrschaft in den Thronsaal bitten (${BOSS_REROLL_PRICE} 🥨)` },
+  { key: 'courtHerald', name: 'Hofherold', emoji: '📯', text: 'Auf jedem Jahrmarkt liegt die Übung deiner meistgespielten Kombi' },
+  { key: 'diploma', name: 'Lehrbrief', emoji: '🎓', text: 'Übungen bringen +2 Stufen statt +1' },
+  { key: 'breadRight', name: 'Brotrecht', emoji: '🍞', text: '+1 🥨 je gewonnene Audienz, in der du nicht getauscht hast' },
+  { key: 'touringStage', name: 'Wanderbühne', emoji: '🎭', text: 'Beim Auslassen wählst du zwischen zwei Gefallen' },
 ];
 export const TOOLS: Record<string, ToolDef> = Object.fromEntries(tools.map((t) => [t.key, t]));
 export const TOOL_KEYS = tools.map((t) => t.key);
@@ -650,54 +290,14 @@ export interface TagDef {
 }
 
 const tags: TagDef[] = [
-  {
-    key: 'modBox',
-    name: 'Narrenkorb gratis',
-    emoji: '🧺',
-    text: 'Öffnet sofort einen großen Narrenkorb',
-  },
-  {
-    key: 'spellBox',
-    name: 'Trickbeutel gratis',
-    emoji: '👝',
-    text: 'Öffnet sofort einen riesigen Trickbeutel',
-  },
-  {
-    key: 'nailBox',
-    name: 'Bücherbündel gratis',
-    emoji: '📚',
-    text: 'Öffnet sofort ein riesiges Bücherbündel',
-  },
-  {
-    key: 'coupon',
-    name: 'Freier Eintritt',
-    emoji: '🎟️',
-    text: 'Angebote und Bündel auf dem nächsten Jahrmarkt kosten nichts',
-  },
-  {
-    key: 'rare',
-    name: 'Seltener Fund',
-    emoji: '💎',
-    text: 'Auf dem nächsten Jahrmarkt wartet ein seltener Narr gratis',
-  },
-  {
-    key: 'foil',
-    name: 'Perlmuttfund',
-    emoji: '🦪',
-    text: 'Der erste Narr auf dem nächsten Jahrmarkt glänzt in Perlmutt und ist gratis',
-  },
-  {
-    key: 'stock',
-    name: 'Festschmaus',
-    emoji: '🍗',
-    text: '+25 🥨 nach dem nächsten Thronsaal',
-  },
-  {
-    key: 'double',
-    name: 'Doppelte Ration',
-    emoji: '🥨',
-    text: 'Verdoppelt deine Brezeln (höchstens +40 🥨)',
-  },
+  { key: 'giftBasket', name: 'Geschenkkorb', emoji: '🎁', text: 'Öffnet sofort ein zufälliges großes Bündel' },
+  { key: 'coupon', name: 'Freier Eintritt', emoji: '🎟️', text: 'Die ersten zwei Angebote auf dem nächsten Jahrmarkt kosten nichts' },
+  { key: 'rare', name: 'Empfehlungsschreiben', emoji: '✉️', text: 'Auf dem nächsten Jahrmarkt wartet ein seltener Narr gratis' },
+  { key: 'stock', name: 'Festschmaus', emoji: '🍗', text: '+3 🥨 je gewonnene Audienz bis einschließlich zum nächsten Thronsaal' },
+  { key: 'bakery', name: 'Bäckerbesuch', emoji: '🥨', text: '+1 🥨 je Narr (höchstens 10)' },
+  { key: 'praise', name: 'Lob des Königs', emoji: '🗣️', text: 'Die nächste Audienz braucht 25 % weniger Applaus' },
+  { key: 'tutoring', name: 'Nachhilfe', emoji: '📖', text: 'Deine schwächste Kombi steigt sofort um 2 Stufen' },
+  { key: 'masquerade', name: 'Maskenball', emoji: '🎭', text: 'Die nächste Herrschaft im Thronsaal hat keine Marotte' },
 ];
 export const TAGS: Record<string, TagDef> = Object.fromEntries(tags.map((t) => [t.key, t]));
 export const TAG_KEYS = tags.map((t) => t.key);

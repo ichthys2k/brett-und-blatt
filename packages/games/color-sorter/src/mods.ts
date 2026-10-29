@@ -68,6 +68,13 @@ const contains = (ctx: HandContext, type: HandType) => CONTAINS[ctx.type].includ
 /** Der Herold ruft eine der neun offenen Kombis aus (ohne die versteckten). */
 const HERALD_HANDS = 9;
 const heraldHand = (mod: Pick<ModInstance, 'value'>): HandType => HAND_TYPES[(mod.value ?? 1) % HERALD_HANDS]!;
+/** Zählhilfen für wachsende Narren. */
+const scored = (ctx: HandContext) => ctx.scoring.filter((c) => c.enh !== 'granite');
+const clubs = (ctx: HandContext) => scored(ctx).filter((c) => hasColor(c, 'c')).length;
+const fibs = (ctx: HandContext) => scored(ctx).filter((c) => [2, 3, 5, 8].includes(c.rank)).length;
+/** Sind alle gewerteten Karten Zahlenkarten mit dieser Eigenschaft? */
+const allNumbers = (ctx: HandContext, test: (rank: number) => boolean) => scored(ctx).length > 0 && scored(ctx).every((c) => c.rank <= 10 && test(c.rank));
+
 const perColor =
   (color: Color, mult: number): ModDef['onCard'] =>
   (card) =>
@@ -195,8 +202,8 @@ const list: ModDef[] = [
     emoji: '😎',
     rarity: 'common',
     price: 5,
-    text: '+3 Lachen je gewertete Pik-Karte',
-    onCard: perColor('s', 3),
+    text: '+20 Witz je Pik-Karte, die in der Hand bleibt',
+    onHeld: (card) => (hasColor(card, 's') ? { chips: 20 } : null),
   },
   {
     key: 'inLove',
@@ -204,8 +211,8 @@ const list: ModDef[] = [
     emoji: '😍',
     rarity: 'common',
     price: 5,
-    text: '+3 Lachen je gewertete Herz-Karte',
-    onCard: perColor('h', 3),
+    text: '+4 Lachen je gewertete Herz-Karte',
+    onCard: perColor('h', 4),
   },
   {
     key: 'sunny',
@@ -213,8 +220,8 @@ const list: ModDef[] = [
     emoji: '🌞',
     rarity: 'common',
     price: 5,
-    text: '+3 Lachen je gewertete Karo-Karte',
-    onCard: perColor('d', 3),
+    text: '+2 🥨, wenn mindestens 3 Karo-Karten gewertet werden',
+    onHand: (ctx) => (ctx.scoring.filter((c) => hasColor(c, 'd')).length >= 3 ? { tokens: 2 } : null),
   },
   {
     key: 'broccoli',
@@ -222,8 +229,13 @@ const list: ModDef[] = [
     emoji: '🌿',
     rarity: 'common',
     price: 5,
-    text: '+3 Lachen je gewertete Kreuz-Karte',
-    onCard: perColor('c', 3),
+    text: '+1 Lachen dauerhaft je gewertete Kreuz-Karte',
+    initial: 0,
+    onHand: (ctx, mod) => {
+      const value = (mod.value ?? 0) + clubs(ctx);
+      return value > 0 ? { mult: value } : null;
+    },
+    afterHand: (mod, ctx) => ({ ...mod, value: (mod.value ?? 0) + clubs(ctx) }),
   },
   {
     key: 'nerd',
@@ -303,54 +315,36 @@ const list: ModDef[] = [
     name: 'Der Kuppler',
     emoji: '💌',
     rarity: 'common',
-    price: 3,
-    text: '+8 Lachen, wenn ein Paar dabei ist',
-    onHand: (ctx) => (contains(ctx, 'pair') ? { mult: 8 } : null),
+    price: 4,
+    text: '+6 Lachen, wenn ein Paar dabei ist, und ×2 bei Zwei Paaren',
+    onHand: (ctx) => (contains(ctx, 'twoPair') ? { mult: 6, xmult: 2 } : contains(ctx, 'pair') ? { mult: 6 } : null),
   },
   {
     key: 'zany',
     name: 'Der Dreikäsehoch',
     emoji: '🧀',
     rarity: 'common',
-    price: 4,
-    text: '+12 Lachen, wenn ein Drilling dabei ist',
-    onHand: (ctx) => (contains(ctx, 'three') ? { mult: 12 } : null),
+    price: 5,
+    text: '+40 Witz und +6 Lachen, wenn ein Drilling dabei ist',
+    onHand: (ctx) => (contains(ctx, 'three') ? { chips: 40, mult: 6 } : null),
   },
   {
     key: 'ruler',
     name: 'Der Läufer',
     emoji: '🏃',
     rarity: 'common',
-    price: 4,
-    text: '+12 Lachen bei einer Straße',
-    onHand: (ctx) => (contains(ctx, 'straight') ? { mult: 12 } : null),
+    price: 5,
+    text: '+10 Lachen bei einer Straße, dazu ×2 bei einer Farbstraße',
+    onHand: (ctx) => (contains(ctx, 'straightFlush') ? { mult: 10, xmult: 2 } : contains(ctx, 'straight') ? { mult: 10 } : null),
   },
   {
     key: 'palette',
     name: 'Die Malerin',
     emoji: '🎨',
     rarity: 'common',
-    price: 4,
-    text: '+10 Lachen bei einer Farbe',
-    onHand: (ctx) => (contains(ctx, 'flush') ? { mult: 10 } : null),
-  },
-  {
-    key: 'fox',
-    name: 'Reinekes Neffe',
-    emoji: '🦊',
-    rarity: 'common',
-    price: 3,
-    text: '+50 Witz, wenn ein Paar dabei ist',
-    onHand: (ctx) => (contains(ctx, 'pair') ? { chips: 50 } : null),
-  },
-  {
-    key: 'knitter',
-    name: 'Die Stickerin',
-    emoji: '🧶',
-    rarity: 'common',
-    price: 4,
-    text: '+80 Witz bei einer Farbe',
-    onHand: (ctx) => (contains(ctx, 'flush') ? { chips: 80 } : null),
+    price: 5,
+    text: '+8 Lachen bei einer Farbe, dazu +2 je gewertete Bildkarte darin',
+    onHand: (ctx) => (contains(ctx, 'flush') ? { mult: 8 + 2 * ctx.scoring.filter((c) => c.enh !== 'granite' && isFace(c.rank)).length } : null),
   },
   {
     key: 'twins',
@@ -358,17 +352,8 @@ const list: ModDef[] = [
     emoji: '👫',
     rarity: 'rare',
     price: 8,
-    text: '×2 Lachen, wenn ein Paar dabei ist',
-    onHand: (ctx) => (contains(ctx, 'pair') ? { xmult: 2 } : null),
-  },
-  {
-    key: 'trio',
-    name: 'Das Kleeblatt',
-    emoji: '☘️',
-    rarity: 'rare',
-    price: 8,
-    text: '×3 Lachen, wenn ein Drilling dabei ist',
-    onHand: (ctx) => (contains(ctx, 'three') ? { xmult: 3 } : null),
+    text: '×1,5 Lachen je Paar in der Vorführung (Zwei Paare und Full House ×2,25)',
+    onHand: (ctx) => (contains(ctx, 'twoPair') || contains(ctx, 'fullHouse') ? { xmult: 2.25 } : contains(ctx, 'pair') ? { xmult: 1.5 } : null),
   },
   {
     key: 'family',
@@ -376,26 +361,8 @@ const list: ModDef[] = [
     emoji: '👨‍👩‍👧‍👦',
     rarity: 'rare',
     price: 8,
-    text: '×4 Lachen, wenn ein Vierling dabei ist',
-    onHand: (ctx) => (contains(ctx, 'four') ? { xmult: 4 } : null),
-  },
-  {
-    key: 'order',
-    name: 'Der Zeremonienmeister',
-    emoji: '🎼',
-    rarity: 'rare',
-    price: 8,
-    text: '×3 Lachen bei einer Straße',
-    onHand: (ctx) => (contains(ctx, 'straight') ? { xmult: 3 } : null),
-  },
-  {
-    key: 'rainbow',
-    name: 'Der Fahnenschwinger',
-    emoji: '🚩',
-    rarity: 'rare',
-    price: 8,
-    text: '×2 Lachen bei einer Farbe',
-    onHand: (ctx) => (contains(ctx, 'flush') ? { xmult: 2 } : null),
+    text: '×3 Lachen, wenn ein Vierling oder ein Full House dabei ist',
+    onHand: (ctx) => (contains(ctx, 'four') || contains(ctx, 'fullHouse') ? { xmult: 3 } : null),
   },
 
   // Karten-Mods
@@ -404,9 +371,9 @@ const list: ModDef[] = [
     name: 'Der Hofmaler',
     emoji: '🖼️',
     rarity: 'common',
-    price: 4,
-    text: '+30 Witz je gewertete Bildkarte',
-    onCard: (card) => (card.enh !== 'granite' && isFace(card.rank) ? { chips: 30 } : null),
+    price: 5,
+    text: '+3 Witz je Bildkarte im ganzen Deck',
+    onHand: (ctx) => ({ chips: 3 * ctx.run.deck.filter((c) => c.enh !== 'granite' && isFace(c.rank)).length }),
   },
   {
     key: 'even',
@@ -414,8 +381,8 @@ const list: ModDef[] = [
     emoji: '🧍',
     rarity: 'common',
     price: 4,
-    text: '+4 Lachen je gewertete 2, 4, 6, 8 oder 10',
-    onCard: (card) => (card.enh !== 'granite' && card.rank <= 10 && card.rank % 2 === 0 ? { mult: 4 } : null),
+    text: '+12 Lachen, wenn alle gewerteten Karten gerade Zahlen sind (2, 4, 6, 8, 10)',
+    onHand: (ctx) => (allNumbers(ctx, (r) => r % 2 === 0) ? { mult: 12 } : null),
   },
   {
     key: 'odd',
@@ -423,35 +390,40 @@ const list: ModDef[] = [
     emoji: '🙃',
     rarity: 'common',
     price: 4,
-    text: '+31 Witz je gewertete 3, 5, 7 oder 9',
-    onCard: (card) => (card.enh !== 'granite' && card.rank <= 10 && card.rank % 2 === 1 ? { chips: 31 } : null),
+    text: '+60 Witz, wenn alle gewerteten Karten ungerade Zahlen sind (3, 5, 7, 9)',
+    onHand: (ctx) => (allNumbers(ctx, (r) => r % 2 === 1) ? { chips: 60 } : null),
   },
   {
     key: 'snail',
     name: 'Die Hofschnecke',
     emoji: '🐌',
     rarity: 'uncommon',
-    price: 8,
-    text: '+8 Lachen je gewertetes Ass, 2, 3, 5 oder 8',
-    onCard: (card) => (card.enh !== 'granite' && [ACE, 2, 3, 5, 8].includes(card.rank) ? { mult: 8 } : null),
+    price: 7,
+    text: '+1 Lachen dauerhaft je gewertete 2, 3, 5 oder 8 – das Schneckenhaus wächst',
+    initial: 0,
+    onHand: (ctx, mod) => {
+      const value = (mod.value ?? 0) + fibs(ctx);
+      return value > 0 ? { mult: value } : null;
+    },
+    afterHand: (mod, ctx) => ({ ...mod, value: (mod.value ?? 0) + fibs(ctx) }),
   },
   {
     key: 'santaFan',
     name: 'Der Assjäger',
     emoji: '🎯',
-    rarity: 'common',
-    price: 5,
-    text: '+20 Witz und +4 Lachen je gewertetes Ass',
-    onCard: (card) => (card.enh !== 'granite' && card.rank === ACE ? { chips: 20, mult: 4 } : null),
+    rarity: 'uncommon',
+    price: 6,
+    text: '×2 Lachen, wenn ein Ass gewertet wird',
+    onHand: (ctx) => (ctx.scoring.some((c) => c.enh !== 'granite' && c.rank === ACE) ? { xmult: 2 } : null),
   },
   {
     key: 'tree',
     name: 'Der Schatzhüter',
     emoji: '🗝️',
-    rarity: 'rare',
-    price: 8,
-    text: '×1,5 Lachen je Ass, das in der Hand bleibt',
-    onHeld: (card) => (card.enh !== 'granite' && card.rank === ACE ? { xmult: 1.5 } : null),
+    rarity: 'uncommon',
+    price: 6,
+    text: '+1 🥨 je Ass, das am Ende der Audienz in der Hand ist',
+    onRoundEnd: (_, run) => ({ tokens: run.hand.filter((c) => c.enh !== 'granite' && c.rank === ACE).length }),
   },
   {
     key: 'echo',
@@ -459,8 +431,8 @@ const list: ModDef[] = [
     emoji: '🦜',
     rarity: 'uncommon',
     price: 6,
-    text: 'Die erste gewertete Karte zählt doppelt',
-    retrigger: (card, ctx) => (ctx.scoring[0] === card ? 1 : 0),
+    text: 'Die letzte gewertete Karte zählt doppelt',
+    retrigger: (card, ctx) => (ctx.scoring[ctx.scoring.length - 1] === card ? 1 : 0),
   },
 
   // Mods mit Zählern
@@ -469,35 +441,23 @@ const list: ModDef[] = [
     name: 'Der Truppenführer',
     emoji: '🎪',
     rarity: 'common',
-    price: 4,
-    text: '+3 Lachen je Narr',
-    onHand: (ctx) => ({ mult: 3 * ctx.run.mods.length }),
-  },
-  {
-    key: 'growth',
-    name: 'Der Hofgärtner',
-    emoji: '🪴',
-    rarity: 'uncommon',
-    price: 6,
-    text: '+1 Lachen dauerhaft je gespielter Farbe',
-    initial: 0,
-    onHand: (ctx, mod) => {
-      const value = (mod.value ?? 0) + (contains(ctx, 'flush') ? 1 : 0);
-      return value > 0 ? { mult: value } : null;
+    price: 5,
+    text: '+2 Lachen je Narr, dazu ×1,5 bei voller Narrenbank',
+    onHand: (ctx) => {
+      const full = ctx.run.mods.length >= ctx.run.modSlots + ctx.run.mods.filter((m) => m.foil === 'clear').length;
+      return { mult: 2 * ctx.run.mods.length, ...(full ? { xmult: 1.5 } : {}) };
     },
-    afterHand: (mod, ctx) => ({
-      ...mod,
-      value: (mod.value ?? 0) + (contains(ctx, 'flush') ? 1 : 0),
-    }),
   },
   {
-    key: 'banana',
-    name: 'Die Banane',
-    emoji: '🍌',
+    key: 'apple',
+    name: 'Der Apfel der Königin',
+    emoji: '🍎',
     rarity: 'uncommon',
     price: 6,
-    text: '×3 Lachen. Wird zu 1/100 nach einer Audienz gegessen.',
+    text: '×3 Lachen. Nach 10 Vorführungen ist er aufgegessen',
+    initial: 10,
     onHand: () => ({ xmult: 3 }),
+    afterHand: (mod) => ((mod.value ?? 10) - 1 <= 0 ? null : { ...mod, value: (mod.value ?? 10) - 1 }),
   },
   {
     key: 'king',
@@ -518,8 +478,8 @@ const list: ModDef[] = [
     emoji: '👩‍🍳',
     rarity: 'common',
     price: 6,
-    text: '+4 🥨 am Ende jeder Audienz',
-    onRoundEnd: () => ({ tokens: 4 }),
+    text: '+1 🥨 am Ende jeder Audienz, je Hoftag 1 mehr',
+    onRoundEnd: (_, run) => ({ tokens: run.level }),
   },
   {
     key: 'patience',
@@ -538,13 +498,10 @@ const list: ModDef[] = [
     emoji: '🤖',
     rarity: 'uncommon',
     price: 6,
-    text: 'Zu 1/4: +20 Lachen. Zu 1/10: +5 🥨.',
-    onHand: (ctx) => {
-      const effect: Effect = {};
-      if (ctx.random() < 0.25) effect.mult = 20;
-      if (ctx.random() < 0.1) effect.tokens = 5;
-      return effect.mult || effect.tokens ? effect : null;
-    },
+    text: 'Ein Uhrwerk: Jede 4. Vorführung +20 Lachen',
+    initial: 0,
+    onHand: (_, mod) => (((mod.value ?? 0) + 1) % 4 === 0 ? { mult: 20 } : null),
+    afterHand: (mod) => ({ ...mod, value: (mod.value ?? 0) + 1 }),
   },
   {
     key: 'recycler',
@@ -567,15 +524,8 @@ const list: ModDef[] = [
     emoji: '🦄',
     rarity: 'legendary',
     price: 20,
-    text: '×1 Lachen, dazu ×1 je Bildkarte, die getauscht wurde (dauerhaft)',
-    initial: 1,
-    onHand: (_, mod) => ((mod.value ?? 1) > 1 ? { xmult: mod.value ?? 1 } : null),
-    onDiscard: (cards, mod) => ({
-      mod: {
-        ...mod,
-        value: (mod.value ?? 1) + cards.filter((c) => c.enh !== 'granite' && isFace(c.rank)).length,
-      },
-    }),
+    text: 'Alle Karten zählen als jede Farbe',
+    // Die Wirkung steckt in der Kombi-Erkennung (scoring.ts, `allColors`).
   },
   {
     key: 'santaClaus',
@@ -583,8 +533,8 @@ const list: ModDef[] = [
     emoji: '🧙',
     rarity: 'legendary',
     price: 20,
-    text: 'Jedes gewertete Ass zählt dreimal',
-    retrigger: (card) => (card.enh !== 'granite' && card.rank === ACE ? 2 : 0),
+    text: 'Jede gewertete Bildkarte zählt zweimal',
+    retrigger: (card) => (card.enh !== 'granite' && isFace(card.rank) ? 1 : 0),
   },
   {
     key: 'painter',

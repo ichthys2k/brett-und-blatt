@@ -63,9 +63,9 @@ export const THEMES: CosmeticDef[] = [
   },
 ];
 
-const LOCKED_MODS = ['twins', 'trio', 'family', 'tree', 'king', 'unicorn', 'painter', 'snail', 'echo', 'growth', 'banana', 'robot', 'twoFaced', 'herald', 'royalCouple', 'kidFan', 'monkey'];
+const LOCKED_MODS = ['twins', 'santaFan', 'family', 'tree', 'king', 'unicorn', 'painter', 'snail', 'echo', 'broccoli', 'apple', 'robot', 'santaClaus', 'herald', 'collector', 'kidFan', 'monkey'];
 const LOCKED_DECKS = ['yellow', 'green', 'black', 'magic'];
-const LOCKED_TOOLS = ['superMagnet', 'bigSale', 'tidy2', 'extraHand2', 'bin2', 'bag2', 'book2', 'scope2'];
+const LOCKED_TOOLS = ['courtHerald', 'diploma', 'breadRight', 'touringStage', 'shelf', 'basket', 'book', 'scope'];
 
 export const MOD_PRICES: Record<Rarity, number> = {
   common: 4,

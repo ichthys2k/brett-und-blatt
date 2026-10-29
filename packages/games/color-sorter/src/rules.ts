@@ -1,5 +1,5 @@
 import { Rng, type Actor, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
-import { ACE, HAND_TYPES, handLabel, isFace, JACK, standardDeck } from './cards';
+import { ACE, HAND_TYPES, HANDS, handLabel, isFace, JACK, standardDeck } from './cards';
 import {
   BOSS_LIST,
   BOSS_REROLL_PRICE,
@@ -24,7 +24,7 @@ import {
 } from './content';
 import { MOD_KEYS, modDef, RARITY_INFO, type TableInfo } from './mods';
 import { decodeUnlocks, lockedFor, type PoolChoice } from './unlocks';
-import { isDebuffed, scoreHand } from './scoring';
+import { favoriteHand, isDebuffed, scoreHand } from './scoring';
 import type {
   Card,
   Color,
@@ -201,7 +201,7 @@ export function sellValue(mod: ModInstance): number {
 }
 
 function discount(run: RunState): number {
-  return run.tools.includes('bigSale') ? 0.5 : run.tools.includes('sale') ? 0.25 : 0;
+  return run.tools.includes('sale') ? 0.25 : 0;
 }
 
 function priced(run: RunState, base: number): number {
@@ -213,7 +213,7 @@ export function rerollCost(run: RunState): number {
 }
 
 function rerollBase(run: RunState): number {
-  return Math.max(0, 5 - (run.tools.includes('tidy') ? 2 : 0) - (run.tools.includes('tidy2') ? 2 : 0));
+  return Math.max(0, 5 - (run.tools.includes('tidy') ? 2 : 0));
 }
 
 function weighted<T>(rng: Rng, items: [T, number][]): T {
@@ -227,7 +227,7 @@ function weighted<T>(rng: Rng, items: [T, number][]): T {
 }
 
 function pickTool(state: SorterState, run: RunState, rng: Rng): string | null {
-  const pool = TOOL_KEYS.filter((k) => !run.tools.includes(k) && !state.locked.includes(`tool:${k}`) && (!TOOLS[k]!.requires || run.tools.includes(TOOLS[k]!.requires!)));
+  const pool = TOOL_KEYS.filter((k) => !run.tools.includes(k) && !state.locked.includes(`tool:${k}`));
   return pool.length ? rng.pick(pool) : null;
 }
 
@@ -247,11 +247,15 @@ function pickModKey(state: SorterState, run: RunState, rng: Rng, rarity?: Rarity
       ['rare', RARITY_INFO.rare.weight],
     ]);
   const owned = new Set(run.mods.map((m) => m.key));
-  const allowed = MOD_KEYS.filter((k) => modDef(k).rarity === r && modAllowed(state, k));
-  let pool = allowed.filter((k) => !owned.has(k));
-  if (pool.length === 0) pool = allowed;
-  if (pool.length === 0) pool = MOD_KEYS.filter((k) => modDef(k).rarity === r && !modDef(k).multi);
-  return rng.pick(pool);
+  // Gibt es in dieser Seltenheit nichts Freigeschaltetes, kommt die nächstgewöhnlichere dran – nie etwas Gesperrtes.
+  const order: Rarity[] = ['legendary', 'rare', 'uncommon', 'common'];
+  for (const rarity of order.slice(order.indexOf(r))) {
+    const allowed = MOD_KEYS.filter((k) => modDef(k).rarity === rarity && modAllowed(state, k));
+    if (allowed.length === 0) continue;
+    const pool = allowed.filter((k) => !owned.has(k));
+    return rng.pick(pool.length ? pool : allowed);
+  }
+  return rng.pick(MOD_KEYS.filter((k) => modDef(k).rarity === r && !modDef(k).multi));
 }
 
 function rollFoil(rng: Rng): Foil | undefined {
@@ -307,7 +311,7 @@ function randomCard(run: RunState, rng: Rng, opts: { rank?: number; enhanced?: b
 
 function makeShop(state: SorterState, run: RunState): Shop {
   const rng = new Rng(run.rng.shop);
-  const count = 2 + (run.tools.includes('magnet') ? 1 : 0) + (run.tools.includes('superMagnet') ? 1 : 0);
+  const count = 2 + (run.tools.includes('magnet') ? 1 : 0);
   const offers: Offer[] = [];
   for (let i = 0; i < count; i++) {
     const kind = weighted<'mod' | 'spell' | 'nail'>(rng, [
@@ -338,25 +342,20 @@ function makeShop(state: SorterState, run: RunState): Shop {
     return true;
   };
   if (take('rare')) offers.unshift({ ...modOffer(state, run, rng, 'rare'), price: 0 });
-  if (take('foil')) {
-    const first = offers.findIndex((o) => o.type === 'mod');
-    if (first >= 0)
-      offers[first] = {
-        ...(offers[first] as Extract<Offer, { type: 'mod' }>),
-        foil: 'holo',
-        price: 0,
-      };
-  }
+  // Hofherold: Die Übung der meistgespielten Kombi liegt immer bereit.
+  if (run.tools.includes('courtHerald'))
+    offers.push({
+      type: 'consumable',
+      item: { kind: 'nail', key: NAIL_FOR_HAND[favoriteHand(run) ?? 'pair'] },
+      price: priced(run, 3),
+    });
   const packs: PackOffer[] = [];
   for (let i = 0; i < 2; i++) {
     const kind = weighted<PackKind>(rng, PACK_WEIGHTS);
     const size = weighted<PackSize>(rng, PACK_SIZE_WEIGHTS);
     packs.push({ kind, size, price: priced(run, PACK_SIZES[size].price) });
   }
-  if (take('coupon')) {
-    for (const o of offers) o.price = 0;
-    for (const p of packs) p.price = 0;
-  }
+  if (take('coupon')) for (const o of offers.slice(0, 2)) o.price = 0;
   run.stickers = stickers;
   run.rng.shop = rng.state;
   return { offers, packs, tool: run.toolOffer, rerollCost: rerollBase(run) };
@@ -514,7 +513,6 @@ export function bossFor(state: Pick<SorterState, 'bosses'>, run: Pick<RunState, 
 export function canRerollBoss(state: SorterState, run: RunState): boolean {
   if (run.phase !== 'choose' || run.round !== 2 || isDuelLevel(state, run.level)) return false;
   if (run.tokens < BOSS_REROLL_PRICE) return false;
-  if (run.tools.includes('scope2')) return true;
   return run.tools.includes('scope') && !(run.bossSwap && run.bossSwap.level === run.level);
 }
 
@@ -545,22 +543,36 @@ export function tableInfo(state: SorterState, seat: SeatId): TableInfo {
   };
 }
 
+/** Nimmt einen Gefallen aus dem Vorrat, wenn er da ist. */
+function takeSticker(run: RunState, key: string): boolean {
+  const i = run.stickers.indexOf(key);
+  if (i < 0) return false;
+  run.stickers = run.stickers.filter((_, k) => k !== i);
+  return true;
+}
+
 function startRound(state: SorterState, run: RunState, duel: boolean, events: GameEvent[]): void {
-  const boss = !duel && run.round === 2 ? bossFor(state, run) : null;
-  const factor = ROUND_FACTORS[run.round]! * (boss ? (BOSSES[boss]?.targetFactor ?? 1) : 1);
-  const hands = Math.max(1, run.hands + passive(run, 'hands') + (run.tools.includes('extraHand') ? 1 : 0) + (run.tools.includes('extraHand2') ? 1 : 0));
-  const discards = Math.max(0, run.discards + passive(run, 'discards') + (run.tools.includes('bin') ? 1 : 0) + (run.tools.includes('bin2') ? 1 : 0));
+  let boss = !duel && run.round === 2 ? bossFor(state, run) : null;
+  // Maskenball und Kompass: Die Herrschaft kommt ohne Marotte (und ohne Zielaufschlag).
+  const calm = boss && takeSticker(run, 'masquerade') ? boss : undefined;
+  if (calm) boss = null;
+  const praise = !duel && takeSticker(run, 'praise') ? 0.75 : 1;
+  const factor = ROUND_FACTORS[run.round]! * (boss ? (BOSSES[boss]?.targetFactor ?? 1) : 1) * praise;
+  const hands = Math.max(1, run.hands + passive(run, 'hands') + (run.tools.includes('extraHand') ? 1 : 0) + (takeSticker(run, 'hourglass') ? 1 : 0));
+  const discards = Math.max(0, run.discards + passive(run, 'discards') + (run.tools.includes('bin') ? 1 : 0));
   run.current = {
     target: duel ? 0 : Math.round(levelTarget(run.level, state.stake) * factor),
     score: 0,
     handsLeft: boss === 'cactus' ? 1 : hands,
     discardsLeft: boss === 'croco' ? 0 : discards,
+    startDiscards: boss === 'croco' ? 0 : discards,
     boss,
     duel,
     playedTypes: [],
     firstDone: false,
     silenced: boss === 'seaSerpent',
     faceDown: [],
+    ...(calm ? { calm } : {}),
   };
   const rng = new Rng(run.rng.deal);
   run.pile = rng.shuffle(run.deck);
@@ -587,15 +599,15 @@ function shuffleMods(run: RunState): void {
 }
 
 /** Zielfaktor je Runde: Vorhut, Wächter, Boss. */
-const ROUND_FACTORS = [1, 1.5, 2.2];
+export const ROUND_FACTORS = [1, 1.5, 2.2];
 /** Grundbelohnung je Runde in Token. */
-const ROUND_REWARDS = [3, 4, 6];
+export const ROUND_REWARDS = [3, 4, 6];
 /** Ordnungsbonus: 1 T je so viele T im Vorrat … */
 export const BONUS_STEP = 6;
 
 /** … höchstens so viele (mit Sparbuch mehr). */
 export function bonusCap(run: RunState): number {
-  return run.tools.includes('book2') ? 16 : run.tools.includes('book') ? 8 : 4;
+  return run.tools.includes('book') ? 8 : 4;
 }
 
 /** Abrechnung nach einer gewonnenen Runde, danach in die Sortier-Zentrale. */
@@ -618,7 +630,6 @@ function winRound(state: SorterState, run: RunState, events: GameEvent[]): void 
       });
   }
   // Mods am Rundenende.
-  const fx = new Rng(run.rng.fx);
   const mods: ModInstance[] = [];
   for (const mod of run.mods) {
     let next: ModInstance | null = { ...mod };
@@ -626,15 +637,6 @@ function winRound(state: SorterState, run: RunState, events: GameEvent[]): void 
       const end = modDef(mod.key).onRoundEnd?.(mod, run);
       if (end?.tokens) extra += end.tokens;
       if (end && 'mod' in end) next = end.mod ?? null;
-      if (next && mod.key === 'banana' && fx.chance(1 / 100)) {
-        events.push({
-          type: 'modGone',
-          seat: run.seat,
-          uid: mod.uid,
-          key: mod.key,
-        });
-        next = null;
-      }
     }
     if (next?.sticker === 'rental') extra -= 3;
     if (next?.sticker === 'perishable' && !next.spent) {
@@ -643,16 +645,15 @@ function winRound(state: SorterState, run: RunState, events: GameEvent[]): void 
     }
     if (next) mods.push(next);
   }
-  run.rng.fx = fx.state;
   run.mods = mods;
-  if (round.boss || round.duel) {
+  // Festschmaus: +3 je gewonnene Audienz bis einschließlich zum nächsten Thronsaal.
+  if (run.stickers.includes('stock')) extra += 3;
+  if (run.round === 2) {
     run.bossesBeaten++;
-    const i = run.stickers.indexOf('stock');
-    if (i >= 0) {
-      extra += 25;
-      run.stickers = run.stickers.filter((_, k) => k !== i);
-    }
+    takeSticker(run, 'stock');
   }
+  // Brotrecht: +1, wenn in dieser Audienz nicht getauscht wurde.
+  if (run.tools.includes('breadRight') && round.discardsLeft >= (round.startDiscards ?? 0)) extra += 1;
   const payout = { reward, hands, bonus, extra };
   run.tokens += reward + hands + bonus + extra;
   run.lastPayout = payout;
@@ -852,76 +853,62 @@ function useConsumable(state: SorterState, run: RunState, item: Consumable, targ
   const fx = new Rng(run.rng.fx);
   const shopRng = new Rng(run.rng.shop);
   if (item.kind === 'nail') {
-    levelUp(run, NAILS[item.key]!.hand);
+    levelUp(run, NAILS[item.key]!.hand, run.tools.includes('diploma') ? 2 : 1);
     run.lastSpell = item;
   } else if (item.kind === 'spell') {
     const def = SPELLS[item.key]!;
     if (def.enhance) for (const t of targets) updateCard(run, t.id, (c) => ({ ...c, enh: def.enhance }));
-    if (def.color) for (const t of targets) updateCard(run, t.id, (c) => ({ ...c, color: def.color as Color }));
     switch (item.key) {
       case 'fool':
         if (run.lastSpell && !(run.lastSpell.kind === 'spell' && run.lastSpell.key === 'fool')) addConsumable(run, run.lastSpell);
         break;
-      case 'priestess':
-        for (let i = 0; i < 2; i++)
-          addConsumable(run, {
-            kind: 'nail',
-            key: shopRng.pick(nailPool(run)),
-          });
+      case 'hierophant':
+        run.tokens += 2;
         break;
-      case 'emperor':
-        for (let i = 0; i < 2; i++)
-          addConsumable(run, {
-            kind: 'spell',
-            key: shopRng.pick(SPELL_KEYS.filter((k) => k !== 'emperor')),
-          });
-        break;
-      case 'hermit':
-        run.tokens += Math.min(20, Math.max(0, run.tokens));
-        break;
-      case 'wheel': {
-        const plain = run.mods.filter((m) => !m.foil);
-        if (plain.length && fx.chance(1 / 4)) {
-          const target = fx.pick(plain);
-          const foil = fx.pick<Foil>(['hot', 'holo', 'iris']);
-          run.mods = run.mods.map((m) => (m.uid === target.uid ? { ...m, foil } : m));
-          events.push({ type: 'wheel', seat: run.seat, uid: target.uid, foil });
-        } else events.push({ type: 'wheel', seat: run.seat, uid: null });
+      case 'dye': {
+        const [source, ...rest] = targets;
+        for (const t of rest) updateCard(run, t.id, (c) => ({ ...c, color: source!.color }));
         break;
       }
-      case 'strength':
-        for (const t of targets)
-          updateCard(run, t.id, (c) => ({
-            ...c,
-            rank: c.rank >= ACE ? 2 : c.rank + 1,
-          }));
+      case 'strength': {
+        const [up, down] = targets;
+        if (up) updateCard(run, up.id, (c) => ({ ...c, rank: Math.min(ACE, c.rank + 1) }));
+        if (down) updateCard(run, down.id, (c) => ({ ...c, rank: Math.max(2, c.rank - 1) }));
         break;
+      }
+      case 'swap': {
+        const [left, right] = targets;
+        if (left && right) {
+          updateCard(run, left.id, (c) => ({ ...c, rank: right.rank }));
+          updateCard(run, right.id, (c) => ({ ...c, rank: left.rank }));
+        }
+        break;
+      }
       case 'hanged':
         destroyCards(
           run,
           targets.map((t) => t.id),
         );
+        run.tokens += targets.length;
         break;
-      case 'death': {
-        const [left, right] = targets;
-        if (left && right) updateCard(run, left.id, () => ({ ...right, id: left.id }));
+      case 'harvest':
+        run.tokens += Math.min(16, 2 * run.bossesBeaten);
+        break;
+      case 'polish': {
+        const target = run.mods.find((m) => !m.foil);
+        if (target) run.mods = run.mods.map((m) => (m.uid === target.uid ? { ...m, foil: 'holo' as Foil } : m));
         break;
       }
-      case 'temperance':
-        run.tokens += Math.min(
-          50,
-          run.mods.reduce((s, m) => s + sellValue(m), 0),
-        );
+      case 'priestess':
+        addConsumable(run, { kind: 'nail', key: NAIL_FOR_HAND[favoriteHand(run) ?? 'pair'] });
         break;
       case 'judgement':
-        addMod(run, pickModKey(state, run, shopRng));
+        addMod(run, pickModKey(state, run, shopRng, 'common'));
         break;
     }
     if (item.key !== 'fool') run.lastSpell = item;
   } else {
-    const def = DREAMS[item.key]!;
     const hand = run.phase === 'pack' ? (run.pack?.hand ?? []) : run.hand;
-    if (def.seal) for (const t of targets) updateCard(run, t.id, (c) => ({ ...c, seal: def.seal }));
     const destroyRandom = (n: number) => {
       const ids = fx.shuffle(hand.map((c) => c.id)).slice(0, n);
       destroyCards(run, ids);
@@ -931,7 +918,7 @@ function useConsumable(state: SorterState, run: RunState, item: Consumable, targ
         destroyRandom(1);
         addCards(
           run,
-          [10, 11, 12].map(() => randomCard(run, fx, { rank: JACK + fx.int(3), enhanced: true })),
+          [0, 1, 2].map(() => randomCard(run, fx, { rank: JACK + fx.int(3), enhanced: true })),
         );
         break;
       case 'snowman':
@@ -947,6 +934,13 @@ function useConsumable(state: SorterState, run: RunState, item: Consumable, targ
           run,
           [0, 1, 2, 3].map(() => randomCard(run, fx, { rank: 2 + fx.int(9), enhanced: true })),
         );
+        break;
+      case 'crestBook':
+        for (const t of targets)
+          updateCard(run, t.id, (c) => ({
+            ...c,
+            seal: fx.pick<Seal>(['gold', 'red', 'blue', 'purple']),
+          }));
         break;
       case 'aura':
         for (const t of targets)
@@ -964,12 +958,6 @@ function useConsumable(state: SorterState, run: RunState, item: Consumable, targ
         for (const c of hand) updateCard(run, c.id, (x) => ({ ...x, color }));
         break;
       }
-      case 'equalizer': {
-        const rank = 2 + fx.int(13);
-        for (const c of hand) updateCard(run, c.id, (x) => ({ ...x, rank }));
-        run.handSize = Math.max(1, run.handSize - 1);
-        break;
-      }
       case 'bubble': {
         const plain = run.mods.filter((m) => !m.foil);
         if (plain.length) {
@@ -983,28 +971,23 @@ function useConsumable(state: SorterState, run: RunState, item: Consumable, targ
         destroyRandom(5);
         run.tokens += 20;
         break;
-      case 'mirror': {
-        if (run.mods.length) {
-          const keep = fx.pick(run.mods);
-          const copy: ModInstance = { ...keep, uid: run.nextUid++ };
+      case 'magicMirror': {
+        const [first, ...others] = run.mods;
+        if (first) {
+          const leaving = others.filter((m) => m.sticker !== 'eternal');
+          const gone = leaving.length ? fx.pick(leaving).uid : null;
+          const copy: ModInstance = { ...first, uid: run.nextUid++ };
           if (copy.foil === 'clear') delete copy.foil;
-          run.mods = [...run.mods.filter((m) => m.uid === keep.uid || m.sticker === 'eternal'), copy];
+          run.mods = [...run.mods.filter((m) => m.uid !== gone), copy];
         }
         break;
       }
-      case 'spell': {
-        if (run.mods.length) {
-          const keep = fx.pick(run.mods);
-          run.mods = run.mods.filter((m) => m.uid === keep.uid || m.sticker === 'eternal').map((m) => (m.uid === keep.uid ? { ...m, foil: 'iris' as Foil } : m));
-        }
+      case 'hourglass':
+        run.stickers = [...run.stickers, 'hourglass'];
+        run.handSize = Math.max(1, run.handSize - 1);
         break;
-      }
-      case 'clone':
-        for (const t of targets)
-          addCards(run, [
-            { ...t, id: run.nextId++ },
-            { ...t, id: run.nextId++ },
-          ]);
+      case 'compass':
+        run.stickers = [...run.stickers, 'masquerade'];
         break;
       case 'soul':
         addMod(run, pickModKey(state, run, shopRng, 'legendary'));
@@ -1036,7 +1019,9 @@ function canUse(run: RunState, item: Consumable, hand: Card[], targetCount: numb
   if (targetCount < min || targetCount > max) return false;
   if (min > 0 && hand.length === 0) return false;
   if (item.kind === 'spell' && item.key === 'judgement' && freeModSlots(run) <= 0) return false;
+  if (item.kind === 'spell' && item.key === 'polish' && !run.mods.some((m) => !m.foil)) return false;
   if (item.kind === 'dream' && (item.key === 'spook' || item.key === 'soul') && freeModSlots(run) <= 0) return false;
+  if (item.kind === 'dream' && item.key === 'magicMirror' && (run.mods.length === 0 || (freeModSlots(run) <= 0 && !run.mods.slice(1).some((m) => m.sticker !== 'eternal')))) return false;
   if (item.kind === 'spell' && item.key === 'fool' && (!run.lastSpell || (run.lastSpell.kind === 'spell' && run.lastSpell.key === 'fool'))) return false;
   return true;
 }
@@ -1084,7 +1069,10 @@ export function legalMoves(state: SorterState, actor: Actor): SorterMove[] {
 
   if (run.phase === 'choose') {
     moves.push({ type: 'start' });
-    if (run.round < 2) moves.push({ type: 'skip' });
+    if (run.round < 2) {
+      moves.push({ type: 'skip' });
+      if (run.tools.includes('touringStage')) moves.push({ type: 'skip', alt: true });
+    }
     if (canRerollBoss(state, run)) moves.push({ type: 'rerollBoss' });
     common();
   } else if (run.phase === 'play') {
@@ -1209,7 +1197,8 @@ export function applyMove(state: SorterState, actor: Actor, move: SorterMove): M
       rerollBoss(next, run, events);
       break;
     case 'skip': {
-      const tag = next.tags[(run.level - 1) * 2 + run.round] ?? 'double';
+      const offered = next.tags[(run.level - 1) * 2 + run.round] ?? 'bakery';
+      const tag = move.alt ? altTag(offered, run.level) : offered;
       events.push({ type: 'skipped', seat, tag });
       run.round = (run.round + 1) as RoundIndex;
       enterRound(next, run, events);
@@ -1301,10 +1290,13 @@ export function applyMove(state: SorterState, actor: Actor, move: SorterMove): M
       run.tools = [...run.tools, key];
       run.toolOffer = null;
       run.shop!.tool = null;
-      if (key === 'bag' || key === 'bag2') run.handSize += 1;
+      if (key === 'bag') run.handSize += 1;
       if (key === 'basket') run.consumableSlots += 1;
-      if (key === 'shelf') run.modSlots += 1;
-      if (key === 'tidy' || key === 'tidy2') run.shop!.rerollCost = Math.max(0, run.shop!.rerollCost - 2);
+      if (key === 'shelf') {
+        run.modSlots += 1;
+        run.handSize = Math.max(1, run.handSize - 1);
+      }
+      if (key === 'tidy') run.shop!.rerollCost = Math.max(0, run.shop!.rerollCost - 2);
       events.push({ type: 'toolBought', seat, key });
       break;
     }
@@ -1356,22 +1348,29 @@ function closePack(state: SorterState, run: RunState, events: GameEvent[]): void
 }
 
 function applyTag(state: SorterState, run: RunState, tag: string, events: GameEvent[]): void {
-  if (tag === 'modBox' || tag === 'spellBox' || tag === 'nailBox') {
-    const kind: PackKind = tag === 'modBox' ? 'mods' : tag === 'spellBox' ? 'spells' : 'nails';
-    run.pack = openPack(state, run, kind, tag === 'modBox' ? 'big' : 'huge', 'choose');
+  if (tag === 'giftBasket') {
+    const rng = new Rng(run.rng.shop);
+    const kind = rng.pick<PackKind>(['mods', 'spells', 'nails', 'dreams', 'cards']);
+    run.rng.shop = rng.state;
+    run.pack = openPack(state, run, kind, 'big', 'choose');
     run.phase = 'pack';
-    events.push({
-      type: 'packOpened',
-      seat: run.seat,
-      kind,
-      size: tag === 'modBox' ? 'big' : 'huge',
-      items: run.pack.items,
-    });
-  } else if (tag === 'double') {
-    run.tokens += Math.min(40, Math.max(0, run.tokens));
+    events.push({ type: 'packOpened', seat: run.seat, kind, size: 'big', items: run.pack.items });
+  } else if (tag === 'bakery') {
+    run.tokens += Math.min(10, run.mods.length);
+  } else if (tag === 'tutoring') {
+    // Die schwächste offene Kombi: niedrigste Stufe, bei Gleichstand die schwächere.
+    const open = HAND_TYPES.filter((t) => !HANDS[t].secret);
+    const weakest = open.reduce((a, b) => (run.handLevels[b] < run.handLevels[a] ? b : a));
+    levelUp(run, weakest, 2);
   } else {
     run.stickers = [...run.stickers, tag];
   }
+}
+
+/** Wanderbühne: der zweite Gefallen zur Wahl – für alle gleich, nie derselbe wie der erste. */
+export function altTag(tag: string, level: number): string {
+  const i = TAG_KEYS.indexOf(tag);
+  return TAG_KEYS[(i + 1 + (level % (TAG_KEYS.length - 1))) % TAG_KEYS.length]!;
 }
 
 function playHand(state: SorterState, run: RunState, indices: number[], events: GameEvent[]): void {

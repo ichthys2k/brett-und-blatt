@@ -70,7 +70,7 @@ describe('Endlos-Modus', () => {
 });
 
 describe('Boss neu wählen', () => {
-  it('geht nur mit Fernrohr, einmal je Level, und kostet 5 T', () => {
+  it('geht nur mit der Bittschrift, einmal je Hoftag, und kostet 5 Brezeln', () => {
     let state = start();
     const run = state.runs[0]!;
     Object.assign(run, { round: 2, phase: 'choose', tokens: 20 });
@@ -85,18 +85,15 @@ describe('Boss neu wählen', () => {
     expect(state.runs[0]!.current!.boss).toBe(state.runs[0]!.bossSwap!.key);
   });
 
-  it('mit dem Satellit beliebig oft', () => {
+  it('Maskenball: Die Herrschaft kommt ohne Marotte', () => {
     let state = start();
-    Object.assign(state.runs[0]!, {
-      round: 2,
-      phase: 'choose',
-      tokens: 20,
-      tools: ['scope', 'scope2'],
-    });
-    state = play(play(state, 0, { type: 'rerollBoss' }), 0, {
-      type: 'rerollBoss',
-    });
-    expect(state.runs[0]!.bossSwap!.count).toBe(2);
+    Object.assign(state.runs[0]!, { round: 2, phase: 'choose', stickers: ['masquerade'] });
+    const boss = bossFor(state, state.runs[0]!);
+    state = play(state, 0, { type: 'start' });
+    const round = state.runs[0]!.current!;
+    expect(round.boss).toBeNull();
+    expect(round.calm).toBe(boss);
+    expect(state.runs[0]!.stickers).toEqual([]);
   });
 });
 
@@ -192,10 +189,10 @@ describe('Mehrspieler-Mods', () => {
 
 describe('Freischaltungen', () => {
   it('Code hin und zurück, Schmuck zählt nicht mit', () => {
-    const ids = ['mod:twins', 'deck:magic', 'tool:scope2', 'back:wave'];
+    const ids = ['mod:twins', 'deck:magic', 'tool:diploma', 'back:wave'];
     const code = encodeUnlocks(ids);
     expect(code).toMatch(/^[0-9a-f]*$/);
-    expect([...decodeUnlocks(code)].sort()).toEqual(['deck:magic', 'mod:twins', 'tool:scope2']);
+    expect([...decodeUnlocks(code)].sort()).toEqual(['deck:magic', 'mod:twins', 'tool:diploma']);
     expect(encodeUnlocks([])).toBe('');
   });
 

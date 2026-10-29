@@ -101,8 +101,11 @@ export function hasColor(card: Card, color: Color): boolean {
   return card.enh === 'ombre' || card.color === color;
 }
 
-/** Erkennt die Kombi der gespielten Karten. Granit-Karten zählen nicht mit, werden aber immer gewertet. */
-export function detectHand(played: Card[]): Detected {
+/**
+ * Erkennt die Kombi der gespielten Karten. Granit-Karten zählen nicht mit, werden aber immer gewertet.
+ * Mit `allColors` (Narr „Das Einhorn“) zählt jede Karte als jede Farbe.
+ */
+export function detectHand(played: Card[], allColors = false): Detected {
   const idx = played.map((_, i) => i);
   const normal = idx.filter((i) => played[i]!.enh !== 'granite');
   const granite = idx.filter((i) => played[i]!.enh === 'granite');
@@ -115,7 +118,7 @@ export function detectHand(played: Card[]): Detected {
   const groups = [...byRank.values()].sort((a, b) => b.length - a.length || played[b[0]!]!.rank - played[a[0]!]!.rank);
   const sizes = groups.map((g) => g.length);
 
-  const flush = normal.length === 5 && COLORS.some((c) => normal.every((i) => hasColor(played[i]!, c)));
+  const flush = normal.length === 5 && (allColors || COLORS.some((c) => normal.every((i) => hasColor(played[i]!, c))));
   const ranks = normal.map((i) => played[i]!.rank).sort((a, b) => a - b);
   const straight = normal.length === 5 && new Set(ranks).size === 5 && ranks[4]! - ranks[0]! === 4;
   const all = withGranite(normal);

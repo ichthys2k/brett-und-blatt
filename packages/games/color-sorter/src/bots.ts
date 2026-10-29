@@ -72,19 +72,26 @@ function targetsFor(item: Consumable, hand: (Card | ViewCard)[]): number[] | nul
   const open = hand.map((c, i) => (isOpen(c) ? i : -1)).filter((i) => i >= 0);
   if (open.length < min) return null;
   const byRank = [...open].sort((a, b) => (hand[b] as Card).rank - (hand[a] as Card).rank);
-  const def = item.kind === 'spell' ? SPELLS[item.key]! : null;
-  if (def?.color) {
-    const off = open.filter((i) => (hand[i] as Card).color !== def.color);
-    return off.length >= min ? off.slice(0, max) : null;
+  if (item.kind === 'spell' && item.key === 'dye') {
+    // Färberei: Die häufigste Farbe gibt den Ton an, die linke Karte muss sie haben.
+    const count = (c: Card['color']) => open.filter((i) => (hand[i] as Card).color === c).length;
+    const color = COLORS.reduce((a, b) => (count(b) > count(a) ? b : a));
+    const source = open.find((i) => (hand[i] as Card).color === color);
+    if (source === undefined) return null;
+    const off = open.filter((i) => i > source && (hand[i] as Card).color !== color).slice(0, max - 1);
+    return off.length >= min - 1 ? [source, ...off] : null;
   }
-  if (item.key === 'hanged') return byRank.slice(-max);
-  if (item.key === 'death') return open.length >= 2 ? [byRank[byRank.length - 1]!, byRank[0]!].sort((a, b) => a - b) : null;
-  if (item.key === 'strength') return byRank.filter((i) => (hand[i] as Card).rank < ACE).slice(0, max);
-  return byRank.slice(0, max);
+  if (item.key === 'hanged') return byRank.slice(-max).sort((a, b) => a - b);
+  if (item.key === 'swap') return null;
+  if (item.key === 'strength') {
+    const up = byRank.find((i) => (hand[i] as Card).rank < ACE);
+    return up === undefined ? null : [up];
+  }
+  return byRank.slice(0, max).sort((a, b) => a - b);
 }
 
 /** Lohnen sich diese Verbrauchsgegenstände ohne Ziel jetzt? */
-const SAFE_NO_TARGET = new Set(['hermit', 'temperance', 'priestess', 'emperor', 'judgement', 'fool', 'blackHole', 'soul', 'wheel']);
+const SAFE_NO_TARGET = new Set(['harvest', 'polish', 'priestess', 'judgement', 'fool', 'blackHole', 'soul', 'compass', 'hourglass']);
 
 function useMove(run: RunState, moves: SorterMove[], withTargets: boolean): SorterMove | null {
   for (let index = 0; index < run.consumables.length; index++) {

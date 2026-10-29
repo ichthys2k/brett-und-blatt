@@ -53,7 +53,7 @@ Die Mechanik bleibt, die Verpackung ändert sich:
 - **Kein Einsatz-Gefühl:** Begriffe wie Blind, Ante, Stake, Jackpot, All-In, Zinsen, Kasse, Würfeln, Wette kommen nicht vor. Die Ideen-Kategorie „Glücksspiel & Casino“ aus `joker-ideen.md` wird umgedeutet (z. B. Einarmiger Bandit → 🤖 Sortierroboter mit derselben Wirkung) statt gestrichen.
 - **Zufall bleibt** (Mischen, Laden, Mods wie 🐛 Der Bug), aber es wird nie etwas gesetzt, das man verlieren kann.
 
-## Neues Thema: Narrenhof (Vorschlag, 29.10.2026, Schritte 1 bis 3 umgesetzt)
+## Neues Thema: Narrenhof (Vorschlag, 29.10.2026, Schritte 1 bis 4 umgesetzt)
 
 Das Emoji-Blatt mit eigenen Kombi-Namen fühlt sich nicht griffig an, und die Welt ist zusammengewürfelt (Sortier-Zentrale, Nagelstudio, Friseur-Salon, Druckerei, Werkstatt). Vorschlag: **zurück zum vertrauten 52er-Blatt und zu den bekannten Kombi-Namen, aber in einer ganz eigenen Welt: einem Fabeltier-Königshof, an dem man als junger Narr die Herrschaften zum Lachen bringt.** Der Joker ist historisch der Narr, und König, Dame und Bube stehen schon auf den Karten. Die Spiel-id `color-sorter` bleibt (wie bei Kniffel/Ligretto), damit Links, Online-Räume und Spielstände weiter funktionieren.
 
@@ -211,10 +211,153 @@ Die übrigen 13 entsprechend (Gäste von weither wie „Yeti aus dem Norden“, 
 1. ✅ **Blatt und Kombis** (29.10.2026): Farben intern `h/s/d/c` (früher `r/y/b/g`: Rot → Herz, Blau → Pik, Gelb → Karo, Grün → Kreuz), Ränge 2–14 (`JACK`, `QUEEN`, `KING`, `ACE` in `src/cards.ts`), Witz = Rang, neue Kombi-Tabelle und -Namen. Mods, Bosse, Zauber- und Traumkarten, die Farben oder Ränge nennen, zeigen auf das neue Blatt (Santa → Ass, Baby → 10 bzw. Bildkarte, „blaue Karte“ → Pik usw.). Die Karten zeigen Rang und Farbzeichen in vier Farben (♥ rot, ♠ schwarz, ♦ blau, ♣ grün); das eigentliche Hof-Aussehen folgt in Schritt 5. `ruleVersion` 2.
 2. ✅ **Zahlen** (29.10.2026): Ziele, Rundenfaktoren (`ROUND_FACTORS` 1 / 1,5 / 2,2), Belohnungen (`ROUND_REWARDS` 3 / 4 / 6) und Ordnungsbonus (`BONUS_STEP` 6, `bonusCap` 4 / 8 / 16) wie in den Tabellen oben. **Messung** (100 Solo-Läufe, Bot mit 10 ms je Zug): vorher erreichte der mittlere Bot im Schnitt Level 3,6 und der schwere 3,3, jetzt 3,7 bzw. 3,5; kein Bot gewinnt einen Lauf, weder vorher noch nachher. Der Schwierigkeitsgrad ist also etwa gleich geblieben, das Ziel „schwer schafft Level 8 in 30 %“ verfehlt der Bot aber schon immer. Der schwere Bot ist sogar schwächer als der mittlere, und mehr Rechenzeit (500 ms) hilft kaum. Das ist eine eigene Baustelle (Laden- und Mod-Strategie des Bots), unabhängig vom Thema.
 3. ✅ **Namen und Texte** (29.10.2026): Spielname **Narrenhof** (🃏, id bleibt `color-sorter`), alle Begriffe der Tabelle oben in allen Texten, Kurzanleitung neu. Neue Einzelnamen: Übungen nach Disziplin (Grimasse … Königsnummer), Schneiderei (🪨 Pflasterstein, 🔔 Schellenbesatz, 💄 Schminke, 🧩 Flickenmuster, 🧵 Goldstickerei, 🫧 Glasperlen, 🛡️ Kettenhemd, 🍀 Kleeblatt), Glanz (✨ Vergoldet, 🦪 Perlmutt, 🪟 Buntglas, 👻 Unsichtbar), Wappen (🥨 Brezel, 🔁 Echo, 🦉 Eulen, 🪶 Feder), Bündel (🧺 Narrenkorb, 👝 Trickbeutel, 📚 Bücherbündel, 🏺 Wunderkiste, 🎴 Kartenbündel), Privilegien (Marktrecht, Hoflieferant, Kurze Wege, Zugabe, Kartentisch, Weite Ärmel, Größere Narrentasche, Vorratskammer, Zweite Narrenbank, Bittschrift/Gnadengesuch), Gefallen, Narrenkappen (Schlichte Kappe, Wandergaukler, Klosterschüler, Bäckerskind, Bauernkind, Puppenspieler, Zauberlehrling), Hofränge (Lehrling bis Narrenkönig), Aufkleber (Treu, Müde, Gastnarr), alle 48 übrigen Mods als Narren-Figuren (z. B. 🤡 Der Spaßmacher, 🥧 Der Rechenmeister, 🤪 Der Tollpatsch, 😇 Der Schutzengel), 25 Herrschaften und 20 Höflinge (z. B. König Nobel, Ritter Isegrim, Reineke Fuchs). Die Zauberkarte „Der Narr“ heißt „Da capo!“, damit sie nicht mit den Narren verwechselt wird; die übrigen Tarot- und Traumkarten-Namen folgen in Schritt 4. Kartenrücken „Harlekin“ und Tisch „Thronsaal“ sind die neuen Standards. **Intern bleiben die englischen Bezeichner** (`mods`, `tokens`, `spells`, `nails`, `dreams`, `tools`, `tags`, `stakes`, `drops`, `level`, `round`), damit Spielstände, Freischaltungen und Online-Räume weiter passen. Die 10 neuen Narren haben eigene Tests; gekaufte Freischaltungen ersetzter Mods gehen auf die neuen Narren an derselben Stelle über (`RENAMED_UNLOCKS` in `ui/progress.ts`). **Offen:** Die Sprachaufnahmen der Kombis (`fs_hand_*`) sagen noch die alten Namen („Duo“, „Triple“ …).
-4. **Kataloge entbalatroisieren**: Kunststücke (statt Tarot), Kuriositäten (statt Spectral), Wappen, Narrenkappen, Hofränge, Privilegien. Wirkungen dabei teilweise neu denken, nicht nur umbenennen.
+4. ✅ **Kataloge entbalatroisieren** (29.10.2026): umgesetzt wie in „Schritt 4: Kataloge“ oben, `ruleVersion` 3. Abweichungen von der Vorschlagsliste: **Purzelbaum** ohne Richtungsknopf (die linke gewählte Karte steigt, eine zweite fällt), **Zauberspiegel** verdoppelt den linken Narren statt eines frei gewählten, die **Sanduhr** wirkt in der nächsten Audienz (sonst wäre sie aus der Wunderkiste nicht benutzbar), **Freier Eintritt** macht die ersten zwei Angebote gratis. Kompass und Maskenball legen den Gefallen `masquerade` ab; im Thronsaal kommt die Herrschaft dann ohne Marotte und ohne Zielaufschlag (`RoundState.calm` nur zur Anzeige). Damit die Grundausstattung seltene Narren enthält, sind Königspaar und Doppelgesichtiger frei; gesperrt sind dafür der Hofzauberer und der Truppenführer. `pickModKey` weicht auf eine gewöhnlichere Seltenheit aus, statt Gesperrtes anzubieten. Gekaufte Freischaltungen entfallener Einträge gehen auf ihre Nachfolger über (`RENAMED_UNLOCKS`). **Bot-Messung** (100 Läufe, 10 ms je Zug): mittel Ø Hoftag 3,76 (vorher 3,71), schwer 3,69 (vorher 3,48), weiterhin kein Sieg.
 5. **Optik** (`ui/styles.css`, `ui/Card.tsx` → `PlayingCard`), Miene als Fortschritt.
 6. **`ruleVersion` 2** und Übernahme des Fortschritts: Farbtropfen werden zu Glöckchen im Verhältnis 1:1, Freischaltungen behalten ihre Schlüssel (`localStorage` bleibt `brett-und-blatt:farbensortierer`, „Sichern“-Texte `FS1:` weiter lesbar).
 7. **Bot nachmessen**, Ziele justieren, `corepack pnpm check`, Rauchtest und Prüfstand.
+
+### Schritt 4: Kataloge (vorgeschlagen und umgesetzt am 29.10.2026)
+
+**Ziel:** Die Kataloge sind bisher eine Übersetzung von Balatro: dieselbe Anzahl, dieselben Paare, dieselben Wirkungen. Genre-übliche Grundbausteine dürfen bleiben (Karte bekommt eine Verzierung, +1 Vorführung, billiger einkaufen). Was wegfallen soll, sind die **vollständigen Eins-zu-eins-Sätze** und die markanten Einzelideen. Deshalb gilt: **weniger Einträge, eigene Gruppierung, eigene Zahlen und eine Reihe neuer Ideen aus der Narrenwelt.**
+
+Legende: **bleibt** = Wirkung wie bisher, nur neuer Name. **angepasst** = Wirkung verändert. **neu** = eigene Idee. **entfällt** = fällt weg. Der Aufwand steht in Klammern, wenn neue Technik nötig ist.
+
+#### Kunststücke (bisher 22 Tarot-Karten → 17)
+
+Statt einer Tarotkarte je Verzierung gibt es drei Gruppen: Verkleiden, Kartentricks und Hofgeschäfte.
+
+| Bisher (Balatro) | Vorschlag | Wirkung | |
+|---|---|---|---|
+| Der Magier (Lucky) | 🍀 **Glücksklee anstecken** | Bis zu 2 Karten bekommen ein Kleeblatt | bleibt |
+| Die Herrscherin (Mult) | 💄 **Schminkkasten** | Bis zu **3** Karten bekommen Schminke | angepasst |
+| Der Turm (Stone) | 🪨 **Pflastern** | 1 Karte wird Pflasterstein, **+2 🥨** | angepasst |
+| Der Hierophant (Bonus) | 🔔 **Schellen annähen** | Bis zu 2 Karten bekommen Schellenbesatz | bleibt |
+| Die Liebenden (Wild) | 🧩 **Flickschneiderei** | 1 Karte bekommt ein Flickenmuster | bleibt |
+| Der Wagen (Steel) | 🛡️ **Rüstkammer** | 1 Karte bekommt ein Kettenhemd | bleibt |
+| Die Gerechtigkeit (Glass) | 🫧 **Perlenschnur** | 1 Karte bekommt Glasperlen | bleibt |
+| Der Teufel (Gold) | 🧵 **Goldfaden** | 1 Karte bekommt eine Goldstickerei | bleibt |
+| Stern, Mond, Sonne, Welt (je eine Farbe für 3 Karten) | 🎨 **Färberei** | Bis zu 3 Karten bekommen die Farbe der **ersten gewählten** Karte | angepasst (4 → 1; Auswahlreihenfolge wie beim „Tod“) |
+| Die Kraft (Rang +1) | 🤸 **Purzelbaum** | Bis zu 2 Karten steigen **oder fallen** um einen Rang (Richtung wählbar) | angepasst (Wahl-Knopf) |
+| Der Tod (links wird Kopie von rechts) | 🔀 **Vertauscht!** | 2 Karten **tauschen ihre Ränge** | neu |
+| Der Gehängte (2 Karten entfernen) | 🧹 **Ausmisten** | Bis zu 2 Karten verlassen das Deck, **+1 🥨 je Karte** | angepasst |
+| Der Eremit (Brezeln verdoppeln) | 🌾 **Erntedank** | +2 🥨 je Herrschaft, die du schon zum Lachen gebracht hast (höchstens 16) | neu |
+| Die Mäßigkeit (Verkaufswert der Narren) | – | – | entfällt |
+| Das Rad (1/4: Narr bekommt Glanz) | 🧽 **Polierlappen** | Der **linke** Narr bekommt Perlmutt, wenn er noch keinen Glanz hat | angepasst (ohne Zufall) |
+| Die Hohepriesterin (2 Übungen) | 📖 **Schulstunde** | Erzeugt die Übung deiner **meistgespielten** Kombi | angepasst |
+| Der Herrscher (2 Kunststücke) | – | – | entfällt |
+| Das Gericht (zufälliger Narr) | ✉️ **Einladung** | Ein zufälliger **gewöhnlicher** Narr kommt dazu | angepasst |
+| Der Narr („Da capo!“) | 🔁 **Da capo!** | Wiederholt das letzte Kunststück oder die letzte Übung | bleibt |
+
+#### Kuriositäten (bisher 18 Spectral-Karten → 14)
+
+Fundstücke aus der Wunderkammer des Königs. Okkulte Namen fallen weg.
+
+| Bisher (Balatro) | Vorschlag | Wirkung | |
+|---|---|---|---|
+| Familienfoto (Familiar) | 🖼️ **Ahnengalerie** | 1 Handkarte geht, 3 verzierte Bildkarten kommen | bleibt |
+| Schneemann (Grim) | 🗡️ **Asse im Ärmel** | 1 Handkarte geht, 2 verzierte Asse kommen | bleibt |
+| Zahlenzauber (Incantation) | 📜 **Zahlenrolle** | 1 Handkarte geht, 4 verzierte Zahlenkarten kommen | bleibt |
+| Talisman, Déjà-vu, Trance, Medium (je ein Wappen) | 📕 **Wappenbuch** | **2** Karten bekommen je ein **zufälliges** Wappen | angepasst (4 → 1) |
+| Aura (Edition) | 💎 **Polierstein** | 1 Karte bekommt zufälligen Glanz | bleibt |
+| Spukgestalt (Wraith) | 🧞 **Flaschengeist** | Seltener Narr, deine Brezeln gehen auf 0 | bleibt |
+| Farbwirbel (Sigil) | 🫕 **Färbekessel** | Alle Handkarten bekommen eine zufällige Farbe | bleibt |
+| Gleichmacher (Ouija) | – | – | entfällt |
+| Seifenblase (Ectoplasm) | 🎩 **Tarnkappe** | Ein Narr wird unsichtbar (+1 Narrenplatz), Handgröße −1 | bleibt |
+| Großputz (Immolate) | 🔥 **Kehraus** | 5 Handkarten gehen, +20 🥨 | bleibt |
+| Spiegel (Ankh) und Bannkreis (Hex) | 🪞 **Zauberspiegel** | Ein Narr deiner Wahl wird verdoppelt, ein **zufälliger anderer** geht | angepasst (2 → 1, milder) |
+| Klon (Cryptid) | – | – | entfällt |
+| Seele (Soul) | 👑 **Krone des Narrenkönigs** | Ein legendärer Narr | bleibt |
+| Schwarzes Loch (Black Hole) | 🏛️ **Große Bibliothek** | Alle Kombis +1 Stufe | bleibt |
+| – | ⏳ **Sanduhr** | +1 Vorführung **in dieser Audienz**, dafür −1 Handgröße dauerhaft | neu (Aufwand: im Spiel benutzbar) |
+| – | 🧭 **Kompass** | Die nächste Herrschaft im Thronsaal hat **keine Marotte** | neu |
+
+#### Narren
+
+Cornelius' eigene Narren aus dem Emoji-Sortierer bleiben unverändert: Spaßmacher, Zahlenschreiber, Tollpatsch, Wortkarge, Nachtwächter, Rechenmeister, Einsundnuller, Sechs-Sieben, Lieblingsnarr, Lumpensammler, Meistermaler. Das gilt auch für die zehn neuen Narren und die Mehrspieler-Narren. Umgebaut werden die Balatro-Übersetzungen:
+
+**Farb-Narren** – bei Balatro vier gleiche Joker („+3 je Karte der Farbe“), hier vier verschiedene Wirkungen:
+
+| Narr | Vorschlag |
+|---|---|
+| 😍 Der Verliebte (♥) | +4 Lachen je gewertete Herz-Karte |
+| 🌞 Die Sonnige (♦) | +2 🥨, wenn mindestens 3 Karo-Karten gewertet werden |
+| 😎 Der Lässige (♠) | +20 Witz je Pik-Karte, die **in der Hand bleibt** |
+| 🌿 Die Kräuterfrau (♣) | +1 Lachen **dauerhaft** je gewertete Kreuz-Karte (wächst) |
+
+**Kombi-Narren** – bei Balatro elf Joker (je Kombi ein +Lachen-, ein +Witz- und ein ×Lachen-Joker), hier sechs mit eigener Wendung:
+
+| Narr | Vorschlag | Statt |
+|---|---|---|
+| 💌 Der Kuppler | +6 Lachen bei einem Paar, ×2 bei Zwei Paaren | Kuppler, Reinekes Neffe |
+| 👫 Das Tanzpaar | ×1,5 Lachen **je Paar** in der Vorführung (Paar ×1,5, Zwei Paare und Full House ×2,25) | Tanzpaar |
+| 🧀 Der Dreikäsehoch | +40 Witz und +6 Lachen bei einem Drilling | Dreikäsehoch, Kleeblatt |
+| 🏃 Der Läufer | +10 Lachen bei einer Straße, ×2 bei einer Farbstraße | Läufer, Zeremonienmeister |
+| 🎨 Die Malerin | +8 Lachen bei einer Farbe, +2 je gewertete Bildkarte darin | Malerin, Stickerin, Fahnenschwinger |
+| 👨‍👩‍👧‍👦 Die Gauklerfamilie | ×3 Lachen bei Vierling **oder** Full House | Gauklerfamilie |
+
+**Weitere Balatro-Übersetzungen:**
+
+| Narr | Bisher (Balatro-Vorbild) | Vorschlag |
+|---|---|---|
+| 🖼️ Der Hofmaler | +30 Witz je Bildkarte (Scary Face) | +3 Witz je Bildkarte **im ganzen Deck** (wächst mit dem Deck) |
+| 🧍 Der Aufrechte | +4 Lachen je gerade Karte (Even Steven) | +12 Lachen, wenn **alle** gewerteten Karten gerade sind |
+| 🙃 Der Querkopf | +31 Witz je ungerade Karte (Odd Todd) | +60 Witz, wenn **alle** gewerteten Karten ungerade sind |
+| 🐌 Die Hofschnecke | +8 Lachen je Ass, 2, 3, 5, 8 (Fibonacci) | +1 Lachen **dauerhaft** je gewertete 2, 3, 5 oder 8 (Schneckenhaus wächst) |
+| 🎯 Der Assjäger | +20 Witz, +4 Lachen je Ass (Scholar) | Das **erste** gewertete Ass jeder Vorführung: ×2 Lachen |
+| 🗝️ Der Schatzhüter | ×1,5 je Ass in der Hand (Baron, dort Könige) | +1 🥨 je Ass in der Hand am Ende der Audienz |
+| 🦜 Der Papagei | Erste Karte zählt doppelt (Hanging Chad) | Die **letzte** gewertete Karte zählt doppelt |
+| 🎪 Der Truppenführer | +3 Lachen je Narr (Abstract) | +2 Lachen je Narr, ×1,5 bei voller Narrenbank |
+| 🪴 Der Hofgärtner | +1 Lachen je gespielte Farbe (Runner-artig) | +2 Witz dauerhaft je gewertete Kreuz-Karte … **oder entfällt**, weil die Kräuterfrau Ähnliches tut |
+| 🍌 Die Banane | ×3, wird zu 1/100 gegessen (Cavendish) | 🍎 **Der Apfel der Königin:** ×3 Lachen, nach 10 Vorführungen gegessen (ohne Zufall) |
+| 👩‍🍳 Die Köchin | +4 🥨 je Audienz (Golden Joker) | +1 🥨 je Audienz, **+1 mehr je Hoftag** (wächst) |
+| 🧘 Der Geduldige | +2 🥨 ohne Tauschen (Delayed Gratification) | bleibt (Zahl genre-üblich) |
+| 🤖 Der Blechnarr | Zufall +20 Lachen / +5 🥨 | **Jede 4. Vorführung** +20 Lachen (Uhrwerk, ohne Zufall) |
+| 🦄 Das Einhorn | ×1 je getauschte Bildkarte (Hit the Road) | **Alle Karten zählen als jede Farbe** (legendär) |
+| 🧙 Der Hofzauberer | Asse zählen dreimal (Hack-artig) | **Bildkarten** zählen zweimal (legendär) |
+
+Damit sinkt die Zahl der Narren von 58 auf etwa 52, und keine Gruppe entspricht mehr einem Balatro-Satz.
+
+#### Privilegien (bisher 9 Balatro-Voucher-Paare → 14 einzelne)
+
+Die zweite Stufe jedes Paares (Großes Marktrecht, Königlicher Hoflieferant, Abkürzung, Doppelte Zugabe, Großer Kartentisch, Zauberärmel, Große Vorratskammer, Gnadengesuch) **entfällt**. Dafür kommen eigene Privilegien dazu:
+
+| Privileg | Wirkung | |
+|---|---|---|
+| 🎪 Marktrecht | +1 Angebot auf dem Jahrmarkt | bleibt |
+| 🏷️ Hoflieferant | Alles 25 % günstiger | bleibt |
+| 🚶 Kurze Wege | Weiterschlendern 2 🥨 günstiger | bleibt |
+| 👏 Zugabe | +1 Vorführung je Audienz | bleibt |
+| 🃏 Kartentisch | +1 Tauschen je Audienz | bleibt |
+| 👘 Weite Ärmel | +1 Handgröße | bleibt |
+| 👝 Größere Narrentasche | +1 Platz in der Narrentasche | bleibt |
+| 🥫 Vorratskammer | Vorratsbonus bis 8 🥨 | bleibt |
+| 🪑 Zweite Narrenbank | +1 Narrenplatz, **−1 Handgröße** | angepasst |
+| 📜 Bittschrift | Herrschaft neu wählen (5 🥨) | bleibt |
+| 📯 Hofherold | Auf jedem Jahrmarkt liegt die Übung deiner meistgespielten Kombi | neu |
+| 🎓 Lehrbrief | Übungen bringen **+2 Stufen** statt +1 | neu |
+| 🍞 Brotrecht | +1 🥨 je Audienz, in der du nicht getauscht hast | neu |
+| 🎭 Wanderbühne | Beim Auslassen darfst du zwischen **zwei** Gefallen wählen | neu (Aufwand: Auswahl) |
+
+#### Gefallen (bisher 8 Balatro-Tags → 8, davon 3 neu)
+
+| Bisher (Balatro) | Vorschlag | Wirkung | |
+|---|---|---|---|
+| Narrenkorb, Trickbeutel, Bücherbündel gratis (Buffoon, Charm, Meteor) | 🎁 **Geschenkkorb** | Öffnet sofort ein **zufälliges** großes Bündel | angepasst (3 → 1) |
+| Freier Eintritt (Coupon) | 🎟️ Freier Eintritt | Die nächsten **zwei** Käufe kosten nichts | angepasst |
+| Seltener Fund (Rare) | ✉️ **Empfehlungsschreiben** | Ein seltener Narr gratis auf dem nächsten Jahrmarkt | bleibt |
+| Perlmuttfund (Holo) | – | – | entfällt |
+| Festschmaus (Investment) | 🍗 Festschmaus | **+3 🥨 je Audienz** bis zum nächsten Thronsaal | angepasst |
+| Doppelte Ration (Economy) | 🥨 **Bäckerbesuch** | +1 🥨 je Narr (höchstens 10) | angepasst |
+| – | 🗣️ **Lob des Königs** | Die nächste Audienz braucht 25 % weniger Applaus | neu |
+| – | 📖 **Nachhilfe** | Deine **schwächste** Kombi steigt um 2 Stufen | neu |
+| – | 🎭 **Maskenball** | Der nächste Thronsaal hat keine Marotte | neu |
+
+#### Folgen und Aufwand
+
+- **Spielstände:** `ruleVersion` 3. Gekaufte Freischaltungen entfallender Einträge gehen wie in Schritt 3 auf den Nachfolger über (zum Beispiel Großes Marktrecht → Hofherold).
+- **Neue Technik:** wenig. Nötig sind die Auswahlreihenfolge (Färberei, gibt es beim „Tod“ schon), ein Richtungs-Knopf (Purzelbaum), eine „in dieser Audienz“-Wirkung (Sanduhr), „keine Marotte“ (Kompass, Maskenball), eine Zielverringerung (Lob des Königs) und eine Auswahl aus zwei Gefallen (Wanderbühne). Alles andere ist Daten plus kleine Wirkfunktion.
+- **Tests:** je neue oder angepasste Wirkung einer.
+- **Bot:** Er bewertet Kunststücke und Kuriositäten über Listen (`SAFE_NO_TARGET` u. a. in `bots.ts`); diese werden angepasst und danach nachgemessen.
 
 ### Offen für Cornelius
 

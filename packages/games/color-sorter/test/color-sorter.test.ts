@@ -3,6 +3,7 @@ import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { detectHand, gameModule, handLabel, scoreHand, type Card, type RunState, type SorterMove, type SorterState } from '../src';
 import { MODS } from '../src/mods';
+import { altTag } from '../src/rules';
 import { describeMod } from '../src/ui/texts';
 
 function start(seats = 1, options: Options = {}, seed = 'test'): SorterState {
@@ -95,13 +96,13 @@ describe('Wertung', () => {
         { uid: 1, key: 'jolly' },
       ],
     });
-    expect(scoreHand(plusThenTimes, pair, [], rng()).score).toBe(22 * (2 + 8) * 2);
-    expect(scoreHand(timesThenPlus, pair, [], rng()).score).toBe(22 * (2 * 2 + 8));
+    expect(scoreHand(plusThenTimes, pair, [], rng()).score).toBe(22 * (2 + 6) * 1.5);
+    expect(scoreHand(timesThenPlus, pair, [], rng()).score).toBe(22 * (2 * 1.5 + 6));
   });
 
   it('Farb-Mods zählen gewertete Karten der Farbe', () => {
     const run = runWith(state, { mods: [{ uid: 1, key: 'inLove' }] });
-    expect(scoreHand(run, [c(5, 'h'), c(5, 's')], [], rng()).score).toBe(22 * (2 + 3));
+    expect(scoreHand(run, [c(5, 'h'), c(5, 's')], [], rng()).score).toBe(22 * (2 + 4));
   });
 
   it('Boss-Farbe zählt nicht', () => {
@@ -210,6 +211,146 @@ describe('Narren', () => {
   it('Doppelgesichtiger: die erste Hand einer Runde wertet alle Karten zweimal', () => {
     expect(scoreHand(withMod('twoFaced', { current: round() }), pair, [], rng()).score).toBe((12 + 20) * 2);
     expect(scoreHand(withMod('twoFaced', { current: round({ firstDone: true }) }), pair, [], rng()).score).toBe(22 * 2);
+  });
+});
+
+describe('Kataloge (Schritt 4)', () => {
+  const rng = () => new Rng([1, 2, 3, 4]);
+  /** Ein Lauf mitten in einer Audienz, mit dieser Hand und diesen Narren. */
+  function inRound(hand: Card[], change: Partial<RunState> = {}): SorterState {
+    let state = start();
+    state = play(state, 0, { type: 'start' });
+    Object.assign(state.runs[0]!, { hand, ...change });
+    return state;
+  }
+  const use = (state: SorterState, kind: 'spell' | 'dream', key: string, cards: number[] = []) => {
+    Object.assign(state.runs[0]!, { consumables: [{ kind, key }] });
+    return play(state, 0, { type: 'use', index: 0, cards }).runs[0]!;
+  };
+  const hand = [c(2, 'h'), c(5, 's'), c(9, 'd'), c(13, 'c')];
+
+  it('Färberei: alle gewählten Karten bekommen die Farbe der linken', () => {
+    const run = use(inRound(hand), 'spell', 'dye', [0, 2, 3]);
+    expect(run.hand.map((x) => x.color)).toEqual(['h', 's', 'h', 'h']);
+  });
+
+  it('Purzelbaum: die linke steigt, die zweite fällt', () => {
+    const run = use(inRound(hand), 'spell', 'strength', [1, 2]);
+    expect(run.hand.map((x) => x.rank)).toEqual([2, 6, 8, 13]);
+  });
+
+  it('Vertauscht!: zwei Karten tauschen ihre Ränge', () => {
+    const run = use(inRound(hand), 'spell', 'swap', [0, 3]);
+    expect(run.hand.map((x) => x.rank)).toEqual([13, 5, 9, 2]);
+  });
+
+  it('Ausmisten und Pflastern bringen Brezeln', () => {
+    const before = inRound(hand).runs[0]!.tokens;
+    expect(use(inRound(hand), 'spell', 'hanged', [0, 1]).tokens).toBe(before + 2);
+    const paved = use(inRound(hand), 'spell', 'hierophant', [2]);
+    expect(paved.tokens).toBe(before + 2);
+    expect(paved.hand[2]!.enh).toBe('granite');
+  });
+
+  it('Erntedank: +2 je Herrschaft, höchstens 16', () => {
+    expect(use(inRound(hand, { tokens: 0, bossesBeaten: 3 }), 'spell', 'harvest').tokens).toBe(6);
+    expect(use(inRound(hand, { tokens: 0, bossesBeaten: 20 }), 'spell', 'harvest').tokens).toBe(16);
+  });
+
+  it('Polierlappen: der erste Narr ohne Glanz bekommt Perlmutt', () => {
+    const mods = [
+      { uid: 1, key: 'clown', foil: 'hot' as const },
+      { uid: 2, key: 'pi' },
+    ];
+    expect(use(inRound(hand, { mods }), 'spell', 'polish').mods.map((m) => m.foil)).toEqual(['hot', 'holo']);
+  });
+
+  it('Schulstunde: Übung der meistgespielten Kombi', () => {
+    const state = inRound(hand);
+    const plays = { ...state.runs[0]!.handPlays, flush: 3, pair: 1 };
+    expect(use(inRound(hand, { handPlays: plays }), 'spell', 'priestess').consumables).toEqual([{ kind: 'nail', key: 'fullcover' }]);
+  });
+
+  it('Zauberspiegel: der linke Narr wird verdoppelt, ein anderer geht', () => {
+    const mods = [
+      { uid: 1, key: 'clown' },
+      { uid: 2, key: 'pi' },
+      { uid: 3, key: 'jolly' },
+    ];
+    const keys = use(inRound(hand, { mods }), 'dream', 'magicMirror').mods.map((m) => m.key);
+    expect(keys.filter((k) => k === 'clown')).toHaveLength(2);
+    expect(keys).toHaveLength(3);
+  });
+
+  it('Sanduhr: +1 Vorführung in der nächsten Audienz, Handgröße −1', () => {
+    const state = inRound(hand);
+    const run = use(state, 'dream', 'hourglass');
+    expect(run.stickers).toContain('hourglass');
+    expect(run.handSize).toBe(state.runs[0]!.handSize - 1);
+  });
+
+  it('Lehrbrief: Übungen bringen zwei Stufen', () => {
+    const state = inRound(hand, { tools: ['diploma'] });
+    Object.assign(state.runs[0]!, { consumables: [{ kind: 'nail', key: 'clearCoat' }] });
+    expect(play(state, 0, { type: 'use', index: 0, cards: [] }).runs[0]!.handLevels.pair).toBe(3);
+  });
+
+  it('Gefallen Nachhilfe und Bäckerbesuch wirken sofort, Lob des Königs senkt das Ziel', () => {
+    let state = start();
+    Object.assign(state.tags, { 0: 'tutoring', 1: 'praise' });
+    Object.assign(state.runs[0]!, { mods: [{ uid: 1, key: 'clown' }, { uid: 2, key: 'pi' }] });
+    state = play(state, 0, { type: 'skip' });
+    expect(state.runs[0]!.handLevels.high).toBe(3);
+    state = play(state, 0, { type: 'skip' });
+    if (state.runs[0]!.phase === 'pack') state = play(state, 0, { type: 'skipPack' });
+    expect(state.runs[0]!.stickers).toContain('praise');
+  });
+
+  it('Wanderbühne: ein zweiter Gefallen zur Wahl', () => {
+    const state = start();
+    expect(gameModule.legalMoves(state, 0).filter((m) => m.type === 'skip')).toHaveLength(1);
+    state.runs[0]!.tools = ['touringStage'];
+    const skips = gameModule.legalMoves(state, 0).filter((m) => m.type === 'skip');
+    expect(skips).toHaveLength(2);
+    expect(altTag(state.tags[0]!, 1)).not.toBe(state.tags[0]);
+  });
+
+  it('Narren: Kuppler, Läufer, Malerin, Gauklerfamilie', () => {
+    const run = (key: string) => runWith(start(), { mods: [{ uid: 1, key }] });
+    const twoPair = [c(5, 'h'), c(5, 's'), c(9, 'h'), c(9, 's')];
+    expect(scoreHand(run('jolly'), twoPair, [], rng()).score).toBe((24 + 28) * (2 + 6) * 2);
+    const flush = [c(2, 'h'), c(4, 'h'), c(11, 'h'), c(12, 'h'), c(9, 'h')];
+    expect(scoreHand(run('palette'), flush, [], rng()).score).toBe((40 + 38) * (4 + 8 + 4));
+    const full = [c(5, 'h'), c(5, 's'), c(5, 'c'), c(9, 'h'), c(9, 's')];
+    expect(scoreHand(run('family'), full, [], rng()).score).toBe((45 + 33) * 4 * 3);
+    const straightFlush = [c(5, 'h'), c(6, 'h'), c(7, 'h'), c(8, 'h'), c(9, 'h')];
+    expect(scoreHand(run('ruler'), straightFlush, [], rng()).score).toBe((90 + 35) * (9 + 10) * 2);
+  });
+
+  it('Narren: Aufrechter, Querkopf, Assjäger, Papagei, Hofzauberer', () => {
+    const run = (key: string) => runWith(start(), { mods: [{ uid: 1, key }] });
+    expect(scoreHand(run('even'), [c(4, 'h'), c(4, 's')], [], rng()).score).toBe((12 + 8) * (2 + 12));
+    expect(scoreHand(run('even'), [c(5, 'h'), c(5, 's')], [], rng()).score).toBe(22 * 2);
+    expect(scoreHand(run('odd'), [c(5, 'h'), c(5, 's')], [], rng()).score).toBe((22 + 60) * 2);
+    expect(scoreHand(run('santaFan'), [c(14, 'h'), c(14, 's')], [], rng()).score).toBe((12 + 28) * 4);
+    expect(scoreHand(run('echo'), [c(5, 'h'), c(5, 's')], [], rng()).score).toBe((22 + 5) * 2);
+    expect(scoreHand(run('santaClaus'), [c(12, 'h'), c(12, 's')], [], rng()).score).toBe((12 + 48) * 2);
+  });
+
+  it('Narren: Kräuterfrau und Hofschnecke wachsen, der Apfel wird aufgegessen', () => {
+    const clubs = [c(5, 'c'), c(5, 'c', { id: 1 })];
+    const herb = scoreHand(runWith(start(), { mods: [{ uid: 1, key: 'broccoli', value: 3 }] }), clubs, [], rng());
+    expect(herb.score).toBe(22 * (2 + 5));
+    expect(herb.mods[0]!.value).toBe(5);
+    const apple = scoreHand(runWith(start(), { mods: [{ uid: 1, key: 'apple', value: 1 }] }), [c(5, 'h'), c(5, 's')], [], rng());
+    expect(apple.score).toBe(22 * 6);
+    expect(apple.mods).toEqual([]);
+  });
+
+  it('Das Einhorn: jede Karte zählt als jede Farbe', () => {
+    const mixed = [c(2, 'h'), c(4, 's'), c(7, 'd'), c(9, 'c'), c(12, 'h')];
+    expect(detectHand(mixed).type).toBe('high');
+    expect(scoreHand(runWith(start(), { mods: [{ uid: 1, key: 'unicorn' }] }), mixed, [], rng()).type).toBe('flush');
   });
 });
 

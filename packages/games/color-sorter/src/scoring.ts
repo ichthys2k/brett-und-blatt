@@ -61,7 +61,10 @@ export function favoriteHand(run: RunState): HandType | null {
  * dann die Karten in der Hand, dann die Mods von links nach rechts.
  */
 export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng, table: TableInfo = SOLO_TABLE): ScoreResult {
-  const detected = detectHand(played);
+  const detected = detectHand(
+    played,
+    run.mods.some((m) => m.key === 'unicorn' && !m.spent),
+  );
   const type = detected.type;
   const scoring = detected.scoring.map((i) => played[i]!);
   const boss = run.current?.boss ? BOSSES[run.current.boss] : undefined;
