@@ -180,6 +180,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 **Fahrplan ab 29.10.2026** (mit Cornelius abgestimmt; Reihenfolge A → B1 → B2 → C1 → C2 → D1 → B3 → C3 → E). Jeder Schritt auf eigenem Zweig, mit Tests, `corepack pnpm check`, bei Spieländerungen Prüfstand, Blick im Browser, Doku-Nachtrag; veröffentlicht wird auf „deploy“.
 
 - ✅ **B1 Remis** (29.10.2026): Schach und Dame, Engine-Baustein `draw-offer.ts`, Leiste `DrawOfferBar`, Ergebnis-Grund „Remis durch Einigung“ (`agreement`). Details in `docs/spiele/schach.md` und `dame.md`.
+- ✅ **B3 Eröffnungsbuch** (29.10.2026): Schach-Bot „mittel“/„schwer“ spielt in bekannten Eröffnungsstellungen einen Buchzug (`packages/games/chess/src/book.ts`, 42 Hauptvarianten).
 - ✅ **D1 Kartenblitz geteilter Bildschirm** (29.10.2026): eigener Bereich je Mensch, gegenüber Sitzende gedreht; `usePointerDrag` unterscheidet Finger (`pointerId`); Statuszeile „Alle spielen gleichzeitig“, wenn mehrere Menschen am Gerät zugleich handeln.
 - ✅ **C2 Skat-Bot** (29.10.2026): spielt Hand (reizt dann bis zum Handwert) und sagt im Handspiel mit sehr starkem Blatt Schneider an.
 - ✅ **C1 Schafkopf** (29.10.2026): Bettel und Tout enden sofort, wenn verloren; Auswertung nennt Stiche statt Augen.

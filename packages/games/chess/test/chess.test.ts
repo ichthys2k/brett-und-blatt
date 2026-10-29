@@ -4,6 +4,11 @@ import { describe, expect, it, test } from 'vitest';
 import { gameModule, type BoardMove, type ChessMove, type ChessState } from '../src';
 import { loadFromPgn, positionKey, toPgn } from '../src/rules';
 import { ChessSearch } from '../src/search';
+import { BOOK_LINES, bookMoves } from '../src/book';
+import { Chess } from 'chess.js';
+import { turnSeat as turnSeatOfFen } from '../src/rules';
+
+const turnSeatOf = (state: ChessState) => turnSeatOfFen(state.fen);
 
 const mv = (from: string, to: string, promotion?: BoardMove['promotion']): ChessMove => (promotion ? { type: 'move', from, to, promotion } : { type: 'move', from, to });
 
@@ -170,5 +175,33 @@ describe('PGN', () => {
     expect(() => loadFromPgn('[FEN "8/8/8/8/8/8/8/K6k w - - 0 1"]\n[SetUp "1"]\n\n1. Kb1 *')).toThrow('Grundstellung');
     // Ungültige Option: normale Partie statt Absturz
     expect((gameModule.setup(2, { pgn: 'Quatsch' }, 'x') as ChessState).history).toEqual([]);
+  });
+});
+
+describe('Eröffnungsbuch', () => {
+  it('jede Buchzeile besteht aus erlaubten Zügen', () => {
+    for (const line of BOOK_LINES) {
+      let state = gameModule.setup(2, {}, 'buch') as ChessState;
+      for (const san of line.split(' ')) {
+        const next = new Chess(state.fen).move(san); // wirft bei unerlaubtem Zug
+        state = gameModule.applyMove(state, turnSeatOf(state), { type: 'move', from: next.from, to: next.to, ...(next.promotion ? { promotion: next.promotion as BoardMove['promotion'] } : {}) }).state;
+      }
+      expect(state.end).toBeNull();
+    }
+    expect(BOOK_LINES.length).toBeGreaterThanOrEqual(30);
+  });
+
+  it('„mittel“ und „schwer“ eröffnen aus dem Buch und abwechslungsreich, „leicht“ rechnet selbst', () => {
+    const start = gameModule.setup(2, {}, 'buch') as ChessState;
+    const firstMoves = new Set<string>();
+    for (let i = 0; i < 30; i++) {
+      const move = computeBotMove(gameModule, { gameId: 'chess', botId: 'chess', level: 'hard', seat: 0, view: start, seed: `b${i}`, timeBudgetMs: 100 }) as BoardMove;
+      expect(bookMoves(start.fen)).toContain(move.from + move.to);
+      firstMoves.add(move.from + move.to);
+    }
+    expect(firstMoves.size).toBeGreaterThanOrEqual(3);
+    // Nach 1. e4 c5 kennt das Buch die Antwort von Weiß.
+    const sicilian = play([['e2', 'e4'], ['c7', 'c5']]);
+    expect(bookMoves(sicilian.fen).length).toBeGreaterThan(0);
   });
 });

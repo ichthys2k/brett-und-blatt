@@ -1,6 +1,7 @@
 import { randomBot, type BotDefinition, type BotLevel, type GameModule } from '@brett-und-blatt/engine';
 import { meta } from './meta';
 import { applyMove, currentPlayers, isLegal, legalMoves, result, setup, type ChessMove, type ChessState, type Promotion } from './rules';
+import { bookMoves } from './book';
 import { ChessSearch } from './search';
 
 export type { BoardMove, ChessEnd, ChessMove, ChessState, Promotion } from './rules';
@@ -24,6 +25,7 @@ const LEVELS: Record<BotLevel, { depth: number; maxMs: number; noise: number }> 
  * - leicht: einen Halbzug tief und ungenau – übersieht gern etwas
  * - mittel: zwei Halbzüge plus Schlagabtausche
  * - schwer: so tief, wie die Zeit erlaubt
+ * Auf „mittel“ und „schwer“ spielt er in bekannten Eröffnungsstellungen einen Buchzug (`book.ts`).
  * Ein Remis-Angebot nimmt er an, wenn er nach seiner Bewertung schlechter steht (`ACCEPT_DRAW_AT`);
  * selbst bietet er keins an.
  */
@@ -36,6 +38,14 @@ const chessBot: BotDefinition<ChessState, ChessMove> = {
       // Die Bewertung gilt für die Seite am Zug – das ist der Anbieter.
       const ownScore = -new ChessSearch(ctx.view.fen).evaluate();
       return { type: ownScore <= ACCEPT_DRAW_AT[ctx.level] ? 'acceptDraw' : 'declineDraw' };
+    }
+    if (ctx.level !== 'easy') {
+      const book = bookMoves(ctx.view.fen);
+      if (book.length > 0) {
+        const lan = ctx.rng.pick(book);
+        const promotion = lan[4] as Promotion | undefined;
+        return promotion ? { type: 'move', from: lan.slice(0, 2), to: lan.slice(2, 4), promotion } : { type: 'move', from: lan.slice(0, 2), to: lan.slice(2, 4) };
+      }
     }
     const level = LEVELS[ctx.level];
     const move = new ChessSearch(ctx.view.fen).bestMove({
