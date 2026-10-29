@@ -179,6 +179,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 **Fahrplan ab 29.10.2026** (mit Cornelius abgestimmt; Reihenfolge A → B1 → B2 → C1 → C2 → D1 → B3 → C3 → E). Jeder Schritt auf eigenem Zweig, mit Tests, `corepack pnpm check`, bei Spieländerungen Prüfstand, Blick im Browser, Doku-Nachtrag; veröffentlicht wird auf „deploy“.
 
 - ✅ **B1 Remis** (29.10.2026): Schach und Dame, Engine-Baustein `draw-offer.ts`, Leiste `DrawOfferBar`, Ergebnis-Grund „Remis durch Einigung“ (`agreement`). Details in `docs/spiele/schach.md` und `dame.md`.
+- ✅ **C1 Schafkopf** (29.10.2026): Bettel und Tout enden sofort, wenn verloren; Auswertung nennt Stiche statt Augen.
 - ✅ **B2 PGN** (29.10.2026): Schach-Partien kopieren/speichern (Chronik) und über die Einrichtung fortsetzen. Dabei behoben: `SetupExtra` bekommt `setOption` (vorher wirkte nichts, was es setzte – auch der Go-SGF-Import nicht), Optionen können `maxLength` haben (vorher fest 256 Zeichen), verborgene Optionen werden nicht mehr in den gespeicherten Einstellungen gemerkt.
 - ✅ **A – Doku an den Code angleichen:** Jeden „offen“-Punkt in `docs/spiele/` am Code prüfen und abhaken oder stehen lassen.
 - **B – Schach:** B1 Remis anbieten/annehmen (Hot-Seat und online, Bot nimmt bei klar schlechterer Stellung an; auch Dame). B2 PGN kopieren und einfügen (`chess.js`). B3 Eröffnungsbuch für „mittel“ und „schwer“.

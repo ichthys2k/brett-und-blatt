@@ -239,9 +239,7 @@ export function SchafkopfBoard({
                   Spielende Partei hat verloren!
                 </span>
               )}
-              <div className="mt-1 text-xs text-stone-400">
-                Augen: {view.history[view.history.length - 1].declarerEyes} : {view.history[view.history.length - 1].opponentEyes}
-              </div>
+              <div className="mt-1 text-xs text-stone-400">{roundDetail(view)}</div>
             </div>
           )}
           <button
@@ -255,6 +253,17 @@ export function SchafkopfBoard({
       )}
     </div>
   );
+}
+
+/** Kleingedrucktes zur Abrechnung: bei Bettel und Tout zählen Stiche, sonst Augen. */
+function roundDetail(view: SchafkopfState): string {
+  const last = view.history[view.history.length - 1]!;
+  const played = view.completedTricks.length;
+  const total = view.sheet === 'short' ? 6 : 8;
+  const early = played < total ? ` – entschieden nach ${played} von ${total} Stichen` : '';
+  if (last.contract.gameType === 'bettel') return last.won ? 'Kein einziger Stich – Bettel gewonnen.' : `Der Spieler hat einen Stich gemacht${early}.`;
+  if (last.contract.tout) return last.won ? 'Alle Stiche – Tout gewonnen.' : `Die Gegner haben einen Stich gemacht${early}.`;
+  return `Augen: ${last.declarerEyes} : ${last.opponentEyes}`;
 }
 
 function formatSuitName(suit: Suit): string {

@@ -528,8 +528,13 @@ function handlePlayCard(state: SchafkopfState, card: CardId, player: number): Sc
   ];
 
   const totalTricksNeeded = state.sheet === 'short' ? 6 : 8;
+  // Bettel ist mit dem ersten Stich des Spielers verloren, Tout mit dem ersten Stich der Gegner –
+  // dann wird nicht weitergespielt.
+  const decided =
+    (state.contract?.gameType === 'bettel' && winnerSeat === state.declarerSeat) ||
+    (state.contract?.tout === true && winnerSeat !== state.declarerSeat);
 
-  if (nextCompleted.length === totalTricksNeeded) {
+  if (nextCompleted.length === totalTricksNeeded || decided) {
     return finishGame({
       ...state,
       hands: nextHands,
