@@ -72,7 +72,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<PairsState, PairsMove> = {
   Board,
   SeatSymbol,
-  sounds: { flipped: 'karte-ziehen', pair: 'paar', mismatch: 'kein-paar' },
+  sounds: { flipped: 'karte-umdrehen', pair: 'paar', mismatch: 'kein-paar' },
   seatLabel: (seat) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) => {
     if (view.scores.length === 1) return `${view.turns} Züge · ${view.scores[0]} Paare`;

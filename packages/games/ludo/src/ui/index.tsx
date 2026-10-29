@@ -577,7 +577,7 @@ export const gameUi: GameUi<LudoState, LudoMove> = {
   Board,
   SeatSymbol,
   sounds: {
-    rolled: 'wuerfeln',
+    rolled: 'wuerfel-einzeln',
     entered: 'stein-heraus',
     moved: 'stein-ziehen',
     captured: 'stein-schlagen',

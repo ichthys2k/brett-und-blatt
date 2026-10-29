@@ -56,6 +56,6 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<GomokuState, GomokuMove> = {
   Board,
   SeatSymbol,
-  sounds: { placed: 'stein-setzen' },
+  sounds: { placed: 'stein-schiefer' },
   seatLabel: (seat) => LABELS[seat] ?? `Platz ${seat + 1}`,
 };

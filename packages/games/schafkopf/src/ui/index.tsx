@@ -312,7 +312,7 @@ function formatContract(contract: SchafkopfContract): string {
 
 export const gameUi: GameUi<SchafkopfState, SchafkopfMove> = {
   Board: SchafkopfBoard,
-  sounds: { cardPlayed: 'karte-legen', trickTaken: 'karte-ziehen', announced: 'ansage', newDeal: 'mischen' },
+  sounds: { cardPlayed: 'karte-legen', trickTaken: 'stich-einsammeln', announced: 'ansage', newDeal: 'karten-austeilen' },
   SeatSymbol: ({ className }) => <span className={className}>🎴</span>,
   seatLabel: (seat: SeatId) => `Spieler ${seat + 1}`,
   seatDetail: (view: SchafkopfState, seat: SeatId) => {

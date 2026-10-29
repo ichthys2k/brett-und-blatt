@@ -514,7 +514,7 @@ export const gameUi: GameUi<SolitaireState, SolitaireMove> = {
   sounds: {
     moved: 'karte-legen',
     drawn: 'karte-ziehen',
-    flipped: 'karte-ziehen',
+    flipped: 'karte-umdrehen',
     recycled: 'mischen',
     dealt: 'mischen',
     completed: 'stapel-fertig',

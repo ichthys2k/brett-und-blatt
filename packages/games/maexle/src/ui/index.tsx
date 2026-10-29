@@ -299,7 +299,7 @@ export const gameUi: GameUi<MaexleState, MaexleMove> = {
   Board,
   SeatSymbol,
   sounds: {
-    rolled: 'wuerfeln',
+    rolled: 'wuerfelbecher-schuetteln',
     announced: 'ansage',
     doubted: 'zweifeln',
     revealed: (event) => (event.dice ? ['aufdecken', 'leben-weg'] : 'leben-weg'),

@@ -293,5 +293,5 @@ export const gameUi: GameUi<ScrabbleState, ScrabbleMove> = {
   SeatSymbol: ({ seat, className = '' }) => <TileFace letter={SEAT_LETTERS[seat % 4]!} className={`wg-symbol ${className}`} />,
   seatLabel: (seat) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) => `${(view.final ?? view.scores)[seat]} Punkte · ${view.racks[seat]?.length ?? 0} Steine`,
-  sounds: { played: 'stein-setzen', exchanged: 'mischen' },
+  sounds: { played: 'plaettchen-setzen', exchanged: 'mischen' },
 };

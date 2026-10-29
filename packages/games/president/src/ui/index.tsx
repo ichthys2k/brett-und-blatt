@@ -271,7 +271,7 @@ export const gameUi: GameUi<PresidentView, PresidentMove> = {
   sounds: {
     played: 'karte-legen',
     passed: 'poker-check',
-    trickWon: 'karte-ziehen',
+    trickWon: 'stich-einsammeln',
     exchanged: 'karte-ziehen',
     roundStarted: 'mischen',
     out: 'ansage',

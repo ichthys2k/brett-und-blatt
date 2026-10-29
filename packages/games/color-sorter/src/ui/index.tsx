@@ -75,10 +75,12 @@ function useScoring(events: GameEvent[], seat: SeatId | 'spectator') {
     } else if (anim.tick === anim.event.steps.length) {
       playEffect('fs-treffer');
       playEffect('fs-angriff', { delay: 0.05 });
+      playEffect('nh-schellen-kurz', { delay: 0.1 });
       // Applaus, wenn der Treffer ankommt; ist das Ziel erreicht, jubelt der Hof, nach dem Thronsaal mit Laute.
       if (anim.won === null) playEffect('nh-applaus', { delay: 0.2 });
       else {
         playEffect('nh-jubel', { delay: 0.2 });
+        playEffect('nh-schellen-lang', { delay: 0.5 });
         if (anim.won === 2) playEffect('nh-hoftag', { delay: 1.4 });
       }
     }
@@ -1155,7 +1157,7 @@ export const gameUi: GameUi<SorterState, SorterMove> = {
     drawn: 'fs-mischen',
     boarDiscard: 'fs-angriff',
     // Den Jubel spielt die Wertungsanimation, wenn der Treffer ankommt.
-    roundStart: (e) => (e.round === 2 && !e.duel ? 'nh-thronsaal' : null),
+    roundStart: (e) => (e.duel ? null : e.round === 2 ? 'nh-thronsaal' : e.round === 0 ? 'nh-herold' : null),
     gameOver: (e) => ((e.winners as number[] | undefined)?.length ? 'nh-hofnarr' : null),
     roundLost: 'fs-game-over',
     out: 'fs-game-over',

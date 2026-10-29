@@ -240,5 +240,5 @@ export const gameUi: GameUi<BinokelState, BinokelMove> = {
   SeatSymbol: ({ seat, className = '' }) => <SuitIcon suit={(['C', 'S', 'H'] as Suit[])[seat % 3]!} className={`h-6 w-6 ${className}`} />,
   seatLabel: (seat: SeatId) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) => `${view.scores[seat]} Punkte${seat === view.declarer ? ' · Spielmacher' : ''}`,
-  sounds: { cardPlayed: 'karte-legen', trickTaken: 'karte-ziehen', announced: 'ansage', newDeal: 'mischen' },
+  sounds: { cardPlayed: 'karte-legen', trickTaken: 'stich-einsammeln', announced: 'ansage', newDeal: 'karten-austeilen' },
 };

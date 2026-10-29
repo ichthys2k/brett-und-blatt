@@ -276,7 +276,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<ColorShapeState, ColorShapeMove> = {
   Board,
   SeatSymbol,
-  sounds: { placed: 'stein-setzen' },
+  sounds: { placed: 'plaettchen-setzen' },
   seatLabel: (seat) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) => `${view.scores[seat]} Punkte`,
 };

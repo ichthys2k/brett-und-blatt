@@ -287,7 +287,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<DominoState, DominoMove> = {
   Board,
   SeatSymbol,
-  sounds: { played: 'stein-setzen', drew: 'stein-ziehen' },
+  sounds: { played: 'domino-klack', drew: 'stein-ziehen' },
   seatLabel: (seat) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) => `${view.scores[seat]} Pkt. · ${view.hands[seat]?.length ?? 0} St.`,
 };
