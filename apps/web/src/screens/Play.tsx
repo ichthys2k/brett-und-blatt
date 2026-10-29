@@ -11,6 +11,7 @@ import type { LoadedGame } from '../lib/registry';
 import { useGameMusic } from '../lib/music';
 import { navigate, paths } from '../lib/router';
 import { useSoundSettings } from '../lib/sound';
+import { storage, type Profile } from '../lib/storage';
 import { useGameSounds } from '../lib/useGameSounds';
 
 export function Play() {
@@ -49,7 +50,7 @@ function resultTitle(result: Result, session: GameSession, online?: OnlineTableP
   if (result.kind === 'loss') return t('play.lost');
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const winners = result.winners;
-  const names = winners.map((seat) => seats[seat]?.name ?? '?').join(' & ');
+  const names = winners.map((seat) => { const s = seats[seat]; return s ? (s.avatar ? `${s.avatar} ${s.name}` : s.name) : '?'; }).join(' & ');
   if (online) return online.yourSeat !== null && winners.includes(online.yourSeat) ? t('play.youWon') : t('play.won', { name: names });
   if (seats.length === 1) return humans.length === 1 ? t('play.solved') : t('play.solvedBy', { name: seats[0]?.name ?? '' });
   if (humans.length === 1) return winners.includes(humans[0] as number) ? t('play.youWon') : t('play.botWon');
@@ -63,6 +64,8 @@ export interface OnlineTableProps {
   onRestart?(rotate: boolean): void;
   onLobby(): void;
   onLeave(): void;
+  /** Avatare (Emojis) der Plätze in Sitzreihenfolge, falls bekannt. */
+  avatars?: (string | null)[];
   /** Z. B. die Leiste mit Emoji-Reaktionen. */
   extra?: ReactNode;
   /** Raumcode und Einladungslink – Spiele zeigen sie z. B. auf einer Tafel an. */
@@ -186,7 +189,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   else if (session.paused) status = t('play.paused');
   else {
     const seat = current[0];
-    const name = seat === undefined ? '' : (seats[seat]?.name ?? '');
+    const seatConfig = seat === undefined ? undefined : seats[seat];
+    const name = seat === undefined ? '' : (seatConfig?.avatar ? `${seatConfig.avatar} ${seatConfig.name}` : (seatConfig?.name ?? ''));
     if (seat === undefined) status = '';
     // Geteilter Bildschirm (z. B. Kartenblitz): mehrere Menschen am Gerät handeln zugleich.
     else if (!online && current.filter((s) => humans.includes(s)).length > 1) status = t('play.together');
@@ -205,7 +209,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const canResign = resignSeat !== undefined && session.canResign(resignSeat);
   const resign = () => {
     if (resignSeat === undefined) return;
-    const question = humans.length > 1 && !online ? t('play.resignConfirmNamed', { name: seats[resignSeat]?.name ?? '' }) : t('play.resignConfirm');
+    const resignName = seats[resignSeat]; const resignLabel = resignName ? (resignName.avatar ? `${resignName.avatar} ${resignName.name}` : resignName.name) : '';
+    const question = humans.length > 1 && !online ? t('play.resignConfirmNamed', { name: resignLabel }) : t('play.resignConfirm');
     if (window.confirm(question)) session.resign(resignSeat);
   };
 
@@ -264,10 +269,15 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           data-many={many || undefined}
           aria-label="Spieler"
         >
-          {seats.map((seat, index) => (
+          {seats.map((seat, index) => {
+            const profile = !online ? storage.loadProfile() : null;
+            const localAvatar = !online && seat.kind === 'human' ? (profile?.avatar ?? seat.avatar ?? null) : (seat.avatar ?? null);
+            const avatar = online ? (seat.avatar ?? online.avatars?.[index] ?? null) : localAvatar;
+            return (
             <PlayerChip
               key={index}
               name={seat.name}
+              avatar={avatar ?? undefined}
               symbol={<ui.SeatSymbol seat={index} seats={seats.length} />}
               score={ui.seatScore?.(publicView, index)}
               detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index, seats.length)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index, seats.length))}
@@ -277,7 +287,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               winner={result?.kind === 'win' && result.winners.includes(index)}
               clock={session.timed ? session.clock(index) : null}
             />
-          ))}
+            );
+          })}
         </section>
 
         <p className="flex-none py-2 text-center font-medium" aria-live="polite">
@@ -420,7 +431,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               <p className="text-4xl" aria-hidden="true">
                 🤫
               </p>
-              <p className="text-xl font-semibold">{t('play.handover', { name: seats[handoverSeat]?.name ?? '' })}</p>
+              <p className="text-xl font-semibold">{t('play.handover', { name: (seats[handoverSeat]?.avatar ? `${seats[handoverSeat]?.avatar} ${seats[handoverSeat]?.name}` : (seats[handoverSeat]?.name ?? '')) })}</p>
               <p className="text-muted">{t('play.handoverHint')}</p>
               <Button
                 variant="primary"
@@ -429,7 +440,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
                   session.resume();
                 }}
               >
-                {t('play.handoverReveal', { name: seats[handoverSeat]?.name ?? '' })}
+                {t('play.handoverReveal', { name: (seats[handoverSeat]?.avatar ? `${seats[handoverSeat]?.avatar} ${seats[handoverSeat]?.name}` : (seats[handoverSeat]?.name ?? '')) })}
               </Button>
             </div>
           </div>

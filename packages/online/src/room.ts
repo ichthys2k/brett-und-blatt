@@ -457,11 +457,11 @@ export class Room {
           if (!target && !canGrow) return deny();
           if (target && (target.kind !== 'human' || target.memberId !== null)) return deny();
           this.game.seatMembers[index] = member.id;
-          this.game.seats[index] = { kind: 'human', name: member.name, memberId: member.id };
+          this.game.seats[index] = { kind: 'human', name: member.name, avatar: member.avatar, memberId: member.id };
           if (this.game.seatMoved) this.game.seatMoved[index] = this.gameVersion();
           while (this.lobby.seats.length <= index) this.lobby.seats.push({ kind: 'human', memberId: null });
           this.lobby.seats[index] = { kind: 'human', memberId: member.id };
-          if (!this.game.session.joinSeat(index, 'human', member.name)) {
+          if (!this.game.session.joinSeat(index, 'human', member.name, undefined, member.avatar)) {
             this.game.seatMembers[index] = null;
             this.game.seats[index] = { kind: 'human', name: 'Frei', memberId: null };
             this.lobby.seats[index] = { kind: 'human', memberId: null };
@@ -596,12 +596,12 @@ export class Room {
         ? { kind: 'bot', name: 'Computer', level: seat.level, memberId: null }
         : seat.memberId === null
           ? { kind: 'human', name: 'Frei', memberId: null }
-          : { kind: 'human', name: this.members.get(seat.memberId)?.name ?? '?', memberId: seat.memberId },
+          : { kind: 'human', name: this.members.get(seat.memberId)?.name ?? '?', avatar: this.members.get(seat.memberId)?.avatar, memberId: seat.memberId },
     );
     const resolvedOptions = resolveOptions(module, this.lobby.options);
     const config: SessionConfig = {
       gameId: module.info.id,
-      seats: publicSeats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name })),
+      seats: publicSeats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name, avatar: seat.avatar })),
       options: emptyIndices.length > 0 ? { ...resolvedOptions, emptySeats: emptyIndices.join(',') } : resolvedOptions,
       seed: this.deps.randomSeed(),
       time: timePresetsOf(module, this.lobby.options)[this.lobby.time],
