@@ -14,13 +14,14 @@ export function tipFrom(d: { emoji?: string; title: string; text: string }, extr
 }
 
 interface HoverApi {
-  show: (tip: Tip, el: HTMLElement) => void;
+  show: (tip: Tip, el: HTMLElement, delay?: number) => void;
   hide: () => void;
 }
 
 const HoverContext = createContext<HoverApi | null>(null);
 
 const SHOW_DELAY_MS = 120;
+const LONG_PRESS_MS = 500;
 
 /** Eine einzige Sprechblase für alle Karten: erscheint bei der Maus nach kurzer Verzögerung und bei Tastaturfokus. */
 export function HoverProvider({ children }: { children: ReactNode }) {
@@ -28,9 +29,9 @@ export function HoverProvider({ children }: { children: ReactNode }) {
   const timer = useRef<number | undefined>(undefined);
   const api = useMemo<HoverApi>(
     () => ({
-      show(tip, el) {
+      show(tip, el, delay = SHOW_DELAY_MS) {
         window.clearTimeout(timer.current);
-        timer.current = window.setTimeout(() => setState({ tip, rect: el.getBoundingClientRect() }), SHOW_DELAY_MS);
+        timer.current = window.setTimeout(() => setState({ tip, rect: el.getBoundingClientRect() }), delay);
       },
       hide() {
         window.clearTimeout(timer.current);
@@ -88,10 +89,11 @@ export type ExtraProps = HTMLAttributes<HTMLElement> & { [data: `data-${string}`
 
 /**
  * Eigenschaften, die ein Element für die Sprechblase braucht, verbunden mit weiteren (z. B. Ziehen).
- * Berührung zeigt die Blase nicht (dort gibt es die Info-Box); beim Drücken verschwindet sie.
+ * Die Maus zeigt die Blase beim Überfahren, ein Finger bei langem Drücken (ohne zu ziehen); beim Drücken mit der Maus verschwindet sie.
  */
 export function useTipProps(tip: Tip | undefined, extra: ExtraProps = {}): ExtraProps {
   const api = useContext(HoverContext);
+  const press = useRef<{ x: number; y: number } | null>(null);
   if (!tip || !api) return extra;
   return {
     ...extra,
@@ -105,7 +107,28 @@ export function useTipProps(tip: Tip | undefined, extra: ExtraProps = {}): Extra
     },
     onPointerDown: (e) => {
       api.hide();
+      if (e.pointerType === 'touch') {
+        press.current = { x: e.clientX, y: e.clientY };
+        api.show(tip, e.currentTarget, LONG_PRESS_MS);
+      }
       extra.onPointerDown?.(e);
+    },
+    onPointerMove: (e) => {
+      extra.onPointerMove?.(e);
+      if (press.current && Math.hypot(e.clientX - press.current.x, e.clientY - press.current.y) > 8) {
+        press.current = null;
+        api.hide();
+      }
+    },
+    onPointerUp: (e) => {
+      extra.onPointerUp?.(e);
+      press.current = null;
+      api.hide();
+    },
+    onPointerCancel: (e) => {
+      extra.onPointerCancel?.(e);
+      press.current = null;
+      api.hide();
     },
     onFocus: (e) => {
       extra.onFocus?.(e);

@@ -36,7 +36,8 @@ type DragItem =
   | { kind: 'cons'; index: number }
   | { kind: 'offer'; index: number }
   | { kind: 'pack'; index: number }
-  | { kind: 'tool' };
+  | { kind: 'tool' }
+  | { kind: 'pick'; index: number };
 
 type DragProps = (item: DragItem, target?: string) => ExtraProps;
 
@@ -225,7 +226,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const can = (move: SorterMove) => legalMoves.some((m) => JSON.stringify(m) === JSON.stringify(move));
   const find = (pred: (m: SorterMove) => boolean) => legalMoves.find(pred);
   // Große Bildschirme: Bühnen-Layout mit Narrenbank oben, Bühne in der Mitte und der Hand unten.
-  const big = size.width >= 960 && size.height >= 540;
+  const big = size.width >= 900 && size.height >= 540;
   // Auf mittleren Bildschirmen stehen die Knöpfe unter der Hand, damit die Karten breiter werden.
   const tight = big && size.width < 1500;
   const wide = !big && size.width > size.height * 1.25 && size.width > 640;
@@ -287,7 +288,14 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
       }
       return false;
     }
-    if (zone !== 'buy' && zone !== 'bench' && zone !== 'mod') return false;
+    if (zone !== 'buy' && zone !== 'bench' && zone !== 'mod' && !(item.kind === 'pick' && (zone === 'hand' || zone === 'play'))) return false;
+    if (item.kind === 'pick') {
+      const pickMove = find((m) => m.type === 'pick' && m.index === item.index && same(m.cards, sortedPickNow));
+      if (!pickMove) return false;
+      onMove(pickMove);
+      setSelected(null);
+      return true;
+    }
     const buy = item.kind === 'offer' ? find((m) => m.type === 'buy' && m.index === item.index) : item.kind === 'pack' ? find((m) => m.type === 'buyPack' && m.index === item.index) : find((m) => m.type === 'buyTool');
     if (!buy) return false;
     onMove(buy);
@@ -625,6 +633,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
         stage={reveal.stage}
         finish={reveal.finish}
         cardW={cardW}
+        dragProps={dragProps}
       />
     );
   } else if (run.phase === 'wait') {
@@ -687,6 +696,9 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           {zone('sell', `🥨 Verkaufen (+${sellFor(dragging)})`, sellable)}
         </>
       );
+    } else if (dragging.kind === 'pick') {
+      const taken = find((m) => m.type === 'pick' && m.index === dragging.index && same(m.cards, sortedPick));
+      zones = zone('buy', '👝 Nehmen', !!taken);
     } else if (dragging.kind === 'offer' || dragging.kind === 'pack' || dragging.kind === 'tool') {
       const bought = find((m) => (dragging.kind === 'offer' ? m.type === 'buy' && m.index === dragging.index : dragging.kind === 'pack' ? m.type === 'buyPack' && m.index === dragging.index : m.type === 'buyTool'));
       zones = zone('buy', dragging.kind === 'pack' ? '📦 Öffnen' : '👝 Nehmen', !!bought);
@@ -1048,6 +1060,7 @@ interface PackProps {
   stage: number;
   finish: () => void;
   cardW: number;
+  dragProps: DragProps;
 }
 
 function isSpecial(offer: Offer): boolean {
@@ -1056,7 +1069,7 @@ function isSpecial(offer: Offer): boolean {
   return !!offer.card.foil;
 }
 
-function PackPanel({ run, find, onMove, hint, selected, setSelected, picked, togglePick, stage, finish, cardW }: PackProps) {
+function PackPanel({ run, find, onMove, hint, selected, setSelected, picked, togglePick, stage, finish, cardW, dragProps }: PackProps) {
   const pack = run.pack!;
   const d = describePack({ kind: pack.kind, size: 'normal', price: 0 });
   const sorted = [...picked].sort((a, b) => a - b);
@@ -1091,6 +1104,7 @@ function PackPanel({ run, find, onMove, hint, selected, setSelected, picked, tog
             <OfferTile
               key={index}
               offer={item}
+              extra={dragProps({ kind: 'pick', index })}
               className={`cs-flip ${isSpecial(item) ? 'cs-special' : ''}`}
               selected={sel === index}
               hint={hint?.type === 'pick' && hint.index === index}
