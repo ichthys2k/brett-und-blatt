@@ -81,5 +81,16 @@
   "nh-schellen-kurz": { "file": "nh_schellen_kurz.mp3", "end": 0.98, "gain": 0.8 },
   "nh-schellen-lang": { "file": "nh_schellen_lang.mp3", "end": 1.78, "gain": 0.8 },
   "stich-einsammeln": { "file": "stich_einsammeln.mp3", "end": 0.55, "gain": 0.9 },
-  "nh-herold": { "file": "nh_herold.mp3", "end": 1.62, "gain": 0.85 }
+  "nh-herold": { "file": "nh_herold.mp3", "end": 1.62, "gain": 0.85 },
+  "emoji-daumen": { "file": "emoji_daumen.mp3", "end": 0.45, "gain": 0.9 },
+  "emoji-applaus": { "file": "emoji_applaus.mp3", "end": 1.22, "gain": 0.8 },
+  "emoji-lachen": { "file": "emoji_lachen.mp3", "end": 1.22, "gain": 0.8 },
+  "emoji-staunen": { "file": "emoji_staunen.mp3", "end": 0.82, "gain": 0.85 },
+  "emoji-gruebeln": { "file": "emoji_gruebeln.mp3", "end": 0.88, "gain": 0.85 },
+  "emoji-schmunzeln": { "file": "emoji_schmunzeln.mp3", "end": 0.7, "gain": 0.85 },
+  "emoji-skeptisch": { "file": "emoji_skeptisch.mp3", "end": 0.46, "gain": 0.9 },
+  "emoji-schreck": { "file": "emoji_schreck.mp3", "end": 0.66, "gain": 0.8 },
+  "emoji-konfetti": { "file": "emoji_konfetti.mp3", "end": 1.3, "gain": 0.8 },
+  "emoji-herz": { "file": "emoji_herz.mp3", "end": 1.02, "gain": 0.85 },
+  "schnellnachricht": { "file": "schnellnachricht.mp3", "end": 0.5, "gain": 0.9 }
 }

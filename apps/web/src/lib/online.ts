@@ -1,4 +1,5 @@
-import { OnlineSession, PROTOCOL_VERSION, type ClientMessage, type GameMessage, type OpenRoomListing, type RoomMessage, type ServerMessage } from '@brett-und-blatt/online';
+import { OnlineSession, PROTOCOL_VERSION, type ClientMessage, type GameMessage, type OpenRoomListing, type Reaction, type RoomMessage, type ServerMessage } from '@brett-und-blatt/online';
+import type { SoundName } from '@brett-und-blatt/ui';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createBotRunner } from './botRunner';
 import { notifyTurn } from './notifications';
@@ -37,6 +38,22 @@ export async function fetchOpenRooms(): Promise<OpenRoomListing[]> {
 }
 
 export type ConnectionStatus = 'connecting' | 'open' | 'reconnecting' | 'gone' | 'kicked' | 'outdated' | 'left';
+
+/** Klang je Emoji-Reaktion; alle Schnellnachrichten teilen sich einen. */
+const REACTION_SOUNDS: Record<Reaction, SoundName> = {
+  '👍': 'emoji-daumen',
+  '👏': 'emoji-applaus',
+  '😂': 'emoji-lachen',
+  '😮': 'emoji-staunen',
+  '🤔': 'emoji-gruebeln',
+  '😏': 'emoji-schmunzeln',
+  '🤨': 'emoji-skeptisch',
+  '😱': 'emoji-schreck',
+  '🎉': 'emoji-konfetti',
+  '❤️': 'emoji-herz',
+};
+/** Die eigene Reaktion kommt als Echo zurück und klingt leiser als die der anderen. */
+const OWN_SIGNAL_VOLUME = 0.6;
 
 export interface Signal {
   id: number;
@@ -173,7 +190,8 @@ export class RoomConnection {
       case 'signal': {
         const signal: Signal = { id: this.nextSignal++, from: message.from, kind: message.kind, value: message.value };
         this.set({ signals: [...this.state.signals.slice(-4), signal] });
-        if (message.from !== this.state.you) sound.play('reaktion');
+        const name = message.kind === 'react' ? (REACTION_SOUNDS[message.value as Reaction] ?? 'reaktion') : 'schnellnachricht';
+        sound.play(name, { volume: message.from === this.state.you ? OWN_SIGNAL_VOLUME : 1 });
         window.setTimeout(() => this.set({ signals: this.state.signals.filter((s) => s.id !== signal.id) }), 3500);
         return;
       }
