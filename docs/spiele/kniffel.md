@@ -30,5 +30,5 @@ Nachträglich angelegt (28.10.2026) aus dem vorhandenen Code.
 
 ## Offene Punkte
 
-- Name „Kniffel“ ist eine Marke – Umbenennung geplant (Etappe 4 des Korrekturplans).
-- Startseite: keiner Rubrik zugeordnet (landet unter *Familie*), keine Playlist.
+- ✅ Name „Kniffel“ ist eine Marke – umbenannt in **Würfelblock** (Etappe 4 des Korrekturplans); die Kennung `kniffel` bleibt.
+- ✅ Startseite: Rubrik *Familien-, Lege- & Gesellschaftsspiele*; Playlist „Spielabend“ (29.10.2026).

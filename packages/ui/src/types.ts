@@ -55,6 +55,9 @@ export interface GameUi<V = unknown, M = unknown> {
    * Freischaltungen füllen. Online wird das nicht aufgerufen.
    */
   prepareOptions?: (options: Options) => Options;
-  /** Zusätzlicher Abschnitt in der Einrichtung, z. B. Atelier und Album eines Spiels. */
-  SetupExtra?: ComponentType<{ options: Options; seats: number }>;
+  /**
+   * Zusätzlicher Abschnitt in der Einrichtung, z. B. Atelier und Album eines Spiels oder eine
+   * eingefügte Partie. `options` ist nur zum Lesen; Werte setzt der Abschnitt über `setOption`.
+   */
+  SetupExtra?: ComponentType<{ options: Options; seats: number; setOption: (id: string, value: string) => void }>;
 }

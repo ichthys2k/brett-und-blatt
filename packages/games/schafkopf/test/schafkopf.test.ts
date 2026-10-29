@@ -161,22 +161,32 @@ describe('Sonderspiele Bettel und Tout', () => {
   }
 
   it('Bettel lässt sich ansagen und ist gewonnen, wenn der Spieler keinen Stich macht', () => {
-    for (const seed of ['bettel-a', 'bettel-b', 'bettel-c', 'bettel-d']) {
+    for (const seed of ['bettel-a', 'bettel-b', 'bettel-c', 'bettel-d', 'bettel-e', 'bettel-f']) {
       const state = playOut('bettel', false, seed);
       const last = state.history[state.history.length - 1]!;
       expect(last.contract.gameType).toBe('bettel');
       const tricks = state.completedTricks.filter((t) => t.winner === state.declarerSeat).length;
       expect(last.won).toBe(tricks === 0);
+      if (!last.won) {
+        // Verloren: Schluss mit genau diesem einen Stich des Spielers.
+        expect(tricks).toBe(1);
+        expect(state.completedTricks.at(-1)!.winner).toBe(state.declarerSeat);
+      }
     }
   });
 
   it('Tout ist nur mit allen Stichen gewonnen und zählt doppelt', () => {
-    for (const seed of ['tout-a', 'tout-b', 'tout-c']) {
+    for (const seed of ['tout-a', 'tout-b', 'tout-c', 'tout-d', 'tout-e', 'tout-f']) {
       const state = playOut('wenz', true, seed);
       const last = state.history[state.history.length - 1]!;
       const tricks = state.completedTricks.filter((t) => t.winner === state.declarerSeat).length;
       expect(last.won).toBe(tricks === state.completedTricks.length);
       expect(Math.abs(last.scorePerPlayer[state.declarerSeat!]!)).toBe(3 * 100);
+      if (!last.won) {
+        // Verloren: Schluss mit dem ersten Stich der Gegner.
+        expect(state.completedTricks.filter((t) => t.winner !== state.declarerSeat)).toHaveLength(1);
+        expect(state.completedTricks.at(-1)!.winner).not.toBe(state.declarerSeat);
+      }
     }
   });
 });

@@ -188,6 +188,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     const seat = current[0];
     const name = seat === undefined ? '' : (seats[seat]?.name ?? '');
     if (seat === undefined) status = '';
+    // Geteilter Bildschirm (z. B. Kartenblitz): mehrere Menschen am Gerät handeln zugleich.
+    else if (!online && current.filter((s) => humans.includes(s)).length > 1) status = t('play.together');
     else if (session.isThinking(seat)) status = t('play.thinking', { name });
     else if (online ? seat === online.yourSeat : humans.length === 1 && seat === humans[0]) status = t('play.yourTurn');
     else status = t('play.turnOf', { name });
@@ -289,6 +291,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           )}
           {result?.reason === 'time' && ` (${t('play.reason.time')})`}
           {result?.reason === 'resign' && ` (${t('play.reason.resign')})`}
+          {result?.reason === 'agreement' && ` (${t('play.reason.agreement')})`}
         </p>
 
 

@@ -23,6 +23,8 @@ const SUITS: Suit[] = ['C', 'S', 'H', 'D'];
  * stärken, und spielt im Stich nach einfachen Faustregeln (Trumpf ziehen, Asse holen,
  * dem Partner schmieren, billig stechen). Mit lauter niedrigen, gedeckten Karten spielt er
  * Null (bis 23 gereizt); dort drückt er die gefährlichen hohen Karten und duckt sich im Stich.
+ * Ist das Blatt schon ohne Skat sehr stark, spielt er Hand (und reizt bis zum Handwert), mit
+ * einem noch stärkeren Blatt sagt er im Handspiel Schneider an.
  *
  * Stufen: „leicht“ reizt waghalsig und spielt jede dritte Karte zufällig, „mittel“ spielt
  * nach den Faustregeln, „schwer“ reizt vorsichtiger und zählt die gefallenen Trümpfe.
@@ -49,11 +51,11 @@ export const skatBot: BotDefinition<SkatState, SkatMove> = {
         return bid ?? { type: 'pass' };
       }
       case 'skatDecision':
-        return { type: 'takeSkat' };
+        return handGame(hand, ctx.level) ? { type: 'playHand' } : { type: 'takeSkat' };
       case 'discard':
         return chooseDiscard(hand, moves, state.currentBidValue);
       case 'declare':
-        return chooseDeclaration(hand, state.discardedCards, state.currentBidValue, moves);
+        return chooseDeclaration(hand, state.discardedCards, state.currentBidValue, moves, ctx.level);
       case 'play':
         return choosePlay(ctx, state, seat, moves);
       default:
@@ -101,6 +103,16 @@ export function handStrength(hand: CardId[], gameType: Exclude<SkatGameType, 'nu
 
 /** Wie stark muss die Hand sein, damit sich das Spiel lohnt (je Stufe)? */
 const THRESHOLD: Record<BotLevel, number> = { easy: 5, medium: 6, hard: 6.5 };
+/** Ab dieser Stärke ohne Skat spielt der Bot Hand … */
+const HAND_THRESHOLD: Record<BotLevel, number> = { easy: 7, medium: 8, hard: 8.5 };
+/** … und ab dieser sagt er im Handspiel Schneider an. */
+const SCHNEIDER_THRESHOLD: Record<BotLevel, number> = { easy: 9, medium: 9, hard: 9.5 };
+
+/** Hand spielen? Hängt nur vom eigenen Blatt ab – so passen Reizen und Spielen zusammen. */
+function handGame(hand: CardId[], level: BotLevel): boolean {
+  const game = bestGame(hand, level);
+  return game !== null && game.strength >= HAND_THRESHOLD[level];
+}
 
 function bestGame(hand: CardId[], level: BotLevel): { gameType: Exclude<SkatGameType, 'null'>; strength: number } | null {
   let best: { gameType: Exclude<SkatGameType, 'null'>; strength: number } | null = null;
@@ -126,7 +138,7 @@ const nullScore = (hand: CardId[]) => 8 - 4 * nullDanger(hand);
 function biddingLimit(hand: CardId[], level: BotLevel): number {
   const game = bestGame(hand, level);
   // Mit dem Skat kann ein weiterer Spitzen-Faktor dazukommen oder verloren gehen – nicht darauf bauen.
-  const suitLimit = game ? calculateGameValue({ gameType: game.gameType }, hand) : 0;
+  const suitLimit = game ? calculateGameValue({ gameType: game.gameType, hand: handGame(hand, level) }, hand) : 0;
   return Math.max(suitLimit, nullPlayable(hand, level) ? NULL_VALUE : 0);
 }
 
@@ -165,17 +177,19 @@ function chooseDiscard(hand: CardId[], moves: SkatMove[], bid: number): SkatMove
   return best?.move ?? moves[0]!;
 }
 
-function chooseDeclaration(hand: CardId[], discarded: CardId[], bid: number, moves: SkatMove[]): SkatMove {
+function chooseDeclaration(hand: CardId[], discarded: CardId[], bid: number, moves: SkatMove[], level: BotLevel): SkatMove {
   const all = [...hand, ...discarded];
   let best: { move: SkatMove; score: number } | null = null;
   for (const move of moves) {
     if (move.type !== 'declare') continue;
     const d = move.declaration;
-    if (d.schneider || d.schwarz || d.ouvert) continue;
+    if (d.schwarz || d.ouvert) continue;
+    const strength = d.gameType === 'null' ? nullScore(hand) : handStrength(hand, d.gameType);
+    // Schneider ansagen (nur im Handspiel möglich) erst mit sehr starkem Blatt.
+    if (d.schneider && strength < SCHNEIDER_THRESHOLD[level]) continue;
     const value = calculateGameValue(d, all);
     const overbid = value < bid;
-    const strength = d.gameType === 'null' ? nullScore(hand) : handStrength(hand, d.gameType);
-    const score = strength - (overbid ? 100 : 0) + value / 100;
+    const score = strength - (overbid ? 100 : 0) + value / 100 + (d.schneider ? 0.5 : 0);
     if (!best || score > best.score) best = { move, score };
   }
   return best?.move ?? moves[0]!;

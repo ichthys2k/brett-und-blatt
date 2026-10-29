@@ -58,6 +58,9 @@ export function usePointerDrag<T>({
 
       const startX = e.clientX;
       const startY = e.clientY;
+      // Nur dieser Finger zählt: Am geteilten Bildschirm ziehen mehrere Spieler gleichzeitig.
+      const pointerId = e.pointerId;
+      const mine = (ev: PointerEvent) => ev.pointerId === pointerId;
 
       activeRef.current = {
         item,
@@ -81,6 +84,7 @@ export function usePointerDrag<T>({
       };
 
       const onWindowPointerMove = (moveEv: PointerEvent) => {
+        if (!mine(moveEv)) return;
         const active = activeRef.current;
         if (!active) return;
 
@@ -123,6 +127,7 @@ export function usePointerDrag<T>({
       };
 
       const onWindowPointerUp = (upEv: PointerEvent) => {
+        if (!mine(upEv)) return;
         cleanupWindowListeners();
         const active = activeRef.current;
         if (!active) return;
@@ -163,7 +168,8 @@ export function usePointerDrag<T>({
         }
       };
 
-      const onWindowPointerCancel = () => {
+      const onWindowPointerCancel = (cancelEv: PointerEvent) => {
+        if (!mine(cancelEv)) return;
         cleanupWindowListeners();
         cancelDrag();
       };

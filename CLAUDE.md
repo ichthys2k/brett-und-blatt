@@ -25,7 +25,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - `corepack pnpm --filter @brett-und-blatt/web dev` – Dev-Server auf http://localhost:5173
   - `corepack pnpm --filter @brett-und-blatt/server dev` – Spieleserver lokal auf http://127.0.0.1:8787 (Wrangler, kein Konto nötig; für Telemetrie aus `WRANGLER_SEND_METRICS=false` davor)
   - `node apps/server/scripts/smoke.mjs` – Rauchtest gegen den laufenden Spieleserver (zwei nachgebaute Browser: Raum, Partie, Wiedereinstieg, Bot, Zeitablauf)
-  - `corepack pnpm rauchtest` – nach `corepack pnpm build`: startet jedes fertige Spiel im Browser (Playwright, Handy-Hochformat), erst frisch, dann alle nacheinander in derselben Seite; meldet Fehler, zu hohe Seiten und CSS-Kollisionen. Einmal je Rechner vorher `corepack pnpm exec playwright install chromium`. Mit Spiel-ids als Argumenten nur diese.
+  - `corepack pnpm rauchtest` – nach `corepack pnpm build`: startet jedes fertige Spiel im Browser (Playwright, Handy-Hochformat), erst frisch, dann alle nacheinander in derselben Seite; meldet Fehler, zu hohe Seiten und CSS-Kollisionen. Einmal je Rechner vorher `corepack pnpm exec playwright install chromium` – oder ein vorhandenes Chromium nutzen: `RAUCHTEST_CHROMIUM=/usr/bin/chromium corepack pnpm rauchtest` (so auf dem Desktop). Mit Spiel-ids als Argumenten nur diese.
   - `PRUEFSTAND=1 corepack pnpm pruefstand` – gründlicher Prüfstand (`tests/pruefstand.test.ts`, alle Spiele etwa 20 min, mit `PRUEFSTAND_SPIELE=skat,uno` nur einzelne): Zufallspartien über alle Optionen und Platzzahlen mit Proben unerlaubter Züge, Geheimnis-Prüfung, jeder Bot auf jeder Stufe mit Zeitmessung, Standard-Bot gegen Zufall. Mit `--disable-console-intercept` erscheint je Spiel eine Kennzahlenzeile. Die Geheimnis-Prüfung in `gameContractChecks` endet nach höchstens 2000 Zügen (`secretMoves`), damit lange Echtzeit-Partien die CI nicht über 60 s treiben.
 - Typprüfung umfasst zwei Konfigurationen: `tsconfig.json` (Browser, Tests) und `apps/server/tsconfig.json` (Cloudflare-Typen). `pnpm typecheck` ruft beide auf.
 - pnpm installiert neue Paketversionen erst nach einer Wartefrist (Lieferketten-Schutz). **Keine `minimumReleaseAgeExclude`-Ausnahmen eintragen**, sondern ältere Versionen wählen. Installationsskripte sind nur für `esbuild` und `workerd` freigegeben (`allowBuilds` in `pnpm-workspace.yaml`).
@@ -130,7 +130,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Weitere Spiele (27./28.10.2026):**
 - **Gomoku** (`packages/games/gomoku`, 2 Plätze): Fünf in einer Reihe auf 15×15 (Freigomoku ohne Renju-Verbote), Bot in drei Stufen, Tests mit `gameContractChecks`, online registriert. Plan in `docs/spiele/gomoku.md`.
-- **Kartenblitz** (früher Ligretto; `packages/games/ligretto`, 2–8 Plätze, am 28.10. neu geschrieben): Echtzeit nach Originalregeln – Blitzstapel (10), Reihe (5/4/3), Hand mit Talon in Dreierschritten, Mittelstapel 1–10 mit festen Kennungen, „Festgefahren“ mit Stillstandsregel, Wertung +1/−2 über mehrere Runden. Gleichzeitige Züge weichen auf einen anderen passenden Stapel aus (`isLegal` großzügiger als `legalMoves`). Bot „Flinke Hand“ mit `delayMs` je Stufe, eigene Kartenoberfläche mit Tippen/Ziehen und Flug-Animationen, Klänge und Playlist „Spielabend“. Nur allein gegen Bots oder online (kein Hot-Seat). Online meldet ein verlorenes Wettrennen `tooLate` („Zu spät – jemand war schneller.“) als neutralen Hinweis statt `illegalMove`. Regeltests und `gameContractChecks`. Plan in `docs/spiele/ligretto.md`.
+- **Kartenblitz** (früher Ligretto; `packages/games/ligretto`, 2–8 Plätze, am 28.10. neu geschrieben): Echtzeit nach Originalregeln – Blitzstapel (10), Reihe (5/4/3), Hand mit Talon in Dreierschritten, Mittelstapel 1–10 mit festen Kennungen, „Festgefahren“ mit Stillstandsregel, Wertung +1/−2 über mehrere Runden. Gleichzeitige Züge weichen auf einen anderen passenden Stapel aus (`isLegal` großzügiger als `legalMoves`). Bot „Flinke Hand“ mit `delayMs` je Stufe, eigene Kartenoberfläche mit Tippen/Ziehen und Flug-Animationen, Klänge und Playlist „Spielabend“. Allein gegen Bots, online oder zu mehreren an einem Tablet mit geteiltem Bildschirm (seit 29.10.2026). Online meldet ein verlorenes Wettrennen `tooLate` („Zu spät – jemand war schneller.“) als neutralen Hinweis statt `illegalMove`. Regeltests und `gameContractChecks`. Plan in `docs/spiele/ligretto.md`.
 - **Würfelblock** (früher Kniffel; `packages/games/kniffel`, 1–6 Plätze): Fünf Würfel, drei Würfe, Würfel halten, 13 Kategorien mit oberem Bonus (63 → +35), Bot in drei Stufen (hält Würfel, siehe Etappe 3), Regeltests und `gameContractChecks`, online registriert, Rubrik Familie. Plan in `docs/spiele/kniffel.md`.
 
 **Prüfbericht und Etappe 1 der Korrekturen (28.10.2026):** Alle Spiele wurden mit Zufallspartien über alle Optionen, Bot-Läufen, Lecksuche und im Browser geprüft (Bericht „Brett & Blatt – Prüfbericht aller Spiele“ in Claude). Etappe 1 ist umgesetzt:
@@ -150,7 +150,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - Schafkopf-Regeln (`ruleVersion` 3): Geier, Farbwenz und Bettel ließen sich reizen, aber nur als Solo ansagen – jetzt richtig; Bettel ist ohne Stich gewonnen, Tout nur mit allen Stichen und zählt doppelt (vorher wie ein normales Spiel nach Augen).
 
 **Bekannte offene Punkte:**
-- **Stichspiel-Bots** spielen nach Faustregeln, ohne Suche (Skat, Schafkopf, Doppelkopf, Binokel). Skat-Hand-, Schneider-, Schwarz- und Ouvert-Ansagen, Geier und Farbwenz macht kein Bot.
+- **Gomoku-Bot-Prüfung ist zeitempfindlich:** allein ~11 s, unter Volllast (Dev-Server, Browser und `check` gleichzeitig) einmal 68 s und damit über der 60-s-Grenze. Bei einem roten `check` mit diesem Test zuerst allein wiederholen.
+- **Stichspiel-Bots** spielen nach Faustregeln, ohne Suche (Skat, Schafkopf, Doppelkopf, Binokel). Skat-Schwarz- und Ouvert-Ansagen, Geier und Farbwenz macht kein Bot.
 - **Bibel-Quiz:** Der Fragenkatalog mit Antworten und Erklärungen liegt im Browser-Bundle (Option 0 ist richtig). Wer den Programmcode durchsucht, findet die Lösung; ganz verbergen ginge nur, wenn der Spieleserver die Fragen liefert – dann bräuchten Solo und Hot-Seat Internet.
 
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
@@ -175,6 +176,21 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
     - URL-Parameter für Spieleinrichtungen (`#/neu/<id>?option=wert` und `&autostart=1` in `router.ts` und `Setup.tsx`) sowie ausklappbarer Bereich „🔗 Übungslink & QR-Code (für Tafel / Arbeitsblatt)“ in `Setup.tsx`.
 
 ## Nächste Schritte
+
+**Fahrplan ab 29.10.2026** (mit Cornelius abgestimmt; Reihenfolge A → B1 → B2 → C1 → C2 → D1 → B3 → C3 → E). Jeder Schritt auf eigenem Zweig, mit Tests, `corepack pnpm check`, bei Spieländerungen Prüfstand, Blick im Browser, Doku-Nachtrag; veröffentlicht wird auf „deploy“.
+
+- ✅ **B1 Remis** (29.10.2026): Schach und Dame, Engine-Baustein `draw-offer.ts`, Leiste `DrawOfferBar`, Ergebnis-Grund „Remis durch Einigung“ (`agreement`). Details in `docs/spiele/schach.md` und `dame.md`.
+- ✅ **B3 Eröffnungsbuch** (29.10.2026): Schach-Bot „mittel“/„schwer“ spielt in bekannten Eröffnungsstellungen einen Buchzug (`packages/games/chess/src/book.ts`, 42 Hauptvarianten).
+- ✅ **D1 Kartenblitz geteilter Bildschirm** (29.10.2026): eigener Bereich je Mensch, gegenüber Sitzende gedreht; `usePointerDrag` unterscheidet Finger (`pointerId`); Statuszeile „Alle spielen gleichzeitig“, wenn mehrere Menschen am Gerät zugleich handeln.
+- ✅ **C2 Skat-Bot** (29.10.2026): spielt Hand (reizt dann bis zum Handwert) und sagt im Handspiel mit sehr starkem Blatt Schneider an.
+- ✅ **C1 Schafkopf** (29.10.2026): Bettel und Tout enden sofort, wenn verloren; Auswertung nennt Stiche statt Augen.
+- ✅ **B2 PGN** (29.10.2026): Schach-Partien kopieren/speichern (Chronik) und über die Einrichtung fortsetzen. Dabei behoben: `SetupExtra` bekommt `setOption` (vorher wirkte nichts, was es setzte – auch der Go-SGF-Import nicht), Optionen können `maxLength` haben (vorher fest 256 Zeichen), verborgene Optionen werden nicht mehr in den gespeicherten Einstellungen gemerkt.
+- ✅ **A – Doku an den Code angleichen:** Jeden „offen“-Punkt in `docs/spiele/` am Code prüfen und abhaken oder stehen lassen.
+- **B – Schach:** B1 Remis anbieten/annehmen (Hot-Seat und online, Bot nimmt bei klar schlechterer Stellung an; auch Dame). B2 PGN kopieren und einfügen (`chess.js`). B3 Eröffnungsbuch für „mittel“ und „schwer“.
+- **C – Stichspiele:** C1 Schafkopf: Bettel und Tout enden sofort, wenn verloren. C2 Skat-Bot sagt Hand und Schneider an. C3 PIMC-Bot (Stichproben-Suche) als gemeinsamer Baustein im Stich-Kern für Skat, Schafkopf, Doppelkopf, Binokel auf „schwer“ – Maßstab: schlägt im Prüfstand den alten Bot, ≤ 1,5 s je Zug auf Cloudflare.
+- **D – Klassenzimmer:** D1 Kartenblitz mit geteiltem Bildschirm (wie Enten-Rallye). D2 Bibel-Quiz holt die Fragen vom Spieleserver (von Cornelius entschieden, 29.10.2026), damit der Katalog nicht mehr im Browser-Bundle liegt.
+- **E – Spieltiefe:** Vierer-Schach-Bot mit Vorausschau, Binokel-Vierertisch/Kreuzbinokel, Doppelkopf-Pflichtsoli, Drachenspiel-Zauberkarten.
+- **Entscheidungen (29.10.2026):** Bibel-Quiz vom Server – ja (D2). Chromium für den Rauchtest ist auf dem Desktop installiert. Quartett-Werte prüft Cornelius später selbst. KataGo entfällt. Farbensortierer geht Cornelius separat an.
 
 Korrekturplan aus dem Prüfbericht:
 1. ✅ Etappe 1 – Lecks und Kaputtes (veröffentlicht 28.10.2026, Commit `2ff0822`).

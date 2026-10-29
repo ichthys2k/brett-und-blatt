@@ -117,3 +117,31 @@ describe('Skat-Bot', () => {
     expect(won / played).toBeGreaterThan(0.35);
   }, 120_000);
 });
+
+describe('Skat-Bot: Hand und Schneider', () => {
+  /** Stellt dem Bot auf Platz `seat` ein bestimmtes Blatt hin, er hat das Reizen mit 18 gewonnen. */
+  function decision(hand: string[], level: 'medium' | 'hard' = 'hard') {
+    let state: any = gameModule.setup(3, resolveOptions(gameModule), 'hand-test');
+    const seat = 1;
+    state = { ...state, phase: 'skatDecision', declarerSeat: seat, highestBid: 18, currentBidValue: 18, hands: { ...state.hands, [seat]: hand } };
+    const ask = (s: any) => computeBotMove(gameModule, { gameId: 'skat', botId: 'skat', level, seat, view: gameModule.playerView(s, seat), seed: 'h', timeBudgetMs: 50 }) as SkatMove;
+    return { state, seat, ask };
+  }
+  const c = (s: 'C' | 'S' | 'H' | 'D', r: number) => cardId(s, r as never);
+
+  it('spielt ein Traumblatt Hand und sagt Schneider an', () => {
+    const dream = [c('C', 11), c('S', 11), c('H', 11), c('D', 11), c('C', 1), c('C', 10), c('C', 13), c('C', 12), c('S', 1), c('H', 1)];
+    const { state, seat, ask } = decision(dream);
+    const first = ask(state);
+    expect(first).toEqual({ type: 'playHand' });
+    const declaring = gameModule.applyMove(state, seat, first).state;
+    const declare = ask(declaring);
+    expect(declare).toMatchObject({ type: 'declare', declaration: { gameType: 'C', hand: true, schneider: true } });
+  });
+
+  it('nimmt mit einem gewöhnlichen Blatt den Skat auf', () => {
+    const plain = [c('C', 11), c('H', 11), c('C', 1), c('C', 10), c('C', 9), c('C', 8), c('S', 7), c('H', 8), c('D', 7), c('D', 9)];
+    const { state, ask } = decision(plain);
+    expect(ask(state)).toEqual({ type: 'takeSkat' });
+  });
+});

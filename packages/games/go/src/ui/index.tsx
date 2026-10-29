@@ -239,7 +239,7 @@ function Board({ view, legalMoves, onMove, hint, activeSeat, seatNames }: BoardP
   );
 }
 
-function SetupExtra({ options }: { options: Record<string, string>; seats: number }) {
+function SetupExtra({ setOption }: { options: Record<string, string>; seats: number; setOption: (id: string, value: string) => void }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [loadedInfo, setLoadedInfo] = useState<string | null>(null);
 
@@ -264,9 +264,9 @@ function SetupExtra({ options }: { options: Record<string, string>; seats: numbe
       {modalOpen && (
         <SgfImportModal
           onImport={(state, sgf) => {
-            options.sgf = sgf;
-            options.size = String(state.size);
-            options.komi = String(state.komi);
+            setOption('sgf', sgf);
+            setOption('size', String(state.size));
+            setOption('komi', String(state.komi));
             setLoadedInfo(`${state.size}×${state.size}, ${state.record.length} Züge`);
           }}
           onClose={() => setModalOpen(false)}

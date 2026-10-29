@@ -1,8 +1,9 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { FitBox, GridBoard, useGridMoveAnimation, usePointerDrag, type BoardProps, type GameUi, type MoveAnimationItem } from '@brett-und-blatt/ui';
+import { DrawOfferBar, FitBox, GridBoard, useGridMoveAnimation, usePointerDrag, type BoardProps, type GameUi, type MoveAnimationItem } from '@brett-und-blatt/ui';
 import { Chess, type Move, type Square } from 'chess.js';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { START_FEN, type ChessMove, type ChessState, type Promotion } from '../rules';
+import { START_FEN, toPgn, type BoardMove, type ChessMove, type ChessState, type Promotion } from '../rules';
+import { PgnSetup } from './PgnSetup';
 import { getCheckWarning, type CheckWarning } from './checkWarning';
 import './styles.css';
 
@@ -144,9 +145,12 @@ interface Fly {
   to: { x: number; y: number };
 }
 
-function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProps<ChessState, ChessMove>) {
+function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: anyHint, seatNames }: BoardProps<ChessState, ChessMove>) {
+  // Remis-Züge haben kein Feld; das Brett kennt nur Brettzüge.
+  const legalMoves = allMoves.filter((m): m is BoardMove => m.type === 'move');
+  const hint = anyHint?.type === 'move' ? anyHint : null;
   const [selected, setSelected] = useState<number | null>(null);
-  const [promotion, setPromotion] = useState<ChessMove[] | null>(null);
+  const [promotion, setPromotion] = useState<BoardMove[] | null>(null);
   const [showMoves, setShowMoves] = useState(false);
   const [warning, setWarning] = useState<CheckWarning | null>(null);
   /** Vorgezogener Zug: wird ausgeführt, sobald man am Zug ist. */
@@ -292,7 +296,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
       const options = moves.filter((m) => m.from === fromIndex && m.to === toIndex).map((m) => m.move);
       if (options.length > 1) {
         setWarning(null);
-        setPromotion(PROMOTIONS.map((p) => options.find((o) => o.promotion === p)).filter((o): o is ChessMove => !!o));
+        setPromotion(PROMOTIONS.map((p) => options.find((o) => o.promotion === p)).filter((o): o is BoardMove => !!o));
         return true;
       } else if (options[0]) {
         wasDraggedRef.current = true;
@@ -350,7 +354,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
     if (selected !== null && targets.has(index)) {
       setWarning(null);
       const options = moves.filter((m) => m.from === selected && m.to === index).map((m) => m.move);
-      if (options.length > 1) setPromotion(PROMOTIONS.map((p) => options.find((o) => o.promotion === p)).filter((o): o is ChessMove => !!o));
+      if (options.length > 1) setPromotion(PROMOTIONS.map((p) => options.find((o) => o.promotion === p)).filter((o): o is BoardMove => !!o));
       else if (options[0]) onMove(options[0]);
       return;
     }
@@ -419,8 +423,9 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
     ? `${view.end === 'checkmate' && !reviewing ? 'Schachmatt!' : 'Schach!'} ${ownKing && myWhite !== null ? 'Dein König' : `Der ${whiteToMove ? 'weiße' : 'schwarze'} König`} wird ${check.attackers.map((a) => `${PIECE_DATIVE[a.type]} auf ${squareName(a.sq)}`).join(' und ')} angegriffen.`
     : null;
 
+  // 8 : 10 – Brett, Leisten darüber und darunter und die Remis-Zeile.
   return (
-    <FitBox ratio={8 / 9}>
+    <FitBox ratio={8 / 10}>
       <div className="ch-wrap">
         {reviewing ? (
           <div className="ch-review">
@@ -553,6 +558,17 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
             </button>
           </div>
         )}
+        {!reviewing && (
+          <DrawOfferBar
+            offer={view.drawOffer}
+            legalMoves={allMoves}
+            onMove={onMove}
+            turn={view.fen.split(' ')[1] === 'w' ? 0 : 1}
+            ply={view.history.length}
+            seatNames={seatNames}
+            ended={view.end !== null}
+          />
+        )}
         <div className="ch-bottom">
           {/* Ein Hinweis liegt über dieser Leiste – dann bleibt sie leer, damit sich nichts überdeckt. */}
           {warning ? (
@@ -589,6 +605,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
           <Chronicle
             moves={played?.moves ?? null}
             history={view.history}
+            pgn={() => toPgn(view, [seatNames[0] ?? 'Weiß', seatNames[1] ?? 'Schwarz'])}
             onPick={(ply) => {
               setShowMoves(false);
               setReview(ply);
@@ -610,7 +627,36 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   );
 }
 
-function Chronicle({ moves, history, onPick, onClose }: { moves: Move[] | null; history: string[]; onPick: (ply: number) => void; onClose: () => void }) {
+/** Speichert Text als Datei (z. B. die Partie als .pgn). */
+function download(name: string, text: string) {
+  const url = URL.createObjectURL(new Blob([text], { type: 'application/x-chess-pgn' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1_000);
+}
+
+function Chronicle({
+  moves,
+  history,
+  pgn,
+  onPick,
+  onClose,
+}: {
+  moves: Move[] | null;
+  history: string[];
+  pgn: () => string;
+  onPick: (ply: number) => void;
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState<'ok' | 'failed' | null>(null);
+  // Ist die Zwischenablage gesperrt (manche Schulrechner), steht die Partie zum Kopieren von Hand da.
+  const copy = () => {
+    const fail = () => setCopied('failed');
+    if (!navigator.clipboard) return fail();
+    navigator.clipboard.writeText(pgn()).then(() => setCopied('ok'), fail);
+  };
   const listRef = useRef<HTMLOListElement>(null);
   useLayoutEffect(() => {
     const el = listRef.current;
@@ -639,9 +685,20 @@ function Chronicle({ moves, history, onPick, onClose }: { moves: Move[] | null; 
           </li>
         ))}
       </ol>
-      <button type="button" className="ch-log-close" onClick={onClose}>
-        Schließen
-      </button>
+      {copied === 'failed' && (
+        <textarea className="ch-log-pgn" readOnly value={pgn()} aria-label="PGN-Partie zum Kopieren" onFocus={(e) => e.currentTarget.select()} autoFocus />
+      )}
+      <div className="ch-log-actions">
+        <button type="button" className="ch-log-close" onClick={copy} title="Partie im PGN-Format in die Zwischenablage kopieren">
+          {copied === 'ok' ? '✅ Kopiert' : copied === 'failed' ? '⬆️ Oben markieren und kopieren' : '📋 PGN kopieren'}
+        </button>
+        <button type="button" className="ch-log-close" onClick={() => download('schach.pgn', pgn())} title="Partie als PGN-Datei speichern">
+          💾 Speichern
+        </button>
+        <button type="button" className="ch-log-close" onClick={onClose}>
+          Schließen
+        </button>
+      </div>
     </div>
   );
 }
@@ -657,6 +714,7 @@ function materialLead(fen: string, white: boolean): number {
 
 export const gameUi: GameUi<ChessState, ChessMove> = {
   Board,
+  SetupExtra: PgnSetup,
   SeatSymbol,
   sounds: {
     moved: (event) => [event.captured ? 'stein-schlagen' : 'stein-ziehen', ...(event.check ? (['schach'] as const) : [])],

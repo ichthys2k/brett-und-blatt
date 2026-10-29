@@ -1,3 +1,4 @@
+import { computeBotMove } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import {
@@ -9,6 +10,7 @@ import {
   type CheckersMove,
   type CheckersState,
 } from '../src';
+import { boardMoves } from '../src/rules';
 
 describe('Dame – Regeln & Mechaniken', () => {
   it('Startaufstellung 8×8 hat je 12 Steine auf dunklen Feldern und Weiß beginnt', () => {
@@ -31,7 +33,7 @@ describe('Dame – Regeln & Mechaniken', () => {
     }
 
     // Weiß hat im ersten Zug genau 7 erlaubte Vorwärtszüge (b3->a4, c4; d3->c4, e4; f3->e4, g4; h3->g4)
-    const moves = gameModule.legalMoves(state, 0);
+    const moves = boardMoves(state, 0);
     expect(moves).toHaveLength(7);
   });
 
@@ -48,7 +50,7 @@ describe('Dame – Regeln & Mechaniken', () => {
     // Weiß zieht c3-d4 (Index für c3 und d4 ermitteln)
     const from = squareIndex('c3', 8);
     const to = squareIndex('d4', 8);
-    const move = gameModule.legalMoves(state, 0).find((m) => m.from === from && m.to === to);
+    const move = boardMoves(state, 0).find((m) => m.from === from && m.to === to);
     expect(move).toBeDefined();
 
     const result = gameModule.applyMove(state, 0, move!);
@@ -71,7 +73,7 @@ describe('Dame – Regeln & Mechaniken', () => {
     const a1 = squareIndex('a1', 8);
     state.cells[a1] = { seat: 0, king: false };
 
-    const moves = gameModule.legalMoves(state, 0);
+    const moves = boardMoves(state, 0);
     // Nur der Schlagzug c3:e5 darf erlaubt sein, nicht der Zug von a1
     expect(moves).toHaveLength(1);
     expect(moves[0]?.from).toBe(c3);
@@ -96,7 +98,7 @@ describe('Dame – Regeln & Mechaniken', () => {
     state.cells[d4] = { seat: 1, king: false };
     state.cells[f6] = { seat: 1, king: false };
 
-    const moves = gameModule.legalMoves(state, 0);
+    const moves = boardMoves(state, 0);
     expect(moves).toHaveLength(1);
     const m = moves[0]!;
     expect(m.from).toBe(c3);
@@ -125,12 +127,12 @@ describe('Dame – Regeln & Mechaniken', () => {
 
     const germanState = setupBoard('german');
     // In deutscher Variante darf Weiß (zieht aufwärts) nicht nach hinten (abwärts nach e3) springen
-    const germanMoves = gameModule.legalMoves(germanState, 0);
+    const germanMoves = boardMoves(germanState, 0);
     expect(germanMoves.some((m) => m.from === c5 && m.to === squareIndex('e3', 8))).toBe(false);
 
     const intlState = setupBoard('international');
     // In internationaler Variante darf Weiß auch rückwärts schlagen
-    const intlMoves = gameModule.legalMoves(intlState, 0);
+    const intlMoves = boardMoves(intlState, 0);
     expect(intlMoves.some((m) => m.from === c5 && m.to === squareIndex('e3', 8))).toBe(true);
   });
 
@@ -142,7 +144,7 @@ describe('Dame – Regeln & Mechaniken', () => {
     const d8 = squareIndex('d8', 8);
     state.cells[c7] = { seat: 0, king: false };
 
-    const move = gameModule.legalMoves(state, 0).find((m) => m.from === c7 && m.to === d8);
+    const move = boardMoves(state, 0).find((m) => m.from === c7 && m.to === d8);
     expect(move).toBeDefined();
 
     const next = gameModule.applyMove(state, 0, move!);
@@ -160,7 +162,7 @@ describe('Dame – Regeln & Mechaniken', () => {
     const c3 = squareIndex('c3', 8);
     state.cells[c3] = { seat: 1, king: false };
 
-    const moves = gameModule.legalMoves(state, 0);
+    const moves = boardMoves(state, 0);
     // Fliegende Dame muss c3 schlagen und kann auf d4, e5, f6, g7 oder h8 landen
     expect(moves.length).toBe(5);
     const landingSquares = moves.map((m) => squareName(m.to, 8)).sort();
@@ -175,7 +177,7 @@ describe('Dame – Regeln & Mechaniken', () => {
     state.cells[c3] = { seat: 0, king: false };
     state.cells[d4] = { seat: 1, king: false };
 
-    const move = gameModule.legalMoves(state, 0)[0]!;
+    const move = boardMoves(state, 0)[0]!;
     const next = gameModule.applyMove(state, 0, move).state;
     expect(next.winner).toBe(0);
     expect(gameModule.result(next)).toEqual({ kind: 'win', winners: [0], reason: 'captured' });
@@ -193,7 +195,7 @@ describe('Dame – Regeln & Mechaniken', () => {
     state.cells[f6] = { seat: 0, king: false };
     state.turn = 1;
 
-    expect(gameModule.legalMoves(state, 1)).toHaveLength(0);
+    expect(boardMoves(state, 1)).toHaveLength(0);
   });
 });
 
@@ -201,4 +203,40 @@ describe('Plattform-Vertragsprüfungen', () => {
   for (const check of gameContractChecks(gameModule, { randomGames: 12, botGames: 1, maxMoves: 500 })) {
     test(check.name, check.run, 60_000);
   }
+});
+
+describe('Dame – Remis anbieten', () => {
+  const offer: CheckersMove = { type: 'offerDraw' };
+
+  it('Angebot, Ablehnen und Annehmen', () => {
+    const start = gameModule.setup(2, {}, 'remis') as CheckersState;
+    expect(gameModule.legalMoves(start, 0).some((m) => m.type === 'offerDraw')).toBe(false);
+    expect(gameModule.isLegal!(start, 0, offer)).toBe(true);
+
+    const offered = gameModule.applyMove(start, 0, offer).state;
+    expect(gameModule.currentPlayers(offered)).toEqual([1]);
+    expect(gameModule.legalMoves(offered, 1)).toEqual([{ type: 'acceptDraw' }, { type: 'declineDraw' }]);
+
+    const declined = gameModule.applyMove(offered, 1, { type: 'declineDraw' }).state;
+    expect(gameModule.currentPlayers(declined)).toEqual([0]);
+    expect(gameModule.isLegal!(declined, 0, offer)).toBe(false);
+
+    const accepted = gameModule.applyMove(offered, 1, { type: 'acceptDraw' }).state;
+    expect(gameModule.result(accepted)).toEqual({ kind: 'draw', reason: 'agreement' });
+  });
+});
+
+describe('Dame – Bot und Remis', () => {
+  it('nimmt an, wenn er klar hinten liegt, sonst nicht', () => {
+    const start = gameModule.setup(2, {}, 'remis-bot') as CheckersState;
+    const ask = (state: CheckersState) => {
+      const offered = gameModule.applyMove(state, 0, { type: 'offerDraw' }).state;
+      return computeBotMove(gameModule, { gameId: 'checkers', botId: 'checkers', level: 'hard', seat: 1, view: offered, seed: 'r', timeBudgetMs: 100 }) as CheckersMove;
+    };
+    expect(ask(start)).toEqual({ type: 'declineDraw' });
+    // Schwarz hat vier Steine weniger.
+    const blackCells = start.cells.map((c, i) => i).filter((i) => start.cells[i]?.seat === 1).slice(0, 4);
+    const weaker = { ...start, cells: start.cells.map((c, i) => (blackCells.includes(i) ? null : c)) };
+    expect(ask(weaker)).toEqual({ type: 'acceptDraw' });
+  });
 });

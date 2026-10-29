@@ -1,5 +1,6 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import {
+  DrawOfferBar,
   FitBox,
   GridBoard,
   useGridMoveAnimation,
@@ -15,6 +16,7 @@ import {
   squareName,
   type CheckersMove,
   type CheckersPiece,
+  type CheckersStep,
   type CheckersState,
 } from '../rules';
 import './styles.css';
@@ -87,7 +89,10 @@ function CaptureStrip({
   );
 }
 
-function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProps<CheckersState, CheckersMove>) {
+function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: anyHint, seatNames }: BoardProps<CheckersState, CheckersMove>) {
+  // Remis-Züge haben kein Feld; das Brett kennt nur Brettzüge.
+  const legalMoves = allMoves.filter((m): m is CheckersStep => m.type === 'move');
+  const hint = anyHint?.type === 'move' ? anyHint : null;
   const [selected, setSelected] = useState<number | null>(null);
   const [showMoves, setShowMoves] = useState(false);
   const [lastView, setLastView] = useState(view);
@@ -177,8 +182,9 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
     });
   }
 
+  // 8 : 10 – Brett, Leisten darüber und darunter und die Remis-Zeile.
   return (
-    <FitBox ratio={8 / 9}>
+    <FitBox ratio={8 / 10}>
       <div className="dk-wrap">
         <CaptureStrip view={view} forWhite={flipped} lead={flipped ? whiteLead : blackLead} />
 
@@ -261,6 +267,16 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
             if (!piece) return name;
             return `${name}: ${LABELS[piece.seat]} ${piece.king ? 'Dame' : 'Stein'}`;
           }}
+        />
+
+        <DrawOfferBar
+          offer={view.drawOffer}
+          legalMoves={allMoves}
+          onMove={onMove}
+          turn={view.turn}
+          ply={view.history.length}
+          seatNames={seatNames}
+          ended={view.end !== null}
         />
 
         <div className="dk-bottom">

@@ -203,5 +203,6 @@ Der aufwendigste Bot der Sammlung. Er hat drei Teile.
 ## Offene Punkte
 
 - ISkO-Sonderfälle (z. B. falsches Beanspruchen / Schenken).
-- Bot: Schneider-, Hand- und Ouvert-Ansagen sowie simulationsbasiertes Reizen/Spielen (wie oben geplant) fehlen noch.
+- Bot: Schwarz- und Ouvert-Ansagen sowie simulationsbasiertes Reizen/Spielen (wie oben geplant) fehlen noch.
+- ✅ Bot spielt Hand und sagt Schneider an (29.10.2026): Hand ab Blattstärke 7/8/8,5 (leicht/mittel/schwer) – dann reizt er auch bis zum Handwert; Schneider nur im Handspiel ab 9/9/9,5. Die Entscheidung hängt nur vom eigenen Blatt ab, Reizen und Spielen passen so zusammen. Gemessen (je 60 Serien): Handspiele mittel 13 von 17, schwer 8 von 8 gewonnen; Schneider-Ansagen selten (mittel 2-mal in ~140 Spielen); nie überreizt.
 - ✅ Bot spielt Null (28.10.2026): reizt bis 23, wenn höchstens eine kurze gefährliche Farbe da ist (`nullDangerSuits`), drückt sie weg und duckt sich im Stich; die Gegner zwingen ihn zum Stechen (`nullTrickCard`). In 169 Bot-Spielen 4 Null, 2 gewonnen.

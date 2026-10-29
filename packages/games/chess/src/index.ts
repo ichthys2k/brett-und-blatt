@@ -1,10 +1,17 @@
 import { randomBot, type BotDefinition, type BotLevel, type GameModule } from '@brett-und-blatt/engine';
 import { meta } from './meta';
-import { applyMove, currentPlayers, legalMoves, result, setup, type ChessMove, type ChessState, type Promotion } from './rules';
+import { applyMove, currentPlayers, isLegal, legalMoves, result, setup, type ChessMove, type ChessState, type Promotion } from './rules';
+import { bookMoves } from './book';
 import { ChessSearch } from './search';
 
-export type { ChessEnd, ChessMove, ChessState, Promotion } from './rules';
-export { turnSeat } from './rules';
+export type { BoardMove, ChessEnd, ChessMove, ChessState, Promotion } from './rules';
+export { loadFromPgn, toPgn, turnSeat } from './rules';
+
+/**
+ * Ab welchem Rückstand (in Hundertstel Bauern, aus Sicht des Bots) nimmt er ein Remis an?
+ * „Leicht“ nimmt schon bei ausgeglichener Stellung an, „schwer“ erst, wenn er klar schlechter steht.
+ */
+const ACCEPT_DRAW_AT: Record<BotLevel, number> = { easy: 0, medium: -150, hard: -300 };
 
 /** Suchtiefe, Zeit und Ungenauigkeit (in Hundertstel Bauern) je Stufe. */
 const LEVELS: Record<BotLevel, { depth: number; maxMs: number; noise: number }> = {
@@ -18,12 +25,28 @@ const LEVELS: Record<BotLevel, { depth: number; maxMs: number; noise: number }> 
  * - leicht: einen Halbzug tief und ungenau – übersieht gern etwas
  * - mittel: zwei Halbzüge plus Schlagabtausche
  * - schwer: so tief, wie die Zeit erlaubt
+ * Auf „mittel“ und „schwer“ spielt er in bekannten Eröffnungsstellungen einen Buchzug (`book.ts`).
+ * Ein Remis-Angebot nimmt er an, wenn er nach seiner Bewertung schlechter steht (`ACCEPT_DRAW_AT`);
+ * selbst bietet er keins an.
  */
 const chessBot: BotDefinition<ChessState, ChessMove> = {
   id: 'chess',
   name: 'Vorausrechner',
   levels: ['easy', 'medium', 'hard'],
   chooseMove(ctx) {
+    if (ctx.view.drawOffer?.by != null) {
+      // Die Bewertung gilt für die Seite am Zug – das ist der Anbieter.
+      const ownScore = -new ChessSearch(ctx.view.fen).evaluate();
+      return { type: ownScore <= ACCEPT_DRAW_AT[ctx.level] ? 'acceptDraw' : 'declineDraw' };
+    }
+    if (ctx.level !== 'easy') {
+      const book = bookMoves(ctx.view.fen);
+      if (book.length > 0) {
+        const lan = ctx.rng.pick(book);
+        const promotion = lan[4] as Promotion | undefined;
+        return promotion ? { type: 'move', from: lan.slice(0, 2), to: lan.slice(2, 4), promotion } : { type: 'move', from: lan.slice(0, 2), to: lan.slice(2, 4) };
+      }
+    }
     const level = LEVELS[ctx.level];
     const move = new ChessSearch(ctx.view.fen).bestMove({
       maxDepth: level.depth,
@@ -49,6 +72,16 @@ export const gameModule: GameModule<ChessState, ChessMove> = {
       ],
       default: 'turn',
     },
+    {
+      // Eingefügte Partie zum Fortsetzen – füllt `SetupExtra` der Oberfläche (nur am eigenen Gerät).
+      id: 'pgn',
+      label: 'PGN-Partie',
+      hidden: true,
+      pattern: '[\\s\\S]*',
+      maxLength: 8000,
+      choices: [{ value: '', label: 'keine' }],
+      default: '',
+    },
   ],
   timePresets: {
     relaxed: { kind: 'none' },
@@ -58,6 +91,7 @@ export const gameModule: GameModule<ChessState, ChessMove> = {
   setup,
   currentPlayers,
   legalMoves,
+  isLegal,
   applyMove,
   playerView: (state) => state,
   result,

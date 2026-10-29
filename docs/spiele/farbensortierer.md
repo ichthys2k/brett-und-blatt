@@ -564,10 +564,7 @@ Neu in der Engine wird dafür vermutlich nur wenig nötig: gleichzeitige Züge u
 
 ## Offene Punkte (für Cornelius)
 
-- Name und Thema: siehe „Neues Thema: Narrenhof“ oben (Vorschlag vom 29.10.2026); Ordner/Kennung `color-sorter` bleibt.
-- Ersatznamen für Kleine/Große Blende (Vorschlag Vorhut/Wächter), „Neu sortieren“, „Sternen-Welle“, „Ordnungsbonus“, Lieferung, Werkzeug, Sticker, Traumkarten, Sortierstufen.
-- Token-Symbol 🔩 statt Münze?
-- Meta-Währung: Name (Farbtropfen 💧?) und was es im Atelier zu kaufen gibt; Mengen je Belohnung.
-- Planungsnotiz `~/code/emojiclicker/docs/farbsortierer-expansion.md` einbeziehen (noch nicht ausgewertet).
-- Standardmodus online: Duell mit 4 Leben?
-- Vorziehen vor Etappe 4/5 oder bei Etappe 6 lassen?
+- ✅ Name und Thema: **Narrenhof** mit allen Begriffen aus „Neues Thema: Narrenhof“ oben (29.10.2026); die Kennung `color-sorter` bleibt. Damit sind auch die früheren Fragen zu Ersatznamen, Token-Symbol und Meta-Währung erledigt (Brezeln 🥨, Glöckchen 🔔, Narrenschule).
+- Standardmodus online: Wettstreit mit 4 Herzen.
+- Planungsnotiz `~/code/emojiclicker/docs/farbsortierer-expansion.md` auswerten.
+- ✅ Vorziehen: aus Etappe 6 vorgezogen und am 26.10.2026 fertig.

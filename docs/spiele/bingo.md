@@ -150,7 +150,7 @@ Lern-Bingo nutzt die vorhandenen Paare-Pakete unter `content/paare/`: `a` ist di
 
 ## Offene Punkte
 
-- **Taktgeber** in der Engine bauen (siehe oben) – mit Cornelius abstimmen, ob das Modulfeld so passt.
-- **Mehr als 10 Plätze** und automatische Platzvergabe für den Klassen-Modus.
+- **Taktgeber** in der Engine bauen (siehe oben) – mit Cornelius abstimmen, ob das Modulfeld so passt. Bisher zieht die Spielleitung von Hand („Nächste Zahl“).
+- ✅ **Mehr als 10 Plätze** (bis 30) und automatische Platzvergabe für den Klassen-Modus („🪑 Alle verteilen“, Online-Nachricht `fillSeats`).
 - 90er-Bingo (britisch, 3 × 9-Karten) als weitere Spielart? Eher nicht, das 75er ist bekannter.
 - Welche Inhaltspakete für den Unterricht zuerst? Ideen von Cornelius sammeln.

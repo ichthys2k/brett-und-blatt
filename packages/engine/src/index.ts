@@ -4,6 +4,7 @@ export { canonicalJson, sameValue } from './canonical';
 export * from './cards';
 export * from './tricks';
 export * from './series';
+export * from './draw-offer';
 export { isLegalMove, replay, resolveOptions, seatActors, settleSystemMoves, timePresetsOf } from './module-helpers';
 export { Clocks, type ClockReading, type ClocksState } from './clock';
 export type { GameSession, PublicSessionConfig } from './game-session';

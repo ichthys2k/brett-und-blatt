@@ -19,5 +19,6 @@ export const meta: GameInfo = {
     'Kannst du schlagen, musst du schlagen (Schlagpflicht): Überspringe einen gegnerischen Stein diagonal auf das freie Feld dahinter. Geht es danach weiter, musst du im selben Zug weiterschlagen.',
     'Erreicht dein Stein die gegnerische Grundreihe, wird er zur Dame. Die fliegende Dame darf beliebig weit diagonal vor- und rückwärts ziehen und springen.',
     'Wer alle Steine des Gegners schlägt oder ihn bewegungsunfähig blockiert, gewinnt.',
+    'Wer am Zug ist, kann Remis anbieten – nimmt der Gegner an, endet die Partie unentschieden.',
   ],
 };

@@ -11,8 +11,9 @@ export const meta: GameInfo = {
   description: 'Schnelles Reaktionsspiel: Alle legen gleichzeitig Karten in die Mitte – wer zuerst seinen Blitzstapel los ist, beendet die Runde.',
   emoji: '⚡',
   players: { min: 2, max: 8 },
-  // Echtzeit: Alle handeln gleichzeitig, deshalb kein Hot-Seat – allein gegen Bots oder online.
-  modes: ['solo', 'online'],
+  // Echtzeit: Alle handeln gleichzeitig. Mehrere an einem Gerät spielen mit geteiltem Bildschirm
+  // (jeder hat seinen Bereich, gegenüber Sitzende gedreht) – gedacht für Tablet oder Smartboard.
+  modes: ['solo', 'hotseat', 'online'],
   patterns: ['simultaneous'],
   hiddenInformation: true,
   privateViews: false,
@@ -24,5 +25,6 @@ export const meta: GameInfo = {
     'Eine Lücke in der Reihe füllt sich sofort aus dem Blitzstapel. Handkarten blättert ihr in Dreierschritten um.',
     'Kommt niemand weiter, tippt auf „Festgefahren“. Hängen alle fest, wandert die oberste Karte jedes Blitzstapels nach unten.',
     'Wer den Blitzstapel leer hat, beendet die Runde: +1 Punkt je Karte in der Mitte, −2 je Karte im Blitzstapel.',
+    'Zu mehreren an einem Tablet: Jeder bekommt seinen eigenen Bereich, wer gegenüber sitzt, sieht ihn gedreht. Am besten bis zu vier Spieler.',
   ],
 };
