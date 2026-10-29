@@ -266,8 +266,9 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const mood = moodOf(share);
   const header = (
     <div className="cs-head">
-      {run.phase === 'play' && (
-        <div className={`cs-enemy ${run.round === 2 && !round?.duel ? 'cs-throne' : ''} ${target > 0 && share >= 1 ? 'cs-laugh' : ''}`}>
+      {run.phase === 'play' && round?.duel && <DuelStage view={view} run={run} seatNames={seatNames} />}
+      {run.phase === 'play' && !round?.duel && (
+        <div className={`cs-enemy ${run.round === 2 ? 'cs-throne' : ''} ${target > 0 && share >= 1 ? 'cs-laugh' : ''}`}>
           <span className="cs-enemy-emoji" aria-hidden="true">
             {enemy.emoji}
             {target > 0 && (
@@ -819,8 +820,9 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected }: Shop
           <Tile
             emoji={describeTool(shop.tool).emoji}
             title={describeTool(shop.tool).title}
-            sub="Privileg"
-            tone="cs-t-tool"
+            sub={`👑 ${Math.max(1, Math.floor(TOOL_PRICE * (run.tools.includes('sale') ? 0.75 : 1)))} 🥨`}
+            label={`Königlicher Stand: ${describeTool(shop.tool).title}`}
+            tone="cs-t-tool cs-royal"
             selected={sel?.kind === 'tool'}
             hint={isHint({ type: 'buyTool' })}
             onClick={() => setSelected(sel?.kind === 'tool' ? null : { kind: 'tool' })}
@@ -899,8 +901,9 @@ function PackPanel({ run, find, onMove, hint, selected, setSelected, picked, tog
   if (stage < 2) {
     return (
       <button type="button" className="cs-panel cs-center cs-delivery" onClick={finish} aria-label="Bündel aufschnüren">
-        <span className={`cs-box ${stage === 0 ? 'cs-wobble' : 'cs-tear'}`} aria-hidden="true">
-          {d.emoji}
+        <span className={`cs-bundle ${stage === 0 ? 'cs-wobble' : 'cs-untie'}`} aria-hidden="true">
+          <span className="cs-bundle-cloth">{d.emoji}</span>
+          <span className="cs-knot">🎀</span>
         </span>
         <span className="cs-title">{d.title} wird aufgeschnürt …</span>
         <span className="cs-muted">Tippen zum Aufschnüren</span>
@@ -987,7 +990,7 @@ function OthersStrip({ view, me, seatNames }: { view: SorterState; me: SeatId; s
             </span>
             {(view.mode === 'duel' || view.mode === 'showdown') && <Lives lives={r.lives} />}
             {r.current?.duel && (
-              <span title={r.current.score === HIDDEN_SCORE ? 'Geheim bis zur Abrechnung – außer mit dem Spion' : undefined}>
+              <span title={r.current.score === HIDDEN_SCORE ? 'Geheim bis zur Abrechnung – außer mit dem Lauscher' : undefined}>
                 ⚔️ {r.current.score === HIDDEN_SCORE ? '?' : formatNumber(r.current.score)}
               </span>
             )}
@@ -1010,6 +1013,43 @@ function phaseText(run: RunState): string {
     out: 'raus',
     won: 'geschafft',
   }[run.phase];
+}
+
+/** Wettstreit: alle Narren nebeneinander vor demselben Thron, fremder Applaus bleibt bis zur Abrechnung geheim. */
+function DuelStage({ view, run, seatNames }: { view: SorterState; run: RunState; seatNames: string[] }) {
+  const rivals = view.runs.filter((r) => r.seat !== run.seat && r.phase !== 'out');
+  return (
+    <div className="cs-stage" aria-label="Wettstreit">
+      <div className="cs-stage-throne">
+        <span className="cs-stage-crown" aria-hidden="true">
+          👑
+        </span>
+        <strong>Wettstreit vor dem Thron</strong>
+        <span className="cs-muted">Wer weniger Applaus bekommt, verliert ein Herz.</span>
+      </div>
+      <div className="cs-stage-row">
+        <div className="cs-stage-narr cs-me">
+          <span className="cs-stage-face" aria-hidden="true">
+            🃏
+          </span>
+          <strong>Du</strong>
+          <span>👏 {formatNumber(run.current?.score ?? 0)}</span>
+        </div>
+        {rivals.map((r) => {
+          const hidden = !r.current?.duel || r.current.score === HIDDEN_SCORE;
+          return (
+            <div key={r.seat} className="cs-stage-narr">
+              <span className="cs-stage-face" aria-hidden="true" style={{ borderColor: SEAT_COLORS[r.seat % SEAT_COLORS.length] }}>
+                🤹
+              </span>
+              <strong>{seatNames[r.seat] ?? `Platz ${r.seat + 1}`}</strong>
+              <span title={hidden ? 'Geheim bis zur Abrechnung – außer mit dem Lauscher' : undefined}>👏 {hidden ? '?' : formatNumber(r.current!.score)}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function DuelResult({ view, seatNames }: { view: SorterState; seatNames: string[] }) {

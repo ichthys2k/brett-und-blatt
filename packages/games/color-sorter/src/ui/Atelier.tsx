@@ -40,9 +40,10 @@ function AtelierBox({ onDone }: { onDone: () => void }) {
   if (stage !== null && found) {
     if (stage < 2)
       return (
-        <button type="button" className="cs-panel cs-center cs-delivery" onClick={() => setStage(2)} aria-label="Auspacken">
-          <span className={`cs-box ${stage === 0 ? 'cs-wobble' : 'cs-tear'}`} aria-hidden="true">
-            📦
+        <button type="button" className="cs-panel cs-center cs-delivery" onClick={() => setStage(2)} aria-label="Schulranzen öffnen">
+          <span className={`cs-bundle ${stage === 0 ? 'cs-wobble' : 'cs-untie'}`} aria-hidden="true">
+            <span className="cs-bundle-cloth">🎒</span>
+            <span className="cs-knot">🎀</span>
           </span>
           <span className="cs-title">Der Schulranzen geht auf …</span>
           <span className="cs-muted">Tippen zum Öffnen</span>
