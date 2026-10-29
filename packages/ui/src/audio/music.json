@@ -1,7 +1,7 @@
 {
   "playlists": [
     { "id": "denkraum", "title": "Denkraum", "mood": "ruhig und konzentriert", "games": ["checkers", "chess", "four-player-chess", "mill", "reversi", "go", "factor-grid", "number-wall", "target-number", "gomoku"] },
-    { "id": "kartentisch", "title": "Kartentisch", "mood": "gesellig und leicht", "games": ["black-peter", "pairs", "quartett", "color-sorter", "skat", "schafkopf", "doppelkopf", "drachenspiel", "uno", "mau-mau", "poker", "binokel", "speed"] },
+    { "id": "kartentisch", "title": "Kartentisch", "mood": "gesellig und leicht", "games": ["black-peter", "pairs", "quartett", "color-sorter", "skat", "schafkopf", "doppelkopf", "drachenspiel", "uno", "mau-mau", "poker", "binokel", "speed", "president"] },
     { "id": "patience", "title": "Patience", "mood": "gemütlich und verträumt", "games": ["solitaire"] },
     { "id": "spielabend", "title": "Spielabend", "mood": "fröhlich und verspielt", "games": ["bible-quiz", "hangman", "word-salad", "maexle", "battleship", "tic-tac-toe", "four-in-a-row", "ultimate-tic-tac-toe", "bingo", "dominoes", "color-and-shape", "ludo", "ligretto", "scrabble", "kniffel"] }
   ],

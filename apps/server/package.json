@@ -38,6 +38,7 @@
     "@brett-und-blatt/game-number-wall": "workspace:*",
     "@brett-und-blatt/game-pairs": "workspace:*",
     "@brett-und-blatt/game-poker": "workspace:*",
+    "@brett-und-blatt/game-president": "workspace:*",
     "@brett-und-blatt/game-quartett": "workspace:*",
     "@brett-und-blatt/game-reversi": "workspace:*",
     "@brett-und-blatt/game-schafkopf": "workspace:*",
