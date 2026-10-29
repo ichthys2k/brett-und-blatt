@@ -26,6 +26,8 @@
 - Bot: leicht (oft zufällig), mittel (gierig), schwer (Punkte + Wert des Rest-Bänkchens, vermeidet Fünferreihen für den Gegner, tauscht ein schlechtes Bänkchen).
 - Farben nach Okabe-Ito, zusätzlich durch die Form unterscheidbar.
 - Steuerung: Steine auf der Bank können angetippt oder per Drag & Drop direkt auf gültige Rasterfelder des Bretts gezogen werden.
+- Drag & Drop: Der Stein folgt dem Mauszeiger exakt (kein Versatz durch die Vergrößerung beim Ziehen).
+- Planen im Vorfeld: Auch wenn man noch nicht am Zug ist, lassen sich Steine auf dem Brett anordnen und Tausch-Auswahlen treffen; der Entwurf bleibt über den Zugwechsel erhalten und kann beim eigenen Zug bestätigt werden (wie Vorgemerkt beim Schach).
 - Bei Rundenzeit/Zugzeit: Session-Caching und Board-Entwurfsüberwachung schützen gelegte Steine vor dem Zurücksetzen durch Timer-Ticks.
 
 ## Offen
