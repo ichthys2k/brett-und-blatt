@@ -151,10 +151,24 @@ export interface BotDefinition<S, M, V = S> {
  * Die Schnittstelle, die jedes Spiel erfüllt. Alle Funktionen sind rein:
  * Sie verändern ihre Eingaben nicht und hängen nur von ihnen ab.
  */
+/** Woher ein Spiel zusätzliche Daten holen darf, bevor es zum ersten Mal gebraucht wird. */
+export interface PrepareContext {
+  /** Adresse des Spieleservers – null, wenn diese Auslieferung keinen kennt. */
+  serverUrl: string | null;
+  /** Wurzel der ausgelieferten App (Vite `base`), immer mit abschließendem Schrägstrich. */
+  baseUrl: string;
+}
+
 export interface GameModule<S, M, V = S> {
   info: GameInfo;
   options: OptionSpec[];
   timePresets: TimePresets;
+  /**
+   * Wird einmal vor dem ersten Gebrauch der Regeln aufgerufen (im Browser, im Bot-Worker und
+   * überall dort, wo die Plattform die Regeln lädt) – für Spiele, deren Inhalte nicht im
+   * JS-Bundle stecken, etwa der Fragenkatalog des Bibel-Quiz. Fehlt der Haken, ist nichts zu tun.
+   */
+  prepare?(context: PrepareContext): Promise<void>;
   /** Zeitvorgaben, die von den Optionen abhängen (z. B. Brettgröße bei Go). Fehlt sie, gilt `timePresets`. */
   timePresetsFor?(options: Options): TimePresets;
 

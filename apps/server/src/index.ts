@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import { Room, parseRoomCode, randomRoomCode, serverBotRunner, type OpenRoomListing, type RoomDeps, type RoomSnapshot, type ServerMessage } from '@brett-und-blatt/online';
 import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
+import { bibelQuizKatalog } from './bibelquiz';
 import { onlineGames } from './games';
 
 /**
@@ -10,6 +11,7 @@ import { onlineGames } from './games';
  * - `POST /rooms` erstellt einen Raum und antwortet mit seinem Emoji-Code.
  * - `GET /rooms` bzw. `GET /rooms/open` liefert offene Spiele der letzten 60 Minuten.
  * - `GET /rooms/<code>` mit WebSocket-Upgrade betritt einen Raum.
+ * - `GET /bibelquiz/fragen` liefert den Fragenkatalog des Bibel-Quiz (liegt nicht im Browser-Bundle).
  *
  * Jeder Raum ist ein eigenes Durable Object (ein kleiner Server mit Speicher),
  * angelegt in der EU.
@@ -101,6 +103,12 @@ export default {
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
       const rooms = await registryStub(env).listOpen();
       return json(rooms, 200, cors);
+    }
+
+    if (url.pathname === '/bibelquiz/fragen' && request.method === 'GET') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      // Die Fragen ändern sich selten; fünf Minuten frisch genügt und spart Anfragen.
+      return json(bibelQuizKatalog, 200, { ...cors, 'Cache-Control': 'public, max-age=300' });
     }
 
     const match = /^\/rooms\/([^/]+)$/.exec(url.pathname);

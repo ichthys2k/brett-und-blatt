@@ -11,7 +11,9 @@ import {
   type TimePresets,
 } from '@brett-und-blatt/engine';
 import {
-  QUESTIONS,
+  hasQuestionCatalog,
+  questionById,
+  questionCatalog,
   type BibleQuestion,
   type QuestionCategory,
   type QuestionDifficulty,
@@ -114,22 +116,23 @@ export const PRAISES = [
 ] as const;
 
 function filterQuestions(categoryOpt: string): BibleQuestion[] {
+  const alle = questionCatalog();
   if (categoryOpt === 'at') {
-    return QUESTIONS.filter((q) => q.category === 'Altes Testament');
+    return alle.filter((q) => q.category === 'Altes Testament');
   }
   if (categoryOpt === 'nt') {
-    return QUESTIONS.filter((q) => q.category === 'Neues Testament');
+    return alle.filter((q) => q.category === 'Neues Testament');
   }
   if (categoryOpt === 'parables') {
-    return QUESTIONS.filter((q) => q.category === 'Gleichnisse');
+    return alle.filter((q) => q.category === 'Gleichnisse');
   }
   if (categoryOpt === 'people') {
-    return QUESTIONS.filter((q) => q.category === 'Personen');
+    return alle.filter((q) => q.category === 'Personen');
   }
   if (categoryOpt === 'verses') {
-    return QUESTIONS.filter((q) => q.category === 'Verse');
+    return alle.filter((q) => q.category === 'Verse');
   }
-  return [...QUESTIONS];
+  return [...alle];
 }
 
 function buildRoundQuestion(raw: BibleQuestion, rng: Rng): RoundQuestion {
@@ -148,14 +151,12 @@ function buildRoundQuestion(raw: BibleQuestion, rng: Rng): RoundQuestion {
   };
 }
 
-const byId = new Map(QUESTIONS.map((q) => [q.id, q]));
-
 /**
  * Richtige Antwort und Erklärung einer Frage aus dem Katalog (dort ist Option 0 richtig).
  * Die Sicht verbirgt beides während der Fragephase; Bots und `sampleHidden` holen es von hier.
  */
 export function solutionOf(question: RoundQuestion): Pick<RoundQuestion, 'correctOptionIndex' | 'info' | 'bibleLink'> {
-  const raw = byId.get(question.questionId);
+  const raw = questionById(question.questionId);
   if (!raw) return { correctOptionIndex: question.correctOptionIndex, info: question.info, bibleLink: question.bibleLink };
   return {
     correctOptionIndex: question.shuffledOptions.indexOf(raw.options[0]),
@@ -214,6 +215,9 @@ function planQuestions(
 }
 
 export function setup(seats: number, gameOptions: Options, seed: string): BibleQuizState {
+  if (!hasQuestionCatalog()) {
+    throw new Error('Bibel-Quiz: Der Fragenkatalog fehlt – die Plattform muss ihn vor dem Start laden (`prepare`).');
+  }
   const rng = Rng.fromSeed(seed, 'bible-quiz');
   const pool = filterQuestions(gameOptions.category ?? 'all');
 
@@ -232,7 +236,7 @@ export function setup(seats: number, gameOptions: Options, seed: string): BibleQ
   );
 
   const firstQuestionRaw =
-    QUESTIONS.find((q) => q.id === plannedQuestionIds[0]) ?? pool[0] ?? QUESTIONS[0]!;
+    questionById(plannedQuestionIds[0] ?? 0) ?? pool[0] ?? questionCatalog()[0]!;
   const firstQuestion = buildRoundQuestion(firstQuestionRaw, rng);
 
   return {
@@ -391,8 +395,9 @@ export function applyMove(
 
     const nextRound = state.currentRound + 1;
     const nextQuestionId = state.plannedQuestionIds[nextRound - 1];
+    const alle = questionCatalog();
     const nextRaw =
-      QUESTIONS.find((q) => q.id === nextQuestionId) ?? QUESTIONS[nextRound % QUESTIONS.length]!;
+      questionById(nextQuestionId ?? 0) ?? alle[nextRound % alle.length] ?? alle[0]!;
 
     const rng = new Rng(state.rng);
     const nextQuestion = buildRoundQuestion(nextRaw, rng);
@@ -450,13 +455,14 @@ export function sampleHidden(
 ): BibleQuizState {
   const currentQuestion =
     view.phase === 'question' ? { ...view.currentQuestion, ...solutionOf(view.currentQuestion) } : view.currentQuestion;
+  const anzahl = questionCatalog().length || 1;
   return {
     ...view,
     rng: rng.state,
     currentQuestion,
     plannedQuestionIds: Array.from(
       { length: view.totalRounds },
-      (_, idx) => view.plannedQuestionIds[idx] ?? ((idx + 1) % QUESTIONS.length) + 1,
+      (_, idx) => view.plannedQuestionIds[idx] ?? ((idx + 1) % anzahl) + 1,
     ),
     answers: view.answers.map((ans, idx) => {
       if (!ans || idx === viewer || ans.chosenIndex !== null) return ans;

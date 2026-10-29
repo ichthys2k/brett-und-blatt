@@ -1,15 +1,27 @@
 import { resolveOptions, type Options } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
-import { QUESTIONS, gameModule, quizBot, solutionOf } from '../src';
+import fragen from '../../../../content/bibelquiz/fragen.json' with { type: 'json' };
+import {
+  gameModule,
+  parseQuestionCatalog,
+  questionCatalog,
+  quizBot,
+  setQuestionCatalog,
+  solutionOf,
+} from '../src';
+
+// Im Betrieb holt die Plattform den Katalog vom Server; hier setzen ihn die Tests selbst.
+setQuestionCatalog(parseQuestionCatalog(fragen));
 
 const start = (options: Options = {}, seats = 2, seed = 'test-seed') =>
   gameModule.setup(seats, resolveOptions(gameModule, options), seed);
 
-describe('Bibel-Quiz – Regeln', () => {
-  it('enthält alle 168 kuratierten Fragen mit gültigen Optionen und Emojis', () => {
-    expect(QUESTIONS.length).toBeGreaterThanOrEqual(160);
-    for (const q of QUESTIONS) {
+describe('Bibel-Quiz – Katalog', () => {
+  it('enthält alle kuratierten Fragen mit gültigen Optionen und Emojis', () => {
+    const katalog = questionCatalog();
+    expect(katalog.length).toBeGreaterThanOrEqual(160);
+    for (const q of katalog) {
       expect(q.options).toHaveLength(4);
       expect(q.emojis.length).toBeGreaterThan(0);
       expect(q.info.length).toBeGreaterThan(0);
@@ -17,6 +29,16 @@ describe('Bibel-Quiz – Regeln', () => {
     }
   });
 
+  it('weist kaputte Katalogdaten mit einer klaren Meldung zurück', () => {
+    expect(() => parseQuestionCatalog([])).toThrow(/keine Fragen/);
+    expect(() => parseQuestionCatalog({ questions: [] })).toThrow(/keine Fragen/);
+    expect(() => parseQuestionCatalog([{ ...fragen[0], options: ['nur eine'] }])).toThrow(/vier Antworten/);
+    expect(() => parseQuestionCatalog([fragen[0], fragen[0]])).toThrow(/doppelte/);
+    expect(() => parseQuestionCatalog([{ ...fragen[0], category: 'Unbekannt' }])).toThrow(/Kategorie/);
+  });
+});
+
+describe('Bibel-Quiz – Regeln', () => {
   it('erzeugt ein Quiz mit deterministisch gemischten Antwortoptionen', () => {
     const s1 = start({ rounds: '5' }, 1, 'seed-a');
     const s2 = start({ rounds: '5' }, 1, 'seed-a');

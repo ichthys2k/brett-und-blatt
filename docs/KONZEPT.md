@@ -39,6 +39,7 @@ interface GameModule<State, Move, View> {
   info: GameInfo;              // id, Name, Spielerzahl, Modi, Muster, Regelversion, Kurzanleitung
   options: OptionSchema;       // Varianten und Hausregeln, erscheinen als Lobby-Schalter
   timePresets: TimePresets;    // „gemütlich“, „normal“, „schnell“
+  prepare?(ctx): Promise<void>;// Inhalte laden, die nicht im JS-Bundle liegen (Server/Datei)
 
   setup(seats: number, options: Options, seed: string): State;
   currentPlayers(s: State): SeatId[];          // wer handeln darf, auch mehrere oder 'system'
