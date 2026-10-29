@@ -58,10 +58,11 @@ function restoreDraft(game: LoadedGame, params?: Record<string, string>): SetupD
 }
 
 function toSeatConfigs(seats: SeatDraft[]): SeatConfig[] {
+  const profile = storage.loadProfile();
   const botCount = seats.filter((s) => s.kind === 'bot').length;
   let botNumber = 0;
   return seats.map((seat, i) => {
-    if (seat.kind === 'human') return { kind: 'human', name: seat.name.trim() || t('setup.defaultName', { n: i + 1 }) };
+    if (seat.kind === 'human') return { kind: 'human', name: seat.name.trim() || t('setup.defaultName', { n: i + 1 }), avatar: profile?.avatar };
     botNumber++;
     return { kind: 'bot', name: botCount > 1 ? `${t('setup.botName')} ${botNumber}` : t('setup.botName'), level: seat.level };
   });

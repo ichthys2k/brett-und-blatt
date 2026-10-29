@@ -96,7 +96,7 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
     this.control = timePresetsOf(deps.module, first.options)[first.time];
     this.config = {
       gameId: first.gameId,
-      seats: first.seats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name })),
+      seats: first.seats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name, avatar: seat.avatar })),
       options: first.options,
       time: this.control,
     };
@@ -105,7 +105,7 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
   /** Neuer Stand vom Server. */
   update(message: GameMessage): void {
     this.message = message;
-    this.config.seats = message.seats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name }));
+    this.config.seats = message.seats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name, avatar: seat.avatar }));
     this.receivedAt = this.now();
     this.waiting = false;
     this._version++;

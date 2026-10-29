@@ -115,6 +115,10 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             onRestart: (rotate: boolean) => connection.send({ type: 'start', rotate }),
             onLobby: () => connection.send({ type: 'toLobby' }),
             onLeave: leave,
+            avatars: state.room?.lobby.seats.map((seat) => {
+              if (seat.kind !== 'human' || !seat.memberId) return null;
+              return state.room?.members.find((m) => m.id === seat.memberId)?.avatar ?? null;
+            }),
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
             extra: <ReactionBar onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} />,
           }}

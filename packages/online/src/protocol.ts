@@ -51,6 +51,7 @@ export type RoomPhase = 'lobby' | 'playing' | 'finished';
 export interface PublicSeat {
   kind: 'human' | 'bot';
   name: string;
+  avatar?: string;
   level?: BotLevel;
   memberId: string | null;
 }

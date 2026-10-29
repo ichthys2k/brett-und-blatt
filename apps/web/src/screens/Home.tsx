@@ -233,7 +233,7 @@ function ResumeCard({ snapshot, onDiscard }: { snapshot: SessionSnapshot; onDisc
       <div className="min-w-0 flex-1">
         <p className="text-sm text-muted">{t('home.resume')}</p>
         <p className="truncate font-semibold">
-          {info.name}: {snapshot.config.seats.map((seat) => seat.name).join(' gegen ')}
+          {info.name}: {snapshot.config.seats.map((seat) => (seat.avatar ? `${seat.avatar} ${seat.name}` : seat.name)).join(' gegen ')}
         </p>
       </div>
       <div className="flex gap-2">

@@ -31,6 +31,8 @@ export function ClockRing({ clock, children }: { clock: ClockReading | null; chi
 export interface PlayerChipProps {
   name: string;
   symbol: ReactNode;
+  /** Ausgewähltes Emoji des Spielers (Avatar), erscheint vor dem Namen. */
+  avatar?: string;
   /** Kurzer Zusatz, z. B. „Computer · mittel“. */
   detail?: string;
   active: boolean;
@@ -43,7 +45,7 @@ export interface PlayerChipProps {
 }
 
 /** Ein Platz in der Spielerleiste: Zeichen mit Uhr-Ring, Name, Zustand. */
-export function PlayerChip({ name, symbol, detail, active, thinking, away, winner, clock, score }: PlayerChipProps) {
+export function PlayerChip({ name, symbol, avatar, detail, active, thinking, away, winner, clock, score }: PlayerChipProps) {
   const time = clock && clock.kind !== 'none' && clock.running ? formatClock(clock) : null;
   return (
     <div className="bub-chip" data-active={active || undefined} data-winner={winner || undefined} aria-current={active ? 'true' : undefined}>
@@ -51,6 +53,7 @@ export function PlayerChip({ name, symbol, detail, active, thinking, away, winne
       <span className="bub-chip-text">
         <span className="bub-chip-name">
           {winner ? '🏆 ' : ''}
+          {avatar ? <span aria-hidden="true">{avatar} </span> : null}
           {name}
         </span>
         <span className="bub-chip-detail">{away ? 'abwesend – Computer spielt' : thinking ? 'denkt nach …' : (time ?? detail ?? '')}</span>
