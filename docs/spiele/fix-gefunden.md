@@ -2,7 +2,7 @@
 
 *Reaktionsspiel für 1–8 Spieler (Klassen-Modus bis 30): Zwischen zwei Karten gibt es immer genau ein gleiches Symbol – wer es zuerst findet, gewinnt die Karte.*
 
-> **Name:** „Dobble“ (bzw. „Spot It!“) ist eine Marke von Asmodee. Arbeitsname **„Fix gefunden!“**, id `symbol-match`. Die Mechanik selbst (Karten aus einer endlichen projektiven Ebene) ist Mathematik und frei.
+> **Name:** „Dobble“ (bzw. „Spot It!“) ist eine Marke von Asmodee. Eigener Name **„Fix gefunden!“** (von Cornelius bestätigt 29.10.2026), id `symbol-match`. Die Mechanik selbst (Karten aus einer endlichen projektiven Ebene) ist Mathematik und frei.
 
 | Steckbrief | |
 |---|---|
@@ -70,8 +70,22 @@ Im Klassen-Modus besser keine Bots, damit Kinder gegeneinander spielen.
 - Mathe-Paket: alle Schreibweisen eines Werts ergeben wirklich denselben Wert.
 - `gameContractChecks`, Prüfstand.
 
+## Umsetzung (29.10.2026)
+
+- **Kartensatz** (`src/deck.ts`): projektive Ebene der Ordnung 3, 5 oder 7 (13 / 31 / 57 Karten mit 4 / 6 / 8 Symbolen). Ein Test prüft für alle drei Ordnungen: je zwei Karten genau ein gemeinsames Symbol, jedes Symbol auf genau n + 1 Karten.
+- **Symbolpakete** stecken im Code statt in `content/symbole/`: Bunte Emojis, Tiere, Bibel (je über 57 verschiedene Zeichen) und **Mathe**. Beim Mathe-Paket ist ein Symbol ein Wert (2 bis 58); jede Karte zeigt ihn anders (z. B. 18 als `18`, `2·9`, `21 − 3`, `36 : 2`). Die Schreibweisen werden berechnet, ein Test wertet jede aus.
+- **Spielarten:** Turmbau (Standard, allein als Training), Brunnen, Vergiftetes Geschenk. Heiße Kartoffel und das Zeit-Duell sind nicht gebaut. Allein gilt immer Turmbau.
+- **Strafzeit ohne Uhr** (die Frage aus „Offene Punkte“): Ein falsches Symbol ist ein erlaubter Zug und sperrt den Platz, **bis eine neue Mittelkarte liegt** (`locked`). Gesperrte Plätze sind nicht in `currentPlayers`. Sind alle gesperrt, werden alle frei und – außer im Brunnen – wird die Mittelkarte verworfen, sonst könnte man allein beliebig raten. Der Zustand bleibt reines JSON, die Engine ist unverändert.
+- **Gleichzeitige Treffer:** Jeder Zug nennt die Mittelkarte (`center`) und die gemeinte oberste Karte (`top`). Ist die Mittelkarte inzwischen weg, ist der Zug nicht mehr erlaubt – online meldet der Raum „Zu spät – jemand war schneller.“
+- **Sicht:** Mitte und oberste Karten offen, Stapel nur als Anzahl (`privateViews: false`, damit der geteilte Bildschirm funktioniert).
+- **Bot „Adlerauge“** (`src/bots.ts`): Bedenkzeit wächst mit der Kartengröße (leicht etwa 3 s + 0,45 s je Symbol, mittel 1,6 s + 0,28 s, schwer 0,8 s + 0,16 s, dazu Streuung); leicht tippt 15 % daneben, mittel 4 %.
+- **Oberfläche** (`src/ui/`, Präfix `sm-`): runde Karten mit einem Symbol in der Mitte und dem Rest im Ring; Lage, Größe und Drehung hängen nur von der Kartennummer ab (überall gleich). „Ruhige Karten“ schaltet Drehung und Größenunterschiede ab. Treffer leuchten grün, Fehlgriffe rot, gesperrte Plätze bekommen einen Schleier. Allein am Gerät kann man das Symbol auch auf der Mittelkarte antippen. **Geteilter Bildschirm** für 2–4 Menschen: jeder bekommt seinen Bereich, die obere Hälfte steht gedreht (am Tablet geprüft).
+- **Klänge** aus dem Katalog: `paar` (Treffer), `kein-paar` (Fehlgriff), `karte-ziehen` (Karte verworfen). Playlist „Spielabend“, Rubrik Familie, online eingetragen.
+- Tests (`test/symbol-match.test.ts`, 31): Kartensatz, Mathe-Werte, alle drei Spielarten, Sperre, verworfene Mitte, zu späte Züge, Sicht und `sampleHidden`, Bot-Partien je Stufe und Spielart, `gameContractChecks`.
+
 ## Offene Punkte
 
-- Endgültiger Name (Vorschläge: „Fix gefunden!“, „Gleich gesehen!“, „Doppelblick“).
-- Strafzeit braucht Echtzeit im Spielzustand – Lösung beim Bau klären (siehe Spielmodell).
-- Symbolpakete kuratieren, Mathe-Paket gemeinsam mit Cornelius.
+- Heiße Kartoffel (mehrere Runden) und Zeit-Duell (60 s) fehlen.
+- Brüche- und Einheiten-Paket für Mathe.
+- Eine echte Strafzeit in Sekunden ginge nur mit Zeit im Zug (die Sperre „bis zur nächsten Karte“ ersetzt sie).
+- Bibel-Symbole auf passende Begriffe kuratieren (jetzt allgemeine Emojis mit Bibelbezug).
