@@ -150,7 +150,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - Schafkopf-Regeln (`ruleVersion` 3): Geier, Farbwenz und Bettel ließen sich reizen, aber nur als Solo ansagen – jetzt richtig; Bettel ist ohne Stich gewonnen, Tout nur mit allen Stichen und zählt doppelt (vorher wie ein normales Spiel nach Augen).
 
 **Bekannte offene Punkte:**
-- **Stichspiel-Bots** spielen nach Faustregeln, ohne Suche (Skat, Schafkopf, Doppelkopf, Binokel). Skat-Hand-, Schneider-, Schwarz- und Ouvert-Ansagen, Geier und Farbwenz macht kein Bot.
+- **Stichspiel-Bots** spielen nach Faustregeln, ohne Suche (Skat, Schafkopf, Doppelkopf, Binokel). Skat-Schwarz- und Ouvert-Ansagen, Geier und Farbwenz macht kein Bot.
 - **Bibel-Quiz:** Der Fragenkatalog mit Antworten und Erklärungen liegt im Browser-Bundle (Option 0 ist richtig). Wer den Programmcode durchsucht, findet die Lösung; ganz verbergen ginge nur, wenn der Spieleserver die Fragen liefert – dann bräuchten Solo und Hot-Seat Internet.
 
 - Musik: alle 20 Stücke vorhanden (je 5 für Denkraum, Kartentisch, Patience, Spielabend). Lösbare Spiele für Solitaire (Klondike, FreeCell, Spider, Pyramide), Domino-Spinner sowie Go SGF-Import und Fernpartien sind erledigt.
@@ -179,6 +179,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 **Fahrplan ab 29.10.2026** (mit Cornelius abgestimmt; Reihenfolge A → B1 → B2 → C1 → C2 → D1 → B3 → C3 → E). Jeder Schritt auf eigenem Zweig, mit Tests, `corepack pnpm check`, bei Spieländerungen Prüfstand, Blick im Browser, Doku-Nachtrag; veröffentlicht wird auf „deploy“.
 
 - ✅ **B1 Remis** (29.10.2026): Schach und Dame, Engine-Baustein `draw-offer.ts`, Leiste `DrawOfferBar`, Ergebnis-Grund „Remis durch Einigung“ (`agreement`). Details in `docs/spiele/schach.md` und `dame.md`.
+- ✅ **C2 Skat-Bot** (29.10.2026): spielt Hand (reizt dann bis zum Handwert) und sagt im Handspiel mit sehr starkem Blatt Schneider an.
 - ✅ **C1 Schafkopf** (29.10.2026): Bettel und Tout enden sofort, wenn verloren; Auswertung nennt Stiche statt Augen.
 - ✅ **B2 PGN** (29.10.2026): Schach-Partien kopieren/speichern (Chronik) und über die Einrichtung fortsetzen. Dabei behoben: `SetupExtra` bekommt `setOption` (vorher wirkte nichts, was es setzte – auch der Go-SGF-Import nicht), Optionen können `maxLength` haben (vorher fest 256 Zeichen), verborgene Optionen werden nicht mehr in den gespeicherten Einstellungen gemerkt.
 - ✅ **A – Doku an den Code angleichen:** Jeden „offen“-Punkt in `docs/spiele/` am Code prüfen und abhaken oder stehen lassen.
