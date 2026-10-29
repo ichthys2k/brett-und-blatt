@@ -8,10 +8,10 @@ import { modDef } from '../mods';
 import { altTag, bonusCap, BONUS_STEP, bossFor, effectiveHandSize, FINAL_LEVEL, freeModSlots, HIDDEN_SCORE, isDuelLevel, modCapacity, ROUND_FACTORS, ROUND_REWARDS, sellValue, tableInfo } from '../rules';
 import { CARD_BACKS } from '../unlocks';
 import { Atelier, SetupExtra } from './Atelier';
-import { award, discover, useProgress, wasAwarded, withUnlocks } from './progress';
+import { award, discover, readCardLook, useProgress, wasAwarded, withUnlocks, writeCardLook, type CardLook } from './progress';
 import { previewHand, type ScoreStep } from '../scoring';
 import type { Card, HandType, Offer, RunState, SorterMove, SorterState, ViewCard } from '../types';
-import { BackContext, CardView, cardDetails, isOpen, Tile } from './Card';
+import { BackContext, CardView, cardDetails, DeckStyleContext, isOpen, Tile } from './Card';
 import { describeConsumable, describeMod, describeOffer, describePack, describeTag, describeTool, formatMult, formatNumber, handName } from './texts';
 import { playBossSound, playEffect, playHandAnnouncement } from './audio';
 import './styles.css';
@@ -46,14 +46,16 @@ interface ScoredEvent {
 }
 
 function useScoring(events: GameEvent[], seat: SeatId | 'spectator') {
-  const [anim, setAnim] = useState<{ event: ScoredEvent; tick: number } | null>(null);
+  /** `won`: Runde der Audienz, die mit dieser Vorführung gewonnen ist (für den Jubel). */
+  const [anim, setAnim] = useState<{ event: ScoredEvent; tick: number; won: number | null } | null>(null);
   const seen = useRef<GameEvent[] | null>(null);
   useEffect(() => {
     if (seen.current === events) return;
     seen.current = events;
     const scored = events.find((e) => e.type === 'scored' && e.seat === seat) as unknown as ScoredEvent | undefined;
     if (scored) {
-      setAnim({ event: scored, tick: 0 });
+      const won = events.find((e) => e.type === 'roundWon' && e.seat === seat) as { round?: number } | undefined;
+      setAnim({ event: scored, tick: 0, won: won ? (won.round ?? 0) : null });
       if (scored.handType) playHandAnnouncement(scored.handType);
     }
   }, [events, seat]);
@@ -73,6 +75,12 @@ function useScoring(events: GameEvent[], seat: SeatId | 'spectator') {
     } else if (anim.tick === anim.event.steps.length) {
       playEffect('fs-treffer');
       playEffect('fs-angriff', { delay: 0.05 });
+      // Applaus, wenn der Treffer ankommt; ist das Ziel erreicht, jubelt der Hof, nach dem Thronsaal mit Laute.
+      if (anim.won === null) playEffect('nh-applaus', { delay: 0.2 });
+      else {
+        playEffect('nh-jubel', { delay: 0.2 });
+        if (anim.won === 2) playEffect('nh-hoftag', { delay: 1.4 });
+      }
     }
     const id = window.setTimeout(() => setAnim((a) => (a ? { ...a, tick: a.tick + 1 } : a)), anim.tick < anim.event.steps.length ? 280 : 420);
     return () => window.clearTimeout(id);
@@ -127,6 +135,14 @@ function enemyOf(state: SorterState, run: RunState): { emoji: string; name: stri
   return creatureFor(run.level, run.round);
 }
 
+/** Miene der Herrschaft: je mehr Applaus, desto fröhlicher. */
+function moodOf(share: number): string {
+  if (share >= 1) return '😂';
+  if (share >= 0.6) return '😄';
+  if (share >= 0.25) return '🙂';
+  return '😐';
+}
+
 function targetFor(state: SorterState, run: RunState): number {
   if (run.current) return run.current.target;
   if (run.round === 2 && isDuelLevel(state, run.level)) return 0;
@@ -169,6 +185,12 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const [pickedState, setPicked] = useState<number[]>([]);
   const [selected, setSelected] = useState<Selected>(null);
   const [showLevels, setShowLevels] = useState(false);
+  const [look, setLook] = useState<CardLook>(readCardLook);
+  const toggleLook = () => {
+    const next = look === 'french' ? 'four-color' : 'french';
+    writeCardLook(next);
+    setLook(next);
+  };
   const handKey = run ? `${run.phase}/${run.level}/${run.round}/${run.hand.map((c) => c.id).join(',')}/${run.pack?.items.length ?? ''}` : '';
   const [lastKey, setLastKey] = useState(handKey);
   const stale = lastKey !== handKey;
@@ -240,26 +262,30 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const enemy = enemyOf(view, run);
   const target = targetFor(view, run);
   const round = run.current;
+  const share = target > 0 ? Math.min(1, (round?.score ?? 0) / target) : 0;
+  const mood = moodOf(share);
   const header = (
     <div className="cs-head">
       {run.phase === 'play' && (
-        <div className={`cs-enemy ${round?.boss ? 'cs-boss' : ''}`}>
+        <div className={`cs-enemy ${run.round === 2 && !round?.duel ? 'cs-throne' : ''} ${target > 0 && share >= 1 ? 'cs-laugh' : ''}`}>
           <span className="cs-enemy-emoji" aria-hidden="true">
             {enemy.emoji}
+            {target > 0 && (
+              <span key={mood} className="cs-mood">
+                {mood}
+              </span>
+            )}
           </span>
           <div className="cs-enemy-text">
             <strong>{enemy.name}</strong>
-            {enemy.text && <span className="cs-muted">{enemy.text}</span>}
+            {enemy.text && <span className="cs-ribbon">{enemy.text}</span>}
             {target > 0 && (
-              <div className="cs-bar" aria-label={`Ziel ${target}, erreicht ${round?.score ?? 0}`}>
-                <div
-                  className="cs-bar-fill"
-                  style={{
-                    width: `${Math.min(100, ((round?.score ?? 0) / target) * 100)}%`,
-                  }}
-                />
-                <span>
-                  {formatNumber(round?.score ?? 0)} / {formatNumber(target)}
+              <div className="cs-applause" aria-label={`Applaus ${round?.score ?? 0} von ${target}`}>
+                <span className="cs-applause-line">
+                  <span style={{ width: `${share * 100}%` }} />
+                </span>
+                <span className="cs-applause-num">
+                  👏 {formatNumber(round?.score ?? 0)} / {formatNumber(target)}
                 </span>
               </div>
             )}
@@ -280,6 +306,9 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
         {multi && view.mode !== 'survival' && view.mode !== 'race' && <Lives lives={run.lives} />}
         <button type="button" className="cs-link" onClick={() => setShowLevels((v) => !v)}>
           📋 Kombis
+        </button>
+        <button type="button" className="cs-link" onClick={toggleLook} title={look === 'french' ? 'Kartenbild: französisch – antippen für vierfarbig' : 'Kartenbild: vierfarbig – antippen für französisch'}>
+          🂠 Kartenbild
         </button>
       </div>
     </div>
@@ -519,6 +548,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
 
   return (
     <BackContext.Provider value={back}>
+      <DeckStyleContext.Provider value={look}>
       <div ref={ref} className={`cs-board ${wide ? 'cs-wide' : ''}`} data-theme={progress.theme} data-back={progress.back}>
         <div className="cs-side">
           {header}
@@ -550,6 +580,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
         )}
         {atelierModal}
       </div>
+      </DeckStyleContext.Provider>
     </BackContext.Provider>
   );
 }
@@ -1083,7 +1114,9 @@ export const gameUi: GameUi<SorterState, SorterMove> = {
     used: 'fs-kauf',
     drawn: 'fs-mischen',
     boarDiscard: 'fs-angriff',
-    roundWon: 'fs-auszahlung',
+    // Den Jubel spielt die Wertungsanimation, wenn der Treffer ankommt.
+    roundStart: (e) => (e.round === 2 && !e.duel ? 'nh-thronsaal' : null),
+    gameOver: (e) => ((e.winners as number[] | undefined)?.length ? 'nh-hofnarr' : null),
     roundLost: 'fs-game-over',
     out: 'fs-game-over',
     lifeLost: 'fs-game-over',

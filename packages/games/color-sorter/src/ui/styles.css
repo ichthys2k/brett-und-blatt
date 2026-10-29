@@ -7,7 +7,21 @@
   --cs-c: #2f9e44;
   --cs-chips: #1c7ed6;
   --cs-mult: #e03131;
+  /* Hoffarben */
+  --cs-wine: #8f2433;
+  --cs-mustard: #d4a017;
+  --cs-fir: #2b5f3a;
+  --cs-diamond: 6%;
   position: relative;
+  /* Harlekin-Rauten, ganz zart, darüber ein warmer Lichtschein vom Thron */
+  background:
+    radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--cs-mustard) 22%, transparent), transparent 55%),
+    linear-gradient(45deg, color-mix(in srgb, var(--cs-wine) var(--cs-diamond), transparent) 25%, transparent 25%, transparent 75%, color-mix(in srgb, var(--cs-wine) var(--cs-diamond), transparent) 75%),
+    linear-gradient(-45deg, color-mix(in srgb, var(--cs-fir) var(--cs-diamond), transparent) 25%, transparent 25%, transparent 75%, color-mix(in srgb, var(--cs-fir) var(--cs-diamond), transparent) 75%);
+  background-size:
+    100% 100%,
+    48px 64px,
+    48px 64px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -15,6 +29,16 @@
   min-height: 0;
   overflow-y: auto;
   user-select: none;
+}
+
+/* Nachts im Thronsaal: dunkler Samt, die Rauten etwas kräftiger */
+@media (prefers-color-scheme: dark) {
+  .cs-board {
+    --cs-wine: #b8323f;
+    --cs-mustard: #e0b23a;
+    --cs-fir: #3f8a55;
+    --cs-diamond: 9%;
+  }
 }
 
 .cs-board.cs-wide {
@@ -80,53 +104,118 @@
 .cs-enemy {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--color-line);
+  gap: 0.7rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--cs-mustard) 45%, var(--color-line));
   border-radius: 14px;
-  background: var(--color-surface);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cs-wine) 10%, var(--color-surface)), var(--color-surface));
 }
 
-.cs-enemy.cs-boss {
-  border-color: var(--color-warning);
+/* Thronsaal: goldener Rahmen und ein größerer Auftritt */
+.cs-enemy.cs-throne {
+  border: 2px solid var(--cs-mustard);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cs-wine) 22%, var(--color-surface)), var(--color-surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cs-mustard) 20%, transparent);
 }
 
 .cs-enemy-emoji {
-  font-size: 2.2rem;
+  position: relative;
+  flex: none;
+  font-size: 2.3rem;
   line-height: 1;
+}
+
+.cs-throne .cs-enemy-emoji {
+  font-size: 2.9rem;
+}
+
+/* Die Miene sitzt als Sprechblase unten rechts am Gesicht. */
+.cs-mood {
+  position: absolute;
+  right: -0.45em;
+  bottom: -0.3em;
+  display: grid;
+  place-items: center;
+  width: 1.5em;
+  aspect-ratio: 1;
+  border: 1.5px solid var(--cs-mustard);
+  border-radius: 50%;
+  background: var(--color-surface);
+  font-size: 0.5em;
+  animation: cs-mood-pop 0.35s ease-out;
+}
+
+@keyframes cs-mood-pop {
+  from {
+    transform: scale(0.4);
+  }
+  70% {
+    transform: scale(1.25);
+  }
+}
+
+/* Lachanfall, wenn das Ziel erreicht ist */
+.cs-laugh .cs-enemy-emoji {
+  animation: cs-laugh 0.5s ease-in-out 3;
+}
+
+@keyframes cs-laugh {
+  25% {
+    transform: rotate(-8deg) translateY(-2px);
+  }
+  75% {
+    transform: rotate(8deg) translateY(-2px);
+  }
 }
 
 .cs-enemy-text {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.2rem;
   min-width: 0;
 }
 
-.cs-bar {
+/* Marotte als Spruchband */
+.cs-ribbon {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 0.05rem 0.9rem;
+  background: var(--cs-mustard);
+  color: #3b1016;
+  font-size: 0.8rem;
+  font-weight: 600;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 0.45rem) 50%, 100% 100%, 0 100%, 0.45rem 50%);
+}
+
+.cs-applause {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cs-applause-line {
   position: relative;
-  height: 1.25rem;
+  flex: 1;
+  height: 0.4rem;
   overflow: hidden;
   border-radius: 999px;
   background: var(--color-surface-2);
 }
 
-.cs-bar-fill {
+.cs-applause-line span {
   position: absolute;
   inset: 0 auto 0 0;
-  background: linear-gradient(90deg, var(--cs-h), var(--cs-d), var(--cs-c), var(--cs-s));
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cs-wine), var(--cs-mustard));
   transition: width 0.5s ease;
 }
 
-.cs-bar span {
-  position: relative;
-  display: block;
+.cs-applause-num {
+  flex: none;
   font-size: 0.8rem;
   font-weight: 700;
-  line-height: 1.25rem;
-  text-align: center;
-  text-shadow: 0 0 3px var(--color-surface);
+  font-variant-numeric: tabular-nums;
 }
 
 .cs-duel-score {
@@ -492,26 +581,56 @@ button.cs-card {
   cursor: pointer;
 }
 
-.cs-c-h {
-  --tone: var(--cs-h);
+/* Offene Karte: Die gemeinsame Spielkarte zeichnet Rahmen und Fläche selbst. */
+.cs-card.cs-face {
+  border: 0;
+  background: none;
+  box-shadow: none;
 }
-.cs-c-s {
-  --tone: var(--cs-s);
+
+.cs-face-art {
+  position: absolute;
+  inset: 0;
 }
-.cs-c-d {
-  --tone: var(--cs-d);
+
+/* Glanz liegt als Schimmer über der Karte. */
+.cs-face[class*='cs-foil-']::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 7%/5%;
+  content: '';
+  pointer-events: none;
 }
-.cs-c-c {
-  --tone: var(--cs-c);
+.cs-face.cs-foil-hot::after {
+  background-image: linear-gradient(135deg, color-mix(in srgb, #f59f00 40%, transparent), transparent 60%);
+}
+.cs-face.cs-foil-holo::after {
+  background-image: linear-gradient(120deg, transparent 20%, color-mix(in srgb, #e9ecef 70%, transparent) 40%, color-mix(in srgb, #fcc2d7 45%, transparent) 55%, transparent 75%);
+  background-size: 250% 100%;
+  animation: cs-sheen 4s linear infinite;
+}
+.cs-face.cs-foil-iris::after {
+  background-image: linear-gradient(120deg, #ffd8a866, #b2f2bb66, #a5d8ff66, #eebefa66, #ffd8a866);
+  background-size: 300% 100%;
+  animation: cs-sheen 6s linear infinite;
+}
+.cs-face.cs-foil-clear {
+  opacity: 0.75;
 }
 .cs-c-granite {
   --tone: #6c757d;
   background-image: radial-gradient(circle at 30% 30%, #ced4da 0 8%, transparent 9%), radial-gradient(circle at 70% 60%, #adb5bd 0 10%, transparent 11%);
 }
 
+/* Standard-Rücken „Harlekin“: Rauten in Weinrot und Senfgelb */
 .cs-back {
-  --tone: #5f3dc4;
-  background-image: repeating-linear-gradient(45deg, #7950f2 0 6px, #845ef7 6px 12px);
+  --tone: #7a1f2b;
+  background-color: #8f2433;
+  background-image:
+    linear-gradient(45deg, #d4a017 25%, transparent 25%, transparent 75%, #d4a017 75%),
+    linear-gradient(-45deg, #d4a017 25%, transparent 25%, transparent 75%, #d4a017 75%);
+  background-size: 16px 22px;
+  background-position: 0 0;
 }
 
 .cs-back-mark {
@@ -526,50 +645,37 @@ button.cs-card {
     0 6px 10px rgb(0 0 0 / 25%);
 }
 
-.cs-corner {
-  position: absolute;
-  top: 4%;
-  left: 7%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: color-mix(in srgb, var(--tone) 75%, #000);
-  font-size: calc(var(--cw, 4rem) * 0.2);
-  font-weight: 800;
-  line-height: 1;
-}
-
-.cs-shape {
-  font-size: calc(var(--cw, 4rem) * 0.16);
-}
-
 .cs-rank-big {
   font-size: calc(var(--cw, 4rem) * 0.48);
-  line-height: 1;
-}
-
-.cs-suit-big {
-  color: var(--tone);
-  font-family: system-ui, sans-serif;
-  font-size: calc(var(--cw, 4rem) * 0.56);
   line-height: 1;
 }
 
 .cs-enh,
 .cs-seal {
   position: absolute;
-  font-size: calc(var(--cw, 4rem) * 0.22);
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: calc(var(--cw, 4rem) * 0.34);
+  aspect-ratio: 1;
+  border: 1.5px solid #c9a227;
+  border-radius: 50%;
+  background: #fffaf0;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 25%);
+  font-size: calc(var(--cw, 4rem) * 0.2);
   line-height: 1;
 }
 
+/* Verzierung unten links, Wappen oben rechts – die Ecken mit Rang und Farbe bleiben frei. */
 .cs-enh {
-  right: 5%;
-  bottom: 4%;
+  bottom: -4%;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .cs-seal {
-  top: 4%;
-  right: 5%;
+  top: 30%;
+  right: -6%;
 }
 
 .cs-pop {
@@ -655,7 +761,7 @@ button.cs-card {
   padding: 0.6rem;
   border: 1px solid var(--color-line);
   border-radius: 16px;
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
 }
 
 .cs-center {
@@ -864,7 +970,10 @@ button.cs-card {
 @media (prefers-reduced-motion: reduce) {
   .cs-foil-holo,
   .cs-foil-iris,
-  .cs-wobble {
+  .cs-face[class*='cs-foil-']::after,
+  .cs-wobble,
+  .cs-mood,
+  .cs-laugh .cs-enemy-emoji {
     animation: none;
   }
 }
@@ -1067,20 +1176,22 @@ button.cs-card {
   font-size: 0.9rem;
 }
 
-/* Tisch-Themen (Schmuck) */
+/* Tisch-Themen (Schmuck): andere Hoffarben für die Rauten und ein eigener Lichtschein */
 .cs-board[data-theme='forest'] {
-  background: radial-gradient(circle at 20% 0%, color-mix(in srgb, #2f9e57 22%, transparent), transparent 60%);
+  --cs-wine: #5c7f2b;
+  --cs-mustard: #9bbf4a;
+  --cs-fir: #1f5f3a;
 }
 .cs-board[data-theme='sea'] {
-  background: radial-gradient(circle at 80% 0%, color-mix(in srgb, #0c8599 24%, transparent), transparent 60%);
+  --cs-wine: #0c6b85;
+  --cs-mustard: #66c2d9;
+  --cs-fir: #1d3f73;
 }
 .cs-board[data-theme='sunset'] {
-  background: linear-gradient(180deg, color-mix(in srgb, #f76707 18%, transparent), color-mix(in srgb, #ae3ec9 12%, transparent));
+  --cs-wine: #b8452b;
+  --cs-mustard: #f08c3a;
+  --cs-fir: #7a2e6b;
 }
-.cs-board[data-theme] .cs-panel {
-  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
-}
-
 /* Kartenrücken (Schmuck) */
 .cs-board[data-back='wave'] .cs-back {
   --tone: #0b7285;

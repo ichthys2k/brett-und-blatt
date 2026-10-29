@@ -31,6 +31,26 @@ export interface Progress {
 }
 
 const KEY = 'brett-und-blatt:farbensortierer';
+const DECK_KEY = 'brett-und-blatt:farbensortierer:kartenbild';
+
+/** Kartenbild je Gerät: französisch (Standard) oder vierfarbig. */
+export type CardLook = 'french' | 'four-color';
+
+export function readCardLook(): CardLook {
+  try {
+    return window.localStorage.getItem(DECK_KEY) === 'four-color' ? 'four-color' : 'french';
+  } catch {
+    return 'french';
+  }
+}
+
+export function writeCardLook(look: CardLook): void {
+  try {
+    window.localStorage.setItem(DECK_KEY, look);
+  } catch {
+    // ohne Speicher gilt die Wahl nur bis zum Neuladen
+  }
+}
 
 function empty(): Progress {
   return {

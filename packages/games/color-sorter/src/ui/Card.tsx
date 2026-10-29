@@ -1,10 +1,22 @@
+import { cardId, type CardId, type Suit } from '@brett-und-blatt/engine';
+import { PlayingCard, type DeckStyle } from '@brett-und-blatt/ui';
 import { createContext, useContext, type CSSProperties, type MouseEventHandler, type ReactNode } from 'react';
-import { cardLabel, COLOR_INFO, rankShort } from '../cards';
+import { ACE, cardLabel } from '../cards';
 import { ENHANCEMENTS, FOILS, SEALS } from '../content';
-import type { Card, ViewCard } from '../types';
+import type { Card, Color, ViewCard } from '../types';
 
 /** Emoji auf dem Kartenrücken (Schmuck aus dem Atelier). */
 export const BackContext = createContext('🃏');
+
+/** Kartenbild (französisch oder vierfarbig), je Gerät gewählt. */
+export const DeckStyleContext = createContext<DeckStyle>('french');
+
+const SUIT: Record<Color, Suit> = { h: 'H', s: 'S', d: 'D', c: 'C' };
+
+/** Kennung für die gemeinsame Spielkarte aus `packages/ui` (Ass dort als 1). */
+export function toCardId(card: Card): CardId {
+  return cardId(SUIT[card.color], card.rank === ACE ? 1 : card.rank);
+}
 
 export const isOpen = (card: ViewCard | Card): card is Card => !('hidden' in card);
 
@@ -29,13 +41,14 @@ interface CardViewProps {
   className?: string;
 }
 
-/** Spielkarte: Rang und Farbzeichen in der Ecke, großes Farbzeichen in der Mitte (vierfarbig). */
+/** Spielkarte: die gemeinsame `PlayingCard`, darüber Schneiderei, Wappen und Glanz als Abzeichen. */
 export function CardView({ card, selected, dim, hint, pop, onClick, style, className = '' }: CardViewProps) {
   const open = isOpen(card);
   const backEmoji = useContext(BackContext);
+  const deckStyle = useContext(DeckStyleContext);
   const classes = [
     'cs-card',
-    open ? `cs-c-${card.enh === 'granite' ? 'granite' : card.color}` : 'cs-back',
+    open ? (card.enh === 'granite' ? 'cs-c-granite' : 'cs-face') : 'cs-back',
     selected ? 'cs-selected' : '',
     dim ? 'cs-dim' : '',
     hint ? 'cs-hint' : '',
@@ -50,15 +63,9 @@ export function CardView({ card, selected, dim, hint, pop, onClick, style, class
           🧱
         </span>
       ) : (
-        <>
-          <span className="cs-corner" aria-hidden="true">
-            {rankShort(card.rank)}
-            <span className="cs-shape">{COLOR_INFO[card.color].shape}</span>
-          </span>
-          <span className="cs-suit-big" aria-hidden="true">
-            {COLOR_INFO[card.color].shape}
-          </span>
-        </>
+        <span className="cs-face-art" aria-hidden="true">
+          <PlayingCard card={toCardId(card)} deckStyle={deckStyle} />
+        </span>
       )}
       {card.enh && card.enh !== 'granite' && (
         <span className="cs-enh" aria-hidden="true">

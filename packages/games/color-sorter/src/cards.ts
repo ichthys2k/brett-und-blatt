@@ -18,11 +18,6 @@ export function rankName(rank: Rank): string {
   return RANK_NAME[rank] ?? '?';
 }
 
-/** Kurzzeichen für die Kartenecke: 2–10, B, D, K, A. */
-export function rankShort(rank: Rank): string {
-  return rank > 10 ? rankName(rank).slice(0, 1) : rankName(rank);
-}
-
 /** Bildkarten: Bube, Dame, König. Das Ass zählt nicht dazu. */
 export function isFace(rank: Rank): boolean {
   return rank >= JACK && rank <= KING;

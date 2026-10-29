@@ -51,15 +51,15 @@ export const THEMES: CosmeticDef[] = [
     key: 'workshop',
     name: 'Thronsaal',
     emoji: '🏰',
-    text: 'Der Standard-Tisch',
+    text: 'Harlekin-Rauten in Weinrot, Senfgelb und Tannengrün',
   },
-  { key: 'forest', name: 'Wald', emoji: '🌲', text: 'Grüner Tisch mit Moos' },
-  { key: 'sea', name: 'Meer', emoji: '🐚', text: 'Türkis wie eine Lagune' },
+  { key: 'forest', name: 'Schlossgarten', emoji: '🌳', text: 'Rauten in Laub- und Moosgrün' },
+  { key: 'sea', name: 'Hafenfest', emoji: '⚓', text: 'Rauten in Türkis und Seeblau' },
   {
     key: 'sunset',
-    name: 'Abendrot',
-    emoji: '🌅',
-    text: 'Warme Farben zum Abend',
+    name: 'Abendfest',
+    emoji: '🏮',
+    text: 'Rauten in Laternenrot und Pflaume',
   },
 ];
 
