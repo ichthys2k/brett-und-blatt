@@ -26,6 +26,9 @@ export function useTrickDisplay(
   }>({ cards: currentTrick, winner: null, collecting: false });
 
   const prevCompletedCount = useRef(completedTricks.length);
+  // Der Effekt hängt an dem, was im Stich liegt, nicht an der Identität der Listen: Eine neue Sicht
+  // mit gleichem Inhalt würde sonst die Sammel-Uhr abbrechen und den Stich zu früh ausblenden.
+  const trickKey = `${currentTrick.map((p) => `${p.player}:${p.card}`).join(',')}|${completedTricks.length}`;
 
   useEffect(() => {
     if (currentTrick.length > 0) {
@@ -54,7 +57,8 @@ export function useTrickDisplay(
     }
 
     setDisplay({ cards: currentTrick, winner: null, collecting: false });
-  }, [currentTrick, completedTricks, durationMs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trickKey, durationMs]);
 
   return display;
 }

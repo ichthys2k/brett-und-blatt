@@ -1,0 +1,296 @@
+/* Fix gefunden! – runde Symbolkarten */
+
+.sm-table {
+  --d: min(80cqi, calc((100cqh - 8.5rem) / 2));
+  position: relative;
+  container-type: size;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  height: 100%;
+  min-height: 24rem;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(0.4rem, 2vw, 0.9rem);
+  overflow: hidden;
+  color: #1e1b4b;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 1.5rem;
+  background: radial-gradient(ellipse at 50% 40%, #fef9c3 0%, #fde68a 55%, #fcd34d 100%);
+  box-shadow: inset 0 0 0 1px rgba(30, 27, 75, 0.15);
+}
+
+.sm-table[data-mode='gift'] {
+  --d: min(62cqi, 25cqh);
+  --dz: min(34cqi, 15cqh);
+}
+
+.sm-table[data-zones='2'],
+.sm-table[data-zones='3'],
+.sm-table[data-zones='4'] {
+  --d: min(46cqi, 26cqh);
+  --dz: min(40cqi, 22cqh);
+}
+
+/* Leiste mit allen Spielern */
+
+.sm-bar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.sm-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.sm-chip b {
+  max-width: 6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sm-chip-locked {
+  opacity: 0.6;
+}
+
+.sm-chip-deck {
+  background: rgba(30, 27, 75, 0.12);
+}
+
+/* Karte */
+
+.sm-card {
+  position: relative;
+  container-type: inline-size;
+  width: var(--d);
+  aspect-ratio: 1;
+  flex: none;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 3px rgba(30, 27, 75, 0.22),
+    0 6px 14px rgba(30, 27, 75, 0.28);
+}
+
+.sm-card-zone {
+  width: var(--dz, var(--d));
+}
+
+.sm-empty {
+  background: transparent;
+  border: 3px dashed rgba(30, 27, 75, 0.25);
+  box-shadow: none;
+}
+
+.sm-symbol {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #1e1b4b;
+  line-height: 1;
+  white-space: nowrap;
+  font-weight: 800;
+  font-family: system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+button.sm-symbol {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button.sm-symbol:hover {
+  background: rgba(250, 204, 21, 0.3);
+}
+
+button.sm-symbol:focus-visible {
+  outline: 3px solid #4f46e5;
+  outline-offset: 1px;
+}
+
+.sm-math {
+  border-radius: 0.6em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sm-flash-ok {
+  background: rgba(34, 197, 94, 0.55) !important;
+  box-shadow: 0 0 0 3px #16a34a;
+  animation: sm-bump 400ms ease;
+}
+
+.sm-flash-bad {
+  background: rgba(239, 68, 68, 0.45) !important;
+  box-shadow: 0 0 0 3px #dc2626;
+}
+
+@keyframes sm-bump {
+  50% {
+    scale: 1.2;
+  }
+}
+
+.sm-pop {
+  animation: sm-pop 260ms ease;
+}
+
+@keyframes sm-pop {
+  from {
+    transform: scale(0.7) rotate(-8deg);
+    opacity: 0.2;
+  }
+}
+
+/* Mitte und Bereiche */
+
+.sm-center {
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+
+.sm-status {
+  flex: none;
+  min-height: 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.sm-zone {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 1.2rem;
+}
+
+.sm-rotated {
+  transform: rotate(180deg);
+}
+
+.sm-zone-head {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+}
+
+.sm-miss {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.sm-zone-cards {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.sm-zone-gift {
+  flex-wrap: wrap;
+}
+
+.sm-target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.sm-target-name {
+  max-width: 6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.sm-zones {
+  flex: none;
+  display: grid;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.sm-zones .sm-zone {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.sm-veil {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.5rem;
+  border-radius: inherit;
+  background: rgba(100, 116, 139, 0.75);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sm-note {
+  font-size: 0.85rem;
+}
+
+/* Ergebnis */
+
+.sm-result {
+  position: absolute;
+  inset: auto 0.6rem 0.6rem;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6px 20px rgba(30, 27, 75, 0.3);
+  font-size: 0.85rem;
+}
+
+.sm-result table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.sm-result th,
+.sm-result td {
+  padding: 0.1rem 0.6rem;
+  text-align: right;
+}
+
+.sm-result th:first-child,
+.sm-result td:first-child {
+  text-align: left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sm-pop,
+  .sm-flash-ok {
+    animation: none;
+  }
+}

@@ -126,6 +126,6 @@ export const unoBot: BotDefinition<UnoState, UnoMove> = {
     return scored[0]?.move ?? playMoves[0];
   },
   delayMs(ctx) {
-    return ctx.move.type === 'catchUno' ? 2000 : 0;
+    return ctx.move.type === 'catchUno' ? 3000 : 0;
   },
 };

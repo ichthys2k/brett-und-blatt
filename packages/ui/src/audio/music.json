@@ -4,7 +4,7 @@
     { "id": "kartentisch", "title": "Kartentisch", "mood": "gesellig und leicht", "games": ["black-peter", "pairs", "quartett", "skat", "schafkopf", "doppelkopf", "drachenspiel", "uno", "mau-mau", "poker", "binokel", "speed", "president"] },
     { "id": "narrenhof", "title": "Narrenhof", "mood": "verspielt und höfisch", "games": ["color-sorter"] },
     { "id": "patience", "title": "Patience", "mood": "gemütlich und verträumt", "games": ["solitaire"] },
-    { "id": "spielabend", "title": "Spielabend", "mood": "fröhlich und verspielt", "games": ["bible-quiz", "hangman", "word-salad", "maexle", "battleship", "tic-tac-toe", "four-in-a-row", "ultimate-tic-tac-toe", "bingo", "dominoes", "color-and-shape", "ludo", "ligretto", "scrabble", "kniffel", "low-flight"] }
+    { "id": "spielabend", "title": "Spielabend", "mood": "fröhlich und verspielt", "games": ["bible-quiz", "hangman", "word-salad", "maexle", "battleship", "tic-tac-toe", "four-in-a-row", "ultimate-tic-tac-toe", "bingo", "dominoes", "color-and-shape", "ludo", "ligretto", "scrabble", "kniffel", "low-flight", "symbol-match"] }
   ],
   "tracks": [
     { "id": "herbstbibliothek", "title": "Herbstbibliothek", "file": "herbstbibliothek.mp3", "playlist": "denkraum" },

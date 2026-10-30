@@ -1081,6 +1081,7 @@ export function legalMoves(state: SorterState, actor: Actor): SorterMove[] {
       if (run.current!.discardsLeft > 0) moves.push({ type: 'discard', cards });
     }
     if (handCount > 1) moves.push({ type: 'sortHand', by: 'rank' }, { type: 'sortHand', by: 'color' });
+    for (let i = 1; i < handCount; i++) moves.push({ type: 'moveCard', from: i, to: i - 1 });
     common();
   } else if (run.phase === 'shop') {
     const shop = run.shop!;
@@ -1144,6 +1145,8 @@ export function isLegal(state: SorterState, actor: Actor, move: SorterMove): boo
       return phase === 'play' && run.current!.discardsLeft > 0 && validSelection(move.cards, run.hand.length, 1, MAX_SELECT);
     case 'sortHand':
       return phase === 'play' && (move.by === 'rank' || move.by === 'color');
+    case 'moveCard':
+      return phase === 'play' && Number.isInteger(move.from) && Number.isInteger(move.to) && !!run.hand[move.from] && move.to >= 0 && move.to < run.hand.length && move.from !== move.to;
     case 'use': {
       if (phase === 'pack') return false;
       const item = run.consumables[move.index];
@@ -1229,6 +1232,13 @@ export function applyMove(state: SorterState, actor: Actor, move: SorterMove): M
       const colorKey = (c: Card) => (c.enh === 'granite' ? 9 : COLORS.indexOf(c.color));
       open.sort(move.by === 'rank' ? (a, b) => key(b) - key(a) || colorKey(a) - colorKey(b) : (a, b) => colorKey(a) - colorKey(b) || key(b) - key(a));
       run.hand = [...open, ...closed];
+      break;
+    }
+    case 'moveCard': {
+      const hand = [...run.hand];
+      const [card] = hand.splice(move.from, 1);
+      hand.splice(move.to, 0, card!);
+      run.hand = hand;
       break;
     }
     case 'use': {

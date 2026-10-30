@@ -143,7 +143,6 @@ export function isLegal(state: MauMauState, actor: Actor, move: MauMauMove): boo
       typeof target === 'number' &&
       target >= 0 &&
       target < state.hands.length &&
-      target !== actor &&
       state.hands[target]!.length === 1 &&
       !state.mauProtection[target]
     );
@@ -206,10 +205,10 @@ export function legalMoves(state: MauMauState, actor: number): MauMauMove[] {
     }
   };
 
-  // Anprangern: Der Nächste darf einen vergessenen „Mau!“-Ruf melden.
+  // Vergessener „Mau!“-Ruf: Nach 3 Sekunden löst die Oberfläche die Strafe aus (auch gegen sich selbst).
   if (state.options.mauCall === 'on') {
     for (let seat = 0; seat < state.hands.length; seat++) {
-      if (seat !== actor && state.hands[seat]!.length === 1 && !state.mauProtection[seat]) {
+      if (state.hands[seat]!.length === 1 && !state.mauProtection[seat]) {
         moves.push({ type: 'catchMau', target: seat });
       }
     }
@@ -291,12 +290,12 @@ export function applyMove(state: MauMauState, actor: number, move: MauMauMove): 
   if (move.type === 'catchMau') {
     const target = move.target;
     if (next.hands[target]!.length === 1 && !next.mauProtection[target]) {
-      giveCards(target, 1);
+      giveCards(target, 2);
       next.mauProtection[target] = true;
       events.push({ type: 'caughtMau', actor, target });
       next.lastAction = {
         player: actor,
-        text: `Mau vergessen! ${target + 1}. Platz zieht 1 Strafkarte.`,
+        text: `Mau vergessen! ${target + 1}. Platz zieht 2 Strafkarten.`,
         target,
       };
     }
