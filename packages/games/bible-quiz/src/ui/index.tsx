@@ -304,9 +304,9 @@ export const gameUi: GameUi<BibleQuizState, BibleQuizMove> = {
     return `${score} Pkt.${ans?.submitted ? ' · ✓' : ''}`;
   },
   sounds: {
-    answered: (e) => (e.correct ? 'paar' : 'kein-paar'),
-    reveal: 'aufdecken',
-    nextQuestion: 'karte-legen',
+    answered: (e) => (e.correct ? 'quiz-richtig' : 'quiz-falsch'),
+    reveal: 'quiz-aufloesung',
+    nextQuestion: 'quiz-seite',
     quizDone: 'sieg',
   },
 };

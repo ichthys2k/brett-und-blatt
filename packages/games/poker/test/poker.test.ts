@@ -224,20 +224,20 @@ describe('Poker – Sound-Effekte & Ereignisse', () => {
     const map = gameUi.sounds!;
     expect(soundsForEvents([{ type: 'fold', seat: 0 }], map)).toEqual(['poker-fold']);
     expect(soundsForEvents([{ type: 'check', seat: 0 }], map)).toEqual(['poker-check']);
-    expect(soundsForEvents([{ type: 'call', seat: 0, amount: 20 }], map)).toEqual(['poker-call']);
-    expect(soundsForEvents([{ type: 'bet', seat: 0, amount: 40 }], map)).toEqual(['poker-bet']);
-    expect(soundsForEvents([{ type: 'raise', seat: 0, to: 80 }], map)).toEqual(['poker-raise', 'fs-pop']);
+    expect(soundsForEvents([{ type: 'call', seat: 0, amount: 20 }], map)).toEqual(['poker-chips-call']);
+    expect(soundsForEvents([{ type: 'bet', seat: 0, amount: 40 }], map)).toEqual(['poker-chips-bet']);
+    expect(soundsForEvents([{ type: 'raise', seat: 0, to: 80 }], map)).toEqual(['poker-chips-bet']);
     expect(soundsForEvents([{ type: 'allIn', seat: 0, to: 1000 }], map)).toEqual(['poker-all-in', 'fs-auszahlung']);
     expect(soundsForEvents([{ type: 'street', street: 'flop' }], map)).toEqual(['drachen-karte-ziehen', 'karte-ziehen']);
     expect(soundsForEvents([{ type: 'street', street: 'turn' }], map)).toEqual(['drachen-karte-ziehen']);
     expect(soundsForEvents([{ type: 'handEnd', handNumber: 1, winners: [0], showdown: false }], map)).toEqual([
-      'fs-auszahlung',
+      'poker-pot',
       'paar',
     ]);
     expect(soundsForEvents([{ type: 'handEnd', handNumber: 1, winners: [0], showdown: true }], map)).toEqual([
       'aufdecken',
       'stapel-fertig',
-      'fs-auszahlung',
+      'poker-pot',
     ]);
     expect(soundsForEvents([{ type: 'eliminated', seats: [1] }], map)).toEqual(['leben-weg']);
     expect(soundsForEvents([{ type: 'blindLevelUp', level: 2, smallBlind: 15, bigBlind: 30 }], map)).toEqual(['schach']);
@@ -254,12 +254,12 @@ describe('Poker – Sound-Effekte & Ereignisse', () => {
     ];
     const chain = soundsForEvents(showdownEvents, map);
     expect(chain).toEqual([
-      'poker-call',
+      'poker-chips-call',
       'drachen-karte-ziehen',
       'karte-ziehen',
       'aufdecken',
       'stapel-fertig',
-      'fs-auszahlung',
+      'poker-pot',
       'leben-weg',
     ]);
     for (const name of chain) {

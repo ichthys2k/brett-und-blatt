@@ -118,7 +118,7 @@ export function applyMove(state: ChessState, actor: Actor, move: ChessMove): Mov
   else if (chess.isDrawByFiftyMoves()) end = 'fiftyMoves';
   else if (chess.isInsufficientMaterial()) end = 'material';
 
-  const events: GameEvent[] = [{ type: 'moved', from: done.from, to: done.to, san: done.san, captured: done.captured ?? null, check: chess.inCheck() }];
+  const events: GameEvent[] = [{ type: 'moved', from: done.from, to: done.to, san: done.san, captured: done.captured ?? null, check: chess.inCheck(), mate: chess.isCheckmate() }];
   if (end) events.push({ type: 'over', end });
   return {
     state: {

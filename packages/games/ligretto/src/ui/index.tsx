@@ -436,12 +436,13 @@ export const gameUi: GameUi<LigrettoView, LigrettoMove> = {
     return `${p.ligrettoCount} im Stapel · ${sum} Pkt.`;
   },
   sounds: {
-    played: 'karte-legen',
+    played: 'karten-klatsch',
     flipped: 'karte-ziehen',
     turnedOver: 'mischen',
     pileCleared: 'stapel-fertig',
+    stuck: 'festgefahren',
     unjammed: 'mischen',
-    ligretto: 'muehle',
+    ligretto: 'ruf-kartenblitz',
     roundStarted: 'mischen',
   },
 };

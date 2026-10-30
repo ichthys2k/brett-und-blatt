@@ -288,7 +288,7 @@ export const gameUi: GameUi<GoState, GoMove> = {
   Board,
   SeatSymbol,
   SetupExtra,
-  sounds: { placed: (event) => ((event.captured as number[] | undefined)?.length ? 'stein-schlagen' : 'stein-schiefer') },
+  sounds: { placed: (event) => (((event.captured as number[] | undefined)?.length ?? 0) > 1 ? ['stein-schlagen', 'go-gefangene'] : (event.captured as number[] | undefined)?.length ? 'stein-schlagen' : 'stein-schiefer') },
   seatLabel: (seat) => LABELS[seat] ?? `Platz ${seat + 1}`,
   seatDetail: (view, seat) => `${view.captures[seat]} gefangen`,
 };

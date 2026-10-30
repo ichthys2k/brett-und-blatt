@@ -58,7 +58,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<ReversiState, ReversiMove> = {
   Board,
   SeatSymbol,
-  sounds: { placed: 'stein-setzen' },
+  sounds: { placed: (event) => ((event.flipped as unknown[] | undefined)?.length ? ['stein-setzen', 'steine-wenden'] : 'stein-setzen') },
   seatLabel: (seat) => LABELS[seat] ?? `Platz ${seat + 1}`,
   seatDetail: (view, seat) => `${LABELS[seat]} · ${countStones(view)[seat as 0 | 1]} Steine`,
 };

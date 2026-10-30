@@ -272,9 +272,9 @@ export const gameUi: GameUi<PresidentView, PresidentMove> = {
     played: 'karte-legen',
     passed: 'poker-check',
     trickWon: 'stich-einsammeln',
-    exchanged: 'karte-ziehen',
+    exchanged: 'karten-tausch',
     roundStarted: 'mischen',
     out: 'ansage',
-    revolution: 'ansage',
+    revolution: () => ['revolution', 'ruf-revolution'],
   },
 };

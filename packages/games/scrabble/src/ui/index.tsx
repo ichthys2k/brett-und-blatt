@@ -293,5 +293,11 @@ export const gameUi: GameUi<ScrabbleState, ScrabbleMove> = {
   SeatSymbol: ({ seat, className = '' }) => <TileFace letter={SEAT_LETTERS[seat % 4]!} className={`wg-symbol ${className}`} />,
   seatLabel: (seat) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) => `${(view.final ?? view.scores)[seat]} Punkte · ${view.racks[seat]?.length ?? 0} Steine`,
-  sounds: { played: 'plaettchen-setzen', exchanged: 'mischen' },
+  sounds: {
+    played: (event) => {
+      const longest = Math.max(0, ...((event.words as string[] | undefined) ?? []).map((w) => w.length));
+      return event.bingo || longest >= 6 ? 'wort-lang' : longest >= 4 ? 'wort-mittel' : 'wort-kurz';
+    },
+    exchanged: 'wortgitter-tauschen',
+  },
 };

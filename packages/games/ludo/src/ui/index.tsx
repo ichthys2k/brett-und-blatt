@@ -581,7 +581,7 @@ export const gameUi: GameUi<LudoState, LudoMove> = {
     entered: 'stein-heraus',
     moved: 'stein-ziehen',
     captured: 'stein-schlagen',
-    goalEntered: 'stein-setzen',
+    goalEntered: 'ludo-haus',
     goalMoved: 'stein-setzen',
     win: 'sieg',
   },

@@ -414,9 +414,9 @@ export const gameUi: GameUi<HangmanState, HangmanMove> = {
     return `${score} Pkt.${b ? ` · ${b.wordsWon}/${view.totalRounds} ✓` : ''}`;
   },
   sounds: {
-    hit: 'stein-heraus',
-    miss: 'kein-paar',
+    hit: 'buchstabe-richtig',
+    miss: 'galgen-falsch',
     wordWon: 'paar',
-    wordLost: 'leben-weg',
+    wordLost: 'galgen-verloren',
   },
 };

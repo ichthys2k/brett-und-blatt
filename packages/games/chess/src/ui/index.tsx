@@ -717,7 +717,11 @@ export const gameUi: GameUi<ChessState, ChessMove> = {
   SetupExtra: PgnSetup,
   SeatSymbol,
   sounds: {
-    moved: (event) => [event.captured ? 'stein-schlagen' : 'stein-ziehen', ...(event.check ? (['schach'] as const) : [])],
+    moved: (event) => [
+      /=/.test(String(event.san)) ? 'schach-umwandlung' : /^O-O/.test(String(event.san)) ? 'schach-rochade' : event.captured ? 'stein-schlagen' : 'stein-ziehen',
+      ...(event.check && !event.mate ? (['ruf-schach'] as const) : []),
+    ],
+    over: (event) => (event.end === 'checkmate' ? ['schach-matt', 'ruf-matt'] : event.end === 'stalemate' ? 'ruf-patt' : null),
   },
   seatLabel: (seat) => (seat === 0 ? 'Weiß' : 'Schwarz'),
   seatDetail: (view, seat) => {

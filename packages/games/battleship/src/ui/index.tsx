@@ -389,8 +389,9 @@ export const gameUi: GameUi<BattleshipState, BattleshipMove> = {
   sounds: {
     placed: 'schiff-setzen',
     aimed: 'zielen',
-    shot: (event) => (event.result === 'water' ? 'wasser' : 'treffer'),
-    sunk: 'versenkt',
+    shot: (event) => (event.result === 'water' ? 'wasser' : 'schiff-treffer'),
+    sunk: 'schiff-versenkt',
+    won: 'flotte-versenkt',
   },
   seatLabel: (seat) => `Flotte ${seat + 1}`,
   seatDetail: (view, seat) => {

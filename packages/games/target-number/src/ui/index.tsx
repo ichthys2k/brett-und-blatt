@@ -339,7 +339,7 @@ export const gameUi: GameUi<TargetNumberState, TargetNumberMove> = {
     return `${score} Pkt.${sub ? ' · ✓' : ''}`;
   },
   sounds: {
-    submitted: (e) => (e.exact ? 'paar' : 'stein-setzen'),
+    submitted: (e) => (e.exact ? 'paar' : 'rechnen-falsch'),
     roundOver: 'paar',
   },
 };

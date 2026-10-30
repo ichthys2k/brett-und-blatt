@@ -224,7 +224,7 @@ export const gameUi: GameUi<NumberWallState, NumberWallMove> = {
     return `${sc} Pkt.${sub ? ' · ✓' : ''}`;
   },
   sounds: {
-    submitted: (e) => (e.perfect ? 'paar' : 'stein-setzen'),
-    roundOver: 'paar',
+    submitted: (e) => (e.perfect ? 'mauer-stein' : 'stein-setzen'),
+    roundOver: 'mauer-fertig',
   },
 };

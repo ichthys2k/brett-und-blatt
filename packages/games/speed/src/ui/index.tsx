@@ -396,10 +396,11 @@ export const gameUi: GameUi<SpeedView, SpeedMove> = {
     return `${p.hand.length + p.drawCount} Karten · ${p.wins} ${p.wins === 1 ? 'Sieg' : 'Siege'}`;
   },
   sounds: {
-    played: 'karte-legen',
+    played: 'karten-klatsch',
     flipped: 'karte-ziehen',
+    stuck: 'festgefahren',
     reshuffled: 'mischen',
-    speed: 'muehle',
+    speed: 'ruf-speed',
     roundStarted: 'mischen',
   },
 };

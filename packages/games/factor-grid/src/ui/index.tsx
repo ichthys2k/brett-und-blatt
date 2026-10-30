@@ -164,6 +164,6 @@ export const gameUi: GameUi<FactorGridState, FactorGridMove> = {
     return view.variant === 'taxman' ? `${sc} Pkt.` : `${sc} Züge`;
   },
   sounds: {
-    picked: 'stein-setzen',
+    picked: (e) => ((e.taxedCount as number | undefined) ? ['stein-setzen', 'steuer-nimmt'] : 'stein-setzen'),
   },
 };

@@ -735,11 +735,11 @@ export const gameUi: GameUi<UnoState, UnoMove> = {
   sounds: {
     cardPlayed: 'karte-legen',
     drewCard: 'karte-ziehen',
-    drewPenalty: 'leben-weg',
-    calledUno: 'ansage',
+    drewPenalty: 'strafe-ziehen',
+    calledUno: 'ruf-eins',
     caughtUno: 'zweifeln',
-    skip: 'karte-legen',
-    reverse: 'karte-legen',
+    skip: 'aussetzen',
+    reverse: 'richtungswechsel',
     flip: 'drachen-karte-ziehen',
   },
 };

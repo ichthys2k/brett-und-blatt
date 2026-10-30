@@ -403,9 +403,9 @@ export const gameUi: GameUi<BingoState, BingoMove> = {
   Board,
   SeatSymbol,
   sounds: {
-    drawn: 'aufdecken',
-    marked: 'paar',
-    bingo: (event) => (event.valid ? 'stapel-fertig' : 'zweifeln'),
+    drawn: 'bingo-kugel',
+    marked: 'bingo-stempel',
+    bingo: (event) => (event.valid ? ['stapel-fertig', 'ruf-bingo'] : 'zweifeln'),
   },
   seatLabel: (seat) => (seat === CALLER ? 'Spielleitung' : `Platz ${seat + 1}`),
   seatDetail: (view, seat) => {

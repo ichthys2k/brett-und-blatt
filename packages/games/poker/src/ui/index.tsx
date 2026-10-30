@@ -659,14 +659,14 @@ export const gameUi: GameUi<PokerView, PokerMove> = {
         : 'drachen-karte-ziehen',
     check: 'poker-check',
     fold: 'poker-fold',
-    call: 'poker-call',
-    bet: 'poker-bet',
-    raise: () => ['poker-raise', 'fs-pop'],
+    call: 'poker-chips-call',
+    bet: 'poker-chips-bet',
+    raise: 'poker-chips-bet',
     allIn: () => ['poker-all-in', 'fs-auszahlung'],
     handEnd: (event) =>
       event.showdown
-        ? ['aufdecken', 'stapel-fertig', 'fs-auszahlung']
-        : ['fs-auszahlung', 'paar'],
+        ? ['aufdecken', 'stapel-fertig', 'poker-pot']
+        : ['poker-pot', 'paar'],
     eliminated: 'leben-weg',
     joined: 'stein-heraus',
     left: 'karte-legen',
