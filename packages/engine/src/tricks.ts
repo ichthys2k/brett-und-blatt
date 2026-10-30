@@ -523,12 +523,12 @@ export interface TrickGameShape {
 /**
  * Ereignisse eines Zugs in einem Stichspiel, aus dem Stand davor und danach abgeleitet:
  * `cardPlayed` (offen gespielte Karte), `trickTaken`, `announced` (Reizen, Ansagen,
- * Vorbehalte – ohne verdeckte Karten) und `newDeal`. Nichts davon verrät Geheimes.
+ * Vorbehalte – mit dem Zug als `detail`, ohne verdeckte Karten) und `newDeal`. Nichts davon verrät Geheimes.
  */
-export function trickGameEvents(prev: TrickGameShape, next: TrickGameShape, seat: number, move: { type: string; card?: CardId }): { type: string; [key: string]: unknown }[] {
+export function trickGameEvents(prev: TrickGameShape, next: TrickGameShape, seat: number, move: { type: string; card?: CardId; [key: string]: unknown }): { type: string; [key: string]: unknown }[] {
   const events: { type: string; [key: string]: unknown }[] = [];
   if (move.type === 'play' && move.card) events.push({ type: 'cardPlayed', seat, card: move.card });
-  else if (move.type !== 'nextGame' && move.type !== 'discard') events.push({ type: 'announced', seat, call: move.type });
+  else if (move.type !== 'nextGame' && move.type !== 'discard') events.push({ type: 'announced', seat, call: move.type, detail: move });
   if (next.completedTricks.length > prev.completedTricks.length && next.gameNumber === prev.gameNumber) {
     events.push({ type: 'trickTaken', winner: next.completedTricks[next.completedTricks.length - 1]!.winner });
   }

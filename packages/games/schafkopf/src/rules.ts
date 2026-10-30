@@ -384,7 +384,7 @@ export function getContract(state: SchafkopfState): TrickContract {
 export function applyMove(state: SchafkopfState, actor: Actor, move: SchafkopfMove): MoveResult<SchafkopfState> {
   const player = Number(actor);
   const nextState = applySchafkopfMove(state, move, player);
-  return { state: nextState, events: trickGameEvents(state, nextState, player, move as { type: string; card?: CardId }) };
+  return { state: nextState, events: trickGameEvents(state, nextState, player, publicMove(move)) };
 }
 
 function applySchafkopfMove(state: SchafkopfState, move: SchafkopfMove, player: number): SchafkopfState {
@@ -776,4 +776,10 @@ export function result(state: SchafkopfState): Result | null {
     return { kind: 'draw' };
   }
   return null;
+}
+
+/** Der Zug für die Ereignisse: Die gerufene Sau bleibt geheim. */
+function publicMove(move: SchafkopfMove): { type: string; card?: CardId; [key: string]: unknown } {
+  if (move.type === 'declare') return { type: 'declare', contract: { gameType: move.contract.gameType, tout: move.contract.tout } };
+  return move as { type: string; card?: CardId };
 }

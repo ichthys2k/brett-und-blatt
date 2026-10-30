@@ -277,7 +277,18 @@ function formatAnnouncement(call: DokoAnnouncement): string {
 
 export const gameUi: GameUi<DokoState, DokoMove> = {
   Board: DokoBoard,
-  sounds: { cardPlayed: 'karte-legen', trickTaken: 'stich-einsammeln', announced: 'ansage', newDeal: 'karten-austeilen' },
+  sounds: {
+    cardPlayed: 'karte-legen',
+    trickTaken: 'stich-einsammeln',
+    announced: (event) => {
+      const call = (event.detail as { call?: string } | undefined)?.call;
+      if (call === 're') return 'ruf-re';
+      if (call === 'kontra') return 'ruf-kontra';
+      if (call === 'no90') return 'ruf-keine-neunzig';
+      return 'ansage';
+    },
+    newDeal: 'karten-austeilen',
+  },
   SeatSymbol: ({ className }) => <span className={className}>🎴</span>,
   seatLabel: (seat: SeatId) => `Spieler ${seat + 1}`,
   seatDetail: (view: DokoState, seat: SeatId) => {

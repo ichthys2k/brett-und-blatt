@@ -334,7 +334,21 @@ function formatDeclaration(decl: SkatDeclaration): string {
 
 export const gameUi: GameUi<SkatState, SkatMove> = {
   Board: SkatBoard,
-  sounds: { cardPlayed: 'karte-legen', trickTaken: 'stich-einsammeln', announced: 'ansage', newDeal: 'karten-austeilen' },
+  sounds: {
+    cardPlayed: 'karte-legen',
+    trickTaken: 'stich-einsammeln',
+    announced: (event) => {
+      const detail = event.detail as { declaration?: { schwarz?: boolean; schneider?: boolean; ouvert?: boolean; hand?: boolean } } | undefined;
+      const d = detail?.declaration;
+      if (event.call === 'bid') return 'reizen-klopfen';
+      if (event.call === 'playHand') return 'ruf-hand';
+      if (d?.ouvert) return 'ruf-ouvert';
+      if (d?.schwarz) return 'ruf-schwarz';
+      if (d?.schneider) return 'ruf-schneider';
+      return 'ansage';
+    },
+    newDeal: 'karten-austeilen',
+  },
   SeatSymbol: ({ className }) => <span className={className}>🃏</span>,
   seatLabel: (seat: SeatId) => `Spieler ${seat + 1}`,
   seatDetail: (view: SkatState, seat: SeatId) => {

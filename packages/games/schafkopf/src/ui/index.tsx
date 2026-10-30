@@ -312,7 +312,20 @@ function formatContract(contract: SchafkopfContract): string {
 
 export const gameUi: GameUi<SchafkopfState, SchafkopfMove> = {
   Board: SchafkopfBoard,
-  sounds: { cardPlayed: 'karte-legen', trickTaken: 'stich-einsammeln', announced: 'ansage', newDeal: 'karten-austeilen' },
+  sounds: {
+    cardPlayed: 'karte-legen',
+    trickTaken: 'stich-einsammeln',
+    announced: (event) => {
+      const contract = (event.detail as { contract?: { gameType?: string; tout?: boolean } } | undefined)?.contract;
+      if (event.call === 'double') return 'klopfen-stoss';
+      if (contract?.tout) return 'ruf-tout';
+      if (contract?.gameType === 'sauspiel') return 'ruf-sauspiel';
+      if (contract?.gameType === 'wenz' || contract?.gameType === 'farbwenz') return 'ruf-wenz';
+      if (contract?.gameType === 'solo') return 'ruf-solo';
+      return 'ansage';
+    },
+    newDeal: 'karten-austeilen',
+  },
   SeatSymbol: ({ className }) => <span className={className}>🎴</span>,
   seatLabel: (seat: SeatId) => `Spieler ${seat + 1}`,
   seatDetail: (view: SchafkopfState, seat: SeatId) => {
