@@ -171,6 +171,31 @@ const MATH_CLASSIC_PRESETS: readonly MathPresetCard[] = [
   },
 ];
 
+/**
+ * Eigenständige Spiele von Cornelius außerhalb der Sammlung. Sie laufen auf
+ * eigenen Seiten und werden nur verlinkt (neuer Tab), nicht eingebettet:
+ * keine Bots, kein Hot-Seat, keine Online-Räume.
+ */
+interface ExternalGameLink {
+  id: string;
+  emoji: string;
+  title: string;
+  description: string;
+  badge: string;
+  url: string;
+}
+
+const EXTERNAL_GAMES: readonly ExternalGameLink[] = [
+  {
+    id: 'emoji-clicker',
+    emoji: '😀',
+    title: 'Emoji-Clicker',
+    description: 'Idle-Clicker: Emojis sammeln, Produzenten kaufen und verbessern, mit Prestige und Minispielen.',
+    badge: 'Allein · eigene Seite',
+    url: 'https://www.thecrazygerman.de/',
+  },
+];
+
 const FILTER_TABS: readonly { id: FilterId; icon: string; label: string }[] = [
   { id: 'all', icon: '🎲', label: 'Alle' },
   { id: 'board', icon: '♟️', label: 'Strategie & Brett' },
@@ -551,6 +576,45 @@ export function Home({ initialFilter }: { initialFilter?: string }) {
           ))
         )}
       </div>
+
+      {/* Weitere Spiele auf eigenen Seiten (nur verlinkt) */}
+      {activeFilter === 'all' && !searchQuery.trim() && (
+        <section className="space-y-3">
+          <div className="space-y-0.5">
+            <h2 className="flex items-center gap-2 text-lg font-bold">
+              <span aria-hidden="true">🔗</span>
+              <span>Weitere Spiele</span>
+            </h2>
+            <p className="text-xs text-muted">Eigene Seiten außerhalb der Sammlung – öffnen in einem neuen Tab.</p>
+          </div>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {EXTERNAL_GAMES.map((game) => (
+              <li key={game.id}>
+                <a
+                  href={game.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-full items-start gap-4 rounded-2xl border border-line bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
+                >
+                  <span className="text-4xl leading-none" aria-hidden="true">
+                    {game.emoji}
+                  </span>
+                  <span className="min-w-0 space-y-1">
+                    <span className="block font-semibold">
+                      {game.title} <span aria-hidden="true">↗</span>
+                      <span className="sr-only"> (öffnet in neuem Tab)</span>
+                    </span>
+                    <span className="block text-sm text-muted">{game.description}</span>
+                    <span className="inline-block rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-semibold text-muted">
+                      {game.badge}
+                    </span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <footer className="mt-auto space-y-2 text-xs text-muted">
         <p>
