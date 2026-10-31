@@ -13,6 +13,11 @@ export function portraitUrl(key: string | undefined, stage: PortraitStage = 1): 
   return files[`./portraits/${key}-${stage}.webp`] ?? files[`./portraits/${key}-1.webp`];
 }
 
+/** Hat der Gegner alle drei Stimmungen? Sonst zeigt die Oberfläche die Miene als Abzeichen. */
+export function hasMoods(key: string | undefined): boolean {
+  return !!key && !!files[`./portraits/${key}-3.webp`];
+}
+
 /** Stimmung nach Anteil am Ziel: ab 60 % lacht der Gegner, am Ziel kommt der Lachkrampf. */
 export function stageOf(share: number): PortraitStage {
   if (share >= 1) return 3;

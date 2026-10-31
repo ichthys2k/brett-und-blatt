@@ -15,7 +15,7 @@ import { BackContext, CardView, cardDetails, cardTip, DeckStyleContext, isOpen, 
 import { HoverProvider, tipFrom, type ExtraProps } from './Hover';
 import { describeConsumable, describeMod, describeOffer, describePack, describeTag, describeTool, formatMult, formatNumber, handName } from './texts';
 import { playBossSound, playEffect, playHandAnnouncement } from './audio';
-import { portraitUrl, preloadPortrait, stageOf, type PortraitStage } from './portraits';
+import { hasMoods, portraitUrl, preloadPortrait, stageOf, type PortraitStage } from './portraits';
 import './styles.css';
 
 type Selected =
@@ -416,7 +416,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
         <div className={`cs-enemy ${run.round === 2 ? 'cs-throne' : ''} ${target > 0 && share >= 1 ? 'cs-laugh' : ''}`}>
           <span className="cs-enemy-emoji" aria-hidden="true">
             <Face enemy={enemy} stage={target > 0 ? stageOf(share) : 1} />
-            {target > 0 && !portraitUrl(enemy.portrait) && (
+            {target > 0 && !hasMoods(enemy.portrait) && (
               <span key={mood} className="cs-mood">
                 {mood}
               </span>
