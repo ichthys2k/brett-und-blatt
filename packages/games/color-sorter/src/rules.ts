@@ -637,6 +637,12 @@ function winRound(state: SorterState, run: RunState, events: GameEvent[]): void 
       const end = modDef(mod.key).onRoundEnd?.(mod, run);
       if (end?.tokens) extra += end.tokens;
       if (end && 'mod' in end) next = end.mod ?? null;
+      if (end?.enhance) {
+        const { id, enh } = end.enhance;
+        updateCard(run, id, (c) => ({ ...c, enh }));
+        events.push({ type: 'modEffect', seat: run.seat, uid: mod.uid });
+      }
+      if (end?.consumable && addConsumable(run, end.consumable)) events.push({ type: 'modEffect', seat: run.seat, uid: mod.uid });
     }
     if (next?.sticker === 'rental') extra -= 3;
     if (next?.sticker === 'perishable' && !next.spent) {
@@ -1491,6 +1497,7 @@ function discardCards(state: SorterState, run: RunState, indices: number[], even
         key: SPELL_KEYS[(card.id * 7 + run.level) % SPELL_KEYS.length]!,
       });
   }
+  const removed: number[] = [];
   run.mods = run.mods.map((mod) => {
     const def = modDef(mod.key);
     if (mod.spent || !def.onDiscard) return mod;
@@ -1500,8 +1507,12 @@ function discardCards(state: SorterState, run: RunState, indices: number[], even
       run,
     );
     if (out.tokens) run.tokens += out.tokens;
+    if (out.remove?.length) removed.push(...out.remove);
     return out.mod ?? mod;
   });
+  // Holzfäller: getauschte Karten verlassen das Deck (nicht die letzten fünf).
+  const gone = [...new Set(removed)].slice(0, Math.max(0, run.deck.length - 5));
+  if (gone.length) destroyCards(run, gone);
   events.push({ type: 'discarded', seat: run.seat, cards });
   drawCards(run, events);
   if (run.hand.length === 0) endHandsOut(state, run, events);

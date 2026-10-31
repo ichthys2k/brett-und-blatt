@@ -228,6 +228,15 @@ function extraWorth(key: string, run: RunState): number {
       return 0.04 * early;
     case 'robot':
       return 0.12;
+    case 'makeupArtist':
+      return 0.15 * (run.level <= 5 ? 1 : 0.5);
+    case 'confectioner':
+      return 0.1 * (run.level <= 5 ? 1 : 0.5);
+    case 'woodcutter':
+      return 0.05 * early;
+    case 'beekeeper':
+    case 'drummer':
+      return 0.08;
     case 'monkey':
     case 'broccoli':
     case 'snail':
@@ -271,7 +280,7 @@ function modShares(run: RunState, hands: Card[][], base: number, t: Think): numb
 // ---------------------------------------------------------------- Reihenfolge der Mods
 
 /** Mods, die Mult malnehmen – sie gehören nach rechts, hinter alles, was Mult addiert. */
-const TIMES = new Set(['twins', 'family', 'santaFan', 'apple', 'king', 'painter', 'bug', 'earlyBird', 'herald', 'royalCouple']);
+const TIMES = new Set(['twins', 'family', 'santaFan', 'apple', 'king', 'painter', 'bug', 'earlyBird', 'herald', 'royalCouple', 'judge', 'primeScholar', 'sleepyhead', 'peacock', 'swan', 'hermit']);
 const isTimes = (mod: ModInstance) => TIMES.has(mod.key) || mod.foil === 'iris';
 
 function orderMods(mods: ModInstance[]): ModInstance[] {

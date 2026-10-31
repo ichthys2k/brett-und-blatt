@@ -9,7 +9,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['hidden', 'parallel', 'simultaneous'],
   hiddenInformation: true,
-  ruleVersion: 4,
+  ruleVersion: 5,
   hints: true,
   howToPlay: [
     'Du bist ein junger Narr am Hof von König Nobel. Du hast 8 Karten auf der Hand. Wähle bis zu 5 aus und führe sie vor: Paar, Drilling, Straße, Farbe, Full House … bringen Witz und Lachen. Applaus = Witz × Lachen.',

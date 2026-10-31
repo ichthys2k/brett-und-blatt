@@ -317,6 +317,32 @@ Cornelius' eigene Narren aus dem Emoji-Sortierer bleiben unverändert: Spaßmach
 
 Damit sinkt die Zahl der Narren von 58 auf etwa 52, und keine Gruppe entspricht mehr einem Balatro-Satz.
 
+#### Zweite Truppe: 29 neue Narren (W-016, 31.10.2026)
+
+**Auftrag:** Die Balatro-Joker sichten und überlegen, wie sie sich in den Narrenhof übertragen lassen, mit eigenen Namen und Ideen statt Kopien.
+
+**Sichtung:** Balatro hat 150 Joker. Sie lassen sich in etwa ein Dutzend Wirkungsfamilien sortieren: feste +Mult/+Chips, ×Mult unter Bedingung, Farb- und Rang-Joker, Kombi-Joker, wachsende Joker (Zähler), Geld-Joker, Wiederholungen (Retrigger), Karten in der Hand, Deck-Zusammensetzung, Ladenwirkungen, Erzeugen von Verbrauchskarten, Kartenveränderung und Kopier-Joker. **Bewusst nicht übertragen:** die einzelnen Joker selbst. Eine vollständige Umsetzung aller 150 wäre genau der „Satz“, der in „Plagiats-Fingerabdrücke“ oben als Problem beschrieben ist. Stattdessen deckt die zweite Truppe die Familien ab, die bisher fehlten oder dünn waren, jeweils mit einer Idee aus der Hofwelt. Ebenfalls weggelassen: Kopier-Joker (Blueprint-artig), Zufalls- und Glücksspiel-Joker sowie Joker, die nur über Verkaufswert wachsen.
+
+| Familie | Bisher | Neu |
+|---|---|---|
+| Zeitpunkt in der Audienz | Frühaufsteher, Doppelgesichtiger | 🎺 Fanfarenbläser (erste Vorführung +12 Lachen), 🛌 Schlafmütze (letzte ×2), 🕯️ Kerzenzieher (+3 je übrige Vorführung), 🍷 Mundschenk (+3 je Karte ohne Tauschen) |
+| Karten in der Hand | Lässiger | 🐕 Hofhund (+6 Witz je Karte), 🐦 Nachtigall (+3 Lachen je Herz), 👵 Königinmutter (×1,25 je Dame) |
+| Rechnen mit Rängen | Einsundnuller, Aufrechter, Querkopf | 🧮 Rechenlehrling (Summe ist Primzahl: ×2), 🔟 Zehnerfreund (Summe durch 10 teilbar: +20), 🧚 Märchenerzählerin (+7 je 7) |
+| Farben gemischt | Meistermaler | ⚖️ Hofrichter (gleich viele rote wie schwarze: ×2), 🦢 Schwanenjungfer (nur rote: ×1,5) |
+| Wiederholungen | Papagei, Hofzauberer, Doppelgesichtiger | 🏹 Bogenschütze (höchste Karte doppelt), 👯 Zwillingsnarren (jeder mehrfache Rang doppelt) |
+| Wachsen | Kräuterfrau, Hofschnecke, Bänkelsänger | 🐝 Imker (+4 Witz je Vorführung mit 5 Karten), 🥁 Trommler (+1 Lachen je Vorführung, Tauschen setzt zurück), 🤴 Thronfolger (+2 Lachen je Hoftag) |
+| Abwechslung | – | 📜 Schreiber (andere Kombi als zuletzt: +10), 🗺️ Kartografin (+15 Witz je schon gezeigte Kombi) |
+| Brezeln im Vorrat | – | 🗃️ Kämmerer (+1 Lachen je 4 🥨, höchstens +12) |
+| Verzierungen | – | 🦚 Pfau (alle gewerteten verziert: ×2), 🪡 Näherin (+5 Witz je verzierte Karte im Deck), 💋 Maskenbildnerin (nach jedem Sieg Schminke für eine Handkarte) |
+| Deck verändern | – | 🪓 Holzfäller (getauschte 2er und 3er verlassen das Deck, mindestens 5 Karten bleiben) |
+| Verbrauchskarten erzeugen | – | 🧁 Zuckerbäcker (nach jedem Thronsaal die Übung der meistgespielten Kombi) |
+| Marotten | – | 🏰 Burgvogt (im Thronsaal +60 Witz, +6 Lachen) |
+| Bank | Truppenführer | 🧓 Einsiedler (allein auf der Bank ×3, sonst +3) |
+| Handgröße | Weite Ärmel (Privileg) | 🥾 Pilger (+1 Handgröße, −1 Tauschen) |
+| Legendär | Einhorn, Hofzauberer, Meistermaler | 🎖️ Der Lügenbaron (nach Münchhausen, gemeinfrei): Jede Vorführung bekommt den Grundwert der nächsthöheren Kombi |
+
+Damit hat der Narrenhof **81 Narren** (davon 7 nur zu mehreren). Gesperrt in der Narrenschule sind von den neuen: Bogenschütze, Schlafmütze, Holzfäller, Maskenbildnerin, Zuckerbäcker, Königinmutter, Zwillingsnarren und Lügenbaron (`LOCKED_MODS_2`, hinten an die Freischaltliste angehängt, damit alte Codes gültig bleiben). Neue Haken in der Regel-Engine: `onRoundEnd` kann eine Handkarte verzieren (`enhance`) und eine Verbrauchskarte erzeugen (`consumable`), `onDiscard` kann Karten aus dem Deck nehmen (`remove`), und `boastful` hebt den Grundwert. `ruleVersion` 5.
+
 #### Privilegien (bisher 9 Balatro-Voucher-Paare → 14 einzelne)
 
 Die zweite Stufe jedes Paares (Großes Marktrecht, Königlicher Hoflieferant, Abkürzung, Doppelte Zugabe, Großer Kartentisch, Zauberärmel, Große Vorratskammer, Gnadengesuch) **entfällt**. Dafür kommen eigene Privilegien dazu:

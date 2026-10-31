@@ -64,6 +64,8 @@ export const THEMES: CosmeticDef[] = [
 ];
 
 const LOCKED_MODS = ['twins', 'santaFan', 'family', 'tree', 'king', 'unicorn', 'painter', 'snail', 'echo', 'broccoli', 'apple', 'robot', 'santaClaus', 'herald', 'collector', 'kidFan', 'monkey'];
+/** Später dazugekommene Narren (31.10.2026) – stehen hinten in der Liste, damit alte Freischaltungen gültig bleiben. */
+const LOCKED_MODS_2 = ['archer', 'sleepyhead', 'woodcutter', 'makeupArtist', 'confectioner', 'queenMother', 'twinFools', 'baron'];
 const LOCKED_DECKS = ['yellow', 'green', 'black', 'magic'];
 const LOCKED_TOOLS = ['courtHerald', 'diploma', 'breadRight', 'touringStage', 'shelf', 'basket', 'book', 'scope'];
 
@@ -119,6 +121,14 @@ export const UNLOCKABLES: Unlockable[] = [
       kind: 'theme',
       key: c.key,
       price: THEME_PRICE,
+    }),
+  ),
+  ...LOCKED_MODS_2.map(
+    (key): Unlockable => ({
+      id: `mod:${key}`,
+      kind: 'mod',
+      key,
+      price: MOD_PRICES[MODS[key]!.rarity],
     }),
   ),
 ];

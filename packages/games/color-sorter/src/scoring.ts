@@ -1,6 +1,6 @@
 import type { Rng } from '@brett-und-blatt/engine';
 import { BOSSES } from './content';
-import { detectHand, handBase, hasColor, isFace, rankChips } from './cards';
+import { detectHand, HAND_TYPES, handBase, hasColor, isFace, rankChips } from './cards';
 import { modDef, SOLO_TABLE, type Effect, type HandContext, type TableInfo } from './mods';
 import type { Card, HandType, ModInstance, RunState } from './types';
 
@@ -68,7 +68,10 @@ export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng,
   const type = detected.type;
   const scoring = detected.scoring.map((i) => played[i]!);
   const boss = run.current?.boss ? BOSSES[run.current.boss] : undefined;
-  const base = handBase(type, run.handLevels[type]);
+  // Lügenbaron: Grundwert der nächsthöheren Kombi (mit deren Stufe).
+  const boast = run.mods.some((m) => !m.spent && modDef(m.key).boastful);
+  const baseType = boast ? (HAND_TYPES[Math.min(HAND_TYPES.length - 1, HAND_TYPES.indexOf(type) + 1)] ?? type) : type;
+  const base = handBase(baseType, run.handLevels[baseType]);
   let chips = base.chips;
   let mult = base.mult;
   if (boss?.key === 'ape') {
