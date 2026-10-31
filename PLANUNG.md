@@ -54,6 +54,8 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Spiel/Bereich | Fehler | Schritte zum Nachstellen | Erwartet | Tatsächlich | Gerät/Browser | Prio | Status | Eingetragen |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| F-005 | Eins! | Handkarten im Querformat abgeschnitten | 1. Eins! auf dem Handy im Querformat starten (844 × 390)<br>2. Unteren Bildschirmrand ansehen | Alle Handkarten sind ganz sichtbar und bedienbar. | Die Handkarten ragen unten aus dem Bild, nur ihr oberer Teil ist zu sehen. | Chromium (Playwright), 844 × 390, in Schlicht und Taverne | mittel | offen | 2026-10-31, Claude |
+| F-006 | Stichspiele | Handkarten überdecken die Knöpfe | 1. Skat oder Doppelkopf im Hochformat starten (390 × 844)<br>2. Die untere Kartenreihe und die Knöpfe darunter ansehen | Karten und Knöpfe „Zug zurück“ und „Aufgeben“ überlappen sich nicht. | Die zweite Kartenreihe liegt über den Knöpfen und verdeckt sie teilweise. | Chromium (Playwright), 390 × 844, in Schlicht und Taverne | mittel | offen | 2026-10-31, Claude |
 
 ## Erledigt
 
