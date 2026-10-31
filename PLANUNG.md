@@ -35,11 +35,9 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-006 | Narrenhof | **Stärkerer Narrenhof-Bot:** Der schwere Bot erreicht im Schnitt Level 5,4–6,3 und gewinnt nur 1–14 % der Läufe; Ziel war Level 8 in etwa 30 %. Ansatzpunkte (Laden- und Narren-Strategie) im Abschnitt „Bot“ in `docs/spiele/farbensortierer.md`. | niedrig | offen | 2026-10-31, Cornelius |
 | W-007 | Eins! | **Eigene Musik je Kartenseite bei Flip:** Im Modus Flip soll je nach Kartenseite (Hell/Dunkel) ein eigener Soundtrack laufen. Neue Stücke dürfen dafür erzeugt werden (Auswahl durch Cornelius). | niedrig | offen | 2026-10-30, Cornelius |
 | W-008 | alle Spiele | **Große Siegerehrung am Rundenende:** Am Rundenende eine Siegerehrung über den ganzen Bildschirm, für alle sichtbar. Die bisherige Siegermeldung ist zu dezent. | niedrig | offen | 2026-10-30, Cornelius |
-| W-009 | Enten-Rallye | **Ente schwimmt von selbst:** Die Ente schwimmt auch ohne richtige Antworten langsam nach vorn. Eine richtig beantwortete Aufgabe gibt ihr einen Schub und beschleunigt sie. | niedrig | offen | 2026-10-30, Cornelius |
 | W-010 | alle Würfelspiele (Würfelblock, Mäxle, Nicht ärgern! …) | **Würfelwurf eindrucksvoll animieren:** Der Wurf soll richtig gut aussehen, Vorbild Baldur's Gate, und höchstens etwa eine Sekunde dauern. | mittel | offen | 2026-10-30, Cornelius |
 | W-013 | alle Spiele | **Kernabläufe aller Spiele befriedigender machen:** Für jedes Spiel die Kernschleife betrachten: Welche Züge macht man immer wieder? Wie fühlen sie sich mit Animationen, Klängen und anderen Ideen richtig gut an? Ergebnis ist zunächst ein umfassender Plan, der dann Spiel für Spiel umgesetzt wird. | hoch | offen | 2026-10-30, Cornelius |
 | W-014 | alle Spiele | **Mehr Lieder in den Playlists:** Die Playlists sollen mehr Stücke bekommen (Auswahl durch Cornelius, Ablage in `musik/` im Klang-Repo). | mittel | offen | 2026-10-30, Cornelius |
-| W-015 | Schach, Vierer-Schach | **Bauernumwandlung in jede Figur:** Bei der Umwandlung auch Turm, Läufer oder Springer wählen können, nicht nur die Dame. Als Spieloption, standardmäßig an. | mittel | offen | 2026-10-30, Cornelius |
 | W-016 | Narrenhof | **Balatro-Joker als Narren übertragen:** Alle Joker aus Balatro recherchieren, überlegen, wie sie sich ins Narrenhof-Thema übertragen lassen (mit eigenen Namen und Ideen, keine Kopien), und einbauen. Plan in `docs/spiele/farbensortierer.md`. | mittel | offen | 2026-10-30, Cornelius |
 | W-017 | Narrenhof | **Vielfalt an Gegnern mit Porträts:** Viele Gegner, die zum Narrenhof passen. Jeder bekommt ein echtes Profilbild im Stil mittelalterlicher Gemälde, dabei überzeichnet und lustig. Erst Gegner recherchieren und einen Umsetzungsplan machen. | mittel | offen | 2026-10-30, Cornelius |
 | W-018 | Narrenhof | **Fortschritt geräteübergreifend sichern:** Freischaltungen und Käufe liegen nur im Browser (plus Sicherung als Text). Optionen erkunden, den Fortschritt mit Zugangsdaten abgesichert zu speichern: datenschutzfreundlich ohne Konto, mit Microsoft-365- oder mit Google-Konto. Ergebnis zunächst ein Vergleich. | niedrig | offen | 2026-10-30, Cornelius |
@@ -57,6 +55,8 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
+| W-009 | Enten-Rallye: Ente schwimmt von selbst (Strömung, Serien beschleunigen, auch online) | 2026-10-31 | #31 |
+| W-015 | Bauernumwandlung in jede Figur (Vierer-Schach, Option „Umwandlung“; Schach konnte es schon) | 2026-10-31 | #31 |
 | W-011 | Figuren ziehen sichtbar (Nicht ärgern!) | 2026-10-31 | #30 |
 | W-012 | Schlagen deutlich animieren (Nicht ärgern!) | 2026-10-31 | #30 |
 | F-002 | Nicht ärgern!: Figuren stehen zu hoch im Feld | 2026-10-31 | #30 |

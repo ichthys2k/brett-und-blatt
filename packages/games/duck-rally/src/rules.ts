@@ -15,8 +15,27 @@ export interface MathProblem {
   answer: number | null;
 }
 
+/** Strecke je gelöster Aufgabe (Schub) in Hundertstel-Etappen; das Ziel liegt bei `target · DISTANCE_PER_TASK`. */
+export const DISTANCE_PER_TASK = 100;
+/** Takt der Strömung: So oft schwimmen alle Enten ein Stück von selbst weiter. */
+export const DRIFT_TICK_MS = 1_000;
+/** Countdown „3, 2, 1, los!“ zu Beginn; so lange ruht auch die Strömung (und die Bots warten). */
+export const COUNTDOWN_MS = 3_000;
+/** Strömung je Takt ohne Serie (Hundertstel-Etappen): allein gut 30 s für eine Etappe. */
+const DRIFT_BASE = 3;
+/** Jede richtige Antwort in Folge beschleunigt die Ente um so viel je Takt – höchstens bis zur dritten. */
+const DRIFT_PER_STREAK = 2;
+const DRIFT_MAX_STREAK = 3;
+
+/** Wie weit eine Ente je Strömungstakt von selbst schwimmt: langsam, mit Serie schneller. */
+export function driftOf(racer: RacerState): number {
+  return DRIFT_BASE + DRIFT_PER_STREAK * Math.min(racer.streak, DRIFT_MAX_STREAK);
+}
+
 export interface RacerState {
   seat: SeatId;
+  /** Zurückgelegte Strecke in Hundertstel-Etappen: Schübe für richtige Antworten plus Strömung. */
+  distance: number;
   solvedCount: number;
   mistakes: number;
   stepMistakes: number;
@@ -40,12 +59,17 @@ export interface DuckRallyState {
   racers: RacerState[];
   /** Sitzplätze in der Reihenfolge ihres Zieleinlaufs. */
   finishOrder: SeatId[];
+  /** Bisherige Strömungstakte (der erste wartet zusätzlich den Countdown ab). */
+  ticks: number;
 }
 
-export type DuckRallyMove = {
-  type: 'answer';
-  value: number;
-};
+export type DuckRallyMove =
+  | { type: 'answer'; value: number }
+  /** Systemzug der Spielleitung: Alle Enten schwimmen ein Stück mit der Strömung. */
+  | { type: 'drift' };
+
+/** Länge der Strecke in Hundertstel-Etappen. */
+export const finishDistance = (state: DuckRallyState): number => state.target * DISTANCE_PER_TASK;
 
 /** Prüft deterministisch, ob `n` eine Primzahl ist. */
 export function isPrimeNumber(n: number): boolean {
@@ -324,6 +348,7 @@ export function setup(seats: number, options: Options, seed: string): DuckRallyS
     const firstIdx = order[0] ?? 0;
     return {
       seat,
+      distance: 0,
       solvedCount: 0,
       mistakes: 0,
       stepMistakes: 0,
@@ -344,14 +369,24 @@ export function setup(seats: number, options: Options, seed: string): DuckRallyS
     seedKey: seed,
     racers,
     finishOrder: [],
+    ticks: 0,
   };
 }
 
 export function currentPlayers(state: DuckRallyState): Actor[] {
   if (result(state)) return [];
-  return state.racers
-    .filter((r) => r.solvedCount < state.target && r.currentProblem !== null)
-    .map((r) => r.seat);
+  const seats: Actor[] = state.racers.filter((r) => !isFinished(state, r)).map((r) => r.seat);
+  // Die Spielleitung lässt die Strömung im Takt wirken (`systemDelayMs`), auch wenn niemand antwortet.
+  return [...seats, 'system'];
+}
+
+/** Wartezeit bis zum nächsten Strömungstakt; der erste kommt erst nach dem Countdown. */
+export function systemDelayMs(state: DuckRallyState): number {
+  return state.ticks === 0 ? COUNTDOWN_MS + DRIFT_TICK_MS : DRIFT_TICK_MS;
+}
+
+function isFinished(state: DuckRallyState, racer: RacerState): boolean {
+  return racer.distance >= finishDistance(state) || racer.currentProblem === null;
 }
 
 /**
@@ -360,9 +395,11 @@ export function currentPlayers(state: DuckRallyState): Actor[] {
  * in kleinen Runden einen plausiblen Fehltipp, damit auch Fehlversuche automatisch getestet werden).
  */
 export function legalMoves(state: DuckRallyState, actor: Actor): DuckRallyMove[] {
-  if (actor === 'system' || actor < 0 || actor >= state.seats || result(state)) return [];
+  if (result(state)) return [];
+  if (actor === 'system') return [{ type: 'drift' }];
+  if (actor < 0 || actor >= state.seats) return [];
   const racer = state.racers[actor];
-  if (!racer || racer.solvedCount >= state.target || !racer.currentProblem) return [];
+  if (!racer || isFinished(state, racer) || !racer.currentProblem) return [];
 
   const exact = solveMathProblem(racer.currentProblem);
   const moves: DuckRallyMove[] = [{ type: 'answer', value: exact }];
@@ -382,13 +419,15 @@ export function legalMoves(state: DuckRallyState, actor: Actor): DuckRallyMove[]
 
 /** Erlaubt jede ganzzahlige Antwort eines aktiven Spielers (bei Primzahl-Aufgaben eine der 6 Optionen). */
 export function isLegal(state: DuckRallyState, actor: Actor, move: DuckRallyMove): boolean {
-  if (actor === 'system' || actor < 0 || actor >= state.seats || result(state)) return false;
-  if (!move || move.type !== 'answer' || typeof move.value !== 'number' || !Number.isInteger(move.value)) {
+  if (result(state) || !move) return false;
+  if (actor === 'system') return move.type === 'drift';
+  if (actor < 0 || actor >= state.seats) return false;
+  if (move.type !== 'answer' || typeof move.value !== 'number' || !Number.isInteger(move.value)) {
     return false;
   }
   if (move.value < -99_999 || move.value > 999_999) return false;
   const racer = state.racers[actor];
-  if (!racer || racer.solvedCount >= state.target || !racer.currentProblem) return false;
+  if (!racer || isFinished(state, racer) || !racer.currentProblem) return false;
   if (racer.currentProblem.kind === 'prime' && racer.currentProblem.options) {
     return racer.currentProblem.options.includes(move.value);
   }
@@ -400,9 +439,10 @@ export function applyMove(
   actor: Actor,
   move: DuckRallyMove,
 ): MoveResult<DuckRallyState> {
-  if (!isLegal(state, actor, move) || actor === 'system') {
+  if (!isLegal(state, actor, move)) {
     throw new Error('Unerlaubter Zug in Enten-Rallye.');
   }
+  if (actor === 'system' || move.type === 'drift') return drift(state);
 
   const racer = state.racers[actor]!;
   const problem = racer.currentProblem!;
@@ -417,7 +457,8 @@ export function applyMove(
     const nextSolved = racer.solvedCount + 1;
     const nextStreak = racer.streak + 1;
     const nextBestStreak = Math.max(racer.bestStreak, nextStreak);
-    const finished = nextSolved >= state.target;
+    const nextDistance = Math.min(finishDistance(state), racer.distance + DISTANCE_PER_TASK);
+    const finished = nextDistance >= finishDistance(state);
 
     let nextProblem: MathProblem | null = null;
     if (!finished) {
@@ -436,6 +477,7 @@ export function applyMove(
 
     nextRacers[actor] = {
       ...racer,
+      distance: nextDistance,
       solvedCount: nextSolved,
       stepMistakes: 0,
       streak: nextStreak,
@@ -490,6 +532,22 @@ export function applyMove(
   };
 }
 
+/** Strömungstakt: Jede Ente im Rennen schwimmt um `driftOf` weiter; wer dabei das Ziel erreicht, ist im Ziel. */
+function drift(state: DuckRallyState): MoveResult<DuckRallyState> {
+  const goal = finishDistance(state);
+  const racers = state.racers.map((r) => (isFinished(state, r) ? r : { ...r, distance: Math.min(goal, r.distance + driftOf(r)) }));
+  const arrivals = racers
+    .filter((r) => r.distance >= goal && !state.finishOrder.includes(r.seat))
+    .sort((a, b) => a.seat - b.seat)
+    .map((r) => r.seat);
+  // Im Ziel gibt es keine Aufgabe mehr.
+  for (const seat of arrivals) racers[seat] = { ...racers[seat]!, currentProblem: null };
+  return {
+    state: { ...state, racers, finishOrder: [...state.finishOrder, ...arrivals], ticks: state.ticks + 1 },
+    events: arrivals.map((seat) => ({ type: 'arrived', seat })),
+  };
+}
+
 /**
  * Blendet den Vorrat kommender Aufgaben (`baseProblems`), den internen Seed-Schlüssel
  * und die vorab gespeicherte Lösungszahl `answer` aus.
@@ -506,7 +564,7 @@ export function playerView(state: DuckRallyState, _seat: SeatId | 'spectator'): 
   };
 }
 
-/** Sortiert alle Enten nach Rennstand: 1. Zieleinlauf, 2. gelöste Aufgaben, 3. wenigste Fehler, 4. beste Serie. */
+/** Sortiert alle Enten nach Rennstand: 1. Zieleinlauf, 2. Strecke, 3. gelöste Aufgaben, 4. wenigste Fehler, 5. beste Serie. */
 export function rankRacers(state: DuckRallyState): RacerState[] {
   return [...state.racers].sort((a, b) => {
     const finA = state.finishOrder.indexOf(a.seat);
@@ -514,6 +572,7 @@ export function rankRacers(state: DuckRallyState): RacerState[] {
     if (finA !== -1 && finB !== -1) return finA - finB;
     if (finA !== -1) return -1;
     if (finB !== -1) return 1;
+    if (b.distance !== a.distance) return b.distance - a.distance;
     if (b.solvedCount !== a.solvedCount) return b.solvedCount - a.solvedCount;
     if (a.mistakes !== b.mistakes) return a.mistakes - b.mistakes;
     if (b.bestStreak !== a.bestStreak) return b.bestStreak - a.bestStreak;

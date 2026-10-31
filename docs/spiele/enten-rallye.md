@@ -12,9 +12,17 @@
 
 - Jede Spielerin und jeder Spieler steuert eine eigene farbige **Gummiente** 🦆 im Fluss von der Startlinie bis zur Zielflagge 🏁.
 - Alle Enten erhalten **denselben Aufgabenpool** (aus dem Partie-Seed erzeugt) in leicht verwürfelten 3er-Blöcken: So ist die Schwierigkeit für alle zu 100 % identisch, aber niemand hat im selben Moment exakt dieselbe Zahl auf dem Bildschirm.
-- **Richtige Antwort:** Die Ente erhält einen Schwimm-Schub um eine Etappe vorwärts (`solvedCount + 1`), der Serien-Zähler (`streak`) steigt, und sofort erscheint die nächste Aufgabe.
+- **Strömung (seit 31.10.2026, W-009):** Alle Enten schwimmen auch ohne Antworten langsam von selbst Richtung Ziel – im Takt von 1 s je 0,03 Etappen (allein gut 30 s für eine Etappe). Jede richtige Antwort in Folge beschleunigt die Ente um 0,02 Etappen je Takt, höchstens bis zur dritten (dann 0,09, dreimal so schnell); eine falsche Antwort bremst sie mit der Serie wieder auf das Grundtempo. Die Strömung ruht während des Countdowns. Sie gilt überall, auch online (Entscheidung Cornelius, 31.10.2026).
+- **Richtige Antwort:** Die Ente erhält einen Schwimm-Schub um eine Etappe vorwärts (`distance + 100`, `solvedCount + 1`), der Serien-Zähler (`streak`) steigt, und sofort erscheint die nächste Aufgabe.
 - **Falsche Antwort:** Das Aufgabenfeld schüttelt sich rot, der Fehlerzähler (`mistakes`) steigt um 1, die Serie reißt ab, und für diese Stufe wird sofort eine neue Ersatz-Aufgabe gezogen (Raten durch Ausprobieren bringt dadurch keinen Vorteil).
-- **Rennende:** Sobald die erste Ente die eingestellte Streckenlänge (10, 15 oder 25 gelöste Aufgaben) erreicht, gewinnt sie das Rennen. Auf dem Siegertreppchen (🥇🥈🥉) werden die Plätze nach gelösten Aufgaben und bei Gleichstand nach den wenigsten Fehlern vergeben.
+- **Rennende:** Sobald die erste Ente das Ziel erreicht (Streckenlänge 10, 15 oder 25 Etappen; durch die Strömung braucht man etwas weniger Aufgaben), gewinnt sie das Rennen. Erreichen mehrere im selben Strömungstakt das Ziel, zählt die kleinere Platznummer. Auf dem Siegertreppchen (🥇🥈🥉) werden die Plätze nach zurückgelegter Strecke, dann nach gelösten Aufgaben und bei Gleichstand nach den wenigsten Fehlern vergeben.
+
+### Umsetzung der Strömung
+
+- Strecke `distance` je Ente in Hundertstel-Etappen (Ziel bei `target · 100`), Takte `ticks` im Spielstand; `ruleVersion` 2.
+- Die Regeln kennen keine Zeit: Die Strömung ist der Systemzug `{ type: 'drift' }`. `currentPlayers` nennt neben den Enten im Rennen immer `'system'`, und der neue Engine-Haken `GameModule.systemDelayMs` (`systemDelayMs`: erster Takt nach Countdown + 1 s, danach 1 s) lässt die Spielleitung (`LocalSession`) damit warten. Antworten verschieben den Takt nicht; Pause, Rücknahme und Ende halten ihn an. Der Fälligkeitszeitpunkt steht im Schnappschuss (`SessionRuntime.systemDue`), damit der Server-Wecker (`nextDeadline()`) ihn auch nach dem Schlafen findet.
+- Online geht damit je Takt ein neuer Stand an alle; Antworten gegen einen etwas älteren Stand nimmt der Raum weiter an (`stillValid`).
+- Oberfläche: Die Ente gleitet gleichmäßig über den Takt (`transition: left 1s linear`), ein Schub ist schnell und federnd (`dr-duck-surge`). Anzeige in Prozent der Strecke statt „gelöst/Ziel“. Die Führung (Lied, Ansage, Rahmen) wechselt erst bei 0,2 Etappen Vorsprung, damit die Strömung sie nicht ständig hin- und herreißt.
 
 ## Optionen in der Lobby
 

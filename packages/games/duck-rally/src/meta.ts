@@ -10,14 +10,15 @@ export const meta: GameInfo = {
   patterns: ['simultaneous', 'parallel'],
   hiddenInformation: true,
   privateViews: false,
-  ruleVersion: 1,
+  ruleVersion: 2,
   // Eigene Musik: das Lied der führenden Ente, Ansager und Siegesmusik (ui/audio.ts).
   ownMusic: true,
   howToPlay: [
     'Nach dem Countdown „3, 2, 1, los!“ geht es gleichzeitig los. Jede Spielerin und jeder Spieler steuert eine farbige Gummiente im Fluss Richtung Ziellinie 🏁.',
     'Löse die angezeigte Mathe-Aufgabe über das Zahlenfeld (oder die Tastatur) und bestätige mit „GO!“ – bei Primzahl-Aufgaben tippst du direkt auf die einzige Primzahl unter den sechs Zahlen.',
     'Alle Enten bekommen über das Rennen hinweg dieselben Aufgaben (in 3er-Blöcken leicht gemischt, damit niemand beim Nachbarn abschreiben kann).',
-    'Jede richtige Antwort gibt deiner Ente einen Schwimm-Schub nach vorn! Bei einer falschen Antwort reißt deine Serie ab und es erscheint eine neue Ersatz-Aufgabe.',
-    'Wer zuerst die volle Streckenlänge (10, 15 oder 25 Aufgaben) schafft, gewinnt die Enten-Rallye und klettert ganz nach oben aufs Siegertreppchen!',
+    'Die Strömung trägt alle Enten langsam von selbst Richtung Ziel. Jede richtige Antwort gibt deiner Ente einen Schwimm-Schub nach vorn – und mit jeder richtigen Antwort in Folge schwimmt sie auch zwischendurch schneller.',
+    'Bei einer falschen Antwort reißt deine Serie ab (die Ente wird wieder langsamer) und es erscheint eine neue Ersatz-Aufgabe.',
+    'Wer zuerst das Ziel erreicht, gewinnt die Enten-Rallye und klettert ganz nach oben aufs Siegertreppchen! Die Streckenlänge (10, 15 oder 25) zählt die Schübe, die man ohne Strömung bräuchte.',
   ],
 };

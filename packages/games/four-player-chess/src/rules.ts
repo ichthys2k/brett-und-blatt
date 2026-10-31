@@ -19,7 +19,7 @@ export type FourChessMove =
 export const seatOf = (color: engine.Color): SeatId => engine.COLORS.indexOf(color);
 
 export function setup(_seats: number, options: Options): engine.FourChessState {
-  return engine.newGame(options.mode === 'teams' ? 'teams' : 'ffa');
+  return engine.newGame(options.mode === 'teams' ? 'teams' : 'ffa', options.promotion === 'queen' ? 'queen' : 'any');
 }
 
 export function currentPlayers(state: engine.FourChessState): Actor[] {
@@ -31,8 +31,8 @@ export function legalMoves(state: engine.FourChessState, actor: Actor): FourChes
   const color = state.turn;
   const moves: FourChessMove[] = [];
   for (const m of engine.legalMoves(state, color)) {
-    // Im Teammodus darf man die Umwandlungsfigur wählen, sonst wird es immer eine Dame.
-    if (m.promote && state.mode === 'teams') {
+    // Mit freier Wahl gibt es je Umwandlungsfigur einen Zug, sonst wird es immer eine Dame.
+    if (m.promote && engine.promotionChoice(state)) {
       for (const pr of ['Q', 'R', 'B', 'N'] as const) moves.push({ t: 'm', p: color, f: m.from, to: m.to, pr });
     } else {
       moves.push({ t: 'm', p: color, f: m.from, to: m.to });

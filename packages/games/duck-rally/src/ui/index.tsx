@@ -2,6 +2,7 @@ import type { SeatId } from '@brett-und-blatt/engine';
 import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
+  DISTANCE_PER_TASK,
   rankRacers,
   result,
   type DuckRallyMove,
@@ -203,6 +204,14 @@ function RubberDuckSVG({
   );
 }
 
+/** Anteil der Strecke in Prozent (0–100). */
+function progressOf(racer: RacerState, target: number): number {
+  return target > 0 ? Math.min(100, (racer.distance / (target * DISTANCE_PER_TASK)) * 100) : 0;
+}
+
+/** So weit muss eine andere Ente vorn liegen, bevor die Führung (Lied, Ansage, Rahmen) wechselt. */
+const LEAD_MARGIN = 20;
+
 function SeatDuckSymbol({ seat, className }: { seat: SeatId; className?: string }) {
   return (
     <span className={`inline-flex items-center justify-center ${className ?? ''}`}>
@@ -235,8 +244,8 @@ function RacerCockpit({
 
   const color = duckColorOf(racer.seat);
   const problem = racer.currentProblem;
-  const isFinished = racer.solvedCount >= target;
-  const progressPct = Math.min(100, Math.round((racer.solvedCount / target) * 100));
+  const isFinished = racer.distance >= target * DISTANCE_PER_TASK;
+  const progressPct = Math.floor(progressOf(racer, target));
 
   // Bei neuer Aufgabe (oder neuem Versuch) Eingabe leeren und kurzes Feedback zeigen
   useEffect(() => {
@@ -316,7 +325,7 @@ function RacerCockpit({
           🦆 {name} ({progressPct} %)
         </span>
         <span className="font-semibold text-muted">
-          {isFinished ? '🏁 Im Ziel!' : `Aufgabe ${racer.solvedCount + 1} / ${target}`}
+          {isFinished ? '🏁 Im Ziel!' : `Aufgabe ${racer.solvedCount + 1}`}
           {racer.streak >= 2 && (
             <span className="ml-1 rounded-full bg-amber-500/20 px-1 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
               🔥 {racer.streak}
@@ -471,7 +480,7 @@ function VictoryPodium({
                 {nameOf(r.seat)}
               </div>
               <div className="mb-1 text-[11px] font-semibold text-muted">
-                {r.solvedCount}/{view.target} · {r.mistakes} F.
+                {r.solvedCount} ✓ · {r.mistakes} F.
               </div>
               <div
                 className="dr-podium-pedestal"
@@ -495,9 +504,7 @@ function VictoryPodium({
             >
               <span className="text-muted">#{i + 4}</span>
               <span style={{ color: duckColorOf(r.seat) }}>{nameOf(r.seat)}</span>
-              <span className="text-muted">
-                ({r.solvedCount}/{view.target})
-              </span>
+              <span className="text-muted">({Math.floor(progressOf(r, view.target))} %)</span>
             </span>
           ))}
         </div>
@@ -537,16 +544,7 @@ function Board({
             ? 28
             : 24;
 
-  // Führende Ente für den farbigen Fluss-Rahmen bestimmen
   const rankedForLeader = useMemo(() => rankRacers(view), [view]);
-  const leaderSeat = useMemo(() => {
-    const top = rankedForLeader[0];
-    if (!top || top.solvedCount <= 0) return null;
-    // Bei Gleichstand nicht wechseln (wie im Original)
-    const second = rankedForLeader[1];
-    if (second && second.solvedCount === top.solvedCount) return null;
-    return top.seat;
-  }, [rankedForLeader]);
 
   // ---------------------------------------------------------------------------
   // Ton: Lieder der führenden Ente, Ansager, Quaken, Siegesmusik (siehe audio.ts)
@@ -564,7 +562,7 @@ function Board({
   }, [audio?.muted]);
 
   // Countdown „3, 2, 1, los!“ zu Beginn eines frischen Rennens (die Bots warten so lange).
-  const freshRace = !gameResult && view.racers.every((r) => r.solvedCount === 0 && r.mistakes === 0);
+  const freshRace = !gameResult && view.ticks === 0 && view.racers.every((r) => r.solvedCount === 0 && r.mistakes === 0);
   const [countdown, setCountdown] = useState<number | 'LOS' | null>(() => (freshRace ? COUNTDOWN_FROM : null));
   useEffect(() => {
     if (countdown === null) return;
@@ -578,12 +576,30 @@ function Board({
   }, [countdown]);
   const racing = countdown === null || countdown === 'LOS';
 
-  // Führende Ente mit „Gedächtnis“: Bei Gleichstand bleibt die bisherige vorn (wie im Original).
+  // Führende Ente mit „Gedächtnis“: Bei Gleichstand bleibt die bisherige vorn (wie im Original),
+  // und weil die Strömung alle Enten stetig verschiebt, wechselt die Führung erst mit etwas Vorsprung.
   const stickyLeaderRef = useRef<SeatId | null>(null);
-  const topSolved = rankedForLeader[0]?.solvedCount ?? 0;
-  if (topSolved <= 0) stickyLeaderRef.current = null;
-  else if (leaderSeat !== null) stickyLeaderRef.current = leaderSeat;
+  const top = rankedForLeader[0];
+  const topDistance = top?.distance ?? 0;
+  if (!top || top.solvedCount <= 0) stickyLeaderRef.current = null;
+  else {
+    const current = stickyLeaderRef.current === null ? undefined : view.racers[stickyLeaderRef.current];
+    const second = rankedForLeader[1];
+    const tied = second !== undefined && second.distance === top.distance;
+    if (current ? top.distance - current.distance > LEAD_MARGIN : !tied) stickyLeaderRef.current = top.seat;
+  }
   const musicLeader = stickyLeaderRef.current;
+  const leaderSeat = musicLeader;
+
+  // Schub (richtige Antwort) schnell und federnd, Strömung gleichmäßig im Takt.
+  const lastSolvedRef = useRef(new Map<SeatId, number>());
+  useEffect(() => {
+    for (const r of view.racers) lastSolvedRef.current.set(r.seat, r.solvedCount);
+  });
+  const surging = (r: RacerState) => {
+    const before = lastSolvedRef.current.get(r.seat);
+    return before !== undefined && before !== r.solvedCount;
+  };
 
   const announcedLeaderRef = useRef<SeatId | null>(musicLeader);
   useEffect(() => {
@@ -598,7 +614,7 @@ function Board({
   }, [gameResult, racing, musicLeader]);
 
   // Fortschritt der vordersten Ente: 50, 75 und 90 Prozent der Strecke.
-  const progress = view.target > 0 ? topSolved / view.target : 0;
+  const progress = view.target > 0 ? topDistance / (view.target * DISTANCE_PER_TASK) : 0;
   const announcedProgressRef = useRef(new Set(PROGRESS_MARKS.filter((mark) => progress >= mark)));
   useEffect(() => {
     if (gameResult) return;
@@ -689,7 +705,7 @@ function Board({
               </div>
 
               {visibleLanes.map((racer) => {
-                const progress = Math.min(100, (racer.solvedCount / view.target) * 100);
+                const progress = progressOf(racer, view.target);
                 const color = duckColorOf(racer.seat);
                 const leftCalc = `calc(14px + (${progress} / 100) * (100% - ${duckSizePx}px - 68px))`;
 
@@ -702,12 +718,12 @@ function Board({
                       />
                       <span className="truncate">{nameOf(racer.seat)}</span>
                       <span className="opacity-80">
-                        {racer.solvedCount}/{view.target}
+                        {Math.floor(progress)} %
                       </span>
                     </div>
 
                     <div
-                      className={`dr-duck-wrap ${racer.lastResult === 'correct' && racer.solvedCount > 0 ? 'dr-duck-boosting' : ''}`}
+                      className={`dr-duck-wrap ${racer.lastResult === 'correct' && racer.solvedCount > 0 ? 'dr-duck-boosting' : ''} ${surging(racer) ? 'dr-duck-surge' : ''}`}
                       style={{ left: leftCalc, width: duckSizePx, height: duckSizePx }}
                     >
                       <RubberDuckSVG color={color} size={duckSizePx} />
@@ -792,7 +808,7 @@ function Board({
             </div>
 
             {visibleLanes.map((racer) => {
-              const progress = Math.min(100, (racer.solvedCount / view.target) * 100);
+              const progress = progressOf(racer, view.target);
               const color = duckColorOf(racer.seat);
               const leftCalc = `calc(14px + (${progress} / 100) * (100% - ${duckSizePx}px - 68px))`;
 
@@ -805,12 +821,12 @@ function Board({
                     />
                     <span className="truncate">{nameOf(racer.seat)}</span>
                     <span className="opacity-80">
-                      {racer.solvedCount}/{view.target}
+                      {Math.floor(progress)} %
                     </span>
                   </div>
 
                   <div
-                    className={`dr-duck-wrap ${racer.lastResult === 'correct' && racer.solvedCount > 0 ? 'dr-duck-boosting' : ''}`}
+                    className={`dr-duck-wrap ${racer.lastResult === 'correct' && racer.solvedCount > 0 ? 'dr-duck-boosting' : ''} ${surging(racer) ? 'dr-duck-surge' : ''}`}
                     style={{ left: leftCalc, width: duckSizePx, height: duckSizePx }}
                   >
                     <RubberDuckSVG color={color} size={duckSizePx} />
@@ -832,7 +848,7 @@ export const gameUi: GameUi<DuckRallyState, DuckRallyMove> = {
   seatDetail: (view, seat) => {
     const r = view.racers[seat];
     if (!r) return '';
-    return `${r.solvedCount}/${view.target}${r.streak >= 2 ? ` · 🔥${r.streak}` : ''}`;
+    return `${Math.floor(progressOf(r, view.target))} %${r.streak >= 2 ? ` · 🔥${r.streak}` : ''}`;
   },
   // Das Quaken bei richtigen Antworten spielt die Oberfläche selbst (audio.ts).
   sounds: {

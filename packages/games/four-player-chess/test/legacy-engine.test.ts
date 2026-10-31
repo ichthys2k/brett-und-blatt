@@ -140,15 +140,25 @@ test('En passant über Kreuz und Verfall der Möglichkeit', () => {
   assert.equal(move(s, 'b', 'e4', 'f3'), false, 'nach einer Runde verfallen');
 });
 
-test('Umwandlung im FFA auf der 8. Reihe, immer zur 1-Punkt-Dame', () => {
+test('Umwandlung im FFA auf der 8. Reihe mit freier Wahl, umgewandelte Figur zählt 1 Punkt', () => {
   const s = custom('ffa', [
     ['f7', 'r', 'P'],
     ['b8', 'b', 'R'],
   ]);
   assert.ok(move(s, 'r', 'f7', 'f8', { pr: 'N' }));
-  assert.deepEqual(piece(s, 'f8'), { c: 'r', t: 'Q', pr: true });
+  assert.deepEqual(piece(s, 'f8'), { c: 'r', t: 'N', pr: true });
   assert.ok(move(s, 'b', 'b8', 'f8'));
   assert.equal(s.scores.b, 1);
+});
+
+test('Umwandlung mit „Immer Dame“ und in alten FFA-Spielständen immer zur Dame', () => {
+  for (const promo of ['queen', undefined] as const) {
+    const s = custom('ffa', [['f7', 'r', 'P']]);
+    if (promo) s.promo = promo;
+    else delete s.promo;
+    assert.ok(move(s, 'r', 'f7', 'f8', { pr: 'N' }));
+    assert.deepEqual(piece(s, 'f8'), { c: 'r', t: 'Q', pr: true });
+  }
 });
 
 test('Umwandlung im Teammodus auf der 11. Reihe mit freier Wahl', () => {

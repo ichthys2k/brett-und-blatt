@@ -26,7 +26,7 @@
 - **Schach mehrerer Gegner** mit einem Zug: zwei Könige +5 (nur mit Damen +1), drei Könige +20 (nur mit Damen +5).
 - **Matt:** +20 für den, der Schach gibt. Geben mehrere Schach, bekommt die Punkte, wer zuletzt gezogen hat. Der Mattgesetzte scheidet aus, seine Figuren bleiben als **graue Hindernisse** stehen. Sie greifen nicht an, versperren aber den Weg.
 - **Patt:** Der Pattgesetzte scheidet aus und bekommt selbst +20.
-- **Umwandlung** auf der 8. Reihe, immer zur Dame.
+- **Umwandlung** auf der 8. Reihe, Figur nach Wahl (Option „Umwandlung“: „Immer Dame“ wie im Original; seit 31.10.2026, W-015). Eine umgewandelte Figur zählt beim Schlagen 1 Punkt.
 - **Sieg beanspruchen:** Sind nur noch zwei übrig und liegt jemand 21 Punkte oder mehr vorn, kann diese Person die Partie beenden. Der andere bekommt dann +20.
 - **Unentschieden-Regeln** (dreifache Wiederholung, 50 Züge je aktivem Spieler ohne Schlagen und Bauernzug, nur noch Könige): Die Partie endet, alle Aktiven bekommen +10.
 - **Ende:** Wenn nur noch einer übrig ist. Es gewinnt, wer die meisten Punkte hat; bei Gleichstand gewinnen mehrere.
@@ -35,7 +35,7 @@
 
 - **Rot und Gelb gegen Blau und Grün.** Partner sitzen sich gegenüber und können sich nicht schlagen. Ein Feld, das nur der Partner angreift, gilt bei der Rochade nicht als bedroht.
 - **Das erste Matt entscheidet** (ebenso ein geschlagener König). Patt ist unentschieden.
-- **Umwandlung** auf der 11. Reihe, Figur nach Wahl.
+- **Umwandlung** auf der 11. Reihe, Figur nach Wahl (oder mit „Immer Dame“ nur Dame).
 - Punkte gibt es keine.
 
 ## Optionen in der Lobby
@@ -55,7 +55,7 @@ type FourChessMove =
 - **Felder als Zahl** 0–195 (Zeile × 14 + Spalte), Zeile 0 oben bei Gelb.
 - **Zustand** (aus der alten Engine): Brett, Farbe am Zug, aktive Farben, Grund des Ausscheidens, Punkte, Rochaderechte, offene En-passant-Möglichkeiten, Zähler für die 50-Züge-Regel, Stellungszähler, Protokoll und Ergebnis. Er ist reines JSON.
 - **Kopie vor jedem Zug:** Die alte Engine verändert ihren Spielstand direkt. Deshalb arbeitet `applyMove` auf einer Kopie (`structuredClone`). Die Schnittstelle bleibt so rein.
-- **Umwandlung:** Im Teammodus liefert `legalMoves` vier Einträge pro Umwandlungszug, sonst einen ohne Angabe (immer Dame).
+- **Umwandlung:** Option `promotion` (`any` Standard, `queen`) landet als `promo` im Spielstand. Mit freier Wahl liefert `legalMoves` vier Einträge pro Umwandlungszug, sonst einen ohne Angabe (immer Dame). Ältere Spielstände ohne `promo` verhalten sich wie früher (Teams wählbar, „Jeder gegen jeden“ nur Dame; `promotionChoice` in `legacy/engine.ts`).
 - **Ereignisse:** `moved` (mit geschlagener Figur), `claimed` und `over`.
 - Keine Geheimnisse: `playerView` gibt den ganzen Spielstand zurück.
 
@@ -92,7 +92,7 @@ Die allgemeine MCTS wäre bei vier Spielern auf 160 Feldern zu langsam. Der Zufa
 
 - **Kreuzbrett** über das Gitterbrett. Es ist so gedreht, dass die eigene Farbe unten sitzt. Im Hot-Seat ist das die Farbe am Zug, online der eigene Platz.
 - **Figuren** als Textzeichen in den vier Farben; ausgeschiedene Figuren sind grau.
-- **Ziehen:** Figur antippen, dann das Ziel (oder durch Antippen eines freien Feldes abwählen). Figuren gleiten flüssig über das 14×14-Raster (`useGridMoveAnimation`, inkl. aller 4 Perspektiven und Rochade). Im Teammodus erscheint bei einer Umwandlung eine Auswahl mit Abbruchmöglichkeit (Hintergrundklick oder ✕).
+- **Ziehen:** Figur antippen, dann das Ziel (oder durch Antippen eines freien Feldes abwählen). Figuren gleiten flüssig über das 14×14-Raster (`useGridMoveAnimation`, inkl. aller 4 Perspektiven und Rochade). Bei einer Umwandlung mit freier Wahl erscheint eine Auswahl mit Abbruchmöglichkeit (Hintergrundklick oder ✕).
 - **Hervorhebungen:** letzter Zug, schlagbare Figuren, Zielpunkte.
 - **Schach- & Fesselungswarnung:** Versucht man eine gefesselte Figur zu bewegen oder den König ins Schach zu ziehen, erklärt ein kurzer Warnhinweis (z. B. mit Angabe von Angreiferfigur, gegnerischer Farbe und Feld) den Grund. Auf dem Kreuzbrett werden die gefesselte Figur, der eigene König und die gegnerische Angreiferfigur farblich hervorgehoben.
 - **Lupe** (🔍 in der freien Ecke oben rechts) ab Feldern unter 36 px. Sie vergrößert das Brett auf 170 % in einem verschiebbaren Ausschnitt, der unten in der Mitte beginnt. Die Einstellung merkt sich jedes Gerät in `localStorage`.

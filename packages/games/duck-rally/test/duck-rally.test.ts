@@ -1,7 +1,10 @@
-import { Rng, resolveOptions, type Options } from '@brett-und-blatt/engine';
+import { inlineBotRunner, LocalSession, Rng, resolveOptions, type Options } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import {
+  COUNTDOWN_MS,
+  DRIFT_TICK_MS,
+  driftOf,
   gameModule,
   generateMathProblem,
   isPrimeNumber,
@@ -78,6 +81,70 @@ describe('Enten-Rallye – Regeln & Aufgaben-Generator', () => {
     expect(s.racers[0]!.bestStreak).toBe(10);
     expect(gameModule.result(s)).toEqual({ kind: 'win', winners: [0] });
     expect(rankRacers(s)[0]?.seat).toBe(0);
+  });
+});
+
+describe('Enten-Rallye – Strömung', () => {
+  it('trägt alle Enten langsam weiter, mit Serie schneller', () => {
+    let s = start({ target: '10' }, 2, 'drift');
+    expect(gameModule.currentPlayers(s)).toEqual([0, 1, 'system']);
+    expect(gameModule.systemDelayMs!(s)).toBe(COUNTDOWN_MS + DRIFT_TICK_MS);
+    s = gameModule.applyMove(s, 'system', { type: 'drift' }).state;
+    expect(s.ticks).toBe(1);
+    expect(gameModule.systemDelayMs!(s)).toBe(DRIFT_TICK_MS);
+    const slow = s.racers[1]!.distance;
+    expect(slow).toBeGreaterThan(0);
+
+    // Platz 0 antwortet zweimal richtig: Schub plus schnellere Strömung.
+    for (let i = 0; i < 2; i++) {
+      s = gameModule.applyMove(s, 0, { type: 'answer', value: solveMathProblem(s.racers[0]!.currentProblem!) }).state;
+    }
+    const before = s.racers[0]!.distance;
+    expect(before).toBe(slow + 200);
+    s = gameModule.applyMove(s, 'system', { type: 'drift' }).state;
+    expect(s.racers[0]!.distance - before).toBe(driftOf(s.racers[0]!));
+    expect(driftOf(s.racers[0]!)).toBeGreaterThan(driftOf(s.racers[1]!));
+  });
+
+  it('bringt auch ohne Antworten eine Ente ins Ziel', () => {
+    let s = start({ target: '10' }, 2, 'drift-only');
+    s.racers[1]!.distance = 999;
+    const { state, events } = gameModule.applyMove(s, 'system', { type: 'drift' });
+    expect(events).toEqual([{ type: 'arrived', seat: 1 }]);
+    expect(gameModule.result(state)).toEqual({ kind: 'win', winners: [1] });
+    expect(rankRacers(state)[0]?.seat).toBe(1);
+    expect(gameModule.currentPlayers(state)).toEqual([]);
+  });
+
+  it('die Spielleitung lässt die Strömung im Takt wirken, Antworten dazwischen gehen', () => {
+    let now = 0;
+    const session = new LocalSession(
+      gameModule,
+      { gameId: 'duck-rally', seed: 'takt', options: { target: '10' }, seats: [{ kind: 'human', name: 'A' }], time: { kind: 'none' } },
+      { botRunner: inlineBotRunner([gameModule]), now: () => now },
+    );
+    expect(session.nextDeadline()).toBe(COUNTDOWN_MS + DRIFT_TICK_MS);
+    now = COUNTDOWN_MS;
+    // Eine Antwort verschiebt den nächsten Takt nicht.
+    session.submit(0, { type: 'answer', value: solveMathProblem(session.state.racers[0]!.currentProblem!) });
+    expect(session.nextDeadline()).toBe(COUNTDOWN_MS + DRIFT_TICK_MS);
+    now = COUNTDOWN_MS + DRIFT_TICK_MS;
+    session.tick();
+    expect(session.state.ticks).toBe(1);
+    expect(session.nextDeadline()).toBe(COUNTDOWN_MS + 2 * DRIFT_TICK_MS);
+    // Pause hält die Strömung an, danach geht es mit einem neuen Takt weiter.
+    session.pause();
+    expect(session.nextDeadline()).toBeNull();
+    now += 10_000;
+    session.tick();
+    expect(session.state.ticks).toBe(1);
+    session.resume();
+    expect(session.nextDeadline()).toBe(now + DRIFT_TICK_MS);
+    // Der Wecker übersteht einen Schnappschuss (Server schläft zwischendurch).
+    const restored = LocalSession.restore(gameModule, session.snapshot(), { botRunner: inlineBotRunner([gameModule]), now: () => now }, { resumeClocks: true });
+    expect(restored.nextDeadline()).toBe(now + DRIFT_TICK_MS);
+    session.dispose();
+    restored.dispose();
   });
 });
 

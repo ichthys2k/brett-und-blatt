@@ -1,5 +1,5 @@
 import type { BotDefinition, BotLevel } from '@brett-und-blatt/engine';
-import { solveMathProblem, type DuckRallyMove, type DuckRallyState } from './rules';
+import { COUNTDOWN_MS, solveMathProblem, type DuckRallyMove, type DuckRallyState } from './rules';
 
 /** Bedenkzeit pro Aufgabe in Millisekunden: [Basis, Zufallsspanne]. */
 const THINK_MS: Record<BotLevel, [number, number]> = {
@@ -7,9 +7,6 @@ const THINK_MS: Record<BotLevel, [number, number]> = {
   medium: [2_600, 1_900],
   hard: [1_400, 1_100],
 };
-
-/** Dauer des Countdowns zu Beginn (3 × 1 s); die Oberfläche sperrt so lange die Eingabe. */
-const COUNTDOWN_MS = 3_000;
 
 /** Wahrscheinlichkeit eines Tipp-/Rechenfehlers beim ersten Versuch einer Stufe. */
 const MISTAKE_CHANCE: Record<BotLevel, number> = {
@@ -53,7 +50,7 @@ export const duckRallyBot: BotDefinition<DuckRallyState, DuckRallyMove> = {
     // Gleichungen und Prozentaufgaben dauern auch für Menschen einen kleinen Moment länger
     const extra = problem?.kind === 'algebra' || problem?.kind === 'percent' ? 600 : 0;
     // Zu Beginn zählt die Oberfläche „3, 2, 1, los!“ herunter – so lange wartet auch der Bot.
-    const fresh = view.racers.every((r) => r.solvedCount === 0 && r.mistakes === 0);
+    const fresh = view.ticks === 0 && view.racers.every((r) => r.solvedCount === 0 && r.mistakes === 0);
     return base + Math.floor(rng.next() * spread) + extra + (fresh ? COUNTDOWN_MS : 0);
   },
 };
