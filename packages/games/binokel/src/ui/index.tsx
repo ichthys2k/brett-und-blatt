@@ -3,7 +3,7 @@ import { cardSuitColor, PlayingCard, SuitShape, TrickTable, useTrickDisplay, typ
 import { useState } from 'react';
 import { binokelContract, SUIT_NAMES, SUITS } from '../cards';
 import { findMelds, meldPoints } from '../melds';
-import { type BinokelMove, type BinokelState } from '../rules';
+import { activeSeats, seatCount, teamOf, type BinokelMove, type BinokelState } from '../rules';
 
 const HAND_CARD_WIDTH = 'clamp(42px, 10.5vw, 72px)';
 
@@ -42,9 +42,12 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
   }
 
   const display = useTrickDisplay(view.currentTrick, view.completedTricks);
-  const slots: TrickTableSlot[] = [0, 1, 2].map((seat) => ({
+  const playing = activeSeats(view);
+  const allSeats = Array.from({ length: seatCount(view) }, (_, s) => s);
+  const partnerOfDeclarer = view.kreuz && view.declarer !== null ? teamOf(view, view.declarer)[1] : null;
+  const slots: TrickTableSlot[] = playing.map((seat) => ({
     seat,
-    name: `${name(seat)}${seat === view.declarer ? ' (Spielmacher)' : ''}`,
+    name: `${name(seat)}${seat === view.declarer ? ' (Spielmacher)' : seat === partnerOfDeclarer ? ' (Partner)' : ''}`,
     card: display.cards.find((p) => p.player === seat)?.card ?? null,
     isLeader: display.cards[0]?.player === seat,
     isWinner: display.winner === seat,
@@ -80,7 +83,11 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
         ) : view.phase === 'bidding' ? (
           <span>Reizen: {view.bid !== null ? `${view.bid} von ${name(view.bidder!)}` : 'noch kein Gebot'}</span>
         ) : null}
-        <span className="text-muted">Geber: {name(view.dealer)}</span>
+        <span className="text-muted">
+          Geber: {name(view.dealer)}
+          {!playing.includes(view.dealer) ? ' (setzt aus)' : ''}
+          {view.kreuz ? ` · Kreuzbinokel: ${name(0)} + ${name(2)} gegen ${name(1)} + ${name(3)}` : ''}
+        </span>
       </div>
 
       {/* Dabb */}
@@ -153,7 +160,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
       {/* Meldungen */}
       {view.phase === 'play' && !view.durch && (
         <div className={`${panel} space-y-1 py-2 text-xs`}>
-          {[0, 1, 2].map((seat) => (
+          {playing.map((seat) => (
             <div key={seat} className="flex gap-2">
               <span className="w-24 flex-none truncate font-semibold">{name(seat)}</span>
               <span className="w-14 flex-none">
@@ -196,6 +203,9 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
                 ? `${name(round.declarer!)} ist abgegangen.`
                 : `${name(round.declarer!)} hat ${round.kind === 'durch' ? 'den Durch' : `mit ${round.bid}`} ${round.won ? 'gewonnen' : 'verloren'}.`}
           </h3>
+          {round.kind !== 'passedOut' && view.kreuz && (
+            <p className="text-xs text-muted">Partner zählen zusammen: Beide bekommen die Punkte ihrer Partei.</p>
+          )}
           {round.kind !== 'passedOut' && (
             <table className="w-full text-sm">
               <thead>
@@ -208,7 +218,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
                 </tr>
               </thead>
               <tbody>
-                {[0, 1, 2].map((seat) => (
+                {allSeats.map((seat) => (
                   <tr key={seat}>
                     <td className="font-semibold">{name(seat)}</td>
                     <td>
@@ -236,9 +246,10 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
 
 export const gameUi: GameUi<BinokelState, BinokelMove> = {
   Board: BinokelBoard,
-  SeatSymbol: ({ seat, className = '' }) => <SuitIcon suit={(['C', 'S', 'H'] as Suit[])[seat % 3]!} className={`h-6 w-6 ${className}`} />,
+  SeatSymbol: ({ seat, className = '' }) => <SuitIcon suit={(['C', 'S', 'H', 'D'] as Suit[])[seat % 4]!} className={`h-6 w-6 ${className}`} />,
   seatLabel: (seat: SeatId) => `Platz ${seat + 1}`,
-  seatDetail: (view, seat) => `${view.scores[seat]} Punkte${seat === view.declarer ? ' · Spielmacher' : ''}`,
+  seatDetail: (view, seat) =>
+    `${view.scores[seat]} Punkte${seat === view.declarer ? ' · Spielmacher' : ''}${view.kreuz ? ` · Partei ${seat % 2 === 0 ? 'A' : 'B'}` : ''}${!activeSeats(view).includes(seat) ? ' · setzt aus' : ''}`,
   sounds: {
     cardPlayed: 'karte-legen',
     trickTaken: 'stich-einsammeln',

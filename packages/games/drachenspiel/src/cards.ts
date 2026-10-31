@@ -11,6 +11,22 @@ export const STAR_CARD: CardDefinition = {
   isSpell: true,
 };
 
+/**
+ * Eigene Zauberkarten (W-004): einmalige Naturzauber statt Tiere. Mit Option „Zauberkarten“
+ * tauscht jedes Themendeck drei Tierpaare gegen drei Zauberpaare (siehe `decks.ts`).
+ */
+export const SPELLS_DB: Record<string, CardDefinition> = {
+  s_lightning: { id: 's_lightning', name: 'Blitzschlag', cost: 2, attack: 0, health: 0, emoji: '⚡', quote: 'Krawumm!', isSpell: true, spell: 'lightning', targeting: 'enemyAny', text: '3 Schaden an einem gegnerischen Tier oder Helden.' },
+  s_honey: { id: 's_honey', name: 'Honigtopf', cost: 1, attack: 0, health: 0, emoji: '🍯', quote: 'Süß macht stark!', isSpell: true, spell: 'honey', targeting: 'ownMinion', text: 'Ein eigenes Tier bekommt +2 Angriff und +2 Leben.' },
+  s_tailwind: { id: 's_tailwind', name: 'Rückenwind', cost: 1, attack: 0, health: 0, emoji: '🍃', quote: 'Husch, husch!', isSpell: true, spell: 'tailwind', targeting: 'ownMinion', text: 'Ein eigenes Tier bekommt +1 Angriff und darf sofort angreifen.' },
+  s_soapBubble: { id: 's_soapBubble', name: 'Seifenblase', cost: 1, attack: 0, health: 0, emoji: '🫧', quote: 'Plopp – nichts passiert.', isSpell: true, spell: 'soapBubble', targeting: 'ownMinion', text: 'Ein eigenes Tier bekommt eine Schutzblase.' },
+  s_growth: { id: 's_growth', name: 'Wachstumsschub', cost: 3, attack: 0, health: 0, emoji: '🌱', quote: 'Groß und stark!', isSpell: true, spell: 'growth', targeting: 'none', text: 'Alle eigenen Tiere bekommen +1 Angriff und +1 Leben.' },
+  s_summerRain: { id: 's_summerRain', name: 'Sommerregen', cost: 2, attack: 0, health: 0, emoji: '🌦️', quote: 'Das tut gut!', isSpell: true, spell: 'summerRain', targeting: 'none', text: 'Dein Held heilt 3 Leben, alle eigenen Tiere heilen ganz.' },
+  s_clover: { id: 's_clover', name: 'Glücksklee', cost: 2, attack: 0, health: 0, emoji: '🍀', quote: 'Vier Blätter, zwei Karten!', isSpell: true, spell: 'clover', targeting: 'none', text: 'Ziehe zwei Karten.' },
+  s_flood: { id: 's_flood', name: 'Flutwelle', cost: 3, attack: 0, health: 0, emoji: '🌊', quote: 'Ab nach Hause!', isSpell: true, spell: 'flood', targeting: 'enemyMinion', text: 'Ein gegnerisches Tier wird zurück auf die Hand gespült (bei voller Hand ist es weg).' },
+  s_whirlwind: { id: 's_whirlwind', name: 'Wirbelsturm', cost: 4, attack: 0, health: 0, emoji: '🌪️', quote: 'Festhalten!', isSpell: true, spell: 'whirlwind', targeting: 'none', text: '2 Schaden an allen gegnerischen Tieren.' },
+};
+
 export const BUTTERFLY_TOKEN: CardDefinition = {
   id: 'token_butterfly',
   name: 'Schmetterling',
@@ -589,6 +605,11 @@ export const CARDS_DB: Record<string, CardDefinition> = {
   token_ant: ANT_TOKEN,
 };
 
+// Zauber stehen mit im Kartenverzeichnis, damit Hand und Deck sie wie Tiere nachschlagen.
+Object.assign(CARDS_DB, SPELLS_DB);
+
+/** Alle Tierkarten (ohne Zauber, Spielsteine und Sonderkarten) – für gemischte Decks. */
 export const ALL_CARD_IDS = Object.keys(CARDS_DB).filter(
-  (id) => !id.startsWith('token_') && !id.startsWith('special_'),
+  (id) => !id.startsWith('token_') && !id.startsWith('special_') && !id.startsWith('s_'),
 );
+export const ALL_SPELL_IDS = Object.keys(SPELLS_DB);

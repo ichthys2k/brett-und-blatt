@@ -60,7 +60,7 @@ function centerDistance(i: number): number {
   return Math.abs(rowOf(i) - 6.5) + Math.abs(colOf(i) - 6.5);
 }
 
-function scoreMove(state: FourChessState, color: Color, m: InternalMove): number {
+export function scoreMove(state: FourChessState, color: Color, m: InternalMove): number {
   const board = state.board;
   const piece = board[m.from];
   if (!piece) return 0;

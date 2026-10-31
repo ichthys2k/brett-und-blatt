@@ -743,3 +743,49 @@
   box-shadow: 0 0 0 4px #ff4757, 0 0 16px rgba(255, 71, 87, 0.5) !important;
 }
 
+
+/* Zauberkarten (W-004) */
+.ds-card.ds-card-spell {
+  background: linear-gradient(160deg, #f3e8ff 0%, var(--color-surface, #ffffff) 70%);
+  border-color: #a78bfa;
+}
+@media (prefers-color-scheme: dark) {
+  .ds-card.ds-card-spell {
+    background: linear-gradient(160deg, #3b2a5c 0%, var(--color-surface, #1e1e2a) 70%);
+  }
+  .ds-spell-hint {
+    background: #3b2a5c;
+    color: #ede9fe;
+  }
+}
+.ds-card.ds-card-spell.playable {
+  border-color: #7c3aed;
+}
+.ds-card.ds-card-selected {
+  transform: translateY(-10px);
+  box-shadow: 0 0 0 3px #7c3aed, 0 8px 18px rgba(124, 58, 237, 0.35);
+}
+.ds-card-spelltext {
+  font-size: 0.52rem;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--color-text-muted, var(--color-muted, #636e72));
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.ds-spell-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  margin: 0 8px;
+  border-radius: 10px;
+  background: #ede9fe;
+  color: #4c1d95;
+  font-size: 0.8rem;
+  font-weight: 600;
+}

@@ -162,7 +162,8 @@ export function getCardTraits(card: CardDefinition): TraitInfo[] {
  * Vollständiger Tooltip-Text für eine Karte (Hand / Mulligan).
  */
 export function getCardFullTitle(card: CardDefinition): string {
-  const lines: string[] = [card.name];
+  const lines: string[] = [card.spell ? `${card.name} (Zauber)` : card.name];
+  if (card.text) lines.push(card.text);
   if (card.quote) {
     lines.push(`„${card.quote}“`);
   }

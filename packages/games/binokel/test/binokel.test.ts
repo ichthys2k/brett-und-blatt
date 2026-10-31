@@ -105,3 +105,76 @@ describe('Binokel – Bot und Durch', () => {
     expect(ask(declare)).toEqual({ type: 'declareDurch' });
   });
 });
+
+describe('Binokel – Vierertisch und Kreuzbinokel', () => {
+  const runSeries = (options: Record<string, string>, seed: string, level: 'medium' | 'hard' = 'medium') => {
+    let s = gameModule.setup(4, { targetScore: '1000', ...options }, seed);
+    const rounds: NonNullable<BinokelState['lastRound']>[] = [];
+    for (let steps = 0; !gameModule.result(s) && steps < 8000; steps++) {
+      const seat = gameModule.currentPlayers(s)[0] as number;
+      const move = computeBotMove(gameModule, { gameId: 'binokel', botId: 'binokel', level, seat, view: gameModule.playerView(s, seat), seed: `${seed}/${steps}`, timeBudgetMs: 50 }) as BinokelMove;
+      expect(isLegalMove(gameModule, s, seat, move)).toBe(true);
+      const before = s;
+      s = gameModule.applyMove(s, seat, move).state;
+      if (s.lastRound && s.lastRound !== before.lastRound) rounds.push(s.lastRound);
+    }
+    return { s, rounds };
+  };
+
+  it('am Vierertisch setzt der Geber aus und bekommt keine Karten', () => {
+    const s = gameModule.setup(4, {}, 'vier');
+    expect(s.active).toEqual([1, 2, 3]);
+    expect(s.hands[0]).toEqual([]);
+    expect(s.hands.slice(1).map((h) => h.length)).toEqual([12, 12, 12]);
+    expect(s.dabb).toHaveLength(4);
+    expect(gameModule.currentPlayers(s)).toEqual([1]);
+  });
+
+  it('Kreuzbinokel: vier spielen mit 9 Karten (mit Siebenern 11) und Dabb 4', () => {
+    const s = gameModule.setup(4, { fourTable: 'kreuz' }, 'kreuz');
+    expect(s.active).toEqual([1, 2, 3, 0]);
+    expect(s.hands.map((h) => h.length)).toEqual([9, 9, 9, 9]);
+    expect(s.dabb).toHaveLength(4);
+    const s48 = gameModule.setup(4, { fourTable: 'kreuz', deckSize: '48' }, 'kreuz48');
+    expect(s48.hands.map((h) => h.length)).toEqual([11, 11, 11, 11]);
+    expect(s48.dabb).toHaveLength(4);
+  });
+
+  it('Kreuzbinokel: Partner bekommen dieselben Punkte', () => {
+    const { s, rounds } = runSeries({ fourTable: 'kreuz' }, 'kreuz-serie');
+    expect(gameModule.result(s)).not.toBeNull();
+    for (const r of rounds) {
+      expect(r.points[0]).toBe(r.points[2]);
+      expect(r.points[1]).toBe(r.points[3]);
+    }
+    expect(s.scores[0]).toBe(s.scores[2]);
+    expect(s.scores[1]).toBe(s.scores[3]);
+    const res = gameModule.result(s)!;
+    if (res.kind === 'win') expect([[0, 2], [1, 3]]).toContainEqual([...res.winners].sort());
+  }, 60_000);
+
+  it('Kreuzbinokel: Meldungen zählen nur mit eigenem Stich', () => {
+    let s = gameModule.setup(4, { fourTable: 'kreuz' }, 'kreuz-meld');
+    // Platz 1 reizt, die anderen passen.
+    s = gameModule.applyMove(s, 1, { type: 'bid', value: 150 }).state;
+    for (const seat of [2, 3, 0]) s = gameModule.applyMove(s, seat, { type: 'pass' }).state;
+    expect(s.declarer).toBe(1);
+    s = gameModule.applyMove(s, 1, { type: 'discard', cards: s.hands[1]!.slice(0, 4) as CardId[] }).state;
+    s = gameModule.applyMove(s, 1, { type: 'declareTrump', suit: 'C' }).state;
+    while (s.phase === 'play') {
+      const seat = gameModule.currentPlayers(s)[0] as number;
+      s = gameModule.applyMove(s, seat, gameModule.legalMoves(s, seat)[0]!).state;
+    }
+    const r = s.lastRound!;
+    const tricks = (seat: number) => r.madeTrick[seat] ? r.eyes[seat]! + r.melds[seat]! : r.eyes[seat]!;
+    const declarerTeam = tricks(1) + tricks(3);
+    expect(r.points[1]).toBe(r.won ? declarerTeam : -300);
+    expect(r.points[0]).toBe(tricks(0) + tricks(2));
+  });
+
+  it('Bots spielen am Vierertisch (Geber setzt aus) eine ganze Partie', () => {
+    const { s, rounds } = runSeries({}, 'vier-serie', 'hard');
+    expect(gameModule.result(s)).not.toBeNull();
+    for (const r of rounds) if (r.declarer !== null) expect(r.points.filter((p, seat) => seat !== r.declarer && p !== 0).length).toBeLessThanOrEqual(2);
+  }, 60_000);
+});

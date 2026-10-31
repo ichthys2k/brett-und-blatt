@@ -2,21 +2,22 @@ import { randomBot, stateFor, type BotDefinition, type GameModule } from '@brett
 import { chooseBotMove } from './legacy/bot';
 import { promotionChoice } from './legacy/engine';
 import { meta } from './meta';
+import { SEARCH_WIDTH, searchMove } from './search';
 import { applyMove, COLORS, currentPlayers, legalMoves, resignMove, result, setup, type FourChessMove, type FourChessState } from './rules';
 
 export type { Color, FourChessMove, FourChessState, Piece } from './rules';
 export { COLORS, seatOf } from './rules';
 
 /**
- * Der Computergegner aus 4playerchess: bewertet jeden Zug mit Faustregeln
- * (Material, bedrohte Figuren, Schach und Matt, Entwicklung).
- * - leicht: oft ein zufälliger Zug
- * - mittel: Faustregeln mit etwas Zufall
- * - schwer: Faustregeln mit wenig Zufall
+ * Der Computergegner: bewertet Züge mit Faustregeln (Material, bedrohte Figuren, Schach und
+ * Matt, Entwicklung) und rechnet auf „mittel“ und „schwer“ eine Runde voraus (`search.ts`).
+ * - leicht: oft ein zufälliger Zug, sonst Faustregeln ohne Vorausschau
+ * - mittel: Vorausschau mit wenigen Kandidaten und spürbarem Zufall
+ * - schwer: breitere Vorausschau mit wenig Zufall
  */
 const fourChessBot: BotDefinition<FourChessState, FourChessMove> = {
   id: 'four-player-chess',
-  name: 'Faustregeln',
+  name: 'Vorausschau',
   levels: ['easy', 'medium', 'hard'],
   chooseMove(ctx) {
     const state = stateFor(ctx);
@@ -25,9 +26,15 @@ const fourChessBot: BotDefinition<FourChessState, FourChessMove> = {
     if (claim) return claim;
     const moveMoves = moves.filter((m): m is Extract<FourChessMove, { t: 'm' }> => m.t === 'm');
     if (ctx.level === 'easy' && ctx.rng.chance(0.4) && moveMoves.length > 0) return ctx.rng.pick(moveMoves);
-    // Der Bot rechnet mit Zufall im Bereich 0–1 und gewichtet ihn selbst; „schwer“ dämpft ihn.
-    const noise = ctx.level === 'hard' ? 0.3 : 1;
-    const action = chooseBotMove(state, COLORS[ctx.seat], () => ctx.rng.next() * noise);
+    if (ctx.level !== 'easy') {
+      const m = searchMove(state, SEARCH_WIDTH[ctx.level], () => ctx.rng.next(), ctx.level === 'hard' ? 0.1 : 0.6);
+      if (m) {
+        const base = { t: 'm' as const, p: COLORS[ctx.seat]!, f: m.from, to: m.to };
+        return m.promote && promotionChoice(state) ? { ...base, pr: 'Q' } : base;
+      }
+    }
+    // Ohne Vorausschau: Zufall im Bereich 0–1, den der Faustregel-Bot selbst gewichtet.
+    const action = chooseBotMove(state, COLORS[ctx.seat], () => ctx.rng.next());
     if (!action || action.t !== 'm') return ctx.rng.pick(moves);
     // Ohne freie Wahl wird automatisch zur Dame umgewandelt – ohne Angabe.
     const normalized: FourChessMove = promotionChoice(state) ? action : { t: 'm', p: action.p, f: action.f, to: action.to };

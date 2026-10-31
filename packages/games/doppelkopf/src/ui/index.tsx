@@ -2,6 +2,7 @@ import { sortHand, cardSuit, type CardId, type SeatId, type Suit } from '@brett-
 import { CardFan, PlayingCard, TrickTable, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import {
   getContract,
+  owingSolo,
   type DokoAnnouncement,
   type DokoContract,
   type DokoContractType,
@@ -63,11 +64,16 @@ export function DokoBoard({
       <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-stone-100 dark:bg-stone-800 rounded-xl text-sm">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-            Spiel {view.gameNumber} von {view.totalGames}
+            {view.gameNumber > view.totalGames ? `Nachspiel (${view.totalGames} Spiele gespielt)` : `Spiel ${view.gameNumber} von ${view.totalGames}`}
           </span>
           <span className="text-stone-700 dark:text-stone-300 font-medium">
             {formatContract(view.contract)}
           </span>
+          {view.contract.mandatory && (
+            <span className="px-2 py-0.5 bg-rose-500/20 text-rose-800 dark:text-rose-300 rounded text-xs font-semibold">
+              Pflichtsolo{view.forcedSeat != null ? ' (Vorführung)' : ''}
+            </span>
+          )}
           {view.hochzeitSeat !== null && view.reTeam.length === 1 && (
             <span className="px-2 py-0.5 bg-amber-500/20 text-amber-800 dark:text-amber-300 rounded text-xs font-semibold">
               Hochzeit sucht Partner ({view.hochzeitTrickCount}/3)
@@ -114,10 +120,32 @@ export function DokoBoard({
         </div>
       )}
 
+      {/* Pflichtsolo-Stand */}
+      {view.mandatorySolo && view.phase !== 'play' && (
+        <div className="px-3 py-2 bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-700 rounded-xl text-xs text-stone-700 dark:text-stone-300 flex flex-wrap gap-x-3 gap-y-1">
+          <span className="font-semibold">Pflichtsolo:</span>
+          {Array.from({ length: view.playerCount }, (_, s) => (
+            <span key={s}>
+              {owingSolo(view).includes(s) ? '○' : '✓'} {seatNames[s] ?? `Spieler ${s + 1}`}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Vorführung */}
+      {view.phase === 'chooseSolo' && view.forcedSeat != null && (
+        <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-300 dark:border-rose-800 rounded-xl text-sm text-rose-900 dark:text-rose-200">
+          <strong>Vorführung:</strong> {view.forcedSeat === mySeat ? 'Du musst' : `${seatNames[view.forcedSeat] ?? `Spieler ${view.forcedSeat + 1}`} muss`} jetzt das
+          Pflichtsolo spielen, weil sonst nicht mehr genug Spiele übrig sind.
+        </div>
+      )}
+
       {/* Solo-Wahl */}
       {view.phase === 'chooseSolo' && legalMoves.length > 0 && (
         <div className="p-4 bg-stone-50 dark:bg-stone-800/80 border border-stone-300 dark:border-stone-700 rounded-xl">
-          <h3 className="font-semibold text-stone-900 dark:text-stone-100 mb-2">Vorbehalt festlegen</h3>
+          <h3 className="font-semibold text-stone-900 dark:text-stone-100 mb-2">
+            {owingSolo(view).includes(mySeat) ? 'Pflichtsolo wählen' : 'Vorbehalt festlegen'}
+          </h3>
           <div className="flex flex-wrap gap-2">
             {legalMoves
               .filter((m) => m.type === 'chooseContract')
@@ -213,6 +241,9 @@ export function DokoBoard({
               <div className="mt-1 text-xs text-stone-400">
                 Punkte: {view.history[view.history.length - 1].points} Pkt
               </div>
+              {view.history[view.history.length - 1].mandatory && (
+                <div className="mt-1 text-xs text-stone-300">Pflichtsolo – zählt nicht als Spiel der Serie, der Geber gibt noch einmal.</div>
+              )}
             </div>
           )}
           <button
@@ -295,6 +326,7 @@ export const gameUi: GameUi<DokoState, DokoMove> = {
     const score = view.scores[seat] ?? 0;
     const isRe = view.reTeam.includes(seat);
     const isRevealed = view.revealedRe.includes(seat) || view.phase === 'roundOver';
-    return `${score} Pkt${isRevealed ? (isRe ? ' · Re' : ' · Kontra') : ''}`;
+    const solo = view.mandatorySolo ? (owingSolo(view).includes(seat) ? ' · Solo offen' : ' · Solo ✓') : '';
+    return `${score} Pkt${isRevealed ? (isRe ? ' · Re' : ' · Kontra') : ''}${solo}`;
   },
 };

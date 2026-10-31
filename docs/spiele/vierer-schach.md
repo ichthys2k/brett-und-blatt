@@ -61,20 +61,22 @@ type FourChessMove =
 
 ## Bot
 
-Der **Faustregel-Bot** aus `4playerchess` (`src/legacy/bot.ts`). Er rechnet nicht voraus, sondern bewertet jeden erlaubten Zug für sich:
+Bot **„Vorausschau“** (31.10.2026, W-001). Grundlage sind die Faustregeln aus `4playerchess` (`src/legacy/bot.ts`, `scoreMove`), die jeden erlaubten Zug für sich bewerten:
 
 - Material gewinnen, besonders Könige und ungedeckte Figuren
 - nichts einstellen (bedrohte eigene Figuren, Zielfeld angegriffen?)
 - Schach und Matt geben
 - Figuren entwickeln, zur Mitte ziehen, rochieren, umwandeln
 
-Ein Sieganspruch wird immer genutzt, wenn er möglich ist.
+Auf „mittel“ und „schwer“ rechnet der Bot darüber hinaus **eine ganze Runde voraus** (`src/search.ts`): Er nimmt seine besten Kandidaten nach den Faustregeln, lässt die direkt folgende Farbe mit ihren plausibelsten Antworten kontern und rechnet mit der Antwort, die ihm am meisten schadet („paranoid“, aber nur unter plausiblen Zügen). Die übrigen beiden Farben ziehen ihren besten Faustregel-Zug. Dann wird die Stellung bewertet, wenn er wieder am Zug ist: eigene Punkte und Material gegen das der anderen, hängende Figuren (eine lässt sich retten, die anderen kaum), Schach; im Teammodus Material beider Teams. Gerechnet wird auf leichten Kopien ohne Protokoll. Ein Sieganspruch wird immer genutzt.
 
 | Stufe | Verhalten |
 |---|---|
-| leicht | in 40 % der Fälle ein zufälliger Zug, sonst Faustregeln |
-| mittel | Faustregeln mit spürbarem Zufall |
-| schwer | Faustregeln mit wenig Zufall (Zufall auf 30 % gedämpft) |
+| leicht | in 40 % der Fälle ein zufälliger Zug, sonst Faustregeln ohne Vorausschau |
+| mittel | Vorausschau mit 6 Kandidaten und 3 Antworten, spürbarer Zufall (etwa 30 ms je Zug) |
+| schwer | Vorausschau mit 12 Kandidaten und 5 Antworten, wenig Zufall (etwa 70 ms je Zug) |
+
+**Messung (31.10.2026):** „Schwer“ gegen drei alte Faustregel-Bots: „Jeder gegen jeden“ 16 von 40 Partien gewonnen (Erwartung bei gleicher Stärke 10), im Schnitt 49 statt 34 Punkte; im Teammodus 18 von 20. Arena-Skript liegt nicht im Repo (Muster: `test/search.test.ts`, Teampartie).
 
 Die allgemeine MCTS wäre bei vier Spielern auf 160 Feldern zu langsam. Der Zufallsbot bleibt zum Testen. Einen Tipp-Knopf gibt es nicht (`hints` ist aus).
 
@@ -124,4 +126,4 @@ Aufgeben ist ein Spielzug `{ t: 'resign', p: Farbe }`, den die Spielleitung übe
 
 - ✅ **Protokoll anzeigen:** Chronik mit Rückblick (siehe Oberfläche).
 - ✅ **Typisieren:** `src/legacy/engine.ts`, `bot.ts` und `test/legacy-engine.test.ts` sind vollständig in TypeScript typisiert (`@ts-nocheck` entfernt).
-- **Stärkerer Bot:** eine flache Suche (zwei bis vier Halbzüge, „paranoid“ oder „max-n“) über den Faustregeln.
+- ✅ **Stärkerer Bot:** Vorausschau über eine Runde (31.10.2026, `src/search.ts`). Denkbar: zweite Runde oder Ruhesuche bei Schlagfolgen.

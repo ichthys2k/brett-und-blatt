@@ -51,6 +51,8 @@ export interface DokoContract {
   type: DokoContractType;
   trumpSuit?: Suit; // Für Farbsolo
   soloist?: number;
+  /** Pflichtsolo (das erste Solo eines Spielers in der Serie, nur mit Option „Pflichtsolo“). */
+  mandatory?: boolean;
 }
 
 export type DokoAnnouncement = 're' | 'kontra' | 'no90' | 'no60' | 'no30' | 'schwarz';
@@ -72,6 +74,10 @@ export interface DokoSummary {
   won: boolean; // Hat Re gewonnen?
   points: number;
   scorePerPlayer: Record<number, number>;
+  /** War es ein Pflichtsolo (zählt nicht als Spiel der Serie, der Geber bleibt)? */
+  mandatory?: boolean;
+  /** Wurde der Solist vorgeführt (musste spielen, weil die Serie sonst zu Ende ginge)? */
+  forced?: boolean;
 }
 
 export interface DokoState {
@@ -82,6 +88,10 @@ export interface DokoState {
   activeSeats: number[]; // 4 aktive Plätze
   deckStyle: DeckStyle;
   mandatorySolo: boolean;
+  /** Plätze, die ihr Pflichtsolo in dieser Serie schon gespielt haben. */
+  mandatoryDone?: number[];
+  /** Vorführung: Dieser Platz muss im laufenden Spiel sein Pflichtsolo spielen. */
+  forcedSeat?: number | null;
 
   phase: DokoPhase;
   hands: Record<number, CardId[]>;
@@ -170,7 +180,7 @@ export function setup(
   const scores: Record<number, number> = {};
   for (let i = 0; i < tablePlayers; i++) scores[i] = 0;
 
-  return {
+  const state: DokoState = {
     playerCount: tablePlayers,
     totalGames,
     gameNumber: 1,
@@ -205,6 +215,37 @@ export function setup(
     scores,
     history: [],
     dealRng: rng.state,
+  };
+  return mandatorySolo ? applyVorfuehrung({ ...state, mandatoryDone: [], forcedSeat: null }) : state;
+}
+
+// =============================================================================
+// Pflichtsolo (DDV-Turnierregel als Option)
+// =============================================================================
+
+/** Plätze, die ihr Pflichtsolo in dieser Serie noch spielen müssen. */
+export function owingSolo(state: DokoState): number[] {
+  if (!state.mandatorySolo) return [];
+  const done = new Set(state.mandatoryDone ?? []);
+  return Array.from({ length: state.playerCount }, (_, i) => i).filter((s) => !done.has(s));
+}
+
+/**
+ * Vorführung: Bleiben nicht mehr Spiele übrig, als Spieler ein Pflichtsolo schulden, muss der
+ * erste Schuldner am Tisch (ab Vorhand) sein Solo jetzt spielen. Die Vorbehaltsabfrage entfällt.
+ */
+function applyVorfuehrung(state: DokoState): DokoState {
+  const owing = owingSolo(state);
+  const remaining = state.totalGames - state.gameNumber + 1;
+  if (owing.length === 0 || owing.length < remaining) return { ...state, forcedSeat: null };
+  const forced = state.activeSeats.find((s) => owing.includes(s));
+  if (forced === undefined) return { ...state, forcedSeat: null };
+  return {
+    ...state,
+    forcedSeat: forced,
+    phase: 'chooseSolo',
+    reservationTurn: 4,
+    reservations: [{ seat: forced, isSolo: true }],
   };
 }
 
@@ -257,7 +298,7 @@ export function legalMoves(state: DokoState, actor: Actor): DokoMove[] {
     const hand = state.hands[player] || [];
     const hasBothQueens = hand.filter((c) => cardSuit(c) === 'C' && cardRank(c) === 12).length === 2;
 
-    if (hasBothQueens) {
+    if (hasBothQueens && state.forcedSeat == null) {
       moves.push({ type: 'chooseContract', contract: { type: 'hochzeit', soloist: player } });
     }
     moves.push({ type: 'chooseContract', contract: { type: 'damensolo', soloist: player } });
@@ -353,11 +394,14 @@ function applyDokoMove(state: DokoState, move: DokoMove, player: number): DokoSt
       };
     }
 
-    // Ein Spieler hat einen Vorbehalt angemeldet
+    // Ein Spieler hat einen Vorbehalt angemeldet. Mit Pflichtsolo hat ein fälliges
+    // Pflichtsolo Vorrang vor Lustsolo und Hochzeit; sonst entscheidet die Sitzfolge.
+    const owing = owingSolo(state);
+    const ordered = [...nextReservations].sort((a, b) => Number(owing.includes(b.seat)) - Number(owing.includes(a.seat)));
     return {
       ...state,
       reservationTurn: nextTurn,
-      reservations: nextReservations,
+      reservations: ordered,
       phase: 'chooseSolo',
     };
   }
@@ -365,14 +409,17 @@ function applyDokoMove(state: DokoState, move: DokoMove, player: number): DokoSt
   if (move.type === 'chooseContract' && state.phase === 'chooseSolo') {
     const isHochzeit = move.contract.type === 'hochzeit';
     const soloist = move.contract.soloist;
+    const mandatory = !isHochzeit && soloist !== undefined && owingSolo(state).includes(soloist);
+    const contract: DokoContract = mandatory ? { ...move.contract, mandatory: true } : move.contract;
     return {
       ...state,
-      contract: move.contract,
+      contract,
       phase: 'play',
       hochzeitSeat: isHochzeit ? player : null,
       reTeam: isHochzeit ? [player] : soloist !== undefined ? [soloist] : state.reTeam,
       revealedRe: isHochzeit ? [player] : soloist !== undefined ? [soloist] : state.revealedRe,
-      leaderSeat: state.activeSeats[0],
+      // Beim Pflichtsolo kommt der Solist heraus, sonst die Vorhand.
+      leaderSeat: mandatory ? soloist : state.activeSeats[0],
     };
   }
 
@@ -541,6 +588,8 @@ function finishGame(state: DokoState): DokoState {
     won,
     points,
     scorePerPlayer: scoreDiffs,
+    ...(state.contract.mandatory ? { mandatory: true } : {}),
+    ...(state.forcedSeat != null ? { forced: true } : {}),
   };
 
   return {
@@ -548,12 +597,17 @@ function finishGame(state: DokoState): DokoState {
     phase: 'roundOver',
     scores: nextScores,
     history: [...state.history, summary],
+    ...(state.contract.mandatory && soloist !== undefined
+      ? { mandatoryDone: [...(state.mandatoryDone ?? []), soloist] }
+      : {}),
   };
 }
 
 function advanceToNextGame(state: DokoState): DokoState {
-  const nextGameNum = state.gameNumber + 1;
-  const nextDealer = nextDealerIndex(state.dealerSeat, state.playerCount);
+  // Ein Pflichtsolo zählt nicht als Spiel der Serie: Der Geber bleibt und gibt noch einmal.
+  const repeat = state.contract.mandatory === true;
+  const nextGameNum = repeat ? state.gameNumber : state.gameNumber + 1;
+  const nextDealer = repeat ? state.dealerSeat : nextDealerIndex(state.dealerSeat, state.playerCount);
   const activeSeats = getActivePlayers(nextDealer, state.playerCount, 4);
 
   const rng = new Rng(state.dealRng);
@@ -573,7 +627,7 @@ function advanceToNextGame(state: DokoState): DokoState {
     }
   }
 
-  return {
+  const next: DokoState = {
     ...state,
     dealRng: rng.state,
     gameNumber: nextGameNum,
@@ -596,7 +650,14 @@ function advanceToNextGame(state: DokoState): DokoState {
     leaderSeat: activeSeats[0],
     reExtraPoints: 0,
     kontraExtraPoints: 0,
+    ...(state.mandatorySolo ? { forcedSeat: null } : {}),
   };
+  return state.mandatorySolo && !seriesOver(next) ? applyVorfuehrung(next) : next;
+}
+
+/** Serie vorbei: alle Spiele gespielt und (mit Pflichtsolo) jedes Pflichtsolo erledigt. */
+function seriesOver(state: DokoState): boolean {
+  return state.gameNumber > state.totalGames && owingSolo(state).length === 0;
 }
 
 // =============================================================================
@@ -686,7 +747,7 @@ export function sampleHidden(view: DokoState, seat: SeatId, rng: Rng): DokoState
 }
 
 export function result(state: DokoState): Result | null {
-  if (state.gameNumber > state.totalGames) {
+  if (seriesOver(state)) {
     const playerScores = Object.entries(state.scores).map(([p, s]) => ({
       player: Number(p),
       score: s,
