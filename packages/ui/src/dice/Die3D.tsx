@@ -1,5 +1,6 @@
 import type { GameEvent } from '@brett-und-blatt/engine';
 import { useLayoutEffect, useRef, type CSSProperties } from 'react';
+import { useEventCounter } from '../effects/ScorePop';
 
 /** Augen je Seite als Plätze im 3×3-Raster (0 = oben links, 8 = unten rechts). */
 const PIPS: Record<number, number[]> = {
@@ -220,10 +221,5 @@ export function Die3D({ value, rollKey, still, delayMs = 0, crit, color, pipColo
  * damit ein geöffnetes Spiel nicht sofort würfelt.
  */
 export function useRollCounter(events: GameEvent[], isRoll: (event: GameEvent) => boolean = (e) => e.type === 'rolled'): number {
-  const state = useRef({ events, count: 0 });
-  if (state.current.events !== events) {
-    state.current.events = events;
-    if (events.some(isRoll)) state.current.count += 1;
-  }
-  return state.current.count;
+  return useEventCounter(events, isRoll);
 }

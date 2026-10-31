@@ -1,4 +1,4 @@
-import { Die3D, useRollCounter, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { Die3D, ScorePop, useLatestEvent, useRollCounter, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import {
   CATEGORY_LABELS,
   LOWER_CATEGORIES,
@@ -14,6 +14,7 @@ const nameOf = (names: string[], seat: number) => names[seat] ?? `Platz ${seat +
 
 function Board({ view, legalMoves, onMove, viewer, seatNames, events }: BoardProps<KniffelState, KniffelMove>) {
   const rollKey = useRollCounter(events);
+  const scoredPop = useLatestEvent(events, (e) => e.type === 'scored');
   // Fünf Gleiche leuchten golden auf.
   const allSame = view.dice !== null && view.dice.values.every((v) => v === view.dice!.values[0]);
   const myTurn = viewer !== 'spectator' && viewer === view.turn && !view.finished;
@@ -24,7 +25,19 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events }: BoardPro
 
   const cell = (seat: number, category: Category) => {
     const filled = view.sheets[seat]!.scores[category];
-    if (typeof filled === 'number') return <span>{filled}</span>;
+    if (typeof filled === 'number') {
+      const pop = scoredPop.event;
+      if (pop && pop.seat === seat && pop.category === category)
+        return (
+          <span className="kniffel-scored">
+            <span key={scoredPop.count} className="bub-plop">
+              {filled}
+            </span>
+            <ScorePop value={filled} trigger={scoredPop.count} big={category === 'kniffel' && filled > 0} />
+          </span>
+        );
+      return <span>{filled}</span>;
+    }
     if (seat === view.turn && scorable.has(category) && view.dice) {
       const potential = calculateScore(category, view.dice.values);
       return (

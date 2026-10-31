@@ -23,9 +23,9 @@ Bausteine, die viele Spiele tragen, kommen zuerst – sonst entsteht dieselbe Ar
 | **Siegerehrung** über den ganzen Bildschirm | `apps/web/src/components/Ceremony.tsx` | alle Spiele, online für alle | ✅ fertig (W-008, Etappe 4) |
 | Gleiten von Figuren `useGridMoveAnimation` | `packages/ui/src/dnd/` | Schach, Vierer-Schach, Dame | vorhanden; ausweiten auf Mühle, Ultimate, Gomoku (Setzen) |
 | Karten-Flug `useSpawnAnimation` | `packages/ui/src/dnd/` | Eins!, Mau-Mau | vorhanden; ausweiten auf Stichspiele, Präsident, Schwarzer Peter |
-| **Punkte-Fähnchen** („+12“ steigt auf und verblasst) | neu in `packages/ui` | Würfelblock, Wortgitter, Domino, Farbe & Form, Quiz-Spiele, Narrenhof | offen – hoher Nutzen, klein |
+| **Punkte-Fähnchen** `ScorePop` + `useLatestEvent` | `packages/ui/src/effects/` | Würfelblock, Wortgitter, Farbe & Form; später Domino, Quiz-Spiele, Narrenhof | ✅ fertig (Schritt 2) |
 | **Stich einsammeln** (vier Karten fliegen gebündelt zum Gewinner) | `TrickTable` | Skat, Schafkopf, Doppelkopf, Binokel, Präsident | offen – ein Eingriff für fünf Spiele |
-| **Stein-Plopp** (kurzes Einfedern beim Setzen, Ring auf dem Feld) | `GridBoard`/`NetBoard` | Tic-Tac-Toe, Vier in einer Reihe, Reversi, Gomoku, Go, Mühle, Teiler-Duell | offen – klein |
+| **Stein-Plopp** (Klasse `bub-plop`) | `packages/ui/src/ui.css` | Reversi, Farbe & Form, Wortgitter; später Gomoku, Go, Mühle, Teiler-Duell | ✅ fertig (Schritt 2) |
 | **Rundenende-Zwischenstand** (Punkte zählen hoch, Rangwechsel gleitet) | neu, ähnlich `Ceremony` | Serien-Spiele: Stichspiele, Tiefflug, Präsident, Kartenblitz, Speed, Mäxle (Leben) | offen – mittel; ergänzt W-008, das nur das Partieende abdeckt |
 | Vibration (`navigator.vibrate`) bei Treffern und Fehlern | `apps/web/src/lib/` | Echtzeit- und Würfelspiele | offen – klein, mit Schalter in den Ton-Einstellungen |
 
@@ -37,10 +37,10 @@ Spalten: **Kernhandlung** – was man immer wieder tut. **Heute** – was dabei 
 
 | Spiel | Kernhandlung | Heute | Ideen | W/A |
 | --- | --- | --- | --- | --- |
-| Tic-Tac-Toe | Zeichen setzen | Zeichen erscheint, Klang | Kreuz und Kreis zeichnen sich mit Strich-Animation (`stroke-dashoffset`), Gewinnlinie wird durchgezogen | ★★★ |
+| Tic-Tac-Toe | Zeichen setzen | Zeichen zeichnen sich mit Strich-Animation, Klang; Gewinnlinie wird durchgezogen (Schritt 2) | fertig | – |
 | Vier in einer Reihe | Stein einwerfen | Fall-Animation, Klang | Aufprall mit kleinem Nachfedern, Gewinnreihe leuchtet nacheinander auf | ★★ |
 | Ultimate Tic-Tac-Toe | Zeichen setzen, Zielfeld wechselt | Hervorhebung, Klang bei gewonnenem Kleinfeld | Pfeil/Gleiten vom gesetzten Feld zum Zielbrett, gewonnenes Kleinfeld klappt zum großen Zeichen um | ★★★ |
-| Reversi | Stein setzen, Steine drehen | Steine wechseln Farbe | Steine drehen sich als Welle vom gesetzten Stein aus (3D-Flip, 40 ms Versatz je Abstand), Klang pro Stein leiser | ★★★ |
+| Reversi | Stein setzen, Steine drehen | Steine drehen nacheinander (60 ms Versatz), gesetzter Stein ploppt ein (Schritt 2) | Welle nach Abstand vom gesetzten Stein statt nach Reihenfolge, Klang pro Stein leiser | ★ |
 | Mühle | Setzen, Ziehen, Schlagen | Klang, kaum Bewegung | Gleiten mit `useGridMoveAnimation` (NetBoard), Mühle leuchtet als Linie auf, geschlagener Stein fliegt zur Seite | ★★ |
 | Gomoku | Stein setzen | Klang | Stein-Plopp, Fünferreihe mit Lichtlauf | ★★ |
 | Go | Stein setzen, Gefangene nehmen | Klang | Gefangene schrumpfen und fliegen in die Gefangenenschale, Zähler hüpft | ★★ |
@@ -71,11 +71,11 @@ Spalten: **Kernhandlung** – was man immer wieder tut. **Heute** – was dabei 
 
 | Spiel | Kernhandlung | Heute | Ideen | W/A |
 | --- | --- | --- | --- | --- |
-| Würfelblock | Würfeln, halten, eintragen | 3D-Würfel, gestaffelt, gehaltene bleiben liegen (Etappe 4) | Eingetragener Wert fliegt aus den Würfeln in die Zeile, Fünferpasch golden (fertig), Bonus +35 mit Fähnchen | ★★ |
+| Würfelblock | Würfeln, halten, eintragen | 3D-Würfel, gestaffelt, gehaltene bleiben liegen (Etappe 4); eingetragener Wert mit Punkte-Fähnchen (Schritt 2) | Wert fliegt aus den Würfeln in die Zeile, Bonus +35 mit Fähnchen | ★ |
 | Mäxle | Würfeln, schauen, ansagen | Becher klappert, 3D-Würfel beim Schauen (Etappe 4) | Aufdecken mit Trommelwirbel; Lüge mit rotem, Wahrheit mit grünem Aufleuchten | ★★ |
 | Domino | Stein anlegen | Klack-Klang | Stein gleitet an die Kette und rastet mit kleinem Einfedern ein, Fünfer-Punkte als Fähnchen | ★★ |
-| Farbe & Form | Plättchen legen | Klang | Punktefähnchen pro Linie, „Sechser-Reihe“ mit Lichtlauf | ★★★ |
-| Wortgitter | Wort legen | Vorschau mit Punkten | Steine rasten nacheinander ein, Prämienfelder blitzen auf, Punktefähnchen, 50er-Bonus mit eigenem Glanz | ★★★ |
+| Farbe & Form | Plättchen legen | Klang; gelegte Steine ploppen ein, Punkte-Fähnchen, golden bei voller Reihe (Schritt 2) | „Sechser-Reihe“ mit Lichtlauf | ★ |
+| Wortgitter | Wort legen | Vorschau mit Punkten; Steine federn nacheinander ein, Punkte-Fähnchen, 50er-Prämie golden (Schritt 2) | Prämienfelder blitzen auf | ★ |
 | Bingo | Kugel ziehen, stempeln | Kugel, Stempel, viele Animationen | fertig; Reihe mit Lichtlauf vor dem „Bingo!“ | ★ |
 | Schiffe versenken | Schuss | Zielen, Treffer, Versenken mit Klang | Wasserfontäne bzw. Explosion auf dem Feld, versenktes Schiff wird sichtbar | ★★ |
 | Galgenmännchen | Buchstabe raten | Klang, Bild wächst | Buchstabe fliegt ins Wort und erscheint an allen Stellen nacheinander | ★★ |
@@ -90,7 +90,7 @@ Spalten: **Kernhandlung** – was man immer wieder tut. **Heute** – was dabei 
 Nach Wirkung je Aufwand und danach, wie viele Spiele ein Schritt trägt:
 
 1. ✅ **Würfel und Siegerehrung** (Etappe 4).
-2. **Punkte-Fähnchen und Stein-Plopp** als Bausteine, eingesetzt in Tic-Tac-Toe, Reversi (Dreh-Welle), Farbe & Form, Wortgitter.
+2. ✅ **Punkte-Fähnchen und Stein-Plopp** als Bausteine, eingesetzt in Farbe & Form, Wortgitter, Würfelblock und Reversi; Tic-Tac-Toe-Gewinnlinie. (Strich-Animation in Tic-Tac-Toe und Dreh-Welle in Reversi gab es schon.)
 3. **Stich einsammeln und Karten-Flug** im `TrickTable` für Skat, Schafkopf, Doppelkopf, Binokel und Präsident.
 4. **Paare finden, Ultimate Tic-Tac-Toe, Mühle** (Umdrehen, Zielbrett-Pfeil, Gleiten).
 5. **Rundenende-Zwischenstand** für Serien-Spiele.

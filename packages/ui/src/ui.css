@@ -778,3 +778,86 @@ button.bub-net-point:not(:disabled) {
     animation: none;
   }
 }
+
+/* Punkte-Fähnchen (ScorePop): springt auf, steigt und verblasst. */
+.bub-pop {
+  position: absolute;
+  left: 50%;
+  bottom: 60%;
+  z-index: 30;
+  padding: 0.1em 0.45em;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-size: clamp(0.8rem, 3.2vmin, 1.15rem);
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+  pointer-events: none;
+  animation: bub-pop 1.3s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+.bub-pop[data-big] {
+  background: linear-gradient(#ffe066, #e8b923);
+  color: #3b2a00;
+  font-size: clamp(1rem, 4.4vmin, 1.6rem);
+  box-shadow:
+    0 0 0 2px #fff3b0,
+    0 0 18px #ffd54a;
+  animation-duration: 1.7s;
+}
+
+@keyframes bub-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 40%) scale(0.4);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -10%) scale(1.18);
+  }
+  25% {
+    transform: translate(-50%, -20%) scale(1);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -160%) scale(0.95);
+  }
+}
+
+/* Stein-Plopp: Ein neu gesetzter Stein federt kurz ein. Als Klasse `bub-plop` auf den Stein. */
+.bub-plop {
+  animation: bub-plop 0.32s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+@keyframes bub-plop {
+  from {
+    opacity: 0.4;
+    transform: scale(0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bub-pop {
+    animation: bub-fade-pop 1.3s linear forwards;
+    transform: translateX(-50%);
+  }
+
+  .bub-plop {
+    animation: none;
+  }
+}
+
+@keyframes bub-fade-pop {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
