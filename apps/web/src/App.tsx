@@ -25,6 +25,6 @@ export function App() {
     case 'privacy':
       return <Datenschutz />;
     default:
-      return <Home initialFilter={route.filter} />;
+      return <Home initialFilter={route.filter} initialPlayers={route.players} />;
   }
 }

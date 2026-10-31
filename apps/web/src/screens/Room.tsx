@@ -1,6 +1,6 @@
 import { BOT_LEVELS, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
-import { MAX_SEATS, parseRoomCode, type LobbySeat, type RoomMessage } from '@brett-und-blatt/online';
-import { useEffect, useRef, useState } from 'react';
+import { MAX_SEATS, parseRoomCode, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { ProfileForm, QrCode, ReactionBar, SignalToasts } from '../components/OnlineParts';
 import { t } from '../i18n';
@@ -121,7 +121,12 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
               return state.room?.members.find((m) => m.id === seat.memberId)?.avatar ?? null;
             }),
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
-            extra: <ReactionBar onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} />,
+            extra: (
+              <>
+                <GameSeats session={session} seatLabel={loaded.ui.seatLabel} room={room} you={state.you} isHost={isHost} send={connection.send.bind(connection)} />
+                <ReactionBar onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} />
+              </>
+            ),
           }}
         />
         {toasts}
@@ -138,6 +143,77 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
       {errorBox}
       {banner}
     </>
+  );
+}
+
+/**
+ * Plätze während der Partie: Die Raumleitung nimmt Abwesende vom Platz, Zuschauer
+ * übernehmen einen freigegebenen Platz, den solange der Computer spielt.
+ */
+function GameSeats({
+  session,
+  seatLabel,
+  room,
+  you,
+  isHost,
+  send,
+}: {
+  session: OnlineSession;
+  seatLabel: LoadedGame['ui']['seatLabel'];
+  room: RoomMessage;
+  you: string | null;
+  isHost: boolean;
+  send: RoomConnection['send'];
+}) {
+  // Neue Spielstände ändern die Sitzung selbst, nicht den Raum – deshalb eigens abonnieren.
+  useSyncExternalStore(
+    (listener) => session.subscribe(listener),
+    () => session.version,
+  );
+  if (session.result) return null;
+  const seats = session.config.seats.map((seat, index) => {
+    const memberId = session.seatMember(index);
+    return { index, seat, memberId, member: room.members.find((m) => m.id === memberId), orphaned: seat.kind === 'human' && memberId === null && session.isAway(index) };
+  });
+  const orphaned = session.yourSeat === null ? seats.filter((s) => s.orphaned) : [];
+  const others = isHost ? seats.filter((s) => s.memberId !== null && s.memberId !== you) : [];
+  if (orphaned.length === 0 && others.length === 0) return null;
+  return (
+    <div className="mx-3 mt-2 space-y-2 text-sm">
+      {orphaned.map(({ index, seat }) => (
+        <div key={index} className="flex flex-wrap items-center gap-2 rounded-xl border border-accent/40 bg-accent/10 p-2">
+          <span className="flex-1">
+            🪑 {seatLabel(index, seats.length)}: {t('online.seatFreeBot')}
+          </span>
+          <Button variant="primary" className="min-h-9 text-sm" onClick={() => send({ type: 'takeSeat', index })}>
+            {t('online.takeOver')}
+          </Button>
+        </div>
+      ))}
+      {others.length > 0 && (
+        <details className="rounded-xl border border-line bg-surface p-2">
+          <summary className="cursor-pointer font-medium">🪑 {t('online.seatsInGame')}</summary>
+          <p className="mt-1 text-xs text-muted">{t('online.unseatRunning')}</p>
+          <ul className="mt-2 space-y-1">
+            {others.map(({ index, member, seat }) => {
+              const name = member?.name ?? seat.name;
+              return (
+                <li key={index} className="flex items-center gap-2">
+                  <span className={`min-w-0 flex-1 truncate ${member?.connected === false ? 'text-muted' : ''}`}>
+                    {member?.avatar ?? seat.avatar} {name}
+                    {member?.connected === false && <span className="ml-1 text-xs">· {t('online.offline')}</span>}
+                    {session.isAway(index) && <span className="ml-1 text-xs">· 🤖</span>}
+                  </span>
+                  <Button variant="ghost" className="min-h-9 text-sm" onClick={() => window.confirm(t('online.unseatConfirm', { name })) && send({ type: 'unseat', index })}>
+                    {t('online.unseat')}
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        </details>
+      )}
+    </div>
   );
 }
 
@@ -241,6 +317,23 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
             </span>
           </label>
         )}
+        {isHost && (
+          <label className="flex cursor-pointer select-none items-center gap-3 border-t border-line pt-2">
+            <input
+              type="checkbox"
+              checked={lobby.namesLocked ?? false}
+              onChange={(e) => send({ type: 'setNamesLocked', locked: e.target.checked })}
+              className="h-4 w-4 rounded accent-accent"
+            />
+            <div className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">{t('online.namesLocked')}</span>
+              <span className="block text-xs text-muted">{t('online.namesLockedHint')}</span>
+            </div>
+            <span className="text-xl" aria-hidden="true">
+              🔒
+            </span>
+          </label>
+        )}
       </section>
 
       <Section title={t('online.game')}>
@@ -338,24 +431,26 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
       )}
 
       <Section title={t('online.members')}>
+        {!isHost && lobby.namesLocked && <p className="text-sm text-muted">🔒 {t('online.namesLockedNotice')}</p>}
         <ul className="space-y-1">
           {room.members.map((member) => (
-            <li key={member.id} className="flex items-center gap-2 rounded-xl bg-surface px-3 py-2">
-              <span className="text-xl" aria-hidden="true">
-                {member.avatar}
-              </span>
-              <span className={`flex-1 font-medium ${member.connected ? '' : 'text-muted'}`}>
-                {member.name}
-                {member.id === state.you && ` (${t('online.you')})`}
-                {member.id === room.hostId && <span className="ml-2 text-xs text-muted">👑 {t('online.host')}</span>}
-                {!member.connected && <span className="ml-2 text-xs">· {t('online.offline')}</span>}
-              </span>
-              {isHost && member.id !== state.you && (
-                <Button variant="ghost" className="min-h-9 text-sm" onClick={() => window.confirm(t('online.kickConfirm', { name: member.name })) && send({ type: 'kick', memberId: member.id })}>
-                  {t('online.kick')}
-                </Button>
-              )}
-            </li>
+            <MemberRow
+              key={member.id}
+              member={member}
+              isYou={member.id === state.you}
+              isHost={isHost}
+              isRoomHost={member.id === room.hostId}
+              canEdit={member.id === state.you ? isHost || (!member.nameFixed && !lobby.namesLocked) : isHost}
+              onSave={(profile) => {
+                if (member.id === state.you) {
+                  storage.saveProfile(profile);
+                  connection.rename(profile);
+                } else {
+                  send({ type: 'renameMember', memberId: member.id, name: profile.name, avatar: profile.avatar });
+                }
+              }}
+              onKick={() => window.confirm(t('online.kickConfirm', { name: member.name })) && send({ type: 'kick', memberId: member.id })}
+            />
           ))}
         </ul>
       </Section>
@@ -371,6 +466,77 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
         <p className="text-center text-sm text-muted">{t('online.startHint')}</p>
       ) : null}
     </Page>
+  );
+}
+
+function MemberRow({
+  member,
+  isYou,
+  isHost,
+  isRoomHost,
+  canEdit,
+  onSave,
+  onKick,
+}: {
+  member: MemberInfo;
+  isYou: boolean;
+  isHost: boolean;
+  isRoomHost: boolean;
+  canEdit: boolean;
+  onSave: (profile: Profile) => void;
+  onKick: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  return (
+    <li className="space-y-2 rounded-xl bg-surface px-3 py-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xl" aria-hidden="true">
+          {member.avatar}
+        </span>
+        <span className={`min-w-0 flex-1 font-medium ${member.connected ? '' : 'text-muted'}`}>
+          {member.name}
+          {isYou && ` (${t('online.you')})`}
+          {isRoomHost && <span className="ml-2 text-xs text-muted">👑 {t('online.host')}</span>}
+          {member.nameFixed && (
+            <span className="ml-1 text-xs" title={t('online.nameFixed')}>
+              🔒<span className="sr-only"> {t('online.nameFixed')}</span>
+            </span>
+          )}
+          {!member.connected && <span className="ml-2 text-xs">· {t('online.offline')}</span>}
+        </span>
+        {canEdit && !editing && (
+          <Button
+            variant="ghost"
+            className="min-h-9 text-sm"
+            aria-label={isYou ? t('online.editProfile') : t('online.editProfileFor', { name: member.name })}
+            onClick={() => setEditing(true)}
+          >
+            ✏️ {t('online.editProfile')}
+          </Button>
+        )}
+        {isHost && !isYou && (
+          <Button variant="ghost" className="min-h-9 text-sm" onClick={onKick}>
+            {t('online.kick')}
+          </Button>
+        )}
+      </div>
+      {editing && (
+        <div className="space-y-2 border-t border-line pt-2">
+          {!isYou && <p className="text-sm text-muted">{t('online.editProfileFor', { name: member.name })}</p>}
+          <ProfileForm
+            initial={{ name: member.name, avatar: member.avatar }}
+            submitLabel={t('online.saveProfile')}
+            onSave={(profile) => {
+              onSave(profile);
+              setEditing(false);
+            }}
+          />
+          <Button variant="ghost" className="w-full" onClick={() => setEditing(false)}>
+            {t('online.cancel')}
+          </Button>
+        </div>
+      )}
+    </li>
   );
 }
 
@@ -416,6 +582,11 @@ function SeatRow({
         {mine && (
           <Button variant="ghost" className="min-h-9 text-sm" onClick={() => send({ type: 'leaveSeat' })}>
             {t('online.standUp')}
+          </Button>
+        )}
+        {isHost && !mine && seat.kind === 'human' && seat.memberId !== null && (
+          <Button variant="ghost" className="min-h-9 text-sm" aria-label={`${t('online.unseat')}: ${member?.name ?? ''}`} onClick={() => send({ type: 'unseat', index })}>
+            {compact ? '✕' : t('online.unseat')}
           </Button>
         )}
         {compact && isHost && (seat.kind === 'bot' || seat.memberId === null) && (

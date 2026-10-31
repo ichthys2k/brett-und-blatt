@@ -77,6 +77,8 @@ interface Member {
   disconnectedAt: number | null;
   /** Hat der Raum den Platz wegen der fehlenden Verbindung einem Bot übergeben? */
   awayByDisconnect: boolean;
+  /** Name und Bild hat die Raumleitung festgelegt; das Mitglied kann sie nicht mehr ändern. */
+  nameFixed: boolean;
   /** Zeitstempel kürzlich gesendeter Signale zur Spam-Begrenzung. */
   recentSignals: number[];
 }
@@ -87,6 +89,8 @@ interface Game {
   /** Welches Mitglied an welchem Platz sitzt (null bei Bots). */
   seatMembers: (string | null)[];
   seats: PublicSeat[];
+  /** Welcher Lobby-Platz zu welchem Platz der Partie gehört (freie Lobby-Plätze fallen beim Start weg). */
+  lobbyIndex?: number[];
   time: LobbySettings['time'];
   round: number;
   /** Damit die Versionsnummer nach einem Neustart des Servers weiterzählt statt bei 0 anzufangen. */
@@ -104,14 +108,14 @@ export interface RoomSnapshot {
   phase: RoomPhase;
   lobby: LobbySettings;
   /** `disconnectedAt`: seit wann ohne Verbindung (null: beim Speichern verbunden). */
-  members: { id: string; token: string; name: string; avatar: string; awayByDisconnect: boolean; disconnectedAt: number | null }[];
+  members: { id: string; token: string; name: string; avatar: string; awayByDisconnect: boolean; disconnectedAt: number | null; nameFixed?: boolean }[];
   kicked: string[];
   nextMember: number;
   lastVersion: number;
   rounds: number;
   createdAt?: number;
   lastActivity: number;
-  game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; time: LobbySettings['time']; version: number; round: number } | null;
+  game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; lobbyIndex?: number[]; time: LobbySettings['time']; version: number; round: number } | null;
 }
 
 /**
@@ -295,14 +299,16 @@ export class Room {
       hostId: this.hostId,
       phase: this.phase,
       lobby: structuredClone(this.lobby),
-      members: [...this.members.values()].map(({ id, token, name, avatar, awayByDisconnect, disconnectedAt }) => ({ id, token, name, avatar, awayByDisconnect, disconnectedAt })),
+      members: [...this.members.values()].map(({ id, token, name, avatar, awayByDisconnect, disconnectedAt, nameFixed }) => ({ id, token, name, avatar, awayByDisconnect, disconnectedAt, ...(nameFixed ? { nameFixed } : {}) })),
       kicked: [...this.kicked],
       nextMember: this.nextMember,
       lastVersion: this.lastVersion,
       rounds: this.rounds,
       createdAt: this.createdAt,
       lastActivity: this.lastActivity,
-      game: game ? { session: game.session.snapshot(), seatMembers: [...game.seatMembers], seats: game.seats, time: game.time, version: this.gameVersion(), round: game.round } : null,
+      game: game
+        ? { session: game.session.snapshot(), seatMembers: [...game.seatMembers], seats: game.seats, ...(game.lobbyIndex ? { lobbyIndex: game.lobbyIndex } : {}), time: game.time, version: this.gameVersion(), round: game.round }
+        : null,
     };
   }
 
@@ -327,14 +333,14 @@ export class Room {
     for (const m of snapshot.members) {
       // Wer schon vorher weg war, behält seinen Zeitpunkt – sonst begänne die Frist bei jedem
       // Aufwachen des Servers von vorn. Wer verbunden war, gilt bis zur Wiederzuordnung als weg.
-      room.members.set(m.id, { ...m, connections: new Set(), disconnectedAt: m.disconnectedAt ?? now, recentSignals: [] });
+      room.members.set(m.id, { ...m, nameFixed: m.nameFixed ?? false, connections: new Set(), disconnectedAt: m.disconnectedAt ?? now, recentSignals: [] });
       room.tokens.set(m.token, m.id);
     }
     const saved = snapshot.game;
     const module = saved ? deps.findGame(saved.session.config.gameId) : undefined;
     if (saved && module) {
       const session = LocalSession.restore(module, saved.session, room.sessionDeps(), { resumeClocks: true });
-      room.attachGame({ module, session, seatMembers: saved.seatMembers, seats: saved.seats, time: saved.time, round: saved.round, versionOffset: saved.version - session.version, unsubscribe: () => {} });
+      room.attachGame({ module, session, seatMembers: saved.seatMembers, seats: saved.seats, ...(saved.lobbyIndex ? { lobbyIndex: saved.lobbyIndex } : {}), time: saved.time, round: saved.round, versionOffset: saved.version - session.version, unsubscribe: () => {} });
     } else if (saved) {
       room.phase = 'lobby';
     }
@@ -373,14 +379,17 @@ export class Room {
         connections: new Set(),
         disconnectedAt: null,
         awayByDisconnect: false,
+        nameFixed: false,
         recentSignals: [],
       };
       this.members.set(member.id, member);
       this.tokens.set(member.token, member.id);
       this.hostId ??= member.id;
-    } else {
+    } else if (this.mayRename(member)) {
+      // Beim Wiederkommen gilt der Name aus dem Profil – außer die Raumleitung hat ihn festgelegt.
       member.name = name;
       member.avatar = cleanAvatar(message.avatar);
+      this.syncSeatName(member);
     }
     this.connections.set(connectionId, member.id);
     member.connections.add(connectionId);
@@ -403,10 +412,41 @@ export class Room {
     const deny = () => this.error(connectionId, 'notAllowed', 'Das ist gerade nicht möglich.');
     switch (message.type) {
       case 'setName': {
+        if (!this.mayRename(member)) return this.error(connectionId, 'notAllowed', 'Die Spielleitung hat die Namen festgelegt.');
         const name = cleanName(message.name);
         if (!name) return this.error(connectionId, 'badName', 'Bitte einen anderen Spitznamen wählen.');
         member.name = name;
         member.avatar = cleanAvatar(message.avatar);
+        this.syncSeatName(member);
+        return this.broadcastRoom();
+      }
+      case 'renameMember': {
+        const target = this.members.get(message.memberId);
+        if (!isHost || !target) return deny();
+        const name = cleanName(message.name);
+        if (!name) return this.error(connectionId, 'badName', 'Bitte einen anderen Spitznamen wählen.');
+        target.name = name;
+        target.avatar = cleanAvatar(message.avatar);
+        // Die Raumleitung selbst bleibt frei, alle anderen behalten den festgelegten Namen.
+        target.nameFixed = target.id !== member.id;
+        this.syncSeatName(target);
+        return this.broadcastRoom();
+      }
+      case 'setNamesLocked':
+        if (!isHost) return deny();
+        this.lobby.namesLocked = message.locked;
+        return this.broadcastRoom();
+      case 'unseat': {
+        if (!isHost) return deny();
+        if (this.phase === 'lobby') {
+          const seat = this.lobby.seats[message.index];
+          if (seat?.kind !== 'human' || seat.memberId === null) return deny();
+          seat.memberId = null;
+          return this.broadcastRoom();
+        }
+        const memberId = this.game?.seatMembers[message.index];
+        if (this.phase !== 'playing' || !memberId) return deny();
+        this.vacateSeat(message.index);
         return this.broadcastRoom();
       }
       case 'setGame': {
@@ -449,6 +489,24 @@ export class Room {
         return this.broadcastRoom();
       }
       case 'takeSeat': {
+        // Ein Platz, den die Raumleitung freigegeben hat und den solange ein Bot spielt, lässt sich übernehmen.
+        if (this.phase === 'playing' && this.game && this.isOrphaned(message.index)) {
+          if (this.seatOf(member.id) !== null) return deny();
+          const index = message.index;
+          this.game.seatMembers[index] = member.id;
+          this.game.seats[index] = { kind: 'human', name: member.name, avatar: member.avatar, memberId: member.id };
+          if (this.game.seatMoved) this.game.seatMoved[index] = this.gameVersion();
+          const lobbyIndex = this.game.lobbyIndex?.[index];
+          const lobbySeat = lobbyIndex !== undefined ? this.lobby.seats[lobbyIndex] : undefined;
+          if (lobbySeat?.kind === 'human') {
+            this.unseat(member.id);
+            lobbySeat.memberId = member.id;
+          }
+          member.awayByDisconnect = false;
+          this.broadcastRoom();
+          this.game.session.returnSeat(index);
+          return;
+        }
         if (this.phase === 'playing' && this.game?.module.info.joinMidGame) {
           if (this.seatOf(member.id) !== null) return deny();
           const index = message.index;
@@ -582,6 +640,9 @@ export class Room {
       return this.error(connectionId, 'notAllowed', 'Es sind noch Plätze frei.');
     }
     const seats = module.info.joinMidGame ? this.lobby.seats : occupied;
+    const lobbyIndex = module.info.joinMidGame
+      ? this.lobby.seats.map((_, i) => i)
+      : this.lobby.seats.flatMap((s, i) => (s.kind === 'bot' || s.memberId !== null ? [i] : []));
     const emptyIndices = module.info.joinMidGame
       ? seats.map((s, i) => (s.kind === 'human' && s.memberId === null ? i : -1)).filter((i) => i >= 0)
       : [];
@@ -610,7 +671,7 @@ export class Room {
     // Die Versionen zählen über Partien hinweg weiter, damit kein alter Zug in eine neue Partie rutscht.
     const versionOffset = this.lastVersion + 1;
     this.rounds++;
-    this.attachGame({ module, session, seatMembers: publicSeats.map((s) => s.memberId), seats: publicSeats, time: this.lobby.time, round: this.rounds, versionOffset, unsubscribe: () => {} });
+    this.attachGame({ module, session, seatMembers: publicSeats.map((s) => s.memberId), seats: publicSeats, lobbyIndex, time: this.lobby.time, round: this.rounds, versionOffset, unsubscribe: () => {} });
     for (const member of this.members.values()) member.awayByDisconnect = false;
     this.broadcastRoom();
     this.broadcastGame([]);
@@ -724,16 +785,56 @@ export class Room {
     this.game.session.leaveSeat(seat, 'Frei');
   }
 
+  /**
+   * Nimmt ein Mitglied in der laufenden Partie vom Platz. Bei Spielen mit laufendem Einstieg
+   * wird der Platz frei; sonst spielt ein Bot weiter, bis jemand den Platz übernimmt.
+   */
+  private vacateSeat(seat: SeatId): void {
+    const game = this.game;
+    if (!game) return;
+    if (game.module.info.joinMidGame && game.session.canLeaveSeat(seat)) return this.freeRunningSeat(seat);
+    const memberId = game.seatMembers[seat];
+    const m = memberId ? this.members.get(memberId) : undefined;
+    if (m) m.awayByDisconnect = false;
+    game.seatMembers[seat] = null;
+    game.seats[seat] = { kind: 'human', name: 'Frei', memberId: null };
+    const lobbyIndex = game.lobbyIndex?.[seat];
+    const lobbySeat = lobbyIndex !== undefined ? this.lobby.seats[lobbyIndex] : undefined;
+    if (lobbySeat?.kind === 'human') lobbySeat.memberId = null;
+    // Schon abwesend (Verbindung weg): markAway meldet nichts, also selbst Bescheid geben.
+    if (game.session.isAway(seat) || game.session.result) this.broadcastGame([]);
+    else game.session.markAway(seat);
+  }
+
+  /** Ein freigegebener Platz, den ein Bot vertritt (nicht bei Spielen mit laufendem Einstieg über `leaveSeat`). */
+  private isOrphaned(seat: number): boolean {
+    const game = this.game;
+    if (!game || game.session.result) return false;
+    const publicSeat = game.seats[seat];
+    return publicSeat?.kind === 'human' && publicSeat.memberId === null && game.seatMembers[seat] === null && game.session.isAway(seat);
+  }
+
+  /** Darf ein Mitglied seinen Namen selbst ändern? */
+  private mayRename(member: Member): boolean {
+    if (member.id === this.hostId) return true;
+    return !member.nameFixed && !this.lobby.namesLocked;
+  }
+
+  /** Name und Bild am Platz der laufenden Partie nachziehen. */
+  private syncSeatName(member: Member): void {
+    const seat = this.seatOf(member.id);
+    const publicSeat = seat !== null ? this.game?.seats[seat] : undefined;
+    if (!publicSeat) return;
+    publicSeat.name = member.name;
+    publicSeat.avatar = member.avatar;
+    this.broadcastGame([]);
+  }
+
   private removeMember(member: Member): void {
     this.unseat(member.id);
     const seat = this.seatOf(member.id);
-    if (seat !== null && this.phase === 'playing') {
-      if (this.game?.module.info.joinMidGame && this.game.session.canLeaveSeat(seat)) {
-        this.freeRunningSeat(seat);
-      } else {
-        this.game?.session.markAway(seat);
-      }
-    }
+    if (seat !== null && this.phase === 'playing') this.vacateSeat(seat);
+    else if (seat !== null && this.game) this.game.seatMembers[seat] = null;
     this.members.delete(member.id);
     this.tokens.delete(member.token);
     if (this.hostId === member.id) this.hostId = [...this.members.values()].find((m) => m.disconnectedAt === null)?.id ?? this.members.keys().next().value ?? null;
@@ -755,7 +856,7 @@ export class Room {
   }
 
   private roomMessage(): RoomMessage {
-    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, connected: m.disconnectedAt === null }));
+    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}) }));
     return { type: 'room', code: this.code, phase: this.phase, hostId: this.hostId, members, lobby: this.lobby };
   }
 

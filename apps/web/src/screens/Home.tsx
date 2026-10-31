@@ -205,6 +205,33 @@ const FILTER_TABS: readonly { id: FilterId; icon: string; label: string }[] = [
   { id: 'math', icon: '📐', label: 'Mathe (Kl. 5/6)' },
 ];
 
+/** Auswahl „Wie viele spielt ihr?“ – zeigt nur Spiele, deren Platzzahl die Anzahl zulässt. */
+const PLAYER_COUNTS: readonly number[] = [1, 2, 3, 4, 5, 6, 8, 10, 20, 30];
+const PLAYER_COUNT_KEY = 'bub.home.players';
+
+/** Passt ein Spiel für so viele Spieler? (`null` = keine Auswahl, alles passt) */
+function fitsPlayers(info: GameInfo, count: number | null): boolean {
+  return count === null || (info.players.min <= count && count <= info.players.max);
+}
+
+function loadPlayerCount(): number | null {
+  try {
+    const value = Number(sessionStorage.getItem(PLAYER_COUNT_KEY));
+    return PLAYER_COUNTS.includes(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function savePlayerCount(count: number | null): void {
+  try {
+    if (count === null) sessionStorage.removeItem(PLAYER_COUNT_KEY);
+    else sessionStorage.setItem(PLAYER_COUNT_KEY, String(count));
+  } catch {
+    // Ohne Speicher gilt die Auswahl nur bis zum Neuladen.
+  }
+}
+
 function playerCount(info: GameInfo): string {
   const { min, max } = info.players;
   return min === max ? t('home.playersFixed', { count: min }) : t('home.players', { min, max });
@@ -256,10 +283,19 @@ function GameCard({ info }: { info: GameInfo }) {
   );
 }
 
-export function Home({ initialFilter }: { initialFilter?: string }) {
+export function Home({ initialFilter, initialPlayers }: { initialFilter?: string; initialPlayers?: number }) {
   const [snapshot, setSnapshot] = useState(() => storage.loadActive());
   const openRooms = useOpenRooms();
   const [searchQuery, setSearchQuery] = useState('');
+  const [players, setPlayersState] = useState<number | null>(() => initialPlayers ?? loadPlayerCount());
+  const setPlayers = (count: number | null) => {
+    setPlayersState(count);
+    savePlayerCount(count);
+  };
+
+  useEffect(() => {
+    if (initialPlayers !== undefined) setPlayersState(initialPlayers);
+  }, [initialPlayers]);
   const [activeFilter, setActiveFilter] = useState<FilterId>(() => {
     if (
       initialFilter === 'board' ||
@@ -298,28 +334,29 @@ export function Home({ initialFilter }: { initialFilter?: string }) {
           assigned.add(id);
         }
       }
-      return { ...cat, games: list };
+      return { ...cat, games: list.filter((g) => fitsPlayers(g, players)) };
     });
     // Falls weitere Spiele hinzukommen, die noch keiner Liste zugeordnet sind: in Familie einsortieren
     const unassigned = games.filter((g) => !assigned.has(g.id));
     if (unassigned.length > 0) {
       const fam = groups.find((g) => g.id === 'family');
-      if (fam) fam.games.push(...unassigned);
+      if (fam) fam.games.push(...unassigned.filter((g) => fitsPlayers(g, players)));
     }
     return groups;
-  }, []);
+  }, [players]);
 
   const filteredGamesBySearch = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return null;
     return games.filter((game) => {
+      if (!fitsPlayers(game, players)) return false;
       if (game.name.toLowerCase().includes(query)) return true;
       if (game.description.toLowerCase().includes(query)) return true;
       if (game.id.toLowerCase().includes(query)) return true;
       if (game.howToPlay.some((rule) => rule.toLowerCase().includes(query))) return true;
       return false;
     });
-  }, [searchQuery]);
+  }, [searchQuery, players]);
 
   const visibleGroups = useMemo(() => {
     if (filteredGamesBySearch !== null) {
@@ -336,10 +373,15 @@ export function Home({ initialFilter }: { initialFilter?: string }) {
         },
       ];
     }
-    return activeFilter === 'all'
-      ? categorizedGames
-      : categorizedGames.filter((g) => g.id === activeFilter);
-  }, [activeFilter, categorizedGames, filteredGamesBySearch]);
+    const groups = activeFilter === 'all' ? categorizedGames : categorizedGames.filter((g) => g.id === activeFilter);
+    // Mit Spielerzahl-Auswahl leere Rubriken weglassen
+    return players === null ? groups : groups.filter((g) => g.games.length > 0);
+  }, [activeFilter, categorizedGames, filteredGamesBySearch, players]);
+  const gameById = useMemo(() => new Map(games.map((g) => [g.id, g])), []);
+  const mathPresets = MATH_CLASSIC_PRESETS.filter((preset) => {
+    const info = gameById.get(preset.gameId);
+    return !info || fitsPlayers(info, players);
+  });
 
   return (
     <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-6 px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-[max(env(safe-area-inset-bottom),1.5rem)]">
@@ -434,9 +476,45 @@ export function Home({ initialFilter }: { initialFilter?: string }) {
         </nav>
       )}
 
+      {/* Spielerzahl-Auswahl */}
+      <nav aria-label="Spielerzahl" className="flex flex-wrap items-center gap-1.5">
+        <span className="mr-1 text-sm font-semibold text-muted">
+          <span aria-hidden="true">👥 </span>Wie viele spielt ihr?
+        </span>
+        {[null, ...PLAYER_COUNTS].map((count) => {
+          const isSelected = players === count;
+          return (
+            <button
+              key={count ?? 'all'}
+              type="button"
+              aria-pressed={isSelected}
+              aria-label={count === null ? 'Beliebig viele Spieler' : count === 1 ? '1 Spieler' : `${count} Spieler`}
+              onClick={() => setPlayers(count)}
+              className={`min-w-9 cursor-pointer rounded-full border px-2.5 py-1 text-sm font-semibold transition ${
+                isSelected ? 'border-accent bg-accent text-white shadow-xs' : 'border-line bg-surface text-ink hover:border-accent/50'
+              }`}
+            >
+              {count ?? 'egal'}
+            </button>
+          );
+        })}
+      </nav>
+
       {/* Strukturierte Spieleliste nach Rubriken */}
       <div className="space-y-8">
-        {visibleGroups.length === 0 && searchQuery.trim() ? (
+        {visibleGroups.length === 0 && !searchQuery.trim() && players !== null ? (
+          <section className="rounded-2xl border border-line bg-surface p-6 text-center shadow-sm">
+            <p className="text-lg font-semibold">Keine passenden Spiele</p>
+            <p className="mt-1 text-sm text-muted">In dieser Rubrik gibt es kein Spiel für {players} Spieler.</p>
+            <button
+              type="button"
+              onClick={() => setPlayers(null)}
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-line px-4 py-1.5 text-sm font-semibold hover:border-accent/50"
+            >
+              Spielerzahl zurücksetzen
+            </button>
+          </section>
+        ) : visibleGroups.length === 0 && searchQuery.trim() ? (
           <section className="rounded-2xl border border-line bg-surface p-6 text-center shadow-sm">
             <p className="text-lg font-semibold">Keine Spiele gefunden</p>
             <p className="mt-1 text-sm text-muted">
@@ -468,13 +546,13 @@ export function Home({ initialFilter }: { initialFilter?: string }) {
               </ul>
 
               {/* In der Mathe-Rubrik zusätzlich die vorgefertigten Mathe-Modi der Klassiker anzeigen */}
-              {group.id === 'math' && !searchQuery.trim() && (
+              {group.id === 'math' && !searchQuery.trim() && mathPresets.length > 0 && (
                 <div className="pt-3 space-y-2.5">
                   <h3 className="text-sm font-semibold text-muted">
                     📐 Mathe-Modi in beliebten Klassikern (mit Voreinstellung starten):
                   </h3>
                   <ul className="grid gap-3 sm:grid-cols-2">
-                    {MATH_CLASSIC_PRESETS.map((preset) => (
+                    {mathPresets.map((preset) => (
                       <li key={preset.id}>
                         <a
                           href={paths.setup(preset.gameId, preset.params)}
@@ -502,7 +580,7 @@ export function Home({ initialFilter }: { initialFilter?: string }) {
       </div>
 
       {/* Weitere Spiele auf eigenen Seiten (nur verlinkt) */}
-      {activeFilter === 'all' && !searchQuery.trim() && (
+      {activeFilter === 'all' && !searchQuery.trim() && players === null && (
         <section className="space-y-3">
           <div className="space-y-0.5">
             <h2 className="flex items-center gap-2 text-lg font-bold">

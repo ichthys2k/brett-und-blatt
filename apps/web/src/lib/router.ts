@@ -5,7 +5,7 @@ import { useSyncExternalStore } from 'react';
  * die App auf jedem einfachen Webspace, ohne Einstellungen am Server.
  */
 export type Route =
-  | { name: 'home'; filter?: string }
+  | { name: 'home'; filter?: string; players?: number }
   | { name: 'setup'; gameId: string; params?: Record<string, string> }
   | { name: 'play' }
   | { name: 'online' }
@@ -45,7 +45,12 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'ton') return { name: 'sound' };
   if (parts[0] === 'impressum') return { name: 'imprint' };
   if (parts[0] === 'datenschutz') return { name: 'privacy' };
-  return { name: 'home', ...(params.filter ? { filter: params.filter } : {}) };
+  const players = Number(params.spieler);
+  return {
+    name: 'home',
+    ...(params.filter ? { filter: params.filter } : {}),
+    ...(Number.isInteger(players) && players > 0 ? { players } : {}),
+  };
 }
 
 export const paths = {

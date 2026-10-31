@@ -38,10 +38,6 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-025 | Drachenspiel | **Drachenspiel im Mittelalter-Thema:** Der Narrenhof hat das Mittelalterthema gut aufgearbeitet. Wäre es denkbar dieses Thema auch für das Drachenspiel aufzuarbeiten und entsprechen auszustaffieren. Reflektiere mal wie das aussehen könnte und entwickle ein Konzept | niedrig | offen | 2026-10-31, Cornelius |
 | W-026 | alle Spiele | **Durchgängiges Thema „Mittelalterliche Taverne“:** Das Mittelalter Thema könnte man auch optisch für alle anderen Spiele anwenden. Man könnte es auch erweitern zu einer mittelalterlichen Taverne. Dann hätte Brett und Blatt ein durchgängiges Thema, das gestalterisch einen Rahmen setzt. | mittel | offen | 2026-10-31, Cornelius |
 | W-027 | neue Spiele | **Spiele für viele Spieler:** Ich möchte mehr Spiele haben, die man mit vielen Spielern spielen kann. Also mindestens 4 Spielern, besser 8 oder 20 oder sogar 30 Spielen. Das könnten Partyspiele sein, gesellschaftsspiele oder andere Spiele die auch mit vielen Spielern kurzweilig zu spielen sind. Recherchiere dafür 20-40 Spielideen, die man umsetzen könnte und gib mir dafür eine kurze Beschreibung. | hoch | offen | 2026-10-31, Cornelius |
-| W-028 | Startseite | **Filter nach Spielerzahl:** Ich möchte, dass man Spiele auch nach maximaler Spieleranzahl filtern kann. Wenn man z.B. weiß, dass man 8 Spieler sein wird, sollte man auch nur Spiele zur Auswahl haben, die diese Spieleranzahl unterstützt | hoch | in Arbeit (Claude, claude/project-thread-2kguyw) | 2026-10-31, Cornelius |
-| W-029 | Online-Raum | **Abwesende vom Platz entfernen:** Ich möchte, dass der Spielleiter auch Spieler entfernen kann, die AFK sind, damit neuer Platz für andere Spieler geschaffen wird. | mittel | in Arbeit (Claude, claude/project-thread-2kguyw) | 2026-10-31, Cornelius |
-| W-030 | Online-Raum | **Name und Emoji in der Lobby ändern:** Ich möchte, dass man auch in der Lobby sein Namen und Emoji anpassen kann. | niedrig | in Arbeit (Claude, claude/project-thread-2kguyw) | 2026-10-31, Cornelius |
-| W-031 | Online-Raum | **Namen und Emojis durch die Spielleitung:** Ich möchte, dass der Spielleiter auch beschränken kann, dass sich Spieler selbst Namen geben, bzw, der Spielleiter sollte für einzelene Mitspieler auch bestimmte Namen und Emojis festlegenkann um missbräuchliche oder missverständliche Namen vorzubeugen. | niedrig | in Arbeit (Claude, claude/project-thread-2kguyw) | 2026-10-31, Cornelius |
 
 ## Fehler
 
@@ -52,6 +48,10 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
+| W-028 | Startseite: Filter nach Spielerzahl („Wie viele spielt ihr?“) | 2026-10-31 | #40 |
+| W-029 | Raumleitung nimmt Abwesende vom Platz, Zuschauer übernehmen ihn | 2026-10-31 | #40 |
+| W-030 | Name und Emoji in der Lobby ändern | 2026-10-31 | #40 |
+| W-031 | Raumleitung legt Namen und Emojis fest und kann das Umbenennen sperren | 2026-10-31 | #40 |
 | W-003 | Pflichtsolo im Doppelkopf (Option, Vorführung, Geber bleibt, Bot zieht sein Solo) | 2026-10-31 | #38 |
 | W-001 | Vierer-Schach-Bot mit Vorausschau über eine Runde (schwer gewinnt 40 % statt 25 %, im Teammodus 18 von 20) | 2026-10-31 | #38 |
 | W-002 | Binokel zu viert: Geber setzt aus oder Kreuzbinokel 2 gegen 2 | 2026-10-31 | #38 |
