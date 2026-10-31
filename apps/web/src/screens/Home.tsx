@@ -6,6 +6,7 @@ import { discardGame } from '../lib/activeGame';
 import { OpenRooms } from '../components/OpenRooms';
 import { GAME_SERVER, useOpenRooms } from '../lib/online';
 import { findGame, games } from '../lib/registry';
+import { useActiveLook } from '../lib/look';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 
@@ -16,6 +17,8 @@ interface CategorySpec {
   id: CategoryId;
   icon: string;
   title: string;
+  /** Raumname im Aussehen „Taverne“; die sachliche Rubrik steht dann darunter. */
+  room: string;
   subtitle: string;
   gameIds: readonly string[];
 }
@@ -25,6 +28,7 @@ const CATEGORIES: readonly CategorySpec[] = [
     id: 'board',
     icon: '♟️',
     title: 'Strategie- & Brettspiele',
+    room: 'Spielstube',
     subtitle: 'Klassische Denk- und Positionsspiele auf dem Spielbrett.',
     gameIds: [
       'chess',
@@ -43,6 +47,7 @@ const CATEGORIES: readonly CategorySpec[] = [
     id: 'cards',
     icon: '🃏',
     title: 'Karten- & Stichspiele',
+    room: 'Kartentisch',
     subtitle: 'Traditionelle Stichspiele, Ablegespiele, Deckbau und Patiencen.',
     gameIds: [
       'skat',
@@ -66,6 +71,7 @@ const CATEGORIES: readonly CategorySpec[] = [
     id: 'family',
     icon: '🎲',
     title: 'Familien-, Lege- & Gesellschaftsspiele',
+    room: 'Festsaal',
     subtitle: 'Gemeinsam würfeln, kombinieren, merken und raten – auch in großer Runde.',
     gameIds: ['scrabble', 'word-salad', 'hangman', 'bible-quiz', 'ludo', 'dominoes', 'color-and-shape', 'battleship', 'maexle', 'kniffel', 'low-flight', 'symbol-match', 'pairs', 'bingo'],
   },
@@ -73,6 +79,7 @@ const CATEGORIES: readonly CategorySpec[] = [
     id: 'math',
     icon: '📐',
     title: 'Mathe- & Rechenspiele (Kl. 5/6)',
+    room: 'Schreibstube',
     subtitle: 'Kopfrechnen, Klammerterme, Teiler, Vielfache und Zahlenmauern spielerisch trainieren.',
     gameIds: ['duck-rally', 'target-number', 'factor-grid', 'number-wall'],
   },
@@ -268,9 +275,9 @@ function GameCard({ info }: { info: GameInfo }) {
     <li>
       <a
         href={paths.setup(info.id)}
-        className="flex h-full items-start gap-4 rounded-2xl border border-line bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
+        className="bub-tile flex h-full items-start gap-4 rounded-2xl border border-line bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
       >
-        <span className="text-4xl leading-none" aria-hidden="true">
+        <span className="bub-tile-crest text-4xl leading-none" aria-hidden="true">
           {info.emoji}
         </span>
         <span className="min-w-0 space-y-1">
@@ -284,6 +291,7 @@ function GameCard({ info }: { info: GameInfo }) {
 }
 
 export function Home({ initialFilter, initialPlayers }: { initialFilter?: string; initialPlayers?: number }) {
+  const tavern = useActiveLook() === 'tavern';
   const [snapshot, setSnapshot] = useState(() => storage.loadActive());
   const openRooms = useOpenRooms();
   const [searchQuery, setSearchQuery] = useState('');
@@ -368,6 +376,7 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
           id: 'search' as CategoryId,
           icon: '🔍',
           title: 'Suchergebnisse',
+          room: 'Suchergebnisse',
           subtitle: `${filteredGamesBySearch.length} ${filteredGamesBySearch.length === 1 ? 'Spiel' : 'Spiele'} gefunden`,
           games: filteredGamesBySearch,
         },
@@ -384,13 +393,13 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
   });
 
   return (
-    <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-6 px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-[max(env(safe-area-inset-bottom),1.5rem)]">
-      <header className="space-y-1">
+    <div className="bub-home mx-auto flex min-h-full max-w-3xl flex-col gap-6 px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-[max(env(safe-area-inset-bottom),1.5rem)]">
+      <header className="bub-home-sign space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">
-          <span aria-hidden="true">🎲 </span>
+          <span aria-hidden="true">{tavern ? '🕯️ ' : '🎲 '}</span>
           {t('app.title')}
         </h1>
-        <p className="text-muted">{t('app.tagline')}</p>
+        <p className="text-muted">{t(tavern ? 'home.tavern.welcome' : 'app.tagline')}</p>
       </header>
 
       {snapshot && (
@@ -464,7 +473,7 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
                 onClick={() => setActiveFilter(tab.id)}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition cursor-pointer ${
                   isSelected
-                    ? 'border-accent bg-accent text-white shadow-xs'
+                    ? 'border-accent bg-accent text-accent-ink shadow-xs'
                     : 'border-line bg-surface text-ink hover:border-accent/50'
                 }`}
               >
@@ -491,7 +500,7 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
               aria-label={count === null ? 'Beliebig viele Spieler' : count === 1 ? '1 Spieler' : `${count} Spieler`}
               onClick={() => setPlayers(count)}
               className={`min-w-9 cursor-pointer rounded-full border px-2.5 py-1 text-sm font-semibold transition ${
-                isSelected ? 'border-accent bg-accent text-white shadow-xs' : 'border-line bg-surface text-ink hover:border-accent/50'
+                isSelected ? 'border-accent bg-accent text-accent-ink shadow-xs' : 'border-line bg-surface text-ink hover:border-accent/50'
               }`}
             >
               {count ?? 'egal'}
@@ -531,13 +540,13 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
         ) : (
           visibleGroups.map((group) => (
             <section key={group.id} className="space-y-3">
-              <div className="space-y-0.5">
+              <div className="bub-home-room space-y-0.5">
                 <h2 className="flex items-center gap-2 text-lg font-bold">
                   <span aria-hidden="true">{group.icon}</span>
-                  <span>{group.title}</span>
+                  <span>{tavern ? group.room : group.title}</span>
                   <span className="text-xs font-normal text-muted">({group.games.length})</span>
                 </h2>
-                <p className="text-xs text-muted">{group.subtitle}</p>
+                <p className="text-xs text-muted">{tavern && group.room !== group.title ? `${group.title}: ${group.subtitle}` : group.subtitle}</p>
               </div>
               <ul className="grid gap-3 sm:grid-cols-2">
                 {group.games.map((info) => (
@@ -556,9 +565,9 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
                       <li key={preset.id}>
                         <a
                           href={paths.setup(preset.gameId, preset.params)}
-                          className="flex h-full items-start gap-4 rounded-2xl border border-accent/35 bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
+                          className="bub-tile flex h-full items-start gap-4 rounded-2xl border border-accent/35 bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
                         >
-                          <span className="text-4xl leading-none" aria-hidden="true">
+                          <span className="bub-tile-crest text-4xl leading-none" aria-hidden="true">
                             {preset.emoji}
                           </span>
                           <span className="min-w-0 space-y-1">
@@ -596,9 +605,9 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
                   href={game.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-full items-start gap-4 rounded-2xl border border-line bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
+                  className="bub-tile flex h-full items-start gap-4 rounded-2xl border border-line bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
                 >
-                  <span className="text-4xl leading-none" aria-hidden="true">
+                  <span className="bub-tile-crest text-4xl leading-none" aria-hidden="true">
                     {game.emoji}
                   </span>
                   <span className="min-w-0 space-y-1">

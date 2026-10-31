@@ -10,10 +10,11 @@
 //   optionale Abruf des Bibel-Quiz-Katalogs vom Spieleserver ausgenommen),
 // - die Partie startet (Seite #/partie, Spielfeld mit sichtbarem Inhalt),
 // - die Seite bleibt höchstens dreimal so hoch wie der Bildschirm (fängt z. B. riesige Handkarten),
+// - auf Wunsch Bilder für den Vergleich der Aussehen: RAUCHTEST_LOOK=tavern, RAUCHTEST_FARBE=dark, RAUCHTEST_BILDER=<Ordner>
 // - nach dem Start eines anderen Spiels bleibt das Spielfeld so groß wie beim frischen Laden
 //   (fängt CSS-Kollisionen zwischen Spielen).
 import { spawn } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { chromium } from 'playwright';
 
@@ -80,14 +81,31 @@ async function startGame(page, id) {
 }
 
 await waitForServer();
+const shots = process.env.RAUCHTEST_BILDER;
+if (shots) mkdirSync(shots, { recursive: true });
+const contextOptions = { viewport, colorScheme: process.env.RAUCHTEST_FARBE === 'dark' ? 'dark' : 'light' };
+const newPage = async () => {
+  const page = await browser.newPage(contextOptions);
+  if (process.env.RAUCHTEST_LOOK) await page.addInitScript((look) => localStorage.setItem('brett-und-blatt:aussehen', look), process.env.RAUCHTEST_LOOK);
+  return page;
+};
 // Ein vorhandenes Chromium (z. B. /usr/bin/chromium) statt des von Playwright geladenen nutzen.
 const browser = await chromium.launch(process.env.RAUCHTEST_CHROMIUM ? { executablePath: process.env.RAUCHTEST_CHROMIUM } : {});
 const problems = [];
 try {
+  if (shots) {
+    const home = await newPage();
+    await home.goto(base);
+    await home.waitForTimeout(800);
+    await home.screenshot({ path: `${shots}/_startseite.png` });
+    await home.screenshot({ path: `${shots}/_startseite-ganz.png`, fullPage: true });
+    await home.close();
+  }
+
   // Erst jedes Spiel frisch laden und messen …
   const fresh = new Map();
   for (const id of ids) {
-    const page = await browser.newPage({ viewport });
+    const page = await newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => {
@@ -99,6 +117,7 @@ try {
     try {
       const m = await startGame(page, id);
       fresh.set(id, m);
+      if (shots) await page.screenshot({ path: `${shots}/${id}.png` });
       if (errors.length) problems.push(`${id}: Fehler beim Start – ${errors.slice(0, 2).join(' | ')}`);
       if (m.interactive === 0) problems.push(`${id}: Spielfeld ohne Bedienelemente`);
       if (m.pageHeight > viewport.height * 3) problems.push(`${id}: Seite ist ${m.pageHeight} px hoch (mehr als dreimal der Bildschirm)`);
@@ -109,7 +128,7 @@ try {
   }
 
   // … dann alle nacheinander in derselben Seite: Die CSS früherer Spiele bleibt aktiv.
-  const page = await browser.newPage({ viewport });
+  const page = await newPage();
   for (const id of ids) {
     if (!fresh.has(id)) continue;
     try {
