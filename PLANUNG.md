@@ -36,8 +36,6 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-007 | Eins! | **Eigene Musik je Kartenseite bei Flip:** Im Modus Flip soll je nach Kartenseite (Hell/Dunkel) ein eigener Soundtrack laufen. Neue Stücke dürfen dafür erzeugt werden (Auswahl durch Cornelius). | niedrig | offen | 2026-10-30, Cornelius |
 | W-008 | alle Spiele | **Große Siegerehrung am Rundenende:** Am Rundenende eine Siegerehrung über den ganzen Bildschirm, für alle sichtbar. Die bisherige Siegermeldung ist zu dezent. | niedrig | offen | 2026-10-30, Cornelius |
 | W-010 | alle Würfelspiele (Würfelblock, Mäxle, Nicht ärgern! …) | **Würfelwurf eindrucksvoll animieren:** Der Wurf soll richtig gut aussehen, Vorbild Baldur's Gate, und höchstens etwa eine Sekunde dauern. | mittel | offen | 2026-10-30, Cornelius |
-| W-011 | Nicht ärgern! | **Figuren ziehen sichtbar:** Figuren springen nicht, sondern ziehen sichtbar Feld für Feld (hüpfend), ähnlich wie das Gleiten im Schach. | niedrig | offen | 2026-10-30, Cornelius |
-| W-012 | Nicht ärgern! | **Schlagen deutlich animieren:** Wird eine Figur geschlagen, soll das deutlich animiert sein (z. B. Figur fliegt zurück in den Stall). | niedrig | offen | 2026-10-30, Cornelius |
 | W-013 | alle Spiele | **Kernabläufe aller Spiele befriedigender machen:** Für jedes Spiel die Kernschleife betrachten: Welche Züge macht man immer wieder? Wie fühlen sie sich mit Animationen, Klängen und anderen Ideen richtig gut an? Ergebnis ist zunächst ein umfassender Plan, der dann Spiel für Spiel umgesetzt wird. | hoch | offen | 2026-10-30, Cornelius |
 | W-014 | alle Spiele | **Mehr Lieder in den Playlists:** Die Playlists sollen mehr Stücke bekommen (Auswahl durch Cornelius, Ablage in `musik/` im Klang-Repo). | mittel | offen | 2026-10-30, Cornelius |
 | W-016 | Narrenhof | **Balatro-Joker als Narren übertragen:** Alle Joker aus Balatro recherchieren, überlegen, wie sie sich ins Narrenhof-Thema übertragen lassen (mit eigenen Namen und Ideen, keine Kopien), und einbauen. Plan in `docs/spiele/farbensortierer.md`. | mittel | offen | 2026-10-30, Cornelius |
@@ -52,9 +50,6 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | Nr. | Spiel/Bereich | Fehler | Schritte zum Nachstellen | Erwartet | Tatsächlich | Gerät/Browser | Prio | Status | Eingetragen |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | F-001 | Eins! | Handkarten teils verdeckt | 1. Partie auf dem Handy spielen.<br>2. Viele Karten auf die Hand bekommen. | Alle Karten sind so gestapelt, dass man sie immer alle sieht. | Ein Teil der Karten ist verdeckt. | Mobilgerät | mittel | offen | 2026-10-30, Cornelius |
-| F-002 | Nicht ärgern! | Figuren stehen zu hoch im Feld | 1. Partie starten und Figuren auf dem Brett ansehen. | Der Boden der Figur steht leicht unterhalb der Feldmitte, sodass die Figur optisch mittig steht. | Der Boden der Figur steht genau in der Feldmitte, die Figur wirkt zu hoch. | – | mittel | offen | 2026-10-30, Cornelius |
-| F-003 | Nicht ärgern! | Schlagpflicht standardmäßig an | 1. Neues Spiel einrichten und die Optionen ansehen. | Schlagpflicht ist standardmäßig aus. | Schlagpflicht ist standardmäßig an. | – | mittel | offen | 2026-10-30, Cornelius |
-| F-004 | Nicht ärgern! | Wurf scheinbar für den nächsten Spieler | 1. Partie bis kurz vor Schluss spielen. | Jeder würfelt für die eigenen Figuren. | Manchmal scheint man für den nächsten Spieler zu würfeln. Muss erst mit Tests bestätigt werden. | – | mittel | offen | 2026-10-30, Cornelius |
 
 ## Erledigt
 
@@ -62,3 +57,8 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | --- | --- | --- | --- |
 | W-009 | Enten-Rallye: Ente schwimmt von selbst (Strömung, Serien beschleunigen, auch online) | 2026-10-31 | #31 |
 | W-015 | Bauernumwandlung in jede Figur (Vierer-Schach, Option „Umwandlung“; Schach konnte es schon) | 2026-10-31 | #31 |
+| W-011 | Figuren ziehen sichtbar (Nicht ärgern!) | 2026-10-31 | #30 |
+| W-012 | Schlagen deutlich animieren (Nicht ärgern!) | 2026-10-31 | #30 |
+| F-002 | Nicht ärgern!: Figuren stehen zu hoch im Feld | 2026-10-31 | #30 |
+| F-003 | Nicht ärgern!: Schlagpflicht standardmäßig an | 2026-10-31 | #30 |
+| F-004 | Nicht ärgern!: Wurf scheinbar für den nächsten Spieler | 2026-10-31 | #30 |

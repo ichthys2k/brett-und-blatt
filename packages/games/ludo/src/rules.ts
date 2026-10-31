@@ -39,6 +39,12 @@ export interface LudoState {
   threeRollsRule: 'empty_track' | 'never';
   enterRule: 'six' | 'six_or_one';
   exactGoal: boolean;
+  /**
+   * Der letzte Wurf, nach dem der Zug ohne Ziehen weiterging (alle Versuche ohne passenden Zug).
+   * Die Oberfläche zeigt ihn klein in der Farbe dessen, der gewürfelt hat – `dice` ist dann schon leer,
+   * damit der Wurf nicht beim nächsten Spieler zu liegen scheint.
+   */
+  lastRoll?: { seat: SeatId; dice: number } | null;
   history: string[];
   rng: RngState;
 }
@@ -96,7 +102,7 @@ export function maxRollsForSeat(state: Pick<LudoState, 'pieces' | 'threeRollsRul
 
 export function setup(seats: number, options: Options, seed: string): LudoState {
   const safeSeats = Math.max(2, Math.min(4, Number(seats) || 4));
-  const mandatoryCapture = options.capture !== 'off';
+  const mandatoryCapture = options.capture === 'on';
   const threeRollsRule = options.threeRolls === 'never' ? 'never' : 'empty_track';
   const enterRule = options.enterRule === 'six_or_one' ? 'six_or_one' : 'six';
   const exactGoal = options.exactGoal !== 'off';
@@ -119,6 +125,7 @@ export function setup(seats: number, options: Options, seed: string): LudoState 
     threeRollsRule,
     enterRule,
     exactGoal,
+    lastRoll: null,
     history: [],
     rng: initialRng,
   };
@@ -353,6 +360,7 @@ export function applyMove(state: LudoState, actor: Actor, move: LudoMove): MoveR
         dice,
         rollsLeft: 0,
         canRollAgain: earnedBonusRoll,
+        lastRoll: null,
         rng: newRngState,
       };
       return { state: nextState, events };
@@ -367,6 +375,7 @@ export function applyMove(state: LudoState, actor: Actor, move: LudoMove): MoveR
         dice,
         rollsLeft,
         canRollAgain: false,
+        lastRoll: null,
         rng: newRngState,
       };
       return { state: nextState, events };
@@ -378,9 +387,10 @@ export function applyMove(state: LudoState, actor: Actor, move: LudoMove): MoveR
       ...state,
       turn: nextSeat,
       phase: 'roll',
-      dice,
+      dice: null,
       rollsLeft: maxRollsForSeat(state, nextSeat),
       canRollAgain: false,
+      lastRoll: { seat: state.turn, dice },
       rng: newRngState,
     };
     events.push({ type: 'turnChanged', previousSeat: state.turn, nextSeat });

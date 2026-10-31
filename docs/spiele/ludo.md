@@ -30,7 +30,7 @@ Das beliebte Laufspiel für Familie und Freunde: Figuren aus dem Häuschen bring
   - Zwei eigene Steine dürfen nicht auf demselben Feld stehen (Blockade).
 - **Schlagen & Schlagpflicht:**
   - Endet der Zug auf einem Feld mit einem gegnerischen Stein, wird dieser geschlagen und wandert zurück in seinen Stall.
-  - **Schlagpflicht (Standard):** Kann ein gegnerischer Stein geschlagen werden, **muss** geschlagen werden.
+  - **Schlagen ist freiwillig (Standard seit 31.10.2026, F-003).** Mit der Option **Schlagpflicht** muss geschlagen werden, wenn es geht.
   - *Prioritätenliste bei der Zugauswahl:*
     1. Startfeld belegen (Stein aus dem Stall auf Start setzen bei 6).
     2. Startfeld räumen (wenn blockiert).
@@ -47,7 +47,7 @@ Das beliebte Laufspiel für Familie und Freunde: Figuren aus dem Häuschen bring
 |---|---|---|---|
 | **Regelvariante** | Klassisch, Familie (locker), Flotter Ärger, Teams (2 vs 2) | Klassisch | **Klassisch:** Schlagpflicht aktiv, 3 Versuche bei leerer Strecke, genaues Einrücken ins Ziel.<br/>**Familie:** Schlagen ist freiwillig, Überspringen im Zielhaus erlaubt.<br/>**Flotter Ärger:** Rauskommen auch bei 1 oder 6; 3 Versuche auch bei Blockade.<br/>**Teams:** 2 gegen 2 (Partner sitzen gegenüber, kein Schlagen untereinander, Helfen im Ziel). |
 | **Brettgröße** | 4 Spieler (Standard), 6 Spieler (Sternbrett) | 4 Spieler | Klassisches 40-Felder-Kreuzbrett oder Sechseck-/Sternbrett für bis zu 6 Personen. |
-| **Schlagpflicht** | An, Aus | An | Steuert, ob schlagbare Züge Vorrang vor normalen Zügen haben. |
+| **Schlagpflicht** | Aus, An | Aus | Steuert, ob schlagbare Züge Vorrang vor normalen Zügen haben (bis 30.10.2026 standardmäßig an, `ruleVersion` 2). |
 | **Drei Versuche** | Nur wenn Strecke leer, Auch bei Blockade, Nie | Nur wenn Strecke leer | Wann bis zu dreimal gewürfelt werden darf. |
 | **Brett drehen** | Zum Spieler am Zug, Fest | Zum Spieler am Zug | Dreht das Brett bei Hot-Seat am Gerät zur jeweiligen Spielerfarbe. |
 
@@ -134,8 +134,10 @@ Heuristischer Taktik-Bot in drei Stufen:
 - **Würfelinteraktion:** Plastischer 3D-Würfel in der Mitte des Bretts. Antippen des Würfels (oder Druck auf die Leertaste) löst den Wurf aus.
 - **Züge:** Legale Figuren pulsieren sanft (`ludo-pulse`). Ein Antippen oder Ziehen per Pointer Drag & Drop (`usePointerDrag`) führt den Zug aus.
 - **Animationen:**
-  - Flüssiges Gleiten / Hüpfen über die Felder.
-  - Rauswurf-Animation: Geschlagene Figur fliegt im Bogen zurück in den Stall.
+  - Figuren hüpfen Feld für Feld (150 ms je Feld, aus dem Stall in einem hohen Sprung aufs Startfeld; W-011). Umgesetzt in `usePieceAnimation` aus den Ereignissen `entered`, `moved`, `goalEntered`, `goalMoved`; während des Sprungs bleibt der Schatten am Boden.
+  - Rauswurf-Animation: Die geschlagene Figur bleibt stehen, bis die ziehende Figur ankommt, und fliegt dann drehend im Bogen zurück in den Stall (650 ms; W-012). Zieht der Nächste schon, laufen beide Animationen nebeneinander. Bei „Bewegung reduzieren“ entfallen die Animationen.
+  - Figuren stehen 5 Einheiten unterhalb der Feldmitte (`PIECE_DROP`, F-002).
+  - Wurf ohne möglichen Zug: Der Würfel wandert nicht zum nächsten Spieler. Die Regeln leeren `dice` beim Zugwechsel und merken den Wurf in `lastRoll`; die Oberfläche zeigt ihn als kleinen durchgestrichenen Würfel in der Farbe dessen, der gewürfelt hat (F-004).
   - Banner bei einer 6: „Nochmal würfeln!“.
 - **Klänge:** `wuerfeln` (Würfelwurf), `stein-heraus` (Herausziehen auf Start), `stein-ziehen` (Vorrücken), `stein-schlagen` (Rauswerfen), `stein-setzen` (Einzug ins Ziel), `sieg` (`arcade_level_win`). Musik: Playlist **`spielabend`**.
 
@@ -150,7 +152,8 @@ Heuristischer Taktik-Bot in drei Stufen:
 - 3 Würfelversuche nur bei leerem Rundkurs; Verfall der Restwürfe bei einer 6.
 - Pflicht zum Herausziehen auf das Startfeld bei einer 6 und Pflicht zur Startfeldräumung.
 - Korrektes Überspringen fremder und eigener Steine auf der Strecke.
-- Schlagpflicht: Schläge haben Vorrang vor normalen Zügen.
+- Schlagen standardmäßig freiwillig; mit Schlagpflicht haben Schläge Vorrang vor normalen Zügen.
+- Wurf ohne Zug kurz vor Schluss: Zugwechsel mit leerem Würfel und `lastRoll` (F-004).
 - Rauswurf: Geschlagener Stein landet wieder im Stall.
 - Einzug ins Zielhaus: Genaue Augenzahl erforderlich, kein Überspringen im Zielhaus.
 - Partiegewinn, sobald alle 4 Steine die Zielfelder belegen.
