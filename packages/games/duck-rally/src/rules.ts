@@ -21,11 +21,11 @@ export const DISTANCE_PER_TASK = 100;
 export const DRIFT_TICK_MS = 1_000;
 /** Countdown „3, 2, 1, los!“ zu Beginn; so lange ruht auch die Strömung (und die Bots warten). */
 export const COUNTDOWN_MS = 3_000;
-/** Strömung je Takt ohne Serie (Hundertstel-Etappen): allein 50 s für eine Etappe. */
-const DRIFT_BASE = 2;
-/** Jede richtige Antwort in Folge beschleunigt die Ente um so viel je Takt – höchstens bis zur vierten. */
-const DRIFT_PER_STREAK = 1;
-const DRIFT_MAX_STREAK = 4;
+/** Strömung je Takt ohne Serie (Hundertstel-Etappen): allein gut 30 s für eine Etappe. */
+const DRIFT_BASE = 3;
+/** Jede richtige Antwort in Folge beschleunigt die Ente um so viel je Takt – höchstens bis zur dritten. */
+const DRIFT_PER_STREAK = 2;
+const DRIFT_MAX_STREAK = 3;
 
 /** Wie weit eine Ente je Strömungstakt von selbst schwimmt: langsam, mit Serie schneller. */
 export function driftOf(racer: RacerState): number {
