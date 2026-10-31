@@ -1,5 +1,6 @@
 import { randomBot, stateFor, type BotDefinition, type GameModule } from '@brett-und-blatt/engine';
 import { chooseBotMove } from './legacy/bot';
+import { promotionChoice } from './legacy/engine';
 import { meta } from './meta';
 import { applyMove, COLORS, currentPlayers, legalMoves, resignMove, result, setup, type FourChessMove, type FourChessState } from './rules';
 
@@ -28,8 +29,8 @@ const fourChessBot: BotDefinition<FourChessState, FourChessMove> = {
     const noise = ctx.level === 'hard' ? 0.3 : 1;
     const action = chooseBotMove(state, COLORS[ctx.seat], () => ctx.rng.next() * noise);
     if (!action || action.t !== 'm') return ctx.rng.pick(moves);
-    // Im Modus „Jeder gegen jeden“ wird automatisch zur Dame umgewandelt – ohne Angabe.
-    const normalized: FourChessMove = state.mode === 'teams' ? action : { t: 'm', p: action.p, f: action.f, to: action.to };
+    // Ohne freie Wahl wird automatisch zur Dame umgewandelt – ohne Angabe.
+    const normalized: FourChessMove = promotionChoice(state) ? action : { t: 'm', p: action.p, f: action.f, to: action.to };
     return normalized;
   },
 };
@@ -46,6 +47,16 @@ export const gameModule: GameModule<FourChessState, FourChessMove> = {
         { value: 'teams', label: 'Teams' },
       ],
       default: 'ffa',
+    },
+    {
+      id: 'promotion',
+      label: 'Umwandlung',
+      description: 'Wird ein Bauer umgewandelt, darf man Dame, Turm, Läufer oder Springer wählen – oder es wird immer eine Dame.',
+      choices: [
+        { value: 'any', label: 'Freie Wahl' },
+        { value: 'queen', label: 'Immer Dame' },
+      ],
+      default: 'any',
     },
   ],
   timePresets: {

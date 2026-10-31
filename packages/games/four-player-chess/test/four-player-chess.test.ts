@@ -38,6 +38,41 @@ describe('Anbindung an die Schnittstelle', () => {
     expect(events[0]).toMatchObject({ type: 'moved', from: 144, to: 159, color: 'b', captured: 'P' });
   });
 
+  describe('Bauernumwandlung', () => {
+    // Rot wandelt in „Jeder gegen jeden“ auf der 8. Reihe um: g7 (104) → g8 (90).
+    function promotionState(options: Record<string, string>) {
+      const state = gameModule.setup(4, resolveOptions(gameModule, options), 'promo');
+      state.board.fill(null);
+      state.board[104] = { c: 'r', t: 'P' };
+      state.board[13 * 14 + 7] = { c: 'r', t: 'K' };
+      state.board[7 * 14 + 0] = { c: 'b', t: 'K' };
+      state.board[0 * 14 + 6] = { c: 'y', t: 'K' };
+      state.board[6 * 14 + 13] = { c: 'g', t: 'K' };
+      return state;
+    }
+    const promotions = (state: FourChessState) => gameModule.legalMoves(state, 0).filter((m) => m.t === 'm' && m.f === 104 && m.to === 90);
+
+    it('standardmäßig frei wählbar, auch in „Jeder gegen jeden“', () => {
+      const state = promotionState({});
+      expect(promotions(state).map((m) => (m.t === 'm' ? m.pr : null))).toEqual(['Q', 'R', 'B', 'N']);
+      const { state: next } = gameModule.applyMove(state, 0, { t: 'm', p: 'r', f: 104, to: 90, pr: 'N' });
+      expect(next.board[90]).toEqual({ c: 'r', t: 'N', pr: true });
+    });
+
+    it('mit „Immer Dame“ nur ein Zug, der zur Dame führt', () => {
+      const state = promotionState({ promotion: 'queen' });
+      expect(promotions(state)).toEqual([{ t: 'm', p: 'r', f: 104, to: 90 }]);
+      const { state: next } = gameModule.applyMove(state, 0, { t: 'm', p: 'r', f: 104, to: 90, pr: 'R' });
+      expect(next.board[90]).toEqual({ c: 'r', t: 'Q', pr: true });
+    });
+
+    it('alte Spielstände ohne Angabe bleiben bei der Dame', () => {
+      const state = promotionState({});
+      delete state.promo;
+      expect(promotions(state)).toHaveLength(1);
+    });
+  });
+
   it('der Bot liefert erlaubte Züge im Format der Schnittstelle', () => {
     const state = gameModule.setup(4, resolveOptions(gameModule), 'bot');
     for (const level of ['easy', 'medium', 'hard'] as const) {

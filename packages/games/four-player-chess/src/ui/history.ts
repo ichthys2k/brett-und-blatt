@@ -30,6 +30,7 @@ export function replayStates(view: FourChessState): (FourChessState | null)[] | 
   const log = view.log;
   if (log.some((e) => e.type === 'move' && !e.action)) return null;
   const state = newGame(view.mode);
+  state.promo = view.promo;
   const states: (FourChessState | null)[] = [];
   for (const entry of log) {
     if (entry.action) {

@@ -12,6 +12,7 @@ export type Color = 'r' | 'b' | 'y' | 'g';
 export type PieceType = 'K' | 'Q' | 'R' | 'B' | 'N' | 'P';
 export type PromoPiece = 'Q' | 'R' | 'B' | 'N';
 export type GameMode = 'ffa' | 'teams';
+export type PromotionRule = 'any' | 'queen';
 
 export interface Piece {
   c: Color;
@@ -58,6 +59,11 @@ export interface InternalMove {
 
 export interface FourChessState {
   mode: GameMode;
+  /**
+   * Umwandlung: 'any' = Dame, Turm, Läufer oder Springer wählbar, 'queen' = immer Dame.
+   * Fehlt in älteren Spielständen – dann wie früher: Teams wählbar, „Jeder gegen jeden“ nur Dame.
+   */
+  promo?: PromotionRule;
   board: (Piece | null)[];
   turn: Color;
   ply: number;
@@ -199,9 +205,10 @@ function initialBoard(): (Piece | null)[] {
  * Neuer Spielstand. Figuren sind Objekte { c: Farbe, t: Typ, d: tot?, pr: umgewandelt? }.
  * Figuren ausgeschiedener Spieler bleiben als graue („tote“) Hindernisse liegen.
  */
-export function newGame(mode: GameMode = 'ffa'): FourChessState {
+export function newGame(mode: GameMode = 'ffa', promo: PromotionRule = 'any'): FourChessState {
   const state: FourChessState = {
     mode: mode === 'teams' ? 'teams' : 'ffa',
+    promo: promo === 'queen' ? 'queen' : 'any',
     board: initialBoard(),
     turn: 'r',
     ply: 0,
@@ -227,9 +234,14 @@ export function newGame(mode: GameMode = 'ffa'): FourChessState {
   return state;
 }
 
+/** Darf man bei der Umwandlung die Figur wählen? */
+export function promotionChoice(state: FourChessState): boolean {
+  return state.promo ? state.promo === 'any' : state.mode === 'teams';
+}
+
 /** Spielt eine Liste von Aktionen von Anfang an nach. Ungültige Aktionen werden übersprungen. */
-export function replay(mode: GameMode, actions: FourChessAction[]): FourChessState {
-  const state = newGame(mode);
+export function replay(mode: GameMode, actions: FourChessAction[], promo?: PromotionRule): FourChessState {
+  const state = newGame(mode, promo);
   for (const a of actions) applyAction(state, a);
   return state;
 }
@@ -481,8 +493,8 @@ function applyMove(state: FourChessState, a: Extract<FourChessAction, { t: 'm' }
     piece = board[m.from];
   if (!piece) return false;
   const victim = m.ep !== undefined ? board[m.ep] : board[m.to];
-  // In „Jeder gegen jeden“ wird immer automatisch zur Dame umgewandelt.
-  const promoType: PromoPiece = m.promote && !ffa && a.pr && ['Q', 'R', 'B', 'N'].includes(a.pr) ? a.pr : 'Q';
+  // Ohne freie Wahl (Option „nur Dame“, alte Spielstände in „Jeder gegen jeden“) wird es immer eine Dame.
+  const promoType: PromoPiece = m.promote && promotionChoice(state) && a.pr && ['Q', 'R', 'B', 'N'].includes(a.pr) ? a.pr : 'Q';
 
   applyToBoard(board, m, promoType);
 
