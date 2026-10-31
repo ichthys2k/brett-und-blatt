@@ -8,7 +8,7 @@ export { useElementSize } from './useElementSize';
 export { useCallDeadline } from './useCallDeadline';
 export { cardSuitColor, PlayingCard, SuitShape, type DeckStyle, type PlayingCardProps } from './cards/PlayingCard';
 export { TrickTable, useTrickDisplay, type TrickTableProps, type TrickTableSlot } from './cards/TrickTable';
-export { CardFan, type CardFanProps } from './cards/CardFan';
+export { CardFan, fanLayout, type CardFanProps, type FanLayout } from './cards/CardFan';
 export { ContentCard, type ContentCardProps } from './cards/ContentCard';
 export { usePointerDrag } from './dnd/usePointerDrag';
 export { useSpawnAnimation, type SpawnAnimationOptions } from './dnd/useSpawnAnimation';

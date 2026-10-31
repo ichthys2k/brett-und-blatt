@@ -72,30 +72,53 @@
   transform: rotateY(180deg);
 }
 
-/* Handkarten-Fächer */
+/* Handkarten-Fächer (CardFan bricht bei vielen Karten in Reihen um) */
 .uno-hand-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
   width: 100%;
-  overflow-x: auto;
   padding: 1rem 0.5rem;
   min-height: 120px;
 }
 
 .uno-hand-card-wrapper {
-  margin-left: -1.25rem;
-  transition: margin 0.2s ease, transform 0.2s ease;
+  position: relative;
+  transition: transform 0.2s ease;
 }
 
-.uno-hand-card-wrapper:first-child {
-  margin-left: 0;
+/* Die Karte füllt den vom Fächer berechneten Platz aus. */
+.uno-hand-card-wrapper > button {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+}
+
+/* Nicht spielbare Karten abdunkeln statt durchscheinen lassen – sonst schimmern überlappte Karten durch. */
+.uno-hand-card-wrapper > button:disabled {
+  opacity: 1;
+  filter: brightness(0.62) saturate(0.7);
 }
 
 .uno-hand-card-wrapper:hover {
-  margin-left: -0.25rem;
-  margin-right: 0.75rem;
   z-index: 20;
+}
+
+/* Verdeckter Mini-Fächer am Mitspieler */
+.uno-mini-hand {
+  flex: none;
+  width: 2.75rem;
+  padding-top: 0.2rem;
+}
+
+.uno-mini-back {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: linear-gradient(135deg, #dc2626, #18181b);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.uno-mini-back-dark {
+  background: linear-gradient(135deg, #581c87, #09090b);
 }
 
 /* Pulsierender EINS-Button */

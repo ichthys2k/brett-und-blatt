@@ -60,6 +60,7 @@ Der Standard-Bot heißt **Mau-Mau-Meister** und spielt in drei Stufen:
 
 - Grüner Filz-Tisch mit Richtungsanzeige, Talon, Ablage und aktiver Wunschfarbe.
 - Handkarten als Fächer mit `PlayingCard`, `usePointerDrag` und Klick/Tap-Bedienung.
+- Der Fächer (`CardFan` mit `minStep`) bricht bei vielen Karten in überlappende Reihen um, Wert und Farbe jeder Karte bleiben sichtbar; Mitspieler zeigen ihre Kartenzahl als kleinen verdeckten Fächer (31.10.2026, W-019).
 - Flug-Animationen beim Legen und Ziehen, Aufprall-Impuls auf der Ablage, organischer Ablagewinkel.
 - „Mau!“-Knopf bei zwei Handkarten, kein Anpranger-Knopf mehr, die Frist läuft von allein.
 - Wunschfarben-Modal für Buben, Hervorhebung aller spielbaren Karten.

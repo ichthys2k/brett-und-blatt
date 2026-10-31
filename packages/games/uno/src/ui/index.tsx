@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useCallDeadline, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { CardFan, useCallDeadline, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { getActiveFace } from '../rules';
 import { DARK_COLORS, LIGHT_COLORS, type UnoCard, type UnoColor, type UnoMove, type UnoState } from '../types';
 import './styles.css';
@@ -26,12 +26,36 @@ interface FlyingCard {
   delayMs?: number;
 }
 
+/** Handkarten: auf schmalen Bildschirmen 64 px, sonst 80 px breit (wie die Kartengröße „md“). */
+const handCardWidth = (containerWidth: number) => (containerWidth >= 600 ? 80 : 64);
+/** So viel jeder Handkarte bleibt mindestens sichtbar: die Ecke mit Zahl oder Symbol. */
+const HAND_MIN_STEP = 26;
+/** Mehr Rückseiten zeichnet der Fächer am Mitspieler nicht; die Zahl daneben nennt den Rest. */
+const OPPONENT_FAN_MAX = 20;
+
 function cardTilt(id: string): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) | 0;
   }
   return (Math.abs(hash) % 9) - 4; // -4° bis +4°
+}
+
+/** Kleiner verdeckter Fächer am Mitspieler: zeigt auf einen Blick, wie viele Karten er hält. */
+function OpponentHand({ count, side }: { count: number; side: 'light' | 'dark' }) {
+  if (count === 0) return null;
+  const shown = Math.min(count, OPPONENT_FAN_MAX);
+  return (
+    <div className="uno-mini-hand" aria-hidden="true">
+      <CardFan
+        count={shown}
+        label=""
+        cardWidth={14}
+        arc={shown > 1 ? Math.min(40, shown * 5) : 0}
+        renderCard={() => <div className={`uno-mini-back ${side === 'dark' ? 'uno-mini-back-dark' : ''}`} />}
+      />
+    </div>
+  );
 }
 
 export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
@@ -475,11 +499,12 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                 isTurn ? 'border-yellow-400 bg-yellow-400/20 font-bold' : 'border-white/10 bg-black/20'
               } ${isEliminated ? 'opacity-40 line-through' : ''}`}
             >
+              <OpponentHand count={hand.length} side={side} />
               <div className="flex flex-col text-left">
-                <span className="text-xs sm:text-sm text-zinc-300">
+                <span className="text-xs sm:text-sm opacity-90">
                   {seatNames[idx] ?? `Spieler ${idx + 1}`}
                 </span>
-                <span className="text-xs text-zinc-400">{hand.length} Karten</span>
+                <span className="text-xs opacity-70">{hand.length} Karten</span>
               </div>
 
               {/* Eins!-Warnung / Anprangern */}
@@ -609,53 +634,63 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
           )}
         </div>
 
-        {/* Handkarten-Fächer mit Pointer Drag & Drop */}
+        {/* Handkarten-Fächer mit Pointer Drag & Drop – bricht um, damit jede Karte sichtbar bleibt */}
         <div className="uno-hand-container">
-          {myHand.map((card: UnoCard) => {
-            const isPlayable = playableCardIds.has(card.id);
-            const isCardDragged = dragState.isDragging && dragState.item?.id === card.id;
-            const isCardSnapping = dragState.snapping && dragState.item?.id === card.id;
+          <CardFan
+            count={myHand.length}
+            label="Deine Handkarten"
+            cardWidth={handCardWidth}
+            cardAspect={1.5}
+            minStep={HAND_MIN_STEP}
+            maxRows={4}
+            rowOverlap={0.55}
+            keyOf={(index) => myHand[index]!.id}
+            renderCard={(index) => {
+              const card = myHand[index]!;
+              const isPlayable = playableCardIds.has(card.id);
+              const isCardDragged = dragState.isDragging && dragState.item?.id === card.id;
+              const isCardSnapping = dragState.snapping && dragState.item?.id === card.id;
 
-            const dragStyle: React.CSSProperties = isCardDragged
-              ? {
-                  transform: `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0) scale(1.1) rotate(3deg)`,
-                  zIndex: 60,
-                  touchAction: 'none',
-                }
-              : isCardSnapping
+              const dragStyle: React.CSSProperties = isCardDragged
                 ? {
-                    transform: 'translate3d(0, 0, 0)',
+                    transform: `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0) scale(1.1) rotate(3deg)`,
                     zIndex: 60,
+                    touchAction: 'none',
                   }
-                : {};
+                : isCardSnapping
+                  ? {
+                      transform: 'translate3d(0, 0, 0)',
+                      zIndex: 60,
+                    }
+                  : {};
 
-            const dragProps = isPlayable && (isActor || state.options.jumpIn === 'on') ? bindDrag(card) : {};
+              const dragProps = isPlayable && (isActor || state.options.jumpIn === 'on') ? bindDrag(card) : {};
 
-            return (
-              <div
-                key={card.id}
-                ref={(el) => {
-                  if (el) cardRefs.current.set(card.id, el);
-                  else cardRefs.current.delete(card.id);
-                }}
-                className={`uno-hand-card-wrapper ${isCardDragged ? 'uno-card-dragging' : ''} ${
-                  isCardSnapping ? 'uno-card-snapping' : ''
-                }`}
-                style={dragStyle}
-                {...dragProps}
-              >
-                <UnoCardView
-                  card={card}
-                  side={side}
-                  size="md"
-                  mathMode={state.options.mathLabels === 'on'}
-                  highlight={isPlayable}
-                  disabled={!isPlayable}
-                  onClick={() => !dragState.isDragging && handleCardClick(card)}
-                />
-              </div>
-            );
-          })}
+              return (
+                <div
+                  ref={(el) => {
+                    if (el) cardRefs.current.set(card.id, el);
+                    else cardRefs.current.delete(card.id);
+                  }}
+                  className={`uno-hand-card-wrapper ${isCardDragged ? 'uno-card-dragging' : ''} ${
+                    isCardSnapping ? 'uno-card-snapping' : ''
+                  }`}
+                  style={dragStyle}
+                  {...dragProps}
+                >
+                  <UnoCardView
+                    card={card}
+                    side={side}
+                    size="md"
+                    mathMode={state.options.mathLabels === 'on'}
+                    highlight={isPlayable}
+                    disabled={!isPlayable}
+                    onClick={() => !dragState.isDragging && handleCardClick(card)}
+                  />
+                </div>
+              );
+            }}
+          />
         </div>
       </div>
 

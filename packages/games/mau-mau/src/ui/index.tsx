@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cardRank, type CardId, type Suit } from '@brett-und-blatt/engine';
 import {
+  CardFan,
   useCallDeadline,
   PlayingCard,
   SuitShape,
@@ -11,6 +12,13 @@ import {
 import { getNextPlayer } from '../rules';
 import type { MauMauDeckStyle, MauMauMove, MauMauState } from '../types';
 import './styles.css';
+
+/** Breite der Handkarten nach verfügbarem Platz (vorher per CSS: 3,1–4,75 rem). */
+const handCardWidth = (containerWidth: number) => Math.round(Math.min(76, Math.max(50, containerWidth * 0.16)));
+/** Anteil jeder Handkarte, der mindestens sichtbar bleibt: die Ecke mit Wert und Farbe. */
+const HAND_MIN_VISIBLE = 0.4;
+/** Mehr Rückseiten zeichnet der Fächer am Mitspieler nicht; die Zahl daneben nennt den Rest. */
+const OPPONENT_FAN_MAX = 20;
 
 interface FlyingCard {
   id: string;
@@ -392,8 +400,16 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
               className={`mau-opponent ${isTurn ? 'mau-opponent-active' : ''}`}
               title={`${seatNames[index] ?? `Platz ${index + 1}`}: ${hand.length} Karten`}
             >
-              <div className="mau-opponent-card">
-                <PlayingCard card={null} deckStyle={deckStyle} />
+              <div className="mau-opponent-hand" aria-hidden="true">
+                {hand.length > 0 && (
+                  <CardFan
+                    count={Math.min(hand.length, OPPONENT_FAN_MAX)}
+                    label=""
+                    cardWidth={16}
+                    arc={hand.length > 1 ? Math.min(40, hand.length * 5) : 0}
+                    renderCard={() => <PlayingCard card={null} deckStyle={deckStyle} />}
+                  />
+                )}
               </div>
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold sm:text-sm">
@@ -502,42 +518,50 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
         </div>
 
         <div className="mau-hand">
-          {myHand.map((card) => {
-            const isPlayable = playableCardIds.has(card);
-            const isDragged = dragState.isDragging && dragState.item === card;
-            const isSnapping = dragState.snapping && dragState.item === card;
-            const dragStyle: React.CSSProperties = isDragged
-              ? {
-                  transform: `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0) scale(1.08) rotate(2deg)`,
-                  zIndex: 60,
-                  pointerEvents: 'none',
-                }
-              : isSnapping
-                ? { transform: 'translate3d(0, 0, 0)', zIndex: 60 }
-                : {};
+          <CardFan
+            count={myHand.length}
+            label="Deine Handkarten"
+            cardWidth={handCardWidth}
+            minStep={(width) => width * HAND_MIN_VISIBLE}
+            rowOverlap={0.55}
+            keyOf={(index) => myHand[index]!}
+            renderCard={(index) => {
+              const card = myHand[index]!;
+              const isPlayable = playableCardIds.has(card);
+              const isDragged = dragState.isDragging && dragState.item === card;
+              const isSnapping = dragState.snapping && dragState.item === card;
+              const dragStyle: React.CSSProperties = isDragged
+                ? {
+                    transform: `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0) scale(1.08) rotate(2deg)`,
+                    zIndex: 60,
+                    pointerEvents: 'none',
+                  }
+                : isSnapping
+                  ? { transform: 'translate3d(0, 0, 0)', zIndex: 60 }
+                  : {};
 
-            return (
-              <div
-                key={card}
-                ref={(el) => {
-                  if (el) cardRefs.current.set(card, el);
-                  else cardRefs.current.delete(card);
-                }}
-                className={`mau-hand-card ${isDragged ? 'mau-card-dragging' : ''} ${
-                  isSnapping ? 'mau-card-snapping' : ''
-                }`}
-                style={dragStyle}
-                {...(isPlayable && isActor ? bindDrag(card) : {})}
-              >
-                <PlayingCard
-                  card={card}
-                  deckStyle={deckStyle}
-                  highlight={isPlayable ? 'hint' : null}
-                  onClick={() => !dragState.isDragging && handleCardClick(card)}
-                />
-              </div>
-            );
-          })}
+              return (
+                <div
+                  ref={(el) => {
+                    if (el) cardRefs.current.set(card, el);
+                    else cardRefs.current.delete(card);
+                  }}
+                  className={`mau-hand-card ${isDragged ? 'mau-card-dragging' : ''} ${
+                    isSnapping ? 'mau-card-snapping' : ''
+                  }`}
+                  style={dragStyle}
+                  {...(isPlayable && isActor ? bindDrag(card) : {})}
+                >
+                  <PlayingCard
+                    card={card}
+                    deckStyle={deckStyle}
+                    highlight={isPlayable ? 'hint' : null}
+                    onClick={() => !dragState.isDragging && handleCardClick(card)}
+                  />
+                </div>
+              );
+            }}
+          />
         </div>
       </div>
 
