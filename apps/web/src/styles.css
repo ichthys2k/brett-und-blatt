@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '../../../packages/ui/src/ui.css';
+@import './look.css';
 
 /* Tailwind soll auch die Klassen im Baukasten und in den Spielen finden. */
 @source '../../../packages';

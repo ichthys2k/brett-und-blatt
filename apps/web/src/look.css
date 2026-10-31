@@ -1,0 +1,89 @@
+/*
+ * Aussehen „Taverne“ (W-026, docs/spiele/taverne-und-drachenspiel.md): überschreibt die
+ * Farb-Tokens und schmückt nur den Rahmen der App. tests/look.test.ts prüft die Kontraste
+ * und erwartet zuerst den hellen, dann den dunklen Token-Block.
+ */
+:root[data-look='tavern'] {
+  --color-bg: #efe3c8;
+  --color-surface: #fbf5e6;
+  --color-surface-2: #e6d8b8;
+  --color-ink: #2e2014;
+  --color-muted: #5f4c36;
+  --color-line: #c9b48d;
+  --color-accent: #2f5d3a;
+  --color-accent-ink: #ffffff;
+  --color-warning: #8a4b14;
+  --color-danger: #a32a1c;
+  --tavern-wood: #5a3b22;
+  --tavern-wood-dark: #3f2a18;
+  --tavern-grain: rgb(90 59 34 / 0.05);
+  --tavern-sign-ink: #f6ead2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-look='tavern'] {
+    --color-bg: #1d1510;
+    --color-surface: #2a1f17;
+    --color-surface-2: #38291e;
+    --color-ink: #f2e6d0;
+    --color-muted: #bfae95;
+    --color-line: #4f3c2c;
+    --color-accent: #e6b450;
+    --color-accent-ink: #241708;
+    --color-warning: #eda45a;
+    --color-danger: #ff8a75;
+    --tavern-wood: #6b4728;
+    --tavern-wood-dark: #2f1f12;
+    --tavern-grain: rgb(230 180 80 / 0.03);
+    --tavern-sign-ink: #f6ead2;
+  }
+}
+
+[data-look='tavern'] body {
+  background-image: repeating-linear-gradient(90deg, transparent 0 7px, var(--tavern-grain) 7px 8px);
+}
+
+/* Überschriften in einer Serifenschrift des Geräts; die Zierschrift folgt erst nach der Probe. */
+[data-look='tavern'] .bub-home :is(h1, h2) {
+  font-family: Georgia, 'Iowan Old Style', 'Noto Serif', 'Liberation Serif', serif;
+}
+
+/* Kopf der Startseite als Holzschild */
+[data-look='tavern'] .bub-home-sign {
+  padding: 1rem 1.25rem;
+  border: 2px solid var(--tavern-wood-dark);
+  border-radius: 0.75rem;
+  background: repeating-linear-gradient(0deg, transparent 0 18px, rgb(0 0 0 / 0.1) 18px 19px), linear-gradient(180deg, var(--tavern-wood), var(--tavern-wood-dark));
+  box-shadow: 0 3px 0 var(--tavern-wood-dark);
+  color: var(--tavern-sign-ink);
+}
+
+[data-look='tavern'] .bub-home-sign p {
+  color: inherit;
+}
+
+/* Raum-Überschriften mit Holzleiste */
+[data-look='tavern'] .bub-home-room {
+  padding-bottom: 0.4rem;
+  border-bottom: 3px double var(--tavern-wood);
+}
+
+/* Kacheln mit Holzkante, das Emoji als Wappen */
+[data-look='tavern'] .bub-tile {
+  border: 2px solid var(--tavern-wood);
+  border-radius: 0.6rem;
+  box-shadow: 0 3px 0 var(--tavern-wood);
+}
+
+[data-look='tavern'] .bub-tile-crest {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.75rem;
+  padding-bottom: 0.3rem;
+  border: 2px solid var(--tavern-wood);
+  border-radius: 0.3rem 0.3rem 50% 50% / 0.3rem 0.3rem 45% 45%;
+  background: var(--color-surface-2);
+  font-size: 1.75rem;
+}
