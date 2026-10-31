@@ -67,7 +67,7 @@ function publicTitle(view: WolvesSheepState): string {
   }
 }
 
-const CAUSE_LABELS: Record<DepartureCause, string> = { wolves: 'versprengt', council: 'vom Rat geschickt', hound: 'vom Hütehund gepackt', grief: 'mitgegangen', left: 'gegangen' };
+const CAUSE_LABELS: Record<DepartureCause, string> = { wolves: 'wurde versprengt', council: 'wurde vom Rat geschickt', hound: 'wurde vom Hütehund gepackt', grief: 'ist mitgegangen', left: 'ist gegangen' };
 
 function RoleCard({ role, shown, onShow }: { role: Role; shown: boolean; onShow: (shown: boolean) => void }) {
   return (
@@ -117,7 +117,7 @@ function newsText(view: WolvesSheepState, name: (seat: SeatId) => string): strin
   const of = (causes: DepartureCause[], day: number) =>
     view.departures
       .filter((entry) => entry.day === day && causes.includes(entry.cause))
-      .map((entry) => `${name(entry.seat)} (${ROLE_LABELS[entry.role]}) wurde ${CAUSE_LABELS[entry.cause]}.`)
+      .map((entry) => `${name(entry.seat)} (${ROLE_LABELS[entry.role]}) ${CAUSE_LABELS[entry.cause]}.`)
       .join(' ');
   if (view.phase === 'night') {
     const council = view.history.at(-1);
@@ -185,7 +185,7 @@ function Wallboard({ view, seatNames, invite, debateLeft, onClose }: { view: Wol
                 {seatName}
               </span>
               {role && <small>{ROLE_LABELS[role]}</small>}
-              {votes > 0 && <small>{votes} Stimmen</small>}
+              {votes > 0 && <small>{votes === 1 ? '1 Stimme' : `${votes} Stimmen`}</small>}
             </div>
           );
         })}

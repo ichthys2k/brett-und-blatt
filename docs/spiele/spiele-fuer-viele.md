@@ -173,6 +173,6 @@ Zählung: 28 der 34 Ideen tragen 8 oder mehr Spieler, 15 tragen 20 bis 30. Fassu
 ## Offene Entscheidungen
 
 - [ ] Passt die Reihenfolge der Wellen, besonders Malstube und Kategorien-Sprint erst später?
-- [ ] Wölfe im Schafspelz: Ab welcher Klassenstufe soll es angeboten werden?
+- [x] Wölfe im Schafspelz: ab 10 Jahren (Cornelius, 31.10.2026).
 - [ ] Freitext und Zeichnen nur in privaten Räumen: einverstanden?
 - [ ] Welche Ideen streichst du ganz?

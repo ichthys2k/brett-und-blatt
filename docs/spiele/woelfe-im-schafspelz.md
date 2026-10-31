@@ -159,6 +159,10 @@ Festlegungen beim Bau:
 
 **Schritt 4 fertig (31.10.2026), bis auf den Probelauf:** Option „Erzähler“ ab 9 Plätzen (Platz 1 spielt nicht mit, sieht alles und alle, die noch fehlen, eröffnet den Rat). Vorlesetexte in jeder Phase. Knopf „Tafel für den Beamer“ für Erzähler und Zuschauer; die Tafel liest nur öffentliche Felder, kann also auch beim Erzähler nichts verraten. Sie zeigt den Raumcode, aber keinen QR-Code, weil nach dem Start ohnehin niemand mehr einsteigt. Ohne Erzähler bleiben sprachlich gestaltete Ansagen aus, bis Klänge ausgewählt sind.
 
+### Online-Tests (31.10.2026, lokaler Spieleserver)
+
+Elf Partien bis zum Sieg mit nachgebauten Browsern (8, 9, 12 und 18 Plätze, alle Rollen und Einsteigermischung, mit Erzähler), dazu eine im menschlichen Tempo mit 12 Plätzen, eine mit 4 Menschen und 4 Bots und eine mit einem Spieler, der nicht reagiert (30 s je Zug). Jede ankommende Sicht wurde geprüft, auch die eines Zuschauers: **keine verratene Rolle, Wahl, Stimme oder Hirten- und Lamm-Angabe.** Im menschlichen Tempo gab es keine abgewiesenen Züge. Die Tafel lief als Zuschauer im Browser mit. Nicht geprüft: Cloudflare, Vollbild am echten Beamer, echte Menschen.
+
 ### Gemessene Siegquoten
 
 Bots gegen Bots, Stufe „mittel“, je 150 Partien (`PRUEFSTAND=1 corepack pnpm exec vitest run packages/games/wolves-sheep -t "Bots gegen Bots" --disable-console-intercept`). **Die Bots beraten nicht**, die Zahlen sagen also wenig über Menschen. Sie zeigen vor allem, dass keine Mischung kippt, und die Partielänge.
@@ -173,7 +177,7 @@ Einzelne Sonderrollen verschieben die Quote nur wenig. Der Lamm-Wert 1 zu 3 blei
 
 ### Probelauf mit Menschen
 
-Vor der Veröffentlichung einmal mit mindestens 8 Menschen an eigenen Geräten spielen. Dafür braucht es einen Testzugang auf einem eigenen Zweig oder lokal im selben Netz; auf „deploy“ wäre es sofort öffentlich.
+Einmal mit mindestens 8 Menschen an eigenen Geräten spielen, live nach dem Deployment.
 
 1. **Einsteigermischung, App als Erzähler:** Findet sich jeder ohne Erklärung zurecht? Wie lang dauert eine Partie wirklich?
 2. **Dieselbe Mischung mit menschlichem Erzähler und Tafel am Beamer.**
@@ -187,7 +191,7 @@ Darauf achten:
 - Passt die Beratungszeit, und reichen die Zeitvorgaben?
 - Ist der Knopf „Linsen“ bei Sitznachbarn zu auffällig? (Nur das Lamm hat ihn.)
 
-**Vor einer Veröffentlichung noch offen:** Probelauf und deine Entscheidung zum Alter. Bis dahin nicht deployen.
+**Probelauf:** Cornelius testet live auf spiele.lipponer.de, sobald er „deploy“ sagt (31.10.2026). Das Spiel ist ab dann für alle sichtbar.
 
 ## Ausbau (nicht Teil der ersten Fassung)
 
@@ -198,7 +202,7 @@ Darauf achten:
 
 ## Was Cornelius wissen sollte
 
-- **Alter:** Das geprüfte Regelheft nennt ab 14 Jahren, ein aktueller Händlereintrag ab 10. Das Thema ist milder, der Kern bleibt: Kinder beschuldigen einander und stimmen sich hinaus. Ob das für Klasse 5/6 passt, entscheidest du.
+- **Alter:** Ab 10 Jahren (von Cornelius entschieden, 31.10.2026). Das geprüfte Regelheft nennt ab 14 Jahren, ein aktueller Händlereintrag ab 10. Das Thema ist milder, der Kern bleibt: Kinder beschuldigen einander und stimmen sich hinaus. Darauf achtet der Probelauf besonders.
 - **Lange Wartezeit:** Weil niemand zurückkehrt und die Regeln gleich bleiben, warten früh Ausgeschiedene bis zum Ende. Händler nennen rund 30 Minuten je Partie.
 - **Ausgeschiedene sehen alles:** Im selben Raum können sie verraten, wer Wolf ist. Das Original verlässt sich auf ihr Schweigen.
 - **Härtere Rollen:** Hirtenstab und Hütehund treffen auch Unschuldige. Für die erste Runde mit einer Klasse empfehle ich die Einsteigermischung.
