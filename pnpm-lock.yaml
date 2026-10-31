@@ -313,6 +313,9 @@ importers:
       '@brett-und-blatt/game-uno':
         specifier: workspace:*
         version: link:../../packages/games/uno
+      '@brett-und-blatt/game-wolves-sheep':
+        specifier: workspace:*
+        version: link:../../packages/games/wolves-sheep
       '@brett-und-blatt/game-word-salad':
         specifier: workspace:*
         version: link:../../packages/games/word-salad

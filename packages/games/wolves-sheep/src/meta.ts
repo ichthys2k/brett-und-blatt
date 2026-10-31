@@ -15,7 +15,8 @@ export const meta: GameInfo = {
   hiddenInformation: true,
   privateViews: true,
   ruleVersion: 1,
-  draft: true,
+  minHumans: 4,
+  noUndo: true,
   howToPlay: [
     'Jeder bekommt geheim eine Rolle: Wolf, Prüfer oder Schaf. Die Wölfe kennen einander.',
     'Nachts wählen die Wölfe ein Schaf, das versprengt wird, und der Prüfer sieht die Rolle einer Person. Alle anderen tippen an, wer ihnen verdächtig ist, damit niemand auffällt.',

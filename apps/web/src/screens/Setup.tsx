@@ -27,7 +27,7 @@ const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
 function defaultDraft(game: LoadedGame): SetupDraft {
   return {
     seats: Array.from({ length: game.info.players.min }, (_, i) =>
-      i === 0 ? { kind: 'human', name: '', level: 'medium' } : { kind: 'bot', name: '', level: 'medium' },
+      i < (game.info.minHumans ?? 1) ? { kind: 'human', name: '', level: 'medium' } : { kind: 'bot', name: '', level: 'medium' },
     ),
     options: resolveOptions(game.module),
     time: 'relaxed',
@@ -108,6 +108,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
   const visibleOptions = module.options.filter(
     (spec) => !spec.hidden && (!spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(draft.options[id] ?? module.options.find((o) => o.id === id)?.default ?? ''))),
   );
+  const humansMissing = (info.minHumans ?? 1) - draft.seats.filter((seat) => seat.kind === 'human').length;
   const update = (change: Partial<SetupDraft>) => setDraft({ ...draft, ...change });
   // Funktional, damit mehrere Werte nacheinander (z. B. SGF, Brettgröße, Komi) alle ankommen.
   const setOption = (id: string, value: string) => setDraft((d) => (d ? { ...d, options: { ...d.options, [id]: value } } : d));
@@ -142,9 +143,10 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
         </div>
       </header>
 
-      <Button variant="primary" className="w-full text-lg" onClick={start}>
+      <Button variant="primary" className="w-full text-lg" disabled={humansMissing > 0} onClick={start}>
         {t('setup.start')}
       </Button>
+      {humansMissing > 0 && <p className="-mt-3 text-center text-sm text-muted">{t('setup.needHumans', { n: info.minHumans ?? 1 })}</p>}
 
       <details className="rounded-2xl border border-line bg-surface p-3 shadow-sm">
         <summary className="cursor-pointer font-semibold">📖 {t('howto.title')}</summary>
@@ -274,7 +276,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
         );
       })()}
 
-      <Button variant="primary" className="mt-auto w-full text-lg" onClick={start}>
+      <Button variant="primary" className="mt-auto w-full text-lg" disabled={humansMissing > 0} onClick={start}>
         {t('setup.start')}
       </Button>
     </div>

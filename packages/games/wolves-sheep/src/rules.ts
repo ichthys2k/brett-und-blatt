@@ -38,7 +38,9 @@ export interface WolvesSheepState {
   day: number;
   /** Nachtwahl je Platz; in der Sicht nur die eigene, für Wölfe auch die der anderen Wölfe. */
   picks: (SeatId | null)[];
-  /** Wer die Nachtwahl bestätigt hat; in der Sicht nur der eigene Eintrag. */
+  /** Wer die Nachtwahl festgelegt hat; in der Sicht nur der eigene Eintrag. */
+  locked: boolean[];
+  /** Wer mit der Nacht fertig ist; in der Sicht nur der eigene Eintrag. */
   confirmed: boolean[];
   /** Stimmen der laufenden Abstimmung; in der Sicht nur die eigene. */
   votes: (SeatId | null)[];
@@ -58,8 +60,10 @@ export interface WolvesSheepState {
 export type WolvesSheepMove =
   /** Vorläufige Nachtwahl; darf bis zur Bestätigung geändert werden. */
   | { type: 'tap'; target: SeatId }
-  /** Bestätigt die Nachtwahl; `target` nur bei Zeitablauf ohne Wahl. */
-  | { type: 'confirm'; target?: SeatId }
+  /** Legt die Nachtwahl fest. Bei Zeitablauf ohne Wahl mit `target`, und `finish` schließt die Nacht gleich ab. */
+  | { type: 'confirm'; target?: SeatId; finish?: boolean }
+  /** „Weiter“: Erst danach ist der Platz mit der Nacht fertig, so kann der Prüfer sein Ergebnis in Ruhe lesen. */
+  | { type: 'done' }
   | { type: 'endDebate' }
   /** `target` null ist eine Enthaltung und kommt nur durch Zeitablauf zustande. */
   | { type: 'vote'; target: SeatId | null }
@@ -90,6 +94,7 @@ export function setup(seats: number, options: Options, seed: string): WolvesShee
     phase: 'night',
     day: 1,
     picks: Array<SeatId | null>(seats).fill(null),
+    locked: Array<boolean>(seats).fill(false),
     confirmed: Array<boolean>(seats).fill(false),
     votes: Array<SeatId | null>(seats).fill(null),
     voted: Array<boolean>(seats).fill(false),
@@ -147,6 +152,7 @@ export function legalMoves(state: WolvesSheepState, actor: Actor): WolvesSheepMo
     case 'night':
       if (state.confirmed[actor]) return [];
       // Umentscheiden erlaubt `isLegal`; hier genügt die Bestätigung, damit Zufallspartien vorankommen.
+      if (state.locked[actor]) return [{ type: 'done' }];
       if (state.picks[actor] !== null) return [{ type: 'confirm' }];
       return nightTargets(state, actor).map((target) => ({ type: 'tap', target }));
     case 'debate':
@@ -165,11 +171,13 @@ export function isLegal(state: WolvesSheepState, actor: Actor, move: WolvesSheep
   if (!state.alive[actor]) return false;
   switch (move.type) {
     case 'tap':
-      return state.phase === 'night' && !state.confirmed[actor] && nightTargets(state, actor).includes(move.target);
+      return state.phase === 'night' && !state.locked[actor] && nightTargets(state, actor).includes(move.target);
     case 'confirm':
-      if (state.phase !== 'night' || state.confirmed[actor]) return false;
+      if (state.phase !== 'night' || state.locked[actor]) return false;
       if (move.target !== undefined) return nightTargets(state, actor).includes(move.target);
       return state.picks[actor] !== null;
+    case 'done':
+      return state.phase === 'night' && state.locked[actor] === true && !state.confirmed[actor];
     case 'endDebate':
       return state.phase === 'debate' && speakerOf(state) === actor;
     case 'vote':
@@ -182,8 +190,9 @@ export function isLegal(state: WolvesSheepState, actor: Actor, move: WolvesSheep
 export function timeoutMove(state: WolvesSheepState, seat: SeatId): WolvesSheepMove {
   if (state.phase === 'vote') return { type: 'vote', target: null };
   if (state.phase === 'debate') return { type: 'endDebate' };
-  if (state.picks[seat] !== null) return { type: 'confirm' };
-  return { type: 'confirm', target: new Rng(state.rng).pick(nightTargets(state, seat)) };
+  if (state.locked[seat]) return { type: 'done' };
+  if (state.picks[seat] !== null) return { type: 'confirm', finish: true };
+  return { type: 'confirm', target: new Rng(state.rng).pick(nightTargets(state, seat)), finish: true };
 }
 
 /** Aufgeben kostet nur diesen Platz; die Herde spielt weiter. */
@@ -220,6 +229,7 @@ function startNight(state: WolvesSheepState, events: GameEvent[]): WolvesSheepSt
     phase: 'night',
     day: state.day + 1,
     picks: Array<SeatId | null>(state.seats).fill(null),
+    locked: Array<boolean>(state.seats).fill(false),
     confirmed: Array<boolean>(state.seats).fill(false),
   };
 }
@@ -282,12 +292,19 @@ export function applyMove(state: WolvesSheepState, actor: Actor, move: WolvesShe
       const seat = actor as SeatId;
       const picks = state.picks.slice();
       if (move.target !== undefined) picks[seat] = move.target;
+      const locked = state.locked.slice();
+      locked[seat] = true;
       const confirmed = state.confirmed.slice();
-      confirmed[seat] = true;
+      if (move.finish) confirmed[seat] = true;
       const target = picks[seat]!;
       // Der Prüfer erfährt das Ergebnis sofort, nicht erst am Morgen.
       const examinations = state.roles[seat] === 'examiner' ? [...state.examinations, { night: state.day, target, role: state.roles[target]! }] : state.examinations;
-      return { state: settle({ ...state, picks, confirmed, examinations }, events), events };
+      return { state: settle({ ...state, picks, locked, confirmed, examinations }, events), events };
+    }
+    case 'done': {
+      const confirmed = state.confirmed.slice();
+      confirmed[actor as SeatId] = true;
+      return { state: settle({ ...state, confirmed }, events), events };
     }
     case 'endDebate':
       events.push({ type: 'councilOpened' });
@@ -307,8 +324,10 @@ export function applyMove(state: WolvesSheepState, actor: Actor, move: WolvesShe
       const picks = clear(state.picks);
       const votes = clear(state.votes);
       const voted = state.voted.map((done, i) => done && state.votes[i] !== seat);
-      const confirmed = state.confirmed.map((done, i) => done && !(state.roles[i] === 'wolf' && state.picks[i] === seat));
-      const next = checkWinner(depart({ ...state, picks, votes, voted, confirmed }, seat, 'left', events), events);
+      const redo = (i: number) => state.roles[i] === 'wolf' && state.picks[i] === seat;
+      const locked = state.locked.map((done, i) => done && !redo(i));
+      const confirmed = state.confirmed.map((done, i) => done && !redo(i));
+      const next = checkWinner(depart({ ...state, picks, votes, voted, locked, confirmed }, seat, 'left', events), events);
       return { state: next.winner !== null ? next : settle(next, events), events };
     }
   }
@@ -338,6 +357,7 @@ export function playerView(state: WolvesSheepState, seat: SeatId | 'spectator'):
     ...state,
     roles: state.roles.map((role, other) => (shownRole(other) ? role : null)),
     picks: state.picks.map((pick, other) => (other === seat || (isWolf && state.roles[other] === 'wolf') ? pick : null)),
+    locked: own(state.locked, false),
     confirmed: own(state.confirmed, false),
     votes: own(state.votes, null),
     voted: own(state.voted, false),

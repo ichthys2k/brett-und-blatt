@@ -67,7 +67,7 @@ const CATEGORIES: readonly CategorySpec[] = [
     icon: '🎲',
     title: 'Familien-, Lege- & Gesellschaftsspiele',
     subtitle: 'Gemeinsam würfeln, kombinieren, merken und raten – auch in großer Runde.',
-    gameIds: ['scrabble', 'word-salad', 'hangman', 'bible-quiz', 'ludo', 'dominoes', 'color-and-shape', 'battleship', 'maexle', 'kniffel', 'low-flight', 'symbol-match', 'pairs', 'bingo'],
+    gameIds: ['scrabble', 'word-salad', 'hangman', 'bible-quiz', 'ludo', 'dominoes', 'color-and-shape', 'battleship', 'maexle', 'kniffel', 'low-flight', 'symbol-match', 'pairs', 'bingo', 'wolves-sheep'],
   },
   {
     id: 'math',

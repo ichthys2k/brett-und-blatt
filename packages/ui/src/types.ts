@@ -48,6 +48,11 @@ export interface GameUi<V = unknown, M = unknown> {
   seatDetail?: (view: V, seat: SeatId) => string | null;
   /** Punktestand eines Platzes, der in der Spielerleiste immer sichtbar bleibt (auch bei laufender Uhr). */
   seatScore?: (view: V, seat: SeatId) => number | string | null;
+  /**
+   * Gerade verbergen, wer noch handeln muss? Dann zeigt die Spielerleiste keine Markierung und
+   * kein „denkt nach“ – etwa nachts bei geheimen Rollen, wo sich sonst jemand durch Zögern verrät.
+   */
+  concealTurns?: (view: V) => boolean;
   /** Klänge zu den Ereignissen, z. B. `{ placed: 'stein-setzen' }`. Sieg, Niederlage und Zeit vertont die Plattform selbst. */
   sounds?: SoundMap;
   /**

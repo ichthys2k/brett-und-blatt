@@ -177,7 +177,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   };
 
   // Deutlich zeigen, wenn ein Mensch an diesem Gerät dran ist (nur bei Spielen, in denen reihum gezogen wird).
-  const yourMove = !result && !session.paused && handoverSeat === null && actingSeat !== undefined && current.length === 1 && seats.length > 1;
+  const concealed = !result && (ui.concealTurns?.(publicView) ?? false);
+  const yourMove = !concealed && !result && !session.paused && handoverSeat === null && actingSeat !== undefined && current.length === 1 && seats.length > 1;
   useEffect(() => {
     if (!yourMove) return;
     const before = document.title;
@@ -197,7 +198,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   if (result) status = resultTitle(result, session, online);
   else if (session.paused) status = t('play.paused');
   else {
-    const seat = current[0];
+    const seat = concealed ? undefined : current[0];
     const seatConfig = seat === undefined ? undefined : seats[seat];
     const name = seat === undefined ? '' : (seatConfig?.avatar ? `${seatConfig.avatar} ${seatConfig.name}` : (seatConfig?.name ?? ''));
     if (seat === undefined) status = '';
@@ -318,8 +319,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               symbol={<ui.SeatSymbol seat={index} seats={seats.length} />}
               score={ui.seatScore?.(publicView, index)}
               detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index, seats.length)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index, seats.length))}
-              active={!result && current.includes(index)}
-              thinking={session.isThinking(index) && seat.kind === 'bot'}
+              active={!concealed && !result && current.includes(index)}
+              thinking={!concealed && session.isThinking(index) && seat.kind === 'bot'}
               away={session.isAway(index)}
               winner={result?.kind === 'win' && result.winners.includes(index)}
               clock={session.timed ? session.clock(index) : null}
@@ -413,7 +414,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             </>
           ) : (
             <>
-              {humans.length > 0 && (
+              {humans.length > 0 && !info.noUndo && (
                 <Button disabled={!session.canUndo()} onClick={() => session.undo()}>
                   ↶ {t('play.undo')}
                 </Button>

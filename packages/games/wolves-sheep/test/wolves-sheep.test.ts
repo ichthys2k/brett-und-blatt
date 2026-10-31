@@ -21,6 +21,7 @@ function night(state: WolvesSheepState, victim: SeatId): WolvesSheepState {
     const target = next.roles[seat] === 'wolf' ? victim : nightTargets(next, seat)[0]!;
     next = applyMove(next, seat, { type: 'tap', target }).state;
     next = applyMove(next, seat, { type: 'confirm' }).state;
+    next = applyMove(next, seat, { type: 'done' }).state;
   }
   return next;
 }
@@ -57,7 +58,9 @@ describe('Nacht', () => {
     expect(currentPlayers(state)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
     const tapped = applyMove(state, 5, { type: 'tap', target: 0 }).state;
     expect(currentPlayers(tapped)).toContain(5);
-    expect(currentPlayers(applyMove(tapped, 5, { type: 'confirm' }).state)).not.toContain(5);
+    const locked = applyMove(tapped, 5, { type: 'confirm' }).state;
+    expect(currentPlayers(locked)).toContain(5);
+    expect(currentPlayers(applyMove(locked, 5, { type: 'done' }).state)).not.toContain(5);
   });
 
   it('Wölfe können kein Rudelmitglied und niemand sich selbst wählen', () => {
@@ -85,7 +88,7 @@ describe('Nacht', () => {
     let state = fixed();
     for (const seat of livingSeats(state)) {
       const target = seat === 0 ? 3 : seat === 1 ? 4 : nightTargets(state, seat)[0]!;
-      state = applyMove(state, seat, { type: 'confirm', target }).state;
+      state = applyMove(state, seat, { type: 'confirm', target, finish: true }).state;
     }
     expect([3, 4]).toContain(state.departures[0]!.seat);
   });
@@ -94,7 +97,7 @@ describe('Nacht', () => {
     let state = applyMove(fixed(), 2, { type: 'confirm', target: 0 }).state;
     expect(playerView(state, 2).examinations).toEqual([{ night: 1, target: 0, role: 'wolf' }]);
     expect(playerView(state, 3).examinations).toEqual([]);
-    state = applyMove(state, 3, { type: 'confirm', target: 0 }).state;
+    state = applyMove(state, 2, { type: 'done' }).state;
     expect(state.examinations).toHaveLength(1);
   });
 });
@@ -128,6 +131,11 @@ describe('Herdenrat', () => {
     expect(playerView(state, 4).votes[4]).toBe(0);
     for (const seat of [0, 1, 2, 5, 6, 7]) state = applyMove(state, seat, { type: 'vote', target: seat === 0 ? 7 : 0 }).state;
     expect(playerView(state, 5).history[0]!.votes[4]).toBe(0);
+  });
+
+  it('ein Zeitablauf schließt die Nacht des Platzes in einem Zug ab', () => {
+    const state = fixed();
+    expect(currentPlayers(applyMove(state, 5, timeoutMove!(state, 5)).state)).not.toContain(5);
   });
 
   it('ein Zeitablauf im Rat ist eine Enthaltung', () => {
@@ -202,7 +210,7 @@ describe('Aufgeben', () => {
   });
 
   it('Stimmen und Wolfswahl auf den Gehenden müssen neu abgegeben werden', () => {
-    let state = applyMove(fixed(), 0, { type: 'confirm', target: 7 }).state;
+    let state = applyMove(fixed(), 0, { type: 'confirm', target: 7, finish: true }).state;
     state = applyMove(state, 7, { type: 'leave' }).state;
     expect(currentPlayers(state)).toContain(0);
     expect(state.picks[0]).toBeNull();

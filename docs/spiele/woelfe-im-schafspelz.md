@@ -84,7 +84,7 @@ Blinzeln am Tisch gibt es in der App nicht, deshalb ist dies die **einzige angep
 - **Phasen:** `preround`, `night`, `dawn`, `election`, `debate`, `vote`, dazu `pending` für Folgen und `done`.
 - **Rollen nicht über `current` verraten:** Der Server schickt `current` an alle. Dürften nachts nur Rollenträger handeln, wären sie erkannt. Deshalb bestätigen in `preround`, `night` und `dawn` **alle Lebenden genau einmal**, und `current` schrumpft auf die, die noch nicht bestätigt haben. Wer nichts zu tun hat, tippt an, wer ihm verdächtig ist. Diese Notiz sieht nur der eigene Platz am Tag wieder.
 - **Warum zwei Nachtrunden:** Der Hirte muss das Opfer kennen, also müssen die Wölfe fertig sein. Prüfer und Wölfe können gleichzeitig handeln, weil keiner das Ergebnis des anderen nutzen kann. Das ändert am Ausgang nichts gegenüber der Reihenfolge im Heft.
-- **Züge:** `tap` (vorläufige Wahl, bei Wölfen für Wölfe sichtbar), `confirm`, `swap`, `bind`, `peek`, `shepherd` (Ruf und Stab), `vote`, `shoot` (Hütehund), `passBell`, `endDebate`.
+- **Züge:** `tap` (vorläufige Wahl, bei Wölfen für Wölfe sichtbar), `confirm`, `done`, `swap`, `bind`, `peek`, `shepherd` (Ruf und Stab), `vote`, `shoot` (Hütehund), `passBell`, `endDebate`.
 - **Folgen als Warteschlange:** Ausscheiden löst Mitgehen, Hütehund und Glocke aus, auch als Kette. `pending` arbeitet sie der Reihe nach ab, und erst danach wird der Sieg geprüft.
 - **Zeit:** Abstimmen und Nachtrunden laufen über `timePresets` je Zug; läuft die Zeit ab, gilt `timeoutMove` (vorläufige Wahl bestätigen, sonst Los). Die Beratung nutzt `systemDelayMs` mit `'system'` in `currentPlayers`, aber nur wenn eine Zeit gewählt ist, denn bei Wartezeit 0 würde der Systemzug sofort laufen. Den Knopf hat der Leithammel, sonst der erste Lebende, mit Erzähler dieser.
 - **Sicht:** `playerView` enthält die eigene Rolle, aufgedeckte Karten, was die Rolle weiß (Prüfer-Ergebnisse, Wölfe und ihre Wahl ab `night`, Verbundene, Opfer nur für den Hirten). Ausgeschiedene und der Erzähler sehen alles; `'spectator'` sieht nur Öffentliches, damit die Tafel sicher ist. `rng` wird genullt.
@@ -116,7 +116,7 @@ Wer die Abstimmungen sehen darf, ist im Original öffentlich (alle zeigen gleich
 - **Online ist der Hauptfall:** jeder am eigenen Handy, Reden im Raum oder im Sprachkanal.
 - **Hot-Seat:** Der vorhandene Übergabe-Bildschirm funktioniert, weil `current` schrumpft. Es bleiben aber etwa zwei Übergaben je Person und Nacht, also 24 bei 12 Spielern. Spielbar, aber zäh; ich empfehle es nur für kleine Runden.
 - **Neu `GameInfo.minHumans` (hier 4):** Die Web-App und der Raum starten sonst auch mit einem Menschen und sieben Bots. `modes` wertet die Web-App heute nicht aus.
-- **Server:** eintragen in `apps/server/src/games.ts` und `apps/server/package.json`; bis zur Fertigstellung `draft: true`.
+- **Server:** eintragen in `apps/server/src/games.ts` und `apps/server/package.json`.
 
 ## Tests
 
@@ -129,10 +129,10 @@ Wer die Abstimmungen sehen darf, ist im Original öffentlich (alle zeigen gleich
 
 ## Schritte
 
-1. **Regeln** mit Einsteigermischung und Tests, `draft: true`.
-2. **Oberfläche** für online und Hot-Seat, Server-Eintrag, `minHumans`.
+1. ✅ **Regeln** mit Einsteigermischung und Tests.
+2. ✅ **Oberfläche** für online und Hot-Seat, Server-Eintrag, `minHumans`.
 3. **Alle Rollen des Grundspiels** samt Warteschlange.
-4. **Erzähler, Tafel**, Prüfstand, Probelauf mit Menschen, dann `draft` entfernen.
+4. **Erzähler, Tafel**, Prüfstand, Probelauf mit Menschen.
 5. **Klänge** nach deiner Auswahl.
 
 Veröffentlicht wird erst auf „deploy“.
@@ -141,12 +141,11 @@ Veröffentlicht wird erst auf „deploy“.
 
 **Schritt 1 fertig (31.10.2026):** Regeln mit Einsteigermischung (Wölfe, Prüfer, Schafe), Bot „Hütehelfer“ in drei Stufen, Tests und eine schlichte Oberfläche; `draft: true`, also nur über `#/neu/wolves-sheep` erreichbar und noch nicht auf dem Spieleserver. Abweichend vom Entwurf oben: Eine Enthaltung gibt es nur bei Zeitablauf, und wer aufgibt, scheidet mit aufgedeckter Karte aus (`leave`); Wölfe, deren Wahl auf ihn fiel, wählen neu.
 
-**Für Schritt 2 gefunden:**
+**Schritt 2 fertig (31.10.2026):** Das Spiel steht auf der Startseite und auf dem Spieleserver (kein `draft` mehr, weil der Server Entwürfe nicht anbietet). Neu in der Plattform: `GameInfo.minHumans`, `GameInfo.noUndo` und `GameUi.concealTurns` (keine Markierung und kein „denkt nach“ nachts und im Rat). Oberfläche: dunkle Nacht, Stimme mit Bestätigung, Wissen tags nur beim Drücken der Karte, Nachricht über Nacht und Rat, Countdown der Beratung (zählt ab dem Morgen auf dem jeweiligen Gerät).
 
-- Die Spieler-Chips zeigen „denkt nach“ für alle, die noch nicht bestätigt haben. Nachts verrät das, wer lange überlegt. Das Spiel braucht eine Möglichkeit, das auszublenden.
-- „Zug zurück“ steht auch hier zur Verfügung. Bei geheimen Rollen im Hot-Seat ist das zu prüfen.
-- `minHumans` fehlt noch: Eine Partie mit einem Menschen und sieben Bots lässt sich starten.
-- Hot-Seat ist noch nicht im Browser geprüft.
+Abweichend vom Entwurf: Nachts gibt es einen dritten Schritt „Weiter“ für alle (`done`), sonst sähe der Prüfer beim Hot-Seat sein Ergebnis nie. Der „Dorfkreis“ ist vorerst ein Raster.
+
+**Vor einer Veröffentlichung noch offen:** Schritt 3 (weitere Rollen) und Schritt 4 (Erzähler, Tafel, Probelauf mit Menschen). Bis dahin nicht deployen.
 
 ## Ausbau (nicht Teil der ersten Fassung)
 

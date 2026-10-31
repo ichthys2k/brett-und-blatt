@@ -26,6 +26,7 @@ const de = {
   'setup.rules': 'Regeln',
   'setup.time': 'Zeit',
   'setup.start': 'Los geht’s',
+  'setup.needHumans': 'Dieses Spiel braucht mindestens {n} Menschen.',
   'setup.loading': 'Spiel wird geladen …',
   'setup.failed': 'Das Spiel ließ sich nicht laden. Bitte prüfe die Verbindung und lade die Seite neu.',
   'level.easy': 'leicht',
