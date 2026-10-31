@@ -1,7 +1,7 @@
 import { Rng, type Actor, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
 
 /** Die Rollen des Grundspiels; der Leithammel ist ein gewähltes Amt, keine Karte. */
-export type Role = 'wolf' | 'examiner' | 'sheep' | 'shepherd' | 'hound' | 'binder' | 'lamb' | 'stray';
+export type Role = 'wolf' | 'examiner' | 'sheep' | 'shepherd' | 'hound' | 'binder' | 'lamb' | 'stray' | 'narrator';
 
 export type Phase = 'preround' | 'night' | 'dawn' | 'election' | 'debate' | 'vote' | 'pending' | 'done';
 
@@ -59,6 +59,8 @@ export interface PendingAction {
 export interface WolvesSheepState {
   seats: number;
   rolesInPlay: RolesInPlay;
+  /** Der menschliche Erzähler wie im Original: spielt nicht mit, sieht alles und eröffnet den Rat. */
+  narrator: SeatId | null;
   /** Alle Karten dieser Partie, für alle sichtbar: Die Mischung ist kein Geheimnis. */
   deck: Role[];
   /** Rolle je Platz; in der Sicht null, wo sie unbekannt ist. */
@@ -163,18 +165,23 @@ export function setup(seats: number, options: Options, seed: string): WolvesShee
   const rng = Rng.fromSeed(seed, 'rollen');
   const on = (id: keyof RolesInPlay) => options[id] === 'on';
   const rolesInPlay: RolesInPlay = { shepherd: on('shepherd'), hound: on('hound'), binder: on('binder'), lamb: on('lamb'), stray: on('stray'), leader: on('leader') };
-  const deck = buildDeck(seats, rolesInPlay);
+  // Das Regelheft verlangt mindestens 8 Spieler; mit Erzähler also 9 Plätze.
+  const narrator = options.narrator === 'on' && seats >= 9 ? 0 : null;
+  const players = narrator === null ? seats : seats - 1;
+  const deck = buildDeck(players, rolesInPlay);
   const shuffled = rng.shuffle(deck);
-  const roles = shuffled.slice(0, seats);
+  const roles: Role[] = [...(narrator === null ? [] : (['narrator'] as Role[])), ...shuffled.slice(0, players)];
   const holder = roles.indexOf('stray');
   return {
     seats,
     rolesInPlay,
+    narrator,
     deck,
     roles,
-    middle: shuffled.slice(seats),
+    middle: shuffled.slice(players),
     strayHolder: holder >= 0 ? holder : null,
-    alive: Array<boolean>(seats).fill(true),
+    // Der Erzähler zählt als nicht im Spiel: Er ist kein Ziel, stimmt nicht ab und sieht alles.
+    alive: roles.map((_, seat) => seat !== narrator),
     phase: rolesInPlay.stray || rolesInPlay.binder ? 'preround' : 'night',
     day: 1,
     picks: Array<SeatId | null>(seats).fill(null),
@@ -209,8 +216,9 @@ export function livingSeats(state: WolvesSheepState): SeatId[] {
   return state.alive.flatMap((alive, seat) => (alive ? [seat] : []));
 }
 
-/** Wer die Beratung beenden darf: der Leithammel, sonst der erste Lebende. */
+/** Wer die Beratung beenden darf: der Erzähler, sonst der Leithammel, sonst der erste Lebende. */
 export function speakerOf(state: WolvesSheepState): SeatId | null {
+  if (state.narrator !== null) return state.narrator;
   if (state.leader !== null && state.alive[state.leader]) return state.leader;
   return livingSeats(state)[0] ?? null;
 }
@@ -313,6 +321,7 @@ export function legalMoves(state: WolvesSheepState, actor: Actor): WolvesSheepMo
     const targets = livingSeats(state).filter((target) => target !== actor);
     return targets.map((target) => ({ type: head.kind, target }));
   }
+  if (state.phase === 'debate') return speakerOf(state) === actor ? [{ type: 'endDebate' }] : [];
   if (!state.alive[actor]) return [];
   switch (state.phase) {
     case 'preround':
@@ -321,11 +330,9 @@ export function legalMoves(state: WolvesSheepState, actor: Actor): WolvesSheepMo
       return roundMoves(state, actor);
     case 'election':
       return state.voted[actor] ? [] : livingSeats(state).map((target) => ({ type: 'elect', target }));
-    case 'debate':
-      return speakerOf(state) === actor ? [{ type: 'endDebate' }] : [];
     case 'vote':
       return state.voted[actor] ? [] : voteTargets(state, actor).map((target) => ({ type: 'vote', target }));
-    case 'done':
+    default:
       return [];
   }
 }
@@ -649,7 +656,7 @@ export function result(state: WolvesSheepState): Result | null {
   if (state.winner === 'none') return { kind: 'draw', reason: 'Niemand ist mehr übrig.' };
   if (state.winner === 'pair') return { kind: 'win', winners: [...state.bound!], reason: 'Der Wolf wohnt beim Lamm: Die Verbundenen sind allein übrig.' };
   const pairMembers: SeatId[] = mixedPair(state) ? state.bound! : [];
-  const winners = state.roles.flatMap((role, seat) => ((role === 'wolf') === (state.winner === 'wolves') && !pairMembers.includes(seat) ? [seat] : []));
+  const winners = state.roles.flatMap((role, seat) => (role !== 'narrator' && (role === 'wolf') === (state.winner === 'wolves') && !pairMembers.includes(seat) ? [seat] : []));
   return { kind: 'win', winners, reason: state.winner === 'wolves' ? 'Die Wölfe haben die Herde zerstreut.' : 'Alle Wölfe sind entdeckt.' };
 }
 

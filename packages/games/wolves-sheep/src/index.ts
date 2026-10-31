@@ -84,6 +84,16 @@ export const gameModule: GameModule<WolvesSheepState, WolvesSheepMove> = {
       default: 'off',
     },
     {
+      id: 'narrator',
+      label: 'Erzähler',
+      description: 'Ab 9 Plätzen: Platz 1 leitet wie im Original, spielt nicht mit und sieht alle Rollen. Sonst erzählt die App.',
+      choices: [
+        { value: 'off', label: 'die App' },
+        { value: 'on', label: 'ein Mensch (Platz 1)' },
+      ],
+      default: 'off',
+    },
+    {
       id: 'debate',
       label: 'Beratung',
       description: '„Bis zum Knopf“: Der Leithammel oder die erste Person im Kreis eröffnet den Herdenrat, wenn alle so weit sind.',

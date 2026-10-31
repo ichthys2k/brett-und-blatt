@@ -529,6 +529,50 @@ describe('Neugieriges Lamm', () => {
   });
 });
 
+describe('Erzähler', () => {
+  const withNarrator = () => setup(9, { debate: '0', narrator: 'on' }, 'erzähler');
+
+  it('hat keine Karte im Spiel: acht Spieler wie sonst auch', () => {
+    const state = withNarrator();
+    expect(state.narrator).toBe(0);
+    expect(state.deck).toHaveLength(8);
+    expect(state.roles[0]).toBe('narrator');
+    expect(livingSeats(state)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(currentPlayers(state)).not.toContain(0);
+  });
+
+  it('erst ab 9 Plätzen, damit mindestens 8 mitspielen', () => {
+    const state = setup(8, { narrator: 'on' }, 'x');
+    expect(state.narrator).toBeNull();
+    expect(state.deck).toHaveLength(8);
+  });
+
+  it('sieht alle Rollen, die anderen sehen seine Sicht nicht', () => {
+    const state = withNarrator();
+    expect(playerView(state, 0).roles).toEqual(state.roles);
+    expect(playerView(state, 'spectator').roles.slice(1).every((role) => role === null)).toBe(true);
+  });
+
+  it('eröffnet den Rat, gehört aber nicht zu den Gewinnern', () => {
+    let state = withNarrator();
+    const wolf = state.roles.indexOf('wolf');
+    const prey = state.roles.findIndex((role) => role === 'sheep');
+    state = night(state, prey);
+    expect(currentPlayers(state)).toEqual([0]);
+    state = applyMove(state, 0, { type: 'endDebate' }).state;
+    expect(state.phase).toBe('vote');
+    expect(wolf).toBeGreaterThan(0);
+    const wolves = state.roles.flatMap((role, seat) => (role === 'wolf' ? [seat] : []));
+    const others = livingSeats(state).filter((seat) => !wolves.includes(seat));
+    const voted = wolves.reduce((current, target) => ({ ...current, alive: current.alive.map((alive, seat) => alive && seat !== target) }), state);
+    state = { ...voted, phase: 'vote' };
+    for (const seat of others.slice(1)) state = applyMove(state, seat, { type: 'vote', target: others[0]! }).state;
+    state = applyMove(state, others[0]!, { type: 'vote', target: others[1]! }).state;
+    expect(result(state)).toMatchObject({ kind: 'win' });
+    expect((result(state) as { winners: SeatId[] }).winners).not.toContain(0);
+  });
+});
+
 describe('Alle Rollen zusammen', () => {
   it('Zufallspartien enden regelgerecht und verraten nichts', () => {
     for (const seats of [8, 12, 18]) {
@@ -547,6 +591,43 @@ describe('Alle Rollen zusammen', () => {
           const move = computeBotMove(gameModule, { gameId: 'wolves-sheep', botId: 'wolves-sheep', level, seat, view: playerView(state, seat), seed: `${game}/${step}`, timeBudgetMs: 10 });
           state = applyMove(state, seat, move as never).state;
         }
+      }
+    }
+  });
+});
+
+const env = (globalThis as unknown as { process: { env: Record<string, string | undefined> } }).process.env;
+
+// Ausgewogenheit: PRUEFSTAND=1 corepack pnpm exec vitest run packages/games/wolves-sheep --disable-console-intercept
+describe.runIf(env.PRUEFSTAND)('Siegquoten', () => {
+  const MIXES: Record<string, Record<string, string>> = {
+    Einsteiger: {},
+    Hirte: { shepherd: 'on' },
+    Hütehund: { hound: 'on' },
+    Bandstifter: { binder: 'on' },
+    Lamm: { lamb: 'on' },
+    Zugelaufen: { stray: 'on' },
+    Leithammel: { leader: 'on' },
+    Alle: { shepherd: 'on', hound: 'on', binder: 'on', lamb: 'on', stray: 'on', leader: 'on' },
+  };
+  it('Bots gegen Bots je Rollenmischung', { timeout: 300_000 }, () => {
+    for (const seats of [8, 12, 18]) {
+      for (const [label, options] of Object.entries(MIXES)) {
+        const wins: Record<string, number> = {};
+        let lengths = 0;
+        const games = 150;
+        for (let game = 0; game < games; game++) {
+          let state = setup(seats, { debate: '0', ...options }, `quote/${seats}/${label}/${game}`);
+          for (let step = 0; !result(state); step++) {
+            const seat = currentPlayers(state)[0] as SeatId;
+            const move = computeBotMove(gameModule, { gameId: 'wolves-sheep', botId: 'wolves-sheep', level: 'medium', seat, view: playerView(state, seat), seed: `${game}/${step}`, timeBudgetMs: 5 });
+            state = applyMove(state, seat, move as never).state;
+          }
+          wins[state.winner!] = (wins[state.winner!] ?? 0) + 1;
+          lengths += state.day;
+        }
+        const pct = (key: string) => `${Math.round(((wins[key] ?? 0) / games) * 100)} %`.padStart(5);
+        console.log(`${String(seats).padStart(2)} Plätze ${label.padEnd(12)} Wölfe ${pct('wolves')}  Herde ${pct('flock')}  Paar ${pct('pair')}  Nächte ${(lengths / games).toFixed(1)}`);
       }
     }
   });

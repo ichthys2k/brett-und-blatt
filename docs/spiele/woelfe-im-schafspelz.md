@@ -6,7 +6,7 @@
 
 | Steckbrief | |
 |---|---|
-| Spieler | 8–18, mit Erzähler 9–19 (später bis 28, siehe Ausbau) |
+| Spieler | 8–18, mit Erzähler 9–19 (ohne Erzähler sind auch 19 Plätze möglich, mit 4 Wölfen; später bis 28, siehe Ausbau) |
 | Modi | online (Hauptfall), Hot-Seat; allein nicht sinnvoll |
 | Muster | verdeckt, gleichzeitig |
 | Bausteine | vorhanden: `playerView`, `eventView`, `sampleHidden`, `timeoutMove`, `systemDelayMs`, Übergabe-Bildschirm; neu: `GameInfo.minHumans` |
@@ -132,7 +132,7 @@ Wer die Abstimmungen sehen darf, ist im Original öffentlich (alle zeigen gleich
 1. ✅ **Regeln** mit Einsteigermischung und Tests.
 2. ✅ **Oberfläche** für online und Hot-Seat, Server-Eintrag, `minHumans`.
 3. ✅ **Alle Rollen des Grundspiels** samt Warteschlange.
-4. **Erzähler, Tafel**, Prüfstand, Probelauf mit Menschen.
+4. ✅ **Erzähler, Tafel**, Prüfstand. Der Probelauf mit Menschen steht aus, siehe unten.
 5. **Klänge** nach deiner Auswahl.
 
 Veröffentlicht wird erst auf „deploy“.
@@ -157,7 +157,37 @@ Festlegungen beim Bau:
 
 **Bekannte Schwäche:** Trägt ein Computer die Glocke und läuft die Beratung „bis zum Knopf“, wartet er über eine Minute, damit er die Menschen nicht abschneidet. Menschen können nicht vorzeitig eröffnen.
 
-**Vor einer Veröffentlichung noch offen:** Schritt 4 (Erzähler, Tafel, Probelauf mit Menschen). Bis dahin nicht deployen.
+**Schritt 4 fertig (31.10.2026), bis auf den Probelauf:** Option „Erzähler“ ab 9 Plätzen (Platz 1 spielt nicht mit, sieht alles und alle, die noch fehlen, eröffnet den Rat). Vorlesetexte in jeder Phase. Knopf „Tafel für den Beamer“ für Erzähler und Zuschauer; die Tafel liest nur öffentliche Felder, kann also auch beim Erzähler nichts verraten. Sie zeigt den Raumcode, aber keinen QR-Code, weil nach dem Start ohnehin niemand mehr einsteigt. Ohne Erzähler bleiben sprachlich gestaltete Ansagen aus, bis Klänge ausgewählt sind.
+
+### Gemessene Siegquoten
+
+Bots gegen Bots, Stufe „mittel“, je 150 Partien (`PRUEFSTAND=1 corepack pnpm exec vitest run packages/games/wolves-sheep -t "Bots gegen Bots" --disable-console-intercept`). **Die Bots beraten nicht**, die Zahlen sagen also wenig über Menschen. Sie zeigen vor allem, dass keine Mischung kippt, und die Partielänge.
+
+| Plätze | Einsteiger: Wölfe / Herde | Alle Rollen: Wölfe / Herde / Paar | Nächte im Schnitt |
+| --- | --- | --- | --- |
+| 8 | 73 % / 27 % | 38 % / 53 % / 5 % | 3–5 |
+| 12 | 76 % / 24 % | 48 % / 48 % / 3 % | 5–6 |
+| 18 | 43 % / 57 % | 39 % / 61 % / 1 % | 8 |
+
+Einzelne Sonderrollen verschieben die Quote nur wenig. Der Lamm-Wert 1 zu 3 bleibt vorerst: Mit Lamm liegen die Wölfe bei 8 Plätzen 8 Punkte tiefer, bei 12 und 18 etwa gleich. Regeln ändern sich dadurch nicht.
+
+### Probelauf mit Menschen
+
+Vor der Veröffentlichung einmal mit mindestens 8 Menschen an eigenen Geräten spielen. Dafür braucht es einen Testzugang auf einem eigenen Zweig oder lokal im selben Netz; auf „deploy“ wäre es sofort öffentlich.
+
+1. **Einsteigermischung, App als Erzähler:** Findet sich jeder ohne Erklärung zurecht? Wie lang dauert eine Partie wirklich?
+2. **Dieselbe Mischung mit menschlichem Erzähler und Tafel am Beamer.**
+3. **Alle Rollen:** Sind Hirte, Bandstifter und Lamm verständlich? Reicht die Rollenkarte als Erklärung?
+
+Darauf achten:
+
+- Verrät jemand durch Tippen, Zögern oder den Bildschirm seine Rolle?
+- Schweigen die Ausgeschiedenen, und wie lange langweilen sie sich?
+- Stimmung in der Gruppe: Trifft das Hinauswählen jemanden persönlich?
+- Passt die Beratungszeit, und reichen die Zeitvorgaben?
+- Ist der Knopf „Linsen“ bei Sitznachbarn zu auffällig? (Nur das Lamm hat ihn.)
+
+**Vor einer Veröffentlichung noch offen:** Probelauf und deine Entscheidung zum Alter. Bis dahin nicht deployen.
 
 ## Ausbau (nicht Teil der ersten Fassung)
 
