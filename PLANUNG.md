@@ -56,8 +56,8 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-001 | Vierer-Schach-Bot mit Vorausschau über eine Runde (schwer gewinnt 40 % statt 25 %, im Teammodus 18 von 20) | 2026-10-31 | #38 |
 | W-002 | Binokel zu viert: Geber setzt aus oder Kreuzbinokel 2 gegen 2 | 2026-10-31 | #38 |
 | W-004 | Drachenspiel: neun eigene Zauberkarten (Option, Standard an) | 2026-10-31 | #38 |
-| W-016 | Narrenhof: 29 neue eigene Narren nach Balatro-Vorbild (81 insgesamt) | 2026-10-31 | claude/project-thread-7f63qr |
-| W-006 | Narrenhof: späte Ziele gesenkt, schwerer Bot gewinnt 24 % statt 2–4 % | 2026-10-31 | claude/project-thread-7f63qr |
+| W-016 | Narrenhof: 29 neue eigene Narren nach Balatro-Vorbild (81 insgesamt) | 2026-10-31 | #36 |
+| W-006 | Narrenhof: späte Ziele gesenkt, schwerer Bot gewinnt 24 % statt 2–4 % | 2026-10-31 | #36 |
 | W-023 | Offene Runden live unter „Online spielen“ und auf der Startseite (WebSocket zum Verzeichnis, Räume melden sich nur bei Änderung) | 2026-10-31 | #37 |
 | W-022 | Emoji-Clicker als Link-Kachel im Abschnitt „Weitere Spiele“ auf der Startseite (neuer Tab, unverändert) | 2026-10-31 | `45a7f11` |
 | W-009 | Enten-Rallye: Ente schwimmt von selbst (Strömung, Serien beschleunigen, auch online) | 2026-10-31 | #31 |
