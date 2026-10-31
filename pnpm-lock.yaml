@@ -493,6 +493,9 @@ importers:
       '@brett-und-blatt/ui':
         specifier: workspace:*
         version: link:../../ui
+      uqr:
+        specifier: 0.1.3
+        version: 0.1.3
     devDependencies:
       react:
         specifier: ^19.3.1

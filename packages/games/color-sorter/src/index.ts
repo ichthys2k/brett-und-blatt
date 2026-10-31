@@ -3,6 +3,7 @@ import { sorterBot } from './bots';
 import { DECKS, STAKES } from './content';
 import { meta } from './meta';
 import { applyMove, currentPlayers, eventView, isLegal, legalMoves, playerView, result, setup } from './rules';
+import { prepare } from './server';
 import type { SorterMove, SorterState } from './types';
 
 export type * from './types';
@@ -16,6 +17,7 @@ export { previewHand, scoreHand, isDebuffed, type ScoreStep } from './scoring';
 export { bestPlay } from './bots';
 
 export const gameModule: GameModule<SorterState, SorterMove> = {
+  prepare,
   info: meta,
   options: [
     {

@@ -546,7 +546,7 @@ Umgesetzt in `packages/games/color-sorter` (Schritte 1 bis 5 des Plans, lokal, H
 - **Atelier** (`src/unlocks.ts`, `src/ui/Atelier.tsx`): Gesperrt sind anfangs 17 Mods (vor allem seltene und legendäre), 4 Kartensätze und 8 Werkzeug-Stufen; dazu Schmuck ohne Spielvorteil (5 Kartenrücken, 3 Tisch-Themen). Alles ist gezielt kaufbar (Mods 4/6/10/20 💧 nach Seltenheit, Kartensatz 8, Werkzeug 6, Rücken 5, Thema 8). Die **Atelier-Lieferung** (5 💧) bringt eine zufällige noch gesperrte Sache: wackelt, reißt auf, Konfetti; nie eine Dublette, Quoten werden angezeigt.
 - **Freischaltungen in der Partie:** Option „Freischaltungen: Meine / Grundausstattung / Alles“. Bei „Meine“ trägt die Oberfläche vor dem Start die Freischaltungen dieses Geräts in die verborgene Option `unlocks` ein (Hex-Code, `GameUi.prepareOptions`). Online lässt sich die verborgene Option nicht setzen – dort spielen alle mit der Grundausstattung, außer die Raumleitung wählt „Alles“. Ein gesperrter Kartensatz wird zum Standard-Satz; die Einrichtung weist darauf hin.
 - **Album:** zeigt alle entdeckten Mods, Zauber-, Nagelstudio- und Traumkarten, Werkzeuge, Bosse und Kartensätze (Unentdecktes als ❔), Bestwerte und Herausforderungen. Kostenlos, keine Album-Seiten zum Kaufen.
-- **Speicher:** alles in `localStorage` (`brett-und-blatt:farbensortierer`), mit „Sichern“ als kopierbarem Text (`FS1:…`) zum Umziehen auf ein anderes Gerät. Nie echtes Geld, kein Handel.
+- **Speicher:** alles in `localStorage` (`brett-und-blatt:farbensortierer`), mit „Sichern“ als kopierbarem Text (`FS1:…`) zum Umziehen auf ein anderes Gerät; seit 31.10.2026 zusätzlich verschlüsselte Sicherung über den Spieleserver mit Sicherungscode oder Passkey (W-018, siehe unten). Nie echtes Geld, kein Handel.
 - **Neu in Engine und Oberfläche** (für alle Spiele nutzbar): `OptionSpec.hidden` und `OptionSpec.pattern` (verborgene Option mit freiem Wert), `GameUi.prepareOptions` (Optionen vor einem Start auf dem Gerät ergänzen) und `GameUi.SetupExtra` (eigener Abschnitt in der Einrichtung, hier: Atelier).
 - **Online getestet** gegen den lokalen Spieleserver: zwei nachgebaute Browser (mit dem schweren Bot als Spieler) und ein Server-Bot im Duell bis zur Abrechnung in Level 2; verborgene Option abgewiesen, Grundausstattung aktiv, fremde Hände, Zufallsstände und Duell-Punkte verborgen, kein Seed in den Nachrichten, eine Spielnachricht etwa 9 KB.
 
@@ -701,13 +701,17 @@ Was gesichert werden muss, ist klein (unter 5 KB) und nicht persönlich: Zahlen 
 - **B Passkey** wäre die bequemste Form (kein Code zum Abschreiben), aber die nötige PRF-Erweiterung fehlt noch in Teilen von Firefox und älteren Geräten. Gut als zweiter Schritt auf A, mit A als Rückfall.
 - **C und D** lohnen sich nur, wenn ohnehin eine Anmeldung gewünscht ist (z. B. später für Ranglisten oder Klassenräume über Teams). Für den Fortschritt allein sind sie zu schwer und bringen Datenschutzfragen bei Minderjährigen.
 
-### Vorschlag
+### Entscheidung und Umsetzung (31.10.2026)
 
-A umsetzen (geschätzt ein Arbeitsschritt: Worker-Endpunkt, Verschlüsselung, Dialog in der Narrenschule, Tests), die Datenschutzerklärung um zwei Sätze ergänzen. B später prüfen. C und D zurückstellen.
+Cornelius: A und B umsetzen, C und D zurückstellen.
 
-### Offen für Cornelius
-
-- Einverstanden mit A als Weg, und soll das gleich in dieser Etappe kommen oder als eigener Eintrag?
+- **Sicherungscode (A):** 16 Zeichen aus `23456789ABCDEFGHJKLMNPQRSTUVWXYZ` (80 Bit, Anzeige `XXXX-XXXX-XXXX-XXXX`). Aus dem Code leitet HKDF-SHA-256 die Kennung beim Server (128 Bit, hex) und einen AES-GCM-Schlüssel ab (`src/ui/syncCrypto.ts`); der Browser verschlüsselt `{ v: 1, progress }`, die Kennung ist zusätzlich als AAD gebunden. Der Spieleserver legt den Block unter `GET`/`PUT /sicherung/<Kennung>` in einem eigenen Durable Object `BackupVault` (EU, Migration `v3`) ab, prüft nur Form und Größe (≤ 64 KB, `applyBackupPut` in `packages/online/src/backup.ts`) und löscht nach 400 Tagen ohne Zugriff. Gegen gleichzeitiges Schreiben trägt jeder Stand eine Nummer `rev` (409 → zusammenführen, erneut schreiben).
+- **Zusammenführen statt „neuere gewinnen“:** Der Fortschritt hat jetzt ein Zählerbuch `ledger` je Gerät (`earned`, `spent`, `runs`, `wins`; Geräte-Kennung in `brett-und-blatt:farbensortierer:geraet`). Jedes Gerät erhöht nur seine Zeile; `mergeProgress` nimmt je Gerät und Feld das Maximum, vereinigt Freischaltungen, Herausforderungen, Hofchronik und gutgeschriebene Partien, Bestwerte als Maximum, Schmuck nach der jüngsten Wahl (`styledAt`). Glöckchen = Summe verdient − Summe ausgegeben (nie unter 0). So geht auf keinem Gerät etwas verloren. Alte Stände ohne Zählerbuch werden zu einer Zeile `alt-<Gerät>`.
+- **Abgleich:** beim Öffnen des Spiels, am Ende jedes Hoftags, nach jeder Partie, beim Schließen der Narrenschule und auf Knopfdruck (`src/ui/sync.ts`, `scheduleSync`).
+- **Dialog:** Narrenschule → „💾 Sichern“: Code anlegen oder eingeben, Code kopieren, QR-Code mit Link `#/neu/color-sorter?sicherung=<Code>` (öffnet auf dem anderen Gerät gleich den Dialog mit eingetragenem Code und entfernt ihn aus der Adresszeile), Gerät trennen. Der Sicherungstext `FS1:` bleibt für Fassungen ohne Server.
+- **Passkey (B):** „🔑 Passkey anlegen“ erzeugt einen auffindbaren Passkey mit PRF-Erweiterung (fester Salt aus `brett-und-blatt/narrenhof-passkey/v1`). Aus der PRF-Ausgabe entstehen auf demselben Weg eine zweite Kennung und ein zweiter Schlüssel; darunter liegt verschlüsselt nur der Sicherungscode. „🔑 Mit Passkey holen“ meldet sich an, holt den Code und verbindet. Der Server prüft keine Anmeldung – der Passkey dient nur als Schlüsselquelle. Fehlt PRF (ältere Browser, manche Passkey-Speicher), erscheint ein Hinweis und der Code bleibt der Weg. Den Knopf zeigen nur Browser mit WebAuthn in sicherer Umgebung; `getClientCapabilities` blendet ihn aus, wenn PRF sicher fehlt.
+- **Datenschutzerklärung** um einen Absatz „Narrenhof-Sicherung“ ergänzt.
+- **Geprüft:** Tests `packages/online/test/backup.test.ts` und `packages/games/color-sorter/test/sync.test.ts`; im Browser zwei Geräte (50 + 20 Glöckchen → 70 auf beiden), QR-Link, falscher Code, Passkey mit virtuellem Authenticator (anlegen, trennen, per Passkey zurückholen) und ohne PRF.
 
 ## Bedienung am Großbildschirm (29.10.2026)
 

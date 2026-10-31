@@ -94,7 +94,7 @@ export function Datenschutz() {
       <h2>Online-Partien über Cloudflare</h2>
       <p>
         Wer online spielt, verbindet sich mit dem Spieleserver von Brett &amp; Blatt. Er läuft bei Cloudflare, Inc., 101 Townsend St., San Francisco,
-        CA 94107, USA. Ohne Online-Partie wird keine Verbindung zu Cloudflare aufgebaut.
+        CA 94107, USA. Ohne Online-Partie oder Narrenhof-Sicherung (siehe unten) wird keine Verbindung zu Cloudflare aufgebaut.
       </p>
       <p>Für einen Raum verarbeitet der Server:</p>
       <ul>
@@ -107,6 +107,13 @@ export function Datenschutz() {
         Die Räume werden in Rechenzentren in der EU gespeichert. Ein Raum wird mit allen Daten spätestens 24 Stunden nach der letzten Aktivität gelöscht.
         Reaktionen und Schnellnachrichten werden nur weitergeleitet und nicht gespeichert. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, denn ohne diese
         Daten kann die gewünschte Online-Partie nicht stattfinden.
+      </p>
+      <p>
+        <strong>Narrenhof-Sicherung:</strong> Wenn du im Narrenhof einen Sicherungscode anlegst, verschlüsselt dein Browser deinen Spielfortschritt
+        (Glöckchen, Freischaltungen, Hofchronik) mit einem Schlüssel aus diesem Code und legt nur den verschlüsselten Block unter einer daraus abgeleiteten,
+        zufälligen Kennung auf dem Spieleserver in der EU ab; ohne den Code kann niemand ihn lesen, auch ich nicht. Name, E-Mail-Adresse oder ein Konto
+        braucht es dafür nicht, ein Passkey bleibt bei dir und deinem Passkey-Speicher. Die Sicherung wird gelöscht, wenn sie 400 Tage lang nicht abgerufen
+        wurde. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
         Beim Verbindungsaufbau verarbeitet Cloudflare außerdem technisch notwendige Daten wie deine IP-Adresse, Datum und Uhrzeit sowie Angaben zum
@@ -122,10 +129,11 @@ export function Datenschutz() {
         <li>die laufende Partie mit Spielernamen, Einstellungen und Zügen,</li>
         <li>die zuletzt gewählten Einstellungen je Spiel,</li>
         <li>ob der Ton an ist und wie laut, welche Playlist du je Spiel gewählt hast und welche Musikstücke du markiert oder ausgeschlossen hast,</li>
-        <li>für Online-Partien deinen Spitznamen, dein Emoji-Bild und die zufällige Geräte-Kennung.</li>
+        <li>für Online-Partien deinen Spitznamen, dein Emoji-Bild und die zufällige Geräte-Kennung,</li>
+        <li>im Narrenhof deinen Spielfortschritt und, falls angelegt, deinen Sicherungscode.</li>
       </ul>
       <p>
-        Diese Daten verlassen dein Gerät nicht, außer Spitzname, Emoji-Bild und Geräte-Kennung, wenn du einen Online-Raum betrittst. Du kannst sie jederzeit löschen: mit „Verwerfen“ bei der laufenden Partie oder über die Einstellungen
+        Diese Daten verlassen dein Gerät nicht, außer Spitzname, Emoji-Bild und Geräte-Kennung, wenn du einen Online-Raum betrittst, und der verschlüsselte Narrenhof-Fortschritt, wenn du eine Sicherung anlegst. Du kannst sie jederzeit löschen: mit „Verwerfen“ bei der laufenden Partie oder über die Einstellungen
         deines Browsers („Websitedaten löschen“). Die Speicherung ist für die von dir gewünschte Funktion unbedingt erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG).
       </p>
       <p>
