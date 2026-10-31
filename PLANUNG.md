@@ -27,12 +27,6 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Spiel/Bereich | Wunsch | Prio | Status | Eingetragen |
 | --- | --- | --- | --- | --- | --- |
-| W-016 | Narrenhof: 29 neue eigene Narren nach Balatro-Vorbild (81 insgesamt) | 2026-10-31 | claude/project-thread-7f63qr |
-| W-006 | Narrenhof: späte Ziele gesenkt, schwerer Bot gewinnt 24 % statt 2–4 % | 2026-10-31 | claude/project-thread-7f63qr |
-| W-001 | Vierer-Schach | **Vierer-Schach-Bot mit Vorausschau:** Der Bot soll mehr als einen Zug vorausdenken, statt nur die aktuelle Stellung zu bewerten. Plan in `docs/spiele/vierer-schach.md`. | mittel | offen | 2026-10-31, Cornelius (aus Fahrplan Schritt E) |
-| W-002 | Binokel | **Binokel am Vierertisch und Kreuzbinokel:** Binokel zu viert (zwei gegen zwei) und als Kreuzbinokel spielbar machen. Plan in `docs/spiele/binokel.md`. | mittel | offen | 2026-10-31, Cornelius (aus Fahrplan Schritt E) |
-| W-003 | Doppelkopf | **Pflichtsoli im Doppelkopf:** Jede Person muss in einer Serie einmal ein Solo spielen (Pflichtsolo), wie es Turnierregeln vorsehen; als Option. Plan in `docs/spiele/doppelkopf.md`. | mittel | offen | 2026-10-31, Cornelius (aus Fahrplan Schritt E) |
-| W-004 | Drachenspiel | **Zauberkarten im Drachenspiel:** Neben den Tierkarten auch Zauberkarten (einmalige Effekte). Plan in `docs/spiele/drachenspiel.md`. | mittel | offen | 2026-10-31, Cornelius (aus Fahrplan Schritt E) |
 | W-005 | Narrenhof | **Sprachaufnahmen der Kombis im Narrenhof:** Die Ansagen der Kombis (`fs_hand_*`) sagen noch die alten Namen („Duo“, „Triple“ …). Neue Aufnahmen mit den Narrenhof-Namen; Auswahl der Stimmen durch Cornelius (Werkzeuge im Klang-Repo). Plan in `docs/spiele/farbensortierer.md`. | niedrig | offen | 2026-10-31, Cornelius |
 | W-007 | Eins! | **Eigene Musik je Kartenseite bei Flip:** Im Modus Flip soll je nach Kartenseite (Hell/Dunkel) ein eigener Soundtrack laufen. Neue Stücke dürfen dafür erzeugt werden (Auswahl durch Cornelius). | niedrig | offen | 2026-10-30, Cornelius |
 | W-014 | alle Spiele | **Mehr Lieder in den Playlists:** Die Playlists sollen mehr Stücke bekommen (Auswahl durch Cornelius, Ablage in `musik/` im Klang-Repo). | mittel | offen | 2026-10-30, Cornelius |
@@ -58,6 +52,12 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
+| W-003 | Pflichtsolo im Doppelkopf (Option, Vorführung, Geber bleibt, Bot zieht sein Solo) | 2026-10-31 | #PR |
+| W-001 | Vierer-Schach-Bot mit Vorausschau über eine Runde (schwer gewinnt 40 % statt 25 %, im Teammodus 18 von 20) | 2026-10-31 | #PR |
+| W-002 | Binokel zu viert: Geber setzt aus oder Kreuzbinokel 2 gegen 2 | 2026-10-31 | #PR |
+| W-004 | Drachenspiel: neun eigene Zauberkarten (Option, Standard an) | 2026-10-31 | #PR |
+| W-016 | Narrenhof: 29 neue eigene Narren nach Balatro-Vorbild (81 insgesamt) | 2026-10-31 | claude/project-thread-7f63qr |
+| W-006 | Narrenhof: späte Ziele gesenkt, schwerer Bot gewinnt 24 % statt 2–4 % | 2026-10-31 | claude/project-thread-7f63qr |
 | W-023 | Offene Runden live unter „Online spielen“ und auf der Startseite (WebSocket zum Verzeichnis, Räume melden sich nur bei Änderung) | 2026-10-31 | #37 |
 | W-022 | Emoji-Clicker als Link-Kachel im Abschnitt „Weitere Spiele“ auf der Startseite (neuer Tab, unverändert) | 2026-10-31 | `45a7f11` |
 | W-009 | Enten-Rallye: Ente schwimmt von selbst (Strömung, Serien beschleunigen, auch online) | 2026-10-31 | #31 |
