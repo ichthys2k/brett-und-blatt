@@ -52,10 +52,10 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
-| W-003 | Pflichtsolo im Doppelkopf (Option, Vorführung, Geber bleibt, Bot zieht sein Solo) | 2026-10-31 | #PR |
-| W-001 | Vierer-Schach-Bot mit Vorausschau über eine Runde (schwer gewinnt 40 % statt 25 %, im Teammodus 18 von 20) | 2026-10-31 | #PR |
-| W-002 | Binokel zu viert: Geber setzt aus oder Kreuzbinokel 2 gegen 2 | 2026-10-31 | #PR |
-| W-004 | Drachenspiel: neun eigene Zauberkarten (Option, Standard an) | 2026-10-31 | #PR |
+| W-003 | Pflichtsolo im Doppelkopf (Option, Vorführung, Geber bleibt, Bot zieht sein Solo) | 2026-10-31 | #38 |
+| W-001 | Vierer-Schach-Bot mit Vorausschau über eine Runde (schwer gewinnt 40 % statt 25 %, im Teammodus 18 von 20) | 2026-10-31 | #38 |
+| W-002 | Binokel zu viert: Geber setzt aus oder Kreuzbinokel 2 gegen 2 | 2026-10-31 | #38 |
+| W-004 | Drachenspiel: neun eigene Zauberkarten (Option, Standard an) | 2026-10-31 | #38 |
 | W-016 | Narrenhof: 29 neue eigene Narren nach Balatro-Vorbild (81 insgesamt) | 2026-10-31 | claude/project-thread-7f63qr |
 | W-006 | Narrenhof: späte Ziele gesenkt, schwerer Bot gewinnt 24 % statt 2–4 % | 2026-10-31 | claude/project-thread-7f63qr |
 | W-023 | Offene Runden live unter „Online spielen“ und auf der Startseite (WebSocket zum Verzeichnis, Räume melden sich nur bei Änderung) | 2026-10-31 | #37 |
