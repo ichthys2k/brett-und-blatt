@@ -364,10 +364,12 @@ export const STAKES: { name: string; emoji: string; text: string }[] = [
   },
 ];
 
+// Ab Hoftag 5 je Hoftag 20 % unter der ersten Fassung (ruleVersion 6, W-006): Die späten Ziele waren
+// auch für den schweren Bot kaum zu schaffen (4 % Siege, jetzt rund 28 %).
 const TARGETS = [
-  [300, 750, 1900, 4600, 10000, 19000, 33000, 52000],
-  [300, 850, 2400, 6500, 15000, 30000, 55000, 90000],
-  [300, 950, 2900, 8200, 20000, 42000, 80000, 140000],
+  [300, 750, 1900, 4600, 8000, 12000, 17000, 21000],
+  [300, 850, 2400, 6500, 12000, 19000, 28000, 37000],
+  [300, 950, 2900, 8200, 16000, 27000, 41000, 57000],
 ];
 
 /** Grundziel eines Levels (Vorhut); Wächter ×1,5, Boss ×2,2. */

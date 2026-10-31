@@ -195,7 +195,7 @@ Stand 31.10.2026. Ziel: viele Gegner, die zum Hof passen, jeder mit einem Portr�
 
 #### Heute
 
-- **Herrschaften** (Thronsaal, mit Marotte): 25, Emoji statt Bild.
+- **Herrschaften** (Thronsaal, mit Marotte): 25, Emoji statt Bild (vor dem Umbau).
 - **Höflinge** (Morgenaudienz und Festmahl): 20 feste Namen ohne Wirkung; welcher kommt, hängt nur von Hoftag und Audienz ab. Jede Partie sieht also dieselben Gesichter.
 
 #### Recherche: Woher die Gegner kommen
@@ -221,10 +221,12 @@ Stand 31.10.2026. Ziel: viele Gegner, die zum Hof passen, jeder mit einem Portr�
 3. **Porträts für alle 61 Gegner** (29 Herrschaften, 32 Höflinge) mit dem Canva-Bildgenerator: Brustbild 4:5, als WebP etwa 10–15 KB, zusammen rund 1 MB. Anzeige im Thron als ovales Bild im Goldrahmen, die Miene (😐 → 😂) bleibt als Abzeichen daneben. Ohne Bild (oder beim Laden) erscheint weiter das Emoji. Kennzeichnung „KI-erzeugt (Canva), CC BY-SA 4.0“ in `THIRD_PARTY.md`.
 4. **Später (nicht in diesem Schritt):** Bilder auch für die 81 Narren. Das wären noch einmal so viele Bilder; erst wenn die Gegner gefallen.
 
-#### Offen für Cornelius
+#### Umsetzung (31.10.2026)
 
-- Passt der Stil des Probebilds (König Nobel), oder lieber noch überzeichneter und lustiger?
-- Sprüche ohne Regelwirkung für die Höflinge: einverstanden?
+- **30 Herrschaften** (die vier oben und dazu **Die Eiskönigin**: „Ewiger Winter“ – Karten bringen keinen Witz, nur Kombi und Narren, ab Hoftag 4) und **38 Höflinge**: 19 für die Morgenaudienz (die 16 oben und die Zauberwald-Gäste Bannerträgerin Fiene 🐁, Hofflötist Faun Pankratz 🐐, Waldfrau Birkenlaub 🍃), 19 für das Festmahl (die 16 oben und Sternkundiger Orion 🐎, Schmied Grummbart ⚒️, Riese Rumpel 🧌). Die Zauberwald-Gäste sind eigene Gestalten aus der gemeinsamen Sagenwelt (Faun, Dryade, Zentaur, Zwerg, Riese), keine Figuren aus Narnia (urheberrechtlich geschützt bis Ende 2033).
+- Je Partie wählt `courtierFor` aus dem Seed 8 Höflinge je Gruppe; sie kommen in fester Reihenfolge (kleinere zuerst).
+- **Porträts in drei Stimmungen** (Cornelius' Wunsch): Jedes Grundbild (schmunzelnd) wird zweimal abgewandelt – lachend und mit Lachkrampf (Kopf in den Nacken, Tränen, Krone verrutscht). Die Oberfläche wählt die Stufe nach dem Applaus: unter 60 % des Ziels schmunzelnd, ab 60 % lachend, am Ziel Lachkrampf (`stageOf` in `src/ui/portraits.ts`). Mit Bild entfällt das Mienen-Abzeichen.
+- Dateien `src/ui/portraits/boss-<key>-<1|2|3>.webp` und `court-<key>-<1|2|3>.webp`, je etwa 6 KB (161 × 200 Pixel). Sie liegen nicht im Vorab-Speicher der PWA, sondern kommen beim ersten Anblick in den Speicher `portraets`. Die Rohbilder und die Canva-Kennungen liegen in den Projektdateien (`narrenhof/portraits/`).
 
 ### Optik
 
@@ -642,6 +644,8 @@ Gemessen auf dem Narrenhof-Stand `d88204b` (Schritt 1–3). **Nach Schritt 4** (
 Die Werte schwanken zwischen zwei Messungen um etwa ±0,2 Level und ±4 Prozentpunkte (die Bedenkzeit macht die Läufe nicht ganz wiederholbar). Mehr als etwa 100 ms bringt nichts mehr; die Stichprobe ist dann gesättigt.
 
 **Ziel verfehlt:** „schwer“ ist jetzt klar besser als „mittel“, schafft Level 8 aber nur in gut 10 % (Stand `d88204b`) bzw. 1–2 % (nach Schritt 4) statt 30 % der Läufe. Die meisten Läufe enden am Boss von Level 5–7 mit etwa 60 % des Ziels. Getestete Stellschrauben ohne messbaren Gewinn: mehr Sparen oder gar nicht sparen, Schätz-Anteil 30/55 %, Poolgröße 10/14, Verwerf-Schwelle, freieres Neu-Sortieren, Boss-Neuwahl nach geschätzter Härte. Für 30 % bräuchte es entweder eine tiefere Planung (ganze Runden je Kauf simulieren) oder etwas leichtere Ziele ab Level 5 – das ist eine Abwägung für die Zahlen, nicht für den Bot.
+
+**Etappe 5 (31.10.2026, W-006):** Mit 29 neuen Narren und fünf neuen Herrschaften lag „schwer“ bei Ø Hoftag 5,6 und 2–4 % Siegen. Vier weitere Stellschrauben am Bot (Übungen dreifach gewichtet, freieres Tauschen und Neu-Sortieren, weniger bzw. mehr Sparen) brachten nichts Messbares (5,3–5,7, 2–4 %). Deshalb sind die Ziele ab Hoftag 5 je Hoftag um 20 % gesenkt (Hoftag 8 etwa 41 % des vorigen Werts, alle drei Stufentabellen, `ruleVersion` 6). Gemessen (100 Läufe, 10 ms): schwer Ø Hoftag 5,9 und **24 % Siege**. Zur Wahl standen auch 10 % je Hoftag (5,9 und 11 %) oder gar keine Senkung.
 
 **Rechenzeit:** Auf dem Spieleserver (Zähl-Uhr, Schrittweite 1 ms) rechnet „schwer“ im Schnitt etwa 0,1 s, höchstens etwa 0,85 s je Zug (lokal gemessen mit `BOT_STEP=1 BOT_BUDGET=800`, Stand nach Schritt 4); die langen Züge sind Ladenbesuche mit voller Narrenbank. Das liegt im Rahmen der anderen Spiele (auf Cloudflare Spitzen bis 1,6 s). Ein eigener Eintrag in `BOT_STEP_MS` ist nicht nötig. Im Laden ignoriert „schwer“ sehr kleine Budgets (etwa 45 ms je Zug bei 10 ms Budget).
 
