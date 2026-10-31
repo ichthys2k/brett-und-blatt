@@ -40,3 +40,4 @@ export {
   type Playlist,
 } from './audio/music';
 export { DIE_ROLL_MS, Die3D, useRollCounter, type Die3DProps } from './dice/Die3D';
+export { ScorePop, useEventCounter, useLatestEvent, type ScorePopProps } from './effects/ScorePop';

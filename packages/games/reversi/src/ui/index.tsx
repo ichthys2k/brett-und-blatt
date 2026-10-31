@@ -5,10 +5,10 @@ import './styles.css';
 
 const LABELS = ['Schwarz', 'Weiß'];
 
-function Stone({ seat, flipDelay }: { seat: SeatId; flipDelay?: number }) {
+function Stone({ seat, flipDelay, plop }: { seat: SeatId; flipDelay?: number; plop?: boolean }) {
   return (
     <span
-      className={`rv-stone rv-${seat === 0 ? 'black' : 'white'} ${flipDelay !== undefined ? 'rv-flip' : ''}`}
+      className={`rv-stone rv-${seat === 0 ? 'black' : 'white'} ${flipDelay !== undefined ? 'rv-flip' : ''} ${plop ? 'bub-plop' : ''}`}
       style={flipDelay !== undefined ? { animationDelay: `${flipDelay * 60}ms` } : undefined}
     />
   );
@@ -30,7 +30,7 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<ReversiState, Reve
           const cell = row * view.size + col;
           const seat = view.cells[cell];
           if (seat === null || seat === undefined) return playable.has(cell) ? <span className="rv-dot" /> : null;
-          return <Stone key={`${cell}-${seat}`} seat={seat} flipDelay={flipOrder.get(cell)} />;
+          return <Stone key={`${cell}-${seat}`} seat={seat} flipDelay={flipOrder.get(cell)} plop={cell === view.lastMove} />;
         }}
         isActive={(col, row) => playable.has(row * view.size + col)}
         onActivate={(col, row) => onMove({ type: 'place', cell: row * view.size + col })}

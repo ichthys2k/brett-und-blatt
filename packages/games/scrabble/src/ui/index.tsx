@@ -1,4 +1,4 @@
-import { GridBoard, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { GridBoard, ScorePop, useLatestEvent, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import { BOARD_SIZE, squareTypeAt, type SquareType } from '../board';
 import { LETTER_VALUES, type Letter, type Tile } from '../letters';
@@ -33,7 +33,9 @@ function TileFace({ letter, blank, className = '' }: { letter: string; blank?: b
   );
 }
 
-function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps<ScrabbleState, ScrabbleMove>) {
+function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: BoardProps<ScrabbleState, ScrabbleMove>) {
+  // Punkte-Fähnchen am letzten Stein des neuen Worts; die 50er-Prämie glänzt golden.
+  const playedPop = useLatestEvent(events, (e) => e.type === 'played');
   const seat = typeof viewer === 'number' ? viewer : null;
   const rack = (seat !== null ? view.racks[seat] : [])?.filter((t): t is Tile => t !== null) ?? [];
   const myTurn = legalMoves.length > 0;
@@ -61,6 +63,7 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
   const check = pending.length > 0 ? checkPlay(view.board, pending, view.bingoBonus) : null;
   const hintTiles = pending.length === 0 && hint?.type === 'play' ? hint.tiles : [];
   const lastCells = new Set(view.lastMove?.cells ?? []);
+  const popCell = lastCells.size > 0 ? Math.max(...lastCells) : -1;
 
   const place = (row: number, col: number, slot: number) => {
     if (view.board[row * N + col] || pendingAt(row, col)) return false;
@@ -143,7 +146,22 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
           className="wg-board"
           renderCell={(col, row) => {
             const cell = view.board[row * N + col];
-            if (cell) return <TileFace letter={cell.letter} blank={cell.blank} />;
+            if (cell) {
+              const i = row * N + col;
+              if (!lastCells.has(i) || !playedPop.count) return <TileFace letter={cell.letter} blank={cell.blank} />;
+              // Die Steine des neuen Worts federn nacheinander ein.
+              const order = [...lastCells].sort((a, b) => a - b).indexOf(i);
+              return (
+                <>
+                  <span key={`plop-${playedPop.count}`} className="bub-plop wg-plop" style={{ animationDelay: `${order * 70}ms` }}>
+                    <TileFace letter={cell.letter} blank={cell.blank} />
+                  </span>
+                  {i === popCell && playedPop.event && (
+                    <ScorePop value={Number(playedPop.event.score)} trigger={playedPop.count} big={Boolean(playedPop.event.bingo)} />
+                  )}
+                </>
+              );
+            }
             const own = pendingAt(row, col);
             if (own) return <TileFace letter={own.letter} blank={own.blank} className="wg-pending" />;
             const ghost = hintTiles.find((t) => t.row === row && t.col === col);

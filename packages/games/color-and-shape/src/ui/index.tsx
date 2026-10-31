@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { GridBoard, useElementSize, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { GridBoard, ScorePop, useElementSize, useLatestEvent, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { boardMap, checkPlacement, colorOf, shapeOf, type ColorShapeMove, type ColorShapeState, type Placed, type TileId } from '../rules';
 import './styles.css';
@@ -37,7 +37,9 @@ export function Tile({ tile, className = '' }: { tile: TileId; className?: strin
 /** Kleinste Feldgröße auf dem Tisch; darunter wird verschoben statt verkleinert. */
 const MIN_CELL = 34;
 
-function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShapeState, ColorShapeMove>) {
+function Board({ view, legalMoves, onMove, viewer, hint, events }: BoardProps<ColorShapeState, ColorShapeMove>) {
+  // Punkte-Fähnchen über dem zuletzt gelegten Stein; volle Sechserreihen glänzen golden.
+  const placedPop = useLatestEvent(events, (e) => e.type === 'placed');
   const seat = typeof viewer === 'number' ? viewer : null;
   const hand = (seat !== null ? view.hands[seat] : [])?.filter((t): t is TileId => t !== null) ?? [];
   const myTurn = legalMoves.length > 0;
@@ -179,7 +181,20 @@ function Board({ view, legalMoves, onMove, viewer, hint }: BoardProps<ColorShape
                 const x = c + minX;
                 const y = r + minY;
                 const tile = map.get(`${x},${y}`);
-                if (tile !== undefined) return <Tile tile={tile} />;
+                if (tile !== undefined) {
+                  const key = `${x},${y}`;
+                  if (!lastPlaced.has(key) || !placedPop.count) return <Tile tile={tile} />;
+                  const tip = view.lastPlaced[view.lastPlaced.length - 1];
+                  const event = placedPop.event;
+                  return (
+                    <>
+                      <Tile key={`plop-${placedPop.count}`} tile={tile} className="bub-plop" />
+                      {tip && tip.x === x && tip.y === y && event && (
+                        <ScorePop value={Number(event.points)} trigger={placedPop.count} big={Number(event.fullLines) > 0} />
+                      )}
+                    </>
+                  );
+                }
                 const own = pendingAt(x, y);
                 if (own) return <Tile tile={own.tile} className="ff-pending" />;
                 const ghost = pending.length === 0 ? hintTiles.find((p) => p.x === x && p.y === y) : undefined;

@@ -26,9 +26,13 @@ function Board({ view, legalMoves, onMove }: BoardProps<TicTacToeState, TicTacTo
   const playable = new Set(legalMoves.map((move) => move.cell));
   const winning = new Set(view.winLine ?? []);
   const cellAt = (col: number, row: number) => row * 3 + col;
+  // Mitte einer Zelle in Prozent des Bretts (3 % Rand und 3 % Abstand zwischen den Zellen).
+  const center = (i: number) => 17.67 + i * 32.33;
+  const line = view.winLine && view.winLine.length >= 2 ? [view.winLine[0]!, view.winLine[view.winLine.length - 1]!] : null;
 
   return (
     <FitBox ratio={1}>
+      <div className="ttt-wrap">
       <GridBoard
         cols={3}
         rows={3}
@@ -46,6 +50,19 @@ function Board({ view, legalMoves, onMove }: BoardProps<TicTacToeState, TicTacTo
           return `Reihe ${row + 1}, Spalte ${col + 1}: ${seat === null || seat === undefined ? 'frei' : LABELS[seat]}`;
         }}
       />
+        {line && (
+          <svg className="ttt-line" viewBox="0 0 100 100" aria-hidden="true">
+            {(() => {
+              const [a, b] = line;
+              const [x1, y1, x2, y2] = [center(a % 3), center(Math.floor(a / 3)), center(b % 3), center(Math.floor(b / 3))];
+              // Die Linie ragt etwas über die äußeren Zeichen hinaus.
+              const dx = (x2 - x1) * 0.12;
+              const dy = (y2 - y1) * 0.12;
+              return <line x1={x1 - dx} y1={y1 - dy} x2={x2 + dx} y2={y2 + dy} pathLength={1} />;
+            })()}
+          </svg>
+        )}
+      </div>
     </FitBox>
   );
 }
