@@ -102,3 +102,83 @@ describe('Doppelkopf-Bot', () => {
     }
   }, 60_000);
 });
+
+describe('Pflichtsolo', () => {
+  const play = async (opts: Record<string, string>, seed: string, seats = 4) => {
+    const { computeBotMove } = await import('@brett-und-blatt/engine');
+    let s = gameModule.setup(seats, opts, seed);
+    for (let i = 0; i < 20_000 && !gameModule.result(s); i++) {
+      const seat = gameModule.currentPlayers(s)[0] as number;
+      const move = computeBotMove(gameModule, { gameId: 'doppelkopf', botId: 'doppelkopf', level: 'medium', seat, view: gameModule.playerView(s, seat), seed: `${i}`, timeBudgetMs: 50 }) as never;
+      s = gameModule.applyMove(s, seat, move).state;
+    }
+    return s;
+  };
+
+  it('Pflichtsolo: Solist kommt heraus, Geber bleibt, das Spiel zählt nicht', () => {
+    let s = gameModule.setup(4, { mandatorySolo: 'true', rounds: '8' }, 'pflicht-1');
+    // Platz 2 meldet einen Vorbehalt, die anderen sind gesund.
+    for (const seat of s.activeSeats) {
+      s = gameModule.applyMove(s, seat, seat === 2 ? { type: 'reservation' } : { type: 'healthy' }).state;
+    }
+    expect(s.phase).toBe('chooseSolo');
+    s = gameModule.applyMove(s, 2, { type: 'chooseContract', contract: { type: 'damensolo', soloist: 2 } }).state;
+    expect(s.contract.mandatory).toBe(true);
+    expect(s.leaderSeat).toBe(2);
+    // Spiel zu Ende spielen.
+    while (s.phase === 'play') {
+      const seat = gameModule.currentPlayers(s)[0] as number;
+      const move = gameModule.legalMoves(s, seat).find((m) => m.type === 'play')!;
+      s = gameModule.applyMove(s, seat, move).state;
+    }
+    expect(s.mandatoryDone).toEqual([2]);
+    const dealer = s.dealerSeat;
+    s = gameModule.applyMove(s, s.activeSeats[0]!, { type: 'nextGame' }).state;
+    expect(s.gameNumber).toBe(1);
+    expect(s.dealerSeat).toBe(dealer);
+  });
+
+  it('ein zweites Solo ist ein Lustsolo: Vorhand kommt heraus, das Spiel zählt', () => {
+    let s = gameModule.setup(4, { mandatorySolo: 'true', rounds: '8' }, 'pflicht-2');
+    s = { ...s, mandatoryDone: [2] };
+    for (const seat of s.activeSeats) {
+      s = gameModule.applyMove(s, seat, seat === 2 ? { type: 'reservation' } : { type: 'healthy' }).state;
+    }
+    s = gameModule.applyMove(s, 2, { type: 'chooseContract', contract: { type: 'bubensolo', soloist: 2 } }).state;
+    expect(s.contract.mandatory).toBeUndefined();
+    expect(s.leaderSeat).toBe(s.activeSeats[0]);
+  });
+
+  it('fälliges Pflichtsolo hat Vorrang vor einem früheren Vorbehalt', () => {
+    let s = gameModule.setup(4, { mandatorySolo: 'true', rounds: '8' }, 'pflicht-3');
+    s = { ...s, mandatoryDone: [s.activeSeats[0]!] };
+    for (const seat of s.activeSeats) {
+      s = gameModule.applyMove(s, seat, seat === s.activeSeats[0] || seat === s.activeSeats[2] ? { type: 'reservation' } : { type: 'healthy' }).state;
+    }
+    expect(gameModule.currentPlayers(s)).toEqual([s.activeSeats[2]]);
+  });
+
+  it('Vorführung: reichen die Spiele nicht mehr, muss ein Schuldner sofort ein Solo wählen', () => {
+    const s = gameModule.setup(4, { mandatorySolo: 'true', rounds: '4' }, 'pflicht-4');
+    expect(s.phase).toBe('chooseSolo');
+    expect(s.forcedSeat).toBe(s.activeSeats[0]);
+    const moves = gameModule.legalMoves(s, s.forcedSeat!);
+    expect(moves.every((m) => m.type === 'chooseContract' && m.contract.type !== 'hochzeit')).toBe(true);
+  });
+
+  it('ohne Option bleibt alles beim Alten', () => {
+    const s = gameModule.setup(4, { rounds: '4' }, 'pflicht-5');
+    expect(s.phase).toBe('reservations');
+    expect(s.mandatoryDone).toBeUndefined();
+  });
+
+  for (const seats of [4, 5]) {
+    it(`Bots spielen eine Serie am ${seats}er-Tisch, bis jeder sein Pflichtsolo hatte`, async () => {
+      const s = await play({ mandatorySolo: 'true', rounds: '8', table: String(seats) }, `pflicht-serie-${seats}`, seats);
+      expect(gameModule.result(s)).not.toBeNull();
+      expect([...(s.mandatoryDone ?? [])].sort()).toEqual(Array.from({ length: seats }, (_, i) => i));
+      expect(s.history.filter((h) => h.mandatory)).toHaveLength(seats);
+      expect(s.history.filter((h) => !h.mandatory)).toHaveLength(8);
+    }, 60_000);
+  }
+});

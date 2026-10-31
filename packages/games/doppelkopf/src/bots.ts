@@ -11,7 +11,7 @@ import {
   type Suit,
   type TrickContract,
 } from '@brett-und-blatt/engine';
-import { getContract, legalMoves, type DokoContract, type DokoMove, type DokoState } from './rules.js';
+import { getContract, legalMoves, owingSolo, type DokoContract, type DokoMove, type DokoState } from './rules.js';
 
 /**
  * Doppelkopf-Bot: meldet Solo oder Hochzeit nur mit passendem Blatt, sagt mit starker Hand
@@ -34,12 +34,17 @@ export const dokoBot: BotDefinition<DokoState, DokoMove> = {
 
     switch (state.phase) {
       case 'reservations': {
-        const solo = level === 'easy' ? null : bestSolo(hand, level);
+        // Wer noch ein Pflichtsolo schuldet, „zieht“ es mit einer brauchbaren Hand lieber selbst,
+        // statt am Ende der Serie mit irgendeinem Blatt vorgeführt zu werden.
+        const owes = owingSolo(state).includes(seat);
+        const solo = level === 'easy' && !owes ? null : bestSolo(hand, level, owes);
         const bothQueens = hand.filter((c) => cardSuit(c) === 'C' && cardRank(c) === 12).length === 2;
         return solo || bothQueens ? { type: 'reservation' } : { type: 'healthy' };
       }
       case 'chooseSolo': {
-        const solo = bestSolo(hand, level);
+        // Bei der Vorführung muss ein Solo her: dann das beste, auch wenn es schwach ist.
+        const forced = state.forcedSeat === seat;
+        const solo = bestSolo(hand, level, owingSolo(state).includes(seat), forced);
         const wanted = solo ?? { type: 'hochzeit' };
         const match = moves.find(
           (m) => m.type === 'chooseContract' && m.contract.type === wanted.type && (wanted.trumpSuit === undefined || m.contract.trumpSuit === wanted.trumpSuit),
@@ -83,7 +88,10 @@ type SoloChoice = Pick<DokoContract, 'type' | 'trumpSuit'>;
 
 const SOLO_THRESHOLD: Record<BotLevel, number> = { easy: Infinity, medium: 11.5, hard: 11 };
 
-function bestSolo(hand: readonly CardId[], level: BotLevel): SoloChoice | null {
+/** Abschlag auf die Solo-Schwelle, solange das Pflichtsolo noch aussteht. */
+const OWING_DISCOUNT = 2;
+
+function bestSolo(hand: readonly CardId[], level: BotLevel, owes = false, forced = false): SoloChoice | null {
   const options: SoloChoice[] = [
     { type: 'damensolo' },
     { type: 'bubensolo' },
@@ -98,10 +106,12 @@ function bestSolo(hand: readonly CardId[], level: BotLevel): SoloChoice | null {
       const side = hand.filter((c) => !contract.isTrump(c) && cardSuit(c) === suit);
       return side.length > 0 && !side.some((c) => cardRank(c) === 1);
     }).length;
-    const score = s.trumps >= 8 ? s.score - weakSuits * 1.2 : 0;
+    const score = s.trumps >= (owes ? 7 : 8) || forced ? s.score - weakSuits * 1.2 + s.trumps * (forced ? 0.5 : 0) : 0;
     if (!best || score > best.score) best = { choice, score };
   }
-  return best && best.score >= SOLO_THRESHOLD[level] ? best.choice : null;
+  if (forced) return best!.choice;
+  const threshold = owes ? Math.min(SOLO_THRESHOLD.hard, SOLO_THRESHOLD[level]) - OWING_DISCOUNT : SOLO_THRESHOLD[level];
+  return best && best.score >= threshold ? best.choice : null;
 }
 
 // ---------------------------------------------------------------------------
