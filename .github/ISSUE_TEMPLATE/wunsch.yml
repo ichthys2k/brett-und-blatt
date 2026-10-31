@@ -1,0 +1,19 @@
+name: Wunsch oder Idee
+description: Neue Funktion, Änderung oder neues Spiel vorschlagen.
+title: "[Wunsch] "
+labels: ["wunsch"]
+body:
+  - type: input
+    id: spiel
+    attributes:
+      label: Spiel oder Bereich
+      placeholder: z. B. Schach, alle Spiele, neues Spiel
+    validations:
+      required: true
+  - type: textarea
+    id: wunsch
+    attributes:
+      label: Wunsch
+      description: Was soll sich ändern und warum? Wie sieht es aus, wenn es fertig ist?
+    validations:
+      required: true
