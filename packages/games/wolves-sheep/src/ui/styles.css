@@ -116,3 +116,32 @@
   display: inline-flex;
   font-weight: 700;
 }
+
+.ws-choices {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ws-shepherd {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ws-shepherd p {
+  margin: 0;
+  text-align: center;
+}
+
+.ws-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.ws-action-quiet {
+  background: transparent;
+  color: var(--color-ink);
+}

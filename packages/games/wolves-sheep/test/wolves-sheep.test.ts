@@ -1,5 +1,5 @@
-import { computeBotMove, type SeatId } from '@brett-und-blatt/engine';
-import { gameContractChecks } from '@brett-und-blatt/engine/testing';
+import { computeBotMove, Rng, type SeatId } from '@brett-und-blatt/engine';
+import { checkSecrets, gameContractChecks, playRandomGame } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { buildDeck, gameModule, livingSeats, nightTargets, speakerOf, wolfCount, type Role, type WolvesSheepState } from '../src';
 
@@ -243,6 +243,312 @@ describe('Bot', () => {
     expect(vote).toEqual({ type: 'vote', target: 0 });
     const wolfVote = computeBotMove(gameModule, { gameId: 'wolves-sheep', botId: 'wolves-sheep', level: 'hard', seat: 1, view: playerView(state, 1), seed: 'b', timeBudgetMs: 10 }) as { target: SeatId };
     expect(wolfVote.target).not.toBe(0);
+  });
+});
+
+const ALL_ON = { debate: '0', shepherd: 'on', hound: 'on', binder: 'on', lamb: 'on', stray: 'on', leader: 'on' };
+
+/** Ein Stand mit festen Rollen aus der angegebenen Liste; die Vorrunde ist schon vorbei. */
+function cast(roles: Role[], options: Record<string, string> = {}): WolvesSheepState {
+  const base = setup(roles.length, { debate: '0', ...options }, 'besetzt');
+  return { ...base, roles, middle: [], strayHolder: null, phase: 'night' };
+}
+
+/** Spielt die Nacht durch und den Hirten, falls er noch dran ist. */
+function dawnAll(state: WolvesSheepState): WolvesSheepState {
+  let next = state;
+  for (const seat of livingSeats(state)) {
+    const moves = legalMoves(next, seat);
+    if (moves[0]?.type === 'shepherd') next = applyMove(next, seat, { type: 'shepherd', save: false, expel: null }).state;
+    if (next.phase === 'dawn') next = applyMove(next, seat, { type: 'done' }).state;
+  }
+  return next;
+}
+
+describe('Kartenmischung mit Sonderrollen', () => {
+  it('jede Sonderrolle ersetzt ein Schaf, das Zugelaufene Schaf bringt zwei Karten mehr', () => {
+    const rolesInPlay = { shepherd: true, hound: true, binder: true, lamb: true, stray: true, leader: true };
+    const deck = buildDeck(8, rolesInPlay);
+    expect(deck).toHaveLength(10);
+    expect(deck.filter((role) => role === 'sheep')).toHaveLength(2);
+    const state = setup(8, ALL_ON, 'alle');
+    expect(state.roles).toHaveLength(8);
+    expect(state.middle).toHaveLength(2);
+    expect(state.phase).toBe('preround');
+  });
+});
+
+describe('Zugelaufenes Schaf', () => {
+  const stray = (middle: Role[]): WolvesSheepState => {
+    const roles: Role[] = ['stray', 'wolf', 'examiner', 'sheep', 'sheep', 'sheep', 'sheep', 'sheep'];
+    return { ...setup(8, { debate: '0', stray: 'on' }, 'x'), roles, middle, strayHolder: 0 };
+  };
+
+  it('darf tauschen oder bleiben und sieht als Einziger die Karten', () => {
+    const state = stray(['wolf', 'sheep']);
+    expect(legalMoves(state, 0)).toContainEqual({ type: 'swap', card: null });
+    expect(playerView(state, 0).middle).toEqual(['wolf', 'sheep']);
+    expect(playerView(state, 3).middle).toEqual([null, null]);
+    const swapped = applyMove(state, 0, { type: 'swap', card: 0 }).state;
+    expect(swapped.roles[0]).toBe('wolf');
+    expect(swapped.middle[0]).toBe('stray');
+  });
+
+  it('muss tauschen, wenn beide Karten Wölfe sind', () => {
+    const state = stray(['wolf', 'wolf']);
+    expect(legalMoves(state, 0)).not.toContainEqual({ type: 'swap', card: null });
+    expect(() => applyMove(state, 0, { type: 'swap', card: null })).toThrow();
+  });
+
+  it('Wölfe kennen einander erst in der Nacht, und ihre Auswahl verrät in der Vorrunde nichts', () => {
+    const state = { ...stray(['sheep', 'sheep']), roles: ['stray', 'wolf', 'wolf', 'sheep', 'sheep', 'sheep', 'sheep', 'examiner'] as Role[] };
+    expect(playerView(state, 1).roles[2]).toBeNull();
+    expect(legalMoves(state, 1)).toContainEqual({ type: 'tap', target: 2 });
+  });
+});
+
+describe('Bandstifter und Verbundene', () => {
+  const roles: Role[] = ['binder', 'wolf', 'wolf', 'sheep', 'sheep', 'examiner', 'sheep', 'sheep'];
+  const bound = (a: number, b: number): WolvesSheepState => ({ ...cast(roles), bound: [a, b] });
+
+  it('auch sich selbst, und erst nach der Vorrunde erfahren es die zwei', () => {
+    let state: WolvesSheepState = { ...setup(8, { debate: '0', binder: 'on' }, 'x'), roles };
+    expect(legalMoves(state, 0)).toContainEqual({ type: 'bind', a: 0, b: 4 });
+    state = applyMove(state, 0, { type: 'bind', a: 4, b: 3 }).state;
+    expect(state.bound).toEqual([3, 4]);
+    expect(playerView(state, 0).bound).toEqual([3, 4]);
+    expect(playerView(state, 3).bound).toBeNull();
+    expect(playerView({ ...state, phase: 'night' }, 3).bound).toEqual([3, 4]);
+    expect(playerView({ ...state, phase: 'night' }, 6).bound).toBeNull();
+  });
+
+  it('die Rolle des anderen bleibt den Verbundenen verborgen', () => {
+    expect(playerView(bound(1, 3), 3).roles[1]).toBeNull();
+  });
+
+  it('scheidet einer aus, geht der andere mit', () => {
+    const state = night(bound(3, 4), 3);
+    expect(state.alive[3]).toBe(false);
+    expect(state.alive[4]).toBe(false);
+    expect(state.departures.map((entry) => entry.cause)).toEqual(['wolves', 'grief']);
+  });
+
+  it('niemand darf im Rat für den Verbundenen stimmen', () => {
+    const state = { ...bound(3, 4), phase: 'vote' as const };
+    expect(legalMoves(state, 3)).not.toContainEqual({ type: 'vote', target: 4 });
+    expect(() => applyMove(state, 3, { type: 'vote', target: 4 })).toThrow();
+  });
+
+  it('ein Wolf und ein Schaf gewinnen nur allein übrig, nicht mit ihrer Seite', () => {
+    let state = bound(1, 3);
+    state = { ...state, alive: state.alive.map((_, seat) => [1, 2, 3].includes(seat)) };
+    // Der andere Wolf wählt den Verbundenen nicht aus Rücksicht, sondern scheidet im Rat aus.
+    state = { ...state, phase: 'vote' };
+    for (const seat of [1, 3]) state = applyMove(state, seat, { type: 'vote', target: 2 }).state;
+    state = applyMove(state, 2, { type: 'vote', target: 3 }).state;
+    expect(result(state)).toMatchObject({ kind: 'win', winners: [1, 3] });
+  });
+
+  it('die Herde gewinnt ohne die gemischten Verbundenen', () => {
+    let state: WolvesSheepState = { ...bound(1, 3), phase: 'vote' };
+    state = { ...state, alive: state.alive.map((_, seat) => seat !== 2) };
+    for (const seat of [0, 4, 5, 6, 7]) state = applyMove(state, seat, { type: 'vote', target: 1 }).state;
+    for (const seat of [1, 3]) state = applyMove(state, seat, { type: 'vote', target: 4 }).state;
+    expect(result(state)).toMatchObject({ kind: 'win', winners: [0, 4, 5, 6, 7] });
+  });
+});
+
+describe('Hirte', () => {
+  const roles: Role[] = ['wolf', 'wolf', 'shepherd', 'examiner', 'sheep', 'sheep', 'sheep', 'sheep'];
+  const withShepherd = () => cast(roles, { shepherd: 'on' });
+
+  it('nur er sieht das Opfer, und niemand fällt schon vor seiner Entscheidung', () => {
+    const state = night(withShepherd(), 4);
+    expect(state.phase).toBe('dawn');
+    expect(state.alive[4]).toBe(true);
+    expect(playerView(state, 2).nightVictim).toBe(4);
+    expect(playerView(state, 3).nightVictim).toBeNull();
+  });
+
+  it('rettet das Opfer genau einmal', () => {
+    let state = night(withShepherd(), 4);
+    state = applyMove(state, 2, { type: 'shepherd', save: true, expel: null }).state;
+    state = dawnAll(state);
+    expect(state.alive[4]).toBe(true);
+    expect(state.saveUsed).toBe(true);
+    state = night(council(state, () => null), 5);
+    expect(legalMoves(state, 2).some((move) => move.type === 'shepherd' && move.save)).toBe(false);
+  });
+
+  it('kann in einer Nacht retten und ausweisen, auch sich selbst', () => {
+    let state = night(withShepherd(), 2);
+    state = applyMove(state, 2, { type: 'shepherd', save: true, expel: 5 }).state;
+    state = dawnAll(state);
+    expect(state.alive[2]).toBe(true);
+    expect(state.alive[5]).toBe(false);
+    expect(state.departures.at(-1)!.cause).toBe('wolves');
+  });
+
+  it('die Runde im Morgengrauen läuft auch, wenn er nichts tut', () => {
+    const state = dawnAll(night(withShepherd(), 4));
+    expect(state.alive[4]).toBe(false);
+    expect(state.phase).toBe('debate');
+  });
+
+  it('das Morgengrauen entfällt erst, wenn der Hirte aufgedeckt fort ist', () => {
+    const state = cast(roles, { shepherd: 'on' });
+    const gone = { ...state, alive: state.alive.map((_, seat) => seat !== 2) };
+    expect(night(gone, 4).phase).toBe('debate');
+  });
+});
+
+describe('Hütehund und Warteschlange', () => {
+  const roles: Role[] = ['wolf', 'wolf', 'hound', 'examiner', 'sheep', 'sheep', 'sheep', 'sheep'];
+
+  it('nimmt beim Ausscheiden jemanden mit, bevor es weitergeht', () => {
+    let state = night(cast(roles, { hound: 'on' }), 2);
+    expect(state.phase).toBe('pending');
+    expect(currentPlayers(state)).toEqual([2]);
+    state = applyMove(state, 2, { type: 'shoot', target: 0 }).state;
+    expect(state.alive[0]).toBe(false);
+    expect(state.departures.at(-1)).toMatchObject({ seat: 0, cause: 'hound' });
+    expect(state.phase).toBe('debate');
+  });
+
+  it('kennt beim Schuss noch keine fremden Rollen', () => {
+    const state = night(cast(roles, { hound: 'on' }), 2);
+    expect(playerView(state, 2).roles[0]).toBeNull();
+    expect(playerView(applyMove(state, 2, { type: 'shoot', target: 3 }).state, 2).roles[0]).toBe('wolf');
+  });
+
+  it('der Sieg zählt erst nach dem Schuss', () => {
+    let state = cast(['wolf', 'hound', 'sheep', 'sheep', 'sheep', 'sheep', 'sheep', 'sheep'], { hound: 'on' });
+    state = { ...state, alive: state.alive.map((_, seat) => seat < 2) };
+    state = night(state, 1);
+    expect(state.phase).toBe('pending');
+    state = applyMove(state, 1, { type: 'shoot', target: 0 }).state;
+    expect(state.winner).toBe('none');
+  });
+
+  it('schießt auch, wenn er mit dem Verbundenen geht', () => {
+    let state: WolvesSheepState = { ...cast(roles, { hound: 'on' }), bound: [2, 4] };
+    state = night(state, 4);
+    expect(state.alive[2]).toBe(false);
+    expect(currentPlayers(state)).toEqual([2]);
+    expect(applyMove(state, 2, { type: 'shoot', target: 5 }).state.alive[5]).toBe(false);
+  });
+
+  it('wer aufgibt, schießt nicht', () => {
+    const state = applyMove(cast(roles, { hound: 'on' }), 2, { type: 'leave' }).state;
+    expect(state.pending).toEqual([]);
+    expect(state.phase).toBe('night');
+  });
+});
+
+describe('Leithammel', () => {
+  const roles: Role[] = ['wolf', 'wolf', 'sheep', 'examiner', 'sheep', 'sheep', 'sheep', 'sheep'];
+  const elected = () => {
+    let state = night(cast(roles, { leader: 'on' }), 7);
+    expect(state.phase).toBe('election');
+    for (const seat of livingSeats(state)) state = applyMove(state, seat, { type: 'elect', target: 2 }).state;
+    return state;
+  };
+
+  it('wird am ersten Morgen gewählt und eröffnet den Rat', () => {
+    const state = elected();
+    expect(state.leader).toBe(2);
+    expect(state.phase).toBe('debate');
+    expect(currentPlayers(state)).toEqual([2]);
+  });
+
+  it('bei Gleichstand wird am nächsten Morgen neu gewählt', () => {
+    let state = night(cast(roles, { leader: 'on' }), 7);
+    for (const seat of livingSeats(state)) state = applyMove(state, seat, { type: 'elect', target: seat === 6 ? null : seat % 2 === 0 ? 2 : 3 }).state;
+    expect(state.leader).toBeNull();
+    state = night(council(state, () => null), 6);
+    expect(state.phase).toBe('election');
+  });
+
+  it('zählt im Rat doppelt', () => {
+    const ballot: Record<number, SeatId> = { 2: 4, 0: 5, 1: 5, 3: 0, 4: 0, 5: 0, 6: 0 };
+    // Der Leithammel stimmt zweifach: 4 bekommt 2, 5 bekommt 2, 0 bekommt 4.
+    const state = council(elected(), (seat) => ballot[seat]!);
+    expect(state.history[0]!.out).toBe(0);
+    const tieBallot: Record<number, SeatId> = { 2: 4, 0: 4, 1: 5, 3: 5, 4: 5, 5: 4, 6: 3 };
+    // 4 hat 2 + 1 + 1 = 4 Stimmen, 5 hat 3, 3 hat 1: Ohne doppelte Stimme wäre es Gleichstand.
+    expect(council(elected(), (seat) => tieBallot[seat]!).history[0]!.out).toBe(4);
+  });
+
+  it('gibt beim Ausscheiden die Glocke weiter', () => {
+    let state = council(elected(), (seat) => (seat === 2 ? 3 : 2));
+    expect(state.phase).toBe('pending');
+    expect(currentPlayers(state)).toEqual([2]);
+    state = applyMove(state, 2, { type: 'passBell', target: 3 }).state;
+    expect(state.leader).toBe(3);
+    expect(state.phase).toBe('night');
+  });
+
+  it('wer aufgibt, gibt die Glocke an den ersten Lebenden', () => {
+    const state = applyMove(elected(), 2, { type: 'leave' }).state;
+    expect(state.leader).toBe(0);
+  });
+});
+
+describe('Neugieriges Lamm', () => {
+  const roles: Role[] = ['wolf', 'wolf', 'lamb', 'examiner', 'sheep', 'sheep', 'sheep', 'sheep'];
+  const withLamb = (rng?: WolvesSheepState['rng']) => {
+    const state = cast(roles, { lamb: 'on' });
+    return rng ? { ...state, rng } : state;
+  };
+
+  it('sieht einen Wolf, nur einmal je Nacht und nur es selbst', () => {
+    const state = applyMove(withLamb(), 2, { type: 'peek' }).state;
+    expect(playerView(state, 2).lambSights).toHaveLength(1);
+    expect(roles[playerView(state, 2).lambSights[0]!.target]).toBe('wolf');
+    expect(playerView(state, 3).lambSights).toEqual([]);
+    expect(() => applyMove(state, 2, { type: 'peek' })).toThrow();
+  });
+
+  it('wird es erwischt, trifft es das Lamm statt des Opfers', () => {
+    let state = applyMove(withLamb(), 2, { type: 'peek' }).state;
+    state = night({ ...state, lambCaught: true }, 4);
+    expect(state.alive[2]).toBe(false);
+    expect(state.alive[4]).toBe(true);
+    expect(state.departures.at(-1)!.cause).toBe('wolves');
+  });
+
+  it('das Erwischen bleibt bis zum Morgen verborgen und trifft etwa jedes dritte Mal', () => {
+    let caught = 0;
+    for (let i = 0; i < 300; i++) {
+      const state = applyMove({ ...withLamb(), rng: Rng.fromSeed(`lamm${i}`).state }, 2, { type: 'peek' }).state;
+      if (state.lambCaught) caught++;
+      expect(playerView(state, 2).lambCaught).toBe(false);
+    }
+    expect(caught).toBeGreaterThan(70);
+    expect(caught).toBeLessThan(130);
+  });
+});
+
+describe('Alle Rollen zusammen', () => {
+  it('Zufallspartien enden regelgerecht und verraten nichts', () => {
+    for (const seats of [8, 12, 18]) {
+      for (let game = 0; game < 8; game++) playRandomGame(gameModule, seats, ALL_ON, `alle/${seats}/${game}`);
+      for (let game = 0; game < 2; game++) checkSecrets(gameModule, seats, ALL_ON, `geheim/${seats}/${game}`);
+    }
+  });
+
+  it('die Bots spielen ganze Partien auf jeder Stufe', () => {
+    for (const level of ['easy', 'medium', 'hard'] as const) {
+      for (let game = 0; game < 2; game++) {
+        let state = setup(8, ALL_ON, `bots/${level}/${game}`);
+        for (let step = 0; !result(state); step++) {
+          expect(step).toBeLessThan(2000);
+          const seat = currentPlayers(state)[0] as SeatId;
+          const move = computeBotMove(gameModule, { gameId: 'wolves-sheep', botId: 'wolves-sheep', level, seat, view: playerView(state, seat), seed: `${game}/${step}`, timeBudgetMs: 10 });
+          state = applyMove(state, seat, move as never).state;
+        }
+      }
+    }
   });
 });
 

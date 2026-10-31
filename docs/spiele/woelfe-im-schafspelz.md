@@ -131,7 +131,7 @@ Wer die Abstimmungen sehen darf, ist im Original öffentlich (alle zeigen gleich
 
 1. ✅ **Regeln** mit Einsteigermischung und Tests.
 2. ✅ **Oberfläche** für online und Hot-Seat, Server-Eintrag, `minHumans`.
-3. **Alle Rollen des Grundspiels** samt Warteschlange.
+3. ✅ **Alle Rollen des Grundspiels** samt Warteschlange.
 4. **Erzähler, Tafel**, Prüfstand, Probelauf mit Menschen.
 5. **Klänge** nach deiner Auswahl.
 
@@ -145,7 +145,19 @@ Veröffentlicht wird erst auf „deploy“.
 
 Abweichend vom Entwurf: Nachts gibt es einen dritten Schritt „Weiter“ für alle (`done`), sonst sähe der Prüfer beim Hot-Seat sein Ergebnis nie. Der „Dorfkreis“ ist vorerst ein Raster.
 
-**Vor einer Veröffentlichung noch offen:** Schritt 3 (weitere Rollen) und Schritt 4 (Erzähler, Tafel, Probelauf mit Menschen). Bis dahin nicht deployen.
+**Schritt 3 fertig (31.10.2026):** Hirte, Hütehund, Bandstifter, Neugieriges Lamm, Zugelaufenes Schaf und Leithammel sind einzeln zuschaltbar, Standard bleibt die Einsteigermischung. Dazu die Warteschlange für Ketten aus Ausscheiden, Schuss und Glocke; der Sieg zählt erst danach.
+
+Festlegungen beim Bau:
+
+- Am Morgen heißt alles Nächtliche „versprengt“, auch Hirtenstab und erwischtes Lamm, damit niemand den Hirten daran erkennt.
+- Hütehund und abtretender Leithammel handeln noch ohne das Wissen der Ausgeschiedenen.
+- Wer aufgibt, schießt nicht; die Glocke geht dann an den ersten Lebenden.
+- Liegt die Hirtenkarte in der Mitte, läuft das Morgengrauen trotzdem, damit das niemand merkt. Es entfällt erst, wenn der Hirte aufgedeckt fort ist.
+- Hat ein Wolf nur noch Rudel und Verbundenen als Ziel, tippt er zum Schein; das zählt nicht.
+
+**Bekannte Schwäche:** Trägt ein Computer die Glocke und läuft die Beratung „bis zum Knopf“, wartet er über eine Minute, damit er die Menschen nicht abschneidet. Menschen können nicht vorzeitig eröffnen.
+
+**Vor einer Veröffentlichung noch offen:** Schritt 4 (Erzähler, Tafel, Probelauf mit Menschen). Bis dahin nicht deployen.
 
 ## Ausbau (nicht Teil der ersten Fassung)
 
