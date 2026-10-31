@@ -1,6 +1,6 @@
-import type { SeatId } from '@brett-und-blatt/engine';
+import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { FitBox, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import {
   TRACK_LENGTH,
   colorIndex,
@@ -176,6 +176,175 @@ export const HOME_COORDS: readonly (readonly { col: number; row: number }[])[] =
   ],
 ];
 
+/** Mittelpunkt eines Gitterfelds in SVG-Koordinaten. */
+function cellCenter(coord: { col: number; row: number }): Point {
+  return { x: coord.col * 100 + 50, y: coord.row * 100 + 50 };
+}
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+/**
+ * Die Figuren stehen etwas unterhalb der Feldmitte: Ihr Sockel liegt dann sichtbar auf dem Feld
+ * und die Figur wirkt mittig (F-002).
+ */
+const PIECE_DROP = 5;
+
+/** Dauer eines Hüpfers von Feld zu Feld. */
+const HOP_MS = 150;
+/** Flug einer geschlagenen Figur zurück in den Stall. */
+const FLIGHT_MS = 650;
+
+interface PieceAnimation {
+  seat: SeatId;
+  pieceIndex: number;
+  /** Startpunkt und alle Felder, über die die Figur hüpft (das letzte ist das Ziel). */
+  path: Point[];
+  captured: { seat: SeatId; pieceIndex: number; from: Point; to: Point }[];
+  start: number;
+  /** Gesamtdauer: Hüpfer und danach der Flug der geschlagenen Figuren. */
+  duration: number;
+}
+
+/** Aktuelle Zeichenposition einer bewegten Figur: Ort, Höhe über dem Brett, Drehung und Größe. */
+interface AnimatedPose extends Point {
+  lift: number;
+  rotate: number;
+  scale: number;
+}
+
+/**
+ * Baut aus den Ereignissen eines Zugs die Animation: Die ziehende Figur hüpft Feld für Feld,
+ * eine geschlagene Figur bleibt stehen, bis sie getroffen wird, und fliegt dann im Bogen in den Stall.
+ */
+function animationFromEvents(events: GameEvent[], seats: number, now: number): PieceAnimation | null {
+  const trackPoint = (seat: SeatId, step: number) => cellCenter(TRACK_COORDS[toAbsoluteTrackIndex(seat, step, seats)]);
+  const goalPoint = (seat: SeatId, slot: number) => cellCenter(GOAL_COORDS[colorIndex(seat, seats)][slot]);
+
+  let mover: Pick<PieceAnimation, 'seat' | 'pieceIndex' | 'path'> | null = null;
+  for (const event of events) {
+    const e = event as GameEvent & Record<string, number>;
+    if (event.type === 'entered') {
+      const home = cellCenter(HOME_COORDS[colorIndex(e.seat, seats)][e.pieceIndex]);
+      mover = { seat: e.seat, pieceIndex: e.pieceIndex, path: [home, trackPoint(e.seat, 0)] };
+    } else if (event.type === 'moved') {
+      const path = [trackPoint(e.seat, e.fromStep)];
+      for (let step = e.fromStep + 1; step <= e.toStep; step++) path.push(trackPoint(e.seat, step));
+      mover = { seat: e.seat, pieceIndex: e.pieceIndex, path };
+    } else if (event.type === 'goalEntered') {
+      const path = [trackPoint(e.seat, e.fromStep)];
+      for (let step = e.fromStep + 1; step < TRACK_LENGTH; step++) path.push(trackPoint(e.seat, step));
+      for (let slot = 0; slot <= e.goalSlot; slot++) path.push(goalPoint(e.seat, slot));
+      mover = { seat: e.seat, pieceIndex: e.pieceIndex, path };
+    } else if (event.type === 'goalMoved') {
+      const path = [goalPoint(e.seat, e.fromSlot)];
+      for (let slot = e.fromSlot + 1; slot <= e.toSlot; slot++) path.push(goalPoint(e.seat, slot));
+      mover = { seat: e.seat, pieceIndex: e.pieceIndex, path };
+    }
+  }
+  if (!mover || mover.path.length < 2) return null;
+
+  const captured = events
+    .filter((event) => event.type === 'captured')
+    .map((event) => {
+      const e = event as GameEvent & Record<string, number>;
+      return {
+        seat: e.capturedSeat,
+        pieceIndex: e.capturedPieceIndex,
+        from: cellCenter(TRACK_COORDS[e.trackIndex]),
+        to: cellCenter(HOME_COORDS[colorIndex(e.capturedSeat, seats)][e.capturedPieceIndex]),
+      };
+    });
+  const hops = (mover.path.length - 1) * HOP_MS;
+  return { ...mover, captured, start: now, duration: hops + (captured.length > 0 ? FLIGHT_MS : 0) };
+}
+
+/** Wo eine Figur gerade zu zeichnen ist, solange die Animation läuft – sonst null. */
+function animatedPose(anim: PieceAnimation, seat: SeatId, pieceIndex: number, now: number): AnimatedPose | null {
+  const elapsed = now - anim.start;
+  if (elapsed >= anim.duration) return null;
+  const hopsMs = (anim.path.length - 1) * HOP_MS;
+
+  if (seat === anim.seat && pieceIndex === anim.pieceIndex) {
+    if (elapsed >= hopsMs) return null;
+    const hop = Math.floor(elapsed / HOP_MS);
+    const t = (elapsed - hop * HOP_MS) / HOP_MS;
+    const from = anim.path[hop];
+    const to = anim.path[hop + 1];
+    // Längere Sprünge (aus dem Stall aufs Startfeld) gehen höher.
+    const height = Math.min(90, 28 + Math.hypot(to.x - from.x, to.y - from.y) * 0.12);
+    return {
+      x: from.x + (to.x - from.x) * t,
+      y: from.y + (to.y - from.y) * t,
+      lift: Math.sin(Math.PI * t) * height,
+      rotate: 0,
+      // Kurz gestaucht beim Aufsetzen, gestreckt in der Luft.
+      scale: 1 + Math.sin(Math.PI * t) * 0.08,
+    };
+  }
+
+  const victim = anim.captured.find((c) => c.seat === seat && c.pieceIndex === pieceIndex);
+  if (!victim) return null;
+  if (elapsed < hopsMs) return { ...victim.from, lift: 0, rotate: 0, scale: 1 };
+  const t = Math.min(1, (elapsed - hopsMs) / FLIGHT_MS);
+  const ease = 1 - (1 - t) ** 2;
+  return {
+    x: victim.from.x + (victim.to.x - victim.from.x) * ease,
+    y: victim.from.y + (victim.to.y - victim.from.y) * ease,
+    lift: Math.sin(Math.PI * t) * 240,
+    rotate: t * 540,
+    scale: 1 + Math.sin(Math.PI * t) * 0.35,
+  };
+}
+
+/**
+ * Spielt die Zug-Animationen zu den neuesten Ereignissen ab und liefert die Zeichenpositionen.
+ * Zieht schon der Nächste, während eine geschlagene Figur noch fliegt, laufen beide Animationen nebeneinander.
+ */
+function usePieceAnimation(events: GameEvent[], seats: number) {
+  const [tracked, setTracked] = useState<{ events: GameEvent[]; anims: PieceAnimation[] }>({ events, anims: [] });
+  const [now, setNow] = useState(0);
+  let anims = tracked.anims;
+
+  // Neue Ereignisse schon beim Zeichnen übernehmen, damit die Figur nicht erst kurz am Ziel aufblitzt.
+  if (tracked.events !== events) {
+    const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const start = performance.now();
+    const next = reduced ? null : animationFromEvents(events, seats, start);
+    // Ereignisse ohne Figurenzug (z. B. ein Wurf) lassen laufende Animationen weiterlaufen.
+    if (next) anims = [...anims.filter((a) => start - a.start < a.duration), next];
+    setTracked({ events, anims });
+    if (next) setNow(start);
+  }
+
+  useEffect(() => {
+    if (anims.length === 0) return;
+    const end = Math.max(...anims.map((a) => a.start + a.duration));
+    let frame = 0;
+    const tick = (time: number) => {
+      setNow(time);
+      if (time < end) frame = requestAnimationFrame(tick);
+      else setTracked((current) => (current.anims === anims ? { ...current, anims: [] } : current));
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [anims]);
+
+  return (seat: SeatId, pieceIndex: number) => {
+    // Die jüngste Animation zählt, wenn eine Figur in mehreren vorkommt.
+    for (let i = anims.length - 1; i >= 0; i--) {
+      const anim = anims[i];
+      const involved =
+        (anim.seat === seat && anim.pieceIndex === pieceIndex) ||
+        anim.captured.some((c) => c.seat === seat && c.pieceIndex === pieceIndex);
+      if (involved) return animatedPose(anim, seat, pieceIndex, Math.max(now, anim.start));
+    }
+    return null;
+  };
+}
+
 /** Zeichnet die Augen eines Spielwürfels als SVG. */
 function DiceFace({ value, size = 70 }: { value: number; size?: number }) {
   const r = size * 0.08;
@@ -215,10 +384,13 @@ function PiecePin({
   style,
   isMovable,
   onClick,
+  shadow = true,
 }: {
   style: PlayerStyle;
   isMovable?: boolean;
   onClick?: () => void;
+  /** Schatten mitzeichnen – nicht, wenn die Figur gerade in der Luft ist (der Schatten bleibt dann am Boden). */
+  shadow?: boolean;
 }) {
   const gradId = useId();
 
@@ -236,7 +408,7 @@ function PiecePin({
       </defs>
 
       {/* Schatten */}
-      <ellipse cx="0" cy="18" rx="20" ry="8" fill="rgba(0, 0, 0, 0.25)" />
+      {shadow && <ellipse cx="0" cy="18" rx="20" ry="8" fill="rgba(0, 0, 0, 0.25)" />}
 
       {/* Sockel */}
       <circle cx="0" cy="8" r="22" fill={style.border} />
@@ -262,8 +434,23 @@ function PiecePin({
   );
 }
 
-function Board({ view, legalMoves, onMove }: BoardProps<LudoState, LudoMove>) {
-  const [hoveredMove, setHoveredMove] = useState<number | null>(null);
+/** Kleiner Würfel in der Ecke des Würfelfelds: „Gelb würfelte 3 – kein Zug“. */
+function LastRollBadge({ seat, seats, dice }: { seat: SeatId; seats: number; dice: number }) {
+  const style = PLAYER_STYLES[colorIndex(seat, seats)];
+  return (
+    <g transform="translate(-14, -14)" className="ludo-last-roll">
+      <title>{`${style.name} würfelte ${dice} – kein Zug möglich`}</title>
+      <rect x="0" y="0" width="48" height="48" rx="12" fill={style.fill} stroke={style.border} strokeWidth="3" />
+      <g transform="translate(6, 6)">
+        <DiceFace value={dice} size={36} />
+      </g>
+      <line x1="4" y1="44" x2="44" y2="4" stroke="#1E293B" strokeWidth="4" strokeLinecap="round" opacity="0.7" />
+    </g>
+  );
+}
+
+function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoMove>) {
+  const poseOf = usePieceAnimation(events, view.seats);
 
   const turn = view.turn;
   const color = colorIndex(turn, view.seats);
@@ -485,6 +672,11 @@ function Board({ view, legalMoves, onMove }: BoardProps<LudoState, LudoMove>) {
               </g>
             )}
 
+            {/* Wurf des Vorgängers, nach dem es keinen Zug gab – klein in dessen Farbe (F-004) */}
+            {view.phase === 'roll' && view.dice === null && view.lastRoll && view.lastRoll.seat !== turn && (
+              <LastRollBadge seat={view.lastRoll.seat} seats={view.seats} dice={view.lastRoll.dice} />
+            )}
+
             {view.phase === 'move' && view.dice !== null && (
               <g>
                 <g transform="translate(40, 25)">
@@ -519,25 +711,38 @@ function Board({ view, legalMoves, onMove }: BoardProps<LudoState, LudoMove>) {
               />
             ))}
 
-          {/* Alle Spielfiguren */}
-          {pieceCoords.map((p) => (
-            <g
-              key={`piece-${p.seat}-${p.pieceIndex}`}
-              transform={`translate(${p.col * 100 + 50}, ${p.row * 100 + 50})`}
-              onMouseEnter={() => p.isMovable && setHoveredMove(p.pieceIndex)}
-              onMouseLeave={() => setHoveredMove(null)}
-            >
-              <PiecePin
-                style={p.style}
-                isMovable={p.isMovable}
-                onClick={
-                  p.isMovable
-                    ? () => onMove({ type: 'move', pieceIndex: p.pieceIndex })
-                    : undefined
-                }
-              />
-            </g>
-          ))}
+          {/* Alle Spielfiguren – bewegte zuletzt, damit sie über den anderen hüpfen */}
+          {pieceCoords
+            .map((p) => ({ ...p, pose: poseOf(p.seat, p.pieceIndex) }))
+            .sort((a, b) => Number(a.pose !== null) - Number(b.pose !== null))
+            .map((p) => {
+              const x = p.pose ? p.pose.x : p.col * 100 + 50;
+              const y = (p.pose ? p.pose.y : p.row * 100 + 50) + PIECE_DROP;
+              const lift = p.pose?.lift ?? 0;
+              return (
+                <g key={`piece-${p.seat}-${p.pieceIndex}`}>
+                  {lift > 1 && (
+                    <ellipse
+                      cx={x}
+                      cy={y + 18}
+                      rx={20 - Math.min(8, lift / 12)}
+                      ry={8 - Math.min(3, lift / 30)}
+                      fill="rgba(0, 0, 0, 0.18)"
+                    />
+                  )}
+                  <g
+                    transform={`translate(${x}, ${y - lift})${p.pose ? ` rotate(${p.pose.rotate}) scale(${p.pose.scale})` : ''}`}
+                  >
+                    <PiecePin
+                      style={p.style}
+                      isMovable={p.isMovable}
+                      shadow={lift <= 1}
+                      onClick={p.isMovable ? () => onMove({ type: 'move', pieceIndex: p.pieceIndex }) : undefined}
+                    />
+                  </g>
+                </g>
+              );
+            })}
         </svg>
 
         {/* Passen-Knopf, falls kein Zug möglich ist */}
