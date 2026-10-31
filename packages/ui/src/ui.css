@@ -135,6 +135,13 @@ button.bub-cell:focus-visible {
   stroke-width: 3;
 }
 
+/* Spielerzeichen sind für helle Flächen gemacht (dunkle Figuren, Pik): im Dunkelmodus eine helle Scheibe. */
+@media (prefers-color-scheme: dark) {
+  .bub-ring-track {
+    fill: #e9e4d8;
+  }
+}
+
 .bub-ring-bar {
   fill: none;
   stroke: var(--color-accent);

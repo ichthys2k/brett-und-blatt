@@ -204,6 +204,11 @@ const EXTERNAL_GAMES: readonly ExternalGameLink[] = [
   },
 ];
 
+/** Die Rubrik eines Spiels; nicht zugeordnete zählen wie auf der Startseite zur Familie. */
+export function categoryOf(gameId: string): CategoryId {
+  return CATEGORIES.find((category) => category.gameIds.includes(gameId))?.id ?? 'family';
+}
+
 const FILTER_TABS: readonly { id: FilterId; icon: string; label: string }[] = [
   { id: 'all', icon: '🎲', label: 'Alle' },
   { id: 'board', icon: '♟️', label: 'Strategie & Brett' },

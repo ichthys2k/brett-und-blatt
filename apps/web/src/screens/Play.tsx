@@ -10,6 +10,7 @@ import { getActiveGame, resumeGame, saveProgress, startGame, type ActiveGame } f
 import { levelLabel } from '../lib/format';
 import type { LoadedGame } from '../lib/registry';
 import { useGameMusic } from '../lib/music';
+import { categoryOf } from './Home';
 import { navigate, paths } from '../lib/router';
 import { useSoundSettings } from '../lib/sound';
 import { storage, type Profile } from '../lib/storage';
@@ -431,7 +432,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         {online?.extra}
       </div>
 
-      <main className="relative order-1 min-h-0 min-w-0 flex-1 px-3 side:py-2 side:px-4">
+      <main className="bub-table relative order-1 min-h-0 min-w-0 flex-1 px-3 side:py-2 side:px-4" data-category={categoryOf(info.id)}>
         {yourMove && <div key={`${session.version}`} className="bub-turn-frame" aria-hidden="true" />}
         <ui.Board
           view={session.view(viewer)}

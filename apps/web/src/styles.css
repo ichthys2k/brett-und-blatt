@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '../../../packages/ui/src/ui.css';
+@import '@fontsource/almendra/latin-700.css';
 @import './look.css';
 
 /* Tailwind soll auch die Klassen im Baukasten und in den Spielen finden. */
@@ -413,6 +414,13 @@ body {
   overflow: hidden;
   font-size: 1.1rem;
   line-height: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bub-ceremony-symbol {
+    border-radius: 50%;
+    background: #e9e4d8;
+  }
 }
 
 .bub-ceremony-symbol > * {
