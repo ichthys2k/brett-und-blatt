@@ -40,7 +40,6 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-018 | Narrenhof | **Fortschritt geräteübergreifend sichern:** Freischaltungen und Käufe liegen nur im Browser (plus Sicherung als Text). Optionen erkunden, den Fortschritt mit Zugangsdaten abgesichert zu speichern: datenschutzfreundlich ohne Konto, mit Microsoft-365- oder mit Google-Konto. Ergebnis zunächst ein Vergleich. | niedrig | Vergleich fertig (Abschnitt in `docs/spiele/farbensortierer.md`), Empfehlung Sync-Code mit Verschlüsselung; Umsetzung wartet auf Cornelius | 2026-10-30, Cornelius |
 | W-020 | Layout (Desktop, Tablet) | **Spieler rund um einen Tisch:** Bei genug Platz sitzen die Spieler wie beim Poker um einen Tisch, in der Mitte findet das Spielgeschehen statt. Nicht auf dem Handy. Erst einen Umsetzungsplan machen. | niedrig | offen | 2026-10-30, Cornelius |
 | W-021 | neues Spiel | **Neues Spiel: Werwolf:** Werwolf (ähnliche Mechaniken wie Among Us) recherchieren und einen Plan erstellen, wie es sich einbauen lässt. | niedrig | offen | 2026-10-30, Cornelius |
-| W-023 | Online | **Offene Runden live unter „Online spielen“:** Auf der Seite „Online spielen“ sollen offene Runden zum Mitspielen erscheinen; neu geöffnete Räume kommen ohne Neuladen dazu (auch auf der Startseite). | mittel | in Arbeit (Claude, claude/project-thread-txv3qy) | 2026-10-31, Cornelius |
 
 ## Fehler
 
@@ -51,6 +50,7 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
+| W-023 | Offene Runden live unter „Online spielen“ und auf der Startseite (WebSocket zum Verzeichnis, Räume melden sich nur bei Änderung) | 2026-10-31 | #37 |
 | W-022 | Emoji-Clicker als Link-Kachel im Abschnitt „Weitere Spiele“ auf der Startseite (neuer Tab, unverändert) | 2026-10-31 | `45a7f11` |
 | W-009 | Enten-Rallye: Ente schwimmt von selbst (Strömung, Serien beschleunigen, auch online) | 2026-10-31 | #31 |
 | W-015 | Bauernumwandlung in jede Figur (Vierer-Schach, Option „Umwandlung“; Schach konnte es schon) | 2026-10-31 | #31 |
