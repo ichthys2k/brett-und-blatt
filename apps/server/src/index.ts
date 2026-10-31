@@ -1,5 +1,17 @@
 import { DurableObject } from 'cloudflare:workers';
-import { Room, parseRoomCode, randomRoomCode, serverBotRunner, type OpenRoomListing, type RoomDeps, type RoomSnapshot, type ServerMessage } from '@brett-und-blatt/online';
+import {
+  OpenRoomDirectory,
+  Room,
+  listingNeedsSync,
+  parseRoomCode,
+  randomRoomCode,
+  serverBotRunner,
+  type OpenRoomListing,
+  type OpenRoomsMessage,
+  type RoomDeps,
+  type RoomSnapshot,
+  type ServerMessage,
+} from '@brett-und-blatt/online';
 import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
 import { bibelQuizKatalog } from './bibelquiz';
 import { onlineGames } from './games';
@@ -9,7 +21,8 @@ import { onlineGames } from './games';
  * steckt in `packages/online` (Klasse `Room`) und in den Spielmodulen.
  *
  * - `POST /rooms` erstellt einen Raum und antwortet mit seinem Emoji-Code.
- * - `GET /rooms` bzw. `GET /rooms/open` liefert offene Spiele der letzten 60 Minuten.
+ * - `GET /rooms` bzw. `GET /rooms/open` liefert offene Spiele der letzten 60 Minuten;
+ *   mit WebSocket-Upgrade kommt die Liste live (bei jeder Änderung neu).
  * - `GET /rooms/<code>` mit WebSocket-Upgrade betritt einen Raum.
  * - `GET /bibelquiz/fragen` liefert den Fragenkatalog des Bibel-Quiz (liegt nicht im Browser-Bundle).
  *
@@ -100,6 +113,10 @@ export default {
     }
 
     if ((url.pathname === '/rooms' || url.pathname === '/rooms/open') && request.method === 'GET') {
+      if (request.headers.get('Upgrade') === 'websocket') {
+        if (!originAllowed(request, env)) return new Response('Origin nicht erlaubt', { status: 403 });
+        return registryStub(env).fetch(request);
+      }
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
       const rooms = await registryStub(env).listOpen();
       return json(rooms, 200, cors);
@@ -136,6 +153,8 @@ export default {
 export class GameRoom extends DurableObject<Env> {
   private room: Room | null = null;
   private sockets = new Map<string, WebSocket>();
+  /** Zuletzt ans Verzeichnis gemeldete Karte (undefined: seit dem Aufwachen noch nicht). */
+  private lastListing: OpenRoomListing | null | undefined = undefined;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -256,73 +275,110 @@ export class GameRoom extends DurableObject<Env> {
     await this.syncRegistry();
   }
 
+  /** Meldet die Karte des Raums ans Verzeichnis – nur, wenn sie sich geändert hat. */
   private async syncRegistry(): Promise<void> {
+    const room = this.room;
+    if (!room) return;
+    const listing = room.publicListing();
+    if (!listingNeedsSync(this.lastListing, listing)) return;
+    const previous = this.lastListing;
+    this.lastListing = listing;
     try {
-      const room = this.room;
       const reg = registryStub(this.env);
-      if (room) {
-        const listing = room.publicListing();
-        if (listing) {
-          await reg.updateRoom(listing);
-        } else {
-          await reg.removeRoom(room.code);
-        }
-      }
+      if (listing) await reg.updateRoom(listing);
+      else await reg.removeRoom(room.code);
     } catch (err) {
+      this.lastListing = previous; // Beim nächsten Mal erneut versuchen.
       console.error('LobbyRegistry sync failed:', err);
     }
   }
 }
 
 /**
- * Zentrale Übersicht aller aktuell offenen Räume auf dem Server.
- * Speichert Listings in SQLite und filtert veraltete (> 60 min) automatisch aus.
+ * Zentrale Übersicht aller offenen Räume („Offene Runden“). Browser, die die Liste
+ * ansehen, halten eine WebSocket-Verbindung (mit Hibernation: schlafende Verbindungen
+ * kosten nichts) und bekommen bei jeder Änderung die ganze Liste. Veraltete Einträge
+ * (> 60 min ohne Meldung) räumt ein Wecker ab.
  */
 export class LobbyRegistry extends DurableObject<Env> {
-  private listings = new Map<string, OpenRoomListing>();
+  private directory = new OpenRoomDirectory();
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
+    // Lebenszeichen der Browser beantwortet Cloudflare selbst, ohne das Objekt zu wecken.
+    ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
     ctx.blockConcurrencyWhile(async () => {
       const saved = await ctx.storage.get<Record<string, OpenRoomListing>>('listings');
-      if (saved) {
-        for (const [code, item] of Object.entries(saved)) {
-          this.listings.set(code, item);
-        }
-      }
+      this.directory = new OpenRoomDirectory(saved);
     });
   }
 
+  override async fetch(): Promise<Response> {
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
+    this.ctx.acceptWebSocket(server);
+    await this.prune();
+    this.sendTo(server, this.message());
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  override async webSocketMessage(): Promise<void> {
+    // Browser schicken nur „ping“ (beantwortet Cloudflare selbst).
+  }
+
+  override async webSocketClose(ws: WebSocket, code: number): Promise<void> {
+    try {
+      ws.close(code === 1005 ? 1000 : code, 'Tschüss');
+    } catch {
+      // Schon zu.
+    }
+  }
+
   async updateRoom(listing: OpenRoomListing): Promise<void> {
-    this.listings.set(listing.code, listing);
-    await this.persist();
+    if (this.directory.update(listing)) await this.changed();
   }
 
   async removeRoom(code: string): Promise<void> {
-    if (this.listings.delete(code)) {
-      await this.persist();
-    }
+    if (this.directory.remove(code)) await this.changed();
   }
 
-  async listOpen(maxAgeMs = 60 * 60 * 1000): Promise<OpenRoomListing[]> {
-    const now = Date.now();
-    let changed = false;
-    const result: OpenRoomListing[] = [];
-    for (const [code, item] of this.listings.entries()) {
-      if (now - item.updatedAt > maxAgeMs) {
-        this.listings.delete(code);
-        changed = true;
-      } else {
-        result.push(item);
-      }
-    }
-    if (changed) {
-      await this.persist();
-    }
-    return result.sort((a, b) => b.updatedAt - a.updatedAt);
+  async listOpen(): Promise<OpenRoomListing[]> {
+    await this.prune();
+    return this.directory.list();
   }
 
-  private async persist(): Promise<void> {
-    await this.ctx.storage.put('listings', Object.fromEntries(this.listings));
+  override async alarm(): Promise<void> {
+    await this.prune();
+    await this.scheduleExpiry();
+  }
+
+  private async prune(): Promise<void> {
+    if (this.directory.prune(Date.now())) await this.changed();
+  }
+
+  /** Speichert, stellt den Wecker und schickt die neue Liste an alle Zuschauer. */
+  private async changed(): Promise<void> {
+    await this.ctx.storage.put('listings', this.directory.toJSON());
+    await this.scheduleExpiry();
+    const message = this.message();
+    for (const ws of this.ctx.getWebSockets()) this.sendTo(ws, message);
+  }
+
+  private async scheduleExpiry(): Promise<void> {
+    const next = this.directory.nextExpiry();
+    if (next === null) await this.ctx.storage.deleteAlarm();
+    else await this.ctx.storage.setAlarm(Math.max(next + 1000, Date.now() + 1000));
+  }
+
+  private message(): string {
+    return JSON.stringify({ type: 'openRooms', rooms: this.directory.list() } satisfies OpenRoomsMessage);
+  }
+
+  private sendTo(ws: WebSocket, message: string): void {
+    try {
+      ws.send(message);
+    } catch {
+      // Verbindung schon weg.
+    }
   }
 }

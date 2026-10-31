@@ -17,3 +17,10 @@ export {
 } from './room';
 export { serverBotRunner } from './server-bots';
 export { OnlineSession, extrapolateClock, type OnlineSessionDeps } from './client';
+export {
+  OPEN_ROOM_MAX_AGE_MS,
+  OPEN_ROOM_REFRESH_MS,
+  OpenRoomDirectory,
+  listingNeedsSync,
+  type OpenRoomsMessage,
+} from './lobby';

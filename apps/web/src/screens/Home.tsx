@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/controls';
 import { t } from '../i18n';
 import { discardGame } from '../lib/activeGame';
-import { GAME_SERVER, fetchOpenRooms, type OpenRoomListing } from '../lib/online';
+import { OpenRooms } from '../components/OpenRooms';
+import { GAME_SERVER, useOpenRooms } from '../lib/online';
 import { findGame, games } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
@@ -209,44 +210,6 @@ function playerCount(info: GameInfo): string {
   return min === max ? t('home.playersFixed', { count: min }) : t('home.players', { min, max });
 }
 
-function formatTimeAgo(timeMs: number): string {
-  const diffSec = Math.max(0, Math.floor((Date.now() - timeMs) / 1000));
-  if (diffSec < 60) return t('home.openGames.justNow');
-  const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return t('home.openGames.minAgo', { n: diffMin });
-  const diffHours = Math.floor(diffMin / 60);
-  return t('home.openGames.hoursAgo', { n: diffHours });
-}
-
-function OpenGameCard({ room }: { room: OpenRoomListing }) {
-  const freeSeats = room.totalSeats - room.filledSeats;
-  const seatsText =
-    freeSeats === 1
-      ? t('home.openGames.oneSeat', { total: room.totalSeats })
-      : t('home.openGames.seats', { free: freeSeats, total: room.totalSeats });
-
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-4 shadow-sm transition hover:shadow-md">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        <span className="text-3xl" aria-hidden="true">
-          {room.gameEmoji}
-        </span>
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="truncate font-semibold">{room.gameName}</p>
-          <p className="truncate text-xs text-muted">
-            <span aria-hidden="true">{room.hostAvatar} </span>
-            {room.hostName} · {seatsText}
-          </p>
-          <p className="text-[11px] text-muted">{formatTimeAgo(room.updatedAt)}</p>
-        </div>
-      </div>
-      <Button variant="primary" onClick={() => navigate(paths.room(room.code))}>
-        {t('home.openGames.join')}
-      </Button>
-    </div>
-  );
-}
-
 function ResumeCard({ snapshot, onDiscard }: { snapshot: SessionSnapshot; onDiscard: () => void }) {
   const info = findGame(snapshot.config.gameId);
   if (!info) return null;
@@ -295,8 +258,7 @@ function GameCard({ info }: { info: GameInfo }) {
 
 export function Home({ initialFilter }: { initialFilter?: string }) {
   const [snapshot, setSnapshot] = useState(() => storage.loadActive());
-  const [openRooms, setOpenRooms] = useState<OpenRoomListing[]>([]);
-  const [loadingRooms, setLoadingRooms] = useState(false);
+  const openRooms = useOpenRooms();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterId>(() => {
     if (
@@ -379,18 +341,6 @@ export function Home({ initialFilter }: { initialFilter?: string }) {
       : categorizedGames.filter((g) => g.id === activeFilter);
   }, [activeFilter, categorizedGames, filteredGamesBySearch]);
 
-  const loadRooms = () => {
-    if (!GAME_SERVER) return;
-    setLoadingRooms(true);
-    fetchOpenRooms()
-      .then(setOpenRooms)
-      .finally(() => setLoadingRooms(false));
-  };
-
-  useEffect(() => {
-    loadRooms();
-  }, []);
-
   return (
     <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-6 px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-[max(env(safe-area-inset-bottom),1.5rem)]">
       <header className="space-y-1">
@@ -426,33 +376,7 @@ export function Home({ initialFilter }: { initialFilter?: string }) {
         </a>
       )}
 
-      {GAME_SERVER && openRooms.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75"></span>
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent"></span>
-              </span>
-              {t('home.openGames')}
-            </h2>
-            <button
-              type="button"
-              disabled={loadingRooms}
-              onClick={loadRooms}
-              className="text-xs text-muted hover:text-foreground disabled:opacity-50"
-              title={t('home.openGames.refresh')}
-            >
-              ↻ {t('home.openGames.refresh')}
-            </button>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {openRooms.map((room) => (
-              <OpenGameCard key={room.code} room={room} />
-            ))}
-          </div>
-        </section>
-      )}
+      {GAME_SERVER && <OpenRooms rooms={openRooms} />}
 
       {/* Suche */}
       <section className="space-y-2">
