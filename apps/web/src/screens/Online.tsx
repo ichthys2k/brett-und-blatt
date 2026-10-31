@@ -2,12 +2,13 @@ import { parseRoomCode } from '@brett-und-blatt/online';
 import { useState } from 'react';
 import { Button, Section } from '../components/controls';
 import { EmojiKeypad, ProfileForm } from '../components/OnlineParts';
+import { OpenRooms } from '../components/OpenRooms';
 import { t } from '../i18n';
-import { GAME_SERVER, createRoom, roomExists } from '../lib/online';
+import { GAME_SERVER, createRoom, roomExists, useOpenRooms } from '../lib/online';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 
-/** Startseite für Online-Partien: Spitzname, Raum erstellen oder beitreten. */
+/** Startseite für Online-Partien: Spitzname, offene Runden (live), Raum erstellen oder beitreten. */
 export function Online() {
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
   const [editing, setEditing] = useState(profile === null);
@@ -15,6 +16,7 @@ export function Online() {
   const [error, setError] = useState<string | null>(null);
   const [pasted, setPasted] = useState('');
   const [isPublic, setIsPublic] = useState(true);
+  const openRooms = useOpenRooms();
 
   const create = async () => {
     setBusy(true);
@@ -79,6 +81,8 @@ export function Online() {
               ✏️ {t('online.name')}
             </Button>
           </section>
+
+          <OpenRooms rooms={openRooms} showEmpty />
 
           <div className="space-y-2">
             <Button variant="primary" className="w-full" disabled={busy} onClick={create}>

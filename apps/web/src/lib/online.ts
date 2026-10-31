@@ -1,4 +1,4 @@
-import { OnlineSession, PROTOCOL_VERSION, type ClientMessage, type GameMessage, type OpenRoomListing, type Reaction, type RoomMessage, type ServerMessage } from '@brett-und-blatt/online';
+import { OnlineSession, PROTOCOL_VERSION, type ClientMessage, type GameMessage, type OpenRoomListing, type OpenRoomsMessage, type Reaction, type RoomMessage, type ServerMessage } from '@brett-und-blatt/online';
 import type { SoundName } from '@brett-und-blatt/ui';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createBotRunner } from './botRunner';
@@ -26,15 +26,75 @@ export async function roomExists(code: string): Promise<boolean> {
   return response.ok && ((await response.json()) as { exists: boolean }).exists;
 }
 
-export async function fetchOpenRooms(): Promise<OpenRoomListing[]> {
-  if (!GAME_SERVER) return [];
-  try {
-    const response = await fetch(`${GAME_SERVER}/rooms/open`);
-    if (!response.ok) return [];
-    return (await response.json()) as OpenRoomListing[];
-  } catch {
-    return [];
-  }
+/** Wie oft ein Lebenszeichen geht, damit Netz und Proxys die stille Verbindung nicht kappen. */
+const OPEN_ROOMS_PING_MS = 30_000;
+
+/**
+ * Hält die Liste offener Runden live: eine WebSocket-Verbindung zum Verzeichnis,
+ * das bei jeder Änderung die ganze Liste schickt. Bricht die Verbindung ab, wird
+ * mit wachsenden Pausen neu verbunden (sofort, wenn die Seite wieder sichtbar ist);
+ * bis dahin bleibt die zuletzt bekannte Liste stehen. Gibt eine Abmeldefunktion zurück.
+ */
+export function watchOpenRooms(onRooms: (rooms: OpenRoomListing[]) => void): () => void {
+  if (!GAME_SERVER) return () => {};
+  let ws: WebSocket | null = null;
+  let stopped = false;
+  let retries = 0;
+  let retryTimer: number | undefined;
+  let pingTimer: number | undefined;
+
+  const connect = () => {
+    if (stopped) return;
+    const socket = new WebSocket(`${GAME_SERVER!.replace(/^http/, 'ws')}/rooms/open`);
+    ws = socket;
+    socket.onopen = () => {
+      retries = 0;
+      pingTimer = window.setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) socket.send('ping');
+      }, OPEN_ROOMS_PING_MS);
+    };
+    socket.onmessage = (event) => {
+      if (typeof event.data !== 'string' || event.data === 'pong') return;
+      try {
+        const message = JSON.parse(event.data) as OpenRoomsMessage;
+        if (message.type === 'openRooms' && Array.isArray(message.rooms)) onRooms(message.rooms);
+      } catch {
+        // Unlesbare Nachricht: ignorieren.
+      }
+    };
+    socket.onclose = () => {
+      window.clearInterval(pingTimer);
+      if (ws !== socket || stopped) return;
+      ws = null;
+      const delay = Math.min(30_000, 1000 * 2 ** retries) * (0.75 + Math.random() * 0.5);
+      retries++;
+      retryTimer = window.setTimeout(connect, delay);
+    };
+  };
+
+  const onVisible = () => {
+    if (document.hidden || stopped || ws) return;
+    window.clearTimeout(retryTimer);
+    connect();
+  };
+
+  connect();
+  document.addEventListener('visibilitychange', onVisible);
+  return () => {
+    stopped = true;
+    window.clearTimeout(retryTimer);
+    window.clearInterval(pingTimer);
+    document.removeEventListener('visibilitychange', onVisible);
+    ws?.close();
+    ws = null;
+  };
+}
+
+/** Offene Runden live; null, solange noch keine Liste angekommen ist. */
+export function useOpenRooms(): OpenRoomListing[] | null {
+  const [rooms, setRooms] = useState<OpenRoomListing[] | null>(null);
+  useEffect(() => watchOpenRooms(setRooms), []);
+  return rooms;
 }
 
 export type ConnectionStatus = 'connecting' | 'open' | 'reconnecting' | 'gone' | 'kicked' | 'outdated' | 'left';
