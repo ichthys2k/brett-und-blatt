@@ -2,7 +2,7 @@
 
 | Steckbrief | |
 |---|---|
-| Spieler | 2–4 (optional bis 6) |
+| Spieler | 2–6 (ab 5 auf dem Sternbrett) |
 | Dauer | 20–45 Minuten |
 | Modi | Solo gegen Bot, Hot-Seat, online |
 | Muster | offen, Zug um Zug, Würfelglück & Taktik |
@@ -46,10 +46,20 @@ Das beliebte Laufspiel für Familie und Freunde: Figuren aus dem Häuschen bring
 | Option | Werte | Standard | Beschreibung |
 |---|---|---|---|
 | **Regelvariante** | Klassisch, Familie (locker), Flotter Ärger, Teams (2 vs 2) | Klassisch | **Klassisch:** Schlagpflicht aktiv, 3 Versuche bei leerer Strecke, genaues Einrücken ins Ziel.<br/>**Familie:** Schlagen ist freiwillig, Überspringen im Zielhaus erlaubt.<br/>**Flotter Ärger:** Rauskommen auch bei 1 oder 6; 3 Versuche auch bei Blockade.<br/>**Teams:** 2 gegen 2 (Partner sitzen gegenüber, kein Schlagen untereinander, Helfen im Ziel). |
-| **Brettgröße** | 4 Spieler (Standard), 6 Spieler (Sternbrett) | 4 Spieler | Klassisches 40-Felder-Kreuzbrett oder Sechseck-/Sternbrett für bis zu 6 Personen. |
+| **Spielbrett** (`board`) | Kreuz für bis zu 4, Stern für bis zu 6 | Kreuz | Klassisches 40-Felder-Kreuzbrett oder Sternbrett mit sechs Armen und 54 Feldern. Ab 5 Spielern gilt immer das Sternbrett (umgesetzt 31.10.2026, W-032). |
 | **Schlagpflicht** | Aus, An | Aus | Steuert, ob schlagbare Züge Vorrang vor normalen Zügen haben (bis 30.10.2026 standardmäßig an, `ruleVersion` 2). |
 | **Drei Versuche** | Nur wenn Strecke leer, Auch bei Blockade, Nie | Nur wenn Strecke leer | Wann bis zu dreimal gewürfelt werden darf. |
 | **Brett drehen** | Zum Spieler am Zug, Fest | Zum Spieler am Zug | Dreht das Brett bei Hot-Seat am Gerät zur jeweiligen Spielerfarbe. |
+
+## Nicht ärgern! zu sechst (W-032, 31.10.2026, `ruleVersion` 3)
+
+Kein eigenes Spiel, sondern ein zweites Brett im selben Modul.
+
+- **Brett:** sechs Arme zu je 9 Feldern (4 hinaus, die Spitze, 4 zurück), zusammen 54 Felder (`SIX_ARM_LENGTH`, `SIX_TRACK_LENGTH`, `trackLengthOf(board)`). Das Startfeld liegt außen auf der Rückspur gleich hinter der Spitze (`arm * 9 + 5`), die Zielfelder führen von der Spitze zur Mitte.
+- **Plätze und Arme:** `armOf(seat, seats)` verteilt weniger als sechs Spieler gleichmäßig (zu zweit Arme 0 und 3, zu dritt 0, 2, 4, zu viert 0, 1, 3, 4). Freie Arme bleiben grau.
+- **Farben:** zwei neue Farben mit Formsymbol: Lila (◆ Raute) und Türkis (✚ Kreuz). Die Farbe hängt nur am Platz (`colorIndex`), nicht am Brett.
+- **Zustand:** `LudoState.board` (`'classic' | 'six'`); fehlt das Feld (ältere Partien), gilt das Kreuzbrett. Regeln und Bot rechnen überall mit `trackLengthOf(state.board)`.
+- **Oberfläche:** Die Geometrie beider Bretter steht in `src/ui/geometry.ts` (`geometryOf`, `cornerOf`, `cornerColors`). Das Sternbrett hat eine viewBox von 1360, die Häuschen sitzen als runde Flächen in den Lücken zwischen den Armen; der 3D-Würfel liest die Brettgröße aus `--ludo-size`.
 
 ## Spielmodell
 
@@ -129,14 +139,14 @@ Heuristischer Taktik-Bot in drei Stufen:
 
 ## Oberfläche
 
-- **Layout:** Klassisches 11×11-Kreuzbrett als SVG (skalierbar via `FitBox`).
-- **Farben & Barrierefreiheit:** Farben nach Okabe-Ito (Gelb, Grün, Rot, Blau). Jede Spielfigur trägt zusätzlich ein klares geometrisches Symbol (● Kreis, ▲ Dreieck, ■ Quadrat, ★ Stern) für Menschen mit Farbsehschwäche.
+- **Layout:** Klassisches 11×11-Kreuzbrett oder sechsarmiges Sternbrett als SVG (skalierbar via `FitBox`, Geometrie in `src/ui/geometry.ts`).
+- **Farben & Barrierefreiheit:** Farben nach Okabe-Ito (Gelb, Grün, Rot, Blau). Jede Spielfigur trägt zusätzlich ein klares geometrisches Symbol (● Kreis, ▲ Dreieck, ■ Quadrat, ★ Stern, auf dem Sternbrett dazu Lila ◆ Raute und Türkis ✚ Kreuz) für Menschen mit Farbsehschwäche.
 - **Würfelinteraktion:** Plastischer 3D-Würfel in der Mitte des Bretts. Antippen des Würfels (oder Druck auf die Leertaste) löst den Wurf aus.
 - **Züge:** Legale Figuren pulsieren sanft (`ludo-pulse`). Ein Antippen oder Ziehen per Pointer Drag & Drop (`usePointerDrag`) führt den Zug aus.
 - **Animationen:**
   - Figuren hüpfen Feld für Feld (150 ms je Feld, aus dem Stall in einem hohen Sprung aufs Startfeld; W-011). Umgesetzt in `usePieceAnimation` aus den Ereignissen `entered`, `moved`, `goalEntered`, `goalMoved`; während des Sprungs bleibt der Schatten am Boden.
   - Rauswurf-Animation: Die geschlagene Figur bleibt stehen, bis die ziehende Figur ankommt, und fliegt dann drehend im Bogen zurück in den Stall (650 ms; W-012). Zieht der Nächste schon, laufen beide Animationen nebeneinander. Bei „Bewegung reduzieren“ entfallen die Animationen.
-  - Figuren stehen 5 Einheiten unterhalb der Feldmitte (`PIECE_DROP`, F-002).
+  - Der Sockel der Figuren steht mittig auf dem Feld (`PIECE_DROP` = −7, F-002; vorher 5 Einheiten darunter).
   - Wurf ohne möglichen Zug: Der Würfel wandert nicht zum nächsten Spieler. Die Regeln leeren `dice` beim Zugwechsel und merken den Wurf in `lastRoll`; die Oberfläche zeigt ihn als kleinen durchgestrichenen Würfel in der Farbe dessen, der gewürfelt hat (F-004).
   - Banner bei einer 6: „Nochmal würfeln!“.
 - **Klänge:** `wuerfeln` (Würfelwurf), `stein-heraus` (Herausziehen auf Start), `stein-ziehen` (Vorrücken), `stein-schlagen` (Rauswerfen), `stein-setzen` (Einzug ins Ziel), `sieg` (`arcade_level_win`). Musik: Playlist **`spielabend`**.
@@ -144,7 +154,7 @@ Heuristischer Taktik-Bot in drei Stufen:
 ## Hot-Seat und Online
 
 - **Hot-Seat:** Vollständig transparente Spielinformationen. Option „Brett drehen“ dreht das Brett bei jedem Zugwechsel zum aktuellen Spieler.
-- **Online:** Bis zu 4 (bzw. 6) Spieler. Serverseitiger Zufall (`Rng`), Zeitlimits mit Kulanz, Bot-Ersatz bei Verbindungsabbruch und Revanche-Funktion direkt am Spieltisch.
+- **Online:** Bis zu 6 Spieler. Serverseitiger Zufall (`Rng`), Zeitlimits mit Kulanz, Bot-Ersatz bei Verbindungsabbruch und Revanche-Funktion direkt am Spieltisch.
 
 ## Tests
 
@@ -157,4 +167,5 @@ Heuristischer Taktik-Bot in drei Stufen:
 - Rauswurf: Geschlagener Stein landet wieder im Stall.
 - Einzug ins Zielhaus: Genaue Augenzahl erforderlich, kein Überspringen im Zielhaus.
 - Partiegewinn, sobald alle 4 Steine die Zielfelder belegen.
-- Vollständige Plattform-Vertragsprüfungen (`gameContractChecks`).
+- Sternbrett: Brettwahl nach Spielerzahl und Option, Startfelder je Arm, Felder ohne Überlappung, Einzug ins Ziel nach 54 Feldern, Schlagen über die Arme hinweg.
+- Vollständige Plattform-Vertragsprüfungen (`gameContractChecks`, mit 2 und 6 Spielern).

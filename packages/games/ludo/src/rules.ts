@@ -9,9 +9,40 @@ import {
   type SeatId,
 } from '@brett-und-blatt/engine';
 
+/** Länge des Rundkurses auf dem klassischen Kreuzbrett (bis 4 Spieler). */
 export const TRACK_LENGTH = 40;
+/** Felder je Arm auf dem Sechser-Brett: 4 hinaus, die Spitze, 4 zurück. */
+export const SIX_ARM_LENGTH = 9;
+/** Länge des Rundkurses auf dem Sechser-Brett (6 Arme). */
+export const SIX_TRACK_LENGTH = 6 * SIX_ARM_LENGTH;
 export const PIECES_PER_PLAYER = 4;
 export const GOAL_LENGTH = 4;
+export const MAX_SEATS = 6;
+
+/** Spielbrett: klassisches Kreuz für bis zu 4 Spieler oder sechsarmiger Stern für bis zu 6. */
+export type Board = 'classic' | 'six';
+
+/** Länge des Rundkurses auf einem Brett. */
+export function trackLengthOf(board: Board = 'classic'): number {
+  return board === 'six' ? SIX_TRACK_LENGTH : TRACK_LENGTH;
+}
+
+/**
+ * Welcher Arm des Sechser-Bretts zu welchem Platz gehört. Bei weniger als sechs Spielern
+ * bleiben Arme frei, und zwar so, dass die Spieler möglichst gleich weit auseinander sitzen.
+ */
+const SIX_ARMS: Record<number, readonly number[]> = {
+  2: [0, 3],
+  3: [0, 2, 4],
+  4: [0, 1, 3, 4],
+  5: [0, 1, 2, 3, 4],
+  6: [0, 1, 2, 3, 4, 5],
+};
+
+/** Arm des Sechser-Bretts für einen Platz (0..5). */
+export function armOf(seat: SeatId, seats: number): number {
+  return (SIX_ARMS[seats] ?? SIX_ARMS[6])[seat] ?? seat;
+}
 
 export type Area = 'home' | 'track' | 'goal';
 
@@ -19,7 +50,7 @@ export interface PiecePosition {
   area: Area;
   /**
    * Bei 'home': 0..3 (Stallplatz)
-   * Bei 'track': 0..39 (relativer Schritt vom eigenen Startfeld 0 bis 39)
+   * Bei 'track': relativer Schritt vom eigenen Startfeld (0..39, auf dem Sechser-Brett 0..53)
    * Bei 'goal': 0..3 (Zielfeld a..d)
    */
   index: number;
@@ -39,6 +70,8 @@ export interface LudoState {
   threeRollsRule: 'empty_track' | 'never';
   enterRule: 'six' | 'six_or_one';
   exactGoal: boolean;
+  /** Spielbrett; fehlt in Partien vor `ruleVersion` 3 und gilt dann als klassisch. */
+  board?: Board;
   /**
    * Der letzte Wurf, nach dem der Zug ohne Ziehen weiterging (alle Versuche ohne passenden Zug).
    * Die Oberfläche zeigt ihn klein in der Farbe dessen, der gewürfelt hat – `dice` ist dann schon leer,
@@ -55,10 +88,14 @@ export type LudoMove =
   | { type: 'pass' };
 
 /**
- * Gibt den absoluten Track-Index (0..39) des Startfelds für einen Sitzplatz zurück.
- * Bei 2 Spielern sitzen sich Gelb (0) und Rot (2) gegenüber.
+ * Gibt den absoluten Track-Index des Startfelds für einen Sitzplatz zurück.
+ * Bei 2 Spielern sitzen sich Gelb (0) und Rot (2) gegenüber. Auf dem Sechser-Brett liegt das
+ * Startfeld gleich hinter der Spitze des eigenen Arms.
  */
-export function startTrackIndex(seat: SeatId, seats: number): number {
+export function startTrackIndex(seat: SeatId, seats: number, board: Board = 'classic'): number {
+  if (board === 'six') {
+    return armOf(seat, seats) * SIX_ARM_LENGTH + 5;
+  }
   if (seats === 2) {
     return seat === 0 ? 0 : 20;
   }
@@ -66,20 +103,21 @@ export function startTrackIndex(seat: SeatId, seats: number): number {
 }
 
 /**
- * Gibt den Farb-Index (0: Gelb, 1: Grün, 2: Rot, 3: Blau) zurück.
+ * Gibt den Farb-Index (0: Gelb, 1: Grün, 2: Rot, 3: Blau, 4: Lila, 5: Türkis) zurück.
+ * Die Farbe hängt nur vom Platz ab, nicht vom Brett.
  */
 export function colorIndex(seat: SeatId, seats: number): number {
   if (seats === 2) {
     return seat === 0 ? 0 : 2;
   }
-  return seat % 4;
+  return seat % MAX_SEATS;
 }
 
 /**
- * Wandelt einen relativen Schritt (0..39) in den absoluten Streckenindex (0..39) um.
+ * Wandelt einen relativen Schritt in den absoluten Streckenindex um.
  */
-export function toAbsoluteTrackIndex(seat: SeatId, step: number, seats: number): number {
-  return (startTrackIndex(seat, seats) + step) % TRACK_LENGTH;
+export function toAbsoluteTrackIndex(seat: SeatId, step: number, seats: number, board: Board = 'classic'): number {
+  return (startTrackIndex(seat, seats, board) + step) % trackLengthOf(board);
 }
 
 /**
@@ -101,7 +139,9 @@ export function maxRollsForSeat(state: Pick<LudoState, 'pieces' | 'threeRollsRul
 }
 
 export function setup(seats: number, options: Options, seed: string): LudoState {
-  const safeSeats = Math.max(2, Math.min(4, Number(seats) || 4));
+  const safeSeats = Math.max(2, Math.min(MAX_SEATS, Number(seats) || 4));
+  // Ab fünf Spielern immer das Sechser-Brett, sonst nur auf Wunsch.
+  const board: Board = safeSeats > 4 || options.board === 'six' ? 'six' : 'classic';
   const mandatoryCapture = options.capture === 'on';
   const threeRollsRule = options.threeRolls === 'never' ? 'never' : 'empty_track';
   const enterRule = options.enterRule === 'six_or_one' ? 'six_or_one' : 'six';
@@ -125,6 +165,7 @@ export function setup(seats: number, options: Options, seed: string): LudoState 
     threeRollsRule,
     enterRule,
     exactGoal,
+    board,
     lastRoll: null,
     history: [],
     rng: initialRng,
@@ -153,6 +194,7 @@ function canMovePiece(
   dice: number,
   playerPieces: PiecePosition[],
   exactGoal: boolean,
+  trackLength: number,
 ): boolean {
   if (piece.area === 'home') {
     return false; // Aus dem Haus zieht man nur über die Einzugslogik
@@ -160,14 +202,14 @@ function canMovePiece(
 
   if (piece.area === 'track') {
     const nextStep = piece.index + dice;
-    if (nextStep < TRACK_LENGTH) {
+    if (nextStep < trackLength) {
       // Noch auf der Strecke: darf nicht auf eigenem Stein landen
       const ownOccupied = playerPieces.some((p) => p.area === 'track' && p.index === nextStep);
       return !ownOccupied;
     }
 
     // Einbiegen ins Ziel
-    const goalSlot = nextStep - TRACK_LENGTH;
+    const goalSlot = nextStep - trackLength;
     if (goalSlot >= GOAL_LENGTH) {
       // Überschießen
       return !exactGoal;
@@ -228,12 +270,12 @@ function doesCapture(
   let targetAbs: number | null = null;
   if (piece.area === 'home') {
     if (isEnterRoll(dice, state.enterRule)) {
-      targetAbs = startTrackIndex(seat, state.seats);
+      targetAbs = startTrackIndex(seat, state.seats, state.board);
     }
   } else if (piece.area === 'track') {
     const nextStep = piece.index + dice;
-    if (nextStep < TRACK_LENGTH) {
-      targetAbs = toAbsoluteTrackIndex(seat, nextStep, state.seats);
+    if (nextStep < trackLengthOf(state.board)) {
+      targetAbs = toAbsoluteTrackIndex(seat, nextStep, state.seats, state.board);
     }
   }
 
@@ -244,7 +286,7 @@ function doesCapture(
     if (otherSeat === seat) continue;
     for (const otherPiece of state.pieces[otherSeat]) {
       if (otherPiece.area === 'track') {
-        const otherAbs = toAbsoluteTrackIndex(otherSeat, otherPiece.index, state.seats);
+        const otherAbs = toAbsoluteTrackIndex(otherSeat, otherPiece.index, state.seats, state.board);
         if (otherAbs === targetAbs) return true;
       }
     }
@@ -285,7 +327,7 @@ export function legalMoves(state: LudoState, actor: Actor): LudoMove[] {
   if (canEnter) {
     if (pieceOnStartField !== -1) {
       // Eigenes Startfeld ist durch eigene Figur belegt -> diese Figur MUSS ziehen, um Platz zu machen!
-      if (canMovePiece(playerPieces[pieceOnStartField], dice, playerPieces, state.exactGoal)) {
+      if (canMovePiece(playerPieces[pieceOnStartField], dice, playerPieces, state.exactGoal, trackLengthOf(state.board))) {
         return [{ type: 'move', pieceIndex: pieceOnStartField }];
       }
     } else {
@@ -299,7 +341,7 @@ export function legalMoves(state: LudoState, actor: Actor): LudoMove[] {
   const possibleMoves: number[] = [];
 
   playerPieces.forEach((p, idx) => {
-    if (canMovePiece(p, dice, playerPieces, state.exactGoal)) {
+    if (canMovePiece(p, dice, playerPieces, state.exactGoal, trackLengthOf(state.board))) {
       possibleMoves.push(idx);
     }
   });
@@ -436,7 +478,7 @@ export function applyMove(state: LudoState, actor: Actor, move: LudoMove): MoveR
       // Aus dem Haus auf Startfeld setzen
       targetPiece.area = 'track';
       targetPiece.index = 0;
-      const startAbs = startTrackIndex(seat, state.seats);
+      const startAbs = startTrackIndex(seat, state.seats, state.board);
       events.push({ type: 'entered', seat, pieceIndex: pieceIdx, trackIndex: startAbs });
 
       // Gegner auf dem Startfeld schlagen
@@ -445,7 +487,7 @@ export function applyMove(state: LudoState, actor: Actor, move: LudoMove): MoveR
         for (let oIdx = 0; oIdx < newPieces[otherSeat].length; oIdx++) {
           const other = newPieces[otherSeat][oIdx];
           if (other.area === 'track') {
-            const otherAbs = toAbsoluteTrackIndex(otherSeat, other.index, state.seats);
+            const otherAbs = toAbsoluteTrackIndex(otherSeat, other.index, state.seats, state.board);
             if (otherAbs === startAbs) {
               other.area = 'home';
               other.index = oIdx;
@@ -463,9 +505,9 @@ export function applyMove(state: LudoState, actor: Actor, move: LudoMove): MoveR
       }
     } else if (targetPiece.area === 'track') {
       const nextStep = targetPiece.index + dice;
-      if (nextStep < TRACK_LENGTH) {
+      if (nextStep < trackLengthOf(state.board)) {
         // Auf der Laufstrecke weiterziehen
-        const targetAbs = toAbsoluteTrackIndex(seat, nextStep, state.seats);
+        const targetAbs = toAbsoluteTrackIndex(seat, nextStep, state.seats, state.board);
         targetPiece.index = nextStep;
         events.push({ type: 'moved', seat, pieceIndex: pieceIdx, fromStep: currentPiece.index, toStep: nextStep });
 
@@ -475,7 +517,7 @@ export function applyMove(state: LudoState, actor: Actor, move: LudoMove): MoveR
           for (let oIdx = 0; oIdx < newPieces[otherSeat].length; oIdx++) {
             const other = newPieces[otherSeat][oIdx];
             if (other.area === 'track') {
-              const otherAbs = toAbsoluteTrackIndex(otherSeat, other.index, state.seats);
+              const otherAbs = toAbsoluteTrackIndex(otherSeat, other.index, state.seats, state.board);
               if (otherAbs === targetAbs) {
                 other.area = 'home';
                 other.index = oIdx;
@@ -493,7 +535,7 @@ export function applyMove(state: LudoState, actor: Actor, move: LudoMove): MoveR
         }
       } else {
         // Einzug ins Ziel
-        const goalSlot = Math.min(GOAL_LENGTH - 1, nextStep - TRACK_LENGTH);
+        const goalSlot = Math.min(GOAL_LENGTH - 1, nextStep - trackLengthOf(state.board));
         targetPiece.area = 'goal';
         targetPiece.index = goalSlot;
         events.push({

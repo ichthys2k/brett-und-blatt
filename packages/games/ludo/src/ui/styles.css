@@ -72,7 +72,7 @@
   filter: brightness(1.08);
 }
 
-/* Brett mit Würfel darüber: Der Würfel sitzt in der Brettmitte (Brett 1100 Einheiten, Würfel 84, Mitte 26 über der Brettmitte). */
+/* Brett mit Würfel darüber: Der Würfel sitzt in der Brettmitte (Brett 1100 bzw. 1360 Einheiten über --ludo-size, Würfel 84, Mitte 26 über der Brettmitte). */
 .ludo-board-wrap {
   position: relative;
   flex: 1 1 0;
@@ -86,9 +86,9 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: calc(var(--ludo-board) * 84 / 1100);
+  width: calc(var(--ludo-board) * 84 / var(--ludo-size, 1100));
   aspect-ratio: 1;
-  transform: translate(-50%, calc(-50% - var(--ludo-board) * 26 / 1100));
+  transform: translate(-50%, calc(-50% - var(--ludo-board) * 26 / var(--ludo-size, 1100)));
   pointer-events: none;
 }
 

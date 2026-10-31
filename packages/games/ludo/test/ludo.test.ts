@@ -1,6 +1,9 @@
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
+import { SIX_GEOMETRY, cornerColors } from '../src/ui/geometry';
 import {
+  SIX_TRACK_LENGTH,
+  armOf,
   colorIndex,
   gameModule,
   startTrackIndex,
@@ -223,6 +226,71 @@ describe('Nicht ärgern! (Ludo) – Regeln & Mechanik', () => {
 
     const moves = gameModule.legalMoves(state, 0);
     expect(moves).toEqual([{ type: 'pass' }]);
+  });
+});
+
+describe('Nicht ärgern! zu sechst – Sternbrett', () => {
+  it('ab fünf Spielern gilt immer das Sechser-Brett, bis vier nur auf Wunsch', () => {
+    expect((gameModule.setup(4, {}, 's') as LudoState).board).toBe('classic');
+    expect((gameModule.setup(4, { board: 'six' }, 's') as LudoState).board).toBe('six');
+    expect((gameModule.setup(5, {}, 's') as LudoState).board).toBe('six');
+    expect((gameModule.setup(6, { board: 'classic' }, 's') as LudoState).board).toBe('six');
+    expect((gameModule.setup(6, {}, 's') as LudoState).pieces).toHaveLength(6);
+  });
+
+  it('Startfelder liegen je Arm 9 Felder auseinander, freie Arme gleichmäßig verteilt', () => {
+    expect([0, 1, 2, 3, 4, 5].map((s) => startTrackIndex(s, 6, 'six'))).toEqual([5, 14, 23, 32, 41, 50]);
+    expect([0, 1].map((s) => armOf(s, 2))).toEqual([0, 3]);
+    expect([0, 1, 2].map((s) => armOf(s, 3))).toEqual([0, 2, 4]);
+    expect(toAbsoluteTrackIndex(5, SIX_TRACK_LENGTH - 1, 6, 'six')).toBe(49);
+    // Farben hängen nur am Platz: zu zweit Gelb und Rot, auch auf dem Sternbrett.
+    expect(cornerColors(2, 'six')).toEqual([0, null, null, 2, null, null]);
+    expect(cornerColors(6, 'six')).toEqual([0, 1, 2, 3, 4, 5]);
+  });
+
+  it('die Felder des Sternbretts überlappen nicht und folgen dicht aufeinander', () => {
+    const points = [
+      ...SIX_GEOMETRY.track,
+      ...SIX_GEOMETRY.goals.flat(),
+      ...SIX_GEOMETRY.homes.flat(),
+    ];
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      expect(p.x).toBeGreaterThan(30);
+      expect(p.x).toBeLessThan(SIX_GEOMETRY.size - 30);
+      expect(p.y).toBeGreaterThan(30);
+      expect(p.y).toBeLessThan(SIX_GEOMETRY.size - 30);
+      for (let j = i + 1; j < points.length; j++) {
+        expect(Math.hypot(p.x - points[j].x, p.y - points[j].y)).toBeGreaterThan(64);
+      }
+    }
+    // Aufeinanderfolgende Streckenfelder sind Nachbarn.
+    const track = SIX_GEOMETRY.track;
+    for (let i = 0; i < track.length; i++) {
+      const next = track[(i + 1) % track.length];
+      expect(Math.hypot(track[i].x - next.x, track[i].y - next.y)).toBeLessThan(140);
+    }
+  });
+
+  it('eine Figur läuft 54 Felder und biegt dann ins Ziel ein', () => {
+    let state = gameModule.setup(6, {}, 'stern') as LudoState;
+    state.pieces[2][0] = { area: 'track', index: 50 };
+    state = { ...state, turn: 2, phase: 'move', dice: 4, rollsLeft: 0 };
+    const moves = gameModule.legalMoves(state, 2);
+    expect(moves).toContainEqual({ type: 'move', pieceIndex: 0 });
+    const res = gameModule.applyMove(state, 2, { type: 'move', pieceIndex: 0 });
+    expect(res.state.pieces[2][0]).toEqual({ area: 'goal', index: 0 });
+  });
+
+  it('Schlagen wirkt über die Arme hinweg', () => {
+    let state = gameModule.setup(6, {}, 'stern') as LudoState;
+    // Platz 0 auf Schritt 10 = absolut 15, Platz 1 startet bei 14 und steht auf Schritt 0.
+    state.pieces[1][0] = { area: 'track', index: 0 };
+    state.pieces[0][0] = { area: 'track', index: 7 };
+    state = { ...state, turn: 0, phase: 'move', dice: 2, rollsLeft: 0 };
+    const res = gameModule.applyMove(state, 0, { type: 'move', pieceIndex: 0 });
+    expect(res.state.pieces[0][0]).toEqual({ area: 'track', index: 9 });
+    expect(res.state.pieces[1][0]).toEqual({ area: 'home', index: 0 });
   });
 });
 
