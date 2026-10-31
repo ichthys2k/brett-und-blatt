@@ -144,6 +144,10 @@
   background: var(--cs-wine);
 }
 
+.cs-portrait-laugh {
+  animation: cs-mood-pop 0.35s ease-out;
+}
+
 .cs-portrait-big {
   display: inline-block;
   height: 2.8em;

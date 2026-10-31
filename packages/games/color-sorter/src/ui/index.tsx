@@ -15,7 +15,7 @@ import { BackContext, CardView, cardDetails, cardTip, DeckStyleContext, isOpen, 
 import { HoverProvider, tipFrom, type ExtraProps } from './Hover';
 import { describeConsumable, describeMod, describeOffer, describePack, describeTag, describeTool, formatMult, formatNumber, handName } from './texts';
 import { playBossSound, playEffect, playHandAnnouncement } from './audio';
-import { portraitUrl } from './portraits';
+import { portraitUrl, preloadPortrait, stageOf, type PortraitStage } from './portraits';
 import './styles.css';
 
 type Selected =
@@ -141,11 +141,21 @@ interface Enemy {
 }
 
 /** Porträt im Goldrahmen, sonst das Emoji. */
-function Face({ enemy, className }: { enemy: Enemy; className?: string }) {
-  const url = portraitUrl(enemy.portrait);
+function Face({ enemy, className, stage = 1 }: { enemy: Enemy; className?: string; stage?: PortraitStage }) {
+  const url = portraitUrl(enemy.portrait, stage);
   const [broken, setBroken] = useState(false);
+  useEffect(() => preloadPortrait(enemy.portrait), [enemy.portrait]);
   if (!url || broken) return <>{enemy.emoji}</>;
-  return <img className={`cs-portrait ${className ?? ''}`} src={url} alt="" draggable={false} onError={() => setBroken(true)} />;
+  return (
+    <img
+      key={stage}
+      className={`cs-portrait ${stage > 1 ? 'cs-portrait-laugh' : ''} ${className ?? ''}`}
+      src={url}
+      alt=""
+      draggable={false}
+      onError={() => setBroken(true)}
+    />
+  );
 }
 
 function enemyOf(state: SorterState, run: RunState): Enemy {
@@ -405,8 +415,8 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
       {run.phase === 'play' && !round?.duel && (
         <div className={`cs-enemy ${run.round === 2 ? 'cs-throne' : ''} ${target > 0 && share >= 1 ? 'cs-laugh' : ''}`}>
           <span className="cs-enemy-emoji" aria-hidden="true">
-            <Face enemy={enemy} />
-            {target > 0 && (
+            <Face enemy={enemy} stage={target > 0 ? stageOf(share) : 1} />
+            {target > 0 && !portraitUrl(enemy.portrait) && (
               <span key={mood} className="cs-mood">
                 {mood}
               </span>

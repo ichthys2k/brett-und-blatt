@@ -68,3 +68,9 @@ SOFTWARE.
 Wörterbuch für Wortgitter (`packages/games/scrabble/src/dict/dawg.ts`, gebaut mit `packages/games/scrabble/scripts/build-dict.mjs`): „german-wordlist“, die Wortliste des Spiels Tanglet. https://github.com/enz/german-wordlist (Stand Commit `1071d87`, 13.09.2026). Großgeschrieben, ß als SS, nur Wörter aus 2 bis 15 Buchstaben A–Z und ÄÖÜ.
 
 Lizenz: CC0 1.0 Universal (gemeinfrei, keine Bedingungen). https://creativecommons.org/publicdomain/zero/1.0/
+
+## Narrenhof-Porträts (KI-erzeugt)
+
+Gegner-Porträts im Narrenhof (`packages/games/color-sorter/src/ui/portraits/*.webp`): **KI-erzeugt** mit dem Bildgenerator von Canva (Canva AI, „generate image“) nach eigenen Bildbeschreibungen, Oktober 2026. Jede Figur hat ein Grundbild (schmunzelnd) und zwei daraus abgeleitete Fassungen (lachend, Lachkrampf). Die Figuren sind eigene Erfindungen bzw. Gestalten aus gemeinfreien Fabeln und Märchen (Reineke Fuchs, Froschkönig u. a.).
+
+Nach den Nutzungsbedingungen von Canva gehören die Ergebnisse dem Ersteller; sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis gemäß Canva: Die Bilder sind KI-erzeugt.
