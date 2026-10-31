@@ -24,7 +24,7 @@ Bausteine, die viele Spiele tragen, kommen zuerst – sonst entsteht dieselbe Ar
 | Gleiten von Figuren `useGridMoveAnimation` | `packages/ui/src/dnd/` | Schach, Vierer-Schach, Dame | vorhanden; ausweiten auf Mühle, Ultimate, Gomoku (Setzen) |
 | Karten-Flug `useSpawnAnimation` | `packages/ui/src/dnd/` | Eins!, Mau-Mau | vorhanden; ausweiten auf Stichspiele, Präsident, Schwarzer Peter |
 | **Punkte-Fähnchen** `ScorePop` + `useLatestEvent` | `packages/ui/src/effects/` | Würfelblock, Wortgitter, Farbe & Form; später Domino, Quiz-Spiele, Narrenhof | ✅ fertig (Schritt 2) |
-| **Stich einsammeln** (vier Karten fliegen gebündelt zum Gewinner) | `TrickTable` | Skat, Schafkopf, Doppelkopf, Binokel, Präsident | offen – ein Eingriff für fünf Spiele |
+| **Karte in den Stich, Stich zum Gewinner** | `TrickTable` (`bub-trick-in`, `useTrickDisplay` 1 s) | Skat, Schafkopf, Doppelkopf, Binokel; Präsident eigens | ✅ fertig (Schritt 3) |
 | **Stein-Plopp** (Klasse `bub-plop`) | `packages/ui/src/ui.css` | Reversi, Farbe & Form, Wortgitter; später Gomoku, Go, Mühle, Teiler-Duell | ✅ fertig (Schritt 2) |
 | **Rundenende-Zwischenstand** (Punkte zählen hoch, Rangwechsel gleitet) | neu, ähnlich `Ceremony` | Serien-Spiele: Stichspiele, Tiefflug, Präsident, Kartenblitz, Speed, Mäxle (Leben) | offen – mittel; ergänzt W-008, das nur das Partieende abdeckt |
 | Vibration (`navigator.vibrate`) bei Treffern und Fehlern | `apps/web/src/lib/` | Echtzeit- und Würfelspiele | offen – klein, mit Schalter in den Ton-Einstellungen |
@@ -54,8 +54,8 @@ Spalten: **Kernhandlung** – was man immer wieder tut. **Heute** – was dabei 
 
 | Spiel | Kernhandlung | Heute | Ideen | W/A |
 | --- | --- | --- | --- | --- |
-| Skat, Schafkopf, Doppelkopf, Binokel | Karte in den Stich legen, Stich einsammeln | Karte erscheint im Stich, Klänge | **Karte fliegt aus der Hand bzw. vom Platz des Mitspielers**, Stich fliegt gebündelt zum Gewinner (gemeinsamer Baustein), Augenzähler zählt hoch | ★★★ |
-| Präsident | Karten ausspielen, passen | Klänge | Karten-Flug, „Stich weg“ wie oben, Rangtitel am Rundenende mit kleiner Krone | ★★ |
+| Skat, Schafkopf, Doppelkopf, Binokel | Karte in den Stich legen, Stich einsammeln | Karte fliegt vom Platz des Spielers herein, voller Stich bleibt 1 s mit Sieger sichtbar und fliegt dann zu ihm (Schritt 3), Klänge | Augenzähler zählt hoch | ★ |
+| Präsident | Karten ausspielen, passen | Karten fliegen von unten bzw. oben herein (Schritt 3), Klänge | „Stich weg“-Animation, Rangtitel am Rundenende mit kleiner Krone | ★ |
 | Eins!, Mau-Mau | Karte legen, ziehen | Flug-Animationen, Aufprall, Richtungswechsel (Etappe 2) | fertig; Kartenzahl-Fächer der Mitspieler (W-019) | – |
 | Schwarzer Peter | Karte ziehen, Paare ablegen | Klang | Karte wandert sichtbar von Hand zu Hand, Paar fliegt zusammen auf den Ablagestapel | ★★ |
 | Quartett | Wert vergleichen | Aufdecken, Klang | Werte erscheinen nacheinander mit kurzem Trommelwirbel, Siegerkarte rutscht zum Gewinner | ★★ |
@@ -91,7 +91,7 @@ Nach Wirkung je Aufwand und danach, wie viele Spiele ein Schritt trägt:
 
 1. ✅ **Würfel und Siegerehrung** (Etappe 4).
 2. ✅ **Punkte-Fähnchen und Stein-Plopp** als Bausteine, eingesetzt in Farbe & Form, Wortgitter, Würfelblock und Reversi; Tic-Tac-Toe-Gewinnlinie. (Strich-Animation in Tic-Tac-Toe und Dreh-Welle in Reversi gab es schon.)
-3. **Stich einsammeln und Karten-Flug** im `TrickTable` für Skat, Schafkopf, Doppelkopf, Binokel und Präsident.
+3. ✅ **Stich einsammeln und Karten-Flug** im `TrickTable` für Skat, Schafkopf, Doppelkopf, Binokel und Präsident.
 4. **Paare finden, Ultimate Tic-Tac-Toe, Mühle** (Umdrehen, Zielbrett-Pfeil, Gleiten).
 5. **Rundenende-Zwischenstand** für Serien-Spiele.
 6. Der Rest nach dieser Tabelle, je zwei bis vier Spiele pro PR.

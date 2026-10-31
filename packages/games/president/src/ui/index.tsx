@@ -143,9 +143,9 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
             </div>
           )}
           {top ? (
-            <div className="prs-play prs-play-top" key={top.cards.join()}>
+            <div className={`prs-play prs-play-top ${top.seat === me ? 'prs-from-me' : 'prs-from-opp'}`} key={top.cards.join()}>
               {top.cards.map((c) => (
-                <PlayingCard key={c} card={c} deckStyle={deckStyle} className="prs-card" anim="drop" />
+                <PlayingCard key={c} card={c} deckStyle={deckStyle} className="prs-card" />
               ))}
               <span className="prs-play-who">{top.seat === me ? 'Du' : seatName(seatNames, top.seat)}</span>
             </div>
