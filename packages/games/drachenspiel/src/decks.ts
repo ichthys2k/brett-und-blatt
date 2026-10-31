@@ -6,11 +6,14 @@ export interface DeckThemeInfo {
   emoji: string;
   description: string;
   cardIds: string[]; // exactly 30 card def IDs
+  /** Mit Zauberkarten: diese drei Tierpaare weichen je einem Zauberpaar. */
+  spellSwap: { out: [string, string, string]; in: [string, string, string] };
 }
 
 export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
   forest: {
     id: 'forest',
+    spellSwap: { out: ['c4', 'c7', 'c26'], in: ['s_honey', 's_growth', 's_clover'] },
     name: 'Wald',
     emoji: '🌳',
     description: 'Ausgewogen und anpassungsfähig mit Igel, Biber und Drache.',
@@ -35,6 +38,7 @@ export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
   },
   sea: {
     id: 'sea',
+    spellSwap: { out: ['c19', 'c11', 'c46'], in: ['s_soapBubble', 's_flood', 's_summerRain'] },
     name: 'Meer',
     emoji: '🌊',
     description: 'Zähigkeit, Schutzblasen und Gegenangriffe.',
@@ -59,6 +63,7 @@ export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
   },
   farm: {
     id: 'farm',
+    spellSwap: { out: ['c3', 'c6', 'c36'], in: ['s_summerRain', 's_honey', 's_growth'] },
     name: 'Bauernhof',
     emoji: '🚜',
     description: 'Gemeinsam stark: Schnelle Tiere und gegenseitige Verstärkung.',
@@ -83,6 +88,7 @@ export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
   },
   wild: {
     id: 'wild',
+    spellSwap: { out: ['c9', 'c41', 'c43'], in: ['s_lightning', 's_tailwind', 's_whirlwind'] },
     name: 'Wildnis',
     emoji: '🌍',
     description: 'Große, kraftvolle Giganten für die späten Runden.',
@@ -107,6 +113,7 @@ export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
   },
   bugs: {
     id: 'bugs',
+    spellSwap: { out: ['c3', 'c10', 'c15'], in: ['s_tailwind', 's_clover', 's_lightning'] },
     name: 'Krabbeltiere',
     emoji: '🐜',
     description: 'Giftig, flink und unberechenbar im Schwarm.',
@@ -132,3 +139,13 @@ export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
 };
 
 export const DECK_THEME_IDS: DeckThemeId[] = ['forest', 'sea', 'farm', 'wild', 'bugs'];
+
+/** Kartenliste eines Themendecks, mit Zauberkarten nach `spellSwap`. */
+export function themeCardIds(theme: DeckThemeId, withSpells: boolean): string[] {
+  const info = DECK_THEMES[theme];
+  if (!withSpells) return [...info.cardIds];
+  return info.cardIds.map((id) => {
+    const i = info.spellSwap.out.indexOf(id);
+    return i < 0 ? id : info.spellSwap.in[i]!;
+  });
+}

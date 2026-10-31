@@ -54,7 +54,7 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 - Korrekturplan aus dem Prüfbericht (28.10.2026): ✅ Etappe 1 Lecks, ✅ Etappe 2 Prüfnetz, ✅ Etappe 3 Reparaturen (Stichspiele, Bots für Skat, Schafkopf, Doppelkopf, Kniffel; Wortgitter und Binokel neu), ✅ Etappe 4 Rechtliches (Umbenennungen, freies Wörterbuch, Enten-Rallye-Klänge im privaten Klang-Repo). Details in `CLAUDE.md`.
 
 - Nachträge 28.10.2026: Sonderspiele der Stichspiel-Bots (Null, Tout, Bettel, Durch), Schafkopf-Ansagen und -Abrechnung korrigiert, Bibel-Quiz-Lösung in der Sicht verborgen, PWA lädt vorab nur ~6 MB, Git-Geschichte von den Enten-Rallye-MP3s bereinigt (andere Rechner: `git fetch && git reset --hard origin/main`).
-- Fahrplan ab 29.10.2026: A Doku-Abgleich → B Schach (Remis, PGN, Eröffnungsbuch) → C Stichspiele (Schafkopf-Frühende, Skat-Ansagen, PIMC-Bot) → D Klassenzimmer (Kartenblitz geteilter Bildschirm) → E Spieltiefe → F neue Spiele (Speed ✅, Präsident ✅, Tiefflug ✅, Fix gefunden! ✅; Pläne in `docs/spiele/`). Details unter „Nächste Schritte“ in `CLAUDE.md`.
+- Fahrplan ab 29.10.2026: A Doku-Abgleich → B Schach (Remis, PGN, Eröffnungsbuch) → C Stichspiele (Schafkopf-Frühende, Skat-Ansagen, PIMC-Bot) → D Klassenzimmer (Kartenblitz geteilter Bildschirm) → E Spieltiefe ✅ → F neue Spiele (Speed ✅, Präsident ✅, Tiefflug ✅, Fix gefunden! ✅; Pläne in `docs/spiele/`). Details unter „Nächste Schritte“ in `CLAUDE.md`.
 
 Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; alle 20 Musikstücke sind eingetragen. Offene Punkte und nächste Schritte stehen in `CLAUDE.md`.
 

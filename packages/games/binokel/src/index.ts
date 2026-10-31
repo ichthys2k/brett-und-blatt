@@ -3,6 +3,7 @@ import { binokelBot } from './bot/index';
 import { meta } from './meta';
 import { applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type BinokelMove, type BinokelState } from './rules';
 
+export { activeSeats, teamOf } from './rules';
 export type { BinokelMove, BinokelPhase, BinokelState, RoundResult } from './rules';
 export { findMelds, meldPoints, type Meld } from './melds';
 export { binokelContract, createDeck, SUIT_NAMES, SUITS } from './cards';
@@ -11,6 +12,16 @@ export { binokelBot } from './bot/index';
 export const gameModule: GameModule<BinokelState, BinokelMove> = {
   info: meta,
   options: [
+    {
+      id: 'fourTable',
+      label: 'Zu viert',
+      description: 'Gilt nur mit vier Plätzen: Entweder setzt der Geber jedes Spiel aus, oder alle vier spielen Kreuzbinokel (die Gegenübersitzenden sind Partner).',
+      choices: [
+        { value: 'sitOut', label: 'Geber setzt aus' },
+        { value: 'kreuz', label: 'Kreuzbinokel (2 gegen 2)' },
+      ],
+      default: 'sitOut',
+    },
     deckStyleOption(),
     {
       id: 'deckSize',

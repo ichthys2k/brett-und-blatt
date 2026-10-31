@@ -2,7 +2,7 @@
 
 | Steckbrief | |
 |---|---|
-| Spieler | 3 aktiv; am 4er-Tisch setzt der Geber aus (optional: Kreuzbinokel 2 gegen 2) |
+| Spieler | 3 aktiv; am 4er-Tisch setzt der Geber aus oder Kreuzbinokel 2 gegen 2 (seit 31.10.2026) |
 | Dauer | 4–6 Minuten pro Spiel, eine Serie auf 1000/1500 Punkte ca. 30–60 Minuten |
 | Modi | Solo gegen 2 Bots, Hot-Seat, online, gemischt |
 | Muster | verdeckt (Hände, Dabb, gedrückte Karten), Phasenablauf mit Vorbehalten |
@@ -255,4 +255,6 @@ Die erste Fassung war nicht spielbar (Platzhalter-Oberfläche, Zustand mit `Set`
 - ✅ Kartenspiel per Stichproben-Suche (`pimcMove` in `packages/engine/src/bots/pimc.ts`): Auf „schwer“ verteilt der Bot die verdeckten Karten 30-mal zufällig (`dealUnknown`: wer eine Farbe nicht bedient hat, bekommt von ihr keine Karte, `knownVoids`), spielt jede mögliche eigene Karte mit den Faustregeln zu Ende und nimmt die Karte mit dem besten Durchschnitt (Spielausgang plus nur der Spielstand; alle Karten werden an denselben Verteilungen verglichen). Gemessen an je gleichen Blättern gegen die reinen Faustregeln (150 Blätter): **+9,8 Punkte je Runde (±1,7)**, 76 von 150 Blättern besser, 18 schlechter; 7 ms je Zug, Spitze 57 ms. Dort zählt `sampleHidden` die Meldungen anderer Spieler mit; Farbenlücken werden noch nicht ausgenutzt.
 - Bot spielt Durch (28.10.2026): drückt alle Karten, die ein fremder Stich überbieten könnte, und sagt Durch an, wenn danach jeder Stich sicher ist (`winsAllTricks`, nicht auf „leicht“).
 
-**Noch offen:** Vierertisch und Kreuzbinokel, offener Durch und Hand-Durch, Melden von Hand statt automatisch, Lernhilfen als Optionen, Bot mit Suche (PIMC).
+- ✅ **Vierertisch und Kreuzbinokel (31.10.2026, W-002, `ruleVersion` 3):** Bis zu vier Plätze, Option „Zu viert“. *Geber setzt aus:* Die drei Plätze nach dem Geber spielen wie am Dreiertisch, der Geber bekommt keine Karten und keine Punkte. *Kreuzbinokel* (nach den Regeln in der Wikipedia): Alle vier spielen, die Gegenübersitzenden (Platz 1+3, 2+4) sind Partner, je 9 Karten (48er-Blatt 11), Dabb immer 4. Gereizt wird reihum wie zu dritt; der Bot überbietet seinen Partner nicht. Partner zählen Augen und Meldungen zusammen, eine Meldung zählt aber nur mit eigenem Stich; beide bekommen die Punkte ihrer Partei. Abgehen: Spielmacher und Partner melden nicht, jeder Gegner bekommt seine Meldung plus die Gutschrift. Durch: Der Spielmacher muss jeden Stich selbst machen (auch ein Stich des Partners verliert); sein Partner wirft nur ab. Neue Zustandsfelder `seats`, `kreuz`, `active` (Spielreihenfolge ab Vorhand), ältere Spielstände gelten als Dreiertisch. Nicht übernommen: Aufrunden auf Zehner und die regionalen „10 je Spieler“ zum Gemeldeten.
+
+**Noch offen:** offener Durch und Hand-Durch, Melden von Hand statt automatisch, Lernhilfen als Optionen, Bot mit Suche (PIMC).

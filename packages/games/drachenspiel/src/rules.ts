@@ -10,8 +10,8 @@ import {
   type SeatId,
   type TimePresets,
 } from '@brett-und-blatt/engine';
-import { ALL_CARD_IDS, CARDS_DB, STAR_CARD } from './cards';
-import { DECK_THEMES, DECK_THEME_IDS } from './decks';
+import { ALL_CARD_IDS, ALL_SPELL_IDS, CARDS_DB, STAR_CARD } from './cards';
+import { DECK_THEMES, DECK_THEME_IDS, themeCardIds } from './decks';
 import { meta } from './meta';
 import type {
   CardInstance,
@@ -22,6 +22,9 @@ import type {
   HiddenPlayerView,
   Minion,
   PlayerState,
+  SpellEffect,
+  SpellTarget,
+  SpellTargeting,
 } from './types';
 import { bots } from './bots';
 
@@ -41,6 +44,16 @@ export const options: OptionSpec[] = [
     default: 'inGame',
   },
   {
+    id: 'spells',
+    label: 'Zauberkarten',
+    description: 'Jedes Deck tauscht drei Tierpaare gegen drei Zauberpaare (Blitzschlag, Honigtopf, Flutwelle …).',
+    choices: [
+      { value: 'on', label: 'An' },
+      { value: 'off', label: 'Aus (nur Tiere)' },
+    ],
+    default: 'on',
+  },
+  {
     id: 'mulligan',
     label: 'Startkarten tauschen',
     choices: [
@@ -57,17 +70,21 @@ export const timePresets: TimePresets = {
   fast: { kind: 'perMove', moveMs: 45_000, bankMs: 15_000, firstMoveMs: 30_000 },
 };
 
-function createDeck(theme: string, rng: Rng, nextId: () => number): CardInstance[] {
+export const spellsOn = (opts: Options) => (opts.spells ?? 'on') !== 'off';
+
+function createDeck(theme: string, rng: Rng, nextId: () => number, withSpells: boolean): CardInstance[] {
   let cardIds: string[];
   if (theme in DECK_THEMES) {
-    cardIds = [...DECK_THEMES[theme as DeckThemeId].cardIds];
+    cardIds = themeCardIds(theme as DeckThemeId, withSpells);
   } else {
-    // random 30 cards
+    // Gemischtes Deck: 30 zufällige Karten, mit Zauberkarten davon 6 Zauber.
     cardIds = [];
     const pool = [...ALL_CARD_IDS];
-    for (let i = 0; i < 30; i++) {
+    const spells = withSpells ? 6 : 0;
+    for (let i = 0; i < 30 - spells; i++) {
       cardIds.push(rng.pick(pool));
     }
+    for (let i = 0; i < spells; i++) cardIds.push(rng.pick(ALL_SPELL_IDS));
   }
   const deck: CardInstance[] = cardIds.map((defId) => ({
     uid: `c_${nextId()}`,
@@ -116,7 +133,7 @@ export function setup(seats: number, opts: Options, seed: string): DrachenspielS
   if (deckOption !== 'inGame') {
     for (const p of state.players) {
       p.deckTheme = deckOption in DECK_THEMES ? (deckOption as DeckThemeId) : 'forest';
-      p.deck = createDeck(deckOption, rng, nextId);
+      p.deck = createDeck(deckOption, rng, nextId, spellsOn(opts));
     }
     dealStartingHands(state, mulliganOption === 'on');
   }
@@ -260,7 +277,11 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
       const def = CARDS_DB[card.defId];
       if (!def) continue;
       if (def.cost <= player.mana) {
-        if (def.isSpell || player.board.length < 7) {
+        if (def.spell) {
+          for (const target of spellTargets(state, actor, def.targeting ?? 'none')) {
+            moves.push(target ? { type: 'playCard', handIndex: i, target } : { type: 'playCard', handIndex: i });
+          }
+        } else if (def.isSpell || player.board.length < 7) {
           moves.push({ type: 'playCard', handIndex: i });
         }
       }
@@ -330,7 +351,7 @@ export function applyMove(
     }
     player.deckTheme = move.deck;
     const rng = Rng.fromSeed(`${next.turn}/${actor}/${move.deck}`);
-    player.deck = createDeck(move.deck, rng, nextEntityId);
+    player.deck = createDeck(move.deck, rng, nextEntityId, spellsOn(next.options));
 
     events.push({ type: 'deckChosen', seat: actor, deck: move.deck });
 
@@ -394,6 +415,18 @@ export function applyMove(
     const def = CARDS_DB[card.defId];
     if (!def) throw new Error('Unbekannte Karte');
     if (def.cost > player.mana) throw new Error('Nicht genug Mana');
+
+    if (def.spell) {
+      const targets = spellTargets(next, actor, def.targeting ?? 'none');
+      const target = move.target ?? null;
+      if (!targets.some((t) => sameTarget(t, target))) throw new Error('Ungültiges Ziel für den Zauber');
+      player.mana -= def.cost;
+      player.hand.splice(move.handIndex, 1);
+      events.push({ type: 'spellCast', seat: actor, card, spell: def.spell, target });
+      castSpell(next, actor, def.spell, target, events);
+      checkGameOver(next, events);
+      return { state: next, events };
+    }
 
     if (def.isSpell) {
       player.mana -= def.cost;
@@ -548,6 +581,109 @@ export function applyMove(
   }
 
   throw new Error('Unbekannter Zug');
+}
+
+// ---------------------------------------------------------------------------
+// Zauberkarten
+// ---------------------------------------------------------------------------
+
+/** Mögliche Ziele eines Zaubers; `null` steht für „ohne Ziel“. Versteckte Gegner sind kein Ziel. */
+export function spellTargets(state: DrachenspielState, seat: SeatId, targeting: SpellTargeting): (SpellTarget | null)[] {
+  const me = state.players[seat];
+  const enemy = state.players[1 - seat];
+  const enemyMinions = enemy.board.filter((m) => !m.stealth).map((m): SpellTarget => ({ kind: 'minion', id: m.id }));
+  switch (targeting) {
+    case 'none':
+      return [null];
+    case 'enemyAny':
+      return [{ kind: 'hero' }, ...enemyMinions];
+    case 'enemyMinion':
+      return enemyMinions;
+    case 'ownMinion':
+      return me.board.map((m): SpellTarget => ({ kind: 'minion', id: m.id }));
+  }
+}
+
+function sameTarget(a: SpellTarget | null, b: SpellTarget | null): boolean {
+  if (a === null || b === null) return a === b;
+  if (a.kind === 'hero' || b.kind === 'hero') return a.kind === b.kind;
+  return a.id === b.id;
+}
+
+function castSpell(state: DrachenspielState, seat: SeatId, spell: SpellEffect, target: SpellTarget | null, events: GameEvent[]): void {
+  const me = state.players[seat];
+  const enemy = state.players[1 - seat];
+  const targetMinion = target?.kind === 'minion' ? [...me.board, ...enemy.board].find((m) => m.id === target.id) : undefined;
+  switch (spell) {
+    case 'lightning':
+      if (target?.kind === 'hero') {
+        enemy.health -= 3;
+        events.push({ type: 'damage', targetType: 'hero', targetSeat: enemy.seat, amount: 3, health: enemy.health });
+      } else if (targetMinion) {
+        applyDamageToMinion(targetMinion, 3, false, events);
+        cleanupDeadMinions(state, events);
+      }
+      break;
+    case 'honey':
+      if (targetMinion) {
+        targetMinion.attack += 2;
+        targetMinion.maxHealth += 2;
+        targetMinion.health += 2;
+        events.push({ type: 'minionBuffed', minionId: targetMinion.id, attack: targetMinion.attack, health: targetMinion.health });
+      }
+      break;
+    case 'tailwind':
+      if (targetMinion) {
+        targetMinion.attack += 1;
+        if (!targetMinion.hasAttacked) targetMinion.canAttack = true;
+        events.push({ type: 'minionBuffed', minionId: targetMinion.id, attack: targetMinion.attack });
+      }
+      break;
+    case 'soapBubble':
+      if (targetMinion) {
+        targetMinion.bubble = true;
+        events.push({ type: 'minionBuffed', minionId: targetMinion.id, bubble: true });
+      }
+      break;
+    case 'growth':
+      for (const m of me.board) {
+        m.attack += 1;
+        m.maxHealth += 1;
+        m.health += 1;
+        events.push({ type: 'minionBuffed', minionId: m.id, attack: m.attack, health: m.health });
+      }
+      break;
+    case 'summerRain': {
+      const healed = Math.min(me.maxHealth, me.health + 3) - me.health;
+      me.health += healed;
+      if (healed > 0) events.push({ type: 'heal', targetType: 'hero', targetSeat: seat, amount: healed, health: me.health });
+      for (const m of me.board) {
+        if (m.health < m.maxHealth) {
+          events.push({ type: 'heal', targetType: 'minion', targetId: m.id, amount: m.maxHealth - m.health, health: m.maxHealth });
+          m.health = m.maxHealth;
+        }
+      }
+      break;
+    }
+    case 'clover':
+      drawCard(me, events);
+      drawCard(me, events);
+      break;
+    case 'flood':
+      if (targetMinion) {
+        enemy.board = enemy.board.filter((m) => m.id !== targetMinion.id);
+        events.push({ type: 'minionReturned', minionId: targetMinion.id, name: targetMinion.name, seat: enemy.seat });
+        // Spielsteine (z. B. Ameisen-Soldat) und volle Hände: Das Tier ist einfach weg.
+        if (CARDS_DB[targetMinion.cardId] && !targetMinion.cardId.startsWith('token_') && enemy.hand.length < 7) {
+          enemy.hand.push({ uid: `c_${state.nextEntityId++}`, defId: targetMinion.cardId });
+        }
+      }
+      break;
+    case 'whirlwind':
+      for (const m of enemy.board) applyDamageToMinion(m, 2, false, events);
+      cleanupDeadMinions(state, events);
+      break;
+  }
 }
 
 function applyDamageToMinion(
@@ -718,8 +854,8 @@ export function sampleHidden(
   const nextId = () => counter++;
 
   const players: [PlayerState, PlayerState] = [
-    reconstructPlayer(view.players[0], seat === 0, rng, nextId),
-    reconstructPlayer(view.players[1], seat === 1, rng, nextId),
+    reconstructPlayer(view.players[0], seat === 0, rng, nextId, spellsOn(view.options)),
+    reconstructPlayer(view.players[1], seat === 1, rng, nextId, spellsOn(view.options)),
   ];
 
   return {
@@ -738,10 +874,11 @@ function reconstructPlayer(
   isViewer: boolean,
   rng: Rng,
   nextId: () => number,
+  withSpells: boolean,
 ): PlayerState {
   const pool = hv.deckTheme && hv.deckTheme in DECK_THEMES
-    ? [...DECK_THEMES[hv.deckTheme].cardIds]
-    : [...ALL_CARD_IDS];
+    ? themeCardIds(hv.deckTheme, withSpells)
+    : [...ALL_CARD_IDS, ...(withSpells ? ALL_SPELL_IDS : [])];
 
   const hand: CardInstance[] = isViewer && hv.hand
     ? hv.hand.map((c) => ({ ...c }))

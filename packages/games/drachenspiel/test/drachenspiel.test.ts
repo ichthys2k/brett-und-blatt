@@ -1,7 +1,7 @@
 import { Rng } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
-import { gameModule } from '../src';
+import { drachenspiel, gameModule } from '../src';
 import type { DrachenspielState, Minion } from '../src/types';
 
 function createTestMinion(overrides: Partial<Minion> & { id: string; cardId: string }): Minion {
@@ -288,4 +288,93 @@ describe('Vertrag für Spielmodule', () => {
   for (const check of gameContractChecks(gameModule, { randomGames: 12, botGames: 1 })) {
     test(check.name, check.run);
   }
+});
+
+describe('Zauberkarten', () => {
+  const base = () => {
+    const s = drachenspiel.setup(2, { deckSelection: 'wild', mulligan: 'off' }, 'zauber');
+    const me = s.activeSeat;
+    s.players[me].mana = 10;
+    s.players[me].maxMana = 10;
+    return { s, me, opp: (1 - me) as 0 | 1 };
+  };
+  const give = (s: ReturnType<typeof base>['s'], seat: number, defId: string) => {
+    s.players[seat as 0 | 1].hand = [{ uid: `x_${defId}`, defId }];
+  };
+  const minion = (id: string, attack: number, health: number): Minion => ({
+    id, cardId: 'c43', name: 'Zebra', emoji: '🦓', cost: 3, baseAttack: attack, attack, baseHealth: health, maxHealth: health, health,
+    quote: null, sound: null, taunt: false, rush: false, bubble: false, poisonous: false, stealth: false, canAttack: false, hasAttacked: false, deathrattle: null,
+  });
+
+  it('jedes Themendeck hat mit Zaubern 30 Karten, davon 6 Zauber; ohne Zauber keine', () => {
+    for (const theme of ['forest', 'sea', 'farm', 'wild', 'bugs'] as const) {
+      const on = drachenspiel.setup(2, { deckSelection: theme, mulligan: 'off' }, `d-${theme}`);
+      const all = [...on.players[0].deck, ...on.players[0].hand].filter((c) => !c.defId.startsWith('special_'));
+      expect(all).toHaveLength(30);
+      expect(all.filter((c) => c.defId.startsWith('s_'))).toHaveLength(6);
+      const off = drachenspiel.setup(2, { deckSelection: theme, mulligan: 'off', spells: 'off' }, `d-${theme}`);
+      expect([...off.players[0].deck, ...off.players[0].hand].some((c) => c.defId.startsWith('s_'))).toBe(false);
+    }
+  });
+
+  it('Blitzschlag trifft Held oder Tier, aber kein verstecktes', () => {
+    const { s, me, opp } = base();
+    give(s, me, 's_lightning');
+    s.players[opp].board = [minion('m_a', 2, 4), { ...minion('m_b', 1, 1), stealth: true }];
+    const moves = drachenspiel.legalMoves(s, me).filter((m) => m.type === 'playCard');
+    expect(moves).toHaveLength(2);
+    const hp = s.players[opp].health;
+    const hero = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0, target: { kind: 'hero' } }).state;
+    expect(hero.players[opp].health).toBe(hp - 3);
+    expect(hero.players[me].mana).toBe(8);
+    const onMinion = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0, target: { kind: 'minion', id: 'm_a' } }).state;
+    expect(onMinion.players[opp].board.find((m) => m.id === 'm_a')!.health).toBe(1);
+    expect(() => drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0, target: { kind: 'minion', id: 'm_b' } })).toThrow();
+    expect(() => drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 })).toThrow();
+  });
+
+  it('Honigtopf, Rückenwind und Seifenblase stärken ein eigenes Tier', () => {
+    const { s, me } = base();
+    s.players[me].board = [minion('m_x', 1, 1)];
+    for (const [spell, check] of [
+      ['s_honey', (m: Minion) => m.attack === 3 && m.health === 3 && m.maxHealth === 3],
+      ['s_tailwind', (m: Minion) => m.attack === 2 && m.canAttack],
+      ['s_soapBubble', (m: Minion) => m.bubble],
+    ] as const) {
+      give(s, me, spell);
+      const next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0, target: { kind: 'minion', id: 'm_x' } }).state;
+      expect(check(next.players[me].board[0]!)).toBe(true);
+    }
+  });
+
+  it('Flutwelle spült ein Tier zurück, Wirbelsturm trifft alle, Glücksklee zieht zwei', () => {
+    const { s, me, opp } = base();
+    s.players[opp].board = [minion('m_a', 2, 2), minion('m_b', 3, 5)];
+    s.players[opp].hand = [];
+    give(s, me, 's_flood');
+    let next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0, target: { kind: 'minion', id: 'm_a' } }).state;
+    expect(next.players[opp].board.map((m) => m.id)).toEqual(['m_b']);
+    expect(next.players[opp].hand.map((c) => c.defId)).toEqual(['c43']);
+    give(s, me, 's_whirlwind');
+    next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 }).state;
+    expect(next.players[opp].board.map((m) => [m.id, m.health])).toEqual([['m_b', 3]]);
+    give(s, me, 's_clover');
+    const deck = s.players[me].deck.length;
+    next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 }).state;
+    expect(next.players[me].hand).toHaveLength(2);
+    expect(next.players[me].deck).toHaveLength(deck - 2);
+  });
+
+  it('Sommerregen heilt Held und Tiere, Wachstumsschub stärkt alle', () => {
+    const { s, me } = base();
+    s.players[me].health = 20;
+    s.players[me].board = [{ ...minion('m_x', 2, 4), health: 1 }, minion('m_y', 1, 1)];
+    give(s, me, 's_summerRain');
+    let next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 }).state;
+    expect(next.players[me].health).toBe(23);
+    expect(next.players[me].board[0]!.health).toBe(4);
+    give(s, me, 's_growth');
+    next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 }).state;
+    expect(next.players[me].board.map((m) => [m.attack, m.health])).toEqual([[3, 2], [2, 2]]);
+  });
 });
