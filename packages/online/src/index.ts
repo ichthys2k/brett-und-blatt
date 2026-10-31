@@ -24,3 +24,4 @@ export {
   listingNeedsSync,
   type OpenRoomsMessage,
 } from './lobby';
+export { BACKUP_ID_PATTERN, BACKUP_MAX_BYTES, BACKUP_TTL_MS, applyBackupPut, type BackupPutResult, type StoredBackup } from './backup';

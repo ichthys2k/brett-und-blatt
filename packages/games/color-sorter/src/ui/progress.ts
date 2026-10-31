@@ -13,19 +13,37 @@ import { ATELIER_BOX_PRICE, CARD_BACKS, encodeUnlocks, openAtelierBox, THEMES, U
  * Fenster), läuft alles im Arbeitsspeicher weiter.
  */
 
+/**
+ * Zähler eines Geräts. Jedes Gerät erhöht nur seine eigene Zeile; beim Zusammenführen zweier
+ * Stände (Sicherung über mehrere Geräte, W-018) gilt je Gerät und Feld der größere Wert. So geht
+ * nichts verloren, was auf einem Gerät verdient oder ausgegeben wurde, und nichts zählt doppelt.
+ */
+export interface LedgerLine {
+  earned: number;
+  spent: number;
+  runs: number;
+  wins: number;
+}
+
 export type AlbumKind = 'mod' | 'spell' | 'nail' | 'dream' | 'tool' | 'boss' | 'deck';
 
 export interface Progress {
   version: 1;
+  /** Verfügbare Glöckchen – abgeleitet aus `ledger` (verdient minus ausgegeben). */
   drops: number;
-  /** Insgesamt verdient (für das Album). */
+  /** Insgesamt verdient (für das Album) – abgeleitet aus `ledger`. */
   earned: number;
+  /** Zähler je Gerät (Schlüssel: zufällige Geräte-Kennung). */
+  ledger: Record<string, LedgerLine>;
+  /** Zeitpunkt der letzten Schmuck-Wahl (ms), damit beim Zusammenführen die jüngste gilt. */
+  styledAt: number;
   unlocked: string[];
   /** Erledigte einmalige Herausforderungen. */
   done: string[];
   /** Partien, die schon gutgeschrieben sind (Kennung je Platz). */
   awarded: string[];
   album: Record<AlbumKind, string[]>;
+  /** `runs` und `wins` sind abgeleitet aus `ledger`. */
   stats: { runs: number; wins: number; bestLevel: number; bestHand: number };
   back: string;
   theme: string;
@@ -33,6 +51,28 @@ export interface Progress {
 
 const KEY = 'brett-und-blatt:farbensortierer';
 const DECK_KEY = 'brett-und-blatt:farbensortierer:kartenbild';
+const DEVICE_KEY = 'brett-und-blatt:farbensortierer:geraet';
+
+let device: string | null = null;
+
+/** Zufällige Kennung dieses Geräts für die eigene Zeile im Zählerbuch (verrät nichts über die Person). */
+export function deviceId(): string {
+  if (device) return device;
+  try {
+    device = window.localStorage.getItem(DEVICE_KEY);
+  } catch {
+    device = null;
+  }
+  if (!device || !/^[0-9a-f]{16}$/.test(device)) {
+    device = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => b.toString(16).padStart(2, '0')).join('');
+    try {
+      window.localStorage.setItem(DEVICE_KEY, device);
+    } catch {
+      // ohne Speicher gilt die Kennung bis zum Neuladen
+    }
+  }
+  return device;
+}
 
 /** Kartenbild je Gerät: Standard ist das Turnierblatt (vierfarbig). */
 export type CardLook = DeckStyle;
@@ -58,6 +98,8 @@ function empty(): Progress {
     version: 1,
     drops: 0,
     earned: 0,
+    ledger: {},
+    styledAt: 0,
     unlocked: [],
     done: [],
     awarded: [],
@@ -99,6 +141,75 @@ const RENAMED_UNLOCKS: Record<string, string> = {
   'tool:scope2': 'tool:scope',
 };
 
+/** Rechnet Glöckchen, Verdienst, Läufe und Siege aus dem Zählerbuch neu aus. */
+export function withTotals(p: Progress): Progress {
+  const lines = Object.values(p.ledger);
+  const sum = (key: keyof LedgerLine) => lines.reduce((s, l) => s + l[key], 0);
+  const earned = sum('earned');
+  return {
+    ...p,
+    earned,
+    drops: Math.max(0, earned - sum('spent')),
+    stats: { ...p.stats, runs: sum('runs'), wins: sum('wins') },
+  };
+}
+
+/** Zeile dieses Geräts um die genannten Beträge erhöhen. */
+function bump(p: Progress, add: Partial<LedgerLine>, id = deviceId()): Progress {
+  const line = p.ledger[id] ?? { earned: 0, spent: 0, runs: 0, wins: 0 };
+  const next: LedgerLine = {
+    earned: line.earned + (add.earned ?? 0),
+    spent: line.spent + (add.spent ?? 0),
+    runs: line.runs + (add.runs ?? 0),
+    wins: line.wins + (add.wins ?? 0),
+  };
+  return withTotals({ ...p, ledger: { ...p.ledger, [id]: next } });
+}
+
+const union = (a: string[], b: string[]) => [...new Set([...a, ...b])];
+
+/**
+ * Führt zwei Stände zusammen (Sicherung über mehrere Geräte): Freischaltungen, Herausforderungen
+ * und Hofchronik werden vereinigt, je Gerät zählt der größere Zähler, Bestwerte das Maximum,
+ * der Schmuck nach der jüngsten Wahl. Reihenfolge egal, mehrfaches Zusammenführen ändert nichts.
+ */
+export function mergeProgress(a: Progress, b: Progress): Progress {
+  const ledger: Record<string, LedgerLine> = { ...a.ledger };
+  for (const [id, line] of Object.entries(b.ledger)) {
+    const own = ledger[id];
+    ledger[id] = own
+      ? { earned: Math.max(own.earned, line.earned), spent: Math.max(own.spent, line.spent), runs: Math.max(own.runs, line.runs), wins: Math.max(own.wins, line.wins) }
+      : line;
+  }
+  const newer = b.styledAt > a.styledAt || (b.styledAt === a.styledAt && `${b.back}/${b.theme}` > `${a.back}/${a.theme}`) ? b : a;
+  const album = Object.fromEntries(Object.keys(a.album).map((k) => [k, union(a.album[k as AlbumKind], b.album[k as AlbumKind])])) as Progress['album'];
+  return sanitize(
+    withTotals({
+      ...a,
+      ledger,
+      unlocked: union(a.unlocked, b.unlocked),
+      done: union(a.done, b.done),
+      awarded: union(a.awarded, b.awarded).slice(-200),
+      album,
+      stats: { ...a.stats, bestLevel: Math.max(a.stats.bestLevel, b.stats.bestLevel), bestHand: Math.max(a.stats.bestHand, b.stats.bestHand) },
+      back: newer.back,
+      theme: newer.theme,
+      styledAt: Math.max(a.styledAt, b.styledAt),
+    }),
+  );
+}
+
+/** Gleiche Stände (zum Erkennen, ob ein Abgleich etwas geändert hat). */
+export function sameProgress(a: Progress, b: Progress): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+const ledgerLine = (value: unknown): LedgerLine | null => {
+  if (!value || typeof value !== 'object') return null;
+  const v = value as Record<string, unknown>;
+  return { earned: count(v.earned), spent: count(v.spent), runs: count(v.runs), wins: count(v.wins) };
+};
+
 /** Prüft einen geladenen oder eingefügten Stand Feld für Feld. */
 export function sanitize(raw: unknown): Progress {
   const base = empty();
@@ -109,10 +220,28 @@ export function sanitize(raw: unknown): Progress {
   const unlocked = strings(r.unlocked)
     .map((id) => RENAMED_UNLOCKS[id] ?? id)
     .filter((id) => UNLOCKABLE_BY_ID[id]);
-  return {
+  const ledger: Record<string, LedgerLine> = {};
+  if (r.ledger && typeof r.ledger === 'object') {
+    for (const [id, value] of Object.entries(r.ledger as Record<string, unknown>).slice(0, 64)) {
+      const line = ledgerLine(value);
+      if (line && /^[0-9A-Za-z-]{1,40}$/.test(id)) ledger[id] = line;
+    }
+  } else if (count(r.drops) || count(r.earned) || count(stats.runs)) {
+    // Stand von vor dem Zählerbuch: alles zählt als eine Zeile „alt“ dieses Geräts.
+    const earned = Math.max(count(r.earned), count(r.drops));
+    ledger[`alt-${typeof window === 'undefined' ? 'x' : deviceId()}`] = {
+      earned,
+      spent: earned - count(r.drops),
+      runs: count(stats.runs),
+      wins: count(stats.wins),
+    };
+  }
+  return withTotals({
     version: 1,
-    drops: count(r.drops),
-    earned: count(r.earned),
+    drops: 0,
+    earned: 0,
+    ledger,
+    styledAt: count(r.styledAt),
     unlocked: [...new Set(unlocked)],
     done: [...new Set(strings(r.done))],
     awarded: strings(r.awarded, 200),
@@ -125,7 +254,7 @@ export function sanitize(raw: unknown): Progress {
     },
     back: typeof r.back === 'string' && (r.back === 'classic' || unlocked.includes(`back:${r.back}`)) ? r.back : 'classic',
     theme: typeof r.theme === 'string' && (r.theme === 'workshop' || unlocked.includes(`theme:${r.theme}`)) ? r.theme : 'workshop',
-  };
+  });
 }
 
 let current: Progress | null = null;
@@ -187,19 +316,19 @@ export function award(view: SorterState, seats: number[]): { seat: number; lines
     if (!run || next.awarded.includes(id)) continue;
     const lines = runDrops(view, seat, new Set(next.done));
     const sum = lines.reduce((s, l) => s + l.amount, 0);
-    next = {
-      ...next,
-      drops: next.drops + sum,
-      earned: next.earned + sum,
-      done: [...next.done, ...lines.flatMap((l) => (l.once ? [l.once] : []))],
-      awarded: [...next.awarded, id].slice(-200),
-      stats: {
-        runs: next.stats.runs + 1,
-        wins: next.stats.wins + (view.winners.includes(seat) ? 1 : 0),
-        bestLevel: Math.max(next.stats.bestLevel, run.level),
-        bestHand: Math.max(next.stats.bestHand, run.bestHand),
+    next = bump(
+      {
+        ...next,
+        done: [...next.done, ...lines.flatMap((l) => (l.once ? [l.once] : []))],
+        awarded: [...next.awarded, id].slice(-200),
+        stats: {
+          ...next.stats,
+          bestLevel: Math.max(next.stats.bestLevel, run.level),
+          bestHand: Math.max(next.stats.bestHand, run.bestHand),
+        },
       },
-    };
+      { earned: sum, runs: 1, wins: view.winners.includes(seat) ? 1 : 0 },
+    );
     out.push({ seat, lines });
   }
   if (out.length) write(next);
@@ -266,11 +395,7 @@ export function buy(id: string): boolean {
   const prev = read();
   const item = UNLOCKABLE_BY_ID[id];
   if (!item || prev.unlocked.includes(id) || prev.drops < item.price) return false;
-  write({
-    ...prev,
-    drops: prev.drops - item.price,
-    unlocked: [...prev.unlocked, id],
-  });
+  write(bump({ ...prev, unlocked: [...prev.unlocked, id] }, { spent: item.price }));
   return true;
 }
 
@@ -285,11 +410,7 @@ export function buyBox(): Unlockable | null {
   };
   const item = openAtelierBox(new Set(prev.unlocked), random);
   if (!item) return null;
-  write({
-    ...prev,
-    drops: prev.drops - ATELIER_BOX_PRICE,
-    unlocked: [...prev.unlocked, item.id],
-  });
+  write(bump({ ...prev, unlocked: [...prev.unlocked, item.id] }, { spent: ATELIER_BOX_PRICE }));
   return item;
 }
 
@@ -297,7 +418,7 @@ export function equip(kind: 'back' | 'theme', key: string): void {
   const prev = read();
   const free = kind === 'back' ? CARD_BACKS[0]!.key : THEMES[0]!.key;
   if (key !== free && !prev.unlocked.includes(`${kind}:${key}`)) return;
-  write({ ...prev, [kind]: key });
+  write({ ...prev, [kind]: key, styledAt: Date.now() });
 }
 
 /** Optionen für eine Partie auf diesem Gerät: die eigenen Freischaltungen eintragen. */
@@ -309,6 +430,11 @@ export function withUnlocks(options: Record<string, string>): Record<string, str
 }
 
 // ---------------------------------------------------------------- Sichern
+
+/** Übernimmt einen zusammengeführten Stand (Abgleich mit der Sicherung). */
+export function replaceProgress(next: Progress): void {
+  if (!sameProgress(read(), next)) write(next);
+}
 
 /** Stand als Text zum Kopieren (zum Umziehen auf ein anderes Gerät). */
 export function exportCode(): string {

@@ -1,7 +1,10 @@
 import { DurableObject } from 'cloudflare:workers';
 import {
+  BACKUP_ID_PATTERN,
+  BACKUP_TTL_MS,
   OpenRoomDirectory,
   Room,
+  applyBackupPut,
   listingNeedsSync,
   parseRoomCode,
   randomRoomCode,
@@ -11,6 +14,7 @@ import {
   type RoomDeps,
   type RoomSnapshot,
   type ServerMessage,
+  type StoredBackup,
 } from '@brett-und-blatt/online';
 import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
 import { bibelQuizKatalog } from './bibelquiz';
@@ -25,6 +29,8 @@ import { onlineGames } from './games';
  *   mit WebSocket-Upgrade kommt die Liste live (bei jeder Änderung neu).
  * - `GET /rooms/<code>` mit WebSocket-Upgrade betritt einen Raum.
  * - `GET /bibelquiz/fragen` liefert den Fragenkatalog des Bibel-Quiz (liegt nicht im Browser-Bundle).
+ * - `GET`/`PUT /sicherung/<Kennung>` lädt bzw. schreibt eine im Browser verschlüsselte Sicherung
+ *   (Narrenhof-Fortschritt). Der Server sieht nur Kennung und Datensalat.
  *
  * Jeder Raum ist ein eigenes Durable Object (ein kleiner Server mit Speicher),
  * angelegt in der EU.
@@ -33,6 +39,7 @@ import { onlineGames } from './games';
 interface Env {
   ROOMS: DurableObjectNamespace<GameRoom>;
   LOBBY_REGISTRY: DurableObjectNamespace<LobbyRegistry>;
+  BACKUPS: DurableObjectNamespace<BackupVault>;
   ALLOWED_ORIGINS: string;
   /** "eu" im echten Betrieb. Nur der lokale Testserver kennt keine Jurisdiktionen und setzt "none". */
   ROOM_JURISDICTION: string;
@@ -66,13 +73,18 @@ function registryStub(env: Env): DurableObjectStub<LobbyRegistry> {
   return namespace.get(namespace.idFromName('global'));
 }
 
+function backupStub(env: Env, id: string): DurableObjectStub<BackupVault> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.BACKUPS : env.BACKUPS.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(id));
+}
+
 function corsHeaders(request: Request, env: Env): Record<string, string> {
   const origin = request.headers.get('Origin') ?? '';
   const allowed = env.ALLOWED_ORIGINS.split(',').map((o) => o.trim());
   return allowed.includes(origin)
     ? {
         'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         Vary: 'Origin',
       }
@@ -126,6 +138,35 @@ export default {
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
       // Die Fragen ändern sich selten; fünf Minuten frisch genügt und spart Anfragen.
       return json(bibelQuizKatalog, 200, { ...cors, 'Cache-Control': 'public, max-age=300' });
+    }
+
+    const backup = /^\/sicherung\/([^/]+)$/.exec(url.pathname);
+    if (backup) {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const id = backup[1]!;
+      if (!BACKUP_ID_PATTERN.test(id)) return json({ error: 'id' }, 404, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      if (request.method === 'GET') {
+        const stored = await backupStub(env, id).load();
+        return stored ? json({ data: stored.data, rev: stored.rev }, 200, noStore) : json({ error: 'missing' }, 404, noStore);
+      }
+      if (request.method === 'PUT') {
+        const length = Number(request.headers.get('Content-Length') ?? 0);
+        if (length > 80 * 1024) return json({ error: 'size' }, 413, noStore);
+        let body: unknown;
+        try {
+          const text = await request.text();
+          if (text.length > 80 * 1024) return json({ error: 'size' }, 413, noStore);
+          body = JSON.parse(text);
+        } catch {
+          return json({ error: 'body' }, 400, noStore);
+        }
+        const result = await backupStub(env, id).save(body);
+        if (result.status === 200) return json({ rev: result.stored.rev }, 200, noStore);
+        if (result.status === 409) return json(result.current ? { data: result.current.data, rev: result.current.rev } : { rev: 0 }, 409, noStore);
+        return json({ error: result.error }, 400, noStore);
+      }
+      return json({ error: 'method' }, 405, cors);
     }
 
     const match = /^\/rooms\/([^/]+)$/.exec(url.pathname);
@@ -380,5 +421,38 @@ export class LobbyRegistry extends DurableObject<Env> {
     } catch {
       // Verbindung schon weg.
     }
+  }
+}
+
+/**
+ * Eine verschlüsselte Sicherung als eigenes Durable Object (eins je Kennung, in der EU).
+ * Unbenutzt wird sie nach `BACKUP_TTL_MS` gelöscht; jedes Lesen und Schreiben verlängert die Frist.
+ */
+export class BackupVault extends DurableObject<Env> {
+  async load(): Promise<StoredBackup | null> {
+    const stored = (await this.ctx.storage.get<StoredBackup>('backup')) ?? null;
+    if (stored) await this.touch({ ...stored, at: Date.now() });
+    return stored;
+  }
+
+  async save(body: unknown): Promise<ReturnType<typeof applyBackupPut>> {
+    const current = (await this.ctx.storage.get<StoredBackup>('backup')) ?? null;
+    const result = applyBackupPut(current, body, Date.now());
+    if (result.status === 200) await this.touch(result.stored);
+    return result;
+  }
+
+  override async alarm(): Promise<void> {
+    const stored = await this.ctx.storage.get<StoredBackup>('backup');
+    if (!stored || Date.now() >= stored.at + BACKUP_TTL_MS) {
+      await this.ctx.storage.deleteAll();
+      return;
+    }
+    await this.ctx.storage.setAlarm(stored.at + BACKUP_TTL_MS);
+  }
+
+  private async touch(stored: StoredBackup): Promise<void> {
+    await this.ctx.storage.put('backup', stored);
+    await this.ctx.storage.setAlarm(stored.at + BACKUP_TTL_MS);
   }
 }
