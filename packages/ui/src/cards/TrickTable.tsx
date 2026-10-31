@@ -12,12 +12,13 @@ export interface TrickTableSlot {
 
 /**
  * Hilfs-Hook für Stichspiele: Hält einen fertigen Stich kurz sichtbar (mit Sieger-Hervorhebung)
- * und animiert danach das Einziehen der Karten zum Siegerplatz.
+ * und animiert danach das Einziehen der Karten zum Siegerplatz. Standard 1 s: rund 0,75 s
+ * liegt der volle Stich mit hervorgehobenem Sieger, danach fliegt er zum Sieger.
  */
 export function useTrickDisplay(
   currentTrick: Trick,
   completedTricks: { winner: number; cards: PlayedCard[] }[],
-  durationMs = 600,
+  durationMs = 1000,
 ) {
   const [display, setDisplay] = useState<{
     cards: PlayedCard[];
@@ -140,16 +141,18 @@ export function TrickTable({
               break;
           }
 
-          const collectClass = collecting ? 'bub-trick-collect' : '';
+          const collectClass = collecting ? 'bub-trick-collect' : 'bub-trick-in';
 
           return (
             <div
-              key={slot.seat}
+              // Neue Karte = neues Element, damit sie vom Platz des Spielers hereinfliegt.
+              key={`${slot.seat}-${slot.card}`}
               className={`absolute transition-all duration-200 ${posClasses} ${slot.isWinner ? 'z-20 ring-4 ring-amber-400 rounded-lg shadow-lg scale-105' : 'z-10 shadow'} ${collectClass}`}
               data-winner-dir={collecting ? winnerDir : undefined}
+              data-from={pos}
               style={{ width: cardWidth }}
             >
-              <PlayingCard card={slot.card} deckStyle={deckStyle} anim="drop" />
+              <PlayingCard card={slot.card} deckStyle={deckStyle} />
               {slot.name && (
                 <div className="text-center text-[11px] font-medium text-stone-700 dark:text-stone-300 truncate max-w-[80px] mt-0.5 mx-auto">
                   {slot.name}

@@ -409,7 +409,7 @@ button.bub-net-point:not(:disabled) {
 
 /* Stich-Tisch: Stich auflösen und zum Sieger wandern */
 .bub-trick-collect {
-  transition: transform 0.3s ease-in, opacity 0.3s ease-in;
+  transition: transform 0.25s ease-in, opacity 0.25s ease-in;
   pointer-events: none;
 }
 .bub-trick-collect[data-winner-dir="bottom"] { transform: translate(-50%, 180%) scale(0.5); opacity: 0; }
@@ -419,7 +419,29 @@ button.bub-net-point:not(:disabled) {
 .bub-trick-collect[data-winner-dir="top-left"] { transform: translate(-150%, -150%) scale(0.5); opacity: 0; }
 .bub-trick-collect[data-winner-dir="top-right"] { transform: translate(150%, -150%) scale(0.5); opacity: 0; }
 
+/* Gespielte Karte fliegt vom Platz des Spielers in die Tischmitte und landet mit leichtem Nachfedern. */
+.bub-trick-in {
+  animation: bub-trick-in 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+.bub-trick-in[data-from="bottom"] { --bub-from: 0, 170%; --bub-from-rot: 6deg; }
+.bub-trick-in[data-from="top"] { --bub-from: 0, -170%; --bub-from-rot: -6deg; }
+.bub-trick-in[data-from="left"] { --bub-from: -190%, 0; --bub-from-rot: -10deg; }
+.bub-trick-in[data-from="right"] { --bub-from: 190%, 0; --bub-from-rot: 10deg; }
+.bub-trick-in[data-from="top-left"] { --bub-from: -150%, -120%; --bub-from-rot: -12deg; }
+.bub-trick-in[data-from="top-right"] { --bub-from: 150%, -120%; --bub-from-rot: 12deg; }
+
+@keyframes bub-trick-in {
+  from {
+    opacity: 0.3;
+    transform: translate(var(--bub-from, 0, 120%)) rotate(var(--bub-from-rot, 0deg)) scale(0.85);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .bub-trick-in {
+    animation: none;
+  }
+
   .bub-card,
   .bub-fan-slot,
   .bub-trick-collect {

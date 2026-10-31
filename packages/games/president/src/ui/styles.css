@@ -321,3 +321,31 @@
     transition: none;
   }
 }
+
+/* Ausgespielte Karten fliegen vom eigenen Platz (unten) bzw. von den Gegnern (oben) herein. */
+.prs-from-me,
+.prs-from-opp {
+  animation: prs-play-in 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+
+.prs-from-me {
+  --prs-from: 0, 160%;
+}
+
+.prs-from-opp {
+  --prs-from: 0, -160%;
+}
+
+@keyframes prs-play-in {
+  from {
+    opacity: 0.3;
+    transform: translate(var(--prs-from)) rotate(-4deg) scale(0.85);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prs-from-me,
+  .prs-from-opp {
+    animation: none;
+  }
+}
