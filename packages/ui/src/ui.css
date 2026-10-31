@@ -274,6 +274,18 @@ button.bub-slot {
   transition: margin-left 0.2s;
 }
 
+.bub-fan-rows {
+  flex-direction: column;
+  align-items: center;
+}
+
+.bub-fan-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
 /* Netzbrett */
 
 .bub-net {
