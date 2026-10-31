@@ -925,6 +925,19 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1
 
+  packages/games/wolves-sheep:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
   packages/games/word-salad:
     dependencies:
       '@brett-und-blatt/engine':

@@ -50,6 +50,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Würfelblock](kniffel.md) (früher Kniffel) | 1–6 | offen | Würfel, Wertungstafel | S | M | S | Nachtrag |
 | [Speed](speed.md) | 2 | gleichzeitig (Echtzeit) | Spielkarten, Echtzeit-Muster von Kartenblitz, geteilter Bildschirm | S | M | S | ✅ 29.10. |
 | [Fix gefunden!](fix-gefunden.md) (Dobble-artig) | 1–8 | gleichzeitig (Echtzeit) | Symbolkarten aus projektiver Ebene, Symbolpakete inkl. Mathe | M | M | S | ✅ 29.10. |
+| [Wölfe im Schafspelz](woelfe-im-schafspelz.md) (Werwolf-artig) | 8–18 | verdeckt, gleichzeitig | geheime Rollen, Warteschlange für Folgen, `minHumans` | L | L | M | geplant |
 | [Präsident](praesident.md) („Arschloch“) | 3–8 | verdeckt, Kartentausch | Spielkarten, Handfächer | S | M | M | ✅ 29.10. |
 | [Tiefflug](tiefflug.md) (Skyjo-artig, mit Junior) | 2–8 | verdeckt (für alle) | Zahlenkarten, Raster 3×4, Serienwertung | S | M | M | ✅ 29.10. |
 
