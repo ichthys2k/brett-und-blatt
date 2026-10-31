@@ -133,6 +133,23 @@
   font-size: 2.9rem;
 }
 
+.cs-portrait {
+  display: block;
+  height: 1.7em;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border: 2px solid var(--cs-mustard);
+  border-radius: 50% / 45%;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cs-wine) 55%, transparent), 0 2px 6px rgb(0 0 0 / 0.3);
+  background: var(--cs-wine);
+}
+
+.cs-portrait-big {
+  display: inline-block;
+  height: 2.8em;
+  border-width: 3px;
+}
+
 /* Die Miene sitzt als Sprechblase unten rechts am Gesicht. */
 .cs-mood {
   position: absolute;

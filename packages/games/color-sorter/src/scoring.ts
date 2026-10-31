@@ -105,7 +105,8 @@ export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng,
   };
 
   for (const card of scoring) {
-    if (isDebuffed(card, run)) {
+    // Merkenau, die Krähe: Die erste gewertete Karte zählt nicht.
+    if (isDebuffed(card, run) || (boss?.key === 'crow' && card === scoring[0])) {
       steps.push({
         src: 'card',
         id: card.id,
@@ -168,6 +169,9 @@ export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng,
   mult = Math.round(mult * 100) / 100;
   let score = Math.floor(chips * mult);
   if (boss?.key === 'dragon' && favoriteHand(run) === type) score = 0;
+  // Abt Esel: mehr als drei Karten bringen nichts; Kämmerer Faultier: erste Vorführung halb.
+  if (boss?.key === 'donkey' && played.length > 3) score = 0;
+  if (boss?.key === 'sloth' && run.current && !run.current.firstDone) score = Math.floor(score / 2);
   return {
     type,
     scoringIds: scoring.map((c) => c.id),

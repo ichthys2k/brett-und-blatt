@@ -189,6 +189,43 @@ Wirkungen bleiben, nur Name und Rolle ändern sich. Muster: **Hoftitel + Tier**.
 
 Die übrigen 13 entsprechend (Gäste von weither wie „Yeti aus dem Norden“, „Feuerfürst Phönix“). Die 20 Tier-Gegner der Morgenaudienz und des Festmahls werden Höflinge und Edle („Page Maus“, „Zofe Marienkäfer“, „Freiherr Dachs“).
 
+### Gegner mit Porträts (W-017, Plan 31.10.2026)
+
+Stand 31.10.2026. Ziel: viele Gegner, die zum Hof passen, jeder mit einem Porträt im Stil mittelalterlicher Gemälde, überzeichnet und lustig.
+
+#### Heute
+
+- **Herrschaften** (Thronsaal, mit Marotte): 25, Emoji statt Bild.
+- **Höflinge** (Morgenaudienz und Festmahl): 20 feste Namen ohne Wirkung; welcher kommt, hängt nur von Hoftag und Audienz ab. Jede Partie sieht also dieselben Gesichter.
+
+#### Recherche: Woher die Gegner kommen
+
+- **Reineke Fuchs** (Goethe 1794, gemeinfrei) liefert den ganzen Hof von König Nobel mit festen Namen: Grimbart der Dachs, Hinze der Kater, Lampe der Hase, Henning der Hahn, Bellyn der Widder, Gieremund die Wölfin, Frau Rückenau die Äffin, Merkenau die Krähe. Einige sind schon da (Nobel, Isegrim, Braun, Reineke, Lampe).
+- **Grimm und Bechstein** (gemeinfrei): Froschkönig ist schon da; dazu passen Gäste wie der Gestiefelte Kater oder die Bremer Stadtmusikanten als Spielleute.
+- **Münchhausen** steckt schon im neuen Narren „Lügenbaron“.
+- **Bildstil:** altniederländische und Renaissance-Porträts (Brustbild, dunkler Grund, Hermelin, Samt, Goldkette), aber als Tier mit übertriebener Miene: zu kleine Krone, aufgeplusterte Mähne, hochnäsiger Blick. Das ist gemeinfreie Malweise, kein bestimmtes Werk.
+
+#### Vorschlag
+
+1. **32 Höflinge statt 20**, in zwei Gruppen:
+   - Morgenaudienz (16 „Höflinge“, kleine Tiere): Page Maus, Zofe Marienkäfer, Diener Ameise, Bote Schnecke, Gärtner Igel, Lampe der Hase, Henning der Hahn (Hofwecker), Küchenjunge Hamster, Schreiberin Eule, Mundschenk Pinguin, Wäscher Waschbär, Stallbursche Pony, Hinze der Kater (Kammerdiener), Hofmusikus Krake, Baumeister Biber, Markart der Häher (Hofklatsch).
+   - Festmahl (16 „Edle“, große Tiere): Grimbart der Dachs, Reineke Fuchs, Freiherr Panda, Freifrau Koala, Graf Tiger, Ritter Nashorn, Herzog Elefant, Altkanzler Mammut, Kurfürst T-Rex, Bellyn der Widder (Hofkaplan), Gieremund die Wölfin, Frau Rückenau die Äffin, Markgräfin Giraffe, Landvogt Büffel, Gräfin Flamingo, Herzogin Gans.
+   - Jede Partie zieht die Reihenfolge aus dem Seed (für alle Mitspieler gleich). Spätere Hoftage bekommen eher die Großen.
+   - Jeder bekommt einen kurzen Spruch zur Begrüßung („Ich lache nur über Wortspiele.“), aber **keine Regelwirkung**. So bleibt das Gleichgewicht, und es wird trotzdem bunter.
+2. **Vier neue Herrschaften** mit eigenen Marotten (25 → 29):
+   - Merkenau, die Krähe (Hofspionin): Die erste gewertete Karte jeder Vorführung zählt nicht.
+   - Abt Esel (Schweigegelübde): Vorführungen mit mehr als 3 Karten bringen keinen Applaus.
+   - Kämmerer Faultier: Die erste Vorführung bringt nur halb so viel Applaus.
+   - Hinze, der Kater (als Zollherr): Jedes Tauschen kostet 1 🥨, ohne Brezeln kein Tauschen.
+   - Der Bot lernt alle vier.
+3. **Porträts für alle 61 Gegner** (29 Herrschaften, 32 Höflinge) mit dem Canva-Bildgenerator: Brustbild 4:5, als WebP etwa 10–15 KB, zusammen rund 1 MB. Anzeige im Thron als ovales Bild im Goldrahmen, die Miene (😐 → 😂) bleibt als Abzeichen daneben. Ohne Bild (oder beim Laden) erscheint weiter das Emoji. Kennzeichnung „KI-erzeugt (Canva), CC BY-SA 4.0“ in `THIRD_PARTY.md`.
+4. **Später (nicht in diesem Schritt):** Bilder auch für die 81 Narren. Das wären noch einmal so viele Bilder; erst wenn die Gegner gefallen.
+
+#### Offen für Cornelius
+
+- Passt der Stil des Probebilds (König Nobel), oder lieber noch überzeichneter und lustiger?
+- Sprüche ohne Regelwirkung für die Höflinge: einverstanden?
+
 ### Optik
 
 - **Hintergrund:** Harlekin-Rauten in gedeckten Hoffarben (Weinrot, Senfgelb, Tannengrün) auf Stoff- bzw. Pergamentstruktur. **Kein** Wabern, kein CRT, keine Pixelschrift, kein grüner Filz.

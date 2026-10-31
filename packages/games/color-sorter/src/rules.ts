@@ -1084,7 +1084,7 @@ export function legalMoves(state: SorterState, actor: Actor): SorterMove[] {
   } else if (run.phase === 'play') {
     for (const cards of subsets(handCount, 1, Math.min(MAX_SELECT, handCount))) {
       moves.push({ type: 'play', cards });
-      if (run.current!.discardsLeft > 0) moves.push({ type: 'discard', cards });
+      if (canDiscard(run)) moves.push({ type: 'discard', cards });
     }
     if (handCount > 1) moves.push({ type: 'sortHand', by: 'rank' }, { type: 'sortHand', by: 'color' });
     for (let i = 1; i < handCount; i++) moves.push({ type: 'moveCard', from: i, to: i - 1 });
@@ -1148,7 +1148,7 @@ export function isLegal(state: SorterState, actor: Actor, move: SorterMove): boo
     case 'play':
       return phase === 'play' && validSelection(move.cards, run.hand.length, 1, MAX_SELECT);
     case 'discard':
-      return phase === 'play' && run.current!.discardsLeft > 0 && validSelection(move.cards, run.hand.length, 1, MAX_SELECT);
+      return phase === 'play' && canDiscard(run) && validSelection(move.cards, run.hand.length, 1, MAX_SELECT);
     case 'sortHand':
       return phase === 'play' && (move.by === 'rank' || move.by === 'color');
     case 'moveCard':
@@ -1405,6 +1405,7 @@ function playHand(state: SorterState, run: RunState, indices: number[], events: 
   // Regeln der Bosse, die eine Hand ungültig machen: Sie zählt dann 0.
   const notAllowed =
     (round.boss === 'spider' && played.length !== 5) ||
+    (round.boss === 'donkey' && played.length > 3) ||
     (round.boss === 'snake' && round.playedTypes.includes(result.type)) ||
     (round.boss === 'lion' && round.playedTypes.length > 0 && round.playedTypes[0] !== result.type);
   if (notAllowed) score = 0;
@@ -1482,8 +1483,16 @@ function endHandsOut(state: SorterState, run: RunState, events: GameEvent[]): vo
   loseRound(state, run, events);
 }
 
+/** Darf getauscht werden? Bei Hinze, dem Kater, kostet jedes Tauschen eine Brezel. */
+export function canDiscard(run: RunState): boolean {
+  const round = run.current;
+  if (!round || round.discardsLeft <= 0) return false;
+  return round.boss !== 'tomcat' || run.tokens >= 1;
+}
+
 function discardCards(state: SorterState, run: RunState, indices: number[], events: GameEvent[]): void {
   const round = run.current!;
+  if (round.boss === 'tomcat') run.tokens -= 1;
   const cards = indices.map((i) => run.hand[i]!);
   const ids = new Set(cards.map((c) => c.id));
   run.hand = run.hand.filter((c) => !ids.has(c.id));

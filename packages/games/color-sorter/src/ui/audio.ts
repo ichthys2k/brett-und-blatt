@@ -55,6 +55,8 @@ const BOSS_SOUND_PATHS: Record<string, string> = {
   owl: 'tiere/eule.mp3',
   dragon: 'tiere/drache/12_Der Drache.mp3',
   seaSerpent: 'tiere/schlange.mp3',
+  tomcat: 'tiere/katze.mp3',
+  sloth: 'tiere/faultier/12_Das Faultier.mp3',
 };
 
 export function playBossSound(bossKey: string): void {

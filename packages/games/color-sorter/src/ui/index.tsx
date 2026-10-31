@@ -2,7 +2,7 @@ import { DECK_STYLE_CHOICES, type GameEvent, type SeatId } from '@brett-und-blat
 import { useElementSize, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { handLabel, HAND_TYPES, HANDS } from '../cards';
-import { BOSS_REROLL_PRICE, BOSSES, creatureFor, DECKS, levelTarget, STAKES, TAGS, TOOL_PRICE } from '../content';
+import { BOSS_REROLL_PRICE, BOSSES, courtierFor, DECKS, levelTarget, STAKES, TAGS, TOOL_PRICE } from '../content';
 import type { DropLine } from '../drops';
 import { modDef } from '../mods';
 import { altTag, bonusCap, BONUS_STEP, bossFor, effectiveHandSize, FINAL_LEVEL, freeModSlots, HIDDEN_SCORE, isDuelLevel, modCapacity, ROUND_FACTORS, ROUND_REWARDS, sellValue, tableInfo } from '../rules';
@@ -15,6 +15,7 @@ import { BackContext, CardView, cardDetails, cardTip, DeckStyleContext, isOpen, 
 import { HoverProvider, tipFrom, type ExtraProps } from './Hover';
 import { describeConsumable, describeMod, describeOffer, describePack, describeTag, describeTool, formatMult, formatNumber, handName } from './texts';
 import { playBossSound, playEffect, playHandAnnouncement } from './audio';
+import { portraitUrl } from './portraits';
 import './styles.css';
 
 type Selected =
@@ -131,7 +132,23 @@ function Lives({ lives }: { lives: number }) {
   return <span aria-label={`${lives} ${lives === 1 ? 'Herz' : 'Herzen'}`}>{'❤️'.repeat(Math.max(0, Math.min(lives, 8)))}</span>;
 }
 
-function enemyOf(state: SorterState, run: RunState): { emoji: string; name: string; text?: string } {
+interface Enemy {
+  emoji: string;
+  name: string;
+  text?: string;
+  /** Schlüssel des Porträts (portraits.ts). */
+  portrait?: string;
+}
+
+/** Porträt im Goldrahmen, sonst das Emoji. */
+function Face({ enemy, className }: { enemy: Enemy; className?: string }) {
+  const url = portraitUrl(enemy.portrait);
+  const [broken, setBroken] = useState(false);
+  if (!url || broken) return <>{enemy.emoji}</>;
+  return <img className={`cs-portrait ${className ?? ''}`} src={url} alt="" draggable={false} onError={() => setBroken(true)} />;
+}
+
+function enemyOf(state: SorterState, run: RunState): Enemy {
   const round = run.current;
   if (round?.duel || (run.round === 2 && isDuelLevel(state, run.level)))
     return {
@@ -142,12 +159,13 @@ function enemyOf(state: SorterState, run: RunState): { emoji: string; name: stri
   if (run.round === 2) {
     if (round?.calm) {
       const calm = BOSSES[round.calm]!;
-      return { emoji: calm.emoji, name: calm.name, text: 'Heute gut gelaunt – ohne Marotte.' };
+      return { emoji: calm.emoji, name: calm.name, text: 'Heute gut gelaunt – ohne Marotte.', portrait: `boss-${calm.key}` };
     }
     const boss = BOSSES[round?.boss ?? bossFor(state, run)]!;
-    return { emoji: boss.emoji, name: boss.name, text: boss.text };
+    return { emoji: boss.emoji, name: boss.name, text: boss.text, portrait: `boss-${boss.key}` };
   }
-  return creatureFor(run.level, run.round);
+  const courtier = courtierFor(state.key, run.level, run.round);
+  return { emoji: courtier.emoji, name: courtier.name, text: `„${courtier.saying}“`, portrait: `court-${courtier.key}` };
 }
 
 /** Miene der Herrschaft: je mehr Applaus, desto fröhlicher. */
@@ -387,7 +405,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
       {run.phase === 'play' && !round?.duel && (
         <div className={`cs-enemy ${run.round === 2 ? 'cs-throne' : ''} ${target > 0 && share >= 1 ? 'cs-laugh' : ''}`}>
           <span className="cs-enemy-emoji" aria-hidden="true">
-            {enemy.emoji}
+            <Face enemy={enemy} />
             {target > 0 && (
               <span key={mood} className="cs-mood">
                 {mood}
@@ -816,7 +834,7 @@ function ChoosePanel({ view, run, can, onMove, hint }: { view: SorterState; run:
         Hoftag {run.level} · {ROUND_NAMES[run.round]}
       </p>
       <p className="cs-big" aria-hidden="true">
-        {enemy.emoji}
+        <Face enemy={enemy} className="cs-portrait-big" />
       </p>
       <p className="cs-title">{enemy.name}</p>
       {enemy.text && <p>{enemy.text}</p>}

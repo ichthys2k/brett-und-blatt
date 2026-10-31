@@ -473,6 +473,49 @@ describe('Neue Narren (zweite Truppe)', () => {
   });
 });
 
+describe('Neue Herrschaften und Höflinge (W-017)', () => {
+  const rng = () => new Rng([1, 2, 3, 4]);
+  const base = start();
+  const current = (boss: string, extra: Partial<NonNullable<RunState['current']>> = {}): RunState['current'] => ({
+    target: 1, score: 0, handsLeft: 4, discardsLeft: 3, startDiscards: 3, boss, duel: false, playedTypes: [], firstDone: true, silenced: false, faceDown: [], ...extra,
+  });
+  const pair = [c(5, 'h'), c(5, 's')];
+
+  it('Krähe: die erste gewertete Karte zählt nicht', () => {
+    expect(scoreHand(runWith(base, { current: current('crow') }), pair, [], rng()).score).toBe(17 * 2);
+  });
+
+  it('Esel: mehr als drei Karten bringen nichts, Faultier halbiert die erste Vorführung', () => {
+    const four = [c(5, 'h'), c(5, 's'), c(9, 'h'), c(9, 's')];
+    expect(scoreHand(runWith(base, { current: current('donkey') }), four, [], rng()).score).toBe(0);
+    expect(scoreHand(runWith(base, { current: current('donkey') }), pair, [], rng()).score).toBe(44);
+    expect(scoreHand(runWith(base, { current: current('sloth', { firstDone: false }) }), pair, [], rng()).score).toBe(22);
+    expect(scoreHand(runWith(base, { current: current('sloth') }), pair, [], rng()).score).toBe(44);
+  });
+
+  it('Kater: Tauschen kostet eine Brezel, ohne Brezeln kein Tauschen', () => {
+    let state = start();
+    state = play(state, 0, { type: 'start' });
+    state.runs[0]!.current!.boss = 'tomcat';
+    state.runs[0]!.tokens = 1;
+    state = play(state, 0, { type: 'discard', cards: [0] });
+    expect(state.runs[0]!.tokens).toBe(0);
+    expect(gameModule.isLegal!(state, 0, { type: 'discard', cards: [0] })).toBe(false);
+    expect(gameModule.legalMoves(state, 0).some((m) => m.type === 'discard')).toBe(false);
+  });
+
+  it('Höflinge: je Partie acht verschiedene je Audienz, für alle gleich', async () => {
+    const { courtierFor, COURTIERS } = await import('../src/content');
+    expect(new Set(COURTIERS.map((x) => x.key)).size).toBe(32);
+    const morning = new Set([1, 2, 3, 4, 5, 6, 7, 8].map((level) => courtierFor('abc', level, 0).key));
+    const feast = new Set([1, 2, 3, 4, 5, 6, 7, 8].map((level) => courtierFor('abc', level, 1).key));
+    expect(morning.size).toBe(8);
+    expect(feast.size).toBe(8);
+    expect(courtierFor('abc', 3, 1)).toEqual(courtierFor('abc', 3, 1));
+    expect(courtierFor('abc', 9, 0)).toEqual(courtierFor('abc', 1, 0));
+  });
+});
+
 describe('Ablauf', () => {
   it('Solo beginnt mit 4 T, 8 Karten, 4 Händen, 3-mal Verwerfen', () => {
     let state = start();

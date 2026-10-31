@@ -84,6 +84,8 @@ const BOSS_PENALTY: Record<string, number> = {
   storm: 1.1,
   phoenix: 1.1,
   lizard: 1.1,
+  donkey: 1.3,
+  tomcat: 1.05,
 };
 
 // ---------------------------------------------------------------- Schätzen per Stichprobe
