@@ -1,4 +1,4 @@
-import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
+import { Die3D, useRollCounter, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import {
   CATEGORY_LABELS,
   LOWER_CATEGORIES,
@@ -12,27 +12,10 @@ import './styles.css';
 
 const nameOf = (names: string[], seat: number) => names[seat] ?? `Platz ${seat + 1}`;
 
-/** Augen eines Würfels als Punkte (Positionen im 3×3-Raster). */
-const PIPS: Record<number, number[]> = {
-  1: [4],
-  2: [0, 8],
-  3: [0, 4, 8],
-  4: [0, 2, 6, 8],
-  5: [0, 2, 4, 6, 8],
-  6: [0, 2, 3, 5, 6, 8],
-};
-
-function Die({ value }: { value: number }) {
-  return (
-    <span className="kniffel-pips" aria-hidden="true">
-      {Array.from({ length: 9 }, (_, i) => (
-        <span key={i} className={PIPS[value]?.includes(i) ? 'kniffel-pip' : ''} />
-      ))}
-    </span>
-  );
-}
-
-function Board({ view, legalMoves, onMove, viewer, seatNames }: BoardProps<KniffelState, KniffelMove>) {
+function Board({ view, legalMoves, onMove, viewer, seatNames, events }: BoardProps<KniffelState, KniffelMove>) {
+  const rollKey = useRollCounter(events);
+  // Fünf Gleiche leuchten golden auf.
+  const allSame = view.dice !== null && view.dice.values.every((v) => v === view.dice!.values[0]);
   const myTurn = viewer !== 'spectator' && viewer === view.turn && !view.finished;
   const canRoll = myTurn && legalMoves.some((m) => m.type === 'roll');
   const canHold = myTurn && view.phase === 'roll' && view.rollsLeft > 0 && view.dice !== null;
@@ -100,7 +83,16 @@ function Board({ view, legalMoves, onMove, viewer, seatNames }: BoardProps<Kniff
               aria-pressed={view.dice?.held[i] ?? false}
               aria-label={view.dice ? `Würfel ${i + 1}: ${value}${view.dice.held[i] ? ', gehalten' : ''}` : `Würfel ${i + 1}`}
             >
-              {view.dice ? <Die value={value} /> : null}
+              <Die3D
+                value={view.dice ? value : null}
+                rollKey={rollKey}
+                still={view.dice?.held[i]}
+                held={view.dice?.held[i]}
+                crit={allSame}
+                inviting={canRoll && !view.dice}
+                delayMs={i * 45}
+                className="kniffel-die3d"
+              />
             </button>
           ))}
         </div>

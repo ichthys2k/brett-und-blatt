@@ -62,7 +62,7 @@
 }
 
 .mx-reveal-dice .mx-die {
-  width: 1.6rem;
+  width: 1.4rem;
 }
 
 .mx-reveal-dice .mx-dice {
@@ -95,22 +95,11 @@
 
 .mx-dice {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.9rem;
 }
 
 .mx-die {
   width: clamp(2.6rem, 11vmin, 4.5rem);
-  height: auto;
-}
-
-.mx-die rect {
-  fill: #fff;
-  stroke: var(--color-line);
-  stroke-width: 3;
-}
-
-.mx-die circle {
-  fill: #212529;
 }
 
 .mx-value {

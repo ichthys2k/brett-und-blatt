@@ -1,6 +1,6 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
-import { useEffect, useRef, useState } from 'react';
+import { Die3D, useRollCounter, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { MAEXLE, RANKING, isDouble, isIn, lastAnnouncement, valueOf, type MaexleMove, type MaexleState, type Reveal } from '../rules';
 import './styles.css';
 
@@ -13,24 +13,8 @@ function valueLabel(value: number): string {
   return String(value);
 }
 
-const PIPS: Record<number, [number, number][]> = {
-  1: [[50, 50]],
-  2: [[28, 28], [72, 72]],
-  3: [[28, 28], [50, 50], [72, 72]],
-  4: [[28, 28], [72, 28], [28, 72], [72, 72]],
-  5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
-  6: [[28, 26], [72, 26], [28, 50], [72, 50], [28, 74], [72, 74]],
-};
-
-function Die({ value }: { value: number }) {
-  return (
-    <svg viewBox="0 0 100 100" className="mx-die" role="img" aria-label={`Würfel ${value}`}>
-      <rect x="4" y="4" width="92" height="92" rx="18" />
-      {(PIPS[value] ?? []).map(([cx, cy], i) => (
-        <circle key={i} cx={cx} cy={cy} r="9" />
-      ))}
-    </svg>
-  );
+function Die({ value, crit }: { value: number; crit: boolean }) {
+  return <Die3D value={value} crit={crit} className="mx-die" label={`Würfel ${value}`} />;
 }
 
 function Dice({ dice }: { dice: [number, number] }) {
@@ -38,15 +22,38 @@ function Dice({ dice }: { dice: [number, number] }) {
   const [a, b] = [Math.max(...dice), Math.min(...dice)];
   return (
     <span className="mx-dice">
-      <Die value={a} />
-      <Die value={b} />
+      <Die value={a} crit={a === 2 && b === 1} />
+      <Die value={b} crit={a === 2 && b === 1} />
     </span>
   );
 }
 
-function CupShape() {
+function CupShape({ rollKey }: { rollKey: number }) {
+  const ref = useRef<SVGSVGElement>(null);
+  const last = useRef(rollKey);
+  // Beim Würfeln klappert der Becher kurz hin und her.
+  useLayoutEffect(() => {
+    if (last.current === rollKey) return;
+    last.current = rollKey;
+    const el = ref.current;
+    if (!el || typeof el.animate !== 'function' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const a = el.animate(
+      [
+        { transform: 'none' },
+        { transform: 'translate(-9%, -6%) rotate(-12deg)' },
+        { transform: 'translate(8%, -10%) rotate(11deg)' },
+        { transform: 'translate(-7%, -5%) rotate(-9deg)' },
+        { transform: 'translate(6%, -8%) rotate(8deg)' },
+        { transform: 'translate(-3%, -2%) rotate(-4deg)' },
+        { transform: 'translateY(2%) scaleY(0.96)' },
+        { transform: 'none' },
+      ],
+      { duration: 800, easing: 'ease-in-out' },
+    );
+    return () => a.cancel();
+  }, [rollKey]);
   return (
-    <svg viewBox="0 0 120 110" className="mx-cup-shape" aria-hidden="true">
+    <svg ref={ref} viewBox="0 0 120 110" className="mx-cup-shape" aria-hidden="true">
       <path d="M30 6 H90 L102 104 H18 Z" />
       <path d="M28 26 H92" className="mx-cup-band" />
       <path d="M22 86 H98" className="mx-cup-band" />
@@ -69,7 +76,7 @@ function RevealText({ reveal, names }: { reveal: Reveal; names: string[] }) {
 }
 
 /** Der Becher: gedrückt halten zum Schauen. Beim Loslassen sind die Würfel wieder verdeckt. */
-function Cup({ dice, canPeek, holder, revealed }: { dice: [number, number] | null; canPeek: boolean; holder: string | null; revealed: [number, number] | null }) {
+function Cup({ dice, canPeek, holder, revealed, rollKey }: { dice: [number, number] | null; canPeek: boolean; holder: string | null; revealed: [number, number] | null; rollKey: number }) {
   const [peeking, setPeeking] = useState(false);
   useEffect(() => setPeeking(false), [dice, canPeek]);
   const open = revealed !== null || (peeking && canPeek && dice !== null);
@@ -108,11 +115,11 @@ function Cup({ dice, canPeek, holder, revealed }: { dice: [number, number] | nul
           onBlur={() => hold(false)}
           onContextMenu={(e) => e.preventDefault()}
         >
-          <CupShape />
+          <CupShape rollKey={rollKey} />
         </button>
       ) : (
         <div className={`mx-cup ${revealed ? 'mx-cup-lifted' : ''} ${dice === null && !revealed && holder === null ? 'mx-cup-empty' : ''}`} aria-hidden="true">
-          <CupShape />
+          <CupShape rollKey={rollKey} />
         </div>
       )}
       <p className="mx-cup-caption">{canPeek ? (open ? 'Loslassen zum Verdecken' : 'Gedrückt halten zum Schauen') : holder ? `Becher bei ${holder}` : ' '}</p>
@@ -200,6 +207,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint }: Bo
   const shakeOn = canShake && view.shake && canRoll;
   const shake = useShake(shakeOn, () => onMove({ type: 'roll' }));
   const justRevealed = events.some((e) => e.type === 'revealed');
+  const rollKey = useRollCounter(events);
   const knowsDice = viewer !== 'spectator' && viewer === view.rolledBy && view.dice !== null;
   const holder = view.rolledBy !== null && view.phase !== 'roll' ? nameOf(seatNames, view.turn) : null;
   // Nach dem Aufdecken liegen die Würfel offen, bis jemand neu würfelt.
@@ -236,7 +244,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint }: Bo
         )}
       </div>
 
-      <Cup dice={knowsDice ? view.dice : null} canPeek={knowsDice} holder={holder} revealed={revealedDice} />
+      <Cup dice={knowsDice ? view.dice : null} canPeek={knowsDice} holder={holder} revealed={revealedDice} rollKey={rollKey} />
 
       <div className="mx-controls">
         {canRoll && (

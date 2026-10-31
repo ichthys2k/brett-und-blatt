@@ -1,6 +1,7 @@
 import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { PlayerChip } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { Ceremony } from '../components/Ceremony';
 import { Button } from '../components/controls';
 import { HowToOverlay } from '../components/HowTo';
 import { SoundControl } from '../components/SoundControl';
@@ -93,6 +94,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   /** Hot-Seat mit Geheimnissen: Wer hat zuletzt seine Sicht aufgedeckt? */
   const [revealedFor, setRevealedFor] = useState<SeatId | null>(null);
   const [copiedInvite, setCopiedInvite] = useState(false);
+  /** Siegerehrung geschlossen (gilt bis zur nächsten Partie in diesem Tisch). */
+  const [ceremonyClosed, setCeremonyClosed] = useState(false);
 
   useSyncExternalStore(
     (onChange) => session.subscribe(onChange),
@@ -184,6 +187,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     };
   }, [yourMove]);
 
+  useEffect(() => {
+    if (!result) setCeremonyClosed(false);
+  }, [result]);
+  const reasonText =
+    result?.reason === 'time' ? t('play.reason.time') : result?.reason === 'resign' ? t('play.reason.resign') : result?.reason === 'agreement' ? t('play.reason.agreement') : null;
+
   let status: string;
   if (result) status = resultTitle(result, session, online);
   else if (session.paused) status = t('play.paused');
@@ -213,6 +222,34 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     const question = humans.length > 1 && !online ? t('play.resignConfirmNamed', { name: resignLabel }) : t('play.resignConfirm');
     if (window.confirm(question)) session.resign(resignSeat);
   };
+
+  // Knöpfe nach Partieende – unter dem Spielfeld und in der Siegerehrung.
+  const resultActions = online ? (
+    online.isHost ? (
+      <>
+        {online.onRestart && (
+          <Button variant="primary" onClick={() => online.onRestart?.(true)}>
+            {t('play.rematch')}
+          </Button>
+        )}
+        <Button variant={online.onRestart ? 'secondary' : 'primary'} onClick={online.onLobby}>
+          {t('online.toLobby')}
+        </Button>
+      </>
+    ) : (
+      <p className="text-sm text-muted">{t('online.waitForHost')}</p>
+    )
+  ) : (
+    <>
+      <Button variant="primary" onClick={() => local?.onRestart(true)}>
+        {t('play.rematch')}
+      </Button>
+      <Button onClick={() => navigate(paths.setup(info.id))}>{t('play.settings')}</Button>
+      <Button variant="ghost" onClick={() => navigate(paths.home)}>
+        {t('play.menu')}
+      </Button>
+    </>
+  );
 
   return (
     <div className="mx-auto flex h-dvh max-w-3xl flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:max-w-none side:flex-row side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)]">
@@ -324,20 +361,14 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3">
           {online ? (
             result ? (
-              online.isHost ? (
-                <>
-                  {online.onRestart && (
-                    <Button variant="primary" onClick={() => online.onRestart?.(true)}>
-                      {t('play.rematch')}
-                    </Button>
-                  )}
-                  <Button variant={online.onRestart ? 'secondary' : 'primary'} onClick={online.onLobby}>
-                    {t('online.toLobby')}
-                  </Button>
-                </>
-              ) : (
-                <p className="text-sm text-muted">{t('online.waitForHost')}</p>
-              )
+              <>
+              {ceremonyClosed && (
+                <Button variant="ghost" onClick={() => setCeremonyClosed(false)}>
+                  {t('ceremony.show')}
+                </Button>
+              )}
+              {resultActions}
+            </>
             ) : (
               <>
                 {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
@@ -373,13 +404,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             )
           ) : result ? (
             <>
-              <Button variant="primary" onClick={() => local?.onRestart(true)}>
-                {t('play.rematch')}
-              </Button>
-              <Button onClick={() => navigate(paths.setup(info.id))}>{t('play.settings')}</Button>
-              <Button variant="ghost" onClick={() => navigate(paths.home)}>
-                {t('play.menu')}
-              </Button>
+              {ceremonyClosed && (
+                <Button variant="ghost" onClick={() => setCeremonyClosed(false)}>
+                  {t('ceremony.show')}
+                </Button>
+              )}
+              {resultActions}
             </>
           ) : (
             <>
@@ -428,6 +458,23 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           }
         />
         {showHowTo && <HowToOverlay info={info} onClose={() => setShowHowTo(false)} />}
+        {result && !ceremonyClosed && (
+          <Ceremony
+            result={result}
+            title={status}
+            reason={reasonText}
+            seats={seats.map((seat, index) => ({
+              seat: index,
+              name: seat.name,
+              avatar: (online ? (seat.avatar ?? online.avatars?.[index]) : seat.kind === 'human' ? (storage.loadProfile()?.avatar ?? seat.avatar) : seat.avatar) ?? null,
+              symbol: <ui.SeatSymbol seat={index} seats={seats.length} />,
+              score: ui.seatScore?.(publicView, index) ?? null,
+              you: online ? index === online.yourSeat : seat.kind === 'human',
+            }))}
+            actions={resultActions}
+            onClose={() => setCeremonyClosed(true)}
+          />
+        )}
         {handoverSeat !== null ? (
           <div className="absolute inset-0 grid place-items-center bg-bg px-6 text-center">
             <div className="space-y-3">

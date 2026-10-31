@@ -619,3 +619,162 @@ button.bub-net-point:not(:disabled) {
   background: var(--color-accent);
   color: var(--color-accent-ink);
 }
+
+/* 3D-Würfel (Die3D). Größe über `width`; alles Innere rechnet in cqw relativ zur Würfelbreite. */
+
+.bub-die {
+  --bub-die-color: #fffdf8;
+  --bub-die-pip: #1f2328;
+  --bub-die-edge: rgb(0 0 0 / 0.18);
+  position: relative;
+  display: inline-block;
+  width: 3rem;
+  aspect-ratio: 1;
+  flex: none;
+  container-type: inline-size;
+  vertical-align: middle;
+}
+
+.bub-die-toss,
+.bub-die-wobble,
+.bub-die-cube {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.bub-die-wobble {
+  perspective: 420cqw;
+  transition: translate 0.15s;
+}
+
+.bub-die-cube {
+  will-change: transform;
+}
+
+.bub-die-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  padding: 11cqw;
+  border-radius: 16cqw;
+  background:
+    radial-gradient(circle at 30% 25%, rgb(255 255 255 / 0.55), transparent 60%),
+    var(--bub-die-color);
+  box-shadow:
+    inset 0 0 0 1.5cqw var(--bub-die-edge),
+    inset -5cqw -6cqw 10cqw rgb(0 0 0 / 0.1);
+  backface-visibility: hidden;
+}
+
+.bub-die-face > span {
+  min-width: 0;
+  min-height: 0;
+}
+
+.bub-die-pip {
+  margin: 13%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 35%, color-mix(in srgb, var(--bub-die-pip) 55%, #fff), var(--bub-die-pip) 62%);
+  box-shadow: inset 0 0.8cqw 1.2cqw rgb(0 0 0 / 0.45);
+}
+
+.bub-die-face-1 .bub-die-pip {
+  margin: 4%;
+}
+
+.bub-die-face-1 { transform: rotateY(0deg) translateZ(50cqw); }
+.bub-die-face-6 { transform: rotateY(180deg) translateZ(50cqw); }
+.bub-die-face-3 { transform: rotateY(90deg) translateZ(50cqw); }
+.bub-die-face-4 { transform: rotateY(-90deg) translateZ(50cqw); }
+.bub-die-face-2 { transform: rotateX(90deg) translateZ(50cqw); }
+.bub-die-face-5 { transform: rotateX(-90deg) translateZ(50cqw); }
+
+.bub-die-shadow {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -14%;
+  height: 26%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.32), transparent);
+  pointer-events: none;
+}
+
+.bub-die-flash {
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  border: 4cqw solid #fff3b0;
+  box-shadow:
+    0 0 10cqw #ffd54a,
+    inset 0 0 10cqw #ffd54a;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bub-die-sparks {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bub-die-sparks > span {
+  position: absolute;
+  left: 44%;
+  top: 44%;
+  width: 12cqw;
+  height: 12cqw;
+  background: #ffd54a;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  transform: rotate(var(--bub-spark)) translateY(-82cqw);
+  filter: drop-shadow(0 0 2cqw #fff3b0);
+}
+
+.bub-die[data-held] .bub-die-wobble {
+  translate: 0 -10%;
+}
+
+.bub-die[data-held] .bub-die-face {
+  box-shadow:
+    inset 0 0 0 5cqw var(--color-accent),
+    inset -5cqw -6cqw 10cqw rgb(0 0 0 / 0.1);
+}
+
+.bub-die[data-crit] .bub-die-face {
+  box-shadow:
+    inset 0 0 0 3cqw #e8b923,
+    inset -5cqw -6cqw 10cqw rgb(0 0 0 / 0.1);
+}
+
+.bub-die[data-empty] {
+  opacity: 0.45;
+}
+
+.bub-die[data-inviting] .bub-die-wobble {
+  animation: bub-die-invite 1.8s ease-in-out infinite;
+}
+
+@keyframes bub-die-invite {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  30% {
+    transform: translateY(-9%) rotate(-7deg);
+  }
+  55% {
+    transform: translateY(0) rotate(4deg);
+  }
+  70% {
+    transform: translateY(-3%) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bub-die[data-inviting] .bub-die-wobble {
+    animation: none;
+  }
+}

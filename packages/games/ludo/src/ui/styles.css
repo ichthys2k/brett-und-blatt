@@ -40,29 +40,6 @@
   pointer-events: none;
 }
 
-/* Würfel-Animation */
-@keyframes ludo-dice-roll {
-  0% {
-    transform: rotate(0deg) scale(0.9);
-  }
-  25% {
-    transform: rotate(-15deg) scale(1.08);
-  }
-  50% {
-    transform: rotate(20deg) scale(1.12);
-  }
-  75% {
-    transform: rotate(-10deg) scale(1.05);
-  }
-  100% {
-    transform: rotate(0deg) scale(1);
-  }
-}
-
-.ludo-dice-rolling {
-  animation: ludo-dice-roll 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
 /* Interaktive Steine */
 .ludo-piece {
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
@@ -93,4 +70,33 @@
 .ludo-center-dice:hover {
   transform: scale(1.06);
   filter: brightness(1.08);
+}
+
+/* Brett mit Würfel darüber: Der Würfel sitzt in der Brettmitte (Brett 1100 Einheiten, Würfel 84, Mitte 26 über der Brettmitte). */
+.ludo-board-wrap {
+  position: relative;
+  flex: 1 1 0;
+  width: 100%;
+  min-height: 0;
+  container-type: size;
+}
+
+.ludo-dice-overlay {
+  --ludo-board: min(100cqw, 100cqh);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--ludo-board) * 84 / 1100);
+  aspect-ratio: 1;
+  transform: translate(-50%, calc(-50% - var(--ludo-board) * 26 / 1100));
+  pointer-events: none;
+}
+
+.ludo-die3d {
+  width: 100%;
+  transition: opacity 0.3s;
+}
+
+.ludo-die3d-old {
+  opacity: 0.4;
 }
