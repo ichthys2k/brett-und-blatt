@@ -1,0 +1,187 @@
+/*
+ * Aussehen „Taverne“ (W-026, docs/spiele/taverne-und-drachenspiel.md): überschreibt die
+ * Farb-Tokens und schmückt nur den Rahmen der App. tests/look.test.ts prüft die Kontraste
+ * und erwartet zuerst den hellen, dann den dunklen Token-Block.
+ */
+:root[data-look='tavern'] {
+  --color-bg: #efe3c8;
+  --color-surface: #fbf5e6;
+  --color-surface-2: #e6d8b8;
+  --color-ink: #2e2014;
+  --color-muted: #5f4c36;
+  --color-line: #c9b48d;
+  --color-accent: #2f5d3a;
+  --color-accent-ink: #ffffff;
+  --color-warning: #8a4b14;
+  --color-danger: #a32a1c;
+  --tavern-wood: #5a3b22;
+  --tavern-wood-dark: #3f2a18;
+  --tavern-grain: rgb(90 59 34 / 0.05);
+  --tavern-sign-ink: #f6ead2;
+  --tavern-table-board: #e6d3ad;
+  --tavern-table-cards: #d3dec6;
+  --tavern-table-family: #efdfbd;
+  --tavern-table-math: #f8f1dd;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-look='tavern'] {
+    --color-bg: #1d1510;
+    --color-surface: #2a1f17;
+    --color-surface-2: #38291e;
+    --color-ink: #f2e6d0;
+    --color-muted: #bfae95;
+    --color-line: #4f3c2c;
+    --color-accent: #e6b450;
+    --color-accent-ink: #241708;
+    --color-warning: #eda45a;
+    --color-danger: #ff8a75;
+    --tavern-wood: #6b4728;
+    --tavern-wood-dark: #2f1f12;
+    --tavern-grain: rgb(230 180 80 / 0.03);
+    --tavern-sign-ink: #f6ead2;
+    --tavern-table-board: #2e2015;
+    --tavern-table-cards: #1a2a20;
+    --tavern-table-family: #2a2118;
+    --tavern-table-math: #262019;
+  }
+}
+
+[data-look='tavern'] body {
+  background-image: repeating-linear-gradient(90deg, transparent 0 7px, var(--tavern-grain) 7px 8px);
+}
+
+/* Zierschrift nur für große Überschriften des Rahmens; Spiele und kleine Titel bleiben in der Systemschrift. */
+[data-look='tavern'] :is(h1:not(.bub-room-code), .bub-home h2, .bub-ceremony-title) {
+  font-family: Almendra, Georgia, 'Noto Serif', serif;
+}
+
+/* Fläche um das Spielfeld je Raum. Hell und ruhig, weil viele Spiele direkt darauf schreiben. */
+[data-look='tavern'] .bub-table[data-category='board'] {
+  background: repeating-linear-gradient(0deg, transparent 0 22px, var(--tavern-grain) 22px 24px), var(--tavern-table-board);
+}
+
+[data-look='tavern'] .bub-table[data-category='cards'] {
+  background: var(--tavern-table-cards);
+}
+
+[data-look='tavern'] .bub-table[data-category='family'] {
+  background: repeating-linear-gradient(0deg, transparent 0 22px, var(--tavern-grain) 22px 24px), var(--tavern-table-family);
+}
+
+[data-look='tavern'] .bub-table[data-category='math'] {
+  background: var(--tavern-table-math);
+}
+
+/* Lobby: Tische mit Holzkante, das Tischzeichen auf grünem Filz */
+[data-look='tavern'] .bub-lobby > section.rounded-2xl {
+  border: 2px solid var(--tavern-wood);
+  border-radius: 0.6rem;
+  box-shadow: 0 3px 0 var(--tavern-wood);
+}
+
+[data-look='tavern'] .bub-room-code {
+  width: fit-content;
+  padding: 0.15rem 0.75rem;
+  border: 2px solid var(--tavern-wood);
+  border-radius: 0.5rem;
+  background: #2c5b3c;
+}
+
+/* Siegerehrung: Holz statt Plastik, Wimpel und Blüten statt Konfetti */
+[data-look='tavern'] .bub-ceremony-card {
+  border: 3px solid var(--tavern-wood);
+  border-radius: 14px;
+}
+
+[data-look='tavern'] .bub-podium-step[data-place] .bub-podium-block {
+  background: linear-gradient(var(--tavern-wood), var(--tavern-wood-dark));
+}
+
+[data-look='tavern'] .bub-ceremony-confetti > span {
+  width: 0.85rem;
+  height: 1.15rem;
+  border-radius: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  filter: saturate(0.75);
+}
+
+[data-look='tavern'] .bub-ceremony-confetti > span[data-round] {
+  width: 0.85rem;
+  height: 0.85rem;
+  clip-path: polygon(50% 0, 62% 30%, 95% 25%, 72% 50%, 95% 75%, 62% 70%, 50% 100%, 38% 70%, 5% 75%, 28% 50%, 5% 25%, 38% 30%);
+}
+
+/* Kopf der Startseite als Holzschild */
+[data-look='tavern'] .bub-home-sign {
+  padding: 1rem 1.25rem;
+  border: 2px solid var(--tavern-wood-dark);
+  border-radius: 0.75rem;
+  background: repeating-linear-gradient(0deg, transparent 0 18px, rgb(0 0 0 / 0.1) 18px 19px), linear-gradient(180deg, var(--tavern-wood), var(--tavern-wood-dark));
+  box-shadow: 0 3px 0 var(--tavern-wood-dark);
+  color: var(--tavern-sign-ink);
+}
+
+[data-look='tavern'] .bub-home-sign p {
+  color: inherit;
+}
+
+/* Raum-Überschriften mit Holzleiste */
+[data-look='tavern'] .bub-home-room {
+  padding-bottom: 0.4rem;
+  border-bottom: 3px double var(--tavern-wood);
+}
+
+/* Kacheln mit Holzkante, das Emoji als Wappen */
+[data-look='tavern'] .bub-tile {
+  border: 2px solid var(--tavern-wood);
+  border-radius: 0.6rem;
+  box-shadow: 0 3px 0 var(--tavern-wood);
+}
+
+[data-look='tavern'] .bub-tile-crest {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.75rem;
+  padding-bottom: 0.3rem;
+  border: 2px solid var(--tavern-wood);
+  border-radius: 0.3rem 0.3rem 50% 50% / 0.3rem 0.3rem 45% 45%;
+  background: var(--color-surface-2);
+  font-size: 1.75rem;
+}
+
+/* Kleine Zusätze neben Überschriften bleiben lesbar. */
+[data-look='tavern'] .bub-home h2 .text-xs {
+  font-family: var(--font-sans);
+}
+
+/* Knöpfe wie geprägtes Leder: kantig, mit dunkler Unterkante */
+[data-look='tavern'] .bub-button:is([data-variant='primary'], [data-variant='secondary']) {
+  border-radius: 0.5rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 2px 0 var(--tavern-wood);
+}
+
+[data-look='tavern'] .bub-button[data-variant='secondary'] {
+  border-color: var(--tavern-wood);
+}
+
+[data-look='tavern'] .bub-button:is([data-variant='primary'], [data-variant='secondary']):active:not(:disabled) {
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.25);
+  transform: translateY(1px);
+}
+
+[data-look='tavern'] .bub-filter {
+  border-radius: 0.5rem;
+  border-color: var(--tavern-wood);
+}
+
+/* Stichtisch: echter grüner Filz statt grauer Fläche; die Karten liegen hell darauf. */
+[data-look='tavern'] .bub-trick-table {
+  border: 3px solid var(--tavern-wood);
+  background: radial-gradient(ellipse at center, #33684a, #234a34);
+  box-shadow: inset 0 0 18px rgb(0 0 0 / 0.3);
+}

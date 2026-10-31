@@ -18,7 +18,7 @@ const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
 const onlineGames = games.filter((info) => info.players.max >= 2);
 
 function Page({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto flex min-h-full max-w-xl flex-col gap-5 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.5rem)]">{children}</div>;
+  return <div className="bub-lobby mx-auto flex min-h-full max-w-xl flex-col gap-5 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.5rem)]">{children}</div>;
 }
 
 function Notice({ text, action }: { text: string; action?: React.ReactNode }) {
@@ -287,7 +287,7 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
               {lobby.isPublic ? `🌐 ${t('online.badge.public')}` : `🔒 ${t('online.badge.private')}`}
             </span>
           </div>
-          <h1 className="text-3xl tracking-widest">{room.code}</h1>
+          <h1 className="bub-room-code text-3xl tracking-widest">{room.code}</h1>
         </div>
       </header>
 

@@ -9,13 +9,15 @@
   "durable_objects": {
     "bindings": [
       { "name": "ROOMS", "class_name": "GameRoom" },
-      { "name": "LOBBY_REGISTRY", "class_name": "LobbyRegistry" }
+      { "name": "LOBBY_REGISTRY", "class_name": "LobbyRegistry" },
+      { "name": "BACKUPS", "class_name": "BackupVault" }
     ]
   },
   // Im Gratis-Tarif gibt es nur Durable Objects mit SQLite-Speicher.
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["GameRoom"] },
-    { "tag": "v2", "new_sqlite_classes": ["LobbyRegistry"] }
+    { "tag": "v2", "new_sqlite_classes": ["LobbyRegistry"] },
+    { "tag": "v3", "new_sqlite_classes": ["BackupVault"] }
   ],
   "vars": {
     // Von diesen Seiten aus dürfen Räume erstellt und betreten werden.

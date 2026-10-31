@@ -19,7 +19,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center;
+  overflow-y: auto;
   height: 100%;
   width: 100%;
   gap: 16px;
@@ -32,12 +33,12 @@
   font-size: 1.5rem;
   font-weight: bold;
   margin: 0;
-  color: var(--color-text, #2d3436);
+  color: var(--color-ink);
 }
 
 .ds-phase-subtitle {
   font-size: 0.95rem;
-  color: var(--color-text-muted, #636e72);
+  color: var(--color-muted);
   margin: 0;
   max-width: 500px;
 }

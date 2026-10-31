@@ -1,11 +1,14 @@
 import type { Options } from '@brett-und-blatt/engine';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { renderSVG } from 'uqr';
 import { BOSS_LIST, DECKS, DREAMS, NAILS, SPELLS, TOOLS } from '../content';
 import { CHALLENGES, DROPS_FOR_WIN, DROPS_PER_DUEL, DROPS_PER_LEVEL } from '../drops';
 import { MODS, RARITY_INFO } from '../mods';
 import type { Rarity } from '../types';
 import { ATELIER_BOX_PRICE, boxOdds, CARD_BACKS, THEMES, UNLOCK_KIND_NAMES, UNLOCKABLES, unlockLabel, type CosmeticDef, type Unlockable, type UnlockKind } from '../unlocks';
 import { buy, buyBox, equip, exportCode, importCode, useProgress, type AlbumKind } from './progress';
+import { clearSyncError, connectSync, connectWithPasskey, createPasskey, createSync, disconnectSync, passkeySupport, scheduleSync, syncAvailable, syncLink, syncNow, takeLinkCode, useSyncState } from './sync';
+import { formatCode } from './syncCrypto';
 import { formatNumber } from './texts';
 
 type Tab = 'atelier' | 'album' | 'save';
@@ -333,16 +336,173 @@ function Album() {
   );
 }
 
-function SaveTab() {
+function QrCode({ text }: { text: string }) {
+  const svg = useMemo(() => renderSVG(text, { border: 2, whiteColor: '#ffffff', blackColor: '#1f2328' }), [text]);
+  return <div role="img" aria-label="QR-Code mit dem Sicherungscode" className="cs-qr" dangerouslySetInnerHTML={{ __html: svg }} />;
+}
+
+function timeText(ms: number): string {
+  const d = new Date(ms);
+  const today = new Date().toDateString() === d.toDateString();
+  return today ? `heute, ${d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr` : d.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+/** Sicherung über den Spieleserver: Code anlegen oder eingeben, QR-Code, Passkey (W-018). */
+function CloudSync({ linkCode }: { linkCode?: string | null }) {
+  const sync = useSyncState();
+  const [input, setInput] = useState(linkCode ? formatCode(linkCode) : '');
+  const [passkey, setPasskey] = useState<'yes' | 'maybe' | 'no'>('no');
+  const [copied, setCopied] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  useEffect(() => {
+    void passkeySupport().then(setPasskey);
+    return () => clearSyncError();
+  }, []);
+  useEffect(() => {
+    if (sync.code) void syncNow();
+    // nur beim Öffnen
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const error = sync.error && <p className="cs-warn" role="alert">{sync.error}</p>;
+
+  const connect = (
+    <>
+      <input
+        className="cs-sync-input"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="XXXX-XXXX-XXXX-XXXX"
+        autoCapitalize="characters"
+        autoComplete="off"
+        spellCheck={false}
+        aria-label="Sicherungscode eingeben"
+      />
+      <button type="button" className={`cs-btn ${linkCode ? 'cs-btn-primary' : ''}`} disabled={sync.busy || !input.trim()} onClick={() => void connectSync(input)}>
+        {sync.busy && linkCode ? 'Einen Moment …' : 'Mit Code verbinden'}
+      </button>
+    </>
+  );
+  const create = (
+    <button type="button" className={`cs-btn ${linkCode ? '' : 'cs-btn-primary'}`} disabled={sync.busy} onClick={() => void createSync()}>
+      {sync.busy && !linkCode ? 'Einen Moment …' : 'Sicherungscode anlegen'}
+    </button>
+  );
+
+  if (!sync.code)
+    return (
+      <section className="cs-panel">
+        <strong>☁️ Auf mehreren Geräten spielen</strong>
+        {linkCode ? (
+          <>
+            <p className="cs-small-text">Der Sicherungscode aus dem QR-Code ist eingetragen. Verbinde dieses Gerät, dann kommt dein Fortschritt hierher und wird mit dem Stand auf diesem Gerät zusammengeführt.</p>
+            {connect}
+            <p className="cs-small-text">Oder eine neue, eigene Sicherung beginnen:</p>
+            {create}
+          </>
+        ) : (
+          <>
+            <p className="cs-small-text">
+              Lege einen Sicherungscode an. Dein Fortschritt wird damit schon in diesem Browser verschlüsselt und auf dem Spieleserver abgelegt. Mit dem Code
+              holst du ihn auf jedes andere Gerät, danach gleichen sich die Geräte nach jedem Hoftag von selbst ab. Kein Konto, kein Name.
+            </p>
+            {create}
+            <p className="cs-small-text">Du hast schon einen Code von einem anderen Gerät? Dann wird dein Fortschritt hier mit der Sicherung zusammengeführt.</p>
+            {connect}
+          </>
+        )}
+        {passkey !== 'no' && (
+          <button type="button" className="cs-btn" disabled={sync.busy} onClick={() => void connectWithPasskey()}>
+            🔑 Mit Passkey holen
+          </button>
+        )}
+        {error}
+      </section>
+    );
+
+  const link = syncLink(sync.code);
+  return (
+    <section className="cs-panel">
+      <strong>☁️ Verbunden</strong>
+      <p className="cs-small-text">Dein Sicherungscode:</p>
+      <code className="cs-sync-code">{formatCode(sync.code)}</code>
+      <p className="cs-small-text">
+        Gib ihn auf dem anderen Gerät unter „💾 Sichern“ ein oder scanne dort den QR-Code. Bewahre ihn gut auf: Ohne Code lässt sich die Sicherung nicht öffnen, auch
+        nicht vom Betreiber.
+      </p>
+      <div className="cs-sync-row">
+        <button
+          type="button"
+          className="cs-btn"
+          onClick={() => {
+            navigator.clipboard?.writeText(formatCode(sync.code!)).then(
+              () => setCopied(true),
+              () => setCopied(false),
+            );
+          }}
+        >
+          {copied ? '✓ Kopiert' : 'Code kopieren'}
+        </button>
+        <button type="button" className="cs-btn" onClick={() => setShowQr((v) => !v)} aria-expanded={showQr}>
+          {showQr ? 'QR-Code ausblenden' : 'QR-Code zeigen'}
+        </button>
+      </div>
+      {showQr && <QrCode text={link} />}
+      <p className="cs-small-text">
+        {sync.busy ? 'Gleiche ab …' : sync.lastSync ? `Zuletzt abgeglichen: ${timeText(sync.lastSync)}` : 'Noch nicht abgeglichen.'}
+      </p>
+      <button type="button" className="cs-btn" disabled={sync.busy} onClick={() => void syncNow()}>
+        🔄 Jetzt abgleichen
+      </button>
+      {passkey !== 'no' &&
+        (sync.passkey ? (
+          <p className="cs-small-text">🔑 Passkey angelegt: Auf einem neuen Gerät genügt „Mit Passkey holen“, wenn dein Passkey-Speicher (z. B. iCloud, Google, Windows) dort mitkommt.</p>
+        ) : (
+          <>
+            <button type="button" className="cs-btn" disabled={sync.busy} onClick={() => void createPasskey()}>
+              🔑 Passkey anlegen
+            </button>
+            <p className="cs-small-text">Mit Passkey holst du den Code später per Fingerabdruck, Gesicht oder PIN, statt ihn abzutippen.</p>
+          </>
+        ))}
+      {confirmLeave ? (
+        <div className="cs-sync-row">
+          <span className="cs-small-text">Dieses Gerät trennen? Der Fortschritt hier und die Sicherung bleiben.</span>
+          <button
+            type="button"
+            className="cs-btn"
+            onClick={() => {
+              disconnectSync();
+              setConfirmLeave(false);
+            }}
+          >
+            Trennen
+          </button>
+          <button type="button" className="cs-btn" onClick={() => setConfirmLeave(false)}>
+            Abbrechen
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="cs-btn cs-btn-quiet" onClick={() => setConfirmLeave(true)}>
+          Dieses Gerät trennen
+        </button>
+      )}
+      {error}
+    </section>
+  );
+}
+
+function SaveTab({ linkCode }: { linkCode?: string | null }) {
   const [code] = useState(() => exportCode());
   const [input, setInput] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   return (
     <>
+      {syncAvailable() && <CloudSync linkCode={linkCode} />}
       <section className="cs-panel">
-        <strong>📤 Sichern</strong>
-        <p className="cs-small-text">Dein Fortschritt liegt nur auf diesem Gerät. Mit diesem Text nimmst du ihn auf ein anderes Gerät mit.</p>
+        <strong>📤 Sicherungstext</strong>
+        <p className="cs-small-text">Ohne Spieleserver: Mit diesem Text nimmst du deinen Fortschritt von Hand auf ein anderes Gerät mit.</p>
         <textarea className="cs-code" readOnly value={code} rows={3} onFocus={(e) => e.currentTarget.select()} aria-label="Sicherungs-Text" />
         <button
           type="button"
@@ -376,7 +536,7 @@ function SaveTab() {
 }
 
 /** Narrenschule (Atelier), Hofchronik (Album) und Sichern als Fenster über allem. */
-export function Atelier({ onClose, start = 'atelier' }: { onClose: () => void; start?: Tab }) {
+export function Atelier({ onClose, start = 'atelier', linkCode }: { onClose: () => void; start?: Tab; linkCode?: string | null }) {
   const progress = useProgress();
   const [tab, setTab] = useState<Tab>(start);
   useEffect(() => {
@@ -384,6 +544,8 @@ export function Atelier({ onClose, start = 'atelier' }: { onClose: () => void; s
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+  // Beim Schließen der Narrenschule (Käufe, Schmuck) mit der Sicherung abgleichen.
+  useEffect(() => () => scheduleSync(), []);
   return (
     <div className="cs-modal" role="dialog" aria-modal="true" aria-label="Narrenschule">
       <div className="cs-modal-inner">
@@ -412,7 +574,7 @@ export function Atelier({ onClose, start = 'atelier' }: { onClose: () => void; s
         <div className="cs-modal-body">
           {tab === 'atelier' && <AtelierShop />}
           {tab === 'album' && <Album />}
-          {tab === 'save' && <SaveTab />}
+          {tab === 'save' && <SaveTab linkCode={linkCode} />}
         </div>
       </div>
     </div>
@@ -422,7 +584,9 @@ export function Atelier({ onClose, start = 'atelier' }: { onClose: () => void; s
 /** Abschnitt in der Einrichtung: Glöckchen, Narrenschule, Hinweis auf gesperrte Narrenkappen. */
 export function SetupExtra({ options }: { options: Options; seats: number }) {
   const progress = useProgress();
-  const [open, setOpen] = useState(false);
+  // Gescannter QR-Code (Adresse mit „sicherung=…“): Narrenschule gleich bei „Sichern“ öffnen.
+  const [linkCode] = useState(() => (typeof window === 'undefined' ? null : takeLinkCode()));
+  const [open, setOpen] = useState(linkCode !== null);
   const deck = DECKS.find((d) => d.key === options.deck);
   const deckLocked = options.pool !== 'all' && !!deck && UNLOCKABLES.some((u) => u.id === `deck:${deck.key}`) && !(options.pool === 'mine' && progress.unlocked.includes(`deck:${deck.key}`));
   return (
@@ -435,7 +599,7 @@ export function SetupExtra({ options }: { options: Options; seats: number }) {
       <button type="button" className="cs-btn" onClick={() => setOpen(true)}>
         Narrenschule und Hofchronik öffnen
       </button>
-      {open && <Atelier onClose={() => setOpen(false)} />}
+      {open && <Atelier onClose={() => setOpen(false)} start={linkCode ? 'save' : 'atelier'} linkCode={linkCode} />}
     </section>
   );
 }

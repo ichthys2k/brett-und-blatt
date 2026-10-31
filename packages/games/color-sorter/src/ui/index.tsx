@@ -9,6 +9,7 @@ import { altTag, bonusCap, BONUS_STEP, bossFor, effectiveHandSize, FINAL_LEVEL, 
 import { CARD_BACKS } from '../unlocks';
 import { Atelier, SetupExtra } from './Atelier';
 import { award, discover, readCardLook, useProgress, wasAwarded, withUnlocks, writeCardLook, type CardLook } from './progress';
+import { scheduleSync } from './sync';
 import { previewHand, type ScoreStep } from '../scoring';
 import type { Card, HandType, Offer, RunState, SorterMove, SorterState, ViewCard } from '../types';
 import { BackContext, CardView, cardDetails, cardTip, DeckStyleContext, isOpen, Tile } from './Card';
@@ -357,6 +358,12 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   useEffect(() => {
     if (seat !== null) discover(view, seat);
   }, [view, seat]);
+  // Abgleich mit der Sicherung (W-018): beim Öffnen, am Ende jedes Hoftags und nach der Partie.
+  const level = run?.level;
+  const finished = !!view.winners;
+  useEffect(() => {
+    scheduleSync(level === undefined ? 500 : 1500);
+  }, [level, finished]);
   useEffect(() => {
     if (!view.winners) return;
     const fresh = award(view, [...localSeats.current]);
