@@ -22,6 +22,23 @@ export type DeathrattleEffect =
   | 'explode_1'
   | 'heal_hero_2';
 
+/** Wirkung einer Zauberkarte (eigene Zauber, 31.10.2026). */
+export type SpellEffect =
+  | 'lightning' // 3 Schaden an einem gegnerischen Ziel
+  | 'honey' // eigenes Tier +2/+2
+  | 'tailwind' // eigenes Tier +1 Angriff und sofort angriffsbereit
+  | 'soapBubble' // eigenes Tier bekommt eine Schutzblase
+  | 'growth' // alle eigenen Tiere +1/+1
+  | 'summerRain' // Held +3, alle eigenen Tiere voll geheilt
+  | 'clover' // zwei Karten ziehen
+  | 'flood' // gegnerisches Tier zurück auf die Hand
+  | 'whirlwind'; // 2 Schaden an allen gegnerischen Tieren
+
+/** Wen ein Zauber treffen darf. */
+export type SpellTargeting = 'none' | 'enemyAny' | 'enemyMinion' | 'ownMinion';
+
+export type SpellTarget = { kind: 'minion'; id: string } | { kind: 'hero' };
+
 export interface CardDefinition {
   id: string;
   name: string;
@@ -32,6 +49,11 @@ export interface CardDefinition {
   quote: string;
   sound?: string;
   isSpell?: boolean;
+  /** Zauberkarte: Wirkung und Ziel (die Sternschnuppe hat keine). */
+  spell?: SpellEffect;
+  targeting?: SpellTargeting;
+  /** Kurzer Regeltext der Zauberkarte. */
+  text?: string;
   abilities?: Ability[];
 }
 
@@ -117,6 +139,6 @@ export interface DrachenspielView {
 export type DrachenspielMove =
   | { type: 'chooseDeck'; deck: DeckThemeId }
   | { type: 'mulligan'; discardIndices: number[] }
-  | { type: 'playCard'; handIndex: number }
+  | { type: 'playCard'; handIndex: number; target?: SpellTarget }
   | { type: 'attack'; attackerId: string; target: { kind: 'minion'; id: string } | { kind: 'hero' } }
   | { type: 'endTurn' };

@@ -85,4 +85,25 @@ export interface DrachenspielState {
 
 ## Offene Punkte
 
-- Optionale Zauberkarten und Heldenkräfte (Stufe D).
+- ✅ Zauberkarten (31.10.2026, W-004, siehe unten). Offen: Heldenkräfte (Stufe D), eigener Zauberklang (derzeit `stapel-fertig`, Auswahl durch Cornelius).
+
+## Zauberkarten (31.10.2026, W-004, `ruleVersion` 2)
+
+Neun eigene Naturzauber (`SPELLS_DB` in `src/cards.ts`, Kennungen `s_…`), einmalig, gehen nach dem Wirken aus dem Spiel. Option „Zauberkarten“ (Standard an): Jedes Themendeck tauscht drei Tierpaare gegen drei Zauberpaare (`spellSwap` in `src/decks.ts`), das gemischte Deck hat 24 Tiere und 6 Zauber.
+
+| Zauber | Mana | Ziel | Wirkung | Decks |
+|---|---|---|---|---|
+| ⚡ Blitzschlag | 2 | gegnerisches Tier oder Held | 3 Schaden | Wildnis, Krabbeltiere |
+| 🍯 Honigtopf | 1 | eigenes Tier | +2/+2 | Wald, Bauernhof |
+| 🍃 Rückenwind | 1 | eigenes Tier | +1 Angriff, darf sofort angreifen | Wildnis, Krabbeltiere |
+| 🫧 Seifenblase | 1 | eigenes Tier | Schutzblase | Meer |
+| 🌱 Wachstumsschub | 3 | – | alle eigenen Tiere +1/+1 | Wald, Bauernhof |
+| 🌦️ Sommerregen | 2 | – | Held +3 Leben, eigene Tiere ganz geheilt | Meer, Bauernhof |
+| 🍀 Glücksklee | 2 | – | zwei Karten ziehen | Wald, Krabbeltiere |
+| 🌊 Flutwelle | 3 | gegnerisches Tier | zurück auf die Hand des Besitzers (Spielsteine und volle Hand: weg) | Meer |
+| 🌪️ Wirbelsturm | 4 | – | 2 Schaden an allen gegnerischen Tieren | Wildnis |
+
+- **Zug:** `{ type: 'playCard', handIndex, target? }`; `legalMoves` liefert je Ziel einen Zug (`spellTargets`). Versteckte Gegner sind kein Ziel, Schutzblasen fangen Blitzschlag und Wirbelsturm ab. Ereignis `spellCast`.
+- **Oberfläche:** Zauberkarten violett mit Regeltext. Zauber ohne Ziel antippen oder aufs Feld ziehen; Zauber mit Ziel antippen (Hinweisleiste mit „Abbrechen“) und das leuchtende Ziel antippen – oder die Karte direkt aufs Ziel ziehen.
+- **Bots:** Leicht zufällig, mittel nach Kosten, schwer bewertet jeden Zug samt Ziel mit `evaluate`.
+

@@ -3,7 +3,7 @@ import { usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/u
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { CARDS_DB, STAR_CARD } from '../cards';
 import { DECK_THEMES, DECK_THEME_IDS } from '../decks';
-import type { DeckThemeId, DrachenspielMove, DrachenspielView, Minion } from '../types';
+import type { DeckThemeId, DrachenspielMove, DrachenspielView, Minion, SpellTarget } from '../types';
 import { playCreatureAudio } from './audio';
 import { getCardFullTitle, getCardTraits, getMinionFullTitle, getMinionTraits, type TraitInfo } from './traits';
 import './styles.css';
@@ -151,6 +151,8 @@ function Board({
   events,
 }: BoardProps<DrachenspielView, DrachenspielMove>) {
   const [selectedAttackerId, setSelectedAttackerId] = useState<string | null>(null);
+  /** Handkarte eines Zaubers mit Ziel, der gerade auf sein Ziel wartet. */
+  const [selectedSpell, setSelectedSpell] = useState<number | null>(null);
   const [mulliganDiscard, setMulliganDiscard] = useState<Set<number>>(new Set());
   const [effects, setEffects] = useState<
     Array<{
@@ -501,6 +503,23 @@ function Board({
     onDrop: (item, targetId) => {
       if (!targetId) return false;
       if (item.kind === 'card') {
+        const def = CARDS_DB[me.hand?.[item.handIndex]?.defId ?? ''];
+        if (def?.spell && def.targeting !== 'none') {
+          // Zauber mit Ziel: aufs Ziel ziehen.
+          const move = legalMoves.find(
+            (m) =>
+              m.type === 'playCard' &&
+              m.handIndex === item.handIndex &&
+              m.target !== undefined &&
+              (targetId === 'enemy-hero' ? m.target.kind === 'hero' : m.target.kind === 'minion' && `minion-${m.target.id}` === targetId),
+          );
+          if (move) {
+            onMove(move);
+            setSelectedSpell(null);
+            return true;
+          }
+          return false;
+        }
         if (targetId === 'battlefield') {
           onMove({ type: 'playCard', handIndex: item.handIndex });
           return true;
@@ -542,7 +561,29 @@ function Board({
     ? legalMoves.filter((m) => m.type === 'attack' && m.attackerId === effectiveAttackerId)
     : [];
 
-  const canTargetHero = validAttacks.some((m) => m.type === 'attack' && m.target.kind === 'hero');
+  // Zauber mit Ziel: ausgewählt oder gerade gezogen.
+  const draggedCardIdx = dragState.isDragging && dragState.item?.kind === 'card' ? dragState.item.handIndex : null;
+  const activeSpellIdx = draggedCardIdx ?? selectedSpell;
+  const activeSpellDef = activeSpellIdx !== null ? CARDS_DB[me.hand?.[activeSpellIdx]?.defId ?? ''] : undefined;
+  const spellMoves =
+    activeSpellIdx !== null && activeSpellDef?.spell
+      ? legalMoves.filter((m) => m.type === 'playCard' && m.handIndex === activeSpellIdx && m.target !== undefined)
+      : [];
+  const spellTargetsHero = spellMoves.some((m) => m.type === 'playCard' && m.target?.kind === 'hero');
+  const spellTargetIds = new Set(
+    spellMoves.flatMap((m) => (m.type === 'playCard' && m.target?.kind === 'minion' ? [m.target.id] : [])),
+  );
+  const castOn = (target: SpellTarget) => {
+    const move = spellMoves.find(
+      (m) => m.type === 'playCard' && m.target && (target.kind === 'hero' ? m.target.kind === 'hero' : m.target.kind === 'minion' && m.target.id === target.id),
+    );
+    if (!move) return false;
+    onMove(move);
+    setSelectedSpell(null);
+    return true;
+  };
+
+  const canTargetHero = validAttacks.some((m) => m.type === 'attack' && m.target.kind === 'hero') || spellTargetsHero;
   const targetableMinionIds = new Set(
     validAttacks
       .filter((m) => m.type === 'attack' && m.target.kind === 'minion')
@@ -554,6 +595,10 @@ function Board({
   );
 
   const handleMinionClick = (minion: Minion, isOwner: boolean) => {
+    if (selectedSpell !== null && spellTargetIds.has(minion.id)) {
+      castOn({ kind: 'minion', id: minion.id });
+      return;
+    }
     if (isOwner) {
       if (minion.canAttack && !minion.hasAttacked) {
         setSelectedAttackerId((prev) => (prev === minion.id ? null : minion.id));
@@ -574,6 +619,10 @@ function Board({
   };
 
   const handleHeroClick = () => {
+    if (selectedSpell !== null && spellTargetsHero) {
+      castOn({ kind: 'hero' });
+      return;
+    }
     if (selectedAttackerId && canTargetHero) {
       onMove({
         type: 'attack',
@@ -665,7 +714,7 @@ function Board({
               const dmg = effects.find((e) => e.targetKind === 'minion' && e.targetId === m.id && e.type === 'damage')?.amount;
               const heal = effects.find((e) => e.targetKind === 'minion' && e.targetId === m.id && e.type === 'heal')?.amount;
               const atkVector = attacking.get(m.id);
-              const isTargetable = !item.isDying && targetableMinionIds.has(m.id);
+              const isTargetable = !item.isDying && (targetableMinionIds.has(m.id) || spellTargetIds.has(m.id));
               const isImpacted = impactedIds.has(m.id);
               return (
                 <MinionView
@@ -719,7 +768,7 @@ function Board({
                   isOwner={true}
                   canAttack={canAttack}
                   isSelected={!item.isDying && (selectedAttackerId === m.id || draggedMinionId === m.id)}
-                  isTargetable={false}
+                  isTargetable={!item.isDying && spellTargetIds.has(m.id)}
                   attackVector={atkVector}
                   damageAmount={dmg}
                   healAmount={heal}
@@ -727,6 +776,8 @@ function Board({
                   isImpacted={isImpacted}
                   onClick={() => !item.isDying && handleMinionClick(m, true)}
                   onPointerDown={minionDragBind?.onPointerDown}
+                  dropTarget={!item.isDying && spellTargetIds.has(m.id) ? `minion-${m.id}` : undefined}
+                  dropActive={!item.isDying && dragState.isDragging && dragState.targetId === `minion-${m.id}` && spellTargetIds.has(m.id)}
                   isDragged={isMinionDragged}
                   isSnapping={dragState.snapping && isMinionDragged}
                   dragTransform={dragTransform}
@@ -778,12 +829,22 @@ function Board({
             onClick={() => {
               onMove({ type: 'endTurn' });
               setSelectedAttackerId(null);
+              setSelectedSpell(null);
             }}
           >
             {isMyTurn ? 'Zug beenden 💎' : 'Warten...'}
           </button>
         </div>
       </div>
+
+      {selectedSpell !== null && activeSpellDef?.spell && (
+        <div className="ds-spell-hint" role="status">
+          {activeSpellDef.emoji} {activeSpellDef.name}: Wähle ein Ziel – {activeSpellDef.text}
+          <button type="button" className="ds-btn" onClick={() => setSelectedSpell(null)}>
+            Abbrechen
+          </button>
+        </div>
+      )}
 
       {/* Player Hand */}
       <div className="ds-hand">
@@ -800,7 +861,7 @@ function Board({
           return (
             <div
               key={card.uid}
-              className={`ds-card bub-animate-deal ${isPlayable ? 'playable' : ''} ${isCardDragged ? 'bub-dragging' : ''} ${dragState.snapping && isCardDragged ? 'bub-snapping' : ''}`}
+              className={`ds-card bub-animate-deal ${def.spell ? 'ds-card-spell' : ''} ${selectedSpell === idx ? 'ds-card-selected' : ''} ${isPlayable ? 'playable' : ''} ${isCardDragged ? 'bub-dragging' : ''} ${dragState.snapping && isCardDragged ? 'bub-snapping' : ''}`}
               style={{
                 animationDelay: `${idx * 40}ms`,
                 transform: cardDragTransform,
@@ -809,7 +870,14 @@ function Board({
                 touchAction: isPlayable ? 'none' : undefined,
               }}
               onClick={() => {
-                if (isPlayable) onMove({ type: 'playCard', handIndex: idx });
+                if (!isPlayable) return;
+                if (def.spell && def.targeting !== 'none') {
+                  // Zauber mit Ziel: erst auswählen, dann Ziel antippen.
+                  setSelectedAttackerId(null);
+                  setSelectedSpell((prev) => (prev === idx ? null : idx));
+                  return;
+                }
+                onMove({ type: 'playCard', handIndex: idx });
               }}
               onPointerDown={cardDragBind?.onPointerDown}
               role={isPlayable ? 'button' : undefined}
@@ -829,6 +897,7 @@ function Board({
                 <span className="ds-card-emoji">{def.emoji}</span>
                 <span className="ds-card-name">{def.name}</span>
               </div>
+              {def.spell && <span className="ds-card-spelltext">{def.text}</span>}
               {!def.isSpell && (
                 <div className="ds-minion-stats">
                   <span className="ds-stat-atk">{def.attack}</span>
@@ -858,6 +927,7 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
     minionLeft: 'leben-weg',
     bubblePopped: 'stein-heraus',
     starPlayed: 'stapel-fertig',
+    spellCast: 'stapel-fertig',
     mulliganDone: 'mischen',
   },
   seatLabel: (seat) => LABELS[seat] ?? `Platz ${seat + 1}`,
