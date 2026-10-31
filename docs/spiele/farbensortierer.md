@@ -672,6 +672,39 @@ Neu in der Engine wird dafür vermutlich nur wenig nötig: gleichzeitige Züge u
 - Planungsnotiz `~/code/emojiclicker/docs/farbsortierer-expansion.md` auswerten.
 - ✅ Vorziehen: aus Etappe 6 vorgezogen und am 26.10.2026 fertig.
 
+## Fortschritt geräteübergreifend sichern (W-018, Vergleich 31.10.2026)
+
+Stand 31.10.2026. Heute liegen Glöckchen, Freischaltungen, Schmuck und Hofchronik nur im Browser (`localStorage`), dazu gibt es den Sicherungstext `FS1:…` zum Kopieren. Gesucht: ein Weg, den Fortschritt abgesichert auf ein anderes Gerät mitzunehmen.
+
+Was gesichert werden muss, ist klein (unter 5 KB) und nicht persönlich: Zahlen und Schlüssel, kein Name, keine E-Mail. Das spricht für die schlankeste Lösung.
+
+### Die Wege im Überblick
+
+| | A Sync-Code (ohne Konto) | B Passkey (ohne Konto) | C Microsoft 365 | D Google |
+|---|---|---|---|---|
+| Wie | Spiel zeigt einmal einen Code (z. B. 6 Emojis + 6 Zeichen). Auf dem anderen Gerät eingeben, fertig. | Gerät legt einen Passkey an (Fingerabdruck, Gesicht, PIN). Der Passkey reist über iCloud/Google/Windows mit. | Anmelden mit Schul- oder Privatkonto, Ablage im versteckten App-Ordner von OneDrive. | Anmelden mit Google-Konto, Ablage im versteckten App-Ordner von Google Drive. |
+| Wo liegen die Daten | Auf unserem Spieleserver (Cloudflare, EU), **im Browser verschlüsselt**; der Server sieht nur Datensalat. | Wie A, Schlüssel kommt aus dem Passkey. | Im OneDrive der Person. Unser Server speichert nichts. | Im Drive der Person. Unser Server speichert nichts. |
+| Personenbezug | keiner (zufälliger Code) | keiner (anonyme Kennung) | Microsoft-Konto | Google-Konto |
+| Datenschutz und Kinder | sehr gut, keine Einwilligung nötig | sehr gut | Schulkonten: oft Admin-Freigabe nötig; Datenschutzerklärung und ggf. Einwilligung | Google-Konten erst ab 16 ohne Eltern; Datenschutzerklärung erweitern |
+| Code verloren | Fortschritt weg (wie heute) | Passkey ist meist mitgesichert | Konto weg = Daten weg | wie C |
+| Aufwand | klein: zwei Endpunkte im Worker, Verschlüsselung mit Web Crypto, ein Dialog | mittel: WebAuthn mit PRF-Erweiterung, noch nicht in allen Browsern | mittel bis groß: App-Registrierung in Entra ID, MSAL, Graph-API | mittel: Google-Cloud-Projekt, OAuth-Zustimmungsbildschirm, Drive-API, ggf. Prüfung durch Google |
+| Laufende Kosten | Gratis-Tarif reicht | wie A | keine | keine |
+| Online-Pflicht | nur zum Sichern und Laden | wie A | wie A | wie A |
+
+### Einschätzung
+
+- **A Sync-Code** passt am besten zu Brett & Blatt: ohne Konto, ohne personenbezogene Daten, für Schulkinder unbedenklich, und er nutzt den vorhandenen Spieleserver. Ablauf: „Sichern“ erzeugt einen Code, verschlüsselt den Fortschritt im Browser mit einem Schlüssel aus dem Code (Web Crypto, AES-GCM), schickt nur den verschlüsselten Block an den Server (`PUT /sicherung/<Kennung>`). Auf dem anderen Gerät Code eingeben, laden, entschlüsseln. Danach gleicht das Spiel bei jedem Hoftag-Ende automatisch ab (neuere Glöckchenstände gewinnen). Der Code lässt sich zusätzlich als QR-Code zeigen, wie beim Raumcode.
+- **B Passkey** wäre die bequemste Form (kein Code zum Abschreiben), aber die nötige PRF-Erweiterung fehlt noch in Teilen von Firefox und älteren Geräten. Gut als zweiter Schritt auf A, mit A als Rückfall.
+- **C und D** lohnen sich nur, wenn ohnehin eine Anmeldung gewünscht ist (z. B. später für Ranglisten oder Klassenräume über Teams). Für den Fortschritt allein sind sie zu schwer und bringen Datenschutzfragen bei Minderjährigen.
+
+### Vorschlag
+
+A umsetzen (geschätzt ein Arbeitsschritt: Worker-Endpunkt, Verschlüsselung, Dialog in der Narrenschule, Tests), die Datenschutzerklärung um zwei Sätze ergänzen. B später prüfen. C und D zurückstellen.
+
+### Offen für Cornelius
+
+- Einverstanden mit A als Weg, und soll das gleich in dieser Etappe kommen oder als eigener Eintrag?
+
 ## Bedienung am Großbildschirm (29.10.2026)
 
 - **Bühnen-Layout** (`cs-bigmode`, ab 900 × 540 px Brettgröße): links Thron und Info, oben die Narrenbank (große Kacheln, Tasche rechts), in der Mitte die Bühne (Wertungsvorschau, Ablagefläche zum Vorführen), unten die Hand. Ab 1500 px Breite stehen Vorführen und Tauschen links und rechts neben der Hand, darunter unter ihr (`cs-bigtight`), damit die Karten breiter werden. Kleinere und hochformatige Bildschirme behalten ihr bisheriges Layout.

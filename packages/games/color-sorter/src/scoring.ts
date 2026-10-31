@@ -119,7 +119,7 @@ export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng,
     for (const mod of active) triggers += modDef(mod.key).retrigger?.(card, ctx) ?? 0;
     for (let t = 0; t < triggers; t++) {
       apply('card', card.id, {
-        chips: card.enh === 'granite' ? 50 : rankChips(card.rank) + (card.bonus ?? 0),
+        chips: boss?.key === 'iceQueen' ? 0 : card.enh === 'granite' ? 50 : rankChips(card.rank) + (card.bonus ?? 0),
       });
       if (card.enh === 'volume') apply('card', card.id, { chips: 30 });
       if (card.enh === 'gloss') apply('card', card.id, { mult: 4 });

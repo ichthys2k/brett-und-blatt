@@ -608,6 +608,13 @@ const bosses: BossDef[] = [
     text: 'Zollherr: Jedes Tauschen kostet 1 🥨, ohne Brezeln kein Tauschen',
     minLevel: 2,
   },
+  {
+    key: 'iceQueen',
+    name: 'Die Eiskönigin',
+    emoji: '👸',
+    text: 'Ewiger Winter: Die Karten selbst bringen keinen Witz, nur Kombi und Narren',
+    minLevel: 4,
+  },
 ];
 export const BOSSES: Record<string, BossDef> = Object.fromEntries(bosses.map((b) => [b.key, b]));
 export const BOSS_LIST = bosses;
@@ -640,6 +647,10 @@ export const COURTIERS_MORNING: Courtier[] = [
   { key: 'octopus', name: 'Hofmusikus Krake', emoji: '🐙', saying: 'Acht Arme zum Klatschen, wenn du es verdienst.' },
   { key: 'beaver', name: 'Baumeister Biber', emoji: '🦫', saying: 'Bau mir einen Witz, der hält.' },
   { key: 'jay', name: 'Markart, der Häher', emoji: '🐦', saying: 'Was du hier erzählst, weiß gleich der ganze Hof.' },
+  // Gäste aus dem Zauberwald (Narnia-Stimmung, Figuren aus der Mythologie mit eigenen Namen).
+  { key: 'fieneMouse', name: 'Bannerträgerin Fiene', emoji: '🐁', saying: 'Klein, aber mit Degen. Lach mich bloß nicht aus – lach mit mir!' },
+  { key: 'faun', name: 'Hofflötist Faun Pankratz', emoji: '🐐', saying: 'Ich spiele dir einen Tusch, wenn die Pointe sitzt.' },
+  { key: 'dryad', name: 'Waldfrau Birkenlaub', emoji: '🍃', saying: 'Bei guten Witzen raschelt mein Laub.' },
 ];
 
 /** Edle beim Festmahl: große Tiere, von Landadel bis Kurfürst. */
@@ -660,6 +671,9 @@ export const COURTIERS_FEAST: Courtier[] = [
   { key: 'elephant', name: 'Herzog Elefant', emoji: '🐘', saying: 'Ich vergesse keinen schlechten Witz.' },
   { key: 'mammoth', name: 'Altkanzler Mammut', emoji: '🦣', saying: 'Zu meiner Zeit waren die Narren noch lustig.' },
   { key: 'trex', name: 'Kurfürst T-Rex', emoji: '🦖', saying: 'Ich klatsche gern. Wenn ich nur rankäme.' },
+  { key: 'centaur', name: 'Sternkundiger Orion', emoji: '🐎', saying: 'Die Sterne sagen: Heute wird gelacht.' },
+  { key: 'dwarf', name: 'Schmied Grummbart', emoji: '⚒️', saying: 'Ein Zwerg lacht selten. Gib dir Mühe.' },
+  { key: 'giant', name: 'Riese Rumpel', emoji: '🧌', saying: 'Wenn ich lache, wackelt der Saal. Halt dich fest!' },
 ];
 
 /** Alle Höflinge und Edlen (für Übersichten und Bilder). */

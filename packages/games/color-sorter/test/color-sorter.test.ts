@@ -493,6 +493,10 @@ describe('Neue Herrschaften und Höflinge (W-017)', () => {
     expect(scoreHand(runWith(base, { current: current('sloth') }), pair, [], rng()).score).toBe(44);
   });
 
+  it('Eiskönigin: Karten bringen keinen Witz', () => {
+    expect(scoreHand(runWith(base, { current: current('iceQueen') }), pair, [], rng()).score).toBe(12 * 2);
+  });
+
   it('Kater: Tauschen kostet eine Brezel, ohne Brezeln kein Tauschen', () => {
     let state = start();
     state = play(state, 0, { type: 'start' });
@@ -506,7 +510,7 @@ describe('Neue Herrschaften und Höflinge (W-017)', () => {
 
   it('Höflinge: je Partie acht verschiedene je Audienz, für alle gleich', async () => {
     const { courtierFor, COURTIERS } = await import('../src/content');
-    expect(new Set(COURTIERS.map((x) => x.key)).size).toBe(32);
+    expect(new Set(COURTIERS.map((x) => x.key)).size).toBe(38);
     const morning = new Set([1, 2, 3, 4, 5, 6, 7, 8].map((level) => courtierFor('abc', level, 0).key));
     const feast = new Set([1, 2, 3, 4, 5, 6, 7, 8].map((level) => courtierFor('abc', level, 1).key));
     expect(morning.size).toBe(8);
