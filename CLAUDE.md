@@ -13,6 +13,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - **Sprache:** Bezeichner im Code englisch; Kommentare, Doku, Commit-Nachrichten und UI-Texte deutsch.
 - **Commits und Push nur auf ausdrückliche Anweisung** von Cornelius – jeweils einzeln („Commit“, danach „Hochladen“), **oder komplett in einem Schritt durch den Befehl „deploy“** (committen, nach `main` mergen und pushen). Ein Push auf `main` veröffentlicht sofort auf spiele.lipponer.de.
 - **Commit-Adresse:** immer `855814+ichthys2k@users.noreply.github.com` (steht in der lokalen Git-Konfiguration des Repos; vor dem ersten Commit auf einem neuen Rechner mit `git config user.email` prüfen).
+- **GitHub ist die einzige gemeinsame Quelle:** Der Repo-Ordner gehört nicht in eine Ordner-Synchronisation (Synology Drive, Syncthing o. Ä.) zwischen Laptop und Desktop. Jeder Arbeitsgang beginnt mit `git pull` und endet mit Commit und Push (auf Cornelius' Wort, siehe oben); sonst fehlt die Arbeit am anderen Rechner.
+- **Mehrere Konten und Agenten:** Arbeiten zwei Claude-Konten oder andere Agenten parallel, trägt der Agent in `PLANUNG.md` Namen bzw. Konto und Zweig beim Eintrag ein (Status `in Arbeit (…)`), **bevor** er ihn bearbeitet, und lädt das gleich hoch, damit nichts doppelt läuft.
 - **Keine Geheimnisse ins Repo:** keine `.env`, Tokens oder Zugangsdaten. Für Cloudflare später nur `.dev.vars`/Wrangler-Secrets (sind in `.gitignore`).
 - **Nichts außerhalb dieses Repos anfassen**, was nicht zur Aufgabe gehört – insbesondere keine Dateien mit Zugangsdaten in anderen Projekten (z. B. im Blog-Repo) lesen.
 - Vor dem Abschluss einer Aufgabe: `corepack pnpm check` (Typprüfung, alle Tests, Build) und die Änderung im Browser ansehen. Bei neuen oder geänderten Spielen zusätzlich `corepack pnpm rauchtest` (Browser) und `PRUEFSTAND=1 PRUEFSTAND_SPIELE=<id> corepack pnpm pruefstand`.
@@ -248,6 +250,6 @@ Alle Etappen 1–7 sind abgeschlossen. Originalspiele liegen in `~/code/4playerc
 Cornelius arbeitet am Laptop (`FES-MD-377`) und am Desktop (`cornelius-desktop`; in Syncthing heißt das Gerät `cornelius-cachyOS`); welcher läuft, zeigt `hostname`.
 
 - **Über GitHub (empfohlen):** Am neuen Rechner `gh repo clone ichthys2k/brett-und-blatt ~/code/brett-und-blatt`, später `git pull`. Nicht committete Änderungen kommen so nicht mit – sie müssen vorher am anderen Rechner committet und hochgeladen sein.
-- **Über eine Ordner-Synchronisation (Syncthing o. Ä.):** **`node_modules/` nicht mitsynchronisieren** (pnpm nutzt rechnerabhängige Verknüpfungen) und nie gleichzeitig auf beiden Rechnern arbeiten, sonst kann der `.git`-Ordner beschädigt werden.
+- **Über eine Ordner-Synchronisation (Syncthing, Synology Drive o. Ä.) – nicht mehr empfohlen (31.10.2026), siehe Regeln oben:** **`node_modules/` nicht mitsynchronisieren** (pnpm nutzt rechnerabhängige Verknüpfungen) und nie gleichzeitig auf beiden Rechnern arbeiten, sonst kann der `.git`-Ordner beschädigt werden.
 - In beiden Fällen am neuen Rechner zuerst: `node --version` (≥ 22), `corepack pnpm install`, `git status`, `git log --oneline -5`, `git fetch` (mit GitHub abgleichen), `git config user.email` prüfen, dann `corepack pnpm check`.
 - `.claude/` (lokale Einstellungen wie `launch.json` für den Dev-Server) ist absichtlich nicht im Repo.

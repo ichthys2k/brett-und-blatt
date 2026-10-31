@@ -37,3 +37,6 @@ pnpm-debug.log*
 
 # OpenChamber: lokaler Sitzungszustand und Aufnahmen der Browser-Vorschau
 .openchamber/
+
+# Obsidian (lokale Einstellungen, z. B. beim Bearbeiten von PLANUNG.md)
+.obsidian/
