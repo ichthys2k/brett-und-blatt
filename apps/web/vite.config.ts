@@ -73,6 +73,16 @@ export default defineConfig({
             },
           },
           {
+            // Gegner-Porträts im Narrenhof (rund 200 kleine WebP-Bilder): erst beim ersten Anblick speichern.
+            urlPattern: ({ url }) => url.pathname.endsWith('.webp'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'portraets',
+              expiration: { maxEntries: 300, purgeOnQuotaError: true },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          {
             urlPattern: ({ url }) => url.pathname.includes('/klaenge/musik/'),
             handler: 'CacheFirst',
             options: {

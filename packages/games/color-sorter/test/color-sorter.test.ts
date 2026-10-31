@@ -355,6 +355,171 @@ describe('Kataloge (Schritt 4)', () => {
   });
 });
 
+describe('Neue Narren (zweite Truppe)', () => {
+  const rng = () => new Rng([1, 2, 3, 4]);
+  const base = start();
+  const current = (extra: Partial<NonNullable<RunState['current']>> = {}): RunState['current'] => ({
+    target: 1, score: 0, handsLeft: 4, discardsLeft: 3, startDiscards: 3, boss: null, duel: false, playedTypes: [], firstDone: false, silenced: false, faceDown: [], ...extra,
+  });
+  const run = (key: string, change: Partial<RunState> = {}, value?: number) =>
+    runWith(base, { mods: [{ uid: 1, key, ...(value === undefined ? {} : { value }) }], current: current(), ...change });
+  const pair = [c(5, 'h'), c(5, 's')];
+
+  it('Mundschenk: +3 je Karte nur ohne Tauschen', () => {
+    expect(scoreHand(run('cupbearer'), pair, [], rng()).score).toBe(22 * (2 + 6));
+    expect(scoreHand(run('cupbearer', { current: current({ discardsLeft: 2 }) }), pair, [], rng()).score).toBe(22 * 2);
+  });
+
+  it('Kerzenzieher, Fanfarenbläser und Schlafmütze hängen an der Vorführung', () => {
+    expect(scoreHand(run('candle', { current: current({ handsLeft: 2 }) }), pair, [], rng()).score).toBe(22 * (2 + 6));
+    expect(scoreHand(run('trumpeter'), pair, [], rng()).score).toBe(22 * (2 + 12));
+    expect(scoreHand(run('trumpeter', { current: current({ firstDone: true }) }), pair, [], rng()).score).toBe(22 * 2);
+    expect(scoreHand(run('sleepyhead', { current: current({ handsLeft: 1 }) }), pair, [], rng()).score).toBe(22 * 4);
+    expect(scoreHand(run('sleepyhead'), pair, [], rng()).score).toBe(22 * 2);
+  });
+
+  it('Hofhund und Nachtigall zählen die Hand, die Königinmutter die Damen darin', () => {
+    const held = [c(9, 'h'), c(12, 'd'), c(12, 'c', { id: 999 })];
+    expect(scoreHand(run('hound'), pair, held, rng()).score).toBe((22 + 18) * 2);
+    expect(scoreHand(run('nightingale'), pair, held, rng()).score).toBe(22 * (2 + 3));
+    expect(scoreHand(run('queenMother'), pair, held, rng()).score).toBe(Math.floor(22 * 2 * 1.25 * 1.25));
+  });
+
+  it('Hofrichter, Rechenlehrling, Zehnerfreund und Schwanenjungfer prüfen die gewerteten Karten', () => {
+    expect(scoreHand(run('judge'), pair, [], rng()).score).toBe(22 * 4);
+    expect(scoreHand(run('judge'), [c(5, 'h'), c(5, 'd')], [], rng()).score).toBe(22 * 2);
+    // 7 + 7 = 14 ist keine Primzahl, 14 (Ass) allein schon gar nicht; 13 (König) ist eine.
+    expect(scoreHand(run('primeScholar'), [c(7, 'h'), c(7, 's')], [], rng()).score).toBe((12 + 14) * 2);
+    expect(scoreHand(run('primeScholar'), [c(13, 'h')], [], rng()).score).toBe((8 + 13) * 2);
+    expect(scoreHand(run('tenFriend'), pair, [], rng()).score).toBe(22 * 22);
+    expect(scoreHand(run('swan'), [c(5, 'h'), c(5, 'd')], [], rng()).score).toBe(22 * 3);
+    expect(scoreHand(run('swan'), pair, [], rng()).score).toBe(22 * 2);
+  });
+
+  it('Bogenschütze lässt die höchste Karte doppelt zählen, Zwillingsnarren jede mehrfache', () => {
+    expect(scoreHand(run('archer'), [c(14, 'h')], [], rng()).score).toBe((8 + 28) * 1);
+    expect(scoreHand(run('twinFools'), pair, [], rng()).score).toBe((12 + 20) * 2);
+  });
+
+  it('Thronfolger, Burgvogt, Kämmerer, Märchenerzählerin, Einsiedler', () => {
+    expect(scoreHand(run('heir', { level: 3 }), pair, [], rng()).score).toBe(22 * 8);
+    expect(scoreHand(run('castellan', { round: 2 }), pair, [], rng()).score).toBe(82 * 8);
+    expect(scoreHand(run('castellan'), pair, [], rng()).score).toBe(22 * 2);
+    expect(scoreHand(run('treasurer', { tokens: 100 }), pair, [], rng()).score).toBe(22 * 14);
+    expect(scoreHand(run('storyteller'), [c(7, 'h'), c(7, 's')], [], rng()).score).toBe(26 * 16);
+    expect(scoreHand(run('hermit'), pair, [], rng()).score).toBe(22 * 6);
+    const two = runWith(base, { mods: [{ uid: 1, key: 'hermit' }, { uid: 2, key: 'hound' }], current: current() });
+    expect(scoreHand(two, pair, [], rng()).score).toBe(22 * 5);
+  });
+
+  it('Pfau und Näherin mögen Verzierungen', () => {
+    const fancy = [c(5, 'h', { enh: 'volume' }), c(5, 's', { enh: 'gloss' })];
+    expect(scoreHand(run('peacock'), fancy, [], rng()).score).toBe((22 + 30) * (2 + 4) * 2);
+    const deck = [...base.runs[0]!.deck.slice(0, 3).map((card) => ({ ...card, enh: 'gold' as const })), ...base.runs[0]!.deck.slice(3)];
+    expect(scoreHand(run('seamstress', { deck }), pair, [], rng()).score).toBe((22 + 15) * 2);
+  });
+
+  it('Schreiber, Kartografin, Imker und Trommler', () => {
+    expect(scoreHand(run('scribe', { lastHandType: 'high' }), pair, [], rng()).score).toBe(22 * 12);
+    expect(scoreHand(run('scribe', { lastHandType: 'pair' }), pair, [], rng()).score).toBe(22 * 2);
+    const plays = { ...base.runs[0]!.handPlays, high: 2, flush: 1 };
+    expect(scoreHand(run('cartographer', { handPlays: plays }), pair, [], rng()).score).toBe((22 + 45) * 2);
+    const five = [c(5, 'h'), c(5, 's'), c(5, 'c'), c(9, 'h'), c(9, 's')];
+    const bee = scoreHand(run('beekeeper', {}, 8), five, [], rng());
+    expect(bee.score).toBe((45 + 33 + 12) * 4);
+    expect(bee.mods[0]!.value).toBe(12);
+    const drum = scoreHand(run('drummer', {}, 2), pair, [], rng());
+    expect(drum.score).toBe(22 * 5);
+    expect(drum.mods[0]!.value).toBe(3);
+  });
+
+  it('Lügenbaron: Paar bekommt den Grundwert von Zwei Paaren', () => {
+    const result = scoreHand(run('baron'), pair, [], rng());
+    expect(result.type).toBe('pair');
+    expect(result.score).toBe((24 + 10) * 2);
+  });
+
+  it('Pilger: +1 Handgröße, −1 Tauschen', () => {
+    let state = start();
+    state.runs[0]!.mods = [{ uid: 99, key: 'pilgrim' }];
+    state = play(state, 0, { type: 'start' });
+    expect(state.runs[0]!.hand).toHaveLength(9);
+    expect(state.runs[0]!.current!.discardsLeft).toBe(2);
+  });
+
+  it('Holzfäller: getauschte 2er und 3er verlassen das Deck', () => {
+    let state = start();
+    state.runs[0]!.mods = [{ uid: 99, key: 'woodcutter' }];
+    state = play(state, 0, { type: 'start' });
+    const r = state.runs[0]!;
+    const low = r.hand.map((card, i) => ({ card, i })).filter(({ card }) => card.rank <= 3);
+    const pick = low.length ? low.map(({ i }) => i).slice(0, 5) : [0];
+    const before = r.deck.length;
+    state = play(state, 0, { type: 'discard', cards: pick });
+    expect(state.runs[0]!.deck.length).toBe(before - low.slice(0, 5).length);
+  });
+
+  it('Maskenbildnerin schminkt nach dem Sieg eine Handkarte, der Zuckerbäcker backt nach dem Thronsaal eine Übung', () => {
+    let state = start();
+    state.runs[0]!.mods = [{ uid: 98, key: 'makeupArtist' }, { uid: 99, key: 'confectioner' }];
+    state.runs[0]!.round = 2;
+    state = play(state, 0, { type: 'start' });
+    state.runs[0]!.current!.target = 1;
+    const rest = state.runs[0]!.hand.slice(1).find((card) => !card.enh)!;
+    state = play(state, 0, { type: 'play', cards: [0] });
+    const r = state.runs[0]!;
+    expect(r.deck.find((card) => card.id === rest.id)!.enh).toBe('gloss');
+    expect(r.consumables.some((item) => item.kind === 'nail')).toBe(true);
+  });
+});
+
+describe('Neue Herrschaften und Höflinge (W-017)', () => {
+  const rng = () => new Rng([1, 2, 3, 4]);
+  const base = start();
+  const current = (boss: string, extra: Partial<NonNullable<RunState['current']>> = {}): RunState['current'] => ({
+    target: 1, score: 0, handsLeft: 4, discardsLeft: 3, startDiscards: 3, boss, duel: false, playedTypes: [], firstDone: true, silenced: false, faceDown: [], ...extra,
+  });
+  const pair = [c(5, 'h'), c(5, 's')];
+
+  it('Krähe: die erste gewertete Karte zählt nicht', () => {
+    expect(scoreHand(runWith(base, { current: current('crow') }), pair, [], rng()).score).toBe(17 * 2);
+  });
+
+  it('Esel: mehr als drei Karten bringen nichts, Faultier halbiert die erste Vorführung', () => {
+    const four = [c(5, 'h'), c(5, 's'), c(9, 'h'), c(9, 's')];
+    expect(scoreHand(runWith(base, { current: current('donkey') }), four, [], rng()).score).toBe(0);
+    expect(scoreHand(runWith(base, { current: current('donkey') }), pair, [], rng()).score).toBe(44);
+    expect(scoreHand(runWith(base, { current: current('sloth', { firstDone: false }) }), pair, [], rng()).score).toBe(22);
+    expect(scoreHand(runWith(base, { current: current('sloth') }), pair, [], rng()).score).toBe(44);
+  });
+
+  it('Eiskönigin: Karten bringen keinen Witz', () => {
+    expect(scoreHand(runWith(base, { current: current('iceQueen') }), pair, [], rng()).score).toBe(12 * 2);
+  });
+
+  it('Kater: Tauschen kostet eine Brezel, ohne Brezeln kein Tauschen', () => {
+    let state = start();
+    state = play(state, 0, { type: 'start' });
+    state.runs[0]!.current!.boss = 'tomcat';
+    state.runs[0]!.tokens = 1;
+    state = play(state, 0, { type: 'discard', cards: [0] });
+    expect(state.runs[0]!.tokens).toBe(0);
+    expect(gameModule.isLegal!(state, 0, { type: 'discard', cards: [0] })).toBe(false);
+    expect(gameModule.legalMoves(state, 0).some((m) => m.type === 'discard')).toBe(false);
+  });
+
+  it('Höflinge: je Partie acht verschiedene je Audienz, für alle gleich', async () => {
+    const { courtierFor, COURTIERS } = await import('../src/content');
+    expect(new Set(COURTIERS.map((x) => x.key)).size).toBe(38);
+    const morning = new Set([1, 2, 3, 4, 5, 6, 7, 8].map((level) => courtierFor('abc', level, 0).key));
+    const feast = new Set([1, 2, 3, 4, 5, 6, 7, 8].map((level) => courtierFor('abc', level, 1).key));
+    expect(morning.size).toBe(8);
+    expect(feast.size).toBe(8);
+    expect(courtierFor('abc', 3, 1)).toEqual(courtierFor('abc', 3, 1));
+    expect(courtierFor('abc', 9, 0)).toEqual(courtierFor('abc', 1, 0));
+  });
+});
+
 describe('Ablauf', () => {
   it('Solo beginnt mit 4 T, 8 Karten, 4 Händen, 3-mal Verwerfen', () => {
     let state = start();

@@ -189,6 +189,45 @@ Wirkungen bleiben, nur Name und Rolle ändern sich. Muster: **Hoftitel + Tier**.
 
 Die übrigen 13 entsprechend (Gäste von weither wie „Yeti aus dem Norden“, „Feuerfürst Phönix“). Die 20 Tier-Gegner der Morgenaudienz und des Festmahls werden Höflinge und Edle („Page Maus“, „Zofe Marienkäfer“, „Freiherr Dachs“).
 
+### Gegner mit Porträts (W-017, Plan 31.10.2026)
+
+Stand 31.10.2026. Ziel: viele Gegner, die zum Hof passen, jeder mit einem Porträt im Stil mittelalterlicher Gemälde, überzeichnet und lustig.
+
+#### Heute
+
+- **Herrschaften** (Thronsaal, mit Marotte): 25, Emoji statt Bild (vor dem Umbau).
+- **Höflinge** (Morgenaudienz und Festmahl): 20 feste Namen ohne Wirkung; welcher kommt, hängt nur von Hoftag und Audienz ab. Jede Partie sieht also dieselben Gesichter.
+
+#### Recherche: Woher die Gegner kommen
+
+- **Reineke Fuchs** (Goethe 1794, gemeinfrei) liefert den ganzen Hof von König Nobel mit festen Namen: Grimbart der Dachs, Hinze der Kater, Lampe der Hase, Henning der Hahn, Bellyn der Widder, Gieremund die Wölfin, Frau Rückenau die Äffin, Merkenau die Krähe. Einige sind schon da (Nobel, Isegrim, Braun, Reineke, Lampe).
+- **Grimm und Bechstein** (gemeinfrei): Froschkönig ist schon da; dazu passen Gäste wie der Gestiefelte Kater oder die Bremer Stadtmusikanten als Spielleute.
+- **Münchhausen** steckt schon im neuen Narren „Lügenbaron“.
+- **Bildstil:** altniederländische und Renaissance-Porträts (Brustbild, dunkler Grund, Hermelin, Samt, Goldkette), aber als Tier mit übertriebener Miene: zu kleine Krone, aufgeplusterte Mähne, hochnäsiger Blick. Das ist gemeinfreie Malweise, kein bestimmtes Werk.
+
+#### Vorschlag
+
+1. **32 Höflinge statt 20**, in zwei Gruppen:
+   - Morgenaudienz (16 „Höflinge“, kleine Tiere): Page Maus, Zofe Marienkäfer, Diener Ameise, Bote Schnecke, Gärtner Igel, Lampe der Hase, Henning der Hahn (Hofwecker), Küchenjunge Hamster, Schreiberin Eule, Mundschenk Pinguin, Wäscher Waschbär, Stallbursche Pony, Hinze der Kater (Kammerdiener), Hofmusikus Krake, Baumeister Biber, Markart der Häher (Hofklatsch).
+   - Festmahl (16 „Edle“, große Tiere): Grimbart der Dachs, Reineke Fuchs, Freiherr Panda, Freifrau Koala, Graf Tiger, Ritter Nashorn, Herzog Elefant, Altkanzler Mammut, Kurfürst T-Rex, Bellyn der Widder (Hofkaplan), Gieremund die Wölfin, Frau Rückenau die Äffin, Markgräfin Giraffe, Landvogt Büffel, Gräfin Flamingo, Herzogin Gans.
+   - Jede Partie zieht die Reihenfolge aus dem Seed (für alle Mitspieler gleich). Spätere Hoftage bekommen eher die Großen.
+   - Jeder bekommt einen kurzen Spruch zur Begrüßung („Ich lache nur über Wortspiele.“), aber **keine Regelwirkung**. So bleibt das Gleichgewicht, und es wird trotzdem bunter.
+2. **Vier neue Herrschaften** mit eigenen Marotten (25 → 29):
+   - Merkenau, die Krähe (Hofspionin): Die erste gewertete Karte jeder Vorführung zählt nicht.
+   - Abt Esel (Schweigegelübde): Vorführungen mit mehr als 3 Karten bringen keinen Applaus.
+   - Kämmerer Faultier: Die erste Vorführung bringt nur halb so viel Applaus.
+   - Hinze, der Kater (als Zollherr): Jedes Tauschen kostet 1 🥨, ohne Brezeln kein Tauschen.
+   - Der Bot lernt alle vier.
+3. **Porträts für alle 61 Gegner** (29 Herrschaften, 32 Höflinge) mit dem Canva-Bildgenerator: Brustbild 4:5, als WebP etwa 10–15 KB, zusammen rund 1 MB. Anzeige im Thron als ovales Bild im Goldrahmen, die Miene (😐 → 😂) bleibt als Abzeichen daneben. Ohne Bild (oder beim Laden) erscheint weiter das Emoji. Kennzeichnung „KI-erzeugt (Canva), CC BY-SA 4.0“ in `THIRD_PARTY.md`.
+4. **Später (nicht in diesem Schritt):** Bilder auch für die 81 Narren. Das wären noch einmal so viele Bilder; erst wenn die Gegner gefallen.
+
+#### Umsetzung (31.10.2026)
+
+- **30 Herrschaften** (die vier oben und dazu **Die Eiskönigin**: „Ewiger Winter“ – Karten bringen keinen Witz, nur Kombi und Narren, ab Hoftag 4) und **38 Höflinge**: 19 für die Morgenaudienz (die 16 oben und die Zauberwald-Gäste Bannerträgerin Fiene 🐁, Hofflötist Faun Pankratz 🐐, Waldfrau Birkenlaub 🍃), 19 für das Festmahl (die 16 oben und Sternkundiger Orion 🐎, Schmied Grummbart ⚒️, Riese Rumpel 🧌). Die Zauberwald-Gäste sind eigene Gestalten aus der gemeinsamen Sagenwelt (Faun, Dryade, Zentaur, Zwerg, Riese), keine Figuren aus Narnia (urheberrechtlich geschützt bis Ende 2033).
+- Je Partie wählt `courtierFor` aus dem Seed 8 Höflinge je Gruppe; sie kommen in fester Reihenfolge (kleinere zuerst).
+- **Porträts in drei Stimmungen** (Cornelius' Wunsch): Jedes Grundbild (schmunzelnd) wird zweimal abgewandelt – lachend und mit Lachkrampf (Kopf in den Nacken, Tränen, Krone verrutscht). Die Oberfläche wählt die Stufe nach dem Applaus: unter 60 % des Ziels schmunzelnd, ab 60 % lachend, am Ziel Lachkrampf (`stageOf` in `src/ui/portraits.ts`). Mit Bild entfällt das Mienen-Abzeichen.
+- Dateien `src/ui/portraits/boss-<key>-<1|2|3>.webp` und `court-<key>-<1|2|3>.webp`, je etwa 6 KB (161 × 200 Pixel). Sie liegen nicht im Vorab-Speicher der PWA, sondern kommen beim ersten Anblick in den Speicher `portraets`. Die Rohbilder und die Canva-Kennungen liegen in den Projektdateien (`narrenhof/portraits/`).
+
 ### Optik
 
 - **Hintergrund:** Harlekin-Rauten in gedeckten Hoffarben (Weinrot, Senfgelb, Tannengrün) auf Stoff- bzw. Pergamentstruktur. **Kein** Wabern, kein CRT, keine Pixelschrift, kein grüner Filz.
@@ -316,6 +355,32 @@ Cornelius' eigene Narren aus dem Emoji-Sortierer bleiben unverändert: Spaßmach
 | 🧙 Der Hofzauberer | Asse zählen dreimal (Hack-artig) | **Bildkarten** zählen zweimal (legendär) |
 
 Damit sinkt die Zahl der Narren von 58 auf etwa 52, und keine Gruppe entspricht mehr einem Balatro-Satz.
+
+#### Zweite Truppe: 29 neue Narren (W-016, 31.10.2026)
+
+**Auftrag:** Die Balatro-Joker sichten und überlegen, wie sie sich in den Narrenhof übertragen lassen, mit eigenen Namen und Ideen statt Kopien.
+
+**Sichtung:** Balatro hat 150 Joker. Sie lassen sich in etwa ein Dutzend Wirkungsfamilien sortieren: feste +Mult/+Chips, ×Mult unter Bedingung, Farb- und Rang-Joker, Kombi-Joker, wachsende Joker (Zähler), Geld-Joker, Wiederholungen (Retrigger), Karten in der Hand, Deck-Zusammensetzung, Ladenwirkungen, Erzeugen von Verbrauchskarten, Kartenveränderung und Kopier-Joker. **Bewusst nicht übertragen:** die einzelnen Joker selbst. Eine vollständige Umsetzung aller 150 wäre genau der „Satz“, der in „Plagiats-Fingerabdrücke“ oben als Problem beschrieben ist. Stattdessen deckt die zweite Truppe die Familien ab, die bisher fehlten oder dünn waren, jeweils mit einer Idee aus der Hofwelt. Ebenfalls weggelassen: Kopier-Joker (Blueprint-artig), Zufalls- und Glücksspiel-Joker sowie Joker, die nur über Verkaufswert wachsen.
+
+| Familie | Bisher | Neu |
+|---|---|---|
+| Zeitpunkt in der Audienz | Frühaufsteher, Doppelgesichtiger | 🎺 Fanfarenbläser (erste Vorführung +12 Lachen), 🛌 Schlafmütze (letzte ×2), 🕯️ Kerzenzieher (+3 je übrige Vorführung), 🍷 Mundschenk (+3 je Karte ohne Tauschen) |
+| Karten in der Hand | Lässiger | 🐕 Hofhund (+6 Witz je Karte), 🐦 Nachtigall (+3 Lachen je Herz), 👵 Königinmutter (×1,25 je Dame) |
+| Rechnen mit Rängen | Einsundnuller, Aufrechter, Querkopf | 🧮 Rechenlehrling (Summe ist Primzahl: ×2), 🔟 Zehnerfreund (Summe durch 10 teilbar: +20), 🧚 Märchenerzählerin (+7 je 7) |
+| Farben gemischt | Meistermaler | ⚖️ Hofrichter (gleich viele rote wie schwarze: ×2), 🦢 Schwanenjungfer (nur rote: ×1,5) |
+| Wiederholungen | Papagei, Hofzauberer, Doppelgesichtiger | 🏹 Bogenschütze (höchste Karte doppelt), 👯 Zwillingsnarren (jeder mehrfache Rang doppelt) |
+| Wachsen | Kräuterfrau, Hofschnecke, Bänkelsänger | 🐝 Imker (+4 Witz je Vorführung mit 5 Karten), 🥁 Trommler (+1 Lachen je Vorführung, Tauschen setzt zurück), 🤴 Thronfolger (+2 Lachen je Hoftag) |
+| Abwechslung | – | 📜 Schreiber (andere Kombi als zuletzt: +10), 🗺️ Kartografin (+15 Witz je schon gezeigte Kombi) |
+| Brezeln im Vorrat | – | 🗃️ Kämmerer (+1 Lachen je 4 🥨, höchstens +12) |
+| Verzierungen | – | 🦚 Pfau (alle gewerteten verziert: ×2), 🪡 Näherin (+5 Witz je verzierte Karte im Deck), 💋 Maskenbildnerin (nach jedem Sieg Schminke für eine Handkarte) |
+| Deck verändern | – | 🪓 Holzfäller (getauschte 2er und 3er verlassen das Deck, mindestens 5 Karten bleiben) |
+| Verbrauchskarten erzeugen | – | 🧁 Zuckerbäcker (nach jedem Thronsaal die Übung der meistgespielten Kombi) |
+| Marotten | – | 🏰 Burgvogt (im Thronsaal +60 Witz, +6 Lachen) |
+| Bank | Truppenführer | 🧓 Einsiedler (allein auf der Bank ×3, sonst +3) |
+| Handgröße | Weite Ärmel (Privileg) | 🥾 Pilger (+1 Handgröße, −1 Tauschen) |
+| Legendär | Einhorn, Hofzauberer, Meistermaler | 🎖️ Der Lügenbaron (nach Münchhausen, gemeinfrei): Jede Vorführung bekommt den Grundwert der nächsthöheren Kombi |
+
+Damit hat der Narrenhof **81 Narren** (davon 7 nur zu mehreren). Gesperrt in der Narrenschule sind von den neuen: Bogenschütze, Schlafmütze, Holzfäller, Maskenbildnerin, Zuckerbäcker, Königinmutter, Zwillingsnarren und Lügenbaron (`LOCKED_MODS_2`, hinten an die Freischaltliste angehängt, damit alte Codes gültig bleiben). Neue Haken in der Regel-Engine: `onRoundEnd` kann eine Handkarte verzieren (`enhance`) und eine Verbrauchskarte erzeugen (`consumable`), `onDiscard` kann Karten aus dem Deck nehmen (`remove`), und `boastful` hebt den Grundwert. `ruleVersion` 5.
 
 #### Privilegien (bisher 9 Balatro-Voucher-Paare → 14 einzelne)
 
@@ -580,6 +645,8 @@ Die Werte schwanken zwischen zwei Messungen um etwa ±0,2 Level und ±4 Prozentp
 
 **Ziel verfehlt:** „schwer“ ist jetzt klar besser als „mittel“, schafft Level 8 aber nur in gut 10 % (Stand `d88204b`) bzw. 1–2 % (nach Schritt 4) statt 30 % der Läufe. Die meisten Läufe enden am Boss von Level 5–7 mit etwa 60 % des Ziels. Getestete Stellschrauben ohne messbaren Gewinn: mehr Sparen oder gar nicht sparen, Schätz-Anteil 30/55 %, Poolgröße 10/14, Verwerf-Schwelle, freieres Neu-Sortieren, Boss-Neuwahl nach geschätzter Härte. Für 30 % bräuchte es entweder eine tiefere Planung (ganze Runden je Kauf simulieren) oder etwas leichtere Ziele ab Level 5 – das ist eine Abwägung für die Zahlen, nicht für den Bot.
 
+**Etappe 5 (31.10.2026, W-006):** Mit 29 neuen Narren und fünf neuen Herrschaften lag „schwer“ bei Ø Hoftag 5,6 und 2–4 % Siegen. Vier weitere Stellschrauben am Bot (Übungen dreifach gewichtet, freieres Tauschen und Neu-Sortieren, weniger bzw. mehr Sparen) brachten nichts Messbares (5,3–5,7, 2–4 %). Deshalb sind die Ziele ab Hoftag 5 je Hoftag um 20 % gesenkt (Hoftag 8 etwa 41 % des vorigen Werts, alle drei Stufentabellen, `ruleVersion` 6). Gemessen (100 Läufe, 10 ms): schwer Ø Hoftag 5,9 und **24 % Siege**. Zur Wahl standen auch 10 % je Hoftag (5,9 und 11 %) oder gar keine Senkung.
+
 **Rechenzeit:** Auf dem Spieleserver (Zähl-Uhr, Schrittweite 1 ms) rechnet „schwer“ im Schnitt etwa 0,1 s, höchstens etwa 0,85 s je Zug (lokal gemessen mit `BOT_STEP=1 BOT_BUDGET=800`, Stand nach Schritt 4); die langen Züge sind Ladenbesuche mit voller Narrenbank. Das liegt im Rahmen der anderen Spiele (auf Cloudflare Spitzen bis 1,6 s). Ein eigener Eintrag in `BOT_STEP_MS` ist nicht nötig. Im Laden ignoriert „schwer“ sehr kleine Budgets (etwa 45 ms je Zug bei 10 ms Budget).
 
 ## Oberfläche
@@ -608,6 +675,39 @@ Neu in der Engine wird dafür vermutlich nur wenig nötig: gleichzeitige Züge u
 - Standardmodus online: Wettstreit mit 4 Herzen.
 - Planungsnotiz `~/code/emojiclicker/docs/farbsortierer-expansion.md` auswerten.
 - ✅ Vorziehen: aus Etappe 6 vorgezogen und am 26.10.2026 fertig.
+
+## Fortschritt geräteübergreifend sichern (W-018, Vergleich 31.10.2026)
+
+Stand 31.10.2026. Heute liegen Glöckchen, Freischaltungen, Schmuck und Hofchronik nur im Browser (`localStorage`), dazu gibt es den Sicherungstext `FS1:…` zum Kopieren. Gesucht: ein Weg, den Fortschritt abgesichert auf ein anderes Gerät mitzunehmen.
+
+Was gesichert werden muss, ist klein (unter 5 KB) und nicht persönlich: Zahlen und Schlüssel, kein Name, keine E-Mail. Das spricht für die schlankeste Lösung.
+
+### Die Wege im Überblick
+
+| | A Sync-Code (ohne Konto) | B Passkey (ohne Konto) | C Microsoft 365 | D Google |
+|---|---|---|---|---|
+| Wie | Spiel zeigt einmal einen Code (z. B. 6 Emojis + 6 Zeichen). Auf dem anderen Gerät eingeben, fertig. | Gerät legt einen Passkey an (Fingerabdruck, Gesicht, PIN). Der Passkey reist über iCloud/Google/Windows mit. | Anmelden mit Schul- oder Privatkonto, Ablage im versteckten App-Ordner von OneDrive. | Anmelden mit Google-Konto, Ablage im versteckten App-Ordner von Google Drive. |
+| Wo liegen die Daten | Auf unserem Spieleserver (Cloudflare, EU), **im Browser verschlüsselt**; der Server sieht nur Datensalat. | Wie A, Schlüssel kommt aus dem Passkey. | Im OneDrive der Person. Unser Server speichert nichts. | Im Drive der Person. Unser Server speichert nichts. |
+| Personenbezug | keiner (zufälliger Code) | keiner (anonyme Kennung) | Microsoft-Konto | Google-Konto |
+| Datenschutz und Kinder | sehr gut, keine Einwilligung nötig | sehr gut | Schulkonten: oft Admin-Freigabe nötig; Datenschutzerklärung und ggf. Einwilligung | Google-Konten erst ab 16 ohne Eltern; Datenschutzerklärung erweitern |
+| Code verloren | Fortschritt weg (wie heute) | Passkey ist meist mitgesichert | Konto weg = Daten weg | wie C |
+| Aufwand | klein: zwei Endpunkte im Worker, Verschlüsselung mit Web Crypto, ein Dialog | mittel: WebAuthn mit PRF-Erweiterung, noch nicht in allen Browsern | mittel bis groß: App-Registrierung in Entra ID, MSAL, Graph-API | mittel: Google-Cloud-Projekt, OAuth-Zustimmungsbildschirm, Drive-API, ggf. Prüfung durch Google |
+| Laufende Kosten | Gratis-Tarif reicht | wie A | keine | keine |
+| Online-Pflicht | nur zum Sichern und Laden | wie A | wie A | wie A |
+
+### Einschätzung
+
+- **A Sync-Code** passt am besten zu Brett & Blatt: ohne Konto, ohne personenbezogene Daten, für Schulkinder unbedenklich, und er nutzt den vorhandenen Spieleserver. Ablauf: „Sichern“ erzeugt einen Code, verschlüsselt den Fortschritt im Browser mit einem Schlüssel aus dem Code (Web Crypto, AES-GCM), schickt nur den verschlüsselten Block an den Server (`PUT /sicherung/<Kennung>`). Auf dem anderen Gerät Code eingeben, laden, entschlüsseln. Danach gleicht das Spiel bei jedem Hoftag-Ende automatisch ab (neuere Glöckchenstände gewinnen). Der Code lässt sich zusätzlich als QR-Code zeigen, wie beim Raumcode.
+- **B Passkey** wäre die bequemste Form (kein Code zum Abschreiben), aber die nötige PRF-Erweiterung fehlt noch in Teilen von Firefox und älteren Geräten. Gut als zweiter Schritt auf A, mit A als Rückfall.
+- **C und D** lohnen sich nur, wenn ohnehin eine Anmeldung gewünscht ist (z. B. später für Ranglisten oder Klassenräume über Teams). Für den Fortschritt allein sind sie zu schwer und bringen Datenschutzfragen bei Minderjährigen.
+
+### Vorschlag
+
+A umsetzen (geschätzt ein Arbeitsschritt: Worker-Endpunkt, Verschlüsselung, Dialog in der Narrenschule, Tests), die Datenschutzerklärung um zwei Sätze ergänzen. B später prüfen. C und D zurückstellen.
+
+### Offen für Cornelius
+
+- Einverstanden mit A als Weg, und soll das gleich in dieser Etappe kommen oder als eigener Eintrag?
 
 ## Bedienung am Großbildschirm (29.10.2026)
 

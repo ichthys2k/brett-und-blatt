@@ -364,10 +364,12 @@ export const STAKES: { name: string; emoji: string; text: string }[] = [
   },
 ];
 
+// Ab Hoftag 5 je Hoftag 20 % unter der ersten Fassung (ruleVersion 6, W-006): Die späten Ziele waren
+// auch für den schweren Bot kaum zu schaffen (4 % Siege, jetzt rund 28 %).
 const TARGETS = [
-  [300, 750, 1900, 4600, 10000, 19000, 33000, 52000],
-  [300, 850, 2400, 6500, 15000, 30000, 55000, 90000],
-  [300, 950, 2900, 8200, 20000, 42000, 80000, 140000],
+  [300, 750, 1900, 4600, 8000, 12000, 17000, 21000],
+  [300, 850, 2400, 6500, 12000, 19000, 28000, 37000],
+  [300, 950, 2900, 8200, 16000, 27000, 41000, 57000],
 ];
 
 /** Grundziel eines Levels (Vorhut); Wächter ×1,5, Boss ×2,2. */
@@ -579,36 +581,131 @@ const bosses: BossDef[] = [
     final: true,
     targetFactor: 3,
   },
+  // Neue Herrschaften (W-017, 31.10.2026), eigene Marotten.
+  {
+    key: 'crow',
+    name: 'Merkenau, die Krähe',
+    emoji: '🐦‍⬛',
+    text: 'Die erste gewertete Karte jeder Vorführung zählt nicht',
+    minLevel: 2,
+  },
+  {
+    key: 'donkey',
+    name: 'Abt Esel',
+    emoji: '🫏',
+    text: 'Schweigegelübde: Vorführungen mit mehr als 3 Karten bringen keinen Applaus',
+    minLevel: 3,
+  },
+  {
+    key: 'sloth',
+    name: 'Kämmerer Faultier',
+    emoji: '🦥',
+    text: 'Die erste Vorführung bringt nur halb so viel Applaus',
+    minLevel: 2,
+  },
+  {
+    key: 'tomcat',
+    name: 'Hinze, der Kater',
+    emoji: '🐈',
+    text: 'Zollherr: Jedes Tauschen kostet 1 🥨, ohne Brezeln kein Tauschen',
+    minLevel: 2,
+  },
+  {
+    key: 'iceQueen',
+    name: 'Die Eiskönigin',
+    emoji: '👸',
+    text: 'Ewiger Winter: Die Karten selbst bringen keinen Witz, nur Kombi und Narren',
+    minLevel: 4,
+  },
 ];
 export const BOSSES: Record<string, BossDef> = Object.fromEntries(bosses.map((b) => [b.key, b]));
 export const BOSS_LIST = bosses;
 
 /** Höflinge und Edle für Morgenaudienz und Festmahl (nur Gesicht und Name). */
-export const CREATURES: { name: string; emoji: string }[] = [
-  { name: 'Page Mikrobe', emoji: '🦠' },
-  { name: 'Diener Ameise', emoji: '🐜' },
-  { name: 'Zofe Marienkäfer', emoji: '🐞' },
-  { name: 'Bote Schnecke', emoji: '🐌' },
-  { name: 'Küchenmaus', emoji: '🐭' },
-  { name: 'Gärtner Igel', emoji: '🦔' },
-  { name: 'Lampe, der Hase', emoji: '🐰' },
-  { name: 'Reineke Fuchs', emoji: '🦊' },
-  { name: 'Wäscher Waschbär', emoji: '🦝' },
-  { name: 'Schreiberin Eule', emoji: '🦉' },
-  { name: 'Mundschenk Pinguin', emoji: '🐧' },
-  { name: 'Musikus Krake', emoji: '🐙' },
-  { name: 'Baumeister Biber', emoji: '🦫' },
-  { name: 'Freiherr Panda', emoji: '🐼' },
-  { name: 'Freifrau Koala', emoji: '🐨' },
-  { name: 'Graf Tiger', emoji: '🐯' },
-  { name: 'Ritter Nashorn', emoji: '🦏' },
-  { name: 'Herzog Elefant', emoji: '🐘' },
-  { name: 'Altkanzler Mammut', emoji: '🦣' },
-  { name: 'Kurfürst T-Rex', emoji: '🦖' },
+/** Ein Gegner der Morgenaudienz (Höfling) oder des Festmahls (Edle) – ohne Regelwirkung. */
+export interface Courtier {
+  key: string;
+  name: string;
+  emoji: string;
+  /** Begrüßung, wenn die Audienz beginnt. */
+  saying: string;
+}
+
+/** Höflinge der Morgenaudienz: kleine Tiere, von bescheiden bis wichtig. */
+export const COURTIERS_MORNING: Courtier[] = [
+  { key: 'mouse', name: 'Page Maus', emoji: '🐭', saying: 'Ich kichere schon, bevor du anfängst.' },
+  { key: 'ladybug', name: 'Zofe Marienkäfer', emoji: '🐞', saying: 'Sieben Punkte für einen guten Witz!' },
+  { key: 'ant', name: 'Diener Ameise', emoji: '🐜', saying: 'Bitte schnell, ich habe noch viel zu tragen.' },
+  { key: 'snail', name: 'Bote Schnecke', emoji: '🐌', saying: 'Die Nachricht von deinem Auftritt ist unterwegs …' },
+  { key: 'hedgehog', name: 'Gärtner Igel', emoji: '🦔', saying: 'Nur keine spitzen Bemerkungen!' },
+  { key: 'hare', name: 'Lampe, der Hase', emoji: '🐰', saying: 'Erschreck mich bloß nicht mit der Pointe.' },
+  { key: 'rooster', name: 'Henning, der Hahn', emoji: '🐓', saying: 'Ich wecke den ganzen Hof, wenn es lustig wird!' },
+  { key: 'hamster', name: 'Küchenjunge Hamster', emoji: '🐹', saying: 'Hast du Brezeln dabei? Ich frage nur so.' },
+  { key: 'owl', name: 'Schreiberin Eule', emoji: '🦉', saying: 'Ich schreibe jeden Witz mit. Jeden.' },
+  { key: 'penguin', name: 'Mundschenk Pinguin', emoji: '🐧', saying: 'Ein Lacher, ein Becher. So ist es Brauch.' },
+  { key: 'raccoon', name: 'Wäscher Waschbär', emoji: '🦝', saying: 'Bitte nur saubere Witze.' },
+  { key: 'pony', name: 'Stallbursche Pony', emoji: '🐴', saying: 'Ich wiehere gern mit.' },
+  { key: 'cat', name: 'Kammerdiener Kater', emoji: '😼', saying: 'Ich habe schon bessere Narren gesehen.' },
+  { key: 'octopus', name: 'Hofmusikus Krake', emoji: '🐙', saying: 'Acht Arme zum Klatschen, wenn du es verdienst.' },
+  { key: 'beaver', name: 'Baumeister Biber', emoji: '🦫', saying: 'Bau mir einen Witz, der hält.' },
+  { key: 'jay', name: 'Markart, der Häher', emoji: '🐦', saying: 'Was du hier erzählst, weiß gleich der ganze Hof.' },
+  // Gäste aus dem Zauberwald (Narnia-Stimmung, Figuren aus der Mythologie mit eigenen Namen).
+  { key: 'fieneMouse', name: 'Bannerträgerin Fiene', emoji: '🐁', saying: 'Klein, aber mit Degen. Lach mich bloß nicht aus – lach mit mir!' },
+  { key: 'faun', name: 'Hofflötist Faun Pankratz', emoji: '🐐', saying: 'Ich spiele dir einen Tusch, wenn die Pointe sitzt.' },
+  { key: 'dryad', name: 'Waldfrau Birkenlaub', emoji: '🍃', saying: 'Bei guten Witzen raschelt mein Laub.' },
 ];
 
-/** Gesicht des Gegners einer Runde – fest je Level und Runde. */
-export function creatureFor(level: number, round: number): { name: string; emoji: string } {
-  const index = Math.min(CREATURES.length - 1, Math.max(0, (level - 1) * 2 + round + Math.floor(level / 3)));
-  return CREATURES[index]!;
+/** Edle beim Festmahl: große Tiere, von Landadel bis Kurfürst. */
+export const COURTIERS_FEAST: Courtier[] = [
+  { key: 'badger', name: 'Grimbart, der Dachs', emoji: '🦡', saying: 'Als Advokat höre ich mir erst alle Beweise an.' },
+  { key: 'fox', name: 'Reineke Fuchs', emoji: '🦊', saying: 'Ich kenne jeden Trick. Überrasch mich.' },
+  { key: 'ram', name: 'Bellyn, der Widder', emoji: '🐏', saying: 'Der Hofkaplan lacht nur über fromme Witze.' },
+  { key: 'panda', name: 'Freiherr Panda', emoji: '🐼', saying: 'Schwarz oder weiß – Hauptsache, es ist lustig.' },
+  { key: 'koala', name: 'Freifrau Koala', emoji: '🐨', saying: 'Weck mich, wenn der Witz kommt.' },
+  { key: 'ape', name: 'Frau Rückenau, die Äffin', emoji: '🐒', saying: 'Ich mache dir jede Grimasse nach.' },
+  { key: 'goose', name: 'Herzogin Gans', emoji: '🪿', saying: 'Hach, wie amüsant. Vielleicht.' },
+  { key: 'flamingo', name: 'Gräfin Flamingo', emoji: '🦩', saying: 'Ich stehe auf einem Bein, bis ich lache.' },
+  { key: 'giraffe', name: 'Markgräfin Giraffe', emoji: '🦒', saying: 'Von hier oben sehe ich jede Karte.' },
+  { key: 'wolf', name: 'Gieremund, die Wölfin', emoji: '🐺', saying: 'Mein Isegrim hat mir viel von dir erzählt.' },
+  { key: 'tiger', name: 'Graf Tiger', emoji: '🐯', saying: 'Gestreift lache ich doppelt.' },
+  { key: 'buffalo', name: 'Landvogt Büffel', emoji: '🐃', saying: 'Bei mir zählt nur der Ertrag.' },
+  { key: 'rhino', name: 'Ritter Nashorn', emoji: '🦏', saying: 'Ich lache mit dem Kopf voran.' },
+  { key: 'elephant', name: 'Herzog Elefant', emoji: '🐘', saying: 'Ich vergesse keinen schlechten Witz.' },
+  { key: 'mammoth', name: 'Altkanzler Mammut', emoji: '🦣', saying: 'Zu meiner Zeit waren die Narren noch lustig.' },
+  { key: 'trex', name: 'Kurfürst T-Rex', emoji: '🦖', saying: 'Ich klatsche gern. Wenn ich nur rankäme.' },
+  { key: 'centaur', name: 'Sternkundiger Orion', emoji: '🐎', saying: 'Die Sterne sagen: Heute wird gelacht.' },
+  { key: 'dwarf', name: 'Schmied Grummbart', emoji: '⚒️', saying: 'Ein Zwerg lacht selten. Gib dir Mühe.' },
+  { key: 'giant', name: 'Riese Rumpel', emoji: '🧌', saying: 'Wenn ich lache, wackelt der Saal. Halt dich fest!' },
+];
+
+/** Alle Höflinge und Edlen (für Übersichten und Bilder). */
+export const COURTIERS: Courtier[] = [...COURTIERS_MORNING, ...COURTIERS_FEAST];
+
+/** Bisherige Liste (Name und Emoji) – bleibt für ältere Aufrufe. */
+export const CREATURES: { name: string; emoji: string }[] = COURTIERS.map(({ name, emoji }) => ({ name, emoji }));
+
+function hashKey(text: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+/**
+ * Gegner der Morgenaudienz bzw. des Festmahls: Jede Partie zieht aus ihrer Kennung acht Höflinge
+ * und acht Edle (für alle Plätze gleich); spätere Hoftage bekommen die Größeren der Auswahl.
+ */
+export function courtierFor(partyKey: string, level: number, round: number): Courtier {
+  const pool = round === 0 ? COURTIERS_MORNING : COURTIERS_FEAST;
+  const order = pool.map((c, i) => ({ i, h: hashKey(`${partyKey}/${round}/${c.key}`) }));
+  const chosen = order
+    .sort((a, b) => a.h - b.h)
+    .slice(0, 8)
+    .map((o) => o.i)
+    .sort((a, b) => a - b);
+  return pool[chosen[(Math.max(1, level) - 1) % chosen.length]!]!;
+}
+
+/** Gesicht des Gegners einer Runde ohne Partie-Kennung – fest je Level und Runde. */
+export function creatureFor(level: number, round: number): Courtier {
+  return courtierFor('', level, round);
 }

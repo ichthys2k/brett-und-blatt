@@ -1,6 +1,6 @@
 import type { Rng } from '@brett-und-blatt/engine';
 import { BOSSES } from './content';
-import { detectHand, handBase, hasColor, isFace, rankChips } from './cards';
+import { detectHand, HAND_TYPES, handBase, hasColor, isFace, rankChips } from './cards';
 import { modDef, SOLO_TABLE, type Effect, type HandContext, type TableInfo } from './mods';
 import type { Card, HandType, ModInstance, RunState } from './types';
 
@@ -68,7 +68,10 @@ export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng,
   const type = detected.type;
   const scoring = detected.scoring.map((i) => played[i]!);
   const boss = run.current?.boss ? BOSSES[run.current.boss] : undefined;
-  const base = handBase(type, run.handLevels[type]);
+  // Lügenbaron: Grundwert der nächsthöheren Kombi (mit deren Stufe).
+  const boast = run.mods.some((m) => !m.spent && modDef(m.key).boastful);
+  const baseType = boast ? (HAND_TYPES[Math.min(HAND_TYPES.length - 1, HAND_TYPES.indexOf(type) + 1)] ?? type) : type;
+  const base = handBase(baseType, run.handLevels[baseType]);
   let chips = base.chips;
   let mult = base.mult;
   if (boss?.key === 'ape') {
@@ -102,7 +105,8 @@ export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng,
   };
 
   for (const card of scoring) {
-    if (isDebuffed(card, run)) {
+    // Merkenau, die Krähe: Die erste gewertete Karte zählt nicht.
+    if (isDebuffed(card, run) || (boss?.key === 'crow' && card === scoring[0])) {
       steps.push({
         src: 'card',
         id: card.id,
@@ -115,7 +119,7 @@ export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng,
     for (const mod of active) triggers += modDef(mod.key).retrigger?.(card, ctx) ?? 0;
     for (let t = 0; t < triggers; t++) {
       apply('card', card.id, {
-        chips: card.enh === 'granite' ? 50 : rankChips(card.rank) + (card.bonus ?? 0),
+        chips: boss?.key === 'iceQueen' ? 0 : card.enh === 'granite' ? 50 : rankChips(card.rank) + (card.bonus ?? 0),
       });
       if (card.enh === 'volume') apply('card', card.id, { chips: 30 });
       if (card.enh === 'gloss') apply('card', card.id, { mult: 4 });
@@ -165,6 +169,9 @@ export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng,
   mult = Math.round(mult * 100) / 100;
   let score = Math.floor(chips * mult);
   if (boss?.key === 'dragon' && favoriteHand(run) === type) score = 0;
+  // Abt Esel: mehr als drei Karten bringen nichts; Kämmerer Faultier: erste Vorführung halb.
+  if (boss?.key === 'donkey' && played.length > 3) score = 0;
+  if (boss?.key === 'sloth' && run.current && !run.current.firstDone) score = Math.floor(score / 2);
   return {
     type,
     scoringIds: scoring.map((c) => c.id),
