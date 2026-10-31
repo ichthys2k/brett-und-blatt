@@ -21,6 +21,8 @@ export interface LobbySettings {
   time: TimePresetId;
   seats: LobbySeat[];
   isPublic: boolean;
+  /** Nur die Raumleitung darf Namen und Bilder ändern (fehlt in älteren Räumen: aus). */
+  namesLocked?: boolean;
 }
 
 /** Kompakte Übersicht für offene Spiele auf dem Startbildschirm. */
@@ -43,6 +45,8 @@ export interface MemberInfo {
   name: string;
   avatar: string;
   connected: boolean;
+  /** Name und Bild hat die Raumleitung festgelegt – das Mitglied kann sie nicht mehr ändern. */
+  nameFixed?: boolean;
 }
 
 export type RoomPhase = 'lobby' | 'playing' | 'finished';
@@ -89,6 +93,12 @@ export type ClientMessage =
   | { type: 'leaveSeat' }
   | { type: 'fillSeats' }
   | { type: 'kick'; memberId: string }
+  /** Raumleitung: Mitglied vom Platz nehmen (Lobby und laufende Partie); es bleibt als Zuschauer im Raum. */
+  | { type: 'unseat'; index: number }
+  /** Raumleitung: Namen und Bild eines Mitglieds festlegen. */
+  | { type: 'renameMember'; memberId: string; name: string; avatar: string }
+  /** Raumleitung: Dürfen Mitglieder ihren Namen selbst ändern? */
+  | { type: 'setNamesLocked'; locked: boolean }
   | { type: 'start'; rotate?: boolean }
   /** Nach dem Ende: zurück in die Lobby (nur die Raumleitung). */
   | { type: 'toLobby' }
@@ -200,6 +210,12 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return isInt(m.index, 0, MAX_SEATS - 1) ? { type: 'takeSeat', index: m.index } : null;
     case 'kick':
       return isString(m.memberId, 20) ? { type: 'kick', memberId: m.memberId } : null;
+    case 'unseat':
+      return isInt(m.index, 0, MAX_SEATS - 1) ? { type: 'unseat', index: m.index } : null;
+    case 'renameMember':
+      return isString(m.memberId, 20) && isString(m.name) && isString(m.avatar, 20) ? { type: 'renameMember', memberId: m.memberId, name: m.name, avatar: m.avatar } : null;
+    case 'setNamesLocked':
+      return typeof m.locked === 'boolean' ? { type: 'setNamesLocked', locked: m.locked } : null;
     case 'move':
       return isInt(m.version) && 'move' in m ? { type: 'move', version: m.version, move: m.move } : null;
     case 'react':

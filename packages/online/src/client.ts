@@ -112,6 +112,11 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
     for (const listener of this.listeners) listener({ events: message.events, entry: null });
   }
 
+  /** Welches Mitglied an einem Platz sitzt (null: frei oder Bot). */
+  seatMember(seat: SeatId): string | null {
+    return this.message.seats[seat]?.memberId ?? null;
+  }
+
   /** Der eigene Platz (null für Zuschauer). */
   get yourSeat(): SeatId | null {
     return this.message.yourSeat;

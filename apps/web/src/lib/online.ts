@@ -172,6 +172,12 @@ export class RoomConnection {
     if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(message));
   }
 
+  /** Eigenen Namen und Bild im Raum ändern; gilt auch beim Wiederverbinden. */
+  rename(profile: Profile): void {
+    this.profile = profile;
+    this.send({ type: 'setName', name: profile.name, avatar: profile.avatar });
+  }
+
   /** Den Raum endgültig verlassen: Der Platz geht an den Computer. */
   leave(): void {
     this.send({ type: 'leave' });

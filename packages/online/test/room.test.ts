@@ -813,3 +813,110 @@ describe('Offene Spiele (publicListing)', () => {
   });
 });
 
+
+describe('Plätze und Namen durch die Raumleitung (W-029 bis W-031)', () => {
+  let env: Env;
+  beforeEach(() => {
+    env = setup();
+  });
+
+  it('nimmt in der Lobby jemanden vom Platz; nur die Raumleitung darf das', () => {
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    anna.hello();
+    ben.hello();
+    anna.send({ type: 'setGame', gameId: 'tic-tac-toe' });
+    anna.send({ type: 'takeSeat', index: 0 });
+    ben.send({ type: 'takeSeat', index: 1 });
+    ben.send({ type: 'unseat', index: 0 });
+    expect(ben.last('error')?.code).toBe('notAllowed');
+    anna.send({ type: 'unseat', index: 1 });
+    expect(anna.room().lobby.seats[1]).toEqual({ kind: 'human', memberId: null });
+    expect(anna.room().members).toHaveLength(2);
+  });
+
+  it('während der Partie: der Bot spielt weiter, ein Zuschauer übernimmt den Platz', async () => {
+    const [anna, ben] = twoPlayers(env);
+    const cara = env.client('cara');
+    cara.hello();
+    anna.send({ type: 'unseat', index: 1 });
+    await flush();
+    expect(anna.game().away).toEqual([1]);
+    expect(anna.game().seats[1]).toMatchObject({ kind: 'human', memberId: null, name: 'Frei' });
+    expect(ben.game().yourSeat).toBeNull();
+    expect(anna.room().lobby.seats[1]).toEqual({ kind: 'human', memberId: null });
+
+    cara.send({ type: 'takeSeat', index: 1 });
+    await flush();
+    expect(cara.game().yourSeat).toBe(1);
+    expect(cara.game().away).toEqual([]);
+    expect(cara.game().seats[1]).toMatchObject({ name: 'cara', memberId: 'm3' });
+    expect(cara.room().lobby.seats[1]).toEqual({ kind: 'human', memberId: 'm3' });
+    // Wer schon sitzt, kann keinen zweiten Platz nehmen
+    anna.send({ type: 'unseat', index: 1 });
+    anna.send({ type: 'takeSeat', index: 1 });
+    expect(anna.last('error')?.code).toBe('notAllowed');
+  });
+
+  it('entfernte Mitglieder geben ihren Platz zum Übernehmen frei', async () => {
+    const [anna] = twoPlayers(env);
+    const cara = env.client('cara');
+    cara.hello();
+    anna.send({ type: 'kick', memberId: 'm2' });
+    await flush();
+    expect(anna.game().seats[1]?.memberId).toBeNull();
+    cara.send({ type: 'takeSeat', index: 1 });
+    expect(cara.game().yourSeat).toBe(1);
+  });
+
+  it('Name in der Lobby ändern – auch am Platz der laufenden Partie', () => {
+    const [anna, ben] = twoPlayers(env);
+    ben.send({ type: 'setName', name: 'Benno', avatar: '🐻' });
+    expect(anna.room().members.find((m) => m.id === 'm2')).toMatchObject({ name: 'Benno', avatar: '🐻' });
+    expect(anna.game().seats[1]).toMatchObject({ name: 'Benno', avatar: '🐻' });
+  });
+
+  it('gesperrte Namen: nur die Raumleitung ändert sie, auch beim Wiederkommen bleibt der festgelegte Name', () => {
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    anna.hello();
+    ben.hello();
+    ben.send({ type: 'setNamesLocked', locked: true });
+    expect(ben.last('error')?.code).toBe('notAllowed');
+    anna.send({ type: 'setNamesLocked', locked: true });
+    expect(anna.room().lobby.namesLocked).toBe(true);
+    ben.send({ type: 'setName', name: 'Quatsch', avatar: '🐻' });
+    expect(ben.last('error')?.code).toBe('notAllowed');
+    anna.send({ type: 'setName', name: 'Frau Lehrer', avatar: '🦉' });
+    expect(anna.room().members[0]?.name).toBe('Frau Lehrer');
+
+    anna.send({ type: 'renameMember', memberId: 'm2', name: 'Ben M', avatar: '🐢' });
+    expect(anna.room().members[1]).toMatchObject({ name: 'Ben M', avatar: '🐢', nameFixed: true });
+    // Auch ohne Sperre bleibt ein festgelegter Name fest, selbst nach erneuter Anmeldung
+    anna.send({ type: 'setNamesLocked', locked: false });
+    ben.send({ type: 'setName', name: 'Quatsch', avatar: '🐻' });
+    expect(ben.last('error')?.code).toBe('notAllowed');
+    const again = env.client('ben-2', ben.token, 'Quatsch');
+    again.hello();
+    expect(again.room().members[1]).toMatchObject({ name: 'Ben M', avatar: '🐢' });
+    // Nur die Raumleitung legt Namen fest, und auch für sie gilt der Filter
+    ben.send({ type: 'renameMember', memberId: 'm1', name: 'Boss', avatar: '🐢' });
+    expect(ben.last('error')?.code).toBe('notAllowed');
+    anna.send({ type: 'renameMember', memberId: 'm2', name: 'F1ck', avatar: '🐢' });
+    expect(anna.last('error')?.code).toBe('badName');
+  });
+
+  it('festgelegte Namen und Platz-Zuordnung überstehen Speichern und Wiederherstellen', async () => {
+    const [anna] = twoPlayers(env);
+    anna.send({ type: 'renameMember', memberId: 'm2', name: 'Ben M', avatar: '🐢' });
+    anna.send({ type: 'unseat', index: 1 });
+    const restored = Room.restore(JSON.parse(JSON.stringify(env.room.snapshot())), env.deps);
+    env.replaceRoom(restored);
+    const cara = env.client('cara');
+    cara.hello();
+    cara.send({ type: 'takeSeat', index: 1 });
+    expect(cara.game().yourSeat).toBe(1);
+    expect(cara.room().members.find((m) => m.id === 'm2')).toMatchObject({ name: 'Ben M', nameFixed: true });
+    expect(cara.room().lobby.seats[1]).toEqual({ kind: 'human', memberId: cara.last('welcome')?.you });
+  });
+});
