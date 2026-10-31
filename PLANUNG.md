@@ -45,7 +45,6 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-016 | Narrenhof | **Balatro-Joker als Narren übertragen:** Alle Joker aus Balatro recherchieren, überlegen, wie sie sich ins Narrenhof-Thema übertragen lassen (mit eigenen Namen und Ideen, keine Kopien), und einbauen. Plan in `docs/spiele/farbensortierer.md`. | mittel | offen | 2026-10-30, Cornelius |
 | W-017 | Narrenhof | **Vielfalt an Gegnern mit Porträts:** Viele Gegner, die zum Narrenhof passen. Jeder bekommt ein echtes Profilbild im Stil mittelalterlicher Gemälde, dabei überzeichnet und lustig. Erst Gegner recherchieren und einen Umsetzungsplan machen. | mittel | offen | 2026-10-30, Cornelius |
 | W-018 | Narrenhof | **Fortschritt geräteübergreifend sichern:** Freischaltungen und Käufe liegen nur im Browser (plus Sicherung als Text). Optionen erkunden, den Fortschritt mit Zugangsdaten abgesichert zu speichern: datenschutzfreundlich ohne Konto, mit Microsoft-365- oder mit Google-Konto. Ergebnis zunächst ein Vergleich. | niedrig | offen | 2026-10-30, Cornelius |
-| W-019 | Kartenspiele (v. a. Eins!, Mau-Mau) | **Kartenzahl der Mitspieler sichtbar:** Man soll auch optisch sehen, wie viele Karten jemand auf der Hand hat (z. B. kleiner verdeckter Fächer am Spieler). | niedrig | in Arbeit (Claude, claude/project-thread-lood66) | 2026-10-30, Cornelius |
 | W-020 | Layout (Desktop, Tablet) | **Spieler rund um einen Tisch:** Bei genug Platz sitzen die Spieler wie beim Poker um einen Tisch, in der Mitte findet das Spielgeschehen statt. Nicht auf dem Handy. Erst einen Umsetzungsplan machen. | niedrig | offen | 2026-10-30, Cornelius |
 | W-021 | neues Spiel | **Neues Spiel: Werwolf:** Werwolf (ähnliche Mechaniken wie Among Us) recherchieren und einen Plan erstellen, wie es sich einbauen lässt. | niedrig | offen | 2026-10-30, Cornelius |
 
@@ -53,7 +52,6 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Spiel/Bereich | Fehler | Schritte zum Nachstellen | Erwartet | Tatsächlich | Gerät/Browser | Prio | Status | Eingetragen |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| F-001 | Eins! | Handkarten teils verdeckt | 1. Partie auf dem Handy spielen.<br>2. Viele Karten auf die Hand bekommen. | Alle Karten sind so gestapelt, dass man sie immer alle sieht. | Ein Teil der Karten ist verdeckt. | Mobilgerät | mittel | in Arbeit (Claude, claude/project-thread-lood66) | 2026-10-30, Cornelius |
 | F-002 | Nicht ärgern! | Figuren stehen zu hoch im Feld | 1. Partie starten und Figuren auf dem Brett ansehen. | Der Boden der Figur steht leicht unterhalb der Feldmitte, sodass die Figur optisch mittig steht. | Der Boden der Figur steht genau in der Feldmitte, die Figur wirkt zu hoch. | – | mittel | offen | 2026-10-30, Cornelius |
 | F-003 | Nicht ärgern! | Schlagpflicht standardmäßig an | 1. Neues Spiel einrichten und die Optionen ansehen. | Schlagpflicht ist standardmäßig aus. | Schlagpflicht ist standardmäßig an. | – | mittel | offen | 2026-10-30, Cornelius |
 | F-004 | Nicht ärgern! | Wurf scheinbar für den nächsten Spieler | 1. Partie bis kurz vor Schluss spielen. | Jeder würfelt für die eigenen Figuren. | Manchmal scheint man für den nächsten Spieler zu würfeln. Muss erst mit Tests bestätigt werden. | – | mittel | offen | 2026-10-30, Cornelius |
@@ -62,3 +60,5 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
+| F-001 | Eins!: Handkarten teils verdeckt (Fächer bricht in Reihen um) | 2026-10-31 | #32 |
+| W-019 | Kartenzahl der Mitspieler als kleiner verdeckter Fächer (Eins!, Mau-Mau) | 2026-10-31 | #32 |
