@@ -4,6 +4,8 @@ Hier steht für jedes geplante Spiel ein eigener Plan. Grundlage ist das [Konzep
 
 Jeder Plan folgt derselben Gliederung: Steckbrief, Regeln, Optionen, Spielmodell, Bot, Zeitlimits, Oberfläche, Hot-Seat und Online, Tests, offene Punkte.
 
+Übergreifend: [Kernschleifen](kernschleifen.md) – Plan, wie sich die häufigsten Handlungen aller Spiele mit Animation und Klang besser anfühlen (W-013).
+
 ## Übersicht
 
 Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.

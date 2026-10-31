@@ -1,5 +1,5 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import { FitBox, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { DIE_ROLL_MS, Die3D, FitBox, useRollCounter, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useId, useState } from 'react';
 import {
   TRACK_LENGTH,
@@ -451,6 +451,15 @@ function LastRollBadge({ seat, seats, dice }: { seat: SeatId; seats: number; dic
 
 function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoMove>) {
   const poseOf = usePieceAnimation(events, view.seats);
+  const rollKey = useRollCounter(events);
+  // Ein Wurf ohne Zug bleibt nach dem Rollen blass liegen, bis der Nächste würfelt.
+  const [rolling, setRolling] = useState(false);
+  useEffect(() => {
+    if (rollKey === 0) return;
+    setRolling(true);
+    const id = window.setTimeout(() => setRolling(false), DIE_ROLL_MS + 250);
+    return () => window.clearTimeout(id);
+  }, [rollKey]);
 
   const turn = view.turn;
   const color = colorIndex(turn, view.seats);
@@ -516,6 +525,7 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
   return (
     <FitBox ratio={1}>
       <div className="ludo-container">
+        <div className="ludo-board-wrap">
         <svg viewBox="0 0 1100 1100" className="ludo-board-svg">
           {/* Hintergrund-Brett */}
           <rect width="1100" height="1100" rx="32" fill="#F8FAFC" stroke="#E2E8F0" strokeWidth="6" />
@@ -644,24 +654,9 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
                 className="cursor-pointer"
                 onClick={canRoll ? () => onMove({ type: 'roll' }) : undefined}
               >
-                {view.dice !== null ? (
-                  <g transform="translate(40, 25)">
-                    <DiceFace value={view.dice} size={70} />
-                  </g>
-                ) : (
-                  <text
-                    x="75"
-                    y="65"
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fontSize="46"
-                  >
-                    🎲
-                  </text>
-                )}
                 <text
                   x="75"
-                  y="118"
+                  y="130"
                   textAnchor="middle"
                   fill={activeStyle.border}
                   fontSize="16"
@@ -679,12 +674,9 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
 
             {view.phase === 'move' && view.dice !== null && (
               <g>
-                <g transform="translate(40, 25)">
-                  <DiceFace value={view.dice} size={70} />
-                </g>
                 <text
                   x="75"
-                  y="118"
+                  y="130"
                   textAnchor="middle"
                   fill={activeStyle.border}
                   fontSize="15"
@@ -744,6 +736,18 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
               );
             })}
         </svg>
+          {/* Der Würfel liegt als HTML über der Brettmitte: 3D-Transformationen in SVG (foreignObject) sind in Safari unzuverlässig. */}
+          <div className="ludo-dice-overlay">
+            <Die3D
+              value={view.dice ?? view.lastRoll?.dice ?? null}
+              rollKey={rollKey}
+              crit={(view.dice ?? view.lastRoll?.dice) === 6}
+              inviting={canRoll && view.dice === null}
+              label={view.dice !== null ? `Würfel: ${view.dice}` : undefined}
+              className={`ludo-die3d ${view.dice === null && !rolling ? 'ludo-die3d-old' : ''}`}
+            />
+          </div>
+        </div>
 
         {/* Passen-Knopf, falls kein Zug möglich ist */}
         {hasPassMove && (
