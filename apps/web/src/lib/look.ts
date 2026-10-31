@@ -26,8 +26,18 @@ export function activeLook(): Look {
   return contrastQuery.matches ? 'plain' : chosen;
 }
 
+/** Farbe der Browserleiste; `dark` entspricht dem zweiten Eintrag in index.html. */
+const BAR_COLORS: Record<Look, { light: string; dark: string }> = {
+  plain: { light: '#1f6f5c', dark: '#121417' },
+  tavern: { light: '#5a3b22', dark: '#1d1510' },
+};
+
 function apply(): void {
-  document.documentElement.dataset.look = activeLook();
+  const look = activeLook();
+  document.documentElement.dataset.look = look;
+  for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+    meta.content = BAR_COLORS[look][meta.media.includes('dark') ? 'dark' : 'light'];
+  }
   for (const listener of listeners) listener();
 }
 

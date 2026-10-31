@@ -420,9 +420,9 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
       {GAME_SERVER && (
         <a
           href={paths.online}
-          className="flex items-center gap-4 rounded-2xl border border-accent/40 bg-accent/10 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
+          className="bub-tile flex items-center gap-4 rounded-2xl border border-accent/40 bg-accent/10 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
         >
-          <span className="text-4xl leading-none" aria-hidden="true">
+          <span className="bub-tile-crest text-4xl leading-none" aria-hidden="true">
             🌐
           </span>
           <span className="min-w-0 space-y-1">
@@ -476,7 +476,7 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
                 type="button"
                 aria-pressed={isSelected}
                 onClick={() => setActiveFilter(tab.id)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition cursor-pointer ${
+                className={`bub-filter inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition cursor-pointer ${
                   isSelected
                     ? 'border-accent bg-accent text-accent-ink shadow-xs'
                     : 'border-line bg-surface text-ink hover:border-accent/50'
@@ -504,7 +504,7 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
               aria-pressed={isSelected}
               aria-label={count === null ? 'Beliebig viele Spieler' : count === 1 ? '1 Spieler' : `${count} Spieler`}
               onClick={() => setPlayers(count)}
-              className={`min-w-9 cursor-pointer rounded-full border px-2.5 py-1 text-sm font-semibold transition ${
+              className={`bub-filter min-w-9 cursor-pointer rounded-full border px-2.5 py-1 text-sm font-semibold transition ${
                 isSelected ? 'border-accent bg-accent text-accent-ink shadow-xs' : 'border-line bg-surface text-ink hover:border-accent/50'
               }`}
             >
