@@ -54,6 +54,8 @@ export interface SessionRuntime {
   clocks: ClocksState;
   away: SeatId[];
   timeouts: number[];
+  /** Wann der nächste verzögerte Systemzug fällig ist (`GameModule.systemDelayMs`); fehlt in älteren Schnappschüssen. */
+  systemDue?: number | null;
 }
 
 export interface BotRequest<V = unknown> {
@@ -127,6 +129,8 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private pendingBots = new Map<SeatId, number>();
   private parked = new Map<SeatId, ParkedMove<M>>();
   private parkTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Fälligkeit des nächsten verzögerten Systemzugs (`GameModule.systemDelayMs`). */
+  private systemDue: number | null = null;
   private deadlineChanged: (() => void) | undefined;
   private consecutiveTimeouts: number[];
   private away = new Set<SeatId>();
@@ -164,8 +168,11 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
       this.clocks.load(runtime.clocks);
       runtime.away.forEach((seat) => this.away.add(seat));
       runtime.timeouts.forEach((count, seat) => (this.consecutiveTimeouts[seat] = count));
+      this.systemDue = runtime.systemDue ?? null;
     }
     this.advance();
+    // Ein übernommener Systemzug-Wecker muss auch hier klingeln, nicht nur beim Server-Wecker.
+    this.armParkTimer();
   }
 
   /**
@@ -305,7 +312,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   nextDeadline(): number | null {
     if (this._disposed || this._paused || this.result) return null;
     const now = this.now();
-    let next: number | null = null;
+    let next: number | null = this.systemDue;
     for (const parked of this.parked.values()) if (next === null || parked.due < next) next = parked.due;
     if (!this.clocks.enabled) return next;
     for (const seat of this.currentSeats()) {
@@ -471,7 +478,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
       config: this.config,
       log: [...this._log],
       forfeit: this._forfeit,
-      runtime: { clocks: this.clocks.state(), away: [...this.away], timeouts: [...this.consecutiveTimeouts] },
+      runtime: { clocks: this.clocks.state(), away: [...this.away], timeouts: [...this.consecutiveTimeouts], systemDue: this.systemDue },
     };
   }
 
@@ -529,8 +536,20 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private advance(): GameEvent[] {
     const events: GameEvent[] = [];
     if (this._disposed) return events;
+    let systemWaits = false;
     for (let guard = 0; !this.module.result(this._state) && this.module.currentPlayers(this._state).includes('system'); guard++) {
       if (guard > 10_000) throw new Error('Zu viele Systemzüge hintereinander.');
+      const delay = this.module.systemDelayMs?.(this._state) ?? 0;
+      if (delay > 0) {
+        // Echtzeit: Der Systemzug wartet; ein schon gestellter Wecker bleibt (sonst schöbe jeder Zug ihn hinaus).
+        systemWaits = true;
+        if (this.systemDue === null && !this._paused && !this._forfeit) {
+          this.systemDue = this.now() + delay;
+          this.armParkTimer();
+          this.deadlineChanged?.();
+        }
+        break;
+      }
       const move = this.module.legalMoves(this._state, 'system')[0] as M | undefined;
       if (move === undefined) throw new Error('Die Spielleitung ist am Zug, hat aber keinen Systemzug.');
       const step = this.module.applyMove(this._state, 'system', move);
@@ -538,6 +557,11 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
       this.invalidateCache();
       events.push(...step.events);
       this._log.push({ actor: 'system', move, cause: 'system' });
+    }
+
+    if (!systemWaits && this.systemDue !== null) {
+      this.systemDue = null;
+      this.armParkTimer();
     }
 
     const now = this.now();
@@ -605,9 +629,15 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     this.deadlineChanged?.();
   }
 
-  /** Führt fällige geparkte Bot-Züge aus, sofern sie noch erlaubt sind; sonst rechnet der Bot neu. */
+  /** Führt fällige geparkte Bot-Züge und den verzögerten Systemzug aus, sofern sie noch erlaubt sind; sonst rechnet der Bot neu. */
   private runParked(): void {
     const now = this.now();
+    if (this.systemDue !== null && this.systemDue <= now && !this._disposed && !this._paused && !this.result) {
+      this.systemDue = null;
+      const move = this.module.currentPlayers(this._state).includes('system') ? (this.module.legalMoves(this._state, 'system')[0] as M | undefined) : undefined;
+      if (move !== undefined) this.commit('system', move, 'system');
+      else this.advance();
+    }
     for (const [seat, parked] of [...this.parked]) {
       if (parked.due > now || this._disposed || this._paused || this.result) continue;
       this.parked.delete(seat);
@@ -624,8 +654,8 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private armParkTimer(): void {
     if (this.parkTimer !== null) clearTimeout(this.parkTimer);
     this.parkTimer = null;
-    if (this._disposed || this.parked.size === 0) return;
-    const due = Math.min(...[...this.parked.values()].map((p) => p.due));
+    if (this._disposed || (this.parked.size === 0 && this.systemDue === null)) return;
+    const due = Math.min(...[...this.parked.values()].map((p) => p.due), this.systemDue ?? Infinity);
     this.parkTimer = setTimeout(() => this.runParked(), Math.max(0, due - this.now()));
   }
 
@@ -637,6 +667,8 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private dropAllBots(): void {
     this.pendingBots.clear();
     this.parked.clear();
+    // Auch der verzögerte Systemzug: Nach Pause, Rücknahme oder Ende stellt `advance()` ihn neu.
+    this.systemDue = null;
     this.armParkTimer();
   }
 

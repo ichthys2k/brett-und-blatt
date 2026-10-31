@@ -166,10 +166,16 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 3;
-  transition: left 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  /* Strömung: gleichmäßig über einen ganzen Takt (DRIFT_TICK_MS), damit die Ente stetig gleitet. */
+  transition: left 1s linear;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Schub nach einer richtigen Antwort: schnell und federnd. */
+.dr-duck-surge {
+  transition: left 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes dr-bob {

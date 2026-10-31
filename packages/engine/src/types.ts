@@ -202,6 +202,14 @@ export interface GameModule<S, M, V = S> {
    * Wird mit `actor = 'system'` ausgeführt und im Zugprotokoll gespeichert.
    */
   seatChangeMove?(state: S, seat: SeatId, active: boolean): M | null;
+  /**
+   * Wartezeit der Spielleitung vor dem nächsten Systemzug: Ist 'system' am Zug und liefert die
+   * Funktion mehr als 0, führt die Spielleitung den Systemzug erst nach so vielen Millisekunden
+   * aus – für Abläufe in Echtzeit wie die Strömung in der Enten-Rallye. Die anderen Plätze
+   * können währenddessen weiter ziehen. Die Regeln kennen dabei keine Zeit; der fällige
+   * Systemzug landet wie jeder andere im Protokoll. Fehlt die Funktion, sofort.
+   */
+  systemDelayMs?(state: S): number;
   /** Standardzug bei Zeitablauf; fehlt er, zieht der Bot. */
   timeoutMove?(state: S, seat: SeatId): M;
   /** Pflicht bei verdeckten Informationen: füllt Unbekanntes passend zur Sicht auf. */
