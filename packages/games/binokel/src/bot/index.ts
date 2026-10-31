@@ -1,7 +1,7 @@
 import { cardRank, cardSuit, pimcMove, trickWinner, winsAllTricks, type BotContext, type BotDefinition, type BotLevel, type CardId, type Suit } from '@brett-und-blatt/engine';
 import { binokelContract, createDeck, eyes, power, SUITS } from '../cards';
 import { findMelds, meldPoints } from '../melds';
-import { legalCardsFor, legalMoves, type BinokelMove, type BinokelState } from '../rules';
+import { activeSeats, legalCardsFor, legalMoves, teamOf, type BinokelMove, type BinokelState } from '../rules';
 
 /**
  * Bot „Schwaben-Ass“: schätzt Meldungen und Stichaugen je Trumpffarbe, reizt bis zu dieser
@@ -25,7 +25,10 @@ export const binokelHeuristicBot: BotDefinition<BinokelState, BinokelMove> = {
 
     switch (view.phase) {
       case 'bidding': {
-        const limit = biddingLimit(hand, level);
+        // Kreuzbinokel: den eigenen Partner nicht überbieten.
+        if (view.kreuz && view.bidder !== null && view.bidder !== seat && teamOf(view, seat).includes(view.bidder)) return { type: 'pass' };
+        // Im Kreuzbinokel bringt der Partner im Schnitt Meldungen und Augen mit (gemessen: mittlerer Reiz 207, Spielmacher gewinnen 92 %).
+        const limit = biddingLimit(hand, level) + (view.kreuz ? 90 : 0);
         const next = view.bid === null ? view.minBid : view.bid + 10;
         return next <= limit ? { type: 'bid', value: next } : { type: 'pass' };
       }
@@ -147,10 +150,18 @@ function choosePlay(ctx: BotContext<BinokelState, BinokelMove, BinokelState>, ha
   const cheapest = (list: CardId[]) => [...list].sort((a, b) => eyes(a) - eyes(b) || strength(a) - strength(b))[0]!;
   const richest = (list: CardId[]) => [...list].sort((a, b) => eyes(b) - eyes(a) || strength(a) - strength(b))[0]!;
   const declarer = view.declarer!;
-  const isDeclarer = seat === declarer;
+  // Im Kreuzbinokel spielt der Partner des Spielmachers mit ihm; sonst halten die Gegenspieler zusammen.
+  const isDeclarer = teamOf(view, declarer).includes(seat);
+  const friend = (s: number) => (view.kreuz ? teamOf(view, seat).includes(s) : isDeclarer ? s === seat : s !== declarer);
   const madeTrick = view.completedTricks.some((t) => t.winner === seat);
-  const needTrick = !isDeclarer && !madeTrick && view.melds[seat]!.length > 0;
+  const needTrick = !madeTrick && view.melds[seat]!.length > 0 && (!isDeclarer || view.kreuz === true);
   const trick = view.currentTrick;
+
+  // Kreuzbinokel-Durch: Der Partner des Spielmachers darf keinen Stich machen.
+  if (view.durch && seat !== declarer && isDeclarer) {
+    const losers = legal.filter((c) => trickWinner([...trick, { player: seat, card: c }], contract).player !== seat);
+    return losers.length > 0 ? cheapest(losers) : cheapest(legal);
+  }
 
   if (trick.length === 0) {
     const sideAces = legal.filter((c) => !isTrump(c) && cardRank(c) === 1);
@@ -167,9 +178,9 @@ function choosePlay(ctx: BotContext<BinokelState, BinokelMove, BinokelState>, ha
   }
 
   const current = trickWinner(trick, contract);
-  const lastToPlay = trick.length === 2;
+  const lastToPlay = trick.length === activeSeats(view).length - 1;
   const winners = legal.filter((c) => trickWinner([...trick, { player: seat, card: c }], contract).player === seat);
-  const partnerWins = !isDeclarer && current.player !== declarer;
+  const partnerWins = current.player !== seat && friend(current.player);
 
   if (partnerWins && (lastToPlay || isTrump(current.card) || power(current.card) >= 6)) {
     const side = legal.filter((c) => !isTrump(c));
