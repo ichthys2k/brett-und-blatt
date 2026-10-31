@@ -18,6 +18,10 @@
   --tavern-wood-dark: #3f2a18;
   --tavern-grain: rgb(90 59 34 / 0.05);
   --tavern-sign-ink: #f6ead2;
+  --tavern-table-board: #e6d3ad;
+  --tavern-table-cards: #d3dec6;
+  --tavern-table-family: #efdfbd;
+  --tavern-table-math: #f8f1dd;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -36,6 +40,10 @@
     --tavern-wood-dark: #2f1f12;
     --tavern-grain: rgb(230 180 80 / 0.03);
     --tavern-sign-ink: #f6ead2;
+    --tavern-table-board: #2e2015;
+    --tavern-table-cards: #1a2a20;
+    --tavern-table-family: #2a2118;
+    --tavern-table-math: #262019;
   }
 }
 
@@ -43,9 +51,65 @@
   background-image: repeating-linear-gradient(90deg, transparent 0 7px, var(--tavern-grain) 7px 8px);
 }
 
-/* Überschriften in einer Serifenschrift des Geräts; die Zierschrift folgt erst nach der Probe. */
-[data-look='tavern'] .bub-home :is(h1, h2) {
-  font-family: Georgia, 'Iowan Old Style', 'Noto Serif', 'Liberation Serif', serif;
+/* Zierschrift nur für große Überschriften des Rahmens; Spiele und kleine Titel bleiben in der Systemschrift. */
+[data-look='tavern'] :is(h1:not(.bub-room-code), .bub-home h2, .bub-ceremony-title) {
+  font-family: Almendra, Georgia, 'Noto Serif', serif;
+}
+
+/* Fläche um das Spielfeld je Raum. Hell und ruhig, weil viele Spiele direkt darauf schreiben. */
+[data-look='tavern'] .bub-table[data-category='board'] {
+  background: repeating-linear-gradient(0deg, transparent 0 22px, var(--tavern-grain) 22px 24px), var(--tavern-table-board);
+}
+
+[data-look='tavern'] .bub-table[data-category='cards'] {
+  background: var(--tavern-table-cards);
+}
+
+[data-look='tavern'] .bub-table[data-category='family'] {
+  background: repeating-linear-gradient(0deg, transparent 0 22px, var(--tavern-grain) 22px 24px), var(--tavern-table-family);
+}
+
+[data-look='tavern'] .bub-table[data-category='math'] {
+  background: var(--tavern-table-math);
+}
+
+/* Lobby: Tische mit Holzkante, das Tischzeichen auf grünem Filz */
+[data-look='tavern'] .bub-lobby > section.rounded-2xl {
+  border: 2px solid var(--tavern-wood);
+  border-radius: 0.6rem;
+  box-shadow: 0 3px 0 var(--tavern-wood);
+}
+
+[data-look='tavern'] .bub-room-code {
+  width: fit-content;
+  padding: 0.15rem 0.75rem;
+  border: 2px solid var(--tavern-wood);
+  border-radius: 0.5rem;
+  background: #2c5b3c;
+}
+
+/* Siegerehrung: Holz statt Plastik, Wimpel und Blüten statt Konfetti */
+[data-look='tavern'] .bub-ceremony-card {
+  border: 3px solid var(--tavern-wood);
+  border-radius: 14px;
+}
+
+[data-look='tavern'] .bub-podium-step[data-place] .bub-podium-block {
+  background: linear-gradient(var(--tavern-wood), var(--tavern-wood-dark));
+}
+
+[data-look='tavern'] .bub-ceremony-confetti > span {
+  width: 0.85rem;
+  height: 1.15rem;
+  border-radius: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  filter: saturate(0.75);
+}
+
+[data-look='tavern'] .bub-ceremony-confetti > span[data-round] {
+  width: 0.85rem;
+  height: 0.85rem;
+  clip-path: polygon(50% 0, 62% 30%, 95% 25%, 72% 50%, 95% 75%, 62% 70%, 50% 100%, 38% 70%, 5% 75%, 28% 50%, 5% 25%, 38% 30%);
 }
 
 /* Kopf der Startseite als Holzschild */

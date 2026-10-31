@@ -54,8 +54,8 @@ Die sachliche Rubrik bleibt als Unterzeile sichtbar, auch die Filter behalten ih
 
 - **Aussehen-Wahl:** „Schlicht“ oder „Taverne“ auf derselben Einstellungsseite wie Ton und Musik, gesetzt als `data-look` auf `<html>`. Die Taverne überschreibt nur Tokens und ergänzt Rahmenklassen. Bei `prefers-contrast: more` gilt immer Schlicht.
 - **Farben:** Hell = Tag (Pergament `#f3e9d2`, Eiche `#5a3b22`, Waldgrün, Kupfer). Dunkel = Kaminabend (Rußbraun, Kerzengelb). Ein Test rechnet die Kontraste der Token-Paare nach WCAG AA aus und schlägt sonst fehl.
-- **Oberflächen:** Holz, Filz und Pergament nur mit CSS (wie die Harlekin-Rauten des Narrenhofs), keine Bilddateien.
-- **Schrift:** Genau eine freie Zierschrift (OFL) für Überschriften, selbst ausgeliefert, höchstens etwa 50 KB, Quelle in `THIRD_PARTY.md`. Vorher mit „Größenänderung“ und „Würfelblock“ prüfen: Umlaute, ß, Breite auf dem Handy. Alles andere bleibt Systemschrift.
+- **Oberflächen:** Holz, Filz und Pergament nur mit CSS (wie die Harlekin-Rauten des Narrenhofs), keine Bilddateien. Die Fläche ums Spielfeld bleibt hell und gedämpft, weil viele Spiele direkt darauf schreiben; auch diese Kontraste prüft der Test.
+- **Schrift:** Almendra Bold (OFL) für große Überschriften, selbst ausgeliefert (`@fontsource/almendra`), Quelle in `THIRD_PARTY.md`. Alles andere bleibt Systemschrift.
 - **Startseite:** Räume als Überschriften, Kacheln mit Holzkante und Spiel-Emoji als Wappen, ein Begrüßungssatz.
 - **Lobby und Siegerehrung:** Nur Optik über `data-look`: Holz und Filz in der Lobby; Wimpel und Blüten statt Konfetti, Ehrenbank als Treppchen. Wörter und Abläufe bleiben.
 - **Spiele:** Nur die gemeinsame Fläche um das Spielfeld in `Play.tsx`. Sieht ein Spiel davor schlecht aus, wird es einzeln korrigiert.
@@ -110,7 +110,7 @@ Neben jedem Herrn liegt ein Ei, das nach einer festen Zahl Runden schlüpft; der
 Jeder Schritt auf eigenem Zweig mit `corepack pnpm check`, Blick im Browser und veröffentlicht erst auf „deploy“.
 
 1. ✅ **Probe (31.10.2026):** Aussehen-Wahl, Tokens hell und dunkel, Kontrast-Test, Startseite; Taverne als Standard.
-2. **Rahmen fertig:** Schrift, Lobby, Siegerehrung, Fläche um das Spielfeld, Korrekturen einzelner Spiele. Test am Handy und am Beamer.
+2. ✅ **Rahmen fertig (31.10.2026):** Schrift, Lobby, Siegerehrung, Fläche um das Spielfeld, Korrekturen einzelner Spiele. Test am Handy und am Beamer.
 3. **Drachenspiel-Thema:** Begriffe, Wimpel, Knappen, Wappenrahmen, Turnierplatz. Keine Regeländerung, unabhängig von 1 und 2.
 4. **Nach Wunsch einzeln:** Wirtin, Klänge und Playlist, gemalte Karten, Drachenei.
 

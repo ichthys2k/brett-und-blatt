@@ -33,6 +33,7 @@ const PAIRS = [
   ['color-danger', 'color-surface'],
   ['tavern-sign-ink', 'tavern-wood'],
   ['tavern-sign-ink', 'tavern-wood-dark'],
+  ...['board', 'cards', 'family', 'math'].flatMap((room) => [['color-ink', `tavern-table-${room}`], ['color-muted', `tavern-table-${room}`]] as const),
 ] as const;
 
 describe('Aussehen Taverne: Kontraste nach WCAG AA', () => {
