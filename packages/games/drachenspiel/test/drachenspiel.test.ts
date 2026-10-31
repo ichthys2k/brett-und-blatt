@@ -301,7 +301,7 @@ describe('Zauberkarten', () => {
   const give = (s: ReturnType<typeof base>['s'], seat: number, defId: string) => {
     s.players[seat as 0 | 1].hand = [{ uid: `x_${defId}`, defId }];
   };
-  const minion = (id: string, attack: number, health: number) => ({
+  const minion = (id: string, attack: number, health: number): Minion => ({
     id, cardId: 'c43', name: 'Zebra', emoji: '🦓', cost: 3, baseAttack: attack, attack, baseHealth: health, maxHealth: health, health,
     quote: null, sound: null, taunt: false, rush: false, bubble: false, poisonous: false, stealth: false, canAttack: false, hasAttacked: false, deathrattle: null,
   });
@@ -337,9 +337,9 @@ describe('Zauberkarten', () => {
     const { s, me } = base();
     s.players[me].board = [minion('m_x', 1, 1)];
     for (const [spell, check] of [
-      ['s_honey', (m: ReturnType<typeof minion>) => m.attack === 3 && m.health === 3 && m.maxHealth === 3],
-      ['s_tailwind', (m: ReturnType<typeof minion>) => m.attack === 2 && m.canAttack],
-      ['s_soapBubble', (m: ReturnType<typeof minion>) => m.bubble],
+      ['s_honey', (m: Minion) => m.attack === 3 && m.health === 3 && m.maxHealth === 3],
+      ['s_tailwind', (m: Minion) => m.attack === 2 && m.canAttack],
+      ['s_soapBubble', (m: Minion) => m.bubble],
     ] as const) {
       give(s, me, spell);
       const next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0, target: { kind: 'minion', id: 'm_x' } }).state;
