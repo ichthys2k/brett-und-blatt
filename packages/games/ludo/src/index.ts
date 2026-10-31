@@ -23,10 +23,10 @@ const options: OptionSpec[] = [
     label: 'Schlagpflicht',
     description: 'Schlagbare Züge haben Vorrang vor normalen Zügen.',
     choices: [
-      { value: 'on', label: 'Schlagpflicht an (Standard)' },
-      { value: 'off', label: 'Schlagen freiwillig' },
+      { value: 'off', label: 'Schlagen freiwillig (Standard)' },
+      { value: 'on', label: 'Schlagpflicht an' },
     ],
-    default: 'on',
+    default: 'off',
   },
   {
     id: 'threeRolls',

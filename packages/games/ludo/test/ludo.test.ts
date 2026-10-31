@@ -141,6 +141,47 @@ describe('Nicht ärgern! (Ludo) – Regeln & Mechanik', () => {
     expect(moves).toEqual([{ type: 'move', pieceIndex: 0 }]);
   });
 
+  it('Schlagen ist standardmäßig freiwillig', () => {
+    let state = gameModule.setup(4, {}, 'test-seed') as LudoState;
+    expect(state.mandatoryCapture).toBe(false);
+    state.pieces[0][0] = { area: 'track', index: 5 };
+    state.pieces[1][0] = { area: 'track', index: 38 };
+    state.pieces[0][1] = { area: 'track', index: 20 };
+    state = { ...state, turn: 0, phase: 'move', dice: 3, rollsLeft: 0 };
+
+    expect(gameModule.legalMoves(state, 0)).toEqual([
+      { type: 'move', pieceIndex: 0 },
+      { type: 'move', pieceIndex: 1 },
+    ]);
+  });
+
+  it('Wurf ohne Zug: der Würfel liegt nicht beim nächsten Spieler (F-004)', () => {
+    let state = gameModule.setup(4, {}, 'kein-zug') as LudoState;
+    // Kurz vor Schluss: drei Figuren im Ziel (a–c), die letzte steht vor dem Ziel.
+    // Mit 1–3 träfe sie ein besetztes Feld, mit 4 müsste sie überspringen, 5 und 6 schießen über.
+    state.pieces[0] = [
+      { area: 'goal', index: 0 },
+      { area: 'goal', index: 1 },
+      { area: 'goal', index: 2 },
+      { area: 'track', index: 39 },
+    ];
+    state = { ...state, rollsLeft: 1 };
+
+    const res = gameModule.applyMove(state, 0, { type: 'roll' });
+    const rolled = res.events.find((e) => e.type === 'rolled') as { dice: number } | undefined;
+    expect(rolled).toBeDefined();
+    expect(res.state.turn).toBe(1);
+    expect(res.state.phase).toBe('roll');
+    // Grün würfelt selbst neu, der alte Wurf gehört sichtbar zu Gelb.
+    expect(res.state.dice).toBeNull();
+    expect(res.state.lastRoll).toEqual({ seat: 0, dice: rolled!.dice });
+    expect(gameModule.legalMoves(res.state, 1)).toEqual([{ type: 'roll' }]);
+
+    // Sobald Grün würfelt, ist der Hinweis auf Gelbs Wurf weg.
+    const next = gameModule.applyMove(res.state, 1, { type: 'roll' });
+    expect(next.state.lastRoll).toBeNull();
+  });
+
   it('Einzug ins Zielhaus und Siegbedingungen', () => {
     let state = gameModule.setup(4, {}, 'test-seed') as LudoState;
     // 3 Figuren bereits im Ziel

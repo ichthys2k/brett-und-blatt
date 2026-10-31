@@ -37,8 +37,6 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-008 | alle Spiele | **Große Siegerehrung am Rundenende:** Am Rundenende eine Siegerehrung über den ganzen Bildschirm, für alle sichtbar. Die bisherige Siegermeldung ist zu dezent. | niedrig | offen | 2026-10-30, Cornelius |
 | W-009 | Enten-Rallye | **Ente schwimmt von selbst:** Die Ente schwimmt auch ohne richtige Antworten langsam nach vorn. Eine richtig beantwortete Aufgabe gibt ihr einen Schub und beschleunigt sie. | niedrig | offen | 2026-10-30, Cornelius |
 | W-010 | alle Würfelspiele (Würfelblock, Mäxle, Nicht ärgern! …) | **Würfelwurf eindrucksvoll animieren:** Der Wurf soll richtig gut aussehen, Vorbild Baldur's Gate, und höchstens etwa eine Sekunde dauern. | mittel | offen | 2026-10-30, Cornelius |
-| W-011 | Nicht ärgern! | **Figuren ziehen sichtbar:** Figuren springen nicht, sondern ziehen sichtbar Feld für Feld (hüpfend), ähnlich wie das Gleiten im Schach. | niedrig | offen | 2026-10-30, Cornelius |
-| W-012 | Nicht ärgern! | **Schlagen deutlich animieren:** Wird eine Figur geschlagen, soll das deutlich animiert sein (z. B. Figur fliegt zurück in den Stall). | niedrig | offen | 2026-10-30, Cornelius |
 | W-013 | alle Spiele | **Kernabläufe aller Spiele befriedigender machen:** Für jedes Spiel die Kernschleife betrachten: Welche Züge macht man immer wieder? Wie fühlen sie sich mit Animationen, Klängen und anderen Ideen richtig gut an? Ergebnis ist zunächst ein umfassender Plan, der dann Spiel für Spiel umgesetzt wird. | hoch | offen | 2026-10-30, Cornelius |
 | W-014 | alle Spiele | **Mehr Lieder in den Playlists:** Die Playlists sollen mehr Stücke bekommen (Auswahl durch Cornelius, Ablage in `musik/` im Klang-Repo). | mittel | offen | 2026-10-30, Cornelius |
 | W-015 | Schach, Vierer-Schach | **Bauernumwandlung in jede Figur:** Bei der Umwandlung auch Turm, Läufer oder Springer wählen können, nicht nur die Dame. Als Spieloption, standardmäßig an. | mittel | offen | 2026-10-30, Cornelius |
@@ -52,13 +50,15 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Spiel/Bereich | Fehler | Schritte zum Nachstellen | Erwartet | Tatsächlich | Gerät/Browser | Prio | Status | Eingetragen |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| F-002 | Nicht ärgern! | Figuren stehen zu hoch im Feld | 1. Partie starten und Figuren auf dem Brett ansehen. | Der Boden der Figur steht leicht unterhalb der Feldmitte, sodass die Figur optisch mittig steht. | Der Boden der Figur steht genau in der Feldmitte, die Figur wirkt zu hoch. | – | mittel | offen | 2026-10-30, Cornelius |
-| F-003 | Nicht ärgern! | Schlagpflicht standardmäßig an | 1. Neues Spiel einrichten und die Optionen ansehen. | Schlagpflicht ist standardmäßig aus. | Schlagpflicht ist standardmäßig an. | – | mittel | offen | 2026-10-30, Cornelius |
-| F-004 | Nicht ärgern! | Wurf scheinbar für den nächsten Spieler | 1. Partie bis kurz vor Schluss spielen. | Jeder würfelt für die eigenen Figuren. | Manchmal scheint man für den nächsten Spieler zu würfeln. Muss erst mit Tests bestätigt werden. | – | mittel | offen | 2026-10-30, Cornelius |
 
 ## Erledigt
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
+| W-011 | Figuren ziehen sichtbar (Nicht ärgern!) | 2026-10-31 | #30 |
+| W-012 | Schlagen deutlich animieren (Nicht ärgern!) | 2026-10-31 | #30 |
+| F-002 | Nicht ärgern!: Figuren stehen zu hoch im Feld | 2026-10-31 | #30 |
+| F-003 | Nicht ärgern!: Schlagpflicht standardmäßig an | 2026-10-31 | #30 |
+| F-004 | Nicht ärgern!: Wurf scheinbar für den nächsten Spieler | 2026-10-31 | #30 |
 | F-001 | Eins!: Handkarten teils verdeckt (Fächer bricht in Reihen um) | 2026-10-31 | #32 |
 | W-019 | Kartenzahl der Mitspieler als kleiner verdeckter Fächer (Eins!, Mau-Mau) | 2026-10-31 | #32 |

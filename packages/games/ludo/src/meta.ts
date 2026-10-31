@@ -14,13 +14,13 @@ export const meta: GameInfo = {
   patterns: ['open'],
   hiddenInformation: false,
   hints: true,
-  ruleVersion: 1,
+  ruleVersion: 2,
   howToPlay: [
     'Bringe alle vier Figuren deiner Farbe aus dem Wartehäuschen ins Ziel.',
     'Bei einer 6 musst du eine Figur auf das Startfeld setzen und darfst noch einmal würfeln.',
     'Hast du keinen Stein auf der Strecke, darfst du bis zu dreimal würfeln.',
     'Endet dein Zug auf einem gegnerischen Stein, wird dieser geschlagen und muss zurück ins Häuschen.',
-    'Schlagpflicht: Kannst du schlagen, musst du schlagen (in den Optionen anpassbar).',
+    'Schlagen ist freiwillig. Mit der Option „Schlagpflicht“ musst du schlagen, wenn du kannst.',
     'Wer zuerst alle vier Figuren in den Zielfeldern hat, gewinnt die Partie.',
   ],
 };
