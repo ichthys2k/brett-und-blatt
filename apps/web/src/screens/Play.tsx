@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } fro
 import { Ceremony } from '../components/Ceremony';
 import { Button } from '../components/controls';
 import { HowToOverlay } from '../components/HowTo';
+import { MoreMenu } from '../components/MoreMenu';
 import { SoundControl } from '../components/SoundControl';
 import { t } from '../i18n';
 import { getActiveGame, resumeGame, saveProgress, startGame, type ActiveGame } from '../lib/activeGame';
@@ -37,6 +38,9 @@ export function Play() {
 }
 
 /** Eine Partie im Browser: speichern nach jedem Zug, neu starten, Revanche. */
+/** Höhe der Kopfzeile über dem Spieltisch (px). */
+const TABLE_BAR_HEIGHT = 56;
+
 function LocalTable({ active, onRestart }: { active: ActiveGame; onRestart: (game: ActiveGame) => void }) {
   const restart = async (rotate: boolean) => {
     const config = active.session.config;
@@ -150,9 +154,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   /** Viele Spieler: im Hochformat eine Zeile zum Wischen statt vieler Reihen, die dem Spielfeld den Platz nehmen. */
   const many = seats.length > 4;
   const playersRef = useRef<HTMLElement>(null);
-  const [tableRef, tableSize] = useElementSize<HTMLElement>();
-  /** Genug Platz: Das Spiel setzt die Spieler um seinen Tisch, die Leiste entfällt. */
-  const around = Boolean(ui.seatsAround) && seatRingFits(seats.length, tableSize.width, tableSize.height);
+  const [rootRef, rootSize] = useElementSize<HTMLDivElement>();
+  /**
+   * Genug Platz: Das Spiel setzt die Spieler um seinen Tisch, die Seitenleiste entfällt, und über dem Tisch bleibt nur die
+   * Kopfzeile. Gemessen wird das ganze Fenster, nicht das Spielfeld: Das wächst durch den Wegfall der Leiste selbst.
+   */
+  const around = Boolean(ui.seatsAround) && seatRingFits(seats.length, rootSize.width, rootSize.height - TABLE_BAR_HEIGHT);
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
   const current = session.currentSeats();
@@ -295,22 +302,130 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     );
   };
 
+  const statusContent = (
+    <>
+      {yourMove ? (
+        <span key={`${session.version}`} className="bub-your-turn">
+          <span aria-hidden="true">👉</span>
+          {status}
+        </span>
+      ) : (
+        status
+      )}
+      {result?.reason === 'time' && ` (${t('play.reason.time')})`}
+      {result?.reason === 'resign' && ` (${t('play.reason.resign')})`}
+      {result?.reason === 'agreement' && ` (${t('play.reason.agreement')})`}
+    </>
+  );
+
+  const inviteBox = online?.invite && (
+    <div className={`flex-none items-center justify-between gap-3 rounded-xl border border-line/70 bg-surface px-3 py-1.5 text-xs text-muted ${around ? 'flex' : 'order-2 mx-3 mb-1 hidden side:flex'}`}>
+      <span>
+        {t('online.room')}: <strong className="font-semibold text-ink">{online.invite.code}</strong>
+      </span>
+      <button
+        type="button"
+        className="cursor-pointer font-medium hover:text-ink"
+        onClick={() => {
+          navigator.clipboard.writeText(online.invite!.link);
+          setCopiedInvite(true);
+          setTimeout(() => setCopiedInvite(false), 2000);
+        }}
+        title={t('online.copyLink')}
+      >
+        📋 {copiedInvite ? t('online.copied') : t('online.copyLink')}
+      </button>
+    </div>
+  );
+
+  // Oft gebrauchte Knöpfe; am Tisch liegen die übrigen im Menü „⋯“ der Kopfzeile.
+  const primaryControls = result ? (
+    <>
+      {ceremonyClosed && (
+        <Button variant="ghost" onClick={() => setCeremonyClosed(false)}>
+          {t('ceremony.show')}
+        </Button>
+      )}
+      {resultActions}
+    </>
+  ) : (
+    <>
+      {!online && humans.length > 0 && !info.noUndo && (
+        <Button disabled={!session.canUndo()} onClick={() => session.undo()}>
+          ↶ {t('play.undo')}
+        </Button>
+      )}
+      {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
+    </>
+  );
+  const secondaryControls = online ? (
+    <>
+      {online.isHost && online.onRestart && (
+        <Button
+          onClick={() => {
+            if (window.confirm(t('play.restartConfirm'))) {
+              online.onRestart?.(false);
+            }
+          }}
+        >
+          {t('play.restart')}
+        </Button>
+      )}
+      {online.isHost && (
+        <Button
+          variant="ghost"
+          onClick={() => {
+            if (window.confirm(t('online.toLobbyConfirm'))) {
+              online.onLobby();
+            }
+          }}
+        >
+          {t('online.toLobby')}
+        </Button>
+      )}
+      {canResign && (
+        <Button variant="ghost" onClick={resign}>
+          {t('play.resign')}
+        </Button>
+      )}
+    </>
+  ) : (
+    <>
+      <Button onClick={() => local?.onRestart(false)}>{t('play.restart')}</Button>
+      {canResign && (
+        <Button variant="ghost" onClick={resign}>
+          {t('play.resign')}
+        </Button>
+      )}
+    </>
+  );
+
   return (
-    <div className="mx-auto flex h-dvh max-w-3xl flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:max-w-none side:flex-row side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)]">
+    <div
+      ref={rootRef}
+      className={`flex h-dvh flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around ? '' : 'mx-auto max-w-3xl side:max-w-none side:flex-row'}`}
+    >
       {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
-      <div className={`contents side:flex side:flex-none side:flex-col side:overflow-y-auto ${crowded ? 'side:w-80' : 'side:w-64 wide:w-72'}`}>
-        <header className="flex h-14 flex-none items-center gap-2 px-3 short:h-11">
+      <div className={around ? 'contents' : `contents side:flex side:flex-none side:flex-col side:overflow-y-auto ${crowded ? 'side:w-80' : 'side:w-64 wide:w-72'}`}>
+        <header className={`flex h-14 flex-none items-center gap-2 px-3 short:h-11 ${around ? 'relative z-30' : ''}`}>
           <Button variant="ghost" className="px-3" aria-label={online ? t('online.leave') : t('play.back')} onClick={() => (online ? online.onLeave() : navigate(paths.home))}>
             ←
           </Button>
-          <h1 className="truncate text-lg font-semibold">
+          <h1 className="min-w-0 truncate text-lg font-semibold">
             <span aria-hidden="true">{info.emoji} </span>
             {info.name}
           </h1>
-          <Button variant="ghost" className="ml-auto px-3 text-lg" aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
+          {around && inviteBox}
+          {around && (
+            <footer className="ml-auto flex flex-none items-center gap-1 [&>button]:min-h-9 [&>button]:px-2 [&>button]:text-sm [&>button]:whitespace-nowrap">
+              {primaryControls}
+              {!result && <MoreMenu>{secondaryControls}</MoreMenu>}
+            </footer>
+          )}
+          <Button variant="ghost" className={`px-3 text-lg ${around ? '' : 'ml-auto'}`} aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
             ?
           </Button>
-          <SoundControl gameId={info.id} isClient={isClient} ownMusic={info.ownMusic} />
+          <SoundControl gameId={info.id} isClient={isClient} ownMusic={info.ownMusic} inBar={around} />
           {session.timed && !result && !online && (
             <Button
               variant="ghost"
@@ -324,25 +439,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           )}
         </header>
 
-        {online?.invite && (
-          <div className="order-2 mx-3 mb-1 hidden side:flex flex-none items-center justify-between rounded-xl border border-line/70 bg-surface px-3 py-1.5 text-xs text-muted">
-            <span>
-              {t('online.room')}: <strong className="font-semibold text-ink">{online.invite.code}</strong>
-            </span>
-            <button
-              type="button"
-              className="cursor-pointer font-medium hover:text-ink"
-              onClick={() => {
-                navigator.clipboard.writeText(online.invite!.link);
-                setCopiedInvite(true);
-                setTimeout(() => setCopiedInvite(false), 2000);
-              }}
-              title={t('online.copyLink')}
-            >
-              📋 {copiedInvite ? t('online.copied') : t('online.copyLink')}
-            </button>
-          </div>
-        )}
+        {!around && inviteBox}
 
         <section
           ref={playersRef}
@@ -354,25 +451,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           {!around && seats.map((_, index) => seatChip(index))}
         </section>
 
-        <p className="flex-none py-2 text-center font-medium short:py-1" aria-live="polite">
-          {yourMove ? (
-            <span key={`${session.version}`} className="bub-your-turn">
-              <span aria-hidden="true">👉</span>
-              {status}
-            </span>
-          ) : (
-            status
-          )}
-          {result?.reason === 'time' && ` (${t('play.reason.time')})`}
-          {result?.reason === 'resign' && ` (${t('play.reason.resign')})`}
-          {result?.reason === 'agreement' && ` (${t('play.reason.agreement')})`}
-        </p>
+        {!around && <p className="flex-none py-2 text-center font-medium short:py-1" aria-live="polite">{statusContent}</p>}
 
-
-        {hintMissing && <p className="order-2 flex-none pt-2 text-center text-sm text-muted">{t('play.noHint')}</p>}
+        {hintMissing && <p className={`flex-none pt-2 text-center text-sm text-muted ${around ? '' : 'order-2'}`}>{t('play.noHint')}</p>}
 
         {awaySeats.length > 0 && !result && (
-          <div className="order-2 mx-3 mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm">
+          <div className={`mx-3 mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm ${around ? '' : 'order-2'}`}>
             {awaySeats.map((seat) => (
               <span key={seat} className="flex flex-1 flex-wrap items-center gap-2">
                 {online ? t('online.away') : t('play.away', { name: seats[seat]?.name ?? '' })}
@@ -384,80 +468,16 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           </div>
         )}
 
-        <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:flex-none short:[&>button]:px-2 short:[&>button]:text-sm short:[&>button]:whitespace-nowrap">
-          {online ? (
-            result ? (
-              <>
-              {ceremonyClosed && (
-                <Button variant="ghost" onClick={() => setCeremonyClosed(false)}>
-                  {t('ceremony.show')}
-                </Button>
-              )}
-              {resultActions}
-            </>
-            ) : (
-              <>
-                {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
-                {online.isHost && online.onRestart && (
-                  <Button
-                    onClick={() => {
-                      if (window.confirm(t('play.restartConfirm'))) {
-                        online.onRestart?.(false);
-                      }
-                    }}
-                  >
-                    {t('play.restart')}
-                  </Button>
-                )}
-                {online.isHost && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      if (window.confirm(t('online.toLobbyConfirm'))) {
-                        online.onLobby();
-                      }
-                    }}
-                  >
-                    {t('online.toLobby')}
-                  </Button>
-                )}
-                {canResign && (
-                  <Button variant="ghost" onClick={resign}>
-                    {t('play.resign')}
-                  </Button>
-                )}
-              </>
-            )
-          ) : result ? (
-            <>
-              {ceremonyClosed && (
-                <Button variant="ghost" onClick={() => setCeremonyClosed(false)}>
-                  {t('ceremony.show')}
-                </Button>
-              )}
-              {resultActions}
-            </>
-          ) : (
-            <>
-              {humans.length > 0 && !info.noUndo && (
-                <Button disabled={!session.canUndo()} onClick={() => session.undo()}>
-                  ↶ {t('play.undo')}
-                </Button>
-              )}
-              {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
-              <Button onClick={() => local?.onRestart(false)}>{t('play.restart')}</Button>
-              {canResign && (
-                <Button variant="ghost" onClick={resign}>
-                  {t('play.resign')}
-                </Button>
-              )}
-            </>
-          )}
-        </footer>
-        {online?.extra}
+        {!around && (
+          <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:flex-none short:[&>button]:px-2 short:[&>button]:text-sm short:[&>button]:whitespace-nowrap">
+            {primaryControls}
+            {!result && secondaryControls}
+          </footer>
+        )}
+        {around ? online?.extra && <div className="order-2 flex-none">{online.extra}</div> : online?.extra}
       </div>
 
-      <main ref={tableRef} className="bub-table relative order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 side:py-2 side:px-4" data-category={categoryOf(info.id)}>
+      <main className="bub-table relative order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 side:py-2 side:px-4" data-category={categoryOf(info.id)}>
         {yourMove && <div key={`${session.version}`} className="bub-turn-frame" aria-hidden="true" />}
         <ui.Board
           view={session.view(viewer)}
@@ -474,7 +494,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           seatNames={seats.map((seat) => seat.name)}
           audio={{ muted: soundSettings.effectsOff && soundSettings.musicOff, music: playMusic ? soundSettings.music : 0, effects: soundSettings.effectsOff ? 0 : soundSettings.effects }}
           invite={online?.invite}
-          table={around ? { seatChip } : undefined}
+          table={around ? { seatChip, status: statusContent } : undefined}
           canJoinSeat={session.canJoinSeat ? (seat) => session.canJoinSeat!(seat) : undefined}
           onJoinSeat={session.joinSeat ? (seat, kind, name) => session.joinSeat!(seat, kind, name) : undefined}
           canLeaveSeat={session.canLeaveSeat ? (seat) => session.canLeaveSeat!(seat) : undefined}

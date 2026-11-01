@@ -30,12 +30,14 @@ export interface SeatRingProps {
   renderSeat: (seat: SeatId) => ReactNode;
   /** Das Spielgeschehen in der Tischmitte. */
   children: ReactNode;
+  /** Neben dem eigenen Platz, meist `status` aus `BoardProps.table`: Wer dran ist, steht dort, wo man hinschaut. */
+  status?: ReactNode;
   /** Unter dem Tisch beim eigenen Platz, etwa die Handkarten. */
   bottom?: ReactNode;
 }
 
 /** Die Spieler rund um einen Tisch, das Spielgeschehen in der Mitte (nur bei genug Platz, siehe `seatRingFits`). */
-export function SeatRing({ seats, bottomSeat, renderSeat, children, bottom }: SeatRingProps) {
+export function SeatRing({ seats, bottomSeat, renderSeat, children, status, bottom }: SeatRingProps) {
   const others = Array.from({ length: seats }, (_, seat) => seat).filter((seat) => seat !== bottomSeat);
   // Wer nicht seitlich neben der Mitte Platz hat, sitzt darüber: Die Mitte beginnt unter ihm.
   const above = others.map((seat) => seatRingPosition(seat, seats, bottomSeat)).filter(({ x }) => x > 20 && x < 80);
@@ -57,7 +59,14 @@ export function SeatRing({ seats, bottomSeat, renderSeat, children, bottom }: Se
         </div>
       </div>
       <div className="bub-seat-ring-bottom">
-        <div className="bub-seat-ring-own">{renderSeat(bottomSeat)}</div>
+        <div className="bub-seat-ring-self">
+          <div className="bub-seat-ring-own">{renderSeat(bottomSeat)}</div>
+          {status !== undefined && (
+            <p className="bub-seat-ring-status" aria-live="polite">
+              {status}
+            </p>
+          )}
+        </div>
         {bottom}
       </div>
     </div>

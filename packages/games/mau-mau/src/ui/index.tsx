@@ -15,6 +15,8 @@ import type { MauMauDeckStyle, MauMauMove, MauMauState } from '../types';
 import './styles.css';
 
 /** Breite der Handkarten nach verfügbarem Platz (vorher per CSS: 3,1–4,75 rem). */
+/** Am Tisch ist Platz: Die Hand wächst mit der Fensterhöhe. */
+const tableHandCardWidth = () => Math.round(window.innerHeight * 0.11);
 const handCardWidth = (containerWidth: number) => Math.round(Math.min(76, Math.max(50, containerWidth * 0.16), Math.max(44, window.innerHeight * 0.15)));
 /** Anteil jeder Handkarte, der mindestens sichtbar bleibt: die Ecke mit Wert und Farbe. */
 const HAND_MIN_VISIBLE = 0.4;
@@ -530,7 +532,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
           <CardFan
             count={myHand.length}
             label="Deine Handkarten"
-            cardWidth={handCardWidth}
+            cardWidth={table ? tableHandCardWidth : handCardWidth}
             minStep={(width) => width * HAND_MIN_VISIBLE}
             rowOverlap={0.55}
             keyOf={(index) => myHand[index]!}
@@ -579,6 +581,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
           <SeatRing
             seats={state.hands.length}
             bottomSeat={actor ?? 0}
+            status={table.status}
             bottom={handArea}
             renderSeat={(seat) => (
               <div ref={seatRef(seat)} className="mau-ring-seat">

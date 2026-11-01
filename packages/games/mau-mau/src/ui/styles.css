@@ -602,4 +602,15 @@
 
 .mau-table[data-around] .mau-center {
   min-height: 0;
+  height: 100%;
+}
+
+/* Am Tisch wachsen die Stapel mit der Mitte: Sie sind das Wichtigste. Die Höhe zieht Kartenrand, Beschriftung und Hinweise ab. */
+.mau-table[data-around] .mau-pile {
+  width: clamp(4.2rem, min(26cqw, 60cqh - 3.5rem), 14rem);
+  font-size: 0.8rem;
+}
+
+.mau-table[data-around] .mau-direction small {
+  display: inline;
 }

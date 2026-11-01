@@ -327,6 +327,7 @@ export function SkatBoard({
         <SeatRing
           seats={seatNames.length}
           bottomSeat={mySeat}
+          status={table.status}
           bottom={hand}
           renderSeat={(seat) => (
             <>
