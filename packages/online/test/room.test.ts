@@ -116,6 +116,7 @@ const teamGame: GameModule<TeamState, RoundMove> = {
 
 const modules = new Map<string, AnyGameModule>([
   [teamGame.info.id, teamGame],
+  ['menschen', { ...together, info: { ...together.info, id: 'menschen', minHumans: 2 } } as AnyGameModule],
   [round.info.id, round],
   [ticTacToe.info.id, ticTacToe],
   [blackPeter.info.id, blackPeter],
@@ -398,6 +399,22 @@ describe('Partie', () => {
     expect(ben.last('error')?.code).toBe('illegalMove');
     anna.send({ type: 'move', version: first.version, move: { cell: 99 } });
     expect(anna.last('error')?.code).toBe('illegalMove');
+  });
+
+  it('minHumans: Mit zu wenigen Menschen startet die Partie nicht, Bots zählen nicht mit', () => {
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    anna.hello();
+    ben.hello();
+    anna.send({ type: 'setGame', gameId: 'menschen' });
+    anna.send({ type: 'takeSeat', index: 0 });
+    anna.send({ type: 'setSeat', index: 1, seat: { bot: 'easy' } });
+    anna.send({ type: 'start' });
+    expect(anna.last('error')?.message).toContain('mindestens 2 Menschen');
+    anna.send({ type: 'setSeat', index: 1, seat: 'open' });
+    ben.send({ type: 'takeSeat', index: 1 });
+    anna.send({ type: 'start' });
+    expect(anna.game().current).toEqual([0, 1]);
   });
 
   it('gleichzeitige Züge: Ein Zug mit älterer Version gilt, wenn der Platz seitdem nicht gezogen hat', () => {

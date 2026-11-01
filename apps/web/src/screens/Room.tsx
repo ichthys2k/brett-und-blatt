@@ -256,7 +256,9 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
   const mySeat = lobby.seats.findIndex((seat) => seat.kind === 'human' && seat.memberId === state.you);
   // Freie Plätze fallen beim Start weg; es müssen nur genug besetzt sein.
   const filled = lobby.seats.filter((seat) => seat.kind === 'bot' || seat.memberId !== null).length;
-  const ready = game !== null && filled >= game.info.players.min;
+  const humansSeated = lobby.seats.filter((seat) => seat.kind === 'human' && seat.memberId !== null).length;
+  const humansMissing = game ? (game.info.minHumans ?? 1) - humansSeated : 0;
+  const ready = game !== null && filled >= game.info.players.min && humansMissing <= 0;
   const openSeats = lobby.seats.length - filled;
   const seatedIds = new Set(lobby.seats.flatMap((seat) => (seat.kind === 'human' && seat.memberId ? [seat.memberId] : [])));
   const unseatedConnected = room.members.filter((m) => m.connected && !seatedIds.has(m.id)).length;
@@ -467,6 +469,7 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
           ▶ {t('online.start')}
         </Button>
       )}
+      {isHost && game && humansMissing > 0 && <p className="-mt-3 text-center text-sm text-muted">{t('setup.needHumans', { n: game.info.minHumans ?? 1 })}</p>}
       {isHost && ready && openSeats > 0 ? (
         <p className="-mt-3 text-center text-sm text-muted">{t('online.openSeatsDropped', { n: openSeats })}</p>
       ) : !isHost ? (

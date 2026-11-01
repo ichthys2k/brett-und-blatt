@@ -1,7 +1,7 @@
 import type { BotContext, BotDefinition, BotLevel, SeatId } from '@brett-und-blatt/engine';
 import {
   GOAL_LENGTH,
-  TRACK_LENGTH,
+  trackLengthOf,
   legalMoves,
   startTrackIndex,
   toAbsoluteTrackIndex,
@@ -10,10 +10,10 @@ import {
 } from './rules';
 
 /**
- * Berechnet den kleinsten Vorwärtsabstand auf dem Ring (0..39) von 'from' nach 'to'.
+ * Berechnet den kleinsten Vorwärtsabstand auf dem Ring von 'from' nach 'to'.
  */
-function trackDistance(from: number, to: number): number {
-  return (to - from + TRACK_LENGTH) % TRACK_LENGTH;
+function trackDistance(from: number, to: number, length: number): number {
+  return (to - from + length) % length;
 }
 
 /**
@@ -25,8 +25,8 @@ function isThreatened(pos: number, state: LudoState, ownSeat: SeatId): boolean {
     if (s === ownSeat) continue;
     for (const p of state.pieces[s]) {
       if (p.area === 'track') {
-        const oppPos = toAbsoluteTrackIndex(s, p.index, state.seats);
-        const dist = trackDistance(oppPos, pos);
+        const oppPos = toAbsoluteTrackIndex(s, p.index, state.seats, state.board);
+        const dist = trackDistance(oppPos, pos, trackLengthOf(state.board));
         if (dist >= 1 && dist <= 6) {
           return true;
         }
@@ -52,12 +52,12 @@ function evaluateMove(state: LudoState, seat: SeatId, move: LudoMove): number {
   // 1. Aus dem Haus kommen
   if (piece.area === 'home') {
     score += 450;
-    const startAbs = startTrackIndex(seat, state.seats);
+    const startAbs = startTrackIndex(seat, state.seats, state.board);
     // Schlägt es direkt auf Start?
     for (let s = 0; s < state.seats; s++) {
       if (s === seat) continue;
       for (const opp of state.pieces[s]) {
-        if (opp.area === 'track' && toAbsoluteTrackIndex(s, opp.index, state.seats) === startAbs) {
+        if (opp.area === 'track' && toAbsoluteTrackIndex(s, opp.index, state.seats, state.board) === startAbs) {
           score += 250;
         }
       }
@@ -75,14 +75,14 @@ function evaluateMove(state: LudoState, seat: SeatId, move: LudoMove): number {
 
   // 3. Auf der Strecke
   if (piece.area === 'track') {
-    const fromAbs = toAbsoluteTrackIndex(seat, piece.index, state.seats);
+    const fromAbs = toAbsoluteTrackIndex(seat, piece.index, state.seats, state.board);
     const wasThreatened = isThreatened(fromAbs, state, seat);
 
     const nextStep = piece.index + dice;
 
-    if (nextStep >= TRACK_LENGTH) {
+    if (nextStep >= trackLengthOf(state.board)) {
       // Zieht ins sichere Ziel
-      const goalSlot = Math.min(GOAL_LENGTH - 1, nextStep - TRACK_LENGTH);
+      const goalSlot = Math.min(GOAL_LENGTH - 1, nextStep - trackLengthOf(state.board));
       score += 300 + goalSlot * 20;
 
       // Letzter Stein ins Ziel = Sieg!
@@ -92,7 +92,7 @@ function evaluateMove(state: LudoState, seat: SeatId, move: LudoMove): number {
       }
     } else {
       // Zieht auf der Strecke vor
-      const toAbs = toAbsoluteTrackIndex(seat, nextStep, state.seats);
+      const toAbs = toAbsoluteTrackIndex(seat, nextStep, state.seats, state.board);
 
       // Gegner schlagen?
       let capturedOpponentProgress = 0;
@@ -100,7 +100,7 @@ function evaluateMove(state: LudoState, seat: SeatId, move: LudoMove): number {
         if (s === seat) continue;
         for (const opp of state.pieces[s]) {
           if (opp.area === 'track') {
-            const oppAbs = toAbsoluteTrackIndex(s, opp.index, state.seats);
+            const oppAbs = toAbsoluteTrackIndex(s, opp.index, state.seats, state.board);
             if (oppAbs === toAbs) {
               capturedOpponentProgress = Math.max(capturedOpponentProgress, opp.index);
             }

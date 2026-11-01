@@ -19,6 +19,16 @@ export { meta } from './meta';
 
 const options: OptionSpec[] = [
   {
+    id: 'board',
+    label: 'Spielbrett',
+    description: 'Das Sechser-Brett hat sechs Arme und 54 Felder. Ab fünf Spielern wird immer darauf gespielt.',
+    choices: [
+      { value: 'classic', label: 'Kreuz für bis zu 4 (Standard)' },
+      { value: 'six', label: 'Stern für bis zu 6' },
+    ],
+    default: 'classic',
+  },
+  {
     id: 'capture',
     label: 'Schlagpflicht',
     description: 'Schlagbare Züge haben Vorrang vor normalen Zügen.',

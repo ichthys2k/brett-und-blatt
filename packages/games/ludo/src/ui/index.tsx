@@ -1,15 +1,16 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { DIE_ROLL_MS, Die3D, FitBox, useRollCounter, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useState, type CSSProperties } from 'react';
 import {
-  TRACK_LENGTH,
   colorIndex,
-  startTrackIndex,
   toAbsoluteTrackIndex,
+  trackLengthOf,
+  type Board as BoardKind,
   type LudoMove,
   type LudoState,
   type PiecePosition,
 } from '../rules';
+import { cornerColors, cornerOf, geometryOf, type BoardGeometry, type Point } from './geometry';
 import './styles.css';
 
 export interface PlayerStyle {
@@ -54,143 +55,32 @@ export const PLAYER_STYLES: readonly PlayerStyle[] = [
     symbol: '★',
     symbolName: 'Stern',
   },
+  {
+    name: 'Lila',
+    fill: '#A855F7',
+    border: '#9333EA',
+    light: '#E9D5FF',
+    symbol: '◆',
+    symbolName: 'Raute',
+  },
+  {
+    name: 'Türkis',
+    fill: '#14B8A6',
+    border: '#0D9488',
+    light: '#99F6E4',
+    symbol: '✚',
+    symbolName: 'Kreuz',
+  },
 ];
 
-/** Die 40 Streckenfelder auf dem 11×11-Gitter (col, row 0..10). */
-export const TRACK_COORDS: readonly { col: number; row: number }[] = [
-  // 0..4 (Gelber Arm runter)
-  { col: 6, row: 0 },
-  { col: 6, row: 1 },
-  { col: 6, row: 2 },
-  { col: 6, row: 3 },
-  { col: 6, row: 4 },
-  // 5..8 (Grüner Arm rechts)
-  { col: 7, row: 4 },
-  { col: 8, row: 4 },
-  { col: 9, row: 4 },
-  { col: 10, row: 4 },
-  // 9..10 (Grüner Arm Spitze & Start Grün)
-  { col: 10, row: 5 },
-  { col: 10, row: 6 },
-  // 11..14 (Grüner Arm links)
-  { col: 9, row: 6 },
-  { col: 8, row: 6 },
-  { col: 7, row: 6 },
-  { col: 6, row: 6 },
-  // 15..18 (Roter Arm runter)
-  { col: 6, row: 7 },
-  { col: 6, row: 8 },
-  { col: 6, row: 9 },
-  { col: 6, row: 10 },
-  // 19..20 (Roter Arm Spitze & Start Rot)
-  { col: 5, row: 10 },
-  { col: 4, row: 10 },
-  // 21..24 (Roter Arm rauf)
-  { col: 4, row: 9 },
-  { col: 4, row: 8 },
-  { col: 4, row: 7 },
-  { col: 4, row: 6 },
-  // 25..28 (Blauer Arm links)
-  { col: 3, row: 6 },
-  { col: 2, row: 6 },
-  { col: 1, row: 6 },
-  { col: 0, row: 6 },
-  // 29..30 (Blauer Arm Spitze & Start Blau)
-  { col: 0, row: 5 },
-  { col: 0, row: 4 },
-  // 31..34 (Blauer Arm rechts)
-  { col: 1, row: 4 },
-  { col: 2, row: 4 },
-  { col: 3, row: 4 },
-  { col: 4, row: 4 },
-  // 35..38 (Gelber Arm rauf)
-  { col: 4, row: 3 },
-  { col: 4, row: 2 },
-  { col: 4, row: 1 },
-  { col: 4, row: 0 },
-  // 39 (Letztes Feld vor Gelb-Ziel)
-  { col: 5, row: 0 },
-];
-
-/** Die 4 Zielfelder je Farbe (0..3: Gelb, Grün, Rot, Blau). */
-export const GOAL_COORDS: readonly (readonly { col: number; row: number }[])[] = [
-  // 0: Gelb (Spalte 5, Zeilen 1..4)
-  [
-    { col: 5, row: 1 },
-    { col: 5, row: 2 },
-    { col: 5, row: 3 },
-    { col: 5, row: 4 },
-  ],
-  // 1: Grün (Zeile 5, Spalten 9..6)
-  [
-    { col: 9, row: 5 },
-    { col: 8, row: 5 },
-    { col: 7, row: 5 },
-    { col: 6, row: 5 },
-  ],
-  // 2: Rot (Spalte 5, Zeilen 9..6)
-  [
-    { col: 5, row: 9 },
-    { col: 5, row: 8 },
-    { col: 5, row: 7 },
-    { col: 5, row: 6 },
-  ],
-  // 3: Blau (Zeile 5, Spalten 1..4)
-  [
-    { col: 1, row: 5 },
-    { col: 2, row: 5 },
-    { col: 3, row: 5 },
-    { col: 4, row: 5 },
-  ],
-];
-
-/** Die 4 Warteplätze im Haus je Farbe. */
-export const HOME_COORDS: readonly (readonly { col: number; row: number }[])[] = [
-  // 0: Gelb oben links
-  [
-    { col: 0.8, row: 0.8 },
-    { col: 2.2, row: 0.8 },
-    { col: 0.8, row: 2.2 },
-    { col: 2.2, row: 2.2 },
-  ],
-  // 1: Grün oben rechts
-  [
-    { col: 7.8, row: 0.8 },
-    { col: 9.2, row: 0.8 },
-    { col: 7.8, row: 2.2 },
-    { col: 9.2, row: 2.2 },
-  ],
-  // 2: Rot unten rechts
-  [
-    { col: 7.8, row: 7.8 },
-    { col: 9.2, row: 7.8 },
-    { col: 7.8, row: 9.2 },
-    { col: 9.2, row: 9.2 },
-  ],
-  // 3: Blau unten links
-  [
-    { col: 0.8, row: 7.8 },
-    { col: 2.2, row: 7.8 },
-    { col: 0.8, row: 9.2 },
-    { col: 2.2, row: 9.2 },
-  ],
-];
-
-/** Mittelpunkt eines Gitterfelds in SVG-Koordinaten. */
-function cellCenter(coord: { col: number; row: number }): Point {
-  return { x: coord.col * 100 + 50, y: coord.row * 100 + 50 };
-}
-
-interface Point {
-  x: number;
-  y: number;
-}
+/** Graue Ecken für freie Arme des Sechser-Bretts. */
+const FREE_STYLE = { fill: '#E2E8F0', border: '#94A3B8', light: '#F1F5F9' };
 
 /**
- * Die Figuren stehen etwas unterhalb der Feldmitte: Ihr Sockel liegt dann sichtbar auf dem Feld
- * und die Figur wirkt mittig (F-002).
+ * Versatz der Figur gegenüber der Feldmitte: Der Sockel (Mitte bei y ≈ 7 in `PiecePin`) steht
+ * genau auf der Feldmitte, die Figur ragt nach oben heraus (F-002, angepasst 31.10.2026).
  */
-const PIECE_DROP = 5;
+const PIECE_DROP = -7;
 
 /** Dauer eines Hüpfers von Feld zu Feld. */
 const HOP_MS = 150;
@@ -219,23 +109,30 @@ interface AnimatedPose extends Point {
  * Baut aus den Ereignissen eines Zugs die Animation: Die ziehende Figur hüpft Feld für Feld,
  * eine geschlagene Figur bleibt stehen, bis sie getroffen wird, und fliegt dann im Bogen in den Stall.
  */
-function animationFromEvents(events: GameEvent[], seats: number, now: number): PieceAnimation | null {
-  const trackPoint = (seat: SeatId, step: number) => cellCenter(TRACK_COORDS[toAbsoluteTrackIndex(seat, step, seats)]);
-  const goalPoint = (seat: SeatId, slot: number) => cellCenter(GOAL_COORDS[colorIndex(seat, seats)][slot]);
+function animationFromEvents(
+  events: GameEvent[],
+  seats: number,
+  board: BoardKind,
+  now: number,
+): PieceAnimation | null {
+  const geo = geometryOf(board);
+  const trackLength = trackLengthOf(board);
+  const trackPoint = (seat: SeatId, step: number) => geo.track[toAbsoluteTrackIndex(seat, step, seats, board)];
+  const goalPoint = (seat: SeatId, slot: number) => geo.goals[cornerOf(seat, seats, board)][slot];
+  const homePoint = (seat: SeatId, slot: number) => geo.homes[cornerOf(seat, seats, board)][slot];
 
   let mover: Pick<PieceAnimation, 'seat' | 'pieceIndex' | 'path'> | null = null;
   for (const event of events) {
     const e = event as GameEvent & Record<string, number>;
     if (event.type === 'entered') {
-      const home = cellCenter(HOME_COORDS[colorIndex(e.seat, seats)][e.pieceIndex]);
-      mover = { seat: e.seat, pieceIndex: e.pieceIndex, path: [home, trackPoint(e.seat, 0)] };
+      mover = { seat: e.seat, pieceIndex: e.pieceIndex, path: [homePoint(e.seat, e.pieceIndex), trackPoint(e.seat, 0)] };
     } else if (event.type === 'moved') {
       const path = [trackPoint(e.seat, e.fromStep)];
       for (let step = e.fromStep + 1; step <= e.toStep; step++) path.push(trackPoint(e.seat, step));
       mover = { seat: e.seat, pieceIndex: e.pieceIndex, path };
     } else if (event.type === 'goalEntered') {
       const path = [trackPoint(e.seat, e.fromStep)];
-      for (let step = e.fromStep + 1; step < TRACK_LENGTH; step++) path.push(trackPoint(e.seat, step));
+      for (let step = e.fromStep + 1; step < trackLength; step++) path.push(trackPoint(e.seat, step));
       for (let slot = 0; slot <= e.goalSlot; slot++) path.push(goalPoint(e.seat, slot));
       mover = { seat: e.seat, pieceIndex: e.pieceIndex, path };
     } else if (event.type === 'goalMoved') {
@@ -253,8 +150,8 @@ function animationFromEvents(events: GameEvent[], seats: number, now: number): P
       return {
         seat: e.capturedSeat,
         pieceIndex: e.capturedPieceIndex,
-        from: cellCenter(TRACK_COORDS[e.trackIndex]),
-        to: cellCenter(HOME_COORDS[colorIndex(e.capturedSeat, seats)][e.capturedPieceIndex]),
+        from: geo.track[e.trackIndex],
+        to: homePoint(e.capturedSeat, e.capturedPieceIndex),
       };
     });
   const hops = (mover.path.length - 1) * HOP_MS;
@@ -303,7 +200,7 @@ function animatedPose(anim: PieceAnimation, seat: SeatId, pieceIndex: number, no
  * Spielt die Zug-Animationen zu den neuesten Ereignissen ab und liefert die Zeichenpositionen.
  * Zieht schon der Nächste, während eine geschlagene Figur noch fliegt, laufen beide Animationen nebeneinander.
  */
-function usePieceAnimation(events: GameEvent[], seats: number) {
+function usePieceAnimation(events: GameEvent[], seats: number, board: BoardKind) {
   const [tracked, setTracked] = useState<{ events: GameEvent[]; anims: PieceAnimation[] }>({ events, anims: [] });
   const [now, setNow] = useState(0);
   let anims = tracked.anims;
@@ -312,7 +209,7 @@ function usePieceAnimation(events: GameEvent[], seats: number) {
   if (tracked.events !== events) {
     const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const start = performance.now();
-    const next = reduced ? null : animationFromEvents(events, seats, start);
+    const next = reduced ? null : animationFromEvents(events, seats, board, start);
     // Ereignisse ohne Figurenzug (z. B. ein Wurf) lassen laufende Animationen weiterlaufen.
     if (next) anims = [...anims.filter((a) => start - a.start < a.duration), next];
     setTracked({ events, anims });
@@ -449,8 +346,22 @@ function LastRollBadge({ seat, seats, dice }: { seat: SeatId; seats: number; dic
   );
 }
 
+/** Hintergrund eines Wartehäuschens in der Farbe seiner Ecke. */
+function HomePanelShape({ geo, corner, color }: { geo: BoardGeometry; corner: number; color: number | null }) {
+  const panel = geo.panels[corner];
+  const style = color === null ? FREE_STYLE : PLAYER_STYLES[color];
+  const common = { fill: style.light, opacity: color === null ? 0.6 : 0.45, stroke: style.fill, strokeWidth: 4 };
+  if (panel.kind === 'rect') {
+    return <rect x={panel.x} y={panel.y} width={panel.size} height={panel.size} rx="28" {...common} />;
+  }
+  return <circle cx={panel.cx} cy={panel.cy} r={panel.r} {...common} />;
+}
+
 function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoMove>) {
-  const poseOf = usePieceAnimation(events, view.seats);
+  const board: BoardKind = view.board ?? 'classic';
+  const geo = geometryOf(board);
+  const colors = cornerColors(view.seats, board);
+  const poseOf = usePieceAnimation(events, view.seats, board);
   const rollKey = useRollCounter(events);
   // Ein Wurf ohne Zug bleibt nach dem Rollen blass liegen, bis der Nächste würfelt.
   const [rolling, setRolling] = useState(false);
@@ -462,8 +373,9 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
   }, [rollKey]);
 
   const turn = view.turn;
-  const color = colorIndex(turn, view.seats);
-  const activeStyle = PLAYER_STYLES[color];
+  const activeStyle = PLAYER_STYLES[colorIndex(turn, view.seats)];
+  const size = geo.size;
+  const half = size / 2;
 
   const movablePieces = new Set<number>();
   let hasPassMove = false;
@@ -479,42 +391,24 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
   const pieceCoords: {
     seat: SeatId;
     pieceIndex: number;
-    col: number;
-    row: number;
+    point: Point;
     position: PiecePosition;
     style: PlayerStyle;
     isMovable: boolean;
   }[] = [];
 
   for (let s = 0; s < view.seats; s++) {
-    const cIdx = colorIndex(s, view.seats);
-    const style = PLAYER_STYLES[cIdx];
-    const playerPieces = view.pieces[s];
-
-    playerPieces.forEach((p, idx) => {
-      let col = 0;
-      let row = 0;
-
-      if (p.area === 'home') {
-        const homeCoord = HOME_COORDS[cIdx]?.[p.index] ?? { col: 0, row: 0 };
-        col = homeCoord.col;
-        row = homeCoord.row;
-      } else if (p.area === 'track') {
-        const absIdx = toAbsoluteTrackIndex(s, p.index, view.seats);
-        const trackCoord = TRACK_COORDS[absIdx] ?? { col: 5, row: 5 };
-        col = trackCoord.col;
-        row = trackCoord.row;
-      } else if (p.area === 'goal') {
-        const goalCoord = GOAL_COORDS[cIdx]?.[p.index] ?? { col: 5, row: 5 };
-        col = goalCoord.col;
-        row = goalCoord.row;
-      }
-
+    const corner = cornerOf(s, view.seats, board);
+    const style = PLAYER_STYLES[colorIndex(s, view.seats)];
+    view.pieces[s].forEach((p, idx) => {
+      let point: Point | undefined;
+      if (p.area === 'home') point = geo.homes[corner]?.[p.index];
+      else if (p.area === 'track') point = geo.track[toAbsoluteTrackIndex(s, p.index, view.seats, board)];
+      else if (p.area === 'goal') point = geo.goals[corner]?.[p.index];
       pieceCoords.push({
         seat: s,
         pieceIndex: idx,
-        col,
-        row,
+        point: point ?? { x: half, y: half },
         position: p,
         style,
         isMovable: s === turn && movablePieces.has(idx),
@@ -522,75 +416,60 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
     });
   }
 
+  /** Farbe des Startfelds je absolutem Streckenindex. */
+  const startColor = new Map<number, number | null>();
+  geo.starts.forEach((trackIndex, corner) => startColor.set(trackIndex, colors[corner] ?? null));
+
   return (
     <FitBox ratio={1}>
       <div className="ludo-container">
-        <div className="ludo-board-wrap">
-        <svg viewBox="0 0 1100 1100" className="ludo-board-svg">
+        <div className="ludo-board-wrap" data-board={board}>
+        <svg viewBox={`0 0 ${size} ${size}`} className="ludo-board-svg">
           {/* Hintergrund-Brett */}
-          <rect width="1100" height="1100" rx="32" fill="#F8FAFC" stroke="#E2E8F0" strokeWidth="6" />
+          <rect width={size} height={size} rx="32" fill="#F8FAFC" stroke="#E2E8F0" strokeWidth="6" />
 
-          {/* 4 Ecken: Häuser (Hintergrund-Panels) */}
-          {/* Gelb (oben links) */}
-          <rect x="25" y="25" width="350" height="350" rx="28" fill="#FEF08A" opacity="0.45" stroke="#EAB308" strokeWidth="4" />
-          {/* Grün (oben rechts) */}
-          <rect x="725" y="25" width="350" height="350" rx="28" fill="#BBF7D0" opacity="0.45" stroke="#22C55E" strokeWidth="4" />
-          {/* Rot (unten rechts) */}
-          <rect x="725" y="725" width="350" height="350" rx="28" fill="#FECACA" opacity="0.45" stroke="#EF4444" strokeWidth="4" />
-          {/* Blau (unten links) */}
-          <rect x="25" y="725" width="350" height="350" rx="28" fill="#BFDBFE" opacity="0.45" stroke="#3B82F6" strokeWidth="4" />
+          {/* Häuser (Hintergrund-Flächen) */}
+          {geo.panels.map((_, corner) => (
+            <HomePanelShape key={`panel-${corner}`} geo={geo} corner={corner} color={colors[corner] ?? null} />
+          ))}
 
           {/* Wartefelder im Haus (Kreise) */}
-          {HOME_COORDS.map((homeSet, cIdx) => {
-            const style = PLAYER_STYLES[cIdx];
+          {geo.homes.map((homeSet, corner) => {
+            const color = colors[corner] ?? null;
+            const border = color === null ? FREE_STYLE.border : PLAYER_STYLES[color].border;
             return homeSet.map((hc, slotIdx) => (
               <circle
-                key={`home-${cIdx}-${slotIdx}`}
-                cx={hc.col * 100 + 50}
-                cy={hc.row * 100 + 50}
+                key={`home-${corner}-${slotIdx}`}
+                cx={hc.x}
+                cy={hc.y}
                 r="30"
                 fill="#FFFFFF"
-                stroke={style.border}
+                stroke={border}
                 strokeWidth="4"
+                opacity={color === null ? 0.5 : 1}
               />
             ));
           })}
 
-          {/* Die 40 Streckenfelder */}
-          {TRACK_COORDS.map((tc, idx) => {
-            // Prüfen, ob es ein Startfeld ist (0: Gelb, 10: Grün, 20: Rot, 30: Blau)
-            let isStart = false;
-            let startColorIdx = 0;
-            if (idx === 0) {
-              isStart = true;
-              startColorIdx = 0;
-            } else if (idx === 10) {
-              isStart = true;
-              startColorIdx = 1;
-            } else if (idx === 20) {
-              isStart = true;
-              startColorIdx = 2;
-            } else if (idx === 30) {
-              isStart = true;
-              startColorIdx = 3;
-            }
-
-            const style = PLAYER_STYLES[startColorIdx];
-
+          {/* Streckenfelder */}
+          {geo.track.map((tc, idx) => {
+            const color = startColor.get(idx);
+            const isStart = color !== undefined && color !== null;
+            const style = isStart ? PLAYER_STYLES[color] : null;
             return (
               <g key={`track-${idx}`}>
                 <circle
-                  cx={tc.col * 100 + 50}
-                  cy={tc.row * 100 + 50}
+                  cx={tc.x}
+                  cy={tc.y}
                   r="30"
-                  fill={isStart ? style.fill : '#FFFFFF'}
-                  stroke={isStart ? style.border : '#94A3B8'}
+                  fill={style ? style.fill : '#FFFFFF'}
+                  stroke={style ? style.border : '#94A3B8'}
                   strokeWidth="3.5"
                 />
-                {isStart && (
+                {style && (
                   <text
-                    x={tc.col * 100 + 50}
-                    y={tc.row * 100 + 52}
+                    x={tc.x}
+                    y={tc.y + 2}
                     textAnchor="middle"
                     dominantBaseline="central"
                     fill="#FFFFFF"
@@ -604,23 +483,17 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
             );
           })}
 
-          {/* Die 4 Zielfelder-Reihen (a, b, c, d) */}
-          {GOAL_COORDS.map((goalSet, cIdx) => {
-            const style = PLAYER_STYLES[cIdx];
+          {/* Zielfelder (a, b, c, d) */}
+          {geo.goals.map((goalSet, corner) => {
+            const color = colors[corner] ?? null;
+            const style = color === null ? FREE_STYLE : PLAYER_STYLES[color];
             const labels = ['a', 'b', 'c', 'd'];
             return goalSet.map((gc, slotIdx) => (
-              <g key={`goal-${cIdx}-${slotIdx}`}>
-                <circle
-                  cx={gc.col * 100 + 50}
-                  cy={gc.row * 100 + 50}
-                  r="28"
-                  fill={style.light}
-                  stroke={style.border}
-                  strokeWidth="3.5"
-                />
+              <g key={`goal-${corner}-${slotIdx}`} opacity={color === null ? 0.5 : 1}>
+                <circle cx={gc.x} cy={gc.y} r="28" fill={style.light} stroke={style.border} strokeWidth="3.5" />
                 <text
-                  x={gc.col * 100 + 50}
-                  y={gc.row * 100 + 52}
+                  x={gc.x}
+                  y={gc.y + 2}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill={style.border}
@@ -633,8 +506,8 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
             ));
           })}
 
-          {/* Zentrum: Interaktiver Würfel & Aktionsbereich (x=500, y=500, w=100, h=100) */}
-          <g transform="translate(475, 475)">
+          {/* Zentrum: Interaktiver Würfel & Aktionsbereich */}
+          <g transform={`translate(${half - 75}, ${half - 75})`}>
             {/* Würfel-Hintergrund */}
             <rect
               x="0"
@@ -694,8 +567,8 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
             .map((p) => (
               <circle
                 key={`pulse-${p.seat}-${p.pieceIndex}`}
-                cx={p.col * 100 + 50}
-                cy={p.row * 100 + 50}
+                cx={p.point.x}
+                cy={p.point.y}
                 className="ludo-ring-pulse"
                 fill="none"
                 stroke={p.style.fill}
@@ -708,8 +581,8 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
             .map((p) => ({ ...p, pose: poseOf(p.seat, p.pieceIndex) }))
             .sort((a, b) => Number(a.pose !== null) - Number(b.pose !== null))
             .map((p) => {
-              const x = p.pose ? p.pose.x : p.col * 100 + 50;
-              const y = (p.pose ? p.pose.y : p.row * 100 + 50) + PIECE_DROP;
+              const x = p.pose ? p.pose.x : p.point.x;
+              const y = (p.pose ? p.pose.y : p.point.y) + PIECE_DROP;
               const lift = p.pose?.lift ?? 0;
               return (
                 <g key={`piece-${p.seat}-${p.pieceIndex}`}>
@@ -737,7 +610,7 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
             })}
         </svg>
           {/* Der Würfel liegt als HTML über der Brettmitte: 3D-Transformationen in SVG (foreignObject) sind in Safari unzuverlässig. */}
-          <div className="ludo-dice-overlay">
+          <div className="ludo-dice-overlay" style={{ '--ludo-size': size } as CSSProperties}>
             <Die3D
               value={view.dice ?? view.lastRoll?.dice ?? null}
               rollKey={rollKey}

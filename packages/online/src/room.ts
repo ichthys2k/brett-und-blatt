@@ -667,6 +667,9 @@ export class Room {
     if (occupied.length < module.info.players.min) {
       return this.error(connectionId, 'notAllowed', 'Es sind noch Plätze frei.');
     }
+    if (occupied.filter((s) => s.kind === 'human').length < (module.info.minHumans ?? 1)) {
+      return this.error(connectionId, 'notAllowed', `Dieses Spiel braucht mindestens ${module.info.minHumans} Menschen.`);
+    }
     const seats = module.info.joinMidGame ? this.lobby.seats : occupied;
     const lobbyIndex = module.info.joinMidGame
       ? this.lobby.seats.map((_, i) => i)

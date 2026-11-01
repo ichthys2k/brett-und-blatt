@@ -103,7 +103,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Negamax-Suchbot mit Piece-Square-Tables (PST), iterativem Vertiefen und Quiescence-Erweiterung für Schlagketten in 3 Stufen (leicht, mittel, schwer).
   - Web-Oberfläche mit Koordinaten (a1–h8), perspektivischer Drehung, Pointer-Drag & Drop, Zughistorie-Modal, Material-Schlagleiste und Hervorhebung schlagpflichtiger Steine.
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`) für Online-Mehrspieler und Playlist „Denkraum“. Plan in `docs/spiele/dame.md`.
-- **Nicht ärgern!** (`packages/games/ludo`, 2–4 Plätze):
+- **Nicht ärgern!** (`packages/games/ludo`, 2–6 Plätze; zu sechst seit 31.10.2026 auf dem Sternbrett, Option `board`, ab 5 Spielern immer, Geometrie in `src/ui/geometry.ts`, `ruleVersion` 3):
   - Vollständiges Regelwerk nach klassischem Standard: 40-Felder-Rundkurs, 4 Ecken-Ställe, 4 Zielhäuschen, Startfeld räumen bei 6, Kettenwürfe bei 6, 3 Versuche bei leerer Strecke, Schlagpflicht als Option (seit 31.10.2026 standardmäßig aus, `ruleVersion` 2).
   - Figuren hüpfen Feld für Feld, Geschlagene fliegen drehend in den Stall; ein Wurf ohne Zug bleibt sichtbar beim Werfer (`lastRoll`) statt beim Nächsten zu liegen.
   - Heuristischer Taktik-Bot „Würfelmeister“ in 3 Stufen (leicht, mittel, schwer mit Gefahrenanalyse und Reuewert).
@@ -138,6 +138,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Zwei Modi (*Wörterjagd* nach Wortlänge und *Exklusiv-Bonus* mit doppelten Punkten für einzigartige Funde ⭐), 3 Stammwort-Pakete (*Bunter Mix*, *Natur & Tiere*, *Mathe & Geometrie Kl. 5/6*), geheime eigene Wortliste während der Runde (`playerView`) und Runden-Auswertung mit unentdeckten Perlen.
   - Bot „Wortakrobat“ mit realistischen Tipp-Pausen (`delayMs`) in 3 Schwierigkeitsstufen.
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`), in *Familien-, Lege- & Gesellschaftsspiele*, als Mathe-Direktwahl „Mathe-Wort-Salat“ und in Playlist „Spielabend“. Plan in `docs/spiele/wort-salat.md`.
+
+**Wölfe im Schafspelz** (`packages/games/wolves-sheep`, W-021, 31.10.2026, auf Zweig `claude/woelfe-im-schafspelz`, noch nicht veröffentlicht): Rollenspiel nach den Regeln des Grundspiels von „Die Werwölfe von Düsterwald“ mit christlichem Thema, 8–18 Spieler plus optionaler Erzähler. Einsteigermischung, dazu einzeln zuschaltbar Hirte, Hütehund, Bandstifter, Neugieriges Lamm, Zugelaufenes Schaf, Leithammel. Nachts handeln alle Lebenden, damit `current` keine Rolle verrät; Ketten aus Ausscheiden, Schuss und Glocke laufen über eine Warteschlange. Neu in der Plattform: `GameInfo.minHumans`, `GameInfo.noUndo`, `GameUi.concealTurns`. Cornelius testet es nach dem Deployment live mit Menschen. Plan in `docs/spiele/woelfe-im-schafspelz.md`.
 
 **Weitere Spiele (27./28.10.2026):**
 - **Gomoku** (`packages/games/gomoku`, 2 Plätze): Fünf in einer Reihe auf 15×15 (Freigomoku ohne Renju-Verbote), Bot in drei Stufen, Tests mit `gameContractChecks`, online registriert. Plan in `docs/spiele/gomoku.md`.
