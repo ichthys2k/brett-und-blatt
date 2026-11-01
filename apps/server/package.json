@@ -25,6 +25,7 @@
     "@brett-und-blatt/game-doppelkopf": "workspace:*",
     "@brett-und-blatt/game-drachenspiel": "workspace:*",
     "@brett-und-blatt/game-duck-rally": "workspace:*",
+    "@brett-und-blatt/game-elevens": "workspace:*",
     "@brett-und-blatt/game-factor-grid": "workspace:*",
     "@brett-und-blatt/game-four-in-a-row": "workspace:*",
     "@brett-und-blatt/game-four-player-chess": "workspace:*",

@@ -13,6 +13,7 @@ import { gameModule as doppelkopf } from '@brett-und-blatt/game-doppelkopf';
 import { gameModule as drachenspiel } from '@brett-und-blatt/game-drachenspiel';
 import { gameModule as duckRally } from '@brett-und-blatt/game-duck-rally';
 import { gameModule as factorGrid } from '@brett-und-blatt/game-factor-grid';
+import { gameModule as elevens } from '@brett-und-blatt/game-elevens';
 import { gameModule as fourInARow } from '@brett-und-blatt/game-four-in-a-row';
 import { gameModule as fourPlayerChess } from '@brett-und-blatt/game-four-player-chess';
 import { gameModule as go } from '@brett-und-blatt/game-go';
@@ -51,4 +52,4 @@ import { gameModule as wolvesSheep } from '@brett-und-blatt/game-wolves-sheep';
  * Mehrspieler-Spiel muss hier (und in package.json) eingetragen werden – ein Test
  * im Server-Paket erinnert daran. Entwürfe (`draft` im Steckbrief) bleiben draußen.
  */
-export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, binokel, bingo, blackPeter, categorySprint, checkers, chess, colorAndShape, colorSorter, describeDuel, dominoes, doppelkopf, drachenspiel, duckRally, factorGrid, fourInARow, fourPlayerChess, go, gomoku, hangman, ludo, ligretto, lowFlight, maexle, mauMau, mill, numberWall, pairs, poker, president, quartett, reversi, schafkopf, scrabble, skat, speed, symbolMatch, targetNumber, ticTacToe, ultimateTicTacToe, uno, wolvesSheep, wordSalad, whoAmI, kniffel];
+export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, binokel, bingo, blackPeter, categorySprint, checkers, chess, colorAndShape, colorSorter, describeDuel, dominoes, doppelkopf, drachenspiel, duckRally, elevens, factorGrid, fourInARow, fourPlayerChess, go, gomoku, hangman, ludo, ligretto, lowFlight, maexle, mauMau, mill, numberWall, pairs, poker, president, quartett, reversi, schafkopf, scrabble, skat, speed, symbolMatch, targetNumber, ticTacToe, ultimateTicTacToe, uno, wolvesSheep, wordSalad, whoAmI, kniffel];

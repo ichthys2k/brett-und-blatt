@@ -139,6 +139,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - Bot „Wortakrobat“ mit realistischen Tipp-Pausen (`delayMs`) in 3 Schwierigkeitsstufen.
   - Registriert auf dem Spieleserver (`apps/server/src/games.ts`), in *Familien-, Lege- & Gesellschaftsspiele*, als Mathe-Direktwahl „Mathe-Wort-Salat“ und in Playlist „Spielabend“. Plan in `docs/spiele/wort-salat.md`.
 
+**Elf zuerst!** (`packages/games/elevens`, W-033, 1.11.2026, Planungsliste Etappe 7, Paket A): Anlegespiel nach „Elfer raus!“ mit eigenem Namen, 80 Karten (1–20 in vier Farben), 2–6 Plätze, Eröffnung mit der roten Elf, Ziehen bis zu 3/1/bis passend, Bot „Zahlenzwerg“ in drei Stufen, online registriert, Playlist „Kartentisch“. Plan in `docs/spiele/elf-zuerst.md`.
+
 **Wölfe im Schafspelz** (`packages/games/wolves-sheep`, W-021, veröffentlicht 31.10.2026): Rollenspiel nach den Regeln des Grundspiels von „Die Werwölfe von Düsterwald“ mit christlichem Thema, 8–18 Spieler plus optionaler Erzähler. Einsteigermischung, dazu einzeln zuschaltbar Hirte, Hütehund, Bandstifter, Neugieriges Lamm, Zugelaufenes Schaf, Leithammel. Nachts handeln alle Lebenden, damit `current` keine Rolle verrät; Ketten aus Ausscheiden, Schuss und Glocke laufen über eine Warteschlange. Neu in der Plattform: `GameInfo.minHumans`, `GameInfo.noUndo`, `GameUi.concealTurns`. Live-Test durch Cornelius am 1.11.2026 für gut befunden. Plan in `docs/spiele/woelfe-im-schafspelz.md`.
 
 **Weitere Spiele (27./28.10.2026):**

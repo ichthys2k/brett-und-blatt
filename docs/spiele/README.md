@@ -56,6 +56,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Wölfe im Schafspelz](woelfe-im-schafspelz.md) (Werwolf-artig) | 8–18, mit Erzähler 19 | verdeckt, gleichzeitig | geheime Rollen, Warteschlange für Folgen, `minHumans` | L | L | M | fertig, live getestet |
 | [Präsident](praesident.md) („Arschloch“) | 3–8 | verdeckt, Kartentausch | Spielkarten, Handfächer | S | M | M | ✅ 29.10. |
 | [Tiefflug](tiefflug.md) (Skyjo-artig, mit Junior) | 2–8 | verdeckt (für alle) | Zahlenkarten, Raster 3×4, Serienwertung | S | M | M | ✅ 29.10. |
+| [Elf zuerst!](elf-zuerst.md) (Elfer raus) | 2–6 | verdeckt | Zahlenkarten 1–20, Auslage 4×20, Handfächer | S | M | S | Planungsliste Etappe 7 |
 
 ## Gemeinsame Bausteine
 
