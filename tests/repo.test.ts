@@ -68,7 +68,7 @@ describe('Repo-Regeln', () => {
     });
     const statisch = Object.entries(sources)
       // Nur echte Importe zählen – Hinweise im Kommentar dürfen die Datei nennen.
-      .filter(([, source]) => /(?:from|import\s*\()\s*['"][^'"]*content\/(?:bibelquiz|wortspiele)/.test(source))
+      .filter(([, source]) => /(?:from|import\s*\()\s*['"][^'"]*content\/(?:bibelquiz|wortspiele|klassenspiele)/.test(source))
       .map(([path]) => path);
     expect(statisch).toEqual([]);
   });

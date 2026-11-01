@@ -1,6 +1,12 @@
 import { parseSprintCatalog, setSprintCatalog } from '@brett-und-blatt/game-category-sprint';
 import { parseDuelCatalog, setDuelCatalog } from '@brett-und-blatt/game-describe-duel';
+import { parseEstimateCatalog, setEstimateCatalog } from '@brett-und-blatt/game-estimate';
+import { parseMajorityCatalog, setMajorityCatalog } from '@brett-und-blatt/game-majority';
+import { parseTimelineCatalog, setTimelineCatalog } from '@brett-und-blatt/game-timeline';
 import { parseWhoCatalog, setWhoCatalog } from '@brett-und-blatt/game-who-am-i';
+import mehrheit from '../../../content/klassenspiele/mehrheit.json' with { type: 'json' };
+import schaetzen from '../../../content/klassenspiele/schaetzen.json' with { type: 'json' };
+import zeitstrahl from '../../../content/klassenspiele/zeitstrahl.json' with { type: 'json' };
 import begriffe from '../../../content/wortspiele/begriffe.json' with { type: 'json' };
 import kategorien from '../../../content/wortspiele/kategorien.json' with { type: 'json' };
 import werBinIch from '../../../content/wortspiele/wer-bin-ich.json' with { type: 'json' };
@@ -14,10 +20,16 @@ import werBinIch from '../../../content/wortspiele/wer-bin-ich.json' with { type
 setSprintCatalog(parseSprintCatalog(kategorien));
 setWhoCatalog(parseWhoCatalog(werBinIch));
 setDuelCatalog(parseDuelCatalog(begriffe));
+setEstimateCatalog(parseEstimateCatalog(schaetzen));
+setMajorityCatalog(parseMajorityCatalog(mehrheit));
+setTimelineCatalog(parseTimelineCatalog(zeitstrahl));
 
 /** Ausgelieferte Kataloge nach Pfad. */
 export const wortspielKataloge: Record<string, unknown> = {
   '/wortspiele/kategorien': kategorien,
   '/wortspiele/wer-bin-ich': werBinIch,
   '/wortspiele/begriffe': begriffe,
+  '/klassenspiele/schaetzen': schaetzen,
+  '/klassenspiele/mehrheit': mehrheit,
+  '/klassenspiele/zeitstrahl': zeitstrahl,
 };

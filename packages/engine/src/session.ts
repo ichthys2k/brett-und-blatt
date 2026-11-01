@@ -131,6 +131,8 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private parkTimer: ReturnType<typeof setTimeout> | null = null;
   /** Fälligkeit des nächsten verzögerten Systemzugs (`GameModule.systemDelayMs`). */
   private systemDue: number | null = null;
+  /** Abschnitt, für den der Wecker gestellt ist (`GameModule.systemTimerKey`). */
+  private systemKey: string | undefined;
   private deadlineChanged: (() => void) | undefined;
   private consecutiveTimeouts: number[];
   private away = new Set<SeatId>();
@@ -169,6 +171,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
       runtime.away.forEach((seat) => this.away.add(seat));
       runtime.timeouts.forEach((count, seat) => (this.consecutiveTimeouts[seat] = count));
       this.systemDue = runtime.systemDue ?? null;
+      this.systemKey = this.module.systemTimerKey?.(this._state);
     }
     this.advance();
     // Ein übernommener Systemzug-Wecker muss auch hier klingeln, nicht nur beim Server-Wecker.
@@ -541,6 +544,12 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     for (let guard = 0; !this.module.result(this._state) && this.module.currentPlayers(this._state).includes('system'); guard++) {
       if (guard > 10_000) throw new Error('Zu viele Systemzüge hintereinander.');
       const delay = this.module.systemDelayMs?.(this._state) ?? 0;
+      // Neuer Abschnitt, etwa wenn alle früher abgegeben haben: Der alte Wecker gilt nicht mehr.
+      const key = this.module.systemTimerKey?.(this._state);
+      if (key !== this.systemKey) {
+        if (this.systemKey !== undefined) this.systemDue = null;
+        this.systemKey = key;
+      }
       if (delay > 0) {
         // Echtzeit: Der Systemzug wartet; ein schon gestellter Wecker bleibt (sonst schöbe jeder Zug ihn hinaus).
         systemWaits = true;

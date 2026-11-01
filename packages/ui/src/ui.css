@@ -943,3 +943,168 @@ button.bub-net-point:not(:disabled) {
   font-size: 0.85rem;
   color: var(--color-danger);
 }
+
+/* Klassenspiele: gemeinsamer Rahmen (RoundFrame) */
+.bub-round {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 44rem;
+  height: 100%;
+  margin: 0 auto;
+}
+
+.bub-round-bar {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.bub-round-tafel,
+.bub-round-next {
+  min-height: 2rem;
+  padding: 0.15rem 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.6rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bub-round-next {
+  flex: none;
+  align-self: center;
+  background: var(--color-accent);
+  border-color: transparent;
+  color: var(--color-accent-ink);
+}
+
+.bub-round-time {
+  flex: none;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  overflow: hidden;
+}
+
+.bub-round-time > span {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+  transform-origin: left;
+  animation: bub-round-time linear forwards;
+}
+
+@keyframes bub-round-time {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+.bub-round-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Wenig Höhe: Während der Antwortzeit zählt die Eingabe, die Rangliste kommt zur Auflösung wieder. */
+@media (max-height: 720px) {
+  .bub-round[data-phase='answer'] > .bub-round-ranks {
+    display: none;
+  }
+}
+
+.bub-round-ranks {
+  display: grid;
+  flex: none;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.6rem;
+  background: var(--color-surface);
+  list-style: none;
+  font-size: 0.85rem;
+}
+
+.bub-round-ranks > li {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.bub-round-ranks > li[data-me] {
+  font-weight: 700;
+}
+
+.bub-round-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bub-round-gain {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.bub-round-wall {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  overflow: auto;
+  font-size: clamp(1rem, 2.4vw, 1.75rem);
+}
+
+.bub-round-wall h2 {
+  margin: 0;
+}
+
+.bub-round-wall-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 1rem;
+}
+
+.bub-round-wall-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.6rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.bub-round-qr {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  width: clamp(6rem, 16vw, 12rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bub-round-time > span {
+    animation-timing-function: steps(10);
+  }
+}

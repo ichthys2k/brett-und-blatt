@@ -1,0 +1,47 @@
+{
+ "status": "entwurf",
+ "hinweis": "Von Claude erstellt (1.11.2026), wartet auf Freigabe durch Cornelius. Es gibt keine richtige Antwort, Punkte gibt es für die Mehrheit.",
+ "packs": [
+  { "id": "alltag", "name": "Alltag", "questions": [
+   { "id": "a01", "text": "Was isst du am liebsten zum Frühstück?", "options": ["Brot oder Brötchen", "Müsli", "Obst", "Gar nichts"] },
+   { "id": "a02", "text": "Welches Haustier hättest du am liebsten?", "options": ["Hund", "Katze", "Hamster oder Hase", "Vogel", "Fisch"] },
+   { "id": "a03", "text": "Was ist die beste Jahreszeit?", "options": ["Frühling", "Sommer", "Herbst", "Winter"] },
+   { "id": "a04", "text": "Was trinkst du am liebsten?", "options": ["Wasser", "Saft oder Schorle", "Kakao", "Tee"] },
+   { "id": "a05", "text": "Wohin würdest du am liebsten in die Ferien fahren?", "options": ["Ans Meer", "In die Berge", "In eine große Stadt", "Auf einen Bauernhof"] },
+   { "id": "a06", "text": "Was ist das beste Eis?", "options": ["Schokolade", "Vanille", "Erdbeere", "Stracciatella", "Zitrone"] },
+   { "id": "a07", "text": "Womit kommst du am liebsten zur Schule?", "options": ["Zu Fuß", "Mit dem Fahrrad", "Mit Bus oder Bahn", "Mit dem Auto"] },
+   { "id": "a08", "text": "Was machst du nach der Schule zuerst?", "options": ["Essen", "Hausaufgaben", "Rausgehen", "Ausruhen"] },
+   { "id": "a09", "text": "Was ist das beste Mittagessen?", "options": ["Pizza", "Nudeln", "Pfannkuchen", "Schnitzel mit Pommes"] },
+   { "id": "a10", "text": "Welche Farbe magst du am liebsten?", "options": ["Blau", "Grün", "Rot", "Gelb", "Lila"] },
+   { "id": "a11", "text": "Was spielst du am liebsten?", "options": ["Brettspiele", "Kartenspiele", "Computerspiele", "Draußen spielen"] },
+   { "id": "a12", "text": "Bist du eher …", "options": ["Frühaufsteher", "Langschläfer", "Mal so, mal so"] },
+   { "id": "a13", "text": "Was wäre die beste Superkraft?", "options": ["Fliegen", "Unsichtbar sein", "Gedanken lesen", "Zeit anhalten"] },
+   { "id": "a14", "text": "Was ist das schönste Fest im Jahr?", "options": ["Weihnachten", "Ostern", "Geburtstag", "Silvester"] },
+   { "id": "a15", "text": "Welches Fach magst du am liebsten?", "options": ["Sport", "Kunst oder Musik", "Mathe oder Naturwissenschaft", "Deutsch oder Sprachen", "Religion oder Geschichte"] }
+  ]},
+  { "id": "bibel", "name": "Bibel", "questions": [
+   { "id": "b01", "text": "Wen aus der Bibel würdest du am liebsten treffen?", "options": ["David", "Mose", "Maria", "Petrus", "Paulus"] },
+   { "id": "b02", "text": "Welche Geschichte magst du am liebsten?", "options": ["Noah und die Arche", "David und Goliat", "Jona und der Fisch", "Daniel in der Löwengrube"] },
+   { "id": "b03", "text": "Welches Gleichnis findest du am schönsten?", "options": ["Der verlorene Sohn", "Der barmherzige Samariter", "Das verlorene Schaf", "Der Sämann"] },
+   { "id": "b04", "text": "Welches Wunder hättest du am liebsten miterlebt?", "options": ["Speisung der Fünftausend", "Gang über das Wasser", "Sturmstillung", "Heilung eines Blinden"] },
+   { "id": "b05", "text": "Welches Tier hättest du am liebsten in der Arche versorgt?", "options": ["Löwen", "Elefanten", "Giraffen", "Schafe", "Tauben"] },
+   { "id": "b06", "text": "Wo wärst du gern dabei gewesen?", "options": ["Durchzug durchs Rote Meer", "Geburt Jesu im Stall", "Einzug in Jerusalem", "Pfingsten"] },
+   { "id": "b07", "text": "Welches Fest bedeutet dir am meisten?", "options": ["Weihnachten", "Ostern", "Pfingsten", "Erntedank"] },
+   { "id": "b08", "text": "Was wärst du zur Zeit Jesu am liebsten gewesen?", "options": ["Fischer", "Hirte", "Zimmermann", "Händler"] },
+   { "id": "b09", "text": "Welche Eigenschaft ist am wichtigsten?", "options": ["Liebe", "Geduld", "Freundlichkeit", "Treue", "Mut"] },
+   { "id": "b10", "text": "Wo betest du am liebsten?", "options": ["Abends im Bett", "Draußen in der Natur", "Im Gottesdienst", "Zusammen mit anderen"] }
+  ]},
+  { "id": "schule", "name": "Schule", "questions": [
+   { "id": "s01", "text": "Was ist das Beste an der Schule?", "options": ["Freunde treffen", "Die Pausen", "Etwas Neues lernen", "Ausflüge"] },
+   { "id": "s02", "text": "Wie lernst du am besten?", "options": ["Lesen", "Aufschreiben", "Erklärt bekommen", "Selbst ausprobieren"] },
+   { "id": "s03", "text": "Was tust du am liebsten in der großen Pause?", "options": ["Fußball oder Ballspiele", "Reden", "Vespern", "Toben"] },
+   { "id": "s04", "text": "Wohin geht der beste Klassenausflug?", "options": ["Freizeitpark", "Zoo", "Schwimmbad", "Klettern", "Museum"] },
+   { "id": "s05", "text": "Wann machst du Hausaufgaben am liebsten?", "options": ["Direkt nach der Schule", "Nach einer Pause", "Abends", "In der Schule"] },
+   { "id": "s06", "text": "Was ist am anstrengendsten?", "options": ["Früh aufstehen", "Lange still sitzen", "Klassenarbeiten", "Viele Hausaufgaben"] },
+   { "id": "s07", "text": "In welcher Sitzordnung lernst du am besten?", "options": ["In Reihen", "Im Kreis", "In Gruppen", "Allein am Tisch"] },
+   { "id": "s08", "text": "Welches Werkzeug ist am wichtigsten?", "options": ["Stift", "Lineal", "Taschenrechner", "Tablet"] },
+   { "id": "s09", "text": "Was würdest du an der Schule zuerst ändern?", "options": ["Später anfangen", "Längere Pausen", "Besseres Essen", "Mehr Sport"] },
+   { "id": "s10", "text": "Was macht einen guten Lehrer aus?", "options": ["Gut erklären", "Humor", "Geduld", "Gerecht sein"] }
+  ]}
+ ]
+}

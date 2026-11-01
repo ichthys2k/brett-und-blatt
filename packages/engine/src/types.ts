@@ -219,6 +219,12 @@ export interface GameModule<S, M, V = S> {
    * Systemzug landet wie jeder andere im Protokoll. Fehlt die Funktion, sofort.
    */
   systemDelayMs?(state: S): number;
+  /**
+   * Abschnitt des verzögerten Systemzugs. Ein gestellter Wecker bleibt sonst stehen, wenn andere
+   * ziehen; ändert sich dieser Wert, gilt er nicht mehr und wird neu gestellt (Klassenspiele:
+   * Haben alle früher abgegeben, beginnt die Auflösung sofort mit ihrer eigenen Dauer).
+   */
+  systemTimerKey?(state: S): string;
   /** Standardzug bei Zeitablauf; fehlt er, zieht der Bot. */
   timeoutMove?(state: S, seat: SeatId): M;
   /** Pflicht bei verdeckten Informationen: füllt Unbekanntes passend zur Sicht auf. */
