@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect, KeywordId, Selector, SpellTargeting } from '../types';
+import type { CardDefinition, Effect, FamilyId, KeywordId, SchoolId, Selector, SpellTargeting } from '../types';
 
 export const KEYWORD_NAMES: Record<KeywordId, string> = {
   taunt: 'Beschützer',
@@ -14,6 +14,32 @@ export const KEYWORD_NAMES: Record<KeywordId, string> = {
   immune: 'Eingerollt',
   elusive: 'Scheu',
   tradeable: 'Tauschen',
+};
+
+export const FAMILY_NAMES: Record<FamilyId, string> = {
+  pack: 'Rudel',
+  cats: 'Katzen',
+  herd: 'Herde',
+  birds: 'Vögel',
+  burrowers: 'Gräber',
+  crawlers: 'Krabbler',
+  reptiles: 'Kriechtiere',
+  sea: 'Meerestiere',
+  giants: 'Riesen',
+  mythic: 'Sagentiere',
+  dragons: 'Drachen',
+  woodfolk: 'Waldvolk',
+};
+
+export const SCHOOL_NAMES: Record<SchoolId, string> = {
+  storm: '⚡ Sturm',
+  frost: '❄️ Frost',
+  water: '🌊 Wasser',
+  herbs: '🌿 Kräuter',
+  growth: '🌱 Wachstum',
+  light: '☀️ Licht',
+  moon: '🌙 Mond',
+  ember: '🔥 Glut',
 };
 
 const CHOSEN: Record<SpellTargeting, string> = {
@@ -32,14 +58,17 @@ function dative(selector: Selector, targeting: SpellTargeting): string {
     case 'hero':
       return selector.side === 'own' ? 'deinem Helden' : 'dem gegnerischen Helden';
     case 'allMinions':
-      return `allen ${selector.exceptSelf ? 'anderen ' : ''}${selector.side === 'own' ? 'eigenen' : 'gegnerischen'} Tieren`;
+      return `allen ${selector.exceptSelf ? 'anderen ' : ''}${selector.side === 'own' ? 'eigenen' : 'gegnerischen'} Tieren${selector.family ? ` der Familie ${FAMILY_NAMES[selector.family]}` : ''}`;
+    case 'random':
+      return `einem zufälligen ${selector.side === 'own' ? 'eigenen' : 'gegnerischen'} Tier`;
   }
 }
 
 function accusative(selector: Selector, targeting: SpellTargeting): string {
   if (selector.pick === 'self') return 'sich';
   if (selector.pick === 'hero') return selector.side === 'own' ? 'deinen Helden' : 'den gegnerischen Helden';
-  if (selector.pick === 'allMinions') return `alle ${selector.exceptSelf ? 'anderen ' : ''}${selector.side === 'own' ? 'eigenen' : 'gegnerischen'} Tiere`;
+  if (selector.pick === 'allMinions') return `alle ${selector.exceptSelf ? 'anderen ' : ''}${selector.side === 'own' ? 'eigenen' : 'gegnerischen'} Tiere${selector.family ? ` der Familie ${FAMILY_NAMES[selector.family]}` : ''}`;
+  if (selector.pick === 'random') return `ein zufälliges ${selector.side === 'own' ? 'eigenes' : 'gegnerisches'} Tier`;
   return CHOSEN[targeting].replace('einem gegnerischen', 'ein gegnerisches').replace('einem eigenen', 'ein eigenes');
 }
 

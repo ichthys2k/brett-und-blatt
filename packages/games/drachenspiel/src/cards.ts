@@ -1,4 +1,5 @@
 import { effectsText } from './core/text';
+import { GRUNDSET_ANIMALS, GRUNDSET_SPELLS, GRUNDSET_TOKENS, tagOldCards } from './grundset';
 import type { CardDefinition } from './types';
 
 export const STAR_CARD: CardDefinition = {
@@ -183,7 +184,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
   c11: {
     id: 'c11',
     name: 'Spinne',
-    cost: 2,
+    cost: 3,
     attack: 2,
     health: 1,
     emoji: '🕸️',
@@ -234,7 +235,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     name: 'Krabbe',
     cost: 2,
     attack: 2,
-    health: 3,
+    health: 2,
     emoji: '🦀',
     quote: 'Zwick zwick!',
     sound: 'krebs.mp3',
@@ -257,7 +258,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     name: 'Tintenfisch',
     cost: 2,
     attack: 1,
-    health: 3,
+    health: 2,
     emoji: '🦑',
     quote: 'Alles voller Tinte!',
     sound: 'tintenfisch.mp3',
@@ -291,7 +292,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     name: 'Kugelfisch',
     cost: 2,
     attack: 1,
-    health: 3,
+    health: 2,
     emoji: '🐡',
     quote: 'Ich platz gleich!',
     sound: 'kugelfisch.mp3',
@@ -458,7 +459,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     name: 'Hahn',
     cost: 4,
     attack: 4,
-    health: 3,
+    health: 4,
     emoji: '🐓',
     quote: 'Kikeriki!',
     sound: 'chicken_cluck.mp3',
@@ -676,8 +677,11 @@ export const CARDS_DB: Record<string, CardDefinition> = {
   token_seahorse: SEAHORSE_TOKEN,
 };
 
+for (const def of GRUNDSET_SPELLS) SPELLS_DB[def.id] = def;
+for (const def of [...GRUNDSET_ANIMALS, ...GRUNDSET_TOKENS]) CARDS_DB[def.id] = def;
 // Zauber stehen mit im Kartenverzeichnis, damit Hand und Deck sie wie Tiere nachschlagen.
 Object.assign(CARDS_DB, SPELLS_DB);
+tagOldCards(CARDS_DB);
 
 for (const def of Object.values(CARDS_DB)) {
   if (def.effects) def.text = effectsText(def.effects, def.targeting ?? 'none', CARDS_DB);

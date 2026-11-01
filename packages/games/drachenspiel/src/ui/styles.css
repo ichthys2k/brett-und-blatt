@@ -398,6 +398,43 @@
   line-height: 1;
 }
 
+.ds-zoom-origin {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.ds-card[data-rarity='rare'] .ds-card-name {
+  color: #0984e3;
+}
+
+.ds-card[data-rarity='mythic'] {
+  border-color: #e1a100;
+  box-shadow: 0 0 8px rgba(225, 161, 0, 0.55);
+}
+
+.ds-arena.ds-heavy {
+  animation: ds-heavy-shake 0.35s ease-out;
+}
+
+@keyframes ds-heavy-shake {
+  20% {
+    transform: translateY(5px);
+  }
+  45% {
+    transform: translateY(-3px);
+  }
+  70% {
+    transform: translateY(2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-arena.ds-heavy {
+    animation: none;
+  }
+}
+
 /* Boards */
 .ds-board-container {
   flex: 1;

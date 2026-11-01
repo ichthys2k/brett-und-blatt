@@ -10,7 +10,7 @@ export const meta: GameInfo = {
   patterns: ['hidden', 'simultaneous'],
   hiddenInformation: true,
   privateViews: true,
-  ruleVersion: 7,
+  ruleVersion: 8,
   // Karten ziehen und Zufall zeigen Neues: Ein Zurücknehmen ließe sich ausnutzen.
   noUndo: true,
   hints: true,

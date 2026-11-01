@@ -202,3 +202,28 @@ Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes D
 - **Im Browser angesehen (375 × 812):** Wahlfenster mit Fährte suchen, Krake mit Zielwahl. Wahlkarte im Fenster, Einzelgänger und Erschöpfung nur per Regeltest.
 - **Bekannte Lücke:** Fällt ein Held, während eine Wahl offen ist, endet die Partie laut `result` sofort, die Wahl entfällt.
 - **Noch offen:** Test mit Kindern, Online-Partie mit zwei Geräten (auch die offene Wahl im Raum), eigene Klänge.
+
+## Grundset (01.11.2026, Phase 6 des Ausbauplans, `ruleVersion` 8)
+
+- **Karten:** `src/grundset.ts` enthält 100 neue Tiere, 15 neue Zauber und 4 Spielsteine als Daten; die älteren Karten bekommen dort Haus, Familien und Seltenheit. Je Haus rund 30 Karten, dazu rund 30 neutrale. Namen und Werte sind Vorschläge.
+- **Neu im Wortschatz:** Familien (`families`), Zauberschulen (`school`), Seltenheit (`rarity`), Auslöser `turnEnd` (🌙 Zugende) und `spellCast` (✨ Nach Zauber), Bedingung `{ family }` (🐾 Sippe), Ziel `random`, Familienfilter bei `allMinions`. Fährte suchen bleibt beim eigenen Haus und neutralen Karten.
+- **Zugende mit Wahl:** Wirkungen am Zugende dürfen selbst keine Wahl anbieten (Kartentest). Kommt eine aus einem Abschied, wartet `state.turnEnding` mit dem Zugwechsel.
+- **Themendecks** neu aus Haus und neutralen Karten, höchstens zwei Kopien, Sagentiere einmal (`test/grundset.test.ts`). Oberfläche: große Karte nennt Familie, Schule und Seltenheit, Sagentiere leuchten, Karten ab 7 Mana lassen das Feld wackeln (nicht bei `prefers-reduced-motion`).
+- **Häuser-Matrix (erstes Haus gewinnt, beide Plätze im Wechsel, „schwer“ 120 Partien je Paarung, „mittel“ 200, etwa ±9 bzw. ±7 Prozentpunkte):**
+
+  | Paarung | schwer | mittel |
+  |---|---|---|
+  | Wald : Meer | 54 | 37 |
+  | Wald : Bauernhof | 43 | 46 |
+  | Wald : Wildnis | 54 | 66 |
+  | Wald : Krabbeltiere | 43 | 22 |
+  | Meer : Bauernhof | 41 | 33 |
+  | Meer : Wildnis | 55 | 63 |
+  | Meer : Krabbeltiere | 63 | 48 |
+  | Bauernhof : Wildnis | 63 | 77 |
+  | Bauernhof : Krabbeltiere | 29 | 35 |
+  | Wildnis : Krabbeltiere | 59 | 41 |
+
+  **Das Ziel 40–60 % ist nicht erreicht:** Bauernhof schlägt fast alle, verliert aber klar gegen Krabbeltiere; auf „mittel“ ist die Wildnis schwach und die Krabbeltiere sind stark, vermutlich weil der mittlere Bot Rüstung und Tempo schlechter nutzt. Das sind nur Bot-Messungen. Abrufbar mit `DRACHEN_MATRIX=forest:sea DRACHEN_MATRIX_STUFE=hard DRACHEN_BALANCE_SPIELE=100 corepack pnpm exec vitest run packages/games/drachenspiel/test/balance --disable-console-intercept`.
+- **Startspieler (150 Partien je Zeile, etwa ±8 Prozentpunkte):** freie Deckwahl schwer 47 %, mittel 47 %, leicht 50 %. Festes Deck schwer/mittel: Wald 48/36, Meer 48/48, Bauernhof 57/54, Wildnis 42/55, Krabbeltiere 50/39. Schwer schlägt Mittel zu 83 %, Mittel schlägt Leicht zu 100 %.
+- **Noch offen:** Häuser-Matrix, klickbare Feldecken, Bilder, Test mit Kindern, Online mit zwei Geräten. Die neuen Karten sind per Kartentest und Bot-Partien geprüft, im Browser nur stichprobenhaft angesehen.

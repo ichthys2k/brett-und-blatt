@@ -74,7 +74,9 @@ function minionValue(minion: Minion): number {
   if (minion.spellPower) value += minion.spellPower * 1.5;
   if (minion.frozen) value -= minion.attack * 1.2;
   for (const trigger of CARDS_DB[minion.cardId]?.triggers ?? []) {
-    if (trigger.on === 'death') value += trigger.do.reduce((sum, effect) => sum + effectValue(effect), 0) * 0.7;
+    if (trigger.on === 'played' || minion.silenced) continue;
+    // Was wiederholt wirkt, zählt mehr als ein einmaliger Abschied.
+    value += trigger.do.reduce((sum, effect) => sum + effectValue(effect), 0) * (trigger.on === 'death' ? 0.7 : 1.2);
   }
   return value;
 }
