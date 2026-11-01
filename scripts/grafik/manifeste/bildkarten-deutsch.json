@@ -1,0 +1,28 @@
+{
+  "beschreibung": "W-048: Porträts für Unter, Ober und König im deutschen/bayerischen Blatt (Eichel, Gras, Herz, Schellen), 12 Motive. Eigene Tiere, damit sich das Blatt vom französischen unterscheidet; Stilvorlage sind der Narrenhof-Bär und die gewählten französischen Könige.",
+  "stil": "Painterly Old-Master style portrait of an anthropomorphic animal in costume, in the same style as the reference images: dark warm background with subtle damask pattern, rich velvet, brocade and fur trim, soft light, warm gold and deep colours, detailed expressive face, dignified with a touch of humour, bust portrait facing the viewer. Figure of a traditional German playing-card deck (Unter = young soldier, Ober = officer with feathered hat, König = king with crown). Vertical composition, figure centred with space around so it can be cropped. No text, no letters, no numbers, no card frame.",
+  "ohne": "text, watermark, border, frame, playing card layout, miniature playing cards or card corners as jewellery, candles at the image edge, real people, celebrities, modern clothing",
+  "referenzen": [
+    "packages/games/color-sorter/src/ui/portraits/boss-bear-2.webp",
+    "packages/ui/src/cards/portraits/koenig-pik.webp"
+  ],
+  "format": "4:5",
+  "groesse": [320, 400],
+  "qualitaet": 80,
+  "ziel": "packages/ui/src/cards/portraits",
+  "praefix": "de-",
+  "motive": [
+    { "id": "koenig-eichel", "titel": "König Eichel", "prompt": "A king animal (wild boar) as the King of Acorns: crown with oak leaves, brown and gold robes with embroidered acorns and oak leaves, a golden acorn medallion, mighty and good-natured expression." },
+    { "id": "ober-eichel", "titel": "Ober Eichel", "prompt": "An officer animal (jay bird) as the Ober of Acorns: hat with a long feather, brown and blue doublet with acorn embroidery, holds an acorn branch, clever expression." },
+    { "id": "unter-eichel", "titel": "Unter Eichel", "prompt": "A young soldier animal (hedgehog) as the Unter of Acorns: small brown cap with feather, brown leather jerkin with an acorn badge, holds a small acorn, brave and cheerful expression." },
+    { "id": "koenig-gras", "titel": "König Gras", "prompt": "A king animal (moose) as the King of Leaves (Green): broad antler crown with green leaves, deep green and gold robes with leaf embroidery, calm and wise expression." },
+    { "id": "ober-gras", "titel": "Ober Gras", "prompt": "An officer animal (woodpecker) as the Ober of Leaves (Green): green hat with a red feather, green doublet with leaf embroidery, holds a leaf branch, alert expression." },
+    { "id": "unter-gras", "titel": "Unter Gras", "prompt": "A young soldier animal (frog) as the Unter of Leaves (Green): green cap with a feather, green tunic with a leaf badge, holds a large leaf like a shield, cheerful and cheeky expression." },
+    { "id": "koenig-herz", "titel": "König Herz", "prompt": "A king animal (bull) as the King of Hearts: crown with red gems, red and gold robes with embroidered hearts, a golden heart medallion, strong and warm expression." },
+    { "id": "ober-herz", "titel": "Ober Herz", "prompt": "An officer animal (rooster) as the Ober of Hearts: tall feathered hat, red doublet with heart embroidery, proud posture, crowing expression." },
+    { "id": "unter-herz", "titel": "Unter Herz", "prompt": "A young soldier animal (tomcat) as the Unter of Hearts: red cap with a feather, red tunic with a heart badge, holds a small heart-shaped shield, mischievous expression." },
+    { "id": "koenig-schellen", "titel": "König Schellen", "prompt": "A king animal (tiger) as the King of Bells: crown with small golden bells, yellow and gold robes with embroidered bells, a golden bell medallion, majestic and amused expression." },
+    { "id": "ober-schellen", "titel": "Ober Schellen", "prompt": "An officer animal (parrot) as the Ober of Bells: yellow hat with a feather and small golden bells, yellow and red doublet, jingling bells on the collar, talkative cheerful expression." },
+    { "id": "unter-schellen", "titel": "Unter Schellen", "prompt": "A young soldier animal (monkey) as the Unter of Bells: yellow cap with small golden bells, yellow tunic with a bell badge, holds a small tambourine bell, playful expression." }
+  ]
+}
