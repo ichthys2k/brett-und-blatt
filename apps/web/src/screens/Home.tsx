@@ -38,6 +38,7 @@ const CATEGORIES: readonly CategorySpec[] = [
       'gomoku',
       'mill',
       'reversi',
+      'chinese-checkers',
       'four-in-a-row',
       'ultimate-tic-tac-toe',
       'tic-tac-toe',

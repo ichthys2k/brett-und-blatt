@@ -214,6 +214,9 @@ importers:
       '@brett-und-blatt/game-chess':
         specifier: workspace:*
         version: link:../../packages/games/chess
+      '@brett-und-blatt/game-chinese-checkers':
+        specifier: workspace:*
+        version: link:../../packages/games/chinese-checkers
       '@brett-und-blatt/game-color-and-shape':
         specifier: workspace:*
         version: link:../../packages/games/color-and-shape
@@ -498,6 +501,19 @@ importers:
       chess.js:
         specifier: ^1.4.0
         version: 1.4.0
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/chinese-checkers:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
     devDependencies:
       react:
         specifier: ^19.3.1

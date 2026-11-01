@@ -2,7 +2,7 @@
 
 *Familien-Anlegespiel für 2–6 Spieler: Jede Farbe beginnt mit ihrer Elf, danach wird nach oben und unten angelegt. Wer zuerst keine Karten mehr hat, gewinnt.*
 
-> **Name:** „Elfer raus!“ ist ein Spieltitel von Ravensburger. Eigener Name **„Elf zuerst!“**, id `elevens` (W-033, Etappe 7 der Planungsliste, Paket A).
+> **Name:** „Elfer raus!“ ist ein Spieltitel von Ravensburger. Eigener Name **„Elf zuerst!“** (von Cornelius bestätigt 1.11.2026), id `elevens` (W-033, Etappe 7 der Planungsliste, Paket A).
 
 | Steckbrief | |
 |---|---|
