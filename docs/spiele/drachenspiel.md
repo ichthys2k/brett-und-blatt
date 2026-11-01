@@ -183,3 +183,22 @@ Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes D
 - **Neue Zauber:** Raureif (1 Mana, Kältestarre, zieht eine Karte; im Meer statt Sommerregen), Stille Stunde (2 Mana, beruhigt, zieht eine Karte; im Bauernhof statt Sommerregen). Doppelschlag ist nur schwach besetzt; dazu kommen später eigene Karten.
 - **Messung (Bots, 200 Partien je Zeile, etwa ±7 Prozentpunkte):** Startspieler bei freier Deckwahl schwer 53 %, mittel 52 %, leicht 49 %. Festes Deck schwer/mittel: Wald 50/56, Meer 41/44, Bauernhof 66/46, Wildnis 51/61, Krabbeltiere 43/49. Schwer schlägt Mittel zu 86 %, Mittel schlägt Leicht zu 99 %. Der Ausgleich von 5 Rüstung blieb unverändert.
 - **Noch offen:** Test mit Kindern (der Plan sieht ihn ab Phase 4 vor: sind die vielen Abzeichen verständlich?), eigene Klänge, Online-Partie mit zwei Geräten. Im Browser angesehen sind Tauschen, Abzeichen und Verlauf im Hochformat; die übrigen Stichwörter sind per Regeltest geprüft.
+
+## Entscheidungen (01.11.2026, Phase 5 des Ausbauplans, `ruleVersion` 7)
+
+- **Warten auf eine Wahl:** `state.pending` hält die Warteschlange an (`settle` kehrt zurück), `resolveChoice` macht nach dem Zug `choose` weiter. Solange die Wahl offen ist, sind nur `choose`-Züge des Wählenden erlaubt; bei Zeitablauf gilt die erste Möglichkeit. Fremde Sichten sehen nur die Anzahl (`pending.count`), die Möglichkeiten bleiben geheim. Eine Wahl aus einem Abschied gehört dem Besitzer des Tiers, auch im fremden Zug.
+- **Auftritte mit Ziel:** `targeting` gilt jetzt auch für Tiere. Ohne mögliches Ziel lässt sich das Tier trotzdem legen, der Auftritt verpufft. Scheu schützt auch vor Auftritten.
+- **Neu im Wortschatz:** Fährte suchen (`discover`), Wahlkarte (`chooseOne`), Anpassen (`adapt`, 3 aus 8 Verbesserungen), Ziel `self`, Bedingungen `combo` (🐺 Rudeltaktik) und `outcast` (🦡 Einzelgänger), `overload` (🔒 Erschöpfung).
+- **Überarbeitete Karten (Angriff/Leben):**
+  - Auftritt mit Ziel: Krake 2/3 (Kältestarre), Otter 3/3 und Pferd 4/5 (+1/+1), Elefant 6/8 (2 Schaden), Spinne 2/1 (Kältestarre).
+  - Rudeltaktik: Mücke, Skorpion, Grille, Hund.
+  - Einzelgänger: Fledermaus, Schlange (Karte ziehen), Igel (+2 Leben).
+  - Erschöpfung: Ochse 5 Mana (1), Känguru 4 Mana (2), Hummer 1 Mana (1).
+  - Fährte suchen: Eule 2/3.
+  - Wahlkarte: Eichhörnchen (dafür ohne Naturkraft).
+  - Anpassen: Eidechse 1/2, Schildkröte 1/3.
+- **Neue Zauber:** Spurenlesen (1 Mana, Fährte suchen nach Tieren; in den Krabbeltieren statt Rückenwind), Mondscheinernte (2 Mana, Wahlkarte; im Wald statt Glücksklee).
+- **Messung (Bots, 200 Partien je Zeile, etwa ±7 Prozentpunkte):** Startspieler bei freier Deckwahl schwer 52 %, mittel 45 %, leicht 49 %. Festes Deck schwer/mittel: Wald 53/56, Meer 51/49, Bauernhof 56/39, Wildnis 51/46, Krabbeltiere 48/42. Schwer schlägt Mittel zu 84 %, Mittel schlägt Leicht zu 100 %. Zu Beginn eines Zugs gibt es in 89 bis 98 % der Fälle mindestens zwei verschiedene Aktionen (40 Partien je Deck, Bot „mittel“).
+- **Im Browser angesehen (375 × 812):** Wahlfenster mit Fährte suchen, Krake mit Zielwahl. Wahlkarte im Fenster, Einzelgänger und Erschöpfung nur per Regeltest.
+- **Bekannte Lücke:** Fällt ein Held, während eine Wahl offen ist, endet die Partie laut `result` sofort, die Wahl entfällt.
+- **Noch offen:** Test mit Kindern, Online-Partie mit zwei Geräten (auch die offene Wahl im Raum), eigene Klänge.

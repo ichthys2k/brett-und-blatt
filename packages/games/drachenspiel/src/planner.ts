@@ -49,6 +49,11 @@ function effectValue(effect: Effect): number {
       return 1.5;
     case 'rebirth':
       return 2;
+    case 'discover':
+      return 2.5;
+    case 'chooseOne':
+    case 'adapt':
+      return 2;
     case 'ready':
     case 'returnToHand':
       return 1;
@@ -107,6 +112,7 @@ export function positionValue(state: DrachenspielState, seat: SeatId): number {
   if (reachingDamage(me.board, opp.board) + (me.gear?.attack ?? 0) >= opp.health + opp.armor) score += 15;
   // Ungenutztes Mana ist im eigenen Zug verschenkt.
   if (state.activeSeat === seat) score -= me.mana * 0.5;
+  score -= (me.overloadNext ?? 0) * 1.5;
   return score;
 }
 
@@ -120,6 +126,7 @@ interface Node {
 function positionKey(state: DrachenspielState): string {
   const sides = state.players.map((p) => {
     const board = p.board.map((m) => `${m.id}:${m.attack}:${m.health}:${m.attacksMade ?? 0}:${m.hasAttacked ? 1 : 0}:${m.bubble ? 1 : 0}:${m.frozen ? 1 : 0}:${m.silenced ? 1 : 0}`);
+    if (state.pending?.seat === p.seat) return `offen|${state.pending.options.map((o) => o.label).join()}|${JSON.stringify(state.queue)}`;
     const hero = `${p.armor}:${p.gear?.durability ?? 0}:${p.heroAttackBonus}:${p.heroAttacked ? 1 : 0}:${p.powerUsed ? 1 : 0}`;
     return `${p.health}|${hero}|${p.mana}|${p.hand.map((c) => c.uid).join()}|${board.join()}`;
   });
@@ -130,7 +137,7 @@ function positionKey(state: DrachenspielState): string {
 function afterReply(start: DrachenspielState, seat: SeatId, value: PlanSettings['value']): number {
   const opp = (1 - seat) as SeatId;
   // Ein Plan kann die Partie schon beenden, etwa wenn der Held am Gegenschlag fällt.
-  if (start.phase !== 'play') return value(start, seat);
+  if (start.phase !== 'play' || start.pending) return value(start, seat);
   let state = applyMove(start, seat, { type: 'endTurn' }).state;
   if (state.phase !== 'play') return value(state, seat);
   for (let step = 0; step < REPLY_STEPS; step++) {
@@ -163,7 +170,8 @@ export function planTurn(
   outOfTime: () => boolean,
 ): Map<string, { move: DrachenspielMove; value: number }> {
   const endTurn: DrachenspielMove = { type: 'endTurn' };
-  const plans: Node[] = [{ state: root, first: endTurn, value: settings.value(root, seat) }];
+  // Bei offener Wahl gibt es kein Zugende, nur die Möglichkeiten.
+  const plans: Node[] = root.pending ? [] : [{ state: root, first: endTurn, value: settings.value(root, seat) }];
   let frontier: Node[] = [{ state: root, first: null, value: 0 }];
   const seen = new Set<string>();
 
@@ -187,7 +195,7 @@ export function planTurn(
   }
 
   plans.sort((a, b) => b.value - a.value);
-  if (settings.replies > 0 && plans[0]!.value < WIN) {
+  if (settings.replies > 0 && plans[0] && plans[0].value < WIN) {
     for (const plan of plans.slice(0, settings.replies)) {
       if (outOfTime()) break;
       plan.value = afterReply(plan.state, seat, settings.value);

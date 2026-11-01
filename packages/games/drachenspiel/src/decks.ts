@@ -13,7 +13,7 @@ export interface DeckThemeInfo {
 export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
   forest: {
     id: 'forest',
-    spellSwap: { out: ['c4', 'c7', 'c26'], in: ['s_honey', 's_growth', 's_clover'] },
+    spellSwap: { out: ['c4', 'c7', 'c26'], in: ['s_honey', 's_growth', 's_harvest'] },
     name: 'Wald',
     emoji: '🌳',
     description: 'Ausgewogen und anpassungsfähig mit Igel, Biber und Drache.',
@@ -113,7 +113,7 @@ export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
   },
   bugs: {
     id: 'bugs',
-    spellSwap: { out: ['c3', 'c10', 'c15'], in: ['s_tailwind', 's_clover', 's_lightning'] },
+    spellSwap: { out: ['c3', 'c10', 'c15'], in: ['s_tracks', 's_clover', 's_lightning'] },
     name: 'Krabbeltiere',
     emoji: '🐜',
     description: 'Giftig, flink und unberechenbar im Schwarm.',

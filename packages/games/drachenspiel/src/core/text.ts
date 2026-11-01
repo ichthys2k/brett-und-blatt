@@ -27,6 +27,8 @@ function dative(selector: Selector, targeting: SpellTargeting): string {
   switch (selector.pick) {
     case 'chosen':
       return CHOSEN[targeting];
+    case 'self':
+      return 'sich';
     case 'hero':
       return selector.side === 'own' ? 'deinem Helden' : 'dem gegnerischen Helden';
     case 'allMinions':
@@ -35,6 +37,7 @@ function dative(selector: Selector, targeting: SpellTargeting): string {
 }
 
 function accusative(selector: Selector, targeting: SpellTargeting): string {
+  if (selector.pick === 'self') return 'sich';
   if (selector.pick === 'hero') return selector.side === 'own' ? 'deinen Helden' : 'den gegnerischen Helden';
   if (selector.pick === 'allMinions') return `alle ${selector.exceptSelf ? 'anderen ' : ''}${selector.side === 'own' ? 'eigenen' : 'gegnerischen'} Tiere`;
   return CHOSEN[targeting].replace('einem gegnerischen', 'ein gegnerisches').replace('einem eigenen', 'ein eigenes');
@@ -78,6 +81,12 @@ function effectText(effect: Effect, targeting: SpellTargeting, lookup: Record<st
       return `Gibt dir ${effect.fleeting ? 'flüchtig (nur in diesem Zug) ' : ''}${lookup[effect.cardId]?.name ?? 'eine Karte'} auf die Hand.`;
     case 'rebirth':
       return 'Kehrt mit 1 Leben zurück.';
+    case 'discover':
+      return `Fährte suchen: Wähle aus 3 zufälligen ${effect.pool === 'spell' ? 'Zaubern' : 'Tieren'} eine Karte für deine Hand.`;
+    case 'chooseOne':
+      return `Wähle: ${effect.options.map((option) => option.label).join(' oder ')}.`;
+    case 'adapt':
+      return 'Anpassen: Wähle aus 3 zufälligen Verbesserungen eine.';
     case 'armor':
       return `+${effect.amount} Rüstung.`;
     case 'heroAttack':

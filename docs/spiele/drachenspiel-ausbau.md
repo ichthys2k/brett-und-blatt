@@ -2,9 +2,9 @@
 
 Fassung 1 vom 01.11.2026 (W-044). Grundlage sind der Code auf Commit `95218ef`, die Fehlerliste (F-007 bis F-009) sowie das Hearthstone-Kompendium im privaten Repo (`brett-und-blatt-klaenge/kompendium/hearthstone/`). Die Vorschläge zu Thema und Karten warten auf Cornelius' Entscheidung.
 
-**Stand für Mitwirkende (01.11.2026):** Phase 0, Phase 1 (Regelkern, `ruleVersion` 4), Phase 2 (Bedienung, Bot-Planer) Phase 3 (Held und Grundregeln, `ruleVersion` 5) und Phase 4 (dauerhafte Stichwörter, `ruleVersion` 6) sind umgesetzt; Stand in [`drachenspiel.md`](drachenspiel.md). Als Nächstes käme Phase 5 (Entscheidungen), sie ist noch nicht begonnen.
+**Stand für Mitwirkende (01.11.2026):** Phase 0, Phase 1 (Regelkern, `ruleVersion` 4), Phase 2 (Bedienung, Bot-Planer) Phase 3 (Held und Grundregeln, `ruleVersion` 5), Phase 4 (dauerhafte Stichwörter, `ruleVersion` 6) und Phase 5 (Entscheidungen, `ruleVersion` 7) sind umgesetzt; Stand in [`drachenspiel.md`](drachenspiel.md). Als Nächstes käme Phase 6 (Tierfamilien und Grundset), sie ist noch nicht begonnen.
 
-**Weiterarbeiten, auch an einem anderen Rechner:** Alles Nötige liegt in GitHub. `git pull`, `corepack pnpm install`, einen neuen Zweig von `main` anlegen, dann diesen Plan (Phase 5 in Kapitel 11) und die Abschnitte zu Phase 2 bis 4 in [`drachenspiel.md`](drachenspiel.md) lesen. Das Kompendium und der Recherchebericht liegen unter `kompendium/hearthstone/` im privaten Repo `ichthys2k/brett-und-blatt-klaenge` und gehören nie in dieses öffentliche Repo (Blizzard-Namen); abrufen mit `gh repo clone`. Offene Punkte aus Phase 2: echte Online-Partie mit zwei Geräten (Lunte, Tierrufe, Rechenzeit auf Cloudflare), Vertonung der Tierrufe nach Auswahl durch Cornelius, F-010 prüfen. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
+**Weiterarbeiten, auch an einem anderen Rechner:** Alles Nötige liegt in GitHub. `git pull`, `corepack pnpm install`, einen neuen Zweig von `main` anlegen, dann diesen Plan (Phase 6 in Kapitel 11) und die Abschnitte zu Phase 2 bis 5 in [`drachenspiel.md`](drachenspiel.md) lesen. Das Kompendium und der Recherchebericht liegen unter `kompendium/hearthstone/` im privaten Repo `ichthys2k/brett-und-blatt-klaenge` und gehören nie in dieses öffentliche Repo (Blizzard-Namen); abrufen mit `gh repo clone`. Offene Punkte aus Phase 2: echte Online-Partie mit zwei Geräten (Lunte, Tierrufe, Rechenzeit auf Cloudflare), Vertonung der Tierrufe nach Auswahl durch Cornelius, F-010 prüfen. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
 
 ## 1. Kurzfassung
 
@@ -494,6 +494,8 @@ Sprinter, Doppelschlag, Lebenskraft, Kältestarre, Beruhigen, Zweite Chance, Nat
 ### Phase 5: Entscheidungen (M)
 
 Auftritte mit Ziel, Fährte suchen, Wahlkarten, Anpassen, Rudeltaktik, Erschöpfung, Einzelgänger, tierische Kartenzieher. Bot und Zeitablauf für `pending`. **Fertig, wenn** jedes Deck in fast jedem Zug eine echte Wahl bietet.
+
+✅ **Umgesetzt (01.11.2026, `ruleVersion` 7).** Einzelgänger ist drin, weil die Hand jetzt ohne Scrollen sichtbar bleibt. Die Wahl-Messung ist grob: 89 bis 98 % der Züge beginnen mit mindestens zwei verschiedenen möglichen Aktionen (Bot „mittel“); ob sie sich auch für Menschen wie echte Entscheidungen anfühlen, misst das nicht.
 
 ### Phase 6: Familien und Grundset (L)
 

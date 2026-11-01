@@ -43,6 +43,11 @@ export const botDrachenhueter: BotDefinition<
       return { type: 'mulligan', discardIndices };
     }
 
+    // Offene Wahl: Bei „leicht“ zufällig, sonst plant die Suche mit den Möglichkeiten weiter.
+    if (ctx.view.pending && ctx.level === 'easy') {
+      return { type: 'choose', index: ctx.rng.int(Math.max(1, ctx.view.pending.options.length)) };
+    }
+
     if (ctx.level === 'easy') {
       // Spielt plausibel: legt, was geht, greift aber wahllos an und übersieht Chancen.
       const moves = legalMoves(ctx.module.sampleHidden!(ctx.view, ctx.seat, ctx.rng), ctx.seat);
@@ -70,7 +75,7 @@ export const botDrachenhueter: BotDefinition<
       }
     }
 
-    let best: DrachenspielMove = { type: 'endTurn' };
+    let best: DrachenspielMove = ctx.view.pending ? { type: 'choose', index: 0 } : { type: 'endTurn' };
     let bestScore = -Infinity;
     for (const total of totals.values()) {
       // Pläne, die nur in einzelnen Stichproben vorkamen, zählen entsprechend weniger.
