@@ -6,7 +6,8 @@
   "license": "AGPL-3.0-or-later",
   "description": "Baukasten für die Oberfläche: Bretter, Spielerleiste, Uhr-Ring",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./sync": "./src/sync/index.ts"
   },
   "dependencies": {
     "@brett-und-blatt/engine": "workspace:*",

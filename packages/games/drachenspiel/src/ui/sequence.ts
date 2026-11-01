@@ -63,6 +63,12 @@ const CATEGORY: Record<string, Category> = {
   cardPlayed: 'enter',
   spellCast: 'enter',
   heroPowerUsed: 'enter',
+  trapSet: 'enter',
+  trapSprung: 'enter',
+  questStarted: 'enter',
+  questDone: 'enter',
+  minionAwoke: 'enter',
+  buildingUsed: 'change',
   minionSummoned: 'enter',
 };
 
@@ -283,6 +289,51 @@ export function buildBeats(
           shown.minion = { ...rest, attack, health, maxHealth, taunt: false, rush: false, bubble: false, poisonous: false, stealth: false, silenced: true };
         }
         current.log.push(`😌 ${nameOfMinion(minionId)} wird beruhigt`);
+        break;
+      }
+      case 'trapSet': {
+        const { seat } = event as unknown as { seat: SeatId };
+        current.floats.push({ target: `hero-${seat}`, text: '🪤', kind: 'fx' });
+        current.log.push(`🪤 ${nameOf(seat)} legt eine Falle`);
+        break;
+      }
+      case 'trapSprung': {
+        const { seat, card } = event as unknown as { seat: SeatId; card: CardInstance };
+        const def = CARDS_DB[card.defId];
+        current.floats.push({ target: `hero-${seat}`, text: def?.emoji ?? '🪤', kind: 'fx' });
+        const text = `🪤 Falle von ${nameOf(seat)}: ${def?.name ?? 'Falle'}!`;
+        current.log.push(text);
+        current.notices.push(text);
+        break;
+      }
+      case 'questStarted': {
+        const { seat, cardId } = event as unknown as { seat: SeatId; cardId: string };
+        current.log.push(`📜 ${nameOf(seat)} beginnt die Aufgabe ${CARDS_DB[cardId]?.name ?? ''}`);
+        break;
+      }
+      case 'questDone': {
+        const { seat, cardId, reward } = event as unknown as { seat: SeatId; cardId: string; reward: string };
+        const text = `📜 ${nameOf(seat)}: ${CARDS_DB[cardId]?.name ?? 'Aufgabe'} geschafft! Belohnung: ${CARDS_DB[reward]?.name ?? 'eine Karte'}`;
+        current.log.push(text);
+        current.notices.push(text);
+        break;
+      }
+      case 'minionAwoke': {
+        const { seat, minion } = event as unknown as { seat: SeatId; minion: Minion };
+        names.set(minion.id, minion.name);
+        const shown = findShown(current, minion.id);
+        if (shown) shown.minion = minion;
+        else current.boards[seat]!.push({ minion, dying: false, fresh: true });
+        current.floats.push({ target: minion.id, text: '🌅', kind: 'fx' });
+        current.log.push(`🌅 ${minion.emoji} ${minion.name} erwacht`);
+        break;
+      }
+      case 'buildingUsed': {
+        const { seat, minionId, name, health } = event as unknown as { seat: SeatId; minionId: string; name: string; health: number };
+        current.floats.push({ target: minionId, text: '🏗️', kind: 'fx' });
+        const shown = findShown(current, minionId);
+        if (shown) shown.minion = { ...shown.minion, health };
+        current.log.push(`🏗️ ${nameOf(seat)} nutzt ${name}`);
         break;
       }
       case 'choiceOffered': {

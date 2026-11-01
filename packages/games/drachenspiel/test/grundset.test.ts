@@ -35,7 +35,7 @@ describe('Kartentest über das ganze Grundset', () => {
       expect(def.house, def.id).toBeDefined();
       if (!def.token) expect(def.rarity, def.id).toBeDefined();
       if (def.isSpell) expect(def.school, def.id).toBeDefined();
-      else expect(def.families?.length, def.id).toBeGreaterThan(0);
+      else if (!def.quest) expect(def.families?.length, def.id).toBeGreaterThan(0);
     }
   });
 
@@ -62,13 +62,23 @@ describe('Kartentest über das ganze Grundset', () => {
         check(trigger.do, def.id);
         if (trigger.on === 'turnEnd' || trigger.on === 'spellCast') expect(offersChoice(trigger.do), def.id).toBe(false);
       }
+      if (def.trap) {
+        check(def.trap.do, def.id);
+        expect(offersChoice(def.trap.do), def.id).toBe(false);
+      }
+      if (def.building) {
+        check(def.building, def.id);
+        expect(offersChoice(def.building), def.id).toBe(false);
+      }
+      if (def.quest) expect(CARDS_DB[def.quest.reward], def.id).toBeDefined();
+      if (def.hatchesInto) expect(CARDS_DB[def.hatchesInto], def.id).toBeDefined();
     }
   });
 
   it('kein Tier liegt über dem Werte-Maßstab, außer Sagentieren', () => {
     for (const def of collectible) {
       if (def.isSpell || def.rarity === 'mythic') continue;
-      expect(def.attack + def.health, `${def.id} ${def.name}`).toBeLessThanOrEqual(2 * def.cost + 2 + 2 * (def.overload ?? 0));
+      expect(def.attack + def.health, `${def.id} ${def.name}`).toBeLessThanOrEqual(2 * def.cost + 2 + 2 * (def.overload ?? 0) + 2 * (def.dormant ?? 0));
     }
   });
 

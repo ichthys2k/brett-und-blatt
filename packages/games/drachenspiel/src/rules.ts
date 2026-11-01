@@ -1,4 +1,5 @@
 import {
+  isLegalMove,
   Rng,
   type Actor,
   type GameEvent,
@@ -11,7 +12,8 @@ import {
   type TimePresets,
 } from '@brett-und-blatt/engine';
 import { ALL_CARD_IDS, ALL_SPELL_IDS, CARDS_DB, STAR_CARD } from './cards';
-import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, canStrike, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueueOwnBoard, enqueuePlayed, isOverTurnLimit, refreshStats, resolveChoice, settle, strike } from './core/effects';
+import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, TRAP_LIMIT, advanceQuest, canStrike, canUseBuilding, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueueOwnBoard, enqueuePlayed, fireTraps, isOverTurnLimit, refreshStats, resolveChoice, settle, strike, wakeDormant } from './core/effects';
+import { DECK_CODE_MAX, DECK_CODE_PATTERN, parseDeckCode } from './deckcode';
 import { DECK_THEMES, DECK_THEME_IDS, themeCardIds } from './decks';
 import { HOUSE_POWERS, powerIsUsable } from './powers';
 import { meta } from './meta';
@@ -31,6 +33,7 @@ import type {
   SpellTargeting,
 } from './types';
 import { bots } from './bots';
+import { prepare } from './server';
 
 export const options: OptionSpec[] = [
   {
@@ -44,8 +47,19 @@ export const options: OptionSpec[] = [
       { value: 'wild', label: '🌍 Wildnis' },
       { value: 'bugs', label: '🐜 Krabbeltiere' },
       { value: 'random', label: '🎲 Gemischtes Deck' },
+      { value: 'code', label: '🎓 Vorgegebenes Deck (Deck-Code)' },
     ],
     default: 'inGame',
+  },
+  {
+    id: 'deckCode',
+    label: 'Deck-Code',
+    description: 'Beide Plätze spielen dieses Deck, etwa für eine Klasse. Ohne gültigen Code wählt jeder im Spiel. Online wählt jeder selbst, dort lässt sich der Code im Spiel eingeben.',
+    choices: [{ value: 'none', label: 'Kein Code' }],
+    default: 'none',
+    hidden: true,
+    pattern: DECK_CODE_PATTERN,
+    maxLength: DECK_CODE_MAX,
   },
   {
     id: 'spells',
@@ -76,9 +90,11 @@ export const timePresets: TimePresets = {
 
 export const spellsOn = (opts: Options) => (opts.spells ?? 'on') !== 'off';
 
-function createDeck(theme: string, rng: Rng, nextId: () => number, withSpells: boolean): CardInstance[] {
+function createDeck(theme: string, rng: Rng, nextId: () => number, withSpells: boolean, custom?: string[]): CardInstance[] {
   let cardIds: string[];
-  if (theme in DECK_THEMES) {
+  if (custom) {
+    cardIds = custom;
+  } else if (theme in DECK_THEMES) {
     cardIds = themeCardIds(theme as DeckThemeId, withSpells);
   } else {
     // Gemischtes Deck: 30 zufällige Karten, mit Zauberkarten davon 6 Zauber. Wie in den
@@ -108,6 +124,8 @@ function upgradeState(state: DrachenspielState): DrachenspielState {
   for (const p of state.players) {
     // Vor `ruleVersion` 5 gab es weder Rüstung noch Hauskraft.
     p.armor ??= 0;
+    p.traps ??= [];
+    p.quest ??= null;
     p.overloadNext ??= 0;
     p.locked ??= 0;
     p.cardsPlayedThisTurn ??= 0;
@@ -151,6 +169,8 @@ function createPlayer(seat: SeatId): PlayerState {
     overloadNext: 0,
     locked: 0,
     cardsPlayedThisTurn: 0,
+    traps: [],
+    quest: null,
     deckTheme: null,
     mulliganDone: false,
   };
@@ -164,7 +184,9 @@ export function setup(seats: number, opts: Options, seed: string): DrachenspielS
   const startingSeat = rng.int(2) as SeatId;
   const players: [PlayerState, PlayerState] = [createPlayer(0), createPlayer(1)];
 
-  const deckOption = opts.deckSelection ?? 'inGame';
+  // Ein vorgegebener Code gilt für beide Plätze; ist er ungültig, wählt jeder im Spiel.
+  const preset = opts.deckSelection === 'code' ? parseDeckCode(opts.deckCode ?? '') : null;
+  const deckOption = preset ? preset.house : opts.deckSelection === 'code' ? 'inGame' : (opts.deckSelection ?? 'inGame');
   const mulliganOption = opts.mulligan ?? 'on';
 
   const state: DrachenspielState = {
@@ -182,7 +204,8 @@ export function setup(seats: number, opts: Options, seed: string): DrachenspielS
   if (deckOption !== 'inGame') {
     for (const p of state.players) {
       p.deckTheme = deckOption in DECK_THEMES ? (deckOption as DeckThemeId) : 'mixed';
-      p.deck = createDeck(deckOption, rng, nextId, spellsOn(opts));
+      p.deck = createDeck(deckOption, rng, nextId, spellsOn(opts), preset?.cardIds);
+      if (preset) p.customDeck = preset.cardIds;
       p.power = p.deckTheme === 'mixed' ? rng.pick(DECK_THEME_IDS) : p.deckTheme;
     }
     state.rng = rng.state;
@@ -252,6 +275,8 @@ function startTurn(state: DrachenspielState, seat: SeatId, events: GameEvent[]):
     maxMana: player.maxMana,
   });
 
+  wakeDormant(state, seat, events);
+
   // Draw card or fatigue
   drawCard(player, events);
 }
@@ -313,7 +338,11 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
       const def = CARDS_DB[card.defId];
       if (!def) continue;
       if (def.cost <= player.mana) {
-        if (def.isSpell || player.board.length < BOARD_LIMIT) {
+        if (def.trap) {
+          if (canSetTrap(player, def.id)) moves.push({ type: 'playCard', handIndex: i });
+        } else if (def.quest) {
+          if (!player.quest) moves.push({ type: 'playCard', handIndex: i });
+        } else if (def.isSpell || player.board.length < BOARD_LIMIT) {
           for (const target of cardTargets(state, actor, def)) {
             moves.push(target ? { type: 'playCard', handIndex: i, target } : { type: 'playCard', handIndex: i });
           }
@@ -337,6 +366,9 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
         }
       }
     }
+    for (const minion of player.board) {
+      if (canUseBuilding(minion)) moves.push({ type: 'useBuilding', minionId: minion.id });
+    }
     for (let i = 0; i < player.hand.length; i++) {
       if (player.mana >= TRADE_COST && player.hand[i]!.fleeting !== true && CARDS_DB[player.hand[i]!.defId]?.keywords?.includes('tradeable')) {
         moves.push({ type: 'tradeCard', handIndex: i });
@@ -350,6 +382,15 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
   }
 
   return [];
+}
+
+/** Eigene Decks lassen sich nicht aufzählen: Sie sind erlaubt, wenn der Code stimmt. */
+export function isLegal(state: DrachenspielState, actor: Actor, move: DrachenspielMove): boolean {
+  if (move.type === 'chooseDeck' && move.code !== undefined) {
+    if (typeof actor !== 'number' || state.phase !== 'deckSelection' || state.players[actor]?.deckTheme) return false;
+    return typeof move.code === 'string' && parseDeckCode(move.code)?.house === move.deck;
+  }
+  return isLegalMove({ legalMoves }, state, actor, move);
 }
 
 export function applyMove(
@@ -373,10 +414,14 @@ export function applyMove(
     if (next.phase !== 'deckSelection' || player.deckTheme) {
       throw new Error('Deck-Wahl jetzt nicht erlaubt');
     }
+    // Die Spielleitung prüft hier auch online jedes eigene Deck.
+    const custom = move.code === undefined ? null : parseDeckCode(move.code);
+    if (move.code !== undefined && custom?.house !== move.deck) throw new Error('Ungültiges Deck');
     player.deckTheme = move.deck;
     player.power = move.deck;
+    if (custom) player.customDeck = custom.cardIds;
     const rng = partyRng(next);
-    player.deck = createDeck(move.deck, rng, nextEntityId, spellsOn(next.options));
+    player.deck = createDeck(move.deck, rng, nextEntityId, spellsOn(next.options), custom?.cardIds);
     next.rng = rng.state;
 
     events.push({ type: 'deckChosen', seat: actor, deck: move.deck });
@@ -453,6 +498,22 @@ export function applyMove(
     if (!def) throw new Error('Unbekannte Karte');
     if (def.cost > player.mana) throw new Error('Nicht genug Mana');
 
+    if (def.trap || def.quest) {
+      if (def.trap ? !canSetTrap(player, def.id) : player.quest) throw new Error('Das geht gerade nicht');
+      player.mana -= def.cost;
+      player.cardsPlayedThisTurn++;
+      player.hand.splice(move.handIndex, 1);
+      if (def.trap) {
+        player.traps.push(card);
+        events.push({ type: 'trapSet', seat: actor, card });
+      } else {
+        player.quest = { cardId: def.id, progress: 0 };
+        events.push({ type: 'questStarted', seat: actor, cardId: def.id });
+      }
+      settle(next, events);
+      return { state: next, events };
+    }
+
     const target = move.target ?? null;
     if (!cardTargets(next, actor, def).some((t) => sameTarget(t, target))) {
       throw new Error('Ungültiges Ziel');
@@ -467,6 +528,8 @@ export function applyMove(
       events.push({ type: 'spellCast', seat: actor, card, target });
       enqueue(next, def.effects, actor, def.id, null, target);
       enqueueOwnBoard(next, actor, 'spellCast');
+      advanceQuest(next, actor, 1, (quest) => quest.goal.kind === 'playSpells', events);
+      fireTraps(next, (1 - actor) as SeatId, 'spellCast', null, events);
       settle(next, events);
       return { state: next, events };
     }
@@ -482,6 +545,20 @@ export function applyMove(
     player.board.push(minion);
     events.push({ type: 'cardPlayed', seat: actor, card, minion });
     enqueuePlayed(next, minion, actor, target, conditions);
+    advanceQuest(next, actor, 1, (quest) => quest.goal.kind === 'playFamily' && Boolean(def.families?.includes(quest.goal.family)), events);
+    fireTraps(next, (1 - actor) as SeatId, 'minionPlayed', minion, events);
+    settle(next, events);
+    return { state: next, events };
+  }
+
+  if (move.type === 'useBuilding') {
+    const minion = player.board.find((m) => m.id === move.minionId);
+    if (!minion || !canUseBuilding(minion)) throw new Error('Bau lässt sich nicht nutzen');
+    minion.hasAttacked = true;
+    minion.damage += 1;
+    refreshStats(minion);
+    events.push({ type: 'buildingUsed', seat: actor, minionId: minion.id, name: minion.name, health: minion.health });
+    enqueue(next, CARDS_DB[minion.cardId]?.building, actor, minion.cardId, minion.id, null);
     settle(next, events);
     return { state: next, events };
   }
@@ -570,6 +647,10 @@ export function applyMove(
     events.push({ type: 'attack', attackerId: attacker.id, target });
 
     if (target.kind === 'hero') {
+      // Eine Falle kommt dem Schlag zuvor und kann den Angreifer aufhalten.
+      fireTraps(next, enemy.seat, 'heroAttacked', attacker, events);
+      settle(next, events);
+      if (next.phase !== 'play' || !player.board.some((m) => m.id === attacker.id)) return { state: next, events };
       strike(attacker, player, enemy, events);
     } else {
       const defender = enemy.board.find((m) => m.id === target.id);
@@ -589,6 +670,12 @@ export function applyMove(
 }
 
 const TRADE_COST = 1;
+
+/** Gleiche Falle nur einmal, höchstens drei. */
+function canSetTrap(player: PlayerState, cardId: string): boolean {
+  const traps = player.traps ?? [];
+  return traps.length < TRAP_LIMIT && !traps.some((card) => card.defId === cardId);
+}
 
 /** Nach dem Zugende: Wer gefallen ist, beendet die Partie, sonst ist der andere dran. */
 function passTurn(state: DrachenspielState, events: GameEvent[]): void {
@@ -617,7 +704,7 @@ function endOwnTurn(player: PlayerState, events: GameEvent[]): void {
 
 /** Erlaubte Angriffsziele auf dieser Seite: Beschützer gehen vor, Versteckte sind keines. */
 function attackTargets(enemy: PlayerState): Array<{ kind: 'minion'; id: string } | { kind: 'hero' }> {
-  const visible = enemy.board.filter((m) => !m.stealth);
+  const visible = enemy.board.filter((m) => !m.stealth && !m.dormant);
   const guards = visible.filter((m) => m.taunt);
   if (guards.length > 0) return guards.map((m) => ({ kind: 'minion', id: m.id }));
   return [{ kind: 'hero' }, ...visible.map((m) => ({ kind: 'minion' as const, id: m.id }))];
@@ -642,16 +729,17 @@ export function cardTargets(state: DrachenspielState, seat: SeatId, def: CardDef
 export function spellTargets(state: DrachenspielState, seat: SeatId, targeting: SpellTargeting): (SpellTarget | null)[] {
   const me = state.players[seat];
   const enemy = state.players[1 - seat];
-  const enemyMinions = enemy.board.filter((m) => !m.stealth && !m.elusive).map((m): SpellTarget => ({ kind: 'minion', id: m.id }));
+  const enemyMinions = enemy.board.filter((m) => !m.stealth && !m.elusive && !m.dormant).map((m): SpellTarget => ({ kind: 'minion', id: m.id }));
   switch (targeting) {
     case 'none':
+    case 'trigger':
       return [null];
     case 'enemyAny':
       return [{ kind: 'hero' }, ...enemyMinions];
     case 'enemyMinion':
       return enemyMinions;
     case 'ownMinion':
-      return me.board.filter((m) => !m.elusive).map((m): SpellTarget => ({ kind: 'minion', id: m.id }));
+      return me.board.filter((m) => !m.elusive && !m.dormant).map((m): SpellTarget => ({ kind: 'minion', id: m.id }));
   }
 }
 
@@ -687,6 +775,10 @@ export function playerView(
       overloadNext: p.overloadNext ?? 0,
       locked: p.locked ?? 0,
       cardsPlayedThisTurn: p.cardsPlayedThisTurn ?? 0,
+      traps: isOwner ? (p.traps ?? []).map((c) => ({ ...c })) : null,
+      trapCount: (p.traps ?? []).length,
+      quest: p.quest ? { ...p.quest } : null,
+      customDeck: isOwner && p.customDeck ? [...p.customDeck] : null,
       deckTheme: p.deckTheme ?? null,
       mulliganDone: p.mulliganDone,
     };
@@ -769,7 +861,9 @@ function reconstructPlayer(
   nextId: () => number,
   withSpells: boolean,
 ): PlayerState {
-  const pool = hv.deckTheme && hv.deckTheme !== 'mixed'
+  const pool = hv.customDeck
+    ? hv.customDeck
+    : hv.deckTheme && hv.deckTheme !== 'mixed'
     ? themeCardIds(hv.deckTheme, withSpells)
     : [...ALL_CARD_IDS, ...(withSpells ? ALL_SPELL_IDS : [])];
 
@@ -788,6 +882,10 @@ function reconstructPlayer(
     : Array.from({ length: hv.handCount }, nextCard);
 
   const deck: CardInstance[] = Array.from({ length: hv.deckCount }, nextCard);
+
+  // Fremde Fallen sind unbekannt: Ausgelost wird aus allen, die es im Haus geben kann.
+  const trapPool = Object.values(CARDS_DB).filter((def) => def.trap && (!hv.deckTheme || hv.deckTheme === 'mixed' || def.house === hv.deckTheme || def.house === 'neutral')).map((def) => def.id);
+  const traps: CardInstance[] = hv.traps ? hv.traps.map((c) => ({ ...c })) : rng.shuffle(trapPool).slice(0, hv.trapCount).map((defId) => ({ uid: `c_${nextId()}`, defId }));
 
   return {
     seat: hv.seat,
@@ -808,6 +906,9 @@ function reconstructPlayer(
     overloadNext: hv.overloadNext,
     locked: hv.locked,
     cardsPlayedThisTurn: hv.cardsPlayedThisTurn,
+    traps,
+    quest: hv.quest ? { ...hv.quest } : null,
+    ...(hv.customDeck ? { customDeck: [...hv.customDeck] } : {}),
     deckTheme: hv.deckTheme,
     mulliganDone: hv.mulliganDone,
   };
@@ -820,7 +921,7 @@ export function evaluate(state: DrachenspielState, seat: SeatId): number {
   if (opp.health <= 0) return 10_000;
   if (me.health <= 0) return -10_000;
 
-  let score = 0;
+  let score = (me.traps.length - opp.traps.length) * 2 + (me.quest ? 2 : 0) - (opp.quest ? 2 : 0);
   score += (me.health + me.armor - opp.health - opp.armor) * 2;
   score += (me.gear ? me.gear.attack * me.gear.durability : 0) - (opp.gear ? opp.gear.attack * opp.gear.durability : 0);
   score += (me.hand.length - opp.hand.length) * 3;
@@ -850,7 +951,7 @@ export function evaluate(state: DrachenspielState, seat: SeatId): number {
 }
 
 export function eventView(event: GameEvent, seat: SeatId | 'spectator'): GameEvent | null {
-  if (event.type === 'cardDrawn' || event.type === 'cardFaded') {
+  if (event.type === 'cardDrawn' || event.type === 'cardFaded' || event.type === 'trapSet') {
     if (event.seat !== seat) {
       return { ...event, card: undefined };
     }
@@ -865,6 +966,7 @@ export const drachenspiel: GameModule<DrachenspielState, DrachenspielMove, Drach
   setup,
   currentPlayers,
   legalMoves,
+  isLegal,
   applyMove,
   playerView,
   result,
@@ -873,4 +975,5 @@ export const drachenspiel: GameModule<DrachenspielState, DrachenspielMove, Drach
   evaluate,
   eventView,
   bots,
+  prepare,
 };

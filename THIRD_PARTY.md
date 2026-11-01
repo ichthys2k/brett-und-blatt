@@ -81,6 +81,12 @@ Bube, Dame und König des französischen Kartenbilds sowie Unter, Ober und Köni
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 
+## Wappen der Spielkacheln (KI-erzeugt)
+
+Die 54 Wappen auf den Kacheln der Startseite (`apps/web/src/wappen/*.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge in `scripts/grafik/`. Sie zeigen allgemeine Sinnbilder (Schachpferd, Würfel, Drache u. a.), keine echten Personen und keine fremden Marken. Die Spiele selbst sind eigene Fassungen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
 ## Almendra
 
 Zierschrift für Überschriften im Aussehen „Taverne“ (`apps/web`), über `@fontsource/almendra`. https://github.com/fontsource/font-files

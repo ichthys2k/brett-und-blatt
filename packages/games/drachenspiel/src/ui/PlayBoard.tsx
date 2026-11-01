@@ -98,6 +98,8 @@ function MinionView({
     minion.bubble && 'bubble',
     minion.stealth && 'stealth',
     minion.frozen && 'frozen',
+    minion.dormant && 'dormant',
+    minion.building && 'building',
   ]
     .filter(Boolean)
     .join(' ');
@@ -156,6 +158,7 @@ function HeroBar({
   onClick,
   onPointerDown,
   dropTarget,
+  onInfo,
   elementRef,
 }: {
   seat: SeatId;
@@ -174,8 +177,15 @@ function HeroBar({
   onClick?: () => void;
   onPointerDown?: (e: ReactPointerEvent<HTMLElement>) => void;
   dropTarget?: string;
+  onInfo: (text: string) => void;
   elementRef: (el: HTMLElement | null) => void;
 }) {
+  const quest = player.quest ? CARDS_DB[player.quest.cardId] : undefined;
+  const info = (text: string) => (event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
+    onInfo(text);
+  };
+  const trapText = player.traps ? player.traps.map((card) => CARDS_DB[card.defId]?.text ?? '').join(' ') : `${player.trapCount} verdeckte ${player.trapCount === 1 ? 'Falle' : 'Fallen'}.`;
   const strength = heroAttackValue(player);
   const interactive = targetable || canAttack;
   return (
@@ -207,6 +217,16 @@ function HeroBar({
             <span className="ds-badge ds-badge-armor" title="Rüstung fängt Schaden vor den Leben ab">
               🛡️ {armor}
             </span>
+          )}
+          {player.trapCount > 0 && (
+            <button type="button" className="ds-badge ds-info-badge" aria-label={trapText} title={trapText} onClick={info(trapText)}>
+              🪤 {player.trapCount}
+            </button>
+          )}
+          {player.quest && quest?.quest && (
+            <button type="button" className="ds-badge ds-info-badge" aria-label={quest.text} title={quest.text} onClick={info(`${quest.name}: ${quest.text}`)}>
+              📜 {player.quest.progress}/{quest.quest.count}
+            </button>
           )}
           {strength > 0 && (
             <span className="ds-badge ds-badge-gear" title={player.gear ? `${player.gear.name}: hält noch ${player.gear.durability} Angriffe` : 'Angriff des Helden in diesem Zug'}>
@@ -366,6 +386,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   const playableCardIndices = new Set(legalMoves.flatMap((m) => (m.type === 'playCard' ? [m.handIndex] : [])));
   const attackersReady = new Set(legalMoves.filter(isStrike).map(strikerOf));
   const heroCanAttack = attackersReady.has(HERO_ATTACKER);
+  const usableBuildings = new Set(legalMoves.flatMap((m) => (m.type === 'useBuilding' ? [m.minionId] : [])));
   const canUsePower = legalMoves.some((m) => m.type === 'heroPower');
   const myPower = me.power ? HOUSE_POWERS[me.power] : null;
   const oppPower = opp.power ? HOUSE_POWERS[opp.power] : null;
@@ -380,6 +401,8 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   if (hint?.type === 'attack') {
     hintedIds.add(hint.attackerId);
     hintedIds.add(hint.target.kind === 'minion' ? hint.target.id : `hero-${oppSeat}`);
+  } else if (hint?.type === 'useBuilding') {
+    hintedIds.add(hint.minionId);
   } else if (hint?.type === 'heroAttack') {
     hintedIds.add(`hero-${mySeat}`);
     hintedIds.add(hint.target.kind === 'minion' ? hint.target.id : `hero-${oppSeat}`);
@@ -389,6 +412,10 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   const hintedCard = hint?.type === 'playCard' || hint?.type === 'tradeCard' ? hint.handIndex : null;
 
   const handleMinionClick = (minion: Minion, isOwner: boolean) => {
+    if (isOwner && usableBuildings.has(minion.id) && selectedSpell === null) {
+      onMove({ type: 'useBuilding', minionId: minion.id });
+      return;
+    }
     if (selectedSpell !== null && spellTargetIds.has(minion.id)) {
       castOn({ kind: 'minion', id: minion.id });
       return;
@@ -479,6 +506,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           name={nameOf(oppSeat)}
           health={beat?.heroes[oppSeat] ?? opp.health}
           armor={beat?.armor[oppSeat] ?? opp.armor}
+          onInfo={setNotice}
           attackVector={attackVector?.id === `hero-${oppSeat}` ? attackVector : undefined}
           dropTarget="enemy-hero"
           floats={floatsOf(`hero-${oppSeat}`)}
@@ -551,8 +579,8 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           ) : (
             myBoard.map((shown) => {
               const m = shown.minion;
-              const canAttack = !shown.dying && attackersReady.has(m.id);
-              const dragBind = canAttack ? bindDrag({ kind: 'minion', minionId: m.id }) : undefined;
+              const canAttack = !shown.dying && (attackersReady.has(m.id) || usableBuildings.has(m.id));
+              const dragBind = !shown.dying && attackersReady.has(m.id) ? bindDrag({ kind: 'minion', minionId: m.id }) : undefined;
               const zoomBinds = zoomMinion(m);
               return (
                 <MinionView
@@ -590,6 +618,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           name={nameOf(mySeat)}
           health={beat?.heroes[mySeat] ?? me.health}
           armor={beat?.armor[mySeat] ?? me.armor}
+          onInfo={setNotice}
           canAttack={heroCanAttack}
           selected={effectiveAttackerId === HERO_ATTACKER}
           attackVector={attackVector?.id === `hero-${mySeat}` ? attackVector : undefined}
@@ -686,7 +715,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
 
       {selectedSpell !== null && activeSpellDef && (
         <div className="ds-spell-hint" role="status">
-          {activeSpellDef.emoji} {activeSpellDef.name}: Wähle ein Ziel – {activeSpellDef.text ?? getCardTraits(activeSpellDef).find((trait) => trait.description.length > 0)?.description}
+          {activeSpellDef.emoji} {activeSpellDef.name}: Wähle ein Ziel – {activeSpellDef.text ?? getCardTraits(activeSpellDef).find((trait) => trait.id.startsWith('battlecry'))?.description}
           <button type="button" className="ds-btn" onClick={() => setSelectedSpell(null)}>
             Abbrechen
           </button>

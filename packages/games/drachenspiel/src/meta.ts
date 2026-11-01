@@ -10,7 +10,7 @@ export const meta: GameInfo = {
   patterns: ['hidden', 'simultaneous'],
   hiddenInformation: true,
   privateViews: true,
-  ruleVersion: 8,
+  ruleVersion: 10,
   // Karten ziehen und Zufall zeigen Neues: Ein Zurücknehmen ließe sich ausnutzen.
   noUndo: true,
   hints: true,
@@ -26,6 +26,8 @@ export const meta: GameInfo = {
     'Rüstung 🛡️ fängt Schaden ab, bevor er deine Leben trifft. Hat dein Held Angriff (⚔️), tippe ihn an und wähle ein Ziel, einmal je Zug. Greift er ein Tier an, schlägt es zurück.',
     'Karten mit 🔄 Tauschen kannst du für 1 Mana zurück ins Deck mischen und dafür neu ziehen. ⏳ Flüchtige Karten verschwinden am Ende deines Zugs. Was ein Abzeichen auf einer Karte bedeutet, zeigt langes Drücken.',
     'Manche Auftritte fragen nach: Wähle ein Ziel, eine Karte (Fährte suchen) oder eine Verbesserung (Anpassen). 🐺 Rudeltaktik wirkt, wenn du im selben Zug schon eine Karte gespielt hast, 🦡 Einzelgänger, wenn die Karte ganz links oder rechts auf der Hand lag. 🔒 Erschöpfung sperrt im nächsten Zug Mana.',
+    'Besondere Karten: 🏗️ Bauten lassen sich einmal je Zug antippen und verlieren dabei 1 Leben. 💤 Tiere im Winterschlaf und Eier sind unangreifbar, bis sie erwachen. 🪤 Fallen liegen verdeckt und lösen im Zug des Gegners aus. 📜 Aufgaben geben bei Erfolg eine starke Karte.',
+    'Eigene Decks: 30 Karten aus einem Haus und neutrale, höchstens 2 Kopien, Sagentiere einmal. Alle Karten sind frei. Bauen, speichern und per Code teilen geht in der Deckwahl.',
     'Ist dein Deck leer, erleidet dein Held jede Runde zunehmenden Müdigkeits-Schaden. Auf die Hand passen 10 Karten, was darüber hinaus gezogen wird, verbrennt.',
   ],
 };

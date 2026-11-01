@@ -37,8 +37,8 @@ export function CardFace({ def }: { def: CardDefinition }) {
         <span className="ds-card-emoji">{def.emoji}</span>
         <span className="ds-card-name">{def.name}</span>
       </div>
-      {def.isSpell && <span className="ds-card-spelltext">{def.text}</span>}
-      {!def.isSpell && (
+      {def.text && <span className="ds-card-spelltext">{def.text}</span>}
+      {!def.isSpell && !def.quest && (
         <div className="ds-minion-stats">
           <span className="ds-stat-atk">{def.attack}</span>
           <span className="ds-stat-hp">{def.health}</span>
@@ -104,7 +104,7 @@ export function CardZoom({ item, onClose }: { item: ZoomItem; onClose: () => voi
         <span className="ds-card-cost ds-zoom-cost">{def.cost}</span>
         <span className="ds-zoom-emoji">{def.emoji}</span>
         <strong className="ds-zoom-name">{def.name}</strong>
-        {def.isSpell && <p className="ds-zoom-text">{def.text}</p>}
+        {def.text && <p className="ds-zoom-text">{def.text}</p>}
         {traits.length > 0 && (
           <ul className="ds-zoom-traits">
             {traits.map((trait) => (
@@ -119,7 +119,7 @@ export function CardZoom({ item, onClose }: { item: ZoomItem; onClose: () => voi
         )}
         {cardOrigin(def) && <p className="ds-zoom-origin">{cardOrigin(def)}</p>}
         {quote && <p className="ds-zoom-quote">„{quote}“</p>}
-        {!def.isSpell && (
+        {!def.isSpell && !def.quest && (
           <div className="ds-minion-stats ds-zoom-stats">
             <span className={minion ? attackClass(minion) : 'ds-stat-atk'}>{minion?.attack ?? def.attack}</span>
             <span className={minion ? healthClass(minion) : 'ds-stat-hp'}>{minion?.health ?? def.health}</span>

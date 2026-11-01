@@ -2,12 +2,34 @@ import { useState } from 'react';
 import { CARDS_DB } from '../cards';
 import { DECK_THEMES, DECK_THEME_IDS } from '../decks';
 import { HOUSE_POWERS } from '../powers';
+import { decodeDeck } from '../deckcode';
 import type { DrachenspielMove, DrachenspielView, HiddenPlayerView } from '../types';
+import { DeckManager } from './DeckBuilder';
 import { CardFace } from './parts';
 import { getCardFullTitle, getCardTraits } from './traits';
 
 /** Deckwahl: eigene Komponente, damit jede Phase ihre eigenen Hooks hat. */
-export function DeckSelection({ view, me, onMove }: { view: DrachenspielView; me: HiddenPlayerView; onMove: (move: DrachenspielMove) => void }) {
+export function DeckSelection({ view, me, onMove, timed }: { view: DrachenspielView; me: HiddenPlayerView; onMove: (move: DrachenspielMove) => void; timed: boolean }) {
+  const [own, setOwn] = useState(false);
+  if (!me.deckTheme && own) {
+    return (
+      <div className="ds-phase-overlay ds-phase-top">
+        <h2 className="ds-phase-title">Eigene Decks</h2>
+        {timed && (
+          <p className="ds-phase-subtitle" role="status">
+            ⏳ Die Uhr läuft, nach Ablauf wird ein Deck für dich gewählt. In Ruhe bauen geht vor der Partie unter „🃏 Meine Decks“.
+          </p>
+        )}
+        <DeckManager
+          onPlay={(code) => {
+            const deck = decodeDeck(code);
+            if (deck) onMove({ type: 'chooseDeck', deck: deck.house, code });
+          }}
+          onClose={() => setOwn(false)}
+        />
+      </div>
+    );
+  }
   if (!me.deckTheme) {
     return (
       <div className="ds-phase-overlay">
@@ -15,6 +37,9 @@ export function DeckSelection({ view, me, onMove }: { view: DrachenspielView; me
         <p className="ds-phase-subtitle">
           {view.options.spells === 'off' ? 'Jedes Deck enthält 30 Tierkarten mit besonderen Stärken.' : 'Jedes Deck enthält 30 Karten: 24 Tiere und 6 Zauber.'}
         </p>
+        <button type="button" className="ds-btn" onClick={() => setOwn(true)}>
+          🃏 Eigenes Deck, Vorschläge, Deck-Code
+        </button>
         <div className="ds-deck-grid">
           {DECK_THEME_IDS.map((themeId) => {
             const theme = DECK_THEMES[themeId];

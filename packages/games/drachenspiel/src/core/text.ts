@@ -29,6 +29,7 @@ export const FAMILY_NAMES: Record<FamilyId, string> = {
   mythic: 'Sagentiere',
   dragons: 'Drachen',
   woodfolk: 'Waldvolk',
+  buildings: 'Bauten',
 };
 
 export const SCHOOL_NAMES: Record<SchoolId, string> = {
@@ -47,6 +48,7 @@ const CHOSEN: Record<SpellTargeting, string> = {
   enemyAny: 'einem gegnerischen Tier oder Helden',
   enemyMinion: 'einem gegnerischen Tier',
   ownMinion: 'einem eigenen Tier',
+  trigger: 'dem auslösenden Tier',
 };
 
 function dative(selector: Selector, targeting: SpellTargeting): string {
@@ -69,7 +71,7 @@ function accusative(selector: Selector, targeting: SpellTargeting): string {
   if (selector.pick === 'hero') return selector.side === 'own' ? 'deinen Helden' : 'den gegnerischen Helden';
   if (selector.pick === 'allMinions') return `alle ${selector.exceptSelf ? 'anderen ' : ''}${selector.side === 'own' ? 'eigenen' : 'gegnerischen'} Tiere${selector.family ? ` der Familie ${FAMILY_NAMES[selector.family]}` : ''}`;
   if (selector.pick === 'random') return `ein zufälliges ${selector.side === 'own' ? 'eigenes' : 'gegnerisches'} Tier`;
-  return CHOSEN[targeting].replace('einem gegnerischen', 'ein gegnerisches').replace('einem eigenen', 'ein eigenes');
+  return CHOSEN[targeting].replace('einem gegnerischen', 'ein gegnerisches').replace('einem eigenen', 'ein eigenes').replace('dem auslösenden', 'das auslösende');
 }
 
 function buffText(attack?: number, health?: number): string {
@@ -97,7 +99,7 @@ function effectText(effect: Effect, targeting: SpellTargeting, lookup: Record<st
     case 'draw':
       return effect.count === 1 ? 'Ziehe eine Karte.' : `Ziehe ${effect.count} Karten.`;
     case 'summon':
-      return `Ruft ${summonText(lookup[effect.cardId])} herbei.`;
+      return `Ruft ${(effect.count ?? 1) > 1 ? `${effect.count}× ` : ''}${summonText(lookup[effect.cardId])} herbei.`;
     case 'returnToHand':
       return `Spült ${accusative(effect.to, targeting)} zurück auf die Hand (Spielsteine und bei voller Hand: weg).`;
     case 'mana':
@@ -125,6 +127,28 @@ function effectText(effect: Effect, targeting: SpellTargeting, lookup: Record<st
     case 'summonRandom':
       return `Ruft zufällig ${effect.cardIds.map((id) => summonText(lookup[id])).join(', ').replace(/, ([^,]*)$/, ' oder $1')} herbei.`;
   }
+}
+
+const TRAP_WHEN = {
+  heroAttacked: 'Greift ein Tier deinen Helden an',
+  minionPlayed: 'Spielt der Gegner ein Tier',
+  spellCast: 'Wirkt der Gegner einen Zauber',
+};
+
+/** Regeltext der besonderen Kartentypen, aus denselben Daten wie ihre Wirkung. */
+export function specialCardText(def: CardDefinition, lookup: Record<string, CardDefinition>): string | undefined {
+  if (def.trap) return `Falle: ${TRAP_WHEN[def.trap.on]}: ${effectsText(def.trap.do, 'trigger', lookup)}`;
+  if (def.building) return `Bau, einmal je Zug nutzbar (kostet 1 Leben): ${effectsText(def.building, 'none', lookup)}`;
+  if (def.quest) {
+    const { goal, count, reward } = def.quest;
+    const what = goal.kind === 'playFamily' ? `Spiele ${count} Tiere der Familie ${FAMILY_NAMES[goal.family]}` : goal.kind === 'playSpells' ? `Wirke ${count} Zauber` : `Sammle ${count} Rüstung`;
+    return `Aufgabe: ${what}. Belohnung: ${lookup[reward]?.name ?? 'eine Karte'}.`;
+  }
+  if (def.dormant) {
+    const into = def.hatchesInto ? lookup[def.hatchesInto] : undefined;
+    return `Winterschlaf: Unangreifbar für ${def.dormant} ${def.dormant === 1 ? 'Zug' : 'Züge'}, dann ${into ? `schlüpft daraus: ${into.name} (${into.attack}/${into.health})` : 'erwacht es'}.`;
+  }
+  return undefined;
 }
 
 /** Der Regeltext entsteht aus den Daten, damit Text und Wirkung nie auseinanderlaufen. */

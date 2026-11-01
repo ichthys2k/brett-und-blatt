@@ -250,3 +250,43 @@ Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes D
 - **Versucht und verworfen:** Der mittlere Bot mit der Bewertung von „schwer“ änderte die Matrix kaum und senkte den Abstand zu „schwer“ von 83 auf 69 %. 3 Rüstung für Dickes Fell machte die Wildnis gegen Krabbeltiere zu stark (79 %).
 - **Startspieler (150 Partien je Zeile, freie Deckwahl):** schwer 49 %, mittel 51 %, leicht 51 %. Schwer schlägt Mittel zu 82 %, Mittel schlägt Leicht zu 100 %.
 
+## Neue Kartentypen (01.11.2026, Phase 7 des Ausbauplans, `ruleVersion` 9)
+
+- **🏗️ Bauten** (`building`): liegen als Figur ohne Angriff auf dem Feld, sind angreifbar, wirken einmal je Zug per Antippen (`useBuilding`) und verlieren dabei 1 Leben. Erstarrt oder beruhigt wirken sie nicht. Biberdamm, Korallenriff, Nest, Wasserloch, Bienenstock, Turm.
+- **💤 Winterschlaf und Eier** (`dormant`, `hatchesInto`): unangreifbar, kein Ziel, von Flächen nicht getroffen, schützen auch nicht als Beschützer; zählen an eigenen Zugbeginnen herunter. Murmeltier, Seeigelei, Hühnerei, Bärenjunges, Kokon, Drachenei (schlüpft nach 3 Zügen als Eidrache 7/7).
+- **🪤 Fallen** (`trap`, in `PlayerState.traps`): zählen als Zauber, höchstens drei, jede nur einmal. Fremde Sichten und Ereignisse zeigen nur die Anzahl; `sampleHidden` lost mögliche Fallen aus, der Bot rechnet also nicht mit den echten. Lösen aus, wenn ein Tier den Helden angreift (vor dem Schlag), ein Tier gespielt oder ein Zauber gewirkt wird. Wurzelfalle, Treibnetz, Falscher Alarm, Fallgrube, Klebefalle, Maskerade.
+- **📜 Aufgaben** (`quest`, `PlayerState.quest`): offen sichtbar, eine zur Zeit, kosten 1 Mana. Ziele: Tiere einer Familie spielen, Zauber wirken, Rüstung sammeln. Die Belohnung ist ein starker Spielstein auf der Hand.
+- **Hot-Seat:** Die Plattform deckt wegen `privateViews` schon vor jedem Zug ab, darum bleiben Fallen auch am selben Gerät verdeckt. Getestet ist das hier nicht eigens.
+- **Decks:** Jedes Themendeck enthält jetzt je einen Bau, eine Aufgabe, zwei Schläfer und zwei Fallen (die Fallen nur mit Zauberkarten). Dafür weichen je drei Paare bzw. Zauber; im Wald ersetzt außerdem die Katze den Siebenschläfer.
+- **Behoben:** Der Kartentext nennt jetzt die Zahl gerufener Tiere („2× ein Küken“), auch bei älteren Karten wie dem Gänsemarsch. Beim Zielen zeigt die Leiste den Auftritt statt der ersten Fähigkeit.
+- **Häuser-Matrix (erstes Haus gewinnt, je 150 Partien, etwa ±8 Prozentpunkte):**
+
+  | Paarung | schwer | mittel |
+  |---|---|---|
+  | Wald : Meer | 35 | 34 |
+  | Wald : Bauernhof | 44 | 67 |
+  | Wald : Wildnis | 41 | 75 |
+  | Wald : Krabbeltiere | 46 | 54 |
+  | Meer : Bauernhof | 51 | 56 |
+  | Meer : Wildnis | 49 | 65 |
+  | Meer : Krabbeltiere | 69 | 73 |
+  | Bauernhof : Wildnis | 60 | 61 |
+  | Bauernhof : Krabbeltiere | 53 | 47 |
+  | Wildnis : Krabbeltiere | 60 | 53 |
+
+  Außerhalb von 40–60 % liegen auf „schwer“ 2 von 10 Paarungen, auf „mittel“ 6. Die mittlere Abweichung von 50 beträgt 7,8 bzw. 12,3 Punkte. Das Meer ist insgesamt etwas zu stark; das Phasenziel von Phase 6 bleibt offen.
+- **Startspieler (150 Partien, freie Deckwahl):** schwer 45 %, mittel 48 %, leicht 47 %. Schwer schlägt Mittel zu 85 %, Mittel schlägt Leicht zu 98 %.
+- **Im Browser angesehen (375 × 812):** Falle mit Abzeichen, Schlüpfen eines Kokons als Falter, Kartentexte. Nur per Regeltest geprüft: Bau antippen, Aufgabe abschließen, das Auslösen einer Falle. Online mit zwei Geräten weiter ungetestet.
+
+## Deckbau ohne Kauf (01.11.2026, Phase 8 des Ausbauplans, `ruleVersion` 10)
+
+- **Regeln** (`src/deckcode.ts`): 30 Karten aus einem Haus und neutrale, höchstens 2 Kopien, Sagentiere einmal. Alle Karten sind frei, es gibt nichts zu kaufen oder freizuspielen. Spielsteine und die Sternschnuppe gehören nicht dazu.
+- **Deck-Code:** lesbarer Text wie `forest:c7*2,f_jay*2,…`, höchstens 600 Zeichen. Zug `chooseDeck` mit `code`; `isLegal` und `applyMove` prüfen ihn, online also die Spielleitung auf dem Server. Der Gegner sieht das eigene Deck nicht (`customDeck` nur in der eigenen Sicht), Ereignisse nennen nur das Haus.
+- **Oberfläche** (`src/ui/DeckBuilder.tsx`): „🃏 Meine Decks“ in der Einrichtung, ohne Uhr; in der Deckwahl dasselbe mit Knopf „Spielen“ und dem Hinweis, dass die Uhr läuft. Haus wählen, Karten antippen, lange drücken zeigt sie groß, Filter und Suche, Kostenkurve, „🎲 Rest auffüllen“, Umbauen, Teilen mit Code und QR-Code, Löschen.
+- **Vorschlagsdecks:** Waldfreunde, Küstenwache, Bunter Hof, Steppenzug, Flinker Schwarm, je Haus eines, einfach zu spielen, auch als Grundlage zum Umbauen. Sie sind nicht eigens auf Balance gemessen.
+- **Vorgabe für eine Klasse:** Option `deckSelection=code` mit verborgener Option `deckCode`, per Link `#/neu/drachenspiel?deckSelection=code&deckCode=…` oder in der Einrichtung; beide Plätze spielen dieses Deck, ungültige Codes führen zur Wahl im Spiel. Online gilt das nicht, weil verborgene Optionen dort nicht gesetzt werden: Dort gibt jedes Kind den Code in der Deckwahl ein.
+- **Zauberkarten-Option:** Sie gilt nur für Themendecks und das gemischte Deck. Ein eigenes Deck wird gespielt, wie es gebaut ist.
+- **Sicherung (W-050):** `packages/ui/src/sync/` (`@brett-und-blatt/ui/sync`) enthält den früheren Narrenhof-Kern. Ein Code gilt für die ganze Plattform, jedes Spiel hat mit eigenem Salt einen eigenen Block; das Salt des Narrenhofs und der Speicherschlüssel `brett-und-blatt:farbensortierer:sicherung` sind unverändert, vorhandene Codes und Passkeys gelten weiter. Ein Code ist gültig, wenn irgendein Block dazu existiert; der eigene wird dann angelegt. Der Abgleich liest auch den Block des anderen Spiels und hält ihn so am Leben. Decks führt die jüngste Änderung je Kennung zusammen, Gelöschtes bleibt als Löschvermerk (`src/ui/deckStore.ts`, höchstens 80 Decks und 200 Vermerke, unter 64 KB). Datenschutzerklärung ergänzt.
+- **Geprüft:** Regeln, Code, Zusammenführen und die Sicherung gegen einen nachgebauten Server mit den echten Serverregeln (`test/deckbau.test.ts`, `test/decksync.test.ts`). Im Browser (375 × 812) gegen den lokalen Spieleserver: Vorschlag übernehmen, speichern, Sicherungscode anlegen, Partie mit dem eigenen Deck; Neues Deck mit Auffüllen, Grenzen, Teilen mit QR-Code.
+- **Noch offen:** Das Kriterium „ein Kind schafft es in unter 5 Minuten“ ist nicht gemessen. Eigene Decks in einer echten Online-Partie mit zwei Geräten, Passkey, das Einlösen eines Codes auf einem zweiten echten Gerät und der Link mit `sicherung=` sind nicht von Hand getestet. Die Häuser-Matrix misst nur die Themendecks.
+
