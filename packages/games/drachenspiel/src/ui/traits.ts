@@ -129,6 +129,8 @@ export function getMinionTraits(minion: Minion): TraitInfo[] {
   const deaths = minion.silenced ? [] : (CARDS_DB[minion.cardId]?.triggers ?? []).filter((t) => t.on !== 'played').map((trigger, index) => triggerTrait(trigger, index));
   const states = [
     ...(minion.spellPower ? [natureTrait(minion.spellPower)] : []),
+    ...(minion.dormant ? [stateTrait('dormant', '💤', 'Winterschlaf', `Unangreifbar, wacht in ${minion.dormant} ${minion.dormant === 1 ? 'Zug' : 'Zügen'} auf.`)] : []),
+    ...(minion.building && !minion.silenced ? [stateTrait('building', '🏗️', 'Bau', CARDS_DB[minion.cardId]?.text ?? '')] : []),
     ...(minion.frozen ? [stateTrait('frozen', '🧊', 'Erstarrt', 'Setzt den nächsten Angriff aus.')] : []),
     ...(minion.silenced ? [stateTrait('silenced', '😌', 'Beruhigt', 'Hat seine Fähigkeiten verloren.')] : []),
   ];
@@ -157,6 +159,10 @@ export function getCardTraits(card: CardDefinition): TraitInfo[] {
   return [
     ...(card.keywords ?? []).map(keywordTrait),
     ...(card.spellPower ? [natureTrait(card.spellPower)] : []),
+    ...(card.building ? [stateTrait('building', '🏗️', 'Bau', card.text ?? '')] : []),
+    ...(card.dormant ? [stateTrait('dormant', '💤', 'Winterschlaf', card.text ?? '')] : []),
+    ...(card.trap ? [stateTrait('trap', '🪤', 'Falle', card.text ?? '')] : []),
+    ...(card.quest ? [stateTrait('quest', '📜', 'Aufgabe', card.text ?? '')] : []),
     ...(card.overload ? [stateTrait('overload', '🔒', `Erschöpfung ${card.overload}`, `Im nächsten Zug fehlen dir ${card.overload} Mana.`)] : []),
     ...(card.triggers ?? []).map((trigger, index) => triggerTrait(trigger, index, card.targeting)),
   ];
@@ -167,6 +173,7 @@ export function getCardTraits(card: CardDefinition): TraitInfo[] {
  */
 export function cardOrigin(card: CardDefinition): string {
   const rarity = card.rarity === 'mythic' ? ' · Sagentier' : card.rarity === 'rare' ? ' · selten' : '';
+  if (card.quest) return `Aufgabe${rarity}`;
   if (card.school) return `Schule ${SCHOOL_NAMES[card.school]}${rarity}`;
   return `${(card.families ?? []).map((family) => FAMILY_NAMES[family]).join(', ')}${rarity}`;
 }

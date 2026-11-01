@@ -1,7 +1,8 @@
 import { Rng, type GameEvent, type SeatId } from '@brett-und-blatt/engine';
 import { CARDS_DB } from '../cards';
-import type { CardDefinition, CardInstance, ChoiceOption, DrachenspielState, Effect, Enchantment, KeywordId, Minion, MinionKeyword, PlayerState, QueuedEffect, Selector, SpellTarget, Trigger } from '../types';
+import type { CardDefinition, CardInstance, ChoiceOption, DrachenspielState, Effect, Enchantment, KeywordId, Minion, MinionKeyword, PlayerState, QueuedEffect, QuestDefinition, Selector, SpellTarget, TrapDefinition, Trigger } from '../types';
 
+export const TRAP_LIMIT = 3;
 export const HAND_LIMIT = 10;
 export const BOARD_LIMIT = 7;
 export const MAX_MANA = 10;
@@ -62,6 +63,8 @@ export function createMinion(state: DrachenspielState, def: CardDefinition, owne
     canAttack: has('rush') || has('sprinter'),
     hasAttacked: false,
     justPlayed: true,
+    ...(def.building ? { building: true } : {}),
+    ...(def.dormant ? { dormant: def.dormant } : {}),
     ...(def.spellPower ? { spellPower: def.spellPower } : {}),
     ...Object.fromEntries(OPTIONAL_KEYWORDS.filter(has).map((keyword) => [keyword, true])),
   };
@@ -69,7 +72,58 @@ export function createMinion(state: DrachenspielState, def: CardDefinition, owne
 
 /** Darf diese Figur jetzt angreifen? */
 export function canStrike(minion: Minion): boolean {
-  return minion.canAttack && !minion.hasAttacked && !minion.frozen && minion.attack > 0;
+  return minion.canAttack && !minion.hasAttacked && !minion.frozen && !minion.building && !minion.dormant && minion.attack > 0;
+}
+
+/** Ein Bau wirkt einmal je Zug, aber nicht erstarrt oder beruhigt. */
+export function canUseBuilding(minion: Minion): boolean {
+  return Boolean(minion.building && !minion.hasAttacked && !minion.frozen && !minion.silenced);
+}
+
+/** Löst alle passenden Fallen des Platzes aus; das auslösende Tier ist ihr `chosen`. */
+export function fireTraps(state: DrachenspielState, seat: SeatId, on: TrapDefinition['on'], source: Minion | null, events: GameEvent[]): void {
+  const player = state.players[seat];
+  player.traps = (player.traps ?? []).filter((card) => {
+    const trap = CARDS_DB[card.defId]?.trap;
+    if (trap?.on !== on) return true;
+    events.push({ type: 'trapSprung', seat, card });
+    enqueue(state, trap.do, seat, card.defId, null, source ? { kind: 'minion', id: source.id } : null);
+    return false;
+  });
+}
+
+/** Zählt für die Aufgabe; am Ziel kommt die Belohnung auf die Hand. */
+export function advanceQuest(state: DrachenspielState, seat: SeatId, amount: number, matches: (quest: QuestDefinition) => boolean, events: GameEvent[]): void {
+  const player = state.players[seat];
+  const active = player.quest;
+  const quest = active ? CARDS_DB[active.cardId]?.quest : undefined;
+  if (!active || !quest || !matches(quest)) return;
+  active.progress = Math.min(quest.count, active.progress + amount);
+  if (active.progress < quest.count) return;
+  events.push({ type: 'questDone', seat, cardId: active.cardId, reward: quest.reward });
+  player.quest = null;
+  enqueue(state, [{ kind: 'addToHand', cardId: quest.reward }], seat, active.cardId, null, null);
+}
+
+/** Zugbeginn: Winterschlaf zählt herunter, Eier schlüpfen. */
+export function wakeDormant(state: DrachenspielState, seat: SeatId, events: GameEvent[]): void {
+  const board = state.players[seat].board;
+  for (let i = 0; i < board.length; i++) {
+    const minion = board[i]!;
+    if (!minion.dormant) continue;
+    minion.dormant--;
+    if (minion.dormant > 0) continue;
+    delete minion.dormant;
+    const into = CARDS_DB[CARDS_DB[minion.cardId]?.hatchesInto ?? ''];
+    if (into) {
+      const hatched = createMinion(state, into, seat);
+      board[i] = { ...hatched, id: minion.id, playOrder: minion.playOrder };
+    }
+    const awake = board[i]!;
+    awake.canAttack = true;
+    delete awake.justPlayed;
+    events.push({ type: 'minionAwoke', seat, minion: awake });
+  }
 }
 
 /** Zurück kommt der wirklich zugefügte Schaden: 0 bei Schutzblase oder Eingerollt. */
@@ -193,11 +247,11 @@ function resolve(state: DrachenspielState, frame: QueuedEffect, selector: Select
       return [{ kind: 'hero', player: selector.side === 'own' ? own : enemy }];
     case 'allMinions':
       return (selector.side === 'own' ? own : enemy).board
-        .filter((m) => !(selector.exceptSelf && m.id === frame.sourceId))
+        .filter((m) => !m.dormant && !(selector.exceptSelf && m.id === frame.sourceId))
         .filter((m) => !selector.family || CARDS_DB[m.cardId]?.families?.includes(selector.family))
         .map((minion) => ({ kind: 'minion' as const, minion }));
     case 'random': {
-      const board = (selector.side === 'own' ? own : enemy).board;
+      const board = (selector.side === 'own' ? own : enemy).board.filter((m) => !m.dormant);
       if (board.length === 0) return [];
       const rng = new Rng(state.rng);
       const minion = rng.pick(board);
@@ -270,7 +324,7 @@ function runEffect(state: DrachenspielState, frame: QueuedEffect, events: GameEv
   switch (effect.kind) {
     case 'damage': {
       // Naturkraft zählt nur bei Zaubern.
-      const bonus = CARDS_DB[frame.sourceCard]?.isSpell ? player.board.reduce((sum, m) => sum + (m.spellPower ?? 0), 0) : 0;
+      const bonus = CARDS_DB[frame.sourceCard]?.isSpell ? player.board.reduce((sum, m) => sum + (m.dormant ? 0 : (m.spellPower ?? 0)), 0) : 0;
       for (const target of resolve(state, frame, effect.to)) {
         if (target.kind === 'hero') damageHero(target.player, effect.amount + bonus, events);
         else damageMinion(target.minion, effect.amount + bonus, false, events);
@@ -304,6 +358,7 @@ function runEffect(state: DrachenspielState, frame: QueuedEffect, events: GameEv
         (def) =>
           !def.token &&
           !def.singleCopy &&
+          !def.quest &&
           def.id !== 'special_star' &&
           Boolean(def.isSpell) === (effect.pool === 'spell') &&
           (!theme || theme === 'mixed' || def.house === theme || def.house === 'neutral'),
@@ -378,6 +433,7 @@ function runEffect(state: DrachenspielState, frame: QueuedEffect, events: GameEv
     case 'armor':
       player.armor += effect.amount;
       events.push({ type: 'armorGained', seat: frame.seat, amount: effect.amount, armor: player.armor });
+      advanceQuest(state, frame.seat, effect.amount, (quest) => quest.goal.kind === 'gainArmor', events);
       break;
     case 'heroAttack':
       player.heroAttackBonus += effect.amount;
@@ -415,7 +471,7 @@ export function enqueuePlayed(state: DrachenspielState, minion: Minion, seat: Se
 /** Zugende oder nach einem Zauber: alle eigenen Tiere in Spielreihenfolge; beruhigte schweigen. */
 export function enqueueOwnBoard(state: DrachenspielState, seat: SeatId, on: 'turnEnd' | 'spellCast'): void {
   for (const minion of [...state.players[seat].board].sort((a, b) => a.playOrder - b.playOrder)) {
-    if (!minion.silenced) enqueue(state, triggered(minion.cardId, on), seat, minion.cardId, minion.id, null);
+    if (!minion.silenced && !minion.dormant) enqueue(state, triggered(minion.cardId, on), seat, minion.cardId, minion.id, null);
   }
 }
 

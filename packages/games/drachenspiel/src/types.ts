@@ -20,7 +20,7 @@ export type MinionKeyword =
 /** `tradeable` wirkt nur auf der Hand. */
 export type KeywordId = MinionKeyword | 'tradeable';
 
-export type FamilyId = 'pack' | 'cats' | 'herd' | 'birds' | 'burrowers' | 'crawlers' | 'reptiles' | 'sea' | 'giants' | 'mythic' | 'dragons' | 'woodfolk';
+export type FamilyId = 'pack' | 'cats' | 'herd' | 'birds' | 'burrowers' | 'crawlers' | 'reptiles' | 'sea' | 'giants' | 'mythic' | 'dragons' | 'woodfolk' | 'buildings';
 export type SchoolId = 'storm' | 'frost' | 'water' | 'herbs' | 'growth' | 'light' | 'moon' | 'ember';
 /** Begrenzt später nur den Deckbau, hat nichts mit Zufall zu tun. */
 export type Rarity = 'common' | 'rare' | 'mythic';
@@ -113,9 +113,27 @@ export interface Trigger {
 }
 
 /** Wen ein Zauber treffen darf. */
-export type SpellTargeting = 'none' | 'enemyAny' | 'enemyMinion' | 'ownMinion';
+export type SpellTargeting = 'none' | 'enemyAny' | 'enemyMinion' | 'ownMinion' | 'trigger';
 
 export type SpellTarget = { kind: 'minion'; id: string } | { kind: 'hero' };
+
+/** Falle: liegt verdeckt und löst im gegnerischen Zug aus; `chosen` ist das auslösende Tier. Bietet keine Wahl an. */
+export interface TrapDefinition {
+  on: 'heroAttacked' | 'minionPlayed' | 'spellCast';
+  do: Effect[];
+}
+
+/** Aufgabe: offen sichtbar; wer das Ziel erreicht, bekommt die Belohnungskarte. */
+export interface QuestDefinition {
+  goal: { kind: 'playFamily'; family: FamilyId } | { kind: 'playSpells' } | { kind: 'gainArmor' };
+  count: number;
+  reward: string;
+}
+
+export interface ActiveQuest {
+  cardId: string;
+  progress: number;
+}
 
 export interface CardDefinition {
   id: string;
@@ -139,6 +157,14 @@ export interface CardDefinition {
   /** Name im Akkusativ mit Artikel für erzeugte Regeltexte. */
   textName?: string;
   keywords?: KeywordId[];
+  /** Bau: kann nicht angreifen; einmal je Zug nutzbar, das kostet ihn 1 Leben. */
+  building?: Effect[];
+  /** Winterschlaf: so viele eigene Züge unangreifbar, dann erwacht das Tier. */
+  dormant?: number;
+  /** Beim Erwachen wird daraus diese Karte (Ei, Kokon). */
+  hatchesInto?: string;
+  trap?: TrapDefinition;
+  quest?: QuestDefinition;
   /** Erschöpfung: So viel Mana fehlt im nächsten Zug. */
   overload?: number;
   /** Naturkraft: So viel mehr Schaden machen eigene Zauber, solange das Tier liegt. */
@@ -215,6 +241,9 @@ export interface Minion {
   /** In diesem Zug aufs Feld gekommen. */
   justPlayed?: boolean;
   attacksMade?: number;
+  building?: boolean;
+  /** Verbleibende eigene Züge im Winterschlaf. */
+  dormant?: number;
 }
 
 export interface PlayerState {
@@ -240,6 +269,9 @@ export interface PlayerState {
   /** In diesem Zug durch Erschöpfung gesperrtes Mana. */
   locked: number;
   cardsPlayedThisTurn: number;
+  /** Eigene Fallen, verdeckt für den Gegner. */
+  traps: CardInstance[];
+  quest: ActiveQuest | null;
   /** `mixed`: gemischtes Zufallsdeck ohne Thema. */
   deckTheme: DeckThemeId | 'mixed' | null;
   mulliganDone: boolean;
@@ -289,6 +321,10 @@ export interface HiddenPlayerView {
   overloadNext: number;
   locked: number;
   cardsPlayedThisTurn: number;
+  /** Nur der Besitzer sieht, welche Fallen liegen. */
+  traps: CardInstance[] | null;
+  trapCount: number;
+  quest: ActiveQuest | null;
   deckTheme: DeckThemeId | 'mixed' | null;
   mulliganDone: boolean;
 }
@@ -312,5 +348,6 @@ export type DrachenspielMove =
   | { type: 'tradeCard'; handIndex: number }
   | { type: 'choose'; index: number }
   | { type: 'heroPower' }
+  | { type: 'useBuilding'; minionId: string }
   | { type: 'heroAttack'; target: { kind: 'minion'; id: string } | { kind: 'hero' } }
   | { type: 'endTurn' };

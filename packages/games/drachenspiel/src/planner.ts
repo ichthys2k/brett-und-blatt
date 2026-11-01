@@ -61,6 +61,15 @@ function effectValue(effect: Effect): number {
 }
 
 function minionValue(minion: Minion): number {
+  // Eier und Schläfer zählen schon, aber weniger; ein Bau zählt, was er noch bewirken kann.
+  if (minion.dormant) {
+    const def = CARDS_DB[CARDS_DB[minion.cardId]?.hatchesInto ?? minion.cardId];
+    return def ? (def.attack * 1.4 + def.health) * 0.6 : 2;
+  }
+  if (minion.building) {
+    const worth = (CARDS_DB[minion.cardId]?.building ?? []).reduce((sum, effect) => sum + effectValue(effect), 0);
+    return minion.silenced ? minion.health * 0.3 : minion.health * Math.max(1, worth);
+  }
   let value = minion.attack * 1.4 + minion.health;
   if (minion.taunt) value += 1.5;
   if (minion.bubble) value += 1 + minion.attack * 0.5;
@@ -86,14 +95,19 @@ function heroValue(health: number): number {
   return health * 1.2 + Math.min(0, health - 12) * 0.8;
 }
 
+function questValue(player: PlayerState): number {
+  const quest = player.quest && CARDS_DB[player.quest.cardId]?.quest;
+  return quest ? 2 + (6 * player.quest!.progress) / quest.count : 0;
+}
+
 function gearValue(player: PlayerState): number {
   return player.gear ? player.gear.attack * player.gear.durability * 1.2 : 0;
 }
 
 /** Was im nächsten Zug den Helden erreichen kann: Beschützer fangen je einen Angreifer ab. */
 function reachingDamage(attackers: Minion[], defenders: Minion[]): number {
-  const guards = defenders.filter((m) => m.taunt && !m.stealth).length;
-  const attacks = attackers.filter((m) => !m.frozen).flatMap((m) => (m.doubleStrike ? [m.attack, m.attack] : [m.attack])).sort((a, b) => b - a);
+  const guards = defenders.filter((m) => m.taunt && !m.stealth && !m.dormant).length;
+  const attacks = attackers.filter((m) => !m.frozen && !m.dormant && !m.building).flatMap((m) => (m.doubleStrike ? [m.attack, m.attack] : [m.attack])).sort((a, b) => b - a);
   return attacks.slice(guards).reduce((sum, attack) => sum + attack, 0);
 }
 
@@ -115,6 +129,7 @@ export function positionValue(state: DrachenspielState, seat: SeatId): number {
   // Ungenutztes Mana ist im eigenen Zug verschenkt.
   if (state.activeSeat === seat) score -= me.mana * 0.5;
   score -= (me.overloadNext ?? 0) * 1.5;
+  score += (me.traps.length - opp.traps.length) * 2.5 + questValue(me) - questValue(opp);
   return score;
 }
 
@@ -129,7 +144,7 @@ function positionKey(state: DrachenspielState): string {
   const sides = state.players.map((p) => {
     const board = p.board.map((m) => `${m.id}:${m.attack}:${m.health}:${m.attacksMade ?? 0}:${m.hasAttacked ? 1 : 0}:${m.bubble ? 1 : 0}:${m.frozen ? 1 : 0}:${m.silenced ? 1 : 0}`);
     if (state.pending?.seat === p.seat) return `offen|${state.pending.options.map((o) => o.label).join()}|${JSON.stringify(state.queue)}`;
-    const hero = `${p.armor}:${p.gear?.durability ?? 0}:${p.heroAttackBonus}:${p.heroAttacked ? 1 : 0}:${p.powerUsed ? 1 : 0}`;
+    const hero = `${p.traps.length}:${p.quest?.progress ?? -1}:${p.armor}:${p.gear?.durability ?? 0}:${p.heroAttackBonus}:${p.heroAttacked ? 1 : 0}:${p.powerUsed ? 1 : 0}`;
     return `${p.health}|${hero}|${p.mana}|${p.hand.map((c) => c.uid).join()}|${board.join()}`;
   });
   return sides.join('/');

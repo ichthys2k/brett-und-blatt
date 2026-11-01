@@ -1,4 +1,4 @@
-import type { CardDefinition, DeckThemeId, Effect, FamilyId, KeywordId, Rarity, SchoolId, Selector, SpellTargeting, Trigger } from './types';
+import type { CardDefinition, DeckThemeId, Effect, FamilyId, KeywordId, QuestDefinition, Rarity, SchoolId, Selector, SpellTargeting, TrapDefinition, Trigger } from './types';
 
 /**
  * Das Grundset (Phase 6 des Ausbauplans): Tiere und Zauber als reine Daten. Namen und Werte sind Vorschläge;
@@ -187,6 +187,58 @@ export const GRUNDSET_SPELLS: CardDefinition[] = [
   spell(B, 'bug_fog', 'Giftnebel', 3, '🌫️', 'Bitte nicht einatmen.', 'herbs', [{ kind: 'damage', amount: 2, to: ALL_ENEMY }]),
   spell(N, 'n_ballbolt', 'Kugelblitz', 3, '⚡', 'Wohin rollt er?', 'storm', [{ kind: 'damage', amount: 2, to: { pick: 'random', side: 'enemy' } }, { kind: 'damage', amount: 2, to: { pick: 'random', side: 'enemy' } }]),
   spell(N, 'n_dragonbreath', 'Drachenatem', 4, '🔥', 'Heiße Luft.', 'ember', [{ kind: 'damage', amount: 5, to: CHOSEN }], 'enemyAny'),
+];
+
+const CHOSEN_T = { pick: 'chosen' } as const;
+function building(house: House, id: string, name: string, cost: number, health: number, emoji: string, quote: string, effects: Effect[]): CardDefinition {
+  return { id, name, cost, attack: 0, health, emoji, quote, house, families: ['buildings'], rarity: 'rare', building: effects };
+}
+function sleeper(house: House, id: string, name: string, cost: number, attack: number, health: number, emoji: string, quote: string, family: FamilyId[], turns: number, hatchesInto?: string): CardDefinition {
+  return { id, name, cost, attack, health, emoji, quote, house, families: family, rarity: 'rare', dormant: turns, ...(hatchesInto ? { hatchesInto } : {}) };
+}
+function trap(house: House, id: string, name: string, cost: number, emoji: string, quote: string, on: TrapDefinition['on'], effects: Effect[]): CardDefinition {
+  return { id, name, cost, attack: 0, health: 0, emoji, quote, isSpell: true, targeting: 'none', house, school: 'moon', rarity: 'common', trap: { on, do: effects } };
+}
+function questCard(house: House, id: string, name: string, emoji: string, quote: string, goal: QuestDefinition['goal'], count: number, reward: string): CardDefinition {
+  return { id, name, cost: 1, attack: 0, health: 0, emoji, quote, house, rarity: 'rare', quest: { goal, count, reward } };
+}
+
+/** Phase 7: Spielsteine, die Eier und Aufgaben hervorbringen. */
+export const PHASE7_TOKENS: CardDefinition[] = [
+  animal(N, 'token_eggdragon', 'Eidrache', 6, 7, 7, '🐉', 'Endlich draußen!', ['dragons'], { token: true, textName: 'einen Eidrachen' }),
+  animal(H, 'token_hen', 'Junghenne', 2, 3, 3, '🐔', 'Schon groß!', ['birds'], { token: true, textName: 'eine Junghenne' }),
+  animal(B, 'token_bigmoth', 'Falter', 3, 4, 4, '🦋', 'Endlich Flügel!', ['crawlers'], { token: true, textName: 'einen Falter', kw: ['elusive'] }),
+  animal(F, 'token_elder', 'Wächter des Hains', 5, 7, 7, '🌳', 'Der Wald dankt.', ['woodfolk'], { token: true, textName: 'einen Wächter', kw: ['taunt'] }),
+  animal(S, 'token_krake', 'Riesenkrake', 5, 6, 8, '🐙', 'Viele Arme, viel Arbeit.', ['sea', 'giants'], { token: true, textName: 'eine Riesenkrake', t: [played({ kind: 'freeze', to: ALL_ENEMY })] }),
+  animal(H, 'token_prize', 'Preisbulle', 5, 8, 6, '🐂', 'Erster Platz!', ['herd'], { token: true, textName: 'einen Preisbullen', kw: ['sprinter'] }),
+  animal(W, 'token_warlord', 'Herrin der Steppe', 5, 7, 7, '🦁', 'Die Karawane siegt.', ['cats'], { token: true, textName: 'die Herrin der Steppe', kw: ['rush'] }),
+  animal(B, 'token_swarmqueen', 'Schwarmkönigin', 5, 5, 6, '👑', 'Alle zu mir!', ['crawlers'], { token: true, textName: 'die Schwarmkönigin', kw: ['poisonous'], t: [played({ kind: 'summon', cardId: 'token_bee', count: 3 })] }),
+];
+
+export const PHASE7_CARDS: CardDefinition[] = [
+  building(F, 'f_dam', 'Biberdamm', 3, 4, '🪵', 'Hält dicht.', [{ kind: 'armor', amount: 3 }]),
+  building(S, 'sea_reef', 'Korallenriff', 3, 4, '🪸', 'Hier ist Platz für alle.', [{ kind: 'heal', amount: 2, to: ALL_OWN }, { kind: 'heal', amount: 1, to: OWN_HERO }]),
+  building(H, 'farm_nest', 'Nest', 3, 3, '🪺', 'Es piept darin.', [{ kind: 'summon', cardId: 'token_chick' }]),
+  building(W, 'wild_pool', 'Wasserloch', 3, 3, '💧', 'Alle kommen hierher.', [{ kind: 'heal', amount: 3, to: OWN_HERO }]),
+  building(B, 'bug_hive', 'Bienenstock', 3, 4, '🍯', 'Es summt.', [{ kind: 'summon', cardId: 'token_bee' }]),
+  building(N, 'n_tower', 'Turm', 4, 5, '🏰', 'Von oben sieht man alles.', [{ kind: 'damage', amount: 1, to: { pick: 'random', side: 'enemy' } }]),
+  sleeper(F, 'f_marmot', 'Murmeltier', 2, 3, 4, '🦫', 'Schon Frühling?', ['burrowers'], 1),
+  sleeper(S, 'sea_urchin', 'Seeigelei', 1, 3, 3, '🥚', 'Blubb, gleich!', ['sea'], 2),
+  sleeper(H, 'farm_egg', 'Hühnerei', 1, 0, 1, '🥚', 'Es wackelt.', ['birds'], 2, 'token_hen'),
+  sleeper(W, 'wild_cub', 'Bärenjunges', 2, 3, 3, '🧸', 'Noch fünf Minuten.', ['giants'], 2),
+  sleeper(B, 'bug_cocoon', 'Kokon', 2, 0, 1, '🐛', 'Bitte nicht stören.', ['crawlers'], 1, 'token_bigmoth'),
+  sleeper(N, 'n_dragonegg', 'Drachenei', 4, 0, 1, '🥚', 'Es wird warm.', ['dragons'], 3, 'token_eggdragon'),
+  trap(F, 'f_roottrap', 'Wurzelfalle', 2, '🌿', 'Da war doch eine Wurzel.', 'heroAttacked', [{ kind: 'freeze', to: CHOSEN_T }, { kind: 'armor', amount: 3 }]),
+  trap(S, 'sea_net', 'Treibnetz', 3, '🕸️', 'Zurück zum Absender.', 'heroAttacked', [{ kind: 'returnToHand', to: CHOSEN_T }]),
+  trap(H, 'farm_alarm', 'Falscher Alarm', 3, '🔔', 'Alle raus!', 'minionPlayed', [{ kind: 'summon', cardId: 'token_chick', count: 2 }]),
+  trap(W, 'wild_pit', 'Fallgrube', 2, '🕳️', 'Vorsicht, Stufe.', 'heroAttacked', [{ kind: 'damage', amount: 3, to: CHOSEN_T }]),
+  trap(B, 'bug_sticky', 'Klebefalle', 2, '🍯', 'Pappt.', 'minionPlayed', [{ kind: 'freeze', to: CHOSEN_T }, { kind: 'damage', amount: 1, to: CHOSEN_T }]),
+  trap(N, 'n_mask', 'Maskerade', 2, '🎭', 'Hab ich es doch gewusst.', 'spellCast', [{ kind: 'draw', count: 2 }]),
+  questCard(F, 'f_quest', 'Versammlung im Bau', '📜', 'Alle unter die Erde!', { kind: 'playFamily', family: 'burrowers' }, 4, 'token_elder'),
+  questCard(S, 'sea_quest', 'Ruf der Tiefe', '📜', 'Hört ihr das?', { kind: 'playFamily', family: 'sea' }, 6, 'token_krake'),
+  questCard(H, 'farm_quest', 'Viehmarkt', '📜', 'Wer bietet mehr?', { kind: 'playFamily', family: 'herd' }, 4, 'token_prize'),
+  questCard(W, 'wild_quest', 'Dickes Fell', '📜', 'Noch eine Schicht.', { kind: 'gainArmor' }, 8, 'token_warlord'),
+  questCard(B, 'bug_quest', 'Großes Krabbeln', '📜', 'Es werden immer mehr.', { kind: 'playFamily', family: 'crawlers' }, 7, 'token_swarmqueen'),
 ];
 
 /** Herkunft der älteren Karten: Haus, Familien, Seltenheit oder Zauberschule. */

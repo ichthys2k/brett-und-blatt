@@ -2,9 +2,9 @@
 
 Fassung 1 vom 01.11.2026 (W-044). Grundlage sind der Code auf Commit `95218ef`, die Fehlerliste (F-007 bis F-009) sowie das Hearthstone-Kompendium im privaten Repo (`brett-und-blatt-klaenge/kompendium/hearthstone/`). Die Vorschläge zu Thema und Karten warten auf Cornelius' Entscheidung.
 
-**Stand für Mitwirkende (01.11.2026):** Phase 0, Phase 1 (Regelkern, `ruleVersion` 4), Phase 2 (Bedienung, Bot-Planer) Phase 3 (Held und Grundregeln, `ruleVersion` 5), Phase 4 (dauerhafte Stichwörter, `ruleVersion` 6) Phase 5 (Entscheidungen, `ruleVersion` 7) und der Inhalt von Phase 6 (Grundset, `ruleVersion` 8) sind umgesetzt; Stand in [`drachenspiel.md`](drachenspiel.md). Das Abschlusskriterium von Phase 6, die ausgeglichene Häuser-Matrix, ist noch nicht erreicht. Danach käme Phase 7 (neue Kartentypen).
+**Stand für Mitwirkende (01.11.2026):** Phase 0, Phase 1 (Regelkern, `ruleVersion` 4), Phase 2 (Bedienung, Bot-Planer) Phase 3 (Held und Grundregeln, `ruleVersion` 5), Phase 4 (dauerhafte Stichwörter, `ruleVersion` 6) Phase 5 (Entscheidungen, `ruleVersion` 7) und der Inhalt von Phase 6 (Grundset, `ruleVersion` 8) sind umgesetzt; Stand in [`drachenspiel.md`](drachenspiel.md). Das Abschlusskriterium von Phase 6, die ausgeglichene Häuser-Matrix, ist noch nicht erreicht. Phase 7 (neue Kartentypen, `ruleVersion` 9) ist umgesetzt. Als Nächstes käme Phase 8 (Deckbau ohne Kauf).
 
-**Weiterarbeiten, auch an einem anderen Rechner:** Alles Nötige liegt in GitHub. `git pull`, `corepack pnpm install`, einen neuen Zweig von `main` anlegen, dann diesen Plan (Phase 6 und 7 in Kapitel 11) und die Abschnitte zu Phase 2 bis 6 in [`drachenspiel.md`](drachenspiel.md) lesen. Das Kompendium und der Recherchebericht liegen unter `kompendium/hearthstone/` im privaten Repo `ichthys2k/brett-und-blatt-klaenge` und gehören nie in dieses öffentliche Repo (Blizzard-Namen); abrufen mit `gh repo clone`. Offene Punkte aus Phase 2: echte Online-Partie mit zwei Geräten (Lunte, Tierrufe, Rechenzeit auf Cloudflare), Vertonung der Tierrufe nach Auswahl durch Cornelius, F-010 prüfen. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
+**Weiterarbeiten, auch an einem anderen Rechner:** Alles Nötige liegt in GitHub. `git pull`, `corepack pnpm install`, einen neuen Zweig von `main` anlegen, dann diesen Plan (Phase 8 in Kapitel 11) und die Abschnitte zu Phase 2 bis 7 in [`drachenspiel.md`](drachenspiel.md) lesen. Das Kompendium und der Recherchebericht liegen unter `kompendium/hearthstone/` im privaten Repo `ichthys2k/brett-und-blatt-klaenge` und gehören nie in dieses öffentliche Repo (Blizzard-Namen); abrufen mit `gh repo clone`. Offene Punkte aus Phase 2: echte Online-Partie mit zwei Geräten (Lunte, Tierrufe, Rechenzeit auf Cloudflare), Vertonung der Tierrufe nach Auswahl durch Cornelius, F-010 prüfen. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
 
 ## 1. Kurzfassung
 
@@ -506,6 +506,8 @@ Etwa 30 Karten je Haus plus 30 neutrale, also rund 180 Karten; Familien, Schulen
 ### Phase 7: Neue Kartentypen (L)
 
 Bauten, Fallen, Aufgaben, Winterschlaf und Ei, Abdeckbildschirm im Hot-Seat. Drachenei als Option oder Aufgabe mit dem eigenen W-025-Prüfschritt. **Fertig, wenn** Geheimnis-Prüfungen grün sind und der Bot Fallen nicht „durchschaut“.
+
+✅ **Umgesetzt (01.11.2026, `ruleVersion` 9).** Das Drachenei ist eine neutrale Karte statt der Option aus W-025; die Option bleibt offen. Den Abdeckbildschirm im Hot-Seat stellt die Plattform schon. Stand in `drachenspiel.md`.
 
 ### Phase 8: Deckbau ohne Kauf (M)
 

@@ -435,6 +435,23 @@
   }
 }
 
+.ds-info-badge {
+  border: none;
+  background: #dfe6e9;
+  color: #2d3436;
+  cursor: pointer;
+}
+
+.ds-minion.dormant {
+  opacity: 0.6;
+  filter: saturate(0.5);
+  border-style: dashed;
+}
+
+.ds-minion.building {
+  border-radius: 4px;
+}
+
 /* Boards */
 .ds-board-container {
   flex: 1;

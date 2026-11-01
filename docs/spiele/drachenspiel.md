@@ -250,3 +250,31 @@ Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes D
 - **Versucht und verworfen:** Der mittlere Bot mit der Bewertung von „schwer“ änderte die Matrix kaum und senkte den Abstand zu „schwer“ von 83 auf 69 %. 3 Rüstung für Dickes Fell machte die Wildnis gegen Krabbeltiere zu stark (79 %).
 - **Startspieler (150 Partien je Zeile, freie Deckwahl):** schwer 49 %, mittel 51 %, leicht 51 %. Schwer schlägt Mittel zu 82 %, Mittel schlägt Leicht zu 100 %.
 
+## Neue Kartentypen (01.11.2026, Phase 7 des Ausbauplans, `ruleVersion` 9)
+
+- **🏗️ Bauten** (`building`): liegen als Figur ohne Angriff auf dem Feld, sind angreifbar, wirken einmal je Zug per Antippen (`useBuilding`) und verlieren dabei 1 Leben. Erstarrt oder beruhigt wirken sie nicht. Biberdamm, Korallenriff, Nest, Wasserloch, Bienenstock, Turm.
+- **💤 Winterschlaf und Eier** (`dormant`, `hatchesInto`): unangreifbar, kein Ziel, von Flächen nicht getroffen, schützen auch nicht als Beschützer; zählen an eigenen Zugbeginnen herunter. Murmeltier, Seeigelei, Hühnerei, Bärenjunges, Kokon, Drachenei (schlüpft nach 3 Zügen als Eidrache 7/7).
+- **🪤 Fallen** (`trap`, in `PlayerState.traps`): zählen als Zauber, höchstens drei, jede nur einmal. Fremde Sichten und Ereignisse zeigen nur die Anzahl; `sampleHidden` lost mögliche Fallen aus, der Bot rechnet also nicht mit den echten. Lösen aus, wenn ein Tier den Helden angreift (vor dem Schlag), ein Tier gespielt oder ein Zauber gewirkt wird. Wurzelfalle, Treibnetz, Falscher Alarm, Fallgrube, Klebefalle, Maskerade.
+- **📜 Aufgaben** (`quest`, `PlayerState.quest`): offen sichtbar, eine zur Zeit, kosten 1 Mana. Ziele: Tiere einer Familie spielen, Zauber wirken, Rüstung sammeln. Die Belohnung ist ein starker Spielstein auf der Hand.
+- **Hot-Seat:** Die Plattform deckt wegen `privateViews` schon vor jedem Zug ab, darum bleiben Fallen auch am selben Gerät verdeckt. Getestet ist das hier nicht eigens.
+- **Decks:** Jedes Themendeck enthält jetzt je einen Bau, eine Aufgabe, zwei Schläfer und zwei Fallen (die Fallen nur mit Zauberkarten). Dafür weichen je drei Paare bzw. Zauber; im Wald ersetzt außerdem die Katze den Siebenschläfer.
+- **Behoben:** Der Kartentext nennt jetzt die Zahl gerufener Tiere („2× ein Küken“), auch bei älteren Karten wie dem Gänsemarsch. Beim Zielen zeigt die Leiste den Auftritt statt der ersten Fähigkeit.
+- **Häuser-Matrix (erstes Haus gewinnt, je 150 Partien, etwa ±8 Prozentpunkte):**
+
+  | Paarung | schwer | mittel |
+  |---|---|---|
+  | Wald : Meer | 35 | 34 |
+  | Wald : Bauernhof | 44 | 67 |
+  | Wald : Wildnis | 41 | 75 |
+  | Wald : Krabbeltiere | 46 | 54 |
+  | Meer : Bauernhof | 51 | 56 |
+  | Meer : Wildnis | 49 | 65 |
+  | Meer : Krabbeltiere | 69 | 73 |
+  | Bauernhof : Wildnis | 60 | 61 |
+  | Bauernhof : Krabbeltiere | 53 | 47 |
+  | Wildnis : Krabbeltiere | 60 | 53 |
+
+  Außerhalb von 40–60 % liegen auf „schwer“ 2 von 10 Paarungen, auf „mittel“ 6. Die mittlere Abweichung von 50 beträgt 7,8 bzw. 12,3 Punkte. Das Meer ist insgesamt etwas zu stark; das Phasenziel von Phase 6 bleibt offen.
+- **Startspieler (150 Partien, freie Deckwahl):** schwer 45 %, mittel 48 %, leicht 47 %. Schwer schlägt Mittel zu 85 %, Mittel schlägt Leicht zu 98 %.
+- **Im Browser angesehen (375 × 812):** Falle mit Abzeichen, Schlüpfen eines Kokons als Falter, Kartentexte. Nur per Regeltest geprüft: Bau antippen, Aufgabe abschließen, das Auslösen einer Falle. Online mit zwei Geräten weiter ungetestet.
+
