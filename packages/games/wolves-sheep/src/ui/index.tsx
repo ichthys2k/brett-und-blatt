@@ -9,6 +9,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { nightTargets, type DepartureCause, type Phase, type Role, type WolvesSheepMove, type WolvesSheepState } from '../rules';
 import './styles.css';
 
+/** Bilder der Rollenkarten (KI-erzeugt, siehe THIRD_PARTY.md): `cards/role-<rolle>.webp`, dazu `role-back.webp` als Rückseite. */
+const CARD_IMAGES = import.meta.glob<string>('./cards/*.webp', { eager: true, query: '?url', import: 'default' });
+const cardImage = (name: string): string | undefined => CARD_IMAGES[`./cards/role-${name}.webp`];
+
 const ROLE_LABELS: Record<Role, string> = {
   wolf: '🐺 Wolf',
   examiner: '🔍 Prüfer',
@@ -70,11 +74,13 @@ function publicTitle(view: WolvesSheepState): string {
 const CAUSE_LABELS: Record<DepartureCause, string> = { wolves: 'wurde versprengt', council: 'wurde vom Rat geschickt', hound: 'wurde vom Hütehund gepackt', grief: 'ist mitgegangen', left: 'ist gegangen' };
 
 function RoleCard({ role, shown, onShow }: { role: Role; shown: boolean; onShow: (shown: boolean) => void }) {
+  const image = cardImage(shown ? role : 'back');
   return (
     <button
       type="button"
       className="ws-card"
       data-shown={shown}
+      data-image={image ? '' : undefined}
       onPointerDown={() => onShow(true)}
       onPointerUp={() => onShow(false)}
       onPointerCancel={() => onShow(false)}
@@ -83,14 +89,17 @@ function RoleCard({ role, shown, onShow }: { role: Role; shown: boolean; onShow:
       onKeyUp={() => onShow(false)}
       onContextMenu={(event) => event.preventDefault()}
     >
-      {shown ? (
-        <>
-          <strong>{ROLE_LABELS[role]}</strong>
-          <span>{ROLE_HINTS[role]}</span>
-        </>
-      ) : (
-        'Gedrückt halten: deine Rolle ansehen'
-      )}
+      {image && <img className="ws-card-image" src={image} alt="" draggable={false} decoding="async" />}
+      <span className="ws-card-text">
+        {shown ? (
+          <>
+            <strong>{ROLE_LABELS[role]}</strong>
+            <span>{ROLE_HINTS[role]}</span>
+          </>
+        ) : (
+          'Gedrückt halten: deine Rolle ansehen'
+        )}
+      </span>
     </button>
   );
 }

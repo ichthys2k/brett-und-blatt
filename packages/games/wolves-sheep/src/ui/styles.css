@@ -56,6 +56,33 @@
   -webkit-touch-callout: none;
 }
 
+.ws-card[data-image] {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ws-card-image {
+  flex: none;
+  width: 5.5rem;
+  aspect-ratio: 4 / 5;
+  border: 2px solid var(--color-line);
+  border-radius: 0.5rem;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.ws-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.ws-card[data-image] .ws-card-text {
+  text-align: left;
+}
+
 .ws-circle {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(4.75rem, 1fr));
