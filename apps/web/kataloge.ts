@@ -11,7 +11,7 @@ import type { Plugin } from 'vite';
  */
 const KATALOGE = [
   { datei: 'bibelquiz/fragen.json', quelle: 'content/bibelquiz/fragen.json' },
-  // Wortspiele: Kategorien-Sprint, Wer bin ich?, Umschreibe-Duell.
+  // Wortspiele: Kategorien-Sprint, Wer bin ich?, Verboten!.
   { datei: 'wortspiele/kategorien.json', quelle: 'content/wortspiele/kategorien.json' },
   { datei: 'wortspiele/wer-bin-ich.json', quelle: 'content/wortspiele/wer-bin-ich.json' },
   { datei: 'wortspiele/begriffe.json', quelle: 'content/wortspiele/begriffe.json' },

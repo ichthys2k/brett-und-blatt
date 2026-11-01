@@ -55,7 +55,7 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 
 - Nachträge 28.10.2026: Sonderspiele der Stichspiel-Bots (Null, Tout, Bettel, Durch), Schafkopf-Ansagen und -Abrechnung korrigiert, Bibel-Quiz-Lösung in der Sicht verborgen, PWA lädt vorab nur ~6 MB, Git-Geschichte von den Enten-Rallye-MP3s bereinigt (andere Rechner: `git fetch && git reset --hard origin/main`).
 - Fahrplan ab 29.10.2026: A Doku-Abgleich → B Schach (Remis, PGN, Eröffnungsbuch) → C Stichspiele (Schafkopf-Frühende, Skat-Ansagen, PIMC-Bot) → D Klassenzimmer (Kartenblitz geteilter Bildschirm) → E Spieltiefe ✅ → F neue Spiele (Speed ✅, Präsident ✅, Tiefflug ✅, Fix gefunden! ✅; Pläne in `docs/spiele/`). Details unter „Nächste Schritte“ in `CLAUDE.md`.
-- Paket B Wortspiele (1.11.2026): Bausteine Texteingabe mit Prüfung, Abstimmung, Teams in der Lobby; Spiele Kategorien-Sprint, Wer bin ich?, Umschreibe-Duell. Kataloge (Entwurf) in `content/wortspiele/`, vom Spieleserver geladen. Kein freier Chat.
+- Paket B Wortspiele (1.11.2026): Bausteine Texteingabe mit Prüfung, Abstimmung, Teams in der Lobby; Spiele Kategorien-Sprint, Wer bin ich?, Verboten!. Kataloge (freigegeben) in `content/wortspiele/`, vom Spieleserver geladen. Kein freier Chat.
 
 Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; alle 20 Musikstücke sind eingetragen. Offene Punkte und nächste Schritte stehen in `CLAUDE.md`.
 

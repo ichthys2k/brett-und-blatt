@@ -54,9 +54,9 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
 | W-033 | Elf zuerst! (Elfer raus): Anlegespiel für 2–6 Spieler, 80 Zahlenkarten, Bot „Zahlenzwerg“, online | 2026-11-01 | a9eebe5 |
-| W-038 | Neues Spiel: [Umschreibe-Duell](docs/spiele/umschreibe-duell.md) (Arbeitstitel) – Sperrwörter legt das gegnerische Team fest, Schreib- und Sprech-Modus; Begriffe als Entwurf | 2026-11-01 | #44 |
-| W-037 | Neues Spiel: [Wer bin ich?](docs/spiele/wer-bin-ich.md) – Katalog- und freier Modus; Kataloge als Entwurf | 2026-11-01 | #44 |
-| W-036 | Neues Spiel: [Kategorien-Sprint](docs/spiele/kategorien-sprint.md) – Stadt-Land-Fluss-artig, Abstimmung, Tafelansicht; Wortlisten als Entwurf | 2026-11-01 | #44 |
+| W-038 | Neues Spiel: [Verboten!](docs/spiele/verboten.md) (früher Arbeitstitel „Umschreibe-Duell“) – Sperrwörter legt das gegnerische Team fest, Schreib- und Sprech-Modus; Begriffe freigegeben | 2026-11-01 | #44 |
+| W-037 | Neues Spiel: [Wer bin ich?](docs/spiele/wer-bin-ich.md) – Katalog- und freier Modus; Kataloge freigegeben | 2026-11-01 | #44 |
+| W-036 | Neues Spiel: [Kategorien-Sprint](docs/spiele/kategorien-sprint.md) – Stadt-Land-Fluss-artig, Abstimmung, Tafelansicht; Wortlisten freigegeben | 2026-11-01 | #44 |
 | W-035 | Bausteine für Wortspiele: Texteingabe mit Prüfung, Abstimmung, Teams in der Lobby | 2026-11-01 | #44 |
 | W-021 | Neues Spiel: [Wölfe im Schafspelz](docs/spiele/woelfe-im-schafspelz.md) (Werwolf-Regeln mit christlichem Thema); Live-Test durch Cornelius bestanden | 2026-11-01 | 0aea54b |
 | W-017 | Narrenhof: Gegner mit Porträts – 30 Herrschaften und 38 Höflinge, je drei Stimmungen (schmunzelnd, lachend, Lachkrampf) | 2026-11-01 | #36, #39, #43 |

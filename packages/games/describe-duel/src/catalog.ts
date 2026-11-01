@@ -36,23 +36,23 @@ export function hasDuelCatalog(): boolean {
 }
 
 export function duelCatalog(): DuelCatalog {
-  if (!catalog) throw new Error('Umschreibe-Duell: Die Begriffe sind nicht geladen.');
+  if (!catalog) throw new Error('Verboten!: Die Begriffe sind nicht geladen.');
   return catalog;
 }
 
 export function duelPack(id: string): DuelPack {
   const pack = packs.get(id) ?? duelCatalog().packs[0];
-  if (!pack) throw new Error('Umschreibe-Duell: kein Begriffspaket');
+  if (!pack) throw new Error('Verboten!: kein Begriffspaket');
   return pack;
 }
 
 export function parseDuelCatalog(data: unknown): DuelCatalog {
   const d = data as Partial<DuelCatalog> | null;
-  if (!d || !Array.isArray(d.packs) || d.packs.length === 0) throw new Error('Umschreibe-Duell: keine Pakete gefunden');
+  if (!d || !Array.isArray(d.packs) || d.packs.length === 0) throw new Error('Verboten!: keine Pakete gefunden');
   for (const pack of d.packs) {
-    if (typeof pack.id !== 'string' || !Array.isArray(pack.terms) || pack.terms.length < 10) throw new Error(`Umschreibe-Duell: Paket ${String(pack.id)} unvollständig`);
+    if (typeof pack.id !== 'string' || !Array.isArray(pack.terms) || pack.terms.length < 10) throw new Error(`Verboten!: Paket ${String(pack.id)} unvollständig`);
     for (const term of pack.terms) {
-      if (typeof term.name !== 'string' || !Array.isArray(term.hints) || !Array.isArray(term.clues)) throw new Error(`Umschreibe-Duell: Begriff in ${pack.id} unvollständig`);
+      if (typeof term.name !== 'string' || !Array.isArray(term.hints) || !Array.isArray(term.clues)) throw new Error(`Verboten!: Begriff in ${pack.id} unvollständig`);
     }
   }
   return { status: String(d.status ?? ''), packs: d.packs };

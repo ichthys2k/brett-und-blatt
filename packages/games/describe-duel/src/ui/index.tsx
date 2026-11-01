@@ -1,5 +1,5 @@
 /**
- * Oberfläche des Umschreibe-Duells. Was jemand sieht, hängt von der Rolle ab: Wer erklärt und
+ * Oberfläche von „Verboten!“. Was jemand sieht, hängt von der Rolle ab: Wer erklärt und
  * das andere Team sehen Begriff und Sperrwörter, das ratende Team und die Tafel nicht.
  */
 import { teamMembers, type SeatId } from '@brett-und-blatt/engine';

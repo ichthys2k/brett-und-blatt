@@ -1,6 +1,6 @@
 /*
  * Baustein für Wortspiele: freie Texteingabe prüfen und vergleichen (Kategorien-Sprint,
- * Wer bin ich?, Umschreibe-Duell). Alles rein und ohne Zufall, damit Regeln, Bots und
+ * Wer bin ich?, Verboten!). Alles rein und ohne Zufall, damit Regeln, Bots und
  * Oberfläche dieselbe Prüfung nutzen. Freien Chat gibt es nicht – jede Eingabe ist ein
  * Spielzug, kurz und gefiltert.
  */

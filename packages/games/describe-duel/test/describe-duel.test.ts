@@ -11,7 +11,7 @@ const apply = (state: DuelState, seat: number, move: DuelMove) => gameModule.app
 
 describe('Begriffe', () => {
   it('Umschreibungen des Bots verraten den Begriff nicht', () => {
-    expect(duelCatalog().status).toBe('entwurf');
+    expect(duelCatalog().status).toBe('freigegeben');
     for (const pack of duelCatalog().packs) {
       for (const term of pack.terms) {
         expect(term.hints.length, term.name).toBeGreaterThanOrEqual(5);

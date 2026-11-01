@@ -6,7 +6,7 @@ import kategorien from '../../../content/wortspiele/kategorien.json' with { type
 import werBinIch from '../../../content/wortspiele/wer-bin-ich.json' with { type: 'json' };
 
 /*
- * Die Kataloge der Wortspiele (Kategorien-Sprint, Wer bin ich?, Umschreibe-Duell) sind hier zu
+ * Die Kataloge der Wortspiele (Kategorien-Sprint, Wer bin ich?, Verboten!) sind hier zu
  * Hause wie die Bibel-Quiz-Fragen: Die Web-App holt sie über `GET /wortspiele/<name>` (Rückfall:
  * mitgelieferte Datei), die Online-Räume setzen sie beim Laden dieses Moduls direkt. Ausgeliefert
  * wird die Datei unverändert – die Spiele prüfen sie beim Einlesen selbst.

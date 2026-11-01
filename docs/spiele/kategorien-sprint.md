@@ -41,9 +41,9 @@ Großer Buchstabe, Schreibbogen mit `WordInput` (prüft den Anfangsbuchstaben sc
 
 ## Umsetzung (1.11.2026)
 
-Regeln, Bot, Oberfläche, Tests (`test/category-sprint.test.ts`, Vertragsprüfungen), Prüfstand. Die Wortlisten (4 Pakete, 27 Kategorien, rund 1700 Wörter) sind ein **Entwurf** (`"status": "entwurf"`) und warten auf Cornelius' Durchsicht. Sie kommen vom Spieleserver (`GET /wortspiele/kategorien`), Rückfall ist die mitgelieferte Datei `wortspiele/kategorien.json`.
+Regeln, Bot, Oberfläche, Tests (`test/category-sprint.test.ts`, Vertragsprüfungen), Prüfstand. Die Wortlisten (4 Pakete, 27 Kategorien, rund 1700 Wörter) sind von Cornelius freigegeben (1.11.2026, `"status": "freigegeben"`). Sie kommen vom Spieleserver (`GET /wortspiele/kategorien`), Rückfall ist die mitgelieferte Datei `wortspiele/kategorien.json`.
 
 ## Offene Punkte
 
-- Wortlisten durchsehen und erweitern (Cornelius).
+- Wortlisten bei Bedarf erweitern.
 - Klänge sind aus dem vorhandenen Katalog gewählt; eigene Klänge nur nach Auswahl.

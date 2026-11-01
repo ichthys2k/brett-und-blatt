@@ -23,7 +23,7 @@ export * from './catalog';
 export * from './rules';
 export { duelBot } from './bots';
 
-export const KATALOG = { serverPath: '/wortspiele/begriffe', file: 'wortspiele/begriffe.json', label: 'Umschreibe-Duell' };
+export const KATALOG = { serverPath: '/wortspiele/begriffe', file: 'wortspiele/begriffe.json', label: 'Verboten!' };
 
 export async function prepare(context: PrepareContext): Promise<void> {
   if (hasDuelCatalog()) return;
