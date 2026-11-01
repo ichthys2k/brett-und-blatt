@@ -41,6 +41,7 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-040 | neues Spiel | **Zeitband (Arbeitstitel):** eigenes Zeitstrahl-Spiel statt Hitster-Nachbau: alle legen gleichzeitig verdeckt auf ein gemeinsames Band, Engstellen-Wertung, Hinweisleiter; Pakete Erfindungen, Geschichte, Bibel (Reihenfolge), Musik nur aus eigenen Suno-Stücken und Gemeinfreiem (Spotify-Regeln verbieten Spiele, YouTube-Player darf nicht verdeckt werden). Denkbar: DJ-Modus (Spielleitung spielt selbst ab) und echtes Video erst nach der Auflösung. 1–30 Plätze, Tafel. [Plan](https://claude.ai/artifact/PNfAeLhZQ94Y8EJnqcrLtM) | niedrig | zurückgestellt (Idee, Cornelius denkt noch nach, 31.10.) | 2026-10-31, Cornelius |
 | W-041 | neues Spiel | **Marktflecken (Arbeitstitel, Handelsspiel im Mittelalter statt Monopoly):** Rundkurs um die Burg, Handwerksbetriebe in Zünften, Brezeln als Spielwährung, feste Spieldauer statt Pleite, Ansehen gewinnt, Zunftaufträge, offene Hofnachrichten statt Ereigniskarten. Eigener Entwurf, kein Nachbau. Paket C, [Umsetzungsplan](https://claude.ai/artifact/NwAG5AvLJ2d3XH95wcxLAU). | mittel | offen | 2026-10-31, Cornelius |
 | W-042 | neues Spiel | **Rübenacker (Arbeitstitel, Laufspiel in der Art von Lotti Karotti):** Hasen laufen zur Riesenrübe im Königsgarten, Karten statt Würfel, der Maulwurf wandert sichtbar unter dem Beet (Erdhügel kündigt das nächste Loch an), zurück zum letzten Zaunpfahl statt zum Start, 2–6 Spieler. Eigene Fassung, kein Nachbau. Paket A, [Umsetzungsplan](https://claude.ai/artifact/NwAG5AvLJ2d3XH95wcxLAU). | mittel | offen | 2026-10-31, Cornelius |
+| W-044 | Drachenspiel | **Ausbau zum vollwertigen Sammelkarten-Duell:** Regelkern, Hauskräfte, Stichwörter, Wahlen, Tierfamilien, Deckbau und Solo-Modi nach dem Vorbild Hearthstone, mit eigener Welt und ohne Kaufsystem. Plan in [`docs/spiele/drachenspiel-ausbau.md`](docs/spiele/drachenspiel-ausbau.md). | mittel | in Arbeit: Phase 0 erledigt (#45), Phase 1 noch nicht begonnen | 2026-11-01, Cornelius |
 
 ## Fehler
 
@@ -86,3 +87,6 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | F-004 | Nicht ärgern!: Wurf scheinbar für den nächsten Spieler | 2026-10-31 | #30 |
 | F-001 | Eins!: Handkarten teils verdeckt (Fächer bricht in Reihen um) | 2026-10-31 | #32 |
 | W-019 | Kartenzahl der Mitspieler als kleiner verdeckter Fächer (Eins!, Mau-Mau) | 2026-10-31 | #32 |
+| F-007 | Drachenspiel: Kartenfolge bei „Im Spiel wählen“ in jeder Partie gleich | 2026-11-01 | #45 |
+| F-008 | Drachenspiel: Kartentexte widersprechen den Regeln | 2026-11-01 | #45 |
+| F-009 | Drachenspiel: Seite wird beim Partiestart leer | 2026-11-01 | #45 |

@@ -56,6 +56,17 @@ async function waitForServer() {
 }
 
 /** Startet ein Spiel mit Voreinstellungen und misst das Spielfeld. */
+// Spiele mit Vorphasen: Erst danach zeigt sich die eigentliche Spielfläche. (Das Drachenspiel
+// stürzte beim Übergang in die Partie ab, ohne dass der reine Start es bemerkte.)
+const firstSteps = {
+  drachenspiel: async (page) => {
+    await page.locator('.ds-deck-choice').first().click();
+    await page.getByRole('button', { name: 'Alle Karten behalten' }).click({ timeout: 10_000 });
+    await page.locator('.ds-arena').waitFor({ timeout: 10_000 });
+    await page.waitForTimeout(500);
+  },
+};
+
 async function startGame(page, id) {
   await page.goto(`${base}#/neu/${id}?autostart=1`);
   await page.waitForURL(/#\/partie/, { timeout: 10_000 });
@@ -117,6 +128,7 @@ try {
     try {
       const m = await startGame(page, id);
       fresh.set(id, m);
+      await firstSteps[id]?.(page);
       if (shots) await page.screenshot({ path: `${shots}/${id}.png` });
       if (errors.length) problems.push(`${id}: Fehler beim Start – ${errors.slice(0, 2).join(' | ')}`);
       if (m.interactive === 0) problems.push(`${id}: Spielfeld ohne Bedienelemente`);

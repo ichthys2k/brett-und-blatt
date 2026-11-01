@@ -70,7 +70,7 @@ describe('Drachenspiel Minion- & Karten-Eigenschaften (traits)', () => {
     const traits = getMinionTraits(deathrattleMinion);
     expect(traits).toHaveLength(1);
     expect(traits[0].emoji).toBe('👋');
-    expect(traits[0].description).toBe('Fügt allen Feinden 1 Schaden zu.');
+    expect(traits[0].description).toBe('Fügt allen gegnerischen Tieren 1 Schaden zu.');
   });
 
   it('erzeugt vollständige Titel mit Spruch und allen Eigenschaften', () => {
@@ -100,7 +100,7 @@ describe('Drachenspiel Minion- & Karten-Eigenschaften (traits)', () => {
     const pufferTraits = getCardTraits(pufferDef);
     expect(pufferTraits).toHaveLength(1);
     expect(pufferTraits[0].emoji).toBe('👋');
-    expect(pufferTraits[0].description).toContain('allen Feinden 1 Schaden');
+    expect(pufferTraits[0].description).toContain('allen gegnerischen Tieren 1 Schaden');
 
     const cardTitle = getCardFullTitle(pufferDef);
     expect(cardTitle).toContain('Kugelfisch');

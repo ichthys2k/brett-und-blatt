@@ -10,7 +10,7 @@ export interface TraitInfo {
 
 export const DEATHRATTLE_EFFECT_TEXTS: Record<DeathrattleEffect, string> = {
   butterfly: 'Ruft einen Schmetterling (1/2 mit Schutzblase) herbei.',
-  explode_1: 'Fügt allen Feinden 1 Schaden zu.',
+  explode_1: 'Fügt allen gegnerischen Tieren 1 Schaden zu.',
   heal_hero_2: 'Heilt deinen Helden um 2 Leben.',
 };
 
@@ -45,7 +45,7 @@ export const TRAIT_DEFINITIONS = {
   rush: {
     emoji: '⚡',
     name: 'Flink',
-    description: 'Darf direkt in der Runde des Ausspielens angreifen (nur gegen Tiere).',
+    description: 'Darf direkt in der Runde des Ausspielens angreifen, auch den gegnerischen Helden.',
   },
 } as const;
 

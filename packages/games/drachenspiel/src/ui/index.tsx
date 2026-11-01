@@ -3,7 +3,7 @@ import { usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/u
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { CARDS_DB, STAR_CARD } from '../cards';
 import { DECK_THEMES, DECK_THEME_IDS } from '../decks';
-import type { DeckThemeId, DrachenspielMove, DrachenspielView, Minion, SpellTarget } from '../types';
+import type { DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
 import { playCreatureAudio } from './audio';
 import { getCardFullTitle, getCardTraits, getMinionFullTitle, getMinionTraits, type TraitInfo } from './traits';
 import './styles.css';
@@ -142,7 +142,7 @@ function MinionView({
   );
 }
 
-function Board({
+function PlayBoard({
   view,
   legalMoves,
   onMove,
@@ -153,7 +153,6 @@ function Board({
   const [selectedAttackerId, setSelectedAttackerId] = useState<string | null>(null);
   /** Handkarte eines Zaubers mit Ziel, der gerade auf sein Ziel wartet. */
   const [selectedSpell, setSelectedSpell] = useState<number | null>(null);
-  const [mulliganDiscard, setMulliganDiscard] = useState<Set<number>>(new Set());
   const [effects, setEffects] = useState<
     Array<{
       type: 'damage' | 'heal';
@@ -166,6 +165,9 @@ function Board({
   const [attacking, setAttacking] = useState<Map<string, { dx: number; dy: number }>>(new Map());
   const [impactedIds, setImpactedIds] = useState<Set<string>>(new Set());
   const [dyingMinions, setDyingMinions] = useState<Array<{ minion: Minion; seat: SeatId; originalIndex: number }>>([]);
+  /** Kurzer Hinweis auf Regeln, die sonst unbemerkt zuschlagen (Hand voll, leeres Deck). */
+  const [notice, setNotice] = useState<string | null>(null);
+  const noticeTimerRef = useRef<number | null>(null);
 
   const seenEventsRef = useRef<GameEvent[] | null>(null);
   const minionElsRef = useRef<Map<string, HTMLElement>>(new Map());
@@ -215,122 +217,6 @@ function Board({
 
   const isMyTurn = view.phase === 'play' && view.activeSeat === mySeat;
 
-  // Deck Selection Phase
-  if (view.phase === 'deckSelection') {
-    if (!me.deckTheme) {
-      return (
-        <div className="ds-phase-overlay">
-          <h2 className="ds-phase-title">Wähle dein Themendeck</h2>
-          <p className="ds-phase-subtitle">
-            Jedes Deck enthält 30 ausgewogene Tierkarten mit besonderen Stärken.
-          </p>
-          <div className="ds-deck-grid">
-            {DECK_THEME_IDS.map((themeId) => {
-              const theme = DECK_THEMES[themeId];
-              return (
-                <div
-                  key={themeId}
-                  className="ds-deck-choice"
-                  onClick={() => onMove({ type: 'chooseDeck', deck: themeId })}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <span className="ds-deck-emoji">{theme.emoji}</span>
-                  <span className="ds-deck-name">{theme.name}</span>
-                  <span className="ds-deck-desc">{theme.description}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className="ds-phase-overlay">
-        <h2 className="ds-phase-title">Deck gewählt!</h2>
-        <p className="ds-phase-subtitle">Warte auf deinen Mitspieler...</p>
-      </div>
-    );
-  }
-
-  // Mulligan Phase
-  if (view.phase === 'mulligan') {
-    if (!me.mulliganDone && me.hand) {
-      const toggleDiscard = (idx: number) => {
-        setMulliganDiscard((prev) => {
-          const next = new Set(prev);
-          if (next.has(idx)) next.delete(idx);
-          else next.add(idx);
-          return next;
-        });
-      };
-
-      return (
-        <div className="ds-phase-overlay">
-          <h2 className="ds-phase-title">Startkarten tauschen</h2>
-          <p className="ds-phase-subtitle">
-            Tippe auf Karten, die du abwerfen möchtest, um neue aus dem Deck zu ziehen.
-          </p>
-          <div className="ds-mulligan-row">
-            {me.hand.map((card, idx) => {
-              const def = CARDS_DB[card.defId];
-              if (!def) return null;
-              const isDiscarded = mulliganDiscard.has(idx);
-              const cardTraits = getCardTraits(def);
-              return (
-                <div
-                  key={card.uid}
-                  className={`ds-card ds-mulligan-card ${isDiscarded ? 'discarded' : ''}`}
-                  onClick={() => toggleDiscard(idx)}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`${def.name}, Kosten ${def.cost}${cardTraits.length > 0 ? ` [${cardTraits.map((t) => t.name).join(', ')}]` : ''}`}
-                  title={getCardFullTitle(def)}
-                >
-                  <div className="ds-card-top">
-                    <span className="ds-card-cost">{def.cost}</span>
-                    <div className="ds-card-traits">
-                      {cardTraits.map((trait) => (
-                        <TraitBadge key={trait.id} trait={trait} />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="ds-card-center">
-                    <span className="ds-card-emoji">{def.emoji}</span>
-                    <span className="ds-card-name">{def.name}</span>
-                  </div>
-                  <div className="ds-minion-stats">
-                    <span className="ds-stat-atk">{def.attack}</span>
-                    <span className="ds-stat-hp">{def.health}</span>
-                  </div>
-                  {isDiscarded && <span className="ds-mulligan-cross">❌</span>}
-                </div>
-              );
-            })}
-          </div>
-          <button
-            className="ds-btn"
-            onClick={() => {
-              onMove({
-                type: 'mulligan',
-                discardIndices: Array.from(mulliganDiscard),
-              });
-            }}
-          >
-            {mulliganDiscard.size === 0 ? 'Alle Karten behalten' : 'Gewählte Karten tauschen'}
-          </button>
-        </div>
-      );
-    }
-    return (
-      <div className="ds-phase-overlay">
-        <h2 className="ds-phase-title">Startkarten gewählt!</h2>
-        <p className="ds-phase-subtitle">Warte auf den Start der Partie...</p>
-      </div>
-    );
-  }
-
-  // Play Phase
   useEffect(() => {
     prevViewRef.current = view;
   }, [view]);
@@ -339,6 +225,9 @@ function Board({
     return () => {
       if (animationTimerRef.current !== null) {
         window.clearTimeout(animationTimerRef.current);
+      }
+      if (noticeTimerRef.current !== null) {
+        window.clearTimeout(noticeTimerRef.current);
       }
     };
   }, []);
@@ -360,6 +249,8 @@ function Board({
     const newEffects: typeof effects = [];
     const newAttacking = new Map<string, { dx: number; dy: number }>();
     const newImpacted = new Set<string>();
+    const notices: string[] = [];
+    const seatName = (seat: SeatId) => seatNames[seat] ?? LABELS[seat];
 
     for (const e of events) {
       if (e.type === 'cardPlayed') {
@@ -473,10 +364,31 @@ function Board({
           targetId: heal.targetId,
           amount: heal.amount,
         });
+      } else if (e.type === 'heroHealed') {
+        const heal = e as unknown as { seat: SeatId; amount: number };
+        newEffects.push({ type: 'heal', targetKind: 'hero', targetSeat: heal.seat, amount: heal.amount });
+      } else if (e.type === 'fatigue') {
+        const fatigue = e as unknown as { seat: SeatId; damage: number };
+        newEffects.push({ type: 'damage', targetKind: 'hero', targetSeat: fatigue.seat, amount: fatigue.damage });
+        newImpacted.add(`hero-${fatigue.seat}`);
+        notices.push(`😴 ${seatName(fatigue.seat)}: Deck leer, ${fatigue.damage} Müdigkeits-Schaden`);
+      } else if (e.type === 'cardBurned') {
+        const burned = e as unknown as { seat: SeatId; card: { defId: string } };
+        const name = CARDS_DB[burned.card.defId]?.name ?? 'Karte';
+        notices.push(`🔥 ${seatName(burned.seat)}: Hand voll, ${name} verbrennt`);
       } else if (e.type === 'bubblePopped') {
         const pop = e as unknown as { minionId: string };
         newImpacted.add(pop.minionId);
       }
+    }
+
+    if (notices.length > 0) {
+      setNotice(notices.join(' · '));
+      if (noticeTimerRef.current !== null) window.clearTimeout(noticeTimerRef.current);
+      noticeTimerRef.current = window.setTimeout(() => {
+        setNotice(null);
+        noticeTimerRef.current = null;
+      }, 3000);
     }
 
     if (newEffects.length > 0 || newAttacking.size > 0 || newImpacted.size > 0) {
@@ -491,7 +403,7 @@ function Board({
         animationTimerRef.current = null;
       }, 620);
     }
-  }, [events, mySeat, oppSeat]);
+  }, [events, mySeat, oppSeat, seatNames]);
 
   const oppHeroDmg = effects.find((e) => e.targetKind === 'hero' && e.targetSeat === oppSeat && e.type === 'damage')?.amount;
   const oppHeroHeal = effects.find((e) => e.targetKind === 'hero' && e.targetSeat === oppSeat && e.type === 'heal')?.amount;
@@ -837,6 +749,12 @@ function Board({
         </div>
       </div>
 
+      {notice && (
+        <div className="ds-notice" role="status">
+          {notice}
+        </div>
+      )}
+
       {selectedSpell !== null && activeSpellDef?.spell && (
         <div className="ds-spell-hint" role="status">
           {activeSpellDef.emoji} {activeSpellDef.name}: Wähle ein Ziel – {activeSpellDef.text}
@@ -910,6 +828,133 @@ function Board({
       </div>
     </div>
   );
+}
+
+/** Deckwahl: eigene Komponente, damit jede Phase ihre eigenen Hooks hat. */
+function DeckSelection({ view, me, onMove }: { view: DrachenspielView; me: HiddenPlayerView; onMove: (move: DrachenspielMove) => void }) {
+  if (!me.deckTheme) {
+    return (
+      <div className="ds-phase-overlay">
+        <h2 className="ds-phase-title">Wähle dein Themendeck</h2>
+        <p className="ds-phase-subtitle">
+          {view.options.spells === 'off' ? 'Jedes Deck enthält 30 Tierkarten mit besonderen Stärken.' : 'Jedes Deck enthält 30 Karten: 24 Tiere und 6 Zauber.'}
+        </p>
+        <div className="ds-deck-grid">
+          {DECK_THEME_IDS.map((themeId) => {
+            const theme = DECK_THEMES[themeId];
+            return (
+              <div
+                key={themeId}
+                className="ds-deck-choice"
+                onClick={() => onMove({ type: 'chooseDeck', deck: themeId })}
+                role="button"
+                tabIndex={0}
+              >
+                <span className="ds-deck-emoji">{theme.emoji}</span>
+                <span className="ds-deck-name">{theme.name}</span>
+                <span className="ds-deck-desc">{theme.description}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="ds-phase-overlay">
+      <h2 className="ds-phase-title">Deck gewählt!</h2>
+      <p className="ds-phase-subtitle">Warte auf deinen Mitspieler...</p>
+    </div>
+  );
+}
+
+function MulliganPhase({ me, onMove }: { me: HiddenPlayerView; onMove: (move: DrachenspielMove) => void }) {
+  const [mulliganDiscard, setMulliganDiscard] = useState<Set<number>>(new Set());
+
+  if (!me.mulliganDone && me.hand) {
+    const toggleDiscard = (idx: number) => {
+      setMulliganDiscard((prev) => {
+        const next = new Set(prev);
+        if (next.has(idx)) next.delete(idx);
+        else next.add(idx);
+        return next;
+      });
+    };
+
+    return (
+      <div className="ds-phase-overlay">
+        <h2 className="ds-phase-title">Startkarten tauschen</h2>
+        <p className="ds-phase-subtitle">
+          Tippe auf Karten, die du abwerfen möchtest, um neue aus dem Deck zu ziehen.
+        </p>
+        <div className="ds-mulligan-row">
+          {me.hand.map((card, idx) => {
+            const def = CARDS_DB[card.defId];
+            if (!def) return null;
+            const isDiscarded = mulliganDiscard.has(idx);
+            const cardTraits = getCardTraits(def);
+            return (
+              <div
+                key={card.uid}
+                className={`ds-card ds-mulligan-card ${def.spell ? 'ds-card-spell' : ''} ${isDiscarded ? 'discarded' : ''}`}
+                onClick={() => toggleDiscard(idx)}
+                role="button"
+                tabIndex={0}
+                aria-label={`${def.name}, Kosten ${def.cost}${cardTraits.length > 0 ? ` [${cardTraits.map((t) => t.name).join(', ')}]` : ''}`}
+                title={getCardFullTitle(def)}
+              >
+                <div className="ds-card-top">
+                  <span className="ds-card-cost">{def.cost}</span>
+                  <div className="ds-card-traits">
+                    {cardTraits.map((trait) => (
+                      <TraitBadge key={trait.id} trait={trait} />
+                    ))}
+                  </div>
+                </div>
+                <div className="ds-card-center">
+                  <span className="ds-card-emoji">{def.emoji}</span>
+                  <span className="ds-card-name">{def.name}</span>
+                </div>
+                {def.spell && <span className="ds-card-spelltext">{def.text}</span>}
+                {!def.isSpell && (
+                  <div className="ds-minion-stats">
+                    <span className="ds-stat-atk">{def.attack}</span>
+                    <span className="ds-stat-hp">{def.health}</span>
+                  </div>
+                )}
+                {isDiscarded && <span className="ds-mulligan-cross">❌</span>}
+              </div>
+            );
+          })}
+        </div>
+        <button
+          className="ds-btn"
+          onClick={() => {
+            onMove({
+              type: 'mulligan',
+              discardIndices: Array.from(mulliganDiscard),
+            });
+          }}
+        >
+          {mulliganDiscard.size === 0 ? 'Alle Karten behalten' : 'Gewählte Karten tauschen'}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="ds-phase-overlay">
+      <h2 className="ds-phase-title">Startkarten gewählt!</h2>
+      <p className="ds-phase-subtitle">Warte auf den Start der Partie...</p>
+    </div>
+  );
+}
+
+function Board(props: BoardProps<DrachenspielView, DrachenspielMove>) {
+  const { view, viewer, onMove } = props;
+  const me = view.players[typeof viewer === 'number' ? viewer : 0];
+  if (view.phase === 'deckSelection') return <DeckSelection view={view} me={me} onMove={onMove} />;
+  if (view.phase === 'mulligan') return <MulliganPhase me={me} onMove={onMove} />;
+  return <PlayBoard {...props} />;
 }
 
 function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string }) {

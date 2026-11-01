@@ -72,25 +72,32 @@ export const timePresets: TimePresets = {
 
 export const spellsOn = (opts: Options) => (opts.spells ?? 'on') !== 'off';
 
+const SINGLE_COPY_CARDS = new Set(['c53', 'c54']);
+
 function createDeck(theme: string, rng: Rng, nextId: () => number, withSpells: boolean): CardInstance[] {
   let cardIds: string[];
   if (theme in DECK_THEMES) {
     cardIds = themeCardIds(theme as DeckThemeId, withSpells);
   } else {
-    // Gemischtes Deck: 30 zufällige Karten, mit Zauberkarten davon 6 Zauber.
-    cardIds = [];
-    const pool = [...ALL_CARD_IDS];
+    // Gemischtes Deck: 30 zufällige Karten, mit Zauberkarten davon 6 Zauber. Wie in den
+    // Themendecks höchstens zwei Kopien, von Fuchs und Drache nur eine.
+    const copies = (ids: string[]) => ids.flatMap((id) => (SINGLE_COPY_CARDS.has(id) ? [id] : [id, id]));
     const spells = withSpells ? 6 : 0;
-    for (let i = 0; i < 30 - spells; i++) {
-      cardIds.push(rng.pick(pool));
-    }
-    for (let i = 0; i < spells; i++) cardIds.push(rng.pick(ALL_SPELL_IDS));
+    cardIds = [
+      ...rng.shuffle(copies(ALL_CARD_IDS)).slice(0, 30 - spells),
+      ...rng.shuffle(copies(ALL_SPELL_IDS)).slice(0, spells),
+    ];
   }
   const deck: CardInstance[] = cardIds.map((defId) => ({
     uid: `c_${nextId()}`,
     defId,
   }));
   return rng.shuffle(deck);
+}
+
+/** Online-Räume aus der Zeit vor `ruleVersion` 3 haben noch keinen Zufallsstrom. */
+function partyRng(state: DrachenspielState): Rng {
+  return state.rng ? new Rng(state.rng) : Rng.fromSeed(`alt/${state.nextEntityId}`);
 }
 
 function createPlayer(seat: SeatId): PlayerState {
@@ -127,18 +134,20 @@ export function setup(seats: number, opts: Options, seed: string): DrachenspielS
     players,
     startingSeat,
     nextEntityId: entityCounter,
+    rng: rng.state,
     options: { ...opts },
   };
 
   if (deckOption !== 'inGame') {
     for (const p of state.players) {
-      p.deckTheme = deckOption in DECK_THEMES ? (deckOption as DeckThemeId) : 'forest';
+      p.deckTheme = deckOption in DECK_THEMES ? (deckOption as DeckThemeId) : 'mixed';
       p.deck = createDeck(deckOption, rng, nextId, spellsOn(opts));
     }
+    state.rng = rng.state;
+    state.nextEntityId = entityCounter;
     dealStartingHands(state, mulliganOption === 'on');
   }
 
-  state.nextEntityId = entityCounter;
   return state;
 }
 
@@ -350,8 +359,9 @@ export function applyMove(
       throw new Error('Deck-Wahl jetzt nicht erlaubt');
     }
     player.deckTheme = move.deck;
-    const rng = Rng.fromSeed(`${next.turn}/${actor}/${move.deck}`);
+    const rng = partyRng(next);
     player.deck = createDeck(move.deck, rng, nextEntityId, spellsOn(next.options));
+    next.rng = rng.state;
 
     events.push({ type: 'deckChosen', seat: actor, deck: move.deck });
 
@@ -384,8 +394,9 @@ export function applyMove(
 
     // Shuffle discarded back into deck
     player.deck.push(...discardedCards);
-    const rng = Rng.fromSeed(`mulligan/${actor}/${next.startingSeat}`);
+    const rng = partyRng(next);
     player.deck = rng.shuffle(player.deck);
+    next.rng = rng.state;
 
     player.mulliganDone = true;
     events.push({ type: 'mulliganDone', seat: actor, count: discardedCards.length });
@@ -517,8 +528,7 @@ export function applyMove(
           }
         }
       } else if (battlecry.effect === 'heal_hero_3') {
-        player.health = Math.min(player.maxHealth, player.health + 3);
-        events.push({ type: 'heroHealed', seat: actor, amount: 3, health: player.health });
+        healHero(player, 3, events);
       } else if (battlecry.effect === 'dragon_breath') {
         for (const enemyMinion of enemy.board) {
           applyDamageToMinion(enemyMinion, 2, false, events);
@@ -686,6 +696,14 @@ function castSpell(state: DrachenspielState, seat: SeatId, spell: SpellEffect, t
   }
 }
 
+/** Heilt höchstens bis zum Maximum; das Ereignis nennt die wirklich geheilte Menge. */
+function healHero(player: PlayerState, amount: number, events: GameEvent[]): void {
+  const healed = Math.min(player.maxHealth, player.health + amount) - player.health;
+  if (healed <= 0) return;
+  player.health += healed;
+  events.push({ type: 'heroHealed', seat: player.seat, amount: healed, health: player.health });
+}
+
 function applyDamageToMinion(
   minion: Minion,
   amount: number,
@@ -758,8 +776,7 @@ function cleanupDeadMinions(state: DrachenspielState, events: GameEvent[]): void
           applyDamageToMinion(enemyMinion, 1, false, events);
         }
       } else if (m.deathrattle === 'heal_hero_2') {
-        p.health = Math.min(p.maxHealth, p.health + 2);
-        events.push({ type: 'heroHealed', seat: p.seat, amount: 2, health: p.health });
+        healHero(p, 2, events);
       }
     }
   }
@@ -865,6 +882,7 @@ export function sampleHidden(
     players,
     startingSeat: view.startingSeat,
     nextEntityId: counter,
+    rng: rng.state,
     options: { ...view.options },
   };
 }
@@ -876,7 +894,7 @@ function reconstructPlayer(
   nextId: () => number,
   withSpells: boolean,
 ): PlayerState {
-  const pool = hv.deckTheme && hv.deckTheme in DECK_THEMES
+  const pool = hv.deckTheme && hv.deckTheme !== 'mixed'
     ? themeCardIds(hv.deckTheme, withSpells)
     : [...ALL_CARD_IDS, ...(withSpells ? ALL_SPELL_IDS : [])];
 
