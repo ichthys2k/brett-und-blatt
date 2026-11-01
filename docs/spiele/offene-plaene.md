@@ -4,7 +4,7 @@ Diese Seite fasst zusammen, was geplant, aber noch nicht gebaut ist, damit ein a
 
 Regeln wie immer (siehe `CLAUDE.md`): eigener Zweig, Eintrag in `PLANUNG.md` vorher auf `in Arbeit (Name, Zweig)`, Tests + `corepack pnpm check` + Rauchtest + Prüfstand, Blick im Browser. Commit, Push und Veröffentlichen nur auf Cornelius' Wort („deploy“). Keine Nachbauten bestimmter Verlagsspiele: eigene Namen, eigene Kernregel.
 
-## 1. Marktplatz (W-041) – gebaut auf `claude/marktplatz-probe`, wartet auf Veröffentlichung
+## 1. Marktplatz (W-041) – veröffentlicht (4817a5e)
 
 Spiel: `packages/games/marketplace`, Plan: [`marktplatz.md`](marktplatz.md), Probe: [`marktplatz-probe.md`](marktplatz-probe.md). Offen: Test online mit zwei Geräten, Narrenhof-Porträts und Sprüche, Feldgrafik, eigene Klänge (Auswahl durch Cornelius).
 
