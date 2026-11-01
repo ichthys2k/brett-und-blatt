@@ -48,15 +48,15 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Spiel/Bereich | Fehler | Schritte zum Nachstellen | Erwartet | Tatsächlich | Gerät/Browser | Prio | Status | Eingetragen |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| F-005 | Eins! | Handkarten im Querformat abgeschnitten | 1. Eins! auf dem Handy im Querformat starten (844 × 390)<br>2. Unteren Bildschirmrand ansehen | Alle Handkarten sind ganz sichtbar und bedienbar. | Die Handkarten ragen unten aus dem Bild, nur ihr oberer Teil ist zu sehen. | Chromium (Playwright), 844 × 390, in Schlicht und Taverne | mittel | behoben, wartet auf Veröffentlichung (Claude, claude/layout-fehler-f005-f011) | 2026-10-31, Claude |
-| F-006 | Stichspiele | Handkarten überdecken die Knöpfe | 1. Skat oder Doppelkopf im Hochformat starten (390 × 844)<br>2. Die untere Kartenreihe und die Knöpfe darunter ansehen | Karten und Knöpfe „Zug zurück“ und „Aufgeben“ überlappen sich nicht. | Die zweite Kartenreihe liegt über den Knöpfen und verdeckt sie teilweise. | Chromium (Playwright), 390 × 844, in Schlicht und Taverne | mittel | behoben, wartet auf Veröffentlichung (Claude, claude/layout-fehler-f005-f011) | 2026-10-31, Claude |
 | F-010 | Drachenspiel | Spiel startet am Anfang oft nicht | Spiel Starten | Spiel beginnt | Bildschirm bleibt schwarz. Man muss die Seite mit "f5" neu laden, bevor das spielfeld erscheint. | Egal | mittel | nicht mehr nachstellbar (15 von 15 Starts sauber, 1.11.): gleiche Ursache wie F-009, wartet auf Cornelius' Bestätigung am Gerät | 2026-11-01, Cornelius |
-| F-011 | Verschiedene Spiele | Bei manchen Spielen ist der untere Teil des Spielfelds nicht mehr sichtbar | Gerät mit kleinem Bildschirm benutzen (z.b. bei "Eins!"). Tritt vor allem dann ein, wenn es viele Spieler hat, die dann das Spielfeld nach untern verschieben | Alle Spielrelevanten UI Elemente sind auf dem Bildschirm zu sehen. | Die Elemente unten sind nur durch scrollen zu sehen. | Mobilgerät | mittel | in Arbeit (Claude, claude/layout-fehler-f005-f011): Seite rollt nicht mehr, Knöpfe bleiben frei, zu viel Inhalt rollt im Spielfeld. Noch nicht ohne Rollen passend: u. a. Scrabble, Poker, Wort-Salat, Rechenmauer, Zielzahl, Mau-Mau, Tiefflug zu acht | 2026-11-01, Cornelius |
+| F-011 | Verschiedene Spiele | Bei manchen Spielen ist der untere Teil des Spielfelds nicht mehr sichtbar | Gerät mit kleinem Bildschirm benutzen (z.b. bei "Eins!"). Tritt vor allem dann ein, wenn es viele Spieler hat, die dann das Spielfeld nach untern verschieben | Alle Spielrelevanten UI Elemente sind auf dem Bildschirm zu sehen. | Die Elemente unten sind nur durch scrollen zu sehen. | Mobilgerät | mittel | teilweise behoben (864ef49): Seite rollt nicht mehr, Knöpfe bleiben frei, zu viel Inhalt rollt im Spielfeld. Noch nicht ohne Rollen passend: u. a. Scrabble, Poker, Wort-Salat, Rechenmauer, Zielzahl, Mau-Mau, Tiefflug zu acht | 2026-11-01, Cornelius |
 
 ## Erledigt
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
+| F-005 | Eins!: Handkarten im Querformat abgeschnitten | 2026-11-01 | 864ef49 |
+| F-006 | Stichspiele: Handkarten überdecken die Knöpfe | 2026-11-01 | 864ef49 |
 | W-042 | Rübenacker (Arbeitstitel): Hasenrennen zur Riesenrübe, Karten statt Würfel, sichtbarer Maulwurf-Hügel, Bot „Langohr“, online | 2026-11-01 | 193c3d9 |
 | W-034 | Sternhalma: Sternbrett mit 121 Löchern für 2–6 Spieler, Sprungketten, Bot „Sternspringer“, online | 2026-11-01 | e9b152d |
 | W-033 | Elf zuerst! (Elfer raus): Anlegespiel für 2–6 Spieler, 80 Zahlenkarten, Bot „Zahlenzwerg“, online | 2026-11-01 | a9eebe5 |
