@@ -2,7 +2,7 @@
 
 Fassung 1 vom 01.11.2026 (W-044). Grundlage sind der Code auf Commit `95218ef`, die Fehlerliste (F-007 bis F-009) sowie das Hearthstone-Kompendium im privaten Repo (`brett-und-blatt-klaenge/kompendium/hearthstone/`). Die Vorschläge zu Thema und Karten warten auf Cornelius' Entscheidung.
 
-**Stand für Mitwirkende (01.11.2026):** Phase 0 ist fertig und liegt auf dem Zweig `claude/hearthstone-research-mechanics-c88148`; Details stehen in [`drachenspiel.md`](drachenspiel.md). Sie ist erst nach dem Merge nach `main` veröffentlicht. Bis dahin bleibt das Drachenspiel auf spiele.lipponer.de vom Absturz F-009 betroffen. Als Nächstes käme Phase 1, der Regelkern. Sie ist noch nicht begonnen, und bis sie fertig ist, sollte niemand parallel an `rules.ts` oder `ui/index.tsx` des Drachenspiels arbeiten. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
+**Stand für Mitwirkende (01.11.2026):** Phase 0 ist fertig und veröffentlicht (PR #45); Details stehen in [`drachenspiel.md`](drachenspiel.md). Als Nächstes käme Phase 1, der Regelkern. Sie ist noch nicht begonnen, und bis sie fertig ist, sollte niemand parallel an `rules.ts` oder `ui/index.tsx` des Drachenspiels arbeiten. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
 
 ## 1. Kurzfassung
 

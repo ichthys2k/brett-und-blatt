@@ -191,7 +191,7 @@ Darauf achten:
 - Passt die Beratungszeit, und reichen die Zeitvorgaben?
 - Ist der Knopf „Linsen“ bei Sitznachbarn zu auffällig? (Nur das Lamm hat ihn.)
 
-**Probelauf:** Cornelius testet live auf spiele.lipponer.de, sobald er „deploy“ sagt (31.10.2026). Das Spiel ist ab dann für alle sichtbar.
+**Live-Test:** Veröffentlicht am 31.10.2026 (Commit `0aea54b`). Cornelius hat das Spiel live auf spiele.lipponer.de getestet und am 1.11.2026 für gut befunden. Einzelergebnisse zu den Punkten oben sind nicht festgehalten.
 
 ## Ausbau (nicht Teil der ersten Fassung)
 

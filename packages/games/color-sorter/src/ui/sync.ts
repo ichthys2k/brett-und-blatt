@@ -23,17 +23,24 @@ export interface SyncState {
   code: string | null;
   /** Letzter erfolgreicher Abgleich (ms). */
   lastSync: number | null;
-  /** Auf diesem Gerät wurde ein Passkey angelegt. */
-  passkey: boolean;
+  /**
+   * Passkeys, die von diesem Gerät aus angelegt oder benutzt wurden (Kennungen als Base64url).
+   * Es dürfen beliebig viele sein – etwa einer in iCloud, einer bei Google, ein Sicherheitsschlüssel.
+   * Jeder hat sein eigenes Schloss beim Server, darin jeweils der Sicherungscode.
+   */
+  passkeys: string[];
   busy: boolean;
   error: string | null;
 }
+
+/** Platzhalter für einen Passkey aus der ersten Fassung (Kennung unbekannt). */
+const LEGACY_PASSKEY = 'alt';
 
 let state: SyncState = loadState();
 const listeners = new Set<() => void>();
 
 function loadState(): SyncState {
-  const base: SyncState = { code: null, lastSync: null, passkey: false, busy: false, error: null };
+  const base: SyncState = { code: null, lastSync: null, passkeys: [], busy: false, error: null };
   try {
     const raw = JSON.parse(window.localStorage.getItem(KEY) ?? 'null') as Partial<SyncState> | null;
     if (!raw) return base;
@@ -41,7 +48,11 @@ function loadState(): SyncState {
       ...base,
       code: typeof raw.code === 'string' ? parseCode(raw.code) : null,
       lastSync: typeof raw.lastSync === 'number' ? raw.lastSync : null,
-      passkey: raw.passkey === true,
+      passkeys: Array.isArray(raw.passkeys)
+        ? raw.passkeys.filter((id): id is string => typeof id === 'string' && /^[A-Za-z0-9_-]{1,400}$/.test(id)).slice(0, 50)
+        : (raw as { passkey?: unknown }).passkey === true
+          ? [LEGACY_PASSKEY]
+          : [],
     };
   } catch {
     return base;
@@ -51,7 +62,7 @@ function loadState(): SyncState {
 function setState(patch: Partial<SyncState>): void {
   state = { ...state, ...patch };
   try {
-    window.localStorage.setItem(KEY, JSON.stringify({ code: state.code, lastSync: state.lastSync, passkey: state.passkey }));
+    window.localStorage.setItem(KEY, JSON.stringify({ code: state.code, lastSync: state.lastSync, passkeys: state.passkeys }));
   } catch {
     // ohne Speicher gilt die Verbindung bis zum Neuladen
   }
@@ -157,7 +168,7 @@ export function createSync(): Promise<boolean> {
       const keys = await keysFromCode(code);
       if (await fetchRemote(keys.id)) continue;
       if (!(await putRemote(keys.id, await seal(keys, { v: 1, progress: getProgress() }), 0))) continue;
-      setState({ code, passkey: false });
+      setState({ code, passkeys: [] });
       return;
     }
     throw new SyncError('Kein freier Code gefunden. Noch einmal versuchen.');
@@ -173,7 +184,7 @@ export function connectSync(input: string): Promise<boolean> {
   }
   return run(async () => {
     await syncWith(code, true);
-    setState({ code, passkey: false });
+    setState({ code, passkeys: [] });
   });
 }
 
@@ -199,7 +210,7 @@ export function scheduleSync(delayMs = 1500): void {
 
 /** Trennt dieses Gerät von der Sicherung. Der Fortschritt hier und die Sicherung bleiben. */
 export function disconnectSync(): void {
-  setState({ code: null, lastSync: null, passkey: false, error: null });
+  setState({ code: null, lastSync: null, passkeys: [], error: null });
 }
 
 export function clearSyncError(): void {
@@ -235,6 +246,22 @@ async function prfSalt(): Promise<Uint8Array> {
 
 const random = (n: number) => crypto.getRandomValues(new Uint8Array(n));
 
+function toBase64Url(bytes: ArrayBuffer): string {
+  let binary = '';
+  for (const b of new Uint8Array(bytes)) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function fromBase64Url(text: string): Uint8Array {
+  const b64 = text.replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4)), (ch) => ch.charCodeAt(0));
+}
+
+function rememberPasskey(list: string[], rawId: ArrayBuffer): string[] {
+  const id = toBase64Url(rawId);
+  return [...list.filter((p) => p !== id), id].slice(-50);
+}
+
 function prfBytes(out: PrfOutputs | undefined): Uint8Array | null {
   const first = out?.results?.first;
   if (!first) return null;
@@ -259,22 +286,30 @@ const NO_PRF = 'Dieser Browser oder Passkey-Speicher kann die nötige Erweiterun
 function passkeyError(error: unknown): never {
   if (error instanceof SyncError) throw error;
   const name = (error as { name?: string })?.name;
+  if (name === 'InvalidStateError') throw new SyncError('In diesem Passkey-Speicher gibt es schon einen Passkey für deinen Fortschritt. Wähle beim Anlegen einen anderen Speicher (z. B. Handy, Sicherheitsschlüssel).');
   if (name === 'NotAllowedError' || name === 'AbortError') throw new SyncError('Abgebrochen.');
   throw new SyncError(NO_PRF);
 }
 
-/** Legt einen Passkey an und hinterlegt darunter verschlüsselt den Sicherungscode. */
+/**
+ * Legt einen (weiteren) Passkey an und hinterlegt darunter verschlüsselt den Sicherungscode.
+ * Schon bekannte Passkeys werden ausgeschlossen, damit derselbe Speicher keinen zweiten bekommt.
+ */
 export function createPasskey(): Promise<boolean> {
   const code = state.code;
   if (!code) return Promise.resolve(false);
   return run(async () => {
     const salt = await prfSalt();
     let secret: Uint8Array | null = null;
+    let rawId: ArrayBuffer | null = null;
+    const label = `Narrenhof-Fortschritt (${new Date().toLocaleDateString('de-DE')})`;
+    const known = state.passkeys.filter((id) => id !== LEGACY_PASSKEY);
     try {
       const credential = (await navigator.credentials.create({
         publicKey: {
           rp: { name: 'Brett & Blatt' },
-          user: { id: random(16), name: 'Narrenhof-Fortschritt', displayName: 'Narrenhof-Fortschritt' },
+          user: { id: random(16), name: label, displayName: label },
+          excludeCredentials: known.map((id) => ({ type: 'public-key' as const, id: fromBase64Url(id) as BufferSource })),
           challenge: random(32),
           pubKeyCredParams: [
             { type: 'public-key', alg: -7 },
@@ -285,6 +320,7 @@ export function createPasskey(): Promise<boolean> {
         },
       })) as PublicKeyCredential | null;
       if (!credential) throw new SyncError('Abgebrochen.');
+      rawId = credential.rawId;
       const prf = (credential.getClientExtensionResults() as { prf?: PrfOutputs }).prf;
       secret = prfBytes(prf);
       // Manche Browser liefern beim Anlegen nur „enabled“ – dann einmal anmelden.
@@ -306,7 +342,7 @@ export function createPasskey(): Promise<boolean> {
     const keys = await deriveKeys(secret, 'passkey');
     const remote = await fetchRemote(keys.id);
     if (!(await putRemote(keys.id, await seal(keys, { v: 1, code }), remote?.rev ?? 0))) throw new SyncError(OFFLINE);
-    setState({ passkey: true });
+    setState({ passkeys: rawId ? rememberPasskey(state.passkeys, rawId) : state.passkeys });
   });
 }
 
@@ -315,6 +351,7 @@ export function connectWithPasskey(): Promise<boolean> {
   return run(async () => {
     const salt = await prfSalt();
     let secret: Uint8Array | null = null;
+    let rawId: ArrayBuffer | null = null;
     try {
       const assertion = (await navigator.credentials.get({
         publicKey: {
@@ -324,6 +361,7 @@ export function connectWithPasskey(): Promise<boolean> {
         },
       })) as PublicKeyCredential | null;
       secret = prfBytes((assertion?.getClientExtensionResults() as { prf?: PrfOutputs } | undefined)?.prf);
+      rawId = assertion?.rawId ?? null;
     } catch (error) {
       passkeyError(error);
     }
@@ -340,6 +378,6 @@ export function connectWithPasskey(): Promise<boolean> {
     }
     if (!code) throw new SyncError('Die Sicherung zu diesem Passkey lässt sich nicht öffnen.');
     await syncWith(code, true);
-    setState({ code, passkey: true });
+    setState({ code, passkeys: rawId ? rememberPasskey([], rawId) : [] });
   });
 }

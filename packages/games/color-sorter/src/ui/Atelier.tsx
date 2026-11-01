@@ -454,17 +454,24 @@ function CloudSync({ linkCode }: { linkCode?: string | null }) {
       <button type="button" className="cs-btn" disabled={sync.busy} onClick={() => void syncNow()}>
         🔄 Jetzt abgleichen
       </button>
-      {passkey !== 'no' &&
-        (sync.passkey ? (
-          <p className="cs-small-text">🔑 Passkey angelegt: Auf einem neuen Gerät genügt „Mit Passkey holen“, wenn dein Passkey-Speicher (z. B. iCloud, Google, Windows) dort mitkommt.</p>
-        ) : (
-          <>
-            <button type="button" className="cs-btn" disabled={sync.busy} onClick={() => void createPasskey()}>
-              🔑 Passkey anlegen
-            </button>
-            <p className="cs-small-text">Mit Passkey holst du den Code später per Fingerabdruck, Gesicht oder PIN, statt ihn abzutippen.</p>
-          </>
-        ))}
+      {passkey !== 'no' && (
+        <>
+          {sync.passkeys.length > 0 && (
+            <p className="cs-small-text">
+              🔑 {sync.passkeys.length === 1 ? 'Ein Passkey' : `${sync.passkeys.length} Passkeys`} von diesem Gerät aus angelegt. Auf einem neuen Gerät genügt „Mit Passkey holen“
+              mit einem davon.
+            </p>
+          )}
+          <button type="button" className="cs-btn" disabled={sync.busy} onClick={() => void createPasskey()}>
+            🔑 {sync.passkeys.length > 0 ? 'Weiteren Passkey anlegen' : 'Passkey anlegen'}
+          </button>
+          <p className="cs-small-text">
+            {sync.passkeys.length > 0
+              ? 'Lege z. B. einen zweiten in einem anderen Passkey-Speicher (Handy, Google, iCloud, Windows, Sicherheitsschlüssel) an. Jeder öffnet dieselbe Sicherung.'
+              : 'Mit Passkey holst du den Code später per Fingerabdruck, Gesicht oder PIN, statt ihn abzutippen. Du kannst mehrere anlegen, etwa einen pro Passkey-Speicher.'}
+          </p>
+        </>
+      )}
       {confirmLeave ? (
         <div className="cs-sync-row">
           <span className="cs-small-text">Dieses Gerät trennen? Der Fortschritt hier und die Sicherung bleiben.</span>
