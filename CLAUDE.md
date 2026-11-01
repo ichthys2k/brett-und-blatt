@@ -143,6 +143,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Sternhalma** (`packages/games/chinese-checkers`, W-034, 1.11.2026, Planungsliste Etappe 7, Paket A): Sternbrett mit 121 Löchern für 2–6 Spieler, 10 oder 6 Steine, Sprungketten, Ziel nicht mehr verlassen, Sieg auch bei blockiertem Ziel (ein eigener Stein genügt), Rundengrenze 150, Bot „Sternspringer“ in drei Stufen, online registriert, Playlist „Spielabend“. Plan in `docs/spiele/sternhalma.md`.
 
+**Rübenacker** (`packages/games/turnip-patch`, W-042, 1.11.2026, Planungsliste Etappe 7, Paket A): Hasenrennen zur Riesenrübe für Kinder, 2–6 Spieler, Karten 1/2/3/Maulwurf statt Würfel, sichtbarer Erdhügel auf fester Maulwurfspur, zurück zum Zaunpfahl (oder streng zur Wiese), Bot „Langohr“ in drei Stufen, online registriert, Playlist „Spielabend“. Plan in `docs/spiele/ruebenacker.md`.
+
 **Wölfe im Schafspelz** (`packages/games/wolves-sheep`, W-021, veröffentlicht 31.10.2026): Rollenspiel nach den Regeln des Grundspiels von „Die Werwölfe von Düsterwald“ mit christlichem Thema, 8–18 Spieler plus optionaler Erzähler. Einsteigermischung, dazu einzeln zuschaltbar Hirte, Hütehund, Bandstifter, Neugieriges Lamm, Zugelaufenes Schaf, Leithammel. Nachts handeln alle Lebenden, damit `current` keine Rolle verrät; Ketten aus Ausscheiden, Schuss und Glocke laufen über eine Warteschlange. Neu in der Plattform: `GameInfo.minHumans`, `GameInfo.noUndo`, `GameUi.concealTurns`. Live-Test durch Cornelius am 1.11.2026 für gut befunden. Plan in `docs/spiele/woelfe-im-schafspelz.md`.
 
 **Weitere Spiele (27./28.10.2026):**

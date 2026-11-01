@@ -1,0 +1,23 @@
+{
+  "name": "@brett-und-blatt/game-turnip-patch",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "description": "Rübenacker – Hasenrennen zur Riesenrübe mit Gärtner Maulwurf",
+  "exports": {
+    ".": "./src/index.ts",
+    "./meta": "./src/meta.ts",
+    "./ui": "./src/ui/index.tsx"
+  },
+  "dependencies": {
+    "@brett-und-blatt/engine": "workspace:*",
+    "@brett-und-blatt/ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
+  },
+  "devDependencies": {
+    "react": "^19.3.1"
+  }
+}

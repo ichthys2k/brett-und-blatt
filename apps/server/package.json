@@ -49,6 +49,7 @@
     "@brett-und-blatt/game-binokel": "workspace:*",
     "@brett-und-blatt/game-target-number": "workspace:*",
     "@brett-und-blatt/game-tic-tac-toe": "workspace:*",
+    "@brett-und-blatt/game-turnip-patch": "workspace:*",
     "@brett-und-blatt/game-ultimate-tic-tac-toe": "workspace:*",
     "@brett-und-blatt/game-uno": "workspace:*",
     "@brett-und-blatt/game-kniffel": "workspace:*",
