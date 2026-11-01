@@ -272,6 +272,8 @@ export interface PlayerState {
   /** Eigene Fallen, verdeckt für den Gegner. */
   traps: CardInstance[];
   quest: ActiveQuest | null;
+  /** Eigenes Deck: die Karten, mit denen der Platz angetreten ist. Fremde Sichten sehen sie nicht. */
+  customDeck?: string[];
   /** `mixed`: gemischtes Zufallsdeck ohne Thema. */
   deckTheme: DeckThemeId | 'mixed' | null;
   mulliganDone: boolean;
@@ -325,6 +327,7 @@ export interface HiddenPlayerView {
   traps: CardInstance[] | null;
   trapCount: number;
   quest: ActiveQuest | null;
+  customDeck: string[] | null;
   deckTheme: DeckThemeId | 'mixed' | null;
   mulliganDone: boolean;
 }
@@ -341,7 +344,8 @@ export interface DrachenspielView {
 }
 
 export type DrachenspielMove =
-  | { type: 'chooseDeck'; deck: DeckThemeId }
+  /** Mit `code` ein eigenes Deck dieses Hauses statt des Themendecks. */
+  | { type: 'chooseDeck'; deck: DeckThemeId; code?: string }
   | { type: 'mulligan'; discardIndices: number[] }
   | { type: 'playCard'; handIndex: number; target?: SpellTarget }
   | { type: 'attack'; attackerId: string; target: { kind: 'minion'; id: string } | { kind: 'hero' } }
