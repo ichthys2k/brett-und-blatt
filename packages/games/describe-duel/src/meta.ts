@@ -2,7 +2,7 @@ import type { GameInfo } from '@brett-und-blatt/engine';
 
 export const meta: GameInfo = {
   id: 'describe-duel',
-  name: 'Umschreibe-Duell',
+  name: 'Verboten!',
   description: 'Zwei Teams, ein Begriff: Erkläre ihn deinem Team, ohne die Sperrwörter zu benutzen, die das andere Team gerade für dich ausgesucht hat.',
   emoji: '🗣️',
   players: { min: 4, max: 30 },

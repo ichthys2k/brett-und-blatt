@@ -1,8 +1,8 @@
 /*
  * Kategorien und Wortlisten liegen nicht hier, sondern in `content/wortspiele/kategorien.json`.
  * Sie kommen vom Spieleserver (`GET /wortspiele/kategorien`), sonst aus der gleichnamigen
- * Datei neben dem JS-Paket (`prepare` in `index.ts`). Die Listen sind ein Entwurf: Was nicht
- * darin steht, ist nicht falsch – darüber stimmt die Runde ab.
+ * Datei neben dem JS-Paket (`prepare` in `index.ts`). Was nicht in den Listen
+ * steht, ist nicht falsch – darüber stimmt die Runde ab.
  */
 import { normalizeWord } from '@brett-und-blatt/engine';
 

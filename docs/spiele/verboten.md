@@ -1,8 +1,8 @@
-# Umschreibe-Duell (Arbeitstitel „Sag's anders“)
+# Verboten!
 
 *Teamspiel für 4–30 Spieler: Einer umschreibt einen Begriff, das eigene Team rät – die Sperrwörter legt das andere Team fest.*
 
-> **Eigene Fassung, kein Nachbau:** „Tabu“ ist eine Marke von Hasbro. Hier gibt es keine gedruckten Sperrwortkarten; das gegnerische Team wählt die Sperrwörter selbst, im Schreib-Modus zählen weniger Hinweise mehr Punkte. id `describe-duel`, W-038.
+> **Eigene Fassung, kein Nachbau:** „Tabu“ ist eine Marke von Hasbro. Hier gibt es keine gedruckten Sperrwortkarten; das gegnerische Team wählt die Sperrwörter selbst, im Schreib-Modus zählen weniger Hinweise mehr Punkte. Der Name **„Verboten!“** ist von Cornelius festgelegt (1.11.2026, vorher Arbeitstitel „Umschreibe-Duell“); id `describe-duel`, W-038.
 
 | Steckbrief | |
 |---|---|
@@ -38,9 +38,8 @@ Punktetafel der Teams, Begriffskarte für die, die ihn sehen dürfen, Sperrwort-
 
 ## Umsetzung (1.11.2026)
 
-Regeln, Bot, Oberfläche, Tests (`test/describe-duel.test.ts`), Prüfstand. Begriffe (Alltag, Natur, Schule, Bibel; je Begriff Name, Aliasse, 5 naheliegende Wörter, 3 Bot-Hinweise) sind ein **Entwurf**; sie kommen vom Spieleserver (`GET /wortspiele/begriffe`), Rückfall `wortspiele/begriffe.json`.
+Regeln, Bot, Oberfläche, Tests (`test/describe-duel.test.ts`), Prüfstand. Begriffe (Alltag, Natur, Schule, Bibel; je Begriff Name, Aliasse, 5 naheliegende Wörter, 3 Bot-Hinweise) sind von Cornelius freigegeben (1.11.2026); sie kommen vom Spieleserver (`GET /wortspiele/begriffe`), Rückfall `wortspiele/begriffe.json`.
 
 ## Offene Punkte
 
-- Name endgültig festlegen (Arbeitstitel).
-- Begriffe durchsehen (Cornelius).
+- Klänge sind aus dem vorhandenen Katalog gewählt; eigene Klänge nur nach Auswahl.

@@ -11,7 +11,7 @@ const apply = (state: WhoState, seat: number, move: Parameters<typeof gameModule
 
 describe('Begriffe', () => {
   it('jeder Begriff lässt sich durch Fragen von allen anderen unterscheiden', () => {
-    expect(whoCatalog().status).toBe('entwurf');
+    expect(whoCatalog().status).toBe('freigegeben');
     for (const pack of whoCatalog().packs) {
       const seen = new Map<string, string>();
       for (const term of pack.terms) {

@@ -12,7 +12,7 @@ const apply = (state: SprintState, seat: number, move: Parameters<typeof gameMod
 describe('Wortlisten', () => {
   it('sind gültig, ohne Doppelte und haben je Kategorie genug Wörter', () => {
     const c = sprintCatalog();
-    expect(c.status).toBe('entwurf');
+    expect(c.status).toBe('freigegeben');
     for (const category of c.categories) {
       expect(category.words.length, category.id).toBeGreaterThanOrEqual(20);
       const keys = category.words.map((w) => w.toLowerCase());
