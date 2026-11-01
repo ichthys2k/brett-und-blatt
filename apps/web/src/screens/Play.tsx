@@ -147,8 +147,9 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const seats = session.config.seats;
   /** Ab drei Spielern wird die linke Spalte im Querformat breiter; auf flachen Handy-Bildschirmen stehen die Spieler zu zweit nebeneinander. */
   const crowded = seats.length > 2;
-  /** Sehr viele Spieler (Bingo bis 30): eine Zeile zum Wischen statt vieler umbrechender Reihen. */
-  const many = seats.length > 10;
+  /** Viele Spieler: im Hochformat eine Zeile zum Wischen statt vieler Reihen, die dem Spielfeld den Platz nehmen. */
+  const many = seats.length > 4;
+  const playersRef = useRef<HTMLElement>(null);
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
   const current = session.currentSeats();
@@ -195,6 +196,19 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   useEffect(() => {
     if (!result) setCeremonyClosed(false);
   }, [result]);
+
+  // Wer dran ist, soll auch in einer rollbaren Spielerleiste zu sehen sein.
+  const turnChip = concealed ? undefined : current[0];
+  useEffect(() => {
+    const list = playersRef.current;
+    const chip = turnChip === undefined ? undefined : (list?.children[turnChip] as HTMLElement | undefined);
+    if (!list || !chip) return;
+    list.scrollTo({
+      left: chip.offsetLeft - (list.clientWidth - chip.offsetWidth) / 2,
+      top: chip.offsetTop - (list.clientHeight - chip.offsetHeight) / 2,
+      behavior: 'smooth',
+    });
+  }, [turnChip]);
   const reasonText =
     result?.reason === 'time' ? t('play.reason.time') : result?.reason === 'resign' ? t('play.reason.resign') : result?.reason === 'agreement' ? t('play.reason.agreement') : null;
 
@@ -260,7 +274,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     <div className="mx-auto flex h-dvh max-w-3xl flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:max-w-none side:flex-row side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)]">
       {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
       <div className={`contents side:flex side:flex-none side:flex-col side:overflow-y-auto ${crowded ? 'side:w-80' : 'side:w-64 wide:w-72'}`}>
-        <header className="flex h-14 flex-none items-center gap-2 px-3">
+        <header className="flex h-14 flex-none items-center gap-2 px-3 short:h-11">
           <Button variant="ghost" className="px-3" aria-label={online ? t('online.leave') : t('play.back')} onClick={() => (online ? online.onLeave() : navigate(paths.home))}>
             ←
           </Button>
@@ -306,7 +320,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         )}
 
         <section
-          className={`bub-players flex flex-none gap-2 px-3 ${many ? 'overflow-x-auto pb-1 side:flex-col side:overflow-x-visible side:max-h-60 side:overflow-y-auto' : 'flex-wrap'} ${crowded && !many ? 'side:flex-col flat:grid flat:grid-cols-2' : 'side:flex-col'}`}
+          ref={playersRef}
+          className={`bub-players relative flex flex-none gap-2 px-3 side:min-h-20 side:flex-initial side:flex-col side:flex-nowrap side:overflow-x-hidden side:overflow-y-auto ${many ? 'overflow-x-auto pb-1' : 'flex-wrap'} ${crowded ? 'flat:grid flat:grid-cols-2 flat:content-start' : ''}`}
           data-crowded={crowded || undefined}
           data-many={many || undefined}
           aria-label="Spieler"
@@ -333,7 +348,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           })}
         </section>
 
-        <p className="flex-none py-2 text-center font-medium" aria-live="polite">
+        <p className="flex-none py-2 text-center font-medium short:py-1" aria-live="polite">
           {yourMove ? (
             <span key={`${session.version}`} className="bub-your-turn">
               <span aria-hidden="true">👉</span>
@@ -363,7 +378,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           </div>
         )}
 
-        <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3">
+        <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:px-2 short:[&>button]:text-sm">
           {online ? (
             result ? (
               <>
@@ -436,7 +451,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         {online?.extra}
       </div>
 
-      <main className="bub-table relative order-1 min-h-0 min-w-0 flex-1 px-3 side:py-2 side:px-4" data-category={categoryOf(info.id)}>
+      <main className="bub-table relative order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 side:py-2 side:px-4" data-category={categoryOf(info.id)}>
         {yourMove && <div key={`${session.version}`} className="bub-turn-frame" aria-hidden="true" />}
         <ui.Board
           view={session.view(viewer)}

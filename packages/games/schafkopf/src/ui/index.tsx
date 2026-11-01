@@ -1,5 +1,5 @@
 import { sortHand, cardId, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
-import { CardFan, PlayingCard, TrickTable, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import { CardFan, PlayingCard, TRICK_HAND_MIN_STEP, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import {
   getContract,
@@ -8,9 +8,6 @@ import {
   type SchafkopfMove,
   type SchafkopfState,
 } from '../rules.js';
-
-/** Breite einer Handkarte: groß genug zum Tippen, klein genug für zwei Reihen auf dem Handy. */
-const HAND_CARD_WIDTH = 'clamp(44px, 11vw, 76px)';
 
 export function SchafkopfBoard({
   view,
@@ -54,9 +51,9 @@ export function SchafkopfBoard({
   const playableCards = new Set(legalMoves.flatMap((m) => (m.type === 'play' ? [m.card] : [])));
 
   return (
-    <div className="flex flex-col w-full max-w-4xl mx-auto p-2 sm:p-4 gap-4">
+    <div className="flex h-full flex-col w-full max-w-4xl mx-auto p-1 gap-2 sm:p-2 flat:p-0">
       {/* Kopfzeile */}
-      <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-stone-100 dark:bg-stone-800 rounded-xl text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 p-2 flat:py-1 bg-stone-100 dark:bg-stone-800 rounded-xl text-sm">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-emerald-700 dark:text-emerald-400">
             Spiel {view.gameNumber} von {view.totalGames}
@@ -187,7 +184,7 @@ export function SchafkopfBoard({
       )}
 
       {/* TrickTable in der Mitte */}
-      <div className="my-2">
+      <div className="flex min-h-[90px] flex-1 flex-col">
         <TrickTable
           slots={trickSlots}
           bottomSeat={mySeat}
@@ -199,27 +196,34 @@ export function SchafkopfBoard({
 
       {/* Eigene Handkarten */}
       <div className="flex flex-col items-center gap-2 mt-auto">
-        <div className="text-xs font-medium text-stone-500 dark:text-stone-400">
+        <div className="text-xs font-medium text-stone-500 dark:text-stone-400 flat:hidden">
           Deine Hand ({myHand.filter((c: CardId) => c !== 'back').length} Karten)
         </div>
-        <div className="w-full flex justify-center overflow-x-auto pb-2">
-          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
-            {myHand.map((card: CardId, idx: number) => (
-              <div key={card === 'back' ? `back-${idx}` : card} className="transition-transform hover:-translate-y-2" style={{ width: HAND_CARD_WIDTH }}>
-                <PlayingCard
-                  card={card === 'back' ? null : card}
-                  deckStyle={view.deckStyle}
-                  highlight={playableCards.has(card) ? 'target' : null}
-                  onClick={() => {
-                    if (view.phase === 'play' && card !== 'back') {
-                      onMove({ type: 'play', card });
-                    }
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+        <CardFan
+          className="w-full pb-1"
+          count={myHand.length}
+          label="Deine Handkarten"
+          cardWidth={trickHandCardWidth}
+          minStep={TRICK_HAND_MIN_STEP}
+          maxRows={2}
+          keyOf={(idx) => (myHand[idx] === 'back' ? `back-${idx}` : myHand[idx]!)}
+          renderCard={(idx) => {
+            const card = myHand[idx]!;
+            
+            return (
+              <PlayingCard
+                card={card === 'back' ? null : card}
+                deckStyle={view.deckStyle}
+                highlight={playableCards.has(card) ? 'target' : null}
+                onClick={() => {
+                  if (view.phase === 'play' && card !== 'back') {
+                    onMove({ type: 'play', card });
+                  }
+                }}
+              />
+            );
+          }}
+        />
       </div>
 
       {/* Runden-Auswertung */}

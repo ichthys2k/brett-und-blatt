@@ -14,7 +14,7 @@
   max-width: 900px;
   margin: 0 auto;
   padding: clamp(0.5rem, 2vw, 1rem);
-  overflow: hidden;
+  overflow: hidden auto;
   color: #0f172a;
   user-select: none;
   -webkit-user-select: none;

@@ -1,6 +1,19 @@
 import type { CardId, PlayedCard, Trick } from '@brett-und-blatt/engine';
 import { useEffect, useRef, useState } from 'react';
+import { useElementSize } from '../useElementSize';
 import { type DeckStyle, PlayingCard } from './PlayingCard.js';
+
+/** Seitenlänge der Kartenfläche (ohne Skalierung) samt etwas Rand für die Namen. */
+const TABLE_SIZE = 192;
+const TABLE_ROOM = 240;
+
+/** Handkarte eines Stichspiels: passt zur Breite und lässt auf flachen Bildschirmen Platz für den Tisch. */
+export function trickHandCardWidth(containerWidth: number): number {
+  const byHeight = typeof window === 'undefined' ? 76 : window.innerHeight * 0.15;
+  return Math.round(Math.min(76, Math.max(44, containerWidth * 0.16), Math.max(40, byHeight)));
+}
+/** So viel bleibt von jeder überlappten Handkarte sichtbar: die Ecke mit Farbe und Wert. */
+export const TRICK_HAND_MIN_STEP = 26;
 
 export interface TrickTableSlot {
   seat: number;
@@ -89,6 +102,9 @@ export function TrickTable({
   className = '',
   collecting = false,
 }: TrickTableProps) {
+  const [tableRef, { height: tableHeight }] = useElementSize<HTMLDivElement>();
+  // Der Tisch nimmt den freien Platz ein; die Karten darauf wachsen und schrumpfen mit.
+  const scale = tableHeight > 0 ? Math.min(1.25, Math.max(0.4, tableHeight / TABLE_ROOM)) : 1;
   const total = slots.length;
   const winnerSlot = slots.find((s) => s.isWinner);
   const winnerDir = winnerSlot ? getRelativePosition(winnerSlot.seat) : 'bottom';
@@ -111,11 +127,15 @@ export function TrickTable({
 
   return (
     <div
-      className={`bub-trick-table relative flex items-center justify-center rounded-2xl bg-emerald-950/20 border border-emerald-900/30 p-4 min-h-[220px] sm:min-h-[260px] ${className}`}
+      ref={tableRef}
+      className={`bub-trick-table relative flex-1 rounded-2xl bg-emerald-950/20 border border-emerald-900/30 min-h-[90px] max-h-[320px] ${className}`}
       role="region"
       aria-label="Aktueller Stich"
     >
-      <div className="relative w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
+      <div
+        className="absolute top-1/2 left-1/2 flex items-center justify-center"
+        style={{ width: TABLE_SIZE, height: TABLE_SIZE, transform: `translate(-50%, -50%) scale(${scale})` }}
+      >
         {slots.map((slot) => {
           if (!slot.card) return null;
           const pos = getRelativePosition(slot.seat);

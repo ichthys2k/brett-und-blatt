@@ -15,6 +15,9 @@
 /* Flacher Bildschirm, z. B. Handy im Querformat: extrem kompakte Steuerung. */
 @custom-variant flat (@media (orientation: landscape) and (max-height: 540px));
 
+/* Kleines Hochformat, z. B. älteres Handy: Kopf und Knöpfe rücken zusammen, das Spielfeld bekommt den Platz. */
+@custom-variant short (@media (orientation: portrait) and (max-height: 720px));
+
 
 @theme {
   --color-bg: #f5f1ea;
@@ -98,7 +101,7 @@ body {
 
 /* Seitenleiste: Spieler-Chips untereinander in natürlicher Höhe (nicht auf 9rem gestreckt). */
 @media (orientation: landscape) {
-  .bub-players:not([data-many]) > .bub-chip {
+  .bub-players > .bub-chip {
     flex: none;
   }
 }
@@ -157,10 +160,26 @@ body {
   }
 }
 
-/* Sehr viele Spieler (Bingo bis 30): Chips fester Breite in einer Zeile zum Wischen. */
-[data-many] > .bub-chip {
-  flex: none;
-  width: 10rem;
+/* Viele Spieler im Hochformat: Chips fester Breite in einer Zeile zum Wischen. */
+@media (orientation: portrait) {
+  [data-many] > .bub-chip {
+    flex: none;
+    width: 10rem;
+  }
+}
+
+/* Kleine Hochformat-Bildschirme: die Spielerleiste ist immer nur eine Zeile, das Spielfeld braucht den Platz. */
+@media (orientation: portrait) and (max-height: 720px) {
+  .bub-players {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .bub-players > .bub-chip {
+    flex: none;
+    width: 9.5rem;
+  }
 }
 
 /* Siegerehrung am Partieende (W-008, components/Ceremony.tsx). Erscheint kurz nach dem letzten Zug. */

@@ -1,11 +1,9 @@
 import { sortHand, type CardId, type DeckStyle, type SeatId, type Suit } from '@brett-und-blatt/engine';
-import { cardSuitColor, PlayingCard, SuitShape, TrickTable, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import { cardSuitColor, CardFan, PlayingCard, TRICK_HAND_MIN_STEP, SuitShape, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import { binokelContract, SUIT_NAMES, SUITS } from '../cards';
 import { findMelds, meldPoints } from '../melds';
 import { activeSeats, seatCount, teamOf, type BinokelMove, type BinokelState } from '../rules';
-
-const HAND_CARD_WIDTH = 'clamp(42px, 10.5vw, 72px)';
 
 const panel = 'rounded-xl border border-line bg-surface p-3 shadow-sm';
 const button = 'rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm font-semibold hover:brightness-95 disabled:opacity-40';
@@ -71,7 +69,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
   const round = view.lastRound;
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-4xl flex-col gap-2 overflow-y-auto p-1 text-ink">
+    <div className="mx-auto flex h-full w-full max-w-4xl flex-col gap-2 p-1 text-ink">
       {/* Kopfzeile */}
       <div className={`${panel} flex flex-wrap items-center justify-between gap-2 text-sm`}>
         <span className="font-semibold">Spiel {view.gameNumber}</span>
@@ -174,13 +172,23 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
         </div>
       )}
 
-      <TrickTable slots={slots} bottomSeat={mySeat} deckStyle={view.deckStyle} cardWidth={72} collecting={display.collecting} />
+      <div className="flex min-h-[90px] flex-1 flex-col">
+        <TrickTable slots={slots} bottomSeat={mySeat} deckStyle={view.deckStyle} cardWidth={72} collecting={display.collecting} />
+      </div>
 
       {/* Eigene Hand */}
       {viewer !== 'spectator' && (
-        <div className="flex flex-wrap justify-center gap-1.5">
-          {myHand.map((card) => (
-            <div key={card} className="transition-transform hover:-translate-y-1" style={{ width: HAND_CARD_WIDTH }}>
+        <CardFan
+          className="w-full flex-none pb-1"
+          count={myHand.length}
+          label="Deine Handkarten"
+          cardWidth={trickHandCardWidth}
+          minStep={TRICK_HAND_MIN_STEP}
+          maxRows={2}
+          keyOf={(idx) => myHand[idx]!}
+          renderCard={(idx) => {
+            const card = myHand[idx]!;
+            return (
               <PlayingCard
                 card={card}
                 deckStyle={view.deckStyle}
@@ -188,9 +196,9 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
                 highlight={card === hintCard ? 'hint' : playable.has(card) ? 'target' : null}
                 onClick={discarding || playable.has(card) ? () => tapCard(card) : undefined}
               />
-            </div>
-          ))}
-        </div>
+            );
+          }}
+        />
       )}
 
       {/* Abrechnung */}

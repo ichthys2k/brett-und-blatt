@@ -9,7 +9,7 @@
 // - keine unbehandelten Fehler und keine Fehler in der Konsole (fehlende Klangdateien und der
 //   optionale Abruf des Bibel-Quiz-Katalogs vom Spieleserver ausgenommen),
 // - die Partie startet (Seite #/partie, Spielfeld mit sichtbarem Inhalt),
-// - die Seite bleibt höchstens dreimal so hoch wie der Bildschirm (fängt z. B. riesige Handkarten),
+// - die Seite rollt nicht und das Spielfeld verdeckt die Knöpfe darunter nicht (zu viel Inhalt rollt im Spielfeld),
 // - auf Wunsch Bilder für den Vergleich der Aussehen: RAUCHTEST_LOOK=tavern, RAUCHTEST_FARBE=dark, RAUCHTEST_BILDER=<Ordner>
 // - nach dem Start eines anderen Spiels bleibt das Spielfeld so groß wie beim frischen Laden
 //   (fängt CSS-Kollisionen zwischen Spielen).
@@ -87,7 +87,14 @@ async function startGame(page, id) {
     for (const el of main.querySelectorAll('*')) {
       if (/auto|scroll/.test(getComputedStyle(el).overflowY)) overflow = Math.max(overflow, el.scrollHeight - el.clientHeight);
     }
-    return { pageHeight: document.documentElement.scrollHeight, board, interactive, overflow };
+    // Die Knöpfe unter dem Spielfeld müssen ganz sichtbar und frei antippbar sein.
+    let footerBlocked = 0;
+    for (const button of document.querySelectorAll('footer button')) {
+      const r = button.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      if (r.bottom > window.innerHeight + 1 || (hit && !button.contains(hit))) footerBlocked++;
+    }
+    return { pageHeight: document.documentElement.scrollHeight, board, interactive, overflow, footerBlocked };
   });
 }
 
@@ -132,7 +139,8 @@ try {
       if (shots) await page.screenshot({ path: `${shots}/${id}.png` });
       if (errors.length) problems.push(`${id}: Fehler beim Start – ${errors.slice(0, 2).join(' | ')}`);
       if (m.interactive === 0) problems.push(`${id}: Spielfeld ohne Bedienelemente`);
-      if (m.pageHeight > viewport.height * 3) problems.push(`${id}: Seite ist ${m.pageHeight} px hoch (mehr als dreimal der Bildschirm)`);
+      if (m.pageHeight > viewport.height + 2) problems.push(`${id}: Seite ist ${m.pageHeight} px hoch und rollt (Bildschirm ${viewport.height} px)`);
+      if (m.footerBlocked > 0) problems.push(`${id}: ${m.footerBlocked} Knöpfe unter dem Spielfeld verdeckt oder außerhalb des Bildschirms`);
     } catch (e) {
       problems.push(`${id}: startet nicht – ${e.message.split('\n')[0]}`);
     }
