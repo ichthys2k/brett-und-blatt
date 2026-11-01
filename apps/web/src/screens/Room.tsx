@@ -12,6 +12,7 @@ import { games, loadGame, type LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { GameTable } from './Play';
+import { TeamChip, TeamSummary } from '../components/Teams';
 
 const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
 /** Online gibt es nur Spiele für mehrere Personen. */
@@ -385,8 +386,14 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
                     🪑 {t('online.fillSeats', { n: unseatedConnected })}
                   </Button>
                 )}
+                {game.info.teams && (
+                  <Button variant="secondary" className="min-h-9 text-sm" onClick={() => send({ type: 'shuffleTeams' })}>
+                    🔀 {t('online.shuffleTeams')}
+                  </Button>
+                )}
               </div>
             )}
+            {game.info.teams && <TeamSummary names={game.info.teams.names} seats={lobby.seats} />}
             <ol className="space-y-2">
               {lobby.seats.map((seat, index) => (
                 <SeatRow key={index} compact={lobby.seats.length > 10} seatCount={lobby.seats.length} index={index} seat={seat} game={game} isHost={isHost} you={state.you} mySeat={mySeat} member={seat.kind === 'human' ? memberName(seat.memberId) : undefined} send={send} />
@@ -574,6 +581,13 @@ function SeatRow({
       <div className={`flex items-center ${compact ? 'gap-2' : 'flex-wrap gap-3'}`}>
         <ui.SeatSymbol seat={index} seats={seatCount} className={`block flex-none ${compact ? 'size-6' : 'size-8'}`} />
         <span className="text-sm whitespace-nowrap text-muted">{ui.seatLabel(index, seatCount)}</span>
+        {game.info.teams && seat.team !== undefined && (
+          <TeamChip
+            names={game.info.teams.names}
+            team={seat.team}
+            onSwitch={isHost || mine ? () => send({ type: 'setTeam', index, team: (seat.team! + 1) % game.info.teams!.count }) : undefined}
+          />
+        )}
         <span className={`flex-1 font-medium ${compact ? 'min-w-0 truncate' : ''}`}>
           {seat.kind === 'bot' ? (compact ? '🤖' : `🤖 ${t('setup.bot')} · ${levelLabel(seat.level)}`) : member ? `${member.avatar} ${member.name}` : compact && isHost ? '' : t('online.seatOpen')}
         </span>

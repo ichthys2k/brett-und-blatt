@@ -1,0 +1,1342 @@
+{
+ "status": "entwurf",
+ "hinweis": "Entwurf von Claude (31.10.2026), von Cornelius noch nicht geprüft. Jede Ja-Antwort steht in „yes“; alle anderen Fragen gelten als Nein.",
+ "packs": [
+  {
+   "id": "tiere",
+   "name": "Tiere",
+   "questions": [
+    {
+     "id": "saeuger",
+     "text": "Bin ich ein Säugetier?"
+    },
+    {
+     "id": "vogel",
+     "text": "Bin ich ein Vogel?"
+    },
+    {
+     "id": "wasser",
+     "text": "Lebe ich meistens im oder am Wasser?"
+    },
+    {
+     "id": "fliegen",
+     "text": "Kann ich fliegen?"
+    },
+    {
+     "id": "fell",
+     "text": "Habe ich ein Fell?"
+    },
+    {
+     "id": "gross",
+     "text": "Bin ich größer und schwerer als ein Mensch?"
+    },
+    {
+     "id": "haustier",
+     "text": "Halten mich viele Menschen als Haustier?"
+    },
+    {
+     "id": "bauernhof",
+     "text": "Lebe ich auf dem Bauernhof?"
+    },
+    {
+     "id": "fleisch",
+     "text": "Fresse ich andere Tiere?"
+    },
+    {
+     "id": "muster",
+     "text": "Habe ich Streifen oder Flecken?"
+    },
+    {
+     "id": "afrika",
+     "text": "Lebe ich in freier Natur in Afrika?"
+    },
+    {
+     "id": "eier",
+     "text": "Schlüpfen meine Jungen aus Eiern?"
+    },
+    {
+     "id": "beine",
+     "text": "Habe ich mehr als vier Beine?"
+    },
+    {
+     "id": "nacht",
+     "text": "Bin ich vor allem nachts unterwegs?"
+    },
+    {
+     "id": "klettern",
+     "text": "Klettere ich auf Bäume?"
+    },
+    {
+     "id": "hals",
+     "text": "Habe ich einen besonders langen Hals?"
+    }
+   ],
+   "terms": [
+    {
+     "id": "hund",
+     "name": "Hund",
+     "emoji": "🐕",
+     "yes": [
+      "saeuger",
+      "fell",
+      "haustier",
+      "fleisch"
+     ]
+    },
+    {
+     "id": "katze",
+     "name": "Katze",
+     "emoji": "🐈",
+     "yes": [
+      "saeuger",
+      "fell",
+      "haustier",
+      "fleisch",
+      "klettern"
+     ]
+    },
+    {
+     "id": "kuh",
+     "name": "Kuh",
+     "emoji": "🐄",
+     "yes": [
+      "saeuger",
+      "fell",
+      "gross",
+      "bauernhof",
+      "muster"
+     ]
+    },
+    {
+     "id": "pferd",
+     "name": "Pferd",
+     "emoji": "🐎",
+     "yes": [
+      "saeuger",
+      "fell",
+      "gross",
+      "bauernhof"
+     ]
+    },
+    {
+     "id": "schwein",
+     "name": "Schwein",
+     "emoji": "🐖",
+     "yes": [
+      "saeuger",
+      "bauernhof"
+     ]
+    },
+    {
+     "id": "schaf",
+     "name": "Schaf",
+     "emoji": "🐑",
+     "yes": [
+      "saeuger",
+      "fell",
+      "bauernhof"
+     ]
+    },
+    {
+     "id": "huhn",
+     "name": "Huhn",
+     "emoji": "🐔",
+     "yes": [
+      "vogel",
+      "bauernhof",
+      "eier"
+     ],
+     "aliases": [
+      "Henne"
+     ]
+    },
+    {
+     "id": "ente",
+     "name": "Ente",
+     "emoji": "🦆",
+     "yes": [
+      "vogel",
+      "fliegen",
+      "eier",
+      "wasser"
+     ]
+    },
+    {
+     "id": "pinguin",
+     "name": "Pinguin",
+     "emoji": "🐧",
+     "yes": [
+      "vogel",
+      "wasser",
+      "eier",
+      "fleisch"
+     ]
+    },
+    {
+     "id": "adler",
+     "name": "Adler",
+     "emoji": "🦅",
+     "yes": [
+      "vogel",
+      "fliegen",
+      "eier",
+      "fleisch"
+     ]
+    },
+    {
+     "id": "eule",
+     "name": "Eule",
+     "emoji": "🦉",
+     "yes": [
+      "vogel",
+      "fliegen",
+      "eier",
+      "fleisch",
+      "nacht"
+     ]
+    },
+    {
+     "id": "papagei",
+     "name": "Papagei",
+     "emoji": "🦜",
+     "yes": [
+      "vogel",
+      "fliegen",
+      "eier",
+      "haustier",
+      "klettern"
+     ]
+    },
+    {
+     "id": "loewe",
+     "name": "Löwe",
+     "emoji": "🦁",
+     "yes": [
+      "saeuger",
+      "fell",
+      "gross",
+      "fleisch",
+      "afrika"
+     ]
+    },
+    {
+     "id": "tiger",
+     "name": "Tiger",
+     "emoji": "🐅",
+     "yes": [
+      "saeuger",
+      "fell",
+      "gross",
+      "fleisch",
+      "muster"
+     ]
+    },
+    {
+     "id": "zebra",
+     "name": "Zebra",
+     "emoji": "🦓",
+     "yes": [
+      "saeuger",
+      "fell",
+      "gross",
+      "muster",
+      "afrika"
+     ]
+    },
+    {
+     "id": "giraffe",
+     "name": "Giraffe",
+     "emoji": "🦒",
+     "yes": [
+      "saeuger",
+      "fell",
+      "gross",
+      "muster",
+      "afrika",
+      "hals"
+     ]
+    },
+    {
+     "id": "elefant",
+     "name": "Elefant",
+     "emoji": "🐘",
+     "yes": [
+      "saeuger",
+      "gross",
+      "afrika"
+     ]
+    },
+    {
+     "id": "affe",
+     "name": "Affe",
+     "emoji": "🐒",
+     "yes": [
+      "saeuger",
+      "fell",
+      "klettern",
+      "afrika"
+     ]
+    },
+    {
+     "id": "fledermaus",
+     "name": "Fledermaus",
+     "emoji": "🦇",
+     "yes": [
+      "saeuger",
+      "fell",
+      "fliegen",
+      "nacht"
+     ]
+    },
+    {
+     "id": "maus",
+     "name": "Maus",
+     "emoji": "🐁",
+     "yes": [
+      "saeuger",
+      "fell",
+      "nacht"
+     ]
+    },
+    {
+     "id": "hamster",
+     "name": "Hamster",
+     "emoji": "🐹",
+     "yes": [
+      "saeuger",
+      "fell",
+      "haustier",
+      "nacht"
+     ]
+    },
+    {
+     "id": "igel",
+     "name": "Igel",
+     "emoji": "🦔",
+     "yes": [
+      "saeuger",
+      "fleisch",
+      "nacht"
+     ]
+    },
+    {
+     "id": "fuchs",
+     "name": "Fuchs",
+     "emoji": "🦊",
+     "yes": [
+      "saeuger",
+      "fell",
+      "fleisch",
+      "nacht"
+     ]
+    },
+    {
+     "id": "wolf",
+     "name": "Wolf",
+     "emoji": "🐺",
+     "yes": [
+      "saeuger",
+      "fell",
+      "fleisch"
+     ]
+    },
+    {
+     "id": "eichhoernchen",
+     "name": "Eichhörnchen",
+     "emoji": "🐿️",
+     "yes": [
+      "saeuger",
+      "fell",
+      "klettern"
+     ]
+    },
+    {
+     "id": "hai",
+     "name": "Hai",
+     "emoji": "🦈",
+     "yes": [
+      "wasser",
+      "fleisch",
+      "gross"
+     ]
+    },
+    {
+     "id": "delfin",
+     "name": "Delfin",
+     "emoji": "🐬",
+     "yes": [
+      "saeuger",
+      "wasser",
+      "fleisch",
+      "gross"
+     ],
+     "aliases": [
+      "Delphin"
+     ]
+    },
+    {
+     "id": "frosch",
+     "name": "Frosch",
+     "emoji": "🐸",
+     "yes": [
+      "wasser",
+      "eier",
+      "fleisch"
+     ]
+    },
+    {
+     "id": "krokodil",
+     "name": "Krokodil",
+     "emoji": "🐊",
+     "yes": [
+      "wasser",
+      "eier",
+      "fleisch",
+      "gross",
+      "afrika"
+     ]
+    },
+    {
+     "id": "schildkroete",
+     "name": "Schildkröte",
+     "emoji": "🐢",
+     "yes": [
+      "eier",
+      "haustier"
+     ]
+    },
+    {
+     "id": "schnecke",
+     "name": "Schnecke",
+     "emoji": "🐌",
+     "yes": [
+      "eier"
+     ]
+    },
+    {
+     "id": "schmetterling",
+     "name": "Schmetterling",
+     "emoji": "🦋",
+     "yes": [
+      "fliegen",
+      "eier",
+      "beine"
+     ]
+    },
+    {
+     "id": "biene",
+     "name": "Biene",
+     "emoji": "🐝",
+     "yes": [
+      "fliegen",
+      "eier",
+      "beine",
+      "muster"
+     ]
+    },
+    {
+     "id": "spinne",
+     "name": "Spinne",
+     "emoji": "🕷️",
+     "yes": [
+      "eier",
+      "beine",
+      "fleisch"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "berufe",
+   "name": "Berufe",
+   "questions": [
+    {
+     "id": "draussen",
+     "text": "Arbeite ich meistens draußen?"
+    },
+    {
+     "id": "uniform",
+     "text": "Trage ich bei der Arbeit eine Uniform oder Schutzkleidung?"
+    },
+    {
+     "id": "kranke",
+     "text": "Helfe ich kranken Menschen oder Tieren?"
+    },
+    {
+     "id": "kinder",
+     "text": "Arbeite ich vor allem mit Kindern?"
+    },
+    {
+     "id": "tiere",
+     "text": "Arbeite ich mit Tieren?"
+    },
+    {
+     "id": "essen",
+     "text": "Habe ich bei der Arbeit mit Essen zu tun?"
+    },
+    {
+     "id": "fahren",
+     "text": "Fahre oder steuere ich ein Fahrzeug?"
+    },
+    {
+     "id": "bauen",
+     "text": "Baue oder repariere ich etwas?"
+    },
+    {
+     "id": "buero",
+     "text": "Arbeite ich viel am Schreibtisch oder Computer?"
+    },
+    {
+     "id": "publikum",
+     "text": "Trete ich vor Publikum auf?"
+    },
+    {
+     "id": "verkaufen",
+     "text": "Verkaufe ich etwas?"
+    },
+    {
+     "id": "nachts",
+     "text": "Arbeite ich oft auch nachts oder sehr früh am Morgen?"
+    },
+    {
+     "id": "werkzeug",
+     "text": "Arbeite ich mit Werkzeug in der Hand?"
+    },
+    {
+     "id": "wasser",
+     "text": "Hat meine Arbeit viel mit Wasser zu tun?"
+    },
+    {
+     "id": "musik",
+     "text": "Mache ich Musik?"
+    }
+   ],
+   "terms": [
+    {
+     "id": "arzt",
+     "name": "Ärztin oder Arzt",
+     "emoji": "🩺",
+     "yes": [
+      "kranke",
+      "nachts"
+     ],
+     "aliases": [
+      "Arzt",
+      "Ärztin",
+      "Doktor"
+     ]
+    },
+    {
+     "id": "tierarzt",
+     "name": "Tierärztin oder Tierarzt",
+     "emoji": "🐾",
+     "yes": [
+      "kranke",
+      "tiere"
+     ],
+     "aliases": [
+      "Tierarzt",
+      "Tierärztin"
+     ]
+    },
+    {
+     "id": "zahnarzt",
+     "name": "Zahnärztin oder Zahnarzt",
+     "emoji": "🦷",
+     "yes": [
+      "kranke",
+      "werkzeug"
+     ],
+     "aliases": [
+      "Zahnarzt",
+      "Zahnärztin"
+     ]
+    },
+    {
+     "id": "lehrer",
+     "name": "Lehrerin oder Lehrer",
+     "emoji": "🧑‍🏫",
+     "yes": [
+      "kinder"
+     ],
+     "aliases": [
+      "Lehrer",
+      "Lehrerin"
+     ]
+    },
+    {
+     "id": "hebamme",
+     "name": "Hebamme",
+     "emoji": "👶",
+     "yes": [
+      "kinder",
+      "nachts"
+     ],
+     "aliases": [
+      "Entbindungspfleger"
+     ]
+    },
+    {
+     "id": "polizei",
+     "name": "Polizistin oder Polizist",
+     "emoji": "👮",
+     "yes": [
+      "uniform",
+      "fahren",
+      "nachts",
+      "draussen"
+     ],
+     "aliases": [
+      "Polizist",
+      "Polizistin",
+      "Polizei"
+     ]
+    },
+    {
+     "id": "feuerwehr",
+     "name": "Feuerwehrfrau oder Feuerwehrmann",
+     "emoji": "🚒",
+     "yes": [
+      "uniform",
+      "fahren",
+      "nachts",
+      "wasser",
+      "werkzeug"
+     ],
+     "aliases": [
+      "Feuerwehrmann",
+      "Feuerwehrfrau",
+      "Feuerwehr"
+     ]
+    },
+    {
+     "id": "baecker",
+     "name": "Bäckerin oder Bäcker",
+     "emoji": "🥖",
+     "yes": [
+      "essen",
+      "verkaufen",
+      "nachts"
+     ],
+     "aliases": [
+      "Bäcker",
+      "Bäckerin"
+     ]
+    },
+    {
+     "id": "koch",
+     "name": "Köchin oder Koch",
+     "emoji": "👩‍🍳",
+     "yes": [
+      "essen"
+     ],
+     "aliases": [
+      "Koch",
+      "Köchin"
+     ]
+    },
+    {
+     "id": "bauer",
+     "name": "Bäuerin oder Bauer",
+     "emoji": "🚜",
+     "yes": [
+      "draussen",
+      "tiere",
+      "essen",
+      "fahren"
+     ],
+     "aliases": [
+      "Bauer",
+      "Bäuerin",
+      "Landwirt",
+      "Landwirtin"
+     ]
+    },
+    {
+     "id": "gaertner",
+     "name": "Gärtnerin oder Gärtner",
+     "emoji": "🌻",
+     "yes": [
+      "draussen",
+      "werkzeug"
+     ],
+     "aliases": [
+      "Gärtner",
+      "Gärtnerin"
+     ]
+    },
+    {
+     "id": "foerster",
+     "name": "Försterin oder Förster",
+     "emoji": "🌲",
+     "yes": [
+      "draussen",
+      "tiere"
+     ],
+     "aliases": [
+      "Förster",
+      "Försterin"
+     ]
+    },
+    {
+     "id": "fischer",
+     "name": "Fischerin oder Fischer",
+     "emoji": "🎣",
+     "yes": [
+      "draussen",
+      "tiere",
+      "wasser"
+     ],
+     "aliases": [
+      "Fischer",
+      "Fischerin"
+     ]
+    },
+    {
+     "id": "imker",
+     "name": "Imkerin oder Imker",
+     "emoji": "🍯",
+     "yes": [
+      "draussen",
+      "tiere",
+      "essen",
+      "uniform"
+     ],
+     "aliases": [
+      "Imker",
+      "Imkerin"
+     ]
+    },
+    {
+     "id": "pilot",
+     "name": "Pilotin oder Pilot",
+     "emoji": "✈️",
+     "yes": [
+      "fahren",
+      "uniform",
+      "nachts"
+     ],
+     "aliases": [
+      "Pilot",
+      "Pilotin"
+     ]
+    },
+    {
+     "id": "busfahrer",
+     "name": "Busfahrerin oder Busfahrer",
+     "emoji": "🚌",
+     "yes": [
+      "fahren"
+     ],
+     "aliases": [
+      "Busfahrer",
+      "Busfahrerin"
+     ]
+    },
+    {
+     "id": "lokfuehrer",
+     "name": "Lokführerin oder Lokführer",
+     "emoji": "🚆",
+     "yes": [
+      "fahren",
+      "nachts"
+     ],
+     "aliases": [
+      "Lokführer",
+      "Lokführerin",
+      "Zugführer"
+     ]
+    },
+    {
+     "id": "kapitaen",
+     "name": "Kapitänin oder Kapitän",
+     "emoji": "⚓",
+     "yes": [
+      "fahren",
+      "uniform",
+      "wasser"
+     ],
+     "aliases": [
+      "Kapitän",
+      "Kapitänin"
+     ]
+    },
+    {
+     "id": "postbote",
+     "name": "Postbotin oder Postbote",
+     "emoji": "📮",
+     "yes": [
+      "draussen",
+      "fahren",
+      "uniform"
+     ],
+     "aliases": [
+      "Postbote",
+      "Postbotin",
+      "Briefträger"
+     ]
+    },
+    {
+     "id": "astronaut",
+     "name": "Astronautin oder Astronaut",
+     "emoji": "🚀",
+     "yes": [
+      "fahren",
+      "uniform"
+     ],
+     "aliases": [
+      "Astronaut",
+      "Astronautin"
+     ]
+    },
+    {
+     "id": "maurer",
+     "name": "Maurerin oder Maurer",
+     "emoji": "🧱",
+     "yes": [
+      "draussen",
+      "bauen",
+      "werkzeug"
+     ],
+     "aliases": [
+      "Maurer",
+      "Maurerin"
+     ]
+    },
+    {
+     "id": "elektriker",
+     "name": "Elektrikerin oder Elektriker",
+     "emoji": "💡",
+     "yes": [
+      "bauen",
+      "werkzeug"
+     ],
+     "aliases": [
+      "Elektriker",
+      "Elektrikerin"
+     ]
+    },
+    {
+     "id": "friseur",
+     "name": "Friseurin oder Friseur",
+     "emoji": "💇",
+     "yes": [
+      "werkzeug"
+     ],
+     "aliases": [
+      "Friseur",
+      "Friseurin",
+      "Frisör"
+     ]
+    },
+    {
+     "id": "verkaeufer",
+     "name": "Verkäuferin oder Verkäufer",
+     "emoji": "🛒",
+     "yes": [
+      "verkaufen"
+     ],
+     "aliases": [
+      "Verkäufer",
+      "Verkäuferin"
+     ]
+    },
+    {
+     "id": "schauspieler",
+     "name": "Schauspielerin oder Schauspieler",
+     "emoji": "🎭",
+     "yes": [
+      "publikum",
+      "nachts"
+     ],
+     "aliases": [
+      "Schauspieler",
+      "Schauspielerin"
+     ]
+    },
+    {
+     "id": "musiker",
+     "name": "Musikerin oder Musiker",
+     "emoji": "🎸",
+     "yes": [
+      "publikum",
+      "nachts",
+      "musik"
+     ],
+     "aliases": [
+      "Musiker",
+      "Musikerin"
+     ]
+    },
+    {
+     "id": "programmierer",
+     "name": "Programmiererin oder Programmierer",
+     "emoji": "💻",
+     "yes": [
+      "buero"
+     ],
+     "aliases": [
+      "Programmierer",
+      "Programmiererin",
+      "Informatiker"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bibel",
+   "name": "Personen der Bibel",
+   "questions": [
+    {
+     "id": "at",
+     "text": "Komme ich im Alten Testament vor?"
+    },
+    {
+     "id": "nt",
+     "text": "Komme ich im Neuen Testament vor?"
+    },
+    {
+     "id": "frau",
+     "text": "Bin ich eine Frau?"
+    },
+    {
+     "id": "koenig",
+     "text": "Bin ich König oder Königin?"
+    },
+    {
+     "id": "prophet",
+     "text": "Bin ich ein Prophet oder eine Prophetin?"
+    },
+    {
+     "id": "juenger",
+     "text": "Bin ich einer der zwölf Jünger Jesu?"
+    },
+    {
+     "id": "buch",
+     "text": "Ist ein Buch der Bibel nach mir benannt?"
+    },
+    {
+     "id": "hirte",
+     "text": "Habe ich Schafe oder Ziegen gehütet?"
+    },
+    {
+     "id": "aegypten",
+     "text": "War ich in Ägypten?"
+    },
+    {
+     "id": "gefangen",
+     "text": "War ich im Gefängnis oder in Gefangenschaft?"
+    },
+    {
+     "id": "wasser",
+     "text": "Spielt in meiner Geschichte ein Schiff oder Boot eine wichtige Rolle?"
+    },
+    {
+     "id": "bruder",
+     "text": "Habe ich einen Bruder, der in der Bibel bekannt ist?"
+    },
+    {
+     "id": "loewe",
+     "text": "Kommt in meiner Geschichte ein Löwe vor?"
+    }
+   ],
+   "terms": [
+    {
+     "id": "adam",
+     "name": "Adam",
+     "emoji": "🍎",
+     "yes": [
+      "at"
+     ]
+    },
+    {
+     "id": "eva",
+     "name": "Eva",
+     "emoji": "🐍",
+     "yes": [
+      "at",
+      "frau"
+     ]
+    },
+    {
+     "id": "noah",
+     "name": "Noah",
+     "emoji": "🌈",
+     "yes": [
+      "at",
+      "wasser"
+     ]
+    },
+    {
+     "id": "abraham",
+     "name": "Abraham",
+     "emoji": "⭐",
+     "yes": [
+      "at",
+      "aegypten"
+     ]
+    },
+    {
+     "id": "sara",
+     "name": "Sara",
+     "emoji": "👵",
+     "yes": [
+      "at",
+      "frau",
+      "aegypten"
+     ],
+     "aliases": [
+      "Sarah"
+     ]
+    },
+    {
+     "id": "jakob",
+     "name": "Jakob",
+     "emoji": "🪜",
+     "yes": [
+      "at",
+      "bruder",
+      "hirte",
+      "aegypten"
+     ]
+    },
+    {
+     "id": "josef",
+     "name": "Josef",
+     "emoji": "🧥",
+     "yes": [
+      "at",
+      "aegypten",
+      "gefangen",
+      "bruder",
+      "hirte"
+     ],
+     "aliases": [
+      "Joseph"
+     ]
+    },
+    {
+     "id": "mose",
+     "name": "Mose",
+     "emoji": "🔥",
+     "yes": [
+      "at",
+      "aegypten",
+      "hirte",
+      "bruder",
+      "prophet"
+     ],
+     "aliases": [
+      "Moses"
+     ]
+    },
+    {
+     "id": "mirjam",
+     "name": "Mirjam",
+     "emoji": "🪘",
+     "yes": [
+      "at",
+      "frau",
+      "prophet",
+      "aegypten",
+      "bruder"
+     ],
+     "aliases": [
+      "Miriam"
+     ]
+    },
+    {
+     "id": "kain",
+     "name": "Kain",
+     "emoji": "🌾",
+     "yes": [
+      "at",
+      "bruder"
+     ]
+    },
+    {
+     "id": "abel",
+     "name": "Abel",
+     "emoji": "🐑",
+     "yes": [
+      "at",
+      "bruder",
+      "hirte"
+     ]
+    },
+    {
+     "id": "rut",
+     "name": "Rut",
+     "emoji": "🌾",
+     "yes": [
+      "at",
+      "frau",
+      "buch"
+     ],
+     "aliases": [
+      "Ruth"
+     ]
+    },
+    {
+     "id": "samuel",
+     "name": "Samuel",
+     "emoji": "🕯️",
+     "yes": [
+      "at",
+      "prophet",
+      "buch"
+     ]
+    },
+    {
+     "id": "simson",
+     "name": "Simson",
+     "emoji": "💪",
+     "yes": [
+      "at",
+      "gefangen",
+      "loewe"
+     ],
+     "aliases": [
+      "Samson"
+     ]
+    },
+    {
+     "id": "david",
+     "name": "David",
+     "emoji": "🪨",
+     "yes": [
+      "at",
+      "koenig",
+      "hirte",
+      "loewe"
+     ]
+    },
+    {
+     "id": "salomo",
+     "name": "Salomo",
+     "emoji": "👑",
+     "yes": [
+      "at",
+      "koenig"
+     ],
+     "aliases": [
+      "Salomon"
+     ]
+    },
+    {
+     "id": "elia",
+     "name": "Elia",
+     "emoji": "🐦‍⬛",
+     "yes": [
+      "at",
+      "prophet"
+     ],
+     "aliases": [
+      "Elias"
+     ]
+    },
+    {
+     "id": "ester",
+     "name": "Ester",
+     "emoji": "👸",
+     "yes": [
+      "at",
+      "frau",
+      "koenig",
+      "buch"
+     ],
+     "aliases": [
+      "Esther"
+     ]
+    },
+    {
+     "id": "daniel",
+     "name": "Daniel",
+     "emoji": "🦁",
+     "yes": [
+      "at",
+      "prophet",
+      "buch",
+      "gefangen",
+      "loewe"
+     ]
+    },
+    {
+     "id": "jeremia",
+     "name": "Jeremia",
+     "emoji": "📜",
+     "yes": [
+      "at",
+      "prophet",
+      "buch",
+      "gefangen"
+     ]
+    },
+    {
+     "id": "jona",
+     "name": "Jona",
+     "emoji": "🐋",
+     "yes": [
+      "at",
+      "prophet",
+      "buch",
+      "wasser"
+     ],
+     "aliases": [
+      "Jonas"
+     ]
+    },
+    {
+     "id": "maria",
+     "name": "Maria, die Mutter Jesu",
+     "emoji": "🤱",
+     "yes": [
+      "nt",
+      "frau",
+      "aegypten"
+     ],
+     "aliases": [
+      "Maria"
+     ]
+    },
+    {
+     "id": "maria-magdalena",
+     "name": "Maria Magdalena",
+     "emoji": "🌅",
+     "yes": [
+      "nt",
+      "frau"
+     ],
+     "aliases": [
+      "Maria von Magdala"
+     ]
+    },
+    {
+     "id": "marta",
+     "name": "Marta",
+     "emoji": "🍲",
+     "yes": [
+      "nt",
+      "frau",
+      "bruder"
+     ],
+     "aliases": [
+      "Martha"
+     ]
+    },
+    {
+     "id": "johannes-taeufer",
+     "name": "Johannes der Täufer",
+     "emoji": "💧",
+     "yes": [
+      "nt",
+      "prophet",
+      "gefangen"
+     ],
+     "aliases": [
+      "Johannes Täufer",
+      "Täufer"
+     ]
+    },
+    {
+     "id": "petrus",
+     "name": "Petrus",
+     "emoji": "🐟",
+     "yes": [
+      "nt",
+      "juenger",
+      "wasser",
+      "gefangen",
+      "bruder",
+      "buch"
+     ],
+     "aliases": [
+      "Simon Petrus"
+     ]
+    },
+    {
+     "id": "andreas",
+     "name": "Andreas",
+     "emoji": "🎣",
+     "yes": [
+      "nt",
+      "juenger",
+      "wasser",
+      "bruder"
+     ]
+    },
+    {
+     "id": "johannes",
+     "name": "Johannes, der Jünger",
+     "emoji": "✒️",
+     "yes": [
+      "nt",
+      "juenger",
+      "wasser",
+      "bruder",
+      "buch"
+     ],
+     "aliases": [
+      "Johannes"
+     ]
+    },
+    {
+     "id": "matthaeus",
+     "name": "Matthäus",
+     "emoji": "💰",
+     "yes": [
+      "nt",
+      "juenger",
+      "buch"
+     ],
+     "aliases": [
+      "Matthaeus",
+      "Levi"
+     ]
+    },
+    {
+     "id": "thomas",
+     "name": "Thomas",
+     "emoji": "🤔",
+     "yes": [
+      "nt",
+      "juenger"
+     ]
+    },
+    {
+     "id": "lukas",
+     "name": "Lukas",
+     "emoji": "📖",
+     "yes": [
+      "nt",
+      "buch"
+     ]
+    },
+    {
+     "id": "paulus",
+     "name": "Paulus",
+     "emoji": "⛓️",
+     "yes": [
+      "nt",
+      "gefangen",
+      "wasser"
+     ],
+     "aliases": [
+      "Saulus"
+     ]
+    },
+    {
+     "id": "zachaeus",
+     "name": "Zachäus",
+     "emoji": "🌳",
+     "yes": [
+      "nt"
+     ],
+     "aliases": [
+      "Zachaeus"
+     ]
+    }
+   ]
+  }
+ ]
+}

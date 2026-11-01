@@ -1,0 +1,1449 @@
+{
+ "status": "entwurf",
+ "hinweis": "Entwurf von Claude (31.10.2026), von Cornelius noch nicht geprüft. „hints“ nutzt der Bot als Sperrwort-Vorschläge und zum Raten, „clues“ als eigene Umschreibungen.",
+ "packs": [
+  {
+   "id": "alltag",
+   "name": "Alltag",
+   "terms": [
+    {
+     "name": "Zahnbürste",
+     "hints": [
+      "Zähne",
+      "putzen",
+      "Zahnpasta",
+      "Bad",
+      "morgens"
+     ],
+     "clues": [
+      "Damit machst du deinen Mund sauber",
+      "Steht im Becher am Waschbecken",
+      "Zweimal am Tag benutzen"
+     ]
+    },
+    {
+     "name": "Regenschirm",
+     "hints": [
+      "Regen",
+      "nass",
+      "aufspannen",
+      "Wetter",
+      "Dach"
+     ],
+     "clues": [
+      "Hält dich trocken, wenn es von oben tropft",
+      "Man klappt ihn auf",
+      "Vergisst man oft im Bus"
+     ]
+    },
+    {
+     "name": "Fahrrad",
+     "hints": [
+      "Pedale",
+      "Räder",
+      "Lenker",
+      "Klingel",
+      "Helm"
+     ],
+     "clues": [
+      "Zwei Räder und du trittst selbst",
+      "Hat eine Klingel und einen Lenker",
+      "Damit fahren viele zur Schule"
+     ]
+    },
+    {
+     "name": "Kühlschrank",
+     "hints": [
+      "kalt",
+      "Küche",
+      "Milch",
+      "Tür",
+      "Strom"
+     ],
+     "clues": [
+      "Hier bleiben Lebensmittel frisch",
+      "Ein kalter Schrank in der Küche",
+      "Licht geht an, wenn man ihn öffnet"
+     ]
+    },
+    {
+     "name": "Geburtstag",
+     "hints": [
+      "Kuchen",
+      "Kerzen",
+      "Geschenke",
+      "Party",
+      "Jahr"
+     ],
+     "clues": [
+      "Einmal im Jahr feierst du ihn",
+      "Man pustet Kerzen aus",
+      "Alle singen für dich"
+     ]
+    },
+    {
+     "name": "Schlüssel",
+     "hints": [
+      "Tür",
+      "Schloss",
+      "aufschließen",
+      "Bund",
+      "Haus"
+     ],
+     "clues": [
+      "Damit öffnest du die Haustür",
+      "Hängt oft an einem Bund",
+      "Wenn er fehlt, kommst du nicht rein"
+     ]
+    },
+    {
+     "name": "Spiegel",
+     "hints": [
+      "Glas",
+      "sehen",
+      "Bad",
+      "Bild",
+      "schauen"
+     ],
+     "clues": [
+      "Darin siehst du dich selbst",
+      "Hängt oft über dem Waschbecken",
+      "Zeigt alles seitenverkehrt"
+     ]
+    },
+    {
+     "name": "Wecker",
+     "hints": [
+      "Uhr",
+      "klingeln",
+      "morgens",
+      "aufstehen",
+      "Zeit"
+     ],
+     "clues": [
+      "Klingelt, wenn du aufstehen sollst",
+      "Steht neben dem Bett",
+      "Man drückt gern auf Schlummern"
+     ]
+    },
+    {
+     "name": "Pizza",
+     "hints": [
+      "Käse",
+      "Tomate",
+      "Ofen",
+      "Italien",
+      "Teig"
+     ],
+     "clues": [
+      "Rund, flach und aus Italien",
+      "Wird in Stücke geschnitten",
+      "Man kann sie bestellen und liefern lassen"
+     ]
+    },
+    {
+     "name": "Kino",
+     "hints": [
+      "Film",
+      "Leinwand",
+      "Popcorn",
+      "Kasse",
+      "dunkel"
+     ],
+     "clues": [
+      "Hier schaut man Filme auf einer großen Wand",
+      "Es gibt Popcorn",
+      "Das Licht geht aus, bevor es losgeht"
+     ]
+    },
+    {
+     "name": "Bahnhof",
+     "hints": [
+      "Zug",
+      "Gleis",
+      "Fahrkarte",
+      "warten",
+      "Bahnsteig"
+     ],
+     "clues": [
+      "Hier steigt man in die Bahn",
+      "Es gibt viele Gleise",
+      "Durchsagen kündigen Verspätungen an"
+     ]
+    },
+    {
+     "name": "Ferien",
+     "hints": [
+      "Schule",
+      "frei",
+      "Urlaub",
+      "Sommer",
+      "Reise"
+     ],
+     "clues": [
+      "Dann ist keine Schule",
+      "Die längsten sind im Sommer",
+      "Viele verreisen dann"
+     ]
+    },
+    {
+     "name": "Handy",
+     "hints": [
+      "Telefon",
+      "anrufen",
+      "Bildschirm",
+      "App",
+      "Nachricht"
+     ],
+     "clues": [
+      "Damit rufst du jemanden an",
+      "Passt in die Hosentasche",
+      "Hat viele kleine Programme"
+     ],
+     "aliases": [
+      "Smartphone"
+     ]
+    },
+    {
+     "name": "Schneemann",
+     "hints": [
+      "Schnee",
+      "Winter",
+      "Karotte",
+      "Nase",
+      "rollen"
+     ],
+     "clues": [
+      "Wird im Winter im Garten gebaut",
+      "Hat eine Möhre im Gesicht",
+      "Schmilzt, wenn es warm wird"
+     ]
+    },
+    {
+     "name": "Feuerwehr",
+     "hints": [
+      "Feuer",
+      "löschen",
+      "Wasser",
+      "Auto",
+      "Sirene"
+     ],
+     "clues": [
+      "Kommt mit Blaulicht, wenn es brennt",
+      "Hat lange Leitern und Schläuche",
+      "Die Nummer ist 112"
+     ]
+    },
+    {
+     "name": "Briefkasten",
+     "hints": [
+      "Post",
+      "Brief",
+      "gelb",
+      "einwerfen",
+      "Klappe"
+     ],
+     "clues": [
+      "Gelb und steht an der Straße",
+      "Hier wirfst du Post ein",
+      "Wird jeden Tag geleert"
+     ]
+    },
+    {
+     "name": "Kissen",
+     "hints": [
+      "Bett",
+      "schlafen",
+      "Kopf",
+      "weich",
+      "Bezug"
+     ],
+     "clues": [
+      "Darauf legst du nachts den Kopf",
+      "Weich und mit Federn gefüllt",
+      "Damit kann man eine Schlacht machen"
+     ]
+    },
+    {
+     "name": "Treppe",
+     "hints": [
+      "Stufen",
+      "hoch",
+      "runter",
+      "Geländer",
+      "Stockwerk"
+     ],
+     "clues": [
+      "Damit kommst du ins nächste Stockwerk",
+      "Man geht Stufe für Stufe",
+      "Hat oft ein Geländer"
+     ]
+    },
+    {
+     "name": "Brille",
+     "hints": [
+      "Augen",
+      "sehen",
+      "Gläser",
+      "Optiker",
+      "Nase"
+     ],
+     "clues": [
+      "Hilft schlecht sehenden Augen",
+      "Sitzt auf der Nase",
+      "Gläser in einem Gestell"
+     ]
+    },
+    {
+     "name": "Supermarkt",
+     "hints": [
+      "einkaufen",
+      "Kasse",
+      "Wagen",
+      "Regal",
+      "Lebensmittel"
+     ],
+     "clues": [
+      "Hier kaufst du Essen ein",
+      "Man schiebt einen Wagen durch die Gänge",
+      "Am Ende zahlt man an der Kasse"
+     ]
+    },
+    {
+     "name": "Zelt",
+     "hints": [
+      "Camping",
+      "schlafen",
+      "Plane",
+      "Heringe",
+      "draußen"
+     ],
+     "clues": [
+      "Ein Haus aus Stoff zum Schlafen draußen",
+      "Wird mit Heringen festgemacht",
+      "Gehört zum Campingurlaub"
+     ]
+    },
+    {
+     "name": "Ballon",
+     "hints": [
+      "Luft",
+      "aufblasen",
+      "platzen",
+      "Gummi",
+      "Party"
+     ],
+     "clues": [
+      "Man pustet ihn auf",
+      "Kann laut knallen",
+      "Hängt bei Feiern an der Decke"
+     ]
+    },
+    {
+     "name": "Rucksack",
+     "hints": [
+      "tragen",
+      "Rücken",
+      "Tasche",
+      "Schule",
+      "Riemen"
+     ],
+     "clues": [
+      "Eine Tasche, die man auf dem Rücken trägt",
+      "Hat zwei Riemen",
+      "Kommt mit zum Wandern"
+     ]
+    },
+    {
+     "name": "Waschmaschine",
+     "hints": [
+      "Wäsche",
+      "waschen",
+      "Kleidung",
+      "drehen",
+      "Pulver"
+     ],
+     "clues": [
+      "Macht deine Kleidung sauber",
+      "Dreht sich laut im Schleudergang",
+      "Steht oft im Keller oder Bad"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "natur",
+   "name": "Tiere und Natur",
+   "terms": [
+    {
+     "name": "Elefant",
+     "hints": [
+      "Rüssel",
+      "grau",
+      "groß",
+      "Afrika",
+      "Stoßzähne"
+     ],
+     "clues": [
+      "Das größte Tier an Land",
+      "Hat große Ohren und einen langen Rüssel",
+      "Lebt in Afrika und Asien"
+     ]
+    },
+    {
+     "name": "Giraffe",
+     "hints": [
+      "Hals",
+      "lang",
+      "Flecken",
+      "Afrika",
+      "hoch"
+     ],
+     "clues": [
+      "Hat den längsten Hals aller Tiere",
+      "Frisst Blätter von hohen Bäumen",
+      "Hat braune Flecken"
+     ]
+    },
+    {
+     "name": "Pinguin",
+     "hints": [
+      "Eis",
+      "schwimmen",
+      "Vogel",
+      "schwarz",
+      "weiß"
+     ],
+     "clues": [
+      "Ein Vogel, der nicht fliegen kann",
+      "Watschelt über das Eis",
+      "Trägt sozusagen einen Frack"
+     ]
+    },
+    {
+     "name": "Schmetterling",
+     "hints": [
+      "Flügel",
+      "bunt",
+      "Raupe",
+      "fliegen",
+      "Blume"
+     ],
+     "clues": [
+      "War früher eine Raupe",
+      "Hat bunte Flügel",
+      "Fliegt von Blüte zu Blüte"
+     ]
+    },
+    {
+     "name": "Regenbogen",
+     "hints": [
+      "Farben",
+      "Regen",
+      "Sonne",
+      "Himmel",
+      "bunt"
+     ],
+     "clues": [
+      "Erscheint, wenn Sonne und Regen zusammenkommen",
+      "Hat sieben Farben",
+      "Ein bunter Bogen am Himmel"
+     ]
+    },
+    {
+     "name": "Vulkan",
+     "hints": [
+      "Lava",
+      "Berg",
+      "Ausbruch",
+      "heiß",
+      "Asche"
+     ],
+     "clues": [
+      "Ein Berg, aus dem glühendes Gestein kommt",
+      "Kann ausbrechen",
+      "Der Ätna ist einer"
+     ]
+    },
+    {
+     "name": "Igel",
+     "hints": [
+      "Stacheln",
+      "rollen",
+      "Herbst",
+      "Winterschlaf",
+      "klein"
+     ],
+     "clues": [
+      "Rollt sich bei Gefahr zusammen",
+      "Hat viele spitze Stacheln",
+      "Hält Winterschlaf"
+     ]
+    },
+    {
+     "name": "Eichhörnchen",
+     "hints": [
+      "Nüsse",
+      "Baum",
+      "Schwanz",
+      "klettern",
+      "rot"
+     ],
+     "clues": [
+      "Sammelt im Herbst Vorräte",
+      "Hat einen buschigen Schwanz",
+      "Springt von Ast zu Ast"
+     ]
+    },
+    {
+     "name": "Biene",
+     "hints": [
+      "Honig",
+      "Stachel",
+      "summen",
+      "Blüte",
+      "Stock"
+     ],
+     "clues": [
+      "Macht etwas Süßes fürs Frühstück",
+      "Summt und kann stechen",
+      "Lebt mit vielen anderen im Volk"
+     ]
+    },
+    {
+     "name": "Gewitter",
+     "hints": [
+      "Blitz",
+      "Donner",
+      "Regen",
+      "laut",
+      "Wolken"
+     ],
+     "clues": [
+      "Es blitzt und donnert",
+      "Man zählt die Sekunden bis zum Knall",
+      "Dunkle Wolken ziehen auf"
+     ]
+    },
+    {
+     "name": "Wüste",
+     "hints": [
+      "Sand",
+      "heiß",
+      "trocken",
+      "Kamel",
+      "Sahara"
+     ],
+     "clues": [
+      "Dort gibt es viel Sand und wenig Wasser",
+      "Die Sahara ist die bekannteste",
+      "Am Tag sehr heiß, nachts kalt"
+     ]
+    },
+    {
+     "name": "Krokodil",
+     "hints": [
+      "Zähne",
+      "Fluss",
+      "Echse",
+      "grün",
+      "Maul"
+     ],
+     "clues": [
+      "Lauert im Fluss mit nur den Augen über Wasser",
+      "Hat ein riesiges Maul",
+      "Ein Reptil mit Panzerhaut"
+     ]
+    },
+    {
+     "name": "Kastanie",
+     "hints": [
+      "Herbst",
+      "braun",
+      "Baum",
+      "stachelig",
+      "Schale"
+     ],
+     "clues": [
+      "Fällt im Herbst vom Baum",
+      "Hat eine stachelige grüne Hülle",
+      "Kinder basteln damit Figuren"
+     ]
+    },
+    {
+     "name": "Delfin",
+     "hints": [
+      "Meer",
+      "schlau",
+      "springen",
+      "Flosse",
+      "Säugetier"
+     ],
+     "clues": [
+      "Ein kluges Tier im Meer, aber kein Fisch",
+      "Springt gern aus dem Wasser",
+      "Verständigt sich mit Klicklauten"
+     ]
+    },
+    {
+     "name": "Schnecke",
+     "hints": [
+      "Haus",
+      "langsam",
+      "Schleim",
+      "Fühler",
+      "Garten"
+     ],
+     "clues": [
+      "Trägt ihr Zuhause auf dem Rücken",
+      "Ist sehr langsam",
+      "Hinterlässt eine glänzende Spur"
+     ]
+    },
+    {
+     "name": "Mond",
+     "hints": [
+      "Nacht",
+      "Himmel",
+      "rund",
+      "Sterne",
+      "Erde"
+     ],
+     "clues": [
+      "Leuchtet nachts am Himmel",
+      "Kreist um die Erde",
+      "Mal ist er voll, mal nur eine Sichel"
+     ]
+    },
+    {
+     "name": "Wal",
+     "hints": [
+      "Meer",
+      "groß",
+      "Blas",
+      "Säugetier",
+      "Fontäne"
+     ],
+     "clues": [
+      "Das größte Tier der Welt",
+      "Lebt im Ozean, ist aber kein Fisch",
+      "Bläst eine Fontäne in die Luft"
+     ]
+    },
+    {
+     "name": "Fuchs",
+     "hints": [
+      "rot",
+      "schlau",
+      "Schwanz",
+      "Wald",
+      "Bau"
+     ],
+     "clues": [
+      "Ein schlaues Tier mit rotem Fell",
+      "Wohnt in einem Bau im Wald",
+      "Im Märchen ist er listig"
+     ]
+    },
+    {
+     "name": "Sonnenblume",
+     "hints": [
+      "gelb",
+      "Sommer",
+      "Kerne",
+      "groß",
+      "Blüte"
+     ],
+     "clues": [
+      "Eine große gelbe Pflanze",
+      "Dreht sich zum Licht",
+      "Ihre Kerne kann man essen"
+     ]
+    },
+    {
+     "name": "Eisbär",
+     "hints": [
+      "weiß",
+      "Arktis",
+      "kalt",
+      "Fell",
+      "Schnee"
+     ],
+     "clues": [
+      "Lebt am Nordpol",
+      "Hat weißes Fell",
+      "Jagt Robben auf dem Eis"
+     ]
+    },
+    {
+     "name": "Wald",
+     "hints": [
+      "Bäume",
+      "grün",
+      "Förster",
+      "Pilze",
+      "Tiere"
+     ],
+     "clues": [
+      "Hier stehen viele Bäume beisammen",
+      "Man kann dort wandern und Pilze suchen",
+      "Rehe und Füchse leben dort"
+     ]
+    },
+    {
+     "name": "Spinne",
+     "hints": [
+      "Netz",
+      "Beine",
+      "acht",
+      "Fliege",
+      "Faden"
+     ],
+     "clues": [
+      "Hat acht Beine",
+      "Baut ein Netz",
+      "Fängt Fliegen"
+     ]
+    },
+    {
+     "name": "Frosch",
+     "hints": [
+      "quaken",
+      "Teich",
+      "grün",
+      "springen",
+      "Kaulquappe"
+     ],
+     "clues": [
+      "Quakt am Teich",
+      "War früher eine Kaulquappe",
+      "Im Märchen wird er zum Prinzen"
+     ]
+    },
+    {
+     "name": "Ameise",
+     "hints": [
+      "klein",
+      "Haufen",
+      "fleißig",
+      "tragen",
+      "Volk"
+     ],
+     "clues": [
+      "Winzig, aber trägt viel mehr als sie wiegt",
+      "Lebt mit Tausenden in einem Haufen",
+      "Läuft in langen Straßen"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "schule",
+   "name": "Schule und Mathe Kl. 5/6",
+   "terms": [
+    {
+     "name": "Dreieck",
+     "hints": [
+      "Ecken",
+      "drei",
+      "Seiten",
+      "Form",
+      "Winkel"
+     ],
+     "clues": [
+      "Eine Form mit drei Seiten",
+      "Hat drei Seiten",
+      "Ein Verkehrsschild hat oft diese Form"
+     ]
+    },
+    {
+     "name": "Quadrat",
+     "hints": [
+      "Ecken",
+      "Seiten",
+      "gleich",
+      "vier",
+      "Rechteck"
+     ],
+     "clues": [
+      "Alle vier Seiten sind gleich lang",
+      "Ein besonderes Rechteck",
+      "Ein Schachfeld hat diese Form"
+     ]
+    },
+    {
+     "name": "Kreis",
+     "hints": [
+      "rund",
+      "Radius",
+      "Zirkel",
+      "Mittelpunkt",
+      "Umfang"
+     ],
+     "clues": [
+      "Ganz rund ohne Ecken",
+      "Man zeichnet ihn mit dem Zirkel",
+      "Alle Punkte sind gleich weit von der Mitte"
+     ]
+    },
+    {
+     "name": "Würfel",
+     "hints": [
+      "sechs",
+      "Seiten",
+      "Augen",
+      "Ecken",
+      "Körper"
+     ],
+     "clues": [
+      "Ein Körper mit sechs gleichen Flächen",
+      "Man spielt damit Mensch ärgere dich nicht",
+      "Hat acht Ecken"
+     ]
+    },
+    {
+     "name": "Bruch",
+     "hints": [
+      "Zähler",
+      "Nenner",
+      "Strich",
+      "Teil",
+      "Hälfte"
+     ],
+     "clues": [
+      "Hat oben und unten eine Zahl",
+      "Ein Halb ist einer",
+      "Zeigt einen Teil vom Ganzen"
+     ]
+    },
+    {
+     "name": "Primzahl",
+     "hints": [
+      "teilbar",
+      "Zahl",
+      "eins",
+      "sich",
+      "Teiler"
+     ],
+     "clues": [
+      "Nur durch eins und sich selbst teilbar",
+      "Zwei, drei, fünf und sieben sind welche",
+      "Die Zwei ist die einzige gerade"
+     ]
+    },
+    {
+     "name": "Lineal",
+     "hints": [
+      "messen",
+      "Zentimeter",
+      "gerade",
+      "Strich",
+      "Linie"
+     ],
+     "clues": [
+      "Damit ziehst du gerade Striche",
+      "Hat eine Skala in Zentimetern",
+      "Liegt im Mäppchen"
+     ]
+    },
+    {
+     "name": "Zirkel",
+     "hints": [
+      "Kreis",
+      "Spitze",
+      "Mine",
+      "zeichnen",
+      "drehen"
+     ],
+     "clues": [
+      "Damit zeichnest du runde Formen",
+      "Hat eine Spitze und eine Mine",
+      "Man dreht ihn um einen Punkt"
+     ]
+    },
+    {
+     "name": "Hausaufgaben",
+     "hints": [
+      "Schule",
+      "machen",
+      "Heft",
+      "nachmittags",
+      "Lehrer"
+     ],
+     "clues": [
+      "Was du nach der Schule noch erledigen musst",
+      "Steht in einem eigenen Heft",
+      "Morgens wird kontrolliert"
+     ]
+    },
+    {
+     "name": "Pause",
+     "hints": [
+      "Schulhof",
+      "klingeln",
+      "Brot",
+      "spielen",
+      "frei"
+     ],
+     "clues": [
+      "Zeit zwischen zwei Stunden",
+      "Man geht auf den Schulhof",
+      "Endet mit dem Klingeln"
+     ]
+    },
+    {
+     "name": "Tafel",
+     "hints": [
+      "Kreide",
+      "Klassenzimmer",
+      "schreiben",
+      "Lehrer",
+      "wischen"
+     ],
+     "clues": [
+      "Steht vorne im Klassenzimmer",
+      "Man schreibt mit Kreide darauf",
+      "Wird mit einem Schwamm sauber"
+     ]
+    },
+    {
+     "name": "Taschenrechner",
+     "hints": [
+      "rechnen",
+      "Tasten",
+      "Zahlen",
+      "Display",
+      "Mathe"
+     ],
+     "clues": [
+      "Ein Gerät, das für dich rechnet",
+      "Hat viele Tasten mit Ziffern",
+      "Im Kopfrechnen verboten"
+     ]
+    },
+    {
+     "name": "Winkel",
+     "hints": [
+      "Grad",
+      "Geodreieck",
+      "Schenkel",
+      "messen",
+      "spitz"
+     ],
+     "clues": [
+      "Wird in Grad gemessen",
+      "Hat zwei Schenkel und einen Scheitel",
+      "Ein rechter hat neunzig Grad"
+     ]
+    },
+    {
+     "name": "Prozent",
+     "hints": [
+      "Hundert",
+      "Anteil",
+      "Zeichen",
+      "Rabatt",
+      "Zahl"
+     ],
+     "clues": [
+      "Bedeutet von hundert",
+      "Im Laden steht es bei Rabatten",
+      "Die Hälfte sind fünfzig davon"
+     ]
+    },
+    {
+     "name": "Zeugnis",
+     "hints": [
+      "Noten",
+      "Schuljahr",
+      "Halbjahr",
+      "Eltern",
+      "Unterschrift"
+     ],
+     "clues": [
+      "Gibt es am Ende des Halbjahrs",
+      "Darauf stehen deine Noten",
+      "Die Eltern unterschreiben es"
+     ]
+    },
+    {
+     "name": "Klassenfahrt",
+     "hints": [
+      "Reise",
+      "Jugendherberge",
+      "Klasse",
+      "Ausflug",
+      "Koffer"
+     ],
+     "clues": [
+      "Die ganze Klasse verreist zusammen",
+      "Man übernachtet oft in einer Jugendherberge",
+      "Dauert ein paar Tage"
+     ]
+    },
+    {
+     "name": "Mäppchen",
+     "hints": [
+      "Stifte",
+      "Reißverschluss",
+      "Schule",
+      "Radiergummi",
+      "Füller"
+     ],
+     "clues": [
+      "Darin sind deine Stifte",
+      "Hat oft einen Reißverschluss",
+      "Liegt auf jedem Schultisch"
+     ],
+     "aliases": [
+      "Federmäppchen"
+     ]
+    },
+    {
+     "name": "Diagonale",
+     "hints": [
+      "Ecke",
+      "Linie",
+      "Viereck",
+      "schräg",
+      "verbinden"
+     ],
+     "clues": [
+      "Verbindet zwei gegenüberliegende Ecken",
+      "Ein Rechteck hat zwei davon",
+      "Läuft schräg durch die Fläche"
+     ]
+    },
+    {
+     "name": "Quader",
+     "hints": [
+      "Körper",
+      "Kanten",
+      "Rechteck",
+      "Schachtel",
+      "Ecken"
+     ],
+     "clues": [
+      "Ein Körper wie ein Schuhkarton",
+      "Hat sechs rechteckige Flächen",
+      "Zwölf Kanten"
+     ]
+    },
+    {
+     "name": "Umfang",
+     "hints": [
+      "Rand",
+      "außen",
+      "Länge",
+      "messen",
+      "Seiten"
+     ],
+     "clues": [
+      "Die Länge einmal ganz außen herum",
+      "Man addiert alle Seiten",
+      "Beim Kreis braucht man Pi"
+     ]
+    },
+    {
+     "name": "Spiegelachse",
+     "hints": [
+      "Symmetrie",
+      "Linie",
+      "falten",
+      "gleich",
+      "Hälfte"
+     ],
+     "clues": [
+      "Eine Linie, an der beide Hälften gleich sind",
+      "Ein Schmetterling hat eine",
+      "Man findet sie durch Falten"
+     ]
+    },
+    {
+     "name": "Minus",
+     "hints": [
+      "weniger",
+      "abziehen",
+      "Zeichen",
+      "negativ",
+      "Strich"
+     ],
+     "clues": [
+      "Ein kleiner waagerechter Strich beim Rechnen",
+      "Bedeutet abziehen",
+      "Unter null ist es kalt"
+     ]
+    },
+    {
+     "name": "Stundenplan",
+     "hints": [
+      "Fächer",
+      "Woche",
+      "Tage",
+      "Stunden",
+      "Montag"
+     ],
+     "clues": [
+      "Zeigt, welches Fach wann dran ist",
+      "Hängt oft an der Wand",
+      "Für jeden Wochentag eine Spalte"
+     ]
+    },
+    {
+     "name": "Sportunterricht",
+     "hints": [
+      "Turnhalle",
+      "Ball",
+      "laufen",
+      "Schuhe",
+      "Fach"
+     ],
+     "clues": [
+      "Ein Fach in der Turnhalle",
+      "Man braucht Turnschuhe",
+      "Völkerball gehört dazu"
+     ],
+     "aliases": [
+      "Sport"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bibel",
+   "name": "Bibel",
+   "terms": [
+    {
+     "name": "Arche",
+     "hints": [
+      "Noah",
+      "Schiff",
+      "Tiere",
+      "Flut",
+      "Regen"
+     ],
+     "clues": [
+      "Ein riesiges Schiff aus Holz",
+      "Tiere gingen paarweise hinein",
+      "Es regnete vierzig Tage"
+     ]
+    },
+    {
+     "name": "Krippe",
+     "hints": [
+      "Stall",
+      "Jesus",
+      "Weihnachten",
+      "Stroh",
+      "Futter"
+     ],
+     "clues": [
+      "Darin lag das Kind in Betlehem",
+      "Eigentlich ein Futtertrog",
+      "Steht zu Weihnachten in vielen Kirchen"
+     ]
+    },
+    {
+     "name": "Stern",
+     "hints": [
+      "Himmel",
+      "Weise",
+      "Betlehem",
+      "leuchten",
+      "Nacht"
+     ],
+     "clues": [
+      "Die Weisen folgten ihm",
+      "Leuchtet am Himmel",
+      "Steht oben auf dem Weihnachtsbaum"
+     ]
+    },
+    {
+     "name": "Hirte",
+     "hints": [
+      "Schafe",
+      "Feld",
+      "Stab",
+      "Herde",
+      "Weide"
+     ],
+     "clues": [
+      "Passt auf eine Herde auf",
+      "Ein gutes Bild für Gott im Psalm 23",
+      "Bekam als Erster die Weihnachtsbotschaft"
+     ]
+    },
+    {
+     "name": "Engel",
+     "hints": [
+      "Flügel",
+      "Bote",
+      "Himmel",
+      "Gabriel",
+      "Gott"
+     ],
+     "clues": [
+      "Ein Bote Gottes",
+      "Wird oft mit Flügeln gemalt",
+      "Gabriel ist einer"
+     ]
+    },
+    {
+     "name": "Paradies",
+     "hints": [
+      "Garten",
+      "Eden",
+      "Adam",
+      "Eva",
+      "Baum"
+     ],
+     "clues": [
+      "Der Garten am Anfang",
+      "Dort wohnten die ersten Menschen",
+      "Es gab einen verbotenen Baum"
+     ]
+    },
+    {
+     "name": "Regenbogen",
+     "hints": [
+      "Noah",
+      "Bund",
+      "Farben",
+      "Himmel",
+      "Flut"
+     ],
+     "clues": [
+      "Zeichen des Bundes nach der Flut",
+      "Ein bunter Bogen am Himmel",
+      "Gott versprach: nie wieder so eine Flut"
+     ]
+    },
+    {
+     "name": "Abendmahl",
+     "hints": [
+      "Brot",
+      "Wein",
+      "Jünger",
+      "Jesus",
+      "letzte"
+     ],
+     "clues": [
+      "Das letzte Essen Jesu mit seinen Freunden",
+      "Es gab Brot und Wein",
+      "Wird im Gottesdienst gefeiert"
+     ]
+    },
+    {
+     "name": "Kreuz",
+     "hints": [
+      "Jesus",
+      "Holz",
+      "Ostern",
+      "Karfreitag",
+      "Zeichen"
+     ],
+     "clues": [
+      "Zeichen der Christen",
+      "An Karfreitag erinnert man daran",
+      "Zwei Balken aus Holz"
+     ]
+    },
+    {
+     "name": "Ostern",
+     "hints": [
+      "Auferstehung",
+      "Grab",
+      "Eier",
+      "Frühling",
+      "Jesus"
+     ],
+     "clues": [
+      "Fest der Auferstehung",
+      "Das Grab war leer",
+      "Kinder suchen bunte Eier"
+     ]
+    },
+    {
+     "name": "Taufe",
+     "hints": [
+      "Wasser",
+      "Kirche",
+      "Name",
+      "Kind",
+      "Johannes"
+     ],
+     "clues": [
+      "Man wird mit Wasser in die Gemeinde aufgenommen",
+      "Johannes machte das im Jordan",
+      "Oft bekommen Babys dabei eine Kerze"
+     ]
+    },
+    {
+     "name": "Gebet",
+     "hints": [
+      "beten",
+      "Gott",
+      "Hände",
+      "Amen",
+      "Vaterunser"
+     ],
+     "clues": [
+      "So spricht man mit Gott",
+      "Endet mit Amen",
+      "Das Vaterunser ist eins"
+     ]
+    },
+    {
+     "name": "Psalm",
+     "hints": [
+      "Lied",
+      "Gebet",
+      "David",
+      "Buch",
+      "Hirte"
+     ],
+     "clues": [
+      "Ein Lied oder Gebet aus der Bibel",
+      "Es gibt hundertfünfzig davon",
+      "Der dreiundzwanzigste ist berühmt"
+     ]
+    },
+    {
+     "name": "Prophet",
+     "hints": [
+      "Gott",
+      "Botschaft",
+      "Jesaja",
+      "verkünden",
+      "Zukunft"
+     ],
+     "clues": [
+      "Spricht im Auftrag Gottes",
+      "Jesaja und Jeremia waren solche",
+      "Warnte oft vor falschen Wegen"
+     ]
+    },
+    {
+     "name": "Wüste",
+     "hints": [
+      "Sand",
+      "Mose",
+      "vierzig",
+      "Manna",
+      "Wanderung"
+     ],
+     "clues": [
+      "Das Volk Israel wanderte vierzig Jahre hindurch",
+      "Dort fiel Manna vom Himmel",
+      "Wenig Wasser, viel Sand"
+     ]
+    },
+    {
+     "name": "Gleichnis",
+     "hints": [
+      "Jesus",
+      "Geschichte",
+      "erzählen",
+      "Bild",
+      "Bedeutung"
+     ],
+     "clues": [
+      "Eine Bildgeschichte, die Jesus erzählte",
+      "Der verlorene Sohn ist eine",
+      "Hat eine tiefere Bedeutung"
+     ]
+    },
+    {
+     "name": "Brot",
+     "hints": [
+      "Bäcker",
+      "essen",
+      "teilen",
+      "Speisung",
+      "backen"
+     ],
+     "clues": [
+      "Jesus teilte es mit fünftausend Menschen",
+      "Im Vaterunser bittet man darum",
+      "Wird beim Abendmahl gebrochen"
+     ]
+    },
+    {
+     "name": "Fisch",
+     "hints": [
+      "Wasser",
+      "Netz",
+      "Petrus",
+      "Jona",
+      "Zeichen"
+     ],
+     "clues": [
+      "Petrus fing sie mit dem Netz",
+      "Ein großer verschluckte Jona",
+      "Altes Erkennungszeichen der Christen"
+     ]
+    },
+    {
+     "name": "Tempel",
+     "hints": [
+      "Jerusalem",
+      "Haus",
+      "Gott",
+      "Salomo",
+      "beten"
+     ],
+     "clues": [
+      "Das große Gotteshaus in Jerusalem",
+      "König Salomo ließ es bauen",
+      "Jesus war als Kind dort"
+     ]
+    },
+    {
+     "name": "Esel",
+     "hints": [
+      "Tier",
+      "reiten",
+      "Palmsonntag",
+      "grau",
+      "Jerusalem"
+     ],
+     "clues": [
+      "Jesus ritt darauf nach Jerusalem",
+      "Ein graues Tier mit langen Ohren",
+      "Trug Maria nach Betlehem, sagt die Tradition"
+     ]
+    },
+    {
+     "name": "Wunder",
+     "hints": [
+      "Jesus",
+      "heilen",
+      "staunen",
+      "unmöglich",
+      "Zeichen"
+     ],
+     "clues": [
+      "Etwas, das eigentlich nicht geht",
+      "Jesus machte Kranke gesund",
+      "Wasser wurde zu Wein"
+     ]
+    },
+    {
+     "name": "Bibel",
+     "hints": [
+      "Buch",
+      "Testament",
+      "lesen",
+      "Gott",
+      "Kapitel"
+     ],
+     "clues": [
+      "Das Buch der Bücher",
+      "Hat ein Altes und ein Neues Testament",
+      "Liegt in jeder Kirche"
+     ]
+    }
+   ]
+  }
+ ]
+}

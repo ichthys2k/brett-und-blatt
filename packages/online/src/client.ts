@@ -229,7 +229,7 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
     const { module } = this.deps;
     const moves = this.legalMoves(seat);
     const moveType = (move as { type?: unknown })?.type;
-    const isSelfCall = moveType === 'callMau' || moveType === 'callUno';
+    const isSelfCall = moveType === 'callMau' || moveType === 'callUno' || moveType === 'buzz';
     if (moves.length === 0 && !isSelfCall) return false;
     if (module.isLegal) return module.isLegal(this.message.view, seat, move);
     return moves.some((m) => sameValue(m, move));

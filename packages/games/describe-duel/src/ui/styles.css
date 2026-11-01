@@ -1,0 +1,221 @@
+.ud-root {
+  /* Lange Listen rollen im Spielfeld statt unter die Knopfleiste zu laufen. */
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0.5rem;
+}
+
+.ud-score {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.ud-team-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.9rem;
+  border: 2px solid var(--color-line);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  font-weight: 700;
+}
+
+.ud-team-score strong {
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ud-team-score.is-team-0.ud-active {
+  border-color: #d97706;
+}
+
+.ud-team-score.is-team-1.ud-active {
+  border-color: #0369a1;
+}
+
+.ud-status,
+.ud-call {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.ud-call {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.ud-muted {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+}
+
+.ud-last {
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.8rem;
+  background: var(--color-surface-2);
+  font-size: 0.9rem;
+}
+
+.ud-term {
+  padding: 0.8rem 1rem;
+  border: 2px dashed var(--color-accent);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.ud-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+}
+
+.ud-term-name {
+  margin: 0.1rem 0 0;
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.ud-blocked {
+  margin: 0.4rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.ud-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin: 0.15rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--color-danger);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  color: var(--color-ink);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.ud-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.8rem;
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  background: var(--color-surface);
+}
+
+.ud-panel p {
+  margin: 0;
+}
+
+.ud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ud-button {
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+.ud-button:disabled {
+  opacity: 0.5;
+}
+
+.ud-primary {
+  border-color: transparent;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.ud-danger {
+  border-color: transparent;
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.ud-buzz {
+  min-height: 5rem;
+  border-radius: 1.2rem;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 900;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-danger) 45%, transparent);
+}
+
+.ud-buzz:active {
+  transform: scale(0.97);
+}
+
+.ud-clues {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.6rem;
+}
+
+.ud-clues section {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  background: var(--color-surface);
+}
+
+.ud-clues h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.ud-clues ol,
+.ud-clues ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  overflow-wrap: anywhere;
+}
+
+.ud-rosters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.88rem;
+}
+
+.ud-roster {
+  margin: 0;
+}
+
+.ud-dot {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin: 0 0.25rem 0 0.1rem;
+  vertical-align: middle;
+}

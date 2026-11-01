@@ -45,6 +45,11 @@ export interface GameInfo {
    * nicht, und die Oberfläche spielt ihre Musik selbst (Lautstärken über `BoardProps.audio`).
    */
   ownMusic?: boolean;
+  /**
+   * Teamspiel: Die Lobby zeigt je Platz das Team und lässt es wechseln (`teamOption`,
+   * `teamsFromOptions` in `teams.ts`). `names` sind die Anzeigenamen der Teams.
+   */
+  teams?: { count: number; names: string[] };
   /** Mindestens so viele Menschen braucht eine Partie; ohne Gespräch unter Menschen ist sie sinnlos. Fehlt die Angabe, reicht einer. */
   minHumans?: number;
   /** Kein „Zug zurück“: Bei geheimen Rollen an einem Gerät würde das Zurücknehmen Wissen verraten. */
