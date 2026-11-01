@@ -120,10 +120,10 @@ try {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => {
-      // Der Fragenkatalog des Bibel-Quiz ist optional: Die App nimmt die mitgelieferte Datei,
+      // Die Kataloge von Bibel-Quiz und Wortspielen sind optional: Die App nimmt die mitgelieferte Datei,
       // wenn der Spieleserver aus dieser Herkunft nicht erlaubt oder (noch) nicht erreichbar ist.
       // Der Browser meldet diesen fehlgeschlagenen Abruf als Konsolenfehler – das Spiel startet trotzdem.
-      if (m.type() === 'error' && !/Failed to load resource|klaenge|\.mp3|bibelquiz\/fragen/i.test(m.text())) errors.push(m.text());
+      if (m.type() === 'error' && !/Failed to load resource|klaenge|\.mp3|bibelquiz\/fragen|wortspiele\//i.test(m.text())) errors.push(m.text());
     });
     try {
       const m = await startGame(page, id);
