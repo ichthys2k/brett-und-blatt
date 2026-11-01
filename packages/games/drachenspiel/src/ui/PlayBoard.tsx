@@ -9,6 +9,7 @@ import { playCreatureAudio } from './audio';
 import { attackClass, CardFace, CardZoom, Fuse, GameLog, healthClass, TargetArrow, TraitBadge, type ArrowPoints, type ZoomItem } from './parts';
 import type { Float, ShownMinion } from './sequence';
 import { getCardFullTitle, getCardTraits, getMinionFullTitle, getMinionTraits } from './traits';
+import { currentCrest, ScenarioTip, useCosmetics } from './SoloHub';
 import { useBeats } from './useBeats';
 import { useLongPress } from './useLongPress';
 
@@ -159,6 +160,7 @@ function HeroBar({
   onPointerDown,
   dropTarget,
   onInfo,
+  crest,
   elementRef,
 }: {
   seat: SeatId;
@@ -178,6 +180,7 @@ function HeroBar({
   onPointerDown?: (e: ReactPointerEvent<HTMLElement>) => void;
   dropTarget?: string;
   onInfo: (text: string) => void;
+  crest?: string | undefined;
   elementRef: (el: HTMLElement | null) => void;
 }) {
   const quest = player.quest ? CARDS_DB[player.quest.cardId] : undefined;
@@ -208,7 +211,7 @@ function HeroBar({
       data-hero-seat={seat}
     >
       <FloatBadges floats={floats} />
-      <span className="ds-hero-avatar">{seat === 0 ? '🐉' : '🐲'}</span>
+      <span className="ds-hero-avatar">{crest ?? (seat === 0 ? '🐉' : '🐲')}</span>
       <div>
         <div className="ds-hero-name" style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{name}</div>
         <div className="ds-hero-badges">
@@ -267,6 +270,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   const opp = view.players[oppSeat];
   const isMyTurn = view.phase === 'play' && view.activeSeat === mySeat;
 
+  const cosmetics = useCosmetics();
   const nameOf = (seat: SeatId) => seatNames[seat] ?? LABELS[seat] ?? '';
   const { beat, log } = useBeats(view, events, nameOf);
 
@@ -619,6 +623,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           health={beat?.heroes[mySeat] ?? me.health}
           armor={beat?.armor[mySeat] ?? me.armor}
           onInfo={setNotice}
+          crest={currentCrest(cosmetics.crest)}
           canAttack={heroCanAttack}
           selected={effectiveAttackerId === HERO_ATTACKER}
           attackVector={attackVector?.id === `hero-${mySeat}` ? attackVector : undefined}
@@ -722,7 +727,9 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
         </div>
       )}
 
-      <div className="ds-hand" style={{ '--ds-hand-gaps': Math.max(1, (me.hand?.length ?? 1) - 1) } as CSSProperties}>
+      <ScenarioTip options={view.options} />
+
+      <div className="ds-hand" data-frame={cosmetics.frame ?? undefined} style={{ '--ds-hand-gaps': Math.max(1, (me.hand?.length ?? 1) - 1) } as CSSProperties}>
         {me.hand?.map((card, idx) => {
           const def = CARDS_DB[card.defId];
           if (!def) return null;

@@ -252,6 +252,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     if (window.confirm(question)) session.resign(resignSeat);
   };
 
+  const endAction = result && !online ? (ui.endAction?.(publicView) ?? null) : null;
+
   // Knöpfe nach Partieende – unter dem Spielfeld und in der Siegerehrung.
   const resultActions = online ? (
     online.isHost ? (
@@ -270,9 +272,15 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     )
   ) : (
     <>
-      <Button variant="primary" onClick={() => local?.onRestart(true)}>
-        {t('play.rematch')}
-      </Button>
+      {endAction ? (
+        <Button variant="primary" onClick={() => navigate(endAction.path)}>
+          {endAction.label}
+        </Button>
+      ) : (
+        <Button variant="primary" onClick={() => local?.onRestart(true)}>
+          {t('play.rematch')}
+        </Button>
+      )}
       <Button onClick={() => navigate(paths.setup(info.id))}>{t('play.settings')}</Button>
       <Button variant="ghost" onClick={() => navigate(paths.home)}>
         {t('play.menu')}

@@ -1,0 +1,506 @@
+{
+ "beschreibung": "W-049: Porträts für die 81 Narren des Narrenhofs (Stimmung 1, schmunzelnd). Im Kontaktbogen steht zu jedem Bild die Funktion des Narren.",
+ "stil": "Painterly dark baroque oil portrait of a whimsical court character of a fairy-tale kingdom, in the same style as the reference images: dark warm background with subtle ornamental damask, rich fabric textures, soft candle-like light, warm gold and deep colours, a detailed expressive friendly face with a gentle smirking smile, humorous but dignified, bust portrait facing the viewer, the character wears or carries the small jester attributes described. Vertical composition, figure centred with space around so it can be cropped. No text, no letters, no numbers.",
+ "ohne": "text, letters, readable numbers, watermark, border, frame, playing card layout, real people, celebrities, modern clothing, logos",
+ "referenzen": [
+  "packages/games/color-sorter/src/ui/portraits/boss-bear-2.webp",
+  "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp"
+ ],
+ "format": "4:5",
+ "groesse": [
+  360,
+  450
+ ],
+ "qualitaet": 78,
+ "ziel": "packages/games/color-sorter/src/ui/portraits",
+ "praefix": "fool-",
+ "suffix": "-1",
+ "motive": [
+  {
+   "id": "juggler",
+   "titel": "Der Jongleur 🤹",
+   "beschreibung": "gewöhnlich · 5 🥨 – +2 Lachen je gewertete Karte",
+   "prompt": "Character: a cheerful juggler jester (a human folk character) in a patched motley costume, tossing three golden balls and a small dagger in the air."
+  },
+  {
+   "id": "fiddler",
+   "titel": "Die Spielfrau 🎻",
+   "beschreibung": "gewöhnlich · 5 🥨 – +30 Witz, wenn genau 3 Karten gewertet werden (Dreivierteltakt)",
+   "prompt": "Character: a woman fiddler jester playing a violin, dancing in three-quarter time, flowing sleeves and a feathered cap."
+  },
+  {
+   "id": "earlyBird",
+   "titel": "Der Frühaufsteher 🐓",
+   "beschreibung": "gewöhnlich · 6 🥨 – In der Morgenaudienz ×2 Lachen, sonst +3 Lachen",
+   "prompt": "Character: a proud rooster jester in a nightcap and jester collar, crowing at the sunrise, a small golden sun behind."
+  },
+  {
+   "id": "baker",
+   "titel": "Der Bäckerjunge 🥨",
+   "beschreibung": "gewöhnlich · 5 🥨 – +1 🥨 je gewerteter Bube",
+   "prompt": "Character: a young baker's boy jester with flour on his cheeks, holding a tray of fresh pretzels, jester cap with a pretzel pattern."
+  },
+  {
+   "id": "balladeer",
+   "titel": "Der Bänkelsänger 🪕",
+   "beschreibung": "gewöhnlich · 6 🥨 – +5 Witz je Vorführung, die du an diesem Hoftag schon gemacht hast",
+   "prompt": "Character: a travelling ballad singer jester with a lute (a cittern), mouth open mid-song, a cloak with musical notes embroidered."
+  },
+  {
+   "id": "monkey",
+   "titel": "Das Hofäffchen 🐒",
+   "beschreibung": "ungewöhnlich · 6 🥨 – +1 Lachen dauerhaft je getauschte Karte (höchstens +20). Eifersüchtig: verliert alles, wenn ein weiterer Narr dazukommt",
+   "prompt": "Character: a mischievous little court monkey in a tiny jester costume, one paw on its cheek, a green-eyed envious sideways glance, holding a golden ring."
+  },
+  {
+   "id": "bookworm",
+   "titel": "Der Bücherwurm 📚",
+   "beschreibung": "ungewöhnlich · 7 🥨 – +1 Lachen je Stufe der vorgeführten Kombi",
+   "prompt": "Character: a scholarly bookworm jester, a plump green caterpillar-like creature with round spectacles reading a huge tome, a jester cap on its head."
+  },
+  {
+   "id": "herald",
+   "titel": "Der Herold 📯",
+   "beschreibung": "ungewöhnlich · 7 🥨 – Ruft eine Kombi aus (wechselt nach jeder Audienz). Ist sie in der Vorführung dabei: ×3 Lachen",
+   "prompt": "Character: a herald jester blowing a long golden trumpet with a banner, a tabard with heraldic diamonds."
+  },
+  {
+   "id": "royalCouple",
+   "titel": "Das Königspaar 💑",
+   "beschreibung": "selten · 8 🥨 – ×2 Lachen, wenn König und Dame derselben Farbe gewertet werden",
+   "prompt": "Character: a royal couple in a double portrait, a king and a queen as animals (a lion king and a swan queen) in matching red and gold robes, both wearing jester caps under their crowns."
+  },
+  {
+   "id": "twoFaced",
+   "titel": "Der Doppelgesichtige 🎭",
+   "beschreibung": "selten · 10 🥨 – Die erste Vorführung jeder Audienz wertet alle Karten zweimal",
+   "prompt": "Character: a jester holding up a split theatre mask, one half smiling and one half weeping, a second face peering from the mask, ornate motley."
+  },
+  {
+   "id": "clown",
+   "titel": "Der Spaßmacher 🤡",
+   "beschreibung": "gewöhnlich · 2 🥨 – +4 Lachen",
+   "prompt": "Character: a laughing clown jester with a red nose, a big grin and a ruffled collar, a squirting flower in the buttonhole."
+  },
+  {
+   "id": "coolGuy",
+   "titel": "Der Lässige 😎",
+   "beschreibung": "gewöhnlich · 5 🥨 – +20 Witz je Pik-Karte, die in der Hand bleibt",
+   "prompt": "Character: a cool, relaxed fox jester wearing tiny round sunglasses and a leather-and-velvet cloak, leaning back, a black spade pattern on his collar."
+  },
+  {
+   "id": "inLove",
+   "titel": "Der Verliebte 😍",
+   "beschreibung": "gewöhnlich · 5 🥨 – +4 Lachen je gewertete Herz-Karte",
+   "prompt": "Character: a lovesick jester with heart-shaped eyes and rosy cheeks, holding a bouquet of red roses, hearts embroidered on his motley."
+  },
+  {
+   "id": "sunny",
+   "titel": "Die Sonnige 🌞",
+   "beschreibung": "gewöhnlich · 5 🥨 – +2 🥨, wenn mindestens 3 Karo-Karten gewertet werden",
+   "prompt": "Character: a radiant sunny jester woman with a golden sun-ray collar and a sun-shaped crown cap, warm smile, diamond patterns in her dress."
+  },
+  {
+   "id": "broccoli",
+   "titel": "Die Kräuterfrau 🌿",
+   "beschreibung": "gewöhnlich · 5 🥨 – +1 Lachen dauerhaft je gewertete Kreuz-Karte",
+   "prompt": "Character: a village herbalist woman jester (herb woman) with a basket of herbs, clover leaves and a green wreath in her hair, a sprig of clover in her hand."
+  },
+  {
+   "id": "nerd",
+   "titel": "Der Zahlenschreiber 🤓",
+   "beschreibung": "gewöhnlich · 5 🥨 – +2 Lachen je Ziffer der bisherigen Rundenpunkte",
+   "prompt": "Character: a bespectacled scribe jester with huge round glasses, ink-stained fingers, a scroll with scribbled number-like marks (no readable digits), a quill behind the ear."
+  },
+  {
+   "id": "bug",
+   "titel": "Der Tollpatsch 🤪",
+   "beschreibung": "gewöhnlich · 4 🥨 – Zu 1/8: ×2 Lachen. Zu 1/8: ×0 Lachen. Sonst nichts.",
+   "prompt": "Character: a clumsy blundering jester with crooked cap, one big eye and one squinting eye, wobbling with a tipped-over cup, a ladybird sitting on his nose."
+  },
+  {
+   "id": "e404",
+   "titel": "Der Wortkarge 🤐",
+   "beschreibung": "gewöhnlich · 5 🥨 – +15 Lachen bei 3 oder weniger gespielten Karten",
+   "prompt": "Character: a silent jester with a finger over his lips and a stitched-shut mouth, big expressive eyes, a plain grey motley costume."
+  },
+  {
+   "id": "darkMode",
+   "titel": "Der Nachtwächter 🌑",
+   "beschreibung": "ungewöhnlich · 7 🥨 – +30 Witz je gewertete schwarze Karte (Pik oder Kreuz)",
+   "prompt": "Character: a night watchman jester with a lantern, a long dark cloak, a spear and a tall black hat, the moon behind, black spade and club patterns."
+  },
+  {
+   "id": "pi",
+   "titel": "Der Rechenmeister 🥧",
+   "beschreibung": "gewöhnlich · 4 🥨 – +3,14 Lachen",
+   "prompt": "Character: a maths master jester in a scholar's gown, holding a round golden pie with a pie-chart pattern and a compass, a circle motif on the cap, no readable digits."
+  },
+  {
+   "id": "binary",
+   "titel": "Der Einsundnuller 🔢",
+   "beschreibung": "gewöhnlich · 5 🥨 – +8 Lachen je gewertetes Ass (1) und je gewertete 10",
+   "prompt": "Character: a jester with two fingers, one finger raised and one hand showing a zero as a closed fist, split black and white motley, a tall hat with one stripe and one circle."
+  },
+  {
+   "id": "sixSeven",
+   "titel": "Der Sechs-Sieben 🤷",
+   "beschreibung": "ungewöhnlich · 6 🥨 – +6,7 Lachen; gewertete 6 und 7: je +6 Witz und +7 Witz",
+   "prompt": "Character: a shrugging jester with raised shoulders and open palms, a puzzled smile, a cap with six small bells on one side and seven on the other."
+  },
+  {
+   "id": "jolly",
+   "titel": "Der Kuppler 💌",
+   "beschreibung": "gewöhnlich · 4 🥨 – +6 Lachen, wenn ein Paar dabei ist, und ×2 bei Zwei Paaren",
+   "prompt": "Character: a matchmaker jester carrying love letters sealed with wax, a red heart patch, winking, a bundle of sealed envelopes."
+  },
+  {
+   "id": "zany",
+   "titel": "Der Dreikäsehoch 🧀",
+   "beschreibung": "gewöhnlich · 5 🥨 – +40 Witz und +6 Lachen, wenn ein Drilling dabei ist",
+   "prompt": "Character: a small cheeky child-sized jester (a three-cheese-high rascal) with a piece of cheese in each hand, mouse ears hat, big grin."
+  },
+  {
+   "id": "ruler",
+   "titel": "Der Läufer 🏃",
+   "beschreibung": "gewöhnlich · 5 🥨 – +10 Lachen bei einer Straße, dazu ×2 bei einer Farbstraße",
+   "prompt": "Character: a runner jester in a short tunic and winged cap, mid-stride, holding a ruler and a ribbon, speed lines."
+  },
+  {
+   "id": "palette",
+   "titel": "Die Malerin 🎨",
+   "beschreibung": "gewöhnlich · 5 🥨 – +8 Lachen bei einer Farbe, dazu +2 je gewertete Bildkarte darin",
+   "prompt": "Character: a woman painter jester with a palette full of colourful paint and a brush, paint smudges on her cheek, a beret with a jester bell."
+  },
+  {
+   "id": "twins",
+   "titel": "Das Tanzpaar 👫",
+   "beschreibung": "selten · 8 🥨 – ×1,5 Lachen je Paar in der Vorführung (Zwei Paare und Full House ×2,25)",
+   "prompt": "Character: a dancing couple of two jesters in matching costumes, in a dance pose, one in red and one in blue, cheerful."
+  },
+  {
+   "id": "family",
+   "titel": "Die Gauklerfamilie 👨‍👩‍👧‍👦",
+   "beschreibung": "selten · 8 🥨 – ×3 Lachen, wenn ein Vierling oder ein Full House dabei ist",
+   "prompt": "Character: a travelling juggler family of four (two parents and two children) as a cheerful group portrait in patched costumes, with juggling clubs."
+  },
+  {
+   "id": "kidFan",
+   "titel": "Der Hofmaler 🖼️",
+   "beschreibung": "gewöhnlich · 5 🥨 – +3 Witz je Bildkarte im ganzen Deck",
+   "prompt": "Character: a court painter jester standing at an easel with a half-finished portrait of a king, a palette and a pointed beard, a tiny jester cap."
+  },
+  {
+   "id": "even",
+   "titel": "Der Aufrechte 🧍",
+   "beschreibung": "gewöhnlich · 4 🥨 – +12 Lachen, wenn alle gewerteten Karten gerade Zahlen sind (2, 4, 6, 8, 10)",
+   "prompt": "Character: an upright proud jester standing straight and tall with a perfectly symmetrical costume, a ruler-straight posture, serious dignified expression."
+  },
+  {
+   "id": "odd",
+   "titel": "Der Querkopf 🙃",
+   "beschreibung": "gewöhnlich · 4 🥨 – +60 Witz, wenn alle gewerteten Karten ungerade Zahlen sind (3, 5, 7, 9)",
+   "prompt": "Character: an eccentric jester standing upside down on his hands with a cheeky grin, his costume mismatched with odd patches."
+  },
+  {
+   "id": "snail",
+   "titel": "Die Hofschnecke 🐌",
+   "beschreibung": "ungewöhnlich · 7 🥨 – +1 Lachen dauerhaft je gewertete 2, 3, 5 oder 8 – das Schneckenhaus wächst",
+   "prompt": "Character: a slow court snail wearing a tiny jester cap on its antennae, a swirling golden shell, calm smile."
+  },
+  {
+   "id": "santaFan",
+   "titel": "Der Assjäger 🎯",
+   "beschreibung": "ungewöhnlich · 6 🥨 – ×2 Lachen, wenn ein Ass gewertet wird",
+   "prompt": "Character: an ace hunter jester with a bow, aiming at a golden target ring, a quiver of arrows, a hunter's hat with a feather and an ace-of-spades pin."
+  },
+  {
+   "id": "tree",
+   "titel": "Der Schatzhüter 🗝️",
+   "beschreibung": "ungewöhnlich · 6 🥨 – +1 🥨 je Ass, das am Ende der Audienz in der Hand ist",
+   "prompt": "Character: a treasure keeper jester with a large key ring, a small iron-bound treasure chest, an owl on his shoulder, a ring of keys on the belt."
+  },
+  {
+   "id": "echo",
+   "titel": "Der Papagei 🦜",
+   "beschreibung": "ungewöhnlich · 6 🥨 – Die letzte gewertete Karte zählt doppelt",
+   "prompt": "Character: a colourful parrot jester repeating words, wearing a tiny jester cap, bright feathers, one wing raised."
+  },
+  {
+   "id": "collector",
+   "titel": "Der Truppenführer 🎪",
+   "beschreibung": "gewöhnlich · 5 🥨 – +2 Lachen je Narr, dazu ×1,5 bei voller Narrenbank",
+   "prompt": "Character: a ringmaster troupe leader jester with a striped tent-coloured coat, a whip-less baton and a top hat, gesturing to unseen performers."
+  },
+  {
+   "id": "apple",
+   "titel": "Der Apfel der Königin 🍎",
+   "beschreibung": "ungewöhnlich · 6 🥨 – ×3 Lachen. Nach 10 Vorführungen ist er aufgegessen",
+   "prompt": "Character: the queen's apple, a shiny red apple with a face and a tiny jester cap, a golden crown leaf, a bite mark near the stem, comical expression."
+  },
+  {
+   "id": "king",
+   "titel": "Der Lieblingsnarr 👑",
+   "beschreibung": "selten · 9 🥨 – ×1 Lachen, dazu ×0,25 je gewonnener Audienz",
+   "prompt": "Character: the king's favourite jester, a smug jester wearing a small golden crown over his cap, a velvet purple cloak with ermine, pleased expression."
+  },
+  {
+   "id": "piggy",
+   "titel": "Die Köchin 👩‍🍳",
+   "beschreibung": "gewöhnlich · 6 🥨 – +1 🥨 am Ende jeder Audienz, je Hoftag 1 mehr",
+   "prompt": "Character: a court cook woman in a white apron and tall chef's hat, ladle in hand, cheeks rosy, a pig-shaped pot on the table behind her."
+  },
+  {
+   "id": "patience",
+   "titel": "Der Geduldige 🧘",
+   "beschreibung": "gewöhnlich · 4 🥨 – +2 🥨 am Ende der Audienz, wenn nicht getauscht wurde",
+   "prompt": "Character: a calm meditating monk jester sitting cross-legged with closed eyes, a serene smile, folded hands, a candle beside him."
+  },
+  {
+   "id": "robot",
+   "titel": "Der Blechnarr 🤖",
+   "beschreibung": "ungewöhnlich · 6 🥨 – Ein Uhrwerk: Jede 4. Vorführung +20 Lachen",
+   "prompt": "Character: a clockwork tin jester, an automaton of brass and copper with gears visible, a key on its back, a jester cap with a bell."
+  },
+  {
+   "id": "recycler",
+   "titel": "Der Lumpensammler 🧺",
+   "beschreibung": "ungewöhnlich · 5 🥨 – +1 🥨 je getauschte Bildkarte",
+   "prompt": "Character: a rag-and-bone man jester with a big wicker basket of cloth scraps and old playing cards on his back, a patched hat."
+  },
+  {
+   "id": "unicorn",
+   "titel": "Das Einhorn 🦄",
+   "beschreibung": "legendär · 20 🥨 – Alle Karten zählen als jede Farbe",
+   "prompt": "Character: a majestic white unicorn in a small golden jester collar, a rainbow-shimmering mane, a spiral horn, gentle wise eyes."
+  },
+  {
+   "id": "santaClaus",
+   "titel": "Der Hofzauberer 🧙",
+   "beschreibung": "legendär · 20 🥨 – Jede gewertete Bildkarte zählt zweimal",
+   "prompt": "Character: a court wizard jester in a starry robe and tall pointed hat with bells, a staff topped with a golden star, a long white beard, twinkling eyes."
+  },
+  {
+   "id": "painter",
+   "titel": "Der Meistermaler 🖌️",
+   "beschreibung": "legendär · 20 🥨 – ×2 Lachen je Farbe, die unter den gewerteten Karten vorkommt, ab der zweiten",
+   "prompt": "Character: a master painter jester wearing a smock and cap, painting with a golden brush a glowing rainbow on a huge canvas, colours swirling around him."
+  },
+  {
+   "id": "cupbearer",
+   "titel": "Der Mundschenk 🍷",
+   "beschreibung": "gewöhnlich · 5 🥨 – +3 Lachen je gewertete Karte, solange du in dieser Audienz noch nicht getauscht hast",
+   "prompt": "Character: a cupbearer jester carrying a tray with a golden goblet of red wine, a velvet livery, an elegant bow, a napkin over his arm."
+  },
+  {
+   "id": "candle",
+   "titel": "Der Kerzenzieher 🕯️",
+   "beschreibung": "gewöhnlich · 5 🥨 – +3 Lachen je Vorführung, die dir in dieser Audienz noch bleibt (diese mitgezählt)",
+   "prompt": "Character: a chandler jester (candle maker) holding a thick burning candle and dipping wax, drips on the apron, warm candlelight glow."
+  },
+  {
+   "id": "hound",
+   "titel": "Der Hofhund 🐕",
+   "beschreibung": "gewöhnlich · 4 🥨 – Bewacht die Hand: +6 Witz je Karte, die in der Hand bleibt",
+   "prompt": "Character: a loyal court hound in a small jester collar with bells, sitting proudly and guarding, golden-brown fur, a bone-shaped medal."
+  },
+  {
+   "id": "judge",
+   "titel": "Der Hofrichter ⚖️",
+   "beschreibung": "ungewöhnlich · 6 🥨 – ×2 Lachen, wenn gleich viele rote (♥ ♦) wie schwarze (♠ ♣) Karten gewertet werden",
+   "prompt": "Character: a stern but kindly court judge jester in a black-and-white robe holding a balance scale with a red and a black card on each pan."
+  },
+  {
+   "id": "primeScholar",
+   "titel": "Der Rechenlehrling 🧮",
+   "beschreibung": "ungewöhnlich · 6 🥨 – ×2 Lachen, wenn die Summe der gewerteten Ränge eine Primzahl ist (Bube 11, Dame 12, König 13, Ass 14)",
+   "prompt": "Character: a young apprentice mathematician jester with an abacus and a quill, ink on his cheek, a cap with a star, no readable numbers."
+  },
+  {
+   "id": "tenFriend",
+   "titel": "Der Zehnerfreund 🔟",
+   "beschreibung": "gewöhnlich · 5 🥨 – +20 Lachen, wenn die Summe der gewerteten Ränge durch 10 teilbar ist",
+   "prompt": "Character: a friendly jester showing ten fingers spread wide with both hands, a big grin, a cap with ten tiny bells."
+  },
+  {
+   "id": "trumpeter",
+   "titel": "Der Fanfarenbläser 🎺",
+   "beschreibung": "gewöhnlich · 5 🥨 – Die erste Vorführung jeder Audienz: +12 Lachen",
+   "prompt": "Character: a fanfare trumpeter jester blowing a long trumpet with a banner, puffed cheeks, a feathered cap, golden light."
+  },
+  {
+   "id": "sleepyhead",
+   "titel": "Die Schlafmütze 🛌",
+   "beschreibung": "ungewöhnlich · 7 🥨 – Wacht erst zum Schluss auf: Die letzte Vorführung jeder Audienz bekommt ×2 Lachen",
+   "prompt": "Character: a sleepy jester in a nightgown and nightcap, holding a candle, yawning, one eye half-open, a pillow under the arm."
+  },
+  {
+   "id": "treasurer",
+   "titel": "Der Kämmerer 🗃️",
+   "beschreibung": "gewöhnlich · 5 🥨 – +1 Lachen je 4 🥨 in deinem Vorrat (höchstens +12)",
+   "prompt": "Character: a chamberlain jester with a chain of office, a stack of ledgers and a heavy purse of coins and pretzels, a pince-nez on his nose."
+  },
+  {
+   "id": "nightingale",
+   "titel": "Die Nachtigall 🐦",
+   "beschreibung": "gewöhnlich · 5 🥨 – +3 Lachen je Herz-Karte, die in der Hand bleibt",
+   "prompt": "Character: a nightingale bird jester perched on a branch, mouth open singing, a tiny jester cap, a red heart pattern on the chest feathers."
+  },
+  {
+   "id": "beekeeper",
+   "titel": "Der Imker 🐝",
+   "beschreibung": "gewöhnlich · 5 🥨 – +4 Witz dauerhaft für jede Vorführung, die genau 5 Karten wertet – der Bienenstock wächst",
+   "prompt": "Character: a beekeeper jester in a veiled hat with bees buzzing around, holding a honeycomb frame, a straw skep behind."
+  },
+  {
+   "id": "heir",
+   "titel": "Der Thronfolger 🤴",
+   "beschreibung": "gewöhnlich · 5 🥨 – +2 Lachen je Hoftag (wird mit jedem Hoftag stärker)",
+   "prompt": "Character: the young heir to the throne as a jester prince, a boy with a small crown over a jester cap, a velvet cloak that is a bit too big, eager look."
+  },
+  {
+   "id": "archer",
+   "titel": "Der Bogenschütze 🏹",
+   "beschreibung": "ungewöhnlich · 7 🥨 – Trifft immer das Höchste: Die ranghöchste gewertete Karte zählt doppelt",
+   "prompt": "Character: an archer jester drawing a longbow, aiming at a golden crown, a feathered cap and a quiver, sharp focused eyes."
+  },
+  {
+   "id": "peacock",
+   "titel": "Der Pfau 🦚",
+   "beschreibung": "ungewöhnlich · 6 🥨 – ×2 Lachen, wenn alle gewerteten Karten eine Verzierung aus der Schneiderei tragen",
+   "prompt": "Character: a vain peacock jester with a large fanned tail of eyes, a small golden jester collar, a haughty smile."
+  },
+  {
+   "id": "seamstress",
+   "titel": "Die Näherin 🪡",
+   "beschreibung": "gewöhnlich · 5 🥨 – +5 Witz je verzierte Karte im ganzen Deck",
+   "prompt": "Character: a seamstress jester woman with a needle and thread, a pincushion on her wrist, working on a glittering embroidered fabric, a thimble hat."
+  },
+  {
+   "id": "castellan",
+   "titel": "Der Burgvogt 🏰",
+   "beschreibung": "gewöhnlich · 5 🥨 – Hält im Thronsaal die Stellung: dort +60 Witz und +6 Lachen",
+   "prompt": "Character: a castle warden jester in a mail coat, a big iron key ring and a keep behind him, a helmet with a jester bell on top, stern but amused."
+  },
+  {
+   "id": "swan",
+   "titel": "Die Schwanenjungfer 🦢",
+   "beschreibung": "ungewöhnlich · 6 🥨 – ×1,5 Lachen, wenn nur rote Karten (♥ ♦) gewertet werden",
+   "prompt": "Character: a swan maiden jester, an elegant white swan with a rose-coloured collar and a tiny crown, graceful neck, red rose in her beak."
+  },
+  {
+   "id": "woodcutter",
+   "titel": "Der Holzfäller 🪓",
+   "beschreibung": "ungewöhnlich · 6 🥨 – Lichtet das Deck: Jede getauschte 2 oder 3 verlässt das Deck für immer",
+   "prompt": "Character: a woodcutter jester with an axe over the shoulder, a checked tunic with patches, a pine tree behind, a hat with an acorn."
+  },
+  {
+   "id": "makeupArtist",
+   "titel": "Die Maskenbildnerin 💋",
+   "beschreibung": "ungewöhnlich · 7 🥨 – Nach jeder gewonnenen Audienz bekommt die erste unverzierte Karte in deiner Hand Schminke",
+   "prompt": "Character: a make-up artist jester woman with a powder brush and a small hand mirror, rouge on her cheeks, red lipstick kisses on the mirror frame."
+  },
+  {
+   "id": "confectioner",
+   "titel": "Der Zuckerbäcker 🧁",
+   "beschreibung": "ungewöhnlich · 6 🥨 – Nach jedem gewonnenen Thronsaal backt er dir die Übung deiner meistgespielten Kombi (wenn in der Narrentasche Platz ist)",
+   "prompt": "Character: a confectioner jester in a tall toque with a decorated cupcake and a piping bag, sugar dust on the apron, a frosted cake behind."
+  },
+  {
+   "id": "scribe",
+   "titel": "Der Schreiber 📜",
+   "beschreibung": "gewöhnlich · 5 🥨 – Mag Abwechslung: +10 Lachen, wenn du eine andere Kombi vorführst als zuletzt",
+   "prompt": "Character: a monk scribe jester writing with a quill at a slanted desk, an illuminated manuscript with golden initials (no readable text), ink bottle beside."
+  },
+  {
+   "id": "drummer",
+   "titel": "Der Trommler 🥁",
+   "beschreibung": "gewöhnlich · 5 🥨 – +1 Lachen dauerhaft je Vorführung (diese mitgezählt). Tauschen bringt ihn aus dem Takt: zurück auf 0",
+   "prompt": "Character: a drummer jester with a snare drum on a strap and drumsticks, a rhythmic grin, a plumed hat, motion lines for the beat."
+  },
+  {
+   "id": "hermit",
+   "titel": "Der Einsiedler 🧓",
+   "beschreibung": "ungewöhnlich · 6 🥨 – Sitzt er allein auf der Narrenbank: ×3 Lachen, sonst +3 Lachen",
+   "prompt": "Character: a hermit jester, an old man with a long beard in a patched hooded robe, a lantern and a walking staff, a small cave behind, peaceful."
+  },
+  {
+   "id": "cartographer",
+   "titel": "Die Kartografin 🗺️",
+   "beschreibung": "gewöhnlich · 5 🥨 – +15 Witz je verschiedene Kombi, die du in diesem Spiel schon vorgeführt hast (diese mitgezählt)",
+   "prompt": "Character: a woman cartographer jester unrolling a large old map with compass roses, a brass compass in her hand, a hat with a jester bell."
+  },
+  {
+   "id": "storyteller",
+   "titel": "Die Märchenerzählerin 🧚",
+   "beschreibung": "gewöhnlich · 4 🥨 – Sieben Geißlein, sieben Zwerge: +7 Lachen je gewertete 7",
+   "prompt": "Character: a fairy-tale storyteller jester woman with a small fairy fluttering at her shoulder, an open storybook, seven tiny stars floating."
+  },
+  {
+   "id": "pilgrim",
+   "titel": "Der Pilger 🥾",
+   "beschreibung": "gewöhnlich · 5 🥨 – Reist mit großem Bündel: +1 Handgröße, aber −1 Tauschen je Audienz",
+   "prompt": "Character: a pilgrim jester with a huge bundle on his back, a walking stick, a wide-brimmed hat with a shell badge and bells, dusty boots."
+  },
+  {
+   "id": "queenMother",
+   "titel": "Die Königinmutter 👵",
+   "beschreibung": "selten · 8 🥨 – ×1,25 Lachen je Dame, die in der Hand bleibt",
+   "prompt": "Character: the queen mother, a dignified elderly lady in a velvet gown and a jester-bell crown, a lace collar and a cane, wise amused smile."
+  },
+  {
+   "id": "twinFools",
+   "titel": "Die Zwillingsnarren 👯",
+   "beschreibung": "selten · 9 🥨 – Jede gewertete Karte, deren Rang in der Vorführung mehrfach vorkommt, zählt doppelt",
+   "prompt": "Character: two identical twin jesters side by side in mirrored costumes, one in red-green and one green-red, cheeky identical grins."
+  },
+  {
+   "id": "baron",
+   "titel": "Der Lügenbaron 🎖️",
+   "beschreibung": "legendär · 20 🥨 – Prahlt mit jeder Vorführung: Sie bekommt den Grundwert der nächsthöheren Kombi (ein Paar zählt wie Zwei Paare)",
+   "prompt": "Character: the lying baron, a pompous officer jester with a large moustache, a chest full of medals, a sword and one hand raised in a boast, a cannonball behind him."
+  },
+  {
+   "id": "shield",
+   "titel": "Der Schildträger 🛡️",
+   "beschreibung": "gewöhnlich · 5 🥨 – +25 Witz je verlorenes Herz",
+   "prompt": "Character: a shield bearer jester with a large round shield painted with red hearts, a small helmet with a bell, sturdy and cheerful."
+  },
+  {
+   "id": "pacifist",
+   "titel": "Der Friedfertige 🕊️",
+   "beschreibung": "ungewöhnlich · 6 🥨 – ×2 Lachen in normalen Audienzen, im Wettstreit aber ×0,5",
+   "prompt": "Character: a peaceful jester holding a white dove and an olive branch, gentle smile, white-and-pale-blue motley."
+  },
+  {
+   "id": "spy",
+   "titel": "Der Lauscher 🕵️",
+   "beschreibung": "gewöhnlich · 3 🥨 – Du hörst im Wettstreit den Applaus der anderen schon während des Spiels",
+   "prompt": "Character: a spy jester in a dark hooded cloak with a hat pulled low, one big ear cupped to listen, a magnifying glass, a sly smile."
+  },
+  {
+   "id": "team",
+   "titel": "Der Gesellige 🤝",
+   "beschreibung": "gewöhnlich · 5 🥨 – +3 Lachen je Mitspieler, der noch dabei ist",
+   "prompt": "Character: a friendly jester with an arm held out for a handshake, a warm smile, a patched costume with many coloured hands as patches."
+  },
+  {
+   "id": "chase",
+   "titel": "Der Nachzügler 🐢",
+   "beschreibung": "ungewöhnlich · 6 🥨 – +30 Witz und +3 Lachen je Hoftag Rückstand auf den Ersten",
+   "prompt": "Character: a small tortoise-riding jester slowly chasing after the others, a tortoise carrying a jester with a flag, determined smile."
+  },
+  {
+   "id": "secondChance",
+   "titel": "Der Schutzengel 😇",
+   "beschreibung": "selten · 8 🥨 – Würdest du ein Herz verlieren oder ausscheiden, geht der Schutzengel stattdessen",
+   "prompt": "Character: a guardian angel jester with white feathered wings and a golden halo, a jester collar, a soft glow, a kind protective smile."
+  },
+  {
+   "id": "champion",
+   "titel": "Der Turniersieger 🏆",
+   "beschreibung": "ungewöhnlich · 6 🥨 – +3 Lachen je gewonnenen Wettstreit",
+   "prompt": "Character: a tournament champion jester holding a golden trophy cup high, a laurel wreath over his cap, a victory grin, confetti."
+  }
+ ]
+}

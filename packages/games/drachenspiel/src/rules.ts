@@ -15,6 +15,7 @@ import { ALL_CARD_IDS, ALL_SPELL_IDS, CARDS_DB, STAR_CARD } from './cards';
 import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, TRAP_LIMIT, advanceQuest, canStrike, canUseBuilding, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueueOwnBoard, enqueuePlayed, fireTraps, isOverTurnLimit, refreshStats, resolveChoice, settle, strike, wakeDormant } from './core/effects';
 import { DECK_CODE_MAX, DECK_CODE_PATTERN, parseDeckCode } from './deckcode';
 import { DECK_THEMES, DECK_THEME_IDS, themeCardIds } from './decks';
+import { SCENARIO_PATTERN, scenarioFrom, TREASURES_PATTERN, type Scenario, type SideSetup } from './modes/scenarios';
 import { HOUSE_POWERS, powerIsUsable } from './powers';
 import { meta } from './meta';
 import type {
@@ -60,6 +61,33 @@ export const options: OptionSpec[] = [
     hidden: true,
     pattern: DECK_CODE_PATTERN,
     maxLength: DECK_CODE_MAX,
+  },
+  {
+    id: 'scenario',
+    label: 'Solo-Kampf',
+    choices: [{ value: 'none', label: 'Keiner' }],
+    default: 'none',
+    hidden: true,
+    pattern: SCENARIO_PATTERN,
+    maxLength: 40,
+  },
+  {
+    id: 'treasures',
+    label: 'Schätze',
+    choices: [{ value: 'none', label: 'Keine' }],
+    default: 'none',
+    hidden: true,
+    pattern: TREASURES_PATTERN,
+    maxLength: 60,
+  },
+  {
+    id: 'playId',
+    label: 'Kennung der Partie',
+    choices: [{ value: 'none', label: 'Keine' }],
+    default: 'none',
+    hidden: true,
+    pattern: '[a-z0-9]+',
+    maxLength: 24,
   },
   {
     id: 'spells',
@@ -176,7 +204,56 @@ function createPlayer(seat: SeatId): PlayerState {
   };
 }
 
+/** Ein Solo-Kampf: Platz 0 beginnt, Aufstellung und Decks kommen aus dem Szenario. */
+function setupScenario(scenario: Scenario, opts: Options, seed: string): DrachenspielState {
+  const rng = Rng.fromSeed(seed);
+  let entityCounter = 1;
+  const nextId = () => entityCounter++;
+  const state: DrachenspielState = {
+    phase: 'play',
+    activeSeat: 0,
+    turn: 0,
+    players: [createPlayer(0), createPlayer(1)],
+    startingSeat: 0,
+    nextEntityId: 1,
+    rng: rng.state,
+    queue: [],
+    options: { ...opts },
+  };
+  const sides: [SideSetup, SideSetup] = [scenario.me, scenario.enemy];
+  sides.forEach((side, seat) => {
+    const player = state.players[seat as SeatId];
+    player.deckTheme = side.house;
+    player.power = side.house;
+    player.mulliganDone = true;
+    player.deck = createDeck(side.house, rng, nextId, true, side.deck);
+    player.hand = side.hand ? side.hand.map((defId) => ({ uid: `c_${nextId()}`, defId })) : player.deck.splice(0, 3);
+    if (side.health) {
+      player.health = side.health;
+      player.maxHealth = Math.max(player.maxHealth, side.health);
+    }
+    player.armor = side.armor ?? 0;
+    if (side.mana) player.maxMana = side.mana - (seat === 0 ? 1 : 0);
+  });
+  state.rng = rng.state;
+  state.nextEntityId = entityCounter;
+  sides.forEach((side, seat) => {
+    for (const cardId of side.board ?? []) {
+      const def = CARDS_DB[cardId];
+      if (!def) continue;
+      const minion = createMinion(state, def, seat as SeatId);
+      minion.canAttack = true;
+      delete minion.justPlayed;
+      state.players[seat as SeatId].board.push(minion);
+    }
+  });
+  startTurn(state, 0, []);
+  return state;
+}
+
 export function setup(seats: number, opts: Options, seed: string): DrachenspielState {
+  const scenario = scenarioFrom(opts);
+  if (scenario) return setupScenario(scenario, opts, seed);
   const rng = Rng.fromSeed(seed);
   let entityCounter = 1;
   const nextId = () => entityCounter++;

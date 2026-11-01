@@ -110,7 +110,7 @@ export function Datenschutz() {
       </p>
       <p>
         <strong>Sicherung (Narrenhof, Drachenspiel):</strong> Wenn du einen Sicherungscode anlegst, verschlüsselt dein Browser je Spiel deinen Stand
-        (im Narrenhof Glöckchen, Freischaltungen und Hofchronik, im Drachenspiel deine eigenen Decks) mit einem Schlüssel aus diesem Code und legt nur den verschlüsselten Block unter einer daraus abgeleiteten,
+        (im Narrenhof Glöckchen, Freischaltungen und Hofchronik, im Drachenspiel deine eigenen Decks und deinen Solo-Fortschritt) mit einem Schlüssel aus diesem Code und legt nur den verschlüsselten Block unter einer daraus abgeleiteten,
         zufälligen Kennung auf dem Spieleserver in der EU ab; ohne den Code kann niemand ihn lesen, auch ich nicht. Name, E-Mail-Adresse oder ein Konto
         braucht es dafür nicht, ein Passkey bleibt bei dir und deinem Passkey-Speicher. Die Sicherung wird gelöscht, wenn sie 400 Tage lang nicht abgerufen
         wurde. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
@@ -130,7 +130,7 @@ export function Datenschutz() {
         <li>die zuletzt gewählten Einstellungen je Spiel,</li>
         <li>ob der Ton an ist und wie laut, welche Playlist du je Spiel gewählt hast und welche Musikstücke du markiert oder ausgeschlossen hast,</li>
         <li>für Online-Partien deinen Spitznamen, dein Emoji-Bild und die zufällige Geräte-Kennung,</li>
-        <li>im Narrenhof deinen Spielfortschritt, im Drachenspiel deine eigenen Decks und, falls angelegt, deinen Sicherungscode.</li>
+        <li>im Narrenhof deinen Spielfortschritt, im Drachenspiel deine eigenen Decks und deinen Solo-Fortschritt und, falls angelegt, deinen Sicherungscode.</li>
       </ul>
       <p>
         Diese Daten verlassen dein Gerät nicht, außer Spitzname, Emoji-Bild und Geräte-Kennung, wenn du einen Online-Raum betrittst, und der verschlüsselte Stand aus Narrenhof und Drachenspiel, wenn du eine Sicherung anlegst. Du kannst sie jederzeit löschen: mit „Verwerfen“ bei der laufenden Partie oder über die Einstellungen

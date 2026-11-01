@@ -72,6 +72,11 @@ export interface GameUi<V = unknown, M = unknown> {
    */
   prepareOptions?: (options: Options) => Options;
   /**
+   * Am Ende einer Partie auf diesem Gerät: Knopf, der „Revanche“ ersetzt und zum nächsten Schritt führt,
+   * etwa dem nächsten Kampf einer Wanderschaft. `null`: gewöhnliche Revanche.
+   */
+  endAction?: (view: V) => { label: string; path: string } | null;
+  /**
    * Zusätzlicher Abschnitt in der Einrichtung, z. B. Atelier und Album eines Spiels oder eine
    * eingefügte Partie. `options` ist nur zum Lesen; Werte setzt der Abschnitt über `setOption`.
    */

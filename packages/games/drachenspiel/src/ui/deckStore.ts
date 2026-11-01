@@ -1,6 +1,7 @@
 import { DRACHENSPIEL_SALT, scheduleSync, type SyncBlock } from '@brett-und-blatt/ui/sync';
 import { useSyncExternalStore } from 'react';
 import { DECK_CODE_MAX, decodeDeck } from '../deckcode';
+import { emptyBook, mergeBooks, sanitizeBook, type Book } from '../modes/progress';
 import { syncServerUrl } from '../server';
 
 /** Eigene Decks auf diesem Gerät, über die gemeinsame Sicherung auch auf anderen (W-050). */
@@ -20,6 +21,8 @@ export interface SavedDeck {
 
 export interface DeckStore {
   decks: Record<string, SavedDeck>;
+  /** Solo-Fortschritt (Phase 9); ältere Sicherungen haben ihn noch nicht. */
+  book?: Book;
 }
 
 /** Macht aus fremden Daten einen gültigen Stand und begrenzt die Menge. */
@@ -37,7 +40,7 @@ export function sanitizeDecks(value: unknown): DeckStore {
   }
   decks.sort((a, b) => b.updatedAt - a.updatedAt);
   const kept = [...decks.filter((d) => !d.deleted).slice(0, MAX_DECKS), ...decks.filter((d) => d.deleted).slice(0, MAX_TOMBSTONES)];
-  return { decks: Object.fromEntries(kept.map((d) => [d.id, d])) };
+  return { decks: Object.fromEntries(kept.map((d) => [d.id, d])), book: sanitizeBook((value as { book?: unknown } | null)?.book) };
 }
 
 /** Je Kennung gewinnt die jüngste Änderung; auch ein Löschvermerk zählt als Änderung. */
@@ -47,16 +50,16 @@ export function mergeDecks(a: DeckStore, b: DeckStore): DeckStore {
     const known = merged[id];
     if (!known || deck.updatedAt > known.updatedAt) merged[id] = deck;
   }
-  return sanitizeDecks({ decks: merged });
+  return sanitizeDecks({ decks: merged, book: mergeBooks(a.book ?? emptyBook(), b.book ?? emptyBook()) });
 }
 
-const stable = (store: DeckStore) => JSON.stringify(Object.keys(store.decks).sort().map((id) => store.decks[id]));
+const stable = (store: DeckStore) => JSON.stringify([Object.keys(store.decks).sort().map((id) => store.decks[id]), store.book ?? emptyBook()]);
 
 function load(): DeckStore {
   try {
     return sanitizeDecks(JSON.parse(window.localStorage.getItem(KEY) ?? 'null'));
   } catch {
-    return { decks: {} };
+    return { decks: {}, book: emptyBook() };
   }
 }
 
@@ -98,14 +101,40 @@ export function useDecks(): SavedDeck[] {
     .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
+export function useBook(): Book {
+  const current = useSyncExternalStore(
+    (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    () => store,
+    () => store,
+  );
+  return current.book ?? EMPTY;
+}
+
+const EMPTY = emptyBook();
+
+export function currentBook(): Book {
+  return store.book ?? EMPTY;
+}
+
+export function updateBook(change: (book: Book) => Book): void {
+  const before = currentBook();
+  const after = change(before);
+  if (after === before) return;
+  replace({ ...store, book: after });
+  scheduleSync(decksBlock);
+}
+
 export function saveDeck(deck: { id?: string; name: string; code: string }): string {
   const id = deck.id ?? `${Date.now().toString(36)}${Math.floor(Math.random() * 36 ** 4).toString(36)}`;
-  replace(sanitizeDecks({ decks: { ...store.decks, [id]: { id, name: deck.name.trim().slice(0, 30) || 'Mein Deck', code: deck.code, updatedAt: Date.now() } } }));
+  replace(sanitizeDecks({ ...store, decks: { ...store.decks, [id]: { id, name: deck.name.trim().slice(0, 30) || 'Mein Deck', code: deck.code, updatedAt: Date.now() } } }));
   scheduleSync(decksBlock);
   return id;
 }
 
 export function deleteDeck(id: string): void {
-  replace(sanitizeDecks({ decks: { ...store.decks, [id]: { id, name: '', code: '', updatedAt: Date.now(), deleted: true } } }));
+  replace(sanitizeDecks({ ...store, decks: { ...store.decks, [id]: { id, name: '', code: '', updatedAt: Date.now(), deleted: true } } }));
   scheduleSync(decksBlock);
 }
