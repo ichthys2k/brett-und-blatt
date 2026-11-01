@@ -1,9 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SOUND_SETTINGS, soundCatalog, soundDuration, soundsForEvents, type SoundMap } from '../src/audio/sound';
+import { DEFAULT_SOUND_SETTINGS, soundCatalog, soundDuration, soundSettingsFrom, soundsForEvents, type SoundMap } from '../src/audio/sound';
 
 describe('DEFAULT_SOUND_SETTINGS', () => {
   it('hat clientMusic standardmäßig deaktiviert', () => {
     expect(DEFAULT_SOUND_SETTINGS.clientMusic).toBe(false);
+  });
+});
+
+describe('soundSettingsFrom', () => {
+  it('nimmt ohne Gespeichertes die Standardwerte', () => {
+    expect(soundSettingsFrom({})).toEqual(DEFAULT_SOUND_SETTINGS);
+  });
+
+  it('übernimmt das frühere gemeinsame Stummschalten für beides', () => {
+    const settings = soundSettingsFrom({ muted: true, effects: 0.2 });
+    expect(settings).toMatchObject({ effectsOff: true, musicOff: true, effects: 0.2 });
+    expect(settings).not.toHaveProperty('muted');
+  });
+
+  it('schaltet Effekte und Musik getrennt', () => {
+    expect(soundSettingsFrom({ effectsOff: true, musicOff: false })).toMatchObject({ effectsOff: true, musicOff: false });
+    expect(soundSettingsFrom({ effectsOff: false, musicOff: true })).toMatchObject({ effectsOff: false, musicOff: true });
   });
 });
 

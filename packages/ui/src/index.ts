@@ -5,6 +5,7 @@ export { GridBoard, type GridBoardProps } from './GridBoard';
 export { ClockRing, PlayerChip, formatClock, type PlayerChipProps } from './PlayerChip';
 export { NetBoard, type NetBoardProps } from './NetBoard';
 export { useElementSize } from './useElementSize';
+export { SeatRing, seatRingFits, seatRingPosition, type SeatRingProps } from './SeatRing';
 export { useCallDeadline } from './useCallDeadline';
 export { cardSuitColor, PlayingCard, SuitShape, type DeckStyle, type PlayingCardProps } from './cards/PlayingCard';
 export { RoundFrame, RoundStandings, type RoundFrameProps } from './classroom/RoundFrame';
@@ -25,6 +26,7 @@ export {
   type SoundMap,
   type SoundName,
   type SoundSettings,
+  soundSettingsFrom,
   type SoundSpec,
 } from './audio/sound';
 export {

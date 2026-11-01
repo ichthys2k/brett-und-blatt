@@ -7,6 +7,7 @@ import { t } from '../i18n';
 import { contrastForcesPlain, type Look, setLook, useChosenLook } from '../lib/look';
 import { music, useMusicPrefs } from '../lib/music';
 import { navigate, paths } from '../lib/router';
+import { setSoundSettings } from '../lib/sound';
 
 /** Ton-Einstellungen mit allen Stücken zum Probehören (#/ton). */
 function LookChoice() {
@@ -52,6 +53,8 @@ export function SoundSettingsScreen() {
       <div className="rounded-2xl border border-line bg-surface p-4">
         <MusicList
           onPlay={(track) => {
+            // Wer ein Stück ausdrücklich startet, will es auch hören.
+            setSoundSettings({ musicOff: false });
             music.play(playlistTracks(track.playlist), prefs);
             music.next(track);
           }}

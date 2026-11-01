@@ -21,7 +21,7 @@ Pakete A und B aus diesem Plan sind fertig und veröffentlicht (Nicht ärgern! z
 
 ## 4. Kleine Wünsche
 
-- **W-046** Musik und Klangeffekte getrennt ein- und ausschalten.
+- **W-020** Spieler rund um einen Tisch: Pilot mit Mau-Mau und Skat gebaut, übrige Spiele warten auf Cornelius' Urteil; [Plan](spieler-am-tisch.md).
 - **W-048** Bildkarten mit Porträts.
 
 ## 5. Klang und Musik (brauchen Cornelius' Auswahl)

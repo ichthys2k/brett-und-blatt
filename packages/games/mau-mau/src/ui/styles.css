@@ -584,3 +584,22 @@
     min-height: 1.6rem;
   }
 }
+
+/* Spieler rund um den Tisch (ab genug Platz, SeatRing). */
+.mau-table[data-around] {
+  max-width: none;
+  min-height: 0;
+}
+
+.mau-ring-seat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  width: 100%;
+}
+
+.mau-table[data-around] .mau-center {
+  min-height: 0;
+}

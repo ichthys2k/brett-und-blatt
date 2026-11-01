@@ -1,5 +1,5 @@
 import { sortHand, cardEyePoints, cardSuit, type CardId, type SeatId } from '@brett-und-blatt/engine';
-import { CardFan, PlayingCard, TRICK_HAND_MIN_STEP, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import { CardFan, PlayingCard, SeatRing, TRICK_HAND_MIN_STEP, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import {
   getContract,
@@ -20,6 +20,7 @@ export function SkatBoard({
   onMove,
   viewer,
   seatNames,
+  table,
 }: BoardProps<SkatState, SkatMove>) {
   const mySeat: number = typeof viewer === 'number' ? viewer : view.activeSeats[0];
   const isDeclarer = mySeat === view.declarerSeat;
@@ -51,9 +52,8 @@ export function SkatBoard({
   // Erlaubte Karten heben sich ab; unerlaubte Klicks lehnt die Spielleitung ohnehin ab.
   const playableCards = new Set(legalMoves.flatMap((m) => (m.type === 'play' ? [m.card] : [])));
 
-  return (
-    <div className="flex h-full flex-col w-full max-w-4xl mx-auto p-1 gap-2 sm:p-2 flat:p-0">
-      {/* Kopfzeile mit Status und Spielstand */}
+  // Kopfzeile mit Status und Spielstand
+  const header = (
       <div className="flex flex-wrap items-center justify-between gap-2 p-2 flat:py-1 bg-stone-100 dark:bg-stone-800 rounded-xl text-sm">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-amber-600 dark:text-amber-400">
@@ -76,7 +76,10 @@ export function SkatBoard({
           </span>
         </div>
       </div>
+  );
 
+  const dialogs = (
+    <>
       {/* Runden-Ablauf & Dialoge */}
       {view.phase === 'bidding' && (
         <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 rounded-xl">
@@ -221,7 +224,11 @@ export function SkatBoard({
         </div>
       )}
 
-      {/* Stich-Tisch in der Mitte */}
+    </>
+  );
+
+  // Stich-Tisch in der Mitte
+  const trick = (
       <div className="flex min-h-[90px] flex-1 flex-col">
         <TrickTable
           slots={trickSlots}
@@ -232,8 +239,11 @@ export function SkatBoard({
         />
       </div>
 
-      {/* Eigene Handkarten */}
-      <div className="flex flex-col items-center gap-2 mt-auto">
+  );
+
+  // Eigene Handkarten
+  const hand = (
+      <div className="flex w-full flex-col items-center gap-2 mt-auto">
         <div className="text-xs font-medium text-stone-500 dark:text-stone-400 flat:hidden">
           Deine Hand ({myHand.filter((c: CardId) => c !== 'back').length} Karten)
         </div>
@@ -271,7 +281,11 @@ export function SkatBoard({
         />
       </div>
 
-      {/* Runden-Auswertung */}
+  );
+
+  // Runden-Auswertung
+  const roundEnd = (
+    <>
       {(view.phase === 'roundOver' || view.phase === 'passedOut') && (
         <div className="p-4 bg-stone-900/90 text-white rounded-2xl shadow-xl flex flex-col items-center gap-3">
           <h2 className="text-lg font-bold">
@@ -302,6 +316,40 @@ export function SkatBoard({
             Nächstes Spiel
           </button>
         </div>
+      )}
+    </>
+  );
+
+  return (
+    <div className={`flex h-full flex-col w-full mx-auto p-1 gap-2 sm:p-2 flat:p-0 ${table ? '' : 'max-w-4xl'}`}>
+      {header}
+      {table ? (
+        <SeatRing
+          seats={seatNames.length}
+          bottomSeat={mySeat}
+          bottom={hand}
+          renderSeat={(seat) => (
+            <>
+              {seat !== mySeat && (view.hands[seat]?.length ?? 0) > 0 && (
+                <div className="w-20" aria-hidden="true">
+                  <CardFan count={view.hands[seat]!.length} label="" cardWidth={16} renderCard={() => <PlayingCard card={null} deckStyle={view.deckStyle} />} />
+                </div>
+              )}
+              {table.seatChip(seat)}
+            </>
+          )}
+        >
+          {dialogs}
+          {roundEnd}
+          {trick}
+        </SeatRing>
+      ) : (
+        <>
+          {dialogs}
+          {trick}
+          {hand}
+          {roundEnd}
+        </>
       )}
     </div>
   );
@@ -335,6 +383,7 @@ function formatDeclaration(decl: SkatDeclaration): string {
 
 export const gameUi: GameUi<SkatState, SkatMove> = {
   Board: SkatBoard,
+  seatsAround: true,
   sounds: {
     cardPlayed: 'karte-legen',
     trickTaken: 'stich-einsammeln',
