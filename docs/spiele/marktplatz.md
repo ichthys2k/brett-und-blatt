@@ -206,8 +206,14 @@ Wer auf einen Ausrufer kommt, zieht die oberste Karte vom verdeckten Ausrufersta
 - [x] Setting im Königreich des Narrenhofs mit Händlerfamilien als Tierfamilien: so lassen oder ändern?
 - [x] Die sechs Zünfte (Bäcker, Weber, Imker, Schuster, Schmiede, Steinmetze) und ihre Betriebe: passen sie?
 - [x] Währung Brezeln, oder lieber etwas anderes (Taler, Mehlsäcke)?
-- [ ] Wertung nach Vermögen zu einem festen Zeitpunkt statt bis zur Pleite: einverstanden? (Geld entscheidet, festgelegt am 31.10.)
+- [x] Wertung nach Vermögen zu einem festen Zeitpunkt statt bis zur Pleite: einverstanden? (Geld entscheidet, festgelegt am 31.10.)
 - [x] Zunftpartnerschaft, verdeckte Hofnachrichten und die zwölf Ausruferkarten: so behalten?
 - [x] Soll ich vor dem Bau eine Probeversion nur mit Bots laufen lassen und dir die Ergebnisse zeigen?
+
+**Gebaut (1.11.):** `packages/games/marketplace`. Cornelius hat den Zahlenvorschlag aus [`marktplatz-probe.md`](marktplatz-probe.md) angenommen. **Die Tabellen oben zeigen noch die ursprünglichen Zahlen; maßgeblich ist `src/board.ts`:** Startkapital 40 (Auswahl 30/40/50) und +1 je späterem Platz, Marktgeld 5 (Königsbesuch doppelt), Zunfthaus-Ware 3/5/6/8/9/11, Partnerschaft bietet nur an, wer zwei Betriebe der Zunft hat, Dauer 3 Jahre, ab 5 Spielern 2. Die Wertung nach Vermögen zum festen Zeitpunkt gilt.
+
+**Neu beim Bau:** Ersteigerte Betriebe zählen bei der Wertung mit dem gezahlten Preis, nicht mit dem Listenpreis. Sonst lohnte es sich zu sehr, gezielt abzulehnen und billig zu ersteigern (der Bot gewann so 54 Brezeln gegen 94 Listenwert). Ein Pfand gilt als Darlehen über den halben Listenpreis.
+
+**Noch nicht drin:** Narrenhof-Porträts und Sprüche der Höflinge, Fachwerkhäuser als Feldgrafik (Felder zeigen Emojis), eigene Klänge (es laufen vorhandene aus dem Katalog). Der Hofnarr erzählt noch keinen echten Witz, die Meldung nennt ihn nur.
 
 **Entschieden (1.11.):** Das Spiel heißt **Marktplatz**; Brezelbach bleibt der Name des Ortes. Setting im Königreich des Narrenhofs mit Tierfamilien, die sechs Zünfte, Brezeln als Währung sowie Zunftpartnerschaft, verdeckte Hofnachrichten und die zwölf Ausruferkarten bleiben so. Vor dem Bau läuft eine Probeversion nur mit Bots, die Ergebnisse bekommt Cornelius zu sehen.

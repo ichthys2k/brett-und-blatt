@@ -4,21 +4,9 @@ Diese Seite fasst zusammen, was geplant, aber noch nicht gebaut ist, damit ein a
 
 Regeln wie immer (siehe `CLAUDE.md`): eigener Zweig, Eintrag in `PLANUNG.md` vorher auf `in Arbeit (Name, Zweig)`, Tests + `corepack pnpm check` + Rauchtest + Prüfstand, Blick im Browser. Commit, Push und Veröffentlichen nur auf Cornelius' Wort („deploy“). Keine Nachbauten bestimmter Verlagsspiele: eigene Namen, eigene Kernregel.
 
-## 1. Marktplatz (W-041) – nächster Schritt: Probeversion nur mit Bots
+## 1. Marktplatz (W-041) – gebaut auf `claude/marktplatz-probe`, wartet auf Veröffentlichung
 
-Plan: [`marktplatz.md`](marktplatz.md) (früher „Marktflecken“; Ort heißt weiter Brezelbach). Würfel- und Handelsspiel im Mittelalter statt Monopoly, 2–6 Spieler, 36 Felder, sechs Zünfte, Brezeln als Spielwährung, feste Dauer, Vermögen entscheidet.
-
-**Von Cornelius bestätigt (31.10./1.11.):** Name Marktplatz, Setting im Königreich des Narrenhofs mit Tierfamilien, die sechs Zünfte (Bäcker, Weber, Imker, Schuster, Schmiede, Steinmetze), Brezeln, Zunftpartnerschaft, verdeckte Hofnachrichten, die zwölf Ausruferkarten, Wertung nach Vermögen zu festem Zeitpunkt.
-
-**Auftrag vor dem Bau (von Cornelius gewünscht):** eine Probeversion nur mit Bots laufen lassen und ihm die Ergebnisse zeigen, **bevor** Oberfläche und Spielmodul gebaut werden. Vorschlag für die Probe:
-
-1. Reines Regel-Skript (z. B. `packages/games/marketplace/scripts/probe.mjs` oder ein Vitest mit `PRUEFSTAND`), noch ohne UI und ohne Eintrag im Server. Spiel-id-Vorschlag: `marketplace`.
-2. Regeln genau wie im Plan (Felder, Preise, Waren, Baukosten, Kerker, Steuern, Pfand, Versteigerung reihum, Handel, Partnerschaft, „aushelfen“ mit Schuldschein, Hofnachrichten, Ausruferkarten).
-3. Einfacher Bot „Krämer“ (kauft mit Reserve, bevorzugt fast volle Zünfte, baut gleichmäßig, nimmt Handel an, wenn er nach Bewertung gewinnt) plus Zufallsbot.
-4. Je Spielerzahl 2–6 und Dauer 2/3/4 Jahre einige tausend Partien. Messen: Siegquote je Startplatz, je Zunft (wer sie besitzt), Anteil Partien mit Schuldscheinen, Spielzüge/Dauer, Vermögensabstand Sieger–Letzter, Wirkung von Partnerschaft und Hofnachrichten, Bot gegen Zufall.
-5. Ziel: keine Zunft klar besser, kein Startplatz-Vorteil über etwa 5 Prozentpunkte. Zahlen anpassen, Ergebnisse als Bericht für Cornelius aufschreiben (Tabelle + Vorschläge), **erst nach seinem Ja** bauen.
-
-Danach Bau laut Plan (Regeln + Tests, Bot, Oberfläche mit Handel), geschätzt etwa 11 Tage.
+Spiel: `packages/games/marketplace`, Plan: [`marktplatz.md`](marktplatz.md), Probe: [`marktplatz-probe.md`](marktplatz-probe.md). Offen: Test online mit zwei Geräten, Narrenhof-Porträts und Sprüche, Feldgrafik, eigene Klänge (Auswahl durch Cornelius).
 
 ## 2. Marktstände und Grafschaft (W-039, Paket C) – wartet auf Cornelius' Ja zum Entwurf
 
