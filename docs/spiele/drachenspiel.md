@@ -153,3 +153,14 @@ Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes D
 - **Aufteilung:** `ui/PlayBoard.tsx`, `ui/phases.tsx`, `ui/parts.tsx`; `index.tsx` hält nur noch die Anbindung.
 - **Messung:** Neuer gegen alten „schwer“ 84 von 100 Partien. Rechenzeit bei 800 ms Budget: Median 11 ms, Spitze 407 ms; mit der Zähl-Uhr des Servers (`BOT_STEP_MS` 0,15) höchstens 150 ms, lokal gemessen, nicht auf Cloudflare.
 - **Stufen und Startvorteil (150 Partien je Zeile, etwa ±8 Prozentpunkte):** Schwer schlägt Mittel zu 79 %, Mittel schlägt Leicht zu 97 %. Startspieler bei zufälliger Deckwahl: schwer 60 %, mittel 52 %, leicht 53 %. Festes Deck, schwer: Wald 52 %, Meer 53 %, Bauernhof 51 %, Wildnis 65 %, Krabbeltiere 45 %. Partien im Spiegel „schwer“ dauern jetzt im Schnitt 18,4 statt 14,7 Züge.
+
+## Held und Grundregeln (01.11.2026, Phase 3 des Ausbauplans, `ruleVersion` 5)
+
+- **Hauskraft:** Zug `heroPower`, 2 Mana, einmal je Zug, als Daten in `src/powers.ts`. Eichenkraft (Wald: +1 Angriff im Zug, +1 Rüstung), Gezeitenruf (Meer: zufällig Muschel, Garnele oder Seepferdchen), Kükenruf (Bauernhof), Dickes Fell (Wildnis: 2 Rüstung), Kleiner Stachel (Krabbeltiere: Rüstzeug 1 Angriff, 2 Angriffe). Namen sind Vorschläge. Das gemischte Deck bekommt eine Kraft aus dem Seed. Kräfte, die ein Tier rufen, gehen nicht bei vollem Feld.
+- **Rüstung** fängt jeden Schaden an Helden vor den Leben ab, auch Müdigkeit.
+- **Heldenangriff:** Zug `heroAttack`, einmal je Zug, mit denselben Zielregeln wie Tiere. Ein angegriffenes Tier schlägt zurück, Gift wirkt nicht auf Helden. Rüstzeug nutzt sich auch beim Angriff mit Zusatzangriff ab.
+- **Grundregeln:** Hand 10, Sternschnuppe darf 11 Mana geben. **Neu:** Wer als Zweiter beginnt, startet mit 5 Rüstung.
+- **Kein „Zug zurück“ mehr** (`noUndo`): Gezogene Karten und Zufall ließen sich sonst durch Zurücknehmen ausspähen.
+- **Handy:** Die Hand überlappt ab etwa sechs Karten statt zu scrollen, Tiere schrumpfen, sodass sieben aufs Feld passen. Unter 480 px entfällt der Name in der Heldenleiste (er steht im Spieler-Chip). Im Browser bei 375 × 812 mit zehn Handkarten und sechs Tieren angesehen, Querformat nicht einzeln geprüft.
+- **Messung (Bots, 200 Partien je Zeile, etwa ±7 Prozentpunkte):** Startspieler bei freier Deckwahl schwer 54 %, mittel 52 %, leicht 46 %. Festes Deck schwer/mittel: Wald 50/56, Meer 46/39, Bauernhof 62/41, Wildnis 59/60, Krabbeltiere 41/49. Schwer schlägt Mittel zu 86 %, Mittel schlägt Leicht zu 99 %. Verglichene Ausgleiche (300 Partien, schwer/mittel, ohne Ausgleich 63/61): 5 statt 4 Startkarten 39/57, kein Ziehen im ersten Zug 38/52, zwei Sternschnuppen 45/58, Rüstung 3: 56/59, 5: 51/53, 8: 48/43. Die Rechenzeit auf Cloudflare ist nicht neu gemessen.
+- **Noch offen:** Echte Online-Partie mit zwei Geräten (auch der Wandler für laufende Räume ist nur per Test geprüft), Auswahl eigener Klänge (Hauskraft nutzt vorerst `stapel-fertig`).

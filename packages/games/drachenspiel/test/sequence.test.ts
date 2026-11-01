@@ -15,6 +15,7 @@ function playing(): DrachenspielState {
     const move: DrachenspielMove = state.phase === 'mulligan' ? { type: 'mulligan', discardIndices: [] } : gameModule.legalMoves(state, seat)[0]!;
     state = gameModule.applyMove(state, seat, move).state;
   }
+  for (const player of state.players) player.armor = 0;
   return JSON.parse(JSON.stringify(state)) as DrachenspielState;
 }
 
@@ -32,6 +33,20 @@ function withBoards(mine: Minion[], theirs: Minion[]): { state: DrachenspielStat
   state.players[1 - seat]!.board = theirs.map((m) => ({ ...m, owner: (1 - seat) as SeatId }));
   return { state, seat };
 }
+
+describe('Planer und Heldenangriff', () => {
+  it('überlebt Pläne, in denen der eigene Held am Gegenschlag fällt', () => {
+    // Der eigene Beschützer hält im Gegenzug, nur der Heldenangriff selbst ist tödlich.
+    const { state, seat } = withBoards([minion('m_wand', 0, 0, 50, { taunt: true })], [minion('m_stark', 0, 9, 9)]);
+    state.players[seat]!.health = 2;
+    state.players[seat]!.gear = { name: 'x', emoji: '🐝', attack: 1, durability: 1 };
+    const plans = planTurn(state, seat, { ...HARD_PLAN, replies: 50 }, () => false);
+    expect(plans.size).toBeGreaterThan(0);
+    const suicide = [...plans.values()].find((plan) => plan.move.type === 'heroAttack' && plan.move.target.kind === 'minion');
+    const endTurn = [...plans.values()].find((plan) => plan.move.type === 'endTurn');
+    expect(suicide!.value).toBeLessThan(endTurn!.value);
+  });
+});
 
 function apply(state: DrachenspielState, seat: SeatId, move: DrachenspielMove): { after: DrachenspielState; events: GameEvent[] } {
   const { state: after, events } = gameModule.applyMove(state, seat, move);

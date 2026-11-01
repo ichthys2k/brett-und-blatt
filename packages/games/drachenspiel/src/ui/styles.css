@@ -121,7 +121,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 12px;
+  padding: 6px 4px;
   gap: 8px;
 }
 
@@ -172,6 +172,140 @@
   color: #2d3436;
 }
 
+.ds-badge-armor {
+  background: #636e72;
+  color: white;
+}
+
+.ds-badge-gear {
+  background: #fdcb6e;
+  color: #2d3436;
+}
+
+.ds-hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.ds-opponent-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ds-hero-card.can-attack {
+  border-color: #00b894;
+  cursor: pointer;
+}
+
+.ds-hero-card.selected {
+  border-color: #fdcb6e;
+  box-shadow: 0 0 10px #fdcb6e;
+}
+
+.ds-power {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  font-size: 1.4rem;
+  line-height: 1;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--color-border, #dfe6e9);
+  background: var(--color-surface, #ffffff);
+  filter: grayscale(0.8);
+  opacity: 0.65;
+  -webkit-touch-callout: none;
+}
+
+.ds-power.playable {
+  border-color: #0984e3;
+  box-shadow: 0 0 8px rgba(9, 132, 227, 0.6);
+  cursor: pointer;
+  filter: none;
+  opacity: 1;
+}
+
+.ds-power-cost {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 18px;
+  height: 18px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 18px;
+  border-radius: 50%;
+  background: #0984e3;
+  color: white;
+}
+
+.ds-power-badge {
+  background: #dfe6e9;
+  border: none;
+  cursor: pointer;
+}
+
+.ds-power-badge.used {
+  opacity: 0.45;
+}
+
+.ds-deck-power {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+/* Handy: Der Name steht schon im Spieler-Chip darüber; so bleibt die Hand ganz sichtbar. */
+@media (max-width: 480px) {
+  .ds-hero-name {
+    display: none;
+  }
+
+  .ds-hero-card {
+    padding: 4px 8px;
+    gap: 4px;
+    border-radius: 16px;
+    flex-shrink: 0;
+  }
+
+  .ds-hero-avatar {
+    font-size: 1.4rem;
+  }
+
+  .ds-opponent-zone,
+  .ds-player-zone {
+    padding: 4px 0;
+    gap: 4px;
+  }
+
+  .ds-actions {
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .ds-btn-endturn {
+    padding: 6px 8px;
+    max-width: 76px;
+    font-size: 0.82rem;
+    line-height: 1.15;
+  }
+
+  .ds-opponent-info {
+    gap: 2px;
+  }
+
+  .ds-hero-badges {
+    max-width: 72px;
+  }
+}
+
+.ds-badge {
+  white-space: nowrap;
+}
+
 /* Boards */
 .ds-board-container {
   flex: 1;
@@ -190,7 +324,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: clamp(2px, 1vw, 8px);
   min-height: 95px;
   width: 100%;
 }
@@ -202,8 +336,10 @@
 }
 
 /* Minions */
+/* Sieben Tiere passen auf jede Breite: Die Figuren schrumpfen, statt über den Rand zu laufen. */
 .ds-minion {
-  width: 78px;
+  flex: 0 1 78px;
+  min-width: 0;
   height: 98px;
   background: var(--color-surface, #ffffff);
   border: 2px solid var(--color-border, #b2bec3);
@@ -401,10 +537,20 @@
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: 6px;
   padding: 6px 4px 2px;
-  overflow-x: auto;
   max-width: 100%;
+  container-type: inline-size;
+}
+
+/* Bis zu zehn Karten passen ohne Scrollen: Wird es eng, überlappen sie, die Kostenecke bleibt frei. */
+.ds-hand > .ds-card + .ds-card {
+  margin-left: min(6px, calc((100cqw - 90px) / var(--ds-hand-gaps) - 82px));
+}
+
+.ds-hand > .ds-card:hover,
+.ds-hand > .ds-card:focus-visible,
+.ds-hand > .ds-card.ds-card-selected {
+  z-index: 20;
 }
 
 .ds-card {
@@ -567,7 +713,8 @@
   }
 }
 
-.ds-minion.ds-attacking {
+.ds-minion.ds-attacking,
+.ds-hero-card.ds-attacking {
   animation: ds-attack-strike 0.52s cubic-bezier(0.2, 0.8, 0.25, 1) !important;
   z-index: 60 !important;
   pointer-events: none !important;
@@ -707,6 +854,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ds-minion.ds-attacking,
+  .ds-hero-card.ds-attacking,
   .ds-minion.ds-attacking.ds-minion-dying,
   .ds-attacking-up,
   .ds-attacking-down,

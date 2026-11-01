@@ -26,6 +26,8 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
     cardDrawn: 'drachen-karte-ziehen',
     cardPlayed: 'drachen-karte-legen',
     attack: 'drachen-angriff',
+    heroAttack: 'drachen-angriff',
+    heroPowerUsed: 'stapel-fertig',
     damage: (event) => ('targetType' in event && event.targetType === 'hero' ? 'drachen-schaden-held' : 'drachen-schaden-tier'),
     minionLeft: 'leben-weg',
     bubblePopped: 'stein-heraus',
@@ -37,7 +39,7 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
   seatDetail: (view, seat) => {
     const p = view.players[seat];
     if (!p) return null;
-    return `❤️ ${p.health} | 💧 ${p.mana}/${p.maxMana}`;
+    return `❤️ ${p.health}${p.armor > 0 ? ` 🛡️ ${p.armor}` : ''} | 💧 ${p.mana}/${p.maxMana}`;
   },
 };
 

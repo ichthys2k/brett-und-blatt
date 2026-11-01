@@ -1,10 +1,12 @@
-import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
+import { Rng, type GameEvent, type SeatId } from '@brett-und-blatt/engine';
 import { CARDS_DB } from '../cards';
 import type { CardDefinition, DrachenspielState, Effect, Enchantment, Minion, PlayerState, QueuedEffect, Selector, SpellTarget } from '../types';
 
-export const HAND_LIMIT = 7;
+export const HAND_LIMIT = 10;
 export const BOARD_LIMIT = 7;
 export const MAX_MANA = 10;
+/** Ausgleich für den Startvorteil: gemessen mit Bots, 3 Rüstung bewegen kaum etwas, 8 sind zu viel. */
+export const SECOND_SEAT_ARMOR = 5;
 /** Nach so vielen Zügen endet die Partie unentschieden, damit sie nie endlos läuft. */
 export const MAX_TURNS = 89;
 /** Grenze gegen Endlosketten aus Effekten und Abschieden je Aktion. */
@@ -59,9 +61,17 @@ export function damageMinion(minion: Minion, amount: number, isPoisonous: boolea
   events.push({ type: 'damage', targetType: 'minion', targetId: minion.id, amount, health: minion.health });
 }
 
+/** Rüstung fängt Schaden zuerst ab; zurück kommt, was die Leben trifft. */
+function absorb(player: PlayerState, amount: number): number {
+  const blocked = Math.min(player.armor ?? 0, amount);
+  player.armor = (player.armor ?? 0) - blocked;
+  player.health -= amount - blocked;
+  return amount - blocked;
+}
+
 export function damageHero(player: PlayerState, amount: number, events: GameEvent[]): void {
-  player.health -= amount;
-  events.push({ type: 'damage', targetType: 'hero', targetSeat: player.seat, amount, health: player.health });
+  const lost = absorb(player, amount);
+  events.push({ type: 'damage', targetType: 'hero', targetSeat: player.seat, amount, lost, armor: player.armor, health: player.health });
 }
 
 /** Heilt höchstens bis zum Maximum; das Ereignis nennt die wirklich geheilte Menge. */
@@ -83,8 +93,8 @@ function healMinion(minion: Minion, amount: number | 'full', events: GameEvent[]
 export function drawCard(player: PlayerState, events: GameEvent[]): void {
   if (player.deck.length === 0) {
     player.fatigue++;
-    player.health -= player.fatigue;
-    events.push({ type: 'fatigue', seat: player.seat, damage: player.fatigue, health: player.health });
+    absorb(player, player.fatigue);
+    events.push({ type: 'fatigue', seat: player.seat, damage: player.fatigue, armor: player.armor, health: player.health });
     return;
   }
   const card = player.deck.shift()!;
@@ -200,8 +210,28 @@ function runEffect(state: DrachenspielState, frame: QueuedEffect, events: GameEv
       }
       break;
     case 'mana':
-      player.mana = Math.min(MAX_MANA, player.mana + effect.amount);
+      // Darf über die Grenze gehen: Die Sternschnuppe gibt auch bei 10 Kristallen eine elfte Einheit.
+      player.mana += effect.amount;
       break;
+    case 'armor':
+      player.armor += effect.amount;
+      events.push({ type: 'armorGained', seat: frame.seat, amount: effect.amount, armor: player.armor });
+      break;
+    case 'heroAttack':
+      player.heroAttackBonus += effect.amount;
+      events.push({ type: 'heroAttackGained', seat: frame.seat, amount: effect.amount });
+      break;
+    case 'equip':
+      player.gear = { ...effect.gear };
+      events.push({ type: 'gearEquipped', seat: frame.seat, gear: player.gear });
+      break;
+    case 'summonRandom': {
+      const rng = new Rng(state.rng);
+      const cardId = rng.pick(effect.cardIds);
+      state.rng = rng.state;
+      summon(state, cardId, frame.seat, events);
+      break;
+    }
   }
 }
 

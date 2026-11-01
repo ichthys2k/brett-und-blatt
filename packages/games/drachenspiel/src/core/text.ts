@@ -62,6 +62,14 @@ function effectText(effect: Effect, targeting: SpellTargeting, lookup: Record<st
       return `Spült ${accusative(effect.to, targeting)} zurück auf die Hand (Spielsteine und bei voller Hand: weg).`;
     case 'mana':
       return `+${effect.amount} Mana in dieser Runde.`;
+    case 'armor':
+      return `+${effect.amount} Rüstung.`;
+    case 'heroAttack':
+      return `Dein Held hat in diesem Zug +${effect.amount} Angriff.`;
+    case 'equip':
+      return `Rüstzeug für deinen Helden: ${effect.gear.name} (${effect.gear.attack} Angriff, hält ${effect.gear.durability} Angriffe).`;
+    case 'summonRandom':
+      return `Ruft zufällig ${effect.cardIds.map((id) => summonText(lookup[id])).join(', ').replace(/, ([^,]*)$/, ' oder $1')} herbei.`;
   }
 }
 

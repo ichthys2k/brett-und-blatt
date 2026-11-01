@@ -20,7 +20,32 @@ export type Effect =
   | { kind: 'draw'; count: number }
   | { kind: 'summon'; cardId: string; count?: number }
   | { kind: 'returnToHand'; to: Selector }
-  | { kind: 'mana'; amount: number };
+  | { kind: 'mana'; amount: number }
+  | { kind: 'armor'; amount: number }
+  /** Angriff des eigenen Helden, nur für diesen Zug. */
+  | { kind: 'heroAttack'; amount: number }
+  | { kind: 'equip'; gear: Gear }
+  /** Ruft eines der Tiere, ausgelost über den Zufallsstrom der Partie. */
+  | { kind: 'summonRandom'; cardIds: string[] };
+
+/** Rüstzeug: zeitlich begrenzter Angriff des Helden, nutzt sich mit jedem Angriff ab. */
+export interface Gear {
+  name: string;
+  emoji: string;
+  attack: number;
+  durability: number;
+}
+
+/** Hauskraft: einmal je Zug, die Wirkung ist wie bei Karten reine Daten. */
+export interface HousePower {
+  id: DeckThemeId;
+  name: string;
+  emoji: string;
+  cost: number;
+  effects: Effect[];
+  /** Regeltext; wird aus `effects` erzeugt. */
+  text: string;
+}
 
 export interface Trigger {
   on: 'played' | 'death';
@@ -110,6 +135,14 @@ export interface PlayerState {
   seat: SeatId;
   health: number;
   maxHealth: number;
+  armor: number;
+  gear: Gear | null;
+  /** Zusätzlicher Angriff des Helden in diesem Zug. */
+  heroAttackBonus: number;
+  heroAttacked: boolean;
+  /** Hauskraft dieses Platzes; beim gemischten Deck aus dem Seed gewählt. */
+  power: DeckThemeId | null;
+  powerUsed: boolean;
   mana: number;
   maxMana: number;
   deck: CardInstance[];
@@ -140,6 +173,12 @@ export interface HiddenPlayerView {
   seat: SeatId;
   health: number;
   maxHealth: number;
+  armor: number;
+  gear: Gear | null;
+  heroAttackBonus: number;
+  heroAttacked: boolean;
+  power: DeckThemeId | null;
+  powerUsed: boolean;
   mana: number;
   maxMana: number;
   deckCount: number;
@@ -166,4 +205,6 @@ export type DrachenspielMove =
   | { type: 'mulligan'; discardIndices: number[] }
   | { type: 'playCard'; handIndex: number; target?: SpellTarget }
   | { type: 'attack'; attackerId: string; target: { kind: 'minion'; id: string } | { kind: 'hero' } }
+  | { type: 'heroPower' }
+  | { type: 'heroAttack'; target: { kind: 'minion'; id: string } | { kind: 'hero' } }
   | { type: 'endTurn' };
