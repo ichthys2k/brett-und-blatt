@@ -1,3 +1,4 @@
+import { effectsText } from './core/text';
 import type { CardDefinition } from './types';
 
 export const STAR_CARD: CardDefinition = {
@@ -9,6 +10,8 @@ export const STAR_CARD: CardDefinition = {
   emoji: '⭐',
   quote: 'Wünsch dir was!',
   isSpell: true,
+  effects: [{ kind: 'mana', amount: 1 }],
+  targeting: 'none',
 };
 
 /**
@@ -16,19 +19,21 @@ export const STAR_CARD: CardDefinition = {
  * tauscht jedes Themendeck drei Tierpaare gegen drei Zauberpaare (siehe `decks.ts`).
  */
 export const SPELLS_DB: Record<string, CardDefinition> = {
-  s_lightning: { id: 's_lightning', name: 'Blitzschlag', cost: 2, attack: 0, health: 0, emoji: '⚡', quote: 'Krawumm!', isSpell: true, spell: 'lightning', targeting: 'enemyAny', text: '3 Schaden an einem gegnerischen Tier oder Helden.' },
-  s_honey: { id: 's_honey', name: 'Honigtopf', cost: 1, attack: 0, health: 0, emoji: '🍯', quote: 'Süß macht stark!', isSpell: true, spell: 'honey', targeting: 'ownMinion', text: 'Ein eigenes Tier bekommt +2 Angriff und +2 Leben.' },
-  s_tailwind: { id: 's_tailwind', name: 'Rückenwind', cost: 1, attack: 0, health: 0, emoji: '🍃', quote: 'Husch, husch!', isSpell: true, spell: 'tailwind', targeting: 'ownMinion', text: 'Ein eigenes Tier bekommt +1 Angriff und darf sofort angreifen.' },
-  s_soapBubble: { id: 's_soapBubble', name: 'Seifenblase', cost: 1, attack: 0, health: 0, emoji: '🫧', quote: 'Plopp – nichts passiert.', isSpell: true, spell: 'soapBubble', targeting: 'ownMinion', text: 'Ein eigenes Tier bekommt eine Schutzblase.' },
-  s_growth: { id: 's_growth', name: 'Wachstumsschub', cost: 3, attack: 0, health: 0, emoji: '🌱', quote: 'Groß und stark!', isSpell: true, spell: 'growth', targeting: 'none', text: 'Alle eigenen Tiere bekommen +1 Angriff und +1 Leben.' },
-  s_summerRain: { id: 's_summerRain', name: 'Sommerregen', cost: 2, attack: 0, health: 0, emoji: '🌦️', quote: 'Das tut gut!', isSpell: true, spell: 'summerRain', targeting: 'none', text: 'Dein Held heilt 3 Leben, alle eigenen Tiere heilen ganz.' },
-  s_clover: { id: 's_clover', name: 'Glücksklee', cost: 2, attack: 0, health: 0, emoji: '🍀', quote: 'Vier Blätter, zwei Karten!', isSpell: true, spell: 'clover', targeting: 'none', text: 'Ziehe zwei Karten.' },
-  s_flood: { id: 's_flood', name: 'Flutwelle', cost: 3, attack: 0, health: 0, emoji: '🌊', quote: 'Ab nach Hause!', isSpell: true, spell: 'flood', targeting: 'enemyMinion', text: 'Ein gegnerisches Tier wird zurück auf die Hand gespült (bei voller Hand ist es weg).' },
-  s_whirlwind: { id: 's_whirlwind', name: 'Wirbelsturm', cost: 4, attack: 0, health: 0, emoji: '🌪️', quote: 'Festhalten!', isSpell: true, spell: 'whirlwind', targeting: 'none', text: '2 Schaden an allen gegnerischen Tieren.' },
+  s_lightning: { id: 's_lightning', name: 'Blitzschlag', cost: 2, attack: 0, health: 0, emoji: '⚡', quote: 'Krawumm!', isSpell: true, effects: [{ kind: 'damage', amount: 3, to: { pick: 'chosen' } }], targeting: 'enemyAny' },
+  s_honey: { id: 's_honey', name: 'Honigtopf', cost: 1, attack: 0, health: 0, emoji: '🍯', quote: 'Süß macht stark!', isSpell: true, effects: [{ kind: 'buff', attack: 2, health: 2, to: { pick: 'chosen' } }], targeting: 'ownMinion' },
+  s_tailwind: { id: 's_tailwind', name: 'Rückenwind', cost: 1, attack: 0, health: 0, emoji: '🍃', quote: 'Husch, husch!', isSpell: true, effects: [{ kind: 'buff', attack: 1, to: { pick: 'chosen' } }, { kind: 'ready', to: { pick: 'chosen' } }], targeting: 'ownMinion' },
+  s_soapBubble: { id: 's_soapBubble', name: 'Seifenblase', cost: 1, attack: 0, health: 0, emoji: '🫧', quote: 'Plopp – nichts passiert.', isSpell: true, effects: [{ kind: 'grantKeyword', keyword: 'bubble', to: { pick: 'chosen' } }], targeting: 'ownMinion' },
+  s_growth: { id: 's_growth', name: 'Wachstumsschub', cost: 3, attack: 0, health: 0, emoji: '🌱', quote: 'Groß und stark!', isSpell: true, effects: [{ kind: 'buff', attack: 1, health: 1, to: { pick: 'allMinions', side: 'own' } }], targeting: 'none' },
+  s_summerRain: { id: 's_summerRain', name: 'Sommerregen', cost: 2, attack: 0, health: 0, emoji: '🌦️', quote: 'Das tut gut!', isSpell: true, effects: [{ kind: 'heal', amount: 3, to: { pick: 'hero', side: 'own' } }, { kind: 'heal', amount: 'full', to: { pick: 'allMinions', side: 'own' } }], targeting: 'none' },
+  s_clover: { id: 's_clover', name: 'Glücksklee', cost: 2, attack: 0, health: 0, emoji: '🍀', quote: 'Vier Blätter, zwei Karten!', isSpell: true, effects: [{ kind: 'draw', count: 2 }], targeting: 'none' },
+  s_flood: { id: 's_flood', name: 'Flutwelle', cost: 3, attack: 0, health: 0, emoji: '🌊', quote: 'Ab nach Hause!', isSpell: true, effects: [{ kind: 'returnToHand', to: { pick: 'chosen' } }], targeting: 'enemyMinion' },
+  s_whirlwind: { id: 's_whirlwind', name: 'Wirbelsturm', cost: 4, attack: 0, health: 0, emoji: '🌪️', quote: 'Festhalten!', isSpell: true, effects: [{ kind: 'damage', amount: 2, to: { pick: 'allMinions', side: 'enemy' } }], targeting: 'none' },
 };
 
 export const BUTTERFLY_TOKEN: CardDefinition = {
   id: 'token_butterfly',
+  token: true,
+  textName: 'einen Schmetterling',
   name: 'Schmetterling',
   cost: 1,
   attack: 1,
@@ -36,11 +41,13 @@ export const BUTTERFLY_TOKEN: CardDefinition = {
   emoji: '🦋',
   quote: 'Frei wie der Wind!',
   sound: 'schmetterling.mp3',
-  abilities: [{ type: 'bubble' }],
+  keywords: ['bubble'],
 };
 
 export const ANT_TOKEN: CardDefinition = {
   id: 'token_ant',
+  token: true,
+  textName: 'einen Ameisen-Soldaten',
   name: 'Ameisen-Soldat',
   cost: 1,
   attack: 1,
@@ -60,7 +67,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🐜',
     quote: 'Für die Königin!',
     sound: 'ameise.mp3',
-    abilities: [{ type: 'battlecry', effect: 'summon_ant' }],
+    triggers: [{ on: 'played', do: [{ kind: 'summon', cardId: 'token_ant' }] }],
   },
   c2: {
     id: 'c2',
@@ -71,7 +78,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🦟',
     quote: 'Sssss... Piek!',
     sound: 'mücke.mp3',
-    abilities: [{ type: 'rush' }],
+    keywords: ['rush'],
   },
   c3: {
     id: 'c3',
@@ -92,7 +99,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🪲',
     quote: 'Harter Panzer, weicher Kern.',
     sound: 'kaefer.mp3',
-    abilities: [{ type: 'taunt' }],
+    keywords: ['taunt'],
   },
   c5: {
     id: 'c5',
@@ -103,7 +110,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🦋',
     quote: 'Schwebe wie ein Schmetterling...',
     sound: 'schmetterling.mp3',
-    abilities: [{ type: 'bubble' }],
+    keywords: ['bubble'],
   },
   c6: {
     id: 'c6',
@@ -144,7 +151,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🦎',
     quote: 'Sonne tanken...',
     sound: 'Eidechse.mp3',
-    abilities: [{ type: 'stealth' }],
+    keywords: ['stealth'],
   },
   c10: {
     id: 'c10',
@@ -165,7 +172,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🕸️',
     quote: 'Ein Netz voller Lügen.',
     sound: 'spider.mp3',
-    abilities: [{ type: 'poisonous' }],
+    keywords: ['poisonous'],
   },
   c12: {
     id: 'c12',
@@ -176,7 +183,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🦂',
     quote: 'Mein Stich sitzt.',
     sound: 'skorpion.mp3',
-    abilities: [{ type: 'poisonous' }],
+    keywords: ['poisonous'],
   },
   c13: {
     id: 'c13',
@@ -187,7 +194,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🐢',
     quote: 'Langsam aber sicher.',
     sound: 'schildgröte.mp3',
-    abilities: [{ type: 'taunt' }],
+    keywords: ['taunt'],
   },
   c14: {
     id: 'c14',
@@ -198,7 +205,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🐍',
     quote: 'Sssieh mir in die Augen.',
     sound: 'schlange.mp3',
-    abilities: [{ type: 'poisonous' }],
+    keywords: ['poisonous'],
   },
   c15: {
     id: 'c15',
@@ -209,7 +216,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🦀',
     quote: 'Zwick zwick!',
     sound: 'krebs.mp3',
-    abilities: [{ type: 'bubble' }],
+    keywords: ['bubble'],
   },
   c16: {
     id: 'c16',
@@ -260,7 +267,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🐡',
     quote: 'Ich platz gleich!',
     sound: 'kugelfisch.mp3',
-    abilities: [{ type: 'deathrattle', effect: 'explode_1' }],
+    triggers: [{ on: 'death', do: [{ kind: 'damage', amount: 1, to: { pick: 'allMinions', side: 'enemy' } }] }],
   },
   c21: {
     id: 'c21',
@@ -271,7 +278,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🐇',
     quote: 'Lauf, Hase, lauf!',
     sound: 'hase.mp3',
-    abilities: [{ type: 'rush' }],
+    keywords: ['rush'],
   },
   c22: {
     id: 'c22',
@@ -292,7 +299,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🦫',
     quote: 'Dammbruch in Sicht!',
     sound: 'bieber.mp3',
-    abilities: [{ type: 'deathrattle', effect: 'heal_hero_2' }],
+    triggers: [{ on: 'death', do: [{ kind: 'heal', amount: 2, to: { pick: 'hero', side: 'own' } }] }],
   },
   c24: {
     id: 'c24',
@@ -313,7 +320,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🦔',
     quote: 'Komm mir nicht zu nah.',
     sound: 'Igel.mp3',
-    abilities: [{ type: 'taunt' }],
+    keywords: ['taunt'],
   },
   c26: {
     id: 'c26',
@@ -324,7 +331,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🦇',
     quote: 'Ich bin die Nacht.',
     sound: 'bat.mp3',
-    abilities: [{ type: 'stealth' }],
+    keywords: ['stealth'],
   },
   c27: {
     id: 'c27',
@@ -335,7 +342,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🦉',
     quote: 'Uhuuuu!',
     sound: 'eule.mp3',
-    abilities: [{ type: 'stealth' }],
+    keywords: ['stealth'],
   },
   c28: {
     id: 'c28',
@@ -356,7 +363,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🐕',
     quote: 'Wuff! Guter Junge?',
     sound: 'hund.mp3',
-    abilities: [{ type: 'battlecry', effect: 'heal_hero_3' }],
+    triggers: [{ on: 'played', do: [{ kind: 'heal', amount: 3, to: { pick: 'hero', side: 'own' } }] }],
   },
   c30: {
     id: 'c30',
@@ -366,7 +373,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     health: 3,
     emoji: '🦝',
     quote: 'Müll ist Gold.',
-    abilities: [{ type: 'stealth' }],
+    keywords: ['stealth'],
   },
   c31: {
     id: 'c31',
@@ -376,7 +383,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     health: 6,
     emoji: '🦨',
     quote: 'Riech mal!',
-    abilities: [{ type: 'taunt' }],
+    keywords: ['taunt'],
   },
   c32: {
     id: 'c32',
@@ -395,7 +402,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     health: 7,
     emoji: '🦥',
     quote: 'Nur... noch... 5... Minuten.',
-    abilities: [{ type: 'taunt' }],
+    keywords: ['taunt'],
   },
   c34: {
     id: 'c34',
@@ -416,7 +423,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🐓',
     quote: 'Kikeriki!',
     sound: 'chicken_cluck.mp3',
-    abilities: [{ type: 'battlecry', effect: 'buff_allies_attack_1' }],
+    triggers: [{ on: 'played', do: [{ kind: 'buff', attack: 1, to: { pick: 'allMinions', side: 'own', exceptSelf: true } }] }],
   },
   c36: {
     id: 'c36',
@@ -482,7 +489,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     health: 4,
     emoji: '🦘',
     quote: 'Hüpf oder stirb.',
-    abilities: [{ type: 'rush' }],
+    keywords: ['rush'],
   },
   c43: {
     id: 'c43',
@@ -502,7 +509,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🐴',
     quote: 'Wieher!',
     sound: 'horse_whinny.mp3',
-    abilities: [{ type: 'rush' }],
+    keywords: ['rush'],
   },
   c45: {
     id: 'c45',
@@ -541,7 +548,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     emoji: '🐘',
     quote: 'Törööö!',
     sound: 'elephant_trumpet.mp3',
-    abilities: [{ type: 'taunt' }],
+    keywords: ['taunt'],
   },
   c49: {
     id: 'c49',
@@ -569,7 +576,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
     health: 1,
     emoji: '🐛',
     quote: 'Nimmersatt!',
-    abilities: [{ type: 'deathrattle', effect: 'butterfly' }],
+    triggers: [{ on: 'death', do: [{ kind: 'summon', cardId: 'token_butterfly' }] }],
   },
   c52: {
     id: 'c52',
@@ -582,23 +589,25 @@ export const CARDS_DB: Record<string, CardDefinition> = {
   },
   c53: {
     id: 'c53',
+    singleCopy: true,
     name: 'Fuchs',
     cost: 6,
     attack: 6,
     health: 5,
     emoji: '🦊',
     quote: 'Was sagt der Fuchs?',
-    abilities: [{ type: 'rush' }],
+    keywords: ['rush'],
   },
   c54: {
     id: 'c54',
+    singleCopy: true,
     name: 'Drache',
     cost: 10,
     attack: 8,
     health: 8,
     emoji: '🐲',
     quote: 'Feuer und Flamme!',
-    abilities: [{ type: 'battlecry', effect: 'dragon_breath' }],
+    triggers: [{ on: 'played', do: [{ kind: 'damage', amount: 2, to: { pick: 'allMinions', side: 'enemy' } }] }],
   },
   special_star: STAR_CARD,
   token_butterfly: BUTTERFLY_TOKEN,
@@ -608,8 +617,12 @@ export const CARDS_DB: Record<string, CardDefinition> = {
 // Zauber stehen mit im Kartenverzeichnis, damit Hand und Deck sie wie Tiere nachschlagen.
 Object.assign(CARDS_DB, SPELLS_DB);
 
+for (const def of Object.values(CARDS_DB)) {
+  if (def.effects) def.text = effectsText(def.effects, def.targeting ?? 'none', CARDS_DB);
+}
+
 /** Alle Tierkarten (ohne Zauber, Spielsteine und Sonderkarten) – für gemischte Decks. */
 export const ALL_CARD_IDS = Object.keys(CARDS_DB).filter(
-  (id) => !id.startsWith('token_') && !id.startsWith('special_') && !id.startsWith('s_'),
+  (id) => !CARDS_DB[id]!.token && !CARDS_DB[id]!.isSpell,
 );
 export const ALL_SPELL_IDS = Object.keys(SPELLS_DB);

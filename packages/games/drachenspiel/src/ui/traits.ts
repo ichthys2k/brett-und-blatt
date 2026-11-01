@@ -1,4 +1,6 @@
-import type { BattlecryEffect, CardDefinition, DeathrattleEffect, Minion } from '../types';
+import { CARDS_DB } from '../cards';
+import { effectsText } from '../core/text';
+import type { CardDefinition, KeywordId, Minion, Trigger } from '../types';
 
 export interface TraitInfo {
   id: string;
@@ -7,19 +9,6 @@ export interface TraitInfo {
   description: string;
   fullTitle: string;
 }
-
-export const DEATHRATTLE_EFFECT_TEXTS: Record<DeathrattleEffect, string> = {
-  butterfly: 'Ruft einen Schmetterling (1/2 mit Schutzblase) herbei.',
-  explode_1: 'Fügt allen gegnerischen Tieren 1 Schaden zu.',
-  heal_hero_2: 'Heilt deinen Helden um 2 Leben.',
-};
-
-export const BATTLECRY_EFFECT_TEXTS: Record<BattlecryEffect, string> = {
-  summon_ant: 'Ruft einen Ameisen-Soldaten (1/1) herbei.',
-  buff_allies_attack_1: 'Verleiht allen befreundeten Tieren +1 Angriff.',
-  heal_hero_3: 'Heilt deinen Helden um 3 Leben.',
-  dragon_breath: 'Fügt allen gegnerischen Tieren 2 Schaden zu.',
-};
 
 export const TRAIT_DEFINITIONS = {
   taunt: {
@@ -49,50 +38,24 @@ export const TRAIT_DEFINITIONS = {
   },
 } as const;
 
+function keywordTrait(keyword: KeywordId): TraitInfo {
+  const d = TRAIT_DEFINITIONS[keyword];
+  return { id: keyword, emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` };
+}
+
+function triggerTrait(trigger: Trigger, index: number): TraitInfo {
+  const description = effectsText(trigger.do, 'none', CARDS_DB);
+  const [emoji, name, id] = trigger.on === 'played' ? ['🎺', 'Auftritt', 'battlecry'] : ['👋', 'Abschied', 'deathrattle'];
+  return { id: `${id}_${index}`, emoji: emoji!, name: name!, description, fullTitle: `${emoji} ${name}: ${description}` };
+}
+
 /**
  * Ermittelt alle aktiven Eigenschaften eines Minions auf dem Spielfeld.
  */
 export function getMinionTraits(minion: Minion): TraitInfo[] {
-  const traits: TraitInfo[] = [];
-
-  if (minion.taunt) {
-    const d = TRAIT_DEFINITIONS.taunt;
-    traits.push({ id: 'taunt', emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` });
-  }
-
-  if (minion.bubble) {
-    const d = TRAIT_DEFINITIONS.bubble;
-    traits.push({ id: 'bubble', emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` });
-  }
-
-  if (minion.poisonous) {
-    const d = TRAIT_DEFINITIONS.poisonous;
-    traits.push({ id: 'poisonous', emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` });
-  }
-
-  if (minion.stealth) {
-    const d = TRAIT_DEFINITIONS.stealth;
-    traits.push({ id: 'stealth', emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` });
-  }
-
-  if (minion.rush) {
-    const d = TRAIT_DEFINITIONS.rush;
-    traits.push({ id: 'rush', emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` });
-  }
-
-  if (minion.deathrattle) {
-    const effectDesc = DEATHRATTLE_EFFECT_TEXTS[minion.deathrattle] ?? 'Löst einen Abschiedseffekt aus.';
-    const desc = `Abschied: ${effectDesc}`;
-    traits.push({
-      id: 'deathrattle',
-      emoji: '👋',
-      name: 'Abschied',
-      description: effectDesc,
-      fullTitle: `👋 ${desc}`,
-    });
-  }
-
-  return traits;
+  const keywords = (['taunt', 'bubble', 'poisonous', 'stealth', 'rush'] as const).filter((k) => minion[k]).map(keywordTrait);
+  const deaths = (CARDS_DB[minion.cardId]?.triggers ?? []).filter((t) => t.on === 'death').map(triggerTrait);
+  return [...keywords, ...deaths];
 }
 
 /**
@@ -114,55 +77,14 @@ export function getMinionFullTitle(minion: Minion): string {
  * Ermittelt alle Eigenschaften einer Kartendefinition (Handkarten / Mulligan).
  */
 export function getCardTraits(card: CardDefinition): TraitInfo[] {
-  if (!card.abilities || card.abilities.length === 0) return [];
-
-  const traits: TraitInfo[] = [];
-
-  for (const ab of card.abilities) {
-    if (ab.type === 'taunt') {
-      const d = TRAIT_DEFINITIONS.taunt;
-      traits.push({ id: 'taunt', emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` });
-    } else if (ab.type === 'stealth') {
-      const d = TRAIT_DEFINITIONS.stealth;
-      traits.push({ id: 'stealth', emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` });
-    } else if (ab.type === 'bubble') {
-      const d = TRAIT_DEFINITIONS.bubble;
-      traits.push({ id: 'bubble', emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` });
-    } else if (ab.type === 'poisonous') {
-      const d = TRAIT_DEFINITIONS.poisonous;
-      traits.push({ id: 'poisonous', emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` });
-    } else if (ab.type === 'rush') {
-      const d = TRAIT_DEFINITIONS.rush;
-      traits.push({ id: 'rush', emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` });
-    } else if (ab.type === 'battlecry') {
-      const effectDesc = BATTLECRY_EFFECT_TEXTS[ab.effect] ?? 'Löst einen Soforteffekt aus.';
-      traits.push({
-        id: `battlecry_${ab.effect}`,
-        emoji: '🎺',
-        name: 'Auftritt',
-        description: effectDesc,
-        fullTitle: `🎺 Auftritt: ${effectDesc}`,
-      });
-    } else if (ab.type === 'deathrattle') {
-      const effectDesc = DEATHRATTLE_EFFECT_TEXTS[ab.effect] ?? 'Löst einen Abschiedseffekt aus.';
-      traits.push({
-        id: `deathrattle_${ab.effect}`,
-        emoji: '👋',
-        name: 'Abschied',
-        description: effectDesc,
-        fullTitle: `👋 Abschied: ${effectDesc}`,
-      });
-    }
-  }
-
-  return traits;
+  return [...(card.keywords ?? []).map(keywordTrait), ...(card.triggers ?? []).map(triggerTrait)];
 }
 
 /**
  * Vollständiger Tooltip-Text für eine Karte (Hand / Mulligan).
  */
 export function getCardFullTitle(card: CardDefinition): string {
-  const lines: string[] = [card.spell ? `${card.name} (Zauber)` : card.name];
+  const lines: string[] = [card.isSpell ? `${card.name} (Zauber)` : card.name];
   if (card.text) lines.push(card.text);
   if (card.quote) {
     lines.push(`„${card.quote}“`);

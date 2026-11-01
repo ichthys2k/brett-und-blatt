@@ -1,0 +1,3989 @@
+{
+ "c1": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c1:1/1/1",
+     "token_ant:1/1/1"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "token_ant:1/1/1"
+    ]
+   }
+  ]
+ },
+ "c10": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c10:1/4/4"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c11": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c11:2/2/2 poison"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c12": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c12:2/2/2 poison"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c13": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c13:1/5/5 taunt"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c14": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c14:2/2/2 poison"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c15": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c15:2/3/3 bubble"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c16": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c16:3/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c17": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c17:2/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c18": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c18:3/4/4"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c19": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c19:2/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c2": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c2:2/1/1 rush ready"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c20": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c20:1/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/4/5 ready",
+     "c43:1/2/2 ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c21": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c21:3/2/2 rush ready"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c22": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c22:2/4/4"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c23": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c23:2/4/4"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 22,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c24": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c24:3/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c25": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c25:2/4/4 taunt"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c26": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c26:3/3/3 stealth"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c27": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c27:2/4/4 stealth"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c28": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c28:3/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c29": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 23,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c29:2/4/4"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 23,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c3": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c3:1/2/2"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c30": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c30:3/3/3 stealth"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c31": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c31:1/6/6 taunt"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c32": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c32:3/4/4"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c33": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c33:1/7/7 taunt"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c34": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c34:4/4/4"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/46/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c35": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:3/3/4 ready",
+     "c35:4/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/46/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:3/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c36": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c36:4/5/5"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/46/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c37": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c37:2/6/6"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c38": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c38:4/4/4"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/46/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c39": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c39:3/5/5"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c4": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c4:1/3/3 taunt"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c40": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 5,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c40:5/5/5"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/45/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 5,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c41": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 5,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c41:4/6/6"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/46/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 5,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c42": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 5,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c42:6/4/4 rush ready"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/44/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 5,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c43": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 5,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c43:5/5/5"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 5,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:5/5/5"
+    ]
+   }
+  ]
+ },
+ "c44": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 5,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c44:4/7/7 rush ready"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/46/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 5,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c45": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 4,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c45:6/7/7"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/44/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 4,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c46": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 4,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c46:5/8/8"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/45/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 4,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c47": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 4,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c47:7/7/7"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/43/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 4,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c48": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 3,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c48:6/9/9 taunt"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/44/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 3,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c49": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 3,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c49:8/6/6"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/42/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 3,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c5": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c5:1/2/2 bubble"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c50": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 3,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c50:7/8/8"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/43/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 3,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c51": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c51:1/1/1"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "token_butterfly:1/2/2 bubble"
+    ]
+   }
+  ]
+ },
+ "c52": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c52:2/1/1"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c53": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 4,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c53:6/5/5 rush ready"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/44/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 4,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c54": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/3/5 ready",
+     "c43:1/2/2 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c54:8/8/8"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/3/5 ready",
+     "c43:1/2/2 ready",
+     "c43:50/42/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c6": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c6:2/1/1"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c7": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c7:1/2/2"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c8": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c8:1/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "c9": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "c9:2/2/2 stealth"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/48/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "s_clover": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 24,
+    "hand": [
+     "c25",
+     "s_honey"
+    ],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "s_flood>m_gross": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c43"
+    ],
+    "board": [
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "s_flood>m_klein": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c43"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "s_flood>m_blase": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c43"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "s_growth": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:3/4/5 ready"
+    ]
+   }
+  ]
+ },
+ "s_honey>m_eigen": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:4/5/6 ready"
+    ]
+   }
+  ]
+ },
+ "s_lightning>hero": {
+  "played": [
+   {
+    "health": 17,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "s_lightning>m_gross": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/2/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "s_lightning>m_klein": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "s_lightning>m_blase": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "s_soapBubble>m_eigen": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 bubble ready"
+    ]
+   }
+  ]
+ },
+ "s_summerRain": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 23,
+    "mana": 8,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/4/4 ready"
+    ]
+   }
+  ]
+ },
+ "s_tailwind>m_eigen": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:3/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "s_whirlwind": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/3/5 ready",
+     "c43:1/2/2 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 6,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "special_star": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 10,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "token_ant": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "token_ant:1/1/1"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "token_butterfly": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "token_butterfly:1/2/2 bubble"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ }
+}

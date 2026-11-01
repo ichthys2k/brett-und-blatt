@@ -24,7 +24,10 @@ describe('Drachenspiel Minion- & Karten-Eigenschaften (traits)', () => {
     stealth: false,
     canAttack: false,
     hasAttacked: false,
-    deathrattle: null,
+    owner: 0,
+    playOrder: 1,
+    damage: 0,
+    enchantments: [],
   };
 
   it('erkennt 🛡️ Beschützer auf einem Minion', () => {
@@ -64,8 +67,8 @@ describe('Drachenspiel Minion- & Karten-Eigenschaften (traits)', () => {
   it('erkennt 👋 Abschied mit spezifischem Effekt', () => {
     const deathrattleMinion: Minion = {
       ...dummyMinion,
+      cardId: 'c20',
       taunt: false,
-      deathrattle: 'explode_1',
     };
     const traits = getMinionTraits(deathrattleMinion);
     expect(traits).toHaveLength(1);

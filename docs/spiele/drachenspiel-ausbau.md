@@ -2,7 +2,7 @@
 
 Fassung 1 vom 01.11.2026 (W-044). Grundlage sind der Code auf Commit `95218ef`, die Fehlerliste (F-007 bis F-009) sowie das Hearthstone-Kompendium im privaten Repo (`brett-und-blatt-klaenge/kompendium/hearthstone/`). Die Vorschläge zu Thema und Karten warten auf Cornelius' Entscheidung.
 
-**Stand für Mitwirkende (01.11.2026):** Phase 0 ist fertig und veröffentlicht (PR #45); Details stehen in [`drachenspiel.md`](drachenspiel.md). Als Nächstes käme Phase 1, der Regelkern. Sie ist noch nicht begonnen, und bis sie fertig ist, sollte niemand parallel an `rules.ts` oder `ui/index.tsx` des Drachenspiels arbeiten. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
+**Stand für Mitwirkende (01.11.2026):** Phase 0 und Phase 1 (Regelkern, `ruleVersion` 4) sind in `main`; Stand in [`drachenspiel.md`](drachenspiel.md). Als Nächstes käme Phase 2, sie ist noch nicht begonnen. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
 
 ## 1. Kurzfassung
 
@@ -267,9 +267,9 @@ Alle unter 5.2 genannten Effekte sind der erste Wortschatz. Damit decken wir lau
 | Handlimit | 7 | 10, Bedienung zuerst prüfen | 3 |
 | Sternschnuppe bei 10 Mana | gedeckelt | darf 11 geben | 3 |
 | Verbrennen, Erschöpfung | seit Phase 0 sichtbar | ✅ | 0 |
-| Zuggrenze | keine | Unentschieden nach festem Zug, gegen Endlosspiele | 1 |
+| Zuggrenze | seit Phase 1: unentschieden nach Zug 89 | ✅ | 1 |
 | Helden greifen an | nein | mit Rüstzeug oder Hauskraft | 3 |
-| Überzählige Tiere | Ameise verfällt still | klare Anzeige „Feld voll“ | 1 |
+| Überzählige Tiere | seit Phase 1 mit Hinweis „Feld voll“ | ✅ | 1 |
 | Zeit | 120/75/45 s plus Reserve | bleibt, dazu sichtbare Lunte | 2 |
 | Zufallsdeck | seit Phase 0 höchstens 2 Kopien | ✅ | 0 |
 
@@ -468,6 +468,8 @@ Aufwand grob: **S** bis ein Arbeitsgang, **M** mehrere, **L** viele. Jede Phase 
 ### Phase 1: Regelkern (L)
 
 Siehe Kapitel 5. Keine neuen Karten, nur die gewollte Tod-Reihenfolge. **Fertig** gemäß 5.7.
+
+✅ **Umgesetzt (01.11.2026, `ruleVersion` 4).** Bewusst verschoben, weil noch keine Karte es braucht: `pending` und der Zug `choose` kommen mit Phase 5, Auslöser neben „gespielt“ und „geht vom Feld“ sowie weitere Effekte mit der jeweils ersten Karte. Die Dateien liegen unter `src/core/`; `cards.ts`, `decks.ts` und `bots.ts` bleiben vorerst an ihrem Ort, statt die Aufteilung aus 5.6 schon ganz umzusetzen.
 
 ### Phase 2: Bedienung und Bot-Planer (M)
 

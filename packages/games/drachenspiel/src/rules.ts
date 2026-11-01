@@ -11,6 +11,7 @@ import {
   type TimePresets,
 } from '@brett-und-blatt/engine';
 import { ALL_CARD_IDS, ALL_SPELL_IDS, CARDS_DB, STAR_CARD } from './cards';
+import { BOARD_LIMIT, MAX_MANA, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueuePlayed, isOverTurnLimit, refreshStats, settle } from './core/effects';
 import { DECK_THEMES, DECK_THEME_IDS, themeCardIds } from './decks';
 import { meta } from './meta';
 import type {
@@ -22,7 +23,6 @@ import type {
   HiddenPlayerView,
   Minion,
   PlayerState,
-  SpellEffect,
   SpellTarget,
   SpellTargeting,
 } from './types';
@@ -72,16 +72,14 @@ export const timePresets: TimePresets = {
 
 export const spellsOn = (opts: Options) => (opts.spells ?? 'on') !== 'off';
 
-const SINGLE_COPY_CARDS = new Set(['c53', 'c54']);
-
 function createDeck(theme: string, rng: Rng, nextId: () => number, withSpells: boolean): CardInstance[] {
   let cardIds: string[];
   if (theme in DECK_THEMES) {
     cardIds = themeCardIds(theme as DeckThemeId, withSpells);
   } else {
     // Gemischtes Deck: 30 zufällige Karten, mit Zauberkarten davon 6 Zauber. Wie in den
-    // Themendecks höchstens zwei Kopien, von Fuchs und Drache nur eine.
-    const copies = (ids: string[]) => ids.flatMap((id) => (SINGLE_COPY_CARDS.has(id) ? [id] : [id, id]));
+    // Themendecks höchstens zwei Kopien, von `singleCopy`-Karten nur eine.
+    const copies = (ids: string[]) => ids.flatMap((id) => (CARDS_DB[id]?.singleCopy ? [id] : [id, id]));
     const spells = withSpells ? 6 : 0;
     cardIds = [
       ...rng.shuffle(copies(ALL_CARD_IDS)).slice(0, 30 - spells),
@@ -98,6 +96,25 @@ function createDeck(theme: string, rng: Rng, nextId: () => number, withSpells: b
 /** Online-Räume aus der Zeit vor `ruleVersion` 3 haben noch keinen Zufallsstrom. */
 function partyRng(state: DrachenspielState): Rng {
   return state.rng ? new Rng(state.rng) : Rng.fromSeed(`alt/${state.nextEntityId}`);
+}
+
+/** Online-Räume aus der Zeit vor `ruleVersion` 4: Figuren bekommen Veränderungsliste und Schaden. */
+function upgradeState(state: DrachenspielState): DrachenspielState {
+  state.queue ??= [];
+  for (const p of state.players) {
+    for (const m of p.board) {
+      m.owner ??= p.seat;
+      m.playOrder ??= 0;
+      m.damage ??= m.maxHealth - m.health;
+      if (!m.enchantments) {
+        const attack = m.attack - m.baseAttack;
+        const health = m.maxHealth - m.baseHealth;
+        m.enchantments = attack || health ? [{ id: `e_alt_${m.id}`, source: 'alt', attack, health }] : [];
+      }
+      refreshStats(m);
+    }
+  }
+  return state;
 }
 
 function createPlayer(seat: SeatId): PlayerState {
@@ -135,6 +152,7 @@ export function setup(seats: number, opts: Options, seed: string): DrachenspielS
     startingSeat,
     nextEntityId: entityCounter,
     rng: rng.state,
+    queue: [],
     options: { ...opts },
   };
 
@@ -182,7 +200,7 @@ function startTurn(state: DrachenspielState, seat: SeatId, events: GameEvent[]):
   state.activeSeat = seat;
   const player = state.players[seat];
 
-  player.maxMana = Math.min(10, player.maxMana + 1);
+  player.maxMana = Math.min(MAX_MANA, player.maxMana + 1);
   player.mana = player.maxMana;
 
   for (const minion of player.board) {
@@ -200,36 +218,6 @@ function startTurn(state: DrachenspielState, seat: SeatId, events: GameEvent[]):
 
   // Draw card or fatigue
   drawCard(player, events);
-}
-
-function drawCard(player: PlayerState, events: GameEvent[]): void {
-  if (player.deck.length === 0) {
-    player.fatigue++;
-    player.health -= player.fatigue;
-    events.push({
-      type: 'fatigue',
-      seat: player.seat,
-      damage: player.fatigue,
-      health: player.health,
-    });
-    return;
-  }
-
-  const card = player.deck.shift()!;
-  if (player.hand.length >= 7) {
-    events.push({
-      type: 'cardBurned',
-      seat: player.seat,
-      card,
-    });
-  } else {
-    player.hand.push(card);
-    events.push({
-      type: 'cardDrawn',
-      seat: player.seat,
-      card,
-    });
-  }
 }
 
 export function currentPlayers(state: DrachenspielState): Actor[] {
@@ -286,11 +274,11 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
       const def = CARDS_DB[card.defId];
       if (!def) continue;
       if (def.cost <= player.mana) {
-        if (def.spell) {
+        if (def.isSpell) {
           for (const target of spellTargets(state, actor, def.targeting ?? 'none')) {
             moves.push(target ? { type: 'playCard', handIndex: i, target } : { type: 'playCard', handIndex: i });
           }
-        } else if (def.isSpell || player.board.length < 7) {
+        } else if (player.board.length < BOARD_LIMIT) {
           moves.push({ type: 'playCard', handIndex: i });
         }
       }
@@ -347,7 +335,7 @@ export function applyMove(
   }
 
   // Deep clone state
-  const next: DrachenspielState = JSON.parse(JSON.stringify(state));
+  const next: DrachenspielState = upgradeState(JSON.parse(JSON.stringify(state)));
   const player = next.players[actor];
   const enemy = next.players[1 - actor];
   const events: GameEvent[] = [];
@@ -416,7 +404,7 @@ export function applyMove(
 
   if (move.type === 'endTurn') {
     startTurn(next, (1 - next.activeSeat) as SeatId, events);
-    checkGameOver(next, events);
+    settle(next, events);
     return { state: next, events };
   }
 
@@ -427,117 +415,29 @@ export function applyMove(
     if (!def) throw new Error('Unbekannte Karte');
     if (def.cost > player.mana) throw new Error('Nicht genug Mana');
 
-    if (def.spell) {
-      const targets = spellTargets(next, actor, def.targeting ?? 'none');
-      const target = move.target ?? null;
-      if (!targets.some((t) => sameTarget(t, target))) throw new Error('Ungültiges Ziel für den Zauber');
-      player.mana -= def.cost;
-      player.hand.splice(move.handIndex, 1);
-      events.push({ type: 'spellCast', seat: actor, card, spell: def.spell, target });
-      castSpell(next, actor, def.spell, target, events);
-      checkGameOver(next, events);
-      return { state: next, events };
-    }
-
     if (def.isSpell) {
+      const target = move.target ?? null;
+      if (!spellTargets(next, actor, def.targeting ?? 'none').some((t) => sameTarget(t, target))) {
+        throw new Error('Ungültiges Ziel für den Zauber');
+      }
       player.mana -= def.cost;
       player.hand.splice(move.handIndex, 1);
-      player.mana = Math.min(10, player.mana + 1);
-      events.push({ type: 'starPlayed', seat: actor });
+      events.push({ type: 'spellCast', seat: actor, card, target });
+      enqueue(next, def.effects, actor, def.id, null, target);
+      settle(next, events);
       return { state: next, events };
     }
 
-    if (player.board.length >= 7) throw new Error('Spielfeld voll');
+    if (player.board.length >= BOARD_LIMIT) throw new Error('Spielfeld voll');
 
     player.mana -= def.cost;
     player.hand.splice(move.handIndex, 1);
 
-    const hasTaunt = def.abilities?.some((a) => a.type === 'taunt') ?? false;
-    const hasRush = def.abilities?.some((a) => a.type === 'rush') ?? false;
-    const hasBubble = def.abilities?.some((a) => a.type === 'bubble') ?? false;
-    const hasPoisonous = def.abilities?.some((a) => a.type === 'poisonous') ?? false;
-    const hasStealth = def.abilities?.some((a) => a.type === 'stealth') ?? false;
-    const deathrattle = def.abilities?.find((a) => a.type === 'deathrattle') as
-      | { type: 'deathrattle'; effect: any }
-      | undefined;
-
-    const minion: Minion = {
-      id: `m_${nextEntityId()}`,
-      cardId: def.id,
-      name: def.name,
-      emoji: def.emoji,
-      cost: def.cost,
-      baseAttack: def.attack,
-      attack: def.attack,
-      baseHealth: def.health,
-      maxHealth: def.health,
-      health: def.health,
-      quote: def.quote ?? null,
-      sound: def.sound ?? null,
-      taunt: hasTaunt,
-      rush: hasRush,
-      bubble: hasBubble,
-      poisonous: hasPoisonous,
-      stealth: hasStealth,
-      canAttack: hasRush,
-      hasAttacked: false,
-      deathrattle: deathrattle?.effect ?? null,
-    };
-
+    const minion = createMinion(next, def, actor);
     player.board.push(minion);
     events.push({ type: 'cardPlayed', seat: actor, card, minion });
-
-    // Battlecries
-    const battlecry = def.abilities?.find((a) => a.type === 'battlecry') as
-      | { type: 'battlecry'; effect: any }
-      | undefined;
-
-    if (battlecry) {
-      if (battlecry.effect === 'summon_ant') {
-        if (player.board.length < 7) {
-          const antMinion: Minion = {
-            id: `m_${nextEntityId()}`,
-            cardId: 'token_ant',
-            name: 'Ameisen-Soldat',
-            emoji: '🐜',
-            cost: 1,
-            baseAttack: 1,
-            attack: 1,
-            baseHealth: 1,
-            maxHealth: 1,
-            health: 1,
-            quote: 'Zu Befehl!',
-            sound: 'ameise.mp3',
-            taunt: false,
-            rush: false,
-            bubble: false,
-            poisonous: false,
-            stealth: false,
-            canAttack: false,
-            hasAttacked: false,
-            deathrattle: null,
-          };
-          player.board.push(antMinion);
-          events.push({ type: 'minionSummoned', seat: actor, minion: antMinion });
-        }
-      } else if (battlecry.effect === 'buff_allies_attack_1') {
-        for (const m of player.board) {
-          if (m.id !== minion.id) {
-            m.attack += 1;
-            events.push({ type: 'minionBuffed', minionId: m.id, attack: m.attack });
-          }
-        }
-      } else if (battlecry.effect === 'heal_hero_3') {
-        healHero(player, 3, events);
-      } else if (battlecry.effect === 'dragon_breath') {
-        for (const enemyMinion of enemy.board) {
-          applyDamageToMinion(enemyMinion, 2, false, events);
-        }
-        cleanupDeadMinions(next, events);
-      }
-    }
-
-    checkGameOver(next, events);
+    enqueuePlayed(next, minion, actor);
+    settle(next, events);
     return { state: next, events };
   }
 
@@ -563,30 +463,20 @@ export function applyMove(
     events.push({ type: 'attack', attackerId: attacker.id, target });
 
     if (target.kind === 'hero') {
-      enemy.health -= attacker.attack;
-      events.push({
-        type: 'damage',
-        targetType: 'hero',
-        targetSeat: enemy.seat,
-        amount: attacker.attack,
-        health: enemy.health,
-      });
+      damageHero(enemy, attacker.attack, events);
     } else {
       const defender = enemy.board.find((m) => m.id === target.id);
       if (!defender) throw new Error('Verteidiger existiert nicht');
       if (defender.stealth) throw new Error('Verstecktes Tier kann nicht angegriffen werden');
 
-      // Simultaneous damage exchange
+      // Beide treffen gleichzeitig mit dem Angriffswert von vor dem Schlag.
       const dmgToDefender = attacker.attack;
       const dmgToAttacker = defender.attack;
-
-      applyDamageToMinion(defender, dmgToDefender, attacker.poisonous, events);
-      applyDamageToMinion(attacker, dmgToAttacker, defender.poisonous, events);
-
-      cleanupDeadMinions(next, events);
+      damageMinion(defender, dmgToDefender, attacker.poisonous, events);
+      damageMinion(attacker, dmgToAttacker, defender.poisonous, events);
     }
 
-    checkGameOver(next, events);
+    settle(next, events);
     return { state: next, events };
   }
 
@@ -618,192 +508,6 @@ function sameTarget(a: SpellTarget | null, b: SpellTarget | null): boolean {
   if (a === null || b === null) return a === b;
   if (a.kind === 'hero' || b.kind === 'hero') return a.kind === b.kind;
   return a.id === b.id;
-}
-
-function castSpell(state: DrachenspielState, seat: SeatId, spell: SpellEffect, target: SpellTarget | null, events: GameEvent[]): void {
-  const me = state.players[seat];
-  const enemy = state.players[1 - seat];
-  const targetMinion = target?.kind === 'minion' ? [...me.board, ...enemy.board].find((m) => m.id === target.id) : undefined;
-  switch (spell) {
-    case 'lightning':
-      if (target?.kind === 'hero') {
-        enemy.health -= 3;
-        events.push({ type: 'damage', targetType: 'hero', targetSeat: enemy.seat, amount: 3, health: enemy.health });
-      } else if (targetMinion) {
-        applyDamageToMinion(targetMinion, 3, false, events);
-        cleanupDeadMinions(state, events);
-      }
-      break;
-    case 'honey':
-      if (targetMinion) {
-        targetMinion.attack += 2;
-        targetMinion.maxHealth += 2;
-        targetMinion.health += 2;
-        events.push({ type: 'minionBuffed', minionId: targetMinion.id, attack: targetMinion.attack, health: targetMinion.health });
-      }
-      break;
-    case 'tailwind':
-      if (targetMinion) {
-        targetMinion.attack += 1;
-        if (!targetMinion.hasAttacked) targetMinion.canAttack = true;
-        events.push({ type: 'minionBuffed', minionId: targetMinion.id, attack: targetMinion.attack });
-      }
-      break;
-    case 'soapBubble':
-      if (targetMinion) {
-        targetMinion.bubble = true;
-        events.push({ type: 'minionBuffed', minionId: targetMinion.id, bubble: true });
-      }
-      break;
-    case 'growth':
-      for (const m of me.board) {
-        m.attack += 1;
-        m.maxHealth += 1;
-        m.health += 1;
-        events.push({ type: 'minionBuffed', minionId: m.id, attack: m.attack, health: m.health });
-      }
-      break;
-    case 'summerRain': {
-      const healed = Math.min(me.maxHealth, me.health + 3) - me.health;
-      me.health += healed;
-      if (healed > 0) events.push({ type: 'heal', targetType: 'hero', targetSeat: seat, amount: healed, health: me.health });
-      for (const m of me.board) {
-        if (m.health < m.maxHealth) {
-          events.push({ type: 'heal', targetType: 'minion', targetId: m.id, amount: m.maxHealth - m.health, health: m.maxHealth });
-          m.health = m.maxHealth;
-        }
-      }
-      break;
-    }
-    case 'clover':
-      drawCard(me, events);
-      drawCard(me, events);
-      break;
-    case 'flood':
-      if (targetMinion) {
-        enemy.board = enemy.board.filter((m) => m.id !== targetMinion.id);
-        events.push({ type: 'minionReturned', minionId: targetMinion.id, name: targetMinion.name, seat: enemy.seat });
-        // Spielsteine (z. B. Ameisen-Soldat) und volle Hände: Das Tier ist einfach weg.
-        if (CARDS_DB[targetMinion.cardId] && !targetMinion.cardId.startsWith('token_') && enemy.hand.length < 7) {
-          enemy.hand.push({ uid: `c_${state.nextEntityId++}`, defId: targetMinion.cardId });
-        }
-      }
-      break;
-    case 'whirlwind':
-      for (const m of enemy.board) applyDamageToMinion(m, 2, false, events);
-      cleanupDeadMinions(state, events);
-      break;
-  }
-}
-
-/** Heilt höchstens bis zum Maximum; das Ereignis nennt die wirklich geheilte Menge. */
-function healHero(player: PlayerState, amount: number, events: GameEvent[]): void {
-  const healed = Math.min(player.maxHealth, player.health + amount) - player.health;
-  if (healed <= 0) return;
-  player.health += healed;
-  events.push({ type: 'heroHealed', seat: player.seat, amount: healed, health: player.health });
-}
-
-function applyDamageToMinion(
-  minion: Minion,
-  amount: number,
-  isPoisonous: boolean,
-  events: GameEvent[],
-): void {
-  if (amount <= 0) return;
-  if (minion.bubble) {
-    minion.bubble = false;
-    events.push({ type: 'bubblePopped', minionId: minion.id });
-    return;
-  }
-  minion.health -= amount;
-  if (isPoisonous) {
-    minion.health = 0;
-  }
-  events.push({
-    type: 'damage',
-    targetType: 'minion',
-    targetId: minion.id,
-    amount,
-    health: minion.health,
-  });
-}
-
-function cleanupDeadMinions(state: DrachenspielState, events: GameEvent[]): void {
-  for (const p of state.players) {
-    const dead: Minion[] = [];
-    p.board = p.board.filter((m) => {
-      if (m.health <= 0) {
-        dead.push(m);
-        return false;
-      }
-      return true;
-    });
-
-    for (const m of dead) {
-      events.push({ type: 'minionLeft', minionId: m.id, name: m.name });
-      // Trigger deathrattles
-      if (m.deathrattle === 'butterfly') {
-        if (p.board.length < 7) {
-          const butterfly: Minion = {
-            id: `m_${state.nextEntityId++}`,
-            cardId: 'token_butterfly',
-            name: 'Schmetterling',
-            emoji: '🦋',
-            cost: 1,
-            baseAttack: 1,
-            attack: 1,
-            baseHealth: 2,
-            maxHealth: 2,
-            health: 2,
-            quote: 'Frei wie der Wind!',
-            sound: 'schmetterling.mp3',
-            taunt: false,
-            rush: false,
-            bubble: true,
-            poisonous: false,
-            stealth: false,
-            canAttack: false,
-            hasAttacked: false,
-            deathrattle: null,
-          };
-          p.board.push(butterfly);
-          events.push({ type: 'minionSummoned', seat: p.seat, minion: butterfly });
-        }
-      } else if (m.deathrattle === 'explode_1') {
-        const enemy = state.players[1 - p.seat];
-        for (const enemyMinion of enemy.board) {
-          applyDamageToMinion(enemyMinion, 1, false, events);
-        }
-      } else if (m.deathrattle === 'heal_hero_2') {
-        healHero(p, 2, events);
-      }
-    }
-  }
-
-  // Second pass in case explode_1 caused deaths
-  let anySecondaryDead = false;
-  for (const p of state.players) {
-    if (p.board.some((m) => m.health <= 0)) {
-      anySecondaryDead = true;
-      break;
-    }
-  }
-  if (anySecondaryDead) {
-    cleanupDeadMinions(state, events);
-  }
-}
-
-function checkGameOver(state: DrachenspielState, events: GameEvent[]): void {
-  const p0Dead = state.players[0].health <= 0;
-  const p1Dead = state.players[1].health <= 0;
-  if (p0Dead || p1Dead) {
-    state.phase = 'ended';
-    events.push({
-      type: 'gameOver',
-      winner: p0Dead && p1Dead ? undefined : p0Dead ? 1 : 0,
-    });
-  }
 }
 
 export function playerView(
@@ -842,9 +546,11 @@ export function playerView(
 export function result(state: DrachenspielState): Result | null {
   const p0Dead = state.players[0].health <= 0;
   const p1Dead = state.players[1].health <= 0;
-  if (!p0Dead && !p1Dead) return null;
   if (p0Dead && p1Dead) {
     return { kind: 'draw', reason: 'Beide Helden sind gleichzeitig gefallen.' };
+  }
+  if (!p0Dead && !p1Dead) {
+    return isOverTurnLimit(state) ? { kind: 'draw', reason: 'Die Zuggrenze ist erreicht.' } : null;
   }
   if (p0Dead) {
     return { kind: 'win', winners: [1], reason: 'Held von Platz 2 hat gewonnen!' };
@@ -883,6 +589,7 @@ export function sampleHidden(
     startingSeat: view.startingSeat,
     nextEntityId: counter,
     rng: rng.state,
+    queue: [],
     options: { ...view.options },
   };
 }
@@ -898,17 +605,21 @@ function reconstructPlayer(
     ? themeCardIds(hv.deckTheme, withSpells)
     : [...ALL_CARD_IDS, ...(withSpells ? ALL_SPELL_IDS : [])];
 
+  // Was schon offen liegt, ist nicht mehr verdeckt; die übrigen Karten werden ohne Zurücklegen verteilt.
+  const remaining = [...pool];
+  const seen = [...hv.board.map((m) => m.cardId), ...(isViewer && hv.hand ? hv.hand.map((c) => c.defId) : [])];
+  for (const id of seen) {
+    const at = remaining.indexOf(id);
+    if (at >= 0) remaining.splice(at, 1);
+  }
+  const shuffled = rng.shuffle(remaining);
+  const nextCard = (): CardInstance => ({ uid: `c_${nextId()}`, defId: shuffled.pop() ?? rng.pick(pool) });
+
   const hand: CardInstance[] = isViewer && hv.hand
     ? hv.hand.map((c) => ({ ...c }))
-    : Array.from({ length: hv.handCount }, () => ({
-        uid: `c_${nextId()}`,
-        defId: rng.pick(pool),
-      }));
+    : Array.from({ length: hv.handCount }, nextCard);
 
-  const deck: CardInstance[] = Array.from({ length: hv.deckCount }, () => ({
-    uid: `c_${nextId()}`,
-    defId: rng.pick(pool),
-  }));
+  const deck: CardInstance[] = Array.from({ length: hv.deckCount }, nextCard);
 
   return {
     seat: hv.seat,
