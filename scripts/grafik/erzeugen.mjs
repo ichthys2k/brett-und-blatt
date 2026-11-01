@@ -54,18 +54,22 @@ const pause = Number(optionen.pause ?? 4);
 const nur = optionen.nur ? new Set(String(optionen.nur).split(',')) : null;
 
 const MIME = { png: 'image/png', webp: 'image/webp', jpg: 'image/jpeg', jpeg: 'image/jpeg' };
-const referenzen = (manifest.referenzen ?? []).map((p) => {
-  const voll = resolve(WURZEL, p);
-  const endung = voll.split('.').pop().toLowerCase();
-  return { inline_data: { mime_type: MIME[endung] ?? 'image/png', data: readFileSync(voll).toString('base64') } };
-});
+const ladeReferenzen = (liste) =>
+  (liste ?? []).map((p) => {
+    const voll = resolve(WURZEL, p);
+    const endung = voll.split('.').pop().toLowerCase();
+    return { inline_data: { mime_type: MIME[endung] ?? 'image/png', data: readFileSync(voll).toString('base64') } };
+  });
+const referenzen = ladeReferenzen(manifest.referenzen);
 
 async function einBild(motiv, nr) {
   const ziel = resolve(ordner(manifest.name, motiv.id), `v${nr}.png`);
   if (existsSync(ziel)) return 'vorhanden';
-  const text = [manifest.stil, motiv.prompt, manifest.ohne && `Vermeide: ${manifest.ohne}`].filter(Boolean).join('\n\n');
+  // Ein Motiv darf eigenen Stil, eigene Referenzen und eigene Verbote mitbringen (z. B. ein Kartenrücken ohne Figuren).
+  const eigeneReferenzen = motiv.referenzen ? ladeReferenzen(motiv.referenzen) : referenzen;
+  const text = [motiv.stil ?? manifest.stil, motiv.prompt, (motiv.ohne ?? manifest.ohne) && `Vermeide: ${motiv.ohne ?? manifest.ohne}`].filter(Boolean).join('\n\n');
   const body = {
-    contents: [{ parts: [...referenzen, { text }] }],
+    contents: [{ parts: [...eigeneReferenzen, { text }] }],
     generationConfig: {
       responseModalities: ['IMAGE'],
       imageConfig: { aspectRatio: motiv.format ?? manifest.format ?? '4:5' },

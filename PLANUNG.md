@@ -57,6 +57,7 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-044 | Drachenspiel: Ausbau zum vollwertigen Sammelkarten-Duell, von Cornelius für erledigt erklärt; [Plan](docs/spiele/drachenspiel-ausbau.md) | 2026-11-01 | 26a40d1 |
 | W-027 | Spiele für viele Spieler: Klassenspiele Schätzmeister, Mehrheitsfrage, Zeitstrahl, bis 30 Plätze; von Cornelius für erledigt erklärt; [Plan](docs/spiele/klassenspiele.md), weitere Ideen in [Spiele für viele](docs/spiele/spiele-fuer-viele.md) | 2026-11-01 | caf18dd |
 | W-049 | Narrenhof: Porträts für alle 81 Narren (KI-Bilder, 360 × 450 px, auf den großen Karten am Desktop), Werkzeuge in `scripts/grafik/` | 2026-11-01 | main |
+| W-054 | Wölfe im Schafspelz: Rollenkarten mit Bildern (neun Rollen, Leithammel, Rückseite), die Rollenkarte zeigt sie beim Drücken neben dem Text | 2026-11-01 | main |
 | W-051 | Wappen auf den Spielkacheln: 54 gemalte Wappen statt der Emoji (Taverne; „Schlicht“ zeigt weiter das Emoji), Werkzeuge in `scripts/grafik/` | 2026-11-01 | main |
 | W-046 | Musik und Soundeffekte getrennt schalten | 2026-11-01 | a95a29d |
 | W-041 | Marktplatz: Würfel- und Handelsspiel im Mittelalter, 2–6 Plätze, Bot „Krämer“, online; [Plan](docs/spiele/marktplatz.md), [Probe](docs/spiele/marktplatz-probe.md) | 2026-11-01 | 4817a5e |

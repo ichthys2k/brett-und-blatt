@@ -14,10 +14,11 @@ const zielDir = resolve(WURZEL, manifest.ziel);
 mkdirSync(zielDir, { recursive: true });
 const [breite, hoehe] = (manifest.groesse ?? [320, 400]);
 // Optional: einen schmalen Rand (Anteil, z. B. 0.06) abschneiden, falls die KI Platten- oder Bildränder malt.
-const rand = manifest.zuschnittRand ?? 0;
+const randFuer = (id) => manifest.motive.find((m) => m.id === id)?.zuschnittRand ?? manifest.zuschnittRand ?? 0;
 
 for (const wahl of positionen.slice(1)) {
   const [id, v] = wahl.split('=');
+  const rand = randFuer(id);
   const quelle = resolve(ordner(manifest.name, id), `v${v}.png`);
   const ziel = resolve(zielDir, `${manifest.praefix ?? ''}${id}${manifest.suffix ?? ''}.webp`);
   execFileSync('magick', [quelle, ...(rand ? ['-gravity', 'center', '-crop', `${Math.round((1 - 2 * rand) * 100)}%x${Math.round((1 - 2 * rand) * 100)}%+0+0`, '+repage'] : []), '-resize', `${breite}x${hoehe}^`, '-gravity', 'center', '-extent', `${breite}x${hoehe}`, '-quality', String(manifest.qualitaet ?? 80), ziel]);

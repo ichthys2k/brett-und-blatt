@@ -1,0 +1,89 @@
+{
+ "beschreibung": "Rollenkarten für Wölfe im Schafspelz: 9 Rollen, das Zusatzamt Leithammel und eine Rückseite. Im Kontaktbogen steht zu jeder Karte die Funktion aus dem Spiel.",
+ "stil": "Painterly storybook oil illustration of anthropomorphic animal characters on a moonlit pastoral meadow, in the same painterly style as the reference image: rich textures, dark midnight blue and deep green night palette, warm lantern or candle light accents, soft wool and fur details, expressive face, gentle and slightly mysterious mood, a consistent set of role cards. Bust or half-figure portrait, vertical composition, centred with space around so it can be cropped. No text, no letters, no numbers, no card frame, no border.",
+ "ohne": "text, letters, numbers, watermark, border, frame, playing card layout, real people, modern clothing, logos, blood, gore, violence",
+ "referenzen": [
+  "packages/games/color-sorter/src/ui/portraits/boss-bear-2.webp"
+ ],
+ "format": "4:5",
+ "groesse": [
+  360,
+  450
+ ],
+ "qualitaet": 78,
+ "ziel": "packages/games/wolves-sheep/src/ui/cards",
+ "praefix": "role-",
+ "suffix": "",
+ "motive": [
+  {
+   "id": "wolf",
+   "titel": "🐺 Wolf",
+   "beschreibung": "Du wählst nachts mit dem Rudel ein Schaf, das versprengt wird. Tags gibst du dich als Schaf aus.",
+   "prompt": "Role card motif: a wolf in sheep's clothing: a wolf wearing a white sheep fleece draped over its head and shoulders like a hood, one sharp amber eye gleaming through the wool, a sly smile, moonlit meadow behind."
+  },
+  {
+   "id": "sheep",
+   "titel": "🐑 Schaf",
+   "beschreibung": "Du hörst zu, beobachtest und stimmst ab. Nachts tippst du an, wer verdächtig wirkt; das bleibt deine Notiz.",
+   "prompt": "Role card motif: a friendly, trusting woolly sheep with a small brass bell on a ribbon, soft cream wool, calm kind eyes, peaceful pasture at dusk behind."
+  },
+  {
+   "id": "examiner",
+   "titel": "🔍 Prüfer",
+   "beschreibung": "Du siehst jede Nacht die Rolle einer Person. Verrate dich nicht zu früh, sonst holen dich die Wölfe.",
+   "prompt": "Role card motif: a wise sheep holding a lantern in one hoof and a magnifying glass in the other, examining a branch heavy with ripe fruit (by their fruits you shall know them), night meadow."
+  },
+  {
+   "id": "shepherd",
+   "titel": "🧑‍🌾 Hirte",
+   "beschreibung": "Du siehst das Opfer der Nacht. Einmal in der Partie holst du es mit dem Hirtenruf zurück, einmal weist du jemanden mit dem Stab aus.",
+   "prompt": "Role card motif: a kind shepherd in a hooded cloak with a long shepherd's crook, carrying a rescued lamb across the shoulders, lantern light, starry night behind."
+  },
+  {
+   "id": "hound",
+   "titel": "🐕 Hütehund",
+   "beschreibung": "Wenn du ausscheidest, packst du noch eine Person, die mit dir die Herde verlässt.",
+   "prompt": "Role card motif: an alert sheepdog (border collie) in a crouched leaping pose ready to pounce, ears up, a studded collar, moonlit field behind."
+  },
+  {
+   "id": "binder",
+   "titel": "🎀 Bandstifter",
+   "beschreibung": "Du hast in der ersten Nacht zwei Personen verbunden. Geht eine, geht auch die andere.",
+   "prompt": "Role card motif: a gentle sheep tying a red ribbon around two lambs' wool tufts so they are bound together, a ribbon of three strands, tender expression, soft evening light."
+  },
+  {
+   "id": "lamb",
+   "titel": "🐥 Neugieriges Lamm",
+   "beschreibung": "Du darfst einmal je Nacht linsen und siehst dann einen Wolf. Wirst du erwischt, trifft es dich statt des Opfers.",
+   "prompt": "Role card motif: a curious little lamb peeking through a gap in a wooden fence with huge shining eyes, a tuft of hay, behind it the dark silhouette of a wolf in the distance."
+  },
+  {
+   "id": "stray",
+   "titel": "🐐 Zugelaufenes Schaf",
+   "beschreibung": "Du durftest zu Beginn gegen eine der übrigen Karten tauschen. Du bist geblieben, was du warst: ein Schaf.",
+   "prompt": "Role card motif: a wandering stray sheep with a travel bundle on a stick, dusty wool and a worn scarf, arriving at a wooden pasture gate at dusk, hopeful expression."
+  },
+  {
+   "id": "narrator",
+   "titel": "🎙️ Erzähler",
+   "beschreibung": "Du leitest das Spiel, spielst nicht mit und siehst alles. Verrate nichts.",
+   "prompt": "Role card motif: an old storyteller (a wise old shepherd) sitting by a candle with a large open book, one hand raised in a storytelling gesture, warm glow, a dark night behind."
+  },
+  {
+   "id": "leader",
+   "titel": "🔔 Leithammel",
+   "beschreibung": "Zusatzamt, keine Karte: Wird gewählt, die Stimme zählt doppelt, beim Ausscheiden bestimmt er den Nachfolger.",
+   "prompt": "Role card motif: a majestic lead ram with curled horns wearing a big golden bell on a leather collar, noble upright pose, dawn light on the meadow."
+  },
+  {
+   "id": "back",
+   "titel": "Rückseite",
+   "beschreibung": "Rückseite der Rollenkarte (wird gezeigt, solange die Karte nicht gedrückt wird)",
+   "prompt": "Card back motif: a repeating pattern of wool curls and stars (no figures at all).",
+   "stil": "A flat, symmetrical, ornamental playing-card back design (a pure decorative pattern, NOT a scene and NOT a character): deep midnight-blue background, a dense repeating pattern of cream wool curls, small stars and tiny crescent moons, thin gold border lines inside the edge, slightly worn printed-card look. The pattern fills the whole image edge to edge.",
+   "referenzen": [],
+   "ohne": "animals, sheep, wolves, people, characters, faces, landscape, scenery, text, letters, numbers, watermark, frame outside the pattern, collage, several cards",
+   "zuschnittRand": 0.14
+  }
+ ]
+}
