@@ -3851,7 +3851,7 @@
    },
    {
     "health": 20,
-    "mana": 10,
+    "mana": 11,
     "deck": 26,
     "hand": [],
     "board": [
@@ -3951,6 +3951,258 @@
     "board": [
      "c43:2/3/4 ready",
      "token_butterfly:1/2/2 bubble"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "token_chick": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "token_chick:1/1/1"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "token_mussel": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "token_mussel:0/2/2 taunt"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/50/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "token_seahorse": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "token_seahorse:1/2/2"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star",
+     "c28"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/49/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "token_shrimp": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "s_growth",
+     "c54",
+     "c40",
+     "c40",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 9,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "token_shrimp:1/1/1 rush ready"
     ]
    }
   ],

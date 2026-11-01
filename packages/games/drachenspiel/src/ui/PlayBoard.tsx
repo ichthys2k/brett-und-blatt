@@ -2,6 +2,8 @@ import type { SeatId } from '@brett-und-blatt/engine';
 import { usePointerDrag, type BoardProps } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { CARDS_DB } from '../cards';
+import { HOUSE_POWERS } from '../powers';
+import { heroAttackValue } from '../rules';
 import type { DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
 import { playCreatureAudio } from './audio';
 import { attackClass, CardFace, CardZoom, Fuse, GameLog, healthClass, TargetArrow, TraitBadge, type ArrowPoints, type ZoomItem } from './parts';
@@ -13,7 +15,14 @@ import { useLongPress } from './useLongPress';
 const LABELS = ['Blau', 'Rot'];
 /** Ab dieser Restzeit brennt die Lunte. */
 const FUSE_FROM_MS = 15_000;
+/** Steht für den eigenen Helden, wo sonst die Kennung des angreifenden Tiers steht. */
+const HERO_ATTACKER = 'hero';
 
+type Strike = Extract<DrachenspielMove, { type: 'attack' | 'heroAttack' }>;
+const isStrike = (move: DrachenspielMove): move is Strike => move.type === 'attack' || move.type === 'heroAttack';
+const strikerOf = (move: Strike) => (move.type === 'attack' ? move.attackerId : HERO_ATTACKER);
+
+/** Auch der eigene Held wird wie ein Tier gezogen, mit der Kennung `HERO_ATTACKER`. */
 type DrachenDragItem = { kind: 'card'; handIndex: number } | { kind: 'minion'; minionId: string };
 
 const activate = (event: KeyboardEvent<HTMLElement>, onClick: () => void, onZoom: () => void) => {
@@ -134,46 +143,76 @@ function HeroBar({
   player,
   name,
   health,
+  armor,
   floats,
   impacted,
   targetable,
+  canAttack,
+  selected,
+  attackVector,
   hinted,
   dropActive,
   onClick,
+  onPointerDown,
+  dropTarget,
   elementRef,
 }: {
   seat: SeatId;
   player: HiddenPlayerView;
   name: string;
   health: number;
+  armor: number;
   floats: Float[];
   impacted: boolean;
   targetable?: boolean;
+  canAttack?: boolean;
+  selected?: boolean;
+  attackVector?: { dx: number; dy: number };
   hinted?: boolean;
   dropActive?: boolean;
   onClick?: () => void;
+  onPointerDown?: (e: ReactPointerEvent<HTMLElement>) => void;
+  dropTarget?: string;
   elementRef: (el: HTMLElement | null) => void;
 }) {
+  const strength = heroAttackValue(player);
+  const interactive = targetable || canAttack;
   return (
     <div
       ref={elementRef}
-      className={`ds-hero-card ${targetable ? 'targetable' : ''} ${hinted ? 'ds-hinted' : ''} ${impacted ? 'bub-animate-shake ds-hit-impact' : ''}`}
+      className={`ds-hero-card ${targetable ? 'targetable' : ''} ${canAttack && !attackVector ? 'can-attack' : ''} ${selected && !attackVector ? 'selected' : ''} ${attackVector ? 'ds-attacking' : ''} ${hinted ? 'ds-hinted' : ''} ${impacted ? 'bub-animate-shake ds-hit-impact' : ''}`}
       onClick={onClick}
-      onKeyDown={onClick ? (event) => activate(event, onClick, () => undefined) : undefined}
-      role={targetable ? 'button' : undefined}
-      tabIndex={targetable ? 0 : undefined}
-      title={targetable ? 'Gegnerischen Helden angreifen!' : undefined}
-      style={{ position: 'relative' }}
-      data-drop-target={onClick ? 'enemy-hero' : undefined}
+      onPointerDown={onPointerDown}
+      onKeyDown={interactive && onClick ? (event) => activate(event, onClick, () => undefined) : undefined}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      title={targetable ? 'Gegnerischen Helden angreifen!' : canAttack ? 'Mit deinem Helden angreifen' : undefined}
+      style={{
+        position: 'relative',
+        touchAction: canAttack ? 'none' : undefined,
+        ...(attackVector ? ({ '--atk-dx': `${attackVector.dx}px`, '--atk-dy': `${attackVector.dy}px` } as CSSProperties) : {}),
+      }}
+      data-drop-target={dropTarget}
       data-drop-active={dropActive ? 'true' : undefined}
       data-hero-seat={seat}
     >
       <FloatBadges floats={floats} />
       <span className="ds-hero-avatar">{seat === 0 ? '🐉' : '🐲'}</span>
       <div>
-        <div style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{name}</div>
-        <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
+        <div className="ds-hero-name" style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{name}</div>
+        <div className="ds-hero-badges">
           <span className="ds-badge ds-badge-hp">❤️ {health}</span>
+          {armor > 0 && (
+            <span className="ds-badge ds-badge-armor" title="Rüstung fängt Schaden vor den Leben ab">
+              🛡️ {armor}
+            </span>
+          )}
+          {strength > 0 && (
+            <span className="ds-badge ds-badge-gear" title={player.gear ? `${player.gear.name}: hält noch ${player.gear.durability} Angriffe` : 'Angriff des Helden in diesem Zug'}>
+              ⚔️ {strength}
+              {player.gear ? ` · ${player.gear.durability}×` : ''}
+            </span>
+          )}
           <span className="ds-badge ds-badge-mana">
             💧 {player.mana}/{player.maxMana}
           </span>
@@ -269,12 +308,13 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           return true;
         }
       } else {
-        const move = legalMoves.find(
-          (m) =>
-            m.type === 'attack' &&
-            m.attackerId === item.minionId &&
-            (targetId === 'enemy-hero' ? m.target.kind === 'hero' : m.target.kind === 'minion' && `minion-${m.target.id}` === targetId),
-        );
+        const move = legalMoves
+          .filter(isStrike)
+          .find(
+            (m) =>
+              strikerOf(m) === item.minionId &&
+              (targetId === 'enemy-hero' ? m.target.kind === 'hero' : m.target.kind === 'minion' && `minion-${m.target.id}` === targetId),
+          );
         if (move) {
           onMove(move);
           return true;
@@ -297,7 +337,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   const draggedMinionId = dragState.isDragging && dragState.item?.kind === 'minion' ? dragState.item.minionId : null;
   const effectiveAttackerId = draggedMinionId ?? selectedAttackerId;
 
-  const validAttacks = effectiveAttackerId ? legalMoves.filter((m) => m.type === 'attack' && m.attackerId === effectiveAttackerId) : [];
+  const validAttacks = effectiveAttackerId ? legalMoves.filter(isStrike).filter((m) => strikerOf(m) === effectiveAttackerId) : [];
 
   // Zauber mit Ziel: ausgewählt oder gerade gezogen.
   const draggedCardIdx = dragState.isDragging && dragState.item?.kind === 'card' ? dragState.item.handIndex : null;
@@ -319,15 +359,27 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
     return true;
   };
 
-  const canTargetHero = validAttacks.some((m) => m.type === 'attack' && m.target.kind === 'hero') || spellTargetsHero;
-  const targetableMinionIds = new Set(validAttacks.flatMap((m) => (m.type === 'attack' && m.target.kind === 'minion' ? [m.target.id] : [])));
+  const canTargetHero = validAttacks.some((m) => m.target.kind === 'hero') || spellTargetsHero;
+  const targetableMinionIds = new Set(validAttacks.flatMap((m) => (m.target.kind === 'minion' ? [m.target.id] : [])));
   const playableCardIndices = new Set(legalMoves.flatMap((m) => (m.type === 'playCard' ? [m.handIndex] : [])));
-  const attackersReady = new Set(legalMoves.flatMap((m) => (m.type === 'attack' ? [m.attackerId] : [])));
+  const attackersReady = new Set(legalMoves.filter(isStrike).map(strikerOf));
+  const heroCanAttack = attackersReady.has(HERO_ATTACKER);
+  const canUsePower = legalMoves.some((m) => m.type === 'heroPower');
+  const myPower = me.power ? HOUSE_POWERS[me.power] : null;
+  const oppPower = opp.power ? HOUSE_POWERS[opp.power] : null;
+  const strike = (target: Strike['target']) => {
+    const move = validAttacks.find((m) => (target.kind === 'hero' ? m.target.kind === 'hero' : m.target.kind === 'minion' && m.target.id === target.id));
+    if (move) onMove(move);
+    setSelectedAttackerId(null);
+  };
 
   // Tipp-Knopf: den vorgeschlagenen Zug auf dem Feld zeigen.
   const hintedIds = new Set<string>();
   if (hint?.type === 'attack') {
     hintedIds.add(hint.attackerId);
+    hintedIds.add(hint.target.kind === 'minion' ? hint.target.id : `hero-${oppSeat}`);
+  } else if (hint?.type === 'heroAttack') {
+    hintedIds.add(`hero-${mySeat}`);
     hintedIds.add(hint.target.kind === 'minion' ? hint.target.id : `hero-${oppSeat}`);
   } else if (hint?.type === 'playCard' && hint.target) {
     hintedIds.add(hint.target.kind === 'minion' ? hint.target.id : `hero-${oppSeat}`);
@@ -346,8 +398,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
       }
       playCreatureAudio(minion.name, 'easterEgg', minion.sound);
     } else if (selectedAttackerId && targetableMinionIds.has(minion.id)) {
-      onMove({ type: 'attack', attackerId: selectedAttackerId, target: { kind: 'minion', id: minion.id } });
-      setSelectedAttackerId(null);
+      strike({ kind: 'minion', id: minion.id });
     } else {
       playCreatureAudio(minion.name, 'easterEgg', minion.sound);
     }
@@ -359,9 +410,14 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
       return;
     }
     if (selectedAttackerId && canTargetHero) {
-      onMove({ type: 'attack', attackerId: selectedAttackerId, target: { kind: 'hero' } });
-      setSelectedAttackerId(null);
+      strike({ kind: 'hero' });
     }
+  };
+
+  const handleOwnHeroClick = () => {
+    if (!heroCanAttack) return;
+    setSelectedSpell(null);
+    setSelectedAttackerId((prev) => (prev === HERO_ATTACKER ? null : HERO_ATTACKER));
   };
 
   // Der Zugknopf leuchtet, sobald nichts anderes mehr geht.
@@ -374,7 +430,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   let arrow: ArrowPoints | null = null;
   const arenaBox = aiming ? arenaRef.current?.getBoundingClientRect() : undefined;
   if (arenaBox) {
-    const sourceEl = effectiveAttackerId ? minionElsRef.current.get(effectiveAttackerId) : activeSpellIdx !== null ? handElsRef.current.get(activeSpellIdx) : undefined;
+    const sourceEl = effectiveAttackerId === HERO_ATTACKER ? heroElsRef.current.get(mySeat) : effectiveAttackerId ? minionElsRef.current.get(effectiveAttackerId) : activeSpellIdx !== null ? handElsRef.current.get(activeSpellIdx) : undefined;
     const pointer = dragState.isDragging ? dragState.currentPoint : aimPoint;
     if (sourceEl && pointer) {
       const box = sourceEl.getBoundingClientRect();
@@ -420,6 +476,9 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           player={opp}
           name={nameOf(oppSeat)}
           health={beat?.heroes[oppSeat] ?? opp.health}
+          armor={beat?.armor[oppSeat] ?? opp.armor}
+          attackVector={attackVector?.id === `hero-${oppSeat}` ? attackVector : undefined}
+          dropTarget="enemy-hero"
           floats={floatsOf(`hero-${oppSeat}`)}
           impacted={isImpacted(`hero-${oppSeat}`)}
           targetable={canTargetHero}
@@ -428,7 +487,18 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           onClick={handleHeroClick}
           elementRef={heroRef(oppSeat)}
         />
-        <div style={{ display: 'flex', gap: '6px' }}>
+        <div className="ds-opponent-info">
+          {oppPower && (
+            <button
+              type="button"
+              className={`ds-badge ds-power-badge ${opp.powerUsed ? 'used' : ''}`}
+              aria-label={`Hauskraft des Gegners: ${oppPower.name}. ${oppPower.text}`}
+              title={`${oppPower.name}: ${oppPower.text}`}
+              onClick={() => openZoom({ kind: 'power', power: oppPower })}
+            >
+              {oppPower.emoji}
+            </button>
+          )}
           <span className="ds-badge ds-badge-deck">🎴 {opp.handCount}</span>
           <span className="ds-badge ds-badge-deck">📚 {opp.deckCount}</span>
           <GameLog entries={log} />
@@ -517,12 +587,41 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           player={me}
           name={nameOf(mySeat)}
           health={beat?.heroes[mySeat] ?? me.health}
+          armor={beat?.armor[mySeat] ?? me.armor}
+          canAttack={heroCanAttack}
+          selected={effectiveAttackerId === HERO_ATTACKER}
+          attackVector={attackVector?.id === `hero-${mySeat}` ? attackVector : undefined}
+          hinted={hintedIds.has(`hero-${mySeat}`)}
+          onClick={handleOwnHeroClick}
+          onPointerDown={heroCanAttack ? bindDrag({ kind: 'minion', minionId: HERO_ATTACKER }).onPointerDown : undefined}
           floats={floatsOf(`hero-${mySeat}`)}
           impacted={isImpacted(`hero-${mySeat}`)}
           elementRef={heroRef(mySeat)}
         />
         <div className="ds-actions">
           <span className="ds-badge ds-badge-deck">📚 {me.deckCount}</span>
+          {myPower && (
+            <button
+              type="button"
+              className={`ds-power ${canUsePower ? 'playable' : ''} ${hint?.type === 'heroPower' ? 'ds-hinted' : ''}`}
+              aria-disabled={!canUsePower}
+              aria-label={`Hauskraft ${myPower.name}, Kosten ${myPower.cost}. ${myPower.text}`}
+              title={`${myPower.name}: ${myPower.text}`}
+              onClick={() => {
+                if (canUsePower) onMove({ type: 'heroPower' });
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'i') openZoom({ kind: 'power', power: myPower });
+              }}
+              onContextMenu={(event) => longPress.contextMenu(event, { kind: 'power', power: myPower })}
+              onPointerDown={(event) => longPress.start(event, { kind: 'power', power: myPower })}
+            >
+              <span aria-hidden="true">{myPower.emoji}</span>
+              <span className="ds-power-cost" aria-hidden="true">
+                {myPower.cost}
+              </span>
+            </button>
+          )}
           <div className="ds-endturn-wrap">
             <button
               className={`ds-btn ds-btn-endturn ${isMyTurn && nothingLeft ? 'sparkle' : ''}`}
@@ -533,7 +632,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
                 setSelectedSpell(null);
               }}
             >
-              {isMyTurn ? 'Zug beenden 💎' : 'Warten...'}
+              {isMyTurn ? 'Zug beenden' : 'Warten...'}
             </button>
             {fuseLeftMs !== null && fuseLeftMs <= FUSE_FROM_MS && <Fuse leftMs={fuseLeftMs} fromMs={FUSE_FROM_MS} />}
           </div>
@@ -555,7 +654,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
         </div>
       )}
 
-      <div className="ds-hand">
+      <div className="ds-hand" style={{ '--ds-hand-gaps': Math.max(1, (me.hand?.length ?? 1) - 1) } as CSSProperties}>
         {me.hand?.map((card, idx) => {
           const def = CARDS_DB[card.defId];
           if (!def) return null;

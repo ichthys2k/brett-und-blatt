@@ -11,8 +11,9 @@ import {
   type TimePresets,
 } from '@brett-und-blatt/engine';
 import { ALL_CARD_IDS, ALL_SPELL_IDS, CARDS_DB, STAR_CARD } from './cards';
-import { BOARD_LIMIT, MAX_MANA, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueuePlayed, isOverTurnLimit, refreshStats, settle } from './core/effects';
+import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueuePlayed, isOverTurnLimit, refreshStats, settle } from './core/effects';
 import { DECK_THEMES, DECK_THEME_IDS, themeCardIds } from './decks';
+import { HOUSE_POWERS, powerIsUsable } from './powers';
 import { meta } from './meta';
 import type {
   CardInstance,
@@ -102,6 +103,13 @@ function partyRng(state: DrachenspielState): Rng {
 function upgradeState(state: DrachenspielState): DrachenspielState {
   state.queue ??= [];
   for (const p of state.players) {
+    // Vor `ruleVersion` 5 gab es weder Rüstung noch Hauskraft.
+    p.armor ??= 0;
+    p.gear ??= null;
+    p.heroAttackBonus ??= 0;
+    p.heroAttacked ??= false;
+    p.powerUsed ??= false;
+    p.power ??= p.deckTheme && p.deckTheme !== 'mixed' ? p.deckTheme : p.deckTheme ? 'farm' : null;
     for (const m of p.board) {
       m.owner ??= p.seat;
       m.playOrder ??= 0;
@@ -122,6 +130,12 @@ function createPlayer(seat: SeatId): PlayerState {
     seat,
     health: 30,
     maxHealth: 30,
+    armor: 0,
+    gear: null,
+    heroAttackBonus: 0,
+    heroAttacked: false,
+    power: null,
+    powerUsed: false,
     mana: 0,
     maxMana: 0,
     deck: [],
@@ -160,6 +174,7 @@ export function setup(seats: number, opts: Options, seed: string): DrachenspielS
     for (const p of state.players) {
       p.deckTheme = deckOption in DECK_THEMES ? (deckOption as DeckThemeId) : 'mixed';
       p.deck = createDeck(deckOption, rng, nextId, spellsOn(opts));
+      p.power = p.deckTheme === 'mixed' ? rng.pick(DECK_THEME_IDS) : p.deckTheme;
     }
     state.rng = rng.state;
     state.nextEntityId = entityCounter;
@@ -180,6 +195,7 @@ function dealStartingHands(state: DrachenspielState, willMulligan: boolean): voi
   }
 
   // Second player draws 4
+  pSecond.armor = SECOND_SEAT_ARMOR;
   for (let i = 0; i < 4; i++) {
     const card = pSecond.deck.shift();
     if (card) pSecond.hand.push(card);
@@ -202,6 +218,10 @@ function startTurn(state: DrachenspielState, seat: SeatId, events: GameEvent[]):
 
   player.maxMana = Math.min(MAX_MANA, player.maxMana + 1);
   player.mana = player.maxMana;
+  player.powerUsed = false;
+  player.heroAttacked = false;
+  // Was „nur für diesen Zug“ galt, endet mit dem Zug des anderen.
+  for (const p of state.players) p.heroAttackBonus = 0;
 
   for (const minion of player.board) {
     minion.canAttack = true;
@@ -284,39 +304,21 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
       }
     }
 
+    const power = player.power ? HOUSE_POWERS[player.power] : undefined;
+    if (power && !player.powerUsed && power.cost <= player.mana && powerIsUsable(power, player.board.length)) {
+      moves.push({ type: 'heroPower' });
+    }
+
     // Attacks
     const enemy = state.players[1 - actor];
-    const tauntMinions = enemy.board.filter((m) => m.taunt && !m.stealth);
-
+    const targets = attackTargets(enemy);
     for (const minion of player.board) {
       if (minion.canAttack && !minion.hasAttacked && minion.attack > 0) {
-        if (tauntMinions.length > 0) {
-          for (const t of tauntMinions) {
-            moves.push({
-              type: 'attack',
-              attackerId: minion.id,
-              target: { kind: 'minion', id: t.id },
-            });
-          }
-        } else {
-          // Can attack enemy hero
-          moves.push({
-            type: 'attack',
-            attackerId: minion.id,
-            target: { kind: 'hero' },
-          });
-          // Can attack non-stealthed enemy minions
-          for (const m of enemy.board) {
-            if (!m.stealth) {
-              moves.push({
-                type: 'attack',
-                attackerId: minion.id,
-                target: { kind: 'minion', id: m.id },
-              });
-            }
-          }
-        }
+        for (const target of targets) moves.push({ type: 'attack', attackerId: minion.id, target });
       }
+    }
+    if (heroAttackValue(player) > 0 && !player.heroAttacked) {
+      for (const target of targets) moves.push({ type: 'heroAttack', target });
     }
 
     return moves;
@@ -347,6 +349,7 @@ export function applyMove(
       throw new Error('Deck-Wahl jetzt nicht erlaubt');
     }
     player.deckTheme = move.deck;
+    player.power = move.deck;
     const rng = partyRng(next);
     player.deck = createDeck(move.deck, rng, nextEntityId, spellsOn(next.options));
     next.rng = rng.state;
@@ -441,6 +444,49 @@ export function applyMove(
     return { state: next, events };
   }
 
+  if (move.type === 'heroPower') {
+    const power = player.power ? HOUSE_POWERS[player.power] : undefined;
+    if (!power) throw new Error('Keine Hauskraft');
+    if (player.powerUsed) throw new Error('Hauskraft in diesem Zug schon genutzt');
+    if (power.cost > player.mana) throw new Error('Nicht genug Mana');
+    if (!powerIsUsable(power, player.board.length)) throw new Error('Spielfeld voll');
+    player.mana -= power.cost;
+    player.powerUsed = true;
+    events.push({ type: 'heroPowerUsed', seat: actor, power: power.id });
+    enqueue(next, power.effects, actor, `power_${power.id}`, null, null);
+    settle(next, events);
+    return { state: next, events };
+  }
+
+  if (move.type === 'heroAttack') {
+    const strength = heroAttackValue(player);
+    if (strength <= 0 || player.heroAttacked) throw new Error('Held kann nicht angreifen');
+    const target = move.target;
+    const allowed = attackTargets(enemy).some((t) => (t.kind === 'hero' ? target.kind === 'hero' : target.kind === 'minion' && t.id === target.id));
+    if (!allowed) throw new Error('Ungültiges Ziel für den Helden');
+
+    player.heroAttacked = true;
+    events.push({ type: 'heroAttack', seat: actor, target });
+    if (target.kind === 'hero') {
+      damageHero(enemy, strength, events);
+    } else {
+      const defender = enemy.board.find((m) => m.id === target.id)!;
+      // Der Gegenschlag trifft den Helden; Gift wirkt nur auf Tiere.
+      const counter = defender.attack;
+      damageMinion(defender, strength, false, events);
+      if (counter > 0) damageHero(player, counter, events);
+    }
+    if (player.gear) {
+      player.gear.durability--;
+      if (player.gear.durability <= 0) {
+        events.push({ type: 'gearBroken', seat: actor, gear: player.gear });
+        player.gear = null;
+      }
+    }
+    settle(next, events);
+    return { state: next, events };
+  }
+
   if (move.type === 'attack') {
     const attacker = player.board.find((m) => m.id === move.attackerId);
     if (!attacker) throw new Error('Angreifer existiert nicht');
@@ -483,6 +529,19 @@ export function applyMove(
   throw new Error('Unbekannter Zug');
 }
 
+/** Erlaubte Angriffsziele auf dieser Seite: Beschützer gehen vor, Versteckte sind keines. */
+function attackTargets(enemy: PlayerState): Array<{ kind: 'minion'; id: string } | { kind: 'hero' }> {
+  const visible = enemy.board.filter((m) => !m.stealth);
+  const guards = visible.filter((m) => m.taunt);
+  if (guards.length > 0) return guards.map((m) => ({ kind: 'minion', id: m.id }));
+  return [{ kind: 'hero' }, ...visible.map((m) => ({ kind: 'minion' as const, id: m.id }))];
+}
+
+/** Angriff des Helden in diesem Zug: Rüstzeug plus, was nur diesen Zug gilt. */
+export function heroAttackValue(player: Pick<PlayerState, 'gear' | 'heroAttackBonus'>): number {
+  return (player.gear?.attack ?? 0) + (player.heroAttackBonus ?? 0);
+}
+
 // ---------------------------------------------------------------------------
 // Zauberkarten
 // ---------------------------------------------------------------------------
@@ -520,6 +579,12 @@ export function playerView(
       seat: p.seat,
       health: p.health,
       maxHealth: p.maxHealth,
+      armor: p.armor ?? 0,
+      gear: p.gear ? { ...p.gear } : null,
+      heroAttackBonus: p.heroAttackBonus ?? 0,
+      heroAttacked: p.heroAttacked ?? false,
+      power: p.power ?? null,
+      powerUsed: p.powerUsed ?? false,
       mana: p.mana,
       maxMana: p.maxMana,
       deckCount: p.deck.length,
@@ -625,6 +690,12 @@ function reconstructPlayer(
     seat: hv.seat,
     health: hv.health,
     maxHealth: hv.maxHealth,
+    armor: hv.armor,
+    gear: hv.gear ? { ...hv.gear } : null,
+    heroAttackBonus: hv.heroAttackBonus,
+    heroAttacked: hv.heroAttacked,
+    power: hv.power,
+    powerUsed: hv.powerUsed,
     mana: hv.mana,
     maxMana: hv.maxMana,
     deck,
@@ -644,7 +715,8 @@ export function evaluate(state: DrachenspielState, seat: SeatId): number {
   if (me.health <= 0) return -10_000;
 
   let score = 0;
-  score += (me.health - opp.health) * 2;
+  score += (me.health + me.armor - opp.health - opp.armor) * 2;
+  score += (me.gear ? me.gear.attack * me.gear.durability : 0) - (opp.gear ? opp.gear.attack * opp.gear.durability : 0);
   score += (me.hand.length - opp.hand.length) * 3;
 
   for (const m of me.board) {

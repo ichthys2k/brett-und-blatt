@@ -13,10 +13,10 @@ export const botDrachenhueter: BotDefinition<
   name: 'Drachenhüter',
   levels: ['easy', 'medium', 'hard'],
   delayMs({ move, level }) {
-    if (move.type === 'attack') {
+    if (move.type === 'attack' || move.type === 'heroAttack') {
       return 1100;
     }
-    if (move.type === 'playCard') {
+    if (move.type === 'playCard' || move.type === 'heroPower') {
       return level === 'easy' ? 800 : 700;
     }
     if (move.type === 'endTurn') {

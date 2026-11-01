@@ -1,7 +1,7 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import { CARDS_DB } from './cards';
 import { applyMove, evaluate, legalMoves } from './rules';
-import type { DrachenspielMove, DrachenspielState, Effect, Minion } from './types';
+import type { DrachenspielMove, DrachenspielState, Effect, Minion, PlayerState } from './types';
 
 /** Wie gründlich eine Stufe plant. */
 export interface PlanSettings {
@@ -35,7 +35,13 @@ function effectValue(effect: Effect): number {
     case 'grantKeyword':
       return 1.5;
     case 'mana':
+    case 'armor':
+    case 'heroAttack':
       return effect.amount;
+    case 'equip':
+      return effect.gear.attack * effect.gear.durability;
+    case 'summonRandom':
+      return 2.5;
     case 'ready':
     case 'returnToHand':
       return 1;
@@ -59,6 +65,10 @@ function heroValue(health: number): number {
   return health * 1.2 + Math.min(0, health - 12) * 0.8;
 }
 
+function gearValue(player: PlayerState): number {
+  return player.gear ? player.gear.attack * player.gear.durability * 1.2 : 0;
+}
+
 /** Was im nächsten Zug den Helden erreichen kann: Beschützer fangen je einen Angreifer ab. */
 function reachingDamage(attackers: Minion[], defenders: Minion[]): number {
   const guards = defenders.filter((m) => m.taunt && !m.stealth).length;
@@ -73,13 +83,14 @@ export function positionValue(state: DrachenspielState, seat: SeatId): number {
   if (opp.health <= 0 && me.health > 0) return WIN;
   if (me.health <= 0) return -WIN;
 
-  let score = heroValue(me.health) - heroValue(opp.health);
+  let score = heroValue(me.health) + me.armor - heroValue(opp.health) - opp.armor;
+  score += gearValue(me) - gearValue(opp);
   score += (me.hand.length - opp.hand.length) * 2.2;
   for (const minion of me.board) score += minionValue(minion);
   for (const minion of opp.board) score -= minionValue(minion);
 
-  if (reachingDamage(opp.board, me.board) >= me.health) score -= 40;
-  if (reachingDamage(me.board, opp.board) >= opp.health) score += 15;
+  if (reachingDamage(opp.board, me.board) + (opp.gear?.attack ?? 0) >= me.health + me.armor) score -= 40;
+  if (reachingDamage(me.board, opp.board) + (me.gear?.attack ?? 0) >= opp.health + opp.armor) score += 15;
   // Ungenutztes Mana ist im eigenen Zug verschenkt.
   if (state.activeSeat === seat) score -= me.mana * 0.5;
   return score;
@@ -95,7 +106,8 @@ interface Node {
 function positionKey(state: DrachenspielState): string {
   const sides = state.players.map((p) => {
     const board = p.board.map((m) => `${m.id}:${m.attack}:${m.health}:${m.hasAttacked ? 1 : 0}:${m.bubble ? 1 : 0}`);
-    return `${p.health}|${p.mana}|${p.hand.map((c) => c.uid).join()}|${board.join()}`;
+    const hero = `${p.armor}:${p.gear?.durability ?? 0}:${p.heroAttackBonus}:${p.heroAttacked ? 1 : 0}:${p.powerUsed ? 1 : 0}`;
+    return `${p.health}|${hero}|${p.mana}|${p.hand.map((c) => c.uid).join()}|${board.join()}`;
   });
   return sides.join('/');
 }
@@ -103,6 +115,8 @@ function positionKey(state: DrachenspielState): string {
 /** Spielt für den Gegner nach dem Zugende einen einfachen Zug durch und bewertet das Ergebnis. */
 function afterReply(start: DrachenspielState, seat: SeatId, value: PlanSettings['value']): number {
   const opp = (1 - seat) as SeatId;
+  // Ein Plan kann die Partie schon beenden, etwa wenn der Held am Gegenschlag fällt.
+  if (start.phase !== 'play') return value(start, seat);
   let state = applyMove(start, seat, { type: 'endTurn' }).state;
   if (state.phase !== 'play') return value(state, seat);
   for (let step = 0; step < REPLY_STEPS; step++) {

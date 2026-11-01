@@ -31,9 +31,13 @@ function play(seed: string, levels: [BotLevel, BotLevel], deckSelection: string)
 describe.runIf(env.DRACHEN_BALANCE)('Drachenspiel: Startvorteil', () => {
   it('misst Startspieler- und Stufenvergleich', () => {
     const pairs: [BotLevel, BotLevel][] = [['hard', 'hard'], ['medium', 'medium'], ['easy', 'easy'], ['hard', 'medium'], ['medium', 'easy']];
-    for (const deck of ['inGame', 'forest', 'sea', 'farm', 'wild', 'bugs']) {
+    // Auf Wunsch nur ein Teil, die ganze Messung dauert lange: DRACHEN_BALANCE_DECKS=inGame, DRACHEN_BALANCE_STUFEN=hard/hard
+    const decks = env.DRACHEN_BALANCE_DECKS?.split(',') ?? ['inGame', 'forest', 'sea', 'farm', 'wild', 'bugs'];
+    const levelFilter = env.DRACHEN_BALANCE_STUFEN?.split(',');
+    for (const deck of decks) {
       for (const levels of pairs) {
         if (deck !== 'inGame' && levels[0] !== levels[1]) continue;
+        if (levelFilter && !levelFilter.includes(levels.join('/'))) continue;
         let starterWins = 0, firstLevelWins = 0, draws = 0, turns = 0;
         for (let i = 0; i < GAMES; i++) {
           const r = play(`mess-${deck}-${levels.join('-')}-${i}`, levels, deck);

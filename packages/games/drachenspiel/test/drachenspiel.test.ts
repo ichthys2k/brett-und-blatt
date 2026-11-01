@@ -2,7 +2,8 @@ import { Rng } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { drachenspiel, gameModule } from '../src';
-import { CARDS_DB } from '../src/cards';
+import { ALL_CARD_IDS, CARDS_DB } from '../src/cards';
+import { HOUSE_POWERS } from '../src/powers';
 import type { DrachenspielState, Minion } from '../src/types';
 
 function createTestMinion(overrides: Partial<Minion> & { id: string; cardId: string }): Minion {
@@ -227,6 +228,7 @@ describe('Drachenspiel – Fähigkeiten und Regeln', () => {
     state.activeSeat = 0;
     state.players[1].deck = []; // Empty opponent deck
     state.players[1].health = 30;
+    state.players[1].armor = 0;
 
     // Player 0 ends turn -> Player 1 turn starts, draws from empty deck
     const res1 = gameModule.applyMove(state, 0, { type: 'endTurn' });
@@ -299,6 +301,7 @@ describe('Zauberkarten', () => {
     const me = s.activeSeat;
     s.players[me].mana = 10;
     s.players[me].maxMana = 10;
+    s.players[1 - me]!.armor = 0;
     return { s, me, opp: (1 - me) as 0 | 1 };
   };
   const give = (s: ReturnType<typeof base>['s'], seat: number, defId: string) => {
@@ -466,6 +469,7 @@ describe('Regelkern', () => {
     const me = s.activeSeat as 0 | 1;
     s.players[me].mana = 10;
     s.players[me].maxMana = 10;
+    s.players[1 - me]!.armor = 0;
     return { s, me, opp: (1 - me) as 0 | 1 };
   };
   const figure = (id: string, cardId: string, owner: 0 | 1, playOrder: number, attack: number, health: number, extra: Partial<Minion> = {}): Minion => ({
@@ -564,5 +568,184 @@ describe('Regelkern', () => {
     delete CARDS_DB.test_neu;
     expect(next.players[opp].health).toBe(hp - 1);
     expect(next.players[me].board.map((m) => m.cardId)).toEqual(['token_ant', 'token_ant']);
+  });
+});
+
+describe('Held und Grundregeln', () => {
+  function fresh(deckSelection = 'forest') {
+    const s = drachenspiel.setup(2, { deckSelection, mulligan: 'off' }, `held-${deckSelection}`);
+    const me = s.activeSeat as 0 | 1;
+    const opp = (1 - me) as 0 | 1;
+    s.players[me].mana = 10;
+    s.players[me].maxMana = 10;
+    s.players[opp].armor = 0;
+    return { s, me, opp };
+  }
+  const heroAttacks = (s: DrachenspielState, seat: 0 | 1) => drachenspiel.legalMoves(s, seat).filter((m) => m.type === 'heroAttack');
+
+  it('Rüstung fängt Schaden vor den Leben ab, auch Müdigkeit', () => {
+    const { s, me, opp } = fresh();
+    s.players[opp].armor = 2;
+    s.players[me].board = [createTestMinion({ id: 'm_a', cardId: 'c43', attack: 3, health: 3 })];
+    const hit = drachenspiel.applyMove(s, me, { type: 'attack', attackerId: 'm_a', target: { kind: 'hero' } }).state;
+    expect(hit.players[opp]).toMatchObject({ armor: 0, health: 29 });
+
+    s.players[opp].armor = 5;
+    s.players[opp].deck = [];
+    s.players[opp].fatigue = 2;
+    const tired = drachenspiel.applyMove(s, me, { type: 'endTurn' }).state;
+    expect(tired.players[opp]).toMatchObject({ armor: 2, health: 30, fatigue: 3 });
+  });
+
+  it('wer als Zweiter beginnt, startet mit 5 Rüstung', () => {
+    const s = drachenspiel.setup(2, { deckSelection: 'forest', mulligan: 'off' }, 'ausgleich');
+    expect(s.players[s.startingSeat].armor).toBe(0);
+    expect(s.players[1 - s.startingSeat]!.armor).toBe(5);
+  });
+
+  it('die Hand fasst zehn Karten, die elfte verbrennt', () => {
+    const { s, me, opp } = fresh();
+    s.players[opp].hand = Array.from({ length: 9 }, (_, i) => ({ uid: `h${i}`, defId: 'c43' }));
+    const ten = drachenspiel.applyMove(s, me, { type: 'endTurn' });
+    expect(ten.state.players[opp].hand).toHaveLength(10);
+    expect(ten.events.some((e) => e.type === 'cardBurned')).toBe(false);
+    s.players[opp].hand.push({ uid: 'h9', defId: 'c43' });
+    const burned = drachenspiel.applyMove(s, me, { type: 'endTurn' });
+    expect(burned.state.players[opp].hand).toHaveLength(10);
+    expect(burned.events.some((e) => e.type === 'cardBurned')).toBe(true);
+  });
+
+  it('die Sternschnuppe gibt auch bei zehn Kristallen eine elfte Einheit', () => {
+    const { s, me } = fresh();
+    s.players[me].hand = [{ uid: 's', defId: 'special_star' }];
+    expect(drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 }).state.players[me].mana).toBe(11);
+  });
+
+  it('die Hauskraft kostet 2 Mana und geht einmal je Zug', () => {
+    const { s, me, opp } = fresh('wild');
+    s.players[me].mana = 1;
+    expect(drachenspiel.legalMoves(s, me)).not.toContainEqual({ type: 'heroPower' });
+    s.players[me].mana = 5;
+    const used = drachenspiel.applyMove(s, me, { type: 'heroPower' }).state;
+    expect(used.players[me]).toMatchObject({ mana: 3, armor: 2, powerUsed: true });
+    expect(drachenspiel.legalMoves(used, me)).not.toContainEqual({ type: 'heroPower' });
+    expect(() => drachenspiel.applyMove(used, me, { type: 'heroPower' })).toThrow();
+    const back = drachenspiel.applyMove(drachenspiel.applyMove(used, me, { type: 'endTurn' }).state, opp, { type: 'endTurn' }).state;
+    expect(back.players[me].powerUsed).toBe(false);
+    expect(drachenspiel.legalMoves(back, me)).toContainEqual({ type: 'heroPower' });
+  });
+
+  it('ruft eine Kraft ein Tier, geht sie bei vollem Feld nicht', () => {
+    for (const deck of ['farm', 'sea']) {
+      const { s, me } = fresh(deck);
+      s.players[me].board = Array.from({ length: 7 }, (_, i) => createTestMinion({ id: `m_${i}`, cardId: 'c43' }));
+      expect(drachenspiel.legalMoves(s, me)).not.toContainEqual({ type: 'heroPower' });
+      s.players[me].board.pop();
+      const next = drachenspiel.applyMove(s, me, { type: 'heroPower' }).state;
+      expect(next.players[me].board).toHaveLength(7);
+    }
+  });
+
+  it('Gezeitenruf lost über den Partie-Seed: gleicher Stand, gleiches Tier; verschiedene Seeds streuen', () => {
+    const summoned = (seed: string) => {
+      const s = drachenspiel.setup(2, { deckSelection: 'sea', mulligan: 'off' }, seed);
+      s.players[s.activeSeat].mana = 2;
+      const next = drachenspiel.applyMove(s, s.activeSeat, { type: 'heroPower' }).state;
+      return next.players[s.activeSeat].board[0]!.cardId;
+    };
+    expect(summoned('a')).toBe(summoned('a'));
+    const seen = new Set(Array.from({ length: 40 }, (_, i) => summoned(`streu-${i}`)));
+    expect(seen).toEqual(new Set(['token_mussel', 'token_shrimp', 'token_seahorse']));
+  });
+
+  it('Eichenkraft: Der Held greift diesen Zug an, danach nicht mehr', () => {
+    const { s, me, opp } = fresh('forest');
+    expect(heroAttacks(s, me)).toEqual([]);
+    const powered = drachenspiel.applyMove(s, me, { type: 'heroPower' }).state;
+    expect(powered.players[me]).toMatchObject({ armor: 1, heroAttackBonus: 1 });
+    const hit = drachenspiel.applyMove(powered, me, { type: 'heroAttack', target: { kind: 'hero' } }).state;
+    expect(hit.players[opp].health).toBe(29);
+    expect(heroAttacks(hit, me)).toEqual([]);
+    expect(() => drachenspiel.applyMove(hit, me, { type: 'heroAttack', target: { kind: 'hero' } })).toThrow();
+    const after = drachenspiel.applyMove(powered, me, { type: 'endTurn' }).state;
+    expect(after.players[me].heroAttackBonus).toBe(0);
+  });
+
+  it('Rüstzeug nutzt sich ab, bricht und bleibt über den Zug hinaus', () => {
+    const { s, me, opp } = fresh('bugs');
+    let state = drachenspiel.applyMove(s, me, { type: 'heroPower' }).state;
+    expect(state.players[me].gear).toMatchObject({ attack: 1, durability: 2 });
+    state = drachenspiel.applyMove(state, me, { type: 'heroAttack', target: { kind: 'hero' } }).state;
+    expect(state.players[me].gear?.durability).toBe(1);
+    state = drachenspiel.applyMove(state, me, { type: 'endTurn' }).state;
+    state = drachenspiel.applyMove(state, opp, { type: 'endTurn' }).state;
+    const res = drachenspiel.applyMove(state, me, { type: 'heroAttack', target: { kind: 'hero' } });
+    expect(res.state.players[me].gear).toBeNull();
+    expect(res.events.some((e) => e.type === 'gearBroken')).toBe(true);
+    expect(res.state.players[opp].health).toBe(28);
+  });
+
+  it('der Held achtet Beschützer und Versteckte, ein Tier schlägt zurück, Gift trifft ihn nicht', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].gear = { name: 'x', emoji: '🐝', attack: 2, durability: 2 };
+    s.players[opp].board = [
+      createTestMinion({ id: 'm_w', cardId: 'c43', attack: 3, health: 5, taunt: true, poisonous: true }),
+      createTestMinion({ id: 'm_n', cardId: 'c43', attack: 1, health: 1 }),
+      createTestMinion({ id: 'm_v', cardId: 'c43', attack: 1, health: 1, stealth: true }),
+    ];
+    expect(heroAttacks(s, me)).toEqual([{ type: 'heroAttack', target: { kind: 'minion', id: 'm_w' } }]);
+    expect(() => drachenspiel.applyMove(s, me, { type: 'heroAttack', target: { kind: 'hero' } })).toThrow();
+    s.players[me].armor = 1;
+    const next = drachenspiel.applyMove(s, me, { type: 'heroAttack', target: { kind: 'minion', id: 'm_w' } }).state;
+    expect(next.players[opp].board.find((m) => m.id === 'm_w')!.health).toBe(3);
+    expect(next.players[me]).toMatchObject({ armor: 0, health: 28 });
+  });
+
+  it('stirbt der Held am Gegenschlag, ist die Partie aus', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].gear = { name: 'x', emoji: '🐝', attack: 1, durability: 1 };
+    s.players[me].health = 2;
+    s.players[opp].board = [createTestMinion({ id: 'm_w', cardId: 'c43', attack: 5, health: 5 })];
+    const next = drachenspiel.applyMove(s, me, { type: 'heroAttack', target: { kind: 'minion', id: 'm_w' } }).state;
+    expect(next.phase).toBe('ended');
+    expect(drachenspiel.result(next)).toMatchObject({ kind: 'win', winners: [opp] });
+  });
+
+  it('das gemischte Deck bekommt eine Hauskraft aus dem Seed', () => {
+    const powers = new Set(Array.from({ length: 30 }, (_, i) => drachenspiel.setup(2, { deckSelection: 'random', mulligan: 'off' }, `m-${i}`).players[0].power));
+    expect(powers.has(null)).toBe(false);
+    expect(powers.size).toBeGreaterThan(1);
+  });
+
+  it('die Deckwahl im Spiel setzt die Hauskraft', () => {
+    const s = drachenspiel.setup(2, { deckSelection: 'inGame', mulligan: 'off' }, 'wahl');
+    expect(drachenspiel.applyMove(s, 0, { type: 'chooseDeck', deck: 'sea' }).state.players[0].power).toBe('sea');
+  });
+
+  it('alte Spielstände ohne Heldenfelder spielen weiter', () => {
+    const { s, me, opp } = fresh('wild');
+    s.players[opp].maxMana = 5;
+    for (const p of s.players) {
+      const old = p as Partial<typeof p>;
+      delete old.armor;
+      delete old.gear;
+      delete old.heroAttackBonus;
+      delete old.heroAttacked;
+      delete old.power;
+      delete old.powerUsed;
+    }
+    expect(drachenspiel.playerView(s, me).players[opp]).toMatchObject({ armor: 0, gear: null, power: null });
+    const next = drachenspiel.applyMove(s, me, { type: 'endTurn' }).state;
+    expect(next.players[opp]).toMatchObject({ armor: 0, gear: null, power: 'wild', powerUsed: false });
+    expect(drachenspiel.legalMoves(next, opp)).toContainEqual({ type: 'heroPower' });
+  });
+
+  it('jede Hauskraft hat einen erzeugten Text und jeder Spielstein ist kein Deck-Tier', () => {
+    for (const power of Object.values(HOUSE_POWERS)) {
+      expect(power.text.length).toBeGreaterThan(5);
+      expect(power.text).not.toContain('undefined');
+    }
+    expect(HOUSE_POWERS.sea.text).toBe('Ruft zufällig eine Muschel (0/2 mit Beschützer), eine Garnele (1/1 mit Flink) oder ein Seepferdchen (1/2) herbei.');
+    for (const id of ['token_chick', 'token_mussel', 'token_shrimp', 'token_seahorse']) expect(ALL_CARD_IDS).not.toContain(id);
   });
 });

@@ -20,6 +20,7 @@ function board(defId: string): { s: DrachenspielState; me: 0 | 1; opp: 0 | 1 } {
   s.players[me].maxMana = 10;
   s.players[me].health = 20;
   s.players[opp].health = 20;
+  s.players[opp].armor = 0;
   s.players[me].hand = [{ uid: 'k', defId }];
   s.players[me].board = [tier('m_eigen', 2, 4, { health: 3, damage: 1 })];
   s.players[opp].board = [tier('m_gross', 3, 5), tier('m_klein', 2, 1), tier('m_blase', 1, 2, { bubble: true }), tier('m_weg', 1, 1, { stealth: true })];

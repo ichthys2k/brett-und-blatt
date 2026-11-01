@@ -1,6 +1,7 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { CARDS_DB } from '../cards';
-import type { CardInstance, DrachenspielView, Minion, SpellTarget } from '../types';
+import { HOUSE_POWERS } from '../powers';
+import type { CardInstance, DeckThemeId, DrachenspielView, Gear, Minion, SpellTarget } from '../types';
 
 /** Eine aufsteigende Anzeige über einem Tier oder Helden. Schlüssel: Tier-Kennung oder `hero-<Platz>`. */
 export interface Float {
@@ -21,6 +22,7 @@ export interface Beat {
   durationMs: number;
   boards: [ShownMinion[], ShownMinion[]];
   heroes: [number, number];
+  armor: [number, number];
   floats: Float[];
   attack: { attackerId: string; target: string } | null;
   impacted: string[];
@@ -39,16 +41,22 @@ const REDUCED_MOTION_FACTOR = 0.4;
 
 const CATEGORY: Record<string, Category> = {
   attack: 'lunge',
+  heroAttack: 'lunge',
   damage: 'hit',
   bubblePopped: 'hit',
   fatigue: 'hit',
   heal: 'change',
   heroHealed: 'change',
+  armorGained: 'change',
+  heroAttackGained: 'change',
+  gearEquipped: 'change',
+  gearBroken: 'change',
   minionBuffed: 'change',
   minionLeft: 'death',
   minionReturned: 'change',
   cardPlayed: 'enter',
   spellCast: 'enter',
+  heroPowerUsed: 'enter',
   minionSummoned: 'enter',
 };
 
@@ -61,6 +69,7 @@ function freshBeat(previous: Beat | null, before: DrachenspielView): Beat {
     durationMs: 0,
     boards: [fromBoard(0), fromBoard(1)],
     heroes: previous ? [...previous.heroes] : [before.players[0].health, before.players[1].health],
+    armor: previous ? [...previous.armor] : [before.players[0].armor, before.players[1].armor],
     floats: [],
     attack: null,
     impacted: [],
@@ -147,8 +156,48 @@ export function buildBeats(
         if (attacker) current.calls.push({ name: attacker.minion.name, kind: 'attack', sound: attacker.minion.sound });
         break;
       }
+      case 'heroPowerUsed': {
+        const { seat, power } = event as unknown as { seat: SeatId; power: DeckThemeId };
+        const def = HOUSE_POWERS[power];
+        current.floats.push({ target: `hero-${seat}`, text: def.emoji, kind: 'fx' });
+        current.log.push(`${def.emoji} ${nameOf(seat)} nutzt ${def.name}`);
+        break;
+      }
+      case 'heroAttack': {
+        const { seat, target } = event as unknown as { seat: SeatId; target: { kind: 'minion'; id: string } | { kind: 'hero' } };
+        const targetKey = target.kind === 'minion' ? target.id : `hero-${(1 - seat) as SeatId}`;
+        current.attack = { attackerId: `hero-${seat}`, target: targetKey };
+        current.impacted.push(targetKey);
+        const victim = target.kind === 'minion' ? nameOfMinion(target.id) : `den Helden von ${nameOf((1 - seat) as SeatId)}`;
+        current.log.push(`⚔️ ${nameOf(seat)} greift ${victim} an`);
+        break;
+      }
+      case 'armorGained': {
+        const { seat, amount, armor } = event as unknown as { seat: SeatId; amount: number; armor: number };
+        current.floats.push({ target: `hero-${seat}`, text: `+${amount} 🛡️`, kind: 'fx' });
+        current.armor[seat] = armor;
+        current.log.push(`🛡️ ${nameOf(seat)} bekommt ${amount} Rüstung`);
+        break;
+      }
+      case 'heroAttackGained': {
+        const { seat, amount } = event as unknown as { seat: SeatId; amount: number };
+        current.floats.push({ target: `hero-${seat}`, text: `+${amount} ⚔️`, kind: 'fx' });
+        current.log.push(`⚔️ ${nameOf(seat)} hat in diesem Zug +${amount} Angriff`);
+        break;
+      }
+      case 'gearEquipped': {
+        const { seat, gear } = event as unknown as { seat: SeatId; gear: Gear };
+        current.floats.push({ target: `hero-${seat}`, text: gear.emoji, kind: 'fx' });
+        current.log.push(`${gear.emoji} ${nameOf(seat)} rüstet sich mit Rüstzeug: ${gear.name}`);
+        break;
+      }
+      case 'gearBroken': {
+        const { seat, gear } = event as unknown as { seat: SeatId; gear: Gear };
+        current.log.push(`💔 ${nameOf(seat)}: ${gear.name} ist abgenutzt`);
+        break;
+      }
       case 'damage': {
-        const hit = event as unknown as { targetType: 'hero' | 'minion'; targetSeat?: SeatId; targetId?: string; amount: number; health: number };
+        const hit = event as unknown as { targetType: 'hero' | 'minion'; targetSeat?: SeatId; targetId?: string; amount: number; health: number; lost?: number; armor?: number };
         if (hit.targetType === 'minion' && hit.targetId) {
           current.floats.push({ target: hit.targetId, text: `-${hit.amount}`, kind: 'damage' });
           current.impacted.push(hit.targetId);
@@ -159,15 +208,19 @@ export function buildBeats(
           current.floats.push({ target: `hero-${hit.targetSeat}`, text: `-${hit.amount}`, kind: 'damage' });
           current.impacted.push(`hero-${hit.targetSeat}`);
           current.heroes[hit.targetSeat] = hit.health;
-          current.log.push(`💥 ${nameOf(hit.targetSeat)} verliert ${hit.amount} Leben`);
+          if (hit.armor !== undefined) current.armor[hit.targetSeat] = hit.armor;
+          const lost = hit.lost ?? hit.amount;
+          const blocked = hit.amount - lost;
+          current.log.push(blocked > 0 ? `🛡️ ${nameOf(hit.targetSeat)}: Rüstung fängt ${blocked} ab, ${lost} Leben verloren` : `💥 ${nameOf(hit.targetSeat)} verliert ${lost} Leben`);
         }
         break;
       }
       case 'fatigue': {
-        const { seat, damage, health } = event as unknown as { seat: SeatId; damage: number; health: number };
+        const { seat, damage, health, armor } = event as unknown as { seat: SeatId; damage: number; health: number; armor?: number };
         current.floats.push({ target: `hero-${seat}`, text: `-${damage}`, kind: 'damage' });
         current.impacted.push(`hero-${seat}`);
         current.heroes[seat] = health;
+        if (armor !== undefined) current.armor[seat] = armor;
         const text = `😴 ${nameOf(seat)}: Deck leer, ${damage} Müdigkeits-Schaden`;
         current.log.push(text);
         current.notices.push(text);

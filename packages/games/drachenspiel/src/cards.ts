@@ -57,6 +57,12 @@ export const ANT_TOKEN: CardDefinition = {
   sound: 'ameise.mp3',
 };
 
+/** Spielsteine der Hauskräfte (siehe `powers.ts`). */
+const CHICK_TOKEN: CardDefinition = { id: 'token_chick', token: true, textName: 'ein Küken', name: 'Küken', cost: 1, attack: 1, health: 1, emoji: '🐥', quote: 'Piep!' };
+const MUSSEL_TOKEN: CardDefinition = { id: 'token_mussel', token: true, textName: 'eine Muschel', name: 'Muschel', cost: 1, attack: 0, health: 2, emoji: '🐚', quote: 'Bleibt zu.', keywords: ['taunt'] };
+const SHRIMP_TOKEN: CardDefinition = { id: 'token_shrimp', token: true, textName: 'eine Garnele', name: 'Garnele', cost: 1, attack: 1, health: 1, emoji: '🍤', quote: 'Husch!', keywords: ['rush'] };
+const SEAHORSE_TOKEN: CardDefinition = { id: 'token_seahorse', token: true, textName: 'ein Seepferdchen', name: 'Seepferdchen', cost: 1, attack: 1, health: 2, emoji: '🌊', quote: 'Hüa, ihr Wellen!' };
+
 export const CARDS_DB: Record<string, CardDefinition> = {
   c1: {
     id: 'c1',
@@ -612,6 +618,10 @@ export const CARDS_DB: Record<string, CardDefinition> = {
   special_star: STAR_CARD,
   token_butterfly: BUTTERFLY_TOKEN,
   token_ant: ANT_TOKEN,
+  token_chick: CHICK_TOKEN,
+  token_mussel: MUSSEL_TOKEN,
+  token_shrimp: SHRIMP_TOKEN,
+  token_seahorse: SEAHORSE_TOKEN,
 };
 
 // Zauber stehen mit im Kartenverzeichnis, damit Hand und Deck sie wie Tiere nachschlagen.

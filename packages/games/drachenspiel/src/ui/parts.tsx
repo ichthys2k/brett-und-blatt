@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { CARDS_DB } from '../cards';
-import type { CardDefinition, Minion } from '../types';
+import type { CardDefinition, HousePower, Minion } from '../types';
 import { getCardTraits, getMinionTraits, type TraitInfo } from './traits';
 
 export function TraitBadge({ trait, isOpponent }: { trait: TraitInfo; isOpponent?: boolean }) {
@@ -62,7 +62,7 @@ export function healthClass(minion: Minion): string {
 }
 
 /** Was groß angesehen wird: eine Handkarte oder ein Tier auf dem Feld mit seinen aktuellen Werten. */
-export type ZoomItem = { kind: 'card'; defId: string } | { kind: 'minion'; minion: Minion };
+export type ZoomItem = { kind: 'card'; defId: string } | { kind: 'minion'; minion: Minion } | { kind: 'power'; power: HousePower };
 
 export function CardZoom({ item, onClose }: { item: ZoomItem; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -74,6 +74,23 @@ export function CardZoom({ item, onClose }: { item: ZoomItem; onClose: () => voi
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  if (item.kind === 'power') {
+    const { power } = item;
+    return (
+      <div className="ds-zoom" role="dialog" aria-modal="true" aria-label={power.name} onClick={onClose}>
+        <div className="ds-zoom-card ds-card-spell">
+          <span className="ds-card-cost ds-zoom-cost">{power.cost}</span>
+          <span className="ds-zoom-emoji">{power.emoji}</span>
+          <strong className="ds-zoom-name">{power.name}</strong>
+          <p className="ds-zoom-text">Hauskraft, einmal je Zug. {power.text}</p>
+          <button ref={closeRef} type="button" className="ds-btn" onClick={onClose}>
+            Schließen
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const def = CARDS_DB[item.kind === 'card' ? item.defId : item.minion.cardId];
   if (!def) return null;
