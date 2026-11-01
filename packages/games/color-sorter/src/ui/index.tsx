@@ -259,6 +259,10 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   // Auf mittleren Bildschirmen stehen die Knöpfe unter der Hand, damit die Karten breiter werden.
   const tight = big && size.width < 1500;
   const wide = !big && size.width > size.height * 1.25 && size.width > 640;
+  // Desktop-Audienz (W-045): Herrschaft als große Karte links, darunter die Bühne; rechts Narrenbank, Tafel und Hand.
+  const desk = big && size.height >= 640 && run?.phase === 'play' && !!run.current;
+  // Narren als große Karten mit Text: in der Audienz am Desktop, sonst nur bei genug Höhe (Jahrmarkt braucht Platz).
+  const cards = desk || (big && size.height >= 860);
   const sortedPickNow = [...picked].sort((a, b) => a - b);
   const drop = (item: DragItem, target: string | null): boolean => {
     if (!run || !target) return false;
@@ -383,12 +387,16 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
 
   // Kartengröße: acht Karten (mit Überlappung) passen in die Breite, dazu genug Höhe.
   const handCount = Math.max(effectiveHandSize(run), run.hand.length, 5);
-  const sideW = Math.min(352, Math.max(224, size.width * 0.18));
-  const handAvail = big ? size.width - sideW - 12 - (tight ? 0 : 224) - 24 : (wide ? size.width * 0.58 : size.width) - 12;
+  const sideW = desk ? Math.min(400, Math.max(260, size.width * 0.25)) : Math.min(352, Math.max(224, size.width * 0.18));
+  // Narren als große Karten: so breit, dass alle Plätze der Bank (und am Jahrmarkt die Tasche) in eine Reihe passen.
+  const benchW = size.width - sideW - 12 - 28;
+  const benchSlots = modCapacity(run) + (desk ? 0 : run.consumableSlots * 0.55);
+  const benchTileW = Math.max(96, Math.min(180, (benchW - 56) / benchSlots - 10, size.height * (desk && size.height >= 880 ? 0.17 : 0.15)));
+  const handAvail = big ? size.width - sideW - 12 - (tight ? 0 : desk ? 310 : 224) - 24 : (wide ? size.width * 0.58 : size.width) - 12;
   const cardW = big
-    ? Math.max(56, Math.min(180, handAvail / (handCount * 0.86 + 0.14), (size.height - (tight ? 200 : 160)) / 2.7))
+    ? Math.max(56, Math.min(180, handAvail / (handCount * 0.86 + 0.14), desk ? (size.height - benchTileW * 1.62 - 400) / 1.4 : (size.height - (tight ? 200 : 160)) / 2.7))
     : Math.max(40, Math.min(96, handAvail / (handCount * 0.86), size.height > 0 ? size.height / (wide ? 3.6 : 6.4) : 96));
-  const tileW = Math.max(60, Math.min(150, cardW * 0.78));
+  const tileW = cards ? benchTileW : Math.max(60, Math.min(150, cardW * 0.78));
 
   const hintCards = hint && (hint.type === 'play' || hint.type === 'discard') ? hint.cards : [];
   const togglePick = (i: number) => {
@@ -416,11 +424,12 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const round = run.current;
   const share = target > 0 ? Math.min(1, (round?.score ?? 0) / target) : 0;
   const mood = moodOf(share);
-  const header = (
-    <div className="cs-head">
+  const reward = run.round === 0 && view.stake >= 2 ? 0 : ROUND_REWARDS[run.round];
+  const enemyBlock = (
+    <>
       {run.phase === 'play' && round?.duel && <DuelStage view={view} run={run} seatNames={seatNames} />}
       {run.phase === 'play' && !round?.duel && (
-        <div className={`cs-enemy ${run.round === 2 ? 'cs-throne' : ''} ${target > 0 && share >= 1 ? 'cs-laugh' : ''}`}>
+        <div className={`cs-enemy ${desk ? 'cs-enemy-card' : ''} ${run.round === 2 ? 'cs-throne' : ''} ${target > 0 && share >= 1 ? 'cs-laugh' : ''}`}>
           <span className="cs-enemy-emoji" aria-hidden="true">
             <Face enemy={enemy} stage={target > 0 ? stageOf(share) : 1} />
             {target > 0 && !hasMoods(enemy.portrait) && (
@@ -443,9 +452,20 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
               </div>
             )}
             {target === 0 && round && <span className="cs-duel-score">Dein Applaus: {formatNumber(round.score)}</span>}
+            {desk && target > 0 && (
+              <span className="cs-enemy-reward">
+                <span>{ROUND_NAMES[run.round]}</span>
+                <span>Belohnung: {reward} 🥨</span>
+              </span>
+            )}
           </div>
         </div>
       )}
+    </>
+  );
+  const header = (
+    <div className="cs-head">
+      {enemyBlock}
       <div className="cs-stats">
         <span title="Hoftag und Audienz">
           🗺️ {view.endless && run.level > FINAL_LEVEL ? `${run.level} ∞` : `${run.level}/${FINAL_LEVEL}`} · {ROUND_NAMES[run.round]}
@@ -468,8 +488,8 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   );
 
   // --- Mods und Verbrauchsgegenstände
-  const modsRow = (
-    <div className="cs-row cs-mods" aria-label="Narren" data-drop-target="bench">
+  const modTiles = (
+    <>
       {run.mods.map((mod, index) => {
         const d = describeMod(mod);
         return (
@@ -477,6 +497,8 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
             key={mod.uid}
             emoji={d.emoji}
             title={d.title}
+            body={d.effect}
+            foot={d.foot}
             tip={tipFrom(d, [`Verkauf: ${sellValue(mod)} 🥨`])}
             extra={dragProps({ kind: 'mod', index }, `mod:${index}`)}
             tone={`${d.tone} ${mod.foil ? `cs-foil-${mod.foil}` : ''} ${mod.spent ? 'cs-dim' : ''}`}
@@ -491,11 +513,15 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           />
         );
       })}
-      {run.mods.length === 0 && <span className="cs-muted cs-empty-note">Noch keine Narren</span>}
+      {run.mods.length === 0 && !desk && <span className="cs-muted cs-empty-note">Noch keine Narren</span>}
+      {desk && Array.from({ length: Math.max(0, modCapacity(run) - run.mods.length) }, (_, i) => <span key={`free-${i}`} className="cs-tile cs-empty cs-free-slot" aria-hidden="true" />)}
       <span className="cs-slots cs-muted">
         {run.mods.length}/{modCapacity(run)}
       </span>
-      <span className="cs-sep" aria-hidden="true" />
+    </>
+  );
+  const consTiles = (
+    <>
       {run.consumables.map((item, index) => {
         const d = describeConsumable(item);
         return (
@@ -511,9 +537,21 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           />
         );
       })}
+      {desk && Array.from({ length: Math.max(0, run.consumableSlots - run.consumables.length) }, (_, i) => <span key={`free-${i}`} className="cs-tile cs-empty cs-small" aria-hidden="true" />)}
       <span className="cs-slots cs-muted" title="Narrentasche: Kunststücke, Übungen und Kuriositäten">
         👝 {run.consumables.length}/{run.consumableSlots}
       </span>
+    </>
+  );
+  const modsRow = (
+    <div className="cs-row cs-mods" aria-label="Narren" data-drop-target="bench">
+      {modTiles}
+      {!desk && (
+        <>
+          <span className="cs-sep" aria-hidden="true" />
+          {consTiles}
+        </>
+      )}
     </div>
   );
 
@@ -590,11 +628,11 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
 
   // --- Phasen
   let main: ReactNode = null;
+  let stageZone: ReactNode = null;
   if (run.phase === 'play' && round) {
     const playMove = find((m) => m.type === 'play' && same(m.cards, sortedPick));
     const discardMove = find((m) => m.type === 'discard' && same(m.cards, sortedPick));
-    main = (
-      <div className="cs-play">
+    stageZone = (
         <div className="cs-stagezone" data-drop-target="play">
         <div className="cs-score" aria-live="polite">
           <span className="cs-score-label">
@@ -614,6 +652,10 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
         </div>
         {big && !preview && <span className="cs-muted cs-stagehint">Karten hierher ziehen zum Vorführen</span>}
         </div>
+    );
+    main = (
+      <div className="cs-play">
+        {!desk && stageZone}
         <div className="cs-hand" style={{ ['--cw' as string]: `${cardW}px` }}>
           {run.hand.map((card, i) => (
             <CardView key={isOpen(card) ? card.id : `h${i}`} card={card as ViewCard} selected={picked.includes(i)} hint={hintCards.includes(i)} onClick={() => togglePick(i)} style={{ zIndex: i }} extra={dragProps({ kind: 'hand', index: i }, `hand:${i}`)} />
@@ -743,21 +785,84 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
 
   const others = multi ? <OthersStrip view={view} me={run.seat} seatNames={seatNames} /> : null;
 
+  // Tafel am Desktop: Stand der Audienz, Narrentasche und die Kombis auf einen Blick
+  const deskPanel = desk && round && (
+    <div className="cs-desk">
+      {dropbar}
+      <div className="cs-desk-stats">
+        <span className="cs-stat">
+          <small>Hoftag</small>
+          <b>🗺️ {view.endless && run.level > FINAL_LEVEL ? `${run.level} ∞` : `${run.level}/${FINAL_LEVEL}`}</b>
+          <span>{ROUND_NAMES[run.round]}</span>
+        </span>
+        <span className="cs-stat">
+          <small>Brezeln</small>
+          <b>🥨 {run.tokens}</b>
+        </span>
+        <span className="cs-stat">
+          <small>Stapel</small>
+          <b>🂠 {run.pileCount ?? run.pile.length}</b>
+          <span>von {run.deck.length} Karten</span>
+        </span>
+        <span className="cs-stat">
+          <small>Vorführungen</small>
+          <b>✋ {round.handsLeft}</b>
+        </span>
+        <span className="cs-stat">
+          <small>Tauschen</small>
+          <b>🗑️ {round.discardsLeft}</b>
+        </span>
+        {multi && view.mode !== 'survival' && view.mode !== 'race' ? (
+          <span className="cs-stat">
+            <small>Herzen</small>
+            <Lives lives={run.lives} />
+          </span>
+        ) : (
+          <span className="cs-stat">
+            <small>Bestwert</small>
+            <b>👏 {formatNumber(run.bestHand)}</b>
+          </span>
+        )}
+      </div>
+      <div className="cs-desk-right">
+        <div className="cs-stat cs-pouchbox">
+          <small>Narrentasche</small>
+          <div className="cs-row cs-pouch">{consTiles}</div>
+          <button type="button" className="cs-link" onClick={toggleLook} title={`Kartenbild: ${DECK_STYLE_CHOICES.find((c) => c.value === look)?.label ?? ''} – antippen zum Wechseln`}>
+            🂠 Kartenbild
+          </button>
+        </div>
+        <KombiList
+          run={run}
+          active={preview?.type}
+          tools={
+            <button type="button" className="cs-link" onClick={() => setShowLevels((v) => !v)} title="Stufen, gespielte Kombis, Privilegien und Gefallen">
+              Details
+            </button>
+          }
+        />
+      </div>
+    </div>
+  );
+
   return (
     <BackContext.Provider value={back}>
       <DeckStyleContext.Provider value={look}>
       <HoverProvider>
-      <div ref={ref} className={`cs-board ${wide ? 'cs-wide' : ''} ${big ? 'cs-bigmode' : ''} ${tight ? 'cs-bigtight' : ''}`} style={{ ['--tw' as string]: `${tileW}px`, ['--side' as string]: `${sideW}px` }} data-theme={progress.theme} data-back={progress.back}>
+      <div ref={ref} className={`cs-board ${wide ? 'cs-wide' : ''} ${big ? 'cs-bigmode' : ''} ${tight ? 'cs-bigtight' : ''} ${desk ? 'cs-deskmode' : ''} ${cards ? 'cs-cardmode' : ''}`} style={{ ['--tw' as string]: `${tileW}px`, ['--side' as string]: `${sideW}px`, ['--bh' as string]: `${size.height}px` }} data-theme={progress.theme} data-back={progress.back}>
         <div className="cs-side">
-          {header}
+          {desk ? <div className="cs-head">{enemyBlock}</div> : header}
           {others}
+          {desk && info}
+          {desk && stageZone}
           {!big && modsRow}
-          {info}
+          {!desk && info}
           {view.lastDuel && run.phase === 'shop' && <DuelResult view={view} seatNames={seatNames} />}
         </div>
         {big && <div className="cs-bench">{modsRow}</div>}
+        {deskPanel}
         <div className="cs-mainarea">
-          {dropbar}
+          {!desk && dropbar}
           {main}
         </div>
         {showLevels && <LevelsTable run={run} onClose={() => setShowLevels(false)} />}
@@ -1071,6 +1176,8 @@ function OfferTile({ offer, selected, hint, onClick, pop, className, extra }: { 
       sub={offer.price > 0 ? `${offer.price} 🥨` : undefined}
       badge={sticker}
       tone={`${d.tone} ${foil} ${className ?? ''}`}
+      body={d.effect}
+      foot={d.foot}
       tip={tipFrom(d, offer.price > 0 ? [`Preis: ${offer.price} 🥨`] : [])}
       extra={extra}
       selected={selected}
@@ -1299,6 +1406,35 @@ function Overview({ view, seatNames, refEl }: { view: SorterState; seatNames: st
           <span>{r.mods.map((m) => modDef(m.key).emoji).join('')}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Kombis am Desktop: immer sichtbar, die gerade gewählte Kombi ist hervorgehoben. */
+function KombiList({ run, active, tools }: { run: RunState; active?: HandType; tools?: ReactNode }) {
+  const rows = HAND_TYPES.filter((t) => !HANDS[t].secret || run.handPlays[t] > 0);
+  return (
+    <div className="cs-kombis" aria-label="Kombis">
+      <div className="cs-kombis-head">
+        <strong>📋 Kombis</strong>
+        {tools}
+      </div>
+      <ul>
+        {rows.map((t) => {
+          const parts = previewParts(run, t);
+          return (
+            <li key={t} className={t === active ? 'cs-kombi-on' : ''}>
+              <span>
+                {handName(t)}
+                {run.handLevels[t] > 1 && <small> · Stufe {run.handLevels[t]}</small>}
+              </span>
+              <span className="cs-kombi-val">
+                <span className="cs-kombi-chips">{parts.chips}</span> × <span className="cs-kombi-mult">{parts.mult}</span>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
