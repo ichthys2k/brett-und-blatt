@@ -40,3 +40,6 @@ pnpm-debug.log*
 
 # Obsidian (lokale Einstellungen, z. B. beim Bearbeiten von PLANUNG.md)
 .obsidian/
+
+# Rohbilder der Bilderzeugung (scripts/grafik) – nur ausgewählte Bilder kommen ins Repo
+grafik-roh/

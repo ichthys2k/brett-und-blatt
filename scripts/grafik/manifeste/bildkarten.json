@@ -1,0 +1,27 @@
+{
+  "beschreibung": "W-048: Porträts für Bube, Dame und König im französischen Kartenbild (12 Motive). Das deutsche Blatt (Unter, Ober, König) kommt mit eigenem Manifest nach der Stilauswahl.",
+  "stil": "Painterly Old-Master style portrait of an anthropomorphic animal in royal costume, in the same style as the reference images: dark warm background with subtle damask pattern, rich velvet, brocade and fur trim, soft candlelight, warm gold and deep colours, detailed expressive face, slightly humorous but dignified, bust portrait facing the viewer. Playing-card court figure, vertical composition, figure centred with space around so it can be cropped. No text, no letters, no numbers, no card frame, no suit symbols in the corners.",
+  "ohne": "text, watermark, border, frame, playing card layout, miniature playing cards or card corners as jewellery, candles at the image edge, real people, celebrities, modern clothing",
+  "referenzen": [
+    "packages/games/color-sorter/src/ui/portraits/boss-bear-2.webp"
+  ],
+  "format": "4:5",
+  "groesse": [320, 400],
+  "qualitaet": 80,
+  "ziel": "packages/ui/src/cards/portraits",
+  "praefix": "",
+  "motive": [
+    { "id": "koenig-herz", "titel": "König Herz", "prompt": "A king animal (lion) as the King of Hearts: crown, red and gold robes, a heart emblem on the cloak, warm and kind expression." },
+    { "id": "dame-herz", "titel": "Dame Herz", "prompt": "A queen animal (swan) as the Queen of Hearts: delicate crown, red silk gown, holds a red rose, gentle romantic expression." },
+    { "id": "bube-herz", "titel": "Bube Herz", "prompt": "A young knight-page animal (fox) as the Jack of Hearts: red feathered cap, red doublet, cheerful cheeky smile." },
+    { "id": "koenig-karo", "titel": "König Karo", "prompt": "A king animal (bear) as the King of Diamonds: crown, orange and gold robes, holds a golden diamond-shaped jewel, proud merchant-like expression." },
+    { "id": "dame-karo", "titel": "Dame Karo", "prompt": "A queen animal (peacock) as the Queen of Diamonds: ornate crown, orange and gold dress with diamond pattern, elegant and vain expression." },
+    { "id": "bube-karo", "titel": "Bube Karo", "prompt": "A young messenger animal (hare) as the Jack of Diamonds: orange cap, diamond-patterned tunic, quick and clever expression." },
+    { "id": "koenig-pik", "titel": "König Pik", "prompt": "A king animal (wolf) as the King of Spades: dark crown, black and silver armour with a dark cloak, stern wise expression." },
+    { "id": "dame-pik", "titel": "Dame Pik", "prompt": "A queen animal (raven) as the Queen of Spades: dark crown, black velvet gown with silver embroidery, mysterious expression." },
+    { "id": "bube-pik", "titel": "Bube Pik", "prompt": "A young soldier animal (badger) as the Jack of Spades: black and silver uniform, holds a halberd, serious and loyal expression." },
+    { "id": "koenig-kreuz", "titel": "König Kreuz", "prompt": "A king animal (stag) as the King of Clubs: antler crown, green and gold forest robes with a clover-leaf emblem, calm wise expression." },
+    { "id": "dame-kreuz", "titel": "Dame Kreuz", "prompt": "A queen animal (owl) as the Queen of Clubs: leaf-wreath crown, green velvet gown, holds a clover branch, wise warm expression." },
+    { "id": "bube-kreuz", "titel": "Bube Kreuz", "prompt": "A young forester animal (squirrel) as the Jack of Clubs: green hat with feather, green tunic, holds a clover leaf, lively cheerful expression." }
+  ]
+}

@@ -1,5 +1,6 @@
 import { cardName, cardRank, cardSuit, isRed, rankLabel, type CardId, type DeckStyle, type Suit } from '@brett-und-blatt/engine';
-import type { CSSProperties, MouseEventHandler } from 'react';
+import { useId, type CSSProperties, type MouseEventHandler } from 'react';
+import { portraitUrl, useCardPortraits } from './portraits';
 
 export type { DeckStyle };
 
@@ -182,6 +183,37 @@ function CardFace({ card, deckStyle = 'four-color' }: { card: CardId; deckStyle?
   const label = getRankLabel(rank, deckStyle);
   const simple = deckStyle === 'simple';
   const color = simple ? SIMPLE_COLORS[suit].fg : cardSuitColor(suit, deckStyle);
+  const portraitsOn = useCardPortraits();
+  const portrait = portraitsOn ? portraitUrl(card, deckStyle) : undefined;
+  const clipId = useId();
+
+  if (portrait) {
+    // Bildkarte: kleiner Index in den Ecken, das Porträt in der Mitte mit Rahmen in der Farbe der Kartenfarbe.
+    const corner = (
+      <>
+        <text x="10" y="50" fontSize="46" fontWeight="700" fontFamily="system-ui, sans-serif">
+          {label}
+        </text>
+        <SuitShape suit={suit} deckStyle={deckStyle} x={11} y={58} size={28} />
+      </>
+    );
+    return (
+      <svg viewBox="0 0 250 350" className="bub-card-face" aria-hidden="true">
+        <defs>
+          <clipPath id={clipId}>
+            <rect x="50" y="22" width="150" height="306" rx="10" />
+          </clipPath>
+        </defs>
+        <rect x="2" y="2" width="246" height="346" rx="20" fill="#fff" stroke="#c9c2b6" strokeWidth="3" />
+        <g fill={color}>
+          {corner}
+          <g transform="rotate(180 125 175)">{corner}</g>
+        </g>
+        <image href={portrait} x="-5" y="22" width="260" height="306" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
+        <rect x="50" y="22" width="150" height="306" rx="10" fill="none" stroke={color} strokeWidth="4" />
+      </svg>
+    );
+  }
 
   return (
     <svg viewBox="0 0 250 350" className="bub-card-face" aria-hidden="true">

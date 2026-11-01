@@ -8,6 +8,7 @@ export { useElementSize } from './useElementSize';
 export { SeatRing, seatRingFits, seatRingPosition, type SeatRingProps } from './SeatRing';
 export { useCallDeadline } from './useCallDeadline';
 export { cardSuitColor, PlayingCard, SuitShape, type DeckStyle, type PlayingCardProps } from './cards/PlayingCard';
+export { setCardPortraits, useCardPortraits } from './cards/portraits';
 export { RoundFrame, RoundStandings, type RoundFrameProps } from './classroom/RoundFrame';
 export { TRICK_HAND_MIN_STEP, TrickTable, trickHandCardWidth, useTrickDisplay, type TrickTableProps, type TrickTableSlot } from './cards/TrickTable';
 export { CardFan, fanLayout, type CardFanProps, type FanLayout } from './cards/CardFan';
