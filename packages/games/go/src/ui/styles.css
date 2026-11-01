@@ -276,3 +276,29 @@
   width: 100%;
   height: 100%;
 }
+
+/* Handy im Querformat: Das Brett füllt den Rahmen, die Knöpfe stehen im freien Raum rechts daneben (nur wenn er reicht). */
+@media (orientation: landscape) and (max-height: 540px) and (min-width: 820px) {
+  .go-layout {
+    position: relative;
+  }
+
+  .go-layout > .go-bar {
+    position: absolute;
+    top: 0;
+    left: calc(100% + 0.5rem);
+    width: 7.5rem;
+    max-height: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    overflow-y: auto;
+  }
+}
+
+/* Kleines Hochformat: Das Brett lässt Platz für die Zeile darunter. */
+@media (orientation: portrait) and (max-height: 720px) {
+  .go-wrap {
+    width: min(100%, calc(100dvh - 20.5rem));
+    margin: 0 auto;
+  }
+}

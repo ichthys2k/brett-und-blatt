@@ -294,3 +294,24 @@ button.sm-symbol:focus-visible {
     animation: none;
   }
 }
+
+/* Viele Spieler: Die Leiste bleibt eine Zeile zum Wischen, die Karten behalten den Platz. */
+@media (max-height: 900px) {
+  .sm-bar {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .sm-chip {
+    flex: none;
+  }
+}
+
+@media (max-height: 720px) {
+  .sm-table {
+    min-height: 0;
+    padding: 0.25rem;
+  }
+}
