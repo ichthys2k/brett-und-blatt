@@ -2,7 +2,7 @@
 
 Fassung 1 vom 01.11.2026 (W-044). Grundlage sind der Code auf Commit `95218ef`, die Fehlerliste (F-007 bis F-009) sowie das Hearthstone-Kompendium im privaten Repo (`brett-und-blatt-klaenge/kompendium/hearthstone/`). Die Vorschläge zu Thema und Karten warten auf Cornelius' Entscheidung.
 
-**Stand für Mitwirkende (01.11.2026):** Phase 0 ist veröffentlicht (PR #45). Phase 1 ist gebaut (`ruleVersion` 4, Zweig `claude/drachenspiel-regelkern`, Stand in [`drachenspiel.md`](drachenspiel.md)), aber noch nicht in `main`. Als Nächstes käme Phase 2. Bis Phase 1 gemergt ist, sollte niemand parallel an `rules.ts` oder `ui/index.tsx` des Drachenspiels arbeiten. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
+**Stand für Mitwirkende (01.11.2026):** Phase 0 und Phase 1 (Regelkern, `ruleVersion` 4) sind in `main`; Stand in [`drachenspiel.md`](drachenspiel.md). Als Nächstes käme Phase 2, sie ist noch nicht begonnen. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
 
 ## 1. Kurzfassung
 
