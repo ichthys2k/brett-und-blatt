@@ -55,6 +55,7 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
+| W-051 | Wappen auf den Spielkacheln: 54 gemalte Wappen statt der Emoji (Taverne; „Schlicht“ zeigt weiter das Emoji), Werkzeuge in `scripts/grafik/` | 2026-11-01 | main |
 | W-046 | Musik und Soundeffekte getrennt schalten | 2026-11-01 | a95a29d |
 | W-041 | Marktplatz: Würfel- und Handelsspiel im Mittelalter, 2–6 Plätze, Bot „Krämer“, online; [Plan](docs/spiele/marktplatz.md), [Probe](docs/spiele/marktplatz-probe.md) | 2026-11-01 | 4817a5e |
 | F-005 | Eins!: Handkarten im Querformat abgeschnitten | 2026-11-01 | 864ef49 |

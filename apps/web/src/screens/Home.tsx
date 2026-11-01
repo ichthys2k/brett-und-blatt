@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/controls';
 import { t } from '../i18n';
 import { discardGame } from '../lib/activeGame';
+import { crestUrl } from '../lib/crest';
 import { OpenRooms } from '../components/OpenRooms';
 import { GAME_SERVER, useOpenRooms } from '../lib/online';
 import { findGame, games } from '../lib/registry';
@@ -279,14 +280,16 @@ function ResumeCard({ snapshot, onDiscard }: { snapshot: SessionSnapshot; onDisc
 }
 
 function GameCard({ info }: { info: GameInfo }) {
+  // Das gemalte Wappen gehört zur Taverne; „Schlicht“ zeigt weiter das Emoji.
+  const crest = useActiveLook() === 'tavern' ? crestUrl(info.id) : undefined;
   return (
     <li>
       <a
         href={paths.setup(info.id)}
         className="bub-tile flex h-full items-start gap-4 rounded-2xl border border-line bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
       >
-        <span className="bub-tile-crest text-4xl leading-none" aria-hidden="true">
-          {info.emoji}
+        <span className="bub-tile-crest text-4xl leading-none" data-image={crest ? '' : undefined} aria-hidden="true">
+          {crest ? <img src={crest} alt="" loading="lazy" decoding="async" className="bub-tile-crest-image" /> : info.emoji}
         </span>
         <span className="min-w-0 space-y-1">
           <span className="block font-semibold">{info.name}</span>

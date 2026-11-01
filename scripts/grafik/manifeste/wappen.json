@@ -1,0 +1,287 @@
+{
+  "beschreibung": "Wappen für die Spielkacheln der Startseite (54 Spiele, ein Motiv je Spiel). Angezeigt werden sie klein (etwa 52 × 60 px) in einem wappenförmigen Feld; die Bilder müssen deshalb schlicht und kontrastreich sein.",
+  "stil": "A bold, simple heraldic emblem for a board-game tile, painted like enamel on metal: ONE single central symbol, thick clean shapes, strong contrast, limited palette of deep colours with gold accents, subtle painterly texture, dark warm background filling the whole image, readable even when shrunk to 50 pixels. Medieval tavern and fairy-tale kingdom mood, consistent with a set of crests. The painted emblem artwork extends all the way to every edge of the square image: no margin, no visible plate or medallion edge, no corners, no white or black areas outside the artwork, the background texture continues to the borders. No text, no letters, no numbers, no border, no shield outline.",
+  "ohne": "text, letters, numbers, watermark, border, frame, shield outline, real people, logos, thin details, plate, medallion edge, white background, black corners, letters on cards",
+  "referenzen": [],
+  "format": "4:5",
+  "groesse": [
+    160,
+    184
+  ],
+  "qualitaet": 78,
+  "ziel": "apps/web/src/wappen",
+  "praefix": "",
+  "motive": [
+    {
+      "id": "battleship",
+      "titel": "Schiffe versenken",
+      "prompt": "Emblem motif: a tall wooden galleon sailing on dark waves, a small cannon flash on its side."
+    },
+    {
+      "id": "bible-quiz",
+      "titel": "Bibel-Quiz",
+      "prompt": "Emblem motif: an open book with golden rays rising from it and a small cross above."
+    },
+    {
+      "id": "bingo",
+      "titel": "Bingo",
+      "prompt": "Emblem motif: a lottery drum with a crank and a few plain coloured balls tumbling out."
+    },
+    {
+      "id": "binokel",
+      "titel": "Binokel",
+      "prompt": "Emblem motif: two golden crowns side by side above a green leaf."
+    },
+    {
+      "id": "black-peter",
+      "titel": "Schwarzer Peter",
+      "prompt": "Emblem motif: a black cat with an arched back and glowing yellow eyes."
+    },
+    {
+      "id": "category-sprint",
+      "titel": "Kategorien-Sprint",
+      "prompt": "Emblem motif: a feather quill racing across a scroll, sparks flying from the tip."
+    },
+    {
+      "id": "checkers",
+      "titel": "Dame",
+      "prompt": "Emblem motif: a round checkers piece topped with a small golden crown."
+    },
+    {
+      "id": "chess",
+      "titel": "Schach",
+      "prompt": "Emblem motif: a black chess knight (horse head) in profile."
+    },
+    {
+      "id": "chinese-checkers",
+      "titel": "Sternhalma",
+      "prompt": "Emblem motif: a six-pointed star made of coloured marbles."
+    },
+    {
+      "id": "color-and-shape",
+      "titel": "Farbe & Form",
+      "prompt": "Emblem motif: a circle, a star, a diamond and a square in bright different colours arranged in a cluster."
+    },
+    {
+      "id": "color-sorter",
+      "titel": "Narrenhof",
+      "prompt": "Emblem motif: a jester cap with three golden bells, red and green."
+    },
+    {
+      "id": "describe-duel",
+      "titel": "Verboten!",
+      "prompt": "Emblem motif: a speech scroll crossed by a red forbidden sign (circle with diagonal bar)."
+    },
+    {
+      "id": "dominoes",
+      "titel": "Domino",
+      "prompt": "Emblem motif: a single ivory domino tile with black dots standing upright."
+    },
+    {
+      "id": "doppelkopf",
+      "titel": "Doppelkopf",
+      "prompt": "Emblem motif: two crossed hunting horns above a red heart."
+    },
+    {
+      "id": "drachenspiel",
+      "titel": "Drachenspiel",
+      "prompt": "Emblem motif: a green dragon head breathing a small flame, in profile."
+    },
+    {
+      "id": "duck-rally",
+      "titel": "Enten-Rallye",
+      "prompt": "Emblem motif: a yellow rubber duck holding a small chequered racing flag."
+    },
+    {
+      "id": "elevens",
+      "titel": "Elf zuerst!",
+      "prompt": "Emblem motif: two tall golden candles standing side by side, flames lit."
+    },
+    {
+      "id": "estimate",
+      "titel": "Schätzmeister",
+      "prompt": "Emblem motif: an old balance scale with a pumpkin on one side and iron weights on the other."
+    },
+    {
+      "id": "factor-grid",
+      "titel": "Teiler-Duell",
+      "prompt": "Emblem motif: a wooden abacus with coloured beads."
+    },
+    {
+      "id": "four-in-a-row",
+      "titel": "Vier in einer Reihe",
+      "prompt": "Emblem motif: a blue frame grid with four red discs lined up and some yellow discs."
+    },
+    {
+      "id": "four-player-chess",
+      "titel": "Vierer-Schach",
+      "prompt": "Emblem motif: four chess pieces (king, queen, rook, bishop) arranged around a cross in four colours."
+    },
+    {
+      "id": "go",
+      "titel": "Go",
+      "prompt": "Emblem motif: black and white stones on a wooden board with thin lines."
+    },
+    {
+      "id": "gomoku",
+      "titel": "Gomoku",
+      "prompt": "Emblem motif: five black stones in a line on a wooden board, a few white stones nearby."
+    },
+    {
+      "id": "hangman",
+      "titel": "Galgenmännchen",
+      "prompt": "Emblem motif: a friendly snowman standing next to a small wooden gallows."
+    },
+    {
+      "id": "kniffel",
+      "titel": "Würfelblock",
+      "prompt": "Emblem motif: five white dice tumbling with black pips, one golden."
+    },
+    {
+      "id": "ligretto",
+      "titel": "Kartenblitz",
+      "prompt": "Emblem motif: a golden lightning bolt over a fan of plain cards."
+    },
+    {
+      "id": "low-flight",
+      "titel": "Tiefflug",
+      "prompt": "Emblem motif: a small vintage biplane flying low over soft clouds."
+    },
+    {
+      "id": "ludo",
+      "titel": "Nicht ärgern!",
+      "prompt": "Emblem motif: a cross-shaped board with four coloured pawns and a white die."
+    },
+    {
+      "id": "maexle",
+      "titel": "Mäxle",
+      "prompt": "Emblem motif: a leather dice cup tipped over with two dice peeking out."
+    },
+    {
+      "id": "majority",
+      "titel": "Mehrheitsfrage",
+      "prompt": "Emblem motif: a wooden ballot box with a raised hand above it."
+    },
+    {
+      "id": "marketplace",
+      "titel": "Marktplatz",
+      "prompt": "Emblem motif: a market stall with a striped canopy and pretzels on display."
+    },
+    {
+      "id": "mau-mau",
+      "titel": "Mau-Mau",
+      "prompt": "Emblem motif: a golden crown over a fan of cards seen from the back with a red and gold pattern."
+    },
+    {
+      "id": "mill",
+      "titel": "Mühle",
+      "prompt": "Emblem motif: a nine-men's-morris board of three nested squares with a few black and white stones."
+    },
+    {
+      "id": "number-wall",
+      "titel": "Rechenmauer",
+      "prompt": "Emblem motif: a pyramid of stacked warm-coloured bricks."
+    },
+    {
+      "id": "pairs",
+      "titel": "Paare finden",
+      "prompt": "Emblem motif: two identical golden butterflies side by side."
+    },
+    {
+      "id": "poker",
+      "titel": "Poker",
+      "prompt": "Emblem motif: a stack of golden chips beside two ace cards."
+    },
+    {
+      "id": "president",
+      "titel": "Präsident",
+      "prompt": "Emblem motif: a golden crown resting on a stack of cards."
+    },
+    {
+      "id": "quartett",
+      "titel": "Quartett",
+      "prompt": "Emblem motif: four animal silhouettes (lion, bear, fox, owl) in four quadrants."
+    },
+    {
+      "id": "reversi",
+      "titel": "Reversi",
+      "prompt": "Emblem motif: a round disc half black and half white flipping in mid-air."
+    },
+    {
+      "id": "schafkopf",
+      "titel": "Schafkopf",
+      "prompt": "Emblem motif: a woolly sheep head wearing a green Bavarian hat with a feather."
+    },
+    {
+      "id": "scrabble",
+      "titel": "Wortgitter",
+      "prompt": "Emblem motif: blank wooden letter tiles forming a small crossword grid."
+    },
+    {
+      "id": "skat",
+      "titel": "Skat",
+      "prompt": "Emblem motif: a golden acorn and an oak leaf over three fanned cards."
+    },
+    {
+      "id": "solitaire",
+      "titel": "Solitaire",
+      "prompt": "Emblem motif: a lone ace card on green felt with a golden crown beside it."
+    },
+    {
+      "id": "speed",
+      "titel": "Speed",
+      "prompt": "Emblem motif: two stylised hands flinging cards, speed lines behind."
+    },
+    {
+      "id": "symbol-match",
+      "titel": "Fix gefunden!",
+      "prompt": "Emblem motif: a magnifying glass over scattered symbols (star, moon, sun, anchor)."
+    },
+    {
+      "id": "target-number",
+      "titel": "Zielzahl",
+      "prompt": "Emblem motif: a bullseye target with an arrow in the centre."
+    },
+    {
+      "id": "tic-tac-toe",
+      "titel": "Tic-Tac-Toe",
+      "prompt": "Emblem motif: a three-by-three grid with a golden X and a silver O."
+    },
+    {
+      "id": "timeline",
+      "titel": "Zeitstrahl",
+      "prompt": "Emblem motif: an hourglass with a horizontal line of dots beneath it."
+    },
+    {
+      "id": "turnip-patch",
+      "titel": "Rübenacker",
+      "prompt": "Emblem motif: a purple-and-white turnip half in the soil with green leaves."
+    },
+    {
+      "id": "ultimate-tic-tac-toe",
+      "titel": "Ultimate Tic-Tac-Toe",
+      "prompt": "Emblem motif: a large three-by-three grid made of nine small grids with X and O."
+    },
+    {
+      "id": "uno",
+      "titel": "Eins!",
+      "prompt": "Emblem motif: a fan of four plain cards in red, yellow, green and blue."
+    },
+    {
+      "id": "who-am-i",
+      "titel": "Wer bin ich?",
+      "prompt": "Emblem motif: a masquerade mask with a golden question-mark curl."
+    },
+    {
+      "id": "wolves-sheep",
+      "titel": "Wölfe im Schafspelz",
+      "prompt": "Emblem motif: a wolf face peeking out of a white sheep fleece."
+    },
+    {
+      "id": "word-salad",
+      "titel": "Wort-Salat",
+      "prompt": "Emblem motif: a wooden bowl with blank letter tiles among lettuce leaves."
+    }
+  ],
+  "zuschnittRand": 0.06
+}
