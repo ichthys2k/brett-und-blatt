@@ -161,7 +161,7 @@ describe('Neue Regeln des Grundsets', () => {
     s.players[me].board = [beast('m_h', 'c38', 1, 1), beast('m_v', 'c1', 1, 1)];
     s.players[me].hand = [{ uid: 'a', defId: 'farm_sheepdog' }];
     const herd = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 }).state.players[me].board;
-    expect(herd.map((m) => m.attack)).toEqual([2, 1, 3]);
+    expect(herd.map((m) => m.attack)).toEqual([2, 1, 2]);
   });
 
   it('der Zufallstreffer folgt dem Partie-Seed und trifft bei leerem Feld niemanden', () => {

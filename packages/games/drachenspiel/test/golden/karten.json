@@ -308,7 +308,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "bug_hornet:3/3/3"
+     "bug_hornet:4/3/3"
     ]
    }
   ],
@@ -330,7 +330,7 @@
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",
-     "c43:50/47/50 ready"
+     "c43:50/46/50 ready"
     ]
    },
    {
@@ -624,7 +624,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "bug_motherspider:3/5/5"
+     "bug_motherspider:4/6/6"
     ]
    }
   ],
@@ -646,7 +646,7 @@
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",
-     "c43:50/47/50 ready"
+     "c43:50/46/50 ready"
     ]
    },
    {
@@ -754,7 +754,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "bug_stagbeetle:3/5/5 taunt"
+     "bug_stagbeetle:2/6/6 taunt"
     ]
    }
   ],
@@ -776,7 +776,7 @@
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",
-     "c43:50/47/50 ready"
+     "c43:50/48/50 ready"
     ]
    },
    {
@@ -912,7 +912,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "bug_wasp:3/1/1 rush ready"
+     "bug_wasp:2/2/2 rush ready"
     ]
    }
   ],
@@ -934,7 +934,7 @@
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",
-     "c43:50/47/50 ready"
+     "c43:50/48/50 ready"
     ]
    },
    {
@@ -5281,7 +5281,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "f_jay:1/2/2"
+     "f_jay:1/3/3"
     ]
    }
   ],
@@ -5757,7 +5757,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "f_wolf:3/3/3"
+     "f_wolf:3/4/4"
     ]
    }
   ],
@@ -6070,7 +6070,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "farm_bull:6/4/4 ready"
+     "farm_bull:5/4/4 ready"
     ]
    }
   ],
@@ -6092,7 +6092,7 @@
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",
-     "c43:50/44/50 ready"
+     "c43:50/45/50 ready"
     ]
    },
    {
@@ -6735,7 +6735,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "token_chick:1/1/1"
+     "token_chick:1/2/2"
     ]
    }
   ]
@@ -6767,7 +6767,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "farm_lamb:1/3/3"
+     "farm_lamb:0/3/3"
     ]
    }
   ],
@@ -6789,7 +6789,7 @@
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",
-     "c43:50/49/50 ready"
+     "c43:50/50/50 ready"
     ]
    },
    {
@@ -6830,9 +6830,9 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "token_chick:1/1/1",
-     "token_chick:1/1/1",
-     "token_chick:1/1/1"
+     "token_chick:1/2/2",
+     "token_chick:1/2/2",
+     "token_chick:1/2/2"
     ]
    }
   ]
@@ -6865,9 +6865,9 @@
     "board": [
      "c43:3/4/5 ready",
      "farm_musicians:5/5/5",
-     "token_chick:2/2/2",
-     "token_chick:2/2/2",
-     "token_chick:2/2/2"
+     "token_chick:2/3/3",
+     "token_chick:2/3/3",
+     "token_chick:2/3/3"
     ]
    }
   ],
@@ -6899,9 +6899,9 @@
     "hand": [],
     "board": [
      "c43:3/4/5 ready",
-     "token_chick:2/2/2",
-     "token_chick:2/2/2",
-     "token_chick:2/2/2"
+     "token_chick:2/3/3",
+     "token_chick:2/3/3",
+     "token_chick:2/3/3"
     ]
    }
   ]
@@ -6933,7 +6933,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "farm_ram:3/5/5"
+     "farm_ram:3/4/4"
     ]
    }
   ],
@@ -6996,7 +6996,7 @@
     "hand": [],
     "board": [
      "c43:3/4/5 ready",
-     "farm_sheepdog:3/3/3"
+     "farm_sheepdog:2/3/3"
     ]
    }
   ],
@@ -7018,7 +7018,7 @@
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",
-     "c43:50/47/50 ready"
+     "c43:50/48/50 ready"
     ]
    },
    {
@@ -7059,7 +7059,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "farm_wolfsheep:3/4/4 stealth"
+     "farm_wolfsheep:3/3/3 stealth"
     ]
    }
   ],
@@ -9551,7 +9551,7 @@
    },
    {
     "health": 20,
-    "mana": 6,
+    "mana": 7,
     "deck": 26,
     "hand": [],
     "board": [
@@ -10971,7 +10971,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "token_chick:1/1/1"
+     "token_chick:1/2/2"
     ]
    }
   ],
@@ -11539,7 +11539,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "wild_cheetah:5/2/2 rush ready"
+     "wild_cheetah:5/3/3 rush ready"
     ]
    }
   ],
@@ -11852,7 +11852,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "wild_gorilla:5/5/5"
+     "wild_gorilla:5/6/6"
     ]
    }
   ],
@@ -12259,7 +12259,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "wild_meerkat:1/2/2"
+     "wild_meerkat:1/3/3"
     ]
    }
   ],
@@ -12479,7 +12479,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "wild_tiger:6/4/4 stealth"
+     "wild_tiger:6/5/5 stealth"
     ]
    }
   ],

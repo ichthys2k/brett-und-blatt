@@ -501,7 +501,7 @@ Auftritte mit Ziel, Fährte suchen, Wahlkarten, Anpassen, Rudeltaktik, Erschöpf
 
 Etwa 30 Karten je Haus plus 30 neutrale, also rund 180 Karten; Familien, Schulen, Seltenheit, Sagentiere. Passende Themendecks neu. Feldecken und erste Bilder für die Häuser. **Fertig, wenn** die Häuser-Matrix ausgeglichen ist: keine Paarung außerhalb von 40–60 %.
 
-🟡 **Inhalt umgesetzt (01.11.2026, `ruleVersion` 8), Abschlusskriterium verfehlt.** Auf „schwer“ liegen noch 3 von 10 Paarungen außerhalb, auf „mittel“ mehr; Zahlen in `drachenspiel.md`. Nicht gebaut: klickbare Feldecken je Haus und Bilder (Emoji bleiben). Von den rund 180 Karten stecken nur etwa 90 in Themendecks, der Rest kommt über Fährte suchen, das gemischte Deck und ab Phase 8 über den Deckbau ins Spiel.
+🟡 **Inhalt umgesetzt (01.11.2026, `ruleVersion` 8), Abschlusskriterium verfehlt.** Auch nach einer eigenen Balance-Runde liegen auf „schwer“ noch 3 von 10 Paarungen außerhalb, auf „mittel“ 6; Zahlen in `drachenspiel.md`. Nicht gebaut: klickbare Feldecken je Haus und Bilder (Emoji bleiben). Von den rund 180 Karten stecken nur etwa 90 in Themendecks, der Rest kommt über Fährte suchen, das gemischte Deck und ab Phase 8 über den Deckbau ins Spiel.
 
 ### Phase 7: Neue Kartentypen (L)
 

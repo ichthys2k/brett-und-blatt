@@ -227,3 +227,26 @@ Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes D
   **Das Ziel 40–60 % ist nicht erreicht:** Bauernhof schlägt fast alle, verliert aber klar gegen Krabbeltiere; auf „mittel“ ist die Wildnis schwach und die Krabbeltiere sind stark, vermutlich weil der mittlere Bot Rüstung und Tempo schlechter nutzt. Das sind nur Bot-Messungen. Abrufbar mit `DRACHEN_MATRIX=forest:sea DRACHEN_MATRIX_STUFE=hard DRACHEN_BALANCE_SPIELE=100 corepack pnpm exec vitest run packages/games/drachenspiel/test/balance --disable-console-intercept`.
 - **Startspieler (150 Partien je Zeile, etwa ±8 Prozentpunkte):** freie Deckwahl schwer 47 %, mittel 47 %, leicht 50 %. Festes Deck schwer/mittel: Wald 48/36, Meer 48/48, Bauernhof 57/54, Wildnis 42/55, Krabbeltiere 50/39. Schwer schlägt Mittel zu 83 %, Mittel schlägt Leicht zu 100 %.
 - **Noch offen:** Häuser-Matrix, klickbare Feldecken, Bilder, Test mit Kindern, Online mit zwei Geräten. Die neuen Karten sind per Kartentest und Bot-Partien geprüft, im Browser nur stichprobenhaft angesehen.
+
+## Balance-Runde nach dem Grundset (01.11.2026, nur Kartenwerte, keine neue `ruleVersion`)
+
+- **Geändert (Angriff/Leben, Kosten nur wo genannt):** Küken 1/2, Eichelhäher 1/3, Wolf 3/4, Stier 5/4, Hütehund 2/3, Gans 2/3, Erdmännchen 1/3, Gepard 5/3, Gorilla 5/6, Tiger 6/5, Wespe 2/2, Hirschkäfer 2/6, Mutterspinne 4/6, Strudel 3 Mana.
+- **Häuser-Matrix danach (erstes Haus gewinnt; „schwer“ 150 Partien je Paarung, „mittel“ 200; etwa ±8 bzw. ±7 Prozentpunkte; die Zahlen in Klammern sind der Stand vor dieser Runde):**
+
+  | Paarung | schwer | mittel |
+  |---|---|---|
+  | Wald : Meer | 51 (54) | 33 (37) |
+  | Wald : Bauernhof | 61 (43) | 52 (46) |
+  | Wald : Wildnis | 49 (54) | 59 (66) |
+  | Wald : Krabbeltiere | 45 (43) | 28 (22) |
+  | Meer : Bauernhof | 41 (41) | 38 (33) |
+  | Meer : Wildnis | 43 (55) | 60 (63) |
+  | Meer : Krabbeltiere | 67 (63) | 55 (48) |
+  | Bauernhof : Wildnis | 55 (63) | 62 (77) |
+  | Bauernhof : Krabbeltiere | 31 (29) | 34 (35) |
+  | Wildnis : Krabbeltiere | 59 (59) | 38 (41) |
+
+- **Ergebnis: Das Ziel 40–60 % ist weiter verfehlt.** Außerhalb liegen auf „schwer“ 3 von 10 Paarungen wie zuvor, auf „mittel“ 6 statt 7. Die mittlere Abweichung von 50 sinkt auf „schwer“ von 9,2 auf 8,4 Punkte, auf „mittel“ von 14,4 auf 11,7. Der Rest ist ein Kreis um die Krabbeltiere: Sie schlagen den Bauernhof, das Meer schlägt sie. Einzelwerte verschieben das Problem nur noch, auch wegen des Messrauschens.
+- **Versucht und verworfen:** Der mittlere Bot mit der Bewertung von „schwer“ änderte die Matrix kaum und senkte den Abstand zu „schwer“ von 83 auf 69 %. 3 Rüstung für Dickes Fell machte die Wildnis gegen Krabbeltiere zu stark (79 %).
+- **Startspieler (150 Partien je Zeile, freie Deckwahl):** schwer 49 %, mittel 51 %, leicht 51 %. Schwer schlägt Mittel zu 82 %, Mittel schlägt Leicht zu 100 %.
+
