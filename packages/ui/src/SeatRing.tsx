@@ -6,6 +6,8 @@ export const SEAT_RING_MIN_WIDTH = 680;
 export const SEAT_RING_MIN_HEIGHT = 560;
 export const SEAT_RING_MIN_SEATS = 3;
 export const SEAT_RING_MAX_SEATS = 8;
+/** Bis zu dieser Entfernung vom Rand (in %) sitzt ein Platz neben der Mitte, nicht darüber oder darunter. */
+const SIDE_LIMIT = 22;
 
 /** Passt der Tisch in diese Fläche? Kleine Bildschirme behalten ihre Spielerleiste. */
 export function seatRingFits(seats: number, width: number, height: number): boolean {
@@ -19,7 +21,7 @@ export function seatRingFits(seats: number, width: number, height: number): bool
 export function seatRingPosition(seat: SeatId, seats: number, bottomSeat: SeatId): { x: number; y: number } {
   const rel = (seat - bottomSeat + seats) % seats;
   const angle = Math.PI / 2 + (rel / seats) * Math.PI * 2;
-  return { x: 50 + Math.cos(angle) * 37, y: 50 + Math.sin(angle) * 41 };
+  return { x: 50 + Math.cos(angle) * 42, y: 50 + Math.sin(angle) * 41 };
 }
 
 export interface SeatRingProps {
@@ -39,9 +41,19 @@ export interface SeatRingProps {
 /** Die Spieler rund um einen Tisch, das Spielgeschehen in der Mitte (nur bei genug Platz, siehe `seatRingFits`). */
 export function SeatRing({ seats, bottomSeat, renderSeat, children, status, bottom }: SeatRingProps) {
   const others = Array.from({ length: seats }, (_, seat) => seat).filter((seat) => seat !== bottomSeat);
-  // Wer nicht seitlich neben der Mitte Platz hat, sitzt darüber: Die Mitte beginnt unter ihm.
-  const above = others.map((seat) => seatRingPosition(seat, seats, bottomSeat)).filter(({ x }) => x > 20 && x < 80);
-  const centerTop = above.length > 0 ? `calc(${Math.max(...above.map(({ y }) => y)).toFixed(1)}% + 3.6rem)` : undefined;
+  // Seitliche Plätze begrenzen die Breite der Mitte; wer darüber oder darunter sitzt, ihre Höhe.
+  const places = others.map((seat) => seatRingPosition(seat, seats, bottomSeat));
+  const beside = places.filter(({ x }) => x <= SIDE_LIMIT || x >= 100 - SIDE_LIMIT);
+  const inner = places.filter((place) => !beside.includes(place));
+  const inset = beside.length > 0 ? Math.max(...beside.map(({ x }) => Math.min(x, 100 - x))) : 0;
+  const above = inner.filter(({ y }) => y < 50);
+  const below = inner.filter(({ y }) => y >= 50);
+  const centerStyle: CSSProperties = {
+    left: `calc(${inset.toFixed(1)}% + 5.5rem)`,
+    right: `calc(${inset.toFixed(1)}% + 5.5rem)`,
+    top: above.length > 0 ? `calc(${Math.max(...above.map(({ y }) => y)).toFixed(1)}% + 3.6rem)` : undefined,
+    bottom: below.length > 0 ? `calc(${(100 - Math.min(...below.map(({ y }) => y))).toFixed(1)}% + 3.6rem)` : undefined,
+  };
   return (
     <div className="bub-seat-ring" data-seat-ring="">
       <div className="bub-seat-ring-stage">
@@ -54,7 +66,7 @@ export function SeatRing({ seats, bottomSeat, renderSeat, children, status, bott
             </div>
           );
         })}
-        <div className="bub-seat-ring-center" style={{ top: centerTop }}>
+        <div className="bub-seat-ring-center" style={centerStyle}>
           {children}
         </div>
       </div>

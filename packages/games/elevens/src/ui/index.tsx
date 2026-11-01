@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { CardFan, useLatestEvent, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, CardFan, useLatestEvent, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import {
   COLORS,
   HIDDEN,
@@ -38,7 +38,7 @@ function NumberCard({ card }: { card: CardId | null }) {
   );
 }
 
-function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint }: BoardProps<ElevensState, ElevensMove>) {
+function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint, table }: BoardProps<ElevensState, ElevensMove>) {
   const mySeat = typeof viewer === 'number' ? viewer : null;
   const hand = mySeat !== null ? (view.hands[mySeat] ?? []) : [];
   const playable = new Set(
@@ -61,8 +61,8 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint }: Bo
   else if (canDraw) status = 'Nichts passt – zieh eine Karte.';
   else status = 'Nichts passt mehr – gib weiter.';
 
-  return (
-    <div className="elv-board">
+  const center = (
+    <>
       <div className="elv-others">
         <div className="elv-stock" title="Karten im Stapel">
           🂠 {view.stock.length} im Stapel
@@ -124,6 +124,11 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint }: Bo
         </div>
       </div>
 
+    </>
+  );
+
+  const own = (
+    <>
       {mySeat !== null && (
         <div className="elv-hand">
           <CardFan
@@ -151,16 +156,40 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint }: Bo
           />
         </div>
       )}
+    </>
+  );
+
+  return (
+    <div className="elv-board" data-around={table ? '' : undefined}>
+      {table ? (
+        <SeatRing
+          seats={view.seats}
+          bottomSeat={mySeat ?? 0}
+          status={table.status}
+          bottom={own}
+          renderSeat={(seat) => table.seatChip(seat)}
+        >
+          {center}
+        </SeatRing>
+      ) : (
+        <>{center}{own}</>
+      )}
     </div>
   );
 }
 
 function SeatSymbol({ seat, className = '' }: { seat: SeatId; seats?: number; className?: string }) {
-  return <span className={className}>{SEAT_SYMBOLS[Number(seat) % SEAT_SYMBOLS.length]}</span>;
+  // Feste Farbe: Der Ring um das Zeichen ist in jedem Aussehen hell.
+  return (
+    <span className={className} style={{ color: '#1f2328' }}>
+      {SEAT_SYMBOLS[Number(seat) % SEAT_SYMBOLS.length]}
+    </span>
+  );
 }
 
 export const gameUi: GameUi<ElevensState, ElevensMove> = {
   Board,
+  seatsAround: true,
   SeatSymbol,
   seatLabel: (seat) => `Platz ${Number(seat) + 1}`,
   seatDetail: (view, seat) => {

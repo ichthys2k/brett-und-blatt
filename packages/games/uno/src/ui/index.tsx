@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CardFan, useCallDeadline, useElementSize, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, CardFan, useCallDeadline, useElementSize, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { getActiveFace } from '../rules';
 import { DARK_COLORS, LIGHT_COLORS, type UnoCard, type UnoColor, type UnoMove, type UnoState } from '../types';
 import './styles.css';
@@ -70,6 +70,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   activeSeat,
   viewer,
   seatNames,
+  table,
 }) => {
   const [selectedWildCard, setSelectedWildCard] = useState<UnoCard | null>(null);
   const [selectedSevenCard, setSelectedSevenCard] = useState<UnoCard | null>(null);
@@ -87,7 +88,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
     [measureTable],
   );
   // Viele Mitspieler brauchen sonst mehrere Reihen, darum dort schon früher kompakt.
-  const tight = tableHeight > 0 && tableHeight < (state.hands.length > 5 ? CROWDED_TABLE_HEIGHT : TIGHT_TABLE_HEIGHT);
+  const tight = !table && tableHeight > 0 && tableHeight < (state.hands.length > 5 ? CROWDED_TABLE_HEIGHT : TIGHT_TABLE_HEIGHT);
   const discardRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<HTMLDivElement | null>(null);
   const handRef = useRef<HTMLDivElement | null>(null);
@@ -457,43 +458,8 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
     wild: '#18181b',
   };
 
-  return (
-    <div ref={bindTable} className={`uno-table ${isDark ? 'bg-zinc-950 text-white' : 'text-zinc-900'}`} data-tight={tight || undefined}>
-      {/* 0. Animation Layer für fliegende Karten */}
-      <div className="uno-flying-layer">
-        {flyingCards.map((fc) => (
-          <div
-            key={fc.id}
-            className="uno-flying-card"
-            style={
-              {
-                '--fly-start-x': `${fc.startX}px`,
-                '--fly-start-y': `${fc.startY}px`,
-                '--fly-end-x': `${fc.endX}px`,
-                '--fly-end-y': `${fc.endY}px`,
-                '--fly-rot-start': `${fc.startRot}deg`,
-                '--fly-rot-end': `${fc.endRot}deg`,
-                '--fly-scale-start': fc.startScale,
-                '--fly-scale-end': fc.endScale,
-                animationDelay: fc.delayMs ? `${fc.delayMs}ms` : undefined,
-                animationDuration: `${fc.durationMs}ms`,
-                width: fc.startWidth,
-                height: fc.startHeight,
-              } as React.CSSProperties
-            }
-          >
-            <UnoCardView
-              card={fc.card}
-              isBack={fc.isBack}
-              side={fc.side}
-              size={fc.isBack ? 'lg' : 'lg'}
-              mathMode={state.options.mathLabels === 'on'}
-              disabled
-            />
-          </div>
-        ))}
-      </div>
-
+  const opponents = (
+    <>
       {/* 1. Obere Leiste: Mitspieler & Richtungsanzeige */}
       <div className={`w-full flex items-center gap-2 bg-black/10 rounded-xl ${tight ? 'flex-none overflow-x-auto p-1' : 'flex-wrap justify-around p-2'}`}>
         {state.hands.map((hand: UnoCard[], idx: number) => {
@@ -534,6 +500,11 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
         })}
       </div>
 
+    </>
+  );
+
+  const center = (
+    <>
       {/* 2. Tischmitte: Ablagestapel, Nachziehstapel und Richtungsring */}
       <div className="uno-center-area my-auto">
         {/* Richtungsring */}
@@ -594,6 +565,11 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
         )}
       </div>
 
+    </>
+  );
+
+  const own = (
+    <>
       {/* 3. Unterer Bereich: Eigene Hand und Aktionen */}
       <div ref={handRef} className="w-full flex flex-col items-center gap-2">
         {/* Aktionsleiste (Ziehen / Passen / "EINS!"-Button) */}
@@ -708,6 +684,76 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
         </div>
       </div>
 
+    </>
+  );
+
+  return (
+    <div ref={bindTable} className={`uno-table ${isDark ? 'bg-zinc-950 text-white' : 'text-zinc-900'}`} data-tight={tight || undefined} data-around={table ? '' : undefined}>
+      {/* 0. Animation Layer für fliegende Karten */}
+      <div className="uno-flying-layer">
+        {flyingCards.map((fc) => (
+          <div
+            key={fc.id}
+            className="uno-flying-card"
+            style={
+              {
+                '--fly-start-x': `${fc.startX}px`,
+                '--fly-start-y': `${fc.startY}px`,
+                '--fly-end-x': `${fc.endX}px`,
+                '--fly-end-y': `${fc.endY}px`,
+                '--fly-rot-start': `${fc.startRot}deg`,
+                '--fly-rot-end': `${fc.endRot}deg`,
+                '--fly-scale-start': fc.startScale,
+                '--fly-scale-end': fc.endScale,
+                animationDelay: fc.delayMs ? `${fc.delayMs}ms` : undefined,
+                animationDuration: `${fc.durationMs}ms`,
+                width: fc.startWidth,
+                height: fc.startHeight,
+              } as React.CSSProperties
+            }
+          >
+            <UnoCardView
+              card={fc.card}
+              isBack={fc.isBack}
+              side={fc.side}
+              size={fc.isBack ? 'lg' : 'lg'}
+              mathMode={state.options.mathLabels === 'on'}
+              disabled
+            />
+          </div>
+        ))}
+      </div>
+
+      {table ? (
+        <SeatRing
+          seats={state.hands.length}
+          bottomSeat={actor ?? 0}
+          status={table.status}
+          bottom={own}
+          renderSeat={(seat) => (
+            <div
+              ref={(el) => {
+                if (el) seatRefs.current.set(seat, el);
+                else seatRefs.current.delete(seat);
+              }}
+              className={`flex w-full flex-col items-center gap-1 ${state.eliminated[seat] ? 'opacity-40' : ''}`}
+            >
+              {seat !== actor && <OpponentHand count={state.hands[seat]?.length ?? 0} side={side} />}
+              {table.seatChip(seat)}
+              {state.hands[seat]?.length === 1 && <span className="px-1.5 py-0.5 text-xs font-black rounded bg-red-600 text-white">Eins!</span>}
+            </div>
+          )}
+        >
+          {center}
+        </SeatRing>
+      ) : (
+        <>
+          {opponents}
+          {center}
+          {own}
+        </>
+      )}
+
       {/* 4. Farbwahl-Modal bei Jokern */}
       {selectedWildCard && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
@@ -774,6 +820,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
 
 export const gameUi: GameUi<UnoState, UnoMove> = {
   Board: UnoBoard,
+  seatsAround: true,
   SeatSymbol: ({ className }) => <span className={className}>🃏</span>,
   seatLabel: (seat) => `Spieler ${Number(seat) + 1}`,
   seatDetail: (view, seat) => {

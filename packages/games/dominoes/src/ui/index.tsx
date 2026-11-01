@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import { halfLabel, isDouble, pipsOf, STONES, type DominoDisplay, type DominoMove, type DominoState, type StoneId } from '../rules';
 import './styles.css';
@@ -82,7 +82,7 @@ const stoneName = (s: StoneId, display: DominoDisplay = 'pips') => {
   return `[${halfLabel(a, display, s, 0)} = ${a} | ${halfLabel(b, display, s, 1)} = ${b}]`;
 };
 
-function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps<DominoState, DominoMove>) {
+function Board({ view, legalMoves, onMove, viewer, hint, seatNames, table }: BoardProps<DominoState, DominoMove>) {
   const seat = typeof viewer === 'number' ? viewer : null;
   const hand = seat !== null ? (view.hands[seat] ?? []).filter((s): s is StoneId => s !== null) : [];
   const [selected, setSelected] = useState<StoneId | null>(null);
@@ -161,8 +161,8 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
   const summary = view.lastRound && view.chain.length === 0 ? view.lastRound : null;
   const name = (s: SeatId) => seatNames[s] ?? `Platz ${s + 1}`;
 
-  return (
-    <div className="dm-layout">
+  const center = (
+    <>
       <div
         className="dm-table"
         data-drop-target={draggedStone && endsFor(draggedStone).length === 1 ? 'board' : undefined}
@@ -240,6 +240,11 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
         )}
       </div>
 
+    </>
+  );
+
+  const own = (
+    <>
       {seat !== null && (
         <div className="dm-hand" role="group" aria-label="Deine Steine">
           {hand.map((stone) => {
@@ -272,6 +277,24 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames }: BoardProps
           })}
         </div>
       )}
+    </>
+  );
+
+  return (
+    <div className="dm-layout" data-around={table ? '' : undefined}>
+      {table ? (
+        <SeatRing
+          seats={view.hands.length}
+          bottomSeat={seat ?? 0}
+          status={table.status}
+          bottom={own}
+          renderSeat={(s) => table.seatChip(s)}
+        >
+          {center}
+        </SeatRing>
+      ) : (
+        <>{center}{own}</>
+      )}
     </div>
   );
 }
@@ -286,6 +309,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 
 export const gameUi: GameUi<DominoState, DominoMove> = {
   Board,
+  seatsAround: true,
   SeatSymbol,
   sounds: { played: 'domino-klack', drew: 'stein-ziehen' },
   seatLabel: (seat) => `Platz ${seat + 1}`,

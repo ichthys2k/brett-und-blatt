@@ -223,3 +223,21 @@
   .mst-card-icon { display: none; }
   .mst-pantries { max-height: 4rem; }
 }
+
+/* Spieler rund um den Tisch (ab genug Platz, SeatRing). */
+.mst-board[data-around] {
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+}
+
+.mst-board[data-around] .mst-stands {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mst-board[data-around] .mst-stand {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}

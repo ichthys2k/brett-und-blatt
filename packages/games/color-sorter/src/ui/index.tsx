@@ -496,6 +496,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           <Tile
             key={mod.uid}
             emoji={d.emoji}
+            image={portraitUrl(`fool-${mod.key}`)}
             title={d.title}
             body={d.effect}
             foot={d.foot}
@@ -1172,6 +1173,7 @@ function OfferTile({ offer, selected, hint, onClick, pop, className, extra }: { 
   return (
     <Tile
       emoji={d.emoji}
+      image={offer.type === 'mod' ? portraitUrl(`fool-${offer.key}`) : undefined}
       title={d.title}
       sub={offer.price > 0 ? `${offer.price} 🥨` : undefined}
       badge={sticker}

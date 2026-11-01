@@ -1,5 +1,5 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import { CardFan, ContentCard, useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, CardFan, ContentCard, useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState } from 'react';
 import { faceOf, PETER } from '../content';
 import { sourceOf, type BlackPeterMove, type BlackPeterState, type Card } from '../rules';
@@ -18,7 +18,7 @@ function Face({ set, card, small = false, anim }: { set: string; card: Card; sma
   );
 }
 
-function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events }: BoardProps<BlackPeterState, BlackPeterMove>) {
+function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events, table }: BoardProps<BlackPeterState, BlackPeterMove>) {
   const [ref, { width, height }] = useElementSize<HTMLDivElement>();
   const [shufflingSeat, setShufflingSeat] = useState<SeatId | null>(null);
   const seenEventsRef = useRef<GameEvent[] | null>(null);
@@ -45,8 +45,8 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events }: Bo
   const hintIndex = hint?.type === 'draw' ? hint.index : null;
   const recent = view.discarded.slice(-6).reverse();
 
-  return (
-    <div ref={ref} className="bp-table">
+  const othersRow = (
+    <>
       <div className="bp-others">
         {others.map((seat) => {
           const hand = view.hands[seat] ?? [];
@@ -76,6 +76,11 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events }: Bo
         })}
       </div>
 
+    </>
+  );
+
+  const middle = (
+    <>
       <div className="bp-middle" aria-label="Abgelegte Paare">
         {canDraw && <p className="bp-help">Tippe eine Karte von {seatNames[source ?? 0] ?? 'deinem Nachbarn'} an.</p>}
         <div className="bp-pairs">
@@ -93,6 +98,11 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events }: Bo
         <p className="bp-count">{view.discarded.length} Paare abgelegt</p>
       </div>
 
+    </>
+  );
+
+  const ownArea = (
+    <>
       {viewer !== 'spectator' && (
         <div className="bp-own">
           <CardFan
@@ -112,6 +122,51 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events }: Bo
           )}
         </div>
       )}
+    </>
+  );
+
+  return (
+    <div ref={ref} className="bp-table" data-around={table ? '' : undefined}>
+      {table ? (
+        <SeatRing
+          seats={view.hands.length}
+          bottomSeat={viewer === 'spectator' ? 0 : viewer}
+          status={table.status}
+          bottom={ownArea}
+          renderSeat={(seat) => (
+            <>
+              {seat !== viewer && (
+                <div className="w-24" aria-hidden="true">
+                  <CardFan count={view.hands[seat]?.length ?? 0} cardWidth={22} label="" renderCard={() => <ContentCard content={null} className="bp-card" />} />
+                </div>
+              )}
+              {table.seatChip(seat)}
+            </>
+          )}
+        >
+          {/* Am Sitz wären die Karten zu eng zum Antippen: Gezogen wird in der Mitte. */}
+          {canDraw && source !== null && source !== undefined && (
+            <CardFan
+              count={view.hands[source]?.length ?? 0}
+              cardWidth={big}
+              label={`Karten von ${seatNames[source] ?? `Platz ${source + 1}`}`}
+              shuffling={shufflingSeat === source}
+              renderCard={(index) => (
+                <ContentCard
+                  content={null}
+                  highlight={hintIndex === index ? 'hint' : null}
+                  onClick={() => onMove({ type: 'draw', index })}
+                  label={`Karte ${index + 1} ziehen`}
+                  className="bp-card"
+                />
+              )}
+            />
+          )}
+          {middle}
+        </SeatRing>
+      ) : (
+        <>{othersRow}{middle}{ownArea}</>
+      )}
     </div>
   );
 }
@@ -126,6 +181,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 
 export const gameUi: GameUi<BlackPeterState, BlackPeterMove> = {
   Board,
+  seatsAround: true,
   SeatSymbol,
   sounds: { drawn: 'karte-ziehen', discarded: 'paar', shuffled: 'mischen', lost: 'peter-gezogen' },
   seatLabel: (seat) => `Platz ${seat + 1}`,

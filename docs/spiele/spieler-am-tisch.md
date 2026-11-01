@@ -78,6 +78,11 @@ Rückmeldung zu Mau-Mau am Desktop: Die Mitte soll größer sein, die linke Leis
 
 Spiele ohne `seatsAround` behalten ihre Leiste.
 
-## Offene Frage an Cornelius
+## Ausgerollt (1.11.2026, auf Cornelius' Wort)
 
-Gefällt der Tisch so, dass die übrigen Spiele (Schritt 6) folgen sollen?
+Am Tisch: Mau-Mau, Skat, Schafkopf, Doppelkopf, Binokel, Elf zuerst!, Präsident, Schwarzer Peter, Eins!, Quartett, Domino, Mäxle, Marktstände.
+
+- **Tiefflug bleibt ohne Tisch:** Jeder Mitspieler hat ein ganzes Kartenraster, bei 8 Spielern überlappen die Plätze.
+- **Poker ist nicht umgestellt:** Es hat seinen eigenen Tisch mit bis zu 10 Plätzen, die Leiste bleibt vorerst.
+- Schwarzer Peter zieht in der Mitte: Am Sitz wären die Karten zu eng zum Antippen.
+- `SeatRing` trennt seitliche Plätze (begrenzen die Breite der Mitte) und Plätze darüber oder darunter (begrenzen ihre Höhe).

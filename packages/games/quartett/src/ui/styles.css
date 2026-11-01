@@ -560,3 +560,12 @@ button.qt-value:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Spieler rund um den Tisch (ab genug Platz, SeatRing). */
+.qt-table[data-around] {
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+}

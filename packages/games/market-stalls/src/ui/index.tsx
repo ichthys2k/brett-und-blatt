@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { CardFan, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, CardFan, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import {
   STAND_CAPACITY,
   WARES,
@@ -76,7 +76,7 @@ function Pantries({ view, seatNames, order }: { view: MarketStallsState; seatNam
   );
 }
 
-function Board({ view, legalMoves, onMove, viewer, seatNames, hint }: BoardProps<MarketStallsState, MarketStallsMove>) {
+function Board({ view, legalMoves, onMove, viewer, seatNames, hint, table }: BoardProps<MarketStallsState, MarketStallsMove>) {
   const mySeat = typeof viewer === 'number' ? viewer : null;
   const hand = mySeat !== null ? (view.hands[mySeat] ?? []) : [];
   const selectable = new Set(legalMoves.flatMap((m) => (m.type === 'choose' ? [m.card] : [])));
@@ -101,8 +101,8 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint }: BoardProps
 
   const order = mySeat !== null ? [mySeat, ...view.pantries.map((_, seat) => seat).filter((seat) => seat !== mySeat)] : view.pantries.map((_, seat) => seat);
 
-  return (
-    <div className="mst-board" data-phase={view.phase}>
+  const center = (
+    <>
       <div className="mst-head">
         <span>
           Markttag {view.day} von {view.days}
@@ -163,6 +163,11 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint }: BoardProps
         <Pantries view={view} seatNames={seatNames} order={order} />
       </div>
 
+    </>
+  );
+
+  const own = (
+    <>
       {mySeat !== null && hand.length > 0 && (
         <div className="mst-hand">
           <CardFan
@@ -191,6 +196,24 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint }: BoardProps
           />
         </div>
       )}
+    </>
+  );
+
+  return (
+    <div className="mst-board" data-phase={view.phase} data-around={table ? '' : undefined}>
+      {table ? (
+        <SeatRing
+          seats={view.seats}
+          bottomSeat={mySeat ?? 0}
+          status={table.status}
+          bottom={own}
+          renderSeat={(seat) => table.seatChip(seat)}
+        >
+          {center}
+        </SeatRing>
+      ) : (
+        <>{center}{own}</>
+      )}
     </div>
   );
 }
@@ -206,6 +229,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; seats?: number; cl
 
 export const gameUi: GameUi<MarketStallsState, MarketStallsMove> = {
   Board,
+  seatsAround: true,
   SeatSymbol,
   seatLabel: (seat) => `Platz ${Number(seat) + 1}`,
   seatDetail: (view, seat) => {

@@ -254,3 +254,18 @@
   }
 }
 
+
+/* Spieler rund um den Tisch (ab genug Platz, SeatRing). */
+.uno-table[data-around] {
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Am Tisch ist die Mitte das Wichtigste: Die Stapel werden größer. */
+.uno-table[data-around] .uno-center-area {
+  zoom: 1.35;
+  margin-block: auto;
+}

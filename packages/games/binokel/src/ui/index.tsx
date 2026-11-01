@@ -1,5 +1,5 @@
 import { sortHand, type CardId, type DeckStyle, type SeatId, type Suit } from '@brett-und-blatt/engine';
-import { cardSuitColor, CardFan, PlayingCard, TRICK_HAND_MIN_STEP, SuitShape, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import { cardSuitColor, CardFan, PlayingCard, TRICK_HAND_MIN_STEP, SuitShape, SeatRing, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import { binokelContract, SUIT_NAMES, SUITS } from '../cards';
 import { findMelds, meldPoints } from '../melds';
@@ -26,7 +26,7 @@ function SuitLabel({ suit, deck }: { suit: Suit; deck: DeckStyle }) {
   );
 }
 
-function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: BoardProps<BinokelState, BinokelMove>) {
+function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table }: BoardProps<BinokelState, BinokelMove>) {
   const mySeat = typeof viewer === 'number' ? viewer : 0;
   const name = (s: number) => seatNames[s] ?? `Platz ${s + 1}`;
   const myTurn = legalMoves.length > 0;
@@ -68,9 +68,8 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
   const tricksWon = (seat: number) => view.completedTricks.filter((t) => t.winner === seat).length;
   const round = view.lastRound;
 
-  return (
-    <div className="mx-auto flex h-full w-full max-w-4xl flex-col gap-2 p-1 text-ink">
-      {/* Kopfzeile */}
+  // Kopfzeile
+  const header = (
       <div className={`${panel} flex flex-wrap items-center justify-between gap-2 text-sm`}>
         <span className="font-semibold">Spiel {view.gameNumber}</span>
         {view.declarer !== null ? (
@@ -88,6 +87,10 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
         </span>
       </div>
 
+  );
+
+  const dialogs = (
+    <>
       {/* Dabb */}
       {(view.phase === 'bidding' || view.phase === 'discard' || view.phase === 'declare') && (
         <div className="flex items-center justify-center gap-2">
@@ -172,12 +175,18 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
         </div>
       )}
 
+    </>
+  );
+
+  const trick = (
       <div className="flex min-h-[90px] flex-1 flex-col">
         <TrickTable slots={slots} bottomSeat={mySeat} deckStyle={view.deckStyle} cardWidth={72} collecting={display.collecting} />
       </div>
 
-      {/* Eigene Hand */}
-      {viewer !== 'spectator' && (
+  );
+
+  // Eigene Hand
+  const handFan = viewer !== 'spectator' && (
         <CardFan
           className="w-full flex-none pb-1"
           count={myHand.length}
@@ -199,9 +208,11 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
             );
           }}
         />
-      )}
+  );
 
-      {/* Abrechnung */}
+  // Abrechnung
+  const roundEnd = (
+    <>
       {(view.phase === 'roundOver' || view.phase === 'finished') && round && (
         <div className={`${panel} flex flex-col gap-2`}>
           <h3 className="font-bold">
@@ -248,12 +259,48 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
           )}
         </div>
       )}
+    </>
+  );
+
+  return (
+    <div className={`flex h-full flex-col w-full mx-auto p-1 gap-2 sm:p-2 flat:p-0 text-ink ${table ? '' : 'max-w-4xl'}`}>
+      {header}
+      {table ? (
+        <SeatRing
+          seats={seatNames.length}
+          bottomSeat={mySeat}
+          status={table.status}
+          bottom={handFan || undefined}
+          renderSeat={(seat) => (
+            <>
+              {seat !== mySeat && (view.hands[seat]?.length ?? 0) > 0 && (
+                <div className="w-20" aria-hidden="true">
+                  <CardFan count={view.hands[seat]!.length} label="" cardWidth={16} renderCard={() => <PlayingCard card={null} deckStyle={view.deckStyle} />} />
+                </div>
+              )}
+              {table.seatChip(seat)}
+            </>
+          )}
+        >
+          {dialogs}
+          {roundEnd}
+          {trick}
+        </SeatRing>
+      ) : (
+        <>
+          {dialogs}
+          {trick}
+          {handFan}
+          {roundEnd}
+        </>
+      )}
     </div>
   );
 }
 
 export const gameUi: GameUi<BinokelState, BinokelMove> = {
   Board: BinokelBoard,
+  seatsAround: true,
   SeatSymbol: ({ seat, className = '' }) => <SuitIcon suit={(['C', 'S', 'H', 'D'] as Suit[])[seat % 4]!} className={`h-6 w-6 ${className}`} />,
   seatLabel: (seat: SeatId) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) =>

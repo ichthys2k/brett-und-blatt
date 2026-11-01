@@ -327,3 +327,12 @@ button.mx-cup {
     animation: none;
   }
 }
+
+/* Spieler rund um den Tisch (ab genug Platz, SeatRing). */
+.mx-table[data-around] {
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+}

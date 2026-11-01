@@ -1,5 +1,5 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { setOf, type Ask, type QuartettMove, type QuartettState, type Trick } from '../rules';
 import { cardOf, formatWithUnit, groupOf, valueOf, type CardId, type CardSet } from '../sets';
@@ -143,7 +143,7 @@ function TrickText({ trick, set, names }: { trick: Trick; set: CardSet; names: s
   );
 }
 
-function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint }: BoardProps<QuartettState, QuartettMove>) {
+function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint, table }: BoardProps<QuartettState, QuartettMove>) {
   const set = setOf(view);
   const shown = useTrickQueue(events, view.revealMs);
   const own = viewer === 'spectator' ? null : (view.stacks[viewer]?.[0]?.card ?? null);
@@ -151,8 +151,8 @@ function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint 
   const hintProperty = hint?.type === 'chooseProperty' ? hint.property : null;
   const others = view.stacks.map((_, seat) => seat).filter((seat) => seat !== viewer);
 
-  return (
-    <div className="qt-table">
+  const seatsRow = (
+    <>
       <div className="qt-others">
         {others.map((seat) => (
           <div key={seat} className={`qt-seat ${seat === view.turn ? 'qt-turn' : ''} ${view.stacks[seat]!.length === 0 ? 'qt-out' : ''}`}>
@@ -170,6 +170,11 @@ function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint 
         )}
       </div>
 
+    </>
+  );
+
+  const center = (
+    <>
       <div className="qt-center">
         {shown ? (
           <div className="qt-reveal" aria-live="polite">
@@ -203,11 +208,40 @@ function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint 
         )}
       </div>
 
+    </>
+  );
+
+  const footer = (
+    <>
       <p className="qt-footer">
         {viewer !== 'spectator' && `Dein Stapel: ${view.stacks[viewer]?.length ?? 0} Karten · `}
         Runde {view.round}
         {view.roundLimit > 0 ? ` von ${view.roundLimit}` : ''}
       </p>
+    </>
+  );
+
+  return (
+    <div className="qt-table" data-around={table ? '' : undefined}>
+      {table ? (
+        <SeatRing
+          seats={view.stacks.length}
+          bottomSeat={viewer === 'spectator' ? 0 : viewer}
+          status={table.status}
+          bottom={footer}
+          renderSeat={(seat) => (
+            <>
+              {seat !== viewer && <CardBack count={view.stacks[seat]!.length} label={`${view.stacks[seat]!.length} Karten`} />}
+              {table.seatChip(seat)}
+            </>
+          )}
+        >
+          {view.middle.length > 0 && <CardBack count={view.middle.length} label={`${view.middle.length} Karten in der Mitte`} />}
+          {center}
+        </SeatRing>
+      ) : (
+        <>{seatsRow}{center}{footer}</>
+      )}
     </div>
   );
 }
@@ -221,7 +255,7 @@ function AskText({ ask, set, names }: { ask: Ask; set: CardSet; names: string[] 
   );
 }
 
-function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: BoardProps<QuartettState, QuartettMove>) {
+function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table }: BoardProps<QuartettState, QuartettMove>) {
   const set = setOf(view);
   const hand = viewer === 'spectator' ? [] : (view.hands[viewer] ?? []).filter((c): c is CardId => c !== null);
   const targets = [...new Set(legalMoves.flatMap((m) => (m.type === 'ask' ? [m.target] : [])))];
@@ -240,8 +274,8 @@ function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
   const others = view.hands.map((_, seat) => seat).filter((seat) => seat !== viewer);
   const ready = target !== null && card !== null && askable.has(card) && targets.includes(target);
 
-  return (
-    <div className="qt-table">
+  const seatsRow = (
+    <>
       <div className="qt-others">
         {others.map((seat) => {
           const selectable = targets.includes(seat);
@@ -273,6 +307,11 @@ function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
         )}
       </div>
 
+    </>
+  );
+
+  const center = (
+    <>
       <div className="qt-center qt-collect">
         {last && (
           <p key={view.asks.length} className={`qt-last ${last.got ? 'qt-got' : ''}`} aria-live="polite">
@@ -326,6 +365,11 @@ function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
         </div>
       </div>
 
+    </>
+  );
+
+  const controls = (
+    <>
       <div className="qt-controls">
         {legalMoves.length > 0 && (
           <button type="button" className="qt-button qt-primary" disabled={!ready} onClick={() => target !== null && card !== null && ready && onMove({ type: 'ask', target, card })}>
@@ -360,6 +404,50 @@ function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: Boa
           </details>
         )}
       </div>
+    </>
+  );
+
+  return (
+    <div className="qt-table" data-around={table ? '' : undefined}>
+      {table ? (
+        <SeatRing
+          seats={view.hands.length}
+          bottomSeat={viewer === 'spectator' ? 0 : viewer}
+          status={table.status}
+          bottom={controls}
+          renderSeat={(seat) => {
+            if (seat === viewer) return table.seatChip(seat);
+            const selectable = targets.includes(seat);
+            const content = (
+              <>
+                <CardBack count={view.hands[seat]!.length} label={`${view.hands[seat]!.length} Karten`} />
+                <span className="qt-quartets">
+                  {quartetsOf(seat).map((q) => (
+                    <span key={q.group} className="qt-q" style={{ background: GROUP_COLORS[q.group] }} />
+                  ))}
+                </span>
+              </>
+            );
+            return (
+              <>
+                {selectable ? (
+                  <button type="button" className={`qt-seat ${target === seat ? 'qt-selected' : ''} ${hintMove?.target === seat ? 'qt-hint' : ''}`} aria-pressed={target === seat} aria-label={nameOf(seatNames, seat)} onClick={() => setTarget(seat)}>
+                    {content}
+                  </button>
+                ) : (
+                  content
+                )}
+                {table.seatChip(seat)}
+              </>
+            );
+          }}
+        >
+          {view.talon.length > 0 && <CardBack count={view.talon.length} label={`${view.talon.length} Karten im Stapel`} />}
+          {center}
+        </SeatRing>
+      ) : (
+        <>{seatsRow}{center}{controls}</>
+      )}
     </div>
   );
 }
@@ -378,6 +466,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 
 export const gameUi: GameUi<QuartettState, QuartettMove> = {
   Board,
+  seatsAround: true,
   SeatSymbol,
   sounds: { trick: 'karte-legen', drew: 'karte-ziehen', asked: (event) => (event.got ? 'karte-ziehen' : 'kein-paar'), quartet: 'paar' },
   seatLabel: (seat) => `Platz ${seat + 1}`,

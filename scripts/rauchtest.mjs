@@ -169,7 +169,7 @@ try {
   }
 
   // Spieler rund um den Tisch: bei höchster Platzzahl auf Tablet und Desktop, auf dem Handy die Leiste.
-  const ringGames = { 'mau-mau': 5, skat: 4 };
+  const ringGames = { 'mau-mau': 5, skat: 4, schafkopf: 4, doppelkopf: 5, binokel: 4, elevens: 6, president: 8, 'black-peter': 6, uno: 8, quartett: 6, dominoes: 4, maexle: 8, 'market-stalls': 8 };
   for (const [id, count] of Object.entries(ringGames)) {
     if (!ids.includes(id)) continue;
     for (const [width, height] of [[1024, 768], [1280, 800], [390, 844]]) {

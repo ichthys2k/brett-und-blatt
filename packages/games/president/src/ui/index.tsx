@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { cardRank, rankLabel, type CardId, type SeatId } from '@brett-und-blatt/engine';
-import { PlayingCard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, PlayingCard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { cardValue, groupsOf, placeKind, placeTitle, topPlay, type PlaceKind, type PresidentMove, type PresidentView, type Titles } from '../rules';
 import './styles.css';
 
@@ -51,7 +51,7 @@ function Hint({ view, mine, names }: { view: PresidentView; mine: boolean; names
   );
 }
 
-export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hint }: BoardProps<PresidentView, PresidentMove>) {
+export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table }: BoardProps<PresidentView, PresidentMove>) {
   const me = typeof viewer === 'number' ? viewer : null;
   const hand = me !== null ? view.hands[me] ?? [] : [];
   const deckStyle = view.options.deckStyle;
@@ -107,8 +107,8 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
   const myTitle = me !== null ? titleOf(view, me) : null;
   const mySwap = me !== null ? view.swaps.find((s) => s.low === me || s.high === me) : undefined;
 
-  return (
-    <div className="prs-table">
+  const opponents = (
+    <>
       <div className="prs-opponents">
         {ordered.map((seat) => {
           const title = titleOf(view, seat);
@@ -132,6 +132,11 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
         })}
       </div>
 
+    </>
+  );
+
+  const center = (
+    <>
       <div className="prs-center">
         {view.reversed && <div className="prs-revolution">✊ Revolution – die Rangfolge ist umgekehrt</div>}
         <div className="prs-trick">
@@ -158,6 +163,11 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
         </div>
       </div>
 
+    </>
+  );
+
+  const own = (
+    <>
       {me !== null && (
         <div className="prs-me">
           <div className="prs-me-head">
@@ -215,6 +225,44 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
         </div>
       )}
 
+    </>
+  );
+
+  return (
+    <div className="prs-table" data-around={table ? '' : undefined}>
+      {table ? (
+        <SeatRing
+          seats={view.counts.length}
+          bottomSeat={me ?? 0}
+          status={table.status}
+          bottom={own}
+          renderSeat={(seat) => {
+            const title = titleOf(view, seat);
+            const out = view.finished.includes(seat);
+            return (
+              <>
+                {seat !== me && (
+                  <div className={`prs-opp-cards${out ? ' prs-opp-out' : ''}`}>
+                    <span className="prs-mini">
+                      <PlayingCard card={null} deckStyle={deckStyle} />
+                    </span>
+                    <b>{view.counts[seat]}</b>
+                  </div>
+                )}
+                {table.seatChip(seat)}
+                <div className="prs-opp-state">
+                  {title && !out ? `${title.badge} ` : ''}
+                  {out ? title?.title : view.phase === 'play' && view.passed[seat] && view.trick.length > 0 ? 'passt' : ' '}
+                </div>
+              </>
+            );
+          }}
+        >
+          {center}
+        </SeatRing>
+      ) : (
+        <>{opponents}{center}{own}</>
+      )}
       {(view.phase === 'roundEnd' || view.phase === 'gameEnd') && view.lastRound && (
         <div className="prs-overlay">
           <div className="prs-overlay-box">
@@ -260,6 +308,7 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
 
 export const gameUi: GameUi<PresidentView, PresidentMove> = {
   Board: PresidentBoard,
+  seatsAround: true,
   SeatSymbol: ({ className }) => <span className={className}>🃏</span>,
   seatLabel: (seat) => `Platz ${Number(seat) + 1}`,
   seatDetail: (view, seat) => {

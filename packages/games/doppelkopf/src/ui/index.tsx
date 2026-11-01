@@ -1,5 +1,5 @@
 import { sortHand, cardSuit, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
-import { CardFan, PlayingCard, TRICK_HAND_MIN_STEP, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import { CardFan, PlayingCard, TRICK_HAND_MIN_STEP, SeatRing, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
 import {
   getContract,
   owingSolo,
@@ -16,6 +16,7 @@ export function DokoBoard({
   onMove,
   viewer,
   seatNames,
+  table,
 }: BoardProps<DokoState, DokoMove>) {
   const mySeat: number = typeof viewer === 'number' ? viewer : view.activeSeats[0];
   // Sortiert nach dem laufenden Spiel (vor der Ansage nach dem üblichen Standardspiel).
@@ -55,9 +56,8 @@ export function DokoBoard({
   // Erlaubte Karten heben sich ab; unerlaubte Klicks lehnt die Spielleitung ohnehin ab.
   const playableCards = new Set(legalMoves.flatMap((m) => (m.type === 'play' ? [m.card] : [])));
 
-  return (
-    <div className="flex h-full flex-col w-full max-w-4xl mx-auto p-1 gap-2 sm:p-2 flat:p-0">
-      {/* Kopfzeile */}
+  // Kopfzeile
+  const header = (
       <div className="flex flex-wrap items-center justify-between gap-2 p-2 flat:py-1 bg-stone-100 dark:bg-stone-800 rounded-xl text-sm">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-indigo-600 dark:text-indigo-400">
@@ -85,6 +85,10 @@ export function DokoBoard({
         </div>
       </div>
 
+  );
+
+  const dialogs = (
+    <>
       {/* Vorbehaltsphase */}
       {view.phase === 'reservations' && (
         <div className="p-4 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-300 dark:border-indigo-800 rounded-xl">
@@ -184,7 +188,11 @@ export function DokoBoard({
         </div>
       )}
 
-      {/* TrickTable in der Mitte */}
+    </>
+  );
+
+  // Stich-Tisch in der Mitte
+  const trick = (
       <div className="flex min-h-[90px] flex-1 flex-col">
         <TrickTable
           slots={trickSlots}
@@ -195,8 +203,11 @@ export function DokoBoard({
         />
       </div>
 
-      {/* Eigene Handkarten (12 Karten) */}
-      <div className="flex flex-col items-center gap-2 mt-auto">
+  );
+
+  // Eigene Handkarten (12 Karten)
+  const hand = (
+      <div className="flex w-full flex-col items-center gap-2 mt-auto">
         <div className="text-xs font-medium text-stone-500 dark:text-stone-400 flat:hidden">
           Deine Hand ({myHand.filter((c: CardId) => c !== 'back').length} Karten)
         </div>
@@ -227,7 +238,11 @@ export function DokoBoard({
         />
       </div>
 
-      {/* Runden-Auswertung */}
+  );
+
+  // Runden-Auswertung
+  const roundEnd = (
+    <>
       {view.phase === 'roundOver' && (
         <div className="p-4 bg-stone-900/90 text-white rounded-2xl shadow-xl flex flex-col items-center gap-3">
           <h2 className="text-lg font-bold">Runde beendet</h2>
@@ -258,6 +273,41 @@ export function DokoBoard({
             Nächstes Spiel
           </button>
         </div>
+      )}
+    </>
+  );
+
+  return (
+    <div className={`flex h-full flex-col w-full mx-auto p-1 gap-2 sm:p-2 flat:p-0 ${table ? '' : 'max-w-4xl'}`}>
+      {header}
+      {table ? (
+        <SeatRing
+          seats={seatNames.length}
+          bottomSeat={mySeat}
+          status={table.status}
+          bottom={hand}
+          renderSeat={(seat) => (
+            <>
+              {seat !== mySeat && (view.hands[seat]?.length ?? 0) > 0 && (
+                <div className="w-20" aria-hidden="true">
+                  <CardFan count={view.hands[seat]!.length} label="" cardWidth={16} renderCard={() => <PlayingCard card={null} deckStyle={view.deckStyle} />} />
+                </div>
+              )}
+              {table.seatChip(seat)}
+            </>
+          )}
+        >
+          {dialogs}
+          {roundEnd}
+          {trick}
+        </SeatRing>
+      ) : (
+        <>
+          {dialogs}
+          {trick}
+          {hand}
+          {roundEnd}
+        </>
       )}
     </div>
   );
@@ -312,6 +362,7 @@ function formatAnnouncement(call: DokoAnnouncement): string {
 
 export const gameUi: GameUi<DokoState, DokoMove> = {
   Board: DokoBoard,
+  seatsAround: true,
   sounds: {
     cardPlayed: 'karte-legen',
     trickTaken: 'stich-einsammeln',
