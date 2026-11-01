@@ -1,6 +1,6 @@
 # Spieler rund um einen Tisch (W-020) – Umsetzungsplan
 
-Stand 1.11.2026. Der Pilot mit Mau-Mau und Skat ist gebaut, die übrigen Spiele warten auf Cornelius' Urteil dazu.
+Stand 1.11.2026. Der Pilot mit Mau-Mau und Skat ist gebaut und nach Cornelius' erstem Test umgebaut, die übrigen Spiele warten auf Cornelius' Urteil dazu.
 
 ## Ziel
 
@@ -66,6 +66,17 @@ Baustein und Rahmen etwa ein Arbeitsgang, die beiden Pilotspiele ein weiterer. J
 - Gebaut: `packages/ui/src/SeatRing.tsx`, Rahmen in `Play.tsx`, Mau-Mau und Skat. Weg B; der Tisch gilt bei genug Platz immer, ohne Schalter (Vorschlag, Cornelius hat nicht widersprochen).
 - Der Rauchtest prüft Mau-Mau zu fünft und Skat zu viert bei 1024 × 768, 1280 × 800 und auf dem Handy.
 - Nebenbei behoben: `TrickTable` legte am Vierertisch Karten falsch, wenn ein Platz aussetzte; Übergabe- und Pausenbildschirm lagen in Mau-Mau hinter der Tischmitte und ließen sich dort nicht antippen; die Spielerzeichen von Mau-Mau waren hell auf hell.
+
+## Nach Cornelius' Test (1.11.2026)
+
+Rückmeldung zu Mau-Mau am Desktop: Die Mitte soll größer sein, die linke Leiste soll entfallen. Umgesetzt:
+
+- Am Tisch gibt es keine Seitenleiste mehr. Darüber liegt nur eine Kopfzeile: Zurück, Name, Raumcode, Zug zurück, Tipp, Menü „⋯“ (Neu starten, Aufgeben, Lobby), Hilfe, Ton, Pause. Online-Reaktionen liegen unter dem Tisch.
+- „Du bist dran“ und der Status stehen neben dem eigenen Platz (`BoardProps.table.status`, `SeatRing.status`).
+- Ob der Tisch gilt, misst `Play.tsx` am ganzen Fenster abzüglich Kopfzeile, nicht am Spielfeld: Das wächst durch den Wegfall der Leiste selbst und ließe das Layout sonst springen.
+- Die Tischmitte ist ein Größen-Container: Spiele bemessen ihre Mitte mit `cqw`/`cqh`. Mau-Mau-Stapel wachsen bei 1280 × 800 von 88 auf 121 px, in Full HD auf etwa 220 px; die Handkarten wachsen am Tisch mit der Fensterhöhe.
+
+Spiele ohne `seatsAround` behalten ihre Leiste.
 
 ## Offene Frage an Cornelius
 

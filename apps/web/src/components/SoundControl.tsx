@@ -76,7 +76,7 @@ export function VolumeControls({ showClientOption }: { showClientOption?: boolea
 }
 
 /** Lautsprecher-Knopf im Spiel: Lautstärken, Playlist, laufendes Stück. */
-export function SoundControl({ gameId, isClient, ownMusic }: { gameId: string; isClient?: boolean; ownMusic?: boolean }) {
+export function SoundControl({ gameId, isClient, ownMusic, inBar }: { gameId: string; isClient?: boolean; ownMusic?: boolean; inBar?: boolean }) {
   const settings = useSoundSettings();
   const prefs = useMusicPrefs();
   const current = useCurrentTrack();
@@ -108,7 +108,7 @@ export function SoundControl({ gameId, isClient, ownMusic }: { gameId: string; i
         {silent ? '🔇' : '🔊'}
       </Button>
       {open && (
-        <div className="absolute top-full right-0 z-30 mt-1 max-h-[calc(100dvh-4rem)] w-72 space-y-3 overflow-y-auto rounded-xl side:fixed side:top-12 side:right-auto side:left-2 border border-line bg-surface p-3 shadow-md">
+        <div className={`absolute top-full right-0 z-30 mt-1 max-h-[calc(100dvh-4rem)] w-72 space-y-3 overflow-y-auto rounded-xl ${inBar ? '' : 'side:fixed side:top-12 side:right-auto side:left-2'} border border-line bg-surface p-3 shadow-md`}>
           <VolumeControls showClientOption={isClient} />
           {musicOn && (
             <>

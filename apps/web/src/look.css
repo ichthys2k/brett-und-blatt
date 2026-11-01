@@ -152,6 +152,19 @@
   font-size: 1.75rem;
 }
 
+/* Gemaltes Wappen statt Emoji: füllt das Wappenfeld ganz aus */
+[data-look='tavern'] .bub-tile-crest[data-image] {
+  padding: 0;
+  overflow: hidden;
+}
+
+[data-look='tavern'] .bub-tile-crest-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* Kleine Zusätze neben Überschriften bleiben lesbar. */
 [data-look='tavern'] .bub-home h2 .text-xs {
   font-family: var(--font-sans);

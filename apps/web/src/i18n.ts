@@ -64,6 +64,7 @@ const de = {
   'play.rematch': 'Revanche',
   'play.settings': 'Einstellungen',
   'play.menu': 'Menü',
+  'play.more': 'Weitere Aktionen',
   'play.back': 'Zum Menü',
   'play.away': '{name} war mehrmals zu langsam – der Computer spielt für diesen Platz.',
   'play.takeBack': 'Wieder selbst spielen',

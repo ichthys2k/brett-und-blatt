@@ -183,10 +183,18 @@ try {
       const m = await startGame(ringPage, id);
       const ring = await ringPage.evaluate(() => {
         const main = document.querySelector('main').getBoundingClientRect();
+        const pile = document.querySelector('.mau-pile')?.getBoundingClientRect();
+        const clipped = [...document.querySelectorAll('header button, footer button')].filter((b) => {
+          const r = b.getBoundingClientRect();
+          return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1);
+        }).length;
         const center = document.querySelector('.bub-seat-ring-center')?.getBoundingClientRect();
         const seats = [...document.querySelectorAll('.bub-seat-ring-seat')].map((el) => el.getBoundingClientRect());
         const overlap = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
         return {
+          mainWidth: main.width,
+          pileWidth: pile?.width ?? null,
+          clipped,
           shown: Boolean(center),
           collisions: seats.filter((a, i) => seats.slice(i + 1).some((b) => overlap(a, b)) || (center && overlap(a, center))).length,
           outside: seats.filter((a) => a.left < main.left - 1 || a.right > main.right + 1 || a.top < main.top - 1 || a.bottom > main.bottom + 1).length,
@@ -194,6 +202,9 @@ try {
       });
       const where = `${id} zu ${count} bei ${width}×${height}`;
       if (ring.shown !== width >= 1024) problems.push(`${where}: Tisch ${ring.shown ? 'erscheint auf dem Handy' : 'fehlt'}`);
+      if (ring.shown && ring.mainWidth < width - 2) problems.push(`${where}: Seitenleiste nimmt noch Platz (${ring.mainWidth} px)`);
+      if (ring.shown && ring.pileWidth !== null && ring.pileWidth < 100) problems.push(`${where}: Stapel zu klein (${ring.pileWidth} px)`);
+      if (ring.clipped > 0) problems.push(`${where}: ${ring.clipped} Knöpfe ragen aus dem Bildschirm`);
       if (ring.collisions > 0) problems.push(`${where}: ${ring.collisions} Plätze überlappen`);
       if (ring.outside > 0) problems.push(`${where}: ${ring.outside} Plätze ragen aus dem Spielfeld`);
       if (m.pageHeight > height + 2) problems.push(`${where}: Seite rollt (${m.pageHeight} px)`);

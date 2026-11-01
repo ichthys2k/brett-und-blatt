@@ -8,7 +8,9 @@ Regeln wie immer (siehe `CLAUDE.md`): eigener Zweig, Eintrag in `PLANUNG.md` vor
 
 Spiel: `packages/games/marketplace`, Plan: [`marktplatz.md`](marktplatz.md), Probe: [`marktplatz-probe.md`](marktplatz-probe.md). Offen: Test online mit zwei Geräten, Narrenhof-Porträts und Sprüche, Feldgrafik, eigene Klänge (Auswahl durch Cornelius).
 
-## 2. Marktstände und Grafschaft (W-039, Paket C) – wartet auf Cornelius' Ja zum Entwurf
+## 2. Grafschaft (W-039, Paket C; Marktstände ist fertig) – wartet auf Cornelius' Ja zum Entwurf
+
+**Stand 1.11.2026:** Marktstände ist gebaut ([Plan](marktstaende.md), [Probe](marktstaende-probe.md)), mit geänderter Wertung und drei Markttagen. Grafschaft ist noch nicht geprobt und wartet auf Cornelius' Ja.
 
 Plan: [`umsetzungsplan-pakete-a-b-c.md`](umsetzungsplan-pakete-a-b-c.md), Abschnitte „Reihenbauer wird Marktstände“ und „Landschaftsleger wird Grafschaft“. Eigene Fassungen statt 6 nimmt! und Carcassonne. Offen ist nur die erste Frage im Plan („Sind die eigenen Fassungen so in Ordnung?“). Nach dem Ja: erst Probepartien mit Bots im Prüfstand (Marktstände 1 Tag, Grafschaft 2 Tage), dann Bau (3 bzw. 7 Tage).
 

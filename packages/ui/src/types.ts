@@ -40,7 +40,7 @@ export interface BoardProps<V, M> {
    * Nur bei `GameUi.seatsAround` und genug Platz: Die Spieler sitzen am Tisch, die Spielerleiste ist
    * ausgeblendet. Das Spiel zeigt seine Plätze dann mit `SeatRing` und diesem Chip.
    */
-  table?: { seatChip: (seat: SeatId) => ReactNode };
+  table?: { seatChip: (seat: SeatId) => ReactNode; status: ReactNode };
 }
 
 /** Was ein Spiel der Oberfläche liefert. Die Plattform findet es über den Export `gameUi`. */
