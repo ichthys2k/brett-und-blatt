@@ -8,6 +8,9 @@ export interface Described {
   title: string;
   text: string;
   tone: string;
+  /** Nur Narren: Wirkung und Fußzeile für die große Karte am Desktop. */
+  effect?: string;
+  foot?: string;
 }
 
 export function describeConsumable(item: Consumable): Described {
@@ -53,6 +56,8 @@ export function describeMod(mod: Pick<ModInstance, 'key' | 'foil' | 'sticker' | 
     title: def.name,
     text: [def.text, `Seltenheit: ${RARITY_INFO[def.rarity].name}`, ...extras].join(' · '),
     tone: `cs-t-${def.rarity}`,
+    effect: [def.text, ...extras].join(' · '),
+    foot: RARITY_INFO[def.rarity].name,
   };
 }
 

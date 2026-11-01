@@ -4,6 +4,8 @@ Hier steht für jedes geplante Spiel ein eigener Plan. Grundlage ist das [Konzep
 
 Jeder Plan folgt derselben Gliederung: Steckbrief, Regeln, Optionen, Spielmodell, Bot, Zeitlimits, Oberfläche, Hot-Seat und Online, Tests, offene Punkte.
 
+**Offen und als Nächstes:** [Offene Pläne – Übergabe](offene-plaene.md). Geplant, noch nicht gebaut: [Marktplatz](marktplatz.md), [Marktstände und Grafschaft](umsetzungsplan-pakete-a-b-c.md), [Zeitband](zeitband.md), [Discord](discord.md); Etappen: [Abarbeitungsplan](abarbeitungsplan.md).
+
 Übergreifend: [Kernschleifen](kernschleifen.md) – Plan, wie sich die häufigsten Handlungen aller Spiele mit Animation und Klang besser anfühlen (W-013).
 
 ## Übersicht
@@ -58,6 +60,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Tiefflug](tiefflug.md) (Skyjo-artig, mit Junior) | 2–8 | verdeckt (für alle) | Zahlenkarten, Raster 3×4, Serienwertung | S | M | M | ✅ 29.10. |
 | [Elf zuerst!](elf-zuerst.md) (Elfer raus) | 2–6 | verdeckt | Zahlenkarten 1–20, Auslage 4×20, Handfächer | S | M | S | Planungsliste Etappe 7 |
 | [Sternhalma](sternhalma.md) | 2–6 | offen | SVG-Sternbrett, Sprungketten | S | M | M | Planungsliste Etappe 7 |
+| [Rübenacker](ruebenacker.md) (Lotti-Karotti-artig) | 2–6 | offen, Kartenstapel verdeckt | SVG-Beet, Maulwurfspur | S | M | S | Planungsliste Etappe 7 |
 
 ## Gemeinsame Bausteine
 

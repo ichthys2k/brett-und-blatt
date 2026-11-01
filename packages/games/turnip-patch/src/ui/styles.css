@@ -1,0 +1,302 @@
+/* Rübenacker – alle Klassen mit Präfix rub- */
+.rub-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.rub-board-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.rub-board {
+  width: 100%;
+  height: 100%;
+  display: block;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rub-soil {
+  fill: #8b5e3c;
+  stroke: #6b4429;
+  stroke-width: 6;
+}
+
+.rub-furrow {
+  stroke: #7a5133;
+  stroke-width: 10;
+  stroke-linecap: round;
+  opacity: 0.6;
+}
+
+.rub-path {
+  fill: none;
+  stroke: #d6b48a;
+  stroke-width: 40;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.55;
+}
+
+.rub-tunnel {
+  stroke: #3f2a1c;
+  stroke-width: 6;
+  stroke-dasharray: 2 12;
+  stroke-linecap: round;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.rub-meadow {
+  fill: #65a30d;
+  stroke: #4d7c0f;
+  stroke-width: 4;
+}
+
+.rub-label {
+  fill: #ecfccb;
+  font-size: 18px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.rub-field {
+  fill: #e7c9a0;
+  stroke: #a47148;
+  stroke-width: 4;
+}
+
+.rub-field-hole {
+  stroke: #5b3a24;
+  stroke-width: 5;
+}
+
+.rub-field-hill {
+  fill: #a97c55;
+  stroke: #3f2a1c;
+}
+
+.rub-mound path {
+  fill: #4a2e1b;
+  stroke: #2b1a0f;
+  stroke-width: 3;
+}
+
+.rub-next-hill {
+  fill: #5b3a24;
+  opacity: 0.35;
+}
+
+.rub-field-number {
+  fill: #a47148;
+  font-size: 18px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.rub-fence rect,
+.rub-fence path {
+  fill: #fef3c7;
+  stroke: #92400e;
+  stroke-width: 3;
+}
+
+.rub-preview {
+  fill: rgb(255 255 255 / 0.35);
+  stroke: #facc15;
+  stroke-width: 6;
+  cursor: pointer;
+  animation: rub-pulse 1.1s ease-in-out infinite;
+}
+
+.rub-preview-danger {
+  stroke: #dc2626;
+}
+
+.rub-preview-hint {
+  stroke: #f59e0b;
+  stroke-dasharray: 10 6;
+}
+
+.rub-hare {
+  transition: transform 0.45s ease-in-out;
+}
+
+.rub-hare-movable {
+  cursor: pointer;
+}
+
+.rub-hare-movable > g {
+  animation: rub-bounce 0.9s ease-in-out infinite;
+}
+
+.rub-hare-hint > g > circle:first-of-type {
+  stroke-dasharray: 6 4;
+}
+
+.rub-hare:focus-visible {
+  outline: none;
+}
+
+.rub-hare:focus-visible > g > circle {
+  stroke: var(--color-focus, #2563eb);
+}
+
+.rub-hare-mark {
+  font-size: 12px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.rub-hole {
+  fill: #1c120b;
+}
+
+.rub-mole-pop > g {
+  animation: rub-mole 1.6s ease-out both;
+}
+
+.rub-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.rub-deck {
+  position: relative;
+  width: 3.6rem;
+  height: 5rem;
+  border-radius: 0.6rem;
+  background: #c2410c;
+  border: 3px solid #fff7ed;
+  box-shadow: 0 2px 0 #7c2d12, 0 4px 0 #9a3412;
+  color: #fff7ed;
+  font-size: 1.6rem;
+}
+
+.rub-deck:disabled {
+  opacity: 0.55;
+}
+
+.rub-deck-active {
+  animation: rub-bounce 0.9s ease-in-out infinite;
+}
+
+.rub-deck-count {
+  position: absolute;
+  right: 0.2rem;
+  bottom: 0.1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.rub-card-slot {
+  animation: rub-flip 0.35s ease-out both;
+}
+
+.rub-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 3.6rem;
+  height: 5rem;
+  border-radius: 0.6rem;
+  background: #fff7ed;
+  border: 3px solid #f97316;
+  color: #7c2d12;
+  font-weight: 800;
+}
+
+.rub-card-empty {
+  border-style: dashed;
+  background: transparent;
+  opacity: 0.5;
+}
+
+.rub-card-number {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.rub-card-paws {
+  font-size: 0.6rem;
+}
+
+.rub-card-mole {
+  background: #e7c9a0;
+  border-color: #5b3a24;
+  font-size: 0.6rem;
+}
+
+.rub-card-mole svg {
+  width: 2.6rem;
+  height: 2.6rem;
+}
+
+.rub-info {
+  min-width: 10rem;
+  max-width: 18rem;
+}
+
+.rub-status {
+  margin: 0;
+  font-weight: 700;
+}
+
+.rub-moles {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.rub-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4em;
+  height: 1.4em;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 0.8em;
+  line-height: 1;
+}
+
+@keyframes rub-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes rub-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes rub-mole {
+  0% { transform: translateY(24px) scale(0.3); opacity: 0; }
+  25% { transform: translateY(-6px) scale(1.1); opacity: 1; }
+  80% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(10px) scale(0.9); opacity: 0; }
+}
+
+@keyframes rub-flip {
+  from { transform: rotateY(90deg); }
+  to { transform: rotateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rub-hare { transition: none; }
+  .rub-hare-movable > g,
+  .rub-deck-active,
+  .rub-preview,
+  .rub-card-slot { animation: none; }
+  .rub-mole-pop > g { animation-duration: 0.01s; }
+}

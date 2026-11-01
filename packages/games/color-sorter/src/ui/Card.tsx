@@ -126,19 +126,24 @@ interface TileProps {
   label?: string;
   tip?: Tip;
   extra?: ExtraProps;
+  /** Wirkung als Text: erscheint nur am Desktop, wo die Kachel zur großen Karte wird. */
+  body?: ReactNode;
+  foot?: ReactNode;
 }
 
 /** Kachel für Mods, Zauberkarten, Angebote und Lieferungen. */
-export function Tile({ emoji, title, sub, badge, tone = '', selected, hint, dim, pop, onClick, className = '', label, tip, extra }: TileProps) {
+export function Tile({ emoji, title, sub, badge, tone = '', selected, hint, dim, pop, onClick, className = '', label, tip, extra, body: text, foot }: TileProps) {
   const props = useTipProps(tip, extra);
-  const classes = ['cs-tile', tone, selected ? 'cs-selected' : '', hint ? 'cs-hint' : '', dim ? 'cs-dim' : '', className].join(' ');
+  const classes = ['cs-tile', text !== undefined ? 'cs-tile-text' : '', tone, selected ? 'cs-selected' : '', hint ? 'cs-hint' : '', dim ? 'cs-dim' : '', className].join(' ');
   const body = (
     <>
       <span className="cs-tile-emoji" aria-hidden="true">
         {emoji}
       </span>
       <span className="cs-tile-title">{title}</span>
+      {text !== undefined && <span className="cs-tile-body">{text}</span>}
       {sub !== undefined && <span className="cs-tile-sub">{sub}</span>}
+      {foot !== undefined && <span className="cs-tile-foot">{foot}</span>}
       {badge !== undefined && <span className="cs-tile-badge">{badge}</span>}
       {pop && <span className="cs-pop">{pop}</span>}
     </>
