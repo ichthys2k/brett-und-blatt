@@ -1,5 +1,5 @@
 import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
-import { PlayerChip } from '@brett-und-blatt/ui';
+import { PlayerChip, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Ceremony } from '../components/Ceremony';
 import { Button } from '../components/controls';
@@ -119,7 +119,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
 
   const isClient = online !== undefined && !online.isHost;
   const soundSettings = useSoundSettings();
-  const playMusic = !isClient || Boolean(soundSettings.clientMusic);
+  const playMusic = !soundSettings.musicOff && (!isClient || Boolean(soundSettings.clientMusic));
 
   useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined);
   useGameMusic(info.id, playMusic && !info.ownMusic);
@@ -150,6 +150,9 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   /** Viele Spieler: im Hochformat eine Zeile zum Wischen statt vieler Reihen, die dem Spielfeld den Platz nehmen. */
   const many = seats.length > 4;
   const playersRef = useRef<HTMLElement>(null);
+  const [tableRef, tableSize] = useElementSize<HTMLElement>();
+  /** Genug Platz: Das Spiel setzt die Spieler um seinen Tisch, die Leiste entfällt. */
+  const around = Boolean(ui.seatsAround) && seatRingFits(seats.length, tableSize.width, tableSize.height);
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
   const current = session.currentSeats();
@@ -270,6 +273,28 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     </>
   );
 
+  const seatChip = (index: SeatId) => {
+    const seat = seats[index]!;
+    const profile = !online ? storage.loadProfile() : null;
+    const localAvatar = !online && seat.kind === 'human' ? (profile?.avatar ?? seat.avatar ?? null) : (seat.avatar ?? null);
+    const avatar = online ? (seat.avatar ?? online.avatars?.[index] ?? null) : localAvatar;
+    return (
+      <PlayerChip
+        key={index}
+        name={seat.name}
+        avatar={avatar ?? undefined}
+        symbol={<ui.SeatSymbol seat={index} seats={seats.length} />}
+        score={ui.seatScore?.(publicView, index)}
+        detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index, seats.length)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index, seats.length))}
+        active={!concealed && !result && current.includes(index)}
+        thinking={!concealed && session.isThinking(index) && seat.kind === 'bot'}
+        away={session.isAway(index)}
+        winner={result?.kind === 'win' && result.winners.includes(index)}
+        clock={session.timed ? session.clock(index) : null}
+      />
+    );
+  };
+
   return (
     <div className="mx-auto flex h-dvh max-w-3xl flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:max-w-none side:flex-row side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)]">
       {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
@@ -321,31 +346,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
 
         <section
           ref={playersRef}
-          className={`bub-players relative flex flex-none gap-2 px-3 side:min-h-20 side:flex-initial side:flex-col side:flex-nowrap side:overflow-x-hidden side:overflow-y-auto ${many ? 'overflow-x-auto pb-1' : 'flex-wrap'} ${crowded ? 'flat:grid flat:grid-cols-2 flat:content-start' : ''}`}
+          className={`bub-players relative ${around ? 'hidden' : 'flex'} flex-none gap-2 px-3 side:min-h-20 side:flex-initial side:flex-col side:flex-nowrap side:overflow-x-hidden side:overflow-y-auto ${many ? 'overflow-x-auto pb-1' : 'flex-wrap'} ${crowded ? 'flat:grid flat:grid-cols-2 flat:content-start' : ''}`}
           data-crowded={crowded || undefined}
           data-many={many || undefined}
           aria-label="Spieler"
         >
-          {seats.map((seat, index) => {
-            const profile = !online ? storage.loadProfile() : null;
-            const localAvatar = !online && seat.kind === 'human' ? (profile?.avatar ?? seat.avatar ?? null) : (seat.avatar ?? null);
-            const avatar = online ? (seat.avatar ?? online.avatars?.[index] ?? null) : localAvatar;
-            return (
-            <PlayerChip
-              key={index}
-              name={seat.name}
-              avatar={avatar ?? undefined}
-              symbol={<ui.SeatSymbol seat={index} seats={seats.length} />}
-              score={ui.seatScore?.(publicView, index)}
-              detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index, seats.length)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index, seats.length))}
-              active={!concealed && !result && current.includes(index)}
-              thinking={!concealed && session.isThinking(index) && seat.kind === 'bot'}
-              away={session.isAway(index)}
-              winner={result?.kind === 'win' && result.winners.includes(index)}
-              clock={session.timed ? session.clock(index) : null}
-            />
-            );
-          })}
+          {!around && seats.map((_, index) => seatChip(index))}
         </section>
 
         <p className="flex-none py-2 text-center font-medium short:py-1" aria-live="polite">
@@ -451,7 +457,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         {online?.extra}
       </div>
 
-      <main className="bub-table relative order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 side:py-2 side:px-4" data-category={categoryOf(info.id)}>
+      <main ref={tableRef} className="bub-table relative order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 side:py-2 side:px-4" data-category={categoryOf(info.id)}>
         {yourMove && <div key={`${session.version}`} className="bub-turn-frame" aria-hidden="true" />}
         <ui.Board
           view={session.view(viewer)}
@@ -466,8 +472,9 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           hint={hint}
           viewer={viewer}
           seatNames={seats.map((seat) => seat.name)}
-          audio={{ muted: soundSettings.muted, music: playMusic ? soundSettings.music : 0, effects: soundSettings.effects }}
+          audio={{ muted: soundSettings.effectsOff && soundSettings.musicOff, music: playMusic ? soundSettings.music : 0, effects: soundSettings.effectsOff ? 0 : soundSettings.effects }}
           invite={online?.invite}
+          table={around ? { seatChip } : undefined}
           canJoinSeat={session.canJoinSeat ? (seat) => session.canJoinSeat!(seat) : undefined}
           onJoinSeat={session.joinSeat ? (seat, kind, name) => session.joinSeat!(seat, kind, name) : undefined}
           canLeaveSeat={session.canLeaveSeat ? (seat) => session.canLeaveSeat!(seat) : undefined}
@@ -497,7 +504,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           />
         )}
         {handoverSeat !== null ? (
-          <div className="absolute inset-0 grid place-items-center bg-bg px-6 text-center">
+          <div className="absolute inset-0 z-40 grid place-items-center bg-bg px-6 text-center">
             <div className="space-y-3">
               <p className="text-4xl" aria-hidden="true">
                 🤫
@@ -516,7 +523,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             </div>
           </div>
         ) : session.paused && !result && (
-          <button type="button" className="absolute inset-0 grid place-items-center bg-bg/80 text-xl font-semibold backdrop-blur-sm" onClick={() => session.resume()}>
+          <button type="button" className="absolute inset-0 z-40 grid place-items-center bg-bg/80 text-xl font-semibold backdrop-blur-sm" onClick={() => session.resume()}>
             ▶ {t('play.resume')}
           </button>
         )}

@@ -1,4 +1,4 @@
-import { DEFAULT_SOUND_SETTINGS, SoundPlayer, type SoundSettings } from '@brett-und-blatt/ui';
+import { DEFAULT_SOUND_SETTINGS, SoundPlayer, soundSettingsFrom, type SoundSettings } from '@brett-und-blatt/ui';
 import { useSyncExternalStore } from 'react';
 
 /*
@@ -12,13 +12,7 @@ export const sound = new SoundPlayer(`${import.meta.env.BASE_URL}klaenge/`);
 function loadSettings(): SoundSettings {
   try {
     const raw = window.localStorage.getItem(SETTINGS_KEY);
-    const saved = raw ? (JSON.parse(raw) as Partial<SoundSettings>) : {};
-    return {
-      muted: typeof saved.muted === 'boolean' ? saved.muted : DEFAULT_SOUND_SETTINGS.muted,
-      effects: typeof saved.effects === 'number' ? saved.effects : DEFAULT_SOUND_SETTINGS.effects,
-      music: typeof saved.music === 'number' ? saved.music : DEFAULT_SOUND_SETTINGS.music,
-      clientMusic: typeof saved.clientMusic === 'boolean' ? saved.clientMusic : (DEFAULT_SOUND_SETTINGS.clientMusic ?? false),
-    };
+    return soundSettingsFrom(raw ? (JSON.parse(raw) as Parameters<typeof soundSettingsFrom>[0]) : {});
   } catch {
     return DEFAULT_SOUND_SETTINGS;
   }

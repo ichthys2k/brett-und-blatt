@@ -1,4 +1,4 @@
-import { playlistTracks } from '@brett-und-blatt/ui';
+import { playlistTracks, setCardPortraits, useCardPortraits } from '@brett-und-blatt/ui';
 import { useEffect } from 'react';
 import { Button } from '../components/controls';
 import { MusicList } from '../components/MusicList';
@@ -7,6 +7,7 @@ import { t } from '../i18n';
 import { contrastForcesPlain, type Look, setLook, useChosenLook } from '../lib/look';
 import { music, useMusicPrefs } from '../lib/music';
 import { navigate, paths } from '../lib/router';
+import { setSoundSettings } from '../lib/sound';
 
 /** Ton-Einstellungen mit allen Stücken zum Probehören (#/ton). */
 function LookChoice() {
@@ -32,6 +33,19 @@ function LookChoice() {
   );
 }
 
+function PortraitChoice() {
+  const on = useCardPortraits();
+  return (
+    <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line bg-surface p-4">
+      <input type="checkbox" className="mt-1 accent-accent" checked={on} onChange={(event) => setCardPortraits(event.target.checked)} />
+      <span>
+        <span className="block font-semibold">{t('cards.portraits')}</span>
+        <span className="block text-sm text-muted">{t('cards.portraits.text')}</span>
+      </span>
+    </label>
+  );
+}
+
 export function SoundSettingsScreen() {
   const prefs = useMusicPrefs();
   // Probehören endet mit dem Verlassen der Seite.
@@ -46,12 +60,15 @@ export function SoundSettingsScreen() {
         <h1 className="text-2xl font-bold">{t('sound.settings')}</h1>
       </header>
       <LookChoice />
+      <PortraitChoice />
       <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
         <VolumeControls showClientOption />
       </div>
       <div className="rounded-2xl border border-line bg-surface p-4">
         <MusicList
           onPlay={(track) => {
+            // Wer ein Stück ausdrücklich startet, will es auch hören.
+            setSoundSettings({ musicOff: false });
             music.play(playlistTracks(track.playlist), prefs);
             music.next(track);
           }}

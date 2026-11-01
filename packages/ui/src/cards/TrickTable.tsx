@@ -112,7 +112,9 @@ export function TrickTable({
   // Berechne relative Positionen bezogen auf bottomSeat:
   // 0 = unten (Süd), 1 = links/oben-links, 2 = oben/oben-rechts, 3 = rechts
   function getRelativePosition(seat: number): 'bottom' | 'left' | 'top' | 'right' | 'top-left' | 'top-right' {
-    const rel = (seat - bottomSeat + total) % total;
+    // Über die Reihenfolge im Stich: Am Vierertisch setzt ein Platz aus, die Sitznummern haben dann Lücken.
+    const order = slots.map((slot) => slot.seat);
+    const rel = (order.indexOf(seat) - order.indexOf(bottomSeat) + total) % total;
     if (total === 3) {
       if (rel === 0) return 'bottom';
       if (rel === 1) return 'top-left';

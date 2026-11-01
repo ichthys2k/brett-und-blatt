@@ -4,6 +4,7 @@ import {
   CardFan,
   useCallDeadline,
   PlayingCard,
+  SeatRing,
   SuitShape,
   usePointerDrag,
   type BoardProps,
@@ -81,6 +82,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
   activeSeat,
   viewer,
   seatNames,
+  table,
 }) => {
   const [selectedJack, setSelectedJack] = useState<CardId | null>(null);
   const [callMauToggled, setCallMauToggled] = useState(false);
@@ -356,8 +358,26 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
     setSelectedJack(null);
   };
 
+  const seatRef = (index: number) => (el: HTMLElement | null) => {
+    if (el) seatRefs.current.set(index, el);
+    else seatRefs.current.delete(index);
+  };
+  const opponentFan = (hand: CardId[]) => (
+    <div className="mau-opponent-hand" aria-hidden="true">
+      {hand.length > 0 && (
+        <CardFan
+          count={Math.min(hand.length, OPPONENT_FAN_MAX)}
+          label=""
+          cardWidth={16}
+          arc={hand.length > 1 ? Math.min(40, hand.length * 5) : 0}
+          renderCard={() => <PlayingCard card={null} deckStyle={deckStyle} />}
+        />
+      )}
+    </div>
+  );
+
   return (
-    <div ref={tableRef} className="mau-table">
+    <div ref={tableRef} className="mau-table" data-around={table ? '' : undefined}>
       <div className="mau-flying-layer">
         {flyingCards.map((card) => (
           <div
@@ -384,7 +404,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
       </div>
 
       {/* Mitspieler */}
-      <div className="mau-opponents">
+      {!table && <div className="mau-opponents">
         {state.hands.map((hand, index) => {
           if (index === actor) return null;
           const isTurn = state.turn === index;
@@ -393,24 +413,11 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
           return (
             <div
               key={index}
-              ref={(el) => {
-                if (el) seatRefs.current.set(index, el);
-                else seatRefs.current.delete(index);
-              }}
+              ref={seatRef(index)}
               className={`mau-opponent ${isTurn ? 'mau-opponent-active' : ''}`}
               title={`${seatNames[index] ?? `Platz ${index + 1}`}: ${hand.length} Karten`}
             >
-              <div className="mau-opponent-hand" aria-hidden="true">
-                {hand.length > 0 && (
-                  <CardFan
-                    count={Math.min(hand.length, OPPONENT_FAN_MAX)}
-                    label=""
-                    cardWidth={16}
-                    arc={hand.length > 1 ? Math.min(40, hand.length * 5) : 0}
-                    renderCard={() => <PlayingCard card={null} deckStyle={deckStyle} />}
-                  />
-                )}
-              </div>
+              {opponentFan(hand)}
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold sm:text-sm">
                   {seatNames[index] ?? `Platz ${index + 1}`}
@@ -421,9 +428,11 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
             </div>
           );
         })}
-      </div>
+      </div>}
 
       {/* Tischmitte */}
+      {(() => {
+        const center = (
       <div className="mau-center">
         <div className="mau-direction" data-reverse={state.direction === -1 ? 'true' : undefined}>
           <span>{state.direction === 1 ? '↻' : '↺'}</span>
@@ -476,8 +485,8 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
           </div>
         )}
       </div>
-
-      {/* Eigene Hand */}
+        );
+        const handArea = (
       <div ref={handRef} className="mau-hand-area">
         <div className="mau-actions">
           {canPass && isActor ? (
@@ -564,6 +573,25 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
           />
         </div>
       </div>
+        );
+        if (!table) return <>{center}{handArea}</>;
+        return (
+          <SeatRing
+            seats={state.hands.length}
+            bottomSeat={actor ?? 0}
+            bottom={handArea}
+            renderSeat={(seat) => (
+              <div ref={seatRef(seat)} className="mau-ring-seat">
+                {seat !== actor && opponentFan(state.hands[seat] ?? [])}
+                {table.seatChip(seat)}
+                {state.hands[seat]?.length === 1 && <span className="mau-badge">Mau!</span>}
+              </div>
+            )}
+          >
+            {center}
+          </SeatRing>
+        );
+      })()}
 
       {/* Wunschfarbe */}
       {selectedJack && (
@@ -596,8 +624,12 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
 
 export const gameUi: GameUi<MauMauState, MauMauMove> = {
   Board: MauMauBoard,
+  seatsAround: true,
   SeatSymbol: ({ seat, className }) => (
-    <span className={className}>{SEAT_SYMBOLS[Number(seat) % SEAT_SYMBOLS.length]}</span>
+    // Feste Farbe: Der Ring um das Zeichen ist in jedem Aussehen hell.
+    <span className={className} style={{ color: Number(seat) % SEAT_SYMBOLS.length === 1 || Number(seat) % SEAT_SYMBOLS.length === 2 ? '#c62828' : '#1f2328' }}>
+      {SEAT_SYMBOLS[Number(seat) % SEAT_SYMBOLS.length]}
+    </span>
   ),
   seatLabel: (seat) => `Platz ${Number(seat) + 1}`,
   seatDetail: (view, seat) => {

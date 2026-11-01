@@ -48,7 +48,10 @@ export function soundDuration(name: SoundName): number {
 }
 
 export interface SoundSettings {
-  muted: boolean;
+  /** Soundeffekte aus; die Lautstärke bleibt für später erhalten. */
+  effectsOff: boolean;
+  /** Musik aus; es wird dann auch nichts geladen. */
+  musicOff: boolean;
   /** Lautstärke der Effekte, 0 bis 1. */
   effects: number;
   /** Lautstärke der Musik, 0 bis 1 (spielt der MusicPlayer). */
@@ -57,7 +60,19 @@ export interface SoundSettings {
   clientMusic?: boolean;
 }
 
-export const DEFAULT_SOUND_SETTINGS: SoundSettings = { muted: false, effects: 0.7, music: 0.4, clientMusic: false };
+export const DEFAULT_SOUND_SETTINGS: SoundSettings = { effectsOff: false, musicOff: false, effects: 0.7, music: 0.4, clientMusic: false };
+
+/** Liest gespeicherte Einstellungen; das frühere gemeinsame `muted` schaltet beides aus. */
+export function soundSettingsFrom(saved: Partial<SoundSettings> & { muted?: unknown }): SoundSettings {
+  const wasMuted = saved.muted === true;
+  return {
+    effectsOff: typeof saved.effectsOff === 'boolean' ? saved.effectsOff : wasMuted,
+    musicOff: typeof saved.musicOff === 'boolean' ? saved.musicOff : wasMuted,
+    effects: typeof saved.effects === 'number' ? saved.effects : DEFAULT_SOUND_SETTINGS.effects,
+    music: typeof saved.music === 'number' ? saved.music : DEFAULT_SOUND_SETTINGS.music,
+    clientMusic: typeof saved.clientMusic === 'boolean' ? saved.clientMusic : (DEFAULT_SOUND_SETTINGS.clientMusic ?? false),
+  };
+}
 
 const FADE_S = 0.03;
 
@@ -163,7 +178,7 @@ export class SoundPlayer {
   }
 
   private volume(): number {
-    return SoundPlayer.sharedSettings.muted ? 0 : Math.max(0, Math.min(1, SoundPlayer.sharedSettings.effects));
+    return SoundPlayer.sharedSettings.effectsOff ? 0 : Math.max(0, Math.min(1, SoundPlayer.sharedSettings.effects));
   }
 
   private ensureContext(): AudioContext | null {

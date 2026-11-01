@@ -167,6 +167,40 @@ try {
       problems.push(`${id}: startet nach anderen Spielen nicht – ${e.message.split('\n')[0]}`);
     }
   }
+
+  // Spieler rund um den Tisch: bei höchster Platzzahl auf Tablet und Desktop, auf dem Handy die Leiste.
+  const ringGames = { 'mau-mau': 5, skat: 4 };
+  for (const [id, count] of Object.entries(ringGames)) {
+    if (!ids.includes(id)) continue;
+    for (const [width, height] of [[1024, 768], [1280, 800], [390, 844]]) {
+      const context = await browser.newContext({ viewport: { width, height } });
+      const ringPage = await context.newPage();
+      await ringPage.goto(base);
+      await ringPage.evaluate(
+        ([game, seats]) => localStorage.setItem(`brett-und-blatt:einstellungen:${game}`, JSON.stringify({ seats, options: {} })),
+        [id, Array.from({ length: count }, (_, i) => (i === 0 ? { kind: 'human', name: 'Du' } : { kind: 'bot', name: '', level: 'medium' }))],
+      );
+      const m = await startGame(ringPage, id);
+      const ring = await ringPage.evaluate(() => {
+        const main = document.querySelector('main').getBoundingClientRect();
+        const center = document.querySelector('.bub-seat-ring-center')?.getBoundingClientRect();
+        const seats = [...document.querySelectorAll('.bub-seat-ring-seat')].map((el) => el.getBoundingClientRect());
+        const overlap = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+        return {
+          shown: Boolean(center),
+          collisions: seats.filter((a, i) => seats.slice(i + 1).some((b) => overlap(a, b)) || (center && overlap(a, center))).length,
+          outside: seats.filter((a) => a.left < main.left - 1 || a.right > main.right + 1 || a.top < main.top - 1 || a.bottom > main.bottom + 1).length,
+        };
+      });
+      const where = `${id} zu ${count} bei ${width}×${height}`;
+      if (ring.shown !== width >= 1024) problems.push(`${where}: Tisch ${ring.shown ? 'erscheint auf dem Handy' : 'fehlt'}`);
+      if (ring.collisions > 0) problems.push(`${where}: ${ring.collisions} Plätze überlappen`);
+      if (ring.outside > 0) problems.push(`${where}: ${ring.outside} Plätze ragen aus dem Spielfeld`);
+      if (m.pageHeight > height + 2) problems.push(`${where}: Seite rollt (${m.pageHeight} px)`);
+      if (m.footerBlocked > 0) problems.push(`${where}: Knöpfe verdeckt`);
+      await context.close();
+    }
+  }
 } finally {
   await browser.close();
   stop();

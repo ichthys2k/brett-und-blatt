@@ -373,3 +373,20 @@
     overflow-y: auto;
   }
 }
+
+/* Handy im Querformat: kleine Sitze; die verdeckten Rückseiten fallen weg, aufgedeckte Karten bleiben. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .poker-seat-box {
+    min-width: 3.4rem;
+    padding: 0.05rem 0.25rem;
+    font-size: 0.56rem;
+  }
+
+  .poker-mini-card {
+    display: none;
+  }
+
+  .poker-seat-node {
+    max-width: 5rem;
+  }
+}

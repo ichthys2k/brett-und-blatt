@@ -101,7 +101,7 @@ export function useGameMusic(gameId: string, enabled = true): void {
 
 const applyVolume = () => {
   const settings = getSoundSettings();
-  music.setVolume(settings.muted ? 0 : settings.music);
+  music.setVolume(settings.musicOff ? 0 : settings.music);
 };
 applyVolume();
 subscribeSoundSettings(applyVolume);

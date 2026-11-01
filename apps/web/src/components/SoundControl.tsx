@@ -6,18 +6,18 @@ import { setSoundSettings, sound, useSoundSettings } from '../lib/sound';
 import { Button } from './controls';
 import { MusicList, StarButton } from './MusicList';
 
-/** Ton an/aus und die beiden Lautstärken – im Spiel und in den Ton-Einstellungen. */
+/** Effekte und Musik je an/aus mit ihren Lautstärken – im Spiel und in den Ton-Einstellungen. */
 export function VolumeControls({ showClientOption }: { showClientOption?: boolean } = {}) {
   const settings = useSoundSettings();
   return (
     <>
       <label className="flex items-center justify-between gap-3 font-medium">
-        {t('sound.on')}
+        {t('sound.effectsOn')}
         <input
           type="checkbox"
           className="size-5 accent-[var(--color-accent)]"
-          checked={!settings.muted}
-          onChange={(event) => setSoundSettings({ muted: !event.target.checked })}
+          checked={!settings.effectsOff}
+          onChange={(event) => setSoundSettings({ effectsOff: !event.target.checked })}
         />
       </label>
       <label className="block space-y-1 text-sm">
@@ -28,11 +28,20 @@ export function VolumeControls({ showClientOption }: { showClientOption?: boolea
           max={100}
           step={5}
           className="w-full accent-[var(--color-accent)]"
-          disabled={settings.muted}
+          disabled={settings.effectsOff}
           value={Math.round(settings.effects * 100)}
           onChange={(event) => setSoundSettings({ effects: Number(event.target.value) / 100 })}
           onPointerUp={() => sound.play('stein-setzen')}
           onKeyUp={() => sound.play('stein-setzen')}
+        />
+      </label>
+      <label className="flex items-center justify-between gap-3 font-medium">
+        {t('sound.musicOn')}
+        <input
+          type="checkbox"
+          className="size-5 accent-[var(--color-accent)]"
+          checked={!settings.musicOff}
+          onChange={(event) => setSoundSettings({ musicOff: !event.target.checked })}
         />
       </label>
       <label className="block space-y-1 text-sm">
@@ -43,7 +52,7 @@ export function VolumeControls({ showClientOption }: { showClientOption?: boolea
           max={100}
           step={5}
           className="w-full accent-[var(--color-accent)]"
-          disabled={settings.muted}
+          disabled={settings.musicOff}
           value={Math.round(settings.music * 100)}
           onChange={(event) => setSoundSettings({ music: Number(event.target.value) / 100 })}
         />
@@ -75,10 +84,10 @@ export function SoundControl({ gameId, isClient, ownMusic }: { gameId: string; i
   const [showList, setShowList] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const musicActive = !isClient || Boolean(settings.clientMusic);
-  const silent = settings.muted || (settings.effects === 0 && (!musicActive || settings.music === 0));
+  const silent = (settings.effectsOff || settings.effects === 0) && (!musicActive || settings.musicOff || settings.music === 0);
   const playlistId = playlistFor(gameId, prefs);
   // Spiele mit eigener Musik haben keine Playlist zur Auswahl.
-  const musicOn = !ownMusic && !settings.muted && settings.music > 0 && musicTracks.length > 0 && musicActive;
+  const musicOn = !ownMusic && !settings.musicOff && settings.music > 0 && musicTracks.length > 0 && musicActive;
 
   useEffect(() => {
     if (!open) return;
@@ -99,7 +108,7 @@ export function SoundControl({ gameId, isClient, ownMusic }: { gameId: string; i
         {silent ? '🔇' : '🔊'}
       </Button>
       {open && (
-        <div className="absolute top-full right-0 z-30 mt-1 w-72 space-y-3 rounded-xl border border-line bg-surface p-3 shadow-md">
+        <div className="absolute top-full right-0 z-30 mt-1 max-h-[calc(100dvh-4rem)] w-72 space-y-3 overflow-y-auto rounded-xl side:fixed side:top-12 side:right-auto side:left-2 border border-line bg-surface p-3 shadow-md">
           <VolumeControls showClientOption={isClient} />
           {musicOn && (
             <>

@@ -527,3 +527,36 @@ button.qt-value:hover {
     animation: none;
   }
 }
+
+/* Wenig Höhe: knappe Werte; im Querformat zwei Spalten. */
+@media (max-height: 720px) {
+  .qt-others {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .qt-others > * {
+    flex: none;
+  }
+
+  .qt-values {
+    gap: 0.1rem;
+    padding: 0 0.3rem 0.25rem;
+  }
+
+  .qt-value {
+    padding: 0.1rem 0.45rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .qt-card {
+    width: min(100%, 30rem);
+  }
+
+  .qt-values {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
