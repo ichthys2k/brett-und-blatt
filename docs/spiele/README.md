@@ -4,6 +4,8 @@ Hier steht für jedes geplante Spiel ein eigener Plan. Grundlage ist das [Konzep
 
 Jeder Plan folgt derselben Gliederung: Steckbrief, Regeln, Optionen, Spielmodell, Bot, Zeitlimits, Oberfläche, Hot-Seat und Online, Tests, offene Punkte.
 
+**Offen und als Nächstes:** [Offene Pläne – Übergabe](offene-plaene.md). Geplant, noch nicht gebaut: [Marktplatz](marktplatz.md), [Marktstände und Grafschaft](umsetzungsplan-pakete-a-b-c.md), [Zeitband](zeitband.md), [Discord](discord.md); Etappen: [Abarbeitungsplan](abarbeitungsplan.md).
+
 Übergreifend: [Kernschleifen](kernschleifen.md) – Plan, wie sich die häufigsten Handlungen aller Spiele mit Animation und Klang besser anfühlen (W-013).
 
 ## Übersicht

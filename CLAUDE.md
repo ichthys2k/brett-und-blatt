@@ -6,6 +6,8 @@ Für andere Agenten (Google Antigravity/Gemini, Codex u. a.) gibt es `AGENTS.md`
 
 Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidungen, Schnittstelle, Fahrplan) und für ein bestimmtes Spiel den Plan unter [`docs/spiele/`](docs/spiele/README.md). [`CONTRIBUTING.md`](CONTRIBUTING.md) erklärt, wie ein neues Spiel angelegt wird.
 
+**Offene Pläne** (was als Nächstes kommt, mit Aufträgen und Stand): [`docs/spiele/offene-plaene.md`](docs/spiele/offene-plaene.md) – dort beginnen, wenn du die Arbeit übernimmst. Frühere Claude-Dokumente (Marktplatz, Pakete A–C, Zeitband, Discord, Abarbeitungsplan) liegen jetzt als Markdown unter `docs/spiele/`.
+
 **Wünsche und Fehler** sammelt [`PLANUNG.md`](PLANUNG.md) – die gemeinsame Liste für alle, die mitarbeiten. Lies sie zu Beginn einer Sitzung. Nimm einen Eintrag nur auf Auftrag in Arbeit (Status `in Arbeit` mit Name und Zweig), setze ihn nach getaner Arbeit auf `erledigt` mit Datum und Commit/PR und verschiebe ihn nach „Erledigt“. Neue Wünsche oder Fehler, die im Gespräch auftauchen, dort mit der Vorlage eintragen. Wer keine Schreibrechte hat, meldet über GitHub Issues (Vorlagen in `.github/ISSUE_TEMPLATE/`); neue Issues mit Verweis `#…` in `PLANUNG.md` übernehmen.
 
 ## Regeln für die Zusammenarbeit

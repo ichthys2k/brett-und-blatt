@@ -38,6 +38,7 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 
 - [`CLAUDE.md`](CLAUDE.md) – Übergabe: Regeln, Technik, aktueller Stand, nächste Schritte.
 - [`PLANUNG.md`](PLANUNG.md) – gemeinsame Liste der Wünsche (`W-…`) und Fehler (`F-…`) mit Status. Zu Beginn lesen, Einträge nur auf Auftrag in Arbeit nehmen, Erledigtes markieren und nach „Erledigt“ verschieben.
+- [`docs/spiele/offene-plaene.md`](docs/spiele/offene-plaene.md) – Übergabe: offene Pläne mit nächstem Auftrag (zuerst Marktplatz-Probe nur mit Bots, Paket C wartet auf Ja), Fehler, Konzepte.
 - [`docs/KONZEPT.md`](docs/KONZEPT.md) – Entscheidungen, Spielmodul-Schnittstelle, Muster, Fahrplan.
 - [`docs/spiele/`](docs/spiele/README.md) – ein Plan pro Spiel (Regeln, Optionen, Bot, Oberfläche, Umsetzungsstand), Übersicht im README.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) – wie ein neues Spiel angelegt wird.
