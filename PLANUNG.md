@@ -54,6 +54,7 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
+| W-055 | Narrenhof: Desktop-Tisch aufgeräumt (Narrentasche rechts in der Bankzeile, Zähler links unter der Bühne, Knöpfe Vorführen/Sortieren/Tauschen unter der Hand, Stapel als Kartenrücken neben der Hand, Stufe bei jeder Kombi); noch nicht im Dunkelmodus und auf Handy/Querformat angesehen | 2026-11-01 | b92ae12, 11cd9a4 |
 | W-044 | Drachenspiel: Ausbau zum vollwertigen Sammelkarten-Duell, von Cornelius für erledigt erklärt; [Plan](docs/spiele/drachenspiel-ausbau.md) | 2026-11-01 | 26a40d1 |
 | W-027 | Spiele für viele Spieler: Klassenspiele Schätzmeister, Mehrheitsfrage, Zeitstrahl, bis 30 Plätze; von Cornelius für erledigt erklärt; [Plan](docs/spiele/klassenspiele.md), weitere Ideen in [Spiele für viele](docs/spiele/spiele-fuer-viele.md) | 2026-11-01 | caf18dd |
 | W-049 | Narrenhof: Porträts für alle 81 Narren (KI-Bilder, 360 × 450 px, auf den großen Karten am Desktop), Werkzeuge in `scripts/grafik/` | 2026-11-01 | main |
