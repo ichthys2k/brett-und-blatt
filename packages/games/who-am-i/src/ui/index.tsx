@@ -89,7 +89,10 @@ function Players({ view, viewer, names }: { view: WhoState; viewer: SeatId | 'sp
   );
 }
 
-function AskPanel({ view, seat, legal, onMove }: { view: WhoState; seat: SeatId; legal: WhoMove[]; onMove: (move: WhoMove) => void }) {
+// Die Fragenliste steht auch, wenn jemand anderes dran ist (dann gesperrt): So sieht das
+// Spielfeld unabhängig vom Startspieler gleich aus, und man kann die nächste Frage vorbereiten.
+function AskPanel({ view, seat, legal, onMove, turnName }: { view: WhoState; seat: SeatId; legal: WhoMove[]; onMove: (move: WhoMove) => void; turnName: string }) {
+  const active = view.turn === seat && legal.length > 0;
   const pack = packOf(view);
   const open = new Set(legal.flatMap((m) => (m.type === 'ask' ? [m.question] : [])));
   const taken = new Set(view.terms.filter((t, s): t is string => t !== null && s !== seat));
@@ -97,10 +100,10 @@ function AskPanel({ view, seat, legal, onMove }: { view: WhoState; seat: SeatId;
   return (
     <div className="wbi-panel">
       <p className="wbi-call">
-        Du bist dran{view.asksThisTurn > 0 ? ` – noch ${MAX_ASKS_PER_TURN - view.asksThisTurn} Frage${MAX_ASKS_PER_TURN - view.asksThisTurn === 1 ? '' : 'n'} in diesem Zug` : ''}. Frag nach dir selbst oder rate!
+        {active ? <>Du bist dran{view.asksThisTurn > 0 ? ` – noch ${MAX_ASKS_PER_TURN - view.asksThisTurn} Frage${MAX_ASKS_PER_TURN - view.asksThisTurn === 1 ? '' : 'n'} in diesem Zug` : ''}. Frag nach dir selbst oder rate!</> : `${turnName} ist dran – die Fragen kannst du dir schon ansehen.`}
       </p>
       {view.mode === 'free' && (
-        <button type="button" className="wbi-button wbi-primary" onClick={() => onMove({ type: 'askAloud' })}>
+        <button type="button" className="wbi-button wbi-primary" disabled={!active} onClick={() => onMove({ type: 'askAloud' })}>
           🗣️ Ich stelle meine Frage laut
         </button>
       )}
@@ -115,7 +118,7 @@ function AskPanel({ view, seat, legal, onMove }: { view: WhoState; seat: SeatId;
         </div>
       </details>
       {view.mode === 'free' ? (
-        <WordInput label="Raten: Wer bin ich?" placeholder="Ich bin …" submitLabel="Raten" onSubmit={(text) => onMove({ type: 'guessText', text })} />
+        <WordInput disabled={!active} label="Raten: Wer bin ich?" placeholder="Ich bin …" submitLabel="Raten" onSubmit={(text) => onMove({ type: 'guessText', text })} />
       ) : (
         <details className="wbi-guess">
           <summary>Raten</summary>
@@ -125,7 +128,7 @@ function AskPanel({ view, seat, legal, onMove }: { view: WhoState; seat: SeatId;
                 key={term.id}
                 type="button"
                 className={`wbi-guess-term ${taken.has(term.id) ? 'is-taken' : ''} ${wrong.has(term.id) ? 'is-wrong' : ''}`}
-                disabled={taken.has(term.id) || wrong.has(term.id)}
+                disabled={!active || taken.has(term.id) || wrong.has(term.id)}
                 title={taken.has(term.id) ? 'Diesen Begriff hat schon jemand anderes' : undefined}
                 onClick={() => onMove({ type: 'guess', term: term.id })}
               >
@@ -135,7 +138,7 @@ function AskPanel({ view, seat, legal, onMove }: { view: WhoState; seat: SeatId;
           </div>
         </details>
       )}
-      <button type="button" className="wbi-button" onClick={() => onMove({ type: 'pass' })}>
+      <button type="button" className="wbi-button" disabled={!active} onClick={() => onMove({ type: 'pass' })}>
         {view.asksThisTurn > 0 ? 'Zug beenden' : 'Aussetzen'}
       </button>
     </div>
@@ -177,9 +180,9 @@ function Board({ view, viewer, legalMoves, onMove, seatNames }: BoardProps<WhoSt
   return (
     <div className="wbi-root">
       <Players view={view} viewer={viewer} names={names} />
-      {myTurn && typeof viewer === 'number' && <AskPanel view={view} seat={viewer} legal={legalMoves} onMove={onMove} />}
+      {view.phase === 'ask' && typeof viewer === 'number' && <AskPanel view={view} seat={viewer} legal={myTurn ? legalMoves : []} onMove={onMove} turnName={names[view.turn]!} />}
       {view.phase === 'answer' && view.pending && <AnswerPanel view={view} names={names} legal={legalMoves} onMove={onMove} />}
-      {view.phase === 'ask' && !myTurn && <p className="wbi-call">{names[view.turn]} ist dran.</p>}
+      {view.phase === 'ask' && typeof viewer !== 'number' && <p className="wbi-call">{names[view.turn]} ist dran.</p>}
       {view.phase === 'done' && <p className="wbi-call">Alle Begriffe sind aufgedeckt.</p>}
       <div className="wbi-histories">
         {typeof viewer === 'number' && <History view={view} entries={view.history[viewer] ?? []} title="Deine Fragen" />}
