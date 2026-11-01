@@ -84,7 +84,9 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
         setGame(loaded);
         setDraft(restored);
         if (params?.autostart === '1') {
-          storage.saveSetup(loaded.info.id, withoutHidden(loaded.module, restored));
+          // Ein vorgegebener Solo-Kampf ändert nicht, was hier fürs nächste Mal gespeichert ist.
+          if (params.gegner === 'bot') restored.seats = [{ kind: 'human', name: restored.seats[0]?.name ?? '', level: 'medium' }, { kind: 'bot', name: '', level: 'medium' }];
+          else storage.saveSetup(loaded.info.id, withoutHidden(loaded.module, restored));
           await startGame({
             gameId: loaded.info.id,
             seats: toSeatConfigs(restored.seats),

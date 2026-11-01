@@ -53,6 +53,24 @@ describe('Deck-Regeln', () => {
     }
   });
 
+  it('jede baubare Karte übersteht den Code, auch Kennungen mit Großbuchstaben', () => {
+    for (const house of DECK_THEME_IDS) {
+      const cards = buildableCards(house);
+      for (let at = 0; at < cards.length; at += 15) {
+        const ids = cards.slice(at, at + 15).map((def) => def.id);
+        const deck = fillDeck(house, ids, pick(Rng.fromSeed(`alle${at}`)));
+        expect(parseDeckCode(encodeDeck(house, deck)), `${house} ${at}`).not.toBeNull();
+      }
+    }
+  });
+
+  it('auch das längste denkbare Deck passt in die Grenze', () => {
+    for (const house of DECK_THEME_IDS) {
+      const longest = buildableCards(house).map((def) => def.id).sort((a, b) => b.length - a.length).slice(0, 30);
+      expect(encodeDeck(house, longest).length, house).toBeLessThanOrEqual(DECK_CODE_MAX);
+    }
+  });
+
   it('lehnt kaputte oder unerlaubte Codes ab', () => {
     for (const bad of ['', 'forest', 'mond:c1*30', 'forest:c1*30', 'forest:c7*0', 'forest:<script>', 'forest:c7*99', `forest:${'c7,'.repeat(400)}c7`]) expect(parseDeckCode(bad), bad).toBeNull();
   });

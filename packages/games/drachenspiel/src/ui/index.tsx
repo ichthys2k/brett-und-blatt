@@ -2,6 +2,7 @@ import type { SeatId } from '@brett-und-blatt/engine';
 import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
 import type { DrachenspielMove, DrachenspielView } from '../types';
 import { SetupExtra } from './DeckBuilder';
+import { endAction, markCustomDeck, prepareOptions } from './SoloHub';
 import { DeckSelection, MulliganPhase } from './phases';
 import { PlayBoard } from './PlayBoard';
 import './styles.css';
@@ -11,6 +12,7 @@ const LABELS = ['Blau', 'Rot'];
 function Board(props: BoardProps<DrachenspielView, DrachenspielMove>) {
   const { view, viewer, onMove } = props;
   const me = view.players[typeof viewer === 'number' ? viewer : 0];
+  if (me.customDeck) markCustomDeck(view.options.playId);
   if (view.phase === 'deckSelection') return <DeckSelection view={view} me={me} onMove={onMove} timed={Boolean(props.clock?.running)} />;
   if (view.phase === 'mulligan') return <MulliganPhase me={me} onMove={onMove} />;
   return <PlayBoard {...props} />;
@@ -24,6 +26,8 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
   Board,
   SeatSymbol,
   SetupExtra,
+  prepareOptions,
+  endAction,
   sounds: {
     cardDrawn: 'drachen-karte-ziehen',
     cardPlayed: 'drachen-karte-legen',

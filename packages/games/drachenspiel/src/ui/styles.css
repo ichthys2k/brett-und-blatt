@@ -651,6 +651,94 @@
   align-items: flex-start;
 }
 
+.ds-hand[data-frame='holz'] .ds-card {
+  border-color: #a0703c;
+}
+
+.ds-hand[data-frame='silber'] .ds-card {
+  border-color: #c0c8d0;
+}
+
+.ds-hand[data-frame='gold'] .ds-card {
+  border-color: #e1a100;
+}
+
+/* Solo */
+.ds-tip {
+  position: absolute;
+  z-index: 40;
+  left: 8px;
+  right: 8px;
+  top: 40%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  color: #2d3436;
+  background: #fff8dc;
+  border: 2px solid #e1a100;
+  border-radius: 10px;
+}
+
+.ds-tip-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.ds-tip button {
+  padding: 4px 10px;
+}
+
+.ds-run-map {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.ds-run-stop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 2px;
+  font-size: 0.7rem;
+  text-align: center;
+  border: 2px solid var(--color-border, #dfe6e9);
+  border-radius: 10px;
+}
+
+.ds-run-stop[data-state='now'] {
+  border-color: #e1a100;
+}
+
+.ds-run-stop[data-state='done'] {
+  opacity: 0.55;
+}
+
+.ds-run-emoji {
+  font-size: 1.5rem;
+}
+
+.ds-progress {
+  height: 6px;
+  background: var(--color-border, #dfe6e9);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ds-progress-fill {
+  height: 100%;
+  background: #00b894;
+}
+
+.ds-draft-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* Boards */
 .ds-board-container {
   flex: 1;

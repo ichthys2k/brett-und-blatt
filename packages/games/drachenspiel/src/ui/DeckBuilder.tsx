@@ -10,6 +10,7 @@ import type { CardDefinition, DeckThemeId } from '../types';
 import { decksBlock, deleteDeck, saveDeck, useDecks, type SavedDeck } from './deckStore';
 import { CardFace, CardZoom, type ZoomItem } from './parts';
 import { getCardFullTitle } from './traits';
+import { SoloHub } from './SoloHub';
 import { useLongPress } from './useLongPress';
 
 const LOOK = [
@@ -393,6 +394,7 @@ export function DeckManager({ onPlay, onClose }: { onPlay?: (code: string) => vo
 /** Einrichtung: Decks verwalten, ohne eine Partie zu beginnen; Deck-Code für „Vorgegebenes Deck“. */
 export function SetupExtra({ options, setOption }: { options: Record<string, string>; seats: number; setOption: (id: string, value: string) => void }) {
   const [open, setOpen] = useState(() => /[?&]sicherung=/.test(typeof window === 'undefined' ? '' : window.location.hash));
+  const [solo, setSolo] = useState(() => /[?&]solo=1/.test(typeof window === 'undefined' ? '' : window.location.hash));
   const code = options.deckCode && options.deckCode !== 'none' ? options.deckCode : '';
   const invalid = code !== '' && !parseDeckCode(code);
   const decks = useDecks();
@@ -419,6 +421,14 @@ export function SetupExtra({ options, setOption }: { options: Record<string, str
             </div>
           )}
         </>
+      )}
+      <button type="button" className="ds-btn ds-btn-endturn" onClick={() => setSolo(true)}>
+        🗺️ Solo: Übungsweg, Wanderschaft, Turnier
+      </button>
+      {solo && (
+        <div className="ds-builder-overlay" role="dialog" aria-modal="true" aria-label="Solo">
+          <SoloHub onClose={() => setSolo(false)} />
+        </div>
       )}
       <button type="button" className="ds-btn" onClick={() => setOpen(true)}>
         🃏 Meine Decks ({decks.length})

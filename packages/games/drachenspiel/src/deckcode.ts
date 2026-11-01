@@ -10,7 +10,7 @@ export const DECK_SIZE = 30;
 export const MAX_COPIES = 2;
 /** Ein voller Code ist kürzer, mehr nimmt niemand an. */
 export const DECK_CODE_MAX = 600;
-export const DECK_CODE_PATTERN = '[a-z]+:[a-z0-9_*,]+';
+export const DECK_CODE_PATTERN = '[a-z]+:[a-zA-Z0-9_*,]+';
 
 export interface BuiltDeck {
   house: DeckThemeId;

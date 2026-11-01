@@ -1,5 +1,6 @@
 import type { BotContext, BotDefinition } from '@brett-und-blatt/engine';
 import { CARDS_DB } from './cards';
+import { scenarioFrom } from './modes/scenarios';
 import { HARD_PLAN, MEDIUM_PLAN, planTurn } from './planner';
 import { legalMoves } from './rules';
 import type { DrachenspielMove, DrachenspielState, DrachenspielView } from './types';
@@ -24,7 +25,10 @@ export const botDrachenhueter: BotDefinition<
     }
     return 350;
   },
-  chooseMove(ctx: BotContext<DrachenspielState, DrachenspielMove, DrachenspielView>): DrachenspielMove {
+  chooseMove(ctxIn: BotContext<DrachenspielState, DrachenspielMove, DrachenspielView>): DrachenspielMove {
+    // Im Solo-Kampf bestimmt der Gegner seine Stärke selbst; der Tipp-Knopf für Platz 0 rechnet weiter wie gewohnt.
+    const forced = ctxIn.seat === 1 ? scenarioFrom(ctxIn.view.options)?.level : undefined;
+    const ctx = forced ? { ...ctxIn, level: forced } : ctxIn;
     // If in deck selection or mulligan, handle straightforwardly
     if (ctx.view.phase === 'deckSelection') {
       const themes = ['forest', 'sea', 'farm', 'wild', 'bugs'] as const;
