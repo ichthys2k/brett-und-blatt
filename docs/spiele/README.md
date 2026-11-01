@@ -57,6 +57,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Präsident](praesident.md) („Arschloch“) | 3–8 | verdeckt, Kartentausch | Spielkarten, Handfächer | S | M | M | ✅ 29.10. |
 | [Tiefflug](tiefflug.md) (Skyjo-artig, mit Junior) | 2–8 | verdeckt (für alle) | Zahlenkarten, Raster 3×4, Serienwertung | S | M | M | ✅ 29.10. |
 | [Elf zuerst!](elf-zuerst.md) (Elfer raus) | 2–6 | verdeckt | Zahlenkarten 1–20, Auslage 4×20, Handfächer | S | M | S | Planungsliste Etappe 7 |
+| [Sternhalma](sternhalma.md) | 2–6 | offen | SVG-Sternbrett, Sprungketten | S | M | M | Planungsliste Etappe 7 |
 
 ## Gemeinsame Bausteine
 
