@@ -9,6 +9,7 @@ const ACTIVE_KEY = 'brett-und-blatt:laufende-partie';
 const setupKey = (gameId: string) => `brett-und-blatt:einstellungen:${gameId}`;
 const PROFILE_KEY = 'brett-und-blatt:profil';
 const DEVICE_KEY = 'brett-und-blatt:geraet';
+const PLAYER_CODE_KEY = 'brett-und-blatt:spielercode';
 
 export interface Profile {
   name: string;
@@ -69,4 +70,21 @@ export const storage = {
     write(DEVICE_KEY, token);
     return token;
   },
+  /** Übernimmt die Kennung eines Spielerausweises von einem anderen Gerät. */
+  setDeviceToken: (token: string) => {
+    fallbackDevice = token;
+    write(DEVICE_KEY, token);
+  },
+  /** Abmelden auf einem geteilten Gerät: Kennung, Spitzname und Spielercode vergessen. */
+  forgetPlayer: () => {
+    fallbackDevice = null;
+    remove(DEVICE_KEY);
+    remove(PROFILE_KEY);
+    remove(PLAYER_CODE_KEY);
+  },
+  loadPlayerCode: () => {
+    const code = read<string>(PLAYER_CODE_KEY);
+    return typeof code === 'string' ? code : null;
+  },
+  savePlayerCode: (code: string | null) => (code ? write(PLAYER_CODE_KEY, code) : remove(PLAYER_CODE_KEY)),
 };

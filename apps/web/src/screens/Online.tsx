@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { Button, Section } from '../components/controls';
 import { EmojiKeypad, ProfileForm } from '../components/OnlineParts';
 import { OpenRooms } from '../components/OpenRooms';
+import { PlayerPassPanel } from '../components/PlayerPassPanel';
 import { t } from '../i18n';
 import { GAME_SERVER, createRoom, roomExists, useOpenRooms } from '../lib/online';
+import { passChanged } from '../lib/playerPass';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 
@@ -65,6 +67,7 @@ export function Online() {
             submitLabel="OK"
             onSave={(next) => {
               storage.saveProfile(next);
+              passChanged();
               setProfile(next);
               setEditing(false);
             }}
@@ -120,6 +123,16 @@ export function Online() {
             </form>
           </Section>
         </>
+      )}
+
+      {GAME_SERVER && (
+        <PlayerPassPanel
+          onChange={() => {
+            const next = storage.loadProfile();
+            setProfile(next);
+            setEditing(next === null);
+          }}
+        />
       )}
 
       {error && (

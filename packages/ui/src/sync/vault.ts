@@ -28,8 +28,9 @@ export interface SyncBlock<T> {
 }
 
 /** Alle Blöcke der Plattform: Sie alle belegen einen Code und werden beim Abgleich mit angefasst. */
-const KNOWN_SALTS = [NARRENHOF_SALT, 'brett-und-blatt/drachenspiel-sicherung/v1'];
+const KNOWN_SALTS = [NARRENHOF_SALT, 'brett-und-blatt/drachenspiel-sicherung/v1', 'brett-und-blatt/spieler-sicherung/v1'];
 export const DRACHENSPIEL_SALT = KNOWN_SALTS[1]!;
+export const PLAYER_SALT = KNOWN_SALTS[2]!;
 
 const KEY = 'brett-und-blatt:farbensortierer:sicherung';
 
@@ -94,6 +95,11 @@ export function useSyncState(): SyncState {
   );
 }
 
+/** Der Sicherungscode dieses Geräts, außerhalb von React. */
+export function currentSyncCode(): string | null {
+  return state.code;
+}
+
 /** Gibt es einen Spieleserver? Ohne ihn bleibt nur der Sicherungstext. */
 export function syncAvailable(block: { serverUrl: Server }): boolean {
   return block.serverUrl() !== null;
@@ -122,7 +128,7 @@ async function request(serverUrl: Server, id: string, init?: RequestInit): Promi
   }
 }
 
-async function fetchRemote(serverUrl: Server, id: string): Promise<Remote | null> {
+export async function fetchRemote(serverUrl: Server, id: string): Promise<Remote | null> {
   const res = await request(serverUrl, id);
   if (res.status === 404) return null;
   if (!res.ok) throw new SyncError(OFFLINE);
@@ -130,7 +136,7 @@ async function fetchRemote(serverUrl: Server, id: string): Promise<Remote | null
 }
 
 /** Schreibt; true bei Erfolg, false wenn inzwischen ein anderes Gerät geschrieben hat. */
-async function putRemote(serverUrl: Server, id: string, data: string, rev: number): Promise<boolean> {
+export async function putRemote(serverUrl: Server, id: string, data: string, rev: number): Promise<boolean> {
   const res = await request(serverUrl, id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data, rev }) });
   if (res.status === 409) return false;
   if (!res.ok) throw new SyncError(OFFLINE);

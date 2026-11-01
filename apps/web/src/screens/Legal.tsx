@@ -116,6 +116,11 @@ export function Datenschutz() {
         wurde. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>Spielerausweis:</strong> Wenn du einen Spielercode anlegst oder den Ausweis in deine Sicherung legst, verschlüsselt dein Browser deine
+        Geräte-Kennung, deinen Spitznamen und dein Emoji-Bild und legt sie auf dieselbe Weise und mit derselben Löschfrist auf dem Spieleserver ab. So
+        erkennt dich ein Raum auch auf einem anderen Gerät wieder. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+      <p>
         Beim Verbindungsaufbau verarbeitet Cloudflare außerdem technisch notwendige Daten wie deine IP-Adresse, Datum und Uhrzeit sowie Angaben zum
         Browser, um die Verbindung herzustellen und den Dienst vor Angriffen zu schützen (Art. 6 Abs. 1 lit. f DSGVO). Dabei können Daten in die USA
         übermittelt werden. Cloudflare ist nach dem EU-US Data Privacy Framework zertifiziert. Wie lange Cloudflare diese Daten speichert, bestimmt

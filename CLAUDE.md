@@ -155,6 +155,8 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 
 **Marktstände** (`packages/games/market-stalls`, W-039, 1.11.2026, Planungsliste Paket C): eigene Fassung statt 6 nimmt!, 2–10 Spieler, gleichzeitige Wahl, vier Stände, die fünfte Karte räumt ab; nur die stärkste eigene Ware zählt plus, drei Markttage. Zahlen aus der Bot-Probe (`scripts/marktstaende-probe.mjs`, Bericht `docs/spiele/marktstaende-probe.md`). Bot „Marktschreier“ in drei Stufen, online registriert, Playlist „Kartentisch“. Plan in `docs/spiele/marktstaende.md`.
 
+**Spielerausweis** (W-052, 1.11.2026): macht die Raum-Kennung (`hello.token`) auf andere Geräte übertragbar, ohne Konto. Spielercode aus vier Wörtern, QR-Link `#/online?ausweis=…`, Sicherungscode und Passkey über `PLAYER_SALT`; Logik in `packages/ui/src/sync/player.ts`, Oberfläche auf `#/online`. Turniere (W-053) sind geplant, nicht gebaut: `docs/spiele/turnier.md`.
+
 **Wölfe im Schafspelz** (`packages/games/wolves-sheep`, W-021, veröffentlicht 31.10.2026): Rollenspiel nach den Regeln des Grundspiels von „Die Werwölfe von Düsterwald“ mit christlichem Thema, 8–18 Spieler plus optionaler Erzähler. Einsteigermischung, dazu einzeln zuschaltbar Hirte, Hütehund, Bandstifter, Neugieriges Lamm, Zugelaufenes Schaf, Leithammel. Nachts handeln alle Lebenden, damit `current` keine Rolle verrät; Ketten aus Ausscheiden, Schuss und Glocke laufen über eine Warteschlange. Neu in der Plattform: `GameInfo.minHumans`, `GameInfo.noUndo`, `GameUi.concealTurns`. Live-Test durch Cornelius am 1.11.2026 für gut befunden. Plan in `docs/spiele/woelfe-im-schafspelz.md`.
 
 **Weitere Spiele (27./28.10.2026):**
