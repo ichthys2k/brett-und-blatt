@@ -3,6 +3,7 @@ import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { drachenspiel, gameModule } from '../src';
 import { ALL_CARD_IDS, CARDS_DB } from '../src/cards';
+import { DECK_THEME_IDS, themeCardIds } from '../src/decks';
 import { HOUSE_POWERS } from '../src/powers';
 import type { DrachenspielState, Minion } from '../src/types';
 
@@ -747,5 +748,184 @@ describe('Held und Grundregeln', () => {
     }
     expect(HOUSE_POWERS.sea.text).toBe('Ruft zufällig eine Muschel (0/2 mit Beschützer), eine Garnele (1/1 mit Flink) oder ein Seepferdchen (1/2) herbei.');
     for (const id of ['token_chick', 'token_mussel', 'token_shrimp', 'token_seahorse']) expect(ALL_CARD_IDS).not.toContain(id);
+  });
+});
+
+describe('Dauerhafte Stichwörter', () => {
+  function fresh() {
+    const s = drachenspiel.setup(2, { deckSelection: 'forest', mulligan: 'off' }, 'stichwort');
+    const me = s.activeSeat as 0 | 1;
+    const opp = (1 - me) as 0 | 1;
+    s.players[me].mana = 10;
+    s.players[me].maxMana = 10;
+    s.players[opp].armor = 0;
+    return { s, me, opp };
+  }
+  const beast = (id: string, attack: number, health: number, extra: Partial<Minion> = {}) => ({ ...createTestMinion({ id, cardId: 'c43', attack, health }), ...extra });
+  const attack = (s: DrachenspielState, seat: 0 | 1, attackerId: string, target: { kind: 'hero' } | { kind: 'minion'; id: string }) => drachenspiel.applyMove(s, seat, { type: 'attack', attackerId, target }).state;
+  const play = (s: DrachenspielState, seat: 0 | 1, defId: string) => {
+    s.players[seat].hand = [{ uid: 'k', defId }];
+    return drachenspiel.applyMove(s, seat, { type: 'playCard', handIndex: 0 }).state;
+  };
+
+  it('Sprinter greift im ersten Zug nur Tiere an, danach auch den Helden', () => {
+    const { s, me, opp } = fresh();
+    s.players[opp].board = [beast('m_x', 1, 9)];
+    const next = play(s, me, 'c6');
+    const rat = next.players[me].board[0]!;
+    const moves = drachenspiel.legalMoves(next, me).filter((m) => m.type === 'attack' && m.attackerId === rat.id);
+    expect(moves).toEqual([{ type: 'attack', attackerId: rat.id, target: { kind: 'minion', id: 'm_x' } }]);
+    expect(() => attack(next, me, rat.id, { kind: 'hero' })).toThrow();
+    const later = drachenspiel.applyMove(drachenspiel.applyMove(next, me, { type: 'endTurn' }).state, opp, { type: 'endTurn' }).state;
+    expect(drachenspiel.legalMoves(later, me)).toContainEqual({ type: 'attack', attackerId: rat.id, target: { kind: 'hero' } });
+  });
+
+  it('Doppelschlag greift zweimal an, nicht dreimal', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].board = [beast('m_d', 2, 5, { doubleStrike: true })];
+    let next = attack(s, me, 'm_d', { kind: 'hero' });
+    next = attack(next, me, 'm_d', { kind: 'hero' });
+    expect(next.players[opp].health).toBe(26);
+    expect(() => attack(next, me, 'm_d', { kind: 'hero' })).toThrow();
+  });
+
+  it('Lebenskraft heilt um den zugefügten Schaden, auch beim Gegenschlag, nicht an der Schutzblase', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].health = 20;
+    s.players[me].board = [beast('m_l', 3, 9, { lifesteal: true })];
+    expect(attack(s, me, 'm_l', { kind: 'hero' }).players[me].health).toBe(23);
+    s.players[opp].board = [beast('m_b', 1, 5, { bubble: true })];
+    expect(attack(s, me, 'm_l', { kind: 'minion', id: 'm_b' }).players[me].health).toBe(20);
+    s.players[opp].board = [beast('m_a', 3, 9)];
+    s.players[me].board = [beast('m_o', 1, 9), beast('m_l', 2, 9, { lifesteal: true, canAttack: false })];
+    s.players[me].board[0]!.taunt = true;
+    const turn = drachenspiel.applyMove(s, me, { type: 'endTurn' }).state;
+    turn.players[me].board = [beast('m_l', 2, 9, { lifesteal: true })];
+    expect(attack(turn, opp, 'm_a', { kind: 'minion', id: 'm_l' }).players[me].health).toBe(22);
+  });
+
+  it('Kältestarre: Der Getroffene setzt seinen nächsten Angriff aus und taut dann auf', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].board = [beast('m_f', 1, 9, { frostbite: true })];
+    s.players[opp].board = [beast('m_z', 2, 9)];
+    let next = attack(s, me, 'm_f', { kind: 'minion', id: 'm_z' });
+    expect(next.players[opp].board[0]!.frozen).toBe(true);
+    next = drachenspiel.applyMove(next, me, { type: 'endTurn' }).state;
+    expect(drachenspiel.legalMoves(next, opp).some((m) => m.type === 'attack')).toBe(false);
+    next = drachenspiel.applyMove(next, opp, { type: 'endTurn' }).state;
+    expect(next.players[opp].board[0]!.frozen).toBeUndefined();
+    next = drachenspiel.applyMove(next, me, { type: 'endTurn' }).state;
+    expect(drachenspiel.legalMoves(next, opp).some((m) => m.type === 'attack')).toBe(true);
+  });
+
+  it('wer nach seinem Angriff erstarrt, setzt den folgenden Zug aus', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].board = [beast('m_a', 1, 9)];
+    s.players[opp].board = [beast('m_f', 1, 9, { frostbite: true })];
+    let next = attack(s, me, 'm_a', { kind: 'minion', id: 'm_f' });
+    expect(next.players[me].board[0]!.frozen).toBe(true);
+    next = drachenspiel.applyMove(next, me, { type: 'endTurn' }).state;
+    next = drachenspiel.applyMove(next, opp, { type: 'endTurn' }).state;
+    expect(drachenspiel.legalMoves(next, me).some((m) => m.type === 'attack')).toBe(false);
+  });
+
+  it('Zweite Chance: einmal zurück mit 1 Leben, nach dem Abschied, beim zweiten Mal endgültig', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].board = [beast('m_o', 9, 9)];
+    s.players[opp].board = [{ ...createTestMinion({ id: 'm_c', cardId: 'c28', attack: 3, health: 2 }), reborn: true }];
+    let next = attack(s, me, 'm_o', { kind: 'minion', id: 'm_c' });
+    const back = next.players[opp].board[0]!;
+    expect(back).toMatchObject({ cardId: 'c28', health: 1, maxHealth: 2 });
+    expect(back.reborn).toBeUndefined();
+    next.players[me].board[0]!.hasAttacked = false;
+    next.players[me].board[0]!.canAttack = true;
+    next = attack(next, me, 'm_o', { kind: 'minion', id: back.id });
+    expect(next.players[opp].board).toHaveLength(0);
+  });
+
+  it('Naturkraft verstärkt Zauber, nicht Auftritte', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].board = [beast('m_n', 1, 1, { spellPower: 1 })];
+    s.players[me].hand = [{ uid: 'z', defId: 's_lightning' }];
+    const hit = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0, target: { kind: 'hero' } }).state;
+    expect(hit.players[opp].health).toBe(26);
+    s.players[opp].board = [beast('m_t', 1, 9)];
+    expect(play(s, me, 'c54').players[opp].board[0]!.health).toBe(7);
+  });
+
+  it('Eingerollt nimmt keinen Schaden und endet mit dem eigenen nächsten Zug', () => {
+    const { s, me, opp } = fresh();
+    const next = play(s, me, 'c10');
+    const snail = next.players[me].board[0]!;
+    expect(snail.immune).toBe(true);
+    const turn = drachenspiel.applyMove(next, me, { type: 'endTurn' }).state;
+    turn.players[opp].board = [beast('m_a', 5, 9)];
+    const hit = attack(turn, opp, 'm_a', { kind: 'minion', id: snail.id });
+    expect(hit.players[me].board[0]!.health).toBe(2);
+    expect(drachenspiel.applyMove(hit, opp, { type: 'endTurn' }).state.players[me].board[0]!.immune).toBeUndefined();
+  });
+
+  it('Scheu ist kein Zauberziel, Flächenzauber treffen es trotzdem', () => {
+    const { s, me, opp } = fresh();
+    s.players[opp].board = [beast('m_s', 1, 9, { elusive: true })];
+    s.players[me].hand = [{ uid: 'z', defId: 's_lightning' }, { uid: 'w', defId: 's_whirlwind' }];
+    expect(() => drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0, target: { kind: 'minion', id: 'm_s' } })).toThrow();
+    expect(drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 1 }).state.players[opp].board[0]!.health).toBe(7);
+  });
+
+  it('Beruhigen nimmt Fähigkeiten und Verstärkungen, Abschied und Zweite Chance entfallen', () => {
+    const { s, me, opp } = fresh();
+    s.players[opp].board = [{ ...createTestMinion({ id: 'm_r', cardId: 'c51', attack: 3, health: 3, taunt: true }), baseAttack: 1, baseHealth: 1, reborn: true, damage: 2, enchantments: [{ id: 'e', source: 'x', attack: 2, health: 4 }], maxHealth: 5, health: 3 }];
+    s.players[me].hand = [{ uid: 'q', defId: 's_quiet' }];
+    const quiet = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0, target: { kind: 'minion', id: 'm_r' } }).state;
+    const m = quiet.players[opp].board[0]!;
+    expect(m).toMatchObject({ attack: 1, maxHealth: 1, health: 1, taunt: false, silenced: true, enchantments: [] });
+    expect(m.reborn).toBeUndefined();
+    quiet.players[me].board = [beast('m_o', 5, 5)];
+    expect(attack(quiet, me, 'm_o', { kind: 'minion', id: 'm_r' }).players[opp].board).toHaveLength(0);
+  });
+
+  it('das Schaf beruhigt alle anderen Tiere, sich selbst nicht', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].board = [beast('m_a', 1, 1, { taunt: true })];
+    s.players[opp].board = [beast('m_b', 1, 1, { taunt: true })];
+    const next = play(s, me, 'c37');
+    expect(next.players[me].board.map((m) => Boolean(m.silenced))).toEqual([true, false]);
+    expect(next.players[opp].board[0]!.taunt).toBe(false);
+  });
+
+  it('Tauschen kostet 1 Mana, die Karte geht ins Deck, eine neue kommt', () => {
+    const { s, me } = fresh();
+    s.players[me].hand = [{ uid: 'k', defId: 'c36' }, { uid: 'l', defId: 'c43' }];
+    const size = s.players[me].deck.length;
+    expect(drachenspiel.legalMoves(s, me)).toContainEqual({ type: 'tradeCard', handIndex: 0 });
+    expect(drachenspiel.legalMoves(s, me)).not.toContainEqual({ type: 'tradeCard', handIndex: 1 });
+    expect(() => drachenspiel.applyMove(s, me, { type: 'tradeCard', handIndex: 1 })).toThrow();
+    const next = drachenspiel.applyMove(s, me, { type: 'tradeCard', handIndex: 0 }).state;
+    expect(next.players[me].mana).toBe(9);
+    expect(next.players[me].hand).toHaveLength(2);
+    expect(next.players[me].deck).toHaveLength(size);
+    s.players[me].mana = 0;
+    expect(drachenspiel.legalMoves(s, me).some((m) => m.type === 'tradeCard')).toBe(false);
+  });
+
+  it('flüchtige Karten verschwinden am Zugende und der Gegner erfährt nicht, welche', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].hand = [{ uid: 'a', defId: 'c34' }, { uid: 'b', defId: 'c43' }];
+    const next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 }).state;
+    const given = next.players[me].hand.find((c) => c.defId === 's_lightning')!;
+    expect(given.fleeting).toBe(true);
+    const res = drachenspiel.applyMove(next, me, { type: 'endTurn' });
+    expect(res.state.players[me].hand.map((c) => c.uid)).toEqual(['b']);
+    const faded = res.events.find((e) => e.type === 'cardFaded')!;
+    expect(drachenspiel.eventView!(faded, opp)).toMatchObject({ card: undefined });
+  });
+
+  it('kein Haus hat mehr als 30 % textlose Tiere', () => {
+    for (const theme of DECK_THEME_IDS) {
+      const animals = [...new Set(themeCardIds(theme, true))].map((id) => CARDS_DB[id]!).filter((def) => !def.isSpell);
+      const plain = animals.filter((def) => !def.keywords?.length && !def.triggers?.length && !def.spellPower);
+      expect(plain.length / animals.length, theme).toBeLessThanOrEqual(0.3);
+    }
   });
 });

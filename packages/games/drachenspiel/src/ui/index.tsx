@@ -33,6 +33,8 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
     bubblePopped: 'stein-heraus',
     spellCast: 'stapel-fertig',
     mulliganDone: 'mischen',
+    cardTraded: 'mischen',
+    damageBlocked: 'stein-heraus',
   },
   phrases: ['hello', 'thanks', 'wellPlayed', 'wow', 'oops', 'grr'],
   seatLabel: (seat) => LABELS[seat] ?? `Platz ${seat + 1}`,

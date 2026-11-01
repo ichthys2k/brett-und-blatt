@@ -38,7 +38,7 @@ export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
   },
   sea: {
     id: 'sea',
-    spellSwap: { out: ['c19', 'c11', 'c46'], in: ['s_soapBubble', 's_flood', 's_summerRain'] },
+    spellSwap: { out: ['c19', 'c11', 'c46'], in: ['s_soapBubble', 's_flood', 's_frost'] },
     name: 'Meer',
     emoji: '🌊',
     description: 'Zähigkeit, Schutzblasen und Gegenangriffe.',
@@ -63,7 +63,7 @@ export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
   },
   farm: {
     id: 'farm',
-    spellSwap: { out: ['c3', 'c6', 'c36'], in: ['s_summerRain', 's_honey', 's_growth'] },
+    spellSwap: { out: ['c3', 'c6', 'c36'], in: ['s_quiet', 's_honey', 's_growth'] },
     name: 'Bauernhof',
     emoji: '🚜',
     description: 'Gemeinsam stark: Schnelle Tiere und gegenseitige Verstärkung.',

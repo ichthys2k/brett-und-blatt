@@ -11,7 +11,7 @@ import {
   type TimePresets,
 } from '@brett-und-blatt/engine';
 import { ALL_CARD_IDS, ALL_SPELL_IDS, CARDS_DB, STAR_CARD } from './cards';
-import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueuePlayed, isOverTurnLimit, refreshStats, settle } from './core/effects';
+import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, canStrike, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueuePlayed, isOverTurnLimit, refreshStats, settle, strike } from './core/effects';
 import { DECK_THEMES, DECK_THEME_IDS, themeCardIds } from './decks';
 import { HOUSE_POWERS, powerIsUsable } from './powers';
 import { meta } from './meta';
@@ -226,6 +226,10 @@ function startTurn(state: DrachenspielState, seat: SeatId, events: GameEvent[]):
   for (const minion of player.board) {
     minion.canAttack = true;
     minion.hasAttacked = false;
+    delete minion.attacksMade;
+    delete minion.justPlayed;
+    // Eingerollt hält bis zum eigenen nächsten Zug.
+    delete minion.immune;
   }
 
   events.push({
@@ -313,8 +317,16 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
     const enemy = state.players[1 - actor];
     const targets = attackTargets(enemy);
     for (const minion of player.board) {
-      if (minion.canAttack && !minion.hasAttacked && minion.attack > 0) {
-        for (const target of targets) moves.push({ type: 'attack', attackerId: minion.id, target });
+      if (canStrike(minion)) {
+        for (const target of targets) {
+          if (target.kind === 'hero' && heroOutOfReach(minion)) continue;
+          moves.push({ type: 'attack', attackerId: minion.id, target });
+        }
+      }
+    }
+    for (let i = 0; i < player.hand.length; i++) {
+      if (player.mana >= TRADE_COST && player.hand[i]!.fleeting !== true && CARDS_DB[player.hand[i]!.defId]?.keywords?.includes('tradeable')) {
+        moves.push({ type: 'tradeCard', handIndex: i });
       }
     }
     if (heroAttackValue(player) > 0 && !player.heroAttacked) {
@@ -406,6 +418,7 @@ export function applyMove(
   }
 
   if (move.type === 'endTurn') {
+    endOwnTurn(player, events);
     startTurn(next, (1 - next.activeSeat) as SeatId, events);
     settle(next, events);
     return { state: next, events };
@@ -440,6 +453,21 @@ export function applyMove(
     player.board.push(minion);
     events.push({ type: 'cardPlayed', seat: actor, card, minion });
     enqueuePlayed(next, minion, actor);
+    settle(next, events);
+    return { state: next, events };
+  }
+
+  if (move.type === 'tradeCard') {
+    const card = player.hand[move.handIndex];
+    if (!card || card.fleeting || !CARDS_DB[card.defId]?.keywords?.includes('tradeable')) throw new Error('Karte lässt sich nicht tauschen');
+    if (player.mana < TRADE_COST) throw new Error('Nicht genug Mana');
+    player.mana -= TRADE_COST;
+    player.hand.splice(move.handIndex, 1);
+    const rng = partyRng(next);
+    player.deck = rng.shuffle([...player.deck, card]);
+    next.rng = rng.state;
+    events.push({ type: 'cardTraded', seat: actor });
+    drawCard(player, events);
     settle(next, events);
     return { state: next, events };
   }
@@ -490,8 +518,11 @@ export function applyMove(
   if (move.type === 'attack') {
     const attacker = player.board.find((m) => m.id === move.attackerId);
     if (!attacker) throw new Error('Angreifer existiert nicht');
-    if (!attacker.canAttack || attacker.hasAttacked || attacker.attack <= 0) {
+    if (!canStrike(attacker)) {
       throw new Error('Tier kann nicht angreifen');
+    }
+    if (move.target.kind === 'hero' && heroOutOfReach(attacker)) {
+      throw new Error('Ein Sprinter greift im ersten Zug nur Tiere an');
     }
 
     const target = move.target;
@@ -505,21 +536,20 @@ export function applyMove(
     }
 
     attacker.stealth = false;
-    attacker.hasAttacked = true;
+    attacker.attacksMade = (attacker.attacksMade ?? 0) + 1;
+    attacker.hasAttacked = attacker.attacksMade >= (attacker.doubleStrike ? 2 : 1);
     events.push({ type: 'attack', attackerId: attacker.id, target });
 
     if (target.kind === 'hero') {
-      damageHero(enemy, attacker.attack, events);
+      strike(attacker, player, enemy, events);
     } else {
       const defender = enemy.board.find((m) => m.id === target.id);
       if (!defender) throw new Error('Verteidiger existiert nicht');
       if (defender.stealth) throw new Error('Verstecktes Tier kann nicht angegriffen werden');
 
-      // Beide treffen gleichzeitig mit dem Angriffswert von vor dem Schlag.
-      const dmgToDefender = attacker.attack;
-      const dmgToAttacker = defender.attack;
-      damageMinion(defender, dmgToDefender, attacker.poisonous, events);
-      damageMinion(attacker, dmgToAttacker, defender.poisonous, events);
+      // Beide treffen gleichzeitig: Der Angriffswert ändert sich durch den Schlag nicht.
+      strike(attacker, player, defender, events);
+      strike(defender, enemy, attacker, events);
     }
 
     settle(next, events);
@@ -527,6 +557,25 @@ export function applyMove(
   }
 
   throw new Error('Unbekannter Zug');
+}
+
+const TRADE_COST = 1;
+
+/** Ein Sprinter darf im ersten Zug nur Tiere angreifen. */
+function heroOutOfReach(minion: Minion): boolean {
+  return Boolean(minion.justPlayed && minion.sprinter && !minion.rush);
+}
+
+/** Zugende: Flüchtige Karten gehen, wer ausgesetzt hat, taut auf. Wer erst nach seinem Angriff erstarrte, bleibt starr. */
+function endOwnTurn(player: PlayerState, events: GameEvent[]): void {
+  player.hand = player.hand.filter((card) => {
+    if (!card.fleeting) return true;
+    events.push({ type: 'cardFaded', seat: player.seat, card });
+    return false;
+  });
+  for (const minion of player.board) {
+    if (minion.frozen && !minion.hasAttacked) delete minion.frozen;
+  }
 }
 
 /** Erlaubte Angriffsziele auf dieser Seite: Beschützer gehen vor, Versteckte sind keines. */
@@ -550,7 +599,7 @@ export function heroAttackValue(player: Pick<PlayerState, 'gear' | 'heroAttackBo
 export function spellTargets(state: DrachenspielState, seat: SeatId, targeting: SpellTargeting): (SpellTarget | null)[] {
   const me = state.players[seat];
   const enemy = state.players[1 - seat];
-  const enemyMinions = enemy.board.filter((m) => !m.stealth).map((m): SpellTarget => ({ kind: 'minion', id: m.id }));
+  const enemyMinions = enemy.board.filter((m) => !m.stealth && !m.elusive).map((m): SpellTarget => ({ kind: 'minion', id: m.id }));
   switch (targeting) {
     case 'none':
       return [null];
@@ -559,7 +608,7 @@ export function spellTargets(state: DrachenspielState, seat: SeatId, targeting: 
     case 'enemyMinion':
       return enemyMinions;
     case 'ownMinion':
-      return me.board.map((m): SpellTarget => ({ kind: 'minion', id: m.id }));
+      return me.board.filter((m) => !m.elusive).map((m): SpellTarget => ({ kind: 'minion', id: m.id }));
   }
 }
 
@@ -724,19 +773,27 @@ export function evaluate(state: DrachenspielState, seat: SeatId): number {
     if (m.taunt) score += 2;
     if (m.bubble) score += 2;
     if (m.stealth) score += 1;
+    if (m.doubleStrike) score += m.attack;
+    if (m.lifesteal) score += 1;
+    if (m.reborn) score += 2;
+    if (m.frozen) score -= m.attack;
   }
 
   for (const m of opp.board) {
     score -= m.attack * 2 + m.health;
     if (m.taunt) score -= 2;
     if (m.bubble) score -= 2;
+    if (m.doubleStrike) score -= m.attack;
+    if (m.lifesteal) score -= 1;
+    if (m.reborn) score -= 2;
+    if (m.frozen) score += m.attack;
   }
 
   return score;
 }
 
 export function eventView(event: GameEvent, seat: SeatId | 'spectator'): GameEvent | null {
-  if (event.type === 'cardDrawn') {
+  if (event.type === 'cardDrawn' || event.type === 'cardFaded') {
     if (event.seat !== seat) {
       return { ...event, card: undefined };
     }

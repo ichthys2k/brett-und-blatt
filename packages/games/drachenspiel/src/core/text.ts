@@ -6,6 +6,14 @@ export const KEYWORD_NAMES: Record<KeywordId, string> = {
   bubble: 'Schutzblase',
   poisonous: 'Giftig',
   stealth: 'Versteckt',
+  sprinter: 'Sprinter',
+  doubleStrike: 'Doppelschlag',
+  lifesteal: 'Lebenskraft',
+  frostbite: 'Kältestarre',
+  reborn: 'Zweite Chance',
+  immune: 'Eingerollt',
+  elusive: 'Scheu',
+  tradeable: 'Tauschen',
 };
 
 const CHOSEN: Record<SpellTargeting, string> = {
@@ -62,6 +70,14 @@ function effectText(effect: Effect, targeting: SpellTargeting, lookup: Record<st
       return `Spült ${accusative(effect.to, targeting)} zurück auf die Hand (Spielsteine und bei voller Hand: weg).`;
     case 'mana':
       return `+${effect.amount} Mana in dieser Runde.`;
+    case 'freeze':
+      return `Versetzt ${accusative(effect.to, targeting)} in Kältestarre: Der nächste Angriff fällt aus.`;
+    case 'silence':
+      return `Beruhigt ${accusative(effect.to, targeting)}: Verstärkungen und Fähigkeiten sind weg.`;
+    case 'addToHand':
+      return `Gibt dir ${effect.fleeting ? 'flüchtig (nur in diesem Zug) ' : ''}${lookup[effect.cardId]?.name ?? 'eine Karte'} auf die Hand.`;
+    case 'rebirth':
+      return 'Kehrt mit 1 Leben zurück.';
     case 'armor':
       return `+${effect.amount} Rüstung.`;
     case 'heroAttack':

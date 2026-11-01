@@ -36,11 +36,59 @@ export const TRAIT_DEFINITIONS = {
     name: 'Flink',
     description: 'Darf direkt in der Runde des Ausspielens angreifen, auch den gegnerischen Helden.',
   },
+  sprinter: {
+    emoji: '🏃',
+    name: 'Sprinter',
+    description: 'Darf sofort angreifen, im ersten Zug aber nur Tiere.',
+  },
+  doubleStrike: {
+    emoji: '✌️',
+    name: 'Doppelschlag',
+    description: 'Darf in jedem Zug zweimal angreifen.',
+  },
+  lifesteal: {
+    emoji: '💚',
+    name: 'Lebenskraft',
+    description: 'Schaden, den dieses Tier im Kampf zufügt, heilt deinen Helden.',
+  },
+  frostbite: {
+    emoji: '❄️',
+    name: 'Kältestarre',
+    description: 'Wen dieses Tier trifft, der setzt seinen nächsten Angriff aus.',
+  },
+  reborn: {
+    emoji: '🌱',
+    name: 'Zweite Chance',
+    description: 'Kehrt beim ersten Mal, wenn es vom Feld geht, mit 1 Leben zurück.',
+  },
+  immune: {
+    emoji: '🌀',
+    name: 'Eingerollt',
+    description: 'Nimmt bis zu deinem nächsten Zug keinen Schaden.',
+  },
+  elusive: {
+    emoji: '🍃',
+    name: 'Scheu',
+    description: 'Zauber können es nicht als Ziel wählen. Flächenzauber treffen es trotzdem.',
+  },
+  tradeable: {
+    emoji: '🔄',
+    name: 'Tauschen',
+    description: 'Auf der Hand: Für 1 Mana zurück ins Deck mischen und neu ziehen.',
+  },
 } as const;
 
 function keywordTrait(keyword: KeywordId): TraitInfo {
   const d = TRAIT_DEFINITIONS[keyword];
   return { id: keyword, emoji: d.emoji, name: d.name, description: d.description, fullTitle: `${d.emoji} ${d.name}: ${d.description}` };
+}
+
+function stateTrait(id: string, emoji: string, name: string, description: string): TraitInfo {
+  return { id, emoji, name, description, fullTitle: `${emoji} ${name}: ${description}` };
+}
+
+function natureTrait(amount: number): TraitInfo {
+  return stateTrait('spellPower', '🌿', `Naturkraft +${amount}`, `Deine Zauber machen ${amount} Schaden mehr.`);
 }
 
 function triggerTrait(trigger: Trigger, index: number): TraitInfo {
@@ -53,9 +101,16 @@ function triggerTrait(trigger: Trigger, index: number): TraitInfo {
  * Ermittelt alle aktiven Eigenschaften eines Minions auf dem Spielfeld.
  */
 export function getMinionTraits(minion: Minion): TraitInfo[] {
-  const keywords = (['taunt', 'bubble', 'poisonous', 'stealth', 'rush'] as const).filter((k) => minion[k]).map(keywordTrait);
-  const deaths = (CARDS_DB[minion.cardId]?.triggers ?? []).filter((t) => t.on === 'death').map(triggerTrait);
-  return [...keywords, ...deaths];
+  const keywords = (['taunt', 'bubble', 'poisonous', 'stealth', 'rush', 'sprinter', 'doubleStrike', 'lifesteal', 'frostbite', 'reborn', 'immune', 'elusive'] as const)
+    .filter((k) => minion[k])
+    .map(keywordTrait);
+  const deaths = minion.silenced ? [] : (CARDS_DB[minion.cardId]?.triggers ?? []).filter((t) => t.on === 'death').map(triggerTrait);
+  const states = [
+    ...(minion.spellPower ? [natureTrait(minion.spellPower)] : []),
+    ...(minion.frozen ? [stateTrait('frozen', '🧊', 'Erstarrt', 'Setzt den nächsten Angriff aus.')] : []),
+    ...(minion.silenced ? [stateTrait('silenced', '😌', 'Beruhigt', 'Hat seine Fähigkeiten verloren.')] : []),
+  ];
+  return [...keywords, ...deaths, ...states];
 }
 
 /**
@@ -77,7 +132,7 @@ export function getMinionFullTitle(minion: Minion): string {
  * Ermittelt alle Eigenschaften einer Kartendefinition (Handkarten / Mulligan).
  */
 export function getCardTraits(card: CardDefinition): TraitInfo[] {
-  return [...(card.keywords ?? []).map(keywordTrait), ...(card.triggers ?? []).map(triggerTrait)];
+  return [...(card.keywords ?? []).map(keywordTrait), ...(card.spellPower ? [natureTrait(card.spellPower)] : []), ...(card.triggers ?? []).map(triggerTrait)];
 }
 
 /**

@@ -1,6 +1,6 @@
 import { Rng, type GameEvent, type SeatId } from '@brett-und-blatt/engine';
 import { CARDS_DB } from '../cards';
-import type { CardDefinition, DrachenspielState, Effect, Enchantment, Minion, PlayerState, QueuedEffect, Selector, SpellTarget } from '../types';
+import type { CardDefinition, CardInstance, DrachenspielState, Effect, Enchantment, KeywordId, Minion, MinionKeyword, PlayerState, QueuedEffect, Selector, SpellTarget } from '../types';
 
 export const HAND_LIMIT = 10;
 export const BOARD_LIMIT = 7;
@@ -12,6 +12,9 @@ export const MAX_TURNS = 89;
 /** Grenze gegen Endlosketten aus Effekten und Abschieden je Aktion. */
 const MAX_QUEUE_STEPS = 200;
 
+/** Fähigkeiten, die nur gesetzt werden, wenn sie zutreffen. */
+const OPTIONAL_KEYWORDS: MinionKeyword[] = ['sprinter', 'doubleStrike', 'lifesteal', 'frostbite', 'reborn', 'immune', 'elusive'];
+
 /** Berechnet die Werte einer Figur aus Grundwerten, Veränderungen und Schaden neu. */
 export function refreshStats(minion: Minion): void {
   minion.attack = minion.enchantments.reduce((sum, e) => sum + (e.attack ?? 0), minion.baseAttack);
@@ -20,7 +23,7 @@ export function refreshStats(minion: Minion): void {
 }
 
 export function createMinion(state: DrachenspielState, def: CardDefinition, owner: SeatId): Minion {
-  const has = (keyword: 'taunt' | 'rush' | 'bubble' | 'poisonous' | 'stealth') => def.keywords?.includes(keyword) ?? false;
+  const has = (keyword: KeywordId) => def.keywords?.includes(keyword) ?? false;
   const entityId = state.nextEntityId++;
   return {
     id: `m_${entityId}`,
@@ -44,21 +47,72 @@ export function createMinion(state: DrachenspielState, def: CardDefinition, owne
     bubble: has('bubble'),
     poisonous: has('poisonous'),
     stealth: has('stealth'),
-    canAttack: has('rush'),
+    canAttack: has('rush') || has('sprinter'),
     hasAttacked: false,
+    justPlayed: true,
+    ...(def.spellPower ? { spellPower: def.spellPower } : {}),
+    ...Object.fromEntries(OPTIONAL_KEYWORDS.filter(has).map((keyword) => [keyword, true])),
   };
 }
 
-export function damageMinion(minion: Minion, amount: number, isPoisonous: boolean, events: GameEvent[]): void {
-  if (amount <= 0) return;
+/** Darf diese Figur jetzt angreifen? */
+export function canStrike(minion: Minion): boolean {
+  return minion.canAttack && !minion.hasAttacked && !minion.frozen && minion.attack > 0;
+}
+
+/** Zurück kommt der wirklich zugefügte Schaden: 0 bei Schutzblase oder Eingerollt. */
+export function damageMinion(minion: Minion, amount: number, isPoisonous: boolean, events: GameEvent[]): number {
+  if (amount <= 0) return 0;
+  if (minion.immune) {
+    events.push({ type: 'damageBlocked', minionId: minion.id });
+    return 0;
+  }
   if (minion.bubble) {
     minion.bubble = false;
     events.push({ type: 'bubblePopped', minionId: minion.id });
-    return;
+    return 0;
   }
   minion.damage = isPoisonous ? Math.max(minion.damage + amount, minion.maxHealth) : minion.damage + amount;
   refreshStats(minion);
   events.push({ type: 'damage', targetType: 'minion', targetId: minion.id, amount, health: minion.health });
+  return amount;
+}
+
+function freezeMinion(minion: Minion, events: GameEvent[]): void {
+  minion.frozen = true;
+  events.push({ type: 'minionFrozen', minionId: minion.id });
+}
+
+/** Der Schlag einer Figur im Kampf: Gift, Kältestarre und Lebenskraft hängen am Treffer. */
+export function strike(source: Minion, owner: PlayerState, target: Minion | PlayerState, events: GameEvent[]): void {
+  const amount = source.attack;
+  if (amount <= 0) return;
+  let dealt: number;
+  if ('board' in target) {
+    damageHero(target, amount, events);
+    dealt = amount;
+  } else {
+    dealt = damageMinion(target, amount, source.poisonous, events);
+    if (dealt > 0 && source.frostbite) freezeMinion(target, events);
+  }
+  if (dealt > 0 && source.lifesteal) healHero(owner, dealt, events);
+}
+
+/** Was eine beruhigte Figur verliert. Leben sinken höchstens bis zum neuen Maximum, sie stirbt daran nicht. */
+function silenceMinion(minion: Minion, events: GameEvent[]): void {
+  const health = minion.health;
+  minion.enchantments = [];
+  minion.taunt = minion.rush = minion.bubble = minion.poisonous = minion.stealth = false;
+  for (const keyword of OPTIONAL_KEYWORDS) delete minion[keyword as Exclude<MinionKeyword, 'taunt' | 'rush' | 'bubble' | 'poisonous' | 'stealth'>];
+  delete minion.spellPower;
+  delete minion.frozen;
+  minion.silenced = true;
+  // Wer nur dank seiner Fähigkeit sofort angreifen durfte, muss warten.
+  if (minion.justPlayed) minion.canAttack = false;
+  refreshStats(minion);
+  minion.damage = Math.max(0, minion.maxHealth - Math.min(health, minion.maxHealth));
+  refreshStats(minion);
+  events.push({ type: 'minionSilenced', minionId: minion.id, attack: minion.attack, health: minion.health, maxHealth: minion.maxHealth });
 }
 
 /** Rüstung fängt Schaden zuerst ab; zurück kommt, was die Leben trifft. */
@@ -167,12 +221,50 @@ function runEffect(state: DrachenspielState, frame: QueuedEffect, events: GameEv
   const effect: Effect = frame.effect;
   const player = state.players[frame.seat];
   switch (effect.kind) {
-    case 'damage':
+    case 'damage': {
+      // Naturkraft zählt nur bei Zaubern.
+      const bonus = CARDS_DB[frame.sourceCard]?.isSpell ? player.board.reduce((sum, m) => sum + (m.spellPower ?? 0), 0) : 0;
       for (const target of resolve(state, frame, effect.to)) {
-        if (target.kind === 'hero') damageHero(target.player, effect.amount, events);
-        else damageMinion(target.minion, effect.amount, false, events);
+        if (target.kind === 'hero') damageHero(target.player, effect.amount + bonus, events);
+        else damageMinion(target.minion, effect.amount + bonus, false, events);
       }
       break;
+    }
+    case 'freeze':
+      for (const target of resolve(state, frame, effect.to)) {
+        if (target.kind === 'minion' && !target.minion.immune) freezeMinion(target.minion, events);
+      }
+      break;
+    case 'silence':
+      for (const target of resolve(state, frame, effect.to)) {
+        if (target.kind === 'minion') silenceMinion(target.minion, events);
+      }
+      break;
+    case 'addToHand': {
+      if (player.hand.length >= HAND_LIMIT) {
+        events.push({ type: 'handFull', seat: frame.seat, cardId: effect.cardId });
+        break;
+      }
+      const card: CardInstance = { uid: `c_${state.nextEntityId++}`, defId: effect.cardId, ...(effect.fleeting ? { fleeting: true } : {}) };
+      player.hand.push(card);
+      events.push({ type: 'cardDrawn', seat: frame.seat, card });
+      break;
+    }
+    case 'rebirth': {
+      const def = CARDS_DB[effect.cardId];
+      if (!def) break;
+      if (player.board.length >= BOARD_LIMIT) {
+        events.push({ type: 'boardFull', seat: frame.seat, cardId: effect.cardId });
+        break;
+      }
+      const minion = createMinion(state, def, frame.seat);
+      delete minion.reborn;
+      minion.damage = minion.maxHealth - 1;
+      refreshStats(minion);
+      player.board.push(minion);
+      events.push({ type: 'minionSummoned', seat: frame.seat, minion });
+      break;
+    }
     case 'heal':
       for (const target of resolve(state, frame, effect.to)) {
         if (target.kind === 'minion') healMinion(target.minion, effect.amount, events);
@@ -190,6 +282,8 @@ function runEffect(state: DrachenspielState, frame: QueuedEffect, events: GameEv
       for (const target of resolve(state, frame, effect.to)) {
         if (target.kind !== 'minion') continue;
         target.minion[effect.keyword] = true;
+        // Flink und Sprinter als Geschenk: Das Tier darf sofort los.
+        if (effect.keyword === 'rush' || effect.keyword === 'sprinter') target.minion.canAttack = true;
         events.push({ type: 'minionBuffed', minionId: target.minion.id, [effect.keyword]: true });
       }
       break;
@@ -256,7 +350,8 @@ function deathPhase(state: DrachenspielState, events: GameEvent[]): boolean {
   for (const p of state.players) p.board = p.board.filter((m) => m.health > 0);
   for (const { minion, seat } of dead) {
     events.push({ type: 'minionLeft', minionId: minion.id, name: minion.name });
-    enqueue(state, triggered(minion.cardId, 'death'), seat, minion.cardId, null, null);
+    if (!minion.silenced) enqueue(state, triggered(minion.cardId, 'death'), seat, minion.cardId, null, null);
+    if (minion.reborn) enqueue(state, [{ kind: 'rebirth', cardId: minion.cardId }], seat, minion.cardId, null, null);
   }
   return true;
 }

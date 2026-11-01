@@ -16,7 +16,7 @@ export const botDrachenhueter: BotDefinition<
     if (move.type === 'attack' || move.type === 'heroAttack') {
       return 1100;
     }
-    if (move.type === 'playCard' || move.type === 'heroPower') {
+    if (move.type === 'playCard' || move.type === 'heroPower' || move.type === 'tradeCard') {
       return level === 'easy' ? 800 : 700;
     }
     if (move.type === 'endTurn') {
