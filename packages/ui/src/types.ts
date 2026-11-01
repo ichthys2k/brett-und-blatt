@@ -1,4 +1,4 @@
-import type { GameEvent, Options, SeatId } from '@brett-und-blatt/engine';
+import type { ClockReading, GameEvent, Options, SeatId } from '@brett-und-blatt/engine';
 import type { ComponentType } from 'react';
 import type { SoundMap } from './audio/sound';
 
@@ -13,6 +13,8 @@ export interface BoardProps<V, M> {
   activeSeat: SeatId | null;
   /** Vorgeschlagener Zug nach Druck auf „Tipp“ – die Oberfläche hebt ihn hervor. */
   hint: M | null;
+  /** Uhr des Platzes am Zug, wenn die Partie eine Zeitvorgabe hat. */
+  clock?: ClockReading | null;
   /** Aus wessen Sicht gezeigt wird (bei Handkarten: wessen Hand offen liegt). */
   viewer: SeatId | 'spectator';
   /** Namen der Plätze, z. B. für Spielfelder mit mehreren Mitspielern. */
@@ -53,6 +55,8 @@ export interface GameUi<V = unknown, M = unknown> {
    * kein „denkt nach“ – etwa nachts bei geheimen Rollen, wo sich sonst jemand durch Zögern verrät.
    */
   concealTurns?: (view: V) => boolean;
+  /** Online: Schnellnachrichten an diesem Tisch statt der üblichen, z. B. die Tierrufe des Drachenspiels. */
+  phrases?: readonly string[];
   /** Klänge zu den Ereignissen, z. B. `{ placed: 'stein-setzen' }`. Sieg, Niederlage und Zeit vertont die Plattform selbst. */
   sounds?: SoundMap;
   /**

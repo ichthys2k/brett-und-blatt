@@ -19,6 +19,7 @@ export const meta: GameInfo = {
     'Greife gegnerische Tiere oder direkt den gegnerischen Helden an. Hat der Gegner Tiere mit 🛡️ Beschützer, musst du sie zuerst angreifen.',
     'Wer als Zweiter beginnt, erhält eine Handkarte mehr und die ⭐ Sternschnuppe für +1 Bonus-Mana.',
     'Zauberkarten (Option, Standard an): einmalige Naturzauber wie ⚡ Blitzschlag (3 Schaden), 🍯 Honigtopf (+2/+2), 🌊 Flutwelle (Tier zurück auf die Hand) oder 🍀 Glücksklee (2 Karten). Zauber mit Ziel erst antippen, dann das Ziel wählen – oder die Karte aufs Ziel ziehen.',
+    'Karte groß ansehen: lange drücken, rechts klicken oder mit der Taste i. Unter „Verlauf“ steht, was zuletzt geschah.',
     'Ist dein Deck leer, erleidet dein Held jede Runde zunehmenden Müdigkeits-Schaden.',
   ],
 };

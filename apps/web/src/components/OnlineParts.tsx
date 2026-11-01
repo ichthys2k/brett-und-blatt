@@ -171,7 +171,7 @@ export function QrCode({ text, label }: { text: string; label: string }) {
 }
 
 /** Emoji-Reaktionen und Schnellnachrichten – freien Text gibt es nicht. */
-export function ReactionBar({ onReact, onSay }: { onReact: (emoji: string) => void; onSay: (phrase: string) => void }) {
+export function ReactionBar({ onReact, onSay, phrases: tablePhrases = PHRASES }: { onReact: (emoji: string) => void; onSay: (phrase: string) => void; phrases?: readonly string[] }) {
   const [phrases, setPhrases] = useState(false);
   const [timestamps, setTimestamps] = useState<number[]>([]);
   const [cooldown, setCooldown] = useState(false);
@@ -229,7 +229,7 @@ export function ReactionBar({ onReact, onSay }: { onReact: (emoji: string) => vo
       )}
       {phrases && (
         <div className="flex flex-wrap justify-center gap-1">
-          {PHRASES.map((phrase) => (
+          {tablePhrases.map((phrase) => (
             <button
               key={phrase}
               type="button"

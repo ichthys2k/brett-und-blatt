@@ -72,9 +72,9 @@ export interface DrachenspielState {
 
 ## Bots
 
-- **Leicht:** Wählt zufällig aus allen erlaubten Zügen.
-- **Mittel:** Nimmt tödlichen Schaden am Helden, spielt meist die teuerste bezahlbare Karte, greift sonst ein zufälliges gegnerisches Tier an.
-- **Schwer:** Bewertet jeden erlaubten Zug einzeln mit `evaluate`, plant also nur einen Schritt voraus. Einen Planer für den ganzen Zug sieht der [Ausbauplan](drachenspiel-ausbau.md) vor.
+- **Leicht:** Legt und greift wahllos an, beendet den Zug nur selten vorzeitig.
+- **Mittel:** Plant den ganzen Zug mit kurzer Strahlsuche und der einfachen Bewertung `evaluate`, findet so auch tödlichen Schaden über mehrere Angriffe.
+- **Schwer:** Plant den ganzen Zug über drei Stichproben der verdeckten Karten (`src/planner.ts`), bewertet aus den Kartendaten und prüft die besten Pläne gegen eine einfache Antwort des Gegners.
 
 ## Umsetzung (Oktober 2026)
 
@@ -142,3 +142,14 @@ Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes D
 - **Schutz vor Regeländerungen:** `test/golden/karten.json` hält fest, was jede Karte mit jedem Ziel bewirkt. Die Datei wurde vor dem Umbau erzeugt und blieb dabei unverändert.
 - **Sichtbare Änderungen:** Die Sternschnuppe zeigt ihren Text und meldet sich als `spellCast`, einige Zaubertexte sind neu formuliert, und „Feld voll“ wird angezeigt.
 - **Messung nachher (300 Partien, Deckwahl zufällig):** Startspieler im Spiegel „schwer“ 57 %, „mittel“ 55 %, „leicht“ 49 %; Schwer schlägt Mittel zu 92 %, Mittel schlägt Leicht zu 75 %.
+
+## Bedienung und Bot-Planer (01.11.2026, Phase 2 des Ausbauplans, Regeln unverändert)
+
+- **Animationsreihe:** `ui/sequence.ts` zerlegt die Ereignisse eines Zugs in Schritte mit eigenem Feldzustand, `ui/useBeats.ts` spielt sie ab. Eine Reihe dauert höchstens 2,2 s; der nächste Zug unterbricht sie, die Regeln warten nie auf die Wiedergabe. Klänge der Plattform laufen weiter gleichzeitig, nur die Tierstimmen folgen den Schritten.
+- **Spielverlauf:** aufklappbar, aus denselben Schritten, ohne gezogene Karten. Er lebt nur in der geöffneten Seite und ist nach einem Neuladen leer.
+- **Bedienung:** Zielpfeil beim Ziehen und mit der Maus, große Karte (lange drücken, Rechtsklick, Taste `i`), Tastatur auf Karten und Tieren, Lunte ab 15 s Restzeit, verstärkte Werte grün, verletzte rot, Tipp-Knopf markiert den Vorschlag.
+- **Plattform:** `BoardProps.clock`, `GameUi.phrases`, neue Schnellnachrichten `wow` und `grr`. `Play.tsx` übergibt Ereignisse und Sicht jetzt im selben Durchlauf.
+- **Tierrufe:** vorerst nur online und als Text über die vorhandene Schnellnachrichten-Leiste, mit dem allgemeinen Nachrichtenklang. Die Vertonung fehlt, neue Klänge wählt Cornelius aus.
+- **Aufteilung:** `ui/PlayBoard.tsx`, `ui/phases.tsx`, `ui/parts.tsx`; `index.tsx` hält nur noch die Anbindung.
+- **Messung:** Neuer gegen alten „schwer“ 84 von 100 Partien. Rechenzeit bei 800 ms Budget: Median 11 ms, Spitze 407 ms; mit der Zähl-Uhr des Servers (`BOT_STEP_MS` 0,15) höchstens 150 ms, lokal gemessen, nicht auf Cloudflare.
+- **Stufen und Startvorteil (150 Partien je Zeile, etwa ±8 Prozentpunkte):** Schwer schlägt Mittel zu 79 %, Mittel schlägt Leicht zu 97 %. Startspieler bei zufälliger Deckwahl: schwer 60 %, mittel 52 %, leicht 53 %. Festes Deck, schwer: Wald 52 %, Meer 53 %, Bauernhof 51 %, Wildnis 65 %, Krabbeltiere 45 %. Partien im Spiegel „schwer“ dauern jetzt im Schnitt 18,4 statt 14,7 Züge.

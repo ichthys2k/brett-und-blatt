@@ -6,6 +6,7 @@ import { gameModule } from '../src';
 // DRACHEN_BALANCE=1 corepack pnpm exec vitest run packages/games/drachenspiel/test/balance --disable-console-intercept
 const env = (globalThis as unknown as { process: { env: Record<string, string | undefined> } }).process.env;
 const GAMES = Number(env.DRACHEN_BALANCE_SPIELE ?? 300);
+const BUDGET: Record<BotLevel, number> = { easy: 100, medium: 300, hard: 800 };
 
 function play(seed: string, levels: [BotLevel, BotLevel], deckSelection: string) {
   let state = gameModule.setup(2, { deckSelection }, seed);
@@ -17,7 +18,7 @@ function play(seed: string, levels: [BotLevel, BotLevel], deckSelection: string)
       seat,
       level: levels[seat],
       rng: Rng.fromSeed(`${seed}/${step}`),
-      timeBudgetMs: 10,
+      timeBudgetMs: BUDGET[levels[seat]],
       now: () => Date.now(),
     });
     state = gameModule.applyMove(state, seat, move).state;
@@ -46,5 +47,5 @@ describe.runIf(env.DRACHEN_BALANCE)('Drachenspiel: Startvorteil', () => {
         console.log(`${deck.padEnd(7)} ${levels.join('/').padEnd(14)} Startspieler ${((100 * starterWins) / GAMES).toFixed(0)} %, Platz 1 ${((100 * firstLevelWins) / GAMES).toFixed(0)} %, Remis ${draws}, Ø ${(turns / GAMES).toFixed(1)} Züge`);
       }
     }
-  }, 600_000);
+  }, 1_800_000);
 });
