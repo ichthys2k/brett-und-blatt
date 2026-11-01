@@ -1,0 +1,70 @@
+.maj-question {
+  margin: 0;
+  font-size: clamp(1.05rem, 3.5vw, 1.6rem);
+  font-weight: 700;
+  text-align: center;
+}
+
+.maj-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.4rem;
+}
+
+.maj-option {
+  min-height: 3rem;
+  padding: 0.3rem 0.6rem;
+  border: 2px solid var(--color-line);
+  border-radius: 0.7rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.maj-wait {
+  margin: 0;
+  text-align: center;
+}
+
+.maj-list {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.maj-bars {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.maj-bars > li {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.maj-bars > li[data-mine] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.maj-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  transition: width 0.5s ease-out;
+}
+
+.maj-label,
+.maj-bars strong {
+  position: relative;
+}

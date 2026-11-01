@@ -17,6 +17,9 @@ import { gameModule as chineseCheckers } from '@brett-und-blatt/game-chinese-che
 import { gameModule as elevens } from '@brett-und-blatt/game-elevens';
 import { gameModule as fourInARow } from '@brett-und-blatt/game-four-in-a-row';
 import { gameModule as fourPlayerChess } from '@brett-und-blatt/game-four-player-chess';
+import { gameModule as estimate } from '@brett-und-blatt/game-estimate';
+import { gameModule as majority } from '@brett-und-blatt/game-majority';
+import { gameModule as timeline } from '@brett-und-blatt/game-timeline';
 import { gameModule as go } from '@brett-und-blatt/game-go';
 import { gameModule as gomoku } from '@brett-und-blatt/game-gomoku';
 import { gameModule as hangman } from '@brett-und-blatt/game-hangman';
@@ -55,4 +58,4 @@ import { gameModule as wolvesSheep } from '@brett-und-blatt/game-wolves-sheep';
  * Mehrspieler-Spiel muss hier (und in package.json) eingetragen werden – ein Test
  * im Server-Paket erinnert daran. Entwürfe (`draft` im Steckbrief) bleiben draußen.
  */
-export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, binokel, bingo, blackPeter, categorySprint, checkers, chess, chineseCheckers, colorAndShape, colorSorter, describeDuel, dominoes, doppelkopf, drachenspiel, duckRally, elevens, factorGrid, fourInARow, fourPlayerChess, go, gomoku, hangman, ludo, ligretto, lowFlight, maexle, marketplace, mauMau, mill, numberWall, pairs, poker, president, quartett, reversi, schafkopf, scrabble, skat, speed, symbolMatch, targetNumber, ticTacToe, turnipPatch, ultimateTicTacToe, uno, wolvesSheep, wordSalad, whoAmI, kniffel];
+export const onlineGames: AnyGameModule[] = [battleship, bibleQuiz, binokel, bingo, blackPeter, categorySprint, checkers, chess, chineseCheckers, colorAndShape, colorSorter, describeDuel, dominoes, doppelkopf, drachenspiel, duckRally, elevens, estimate, factorGrid, fourInARow, fourPlayerChess, go, gomoku, hangman, ludo, ligretto, lowFlight, maexle, majority, marketplace, mauMau, mill, numberWall, pairs, poker, president, quartett, reversi, schafkopf, scrabble, skat, speed, symbolMatch, targetNumber, ticTacToe, timeline, turnipPatch, ultimateTicTacToe, uno, wolvesSheep, wordSalad, whoAmI, kniffel];

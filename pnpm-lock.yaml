@@ -241,6 +241,9 @@ importers:
       '@brett-und-blatt/game-elevens':
         specifier: workspace:*
         version: link:../../packages/games/elevens
+      '@brett-und-blatt/game-estimate':
+        specifier: workspace:*
+        version: link:../../packages/games/estimate
       '@brett-und-blatt/game-factor-grid':
         specifier: workspace:*
         version: link:../../packages/games/factor-grid
@@ -274,6 +277,9 @@ importers:
       '@brett-und-blatt/game-maexle':
         specifier: workspace:*
         version: link:../../packages/games/maexle
+      '@brett-und-blatt/game-majority':
+        specifier: workspace:*
+        version: link:../../packages/games/majority
       '@brett-und-blatt/game-marketplace':
         specifier: workspace:*
         version: link:../../packages/games/marketplace
@@ -322,6 +328,9 @@ importers:
       '@brett-und-blatt/game-tic-tac-toe':
         specifier: workspace:*
         version: link:../../packages/games/tic-tac-toe
+      '@brett-und-blatt/game-timeline':
+        specifier: workspace:*
+        version: link:../../packages/games/timeline
       '@brett-und-blatt/game-turnip-patch':
         specifier: workspace:*
         version: link:../../packages/games/turnip-patch
@@ -632,6 +641,19 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1
 
+  packages/games/estimate:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
   packages/games/factor-grid:
     dependencies:
       '@brett-und-blatt/engine':
@@ -761,6 +783,19 @@ importers:
         version: 19.3.1
 
   packages/games/maexle:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
+  packages/games/majority:
     dependencies:
       '@brett-und-blatt/engine':
         specifier: workspace:*
@@ -994,6 +1029,19 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1
 
+  packages/games/timeline:
+    dependencies:
+      '@brett-und-blatt/engine':
+        specifier: workspace:*
+        version: link:../../engine
+      '@brett-und-blatt/ui':
+        specifier: workspace:*
+        version: link:../../ui
+    devDependencies:
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
   packages/games/turnip-patch:
     dependencies:
       '@brett-und-blatt/engine':
@@ -1096,6 +1144,9 @@ importers:
       '@brett-und-blatt/engine':
         specifier: workspace:*
         version: link:../engine
+      uqr:
+        specifier: 0.1.3
+        version: 0.1.3
     devDependencies:
       react:
         specifier: ^19.3.1

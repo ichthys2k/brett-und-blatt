@@ -8,6 +8,7 @@ export * from './draw-offer';
 export * from './words';
 export * from './vote';
 export * from './teams';
+export * from './round-game';
 export { loadCatalog, type CatalogSource } from './catalog';
 export { isLegalMove, replay, resolveOptions, seatActors, settleSystemMoves, timePresetsOf } from './module-helpers';
 export { Clocks, type ClockReading, type ClocksState } from './clock';

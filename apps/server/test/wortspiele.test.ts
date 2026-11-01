@@ -6,8 +6,8 @@ import { wortspielKataloge } from '../src/wortspiele';
 
 /* Die Wortspiel-Kataloge liegen auf dem Server, nicht im Browser-Bundle (wie beim Bibel-Quiz). */
 describe('Wortspiel-Kataloge auf dem Server', () => {
-  it('liefert alle drei Kataloge aus', () => {
-    expect(Object.keys(wortspielKataloge).sort()).toEqual(['/wortspiele/begriffe', '/wortspiele/kategorien', '/wortspiele/wer-bin-ich']);
+  it('liefert alle Kataloge aus', () => {
+    expect(Object.keys(wortspielKataloge).sort()).toEqual(['/klassenspiele/mehrheit', '/klassenspiele/schaetzen', '/klassenspiele/zeitstrahl', '/wortspiele/begriffe', '/wortspiele/kategorien', '/wortspiele/wer-bin-ich']);
   });
 
   it('setzt die Kataloge für Online-Räume und Bots', () => {

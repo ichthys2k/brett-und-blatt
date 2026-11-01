@@ -1,0 +1,32 @@
+{
+ "status": "entwurf",
+ "hinweis": "Von Claude erstellt (1.11.2026), wartet auf Freigabe durch Cornelius. Einträge stehen in der richtigen Reihenfolge; Jahre vor Freigabe prüfen. Das Paket Bibel ordnet nach der biblischen Erzählung und nennt keine Jahre.",
+ "packs": [
+  { "id": "bibel", "name": "Bibel", "sets": [
+   { "id": "b01", "title": "Altes Testament: vom Anfang an", "items": ["Schöpfung", "Noah baut die Arche", "Abraham zieht fort", "Josef in Ägypten", "Auszug mit Mose"] },
+   { "id": "b02", "title": "Das Volk Israel", "items": ["Zehn Gebote am Sinai", "Josua erobert Jericho", "Samuel salbt Saul", "David wird König", "Salomo baut den Tempel"] },
+   { "id": "b03", "title": "Das Leben Jesu", "items": ["Geburt in Bethlehem", "Taufe im Jordan", "Einzug in Jerusalem", "Letztes Abendmahl", "Kreuzigung", "Auferstehung"] },
+   { "id": "b04", "title": "Die erste Gemeinde", "items": ["Himmelfahrt", "Pfingsten", "Steinigung des Stephanus", "Bekehrung des Paulus", "Paulus reist nach Rom"] },
+   { "id": "b05", "title": "Die Karwoche", "items": ["Palmsonntag", "Gründonnerstag", "Karfreitag", "Ostersonntag"] },
+   { "id": "b06", "title": "Josef und seine Brüder", "items": ["Der bunte Rock", "Verkauft nach Ägypten", "Im Gefängnis", "Pharaos Träume", "Die Brüder kommen"] },
+   { "id": "b07", "title": "David", "items": ["Hütet die Schafe", "Besiegt Goliat", "Flieht vor Saul", "Wird König", "Macht Jerusalem zur Hauptstadt"] },
+   { "id": "b08", "title": "Die Bücher der Bibel", "items": ["1. Mose", "Psalmen", "Jesaja", "Matthäus", "Römerbrief", "Offenbarung"] }
+  ]},
+  { "id": "geschichte", "name": "Geschichte", "sets": [
+   { "id": "g01", "title": "Große Ereignisse", "items": ["Bau der Cheops-Pyramide (um 2500 v. Chr.)", "Gründung Roms (753 v. Chr.)", "Karl der Große wird Kaiser (800)", "Kolumbus erreicht Amerika (1492)", "Französische Revolution (1789)"] },
+   { "id": "g02", "title": "Deutschland", "items": ["Luthers Thesen (1517)", "Gründung des Kaiserreichs (1871)", "Gründung der Bundesrepublik (1949)", "Fall der Berliner Mauer (1989)", "Einführung des Euro-Bargelds (2002)"] },
+   { "id": "g03", "title": "Entdeckungen", "items": ["Marco Polo in China (um 1275)", "Kolumbus in Amerika (1492)", "Erste Weltumseglung (1519–1522)", "Erster Mensch am Südpol (1911)", "Erste Mondlandung (1969)"] },
+   { "id": "g04", "title": "Das Mittelalter und danach", "items": ["Krönung Karls des Großen (800)", "Erster Kreuzzug (1096)", "Magna Carta (1215)", "Gutenbergs Bibel (um 1455)", "Reformation (1517)"] },
+   { "id": "g05", "title": "20. Jahrhundert", "items": ["Erster Weltkrieg beginnt (1914)", "Zweiter Weltkrieg endet (1945)", "Bau der Berliner Mauer (1961)", "Erste Mondlandung (1969)", "Deutsche Einheit (1990)"] },
+   { "id": "g06", "title": "Alte Kulturen", "items": ["Pyramiden von Gizeh", "Blütezeit von Athen", "Augustus wird römischer Kaiser", "Völkerwanderung", "Wikinger in Nordamerika"] }
+  ]},
+  { "id": "erfindungen", "name": "Erfindungen", "sets": [
+   { "id": "e01", "title": "Verkehr", "items": ["Dampflokomotive (1804)", "Fahrrad mit Pedalen (um 1860)", "Benzin-Auto (1886)", "Motorflugzeug (1903)", "Raumfähre (1981)"] },
+   { "id": "e02", "title": "Nachrichten", "items": ["Buchdruck (um 1450)", "Telefon (1876)", "Radio-Rundfunk (1920er)", "Internet für alle: WWW (1991)", "Smartphone mit Touchscreen (2007)"] },
+   { "id": "e03", "title": "Im Haus", "items": ["Glühbirne (1879)", "Kühlschrank für Zuhause (um 1913)", "Fernseher (um 1930)", "Mikrowelle (1947)", "Heimcomputer (um 1977)"] },
+   { "id": "e04", "title": "Medizin und Wissen", "items": ["Fernrohr (1608)", "Pockenimpfung (1796)", "Röntgenstrahlen (1895)", "Penicillin (1928)", "Bau der DNA entdeckt (1953)"] },
+   { "id": "e05", "title": "Spiele und Spaß", "items": ["Schachspiel in Europa (um 1000)", "Spielkarten in Europa (um 1370)", "Monopoly (1935)", "LEGO-Noppenstein (1958)", "Game Boy (1989)"] },
+   { "id": "e06", "title": "Rechnen", "items": ["Rechenschieber (um 1620)", "Rechenmaschine von Pascal (1642)", "Zuse Z3 (1941)", "Taschenrechner (um 1970)", "Tablet-Computer iPad (2010)"] }
+  ]}
+ ]
+}

@@ -9,7 +9,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@brett-und-blatt/engine": "workspace:*"
+    "@brett-und-blatt/engine": "workspace:*",
+    "uqr": "0.1.3"
   },
   "peerDependencies": {
     "react": "^19.3.0"

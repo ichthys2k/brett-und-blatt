@@ -7,6 +7,7 @@ export { NetBoard, type NetBoardProps } from './NetBoard';
 export { useElementSize } from './useElementSize';
 export { useCallDeadline } from './useCallDeadline';
 export { cardSuitColor, PlayingCard, SuitShape, type DeckStyle, type PlayingCardProps } from './cards/PlayingCard';
+export { RoundFrame, RoundStandings, type RoundFrameProps } from './classroom/RoundFrame';
 export { TRICK_HAND_MIN_STEP, TrickTable, trickHandCardWidth, useTrickDisplay, type TrickTableProps, type TrickTableSlot } from './cards/TrickTable';
 export { CardFan, fanLayout, type CardFanProps, type FanLayout } from './cards/CardFan';
 export { ContentCard, type ContentCardProps } from './cards/ContentCard';

@@ -512,13 +512,19 @@ Bauten, Fallen, Aufgaben, Winterschlaf und Ei, Abdeckbildschirm im Hot-Seat. Dra
 - 30 Karten, höchstens 2 Kopien, 1 je Sagentier, ein Haus plus neutrale Karten.
 - Alle Karten sind frei verfügbar. Es gibt keine Sammlung, die man kaufen muss.
 - Decks in `localStorage`, teilen per Deck-Code und QR wie in der Lobby; online prüft der Server jedes Deck.
+- **Sicherung über Geräte wie beim Narrenhof (W-050):** Sicherungscode, QR-Link und Passkey, im Browser verschlüsselt, ohne Konto. Gesichert werden ab hier die eigenen Decks, ab Phase 9 auch der Fortschritt.
+  - **Wiederverwenden:** Der Server (`GET`/`PUT /sicherung/<Kennung>`, `BackupVault`) bleibt unverändert, denn er sieht nur verschlüsselte Blöcke. `syncCrypto.ts` und die Abläufe aus `sync.ts` liegen heute im Narrenhof und wandern in einen gemeinsamen Baustein; das Spiel liefert nur noch Speicherschlüssel, Zusammenführen und Link. Das Salt des Narrenhofs bleibt wortgleich, sonst wären dessen Sicherungen nicht mehr lesbar.
+  - **Ein Code für alle Spiele (Entscheidung Cornelius, 01.11.2026):** Der Code gilt für die ganze Plattform, jedes Spiel legt aber einen eigenen Block ab. Der Narrenhof behält seine heutige Ableitung, das Drachenspiel leitet aus demselben Code mit eigenem Salt eine eigene Kennung und einen eigenen Schlüssel ab. Dadurch müssen vorhandene Sicherungen nicht umziehen, alte Codes und Passkeys gelten weiter, und die Spiele kommen sich weder bei der Größengrenze noch beim gleichzeitigen Schreiben (`rev`) in die Quere.
+  - **Dafür ändert sich:** Code und Passkey-Liste gelten je Gerät für alle Spiele, der Speicherschlüssel `brett-und-blatt:farbensortierer:sicherung` wird dafür mitbenutzt oder mit Übernahme verlegt. Beim Eingeben eines Codes reicht ein Block irgendeines Spiels als Beleg, denn heute meldet `connectSync` sonst „keine Sicherung“, wenn der Code aus einem anderen Spiel stammt; fehlt der Block des aktuellen Spiels, wird er angelegt. Der QR-Link darf nicht mehr fest auf `color-sorter` zeigen, der Passkey-Name nicht mehr „Narrenhof-Fortschritt“ heißen. Verschwinden kann ein Block weiter einzeln nach 400 Tagen ohne Zugriff, der Abgleich sollte deshalb alle Blöcke des Geräts anfassen.
+  - **Zusammenführen:** Decks je Kennung, die jüngste Änderung gewinnt; gelöschte Decks bleiben als Löschvermerk stehen, damit ein anderes Gerät sie nicht zurückbringt. Der Stand trägt eine Formatversion und muss unter die Grenze von 64 KB passen.
+  - **Datenschutzerklärung** um das Drachenspiel ergänzen.
 - Fertige Vorschlagsdecks für den Einstieg; Lehrkraft kann einer Klasse ein Deck vorgeben.
 - **Fertig, wenn** ein Kind in unter 5 Minuten ein eigenes Deck spielen kann.
 
 ### Phase 9: Solo und Langzeit (L)
 
 - **Übungsweg:** 6 bis 8 geführte Kämpfe, jeder führt eine Sache ein: Mana, Abtausch, Beschützer, Hauskraft, Zauber, Wahl.
-- **Wanderschaft** nach Dungeon-Run-Art: Wegekarte durch das Königreich, 8 Gegner mit Sonderregeln, nach jedem Sieg Kartenbündel und Schatz, Niederlage beendet den Lauf. Geräte-Stand oder Sicherungscode aus W-018.
+- **Wanderschaft** nach Dungeon-Run-Art: Wegekarte durch das Königreich, 8 Gegner mit Sonderregeln, nach jedem Sieg Kartenbündel und Schatz, Niederlage beendet den Lauf. Der Stand läuft über die Sicherung aus Phase 8 (W-050). Fortschritt wie Turnierbuch und Bestwerte führt ein Zählerbuch je Gerät zusammen wie beim Narrenhof (`mergeProgress`), damit auf keinem Gerät etwas verloren geht.
 - **Turnier** nach Arena-Art: aus je 3 angebotenen Karten ein Deck, bis 5 Siege oder 2 Niederlagen, kostenlos.
 - **Turnierbuch:** Aufgaben („Gewinne mit jedem Haus“), Belohnung nur Kartenrahmen und Wappen, feste Reihenfolge, nie zufällig.
 - **Klassenturnier:** Turnierbaum im Raum als Ausblick, nur nach eigener Prüfung; Online-Raum bleibt heute auf 2 Plätze begrenzt.

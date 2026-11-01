@@ -15,6 +15,10 @@ const KATALOGE = [
   { datei: 'wortspiele/kategorien.json', quelle: 'content/wortspiele/kategorien.json' },
   { datei: 'wortspiele/wer-bin-ich.json', quelle: 'content/wortspiele/wer-bin-ich.json' },
   { datei: 'wortspiele/begriffe.json', quelle: 'content/wortspiele/begriffe.json' },
+  // Klassenspiele: Schätzmeister, Mehrheitsfrage, Zeitstrahl.
+  { datei: 'klassenspiele/schaetzen.json', quelle: 'content/klassenspiele/schaetzen.json' },
+  { datei: 'klassenspiele/mehrheit.json', quelle: 'content/klassenspiele/mehrheit.json' },
+  { datei: 'klassenspiele/zeitstrahl.json', quelle: 'content/klassenspiele/zeitstrahl.json' },
 ];
 
 export function kataloge(): Plugin {

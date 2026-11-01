@@ -1,0 +1,504 @@
+{
+ "status": "entwurf",
+ "hinweis": "Von Claude erstellt (1.11.2026), wartet auf Freigabe durch Cornelius. Lösungen vor der Freigabe prüfen. Bibelzahlen nach der Lutherbibel.",
+ "packs": [
+  {
+   "id": "allgemein",
+   "name": "Allgemein",
+   "questions": [
+    {
+     "id": "a01",
+     "text": "Wie viele Tage hat ein Schaltjahr?",
+     "answer": 366,
+     "unit": "Tage",
+     "min": 300,
+     "max": 400
+    },
+    {
+     "id": "a02",
+     "text": "Wie viele Länder grenzen an Deutschland?",
+     "answer": 9,
+     "unit": "Länder",
+     "min": 0,
+     "max": 20
+    },
+    {
+     "id": "a03",
+     "text": "Wie viele Bundesländer hat Deutschland?",
+     "answer": 16,
+     "unit": "Bundesländer",
+     "min": 0,
+     "max": 40
+    },
+    {
+     "id": "a04",
+     "text": "Wie viele Tasten hat ein normales Klavier?",
+     "answer": 88,
+     "unit": "Tasten",
+     "min": 20,
+     "max": 200
+    },
+    {
+     "id": "a05",
+     "text": "Wie viele Spieler stehen beim Fußball je Mannschaft auf dem Platz?",
+     "answer": 11,
+     "unit": "Spieler",
+     "min": 1,
+     "max": 30
+    },
+    {
+     "id": "a06",
+     "text": "Wie viele Knochen hat ein erwachsener Mensch?",
+     "answer": 206,
+     "unit": "Knochen",
+     "min": 50,
+     "max": 500
+    },
+    {
+     "id": "a07",
+     "text": "Wie viele Beine hat eine Spinne?",
+     "answer": 8,
+     "unit": "Beine",
+     "min": 0,
+     "max": 20
+    },
+    {
+     "id": "a08",
+     "text": "Wie viele Planeten kreisen um die Sonne?",
+     "answer": 8,
+     "unit": "Planeten",
+     "min": 1,
+     "max": 30
+    },
+    {
+     "id": "a09",
+     "text": "Wie hoch ist der höchste Berg Deutschlands, die Zugspitze?",
+     "answer": 2962,
+     "unit": "Meter",
+     "min": 500,
+     "max": 9000
+    },
+    {
+     "id": "a10",
+     "text": "Wie viele Zähne hat ein Erwachsener mit Weisheitszähnen?",
+     "answer": 32,
+     "unit": "Zähne",
+     "min": 10,
+     "max": 60
+    },
+    {
+     "id": "a11",
+     "text": "In welchem Jahr fiel die Berliner Mauer?",
+     "answer": 1989,
+     "unit": "",
+     "min": 1900,
+     "max": 2020
+    },
+    {
+     "id": "a12",
+     "text": "Wie viele Buchstaben hat das deutsche Alphabet ohne Umlaute und ß?",
+     "answer": 26,
+     "unit": "Buchstaben",
+     "min": 10,
+     "max": 50
+    },
+    {
+     "id": "a13",
+     "text": "Wie viele Grad Celsius hat kochendes Wasser auf Meereshöhe?",
+     "answer": 100,
+     "unit": "Grad",
+     "min": 0,
+     "max": 300
+    },
+    {
+     "id": "a14",
+     "text": "Wie lang ist die Elbe ungefähr?",
+     "answer": 1094,
+     "unit": "Kilometer",
+     "min": 100,
+     "max": 5000
+    },
+    {
+     "id": "a15",
+     "text": "Wie viele Herzkammern hat der Mensch?",
+     "answer": 2,
+     "unit": "Kammern",
+     "min": 0,
+     "max": 10
+    },
+    {
+     "id": "a16",
+     "text": "Wie viele Felder hat ein Schachbrett?",
+     "answer": 64,
+     "unit": "Felder",
+     "min": 10,
+     "max": 200
+    },
+    {
+     "id": "a17",
+     "text": "Wie hoch ist der Eiffelturm ungefähr, mit Antenne?",
+     "answer": 330,
+     "unit": "Meter",
+     "min": 50,
+     "max": 1000
+    },
+    {
+     "id": "a18",
+     "text": "Wie viele Saiten hat eine normale Gitarre?",
+     "answer": 6,
+     "unit": "Saiten",
+     "min": 1,
+     "max": 20
+    },
+    {
+     "id": "a19",
+     "text": "Wie viele Karten hat ein Skatblatt?",
+     "answer": 32,
+     "unit": "Karten",
+     "min": 10,
+     "max": 100
+    },
+    {
+     "id": "a20",
+     "text": "Wie viele Monate haben 31 Tage?",
+     "answer": 7,
+     "unit": "Monate",
+     "min": 0,
+     "max": 12
+    }
+   ]
+  },
+  {
+   "id": "bibel",
+   "name": "Bibel",
+   "questions": [
+    {
+     "id": "b01",
+     "text": "Wie viele Bücher hat die evangelische Bibel?",
+     "answer": 66,
+     "unit": "Bücher",
+     "min": 10,
+     "max": 200
+    },
+    {
+     "id": "b02",
+     "text": "Wie viele Bücher hat das Neue Testament?",
+     "answer": 27,
+     "unit": "Bücher",
+     "min": 1,
+     "max": 80
+    },
+    {
+     "id": "b03",
+     "text": "Wie viele Psalmen stehen in der Bibel?",
+     "answer": 150,
+     "unit": "Psalmen",
+     "min": 10,
+     "max": 500
+    },
+    {
+     "id": "b04",
+     "text": "Wie viele Jünger berief Jesus in den engeren Kreis?",
+     "answer": 12,
+     "unit": "Jünger",
+     "min": 1,
+     "max": 50
+    },
+    {
+     "id": "b05",
+     "text": "Wie viele Gebote empfing Mose auf den Steintafeln?",
+     "answer": 10,
+     "unit": "Gebote",
+     "min": 1,
+     "max": 50
+    },
+    {
+     "id": "b06",
+     "text": "Wie viele Tage regnete es bei der Sintflut?",
+     "answer": 40,
+     "unit": "Tage",
+     "min": 1,
+     "max": 200
+    },
+    {
+     "id": "b07",
+     "text": "Wie viele Jahre zog das Volk Israel durch die Wüste?",
+     "answer": 40,
+     "unit": "Jahre",
+     "min": 1,
+     "max": 200
+    },
+    {
+     "id": "b08",
+     "text": "Wie alt wurde Metuschelach, der älteste Mensch der Bibel?",
+     "answer": 969,
+     "unit": "Jahre",
+     "min": 50,
+     "max": 2000
+    },
+    {
+     "id": "b09",
+     "text": "Wie viele Männer wurden bei der Speisung mit fünf Broten satt?",
+     "answer": 5000,
+     "unit": "Männer",
+     "min": 50,
+     "max": 50000
+    },
+    {
+     "id": "b10",
+     "text": "Wie viele Söhne hatte Jakob?",
+     "answer": 12,
+     "unit": "Söhne",
+     "min": 1,
+     "max": 40
+    },
+    {
+     "id": "b11",
+     "text": "Wie viele Tage war Jona im Bauch des Fisches?",
+     "answer": 3,
+     "unit": "Tage",
+     "min": 1,
+     "max": 40
+    },
+    {
+     "id": "b12",
+     "text": "Wie viele Tage fastete Jesus in der Wüste?",
+     "answer": 40,
+     "unit": "Tage",
+     "min": 1,
+     "max": 200
+    },
+    {
+     "id": "b13",
+     "text": "Wie viele Plagen kamen über Ägypten?",
+     "answer": 10,
+     "unit": "Plagen",
+     "min": 1,
+     "max": 40
+    },
+    {
+     "id": "b14",
+     "text": "Für wie viele Silberlinge verriet Judas Jesus?",
+     "answer": 30,
+     "unit": "Silberlinge",
+     "min": 1,
+     "max": 200
+    },
+    {
+     "id": "b15",
+     "text": "Wie viele Körbe mit Resten blieben bei der Speisung der Fünftausend übrig?",
+     "answer": 12,
+     "unit": "Körbe",
+     "min": 0,
+     "max": 100
+    },
+    {
+     "id": "b16",
+     "text": "Wie viele Wochen liegen laut Tradition zwischen Ostern und Pfingsten (50 Tage)?",
+     "answer": 7,
+     "unit": "Wochen",
+     "min": 1,
+     "max": 20
+    },
+    {
+     "id": "b17",
+     "text": "Wie viele Evangelien stehen im Neuen Testament?",
+     "answer": 4,
+     "unit": "Evangelien",
+     "min": 1,
+     "max": 12
+    },
+    {
+     "id": "b18",
+     "text": "Wie viele Tage dauerte die Schöpfung bis zum Ruhetag einschließlich?",
+     "answer": 7,
+     "unit": "Tage",
+     "min": 1,
+     "max": 30
+    },
+    {
+     "id": "b19",
+     "text": "Wie viele Steine nahm David für seine Schleuder aus dem Bach?",
+     "answer": 5,
+     "unit": "Steine",
+     "min": 1,
+     "max": 20
+    },
+    {
+     "id": "b20",
+     "text": "Wie viele Menschen waren mit Noah in der Arche, Noah eingerechnet?",
+     "answer": 8,
+     "unit": "Menschen",
+     "min": 1,
+     "max": 40
+    }
+   ]
+  },
+  {
+   "id": "mathe",
+   "name": "Mathe Kl. 5/6",
+   "questions": [
+    {
+     "id": "m01",
+     "text": "Wie viele Sekunden hat eine Stunde?",
+     "answer": 3600,
+     "unit": "Sekunden",
+     "min": 100,
+     "max": 20000
+    },
+    {
+     "id": "m02",
+     "text": "Wie viele Minuten hat ein Tag?",
+     "answer": 1440,
+     "unit": "Minuten",
+     "min": 100,
+     "max": 10000
+    },
+    {
+     "id": "m03",
+     "text": "Wie viele Quadratmeter hat ein Hektar?",
+     "answer": 10000,
+     "unit": "m²",
+     "min": 100,
+     "max": 100000
+    },
+    {
+     "id": "m04",
+     "text": "Wie viel ist 15 · 15?",
+     "answer": 225,
+     "unit": "",
+     "min": 50,
+     "max": 500
+    },
+    {
+     "id": "m05",
+     "text": "Wie viel ist 2 hoch 10?",
+     "answer": 1024,
+     "unit": "",
+     "min": 10,
+     "max": 5000
+    },
+    {
+     "id": "m06",
+     "text": "Wie viele Primzahlen gibt es unter 100?",
+     "answer": 25,
+     "unit": "Primzahlen",
+     "min": 1,
+     "max": 100
+    },
+    {
+     "id": "m07",
+     "text": "Wie viel Prozent sind 3 von 4?",
+     "answer": 75,
+     "unit": "%",
+     "min": 0,
+     "max": 100
+    },
+    {
+     "id": "m08",
+     "text": "Wie viele Gramm hat ein Viertelkilo?",
+     "answer": 250,
+     "unit": "Gramm",
+     "min": 10,
+     "max": 1000
+    },
+    {
+     "id": "m09",
+     "text": "Wie viele Grad hat ein voller Kreis?",
+     "answer": 360,
+     "unit": "Grad",
+     "min": 10,
+     "max": 1000
+    },
+    {
+     "id": "m10",
+     "text": "Wie viele Kanten hat ein Würfel?",
+     "answer": 12,
+     "unit": "Kanten",
+     "min": 1,
+     "max": 30
+    },
+    {
+     "id": "m11",
+     "text": "Wie groß ist die Winkelsumme im Dreieck?",
+     "answer": 180,
+     "unit": "Grad",
+     "min": 10,
+     "max": 720
+    },
+    {
+     "id": "m12",
+     "text": "Wie viele Liter passen in einen Kubikmeter?",
+     "answer": 1000,
+     "unit": "Liter",
+     "min": 10,
+     "max": 10000
+    },
+    {
+     "id": "m13",
+     "text": "Wie viel ist 125 · 8?",
+     "answer": 1000,
+     "unit": "",
+     "min": 100,
+     "max": 5000
+    },
+    {
+     "id": "m14",
+     "text": "Wie viele Zentimeter hat ein halber Kilometer?",
+     "answer": 50000,
+     "unit": "cm",
+     "min": 100,
+     "max": 500000
+    },
+    {
+     "id": "m15",
+     "text": "Wie viele Stunden hat eine Woche?",
+     "answer": 168,
+     "unit": "Stunden",
+     "min": 20,
+     "max": 500
+    },
+    {
+     "id": "m16",
+     "text": "Wie viele Teiler hat die Zahl 36?",
+     "answer": 9,
+     "unit": "Teiler",
+     "min": 1,
+     "max": 36
+    },
+    {
+     "id": "m17",
+     "text": "Wie viele Ecken hat ein Oktaeder?",
+     "answer": 6,
+     "unit": "Ecken",
+     "min": 1,
+     "max": 30
+    },
+    {
+     "id": "m18",
+     "text": "Wie viel ist ein Drittel von 666?",
+     "answer": 222,
+     "unit": "",
+     "min": 10,
+     "max": 666
+    },
+    {
+     "id": "m19",
+     "text": "Wie viele Millimeter hat ein Meter?",
+     "answer": 1000,
+     "unit": "mm",
+     "min": 10,
+     "max": 10000
+    },
+    {
+     "id": "m20",
+     "text": "Wie viele Diagonalen hat ein Fünfeck?",
+     "answer": 5,
+     "unit": "Diagonalen",
+     "min": 0,
+     "max": 20
+    }
+   ]
+  }
+ ]
+}
