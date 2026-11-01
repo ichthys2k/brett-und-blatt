@@ -75,6 +75,12 @@ Gegner-Porträts im Narrenhof (`packages/games/color-sorter/src/ui/portraits/*.w
 
 Nach den Nutzungsbedingungen von Canva gehören die Ergebnisse dem Ersteller; sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis gemäß Canva: Die Bilder sind KI-erzeugt.
 
+## Narren-Porträts (KI-erzeugt)
+
+Die 81 Narren im Narrenhof (`packages/games/color-sorter/src/ui/portraits/fool-*.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen und mit zwei Narrenhof-Porträts als Stilvorlage, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `narren.json`). Die Figuren sind eigene Erfindungen (Hofnarren, Tiere und Märchenwesen), keine echten Personen. Die Gesichter der menschlichen Figuren sind frei erfunden.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
 ## Bildkarten-Porträts (KI-erzeugt)
 
 Bube, Dame und König des französischen Kartenbilds sowie Unter, Ober und König des deutschen Blatts (`packages/ui/src/cards/portraits/*.webp`, 24 Bilder): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen und mit einem Narrenhof-Porträt als Stilvorlage, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge in `scripts/grafik/`. Die Figuren sind eigene Erfindungen (Tiere in Königsgewändern), keine echten Personen.
