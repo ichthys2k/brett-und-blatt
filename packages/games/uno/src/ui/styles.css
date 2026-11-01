@@ -79,6 +79,16 @@
   min-height: 120px;
 }
 
+/* Wenig Höhe: Ränder sparen, damit die Hand ganz auf den Bildschirm passt. */
+.uno-table[data-tight] .uno-center-area {
+  padding: 0.25rem;
+}
+
+.uno-table[data-tight] .uno-hand-container {
+  padding: 0.25rem;
+  min-height: 0;
+}
+
 .uno-hand-card-wrapper {
   position: relative;
   transition: transform 0.2s ease;

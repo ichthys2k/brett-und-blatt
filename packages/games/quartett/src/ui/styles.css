@@ -108,6 +108,7 @@ button.qt-seat:hover {
 .qt-card {
   --qt-group: var(--color-accent);
   display: flex;
+  flex: none;
   flex-direction: column;
   width: min(100%, 20rem);
   border: 3px solid var(--qt-group);

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CardFan, useCallDeadline, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { CardFan, useCallDeadline, useElementSize, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { getActiveFace } from '../rules';
 import { DARK_COLORS, LIGHT_COLORS, type UnoCard, type UnoColor, type UnoMove, type UnoState } from '../types';
 import './styles.css';
@@ -28,6 +28,10 @@ interface FlyingCard {
 
 /** Handkarten: auf schmalen Bildschirmen 64 px, sonst 80 px breit (wie die Kartengröße „md“). */
 const handCardWidth = (containerWidth: number) => (containerWidth >= 600 ? 80 : 64);
+/** Wenig Höhe (Handy im Querformat, kleine Bildschirme, viele Spieler): kleinere Karten, Mitspieler in einer Zeile. */
+const TIGHT_TABLE_HEIGHT = 480;
+const CROWDED_TABLE_HEIGHT = 720;
+const TIGHT_HAND_CARD_WIDTH = 48;
 /** So viel jeder Handkarte bleibt mindestens sichtbar: die Ecke mit Zahl oder Symbol. */
 const HAND_MIN_STEP = 26;
 /** Mehr Rückseiten zeichnet der Fächer am Mitspieler nicht; die Zahl daneben nennt den Rest. */
@@ -74,6 +78,16 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   const [discardLanding, setDiscardLanding] = useState<boolean>(false);
 
   const tableRef = useRef<HTMLDivElement | null>(null);
+  const [measureTable, { height: tableHeight }] = useElementSize<HTMLDivElement>();
+  const bindTable = useCallback(
+    (node: HTMLDivElement | null) => {
+      tableRef.current = node;
+      return measureTable(node);
+    },
+    [measureTable],
+  );
+  // Viele Mitspieler brauchen sonst mehrere Reihen, darum dort schon früher kompakt.
+  const tight = tableHeight > 0 && tableHeight < (state.hands.length > 5 ? CROWDED_TABLE_HEIGHT : TIGHT_TABLE_HEIGHT);
   const discardRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<HTMLDivElement | null>(null);
   const handRef = useRef<HTMLDivElement | null>(null);
@@ -444,7 +458,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   };
 
   return (
-    <div ref={tableRef} className={`uno-table ${isDark ? 'bg-zinc-950 text-white' : 'text-zinc-900'}`}>
+    <div ref={bindTable} className={`uno-table ${isDark ? 'bg-zinc-950 text-white' : 'text-zinc-900'}`} data-tight={tight || undefined}>
       {/* 0. Animation Layer für fliegende Karten */}
       <div className="uno-flying-layer">
         {flyingCards.map((fc) => (
@@ -481,7 +495,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
       </div>
 
       {/* 1. Obere Leiste: Mitspieler & Richtungsanzeige */}
-      <div className="w-full flex flex-wrap items-center justify-around gap-2 p-2 bg-black/10 rounded-xl">
+      <div className={`w-full flex items-center gap-2 bg-black/10 rounded-xl ${tight ? 'flex-none overflow-x-auto p-1' : 'flex-wrap justify-around p-2'}`}>
         {state.hands.map((hand: UnoCard[], idx: number) => {
           if (idx === actor) return null; // Eigene Hand ist unten
           const isTurn = state.turn === idx;
@@ -495,7 +509,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                 if (el) seatRefs.current.set(idx, el);
                 else seatRefs.current.delete(idx);
               }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${
+              className={`flex flex-none items-center gap-2 rounded-lg border transition-all ${tight ? 'px-2 py-0.5' : 'px-3 py-1.5'} ${
                 isTurn ? 'border-yellow-400 bg-yellow-400/20 font-bold' : 'border-white/10 bg-black/20'
               } ${isEliminated ? 'opacity-40 line-through' : ''}`}
             >
@@ -530,7 +544,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
           <UnoCardView
             isBack
             side={side}
-            size="lg"
+            size={tight ? 'md' : 'lg'}
             highlight={canDraw && isActor}
             disabled={!canDraw || !isActor}
             onClick={() => onMove({ type: 'draw' })}
@@ -557,7 +571,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
             <UnoCardView
               card={topDiscard}
               side={side}
-              size="lg"
+              size={tight ? 'md' : 'lg'}
               mathMode={state.options.mathLabels === 'on'}
               disabled
               className="shadow-2xl"
@@ -639,7 +653,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
           <CardFan
             count={myHand.length}
             label="Deine Handkarten"
-            cardWidth={handCardWidth}
+            cardWidth={tight ? TIGHT_HAND_CARD_WIDTH : handCardWidth}
             cardAspect={1.5}
             minStep={HAND_MIN_STEP}
             maxRows={4}

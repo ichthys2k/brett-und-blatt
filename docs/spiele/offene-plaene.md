@@ -28,12 +28,8 @@ Pakete A und B aus diesem Plan sind fertig und veröffentlicht (Nicht ärgern! z
 
 ## 3. Fehler (offen in PLANUNG.md)
 
-- **F-005** Eins!: Handkarten im Querformat (844 × 390) unten abgeschnitten.
-- **F-006** Stichspiele: Handkarten überdecken im Hochformat die Knöpfe.
-- **F-010** Drachenspiel: Bildschirm beim Start oft schwarz. Vermutlich mit F-009 in #45 behoben – erst prüfen, dann schließen oder beheben.
-- **F-011** Kleine Bildschirme mit vielen Spielern: unterer Teil des Spielfelds nicht sichtbar.
-
-Empfehlung: diese vier zuerst, sie treffen Spieler direkt und sind klein.
+- **F-010** Drachenspiel: nicht mehr nachstellbar, gleiche Ursache wie F-009; Cornelius bestätigt am Gerät.
+- **F-011** Kleine Bildschirme: Der Rahmen ist behoben (Seite rollt nicht, Knöpfe frei, Inhalt rollt im Spielfeld). Offen ist, dass einzelne Spiele auf kleinen Bildschirmen noch rollen statt ganz zu passen, siehe `PLANUNG.md`.
 
 ## 4. Kleine Wünsche
 
