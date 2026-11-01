@@ -1,0 +1,247 @@
+.ws-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(100%, 34rem);
+  /* Das Spielfeld ist nur so hoch wie der Platz daneben: Bei 18 Personen scrollt die Fläche selbst. */
+  height: 100%;
+  overflow-y: auto;
+  margin: 0 auto;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  color: var(--color-ink);
+}
+
+/* Nachts ist die Fläche für alle gleich dunkel, im hellen wie im dunklen Thema. */
+.ws-board[data-night='true'] {
+  --color-ink: #eef1fb;
+  --color-muted: #aab3d0;
+  --color-line: #3a4470;
+  --color-surface: #232b4d;
+  --color-surface-2: #1b2240;
+  background: #141a33;
+}
+
+.ws-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.ws-news {
+  font-weight: 600;
+}
+
+.ws-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem;
+  border: 1px dashed var(--color-line);
+  border-radius: 0.75rem;
+  background: var(--color-surface-2);
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.ws-circle {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.75rem, 1fr));
+  gap: 0.35rem;
+}
+
+.ws-person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.2rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.6rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.ws-person:enabled {
+  cursor: pointer;
+}
+
+.ws-person:enabled:hover {
+  border-color: var(--color-accent);
+}
+
+.ws-person[data-chosen='true'] {
+  border-color: var(--color-accent);
+  outline: 2px solid var(--color-accent);
+}
+
+.ws-person[data-gone='true'] {
+  opacity: 0.55;
+}
+
+.ws-person small {
+  color: var(--color-muted);
+}
+
+.ws-action {
+  padding: 0.65rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 0.75rem;
+  background: var(--color-accent);
+  color: var(--color-on-accent, #fff);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  /* Der Hauptknopf bleibt sichtbar, auch wenn die Personen darüber scrollen. */
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+
+.ws-action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ws-symbol {
+  display: inline-flex;
+  font-weight: 700;
+}
+
+.ws-choices {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ws-shepherd {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ws-shepherd p {
+  margin: 0;
+  text-align: center;
+}
+
+.ws-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.ws-action-quiet {
+  position: static;
+  background: transparent;
+  color: var(--color-ink);
+}
+
+/* Auf kleinen Bildschirmen geht das Vorlesen vor dem Platz für die Personen zurück. */
+@media (max-height: 720px) {
+  .ws-board .ws-story {
+    display: none;
+  }
+}
+
+.ws-story {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.ws-wall {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2vh;
+  padding: 4vh 4vw;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  text-align: center;
+  overflow: auto;
+}
+
+.ws-wall[data-night='true'] {
+  --color-ink: #eef1fb;
+  --color-muted: #aab3d0;
+  --color-line: #3a4470;
+  --color-surface: #232b4d;
+  background: #141a33;
+}
+
+.ws-wall h2 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 4.5rem);
+}
+
+.ws-wall .ws-story,
+.ws-wall .ws-news {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.5vw, 2rem);
+}
+
+.ws-wall-clock {
+  margin: 0;
+  font-size: clamp(3rem, 10vw, 7rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ws-wall-people {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.ws-wall-person {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  font-size: clamp(1rem, 2vw, 1.5rem);
+}
+
+.ws-wall-person[data-gone='true'] {
+  opacity: 0.55;
+}
+
+.ws-wall-code {
+  margin: 0;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+}
+
+.ws-wall-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 1.1rem;
+}

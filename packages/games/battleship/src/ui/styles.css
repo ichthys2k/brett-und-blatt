@@ -188,6 +188,17 @@
   font-size: inherit;
 }
 
+/* Im Dunkelmodus verschwände das Wasser sonst fast im Hintergrund. */
+@media (prefers-color-scheme: dark) {
+  .bs-cell {
+    background: #24506f;
+  }
+
+  .bs-sea {
+    background: #7fb4d8;
+  }
+}
+
 .bs-cell:disabled {
   cursor: default;
   opacity: 1;

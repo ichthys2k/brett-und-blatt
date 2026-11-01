@@ -45,6 +45,10 @@ export interface GameInfo {
    * nicht, und die Oberfläche spielt ihre Musik selbst (Lautstärken über `BoardProps.audio`).
    */
   ownMusic?: boolean;
+  /** Mindestens so viele Menschen braucht eine Partie; ohne Gespräch unter Menschen ist sie sinnlos. Fehlt die Angabe, reicht einer. */
+  minHumans?: number;
+  /** Kein „Zug zurück“: Bei geheimen Rollen an einem Gerät würde das Zurücknehmen Wissen verraten. */
+  noUndo?: boolean;
   /** Kurze Anleitung „So geht's“: die wichtigsten Regeln in wenigen Sätzen, je ein Punkt pro Eintrag. */
   howToPlay: string[];
 }

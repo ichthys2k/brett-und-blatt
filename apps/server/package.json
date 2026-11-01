@@ -54,7 +54,8 @@
     "@brett-und-blatt/game-scrabble": "workspace:*",
     "@brett-und-blatt/game-ligretto": "workspace:*",
     "@brett-und-blatt/game-speed": "workspace:*",
-    "@brett-und-blatt/game-symbol-match": "workspace:*"
+    "@brett-und-blatt/game-symbol-match": "workspace:*",
+    "@brett-und-blatt/game-wolves-sheep": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261010.1",

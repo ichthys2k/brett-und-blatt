@@ -1,163 +1,178 @@
 # Etappe 7 – Spiele für viele Spieler (W-027) und Werwolf (W-021)
 
-Oct 31, 2026 · @Cornelius Lipponer
+31.10.2026 · Fassung 2, am Code geprüft · Vorschlag, wartet auf Entscheidung von Cornelius
 
 ## Kurzfassung
 
-Ich empfehle, mit fünf Spielen zu beginnen, die 12 bis 30 Plätze tragen, auf vorhandenen Bausteinen aufsetzen und im Klassenzimmer funktionieren: **Werwolf-Dorf** (W-021, eigene Fassung), **Wortbrücke** (Assoziationen erraten), **Schätzmeister** (Schätzfragen), **Malstube** (Zeichnen und Raten) und **Kategorien-Sprint** (Stadt-Land-Fluss-Art). Diese Liste enthält 34 Ideen; 28 davon tragen 8 oder mehr Spieler, 17 tragen 20 bis 30.
+**Ja, das lässt sich umsetzen.** Plätze, gleichzeitige Züge, geheime Sichten und Zeitgeber sind vorhanden. Fassung 1 war aber in drei Punkten zu optimistisch: Freitext und Zeichnungen wären in öffentlichen Räumen ein Chat mit Fremden, Zeichnen im Spielzustand überlastet den Server, und Werwolf mit 30 Kindern dauert viel länger, als eine Schulstunde verträgt.
 
-Alle Ideen kommen ohne Glücksspiel aus: kein Einsatz, kein Gewinn mit Wert, keine Zufallsbelohnungen. Wo ein Vorbild bekannt ist, wäre es eine eigene Fassung mit eigenem Namen, eigenen Inhalten und eigener Gestaltung, wie bei Kartenblitz oder Eins!.
+Deshalb ändert sich die Reihenfolge: Erst kommen Spiele **ohne freie Eingabe**, die mit Inhaltspaketen auskommen, dann Abstimmung und Werwolf, dann Freitext, zuletzt Zeichnen. Malstube und Kategorien-Sprint rücken aus dem Start nach hinten.
 
-## Maßstäbe
+| Welle | Spiele | Neu nötig | Risiko |
+| --- | --- | --- | --- |
+| 1 Sofort für die ganze Klasse | Schätzmeister, Zeitstrahl, Emoji-Rätsel, Mehrheitsfrage (mit Vorgaben) | gemeinsame Tafel, Runden-Zeitgeber | gering |
+| 2 Abstimmen und Rollen | Wölfe im Schafspelz (8–18), Der Fremde, Codewörter | Abstimmung, Teamwahl | mittel |
+| 3 Freitext, nur in privaten Räumen | Wortbrücke, Kategorien-Sprint, Wahr oder geflunkert | Texteingabe, Pflicht zum privaten Raum | mittel |
+| 4 Zeichnen | Stille Post gemalt, dann Malstube | Zeichenfläche, flüchtiger Kanal | hoch |
 
-Jede Idee wurde an vier Fragen gemessen.
+Jede Welle ist für sich nutzbar. Nach Welle 1 und 2 wird neu entschieden, ob Welle 3 und 4 den Aufwand lohnen.
 
-- **Jugendschutz:** Keine Einsätze, keine Wetten mit Punkten als Währung, keine Lootboxen oder Zufallsbelohnungen, kein Chat mit Fremden über die vorhandenen Schnellnachrichten hinaus. Freie Texteingaben (Begriffe, Antworten) laufen durch den vorhandenen Spitznamen-Filter und sind nur im Raum sichtbar.
-- **Klassenzimmer:** Spielbar mit 20 bis 30 Kindern am eigenen Handy oder Tablet, eine Runde in 5 bis 15 Minuten, auf Wunsch mit Tafelansicht (Beamer) wie bei Bingo.
-- **Technik:** Der Raum trägt heute höchstens 30 Plätze und 40 Mitglieder (`MAX_SEATS`, `MAX_MEMBERS`). Gleichzeitige Züge gibt es schon (`stillValid`, Bibel-Quiz, Enten-Rallye). Spiele mit Texteingabe oder Zeichnen brauchen neue Bausteine.
-- **Kurzweil:** Niemand wartet lange. Wer ausscheidet, bleibt beschäftigt (zuschauen, mitraten, Geisterrolle).
+## Was der Code hergibt
 
-Die Spalte „Spieler“ nennt die sinnvolle Spanne, „Aufwand“ schätzt die Umsetzung grob: S etwa 1 Tag, M 2 bis 4 Tage, L eine Woche oder mehr.
+### Passt schon
 
-## Die Spielideen
+- **30 Plätze, 40 Mitglieder:** `MAX_SEATS`, `MAX_MEMBERS`. Bibel-Quiz und Bingo laufen damit.
+- **Gleichzeitige Züge:** `currentPlayers` nennt alle, die noch handeln müssen; `stillValid` nimmt Züge trotz veralteter Version an.
+- **Zeitablauf:** `systemDelayMs` weckt die Spielleitung, und ein gestellter Wecker bleibt stehen, wenn andere ziehen. Er überlebt das Schlafen des Servers.
+- **Geheime Sichten:** `playerView` und `eventView` je Platz; der Server schickt nie den ganzen Zustand.
+- **Spielleitung ohne Rolle:** Bingo setzt die Lehrkraft auf Platz 1 („zieht nur“). Dasselbe Muster trägt die Werwolf-Spielleitung.
 
-34 Ideen in sechs Gruppen. Die Namen sind Arbeitstitel; „Art“ nennt die Spielgattung, damit klar ist, was gemeint ist.
+### Muss sich gegenüber Fassung 1 ändern
+
+| Annahme in Fassung 1 | Was der Code zeigt | Änderung |
+| --- | --- | --- |
+| Freie Texte sind „nur im Raum sichtbar“ | Räume sind standardmäßig öffentlich (`isPublic = true`) und stehen auf der Startseite. Fremde können also mitlesen. | Spiele mit freier Eingabe erzwingen private Räume |
+| Der Spitznamen-Filter reicht für Texte | `cleanName` kürzt auf 16 Zeichen und prüft Wortteile. „Marsch“ und „Barsch“ fielen durch („arsch“), Beleidigungen ohne Listenwort kämen durch. Sein Kommentar sagt selbst, dass er nicht alles abfängt. | Eigene Texteingabe in der Engine, dazu Ausblenden durch die Raumleitung |
+| Schnellnachrichten „mit Spielerwahl“ | `say` erlaubt nur sieben feste Sätze aus `PHRASES`, ohne Parameter | Verdacht wird ein Spielzug, kein Signal |
+| Striche als JSON im Zustand | Jeder Zug speichert den ganzen Raum (`storage.put`) und schickt die ganze Sicht an alle; eine Nachricht vom Browser darf höchstens 16 KB haben. | Striche laufen über einen flüchtigen Kanal, siehe Welle 4 |
+| Lehrkraft „sieht alle Rollen“ als Raumleitung | Sichten kennen nur Plätze und einen gemeinsamen `'spectator'`. Hätte der alles, sähen es alle Zuschauer. | Spielleitung als eigener Platz wie bei Bingo |
+| Inhalte vom Server schützen die Lösungen | `prepare` lädt den Katalog weiterhin in den Browser (beim Bibel-Quiz so vermerkt) | Nur für kleineres Paket sinnvoll, nicht als Schutz |
+| Tafelansicht als fast fertiger Baustein | Die Tafel steckt fest im Bingo-Code (`bg-wall`) | Zuerst nach `packages/ui` herauslösen |
+| Bots „nur als Ersatz“ | Der Vertrag verlangt mindestens einen Bot, und die Web-App wertet `modes` nirgends aus. Man könnte also allein gegen fünf Bots Werwolf starten. | Kleine Ergänzung: `GameInfo.minHumans` |
+
+### Belastung des Servers
+
+Ein Zug bei 30 Plätzen bedeutet 1 Speichervorgang und 30 Nachrichten. Geben alle in einer Runde einmal ab, sind das 30 Speichervorgänge und 900 Nachrichten. Das ist machbar, wenn jeder einmal je Runde abgibt, aber nicht bei einem Zug je Tastendruck oder Pinselstrich. Das Gratis-Kontingent der Durable Objects kann ausgehen (Fehler 1101, Reset täglich um 00:00 UTC).
+
+**Regel für alle Spiele hier:** höchstens ein bis zwei Züge je Spieler und Runde. Vor Welle 2 messe ich eine Klassenpartie mit 30 nachgebauten Browsern (Ausbau von `apps/server/scripts/smoke.mjs`).
+
+## Leitplanken
+
+- **Jugendschutz:** Keine Einsätze, keine Wetten, keine Zufallsbelohnungen. Spiele mit freier Eingabe laufen nie in öffentlichen Räumen. Die Raumleitung kann jeden Text und jedes Bild ausblenden und Mitglieder entfernen.
+- **Klasse:** Eine Runde dauert 5 bis 15 Minuten. „ganz“ heißt: läuft mit 20 bis 30 Kindern in einem Raum. „Gruppen“ heißt: mehrere Räume mit je wenigen Kindern. Fassung 1 hatte beides als „ja“ geführt.
+- **Miteinander:** Nur wenige Spiele scheiden Kinder durch die Stimmen anderer aus (siehe Wölfe im Schafspelz). Wer ausscheidet, bleibt beschäftigt.
+- **Gespräch:** Viele Spiele leben vom Reden. Sie funktionieren am Tisch, im Klassenzimmer oder mit Sprachkanal (W-024), aber nicht online ohne Stimme. Die Spalte „Reden“ markiert das; der Steckbrief soll es anzeigen.
+- **Eigene Fassung:** Eigene Namen, Texte, Wortlisten und Gestaltung. Vor der Veröffentlichung prüft Cornelius die Namen naher Vorbilder; dieses Papier ist keine Rechtsauskunft.
+
+## Bausteine
+
+| Baustein | wofür | Welle | Aufwand |
+| --- | --- | --- | --- |
+| Tafel (aus Bingo herausgelöst, zeigt die Zuschauer-Sicht mit QR-Code und Rangliste) | alle ganzen Klassenspiele | 1 | S |
+| Runden-Zeitgeber (Frage, Antwortzeit, Auflösung über `systemDelayMs`, früher Schluss, wenn alle abgegeben haben) | 1, 3, 4, 7, 8, 12 | 1 | S |
+| Rangliste für 30 (wie bei Bingo: die Besten plus der eigene Platz) | alle ganzen Klassenspiele | 1 | S |
+| Abstimmung in der Engine (geheim, Live-Stand wahlweise, Gleichstand-Regel) | 6, 12, 13, 14, 15, 23, 28 | 2 | M |
+| Teamwahl in der Lobby (zwei Teams, zufällig wie „Alle verteilen“) | 11, 23, 27, 28, 32 | 2 | S |
+| Texteingabe (Prüfung im Regelwerk auf dem Server, Vergleich trotz Tippfehlern, Ausblenden) | 2, 3, 6, 9, 10 | 3 | M |
+| Pflicht zum privaten Raum (`GameInfo.privateRoomOnly`: Spiel erscheint nicht in `publicListing`, Schalter gesperrt) | Welle 3 und 4 | 3 | S |
+| Zeichenfläche und flüchtiger Kanal | 9, 10 | 4 | L |
+
+Der Filter muss aus `packages/online` in die Engine wandern, denn Spiele hängen nur von der Engine ab und die Prüfung gehört ins Regelwerk. Mehr als 30 Plätze braucht keine Idee.
+
+## Welle 1: Ohne freie Eingabe
+
+Diese Spiele belegen die Klassentauglichkeit mit wenig Risiko. Alle nutzen Inhaltspakete unter `content/` und antworten mit genau einem Zug je Frage.
+
+- **Schätzmeister:** Zahl eingeben, Zahlenleiste zeigt alle Tipps. Freie Zahlen prüft `isLegal`.
+- **Zeitstrahl:** Reihenfolge wird als ein Zug abgegeben, nicht je Verschieben.
+- **Emoji-Rätsel:** nur Auswahlantworten. Freie Eingabe käme erst mit Welle 3.
+- **Mehrheitsfrage:** vier bis sechs Vorgaben statt Freitext. So entfällt das schwierige Zusammenfassen ähnlicher Antworten.
+
+Bots wählen aus dem Katalog, damit Vertragsprüfungen und Ersatz für Abwesende funktionieren. Die Inhalte schreibe ich als Entwurf, Cornelius prüft sie (besonders die Bibel-Pakete).
+
+## Welle 2: Wölfe im Schafspelz (W-021)
+
+Der vollständige Spielplan steht in [`woelfe-im-schafspelz.md`](woelfe-im-schafspelz.md): Regeln und Rollen wie im Original, christliches Thema, 8–18 Plätze. Er ersetzt die früheren Abwandlungen (6–16 Plätze, kein Amor, Diebe im Dorf, Wiederfinden).
+
+## Welle 3: Freitext
+
+Nur in privaten Räumen. Texte gehen als ein Zug je Runde an den Server, nicht je Tastendruck.
+
+- **Wortbrücke:** Doppelte Hinweise fallen weg (Vergleich mit dem Baustein). 3–12 Plätze, die Klasse spielt in Gruppen.
+- **Kategorien-Sprint:** Ein Abstimmen über jede Antwort ist bei 30 Kindern mit fünf Kategorien (150 Antworten) unmöglich. Stattdessen werden Antworten automatisch gewertet, wo es geht (Wortliste aus Wortgitter, eigene Listen für Städte, Länder, Tiere); nur angefochtene Einträge gehen an die Raumleitung.
+- **Wahr oder geflunkert:** Abstimmung über die Erklärungen, Ausblenden durch die Raumleitung vor dem Aufdecken.
+
+## Welle 4: Zeichnen
+
+**Stille Post gemalt zuerst:** Ein Bild ist ein Zug am Ende der Zeichenzeit, also ohne neuen Kanal. Die Datenmenge begrenzt die Plätze: 20 Ketten mit je 20 Schritten wären rund 200 Bilder und über 3 MB im Zustand. Deshalb 4–10 Plätze, Bilder höchstens 8 KB und in der Vorführung nur die gerade gezeigte Kette in der Sicht.
+
+**Malstube danach:** Live-Striche brauchen einen flüchtigen Kanal neben den Zügen (wie `signal`, ungespeichert), mit gebündelten Strichen etwa jede Sekunde. Das fertige Bild kommt als ein Zug in den Zustand, sonst fehlt es Wiederkommenden.
+
+Ein Filter sieht keine Bilder. Schutz bieten nur private Räume und das Ausblenden durch die Raumleitung.
+
+## Alle 34 Ideen
+
+Die Nummern bleiben wie in Fassung 1. Aufwand: S etwa 1 Tag, M 2 bis 4 Tage, L eine Woche oder mehr, jeweils ohne Inhalte. „Reden“: ohne Gespräch nicht spielbar. Welle „–“ heißt: vorerst zurückgestellt.
 
 ### Wissen und Raten
 
-| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | Schätzmeister | Schätzquiz | 2–30 | Alle schätzen gleichzeitig eine Zahl (Höhe des Eiffelturms, Knochen im Körper). Wer am nächsten liegt, punktet; eine Zahlenleiste zeigt alle Tipps. Inhaltspakete Allgemein, Bibel, Mathe. | S | ja |
-| 2 | Wortbrücke | kooperatives Hinweisspiel | 3–12 | Einer rät, alle anderen schreiben geheim je ein Hinweiswort. Doppelte Hinweise fallen weg, dann rät der Ratende. Der Rater wechselt reihum. | M | ja |
-| 3 | Kategorien-Sprint | Stadt-Land-Fluss-Art | 2–30 | Ein Buchstabe, fünf Kategorien, alle tippen gleichzeitig. Gleiche Antworten geben weniger Punkte, Zweifelsfälle stimmt die Runde ab. | M | ja |
-| 4 | Mehrheitsfrage | Umfrage-Raten | 3–30 | „Was nehmen die meisten mit auf eine Insel?“ Alle antworten, Punkte gibt es für Antworten, die viele andere auch gaben. Gut zum Kennenlernen einer Klasse. | S | ja |
-| 5 | Wer bin ich? | Ja-Nein-Fragen | 3–10 | Jeder hat einen Begriff, den alle außer ihm sehen. Reihum Ja-Nein-Fragen über Knöpfe; wer es zuerst rät, gewinnt. | M | bedingt |
-| 6 | Wahr oder geflunkert | Bluff-Erklärungen | 3–12 | Ein seltenes Wort oder eine erstaunliche Tatsache: Jeder erfindet eine glaubhafte falsche Erklärung. Wer die echte findet oder andere hereinlegt, punktet. | M | ja |
-| 7 | Zeitstrahl | Einsortieren | 2–30 | Ereignisse, Erfindungen oder biblische Geschichten in die richtige Reihenfolge legen, alle gleichzeitig mit derselben Karte. | S | ja |
-| 8 | Emoji-Rätsel | Bilderrätsel | 1–30 | Sprichwörter, Geschichten oder Begriffe aus Emojis erraten, Auswahl oder Eingabe, schnelle Antworten zählen mehr. Passt zu Bibel-Quiz und „Der Große Preis“. | S | ja |
+| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse | Reden | Welle |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Schätzmeister | Schätzquiz | 2–30 | Alle schätzen gleichzeitig eine Zahl, wer am nächsten liegt, punktet. Pakete Allgemein, Bibel, Mathe. | S | ganz | | 1 |
+| 2 | Wortbrücke | Hinweisspiel | 3–12 | Einer rät, alle anderen schreiben je ein Hinweiswort, doppelte fallen weg. | M | Gruppen | | 3 |
+| 3 | Kategorien-Sprint | Stadt-Land-Fluss-Art | 2–30 | Ein Buchstabe, fünf Kategorien, automatische Wertung mit Einspruch. | L | ganz | | 3 |
+| 4 | Mehrheitsfrage | Umfrage-Raten | 3–30 | Punkte für Antworten, die viele andere auch wählen. Mit festen Vorgaben. | S | ganz | | 1 |
+| 5 | Wer bin ich? | Ja-Nein-Fragen | 3–10 | Jeder hat einen Begriff, den alle außer ihm sehen. Fragen laut, Antwort über Knöpfe. | M | Gruppen | ja | – |
+| 6 | Wahr oder geflunkert | Bluff-Erklärungen | 3–12 | Falsche Erklärungen erfinden, die echte finden. | M | Gruppen | | 3 |
+| 7 | Zeitstrahl | Einsortieren | 2–30 | Ereignisse oder biblische Geschichten ordnen, alle gleichzeitig. | S | ganz | | 1 |
+| 8 | Emoji-Rätsel | Bilderrätsel | 1–30 | Begriffe aus Emojis erraten, schnelle Antworten zählen mehr. Auswahlantworten. | S | ganz | | 1 |
 
 ### Zeichnen und Darstellen
 
-| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse |
-| --- | --- | --- | --- | --- | --- | --- |
-| 9 | Malstube | Zeichnen und Raten | 3–20 | Einer zeichnet einen Begriff, alle anderen raten per Eingabe. Frühe Treffer zählen mehr, der Zeichner punktet mit. | L | ja |
-| 10 | Stille Post gemalt | Satz-Bild-Kette | 4–20 | Jeder schreibt einen Satz, der Nächste malt ihn, der Nächste beschreibt das Bild. Am Ende werden alle Ketten vorgeführt. Kein Gewinner, viel Gelächter. | L | ja |
-| 11 | Pantomime-Uhr | Vorspielen im Raum | 4–30 | Für einen Raum voller Menschen: Das Handy zeigt dem Darsteller den Begriff, die App misst die Zeit und zählt Teampunkte. Auch auf der Tafel. | S | ja |
-| 32 | Sag's anders | Umschreiben mit Verboten | 4–30 | Einen Begriff erklären, ohne fünf verbotene Wörter zu sagen; das eigene Team rät, das andere passt auf. Am Tisch oder mit Sprachkanal. | S | ja |
+| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse | Reden | Welle |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 9 | Malstube | Zeichnen und Raten | 3–20 | Einer zeichnet, alle raten per Eingabe. | L | ganz | | 4 |
+| 10 | Stille Post gemalt | Satz-Bild-Kette | 4–10 | Abwechselnd schreiben und malen, am Ende alle Ketten vorführen. | L | Gruppen | | 4 |
+| 11 | Pantomime-Uhr | Vorspielen im Raum | 4–30 | Handy zeigt dem Darsteller den Begriff, misst Zeit und Teampunkte. | S | ganz | ja | – |
+| 32 | Sag's anders | Umschreiben mit Verboten | 4–30 | Begriff erklären, ohne fünf verbotene Wörter. Teams. | S | ganz | ja | – |
 
 ### Verborgene Rollen und Bluff
 
-| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse |
-| --- | --- | --- | --- | --- | --- | --- |
-| 12 | Werwolf-Dorf | Rollenspiel mit Abstimmung | 6–30 | Nachts handeln geheime Rollen, tags beraten und stimmen alle ab. Ausführlicher Plan im nächsten Abschnitt. | L | bedingt |
-| 13 | Der Fremde | Wer kennt das Wort nicht? | 4–12 | Alle sehen dasselbe geheime Wort, nur einer nicht. Reihum nennt jeder ein passendes Wort, dann wird abgestimmt. Der Fremde kann sich retten, wenn er das Wort errät. | M | ja |
-| 14 | Spion im Schloss | Fragerunde mit Ort | 3–10 | Alle kennen den Ort (Burgküche, Marktplatz) und eine Rolle, der Spion nicht. Fragen reihum; der Spion versucht, den Ort zu erraten. | M | ja |
-| 15 | Tafelrunde | Aufträge mit Verrätern | 5–10 | Ritter wählen Gruppen für fünf Aufträge, verborgene Verräter lassen sie scheitern. Abstimmungen über die Gruppen. Passt zur Taverne. | L | bedingt |
-| 16 | Zöllner am Stadttor | Waren melden und bluffen | 3–6 | Spieler bringen verdeckte Waren in die Stadt und melden sie an; der Zöllner prüft oder lässt durch. Wertung in Ehrenpunkten, ohne Münzen und Bestechung. | L | nein |
-| 17 | Kröten-Bluff | Behaupten und weitergeben | 3–6 | Eine Tierkarte verdeckt weitergeben mit Ansage „Das ist eine Kröte“. Glauben, widersprechen oder weiterschieben. Wer vier gleiche sammelt, verliert. | M | ja |
+| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse | Reden | Welle |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 12 | Wölfe im Schafspelz | Rollen mit Abstimmung | 8–18 | Eigener Spielplan, siehe Welle 2. | L | Gruppen | ja | 2 |
+| 13 | Der Fremde | Wer kennt das Wort nicht? | 4–12 | Alle sehen ein Wort, einer nicht. Reihum ein passendes Wort sagen, dann abstimmen. | M | Gruppen | ja | 2 |
+| 14 | Spion im Schloss | Fragerunde mit Ort | 3–10 | Alle kennen den Ort, der Spion nicht. | M | Gruppen | ja | – |
+| 15 | Tafelrunde | Aufträge mit Verrätern | 5–10 | Gruppen für fünf Aufträge wählen, Verräter lassen sie scheitern. | L | Gruppen | ja | – |
+| 16 | Zöllner am Stadttor | Waren melden und bluffen | 3–6 | Verdeckte Waren anmelden, Zöllner prüft. Ehrenpunkte, keine Münzen. | L | nein | | – |
+| 17 | Kröten-Bluff | Behaupten und weitergeben | 3–6 | Tierkarte verdeckt weitergeben mit Ansage. Wer vier gleiche sammelt, verliert. | M | Gruppen | | – |
 
 ### Karten, Würfel und Brett
 
-| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse |
-| --- | --- | --- | --- | --- | --- | --- |
-| 18 | Reihenbauer | gleichzeitiges Kartenlegen | 2–10 | Alle wählen geheim eine Zahlenkarte, dann werden sie aufsteigend an vier Reihen gelegt. Wer die sechste Karte einer Reihe legt, nimmt die Reihe mit Minuspunkten. | M | ja |
-| 19 | Stille Zahlenreihe | kooperativ in Echtzeit | 2–8 | Ohne Absprache legen alle ihre Zahlen aufsteigend ab, nur nach Gefühl für den richtigen Moment. Gemeinsame Leben, steigende Stufen. | M | ja |
-| 20 | Würfelblock für alle | gleicher Wurf | 1–30 | Erweiterung des Würfelblocks: Die Tafel würfelt für alle, jeder trägt auf dem eigenen Block ein. Bestenliste nach 13 Würfen. | S | ja |
-| 21 | Mogel-Stapel | ansagen und anzweifeln | 3–10 | Karten verdeckt mit Ansage ablegen („drei Siebener“), jeder darf „Geflunkert!“ rufen. Wer zuerst keine Karten mehr hat, gewinnt. | M | ja |
-| 22 | Gänsespiel | Würfelrennen | 2–8 | Das alte gemeinfreie Laufspiel mit Sonderfeldern (Brücke, Brunnen, Labyrinth). Kurz, für Kinder, mit Spielbrett im Taverne-Stil. | S | ja |
-| 23 | Flottenduell | Schiffe versenken in Teams | 4–30 | Zwei Teams teilen sich eine Flotte; jeder schlägt Ziele vor, die Mehrheit schießt. Nutzt die vorhandenen Koordinaten-Modi für Mathe. | M | ja |
-| 30 | Sternhalma | Laufspiel auf Sternbrett | 2–6 | Figuren über andere springend ins gegenüberliegende Dreieck bringen. Gemeinfreier Klassiker, Bot gut machbar. | M | bedingt |
-| 31 | Landschaftsleger | Plättchen legen | 2–5 | Landschaftsplättchen anlegen, Wege, Wiesen und Dörfer schließen und werten. Eigene Plättchen und Regeln. | L | nein |
-| 33 | Durak | Angriff und Abwehr | 2–6 | Russischer Kartenklassiker: Angreifer legen, Verteidiger schlagen mit höheren Karten oder Trumpf ab. Wer am Ende Karten hält, ist der „Durak“. | M | bedingt |
-| 34 | Elfer raus | Reihen von 11 aus legen | 2–6 | Familienspiel: Von der Elf aus nach oben und unten in vier Farben anlegen. Einfach, ideal für jüngere Kinder. | S | ja |
+| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse | Reden | Welle |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 18 | Reihenbauer | gleichzeitiges Kartenlegen | 2–10 | Geheim eine Zahlenkarte wählen, aufsteigend an vier Reihen legen. | M | Gruppen | | – |
+| 19 | Stille Zahlenreihe | kooperativ in Echtzeit | 2–8 | Zahlen ohne Absprache aufsteigend ablegen. Gemeinsame Leben. | M | Gruppen | | – |
+| 20 | Würfelblock für alle | gleicher Wurf | 1–30 | Die Tafel würfelt für alle, jeder trägt ein. Der Würfelblock trägt heute 6 Plätze, Tabelle muss neu. | M | ganz | | – |
+| 21 | Mogel-Stapel | ansagen und anzweifeln | 3–10 | Karten verdeckt mit Ansage ablegen, „Geflunkert!“ rufen. | M | Gruppen | | – |
+| 22 | Gänsespiel | Würfelrennen | 2–8 | Altes Laufspiel mit Sonderfeldern. | S | Gruppen | | – |
+| 23 | Flottenduell | Schiffe versenken in Teams | 4–30 | Zwei Teams, Mehrheit bestimmt den Schuss. Mathe-Koordinaten vorhanden. | M | ganz | | – |
+| 30 | Sternhalma | Laufspiel auf Sternbrett | 2–6 | Figuren springend ins Gegenüber bringen. | M | Gruppen | | – |
+| 31 | Landschaftsleger | Plättchen legen | 2–5 | Wege, Wiesen und Dörfer schließen und werten. | L | nein | | – |
+| 33 | Durak | Angriff und Abwehr | 2–6 | Russischer Klassiker mit Angreifer und Verteidiger. | M | Gruppen | | – |
+| 34 | Elfer raus | Reihen von 11 aus legen | 2–6 | Einfaches Familienspiel. | S | Gruppen | | – |
 
 ### Echtzeit und Party
 
-| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse |
-| --- | --- | --- | --- | --- | --- | --- |
-| 24 | Minispiel-Marathon | Reaktionsaufgaben | 1–30 | Fünf-Sekunden-Aufgaben in schneller Folge: Farbe tippen, Dinge zählen, größte Zahl finden. Alle gleichzeitig, Bestenliste live. | L | ja |
-| 25 | Stuhltanz | Reise nach Jerusalem | 3–30 | Musik läuft, bei Stille müssen alle tippen. Wer zuletzt tippt oder zu früh, scheidet aus. Nutzt Musik und Klänge. | S | ja |
-| 26 | Schnick-Schnack-Turnier | Schere, Stein, Papier | 2–30 | Turnierbaum für die ganze Klasse. Wer verliert, wird Anhänger des Siegers und feuert ihn an, bis zwei große Fanblocks im Finale stehen. | S | ja |
-| 27 | Klassen-Tauziehen | Rechenduell in Teams | 2–30 | Zwei Teams, jede richtige Aufgabe zieht das Seil ein Stück. Baut auf dem Aufgabenstrom der Enten-Rallye auf. | M | ja |
+| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse | Reden | Welle |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 24 | Minispiel-Marathon | Reaktionsaufgaben | 1–30 | Fünf-Sekunden-Aufgaben in Folge. Live-Liste nur alle paar Sekunden. | L | ganz | | – |
+| 25 | Stuhltanz | Reise nach Jerusalem | 3–30 | Bei Stille tippen. Das Netz entscheidet mit, darum Zeitmessung im Gerät und Toleranzfenster. | M | ganz | | – |
+| 26 | Schnick-Schnack-Turnier | Schere, Stein, Papier | 2–30 | Turnierbaum, Verlierer werden Anhänger des Siegers. | M | ganz | | – |
+| 27 | Klassen-Tauziehen | Rechenduell in Teams | 2–30 | Richtige Aufgaben ziehen das Seil. Aufgabenstrom der Enten-Rallye. | M | ganz | | – |
 
 ### Kooperativ und Teams
 
-| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse |
-| --- | --- | --- | --- | --- | --- | --- |
-| 28 | Codewörter | Team-Hinweisspiel | 4–30 | Zwei Teams, 25 Wörter im Gitter. Der Hinweisgeber nennt ein Wort und eine Zahl, sein Team tippt die passenden Felder. Teams stimmen gemeinsam ab. | M | ja |
-| 29 | Turmrätsel | Escape-Rätsel | 2–8 | Jeder sieht andere Hinweise zu einem Rätsel und muss sie der Gruppe beschreiben. Drei Räume im Turm, gemeinsame Zeit. | L | bedingt |
+| Nr. | Idee | Art | Spieler | Kurzbeschreibung | Aufwand | Klasse | Reden | Welle |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 28 | Codewörter | Team-Hinweisspiel | 4–30 | 25 Wörter im Gitter; der Hinweis wird laut gesagt, das Team stimmt ab. | M | ganz | ja | 2 |
+| 29 | Turmrätsel | Escape-Rätsel | 2–8 | Jeder sieht andere Hinweise und beschreibt sie der Gruppe. | L | Gruppen | ja | – |
 
-Zählung: 28 der 34 Ideen tragen 8 oder mehr Spieler, 17 tragen 20 bis 30.
+Zählung: 28 der 34 Ideen tragen 8 oder mehr Spieler, 15 tragen 20 bis 30. Fassung 1 zählte 28 und 17; Werwolf und Stille Post sind bewusst kleiner geworden.
 
-## Werwolf-Dorf (W-021)
+## Offene Entscheidungen
 
-Werwolf lässt sich gut in die vorhandene Engine einbauen: Die App übernimmt den Erzähler, geheime Rollen sind eine Sicht je Platz, Nacht und Abstimmung sind gleichzeitige Züge. Das Volksspiel (auch „Mafia“) ist frei; eine eigene Fassung mit eigenen Rollennamen und Bildern ist rechtlich unbedenklich. Aufwand etwa eineinhalb Wochen für das Grundspiel.
-
-### Ablauf einer Partie
-
-1. **Rollen verteilen:** Jeder sieht nur die eigene Rolle; Werwölfe sehen einander.
-2. **Nacht:** Die Werwölfe wählen gemeinsam ein Opfer und sehen live, wen die anderen Wölfe antippen. Seherin, Heilerin und weitere Rollen handeln gleichzeitig. Wer keine Nachtrolle hat, tippt zum Schein auf Personen, damit niemand am Tippen erkannt wird.
-3. **Morgen:** Der Erzähler verkündet, wer das Dorf verlassen musste.
-4. **Tag:** Beratung mit einstellbarer Zeit (2 bis 5 Minuten), dann geheime Abstimmung. Bei Gleichstand geschieht nichts.
-5. **Ende:** Das Dorf gewinnt, wenn alle Werwölfe enttarnt sind; die Werwölfe, wenn sie so viele sind wie die übrigen.
-
-### Rollen
-
-| Rolle | Fähigkeit | ab Spielern |
-| --- | --- | --- |
-| Werwolf | wählt nachts mit den anderen Wölfen ein Opfer; etwa jeder vierte bis fünfte Spieler | 6 |
-| Dorfbewohner | berät und stimmt ab | 6 |
-| Seherin | erfährt jede Nacht die Rolle einer Person | 6 |
-| Heilerin | schützt jede Nacht eine Person, nicht zweimal hintereinander dieselbe | 7 |
-| Jäger | darf beim Ausscheiden noch eine Person mitnehmen | 9 |
-| Amor | verbindet in der ersten Nacht zwei Verliebte, die nur gemeinsam gewinnen | 10 |
-| Dorfältester | übersteht den ersten Angriff | 12 |
-
-Die App schlägt je Spielerzahl eine ausgewogene Mischung vor; die Raumleitung darf Rollen an- und abwählen.
-
-### Jugendschutz und Klassenzimmer
-
-- **Milde Erzählweise als Standard:** Wer erwischt wird, „flieht aus dem Dorf“ oder „wird verzaubert“, statt zu sterben. Zur Wahl stehen Themen wie „Werwolf-Dorf“, „Gespensternacht“ (Gespenster verhexen) und „Narrenhof“ (Taschendiebe am Hof).
-- **Kein freier Chat:** Beraten wird am Tisch, im Klassenzimmer oder im Sprachkanal. In der App gibt es nur Schnellnachrichten mit Spielerwahl („Ich verdächtige …“, „Ich vertraue …“, „Ich bin unschuldig“).
-- **Lehrkraft als Spielleitung:** Optional sieht die Raumleitung alle Rollen und leitet nur an, ohne mitzuspielen; die Tafelansicht zeigt Nacht, Morgen und Abstimmung groß.
-- **Wer ausscheidet, bleibt dabei:** Geister sehen alle Rollen und das Nachtgeschehen, dürfen aber nichts verraten. In einem späteren Aufgaben-Modus lösen sie kleine Rätsel, die dem Dorf Hinweise geben.
-
-### Umsetzung in der Engine
-
-- **Zustand und Sicht:** Rollen, Nachtaktionen und Stimmen liegen im Zustand; `playerView` zeigt jedem nur, was er wissen darf. `sampleHidden` verteilt die unbekannten Rollen zufällig, passend zu dem, was der Platz weiß.
-- **Gleichzeitige Züge:** In der Nacht und bei der Abstimmung sind alle Lebenden am Zug (`currentPlayers`), wie im Bibel-Quiz.
-- **Zeiten:** Beratung und Abstimmung laufen über `systemDelayMs` ab; danach entscheidet ein Systemzug.
-- **Erzähler:** Klänge und Sprachansagen („Das Dorf schläft ein“) über den Klangkatalog, Auswahl durch dich.
-- **Hot-Seat:** Ein Gerät geht reihum („Gib das Gerät an Lena“), Rolle und Nachtaktion nur nach Antippen sichtbar.
-- **Bots:** Nur als Ersatz für Abwesende, mit einfachen Regeln (Seherin-Wissen nutzen, sonst mit der Mehrheit stimmen). Ein Bot, der überzeugend mitdiskutiert, ist nicht machbar.
-
-### Bezug zu Among Us
-
-Das Echtzeitspiel mit Karte und Laufen ist ein eigenes, viel größeres Vorhaben. Der Kern davon (verborgene Verräter, Aufgaben, Notfallsitzung) lässt sich später als **Aufgaben-Modus** von Werwolf-Dorf nachbilden: Tags lösen alle kleine Aufgaben (Rechnen, Sortieren), die Wölfe stören heimlich, eine Sitzung führt zur Abstimmung.
-
-### Schritte
-
-1. Grundspiel mit vier Rollen, mildem Thema, Hot-Seat und online.
-2. Erzählerstimme und Klänge (nach deiner Auswahl).
-3. Weitere Rollen und Spielleitungs-Modus für Lehrkräfte.
-4. Aufgaben-Modus.
-
-## Was die Plattform dafür braucht
-
-Drei neue Bausteine würden die meisten Ideen tragen; sie lohnen sich, bevor das zweite Spiel einer Gruppe kommt.
-
-| Baustein | wofür | Ideen |
-| --- | --- | --- |
-| Texteingabe mit Prüfung (Filter, Gleichheit trotz Tippfehler, Abstimmung über Gültigkeit) | Antworten und Hinweise frei tippen | 2, 3, 4, 6, 9, 10, 13 |
-| Abstimmung als Engine-Baustein (geheim, mit Live-Stand, Gleichstand-Regel) | Rollenspiele, Teams, Zweifelsfälle | 3, 12, 13, 14, 15, 23, 28 |
-| Zeichenfläche mit Strichen als JSON (kein Bild, damit der Zustand rein bleibt) | Malen und Raten | 9, 10 |
-
-Dazu kommt eine **Tafelansicht** für alle Klassenspiele (heute nur bei Bingo) und eine **Teamwahl** in der Lobby (zwei Teams, zufällig verteilen wie „Alle verteilen“). Mehr als 30 Plätze sind für keine Idee nötig; die Grenze von 40 Mitgliedern bleibt.
-
-## Offene Fragen an dich
-
-- [ ] Passen die fünf Startspiele (Werwolf-Dorf, Wortbrücke, Schätzmeister, Malstube, Kategorien-Sprint), oder sollen andere vorgezogen werden?
-- [ ] Werwolf: Welches Thema soll Standard sein, mild („flieht aus dem Dorf“) oder klassisch? Und ab welchem Alter planst du es ein?
-- [ ] Freie Texteingabe im Spiel: einverstanden, wenn sie nur im Raum sichtbar ist und gefiltert wird? Ohne sie fallen 7 Ideen weg.
-- [ ] Sollen die Inhaltspakete (Schätzfragen, Begriffe, Emoji-Rätsel) wie beim Bibel-Quiz vom Server kommen, damit Schüler die Lösungen nicht im Browser finden?
+- [ ] Passt die Reihenfolge der Wellen, besonders Malstube und Kategorien-Sprint erst später?
+- [x] Wölfe im Schafspelz: ab 10 Jahren (Cornelius, 31.10.2026).
+- [ ] Freitext und Zeichnen nur in privaten Räumen: einverstanden?
 - [ ] Welche Ideen streichst du ganz?
