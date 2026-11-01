@@ -35,8 +35,8 @@ Stirnkarten aller Spieler (eigene mit ❓), Fragenliste als Knöpfe in eigenem R
 
 ## Umsetzung (1.11.2026)
 
-Regeln, Bot, Oberfläche, Tests (`test/who-am-i.test.ts`), Prüfstand. Kataloge (Tiere 34, Berufe 27, Bibel 33 Begriffe) sind ein **Entwurf** und warten auf Cornelius' Durchsicht; sie kommen vom Spieleserver (`GET /wortspiele/wer-bin-ich`), Rückfall `wortspiele/wer-bin-ich.json`.
+Regeln, Bot, Oberfläche, Tests (`test/who-am-i.test.ts`), Prüfstand. Kataloge (Tiere 34, Berufe 27, Bibel 33 Begriffe) sind von Cornelius freigegeben (1.11.2026); sie kommen vom Spieleserver (`GET /wortspiele/wer-bin-ich`), Rückfall `wortspiele/wer-bin-ich.json`.
 
 ## Offene Punkte
 
-- Begriffe und Eigenschaften durchsehen (Cornelius); jede Eigenschaft muss für jeden Begriff eindeutig Ja oder Nein sein.
+- Bei neuen Begriffen beachten: Jede Eigenschaft muss für jeden Begriff eindeutig Ja oder Nein sein.

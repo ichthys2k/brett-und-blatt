@@ -307,7 +307,7 @@ function endTurn(state: DuelState, outcome: TurnSummary['outcome'], points: numb
 }
 
 export function applyMove(state: DuelState, actor: Actor, move: DuelMove): MoveResult<DuelState> {
-  if (!isLegal(state, actor, move)) throw new Error('Unerlaubter Zug im Umschreibe-Duell.');
+  if (!isLegal(state, actor, move)) throw new Error('Unerlaubter Zug in „Verboten!“.');
   const seat = actor as SeatId;
   const events: GameEvent[] = [];
   const team = state.team;

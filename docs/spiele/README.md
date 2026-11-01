@@ -52,7 +52,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Fix gefunden!](fix-gefunden.md) (Dobble-artig) | 1–8 | gleichzeitig (Echtzeit) | Symbolkarten aus projektiver Ebene, Symbolpakete inkl. Mathe | M | M | S | ✅ 29.10. |
 | [Kategorien-Sprint](kategorien-sprint.md) (Stadt-Land-Fluss-artig) | 1–30 | gleichzeitig | Texteingabe mit Prüfung, Abstimmung, Wortlisten vom Server | M | M | S | ✅ 1.11. |
 | [Wer bin ich?](wer-bin-ich.md) | 3–10 | verdeckt, Abstimmung | Fragenkatalog, Abstimmung, Texteingabe | M | M | M | ✅ 1.11. |
-| [Umschreibe-Duell](umschreibe-duell.md) (Arbeitstitel) | 4–30 | verdeckt, Teams | Teams in der Lobby, Sperrwort-Prüfung, Texteingabe | M | M | M | ✅ 1.11. |
+| [Verboten!](verboten.md) (Tabu-artig, eigene Fassung) | 4–30 | verdeckt, Teams | Teams in der Lobby, Sperrwort-Prüfung, Texteingabe | M | M | M | ✅ 1.11. |
 | [Wölfe im Schafspelz](woelfe-im-schafspelz.md) (Werwolf-artig) | 8–18, mit Erzähler 19 | verdeckt, gleichzeitig | geheime Rollen, Warteschlange für Folgen, `minHumans` | L | L | M | fertig, live getestet |
 | [Präsident](praesident.md) („Arschloch“) | 3–8 | verdeckt, Kartentausch | Spielkarten, Handfächer | S | M | M | ✅ 29.10. |
 | [Tiefflug](tiefflug.md) (Skyjo-artig, mit Junior) | 2–8 | verdeckt (für alle) | Zahlenkarten, Raster 3×4, Serienwertung | S | M | M | ✅ 29.10. |

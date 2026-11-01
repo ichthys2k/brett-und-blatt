@@ -1,6 +1,6 @@
 {
- "status": "entwurf",
- "hinweis": "Entwurf von Claude (31.10.2026), von Cornelius noch nicht geprüft. Antworten außerhalb der Listen sind nicht falsch – über sie stimmt die Runde ab.",
+ "status": "freigegeben",
+ "hinweis": "Von Claude erstellt (31.10.2026), von Cornelius freigegeben (1.11.2026). Antworten außerhalb der Listen sind nicht falsch – über sie stimmt die Runde ab.",
  "packs": [
   {
    "id": "allgemein",

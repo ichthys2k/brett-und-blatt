@@ -41,6 +41,7 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-041 | neues Spiel | **Marktflecken (Arbeitstitel, Handelsspiel im Mittelalter statt Monopoly):** Rundkurs um die Burg, Handwerksbetriebe in Zünften, Brezeln als Spielwährung, feste Spieldauer statt Pleite, Ansehen gewinnt, Zunftaufträge, offene Hofnachrichten statt Ereigniskarten. Eigener Entwurf, kein Nachbau. Paket C, [Umsetzungsplan](https://claude.ai/artifact/NwAG5AvLJ2d3XH95wcxLAU). | mittel | offen | 2026-10-31, Cornelius |
 | W-042 | neues Spiel | **Rübenacker (Arbeitstitel, Laufspiel in der Art von Lotti Karotti):** Hasen laufen zur Riesenrübe im Königsgarten, Karten statt Würfel, der Maulwurf wandert sichtbar unter dem Beet (Erdhügel kündigt das nächste Loch an), zurück zum letzten Zaunpfahl statt zum Start, 2–6 Spieler. Eigene Fassung, kein Nachbau. Paket A, [Umsetzungsplan](https://claude.ai/artifact/NwAG5AvLJ2d3XH95wcxLAU). | mittel | offen | 2026-10-31, Cornelius |
 | W-044 | Drachenspiel | **Ausbau zum vollwertigen Sammelkarten-Duell:** Regelkern, Hauskräfte, Stichwörter, Wahlen, Tierfamilien, Deckbau und Solo-Modi nach dem Vorbild Hearthstone, mit eigener Welt und ohne Kaufsystem. Plan in [`docs/spiele/drachenspiel-ausbau.md`](docs/spiele/drachenspiel-ausbau.md). | mittel | in Arbeit (Claude, claude/drachenspiel-regelkern): Phase 0 erledigt (#45), Phase 1 gebaut, noch nicht in `main` | 2026-11-01, Cornelius |
+| W-045 | Narrenhof | **Desktop: große Porträtkarten für Herrschaft und Narren:** Am Desktop bekommen die Herrschaft (Gegner) und die Narren hochformatige Karten in voller Größe, Porträt oben, darunter voll lesbarer Name, Beschreibung, Ziel bzw. Wirkung. Das mittlere Feld („Karte auswählen“, „Karte hierher ziehen zum Vorführen“) rückt nach links, damit Hand, Abwürfe, Brezeln, Kartenbild, Kombis usw. mehr Platz bekommen. Handy-Ansicht bleibt unverändert. Erst Vorschlag mit Skizze, Bau nach Cornelius' Ja. | mittel | in Arbeit (Claude, claude/project-thread-77t9kr): Vorschlag | 2026-11-01, Cornelius |
 
 ## Fehler
 
@@ -54,9 +55,9 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
 | W-033 | Elf zuerst! (Elfer raus): Anlegespiel für 2–6 Spieler, 80 Zahlenkarten, Bot „Zahlenzwerg“, online | 2026-11-01 | a9eebe5 |
-| W-038 | Neues Spiel: [Umschreibe-Duell](docs/spiele/umschreibe-duell.md) (Arbeitstitel) – Sperrwörter legt das gegnerische Team fest, Schreib- und Sprech-Modus; Begriffe als Entwurf | 2026-11-01 | #44 |
-| W-037 | Neues Spiel: [Wer bin ich?](docs/spiele/wer-bin-ich.md) – Katalog- und freier Modus; Kataloge als Entwurf | 2026-11-01 | #44 |
-| W-036 | Neues Spiel: [Kategorien-Sprint](docs/spiele/kategorien-sprint.md) – Stadt-Land-Fluss-artig, Abstimmung, Tafelansicht; Wortlisten als Entwurf | 2026-11-01 | #44 |
+| W-038 | Neues Spiel: [Verboten!](docs/spiele/verboten.md) (früher Arbeitstitel „Umschreibe-Duell“) – Sperrwörter legt das gegnerische Team fest, Schreib- und Sprech-Modus; Begriffe freigegeben | 2026-11-01 | #44 |
+| W-037 | Neues Spiel: [Wer bin ich?](docs/spiele/wer-bin-ich.md) – Katalog- und freier Modus; Kataloge freigegeben | 2026-11-01 | #44 |
+| W-036 | Neues Spiel: [Kategorien-Sprint](docs/spiele/kategorien-sprint.md) – Stadt-Land-Fluss-artig, Abstimmung, Tafelansicht; Wortlisten freigegeben | 2026-11-01 | #44 |
 | W-035 | Bausteine für Wortspiele: Texteingabe mit Prüfung, Abstimmung, Teams in der Lobby | 2026-11-01 | #44 |
 | W-021 | Neues Spiel: [Wölfe im Schafspelz](docs/spiele/woelfe-im-schafspelz.md) (Werwolf-Regeln mit christlichem Thema); Live-Test durch Cornelius bestanden | 2026-11-01 | 0aea54b |
 | W-017 | Narrenhof: Gegner mit Porträts – 30 Herrschaften und 38 Höflinge, je drei Stimmungen (schmunzelnd, lachend, Lachkrampf) | 2026-11-01 | #36, #39, #43 |

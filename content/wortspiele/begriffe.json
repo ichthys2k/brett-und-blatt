@@ -1,6 +1,6 @@
 {
- "status": "entwurf",
- "hinweis": "Entwurf von Claude (31.10.2026), von Cornelius noch nicht geprüft. „hints“ nutzt der Bot als Sperrwort-Vorschläge und zum Raten, „clues“ als eigene Umschreibungen.",
+ "status": "freigegeben",
+ "hinweis": "Von Claude erstellt (31.10.2026), von Cornelius freigegeben (1.11.2026). „hints“ nutzt der Bot als Sperrwort-Vorschläge und zum Raten, „clues“ als eigene Umschreibungen.",
  "packs": [
   {
    "id": "alltag",
