@@ -42,6 +42,13 @@ function effectValue(effect: Effect): number {
       return effect.gear.attack * effect.gear.durability;
     case 'summonRandom':
       return 2.5;
+    case 'addToHand':
+      return effect.fleeting ? 1.5 : 2.2;
+    case 'freeze':
+    case 'silence':
+      return 1.5;
+    case 'rebirth':
+      return 2;
     case 'ready':
     case 'returnToHand':
       return 1;
@@ -54,6 +61,13 @@ function minionValue(minion: Minion): number {
   if (minion.bubble) value += 1 + minion.attack * 0.5;
   if (minion.poisonous && minion.attack > 0) value += 3;
   if (minion.stealth) value += 1;
+  if (minion.doubleStrike) value += minion.attack * 1.2;
+  if (minion.lifesteal) value += minion.attack * 0.6;
+  if (minion.reborn) value += 1 + minion.attack * 0.5;
+  if (minion.elusive) value += 0.5;
+  if (minion.immune) value += 2;
+  if (minion.spellPower) value += minion.spellPower * 1.5;
+  if (minion.frozen) value -= minion.attack * 1.2;
   for (const trigger of CARDS_DB[minion.cardId]?.triggers ?? []) {
     if (trigger.on === 'death') value += trigger.do.reduce((sum, effect) => sum + effectValue(effect), 0) * 0.7;
   }
@@ -72,7 +86,7 @@ function gearValue(player: PlayerState): number {
 /** Was im nächsten Zug den Helden erreichen kann: Beschützer fangen je einen Angreifer ab. */
 function reachingDamage(attackers: Minion[], defenders: Minion[]): number {
   const guards = defenders.filter((m) => m.taunt && !m.stealth).length;
-  const attacks = attackers.map((m) => m.attack).sort((a, b) => b - a);
+  const attacks = attackers.filter((m) => !m.frozen).flatMap((m) => (m.doubleStrike ? [m.attack, m.attack] : [m.attack])).sort((a, b) => b - a);
   return attacks.slice(guards).reduce((sum, attack) => sum + attack, 0);
 }
 
@@ -105,7 +119,7 @@ interface Node {
 /** Tauschen zwei Angriffe nur die Reihenfolge, entsteht dieselbe Stellung: Sie wird nur einmal verfolgt. */
 function positionKey(state: DrachenspielState): string {
   const sides = state.players.map((p) => {
-    const board = p.board.map((m) => `${m.id}:${m.attack}:${m.health}:${m.hasAttacked ? 1 : 0}:${m.bubble ? 1 : 0}`);
+    const board = p.board.map((m) => `${m.id}:${m.attack}:${m.health}:${m.attacksMade ?? 0}:${m.hasAttacked ? 1 : 0}:${m.bubble ? 1 : 0}:${m.frozen ? 1 : 0}:${m.silenced ? 1 : 0}`);
     const hero = `${p.armor}:${p.gear?.durability ?? 0}:${p.heroAttackBonus}:${p.heroAttacked ? 1 : 0}:${p.powerUsed ? 1 : 0}`;
     return `${p.health}|${hero}|${p.mana}|${p.hand.map((c) => c.uid).join()}|${board.join()}`;
   });

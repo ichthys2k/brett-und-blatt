@@ -164,3 +164,22 @@ Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes D
 - **Handy:** Die Hand überlappt ab etwa sechs Karten statt zu scrollen, Tiere schrumpfen, sodass sieben aufs Feld passen. Unter 480 px entfällt der Name in der Heldenleiste (er steht im Spieler-Chip). Im Browser bei 375 × 812 mit zehn Handkarten und sechs Tieren angesehen, Querformat nicht einzeln geprüft.
 - **Messung (Bots, 200 Partien je Zeile, etwa ±7 Prozentpunkte):** Startspieler bei freier Deckwahl schwer 54 %, mittel 52 %, leicht 46 %. Festes Deck schwer/mittel: Wald 50/56, Meer 46/39, Bauernhof 62/41, Wildnis 59/60, Krabbeltiere 41/49. Schwer schlägt Mittel zu 86 %, Mittel schlägt Leicht zu 99 %. Verglichene Ausgleiche (300 Partien, schwer/mittel, ohne Ausgleich 63/61): 5 statt 4 Startkarten 39/57, kein Ziehen im ersten Zug 38/52, zwei Sternschnuppen 45/58, Rüstung 3: 56/59, 5: 51/53, 8: 48/43. Die Rechenzeit auf Cloudflare ist nicht neu gemessen.
 - **Noch offen:** Echte Online-Partie mit zwei Geräten (auch der Wandler für laufende Räume ist nur per Test geprüft), Auswahl eigener Klänge (Hauskraft nutzt vorerst `stapel-fertig`).
+
+## Dauerhafte Stichwörter (01.11.2026, Phase 4 des Ausbauplans, `ruleVersion` 6)
+
+- **Neu:** 🏃 Sprinter (sofort, im ersten Zug nur Tiere), ✌️ Doppelschlag, 💚 Lebenskraft, ❄️ Kältestarre, 😌 Beruhigen, 🌱 Zweite Chance, 🌿 Naturkraft, 🌀 Eingerollt (bis zum eigenen nächsten Zug), 🍃 Scheu, 🔄 Tauschen (1 Mana), ⏳ flüchtige Karten. Flink bleibt Sofortangriff auch auf den Helden.
+- **Felder:** Die neuen Figurenfelder sind optional und nur gesetzt, wenn sie zutreffen. Ältere Spielstände laufen deshalb ohne Wandler weiter.
+- **Überarbeitete Tiere (Angriff/Leben):**
+  - Sprinter: Ratte, Kaninchen 3/3, Nashorn 8/5.
+  - Doppelschlag: Fliege 1/1.
+  - Lebenskraft: Hummer 2/3, Lama 4/5.
+  - Kältestarre: Tintenfisch 1/3, Fisch 2/2.
+  - Zweite Chance: Frosch 1/2, Katze 3/2, Ziege 3/3.
+  - Naturkraft +1: Maus, Eichhörnchen 2/3, Eule.
+  - Eingerollt: Schnecke 1/2, Nilpferd 7/6.
+  - Scheu: Hirsch 5/4, Giraffe 7/6, Grille.
+  - Tauschen: Truthahn, Ochse, Kamel.
+  - Auftritt: Schaf 2/5 beruhigt alle anderen Tiere; flüchtige Karte geben Waschbär 3/2 (Rückenwind), Affe 3/4 (Blitzschlag), Schwein 3/4 (Honigtopf).
+- **Neue Zauber:** Raureif (1 Mana, Kältestarre, zieht eine Karte; im Meer statt Sommerregen), Stille Stunde (2 Mana, beruhigt, zieht eine Karte; im Bauernhof statt Sommerregen). Doppelschlag ist nur schwach besetzt; dazu kommen später eigene Karten.
+- **Messung (Bots, 200 Partien je Zeile, etwa ±7 Prozentpunkte):** Startspieler bei freier Deckwahl schwer 53 %, mittel 52 %, leicht 49 %. Festes Deck schwer/mittel: Wald 50/56, Meer 41/44, Bauernhof 66/46, Wildnis 51/61, Krabbeltiere 43/49. Schwer schlägt Mittel zu 86 %, Mittel schlägt Leicht zu 99 %. Der Ausgleich von 5 Rüstung blieb unverändert.
+- **Noch offen:** Test mit Kindern (der Plan sieht ihn ab Phase 4 vor: sind die vielen Abzeichen verständlich?), eigene Klänge, Online-Partie mit zwei Geräten. Im Browser angesehen sind Tauschen, Abzeichen und Verlauf im Hochformat; die übrigen Stichwörter sind per Regeltest geprüft.

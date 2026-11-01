@@ -2,7 +2,23 @@ import type { Options, RngState, SeatId } from '@brett-und-blatt/engine';
 
 export type DeckThemeId = 'forest' | 'sea' | 'farm' | 'wild' | 'bugs';
 
-export type KeywordId = 'taunt' | 'rush' | 'bubble' | 'poisonous' | 'stealth';
+/** Fähigkeiten, die eine Figur auf dem Feld trägt. */
+export type MinionKeyword =
+  | 'taunt'
+  | 'rush'
+  | 'bubble'
+  | 'poisonous'
+  | 'stealth'
+  | 'sprinter'
+  | 'doubleStrike'
+  | 'lifesteal'
+  | 'frostbite'
+  | 'reborn'
+  | 'immune'
+  | 'elusive';
+
+/** `tradeable` wirkt nur auf der Hand. */
+export type KeywordId = MinionKeyword | 'tradeable';
 
 /** Wen ein Effekt trifft. `chosen` ist das beim Ausspielen gewählte Ziel. */
 export type Selector =
@@ -15,7 +31,7 @@ export type Effect =
   | { kind: 'damage'; amount: number; to: Selector }
   | { kind: 'heal'; amount: number | 'full'; to: Selector }
   | { kind: 'buff'; attack?: number; health?: number; to: Selector }
-  | { kind: 'grantKeyword'; keyword: KeywordId; to: Selector }
+  | { kind: 'grantKeyword'; keyword: MinionKeyword; to: Selector }
   | { kind: 'ready'; to: Selector }
   | { kind: 'draw'; count: number }
   | { kind: 'summon'; cardId: string; count?: number }
@@ -26,7 +42,15 @@ export type Effect =
   | { kind: 'heroAttack'; amount: number }
   | { kind: 'equip'; gear: Gear }
   /** Ruft eines der Tiere, ausgelost über den Zufallsstrom der Partie. */
-  | { kind: 'summonRandom'; cardIds: string[] };
+  | { kind: 'summonRandom'; cardIds: string[] }
+  /** Das Ziel setzt seinen nächsten Angriff aus. */
+  | { kind: 'freeze'; to: Selector }
+  /** Nimmt Verstärkungen und Fähigkeiten, Schaden bleibt. */
+  | { kind: 'silence'; to: Selector }
+  /** Karte auf die Hand; flüchtig heißt: verschwindet am Ende des Zugs. */
+  | { kind: 'addToHand'; cardId: string; fleeting?: boolean }
+  /** Zweite Chance: nur vom Regelkern eingereiht, in keiner Kartenliste. */
+  | { kind: 'rebirth'; cardId: string };
 
 /** Rüstzeug: zeitlich begrenzter Angriff des Helden, nutzt sich mit jedem Angriff ab. */
 export interface Gear {
@@ -74,6 +98,8 @@ export interface CardDefinition {
   /** Name im Akkusativ mit Artikel für erzeugte Regeltexte. */
   textName?: string;
   keywords?: KeywordId[];
+  /** Naturkraft: So viel mehr Schaden machen eigene Zauber, solange das Tier liegt. */
+  spellPower?: number;
   triggers?: Trigger[];
   /** Wirkung eines Zaubers. */
   effects?: Effect[];
@@ -102,6 +128,8 @@ export interface QueuedEffect {
 export interface CardInstance {
   uid: string;
   defId: string;
+  /** Flüchtig: verschwindet am Ende des eigenen Zugs von der Hand. */
+  fleeting?: boolean;
 }
 
 export interface Minion {
@@ -129,6 +157,20 @@ export interface Minion {
   stealth: boolean;
   canAttack: boolean;
   hasAttacked: boolean;
+  // Ab `ruleVersion` 6, nur gesetzt, wenn sie zutreffen. So laufen ältere Spielstände unverändert weiter.
+  sprinter?: boolean;
+  doubleStrike?: boolean;
+  lifesteal?: boolean;
+  frostbite?: boolean;
+  reborn?: boolean;
+  immune?: boolean;
+  elusive?: boolean;
+  spellPower?: number;
+  frozen?: boolean;
+  silenced?: boolean;
+  /** In diesem Zug aufs Feld gekommen. */
+  justPlayed?: boolean;
+  attacksMade?: number;
 }
 
 export interface PlayerState {
@@ -205,6 +247,7 @@ export type DrachenspielMove =
   | { type: 'mulligan'; discardIndices: number[] }
   | { type: 'playCard'; handIndex: number; target?: SpellTarget }
   | { type: 'attack'; attackerId: string; target: { kind: 'minion'; id: string } | { kind: 'hero' } }
+  | { type: 'tradeCard'; handIndex: number }
   | { type: 'heroPower' }
   | { type: 'heroAttack'; target: { kind: 'minion'; id: string } | { kind: 'hero' } }
   | { type: 'endTurn' };

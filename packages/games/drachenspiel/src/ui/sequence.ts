@@ -44,6 +44,7 @@ const CATEGORY: Record<string, Category> = {
   heroAttack: 'lunge',
   damage: 'hit',
   bubblePopped: 'hit',
+  damageBlocked: 'hit',
   fatigue: 'hit',
   heal: 'change',
   heroHealed: 'change',
@@ -52,6 +53,8 @@ const CATEGORY: Record<string, Category> = {
   gearEquipped: 'change',
   gearBroken: 'change',
   minionBuffed: 'change',
+  minionFrozen: 'change',
+  minionSilenced: 'change',
   minionLeft: 'death',
   minionReturned: 'change',
   cardPlayed: 'enter',
@@ -250,6 +253,48 @@ export function buildBeats(
         const shown = findShown(current, minionId);
         if (shown) shown.minion = { ...shown.minion, bubble: false };
         current.log.push(`🫧 Die Schutzblase von ${nameOfMinion(minionId)} platzt`);
+        break;
+      }
+      case 'damageBlocked': {
+        const { minionId } = event as unknown as { minionId: string };
+        current.floats.push({ target: minionId, text: '🌀', kind: 'fx' });
+        current.log.push(`🌀 ${nameOfMinion(minionId)} ist eingerollt und bleibt heil`);
+        break;
+      }
+      case 'minionFrozen': {
+        const { minionId } = event as unknown as { minionId: string };
+        current.floats.push({ target: minionId, text: '🧊', kind: 'fx' });
+        const shown = findShown(current, minionId);
+        if (shown) shown.minion = { ...shown.minion, frozen: true };
+        current.log.push(`🧊 ${nameOfMinion(minionId)} erstarrt`);
+        break;
+      }
+      case 'minionSilenced': {
+        const { minionId, attack, health, maxHealth } = event as unknown as { minionId: string; attack: number; health: number; maxHealth: number };
+        current.floats.push({ target: minionId, text: '😌', kind: 'fx' });
+        const shown = findShown(current, minionId);
+        if (shown) {
+          const { sprinter: _a, doubleStrike: _b, lifesteal: _c, frostbite: _d, reborn: _e, immune: _f, elusive: _g, spellPower: _h, frozen: _i, ...rest } = shown.minion;
+          shown.minion = { ...rest, attack, health, maxHealth, taunt: false, rush: false, bubble: false, poisonous: false, stealth: false, silenced: true };
+        }
+        current.log.push(`😌 ${nameOfMinion(minionId)} wird beruhigt`);
+        break;
+      }
+      case 'cardTraded': {
+        const { seat } = event as unknown as { seat: SeatId };
+        current.log.push(`🔄 ${nameOf(seat)} tauscht eine Karte`);
+        break;
+      }
+      case 'cardFaded': {
+        const { seat } = event as unknown as { seat: SeatId };
+        current.log.push(`⏳ ${nameOf(seat)}: Eine flüchtige Karte verschwindet`);
+        break;
+      }
+      case 'handFull': {
+        const { seat, cardId } = event as unknown as { seat: SeatId; cardId: string };
+        const text = `🚫 ${nameOf(seat)}: Hand voll, ${CARDS_DB[cardId]?.name ?? 'Karte'} geht verloren`;
+        current.log.push(text);
+        current.notices.push(text);
         break;
       }
       case 'minionBuffed': {

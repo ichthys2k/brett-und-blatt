@@ -97,6 +97,7 @@ function MinionView({
     minion.taunt && 'taunt',
     minion.bubble && 'bubble',
     minion.stealth && 'stealth',
+    minion.frozen && 'frozen',
   ]
     .filter(Boolean)
     .join(' ');
@@ -384,7 +385,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   } else if (hint?.type === 'playCard' && hint.target) {
     hintedIds.add(hint.target.kind === 'minion' ? hint.target.id : `hero-${oppSeat}`);
   }
-  const hintedCard = hint?.type === 'playCard' ? hint.handIndex : null;
+  const hintedCard = hint?.type === 'playCard' || hint?.type === 'tradeCard' ? hint.handIndex : null;
 
   const handleMinionClick = (minion: Minion, isOwner: boolean) => {
     if (selectedSpell !== null && spellTargetIds.has(minion.id)) {
@@ -705,6 +706,26 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
               title={getCardFullTitle(def)}
             >
               <CardFace def={def} />
+              {card.fleeting && (
+                <span className="ds-card-fleeting" title="Flüchtig: Verschwindet am Ende deines Zugs." aria-label="Flüchtig">
+                  ⏳
+                </span>
+              )}
+              {legalMoves.some((m) => m.type === 'tradeCard' && m.handIndex === idx) && (
+                <button
+                  type="button"
+                  className="ds-card-trade"
+                  title="Für 1 Mana zurück ins Deck mischen und neu ziehen"
+                  aria-label={`${def.name} für 1 Mana tauschen`}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onMove({ type: 'tradeCard', handIndex: idx });
+                  }}
+                >
+                  🔄
+                </button>
+              )}
             </div>
           );
         })}
