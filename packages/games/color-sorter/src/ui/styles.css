@@ -608,10 +608,6 @@ button.cs-tile {
   margin-left: calc(var(--cw) * -0.14);
 }
 
-.cs-pile {
-  margin-left: 0.3rem;
-}
-
 /* Karten */
 
 .cs-card {
@@ -1206,12 +1202,6 @@ button.cs-card {
   align-self: center;
 }
 
-.cs-sort {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
 .cs-card.cs-hint {
   box-shadow:
     0 0 0 4px color-mix(in srgb, var(--color-warning) 80%, transparent),
@@ -1667,7 +1657,7 @@ button.cs-tile {
   font-size: clamp(1rem, 2vw, 1.6rem);
 }
 
-.cs-bigmode .cs-hand {
+.cs-bigmode .cs-handrow {
   grid-area: hand;
   align-self: end;
 }
@@ -1682,7 +1672,7 @@ button.cs-tile {
   justify-self: stretch;
 }
 
-.cs-bigmode .cs-actions > .cs-btn:nth-child(2) {
+.cs-bigmode .cs-actions > .cs-btn:last-child {
   grid-area: discard;
   align-self: center;
   justify-self: stretch;
@@ -1965,7 +1955,7 @@ button.cs-tile {
 .cs-enemy-card .cs-portrait {
   width: 100%;
   height: auto;
-  max-height: calc(var(--bh, 800px) * 0.5);
+  max-height: calc(var(--bh, 800px) * 0.36);
   aspect-ratio: 161 / 200;
   border: 0;
   border-bottom: 3px solid var(--cs-mustard);
@@ -2018,12 +2008,12 @@ button.cs-tile {
 /* Bühne unter der Herrschaft */
 .cs-deskmode .cs-side > .cs-stagezone {
   display: flex;
-  flex: 1 1 9rem;
+  flex: 1 1 6rem;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  min-height: 8rem;
+  gap: 0.4rem;
+  min-height: 5.5rem;
   padding: 0.5rem;
   border: 2px dashed color-mix(in srgb, var(--cs-mustard) 50%, var(--color-line));
   border-radius: 20px;
@@ -2041,13 +2031,12 @@ button.cs-tile {
   text-align: center;
 }
 
-/* Tafel: Stand, Tasche und Kombis */
+/* Tafel: Kombis über die ganze Breite */
 .cs-desk {
   position: relative;
   display: grid;
   grid-area: desk;
-  grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem);
-  gap: 0.6rem;
+  grid-template-columns: minmax(0, 1fr);
   min-height: 0;
 }
 
@@ -2055,19 +2044,19 @@ button.cs-tile {
   height: 100%;
 }
 
-.cs-desk-stats {
+/* Zähler unter der Bühne: Vorführungen | Tauschen, Brezeln breit, Hoftag | Bestwert */
+.cs-statgrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
-  align-content: start;
+  flex: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
-  min-height: 0;
-  overflow-y: auto;
 }
 
 .cs-stat {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  min-width: 0;
   padding: 0.35rem 0.6rem;
   border: 1px solid color-mix(in srgb, var(--cs-mustard) 35%, var(--color-line));
   border-radius: 12px;
@@ -2091,35 +2080,69 @@ button.cs-tile {
   font-size: 0.8rem;
 }
 
-.cs-desk-right {
+.cs-stat-wide {
+  grid-column: 1 / -1;
+  align-items: center;
+  padding: 0.5rem 0.8rem;
+  border-color: var(--cs-mustard);
+  text-align: center;
+}
+
+.cs-stat-wide b {
+  font-family: var(--font-display, Almendra, Georgia, serif);
+  font-size: 2.1rem;
+  line-height: 1.1;
+}
+
+/* Narrentasche: rechts in der Zeile der Narrenbank, Felder so groß wie die Narren */
+.cs-deskmode .cs-bench {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  min-height: 0;
+  align-items: flex-end;
+  gap: 0.9rem;
+}
+
+.cs-deskmode .cs-bench > .cs-mods {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .cs-pouchbox {
-  flex-flow: row wrap;
+  display: flex;
   flex: none;
-  align-items: center;
-  gap: 0.3rem 0.5rem;
-}
-
-.cs-pouchbox > small {
-  width: 100%;
-}
-
-.cs-pouchbox .cs-link {
-  margin-left: auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  padding-left: 0.9rem;
+  border-left: 2px dotted color-mix(in srgb, var(--cs-mustard) 55%, var(--color-line));
 }
 
 .cs-pouch {
-  align-items: center;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 0.6rem;
 }
 
 .cs-pouch .cs-tile {
-  width: 3.4rem;
-  min-height: 3.4rem;
+  flex: none;
+  width: var(--tw);
+  min-height: calc(var(--tw) * 1.62);
+  border-radius: calc(var(--tw) * 0.12);
+}
+
+.cs-pouch .cs-tile-emoji {
+  font-size: calc(var(--tw) * 0.42);
+}
+
+.cs-pouch .cs-tile-title {
+  font-size: calc(var(--tw) * 0.15);
+}
+
+.cs-pouch .cs-tile-sub {
+  font-size: calc(var(--tw) * 0.14);
+}
+
+.cs-pouch .cs-slots {
+  align-self: flex-end;
 }
 
 .cs-kombis-head {
@@ -2155,6 +2178,15 @@ button.cs-tile {
   margin: 0.3rem 0 0;
   padding: 0;
   list-style: none;
+}
+
+.cs-deskmode .cs-kombis ul {
+  columns: 15rem auto;
+  column-gap: 1.2rem;
+}
+
+.cs-deskmode .cs-kombis li {
+  break-inside: avoid;
 }
 
 .cs-kombis li {
@@ -2196,11 +2228,104 @@ button.cs-tile {
 }
 
 .cs-bigmode.cs-deskmode .cs-play {
-  grid-template-columns: 9rem auto 9rem;
+  grid-template-columns: auto;
   grid-template-rows: auto auto;
   grid-template-areas:
-    'play hand discard'
-    '. meta .';
+    'hand'
+    'play';
+}
+
+.cs-handrow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.cs-deskmode .cs-actions {
+  display: flex;
+  grid-area: play;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+.cs-deskmode .cs-actions > .cs-btn {
+  min-width: 9rem;
+}
+
+.cs-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cs-sort small {
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cs-sort .cs-btn {
+  min-height: 2.25rem;
+  padding: 0 0.8rem;
+  font-size: 0.9rem;
+}
+
+/* Vorführen blau wie „Witz“, Tauschen rot wie „Lachen“ */
+.cs-btn-play,
+.cs-btn-discard {
+  border-color: transparent;
+  color: #fff;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 25%);
+}
+
+.cs-btn-play {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cs-chips) 85%, #fff), var(--cs-chips));
+}
+
+.cs-btn-discard {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cs-mult) 85%, #fff), var(--cs-mult));
+}
+
+/* Nachziehstapel: Rücken in Handgröße, versetzte Lagen zeigen den Füllstand */
+.cs-deckpile {
+  position: relative;
+  flex: none;
+  width: calc(var(--cw) + 14px);
+  height: calc(var(--cw) * 1.4 + 14px);
+}
+
+.cs-deckpile .cs-deckpile-layer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transform: translate(calc(var(--i) * 2px), calc(var(--i) * -2px));
+  box-shadow: 0 1px 2px rgb(0 0 0 / 35%);
+}
+
+.cs-deckpile-empty {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border: 2px dashed var(--color-line);
+  border-radius: 8px;
+}
+
+.cs-deckpile-count {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  min-width: 1.6rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--cs-mustard);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
 }
 
 .cs-bigmode.cs-bigtight.cs-deskmode .cs-play {

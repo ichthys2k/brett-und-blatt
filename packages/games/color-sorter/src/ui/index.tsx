@@ -390,11 +390,11 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const sideW = desk ? Math.min(400, Math.max(260, size.width * 0.25)) : Math.min(352, Math.max(224, size.width * 0.18));
   // Narren als große Karten: so breit, dass alle Plätze der Bank (und am Jahrmarkt die Tasche) in eine Reihe passen.
   const benchW = size.width - sideW - 12 - 28;
-  const benchSlots = modCapacity(run) + (desk ? 0 : run.consumableSlots * 0.55);
-  const benchTileW = Math.max(96, Math.min(180, (benchW - 56) / benchSlots - 10, size.height * (desk && size.height >= 880 ? 0.17 : 0.15)));
-  const handAvail = big ? size.width - sideW - 12 - (tight ? 0 : desk ? 310 : 224) - 24 : (wide ? size.width * 0.58 : size.width) - 12;
+  const benchSlots = modCapacity(run) + (desk ? run.consumableSlots + 1.7 : run.consumableSlots * 0.55);
+  const benchTileW = Math.max(desk ? 66 : 96, Math.min(180, (benchW - 56) / benchSlots - 10, size.height * (desk && size.height >= 880 ? 0.17 : 0.15)));
+  const handAvail = big ? size.width - sideW - 12 - (tight || desk ? 0 : 224) - 24 : (wide ? size.width * 0.58 : size.width) - 12;
   const cardW = big
-    ? Math.max(56, Math.min(180, handAvail / (handCount * 0.86 + 0.14), desk ? (size.height - benchTileW * 1.62 - 400) / 1.4 : (size.height - (tight ? 200 : 160)) / 2.7))
+    ? Math.max(56, Math.min(180, handAvail / (handCount * 0.86 + 0.14 + (desk ? 1.25 : 0)), desk ? (size.height - benchTileW * 1.62 - 400) / 1.4 : (size.height - (tight ? 200 : 160)) / 2.7))
     : Math.max(40, Math.min(96, handAvail / (handCount * 0.86), size.height > 0 ? size.height / (wide ? 3.6 : 6.4) : 96));
   const tileW = cards ? benchTileW : Math.max(60, Math.min(150, cardW * 0.78));
 
@@ -657,39 +657,35 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
     main = (
       <div className="cs-play">
         {!desk && stageZone}
-        <div className="cs-hand" style={{ ['--cw' as string]: `${cardW}px` }}>
-          {run.hand.map((card, i) => (
-            <CardView key={isOpen(card) ? card.id : `h${i}`} card={card as ViewCard} selected={picked.includes(i)} hint={hintCards.includes(i)} onClick={() => togglePick(i)} style={{ zIndex: i }} extra={dragProps({ kind: 'hand', index: i }, `hand:${i}`)} />
-          ))}
+        <div className="cs-handrow">
+          <div className="cs-hand" style={{ ['--cw' as string]: `${cardW}px` }}>
+            {run.hand.map((card, i) => (
+              <CardView key={isOpen(card) ? card.id : `h${i}`} card={card as ViewCard} selected={picked.includes(i)} hint={hintCards.includes(i)} onClick={() => togglePick(i)} style={{ zIndex: i }} extra={dragProps({ kind: 'hand', index: i }, `hand:${i}`)} />
+            ))}
+          </div>
+          {desk && <DeckPile count={run.pileCount ?? run.pile.length} total={run.deck.length} cardW={cardW} />}
         </div>
         <div className="cs-actions">
-          <Btn primary disabled={!playMove} hint={hint?.type === 'play'} onClick={() => playMove && (playEffect('fs-abschicken'), onMove(playMove))}>
+          <button type="button" className={`cs-btn cs-btn-play ${hint?.type === 'play' ? 'cs-hint' : ''}`} disabled={!playMove} onClick={() => playMove && (playEffect('fs-abschicken'), onMove(playMove))}>
             Vorführen
-          </Btn>
-          <Btn disabled={!discardMove} hint={hint?.type === 'discard'} onClick={() => discardMove && (playEffect('fs-verwerfen'), onMove(discardMove))}>
-            Tauschen ({round.discardsLeft})
-          </Btn>
+          </button>
           <span className="cs-sort">
-            <button
-              type="button"
-              className="cs-link"
-              onClick={() => can({ type: 'sortHand', by: 'rank' }) && (playEffect('fs-karte-waehlen'), onMove({ type: 'sortHand', by: 'rank' }))}
-              aria-label="Nach Rang sortieren"
-            >
-              🔢
+            <small>Sortieren</small>
+            <button type="button" className="cs-btn cs-btn-quiet" onClick={() => can({ type: 'sortHand', by: 'rank' }) && (playEffect('fs-karte-waehlen'), onMove({ type: 'sortHand', by: 'rank' }))}>
+              Rang
             </button>
-            <button
-              type="button"
-              className="cs-link"
-              onClick={() => can({ type: 'sortHand', by: 'color' }) && (playEffect('fs-karte-waehlen'), onMove({ type: 'sortHand', by: 'color' }))}
-              aria-label="Nach Farbe sortieren"
-            >
-              🌈
+            <button type="button" className="cs-btn cs-btn-quiet" onClick={() => can({ type: 'sortHand', by: 'color' }) && (playEffect('fs-karte-waehlen'), onMove({ type: 'sortHand', by: 'color' }))}>
+              Farbe
             </button>
-            <span className="cs-muted" title="Karten im Stapel">
-              🂠 {run.pileCount ?? run.pile.length}
-            </span>
+            {!desk && (
+              <span className="cs-muted" title="Karten im Stapel">
+                🂠 {run.pileCount ?? run.pile.length}
+              </span>
+            )}
           </span>
+          <button type="button" className={`cs-btn cs-btn-discard ${hint?.type === 'discard' ? 'cs-hint' : ''}`} disabled={!discardMove} onClick={() => discardMove && (playEffect('fs-verwerfen'), onMove(discardMove))}>
+            Tauschen ({round.discardsLeft})
+          </button>
         </div>
       </div>
     );
@@ -786,63 +782,63 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
 
   const others = multi ? <OthersStrip view={view} me={run.seat} seatNames={seatNames} /> : null;
 
-  // Tafel am Desktop: Stand der Audienz, Narrentasche und die Kombis auf einen Blick
+  // Zähler am Desktop: unter der Bühne in der linken Spalte
+  const statGrid = desk && round && (
+    <div className="cs-statgrid">
+      <span className="cs-stat">
+        <small>Vorführungen</small>
+        <b>✋ {round.handsLeft}</b>
+      </span>
+      <span className="cs-stat">
+        <small>Tauschen</small>
+        <b>🗑️ {round.discardsLeft}</b>
+      </span>
+      <span className="cs-stat cs-stat-wide">
+        <small>Aktuelle Brezeln</small>
+        <b>🥨 {run.tokens}</b>
+      </span>
+      <span className="cs-stat">
+        <small>Hoftag</small>
+        <b>🗺️ {view.endless && run.level > FINAL_LEVEL ? `${run.level} ∞` : `${run.level}/${FINAL_LEVEL}`}</b>
+        <span>{ROUND_NAMES[run.round]}</span>
+      </span>
+      {multi && view.mode !== 'survival' && view.mode !== 'race' ? (
+        <span className="cs-stat">
+          <small>Herzen</small>
+          <Lives lives={run.lives} />
+        </span>
+      ) : (
+        <span className="cs-stat">
+          <small>Bestwert</small>
+          <b>👏 {formatNumber(run.bestHand)}</b>
+        </span>
+      )}
+    </div>
+  );
+
+  // Narrentasche am Desktop: rechtsbündig in der Zeile der Narrenbank, Felder so groß wie die Narren
+  const pouchBox = desk && (
+    <div className="cs-pouchbox" aria-label="Narrentasche">
+      <div className="cs-row cs-pouch">{consTiles}</div>
+      <button type="button" className="cs-link" onClick={toggleLook} title={`Kartenbild: ${DECK_STYLE_CHOICES.find((c) => c.value === look)?.label ?? ''} – antippen zum Wechseln`}>
+        🂠 Kartenbild
+      </button>
+    </div>
+  );
+
+  // Tafel am Desktop: Kombis über die ganze Breite
   const deskPanel = desk && round && (
     <div className="cs-desk">
       {dropbar}
-      <div className="cs-desk-stats">
-        <span className="cs-stat">
-          <small>Hoftag</small>
-          <b>🗺️ {view.endless && run.level > FINAL_LEVEL ? `${run.level} ∞` : `${run.level}/${FINAL_LEVEL}`}</b>
-          <span>{ROUND_NAMES[run.round]}</span>
-        </span>
-        <span className="cs-stat">
-          <small>Brezeln</small>
-          <b>🥨 {run.tokens}</b>
-        </span>
-        <span className="cs-stat">
-          <small>Stapel</small>
-          <b>🂠 {run.pileCount ?? run.pile.length}</b>
-          <span>von {run.deck.length} Karten</span>
-        </span>
-        <span className="cs-stat">
-          <small>Vorführungen</small>
-          <b>✋ {round.handsLeft}</b>
-        </span>
-        <span className="cs-stat">
-          <small>Tauschen</small>
-          <b>🗑️ {round.discardsLeft}</b>
-        </span>
-        {multi && view.mode !== 'survival' && view.mode !== 'race' ? (
-          <span className="cs-stat">
-            <small>Herzen</small>
-            <Lives lives={run.lives} />
-          </span>
-        ) : (
-          <span className="cs-stat">
-            <small>Bestwert</small>
-            <b>👏 {formatNumber(run.bestHand)}</b>
-          </span>
-        )}
-      </div>
-      <div className="cs-desk-right">
-        <div className="cs-stat cs-pouchbox">
-          <small>Narrentasche</small>
-          <div className="cs-row cs-pouch">{consTiles}</div>
-          <button type="button" className="cs-link" onClick={toggleLook} title={`Kartenbild: ${DECK_STYLE_CHOICES.find((c) => c.value === look)?.label ?? ''} – antippen zum Wechseln`}>
-            🂠 Kartenbild
+      <KombiList
+        run={run}
+        active={preview?.type}
+        tools={
+          <button type="button" className="cs-link" onClick={() => setShowLevels((v) => !v)} title="Stufen, gespielte Kombis, Privilegien und Gefallen">
+            Details
           </button>
-        </div>
-        <KombiList
-          run={run}
-          active={preview?.type}
-          tools={
-            <button type="button" className="cs-link" onClick={() => setShowLevels((v) => !v)} title="Stufen, gespielte Kombis, Privilegien und Gefallen">
-              Details
-            </button>
-          }
-        />
-      </div>
+        }
+      />
     </div>
   );
 
@@ -856,11 +852,17 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           {others}
           {desk && info}
           {desk && stageZone}
+          {statGrid}
           {!big && modsRow}
           {!desk && info}
           {view.lastDuel && run.phase === 'shop' && <DuelResult view={view} seatNames={seatNames} />}
         </div>
-        {big && <div className="cs-bench">{modsRow}</div>}
+        {big && (
+          <div className="cs-bench">
+            {modsRow}
+            {pouchBox}
+          </div>
+        )}
         {deskPanel}
         <div className="cs-mainarea">
           {!desk && dropbar}
@@ -891,6 +893,22 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
       </HoverProvider>
       </DeckStyleContext.Provider>
     </BackContext.Provider>
+  );
+}
+
+/** Nachziehstapel: Kartenrücken in Handgröße, die Zahl der versetzten Rücken zeigt grob den Füllstand. */
+function DeckPile({ count, total, cardW }: { count: number; total: number; cardW: number }) {
+  const layers = count <= 0 ? 0 : Math.max(1, Math.min(8, Math.ceil((count / Math.max(total, 1)) * 8)));
+  const back = { hidden: true } as ViewCard;
+  return (
+    <div className="cs-deckpile" style={{ ['--cw' as string]: `${cardW}px` }} role="img" aria-label={`Stapel: ${count} von ${total} Karten`} title={`${count} von ${total} Karten im Stapel`}>
+      {layers === 0 ? (
+        <span className="cs-card cs-deckpile-empty" />
+      ) : (
+        Array.from({ length: layers }, (_, i) => <CardView key={i} card={back} className="cs-deckpile-layer" style={{ ['--i' as string]: i }} />)
+      )}
+      <span className="cs-deckpile-count">{count}</span>
+    </div>
   );
 }
 
