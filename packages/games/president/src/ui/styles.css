@@ -349,3 +349,17 @@
     animation: none;
   }
 }
+
+/* Spieler rund um den Tisch (ab genug Platz, SeatRing). */
+.prs-table[data-around] {
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Am Tisch ist die Mitte das Wichtigste: Der Stich wächst mit ihr. */
+.prs-table[data-around] .prs-center {
+  --card-w: clamp(4rem, 28cqh, 9rem);
+}

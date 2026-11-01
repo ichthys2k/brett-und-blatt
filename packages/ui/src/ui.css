@@ -1160,7 +1160,7 @@ button.bub-net-point:not(:disabled) {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden auto;
   /* Die Spiele richten die Größe ihrer Mitte danach (cqw, cqh). */
   container-type: size;
 }

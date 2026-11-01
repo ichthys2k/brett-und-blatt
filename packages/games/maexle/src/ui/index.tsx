@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { Die3D, useRollCounter, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, Die3D, useRollCounter, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { MAEXLE, RANKING, isDouble, isIn, lastAnnouncement, valueOf, type MaexleMove, type MaexleState, type Reveal } from '../rules';
 import './styles.css';
@@ -195,7 +195,7 @@ function useShake(active: boolean, onShake: () => void) {
   return { allowed, request };
 }
 
-function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint }: BoardProps<MaexleState, MaexleMove>) {
+function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint, table }: BoardProps<MaexleState, MaexleMove>) {
   const last = lastAnnouncement(view);
   const canRoll = legalMoves.some((m) => m.type === 'roll');
   const announceValues = new Set(legalMoves.flatMap((m) => (m.type === 'announce' ? [m.value] : [])));
@@ -214,8 +214,8 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint }: Bo
   const revealedDice = view.history.length === 0 && view.phase === 'roll' ? (view.lastReveal?.dice ?? null) : null;
   const hintKey = hint ? (hint.type === 'announce' || hint.type === 'passBlind' ? `${hint.type}:${hint.value}` : hint.type) : null;
 
-  return (
-    <div className="mx-table">
+  const center = (
+    <>
       <div className="mx-top">
         {view.lastReveal && (
           <p key={view.round} className={`mx-reveal ${justRevealed ? 'mx-reveal-new' : ''}`}>
@@ -291,6 +291,23 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint }: Bo
           </>
         )}
       </div>
+    </>
+  );
+
+  return (
+    <div className="mx-table" data-around={table ? '' : undefined}>
+      {table ? (
+        <SeatRing
+          seats={seatNames.length}
+          bottomSeat={viewer === 'spectator' ? 0 : viewer}
+          status={table.status}
+          renderSeat={(seat) => table.seatChip(seat)}
+        >
+          {center}
+        </SeatRing>
+      ) : (
+        <>{center}</>
+      )}
     </div>
   );
 }
@@ -305,6 +322,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 
 export const gameUi: GameUi<MaexleState, MaexleMove> = {
   Board,
+  seatsAround: true,
   SeatSymbol,
   sounds: {
     rolled: 'wuerfelbecher-schuetteln',

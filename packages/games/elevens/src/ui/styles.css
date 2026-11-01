@@ -212,3 +212,12 @@
     height: 1.35rem;
   }
 }
+
+/* Spieler rund um den Tisch (ab genug Platz, SeatRing). */
+.elv-board[data-around] {
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+}

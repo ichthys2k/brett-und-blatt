@@ -136,3 +136,12 @@
     display: none;
   }
 }
+
+/* Spieler rund um den Tisch (ab genug Platz, SeatRing). */
+.bp-table[data-around] {
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+}
