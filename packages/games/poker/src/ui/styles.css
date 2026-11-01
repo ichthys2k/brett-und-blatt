@@ -318,3 +318,58 @@
   outline: 2px solid var(--slider-fill-color);
   outline-offset: 3px;
 }
+
+/* Wenig Höhe: Tisch und Steuerung knapper; im Querformat nebeneinander. */
+@media (max-height: 720px) {
+  .poker-root {
+    gap: 0.25rem;
+  }
+
+  .poker-topbar {
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .poker-arena {
+    min-height: 170px;
+    padding: 0.1rem;
+  }
+
+  .poker-table-felt {
+    min-height: 150px;
+    border-width: 6px;
+    padding: 0.5rem 1.25rem;
+  }
+
+  .poker-controls {
+    gap: 0.25rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .poker-my-card {
+    width: 2.3rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .poker-root {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 13rem;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .poker-root > * {
+    grid-column: 1 / -1;
+  }
+
+  .poker-root > .poker-arena {
+    grid-column: 1;
+    height: 100%;
+  }
+
+  .poker-root > .poker-controls {
+    grid-column: 2;
+    overflow-y: auto;
+  }
+}

@@ -195,3 +195,20 @@
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
+
+/* Wenig Höhe: flachere Felder, damit die Hand darunter passt. */
+@media (max-height: 720px) {
+  .elv-board {
+    gap: 0.25rem;
+  }
+
+  .elv-rows {
+    gap: 0.15rem;
+    padding: 0.2rem;
+  }
+
+  .elv-cell {
+    aspect-ratio: auto;
+    height: 1.35rem;
+  }
+}

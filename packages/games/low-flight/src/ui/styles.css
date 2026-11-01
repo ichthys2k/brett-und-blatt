@@ -431,3 +431,55 @@
     animation: none;
   }
 }
+
+/* Viele Mitspieler: kleinere Auslagen, damit alle Platz haben. */
+.lf-table[data-crowded] {
+  --lf-small: clamp(13px, min(4cqi, 2.8cqh), 30px);
+}
+
+@media (max-height: 720px) {
+  .lf-table {
+    min-height: 0;
+    gap: 0.25rem;
+    padding: 0.25rem;
+  }
+}
+
+/* Viele Mitspieler: schmale Auslagen, damit mehrere in eine Reihe passen; die Mitte behält ihre Höhe. */
+.lf-table[data-crowded] .lf-other {
+  max-width: calc(var(--lf-small) * 4 + 1.5rem);
+  padding: 0.15rem;
+}
+
+.lf-table[data-crowded] .lf-other-head {
+  font-size: 0.62rem;
+}
+
+.lf-table[data-crowded] .lf-center {
+  flex: none;
+}
+
+.lf-table[data-crowded] {
+  --lf-card: clamp(32px, min(14cqi, 7.5cqh), 84px);
+}
+
+/* Viele Mitspieler auf flachem Bildschirm: Mitspieler links, Stapel und eigene Auslage rechts. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .lf-table[data-crowded] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-content: start;
+    column-gap: 0.5rem;
+    row-gap: 0.1rem;
+  }
+
+  .lf-table[data-crowded] > * {
+    grid-column: 2;
+  }
+
+  .lf-table[data-crowded] > .lf-others {
+    grid-column: 1;
+    grid-row: 1 / span 6;
+    align-content: flex-start;
+  }
+}

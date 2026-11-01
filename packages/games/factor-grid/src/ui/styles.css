@@ -175,3 +175,32 @@
   font-size: 0.7rem;
   margin-top: 0.1rem;
 }
+
+/* Wenig Höhe: mehr Spalten und flachere Felder. */
+@media (max-height: 720px) {
+  .fg-layout {
+    gap: 0.25rem;
+  }
+
+  .fg-scoreboard {
+    gap: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .fg-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.2rem;
+  }
+
+  .fg-cell {
+    min-height: 2.2rem;
+    padding: 0.05rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .fg-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+}

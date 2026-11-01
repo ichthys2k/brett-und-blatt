@@ -162,7 +162,7 @@ export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, s
   const ordered = [...others.filter((s) => s > me), ...others.filter((s) => s < me)];
 
   return (
-    <div className={`lf-table${junior ? ' lf-junior' : ''}`}>
+    <div className={`lf-table${junior ? ' lf-junior' : ''}`} data-crowded={view.players.length > 4 || undefined}>
       <div className="lf-others">
         {ordered.map((seat) => {
           const p = view.players[seat]!;

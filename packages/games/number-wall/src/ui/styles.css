@@ -171,3 +171,68 @@
   text-align: center;
   font-size: 0.85rem;
 }
+
+/* Wenig Höhe: kleinere Steine; im Querformat Mauer links, Zahlen rechts. */
+@media (max-height: 720px) {
+  .nw-layout {
+    gap: 0.3rem;
+  }
+
+  .nw-header {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .nw-pyramid {
+    gap: 0.2rem;
+    padding: 0.25rem;
+  }
+
+  .nw-row {
+    gap: 0.2rem;
+  }
+
+  .nw-brick {
+    width: 4rem;
+    height: 2.2rem;
+    font-size: 1rem;
+  }
+
+  .nw-controls {
+    gap: 0.3rem;
+  }
+
+  .nw-chips {
+    gap: 0.25rem;
+  }
+
+  .nw-chip {
+    min-width: 2.7rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  .nw-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.78rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .nw-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    max-width: none;
+    align-items: start;
+  }
+
+  .nw-header,
+  .nw-waiting,
+  .nw-summary {
+    grid-column: 1 / -1;
+  }
+
+  .nw-brick {
+    width: 3.4rem;
+  }
+}

@@ -14,7 +14,7 @@ import type { MauMauDeckStyle, MauMauMove, MauMauState } from '../types';
 import './styles.css';
 
 /** Breite der Handkarten nach verfügbarem Platz (vorher per CSS: 3,1–4,75 rem). */
-const handCardWidth = (containerWidth: number) => Math.round(Math.min(76, Math.max(50, containerWidth * 0.16)));
+const handCardWidth = (containerWidth: number) => Math.round(Math.min(76, Math.max(50, containerWidth * 0.16), Math.max(44, window.innerHeight * 0.15)));
 /** Anteil jeder Handkarte, der mindestens sichtbar bleibt: die Ecke mit Wert und Farbe. */
 const HAND_MIN_VISIBLE = 0.4;
 /** Mehr Rückseiten zeichnet der Fächer am Mitspieler nicht; die Zahl daneben nennt den Rest. */

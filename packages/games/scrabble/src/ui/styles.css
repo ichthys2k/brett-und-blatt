@@ -3,8 +3,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  container-type: size;
   width: 100%;
-  max-width: 640px;
+  height: 100%;
   margin: 0 auto;
   color: var(--color-ink);
 }
@@ -23,7 +24,10 @@
 
 .wg-board-wrap {
   container-type: inline-size;
-  width: 100%;
+  flex: none;
+  /* Quadratisch: Unter dem Brett bleibt Platz für Bänkchen und Knöpfe. */
+  width: min(100cqw, 100cqh - 9.5rem, 640px);
+  margin: 0 auto;
   border-radius: 10px;
   overflow: hidden;
   border: 2px solid #4b3a22;
@@ -244,4 +248,56 @@
   place-items: center;
   width: 100%;
   height: 100%;
+}
+
+/* Wenig Höhe: Hinweis in einer Zeile, Bänkchen und Knöpfe knapp. */
+@media (max-height: 720px) {
+  .wg-status {
+    font-size: 0.72rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wg-rack {
+    min-height: 0;
+    padding: 0.2rem;
+  }
+
+  .wg-rack-tile {
+    width: clamp(30px, 10vw, 42px);
+  }
+
+  .wg-info {
+    flex-basis: 100%;
+    font-size: 0.78rem;
+  }
+}
+
+/* Breiter als hoch: Brett links, Bänkchen und Knöpfe rechts daneben. */
+@container (min-aspect-ratio: 11 / 10) {
+  .wg-status,
+  .wg-rack,
+  .wg-bar {
+    margin-left: min(100cqh, 66cqw);
+    padding-left: 0.5rem;
+  }
+
+  .wg-board-wrap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: min(100cqh, 66cqw);
+    margin: 0;
+  }
+
+  .wg-rack {
+    flex-wrap: wrap;
+    margin-left: calc(min(100cqh, 66cqw) + 0.5rem);
+    padding-left: 0.2rem;
+  }
+
+  .wg-bar {
+    justify-content: flex-start;
+  }
 }

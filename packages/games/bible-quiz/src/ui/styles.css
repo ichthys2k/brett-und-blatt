@@ -437,3 +437,48 @@
     transform: translateY(0);
   }
 }
+
+/* Viele Mitspieler: eine Zeile zum Wischen statt vieler Reihen. */
+@media (max-height: 900px) {
+  .bq-multi-status {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .bq-player-pill {
+    flex: none;
+  }
+}
+
+/* Wenig Höhe: kleines Rätsel, Antworten immer zwei nebeneinander. */
+@media (max-height: 720px) {
+  .bq-layout {
+    gap: 0.3rem;
+    padding: 0.2rem;
+  }
+
+  .bq-header {
+    padding: 0.2rem 0.5rem;
+  }
+
+  .bq-emoji-card {
+    min-height: 3.2rem;
+    padding: 0.2rem;
+  }
+
+  .bq-emoji-text {
+    font-size: 2.2rem;
+  }
+
+  .bq-options-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.3rem;
+  }
+
+  .bq-option-btn {
+    gap: 0.35rem;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.85rem;
+  }
+}

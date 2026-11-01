@@ -20,7 +20,7 @@ const SEAT_SYMBOLS = ['①', '②', '③', '④', '⑤', '⑥'];
 const VALUES = Array.from({ length: HIGHEST - LOWEST + 1 }, (_, i) => LOWEST + i);
 
 /** Breite der Handkarten nach verfügbarem Platz. */
-const handCardWidth = (containerWidth: number) => Math.round(Math.min(78, Math.max(52, containerWidth * 0.17)));
+const handCardWidth = (containerWidth: number) => Math.round(Math.min(78, Math.max(52, containerWidth * 0.17), Math.max(44, window.innerHeight * 0.13)));
 
 function cardLabel(card: CardId): string {
   return `${COLOR_NAMES[colorOf(card)]} ${valueOf(card)}`;

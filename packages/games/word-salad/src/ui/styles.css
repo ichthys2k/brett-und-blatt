@@ -324,3 +324,63 @@
   gap: 0.45rem;
   justify-content: center;
 }
+
+/* Die Punkte stehen schon in den Spieler-Chips: Bei knapper Höhe entfällt die zweite Tafel. */
+@media (max-height: 900px) {
+  .bb-ws-scoreboard {
+    display: none;
+  }
+
+  .bb-ws-root {
+    gap: 0.5rem;
+    padding: 0.25rem;
+  }
+}
+
+@media (max-height: 720px) {
+  .bb-ws-header {
+    gap: 0.25rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .bb-ws-stats-pill {
+    display: none;
+  }
+
+  .bb-ws-stem-title {
+    font-size: 1rem;
+  }
+
+  .bb-ws-stem-hint {
+    font-size: 0.75rem;
+  }
+
+  .bb-ws-bowl {
+    gap: 0.35rem;
+    padding: 0.4rem;
+  }
+
+  .bb-ws-tiles {
+    gap: 0.25rem;
+  }
+
+  .bb-ws-tile {
+    width: 2.3rem;
+    height: 2.4rem;
+    font-size: 1.05rem;
+  }
+
+  .bb-ws-draft-row {
+    min-height: 2.3rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .bb-ws-controls {
+    gap: 0.25rem;
+  }
+
+  .bb-ws-btn {
+    padding: 0.3rem 0.55rem;
+    font-size: 0.78rem;
+  }
+}

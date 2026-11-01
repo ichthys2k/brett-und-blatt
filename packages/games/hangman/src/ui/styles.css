@@ -118,3 +118,42 @@
   opacity: 0.62;
   cursor: default;
 }
+
+/* Wenig Höhe: kleinere Figur und Tastatur. */
+@media (max-height: 720px) {
+  .hm-root {
+    gap: 0.25rem;
+  }
+
+  .hm-stage {
+    padding: 0.25rem 0.5rem;
+    gap: 0.2rem;
+  }
+
+  .hm-stage svg {
+    width: auto;
+    height: 5rem;
+  }
+
+  .hm-word-box {
+    gap: 0.2rem;
+    padding: 0.1rem;
+  }
+
+  .hm-letter-slot {
+    width: 1.6rem;
+    height: 1.9rem;
+    font-size: 1rem;
+  }
+
+  .hm-keyboard {
+    grid-template-columns: repeat(auto-fit, minmax(30px, 1fr));
+    gap: 0.2rem;
+    max-width: none;
+  }
+
+  .hm-key {
+    min-height: 32px;
+    font-size: 0.9rem;
+  }
+}

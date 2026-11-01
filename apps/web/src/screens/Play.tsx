@@ -378,7 +378,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           </div>
         )}
 
-        <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:px-2 short:[&>button]:text-sm">
+        <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:flex-none short:[&>button]:px-2 short:[&>button]:text-sm short:[&>button]:whitespace-nowrap">
           {online ? (
             result ? (
               <>

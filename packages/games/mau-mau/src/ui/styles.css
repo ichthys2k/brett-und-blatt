@@ -541,3 +541,46 @@
     transition: none;
   }
 }
+
+/* Wenig Höhe: alles rückt zusammen, die Mitspieler stehen in einer Zeile. */
+@media (max-height: 720px) {
+  .mau-table {
+    min-height: 0;
+    gap: 0.2rem;
+    padding: 0.4rem;
+    overflow: hidden auto;
+  }
+
+  .mau-opponents {
+    flex: none;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .mau-opponent {
+    flex: none;
+  }
+
+  .mau-center {
+    min-height: 0;
+    gap: 0.2rem;
+  }
+
+  .mau-direction {
+    display: none;
+  }
+
+  .mau-pile {
+    width: 3.3rem;
+  }
+
+  .mau-hand {
+    min-height: 0;
+    padding-top: 0.4rem;
+  }
+
+  .mau-actions {
+    min-height: 1.6rem;
+  }
+}
