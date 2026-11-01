@@ -278,9 +278,10 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     if (this._disposed || this._paused || this.result) return false;
     if (!this.isHuman(seat)) return false;
     if (!this.currentSeats().includes(seat)) {
-      // Außer-der-Reihe-Reaktionszüge: nur die Selbstaufrufe „Mau!“/„Eins!“ (callMau/callUno).
+      // Außer-der-Reihe-Reaktionszüge: die Selbstaufrufe „Mau!“/„Eins!“ (callMau/callUno) und
+      // „Gesagt!“ im Umschreibe-Duell (buzz) – wer nicht am Zug ist, darf nur diese ins Spiel rufen.
       const moveType = (move as { type?: unknown })?.type;
-      if (moveType !== 'callMau' && moveType !== 'callUno') return false;
+      if (moveType !== 'callMau' && moveType !== 'callUno' && moveType !== 'buzz') return false;
       if (!(this.module.isLegal?.(this._state, seat, move) ?? false)) return false;
     } else {
       if (!isLegalMove(this.module, this._state, seat, move)) return false;

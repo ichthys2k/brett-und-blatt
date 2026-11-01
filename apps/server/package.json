@@ -55,6 +55,9 @@
     "@brett-und-blatt/game-ligretto": "workspace:*",
     "@brett-und-blatt/game-speed": "workspace:*",
     "@brett-und-blatt/game-symbol-match": "workspace:*",
+    "@brett-und-blatt/game-category-sprint": "workspace:*",
+    "@brett-und-blatt/game-who-am-i": "workspace:*",
+    "@brett-und-blatt/game-describe-duel": "workspace:*",
     "@brett-und-blatt/game-wolves-sheep": "workspace:*"
   },
   "devDependencies": {

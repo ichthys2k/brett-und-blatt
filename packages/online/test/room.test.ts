@@ -1,4 +1,4 @@
-import { inlineBotRunner, type AnyGameModule, type GameModule } from '@brett-und-blatt/engine';
+import { inlineBotRunner, teamOption, teamsFromOptions, type AnyGameModule, type GameModule } from '@brett-und-blatt/engine';
 import { gameModule as blackPeter } from '@brett-und-blatt/game-black-peter';
 import { gameModule as ticTacToe } from '@brett-und-blatt/game-tic-tac-toe';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -105,7 +105,17 @@ const joinableGame: GameModule<RoundState, RoundMove | { join: number }> = {
   },
 };
 
+/** Teamspiel: merkt sich die Teamzuordnung aus der verborgenen Option. */
+type TeamState = RoundState & { teams: number[] };
+const teamGame: GameModule<TeamState, RoundMove> = {
+  ...(round as unknown as GameModule<TeamState, RoundMove>),
+  info: { ...round.info, id: 'teamspiel', name: 'Teamspiel', players: { min: 3, max: 6 }, teams: { count: 2, names: ['Sonne', 'Mond'] } },
+  options: [teamOption()],
+  setup: (seats, opts) => ({ ...round.setup(seats, opts, ''), teams: teamsFromOptions(opts, seats) }),
+};
+
 const modules = new Map<string, AnyGameModule>([
+  [teamGame.info.id, teamGame],
   ['menschen', { ...together, info: { ...together.info, id: 'menschen', minHumans: 2 } } as AnyGameModule],
   [round.info.id, round],
   [ticTacToe.info.id, ticTacToe],
@@ -197,6 +207,54 @@ describe('Nachrichten vom Browser', () => {
     expect(parseClientMessage('[1,2]')).toBeNull();
     expect(parseClientMessage('{"type":"selfDestruct"}')).toBeNull();
     expect(parseClientMessage(`{"type":"say","phrase":"${'x'.repeat(20_000)}"}`)).toBeNull();
+  });
+});
+
+describe('Teams in der Lobby', () => {
+  it('zeigt Teams im Wechsel, lässt sie wechseln und mischen und gibt sie dem Spiel mit', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    const cara = env.client('cara');
+    for (const c of [anna, ben, cara]) c.hello();
+    anna.send({ type: 'setGame', gameId: 'teamspiel' });
+    anna.send({ type: 'setSeatCount', count: 5 });
+    expect(anna.room().lobby.seats.map((s) => s.team)).toEqual([0, 1, 0, 1, 0]);
+    anna.send({ type: 'takeSeat', index: 0 });
+    ben.send({ type: 'takeSeat', index: 2 });
+    cara.send({ type: 'takeSeat', index: 4 });
+    // Mitglieder wechseln nur das eigene Team, die Raumleitung jedes.
+    ben.send({ type: 'setTeam', index: 2, team: 1 });
+    expect(ben.room().lobby.seats[2]!.team).toBe(1);
+    ben.send({ type: 'setTeam', index: 4, team: 1 });
+    expect(ben.last('error')?.code).toBe('notAllowed');
+    ben.send({ type: 'shuffleTeams' });
+    expect(ben.last('error')?.code).toBe('notAllowed');
+    anna.send({ type: 'setTeam', index: 4, team: 1 });
+    anna.send({ type: 'setTeam', index: 0, team: 2 });
+    expect(anna.last('error')?.code).toBe('notAllowed');
+    // Platz 3 (frei) wird ein Bot und behält sein Team.
+    anna.send({ type: 'setSeat', index: 3, seat: { bot: 'easy' } });
+    expect(anna.room().lobby.seats[3]).toEqual({ kind: 'bot', level: 'easy', team: 1 });
+    anna.send({ type: 'start' });
+    // Freie Plätze fallen weg: Anna (0), Ben (1), Bot (1), Cara (1).
+    expect((env.room as unknown as { game: { session: { state: TeamState } } }).game.session.state.teams).toEqual([0, 1, 1, 1]);
+  });
+
+  it('mischt besetzte Plätze gleichmäßig', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    anna.hello();
+    anna.send({ type: 'setGame', gameId: 'teamspiel' });
+    anna.send({ type: 'setSeatCount', count: 6 });
+    for (let i = 0; i < 6; i++) anna.send({ type: 'setSeat', index: i, seat: { bot: 'easy' } });
+    anna.send({ type: 'shuffleTeams' });
+    const teams = anna.room().lobby.seats.map((s) => s.team);
+    expect(teams.filter((t) => t === 0)).toHaveLength(3);
+    expect(teams.filter((t) => t === 1)).toHaveLength(3);
+    // Andere Spiele kennen keine Teams.
+    anna.send({ type: 'setGame', gameId: 'tic-tac-toe' });
+    expect(anna.room().lobby.seats.every((s) => s.team === undefined)).toBe(true);
   });
 });
 

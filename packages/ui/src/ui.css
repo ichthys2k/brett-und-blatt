@@ -890,3 +890,56 @@ button.bub-net-point:not(:disabled) {
     opacity: 0;
   }
 }
+
+/* Eingabefeld für Wortspiele (WordInput) */
+.bub-word {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.bub-word-row {
+  display: flex;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.bub-word-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-size: 1rem;
+}
+
+.bub-word-input:disabled {
+  opacity: 0.6;
+}
+
+.bub-word-input[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.bub-word-button {
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border-radius: 0.75rem;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-weight: 700;
+}
+
+.bub-word-button:disabled {
+  opacity: 0.5;
+}
+
+.bub-word-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-danger);
+}

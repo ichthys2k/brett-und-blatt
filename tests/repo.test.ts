@@ -58,7 +58,7 @@ describe('Repo-Regeln', () => {
     expect(shared).toEqual([]);
   });
 
-  it('Bibel-Quiz lädt seinen Fragenkatalog vom Server statt aus dem Bundle', () => {
+  it('Bibel-Quiz und Wortspiele laden ihre Kataloge vom Server statt aus dem Bundle', () => {
     // Der Katalog (168 Fragen) liegt in `content/bibelquiz/fragen.json` und kommt zur Laufzeit
     // über `GameModule.prepare` – ein statischer Import würde ihn wieder ins JS-Bundle holen.
     const sources = import.meta.glob<string>('../packages/games/*/src/**/*.{ts,tsx}', {
@@ -68,7 +68,7 @@ describe('Repo-Regeln', () => {
     });
     const statisch = Object.entries(sources)
       // Nur echte Importe zählen – Hinweise im Kommentar dürfen die Datei nennen.
-      .filter(([, source]) => /(?:from|import\s*\()\s*['"][^'"]*content\/bibelquiz/.test(source))
+      .filter(([, source]) => /(?:from|import\s*\()\s*['"][^'"]*content\/(?:bibelquiz|wortspiele)/.test(source))
       .map(([path]) => path);
     expect(statisch).toEqual([]);
   });
