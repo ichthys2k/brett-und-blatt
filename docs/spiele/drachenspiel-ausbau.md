@@ -2,7 +2,9 @@
 
 Fassung 1 vom 01.11.2026 (W-044). Grundlage sind der Code auf Commit `95218ef`, die Fehlerliste (F-007 bis F-009) sowie das Hearthstone-Kompendium im privaten Repo (`brett-und-blatt-klaenge/kompendium/hearthstone/`). Die Vorschläge zu Thema und Karten warten auf Cornelius' Entscheidung.
 
-**Stand für Mitwirkende (01.11.2026):** Phase 0 und Phase 1 (Regelkern, `ruleVersion` 4) sind in `main`; Stand in [`drachenspiel.md`](drachenspiel.md). Als Nächstes käme Phase 2, sie ist noch nicht begonnen. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
+**Stand für Mitwirkende (01.11.2026):** Phase 0, Phase 1 (Regelkern, `ruleVersion` 4) und Phase 2 (Bedienung, Bot-Planer) sind umgesetzt; Stand in [`drachenspiel.md`](drachenspiel.md). Als Nächstes käme Phase 3, sie ist noch nicht begonnen.
+
+**Weiterarbeiten, auch an einem anderen Rechner:** Alles Nötige liegt in GitHub. `git pull`, `corepack pnpm install`, einen neuen Zweig von `main` anlegen, dann diesen Plan (Phase 3 in Kapitel 11) und den Abschnitt zu Phase 2 in [`drachenspiel.md`](drachenspiel.md) lesen. Das Kompendium und der Recherchebericht liegen unter `kompendium/hearthstone/` im privaten Repo `ichthys2k/brett-und-blatt-klaenge` und gehören nie in dieses öffentliche Repo (Blizzard-Namen); abrufen mit `gh repo clone`. Offene Punkte aus Phase 2: echte Online-Partie mit zwei Geräten (Lunte, Tierrufe, Rechenzeit auf Cloudflare), Vertonung der Tierrufe nach Auswahl durch Cornelius, F-010 prüfen. Das Kompendium ist nur für Berechtigte im privaten Klang-Repo erreichbar; Regelideen übernehmen wir, Namen, Texte und Bilder nicht.
 
 ## 1. Kurzfassung
 
@@ -474,6 +476,8 @@ Siehe Kapitel 5. Keine neuen Karten, nur die gewollte Tod-Reihenfolge. **Fertig*
 ### Phase 2: Bedienung und Bot-Planer (M)
 
 UI aufteilen, Zielpfeil, Verlauf, große Karte, Animationsreihe, Tierrufe, Lunte; Bot-Planer aus Kapitel 9. **Fertig, wenn** Schwer spürbar besser spielt und Ketten sichtbar nachvollziehbar sind.
+
+✅ **Umgesetzt (01.11.2026).** Noch offen: Vertonung der Tierrufe (wartet auf Auswahl durch Cornelius), eigene Bilder für Verbrennen und Erschöpfung (bisher Hinweistext), Mittel schlägt Leicht mit 97 % sehr deutlich. Der Startspieler liegt im Spiegel „schwer“ noch bei 60 %; das ist Aufgabe von Phase 3.
 
 ### Phase 3: Held und Grundregeln (M)
 

@@ -87,7 +87,9 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const isOnline = online !== undefined;
   const localRef = useRef(local);
   localRef.current = local;
-  const [events, setEvents] = useState<GameEvent[]>([]);
+  // Im Ref, damit Sicht und Ereignisse auch bei Bot-Zügen im selben Durchlauf ankommen.
+  const eventsRef = useRef<GameEvent[]>([]);
+  const [, setEvents] = useState<GameEvent[]>([]);
   const [, setTick] = useState(0);
   const [hint, setHint] = useState<unknown>(null);
   const [hintMissing, setHintMissing] = useState(false);
@@ -106,6 +108,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   useEffect(
     () =>
       session.subscribe((change) => {
+        eventsRef.current = change.events;
         setEvents(change.events);
         setHint(null);
         setHintMissing(false);
@@ -442,7 +445,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             const seat = actingSeat !== undefined ? actingSeat : (typeof viewer === 'number' ? viewer : undefined);
             return seat !== undefined && session.submit(seat, move);
           }}
-          events={events}
+          events={eventsRef.current}
+          clock={session.timed && current[0] !== undefined ? session.clock(current[0]) : null}
           activeSeat={current[0] ?? null}
           hint={hint}
           viewer={viewer}

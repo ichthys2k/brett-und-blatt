@@ -64,7 +64,7 @@ export interface PublicSeat {
 }
 
 /** Vorgefertigte Schnellnachrichten – freien Text gibt es nicht. */
-export const PHRASES = ['hello', 'goodGame', 'wellPlayed', 'oops', 'thanks', 'oneMoment', 'again'] as const;
+export const PHRASES = ['hello', 'goodGame', 'wellPlayed', 'oops', 'thanks', 'oneMoment', 'again', 'wow', 'grr'] as const;
 export type Phrase = (typeof PHRASES)[number];
 
 /** Erlaubte Emoji-Reaktionen. */

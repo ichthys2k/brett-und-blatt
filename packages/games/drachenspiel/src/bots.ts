@@ -1,6 +1,7 @@
 import type { BotContext, BotDefinition } from '@brett-und-blatt/engine';
 import { CARDS_DB } from './cards';
-import { evaluate, legalMoves, applyMove } from './rules';
+import { HARD_PLAN, MEDIUM_PLAN, planTurn } from './planner';
+import { legalMoves } from './rules';
 import type { DrachenspielMove, DrachenspielState, DrachenspielView } from './types';
 
 export const botDrachenhueter: BotDefinition<
@@ -13,10 +14,10 @@ export const botDrachenhueter: BotDefinition<
   levels: ['easy', 'medium', 'hard'],
   delayMs({ move, level }) {
     if (move.type === 'attack') {
-      return level === 'easy' ? 750 : level === 'medium' ? 650 : 600;
+      return 1100;
     }
     if (move.type === 'playCard') {
-      return level === 'easy' ? 500 : 400;
+      return level === 'easy' ? 800 : 700;
     }
     if (move.type === 'endTurn') {
       return 350;
@@ -31,86 +32,55 @@ export const botDrachenhueter: BotDefinition<
     }
 
     if (ctx.view.phase === 'mulligan') {
-      // Discard cards that cost >= 4
       const me = ctx.view.players[ctx.seat];
-      const discardIndices: number[] = [];
-      if (me.hand) {
-        me.hand.forEach((card, idx) => {
-          const def = CARDS_DB[card.defId];
-          if (def && def.cost >= 4) discardIndices.push(idx);
-        });
+      const costs = (me.hand ?? []).map((card) => CARDS_DB[card.defId]?.cost ?? 0);
+      const discardIndices = costs.flatMap((cost, idx) => (cost >= 4 ? [idx] : []));
+      // Schwer behält eine Vierer-Karte, wenn der frühe Zug schon gesichert ist.
+      if (ctx.level === 'hard' && costs.filter((cost) => cost <= 2).length >= 2) {
+        const keep = discardIndices.findIndex((idx) => costs[idx] === 4);
+        if (keep >= 0) discardIndices.splice(keep, 1);
       }
       return { type: 'mulligan', discardIndices };
     }
 
-    // In play phase: reconstruct a sample state
-    const sampleState = ctx.module.sampleHidden!(ctx.view, ctx.seat, ctx.rng);
-    const moves = legalMoves(sampleState, ctx.seat);
-    if (moves.length === 0) return { type: 'endTurn' };
-    if (moves.length === 1) return moves[0];
-
     if (ctx.level === 'easy') {
-      // Easy bot: plays cards or attacks randomly
-      return ctx.rng.pick(moves);
+      // Spielt plausibel: legt, was geht, greift aber wahllos an und übersieht Chancen.
+      const moves = legalMoves(ctx.module.sampleHidden!(ctx.view, ctx.seat, ctx.rng), ctx.seat);
+      const actions = moves.filter((m) => m.type !== 'endTurn');
+      if (actions.length === 0 || ctx.rng.next() < 0.1) return { type: 'endTurn' };
+      return ctx.rng.pick(actions);
     }
 
-    if (ctx.level === 'medium') {
-      // Medium bot: checks for lethal on enemy hero first, then plays cards/trades
-      const attacks = moves.filter((m) => m.type === 'attack');
-      const lethal = attacks.find((m) => {
-        if (m.type !== 'attack' || m.target.kind !== 'hero') return false;
-        const enemy = sampleState.players[1 - ctx.seat];
-        const attacker = sampleState.players[ctx.seat].board.find((b) => b.id === m.attackerId);
-        return attacker && enemy.health <= attacker.attack;
-      });
-      if (lethal) return lethal;
-
-      // Prefer playing cards if mana is available
-      const cardPlays = moves.filter((m) => m.type === 'playCard');
-      if (cardPlays.length > 0 && ctx.rng.next() < 0.7) {
-        // Pick card with highest cost
-        cardPlays.sort((a, b) => {
-          if (a.type !== 'playCard' || b.type !== 'playCard') return 0;
-          const me = sampleState.players[ctx.seat];
-          const costA = CARDS_DB[me.hand[a.handIndex]?.defId]?.cost ?? 0;
-          const costB = CARDS_DB[me.hand[b.handIndex]?.defId]?.cost ?? 0;
-          return costB - costA;
-        });
-        return cardPlays[0];
+    // Je Stichprobe der verdeckten Karten den ganzen Zug planen; gespielt wird der erste Schritt des besten Plans.
+    const settings = ctx.level === 'hard' ? HARD_PLAN : MEDIUM_PLAN;
+    const samples = ctx.level === 'hard' ? 3 : 1;
+    const started = ctx.now();
+    const totals = new Map<string, { move: DrachenspielMove; sum: number; count: number }>();
+    for (let sample = 0; sample < samples; sample++) {
+      if (sample > 0 && ctx.now() - started > (ctx.timeBudgetMs * sample) / samples) break;
+      const state = ctx.module.sampleHidden!(ctx.view, ctx.seat, ctx.rng);
+      const sliceEnd = started + (ctx.timeBudgetMs * (sample + 1)) / samples;
+      const plans = planTurn(state, ctx.seat, settings, () => ctx.now() > sliceEnd);
+      for (const [key, plan] of plans) {
+        if (plan.value === -Infinity) continue;
+        const total = totals.get(key) ?? { move: plan.move, sum: 0, count: 0 };
+        total.sum += plan.value;
+        total.count++;
+        totals.set(key, total);
       }
-
-      // If attack exists, prefer killing minions over face unless enemy has no minions
-      if (attacks.length > 0) {
-        const minionAttacks = attacks.filter((m) => m.type === 'attack' && m.target.kind === 'minion');
-        if (minionAttacks.length > 0) {
-          return ctx.rng.pick(minionAttacks);
-        }
-        return attacks[0];
-      }
-
-      return { type: 'endTurn' };
     }
 
-    // Hard bot: evaluates one-ply step with `evaluate()`
-    let bestMove = moves[0];
+    let best: DrachenspielMove = { type: 'endTurn' };
     let bestScore = -Infinity;
-
-    for (const move of moves) {
-      try {
-        const res = applyMove(sampleState, ctx.seat, move);
-        const score = evaluate(res.state, ctx.seat);
-        // Add small random noise to break ties
-        const perturbedScore = score + ctx.rng.next() * 0.1;
-        if (perturbedScore > bestScore) {
-          bestScore = perturbedScore;
-          bestMove = move;
-        }
-      } catch {
-        // Ignore invalid moves
+    for (const total of totals.values()) {
+      // Pläne, die nur in einzelnen Stichproben vorkamen, zählen entsprechend weniger.
+      const score = total.sum / total.count + total.count;
+      if (score > bestScore) {
+        bestScore = score;
+        best = total.move;
       }
     }
-
-    return bestMove;
+    return best;
   },
 };
 

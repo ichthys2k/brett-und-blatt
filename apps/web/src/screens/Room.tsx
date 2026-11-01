@@ -125,7 +125,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             extra: (
               <>
                 <GameSeats session={session} seatLabel={loaded.ui.seatLabel} room={room} you={state.you} isHost={isHost} send={connection.send.bind(connection)} />
-                <ReactionBar onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} />
+                <ReactionBar onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} phrases={loaded.ui.phrases} />
               </>
             ),
           }}

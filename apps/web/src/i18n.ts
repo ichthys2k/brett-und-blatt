@@ -171,6 +171,8 @@ const de = {
   'phrase.thanks': 'Danke!',
   'phrase.oneMoment': 'Moment bitte …',
   'phrase.again': 'Nochmal?',
+  'phrase.wow': 'Wow!',
+  'phrase.grr': 'Grr!',
   'howto.title': 'So geht’s',
   'howto.open': 'Anleitung anzeigen',
   'look.title': 'Aussehen',
