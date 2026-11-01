@@ -37,6 +37,7 @@
     "@brett-und-blatt/game-ludo": "workspace:*",
     "@brett-und-blatt/game-majority": "workspace:*",
     "@brett-und-blatt/game-timeline": "workspace:*",
+    "@brett-und-blatt/game-market-stalls": "workspace:*",
     "@brett-und-blatt/game-marketplace": "workspace:*",
     "@brett-und-blatt/game-low-flight": "workspace:*",
     "@brett-und-blatt/game-maexle": "workspace:*",

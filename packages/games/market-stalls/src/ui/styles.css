@@ -1,0 +1,225 @@
+/* Marktstände – vier Stände, Vorratskammern und Handkarten */
+
+.mst-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 44rem;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mst-w-0 { --mst-fill: #f6e3c1; --mst-edge: #a16207; }
+.mst-w-1 { --mst-fill: #fdf3a7; --mst-edge: #ca8a04; }
+.mst-w-2 { --mst-fill: #fbd5d5; --mst-edge: #b91c1c; }
+.mst-w-3 { --mst-fill: #cfe8fb; --mst-edge: #1d4ed8; }
+
+.mst-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Eine Karte: feste Farben, damit sie in jedem Aussehen lesbar bleibt */
+.mst-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  aspect-ratio: 3 / 4;
+  width: 100%;
+  min-width: 0;
+  padding: 0.1rem;
+  border: 2px solid var(--mst-edge);
+  border-radius: 0.4rem;
+  background: var(--mst-fill);
+  color: #1f2937;
+  line-height: 1;
+}
+
+.mst-card-number {
+  font-size: clamp(0.8rem, 3.6vw, 1.15rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mst-card-icon { font-size: clamp(0.8rem, 3.6vw, 1.2rem); }
+
+.mst-card-stars {
+  min-height: 0.7rem;
+  font-size: clamp(0.55rem, 2.4vw, 0.75rem);
+  color: #92400e;
+}
+
+/* Die Stände */
+.mst-stands {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mst-stand {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, clamp(1.8rem, 4.9dvh, 3.5rem)));
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 2px solid transparent;
+  border-radius: 0.7rem;
+  background: var(--color-surface-2, rgba(0, 0, 0, 0.05));
+}
+
+.mst-stand-target {
+  border-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.mst-stand-take { border-style: dashed; }
+
+.mst-stand-hint {
+  box-shadow: 0 0 0 3px var(--color-accent);
+}
+
+.mst-slot {
+  aspect-ratio: 3 / 4;
+  border: 1.5px dashed var(--color-line, rgba(127, 127, 127, 0.5));
+  border-radius: 0.4rem;
+}
+
+.mst-slot-last {
+  border-style: solid;
+  border-color: var(--color-accent);
+}
+
+.mst-take-note {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.3rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-on-accent, #ffffff);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* Aufgedeckte Karten */
+.mst-queue {
+  display: flex;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+}
+
+.mst-queue li {
+  flex: 0 0 3rem;
+  font-size: 0.65rem;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.75;
+}
+
+.mst-queue-now { opacity: 1 !important; font-weight: 700; }
+
+.mst-status {
+  margin: 0;
+  min-height: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.mst-mine {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.mst-mine .mst-card { width: 2.6rem; }
+
+/* Vorratskammern */
+.mst-pantries {
+  max-height: 8.5rem;
+  overflow-y: auto;
+}
+
+.mst-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.mst-table th,
+.mst-table td {
+  padding: 0.1rem 0.25rem;
+  text-align: center;
+}
+
+.mst-table tbody th {
+  max-width: 6rem;
+  overflow: hidden;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.mst-cell-empty { opacity: 0.4; }
+.mst-cell-plus { font-weight: 800; color: #15803d; }
+.mst-cell-best { font-weight: 800; text-decoration: underline; }
+.mst-cell-points { font-weight: 800; }
+
+@media (prefers-color-scheme: dark) {
+  .mst-cell-plus { color: #4ade80; }
+}
+
+/* Hand */
+.mst-hand-card {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0.4rem;
+  background: none;
+}
+
+/* Überlappen sich die Karten, bleibt der linke Rand sichtbar: Dort steht alles Wichtige. */
+.mst-hand-card .mst-card {
+  align-items: flex-start;
+  padding-left: 0.2rem;
+}
+
+.mst-hand-playable { cursor: pointer; }
+.mst-hand-playable:hover { transform: translateY(-4px); }
+.mst-hand-hint { box-shadow: 0 0 0 3px var(--color-accent); }
+
+/* Handy: kleinere Stände; beim Legen braucht es die Hand nicht, und die Tabelle rollt für sich. */
+@media (max-width: 600px) {
+  .mst-stand { grid-template-columns: repeat(5, minmax(0, 2.3rem)); }
+  .mst-queue li { flex-basis: 2.3rem; }
+  .mst-pantries { max-height: 5.5rem; }
+}
+
+@media (max-height: 900px) {
+  .mst-board[data-phase='place'] .mst-hand { display: none; }
+}
+
+@media (max-height: 720px) {
+  .mst-pantries { max-height: 5.5rem; }
+}
+
+@media (max-height: 540px) {
+  .mst-card-icon { display: none; }
+  .mst-pantries { max-height: 4rem; }
+}
