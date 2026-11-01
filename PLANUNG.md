@@ -46,7 +46,6 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-040 | neues Spiel | **Zeitband (Arbeitstitel):** eigenes Zeitstrahl-Spiel statt Hitster-Nachbau: alle legen gleichzeitig verdeckt auf ein gemeinsames Band, Engstellen-Wertung, Hinweisleiter; Pakete Erfindungen, Geschichte, Bibel (Reihenfolge), Musik nur aus eigenen Suno-Stücken und Gemeinfreiem (Spotify-Regeln verbieten Spiele, YouTube-Player darf nicht verdeckt werden). Denkbar: DJ-Modus (Spielleitung spielt selbst ab) und echtes Video erst nach der Auflösung. 1–30 Plätze, Tafel. [Plan](https://claude.ai/artifact/PNfAeLhZQ94Y8EJnqcrLtM) | niedrig | zurückgestellt (Idee, Cornelius denkt noch nach, 31.10.) | 2026-10-31, Cornelius |
 | W-041 | neues Spiel | **Marktflecken (Arbeitstitel, Handelsspiel im Mittelalter statt Monopoly):** Rundkurs um die Burg, Handwerksbetriebe in Zünften, Brezeln als Spielwährung, feste Spieldauer statt Pleite, Ansehen gewinnt, Zunftaufträge, offene Hofnachrichten statt Ereigniskarten. Eigener Entwurf, kein Nachbau. Paket C, [Umsetzungsplan](https://claude.ai/artifact/NwAG5AvLJ2d3XH95wcxLAU). | mittel | offen | 2026-10-31, Cornelius |
 | W-042 | neues Spiel | **Rübenacker (Arbeitstitel, Laufspiel in der Art von Lotti Karotti):** Hasen laufen zur Riesenrübe im Königsgarten, Karten statt Würfel, der Maulwurf wandert sichtbar unter dem Beet (Erdhügel kündigt das nächste Loch an), zurück zum letzten Zaunpfahl statt zum Start, 2–6 Spieler. Eigene Fassung, kein Nachbau. Paket A, [Umsetzungsplan](https://claude.ai/artifact/NwAG5AvLJ2d3XH95wcxLAU). | mittel | offen | 2026-10-31, Cornelius |
-| W-043 | Narrenhof | **Mehrere Passkeys für die Sicherung:** Für eine Narrenhof-Sicherung beliebig viele Passkeys anlegen können (z. B. je Passkey-Speicher einen). | mittel | in Arbeit (Claude, Zweig `claude/project-thread-2k12cu`) | 2026-10-31, Cornelius |
 
 ## Fehler
 
@@ -60,6 +59,7 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
 | W-017 | Narrenhof: Gegner mit Porträts – 30 Herrschaften und 38 Höflinge, je drei Stimmungen (schmunzelnd, lachend, Lachkrampf) | 2026-11-01 | #36, #39, #43 |
+| W-043 | Narrenhof: mehrere Passkeys für die Sicherung | 2026-11-01 | #42 |
 | W-032 | Nicht ärgern! zu sechst: Sternbrett mit sechs Armen und 54 Feldern (ab 5 Spielern, bis 4 als Option), Lila ◆ und Türkis ✚; Figuren stehen mittig auf dem Feld | 2026-10-31 | d010251 |
 | W-018 | Narrenhof: Fortschritt geräteübergreifend sichern (Sicherungscode und Passkey; Microsoft/Google zurückgestellt) | 2026-10-31 | #41 |
 | W-028 | Startseite: Filter nach Spielerzahl („Wie viele spielt ihr?“) | 2026-10-31 | #40 |
