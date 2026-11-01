@@ -1446,7 +1446,7 @@ function KombiList({ run, active, tools }: { run: RunState; active?: HandType; t
             <li key={t} className={t === active ? 'cs-kombi-on' : ''}>
               <span>
                 {handName(t)}
-                {run.handLevels[t] > 1 && <small> · Stufe {run.handLevels[t]}</small>}
+                <small className={`cs-kombi-level ${run.handLevels[t] > 1 ? 'cs-kombi-up' : ''}`}> · Stufe {run.handLevels[t]}</small>
               </span>
               <span className="cs-kombi-val">
                 <span className="cs-kombi-chips">{parts.chips}</span> × <span className="cs-kombi-mult">{parts.mult}</span>

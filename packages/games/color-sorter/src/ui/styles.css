@@ -2206,6 +2206,11 @@ button.cs-tile {
   font-weight: 700;
 }
 
+.cs-kombis li small.cs-kombi-up {
+  color: var(--cs-mustard);
+  font-weight: 700;
+}
+
 .cs-kombi-val {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
