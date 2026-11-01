@@ -2,37 +2,30 @@ import type { Options, RngState, SeatId } from '@brett-und-blatt/engine';
 
 export type DeckThemeId = 'forest' | 'sea' | 'farm' | 'wild' | 'bugs';
 
-export type Ability =
-  | { type: 'taunt' }
-  | { type: 'rush' }
-  | { type: 'bubble' }
-  | { type: 'poisonous' }
-  | { type: 'stealth' }
-  | { type: 'battlecry'; effect: BattlecryEffect }
-  | { type: 'deathrattle'; effect: DeathrattleEffect };
+export type KeywordId = 'taunt' | 'rush' | 'bubble' | 'poisonous' | 'stealth';
 
-export type BattlecryEffect =
-  | 'summon_ant'
-  | 'buff_allies_attack_1'
-  | 'heal_hero_3'
-  | 'dragon_breath';
+/** Wen ein Effekt trifft. `chosen` ist das beim Ausspielen gewählte Ziel. */
+export type Selector =
+  | { pick: 'chosen' }
+  | { pick: 'hero'; side: 'own' | 'enemy' }
+  | { pick: 'allMinions'; side: 'own' | 'enemy'; exceptSelf?: boolean };
 
-export type DeathrattleEffect =
-  | 'butterfly'
-  | 'explode_1'
-  | 'heal_hero_2';
+/** Wortschatz der Karten: Neue Karten kommen ohne eigenen Regelcode aus. */
+export type Effect =
+  | { kind: 'damage'; amount: number; to: Selector }
+  | { kind: 'heal'; amount: number | 'full'; to: Selector }
+  | { kind: 'buff'; attack?: number; health?: number; to: Selector }
+  | { kind: 'grantKeyword'; keyword: KeywordId; to: Selector }
+  | { kind: 'ready'; to: Selector }
+  | { kind: 'draw'; count: number }
+  | { kind: 'summon'; cardId: string; count?: number }
+  | { kind: 'returnToHand'; to: Selector }
+  | { kind: 'mana'; amount: number };
 
-/** Wirkung einer Zauberkarte (eigene Zauber, 31.10.2026). */
-export type SpellEffect =
-  | 'lightning' // 3 Schaden an einem gegnerischen Ziel
-  | 'honey' // eigenes Tier +2/+2
-  | 'tailwind' // eigenes Tier +1 Angriff und sofort angriffsbereit
-  | 'soapBubble' // eigenes Tier bekommt eine Schutzblase
-  | 'growth' // alle eigenen Tiere +1/+1
-  | 'summerRain' // Held +3, alle eigenen Tiere voll geheilt
-  | 'clover' // zwei Karten ziehen
-  | 'flood' // gegnerisches Tier zurück auf die Hand
-  | 'whirlwind'; // 2 Schaden an allen gegnerischen Tieren
+export interface Trigger {
+  on: 'played' | 'death';
+  do: Effect[];
+}
 
 /** Wen ein Zauber treffen darf. */
 export type SpellTargeting = 'none' | 'enemyAny' | 'enemyMinion' | 'ownMinion';
@@ -49,12 +42,36 @@ export interface CardDefinition {
   quote: string;
   sound?: string;
   isSpell?: boolean;
-  /** Zauberkarte: Wirkung und Ziel (die Sternschnuppe hat keine). */
-  spell?: SpellEffect;
+  /** Höchstens eine Kopie im gemischten Deck (Fuchs, Drache). */
+  singleCopy?: boolean;
+  /** Spielstein: gehört in kein Deck und kehrt nie auf die Hand zurück. */
+  token?: boolean;
+  /** Name im Akkusativ mit Artikel für erzeugte Regeltexte. */
+  textName?: string;
+  keywords?: KeywordId[];
+  triggers?: Trigger[];
+  /** Wirkung eines Zaubers. */
+  effects?: Effect[];
   targeting?: SpellTargeting;
-  /** Kurzer Regeltext der Zauberkarte. */
+  /** Regeltext des Zaubers; wird aus `effects` erzeugt. */
   text?: string;
-  abilities?: Ability[];
+}
+
+/** Eine Veränderung an einer Figur; die Werte werden daraus berechnet. */
+export interface Enchantment {
+  id: string;
+  source: string;
+  attack?: number;
+  health?: number;
+}
+
+/** Ein Effekt in der Warteschlange des Spielstands (reines JSON, später auch über eine Wahl hinweg). */
+export interface QueuedEffect {
+  effect: Effect;
+  seat: SeatId;
+  sourceCard: string;
+  sourceId: string | null;
+  target: SpellTarget | null;
 }
 
 export interface CardInstance {
@@ -65,6 +82,9 @@ export interface CardInstance {
 export interface Minion {
   id: string;
   cardId: string;
+  owner: SeatId;
+  /** Laufende Nummer: entscheidet die Reihenfolge gleichzeitiger Ereignisse. */
+  playOrder: number;
   name: string;
   emoji: string;
   cost: number;
@@ -73,6 +93,8 @@ export interface Minion {
   baseHealth: number;
   maxHealth: number;
   health: number;
+  damage: number;
+  enchantments: Enchantment[];
   quote: string | null;
   sound: string | null;
   taunt: boolean;
@@ -82,7 +104,6 @@ export interface Minion {
   stealth: boolean;
   canAttack: boolean;
   hasAttacked: boolean;
-  deathrattle: DeathrattleEffect | null;
 }
 
 export interface PlayerState {
@@ -111,6 +132,7 @@ export interface DrachenspielState {
   nextEntityId: number;
   /** Zufallsstrom der Partie, aus dem Seed abgeleitet; gehört nie in eine Sicht. */
   rng: RngState;
+  queue: QueuedEffect[];
   options: Options;
 }
 

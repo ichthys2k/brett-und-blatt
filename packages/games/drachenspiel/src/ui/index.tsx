@@ -372,6 +372,9 @@ function PlayBoard({
         newEffects.push({ type: 'damage', targetKind: 'hero', targetSeat: fatigue.seat, amount: fatigue.damage });
         newImpacted.add(`hero-${fatigue.seat}`);
         notices.push(`😴 ${seatName(fatigue.seat)}: Deck leer, ${fatigue.damage} Müdigkeits-Schaden`);
+      } else if (e.type === 'boardFull') {
+        const full = e as unknown as { seat: SeatId; cardId: string };
+        notices.push(`🚫 ${seatName(full.seat)}: Feld voll, ${CARDS_DB[full.cardId]?.name ?? 'Tier'} kommt nicht aufs Feld`);
       } else if (e.type === 'cardBurned') {
         const burned = e as unknown as { seat: SeatId; card: { defId: string } };
         const name = CARDS_DB[burned.card.defId]?.name ?? 'Karte';
@@ -416,7 +419,7 @@ function PlayBoard({
       if (!targetId) return false;
       if (item.kind === 'card') {
         const def = CARDS_DB[me.hand?.[item.handIndex]?.defId ?? ''];
-        if (def?.spell && def.targeting !== 'none') {
+        if (def?.isSpell && (def.targeting ?? 'none') !== 'none') {
           // Zauber mit Ziel: aufs Ziel ziehen.
           const move = legalMoves.find(
             (m) =>
@@ -478,7 +481,7 @@ function PlayBoard({
   const activeSpellIdx = draggedCardIdx ?? selectedSpell;
   const activeSpellDef = activeSpellIdx !== null ? CARDS_DB[me.hand?.[activeSpellIdx]?.defId ?? ''] : undefined;
   const spellMoves =
-    activeSpellIdx !== null && activeSpellDef?.spell
+    activeSpellIdx !== null && activeSpellDef?.isSpell
       ? legalMoves.filter((m) => m.type === 'playCard' && m.handIndex === activeSpellIdx && m.target !== undefined)
       : [];
   const spellTargetsHero = spellMoves.some((m) => m.type === 'playCard' && m.target?.kind === 'hero');
@@ -755,7 +758,7 @@ function PlayBoard({
         </div>
       )}
 
-      {selectedSpell !== null && activeSpellDef?.spell && (
+      {selectedSpell !== null && activeSpellDef?.isSpell && (
         <div className="ds-spell-hint" role="status">
           {activeSpellDef.emoji} {activeSpellDef.name}: Wähle ein Ziel – {activeSpellDef.text}
           <button type="button" className="ds-btn" onClick={() => setSelectedSpell(null)}>
@@ -779,7 +782,7 @@ function PlayBoard({
           return (
             <div
               key={card.uid}
-              className={`ds-card bub-animate-deal ${def.spell ? 'ds-card-spell' : ''} ${selectedSpell === idx ? 'ds-card-selected' : ''} ${isPlayable ? 'playable' : ''} ${isCardDragged ? 'bub-dragging' : ''} ${dragState.snapping && isCardDragged ? 'bub-snapping' : ''}`}
+              className={`ds-card bub-animate-deal ${def.isSpell ? 'ds-card-spell' : ''} ${selectedSpell === idx ? 'ds-card-selected' : ''} ${isPlayable ? 'playable' : ''} ${isCardDragged ? 'bub-dragging' : ''} ${dragState.snapping && isCardDragged ? 'bub-snapping' : ''}`}
               style={{
                 animationDelay: `${idx * 40}ms`,
                 transform: cardDragTransform,
@@ -789,7 +792,7 @@ function PlayBoard({
               }}
               onClick={() => {
                 if (!isPlayable) return;
-                if (def.spell && def.targeting !== 'none') {
+                if (def.isSpell && (def.targeting ?? 'none') !== 'none') {
                   // Zauber mit Ziel: erst auswählen, dann Ziel antippen.
                   setSelectedAttackerId(null);
                   setSelectedSpell((prev) => (prev === idx ? null : idx));
@@ -815,7 +818,7 @@ function PlayBoard({
                 <span className="ds-card-emoji">{def.emoji}</span>
                 <span className="ds-card-name">{def.name}</span>
               </div>
-              {def.spell && <span className="ds-card-spelltext">{def.text}</span>}
+              {def.isSpell && <span className="ds-card-spelltext">{def.text}</span>}
               {!def.isSpell && (
                 <div className="ds-minion-stats">
                   <span className="ds-stat-atk">{def.attack}</span>
@@ -896,7 +899,7 @@ function MulliganPhase({ me, onMove }: { me: HiddenPlayerView; onMove: (move: Dr
             return (
               <div
                 key={card.uid}
-                className={`ds-card ds-mulligan-card ${def.spell ? 'ds-card-spell' : ''} ${isDiscarded ? 'discarded' : ''}`}
+                className={`ds-card ds-mulligan-card ${def.isSpell ? 'ds-card-spell' : ''} ${isDiscarded ? 'discarded' : ''}`}
                 onClick={() => toggleDiscard(idx)}
                 role="button"
                 tabIndex={0}
@@ -915,7 +918,7 @@ function MulliganPhase({ me, onMove }: { me: HiddenPlayerView; onMove: (move: Dr
                   <span className="ds-card-emoji">{def.emoji}</span>
                   <span className="ds-card-name">{def.name}</span>
                 </div>
-                {def.spell && <span className="ds-card-spelltext">{def.text}</span>}
+                {def.isSpell && <span className="ds-card-spelltext">{def.text}</span>}
                 {!def.isSpell && (
                   <div className="ds-minion-stats">
                     <span className="ds-stat-atk">{def.attack}</span>
@@ -971,7 +974,6 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
     damage: (event) => ('targetType' in event && event.targetType === 'hero' ? 'drachen-schaden-held' : 'drachen-schaden-tier'),
     minionLeft: 'leben-weg',
     bubblePopped: 'stein-heraus',
-    starPlayed: 'stapel-fertig',
     spellCast: 'stapel-fertig',
     mulliganDone: 'mischen',
   },

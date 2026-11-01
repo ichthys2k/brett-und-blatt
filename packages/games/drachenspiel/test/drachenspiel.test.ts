@@ -2,6 +2,7 @@ import { Rng } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { drachenspiel, gameModule } from '../src';
+import { CARDS_DB } from '../src/cards';
 import type { DrachenspielState, Minion } from '../src/types';
 
 function createTestMinion(overrides: Partial<Minion> & { id: string; cardId: string }): Minion {
@@ -25,7 +26,10 @@ function createTestMinion(overrides: Partial<Minion> & { id: string; cardId: str
     stealth: overrides.stealth ?? false,
     canAttack: overrides.canAttack ?? true,
     hasAttacked: overrides.hasAttacked ?? false,
-    deathrattle: overrides.deathrattle ?? null,
+    owner: overrides.owner ?? 0,
+    playOrder: overrides.playOrder ?? 0,
+    damage: overrides.damage ?? 0,
+    enchantments: overrides.enchantments ?? [],
   };
 }
 
@@ -189,7 +193,6 @@ describe('Drachenspiel – Fähigkeiten und Regeln', () => {
         attack: 1,
         health: 1,
         rush: true,
-        deathrattle: 'butterfly',
       }),
     ];
     state.players[1].board = [
@@ -303,7 +306,7 @@ describe('Zauberkarten', () => {
   };
   const minion = (id: string, attack: number, health: number): Minion => ({
     id, cardId: 'c43', name: 'Zebra', emoji: '🦓', cost: 3, baseAttack: attack, attack, baseHealth: health, maxHealth: health, health,
-    quote: null, sound: null, taunt: false, rush: false, bubble: false, poisonous: false, stealth: false, canAttack: false, hasAttacked: false, deathrattle: null,
+    quote: null, sound: null, taunt: false, rush: false, bubble: false, poisonous: false, stealth: false, canAttack: false, hasAttacked: false, owner: 0, playOrder: 0, damage: 0, enchantments: [],
   });
 
   it('jedes Themendeck hat mit Zaubern 30 Karten, davon 6 Zauber; ohne Zauber keine', () => {
@@ -368,7 +371,7 @@ describe('Zauberkarten', () => {
   it('Sommerregen heilt Held und Tiere, Wachstumsschub stärkt alle', () => {
     const { s, me } = base();
     s.players[me].health = 20;
-    s.players[me].board = [{ ...minion('m_x', 2, 4), health: 1 }, minion('m_y', 1, 1)];
+    s.players[me].board = [{ ...minion('m_x', 2, 4), health: 1, damage: 3 }, minion('m_y', 1, 1)];
     give(s, me, 's_summerRain');
     let next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 }).state;
     expect(next.players[me].health).toBe(23);
@@ -454,5 +457,112 @@ describe('Ehrliche Anzeige', () => {
     s.players[me].hand = [{ uid: 'f', defId: 'c53' }];
     const next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 }).state;
     expect(drachenspiel.legalMoves(next, me).some((m) => m.type === 'attack' && m.target.kind === 'hero')).toBe(true);
+  });
+});
+
+describe('Regelkern', () => {
+  const fresh = () => {
+    const s = drachenspiel.setup(2, { deckSelection: 'forest', mulligan: 'off' }, 'kern');
+    const me = s.activeSeat as 0 | 1;
+    s.players[me].mana = 10;
+    s.players[me].maxMana = 10;
+    return { s, me, opp: (1 - me) as 0 | 1 };
+  };
+  const figure = (id: string, cardId: string, owner: 0 | 1, playOrder: number, attack: number, health: number, extra: Partial<Minion> = {}): Minion => ({
+    ...createTestMinion({ id, cardId, attack, health, owner, playOrder }),
+    ...extra,
+  });
+
+  it('Abschiede gleichzeitig gefallener Tiere folgen der Spielreihenfolge, nicht dem Platz', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].board = [figure('m_raupe', 'c51', me, 9, 1, 1)];
+    s.players[opp].board = [figure('m_fisch', 'c20', opp, 3, 1, 1)];
+    // Beide fallen durch denselben Tausch; zuerst wirkt die ältere Figur des Gegners. Ihr Schaden
+    // trifft also noch nicht den Schmetterling, der erst danach erscheint.
+    const res = drachenspiel.applyMove(s, me, { type: 'attack', attackerId: 'm_raupe', target: { kind: 'minion', id: 'm_fisch' } });
+    const kinds = res.events.filter((e) => e.type === 'minionLeft' || e.type === 'damage' || e.type === 'minionSummoned').map((e) => e.type);
+    expect(kinds).toEqual(['damage', 'damage', 'minionLeft', 'minionLeft', 'minionSummoned']);
+    expect(res.state.players[me].board[0]).toMatchObject({ cardId: 'token_butterfly', bubble: true });
+    expect(res.state.queue).toEqual([]);
+  });
+
+  it('Ketten aus Abschieden laufen, bis niemand mehr fällt', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].board = [figure('m_a', 'c20', me, 1, 1, 1), figure('m_c', 'c20', me, 4, 1, 1)];
+    s.players[opp].board = [figure('m_b', 'c20', opp, 2, 1, 2)];
+    const res = drachenspiel.applyMove(s, me, { type: 'attack', attackerId: 'm_a', target: { kind: 'minion', id: 'm_b' } });
+    expect(res.state.players[opp].board).toEqual([]);
+    expect(res.state.players[me].board.map((m) => m.id)).toEqual([]);
+  });
+
+  it('Schaden bleibt, wenn Verstärkungen hinzukommen, und Heilung geht bis zum neuen Maximum', () => {
+    const { s, me } = fresh();
+    s.players[me].board = [figure('m_x', 'c43', me, 1, 2, 4, { health: 1, damage: 3 })];
+    s.players[me].hand = [{ uid: 'h', defId: 's_honey' }];
+    const buffed = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0, target: { kind: 'minion', id: 'm_x' } }).state;
+    expect(buffed.players[me].board[0]).toMatchObject({ attack: 4, maxHealth: 6, health: 3, damage: 3 });
+    expect(buffed.players[me].board[0]!.enchantments).toHaveLength(1);
+  });
+
+  it('fallen beide Helden in derselben Aktion, ist es unentschieden', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].health = 1;
+    s.players[opp].health = 1;
+    s.players[me].deck = [];
+    s.players[me].fatigue = 5;
+    s.players[opp].deck = [];
+    s.players[opp].fatigue = 5;
+    const next = drachenspiel.applyMove(s, me, { type: 'endTurn' }).state;
+    expect(next.players[opp].health).toBeLessThanOrEqual(0);
+    expect(drachenspiel.result(next)?.kind).toBe('win');
+    next.players[me].health = 0;
+    expect(drachenspiel.result(next)?.kind).toBe('draw');
+  });
+
+  it('nach der Zuggrenze endet die Partie unentschieden', () => {
+    const { s, me } = fresh();
+    s.turn = 89;
+    const next = drachenspiel.applyMove(s, me, { type: 'endTurn' }).state;
+    expect(next.phase).toBe('ended');
+    expect(drachenspiel.result(next)).toMatchObject({ kind: 'draw' });
+  });
+
+  it('volles Feld meldet das verlorene Tier', () => {
+    const { s, me } = fresh();
+    s.players[me].board = Array.from({ length: 6 }, (_, i) => figure(`m_${i}`, 'c43', me, i, 1, 1));
+    s.players[me].hand = [{ uid: 'a', defId: 'c1' }];
+    const res = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 });
+    expect(res.state.players[me].board).toHaveLength(7);
+    expect(res.events.some((e) => e.type === 'boardFull')).toBe(true);
+  });
+
+  it('alte Spielstände ohne Veränderungsliste spielen weiter', () => {
+    const { s, me } = fresh();
+    const old = { ...figure('m_alt', 'c43', me, 0, 4, 6, { baseAttack: 2, baseHealth: 4, health: 5 }) } as Partial<Minion>;
+    delete old.damage;
+    delete old.enchantments;
+    delete old.playOrder;
+    delete old.owner;
+    s.players[me].board = [old as Minion];
+    delete (s as Partial<typeof s>).queue;
+    const next = drachenspiel.applyMove(s, me, { type: 'endTurn' }).state;
+    expect(next.players[me].board[0]).toMatchObject({ attack: 4, maxHealth: 6, health: 5, damage: 1 });
+  });
+
+  it('jede Karte mit Wirkung hat einen erzeugten Text, und neue Effekte brauchen keinen Regelcode', () => {
+    for (const def of Object.values(CARDS_DB)) {
+      if (def.effects) expect(def.text, def.id).toMatch(/\S/);
+    }
+    const { s, me, opp } = fresh();
+    CARDS_DB.test_neu = {
+      id: 'test_neu', name: 'Probe', cost: 1, attack: 0, health: 0, emoji: '🧪', quote: '', isSpell: true, targeting: 'none',
+      effects: [{ kind: 'damage', amount: 1, to: { pick: 'hero', side: 'enemy' } }, { kind: 'summon', cardId: 'token_ant', count: 2 }],
+    };
+    s.players[me].hand = [{ uid: 'n', defId: 'test_neu' }];
+    const hp = s.players[opp].health;
+    const next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 }).state;
+    delete CARDS_DB.test_neu;
+    expect(next.players[opp].health).toBe(hp - 1);
+    expect(next.players[me].board.map((m) => m.cardId)).toEqual(['token_ant', 'token_ant']);
   });
 });

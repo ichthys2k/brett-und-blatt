@@ -65,6 +65,7 @@ export interface DrachenspielState {
   startingSeat: SeatId;
   nextEntityId: number;
   rng: RngState; // aus dem Seed abgeleitet, nie in einer Sicht
+  queue: QueuedEffect[]; // Warteschlange der Effekte, am Ende jeder Aktion leer
   options: Options;
 }
 ```
@@ -129,3 +130,15 @@ Abruf: `DRACHEN_BALANCE=1 corepack pnpm exec vitest run packages/games/drachensp
 | Leicht gegen Leicht | 47 % | 30,7 |
 
 Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes Deck, Schwer gegen Schwer: Wald 65 %, Wildnis 65 %, Bauernhof 58 %, Krabbeltiere 54 %, Meer 53 %. Die Stichprobe ist klein (bei 300 Partien etwa ±6 Prozentpunkte), und es sind nur Bots. Der frühere Wert von 77 % ging großteils auf den Mischfehler zurück. Bei guten Bots bleibt ein leichter Vorteil, das Ziel 45–55 % ist also noch nicht ganz erreicht.
+
+## Regelkern (01.11.2026, Phase 1 des Ausbauplans, `ruleVersion` 4)
+
+- **Karten sind Daten:** `keywords`, `triggers` und bei Zaubern `effects` aus dem Wortschatz in `types.ts` (`Effect`, `Selector`). Eine neue Karte aus vorhandenen Effekten braucht keinen Regelcode.
+- **Texte werden erzeugt:** `core/text.ts`; handgeschriebene Regeltexte gibt es nicht mehr.
+- **Ablauf:** `core/effects.ts` arbeitet die Warteschlange ab. Danach gehen alle Figuren ohne Leben gleichzeitig vom Feld, und ihre Abschiede folgen nach `playOrder`, bis niemand mehr fällt. Sieg, Unentschieden und Zuggrenze (Zug 89) werden nur in `settle` geprüft.
+- **Werte:** `refreshStats` berechnet Angriff und Leben aus Grundwert, `enchantments` und `damage`. Die Felder `attack`, `health` und `maxHealth` bleiben als berechnetes Ergebnis für Oberfläche und Bot erhalten.
+- **Verdeckte Karten:** `sampleHidden` verteilt ohne Zurücklegen und zieht offen liegende Karten ab.
+- **Alte Online-Räume:** `upgradeState` ergänzt fehlende Felder.
+- **Schutz vor Regeländerungen:** `test/golden/karten.json` hält fest, was jede Karte mit jedem Ziel bewirkt. Die Datei wurde vor dem Umbau erzeugt und blieb dabei unverändert.
+- **Sichtbare Änderungen:** Die Sternschnuppe zeigt ihren Text und meldet sich als `spellCast`, einige Zaubertexte sind neu formuliert, und „Feld voll“ wird angezeigt.
+- **Messung nachher (300 Partien, Deckwahl zufällig):** Startspieler im Spiegel „schwer“ 57 %, „mittel“ 55 %, „leicht“ 49 %; Schwer schlägt Mittel zu 92 %, Mittel schlägt Leicht zu 75 %.
