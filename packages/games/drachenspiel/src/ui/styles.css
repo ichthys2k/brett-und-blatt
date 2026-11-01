@@ -334,6 +334,70 @@
   background: color-mix(in srgb, var(--color-surface, #ffffff) 65%, #74b9ff 35%);
 }
 
+/* Offene Wahl */
+.ds-choice {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.ds-choice .ds-phase-title {
+  color: #fff;
+}
+
+.ds-choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ds-choice-option {
+  min-width: 96px;
+  max-width: 140px;
+  min-height: 110px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: inherit;
+  background: var(--color-surface, #ffffff);
+  border: 2px solid #0984e3;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.ds-choice-option.ds-card {
+  justify-content: space-between;
+  padding: 4px;
+  width: 104px;
+  height: auto;
+  min-height: 140px;
+}
+
+.ds-choice-option .ds-card-spelltext {
+  overflow: visible;
+  display: block;
+  -webkit-line-clamp: unset;
+}
+
+.ds-choice-emoji {
+  font-size: 2rem;
+  line-height: 1;
+}
+
 /* Boards */
 .ds-board-container {
   flex: 1;

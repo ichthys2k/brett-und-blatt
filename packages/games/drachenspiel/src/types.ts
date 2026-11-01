@@ -23,6 +23,8 @@ export type KeywordId = MinionKeyword | 'tradeable';
 /** Wen ein Effekt trifft. `chosen` ist das beim Ausspielen gewählte Ziel. */
 export type Selector =
   | { pick: 'chosen' }
+  /** Die Figur, von der die Wirkung ausgeht. */
+  | { pick: 'self' }
   | { pick: 'hero'; side: 'own' | 'enemy' }
   | { pick: 'allMinions'; side: 'own' | 'enemy'; exceptSelf?: boolean };
 
@@ -50,7 +52,31 @@ export type Effect =
   /** Karte auf die Hand; flüchtig heißt: verschwindet am Ende des Zugs. */
   | { kind: 'addToHand'; cardId: string; fleeting?: boolean }
   /** Zweite Chance: nur vom Regelkern eingereiht, in keiner Kartenliste. */
-  | { kind: 'rebirth'; cardId: string };
+  | { kind: 'rebirth'; cardId: string }
+  /** Fährte suchen: drei zufällige Karten zur Wahl, eine kommt auf die Hand. */
+  | { kind: 'discover'; pool: 'spell' | 'animal' }
+  /** Wahlkarte: eine von zwei festen Wirkungen. */
+  | { kind: 'chooseOne'; options: ChoiceOption[] }
+  /** Anpassen: drei zufällige Verbesserungen zur Wahl. */
+  | { kind: 'adapt' };
+
+/** Eine Möglichkeit, wenn eine Wirkung auf eine Wahl wartet. */
+export interface ChoiceOption {
+  label: string;
+  emoji: string;
+  /** Bei „Fährte suchen“: die angebotene Karte. */
+  cardId?: string;
+  effects: Effect[];
+}
+
+/** Der Ablauf hält an, bis `seat` mit dem Zug `choose` gewählt hat. */
+export interface PendingChoice {
+  seat: SeatId;
+  options: ChoiceOption[];
+  sourceCard: string;
+  sourceId: string | null;
+  target: SpellTarget | null;
+}
 
 /** Rüstzeug: zeitlich begrenzter Angriff des Helden, nutzt sich mit jedem Angriff ab. */
 export interface Gear {
@@ -73,6 +99,8 @@ export interface HousePower {
 
 export interface Trigger {
   on: 'played' | 'death';
+  /** `combo`: schon eine Karte in diesem Zug gespielt. `outcast`: von ganz links oder rechts auf der Hand gespielt. */
+  if?: 'combo' | 'outcast';
   do: Effect[];
 }
 
@@ -98,11 +126,14 @@ export interface CardDefinition {
   /** Name im Akkusativ mit Artikel für erzeugte Regeltexte. */
   textName?: string;
   keywords?: KeywordId[];
+  /** Erschöpfung: So viel Mana fehlt im nächsten Zug. */
+  overload?: number;
   /** Naturkraft: So viel mehr Schaden machen eigene Zauber, solange das Tier liegt. */
   spellPower?: number;
   triggers?: Trigger[];
   /** Wirkung eines Zaubers. */
   effects?: Effect[];
+  /** Ziel eines Zaubers oder Auftritts. */
   targeting?: SpellTargeting;
   /** Regeltext des Zaubers; wird aus `effects` erzeugt. */
   text?: string;
@@ -191,6 +222,11 @@ export interface PlayerState {
   hand: CardInstance[];
   board: Minion[];
   fatigue: number;
+  /** Erschöpfung für den nächsten Zug. */
+  overloadNext: number;
+  /** In diesem Zug durch Erschöpfung gesperrtes Mana. */
+  locked: number;
+  cardsPlayedThisTurn: number;
   /** `mixed`: gemischtes Zufallsdeck ohne Thema. */
   deckTheme: DeckThemeId | 'mixed' | null;
   mulliganDone: boolean;
@@ -208,7 +244,14 @@ export interface DrachenspielState {
   /** Zufallsstrom der Partie, aus dem Seed abgeleitet; gehört nie in eine Sicht. */
   rng: RngState;
   queue: QueuedEffect[];
+  /** Offene Wahl; nur gesetzt, solange sie aussteht. */
+  pending?: PendingChoice;
   options: Options;
+}
+
+/** Offene Wahl in der Sicht: Wer nicht wählt, sieht nur die Anzahl der Möglichkeiten. */
+export interface PendingView extends PendingChoice {
+  count: number;
 }
 
 export interface HiddenPlayerView {
@@ -228,6 +271,9 @@ export interface HiddenPlayerView {
   hand: CardInstance[] | null;
   board: Minion[];
   fatigue: number;
+  overloadNext: number;
+  locked: number;
+  cardsPlayedThisTurn: number;
   deckTheme: DeckThemeId | 'mixed' | null;
   mulliganDone: boolean;
 }
@@ -239,6 +285,7 @@ export interface DrachenspielView {
   players: [HiddenPlayerView, HiddenPlayerView];
   startingSeat: SeatId;
   viewerSeat: SeatId | 'spectator';
+  pending?: PendingView;
   options: Options;
 }
 
@@ -248,6 +295,7 @@ export type DrachenspielMove =
   | { type: 'playCard'; handIndex: number; target?: SpellTarget }
   | { type: 'attack'; attackerId: string; target: { kind: 'minion'; id: string } | { kind: 'hero' } }
   | { type: 'tradeCard'; handIndex: number }
+  | { type: 'choose'; index: number }
   | { type: 'heroPower' }
   | { type: 'heroAttack'; target: { kind: 'minion'; id: string } | { kind: 'hero' } }
   | { type: 'endTurn' };

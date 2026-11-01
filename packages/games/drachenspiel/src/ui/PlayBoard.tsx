@@ -216,6 +216,8 @@ function HeroBar({
           )}
           <span className="ds-badge ds-badge-mana">
             💧 {player.mana}/{player.maxMana}
+            {player.locked > 0 ? ` 🔒${player.locked}` : ''}
+            {player.overloadNext > 0 ? ` →🔒${player.overloadNext}` : ''}
           </span>
         </div>
       </div>
@@ -287,9 +289,8 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
     onDrop: (item, targetId) => {
       if (!targetId) return false;
       if (item.kind === 'card') {
-        const def = CARDS_DB[me.hand?.[item.handIndex]?.defId ?? ''];
-        if (def?.isSpell && (def.targeting ?? 'none') !== 'none') {
-          // Zauber mit Ziel: aufs Ziel ziehen.
+        if (legalMoves.some((m) => m.type === 'playCard' && m.handIndex === item.handIndex && m.target !== undefined)) {
+          // Karte mit Ziel: aufs Ziel ziehen.
           const move = legalMoves.find(
             (m) =>
               m.type === 'playCard' &&
@@ -345,7 +346,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   const activeSpellIdx = draggedCardIdx ?? selectedSpell;
   const activeSpellDef = activeSpellIdx !== null ? CARDS_DB[me.hand?.[activeSpellIdx]?.defId ?? ''] : undefined;
   const spellMoves =
-    activeSpellIdx !== null && activeSpellDef?.isSpell
+    activeSpellIdx !== null
       ? legalMoves.filter((m) => m.type === 'playCard' && m.handIndex === activeSpellIdx && m.target !== undefined)
       : [];
   const spellTargetsHero = spellMoves.some((m) => m.type === 'playCard' && m.target?.kind === 'hero');
@@ -626,7 +627,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           <div className="ds-endturn-wrap">
             <button
               className={`ds-btn ds-btn-endturn ${isMyTurn && nothingLeft ? 'sparkle' : ''}`}
-              disabled={!isMyTurn}
+              disabled={!isMyTurn || Boolean(view.pending)}
               onClick={() => {
                 onMove({ type: 'endTurn' });
                 setSelectedAttackerId(null);
@@ -646,9 +647,46 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
         </div>
       )}
 
-      {selectedSpell !== null && activeSpellDef?.isSpell && (
+      {view.pending?.seat === mySeat && view.pending.options.length > 0 && (
+        <div className="ds-choice" role="dialog" aria-modal="true" aria-label="Wähle eine Möglichkeit">
+          <h3 className="ds-phase-title">Wähle eins</h3>
+          <div className="ds-choice-row">
+            {view.pending.options.map((option, index) => {
+              const def = option.cardId ? CARDS_DB[option.cardId] : undefined;
+              const hinted = hint?.type === 'choose' && hint.index === index;
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  className={`ds-choice-option ${def ? 'ds-card' : ''} ${def?.isSpell ? 'ds-card-spell' : ''} ${hinted ? 'ds-hinted' : ''}`}
+                  title={def ? getCardFullTitle(def) : option.label}
+                  aria-label={def ? getCardFullTitle(def) : option.label}
+                  onClick={() => onMove({ type: 'choose', index })}
+                >
+                  {def ? (
+                    <CardFace def={def} />
+                  ) : (
+                    <>
+                      <span className="ds-choice-emoji">{option.emoji}</span>
+                      <span>{option.label}</span>
+                    </>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {view.pending && view.pending.seat !== mySeat && (
         <div className="ds-spell-hint" role="status">
-          {activeSpellDef.emoji} {activeSpellDef.name}: Wähle ein Ziel – {activeSpellDef.text}
+          🤔 {nameOf(view.pending.seat)} wählt …
+        </div>
+      )}
+
+      {selectedSpell !== null && activeSpellDef && (
+        <div className="ds-spell-hint" role="status">
+          {activeSpellDef.emoji} {activeSpellDef.name}: Wähle ein Ziel – {activeSpellDef.text ?? getCardTraits(activeSpellDef).find((trait) => trait.description.length > 0)?.description}
           <button type="button" className="ds-btn" onClick={() => setSelectedSpell(null)}>
             Abbrechen
           </button>
@@ -660,15 +698,15 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           const def = CARDS_DB[card.defId];
           if (!def) return null;
           const isPlayable = isMyTurn && playableCardIndices.has(idx);
-          const needsTarget = def.isSpell && (def.targeting ?? 'none') !== 'none';
-          // Zauber mit Ziel bleiben liegen, der Pfeil zeigt das Ziel; alles andere folgt dem Finger.
+          const needsTarget = legalMoves.some((m) => m.type === 'playCard' && m.handIndex === idx && m.target !== undefined);
+          // Karten mit Ziel bleiben liegen, der Pfeil zeigt das Ziel; alles andere folgt dem Finger.
           const followsFinger = !needsTarget && (dragState.isDragging || dragState.snapping) && dragState.item?.kind === 'card' && dragState.item.handIndex === idx;
           const dragBind = isPlayable ? bindDrag({ kind: 'card', handIndex: idx }) : undefined;
           const traits = getCardTraits(def);
           const play = () => {
             if (!isPlayable) return;
             if (needsTarget) {
-              // Zauber mit Ziel: erst auswählen, dann Ziel antippen.
+              // Karte mit Ziel: erst auswählen, dann Ziel antippen.
               setSelectedAttackerId(null);
               setSelectedSpell((prev) => (prev === idx ? null : idx));
               return;

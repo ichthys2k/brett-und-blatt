@@ -1,6 +1,6 @@
 import { Rng, type GameEvent, type SeatId } from '@brett-und-blatt/engine';
 import { CARDS_DB } from '../cards';
-import type { CardDefinition, CardInstance, DrachenspielState, Effect, Enchantment, KeywordId, Minion, MinionKeyword, PlayerState, QueuedEffect, Selector, SpellTarget } from '../types';
+import type { CardDefinition, CardInstance, ChoiceOption, DrachenspielState, Effect, Enchantment, KeywordId, Minion, MinionKeyword, PlayerState, QueuedEffect, Selector, SpellTarget } from '../types';
 
 export const HAND_LIMIT = 10;
 export const BOARD_LIMIT = 7;
@@ -13,6 +13,18 @@ export const MAX_TURNS = 89;
 const MAX_QUEUE_STEPS = 200;
 
 /** Fähigkeiten, die nur gesetzt werden, wenn sie zutreffen. */
+/** Die Verbesserungen von „Anpassen“; drei davon stehen je Karte zur Wahl. */
+const ADAPTATIONS: ChoiceOption[] = [
+  { label: '+1 Angriff, +1 Leben', emoji: '💪', effects: [{ kind: 'buff', attack: 1, health: 1, to: { pick: 'self' } }] },
+  { label: '+3 Leben', emoji: '🐚', effects: [{ kind: 'buff', health: 3, to: { pick: 'self' } }] },
+  { label: '+2 Angriff', emoji: '🦷', effects: [{ kind: 'buff', attack: 2, to: { pick: 'self' } }] },
+  { label: 'Beschützer', emoji: '🛡️', effects: [{ kind: 'grantKeyword', keyword: 'taunt', to: { pick: 'self' } }] },
+  { label: 'Schutzblase', emoji: '🫧', effects: [{ kind: 'grantKeyword', keyword: 'bubble', to: { pick: 'self' } }] },
+  { label: 'Giftig', emoji: '🧪', effects: [{ kind: 'grantKeyword', keyword: 'poisonous', to: { pick: 'self' } }] },
+  { label: 'Lebenskraft', emoji: '💚', effects: [{ kind: 'grantKeyword', keyword: 'lifesteal', to: { pick: 'self' } }] },
+  { label: 'Sprinter', emoji: '🏃', effects: [{ kind: 'grantKeyword', keyword: 'sprinter', to: { pick: 'self' } }] },
+];
+
 const OPTIONAL_KEYWORDS: MinionKeyword[] = ['sprinter', 'doubleStrike', 'lifesteal', 'frostbite', 'reborn', 'immune', 'elusive'];
 
 /** Berechnet die Werte einer Figur aus Grundwerten, Veränderungen und Schaden neu. */
@@ -166,6 +178,10 @@ function resolve(state: DrachenspielState, frame: QueuedEffect, selector: Select
   const own = state.players[frame.seat];
   const enemy = state.players[1 - frame.seat]!;
   switch (selector.pick) {
+    case 'self': {
+      const minion = [...own.board, ...enemy.board].find((m) => m.id === frame.sourceId);
+      return minion ? [{ kind: 'minion', minion }] : [];
+    }
     case 'chosen': {
       const target = frame.target;
       if (!target) return [];
@@ -217,6 +233,28 @@ function returnToHand(state: DrachenspielState, minion: Minion, events: GameEven
   }
 }
 
+function pick3<T>(state: DrachenspielState, items: T[]): T[] {
+  const rng = new Rng(state.rng);
+  const picked = rng.shuffle([...items]).slice(0, 3);
+  state.rng = rng.state;
+  return picked;
+}
+
+function offerChoice(state: DrachenspielState, frame: QueuedEffect, options: ChoiceOption[], events: GameEvent[]): void {
+  state.pending = { seat: frame.seat, options, sourceCard: frame.sourceCard, sourceId: frame.sourceId, target: frame.target };
+  events.push({ type: 'choiceOffered', seat: frame.seat });
+}
+
+/** Führt die gewählte Möglichkeit vor allem anderen aus, was noch wartet. */
+export function resolveChoice(state: DrachenspielState, index: number, events: GameEvent[]): void {
+  const pending = state.pending;
+  const option = pending?.options[index];
+  if (!pending || !option) throw new Error('Keine solche Wahl');
+  delete state.pending;
+  state.queue.unshift(...option.effects.map((effect) => ({ effect, seat: pending.seat, sourceCard: pending.sourceCard, sourceId: pending.sourceId, target: pending.target })));
+  settle(state, events);
+}
+
 function runEffect(state: DrachenspielState, frame: QueuedEffect, events: GameEvent[]): void {
   const effect: Effect = frame.effect;
   const player = state.players[frame.seat];
@@ -250,6 +288,18 @@ function runEffect(state: DrachenspielState, frame: QueuedEffect, events: GameEv
       events.push({ type: 'cardDrawn', seat: frame.seat, card });
       break;
     }
+    case 'discover': {
+      const pool = Object.values(CARDS_DB).filter((def) => !def.token && !def.singleCopy && def.id !== 'special_star' && Boolean(def.isSpell) === (effect.pool === 'spell'));
+      offerChoice(state, frame, pick3(state, pool).map((def) => ({ label: def.name, emoji: def.emoji, cardId: def.id, effects: [{ kind: 'addToHand', cardId: def.id }] })), events);
+      break;
+    }
+    case 'chooseOne':
+      offerChoice(state, frame, effect.options, events);
+      break;
+    case 'adapt':
+      // Ist das Tier schon weg, gibt es nichts mehr anzupassen.
+      if (resolve(state, frame, { pick: 'self' }).length > 0) offerChoice(state, frame, pick3(state, ADAPTATIONS), events);
+      break;
     case 'rebirth': {
       const def = CARDS_DB[effect.cardId];
       if (!def) break;
@@ -333,12 +383,13 @@ export function enqueue(state: DrachenspielState, effects: Effect[] | undefined,
   for (const effect of effects ?? []) state.queue.push({ effect, seat, sourceCard, sourceId, target });
 }
 
-function triggered(cardId: string, on: 'played' | 'death'): Effect[] {
-  return (CARDS_DB[cardId]?.triggers ?? []).filter((t) => t.on === on).flatMap((t) => t.do);
+function triggered(cardId: string, on: 'played' | 'death', holds: (condition: 'combo' | 'outcast') => boolean = () => false): Effect[] {
+  return (CARDS_DB[cardId]?.triggers ?? []).filter((t) => t.on === on && (!t.if || holds(t.if))).flatMap((t) => t.do);
 }
 
-export function enqueuePlayed(state: DrachenspielState, minion: Minion, seat: SeatId): void {
-  enqueue(state, triggered(minion.cardId, 'played'), seat, minion.cardId, minion.id, null);
+/** `combo` und `outcast` werden beim Ausspielen geprüft, bevor die Karte mitzählt oder die Hand verlässt. */
+export function enqueuePlayed(state: DrachenspielState, minion: Minion, seat: SeatId, target: SpellTarget | null, conditions: { combo: boolean; outcast: boolean }): void {
+  enqueue(state, triggered(minion.cardId, 'played', (condition) => conditions[condition]), seat, minion.cardId, minion.id, target);
 }
 
 /** Alle Figuren ohne Leben gehen gleichzeitig vom Feld; Abschiede folgen in Spielreihenfolge. */
@@ -375,12 +426,15 @@ export function settle(state: DrachenspielState, events: GameEvent[]): void {
   let steps = 0;
   do {
     while (state.queue.length > 0) {
+      // Eine offene Wahl hält alles an, `resolveChoice` macht danach weiter.
+      if (state.pending) return;
       if (++steps > MAX_QUEUE_STEPS) {
         state.queue = [];
         break;
       }
       runEffect(state, state.queue.shift()!, events);
     }
+    if (state.pending) return;
   } while (deathPhase(state, events) || state.queue.length > 0);
   checkGameOver(state, events);
 }

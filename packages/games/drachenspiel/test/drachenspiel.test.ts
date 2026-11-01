@@ -929,3 +929,146 @@ describe('Dauerhafte Stichwörter', () => {
     }
   });
 });
+
+describe('Entscheidungen', () => {
+  function fresh() {
+    const s = drachenspiel.setup(2, { deckSelection: 'forest', mulligan: 'off' }, 'wahl-test');
+    const me = s.activeSeat as 0 | 1;
+    const opp = (1 - me) as 0 | 1;
+    s.players[me].mana = 10;
+    s.players[me].maxMana = 10;
+    s.players[opp].armor = 0;
+    return { s, me, opp };
+  }
+  const beast = (id: string, attack: number, health: number, extra: Partial<Minion> = {}) => ({ ...createTestMinion({ id, cardId: 'c43', attack, health }), ...extra });
+  const hand = (s: DrachenspielState, seat: 0 | 1, ...ids: string[]) => {
+    s.players[seat].hand = ids.map((defId, i) => ({ uid: `k${i}`, defId }));
+  };
+  const playAt = (s: DrachenspielState, seat: 0 | 1, handIndex: number, target?: { kind: 'minion'; id: string } | { kind: 'hero' }) =>
+    drachenspiel.applyMove(s, seat, target ? { type: 'playCard', handIndex, target } : { type: 'playCard', handIndex }).state;
+
+  it('ein Auftritt mit Ziel verlangt das Ziel und wirkt darauf', () => {
+    const { s, me, opp } = fresh();
+    s.players[opp].board = [beast('m_a', 3, 9)];
+    hand(s, me, 'c18');
+    expect(() => playAt(s, me, 0)).toThrow();
+    const next = playAt(s, me, 0, { kind: 'minion', id: 'm_a' });
+    expect(next.players[opp].board[0]!.frozen).toBe(true);
+    expect(next.players[me].board[0]!.cardId).toBe('c18');
+  });
+
+  it('ohne mögliches Ziel lässt sich das Tier trotzdem legen', () => {
+    const { s, me, opp } = fresh();
+    s.players[opp].board = [beast('m_s', 1, 1, { stealth: true })];
+    hand(s, me, 'c18');
+    expect(drachenspiel.legalMoves(s, me)).toContainEqual({ type: 'playCard', handIndex: 0 });
+    expect(playAt(s, me, 0).players[me].board).toHaveLength(1);
+  });
+
+  it('Fährte suchen hält an, bietet drei verschiedene Karten, nur der Wählende sieht sie', () => {
+    const { s, me, opp } = fresh();
+    hand(s, me, 's_tracks');
+    const open = playAt(s, me, 0);
+    expect(drachenspiel.currentPlayers(open)).toEqual([me]);
+    const moves = drachenspiel.legalMoves(open, me);
+    expect(moves).toEqual([{ type: 'choose', index: 0 }, { type: 'choose', index: 1 }, { type: 'choose', index: 2 }]);
+    expect(() => drachenspiel.applyMove(open, me, { type: 'endTurn' })).toThrow();
+    expect(() => drachenspiel.applyMove(open, opp, { type: 'choose', index: 0 })).toThrow();
+    const offered = open.pending!.options.map((o) => o.cardId!);
+    expect(new Set(offered).size).toBe(3);
+    expect(offered.every((id) => !CARDS_DB[id]!.isSpell && !CARDS_DB[id]!.token)).toBe(true);
+    expect(drachenspiel.playerView(open, me).pending!.options).toHaveLength(3);
+    expect(drachenspiel.playerView(open, opp).pending).toMatchObject({ options: [], count: 3 });
+    expect(drachenspiel.playerView(open, 'spectator').pending!.options).toEqual([]);
+    const done = drachenspiel.applyMove(open, me, { type: 'choose', index: 1 }).state;
+    expect(done.pending).toBeUndefined();
+    expect(done.players[me].hand.map((c) => c.defId)).toEqual([offered[1]]);
+  });
+
+  it('die Wahlkarte führt nur die gewählte Wirkung aus', () => {
+    const { s, me } = fresh();
+    hand(s, me, 'c24');
+    const open = playAt(s, me, 0);
+    const size = open.players[me].hand.length;
+    const buffed = drachenspiel.applyMove(open, me, { type: 'choose', index: 1 }).state;
+    expect(buffed.players[me].board[0]).toMatchObject({ attack: 3, health: 4 });
+    expect(buffed.players[me].hand).toHaveLength(size);
+    const drew = drachenspiel.applyMove(open, me, { type: 'choose', index: 0 }).state;
+    expect(drew.players[me].board[0]).toMatchObject({ attack: 2, health: 3 });
+    expect(drew.players[me].hand).toHaveLength(size + 1);
+  });
+
+  it('Anpassen verbessert das Tier selbst', () => {
+    const { s, me } = fresh();
+    hand(s, me, 'c9');
+    const open = playAt(s, me, 0);
+    expect(open.pending!.options).toHaveLength(3);
+    const before = JSON.stringify(open.players[me].board[0]);
+    const next = drachenspiel.applyMove(open, me, { type: 'choose', index: 0 }).state;
+    expect(JSON.stringify(next.players[me].board[0])).not.toBe(before);
+  });
+
+  it('eine Wahl aus einem Abschied gehört dem Besitzer des Tiers, auch im fremden Zug', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].board = [beast('m_h', 9, 9)];
+    const saved = CARDS_DB.c51!.triggers;
+    CARDS_DB.c51!.triggers = [{ on: 'death', do: [{ kind: 'discover', pool: 'spell' }] }];
+    try {
+      s.players[opp].board = [createTestMinion({ id: 'm_r', cardId: 'c51', attack: 1, health: 1 })];
+      const open = drachenspiel.applyMove(s, me, { type: 'attack', attackerId: 'm_h', target: { kind: 'minion', id: 'm_r' } }).state;
+      expect(drachenspiel.currentPlayers(open)).toEqual([opp]);
+      const done = drachenspiel.applyMove(open, opp, { type: 'choose', index: 0 }).state;
+      expect(drachenspiel.currentPlayers(done)).toEqual([me]);
+    } finally {
+      CARDS_DB.c51!.triggers = saved;
+    }
+  });
+
+  it('Rudeltaktik wirkt erst nach einer anderen Karte im selben Zug', () => {
+    const { s, me } = fresh();
+    hand(s, me, 'c2', 'c2', 'c43');
+    const first = playAt(s, me, 0);
+    expect(first.players[me].board[0]!.attack).toBe(2);
+    const second = playAt(first, me, 0);
+    expect(second.players[me].board[1]!.attack).toBe(3);
+    const opp = (1 - me) as 0 | 1;
+    const next = drachenspiel.applyMove(drachenspiel.applyMove(second, me, { type: 'endTurn' }).state, opp, { type: 'endTurn' }).state;
+    expect(next.players[me].cardsPlayedThisTurn).toBe(0);
+  });
+
+  it('Einzelgänger wirkt nur von den Rändern der Hand', () => {
+    const { s, me } = fresh();
+    hand(s, me, 'c43', 'c25', 'c43');
+    expect(playAt(s, me, 1).players[me].board[0]!.health).toBe(4);
+    hand(s, me, 'c25', 'c43', 'c43');
+    expect(playAt(s, me, 0).players[me].board[0]!.health).toBe(6);
+    hand(s, me, 'c43', 'c43', 'c25');
+    expect(playAt(s, me, 2).players[me].board[0]!.health).toBe(6);
+  });
+
+  it('Erschöpfung sperrt im nächsten Zug Mana und nur dort', () => {
+    const { s, me, opp } = fresh();
+    s.players[me].maxMana = 5;
+    hand(s, me, 'c42');
+    let next = playAt(s, me, 0);
+    expect(next.players[me].overloadNext).toBe(2);
+    next = drachenspiel.applyMove(drachenspiel.applyMove(next, me, { type: 'endTurn' }).state, opp, { type: 'endTurn' }).state;
+    expect(next.players[me]).toMatchObject({ maxMana: 6, mana: 4, locked: 2, overloadNext: 0 });
+    next = drachenspiel.applyMove(drachenspiel.applyMove(next, me, { type: 'endTurn' }).state, opp, { type: 'endTurn' }).state;
+    expect(next.players[me]).toMatchObject({ mana: 7, locked: 0 });
+  });
+
+  it('bei Zeitablauf gilt die erste Möglichkeit', () => {
+    const { s, me } = fresh();
+    hand(s, me, 's_harvest');
+    expect(drachenspiel.timeoutMove!(playAt(s, me, 0), me)).toEqual({ type: 'choose', index: 0 });
+  });
+
+  it.each(['easy', 'medium', 'hard'] as const)('der Bot auf „%s“ beantwortet eine offene Wahl', (level) => {
+    const { s, me } = fresh();
+    hand(s, me, 's_tracks');
+    const open = playAt(s, me, 0);
+    const move = gameModule.bots[0]!.chooseMove({ module: gameModule, view: gameModule.playerView(open, me), seat: me, level, rng: Rng.fromSeed('wahl'), timeBudgetMs: 200, now: () => Date.now() });
+    expect(drachenspiel.legalMoves(open, me)).toContainEqual(move);
+  });
+});

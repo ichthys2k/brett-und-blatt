@@ -44,7 +44,9 @@ describe('Verhalten aller Karten', () => {
       const moves = drachenspiel.legalMoves(s, me).filter((m) => m.type === 'playCard');
       for (const move of moves) {
         const key = move.type === 'playCard' && move.target ? `${defId}>${move.target.kind === 'hero' ? 'hero' : move.target.id}` : defId;
-        const played = drachenspiel.applyMove(s, me, move).state;
+        // Eine offene Wahl wird für die Festschreibung immer mit der ersten Möglichkeit beantwortet.
+        let played = drachenspiel.applyMove(s, me, move).state;
+        if (played.pending) played = drachenspiel.applyMove(played, me, { type: 'choose', index: 0 }).state;
         const entry: Record<string, unknown> = { played: summary(played) };
         // Abschied: Das frisch gelegte Tier wird vom Gegner erschlagen.
         const fresh = played.players[me].board.find((m) => m.cardId === defId);

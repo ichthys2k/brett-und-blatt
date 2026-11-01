@@ -10,7 +10,7 @@ export const meta: GameInfo = {
   patterns: ['hidden', 'simultaneous'],
   hiddenInformation: true,
   privateViews: true,
-  ruleVersion: 6,
+  ruleVersion: 7,
   // Karten ziehen und Zufall zeigen Neues: Ein Zurücknehmen ließe sich ausnutzen.
   noUndo: true,
   hints: true,
@@ -25,6 +25,7 @@ export const meta: GameInfo = {
     'Hauskraft: Einmal je Zug kannst du für 2 Mana die Kraft deines Hauses nutzen (Knopf neben „Zug beenden“). Lange drücken zeigt, was sie tut.',
     'Rüstung 🛡️ fängt Schaden ab, bevor er deine Leben trifft. Hat dein Held Angriff (⚔️), tippe ihn an und wähle ein Ziel, einmal je Zug. Greift er ein Tier an, schlägt es zurück.',
     'Karten mit 🔄 Tauschen kannst du für 1 Mana zurück ins Deck mischen und dafür neu ziehen. ⏳ Flüchtige Karten verschwinden am Ende deines Zugs. Was ein Abzeichen auf einer Karte bedeutet, zeigt langes Drücken.',
+    'Manche Auftritte fragen nach: Wähle ein Ziel, eine Karte (Fährte suchen) oder eine Verbesserung (Anpassen). 🐺 Rudeltaktik wirkt, wenn du im selben Zug schon eine Karte gespielt hast, 🦡 Einzelgänger, wenn die Karte ganz links oder rechts auf der Hand lag. 🔒 Erschöpfung sperrt im nächsten Zug Mana.',
     'Ist dein Deck leer, erleidet dein Held jede Runde zunehmenden Müdigkeits-Schaden. Auf die Hand passen 10 Karten, was darüber hinaus gezogen wird, verbrennt.',
   ],
 };

@@ -11,11 +11,12 @@ import {
   type TimePresets,
 } from '@brett-und-blatt/engine';
 import { ALL_CARD_IDS, ALL_SPELL_IDS, CARDS_DB, STAR_CARD } from './cards';
-import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, canStrike, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueuePlayed, isOverTurnLimit, refreshStats, settle, strike } from './core/effects';
+import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, canStrike, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueuePlayed, isOverTurnLimit, refreshStats, resolveChoice, settle, strike } from './core/effects';
 import { DECK_THEMES, DECK_THEME_IDS, themeCardIds } from './decks';
 import { HOUSE_POWERS, powerIsUsable } from './powers';
 import { meta } from './meta';
 import type {
+  CardDefinition,
   CardInstance,
   DeckThemeId,
   DrachenspielMove,
@@ -23,6 +24,8 @@ import type {
   DrachenspielView,
   HiddenPlayerView,
   Minion,
+  PendingChoice,
+  PendingView,
   PlayerState,
   SpellTarget,
   SpellTargeting,
@@ -105,6 +108,9 @@ function upgradeState(state: DrachenspielState): DrachenspielState {
   for (const p of state.players) {
     // Vor `ruleVersion` 5 gab es weder Rüstung noch Hauskraft.
     p.armor ??= 0;
+    p.overloadNext ??= 0;
+    p.locked ??= 0;
+    p.cardsPlayedThisTurn ??= 0;
     p.gear ??= null;
     p.heroAttackBonus ??= 0;
     p.heroAttacked ??= false;
@@ -142,6 +148,9 @@ function createPlayer(seat: SeatId): PlayerState {
     hand: [],
     board: [],
     fatigue: 0,
+    overloadNext: 0,
+    locked: 0,
+    cardsPlayedThisTurn: 0,
     deckTheme: null,
     mulliganDone: false,
   };
@@ -217,7 +226,10 @@ function startTurn(state: DrachenspielState, seat: SeatId, events: GameEvent[]):
   const player = state.players[seat];
 
   player.maxMana = Math.min(MAX_MANA, player.maxMana + 1);
-  player.mana = player.maxMana;
+  player.locked = player.overloadNext ?? 0;
+  player.overloadNext = 0;
+  player.mana = Math.max(0, player.maxMana - player.locked);
+  player.cardsPlayedThisTurn = 0;
   player.powerUsed = false;
   player.heroAttacked = false;
   // Was „nur für diesen Zug“ galt, endet mit dem Zug des anderen.
@@ -258,7 +270,7 @@ export function currentPlayers(state: DrachenspielState): Actor[] {
     return actors;
   }
   if (state.phase === 'play') {
-    return [state.activeSeat];
+    return [state.pending ? state.pending.seat : state.activeSeat];
   }
   return [];
 }
@@ -289,6 +301,9 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
   }
 
   if (state.phase === 'play') {
+    if (state.pending) {
+      return state.pending.seat === actor ? state.pending.options.map((_, index) => ({ type: 'choose', index })) : [];
+    }
     if (actor !== state.activeSeat) return [];
     const moves: DrachenspielMove[] = [{ type: 'endTurn' }];
 
@@ -298,12 +313,10 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
       const def = CARDS_DB[card.defId];
       if (!def) continue;
       if (def.cost <= player.mana) {
-        if (def.isSpell) {
-          for (const target of spellTargets(state, actor, def.targeting ?? 'none')) {
+        if (def.isSpell || player.board.length < BOARD_LIMIT) {
+          for (const target of cardTargets(state, actor, def)) {
             moves.push(target ? { type: 'playCard', handIndex: i, target } : { type: 'playCard', handIndex: i });
           }
-        } else if (player.board.length < BOARD_LIMIT) {
-          moves.push({ type: 'playCard', handIndex: i });
         }
       }
     }
@@ -413,6 +426,12 @@ export function applyMove(
     return { state: next, events };
   }
 
+  if (next.pending) {
+    if (move.type !== 'choose' || next.pending.seat !== actor) throw new Error('Erst muss die offene Wahl getroffen werden');
+    resolveChoice(next, move.index, events);
+    return { state: next, events };
+  }
+
   if (next.phase !== 'play' || actor !== next.activeSeat) {
     throw new Error('Nicht an der Reihe');
   }
@@ -431,12 +450,16 @@ export function applyMove(
     if (!def) throw new Error('Unbekannte Karte');
     if (def.cost > player.mana) throw new Error('Nicht genug Mana');
 
+    const target = move.target ?? null;
+    if (!cardTargets(next, actor, def).some((t) => sameTarget(t, target))) {
+      throw new Error('Ungültiges Ziel');
+    }
+    const conditions = { combo: player.cardsPlayedThisTurn > 0, outcast: move.handIndex === 0 || move.handIndex === player.hand.length - 1 };
+
     if (def.isSpell) {
-      const target = move.target ?? null;
-      if (!spellTargets(next, actor, def.targeting ?? 'none').some((t) => sameTarget(t, target))) {
-        throw new Error('Ungültiges Ziel für den Zauber');
-      }
       player.mana -= def.cost;
+      player.overloadNext += def.overload ?? 0;
+      player.cardsPlayedThisTurn++;
       player.hand.splice(move.handIndex, 1);
       events.push({ type: 'spellCast', seat: actor, card, target });
       enqueue(next, def.effects, actor, def.id, null, target);
@@ -447,12 +470,14 @@ export function applyMove(
     if (player.board.length >= BOARD_LIMIT) throw new Error('Spielfeld voll');
 
     player.mana -= def.cost;
+    player.overloadNext += def.overload ?? 0;
+    player.cardsPlayedThisTurn++;
     player.hand.splice(move.handIndex, 1);
 
     const minion = createMinion(next, def, actor);
     player.board.push(minion);
     events.push({ type: 'cardPlayed', seat: actor, card, minion });
-    enqueuePlayed(next, minion, actor);
+    enqueuePlayed(next, minion, actor, target, conditions);
     settle(next, events);
     return { state: next, events };
   }
@@ -595,6 +620,12 @@ export function heroAttackValue(player: Pick<PlayerState, 'gear' | 'heroAttackBo
 // Zauberkarten
 // ---------------------------------------------------------------------------
 
+/** Ziele beim Ausspielen. Ein Auftritt ohne mögliches Ziel verpufft, das Tier lässt sich trotzdem legen. */
+export function cardTargets(state: DrachenspielState, seat: SeatId, def: CardDefinition): (SpellTarget | null)[] {
+  const targets = spellTargets(state, seat, def.targeting ?? 'none');
+  return !def.isSpell && targets.length === 0 ? [null] : targets;
+}
+
 /** Mögliche Ziele eines Zaubers; `null` steht für „ohne Ziel“. Versteckte Gegner sind kein Ziel. */
 export function spellTargets(state: DrachenspielState, seat: SeatId, targeting: SpellTargeting): (SpellTarget | null)[] {
   const me = state.players[seat];
@@ -641,6 +672,9 @@ export function playerView(
       hand: isOwner ? p.hand.map((c) => ({ ...c })) : null,
       board: p.board.map((m) => ({ ...m })),
       fatigue: p.fatigue,
+      overloadNext: p.overloadNext ?? 0,
+      locked: p.locked ?? 0,
+      cardsPlayedThisTurn: p.cardsPlayedThisTurn ?? 0,
       deckTheme: p.deckTheme ?? null,
       mulliganDone: p.mulliganDone,
     };
@@ -653,6 +687,7 @@ export function playerView(
     players: [mapPlayer(state.players[0]), mapPlayer(state.players[1])],
     startingSeat: state.startingSeat,
     viewerSeat: seat,
+    ...(state.pending ? { pending: { ...state.pending, count: state.pending.options.length, options: state.pending.seat === seat ? state.pending.options : [] } } : {}),
     options: { ...state.options },
   };
 }
@@ -679,6 +714,7 @@ export function timeoutMove(state: DrachenspielState, actor: SeatId): Drachenspi
   if (state.phase === 'mulligan') {
     return { type: 'mulligan', discardIndices: [] };
   }
+  if (state.pending) return { type: 'choose', index: 0 };
   return { type: 'endTurn' };
 }
 
@@ -704,8 +740,14 @@ export function sampleHidden(
     nextEntityId: counter,
     rng: rng.state,
     queue: [],
+    ...(view.pending ? { pending: samplePending(view.pending) } : {}),
     options: { ...view.options },
   };
+}
+
+/** Wer nicht wählt, kennt die Möglichkeiten nicht: Platzhalter ohne Wirkung halten nur die Anzahl. */
+function samplePending({ count, ...pending }: PendingView): PendingChoice {
+  return pending.options.length > 0 ? pending : { ...pending, options: Array.from({ length: count }, () => ({ label: '?', emoji: '❓', effects: [] })) };
 }
 
 function reconstructPlayer(
@@ -751,6 +793,9 @@ function reconstructPlayer(
     hand,
     board: hv.board.map((m) => ({ ...m })),
     fatigue: hv.fatigue,
+    overloadNext: hv.overloadNext,
+    locked: hv.locked,
+    cardsPlayedThisTurn: hv.cardsPlayedThisTurn,
     deckTheme: hv.deckTheme,
     mulliganDone: hv.mulliganDone,
   };

@@ -280,6 +280,11 @@ export function buildBeats(
         current.log.push(`😌 ${nameOfMinion(minionId)} wird beruhigt`);
         break;
       }
+      case 'choiceOffered': {
+        const { seat } = event as unknown as { seat: SeatId };
+        current.log.push(`🤔 ${nameOf(seat)} wählt`);
+        break;
+      }
       case 'cardTraded': {
         const { seat } = event as unknown as { seat: SeatId };
         current.log.push(`🔄 ${nameOf(seat)} tauscht eine Karte`);
