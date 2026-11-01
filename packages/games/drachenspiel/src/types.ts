@@ -20,13 +20,20 @@ export type MinionKeyword =
 /** `tradeable` wirkt nur auf der Hand. */
 export type KeywordId = MinionKeyword | 'tradeable';
 
+export type FamilyId = 'pack' | 'cats' | 'herd' | 'birds' | 'burrowers' | 'crawlers' | 'reptiles' | 'sea' | 'giants' | 'mythic' | 'dragons' | 'woodfolk';
+export type SchoolId = 'storm' | 'frost' | 'water' | 'herbs' | 'growth' | 'light' | 'moon' | 'ember';
+/** Begrenzt später nur den Deckbau, hat nichts mit Zufall zu tun. */
+export type Rarity = 'common' | 'rare' | 'mythic';
+
 /** Wen ein Effekt trifft. `chosen` ist das beim Ausspielen gewählte Ziel. */
 export type Selector =
   | { pick: 'chosen' }
   /** Die Figur, von der die Wirkung ausgeht. */
   | { pick: 'self' }
   | { pick: 'hero'; side: 'own' | 'enemy' }
-  | { pick: 'allMinions'; side: 'own' | 'enemy'; exceptSelf?: boolean };
+  | { pick: 'allMinions'; side: 'own' | 'enemy'; exceptSelf?: boolean; family?: FamilyId }
+  /** Ein ausgelostes Tier dieser Seite, auch ein verstecktes. */
+  | { pick: 'random'; side: 'own' | 'enemy' };
 
 /** Wortschatz der Karten: Neue Karten kommen ohne eigenen Regelcode aus. */
 export type Effect =
@@ -98,9 +105,10 @@ export interface HousePower {
 }
 
 export interface Trigger {
-  on: 'played' | 'death';
-  /** `combo`: schon eine Karte in diesem Zug gespielt. `outcast`: von ganz links oder rechts auf der Hand gespielt. */
-  if?: 'combo' | 'outcast';
+  /** `turnEnd` und `spellCast` gelten für den eigenen Zug und dürfen keine Wahl anbieten. */
+  on: 'played' | 'death' | 'turnEnd' | 'spellCast';
+  /** `combo`: schon eine Karte in diesem Zug gespielt. `outcast`: von ganz links oder rechts auf der Hand gespielt. `family`: ein anderes Tier dieser Familie liegt bei dir. */
+  if?: 'combo' | 'outcast' | { family: FamilyId };
   do: Effect[];
 }
 
@@ -119,6 +127,11 @@ export interface CardDefinition {
   quote: string;
   sound?: string;
   isSpell?: boolean;
+  /** `neutral` steht allen Häusern offen. */
+  house?: DeckThemeId | 'neutral';
+  families?: FamilyId[];
+  school?: SchoolId;
+  rarity?: Rarity;
   /** Höchstens eine Kopie im gemischten Deck (Fuchs, Drache). */
   singleCopy?: boolean;
   /** Spielstein: gehört in kein Deck und kehrt nie auf die Hand zurück. */
@@ -246,6 +259,8 @@ export interface DrachenspielState {
   queue: QueuedEffect[];
   /** Offene Wahl; nur gesetzt, solange sie aussteht. */
   pending?: PendingChoice;
+  /** Die Wahl fiel am Zugende: Danach ist der andere dran. */
+  turnEnding?: boolean;
   options: Options;
 }
 

@@ -28,6 +28,8 @@ export interface Beat {
   impacted: string[];
   log: string[];
   notices: string[];
+  /** Eine teure Karte schlägt ein. */
+  heavy: boolean;
   /** Tierstimmen, die zu Beginn des Schritts erklingen. */
   calls: Array<{ name: string; kind: 'play' | 'attack' | 'death'; sound?: string | null }>;
 }
@@ -38,6 +40,7 @@ const DURATION: Record<Category, number> = { quiet: 0, lunge: 560, hit: 340, dea
 /** Lange Ketten laufen schneller, damit der Gegner nicht ewig zuschauen muss. */
 const LONGEST_RUN_MS = 2200;
 const REDUCED_MOTION_FACTOR = 0.4;
+const HEAVY_COST = 7;
 
 const CATEGORY: Record<string, Category> = {
   attack: 'lunge',
@@ -78,6 +81,7 @@ function freshBeat(previous: Beat | null, before: DrachenspielView): Beat {
     impacted: [],
     log: [],
     notices: [],
+    heavy: false,
     calls: [],
   };
 }
@@ -133,6 +137,7 @@ export function buildBeats(
         const def = CARDS_DB[card.defId];
         current.log.push(`🎴 ${nameOf(seat)} legt ${def?.emoji ?? ''} ${def?.name ?? 'eine Karte'}`);
         if (def && !def.isSpell) current.calls.push({ name: def.name, kind: 'play', sound: def.sound });
+        if ((def?.cost ?? 0) >= HEAVY_COST) current.heavy = true;
         if (minion) {
           names.set(minion.id, minion.name);
           current.boards[seat]!.push({ minion, dying: false, fresh: true });

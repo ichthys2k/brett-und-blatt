@@ -1,5 +1,5 @@
 import { CARDS_DB } from '../cards';
-import { effectsText } from '../core/text';
+import { effectsText, FAMILY_NAMES, SCHOOL_NAMES } from '../core/text';
 import type { CardDefinition, KeywordId, Minion, SpellTargeting, Trigger } from '../types';
 
 export interface TraitInfo {
@@ -94,8 +94,27 @@ function natureTrait(amount: number): TraitInfo {
 function triggerTrait(trigger: Trigger, index: number, targeting: SpellTargeting = 'none'): TraitInfo {
   const text = effectsText(trigger.do, targeting, CARDS_DB);
   const [emoji, name, id] =
-    trigger.if === 'combo' ? ['🐺', 'Rudeltaktik', 'combo'] : trigger.if === 'outcast' ? ['🦡', 'Einzelgänger', 'outcast'] : trigger.on === 'played' ? ['🎺', 'Auftritt', 'battlecry'] : ['👋', 'Abschied', 'deathrattle'];
-  const condition = trigger.if === 'combo' ? 'Hast du in diesem Zug schon eine Karte gespielt: ' : trigger.if === 'outcast' ? 'Lag die Karte ganz links oder rechts auf der Hand: ' : '';
+    trigger.if === 'combo'
+      ? ['🐺', 'Rudeltaktik', 'combo']
+      : trigger.if === 'outcast'
+        ? ['🦡', 'Einzelgänger', 'outcast']
+        : trigger.if
+          ? ['🐾', 'Sippe', 'kin']
+          : trigger.on === 'played'
+            ? ['🎺', 'Auftritt', 'battlecry']
+            : trigger.on === 'turnEnd'
+              ? ['🌙', 'Zugende', 'turnend']
+              : trigger.on === 'spellCast'
+                ? ['✨', 'Nach Zauber', 'aftercast']
+                : ['👋', 'Abschied', 'deathrattle'];
+  const condition =
+    trigger.if === 'combo'
+      ? 'Hast du in diesem Zug schon eine Karte gespielt: '
+      : trigger.if === 'outcast'
+        ? 'Lag die Karte ganz links oder rechts auf der Hand: '
+        : trigger.if
+          ? `Liegt bei dir ein anderes Tier der Familie ${FAMILY_NAMES[trigger.if.family]}: `
+          : '';
   const description = condition + text;
   return { id: `${id}_${index}`, emoji: emoji!, name: name!, description, fullTitle: `${emoji} ${name}: ${description}` };
 }
@@ -107,7 +126,7 @@ export function getMinionTraits(minion: Minion): TraitInfo[] {
   const keywords = (['taunt', 'bubble', 'poisonous', 'stealth', 'rush', 'sprinter', 'doubleStrike', 'lifesteal', 'frostbite', 'reborn', 'immune', 'elusive'] as const)
     .filter((k) => minion[k])
     .map(keywordTrait);
-  const deaths = minion.silenced ? [] : (CARDS_DB[minion.cardId]?.triggers ?? []).filter((t) => t.on === 'death').map((trigger, index) => triggerTrait(trigger, index));
+  const deaths = minion.silenced ? [] : (CARDS_DB[minion.cardId]?.triggers ?? []).filter((t) => t.on !== 'played').map((trigger, index) => triggerTrait(trigger, index));
   const states = [
     ...(minion.spellPower ? [natureTrait(minion.spellPower)] : []),
     ...(minion.frozen ? [stateTrait('frozen', '🧊', 'Erstarrt', 'Setzt den nächsten Angriff aus.')] : []),
@@ -146,6 +165,12 @@ export function getCardTraits(card: CardDefinition): TraitInfo[] {
 /**
  * Vollständiger Tooltip-Text für eine Karte (Hand / Mulligan).
  */
+export function cardOrigin(card: CardDefinition): string {
+  const rarity = card.rarity === 'mythic' ? ' · Sagentier' : card.rarity === 'rare' ? ' · selten' : '';
+  if (card.school) return `Schule ${SCHOOL_NAMES[card.school]}${rarity}`;
+  return `${(card.families ?? []).map((family) => FAMILY_NAMES[family]).join(', ')}${rarity}`;
+}
+
 export function getCardFullTitle(card: CardDefinition): string {
   const lines: string[] = [card.isSpell ? `${card.name} (Zauber)` : card.name];
   if (card.text) lines.push(card.text);

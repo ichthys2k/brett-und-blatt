@@ -1,6 +1,7 @@
 import { Rng, type BotLevel, type SeatId } from '@brett-und-blatt/engine';
 import { describe, it } from 'vitest';
 import { gameModule } from '../src';
+import type { DeckThemeId } from '../src/types';
 
 // Abrufbare Messung des Startvorteils, läuft nur auf Wunsch:
 // DRACHEN_BALANCE=1 corepack pnpm exec vitest run packages/games/drachenspiel/test/balance --disable-console-intercept
@@ -27,6 +28,38 @@ function play(seed: string, levels: [BotLevel, BotLevel], deckSelection: string)
   const winner = result?.kind === 'win' ? result.winners[0]! : null;
   return { winner, starter: state.startingSeat, turns: state.turn };
 }
+
+/** Eine Partie zweier Häuser; die Plätze werden im Spiel gewählt. */
+function matchup(seed: string, decks: [DeckThemeId, DeckThemeId], level: BotLevel) {
+  let state = gameModule.setup(2, { deckSelection: 'inGame' }, seed);
+  state = gameModule.applyMove(state, 0, { type: 'chooseDeck', deck: decks[0] }).state;
+  state = gameModule.applyMove(state, 1, { type: 'chooseDeck', deck: decks[1] }).state;
+  for (let step = 0; step < 2000 && !gameModule.result(state); step++) {
+    const seat = gameModule.currentPlayers(state)[0] as SeatId;
+    const move = gameModule.bots[0]!.chooseMove({ module: gameModule, view: gameModule.playerView(state, seat), seat, level, rng: Rng.fromSeed(`${seed}/${step}`), timeBudgetMs: BUDGET[level], now: () => Date.now() });
+    state = gameModule.applyMove(state, seat, move).state;
+  }
+  const result = gameModule.result(state);
+  return result?.kind === 'win' ? result.winners[0]! : null;
+}
+
+// Häuser-Matrix: DRACHEN_MATRIX=forest:sea,forest:farm DRACHEN_MATRIX_STUFE=hard DRACHEN_BALANCE_SPIELE=100
+describe.runIf(env.DRACHEN_MATRIX)('Drachenspiel: Häuser-Matrix', () => {
+  it('misst, wie oft das erste Haus gewinnt', () => {
+    const level = (env.DRACHEN_MATRIX_STUFE ?? 'medium') as BotLevel;
+    for (const pair of env.DRACHEN_MATRIX!.split(',')) {
+      const [a, b] = pair.split(':') as [DeckThemeId, DeckThemeId];
+      let wins = 0;
+      for (let i = 0; i < GAMES; i++) {
+        // Abwechselnd auf beiden Plätzen, damit der Platz nichts verfälscht.
+        const swap = i % 2 === 1;
+        const winner = matchup(`mat-${pair}-${i}`, swap ? [b, a] : [a, b], level);
+        if (winner !== null && winner === (swap ? 1 : 0)) wins++;
+      }
+      console.log(`MATRIX ${level} ${a}:${b} ${Math.round((100 * wins) / GAMES)} %`);
+    }
+  }, 3_000_000);
+});
 
 describe.runIf(env.DRACHEN_BALANCE)('Drachenspiel: Startvorteil', () => {
   it('misst Startspieler- und Stufenvergleich', () => {

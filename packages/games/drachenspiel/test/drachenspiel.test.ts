@@ -318,9 +318,9 @@ describe('Zauberkarten', () => {
       const on = drachenspiel.setup(2, { deckSelection: theme, mulligan: 'off' }, `d-${theme}`);
       const all = [...on.players[0].deck, ...on.players[0].hand].filter((c) => !c.defId.startsWith('special_'));
       expect(all).toHaveLength(30);
-      expect(all.filter((c) => c.defId.startsWith('s_'))).toHaveLength(6);
+      expect(all.filter((c) => CARDS_DB[c.defId]!.isSpell)).toHaveLength(6);
       const off = drachenspiel.setup(2, { deckSelection: theme, mulligan: 'off', spells: 'off' }, `d-${theme}`);
-      expect([...off.players[0].deck, ...off.players[0].hand].some((c) => c.defId.startsWith('s_'))).toBe(false);
+      expect([...off.players[0].deck, ...off.players[0].hand].some((c) => CARDS_DB[c.defId]!.isSpell && !c.defId.startsWith('special_'))).toBe(false);
     }
   });
 

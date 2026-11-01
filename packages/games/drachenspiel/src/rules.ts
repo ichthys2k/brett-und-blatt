@@ -11,7 +11,7 @@ import {
   type TimePresets,
 } from '@brett-und-blatt/engine';
 import { ALL_CARD_IDS, ALL_SPELL_IDS, CARDS_DB, STAR_CARD } from './cards';
-import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, canStrike, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueuePlayed, isOverTurnLimit, refreshStats, resolveChoice, settle, strike } from './core/effects';
+import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, canStrike, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueueOwnBoard, enqueuePlayed, isOverTurnLimit, refreshStats, resolveChoice, settle, strike } from './core/effects';
 import { DECK_THEMES, DECK_THEME_IDS, themeCardIds } from './decks';
 import { HOUSE_POWERS, powerIsUsable } from './powers';
 import { meta } from './meta';
@@ -429,6 +429,7 @@ export function applyMove(
   if (next.pending) {
     if (move.type !== 'choose' || next.pending.seat !== actor) throw new Error('Erst muss die offene Wahl getroffen werden');
     resolveChoice(next, move.index, events);
+    if (next.turnEnding && !next.pending) passTurn(next, events);
     return { state: next, events };
   }
 
@@ -438,8 +439,10 @@ export function applyMove(
 
   if (move.type === 'endTurn') {
     endOwnTurn(player, events);
-    startTurn(next, (1 - next.activeSeat) as SeatId, events);
+    enqueueOwnBoard(next, actor, 'turnEnd');
+    next.turnEnding = true;
     settle(next, events);
+    if (!next.pending) passTurn(next, events);
     return { state: next, events };
   }
 
@@ -463,6 +466,7 @@ export function applyMove(
       player.hand.splice(move.handIndex, 1);
       events.push({ type: 'spellCast', seat: actor, card, target });
       enqueue(next, def.effects, actor, def.id, null, target);
+      enqueueOwnBoard(next, actor, 'spellCast');
       settle(next, events);
       return { state: next, events };
     }
@@ -585,6 +589,14 @@ export function applyMove(
 }
 
 const TRADE_COST = 1;
+
+/** Nach dem Zugende: Wer gefallen ist, beendet die Partie, sonst ist der andere dran. */
+function passTurn(state: DrachenspielState, events: GameEvent[]): void {
+  delete state.turnEnding;
+  if (state.phase !== 'play') return;
+  startTurn(state, (1 - state.activeSeat) as SeatId, events);
+  settle(state, events);
+}
 
 /** Ein Sprinter darf im ersten Zug nur Tiere angreifen. */
 function heroOutOfReach(minion: Minion): boolean {

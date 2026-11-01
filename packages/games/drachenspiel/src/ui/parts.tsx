@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CARDS_DB } from '../cards';
 import type { CardDefinition, HousePower, Minion } from '../types';
-import { getCardTraits, getMinionTraits, type TraitInfo } from './traits';
+import { cardOrigin, getCardTraits, getMinionTraits, type TraitInfo } from './traits';
 
 export function TraitBadge({ trait, isOpponent }: { trait: TraitInfo; isOpponent?: boolean }) {
   return (
@@ -117,6 +117,7 @@ export function CardZoom({ item, onClose }: { item: ZoomItem; onClose: () => voi
             ))}
           </ul>
         )}
+        {cardOrigin(def) && <p className="ds-zoom-origin">{cardOrigin(def)}</p>}
         {quote && <p className="ds-zoom-quote">„{quote}“</p>}
         {!def.isSpell && (
           <div className="ds-minion-stats ds-zoom-stats">

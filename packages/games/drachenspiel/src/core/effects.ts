@@ -1,6 +1,6 @@
 import { Rng, type GameEvent, type SeatId } from '@brett-und-blatt/engine';
 import { CARDS_DB } from '../cards';
-import type { CardDefinition, CardInstance, ChoiceOption, DrachenspielState, Effect, Enchantment, KeywordId, Minion, MinionKeyword, PlayerState, QueuedEffect, Selector, SpellTarget } from '../types';
+import type { CardDefinition, CardInstance, ChoiceOption, DrachenspielState, Effect, Enchantment, KeywordId, Minion, MinionKeyword, PlayerState, QueuedEffect, Selector, SpellTarget, Trigger } from '../types';
 
 export const HAND_LIMIT = 10;
 export const BOARD_LIMIT = 7;
@@ -194,7 +194,16 @@ function resolve(state: DrachenspielState, frame: QueuedEffect, selector: Select
     case 'allMinions':
       return (selector.side === 'own' ? own : enemy).board
         .filter((m) => !(selector.exceptSelf && m.id === frame.sourceId))
+        .filter((m) => !selector.family || CARDS_DB[m.cardId]?.families?.includes(selector.family))
         .map((minion) => ({ kind: 'minion' as const, minion }));
+    case 'random': {
+      const board = (selector.side === 'own' ? own : enemy).board;
+      if (board.length === 0) return [];
+      const rng = new Rng(state.rng);
+      const minion = rng.pick(board);
+      state.rng = rng.state;
+      return [{ kind: 'minion', minion }];
+    }
   }
 }
 
@@ -289,7 +298,16 @@ function runEffect(state: DrachenspielState, frame: QueuedEffect, events: GameEv
       break;
     }
     case 'discover': {
-      const pool = Object.values(CARDS_DB).filter((def) => !def.token && !def.singleCopy && def.id !== 'special_star' && Boolean(def.isSpell) === (effect.pool === 'spell'));
+      // Eigenes Haus und neutrale Karten; ein gemischtes Deck sucht überall.
+      const theme = player.deckTheme;
+      const pool = Object.values(CARDS_DB).filter(
+        (def) =>
+          !def.token &&
+          !def.singleCopy &&
+          def.id !== 'special_star' &&
+          Boolean(def.isSpell) === (effect.pool === 'spell') &&
+          (!theme || theme === 'mixed' || def.house === theme || def.house === 'neutral'),
+      );
       offerChoice(state, frame, pick3(state, pool).map((def) => ({ label: def.name, emoji: def.emoji, cardId: def.id, effects: [{ kind: 'addToHand', cardId: def.id }] })), events);
       break;
     }
@@ -383,13 +401,22 @@ export function enqueue(state: DrachenspielState, effects: Effect[] | undefined,
   for (const effect of effects ?? []) state.queue.push({ effect, seat, sourceCard, sourceId, target });
 }
 
-function triggered(cardId: string, on: 'played' | 'death', holds: (condition: 'combo' | 'outcast') => boolean = () => false): Effect[] {
+function triggered(cardId: string, on: Trigger['on'], holds: (condition: NonNullable<Trigger['if']>) => boolean = () => false): Effect[] {
   return (CARDS_DB[cardId]?.triggers ?? []).filter((t) => t.on === on && (!t.if || holds(t.if))).flatMap((t) => t.do);
 }
 
 /** `combo` und `outcast` werden beim Ausspielen geprüft, bevor die Karte mitzählt oder die Hand verlässt. */
 export function enqueuePlayed(state: DrachenspielState, minion: Minion, seat: SeatId, target: SpellTarget | null, conditions: { combo: boolean; outcast: boolean }): void {
-  enqueue(state, triggered(minion.cardId, 'played', (condition) => conditions[condition]), seat, minion.cardId, minion.id, target);
+  const holds = (condition: NonNullable<Trigger['if']>) =>
+    typeof condition === 'string' ? conditions[condition] : state.players[seat].board.some((m) => m.id !== minion.id && CARDS_DB[m.cardId]?.families?.includes(condition.family));
+  enqueue(state, triggered(minion.cardId, 'played', holds), seat, minion.cardId, minion.id, target);
+}
+
+/** Zugende oder nach einem Zauber: alle eigenen Tiere in Spielreihenfolge; beruhigte schweigen. */
+export function enqueueOwnBoard(state: DrachenspielState, seat: SeatId, on: 'turnEnd' | 'spellCast'): void {
+  for (const minion of [...state.players[seat].board].sort((a, b) => a.playOrder - b.playOrder)) {
+    if (!minion.silenced) enqueue(state, triggered(minion.cardId, on), seat, minion.cardId, minion.id, null);
+  }
 }
 
 /** Alle Figuren ohne Leben gehen gleichzeitig vom Feld; Abschiede folgen in Spielreihenfolge. */

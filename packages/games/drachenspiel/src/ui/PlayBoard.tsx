@@ -469,7 +469,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   return (
     <div
       ref={arenaRef}
-      className="ds-arena"
+      className={`ds-arena ${beat?.heavy ? 'ds-heavy' : ''}`}
       onPointerMove={aiming && !dragState.isDragging ? (event) => setAimPoint({ x: event.clientX, y: event.clientY }) : undefined}
     >
       <div className="ds-opponent-zone">
@@ -722,6 +722,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
                 if (el) handElsRef.current.set(idx, el);
                 else handElsRef.current.delete(idx);
               }}
+              data-rarity={def.rarity}
               className={`ds-card bub-animate-deal ${def.isSpell ? 'ds-card-spell' : ''} ${selectedSpell === idx || draggedCardIdx === idx ? 'ds-card-selected' : ''} ${isPlayable ? 'playable' : ''} ${hintedCard === idx ? 'ds-hinted' : ''} ${followsFinger ? 'bub-dragging' : ''} ${dragState.snapping && followsFinger ? 'bub-snapping' : ''}`}
               style={{
                 animationDelay: `${idx * 40}ms`,
