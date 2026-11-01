@@ -1,4 +1,4 @@
-import type { Options, SeatId } from '@brett-und-blatt/engine';
+import type { Options, RngState, SeatId } from '@brett-und-blatt/engine';
 
 export type DeckThemeId = 'forest' | 'sea' | 'farm' | 'wild' | 'bugs';
 
@@ -95,7 +95,8 @@ export interface PlayerState {
   hand: CardInstance[];
   board: Minion[];
   fatigue: number;
-  deckTheme: DeckThemeId | null;
+  /** `mixed`: gemischtes Zufallsdeck ohne Thema. */
+  deckTheme: DeckThemeId | 'mixed' | null;
   mulliganDone: boolean;
 }
 
@@ -108,6 +109,8 @@ export interface DrachenspielState {
   players: [PlayerState, PlayerState];
   startingSeat: SeatId;
   nextEntityId: number;
+  /** Zufallsstrom der Partie, aus dem Seed abgeleitet; gehört nie in eine Sicht. */
+  rng: RngState;
   options: Options;
 }
 
@@ -122,7 +125,7 @@ export interface HiddenPlayerView {
   hand: CardInstance[] | null;
   board: Minion[];
   fatigue: number;
-  deckTheme: DeckThemeId | null;
+  deckTheme: DeckThemeId | 'mixed' | null;
   mulliganDone: boolean;
 }
 

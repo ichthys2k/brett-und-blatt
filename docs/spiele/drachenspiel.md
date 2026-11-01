@@ -46,10 +46,10 @@ Sammelkarten-Duell nach dem Vorbild von Hearthstone mit Tierkarten, Mana-Kristal
 
 ### Themendecks
 
-- 🌳 **Wald:** Ausgewogene Tiere, Synergien, Biber, Igel, Bär.
+- 🌳 **Wald:** Ausgewogene Tiere, Biber, Igel, Eule, Fuchs und Drache.
 - 🌊 **Meer:** Schutzblasen und Zähigkeit (Krabbe, Kugelfisch, Tintenfisch, Krake).
-- 🚜 **Bauernhof:** Schwarm-Mechaniken und Schnelligkeit (Küken, Hahn, Hund, Schwein).
-- 🌍 **Wildnis:** Große, wuchtige Tiere für das späte Spiel (Elefant, Nashorn, Gorilla).
+- 🚜 **Bauernhof:** Gegenseitige Verstärkung und Schnelligkeit (Hahn, Hund, Schwein).
+- 🌍 **Wildnis:** Große, wuchtige Tiere für das späte Spiel (Elefant, Nashorn, Nilpferd).
 - 🐜 **Krabbeltiere:** Schnelle Angriffe, Gift und Flinkheit (Ameise, Mücke, Spinne, Skorpion).
 
 ## Spielmodell
@@ -60,18 +60,20 @@ export type Phase = 'deckSelection' | 'mulligan' | 'play' | 'ended';
 export interface DrachenspielState {
   phase: Phase;
   activeSeat: SeatId;
-  turnNumber: number;
+  turn: number;
   players: [PlayerState, PlayerState];
-  seed: string;
-  // ...
+  startingSeat: SeatId;
+  nextEntityId: number;
+  rng: RngState; // aus dem Seed abgeleitet, nie in einer Sicht
+  options: Options;
 }
 ```
 
 ## Bots
 
-- **Leicht:** Spielt bezahlbare Handkarten und greift zufällig regelkonform an.
-- **Mittel:** Greift vorteilhafte Trades an (eigenes Tier überlebt, gegnerisches Tier geht vom Feld), nutzt Mana effizient, greift den Helden an, wenn Feld gesichert ist.
-- **Schwer:** Bewertet Zugfolgen (Sequenzen von Ausspielen und Angriffen) mit Stellungsbewertung und Determinisierung über die noch im gegnerischen Deck verbliebenen Karten.
+- **Leicht:** Wählt zufällig aus allen erlaubten Zügen.
+- **Mittel:** Nimmt tödlichen Schaden am Helden, spielt meist die teuerste bezahlbare Karte, greift sonst ein zufälliges gegnerisches Tier an.
+- **Schwer:** Bewertet jeden erlaubten Zug einzeln mit `evaluate`, plant also nur einen Schritt voraus. Einen Planer für den ganzen Zug sieht der [Ausbauplan](drachenspiel-ausbau.md) vor.
 
 ## Umsetzung (Oktober 2026)
 
@@ -79,12 +81,13 @@ export interface DrachenspielState {
 - `packages/games/drachenspiel/src/decks.ts`: 5 balancierte Themendecks à 30 Karten (Wald, Meer, Bauernhof, Wildnis, Krabbeltiere).
 - `packages/games/drachenspiel/src/rules.ts`: Vollständige Spielregeln (Deckauswahl, Mulligan, Rundenphasen mit Manazuwachs, Ausspielen, Kampf mit Beschützer/Schutzblase/Giftig/Versteckt/Auftritt/Abschied, Müdigkeit, reines JSON für Zustand und Sichten, `playerView`, `sampleHidden`, `eventView`).
 - `packages/games/drachenspiel/src/bots.ts`: Drachenhüter-Bot in drei Schwierigkeitsstufen (leicht, mittel, schwer) mit Bedenkpausen (`delayMs`) für Angriffe (600–750 ms) und Kartenausspielen (400–500 ms) zur vollständigen Visualisierung von Zügen.
-- `packages/games/drachenspiel/src/ui/`: Arena-Oberfläche mit Deckauswahl, Mulligan-Tausch-Auswahl, Manakristall-Leiste, Helden-Porträts, Tier-Kampffeld, Zielauswahl-Hervorhebung und Zug-beenden-Button. Zielgerichtete Vektor-Angriffsanimationen (Karten bewegen sich direkt auf die angegriffene Figur bzw. den Helden zu), synchrone Erhaltung besiegter Tiere zur Anzeige von Schaden und Treffer-Shake vor dem sanften Verblassen, aufsteigende Schadens- und Heilungsanzeigen, platzende Schutzblasen und Karteneffekte (Drop beim Ausspielen, Deal beim Ziehen).
-- Sound-Effekte: Vollständige Übernahme der Originalsounds aus dem Vorlagen-Klon (`ds_snip`, `ds_swipe`, `ds_punch1`, `ds_punch2`, `ds_flipcard`) sowie Einbindung der 368 Minion-Sprachausgaben on-demand (`klaenge/tiere/`) beim Ausspielen, Angreifen, Ableben und Anklicken auf dem Spielfeld (Easter-Egg).
+- `packages/games/drachenspiel/src/ui/`: Arena-Oberfläche mit Deckauswahl, Mulligan-Tausch-Auswahl, Mana-Anzeige, Helden-Porträts, Tier-Kampffeld, Zielauswahl-Hervorhebung und Zug-beenden-Button. Zielgerichtete Vektor-Angriffsanimationen (Karten bewegen sich direkt auf die angegriffene Figur bzw. den Helden zu), synchrone Erhaltung besiegter Tiere zur Anzeige von Schaden und Treffer-Shake vor dem sanften Verblassen, aufsteigende Schadens- und Heilungsanzeigen, platzende Schutzblasen und Karteneffekte (Drop beim Ausspielen, Deal beim Ziehen).
+- Sound-Effekte: Vollständige Übernahme der Originalsounds aus dem Vorlagen-Klon (`ds_snip`, `ds_swipe`, `ds_punch1`, `ds_punch2`, `ds_flipcard`) sowie Tierstimmen on-demand (`klaenge/tiere/`, Zuordnung in `ui/audio.ts`, nicht jedes Tier hat eine) beim Ausspielen, Angreifen, Ableben und Anklicken auf dem Spielfeld (Easter-Egg).
 - Server-Registrierung: In `apps/server/src/games.ts` und `apps/server/package.json` als Online-Mehrspieler-Spiel registriert.
 
 ## Offene Punkte
 
+- Ausbauplan zum vollwertigen Sammelkarten-Duell: [`drachenspiel-ausbau.md`](drachenspiel-ausbau.md) (W-044).
 - ✅ Zauberkarten (31.10.2026, W-004, siehe unten). Offen: Heldenkräfte (Stufe D), eigener Zauberklang (derzeit `stapel-fertig`, Auswahl durch Cornelius).
 
 ## Zauberkarten (31.10.2026, W-004, `ruleVersion` 2)
@@ -107,3 +110,22 @@ Neun eigene Naturzauber (`SPELLS_DB` in `src/cards.ts`, Kennungen `s_…`), einm
 - **Oberfläche:** Zauberkarten violett mit Regeltext. Zauber ohne Ziel antippen oder aufs Feld ziehen; Zauber mit Ziel antippen (Hinweisleiste mit „Abbrechen“) und das leuchtende Ziel antippen – oder die Karte direkt aufs Ziel ziehen.
 - **Bots:** Leicht zufällig, mittel nach Kosten, schwer bewertet jeden Zug samt Ziel mit `evaluate`.
 
+## Fundament-Korrekturen (01.11.2026, Phase 0 des Ausbauplans, `ruleVersion` 3)
+
+- **Absturz beim Partiestart behoben (F-009):** `Board` rief Hooks nach bedingten Rücksprüngen auf. Sobald die Partie nach Deckwahl oder Kartentausch begann, blieb die Seite leer. Jede Phase ist jetzt eine eigene Komponente; der Rauchtest spielt bis auf die Spielfläche (`firstSteps` in `scripts/rauchtest.mjs`).
+- **Mischen (F-007):** Der Spielstand führt den Zufallsstrom `rng`; Deckwahl und Kartentausch mischen daraus. Vorher waren Starthand und Deckanfang je Thema und Startspieler in jeder Partie gleich.
+- **Texte (F-008):** Flink darf ausdrücklich auch den Helden angreifen, der Kugelfisch trifft gegnerische Tiere.
+- **Gemischtes Deck:** Thema `mixed`, höchstens zwei Kopien, Fuchs und Drache je eine.
+- **Anzeige:** Hinweis bei Verbrennen und Müdigkeit, Heilzahl am Helden mit der wirklich geheilten Menge, Zauber im Kartentausch mit Text.
+
+### Startvorteil (300 Bot-Partien je Zeile, Standardoptionen)
+
+Abruf: `DRACHEN_BALANCE=1 corepack pnpm exec vitest run packages/games/drachenspiel/test/balance --disable-console-intercept`
+
+| Paarung (Deckwahl zufällig) | Startspieler gewinnt | Ø Züge gesamt |
+|---|---|---|
+| Schwer gegen Schwer | 58 % (vorher 77 %) | 14,7 |
+| Mittel gegen Mittel | 54 % (vorher 63 %) | 21,0 |
+| Leicht gegen Leicht | 47 % | 30,7 |
+
+Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes Deck, Schwer gegen Schwer: Wald 65 %, Wildnis 65 %, Bauernhof 58 %, Krabbeltiere 54 %, Meer 53 %. Die Stichprobe ist klein (bei 300 Partien etwa ±6 Prozentpunkte), und es sind nur Bots. Der frühere Wert von 77 % ging großteils auf den Mischfehler zurück. Bei guten Bots bleibt ein leichter Vorteil, das Ziel 45–55 % ist also noch nicht ganz erreicht.

@@ -10,7 +10,7 @@ export const meta: GameInfo = {
   patterns: ['hidden', 'simultaneous'],
   hiddenInformation: true,
   privateViews: true,
-  ruleVersion: 2,
+  ruleVersion: 3,
   hints: true,
   howToPlay: [
     'Beide Helden starten mit 30 Leben. Wer zuerst auf 0 Lebenspunkte sinkt, verliert das Duell.',

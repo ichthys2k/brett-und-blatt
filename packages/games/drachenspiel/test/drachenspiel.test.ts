@@ -378,3 +378,81 @@ describe('Zauberkarten', () => {
     expect(next.players[me].board.map((m) => [m.attack, m.health])).toEqual([[3, 2], [2, 2]]);
   });
 });
+
+describe('Mischen und Zufallsdeck', () => {
+  const start = (seed: string) => {
+    let s = drachenspiel.setup(2, { deckSelection: 'inGame', mulligan: 'on' }, seed);
+    s = drachenspiel.applyMove(s, 0, { type: 'chooseDeck', deck: 'forest' }).state;
+    return drachenspiel.applyMove(s, 1, { type: 'chooseDeck', deck: 'forest' }).state;
+  };
+  const order = (s: ReturnType<typeof start>, seat: 0 | 1) => [...s.players[seat].hand, ...s.players[seat].deck].map((c) => c.defId).join();
+
+  it('Deckwahl im Spiel mischt je Seed anders, bei gleichem Seed gleich', () => {
+    const orders = Array.from({ length: 6 }, (_, i) => order(start(`seed-${i}`), 0));
+    expect(new Set(orders).size).toBe(6);
+    expect(order(start('seed-0'), 0)).toBe(orders[0]);
+  });
+
+  it('beide Plätze bekommen bei gleichem Deck verschiedene Reihenfolgen', () => {
+    const s = start('zwei-plaetze');
+    const key = (seat: 0 | 1) => s.players[seat].deck.slice(0, 20).map((c) => c.defId).join();
+    expect(key(0)).not.toBe(key(1));
+  });
+
+  it('der Kartentausch mischt je Seed anders', () => {
+    const afterMulligan = (seed: string) => {
+      const s = start(seed);
+      const seat = s.startingSeat;
+      const hand = s.players[seat].hand.map((_, i) => i);
+      return drachenspiel.applyMove(s, seat, { type: 'mulligan', discardIndices: hand }).state.players[seat].deck.map((c) => c.defId).join();
+    };
+    expect(new Set(Array.from({ length: 6 }, (_, i) => afterMulligan(`tausch-${i}`))).size).toBe(6);
+  });
+
+  it('der Zufallsstrom erscheint in keiner Sicht', () => {
+    const s = start('sicht');
+    expect(s.rng).toBeDefined();
+    expect(JSON.stringify(drachenspiel.playerView(s, 0))).not.toContain('"rng"');
+  });
+
+  it('gemischtes Deck: Thema mixed, 30 Karten, höchstens zwei Kopien, Fuchs und Drache einmal', () => {
+    for (let i = 0; i < 20; i++) {
+      const s = drachenspiel.setup(2, { deckSelection: 'random', mulligan: 'off' }, `mix-${i}`);
+      const seat = s.startingSeat;
+      const player = s.players[seat];
+      expect(player.deckTheme).toBe('mixed');
+      const ids = [...player.hand, ...player.deck, ].map((c) => c.defId);
+      expect(ids.filter((id) => !id.startsWith('special_')).length + 1).toBeGreaterThanOrEqual(30);
+      const counts = new Map<string, number>();
+      for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
+      for (const [id, n] of counts) expect(n, id).toBeLessThanOrEqual(id === 'c53' || id === 'c54' ? 1 : 2);
+    }
+  });
+});
+
+describe('Ehrliche Anzeige', () => {
+  it('Heilung meldet nur, was wirklich geheilt wurde', () => {
+    const s = drachenspiel.setup(2, { deckSelection: 'forest', mulligan: 'off' }, 'heilung');
+    const me = s.activeSeat;
+    s.players[me].mana = 10;
+    s.players[me].health = 29;
+    s.players[me].hand = [{ uid: 'h', defId: 'c29' }];
+    const res = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 });
+    expect(res.state.players[me].health).toBe(30);
+    expect(res.events.find((e) => e.type === 'heroHealed')).toMatchObject({ amount: 1 });
+
+    const full = drachenspiel.setup(2, { deckSelection: 'forest', mulligan: 'off' }, 'heilung');
+    full.players[me].mana = 10;
+    full.players[me].hand = [{ uid: 'h', defId: 'c29' }];
+    expect(drachenspiel.applyMove(full, me, { type: 'playCard', handIndex: 0 }).events.some((e) => e.type === 'heroHealed')).toBe(false);
+  });
+
+  it('Flink greift im Zug des Ausspielens auch den Helden an, wie der Text sagt', () => {
+    const s = drachenspiel.setup(2, { deckSelection: 'forest', mulligan: 'off' }, 'flink');
+    const me = s.activeSeat;
+    s.players[me].mana = 10;
+    s.players[me].hand = [{ uid: 'f', defId: 'c53' }];
+    const next = drachenspiel.applyMove(s, me, { type: 'playCard', handIndex: 0 }).state;
+    expect(drachenspiel.legalMoves(next, me).some((m) => m.type === 'attack' && m.target.kind === 'hero')).toBe(true);
+  });
+});
