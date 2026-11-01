@@ -60,7 +60,7 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 | W-035 | Bausteine für Wortspiele: Texteingabe mit Prüfung, Abstimmung, Teams in der Lobby | 2026-11-01 | #44 |
 | W-021 | Neues Spiel: [Wölfe im Schafspelz](docs/spiele/woelfe-im-schafspelz.md) (Werwolf-Regeln mit christlichem Thema); Live-Test durch Cornelius bestanden | 2026-11-01 | 0aea54b |
 | W-017 | Narrenhof: Gegner mit Porträts – 30 Herrschaften und 38 Höflinge, je drei Stimmungen (schmunzelnd, lachend, Lachkrampf) | 2026-11-01 | #36, #39, #43 |
-| W-043 | Narrenhof: mehrere Passkeys für die Sicherung | 2026-11-01 | #42 |
+| W-043 | Narrenhof: mehrere Passkeys für die Sicherung (auf dem Handy bestätigt) | 2026-11-01 | #42 |
 | W-032 | Nicht ärgern! zu sechst: Sternbrett mit sechs Armen und 54 Feldern (ab 5 Spielern, bis 4 als Option), Lila ◆ und Türkis ✚; Figuren stehen mittig auf dem Feld | 2026-10-31 | d010251 |
 | W-018 | Narrenhof: Fortschritt geräteübergreifend sichern (Sicherungscode und Passkey; Microsoft/Google zurückgestellt) | 2026-10-31 | #41 |
 | W-028 | Startseite: Filter nach Spielerzahl („Wie viele spielt ihr?“) | 2026-10-31 | #40 |
