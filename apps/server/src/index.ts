@@ -18,6 +18,7 @@ import {
 } from '@brett-und-blatt/online';
 import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
 import { bibelQuizKatalog } from './bibelquiz';
+import { wortspielKataloge } from './wortspiele';
 import { onlineGames } from './games';
 
 /**
@@ -29,6 +30,7 @@ import { onlineGames } from './games';
  *   mit WebSocket-Upgrade kommt die Liste live (bei jeder Änderung neu).
  * - `GET /rooms/<code>` mit WebSocket-Upgrade betritt einen Raum.
  * - `GET /bibelquiz/fragen` liefert den Fragenkatalog des Bibel-Quiz (liegt nicht im Browser-Bundle).
+ * - `GET /wortspiele/kategorien`, `/wer-bin-ich`, `/begriffe` liefern die Kataloge der Wortspiele.
  * - `GET`/`PUT /sicherung/<Kennung>` lädt bzw. schreibt eine im Browser verschlüsselte Sicherung
  *   (Narrenhof-Fortschritt). Der Server sieht nur Kennung und Datensalat.
  *
@@ -138,6 +140,12 @@ export default {
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
       // Die Fragen ändern sich selten; fünf Minuten frisch genügt und spart Anfragen.
       return json(bibelQuizKatalog, 200, { ...cors, 'Cache-Control': 'public, max-age=300' });
+    }
+
+    const wortspiel = wortspielKataloge[url.pathname];
+    if (wortspiel !== undefined && request.method === 'GET') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      return json(wortspiel, 200, { ...cors, 'Cache-Control': 'public, max-age=300' });
     }
 
     const backup = /^\/sicherung\/([^/]+)$/.exec(url.pathname);

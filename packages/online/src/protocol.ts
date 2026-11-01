@@ -13,7 +13,10 @@ export const MAX_MESSAGE_LENGTH = 16_000;
 export const MAX_SEATS = 30;
 
 /** Ein Platz in der Lobby: offen für einen Menschen, von einem Mitglied besetzt oder ein Bot. */
-export type LobbySeat = { kind: 'human'; memberId: string | null } | { kind: 'bot'; level: BotLevel };
+export type LobbySeat = ({ kind: 'human'; memberId: string | null } | { kind: 'bot'; level: BotLevel }) & {
+  /** Nur bei Teamspielen (`GameInfo.teams`): Team dieses Platzes, 0, 1, … */
+  team?: number;
+};
 
 export interface LobbySettings {
   gameId: string | null;
@@ -92,6 +95,10 @@ export type ClientMessage =
   | { type: 'takeSeat'; index: number }
   | { type: 'leaveSeat' }
   | { type: 'fillSeats' }
+  /** Teamspiele: Team eines Platzes wechseln (Raumleitung jeden, Mitglieder den eigenen). */
+  | { type: 'setTeam'; index: number; team: number }
+  /** Teamspiele (Raumleitung): besetzte Plätze zufällig und gleichmäßig auf die Teams verteilen. */
+  | { type: 'shuffleTeams' }
   | { type: 'kick'; memberId: string }
   /** Raumleitung: Mitglied vom Platz nehmen (Lobby und laufende Partie); es bleibt als Zuschauer im Raum. */
   | { type: 'unseat'; index: number }
@@ -208,6 +215,8 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return typeof m.isPublic === 'boolean' ? { type: 'setPublic', isPublic: m.isPublic } : null;
     case 'takeSeat':
       return isInt(m.index, 0, MAX_SEATS - 1) ? { type: 'takeSeat', index: m.index } : null;
+    case 'setTeam':
+      return isInt(m.index, 0, MAX_SEATS - 1) && isInt(m.team, 0, 9) ? { type: 'setTeam', index: m.index, team: m.team } : null;
     case 'kick':
       return isString(m.memberId, 20) ? { type: 'kick', memberId: m.memberId } : null;
     case 'unseat':
@@ -226,6 +235,7 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return { type: 'start', ...(typeof m.rotate === 'boolean' ? { rotate: m.rotate } : {}) };
     case 'leaveSeat':
     case 'fillSeats':
+    case 'shuffleTeams':
     case 'toLobby':
     case 'resign':
     case 'returnSeat':

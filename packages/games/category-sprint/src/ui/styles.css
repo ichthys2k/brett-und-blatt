@@ -1,0 +1,305 @@
+.ks-root {
+  /* Lange Listen rollen im Spielfeld statt unter die Knopfleiste zu laufen. */
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0.5rem;
+}
+
+.ks-header {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.ks-letter {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: none;
+  border-radius: 0.9rem;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-size: 2.2rem;
+  font-weight: 900;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+.ks-letter-big {
+  width: 7rem;
+  height: 7rem;
+  font-size: 5rem;
+}
+
+.ks-round {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+}
+
+.ks-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.ks-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ks-field {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 34%) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ks-field-name {
+  font-weight: 700;
+}
+
+.ks-field-ok {
+  color: var(--color-accent);
+}
+
+.ks-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.ks-button {
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+.ks-button:disabled {
+  opacity: 0.5;
+}
+
+.ks-primary,
+.ks-stop {
+  border-color: transparent;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.ks-stop:not(:disabled) {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.ks-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+.ks-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ks-progress-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  font-size: 0.85rem;
+}
+
+.ks-progress-item.ks-done {
+  border-color: var(--color-accent);
+}
+
+.ks-progress-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.ks-progress-count {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ks-board-cats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ks-board-cats li {
+  padding: 0.8rem;
+  border-radius: 0.8rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.ks-board .ks-title {
+  font-size: 2rem;
+}
+
+.ks-review {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.ks-review-cat {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.9rem;
+  background: var(--color-surface);
+}
+
+.ks-review-cat h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.ks-review-cat ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ks-answer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+}
+
+.ks-answer-who {
+  width: 30%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.ks-answer-text {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ks-answer-status {
+  width: 1.5rem;
+  text-align: center;
+  font-weight: 900;
+}
+
+.ks-answer.is-known .ks-answer-status,
+.ks-answer.is-accepted .ks-answer-status,
+.ks-answer.is-trusted .ks-answer-status {
+  color: var(--color-accent);
+}
+
+.ks-answer.is-wrongLetter .ks-answer-status,
+.ks-answer.is-unknown .ks-answer-status,
+.ks-answer.is-rejected .ks-answer-status {
+  color: var(--color-danger);
+}
+
+.ks-answer.is-disputed .ks-answer-status {
+  color: var(--color-warning);
+}
+
+.ks-vote {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.ks-vote button {
+  min-width: 2.5rem;
+  min-height: 2.25rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.6rem;
+  background: var(--color-bg);
+}
+
+.ks-vote button[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+
+.ks-summary {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.9rem;
+  background: var(--color-surface);
+}
+
+.ks-summary summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.ks-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.ks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ks-table th,
+.ks-table td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--color-line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ks-table td.is-rejected,
+.ks-table td.is-wrongLetter,
+.ks-table td.is-unknown {
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+
+.ks-points {
+  color: var(--color-accent);
+  font-weight: 800;
+}

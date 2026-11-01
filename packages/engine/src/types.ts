@@ -45,6 +45,11 @@ export interface GameInfo {
    * nicht, und die Oberfläche spielt ihre Musik selbst (Lautstärken über `BoardProps.audio`).
    */
   ownMusic?: boolean;
+  /**
+   * Teamspiel: Die Lobby zeigt je Platz das Team und lässt es wechseln (`teamOption`,
+   * `teamsFromOptions` in `teams.ts`). `names` sind die Anzeigenamen der Teams.
+   */
+  teams?: { count: number; names: string[] };
   /** Kurze Anleitung „So geht's“: die wichtigsten Regeln in wenigen Sätzen, je ein Punkt pro Eintrag. */
   howToPlay: string[];
 }

@@ -1,10 +1,13 @@
 import {
   LocalSession,
+  TEAM_OPTION_ID,
+  shuffledTeams,
   resolveOptions,
   type AnyGameModule,
   type BotLevel,
   type BotRunner,
   type GameEvent,
+  type Options,
   type SeatId,
   type SessionChange,
   type SessionConfig,
@@ -64,6 +67,8 @@ export interface RoomDeps {
   changed?(): void;
   /** Bedenkzeit der Bots je Stufe – auf dem Server eventuell knapper. */
   botBudgetMs?: Partial<Record<BotLevel, number>>;
+  /** Zufallszahl in [0, 1) für Lobby-Dinge wie „Teams mischen“ (Standard: Math.random). */
+  random?(): number;
 }
 
 interface Member {
@@ -458,6 +463,7 @@ export class Room {
         const defaultSeats = isClassGame ? Math.min(max, MAX_SEATS) : module.info.joinMidGame ? Math.min(max, 6) : min;
         const count = Math.min(Math.min(max, MAX_SEATS), Math.max(defaultSeats, this.lobby.seats.length));
         this.lobby = { gameId: message.gameId, options: resolveOptions(module), time: this.lobby.time, seats: this.resizeSeats(count), isPublic: this.lobby.isPublic };
+        this.applyTeams();
         return this.broadcastRoom();
       }
       case 'setPublic':
@@ -481,11 +487,33 @@ export class Room {
         const { min, max } = module.info.players;
         if (message.count < min || message.count > Math.min(max, MAX_SEATS)) return deny();
         this.lobby.seats = this.resizeSeats(message.count);
+        this.applyTeams();
         return this.broadcastRoom();
       }
       case 'setSeat': {
         if (!isHost || this.phase !== 'lobby' || message.index >= this.lobby.seats.length) return deny();
+        const team = this.lobby.seats[message.index]?.team;
         this.lobby.seats[message.index] = message.seat === 'open' ? { kind: 'human', memberId: null } : { kind: 'bot', level: message.seat.bot };
+        if (team !== undefined) this.lobby.seats[message.index]!.team = team;
+        return this.broadcastRoom();
+      }
+      case 'setTeam': {
+        const count = this.lobbyModule()?.info.teams?.count ?? 0;
+        const seat = this.lobby.seats[message.index];
+        const own = seat?.kind === 'human' && seat.memberId === member.id;
+        if (this.phase !== 'lobby' || !seat || message.team >= count || !(isHost || own)) return deny();
+        seat.team = message.team;
+        return this.broadcastRoom();
+      }
+      case 'shuffleTeams': {
+        const count = this.lobbyModule()?.info.teams?.count ?? 0;
+        if (!isHost || this.phase !== 'lobby' || count < 2) return deny();
+        // Besetzte Plätze gleichmäßig mischen, freie Plätze behalten ihr Team.
+        const occupied = this.lobby.seats.flatMap((s, i) => (s.kind === 'bot' || s.memberId !== null ? [i] : []));
+        const teams = shuffledTeams(occupied.length, count, this.deps.random ?? Math.random);
+        occupied.forEach((index, position) => {
+          this.lobby.seats[index]!.team = teams[position]!;
+        });
         return this.broadcastRoom();
       }
       case 'takeSeat': {
@@ -659,7 +687,9 @@ export class Room {
           ? { kind: 'human', name: 'Frei', memberId: null }
           : { kind: 'human', name: this.members.get(seat.memberId)?.name ?? '?', avatar: this.members.get(seat.memberId)?.avatar, memberId: seat.memberId },
     );
-    const resolvedOptions = resolveOptions(module, this.lobby.options);
+    const teamCount = module.info.teams?.count ?? 0;
+    const teamOptions: Options = teamCount >= 2 ? { [TEAM_OPTION_ID]: seats.map((seat, i) => seat.team ?? i % teamCount).join(',') } : {};
+    const resolvedOptions = resolveOptions(module, { ...this.lobby.options, ...teamOptions });
     const config: SessionConfig = {
       gameId: module.info.id,
       seats: publicSeats.map((seat) => (seat.kind === 'bot' ? { kind: 'bot', name: seat.name, level: seat.level } : { kind: 'human', name: seat.name, avatar: seat.avatar })),
@@ -741,6 +771,15 @@ export class Room {
     const seats = this.lobby.seats.slice(0, count);
     while (seats.length < count) seats.push({ kind: 'human', memberId: null });
     return seats;
+  }
+
+  /** Teamspiel: jedem Platz ein gültiges Team (sonst im Wechsel); sonst die Teamangaben entfernen. */
+  private applyTeams(): void {
+    const count = this.lobbyModule()?.info.teams?.count ?? 0;
+    this.lobby.seats.forEach((seat, index) => {
+      if (count < 2) delete seat.team;
+      else if (seat.team === undefined || seat.team >= count) seat.team = index % count;
+    });
   }
 
   private unseat(memberId: string): void {

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { HowToList } from '../components/HowTo';
 import { QrCode } from '../components/OnlineParts';
+import { TeamChip } from '../components/Teams';
 import { t } from '../i18n';
 import { startGame } from '../lib/activeGame';
 import { describeTime, levelLabel } from '../lib/format';
@@ -157,12 +158,14 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
         {info.players.min < info.players.max && (
           <PlayerCount label={t('setup.playerCount')} value={draft.seats.length} min={info.players.min} max={info.players.max} onChange={setCount} />
         )}
+        {info.teams && <p className="text-sm text-muted">{t('setup.teamsAlternate')}</p>}
         <ol className="space-y-2">
           {draft.seats.map((seat, index) => (
             <li key={index} className="space-y-2 rounded-2xl border border-line bg-surface p-3 shadow-sm">
               <div className="flex items-center gap-3">
                 <ui.SeatSymbol seat={index} seats={draft.seats.length} className="block size-8 flex-none" />
                 <span className="text-sm text-muted">{ui.seatLabel(index, draft.seats.length)}</span>
+                {info.teams && <TeamChip names={info.teams.names} team={index % info.teams.count} />}
                 <div className="ml-auto w-48">
                   <Segmented
                     label={`${ui.seatLabel(index, draft.seats.length)}: ${t('setup.human')} oder ${t('setup.bot')}`}
