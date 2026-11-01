@@ -181,7 +181,7 @@ const de = {
   'look.tavern': 'Taverne',
   'look.tavern.text': 'Holz, Pergament und Kerzenschein rund um die Spiele.',
   'cards.portraits': 'Bildkarten',
-  'cards.portraits.text': 'Bube, Dame und König zeigen gemalte Tierporträts (französisches und vierfarbiges Blatt). Am Desktop standardmäßig an, auf dem Handy aus.',
+  'cards.portraits.text': 'Bube, Dame und König (beim deutschen Blatt Unter, Ober und König) zeigen gemalte Tierporträts. Am Desktop standardmäßig an, auf dem Handy aus.',
   'look.contrast': 'Dein Gerät wünscht erhöhten Kontrast, darum bleibt es bei „Schlicht“.',
   'home.tavern.welcome': 'Tritt ein und such dir einen Tisch: Karten- und Brettspiele, allein gegen den Computer oder zu mehreren.',
   'sound.title': 'Ton',

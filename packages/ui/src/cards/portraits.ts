@@ -3,22 +3,33 @@ import { cardRank, cardSuit } from '@brett-und-blatt/engine';
 import { useSyncExternalStore } from 'react';
 
 /*
- * Bildkarten: Bube, Dame und König des französischen Blatts mit gemalten Porträts
+ * Bildkarten: Bube, Dame und König des französischen Blatts sowie Unter, Ober und König des deutschen
+ * Blatts mit gemalten Porträts
  * (KI-Bilder im Stil des Narrenhofs, siehe THIRD_PARTY.md). Die Wahl gilt je Gerät:
  * am Desktop standardmäßig an, auf dem Handy aus.
  */
 
 const files = import.meta.glob<string>('./portraits/*.webp', { eager: true, query: '?url', import: 'default' });
 
-const SUIT_NAMES: Record<Suit, string> = { H: 'herz', D: 'karo', S: 'pik', C: 'kreuz' };
-const RANK_NAMES: Record<number, string> = { 11: 'bube', 12: 'dame', 13: 'koenig' };
+const FRENCH_SUITS: Record<Suit, string> = { H: 'herz', D: 'karo', S: 'pik', C: 'kreuz' };
+const FRENCH_RANKS: Record<number, string> = { 11: 'bube', 12: 'dame', 13: 'koenig' };
+/** Deutsches und bayerisches Blatt: Schellen, Gras und Eichel stehen für Karo, Pik und Kreuz. */
+const GERMAN_SUITS: Record<Suit, string> = { H: 'herz', D: 'schellen', S: 'gras', C: 'eichel' };
+const GERMAN_RANKS: Record<number, string> = { 11: 'unter', 12: 'ober', 13: 'koenig' };
 
-/** Porträts gibt es bisher nur für die französischen Blätter (auch vierfarbig). */
+/** Porträt der Bildkarte (Bube/Dame/König bzw. Unter/Ober/König) oder undefined, wenn es keines gibt. */
 export function portraitUrl(card: CardId, deckStyle: DeckStyle): string | undefined {
-  if (deckStyle !== 'french' && deckStyle !== 'four-color') return undefined;
-  const rank = RANK_NAMES[cardRank(card)];
-  if (!rank) return undefined;
-  return files[`./portraits/${rank}-${SUIT_NAMES[cardSuit(card)]}.webp`];
+  const rank = cardRank(card);
+  const suit = cardSuit(card);
+  if (deckStyle === 'french' || deckStyle === 'four-color') {
+    const name = FRENCH_RANKS[rank];
+    return name && files[`./portraits/${name}-${FRENCH_SUITS[suit]}.webp`];
+  }
+  if (deckStyle === 'german' || deckStyle === 'bavarian') {
+    const name = GERMAN_RANKS[rank];
+    return name && files[`./portraits/de-${name}-${GERMAN_SUITS[suit]}.webp`];
+  }
+  return undefined;
 }
 
 const KEY = 'brett-und-blatt:bildkarten';

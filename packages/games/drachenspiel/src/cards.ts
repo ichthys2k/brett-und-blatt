@@ -63,7 +63,7 @@ export const ANT_TOKEN: CardDefinition = {
 };
 
 /** Spielsteine der Hauskräfte (siehe `powers.ts`). */
-const CHICK_TOKEN: CardDefinition = { id: 'token_chick', token: true, textName: 'ein Küken', name: 'Küken', cost: 1, attack: 1, health: 1, emoji: '🐥', quote: 'Piep!' };
+const CHICK_TOKEN: CardDefinition = { id: 'token_chick', token: true, textName: 'ein Küken', name: 'Küken', cost: 1, attack: 1, health: 2, emoji: '🐥', quote: 'Piep!' };
 const MUSSEL_TOKEN: CardDefinition = { id: 'token_mussel', token: true, textName: 'eine Muschel', name: 'Muschel', cost: 1, attack: 0, health: 2, emoji: '🐚', quote: 'Bleibt zu.', keywords: ['taunt'] };
 const SHRIMP_TOKEN: CardDefinition = { id: 'token_shrimp', token: true, textName: 'eine Garnele', name: 'Garnele', cost: 1, attack: 1, health: 1, emoji: '🍤', quote: 'Husch!', keywords: ['rush'] };
 const SEAHORSE_TOKEN: CardDefinition = { id: 'token_seahorse', token: true, textName: 'ein Seepferdchen', name: 'Seepferdchen', cost: 1, attack: 1, health: 2, emoji: '🌊', quote: 'Hüa, ihr Wellen!' };
