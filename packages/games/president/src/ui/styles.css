@@ -361,5 +361,5 @@
 
 /* Am Tisch ist die Mitte das Wichtigste: Der Stich wächst mit ihr. */
 .prs-table[data-around] .prs-center {
-  --card-w: clamp(4rem, 28cqh, 9rem);
+  --card-w: clamp(4rem, min(28cqh, 30cqw), 9rem);
 }

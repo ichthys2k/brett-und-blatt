@@ -172,7 +172,7 @@ try {
   const ringGames = { 'mau-mau': 5, skat: 4, schafkopf: 4, doppelkopf: 5, binokel: 4, elevens: 6, president: 8, 'black-peter': 6, uno: 8, quartett: 6, dominoes: 4, maexle: 8, 'market-stalls': 8 };
   for (const [id, count] of Object.entries(ringGames)) {
     if (!ids.includes(id)) continue;
-    for (const [width, height] of [[1024, 768], [1280, 800], [390, 844]]) {
+    for (const [width, height] of [[1024, 768], [1280, 800], [768, 1024], [390, 844]]) {
       const context = await browser.newContext({ viewport: { width, height } });
       const ringPage = await context.newPage();
       await ringPage.goto(base);
@@ -201,9 +201,9 @@ try {
         };
       });
       const where = `${id} zu ${count} bei ${width}×${height}`;
-      if (ring.shown !== width >= 1024) problems.push(`${where}: Tisch ${ring.shown ? 'erscheint auf dem Handy' : 'fehlt'}`);
+      if (ring.shown !== width >= 768) problems.push(`${where}: Tisch ${ring.shown ? 'erscheint auf dem Handy' : 'fehlt'}`);
       if (ring.shown && ring.mainWidth < width - 2) problems.push(`${where}: Seitenleiste nimmt noch Platz (${ring.mainWidth} px)`);
-      if (ring.shown && ring.pileWidth !== null && ring.pileWidth < 100) problems.push(`${where}: Stapel zu klein (${ring.pileWidth} px)`);
+      if (ring.shown && width >= 1024 && ring.pileWidth !== null && ring.pileWidth < 100) problems.push(`${where}: Stapel zu klein (${ring.pileWidth} px)`);
       if (ring.clipped > 0) problems.push(`${where}: ${ring.clipped} Knöpfe ragen aus dem Bildschirm`);
       if (ring.collisions > 0) problems.push(`${where}: ${ring.collisions} Plätze überlappen`);
       if (ring.outside > 0) problems.push(`${where}: ${ring.outside} Plätze ragen aus dem Spielfeld`);

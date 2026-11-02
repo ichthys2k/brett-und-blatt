@@ -8,6 +8,8 @@ export const SEAT_RING_MIN_SEATS = 3;
 export const SEAT_RING_MAX_SEATS = 8;
 /** Bis zu dieser Entfernung vom Rand (in %) sitzt ein Platz neben der Mitte, nicht darüber oder darunter. */
 const SIDE_LIMIT = 22;
+/** Halbe Breite eines Platzes (siehe `.bub-seat-ring-seat`): So weit bleibt seine Mitte vom Rand weg. */
+const SEAT_HALF_WIDTH = '5.25rem';
 
 /** Passt der Tisch in diese Fläche? Kleine Bildschirme behalten ihre Spielerleiste. */
 export function seatRingFits(seats: number, width: number, height: number): boolean {
@@ -49,8 +51,8 @@ export function SeatRing({ seats, bottomSeat, renderSeat, children, status, bott
   const above = inner.filter(({ y }) => y < 50);
   const below = inner.filter(({ y }) => y >= 50);
   const centerStyle: CSSProperties = {
-    left: `calc(${inset.toFixed(1)}% + 5.5rem)`,
-    right: `calc(${inset.toFixed(1)}% + 5.5rem)`,
+    left: `calc(max(${inset.toFixed(1)}%, ${SEAT_HALF_WIDTH}) + 5.5rem)`,
+    right: `calc(max(${inset.toFixed(1)}%, ${SEAT_HALF_WIDTH}) + 5.5rem)`,
     top: above.length > 0 ? `calc(${Math.max(...above.map(({ y }) => y)).toFixed(1)}% + 3.6rem)` : undefined,
     bottom: below.length > 0 ? `calc(${(100 - Math.min(...below.map(({ y }) => y))).toFixed(1)}% + 3.6rem)` : undefined,
   };
@@ -61,7 +63,7 @@ export function SeatRing({ seats, bottomSeat, renderSeat, children, status, bott
         {others.map((seat) => {
           const { x, y } = seatRingPosition(seat, seats, bottomSeat);
           return (
-            <div key={seat} className="bub-seat-ring-seat" style={{ left: `${x.toFixed(1)}%`, top: `${y.toFixed(1)}%` } as CSSProperties}>
+            <div key={seat} className="bub-seat-ring-seat" style={{ left: `clamp(${SEAT_HALF_WIDTH}, ${x.toFixed(1)}%, calc(100% - ${SEAT_HALF_WIDTH}))`, top: `${y.toFixed(1)}%` } as CSSProperties}>
               {renderSeat(seat)}
             </div>
           );

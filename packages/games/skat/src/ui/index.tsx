@@ -3,6 +3,7 @@ import { CardFan, PlayingCard, SeatRing, TRICK_HAND_MIN_STEP, TrickTable, trickH
 import { useState } from 'react';
 import {
   getContract,
+  plainDeclaration,
   ALL_BID_VALUES,
   SKAT_BASE_VALUES,
   calculateGameValue,
@@ -29,9 +30,6 @@ export function SkatBoard({
 
   const [selectedToDiscard, setSelectedToDiscard] = useState<CardId[]>([]);
   const [selectedGameType, setSelectedGameType] = useState<SkatGameType>('grand');
-  const [selectedSchneider, setSelectedSchneider] = useState(false);
-  const [selectedSchwarz, setSelectedSchwarz] = useState(false);
-  const [selectedOuvert, setSelectedOuvert] = useState(false);
 
   const displayTrick = useTrickDisplay(view.currentTrick, view.completedTricks);
 
@@ -207,16 +205,7 @@ export function SkatBoard({
             type="button"
             className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium shadow"
             onClick={() => {
-              onMove({
-                type: 'declare',
-                declaration: {
-                  gameType: selectedGameType,
-                  hand: view.discardedCards.length === 0,
-                  schneider: selectedSchneider,
-                  schwarz: selectedSchwarz,
-                  ouvert: selectedOuvert,
-                },
-              });
+              onMove(plainDeclaration(view, selectedGameType));
             }}
           >
             {formatGameTypeName(selectedGameType)} ansagen

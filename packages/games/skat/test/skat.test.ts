@@ -1,4 +1,4 @@
-import { cardId, computeBotMove, knownVoids, resolveOptions, Rng } from '@brett-und-blatt/engine';
+import { cardId, computeBotMove, isLegalMove, knownVoids, resolveOptions, Rng } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
 import { gameModule } from '../src/index.js';
@@ -8,6 +8,8 @@ import {
   countSpitzen,
   getContract,
   nextPossibleBid,
+  plainDeclaration,
+  type SkatGameType,
   type SkatMove,
 } from '../src/rules.js';
 
@@ -117,6 +119,30 @@ describe('Skat-Bot', () => {
     // Der alte Bot sagte fast immer Grand an und verlor fast alles.
     expect(won / played).toBeGreaterThan(0.35);
   }, 120_000);
+});
+
+describe('Ansage über den Knopf', () => {
+  const types: SkatGameType[] = ['grand', 'C', 'S', 'H', 'D', 'null'];
+
+  function declaring(moves: SkatMove[]) {
+    const start: any = gameModule.setup(3, resolveOptions(gameModule), 'ansage');
+    let state = { ...start, phase: 'skatDecision', declarerSeat: 1, highestBid: 18, currentBidValue: 18 };
+    for (const move of moves) state = gameModule.applyMove(state, 1, move).state as any;
+    return state;
+  }
+
+  it('ist beim Handspiel erlaubt', () => {
+    const state = declaring([{ type: 'playHand' }]);
+    for (const type of types) expect(isLegalMove(gameModule, state, 1, plainDeclaration(gameModule.playerView(state, 1), type))).toBe(true);
+  });
+
+  it('ist nach dem Drücken erlaubt', () => {
+    let state = declaring([{ type: 'takeSkat' }]);
+    const [first, second] = state.hands[1];
+    state = gameModule.applyMove(state, 1, { type: 'discard', cards: [first, second] } as SkatMove).state as any;
+    expect(state.phase).toBe('declare');
+    for (const type of types) expect(isLegalMove(gameModule, state, 1, plainDeclaration(gameModule.playerView(state, 1), type))).toBe(true);
+  });
 });
 
 describe('Skat-Bot: Hand und Schneider', () => {
