@@ -1,4 +1,4 @@
-import type { GameInfo } from '@brett-und-blatt/engine';
+import type { GameInfo, OptionSpec, Options } from '@brett-und-blatt/engine';
 import { cleanAvatar, cleanName } from './names';
 
 /**
@@ -36,6 +36,8 @@ export interface TournamentSettings {
   days: number;
   /** Spiel um Platz 3 (nur WM-Form). */
   thirdPlace: boolean;
+  /** Spieloptionen aller Partien; was fehlt, steht auf dem Standard. */
+  options?: Options;
 }
 
 /** Woher ein noch offener Platz seinen Spieler bekommt. */
@@ -117,6 +119,8 @@ export interface TournamentSnapshot {
   createdAt: number;
   lastActivity: number;
   finishedAt: number | null;
+  /** Regelstand des Spiels beim Turnierstart. */
+  ruleVersion?: number;
 }
 
 /** Eine Zeile der Tabelle. */
@@ -155,6 +159,8 @@ export interface TournamentView {
   podium: string[];
   you: string | null;
   isLeader: boolean;
+  /** Das Spiel hat seit dem Turnierstart neue Regeln bekommen. */
+  rulesChanged: boolean;
   serverNow: number;
 }
 
@@ -221,15 +227,24 @@ export function isTournamentGame(info: GameInfo): boolean {
 export const TOURNAMENT_CODE_PATTERN = /^[2-9A-HJ-NP-Z]{8}$/;
 
 /** Prüft die Angaben beim Anlegen. `isTournamentGame` kennt der Server. */
-export function parseTournamentSettings(body: unknown, isTournamentGame: (id: string) => boolean): TournamentSettings | null {
+export function parseTournamentSettings(body: unknown, findGame: (id: string) => { info: GameInfo; options: OptionSpec[] } | undefined): TournamentSettings | null {
   if (!isRecord(body)) return null;
   const name = typeof body.name === 'string' ? body.name.trim().slice(0, TOURNAMENT_NAME_LENGTH) : '';
   if (!name || !cleanName(name.slice(0, 16))) return null;
-  if (typeof body.gameId !== 'string' || !isTournamentGame(body.gameId)) return null;
+  const game = typeof body.gameId === 'string' ? findGame(body.gameId) : undefined;
+  if (typeof body.gameId !== 'string' || !game || !isTournamentGame(game.info)) return null;
   if (body.format !== 'world' && body.format !== 'swiss') return null;
   if (body.time !== 'relaxed' && body.time !== 'normal' && body.time !== 'fast') return null;
   if (body.days !== 1 && body.days !== 3 && body.days !== 7 && body.days !== 14) return null;
-  return { name, gameId: body.gameId, format: body.format, time: body.time, days: body.days, thirdPlace: body.thirdPlace === true };
+  const options: Options = {};
+  if (isRecord(body.options)) {
+    for (const [id, value] of Object.entries(body.options)) {
+      const spec = game.options.find((o) => o.id === id && !o.hidden);
+      if (!spec?.choices.some((c) => c.value === value)) return null;
+      options[id] = value as string;
+    }
+  }
+  return { name, gameId: body.gameId, format: body.format, time: body.time, days: body.days, thirdPlace: body.thirdPlace === true, ...(Object.keys(options).length > 0 ? { options } : {}) };
 }
 
 // ---------------------------------------------------------------------------
@@ -386,6 +401,8 @@ export interface TournamentDeps {
   now(): number;
   /** Zufallscode für die Neuausstellung durch die Leitung. */
   randomClaim(): string;
+  /** Der veröffentlichte Regelstand eines Spiels. */
+  ruleVersion?(gameId: string): number | undefined;
 }
 
 /** Was eine Spielrunde zurückmeldet. */
@@ -400,6 +417,7 @@ export interface MatchRoomRequest {
   match: string;
   gameId: string;
   time: TournamentSettings['time'];
+  options: Options;
   /** Kennungen in Platzreihenfolge; nach einem Remis im K.-o. getauscht. */
   tokens: [string, string];
   label: string;
@@ -516,6 +534,8 @@ export class Tournament {
     const ids = seededShuffle(this.s.players.map((p) => p.id), `${this.s.seed}/auslosung`);
     if (format === 'world') this.setupWorld(ids, deadline);
     else this.setupSwiss(ids, deadline);
+    const ruleVersion = this.deps.ruleVersion?.(this.s.settings.gameId);
+    if (ruleVersion !== undefined) this.s.ruleVersion = ruleVersion;
     this.s.phase = 'running';
     this.settle();
     this.touch();
@@ -546,7 +566,7 @@ export class Tournament {
       const tokens = m.slots.map((slot) => this.s.players.find((p) => p.id === slot.player)?.token) as [string | undefined, string | undefined];
       if (!tokens[0] || !tokens[1]) return [];
       const seats: [string, string] = m.replays % 2 === 1 ? [tokens[1], tokens[0]] : [tokens[0], tokens[1]];
-      return [{ match: m.id, gameId: this.s.settings.gameId, time: m.replays > 0 ? 'fast' : this.s.settings.time, tokens: seats, label: this.s.settings.name }];
+      return [{ match: m.id, gameId: this.s.settings.gameId, time: m.replays > 0 ? 'fast' : this.s.settings.time, options: this.s.settings.options ?? {}, tokens: seats, label: this.s.settings.name }];
     });
   }
 
@@ -674,6 +694,7 @@ export class Tournament {
       podium: this.podium(),
       you,
       isLeader: token !== null && this.isLeader(token),
+      rulesChanged: s.ruleVersion !== undefined && s.phase === 'running' && this.deps.ruleVersion?.(s.settings.gameId) !== s.ruleVersion,
       serverNow: this.deps.now(),
     };
   }

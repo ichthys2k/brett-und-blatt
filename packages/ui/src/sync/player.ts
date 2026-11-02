@@ -19,6 +19,29 @@ export interface PlayerPass {
   avatar: string;
   /** Spielercode, damit er auch über Sicherungscode oder Passkey auf ein neues Gerät kommt. */
   code: string | null;
+  /** Turniere, die dieser Spieler kennt; so findet ein neues Gerät sie ohne Link wieder. */
+  tournaments?: KnownTournament[];
+}
+
+export interface KnownTournament {
+  code: string;
+  name: string;
+}
+
+const MAX_TOURNAMENTS = 20;
+
+function sanitizeTournaments(value: unknown): KnownTournament[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is KnownTournament => typeof item?.code === 'string' && /^[2-9A-HJ-NP-Z]{8}$/.test(item.code) && typeof item.name === 'string')
+    .slice(0, MAX_TOURNAMENTS)
+    .map(({ code, name }) => ({ code, name: name.slice(0, 40) }));
+}
+
+/** Vereinigung zweier Listen; bei beiden gilt der Eintrag aus `first`. */
+function mergeTournaments(first: KnownTournament[] = [], second: KnownTournament[] = []): KnownTournament[] {
+  const seen = new Set(first.map((item) => item.code));
+  return [...first, ...second.filter((item) => !seen.has(item.code))].slice(0, MAX_TOURNAMENTS);
 }
 
 /** Eigenes Salt für das Schloss des Spielercodes, getrennt vom Block der Sicherung. */
@@ -67,15 +90,20 @@ export function parsePlayerCode(input: string): string | null {
 /** Macht aus fremden Daten einen gültigen Ausweis oder nichts. */
 export function sanitizePlayerPass(value: unknown): PlayerPass | null {
   if (!value || typeof value !== 'object') return null;
-  const { token, name, avatar, code } = value as Record<string, unknown>;
+  const { token, name, avatar, code, tournaments } = value as Record<string, unknown>;
+  const known = sanitizeTournaments(tournaments);
   if (typeof token !== 'string' || !/^[\w-]{32,100}$/.test(token)) return null;
   return {
     token,
     name: typeof name === 'string' ? name.slice(0, 40) : '',
     avatar: typeof avatar === 'string' ? avatar.slice(0, 20) : '',
     code: typeof code === 'string' ? parsePlayerCode(code) : null,
+    ...(known.length > 0 ? { tournaments: known } : {}),
   };
 }
+
+const withTournaments = (tournaments: KnownTournament[]) => (tournaments.length > 0 ? { tournaments } : {});
+const sortedCodes = (pass: PlayerPass) => (pass.tournaments ?? []).map((item) => item.code).sort();
 
 /** Der Ausweis als Block der gemeinsamen Sicherung: Kennung vom Server, der eigene Name bleibt, falls vorhanden. */
 export function playerBlock(salt: string, serverUrl: () => string | null, store: { read(): PlayerPass; write(pass: PlayerPass): void }): SyncBlock<PlayerPass> {
@@ -91,8 +119,9 @@ export function playerBlock(salt: string, serverUrl: () => string | null, store:
       name: local.name || remote.name,
       avatar: local.name ? local.avatar : remote.avatar,
       code: remote.code ?? local.code,
+      ...withTournaments(mergeTournaments(local.tournaments, remote.tournaments)),
     }),
-    same: (a, b) => a.token === b.token && a.name === b.name && a.avatar === b.avatar && a.code === b.code,
+    same: (a, b) => a.token === b.token && a.name === b.name && a.avatar === b.avatar && a.code === b.code && JSON.stringify(sortedCodes(a)) === JSON.stringify(sortedCodes(b)),
   };
 }
 
