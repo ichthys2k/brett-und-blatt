@@ -4,17 +4,27 @@ import {
   BACKUP_TTL_MS,
   OpenRoomDirectory,
   Room,
+  TOURNAMENT_CODE_PATTERN,
+  Tournament,
   applyBackupPut,
+  isTournamentGame,
   listingNeedsSync,
   parseRoomCode,
+  parseTournamentMessage,
+  parseTournamentSettings,
   randomRoomCode,
   serverBotRunner,
+  type MatchRoomConfig,
   type OpenRoomListing,
   type OpenRoomsMessage,
   type RoomDeps,
+  type RoomReport,
   type RoomSnapshot,
   type ServerMessage,
   type StoredBackup,
+  type TournamentServerMessage,
+  type TournamentSettings,
+  type TournamentSnapshot,
 } from '@brett-und-blatt/online';
 import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
 import { bibelQuizKatalog } from './bibelquiz';
@@ -29,6 +39,7 @@ import { onlineGames } from './games';
  * - `GET /rooms` bzw. `GET /rooms/open` liefert offene Spiele der letzten 60 Minuten;
  *   mit WebSocket-Upgrade kommt die Liste live (bei jeder Änderung neu).
  * - `GET /rooms/<code>` mit WebSocket-Upgrade betritt einen Raum.
+ * - `POST /turniere` legt ein Turnier an, `GET /turniere/<Code>` mit WebSocket-Upgrade öffnet die Turnierseite.
  * - `GET /bibelquiz/fragen` liefert den Fragenkatalog des Bibel-Quiz (liegt nicht im Browser-Bundle).
  * - `GET /wortspiele/kategorien`, `/wer-bin-ich`, `/begriffe` liefern die Kataloge der Wortspiele.
  * - `GET`/`PUT /sicherung/<Kennung>` lädt bzw. schreibt eine im Browser verschlüsselte Sicherung
@@ -42,6 +53,7 @@ interface Env {
   ROOMS: DurableObjectNamespace<GameRoom>;
   LOBBY_REGISTRY: DurableObjectNamespace<LobbyRegistry>;
   BACKUPS: DurableObjectNamespace<BackupVault>;
+  TOURNAMENTS: DurableObjectNamespace<TournamentRoom>;
   ALLOWED_ORIGINS: string;
   /** "eu" im echten Betrieb. Nur der lokale Testserver kennt keine Jurisdiktionen und setzt "none". */
   ROOM_JURISDICTION: string;
@@ -78,6 +90,18 @@ function registryStub(env: Env): DurableObjectStub<LobbyRegistry> {
 function backupStub(env: Env, id: string): DurableObjectStub<BackupVault> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.BACKUPS : env.BACKUPS.jurisdiction('eu');
   return namespace.get(namespace.idFromName(id));
+}
+
+function tournamentStub(env: Env, code: string): DurableObjectStub<TournamentRoom> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.TOURNAMENTS : env.TOURNAMENTS.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(code));
+}
+
+/** Zeichen ohne 0, 1, I und O, wie bei den Sicherungscodes. */
+const CODE_LETTERS = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+function randomLetters(length: number): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(length)), (b) => CODE_LETTERS[b & 31]).join('');
 }
 
 function corsHeaders(request: Request, env: Env): Record<string, string> {
@@ -146,6 +170,37 @@ export default {
     if (wortspiel !== undefined && request.method === 'GET') {
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
       return json(wortspiel, 200, { ...cors, 'Cache-Control': 'public, max-age=300' });
+    }
+
+    if (url.pathname === '/turniere' && request.method === 'POST') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      let body: { settings?: unknown; token?: unknown; name?: unknown };
+      try {
+        const text = await request.text();
+        if (text.length > 2000) return json({ error: 'size' }, 413, cors);
+        body = JSON.parse(text) as typeof body;
+      } catch {
+        return json({ error: 'body' }, 400, cors);
+      }
+      const settings = parseTournamentSettings(body.settings, (id) => {
+        const info = gamesById.get(id)?.info;
+        return info !== undefined && isTournamentGame(info);
+      });
+      if (!settings || typeof body.token !== 'string' || body.token.length < 16 || body.token.length > 100 || typeof body.name !== 'string') return json({ error: 'body' }, 400, cors);
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const code = randomLetters(8);
+        if (await tournamentStub(env, code).create(code, settings, { token: body.token, name: body.name })) return json({ code }, 201, cors);
+      }
+      return json({ error: 'busy' }, 503, cors);
+    }
+
+    const tournament = /^\/turniere\/([^/]+)$/.exec(url.pathname);
+    if (tournament && request.method === 'GET') {
+      const code = tournament[1]!;
+      if (!TOURNAMENT_CODE_PATTERN.test(code)) return json({ error: 'code' }, 404, cors);
+      if (!originAllowed(request, env)) return new Response('Origin nicht erlaubt', { status: 403 });
+      if (request.headers.get('Upgrade') !== 'websocket') return json({ exists: await tournamentStub(env, code).exists() }, 200, cors);
+      return tournamentStub(env, code).fetch(request);
     }
 
     const backup = /^\/sicherung\/([^/]+)$/.exec(url.pathname);
@@ -224,6 +279,16 @@ export class GameRoom extends DurableObject<Env> {
   async create(code: string, isPublic = true): Promise<boolean> {
     if (this.room) return false;
     this.room = new Room(code, this.deps(), isPublic);
+    await this.persist();
+    return true;
+  }
+
+  /** Legt den Raum für eine Turnierpartie an. false, wenn es den Code schon gibt. */
+  async createMatch(code: string, config: MatchRoomConfig): Promise<boolean> {
+    if (this.room) return false;
+    const room = new Room(code, this.deps(), false);
+    if (!room.setupMatch(config)) return false;
+    this.room = room;
     await this.persist();
     return true;
   }
@@ -322,6 +387,21 @@ export class GameRoom extends DurableObject<Env> {
     const wake = room.nextWakeup();
     if (wake !== null) await this.ctx.storage.setAlarm(Math.max(wake, Date.now() + 50));
     await this.syncRegistry();
+    await this.reportMatch();
+  }
+
+  /** Meldet das Ergebnis einer Turnierpartie. Klappt das nicht, versucht es der Wecker erneut. */
+  private async reportMatch(): Promise<void> {
+    const room = this.room;
+    const report = room?.matchReport();
+    if (!room || !report) return;
+    try {
+      await tournamentStub(this.env, report.tournament).reportMatch(report.match, room.code, report.report);
+      room.markMatchReported();
+    } catch (err) {
+      console.error('Turnier nicht erreichbar:', err);
+      await this.ctx.storage.setAlarm(Date.now() + 60_000);
+    }
   }
 
   /** Meldet die Karte des Raums ans Verzeichnis – nur, wenn sie sich geändert hat. */
@@ -462,5 +542,171 @@ export class BackupVault extends DurableObject<Env> {
   private async touch(stored: StoredBackup): Promise<void> {
     await this.ctx.storage.put('backup', stored);
     await this.ctx.storage.setAlarm(stored.at + BACKUP_TTL_MS);
+  }
+}
+
+/** Was an einer Verbindung der Turnierseite hängt und das Schlafen übersteht. */
+interface TournamentAttachment {
+  token: string | null;
+  name?: string;
+  avatar?: string;
+}
+
+/**
+ * Ein Turnier als Durable Object (in der EU): hält Stand und Stichtage, legt für jede Partie
+ * einen normalen Spielraum an und schickt jede Änderung an alle offenen Turnierseiten.
+ */
+export class TournamentRoom extends DurableObject<Env> {
+  private tournament: Tournament | null = null;
+
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
+    ctx.blockConcurrencyWhile(async () => {
+      const snapshot = await ctx.storage.get<TournamentSnapshot>('tournament');
+      if (snapshot) this.tournament = Tournament.restore(snapshot, this.deps());
+    });
+  }
+
+  async create(code: string, settings: TournamentSettings, leader: { token: string; name: string }): Promise<boolean> {
+    if (this.tournament) return false;
+    this.tournament = Tournament.create(code, randomSeed(), settings, leader, this.deps());
+    await this.changed();
+    return true;
+  }
+
+  async exists(): Promise<boolean> {
+    return this.tournament !== null;
+  }
+
+  async reportMatch(match: string, room: string, report: RoomReport): Promise<void> {
+    if (this.tournament?.report(match, room, report)) await this.changed();
+  }
+
+  override async fetch(): Promise<Response> {
+    if (!this.tournament) return new Response('Dieses Turnier gibt es nicht (mehr).', { status: 404 });
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
+    this.ctx.acceptWebSocket(server);
+    server.serializeAttachment({ token: null } satisfies TournamentAttachment);
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  override async webSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
+    const t = this.tournament;
+    if (!t || typeof raw !== 'string') return;
+    const message = parseTournamentMessage(raw);
+    if (!message) return this.sendTo(ws, { type: 'error', message: 'Unbekannte Nachricht.' });
+    if (message.type === 'hello') {
+      ws.serializeAttachment({ token: message.token, name: message.name, avatar: message.avatar } satisfies TournamentAttachment);
+      if (t.greet(message.token, message.name, message.avatar)) return this.changed();
+      return this.sendView(ws);
+    }
+    const { token, name, avatar } = ws.deserializeAttachment() as TournamentAttachment;
+    if (!token) return this.sendTo(ws, { type: 'error', message: 'Erst anmelden.' });
+    let error: string | null = null;
+    switch (message.type) {
+      case 'join':
+        error = t.join(token, name ?? '', avatar ?? '');
+        break;
+      case 'leave':
+        error = t.leave(token);
+        break;
+      case 'claim':
+        error = t.claim(token, message.code);
+        break;
+      case 'start':
+        error = t.start(token);
+        break;
+      case 'ready':
+        error = t.ready(token, message.match, message.ready);
+        break;
+      case 'setResult':
+        error = t.setResult(token, message.match, message.winner);
+        break;
+      case 'extend':
+        error = t.extend(token, message.days);
+        break;
+      case 'withdraw':
+        error = t.withdraw(token, message.player);
+        break;
+      case 'reissue': {
+        const issued = t.reissue(token, message.player);
+        if ('error' in issued) error = issued.error;
+        else this.sendTo(ws, { type: 'claimCode', player: message.player, code: issued.code });
+        break;
+      }
+    }
+    if (error) return this.sendTo(ws, { type: 'error', message: error });
+    await this.changed();
+  }
+
+  override async webSocketClose(ws: WebSocket, code: number): Promise<void> {
+    try {
+      ws.close(code === 1005 ? 1000 : code, 'Tschüss');
+    } catch {
+      // Schon zu.
+    }
+  }
+
+  override async alarm(): Promise<void> {
+    const t = this.tournament;
+    if (!t) return;
+    if (Date.now() >= t.expiresAt()) {
+      this.tournament = null;
+      await this.ctx.storage.deleteAll();
+      for (const ws of this.ctx.getWebSockets()) ws.close(1000, 'Turnier beendet');
+      return;
+    }
+    t.tick();
+    await this.changed();
+  }
+
+  /** Räume anlegen, speichern, Wecker stellen, allen den neuen Stand schicken. */
+  private async changed(): Promise<void> {
+    const t = this.tournament;
+    if (!t) return;
+    let retry = false;
+    for (const request of t.pendingRooms()) {
+      const code = await this.createMatchRoom({ tournament: t.snapshot().code, match: request.match, gameId: request.gameId, time: request.time, tokens: request.tokens, label: request.label });
+      if (code) t.roomCreated(request.match, code);
+      else retry = true;
+    }
+    await this.ctx.storage.put('tournament', t.snapshot());
+    const wake = retry ? Date.now() + 30_000 : t.nextWakeup();
+    await this.ctx.storage.setAlarm(Math.max(wake, Date.now() + 1000));
+    for (const ws of this.ctx.getWebSockets()) this.sendView(ws);
+  }
+
+  private async createMatchRoom(config: MatchRoomConfig): Promise<string | null> {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = randomRoomCode(randomInt);
+      try {
+        if (await roomStub(this.env, code).createMatch(code, config)) return code;
+      } catch (err) {
+        console.error('Spielraum nicht angelegt:', err);
+      }
+    }
+    return null;
+  }
+
+  private sendView(ws: WebSocket): void {
+    const t = this.tournament;
+    if (!t) return;
+    const token = (ws.deserializeAttachment() as TournamentAttachment).token;
+    if (!token) return;
+    this.sendTo(ws, t.maySee(token) ? { type: 'tournament', view: t.view(token) } : { type: 'closed', name: t.name });
+  }
+
+  private sendTo(ws: WebSocket, message: TournamentServerMessage): void {
+    try {
+      ws.send(JSON.stringify(message));
+    } catch {
+      // Verbindung schon weg.
+    }
+  }
+
+  private deps() {
+    return { now: () => Date.now(), randomClaim: () => randomLetters(8) };
   }
 }

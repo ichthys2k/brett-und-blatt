@@ -516,9 +516,11 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
       })}
       {run.mods.length === 0 && !desk && <span className="cs-muted cs-empty-note">Noch keine Narren</span>}
       {desk && Array.from({ length: Math.max(0, modCapacity(run) - run.mods.length) }, (_, i) => <span key={`free-${i}`} className="cs-tile cs-empty cs-free-slot" aria-hidden="true" />)}
-      <span className="cs-slots cs-muted">
-        {run.mods.length}/{modCapacity(run)}
-      </span>
+      {!desk && (
+        <span className="cs-slots cs-muted">
+          {run.mods.length}/{modCapacity(run)}
+        </span>
+      )}
     </>
   );
   const consTiles = (
@@ -539,9 +541,11 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
         );
       })}
       {desk && Array.from({ length: Math.max(0, run.consumableSlots - run.consumables.length) }, (_, i) => <span key={`free-${i}`} className="cs-tile cs-empty cs-small" aria-hidden="true" />)}
-      <span className="cs-slots cs-muted" title="Narrentasche: Kunststücke, Übungen und Kuriositäten">
-        👝 {run.consumables.length}/{run.consumableSlots}
-      </span>
+      {!desk && (
+        <span className="cs-slots cs-muted" title="Narrentasche: Kunststücke, Übungen und Kuriositäten">
+          👝 {run.consumables.length}/{run.consumableSlots}
+        </span>
+      )}
     </>
   );
   const modsRow = (
@@ -686,6 +690,11 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           <button type="button" className={`cs-btn cs-btn-discard ${hint?.type === 'discard' ? 'cs-hint' : ''}`} disabled={!discardMove} onClick={() => discardMove && (playEffect('fs-verwerfen'), onMove(discardMove))}>
             Tauschen ({round.discardsLeft})
           </button>
+          {desk && (
+            <button type="button" className="cs-link cs-looklink" onClick={toggleLook} title={`Kartenbild: ${DECK_STYLE_CHOICES.find((c) => c.value === look)?.label ?? ''} – antippen zum Wechseln`}>
+              🂠 Kartenbild
+            </button>
+          )}
         </div>
       </div>
     );
@@ -820,9 +829,6 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const pouchBox = desk && (
     <div className="cs-pouchbox" aria-label="Narrentasche">
       <div className="cs-row cs-pouch">{consTiles}</div>
-      <button type="button" className="cs-link" onClick={toggleLook} title={`Kartenbild: ${DECK_STYLE_CHOICES.find((c) => c.value === look)?.label ?? ''} – antippen zum Wechseln`}>
-        🂠 Kartenbild
-      </button>
     </div>
   );
 

@@ -129,6 +129,8 @@ export interface RoomMessage {
   hostId: string | null;
   members: MemberInfo[];
   lobby: LobbySettings;
+  /** Nur bei Turnierpartien: zu welchem Turnier der Raum gehört. */
+  match?: { tournament: string; label: string; noShow: boolean };
 }
 
 export interface GameMessage {

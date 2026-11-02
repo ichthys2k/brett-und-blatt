@@ -67,6 +67,8 @@ function resultTitle(result: Result, session: GameSession, online?: OnlineTableP
 export interface OnlineTableProps {
   yourSeat: SeatId | null;
   isHost: boolean;
+  /** Ersetzt den Hinweis auf die Raumleitung am Partieende, z. B. in Turnierpartien. */
+  finishedNote?: string;
   onRestart?(rotate: boolean): void;
   onLobby(): void;
   onLeave(): void;
@@ -268,7 +270,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         </Button>
       </>
     ) : (
-      <p className="text-sm text-muted">{t('online.waitForHost')}</p>
+      <p className="text-sm text-muted">{online.finishedNote ?? t('online.waitForHost')}</p>
     )
   ) : (
     <>
