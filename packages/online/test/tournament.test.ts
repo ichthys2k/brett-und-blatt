@@ -11,6 +11,7 @@ import {
   roundRobinPairs,
   swissPairing,
   swissRoundsFor,
+  parseTournamentSettings,
   type TournamentFormat,
   type TournamentMatch,
   type TournamentSettings,
@@ -318,6 +319,45 @@ describe('Leitung', () => {
     expect(t.view(fresh).you).toBe(player.id);
     expect(t.maySee(oldToken)).toBe(false);
     expect(t.claim('kennung-noch-ein-geraet', 'NEUCODE1')).toBe('Dieser Code passt nicht.');
+  });
+});
+
+describe('Spieloptionen und Regelstand', () => {
+  const game = {
+    info: { players: { min: 2, max: 2 } },
+    options: [
+      { id: 'size', label: 'Größe', choices: [{ value: '9', label: '9' }, { value: '13', label: '13' }], default: '9' },
+      { id: 'secret', label: 'Geheim', choices: [{ value: 'a', label: 'A' }], default: 'a', hidden: true },
+    ],
+  } as never;
+  const body = { name: 'Cup', gameId: 'go', format: 'world', time: 'normal', days: 7 };
+
+  it('nimmt nur erlaubte Werte sichtbarer Optionen an', () => {
+    const find = (id: string) => (id === 'go' ? game : undefined);
+    expect(parseTournamentSettings({ ...body, options: { size: '13' } }, find)?.options).toEqual({ size: '13' });
+    expect(parseTournamentSettings({ ...body, options: { size: '99' } }, find)).toBeNull();
+    expect(parseTournamentSettings({ ...body, options: { secret: 'a' } }, find)).toBeNull();
+    expect(parseTournamentSettings({ ...body, gameId: 'unbekannt' }, find)).toBeNull();
+    expect(parseTournamentSettings(body, find)?.options).toBeUndefined();
+  });
+
+  it('gibt die Optionen an jeden Spielraum weiter', () => {
+    const { t } = setup(8, 'world', { options: { size: '13' } });
+    t.start(LEADER);
+    const m = t.view(LEADER).matches[0]!;
+    t.ready(tokenOf(t, m.slots[0].player), m.id, true);
+    t.ready(tokenOf(t, m.slots[1].player), m.id, true);
+    expect(t.pendingRooms()[0]?.options).toEqual({ size: '13' });
+  });
+
+  it('meldet, wenn sich die Regeln seit dem Start geändert haben', () => {
+    let version = 3;
+    const t = Tournament.create('ABCD2345', 's', { name: 'Cup', gameId: 'chess', format: 'swiss', time: 'normal', days: 7, thirdPlace: false }, { token: LEADER, name: 'L' }, { now: () => 1, randomClaim: () => 'X', ruleVersion: () => version });
+    for (let i = 0; i < 4; i++) t.join(token(i), `S${i}`, '🦊');
+    t.start(LEADER);
+    expect(t.view(LEADER).rulesChanged).toBe(false);
+    version = 4;
+    expect(t.view(LEADER).rulesChanged).toBe(true);
   });
 });
 

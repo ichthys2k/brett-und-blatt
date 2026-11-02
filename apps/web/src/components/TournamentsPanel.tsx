@@ -1,7 +1,9 @@
+import type { OptionSpec, Options } from '@brett-und-blatt/engine';
 import { isTournamentGame, type TournamentFormat, type TournamentSettings } from '@brett-und-blatt/online';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { t } from '../i18n';
-import { games } from '../lib/registry';
+import { passChanged } from '../lib/playerPass';
+import { games, loadGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { createTournament } from '../lib/tournament';
@@ -12,7 +14,8 @@ const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
 
 /** Die eigenen Turniere und das Formular zum Anlegen, auf der Seite „Online spielen“. */
 export function TournamentsPanel({ profile }: { profile: Profile }) {
-  const [known] = useState(() => storage.loadTournaments());
+  // Bei jedem Zeichnen frisch: Ein übernommener Ausweis kann neue Turniere mitbringen.
+  const known = storage.loadTournaments();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
   const [gameId, setGameId] = useState(tournamentGames.find((g) => g.id === 'chess')?.id ?? tournamentGames[0]?.id ?? '');
@@ -20,15 +23,36 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [time, setTime] = useState<TournamentSettings['time']>('normal');
   const [days, setDays] = useState(7);
   const [thirdPlace, setThirdPlace] = useState(false);
+  const [specs, setSpecs] = useState<OptionSpec[]>([]);
+  const [options, setOptions] = useState<Options>({});
   const [busy, setBusy] = useState(false);
+
+  // Die Optionen stehen in den Regeln des Spiels, die erst bei Bedarf geladen werden.
+  useEffect(() => {
+    if (!creating || !gameId) return;
+    let live = true;
+    setSpecs([]);
+    setOptions({});
+    loadGame(gameId).then(({ module }) => {
+      if (live) setSpecs(module.options.filter((spec) => !spec.hidden && !spec.pattern && spec.choices.length > 1));
+    });
+    return () => {
+      live = false;
+    };
+  }, [creating, gameId]);
+
+  const valueOf = (spec: OptionSpec) => options[spec.id] ?? spec.default;
+  const visible = specs.filter((spec) => !spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(options[id] ?? specs.find((s) => s.id === id)?.default ?? '')));
   const [error, setError] = useState<string | null>(null);
 
   const create = async () => {
     setBusy(true);
     setError(null);
     try {
-      const code = await createTournament({ name: name.trim(), gameId, format, time, days, thirdPlace }, profile);
+      const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
+      const code = await createTournament({ name: name.trim(), gameId, format, time, days, thirdPlace, options: chosen }, profile);
       storage.rememberTournament({ code, name: name.trim() });
+      passChanged();
       navigate(paths.tournament(code));
     } catch {
       setError(t('online.serverError'));
@@ -77,6 +101,23 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               ))}
             </select>
           </label>
+          {visible.length > 0 && (
+            <fieldset className="space-y-2 rounded-xl border border-line p-3">
+              <legend className="px-1 text-sm">{t('tournament.options')}</legend>
+              {visible.map((spec) => (
+                <label key={spec.id} className="block space-y-1 text-sm">
+                  <span>{spec.label}</span>
+                  <select className={FIELD} value={valueOf(spec)} onChange={(e) => setOptions({ ...options, [spec.id]: e.target.value })}>
+                    {spec.choices.map((choice) => (
+                      <option key={choice.value} value={choice.value}>
+                        {choice.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+            </fieldset>
+          )}
           <label className="block space-y-1 text-sm">
             <span>{t('tournament.format')}</span>
             <select className={FIELD} value={format} onChange={(e) => setFormat(e.target.value as TournamentFormat)}>

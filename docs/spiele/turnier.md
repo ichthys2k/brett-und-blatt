@@ -73,14 +73,14 @@ Im Turnier kann die Leitung zusätzlich einen Einmal-Link ausstellen (`reissue`,
 - **Fehlen:** 5 Minuten Wartezeit beim Betreten; wer in der Partie 5 Minuten weg ist, verliert sie. Kommt keiner, ist die Partie wieder offen.
 - **Fristen:** Eine Partie, die spät spielbar wird, hat mindestens 24 Stunden Zeit. Eine laufende Partie verfällt am Stichtag nicht.
 - **Zuschaulink:** vorerst keiner. Nach dem Start sehen nur Eingeschriebene und Leitung die Seite; die Leitung hat eine große Ansicht für die Tafel.
+- **Spieloptionen:** Die Leitung wählt sie beim Anlegen, sie gelten für alle Partien. Verborgene Optionen bleiben auf dem Standard.
+- **Turnierliste:** Sie liegt im Spielerausweis (`tournaments`), ein neues Gerät findet die Turniere also ohne Link wieder.
 - **Löschen:** 30 Tage nach Ende oder nach der letzten Aktivität.
 
 ## Noch offen
 
-- **Regelversion:** Laufende Turniere spielen mit dem jeweils veröffentlichten Regelstand. Während eines Turniers also keine Balance-Änderungen am gewählten Spiel veröffentlichen.
-- **Spieloptionen:** Partien laufen mit den Standardoptionen des Spiels; nur Spiel, Form, Bedenkzeit und Frist sind wählbar.
-- **Gerätewechsel:** Die Liste „Meine Turniere“ liegt nur auf dem Gerät. Auf einem neuen Gerät braucht es nach dem Ausweis den Turnierlink noch einmal.
-- **Benachrichtigung:** nur bei offener Seite im Hintergrund (Web Notifications); keine Nachricht bei geschlossener Seite.
+- **Regelversion:** Der Regelstand wird beim Start festgehalten; ändert er sich, sehen alle einen Hinweis. Alte Regeln lassen sich aber nicht weiterspielen, denn der Server hat nur den aktuellen Code. Während eines Turniers also trotzdem keine Balance-Änderungen am gewählten Spiel veröffentlichen.
+- **Benachrichtigung:** nur bei offener Seite im Hintergrund (Web Notifications). Hinweise bei geschlossener Seite bräuchten Web Push mit eigenen Schlüsseln und Speicherung der Empfänger, sind also eine eigene Entscheidung.
 - **Kontingent:** Eine Testpartie messen und hochrechnen, bevor große Turniere laufen.
 - **Datenschutz:** Der neue Absatz ist nicht rechtlich geprüft.
 - **Ungeprüft:** echtes Turnier mit mehreren Menschen auf echten Geräten, Stichtage auf Cloudflare.

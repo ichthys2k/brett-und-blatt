@@ -81,6 +81,12 @@ Die Rollenbilder von Wölfe im Schafspelz (`packages/games/wolves-sheep/src/ui/c
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 
+## Jahrmarkt-Symbole im Narrenhof (KI-erzeugt)
+
+Die 70 Medaillon-Bilder für Lieferungen, Privilegien, Kuriositäten, Gefallen, Kunststücke und Übungen im Narrenhof (`packages/games/color-sorter/src/ui/items/*.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-2.5-flash-image“) nach eigenen Bildbeschreibungen, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifeste `jahrmarkt.json`, `jahrmarkt-2.json` und `jahrmarkt-3.json`). Es sind Gegenstände und Requisiten ohne Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
 ## Narren-Porträts (KI-erzeugt)
 
 Die 81 Narren im Narrenhof (`packages/games/color-sorter/src/ui/portraits/fool-*.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen und mit zwei Narrenhof-Porträts als Stilvorlage, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `narren.json`). Die Figuren sind eigene Erfindungen (Hofnarren, Tiere und Märchenwesen), keine echten Personen. Die Gesichter der menschlichen Figuren sind frei erfunden.

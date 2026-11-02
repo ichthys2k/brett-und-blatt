@@ -317,6 +317,25 @@ button.cs-tile {
   line-height: 1.1;
 }
 
+/* Medaillon-Bild statt Emoji: so groß wie das Emoji, rund beschnitten. */
+.cs-tile-symbol {
+  display: block;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+.cs-glyph {
+  display: inline-block;
+  width: 1.4em;
+  height: 1.4em;
+  border-radius: 50%;
+  vertical-align: -0.35em;
+  object-fit: cover;
+}
+
 .cs-tile-title {
   overflow: hidden;
   width: 100%;

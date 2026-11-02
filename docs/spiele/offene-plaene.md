@@ -18,7 +18,6 @@ Pakete A und B aus diesem Plan sind fertig und veröffentlicht (Nicht ärgern! z
 
 ## 3. Fehler (offen in PLANUNG.md)
 
-- **F-010** Drachenspiel: nicht mehr nachstellbar, gleiche Ursache wie F-009; Cornelius bestätigt am Gerät.
 - **F-011** Kleine Bildschirme: behoben und veröffentlicht (8e6d2d2), Cornelius prüft am Handy; was bewusst noch rollt, steht in `PLANUNG.md`.
 
 ## 4. Kleine Wünsche

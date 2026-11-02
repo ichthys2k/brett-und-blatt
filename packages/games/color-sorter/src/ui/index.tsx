@@ -531,6 +531,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           <Tile
             key={`c-${index}`}
             emoji={d.emoji}
+            symbol={d.symbol}
             title={d.title}
             tip={tipFrom(d, ['Verkauf: 1 🥨'])}
             extra={dragProps({ kind: 'cons', index })}
@@ -986,12 +987,12 @@ function ChoosePanel({ view, run, can, onMove, hint }: { view: SorterState; run:
         </Btn>
         {tagInfo && (
           <Btn disabled={!can({ type: 'skip' })} hint={hint?.type === 'skip'} onClick={() => onMove({ type: 'skip' })}>
-            Auslassen: {tagInfo.emoji} {tagInfo.title}
+            Auslassen: <Glyph d={tagInfo} /> {tagInfo.title}
           </Btn>
         )}
         {alt && (
           <Btn hint={hint?.type === 'skip' && hint.alt} onClick={() => onMove({ type: 'skip', alt: true })}>
-            Auslassen: {alt.emoji} {alt.title}
+            Auslassen: <Glyph d={alt} /> {alt.title}
           </Btn>
         )}
       </div>
@@ -1133,6 +1134,7 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected, dragPr
             <Tile
               key={index}
               emoji={d.emoji}
+              symbol={d.symbol}
               title={d.title}
               sub={`${pack.price} 🥨`}
               tip={tipFrom(d, [`Preis: ${pack.price} 🥨`])}
@@ -1147,6 +1149,7 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected, dragPr
         {shop.tool && (
           <Tile
             emoji={describeTool(shop.tool).emoji}
+            symbol={describeTool(shop.tool).symbol}
             title={describeTool(shop.tool).title}
             sub={`👑 ${Math.max(1, Math.floor(TOOL_PRICE * (run.tools.includes('sale') ? 0.75 : 1)))} 🥨`}
             label={`Königlicher Stand: ${describeTool(shop.tool).title}`}
@@ -1189,6 +1192,7 @@ function OfferTile({ offer, selected, hint, onClick, pop, className, extra }: { 
   return (
     <Tile
       emoji={d.emoji}
+      symbol={d.symbol}
       image={offer.type === 'mod' ? portraitUrl(`fool-${offer.key}`) : undefined}
       title={d.title}
       sub={offer.price > 0 ? `${offer.price} 🥨` : undefined}
@@ -1238,7 +1242,7 @@ function PackPanel({ run, find, onMove, hint, selected, setSelected, picked, tog
     return (
       <button type="button" className="cs-panel cs-center cs-delivery" onClick={finish} aria-label="Bündel aufschnüren">
         <span className={`cs-bundle ${stage === 0 ? 'cs-wobble' : 'cs-untie'}`} aria-hidden="true">
-          <span className="cs-bundle-cloth">{d.emoji}</span>
+          <span className="cs-bundle-cloth">{d.symbol ? <img src={d.symbol} alt="" className="cs-tile-symbol" /> : d.emoji}</span>
           <span className="cs-knot">🎀</span>
         </span>
         <span className="cs-title">{d.title} wird aufgeschnürt …</span>
@@ -1490,6 +1494,11 @@ function LevelsTable({ run, active, onClose }: { run: RunState; active?: HandTyp
       </p>
     </div>
   );
+}
+
+/** Kleines Symbol im Text: das Medaillon-Bild oder das Emoji. */
+function Glyph({ d }: { d: { emoji: string; symbol?: string } }) {
+  return d.symbol ? <img src={d.symbol} alt="" className="cs-glyph" /> : <>{d.emoji}</>;
 }
 
 // ---------------------------------------------------------------- Platzsymbol

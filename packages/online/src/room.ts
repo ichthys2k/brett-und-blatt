@@ -63,6 +63,7 @@ export interface MatchRoomConfig {
   match: string;
   gameId: string;
   time: LobbySettings['time'];
+  options?: Options;
   /** Geheime Kennungen je Platz. */
   tokens: [string, string];
   label: string;
@@ -189,7 +190,7 @@ export class Room {
     const module = this.deps.findGame(config.gameId);
     if (!module) return false;
     this.match = { config, noShow: null, reported: false };
-    this.lobby = { gameId: config.gameId, options: resolveOptions(module), time: config.time, seats: [{ kind: 'human', memberId: null }, { kind: 'human', memberId: null }], isPublic: false };
+    this.lobby = { gameId: config.gameId, options: resolveOptions(module, config.options), time: config.time, seats: [{ kind: 'human', memberId: null }, { kind: 'human', memberId: null }], isPublic: false };
     return true;
   }
 

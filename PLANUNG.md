@@ -45,7 +45,6 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Spiel/Bereich | Fehler | Schritte zum Nachstellen | Erwartet | Tatsächlich | Gerät/Browser | Prio | Status | Eingetragen |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| F-010 | Drachenspiel | Spiel startet am Anfang oft nicht | Spiel Starten | Spiel beginnt | Bildschirm bleibt schwarz. Man muss die Seite mit "f5" neu laden, bevor das spielfeld erscheint. | Egal | mittel | nicht mehr nachstellbar (15 von 15 Starts sauber, 1.11.): gleiche Ursache wie F-009, wartet auf Cornelius' Bestätigung am Gerät | 2026-11-01, Cornelius |
 | F-011 | Verschiedene Spiele | Bei manchen Spielen ist der untere Teil des Spielfelds nicht mehr sichtbar | Gerät mit kleinem Bildschirm benutzen (z.b. bei "Eins!"). Tritt vor allem dann ein, wenn es viele Spieler hat, die dann das Spielfeld nach untern verschieben | Alle Spielrelevanten UI Elemente sind auf dem Bildschirm zu sehen. | Die Elemente unten sind nur durch scrollen zu sehen. | Mobilgerät | mittel | behoben (8e6d2d2), wartet auf Cornelius' Blick am Handy. Rest (192b93a): Poker zu zehnt, Fix gefunden! zu acht, Quartett und Go. Bewusst noch rollend: Auswahllisten (Wer bin ich?, Drachenspiel-Deckwahl, Narrenhof-Vorbereitung), Poker-Erhöhen auf kleinen Bildschirmen, Go „SGF laden“ auf schmalen Handys im Querformat. Noch eng: Poker zu zehnt im Handy-Querformat, einzelne Sitze überlappen | 2026-11-01, Cornelius |
 | F-012 | Tests (Skat) | Skat-Bot-Test schlägt vereinzelt fehl | `corepack pnpm check` bei voll ausgelastetem Rechner | Der Test ist bei jedem Lauf grün | Einmal fiel „gewinnt einen guten Teil seiner Spiele“ unter die Schwelle von 35 %, im nächsten Lauf grün; Ursache vermutet: Zeitbudget des Bots unter Last. In der CI würde das die Veröffentlichung aufhalten | Desktop, Vitest | niedrig | offen | 2026-11-01, Claude |
 
@@ -53,11 +52,13 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
+| F-010 | Drachenspiel: schwarzer Bildschirm beim Start, gleiche Ursache wie F-009, von Cornelius am Gerät bestätigt | 2026-11-02 | – |
 | F-013 | Stichspiele: Karten und Namen im Stich überdecken sich nicht mehr (Kartenfläche nach Platzzahl, auch zu viert), Namen auf dem Filz lesbar | 2026-11-02 | 4a66681 |
 | W-055 | Narrenhof: Desktop-Tisch aufgeräumt (Narrentasche rechts in der Bankzeile, Zähler links unter der Bühne, Knöpfe Vorführen/Sortieren/Tauschen unter der Hand, Stapel als Kartenrücken neben der Hand, Stufe bei jeder Kombi; später Narren nur als Porträt mit Namen, Kartenbild in der Knopfzeile, Zähler der Bank entfernt); die linke Leiste bleibt vorerst unverändert; noch nicht im Dunkelmodus und auf Handy/Querformat angesehen | 2026-11-01 | b92ae12, 11cd9a4, 4087943 |
 | W-044 | Drachenspiel: Ausbau zum vollwertigen Sammelkarten-Duell, von Cornelius für erledigt erklärt; [Plan](docs/spiele/drachenspiel-ausbau.md) | 2026-11-01 | 26a40d1 |
 | W-027 | Spiele für viele Spieler: Klassenspiele Schätzmeister, Mehrheitsfrage, Zeitstrahl, bis 30 Plätze; von Cornelius für erledigt erklärt; [Plan](docs/spiele/klassenspiele.md), weitere Ideen in [Spiele für viele](docs/spiele/spiele-fuer-viele.md) | 2026-11-01 | caf18dd |
 | W-049 | Narrenhof: Porträts für alle 81 Narren (KI-Bilder, 360 × 450 px, auf den großen Karten am Desktop), Werkzeuge in `scripts/grafik/` | 2026-11-01 | main |
+| W-056 | Narrenhof: 70 Medaillon-Bilder für den Jahrmarkt (Lieferungen, Privilegien, Kuriositäten, Gefallen, Kunststücke, Übungen) statt der Emojis, Werkzeuge in `scripts/grafik/` | 2026-11-02 | main |
 | W-054 | Wölfe im Schafspelz: Rollenkarten mit Bildern (neun Rollen, Leithammel, Rückseite), die Rollenkarte zeigt sie beim Drücken neben dem Text | 2026-11-01 | main |
 | W-051 | Wappen auf den Spielkacheln: 54 gemalte Wappen statt der Emoji (Taverne; „Schlicht“ zeigt weiter das Emoji), Werkzeuge in `scripts/grafik/` | 2026-11-01 | main |
 | W-046 | Musik und Soundeffekte getrennt schalten | 2026-11-01 | a95a29d |
