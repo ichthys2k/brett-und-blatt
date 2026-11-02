@@ -692,6 +692,11 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
             Tauschen ({round.discardsLeft})
           </button>
           {desk && (
+            <button type="button" className="cs-link cs-kombilink" onClick={() => setShowLevels((v) => !v)} title="Stufen, gespielte Kombis, Privilegien und Gefallen">
+              📋 Kombis
+            </button>
+          )}
+          {desk && (
             <button type="button" className="cs-link cs-looklink" onClick={toggleLook} title={`Kartenbild: ${DECK_STYLE_CHOICES.find((c) => c.value === look)?.label ?? ''} – antippen zum Wechseln`}>
               🂠 Kartenbild
             </button>
@@ -833,21 +838,8 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
     </div>
   );
 
-  // Tafel am Desktop: Kombis über die ganze Breite
-  const deskPanel = desk && round && (
-    <div className="cs-desk">
-      {dropbar}
-      <KombiList
-        run={run}
-        active={preview?.type}
-        tools={
-          <button type="button" className="cs-link" onClick={() => setShowLevels((v) => !v)} title="Stufen, gespielte Kombis, Privilegien und Gefallen">
-            Details
-          </button>
-        }
-      />
-    </div>
-  );
+  // Tafel am Desktop: nur die Ablagezonen beim Ziehen; die Kombis öffnet ein kleiner Knopf unter der Hand
+  const deskPanel = desk && round && <div className="cs-desk">{dropbar}</div>;
 
   return (
     <BackContext.Provider value={back}>
@@ -875,7 +867,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           {!desk && dropbar}
           {main}
         </div>
-        {showLevels && <LevelsTable run={run} onClose={() => setShowLevels(false)} />}
+        {showLevels && <LevelsTable run={run} active={preview?.type} onClose={() => setShowLevels(false)} />}
         {anim && (
           <button type="button" className="cs-anim" onClick={skip} aria-label="Wertung überspringen">
             <span className="cs-anim-label">{anim.event.notAllowed ? `${anim.event.label} – nicht erlaubt!` : anim.event.label}</span>
@@ -1441,36 +1433,12 @@ function Overview({ view, seatNames, refEl }: { view: SorterState; seatNames: st
 }
 
 /** Kombis am Desktop: immer sichtbar, die gerade gewählte Kombi ist hervorgehoben. */
-function KombiList({ run, active, tools }: { run: RunState; active?: HandType; tools?: ReactNode }) {
+function LevelsTable({ run, active, onClose }: { run: RunState; active?: HandType; onClose: () => void }) {
   const rows = HAND_TYPES.filter((t) => !HANDS[t].secret || run.handPlays[t] > 0);
-  return (
-    <div className="cs-kombis" aria-label="Kombis">
-      <div className="cs-kombis-head">
-        <strong>📋 Kombis</strong>
-        {tools}
-      </div>
-      <ul>
-        {rows.map((t) => {
-          const parts = previewParts(run, t);
-          return (
-            <li key={t} className={t === active ? 'cs-kombi-on' : ''}>
-              <span>
-                {handName(t)}
-                <small className={`cs-kombi-level ${run.handLevels[t] > 1 ? 'cs-kombi-up' : ''}`}> · Stufe {run.handLevels[t]}</small>
-              </span>
-              <span className="cs-kombi-val">
-                <span className="cs-kombi-chips">{parts.chips}</span> × <span className="cs-kombi-mult">{parts.mult}</span>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-function LevelsTable({ run, onClose }: { run: RunState; onClose: () => void }) {
-  const rows = HAND_TYPES.filter((t) => !HANDS[t].secret || run.handPlays[t] > 0);
+  const base = (t: HandType, level: number) => {
+    const h = HANDS[t];
+    return (h.chips + h.chipsPerLevel * (level - 1)) * (h.mult + h.multPerLevel * (level - 1));
+  };
   return (
     <div className="cs-levels" role="dialog" aria-label="Kombis">
       <div className="cs-info-head">
@@ -1483,24 +1451,43 @@ function LevelsTable({ run, onClose }: { run: RunState; onClose: () => void }) {
         <thead>
           <tr>
             <th>Kombi</th>
-            <th>Stufe</th>
-            <th>Witz × Lachen</th>
-            <th>gespielt</th>
+            <th className="cs-num">Stufe</th>
+            <th className="cs-num">
+              <span className="cs-kombi-chips">Witz</span> × <span className="cs-kombi-mult">Lachen</span>
+            </th>
+            <th className="cs-num" title="Witz mal Lachen der Kombi; die Karten bringen ihren Rang noch dazu">
+              Grundpunkte
+            </th>
+            <th className="cs-num">Nächste Stufe</th>
+            <th className="cs-num">gespielt</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((t) => (
-            <tr key={t}>
-              <td>{handName(t)}</td>
-              <td>{run.handLevels[t]}</td>
-              <td>
-                {previewParts(run, t).chips} × {previewParts(run, t).mult}
-              </td>
-              <td>{run.handPlays[t]}</td>
-            </tr>
-          ))}
+          {rows.map((t) => {
+            const parts = previewParts(run, t);
+            const level = run.handLevels[t];
+            const now = base(t, level);
+            const next = base(t, level + 1);
+            return (
+              <tr key={t} className={t === active ? 'cs-kombi-on' : ''}>
+                <th scope="row">{handName(t)}</th>
+                <td className="cs-num">
+                  <span className={`cs-level-pill ${level > 1 ? 'cs-kombi-up' : ''}`}>{level}</span>
+                </td>
+                <td className="cs-num">
+                  <span className="cs-kombi-chips">{parts.chips}</span> × <span className="cs-kombi-mult">{parts.mult}</span>
+                </td>
+                <td className="cs-num cs-points">{formatNumber(now)}</td>
+                <td className="cs-num cs-muted">
+                  {formatNumber(next)} <small>(+{formatNumber(next - now)})</small>
+                </td>
+                <td className="cs-num">{run.handPlays[t]}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
+      <p className="cs-muted cs-small-text">Grundpunkte = Witz × Lachen der Kombi. Dazu kommen der Rang der gewerteten Karten sowie die Wirkung von Narren und Privilegien.</p>
       <p className="cs-muted cs-small-text">
         Deck: {run.deck.length} Karten · Privilegien: {run.tools.length ? run.tools.map((k) => describeTool(k).emoji + ' ' + describeTool(k).title).join(', ') : 'keine'}
         {run.stickers.length ? ` · Gefallen: ${run.stickers.map((k) => TAGS[k]?.emoji).join(' ')}` : ''}
