@@ -15,6 +15,7 @@ import {
   timePresetsOf,
 } from '@brett-und-blatt/engine';
 import { cleanAvatar, cleanName } from './names';
+import type { RoomReport } from './tournament';
 import {
   MAX_SEATS,
   PHRASES,
@@ -51,6 +52,29 @@ export const SIGNAL_INTERVAL_MS = 1000;
 export const SIGNAL_WINDOW_MS = 60_000;
 /** Maximale Anzahl an Signalen innerhalb des Zeitfensters. */
 export const SIGNAL_MAX_PER_WINDOW = 8;
+/** Turnierpartie: So lange wartet der Raum darauf, dass beide Gegner erscheinen. */
+export const MATCH_ARRIVAL_MS = 5 * 60 * 1000;
+/** Turnierpartie: So lange darf die Verbindung weg sein, dann ist die Partie verloren (kein Bot). */
+export const MATCH_AWAY_MS = 5 * 60 * 1000;
+
+/** Eine Partie im Auftrag eines Turniers: feste Plätze, keine Raumleitung. */
+export interface MatchRoomConfig {
+  tournament: string;
+  match: string;
+  gameId: string;
+  time: LobbySettings['time'];
+  options?: Options;
+  /** Geheime Kennungen je Platz. */
+  tokens: [string, string];
+  label: string;
+}
+
+/** Was der Raum dem Turnier meldet. */
+export interface MatchRoomReport {
+  tournament: string;
+  match: string;
+  report: RoomReport;
+}
 
 export interface RoomDeps {
   now(): number;
@@ -121,6 +145,7 @@ export interface RoomSnapshot {
   createdAt?: number;
   lastActivity: number;
   game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; lobbyIndex?: number[]; time: LobbySettings['time']; version: number; round: number } | null;
+  match?: { config: MatchRoomConfig; noShow: RoomReport | null; reported: boolean };
 }
 
 /**
@@ -144,6 +169,8 @@ export class Room {
   private rounds = 0;
   private createdAt: number;
   private lastActivity: number;
+  /** Nur bei Turnierpartien. */
+  private match: { config: MatchRoomConfig; noShow: RoomReport | null; reported: boolean } | null = null;
 
   constructor(
     readonly code: string,
@@ -157,6 +184,33 @@ export class Room {
 
   // -------------------------------------------------------------------------
   // Schnittstelle für den Adapter
+
+  /** Macht aus einem frischen Raum eine Turnierpartie. false, wenn es das Spiel nicht gibt. */
+  setupMatch(config: MatchRoomConfig): boolean {
+    const module = this.deps.findGame(config.gameId);
+    if (!module) return false;
+    this.match = { config, noShow: null, reported: false };
+    this.lobby = { gameId: config.gameId, options: resolveOptions(module, config.options), time: config.time, seats: [{ kind: 'human', memberId: null }, { kind: 'human', memberId: null }], isPublic: false };
+    return true;
+  }
+
+  /** Das noch nicht zugestellte Ergebnis einer Turnierpartie. */
+  matchReport(): MatchRoomReport | null {
+    const match = this.match;
+    if (!match || match.reported) return null;
+    const result = this.game?.session.result;
+    let report: RoomReport | null = match.noShow;
+    if (result) {
+      const winners = result.kind === 'win' ? result.winners : [];
+      report = { kind: 'played', winner: winners.length === 1 ? (winners[0] as 0 | 1) : null };
+    }
+    return report ? { tournament: match.config.tournament, match: match.config.match, report } : null;
+  }
+
+  markMatchReported(): void {
+    if (this.match) this.match.reported = true;
+    this.deps.changed?.();
+  }
 
   connect(connectionId: string): void {
     this.connections.set(connectionId, null);
@@ -211,6 +265,11 @@ export class Room {
   tick(): void {
     const now = this.deps.now();
     this.game?.session.tick();
+    if (this.match) {
+      this.tickMatch(now);
+      this.deps.changed?.();
+      return;
+    }
     const corr = this.isCorrespondence();
     for (const member of this.members.values()) {
       if (member.disconnectedAt === null || member.awayByDisconnect) continue;
@@ -242,6 +301,15 @@ export class Room {
     const times: number[] = [expires > now ? expires : now + HOST_HANDOVER_MS];
     const deadline = this.game?.session.nextDeadline();
     if (deadline != null) times.push(deadline);
+    if (this.match) {
+      if (this.phase === 'lobby' && !this.match.noShow) times.push(this.createdAt + MATCH_ARRIVAL_MS);
+      if (this.phase === 'playing') {
+        for (const member of this.members.values()) {
+          if (member.disconnectedAt !== null && this.seatOf(member.id) !== null) times.push(member.disconnectedAt + MATCH_AWAY_MS);
+        }
+      }
+      return Math.min(...times);
+    }
     const successor = [...this.members.values()].some((m) => m.disconnectedAt === null);
     const corr = this.isCorrespondence();
     for (const member of this.members.values()) {
@@ -314,6 +382,7 @@ export class Room {
       game: game
         ? { session: game.session.snapshot(), seatMembers: [...game.seatMembers], seats: game.seats, ...(game.lobbyIndex ? { lobbyIndex: game.lobbyIndex } : {}), time: game.time, version: this.gameVersion(), round: game.round }
         : null,
+      ...(this.match ? { match: structuredClone(this.match) } : {}),
     };
   }
 
@@ -334,6 +403,7 @@ export class Room {
     room.rounds = snapshot.rounds;
     room.createdAt = snapshot.createdAt ?? snapshot.lastActivity;
     room.lastActivity = snapshot.lastActivity;
+    room.match = snapshot.match ?? null;
     const now = deps.now();
     for (const m of snapshot.members) {
       // Wer schon vorher weg war, behält seinen Zeitpunkt – sonst begänne die Frist bei jedem
@@ -372,7 +442,8 @@ export class Room {
 
     let member = this.members.get(this.tokens.get(message.token) ?? '');
     if (!member) {
-      if (this.members.size >= MAX_MEMBERS) {
+      const matchSeat = this.match ? this.match.config.tokens.indexOf(message.token) : -1;
+      if (this.members.size >= MAX_MEMBERS && matchSeat < 0) {
         this.error(connectionId, 'roomFull', 'Der Raum ist voll.');
         return this.deps.close(connectionId);
       }
@@ -389,7 +460,11 @@ export class Room {
       };
       this.members.set(member.id, member);
       this.tokens.set(member.token, member.id);
-      this.hostId ??= member.id;
+      if (this.match) {
+        if (matchSeat >= 0) this.lobby.seats[matchSeat] = { kind: 'human', memberId: member.id };
+      } else {
+        this.hostId ??= member.id;
+      }
     } else if (this.mayRename(member)) {
       // Beim Wiederkommen gilt der Name aus dem Profil – außer die Raumleitung hat ihn festgelegt.
       member.name = name;
@@ -409,12 +484,26 @@ export class Room {
     }
     this.broadcastRoom();
     if (this.game) this.sendGame(connectionId, []);
+    this.startMatchIfComplete(connectionId);
     this.deps.changed?.();
   }
 
   private handle(connectionId: string, member: Member, message: ClientMessage): void {
     const isHost = member.id === this.hostId;
     const deny = () => this.error(connectionId, 'notAllowed', 'Das ist gerade nicht möglich.');
+    if (this.match) {
+      // Die Plätze einer Turnierpartie stehen fest; Weggehen zählt wie ein Verbindungsabbruch.
+      if (message.type === 'takeSeat' || message.type === 'leaveSeat') return deny();
+      if (message.type === 'leave' && this.match.config.tokens.includes(member.token)) {
+        for (const connection of member.connections) {
+          this.deps.close(connection);
+          this.connections.delete(connection);
+        }
+        member.connections.clear();
+        member.disconnectedAt = this.deps.now();
+        return this.broadcastRoom();
+      }
+    }
     switch (message.type) {
       case 'setName': {
         if (!this.mayRename(member)) return this.error(connectionId, 'notAllowed', 'Die Spielleitung hat die Namen festgelegt.');
@@ -651,6 +740,36 @@ export class Room {
           this.connections.delete(connection);
         }
         return this.removeMember(member);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Turnierpartie
+
+  /** Beide da und verbunden: Es geht ohne weiteren Klick los. */
+  private startMatchIfComplete(connectionId: string): void {
+    if (!this.match || this.phase !== 'lobby' || this.match.noShow) return;
+    const seated = this.lobby.seats.map((seat) => (seat.kind === 'human' && seat.memberId ? this.members.get(seat.memberId) : undefined));
+    if (seated.every((m) => m && m.disconnectedAt === null)) this.start(connectionId);
+  }
+
+  private tickMatch(now: number): void {
+    if (this.phase === 'lobby' && !this.match!.noShow && now >= this.createdAt + MATCH_ARRIVAL_MS) {
+      const arrived = this.lobby.seats.flatMap((seat, index) => (seat.kind === 'human' && seat.memberId ? [index as 0 | 1] : []));
+      // Beide waren schon da, nur nie gleichzeitig: Dann entscheidet die Wartefrist in der Partie.
+      if (arrived.length === 2) this.start('');
+      else {
+        this.match!.noShow = { kind: 'noShow', winner: arrived[0] ?? null };
+        this.broadcastRoom();
+      }
+    }
+    if (this.phase !== 'playing') return;
+    for (const member of this.members.values()) {
+      const seat = this.seatOf(member.id);
+      if (seat !== null && member.disconnectedAt !== null && now - member.disconnectedAt >= MATCH_AWAY_MS) {
+        this.game?.session.resign(seat);
+        break;
+      }
     }
   }
 
@@ -899,7 +1018,8 @@ export class Room {
 
   private roomMessage(): RoomMessage {
     const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}) }));
-    return { type: 'room', code: this.code, phase: this.phase, hostId: this.hostId, members, lobby: this.lobby };
+    const match = this.match ? { tournament: this.match.config.tournament, label: this.match.config.label, noShow: this.match.noShow !== null } : undefined;
+    return { type: 'room', code: this.code, phase: this.phase, hostId: this.hostId, members, lobby: this.lobby, ...(match ? { match } : {}) };
   }
 
   private broadcastRoom(): void {

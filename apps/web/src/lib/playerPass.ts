@@ -20,12 +20,15 @@ export const passServer = () => GAME_SERVER || null;
 
 function readPass(): PlayerPass {
   const profile = storage.loadProfile();
-  return { token: storage.deviceToken(), name: profile?.name ?? '', avatar: profile?.avatar ?? '', code: storage.loadPlayerCode() };
+  return { token: storage.deviceToken(), name: profile?.name ?? '', avatar: profile?.avatar ?? '', code: storage.loadPlayerCode(), tournaments: storage.loadTournaments() };
 }
 
 function writePass(pass: PlayerPass): void {
   storage.setDeviceToken(pass.token);
   storage.savePlayerCode(pass.code);
+  // Was nur dieses Gerät kennt, bleibt; hinzu kommt, was der Ausweis mitbringt.
+  const known = storage.loadTournaments();
+  for (const item of [...(pass.tournaments ?? [])].reverse()) if (!known.some((k) => k.code === item.code)) storage.rememberTournament(item);
   if (pass.name && pass.avatar) storage.saveProfile({ name: pass.name, avatar: pass.avatar });
 }
 

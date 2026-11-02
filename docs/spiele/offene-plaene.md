@@ -18,7 +18,6 @@ Pakete A und B aus diesem Plan sind fertig und veröffentlicht (Nicht ärgern! z
 
 ## 3. Fehler (offen in PLANUNG.md)
 
-- **F-010** Drachenspiel: nicht mehr nachstellbar, gleiche Ursache wie F-009; Cornelius bestätigt am Gerät.
 - **F-011** Kleine Bildschirme: behoben und veröffentlicht (8e6d2d2), Cornelius prüft am Handy; was bewusst noch rollt, steht in `PLANUNG.md`.
 
 ## 4. Kleine Wünsche
@@ -41,7 +40,7 @@ Ablauf in [`klaenge-alle-spiele.md`](klaenge-alle-spiele.md), Werkzeuge im priva
 - **W-025/W-026** Taverne-Aussehen und Drachenspiel im Mittelalter: [`taverne-und-drachenspiel.md`](taverne-und-drachenspiel.md) (Schritt 1 und 2 der Taverne sind live).
 - **W-027** Spiele für viele Spieler: Welle 1 fertig ([`klassenspiele.md`](klassenspiele.md)), Inhalte warten auf Cornelius' Freigabe; weitere Ideen in [`spiele-fuer-viele.md`](spiele-fuer-viele.md).
 - **W-044** Drachenspiel-Ausbau: [`drachenspiel-ausbau.md`](drachenspiel-ausbau.md) (lief in einem anderen Thread, Stand dort nachlesen).
-- **Turniere (W-053):** [`turnier.md`](turnier.md), WM-Form und Schweizer System über längere Zeit, mit Turnierbaum für alle Eingeschriebenen. Der Spielerausweis (W-052) ist gebaut.
+- **Turniere (W-053):** [`turnier.md`](turnier.md), WM-Form und Schweizer System über längere Zeit, mit Turnierbaum für alle Eingeschriebenen. Veröffentlicht; offen sind die Punkte unter „Noch offen“ dort.
 
 ## 7. Zurückgestellt
 

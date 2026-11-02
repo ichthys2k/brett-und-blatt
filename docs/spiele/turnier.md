@@ -1,6 +1,6 @@
 # Turniere (W-053)
 
-Stand: Plan, noch nicht gebaut. Fertig ist nur der Spielerausweis (W-052), siehe unten.
+Stand: veröffentlicht am 2.11.2026. Offenes steht am Ende.
 
 ## Ziel
 
@@ -54,20 +54,33 @@ Räume erkennen Mitglieder an einer geheimen Kennung (`hello.token`). Der Auswei
 
 Beim Anlegen bleibt die Kennung gleich, begonnene Partien laufen also weiter. Zwei Geräte mit demselben Ausweis sind im Raum dasselbe Mitglied und beide verbunden. Code: `packages/ui/src/sync/player.ts`, `apps/web/src/lib/playerPass.ts`, `apps/web/src/components/PlayerPassPanel.tsx`.
 
-Noch offen für das Turnier: Die Leitung kann heute keinen neuen Code ausstellen. Ein neuer Code sperrt zudem nur den alten Code, nicht schon angemeldete Geräte, denn die Kennung bleibt gleich. Für das Turnier braucht es dazu eine Zuordnung Turnierspieler → Kennung im Turnierleiter, die die Leitung neu vergeben kann.
+Im Turnier kann die Leitung zusätzlich einen Einmal-Link ausstellen (`reissue`, `claim`, `#/turnier/<Code>?neu=…`): Das neue Gerät übernimmt den Turnierplatz, das alte verliert den Zugang. Eine schon laufende Partie bleibt beim alten Gerät.
 
-## Bauteile
+## Umsetzung
 
-1. Reine Logik: Auslosung, Tabelle, Gleichstand, Baum, Schweizer Paarungen.
-2. Durable Object `TournamentRoom` (EU, Wecker für Stichtage, Löschfrist nach Turnierende, Vorschlag 30 Tage). Neue Klasse in `wrangler.jsonc` als Migration.
-3. Raum-Anbindung: Der Turnierleiter legt Räume an, teilt Plätze zu und erhält das Ergebnis. Dafür braucht `Room` eine Kennung des Turniers und feste Plätze, und die Bot-Vertretung entfällt zugunsten einer Wartefrist von einigen Minuten.
-4. Turnierseite mit Tabellen, Baum und „Mein Stand“.
-5. Werkzeuge der Leitung: Frist, Ergebnis, Rückzug, Code neu ausstellen.
-6. Datenschutzerklärung ergänzen, von jemandem mit Rechtskenntnis prüfen lassen.
+- **Logik:** `packages/online/src/tournament.ts` (Klasse `Tournament`, ohne Cloudflare testbar, `test/tournament.test.ts`).
+- **Server:** Durable Object `TournamentRoom` in `apps/server/src/index.ts`, `POST /turniere`, `GET /turniere/<Code>` als WebSocket mit Hibernation, Wecker für Stichtage, Migration `v4`.
+- **Raum:** `Room.setupMatch` (`test/match-room.test.ts`): feste Plätze über die Kennungen, keine Raumleitung, Start, sobald beide verbunden sind. Das Ergebnis wird über `matchReport` zugestellt und bei einem Fehler nach 60 s erneut versucht.
+- **Oberfläche:** `apps/web/src/screens/Tournament.tsx`, `components/TournamentsPanel.tsx`, `lib/tournament.ts`.
+- **Rauchtest:** `node apps/server/scripts/turnier.mjs` spielt gegen den laufenden Server ein ganzes Turnier in echten Räumen.
 
-## Offene Fragen
+## Entscheidungen (2.11.2026)
 
-- **Gleichstand:** direkter Vergleich, dann Siege, dann Los über den Seed. Tordifferenz nur mit neuer freiwilliger Angabe im Spielmodul.
-- **Remis im K.-o.-Spiel:** Entscheidungsspiel mit getauschten Farben und kürzerer Zeit.
-- **Regelversion:** Beim Turnierstart festhalten oder in der Turnierzeit keine Balance-Änderungen veröffentlichen. Prüfen, wie sich das umsetzen lässt.
+- **Gruppen:** die größte Zweierpotenz mit mindestens drei Spielern je Gruppe. WM-Form ab 6, Schweizer System ab 4, höchstens 32 Spieler.
+- **Gleichstand:** Punkte, direkter Vergleich, Siege, Los über den Seed; im Schweizer System Buchholz statt direktem Vergleich.
+- **Remis im K.-o.-Spiel:** Entscheidungsspiel mit getauschten Farben und schneller Zeit.
+- **„Bereit“:** gilt 10 Minuten und nur für eine Partie. Wer je bereit war, gewinnt am Stichtag kampflos gegen jemanden, der es nie war; waren es beide oder keiner, verlieren beide.
+- **Fehlen:** 5 Minuten Wartezeit beim Betreten; wer in der Partie 5 Minuten weg ist, verliert sie. Kommt keiner, ist die Partie wieder offen.
+- **Fristen:** Eine Partie, die spät spielbar wird, hat mindestens 24 Stunden Zeit. Eine laufende Partie verfällt am Stichtag nicht.
+- **Zuschaulink:** vorerst keiner. Nach dem Start sehen nur Eingeschriebene und Leitung die Seite; die Leitung hat eine große Ansicht für die Tafel.
+- **Spieloptionen:** Die Leitung wählt sie beim Anlegen, sie gelten für alle Partien. Verborgene Optionen bleiben auf dem Standard.
+- **Turnierliste:** Sie liegt im Spielerausweis (`tournaments`), ein neues Gerät findet die Turniere also ohne Link wieder.
+- **Löschen:** 30 Tage nach Ende oder nach der letzten Aktivität.
+
+## Noch offen
+
+- **Regelversion:** Der Regelstand wird beim Start festgehalten; ändert er sich, sehen alle einen Hinweis. Alte Regeln lassen sich aber nicht weiterspielen, denn der Server hat nur den aktuellen Code. Während eines Turniers also trotzdem keine Balance-Änderungen am gewählten Spiel veröffentlichen.
+- **Benachrichtigung:** nur bei offener Seite im Hintergrund (Web Notifications). Hinweise bei geschlossener Seite bräuchten Web Push mit eigenen Schlüsseln und Speicherung der Empfänger, sind also eine eigene Entscheidung.
 - **Kontingent:** Eine Testpartie messen und hochrechnen, bevor große Turniere laufen.
+- **Datenschutz:** Der neue Absatz ist nicht rechtlich geprüft.
+- **Ungeprüft:** echtes Turnier mit mehreren Menschen auf echten Geräten, Stichtage auf Cloudflare.
