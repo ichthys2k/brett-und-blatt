@@ -1,0 +1,112 @@
+{
+  "beschreibung": "Jahrmarkt-Symbole: 5 Lieferungen und 14 Privilegien als Medaillon-Bilder (Narrenhof, Farbensortierer).",
+  "stil": "Painterly storybook oil illustration of a single object as a round medieval fairground medallion icon: the object centred on a deep warm brown wooden background with a thin gold ring, rich colours, warm candlelight, soft shadows, detailed but clearly readable at small size, whimsical royal fool's court and travelling fair mood. Square composition, object fills about 70% of the image with margin around. No text, no letters, no numbers, no characters, no faces, no card frame.",
+  "ohne": "text, letters, numbers, watermark, people, animals, faces, hands, modern objects, logos, border, frame, photo",
+  "format": "1:1",
+  "groesse": [
+    256,
+    256
+  ],
+  "qualitaet": 80,
+  "ziel": "packages/games/color-sorter/src/ui/items",
+  "praefix": "",
+  "suffix": "",
+  "zuschnittRand": 0.08,
+  "motive": [
+    {
+      "id": "pack-mods",
+      "titel": "Narrenkorb (Lieferung: Narren)",
+      "prompt": "A wicker basket overflowing with colourful jester caps with jingling bells and a cheerful striped cloth, closed with a red ribbon."
+    },
+    {
+      "id": "pack-spells",
+      "titel": "Trickbeutel (Lieferung: Kunststücke)",
+      "prompt": "A purple velvet drawstring pouch with golden stars, juggling balls and a magic wand peeking out, a few sparkles."
+    },
+    {
+      "id": "pack-nails",
+      "titel": "Bücherbündel (Lieferung: Übungen)",
+      "prompt": "A bundle of three old leather-bound books tied with a leather strap, a feather quill tucked in, parchment pages showing."
+    },
+    {
+      "id": "pack-dreams",
+      "titel": "Wunderkiste (Lieferung: Kuriositäten)",
+      "prompt": "An ornate small wooden treasure chest slightly open, glowing with soft magical light, curious trinkets glimmering inside."
+    },
+    {
+      "id": "pack-cards",
+      "titel": "Kartenbündel (Lieferung: Spielkarten)",
+      "prompt": "A bundle of plain playing cards fanned out and tied with a golden ribbon, card backs with a harlequin diamond pattern."
+    },
+    {
+      "id": "tool-magnet",
+      "titel": "Marktrecht",
+      "prompt": "A small fairground stall with a red and white striped awning and a wooden sign post, open for business, no text."
+    },
+    {
+      "id": "tool-sale",
+      "titel": "Hoflieferant",
+      "prompt": "A royal warrant plaque: an ornate golden shield with a crown on top and a red wax seal, hanging from a ribbon."
+    },
+    {
+      "id": "tool-tidy",
+      "titel": "Kurze Wege",
+      "prompt": "A pair of worn leather boots with little silver wings on the heels, a tiny cobbled path behind."
+    },
+    {
+      "id": "tool-extraHand",
+      "titel": "Zugabe",
+      "prompt": "A pair of golden theatre curtains pulled half open on a small stage with a single spotlight, a rose lying on the stage floor."
+    },
+    {
+      "id": "tool-bin",
+      "titel": "Kartentisch",
+      "prompt": "A small round green felt card table with a candle and a deck of cards on it, seen at an angle."
+    },
+    {
+      "id": "tool-bag",
+      "titel": "Weite Ärmel",
+      "prompt": "A wide, billowing embroidered jester sleeve of red and gold fabric with bells at the cuff, shown alone."
+    },
+    {
+      "id": "tool-basket",
+      "titel": "Größere Narrentasche",
+      "prompt": "A large patchwork shoulder bag in jester colours with a brass buckle and a bell on the strap."
+    },
+    {
+      "id": "tool-book",
+      "titel": "Vorratskammer",
+      "prompt": "A wooden pantry shelf with jars of preserves, a hanging sausage and pretzels in a basket."
+    },
+    {
+      "id": "tool-shelf",
+      "titel": "Zweite Narrenbank",
+      "prompt": "A small carved wooden bench with two cushions in jester colours, side by side, with a tiny bell on each end."
+    },
+    {
+      "id": "tool-scope",
+      "titel": "Bittschrift",
+      "prompt": "A rolled parchment scroll with a red wax seal and a ribbon, a feather quill lying next to it."
+    },
+    {
+      "id": "tool-courtHerald",
+      "titel": "Hofherold",
+      "prompt": "A golden herald trumpet with a heraldic banner hanging from it, diamond pattern on the cloth, no text."
+    },
+    {
+      "id": "tool-diploma",
+      "titel": "Lehrbrief",
+      "prompt": "A rolled diploma scroll tied with a ribbon beside a small black scholar's cap with a golden tassel."
+    },
+    {
+      "id": "tool-breadRight",
+      "titel": "Brotrecht",
+      "prompt": "A freshly baked round loaf of bread and a pretzel on a wooden board with a small crown stamped on the loaf."
+    },
+    {
+      "id": "tool-touringStage",
+      "titel": "Wanderbühne",
+      "prompt": "A small wooden wagon stage with painted curtains and two masks, one smiling and one sad, hanging on the front."
+    }
+  ]
+}

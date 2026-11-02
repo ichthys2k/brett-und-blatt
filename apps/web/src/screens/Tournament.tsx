@@ -5,7 +5,8 @@ import { ProfileForm, QrCode } from '../components/OnlineParts';
 import { t } from '../i18n';
 import { notifyTurn, requestNotificationPermission } from '../lib/notifications';
 import { GAME_SERVER } from '../lib/online';
-import { findGame } from '../lib/registry';
+import { passChanged } from '../lib/playerPass';
+import { findGame, loadGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { useTournament } from '../lib/tournament';
@@ -79,8 +80,39 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
 
   // Wer hier eingeschrieben ist oder leitet, findet das Turnier auf „Online spielen“ wieder.
   useEffect(() => {
-    if (view && (view.you || view.isLeader)) storage.rememberTournament({ code, name: view.settings.name });
+    if (!view || !(view.you || view.isLeader)) return;
+    if (storage.loadTournaments().some((item) => item.code === code)) return;
+    storage.rememberTournament({ code, name: view.settings.name });
+    // Der Ausweis nimmt die Liste auf andere Geräte mit.
+    passChanged();
   }, [view, code]);
+
+  // Gelöschte Turniere verschwinden auch aus der eigenen Liste.
+  useEffect(() => {
+    if (state.status === 'gone') storage.forgetTournament(code);
+  }, [state.status, code]);
+
+  // Gewählte Spieloptionen in lesbarer Form.
+  const [optionText, setOptionText] = useState<string[]>([]);
+  const gameId = view?.settings.gameId;
+  const chosen = view?.settings.options;
+  useEffect(() => {
+    if (!gameId || !chosen) return setOptionText([]);
+    let live = true;
+    loadGame(gameId).then(({ module }) => {
+      if (!live) return;
+      setOptionText(
+        Object.entries(chosen).flatMap(([id, value]) => {
+          const spec = module.options.find((o) => o.id === id);
+          const choice = spec?.choices.find((c) => c.value === value);
+          return spec && choice && value !== spec.default ? [`${spec.label}: ${choice.label}`] : [];
+        }),
+      );
+    });
+    return () => {
+      live = false;
+    };
+  }, [gameId, chosen]);
 
   // Partie geht los: direkt hinein, aber nur beim Wechsel, damit „Zurück“ nicht wieder hineinführt.
   const seenRunning = useRef<Set<string> | null>(null);
@@ -188,6 +220,8 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
   const subtitle = (
     <p className="text-sm text-muted">
       {game?.emoji} {game?.name} · {t(`tournament.format.${view.settings.format}`)} · {t('tournament.leader', { name: view.leaderName })}
+      {optionText.length > 0 && <span className="block">{optionText.join(' · ')}</span>}
+      {view.rulesChanged && <span className="block text-warning">⚠️ {t('tournament.rulesChanged')}</span>}
     </p>
   );
 

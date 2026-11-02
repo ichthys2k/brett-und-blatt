@@ -10,6 +10,7 @@ import {
   PLAYER_SALT,
   PLAYER_WORDS,
   playerBlock,
+  sanitizePlayerPass,
   randomPlayerCode,
   revokePlayerLock,
   updatePlayerLock,
@@ -101,5 +102,23 @@ describe('Ausweis in der Sicherung', () => {
     expect(second.token).toBe(first.token);
     expect(second.code).toBe('Fuchs-Birne-Mond-Anker');
     expect(second.name).toBe('Tablet');
+  });
+});
+
+describe('Turnierliste im Ausweis', () => {
+  const token = 'a'.repeat(32);
+
+  it('prüft fremde Listen und lässt eine leere weg', () => {
+    expect(sanitizePlayerPass({ token, tournaments: [{ code: 'ABCD2345', name: 'Cup' }, { code: 'falsch', name: 'X' }, 7] })?.tournaments).toEqual([{ code: 'ABCD2345', name: 'Cup' }]);
+    expect(sanitizePlayerPass({ token, tournaments: 'kaputt' })).not.toHaveProperty('tournaments');
+  });
+
+  it('vereinigt die Listen zweier Geräte', () => {
+    const local: PlayerPass = { token, name: 'A', avatar: '🦊', code: null, tournaments: [{ code: 'AAAA2222', name: 'Eins' }] };
+    const block = playerBlock('salz', () => null, { read: () => local, write: () => {} });
+    const merged = block.merge({ ...local, tournaments: [{ code: 'BBBB3333', name: 'Zwei' }] }, local);
+    expect(merged.tournaments?.map((t) => t.code)).toEqual(['AAAA2222', 'BBBB3333']);
+    expect(block.same(local, merged)).toBe(false);
+    expect(block.same(merged, { ...merged, tournaments: [...merged.tournaments!].reverse() })).toBe(true);
   });
 });

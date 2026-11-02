@@ -7,7 +7,6 @@ import {
   TOURNAMENT_CODE_PATTERN,
   Tournament,
   applyBackupPut,
-  isTournamentGame,
   listingNeedsSync,
   parseRoomCode,
   parseTournamentMessage,
@@ -182,10 +181,7 @@ export default {
       } catch {
         return json({ error: 'body' }, 400, cors);
       }
-      const settings = parseTournamentSettings(body.settings, (id) => {
-        const info = gamesById.get(id)?.info;
-        return info !== undefined && isTournamentGame(info);
-      });
+      const settings = parseTournamentSettings(body.settings, (id) => gamesById.get(id));
       if (!settings || typeof body.token !== 'string' || body.token.length < 16 || body.token.length > 100 || typeof body.name !== 'string') return json({ error: 'body' }, 400, cors);
       for (let attempt = 0; attempt < 5; attempt++) {
         const code = randomLetters(8);
@@ -668,7 +664,7 @@ export class TournamentRoom extends DurableObject<Env> {
     if (!t) return;
     let retry = false;
     for (const request of t.pendingRooms()) {
-      const code = await this.createMatchRoom({ tournament: t.snapshot().code, match: request.match, gameId: request.gameId, time: request.time, tokens: request.tokens, label: request.label });
+      const code = await this.createMatchRoom({ tournament: t.snapshot().code, match: request.match, gameId: request.gameId, time: request.time, options: request.options, tokens: request.tokens, label: request.label });
       if (code) t.roomCreated(request.match, code);
       else retry = true;
     }
@@ -707,6 +703,6 @@ export class TournamentRoom extends DurableObject<Env> {
   }
 
   private deps() {
-    return { now: () => Date.now(), randomClaim: () => randomLetters(8) };
+    return { now: () => Date.now(), randomClaim: () => randomLetters(8), ruleVersion: (gameId: string) => gamesById.get(gameId)?.info.ruleVersion };
   }
 }

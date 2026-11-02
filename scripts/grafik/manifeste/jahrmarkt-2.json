@@ -1,0 +1,127 @@
+{
+  "beschreibung": "Jahrmarkt-Symbole, Teil 2: 14 Kuriositäten und 8 Gefallen als Medaillon-Bilder (Narrenhof).",
+  "stil": "Painterly storybook oil illustration of a single object as a round medieval fairground medallion icon: the object centred on a deep warm brown wooden background with a thin gold ring, rich colours, warm candlelight, soft shadows, detailed but clearly readable at small size, whimsical royal fool's court and travelling fair mood. Square composition, object fills about 70% of the image with margin around. No text, no letters, no numbers, no characters, no faces, no card frame.",
+  "ohne": "text, letters, numbers, watermark, people, animals, faces, hands, modern objects, logos, border, frame, photo",
+  "format": "1:1",
+  "groesse": [
+    256,
+    256
+  ],
+  "qualitaet": 80,
+  "ziel": "packages/games/color-sorter/src/ui/items",
+  "praefix": "",
+  "suffix": "",
+  "zuschnittRand": 0.08,
+  "motive": [
+    {
+      "id": "dream-familyPhoto",
+      "titel": "Ahnengalerie",
+      "prompt": "An ornate golden picture frame holding a dark painted portrait of a stern noble in a ruff collar, hanging on a rope, shown as an object."
+    },
+    {
+      "id": "dream-snowman",
+      "titel": "Asse im Ärmel",
+      "prompt": "A fan of three playing cards (aces, with large spade-like and heart symbols and no letters) sliding out of a wide embroidered sleeve cuff."
+    },
+    {
+      "id": "dream-numbers",
+      "titel": "Zahlenrolle",
+      "prompt": "A long unrolled parchment scroll covered in neat rows of decorative numeral-like symbols, tied at one end with a ribbon."
+    },
+    {
+      "id": "dream-crestBook",
+      "titel": "Wappenbuch",
+      "prompt": "A thick red leather book with a gold embossed heraldic shield on the cover, a ribbon bookmark hanging out."
+    },
+    {
+      "id": "dream-aura",
+      "titel": "Polierstein",
+      "prompt": "A single large faceted gemstone glowing softly on a small velvet cushion, sparkling highlights."
+    },
+    {
+      "id": "dream-spook",
+      "titel": "Flaschengeist",
+      "prompt": "An old glass bottle with a cork, a swirling blue-violet ghostly mist rising from it, glowing."
+    },
+    {
+      "id": "dream-swirl",
+      "titel": "Färbekessel",
+      "prompt": "A black iron cauldron on three legs filled with bubbling swirling multicoloured dye, steam rising."
+    },
+    {
+      "id": "dream-bubble",
+      "titel": "Tarnkappe",
+      "prompt": "A tall black magician's top hat with a purple band, faint shimmering transparent edges as if half invisible."
+    },
+    {
+      "id": "dream-cleanup",
+      "titel": "Kehraus",
+      "prompt": "A straw broom sweeping a small pile of old playing cards and glittering coins into a heap, motion lines."
+    },
+    {
+      "id": "dream-magicMirror",
+      "titel": "Zauberspiegel",
+      "prompt": "An ornate standing hand mirror with a gold frame, its surface shining with a magical silvery-blue light and sparkles."
+    },
+    {
+      "id": "dream-hourglass",
+      "titel": "Sanduhr",
+      "prompt": "A wooden hourglass with golden sand running through, brass caps, glowing warmly."
+    },
+    {
+      "id": "dream-compass",
+      "titel": "Kompass",
+      "prompt": "A brass pocket compass, open, with a red needle and engraved rim, on a small piece of old map parchment."
+    },
+    {
+      "id": "dream-soul",
+      "titel": "Krone des Narrenkönigs",
+      "prompt": "A golden jester king's crown with three curved points ending in small bells, set with jewels, glowing with a radiant halo."
+    },
+    {
+      "id": "dream-blackHole",
+      "titel": "Große Bibliothek",
+      "prompt": "A tall wooden library shelf filled with many old books and a rolling ladder, warm candlelight, a dark swirl of stars in the middle."
+    },
+    {
+      "id": "tag-giftBasket",
+      "titel": "Geschenkkorb",
+      "prompt": "A woven gift basket with a big red bow, a bottle, fruit and a wrapped parcel peeking out."
+    },
+    {
+      "id": "tag-coupon",
+      "titel": "Freier Eintritt",
+      "prompt": "A fairground admission ticket with a perforated torn edge and a decorative golden star, no text."
+    },
+    {
+      "id": "tag-rare",
+      "titel": "Empfehlungsschreiben",
+      "prompt": "A folded letter sealed with a golden wax seal showing a crown, a ribbon around it."
+    },
+    {
+      "id": "tag-stock",
+      "titel": "Festschmaus",
+      "prompt": "A roasted chicken leg and a golden roast on a pewter platter with a mug of ale, steaming."
+    },
+    {
+      "id": "tag-bakery",
+      "titel": "Bäckerbesuch",
+      "prompt": "A wooden bread peel holding a golden pretzel and a loaf of bread, flour dust and steam."
+    },
+    {
+      "id": "tag-praise",
+      "titel": "Lob des Königs",
+      "prompt": "A golden laurel wreath resting on a small red velvet cushion, a tiny royal scepter beside it."
+    },
+    {
+      "id": "tag-tutoring",
+      "titel": "Nachhilfe",
+      "prompt": "An open old book with a lit candle, a quill in an inkwell and a small hourglass, scholarly mood."
+    },
+    {
+      "id": "tag-masquerade",
+      "titel": "Maskenball",
+      "prompt": "A pair of ornate Venetian masquerade masks with feathers and gold decoration, on a stick, one white and one black."
+    }
+  ]
+}

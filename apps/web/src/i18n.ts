@@ -103,6 +103,8 @@ const de = {
   'tournament.format.swiss': 'Schweizer System: feste Rundenzahl',
   'tournament.time': 'Bedenkzeit',
   'tournament.days': 'Tage je Phase',
+  'tournament.options': 'Spieloptionen',
+  'tournament.rulesChanged': 'Die Regeln dieses Spiels wurden seit dem Turnierstart aktualisiert. Neue Partien spielen nach den neuen Regeln.',
   'tournament.third': 'Spiel um Platz 3',
   'tournament.notFound': 'Dieses Turnier gibt es nicht (mehr).',
   'tournament.closed': 'Zu „{name}“ haben nur Eingeschriebene Zugang. Nutze deinen Spielerausweis oder frag die Leitung nach einem Code.',

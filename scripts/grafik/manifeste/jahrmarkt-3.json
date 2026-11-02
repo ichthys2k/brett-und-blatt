@@ -1,0 +1,162 @@
+{
+  "beschreibung": "Jahrmarkt-Symbole, Teil 3: 17 Kunststücke und 12 Übungen als Medaillon-Bilder (Narrenhof).",
+  "stil": "Painterly storybook oil illustration of a single object as a round medieval fairground medallion icon: the object centred on a deep warm brown wooden background with a thin gold ring, rich colours, warm candlelight, soft shadows, detailed but clearly readable at small size, whimsical royal fool's court and travelling fair mood. Square composition, object fills about 70% of the image with margin around. No text, no letters, no numbers, no characters, no faces, no card frame.",
+  "ohne": "text, letters, numbers, watermark, people, animals, faces, hands, modern objects, logos, border, frame, photo",
+  "format": "1:1",
+  "groesse": [
+    256,
+    256
+  ],
+  "qualitaet": 80,
+  "ziel": "packages/games/color-sorter/src/ui/items",
+  "praefix": "",
+  "suffix": "",
+  "zuschnittRand": 0.08,
+  "motive": [
+    {
+      "id": "spell-magician",
+      "titel": "Glücksklee anstecken",
+      "prompt": "A shiny green four-leaf clover on a small golden pin, sparkling with luck."
+    },
+    {
+      "id": "spell-empress",
+      "titel": "Schminkkasten",
+      "prompt": "An open wooden make-up case with greasepaint pots in red, white and blue, a brush and a small hand mirror."
+    },
+    {
+      "id": "spell-hierophant",
+      "titel": "Pflastern",
+      "prompt": "A single round cobblestone with a small trowel and a few coins beside it, rough grey stone."
+    },
+    {
+      "id": "spell-tower",
+      "titel": "Schellen annähen",
+      "prompt": "A needle and thread sewing a cluster of small golden jingle bells onto a piece of red cloth."
+    },
+    {
+      "id": "spell-lovers",
+      "titel": "Flickschneiderei",
+      "prompt": "A colourful patchwork square made of many different coloured cloth pieces stitched together, with a needle and thread."
+    },
+    {
+      "id": "spell-chariot",
+      "titel": "Rüstkammer",
+      "prompt": "A small chainmail shirt hanging on a wooden stand, shining silver rings, a tiny helmet beside it."
+    },
+    {
+      "id": "spell-justice",
+      "titel": "Perlenschnur",
+      "prompt": "A long string of shimmering glass beads in many colours curled in a loop on dark velvet."
+    },
+    {
+      "id": "spell-devil",
+      "titel": "Goldfaden",
+      "prompt": "A spool of shining golden thread with a sewing needle, a golden embroidered flourish unrolling from it."
+    },
+    {
+      "id": "spell-dye",
+      "titel": "Färberei",
+      "prompt": "Three wooden dye vats in red, blue and yellow with a skein of coloured yarn hanging above them."
+    },
+    {
+      "id": "spell-strength",
+      "titel": "Purzelbaum",
+      "prompt": "A small wooden acrobat's tumbling mat with a ring of motion arrows and stars spinning in a somersault curve, no people."
+    },
+    {
+      "id": "spell-swap",
+      "titel": "Vertauscht!",
+      "prompt": "Two playing cards with swirling golden arrows exchanging places between them, magical sparkles, card faces showing only large suit-like symbols and no letters."
+    },
+    {
+      "id": "spell-hanged",
+      "titel": "Ausmisten",
+      "prompt": "A wooden bucket and a feather duster with a few old crumpled playing cards and cobwebs being swept out."
+    },
+    {
+      "id": "spell-harvest",
+      "titel": "Erntedank",
+      "prompt": "A golden wheat sheaf tied with a ribbon next to a wicker basket of pretzels and a small pumpkin."
+    },
+    {
+      "id": "spell-polish",
+      "titel": "Polierlappen",
+      "prompt": "A soft cloth polishing a glowing pearl-like shell, shimmering rainbow reflections."
+    },
+    {
+      "id": "spell-priestess",
+      "titel": "Schulstunde",
+      "prompt": "An open old textbook on a wooden lectern with a pointer stick and a small chalk slate showing only drawn diagrams."
+    },
+    {
+      "id": "spell-judgement",
+      "titel": "Einladung",
+      "prompt": "A cream-coloured invitation card with a golden decorative border and a red wax seal, a feather pen beside it, no text."
+    },
+    {
+      "id": "spell-fool",
+      "titel": "Da capo!",
+      "prompt": "A golden circular repeat arrow made of two arrows chasing each other around a small music score scroll with drawn notes."
+    },
+    {
+      "id": "nail-oil",
+      "titel": "Grimasse",
+      "prompt": "A wooden comedy mask with a wildly grinning, silly pulled face and bulging eyes, hanging on a ribbon."
+    },
+    {
+      "id": "nail-clearCoat",
+      "titel": "Wortspiel",
+      "prompt": "Two large decorative speech bubbles overlapping, one golden and one red, with a feather quill, using only little drawn symbols and no letters."
+    },
+    {
+      "id": "nail-french",
+      "titel": "Doppelsinn",
+      "prompt": "A two-faced jester mask, one half smiling in red and gold and the other half sad in blue and silver, split down the middle."
+    },
+    {
+      "id": "nail-babyboomer",
+      "titel": "Jonglage",
+      "prompt": "Three colourful juggling balls and a juggling club flying in an arc above a small wooden stage floor."
+    },
+    {
+      "id": "nail-stiletto",
+      "titel": "Stelzenlauf",
+      "prompt": "A pair of tall wooden stilts with red and white striped legs standing on a cobbled fairground path."
+    },
+    {
+      "id": "nail-fullcover",
+      "titel": "Farbenspiel",
+      "prompt": "A painter's wooden palette with bright blobs of paint in all colours and a brush, a rainbow arc above it."
+    },
+    {
+      "id": "nail-acrylic",
+      "titel": "Menschenpyramide",
+      "prompt": "A tower of stacked colourful round barrels and crates forming a pyramid, a small flag on top, circus tent in the background."
+    },
+    {
+      "id": "nail-nailArt",
+      "titel": "Feuerspucken",
+      "prompt": "A flaming fire-eater's torch with a large orange flame and a small flask of oil beside it, sparks flying."
+    },
+    {
+      "id": "nail-fiberglass",
+      "titel": "Seiltanz",
+      "prompt": "A tightrope stretched between two small wooden posts with a balancing pole lying across it and a safety net below."
+    },
+    {
+      "id": "nail-glitter",
+      "titel": "Narrenturm",
+      "prompt": "A tall, crooked tower made of stacked jester caps and bells, balanced precariously, colourful and tall."
+    },
+    {
+      "id": "nail-rhinestone",
+      "titel": "Feuerwerk",
+      "prompt": "A burst of colourful fireworks exploding in a night sky above fairground tents, golden and red sparks."
+    },
+    {
+      "id": "nail-chrome",
+      "titel": "Königsnummer",
+      "prompt": "A grand golden royal circus ring with a red velvet throne cushion in the middle and a crown hovering above it, spotlights."
+    }
+  ]
+}

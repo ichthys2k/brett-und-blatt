@@ -5,6 +5,8 @@ import type { Consumable, HandType, ModInstance, Offer, PackOffer } from '../typ
 
 export interface Described {
   emoji: string;
+  /** Medaillon-Bild (Jahrmarkt-Symbole, KI-erzeugt); fehlt es, bleibt das Emoji. */
+  symbol?: string;
   title: string;
   text: string;
   tone: string;
@@ -19,6 +21,7 @@ export function describeConsumable(item: Consumable): Described {
     return def
       ? {
           emoji: def.emoji,
+          symbol: symbolUrl(`spell-${item.key}`),
           title: def.name,
           text: def.text,
           tone: 'cs-t-spell',
@@ -31,13 +34,14 @@ export function describeConsumable(item: Consumable): Described {
     const hand = HANDS[def.hand];
     return {
       emoji: def.emoji,
+      symbol: symbolUrl(`nail-${item.key}`),
       title: def.name,
       text: `${hand.name}: +1 Stufe (+${hand.chipsPerLevel} Witz, +${hand.multPerLevel} Lachen)`,
       tone: 'cs-t-nail',
     };
   }
   const def = DREAMS[item.key];
-  return def ? { emoji: def.emoji, title: def.name, text: def.text, tone: 'cs-t-dream' } : { emoji: '🏺', title: 'Kuriosität', text: '', tone: 'cs-t-dream' };
+  return def ? { emoji: def.emoji, symbol: symbolUrl(`dream-${item.key}`), title: def.name, text: def.text, tone: 'cs-t-dream' } : { emoji: '🏺', title: 'Kuriosität', text: '', tone: 'cs-t-dream' };
 }
 
 export function describeMod(mod: Pick<ModInstance, 'key' | 'foil' | 'sticker' | 'value' | 'spent' | 'roundsLeft'>): Described {
@@ -74,12 +78,16 @@ export function describeOffer(offer: Offer): Described {
   };
 }
 
+const SYMBOLS = import.meta.glob<string>('./items/*.webp', { eager: true, query: '?url', import: 'default' });
+const symbolUrl = (name: string): string | undefined => SYMBOLS[`./items/${name}.webp`];
+
 export function describePack(pack: PackOffer): Described {
   const kind = PACK_KINDS[pack.kind];
   const size = PACK_SIZES[pack.size];
   const items = size.items[pack.kind];
   return {
     emoji: kind.emoji,
+    symbol: symbolUrl(`pack-${pack.kind}`),
     title: `${kind.name}${size.name ? ` (${size.name})` : ''}`,
     text: `${items} Stück, ${size.picks === 1 ? 'eins' : `${size.picks}`} davon aussuchen. ${kind.text}.`,
     tone: 'cs-t-pack',
@@ -90,6 +98,7 @@ export function describeTool(key: string): Described {
   const def = TOOLS[key]!;
   return {
     emoji: def.emoji,
+    symbol: symbolUrl(`tool-${key}`),
     title: def.name,
     text: def.text,
     tone: 'cs-t-tool',
@@ -100,6 +109,7 @@ export function describeTag(key: string): Described {
   const def = TAGS[key]!;
   return {
     emoji: def.emoji,
+    symbol: symbolUrl(`tag-${key}`),
     title: def.name,
     text: def.text,
     tone: 'cs-t-tag',

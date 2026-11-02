@@ -115,6 +115,8 @@ interface TileProps {
   emoji: string;
   /** Porträt für die große Karte am Desktop; sonst bleibt das Emoji. */
   image?: string;
+  /** Medaillon-Bild statt Emoji, auf allen Größen. */
+  symbol?: string;
   title: string;
   sub?: ReactNode;
   badge?: ReactNode;
@@ -134,14 +136,14 @@ interface TileProps {
 }
 
 /** Kachel für Mods, Zauberkarten, Angebote und Lieferungen. */
-export function Tile({ emoji, image, title, sub, badge, tone = '', selected, hint, dim, pop, onClick, className = '', label, tip, extra, body: text, foot }: TileProps) {
+export function Tile({ emoji, image, symbol, title, sub, badge, tone = '', selected, hint, dim, pop, onClick, className = '', label, tip, extra, body: text, foot }: TileProps) {
   const props = useTipProps(tip, extra);
   const classes = ['cs-tile', text !== undefined ? 'cs-tile-text' : '', tone, selected ? 'cs-selected' : '', hint ? 'cs-hint' : '', dim ? 'cs-dim' : '', className].join(' ');
   const body = (
     <>
       <span className="cs-tile-emoji" data-image={image ? '' : undefined} aria-hidden="true">
         {image && <img src={image} alt="" className="cs-tile-photo" loading="lazy" decoding="async" />}
-        {emoji}
+        {symbol ? <img src={symbol} alt="" className="cs-tile-symbol" loading="lazy" decoding="async" /> : emoji}
       </span>
       <span className="cs-tile-title">{title}</span>
       {text !== undefined && <span className="cs-tile-body">{text}</span>}
