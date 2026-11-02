@@ -3,9 +3,22 @@ import { useEffect, useRef, useState } from 'react';
 import { useElementSize } from '../useElementSize';
 import { type DeckStyle, PlayingCard } from './PlayingCard.js';
 
-/** Seitenlänge der Kartenfläche (ohne Skalierung) samt etwas Rand für die Namen. */
-const TABLE_SIZE = 192;
-const TABLE_ROOM = 240;
+/** Höhe des Namens unter einer Karte (ohne Skalierung). */
+const NAME_HEIGHT = 18;
+/** Abstand zwischen den Karten; am Dreiertisch mehr, weil die oberen Karten schräg liegen. */
+const CARD_GAP = 8;
+const TILTED_GAP = 20;
+/** Rand um die Kartenfläche. */
+const TABLE_MARGIN = 12;
+
+/** Größe der Kartenfläche (ohne Skalierung), auf der sich weder Karten noch Namen überdecken. */
+export function trickTableArea(players: number, cardWidth: number): { width: number; height: number } {
+  const slotHeight = cardWidth * 1.4 + NAME_HEIGHT;
+  return {
+    width: players === 3 ? 2 * cardWidth + TILTED_GAP : 3 * cardWidth + 2 * CARD_GAP,
+    height: 2 * slotHeight + CARD_GAP,
+  };
+}
 
 /** Handkarte eines Stichspiels: passt zur Breite und lässt auf flachen Bildschirmen Platz für den Tisch. */
 export function trickHandCardWidth(containerWidth: number): number {
@@ -102,10 +115,12 @@ export function TrickTable({
   className = '',
   collecting = false,
 }: TrickTableProps) {
-  const [tableRef, { height: tableHeight }] = useElementSize<HTMLDivElement>();
-  // Der Tisch nimmt den freien Platz ein; die Karten darauf wachsen und schrumpfen mit.
-  const scale = tableHeight > 0 ? Math.min(1.25, Math.max(0.4, tableHeight / TABLE_ROOM)) : 1;
+  const [tableRef, { width: tableWidth, height: tableHeight }] = useElementSize<HTMLDivElement>();
   const total = slots.length;
+  const area = trickTableArea(total, cardWidth);
+  // Der Tisch nimmt den freien Platz ein; die Karten darauf wachsen und schrumpfen mit.
+  const fit = Math.min(tableWidth / (area.width + TABLE_MARGIN), tableHeight / (area.height + TABLE_MARGIN));
+  const scale = tableHeight > 0 ? Math.min(1.25, Math.max(0.4, fit)) : 1;
   const winnerSlot = slots.find((s) => s.isWinner);
   const winnerDir = winnerSlot ? getRelativePosition(winnerSlot.seat) : 'bottom';
 
@@ -136,7 +151,7 @@ export function TrickTable({
     >
       <div
         className="absolute top-1/2 left-1/2 flex items-center justify-center"
-        style={{ width: TABLE_SIZE, height: TABLE_SIZE, transform: `translate(-50%, -50%) scale(${scale})` }}
+        style={{ width: area.width, height: area.height, transform: `translate(-50%, -50%) scale(${scale})` }}
       >
         {slots.map((slot) => {
           if (!slot.card) return null;
@@ -144,22 +159,22 @@ export function TrickTable({
           let posClasses = '';
           switch (pos) {
             case 'bottom':
-              posClasses = 'bottom-0 left-1/2 -translate-x-1/2 translate-y-2';
+              posClasses = 'bottom-0 left-1/2 -translate-x-1/2';
               break;
             case 'top':
-              posClasses = 'top-0 left-1/2 -translate-x-1/2 -translate-y-2';
+              posClasses = 'top-0 left-1/2 -translate-x-1/2';
               break;
             case 'left':
-              posClasses = 'left-0 top-1/2 -translate-y-1/2 -translate-x-2';
+              posClasses = 'left-0 top-1/2 -translate-y-1/2';
               break;
             case 'right':
-              posClasses = 'right-0 top-1/2 -translate-y-1/2 translate-x-2';
+              posClasses = 'right-0 top-1/2 -translate-y-1/2';
               break;
             case 'top-left':
-              posClasses = 'top-2 left-4 -rotate-6';
+              posClasses = 'top-0 left-0 -rotate-6';
               break;
             case 'top-right':
-              posClasses = 'top-2 right-4 rotate-6';
+              posClasses = 'top-0 right-0 rotate-6';
               break;
           }
 
@@ -176,7 +191,7 @@ export function TrickTable({
             >
               <PlayingCard card={slot.card} deckStyle={deckStyle} />
               {slot.name && (
-                <div className="text-center text-[11px] font-medium text-stone-700 dark:text-stone-300 truncate max-w-[80px] mt-0.5 mx-auto">
+                <div className="bub-trick-name text-center text-[11px] font-medium text-stone-700 dark:text-stone-300 truncate max-w-[80px] mt-0.5 mx-auto">
                   {slot.name}
                 </div>
               )}
