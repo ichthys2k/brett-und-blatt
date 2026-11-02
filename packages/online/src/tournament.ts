@@ -10,7 +10,7 @@ import { cleanAvatar, cleanName } from './names';
  * Die Kennungen (`token`) sind geheim und stehen nie in einer Sicht.
  */
 
-export const TOURNAMENT_MIN_PLAYERS = { world: 6, swiss: 4 } as const;
+export const TOURNAMENT_MIN_PLAYERS = { world: 6, swiss: 4, knockout: 4, double: 4 } as const;
 export const TOURNAMENT_MAX_PLAYERS = 32;
 /** „Bereit“ gilt nur so lange, damit niemand Tage später in eine Partie gezogen wird. */
 export const READY_WINDOW_MS = 10 * 60 * 1000;
@@ -21,7 +21,7 @@ export const DAY_MS = 24 * 60 * 60 * 1000;
 export const TOURNAMENT_KEEP_MS = 30 * DAY_MS;
 export const TOURNAMENT_NAME_LENGTH = 40;
 
-export type TournamentFormat = 'world' | 'swiss';
+export type TournamentFormat = 'world' | 'swiss' | 'knockout' | 'double';
 export type TournamentPhase = 'signup' | 'running' | 'finished';
 export type MatchStatus = 'waiting' | 'open' | 'running' | 'done';
 export type MatchSide = 0 | 1;
@@ -34,7 +34,7 @@ export interface TournamentSettings {
   time: 'relaxed' | 'normal' | 'fast';
   /** Tage je Phase bis zum Stichtag. */
   days: number;
-  /** Spiel um Platz 3 (nur WM-Form). */
+  /** Spiel um Platz 3 (WM-Form und K.-o.). */
   thirdPlace: boolean;
   /** Spieloptionen aller Partien; was fehlt, steht auf dem Standard. */
   options?: Options;
@@ -86,8 +86,11 @@ export interface TournamentMatch {
 }
 
 export interface TournamentStage {
-  /** group, swiss oder ko; im K.-o. zählt `round` rückwärts: 1 = Finale, 2 = Halbfinale … */
-  kind: 'group' | 'swiss' | 'ko';
+  /**
+   * group, swiss, ko oder double; im K.-o. zählt `round` rückwärts: 1 = Finale, 2 = Halbfinale …
+   * Beim Doppel-K.-o. teilen sich Gewinner- und Verliererrunden die Stichtage, `round` zählt nur durch.
+   */
+  kind: 'group' | 'swiss' | 'ko' | 'double';
   round: number;
   deadline: number;
 }
@@ -233,7 +236,7 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
   if (!name || !cleanName(name.slice(0, 16))) return null;
   const game = typeof body.gameId === 'string' ? findGame(body.gameId) : undefined;
   if (typeof body.gameId !== 'string' || !game || !isTournamentGame(game.info)) return null;
-  if (body.format !== 'world' && body.format !== 'swiss') return null;
+  if (body.format !== 'world' && body.format !== 'swiss' && body.format !== 'knockout' && body.format !== 'double') return null;
   if (body.time !== 'relaxed' && body.time !== 'normal' && body.time !== 'fast') return null;
   if (body.days !== 1 && body.days !== 3 && body.days !== 7 && body.days !== 14) return null;
   const options: Options = {};
@@ -310,6 +313,32 @@ export function koFirstRound(groups: number): [SlotSource, SlotSource][] {
     bottom.push([{ kind: 'groupPlace', group: g + 1, place: 0 }, { kind: 'groupPlace', group: g, place: 1 }]);
   }
   return [...top, ...bottom];
+}
+
+/**
+ * Setzliste eines Baums: Platz 1 und 2 treffen sich erst im Finale. Die Positionen je
+ * zwei Einträge bilden eine Partie der ersten Runde; Setzplätze über der Spielerzahl sind Freilose.
+ */
+export function seedOrder(size: number): number[] {
+  let order = [0];
+  while (order.length < size) {
+    const next = order.length * 2 - 1;
+    order = order.flatMap((seed) => [seed, next - seed]);
+  }
+  return order;
+}
+
+/** Erste Runde eines Baums; ein Freilos steht immer auf der zweiten Seite. */
+export function firstRoundSlots(ids: readonly string[]): [MatchSlot, MatchSlot][] {
+  let size = 2;
+  while (size < ids.length) size *= 2;
+  const order = seedOrder(size);
+  const pairs: [MatchSlot, MatchSlot][] = [];
+  for (let i = 0; i < size; i += 2) {
+    const [a, b] = [order[i]!, order[i + 1]!].sort((x, y) => x - y) as [number, number];
+    pairs.push([{ player: ids[a] ?? null }, { player: ids[b] ?? null }]);
+  }
+  return pairs;
 }
 
 /** Paart nach Tabellenstand ohne Wiederholung (mit Rücksetzen); bei ungerader Zahl das Freilos für den Letzten ohne Freilos. */
@@ -393,6 +422,9 @@ export function standings(players: readonly string[], matches: readonly Tourname
     return lot.get(x.player)! - lot.get(y.player)!;
   });
 }
+
+const winnerOf = (match: string): MatchSlot => ({ player: null, from: { kind: 'winner', match } });
+const loserOf = (match: string): MatchSlot => ({ player: null, from: { kind: 'loser', match } });
 
 // ---------------------------------------------------------------------------
 // Das Turnier
@@ -533,7 +565,9 @@ export class Tournament {
     const deadline = (index: number) => now + (index + 1) * days * DAY_MS;
     const ids = seededShuffle(this.s.players.map((p) => p.id), `${this.s.seed}/auslosung`);
     if (format === 'world') this.setupWorld(ids, deadline);
-    else this.setupSwiss(ids, deadline);
+    else if (format === 'swiss') this.setupSwiss(ids, deadline);
+    else if (format === 'knockout') this.addKnockoutTree(firstRoundSlots(ids), 0, deadline);
+    else this.setupDouble(ids, deadline);
     const ruleVersion = this.deps.ruleVersion?.(this.s.settings.gameId);
     if (ruleVersion !== undefined) this.s.ruleVersion = ruleVersion;
     this.s.phase = 'running';
@@ -590,7 +624,7 @@ export class Tournament {
       else this.decide(match, { winner, draw: false, walkover: true });
     } else if (winner !== null) {
       this.decide(match, { winner, draw: false, walkover: false });
-    } else if (match.group === null && this.s.stages[match.stage]?.kind === 'ko') {
+    } else if (this.needsWinner(match)) {
       // K.-o. braucht einen Sieger: neu ansetzen, Farben getauscht, schnelle Zeit.
       match.replays++;
       this.reopen(match);
@@ -607,8 +641,7 @@ export class Tournament {
     const match = this.match(matchId);
     if (!match || match.status === 'waiting') return 'Diese Partie steht noch nicht fest.';
     if (!this.mayChange(match)) return 'Daran hängen schon weitere Partien.';
-    const ko = this.s.stages[match.stage]?.kind === 'ko';
-    if (winner === 'draw' && ko) return 'Im K.-o.-Spiel braucht es einen Sieger.';
+    if (winner === 'draw' && this.needsWinner(match)) return 'Im K.-o.-Spiel braucht es einen Sieger.';
     match.status = 'open';
     match.roomCode = null;
     this.decide(match, winner === 'draw' ? { winner: null, draw: true, walkover: false, byLeader: true } : winner === 'none' ? { winner: null, draw: false, walkover: true, byLeader: true } : { winner, draw: false, walkover: true, byLeader: true });
@@ -714,16 +747,22 @@ export class Tournament {
       });
     });
     // Der Baum steht von Anfang an, mit der Herkunft jedes Platzes.
-    let sources: [SlotSource, SlotSource][] = koFirstRound(groupCount);
-    let stage = 1;
-    let round = groupCount * 2 >= 2 ? Math.log2(groupCount * 2) : 1;
-    while (sources.length > 0) {
+    this.addKnockoutTree(koFirstRound(groupCount).map(([a, b]) => [{ player: null, from: a }, { player: null, from: b }]), 1, deadline);
+  }
+
+  /** Legt einen K.-o.-Baum an. Hat die erste Runde schon Spieler, ist sie sofort spielbar. */
+  private addKnockoutTree(first: [MatchSlot, MatchSlot][], firstStage: number, deadline: (index: number) => number): void {
+    let slots = first;
+    let stage = firstStage;
+    let round = Math.log2(first.length * 2);
+    while (slots.length > 0) {
       this.s.stages.push({ kind: 'ko', round, deadline: deadline(stage) });
       const ids_: string[] = [];
-      sources.forEach((pair, i) => {
+      slots.forEach((pair, i) => {
         const id = `k${round}-${i}`;
         ids_.push(id);
-        this.s.matches.push(this.newMatch(id, stage, null, [{ player: null, from: pair[0] }, { player: null, from: pair[1] }], 'waiting'));
+        const ready = !pair[0].from && !pair[1].from;
+        this.s.matches.push(this.newMatch(id, stage, null, pair, ready ? 'open' : 'waiting'));
       });
       if (round === 1 && this.s.settings.thirdPlace) {
         const semis = this.s.matches.filter((m) => m.stage === stage - 1);
@@ -733,12 +772,63 @@ export class Tournament {
           this.s.matches.push(third);
         }
       }
-      const next: [SlotSource, SlotSource][] = [];
-      for (let i = 0; i + 1 < ids_.length; i += 2) next.push([{ kind: 'winner', match: ids_[i]! }, { kind: 'winner', match: ids_[i + 1]! }]);
-      sources = next;
+      const next: [MatchSlot, MatchSlot][] = [];
+      for (let i = 0; i + 1 < ids_.length; i += 2) next.push([winnerOf(ids_[i]!), winnerOf(ids_[i + 1]!)]);
+      slots = next;
       stage++;
       round--;
     }
+  }
+
+  /**
+   * Doppel-K.-o.: Wer in der Gewinnerrunde verliert, fällt in die Verliererrunde. Dort wechseln
+   * sich Runden unter Verlierern und Runden mit neu Herabgefallenen ab. Gewinner- und
+   * Verliererrunde laufen teils zur selben Zeit, darum teilen sie sich Stichtage.
+   */
+  private setupDouble(ids: string[], deadline: (index: number) => number): void {
+    const first = firstRoundSlots(ids);
+    const rounds = Math.log2(first.length * 2);
+    const upperStage = (round: number) => (round === 1 ? 0 : 2 * round - 3);
+    const lastLower = 2 * rounds - 2;
+    for (let stage = 0; stage <= lastLower + 1; stage++) this.s.stages.push({ kind: 'double', round: stage, deadline: deadline(stage) });
+
+    // Gewinnerrunde
+    let upper = first;
+    for (let round = 1; round <= rounds; round++) {
+      const pairs = upper;
+      pairs.forEach((pair, i) => this.s.matches.push(this.newMatch(`w${round}-${i}`, upperStage(round), null, pair, round === 1 ? 'open' : 'waiting')));
+      upper = [];
+      for (let i = 0; i + 1 < pairs.length; i += 2) upper.push([winnerOf(`w${round}-${i}`), winnerOf(`w${round}-${i + 1}`)]);
+    }
+
+    // Verliererrunde
+    let survivors = first.map((_, i) => loserOf(`w1-${i}`));
+    for (let round = 1; round <= lastLower; round++) {
+      const pairs: [MatchSlot, MatchSlot][] = [];
+      if (round % 2 === 1) {
+        for (let i = 0; i + 1 < survivors.length; i += 2) pairs.push([survivors[i]!, survivors[i + 1]!]);
+      } else {
+        // Herabgefallene umgekehrt einsortieren, damit sich Paarungen nicht gleich wiederholen.
+        const upperRound = round / 2 + 1;
+        const count = survivors.length;
+        survivors.forEach((slot, i) => pairs.push([loserOf(`w${upperRound}-${count - 1 - i}`), slot]));
+      }
+      pairs.forEach((pair, i) => this.s.matches.push(this.newMatch(`l${round}-${i}`, round, null, pair, 'waiting')));
+      survivors = pairs.map((_, i) => winnerOf(`l${round}-${i}`));
+    }
+
+    this.s.matches.push(this.newMatch('gf', lastLower + 1, null, [winnerOf(`w${rounds}-0`), winnerOf(`l${lastLower}-0`)], 'waiting'));
+  }
+
+  /** Gewinnt im Großen Finale der Herausforderer, haben beide je eine Niederlage: eine Partie mehr. */
+  private addDecider(): boolean {
+    const final = this.match('gf');
+    if (!final?.outcome || final.outcome.winner !== 1 || final.outcome.walkover || this.match('gf2')) return false;
+    const stage = this.s.stages.length;
+    const last = this.s.stages[stage - 1]!;
+    this.s.stages.push({ kind: 'double', round: stage, deadline: Math.max(last.deadline, this.deps.now()) + this.s.settings.days * DAY_MS });
+    this.s.matches.push(this.newMatch('gf2', stage, null, [{ player: final.slots[0].player }, { player: final.slots[1].player }], 'open'));
+    return true;
   }
 
   private setupSwiss(ids: string[], deadline: (index: number) => number): void {
@@ -786,7 +876,9 @@ export class Tournament {
         if (match.status !== 'open') continue;
         const gone = match.slots.map((slot) => slot.player === null || this.s.players.find((p) => p.id === slot.player)?.withdrawn === true);
         if (gone[0] || gone[1]) {
-          this.decide(match, gone[0] && gone[1] ? { winner: null, draw: false, walkover: true } : { winner: gone[0] ? 1 : 0, draw: false, walkover: true });
+          // Ein leerer Platz ist ein Freilos, ein Rückzug kampflos.
+          const bye = match.slots.some((slot) => slot.player === null);
+          this.decide(match, { winner: gone[0] && gone[1] ? null : gone[0] ? 1 : 0, draw: false, walkover: true, ...(bye ? { bye } : {}) });
           moved = true;
         } else if (now >= this.dueAt(match)) {
           const [a, b] = match.everReady;
@@ -796,6 +888,7 @@ export class Tournament {
       }
       if (this.fillBracket()) moved = true;
       if (this.nextSwissRound()) moved = true;
+      if (this.addDecider()) moved = true;
       if (!moved) break;
     }
     this.checkFinished();
@@ -880,7 +973,13 @@ export class Tournament {
     if (match.status !== 'done') return true;
     if (match.group !== null) return !this.groupSettled(match.group) || !this.s.matches.some((m) => m.slots.some((slot) => slot.from?.kind === 'groupPlace' && slot.from.group === match.group && slot.player !== null));
     if (this.s.settings.format === 'swiss') return match.stage === Math.max(...this.s.matches.map((m) => m.stage));
+    if (match.id === 'gf' && this.match('gf2')) return false;
     return !this.s.matches.some((m) => m.status !== 'waiting' && m.slots.some((slot) => slot.from && 'match' in slot.from && slot.from.match === match.id));
+  }
+
+  /** In allem außer Gruppe und Schweizer System braucht eine Partie einen Sieger. */
+  private needsWinner(match: TournamentMatch): boolean {
+    return match.group === null && this.s.settings.format !== 'swiss';
   }
 
   private dueAt(match: TournamentMatch): number {
@@ -912,12 +1011,17 @@ export class Tournament {
   private podium(): string[] {
     if (this.s.phase !== 'finished') return [];
     if (this.s.settings.format === 'swiss') return this.swissTable().slice(0, 3).map((r) => r.player);
-    const final = this.match('k1-0');
     const place = (m: TournamentMatch | undefined, winner: boolean): string[] => {
       if (m?.outcome?.winner == null) return [];
       const player = m.slots[winner ? m.outcome.winner : 1 - m.outcome.winner]!.player;
       return player ? [player] : [];
     };
+    if (this.s.settings.format === 'double') {
+      const final = this.match('gf2') ?? this.match('gf');
+      const lower = Math.max(...this.s.matches.filter((m) => m.id.startsWith('l')).map((m) => m.stage));
+      return [...place(final, true), ...place(final, false), ...place(this.match(`l${lower}-0`), false)];
+    }
+    const final = this.match('k1-0');
     return [...place(final, true), ...place(final, false), ...place(this.match('k-3'), true)];
   }
 

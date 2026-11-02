@@ -50,7 +50,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
     setError(null);
     try {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
-      const code = await createTournament({ name: name.trim(), gameId, format, time, days, thirdPlace, options: chosen }, profile);
+      const code = await createTournament({ name: name.trim(), gameId, format, time, days, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), options: chosen }, profile);
       storage.rememberTournament({ code, name: name.trim() });
       passChanged();
       navigate(paths.tournament(code));
@@ -122,6 +122,8 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
             <span>{t('tournament.format')}</span>
             <select className={FIELD} value={format} onChange={(e) => setFormat(e.target.value as TournamentFormat)}>
               <option value="world">{t('tournament.format.world')}</option>
+              <option value="knockout">{t('tournament.format.knockout')}</option>
+              <option value="double">{t('tournament.format.double')}</option>
               <option value="swiss">{t('tournament.format.swiss')}</option>
             </select>
           </label>
@@ -145,7 +147,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               </select>
             </label>
           </div>
-          {format === 'world' && (
+          {(format === 'world' || format === 'knockout') && (
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" className="h-4 w-4 accent-accent" checked={thirdPlace} onChange={(e) => setThirdPlace(e.target.checked)} />
               {t('tournament.third')}

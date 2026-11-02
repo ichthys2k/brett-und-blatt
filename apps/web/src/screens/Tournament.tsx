@@ -28,6 +28,12 @@ function roundName(round: number): string {
 /** „Halbfinale 2“ aus der Kennung `k2-1`. */
 function koMatchName(id: string): string {
   if (id === 'k-3') return t('tournament.thirdPlace');
+  if (id === 'gf') return t('tournament.grandFinal');
+  if (id === 'gf2') return t('tournament.decider');
+  if (id.startsWith('w') || id.startsWith('l')) {
+    const [round, index] = id.slice(1).split('-').map(Number) as [number, number];
+    return `${t(id.startsWith('w') ? 'tournament.upper' : 'tournament.lower')} ${round}.${index + 1}`;
+  }
   const [round, index] = id.slice(1).split('-').map(Number) as [number, number];
   return round === 1 ? roundName(1) : `${roundName(round)} ${index + 1}`;
 }
@@ -389,9 +395,11 @@ function matchTitle(view: TournamentView, m: Match): string {
 // Tabellen und Baum
 
 function Progress({ view }: { view: TournamentView }) {
+  if (view.settings.format === 'knockout') return <KnockoutBracket view={view} />;
+  if (view.settings.format === 'double') return <DoubleBracket view={view} />;
   return view.settings.format === 'world' ? (
     <>
-      <Bracket view={view} />
+      <KnockoutBracket view={view} />
       <Section title={t('tournament.groups')}>
         <p className="text-sm text-muted">{t('tournament.advances')}</p>
         <div className="grid gap-3 md:grid-cols-2">
@@ -482,7 +490,7 @@ function MatchCard({ view, m, title }: { view: TournamentView; m: Match; title?:
         return (
           <p key={side} className={`truncate ${won ? 'font-bold' : ''} ${lost ? 'text-muted' : ''} ${slot.player ? '' : 'text-xs text-muted italic'}`}>
             {won && '🏅 '}
-            {m.outcome?.bye && side === 1 ? t('tournament.bye') : slotLabel(slot)}
+            {m.outcome?.bye && !slot.player ? t('tournament.bye') : slotLabel(slot)}
           </p>
         );
       })}
@@ -537,48 +545,56 @@ function SwissRounds({ view }: { view: TournamentView }) {
   );
 }
 
+interface BracketColumn {
+  key: string;
+  label: string;
+  deadline: number;
+  matches: Match[];
+}
+
 /**
- * Der Baum. Breit: alle Runden nebeneinander. Handy: je Runde eine Ansicht mit Reitern,
+ * Ein Baum. Breit: alle Runden nebeneinander. Handy: je Runde eine Ansicht mit Reitern,
  * damit die Seite nie waagerecht rollt; die Reiter zeigen zugleich, wo man im Baum steht.
  */
-function Bracket({ view }: { view: TournamentView }) {
-  const stages = view.stages.map((stage, index) => ({ ...stage, index })).filter((stage) => stage.kind === 'ko');
-  const ownStage = [...view.matches].reverse().find((m) => m.group === null && m.slots.some((s) => s.player === view.you))?.stage;
-  const [picked, setPicked] = useState<number | null>(null);
-  const shown = picked ?? ownStage ?? Math.max(view.currentStage, stages[0]?.index ?? 0);
-  const matchesOf = (stage: number) => view.matches.filter((m) => m.stage === stage);
+function Bracket({ view, title, hint, columns }: { view: TournamentView; title: string; hint?: string; columns: BracketColumn[] }) {
+  const own = [...columns].reverse().find((column) => column.matches.some((m) => m.slots.some((s) => s.player && s.player === view.you)))?.key;
+  const [picked, setPicked] = useState<string | null>(null);
+  const live = columns.find((column) => column.matches.some((m) => !m.outcome))?.key;
+  const shown = columns.find((column) => column.key === (picked ?? own ?? live)) ?? columns[0];
+  if (!shown) return null;
   return (
-    <Section title={t('tournament.bracket')}>
+    <Section title={title}>
+      {hint && <p className="text-sm text-muted">{hint}</p>}
       <div className="md:hidden">
         <div role="tablist" className="mb-2 flex flex-wrap gap-1">
-          {stages.map((stage) => (
+          {columns.map((column) => (
             <button
-              key={stage.index}
+              key={column.key}
               type="button"
               role="tab"
-              aria-selected={stage.index === shown}
-              className={`min-h-9 rounded-full border px-3 text-xs ${stage.index === shown ? 'border-accent bg-accent/10 font-semibold' : 'border-line bg-surface'}`}
-              onClick={() => setPicked(stage.index)}
+              aria-selected={column.key === shown.key}
+              className={`min-h-9 rounded-full border px-3 text-xs ${column.key === shown.key ? 'border-accent bg-accent/10 font-semibold' : 'border-line bg-surface'}`}
+              onClick={() => setPicked(column.key)}
             >
-              {stage.index === ownStage && '📍 '}
-              {roundName(stage.round)}
+              {column.key === own && '📍 '}
+              {column.label}
             </button>
           ))}
         </div>
-        <p className="mb-1 text-xs text-muted">{t('tournament.deadline', { date: formatDate(view.stages[shown]?.deadline ?? 0) })}</p>
+        <p className="mb-1 text-xs text-muted">{t('tournament.deadline', { date: formatDate(shown.deadline) })}</p>
         <div className="space-y-2">
-          {matchesOf(shown).map((m) => (
+          {shown.matches.map((m) => (
             <MatchCard key={m.id} view={view} m={m} title={koMatchName(m.id)} />
           ))}
         </div>
       </div>
       <div className="hidden gap-3 md:flex">
-        {stages.map((stage) => (
-          <div key={stage.index} className="flex min-w-0 flex-1 flex-col">
-            <p className="truncate text-center text-xs font-semibold">{roundName(stage.round)}</p>
-            <p className="mb-2 truncate text-center text-[11px] text-muted">{formatDate(stage.deadline)}</p>
+        {columns.map((column) => (
+          <div key={column.key} className="flex min-w-0 flex-1 flex-col">
+            <p className="truncate text-center text-xs font-semibold">{column.label}</p>
+            <p className="mb-2 truncate text-center text-[11px] text-muted">{formatDate(column.deadline)}</p>
             <div className="flex flex-1 flex-col justify-around gap-2">
-              {matchesOf(stage.index).map((m) => (
+              {column.matches.map((m) => (
                 <MatchCard key={m.id} view={view} m={m} title={m.thirdPlace ? t('tournament.thirdPlace') : undefined} />
               ))}
             </div>
@@ -586,6 +602,39 @@ function Bracket({ view }: { view: TournamentView }) {
         ))}
       </div>
     </Section>
+  );
+}
+
+/** Der Baum von WM-Form und K.-o. */
+function KnockoutBracket({ view }: { view: TournamentView }) {
+  const columns = view.stages.flatMap((stage, index) => (stage.kind === 'ko' ? [{ key: String(index), label: roundName(stage.round), deadline: stage.deadline, matches: view.matches.filter((m) => m.stage === index) }] : []));
+  return <Bracket view={view} title={t('tournament.bracket')} columns={columns} />;
+}
+
+/** Runden einer Seite des Doppel-K.-o., Partien ohne jeden Spieler fallen weg. */
+function doubleColumns(view: TournamentView, prefix: 'w' | 'l'): BracketColumn[] {
+  const rounds = new Map<number, Match[]>();
+  for (const m of view.matches) {
+    if (!m.id.startsWith(prefix)) continue;
+    if (m.outcome?.bye && !m.slots[0].player && !m.slots[1].player) continue;
+    const round = Number(m.id.slice(1).split('-')[0]);
+    rounds.set(round, [...(rounds.get(round) ?? []), m]);
+  }
+  return [...rounds.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([round, matches]) => ({ key: String(round), label: t('tournament.round', { n: round }), deadline: view.stages[matches[0]!.stage]?.deadline ?? 0, matches }));
+}
+
+function DoubleBracket({ view }: { view: TournamentView }) {
+  const finals = view.matches
+    .filter((m) => m.id === 'gf' || m.id === 'gf2')
+    .map((m) => ({ key: m.id, label: koMatchName(m.id), deadline: view.stages[m.stage]?.deadline ?? 0, matches: [m] }));
+  return (
+    <>
+      <Bracket view={view} title={t('tournament.upper')} hint={t('tournament.doubleHint')} columns={doubleColumns(view, 'w')} />
+      <Bracket view={view} title={t('tournament.lower')} columns={doubleColumns(view, 'l')} />
+      <Bracket view={view} title={t('tournament.finals')} columns={finals} />
+    </>
   );
 }
 
@@ -689,7 +738,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
                 <Button className="text-xs" onClick={() => send({ type: 'setResult', match: match.id, winner: 1 })}>
                   {t('tournament.winner', { name: label(match.slots[1].player) })}
                 </Button>
-                {view.stages[match.stage]?.kind !== 'ko' && (
+                {(match.group !== null || view.settings.format === 'swiss') && (
                   <Button className="text-xs" onClick={() => send({ type: 'setResult', match: match.id, winner: 'draw' })}>
                     {t('tournament.draw')}
                   </Button>

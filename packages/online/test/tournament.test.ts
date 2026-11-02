@@ -8,7 +8,9 @@ import {
   groupCountFor,
   koFirstRound,
   parseTournamentMessage,
+  firstRoundSlots,
   roundRobinPairs,
+  seedOrder,
   swissPairing,
   swissRoundsFor,
   parseTournamentSettings,
@@ -162,6 +164,131 @@ describe('Schweizer System', () => {
     expect(end.matches.filter((m) => m.outcome?.bye)).toHaveLength(swissRoundsFor(7));
     expect(end.podium).toHaveLength(3);
     expect(end.swissTable[0]!.points).toBeGreaterThanOrEqual(end.swissTable[1]!.points);
+  });
+});
+
+describe('K.-o.', () => {
+  it('Setzliste: Die Besten treffen sich zuletzt', () => {
+    expect(seedOrder(4)).toEqual([0, 3, 1, 2]);
+    const slots = firstRoundSlots(['a', 'b', 'c', 'd', 'e']);
+    expect(slots).toHaveLength(4);
+    expect(slots.filter(([, b]) => b.player === null)).toHaveLength(3);
+    expect(slots.every(([a]) => a.player !== null)).toBe(true);
+  });
+
+  for (const players of [4, 5, 7, 8, 13, 32]) {
+    it(`spielt ${players} Spieler durch: ${players - 1} echte Partien, ein Sieger`, () => {
+      const { t } = setup(players, 'knockout');
+      t.start(LEADER);
+      for (let i = 0; i < 12 && t.phase === 'running'; i++) playAllOpen(t);
+      const end = t.view(LEADER);
+      expect(end.phase).toBe('finished');
+      expect(end.matches.filter((m) => !m.outcome?.bye)).toHaveLength(players - 1);
+      expect(end.podium).toHaveLength(2);
+    });
+  }
+
+  it('ein Freilos ist kein kampfloser Sieg gegen jemanden und spielt um Platz 3 auf Wunsch', () => {
+    const { t } = setup(5, 'knockout', { thirdPlace: true });
+    t.start(LEADER);
+    const byes = t.view(LEADER).matches.filter((m) => m.outcome?.bye);
+    expect(byes).toHaveLength(3);
+    for (let i = 0; i < 12 && t.phase === 'running'; i++) playAllOpen(t);
+    expect(t.view(LEADER).podium).toHaveLength(3);
+  });
+
+  it('Remis gibt ein Entscheidungsspiel', () => {
+    const { t } = setup(4, 'knockout');
+    t.start(LEADER);
+    const m = t.view(LEADER).matches[0]!;
+    play(t, m, null);
+    expect(t.view(LEADER).matches[0]).toMatchObject({ status: 'open', replays: 1 });
+    expect(t.setResult(LEADER, m.id, 'draw')).toBe('Im K.-o.-Spiel braucht es einen Sieger.');
+  });
+});
+
+describe('Doppel-K.-o.', () => {
+  /** Wie oft jeder echt verloren hat. */
+  const losses = (t: Tournament) => {
+    const count = new Map<string, number>();
+    for (const m of t.view(LEADER).matches) {
+      const o = m.outcome;
+      if (!o || o.winner === null || o.bye) continue;
+      const loser = m.slots[1 - o.winner]!.player!;
+      count.set(loser, (count.get(loser) ?? 0) + 1);
+    }
+    return count;
+  };
+
+  for (const players of [4, 5, 6, 7, 8, 11, 16, 32]) {
+    it(`${players} Spieler: Ausscheiden erst bei der zweiten Niederlage`, () => {
+      const { t } = setup(players, 'double');
+      t.start(LEADER);
+      for (let i = 0; i < 80 && t.phase === 'running'; i++) playAllOpen(t);
+      const end = t.view(LEADER);
+      expect(end.phase).toBe('finished');
+      const count = losses(t);
+      const champion = end.podium[0]!;
+      expect(count.get(champion) ?? 0).toBe(0);
+      expect([...count.values()].every((n) => n <= 2)).toBe(true);
+      // Hier gewinnt immer die obere Seite: Alle außer dem Sieger haben genau zwei Niederlagen.
+      expect([...count.values()].filter((n) => n === 2)).toHaveLength(players - 1);
+      expect(end.podium).toHaveLength(3);
+      expect(new Set(end.podium).size).toBe(3);
+      expect(end.matches.filter((m) => !m.outcome?.bye)).toHaveLength(2 * players - 2);
+    });
+  }
+
+  it('gewinnt der Herausforderer das Große Finale, folgt eine Entscheidungspartie', () => {
+    const { t } = setup(4, 'double');
+    t.start(LEADER);
+    for (let i = 0; i < 12; i++) {
+      const open = t.view(LEADER).matches.filter((m) => m.status === 'open' && m.id !== 'gf');
+      if (open.length === 0) break;
+      for (const m of open) play(t, m, 0);
+    }
+    const final = t.view(LEADER).matches.find((m) => m.id === 'gf')!;
+    expect(final.status).toBe('open');
+    play(t, final, 1);
+    expect(t.phase).toBe('running');
+    const decider = t.view(LEADER).matches.find((m) => m.id === 'gf2')!;
+    expect(decider.slots.map((s) => s.player)).toEqual(final.slots.map((s) => s.player));
+    expect(t.setResult(LEADER, 'gf', 0)).toBe('Daran hängen schon weitere Partien.');
+    play(t, decider, 1);
+    const end = t.view(LEADER);
+    expect(end.phase).toBe('finished');
+    expect(end.podium[0]).toBe(final.slots[1].player);
+    expect(end.podium[1]).toBe(final.slots[0].player);
+  });
+
+  it('gewinnt der Ungeschlagene, ist sofort Schluss', () => {
+    const { t } = setup(4, 'double');
+    t.start(LEADER);
+    for (let i = 0; i < 12 && t.phase === 'running'; i++) playAllOpen(t);
+    expect(t.view(LEADER).matches.some((m) => m.id === 'gf2')).toBe(false);
+    expect(t.phase).toBe('finished');
+  });
+
+  it('nach einer Niederlage geht es in der Verliererrunde weiter', () => {
+    const { t } = setup(8, 'double');
+    t.start(LEADER);
+    const w1 = t.view(LEADER).matches.filter((m) => m.id.startsWith('w1-'));
+    for (const m of w1) play(t, m, 0);
+    const after = t.view(LEADER).matches;
+    expect(after.find((m) => m.id === 'l1-0')?.slots.map((s) => s.player)).toEqual([w1[0]!.slots[1].player, w1[1]!.slots[1].player]);
+    expect(after.find((m) => m.id === 'w2-0')?.slots.map((s) => s.player)).toEqual([w1[0]!.slots[0].player, w1[1]!.slots[0].player]);
+    expect(after.find((m) => m.id === 'l1-0')?.status).toBe('open');
+  });
+
+  it('Rückzug und Stichtage bringen das Turnier trotzdem zu Ende', () => {
+    const { t, clock } = setup(6, 'double');
+    t.start(LEADER);
+    t.withdraw(LEADER, t.view(LEADER).players[0]!.id);
+    for (let i = 0; i < 12 && t.phase === 'running'; i++) {
+      clock.now += 30 * DAY_MS;
+      t.tick();
+    }
+    expect(t.phase).toBe('finished');
   });
 });
 
