@@ -1,6 +1,8 @@
 # Spieler rund um einen Tisch (W-020) – Umsetzungsplan
 
-Stand 1.11.2026. Der Pilot mit Mau-Mau und Skat ist gebaut und nach Cornelius' erstem Test umgebaut, die übrigen Spiele warten auf Cornelius' Urteil dazu.
+Stand 2.11.2026. 13 Spiele sitzen am Tisch und sind veröffentlicht. Tiefflug bleibt ohne Tisch (Raster passen nicht), Poker behält seinen eigenen.
+
+Geprüft mit Zufallspartien auf 1280 × 800, 1024 × 768 und 768 × 1024: keine Fehler, kein Überlauf in Ruhe, Plätze im Bild. Online zu dritt (Skat, lokaler Spieleserver): Jeder sitzt bei sich unten. Nicht geprüft: echte Tablets mit Fingerbedienung, Start- und Zielpunkte der Flug-Animationen.
 
 ## Ziel
 

@@ -430,6 +430,11 @@ export function legalMoves(state: SkatState, actor: Actor): SkatMove[] {
   return [];
 }
 
+/** Die Ansage des Knopfs: Nur die Felder aus `legalMoves`, sonst gilt der Zug als unerlaubt und bleibt ohne Wirkung. */
+export function plainDeclaration(view: SkatState, gameType: SkatGameType): SkatMove {
+  return { type: 'declare', declaration: { gameType, hand: view.discardedCards.length === 0 } };
+}
+
 export function getContract(state: SkatState) {
   const decl = state.declaration || { gameType: 'grand' as const };
   if (decl.gameType === 'null') {
