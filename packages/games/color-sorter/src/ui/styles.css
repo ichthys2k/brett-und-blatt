@@ -327,6 +327,16 @@ button.cs-tile {
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
 }
 
+.cs-tile-face {
+  object-position: 50% 20%;
+}
+
+/* Mit Porträt ersetzt das runde Gesicht das Emoji; auf der großen Karte (Desktop) füllt das Porträt das Bildfeld. */
+.cs-tile-glyph,
+.cs-cardmode .cs-tile-text .cs-tile-face {
+  display: none;
+}
+
 .cs-glyph {
   display: inline-block;
   width: 1.4em;
@@ -931,6 +941,8 @@ button.cs-card {
   position: relative;
   padding-top: 1.7rem;
   overflow: hidden;
+  /* nicht schrumpfen: sonst schneidet das Panel „Kaufen“ ab, statt dass der Tisch scrollt */
+  flex-shrink: 0;
 }
 
 .cs-shop::before,

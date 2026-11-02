@@ -196,8 +196,13 @@ function targetFor(state: SorterState, run: RunState): number {
 }
 
 function InfoBox({ title, emoji, text, actions, onClose }: { title: string; emoji: string; text: ReactNode; actions?: ReactNode; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // Beim Öffnen und Wechseln in den sichtbaren Bereich holen, damit „Kaufen“ nicht unter dem Rand liegt.
+  useEffect(() => {
+    ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }, [title]);
   return (
-    <div className="cs-info" role="dialog" aria-label={title}>
+    <div className="cs-info" role="dialog" aria-label={title} ref={ref}>
       <div className="cs-info-head">
         <span className="cs-info-emoji" aria-hidden="true">
           {emoji}

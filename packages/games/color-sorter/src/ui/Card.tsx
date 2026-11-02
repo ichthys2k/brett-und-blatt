@@ -143,7 +143,8 @@ export function Tile({ emoji, image, symbol, title, sub, badge, tone = '', selec
     <>
       <span className="cs-tile-emoji" data-image={image ? '' : undefined} aria-hidden="true">
         {image && <img src={image} alt="" className="cs-tile-photo" loading="lazy" decoding="async" />}
-        {symbol ? <img src={symbol} alt="" className="cs-tile-symbol" loading="lazy" decoding="async" /> : emoji}
+        {image && !symbol && <img src={image} alt="" className="cs-tile-symbol cs-tile-face" loading="lazy" decoding="async" />}
+        {symbol ? <img src={symbol} alt="" className="cs-tile-symbol" loading="lazy" decoding="async" /> : image ? <span className="cs-tile-glyph">{emoji}</span> : emoji}
       </span>
       <span className="cs-tile-title">{title}</span>
       {text !== undefined && <span className="cs-tile-body">{text}</span>}
