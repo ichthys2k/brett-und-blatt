@@ -1,9 +1,10 @@
 /**
  * Rauchtest gegen den laufenden Spieleserver: ein ganzes Turnier in WM-Form mit sechs
  * nachgebauten Browsern, jede Partie in einem echten Raum und durch Aufgeben entschieden.
- * Aufruf: node apps/server/scripts/turnier.mjs [Adresse]
+ * Aufruf: node apps/server/scripts/turnier.mjs [Adresse] [world|knockout|double|swiss]
  */
 const base = process.argv[2] ?? 'http://127.0.0.1:8787';
+const format = process.argv[3] ?? 'world';
 const origin = 'http://localhost:5173';
 const wsBase = base.replace(/^http/, 'ws');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -34,7 +35,7 @@ const view = (box) => latest(box, 'tournament')?.view;
 const created = await fetch(`${base}/turniere`, {
   method: 'POST',
   headers: { Origin: origin, 'Content-Type': 'application/json' },
-  body: JSON.stringify({ token: 'kennung-der-leitung-0001', name: 'Leitung', settings: { name: 'Rauchtest', gameId: 'tic-tac-toe', format: 'world', time: 'relaxed', days: 7, thirdPlace: false } }),
+  body: JSON.stringify({ token: 'kennung-der-leitung-0001', name: 'Leitung', settings: { name: 'Rauchtest', gameId: 'tic-tac-toe', format, time: 'relaxed', days: 7, thirdPlace: false } }),
 });
 if (created.status !== 201) throw new Error(`Anlegen: ${created.status}`);
 const { code } = await created.json();
@@ -91,8 +92,9 @@ while (view(leader).phase === 'running') {
   played++;
 }
 const end = view(leader);
-console.log(`${played} Partien, Sieger: ${end.players.find((p) => p.id === end.podium[0])?.name}`);
-if (played !== 9 || end.podium.length !== 2) throw new Error('Unerwarteter Abschluss');
+console.log(`${format}: ${played} Partien, Sieger: ${end.players.find((p) => p.id === end.podium[0])?.name}`);
+const expected = { world: 9, knockout: 5, double: 10 }[format];
+if ((expected && played !== expected) || end.podium.length < 2) throw new Error(`Unerwarteter Abschluss: ${played} Partien`);
 for (const box of [leader, ...players]) box.ws.close();
 console.log('✓ Turnier-Rauchtest bestanden');
 process.exit(0);
