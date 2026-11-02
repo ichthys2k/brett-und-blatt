@@ -12,6 +12,8 @@ Austauschbare, reine Logik in `packages/online` (wie `lobby.ts`), ohne Cloudflar
 
 - **WM-Form:** Vierergruppen, jeder gegen jeden, 3/1/0 Punkte, die zwei Besten kommen in den K.-o.-Baum, Spiel um Platz 3 optional.
 - **Schweizer System:** feste Rundenzahl, immer ähnlich Starke gegeneinander.
+- **K.-o.:** Wer verliert, ist raus; Spiel um Platz 3 optional. Geht die Spielerzahl nicht in einer Zweierpotenz auf, gibt es in Runde 1 Freilose. Für n Spieler n − 1 Partien.
+- **Doppel-K.-o.:** Raus erst nach zwei Niederlagen. Gewinnerrunde, Verliererrunde, Großes Finale; gewinnt dort der Herausforderer, folgt eine Entscheidungspartie (`gf2`). 2n − 2 Partien, mit Entscheidung 2n − 1. Beide Seiten teilen sich Stichtage: bei 8 Spielern 6 Phasen, mit Entscheidung 7.
 
 | Spieler | Gruppen | Partien WM-Form | Runden |
 |---|---|---|---|
@@ -83,4 +85,5 @@ Im Turnier kann die Leitung zusätzlich einen Einmal-Link ausstellen (`reissue`,
 - **Benachrichtigung:** nur bei offener Seite im Hintergrund (Web Notifications). Hinweise bei geschlossener Seite bräuchten Web Push mit eigenen Schlüsseln und Speicherung der Empfänger, sind also eine eigene Entscheidung.
 - **Kontingent:** Eine Testpartie messen und hochrechnen, bevor große Turniere laufen.
 - **Datenschutz:** Der neue Absatz ist nicht rechtlich geprüft.
+- **Regeln fest:** Doppel-K.-o. kennt noch kein Spiel um Platz 3 als eigene Partie, Dritter ist der Verlierer des Finales der Verliererrunde.
 - **Ungeprüft:** echtes Turnier mit mehreren Menschen auf echten Geräten, Stichtage auf Cloudflare.
