@@ -8,6 +8,12 @@ import type { SessionSnapshot } from '@brett-und-blatt/engine';
 const ACTIVE_KEY = 'brett-und-blatt:laufende-partie';
 const setupKey = (gameId: string) => `brett-und-blatt:einstellungen:${gameId}`;
 const PROFILE_KEY = 'brett-und-blatt:profil';
+const TOURNAMENTS_KEY = 'brett-und-blatt:turniere';
+
+export interface KnownTournament {
+  code: string;
+  name: string;
+}
 const DEVICE_KEY = 'brett-und-blatt:geraet';
 const PLAYER_CODE_KEY = 'brett-und-blatt:spielercode';
 
@@ -58,6 +64,16 @@ export const storage = {
     return profile && typeof profile.name === 'string' && typeof profile.avatar === 'string' ? profile : null;
   },
   saveProfile: (profile: Profile) => write(PROFILE_KEY, profile),
+  /** Turniere, die dieses Gerät kennt – nur eine Merkliste für die Seite „Online spielen“. */
+  loadTournaments: (): KnownTournament[] => {
+    const list = read<KnownTournament[]>(TOURNAMENTS_KEY);
+    return Array.isArray(list) ? list : [];
+  },
+  rememberTournament: (entry: KnownTournament) => {
+    const others = storage.loadTournaments().filter((item) => item.code !== entry.code);
+    write(TOURNAMENTS_KEY, [entry, ...others].slice(0, 20));
+  },
+  forgetTournament: (code: string) => write(TOURNAMENTS_KEY, storage.loadTournaments().filter((item) => item.code !== code)),
   /**
    * Geheime, zufällige Kennung dieses Geräts. Mit ihr erkennt ein Online-Raum,
    * wer zurückkommt – sie verlässt das Gerät nur in Richtung Spieleserver.
@@ -81,6 +97,7 @@ export const storage = {
     remove(DEVICE_KEY);
     remove(PROFILE_KEY);
     remove(PLAYER_CODE_KEY);
+    remove(TOURNAMENTS_KEY);
   },
   loadPlayerCode: () => {
     const code = read<string>(PLAYER_CODE_KEY);
