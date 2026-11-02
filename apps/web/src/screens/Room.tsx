@@ -85,8 +85,13 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
   const leave = () => {
     if (!window.confirm(t('online.leaveConfirm'))) return;
     connection.leave();
-    navigate(paths.online);
+    navigate(room.match ? paths.tournament(room.match.tournament) : paths.online);
   };
+  const toTournament = room.match && (
+    <Button className="w-full" onClick={() => navigate(paths.tournament(room.match!.tournament))}>
+      🏆 {t('tournament.backToPage')}
+    </Button>
+  );
   const banner = state.status === 'reconnecting' && (
     <p className="fixed inset-x-0 bottom-0 z-30 bg-warning px-3 py-2 text-center text-sm font-medium text-white">{t('online.reconnecting')}</p>
   );
@@ -114,6 +119,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
           online={{
             yourSeat: session.yourSeat,
             isHost,
+            ...(room.match ? { finishedNote: t('tournament.matchOver') } : {}),
             onRestart: (rotate: boolean) => connection.send({ type: 'start', rotate }),
             onLobby: () => connection.send({ type: 'toLobby' }),
             onLeave: leave,
@@ -124,6 +130,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
             extra: (
               <>
+                {toTournament}
                 <GameSeats session={session} seatLabel={loaded.ui.seatLabel} room={room} you={state.you} isHost={isHost} send={connection.send.bind(connection)} />
                 <ReactionBar onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} phrases={loaded.ui.phrases} />
               </>
@@ -131,6 +138,30 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
           }}
         />
         {toasts}
+        {errorBox}
+        {banner}
+      </>
+    );
+  }
+
+  if (room.match) {
+    return (
+      <>
+        <Page>
+          <h1 className="text-2xl font-bold">🏆 {room.match.label}</h1>
+          <p className="text-muted">{room.match.noShow ? t('tournament.room.noShow') : t('tournament.room.waiting')}</p>
+          <ul className="space-y-1">
+            {room.lobby.seats.map((seat, index) => {
+              const member = seat.kind === 'human' ? room.members.find((m) => m.id === seat.memberId) : undefined;
+              return (
+                <li key={index} className="rounded-xl border border-line bg-surface px-3 py-2">
+                  {member ? `${member.avatar} ${member.name} ${member.connected ? '✅' : '⏳'}` : `⏳ ${t('tournament.room.empty')}`}
+                </li>
+              );
+            })}
+          </ul>
+          {toTournament}
+        </Page>
         {errorBox}
         {banner}
       </>

@@ -121,6 +121,12 @@ export function Datenschutz() {
         erkennt dich ein Raum auch auf einem anderen Gerät wieder. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>Turniere:</strong> Wenn du ein Turnier anlegst, dich einschreibst oder die Turnierseite öffnest, speichert der Spieleserver in der EU den
+        Namen des Turniers, deine Geräte-Kennung, deinen Spitznamen und dein Emoji-Bild sowie Paarungen und Ergebnisse. Alle Eingeschriebenen sehen
+        Spitznamen, Bilder und Ergebnisse, die Geräte-Kennung sieht niemand. Das Turnier wird 30 Tage nach seinem Ende gelöscht, ein nicht beendetes 30 Tage
+        nach der letzten Aktivität. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+      <p>
         Beim Verbindungsaufbau verarbeitet Cloudflare außerdem technisch notwendige Daten wie deine IP-Adresse, Datum und Uhrzeit sowie Angaben zum
         Browser, um die Verbindung herzustellen und den Dienst vor Angriffen zu schützen (Art. 6 Abs. 1 lit. f DSGVO). Dabei können Daten in die USA
         übermittelt werden. Cloudflare ist nach dem EU-US Data Privacy Framework zertifiziert. Wie lange Cloudflare diese Daten speichert, bestimmt

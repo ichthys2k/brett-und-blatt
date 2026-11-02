@@ -4,6 +4,7 @@ import { Datenschutz, Impressum } from './screens/Legal';
 import { Online } from './screens/Online';
 import { Play } from './screens/Play';
 import { RoomScreen } from './screens/Room';
+import { TournamentScreen } from './screens/Tournament';
 import { Setup } from './screens/Setup';
 import { SoundSettingsScreen } from './screens/SoundSettings';
 
@@ -18,6 +19,8 @@ export function App() {
       return <Online />;
     case 'room':
       return <RoomScreen key={route.code} code={route.code} />;
+    case 'tournament':
+      return <TournamentScreen key={route.code} code={route.code} claim={route.claim} />;
     case 'sound':
       return <SoundSettingsScreen />;
     case 'imprint':

@@ -4,6 +4,7 @@ import { Button, Section } from '../components/controls';
 import { EmojiKeypad, ProfileForm } from '../components/OnlineParts';
 import { OpenRooms } from '../components/OpenRooms';
 import { PlayerPassPanel } from '../components/PlayerPassPanel';
+import { TournamentsPanel } from '../components/TournamentsPanel';
 import { t } from '../i18n';
 import { GAME_SERVER, createRoom, roomExists, useOpenRooms } from '../lib/online';
 import { passChanged } from '../lib/playerPass';
@@ -101,6 +102,8 @@ export function Online() {
               <span>{t('online.publicListing')}</span>
             </label>
           </div>
+
+          <TournamentsPanel profile={profile} />
 
           <Section title={t('online.join')}>
             <p className="text-sm text-muted">{t('online.codeHint')}</p>

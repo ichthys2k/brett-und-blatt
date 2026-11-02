@@ -5,6 +5,8 @@ export {
   AWAY_AFTER_DISCONNECT_MS,
   CLOCK_GRACE_MS,
   HOST_HANDOVER_MS,
+  MATCH_ARRIVAL_MS,
+  MATCH_AWAY_MS,
   MAX_MEMBERS,
   ROOM_TTL_MS,
   CORRESPONDENCE_ROOM_TTL_MS,
@@ -12,6 +14,8 @@ export {
   SIGNAL_INTERVAL_MS,
   SIGNAL_MAX_PER_WINDOW,
   SIGNAL_WINDOW_MS,
+  type MatchRoomConfig,
+  type MatchRoomReport,
   type RoomDeps,
   type RoomSnapshot,
 } from './room';
@@ -24,4 +28,5 @@ export {
   listingNeedsSync,
   type OpenRoomsMessage,
 } from './lobby';
+export * from './tournament';
 export { BACKUP_ID_PATTERN, BACKUP_MAX_BYTES, BACKUP_TTL_MS, applyBackupPut, type BackupPutResult, type StoredBackup } from './backup';
