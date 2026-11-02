@@ -1887,6 +1887,34 @@ button.cs-tile {
   font-weight: 700;
 }
 
+.cs-cardmode .cs-mods .cs-tile-text {
+  position: relative;
+  padding: 0;
+}
+
+.cs-cardmode .cs-mods .cs-tile-text .cs-tile-emoji {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  border-bottom: 0;
+}
+
+.cs-cardmode .cs-mods .cs-tile-text .cs-tile-title {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  padding: 1.4rem 0.35rem 0.3rem;
+  background: linear-gradient(transparent, rgb(0 0 0 / 78%));
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 70%);
+}
+
+.cs-cardmode .cs-mods .cs-tile-text .cs-tile-body,
+.cs-cardmode .cs-mods .cs-tile-text .cs-tile-foot {
+  display: none;
+}
+
 .cs-t-common {
   --cs-tone: #8fa3b8;
 }
@@ -2233,7 +2261,7 @@ button.cs-tile {
 }
 
 .cs-bigmode.cs-deskmode .cs-play {
-  grid-template-columns: auto;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto;
   grid-template-areas:
     'hand'
@@ -2248,6 +2276,7 @@ button.cs-tile {
 }
 
 .cs-deskmode .cs-actions {
+  position: relative;
   display: flex;
   grid-area: play;
   align-items: center;
@@ -2257,6 +2286,11 @@ button.cs-tile {
 
 .cs-deskmode .cs-actions > .cs-btn {
   min-width: 9rem;
+}
+
+.cs-actions .cs-looklink {
+  position: absolute;
+  right: 0;
 }
 
 .cs-sort {
