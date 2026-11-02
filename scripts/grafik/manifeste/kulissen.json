@@ -1,0 +1,41 @@
+{
+  "beschreibung": "Kulissen für den Narrenhof: fünf menschenleere Breitbild-Hintergründe (Jahrmarkt, Thronsaal, Hof, Lieferung, Narrenschule).",
+  "stil": "Painterly storybook oil illustration of an empty medieval fantasy fool's-court scene, wide landscape background for a card game screen: rich warm colours, candlelight and lantern glow, soft atmospheric haze, harlequin diamond patterns, red, gold, deep wine and forest green palette, detailed decoration at the left and right edges and the top, while the centre and lower middle stay calm, darker and uncluttered so that interface text can be laid over it. No people, no animals, no characters, no faces, no text, no letters, no numbers, no frame.",
+  "ohne": "people, animals, characters, faces, text, letters, numbers, watermark, border, frame, modern objects, logos, photo",
+  "format": "16:9",
+  "groesse": [
+    960,
+    540
+  ],
+  "qualitaet": 70,
+  "ziel": "packages/games/color-sorter/src/ui/kulissen",
+  "praefix": "",
+  "suffix": "",
+  "motive": [
+    {
+      "id": "jahrmarkt",
+      "titel": "Jahrmarkt",
+      "prompt": "A medieval fairground avenue at dusk: red and gold striped market stalls and tents on both sides, strings of glowing lanterns and bunting across the sky, a lit big-top tent far away, a cobbled empty path in the middle."
+    },
+    {
+      "id": "thronsaal",
+      "titel": "Thronsaal",
+      "prompt": "A grand throne hall: tall stone pillars with harlequin-patterned banners, a long red carpet leading to an empty golden throne under a canopy, chandeliers with many candles, light rays through high windows."
+    },
+    {
+      "id": "hof",
+      "titel": "Hof",
+      "prompt": "A sunlit castle courtyard: a stone archway with an open wooden door, a small fountain, colourful pennants and diamond-patterned banners on the walls, cobblestones in the middle, climbing roses, golden afternoon light."
+    },
+    {
+      "id": "buendel",
+      "titel": "Lieferung",
+      "prompt": "A cosy storeroom of the fool's court: shelves with parcels, sacks, ribbon-tied bundles and crates on both sides, a hanging lamp with warm light, an empty wooden table in the middle with some straw."
+    },
+    {
+      "id": "schule",
+      "titel": "Narrenschule",
+      "prompt": "A rustic fool's school classroom: wooden desks and benches at the sides, a big blackboard with chalk drawings of simple shapes and no writing, jester caps and juggling balls hanging on the wall, bookshelves, warm window light, an open wooden floor in the middle."
+    }
+  ]
+}

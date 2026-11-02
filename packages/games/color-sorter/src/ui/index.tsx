@@ -16,6 +16,7 @@ import { BackContext, CardView, cardDetails, cardTip, DeckStyleContext, isOpen, 
 import { HoverProvider, tipFrom, type ExtraProps } from './Hover';
 import { describeConsumable, describeMod, describeOffer, describePack, describeTag, describeTool, formatMult, formatNumber, handName } from './texts';
 import { playBossSound, playEffect, playHandAnnouncement } from './audio';
+import { kulisse } from './kulissen';
 import { hasMoods, portraitUrl, preloadPortrait, stageOf, type PortraitStage } from './portraits';
 import './styles.css';
 
@@ -977,7 +978,7 @@ function ChoosePanel({ view, run, can, onMove, hint }: { view: SorterState; run:
   }, [view, run, run.level, run.round, run.current?.boss]);
 
   return (
-    <div className="cs-panel cs-center">
+    <div className={`cs-panel cs-center ${kulisse(run.round === 2 ? 'thronsaal' : 'hof').className}`} style={kulisse(run.round === 2 ? 'thronsaal' : 'hof').style}>
       <p className="cs-muted">
         Hoftag {run.level} · {ROUND_NAMES[run.round]}
       </p>
@@ -1104,7 +1105,7 @@ function ShopPanel({ run, can, find, onMove, hint, selected, setSelected, dragPr
   }
   const isHint = (m: Partial<SorterMove>) => !!hint && Object.entries(m).every(([k, v]) => (hint as Record<string, unknown>)[k] === v);
   return (
-    <div className="cs-panel cs-shop">
+    <div className={`cs-panel cs-shop ${kulisse('jahrmarkt').className}`} style={kulisse('jahrmarkt').style}>
       <div className="cs-shop-head">
         <strong>🎪 Jahrmarkt</strong>
         {payout && (payout.reward || payout.hands || payout.bonus || payout.extra) ? (
@@ -1248,7 +1249,7 @@ function PackPanel({ run, find, onMove, hint, selected, setSelected, picked, tog
   // Bühne: 0 Bündel wackelt, 1 Schnur geht auf, ab 2 werden die Karten einzeln umgedreht.
   if (stage < 2) {
     return (
-      <button type="button" className="cs-panel cs-center cs-delivery" onClick={finish} aria-label="Bündel aufschnüren">
+      <button type="button" className={`cs-panel cs-center cs-delivery ${kulisse('buendel').className}`} style={kulisse('buendel').style} onClick={finish} aria-label="Bündel aufschnüren">
         <span className={`cs-bundle ${stage === 0 ? 'cs-wobble' : 'cs-untie'}`} aria-hidden="true">
           <span className="cs-bundle-cloth">{d.symbol ? <img src={d.symbol} alt="" className="cs-tile-symbol" /> : d.emoji}</span>
           <span className="cs-knot">🎀</span>
@@ -1263,7 +1264,7 @@ function PackPanel({ run, find, onMove, hint, selected, setSelected, picked, tog
   const offer = sel !== null ? pack.items[sel] : undefined;
   const pick = sel !== null ? find((m) => m.type === 'pick' && m.index === sel && same(m.cards, sorted)) : undefined;
   return (
-    <div className="cs-panel cs-pack" onClick={shown < pack.items.length ? finish : undefined}>
+    <div className={`cs-panel cs-pack ${kulisse('buendel').className}`} style={kulisse('buendel').style} onClick={shown < pack.items.length ? finish : undefined}>
       <div className="cs-shop-head">
         <strong>
           {d.emoji} {d.title}

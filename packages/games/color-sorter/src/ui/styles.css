@@ -2393,3 +2393,10 @@ button.cs-tile {
     'hand'
     'play';
 }
+
+/* Kulissen: Hintergrundbild unter einem Schleier in der Flächenfarbe, Text bleibt lesbar */
+.cs-kulisse {
+  background:
+    linear-gradient(color-mix(in srgb, var(--color-surface) 48%, transparent), color-mix(in srgb, var(--color-surface) 74%, transparent)),
+    var(--cs-kulisse) center / cover no-repeat;
+}

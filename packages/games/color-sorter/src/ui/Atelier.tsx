@@ -9,6 +9,7 @@ import { ATELIER_BOX_PRICE, boxOdds, CARD_BACKS, THEMES, UNLOCK_KIND_NAMES, UNLO
 import { buy, buyBox, equip, exportCode, importCode, useProgress, type AlbumKind } from './progress';
 import { clearSyncError, connectSync, connectWithPasskey, createPasskey, createSync, disconnectSync, passkeySupport, scheduleSync, syncAvailable, syncLink, syncNow, takeLinkCode, useSyncState } from './sync';
 import { formatCode } from './syncCrypto';
+import { kulisse } from './kulissen';
 import { formatNumber } from './texts';
 
 type Tab = 'atelier' | 'album' | 'save';
@@ -555,7 +556,7 @@ export function Atelier({ onClose, start = 'atelier', linkCode }: { onClose: () 
   useEffect(() => () => scheduleSync(), []);
   return (
     <div className="cs-modal" role="dialog" aria-modal="true" aria-label="Narrenschule">
-      <div className="cs-modal-inner">
+      <div className={`cs-modal-inner ${kulisse('schule').className}`} style={kulisse('schule').style}>
         <div className="cs-info-head">
           <strong className="cs-title">🎓 Narrenschule</strong>
           <span className="cs-drops" aria-label={`${progress.drops} Glöckchen`}>
