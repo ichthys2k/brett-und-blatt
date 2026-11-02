@@ -53,8 +53,8 @@ Die dritte Zeile ist für die Tabelle „Erledigt“.
 
 | Nr. | Titel | Erledigt am | Commit/PR |
 | --- | --- | --- | --- |
-| F-014 | Skat: Der Knopf „… ansagen“ blieb ohne Wirkung, wer das Reizen gewann, kam nicht weiter (offline und online) | 2026-11-02 | noch nicht veröffentlicht |
-| F-015 | Tisch im Tablet-Hochformat: seitliche Plätze ragten aus dem Bild, Stichkarten bei Präsident waren breiter als die Mitte | 2026-11-02 | noch nicht veröffentlicht |
+| F-014 | Skat: Der Knopf „… ansagen“ blieb ohne Wirkung, wer das Reizen gewann, kam nicht weiter (offline und online) | 2026-11-02 | 082ab25 |
+| F-015 | Tisch im Tablet-Hochformat: seitliche Plätze ragten aus dem Bild, Stichkarten bei Präsident waren breiter als die Mitte | 2026-11-02 | 082ab25 |
 | F-013 | Stichspiele: Karten und Namen im Stich überdecken sich nicht mehr (Kartenfläche nach Platzzahl, auch zu viert), Namen auf dem Filz lesbar | 2026-11-02 | 4a66681 |
 | W-055 | Narrenhof: Desktop-Tisch aufgeräumt (Narrentasche rechts in der Bankzeile, Zähler links unter der Bühne, Knöpfe Vorführen/Sortieren/Tauschen unter der Hand, Stapel als Kartenrücken neben der Hand, Stufe bei jeder Kombi; später Narren nur als Porträt mit Namen, Kartenbild in der Knopfzeile, Zähler der Bank entfernt); die linke Leiste bleibt vorerst unverändert; noch nicht im Dunkelmodus und auf Handy/Querformat angesehen | 2026-11-01 | b92ae12, 11cd9a4, 4087943 |
 | W-044 | Drachenspiel: Ausbau zum vollwertigen Sammelkarten-Duell, von Cornelius für erledigt erklärt; [Plan](docs/spiele/drachenspiel-ausbau.md) | 2026-11-01 | 26a40d1 |
