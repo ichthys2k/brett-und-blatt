@@ -1,5 +1,7 @@
 import type { GameInfo, OptionSpec, Options } from '@brett-und-blatt/engine';
+import { OPEN_ROOM_REFRESH_MS } from './lobby';
 import { cleanAvatar, cleanName } from './names';
+import type { OpenRoomListing } from './protocol';
 
 /**
  * Turniere (W-053) ohne Anbieterbindung: Einschreibung, Auslosung, Tabellen, Baum und
@@ -36,6 +38,8 @@ export interface TournamentSettings {
   days: number;
   /** Spiel um Platz 3 (WM-Form und K.-o.). */
   thirdPlace: boolean;
+  /** Öffentlich ausgeschrieben (in „Offene Runden“), solange die Einschreibung läuft; fehlt = ja. */
+  isPublic?: boolean;
   /** Spieloptionen aller Partien; was fehlt, steht auf dem Standard. */
   options?: Options;
 }
@@ -247,7 +251,7 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
       options[id] = value as string;
     }
   }
-  return { name, gameId: body.gameId, format: body.format, time: body.time, days: body.days, thirdPlace: body.thirdPlace === true, ...(Object.keys(options).length > 0 ? { options } : {}) };
+  return { name, gameId: body.gameId, format: body.format, time: body.time, days: body.days, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...(Object.keys(options).length > 0 ? { options } : {}) };
 }
 
 // ---------------------------------------------------------------------------
@@ -699,7 +703,27 @@ export class Tournament {
   nextWakeup(): number {
     const times = [this.expiresAt()];
     for (const match of this.s.matches) if (match.status === 'open') times.push(this.dueAt(match));
+    // Die Ausschreibung muss sich regelmäßig neu melden, sonst fällt sie aus der Liste.
+    if (this.publicListing()) times.push(this.deps.now() + OPEN_ROOM_REFRESH_MS);
     return Math.min(...times);
+  }
+
+  /** Karte für „Offene Runden“: nur öffentlich und nur, solange man sich einschreiben kann. */
+  publicListing(): OpenRoomListing | null {
+    if (this.s.phase !== 'signup' || this.s.settings.isPublic === false) return null;
+    return {
+      code: this.s.code,
+      gameId: this.s.settings.gameId,
+      gameName: this.s.settings.name,
+      gameEmoji: '🏆',
+      hostName: this.s.leaderName,
+      hostAvatar: '🏆',
+      totalSeats: TOURNAMENT_MAX_PLAYERS,
+      filledSeats: this.s.players.length,
+      createdAt: this.s.createdAt,
+      updatedAt: this.deps.now(),
+      tournament: true,
+    };
   }
 
   /** Ab dann darf das Turnier samt allen Daten verschwinden. */

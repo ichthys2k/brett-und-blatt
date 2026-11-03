@@ -477,6 +477,15 @@ describe('Spieloptionen und Regelstand', () => {
     expect(t.pendingRooms()[0]?.options).toEqual({ size: '13' });
   });
 
+  it('schreibt sich öffentlich aus, solange man sich einschreiben kann', () => {
+    const { t } = setup(3, 'swiss');
+    expect(t.publicListing()).toMatchObject({ code: 'ABCD2345', tournament: true, gameName: 'Testcup', filledSeats: 3, hostName: 'Leitung' });
+    expect(setup(3, 'swiss', { isPublic: false }).t.publicListing()).toBeNull();
+    const full = setup(4, 'swiss');
+    expect(full.t.start(LEADER)).toBeNull();
+    expect(full.t.publicListing()).toBeNull();
+  });
+
   it('meldet, wenn sich die Regeln seit dem Start geändert haben', () => {
     let version = 3;
     const t = Tournament.create('ABCD2345', 's', { name: 'Cup', gameId: 'chess', format: 'swiss', time: 'normal', days: 7, thirdPlace: false }, { token: LEADER, name: 'L' }, { now: () => 1, randomClaim: () => 'X', ruleVersion: () => version });

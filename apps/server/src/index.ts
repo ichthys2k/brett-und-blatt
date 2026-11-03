@@ -554,6 +554,7 @@ interface TournamentAttachment {
  */
 export class TournamentRoom extends DurableObject<Env> {
   private tournament: Tournament | null = null;
+  private lastListing: OpenRoomListing | null | undefined = undefined;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -650,6 +651,7 @@ export class TournamentRoom extends DurableObject<Env> {
     if (!t) return;
     if (Date.now() >= t.expiresAt()) {
       this.tournament = null;
+      await registryStub(this.env).removeRoom(t.snapshot().code).catch(() => undefined);
       await this.ctx.storage.deleteAll();
       for (const ws of this.ctx.getWebSockets()) ws.close(1000, 'Turnier beendet');
       return;
@@ -672,6 +674,23 @@ export class TournamentRoom extends DurableObject<Env> {
     const wake = retry ? Date.now() + 30_000 : t.nextWakeup();
     await this.ctx.storage.setAlarm(Math.max(wake, Date.now() + 1000));
     for (const ws of this.ctx.getWebSockets()) this.sendView(ws);
+    await this.syncRegistry(t);
+  }
+
+  /** Schreibt das Turnier in „Offene Runden“ aus (oder nimmt es heraus) – nur bei sichtbarer Änderung. */
+  private async syncRegistry(t: Tournament): Promise<void> {
+    const listing = t.publicListing();
+    if (!listingNeedsSync(this.lastListing, listing)) return;
+    const previous = this.lastListing;
+    this.lastListing = listing;
+    try {
+      const reg = registryStub(this.env);
+      if (listing) await reg.updateRoom(listing);
+      else await reg.removeRoom(t.snapshot().code);
+    } catch (err) {
+      this.lastListing = previous;
+      console.error('LobbyRegistry sync failed (Turnier):', err);
+    }
   }
 
   private async createMatchRoom(config: MatchRoomConfig): Promise<string | null> {

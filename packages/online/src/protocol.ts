@@ -40,6 +40,8 @@ export interface OpenRoomListing {
   filledSeats: number;
   createdAt: number;
   updatedAt: number;
+  /** Ausschreibung eines Turniers (Einschreibung läuft): `code` ist der Turniercode, `gameName` der Turniername. */
+  tournament?: boolean;
 }
 
 /** Ein Mitglied des Raums, wie es alle sehen. Die geheime Kennung steht nie darin. */

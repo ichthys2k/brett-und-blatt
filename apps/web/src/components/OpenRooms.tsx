@@ -14,8 +14,9 @@ function formatTimeAgo(timeMs: number, now: number): string {
 
 function OpenGameCard({ room, now }: { room: OpenRoomListing; now: number }) {
   const freeSeats = room.totalSeats - room.filledSeats;
-  const seatsText =
-    freeSeats === 1
+  const seatsText = room.tournament
+    ? t('home.openGames.signedUp', { n: room.filledSeats })
+    : freeSeats === 1
       ? t('home.openGames.oneSeat', { total: room.totalSeats })
       : t('home.openGames.seats', { free: freeSeats, total: room.totalSeats });
 
@@ -36,8 +37,8 @@ function OpenGameCard({ room, now }: { room: OpenRoomListing; now: number }) {
           </p>
         </div>
       </div>
-      <Button variant="primary" onClick={() => navigate(paths.room(room.code))}>
-        {t('home.openGames.join')}
+      <Button variant="primary" onClick={() => navigate(room.tournament ? paths.tournament(room.code) : paths.room(room.code))}>
+        {room.tournament ? t('home.openGames.signUp') : t('home.openGames.join')}
       </Button>
     </li>
   );

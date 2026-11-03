@@ -23,6 +23,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [time, setTime] = useState<TournamentSettings['time']>('normal');
   const [days, setDays] = useState(7);
   const [thirdPlace, setThirdPlace] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
   const [specs, setSpecs] = useState<OptionSpec[]>([]);
   const [options, setOptions] = useState<Options>({});
   const [busy, setBusy] = useState(false);
@@ -50,7 +51,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
     setError(null);
     try {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
-      const code = await createTournament({ name: name.trim(), gameId, format, time, days, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), options: chosen }, profile);
+      const code = await createTournament({ name: name.trim(), gameId, format, time, days, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), isPublic, options: chosen }, profile);
       storage.rememberTournament({ code, name: name.trim() });
       passChanged();
       navigate(paths.tournament(code));
@@ -153,6 +154,10 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               {t('tournament.third')}
             </label>
           )}
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" className="h-4 w-4 accent-accent" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
+            {t('tournament.public')}
+          </label>
           <Button type="submit" variant="primary" className="w-full" disabled={busy || !name.trim() || !gameId}>
             🏆 {t('tournament.create')}
           </Button>
