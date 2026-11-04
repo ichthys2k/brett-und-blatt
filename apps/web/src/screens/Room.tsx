@@ -1,5 +1,5 @@
 import { BOT_LEVELS, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
-import { MAX_SEATS, parseRoomCode, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
+import { MAX_SEATS, TOURNAMENT_CODE_PATTERN, parseRoomCode, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { ProfileForm, QrCode, ReactionBar, SignalToasts } from '../components/OnlineParts';
@@ -7,7 +7,7 @@ import { t } from '../i18n';
 import { announceAvatar } from '../lib/avatar-sounds';
 import { describeTime, levelLabel } from '../lib/format';
 import { requestNotificationPermission } from '../lib/notifications';
-import { useRoomConnection, type RoomConnection, type RoomState } from '../lib/online';
+import { GAME_SERVER, useRoomConnection, type RoomConnection, type RoomState } from '../lib/online';
 import { games, loadGame, type LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
@@ -46,6 +46,20 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
       requestNotificationPermission();
     }
   }, [code, profile]);
+
+  // Ein Turniercode im Raum-Link (z. B. aus einer älteren, noch zwischengespeicherten App-Version): zum Turnier weiterleiten.
+  const missing = !code || state?.status === 'gone';
+  useEffect(() => {
+    if (!missing || !GAME_SERVER || !TOURNAMENT_CODE_PATTERN.test(rawCode)) return;
+    let stopped = false;
+    fetch(`${GAME_SERVER}/turniere/${encodeURIComponent(rawCode)}`)
+      .then((response) => (response.ok ? (response.json() as Promise<{ exists: boolean }>) : null))
+      .then((body) => body?.exists && !stopped && navigate(paths.tournament(rawCode)))
+      .catch(() => undefined);
+    return () => {
+      stopped = true;
+    };
+  }, [missing, rawCode]);
 
   if (!code) return <Notice text={t('online.notFound')} />;
   if (!profile) {
