@@ -48,8 +48,8 @@ describe('Sicherung der Decks', () => {
     const own = await keysFromCode(c, DRACHENSPIEL_SALT);
     expect(vault.get(own.id)?.rev).toBe(1);
     expect(vault.get(narrenhof.id)).toBe(before);
-    // Der Server sieht nur Datensalat.
-    expect(vault.get(own.id)?.data).not.toContain('Hof');
+    // Der Server sieht nur verschlüsselte Bytes, keine serialisierten Deckdaten.
+    expect(() => JSON.parse(vault.get(own.id)!.data)).toThrow();
   });
 
   it('ein unbekannter Code wird abgelehnt und legt nichts an', async () => {

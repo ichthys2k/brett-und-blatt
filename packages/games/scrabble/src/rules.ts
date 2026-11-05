@@ -1,4 +1,19 @@
-import type { Actor, GameEvent, MoveResult, Options, Result, SeatId } from '@brett-und-blatt/engine';
+import {
+  castBallot,
+  isValidBallot,
+  openVote,
+  pendingVoters,
+  voteComplete,
+  voteView,
+  voteWinner,
+  type Actor,
+  type GameEvent,
+  type MoveResult,
+  type Options,
+  type Result,
+  type SeatId,
+  type VoteBox,
+} from '@brett-und-blatt/engine';
 import { Rng, type RngState } from '@brett-und-blatt/engine';
 import { BOARD_SIZE, CENTER, squareTypeAt } from './board';
 import { isValidWord } from './dict';
@@ -23,11 +38,18 @@ export interface PlacedTile {
 
 export interface LastMove {
   seat: number;
-  kind: 'play' | 'exchange' | 'pass';
+  kind: 'play' | 'exchange' | 'pass' | 'rejected';
   cells: number[];
   words: { word: string; score: number }[];
   score: number;
   count: number;
+}
+
+export interface WordProposal {
+  seat: SeatId;
+  tiles: PlacedTile[];
+  words: string[];
+  vote: VoteBox;
 }
 
 export interface ScrabbleState {
@@ -45,6 +67,8 @@ export interface ScrabbleState {
   moveCount: number;
   rackSize: number;
   bingoBonus: number;
+  allowUnlistedWords: boolean;
+  proposal: WordProposal | null;
   lastMove: LastMove | null;
   /** Endstand nach Verrechnung der Reststeine, sobald die Partie vorbei ist. */
   final: number[] | null;
@@ -53,7 +77,8 @@ export interface ScrabbleState {
 export type ScrabbleMove =
   | { type: 'play'; tiles: PlacedTile[] }
   | { type: 'exchange'; tiles: Tile[] }
-  | { type: 'pass' };
+  | { type: 'pass' }
+  | { type: 'vote'; accept: boolean };
 
 /** Mindestzahl Steine im Beutel, damit getauscht werden darf. */
 export const EXCHANGE_MIN_BAG = 7;
@@ -79,13 +104,16 @@ export function setup(seats: number, options: Options, seed: string): ScrabbleSt
     moveCount: 0,
     rackSize,
     bingoBonus: String(options.bingoBonus ?? '50') === '0' ? 0 : 50,
+    allowUnlistedWords: options.unlistedWords !== 'strict',
+    proposal: null,
     lastMove: null,
     final: null,
   };
 }
 
 export function currentPlayers(state: ScrabbleState): Actor[] {
-  return state.final ? [] : [state.turn];
+  if (state.final) return [];
+  return state.proposal ? pendingVoters(state.proposal.vote) : [state.turn];
 }
 
 // ---------------------------------------------------------------------------
@@ -93,14 +121,19 @@ export function currentPlayers(state: ScrabbleState): Actor[] {
 // ---------------------------------------------------------------------------
 
 export type PlayCheck =
-  | { ok: true; words: { word: string; score: number; cells: number[] }[]; score: number; bingo: boolean }
+  | { ok: true; words: { word: string; score: number; cells: number[] }[]; score: number; bingo: boolean; unknownWords: string[] }
   | { ok: false; reason: string };
 
 /**
  * Prüft eine Legung auf dem Brett (ohne Bänkchen): eine Linie, lückenlos, angelegt bzw. über
  * die Mitte, alle entstandenen Wörter im Wörterbuch. Liefert Wörter und Punkte.
  */
-export function checkPlay(board: readonly (BoardCell | null)[], tiles: readonly PlacedTile[], bingoBonus = 50): PlayCheck {
+export function checkPlay(
+  board: readonly (BoardCell | null)[],
+  tiles: readonly PlacedTile[],
+  bingoBonus = 50,
+  allowUnlistedWords = false,
+): PlayCheck {
   if (tiles.length === 0) return { ok: false, reason: 'Lege mindestens einen Stein.' };
   const placed = new Map<number, PlacedTile>();
   for (const t of tiles) {
@@ -195,11 +228,13 @@ export function checkPlay(board: readonly (BoardCell | null)[], tiles: readonly 
     }
   }
   if (words.length === 0) return { ok: false, reason: 'Es entsteht kein Wort.' };
-  const wrong = words.find((w) => !isValidWord(w.word));
-  if (wrong) return { ok: false, reason: `„${wrong.word}“ steht nicht im Wörterbuch.` };
+  const unknownWords = [...new Set(words.filter((w) => !isValidWord(w.word)).map((w) => w.word))];
+  if (unknownWords.length > 0 && !allowUnlistedWords) {
+    return { ok: false, reason: `„${unknownWords[0]}“ steht nicht im Wörterbuch.` };
+  }
   const bingo = tiles.length >= BINGO_TILES;
   const score = words.reduce((sum, w) => sum + w.score, 0) + (bingo ? bingoBonus : 0);
-  return { ok: true, words, score, bingo };
+  return { ok: true, words, score, bingo, unknownWords };
 }
 
 /** Nimmt die Steine vom Bänkchen; null, wenn sie nicht darauf liegen. */
@@ -224,7 +259,11 @@ const rackTile = (t: PlacedTile): Tile => (t.blank ? '?' : t.letter);
  * des ganzen Bänkchens (beliebige Teilmengen prüft `isLegal`).
  */
 export function legalMoves(state: ScrabbleState, actor: Actor): ScrabbleMove[] {
-  if (state.final || actor !== state.turn) return [];
+  if (state.final || typeof actor !== 'number') return [];
+  if (state.proposal) {
+    return isValidBallot(state.proposal.vote, actor, [0]) ? [{ type: 'vote', accept: true }, { type: 'vote', accept: false }] : [];
+  }
+  if (actor !== state.turn) return [];
   const rack = state.racks[state.turn]!.filter((t): t is Tile => t !== null);
   const moves: ScrabbleMove[] = generatePlays(state.board, rack).map((tiles) => ({ type: 'play', tiles }));
   if (state.bag.length >= EXCHANGE_MIN_BAG && rack.length > 0) moves.push({ type: 'exchange', tiles: rack });
@@ -233,7 +272,11 @@ export function legalMoves(state: ScrabbleState, actor: Actor): ScrabbleMove[] {
 }
 
 export function isLegal(state: ScrabbleState, actor: Actor, move: ScrabbleMove): boolean {
-  if (state.final || actor !== state.turn) return false;
+  if (state.final || typeof actor !== 'number') return false;
+  if (state.proposal) {
+    return move?.type === 'vote' && typeof move.accept === 'boolean' && isValidBallot(state.proposal.vote, actor, [move.accept ? 1 : 0]);
+  }
+  if (actor !== state.turn) return false;
   const rack = state.racks[state.turn]!;
   switch (move.type) {
     case 'pass':
@@ -249,7 +292,7 @@ export function isLegal(state: ScrabbleState, actor: Actor, move: ScrabbleMove):
       return (
         Array.isArray(move.tiles) &&
         takeFromRack(rack, move.tiles.map(rackTile)) !== null &&
-        checkPlay(state.board, move.tiles, state.bingoBonus).ok
+        checkPlay(state.board, move.tiles, state.bingoBonus, state.allowUnlistedWords && state.seats > 1).ok
       );
     default:
       return false;
@@ -265,9 +308,7 @@ function finish(state: ScrabbleState, finisher: number | null): number[] {
   return state.scores.map((score, seat) => (seat === finisher ? score + total : score - rests[seat]!));
 }
 
-export function applyMove(state: ScrabbleState, actor: Actor, move: ScrabbleMove): MoveResult<ScrabbleState> {
-  if (!isLegal(state, actor, move)) throw new Error('Unerlaubter Zug.');
-  const seat = state.turn;
+function applyTurn(state: ScrabbleState, seat: SeatId, move: Exclude<ScrabbleMove, { type: 'vote' }>): MoveResult<ScrabbleState> {
   const next: ScrabbleState = { ...state, turn: (seat + 1) % state.seats, moveCount: state.moveCount + 1 };
   const events: GameEvent[] = [];
 
@@ -287,7 +328,7 @@ export function applyMove(state: ScrabbleState, actor: Actor, move: ScrabbleMove
     next.lastMove = { seat, kind: 'exchange', cells: [], words: [], score: 0, count: move.tiles.length };
     events.push({ type: 'exchanged', seat, count: move.tiles.length });
   } else {
-    const check = checkPlay(state.board, move.tiles, state.bingoBonus);
+    const check = checkPlay(state.board, move.tiles, state.bingoBonus, state.allowUnlistedWords && state.seats > 1);
     if (!check.ok) throw new Error(check.reason);
     const board = [...state.board];
     for (const t of move.tiles) board[idx(t.row, t.col)] = { letter: t.letter, blank: !!t.blank, by: seat };
@@ -317,6 +358,69 @@ export function applyMove(state: ScrabbleState, actor: Actor, move: ScrabbleMove
   return { state: next, events };
 }
 
+function rejectProposal(state: ScrabbleState, proposal: WordProposal): MoveResult<ScrabbleState> {
+  const next: ScrabbleState = {
+    ...state,
+    proposal: null,
+    turn: (proposal.seat + 1) % state.seats,
+    moveCount: state.moveCount + 1,
+    scoreless: state.scoreless + 1,
+    lastMove: {
+      seat: proposal.seat,
+      kind: 'rejected',
+      cells: [],
+      words: proposal.words.map((word) => ({ word, score: 0 })),
+      score: 0,
+      count: proposal.tiles.length,
+    },
+  };
+  const events: GameEvent[] = [{ type: 'wordRejected', seat: proposal.seat, words: proposal.words }];
+  if (next.scoreless >= Math.max(6, state.seats * 2)) {
+    next.final = finish(next, null);
+    events.push({ type: 'gameOver' });
+  }
+  return { state: next, events };
+}
+
+export function applyMove(state: ScrabbleState, actor: Actor, move: ScrabbleMove): MoveResult<ScrabbleState> {
+  if (!isLegal(state, actor, move)) throw new Error('Unerlaubter Zug.');
+
+  if (state.proposal) {
+    const proposal = state.proposal;
+    const vote = castBallot(proposal.vote, actor as SeatId, [move.type === 'vote' && move.accept ? 1 : 0]);
+    const next = { ...state, proposal: { ...proposal, vote } };
+    if (!voteComplete(vote)) return { state: next, events: [{ type: 'wordVoteCast', seat: actor }] };
+    if (voteWinner(vote, 0, 0) !== 1) return rejectProposal(next, proposal);
+
+    const accepted = applyTurn({ ...next, proposal: null }, proposal.seat, { type: 'play', tiles: proposal.tiles });
+    return {
+      state: accepted.state,
+      events: [{ type: 'wordAccepted', seat: proposal.seat, words: proposal.words }, ...accepted.events],
+    };
+  }
+
+  if (move.type === 'play') {
+    const check = checkPlay(state.board, move.tiles, state.bingoBonus, state.allowUnlistedWords && state.seats > 1);
+    if (!check.ok) throw new Error(check.reason);
+    if (check.unknownWords.length > 0) {
+      const voters = Array.from({ length: state.seats }, (_, seat) => seat).filter((seat) => seat !== actor);
+      const proposal: WordProposal = {
+        seat: actor as SeatId,
+        tiles: move.tiles,
+        words: check.unknownWords,
+        vote: openVote(state.seats, voters, { choices: 2, secret: true }),
+      };
+      return {
+        state: { ...state, proposal },
+        events: [{ type: 'wordProposed', seat: actor, words: proposal.words }],
+      };
+    }
+  }
+
+  if (move.type === 'vote') throw new Error('Es gibt keine offene Wortabstimmung.');
+  return applyTurn(state, actor as SeatId, move);
+}
+
 export function result(state: ScrabbleState): Result | null {
   if (!state.final) return null;
   const best = Math.max(...state.final);
@@ -337,6 +441,7 @@ export function playerView(state: ScrabbleState, seat: SeatId | 'spectator'): Sc
     racks: state.racks.map((rack, s) => (s === seat || state.final ? rack : rack.map(() => null))),
     bag: state.bag.map(() => null),
     rng: [0, 0, 0, 0],
+    proposal: state.proposal ? { ...state.proposal, vote: voteView(state.proposal.vote, seat) } : null,
   };
 }
 

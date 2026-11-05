@@ -41,6 +41,16 @@ export const gameModule: GameModule<ScrabbleState, ScrabbleMove> = {
       ],
       default: '50',
     },
+    {
+      id: 'unlistedWords',
+      label: 'Wörter außerhalb der Liste',
+      description: 'Die übrigen Plätze stimmen geheim ab; eine Mehrheit muss zustimmen.',
+      choices: [
+        { value: 'vote', label: 'Mit Abstimmung' },
+        { value: 'strict', label: 'Nur Wörter aus der Liste' },
+      ],
+      default: 'vote',
+    },
   ],
   timePresets: {
     relaxed: { kind: 'none' },
@@ -56,6 +66,6 @@ export const gameModule: GameModule<ScrabbleState, ScrabbleMove> = {
   result,
   evaluate,
   sampleHidden,
-  timeoutMove: () => ({ type: 'pass' }),
+  timeoutMove: (state) => (state.proposal ? { type: 'vote', accept: false } : { type: 'pass' }),
   bots: [scrabbleBot],
 };

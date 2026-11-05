@@ -1,5 +1,5 @@
 import { GridBoard, ScorePop, useLatestEvent, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BOARD_SIZE, squareTypeAt, type SquareType } from '../board';
 import { LETTER_VALUES, type Letter, type Tile } from '../letters';
 import { checkPlay, EXCHANGE_MIN_BAG, type PlacedTile, type ScrabbleMove, type ScrabbleState } from '../rules';
@@ -38,15 +38,21 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
   const playedPop = useLatestEvent(events, (e) => e.type === 'played');
   const seat = typeof viewer === 'number' ? viewer : null;
   const rack = (seat !== null ? view.racks[seat] : [])?.filter((t): t is Tile => t !== null) ?? [];
-  const myTurn = legalMoves.length > 0;
+  const proposal = view.proposal;
+  const voteTurn = legalMoves.some((move) => move.type === 'vote');
+  const myTurn = legalMoves.length > 0 && !proposal;
+  const canCompose = seat !== null && !view.final && !proposal;
 
   const [pending, setPending] = useState<Pending[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [blankFor, setBlankFor] = useState<{ row: number; col: number; slot: number } | null>(null);
   const [swapMode, setSwapMode] = useState(false);
   const [swapSlots, setSwapSlots] = useState<number[]>([]);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [reorderFrom, setReorderFrom] = useState<number | null>(null);
+  const [planned, setPlanned] = useState(false);
   const [order, setOrder] = useState<number[]>(() => rack.map((_, i) => i));
-  const rackKey = `${viewer}|${rack.join('')}|${view.moveCount}`;
+  const rackKey = `${viewer}|${rack.join(',')}`;
   const [lastKey, setLastKey] = useState(rackKey);
   if (lastKey !== rackKey) {
     setLastKey(rackKey);
@@ -55,24 +61,36 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
     setBlankFor(null);
     setSwapMode(false);
     setSwapSlots([]);
+    setReorderMode(false);
+    setReorderFrom(null);
+    setPlanned(false);
     setOrder(rack.map((_, i) => i));
+  }
+  const [handledOwnMove, setHandledOwnMove] = useState(view.moveCount);
+  if (seat !== null && view.lastMove?.seat === seat && view.moveCount !== handledOwnMove) {
+    setHandledOwnMove(view.moveCount);
+    setPending([]);
+    setSelected(null);
+    setBlankFor(null);
+    setPlanned(false);
   }
 
   const used = new Set(pending.map((p) => p.slot));
   const pendingAt = (row: number, col: number) => pending.find((p) => p.row === row && p.col === col);
-  const check = pending.length > 0 ? checkPlay(view.board, pending, view.bingoBonus) : null;
+  const check = pending.length > 0 ? checkPlay(view.board, pending, view.bingoBonus, view.allowUnlistedWords && view.seats > 1) : null;
   const hintTiles = pending.length === 0 && hint?.type === 'play' ? hint.tiles : [];
   const lastCells = new Set(view.lastMove?.cells ?? []);
   const popCell = lastCells.size > 0 ? Math.max(...lastCells) : -1;
 
   const place = (row: number, col: number, slot: number) => {
-    if (view.board[row * N + col] || pendingAt(row, col)) return false;
+    if (!canCompose || reorderMode || view.board[row * N + col] || pendingAt(row, col)) return false;
     const tile = rack[slot]!;
     if (tile === '?') {
       setBlankFor({ row, col, slot });
       return true;
     }
     setPending([...pending, { row, col, letter: tile, slot }]);
+    setPlanned(!myTurn);
     setSelected(null);
     return true;
   };
@@ -87,17 +105,38 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
   });
 
   const tapCell = (row: number, col: number) => {
+    if (!canCompose) return;
     const own = pendingAt(row, col);
     if (own) {
-      setPending(pending.filter((p) => p !== own));
+      const next = pending.filter((p) => p !== own);
+      setPending(next);
+      if (next.length === 0) setPlanned(false);
       return;
     }
-    if (selected !== null) place(row, col, selected);
+    if (selected !== null && canCompose && !swapMode && !reorderMode) place(row, col, selected);
   };
 
   const tapRack = (slot: number) => {
-    if (!myTurn) return;
+    if (!canCompose) return;
+    if (reorderMode) {
+      if (reorderFrom === null) {
+        setReorderFrom(slot);
+      } else {
+        if (reorderFrom !== slot) {
+          setOrder((current) => {
+            const from = current.indexOf(reorderFrom);
+            const to = current.indexOf(slot);
+            const next = [...current];
+            [next[from], next[to]] = [next[to]!, next[from]!];
+            return next;
+          });
+        }
+        setReorderFrom(null);
+      }
+      return;
+    }
     if (swapMode) {
+      if (!myTurn) return;
       setSwapSlots(swapSlots.includes(slot) ? swapSlots.filter((s) => s !== slot) : [...swapSlots, slot]);
       return;
     }
@@ -108,6 +147,15 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
   const playMove: ScrabbleMove | null = check?.ok ? { type: 'play', tiles: pending.map(({ slot: _slot, ...t }) => t) } : null;
   const names = (s: number) => seatNames[s] ?? `Platz ${s + 1}`;
 
+  useEffect(() => {
+    if (!planned || !myTurn) return;
+    setPlanned(false);
+    if (playMove) {
+      setPending([]);
+      onMove(playMove);
+    }
+  }, [myTurn, onMove, planned, playMove]);
+
   const last = view.lastMove;
   const lastText = !last
     ? 'Das erste Wort muss über das Mittelfeld ★.'
@@ -115,21 +163,35 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
       ? `${names(last.seat)} hat gepasst.`
       : last.kind === 'exchange'
         ? `${names(last.seat)} hat ${last.count} ${last.count === 1 ? 'Stein' : 'Steine'} getauscht.`
+      : last.kind === 'rejected'
+        ? `${last.words.map((w) => w.word).join(', ')} wurde abgelehnt; ${names(last.seat)} setzt aus.`
         : `${names(last.seat)}: ${last.words.map((w) => w.word).join(', ')} (+${last.score})`;
 
-  const info = swapMode
-    ? 'Steine zum Tauschen antippen'
-    : check
-      ? check.ok
-        ? `${check.words.map((w) => w.word).join(', ')}: ${check.score} Punkte${check.bingo ? ' mit Prämie' : ''}`
-        : check.reason
-      : myTurn
-        ? selected !== null
-          ? 'Feld antippen'
-          : 'Stein wählen oder aufs Brett ziehen'
-        : view.final
-          ? 'Partie beendet'
-          : `${names(view.turn)} ist am Zug`;
+  let info: string;
+  if (proposal) {
+    const submitted = proposal.vote.ballots.filter((ballot) => ballot !== null).length;
+    info = `${names(proposal.seat)} schlägt ${proposal.words.join(', ')} vor. ${submitted} von ${proposal.vote.voters.length} Stimmen abgegeben.`;
+  } else if (reorderMode) {
+    info = reorderFrom === null ? 'Ersten Buchstaben zum Verschieben antippen' : 'Zielplatz für den Buchstaben antippen';
+  } else if (swapMode) {
+    info = 'Steine zum Tauschen antippen';
+  } else if (check) {
+    info = !check.ok
+      ? check.reason
+      : check.unknownWords.length > 0
+        ? `${check.words.map((w) => w.word).join(', ')}: ${check.score} Punkte · Zustimmung nötig`
+        : `${check.words.map((w) => w.word).join(', ')}: ${check.score} Punkte${check.bingo ? ' mit Prämie' : ''}`;
+  } else if (myTurn) {
+    info = selected !== null ? 'Feld antippen' : 'Stein wählen oder aufs Brett ziehen';
+  } else if (planned) {
+    info = 'Vorgemerkter Zug wird geprüft, sobald du dran bist.';
+  } else if (canCompose) {
+    info = 'Du kannst deinen nächsten Zug schon vorbereiten.';
+  } else if (view.final) {
+    info = 'Partie beendet';
+  } else {
+    info = `${names(view.turn)} ist am Zug`;
+  }
 
   return (
     <div className="wg-layout">
@@ -146,6 +208,7 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
           className="wg-board"
           renderCell={(col, row) => {
             const cell = view.board[row * N + col];
+            const proposed = proposal?.tiles.find((tile) => tile.row === row && tile.col === col);
             if (cell) {
               const i = row * N + col;
               if (!lastCells.has(i) || !playedPop.count) return <TileFace letter={cell.letter} blank={cell.blank} />;
@@ -162,6 +225,7 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
                 </>
               );
             }
+            if (proposed) return <TileFace letter={proposed.letter} blank={proposed.blank} className="wg-proposal" />;
             const own = pendingAt(row, col);
             if (own) return <TileFace letter={own.letter} blank={own.blank} className="wg-pending" />;
             const ghost = hintTiles.find((t) => t.row === row && t.col === col);
@@ -169,18 +233,22 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
             const square = squareTypeAt(row, col);
             return square !== 'normal' ? <span className="wg-premium">{SQUARE_LABEL[square]}</span> : null;
           }}
-          isActive={(col, row) => !!pendingAt(row, col) || (myTurn && !swapMode && selected !== null && !view.board[row * N + col])}
+          isActive={(col, row) =>
+            canCompose &&
+            (!!pendingAt(row, col) || (!swapMode && !reorderMode && selected !== null && !view.board[row * N + col]))
+          }
           onActivate={(col, row) => tapCell(row, col)}
           cellClassName={(col, row) => {
             const i = row * N + col;
-            return `wg-sq-${squareTypeAt(row, col)} ${lastCells.has(i) ? 'wg-last' : ''}`;
+            const proposed = proposal?.tiles.some((tile) => tile.row === row && tile.col === col);
+            return `wg-sq-${squareTypeAt(row, col)} ${lastCells.has(i) ? 'wg-last' : ''} ${proposed ? 'wg-proposal-cell' : ''}`;
           }}
           cellProps={(col, row) => ({
-            'data-drop-target': view.board[row * N + col] ? undefined : `wg-${row}-${col}`,
+            'data-drop-target': view.board[row * N + col] || proposal?.tiles.some((tile) => tile.row === row && tile.col === col) ? undefined : `wg-${row}-${col}`,
             'data-drop-active': dragState.isDragging && dragState.targetId === `wg-${row}-${col}` ? 'true' : undefined,
           })}
           cellLabel={(col, row) => {
-            const cell = view.board[row * N + col] ?? pendingAt(row, col);
+            const cell = view.board[row * N + col] ?? proposal?.tiles.find((tile) => tile.row === row && tile.col === col) ?? pendingAt(row, col);
             const square = squareTypeAt(row, col);
             return `${coord(row, col)}: ${cell ? cell.letter : 'frei'}${square !== 'normal' ? `, ${SQUARE_NAME[square]}` : ''}`;
           }}
@@ -194,17 +262,17 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
             .map((slot) => {
               const tile = rack[slot]!;
               const dragged = (dragState.isDragging || dragState.snapping) && dragState.item === slot;
-              const bind = myTurn && !swapMode ? bindDrag(slot) : undefined;
-              const chosen = selected === slot || swapSlots.includes(slot);
+              const bind = canCompose && !swapMode && !reorderMode ? bindDrag(slot) : undefined;
+              const chosen = selected === slot || swapSlots.includes(slot) || reorderFrom === slot;
               return (
                 <button
                   key={slot}
                   type="button"
                   className="wg-rack-tile"
                   data-selected={chosen || undefined}
-                  disabled={!myTurn}
+                  disabled={!canCompose}
                   aria-pressed={chosen}
-                  aria-label={tile === '?' ? 'Joker' : `${tile}, ${LETTER_VALUES[tile]} Punkte`}
+                  aria-label={`${tile === '?' ? 'Joker' : `${tile}, ${LETTER_VALUES[tile]} Punkte`}${reorderMode ? ', zum Umordnen wählen' : ''}`}
                   onClick={() => tapRack(slot)}
                   onPointerDown={bind?.onPointerDown}
                   style={{
@@ -221,7 +289,7 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
         </div>
       )}
 
-      {blankFor && (
+      {blankFor && canCompose && (
         <div className="wg-blank-picker" role="dialog" aria-label="Buchstaben für den Joker wählen">
           <div className="wg-blank-title">Welcher Buchstabe soll der Joker sein?</div>
           <div className="wg-blank-grid">
@@ -232,6 +300,7 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
                 className="wg-button"
                 onClick={() => {
                   setPending([...pending, { row: blankFor.row, col: blankFor.col, letter, blank: true, slot: blankFor.slot }]);
+                  setPlanned(!myTurn);
                   setBlankFor(null);
                   setSelected(null);
                 }}
@@ -250,20 +319,52 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
         <span className="wg-info" data-error={check && !check.ok ? 'true' : undefined}>
           {info}
         </span>
-        {myTurn && !swapMode && pending.length > 0 && (
+        {voteTurn && proposal && (
           <>
-            <button type="button" className="wg-button" onClick={() => setPending([])}>
-              Zurück
+            <button type="button" className="wg-button" onClick={() => onMove({ type: 'vote', accept: false })}>
+              Ablehnen
             </button>
-            <button type="button" className="wg-button wg-primary" disabled={!playMove} onClick={() => playMove && onMove(playMove)}>
-              Legen
+            <button type="button" className="wg-button wg-primary" onClick={() => onMove({ type: 'vote', accept: true })}>
+              Zustimmen
             </button>
           </>
         )}
-        {myTurn && !swapMode && pending.length === 0 && (
+        {myTurn && !swapMode && !reorderMode && pending.length > 0 && (
           <>
-            <button type="button" className="wg-button" onClick={() => setOrder(shuffled(order))} aria-label="Bänkchen mischen">
-              Mischen
+            <button type="button" className="wg-button" onClick={() => (setPending([]), setPlanned(false))}>
+              Zurück
+            </button>
+            <button
+              type="button"
+              className="wg-button wg-primary"
+              disabled={!playMove}
+              onClick={() => {
+                if (!playMove) return;
+                setPending([]);
+                setPlanned(false);
+                onMove(playMove);
+              }}
+            >
+              {check?.ok && check.unknownWords.length > 0 ? 'Zustimmung einholen' : 'Legen'}
+            </button>
+          </>
+        )}
+        {canCompose && !swapMode && pending.length === 0 && !reorderMode && (
+          <>
+            {myTurn && (
+              <button type="button" className="wg-button" onClick={() => setOrder(shuffled(order))} aria-label="Bänkchen mischen">
+                Mischen
+              </button>
+            )}
+            <button
+              type="button"
+              className="wg-button"
+              onClick={() => {
+                setReorderMode(true);
+                setSelected(null);
+              }}
+            >
+              Bänkchen ordnen
             </button>
             {canExchange && (
               <button type="button" className={`wg-button ${hint?.type === 'exchange' ? 'wg-primary' : ''}`} onClick={() => (setSwapMode(true), setSelected(null))}>
@@ -275,7 +376,12 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
             </button>
           </>
         )}
-        {swapMode && (
+        {canCompose && reorderMode && (
+          <button type="button" className="wg-button wg-primary" onClick={() => (setReorderMode(false), setReorderFrom(null))}>
+            Fertig
+          </button>
+        )}
+        {swapMode && canCompose && myTurn && (
           <>
             <button type="button" className="wg-button" onClick={() => (setSwapMode(false), setSwapSlots([]))}>
               Abbrechen

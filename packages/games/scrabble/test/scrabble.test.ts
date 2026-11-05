@@ -109,6 +109,46 @@ describe('Wortgitter – Regeln', () => {
     expect(gameModule.result(state)).not.toBeNull();
     expect(state.final).not.toBeNull();
   });
+
+  it('legt unbekannte Wörter erst nach geheimer Zustimmung der übrigen Plätze', () => {
+    let state = gameModule.setup(4, {}, 'wortabstimmung');
+    state = withRack(state, ['Q', 'X', 'A', 'E', 'I', 'N', 'R']);
+    const move: ScrabbleMove = { type: 'play', tiles: word('QX', CENTER, CENTER - 1) };
+    const proposed = gameModule.applyMove(state, 0, move).state;
+    expect(proposed.proposal?.words).toEqual(['QX']);
+    expect(gameModule.currentPlayers(proposed)).toEqual([1, 2, 3]);
+    expect(proposed.board.every((cell) => cell === null)).toBe(true);
+
+    const oneVote = gameModule.applyMove(proposed, 1, { type: 'vote', accept: true }).state;
+    expect(gameModule.playerView(oneVote, 2).proposal?.vote.ballots[1]).toEqual([null]);
+    const twoVotes = gameModule.applyMove(oneVote, 2, { type: 'vote', accept: true }).state;
+    expect(twoVotes.proposal).not.toBeNull();
+    const accepted = gameModule.applyMove(twoVotes, 3, { type: 'vote', accept: false }).state;
+    expect(accepted.proposal).toBeNull();
+    expect(accepted.board[CENTER * 15 + CENTER - 1]?.letter).toBe('Q');
+    expect(accepted.scores[0]).toBeGreaterThan(0);
+    expect(accepted.turn).toBe(1);
+  });
+
+  it('lehnt ein unbekanntes Wort bei Gleichstand ab und wertet den Zug als Pass', () => {
+    let state = gameModule.setup(3, {}, 'wortabstimmung-gleichstand');
+    state = withRack(state, ['Q', 'X', 'A', 'E', 'I', 'N', 'R']);
+    state = gameModule.applyMove(state, 0, { type: 'play', tiles: word('QX', CENTER, CENTER - 1) }).state;
+    state = gameModule.applyMove(state, 1, { type: 'vote', accept: true }).state;
+    state = gameModule.applyMove(state, 2, { type: 'vote', accept: false }).state;
+    expect(state.proposal).toBeNull();
+    expect(state.board.every((cell) => cell === null)).toBe(true);
+    expect(state.lastMove?.kind).toBe('rejected');
+    expect(state.scoreless).toBe(1);
+    expect(state.turn).toBe(1);
+  });
+
+  it('kann die Abstimmung für unbekannte Wörter in den Optionen ausschalten', () => {
+    const state = gameModule.setup(2, { unlistedWords: 'strict' }, 'wortliste');
+    const withLetters = withRack(state, ['Q', 'X', 'A', 'E', 'I', 'N', 'R']);
+    const move: ScrabbleMove = { type: 'play', tiles: word('QX', CENTER, CENTER - 1) };
+    expect(gameModule.isLegal?.(withLetters, 0, move)).toBe(false);
+  });
 });
 
 describe('Wortgitter – Bot', () => {

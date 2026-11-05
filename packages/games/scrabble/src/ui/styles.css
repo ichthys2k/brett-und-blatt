@@ -117,6 +117,16 @@
   box-shadow: 0 0 0 2px var(--color-accent);
 }
 
+.wg-proposal {
+  background: linear-gradient(180deg, #fff6d8, #f6e2aa);
+  box-shadow: 0 0 0 2px #8b5fc2;
+}
+
+.wg-proposal-cell {
+  outline: 2px dashed #8b5fc2;
+  outline-offset: -2px;
+}
+
 .wg-ghost {
   opacity: 0.5;
 }

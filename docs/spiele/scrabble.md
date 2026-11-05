@@ -41,7 +41,7 @@ Das weltbekannte Kreuzwort- und Buchstaben-Legespiel: Wörter auf dem 15×15-Bre
     1. **Wort legen (`play`):** 1 bis 7 Steine in einer lückenlosen Linie (waagerecht oder senkrecht) anlegen.
        - Erstzug: muss das Mittelfeld H8 bedecken und mindestens 2 Steine umfassen.
        - Folgezüge: müssen lückenlos an mindestens einen bereits liegenden Stein anschließen (durch Verlängerung oder orthogonales Kreuzen).
-       - Alle in diesem Zug neu entstandenen Wörter (Hauptwort + orthogonale Querwörter) müssen gültige Wörter sein (mindestens 2 Buchstaben).
+       - Alle in diesem Zug neu entstandenen Wörter (Hauptwort + orthogonale Querwörter) müssen mindestens 2 Buchstaben haben. Unbekannte Wörter können mit der Hausregel zur geheimen Abstimmung vorgelegt werden.
        - **Wertung:** Buchstabe × Buchstabenprämie; Summe × Wortmultiplikatoren (multiplizieren sich, z. B. 3W + 3W = 9×). Querwörter werden separat berechnet.
        - **Bingo-Prämie:** Wer alle 7 Steine von der Bank ausspielt, erhält **+50 Punkte** extra.
        - Anschließend zieht der Spieler aus dem Beutel auf 7 Steine nach.
@@ -60,9 +60,7 @@ Das weltbekannte Kreuzwort- und Buchstaben-Legespiel: Wörter auf dem 15×15-Bre
 
 | Option | Werte | Standard | Beschreibung |
 |---|---|---|---|
-| **Wörterbuch** | Deutsch (Standard), Englisch (SOWPODS) | Deutsch | Sprache und Wortliste für die Gültigkeitsprüfung. |
-| **Prüfmodus** | Sofortprüfung, Challenge (Anfechten) | Sofortprüfung | *Sofort*: Nur gültige Wörter können gelegt werden (einsteigerfreundlich).<br/>*Challenge*: Man darf jedes Wort legen; der Gegner kann vor seinem nächsten Zug anfechten. |
-| **Joker-Tausch** | Aus, An (Hausregel) | Aus | Erlaubt den Tausch eines auf dem Brett liegenden Jokers gegen den passenden Buchstaben von der eigenen Bank. |
+| **Wörter außerhalb der Liste** | Mit Abstimmung, Nur Wörter aus der Liste | Mit Abstimmung | Alle übrigen Plätze stimmen geheim ab. Das Wort zählt nur bei einer Mehrheit; Gleichstand oder Zeitablauf lehnt es ab. |
 | **Bänkchengröße** | 7 Steine, 8 Steine | 7 Steine | 8 Steine erleichtert das Finden von Wörtern für Gelegenheitsspieler. |
 | **Bingo-Prämie** | 50 Punkte, Aus | 50 Punkte | Prämie für das Ausspielen aller 7 Steine in einem Zug. |
 
@@ -150,6 +148,7 @@ export interface ScrabbleView {
 ```
 
 - **Sicht (`playerView`):** Nur die eigenen Banksteine sind sichtbar. Fremde Bänke und der Beutel erscheinen nur als Zähler.
+- **Unbekannte Wörter:** Der Zug wird erst nach Zustimmung aller anderen Plätze ausgeführt. Stimmen bleiben bis zur vollständigen Abstimmung geheim. Bei Ablehnung verliert der Legende seinen Zug; Bots lehnen unbekannte Wörter ab.
 - **`sampleHidden`:** Füllt für Bots fremde Hände und den Beutel aus den verbleibenden ungesehenen Steinen auf.
 
 ## Bot
@@ -178,6 +177,8 @@ Basierend auf Gordon's GADDAG- und Appel-Jacobson-DAWG-Suche mit Ankerfeldern un
 - **Dual-Input:**
   - **Drag & Drop:** Steine per Pointer-Drag vom Bänkchen direkt aufs Brett ziehen.
   - **Tastatur & Tipp-Modus:** Feld antippen -> Richtungspfeil erscheint -> Steine auf der Bank oder PC-Tastatur tippen.
+- **Vormerken:** Ein Wort kann während des gegnerischen Zuges vorbereitet werden. Zu Beginn des eigenen Zuges wird es erneut geprüft und bei unveränderter Gültigkeit automatisch gelegt; andernfalls bleibt der Entwurf zum Anpassen stehen.
+- **Bänkchen ordnen:** Im Modus „Bänkchen ordnen“ zwei Steine antippen, um ihre Plätze zu tauschen. Die Reihenfolge bleibt auf diesem Gerät erhalten.
 - **Entwurfs-Phase (Staging) & Live-Punkte:**
   - Gelegte Steine verbleiben bis zur Bestätigung als Entwurf.
   - Live-Anzeige: `GARTEN (+28 Pkt. ✓)` oder rotes Feedback bei ungültiger Lage/Wort.
@@ -192,6 +193,7 @@ Basierend auf Gordon's GADDAG- und Appel-Jacobson-DAWG-Suche mit Ankerfeldern un
 - Legeregeln: Erstzug über H8; Mindestlänge 2; lückenloser Verbund; Erkennung aller orthogonalen Querwörter.
 - Wertung: Buchstaben- und Wortmultiplikatoren (inkl. mehrfacher Multiplikatoren wie 3W × 3W = 9×); einmalige Gültigkeit von Prämienfeldern; Bingo-Bonus (+50 Punkte); Blanko zählt 0 Punkte.
 - Tausch- und Pass-Regeln; Endabrechnung bei leerem Beutel vs. Pass-Remis.
+- Abstimmung über unbekannte Wörter: geheime Stimmen, Mehrheitsentscheid, Gleichstand/Ablehnung und Zeitablauf.
 
 ## Umsetzungsstand (28.10.2026, Neufassung)
 
@@ -202,6 +204,8 @@ Die erste Fassung war nicht spielbar (Oberfläche ohne Funktion, Startfeld (4,4)
 - `src/dict.ts`: minimierter Wortgraph (DAWG, `src/dict/dawg.ts`, 257 000 Kanten, 1,3 MB als Base64, erst bei Bedarf entpackt), gebaut von `scripts/build-dict.mjs` aus der „german-wordlist“ von Tanglet (CC0, rund 590 000 Wortformen nach Scrabble-Regeln, ß als SS).
 - `src/bots.ts`: „Wortmeister“ – leicht ein mittelmäßiges Wort (30.–70. Perzentil), mittel das punktstärkste, schwer Punkte plus Bewertung des Rests (Joker, S, E behalten; Dubletten, Q ohne U meiden; Selbstlaute ausgewogen) und Tauschen bei schwachem Zug.
 - `src/ui/`: Brett mit Prämienfeldern, Steine antippen oder ziehen (`usePointerDrag`), Joker-Buchstabenwahl, Vorschau mit Wörtern und Punkten bzw. Fehlergrund, Mischen, Tauschen, Passen, Tipp als Geisterbuchstaben.
-- Optionen: Bänkchen 7/8 Steine, Prämie für 7 Steine an/aus. Englisches Wörterbuch, Anfechten und Joker-Tausch sind gestrichen.
+- Optionen: Bänkchen 7/8 Steine, Prämie für 7 Steine an/aus und unbekannte Wörter per Abstimmung oder nur aus der Wortliste.
+
+**Nachtrag (2026-11-05, W-060 bis W-062):** Züge lassen sich während fremder Züge vorbereiten und werden zu Beginn des eigenen Zuges erneut geprüft; das Bänkchen kann lokal umsortiert werden. Unbekannte Wörter können mit einer geheimen Abstimmung aller übrigen Plätze zugelassen werden. Nur eine Mehrheit nimmt an, Gleichstand, Ablehnung oder Zeitablauf lehnen ab. Die Option „Nur Wörter aus der Liste“ schaltet Abstimmungen aus.
 
 **Wörterbuch (Etappe 4, 28.10.2026):** Die frühere Liste `words-de.json` (unklare Herkunft, Namen und Englisches) ist ersetzt; Quelle und Lizenz stehen in `THIRD_PARTY.md`. Zugsuche mit zwei Jokern dauert im schlimmsten Fall knapp eine Sekunde.

@@ -16,6 +16,7 @@ export const scrabbleBot: BotDefinition<ScrabbleState, ScrabbleMove> = {
   levels: ['easy', 'medium', 'hard'],
   chooseMove(ctx: BotContext<ScrabbleState, ScrabbleMove, ScrabbleState>): ScrabbleMove {
     const { view, level, rng } = ctx;
+    if (view.proposal) return { type: 'vote', accept: false };
     const moves = legalMoves(view, ctx.seat);
     if (moves.length === 0) throw new Error('Kein Zug');
     const rack = view.racks[ctx.seat]!.filter((t): t is Tile => t !== null);
