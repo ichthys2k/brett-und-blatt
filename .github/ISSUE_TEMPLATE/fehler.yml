@@ -1,7 +1,7 @@
 name: Fehler melden
 description: Etwas funktioniert nicht wie gedacht.
 title: "[Fehler] "
-labels: ["fehler"]
+labels: ["fehler", "status: Idee"]
 body:
   - type: input
     id: spiel
