@@ -1,7 +1,7 @@
 name: Recherche oder Konzept
 description: Etwas erkunden, vergleichen oder ein Konzept entwerfen lassen, bevor gebaut wird.
 title: "Spiel/Bereich: "
-labels: ["wunsch", "status: Idee"]
+labels: ["wunsch", "recherche", "status: Idee"]
 body:
   - type: markdown
     attributes:

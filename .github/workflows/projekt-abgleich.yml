@@ -1,0 +1,37 @@
+# Trägt Status-, Prioritäts- und Bereichs-Labels der Issues in die Felder des
+# GitHub-Projekts „Brett & Blatt – Planung“ ein (Labels sind führend).
+# Braucht das Secret PROJECT_TOKEN (klassischer Token mit Recht „project“);
+# ohne Secret läuft der Job durch und tut nichts.
+name: Projekt-Abgleich
+
+on:
+  issues:
+    types: [opened, reopened, closed, labeled, unlabeled]
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: projekt-abgleich
+  cancel-in-progress: false
+
+jobs:
+  abgleich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: scripts/projekt-abgleich.mjs
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Labels ins Projekt übertragen
+        env:
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
+        run: node scripts/projekt-abgleich.mjs ${{ github.event.issue.number }}
