@@ -1,4 +1,4 @@
-> Übernommen aus dem Claude-Dokument https://claude.ai/artifact/Da21BTkDHu4J98HPyYJf1T am 1.11.2026, damit andere Agenten den Plan lesen können. **Diese Datei ist ab jetzt die maßgebliche Fassung.**
+> Übernommen aus dem Claude-Dokument https://claude.ai/artifact/Da21BTkDHu4J98HPyYJf1T am 1.11.2026. **Historischer Planungsstand vom 31.10.2026, keine aktuelle Aufgabenliste.** Aufgabenstatus und Freigaben stehen ausschließlich in den [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues); Details zur Migration enthält das [Planungsarchiv](https://github.com/ichthys2k/brett-und-blatt/issues/72).
 
 # Brett & Blatt – Abarbeitungsplan für PLANUNG.md
 
@@ -134,4 +134,4 @@ Brauchen dich mit zwei oder mehr echten Geräten:
 
 Bereits entschieden (31.10.2026): Reihenfolge der Etappen, Narrenhof läuft hier mit, Porträts per KI-Bilddienst (Lizenz passend zu CC BY-SA), die Enten-Strömung gilt überall, Etappe 8 Lobby.
 
-Beim Start einer Etappe setze ich die Einträge in `PLANUNG.md` auf „in Arbeit“ mit Zweig und nach dem Merge auf „erledigt“.
+Die damalige Statusanweisung ist historisch und nicht mehr gültig. Aktuell dürfen nur von Cornelius auf `status: Ready` gesetzte Issues übernommen und per Kommentar reserviert werden; Einzelheiten stehen in `CLAUDE.md` und `AGENTS.md`.

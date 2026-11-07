@@ -1,7 +1,7 @@
 name: Wunsch oder Idee
 description: Neue Funktion, Änderung oder neues Spiel vorschlagen.
 title: "[Wunsch] "
-labels: ["wunsch"]
+labels: ["wunsch", "status: Idee"]
 body:
   - type: input
     id: spiel

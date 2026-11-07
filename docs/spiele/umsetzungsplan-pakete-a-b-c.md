@@ -109,7 +109,7 @@ Paket A (Schritte 1, 2 und 7) und Paket B (Schritte 3 bis 6) berühren kaum dies
 
 ## Arbeitsweise je Spiel
 
-- **Plan zuerst:** `docs/spiele/<name>.md` mit Regeln und Optionen, dazu ein Eintrag in PLANUNG.md (W-032 bis W-039).
+- **Plan zuerst:** `docs/spiele/<name>.md` mit Regeln und Optionen, dazu ein GitHub-Issue im Ideen-Backlog (die Einträge W-032 bis W-039 sind historische Kennungen; neue Aufgaben bekommen keine parallele Nummernliste in `PLANUNG.md`).
 - **Eigener Zweig und PR,** angelegt mit `corepack pnpm neues-spiel`. Bei Mehrspieler-Spielen kommt ein Eintrag im Spieleserver dazu.
 - **Tests:** Regeltests, `gameContractChecks` mit Geheimnis-Prüfung (verdeckte Hand bei Elfer raus und Marktstände, geheime Antworten bis zur Auflösung bei den Wortspielen), `corepack pnpm check`, Rauchtest und Prüfstand.
 - **Aussehen:** Theme-Tokens, damit Taverne und Schlichte Ansicht von selbst passen. Eigenes Klassenpräfix je Spiel.

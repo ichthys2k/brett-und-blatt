@@ -2,6 +2,8 @@
 
 Stand: veröffentlicht am 2.11.2026. Offenes steht am Ende.
 
+Aufgabenstatus und Abnahme: [GitHub Issue #62](https://github.com/ichthys2k/brett-und-blatt/issues/62). Dieser Plan enthält die fachlichen Anforderungen und Prüfpunkte, nicht den Freigabestatus.
+
 ## Ziel
 
 Mehr als zwei Spieler tragen über Tage oder Wochen ein Turnier aus. Jede Partie wird am Stück gespielt, die Partien aber nach und nach, wann die beiden Gegner Zeit haben. Alle Eingeschriebenen können jederzeit nachsehen, wo das Turnier steht.
