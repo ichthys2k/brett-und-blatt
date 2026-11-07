@@ -17,6 +17,7 @@ import { HoverProvider, tipFrom, type ExtraProps } from './Hover';
 import { describeConsumable, describeMod, describeOffer, describePack, describeTag, describeTool, formatMult, formatNumber, handName } from './texts';
 import { playBossSound, playEffect, playHandAnnouncement } from './audio';
 import { kulisse } from './kulissen';
+import { pickedHandCards } from './picks';
 import { hasMoods, portraitUrl, preloadPortrait, stageOf, type PortraitStage } from './portraits';
 import './styles.css';
 
@@ -407,17 +408,18 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const hintCards = hint && (hint.type === 'play' || hint.type === 'discard') ? hint.cards : [];
   const togglePick = (i: number) => {
     playEffect('fs-karte-waehlen');
-    setSelected((s) => (s?.kind === 'cons' ? s : null));
+    setSelected((s) => (s?.kind === 'cons' || s?.kind === 'item' ? s : null));
     setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : p.length >= 5 ? p : [...p, i]));
   };
 
-  const pickedOpen = picked.filter((i) => isOpen(run.hand[i]!));
+  // Nur in der Audienz zeigt die Auswahl auf run.hand (beim Auspacken auf run.pack.hand, #71).
+  const pickedOpen = pickedHandCards(run, picked);
   const held = run.hand.filter((c, i) => !picked.includes(i) && isOpen(c)) as Card[];
   const preview =
     run.phase === 'play' && pickedOpen.length > 0 && pickedOpen.length === picked.length
       ? previewHand(
           run,
-          pickedOpen.map((i) => run.hand[i] as Card),
+          pickedOpen,
           held,
           tableInfo(view, run.seat),
         )
@@ -651,7 +653,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
             {preview
               ? handLabel(
                   preview.type,
-                  pickedOpen.map((i) => run.hand[i] as Card),
+                  pickedOpen,
                 ) + ` · Stufe ${run.handLevels[preview.type]}`
               : picked.length
                 ? 'Verdeckte Karte dabei'
