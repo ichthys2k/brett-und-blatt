@@ -1,3 +1,16 @@
+/* Original-Hintergrundbild aus dem Vorlagen-Klon (Emojiclicker), unter einem Schleier in der
+   Flächenfarbe, damit Text und Karten lesbar bleiben (wie die Kulissen im Narrenhof). */
+.ds-arena,
+.ds-phase-overlay {
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--color-surface, #ffffff) 48%, transparent),
+      color-mix(in srgb, var(--color-surface, #ffffff) 74%, transparent)
+    ),
+    url('./kulissen/drachenarena.webp') center / cover no-repeat;
+  border-radius: 16px;
+}
+
 .ds-arena {
   display: flex;
   flex-direction: column;
