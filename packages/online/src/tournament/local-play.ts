@@ -1,4 +1,4 @@
-import type { MatchOutcome, MatchScore, MatchSide, TournamentMatch, TournamentSnapshot } from './types';
+import type { MatchOutcome, MatchScore, MatchSide, TournamentMatch, TournamentSchedule, TournamentSnapshot } from './types';
 
 /**
  * Austragung vor Ort (W-058 Stufe 1): Gespielt wird am echten Tisch oder auf dem Feld, die
@@ -54,7 +54,8 @@ export function assignFields(s: TournamentSnapshot, now: number): boolean {
   }
   if (count === 0) return moved;
   const busy = busyFields(s);
-  const playing = new Set([...busy.values()].flatMap((m) => m.slots.map((slot) => slot.player)));
+  // Wer pfeift, steht ebenfalls am Tisch und wird so lange nicht zum Spielen aufgerufen.
+  const playing = new Set([...busy.values()].flatMap((m) => [...m.slots.map((slot) => slot.player), ...(m.referee ? [m.referee] : [])]));
   const queue = s.matches.filter((m) => m.status === 'open').sort((x, y) => x.stage - y.stage);
   for (let field = 0; field < count; field++) {
     if (busy.has(field)) continue;
@@ -64,7 +65,43 @@ export function assignFields(s: TournamentSnapshot, now: number): boolean {
     next.field = field;
     next.calledAt = now;
     for (const slot of next.slots) playing.add(slot.player);
+    if (s.referees) {
+      const referee = pickReferee(s, playing);
+      if (referee) {
+        next.referee = referee;
+        playing.add(referee);
+      }
+    }
     moved = true;
   }
   return moved;
+}
+
+/**
+ * Teams pfeifen gegenseitig: Wer gerade weder spielt noch pfeift und bisher am seltensten
+ * gepfiffen hat, pfeift. Bei Gleichstand der Reihe nach.
+ */
+function pickReferee(s: TournamentSnapshot, playing: Set<string | null>): string | undefined {
+  const count = new Map<string, number>();
+  for (const m of s.matches) if (m.referee) count.set(m.referee, (count.get(m.referee) ?? 0) + 1);
+  const free = s.players.filter((p) => !p.withdrawn && !playing.has(p.id));
+  free.sort((a, b) => (count.get(a.id) ?? 0) - (count.get(b.id) ?? 0));
+  return free[0]?.id;
+}
+
+/** Längste Spieldauer und Pause in Minuten. */
+export const SCHEDULE_MAX_MINUTES = 240;
+
+/**
+ * Uhrzeiten laut Zeitplan: Die Partien laufen in Phasenreihenfolge über alle Tische, je Durchgang
+ * Spieldauer plus Pause. Freilose und Partien ohne Gegner zählen nicht. Ohne Tische gilt einer.
+ */
+export function plannedStarts(s: TournamentSnapshot, schedule: TournamentSchedule): Map<string, number> {
+  const fields = Math.max(1, s.fields ?? 0);
+  const slot = (schedule.matchMinutes + schedule.breakMinutes) * 60_000;
+  const order = s.matches
+    .map((m, index) => ({ m, index }))
+    .filter(({ m }) => !m.outcome?.bye && !(m.status === 'done' && (!m.slots[0].player || !m.slots[1].player)))
+    .sort((a, b) => a.m.stage - b.m.stage || a.index - b.index);
+  return new Map(order.map(({ m }, i) => [m.id, schedule.start + Math.floor(i / fields) * slot]));
 }

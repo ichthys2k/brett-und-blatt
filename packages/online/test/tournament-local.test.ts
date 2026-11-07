@@ -306,3 +306,41 @@ describe('Stufe 2: Helfer', () => {
     expect(t.start(HELPER)).toBeNull();
   });
 });
+
+describe('Stufe 2: Zeitplan und Schiedsrichter', () => {
+  it('Uhrzeiten je Partie aus Beginn, Dauer, Pause und Tischen', () => {
+    const { t } = local(6, 'league', {}, 2);
+    expect(t.setSchedule(LEADER, { start: 0, matchMinutes: 0, breakMinutes: 5 })).toBeTypeOf('string');
+    expect(t.setSchedule(GUEST, { start: 0, matchMinutes: 10, breakMinutes: 5 })).toBeTypeOf('string');
+    const start = Date.UTC(2026, 10, 7, 14, 0);
+    expect(t.setSchedule(LEADER, { start, matchMinutes: 10, breakMinutes: 5 })).toBeNull();
+    expect(t.start(LEADER)).toBeNull();
+    const times = t.view(LEADER).matches.map((m) => m.plannedAt!);
+    // 15 Partien auf 2 Tischen: 8 Durchgänge zu je 15 Minuten.
+    expect(times.slice(0, 4)).toEqual([start, start, start + 15 * 60_000, start + 15 * 60_000]);
+    expect(Math.max(...times)).toBe(start + 7 * 15 * 60_000);
+    expect(t.setSchedule(LEADER, null)).toBeNull();
+    expect(t.view(LEADER).matches[0]!.plannedAt).toBeUndefined();
+  });
+
+  it('Teams pfeifen gegenseitig: spielfrei, gleichmäßig verteilt', () => {
+    const { t } = local(6, 'league', {}, 2);
+    expect(t.setReferees(LEADER, true)).toBeNull();
+    expect(t.start(LEADER)).toBeNull();
+    let rounds = 0;
+    while (t.phase === 'running' && rounds++ < 50) {
+      const view = t.view(LEADER);
+      const running = view.matches.filter((m) => m.status === 'running');
+      for (const m of running) {
+        expect(m.referee).toBeDefined();
+        // Wer pfeift, spielt nirgends gerade und pfeift nur einmal zugleich.
+        expect(running.flatMap((x) => x.slots.map((s) => s.player))).not.toContain(m.referee);
+      }
+      expect(new Set(running.map((m) => m.referee)).size).toBe(running.length);
+      expect(t.enterResult(LEADER, running[0]!.id, { score: [1, 0] })).toBeNull();
+    }
+    const counts = new Map<string, number>();
+    for (const m of t.view(LEADER).matches) if (m.referee) counts.set(m.referee, (counts.get(m.referee) ?? 0) + 1);
+    expect(Math.max(...counts.values()) - Math.min(...counts.values())).toBeLessThanOrEqual(2);
+  });
+});

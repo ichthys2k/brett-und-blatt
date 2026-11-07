@@ -116,6 +116,15 @@ export interface TournamentMatch {
   /** Vor Ort: Tisch oder Feld (ab 0), solange die Partie dort aufgerufen ist. */
   field?: number;
   calledAt?: number;
+  /** Vor Ort: wer pfeift (Teams pfeifen gegenseitig). */
+  referee?: string;
+}
+
+/** Vor Ort: Zeitplan aus Beginn, Spieldauer und Pause; daraus ergeben sich Uhrzeiten je Partie. */
+export interface TournamentSchedule {
+  start: number;
+  matchMinutes: number;
+  breakMinutes: number;
 }
 
 export interface TournamentStage {
@@ -184,6 +193,9 @@ export interface TournamentSnapshot {
   /** Vor Ort: Helfer und Mitleitung. */
   helpers?: TournamentHelper[];
   nextHelper?: number;
+  schedule?: TournamentSchedule;
+  /** Vor Ort: Teams pfeifen gegenseitig; beim Aufruf bekommt jede Partie ein spielfreies Team. */
+  referees?: boolean;
 }
 
 /** Helfer vor Ort (Stufe 2): Wer den Link öffnet, trägt Ergebnisse ein; Mitleitung darf alles. */
@@ -250,7 +262,10 @@ export interface TournamentView {
   stages: TournamentStage[];
   /** Index der laufenden Phase. */
   currentStage: number;
-  matches: Omit<TournamentMatch, 'everReady'>[];
+  /** `plannedAt`: Uhrzeit laut Zeitplan (vor Ort, wenn einer gesetzt ist). */
+  matches: (Omit<TournamentMatch, 'everReady'> & { plannedAt?: number })[];
+  schedule: TournamentSchedule | null;
+  referees: boolean;
   /** Plätze am Ende: Sieger, Zweiter, ggf. Dritter. */
   podium: string[];
   you: string | null;

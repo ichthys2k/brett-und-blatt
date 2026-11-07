@@ -4,7 +4,7 @@ import { cleanAvatar, cleanName } from './names';
 import type { OpenRoomListing } from './protocol';
 import { FORMATS, type FormatContext, type TournamentFormatRules } from './tournament/formats';
 import { upgradeSnapshot, type StoredTournamentSnapshot } from './tournament/migrate';
-import { assignFields, isLocal, outcomeFromEntry, type ResultEntry } from './tournament/local-play';
+import { SCHEDULE_MAX_MINUTES, assignFields, isLocal, outcomeFromEntry, plannedStarts, type ResultEntry } from './tournament/local-play';
 import type { PointRules } from './tournament/protocol';
 import { deadlineOutcome, dueAt, roomRequest, setReady, sideOfSeat, type MatchRoomRequest, type RoomReport } from './tournament/online-play';
 import { seededShuffle } from './tournament/pairing';
@@ -15,6 +15,7 @@ import {
   HELPER_MAX_DEVICES,
   TOURNAMENT_MAX_HELPERS,
   type HelperRole,
+  type TournamentSchedule,
   type TournamentHelper,
   LEAGUE_KEEP_MS,
   TOURNAMENT_MAX_FIELDS,
@@ -401,6 +402,29 @@ export class Tournament {
     return null;
   }
 
+  /** Zeitplan setzen oder mit null entfernen. */
+  setSchedule(token: string, schedule: TournamentSchedule | null): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!isLocal(this.s)) return 'Einen Zeitplan gibt es nur vor Ort.';
+    if (schedule) {
+      const { start, matchMinutes, breakMinutes } = schedule;
+      const minutes = (n: number, min: number) => Number.isInteger(n) && n >= min && n <= SCHEDULE_MAX_MINUTES;
+      if (!Number.isFinite(start) || !minutes(matchMinutes, 1) || !minutes(breakMinutes, 0)) return 'Bitte gültige Zeiten eintragen.';
+      this.s.schedule = { start, matchMinutes, breakMinutes };
+    } else delete this.s.schedule;
+    this.touch();
+    return null;
+  }
+
+  /** Teams pfeifen gegenseitig: gilt für alle Partien, die danach aufgerufen werden. */
+  setReferees(token: string, on: boolean): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!isLocal(this.s)) return 'Schiedsrichter gibt es nur vor Ort.';
+    this.s.referees = on;
+    this.touch();
+    return null;
+  }
+
   /** Zahl der Tische oder Felder; 0 schaltet den Aufruf ab. */
   setFields(token: string, count: number): string | null {
     if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
@@ -465,6 +489,7 @@ export class Tournament {
 
   view(token: string | null): TournamentView {
     const s = this.s;
+    const planned = s.schedule && s.phase !== 'signup' ? plannedStarts(s, s.schedule) : null;
     const you = token ? (this.playerByToken(token)?.id ?? null) : null;
     return {
       code: s.code,
@@ -478,7 +503,9 @@ export class Tournament {
       fields: s.fields ?? 0,
       stages: s.stages,
       currentStage: this.currentStage(),
-      matches: s.matches.map(({ everReady: _hidden, ...match }) => match),
+      matches: s.matches.map(({ everReady: _hidden, ...match }) => (planned?.has(match.id) ? { ...match, plannedAt: planned.get(match.id)! } : match)),
+      schedule: s.schedule ?? null,
+      referees: s.referees === true,
       podium: this.podium(),
       you,
       isLeader: token !== null && this.isLeader(token),

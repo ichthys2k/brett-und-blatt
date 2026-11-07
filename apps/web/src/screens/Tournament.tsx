@@ -51,6 +51,10 @@ function deadlineNote(view: TournamentView, ms: number): string {
   return isLocalView(view) ? '' : t('tournament.deadline', { date: formatDate(ms) });
 }
 
+function clock(ms: number): string {
+  return new Date(ms).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
+
 function fieldName(view: TournamentView, field: number): string {
   return t('tournament.field', { label: view.settings.fieldLabel ?? 'Tisch', n: field + 1 });
 }
@@ -383,7 +387,13 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
           </>
         )}
       </Section>
-      {view.isLeader && <SpectatorLink view={view} code={code} />}
+      {view.isLeader && (
+        <Section title={t('tournament.tools')}>
+          <SpectatorLink view={view} code={code} />
+          <Helpers view={view} code={code} send={send} />
+          <SchedulePanel view={view} send={send} />
+        </Section>
+      )}
     </>
   );
 }
@@ -453,19 +463,69 @@ function Helpers({ view, code, send }: { view: TournamentView; code: string; sen
   );
 }
 
+/** Zeitplan und Schiedsrichter vor Ort. */
+function SchedulePanel({ view, send }: { view: TournamentView; send: Send }) {
+  const current = view.schedule;
+  const toTime = (ms: number) => clock(ms);
+  const [start, setStart] = useState(() => toTime(current?.start ?? Math.ceil(Date.now() / 900_000) * 900_000));
+  const [matchMinutes, setMatchMinutes] = useState(current?.matchMinutes ?? 10);
+  const [breakMinutes, setBreakMinutes] = useState(current?.breakMinutes ?? 2);
+  const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-2';
+  const save = () => {
+    const [h, m] = start.split(':').map(Number) as [number, number];
+    const base = new Date(current?.start ?? Date.now());
+    base.setHours(h, m, 0, 0);
+    send({ type: 'setSchedule', schedule: { start: base.getTime(), matchMinutes, breakMinutes } });
+  };
+  return (
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <p className="text-sm font-semibold">🕑 {t('tournament.schedule')}</p>
+      <div className="grid grid-cols-3 gap-2">
+        <label className="block space-y-1 text-xs">
+          <span>{t('tournament.schedule.start')}</span>
+          <input className={FIELD} type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+        </label>
+        <label className="block space-y-1 text-xs">
+          <span>{t('tournament.schedule.match')}</span>
+          <input className={FIELD} type="number" inputMode="numeric" min={1} max={240} value={matchMinutes} onChange={(e) => setMatchMinutes(Math.max(1, Math.min(240, Math.floor(Number(e.target.value) || 1))))} />
+        </label>
+        <label className="block space-y-1 text-xs">
+          <span>{t('tournament.schedule.break')}</span>
+          <input className={FIELD} type="number" inputMode="numeric" min={0} max={240} value={breakMinutes} onChange={(e) => setBreakMinutes(Math.max(0, Math.min(240, Math.floor(Number(e.target.value) || 0))))} />
+        </label>
+      </div>
+      <div className="flex gap-2">
+        <Button className="flex-1 text-sm" disabled={!/^\d{2}:\d{2}$/.test(start)} onClick={save}>
+          {current ? t('tournament.schedule.update') : t('tournament.schedule.set')}
+        </Button>
+        {current && (
+          <Button className="text-sm" onClick={() => send({ type: 'setSchedule', schedule: null })}>
+            {t('tournament.remove')}
+          </Button>
+        )}
+      </div>
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={view.referees} onChange={(e) => send({ type: 'setReferees', on: e.target.checked })} />
+        {t('tournament.referees')}
+      </label>
+    </div>
+  );
+}
+
 function SpectatorLink({ view, code }: { view: TournamentView; code: string }) {
   const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
   if (!view.settings.spectators) return <p className="text-sm text-muted">{t('tournament.noSpectators')}</p>;
   return (
-    <Section title={t('tournament.spectatorLink')}>
-      <p className="text-sm text-muted">{t('tournament.spectatorHint')}</p>
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <p className="text-sm font-semibold">👀 {t('tournament.spectatorLink')}</p>
+      <p className="text-xs text-muted">{t('tournament.spectatorHint')}</p>
       <div className="mx-auto w-44">
         <QrCode text={link} label={t('tournament.spectatorLink')} />
       </div>
       <Button className="w-full" onClick={() => navigator.clipboard?.writeText(link)}>
         🔗 {t('tournament.copy')}
       </Button>
-    </Section>
+    </div>
   );
 }
 
@@ -479,6 +539,15 @@ function FieldBoard({ view, send }: { view: TournamentView; send: Send | null })
   const running = view.matches.filter((m) => m.status === 'running').sort((a, b) => (a.field ?? 0) - (b.field ?? 0));
   const next = view.matches.filter((m) => m.status === 'open' && m.slots.every((s) => s.player)).sort((a, b) => a.stage - b.stage);
   const shown = view.fields > 0 ? next.slice(0, 8) : next;
+  // Verzug: Die früheste noch nicht aufgerufene Partie hätte schon beginnen sollen.
+  const waitingSince = Math.min(...next.flatMap((m) => (m.plannedAt !== undefined ? [m.plannedAt] : [])));
+  const delay = Number.isFinite(waitingSince) ? Math.floor((view.serverNow - waitingSince) / 60_000) : 0;
+  const extra = (m: Match) => (
+    <>
+      {m.plannedAt !== undefined && <span>🕑 {t('tournament.about', { time: clock(m.plannedAt) })}</span>}
+      {m.referee && <span> · 🟨 {t('tournament.referee', { name: label(m.referee) })}</span>}
+    </>
+  );
   const names = (m: Match) => (
     <p className="min-w-0 truncate font-semibold">
       {label(m.slots[0].player)} <span className="font-normal text-muted">–</span> {label(m.slots[1].player)}
@@ -486,6 +555,7 @@ function FieldBoard({ view, send }: { view: TournamentView; send: Send | null })
   );
   return (
     <>
+      {delay >= 3 && <p className="rounded-xl bg-warning/15 px-3 py-2 text-sm font-semibold text-warning">⏱️ {t('tournament.delay', { n: delay })}</p>}
       {running.length > 0 && (
         <Section title={t('tournament.atFields')}>
           <ul className="grid gap-2 md:grid-cols-2">
@@ -496,6 +566,7 @@ function FieldBoard({ view, send }: { view: TournamentView; send: Send | null })
                   <span className="truncate">{matchTitle(view, m)}</span>
                 </p>
                 {names(m)}
+                {(m.referee || m.plannedAt !== undefined) && <p className="text-xs text-muted">{extra(m)}</p>}
                 {send && <ResultForm key={m.id} view={view} m={m} send={send} />}
               </li>
             ))}
@@ -507,7 +578,10 @@ function FieldBoard({ view, send }: { view: TournamentView; send: Send | null })
         <ul className="space-y-2">
           {shown.map((m) => (
             <li key={m.id} className="space-y-1 rounded-xl border border-line bg-surface p-2 text-sm">
-              <p className="truncate text-xs text-muted">{matchTitle(view, m)}</p>
+              <p className="truncate text-xs text-muted">
+                {matchTitle(view, m)}
+                {m.plannedAt !== undefined && ` · ${t('tournament.about', { time: clock(m.plannedAt) })}`}
+              </p>
               {names(m)}
               {send &&
                 (view.fields > 0 ? (
@@ -1061,6 +1135,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
           </select>
         </label>
       )}
+      {local && view.phase !== 'finished' && <SchedulePanel view={view} send={send} />}
       {view.phase !== 'signup' && local && (
         <div className="space-y-2">
           <label className="block space-y-1 text-sm">
@@ -1288,7 +1363,9 @@ function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintK
                     .filter((m) => m.stage === stage)
                     .map((m) => (
                       <tr key={m.id} className="border-b border-gray-300">
-                        <td className="w-40 py-1 pr-2 text-xs">{matchTitle(view, m)}</td>
+                        {view.schedule && <td className="w-14 py-1 text-xs tabular-nums">{m.plannedAt !== undefined ? clock(m.plannedAt) : ''}</td>}
+                        {/* In Liga und Schweizer System steht die Runde schon in der Überschrift. */}
+                        {view.settings.format !== 'league' && view.settings.format !== 'swiss' && <td className="w-40 py-1 pr-2 text-xs">{matchTitle(view, m)}</td>}
                         <td className="py-1">{m.slots[0].player ? label(m.slots[0].player) : '…'}</td>
                         <td className="w-6 text-center">–</td>
                         <td className="py-1">{m.slots[1].player ? label(m.slots[1].player) : '…'}</td>
@@ -1310,6 +1387,8 @@ function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintK
                 <p className="text-xs">
                   {view.settings.name} · {matchTitle(view, m)}
                   {m.field !== undefined && ` · ${fieldName(view, m.field)}`}
+                  {m.plannedAt !== undefined && ` · ${clock(m.plannedAt)}`}
+                  {m.referee && ` · ${t('tournament.referee', { name: label(m.referee) })}`}
                 </p>
                 {[0, 1].map((side) => (
                   <div key={side} className="mt-2 flex items-center gap-2">

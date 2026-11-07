@@ -23,7 +23,9 @@ export type TournamentClientMessage =
   // Stufe 2: Helfer
   | { type: 'addHelper'; name: string; role: 'helper' | 'coleader' }
   | { type: 'removeHelper'; helper: string }
-  | { type: 'helper'; code: string };
+  | { type: 'helper'; code: string }
+  | { type: 'setSchedule'; schedule: { start: number; matchMinutes: number; breakMinutes: number } | null }
+  | { type: 'setReferees'; on: boolean };
 
 export type TournamentServerMessage =
   | { type: 'tournament'; view: TournamentView }
@@ -78,6 +80,14 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
       return isShort(m.helper) ? { type: 'removeHelper', helper: m.helper } : null;
     case 'helper':
       return isShort(m.code, 20) ? { type: 'helper', code: m.code } : null;
+    case 'setSchedule': {
+      if (m.schedule === null) return { type: 'setSchedule', schedule: null };
+      const sch = m.schedule;
+      if (!isRecord(sch) || typeof sch.start !== 'number' || typeof sch.matchMinutes !== 'number' || typeof sch.breakMinutes !== 'number') return null;
+      return { type: 'setSchedule', schedule: { start: sch.start, matchMinutes: sch.matchMinutes, breakMinutes: sch.breakMinutes } };
+    }
+    case 'setReferees':
+      return typeof m.on === 'boolean' ? { type: 'setReferees', on: m.on } : null;
     case 'setFields':
       return Number.isInteger(m.count) && (m.count as number) >= 0 && (m.count as number) <= TOURNAMENT_MAX_FIELDS ? { type: 'setFields', count: m.count as number } : null;
     default:
