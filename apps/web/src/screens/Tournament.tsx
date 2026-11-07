@@ -90,6 +90,7 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
   const [state, send] = useTournament(code, profile ?? GUEST);
   const [board, setBoard] = useState(false);
+  const [printing, setPrinting] = useState<PrintKind | null>(null);
   const [claimInput, setClaimInput] = useState('');
   const view = state.view;
   const claimed = useRef(false);
@@ -284,6 +285,8 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
     );
   }
 
+  if (printing) return <PrintView view={view} kind={printing} onClose={() => setPrinting(null)} />;
+
   if (board) {
     return (
       <div className="fixed inset-0 z-40 overflow-auto bg-bg p-4 text-lg">
@@ -307,6 +310,7 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
       <Progress view={view} />
       <History view={view} />
       {view.isLeader && <LeaderTools view={view} code={code} send={send} claim={state.claim} onBoard={() => setBoard(true)} />}
+      {(view.isLeader || view.helperRole) && <PrintTools view={view} onPrint={setPrinting} />}
       {banners}
     </Page>
   );
@@ -1154,5 +1158,211 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
         </>
       )}
     </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Druck und Export (W-058 Stufe 2): über den Browser, „Als PDF speichern“ inklusive.
+
+type PrintKind = 'plan' | 'sheets' | 'tables' | 'certificates';
+
+/** Partien in Spielreihenfolge, ohne Freilose und ohne Partien, die nie zustande kommen. */
+function printableMatches(view: TournamentView): Match[] {
+  return view.matches.filter((m) => !m.outcome?.bye && !(m.status === 'done' && (!m.slots[0].player || !m.slots[1].player))).sort((a, b) => a.stage - b.stage);
+}
+
+function stageTitle(view: TournamentView, index: number): string {
+  const stage = view.stages[index];
+  if (!stage) return '';
+  if (stage.kind === 'group') return t('tournament.groups');
+  if (stage.kind === 'league') return t('tournament.matchday', { n: stage.round });
+  if (stage.kind === 'ko') return roundName(stage.round);
+  return t('tournament.round', { n: stage.round });
+}
+
+function resultText(m: Match): string {
+  const o = m.outcome;
+  if (!o) return '';
+  if (o.score) return o.score.join(':');
+  if (o.draw) return t('tournament.draw');
+  return o.winner === null ? '–' : o.winner === 0 ? '1:0' : '0:1';
+}
+
+function PrintTools({ view, onPrint }: { view: TournamentView; onPrint: (kind: PrintKind) => void }) {
+  const download = (name: string, type: string, text: string) => {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const base = view.settings.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'turnier';
+  const names = new Map(view.players.map((p) => [p.id, p.name]));
+  const csvCell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+  const csv = (rows: (string | number)[][]) => '\ufeff' + rows.map((row) => row.map(csvCell).join(';')).join('\r\n');
+  const exportMatches = () =>
+    download(
+      `${base}-partien.csv`,
+      'text/csv;charset=utf-8',
+      csv([
+        [t('tournament.csv.round'), t('tournament.csv.match'), t('tournament.csv.a'), t('tournament.csv.b'), t('tournament.csv.result'), t('tournament.csv.field')],
+        ...printableMatches(view).map((m) => [matchTitle(view, m), m.id, names.get(m.slots[0].player ?? '') ?? '', names.get(m.slots[1].player ?? '') ?? '', resultText(m), m.field !== undefined ? m.field + 1 : '']),
+      ]),
+    );
+  const exportTable = () => {
+    const rows = view.table.length > 0 ? view.table : view.groups.flatMap((g) => g.table);
+    download(
+      `${base}-tabelle.csv`,
+      'text/csv;charset=utf-8',
+      csv([
+        [t('tournament.table.place'), t('tournament.table.player'), t('tournament.table.played'), t('tournament.table.wins'), t('tournament.table.draws'), t('tournament.table.losses'), t('tournament.csv.scored'), t('tournament.csv.conceded'), t('tournament.table.points')],
+        ...rows.map((r, i) => [i + 1, names.get(r.player) ?? '', r.played, r.wins, r.draws, r.losses, r.scored, r.conceded, r.points]),
+      ]),
+    );
+  };
+  const kinds: [PrintKind, string][] = [
+    ['plan', `📋 ${t('tournament.print.plan')}`],
+    ['sheets', `📝 ${t('tournament.print.sheets')}`],
+    ['tables', `📊 ${t('tournament.print.tables')}`],
+    ...(view.phase === 'finished' ? ([['certificates', `🏅 ${t('tournament.print.certificates')}`]] as [PrintKind, string][]) : []),
+  ];
+  if (view.phase === 'signup') return null;
+  return (
+    <Section title={t('tournament.print')}>
+      <div className="grid grid-cols-2 gap-2">
+        {kinds.map(([kind, label]) => (
+          <Button key={kind} className="text-sm" onClick={() => onPrint(kind)}>
+            {label}
+          </Button>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <Button className="text-xs" onClick={exportMatches}>
+          ⬇️ {t('tournament.csv.matches')}
+        </Button>
+        <Button className="text-xs" onClick={exportTable} disabled={view.table.length === 0 && view.groups.length === 0}>
+          ⬇️ {t('tournament.csv.table')}
+        </Button>
+        <Button className="text-xs" onClick={() => download(`${base}.json`, 'application/json', JSON.stringify({ ...view, helpers: [] }, null, 2))}>
+          ⬇️ JSON
+        </Button>
+      </div>
+    </Section>
+  );
+}
+
+/** Druckansicht: weiß, ohne Bedienelemente im Druck; der Druckdialog öffnet sich gleich. */
+function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintKind; onClose: () => void }) {
+  const { label } = useLookup(view);
+  useEffect(() => {
+    const timer = window.setTimeout(() => window.print(), 300);
+    return () => window.clearTimeout(timer);
+  }, []);
+  const local = isLocalView(view);
+  const unit = local && view.settings.result && view.settings.result !== 'winner' ? t(`tournament.result.${view.settings.result}`) : '';
+  const heading = (
+    <header className="mb-3">
+      <h1 className="text-2xl font-bold">🏆 {view.settings.name}</h1>
+      <p className="text-sm">
+        {local ? view.settings.sport : findGame(view.settings.gameId)?.name} · {t(`tournament.format.${view.settings.format}`)} · {new Date(view.serverNow).toLocaleDateString('de-DE')}
+      </p>
+    </header>
+  );
+  const stages = [...new Set(printableMatches(view).map((m) => m.stage))];
+  return (
+    <div className="bub-print min-h-full bg-white p-6 text-black">
+      <div className="mb-4 flex gap-2 print:hidden">
+        <Button onClick={() => window.print()}>🖨️ {t('tournament.print.now')}</Button>
+        <Button onClick={onClose}>{t('tournament.boardClose')}</Button>
+      </div>
+      {kind === 'plan' && (
+        <>
+          {heading}
+          {stages.map((stage) => (
+            <section key={stage} className="mb-4 break-inside-avoid">
+              <h2 className="mb-1 font-bold">{stageTitle(view, stage)}</h2>
+              <table className="w-full border-collapse text-sm">
+                <tbody>
+                  {printableMatches(view)
+                    .filter((m) => m.stage === stage)
+                    .map((m) => (
+                      <tr key={m.id} className="border-b border-gray-300">
+                        <td className="w-40 py-1 pr-2 text-xs">{matchTitle(view, m)}</td>
+                        <td className="py-1">{m.slots[0].player ? label(m.slots[0].player) : '…'}</td>
+                        <td className="w-6 text-center">–</td>
+                        <td className="py-1">{m.slots[1].player ? label(m.slots[1].player) : '…'}</td>
+                        <td className="w-20 text-right font-bold tabular-nums">{resultText(m) || '___ : ___'}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </section>
+          ))}
+        </>
+      )}
+      {kind === 'sheets' && (
+        <div className="grid grid-cols-2 gap-4">
+          {printableMatches(view)
+            .filter((m) => !m.outcome && m.slots[0].player && m.slots[1].player)
+            .map((m) => (
+              <div key={m.id} className="break-inside-avoid rounded border-2 border-black p-3 text-sm">
+                <p className="text-xs">
+                  {view.settings.name} · {matchTitle(view, m)}
+                  {m.field !== undefined && ` · ${fieldName(view, m.field)}`}
+                </p>
+                {[0, 1].map((side) => (
+                  <div key={side} className="mt-2 flex items-center gap-2">
+                    <span className="min-w-0 flex-1 truncate text-base font-bold">{label(m.slots[side]!.player)}</span>
+                    <span className="h-9 w-14 border-2 border-black" />
+                  </div>
+                ))}
+                <p className="mt-2 text-xs">{unit ? `${unit} eintragen` : t('tournament.print.markWinner')}</p>
+                <p className="mt-4 border-t border-black pt-1 text-xs">{t('tournament.print.signature')}</p>
+              </div>
+            ))}
+        </div>
+      )}
+      {kind === 'tables' && (
+        <>
+          {heading}
+          {view.groups.map((g, index) => (
+            <section key={index} className="mb-4 break-inside-avoid">
+              <h2 className="font-bold">{t('tournament.group', { name: GROUP_LETTERS[index] ?? String(index + 1) })}</h2>
+              <Table view={view} rows={g.table} highlight={2} />
+            </section>
+          ))}
+          {view.table.length > 0 && <Table view={view} rows={view.table} highlight={view.phase === 'finished' ? 3 : 0} buchholz={view.settings.format === 'swiss'} />}
+          {view.matches.some((m) => m.group === null && view.stages[m.stage]?.kind !== 'swiss' && view.stages[m.stage]?.kind !== 'league') && (
+            <section className="mt-4">
+              <h2 className="font-bold">{t('tournament.bracket')}</h2>
+              <ul className="text-sm">
+                {printableMatches(view)
+                  .filter((m) => m.group === null)
+                  .map((m) => (
+                    <li key={m.id}>
+                      {matchTitle(view, m)}: {label(m.slots[0].player)} – {label(m.slots[1].player)} {resultText(m)}
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          )}
+        </>
+      )}
+      {kind === 'certificates' &&
+        view.podium.map((id, index) => (
+          <section key={id} className="flex min-h-[90vh] break-after-page flex-col items-center justify-center gap-6 border-8 border-double border-black p-10 text-center">
+            <p className="text-5xl">{['🥇', '🥈', '🥉'][index]}</p>
+            <h1 className="text-4xl font-bold">{t('tournament.print.certificate')}</h1>
+            <p className="text-xl">{view.settings.name}</p>
+            <p className="text-4xl font-bold">{view.players.find((p) => p.id === id)?.name}</p>
+            <p className="text-2xl">{t('tournament.print.place', { n: index + 1 })}</p>
+            <p className="text-sm">
+              {local ? view.settings.sport : findGame(view.settings.gameId)?.name} · {new Date(view.serverNow).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <p className="mt-10 w-64 border-t border-black pt-1 text-sm">{view.leaderName}</p>
+          </section>
+        ))}
+    </div>
   );
 }
