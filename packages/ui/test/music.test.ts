@@ -25,6 +25,11 @@ describe('Musik-Katalog', () => {
     expect(defaultPlaylist('gibt-es-nicht')).toBe('spielabend');
   });
 
+  it('spielt im Drachenspiel dessen Original-Soundtrack', () => {
+    expect(defaultPlaylist('drachenspiel')).toBe('drachenspiel');
+    expect(playlistTracks('drachenspiel').map((item) => item.id)).toEqual(['drachenspiel-soundtrack']);
+  });
+
   it('spielt bei einer leeren Playlist alle Stücke', () => {
     const empty = playlists.find((list) => !musicTracks.some((item) => item.playlist === list.id));
     if (empty) expect(playlistTracks(empty.id)).toEqual(musicTracks);
