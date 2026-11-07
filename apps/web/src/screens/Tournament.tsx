@@ -51,6 +51,10 @@ function deadlineNote(view: TournamentView, ms: number): string {
   return isLocalView(view) ? '' : t('tournament.deadline', { date: formatDate(ms) });
 }
 
+function clock(ms: number): string {
+  return new Date(ms).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
+
 function fieldName(view: TournamentView, field: number): string {
   return t('tournament.field', { label: view.settings.fieldLabel ?? 'Tisch', n: field + 1 });
 }
@@ -86,10 +90,11 @@ function useLookup(view: TournamentView) {
   }, [view]);
 }
 
-export function TournamentScreen({ code, claim }: { code: string; claim?: string }) {
+export function TournamentScreen({ code, claim, helper }: { code: string; claim?: string; helper?: string }) {
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
   const [state, send] = useTournament(code, profile ?? GUEST);
   const [board, setBoard] = useState(false);
+  const [printing, setPrinting] = useState<PrintKind | null>(null);
   const [claimInput, setClaimInput] = useState('');
   const view = state.view;
   const claimed = useRef(false);
@@ -107,9 +112,19 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
     }
   }, [claim, state.status, code, send]);
 
+  // Der Helferlink: einlösen und aus der Adresszeile nehmen, damit er nicht im Verlauf herumliegt.
+  const helped = useRef(false);
+  useEffect(() => {
+    if (helper && state.status === 'open' && !helped.current) {
+      helped.current = true;
+      send({ type: 'helper', code: helper });
+      window.history.replaceState(null, '', paths.tournament(code));
+    }
+  }, [helper, state.status, code, send]);
+
   // Wer hier eingeschrieben ist oder leitet, findet das Turnier auf „Online spielen“ wieder.
   useEffect(() => {
-    if (!view || !(view.you || view.isLeader)) return;
+    if (!view || !(view.you || view.isLeader || view.helperRole)) return;
     if (storage.loadTournaments().some((item) => item.code === code)) return;
     storage.rememberTournament({ code, name: view.settings.name });
     // Der Ausweis nimmt die Liste auf andere Geräte mit.
@@ -274,6 +289,8 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
     );
   }
 
+  if (printing) return <PrintView view={view} kind={printing} onClose={() => setPrinting(null)} />;
+
   if (board) {
     return (
       <div className="fixed inset-0 z-40 overflow-auto bg-bg p-4 text-lg">
@@ -292,10 +309,12 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
       {header}
       {subtitle}
       {view.phase === 'finished' && <Podium view={view} />}
-      {local ? <FieldBoard view={view} send={view.isLeader ? send : null} /> : <MyStand view={view} send={send} />}
+      {local ? <FieldBoard view={view} send={view.isLeader || view.helperRole ? send : null} /> : <MyStand view={view} send={send} />}
+      {view.helperRole === 'helper' && <p className="text-sm text-muted">🤝 {t('tournament.youHelp')}</p>}
       <Progress view={view} />
       <History view={view} />
       {view.isLeader && <LeaderTools view={view} code={code} send={send} claim={state.claim} onBoard={() => setBoard(true)} />}
+      {(view.isLeader || view.helperRole) && <PrintTools view={view} onPrint={setPrinting} />}
       {banners}
     </Page>
   );
@@ -304,13 +323,35 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
 // ---------------------------------------------------------------------------
 // Einschreibung
 
+/** Namen eintragen, einer je Zeile; der Text bleibt stehen, bis die Namen angekommen sind. */
+function EntrantForm({ view, send, label }: { view: TournamentView; send: Send; label: string }) {
+  const [text, setText] = useState('');
+  const count = view.players.length;
+  useEffect(() => setText(''), [count]);
+  return (
+    <form
+      className="space-y-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const names = text.split('\n').map((line) => line.trim()).filter(Boolean);
+        if (names.length > 0) send({ type: 'addEntrants', names });
+      }}
+    >
+      <label className="block space-y-1 text-sm">
+        <span>{label}</span>
+        <textarea className="min-h-24 w-full rounded-xl border border-line bg-surface px-3 py-2" rows={4} value={text} onChange={(e) => setText(e.target.value)} />
+      </label>
+      <Button type="submit" className="w-full" disabled={!text.trim()}>
+        ➕ {t('tournament.add')}
+      </Button>
+    </form>
+  );
+}
+
 /** Einschreibung vor Ort: Die Leitung trägt die Namen ein, Zuschauer sehen die Liste. */
 function LocalSignup({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
   const min = TOURNAMENT_MIN_PLAYERS[view.settings.format];
-  const [text, setText] = useState('');
-  // Erst leeren, wenn die Namen angekommen sind; bei einer Ablehnung bleibt der Text stehen.
   const count = view.players.length;
-  useEffect(() => setText(''), [count]);
   return (
     <>
       <Section title={t('tournament.entrants')}>
@@ -331,22 +372,7 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
         </ul>
         {view.isLeader && (
           <>
-            <form
-              className="space-y-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                const names = text.split('\n').map((line) => line.trim()).filter(Boolean);
-                if (names.length > 0) send({ type: 'addEntrants', names });
-              }}
-            >
-              <label className="block space-y-1 text-sm">
-                <span>{t('tournament.addEntrants')}</span>
-                <textarea className="min-h-24 w-full rounded-xl border border-line bg-surface px-3 py-2" rows={4} value={text} onChange={(e) => setText(e.target.value)} />
-              </label>
-              <Button type="submit" className="w-full" disabled={!text.trim()}>
-                ➕ {t('tournament.add')}
-              </Button>
-            </form>
+            <EntrantForm view={view} send={send} label={t('tournament.addEntrants')} />
             <p className="text-xs text-muted">{t('tournament.namesHint')}</p>
             <Button
               variant="primary"
@@ -361,8 +387,128 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
           </>
         )}
       </Section>
-      {view.isLeader && <SpectatorLink view={view} code={code} />}
+      {view.isLeader && (
+        <Section title={t('tournament.tools')}>
+          <SpectatorLink view={view} code={code} />
+          <Helpers view={view} code={code} send={send} />
+          <SchedulePanel view={view} send={send} />
+        </Section>
+      )}
     </>
+  );
+}
+
+/** Helferlinks: Wer einen öffnet, trägt Ergebnisse ein (Mitleitung: darf alles). */
+function Helpers({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<'helper' | 'coleader'>('helper');
+  const [shown, setShown] = useState<string | null>(null);
+  const count = view.helpers.length;
+  useEffect(() => setName(''), [count]);
+  const link = (helperCode: string) => `${window.location.origin}${window.location.pathname}${paths.tournament(code)}?helfer=${helperCode}`;
+  return (
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <p className="text-sm font-semibold">🤝 {t('tournament.helpers')}</p>
+      <p className="text-xs text-muted">{t('tournament.helpersHint')}</p>
+      <ul className="space-y-1">
+        {view.helpers.map((h) => (
+          <li key={h.id} className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="min-w-0 flex-1 truncate">
+                {h.name} <span className="text-xs text-muted">· {t(h.role === 'coleader' ? 'tournament.role.coleader' : 'tournament.role.helper')} · {t('tournament.devices', { n: h.devices })}</span>
+              </span>
+              <Button className="text-xs" onClick={() => setShown(shown === h.id ? null : h.id)}>
+                🔗
+              </Button>
+              <Button
+                className="text-xs"
+                aria-label={`${t('tournament.remove')}: ${h.name}`}
+                onClick={() => {
+                  if (window.confirm(t('tournament.removeHelperConfirm', { name: h.name }))) send({ type: 'removeHelper', helper: h.id });
+                }}
+              >
+                ✕
+              </Button>
+            </div>
+            {shown === h.id && (
+              <div className="space-y-2">
+                <div className="mx-auto w-40">
+                  <QrCode text={link(h.code)} label={h.name} />
+                </div>
+                <Button className="w-full text-sm" onClick={() => navigator.clipboard?.writeText(link(h.code))}>
+                  🔗 {t('tournament.copy')}
+                </Button>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+      <form
+        className="flex flex-wrap gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (name.trim()) send({ type: 'addHelper', name: name.trim(), role });
+        }}
+      >
+        <input className="min-h-11 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3" aria-label={t('tournament.helperName')} placeholder={t('tournament.helperName')} maxLength={30} value={name} onChange={(e) => setName(e.target.value)} />
+        <select className="min-h-11 rounded-xl border border-line bg-surface px-2" aria-label={t('tournament.role')} value={role} onChange={(e) => setRole(e.target.value as 'helper' | 'coleader')}>
+          <option value="helper">{t('tournament.role.helper')}</option>
+          <option value="coleader">{t('tournament.role.coleader')}</option>
+        </select>
+        <Button type="submit" disabled={!name.trim()}>
+          ➕
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+/** Zeitplan und Schiedsrichter vor Ort. */
+function SchedulePanel({ view, send }: { view: TournamentView; send: Send }) {
+  const current = view.schedule;
+  const toTime = (ms: number) => clock(ms);
+  const [start, setStart] = useState(() => toTime(current?.start ?? Math.ceil(Date.now() / 900_000) * 900_000));
+  const [matchMinutes, setMatchMinutes] = useState(current?.matchMinutes ?? 10);
+  const [breakMinutes, setBreakMinutes] = useState(current?.breakMinutes ?? 2);
+  const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-2';
+  const save = () => {
+    const [h, m] = start.split(':').map(Number) as [number, number];
+    const base = new Date(current?.start ?? Date.now());
+    base.setHours(h, m, 0, 0);
+    send({ type: 'setSchedule', schedule: { start: base.getTime(), matchMinutes, breakMinutes } });
+  };
+  return (
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <p className="text-sm font-semibold">🕑 {t('tournament.schedule')}</p>
+      <div className="grid grid-cols-3 gap-2">
+        <label className="block space-y-1 text-xs">
+          <span>{t('tournament.schedule.start')}</span>
+          <input className={FIELD} type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+        </label>
+        <label className="block space-y-1 text-xs">
+          <span>{t('tournament.schedule.match')}</span>
+          <input className={FIELD} type="number" inputMode="numeric" min={1} max={240} value={matchMinutes} onChange={(e) => setMatchMinutes(Math.max(1, Math.min(240, Math.floor(Number(e.target.value) || 1))))} />
+        </label>
+        <label className="block space-y-1 text-xs">
+          <span>{t('tournament.schedule.break')}</span>
+          <input className={FIELD} type="number" inputMode="numeric" min={0} max={240} value={breakMinutes} onChange={(e) => setBreakMinutes(Math.max(0, Math.min(240, Math.floor(Number(e.target.value) || 0))))} />
+        </label>
+      </div>
+      <div className="flex gap-2">
+        <Button className="flex-1 text-sm" disabled={!/^\d{2}:\d{2}$/.test(start)} onClick={save}>
+          {current ? t('tournament.schedule.update') : t('tournament.schedule.set')}
+        </Button>
+        {current && (
+          <Button className="text-sm" onClick={() => send({ type: 'setSchedule', schedule: null })}>
+            {t('tournament.remove')}
+          </Button>
+        )}
+      </div>
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={view.referees} onChange={(e) => send({ type: 'setReferees', on: e.target.checked })} />
+        {t('tournament.referees')}
+      </label>
+    </div>
   );
 }
 
@@ -370,15 +516,16 @@ function SpectatorLink({ view, code }: { view: TournamentView; code: string }) {
   const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
   if (!view.settings.spectators) return <p className="text-sm text-muted">{t('tournament.noSpectators')}</p>;
   return (
-    <Section title={t('tournament.spectatorLink')}>
-      <p className="text-sm text-muted">{t('tournament.spectatorHint')}</p>
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <p className="text-sm font-semibold">👀 {t('tournament.spectatorLink')}</p>
+      <p className="text-xs text-muted">{t('tournament.spectatorHint')}</p>
       <div className="mx-auto w-44">
         <QrCode text={link} label={t('tournament.spectatorLink')} />
       </div>
       <Button className="w-full" onClick={() => navigator.clipboard?.writeText(link)}>
         🔗 {t('tournament.copy')}
       </Button>
-    </Section>
+    </div>
   );
 }
 
@@ -392,6 +539,15 @@ function FieldBoard({ view, send }: { view: TournamentView; send: Send | null })
   const running = view.matches.filter((m) => m.status === 'running').sort((a, b) => (a.field ?? 0) - (b.field ?? 0));
   const next = view.matches.filter((m) => m.status === 'open' && m.slots.every((s) => s.player)).sort((a, b) => a.stage - b.stage);
   const shown = view.fields > 0 ? next.slice(0, 8) : next;
+  // Verzug: Die früheste noch nicht aufgerufene Partie hätte schon beginnen sollen.
+  const waitingSince = Math.min(...next.flatMap((m) => (m.plannedAt !== undefined ? [m.plannedAt] : [])));
+  const delay = Number.isFinite(waitingSince) ? Math.floor((view.serverNow - waitingSince) / 60_000) : 0;
+  const extra = (m: Match) => (
+    <>
+      {m.plannedAt !== undefined && <span>🕑 {t('tournament.about', { time: clock(m.plannedAt) })}</span>}
+      {m.referee && <span> · 🟨 {t('tournament.referee', { name: label(m.referee) })}</span>}
+    </>
+  );
   const names = (m: Match) => (
     <p className="min-w-0 truncate font-semibold">
       {label(m.slots[0].player)} <span className="font-normal text-muted">–</span> {label(m.slots[1].player)}
@@ -399,6 +555,7 @@ function FieldBoard({ view, send }: { view: TournamentView; send: Send | null })
   );
   return (
     <>
+      {delay >= 3 && <p className="rounded-xl bg-warning/15 px-3 py-2 text-sm font-semibold text-warning">⏱️ {t('tournament.delay', { n: delay })}</p>}
       {running.length > 0 && (
         <Section title={t('tournament.atFields')}>
           <ul className="grid gap-2 md:grid-cols-2">
@@ -409,6 +566,7 @@ function FieldBoard({ view, send }: { view: TournamentView; send: Send | null })
                   <span className="truncate">{matchTitle(view, m)}</span>
                 </p>
                 {names(m)}
+                {(m.referee || m.plannedAt !== undefined) && <p className="text-xs text-muted">{extra(m)}</p>}
                 {send && <ResultForm key={m.id} view={view} m={m} send={send} />}
               </li>
             ))}
@@ -420,7 +578,10 @@ function FieldBoard({ view, send }: { view: TournamentView; send: Send | null })
         <ul className="space-y-2">
           {shown.map((m) => (
             <li key={m.id} className="space-y-1 rounded-xl border border-line bg-surface p-2 text-sm">
-              <p className="truncate text-xs text-muted">{matchTitle(view, m)}</p>
+              <p className="truncate text-xs text-muted">
+                {matchTitle(view, m)}
+                {m.plannedAt !== undefined && ` · ${t('tournament.about', { time: clock(m.plannedAt) })}`}
+              </p>
               {names(m)}
               {send &&
                 (view.fields > 0 ? (
@@ -960,6 +1121,8 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
         📺 {t('tournament.board')}
       </Button>
       {local && <SpectatorLink view={view} code={code} />}
+      {local && view.phase !== 'finished' && <Helpers view={view} code={code} send={send} />}
+      {local && view.phase === 'running' && view.settings.format === 'swiss' && <EntrantForm view={view} send={send} label={t('tournament.lateEntry')} />}
       {local && view.phase === 'running' && (
         <label className="block space-y-1 text-sm">
           <span>{t('tournament.fieldCount')}</span>
@@ -972,6 +1135,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
           </select>
         </label>
       )}
+      {local && view.phase !== 'finished' && <SchedulePanel view={view} send={send} />}
       {view.phase !== 'signup' && local && (
         <div className="space-y-2">
           <label className="block space-y-1 text-sm">
@@ -1069,5 +1233,215 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
         </>
       )}
     </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Druck und Export (W-058 Stufe 2): über den Browser, „Als PDF speichern“ inklusive.
+
+type PrintKind = 'plan' | 'sheets' | 'tables' | 'certificates';
+
+/** Partien in Spielreihenfolge, ohne Freilose und ohne Partien, die nie zustande kommen. */
+function printableMatches(view: TournamentView): Match[] {
+  return view.matches.filter((m) => !m.outcome?.bye && !(m.status === 'done' && (!m.slots[0].player || !m.slots[1].player))).sort((a, b) => a.stage - b.stage);
+}
+
+function stageTitle(view: TournamentView, index: number): string {
+  const stage = view.stages[index];
+  if (!stage) return '';
+  if (stage.kind === 'group') return t('tournament.groups');
+  if (stage.kind === 'league') return t('tournament.matchday', { n: stage.round });
+  if (stage.kind === 'ko') return roundName(stage.round);
+  return t('tournament.round', { n: stage.round });
+}
+
+function resultText(m: Match): string {
+  const o = m.outcome;
+  if (!o) return '';
+  if (o.score) return o.score.join(':');
+  if (o.draw) return t('tournament.draw');
+  return o.winner === null ? '–' : o.winner === 0 ? '1:0' : '0:1';
+}
+
+function PrintTools({ view, onPrint }: { view: TournamentView; onPrint: (kind: PrintKind) => void }) {
+  const download = (name: string, type: string, text: string) => {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const base = view.settings.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'turnier';
+  const names = new Map(view.players.map((p) => [p.id, p.name]));
+  const csvCell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+  const csv = (rows: (string | number)[][]) => '\ufeff' + rows.map((row) => row.map(csvCell).join(';')).join('\r\n');
+  const exportMatches = () =>
+    download(
+      `${base}-partien.csv`,
+      'text/csv;charset=utf-8',
+      csv([
+        [t('tournament.csv.round'), t('tournament.csv.match'), t('tournament.csv.a'), t('tournament.csv.b'), t('tournament.csv.result'), t('tournament.csv.field')],
+        ...printableMatches(view).map((m) => [matchTitle(view, m), m.id, names.get(m.slots[0].player ?? '') ?? '', names.get(m.slots[1].player ?? '') ?? '', resultText(m), m.field !== undefined ? m.field + 1 : '']),
+      ]),
+    );
+  const exportTable = () => {
+    const rows = view.table.length > 0 ? view.table : view.groups.flatMap((g) => g.table);
+    download(
+      `${base}-tabelle.csv`,
+      'text/csv;charset=utf-8',
+      csv([
+        [t('tournament.table.place'), t('tournament.table.player'), t('tournament.table.played'), t('tournament.table.wins'), t('tournament.table.draws'), t('tournament.table.losses'), t('tournament.csv.scored'), t('tournament.csv.conceded'), t('tournament.table.points')],
+        ...rows.map((r, i) => [i + 1, names.get(r.player) ?? '', r.played, r.wins, r.draws, r.losses, r.scored, r.conceded, r.points]),
+      ]),
+    );
+  };
+  const kinds: [PrintKind, string][] = [
+    ['plan', `📋 ${t('tournament.print.plan')}`],
+    ['sheets', `📝 ${t('tournament.print.sheets')}`],
+    ['tables', `📊 ${t('tournament.print.tables')}`],
+    ...(view.phase === 'finished' ? ([['certificates', `🏅 ${t('tournament.print.certificates')}`]] as [PrintKind, string][]) : []),
+  ];
+  if (view.phase === 'signup') return null;
+  return (
+    <Section title={t('tournament.print')}>
+      <div className="grid grid-cols-2 gap-2">
+        {kinds.map(([kind, label]) => (
+          <Button key={kind} className="text-sm" onClick={() => onPrint(kind)}>
+            {label}
+          </Button>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <Button className="text-xs" onClick={exportMatches}>
+          ⬇️ {t('tournament.csv.matches')}
+        </Button>
+        <Button className="text-xs" onClick={exportTable} disabled={view.table.length === 0 && view.groups.length === 0}>
+          ⬇️ {t('tournament.csv.table')}
+        </Button>
+        <Button className="text-xs" onClick={() => download(`${base}.json`, 'application/json', JSON.stringify({ ...view, helpers: [] }, null, 2))}>
+          ⬇️ JSON
+        </Button>
+      </div>
+    </Section>
+  );
+}
+
+/** Druckansicht: weiß, ohne Bedienelemente im Druck; der Druckdialog öffnet sich gleich. */
+function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintKind; onClose: () => void }) {
+  const { label } = useLookup(view);
+  useEffect(() => {
+    const timer = window.setTimeout(() => window.print(), 300);
+    return () => window.clearTimeout(timer);
+  }, []);
+  const local = isLocalView(view);
+  const unit = local && view.settings.result && view.settings.result !== 'winner' ? t(`tournament.result.${view.settings.result}`) : '';
+  const heading = (
+    <header className="mb-3">
+      <h1 className="text-2xl font-bold">🏆 {view.settings.name}</h1>
+      <p className="text-sm">
+        {local ? view.settings.sport : findGame(view.settings.gameId)?.name} · {t(`tournament.format.${view.settings.format}`)} · {new Date(view.serverNow).toLocaleDateString('de-DE')}
+      </p>
+    </header>
+  );
+  const stages = [...new Set(printableMatches(view).map((m) => m.stage))];
+  return (
+    <div className="bub-print min-h-full bg-white p-6 text-black">
+      <div className="mb-4 flex gap-2 print:hidden">
+        <Button onClick={() => window.print()}>🖨️ {t('tournament.print.now')}</Button>
+        <Button onClick={onClose}>{t('tournament.boardClose')}</Button>
+      </div>
+      {kind === 'plan' && (
+        <>
+          {heading}
+          {stages.map((stage) => (
+            <section key={stage} className="mb-4 break-inside-avoid">
+              <h2 className="mb-1 font-bold">{stageTitle(view, stage)}</h2>
+              <table className="w-full border-collapse text-sm">
+                <tbody>
+                  {printableMatches(view)
+                    .filter((m) => m.stage === stage)
+                    .map((m) => (
+                      <tr key={m.id} className="border-b border-gray-300">
+                        {view.schedule && <td className="w-14 py-1 text-xs tabular-nums">{m.plannedAt !== undefined ? clock(m.plannedAt) : ''}</td>}
+                        {/* In Liga und Schweizer System steht die Runde schon in der Überschrift. */}
+                        {view.settings.format !== 'league' && view.settings.format !== 'swiss' && <td className="w-40 py-1 pr-2 text-xs">{matchTitle(view, m)}</td>}
+                        <td className="py-1">{m.slots[0].player ? label(m.slots[0].player) : '…'}</td>
+                        <td className="w-6 text-center">–</td>
+                        <td className="py-1">{m.slots[1].player ? label(m.slots[1].player) : '…'}</td>
+                        <td className="w-20 text-right font-bold tabular-nums">{resultText(m) || '___ : ___'}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </section>
+          ))}
+        </>
+      )}
+      {kind === 'sheets' && (
+        <div className="grid grid-cols-2 gap-4">
+          {printableMatches(view)
+            .filter((m) => !m.outcome && m.slots[0].player && m.slots[1].player)
+            .map((m) => (
+              <div key={m.id} className="break-inside-avoid rounded border-2 border-black p-3 text-sm">
+                <p className="text-xs">
+                  {view.settings.name} · {matchTitle(view, m)}
+                  {m.field !== undefined && ` · ${fieldName(view, m.field)}`}
+                  {m.plannedAt !== undefined && ` · ${clock(m.plannedAt)}`}
+                  {m.referee && ` · ${t('tournament.referee', { name: label(m.referee) })}`}
+                </p>
+                {[0, 1].map((side) => (
+                  <div key={side} className="mt-2 flex items-center gap-2">
+                    <span className="min-w-0 flex-1 truncate text-base font-bold">{label(m.slots[side]!.player)}</span>
+                    <span className="h-9 w-14 border-2 border-black" />
+                  </div>
+                ))}
+                <p className="mt-2 text-xs">{unit ? `${unit} eintragen` : t('tournament.print.markWinner')}</p>
+                <p className="mt-4 border-t border-black pt-1 text-xs">{t('tournament.print.signature')}</p>
+              </div>
+            ))}
+        </div>
+      )}
+      {kind === 'tables' && (
+        <>
+          {heading}
+          {view.groups.map((g, index) => (
+            <section key={index} className="mb-4 break-inside-avoid">
+              <h2 className="font-bold">{t('tournament.group', { name: GROUP_LETTERS[index] ?? String(index + 1) })}</h2>
+              <Table view={view} rows={g.table} highlight={2} />
+            </section>
+          ))}
+          {view.table.length > 0 && <Table view={view} rows={view.table} highlight={view.phase === 'finished' ? 3 : 0} buchholz={view.settings.format === 'swiss'} />}
+          {view.matches.some((m) => m.group === null && view.stages[m.stage]?.kind !== 'swiss' && view.stages[m.stage]?.kind !== 'league') && (
+            <section className="mt-4">
+              <h2 className="font-bold">{t('tournament.bracket')}</h2>
+              <ul className="text-sm">
+                {printableMatches(view)
+                  .filter((m) => m.group === null)
+                  .map((m) => (
+                    <li key={m.id}>
+                      {matchTitle(view, m)}: {label(m.slots[0].player)} – {label(m.slots[1].player)} {resultText(m)}
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          )}
+        </>
+      )}
+      {kind === 'certificates' &&
+        view.podium.map((id, index) => (
+          <section key={id} className="flex min-h-[90vh] break-after-page flex-col items-center justify-center gap-6 border-8 border-double border-black p-10 text-center">
+            <p className="text-5xl">{['🥇', '🥈', '🥉'][index]}</p>
+            <h1 className="text-4xl font-bold">{t('tournament.print.certificate')}</h1>
+            <p className="text-xl">{view.settings.name}</p>
+            <p className="text-4xl font-bold">{view.players.find((p) => p.id === id)?.name}</p>
+            <p className="text-2xl">{t('tournament.print.place', { n: index + 1 })}</p>
+            <p className="text-sm">
+              {local ? view.settings.sport : findGame(view.settings.gameId)?.name} · {new Date(view.serverNow).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <p className="mt-10 w-64 border-t border-black pt-1 text-sm">{view.leaderName}</p>
+          </section>
+        ))}
+    </div>
   );
 }

@@ -166,6 +166,7 @@ Kern in Format, Wertung und Austragung trennen, Schnappschuss Version 2 mit Migr
 - Fertig, wenn: eine Kickerliga mit 6 Teams in Hin- und Rückrunde, ein Kickerturnier mit 12 Doppeln im Schweizer System und ein Volleyballturnier mit 8 Teams in 2 Gruppen + Halbfinale komplett am Handy geleitet werden können, ohne dass ein Teilnehmer ein Gerät braucht.
 
 ### Stufe 2 – Helfer, Zeitplan, Druck (M)
+**Umgesetzt am 7.11.2026** (#125): Nachmelden im Schweizer System (ab der nächsten Runde), eigene Punkte je Sieg/Remis/Niederlage beim Anlegen, Helferlinks mit Namen (Rolle „Ergebnisse“ oder Mitleitung, bis 5 Geräte je Link, Entfernen sperrt sofort), Zeitplan aus Beginn, Spieldauer und Pause mit „ca.“-Uhrzeit je Partie und Verzugsanzeige, „Teams pfeifen gegenseitig“ beim Aufruf, Druckansichten (Spielplan, Spielzettel, Tabellen, Urkunden für das Treppchen) und Export als CSV und JSON. Nicht dabei: Schiedsrichter aus einer eigenen Liste, Verschieben per Ziehen und Selbsteintragen mit Bestätigung der Gegenseite (braucht Geräte bei den Teilnehmern; eigenes Issue, wenn gewünscht).
 - Helferlinks mit Namen, Mitleitung, Leitungslink.
 - Zeitplan: Beginn, Spieldauer, Pause, Felder → Uhrzeiten je Partie; Verschieben per Ziehen; Verzug wird sichtbar.
 - Schiedsrichter: aus Liste oder „Teams pfeifen gegenseitig“ (spielfreies Team).

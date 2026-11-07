@@ -116,6 +116,15 @@ export interface TournamentMatch {
   /** Vor Ort: Tisch oder Feld (ab 0), solange die Partie dort aufgerufen ist. */
   field?: number;
   calledAt?: number;
+  /** Vor Ort: wer pfeift (Teams pfeifen gegenseitig). */
+  referee?: string;
+}
+
+/** Vor Ort: Zeitplan aus Beginn, Spieldauer und Pause; daraus ergeben sich Uhrzeiten je Partie. */
+export interface TournamentSchedule {
+  start: number;
+  matchMinutes: number;
+  breakMinutes: number;
 }
 
 export interface TournamentStage {
@@ -181,6 +190,38 @@ export interface TournamentSnapshot {
   ruleVersion?: number;
   /** Vor Ort: Zahl der Tische oder Felder; 0 = ohne Aufruf, die Leitung trägt einfach ein. */
   fields?: number;
+  /** Vor Ort: Helfer und Mitleitung. */
+  helpers?: TournamentHelper[];
+  nextHelper?: number;
+  schedule?: TournamentSchedule;
+  /** Vor Ort: Teams pfeifen gegenseitig; beim Aufruf bekommt jede Partie ein spielfreies Team. */
+  referees?: boolean;
+}
+
+/** Helfer vor Ort (Stufe 2): Wer den Link öffnet, trägt Ergebnisse ein; Mitleitung darf alles. */
+export type HelperRole = 'helper' | 'coleader';
+
+export interface TournamentHelper {
+  id: string;
+  name: string;
+  role: HelperRole;
+  /** Geheimer Code im Helferlink; gilt, bis die Leitung den Helfer entfernt. */
+  code: string;
+  /** Geräte-Kennungen, die den Link geöffnet haben. */
+  tokens: string[];
+}
+
+/** Höchstens so viele Helfer je Turnier und so viele Geräte je Helferlink. */
+export const TOURNAMENT_MAX_HELPERS = 20;
+export const HELPER_MAX_DEVICES = 5;
+
+/** Was die Leitung über ihre Helfer sieht. */
+export interface HelperView {
+  id: string;
+  name: string;
+  role: HelperRole;
+  code: string;
+  devices: number;
 }
 
 /** Eine Zeile der Tabelle. */
@@ -221,11 +262,18 @@ export interface TournamentView {
   stages: TournamentStage[];
   /** Index der laufenden Phase. */
   currentStage: number;
-  matches: Omit<TournamentMatch, 'everReady'>[];
+  /** `plannedAt`: Uhrzeit laut Zeitplan (vor Ort, wenn einer gesetzt ist). */
+  matches: (Omit<TournamentMatch, 'everReady'> & { plannedAt?: number })[];
+  schedule: TournamentSchedule | null;
+  referees: boolean;
   /** Plätze am Ende: Sieger, Zweiter, ggf. Dritter. */
   podium: string[];
   you: string | null;
   isLeader: boolean;
+  /** Vor Ort: Helfer (trägt Ergebnisse ein) oder Mitleitung; null sonst. */
+  helperRole: HelperRole | null;
+  /** Nur für die Leitung: die Helferlinks. */
+  helpers: HelperView[];
   /** Das Spiel hat seit dem Turnierstart neue Regeln bekommen. */
   rulesChanged: boolean;
   serverNow: number;

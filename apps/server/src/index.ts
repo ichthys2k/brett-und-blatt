@@ -12,6 +12,7 @@ import {
   parseTournamentMessage,
   parseTournamentSettings,
   parseFieldCount,
+  parsePointRules,
   randomRoomCode,
   serverBotRunner,
   type MatchRoomConfig,
@@ -24,6 +25,7 @@ import {
   type StoredBackup,
   type TournamentServerMessage,
   type TournamentSettings,
+  type PointRules,
   type StoredTournamentSnapshot,
 } from '@brett-und-blatt/online';
 import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
@@ -186,7 +188,7 @@ export default {
       if (!settings || typeof body.token !== 'string' || body.token.length < 16 || body.token.length > 100 || typeof body.name !== 'string') return json({ error: 'body' }, 400, cors);
       for (let attempt = 0; attempt < 5; attempt++) {
         const code = randomLetters(8);
-        if (await tournamentStub(env, code).create(code, settings, { token: body.token, name: body.name }, parseFieldCount(body.settings))) return json({ code }, 201, cors);
+        if (await tournamentStub(env, code).create(code, settings, { token: body.token, name: body.name }, parseFieldCount(body.settings), parsePointRules(body.settings))) return json({ code }, 201, cors);
       }
       return json({ error: 'busy' }, 503, cors);
     }
@@ -566,9 +568,9 @@ export class TournamentRoom extends DurableObject<Env> {
     });
   }
 
-  async create(code: string, settings: TournamentSettings, leader: { token: string; name: string }, fields = 0): Promise<boolean> {
+  async create(code: string, settings: TournamentSettings, leader: { token: string; name: string }, fields = 0, points?: PointRules): Promise<boolean> {
     if (this.tournament) return false;
-    this.tournament = Tournament.create(code, randomSeed(), settings, leader, this.deps(), fields);
+    this.tournament = Tournament.create(code, randomSeed(), settings, leader, this.deps(), fields, points);
     await this.changed();
     return true;
   }
@@ -645,6 +647,21 @@ export class TournamentRoom extends DurableObject<Env> {
         break;
       case 'setFields':
         error = t.setFields(token, message.count);
+        break;
+      case 'addHelper':
+        error = t.addHelper(token, message.name, message.role);
+        break;
+      case 'removeHelper':
+        error = t.removeHelper(token, message.helper);
+        break;
+      case 'helper':
+        error = t.joinAsHelper(token, message.code);
+        break;
+      case 'setSchedule':
+        error = t.setSchedule(token, message.schedule);
+        break;
+      case 'setReferees':
+        error = t.setReferees(token, message.on);
         break;
     }
     if (error) return this.sendTo(ws, { type: 'error', message: error });

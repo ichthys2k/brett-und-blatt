@@ -5,6 +5,7 @@ import {
   assignFields,
   outcomeFromEntry,
   parseFieldCount,
+  parsePointRules,
   parseTournamentMessage,
   parseTournamentSettings,
   roundRobinRounds,
@@ -15,10 +16,10 @@ import {
 const LEADER = 'kennung-der-leitung-01';
 const GUEST = 'kennung-eines-gastes-1';
 
-function local(entrants: number, format: TournamentFormat, extra: Partial<TournamentSettings> = {}, fields = 0) {
+function local(entrants: number, format: TournamentFormat, extra: Partial<TournamentSettings> = {}, fields = 0, points?: { win: number; draw: number; loss: number }) {
   const clock = { now: 1_000_000 };
   const settings: TournamentSettings = { name: 'Kickercup', gameId: '', format, time: 'normal', days: 1, thirdPlace: false, isPublic: false, mode: 'local', sport: 'Tischkicker', result: 'goals', draws: false, fieldLabel: 'Tisch', ...extra };
-  const t = Tournament.create('ABCD2345', 'seed-vor-ort', settings, { token: LEADER, name: 'Leitung' }, { now: () => clock.now, randomClaim: () => 'NEUCODE1' }, fields);
+  const t = Tournament.create('ABCD2345', 'seed-vor-ort', settings, { token: LEADER, name: 'Leitung' }, { now: () => clock.now, randomClaim: () => 'NEUCODE1' }, fields, points);
   const names = Array.from({ length: entrants }, (_, i) => `Team ${i + 1}`);
   if (entrants > 0) expect(t.addEntrants(LEADER, names)).toBeNull();
   return { t, clock };
@@ -235,5 +236,111 @@ describe('Formen vor Ort', () => {
     const final = t.view(LEADER).matches.find((m) => m.status === 'open')!;
     expect(t.enterResult(LEADER, final.id, { score: [3, 2] })).toBeNull();
     expect(t.enterResult(LEADER, a!.id, { score: [3, 0] })).toBe('Daran hängen schon weitere Partien.');
+  });
+});
+
+describe('Stufe 2: Nachmelden und eigene Punkte', () => {
+  it('Eigene Punkte je Ergebnis', () => {
+    expect(parsePointRules({ points: { win: 2, draw: 1, loss: 0 } })).toEqual({ win: 2, draw: 1, loss: 0 });
+    expect(parsePointRules({ points: { win: 1, draw: 1, loss: 0 } })).toBeUndefined();
+    expect(parsePointRules({ points: { win: 11, draw: 1, loss: 0 } })).toBeUndefined();
+    expect(parsePointRules({})).toBeUndefined();
+    const { t } = local(4, 'league', { draws: true }, 0, { win: 2, draw: 1, loss: 0 });
+    expect(t.start(LEADER)).toBeNull();
+    for (const m of t.view(LEADER).matches) expect(t.enterResult(LEADER, m.id, { score: [2, 1] })).toBeNull();
+    const table = t.view(LEADER).table;
+    expect(table.reduce((sum, r) => sum + r.points, 0)).toBe(6 * 2);
+  });
+
+  it('Nachmelden im Schweizer System: ab der nächsten Runde dabei', () => {
+    const { t } = local(6, 'swiss');
+    expect(t.start(LEADER)).toBeNull();
+    expect(t.addEntrants(LEADER, ['Spät / Dran', 'Noch / Später'])).toBeNull();
+    const late = t.snapshot().players.slice(-2).map((p) => p.id);
+    expect(t.view(LEADER).matches.some((m) => m.slots.some((s) => late.includes(s.player ?? '')))).toBe(false);
+    for (const m of t.view(LEADER).matches.filter((x) => x.status === 'open')) expect(t.enterResult(LEADER, m.id, { score: [1, 0] })).toBeNull();
+    const round2 = t.view(LEADER).matches.filter((m) => m.stage === 1);
+    expect(round2.flatMap((m) => m.slots.map((s) => s.player))).toEqual(expect.arrayContaining(late));
+  });
+
+  it('Nachmelden geht in anderen Formen nicht', () => {
+    const { t } = local(4, 'knockout');
+    expect(t.start(LEADER)).toBeNull();
+    expect(t.addEntrants(LEADER, ['Zu / Spät'])).toBe('Die Einschreibung ist beendet.');
+  });
+});
+
+describe('Stufe 2: Helfer', () => {
+  const HELPER = 'kennung-eines-helfers-1';
+  it('Helfer tragen ein, sehen das Turnier, verwalten aber nichts', () => {
+    const { t } = local(4, 'knockout');
+    expect(t.addHelper(GUEST, 'Mia', 'helper')).toBeTypeOf('string');
+    expect(t.addHelper(LEADER, 'Mia', 'helper')).toBeNull();
+    const [link] = t.view(LEADER).helpers;
+    expect(link).toMatchObject({ name: 'Mia', role: 'helper', code: 'NEUCODE1', devices: 0 });
+    expect(t.view(GUEST).helpers).toEqual([]);
+    expect(t.maySee(HELPER)).toBe(false);
+    expect(t.joinAsHelper(HELPER, 'falsch')).toBeTypeOf('string');
+    expect(t.joinAsHelper(HELPER, 'neucode1')).toBeNull();
+    expect(t.maySee(HELPER)).toBe(true);
+    expect(t.view(HELPER)).toMatchObject({ helperRole: 'helper', isLeader: false, helpers: [] });
+    expect(t.start(HELPER)).toBeTypeOf('string');
+    expect(t.start(LEADER)).toBeNull();
+    const [m] = t.view(LEADER).matches;
+    expect(t.enterResult(HELPER, m!.id, { winner: 0 })).toBeNull();
+    expect(t.setFields(HELPER, 2)).toBeTypeOf('string');
+    // Entfernt: Zugang sofort weg.
+    expect(t.removeHelper(LEADER, link!.id)).toBeNull();
+    expect(t.maySee(HELPER)).toBe(false);
+    expect(t.enterResult(HELPER, m!.id, { winner: 1 })).toBeTypeOf('string');
+  });
+
+  it('Mitleitung darf alles außer sich selbst entfernen', () => {
+    const { t } = local(4, 'knockout');
+    expect(t.addHelper(LEADER, 'Ole', 'coleader')).toBeNull();
+    const [link] = t.view(LEADER).helpers;
+    expect(t.joinAsHelper(HELPER, link!.code)).toBeNull();
+    expect(t.view(HELPER)).toMatchObject({ isLeader: true, helperRole: 'coleader' });
+    expect(t.addEntrants(HELPER, ['Neu / Dabei'])).toBeNull();
+    expect(t.removeHelper(HELPER, link!.id)).toBeTypeOf('string');
+    expect(t.start(HELPER)).toBeNull();
+  });
+});
+
+describe('Stufe 2: Zeitplan und Schiedsrichter', () => {
+  it('Uhrzeiten je Partie aus Beginn, Dauer, Pause und Tischen', () => {
+    const { t } = local(6, 'league', {}, 2);
+    expect(t.setSchedule(LEADER, { start: 0, matchMinutes: 0, breakMinutes: 5 })).toBeTypeOf('string');
+    expect(t.setSchedule(GUEST, { start: 0, matchMinutes: 10, breakMinutes: 5 })).toBeTypeOf('string');
+    const start = Date.UTC(2026, 10, 7, 14, 0);
+    expect(t.setSchedule(LEADER, { start, matchMinutes: 10, breakMinutes: 5 })).toBeNull();
+    expect(t.start(LEADER)).toBeNull();
+    const times = t.view(LEADER).matches.map((m) => m.plannedAt!);
+    // 15 Partien auf 2 Tischen: 8 Durchgänge zu je 15 Minuten.
+    expect(times.slice(0, 4)).toEqual([start, start, start + 15 * 60_000, start + 15 * 60_000]);
+    expect(Math.max(...times)).toBe(start + 7 * 15 * 60_000);
+    expect(t.setSchedule(LEADER, null)).toBeNull();
+    expect(t.view(LEADER).matches[0]!.plannedAt).toBeUndefined();
+  });
+
+  it('Teams pfeifen gegenseitig: spielfrei, gleichmäßig verteilt', () => {
+    const { t } = local(6, 'league', {}, 2);
+    expect(t.setReferees(LEADER, true)).toBeNull();
+    expect(t.start(LEADER)).toBeNull();
+    let rounds = 0;
+    while (t.phase === 'running' && rounds++ < 50) {
+      const view = t.view(LEADER);
+      const running = view.matches.filter((m) => m.status === 'running');
+      for (const m of running) {
+        expect(m.referee).toBeDefined();
+        // Wer pfeift, spielt nirgends gerade und pfeift nur einmal zugleich.
+        expect(running.flatMap((x) => x.slots.map((s) => s.player))).not.toContain(m.referee);
+      }
+      expect(new Set(running.map((m) => m.referee)).size).toBe(running.length);
+      expect(t.enterResult(LEADER, running[0]!.id, { score: [1, 0] })).toBeNull();
+    }
+    const counts = new Map<string, number>();
+    for (const m of t.view(LEADER).matches) if (m.referee) counts.set(m.referee, (counts.get(m.referee) ?? 0) + 1);
+    expect(Math.max(...counts.values()) - Math.min(...counts.values())).toBeLessThanOrEqual(2);
   });
 });

@@ -19,7 +19,13 @@ export type TournamentClientMessage =
   | { type: 'addEntrants'; names: string[] }
   | { type: 'removeEntrant'; player: string }
   | { type: 'enterResult'; match: string; score?: [number, number]; winner?: MatchSide | 'draw' }
-  | { type: 'setFields'; count: number };
+  | { type: 'setFields'; count: number }
+  // Stufe 2: Helfer
+  | { type: 'addHelper'; name: string; role: 'helper' | 'coleader' }
+  | { type: 'removeHelper'; helper: string }
+  | { type: 'helper'; code: string }
+  | { type: 'setSchedule'; schedule: { start: number; matchMinutes: number; breakMinutes: number } | null }
+  | { type: 'setReferees'; on: boolean };
 
 export type TournamentServerMessage =
   | { type: 'tournament'; view: TournamentView }
@@ -68,6 +74,20 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
       if (m.winner === 0 || m.winner === 1 || m.winner === 'draw') return { type: 'enterResult', match: m.match, winner: m.winner };
       return null;
     }
+    case 'addHelper':
+      return isShort(m.name, 60) && (m.role === 'helper' || m.role === 'coleader') ? { type: 'addHelper', name: m.name, role: m.role } : null;
+    case 'removeHelper':
+      return isShort(m.helper) ? { type: 'removeHelper', helper: m.helper } : null;
+    case 'helper':
+      return isShort(m.code, 20) ? { type: 'helper', code: m.code } : null;
+    case 'setSchedule': {
+      if (m.schedule === null) return { type: 'setSchedule', schedule: null };
+      const sch = m.schedule;
+      if (!isRecord(sch) || typeof sch.start !== 'number' || typeof sch.matchMinutes !== 'number' || typeof sch.breakMinutes !== 'number') return null;
+      return { type: 'setSchedule', schedule: { start: sch.start, matchMinutes: sch.matchMinutes, breakMinutes: sch.breakMinutes } };
+    }
+    case 'setReferees':
+      return typeof m.on === 'boolean' ? { type: 'setReferees', on: m.on } : null;
     case 'setFields':
       return Number.isInteger(m.count) && (m.count as number) >= 0 && (m.count as number) <= TOURNAMENT_MAX_FIELDS ? { type: 'setFields', count: m.count as number } : null;
     default:
@@ -136,6 +156,28 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
     ...returnRound,
     ...groupCount,
   };
+}
+
+/** Punkte je Ergebnis, die die Leitung vor Ort selbst festlegt. */
+export interface PointRules {
+  win: number;
+  draw: number;
+  loss: number;
+}
+
+/** Höchstens so viele Punkte je Partie. */
+export const MAX_POINTS = 10;
+
+/** Punkte je Sieg, Remis und Niederlage beim Anlegen vor Ort; undefined = Voreinstellung (3/1/0). */
+export function parsePointRules(body: unknown): PointRules | undefined {
+  const points = isRecord(body) ? body.points : undefined;
+  if (!isRecord(points)) return undefined;
+  const values = [points.win, points.draw, points.loss];
+  if (!values.every((v) => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= MAX_POINTS)) return undefined;
+  const [win, draw, loss] = values as [number, number, number];
+  // Ein Sieg muss mehr zählen als ein Remis, ein Remis nicht weniger als eine Niederlage.
+  if (!(win > draw && draw >= loss)) return undefined;
+  return { win, draw, loss };
 }
 
 /** Zahl der Tische oder Felder beim Anlegen vor Ort (0 bis 32). */
