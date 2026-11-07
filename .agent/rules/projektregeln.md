@@ -4,7 +4,7 @@ trigger: always_on
 
 # Projektregeln Brett & Blatt
 
-Lies vor jeder Aufgabe `AGENTS.md` und die ausführliche Übergabe `CLAUDE.md` im Wurzelordner. Aufgaben und Fehler stehen in den [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues); `PLANUNG.md` enthält nur den Verweis und das vollständige Migrationsarchiv. Neue Ideen bleiben `status: Idee`; ausschließlich Cornelius gibt sie durch `status: Ready` frei. Zu Beginn jeder Sitzung die Issues mit `status: Ready` und `status: Review` abrufen und kurz nennen. Agenten bearbeiten nur Ready-Issues und reservieren sie mit einem Kommentar mit Konto und Zweig. Keine Assignees oder Labels zur Reservierung verwenden. Diese Regeln gelten immer:
+Lies vor jeder Aufgabe `AGENTS.md` und die ausführliche Übergabe `CLAUDE.md` im Wurzelordner. Aufgaben und Fehler stehen in den [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues); `PLANUNG.md` enthält nur den Verweis und das vollständige Migrationsarchiv. Neue Ideen bleiben `status: Idee`; ausschließlich Cornelius gibt sie durch `status: Ready` frei. Zu Beginn jeder Sitzung die Issues mit `status: Ready` und `status: Review` abrufen und kurz nennen. Ablauf Schritt für Schritt: `.agent/workflows/issue-bearbeiten.md`. Agenten bearbeiten nur Ready-Issues und reservieren sie mit einem Kommentar mit Konto und Zweig. Keine Assignees oder Labels zur Reservierung verwenden. Diese Regeln gelten immer:
 
 - Antworte auf Deutsch. Code-Bezeichner englisch, Kommentare, Doku, Commit-Nachrichten und UI-Texte deutsch.
 - Zeige zuerst einen Vorschlag und warte auf Zustimmung, bevor du Größeres änderst.
