@@ -160,28 +160,6 @@ body {
   }
 }
 
-/* Viele Spieler im Hochformat: Chips fester Breite in einer Zeile zum Wischen. */
-@media (orientation: portrait) {
-  [data-many] > .bub-chip {
-    flex: none;
-    width: 10rem;
-  }
-}
-
-/* Kleine Hochformat-Bildschirme: die Spielerleiste ist immer nur eine Zeile, das Spielfeld braucht den Platz. */
-@media (orientation: portrait) and (max-height: 720px) {
-  .bub-players {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
-  }
-
-  .bub-players > .bub-chip {
-    flex: none;
-    width: 9.5rem;
-  }
-}
-
 /* Siegerehrung am Partieende (W-008, components/Ceremony.tsx). Erscheint kurz nach dem letzten Zug. */
 .bub-ceremony {
   position: fixed;

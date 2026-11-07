@@ -2,7 +2,7 @@ import { BOT_LEVELS, timePresetsOf, type TimePresetId } from '@brett-und-blatt/e
 import { MAX_SEATS, TOURNAMENT_CODE_PATTERN, parseRoomCode, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
-import { ProfileForm, QrCode, ReactionBar, SignalToasts } from '../components/OnlineParts';
+import { ProfileForm, QrCode, ReactionMenu, SignalToasts } from '../components/OnlineParts';
 import { t } from '../i18n';
 import { announceAvatar } from '../lib/avatar-sounds';
 import { describeTime, levelLabel } from '../lib/format';
@@ -144,11 +144,13 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             }),
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
             ...(loaded.info.takeBack ? { bar: <TakeBackBar session={session} /> } : {}),
+            chat: (inBar: boolean) => (
+              <ReactionMenu inBar={inBar} onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} phrases={loaded.ui.phrases} />
+            ),
             extra: (
               <>
                 {toTournament}
                 <GameSeats session={session} seatLabel={loaded.ui.seatLabel} room={room} you={state.you} isHost={isHost} send={connection.send.bind(connection)} />
-                <ReactionBar onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} phrases={loaded.ui.phrases} />
               </>
             ),
           }}

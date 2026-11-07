@@ -10,12 +10,13 @@ import {
   SIGNAL_WINDOW_MS,
   type MemberInfo,
 } from '@brett-und-blatt/online';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { renderSVG } from 'uqr';
 import { t, type MessageKey } from '../i18n';
 import type { Signal } from '../lib/online';
 import type { Profile } from '../lib/storage';
 import { Button } from './controls';
+import { useDismiss } from './useDismiss';
 
 /** Spitzname und Bild – mehr gibt niemand von sich preis. */
 export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile | null; onSave: (profile: Profile) => void; submitLabel: string }) {
@@ -170,12 +171,29 @@ export function QrCode({ text, label }: { text: string; label: string }) {
   return <div role="img" aria-label={label} className="mx-auto w-full max-w-56 overflow-hidden rounded-xl bg-white [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
-/** Emoji-Reaktionen und Schnellnachrichten – freien Text gibt es nicht. */
-export function ReactionBar({ onReact, onSay, phrases: tablePhrases = PHRASES }: { onReact: (emoji: string) => void; onSay: (phrase: string) => void; phrases?: readonly string[] }) {
-  const [phrases, setPhrases] = useState(false);
+/**
+ * Emoji-Reaktionen und Schnellnachrichten – freien Text gibt es nicht. Am Tisch nur ein Knopf 💬 in der Kopfzeile,
+ * der immer zu sehen ist; Emojis und Sätze klappen erst beim Antippen auf, damit das Spielfeld den Platz behält.
+ */
+export function ReactionMenu({
+  onReact,
+  onSay,
+  phrases: tablePhrases = PHRASES,
+  inBar,
+}: {
+  onReact: (emoji: string) => void;
+  onSay: (phrase: string) => void;
+  phrases?: readonly string[];
+  /** Kopfzeile über dem Tisch (Spieler rundum): Das Menü klappt nach rechts unten auf statt neben der Seitenleiste. */
+  inBar?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
   const [timestamps, setTimestamps] = useState<number[]>([]);
   const [cooldown, setCooldown] = useState(false);
   const [, setTick] = useState(0);
+
+  useDismiss(open, useCallback(() => setOpen(false), []), box);
 
   const now = Date.now();
   const recent = timestamps.filter((t) => now - t < SIGNAL_WINDOW_MS);
@@ -202,50 +220,53 @@ export function ReactionBar({ onReact, onSay, phrases: tablePhrases = PHRASES }:
     action();
     setTimestamps((prev) => [...prev.filter((t) => timestamp - t < SIGNAL_WINDOW_MS), timestamp]);
     setCooldown(true);
+    setOpen(false);
   };
 
   return (
-    <div className="order-3 space-y-2 px-3 pt-2 short:pt-1" aria-label={t('online.reactions')}>
-      {/* Hochformat: eine einzige Zeile (zur Not seitlich wischen), damit das Spielfeld darüber Platz behält. */}
-      <div className="flex justify-center-safe gap-1 overflow-x-auto overscroll-x-contain side:flex-wrap side:justify-center side:overflow-visible">
-        <button type="button" aria-expanded={phrases} aria-label={t('online.phrases')} className="grid size-9 flex-none place-items-center rounded-full bg-surface-2 text-lg hover:bg-line side:order-last side:size-10 side:text-xl" onClick={() => setPhrases(!phrases)}>
-          💬
-        </button>
-        {REACTIONS.map((emoji) => (
-          <button
-            key={emoji}
-            type="button"
-            disabled={disabled}
-            className="grid size-9 flex-none place-items-center rounded-full bg-surface-2 text-lg hover:bg-line disabled:pointer-events-none disabled:opacity-40 side:size-10 side:text-xl"
-            onClick={() => trigger(() => onReact(emoji))}
-          >
-            {emoji}
-          </button>
-        ))}
-      </div>
-      {isRateLimited && (
-        <p className="text-center text-xs text-muted" role="status">
-          {t('online.rateLimit')}
-        </p>
-      )}
-      {phrases && (
-        <div className="flex flex-wrap justify-center gap-1">
-          {tablePhrases.map((phrase) => (
-            <button
-              key={phrase}
-              type="button"
-              disabled={disabled}
-              className="rounded-full bg-surface-2 px-3 py-1.5 text-sm hover:bg-line disabled:pointer-events-none disabled:opacity-40"
-              onClick={() => {
-                trigger(() => {
-                  onSay(phrase);
-                  setPhrases(false);
-                });
-              }}
-            >
-              {phraseText(phrase)}
-            </button>
-          ))}
+    <div ref={box} className="bub-reactions relative flex-none">
+      <Button variant="ghost" className="px-3 text-lg" aria-label={t('online.reactions')} title={t('online.reactions')} aria-expanded={open} onClick={() => setOpen(!open)}>
+        💬
+      </Button>
+      {open && (
+        <div
+          role="menu"
+          aria-label={t('online.reactions')}
+          className={`z-30 max-h-[calc(100dvh-4rem)] space-y-2 overflow-y-auto rounded-xl border border-line bg-surface p-2 shadow-md ${inBar ? 'absolute top-full right-0 mt-1 w-72' : 'fixed inset-x-3 top-[calc(env(safe-area-inset-top)+3.5rem)] mx-auto max-w-sm short:top-[calc(env(safe-area-inset-top)+2.75rem)] side:top-12 side:right-auto side:left-2 side:mx-0 side:w-72'}`}
+        >
+          <div className="flex flex-wrap justify-center gap-1">
+            {REACTIONS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                role="menuitem"
+                disabled={disabled}
+                className="grid size-10 flex-none place-items-center rounded-full bg-surface-2 text-xl hover:bg-line disabled:pointer-events-none disabled:opacity-40"
+                onClick={() => trigger(() => onReact(emoji))}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+          {isRateLimited && (
+            <p className="text-center text-xs text-muted" role="status">
+              {t('online.rateLimit')}
+            </p>
+          )}
+          <div className="flex flex-wrap justify-center gap-1 border-t border-line pt-2" aria-label={t('online.phrases')}>
+            {tablePhrases.map((phrase) => (
+              <button
+                key={phrase}
+                type="button"
+                role="menuitem"
+                disabled={disabled}
+                className="rounded-full bg-surface-2 px-3 py-1.5 text-sm hover:bg-line disabled:pointer-events-none disabled:opacity-40"
+                onClick={() => trigger(() => onSay(phrase))}
+              >
+                {phraseText(phrase)}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

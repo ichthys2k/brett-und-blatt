@@ -1,24 +1,14 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { t } from '../i18n';
 import { Button } from './controls';
+import { useDismiss } from './useDismiss';
 
 /** Knopf „⋯“ mit selten gebrauchten Knöpfen, für die Kopfzeile am Spieltisch. */
 export function MoreMenu({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const close = (event: PointerEvent | KeyboardEvent) => {
-      if (event instanceof KeyboardEvent ? event.key === 'Escape' : !box.current?.contains(event.target as Node)) setOpen(false);
-    };
-    window.addEventListener('pointerdown', close);
-    window.addEventListener('keydown', close);
-    return () => {
-      window.removeEventListener('pointerdown', close);
-      window.removeEventListener('keydown', close);
-    };
-  }, [open]);
+  useDismiss(open, useCallback(() => setOpen(false), []), box);
 
   return (
     <div ref={box} className="relative">
