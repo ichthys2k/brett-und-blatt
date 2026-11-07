@@ -54,6 +54,12 @@ export interface GameInfo {
   minHumans?: number;
   /** Kein „Zug zurück“: Bei geheimen Rollen an einem Gerät würde das Zurücknehmen Wissen verraten. */
   noUndo?: boolean;
+  /**
+   * Online darf man den eigenen letzten Zug zurücknehmen, wenn alle anderen Menschen am Tisch
+   * zustimmen (Raum in `packages/online`). Nur für Spiele mit offener Information: Wurde nach
+   * dem Zug etwas aufgedeckt, wüsste die bittende Person schon mehr. Nie zusammen mit `noUndo`.
+   */
+  takeBack?: boolean;
   /** Kurze Anleitung „So geht's“: die wichtigsten Regeln in wenigen Sätzen, je ein Punkt pro Eintrag. */
   howToPlay: string[];
 }

@@ -11,7 +11,7 @@ import {
   type SessionChange,
   type TimeControl,
 } from '@brett-und-blatt/engine';
-import type { ClientMessage, GameMessage } from './protocol';
+import type { ClientMessage, GameMessage, TakeBackInfo } from './protocol';
 
 /**
  * Zählt eine Uhr seit der letzten Nachricht des Servers selbst weiter, damit die
@@ -198,12 +198,38 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
     if (seat === this.message.yourSeat) this.deps.send({ type: 'returnSeat' });
   }
 
+  /** Online heißt „Zug zurück“: um Zustimmung bitten (nur bei Spielen mit `takeBack`, siehe Raum). */
   canUndo(): boolean {
-    return false;
+    return Boolean(this.message.canTakeBack) && !this.message.result;
   }
 
   undo(): boolean {
-    return false;
+    if (!this.canUndo()) return false;
+    this.deps.send({ type: 'takeBack' });
+    return true;
+  }
+
+  /** Offene Bitte ums Zurücknehmen oder ihr Ausgang bis zum nächsten Zug. */
+  get takeBack(): TakeBackInfo | null {
+    return this.message.takeBack ?? null;
+  }
+
+  /** Muss der eigene Platz gerade über eine Bitte abstimmen? */
+  get mustAnswerTakeBack(): boolean {
+    const info = this.message.takeBack;
+    const seat = this.message.yourSeat;
+    return info?.status === 'pending' && seat !== null && info.waiting.includes(seat);
+  }
+
+  answerTakeBack(accept: boolean): void {
+    if (this.mustAnswerTakeBack) this.deps.send({ type: 'answerTakeBack', accept });
+  }
+
+  /** Wie viele Millisekunden die Abstimmung noch läuft (auf die eigene Uhr umgerechnet). */
+  takeBackLeftMs(): number {
+    const info = this.message.takeBack;
+    if (info?.status !== 'pending' || info.deadline === null) return 0;
+    return Math.max(0, info.deadline - this.message.serverNow - (this.now() - this.receivedAt));
   }
 
   async hint(seat: SeatId): Promise<M | null> {

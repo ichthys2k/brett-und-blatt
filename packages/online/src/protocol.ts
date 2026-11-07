@@ -26,6 +26,8 @@ export interface LobbySettings {
   isPublic: boolean;
   /** Nur die Raumleitung darf Namen und Bilder ändern (fehlt in älteren Räumen: aus). */
   namesLocked?: boolean;
+  /** Dürfen Spieler online einen Zug zurücknehmen, wenn alle zustimmen (`GameInfo.takeBack`)? Fehlt: an. */
+  takeBack?: boolean;
 }
 
 /** Kompakte Übersicht für offene Spiele auf dem Startbildschirm. */
@@ -108,6 +110,8 @@ export type ClientMessage =
   | { type: 'renameMember'; memberId: string; name: string; avatar: string }
   /** Raumleitung: Dürfen Mitglieder ihren Namen selbst ändern? */
   | { type: 'setNamesLocked'; locked: boolean }
+  /** Raumleitung: Zurücknehmen mit Zustimmung erlauben (Lobby). */
+  | { type: 'setTakeBack'; allowed: boolean }
   | { type: 'start'; rotate?: boolean }
   /** Nach dem Ende: zurück in die Lobby (nur die Raumleitung). */
   | { type: 'toLobby' }
@@ -115,6 +119,9 @@ export type ClientMessage =
   | { type: 'move'; version: number; move: unknown }
   | { type: 'resign' }
   | { type: 'returnSeat' }
+  /** Bitte, den eigenen letzten Zug zurückzunehmen; die anderen Menschen stimmen ab. */
+  | { type: 'takeBack' }
+  | { type: 'answerTakeBack'; accept: boolean }
   // Flüchtige Signale
   | { type: 'react'; emoji: string }
   | { type: 'say'; phrase: string }
@@ -135,6 +142,25 @@ export interface RoomMessage {
   match?: { tournament: string; label: string; noShow: boolean };
 }
 
+/**
+ * Eine Bitte ums Zurücknehmen, wie sie alle sehen: offen (`pending`) oder ihr Ausgang, bis
+ * zum nächsten Zug. Während sie offen ist, ruht die Partie (keine Züge, Uhren stehen).
+ */
+export interface TakeBackInfo {
+  /** Wer zurücknehmen möchte. */
+  seat: SeatId;
+  status: 'pending' | 'accepted' | 'declined' | 'expired';
+  /** Wie viele Züge die Rücknahme umfasst (der eigene und alle danach). */
+  moves: number;
+  /** Wer schon zugestimmt hat und auf wen noch gewartet wird (Menschen ohne die bittende Person). */
+  accepted: SeatId[];
+  waiting: SeatId[];
+  /** Bis wann abgestimmt werden kann (Serverzeit, nur bei `pending`). */
+  deadline: number | null;
+  /** Wer abgelehnt hat (bei `declined`). */
+  by?: SeatId;
+}
+
 export interface GameMessage {
   type: 'game';
   gameId: string;
@@ -152,6 +178,10 @@ export interface GameMessage {
   legalMoves: unknown[];
   /** Darf der eigene Platz aufgeben? (Nicht mehr, wenn er schon ausgeschieden ist.) */
   canResign: boolean;
+  /** Darf der eigene Platz gerade bitten, seinen letzten Zug zurückzunehmen? Fehlt bei älteren Servern. */
+  canTakeBack?: boolean;
+  /** Offene Bitte ums Zurücknehmen oder ihr Ausgang (bis zum nächsten Zug). */
+  takeBack?: TakeBackInfo | null;
   current: SeatId[];
   away: SeatId[];
   thinking: SeatId[];
@@ -229,6 +259,10 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return isString(m.memberId, 20) && isString(m.name) && isString(m.avatar, 20) ? { type: 'renameMember', memberId: m.memberId, name: m.name, avatar: m.avatar } : null;
     case 'setNamesLocked':
       return typeof m.locked === 'boolean' ? { type: 'setNamesLocked', locked: m.locked } : null;
+    case 'setTakeBack':
+      return typeof m.allowed === 'boolean' ? { type: 'setTakeBack', allowed: m.allowed } : null;
+    case 'answerTakeBack':
+      return typeof m.accept === 'boolean' ? { type: 'answerTakeBack', accept: m.accept } : null;
     case 'move':
       return isInt(m.version) && 'move' in m ? { type: 'move', version: m.version, move: m.move } : null;
     case 'react':
@@ -243,6 +277,7 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     case 'toLobby':
     case 'resign':
     case 'returnSeat':
+    case 'takeBack':
     case 'leave':
     case 'ping':
       return { type: m.type };

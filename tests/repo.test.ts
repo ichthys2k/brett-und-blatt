@@ -37,6 +37,13 @@ describe('Repo-Regeln', () => {
     expect(missing).toEqual([]);
   });
 
+  it('Zurücknehmen mit Zustimmung nur bei offener Information und nie zusammen mit noUndo', () => {
+    const wrong = Object.values(metas)
+      .filter((info) => info.takeBack && (info.hiddenInformation || info.noUndo))
+      .map((info) => info.id);
+    expect(wrong).toEqual([]);
+  });
+
   it('Ordnername und Spiel-id stimmen überein', () => {
     expect(games.filter(({ folder, info }) => folder !== info.id).map(({ folder }) => folder)).toEqual([]);
   });

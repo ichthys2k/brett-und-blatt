@@ -124,6 +124,8 @@ Weitere Regeln zur Uhr:
 - Online misst der Server die Zeit und gleicht die Netzverzögerung aus (Kulanz etwa 1 Sekunde).
 - Zeit-Ausgleich je Spieler ist möglich, z. B. ×1,5.
 
+**Zug zurücknehmen online (7.11.2026, #104):** Lokal nimmt „Zug zurück“ einfach den letzten Zug eines Menschen zurück. Online geht das nur mit Zustimmung: Wer bittet („↶ Zurücknehmen?“), nimmt den eigenen letzten Zug und alle Züge danach zurück, wenn alle anderen Menschen am Tisch zustimmen; Bots (auch für freigegebene Plätze) stimmen zu, Zuschauer stimmen nicht ab, nach 30 s ohne Antwort gilt die Bitte als abgelehnt (`TAKE_BACK_MS`). Während der Abstimmung ruht die Partie (keine Züge, Uhren stehen); danach gelten die Uhrenstände vor dem Zug (`LocalSession.undoSeat` mit `SessionRuntime.clockMarks`). Höchstens eine offene Bitte, danach erst wieder nach drei eigenen Zügen (`TAKE_BACK_GAP`). Die Bitte gehört zum Raum, nicht zum Spielstand (`packages/online/src/room.ts`, Nachrichten `takeBack`, `answerTakeBack`, `setTakeBack`, Feld `GameMessage.takeBack`). Nur Spiele mit offener Information schalten es mit `GameInfo.takeBack` frei (Schach, Vierer-Schach, Dame, Go, Reversi, Mühle, Vier in einer Reihe, Tic-Tac-Toe, Ultimate Tic-Tac-Toe, Gomoku, Sternhalma) – bei verdeckten Karten oder Würfeln wüsste die bittende Person schon mehr; `tests/repo.test.ts` passt darauf auf. Die Raumleitung kann es in der Lobby ausschalten („Zurücknehmen erlauben“, `LobbySettings.takeBack`), in Turnierpartien ist es aus.
+
 Was den Spielfluss außerdem beschleunigt: automatische Pflichtzüge, Vorab-Züge, einstellbares Animationstempo und hervorgehobene erlaubte Züge.
 
 ## Oberfläche

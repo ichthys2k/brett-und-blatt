@@ -56,6 +56,8 @@ export interface SessionRuntime {
   timeouts: number[];
   /** Wann der nächste verzögerte Systemzug fällig ist (`GameModule.systemDelayMs`); fehlt in älteren Schnappschüssen. */
   systemDue?: number | null;
+  /** Uhrenstand vor Zügen von Menschen (Logindex → Stand), für `undoSeat`; fehlt in älteren Schnappschüssen. */
+  clockMarks?: [number, ClocksState][];
 }
 
 export interface BotRequest<V = unknown> {
@@ -103,6 +105,9 @@ interface ParkedMove<M> {
   token: number;
 }
 
+/** So viele Uhrenstände vor Zügen von Menschen merkt sich die Spielleitung für `undoSeat`. */
+const CLOCK_MARKS_KEPT = 24;
+
 /** Nach so vielen Zeitüberschreitungen in Folge übernimmt der Bot den Platz. */
 export const AWAY_AFTER_TIMEOUTS = 3;
 
@@ -136,6 +141,8 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private deadlineChanged: (() => void) | undefined;
   private consecutiveTimeouts: number[];
   private away = new Set<SeatId>();
+  /** Uhrenstand vor jedem der letzten Züge von Menschen, nach Logindex. */
+  private clockMarks = new Map<number, ClocksState>();
   private cachedViews = new Map<SeatId | 'spectator', V>();
   private cachedMoves = new Map<SeatId, M[]>();
 
@@ -171,6 +178,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
       runtime.away.forEach((seat) => this.away.add(seat));
       runtime.timeouts.forEach((count, seat) => (this.consecutiveTimeouts[seat] = count));
       this.systemDue = runtime.systemDue ?? null;
+      for (const [index, mark] of runtime.clockMarks ?? []) if (index < this._log.length) this.clockMarks.set(index, mark);
       this.systemKey = this.module.systemTimerKey?.(this._state);
     }
     this.advance();
@@ -381,24 +389,54 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
 
   /** Nimmt den letzten Zug eines Menschen zurück – und alles, was danach kam. */
   undo(): boolean {
-    let index = -1;
-    for (let i = this._log.length - 1; i >= 0; i--) {
-      if (this._log[i]?.cause === 'player') {
-        index = i;
-        break;
-      }
-    }
+    const index = this.lastPlayerMove();
     if (index < 0) return false;
+    this.truncate(index, false);
+    return true;
+  }
+
+  /** Hat dieser Platz selbst einen Zug gemacht, der sich zurücknehmen lässt (`undoSeat`)? */
+  canUndoSeat(seat: SeatId): boolean {
+    return !this._disposed && !this.result && this.lastPlayerMove(seat) >= 0;
+  }
+
+  /**
+   * Nimmt den letzten eigenen Zug dieses Platzes zurück – samt allem, was danach kam – und
+   * setzt die Uhren auf den Stand vor diesem Zug (online nach Zustimmung aller, siehe Raum).
+   */
+  undoSeat(seat: SeatId): boolean {
+    if (!this.canUndoSeat(seat)) return false;
+    this.truncate(this.lastPlayerMove(seat), true);
+    return true;
+  }
+
+  /** Logindex des letzten Zugs eines Menschen (nur von diesem Platz, falls angegeben), sonst -1. */
+  private lastPlayerMove(seat?: SeatId): number {
+    for (let i = this._log.length - 1; i >= 0; i--) {
+      const entry = this._log[i];
+      if (entry?.cause === 'player' && (seat === undefined || entry.actor === seat)) return i;
+    }
+    return -1;
+  }
+
+  private truncate(index: number, restoreClocks: boolean): void {
+    const mark = restoreClocks ? this.clockMarks.get(index) : undefined;
     this._log = this._log.slice(0, index);
+    for (const key of [...this.clockMarks.keys()]) if (key >= index) this.clockMarks.delete(key);
     this._state = replay<S, M>(this.module, this.config.initialSeats ?? this.config.seats.length, this.config.options, this.config.seed, this._log);
     this.invalidateCache();
     this._forfeit = null;
     this.dropAllBots();
-    this.config.seats.forEach((_, seat) => this.clocks.cancel(seat));
+    const pausedAt = this.clocks.state().pausedAt;
+    if (mark && mark.seats.length === this.config.seats.length) {
+      // Zeiten wie vor dem Zug; wer dran ist, beginnt seinen Zug jetzt (bzw. nach der Pause) neu.
+      this.clocks.load({ seats: mark.seats.map((clock) => ({ ...clock, startedAt: null })), pausedAt });
+    } else {
+      this.config.seats.forEach((_, seat) => this.clocks.cancel(seat));
+    }
     this.bump();
     this.advance();
     this.notify([{ type: 'undo' }], null);
-    return true;
   }
 
   /** Ein Zugvorschlag des Standard-Bots für einen Menschen („Tipp“). Wird nicht ausgeführt. */
@@ -482,7 +520,13 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
       config: this.config,
       log: [...this._log],
       forfeit: this._forfeit,
-      runtime: { clocks: this.clocks.state(), away: [...this.away], timeouts: [...this.consecutiveTimeouts], systemDue: this.systemDue },
+      runtime: {
+        clocks: this.clocks.state(),
+        away: [...this.away],
+        timeouts: [...this.consecutiveTimeouts],
+        systemDue: this.systemDue,
+        ...(this.clockMarks.size > 0 ? { clockMarks: [...this.clockMarks] } : {}),
+      },
     };
   }
 
@@ -525,6 +569,10 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   }
 
   private commit(actor: Actor, move: M, cause: MoveCause): void {
+    if (cause === 'player' && this.clocks.enabled) {
+      this.clockMarks.set(this._log.length, this.clocks.state());
+      if (this.clockMarks.size > CLOCK_MARKS_KEPT) this.clockMarks.delete(this.clockMarks.keys().next().value!);
+    }
     const { state, events } = this.module.applyMove(this._state, actor, move);
     this._state = state;
     this.invalidateCache();

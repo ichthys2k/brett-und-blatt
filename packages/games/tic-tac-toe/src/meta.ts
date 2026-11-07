@@ -13,6 +13,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['open'],
   hiddenInformation: false,
+  takeBack: true,
   ruleVersion: 1,
   howToPlay: [
     'Ihr setzt abwechselnd euer Zeichen (Kreuz oder Kreis) in ein freies Feld.',

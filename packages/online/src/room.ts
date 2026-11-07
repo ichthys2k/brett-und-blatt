@@ -32,6 +32,7 @@ import {
   type RoomMessage,
   type RoomPhase,
   type ServerMessage,
+  type TakeBackInfo,
 } from './protocol';
 
 /** Höchstens so viele Mitglieder (Spieler und Zuschauer) pro Raum. */
@@ -56,6 +57,21 @@ export const SIGNAL_MAX_PER_WINDOW = 8;
 export const MATCH_ARRIVAL_MS = 5 * 60 * 1000;
 /** Turnierpartie: So lange darf die Verbindung weg sein, dann ist die Partie verloren (kein Bot). */
 export const MATCH_AWAY_MS = 5 * 60 * 1000;
+
+/** So lange können die anderen über eine Bitte ums Zurücknehmen abstimmen; danach gilt sie als abgelehnt. */
+export const TAKE_BACK_MS = 30_000;
+/** Nach einer Bitte ums Zurücknehmen darf derselbe Platz erst nach so vielen eigenen Zügen wieder bitten. */
+export const TAKE_BACK_GAP = 3;
+
+/** Zurücknehmen mit Zustimmung (`GameInfo.takeBack`): offene Bitte, letzter Ausgang und Sperren je Platz. */
+interface TakeBackState {
+  pending: { seat: SeatId; accepted: SeatId[]; deadline: number; moves: number } | null;
+  /** Ausgang der letzten Bitte – bleibt bis zum nächsten Zug sichtbar. */
+  last: { seat: SeatId; status: 'accepted' | 'declined' | 'expired'; moves: number; by?: SeatId } | null;
+  /** Eigene Züge je Platz (zählt nur vorwärts) und ab welcher Zahl wieder gebeten werden darf. */
+  ownMoves: number[];
+  nextAllowed: number[];
+}
 
 /** Eine Partie im Auftrag eines Turniers: feste Plätze, keine Raumleitung. */
 export interface MatchRoomConfig {
@@ -126,6 +142,7 @@ interface Game {
   versionOffset: number;
   /** Version nach dem letzten Zug je Platz (auch Bot- oder Zeitablauf-Zug für ihn); nicht gespeichert. */
   seatMoved?: number[];
+  takeBack?: TakeBackState;
   unsubscribe: () => void;
 }
 
@@ -144,7 +161,7 @@ export interface RoomSnapshot {
   rounds: number;
   createdAt?: number;
   lastActivity: number;
-  game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; lobbyIndex?: number[]; time: LobbySettings['time']; version: number; round: number } | null;
+  game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; lobbyIndex?: number[]; time: LobbySettings['time']; version: number; round: number; takeBack?: TakeBackState } | null;
   match?: { config: MatchRoomConfig; noShow: RoomReport | null; reported: boolean };
 }
 
@@ -171,6 +188,8 @@ export class Room {
   private lastActivity: number;
   /** Nur bei Turnierpartien. */
   private match: { config: MatchRoomConfig; noShow: RoomReport | null; reported: boolean } | null = null;
+  /** Mehrere Schritte der Spielleitung hintereinander (Zurücknehmen): erst am Ende eine Nachricht an alle. */
+  private muted = false;
 
   constructor(
     readonly code: string,
@@ -265,6 +284,7 @@ export class Room {
   tick(): void {
     const now = this.deps.now();
     this.game?.session.tick();
+    this.settleTakeBack();
     if (this.match) {
       this.tickMatch(now);
       this.deps.changed?.();
@@ -301,6 +321,8 @@ export class Room {
     const times: number[] = [expires > now ? expires : now + HOST_HANDOVER_MS];
     const deadline = this.game?.session.nextDeadline();
     if (deadline != null) times.push(deadline);
+    const takeBack = this.game?.takeBack?.pending;
+    if (takeBack) times.push(takeBack.deadline);
     if (this.match) {
       if (this.phase === 'lobby' && !this.match.noShow) times.push(this.createdAt + MATCH_ARRIVAL_MS);
       if (this.phase === 'playing') {
@@ -380,7 +402,7 @@ export class Room {
       createdAt: this.createdAt,
       lastActivity: this.lastActivity,
       game: game
-        ? { session: game.session.snapshot(), seatMembers: [...game.seatMembers], seats: game.seats, ...(game.lobbyIndex ? { lobbyIndex: game.lobbyIndex } : {}), time: game.time, version: this.gameVersion(), round: game.round }
+        ? { session: game.session.snapshot(), seatMembers: [...game.seatMembers], seats: game.seats, ...(game.lobbyIndex ? { lobbyIndex: game.lobbyIndex } : {}), time: game.time, version: this.gameVersion(), round: game.round, ...(game.takeBack ? { takeBack: structuredClone(game.takeBack) } : {}) }
         : null,
       ...(this.match ? { match: structuredClone(this.match) } : {}),
     };
@@ -415,7 +437,10 @@ export class Room {
     const module = saved ? deps.findGame(saved.session.config.gameId) : undefined;
     if (saved && module) {
       const session = LocalSession.restore(module, saved.session, room.sessionDeps(), { resumeClocks: true });
-      room.attachGame({ module, session, seatMembers: saved.seatMembers, seats: saved.seats, ...(saved.lobbyIndex ? { lobbyIndex: saved.lobbyIndex } : {}), time: saved.time, round: saved.round, versionOffset: saved.version - session.version, unsubscribe: () => {} });
+      // Während einer Abstimmung ruht die Partie; die Uhren stehen schon im Schnappschuss.
+      if (saved.takeBack?.pending) session.pause();
+      const versionOffset = saved.version - session.version;
+      room.attachGame({ module, session, seatMembers: saved.seatMembers, seats: saved.seats, ...(saved.lobbyIndex ? { lobbyIndex: saved.lobbyIndex } : {}), ...(saved.takeBack ? { takeBack: saved.takeBack } : {}), time: saved.time, round: saved.round, versionOffset, unsubscribe: () => {} });
     } else if (saved) {
       room.phase = 'lobby';
     }
@@ -530,6 +555,24 @@ export class Room {
         if (!isHost) return deny();
         this.lobby.namesLocked = message.locked;
         return this.broadcastRoom();
+      case 'setTakeBack':
+        if (!isHost || this.phase !== 'lobby') return deny();
+        this.lobby.takeBack = message.allowed;
+        return this.broadcastRoom();
+      case 'takeBack': {
+        const seat = this.seatOf(member.id);
+        if (seat === null || !this.canTakeBack(seat)) return deny();
+        return this.requestTakeBack(seat);
+      }
+      case 'answerTakeBack': {
+        const seat = this.seatOf(member.id);
+        const pending = this.game?.takeBack?.pending;
+        if (seat === null || !pending || !this.takeBackVoters().includes(seat) || pending.accepted.includes(seat)) return deny();
+        if (!message.accept) return this.finishTakeBack('declined', seat);
+        pending.accepted.push(seat);
+        if (!this.settleTakeBack()) this.broadcastGame([]);
+        return;
+      }
       case 'unseat': {
         if (!isHost) return deny();
         if (this.phase === 'lobby') {
@@ -698,6 +741,7 @@ export class Room {
         const seat = this.seatOf(member.id);
         const session = this.game?.session;
         if (!session || seat === null) return deny();
+        if (this.game?.takeBack?.pending) return this.error(connectionId, 'notAllowed', 'Erst wird über das Zurücknehmen abgestimmt.');
         if (message.version !== this.gameVersion() && !this.stillValid(seat, message.version)) {
           this.error(connectionId, 'staleMove', 'Der Spielstand hat sich inzwischen geändert.');
           return this.sendGame(connectionId, []);
@@ -832,6 +876,7 @@ export class Room {
   private attachGame(game: Game): void {
     this.game = game;
     game.seatMoved = game.seats.map(() => this.gameVersion());
+    if (game.module.info.takeBack && !game.module.info.noUndo) game.takeBack ??= { pending: null, last: null, ownMoves: game.seats.map(() => 0), nextAllowed: game.seats.map(() => 0) };
     this.phase = game.session.result ? 'finished' : 'playing';
     game.unsubscribe = game.session.subscribe((change) => this.onSessionChange(change));
   }
@@ -840,7 +885,15 @@ export class Room {
     if (!this.game) return;
     const actor = change.entry?.actor;
     if (typeof actor === 'number' && this.game.seatMoved) this.game.seatMoved[actor] = this.gameVersion();
+    const takeBack = this.game.takeBack;
+    if (takeBack && change.entry) {
+      // Der nächste Zug lässt den Hinweis auf die letzte Bitte verschwinden.
+      takeBack.last = null;
+      if (typeof actor === 'number' && change.entry.cause === 'player') takeBack.ownMoves[actor] = (takeBack.ownMoves[actor] ?? 0) + 1;
+    }
     const finished = this.game.session.result !== null;
+    if (finished && takeBack?.pending) takeBack.pending = null;
+    if (this.muted) return;
     if (finished && this.phase === 'playing') {
       this.phase = 'finished';
       this.broadcastRoom();
@@ -965,6 +1018,7 @@ export class Room {
     // Schon abwesend (Verbindung weg): markAway meldet nichts, also selbst Bescheid geben.
     if (game.session.isAway(seat) || game.session.result) this.broadcastGame([]);
     else game.session.markAway(seat);
+    this.settleTakeBack();
   }
 
   /** Ein freigegebener Platz, den ein Bot vertritt (nicht bei Spielen mit laufendem Einstieg über `leaveSeat`). */
@@ -1000,6 +1054,105 @@ export class Room {
     this.tokens.delete(member.token);
     if (this.hostId === member.id) this.hostId = [...this.members.values()].find((m) => m.disconnectedAt === null)?.id ?? this.members.keys().next().value ?? null;
     this.broadcastRoom();
+    this.settleTakeBack();
+  }
+
+  // -------------------------------------------------------------------------
+  // Zurücknehmen mit Zustimmung
+
+  /** Darf in dieser Partie überhaupt zurückgenommen werden? Nie in Turnierpartien, nie bei Spielen ohne `takeBack`. */
+  private takeBackEnabled(): boolean {
+    return Boolean(this.game?.takeBack) && !this.match && this.lobby.takeBack !== false && this.phase === 'playing';
+  }
+
+  /** Darf dieser Platz jetzt um das Zurücknehmen seines letzten Zuges bitten? */
+  private canTakeBack(seat: SeatId): boolean {
+    const game = this.game;
+    const takeBack = game?.takeBack;
+    if (!game || !takeBack || !this.takeBackEnabled() || takeBack.pending) return false;
+    if ((takeBack.ownMoves[seat] ?? 0) < (takeBack.nextAllowed[seat] ?? 0)) return false;
+    return game.session.canUndoSeat(seat);
+  }
+
+  /** Wer abstimmt: alle Plätze mit einem Mitglied außer der bittenden Person. Bots (auch für freigegebene Plätze) stimmen zu. */
+  private takeBackVoters(): SeatId[] {
+    const game = this.game;
+    const pending = game?.takeBack?.pending;
+    if (!game || !pending) return [];
+    return game.seatMembers.flatMap((memberId, seat) => (memberId !== null && seat !== pending.seat ? [seat] : []));
+  }
+
+  private requestTakeBack(seat: SeatId): void {
+    const game = this.game!;
+    const takeBack = game.takeBack!;
+    const log = game.session.log;
+    let index = log.length - 1;
+    while (index >= 0 && !(log[index]?.actor === seat && log[index]?.cause === 'player')) index--;
+    const moves = log.slice(index).filter((entry) => entry.actor !== 'system').length;
+    takeBack.nextAllowed[seat] = (takeBack.ownMoves[seat] ?? 0) + TAKE_BACK_GAP;
+    takeBack.last = null;
+    takeBack.pending = { seat, accepted: [], deadline: this.deps.now() + TAKE_BACK_MS, moves };
+    // Während der Abstimmung ruht die Partie: keine Züge, keine Bots, die Uhren stehen.
+    this.quietly(() => game.session.pause());
+    if (!this.settleTakeBack()) this.broadcastGame([{ type: 'takeBack', status: 'pending', seat }]);
+  }
+
+  /** Prüft eine offene Bitte: alle zugestimmt, Frist vorbei oder bittende Person weg. true, wenn sie damit erledigt ist. */
+  private settleTakeBack(): boolean {
+    const game = this.game;
+    const pending = game?.takeBack?.pending;
+    if (!game || !pending) return false;
+    if (game.session.result || game.seatMembers[pending.seat] === null) {
+      game.takeBack!.pending = null;
+      this.quietly(() => game.session.resume());
+      this.broadcastGame([]);
+      return true;
+    }
+    const voters = this.takeBackVoters();
+    if (voters.every((seat) => pending.accepted.includes(seat))) {
+      this.finishTakeBack('accepted');
+      return true;
+    }
+    if (this.deps.now() >= pending.deadline) {
+      this.finishTakeBack('expired');
+      return true;
+    }
+    return false;
+  }
+
+  private finishTakeBack(status: 'accepted' | 'declined' | 'expired', by?: SeatId): void {
+    const game = this.game!;
+    const takeBack = game.takeBack!;
+    const pending = takeBack.pending!;
+    takeBack.pending = null;
+    takeBack.last = { seat: pending.seat, status, moves: pending.moves, ...(by !== undefined ? { by } : {}) };
+    // Noch pausiert zurücknehmen, dann weiter: So beginnt die Uhr der bittenden Person erst jetzt.
+    const undone = this.quietly(() => (status === 'accepted' ? game.session.undoSeat(pending.seat) : false));
+    this.quietly(() => game.session.resume());
+    this.broadcastGame([...(undone ? [{ type: 'undo' }] : []), { type: 'takeBack', status, seat: pending.seat }]);
+    this.deps.changed?.();
+  }
+
+  private quietly<T>(run: () => T): T {
+    this.muted = true;
+    try {
+      return run();
+    } finally {
+      this.muted = false;
+    }
+  }
+
+  /** Was ein Platz über die Bitte ums Zurücknehmen erfährt. */
+  private takeBackInfo(): TakeBackInfo | null {
+    const takeBack = this.game?.takeBack;
+    if (!takeBack) return null;
+    const pending = takeBack.pending;
+    if (pending) {
+      const voters = this.takeBackVoters();
+      return { seat: pending.seat, status: 'pending', moves: pending.moves, accepted: [...pending.accepted], waiting: voters.filter((s) => !pending.accepted.includes(s)), deadline: pending.deadline };
+    }
+    const last = takeBack.last;
+    return last ? { seat: last.seat, status: last.status, moves: last.moves, accepted: [], waiting: [], deadline: null, ...(last.by !== undefined ? { by: last.by } : {}) } : null;
   }
 
   /** Der Platz eines Mitglieds in der laufenden Partie oder null (Zuschauer). */
@@ -1046,6 +1199,8 @@ export class Room {
     const viewer = seat ?? 'spectator';
     const filtered = module.eventView ? events.map((e) => module.eventView!(e, viewer)).filter((e): e is GameEvent => e !== null) : events;
     const now = this.deps.now();
+    const voting = Boolean(this.game!.takeBack?.pending);
+    const clocks = seats.map((_, i) => session.clock(i));
     return {
       type: 'game',
       gameId: module.info.id,
@@ -1056,14 +1211,17 @@ export class Room {
       time,
       yourSeat: seat,
       view: session.view(viewer),
-      legalMoves: seat !== null && !session.isAway(seat) ? session.legalMoves(seat) : [],
+      legalMoves: seat !== null && !session.isAway(seat) && !voting ? session.legalMoves(seat) : [],
       canResign: seat !== null && session.canResign(seat),
+      canTakeBack: seat !== null && this.canTakeBack(seat),
+      takeBack: this.takeBackInfo(),
       current: session.currentSeats(),
       away: seats.map((_, i) => i).filter((i) => session.isAway(i)),
       thinking: seats.map((_, i) => i).filter((i) => session.isThinking(i)),
       result: session.result,
       forfeit: session.forfeit,
-      clocks: seats.map((_, i) => session.clock(i)),
+      // Während der Abstimmung stehen die Uhren; der Browser soll sie nicht weiterzählen.
+      clocks: voting ? clocks.map((clock) => ({ ...clock, running: false })) : clocks,
       serverNow: now,
       events: filtered,
     };

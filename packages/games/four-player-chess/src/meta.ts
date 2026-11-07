@@ -9,6 +9,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['open'],
   hiddenInformation: false,
+  takeBack: true,
   ruleVersion: 1,
   howToPlay: [
     'Rot, Blau, Gelb und Grün ziehen im Uhrzeigersinn. Die Figuren ziehen wie beim Schach, auch Rochade und en passant gibt es.',

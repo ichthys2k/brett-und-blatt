@@ -13,6 +13,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['open'],
   hiddenInformation: false,
+  takeBack: true,
   hints: true,
   ruleVersion: 1,
   howToPlay: [

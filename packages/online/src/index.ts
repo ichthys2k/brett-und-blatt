@@ -14,6 +14,8 @@ export {
   SIGNAL_INTERVAL_MS,
   SIGNAL_MAX_PER_WINDOW,
   SIGNAL_WINDOW_MS,
+  TAKE_BACK_GAP,
+  TAKE_BACK_MS,
   type MatchRoomConfig,
   type MatchRoomReport,
   type RoomDeps,
