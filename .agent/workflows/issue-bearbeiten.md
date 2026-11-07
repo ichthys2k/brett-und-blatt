@@ -71,6 +71,8 @@ gh issue create --title "Narrenhof: Kurztitel" --label "wunsch,status: Idee,spie
 
 Aufbau des Texts: **Ziel** (bei Fehlern: **Fehler** mit Schritten, Erwartet, Tatsächlich, Gerät), **Stand**, **Fertig, wenn** als Kästchenliste, **Links**. Rechercheaufträge behalten Cornelius' Wortlaut als Zitat.
 
+**Vorlagen auf GitHub** (`.github/ISSUE_TEMPLATE/`, gleiche Gliederung, setzen Typ und `status: Idee` selbst): `1-fehler.yml` (Fehler melden), `2-wunsch.yml` (Wunsch oder Idee), `3-recherche.yml` (Recherche oder Konzept – Ergebnis ist ein Bericht, gebaut wird erst nach Entscheidung), `4-vorhaben.yml` (Eltern-Issue mit Schritten). Die Felder „Spiel“ und „Bereich“ setzen **keine** Labels (GitHub-Formulare können das nicht); wer ein über die Vorlage gemeldetes Issue sichtet, übersetzt sie in `spiel: …` und `bereich: …`. Bei einem Vorhaben werden die Zeilen unter „Schritte“ nach Cornelius' Zustimmung als Unter-Issues angelegt.
+
 ## Größere Vorhaben (mehrere Issues)
 
 - Ein **Eltern-Issue** mit Label `vorhaben` beschreibt das Ganze: Ziel, Reihenfolge, Entscheidungen, Link zum ausführlichen Plan unter `docs/spiele/`.

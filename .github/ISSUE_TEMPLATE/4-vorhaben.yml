@@ -1,0 +1,47 @@
+name: Vorhaben (mehrere Schritte)
+description: Ein größeres Ziel, das aus mehreren Issues besteht – z. B. ein neues Spiel oder ein Umbau.
+title: "Vorhaben: "
+labels: ["vorhaben", "status: Idee"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **So geht es weiter:** Das Vorhaben ist ein **Eltern-Issue**. Jeder Schritt unten wird ein eigenes Unter-Issue; GitHub zeigt hier dann eine Fortschrittsleiste. Cornelius gibt **jeden Schritt einzeln** mit `status: Ready` frei, nicht das ganze Vorhaben. Das Vorhaben bleibt offen, bis alle Schritte abgenommen sind – Ablauf in [`issue-bearbeiten.md`](https://github.com/ichthys2k/brett-und-blatt/blob/main/.agent/workflows/issue-bearbeiten.md#größere-vorhaben-mehrere-issues).
+  - type: input
+    id: spiel
+    attributes:
+      label: Spiel
+      description: Leer lassen, wenn es mehrere oder alle Spiele betrifft; bei einem neuen Spiel den Arbeitstitel.
+  - type: textarea
+    id: ziel
+    attributes:
+      label: Ziel
+      description: Was soll am Ende gelten, und warum lohnt es sich?
+    validations:
+      required: true
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Schritte
+      description: Ein Schritt je Zeile, in sinnvoller Reihenfolge. Jeder wird ein Unter-Issue; vorhandene Issues mit #Nummer nennen.
+      value: |
+        - [ ] Entwurf / Konzept
+        - [ ] …
+        - [ ] …
+    validations:
+      required: true
+  - type: textarea
+    id: abhaengigkeiten
+    attributes:
+      label: Reihenfolge und Abhängigkeiten
+      description: Optional. Was muss vor was fertig sein? Was kann parallel laufen?
+  - type: textarea
+    id: entscheidungen
+    attributes:
+      label: Offene Entscheidungen
+      description: Optional. Was muss Cornelius vorab klären (Namen, Regeln, Umfang)?
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      description: Optional. Ausführlicher Plan unter `docs/spiele/`, verwandte Issues (#…).

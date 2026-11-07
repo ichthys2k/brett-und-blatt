@@ -1,0 +1,58 @@
+name: Wunsch oder Idee
+description: Neue Funktion, Änderung oder neues Spiel vorschlagen.
+title: "Spiel/Bereich: "
+labels: ["wunsch", "status: Idee"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **So geht es weiter:** Der Wunsch startet mit `status: Idee` – das ist noch kein Auftrag. Cornelius prüft ihn, setzt Priorität (`prio: …`), Bereich (`bereich: …`) und Spiel (`spiel: …`) und gibt ihn mit `status: Ready` frei. Erst dann übernimmt ihn jemand – Ablauf in [`issue-bearbeiten.md`](https://github.com/ichthys2k/brett-und-blatt/blob/main/.agent/workflows/issue-bearbeiten.md).
+
+        **Titel:** „Spiel/Bereich: kurzer Titel“, z. B. „Narrenhof: Narren umsortieren“. Soll erst recherchiert oder ein Konzept entworfen werden, nimm die Vorlage **Recherche oder Konzept**; besteht der Wunsch aus mehreren Schritten, die Vorlage **Vorhaben**.
+  - type: input
+    id: spiel
+    attributes:
+      label: Spiel
+      description: Name wie auf der Startseite. Leer lassen bei „alle Spiele“; bei einem neuen Spiel den Arbeitstitel.
+      placeholder: z. B. Schach, Narrenhof, neues Spiel „Grafschaft“
+  - type: dropdown
+    id: bereich
+    attributes:
+      label: Bereich
+      description: Worum geht es? Mehrfachauswahl möglich.
+      multiple: true
+      options:
+        - Spielregeln oder Bot
+        - Oberfläche (Layout, Aussehen)
+        - Online (Räume, Lobby, Turniere, Ausweis, Sicherung)
+        - Klang und Musik
+        - Neues Spiel
+        - Barrierefreiheit
+        - Technik (Engine, Werkzeuge, Plattformen)
+  - type: textarea
+    id: ziel
+    attributes:
+      label: Ziel
+      description: Was soll sich ändern und warum? Wie sieht es aus, wenn es fertig ist?
+    validations:
+      required: true
+  - type: textarea
+    id: stand
+    attributes:
+      label: Stand
+      description: Optional. Was gibt es schon, was wurde schon versucht oder entschieden?
+  - type: textarea
+    id: fertig
+    attributes:
+      label: Fertig, wenn
+      description: Woran merkt man, dass der Wunsch erfüllt ist? Als Kästchenliste – sie wird später abgehakt.
+      value: |
+        - [ ] …
+        - [ ] …
+    validations:
+      required: true
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      description: Optional. Spielplan unter `docs/spiele/`, verwandte Issues (#…), Vorbilder.

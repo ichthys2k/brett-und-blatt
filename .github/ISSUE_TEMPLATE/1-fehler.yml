@@ -1,0 +1,75 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie gedacht.
+title: "Spiel/Bereich: "
+labels: ["fehler", "status: Idee"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **So geht es weiter:** Die Meldung startet mit `status: Idee`. Cornelius prüft sie, setzt Priorität (`prio: …`), Bereich (`bereich: …`) und Spiel (`spiel: …`) und gibt sie mit `status: Ready` zur Behebung frei. Erst dann übernimmt sie jemand – Ablauf in [`issue-bearbeiten.md`](https://github.com/ichthys2k/brett-und-blatt/blob/main/.agent/workflows/issue-bearbeiten.md).
+
+        **Titel:** „Spiel/Bereich: kurze Beschreibung“, z. B. „Narrenhof: Absturz beim Narrenkorb“.
+  - type: input
+    id: spiel
+    attributes:
+      label: Spiel
+      description: Name wie auf der Startseite. Leer lassen, wenn es kein bestimmtes Spiel betrifft.
+      placeholder: z. B. Skat, Narrenhof, Eins!
+  - type: dropdown
+    id: bereich
+    attributes:
+      label: Bereich
+      description: Was ist betroffen? Mehrfachauswahl möglich.
+      multiple: true
+      options:
+        - Spielregeln oder Bot
+        - Oberfläche (Layout, Aussehen, kleine Bildschirme)
+        - Online (Räume, Lobby, Turniere, Ausweis, Sicherung)
+        - Klang und Musik
+        - Barrierefreiheit
+        - Technik (Tests, Build, Server)
+        - weiß nicht
+  - type: textarea
+    id: fehler
+    attributes:
+      label: Fehler
+      description: Was ist kaputt? Ein, zwei Sätze.
+    validations:
+      required: true
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Schritte zum Nachstellen
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: erwartet
+    attributes:
+      label: Erwartet
+      description: Was sollte passieren?
+    validations:
+      required: true
+  - type: textarea
+    id: tatsaechlich
+    attributes:
+      label: Tatsächlich
+      description: Was passiert stattdessen? Fehlermeldung, Screenshot oder Raumcode, falls vorhanden.
+    validations:
+      required: true
+  - type: input
+    id: geraet
+    attributes:
+      label: Gerät und Browser
+      placeholder: z. B. Android-Handy, Chrome, Hochformat
+  - type: textarea
+    id: fertig
+    attributes:
+      label: Fertig, wenn
+      description: Optional. Woran merkt man, dass der Fehler behoben ist? Wird bei der Freigabe ergänzt.
+      value: |
+        - [ ] Ursache gefunden und behoben
+        - [ ] Test, der den Fall nachstellt
+        - [ ] Im Browser auf dem genannten Gerät geprüft

@@ -2,7 +2,7 @@
 
 **GitHub Issues sind die einzige aktuelle Aufgabenliste** für Wünsche, Fehler und Prompts: [Brett & Blatt – Issues](https://github.com/ichthys2k/brett-und-blatt/issues).
 
-- Neue Ideen und Aufgaben als Issue mit `status: Idee` eintragen. Die Vorlagen unter `.github/ISSUE_TEMPLATE/` versehen sie automatisch mit diesem Status.
+- Neue Ideen und Aufgaben als Issue mit `status: Idee` eintragen. Die Vorlagen unter `.github/ISSUE_TEMPLATE/` (Fehler melden, Wunsch oder Idee, Recherche oder Konzept, Vorhaben) geben die Gliederung vor und versehen sie automatisch mit diesem Status.
 - **Nur Cornelius** gibt eine Idee nach Prüfung mit `status: Ready` zur Bearbeitung frei. Agenten übernehmen ausschließlich `Ready`-Issues.
 - Vor Arbeitsbeginn reserviert der Agent das Issue mit einem Kommentar, z. B. `🔒 Übernehme ich: @konto, zweig-name — 2026-11-06 05:30 UTC`. Der Kommentar ist die gemeinsame Reservierung; keine Assignees oder Labels als Reservierung verwenden.
 - Der Agent arbeitet auf einem eigenen Zweig, lädt ihn selbst hoch und öffnet einen PR mit `Refs #…` (nicht `Fixes #…`). Nach `main` geht es nur auf Cornelius' Wort „deploy“.
