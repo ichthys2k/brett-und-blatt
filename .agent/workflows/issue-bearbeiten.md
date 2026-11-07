@@ -2,7 +2,7 @@
 description: Bearbeitet ein freigegebenes GitHub-Issue von der Reservierung bis zur Abnahme
 ---
 
-Gilt für alle Agenten (Claude Code, Antigravity/Gemini, Codex …). Aufgaben stehen ausschließlich in den [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues); `PLANUNG.md` ist nur noch ein Verweis.
+Gilt für alle Agenten (Claude Code, Antigravity/Gemini, Codex …). Aufgaben stehen ausschließlich in den [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues); `PLANUNG.md` ist nur noch ein Wegweiser mit Filter-Links.
 
 ## 0. Zu Beginn jeder Sitzung
 
@@ -87,6 +87,10 @@ Aufbau des Texts: **Ziel** (bei Fehlern: **Fehler** mit Schritten, Erwartet, Tat
 ## GitHub-Projekt
 
 Das Projekt [„Brett & Blatt – Planung“](https://github.com/users/ichthys2k/projects/3) ist nur eine Anzeige. **Status und Priorität immer über die Labels am Issue ändern**, nie über Felder oder Board-Spalten im Projekt – die Action `projekt-abgleich` überträgt die Labels und überschreibt Handänderungen. Neue Issues kommen von selbst ins Projekt.
+
+Technik: Die Action `.github/workflows/projekt-abgleich.yml` (Skript `scripts/projekt-abgleich.mjs`) läuft bei jeder Label-Änderung und zweimal pro Stunde. Sie braucht das Repo-Secret `PROJECT_TOKEN` (klassischer Personal Access Token nur mit dem Recht `project`) und die Repo-Variable `PROJECT_NUMBER` (= 3). Von Hand: `PROJECT_TOKEN=$(gh auth token) PROJECT_NUMBER=3 node scripts/projekt-abgleich.mjs` (mit `PROJEKT_PROBE=1` nur anzeigen). Das Feld „Bereich“ zeigt bei mehreren Bereichs-Labels nur das erste.
+
+Fertige Filter-Links für die Issue-Liste stehen in [`PLANUNG.md`](../../PLANUNG.md).
 
 ## Labels auf einen Blick
 
