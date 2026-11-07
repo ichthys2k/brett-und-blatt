@@ -9,6 +9,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['open'],
   hiddenInformation: false,
+  takeBack: true,
   ruleVersion: 1,
   howToPlay: [
     'Zuerst setzt ihr abwechselnd eure neun Steine auf freie Punkte, danach zieht ihr sie entlang der Linien auf einen freien Nachbarpunkt.',

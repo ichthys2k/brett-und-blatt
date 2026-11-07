@@ -9,6 +9,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['open'],
   hiddenInformation: false,
+  takeBack: true,
   ruleVersion: 1,
   howToPlay: [
     'Das Brett besteht aus neun kleinen Tic-Tac-Toe-Feldern.',

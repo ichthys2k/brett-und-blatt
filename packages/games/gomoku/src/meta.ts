@@ -9,6 +9,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['open'],
   hiddenInformation: false,
+  takeBack: true,
   ruleVersion: 1,
   howToPlay: [
     'Ihr setzt abwechselnd einen schwarzen oder weißen Stein auf ein freies Feld.',

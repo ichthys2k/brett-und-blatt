@@ -121,6 +121,24 @@ check(games.Anna.yourSeat === 0 && games.Ben.yourSeat === 1, 'Partie gestartet, 
 const openStarted = await (await fetch(`${base}/rooms/open`, { headers: { Origin: origin } })).json();
 check(!openStarted.some((r) => r.code === code), 'gestarteter Raum verschwindet aus /rooms/open');
 
+// Zurücknehmen mit Zustimmung: Anna zieht, bittet ums Zurücknehmen, Ben erlaubt es.
+{
+  const mover = games.Anna.current[0] === 0 ? anna : ben;
+  const other = mover === anna ? ben : anna;
+  const own = mover === anna ? games.Anna : games.Ben;
+  const moved = mover.next((m) => m.type === 'game' && m.canTakeBack === true);
+  mover.send({ type: 'move', version: own.version, move: own.legalMoves[0] });
+  await moved;
+  const asked = other.next((m) => m.type === 'game' && m.takeBack?.status === 'pending');
+  mover.send({ type: 'takeBack' });
+  check((await asked).legalMoves.length === 0, 'Bitte ums Zurücknehmen kommt an, die Partie ruht');
+  const doneA = anna.next((m) => m.type === 'game' && m.takeBack?.status === 'accepted');
+  const doneB = ben.next((m) => m.type === 'game' && m.takeBack?.status === 'accepted');
+  other.send({ type: 'answerTakeBack', accept: true });
+  games = { Anna: await doneA, Ben: await doneB };
+  check(games.Anna.view.board.every((cell) => cell === null), 'Nach Zustimmung ist der Zug zurückgenommen');
+}
+
 // Ganze Partie: Wer dran ist, nimmt den ersten erlaubten Zug.
 for (let turn = 0; turn < 9 && !games.Anna.result; turn++) {
   const mover = games.Anna.current[0] === 0 ? anna : ben;
@@ -155,6 +173,11 @@ for (let turn = 0; turn < 4 && !game.result; turn++) {
   times.push(Date.now() - started);
 }
 check(times.length > 0, `Bot „schwer“ antwortet nach ${times.join(', ')} ms`);
+if (!game.result) {
+  const undone = anna.next((m) => m.type === 'game' && m.takeBack?.status === 'accepted');
+  anna.send({ type: 'takeBack' });
+  check((await undone).current.includes(0), 'Gegen den Bot: Zurücknehmen ohne Abstimmung');
+}
 
 // Zeitablauf über den Wecker des Servers: Tic-Tac-Toe „schnell“ (5 s pro Zug), Anna zieht nicht.
 await anna.step({ type: 'toLobby' }, (m) => m.phase === 'lobby');

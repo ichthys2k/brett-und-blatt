@@ -13,6 +13,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['open'],
   hiddenInformation: false,
+  takeBack: true,
   ruleVersion: 1,
   howToPlay: [
     'Gespielt wird auf den dunklen Feldern. Weiß beginnt. Einfache Steine ziehen diagonal ein Feld vorwärts.',

@@ -9,6 +9,7 @@ export const meta: GameInfo = {
   modes: ['solo', 'hotseat', 'online'],
   patterns: ['open'],
   hiddenInformation: false,
+  takeBack: true,
   ruleVersion: 1,
   howToPlay: [
     'Schwarz beginnt. Setze einen Stein so, dass gegnerische Steine zwischen ihm und einem deiner Steine eingeschlossen sind – in einer oder mehreren Richtungen.',

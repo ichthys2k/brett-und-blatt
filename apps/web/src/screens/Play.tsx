@@ -78,6 +78,8 @@ export interface OnlineTableProps {
   extra?: ReactNode;
   /** Raumcode und Einladungslink – Spiele zeigen sie z. B. auf einer Tafel an. */
   invite?: { code: string; link: string };
+  /** Leiste über den Knöpfen, etwa die Abstimmung übers Zurücknehmen. */
+  bar?: ReactNode;
 }
 
 interface GameTableProps {
@@ -365,6 +367,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           ↶ {t('play.undo')}
         </Button>
       )}
+      {online && online.yourSeat !== null && info.takeBack && !info.noUndo && (
+        <Button disabled={!session.canUndo()} title={t('online.takeBackAskTitle')} onClick={() => session.undo()}>
+          ↶ {t('online.takeBackAsk')}
+        </Button>
+      )}
       {info.hints && actingSeat !== undefined && <Button onClick={askHint}>💡 {t('play.hint')}</Button>}
     </>
   );
@@ -464,6 +471,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         {!around && <p className="flex-none py-2 text-center font-medium short:py-1" aria-live="polite">{statusContent}</p>}
 
         {hintMissing && <p className={`flex-none pt-2 text-center text-sm text-muted ${around ? '' : 'order-2'}`}>{t('play.noHint')}</p>}
+
+        {online?.bar && !result && <div className={`flex-none ${around ? '' : 'order-2'}`}>{online.bar}</div>}
 
         {awaySeats.length > 0 && !result && (
           <div className={`mx-3 mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm ${around ? '' : 'order-2'}`}>

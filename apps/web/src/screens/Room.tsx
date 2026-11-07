@@ -12,6 +12,7 @@ import { games, loadGame, type LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { GameTable } from './Play';
+import { TakeBackBar } from '../components/TakeBackBar';
 import { TeamChip, TeamSummary } from '../components/Teams';
 
 const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
@@ -142,6 +143,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
               return state.room?.members.find((m) => m.id === seat.memberId)?.avatar ?? null;
             }),
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
+            ...(loaded.info.takeBack ? { bar: <TakeBackBar session={session} /> } : {}),
             extra: (
               <>
                 {toTournament}
@@ -379,6 +381,23 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
             </div>
             <span className="text-xl" aria-hidden="true">
               🔒
+            </span>
+          </label>
+        )}
+        {isHost && !room.match && (
+          <label className="flex cursor-pointer select-none items-center gap-3 border-t border-line pt-2">
+            <input
+              type="checkbox"
+              checked={lobby.takeBack ?? true}
+              onChange={(e) => send({ type: 'setTakeBack', allowed: e.target.checked })}
+              className="h-4 w-4 rounded accent-accent"
+            />
+            <div className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">{t('online.takeBack')}</span>
+              <span className="block text-xs text-muted">{t('online.takeBackHint')}</span>
+            </div>
+            <span className="text-xl" aria-hidden="true">
+              ↶
             </span>
           </label>
         )}
