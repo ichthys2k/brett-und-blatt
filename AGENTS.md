@@ -18,6 +18,19 @@ Freie Spielesammlung im Browser (Karten- und Brettspiele für Handy und Desktop)
 - **Klänge:** Die MP3s liegen im **privaten** Repo `ichthys2k/brett-und-blatt-klaenge` (ElevenLabs-Lizenz) und dürfen nie ins öffentliche Repo kopiert werden. Nur die CI holt sie per Secret. Lokal läuft alles auch ohne – fehlende Klänge sind dann nur ein Hinweis. Neue Klänge nur nach Auswahl durch Cornelius – Werkzeuge im Klang-Repo (`tools/erzeugen.mjs`, `stimme.mjs`, `hoerprobe.mjs`, `uebernehmen.mjs`), Stand in `docs/spiele/klaenge-alle-spiele.md`. Dateinamen dort mit Unterstrichen, Katalognamen mit Bindestrichen, Sprachausrufe `ruf-…`; in Worktrees `KLAENGE_DIR=$HOME/code/brett-und-blatt-klaenge` setzen.
 - **Abhängigkeiten:** pnpm 12 nur über corepack (`corepack pnpm …`, `pnpm` ist nicht im PATH). pnpm hat eine Wartefrist für neue Paketversionen – **keine `minimumReleaseAgeExclude`-Ausnahmen**, sondern ältere Versionen wählen. Neue Fremdbibliotheken in `THIRD_PARTY.md` eintragen.
 
+## Arbeitsablauf mit GitHub Issues
+
+Ausführlich mit allen Befehlen: [`.agent/workflows/issue-bearbeiten.md`](.agent/workflows/issue-bearbeiten.md). Kurzfassung:
+
+1. **Sitzungsbeginn:** `git pull`, dann `gh issue list --label "status: Ready"` und `--label "status: Review"` – Cornelius kurz nennen, was ansteht.
+2. **Nur `status: Ready` bearbeiten** (setzt allein Cornelius), nach Priorität `prio: hoch` → `mittel` → `niedrig`. Vorher die Kommentare prüfen: Ein 🔒 ohne späteres 🔓 heißt „vergeben“.
+3. **Reservieren:** eigener Zweig `<agent>/<kurzname>` von `origin/main`, Kommentar `🔒 Übernehme ich: <Agent/Konto>, Zweig <zweig> — <Datum Uhrzeit UTC>`, Status auf `status: In progress`.
+4. **Umsetzen** nach „Fertig, wenn“ im Issue; Tests, `corepack pnpm check`, bei Spielen Rauchtest und Prüfstand, Blick im Browser.
+5. **Hochladen:** eigenen Zweig pushen, PR mit `Refs #<Nr>` (nicht `Fixes`). **Nie selbst nach `main`** – das geschieht nur auf Cornelius' Wort „deploy“.
+6. **Übergabe:** im Issue zusammenfassen, wie man prüft, Status auf `status: Review`. Schließen (`status: Done`) tut Cornelius.
+
+Neue Wünsche und Fehler als Issue mit `status: Idee`, Typ (`wunsch`/`fehler`), `bereich: …` und ggf. `spiel: <Name>` anlegen; Größeres als Eltern-Issue `vorhaben` mit Unter-Issues je Schritt.
+
 ## Wichtige Befehle
 
 ```sh
