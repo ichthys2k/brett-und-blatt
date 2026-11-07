@@ -8,9 +8,9 @@ export const MAX_NAME_LENGTH = 16;
  * höchstens 16 Zeichen. Gibt null zurück, wenn nichts übrig bleibt oder der Name
  * unpassend ist.
  */
-export function cleanName(raw: string): string | null {
+export function cleanName(raw: string, maxLength = MAX_NAME_LENGTH): string | null {
   const name = Array.from(raw.normalize('NFC').replace(/[\p{C}]/gu, '').replace(/\s+/g, ' ').trim())
-    .slice(0, MAX_NAME_LENGTH)
+    .slice(0, maxLength)
     .join('')
     .trim();
   if (name.length === 0) return null;

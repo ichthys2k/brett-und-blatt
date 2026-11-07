@@ -53,6 +53,28 @@ export function roundRobinPairs<T>(players: readonly T[]): [T, T][] {
   return pairs;
 }
 
+/**
+ * Spieltage für jeden gegen jeden (Kreisverfahren): je Spieltag spielt jeder höchstens einmal,
+ * bei ungerader Zahl hat einer frei. Die Heimseite wechselt von Spieltag zu Spieltag.
+ */
+export function roundRobinRounds<T>(players: readonly T[]): [T, T][][] {
+  const list: (T | null)[] = [...players];
+  if (list.length % 2 === 1) list.push(null);
+  const rounds: [T, T][][] = [];
+  for (let round = 0; round < list.length - 1; round++) {
+    const pairs: [T, T][] = [];
+    for (let i = 0; i < list.length / 2; i++) {
+      const a = list[i]!;
+      const b = list[list.length - 1 - i]!;
+      // Der feste erste Platz wechselt jeden Spieltag zwischen Heim und Gast.
+      if (a !== null && b !== null) pairs.push((i === 0 ? round % 2 === 0 : i % 2 === 1) ? [a, b] : [b, a]);
+    }
+    rounds.push(pairs);
+    list.splice(1, 0, list.pop()!);
+  }
+  return rounds;
+}
+
 /** Erste K.-o.-Runde: Gruppensieger gegen Zweite; Spieler derselben Gruppe treffen sich erst im Finale. */
 export function koFirstRound(groups: number): [SlotSource, SlotSource][] {
   const top: [SlotSource, SlotSource][] = [];

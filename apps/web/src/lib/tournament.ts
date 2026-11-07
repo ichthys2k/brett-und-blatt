@@ -4,7 +4,7 @@ import { GAME_SERVER } from './server';
 import { storage, type Profile } from './storage';
 
 
-export async function createTournament(settings: TournamentSettings, profile: Profile): Promise<string> {
+export async function createTournament(settings: TournamentSettings & { fields?: number }, profile: Profile): Promise<string> {
   const response = await fetch(`${GAME_SERVER}/turniere`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

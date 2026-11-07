@@ -1,4 +1,4 @@
-import { READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentView } from '@brett-und-blatt/online';
+import { AVATARS, MAX_SCORE, READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentView } from '@brett-und-blatt/online';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Section } from '../components/controls';
 import { ProfileForm, QrCode } from '../components/OnlineParts';
@@ -42,6 +42,29 @@ function formatDate(ms: number): string {
   return new Date(ms).toLocaleDateString('de-DE', { day: 'numeric', month: 'long' });
 }
 
+/** Vor Ort (W-058 Stufe 1): Die Leitung trägt ein, es gibt keine Stichtage. */
+const isLocalView = (view: TournamentView) => view.settings.mode === 'local';
+/** Wird ein Spielstand gezählt (Tore, Sätze, Punkte)? */
+const withScore = (view: TournamentView) => isLocalView(view) && view.settings.result !== undefined && view.settings.result !== 'winner';
+
+function deadlineNote(view: TournamentView, ms: number): string {
+  return isLocalView(view) ? '' : t('tournament.deadline', { date: formatDate(ms) });
+}
+
+function fieldName(view: TournamentView, field: number): string {
+  return t('tournament.field', { label: view.settings.fieldLabel ?? 'Tisch', n: field + 1 });
+}
+
+/** Remis nur, wenn die Leitung es erlaubt und die Form an dieser Stelle keinen Sieger braucht. */
+function drawAllowed(view: TournamentView, m: Match): boolean {
+  return view.settings.draws === true && (m.group !== null || view.settings.format === 'swiss' || view.settings.format === 'league');
+}
+
+/** Zuschauer vor Ort brauchen kein Profil; der Name zählt nur für Eingeschriebene. */
+const GUEST: Profile = { name: 'Gast', avatar: AVATARS[0] };
+
+type Send = ReturnType<typeof useTournament>[1];
+
 /** Alles, was die Teile der Seite gemeinsam brauchen. */
 function useLookup(view: TournamentView) {
   return useMemo(() => {
@@ -65,7 +88,7 @@ function useLookup(view: TournamentView) {
 
 export function TournamentScreen({ code, claim }: { code: string; claim?: string }) {
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
-  const [state, send] = useTournament(code, profile);
+  const [state, send] = useTournament(code, profile ?? GUEST);
   const [board, setBoard] = useState(false);
   const [claimInput, setClaimInput] = useState('');
   const view = state.view;
@@ -149,7 +172,15 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
   }, [view]);
 
   if (!GAME_SERVER) return <Page><p className="text-muted">{t('online.unavailable')}</p></Page>;
-  if (!profile) {
+  // Ohne Profil erst nachsehen, ob es ein Turnier vor Ort ist: Dort genügt das Zuschauen.
+  if (!profile && !view && state.closed === null && state.status !== 'gone') {
+    return (
+      <Page>
+        <p className="text-muted">{t('online.connecting')}</p>
+      </Page>
+    );
+  }
+  if (!profile && !(view && isLocalView(view))) {
     return (
       <Page>
         <h1 className="text-2xl font-bold">🏆 {t('tournament.title')}</h1>
@@ -223,9 +254,10 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
   }
 
   const game = findGame(view.settings.gameId);
+  const local = isLocalView(view);
   const subtitle = (
     <p className="text-sm text-muted">
-      {game?.emoji} {game?.name} · {t(`tournament.format.${view.settings.format}`)} · {t('tournament.leader', { name: view.leaderName })}
+      {local ? `🏟️ ${view.settings.sport ?? ''}` : `${game?.emoji ?? ''} ${game?.name ?? ''}`} · {t(`tournament.format.${view.settings.format}`)} · {t('tournament.leader', { name: view.leaderName })}
       {optionText.length > 0 && <span className="block">{optionText.join(' · ')}</span>}
       {view.rulesChanged && <span className="block text-warning">⚠️ {t('tournament.rulesChanged')}</span>}
     </p>
@@ -236,7 +268,7 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
       <Page>
         {header}
         {subtitle}
-        <SignupView view={view} code={code} send={send} />
+        {local ? <LocalSignup view={view} code={code} send={send} /> : <SignupView view={view} code={code} send={send} />}
         {banners}
       </Page>
     );
@@ -249,6 +281,7 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
           <h1 className="min-w-0 flex-1 truncate text-3xl font-bold">🏆 {view.settings.name}</h1>
           <Button onClick={() => setBoard(false)}>{t('tournament.boardClose')}</Button>
         </div>
+        {local && <FieldBoard view={view} send={null} />}
         <Progress view={view} />
       </div>
     );
@@ -259,7 +292,7 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
       {header}
       {subtitle}
       {view.phase === 'finished' && <Podium view={view} />}
-      <MyStand view={view} send={send} />
+      {local ? <FieldBoard view={view} send={view.isLeader ? send : null} /> : <MyStand view={view} send={send} />}
       <Progress view={view} />
       <History view={view} />
       {view.isLeader && <LeaderTools view={view} code={code} send={send} claim={state.claim} onBoard={() => setBoard(true)} />}
@@ -271,7 +304,199 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
 // ---------------------------------------------------------------------------
 // Einschreibung
 
-function SignupView({ view, code, send }: { view: TournamentView; code: string; send: ReturnType<typeof useTournament>[1] }) {
+/** Einschreibung vor Ort: Die Leitung trägt die Namen ein, Zuschauer sehen die Liste. */
+function LocalSignup({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
+  const min = TOURNAMENT_MIN_PLAYERS[view.settings.format];
+  const [text, setText] = useState('');
+  // Erst leeren, wenn die Namen angekommen sind; bei einer Ablehnung bleibt der Text stehen.
+  const count = view.players.length;
+  useEffect(() => setText(''), [count]);
+  return (
+    <>
+      <Section title={t('tournament.entrants')}>
+        <p className="text-sm text-muted">{t('tournament.entrantsCount', { n: count, min })}</p>
+        <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2 md:grid-cols-3">
+          {view.players.map((p) => (
+            <li key={p.id} className="flex min-w-0 items-center gap-1 rounded-xl border border-line bg-surface py-1 pr-1 pl-2 text-sm">
+              <span className="min-w-0 flex-1 truncate">
+                {p.avatar} {p.name}
+              </span>
+              {view.isLeader && (
+                <button type="button" className="min-h-8 rounded-lg px-2 text-muted hover:bg-line/40" aria-label={`${t('tournament.remove')}: ${p.name}`} onClick={() => send({ type: 'removeEntrant', player: p.id })}>
+                  ✕
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+        {view.isLeader && (
+          <>
+            <form
+              className="space-y-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const names = text.split('\n').map((line) => line.trim()).filter(Boolean);
+                if (names.length > 0) send({ type: 'addEntrants', names });
+              }}
+            >
+              <label className="block space-y-1 text-sm">
+                <span>{t('tournament.addEntrants')}</span>
+                <textarea className="min-h-24 w-full rounded-xl border border-line bg-surface px-3 py-2" rows={4} value={text} onChange={(e) => setText(e.target.value)} />
+              </label>
+              <Button type="submit" className="w-full" disabled={!text.trim()}>
+                ➕ {t('tournament.add')}
+              </Button>
+            </form>
+            <p className="text-xs text-muted">{t('tournament.namesHint')}</p>
+            <Button
+              variant="primary"
+              className="w-full"
+              disabled={count < min}
+              onClick={() => {
+                if (window.confirm(t('tournament.startConfirm'))) send({ type: 'start' });
+              }}
+            >
+              🏁 {t('tournament.start')}
+            </Button>
+          </>
+        )}
+      </Section>
+      {view.isLeader && <SpectatorLink view={view} code={code} />}
+    </>
+  );
+}
+
+function SpectatorLink({ view, code }: { view: TournamentView; code: string }) {
+  const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
+  if (!view.settings.spectators) return <p className="text-sm text-muted">{t('tournament.noSpectators')}</p>;
+  return (
+    <Section title={t('tournament.spectatorLink')}>
+      <p className="text-sm text-muted">{t('tournament.spectatorHint')}</p>
+      <div className="mx-auto w-44">
+        <QrCode text={link} label={t('tournament.spectatorLink')} />
+      </div>
+      <Button className="w-full" onClick={() => navigator.clipboard?.writeText(link)}>
+        🔗 {t('tournament.copy')}
+      </Button>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Vor Ort: Tische und Ergebnisse
+
+/** Was gerade an den Tischen läuft und was als Nächstes dran ist; die Leitung trägt hier ein. */
+function FieldBoard({ view, send }: { view: TournamentView; send: Send | null }) {
+  const { label } = useLookup(view);
+  if (view.phase !== 'running') return null;
+  const running = view.matches.filter((m) => m.status === 'running').sort((a, b) => (a.field ?? 0) - (b.field ?? 0));
+  const next = view.matches.filter((m) => m.status === 'open' && m.slots.every((s) => s.player)).sort((a, b) => a.stage - b.stage);
+  const shown = view.fields > 0 ? next.slice(0, 8) : next;
+  const names = (m: Match) => (
+    <p className="min-w-0 truncate font-semibold">
+      {label(m.slots[0].player)} <span className="font-normal text-muted">–</span> {label(m.slots[1].player)}
+    </p>
+  );
+  return (
+    <>
+      {running.length > 0 && (
+        <Section title={t('tournament.atFields')}>
+          <ul className="grid gap-2 md:grid-cols-2">
+            {running.map((m) => (
+              <li key={m.id} className="space-y-2 rounded-2xl border-2 border-accent bg-accent/5 p-3">
+                <p className="flex items-center justify-between gap-2 text-xs text-muted">
+                  <span className="rounded-full bg-accent px-2 py-0.5 font-semibold text-white">📍 {fieldName(view, m.field ?? 0)}</span>
+                  <span className="truncate">{matchTitle(view, m)}</span>
+                </p>
+                {names(m)}
+                {send && <ResultForm key={m.id} view={view} m={m} send={send} />}
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+      <Section title={`${t('tournament.upNext')} (${next.length})`}>
+        {next.length === 0 && <p className="text-sm text-muted">{t('tournament.noneOpen')}</p>}
+        <ul className="space-y-2">
+          {shown.map((m) => (
+            <li key={m.id} className="space-y-1 rounded-xl border border-line bg-surface p-2 text-sm">
+              <p className="truncate text-xs text-muted">{matchTitle(view, m)}</p>
+              {names(m)}
+              {send &&
+                (view.fields > 0 ? (
+                  <details>
+                    <summary className="cursor-pointer text-xs text-muted">{t('tournament.enter')}</summary>
+                    <ResultForm key={m.id} view={view} m={m} send={send} />
+                  </details>
+                ) : (
+                  <ResultForm key={m.id} view={view} m={m} send={send} />
+                ))}
+            </li>
+          ))}
+        </ul>
+      </Section>
+    </>
+  );
+}
+
+/** Spielstand oder Sieger eintragen; auch zum Berichtigen eines Ergebnisses. */
+function ResultForm({ view, m, send, onDone }: { view: TournamentView; m: Match; send: Send; onDone?: () => void }) {
+  const { label } = useLookup(view);
+  const [a, setA] = useState(m.outcome?.score?.[0]?.toString() ?? '');
+  const [b, setB] = useState(m.outcome?.score?.[1]?.toString() ?? '');
+  const enter = (message: { score: [number, number] } | { winner: 0 | 1 | 'draw' }) => {
+    send({ type: 'enterResult', match: m.id, ...message });
+    onDone?.();
+  };
+  if (!withScore(view)) {
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        {([0, 1] as const).map((side) => (
+          <Button key={side} className="text-xs" onClick={() => enter({ winner: side })}>
+            🏅 {t('tournament.winner', { name: label(m.slots[side].player) })}
+          </Button>
+        ))}
+        {drawAllowed(view, m) && (
+          <Button className="col-span-2 text-xs" onClick={() => enter({ winner: 'draw' })}>
+            {t('tournament.draw')}
+          </Button>
+        )}
+      </div>
+    );
+  }
+  const unit = t(`tournament.result.${view.settings.result ?? 'goals'}`);
+  const valid = [a, b].every((v) => /^\d{1,3}$/.test(v) && Number(v) <= MAX_SCORE) && (a !== b || drawAllowed(view, m));
+  const input = (value: string, set: (v: string) => void, side: 0 | 1) => (
+    <input
+      className="min-h-11 w-16 rounded-xl border border-line bg-surface px-2 text-center text-lg tabular-nums"
+      type="number"
+      inputMode="numeric"
+      min={0}
+      max={MAX_SCORE}
+      aria-label={`${unit} ${label(m.slots[side].player)}`}
+      value={value}
+      onChange={(e) => set(e.target.value)}
+    />
+  );
+  return (
+    <form
+      className="flex items-center gap-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (valid) enter({ score: [Number(a), Number(b)] });
+      }}
+    >
+      {input(a, setA, 0)}
+      <span className="text-lg font-bold">:</span>
+      {input(b, setB, 1)}
+      <Button type="submit" variant="primary" className="flex-1 text-sm" disabled={!valid}>
+        {t('tournament.enter')}
+      </Button>
+    </form>
+  );
+}
+
+function SignupView({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
   const min = TOURNAMENT_MIN_PLAYERS[view.settings.format];
   const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
   return (
@@ -322,7 +547,7 @@ function SignupView({ view, code, send }: { view: TournamentView; code: string; 
 // ---------------------------------------------------------------------------
 // Mein Stand
 
-function MyStand({ view, send }: { view: TournamentView; send: ReturnType<typeof useTournament>[1] }) {
+function MyStand({ view, send }: { view: TournamentView; send: Send }) {
   const { label } = useLookup(view);
   // Die Serverzeit als Bezug; alle 15 Sekunden neu, damit „Bereit“ sichtbar verfällt.
   const [offset] = useState(() => view.serverNow - Date.now());
@@ -388,6 +613,7 @@ function MyStand({ view, send }: { view: TournamentView; send: ReturnType<typeof
 function matchTitle(view: TournamentView, m: Match): string {
   if (m.group !== null) return t('tournament.group', { name: GROUP_LETTERS[m.group]! });
   if (view.stages[m.stage]?.kind === 'swiss') return t('tournament.round', { n: m.stage + 1 });
+  if (view.stages[m.stage]?.kind === 'league') return t('tournament.matchday', { n: m.stage + 1 });
   return koMatchName(m.id);
 }
 
@@ -406,7 +632,7 @@ function Progress({ view }: { view: TournamentView }) {
           {view.groups.map((group, index) => (
             <div key={index} className="min-w-0 space-y-1">
               <h3 className="font-semibold">
-                {t('tournament.group', { name: GROUP_LETTERS[index]! })} <span className="text-xs font-normal text-muted">({group.settled ? t('tournament.final') : `${t('tournament.provisional')}, ${t('tournament.deadline', { date: formatDate(view.stages[0]!.deadline) })}`})</span>
+                {t('tournament.group', { name: GROUP_LETTERS[index]! })} <span className="text-xs font-normal text-muted">({group.settled ? t('tournament.final') : [t('tournament.provisional'), deadlineNote(view, view.stages[0]!.deadline)].filter(Boolean).join(', ')})</span>
               </h3>
               <Table view={view} rows={group.table} highlight={2} />
               <GroupMatches view={view} group={index} />
@@ -419,9 +645,15 @@ function Progress({ view }: { view: TournamentView }) {
     <>
       <Section title={t('tournament.table')}>
         <p className="text-xs text-muted">
-          {t('tournament.round', { n: Math.min(view.currentStage + 1, view.stages.length) })} / {view.stages.length} · {t('tournament.deadline', { date: formatDate(view.stages[view.currentStage]?.deadline ?? 0) })} · {view.phase === 'finished' ? t('tournament.final') : t('tournament.provisional')}
+          {[
+            `${t(view.settings.format === 'league' ? 'tournament.matchday' : 'tournament.round', { n: Math.min(view.currentStage + 1, view.stages.length) })} / ${view.stages.length}`,
+            deadlineNote(view, view.stages[view.currentStage]?.deadline ?? 0),
+            view.phase === 'finished' ? t('tournament.final') : t('tournament.provisional'),
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         </p>
-        <Table view={view} rows={view.swissTable} highlight={view.phase === 'finished' ? 1 : 0} buchholz />
+        <Table view={view} rows={view.table.length > 0 ? view.table : view.swissTable} highlight={view.phase === 'finished' ? 1 : 0} buchholz={view.settings.format === 'swiss'} />
       </Section>
       <SwissRounds view={view} />
     </>
@@ -430,6 +662,7 @@ function Progress({ view }: { view: TournamentView }) {
 
 function Table({ view, rows, highlight, buchholz = false }: { view: TournamentView; rows: StandingRow[]; highlight: number; buchholz?: boolean }) {
   const { players, label } = useLookup(view);
+  const score = withScore(view);
   const cell = 'px-1 py-1 text-center tabular-nums';
   return (
     <table className="w-full table-fixed text-sm">
@@ -442,6 +675,8 @@ function Table({ view, rows, highlight, buchholz = false }: { view: TournamentVi
           <th className="w-7">{t('tournament.table.draws')}</th>
           <th className="w-7">{t('tournament.table.losses')}</th>
           {buchholz && <th className="w-8">{t('tournament.table.buchholz')}</th>}
+          {score && <th className="w-12">{t('tournament.table.score')}</th>}
+          {score && <th className="w-9">{t('tournament.table.diff')}</th>}
           <th className="w-8">{t('tournament.table.points')}</th>
         </tr>
       </thead>
@@ -457,6 +692,12 @@ function Table({ view, rows, highlight, buchholz = false }: { view: TournamentVi
               <td className={cell}>{row.draws}</td>
               <td className={cell}>{row.losses}</td>
               {buchholz && <td className={cell}>{row.buchholz}</td>}
+              {score && (
+                <td className={cell}>
+                  {row.scored}:{row.conceded}
+                </td>
+              )}
+              {score && <td className={cell}>{row.scored - row.conceded > 0 ? `+${row.scored - row.conceded}` : row.scored - row.conceded}</td>}
               <td className={`${cell} font-bold`}>{row.points}</td>
             </tr>
           );
@@ -488,15 +729,18 @@ function MatchCard({ view, m, title }: { view: TournamentView; m: Match; title?:
         const won = m.outcome?.winner === side;
         const lost = m.outcome && m.outcome.winner !== null && !won;
         return (
-          <p key={side} className={`truncate ${won ? 'font-bold' : ''} ${lost ? 'text-muted' : ''} ${slot.player ? '' : 'text-xs text-muted italic'}`}>
-            {won && '🏅 '}
-            {m.outcome?.bye && !slot.player ? t('tournament.bye') : slotLabel(slot)}
+          <p key={side} className={`flex gap-2 ${won ? 'font-bold' : ''} ${lost ? 'text-muted' : ''} ${slot.player ? '' : 'text-xs text-muted italic'}`}>
+            <span className="min-w-0 flex-1 truncate">
+              {won && '🏅 '}
+              {m.outcome?.bye && !slot.player ? t('tournament.bye') : slotLabel(slot)}
+            </span>
+            {m.outcome?.score && <span className="tabular-nums">{m.outcome.score[side]}</span>}
           </p>
         );
       })}
       {m.status === 'running' && (
         <p className="mt-1 flex items-center justify-between gap-2 text-xs font-semibold text-accent">
-          <span>🔴 {t('tournament.live')}</span>
+          <span>{m.field !== undefined ? `📍 ${fieldName(view, m.field)}` : `🔴 ${t('tournament.live')}`}</span>
           {m.roomCode && !mine && (
             <button type="button" className="underline" onClick={() => navigate(paths.room(m.roomCode!))}>
               {t('tournament.watch')}
@@ -527,11 +771,13 @@ function GroupMatches({ view, group }: { view: TournamentView; group: number }) 
 }
 
 function SwissRounds({ view }: { view: TournamentView }) {
-  const rounds = [...new Set(view.matches.map((m) => m.stage))].sort((a, b) => b - a);
+  // Eine Liga steht von Anfang an fest und liest sich vorwärts; im Schweizer System zuerst die neueste Runde.
+  const league = view.settings.format === 'league';
+  const rounds = [...new Set(view.matches.map((m) => m.stage))].sort((a, b) => (league ? a - b : b - a));
   return (
     <>
       {rounds.map((stage) => (
-        <Section key={stage} title={t('tournament.round', { n: stage + 1 })}>
+        <Section key={stage} title={t(league ? 'tournament.matchday' : 'tournament.round', { n: stage + 1 })}>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
             {view.matches
               .filter((m) => m.stage === stage)
@@ -581,7 +827,7 @@ function Bracket({ view, title, hint, columns }: { view: TournamentView; title: 
             </button>
           ))}
         </div>
-        <p className="mb-1 text-xs text-muted">{t('tournament.deadline', { date: formatDate(shown.deadline) })}</p>
+        {!isLocalView(view) && <p className="mb-1 text-xs text-muted">{deadlineNote(view, shown.deadline)}</p>}
         <div className="space-y-2">
           {shown.matches.map((m) => (
             <MatchCard key={m.id} view={view} m={m} title={koMatchName(m.id)} />
@@ -592,7 +838,7 @@ function Bracket({ view, title, hint, columns }: { view: TournamentView; title: 
         {columns.map((column) => (
           <div key={column.key} className="flex min-w-0 flex-1 flex-col">
             <p className="truncate text-center text-xs font-semibold">{column.label}</p>
-            <p className="mb-2 truncate text-center text-[11px] text-muted">{formatDate(column.deadline)}</p>
+            {!isLocalView(view) && <p className="mb-2 truncate text-center text-[11px] text-muted">{formatDate(column.deadline)}</p>}
             <div className="flex flex-1 flex-col justify-around gap-2">
               {column.matches.map((m) => (
                 <MatchCard key={m.id} view={view} m={m} title={m.thirdPlace ? t('tournament.thirdPlace') : undefined} />
@@ -662,6 +908,8 @@ function History({ view }: { view: TournamentView }) {
     .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0))
     .slice(0, 6);
   const open = view.matches.filter((m) => m.status === 'open');
+  // Vor Ort zeigt die Tischübersicht schon, was noch offen ist.
+  const showOpen = view.phase === 'running' && !isLocalView(view);
   return (
     <div className="grid gap-5 md:grid-cols-2">
       <Section title={t('tournament.recent')}>
@@ -673,13 +921,14 @@ function History({ view }: { view: TournamentView }) {
             return (
               <li key={m.id} className="truncate">
                 {winner === null ? `${label(m.slots[0].player)} – ${label(m.slots[1].player)}` : t('tournament.beat', { a: label(m.slots[winner].player), b: label(m.slots[1 - winner]!.player) })}
+                {m.outcome!.score && <span className="tabular-nums"> {(winner === 1 ? [...m.outcome!.score].reverse() : m.outcome!.score).join(':')}</span>}
                 {note && <span className="text-muted"> ({note})</span>}
               </li>
             );
           })}
         </ul>
       </Section>
-      {view.phase === 'running' && (
+      {showOpen && (
         <Section title={`${t('tournament.open')} (${open.length})`}>
           <ul className="max-h-48 space-y-1 overflow-y-auto text-sm">
             {open.map((m) => (
@@ -697,20 +946,54 @@ function History({ view }: { view: TournamentView }) {
 // ---------------------------------------------------------------------------
 // Leitung
 
-function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentView; code: string; send: ReturnType<typeof useTournament>[1]; claim: { player: string; code: string } | null; onBoard: () => void }) {
+function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentView; code: string; send: Send; claim: { player: string; code: string } | null; onBoard: () => void }) {
   const { label, players } = useLookup(view);
   const [matchId, setMatchId] = useState('');
   const match = view.matches.find((m) => m.id === matchId);
   const candidates = view.matches.filter((m) => m.status !== 'waiting' && m.slots[0].player && m.slots[1].player);
   const claimLink = claim && `${window.location.origin}${window.location.pathname}${paths.tournament(code)}?neu=${claim.code}`;
   const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
+  const local = isLocalView(view);
   return (
     <Section title={t('tournament.tools')}>
       <Button className="w-full" onClick={onBoard}>
         📺 {t('tournament.board')}
       </Button>
+      {local && <SpectatorLink view={view} code={code} />}
+      {local && view.phase === 'running' && (
+        <label className="block space-y-1 text-sm">
+          <span>{t('tournament.fieldCount')}</span>
+          <select className={FIELD} value={view.fields} onChange={(e) => send({ type: 'setFields', count: Number(e.target.value) })}>
+            {Array.from({ length: 33 }, (_, n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {view.phase !== 'signup' && local && (
+        <div className="space-y-2">
+          <label className="block space-y-1 text-sm">
+            <span>{t('tournament.correct')}</span>
+            <select className={FIELD} value={matchId} onChange={(e) => setMatchId(e.target.value)}>
+              <option value="">{t('tournament.pickMatch')}</option>
+              {view.matches
+                .filter((m) => m.outcome && !m.outcome.bye && m.slots[0].player && m.slots[1].player)
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {matchTitle(view, m)}: {players.get(m.slots[0].player!)?.name} – {players.get(m.slots[1].player!)?.name}
+                    {m.outcome?.score ? ` (${m.outcome.score.join(':')})` : ''}
+                  </option>
+                ))}
+            </select>
+          </label>
+          {match && <ResultForm key={match.id} view={view} m={match} send={send} onDone={() => setMatchId('')} />}
+        </div>
+      )}
       {view.phase === 'running' && (
         <>
+          {!local && (
           <div className="grid grid-cols-3 gap-2">
             {[1, 3, 7].map((n) => (
               <Button key={n} className="text-xs" onClick={() => send({ type: 'extend', days: n })}>
@@ -718,6 +1001,8 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
               </Button>
             ))}
           </div>
+          )}
+          {!local && (
           <div className="space-y-2">
             <label className="block space-y-1 text-sm">
               <span>{t('tournament.setResult')}</span>
@@ -749,13 +1034,16 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
               </div>
             )}
           </div>
+          )}
           <ul className="space-y-1">
             {view.players.map((p) => (
               <li key={p.id} className="flex items-center gap-2 text-sm">
                 <span className={`min-w-0 flex-1 truncate ${p.withdrawn ? 'text-muted line-through' : ''}`}>{label(p.id)}</span>
-                <Button className="text-xs" onClick={() => send({ type: 'reissue', player: p.id })}>
-                  🔑 {t('tournament.reissue')}
-                </Button>
+                {!local && (
+                  <Button className="text-xs" onClick={() => send({ type: 'reissue', player: p.id })}>
+                    🔑 {t('tournament.reissue')}
+                  </Button>
+                )}
                 {!p.withdrawn && (
                   <Button
                     className="text-xs"

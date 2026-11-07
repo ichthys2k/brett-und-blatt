@@ -156,6 +156,7 @@ Jede Stufe ist für sich nutzbar und geht als eigenes Issue mit `status: Idee` a
 Kern in Format, Wertung und Austragung trennen, Schnappschuss Version 2 mit Migration, alle heutigen Tests und `apps/server/scripts/turnier.mjs` bleiben grün. Keine sichtbare Änderung. Ergebnis mit optionalem Spielstand.
 
 ### Stufe 1 – Vor-Ort-Turnier, Grundfunktionen (L)
+**Umgesetzt am 7.11.2026** (#120): Anlegen „Vor Ort“ mit Vorlagen (Tischkicker, Fußball, Volleyball, Tischtennis, Badminton, Darts, Brettspiel, eigene), Ergebnisart Sieger/Tore/Sätze/Punkte, Remis-Schalter, Name und Zahl der Tische (0–32, auch während des Turniers änderbar), Gruppenzahl wählbar, Bundesliga-Modus mit Rückrunde (auch online), Teilnehmerliste als Text (bis 128, ohne Gerät), Leitstand „Läuft gerade“/„Als Nächstes“ mit Eintragen am Tisch, Berichtigen, Rückzug, Große Ansicht, Zuschaulink mit QR (ohne Profil lesbar), Tabelle mit Toren und Differenz, Aufbewahrung von Ligen ein Jahr. Nicht dabei: Nachmelden nach dem Start (Abmelden geht über „Zurückziehen“) und eigene Punkte je Sieg/Remis (die Wertung steht schon im Datenmodell, Oberfläche folgt). Code in `packages/online/src/tournament/local-play.ts`.
 - „Turnier für draußen“ beim Anlegen: Sportart frei oder aus Vorlage, Ergebnisart, Remis ja/nein, Punkte.
 - Teilnehmer als Namensliste eintippen oder einfügen, Einzel oder Teams, Nachmelden bis zum Start, Abmelden während.
 - Formen: K.-o., Doppel-K.-o., **Bundesliga-Modus** (Hinrunde, optional Rückrunde), Gruppen + K.-o. (frei), Schweizer System.
@@ -190,14 +191,16 @@ Zufallspartner (DYP, Monster-DYP), Last One Standing, Liga über Wochen mit Spie
 ### Stufe 6 – Ohne Netz (L)
 Leitung läuft vollständig im Browser (der Kern ist schon ohne Server lauffähig), Zustand lokal gespeichert, Abgleich mit dem Server, sobald Netz da ist; Helfer im selben Raum ohne Internet bleiben außen vor (bräuchte lokales Netz, nicht vorgesehen).
 
-## Zu entscheiden (Cornelius)
+## Entscheidungen (7.11.2026)
 
-1. **Ob und wie weiter:** Stufe 0 und 1 als nächste Aufträge freigeben, oder zuerst Stufe 3 (mehr Brett-&-Blatt-Spiele im Turnier)?
-2. **Zuschaulink:** Für Vor-Ort-Turniere ein öffentlicher Lese-Link (Namen und Ergebnisse für jeden mit Link sichtbar)? Vorschlag: ja, von der Leitung je Turnier einschaltbar; für Online-Turniere bleibt es bei der Entscheidung vom 2.11.2026.
-3. **Namen:** Klarnamen zulassen oder nur Spitznamen/Vornamen empfehlen? Vorschlag: Hinweis beim Eintippen, keine technische Sperre.
-4. **Aufbewahrung:** 30 Tage nach Ende reichen für Einzelturniere; Ligen und Serien bräuchten länger (z. B. 1 Jahr nach letzter Aktivität).
-5. **Größe:** Obergrenze 128 Teilnehmer statt heute 32?
-6. **Druck:** Druckansichten im Browser genügen (kein PDF-Paket)?
+Cornelius hat alle Vorschläge übernommen:
+
+1. **Reihenfolge:** Stufe 0 (erledigt), dann Stufe 1.
+2. **Zuschaulink:** Für Vor-Ort-Turniere schaltet die Leitung je Turnier einen öffentlichen Lese-Link ein (Namen und Ergebnisse für jeden mit Link sichtbar). Für Online-Turniere bleibt es bei der Entscheidung vom 2.11.2026: kein Zuschaulink.
+3. **Namen:** Klarnamen sind erlaubt; beim Eintippen steht ein Hinweis, lieber Vor- oder Spitznamen zu nehmen. Keine technische Sperre (der Namensfilter bleibt).
+4. **Aufbewahrung:** Einzelturniere 30 Tage nach Ende, Ligen 1 Jahr nach der letzten Aktivität.
+5. **Größe:** höchstens 128 Teilnehmer.
+6. **Druck:** nur Druckansichten im Browser („Als PDF speichern“), kein PDF-Paket.
 
 ## Offene Punkte
 
