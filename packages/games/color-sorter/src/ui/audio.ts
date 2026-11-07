@@ -12,7 +12,7 @@ function getBaseUrl(): string {
 
 const player = new SoundPlayer(`${getBaseUrl().replace(/\/$/, '')}/klaenge/`);
 
-/** Kombi-Ansagen mit den Narrenhof-Namen. Farb-Fünfling hat noch keine eigene Aufnahme. */
+/** Kombi-Ansagen mit den Narrenhof-Namen. */
 const HAND_SOUNDS: Record<HandType, SoundName> = {
   high: 'fs-hand-hohe-karte',
   pair: 'fs-hand-paar',
@@ -25,7 +25,7 @@ const HAND_SOUNDS: Record<HandType, SoundName> = {
   straightFlush: 'fs-hand-farbstrasse',
   five: 'fs-hand-fuenfling',
   flushHouse: 'fs-hand-full-house-in-farbe',
-  flushFive: 'fs-hand-fuenfling',
+  flushFive: 'fs-hand-farb-fuenfling',
 };
 
 export function playEffect(name: SoundName, { volume = 1, delay = 0 }: { volume?: number; delay?: number } = {}): void {
