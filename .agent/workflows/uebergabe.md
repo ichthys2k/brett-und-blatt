@@ -7,4 +7,4 @@ description: Trägt den aktuellen Stand am Ende einer Arbeitssitzung in die Übe
 3. Aufgabenstatus im zugehörigen GitHub-Issue pflegen. Neue Wünsche und Fehler als `status: Idee` eintragen; nur Cornelius setzt `status: Ready`. Agenten übernehmen ausschließlich Ready-Issues und reservieren sie vor Arbeitsbeginn durch einen Kommentar mit Konto und Zweig (keine Assignees oder Labels als Reservierung). Nach der Arbeit `status: Review` setzen; Cornelius schließt nach Prüfung mit `status: Done`.
 4. Den Plan des betroffenen Spiels unter `docs/spiele/` nachtragen, ggf. den Fahrplan in `docs/KONZEPT.md`.
 5. Nur wenn sich Kernregeln oder der Fahrplan-Stand ändern: `AGENTS.md` kurz anpassen.
-6. Änderungen als Vorschlag zeigen. Commit und Push nur auf Cornelius' ausdrückliches Wort.
+6. Arbeitszweig committen, hochladen und den PR (mit `Refs #…`) aktualisieren. Nach `main` nur auf Cornelius' Wort „deploy“.
