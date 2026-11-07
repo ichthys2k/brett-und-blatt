@@ -23,7 +23,7 @@ import {
   type StoredBackup,
   type TournamentServerMessage,
   type TournamentSettings,
-  type TournamentSnapshot,
+  type StoredTournamentSnapshot,
 } from '@brett-und-blatt/online';
 import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
 import { bibelQuizKatalog } from './bibelquiz';
@@ -560,7 +560,7 @@ export class TournamentRoom extends DurableObject<Env> {
     super(ctx, env);
     ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong'));
     ctx.blockConcurrencyWhile(async () => {
-      const snapshot = await ctx.storage.get<TournamentSnapshot>('tournament');
+      const snapshot = await ctx.storage.get<StoredTournamentSnapshot>('tournament');
       if (snapshot) this.tournament = Tournament.restore(snapshot, this.deps());
     });
   }

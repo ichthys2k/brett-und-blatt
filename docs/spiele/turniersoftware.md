@@ -151,6 +151,8 @@ Vorhanden und bleibend: WM-Form, Schweizer System, K.-o., Doppel-K.-o. Neu:
 Jede Stufe ist für sich nutzbar und geht als eigenes Issue mit `status: Idee` an Cornelius.
 
 ### Stufe 0 – Umbau (M)
+**Umgesetzt am 7.11.2026** (Aufteilung siehe [`turnier.md`](turnier.md#umsetzung)). Geprüft mit einem Vergleich alter gegen neuer Kern über 78 Zufallsturniere aller Formen (gleiche Schnappschüsse und Sichten nach jedem Schritt) und dem Rauchtest gegen den lokalen Server für alle vier Formen.
+
 Kern in Format, Wertung und Austragung trennen, Schnappschuss Version 2 mit Migration, alle heutigen Tests und `apps/server/scripts/turnier.mjs` bleiben grün. Keine sichtbare Änderung. Ergebnis mit optionalem Spielstand.
 
 ### Stufe 1 – Vor-Ort-Turnier, Grundfunktionen (L)

@@ -14,6 +14,10 @@ import {
   swissPairing,
   swissRoundsFor,
   parseTournamentSettings,
+  FORMATS,
+  defaultScoring,
+  standings,
+  type TournamentSnapshotV1,
   type TournamentFormat,
   type TournamentMatch,
   type TournamentSettings,
@@ -522,5 +526,40 @@ describe('Zugang und Geheimnisse', () => {
     t.start(LEADER);
     const copy = Tournament.restore(JSON.parse(JSON.stringify(t.snapshot())), { now: () => clock.now, randomClaim: () => 'X' });
     expect(copy.view(LEADER)).toEqual(t.view(LEADER));
+  });
+});
+
+describe('Umbau (W-058 Stufe 0)', () => {
+  it('ein gespeichertes Turnier von Version 1 spielt unverändert weiter', () => {
+    const { t, clock } = setup(8, 'swiss');
+    t.start(LEADER);
+    playAllOpen(t, 0);
+    const { version: _v, scoring: _s, ...rest } = JSON.parse(JSON.stringify(t.snapshot()));
+    const old: TournamentSnapshotV1 = { ...rest, version: 1 };
+    const copy = Tournament.restore(old, { now: () => clock.now, randomClaim: () => 'X' });
+    expect(copy.snapshot().version).toBe(2);
+    expect(copy.snapshot().scoring).toEqual(defaultScoring('swiss'));
+    expect(copy.view(LEADER)).toEqual(t.view(LEADER));
+    playAllOpen(copy, 1);
+    playAllOpen(t, 1);
+    expect(copy.view(LEADER)).toEqual(t.view(LEADER));
+  });
+
+  it('jede Form nennt ihre Mindestzahl', () => {
+    expect(Object.fromEntries(Object.entries(FORMATS).map(([id, f]) => [id, f.minPlayers]))).toEqual({ world: 6, knockout: 4, double: 4, swiss: 4 });
+  });
+
+  it('die Wertung kennt Spielstand, Tordifferenz und erzielte Tore', () => {
+    const match = (id: string, a: string, b: string, score: [number, number]): TournamentMatch => ({
+      id, stage: 0, group: 0, slots: [{ player: a }, { player: b }], status: 'done', openedAt: 0, readyAt: [null, null], everReady: [true, true], roomCode: null, replays: 0,
+      outcome: { winner: score[0] > score[1] ? 0 : score[0] < score[1] ? 1 : null, draw: score[0] === score[1], walkover: false, score },
+    });
+    // a und b gewinnen je eine Partie und spielen unentschieden; a mit höherer Differenz, c verliert alles.
+    const matches = [match('1', 'a', 'c', [5, 0]), match('2', 'b', 'c', [2, 1]), match('3', 'a', 'b', [1, 1])];
+    const rules = { win: 3, draw: 1, loss: 0, tiebreaks: ['difference' as const, 'scored' as const] };
+    const table = standings(['b', 'c', 'a'], matches, 'seed', rules);
+    expect(table.map((r) => r.player)).toEqual(['a', 'b', 'c']);
+    expect(table[0]).toMatchObject({ points: 4, scored: 6, conceded: 1 });
+    expect(table[2]).toMatchObject({ points: 0, scored: 1, conceded: 7 });
   });
 });
