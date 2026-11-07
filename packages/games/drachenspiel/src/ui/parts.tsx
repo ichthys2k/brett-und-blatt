@@ -138,11 +138,12 @@ export function GameLog({ entries }: { entries: string[] }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" className="ds-badge ds-log-toggle" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-        📜 Verlauf
+      <button type="button" className="ds-badge ds-log-toggle" aria-expanded={open} aria-label="Verlauf" onClick={() => setOpen((value) => !value)}>
+        📜<span className="ds-log-label"> Verlauf</span>
       </button>
       {open && (
-        <div className="ds-log" role="log" aria-label="Spielverlauf">
+        // Antippen schließt den Verlauf wieder, damit er nicht über dem Spielfeld liegen bleibt.
+        <div className="ds-log" role="log" aria-label="Spielverlauf" onClick={() => setOpen(false)}>
           {entries.length === 0 ? <p>Noch nichts passiert.</p> : [...entries].reverse().map((entry, index) => <p key={entries.length - index}>{entry}</p>)}
         </div>
       )}

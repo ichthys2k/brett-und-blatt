@@ -461,7 +461,10 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   // Zielpfeil: beim Ziehen zum Finger, sonst zur Maus; über einem erlaubten Ziel rastet er ein.
   const aiming = draggedMinionId !== null || (draggedCardIdx !== null && spellMoves.length > 0) || selectedAttackerId !== null || selectedSpell !== null;
   let arrow: ArrowPoints | null = null;
-  const arenaBox = aiming ? arenaRef.current?.getBoundingClientRect() : undefined;
+  const arenaEl = aiming ? arenaRef.current : null;
+  const arenaRect = arenaEl?.getBoundingClientRect();
+  // Die Arena kann auf kleinen Bildschirmen rollen; der Pfeil liegt im gerollten Inhalt.
+  const arenaBox = arenaEl && arenaRect ? { left: arenaRect.left - arenaEl.scrollLeft, top: arenaRect.top - arenaEl.scrollTop } : undefined;
   if (arenaBox) {
     const sourceEl = effectiveAttackerId === HERO_ATTACKER ? heroElsRef.current.get(mySeat) : effectiveAttackerId ? minionElsRef.current.get(effectiveAttackerId) : activeSpellIdx !== null ? handElsRef.current.get(activeSpellIdx) : undefined;
     const pointer = dragState.isDragging ? dragState.currentPoint : aimPoint;

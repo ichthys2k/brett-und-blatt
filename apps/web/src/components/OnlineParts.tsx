@@ -205,22 +205,23 @@ export function ReactionBar({ onReact, onSay, phrases: tablePhrases = PHRASES }:
   };
 
   return (
-    <div className="order-3 space-y-2 px-3 pt-2" aria-label={t('online.reactions')}>
-      <div className="flex flex-wrap justify-center gap-1">
+    <div className="order-3 space-y-2 px-3 pt-2 short:pt-1" aria-label={t('online.reactions')}>
+      {/* Hochformat: eine einzige Zeile (zur Not seitlich wischen), damit das Spielfeld darüber Platz behält. */}
+      <div className="flex justify-center-safe gap-1 overflow-x-auto overscroll-x-contain side:flex-wrap side:justify-center side:overflow-visible">
+        <button type="button" aria-expanded={phrases} aria-label={t('online.phrases')} className="grid size-9 flex-none place-items-center rounded-full bg-surface-2 text-lg hover:bg-line side:order-last side:size-10 side:text-xl" onClick={() => setPhrases(!phrases)}>
+          💬
+        </button>
         {REACTIONS.map((emoji) => (
           <button
             key={emoji}
             type="button"
             disabled={disabled}
-            className="grid size-10 place-items-center rounded-full bg-surface-2 text-xl hover:bg-line disabled:pointer-events-none disabled:opacity-40"
+            className="grid size-9 flex-none place-items-center rounded-full bg-surface-2 text-lg hover:bg-line disabled:pointer-events-none disabled:opacity-40 side:size-10 side:text-xl"
             onClick={() => trigger(() => onReact(emoji))}
           >
             {emoji}
           </button>
         ))}
-        <button type="button" aria-expanded={phrases} className="grid size-10 place-items-center rounded-full bg-surface-2 text-xl hover:bg-line" onClick={() => setPhrases(!phrases)}>
-          💬
-        </button>
       </div>
       {isRateLimited && (
         <p className="text-center text-xs text-muted" role="status">
