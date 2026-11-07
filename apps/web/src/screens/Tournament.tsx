@@ -921,7 +921,7 @@ function History({ view }: { view: TournamentView }) {
             return (
               <li key={m.id} className="truncate">
                 {winner === null ? `${label(m.slots[0].player)} – ${label(m.slots[1].player)}` : t('tournament.beat', { a: label(m.slots[winner].player), b: label(m.slots[1 - winner]!.player) })}
-                {m.outcome!.score && <span className="tabular-nums"> {m.outcome!.score.join(':')}</span>}
+                {m.outcome!.score && <span className="tabular-nums"> {(winner === 1 ? [...m.outcome!.score].reverse() : m.outcome!.score).join(':')}</span>}
                 {note && <span className="text-muted"> ({note})</span>}
               </li>
             );

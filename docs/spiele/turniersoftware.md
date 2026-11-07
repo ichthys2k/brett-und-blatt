@@ -156,6 +156,7 @@ Jede Stufe ist für sich nutzbar und geht als eigenes Issue mit `status: Idee` a
 Kern in Format, Wertung und Austragung trennen, Schnappschuss Version 2 mit Migration, alle heutigen Tests und `apps/server/scripts/turnier.mjs` bleiben grün. Keine sichtbare Änderung. Ergebnis mit optionalem Spielstand.
 
 ### Stufe 1 – Vor-Ort-Turnier, Grundfunktionen (L)
+**Umgesetzt am 7.11.2026** (#120): Anlegen „Vor Ort“ mit Vorlagen (Tischkicker, Fußball, Volleyball, Tischtennis, Badminton, Darts, Brettspiel, eigene), Ergebnisart Sieger/Tore/Sätze/Punkte, Remis-Schalter, Name und Zahl der Tische (0–32, auch während des Turniers änderbar), Gruppenzahl wählbar, Bundesliga-Modus mit Rückrunde (auch online), Teilnehmerliste als Text (bis 128, ohne Gerät), Leitstand „Läuft gerade“/„Als Nächstes“ mit Eintragen am Tisch, Berichtigen, Rückzug, Große Ansicht, Zuschaulink mit QR (ohne Profil lesbar), Tabelle mit Toren und Differenz, Aufbewahrung von Ligen ein Jahr. Nicht dabei: Nachmelden nach dem Start (Abmelden geht über „Zurückziehen“) und eigene Punkte je Sieg/Remis (die Wertung steht schon im Datenmodell, Oberfläche folgt). Code in `packages/online/src/tournament/local-play.ts`.
 - „Turnier für draußen“ beim Anlegen: Sportart frei oder aus Vorlage, Ergebnisart, Remis ja/nein, Punkte.
 - Teilnehmer als Namensliste eintippen oder einfügen, Einzel oder Teams, Nachmelden bis zum Start, Abmelden während.
 - Formen: K.-o., Doppel-K.-o., **Bundesliga-Modus** (Hinrunde, optional Rückrunde), Gruppen + K.-o. (frei), Schweizer System.
