@@ -10,7 +10,7 @@ Stand: Konzept vom 7.11.2026, noch nichts gebaut. Aufgabenstatus: [GitHub Issue 
 
 - Das heutige Turniersystem ist ein guter Kern: vier Formen (WM-Form, Schweizer System, K.-o., Doppel-K.-o.) als reine Logik, Live-Seite per WebSocket, Spielerausweis statt Konto. Es kennt aber nur **eine Art von Turnier**: zwei Menschen, ein Brett-&-Blatt-Spiel, Partien über Tage mit Stichtagen, Ergebnis kommt vom Spielraum.
 - Für Vor-Ort-Turniere (Kicker, Fußball, Volleyball, Tischtennis, Spieleabend) fehlen vor allem: **Teilnehmer ohne Ausweis** (Namensliste, Teams), **Ergebnisse von Hand** mit Spielstand (Tore, Sätze), **Felder/Tische und Zeitplan**, **Helfer** zum Eintragen, **Beamer-Ansicht** und **öffentlicher Zuschaulink**, **Druck**.
-- Vorschlag: Den Kern in **Format** (wer spielt gegen wen, wer kommt weiter) und **Austragung** (online im Spielraum oder vor Ort von Hand) trennen. Dann gelten alle Formen für beide Arten, und neue Formen (Liga, Gruppen mit Platzierungsspielen, Zufallspartner, Last One Standing, Tischrunden für Skat/Uno) kommen einmal für alle dazu.
+- Vorschlag: Den Kern in **Format** (wer spielt gegen wen, wer kommt weiter) und **Austragung** (online im Spielraum oder vor Ort von Hand) trennen. Dann gelten alle Formen für beide Arten, und neue Formen (Bundesliga-Modus mit Hin- und Rückrunde, Gruppen mit Platzierungsspielen, Zufallspartner, Last One Standing, Tischrunden für Skat/Uno) kommen einmal für alle dazu.
 - Reihenfolge: **Stufe 0** Umbau ohne neue Funktion → **Stufe 1** Vor-Ort-Turnier mit Grundfunktionen → **Stufe 2** Helfer, Zeitplan, Druck → **Stufe 3** Brett & Blatt für mehr Spiele (Tischrunden, Teams, Turnierabend) → **Stufe 4** weitere Formen → **Stufe 5** Verwaltung, Anmeldung, Serien und Ranglisten → **Stufe 6** offline ohne Netz.
 - Vor dem Bau braucht es Entscheidungen von Cornelius (unten unter „Zu entscheiden“), vor allem zum öffentlichen Zuschaulink, zu Klarnamen und zur Aufbewahrungsdauer.
 
@@ -56,7 +56,7 @@ Deutscher Planer für Mannschaftssport (Fußball, Handball, E-Sport, laut Starts
 |---|---|---|---|---|
 | K.-o., Doppel-K.-o., Schweizer System | ✓ | K.-o. ✓ | ✓ | ✓ |
 | Gruppen + K.-o. | ✓ | ✓ (sehr flexibel) | ✓ | nur WM-Form, feste Gruppengröße |
-| Liga / Jeder gegen jeden ohne K.-o. | ✓ | ✓ | ✓ | – |
+| Liga / Jeder gegen jeden ohne K.-o. (Bundesliga-Modus) | ✓ | ✓ | ✓ | – (nur als Gruppenphase der WM-Form) |
 | Zufallspartner (DYP), Leben (Last One Standing) | ✓ | – | – | – |
 | Teams und Doppel | ✓ | ✓ | ✓ | – |
 | Teilnehmer per Namensliste | ✓ | ✓ | ✓ | – (jeder braucht Ausweis) |
@@ -119,7 +119,12 @@ Der Zustand bleibt reines JSON mit Seed für alle Auslosungen. `TournamentSnapsh
 
 Vorhanden und bleibend: WM-Form, Schweizer System, K.-o., Doppel-K.-o. Neu:
 
-1. **Jeder gegen jeden / Liga** ohne K.-o., optional mit Rückrunde; als Liga über Wochen mit Spieltagen.
+1. **Bundesliga-Modus (Liga):** jeder gegen jeden ohne K.-o., Wunsch von Cornelius (7.11.2026).
+   - **Hinrunde** mit allen Paarungen, auf **Spieltage** verteilt (Rundenplan nach dem Kreisverfahren wie heute `roundRobinPairs`; bei ungerader Zahl hat je Spieltag ein Teilnehmer spielfrei).
+   - **Rückrunde optional:** dieselben Paarungen in derselben Reihenfolge mit getauschtem Heimrecht (vor Ort: Heim/Gast, online: Farben bzw. Anzugsrecht getauscht).
+   - **Tabelle** wie in der Bundesliga: Platz, Spiele, Siege, Unentschieden, Niederlagen, Tore (bzw. Sätze/Punkte), Differenz, Punkte 3/1/0; Gleichstand nach Punkten, Tordifferenz, erzielten Toren, direktem Vergleich, Los (Reihenfolge einstellbar, siehe Wertung). Bei „nur Sieger“ entfallen die Torspalten.
+   - **Spieltage** haben je einen Stichtag (online) oder ein Datum mit Uhrzeit (vor Ort, Liga über Wochen); Nachholspiele bleiben offen, die Tabelle zeigt „vorläufig“ und die Zahl der Spiele.
+   - Optional: Tabelle nach Hin- und Rückrunde getrennt, Heim-/Auswärtstabelle, Markierung für Meister und Plätze, die in eine Endrunde gehen (Übergang zu Form 2).
 2. **Gruppen + Endrunde frei:** Gruppenzahl und -größe wählbar, Weiterkommende je Gruppe, beste Dritte, Endrunde als K.-o. oder neue Gruppen, Spiel um Platz 3 und **Platzierungsspiele** für alle Plätze (5–8, 9–12 …).
 3. **Setzliste:** Teilnehmer mit Setzplatz, K.-o.-Bäume nach Setzplatz statt Los, Freilose an die Besten.
 4. **Zufallspartner (DYP, Monster-DYP):** Einzelspieler, je Runde neu geloste Doppel, Punkte für den Einzelnen, Nachkommen und Gehen jederzeit, faire Durchschnittswertung.
@@ -151,11 +156,11 @@ Kern in Format, Wertung und Austragung trennen, Schnappschuss Version 2 mit Migr
 ### Stufe 1 – Vor-Ort-Turnier, Grundfunktionen (L)
 - „Turnier für draußen“ beim Anlegen: Sportart frei oder aus Vorlage, Ergebnisart, Remis ja/nein, Punkte.
 - Teilnehmer als Namensliste eintippen oder einfügen, Einzel oder Teams, Nachmelden bis zum Start, Abmelden während.
-- Formen: K.-o., Doppel-K.-o., Jeder gegen jeden, Gruppen + K.-o. (frei), Schweizer System.
+- Formen: K.-o., Doppel-K.-o., **Bundesliga-Modus** (Hinrunde, optional Rückrunde), Gruppen + K.-o. (frei), Schweizer System.
 - Tische/Felder anlegen, nächste Partien automatisch aufs nächste freie Feld.
 - Leitstand: Ergebnis eintragen und korrigieren (Folgepartien rechnen neu, solange sie nicht begonnen sind).
 - Beamer-Ansicht und Zuschaulink (wenn so entschieden).
-- Fertig, wenn: ein Kickerturnier mit 12 Doppeln im Schweizer System und ein Volleyballturnier mit 8 Teams in 2 Gruppen + Halbfinale komplett am Handy geleitet werden können, ohne dass ein Teilnehmer ein Gerät braucht.
+- Fertig, wenn: eine Kickerliga mit 6 Teams in Hin- und Rückrunde, ein Kickerturnier mit 12 Doppeln im Schweizer System und ein Volleyballturnier mit 8 Teams in 2 Gruppen + Halbfinale komplett am Handy geleitet werden können, ohne dass ein Teilnehmer ein Gerät braucht.
 
 ### Stufe 2 – Helfer, Zeitplan, Druck (M)
 - Helferlinks mit Namen, Mitleitung, Leitungslink.
@@ -171,7 +176,7 @@ Kern in Format, Wertung und Austragung trennen, Schnappschuss Version 2 mit Migr
 - Brett-&-Blatt-Spiel als Sportart eines Vor-Ort-Turniers.
 
 ### Stufe 4 – Weitere Formen (M)
-Zufallspartner (DYP, Monster-DYP), Last One Standing, Liga mit Rückrunde und Spieltagen, Platzierungsspiele für alle Plätze, beste Dritte, Setzliste, beliebig viele Phasen hintereinander.
+Zufallspartner (DYP, Monster-DYP), Last One Standing, Liga über Wochen mit Spieltagen nach Kalender (Grundform schon in Stufe 1), Platzierungsspiele für alle Plätze, beste Dritte, Setzliste, beliebig viele Phasen hintereinander.
 
 ### Stufe 5 – Verwaltung und Dauer (M)
 - „Meine Turniere“ als Verwaltung: kopieren, als Vorlage speichern, archivieren, löschen.
