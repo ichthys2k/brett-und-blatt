@@ -73,7 +73,7 @@ function useScoring(events: GameEvent[], seat: SeatId | 'spectator') {
     if (scored) {
       const won = events.find((e) => e.type === 'roundWon' && e.seat === seat) as { round?: number } | undefined;
       setAnim({ event: scored, tick: 0, won: won ? (won.round ?? 0) : null });
-      if (scored.handType) playHandAnnouncement(scored.handType);
+      if (scored.handType) playHandAnnouncement(scored.handType, scored.label);
     }
   }, [events, seat]);
   useEffect(() => {
