@@ -31,6 +31,10 @@ Fertige Filter für die Issue-Liste – am besten als Lesezeichen speichern (geh
 
 ## GitHub-Projekt
 
-Das Projekt [„Brett & Blatt – Planung“](PROJEKT_URL) zeigt dieselben Issues als Board und als sortierbare Tabellen. **Die Labels bleiben führend:** Status und Priorität werden immer am Issue als Label gesetzt; die Action `.github/workflows/projekt-abgleich.yml` trägt sie in die Projekt-Felder „Status“, „Priorität“ und „Bereich“ ein (bei jeder Label-Änderung und alle 30 Minuten zur Sicherheit). Karten im Board zu ziehen ändert die Labels nicht – dort nur schauen.
+Das Projekt [„Brett & Blatt – Planung“](https://github.com/users/ichthys2k/projects/3) zeigt dieselben Issues als Board und als Tabellen mit gespeicherten Ansichten: **Ablauf** (Board nach Status), **Was ist dran**, **Meine Prüfliste**, **Fehler**, **Ideen-Backlog**, **Ungesichtet**, **Recherche**, **Nach Bereich**, **Vorhaben** (mit Fortschritt der Unter-Issues), **Zurückgestellt**.
+
+**Die Labels bleiben führend.** Status und Priorität werden immer am Issue als Label gesetzt; die Action [`projekt-abgleich.yml`](.github/workflows/projekt-abgleich.yml) (Skript `scripts/projekt-abgleich.mjs`) nimmt jedes Issue ins Projekt auf und trägt die Labels in die Felder „Status“, „Priorität“ und „Bereich“ ein – bei jeder Label-Änderung und zur Sicherheit zweimal pro Stunde. Felder oder Spalten im Projekt von Hand zu ändern hat keine Wirkung auf die Labels und wird beim nächsten Abgleich überschrieben. Das Feld „Bereich“ zeigt bei mehreren Bereichs-Labels nur das erste; die Spiele stehen als Labels in der Spalte „Labels“.
+
+Die Action braucht das Repo-Secret `PROJECT_TOKEN` (klassischer Personal Access Token nur mit dem Recht `project`) und die Repo-Variable `PROJECT_NUMBER` (= 3). Von Hand: `PROJECT_TOKEN=$(gh auth token) PROJECT_NUMBER=3 node scripts/projekt-abgleich.mjs` (mit `PROJEKT_PROBE=1` nur anzeigen).
 
 Das vollständige frühere Dokument – einschließlich aller offenen Prompts, erledigten und zurückgestellten Einträge, Referenzen und Vorlagen – liegt unverändert im [Migrationsarchiv #72](https://github.com/ichthys2k/brett-und-blatt/issues/72). Die migrierten offenen Einträge sind jeweils eigene Issues; bereits vorhandene passende Issues wurden wiederverwendet statt dupliziert.
