@@ -84,11 +84,15 @@ Aufbau des Texts: **Ziel** (bei Fehlern: **Fehler** mit Schritten, Erwartet, Tat
   ```
 - Freigegeben (`status: Ready`) wird **jeder Schritt einzeln**, nicht das Eltern-Issue. Das Eltern-Issue bleibt offen, bis Cornelius alle Schritte abgenommen hat.
 
+## GitHub-Projekt
+
+Das Projekt [„Brett & Blatt – Planung“](https://github.com/users/ichthys2k/projects/3) ist nur eine Anzeige. **Status und Priorität immer über die Labels am Issue ändern**, nie über Felder oder Board-Spalten im Projekt – die Action `projekt-abgleich` überträgt die Labels und überschreibt Handänderungen. Neue Issues kommen von selbst ins Projekt.
+
 ## Labels auf einen Blick
 
 | Achse | Labels | Wer setzt |
 |---|---|---|
-| Typ | `wunsch`, `fehler`, `vorhaben` (Eltern-Issue mit Unter-Issues); `context` nur fürs Archiv #72 | wer anlegt |
+| Typ | `wunsch`, `fehler`, `recherche` (zusätzlich zu `wunsch`, nur erkunden), `vorhaben` (Eltern-Issue mit Unter-Issues); `context` nur fürs Archiv #72 | wer anlegt |
 | Status | `status: Idee` → `Ready` → `In progress` → `Review` → `Done`; `status: Zurückgestellt` | `Ready`, `Done`, `Zurückgestellt`: nur Cornelius |
 | Priorität | `prio: hoch`, `prio: mittel`, `prio: niedrig` | Cornelius |
 | Bereich | `bereich: Online`, `Klang & Musik`, `Oberfläche`, `Neues Spiel`, `Technik`; `barrierefreiheit` | wer anlegt |
