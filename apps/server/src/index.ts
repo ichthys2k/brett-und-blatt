@@ -648,6 +648,15 @@ export class TournamentRoom extends DurableObject<Env> {
       case 'setFields':
         error = t.setFields(token, message.count);
         break;
+      case 'addHelper':
+        error = t.addHelper(token, message.name, message.role);
+        break;
+      case 'removeHelper':
+        error = t.removeHelper(token, message.helper);
+        break;
+      case 'helper':
+        error = t.joinAsHelper(token, message.code);
+        break;
     }
     if (error) return this.sendTo(ws, { type: 'error', message: error });
     await this.changed();

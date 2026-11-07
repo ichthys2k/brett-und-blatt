@@ -86,7 +86,7 @@ function useLookup(view: TournamentView) {
   }, [view]);
 }
 
-export function TournamentScreen({ code, claim }: { code: string; claim?: string }) {
+export function TournamentScreen({ code, claim, helper }: { code: string; claim?: string; helper?: string }) {
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
   const [state, send] = useTournament(code, profile ?? GUEST);
   const [board, setBoard] = useState(false);
@@ -107,9 +107,19 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
     }
   }, [claim, state.status, code, send]);
 
+  // Der Helferlink: einlösen und aus der Adresszeile nehmen, damit er nicht im Verlauf herumliegt.
+  const helped = useRef(false);
+  useEffect(() => {
+    if (helper && state.status === 'open' && !helped.current) {
+      helped.current = true;
+      send({ type: 'helper', code: helper });
+      window.history.replaceState(null, '', paths.tournament(code));
+    }
+  }, [helper, state.status, code, send]);
+
   // Wer hier eingeschrieben ist oder leitet, findet das Turnier auf „Online spielen“ wieder.
   useEffect(() => {
-    if (!view || !(view.you || view.isLeader)) return;
+    if (!view || !(view.you || view.isLeader || view.helperRole)) return;
     if (storage.loadTournaments().some((item) => item.code === code)) return;
     storage.rememberTournament({ code, name: view.settings.name });
     // Der Ausweis nimmt die Liste auf andere Geräte mit.
@@ -292,7 +302,8 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
       {header}
       {subtitle}
       {view.phase === 'finished' && <Podium view={view} />}
-      {local ? <FieldBoard view={view} send={view.isLeader ? send : null} /> : <MyStand view={view} send={send} />}
+      {local ? <FieldBoard view={view} send={view.isLeader || view.helperRole ? send : null} /> : <MyStand view={view} send={send} />}
+      {view.helperRole === 'helper' && <p className="text-sm text-muted">🤝 {t('tournament.youHelp')}</p>}
       <Progress view={view} />
       <History view={view} />
       {view.isLeader && <LeaderTools view={view} code={code} send={send} claim={state.claim} onBoard={() => setBoard(true)} />}
@@ -370,6 +381,71 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
       </Section>
       {view.isLeader && <SpectatorLink view={view} code={code} />}
     </>
+  );
+}
+
+/** Helferlinks: Wer einen öffnet, trägt Ergebnisse ein (Mitleitung: darf alles). */
+function Helpers({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<'helper' | 'coleader'>('helper');
+  const [shown, setShown] = useState<string | null>(null);
+  const count = view.helpers.length;
+  useEffect(() => setName(''), [count]);
+  const link = (helperCode: string) => `${window.location.origin}${window.location.pathname}${paths.tournament(code)}?helfer=${helperCode}`;
+  return (
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <p className="text-sm font-semibold">🤝 {t('tournament.helpers')}</p>
+      <p className="text-xs text-muted">{t('tournament.helpersHint')}</p>
+      <ul className="space-y-1">
+        {view.helpers.map((h) => (
+          <li key={h.id} className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="min-w-0 flex-1 truncate">
+                {h.name} <span className="text-xs text-muted">· {t(h.role === 'coleader' ? 'tournament.role.coleader' : 'tournament.role.helper')} · {t('tournament.devices', { n: h.devices })}</span>
+              </span>
+              <Button className="text-xs" onClick={() => setShown(shown === h.id ? null : h.id)}>
+                🔗
+              </Button>
+              <Button
+                className="text-xs"
+                aria-label={`${t('tournament.remove')}: ${h.name}`}
+                onClick={() => {
+                  if (window.confirm(t('tournament.removeHelperConfirm', { name: h.name }))) send({ type: 'removeHelper', helper: h.id });
+                }}
+              >
+                ✕
+              </Button>
+            </div>
+            {shown === h.id && (
+              <div className="space-y-2">
+                <div className="mx-auto w-40">
+                  <QrCode text={link(h.code)} label={h.name} />
+                </div>
+                <Button className="w-full text-sm" onClick={() => navigator.clipboard?.writeText(link(h.code))}>
+                  🔗 {t('tournament.copy')}
+                </Button>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+      <form
+        className="flex flex-wrap gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (name.trim()) send({ type: 'addHelper', name: name.trim(), role });
+        }}
+      >
+        <input className="min-h-11 min-w-0 flex-1 rounded-xl border border-line bg-surface px-3" aria-label={t('tournament.helperName')} placeholder={t('tournament.helperName')} maxLength={30} value={name} onChange={(e) => setName(e.target.value)} />
+        <select className="min-h-11 rounded-xl border border-line bg-surface px-2" aria-label={t('tournament.role')} value={role} onChange={(e) => setRole(e.target.value as 'helper' | 'coleader')}>
+          <option value="helper">{t('tournament.role.helper')}</option>
+          <option value="coleader">{t('tournament.role.coleader')}</option>
+        </select>
+        <Button type="submit" disabled={!name.trim()}>
+          ➕
+        </Button>
+      </form>
+    </div>
   );
 }
 
@@ -967,6 +1043,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
         📺 {t('tournament.board')}
       </Button>
       {local && <SpectatorLink view={view} code={code} />}
+      {local && view.phase !== 'finished' && <Helpers view={view} code={code} send={send} />}
       {local && view.phase === 'running' && view.settings.format === 'swiss' && <EntrantForm view={view} send={send} label={t('tournament.lateEntry')} />}
       {local && view.phase === 'running' && (
         <label className="block space-y-1 text-sm">

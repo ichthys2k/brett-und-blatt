@@ -12,6 +12,10 @@ import { defaultScoring, standings } from './tournament/scoring';
 import {
   DAY_MS,
   ENTRANT_NAME_LENGTH,
+  HELPER_MAX_DEVICES,
+  TOURNAMENT_MAX_HELPERS,
+  type HelperRole,
+  type TournamentHelper,
   LEAGUE_KEEP_MS,
   TOURNAMENT_MAX_FIELDS,
   TOURNAMENT_MAX_PLAYERS,
@@ -132,12 +136,23 @@ export class Tournament {
    * vor Ort nur die Leitung, mit Zuschaulink jeder.
    */
   maySee(token: string): boolean {
-    if (isLocal(this.s)) return this.s.settings.spectators === true || this.isLeader(token);
+    if (isLocal(this.s)) return this.s.settings.spectators === true || this.isLeader(token) || this.helperOf(token) !== undefined;
     return this.s.phase === 'signup' || token === this.s.leaderToken || this.playerByToken(token) !== undefined;
   }
 
+  /** Leitung oder Mitleitung. */
   isLeader(token: string): boolean {
-    return token === this.s.leaderToken;
+    return token === this.s.leaderToken || this.helperOf(token)?.role === 'coleader';
+  }
+
+  /** Darf Ergebnisse eintragen: Leitung, Mitleitung oder Helfer. */
+  private mayEnter(token: string): boolean {
+    return this.isLeader(token) || this.helperOf(token) !== undefined;
+  }
+
+  private helperOf(token: string): TournamentHelper | undefined {
+    if (!token) return undefined;
+    return this.s.helpers?.find((h) => h.tokens.includes(token));
   }
 
   /** Name und Bild beim Wiederkommen nachziehen. Sagt, ob sich etwas geändert hat. */
@@ -334,7 +349,7 @@ export class Tournament {
 
   /** Ergebnis vom Tisch: Spielstand oder Sieger. Auch zum Berichtigen, solange nichts daran hängt. */
   enterResult(token: string, matchId: string, entry: ResultEntry): string | null {
-    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!this.mayEnter(token)) return 'Das dürfen nur Leitung und Helfer.';
     if (!isLocal(this.s)) return 'Online meldet der Spielraum das Ergebnis.';
     const match = this.match(matchId);
     if (!match || match.status === 'waiting' || match.slots.some((slot) => !slot.player)) return 'Diese Partie steht noch nicht fest.';
@@ -344,6 +359,44 @@ export class Tournament {
     if (typeof outcome === 'string') return outcome;
     this.decide(match, outcome);
     this.settle();
+    this.touch();
+    return null;
+  }
+
+  /** Neuer Helferlink. Der Code steht danach in der Sicht der Leitung. */
+  addHelper(token: string, name: string, role: HelperRole): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!isLocal(this.s)) return 'Helfer gibt es nur vor Ort.';
+    const clean = cleanName(name, ENTRANT_NAME_LENGTH);
+    if (!clean) return 'Bitte einen anderen Namen wählen.';
+    const helpers = (this.s.helpers ??= []);
+    if (helpers.length >= TOURNAMENT_MAX_HELPERS) return `Höchstens ${TOURNAMENT_MAX_HELPERS} Helfer.`;
+    const number = (this.s.nextHelper ?? 1);
+    this.s.nextHelper = number + 1;
+    helpers.push({ id: `h${number}`, name: clean, role, code: this.deps.randomClaim(), tokens: [] });
+    this.touch();
+    return null;
+  }
+
+  /** Entfernt einen Helfer; seine Geräte verlieren sofort den Zugang. */
+  removeHelper(token: string, helperId: string): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    const helper = this.s.helpers?.find((h) => h.id === helperId);
+    if (!helper) return 'Diesen Helfer gibt es nicht.';
+    if (helper.tokens.includes(token)) return 'Du kannst dich nicht selbst entfernen.';
+    this.s.helpers = this.s.helpers!.filter((h) => h.id !== helperId);
+    this.touch();
+    return null;
+  }
+
+  /** Helferlink einlösen: Dieses Gerät darf danach eintragen. */
+  joinAsHelper(token: string, code: string): string | null {
+    const helper = this.s.helpers?.find((h) => h.code === code.trim().toUpperCase());
+    if (!helper) return 'Dieser Helferlink gilt nicht (mehr).';
+    if (token === this.s.leaderToken || helper.tokens.includes(token)) return null;
+    if (this.helperOf(token)) return 'Dieses Gerät hilft schon mit.';
+    if (helper.tokens.length >= HELPER_MAX_DEVICES) return `Ein Helferlink gilt für höchstens ${HELPER_MAX_DEVICES} Geräte.`;
+    helper.tokens.push(token);
     this.touch();
     return null;
   }
@@ -429,6 +482,8 @@ export class Tournament {
       podium: this.podium(),
       you,
       isLeader: token !== null && this.isLeader(token),
+      helperRole: token ? (this.helperOf(token)?.role ?? null) : null,
+      helpers: token !== null && this.isLeader(token) ? (s.helpers ?? []).map(({ id, name, role, code, tokens }) => ({ id, name, role, code, devices: tokens.length })) : [],
       rulesChanged: s.ruleVersion !== undefined && s.phase === 'running' && this.deps.ruleVersion?.(s.settings.gameId) !== s.ruleVersion,
       serverNow: this.deps.now(),
     };

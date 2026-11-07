@@ -269,3 +269,40 @@ describe('Stufe 2: Nachmelden und eigene Punkte', () => {
     expect(t.addEntrants(LEADER, ['Zu / Spät'])).toBe('Die Einschreibung ist beendet.');
   });
 });
+
+describe('Stufe 2: Helfer', () => {
+  const HELPER = 'kennung-eines-helfers-1';
+  it('Helfer tragen ein, sehen das Turnier, verwalten aber nichts', () => {
+    const { t } = local(4, 'knockout');
+    expect(t.addHelper(GUEST, 'Mia', 'helper')).toBeTypeOf('string');
+    expect(t.addHelper(LEADER, 'Mia', 'helper')).toBeNull();
+    const [link] = t.view(LEADER).helpers;
+    expect(link).toMatchObject({ name: 'Mia', role: 'helper', code: 'NEUCODE1', devices: 0 });
+    expect(t.view(GUEST).helpers).toEqual([]);
+    expect(t.maySee(HELPER)).toBe(false);
+    expect(t.joinAsHelper(HELPER, 'falsch')).toBeTypeOf('string');
+    expect(t.joinAsHelper(HELPER, 'neucode1')).toBeNull();
+    expect(t.maySee(HELPER)).toBe(true);
+    expect(t.view(HELPER)).toMatchObject({ helperRole: 'helper', isLeader: false, helpers: [] });
+    expect(t.start(HELPER)).toBeTypeOf('string');
+    expect(t.start(LEADER)).toBeNull();
+    const [m] = t.view(LEADER).matches;
+    expect(t.enterResult(HELPER, m!.id, { winner: 0 })).toBeNull();
+    expect(t.setFields(HELPER, 2)).toBeTypeOf('string');
+    // Entfernt: Zugang sofort weg.
+    expect(t.removeHelper(LEADER, link!.id)).toBeNull();
+    expect(t.maySee(HELPER)).toBe(false);
+    expect(t.enterResult(HELPER, m!.id, { winner: 1 })).toBeTypeOf('string');
+  });
+
+  it('Mitleitung darf alles außer sich selbst entfernen', () => {
+    const { t } = local(4, 'knockout');
+    expect(t.addHelper(LEADER, 'Ole', 'coleader')).toBeNull();
+    const [link] = t.view(LEADER).helpers;
+    expect(t.joinAsHelper(HELPER, link!.code)).toBeNull();
+    expect(t.view(HELPER)).toMatchObject({ isLeader: true, helperRole: 'coleader' });
+    expect(t.addEntrants(HELPER, ['Neu / Dabei'])).toBeNull();
+    expect(t.removeHelper(HELPER, link!.id)).toBeTypeOf('string');
+    expect(t.start(HELPER)).toBeNull();
+  });
+});

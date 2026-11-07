@@ -19,7 +19,11 @@ export type TournamentClientMessage =
   | { type: 'addEntrants'; names: string[] }
   | { type: 'removeEntrant'; player: string }
   | { type: 'enterResult'; match: string; score?: [number, number]; winner?: MatchSide | 'draw' }
-  | { type: 'setFields'; count: number };
+  | { type: 'setFields'; count: number }
+  // Stufe 2: Helfer
+  | { type: 'addHelper'; name: string; role: 'helper' | 'coleader' }
+  | { type: 'removeHelper'; helper: string }
+  | { type: 'helper'; code: string };
 
 export type TournamentServerMessage =
   | { type: 'tournament'; view: TournamentView }
@@ -68,6 +72,12 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
       if (m.winner === 0 || m.winner === 1 || m.winner === 'draw') return { type: 'enterResult', match: m.match, winner: m.winner };
       return null;
     }
+    case 'addHelper':
+      return isShort(m.name, 60) && (m.role === 'helper' || m.role === 'coleader') ? { type: 'addHelper', name: m.name, role: m.role } : null;
+    case 'removeHelper':
+      return isShort(m.helper) ? { type: 'removeHelper', helper: m.helper } : null;
+    case 'helper':
+      return isShort(m.code, 20) ? { type: 'helper', code: m.code } : null;
     case 'setFields':
       return Number.isInteger(m.count) && (m.count as number) >= 0 && (m.count as number) <= TOURNAMENT_MAX_FIELDS ? { type: 'setFields', count: m.count as number } : null;
     default:

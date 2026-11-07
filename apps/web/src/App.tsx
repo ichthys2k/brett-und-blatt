@@ -20,7 +20,7 @@ export function App() {
     case 'room':
       return <RoomScreen key={route.code} code={route.code} />;
     case 'tournament':
-      return <TournamentScreen key={route.code} code={route.code} claim={route.claim} />;
+      return <TournamentScreen key={route.code} code={route.code} claim={route.claim} helper={route.helper} />;
     case 'sound':
       return <SoundSettingsScreen />;
     case 'imprint':
