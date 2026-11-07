@@ -11,7 +11,7 @@ Stand: Konzept vom 7.11.2026, noch nichts gebaut. Aufgabenstatus: [GitHub Issue 
 - Das heutige Turniersystem ist ein guter Kern: vier Formen (WM-Form, Schweizer System, K.-o., Doppel-K.-o.) als reine Logik, Live-Seite per WebSocket, Spielerausweis statt Konto. Es kennt aber nur **eine Art von Turnier**: zwei Menschen, ein Brett-&-Blatt-Spiel, Partien über Tage mit Stichtagen, Ergebnis kommt vom Spielraum.
 - Für Vor-Ort-Turniere (Kicker, Fußball, Volleyball, Tischtennis, Spieleabend) fehlen vor allem: **Teilnehmer ohne Ausweis** (Namensliste, Teams), **Ergebnisse von Hand** mit Spielstand (Tore, Sätze), **Felder/Tische und Zeitplan**, **Helfer** zum Eintragen, **Beamer-Ansicht** und **öffentlicher Zuschaulink**, **Druck**.
 - Vorschlag: Den Kern in **Format** (wer spielt gegen wen, wer kommt weiter) und **Austragung** (online im Spielraum oder vor Ort von Hand) trennen. Dann gelten alle Formen für beide Arten, und neue Formen (Bundesliga-Modus mit Hin- und Rückrunde, Gruppen mit Platzierungsspielen, Zufallspartner, Last One Standing, Tischrunden für Skat/Uno) kommen einmal für alle dazu.
-- Reihenfolge: **Stufe 0** Umbau ohne neue Funktion → **Stufe 1** Vor-Ort-Turnier mit Grundfunktionen → **Stufe 2** Helfer, Zeitplan, Druck → **Stufe 3** Brett & Blatt für mehr Spiele (Tischrunden, Teams, Turnierabend) → **Stufe 4** weitere Formen → **Stufe 5** Verwaltung, Anmeldung, Serien und Ranglisten → **Stufe 6** offline ohne Netz.
+- Reihenfolge: **Stufe 0** Umbau ohne neue Funktion → **Stufe 1** Vor-Ort-Turnier mit Grundfunktionen → **Stufe 2** Helfer, Zeitplan, Druck → **Stufe 3** Brett & Blatt für mehr Spiele (Turnierabend, Spieleabend mit Wunschdisziplinen, Tischrunden, Teams) → **Stufe 4** weitere Formen → **Stufe 5** Verwaltung, Anmeldung, Serien und Ranglisten → **Stufe 6** offline ohne Netz.
 - Vor dem Bau braucht es Entscheidungen von Cornelius (unten unter „Zu entscheiden“), vor allem zum öffentlichen Zuschaulink, zu Klarnamen und zur Aufbewahrungsdauer.
 
 ## Recherche
@@ -174,10 +174,12 @@ Kern in Format, Wertung und Austragung trennen, Schnappschuss Version 2 mit Migr
 - Druckansichten (Spielplan, Spielzettel, Tabellen, Baum, Urkunden), Export JSON und CSV.
 
 ### Stufe 3 – Brett & Blatt für mehr Spiele (L)
-- Tischrunden für Spiele mit 3+ Plätzen (online: Raum je Tisch, Platzierung zurückmelden).
-- Teams in Online-Turnieren (`GameInfo.teams`).
-- Turnierabend: kurze Fristen, rundenweise Auslosung, gemeinsamer Rundenstart.
-- Brett-&-Blatt-Spiel als Sportart eines Vor-Ort-Turniers.
+Issue #127, in vier Teilen mit je eigenem PR:
+
+1. **Turnierabend und B&B-Spiel vor Ort.** *Umgesetzt am 7.11.2026:* Tempo „Turnierabend“ beim Anlegen online (10–60 Minuten je Partie statt Tage je Phase). Jede Runde startet die Leitung mit „▶️ Runde starten“; dann beginnen alle Partien der Runde zugleich ohne „Bereit“, die Frist ist Minuten × die meisten Partien eines Spielers in der Runde (Gruppenphase: nacheinander, die nächste Partie startet von selbst, sobald beide frei sind). Verlängern um 5/10/15 Minuten. Wer nach Nichterscheinen neu angesetzt wird, braucht wieder „Bereit“. Vor Ort lässt sich als Vorlage ein Brett-&-Blatt-Spiel wählen (Spiele zu zweit); am Feld steht dann „Partie hier am Gerät spielen“, das Ergebnis trägt man wie gewohnt ein. Logik in `packages/online/src/tournament/evening.ts`.
+2. **Spieleabend mit Wunschdisziplinen** (#129): Jeder gegen jeden (Bundesliga-Modus) über mehrere **Disziplinen** – je Spieltag ein anderes Spiel. Die Leitung wählt beim Anlegen mehrere Spiele (online: Brett-&-Blatt-Spiele zu zweit; vor Ort: Spiele oder Sportarten frei), optional wünschen sich die Teilnehmer bei der Einschreibung Disziplinen und das System nimmt die meistgewünschten. Die Spieltage verteilen die Disziplinen reihum, die Paarungen lost das System (Rundenplan wie in der Liga), jede Gruppengröße geht (bei ungerader Zahl spielfrei). Kurze Partien über das Tempo „Turnierabend“, Punkte nach jedem Spieltag in einer Gesamttabelle, die alle Teilnehmer live sehen; dazu eine Tabelle je Disziplin. Online öffnet jede Partie den Raum mit dem Spiel ihres Spieltags.
+3. **Tischrunden für Spiele mit 3+ Plätzen** (online: Raum je Tisch, Platzierung zurückmelden; vor Ort Platzierung oder Punkte von Hand). Damit kann Teil 2 auch Mehrspieler-Disziplinen enthalten.
+4. **Teams in Online-Turnieren** (`GameInfo.teams`).
 
 ### Stufe 4 – Weitere Formen (M)
 Zufallspartner (DYP, Monster-DYP), Last One Standing, Liga über Wochen mit Spieltagen nach Kalender (Grundform schon in Stufe 1), Platzierungsspiele für alle Plätze, beste Dritte, Setzliste, beliebig viele Phasen hintereinander.

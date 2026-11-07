@@ -1,4 +1,4 @@
-import { AVATARS, MAX_SCORE, READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentView } from '@brett-und-blatt/online';
+import { AVATARS, EVENING_EXTEND_CHOICES, MAX_SCORE, READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentView } from '@brett-und-blatt/online';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Section } from '../components/controls';
 import { ProfileForm, QrCode } from '../components/OnlineParts';
@@ -47,8 +47,19 @@ const isLocalView = (view: TournamentView) => view.settings.mode === 'local';
 /** Wird ein Spielstand gezählt (Tore, Sätze, Punkte)? */
 const withScore = (view: TournamentView) => isLocalView(view) && view.settings.result !== undefined && view.settings.result !== 'winner';
 
+/** Turnierabend (Stufe 3): Minuten je Partie, die Leitung startet jede Runde. */
+const isEveningView = (view: TournamentView) => !isLocalView(view) && (view.settings.minutes ?? 0) > 0;
+
 function deadlineNote(view: TournamentView, ms: number): string {
-  return isLocalView(view) ? '' : t('tournament.deadline', { date: formatDate(ms) });
+  if (isLocalView(view)) return '';
+  if (isEveningView(view)) return ms > 0 ? t('tournament.until', { time: clock(ms) }) : t('tournament.waitingStart');
+  return t('tournament.deadline', { date: formatDate(ms) });
+}
+
+/** Kurz für Spalten im Baum: Datum oder am Turnierabend die Uhrzeit. */
+function deadlineShort(view: TournamentView, ms: number): string {
+  if (isEveningView(view)) return ms > 0 ? clock(ms) : '–';
+  return formatDate(ms);
 }
 
 function clock(ms: number): string {
@@ -272,7 +283,8 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
   const local = isLocalView(view);
   const subtitle = (
     <p className="text-sm text-muted">
-      {local ? `🏟️ ${view.settings.sport ?? ''}` : `${game?.emoji ?? ''} ${game?.name ?? ''}`} · {t(`tournament.format.${view.settings.format}`)} · {t('tournament.leader', { name: view.leaderName })}
+      {local ? `${game?.emoji ?? '🏟️'} ${view.settings.sport ?? ''}` : `${game?.emoji ?? ''} ${game?.name ?? ''}`} · {t(`tournament.format.${view.settings.format}`)} · {t('tournament.leader', { name: view.leaderName })}
+      {isEveningView(view) && <span className="block">🌙 {t('tournament.evening', { n: view.settings.minutes ?? 0 })}</span>}
       {optionText.length > 0 && <span className="block">{optionText.join(' · ')}</span>}
       {view.rulesChanged && <span className="block text-warning">⚠️ {t('tournament.rulesChanged')}</span>}
     </p>
@@ -309,6 +321,7 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
       {header}
       {subtitle}
       {view.phase === 'finished' && <Podium view={view} />}
+      <RoundStart view={view} send={send} />
       {local ? <FieldBoard view={view} send={view.isLeader || view.helperRole ? send : null} /> : <MyStand view={view} send={send} />}
       {view.helperRole === 'helper' && <p className="text-sm text-muted">🤝 {t('tournament.youHelp')}</p>}
       <Progress view={view} />
@@ -567,6 +580,11 @@ function FieldBoard({ view, send }: { view: TournamentView; send: Send | null })
                 </p>
                 {names(m)}
                 {(m.referee || m.plannedAt !== undefined) && <p className="text-xs text-muted">{extra(m)}</p>}
+                {send && view.settings.gameId && (
+                  <a className="block text-sm font-semibold text-accent underline" href={paths.setup(view.settings.gameId)} target="_blank" rel="noopener">
+                    🎲 {t('tournament.playHere')}
+                  </a>
+                )}
                 {send && <ResultForm key={m.id} view={view} m={m} send={send} />}
               </li>
             ))}
@@ -738,11 +756,13 @@ function MyStand({ view, send }: { view: TournamentView; send: Send }) {
               <p className="font-semibold">{t('tournament.yourTurn', { name: label(other) })}</p>
               {stage && (
                 <p className="text-xs text-muted">
-                  {matchTitle(view, m)} · {t('tournament.deadline', { date: formatDate(stage.deadline) })}
+                  {matchTitle(view, m)} · {deadlineNote(view, stage.deadline)}
                   {m.replays > 0 && ` · ${t('tournament.replay')}`}
                 </p>
               )}
-              {m.status === 'running' ? (
+              {isEveningView(view) && stage?.startedAt === undefined ? (
+                <p className="text-sm">🌙 {t('tournament.heldHint')}</p>
+              ) : m.status === 'running' ? (
                 m.roomCode && (
                   <Button variant="primary" className="w-full" onClick={() => navigate(paths.room(m.roomCode!))}>
                     ▶️ {t('tournament.toGame')}
@@ -769,6 +789,24 @@ function MyStand({ view, send }: { view: TournamentView; send: Send }) {
       </ul>
     </Section>
   );
+}
+
+/** Turnierabend: Die Leitung startet die Runde; alle anderen sehen, dass es gleich losgeht. */
+function RoundStart({ view, send }: { view: TournamentView; send: Send }) {
+  if (!isEveningView(view) || view.phase !== 'running') return null;
+  const stage = view.stages[view.currentStage];
+  const name = stage?.kind === 'ko' ? roundName(stage.round) : t('tournament.round', { n: view.currentStage + 1 });
+  if (view.startableStage !== null) {
+    return view.isLeader ? (
+      <Button variant="primary" className="w-full text-lg" onClick={() => send({ type: 'startRound' })}>
+        ▶️ {t('tournament.startRound', { name })}
+      </Button>
+    ) : (
+      <p className="rounded-xl bg-accent/10 px-3 py-2 text-sm font-semibold">🌙 {t('tournament.roundSoon', { name })}</p>
+    );
+  }
+  if (!stage?.startedAt) return null;
+  return <p className="rounded-xl bg-accent/10 px-3 py-2 text-sm">⏱️ {t('tournament.roundRunning', { name, time: clock(stage.deadline) })}</p>;
 }
 
 function matchTitle(view: TournamentView, m: Match): string {
@@ -999,7 +1037,7 @@ function Bracket({ view, title, hint, columns }: { view: TournamentView; title: 
         {columns.map((column) => (
           <div key={column.key} className="flex min-w-0 flex-1 flex-col">
             <p className="truncate text-center text-xs font-semibold">{column.label}</p>
-            {!isLocalView(view) && <p className="mb-2 truncate text-center text-[11px] text-muted">{formatDate(column.deadline)}</p>}
+            {!isLocalView(view) && <p className="mb-2 truncate text-center text-[11px] text-muted">{deadlineShort(view, column.deadline)}</p>}
             <div className="flex flex-1 flex-col justify-around gap-2">
               {column.matches.map((m) => (
                 <MatchCard key={m.id} view={view} m={m} title={m.thirdPlace ? t('tournament.thirdPlace') : undefined} />
@@ -1157,11 +1195,20 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
       )}
       {view.phase === 'running' && (
         <>
-          {!local && (
+          {!local && !isEveningView(view) && (
           <div className="grid grid-cols-3 gap-2">
             {[1, 3, 7].map((n) => (
               <Button key={n} className="text-xs" onClick={() => send({ type: 'extend', days: n })}>
                 {t('tournament.extend', { n })}
+              </Button>
+            ))}
+          </div>
+          )}
+          {isEveningView(view) && view.stages[view.currentStage]?.startedAt !== undefined && (
+          <div className="grid grid-cols-3 gap-2">
+            {EVENING_EXTEND_CHOICES.map((n) => (
+              <Button key={n} className="text-xs" onClick={() => send({ type: 'extend', days: 0, minutes: n })}>
+                {t('tournament.extendMinutes', { n })}
               </Button>
             ))}
           </div>

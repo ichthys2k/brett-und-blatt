@@ -625,7 +625,10 @@ export class TournamentRoom extends DurableObject<Env> {
         error = t.setResult(token, message.match, message.winner);
         break;
       case 'extend':
-        error = t.extend(token, message.days);
+        error = t.extend(token, message.days, message.minutes);
+        break;
+      case 'startRound':
+        error = t.startRound(token);
         break;
       case 'withdraw':
         error = t.withdraw(token, message.player);

@@ -1,5 +1,6 @@
 import type { GameInfo, OptionSpec, Options } from '@brett-und-blatt/engine';
 import { cleanName } from '../names';
+import { EVENING_EXTEND_CHOICES, EVENING_MINUTE_CHOICES } from './evening';
 import { ENTRANT_NAME_LENGTH, TOURNAMENT_MAX_FIELDS, TOURNAMENT_MAX_PLAYERS, TOURNAMENT_NAME_LENGTH, type MatchSide, type ResultKind, type TournamentFormat, type TournamentSettings, type TournamentView } from './types';
 
 /** Nachrichten zwischen Turnierseite und Server und die Prüfung der Angaben beim Anlegen. */
@@ -12,7 +13,9 @@ export type TournamentClientMessage =
   | { type: 'start' }
   | { type: 'ready'; match: string; ready: boolean }
   | { type: 'setResult'; match: string; winner: MatchSide | 'draw' | 'none' }
-  | { type: 'extend'; days: number }
+  | { type: 'extend'; days: number; minutes?: number }
+  // Stufe 3: Turnierabend
+  | { type: 'startRound' }
   | { type: 'withdraw'; player: string }
   | { type: 'reissue'; player: string }
   // Vor Ort (Stufe 1), nur die Leitung:
@@ -53,6 +56,7 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
     case 'join':
     case 'leave':
     case 'start':
+    case 'startRound':
       return { type: m.type };
     case 'claim':
       return isShort(m.code, 20) ? { type: 'claim', code: m.code } : null;
@@ -61,6 +65,7 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
     case 'setResult':
       return isShort(m.match) && (m.winner === 0 || m.winner === 1 || m.winner === 'draw' || m.winner === 'none') ? { type: 'setResult', match: m.match, winner: m.winner } : null;
     case 'extend':
+      if (EVENING_EXTEND_CHOICES.includes(m.minutes as 5)) return { type: 'extend', days: 0, minutes: m.minutes as number };
       return m.days === 1 || m.days === 3 || m.days === 7 ? { type: 'extend', days: m.days } : null;
     case 'withdraw':
     case 'reissue':
@@ -116,11 +121,13 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
   if (!FORMAT_IDS.includes(body.format as TournamentFormat)) return null;
   const format = body.format as TournamentFormat;
   const returnRound = format === 'league' && body.returnRound === true ? { returnRound: true } : {};
-  if (body.mode === 'local') return parseLocalSettings(body, name, format, returnRound);
+  if (body.mode === 'local') return parseLocalSettings(body, name, format, returnRound, findGame);
   const game = typeof body.gameId === 'string' ? findGame(body.gameId) : undefined;
   if (typeof body.gameId !== 'string' || !game || !isTournamentGame(game.info)) return null;
   if (body.time !== 'relaxed' && body.time !== 'normal' && body.time !== 'fast') return null;
-  if (body.days !== 1 && body.days !== 3 && body.days !== 7 && body.days !== 14) return null;
+  // Turnierabend: Minuten je Partie statt Tage je Phase.
+  const minutes = EVENING_MINUTE_CHOICES.includes(body.minutes as 10) ? { minutes: body.minutes as number } : {};
+  if (!minutes.minutes && body.days !== 1 && body.days !== 3 && body.days !== 7 && body.days !== 14) return null;
   const options: Options = {};
   if (isRecord(body.options)) {
     for (const [id, value] of Object.entries(body.options)) {
@@ -129,19 +136,22 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
       options[id] = value as string;
     }
   }
-  return { name, gameId: body.gameId, format, time: body.time, days: body.days, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
+  return { name, gameId: body.gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
 }
 
 /** Vor Ort: Sportart statt Spiel, keine Zeitvorgabe, nie in „Offene Runden“. */
-function parseLocalSettings(body: Record<string, unknown>, name: string, format: TournamentFormat, returnRound: { returnRound?: boolean }): TournamentSettings | null {
-  const sport = typeof body.sport === 'string' ? cleanName(body.sport, ENTRANT_NAME_LENGTH) : null;
+function parseLocalSettings(body: Record<string, unknown>, name: string, format: TournamentFormat, returnRound: { returnRound?: boolean }, findGame: (id: string) => { info: GameInfo } | undefined): TournamentSettings | null {
+  // Ein Brett-&-Blatt-Spiel als Sportart (Stufe 3): Name aus dem Steckbrief, gespielt wird am Gerät.
+  const game = typeof body.gameId === 'string' && body.gameId ? findGame(body.gameId) : undefined;
+  if (typeof body.gameId === 'string' && body.gameId && (!game || !isTournamentGame(game.info))) return null;
+  const sport = game ? game.info.name : typeof body.sport === 'string' ? cleanName(body.sport, ENTRANT_NAME_LENGTH) : null;
   if (!sport) return null;
   const result = RESULT_KINDS.includes(body.result as ResultKind) ? (body.result as ResultKind) : 'winner';
   const fieldLabel = typeof body.fieldLabel === 'string' ? cleanName(body.fieldLabel, 12) : null;
   const groupCount = format === 'world' && GROUP_COUNT_CHOICES.includes(body.groupCount as 2) ? { groupCount: body.groupCount as number } : {};
   return {
     name,
-    gameId: '',
+    gameId: game ? (body.gameId as string) : '',
     format,
     time: 'normal',
     days: 1,

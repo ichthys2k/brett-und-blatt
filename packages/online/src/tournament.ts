@@ -7,6 +7,7 @@ import { upgradeSnapshot, type StoredTournamentSnapshot } from './tournament/mig
 import { SCHEDULE_MAX_MINUTES, assignFields, isLocal, outcomeFromEntry, plannedStarts, type ResultEntry } from './tournament/local-play';
 import type { PointRules } from './tournament/protocol';
 import { deadlineOutcome, dueAt, roomRequest, setReady, sideOfSeat, type MatchRoomRequest, type RoomReport } from './tournament/online-play';
+import { autoStart, isEvening, isHeld, startStage, startableStage } from './tournament/evening';
 import { seededShuffle } from './tournament/pairing';
 import { defaultScoring, standings } from './tournament/scoring';
 import {
@@ -41,6 +42,7 @@ export * from './tournament/scoring';
 export * from './tournament/formats';
 export * from './tournament/online-play';
 export * from './tournament/local-play';
+export * from './tournament/evening';
 export * from './tournament/migrate';
 export * from './tournament/protocol';
 
@@ -210,10 +212,11 @@ export class Tournament {
     const { minPlayers } = this.format;
     if (this.s.players.length < minPlayers) return `Es braucht mindestens ${minPlayers} Spieler.`;
     const now = this.deps.now();
-    const deadline = (index: number) => now + (index + 1) * days * DAY_MS;
+    // Am Turnierabend gibt es Fristen erst, wenn die Leitung eine Runde startet.
+    const deadline = (index: number) => (isEvening(this.s) ? 0 : now + (index + 1) * days * DAY_MS);
     const ids = seededShuffle(this.s.players.map((p) => p.id), `${this.s.seed}/auslosung`);
     this.format.setup(this.ctx, ids, deadline);
-    const ruleVersion = this.deps.ruleVersion?.(this.s.settings.gameId);
+    const ruleVersion = isLocal(this.s) ? undefined : this.deps.ruleVersion?.(this.s.settings.gameId);
     if (ruleVersion !== undefined) this.s.ruleVersion = ruleVersion;
     this.s.phase = 'running';
     this.settle();
@@ -226,6 +229,7 @@ export class Tournament {
     const match = this.match(matchId);
     const side = match?.slots.findIndex((slot) => slot.player === this.playerByToken(token)?.id) ?? -1;
     if (!match || side < 0) return 'Das ist nicht deine Partie.';
+    if (isHeld(this.s, match)) return 'Die Runde hat noch nicht begonnen.';
     const error = setReady(this.s, match, side as MatchSide, ready, this.deps.now());
     if (error) return error;
     this.touch();
@@ -281,14 +285,36 @@ export class Tournament {
     return null;
   }
 
-  extend(token: string, days: number): string | null {
+  /** Stichtage verschieben; am Turnierabend nur die laufende Runde, um Minuten. */
+  extend(token: string, days: number, minutes?: number): string | null {
     if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
     if (isLocal(this.s)) return 'Vor Ort gibt es keine Stichtage.';
     if (this.s.phase !== 'running') return 'Das Turnier läuft nicht.';
     const current = this.currentStage();
+    if (isEvening(this.s)) {
+      const stage = this.s.stages[current];
+      if (!minutes || stage?.startedAt === undefined) return 'Die Runde hat noch nicht begonnen.';
+      // Ab dem spätesten Zeitpunkt, der jetzt gilt – auch für Partien, die spät aufgegangen sind.
+      const latest = this.s.matches.filter((m) => m.stage === current && m.status === 'open').map((m) => dueAt(this.s, m));
+      stage.deadline = Math.max(stage.deadline, this.deps.now(), ...latest) + minutes * 60_000;
+      this.touch();
+      return null;
+    }
+    if (minutes) return 'Hier gelten Tage, keine Minuten.';
     this.s.stages.forEach((stage, index) => {
       if (index >= current) stage.deadline += days * DAY_MS;
     });
+    this.touch();
+    return null;
+  }
+
+  /** Turnierabend: Die Leitung startet die nächste Runde; alle Partien darin beginnen zugleich. */
+  startRound(token: string): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    const index = startableStage(this.s, this.currentStage());
+    if (index === null) return 'Gerade gibt es keine Runde zu starten.';
+    startStage(this.s, index, this.deps.now());
+    this.settle();
     this.touch();
     return null;
   }
@@ -453,7 +479,7 @@ export class Tournament {
   nextWakeup(): number {
     const times = [this.expiresAt()];
     if (isLocal(this.s)) return times[0]!;
-    for (const match of this.s.matches) if (match.status === 'open') times.push(dueAt(this.s, match));
+    for (const match of this.s.matches) if (match.status === 'open' && !isHeld(this.s, match)) times.push(dueAt(this.s, match));
     // Die Ausschreibung muss sich regelmäßig neu melden, sonst fällt sie aus der Liste.
     if (this.publicListing()) times.push(this.deps.now() + OPEN_ROOM_REFRESH_MS);
     return Math.min(...times);
@@ -503,6 +529,7 @@ export class Tournament {
       fields: s.fields ?? 0,
       stages: s.stages,
       currentStage: this.currentStage(),
+      startableStage: startableStage(s, this.currentStage()),
       matches: s.matches.map(({ everReady: _hidden, ...match }) => (planned?.has(match.id) ? { ...match, plannedAt: planned.get(match.id)! } : match)),
       schedule: s.schedule ?? null,
       referees: s.referees === true,
@@ -544,7 +571,7 @@ export class Tournament {
           const bye = match.slots.some((slot) => slot.player === null);
           this.decide(match, { winner: gone[0] && gone[1] ? null : gone[0] ? 1 : 0, draw: false, walkover: true, ...(bye ? { bye } : {}) });
           moved = true;
-        } else if (!isLocal(this.s) && now >= dueAt(this.s, match)) {
+        } else if (!isLocal(this.s) && !isHeld(this.s, match) && now >= dueAt(this.s, match)) {
           this.decide(match, deadlineOutcome(match));
           moved = true;
         }
@@ -554,6 +581,7 @@ export class Tournament {
       if (!moved) break;
     }
     if (isLocal(this.s)) assignFields(this.s, now);
+    autoStart(this.s, now);
     this.checkFinished();
   }
 

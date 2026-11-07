@@ -1,5 +1,5 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { GROUP_COUNT_CHOICES, TOURNAMENT_MAX_FIELDS, isTournamentGame, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TOURNAMENT_MAX_FIELDS, isTournamentGame, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
@@ -44,7 +44,8 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [gameId, setGameId] = useState(tournamentGames.find((g) => g.id === 'chess')?.id ?? tournamentGames[0]?.id ?? '');
   const [format, setFormat] = useState<TournamentFormat>('world');
   const [time, setTime] = useState<TournamentSettings['time']>('normal');
-  const [days, setDays] = useState(7);
+  /** Tempo: „d7“ = 7 Tage je Phase, „m20“ = Turnierabend mit 20 Minuten je Partie. */
+  const [pace, setPace] = useState('d7');
   const [thirdPlace, setThirdPlace] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
   const [specs, setSpecs] = useState<OptionSpec[]>([]);
@@ -70,8 +71,18 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [error, setError] = useState<string | null>(null);
 
   const local = mode === 'local';
+  /** Vor Ort gespieltes Brett-&-Blatt-Spiel (Stufe 3); leer bei einer Sportart. */
+  const localGame = sportPreset.startsWith('game:') ? sportPreset.slice(5) : '';
   const pickSport = (preset: string) => {
     setSportPreset(preset);
+    const game = preset.startsWith('game:') ? tournamentGames.find((g) => g.id === preset.slice(5)) : undefined;
+    if (game) {
+      setSport(game.name);
+      setResult('winner');
+      setDraws(true);
+      setFieldLabel('Tisch');
+      return;
+    }
     const found = SPORTS.find((item) => item.name === preset);
     if (!found) return setSport('');
     setSport(found.name);
@@ -87,8 +98,8 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
       const common = { name: name.trim(), format, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}) };
       const settings = local
-        ? { ...common, gameId: '', time: 'normal' as const, days: 1, isPublic: false, mode, sport: sport.trim(), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}) }
-        : { ...common, gameId, time, days, isPublic, options: chosen };
+        ? { ...common, gameId: localGame, time: 'normal' as const, days: 1, isPublic: false, mode, sport: sport.trim(), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}) }
+        : { ...common, gameId, time, isPublic, options: chosen, ...(pace.startsWith('m') ? { days: 1, minutes: Number(pace.slice(1)) } : { days: Number(pace.slice(1)) }) };
       const code = await createTournament(settings, profile);
       storage.rememberTournament({ code, name: name.trim() });
       passChanged();
@@ -153,11 +164,18 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
                       </option>
                     ))}
                     <option value="">{t('tournament.sportOwn')}</option>
+                    <optgroup label={t('tournament.sportGames')}>
+                      {tournamentGames.map((game) => (
+                        <option key={game.id} value={`game:${game.id}`}>
+                          {game.emoji} {game.name}
+                        </option>
+                      ))}
+                    </optgroup>
                   </select>
                 </label>
                 <label className="block space-y-1 text-sm">
                   <span>{t('tournament.sport')}</span>
-                  <input className={FIELD} required maxLength={30} value={sport} onChange={(e) => setSport(e.target.value)} />
+                  <input className={FIELD} required maxLength={30} value={sport} disabled={localGame !== ''} onChange={(e) => setSport(e.target.value)} />
                 </label>
                 <label className="block space-y-1 text-sm">
                   <span>{t('tournament.result')}</span>
@@ -277,13 +295,22 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               </select>
             </label>
             <label className="block space-y-1 text-sm">
-              <span>{t('tournament.days')}</span>
-              <select className={FIELD} value={days} onChange={(e) => setDays(Number(e.target.value))}>
-                {[1, 3, 7, 14].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
+              <span>{t('tournament.pace')}</span>
+              <select className={FIELD} value={pace} onChange={(e) => setPace(e.target.value)}>
+                <optgroup label={t('tournament.paceDays')}>
+                  {[1, 3, 7, 14].map((n) => (
+                    <option key={n} value={`d${n}`}>
+                      {t(n === 1 ? 'tournament.paceDay' : 'tournament.paceDaysN', { n })}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label={t('tournament.paceEvening')}>
+                  {EVENING_MINUTE_CHOICES.map((n) => (
+                    <option key={n} value={`m${n}`}>
+                      {t('tournament.paceMinutes', { n })}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </label>
           </div>

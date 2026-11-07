@@ -1,4 +1,5 @@
 import type { Options } from '@brett-und-blatt/engine';
+import { eveningDueAt, isEvening } from './evening';
 import { MATCH_MIN_TIME_MS, READY_WINDOW_MS, type MatchOutcome, type MatchSide, type TournamentMatch, type TournamentSettings, type TournamentSnapshot } from './types';
 
 /**
@@ -62,6 +63,7 @@ export function sideOfSeat(match: TournamentMatch, seat: 0 | 1 | null): MatchSid
 
 /** Ab wann eine offene Partie verfällt: Stichtag der Phase, mindestens `MATCH_MIN_TIME_MS` nach dem Öffnen. */
 export function dueAt(s: TournamentSnapshot, match: TournamentMatch): number {
+  if (isEvening(s)) return eveningDueAt(s, match);
   return Math.max(s.stages[match.stage]?.deadline ?? 0, (match.openedAt ?? 0) + MATCH_MIN_TIME_MS);
 }
 

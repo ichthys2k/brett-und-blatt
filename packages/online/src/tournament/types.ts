@@ -47,7 +47,7 @@ export interface TournamentSettings {
   isPublic?: boolean;
   /** Spieloptionen aller Partien; was fehlt, steht auf dem Standard. */
   options?: Options;
-  /** Fehlt = online. Vor Ort ist `gameId` leer, `time` und `days` gelten nicht. */
+  /** Fehlt = online. Vor Ort gelten `time` und `days` nicht; `gameId` ist leer oder das Brett-&-Blatt-Spiel, das als Sportart gespielt wird (Stufe 3). */
   mode?: TournamentMode;
   /** Vor Ort: Sportart oder Spiel, frei („Tischkicker“, „Volleyball“). */
   sport?: string;
@@ -63,6 +63,11 @@ export interface TournamentSettings {
   returnRound?: boolean;
   /** WM-Form: Gruppenzahl (Zweierpotenz); fehlt = automatisch. */
   groupCount?: number;
+  /**
+   * Turnierabend (Stufe 3, nur online): Minuten je Partie statt Tage je Phase. Jede Runde
+   * startet die Leitung, dann beginnen alle Partien der Runde zugleich.
+   */
+  minutes?: number;
 }
 
 /** Woher ein noch offener Platz seinen Spieler bekommt. */
@@ -135,6 +140,8 @@ export interface TournamentStage {
   kind: 'group' | 'swiss' | 'ko' | 'double' | 'league';
   round: number;
   deadline: number;
+  /** Turnierabend: Wann die Leitung die Runde gestartet hat; fehlt = noch nicht. */
+  startedAt?: number;
 }
 
 export interface TournamentPlayer {
@@ -262,6 +269,8 @@ export interface TournamentView {
   stages: TournamentStage[];
   /** Index der laufenden Phase. */
   currentStage: number;
+  /** Turnierabend: Runde, die die Leitung jetzt starten kann; sonst null. */
+  startableStage: number | null;
   /** `plannedAt`: Uhrzeit laut Zeitplan (vor Ort, wenn einer gesetzt ist). */
   matches: (Omit<TournamentMatch, 'everReady'> & { plannedAt?: number })[];
   schedule: TournamentSchedule | null;
