@@ -1,13 +1,18 @@
 import { OPEN_ROOM_REFRESH_MS } from './lobby';
+import { AVATARS } from './avatars';
 import { cleanAvatar, cleanName } from './names';
 import type { OpenRoomListing } from './protocol';
 import { FORMATS, type FormatContext, type TournamentFormatRules } from './tournament/formats';
 import { upgradeSnapshot, type StoredTournamentSnapshot } from './tournament/migrate';
+import { assignFields, isLocal, outcomeFromEntry, type ResultEntry } from './tournament/local-play';
 import { deadlineOutcome, dueAt, roomRequest, setReady, sideOfSeat, type MatchRoomRequest, type RoomReport } from './tournament/online-play';
 import { seededShuffle } from './tournament/pairing';
 import { defaultScoring, standings } from './tournament/scoring';
 import {
   DAY_MS,
+  ENTRANT_NAME_LENGTH,
+  LEAGUE_KEEP_MS,
+  TOURNAMENT_MAX_FIELDS,
   TOURNAMENT_MAX_PLAYERS,
   TOURNAMENT_KEEP_MS,
   type MatchOutcome,
@@ -29,6 +34,7 @@ export * from './tournament/pairing';
 export * from './tournament/scoring';
 export * from './tournament/formats';
 export * from './tournament/online-play';
+export * from './tournament/local-play';
 export * from './tournament/migrate';
 export * from './tournament/protocol';
 
@@ -38,7 +44,7 @@ export * from './tournament/protocol';
  * für jede Partie einen normalen Spielraum an und meldet das Ergebnis zurück.
  *
  * Aufgeteilt (W-058 Stufe 0): Formen in `tournament/formats.ts`, Wertung in `scoring.ts`,
- * Austragung online in `online-play.ts`; diese Klasse hält Zustand, Rollen, Fristen und Sichten.
+ * Austragung online in `online-play.ts`, vor Ort in `local-play.ts` (Stufe 1); diese Klasse hält Zustand, Rollen, Fristen und Sichten.
  */
 
 export interface TournamentDeps {
@@ -55,15 +61,17 @@ export class Tournament {
     private deps: TournamentDeps,
   ) {}
 
-  static create(code: string, seed: string, settings: TournamentSettings, leader: { token: string; name: string }, deps: TournamentDeps): Tournament {
+  static create(code: string, seed: string, settings: TournamentSettings, leader: { token: string; name: string }, deps: TournamentDeps, fields = 0): Tournament {
     const now = deps.now();
+    const local = settings.mode === 'local';
+    const withScore = local && settings.result !== undefined && settings.result !== 'winner';
     return new Tournament(
       {
         version: 2,
         code,
         seed,
         settings,
-        scoring: defaultScoring(settings.format),
+        scoring: defaultScoring(settings.format, withScore),
         leaderToken: leader.token,
         leaderName: cleanName(leader.name) ?? 'Leitung',
         phase: 'signup',
@@ -76,6 +84,7 @@ export class Tournament {
         createdAt: now,
         lastActivity: now,
         finishedAt: null,
+        ...(local ? { fields: Math.max(0, Math.min(TOURNAMENT_MAX_FIELDS, Math.floor(fields))) } : {}),
       },
       deps,
     );
@@ -117,8 +126,12 @@ export class Tournament {
     return this.s.settings.name;
   }
 
-  /** Darf diese Kennung die Turnierseite sehen? In der Einschreibung jeder mit dem Link. */
+  /**
+   * Darf diese Kennung die Turnierseite sehen? Online in der Einschreibung jeder mit dem Link;
+   * vor Ort nur die Leitung, mit Zuschaulink jeder.
+   */
   maySee(token: string): boolean {
+    if (isLocal(this.s)) return this.s.settings.spectators === true || this.isLeader(token);
     return this.s.phase === 'signup' || token === this.s.leaderToken || this.playerByToken(token) !== undefined;
   }
 
@@ -142,6 +155,7 @@ export class Tournament {
   // Handlungen. Ein Text bedeutet: abgelehnt, mit dieser Begründung.
 
   join(token: string, name: string, avatar: string): string | null {
+    if (isLocal(this.s)) return 'Die Leitung trägt die Teilnehmer ein.';
     if (this.s.phase !== 'signup') return 'Die Einschreibung ist beendet.';
     if (this.playerByToken(token)) return null;
     if (this.s.players.length >= TOURNAMENT_MAX_PLAYERS) return 'Das Turnier ist voll.';
@@ -153,6 +167,7 @@ export class Tournament {
   }
 
   leave(token: string): string | null {
+    if (isLocal(this.s)) return 'Die Leitung trägt die Teilnehmer ein.';
     if (this.s.phase !== 'signup') return 'Das Turnier läuft schon. Die Leitung kann dich zurückziehen.';
     this.s.players = this.s.players.filter((p) => p.token !== token);
     this.touch();
@@ -190,6 +205,7 @@ export class Tournament {
   }
 
   ready(token: string, matchId: string, ready: boolean): string | null {
+    if (isLocal(this.s)) return 'Vor Ort ruft die Leitung die Partien auf.';
     const match = this.match(matchId);
     const side = match?.slots.findIndex((slot) => slot.player === this.playerByToken(token)?.id) ?? -1;
     if (!match || side < 0) return 'Das ist nicht deine Partie.';
@@ -250,6 +266,7 @@ export class Tournament {
 
   extend(token: string, days: number): string | null {
     if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (isLocal(this.s)) return 'Vor Ort gibt es keine Stichtage.';
     if (this.s.phase !== 'running') return 'Das Turnier läuft nicht.';
     const current = this.currentStage();
     this.s.stages.forEach((stage, index) => {
@@ -281,6 +298,65 @@ export class Tournament {
   }
 
   // -------------------------------------------------------------------------
+  // Vor Ort (W-058 Stufe 1): Die Leitung trägt Teilnehmer und Ergebnisse ein.
+
+  /** Teilnehmer eintragen, einer je Name. Ohne Kennung: Sie brauchen kein Gerät. */
+  addEntrants(token: string, names: readonly string[]): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!isLocal(this.s)) return 'Online schreiben sich die Spieler selbst ein.';
+    if (this.s.phase !== 'signup') return 'Die Einschreibung ist beendet.';
+    const clean = names.map((name) => cleanName(name, ENTRANT_NAME_LENGTH));
+    if (clean.some((name) => name === null)) return 'Bitte einen anderen Namen wählen.';
+    if (this.s.players.length + clean.length > TOURNAMENT_MAX_PLAYERS) return `Höchstens ${TOURNAMENT_MAX_PLAYERS} Teilnehmer.`;
+    const taken = new Set(this.s.players.map((p) => p.name.toLocaleLowerCase('de')));
+    for (const name of clean as string[]) {
+      if (taken.has(name.toLocaleLowerCase('de'))) return `„${name}“ steht schon auf der Liste.`;
+      taken.add(name.toLocaleLowerCase('de'));
+    }
+    for (const name of clean as string[]) {
+      const number = this.s.nextPlayer++;
+      this.s.players.push({ id: `p${number}`, token: '', name, avatar: AVATARS[(number - 1) % AVATARS.length]!, withdrawn: false });
+    }
+    this.touch();
+    return null;
+  }
+
+  removeEntrant(token: string, playerId: string): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!isLocal(this.s) || this.s.phase !== 'signup') return 'Das geht gerade nicht.';
+    this.s.players = this.s.players.filter((p) => p.id !== playerId);
+    this.touch();
+    return null;
+  }
+
+  /** Ergebnis vom Tisch: Spielstand oder Sieger. Auch zum Berichtigen, solange nichts daran hängt. */
+  enterResult(token: string, matchId: string, entry: ResultEntry): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!isLocal(this.s)) return 'Online meldet der Spielraum das Ergebnis.';
+    const match = this.match(matchId);
+    if (!match || match.status === 'waiting' || match.slots.some((slot) => !slot.player)) return 'Diese Partie steht noch nicht fest.';
+    if (match.outcome?.bye) return 'Ein Freilos hat kein Ergebnis.';
+    if (!this.mayChange(match)) return 'Daran hängen schon weitere Partien.';
+    const outcome = outcomeFromEntry(entry, this.s.settings.draws === true && !this.needsWinner(match));
+    if (typeof outcome === 'string') return outcome;
+    this.decide(match, outcome);
+    this.settle();
+    this.touch();
+    return null;
+  }
+
+  /** Zahl der Tische oder Felder; 0 schaltet den Aufruf ab. */
+  setFields(token: string, count: number): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!isLocal(this.s)) return 'Online gibt es keine Tische.';
+    if (!Number.isInteger(count) || count < 0 || count > TOURNAMENT_MAX_FIELDS) return `Zwischen 0 und ${TOURNAMENT_MAX_FIELDS}.`;
+    this.s.fields = count;
+    if (this.s.phase === 'running') assignFields(this.s, this.deps.now());
+    this.touch();
+    return null;
+  }
+
+  // -------------------------------------------------------------------------
   // Zeit
 
   /** Erledigt fällige Stichtage und räumt ab. Sagt, ob sich etwas geändert hat. */
@@ -296,6 +372,7 @@ export class Tournament {
   /** Wann `tick` wieder etwas tun kann, oder wann das Turnier gelöscht wird. */
   nextWakeup(): number {
     const times = [this.expiresAt()];
+    if (isLocal(this.s)) return times[0]!;
     for (const match of this.s.matches) if (match.status === 'open') times.push(dueAt(this.s, match));
     // Die Ausschreibung muss sich regelmäßig neu melden, sonst fällt sie aus der Liste.
     if (this.publicListing()) times.push(this.deps.now() + OPEN_ROOM_REFRESH_MS);
@@ -304,7 +381,7 @@ export class Tournament {
 
   /** Karte für „Offene Runden“: nur öffentlich und nur, solange man sich einschreiben kann. */
   publicListing(): OpenRoomListing | null {
-    if (this.s.phase !== 'signup' || this.s.settings.isPublic === false) return null;
+    if (this.s.phase !== 'signup' || this.s.settings.isPublic === false || isLocal(this.s)) return null;
     return {
       code: this.s.code,
       gameId: this.s.settings.gameId,
@@ -322,6 +399,8 @@ export class Tournament {
 
   /** Ab dann darf das Turnier samt allen Daten verschwinden. */
   expiresAt(): number {
+    // Ligen laufen über Monate und bleiben ein Jahr nach der letzten Aktivität.
+    if (this.s.settings.format === 'league') return this.s.lastActivity + LEAGUE_KEEP_MS;
     return (this.s.finishedAt ?? this.s.lastActivity) + TOURNAMENT_KEEP_MS;
   }
 
@@ -339,6 +418,8 @@ export class Tournament {
       players: s.players.map(({ id, name, avatar, withdrawn }) => ({ id, name, avatar, withdrawn })),
       groups: s.groups.map((players, group) => ({ players, table: this.groupTable(group), settled: this.groupSettled(group) })),
       swissTable: s.settings.format === 'swiss' && s.phase !== 'signup' ? this.overallTable() : [],
+      table: (s.settings.format === 'swiss' || s.settings.format === 'league') && s.phase !== 'signup' ? this.overallTable() : [],
+      fields: s.fields ?? 0,
       stages: s.stages,
       currentStage: this.currentStage(),
       matches: s.matches.map(({ everReady: _hidden, ...match }) => match),
@@ -370,14 +451,15 @@ export class Tournament {
     for (let pass = 0; pass < 200; pass++) {
       let moved = false;
       for (const match of this.s.matches) {
-        if (match.status !== 'open') continue;
+        // Vor Ort läuft eine aufgerufene Partie am Tisch; ein Rückzug entscheidet auch sie.
+        if (match.status !== 'open' && !(isLocal(this.s) && match.status === 'running')) continue;
         const gone = match.slots.map((slot) => slot.player === null || this.s.players.find((p) => p.id === slot.player)?.withdrawn === true);
         if (gone[0] || gone[1]) {
           // Ein leerer Platz ist ein Freilos, ein Rückzug kampflos.
           const bye = match.slots.some((slot) => slot.player === null);
           this.decide(match, { winner: gone[0] && gone[1] ? null : gone[0] ? 1 : 0, draw: false, walkover: true, ...(bye ? { bye } : {}) });
           moved = true;
-        } else if (now >= dueAt(this.s, match)) {
+        } else if (!isLocal(this.s) && now >= dueAt(this.s, match)) {
           this.decide(match, deadlineOutcome(match));
           moved = true;
         }
@@ -386,6 +468,7 @@ export class Tournament {
       if (this.format.advance(this.ctx)) moved = true;
       if (!moved) break;
     }
+    if (isLocal(this.s)) assignFields(this.s, now);
     this.checkFinished();
   }
 
@@ -437,6 +520,8 @@ export class Tournament {
     match.status = 'done';
     match.finishedAt = this.deps.now();
     match.readyAt = [null, null];
+    // Vor Ort ist die Partie vom Tisch; die Nummer bleibt zur Anzeige stehen.
+    delete match.calledAt;
   }
 
   private reopen(match: TournamentMatch): void {
@@ -486,6 +571,8 @@ export class Tournament {
   }
 
   private playerByToken(token: string): TournamentPlayer | undefined {
+    // Teilnehmer vor Ort haben keine Kennung.
+    if (!token) return undefined;
     return this.s.players.find((p) => p.token === token);
   }
 

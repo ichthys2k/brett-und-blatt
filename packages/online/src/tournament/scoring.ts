@@ -6,9 +6,15 @@ import type { ScoringRules, StandingRow, Tiebreak, TournamentFormat, TournamentM
  * gespielt wird; die Form bestimmt nur die Voreinstellung.
  */
 
-/** Voreinstellung je Form: Sieg 3, Remis 1; Gruppen nach direktem Vergleich, Schweizer System nach Buchholz. */
-export function defaultScoring(format: TournamentFormat): ScoringRules {
-  return { win: 3, draw: 1, loss: 0, tiebreaks: format === 'swiss' ? ['buchholz', 'wins'] : ['direct', 'wins'] };
+/**
+ * Voreinstellung je Form: Sieg 3, Remis 1. Online: Gruppen nach direktem Vergleich, Schweizer
+ * System nach Buchholz. Mit Spielstand (vor Ort, Liga) wie in der Bundesliga zuerst Tordifferenz
+ * und erzielte Tore, dann der direkte Vergleich.
+ */
+export function defaultScoring(format: TournamentFormat, withScore = false): ScoringRules {
+  if (format === 'swiss') return { win: 3, draw: 1, loss: 0, tiebreaks: withScore ? ['buchholz', 'difference', 'wins'] : ['buchholz', 'wins'] };
+  if (withScore || format === 'league') return { win: 3, draw: 1, loss: 0, tiebreaks: ['difference', 'scored', 'direct', 'wins'] };
+  return { win: 3, draw: 1, loss: 0, tiebreaks: ['direct', 'wins'] };
 }
 
 /** Punkte einer Seite aus einer entschiedenen Partie. */

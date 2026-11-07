@@ -1,4 +1,4 @@
-import { firstRoundSlots, groupCountFor, koFirstRound, loserOf, pairKey, roundRobinPairs, swissPairing, swissRoundsFor, winnerOf } from './pairing';
+import { firstRoundSlots, groupCountFor, koFirstRound, loserOf, pairKey, roundRobinPairs, roundRobinRounds, swissPairing, swissRoundsFor, winnerOf } from './pairing';
 import { TOURNAMENT_MIN_PLAYERS, DAY_MS, type MatchSlot, type MatchStatus, type StandingRow, type TournamentFormat, type TournamentMatch, type TournamentSnapshot } from './types';
 
 /**
@@ -101,7 +101,9 @@ const lastStage = (ctx: FormatContext) => Math.max(...ctx.s.matches.map((m) => m
 const world: TournamentFormatRules = {
   minPlayers: TOURNAMENT_MIN_PLAYERS.world,
   setup(ctx, ids, deadline) {
-    const groupCount = groupCountFor(ids.length);
+    // Vor Ort darf die Leitung die Gruppenzahl wählen, solange jede Gruppe mindestens zwei hat.
+    const wanted = ctx.s.settings.groupCount;
+    const groupCount = wanted && wanted * 2 <= ids.length ? wanted : groupCountFor(ids.length);
     const groups: string[][] = Array.from({ length: groupCount }, () => []);
     ids.forEach((id, i) => groups[i % groupCount]!.push(id));
     ctx.s.groups = groups;
@@ -248,4 +250,24 @@ const swiss: TournamentFormatRules = {
   podium: (ctx) => ctx.overallTable().slice(0, 3).map((r) => r.player),
 };
 
-export const FORMATS: Record<TournamentFormat, TournamentFormatRules> = { world, knockout, double, swiss };
+// ---------------------------------------------------------------------------
+// Bundesliga-Modus: jeder gegen jeden auf Spieltagen, optional mit Rückrunde
+
+const league: TournamentFormatRules = {
+  minPlayers: TOURNAMENT_MIN_PLAYERS.league,
+  setup(ctx, ids, deadline) {
+    const first = roundRobinRounds(ids);
+    // Die Rückrunde wiederholt die Hinrunde in derselben Reihenfolge mit getauschtem Heimrecht.
+    const rounds = ctx.s.settings.returnRound ? [...first, ...first.map((pairs) => pairs.map(([a, b]) => [b, a] as [string, string]))] : first;
+    ctx.s.stages = rounds.map((_, i) => ({ kind: 'league' as const, round: i + 1, deadline: deadline(i) }));
+    rounds.forEach((pairs, stage) => pairs.forEach(([a, b], i) => ctx.s.matches.push(ctx.newMatch(`t${stage}-${i}`, stage, null, [{ player: a }, { player: b }], 'open'))));
+  },
+  advance: () => false,
+  moreRounds: () => false,
+  needsWinner: () => false,
+  // An einem Ligaergebnis hängt keine andere Partie.
+  mayChangeDone: () => true,
+  podium: (ctx) => ctx.overallTable().slice(0, 3).map((r) => r.player),
+};
+
+export const FORMATS: Record<TournamentFormat, TournamentFormatRules> = { world, knockout, double, swiss, league };

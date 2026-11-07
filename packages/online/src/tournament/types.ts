@@ -5,8 +5,13 @@ import type { Options } from '@brett-und-blatt/engine';
  * Kennungen (`token`) sind geheim und stehen nie in einer Sicht.
  */
 
-export const TOURNAMENT_MIN_PLAYERS = { world: 6, swiss: 4, knockout: 4, double: 4 } as const;
-export const TOURNAMENT_MAX_PLAYERS = 32;
+export const TOURNAMENT_MIN_PLAYERS = { world: 6, swiss: 4, knockout: 4, double: 4, league: 3 } as const;
+/** Obergrenze für alle Turniere (Entscheidung 7.11.2026). */
+export const TOURNAMENT_MAX_PLAYERS = 128;
+/** Namen von Teilnehmern vor Ort dürfen länger sein als Spitznamen, z. B. „Anna / Ben“. */
+export const ENTRANT_NAME_LENGTH = 30;
+/** Höchstens so viele Tische oder Felder. */
+export const TOURNAMENT_MAX_FIELDS = 32;
 /** „Bereit“ gilt nur so lange, damit niemand Tage später in eine Partie gezogen wird. */
 export const READY_WINDOW_MS = 10 * 60 * 1000;
 /** Eine Partie, die spät spielbar wird, hat mindestens so lange Zeit. */
@@ -14,9 +19,16 @@ export const MATCH_MIN_TIME_MS = 24 * 60 * 60 * 1000;
 export const DAY_MS = 24 * 60 * 60 * 1000;
 /** Nach dem Ende bleibt das Turnier so lange sichtbar, dann wird es gelöscht. */
 export const TOURNAMENT_KEEP_MS = 30 * DAY_MS;
+/** Ligen laufen über Monate: ein Jahr nach der letzten Aktivität. */
+export const LEAGUE_KEEP_MS = 365 * DAY_MS;
 export const TOURNAMENT_NAME_LENGTH = 40;
 
-export type TournamentFormat = 'world' | 'swiss' | 'knockout' | 'double';
+/** WM-Form (vor Ort „Gruppen + K.-o.“), Schweizer System, K.-o., Doppel-K.-o., Bundesliga-Modus. */
+export type TournamentFormat = 'world' | 'swiss' | 'knockout' | 'double' | 'league';
+/** Online im Spielraum oder vor Ort mit Ergebnis von Hand. */
+export type TournamentMode = 'online' | 'local';
+/** Was vor Ort gezählt wird. */
+export type ResultKind = 'winner' | 'goals' | 'sets' | 'points';
 export type TournamentPhase = 'signup' | 'running' | 'finished';
 export type MatchStatus = 'waiting' | 'open' | 'running' | 'done';
 export type MatchSide = 0 | 1;
@@ -35,6 +47,22 @@ export interface TournamentSettings {
   isPublic?: boolean;
   /** Spieloptionen aller Partien; was fehlt, steht auf dem Standard. */
   options?: Options;
+  /** Fehlt = online. Vor Ort ist `gameId` leer, `time` und `days` gelten nicht. */
+  mode?: TournamentMode;
+  /** Vor Ort: Sportart oder Spiel, frei („Tischkicker“, „Volleyball“). */
+  sport?: string;
+  /** Vor Ort: was eingetragen wird; fehlt = nur Sieger. */
+  result?: ResultKind;
+  /** Vor Ort: Unentschieden erlaubt, wo die Form es zulässt (Gruppe, Liga, Schweizer System). */
+  draws?: boolean;
+  /** Vor Ort: Wie Tische oder Felder heißen („Tisch“, „Feld“). */
+  fieldLabel?: string;
+  /** Vor Ort: öffentlicher Lese-Link, auch für Menschen ohne Ausweis. */
+  spectators?: boolean;
+  /** Bundesliga-Modus: Rückrunde mit getauschtem Heimrecht. */
+  returnRound?: boolean;
+  /** WM-Form: Gruppenzahl (Zweierpotenz); fehlt = automatisch. */
+  groupCount?: number;
 }
 
 /** Woher ein noch offener Platz seinen Spieler bekommt. */
@@ -85,6 +113,9 @@ export interface TournamentMatch {
   /** Das Spiel um Platz 3 gehört nicht zum Weg des Siegers. */
   thirdPlace?: boolean;
   finishedAt?: number;
+  /** Vor Ort: Tisch oder Feld (ab 0), solange die Partie dort aufgerufen ist. */
+  field?: number;
+  calledAt?: number;
 }
 
 export interface TournamentStage {
@@ -92,7 +123,7 @@ export interface TournamentStage {
    * group, swiss, ko oder double; im K.-o. zählt `round` rückwärts: 1 = Finale, 2 = Halbfinale …
    * Beim Doppel-K.-o. teilen sich Gewinner- und Verliererrunden die Stichtage, `round` zählt nur durch.
    */
-  kind: 'group' | 'swiss' | 'ko' | 'double';
+  kind: 'group' | 'swiss' | 'ko' | 'double' | 'league';
   round: number;
   deadline: number;
 }
@@ -148,6 +179,8 @@ export interface TournamentSnapshot {
   finishedAt: number | null;
   /** Regelstand des Spiels beim Turnierstart. */
   ruleVersion?: number;
+  /** Vor Ort: Zahl der Tische oder Felder; 0 = ohne Aufruf, die Leitung trägt einfach ein. */
+  fields?: number;
 }
 
 /** Eine Zeile der Tabelle. */
@@ -181,6 +214,10 @@ export interface TournamentView {
   players: PublicPlayer[];
   groups: { players: string[]; table: StandingRow[]; settled: boolean }[];
   swissTable: StandingRow[];
+  /** Gesamttabelle im Schweizer System und im Bundesliga-Modus. */
+  table: StandingRow[];
+  /** Vor Ort: Zahl der Tische oder Felder. */
+  fields: number;
   stages: TournamentStage[];
   /** Index der laufenden Phase. */
   currentStage: number;

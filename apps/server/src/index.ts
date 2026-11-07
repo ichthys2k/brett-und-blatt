@@ -11,6 +11,7 @@ import {
   parseRoomCode,
   parseTournamentMessage,
   parseTournamentSettings,
+  parseFieldCount,
   randomRoomCode,
   serverBotRunner,
   type MatchRoomConfig,
@@ -176,7 +177,7 @@ export default {
       let body: { settings?: unknown; token?: unknown; name?: unknown };
       try {
         const text = await request.text();
-        if (text.length > 2000) return json({ error: 'size' }, 413, cors);
+        if (text.length > 4000) return json({ error: 'size' }, 413, cors);
         body = JSON.parse(text) as typeof body;
       } catch {
         return json({ error: 'body' }, 400, cors);
@@ -185,7 +186,7 @@ export default {
       if (!settings || typeof body.token !== 'string' || body.token.length < 16 || body.token.length > 100 || typeof body.name !== 'string') return json({ error: 'body' }, 400, cors);
       for (let attempt = 0; attempt < 5; attempt++) {
         const code = randomLetters(8);
-        if (await tournamentStub(env, code).create(code, settings, { token: body.token, name: body.name })) return json({ code }, 201, cors);
+        if (await tournamentStub(env, code).create(code, settings, { token: body.token, name: body.name }, parseFieldCount(body.settings))) return json({ code }, 201, cors);
       }
       return json({ error: 'busy' }, 503, cors);
     }
@@ -565,9 +566,9 @@ export class TournamentRoom extends DurableObject<Env> {
     });
   }
 
-  async create(code: string, settings: TournamentSettings, leader: { token: string; name: string }): Promise<boolean> {
+  async create(code: string, settings: TournamentSettings, leader: { token: string; name: string }, fields = 0): Promise<boolean> {
     if (this.tournament) return false;
-    this.tournament = Tournament.create(code, randomSeed(), settings, leader, this.deps());
+    this.tournament = Tournament.create(code, randomSeed(), settings, leader, this.deps(), fields);
     await this.changed();
     return true;
   }
@@ -633,6 +634,18 @@ export class TournamentRoom extends DurableObject<Env> {
         else this.sendTo(ws, { type: 'claimCode', player: message.player, code: issued.code });
         break;
       }
+      case 'addEntrants':
+        error = t.addEntrants(token, message.names);
+        break;
+      case 'removeEntrant':
+        error = t.removeEntrant(token, message.player);
+        break;
+      case 'enterResult':
+        error = t.enterResult(token, message.match, message.score ? { score: message.score } : { winner: message.winner! });
+        break;
+      case 'setFields':
+        error = t.setFields(token, message.count);
+        break;
     }
     if (error) return this.sendTo(ws, { type: 'error', message: error });
     await this.changed();
