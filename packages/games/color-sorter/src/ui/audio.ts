@@ -12,19 +12,20 @@ function getBaseUrl(): string {
 
 const player = new SoundPlayer(`${getBaseUrl().replace(/\/$/, '')}/klaenge/`);
 
+/** Kombi-Ansagen mit den Narrenhof-Namen. Farb-Fünfling hat noch keine eigene Aufnahme. */
 const HAND_SOUNDS: Record<HandType, SoundName> = {
-  high: 'fs-hand-einzelwert',
-  pair: 'fs-hand-duo',
-  twoPair: 'fs-hand-doppelduo',
-  three: 'fs-hand-triple',
-  straight: 'fs-hand-zahlenlauf',
-  flush: 'fs-hand-farbensatz',
-  fullHouse: 'fs-hand-kombisatz',
-  four: 'fs-hand-quartett',
-  straightFlush: 'fs-hand-farbenstrasse',
-  flushHouse: 'fs-hand-farbenlauf-deluxe',
-  five: 'fs-hand-quintett',
-  flushFive: 'fs-hand-quintett',
+  high: 'fs-hand-hohe-karte',
+  pair: 'fs-hand-paar',
+  twoPair: 'fs-hand-zwei-paare',
+  three: 'fs-hand-drilling',
+  straight: 'fs-hand-strasse',
+  flush: 'fs-hand-farbe',
+  fullHouse: 'fs-hand-full-house',
+  four: 'fs-hand-vierling',
+  straightFlush: 'fs-hand-farbstrasse',
+  five: 'fs-hand-fuenfling',
+  flushHouse: 'fs-hand-full-house-in-farbe',
+  flushFive: 'fs-hand-fuenfling',
 };
 
 export function playEffect(name: SoundName, { volume = 1, delay = 0 }: { volume?: number; delay?: number } = {}): void {
@@ -35,8 +36,9 @@ export function playEffect(name: SoundName, { volume = 1, delay = 0 }: { volume?
   }
 }
 
-export function playHandAnnouncement(handType: HandType): void {
-  const soundName = HAND_SOUNDS[handType];
+/** `label` wie aus `handLabel`: die Farbstraße 10 bis Ass heißt „Königsstraße“. */
+export function playHandAnnouncement(handType: HandType, label?: string): void {
+  const soundName = label === 'Königsstraße' ? 'fs-hand-koenigsstrasse' : HAND_SOUNDS[handType];
   if (soundName) {
     playEffect(soundName, { volume: 1.1 });
   }

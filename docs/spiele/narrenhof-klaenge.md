@@ -12,7 +12,7 @@ Stand: 29.10.2026. Sammlung von Cornelius' Klangwünschen für den Narrenhof (`p
 | Applaus, Jubel | `applause_small`, `applause_huge` | passt |
 | Hoftag, Thronsaal, Sieg | `level_up_classical`, `trophy_unlocked`, `victory_fanfare` | brauchbar, nicht höfisch |
 | Verlieren, Ausscheiden | `fs_game_over` | passt |
-| Kombi-Ansagen `fs_hand_*` | Sprachaufnahmen mit den alten Namen | offen |
+| Kombi-Ansagen `fs_hand_*` | Neu aufgenommen am 7.11.2026 (#50), ElevenLabs-Stimme `ML23UVoFL5mI6APbRAeR` „Robert Ranger“; Königsstraße eigens. Straße und Farb-Fünfling fehlen noch (Straße nutzt die alte Aufnahme, Farb-Fünfling die des Fünflings) | fast fertig |
 
 ## Aus PepperMINT wiederverwendbar (liegt schon im Klang-Repo)
 
