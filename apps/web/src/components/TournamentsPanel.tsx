@@ -38,6 +38,8 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [groupCount, setGroupCount] = useState(0);
   const [returnRound, setReturnRound] = useState(false);
   const [spectators, setSpectators] = useState(true);
+  const [points, setPoints] = useState({ win: 3, draw: 1, loss: 0 });
+  const pointsValid = points.win > points.draw && points.draw >= points.loss;
   const [name, setName] = useState('');
   const [gameId, setGameId] = useState(tournamentGames.find((g) => g.id === 'chess')?.id ?? tournamentGames[0]?.id ?? '');
   const [format, setFormat] = useState<TournamentFormat>('world');
@@ -85,7 +87,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
       const common = { name: name.trim(), format, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}) };
       const settings = local
-        ? { ...common, gameId: '', time: 'normal' as const, days: 1, isPublic: false, mode, sport: sport.trim(), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, ...(format === 'world' && groupCount ? { groupCount } : {}) }
+        ? { ...common, gameId: '', time: 'normal' as const, days: 1, isPublic: false, mode, sport: sport.trim(), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}) }
         : { ...common, gameId, time, days, isPublic, options: chosen };
       const code = await createTournament(settings, profile);
       storage.rememberTournament({ code, name: name.trim() });
@@ -242,6 +244,28 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               </select>
             </label>
           )}
+          {local && format !== 'knockout' && format !== 'double' && (
+            <fieldset className="space-y-1 text-sm">
+              <legend className="mb-1">{t('tournament.points')}</legend>
+              <div className="grid grid-cols-3 gap-2">
+                {(['win', 'draw', 'loss'] as const).map((kind) => (
+                  <label key={kind} className="block space-y-1 text-xs">
+                    <span>{t(`tournament.points.${kind}`)}</span>
+                    <input
+                      className={FIELD}
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={10}
+                      value={points[kind]}
+                      onChange={(e) => setPoints({ ...points, [kind]: Math.max(0, Math.min(10, Math.floor(Number(e.target.value) || 0))) })}
+                    />
+                  </label>
+                ))}
+              </div>
+              {!pointsValid && <span className="text-xs text-danger">{t('tournament.pointsInvalid')}</span>}
+            </fieldset>
+          )}
           {!local && (
           <div className="grid grid-cols-2 gap-3">
             <label className="block space-y-1 text-sm">
@@ -284,7 +308,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               {t('tournament.public')}
             </label>
           )}
-          <Button type="submit" variant="primary" className="w-full" disabled={busy || !name.trim() || (local ? !sport.trim() : !gameId)}>
+          <Button type="submit" variant="primary" className="w-full" disabled={busy || !name.trim() || (local ? !sport.trim() || !pointsValid : !gameId)}>
             🏆 {t('tournament.create')}
           </Button>
           {error && (

@@ -5,6 +5,7 @@ import {
   assignFields,
   outcomeFromEntry,
   parseFieldCount,
+  parsePointRules,
   parseTournamentMessage,
   parseTournamentSettings,
   roundRobinRounds,
@@ -15,10 +16,10 @@ import {
 const LEADER = 'kennung-der-leitung-01';
 const GUEST = 'kennung-eines-gastes-1';
 
-function local(entrants: number, format: TournamentFormat, extra: Partial<TournamentSettings> = {}, fields = 0) {
+function local(entrants: number, format: TournamentFormat, extra: Partial<TournamentSettings> = {}, fields = 0, points?: { win: number; draw: number; loss: number }) {
   const clock = { now: 1_000_000 };
   const settings: TournamentSettings = { name: 'Kickercup', gameId: '', format, time: 'normal', days: 1, thirdPlace: false, isPublic: false, mode: 'local', sport: 'Tischkicker', result: 'goals', draws: false, fieldLabel: 'Tisch', ...extra };
-  const t = Tournament.create('ABCD2345', 'seed-vor-ort', settings, { token: LEADER, name: 'Leitung' }, { now: () => clock.now, randomClaim: () => 'NEUCODE1' }, fields);
+  const t = Tournament.create('ABCD2345', 'seed-vor-ort', settings, { token: LEADER, name: 'Leitung' }, { now: () => clock.now, randomClaim: () => 'NEUCODE1' }, fields, points);
   const names = Array.from({ length: entrants }, (_, i) => `Team ${i + 1}`);
   if (entrants > 0) expect(t.addEntrants(LEADER, names)).toBeNull();
   return { t, clock };
@@ -235,5 +236,36 @@ describe('Formen vor Ort', () => {
     const final = t.view(LEADER).matches.find((m) => m.status === 'open')!;
     expect(t.enterResult(LEADER, final.id, { score: [3, 2] })).toBeNull();
     expect(t.enterResult(LEADER, a!.id, { score: [3, 0] })).toBe('Daran hängen schon weitere Partien.');
+  });
+});
+
+describe('Stufe 2: Nachmelden und eigene Punkte', () => {
+  it('Eigene Punkte je Ergebnis', () => {
+    expect(parsePointRules({ points: { win: 2, draw: 1, loss: 0 } })).toEqual({ win: 2, draw: 1, loss: 0 });
+    expect(parsePointRules({ points: { win: 1, draw: 1, loss: 0 } })).toBeUndefined();
+    expect(parsePointRules({ points: { win: 11, draw: 1, loss: 0 } })).toBeUndefined();
+    expect(parsePointRules({})).toBeUndefined();
+    const { t } = local(4, 'league', { draws: true }, 0, { win: 2, draw: 1, loss: 0 });
+    expect(t.start(LEADER)).toBeNull();
+    for (const m of t.view(LEADER).matches) expect(t.enterResult(LEADER, m.id, { score: [2, 1] })).toBeNull();
+    const table = t.view(LEADER).table;
+    expect(table.reduce((sum, r) => sum + r.points, 0)).toBe(6 * 2);
+  });
+
+  it('Nachmelden im Schweizer System: ab der nächsten Runde dabei', () => {
+    const { t } = local(6, 'swiss');
+    expect(t.start(LEADER)).toBeNull();
+    expect(t.addEntrants(LEADER, ['Spät / Dran', 'Noch / Später'])).toBeNull();
+    const late = t.snapshot().players.slice(-2).map((p) => p.id);
+    expect(t.view(LEADER).matches.some((m) => m.slots.some((s) => late.includes(s.player ?? '')))).toBe(false);
+    for (const m of t.view(LEADER).matches.filter((x) => x.status === 'open')) expect(t.enterResult(LEADER, m.id, { score: [1, 0] })).toBeNull();
+    const round2 = t.view(LEADER).matches.filter((m) => m.stage === 1);
+    expect(round2.flatMap((m) => m.slots.map((s) => s.player))).toEqual(expect.arrayContaining(late));
+  });
+
+  it('Nachmelden geht in anderen Formen nicht', () => {
+    const { t } = local(4, 'knockout');
+    expect(t.start(LEADER)).toBeNull();
+    expect(t.addEntrants(LEADER, ['Zu / Spät'])).toBe('Die Einschreibung ist beendet.');
   });
 });

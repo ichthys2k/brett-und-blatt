@@ -5,6 +5,7 @@ import type { OpenRoomListing } from './protocol';
 import { FORMATS, type FormatContext, type TournamentFormatRules } from './tournament/formats';
 import { upgradeSnapshot, type StoredTournamentSnapshot } from './tournament/migrate';
 import { assignFields, isLocal, outcomeFromEntry, type ResultEntry } from './tournament/local-play';
+import type { PointRules } from './tournament/protocol';
 import { deadlineOutcome, dueAt, roomRequest, setReady, sideOfSeat, type MatchRoomRequest, type RoomReport } from './tournament/online-play';
 import { seededShuffle } from './tournament/pairing';
 import { defaultScoring, standings } from './tournament/scoring';
@@ -61,7 +62,7 @@ export class Tournament {
     private deps: TournamentDeps,
   ) {}
 
-  static create(code: string, seed: string, settings: TournamentSettings, leader: { token: string; name: string }, deps: TournamentDeps, fields = 0): Tournament {
+  static create(code: string, seed: string, settings: TournamentSettings, leader: { token: string; name: string }, deps: TournamentDeps, fields = 0, points?: PointRules): Tournament {
     const now = deps.now();
     const local = settings.mode === 'local';
     const withScore = local && settings.result !== undefined && settings.result !== 'winner';
@@ -71,7 +72,7 @@ export class Tournament {
         code,
         seed,
         settings,
-        scoring: defaultScoring(settings.format, withScore),
+        scoring: { ...defaultScoring(settings.format, withScore), ...(local && points ? points : {}) },
         leaderToken: leader.token,
         leaderName: cleanName(leader.name) ?? 'Leitung',
         phase: 'signup',
@@ -304,7 +305,9 @@ export class Tournament {
   addEntrants(token: string, names: readonly string[]): string | null {
     if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
     if (!isLocal(this.s)) return 'Online schreiben sich die Spieler selbst ein.';
-    if (this.s.phase !== 'signup') return 'Die Einschreibung ist beendet.';
+    // Nachmelden geht nur im Schweizer System: Wer neu ist, wird ab der nächsten Runde mit gepaart.
+    const late = this.s.phase === 'running' && this.s.settings.format === 'swiss';
+    if (this.s.phase !== 'signup' && !late) return 'Die Einschreibung ist beendet.';
     const clean = names.map((name) => cleanName(name, ENTRANT_NAME_LENGTH));
     if (clean.some((name) => name === null)) return 'Bitte einen anderen Namen wählen.';
     if (this.s.players.length + clean.length > TOURNAMENT_MAX_PLAYERS) return `Höchstens ${TOURNAMENT_MAX_PLAYERS} Teilnehmer.`;

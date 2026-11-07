@@ -304,13 +304,35 @@ export function TournamentScreen({ code, claim }: { code: string; claim?: string
 // ---------------------------------------------------------------------------
 // Einschreibung
 
+/** Namen eintragen, einer je Zeile; der Text bleibt stehen, bis die Namen angekommen sind. */
+function EntrantForm({ view, send, label }: { view: TournamentView; send: Send; label: string }) {
+  const [text, setText] = useState('');
+  const count = view.players.length;
+  useEffect(() => setText(''), [count]);
+  return (
+    <form
+      className="space-y-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const names = text.split('\n').map((line) => line.trim()).filter(Boolean);
+        if (names.length > 0) send({ type: 'addEntrants', names });
+      }}
+    >
+      <label className="block space-y-1 text-sm">
+        <span>{label}</span>
+        <textarea className="min-h-24 w-full rounded-xl border border-line bg-surface px-3 py-2" rows={4} value={text} onChange={(e) => setText(e.target.value)} />
+      </label>
+      <Button type="submit" className="w-full" disabled={!text.trim()}>
+        ➕ {t('tournament.add')}
+      </Button>
+    </form>
+  );
+}
+
 /** Einschreibung vor Ort: Die Leitung trägt die Namen ein, Zuschauer sehen die Liste. */
 function LocalSignup({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
   const min = TOURNAMENT_MIN_PLAYERS[view.settings.format];
-  const [text, setText] = useState('');
-  // Erst leeren, wenn die Namen angekommen sind; bei einer Ablehnung bleibt der Text stehen.
   const count = view.players.length;
-  useEffect(() => setText(''), [count]);
   return (
     <>
       <Section title={t('tournament.entrants')}>
@@ -331,22 +353,7 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
         </ul>
         {view.isLeader && (
           <>
-            <form
-              className="space-y-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                const names = text.split('\n').map((line) => line.trim()).filter(Boolean);
-                if (names.length > 0) send({ type: 'addEntrants', names });
-              }}
-            >
-              <label className="block space-y-1 text-sm">
-                <span>{t('tournament.addEntrants')}</span>
-                <textarea className="min-h-24 w-full rounded-xl border border-line bg-surface px-3 py-2" rows={4} value={text} onChange={(e) => setText(e.target.value)} />
-              </label>
-              <Button type="submit" className="w-full" disabled={!text.trim()}>
-                ➕ {t('tournament.add')}
-              </Button>
-            </form>
+            <EntrantForm view={view} send={send} label={t('tournament.addEntrants')} />
             <p className="text-xs text-muted">{t('tournament.namesHint')}</p>
             <Button
               variant="primary"
@@ -960,6 +967,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
         📺 {t('tournament.board')}
       </Button>
       {local && <SpectatorLink view={view} code={code} />}
+      {local && view.phase === 'running' && view.settings.format === 'swiss' && <EntrantForm view={view} send={send} label={t('tournament.lateEntry')} />}
       {local && view.phase === 'running' && (
         <label className="block space-y-1 text-sm">
           <span>{t('tournament.fieldCount')}</span>

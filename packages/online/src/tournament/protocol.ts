@@ -138,6 +138,28 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
   };
 }
 
+/** Punkte je Ergebnis, die die Leitung vor Ort selbst festlegt. */
+export interface PointRules {
+  win: number;
+  draw: number;
+  loss: number;
+}
+
+/** Höchstens so viele Punkte je Partie. */
+export const MAX_POINTS = 10;
+
+/** Punkte je Sieg, Remis und Niederlage beim Anlegen vor Ort; undefined = Voreinstellung (3/1/0). */
+export function parsePointRules(body: unknown): PointRules | undefined {
+  const points = isRecord(body) ? body.points : undefined;
+  if (!isRecord(points)) return undefined;
+  const values = [points.win, points.draw, points.loss];
+  if (!values.every((v) => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= MAX_POINTS)) return undefined;
+  const [win, draw, loss] = values as [number, number, number];
+  // Ein Sieg muss mehr zählen als ein Remis, ein Remis nicht weniger als eine Niederlage.
+  if (!(win > draw && draw >= loss)) return undefined;
+  return { win, draw, loss };
+}
+
 /** Zahl der Tische oder Felder beim Anlegen vor Ort (0 bis 32). */
 export function parseFieldCount(body: unknown): number {
   const count = isRecord(body) ? body.fields : undefined;
