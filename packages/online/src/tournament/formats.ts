@@ -1,4 +1,5 @@
 import { firstRoundSlots, groupCountFor, koFirstRound, loserOf, pairKey, roundRobinPairs, roundRobinRounds, swissPairing, swissRoundsFor, winnerOf } from './pairing';
+import { tablesFormat } from './table-rounds';
 import { TOURNAMENT_MIN_PLAYERS, DAY_MS, type MatchSlot, type MatchStatus, type StandingRow, type TournamentFormat, type TournamentMatch, type TournamentSnapshot } from './types';
 
 /**
@@ -270,4 +271,4 @@ const league: TournamentFormatRules = {
   podium: (ctx) => ctx.overallTable().slice(0, 3).map((r) => r.player),
 };
 
-export const FORMATS: Record<TournamentFormat, TournamentFormatRules> = { world, knockout, double, swiss, league };
+export const FORMATS: Record<TournamentFormat, TournamentFormatRules> = { world, knockout, double, swiss, league, tables: tablesFormat };

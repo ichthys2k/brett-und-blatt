@@ -1,6 +1,7 @@
 import type { GameInfo, OptionSpec, Options } from '@brett-und-blatt/engine';
 import { cleanName } from '../names';
 import { DISCIPLINES_MAX, DISCIPLINES_MIN } from './disciplines';
+import { TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN } from './table-rounds';
 import { EVENING_EXTEND_CHOICES, EVENING_MINUTE_CHOICES } from './evening';
 import { ENTRANT_NAME_LENGTH, TOURNAMENT_MAX_FIELDS, TOURNAMENT_MAX_PLAYERS, TOURNAMENT_NAME_LENGTH, type MatchSide, type ResultKind, type TournamentFormat, type TournamentSettings, type TournamentView } from './types';
 
@@ -18,6 +19,7 @@ export type TournamentClientMessage =
   // Stufe 3: Turnierabend
   | { type: 'startRound' }
   | { type: 'wish'; disciplines: string[] }
+  | { type: 'enterTable'; table: string; places?: number[]; scores?: number[] }
   | { type: 'withdraw'; player: string }
   | { type: 'reissue'; player: string }
   // Vor Ort (Stufe 1), nur die Leitung:
@@ -60,6 +62,11 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
     case 'start':
     case 'startRound':
       return { type: m.type };
+    case 'enterTable': {
+      const list = (v: unknown) => Array.isArray(v) && v.length >= 2 && v.length <= 8 && v.every((x) => Number.isInteger(x) && Math.abs(x as number) <= 99_999);
+      if (!isShort(m.table) || (m.places !== undefined && !list(m.places)) || (m.scores !== undefined && !list(m.scores)) || (m.places === undefined) === (m.scores === undefined)) return null;
+      return { type: 'enterTable', table: m.table, ...(m.places ? { places: m.places as number[] } : {}), ...(m.scores ? { scores: m.scores as number[] } : {}) };
+    }
     case 'wish':
       return Array.isArray(m.disciplines) && m.disciplines.length <= DISCIPLINES_MAX && m.disciplines.every((d) => isShort(d, 40)) ? { type: 'wish', disciplines: m.disciplines as string[] } : null;
     case 'claim':
@@ -109,10 +116,15 @@ export function isTournamentGame(info: GameInfo): boolean {
   return info.players.min <= 2 && info.players.max >= 2 && !info.joinMidGame && !info.draft && (info.minHumans ?? 1) <= 2;
 }
 
+/** Tischrunden (Stufe 3 Teil 3): Spiele mit festen Plätzen ab drei Spielern; kein laufender Einstieg, keine Rollenspiele. */
+export function isTableGame(info: GameInfo): boolean {
+  return info.players.max >= 3 && !info.joinMidGame && !info.draft && (info.minHumans ?? 1) <= 3;
+}
+
 /** Turniercode: 8 Zeichen, zum Erraten zu viele. */
 export const TOURNAMENT_CODE_PATTERN = /^[2-9A-HJ-NP-Z]{8}$/;
 
-const FORMAT_IDS: readonly TournamentFormat[] = ['world', 'swiss', 'knockout', 'double', 'league'];
+const FORMAT_IDS: readonly TournamentFormat[] = ['world', 'swiss', 'knockout', 'double', 'league', 'tables'];
 const RESULT_KINDS: readonly ResultKind[] = ['winner', 'goals', 'sets', 'points'];
 /** Gruppenzahlen, die die Leitung vor Ort wählen darf. */
 export const GROUP_COUNT_CHOICES = [2, 4, 8, 16] as const;
@@ -134,7 +146,9 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
   if (disciplines === null) return null;
   const gameId = disciplines ? disciplines[0] : body.gameId;
   const game = typeof gameId === 'string' ? findGame(gameId) : undefined;
-  if (typeof gameId !== 'string' || !game || !isTournamentGame(game.info)) return null;
+  if (typeof gameId !== 'string' || !game) return null;
+  if (format === 'tables' ? !isTableGame(game.info) : !isTournamentGame(game.info)) return null;
+  const tables = format === 'tables' ? parseTableSettings(body, Math.max(TABLE_SIZE_MIN, game.info.players.min), Math.min(TABLE_SIZE_MAX, game.info.players.max)) : {};
   if (body.time !== 'relaxed' && body.time !== 'normal' && body.time !== 'fast') return null;
   // Turnierabend: Minuten je Partie statt Tage je Phase.
   const minutes = EVENING_MINUTE_CHOICES.includes(body.minutes as 10) ? { minutes: body.minutes as number } : {};
@@ -149,14 +163,17 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
     }
   }
   const multi = disciplines ? { disciplines, ...(body.wishes === true ? { wishes: true } : {}) } : {};
-  return { name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
+  return { ...tables, name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
 }
 
 /** Vor Ort: Sportart statt Spiel, keine Zeitvorgabe, nie in „Offene Runden“. */
 function parseLocalSettings(body: Record<string, unknown>, name: string, format: TournamentFormat, returnRound: { returnRound?: boolean }, findGame: (id: string) => { info: GameInfo } | undefined): TournamentSettings | null {
   // Ein Brett-&-Blatt-Spiel als Sportart (Stufe 3): Name aus dem Steckbrief, gespielt wird am Gerät.
   const game = typeof body.gameId === 'string' && body.gameId ? findGame(body.gameId) : undefined;
-  if (typeof body.gameId === 'string' && body.gameId && (!game || !isTournamentGame(game.info))) return null;
+  if (typeof body.gameId === 'string' && body.gameId && (!game || !(format === 'tables' ? isTableGame(game.info) : isTournamentGame(game.info)))) return null;
+  // Tischrunden vor Ort: Ohne Spiel aus Brett & Blatt darf ein Tisch einen Platz mehr oder weniger haben.
+  const size = Number.isInteger(body.tableSize) ? Math.max(TABLE_SIZE_MIN, Math.min(TABLE_SIZE_MAX, body.tableSize as number)) : 4;
+  const tables = format === 'tables' ? (game ? parseTableSettings(body, Math.max(TABLE_SIZE_MIN, game.info.players.min), Math.min(TABLE_SIZE_MAX, game.info.players.max)) : parseTableSettings(body, Math.max(TABLE_SIZE_MIN, size - 1), Math.min(TABLE_SIZE_MAX, size + 1))) : {};
   const disciplines = parseDisciplines(body, format, (name) => cleanName(name, ENTRANT_NAME_LENGTH));
   if (disciplines === null) return null;
   const sport = game ? game.info.name : typeof body.sport === 'string' ? cleanName(body.sport, ENTRANT_NAME_LENGTH) : disciplines ? 'Spieleabend' : null;
@@ -181,7 +198,16 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
     ...returnRound,
     ...groupCount,
     ...(disciplines ? { disciplines } : {}),
+    ...tables,
+    ...(format === 'tables' && body.lowWins === true ? { lowWins: true } : {}),
   };
+}
+
+/** Tischgröße, Grenzen und Rundenzahl der Tischrunden. */
+function parseTableSettings(body: Record<string, unknown>, min: number, max: number): Pick<TournamentSettings, 'tableSize' | 'tableMin' | 'tableMax' | 'rounds'> {
+  const wanted = Number.isInteger(body.tableSize) ? (body.tableSize as number) : Math.min(4, max);
+  const rounds = TABLE_ROUND_CHOICES.includes(body.rounds as 4) ? (body.rounds as number) : 4;
+  return { tableSize: Math.max(min, Math.min(max, wanted)), tableMin: min, tableMax: max, rounds };
 }
 
 /**

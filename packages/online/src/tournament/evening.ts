@@ -36,7 +36,8 @@ export function startableStage(s: TournamentSnapshot, current: number): number |
   if (!isEvening(s) || s.phase !== 'running') return null;
   const stage = s.stages[current];
   if (!stage || stage.startedAt !== undefined) return null;
-  return s.matches.some((m) => m.stage === current && m.status === 'open') ? current : null;
+  const open = s.matches.some((m) => m.stage === current && m.status === 'open') || (s.tables ?? []).some((t) => t.stage === current && t.status === 'open');
+  return open ? current : null;
 }
 
 /** Startet die Runde: Frist = Minuten × die meisten Partien eines Spielers in dieser Runde. */

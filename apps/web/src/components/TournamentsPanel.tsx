@@ -1,5 +1,5 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TOURNAMENT_MAX_FIELDS, isTournamentGame, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, TOURNAMENT_MAX_FIELDS, isTableGame, isTournamentGame, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
@@ -10,6 +10,8 @@ import { createTournament } from '../lib/tournament';
 import { Button, Section } from './controls';
 
 const tournamentGames = games.filter(isTournamentGame).sort((a, b) => a.name.localeCompare(b.name, 'de'));
+/** Spiele für Tischrunden: drei und mehr Plätze (Stufe 3 Teil 3). */
+const tableGames = games.filter(isTableGame).sort((a, b) => a.name.localeCompare(b.name, 'de'));
 const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
 
 /** Vorlagen vor Ort: Was gezählt wird, ob Remis geht und wie die Spielstätten heißen. */
@@ -56,6 +58,19 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [specs, setSpecs] = useState<OptionSpec[]>([]);
   const [options, setOptions] = useState<Options>({});
   const [busy, setBusy] = useState(false);
+  /** Tischrunden: Wunschgröße der Tische, Rundenzahl, vor Ort ob wenig Punkte gewinnen. */
+  const [tableSize, setTableSize] = useState(4);
+  const [rounds, setRounds] = useState(4);
+  const [lowWins, setLowWins] = useState(false);
+  const tables = format === 'tables';
+  const gameList = tables ? tableGames : tournamentGames;
+  // Beim Wechsel der Form ein passendes Spiel wählen.
+  useEffect(() => {
+    if (gameList.some((g) => g.id === gameId)) return;
+    setGameId((gameList.find((g) => g.id === (tables ? 'skat' : 'chess')) ?? gameList[0])?.id ?? '');
+    if (sportPreset.startsWith('game:') && !gameList.some((g) => `game:${g.id}` === sportPreset)) pickSport(SPORTS[0]!.name);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tables]);
 
   // Die Optionen stehen in den Regeln des Spiels, die erst bei Bedarf geladen werden.
   useEffect(() => {
@@ -79,9 +94,15 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const localDisciplineCount = new Set(localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean)).size;
   /** Vor Ort gespieltes Brett-&-Blatt-Spiel (Stufe 3); leer bei einer Sportart. */
   const localGame = sportPreset.startsWith('game:') ? sportPreset.slice(5) : '';
+  /** Mögliche Tischgrößen: die Plätze des Spiels, sonst 3 bis 8. */
+  const sizeGame = local ? (localGame ? gameList.find((g) => g.id === localGame) : undefined) : gameList.find((g) => g.id === gameId);
+  const sizeMin = Math.max(TABLE_SIZE_MIN, sizeGame?.players.min ?? TABLE_SIZE_MIN);
+  const sizeMax = Math.min(TABLE_SIZE_MAX, sizeGame?.players.max ?? TABLE_SIZE_MAX);
+  const sizeChoices = Array.from({ length: Math.max(0, sizeMax - sizeMin + 1) }, (_, i) => sizeMin + i);
+  const size = Math.min(sizeMax, Math.max(sizeMin, tableSize));
   const pickSport = (preset: string) => {
     setSportPreset(preset);
-    const game = preset.startsWith('game:') ? tournamentGames.find((g) => g.id === preset.slice(5)) : undefined;
+    const game = preset.startsWith('game:') ? gameList.find((g) => g.id === preset.slice(5)) : undefined;
     if (game) {
       setSport(game.name);
       setResult('winner');
@@ -102,7 +123,8 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
     setError(null);
     try {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
-      const common = { name: name.trim(), format, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}) };
+      const tableSettings = tables ? { tableSize: size, rounds, ...(local && lowWins ? { lowWins: true } : {}) } : {};
+      const common = { name: name.trim(), format, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...tableSettings };
       const many = format === 'league' && multi;
       const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
@@ -173,7 +195,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
                     ))}
                     <option value="">{t('tournament.sportOwn')}</option>
                     <optgroup label={t('tournament.sportGames')}>
-                      {tournamentGames.map((game) => (
+                      {gameList.map((game) => (
                         <option key={game.id} value={`game:${game.id}`}>
                           {game.emoji} {game.name}
                         </option>
@@ -215,7 +237,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
           <label className="block space-y-1 text-sm">
             <span>{t('tournament.game')}</span>
             <select className={FIELD} value={gameId} onChange={(e) => setGameId(e.target.value)}>
-              {tournamentGames.map((game) => (
+              {gameList.map((game) => (
                 <option key={game.id} value={game.id}>
                   {game.emoji} {game.name}
                 </option>
@@ -249,8 +271,40 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               <option value="double">{t('tournament.format.double')}</option>
               <option value="swiss">{t('tournament.format.swiss')}</option>
               <option value="league">{t('tournament.format.league')}</option>
+              <option value="tables">{t('tournament.format.tables')}</option>
             </select>
           </label>
+          {tables && (
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block space-y-1 text-sm">
+                <span>{t('tournament.tableSize')}</span>
+                <select className={FIELD} value={size} onChange={(e) => setTableSize(Number(e.target.value))}>
+                  {sizeChoices.map((n) => (
+                    <option key={n} value={n}>
+                      {t('tournament.tableSizeN', { n })}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block space-y-1 text-sm">
+                <span>{t('tournament.tableRounds')}</span>
+                <select className={FIELD} value={rounds} onChange={(e) => setRounds(Number(e.target.value))}>
+                  {TABLE_ROUND_CHOICES.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="col-span-2 text-xs text-muted">{t('tournament.tablesHint')}</p>
+              {local && (
+                <label className="col-span-2 flex items-center gap-2 text-sm">
+                  <input type="checkbox" className="h-4 w-4 accent-accent" checked={lowWins} onChange={(e) => setLowWins(e.target.checked)} />
+                  {t('tournament.lowWins')}
+                </label>
+              )}
+            </div>
+          )}
           {format === 'league' && (
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" className="h-4 w-4 accent-accent" checked={returnRound} onChange={(e) => setReturnRound(e.target.checked)} />
@@ -311,7 +365,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               </select>
             </label>
           )}
-          {local && format !== 'knockout' && format !== 'double' && (
+          {local && format !== 'knockout' && format !== 'double' && !tables && (
             <fieldset className="space-y-1 text-sm">
               <legend className="mb-1">{t('tournament.points')}</legend>
               <div className="grid grid-cols-3 gap-2">

@@ -7,6 +7,7 @@ import { upgradeSnapshot, type StoredTournamentSnapshot } from './tournament/mig
 import { SCHEDULE_MAX_MINUTES, assignFields, isLocal, outcomeFromEntry, plannedStarts, type ResultEntry } from './tournament/local-play';
 import type { PointRules } from './tournament/protocol';
 import { deadlineOutcome, dueAt, roomRequest, setReady, sideOfSeat, type MatchRoomRequest, type RoomReport } from './tournament/online-play';
+import { TABLE_SIZE_MAX, TABLE_SIZE_MIN, autoStartTables, decideTable, isTables, rerank, setTableReady, tableDeadlinePlaces, tableRoomRequest, tableSizes, tableStandings, validPlaces, placesFromScores } from './tournament/table-rounds';
 import { chooseDisciplines, disciplineOf, hasDisciplines, setWishes, wishCounts } from './tournament/disciplines';
 import { autoStart, isEvening, isHeld, startStage, startableStage } from './tournament/evening';
 import { seededShuffle } from './tournament/pairing';
@@ -29,6 +30,7 @@ import {
   type MatchStatus,
   type SlotSource,
   type StandingRow,
+  type TableGame,
   type TournamentMatch,
   type TournamentPhase,
   type TournamentPlayer,
@@ -45,6 +47,7 @@ export * from './tournament/online-play';
 export * from './tournament/local-play';
 export * from './tournament/evening';
 export * from './tournament/disciplines';
+export * from './tournament/table-rounds';
 export * from './tournament/migrate';
 export * from './tournament/protocol';
 
@@ -225,6 +228,7 @@ export class Tournament {
     const { days } = this.s.settings;
     const { minPlayers } = this.format;
     if (this.s.players.length < minPlayers) return `Es braucht mindestens ${minPlayers} Spieler.`;
+    if (isTables(this.s) && !tableSizes(this.s.players.length, this.s.settings.tableSize ?? 4, this.s.settings.tableMin ?? TABLE_SIZE_MIN, this.s.settings.tableMax ?? TABLE_SIZE_MAX)) return 'So viele Spieler lassen sich nicht auf Tische verteilen.';
     const now = this.deps.now();
     // Am Turnierabend gibt es Fristen erst, wenn die Leitung eine Runde startet.
     const deadline = (index: number) => (isEvening(this.s) ? 0 : now + (index + 1) * days * DAY_MS);
@@ -241,6 +245,16 @@ export class Tournament {
 
   ready(token: string, matchId: string, ready: boolean): string | null {
     if (isLocal(this.s)) return 'Vor Ort ruft die Leitung die Partien auf.';
+    const table = this.table(matchId);
+    if (table) {
+      const seat = table.seats.indexOf(this.playerByToken(token)?.id ?? '');
+      if (seat < 0) return 'Das ist nicht dein Tisch.';
+      if (isHeld(this.s, { stage: table.stage } as TournamentMatch)) return 'Die Runde hat noch nicht begonnen.';
+      const error = setTableReady(this.s, table, seat, ready, this.deps.now());
+      if (error) return error;
+      this.touch();
+      return null;
+    }
     const match = this.match(matchId);
     const side = match?.slots.findIndex((slot) => slot.player === this.playerByToken(token)?.id) ?? -1;
     if (!match || side < 0) return 'Das ist nicht deine Partie.';
@@ -253,10 +267,16 @@ export class Tournament {
 
   /** Aufträge für Spielräume: Partien, die laufen sollen und noch keinen Raum haben. */
   pendingRooms(): MatchRoomRequest[] {
-    return this.s.matches.flatMap((m) => roomRequest(this.s, m) ?? []);
+    return [...this.s.matches.flatMap((m) => roomRequest(this.s, m) ?? []), ...(this.s.tables ?? []).flatMap((t) => tableRoomRequest(this.s, t) ?? [])];
   }
 
   roomCreated(matchId: string, code: string): void {
+    const table = this.table(matchId);
+    if (table?.status === 'running' && !table.roomCode) {
+      table.roomCode = code;
+      this.touch();
+      return;
+    }
     const match = this.match(matchId);
     if (match?.status === 'running' && !match.roomCode) {
       match.roomCode = code;
@@ -266,8 +286,16 @@ export class Tournament {
 
   /** Ergebnis aus einem Spielraum. Veraltete Meldungen (anderer Raum) zählen nicht. */
   report(matchId: string, roomCode: string, report: RoomReport): boolean {
+    const table = this.table(matchId);
+    if (table) {
+      if (table.status !== 'running' || table.roomCode !== roomCode || report.kind !== 'placed' || report.places.length !== table.seats.length) return false;
+      decideTable(this.s, table, rerank(report.places), this.deps.now(), report.walkover ? { walkover: true } : {});
+      this.settle();
+      this.touch();
+      return true;
+    }
     const match = this.match(matchId);
-    if (!match || match.status !== 'running' || match.roomCode !== roomCode) return false;
+    if (!match || match.status !== 'running' || match.roomCode !== roomCode || report.kind === 'placed') return false;
     const winner = sideOfSeat(match, report.winner);
     if (report.kind === 'noShow') {
       if (winner === null) this.reopen(match);
@@ -405,6 +433,30 @@ export class Tournament {
     return null;
   }
 
+  /**
+   * Ergebnis eines Tisches: Plätze (0 = erster) oder Punkte im Spiel je Sitz. Vor Ort Leitung
+   * und Helfer, online nur die Leitung (z. B. wenn ein Raum hängt).
+   */
+  enterTable(token: string, tableId: string, entry: { places?: number[]; scores?: number[] }): string | null {
+    if (isLocal(this.s) ? !this.mayEnter(token) : !this.isLeader(token)) return isLocal(this.s) ? 'Das dürfen nur Leitung und Helfer.' : 'Das darf nur die Leitung.';
+    const table = this.table(tableId);
+    if (!table) return 'Diesen Tisch gibt es nicht.';
+    const n = table.seats.length;
+    let places = entry.places;
+    if (entry.scores) {
+      if (entry.scores.length !== n || !entry.scores.every((v) => Number.isInteger(v) && Math.abs(v) <= 99_999)) return 'Bitte für jeden Sitz Punkte eintragen.';
+      places = placesFromScores(entry.scores, this.s.settings.lowWins === true);
+    }
+    if (!places || !validPlaces(places, n)) return 'Diese Plätze passen nicht.';
+    const later = (this.s.tables ?? []).some((t) => t.stage > table.stage);
+    if (later && table.status !== 'done') return 'Diese Runde ist schon vorbei.';
+    table.roomCode = null;
+    decideTable(this.s, table, places, this.deps.now(), { ...(entry.scores ? { scores: entry.scores } : {}), byLeader: true });
+    this.settle();
+    this.touch();
+    return null;
+  }
+
   /** Neuer Helferlink. Der Code steht danach in der Sicht der Leitung. */
   addHelper(token: string, name: string, role: HelperRole): string | null {
     if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
@@ -495,6 +547,7 @@ export class Tournament {
     const times = [this.expiresAt()];
     if (isLocal(this.s)) return times[0]!;
     for (const match of this.s.matches) if (match.status === 'open' && !isHeld(this.s, match)) times.push(dueAt(this.s, match));
+    for (const table of this.s.tables ?? []) if (table.status === 'open' && !isHeld(this.s, { stage: table.stage } as TournamentMatch)) times.push(this.tableDue(table));
     // Die Ausschreibung muss sich regelmäßig neu melden, sonst fällt sie aus der Liste.
     if (this.publicListing()) times.push(this.deps.now() + OPEN_ROOM_REFRESH_MS);
     return Math.min(...times);
@@ -540,7 +593,7 @@ export class Tournament {
       players: s.players.map(({ id, name, avatar, withdrawn }) => ({ id, name, avatar, withdrawn })),
       groups: s.groups.map((players, group) => ({ players, table: this.groupTable(group), settled: this.groupSettled(group) })),
       swissTable: s.settings.format === 'swiss' && s.phase !== 'signup' ? this.overallTable() : [],
-      table: (s.settings.format === 'swiss' || s.settings.format === 'league') && s.phase !== 'signup' ? this.overallTable() : [],
+      table: isTables(s) ? (s.phase !== 'signup' ? tableStandings(s) : []) : (s.settings.format === 'swiss' || s.settings.format === 'league') && s.phase !== 'signup' ? this.overallTable() : [],
       fields: s.fields ?? 0,
       stages: s.stages,
       currentStage: this.currentStage(),
@@ -548,6 +601,7 @@ export class Tournament {
       disciplines: hasDisciplines(s) ? (s.disciplineOrder ? s.disciplineOrder.map((id) => ({ id, wishes: wishCounts(s).find((c) => c.id === id)?.wishes ?? 0 })) : wishCounts(s)) : [],
       yourWishes: (you ? s.wishes?.[you] : undefined) ?? [],
       disciplineTables: hasDisciplines(s) && s.phase !== 'signup' ? this.disciplineTables() : [],
+      tableGames: (s.tables ?? []).map(({ everReady: _hidden, ...table }) => table),
       matches: s.matches.map(({ everReady: _hidden, ...match }) => (planned?.has(match.id) ? { ...match, plannedAt: planned.get(match.id)! } : match)),
       schedule: s.schedule ?? null,
       referees: s.referees === true,
@@ -594,13 +648,44 @@ export class Tournament {
           moved = true;
         }
       }
+      if (this.settleTables(now)) moved = true;
       if (this.fillBracket()) moved = true;
       if (this.format.advance(this.ctx)) moved = true;
       if (!moved) break;
     }
     if (isLocal(this.s)) assignFields(this.s, now);
     autoStart(this.s, now);
+    if (isEvening(this.s)) autoStartTables(this.s, now, (stage) => this.s.stages[stage]?.startedAt === undefined);
     this.checkFinished();
+  }
+
+  /**
+   * Tische, die sich von selbst entscheiden: alle Sitze zurückgezogen bis auf höchstens einen,
+   * oder (online) die Frist ist abgelaufen.
+   */
+  private settleTables(now: number): boolean {
+    let moved = false;
+    for (const table of this.s.tables ?? []) {
+      if (table.status === 'done') continue;
+      const gone = table.seats.map((id) => this.isWithdrawn(id));
+      const remaining = gone.filter((g) => !g).length;
+      if (table.status === 'open' && remaining <= 1) {
+        decideTable(this.s, table, rerank(gone.map((g) => (g ? 1 : 0))), now, { walkover: true });
+        moved = true;
+      } else if (table.status === 'open' && !isLocal(this.s) && !isHeld(this.s, { stage: table.stage } as TournamentMatch) && now >= this.tableDue(table)) {
+        decideTable(this.s, table, tableDeadlinePlaces(table), now, { walkover: true });
+        moved = true;
+      }
+    }
+    return moved;
+  }
+
+  private tableDue(table: TableGame): number {
+    return dueAt(this.s, { stage: table.stage, openedAt: table.openedAt } as TournamentMatch);
+  }
+
+  private table(id: string): TableGame | undefined {
+    return this.s.tables?.find((t) => t.id === id);
   }
 
   private fillBracket(): boolean {
@@ -672,6 +757,8 @@ export class Tournament {
   }
 
   private currentStage(): number {
+    const openTable = this.s.tables?.find((t) => t.status !== 'done');
+    if (openTable) return openTable.stage;
     const open = this.s.matches.find((m) => !m.outcome);
     return open ? open.stage : Math.max(0, this.s.stages.length - 1);
   }

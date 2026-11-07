@@ -167,7 +167,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
       <>
         <Page>
           <h1 className="text-2xl font-bold">🏆 {room.match.label}</h1>
-          <p className="text-muted">{room.match.noShow ? t('tournament.room.noShow') : t('tournament.room.waiting')}</p>
+          <p className="text-muted">{room.match.noShow ? t('tournament.room.noShow') : room.lobby.seats.length > 2 ? t('tournament.room.waitingTable') : t('tournament.room.waiting')}</p>
           <ul className="space-y-1">
             {room.lobby.seats.map((seat, index) => {
               const member = seat.kind === 'human' ? room.members.find((m) => m.id === seat.memberId) : undefined;

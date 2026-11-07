@@ -5,7 +5,7 @@ import type { Options } from '@brett-und-blatt/engine';
  * Kennungen (`token`) sind geheim und stehen nie in einer Sicht.
  */
 
-export const TOURNAMENT_MIN_PLAYERS = { world: 6, swiss: 4, knockout: 4, double: 4, league: 3 } as const;
+export const TOURNAMENT_MIN_PLAYERS = { world: 6, swiss: 4, knockout: 4, double: 4, league: 3, tables: 3 } as const;
 /** Obergrenze für alle Turniere (Entscheidung 7.11.2026). */
 export const TOURNAMENT_MAX_PLAYERS = 128;
 /** Namen von Teilnehmern vor Ort dürfen länger sein als Spitznamen, z. B. „Anna / Ben“. */
@@ -23,8 +23,8 @@ export const TOURNAMENT_KEEP_MS = 30 * DAY_MS;
 export const LEAGUE_KEEP_MS = 365 * DAY_MS;
 export const TOURNAMENT_NAME_LENGTH = 40;
 
-/** WM-Form (vor Ort „Gruppen + K.-o.“), Schweizer System, K.-o., Doppel-K.-o., Bundesliga-Modus. */
-export type TournamentFormat = 'world' | 'swiss' | 'knockout' | 'double' | 'league';
+/** WM-Form (vor Ort „Gruppen + K.-o.“), Schweizer System, K.-o., Doppel-K.-o., Bundesliga-Modus, Tischrunden (Stufe 3). */
+export type TournamentFormat = 'world' | 'swiss' | 'knockout' | 'double' | 'league' | 'tables';
 /** Online im Spielraum oder vor Ort mit Ergebnis von Hand. */
 export type TournamentMode = 'online' | 'local';
 /** Was vor Ort gezählt wird. */
@@ -75,6 +75,15 @@ export interface TournamentSettings {
   disciplines?: string[];
   /** Teilnehmer wünschen sich bei der Einschreibung Disziplinen. */
   wishes?: boolean;
+  /** Tischrunden (Stufe 3 Teil 3): gewünschte Plätze je Tisch. */
+  tableSize?: number;
+  /** Tischrunden: kleinster und größter Tisch, den das Spiel erlaubt. */
+  tableMin?: number;
+  tableMax?: number;
+  /** Tischrunden: Zahl der Runden. */
+  rounds?: number;
+  /** Tischrunden vor Ort: Punkte im Spiel zählen niedrig (z. B. Strafpunkte); sonst hoch. */
+  lowWins?: boolean;
 }
 
 /** Woher ein noch offener Platz seinen Spieler bekommt. */
@@ -144,7 +153,7 @@ export interface TournamentStage {
    * group, swiss, ko oder double; im K.-o. zählt `round` rückwärts: 1 = Finale, 2 = Halbfinale …
    * Beim Doppel-K.-o. teilen sich Gewinner- und Verliererrunden die Stichtage, `round` zählt nur durch.
    */
-  kind: 'group' | 'swiss' | 'ko' | 'double' | 'league';
+  kind: 'group' | 'swiss' | 'ko' | 'double' | 'league' | 'tables';
   round: number;
   deadline: number;
   /** Turnierabend: Wann die Leitung die Runde gestartet hat; fehlt = noch nicht. */
@@ -214,6 +223,35 @@ export interface TournamentSnapshot {
   wishes?: Record<string, string[]>;
   /** Spieleabend: Reihenfolge der Disziplinen, beim Start festgelegt. */
   disciplineOrder?: string[];
+  /** Tischrunden: die Tische aller Runden. */
+  tables?: TableGame[];
+}
+
+/**
+ * Ein Tisch einer Tischrunde (Stufe 3 Teil 3): drei und mehr Spieler, Ergebnis ist die
+ * Platzierung je Sitz (0 = erster Platz, gleiche Zahl = geteilter Platz).
+ */
+export interface TableGame {
+  id: string;
+  /** Runde (Phase). */
+  stage: number;
+  /** Tischnummer in der Runde, ab 0. */
+  index: number;
+  /** Spieler-ids je Sitz. */
+  seats: string[];
+  status: MatchStatus;
+  openedAt: number | null;
+  readyAt: (number | null)[];
+  everReady: boolean[];
+  roomCode: string | null;
+  /** Platz je Sitz; null, solange offen. */
+  places: number[] | null;
+  /** Punkte im Spiel je Sitz (vor Ort eingetragen), zählen bei Gleichstand. */
+  scores?: number[];
+  /** Kampflos (Frist, Rückzug) oder von der Leitung festgelegt. */
+  walkover?: boolean;
+  byLeader?: boolean;
+  finishedAt?: number;
 }
 
 /** Helfer vor Ort (Stufe 2): Wer den Link öffnet, trägt Ergebnisse ein; Mitleitung darf alles. */
@@ -288,6 +326,8 @@ export interface TournamentView {
   yourWishes: string[];
   /** Spieleabend: Tabelle je Disziplin. */
   disciplineTables: { id: string; table: StandingRow[] }[];
+  /** Tischrunden: alle Tische ohne Geheimnisse; die Tabelle steht in `table`. */
+  tableGames: Omit<TableGame, 'everReady'>[];
   /** `plannedAt`: Uhrzeit laut Zeitplan (vor Ort, wenn einer gesetzt ist). */
   matches: (Omit<TournamentMatch, 'everReady'> & { plannedAt?: number })[];
   schedule: TournamentSchedule | null;

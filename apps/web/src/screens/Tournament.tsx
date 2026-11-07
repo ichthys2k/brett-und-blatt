@@ -1,5 +1,5 @@
 import { AVATARS, EVENING_EXTEND_CHOICES, MAX_SCORE, READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentView } from '@brett-und-blatt/online';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, Section } from '../components/controls';
 import { ProfileForm, QrCode } from '../components/OnlineParts';
 import { t } from '../i18n';
@@ -323,8 +323,14 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
           <h1 className="min-w-0 flex-1 truncate text-3xl font-bold">🏆 {view.settings.name}</h1>
           <Button onClick={() => setBoard(false)}>{t('tournament.boardClose')}</Button>
         </div>
-        {local && <FieldBoard view={view} send={null} />}
-        <Progress view={view} />
+        {view.settings.format === 'tables' ? (
+          <TableRounds view={view} send={null} />
+        ) : (
+          <>
+            {local && <FieldBoard view={view} send={null} />}
+            <Progress view={view} />
+          </>
+        )}
       </div>
     );
   }
@@ -335,10 +341,16 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
       {subtitle}
       {view.phase === 'finished' && <Podium view={view} />}
       <RoundStart view={view} send={send} />
-      {local ? <FieldBoard view={view} send={view.isLeader || view.helperRole ? send : null} /> : <MyStand view={view} send={send} />}
       {view.helperRole === 'helper' && <p className="text-sm text-muted">🤝 {t('tournament.youHelp')}</p>}
-      <Progress view={view} />
-      <History view={view} />
+      {view.settings.format === 'tables' ? (
+        <TableRounds view={view} send={send} />
+      ) : (
+        <>
+          {local ? <FieldBoard view={view} send={view.isLeader || view.helperRole ? send : null} /> : <MyStand view={view} send={send} />}
+          <Progress view={view} />
+          <History view={view} />
+        </>
+      )}
       {view.isLeader && <LeaderTools view={view} code={code} send={send} claim={state.claim} onBoard={() => setBoard(true)} />}
       {(view.isLeader || view.helperRole) && <PrintTools view={view} onPrint={setPrinting} />}
       {banners}
@@ -854,6 +866,130 @@ function RoundStart({ view, send }: { view: TournamentView; send: Send }) {
   return <p className="rounded-xl bg-accent/10 px-3 py-2 text-sm">⏱️ {t('tournament.roundRunning', { name, time: clock(stage.deadline) })}</p>;
 }
 
+type TableGameView = TournamentView['tableGames'][number];
+
+/** Tischrunden (Stufe 3 Teil 3): Tabelle, die Tische je Runde, Bereit und Eintragen. */
+function TableRounds({ view, send }: { view: TournamentView; send: Send | null }) {
+  const rounds = [...new Set(view.tableGames.map((g) => g.stage))].sort((a, b) => b - a);
+  return (
+    <>
+      <Section title={t('tournament.table')}>
+        <p className="text-xs text-muted">
+          {[`${t('tournament.round', { n: Math.min(view.currentStage + 1, view.stages.length) })} / ${view.stages.length}`, deadlineNote(view, view.stages[view.currentStage]?.deadline ?? 0), view.phase === 'finished' ? t('tournament.final') : t('tournament.provisional')].filter(Boolean).join(' · ')}
+        </p>
+        <Table view={view} rows={view.table} highlight={view.phase === 'finished' ? 1 : 0} />
+        <p className="text-xs text-muted">{t('tournament.tablesPoints')}</p>
+      </Section>
+      {rounds.map((stage) => (
+        <Section key={stage} title={t('tournament.round', { n: stage + 1 })}>
+          <ul className="grid gap-2 md:grid-cols-2">
+            {view.tableGames
+              .filter((g) => g.stage === stage)
+              .map((g) => (
+                <TableCard key={g.id} view={view} game={g} send={send} />
+              ))}
+          </ul>
+        </Section>
+      ))}
+    </>
+  );
+}
+
+function TableCard({ view, game, send }: { view: TournamentView; game: TableGameView; send: Send | null }) {
+  const { label } = useLookup(view);
+  const [editing, setEditing] = useState(false);
+  const mine = send !== null && view.you !== null && game.seats.includes(view.you);
+  const seat = view.you ? game.seats.indexOf(view.you) : -1;
+  const iAmReady = seat >= 0 && game.readyAt[seat] !== null && view.serverNow - game.readyAt[seat]! < READY_WINDOW_MS;
+  const held = isEveningView(view) && view.stages[game.stage]?.startedAt === undefined;
+  const mayEnter = send !== null && (isLocalView(view) ? view.isLeader || view.helperRole !== null : view.isLeader);
+  const order = game.seats.map((_, i) => i).sort((a, b) => (game.places ? game.places[a]! - game.places[b]! : 0));
+  return (
+    <li className={`space-y-2 rounded-2xl border-2 p-3 ${mine && game.status !== 'done' ? 'border-accent bg-accent/5' : 'border-line bg-surface'}`}>
+      <p className="flex items-center justify-between gap-2 text-xs text-muted">
+        <span className="rounded-full bg-accent px-2 py-0.5 font-semibold text-white">📍 {fieldName(view, game.index)}</span>
+        <span>{game.status === 'done' ? (game.walkover ? t('tournament.walkover') : t('tournament.final')) : game.status === 'running' ? `🔴 ${t('tournament.live')}` : held ? t('tournament.waitingStart') : ''}</span>
+      </p>
+      <ol className="space-y-0.5 text-sm">
+        {order.map((i) => (
+          <li key={i} className={`flex gap-2 ${game.seats[i] === view.you ? 'font-semibold' : ''}`}>
+            <span className="w-6 text-right tabular-nums text-muted">{game.places ? `${game.places[i]! + 1}.` : ''}</span>
+            <span className="min-w-0 flex-1 truncate">{label(game.seats[i]!)}</span>
+            {game.scores && <span className="tabular-nums text-muted">{game.scores[i]}</span>}
+          </li>
+        ))}
+      </ol>
+      {!isLocalView(view) && mine && game.status === 'open' && !held && (
+        <Button variant={iAmReady ? 'secondary' : 'primary'} className="w-full" onClick={() => send?.({ type: 'ready', match: game.id, ready: !iAmReady })}>
+          {iAmReady ? t('tournament.notReady') : `✅ ${t('tournament.ready')}`}
+        </Button>
+      )}
+      {mine && game.status === 'running' && game.roomCode && (
+        <Button variant="primary" className="w-full" onClick={() => navigate(paths.room(game.roomCode!))}>
+          ▶️ {t('tournament.toGame')}
+        </Button>
+      )}
+      {isLocalView(view) && game.status !== 'done' && mayEnter && view.settings.gameId && (
+        <a className="block text-sm font-semibold text-accent underline" href={paths.setup(view.settings.gameId)} target="_blank" rel="noopener">
+          🎲 {t('tournament.playHere')}
+        </a>
+      )}
+      {mayEnter && send && (game.status !== 'done' || editing) && <TableResultForm view={view} game={game} send={send} onDone={() => setEditing(false)} />}
+      {mayEnter && game.status === 'done' && !editing && (
+        <button type="button" className="text-xs text-muted underline" onClick={() => setEditing(true)}>
+          {t('tournament.correct')}
+        </button>
+      )}
+    </li>
+  );
+}
+
+/** Ergebnis eines Tisches: Punkte im Spiel (Plätze ergeben sich) oder direkt die Plätze. */
+function TableResultForm({ view, game, send, onDone }: { view: TournamentView; game: TableGameView; send: Send; onDone: () => void }) {
+  const { label } = useLookup(view);
+  const [byScore, setByScore] = useState(isLocalView(view) && (view.settings.result === 'points' || view.settings.lowWins === true));
+  const [values, setValues] = useState<string[]>(() => game.seats.map((_, i) => (byScore ? String(game.scores?.[i] ?? '') : String((game.places?.[i] ?? i) + 1))));
+  const numbers = values.map((v) => Number(v));
+  const valid = values.every((v) => v.trim() !== '' && Number.isInteger(Number(v)));
+  const FIELD = 'min-h-10 w-20 rounded-lg border border-line bg-surface px-2 text-right tabular-nums';
+  return (
+    <form
+      className="space-y-2 border-t border-line pt-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!valid) return;
+        send(byScore ? { type: 'enterTable', table: game.id, scores: numbers } : { type: 'enterTable', table: game.id, places: numbers.map((n) => n - 1) });
+        onDone();
+      }}
+    >
+      <div className="flex gap-2 text-xs">
+        {[false, true].map((score) => (
+          <button
+            key={String(score)}
+            type="button"
+            className={`rounded-full border px-2 py-0.5 ${byScore === score ? 'border-accent bg-accent/10 font-semibold' : 'border-line'}`}
+            onClick={() => {
+              setByScore(score);
+              setValues(game.seats.map((_, i) => (score ? '' : String(i + 1))));
+            }}
+          >
+            {score ? t('tournament.enterScores') : t('tournament.enterPlaces')}
+          </button>
+        ))}
+      </div>
+      {game.seats.map((id, i) => (
+        <label key={id} className="flex items-center gap-2 text-sm">
+          <span className="min-w-0 flex-1 truncate">{label(id)}</span>
+          <input className={FIELD} type="number" inputMode="numeric" min={byScore ? undefined : 1} max={byScore ? undefined : game.seats.length} value={values[i]} onChange={(e) => setValues(values.map((v, j) => (j === i ? e.target.value : v)))} aria-label={`${label(id)}: ${byScore ? t('tournament.enterScores') : t('tournament.enterPlaces')}`} />
+        </label>
+      ))}
+      <Button type="submit" className="w-full" disabled={!valid}>
+        ✔️ {t('tournament.save')}
+      </Button>
+    </form>
+  );
+}
+
 function matchTitle(view: TournamentView, m: Match): string {
   if (m.group !== null) return t('tournament.group', { name: GROUP_LETTERS[m.group]! });
   if (view.stages[m.stage]?.kind === 'swiss') return t('tournament.round', { n: m.stage + 1 });
@@ -1219,7 +1355,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
       {local && <SpectatorLink view={view} code={code} />}
       {local && view.phase !== 'finished' && <Helpers view={view} code={code} send={send} />}
       {local && view.phase === 'running' && view.settings.format === 'swiss' && <EntrantForm view={view} send={send} label={t('tournament.lateEntry')} />}
-      {local && view.phase === 'running' && (
+      {local && view.phase === 'running' && view.settings.format !== 'tables' && (
         <label className="block space-y-1 text-sm">
           <span>{t('tournament.fieldCount')}</span>
           <select className={FIELD} value={view.fields} onChange={(e) => send({ type: 'setFields', count: Number(e.target.value) })}>
@@ -1231,8 +1367,8 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
           </select>
         </label>
       )}
-      {local && view.phase !== 'finished' && <SchedulePanel view={view} send={send} />}
-      {view.phase !== 'signup' && local && (
+      {local && view.phase !== 'finished' && view.settings.format !== 'tables' && <SchedulePanel view={view} send={send} />}
+      {view.phase !== 'signup' && local && view.settings.format !== 'tables' && (
         <div className="space-y-2">
           <label className="block space-y-1 text-sm">
             <span>{t('tournament.correct')}</span>
@@ -1271,7 +1407,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
             ))}
           </div>
           )}
-          {!local && (
+          {!local && view.settings.format !== 'tables' && (
           <div className="space-y-2">
             <label className="block space-y-1 text-sm">
               <span>{t('tournament.setResult')}</span>
@@ -1433,6 +1569,56 @@ function PrintTools({ view, onPrint }: { view: TournamentView; onPrint: (kind: P
 }
 
 /** Druckansicht: weiß, ohne Bedienelemente im Druck; der Druckdialog öffnet sich gleich. */
+/** Tischrunden zum Drucken: Sitzplan je Runde oder ein Zettel je offenem Tisch. */
+function PrintTables({ view, sheets, heading }: { view: TournamentView; sheets: boolean; heading: ReactNode }) {
+  const { label } = useLookup(view);
+  const games = view.tableGames.filter((g) => !sheets || g.status !== 'done');
+  if (sheets) {
+    return (
+      <div className="grid grid-cols-2 gap-4">
+        {games.map((g) => (
+          <div key={g.id} className="break-inside-avoid rounded border-2 border-black p-3 text-sm">
+            <p className="text-xs">
+              {view.settings.name} · {t('tournament.round', { n: g.stage + 1 })} · {fieldName(view, g.index)}
+            </p>
+            {g.seats.map((id) => (
+              <div key={id} className="mt-2 flex items-center gap-2">
+                <span className="min-w-0 flex-1 truncate text-base font-bold">{label(id)}</span>
+                <span className="h-9 w-14 border-2 border-black" />
+              </div>
+            ))}
+            <p className="mt-2 text-xs">{t('tournament.print.tableSheet')}</p>
+            <p className="mt-4 border-t border-black pt-1 text-xs">{t('tournament.print.signature')}</p>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  const stages = [...new Set(games.map((g) => g.stage))];
+  return (
+    <>
+      {heading}
+      {stages.map((stage) => (
+        <section key={stage} className="mb-4 break-inside-avoid">
+          <h2 className="mb-1 font-bold">{t('tournament.round', { n: stage + 1 })}</h2>
+          <table className="w-full border-collapse text-sm">
+            <tbody>
+              {games
+                .filter((g) => g.stage === stage)
+                .map((g) => (
+                  <tr key={g.id} className="border-b border-gray-300">
+                    <td className="w-24 py-1 pr-2 text-xs">{fieldName(view, g.index)}</td>
+                    <td className="py-1">{g.seats.map((id, i) => `${label(id)}${g.places ? ` (${g.places[i]! + 1}.)` : ''}`).join(' · ')}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </section>
+      ))}
+    </>
+  );
+}
+
 function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintKind; onClose: () => void }) {
   const { label } = useLookup(view);
   useEffect(() => {
@@ -1456,7 +1642,8 @@ function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintK
         <Button onClick={() => window.print()}>🖨️ {t('tournament.print.now')}</Button>
         <Button onClick={onClose}>{t('tournament.boardClose')}</Button>
       </div>
-      {kind === 'plan' && (
+      {view.settings.format === 'tables' && (kind === 'plan' || kind === 'sheets') && <PrintTables view={view} sheets={kind === 'sheets'} heading={heading} />}
+      {kind === 'plan' && view.settings.format !== 'tables' && (
         <>
           {heading}
           {stages.map((stage) => (
@@ -1483,7 +1670,7 @@ function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintK
           ))}
         </>
       )}
-      {kind === 'sheets' && (
+      {kind === 'sheets' && view.settings.format !== 'tables' && (
         <div className="grid grid-cols-2 gap-4">
           {printableMatches(view)
             .filter((m) => !m.outcome && m.slots[0].player && m.slots[1].player)

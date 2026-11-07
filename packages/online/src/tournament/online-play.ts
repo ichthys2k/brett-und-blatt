@@ -15,7 +15,9 @@ export type RoomReport =
   /** Gewinnerplatz der Partie oder null bei Remis. */
   | { kind: 'played'; winner: 0 | 1 | null }
   /** Nur ein Spieler kam (`winner`), oder gar keiner (null). */
-  | { kind: 'noShow'; winner: 0 | 1 | null };
+  | { kind: 'noShow'; winner: 0 | 1 | null }
+  /** Tischrunde: Platz je Sitz (0 = erster); `walkover`, wenn zu wenige kamen. */
+  | { kind: 'placed'; places: number[]; walkover?: boolean };
 
 /** Der Auftrag an den Adapter, einen Spielraum anzulegen. */
 export interface MatchRoomRequest {
@@ -23,8 +25,8 @@ export interface MatchRoomRequest {
   gameId: string;
   time: TournamentSettings['time'];
   options: Options;
-  /** Kennungen in Platzreihenfolge; nach einem Remis im K.-o. getauscht. */
-  tokens: [string, string];
+  /** Kennungen in Platzreihenfolge; nach einem Remis im K.-o. getauscht. Tischrunden: einer je Sitz. */
+  tokens: string[];
   label: string;
 }
 
@@ -60,7 +62,7 @@ export function roomRequest(s: TournamentSnapshot, match: TournamentMatch): Matc
 }
 
 /** Der Raum zählt nach Plätzen; nach einem getauschten Entscheidungsspiel sind das andere Seiten. */
-export function sideOfSeat(match: TournamentMatch, seat: 0 | 1 | null): MatchSide | null {
+export function sideOfSeat(match: TournamentMatch, seat: number | null): MatchSide | null {
   return seat === null ? null : ((match.replays % 2 === 1 ? 1 - seat : seat) as MatchSide);
 }
 
