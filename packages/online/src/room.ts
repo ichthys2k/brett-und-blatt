@@ -8,6 +8,7 @@ import {
   type BotRunner,
   type GameEvent,
   type Options,
+  type Result,
   type SeatId,
   type SessionChange,
   type SessionConfig,
@@ -80,8 +81,8 @@ export interface MatchRoomConfig {
   gameId: string;
   time: LobbySettings['time'];
   options?: Options;
-  /** Geheime Kennungen je Platz. */
-  tokens: [string, string];
+  /** Geheime Kennungen je Platz; zwei, bei Tischrunden mehr. */
+  tokens: string[];
   label: string;
 }
 
@@ -209,7 +210,7 @@ export class Room {
     const module = this.deps.findGame(config.gameId);
     if (!module) return false;
     this.match = { config, noShow: null, reported: false };
-    this.lobby = { gameId: config.gameId, options: resolveOptions(module, config.options), time: config.time, seats: [{ kind: 'human', memberId: null }, { kind: 'human', memberId: null }], isPublic: false };
+    this.lobby = { gameId: config.gameId, options: resolveOptions(module, config.options), time: config.time, seats: config.tokens.map(() => ({ kind: 'human' as const, memberId: null })), isPublic: false };
     return true;
   }
 
@@ -219,11 +220,27 @@ export class Room {
     if (!match || match.reported) return null;
     const result = this.game?.session.result;
     let report: RoomReport | null = match.noShow;
-    if (result) {
+    if (result && match.config.tokens.length > 2) {
+      report = { kind: 'placed', places: this.tablePlaces(result) };
+    } else if (result) {
       const winners = result.kind === 'win' ? result.winners : [];
       report = { kind: 'played', winner: winners.length === 1 ? (winners[0] as 0 | 1) : null };
     }
     return report ? { tournament: match.config.tournament, match: match.config.match, report } : null;
+  }
+
+  /**
+   * Tischrunde: Platz je Lobby-Sitz. Sieger vorn, alle anderen dahinter; wer nicht mitspielte
+   * (nicht gekommen), ganz hinten.
+   */
+  private tablePlaces(result: Result): number[] {
+    const seats = this.match!.config.tokens.length;
+    const lobbyIndex = this.game?.lobbyIndex ?? Array.from({ length: seats }, (_, i) => i);
+    const rank = Array.from({ length: seats }, () => 2);
+    lobbyIndex.forEach((lobbySeat, gameSeat) => {
+      rank[lobbySeat] = result.kind === 'win' && !result.winners.includes(gameSeat) ? 1 : 0;
+    });
+    return rank.map((v) => rank.filter((other) => other < v).length);
   }
 
   markMatchReported(): void {
@@ -800,9 +817,16 @@ export class Room {
   private tickMatch(now: number): void {
     if (this.phase === 'lobby' && !this.match!.noShow && now >= this.createdAt + MATCH_ARRIVAL_MS) {
       const arrived = this.lobby.seats.flatMap((seat, index) => (seat.kind === 'human' && seat.memberId ? [index as 0 | 1] : []));
+      const seats = this.match!.config.tokens.length;
+      const min = this.lobbyModule()?.info.players.min ?? 2;
       // Beide waren schon da, nur nie gleichzeitig: Dann entscheidet die Wartefrist in der Partie.
-      if (arrived.length === 2) this.start('');
-      else {
+      // Am Tisch spielen die, die gekommen sind, wenn es für das Spiel reicht.
+      if (arrived.length === seats || (seats > 2 && arrived.length >= min)) this.start('');
+      else if (seats > 2) {
+        const rank = this.lobby.seats.map((_, i) => (arrived.includes(i as 0 | 1) ? 0 : 1));
+        this.match!.noShow = { kind: 'placed', places: rank.map((v) => rank.filter((o) => o < v).length), walkover: true };
+        this.broadcastRoom();
+      } else {
         this.match!.noShow = { kind: 'noShow', winner: arrived[0] ?? null };
         this.broadcastRoom();
       }

@@ -1,5 +1,5 @@
-import { AVATARS, MAX_SCORE, READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentView } from '@brett-und-blatt/online';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { AVATARS, EVENING_EXTEND_CHOICES, MAX_SCORE, READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentView } from '@brett-und-blatt/online';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, Section } from '../components/controls';
 import { ProfileForm, QrCode } from '../components/OnlineParts';
 import { t } from '../i18n';
@@ -47,8 +47,31 @@ const isLocalView = (view: TournamentView) => view.settings.mode === 'local';
 /** Wird ein Spielstand gezählt (Tore, Sätze, Punkte)? */
 const withScore = (view: TournamentView) => isLocalView(view) && view.settings.result !== undefined && view.settings.result !== 'winner';
 
+/** Turnierabend (Stufe 3): Minuten je Partie, die Leitung startet jede Runde. */
+const isEveningView = (view: TournamentView) => !isLocalView(view) && (view.settings.minutes ?? 0) > 0;
+
 function deadlineNote(view: TournamentView, ms: number): string {
-  return isLocalView(view) ? '' : t('tournament.deadline', { date: formatDate(ms) });
+  if (isLocalView(view)) return '';
+  if (isEveningView(view)) return ms > 0 ? t('tournament.until', { time: clock(ms) }) : t('tournament.waitingStart');
+  return t('tournament.deadline', { date: formatDate(ms) });
+}
+
+/** Kurz für Spalten im Baum: Datum oder am Turnierabend die Uhrzeit. */
+function deadlineShort(view: TournamentView, ms: number): string {
+  if (isEveningView(view)) return ms > 0 ? clock(ms) : '–';
+  return formatDate(ms);
+}
+
+/** Spieleabend (Stufe 3 Teil 2): Name einer Disziplin – online ein Spiel, vor Ort ein freier Name. */
+function disciplineName(view: TournamentView, id: string): string {
+  if (isLocalView(view)) return id;
+  const game = findGame(id);
+  return game ? `${game.emoji} ${game.name}` : id;
+}
+
+/** Die Disziplin eines Spieltags; null ohne Spieleabend. */
+function disciplineOfStage(view: TournamentView, stage: number): string | null {
+  return view.disciplines.length > 0 ? view.disciplines[stage % view.disciplines.length]!.id : null;
 }
 
 function clock(ms: number): string {
@@ -272,7 +295,9 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
   const local = isLocalView(view);
   const subtitle = (
     <p className="text-sm text-muted">
-      {local ? `🏟️ ${view.settings.sport ?? ''}` : `${game?.emoji ?? ''} ${game?.name ?? ''}`} · {t(`tournament.format.${view.settings.format}`)} · {t('tournament.leader', { name: view.leaderName })}
+      {view.disciplines.length > 0 ? `🎲 ${view.settings.sport ?? t('tournament.multiSport')}` : local ? `${game?.emoji ?? '🏟️'} ${view.settings.sport ?? ''}` : `${game?.emoji ?? ''} ${game?.name ?? ''}`} · {t(`tournament.format.${view.settings.format}`)} · {t('tournament.leader', { name: view.leaderName })}
+      {view.disciplines.length > 0 && <span className="block">{view.disciplines.map((d) => disciplineName(view, d.id)).join(' · ')}</span>}
+      {isEveningView(view) && <span className="block">🌙 {t('tournament.evening', { n: view.settings.minutes ?? 0 })}</span>}
       {optionText.length > 0 && <span className="block">{optionText.join(' · ')}</span>}
       {view.rulesChanged && <span className="block text-warning">⚠️ {t('tournament.rulesChanged')}</span>}
     </p>
@@ -298,8 +323,14 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
           <h1 className="min-w-0 flex-1 truncate text-3xl font-bold">🏆 {view.settings.name}</h1>
           <Button onClick={() => setBoard(false)}>{t('tournament.boardClose')}</Button>
         </div>
-        {local && <FieldBoard view={view} send={null} />}
-        <Progress view={view} />
+        {view.settings.format === 'tables' ? (
+          <TableRounds view={view} send={null} />
+        ) : (
+          <>
+            {local && <FieldBoard view={view} send={null} />}
+            <Progress view={view} />
+          </>
+        )}
       </div>
     );
   }
@@ -309,10 +340,17 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
       {header}
       {subtitle}
       {view.phase === 'finished' && <Podium view={view} />}
-      {local ? <FieldBoard view={view} send={view.isLeader || view.helperRole ? send : null} /> : <MyStand view={view} send={send} />}
+      <RoundStart view={view} send={send} />
       {view.helperRole === 'helper' && <p className="text-sm text-muted">🤝 {t('tournament.youHelp')}</p>}
-      <Progress view={view} />
-      <History view={view} />
+      {view.settings.format === 'tables' ? (
+        <TableRounds view={view} send={send} />
+      ) : (
+        <>
+          {local ? <FieldBoard view={view} send={view.isLeader || view.helperRole ? send : null} /> : <MyStand view={view} send={send} />}
+          <Progress view={view} />
+          <History view={view} />
+        </>
+      )}
       {view.isLeader && <LeaderTools view={view} code={code} send={send} claim={state.claim} onBoard={() => setBoard(true)} />}
       {(view.isLeader || view.helperRole) && <PrintTools view={view} onPrint={setPrinting} />}
       {banners}
@@ -356,6 +394,7 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
     <>
       <Section title={t('tournament.entrants')}>
         <p className="text-sm text-muted">{t('tournament.entrantsCount', { n: count, min })}</p>
+        <Wishes view={view} send={send} />
         <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2 md:grid-cols-3">
           {view.players.map((p) => (
             <li key={p.id} className="flex min-w-0 items-center gap-1 rounded-xl border border-line bg-surface py-1 pr-1 pl-2 text-sm">
@@ -567,6 +606,11 @@ function FieldBoard({ view, send }: { view: TournamentView; send: Send | null })
                 </p>
                 {names(m)}
                 {(m.referee || m.plannedAt !== undefined) && <p className="text-xs text-muted">{extra(m)}</p>}
+                {send && view.settings.gameId && (
+                  <a className="block text-sm font-semibold text-accent underline" href={paths.setup(view.settings.gameId)} target="_blank" rel="noopener">
+                    🎲 {t('tournament.playHere')}
+                  </a>
+                )}
                 {send && <ResultForm key={m.id} view={view} m={m} send={send} />}
               </li>
             ))}
@@ -657,6 +701,36 @@ function ResultForm({ view, m, send, onDone }: { view: TournamentView; m: Match;
   );
 }
 
+/** Spieleabend: Disziplinen mit Stimmen; Eingeschriebene kreuzen ihre Wünsche an. */
+function Wishes({ view, send }: { view: TournamentView; send: Send }) {
+  if (view.disciplines.length === 0) return null;
+  const canWish = view.settings.wishes === true && view.you !== null && view.phase === 'signup';
+  return (
+    <fieldset className="space-y-1 rounded-xl border border-line p-3">
+      <legend className="px-1 text-sm">{canWish ? t('tournament.wishTitle') : t('tournament.disciplineList')}</legend>
+      {canWish && <p className="text-xs text-muted">{t('tournament.wishesHint')}</p>}
+      <ul className="space-y-1">
+        {view.disciplines.map((d) => (
+          <li key={d.id}>
+            <label className="flex items-center gap-2 text-sm">
+              {canWish && (
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-accent"
+                  checked={view.yourWishes.includes(d.id)}
+                  onChange={(e) => send({ type: 'wish', disciplines: e.target.checked ? [...view.yourWishes, d.id] : view.yourWishes.filter((id) => id !== d.id) })}
+                />
+              )}
+              <span className="min-w-0 flex-1 truncate">{disciplineName(view, d.id)}</span>
+              {view.settings.wishes && <span className="text-xs text-muted">{d.wishes === 1 ? t('tournament.wishCountOne') : t('tournament.wishCount', { n: d.wishes })}</span>}
+            </label>
+          </li>
+        ))}
+      </ul>
+    </fieldset>
+  );
+}
+
 function SignupView({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
   const min = TOURNAMENT_MIN_PLAYERS[view.settings.format];
   const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
@@ -680,6 +754,7 @@ function SignupView({ view, code, send }: { view: TournamentView; code: string; 
             ✍️ {t('tournament.join')}
           </Button>
         )}
+        <Wishes view={view} send={send} />
         {view.isLeader && (
           <Button
             variant="primary"
@@ -738,11 +813,13 @@ function MyStand({ view, send }: { view: TournamentView; send: Send }) {
               <p className="font-semibold">{t('tournament.yourTurn', { name: label(other) })}</p>
               {stage && (
                 <p className="text-xs text-muted">
-                  {matchTitle(view, m)} · {t('tournament.deadline', { date: formatDate(stage.deadline) })}
+                  {matchTitle(view, m)} · {deadlineNote(view, stage.deadline)}
                   {m.replays > 0 && ` · ${t('tournament.replay')}`}
                 </p>
               )}
-              {m.status === 'running' ? (
+              {isEveningView(view) && stage?.startedAt === undefined ? (
+                <p className="text-sm">🌙 {t('tournament.heldHint')}</p>
+              ) : m.status === 'running' ? (
                 m.roomCode && (
                   <Button variant="primary" className="w-full" onClick={() => navigate(paths.room(m.roomCode!))}>
                     ▶️ {t('tournament.toGame')}
@@ -771,10 +848,155 @@ function MyStand({ view, send }: { view: TournamentView; send: Send }) {
   );
 }
 
+/** Turnierabend: Die Leitung startet die Runde; alle anderen sehen, dass es gleich losgeht. */
+function RoundStart({ view, send }: { view: TournamentView; send: Send }) {
+  if (!isEveningView(view) || view.phase !== 'running') return null;
+  const stage = view.stages[view.currentStage];
+  const name = stage?.kind === 'ko' ? roundName(stage.round) : t('tournament.round', { n: view.currentStage + 1 });
+  if (view.startableStage !== null) {
+    return view.isLeader ? (
+      <Button variant="primary" className="w-full text-lg" onClick={() => send({ type: 'startRound' })}>
+        ▶️ {t('tournament.startRound', { name })}
+      </Button>
+    ) : (
+      <p className="rounded-xl bg-accent/10 px-3 py-2 text-sm font-semibold">🌙 {t('tournament.roundSoon', { name })}</p>
+    );
+  }
+  if (!stage?.startedAt) return null;
+  return <p className="rounded-xl bg-accent/10 px-3 py-2 text-sm">⏱️ {t('tournament.roundRunning', { name, time: clock(stage.deadline) })}</p>;
+}
+
+type TableGameView = TournamentView['tableGames'][number];
+
+/** Tischrunden (Stufe 3 Teil 3): Tabelle, die Tische je Runde, Bereit und Eintragen. */
+function TableRounds({ view, send }: { view: TournamentView; send: Send | null }) {
+  const rounds = [...new Set(view.tableGames.map((g) => g.stage))].sort((a, b) => b - a);
+  return (
+    <>
+      <Section title={t('tournament.table')}>
+        <p className="text-xs text-muted">
+          {[`${t('tournament.round', { n: Math.min(view.currentStage + 1, view.stages.length) })} / ${view.stages.length}`, deadlineNote(view, view.stages[view.currentStage]?.deadline ?? 0), view.phase === 'finished' ? t('tournament.final') : t('tournament.provisional')].filter(Boolean).join(' · ')}
+        </p>
+        <Table view={view} rows={view.table} highlight={view.phase === 'finished' ? 1 : 0} />
+        <p className="text-xs text-muted">{t('tournament.tablesPoints')}</p>
+      </Section>
+      {rounds.map((stage) => (
+        <Section key={stage} title={t('tournament.round', { n: stage + 1 })}>
+          <ul className="grid gap-2 md:grid-cols-2">
+            {view.tableGames
+              .filter((g) => g.stage === stage)
+              .map((g) => (
+                <TableCard key={g.id} view={view} game={g} send={send} />
+              ))}
+          </ul>
+        </Section>
+      ))}
+    </>
+  );
+}
+
+function TableCard({ view, game, send }: { view: TournamentView; game: TableGameView; send: Send | null }) {
+  const { label } = useLookup(view);
+  const [editing, setEditing] = useState(false);
+  const mine = send !== null && view.you !== null && game.seats.includes(view.you);
+  const seat = view.you ? game.seats.indexOf(view.you) : -1;
+  const iAmReady = seat >= 0 && game.readyAt[seat] !== null && view.serverNow - game.readyAt[seat]! < READY_WINDOW_MS;
+  const held = isEveningView(view) && view.stages[game.stage]?.startedAt === undefined;
+  const mayEnter = send !== null && (isLocalView(view) ? view.isLeader || view.helperRole !== null : view.isLeader);
+  const order = game.seats.map((_, i) => i).sort((a, b) => (game.places ? game.places[a]! - game.places[b]! : 0));
+  return (
+    <li className={`space-y-2 rounded-2xl border-2 p-3 ${mine && game.status !== 'done' ? 'border-accent bg-accent/5' : 'border-line bg-surface'}`}>
+      <p className="flex items-center justify-between gap-2 text-xs text-muted">
+        <span className="rounded-full bg-accent px-2 py-0.5 font-semibold text-white">📍 {fieldName(view, game.index)}</span>
+        <span>{game.status === 'done' ? (game.walkover ? t('tournament.walkover') : t('tournament.final')) : game.status === 'running' ? `🔴 ${t('tournament.live')}` : held ? t('tournament.waitingStart') : ''}</span>
+      </p>
+      <ol className="space-y-0.5 text-sm">
+        {order.map((i) => (
+          <li key={i} className={`flex gap-2 ${game.seats[i] === view.you ? 'font-semibold' : ''}`}>
+            <span className="w-6 text-right tabular-nums text-muted">{game.places ? `${game.places[i]! + 1}.` : ''}</span>
+            <span className="min-w-0 flex-1 truncate">{label(game.seats[i]!)}</span>
+            {game.scores && <span className="tabular-nums text-muted">{game.scores[i]}</span>}
+          </li>
+        ))}
+      </ol>
+      {!isLocalView(view) && mine && game.status === 'open' && !held && (
+        <Button variant={iAmReady ? 'secondary' : 'primary'} className="w-full" onClick={() => send?.({ type: 'ready', match: game.id, ready: !iAmReady })}>
+          {iAmReady ? t('tournament.notReady') : `✅ ${t('tournament.ready')}`}
+        </Button>
+      )}
+      {mine && game.status === 'running' && game.roomCode && (
+        <Button variant="primary" className="w-full" onClick={() => navigate(paths.room(game.roomCode!))}>
+          ▶️ {t('tournament.toGame')}
+        </Button>
+      )}
+      {isLocalView(view) && game.status !== 'done' && mayEnter && view.settings.gameId && (
+        <a className="block text-sm font-semibold text-accent underline" href={paths.setup(view.settings.gameId)} target="_blank" rel="noopener">
+          🎲 {t('tournament.playHere')}
+        </a>
+      )}
+      {mayEnter && send && (game.status !== 'done' || editing) && <TableResultForm view={view} game={game} send={send} onDone={() => setEditing(false)} />}
+      {mayEnter && game.status === 'done' && !editing && (
+        <button type="button" className="text-xs text-muted underline" onClick={() => setEditing(true)}>
+          {t('tournament.correct')}
+        </button>
+      )}
+    </li>
+  );
+}
+
+/** Ergebnis eines Tisches: Punkte im Spiel (Plätze ergeben sich) oder direkt die Plätze. */
+function TableResultForm({ view, game, send, onDone }: { view: TournamentView; game: TableGameView; send: Send; onDone: () => void }) {
+  const { label } = useLookup(view);
+  const [byScore, setByScore] = useState(isLocalView(view) && (view.settings.result === 'points' || view.settings.lowWins === true));
+  const [values, setValues] = useState<string[]>(() => game.seats.map((_, i) => (byScore ? String(game.scores?.[i] ?? '') : String((game.places?.[i] ?? i) + 1))));
+  const numbers = values.map((v) => Number(v));
+  const valid = values.every((v) => v.trim() !== '' && Number.isInteger(Number(v)));
+  const FIELD = 'min-h-10 w-20 rounded-lg border border-line bg-surface px-2 text-right tabular-nums';
+  return (
+    <form
+      className="space-y-2 border-t border-line pt-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!valid) return;
+        send(byScore ? { type: 'enterTable', table: game.id, scores: numbers } : { type: 'enterTable', table: game.id, places: numbers.map((n) => n - 1) });
+        onDone();
+      }}
+    >
+      <div className="flex gap-2 text-xs">
+        {[false, true].map((score) => (
+          <button
+            key={String(score)}
+            type="button"
+            className={`rounded-full border px-2 py-0.5 ${byScore === score ? 'border-accent bg-accent/10 font-semibold' : 'border-line'}`}
+            onClick={() => {
+              setByScore(score);
+              setValues(game.seats.map((_, i) => (score ? '' : String(i + 1))));
+            }}
+          >
+            {score ? t('tournament.enterScores') : t('tournament.enterPlaces')}
+          </button>
+        ))}
+      </div>
+      {game.seats.map((id, i) => (
+        <label key={id} className="flex items-center gap-2 text-sm">
+          <span className="min-w-0 flex-1 truncate">{label(id)}</span>
+          <input className={FIELD} type="number" inputMode="numeric" min={byScore ? undefined : 1} max={byScore ? undefined : game.seats.length} value={values[i]} onChange={(e) => setValues(values.map((v, j) => (j === i ? e.target.value : v)))} aria-label={`${label(id)}: ${byScore ? t('tournament.enterScores') : t('tournament.enterPlaces')}`} />
+        </label>
+      ))}
+      <Button type="submit" className="w-full" disabled={!valid}>
+        ✔️ {t('tournament.save')}
+      </Button>
+    </form>
+  );
+}
+
 function matchTitle(view: TournamentView, m: Match): string {
   if (m.group !== null) return t('tournament.group', { name: GROUP_LETTERS[m.group]! });
   if (view.stages[m.stage]?.kind === 'swiss') return t('tournament.round', { n: m.stage + 1 });
-  if (view.stages[m.stage]?.kind === 'league') return t('tournament.matchday', { n: m.stage + 1 });
+  if (view.stages[m.stage]?.kind === 'league') {
+    const discipline = disciplineOfStage(view, m.stage);
+    return `${t('tournament.matchday', { n: m.stage + 1 })}${discipline ? ` · ${disciplineName(view, discipline)}` : ''}`;
+  }
   return koMatchName(m.id);
 }
 
@@ -804,7 +1026,7 @@ function Progress({ view }: { view: TournamentView }) {
     </>
   ) : (
     <>
-      <Section title={t('tournament.table')}>
+      <Section title={view.disciplines.length > 0 ? t('tournament.overall') : t('tournament.table')}>
         <p className="text-xs text-muted">
           {[
             `${t(view.settings.format === 'league' ? 'tournament.matchday' : 'tournament.round', { n: Math.min(view.currentStage + 1, view.stages.length) })} / ${view.stages.length}`,
@@ -816,6 +1038,16 @@ function Progress({ view }: { view: TournamentView }) {
         </p>
         <Table view={view} rows={view.table.length > 0 ? view.table : view.swissTable} highlight={view.phase === 'finished' ? 1 : 0} buchholz={view.settings.format === 'swiss'} />
       </Section>
+      {view.disciplineTables.length > 0 && (
+        <Section title={t('tournament.disciplineList')}>
+          {view.disciplineTables.map(({ id, table }) => (
+            <details key={id} className="rounded-xl border border-line p-2">
+              <summary className="cursor-pointer font-semibold">{t('tournament.disciplineTable', { name: disciplineName(view, id) })}</summary>
+              <Table view={view} rows={table} highlight={0} />
+            </details>
+          ))}
+        </Section>
+      )}
       <SwissRounds view={view} />
     </>
   );
@@ -938,7 +1170,7 @@ function SwissRounds({ view }: { view: TournamentView }) {
   return (
     <>
       {rounds.map((stage) => (
-        <Section key={stage} title={t(league ? 'tournament.matchday' : 'tournament.round', { n: stage + 1 })}>
+        <Section key={stage} title={`${t(league ? 'tournament.matchday' : 'tournament.round', { n: stage + 1 })}${disciplineOfStage(view, stage) ? ` · ${disciplineName(view, disciplineOfStage(view, stage)!)}` : ''}`}>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
             {view.matches
               .filter((m) => m.stage === stage)
@@ -999,7 +1231,7 @@ function Bracket({ view, title, hint, columns }: { view: TournamentView; title: 
         {columns.map((column) => (
           <div key={column.key} className="flex min-w-0 flex-1 flex-col">
             <p className="truncate text-center text-xs font-semibold">{column.label}</p>
-            {!isLocalView(view) && <p className="mb-2 truncate text-center text-[11px] text-muted">{formatDate(column.deadline)}</p>}
+            {!isLocalView(view) && <p className="mb-2 truncate text-center text-[11px] text-muted">{deadlineShort(view, column.deadline)}</p>}
             <div className="flex flex-1 flex-col justify-around gap-2">
               {column.matches.map((m) => (
                 <MatchCard key={m.id} view={view} m={m} title={m.thirdPlace ? t('tournament.thirdPlace') : undefined} />
@@ -1123,7 +1355,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
       {local && <SpectatorLink view={view} code={code} />}
       {local && view.phase !== 'finished' && <Helpers view={view} code={code} send={send} />}
       {local && view.phase === 'running' && view.settings.format === 'swiss' && <EntrantForm view={view} send={send} label={t('tournament.lateEntry')} />}
-      {local && view.phase === 'running' && (
+      {local && view.phase === 'running' && view.settings.format !== 'tables' && (
         <label className="block space-y-1 text-sm">
           <span>{t('tournament.fieldCount')}</span>
           <select className={FIELD} value={view.fields} onChange={(e) => send({ type: 'setFields', count: Number(e.target.value) })}>
@@ -1135,8 +1367,8 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
           </select>
         </label>
       )}
-      {local && view.phase !== 'finished' && <SchedulePanel view={view} send={send} />}
-      {view.phase !== 'signup' && local && (
+      {local && view.phase !== 'finished' && view.settings.format !== 'tables' && <SchedulePanel view={view} send={send} />}
+      {view.phase !== 'signup' && local && view.settings.format !== 'tables' && (
         <div className="space-y-2">
           <label className="block space-y-1 text-sm">
             <span>{t('tournament.correct')}</span>
@@ -1157,7 +1389,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
       )}
       {view.phase === 'running' && (
         <>
-          {!local && (
+          {!local && !isEveningView(view) && (
           <div className="grid grid-cols-3 gap-2">
             {[1, 3, 7].map((n) => (
               <Button key={n} className="text-xs" onClick={() => send({ type: 'extend', days: n })}>
@@ -1166,7 +1398,16 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
             ))}
           </div>
           )}
-          {!local && (
+          {isEveningView(view) && view.stages[view.currentStage]?.startedAt !== undefined && (
+          <div className="grid grid-cols-3 gap-2">
+            {EVENING_EXTEND_CHOICES.map((n) => (
+              <Button key={n} className="text-xs" onClick={() => send({ type: 'extend', days: 0, minutes: n })}>
+                {t('tournament.extendMinutes', { n })}
+              </Button>
+            ))}
+          </div>
+          )}
+          {!local && view.settings.format !== 'tables' && (
           <div className="space-y-2">
             <label className="block space-y-1 text-sm">
               <span>{t('tournament.setResult')}</span>
@@ -1328,6 +1569,56 @@ function PrintTools({ view, onPrint }: { view: TournamentView; onPrint: (kind: P
 }
 
 /** Druckansicht: weiß, ohne Bedienelemente im Druck; der Druckdialog öffnet sich gleich. */
+/** Tischrunden zum Drucken: Sitzplan je Runde oder ein Zettel je offenem Tisch. */
+function PrintTables({ view, sheets, heading }: { view: TournamentView; sheets: boolean; heading: ReactNode }) {
+  const { label } = useLookup(view);
+  const games = view.tableGames.filter((g) => !sheets || g.status !== 'done');
+  if (sheets) {
+    return (
+      <div className="grid grid-cols-2 gap-4">
+        {games.map((g) => (
+          <div key={g.id} className="break-inside-avoid rounded border-2 border-black p-3 text-sm">
+            <p className="text-xs">
+              {view.settings.name} · {t('tournament.round', { n: g.stage + 1 })} · {fieldName(view, g.index)}
+            </p>
+            {g.seats.map((id) => (
+              <div key={id} className="mt-2 flex items-center gap-2">
+                <span className="min-w-0 flex-1 truncate text-base font-bold">{label(id)}</span>
+                <span className="h-9 w-14 border-2 border-black" />
+              </div>
+            ))}
+            <p className="mt-2 text-xs">{t('tournament.print.tableSheet')}</p>
+            <p className="mt-4 border-t border-black pt-1 text-xs">{t('tournament.print.signature')}</p>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  const stages = [...new Set(games.map((g) => g.stage))];
+  return (
+    <>
+      {heading}
+      {stages.map((stage) => (
+        <section key={stage} className="mb-4 break-inside-avoid">
+          <h2 className="mb-1 font-bold">{t('tournament.round', { n: stage + 1 })}</h2>
+          <table className="w-full border-collapse text-sm">
+            <tbody>
+              {games
+                .filter((g) => g.stage === stage)
+                .map((g) => (
+                  <tr key={g.id} className="border-b border-gray-300">
+                    <td className="w-24 py-1 pr-2 text-xs">{fieldName(view, g.index)}</td>
+                    <td className="py-1">{g.seats.map((id, i) => `${label(id)}${g.places ? ` (${g.places[i]! + 1}.)` : ''}`).join(' · ')}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </section>
+      ))}
+    </>
+  );
+}
+
 function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintKind; onClose: () => void }) {
   const { label } = useLookup(view);
   useEffect(() => {
@@ -1340,7 +1631,7 @@ function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintK
     <header className="mb-3">
       <h1 className="text-2xl font-bold">🏆 {view.settings.name}</h1>
       <p className="text-sm">
-        {local ? view.settings.sport : findGame(view.settings.gameId)?.name} · {t(`tournament.format.${view.settings.format}`)} · {new Date(view.serverNow).toLocaleDateString('de-DE')}
+        {view.disciplines.length > 0 ? (view.settings.sport ?? t('tournament.multiSport')) : local ? view.settings.sport : findGame(view.settings.gameId)?.name} · {t(`tournament.format.${view.settings.format}`)} · {new Date(view.serverNow).toLocaleDateString('de-DE')}
       </p>
     </header>
   );
@@ -1351,7 +1642,8 @@ function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintK
         <Button onClick={() => window.print()}>🖨️ {t('tournament.print.now')}</Button>
         <Button onClick={onClose}>{t('tournament.boardClose')}</Button>
       </div>
-      {kind === 'plan' && (
+      {view.settings.format === 'tables' && (kind === 'plan' || kind === 'sheets') && <PrintTables view={view} sheets={kind === 'sheets'} heading={heading} />}
+      {kind === 'plan' && view.settings.format !== 'tables' && (
         <>
           {heading}
           {stages.map((stage) => (
@@ -1378,7 +1670,7 @@ function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintK
           ))}
         </>
       )}
-      {kind === 'sheets' && (
+      {kind === 'sheets' && view.settings.format !== 'tables' && (
         <div className="grid grid-cols-2 gap-4">
           {printableMatches(view)
             .filter((m) => !m.outcome && m.slots[0].player && m.slots[1].player)
@@ -1437,7 +1729,7 @@ function PrintView({ view, kind, onClose }: { view: TournamentView; kind: PrintK
             <p className="text-4xl font-bold">{view.players.find((p) => p.id === id)?.name}</p>
             <p className="text-2xl">{t('tournament.print.place', { n: index + 1 })}</p>
             <p className="text-sm">
-              {local ? view.settings.sport : findGame(view.settings.gameId)?.name} · {new Date(view.serverNow).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}
+              {view.disciplines.length > 0 ? (view.settings.sport ?? t('tournament.multiSport')) : local ? view.settings.sport : findGame(view.settings.gameId)?.name} · {new Date(view.serverNow).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
             <p className="mt-10 w-64 border-t border-black pt-1 text-sm">{view.leaderName}</p>
           </section>
