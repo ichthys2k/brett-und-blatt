@@ -83,6 +83,8 @@ Im Turnier kann die Leitung zusätzlich einen Einmal-Link ausstellen (`reissue`,
 
 ## Noch offen
 
+- **Ausbau zur Turniersoftware:** Gesamtkonzept mit Vor-Ort-Turnieren, Helfern, Zeitplan und weiteren Formen in [`turniersoftware.md`](turniersoftware.md) (W-058, #63).
+
 - **Regelversion:** Der Regelstand wird beim Start festgehalten; ändert er sich, sehen alle einen Hinweis. Alte Regeln lassen sich aber nicht weiterspielen, denn der Server hat nur den aktuellen Code. Während eines Turniers also trotzdem keine Balance-Änderungen am gewählten Spiel veröffentlichen.
 - **Benachrichtigung:** nur bei offener Seite im Hintergrund (Web Notifications). Hinweise bei geschlossener Seite bräuchten Web Push mit eigenen Schlüsseln und Speicherung der Empfänger, sind also eine eigene Entscheidung.
 - **Kontingent:** Eine Testpartie messen und hochrechnen, bevor große Turniere laufen.
