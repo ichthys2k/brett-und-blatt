@@ -1,0 +1,53 @@
+name: Recherche oder Konzept
+description: Etwas erkunden, vergleichen oder ein Konzept entwerfen lassen, bevor gebaut wird.
+title: "Spiel/Bereich: "
+labels: ["wunsch", "status: Idee"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **So geht es weiter:** Der Auftrag startet mit `status: Idee`. Nach Cornelius' Freigabe (`status: Ready`) entsteht ein Bericht oder Konzept, meist als Datei unter `docs/spiele/`. **Gebaut wird danach noch nichts** – über die Umsetzung entscheidet Cornelius, oft als eigenes Issue oder Vorhaben.
+
+        Den Auftrag gern so formulieren, wie du ihn einem Agenten geben würdest; er bleibt wörtlich im Issue stehen.
+  - type: input
+    id: spiel
+    attributes:
+      label: Spiel
+      description: Leer lassen, wenn es kein bestimmtes Spiel betrifft.
+      placeholder: z. B. Narrenhof, alle Spiele
+  - type: dropdown
+    id: bereich
+    attributes:
+      label: Bereich
+      multiple: true
+      options:
+        - Spielregeln oder Bot
+        - Oberfläche (Layout, Aussehen)
+        - Online (Räume, Lobby, Turniere, Ausweis, Sicherung)
+        - Klang und Musik
+        - Neues Spiel
+        - Barrierefreiheit
+        - Technik (Engine, Werkzeuge, Plattformen)
+  - type: textarea
+    id: auftrag
+    attributes:
+      label: Auftrag (Originalwortlaut)
+      description: Was soll recherchiert oder entworfen werden? Hintergrund, Vorbilder, Fragen.
+    validations:
+      required: true
+  - type: textarea
+    id: ergebnis
+    attributes:
+      label: Fertig, wenn
+      description: Was soll am Ende vorliegen?
+      value: |
+        - [ ] Bericht oder Konzept unter `docs/spiele/…`
+        - [ ] Empfehlung mit Nutzen und Aufwand
+        - [ ] Cornelius hat entschieden, wie es weitergeht
+    validations:
+      required: true
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      description: Optional. Vorbilder, Webseiten, verwandte Issues (#…).
