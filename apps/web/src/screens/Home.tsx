@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/controls';
 import { t } from '../i18n';
 import { discardGame } from '../lib/activeGame';
+import { pickFavorites, useFavorites } from '../lib/favorites';
 import { crestUrl } from '../lib/crest';
 import { OpenRooms } from '../components/OpenRooms';
 import { GAME_SERVER, useOpenRooms } from '../lib/online';
@@ -279,14 +280,19 @@ function ResumeCard({ snapshot, onDiscard }: { snapshot: SessionSnapshot; onDisc
   );
 }
 
-function GameCard({ info }: { info: GameInfo }) {
+interface FavoriteProps {
+  favorite: boolean;
+  onToggleFavorite: (gameId: string) => void;
+}
+
+function GameCard({ info, favorite, onToggleFavorite }: { info: GameInfo } & FavoriteProps) {
   // Das gemalte Wappen gehört zur Taverne; „Schlicht“ zeigt weiter das Emoji.
   const crest = useActiveLook() === 'tavern' ? crestUrl(info.id) : undefined;
   return (
-    <li>
+    <li className="relative">
       <a
         href={paths.setup(info.id)}
-        className="bub-tile flex h-full items-start gap-4 rounded-2xl border border-line bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
+        className="bub-tile flex h-full items-start gap-4 rounded-2xl border border-line bg-surface p-4 pr-12 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
       >
         <span className="bub-tile-crest text-4xl leading-none" data-image={crest ? '' : undefined} aria-hidden="true">
           {crest ? <img src={crest} alt="" loading="lazy" decoding="async" className="bub-tile-crest-image" /> : info.emoji}
@@ -297,6 +303,19 @@ function GameCard({ info }: { info: GameInfo }) {
           <span className="block text-xs text-muted">{playerCount(info)}</span>
         </span>
       </a>
+      {/* Eigener Knopf neben dem Link (nicht darin), damit Tippen den Stern umschaltet statt das Spiel zu öffnen */}
+      <button
+        type="button"
+        aria-pressed={favorite}
+        aria-label={favorite ? `${info.name} von den Lieblingsspielen nehmen` : `${info.name} als Lieblingsspiel markieren`}
+        title={favorite ? 'Von den Lieblingsspielen nehmen' : 'Als Lieblingsspiel oben anpinnen'}
+        onClick={() => onToggleFavorite(info.id)}
+        className={`bub-fav absolute top-2 right-2 grid size-9 cursor-pointer place-items-center rounded-full text-xl leading-none transition hover:bg-surface-2 focus-visible:outline-3 focus-visible:outline-accent ${
+          favorite ? 'text-warning' : 'text-muted hover:text-warning'
+        }`}
+      >
+        <span aria-hidden="true">{favorite ? '★' : '☆'}</span>
+      </button>
     </li>
   );
 }
@@ -305,6 +324,7 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
   const tavern = useActiveLook() === 'tavern';
   const [snapshot, setSnapshot] = useState(() => storage.loadActive());
   const openRooms = useOpenRooms();
+  const { favorites, toggle: toggleFavorite } = useFavorites();
   const [searchQuery, setSearchQuery] = useState('');
   const [players, setPlayersState] = useState<number | null>(() => initialPlayers ?? loadPlayerCount());
   const setPlayers = (count: number | null) => {
@@ -398,6 +418,13 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
     return players === null ? groups : groups.filter((g) => g.games.length > 0);
   }, [activeFilter, categorizedGames, filteredGamesBySearch, players]);
   const gameById = useMemo(() => new Map(games.map((g) => [g.id, g])), []);
+  // Lieblingsspiele stehen oben, gefiltert wie die Rubriken darunter (bei Suche nicht).
+  const favoriteGames = useMemo(() => {
+    if (filteredGamesBySearch !== null) return [];
+    return pickFavorites(favorites, games).filter(
+      (g) => fitsPlayers(g, players) && (activeFilter === 'all' || categoryOf(g.id) === activeFilter),
+    );
+  }, [favorites, filteredGamesBySearch, players, activeFilter]);
   const mathPresets = MATH_CLASSIC_PRESETS.filter((preset) => {
     const info = gameById.get(preset.gameId);
     return !info || fitsPlayers(info, players);
@@ -520,8 +547,25 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
         })}
       </nav>
 
-      {/* Strukturierte Spieleliste nach Rubriken */}
+      {/* Strukturierte Spieleliste nach Rubriken, Lieblingsspiele vorweg */}
       <div className="space-y-8">
+        {favoriteGames.length > 0 && (
+          <section className="space-y-3" aria-labelledby="home-favorites">
+            <div className="bub-home-room space-y-0.5">
+              <h2 id="home-favorites" className="flex items-center gap-2 text-lg font-bold">
+                <span aria-hidden="true">⭐</span>
+                <span>Lieblingsspiele</span>
+                <span className="text-xs font-normal text-muted">({favoriteGames.length})</span>
+              </h2>
+              <p className="text-xs text-muted">Mit dem Stern angepinnt – nur auf diesem Gerät.</p>
+            </div>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {favoriteGames.map((info) => (
+                <GameCard key={info.id} info={info} favorite onToggleFavorite={toggleFavorite} />
+              ))}
+            </ul>
+          </section>
+        )}
         {visibleGroups.length === 0 && !searchQuery.trim() && players !== null ? (
           <section className="rounded-2xl border border-line bg-surface p-6 text-center shadow-sm">
             <p className="text-lg font-semibold">Keine passenden Spiele</p>
@@ -561,7 +605,12 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
               </div>
               <ul className="grid gap-3 sm:grid-cols-2">
                 {group.games.map((info) => (
-                  <GameCard key={info.id} info={info} />
+                  <GameCard
+                    key={info.id}
+                    info={info}
+                    favorite={favorites.includes(info.id)}
+                    onToggleFavorite={toggleFavorite}
+                  />
                 ))}
               </ul>
 
