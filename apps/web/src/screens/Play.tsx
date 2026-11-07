@@ -1,11 +1,12 @@
 import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
-import { PlayerChip, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Ceremony } from '../components/Ceremony';
 import { Button } from '../components/controls';
 import { HowToOverlay } from '../components/HowTo';
 import { MoreMenu } from '../components/MoreMenu';
 import { SoundControl } from '../components/SoundControl';
+import { useDismiss } from '../components/useDismiss';
 import { t } from '../i18n';
 import { getActiveGame, resumeGame, saveProgress, startGame, type ActiveGame } from '../lib/activeGame';
 import { levelLabel } from '../lib/format';
@@ -74,8 +75,10 @@ export interface OnlineTableProps {
   onLeave(): void;
   /** Avatare (Emojis) der Plätze in Sitzreihenfolge, falls bekannt. */
   avatars?: (string | null)[];
-  /** Z. B. die Leiste mit Emoji-Reaktionen. */
+  /** Z. B. die Plätze zum Übernehmen. */
   extra?: ReactNode;
+  /** Knopf 💬 für Reaktionen und Schnellnachrichten; steht immer in der Kopfzeile (`inBar`: über dem Tisch). */
+  chat?: (inBar: boolean) => ReactNode;
   /** Raumcode und Einladungslink – Spiele zeigen sie z. B. auf einer Tafel an. */
   invite?: { code: string; link: string };
   /** Leiste über den Knöpfen, etwa die Abstimmung übers Zurücknehmen. */
@@ -155,9 +158,15 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const seats = session.config.seats;
   /** Ab drei Spielern wird die linke Spalte im Querformat breiter; auf flachen Handy-Bildschirmen stehen die Spieler zu zweit nebeneinander. */
   const crowded = seats.length > 2;
-  /** Viele Spieler: im Hochformat eine Zeile zum Wischen statt vieler Reihen, die dem Spielfeld den Platz nehmen. */
-  const many = seats.length > 4;
   const playersRef = useRef<HTMLElement>(null);
+  /**
+   * Im Hochformat ist die Spielerleiste ein Menü (☰ in der Statuszeile): eingeklappt, bis jemand sie braucht, und sie
+   * klappt beim nächsten Tipp daneben wieder zu. So bleibt dem Spielfeld die Höhe. In der Seitenleiste stehen die
+   * Spieler weiter offen da – dort nehmen sie dem Spielfeld nichts weg.
+   */
+  const [playersOpen, setPlayersOpen] = useState(false);
+  const playersBox = useRef<HTMLDivElement>(null);
+  useDismiss(playersOpen, useCallback(() => setPlayersOpen(false), []), playersBox);
   const [rootRef, rootSize] = useElementSize<HTMLDivElement>();
   /**
    * Genug Platz: Das Spiel setzt die Spieler um seinen Tisch, die Seitenleiste entfällt, und über dem Tisch bleibt nur die
@@ -222,7 +231,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       top: chip.offsetTop - (list.clientHeight - chip.offsetHeight) / 2,
       behavior: 'smooth',
     });
-  }, [turnChip]);
+  }, [turnChip, playersOpen]);
   const reasonText =
     result?.reason === 'time' ? t('play.reason.time') : result?.reason === 'resign' ? t('play.reason.resign') : result?.reason === 'agreement' ? t('play.reason.agreement') : null;
 
@@ -313,6 +322,10 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       />
     );
   };
+
+  const clockSeat = concealed || result ? undefined : current[0];
+  const clockReading = session.timed && clockSeat !== undefined ? session.clock(clockSeat) : null;
+  const turnClock = clockReading && clockReading.kind !== 'none' && clockReading.running ? formatClock(clockReading) : null;
 
   const statusContent = (
     <>
@@ -439,7 +452,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               {!result && <MoreMenu>{secondaryControls}</MoreMenu>}
             </footer>
           )}
-          <Button variant="ghost" className={`px-3 text-lg ${around ? '' : 'ml-auto'}`} aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
+          {online?.chat && <div className={`flex flex-none ${around ? '' : 'ml-auto'}`}>{online.chat(around)}</div>}
+          <Button variant="ghost" className={`px-3 text-lg ${around || online?.chat ? '' : 'ml-auto'}`} aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
             ?
           </Button>
           <SoundControl gameId={info.id} isClient={isClient} ownMusic={info.ownMusic} inBar={around} />
@@ -458,17 +472,44 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
 
         {!around && inviteBox}
 
-        <section
-          ref={playersRef}
-          className={`bub-players relative ${around ? 'hidden' : 'flex'} flex-none gap-2 px-3 side:min-h-20 side:flex-initial side:flex-col side:flex-nowrap side:overflow-x-hidden side:overflow-y-auto ${many ? 'overflow-x-auto pb-1' : 'flex-wrap'} ${crowded ? 'flat:grid flat:grid-cols-2 flat:content-start' : ''}`}
-          data-crowded={crowded || undefined}
-          data-many={many || undefined}
-          aria-label="Spieler"
-        >
-          {!around && seats.map((_, index) => seatChip(index))}
-        </section>
-
-        {!around && <p className="flex-none py-2 text-center font-medium short:py-1" aria-live="polite">{statusContent}</p>}
+        {/* Hochformat: Statuszeile mit Knopf ☰, darunter klappt die Spielerliste über dem Spielfeld auf. Seitenleiste: wie bisher. */}
+        {!around && (
+          <div ref={playersBox} className="relative flex-none side:contents">
+            <section
+              ref={playersRef}
+              id="bub-players"
+              className={`bub-players ${playersOpen ? 'absolute inset-x-3 top-full z-30 flex max-h-[60dvh] overflow-y-auto rounded-xl border border-line bg-surface p-2 shadow-md' : 'hidden'} flex-wrap gap-2 side:static side:z-auto side:flex side:min-h-20 side:max-h-none side:flex-initial side:flex-col side:flex-nowrap side:overflow-x-hidden side:overflow-y-auto side:rounded-none side:border-0 side:bg-transparent side:px-3 side:py-0 side:shadow-none ${crowded ? 'flat:grid flat:grid-cols-2 flat:content-start' : ''}`}
+              data-crowded={crowded || undefined}
+              data-open={playersOpen || undefined}
+              aria-label={t('play.players')}
+            >
+              {seats.map((_, index) => seatChip(index))}
+            </section>
+            <div className="flex items-center gap-2 px-3 py-1.5 short:py-1 side:justify-center side:py-2">
+              <button
+                type="button"
+                className="bub-players-toggle flex min-h-9 flex-none cursor-pointer items-center gap-1 rounded-full border border-line bg-surface px-2.5 text-sm font-medium hover:bg-surface-2 side:hidden"
+                aria-expanded={playersOpen}
+                aria-controls="bub-players"
+                aria-label={playersOpen ? t('play.hidePlayers') : t('play.showPlayers')}
+                title={playersOpen ? t('play.hidePlayers') : t('play.showPlayers')}
+                onClick={() => setPlayersOpen(!playersOpen)}
+              >
+                <span aria-hidden="true">☰</span>
+                <span aria-hidden="true">{seats.length}</span>
+              </button>
+              <p className="min-w-0 flex-1 text-center font-medium side:flex-initial" aria-live="polite">
+                {statusContent}
+              </p>
+              {/* Eingeklappt muss die laufende Uhr trotzdem zu sehen sein. */}
+              {turnClock && (
+                <span className="flex-none rounded-full bg-surface-2 px-2 py-0.5 text-sm font-semibold tabular-nums side:hidden" title={t('play.clock')}>
+                  ⏱ {turnClock}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {hintMissing && <p className={`flex-none pt-2 text-center text-sm text-muted ${around ? '' : 'order-2'}`}>{t('play.noHint')}</p>}
 

@@ -141,6 +141,17 @@ try {
       if (m.interactive === 0) problems.push(`${id}: Spielfeld ohne Bedienelemente`);
       if (m.pageHeight > viewport.height + 2) problems.push(`${id}: Seite ist ${m.pageHeight} px hoch und rollt (Bildschirm ${viewport.height} px)`);
       if (m.footerBlocked > 0) problems.push(`${id}: ${m.footerBlocked} Knöpfe unter dem Spielfeld verdeckt oder außerhalb des Bildschirms`);
+      // Hochformat: Die Spielerleiste ist eingeklappt und klappt über ☰ über dem Spielfeld auf, ohne die Seite zu verlängern (#114).
+      const players = page.locator('#bub-players');
+      if (await players.isVisible()) problems.push(`${id}: Spielerleiste ist im Hochformat nicht eingeklappt`);
+      await page.locator('.bub-players-toggle').click({ timeout: 2_000 });
+      const opened = await page.evaluate(() => ({
+        shown: document.querySelector('#bub-players')?.getBoundingClientRect().height ?? 0,
+        pageHeight: document.documentElement.scrollHeight,
+      }));
+      if (opened.shown === 0) problems.push(`${id}: Spielerleiste klappt mit ☰ nicht auf`);
+      if (opened.pageHeight > viewport.height + 2) problems.push(`${id}: aufgeklappte Spielerleiste verlängert die Seite (${opened.pageHeight} px)`);
+      await page.keyboard.press('Escape');
     } catch (e) {
       problems.push(`${id}: startet nicht – ${e.message.split('\n')[0]}`);
     }
