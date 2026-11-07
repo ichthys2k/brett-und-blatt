@@ -11,7 +11,11 @@
   user-select: none;
   font-family: inherit;
   position: relative;
-  overflow: hidden;
+  /* Die Arena misst ihre Höhe selbst (siehe Kompakt-Regeln am Ende). Passt trotzdem nicht alles,
+     rollt sie, statt die eigene Hand abzuschneiden. */
+  container: ds-arena / size;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
 }
 
 /* Deck Selection & Mulligan */
@@ -1597,4 +1601,133 @@
 .ds-card,
 .ds-minion {
   -webkit-touch-callout: none;
+}
+
+/* Wenig Höhe (Handy, online mit Reaktionsleiste darunter, Querformat): Spielfeld, Figuren und
+   Handkarten werden niedriger, damit eigener Held, Zug-Knopf und Hand sichtbar bleiben. */
+@container ds-arena (max-height: 600px) {
+  .ds-opponent-zone,
+  .ds-player-zone {
+    padding: 2px 0;
+  }
+
+  .ds-hero-card {
+    padding: 3px 8px;
+  }
+
+  .ds-hero-badges {
+    margin-top: 0;
+    gap: 3px;
+  }
+
+  .ds-board-container {
+    min-height: auto;
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .ds-board-row {
+    min-height: 80px;
+  }
+
+  .ds-board-row.empty-hint {
+    min-height: 44px;
+  }
+
+  .ds-minion {
+    height: 80px;
+    padding: 2px;
+  }
+
+  .ds-minion-emoji {
+    font-size: 1.6rem;
+  }
+
+  .ds-hand {
+    padding-top: 4px;
+  }
+
+  .ds-card {
+    height: 92px;
+    padding: 3px;
+  }
+
+  .ds-card-emoji {
+    font-size: 1.45rem;
+  }
+}
+
+/* Wenig Höhe, aber etwas Breite: Werte des Helden zu zweit nebeneinander statt untereinander. */
+@container ds-arena (max-height: 600px) and (min-width: 330px) {
+  .ds-hero-badges {
+    max-width: 112px;
+  }
+}
+
+/* Schmal: Verlauf nur als Symbol, damit Zeile und Zug-Knopf nicht über den Rand laufen. */
+@container ds-arena (max-width: 420px) {
+  .ds-log-label {
+    display: none;
+  }
+
+  .ds-btn-endturn {
+    max-width: 70px;
+    font-size: 0.78rem;
+  }
+}
+
+/* Sehr schmal (kleine Handys): Heldenzeile enger, damit der Zug-Knopf ganz zu sehen ist. */
+@container ds-arena (max-width: 360px) {
+  .ds-hero-card {
+    padding: 3px 4px;
+  }
+
+  .ds-badge {
+    padding: 2px 4px;
+  }
+
+  .ds-power {
+    width: 38px;
+    height: 38px;
+  }
+
+  .ds-btn-endturn {
+    max-width: 64px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Sehr wenig Höhe und genug Breite (Querformat): Werte des Helden in einer Zeile. */
+@container ds-arena (max-height: 470px) and (min-width: 440px) {
+  .ds-hero-badges {
+    max-width: none;
+    flex-wrap: nowrap;
+  }
+}
+
+/* Sehr wenig Höhe: Figuren und Karten noch flacher. */
+@container ds-arena (max-height: 470px) {
+  .ds-hero-avatar {
+    font-size: 1.3rem;
+  }
+
+  .ds-board-row {
+    min-height: 70px;
+  }
+
+  .ds-minion {
+    height: 70px;
+  }
+
+  .ds-minion-emoji {
+    font-size: 1.35rem;
+  }
+
+  .ds-card {
+    height: 80px;
+  }
+
+  .ds-card-emoji {
+    font-size: 1.25rem;
+  }
 }
