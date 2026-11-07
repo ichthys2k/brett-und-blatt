@@ -86,9 +86,15 @@ Aufbau des Texts: **Ziel** (bei Fehlern: **Fehler** mit Schritten, Erwartet, Tat
 
 ## GitHub-Projekt
 
-Das Projekt [„Brett & Blatt – Planung“](https://github.com/users/ichthys2k/projects/3) ist nur eine Anzeige. **Status und Priorität immer über die Labels am Issue ändern**, nie über Felder oder Board-Spalten im Projekt – die Action `projekt-abgleich` überträgt die Labels und überschreibt Handänderungen. Neue Issues kommen von selbst ins Projekt.
+Das Projekt [„Brett & Blatt – Planung“](https://github.com/users/ichthys2k/projects/3) und die Labels werden **in beide Richtungen** abgeglichen; die jüngere Änderung gewinnt. Status, Priorität und Bereich lassen sich also am Issue (Label) **oder** im Projekt (Feld, Board-Spalte) setzen. Neue Issues kommen von selbst ins Projekt.
 
-Technik: Die Action `.github/workflows/projekt-abgleich.yml` (Skript `scripts/projekt-abgleich.mjs`) läuft bei jeder Label-Änderung und zweimal pro Stunde. Sie braucht das Repo-Secret `PROJECT_TOKEN` (klassischer Personal Access Token nur mit dem Recht `project`) und die Repo-Variable `PROJECT_NUMBER` (= 3). Von Hand: `PROJECT_TOKEN=$(gh auth token) PROJECT_NUMBER=3 node scripts/projekt-abgleich.mjs` (mit `PROJEKT_PROBE=1` nur anzeigen). Das Feld „Bereich“ zeigt bei mehreren Bereichs-Labels nur das erste.
+- **Label am Issue geändert:** Das Projekt folgt sofort (Lauf je Issue).
+- **Feld im Projekt geändert:** Das Label folgt beim nächsten Lauf, **spätestens nach etwa 5 Minuten** (GitHub meldet Projekt-Änderungen nicht an Actions; geplante Läufe starten teils verspätet). Agenten sehen die Änderung erst danach – zum Prüfen immer die Labels lesen.
+- **Status „Fertig“ im Projekt** schließt das Issue; ein anderer Status an einem geschlossenen Issue öffnet es wieder. „Fertig“ setzt nur Cornelius.
+- **Feld leeren** im Projekt wirkt nicht – das Feld wird aus dem Label wieder gefüllt. Zum Entfernen das Label abnehmen.
+- **Bereich:** Das Feld zeigt bei mehreren Bereichs-Labels nur das erste; ändert man es im Projekt, wird genau dieses Label ersetzt.
+
+Technik: Die Action `.github/workflows/projekt-abgleich.yml` (Skript `scripts/projekt-abgleich.mjs`) läuft bei jeder Label-Änderung und alle 5 Minuten. Sie vergleicht je Achse den Zeitpunkt des Feldwerts (`updatedAt`) mit der letzten Label-Änderung dieser Achse (bei Status auch Schließen/Öffnen). Für das Projekt braucht sie das Repo-Secret `PROJECT_TOKEN` (klassischer Personal Access Token nur mit dem Recht `project`) und die Repo-Variable `PROJECT_NUMBER` (= 3); Labels schreibt sie mit dem eingebauten `GITHUB_TOKEN`. Von Hand: `PROJECT_TOKEN=$(gh auth token) ISSUES_TOKEN=$(gh auth token) PROJECT_NUMBER=3 node scripts/projekt-abgleich.mjs [Nr]` (mit `PROJEKT_PROBE=1` nur anzeigen).
 
 Fertige Filter-Links für die Issue-Liste stehen in [`PLANUNG.md`](../../PLANUNG.md).
 
@@ -97,7 +103,7 @@ Fertige Filter-Links für die Issue-Liste stehen in [`PLANUNG.md`](../../PLANUNG
 | Achse | Labels | Wer setzt |
 |---|---|---|
 | Typ | `wunsch`, `fehler`, `recherche` (zusätzlich zu `wunsch`, nur erkunden), `vorhaben` (Eltern-Issue mit Unter-Issues); `context` nur fürs Archiv #72 | wer anlegt |
-| Status | `status: Idee` → `Ready` → `In progress` → `Review` → `Done`; `status: Zurückgestellt` | `Ready`, `Done`, `Zurückgestellt`: nur Cornelius |
+| Status | `status: Idee` → `Ready` → `In progress` → `Review` → `Done`; `status: Zurückgestellt` (im Projekt auch als Spalte) | `Ready`, `Done`, `Zurückgestellt`: nur Cornelius |
 | Priorität | `prio: hoch`, `prio: mittel`, `prio: niedrig` | Cornelius |
 | Bereich | `bereich: Online`, `Klang & Musik`, `Oberfläche`, `Neues Spiel`, `Technik`; `barrierefreiheit` | wer anlegt |
 | Spiel | `spiel: <Name>` je Spiel (z. B. `spiel: Narrenhof`, `spiel: Eins!`); Beschreibung nennt die Spiel-id | wer anlegt |

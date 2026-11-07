@@ -1,18 +1,26 @@
-# Trägt Status-, Prioritäts- und Bereichs-Labels der Issues in die Felder des
-# GitHub-Projekts „Brett & Blatt – Planung“ ein (Labels sind führend).
+# Gleicht Status, Priorität und Bereich zwischen den Labels der Issues und den
+# Feldern des GitHub-Projekts „Brett & Blatt – Planung“ ab – in beide
+# Richtungen, die jüngere Änderung gewinnt (Skript scripts/projekt-abgleich.mjs).
+#
+# - Label-Änderungen am Issue lösen sofort einen Lauf für dieses Issue aus.
+# - Änderungen im Projekt meldet GitHub nicht an Actions; sie holt der
+#   Lauf alle 5 Minuten ab (GitHub startet geplante Läufe teils verspätet).
+#
 # Braucht das Secret PROJECT_TOKEN (klassischer Token mit Recht „project“);
-# ohne Secret läuft der Job durch und tut nichts.
+# ohne Secret läuft der Job durch und tut nichts. Labels schreibt der Job mit
+# dem eingebauten GITHUB_TOKEN – solche Änderungen starten keinen neuen Lauf.
 name: Projekt-Abgleich
 
 on:
   issues:
     types: [opened, reopened, closed, labeled, unlabeled]
   schedule:
-    - cron: '17,47 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: projekt-abgleich
@@ -30,8 +38,9 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-      - name: Labels ins Projekt übertragen
+      - name: Labels und Projekt abgleichen
         env:
           PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ISSUES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
         run: node scripts/projekt-abgleich.mjs ${{ github.event.issue.number }}

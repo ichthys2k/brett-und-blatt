@@ -24,7 +24,7 @@ Fertige Filter für die Issue-Liste – am besten als Lesezeichen speichern (geh
 
 ## Projekt
 
-Board und sortierbare Tabellen: [„Brett & Blatt – Planung“](https://github.com/users/ichthys2k/projects/3) – Ansichten Ablauf, Was ist dran, Meine Prüfliste, Fehler, Ideen-Backlog, Ungesichtet, Recherche, Nach Bereich, Vorhaben, Zurückgestellt. Nur zum Anschauen: Status und Priorität werden über die Labels am Issue geändert.
+Board und sortierbare Tabellen: [„Brett & Blatt – Planung“](https://github.com/users/ichthys2k/projects/3) – Ansichten Ablauf, Was ist dran, Meine Prüfliste, Fehler, Ideen-Backlog, Ungesichtet, Recherche, Nach Bereich, Vorhaben, Zurückgestellt. Status, Priorität und Bereich lassen sich hier **oder** am Issue setzen – beides wird abgeglichen; Änderungen im Projekt erreichen die Labels nach etwa 5 Minuten.
 
 ## Wie gearbeitet wird
 
