@@ -1,5 +1,5 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TOURNAMENT_MAX_FIELDS, isTournamentGame, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TOURNAMENT_MAX_FIELDS, isTournamentGame, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
@@ -37,6 +37,11 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [fields, setFields] = useState(2);
   const [groupCount, setGroupCount] = useState(0);
   const [returnRound, setReturnRound] = useState(false);
+  /** Spieleabend (Stufe 3 Teil 2): mehrere Disziplinen, je Spieltag eine. */
+  const [multi, setMulti] = useState(false);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [localDisciplines, setLocalDisciplines] = useState('');
+  const [wishes, setWishes] = useState(true);
   const [spectators, setSpectators] = useState(true);
   const [points, setPoints] = useState({ win: 3, draw: 1, loss: 0 });
   const pointsValid = points.win > points.draw && points.draw >= points.loss;
@@ -71,6 +76,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [error, setError] = useState<string | null>(null);
 
   const local = mode === 'local';
+  const localDisciplineCount = new Set(localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean)).size;
   /** Vor Ort gespieltes Brett-&-Blatt-Spiel (Stufe 3); leer bei einer Sportart. */
   const localGame = sportPreset.startsWith('game:') ? sportPreset.slice(5) : '';
   const pickSport = (preset: string) => {
@@ -97,9 +103,11 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
     try {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
       const common = { name: name.trim(), format, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}) };
+      const many = format === 'league' && multi;
+      const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
-        ? { ...common, gameId: localGame, time: 'normal' as const, days: 1, isPublic: false, mode, sport: sport.trim(), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}) }
-        : { ...common, gameId, time, isPublic, options: chosen, ...(pace.startsWith('m') ? { days: 1, minutes: Number(pace.slice(1)) } : { days: Number(pace.slice(1)) }) };
+        ? { ...common, gameId: many ? '' : localGame, time: 'normal' as const, days: 1, isPublic: false, mode, sport: many ? t('tournament.multiSport') : sport.trim(), ...(many ? { disciplines: localList } : {}), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}) }
+        : { ...common, gameId: many ? picked[0]! : gameId, time, isPublic, options: many ? {} : chosen, ...(many ? { disciplines: picked, wishes } : {}), ...(pace.startsWith('m') ? { days: 1, minutes: Number(pace.slice(1)) } : { days: Number(pace.slice(1)) }) };
       const code = await createTournament(settings, profile);
       storage.rememberTournament({ code, name: name.trim() });
       passChanged();
@@ -202,7 +210,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
                 {t('tournament.draws')}
               </label>
             </>
-          ) : (
+          ) : format === 'league' && multi ? null : (
           <>
           <label className="block space-y-1 text-sm">
             <span>{t('tournament.game')}</span>
@@ -247,6 +255,47 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" className="h-4 w-4 accent-accent" checked={returnRound} onChange={(e) => setReturnRound(e.target.checked)} />
               {t('tournament.returnRound')}
+            </label>
+          )}
+          {format === 'league' && (
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={multi} onChange={(e) => setMulti(e.target.checked)} />
+              <span>
+                {t('tournament.multi')}
+                <span className="block text-xs text-muted">{t('tournament.multiHint')}</span>
+              </span>
+            </label>
+          )}
+          {format === 'league' && multi && !local && (
+            <fieldset className="space-y-2 rounded-xl border border-line p-3">
+              <legend className="px-1 text-sm">{t('tournament.disciplines', { n: picked.length })}</legend>
+              <div className="grid max-h-64 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2">
+                {tournamentGames.map((game) => (
+                  <label key={game.id} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-accent"
+                      checked={picked.includes(game.id)}
+                      disabled={!picked.includes(game.id) && picked.length >= DISCIPLINES_MAX}
+                      onChange={(e) => setPicked(e.target.checked ? [...picked, game.id] : picked.filter((id) => id !== game.id))}
+                    />
+                    {game.emoji} {game.name}
+                  </label>
+                ))}
+              </div>
+              <label className="flex items-start gap-2 text-sm">
+                <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={wishes} onChange={(e) => setWishes(e.target.checked)} />
+                <span>
+                  {t('tournament.wishes')}
+                  <span className="block text-xs text-muted">{t('tournament.wishesHint')}</span>
+                </span>
+              </label>
+            </fieldset>
+          )}
+          {format === 'league' && multi && local && (
+            <label className="block space-y-1 text-sm">
+              <span>{t('tournament.disciplinesLocal')}</span>
+              <textarea className="min-h-24 w-full rounded-xl border border-line bg-surface px-3 py-2" rows={4} value={localDisciplines} onChange={(e) => setLocalDisciplines(e.target.value)} />
             </label>
           )}
           {local && format === 'world' && (
@@ -335,7 +384,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               {t('tournament.public')}
             </label>
           )}
-          <Button type="submit" variant="primary" className="w-full" disabled={busy || !name.trim() || (local ? !sport.trim() || !pointsValid : !gameId)}>
+          <Button type="submit" variant="primary" className="w-full" disabled={busy || !name.trim() || (format === 'league' && multi ? (local ? localDisciplineCount : picked.length) < DISCIPLINES_MIN || (local && localDisciplineCount > DISCIPLINES_MAX) : false) || (local ? !sport.trim() || !pointsValid : !gameId)}>
             🏆 {t('tournament.create')}
           </Button>
           {error && (

@@ -7,6 +7,7 @@ import { upgradeSnapshot, type StoredTournamentSnapshot } from './tournament/mig
 import { SCHEDULE_MAX_MINUTES, assignFields, isLocal, outcomeFromEntry, plannedStarts, type ResultEntry } from './tournament/local-play';
 import type { PointRules } from './tournament/protocol';
 import { deadlineOutcome, dueAt, roomRequest, setReady, sideOfSeat, type MatchRoomRequest, type RoomReport } from './tournament/online-play';
+import { chooseDisciplines, disciplineOf, hasDisciplines, setWishes, wishCounts } from './tournament/disciplines';
 import { autoStart, isEvening, isHeld, startStage, startableStage } from './tournament/evening';
 import { seededShuffle } from './tournament/pairing';
 import { defaultScoring, standings } from './tournament/scoring';
@@ -43,6 +44,7 @@ export * from './tournament/formats';
 export * from './tournament/online-play';
 export * from './tournament/local-play';
 export * from './tournament/evening';
+export * from './tournament/disciplines';
 export * from './tournament/migrate';
 export * from './tournament/protocol';
 
@@ -188,7 +190,19 @@ export class Tournament {
   leave(token: string): string | null {
     if (isLocal(this.s)) return 'Die Leitung trägt die Teilnehmer ein.';
     if (this.s.phase !== 'signup') return 'Das Turnier läuft schon. Die Leitung kann dich zurückziehen.';
+    const gone = this.playerByToken(token);
     this.s.players = this.s.players.filter((p) => p.token !== token);
+    if (gone && this.s.wishes) delete this.s.wishes[gone.id];
+    this.touch();
+    return null;
+  }
+
+  /** Spieleabend: eigene Wunschdisziplinen während der Einschreibung. */
+  wish(token: string, ids: readonly string[]): string | null {
+    const player = this.playerByToken(token);
+    if (!player) return 'Schreib dich zuerst ein.';
+    const error = setWishes(this.s, player.id, ids);
+    if (error) return error;
     this.touch();
     return null;
   }
@@ -215,8 +229,9 @@ export class Tournament {
     // Am Turnierabend gibt es Fristen erst, wenn die Leitung eine Runde startet.
     const deadline = (index: number) => (isEvening(this.s) ? 0 : now + (index + 1) * days * DAY_MS);
     const ids = seededShuffle(this.s.players.map((p) => p.id), `${this.s.seed}/auslosung`);
+    if (hasDisciplines(this.s)) this.s.disciplineOrder = chooseDisciplines(this.s);
     this.format.setup(this.ctx, ids, deadline);
-    const ruleVersion = isLocal(this.s) ? undefined : this.deps.ruleVersion?.(this.s.settings.gameId);
+    const ruleVersion = isLocal(this.s) || hasDisciplines(this.s) ? undefined : this.deps.ruleVersion?.(this.s.settings.gameId);
     if (ruleVersion !== undefined) this.s.ruleVersion = ruleVersion;
     this.s.phase = 'running';
     this.settle();
@@ -530,6 +545,9 @@ export class Tournament {
       stages: s.stages,
       currentStage: this.currentStage(),
       startableStage: startableStage(s, this.currentStage()),
+      disciplines: hasDisciplines(s) ? (s.disciplineOrder ? s.disciplineOrder.map((id) => ({ id, wishes: wishCounts(s).find((c) => c.id === id)?.wishes ?? 0 })) : wishCounts(s)) : [],
+      yourWishes: (you ? s.wishes?.[you] : undefined) ?? [],
+      disciplineTables: hasDisciplines(s) && s.phase !== 'signup' ? this.disciplineTables() : [],
       matches: s.matches.map(({ everReady: _hidden, ...match }) => (planned?.has(match.id) ? { ...match, plannedAt: planned.get(match.id)! } : match)),
       schedule: s.schedule ?? null,
       referees: s.referees === true,
@@ -669,6 +687,12 @@ export class Tournament {
 
   private groupTable(group: number): StandingRow[] {
     return standings(this.s.groups[group] ?? [], this.groupMatches(group), this.s.seed, this.s.scoring);
+  }
+
+  /** Spieleabend: Tabelle je Disziplin aus den Partien ihrer Spieltage. */
+  private disciplineTables(): { id: string; table: StandingRow[] }[] {
+    const ids = this.s.players.map((p) => p.id);
+    return (this.s.disciplineOrder ?? []).map((id) => ({ id, table: standings(ids, this.s.matches.filter((m) => disciplineOf(this.s, m.stage) === id), this.s.seed, this.s.scoring) }));
   }
 
   private overallTable(): StandingRow[] {

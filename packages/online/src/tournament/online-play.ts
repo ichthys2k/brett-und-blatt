@@ -1,4 +1,5 @@
 import type { Options } from '@brett-und-blatt/engine';
+import { disciplineOf } from './disciplines';
 import { eveningDueAt, isEvening } from './evening';
 import { MATCH_MIN_TIME_MS, READY_WINDOW_MS, type MatchOutcome, type MatchSide, type TournamentMatch, type TournamentSettings, type TournamentSnapshot } from './types';
 
@@ -53,7 +54,9 @@ export function roomRequest(s: TournamentSnapshot, match: TournamentMatch): Matc
   const tokens = match.slots.map((slot) => s.players.find((p) => p.id === slot.player)?.token) as [string | undefined, string | undefined];
   if (!tokens[0] || !tokens[1]) return null;
   const seats: [string, string] = match.replays % 2 === 1 ? [tokens[1], tokens[0]] : [tokens[0], tokens[1]];
-  return { match: match.id, gameId: s.settings.gameId, time: match.replays > 0 ? 'fast' : s.settings.time, options: s.settings.options ?? {}, tokens: seats, label: s.settings.name };
+  // Spieleabend: das Spiel des Spieltags, mit seinen Standardoptionen.
+  const discipline = disciplineOf(s, match.stage);
+  return { match: match.id, gameId: discipline ?? s.settings.gameId, time: match.replays > 0 ? 'fast' : s.settings.time, options: discipline ? {} : (s.settings.options ?? {}), tokens: seats, label: s.settings.name };
 }
 
 /** Der Raum zählt nach Plätzen; nach einem getauschten Entscheidungsspiel sind das andere Seiten. */

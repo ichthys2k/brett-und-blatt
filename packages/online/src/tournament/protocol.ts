@@ -1,5 +1,6 @@
 import type { GameInfo, OptionSpec, Options } from '@brett-und-blatt/engine';
 import { cleanName } from '../names';
+import { DISCIPLINES_MAX, DISCIPLINES_MIN } from './disciplines';
 import { EVENING_EXTEND_CHOICES, EVENING_MINUTE_CHOICES } from './evening';
 import { ENTRANT_NAME_LENGTH, TOURNAMENT_MAX_FIELDS, TOURNAMENT_MAX_PLAYERS, TOURNAMENT_NAME_LENGTH, type MatchSide, type ResultKind, type TournamentFormat, type TournamentSettings, type TournamentView } from './types';
 
@@ -16,6 +17,7 @@ export type TournamentClientMessage =
   | { type: 'extend'; days: number; minutes?: number }
   // Stufe 3: Turnierabend
   | { type: 'startRound' }
+  | { type: 'wish'; disciplines: string[] }
   | { type: 'withdraw'; player: string }
   | { type: 'reissue'; player: string }
   // Vor Ort (Stufe 1), nur die Leitung:
@@ -58,6 +60,8 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
     case 'start':
     case 'startRound':
       return { type: m.type };
+    case 'wish':
+      return Array.isArray(m.disciplines) && m.disciplines.length <= DISCIPLINES_MAX && m.disciplines.every((d) => isShort(d, 40)) ? { type: 'wish', disciplines: m.disciplines as string[] } : null;
     case 'claim':
       return isShort(m.code, 20) ? { type: 'claim', code: m.code } : null;
     case 'ready':
@@ -122,21 +126,30 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
   const format = body.format as TournamentFormat;
   const returnRound = format === 'league' && body.returnRound === true ? { returnRound: true } : {};
   if (body.mode === 'local') return parseLocalSettings(body, name, format, returnRound, findGame);
-  const game = typeof body.gameId === 'string' ? findGame(body.gameId) : undefined;
-  if (typeof body.gameId !== 'string' || !game || !isTournamentGame(game.info)) return null;
+  // Spieleabend: mehrere Spiele, je Spieltag eines; `gameId` ist dann das erste.
+  const disciplines = parseDisciplines(body, format, (id) => {
+    const found = findGame(id);
+    return found && isTournamentGame(found.info) ? id : null;
+  });
+  if (disciplines === null) return null;
+  const gameId = disciplines ? disciplines[0] : body.gameId;
+  const game = typeof gameId === 'string' ? findGame(gameId) : undefined;
+  if (typeof gameId !== 'string' || !game || !isTournamentGame(game.info)) return null;
   if (body.time !== 'relaxed' && body.time !== 'normal' && body.time !== 'fast') return null;
   // Turnierabend: Minuten je Partie statt Tage je Phase.
   const minutes = EVENING_MINUTE_CHOICES.includes(body.minutes as 10) ? { minutes: body.minutes as number } : {};
   if (!minutes.minutes && body.days !== 1 && body.days !== 3 && body.days !== 7 && body.days !== 14) return null;
   const options: Options = {};
-  if (isRecord(body.options)) {
+  // Am Spieleabend gelten die Standardoptionen jedes Spiels.
+  if (isRecord(body.options) && !disciplines) {
     for (const [id, value] of Object.entries(body.options)) {
       const spec = game.options.find((o) => o.id === id && !o.hidden);
       if (!spec?.choices.some((c) => c.value === value)) return null;
       options[id] = value as string;
     }
   }
-  return { name, gameId: body.gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
+  const multi = disciplines ? { disciplines, ...(body.wishes === true ? { wishes: true } : {}) } : {};
+  return { name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
 }
 
 /** Vor Ort: Sportart statt Spiel, keine Zeitvorgabe, nie in „Offene Runden“. */
@@ -144,7 +157,9 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
   // Ein Brett-&-Blatt-Spiel als Sportart (Stufe 3): Name aus dem Steckbrief, gespielt wird am Gerät.
   const game = typeof body.gameId === 'string' && body.gameId ? findGame(body.gameId) : undefined;
   if (typeof body.gameId === 'string' && body.gameId && (!game || !isTournamentGame(game.info))) return null;
-  const sport = game ? game.info.name : typeof body.sport === 'string' ? cleanName(body.sport, ENTRANT_NAME_LENGTH) : null;
+  const disciplines = parseDisciplines(body, format, (name) => cleanName(name, ENTRANT_NAME_LENGTH));
+  if (disciplines === null) return null;
+  const sport = game ? game.info.name : typeof body.sport === 'string' ? cleanName(body.sport, ENTRANT_NAME_LENGTH) : disciplines ? 'Spieleabend' : null;
   if (!sport) return null;
   const result = RESULT_KINDS.includes(body.result as ResultKind) ? (body.result as ResultKind) : 'winner';
   const fieldLabel = typeof body.fieldLabel === 'string' ? cleanName(body.fieldLabel, 12) : null;
@@ -165,7 +180,21 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
     spectators: body.spectators === true,
     ...returnRound,
     ...groupCount,
+    ...(disciplines ? { disciplines } : {}),
   };
+}
+
+/**
+ * Disziplinen eines Spieleabends: undefined = keine (ein Spiel), null = ungültig.
+ * Nur im Bundesliga-Modus, 2 bis 8, jede nur einmal; `clean` prüft und säubert jeden Eintrag.
+ */
+function parseDisciplines(body: Record<string, unknown>, format: TournamentFormat, clean: (value: string) => string | null): string[] | null | undefined {
+  if (body.disciplines === undefined) return undefined;
+  if (format !== 'league' || !Array.isArray(body.disciplines)) return null;
+  const list = body.disciplines.map((value) => (typeof value === 'string' ? clean(value) : null));
+  if (list.some((value) => value === null)) return null;
+  const unique = [...new Set(list as string[])];
+  return unique.length === list.length && unique.length >= DISCIPLINES_MIN && unique.length <= DISCIPLINES_MAX ? unique : null;
 }
 
 /** Punkte je Ergebnis, die die Leitung vor Ort selbst festlegt. */

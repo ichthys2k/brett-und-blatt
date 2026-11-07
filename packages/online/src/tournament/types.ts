@@ -68,6 +68,13 @@ export interface TournamentSettings {
    * startet die Leitung, dann beginnen alle Partien der Runde zugleich.
    */
   minutes?: number;
+  /**
+   * Spieleabend (Stufe 3 Teil 2, nur Bundesliga-Modus): je Spieltag eine Disziplin, reihum.
+   * Online Spiel-ids (`gameId` ist dann die erste), vor Ort freie Namen.
+   */
+  disciplines?: string[];
+  /** Teilnehmer wünschen sich bei der Einschreibung Disziplinen. */
+  wishes?: boolean;
 }
 
 /** Woher ein noch offener Platz seinen Spieler bekommt. */
@@ -203,6 +210,10 @@ export interface TournamentSnapshot {
   schedule?: TournamentSchedule;
   /** Vor Ort: Teams pfeifen gegenseitig; beim Aufruf bekommt jede Partie ein spielfreies Team. */
   referees?: boolean;
+  /** Spieleabend: Wünsche je Spieler-id. */
+  wishes?: Record<string, string[]>;
+  /** Spieleabend: Reihenfolge der Disziplinen, beim Start festgelegt. */
+  disciplineOrder?: string[];
 }
 
 /** Helfer vor Ort (Stufe 2): Wer den Link öffnet, trägt Ergebnisse ein; Mitleitung darf alles. */
@@ -271,6 +282,12 @@ export interface TournamentView {
   currentStage: number;
   /** Turnierabend: Runde, die die Leitung jetzt starten kann; sonst null. */
   startableStage: number | null;
+  /** Spieleabend: Disziplinen mit Stimmen (nach dem Start in Spieltag-Reihenfolge); sonst leer. */
+  disciplines: { id: string; wishes: number }[];
+  /** Spieleabend: eigene Wünsche. */
+  yourWishes: string[];
+  /** Spieleabend: Tabelle je Disziplin. */
+  disciplineTables: { id: string; table: StandingRow[] }[];
   /** `plannedAt`: Uhrzeit laut Zeitplan (vor Ort, wenn einer gesetzt ist). */
   matches: (Omit<TournamentMatch, 'everReady'> & { plannedAt?: number })[];
   schedule: TournamentSchedule | null;
