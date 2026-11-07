@@ -1,6 +1,6 @@
 name: Wunsch oder Idee
 description: Neue Funktion, Änderung oder neues Spiel vorschlagen.
-title: "[Wunsch] "
+title: "Spiel/Bereich: "
 labels: ["wunsch", "status: Idee"]
 body:
   - type: input
@@ -17,3 +17,11 @@ body:
       description: Was soll sich ändern und warum? Wie sieht es aus, wenn es fertig ist?
     validations:
       required: true
+  - type: textarea
+    id: fertig
+    attributes:
+      label: Fertig, wenn
+      description: Woran merkt man, dass der Wunsch erfüllt ist? Gern als Liste.
+      placeholder: |
+        - …
+        - …
