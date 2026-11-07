@@ -2,7 +2,7 @@
 
 Diese Seite enthält fachliche Übergaben und Links zu Detailplänen, aber **keinen maßgeblichen Aufgabenstatus**. Wünsche, Fehler, Prompts und Freigaben werden ausschließlich als [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues) verwaltet; [`PLANUNG.md`](../../PLANUNG.md) verweist auf das vollständige Migrationsarchiv. Alle früheren Claude-Dokumente sind jetzt als Markdown im Repo.
 
-Vor der Arbeit ein von Cornelius auf `status: Ready` gesetztes Issue auswählen und im Issue mit Konto und Zweig kommentierend reservieren; keine Assignees oder Labels als Reservierung. Nur Cornelius erteilt Ready-Freigaben. Tests + `corepack pnpm check` + Rauchtest + Prüfstand und Blick im Browser bleiben Pflicht. Commit, Push und Veröffentlichen nur auf Cornelius' Wort („deploy“). Keine Nachbauten bestimmter Verlagsspiele: eigene Namen, eigene Kernregel.
+Vor der Arbeit ein von Cornelius auf `status: Ready` gesetztes Issue auswählen und im Issue mit Konto und Zweig kommentierend reservieren; keine Assignees oder Labels als Reservierung. Nur Cornelius erteilt Ready-Freigaben. Tests + `corepack pnpm check` + Rauchtest + Prüfstand und Blick im Browser bleiben Pflicht. Den eigenen Arbeitszweig committen und hochladen Agenten selbst (PR mit `Refs #…`); nach `main` und damit veröffentlicht wird nur auf Cornelius' Wort „deploy“. Keine Nachbauten bestimmter Verlagsspiele: eigene Namen, eigene Kernregel.
 
 ## 1. Marktplatz (W-041) – veröffentlicht (4817a5e)
 
