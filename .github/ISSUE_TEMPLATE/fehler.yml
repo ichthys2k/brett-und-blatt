@@ -1,6 +1,6 @@
 name: Fehler melden
 description: Etwas funktioniert nicht wie gedacht.
-title: "[Fehler] "
+title: "Spiel/Bereich: "
 labels: ["fehler", "status: Idee"]
 body:
   - type: input
