@@ -1,13 +1,6 @@
-# Aufgabenplanung
+# Planung – Ansichten
 
-**GitHub Issues sind die einzige aktuelle Aufgabenliste** für Wünsche, Fehler und Prompts: [Brett & Blatt – Issues](https://github.com/ichthys2k/brett-und-blatt/issues).
-
-- Neue Ideen und Aufgaben als Issue mit `status: Idee` eintragen. Die Vorlagen unter `.github/ISSUE_TEMPLATE/` (Fehler melden, Wunsch oder Idee, Recherche oder Konzept, Vorhaben) geben die Gliederung vor und versehen sie automatisch mit diesem Status.
-- **Nur Cornelius** gibt eine Idee nach Prüfung mit `status: Ready` zur Bearbeitung frei. Agenten übernehmen ausschließlich `Ready`-Issues.
-- Vor Arbeitsbeginn reserviert der Agent das Issue mit einem Kommentar, z. B. `🔒 Übernehme ich: @konto, zweig-name — 2026-11-06 05:30 UTC`. Der Kommentar ist die gemeinsame Reservierung; keine Assignees oder Labels als Reservierung verwenden.
-- Der Agent arbeitet auf einem eigenen Zweig, lädt ihn selbst hoch und öffnet einen PR mit `Refs #…` (nicht `Fixes #…`). Nach `main` geht es nur auf Cornelius' Wort „deploy“.
-- Labels: Typ (`wunsch`, `fehler`), Status, Priorität (`prio: …`, setzt Cornelius), Bereich (`bereich: …`) und Spiel (`spiel: <Name>`). Größere Vorhaben: Eltern-Issue `vorhaben` mit Unter-Issues je Schritt. Ablauf mit Befehlen: [`.agent/workflows/issue-bearbeiten.md`](.agent/workflows/issue-bearbeiten.md). Geparkte Ideen tragen `status: Zurückgestellt`. Aufbau eines Issues: Ziel, Stand, „Fertig, wenn“ als Kästchenliste, Links (Einzelheiten in `CLAUDE.md`).
-- Nach der Arbeit folgt `status: Review`; Cornelius schließt nach Prüfung mit `status: Done`. Ablauf und Zuständigkeiten stehen in [`CLAUDE.md`](CLAUDE.md) und [`AGENTS.md`](AGENTS.md).
+**Die Aufgabenliste sind die [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues).** Diese Seite sammelt nur Lesezeichen dafür und erklärt das GitHub-Projekt. Die Regeln (Freigabe mit `status: Ready` nur durch Cornelius, Reservierung per Kommentar, PR mit `Refs #…`, „deploy“) stehen in [`CLAUDE.md`](CLAUDE.md), der Ablauf mit Befehlen in [`.agent/workflows/issue-bearbeiten.md`](.agent/workflows/issue-bearbeiten.md).
 
 ## Ansichten
 
@@ -37,4 +30,6 @@ Das Projekt [„Brett & Blatt – Planung“](https://github.com/users/ichthys2k
 
 Die Action braucht das Repo-Secret `PROJECT_TOKEN` (klassischer Personal Access Token nur mit dem Recht `project`) und die Repo-Variable `PROJECT_NUMBER` (= 3). Von Hand: `PROJECT_TOKEN=$(gh auth token) PROJECT_NUMBER=3 node scripts/projekt-abgleich.mjs` (mit `PROJEKT_PROBE=1` nur anzeigen).
 
-Das vollständige frühere Dokument – einschließlich aller offenen Prompts, erledigten und zurückgestellten Einträge, Referenzen und Vorlagen – liegt unverändert im [Migrationsarchiv #72](https://github.com/ichthys2k/brett-und-blatt/issues/72). Die migrierten offenen Einträge sind jeweils eigene Issues; bereits vorhandene passende Issues wurden wiederverwendet statt dupliziert.
+## Frühere Fassung
+
+Die alte Aufgabenliste (offene Prompts, erledigte und zurückgestellte Einträge, Referenzen, Vorlagen) steht unverändert im [Migrationsarchiv #72](https://github.com/ichthys2k/brett-und-blatt/issues/72); jeder offene Eintrag daraus ist ein eigenes Issue.

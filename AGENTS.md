@@ -50,7 +50,7 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 ## Wo was steht
 
 - [`CLAUDE.md`](CLAUDE.md) – Übergabe: Regeln, Technik, aktueller Stand, nächste Schritte.
-- [`PLANUNG.md`](PLANUNG.md) – kurze Anleitung zur GitHub-Aufgabensteuerung und Link zum vollständigen Migrationsarchiv; die aktive Aufgabenliste ist [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues).
+- [`PLANUNG.md`](PLANUNG.md) – Lesezeichen (Filter-Links) für die Issues, Erklärung des GitHub-Projekts und Link zum Migrationsarchiv #72, keine Aufgaben; die aktive Aufgabenliste ist [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues).
 - [`docs/spiele/offene-plaene.md`](docs/spiele/offene-plaene.md) – Übergabe: offene Pläne mit nächstem Auftrag (zuerst Marktplatz-Probe nur mit Bots, Paket C wartet auf Ja), Fehler, Konzepte.
 - [`docs/KONZEPT.md`](docs/KONZEPT.md) – Entscheidungen, Spielmodul-Schnittstelle, Muster, Fahrplan.
 - [`docs/spiele/`](docs/spiele/README.md) – ein Plan pro Spiel (Regeln, Optionen, Bot, Oberfläche, Umsetzungsstand), Übersicht im README.

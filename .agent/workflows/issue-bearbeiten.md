@@ -2,7 +2,7 @@
 description: Bearbeitet ein freigegebenes GitHub-Issue von der Reservierung bis zur Abnahme
 ---
 
-Gilt für alle Agenten (Claude Code, Antigravity/Gemini, Codex …). Aufgaben stehen ausschließlich in den [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues); `PLANUNG.md` ist nur noch ein Verweis.
+Gilt für alle Agenten (Claude Code, Antigravity/Gemini, Codex …). Aufgaben stehen ausschließlich in den [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues); `PLANUNG.md` enthält nur Filter-Links und die Erklärung des GitHub-Projekts.
 
 ## 0. Zu Beginn jeder Sitzung
 
