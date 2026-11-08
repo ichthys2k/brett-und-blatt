@@ -19,67 +19,39 @@
 .bub-menu-scene {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   --mx: 0;
   --my: 0;
-  background: radial-gradient(ellipse 60% 70% at 38% 55%, #7a4a1e 0%, #3a2210 45%, #140d07 100%);
+  background: #140d07;
 }
 .bub-menu-layer {
   position: absolute;
   inset: -3%;
   transition: transform 0.2s ease-out;
 }
-.bub-menu-wall {
-  transform: translate(calc(var(--mx) * -10px), calc(var(--my) * -6px));
+.bub-menu-back picture,
+.bub-menu-back img,
+.bub-menu-front img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 30% 100%;
 }
-.bub-menu-window {
-  position: absolute;
-  top: 8%;
-  width: 14%;
-  height: 40%;
-  border: 6px solid #2b1d10;
-  border-radius: 999px 999px 0 0;
-  background: linear-gradient(#3a4c6a, #0e1522);
-  box-shadow: inset 0 0 40px #000;
-}
-.bub-menu-window:nth-child(1) { left: 5%; }
-.bub-menu-window:nth-child(2) { left: 24%; top: 5%; height: 44%; }
-.bub-menu-window:nth-child(3) { left: 44%; }
+.bub-menu-back { transform: translate(calc(var(--mx) * -8px), calc(var(--my) * -5px)); }
+.bub-menu-front { transform: translate(calc(var(--mx) * -30px), calc(var(--my) * -14px)); pointer-events: none; }
 .bub-menu-glow {
-  background: radial-gradient(circle at 24% 28%, #ffd27a66 0, transparent 14%), radial-gradient(circle at 44% 32%, #ffd27a55 0, transparent 12%);
-  transform: translate(calc(var(--mx) * -18px), calc(var(--my) * -10px));
+  background: radial-gradient(circle at 34% 20%, #ffd27a33 0, transparent 12%), radial-gradient(circle at 52% 14%, #ffd27a33 0, transparent 10%);
+  transform: translate(calc(var(--mx) * -14px), calc(var(--my) * -8px));
 }
-.bub-menu-table {
-  transform: translate(calc(var(--mx) * -28px), calc(var(--my) * -14px));
-}
-.bub-menu-table::before {
-  content: '';
-  position: absolute;
-  left: 8%;
-  top: 62%;
-  width: 52%;
-  height: 26%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 40% 30%, #a8763a, #5c3b1a 70%);
-  box-shadow: 0 30px 40px #000a;
-}
-.bub-menu-card,
-.bub-menu-die {
-  position: absolute;
-  top: 66%;
-  box-shadow: 2px 5px 7px #0008;
-}
-.bub-menu-card { width: 5.4%; aspect-ratio: 5 / 7; border-radius: 6px; background: #f6efd9; }
-.bub-menu-card:nth-of-type(1) { left: 24%; transform: rotate(-14deg); }
-.bub-menu-card:nth-of-type(2) { left: 28%; top: 65%; transform: rotate(2deg); }
-.bub-menu-card:nth-of-type(3) { left: 32%; background: #b3261e; transform: rotate(16deg); }
-.bub-menu-die { width: 2.6%; aspect-ratio: 1; border-radius: 5px; background: #f6efd9; }
-.bub-menu-die:nth-of-type(4) { left: 42%; top: 70%; transform: rotate(18deg); }
-.bub-menu-die:nth-of-type(5) { left: 46%; top: 72%; transform: rotate(-24deg); }
 .bub-menu-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent 40%, #140d07cc 80%);
+  background: linear-gradient(90deg, transparent 45%, #140d0766 80%);
 }
+/* Unterseiten rollen: die Szene bleibt stehen */
+.bub-tav .bub-menu-scene { position: fixed; }
+.bub-menu-scene[data-calm] .bub-menu-shade { background: linear-gradient(#140d07bb, #140d07ee); }
 
 .bub-menu > :not(.bub-menu-scene) { position: relative; }
 
@@ -174,6 +146,8 @@
   .bub-menu-foot { grid-row: 4; }
   .bub-menu-shade { background: linear-gradient(#140d0733, #140d07cc 70%); }
   .bub-menu-layer { transform: none !important; }
+  .bub-menu-front { display: none; }
+  .bub-menu-back img { object-position: 50% 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .bub-menu-layer { transform: none !important; transition: none; }
@@ -225,29 +199,9 @@
 .bub-tav-inner[data-wide] { max-width: 56rem; }
 
 /* Schritt 7: Balken, Kaminglut, flackerndes Laternenlicht, schwebende Funken; Rahmen mit Nieten */
-.bub-menu-beams span {
-  position: absolute;
-  top: 0;
-  width: 5%;
-  height: 100%;
-  background: linear-gradient(90deg, #00000066, #2b1d1055 40%, #00000077);
-}
-.bub-menu-beams span:nth-child(1) { left: 20%; }
-.bub-menu-beams span:nth-child(2) { left: 43%; }
-.bub-menu-beams span:nth-child(3) { left: 66%; }
-.bub-menu-beams::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 7%;
-  background: linear-gradient(#0b0704, #2b1d10);
-  border-bottom: 3px solid #4a331b;
-}
 .bub-menu-glow { animation: bub-flicker 4.5s ease-in-out infinite; }
 .bub-menu-hearth {
-  background: radial-gradient(ellipse 22% 16% at 14% 96%, #ff9a3c99 0, #ff6a1a44 45%, transparent 75%);
+  background: radial-gradient(ellipse 14% 14% at 11% 64%, #ff9a3c66 0, #ff6a1a33 45%, transparent 75%);
   animation: bub-flicker 3.1s ease-in-out infinite reverse;
 }
 .bub-menu-motes span {
@@ -297,6 +251,7 @@
 }
 @media (max-width: 760px) {
   .bub-menu-motes { display: none; }
+  .bub-menu-hearth { background: radial-gradient(ellipse 22% 10% at 18% 74%, #ff9a3c55 0, transparent 75%); }
 }
 .bub-menu-plaque-link { cursor: pointer; }
 .bub-menu-plaque-link:hover, .bub-menu-plaque-link:focus-visible { border-color: #e0b25a; }
