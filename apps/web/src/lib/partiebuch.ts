@@ -105,7 +105,10 @@ export function recordGame(book: Book, game: PlayedGame, deviceId: string, level
   };
 }
 
-const natural = (value: unknown): number => (typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.min(Math.floor(value), 1_000_000) : 0);
+const natural = (value: unknown, max = 1_000_000): number => (typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.min(Math.floor(value), max) : 0);
+/** Zeitstempel in ms (bis zum Jahr 2286) und Dauern in ms (bis rund 11 Tage). */
+const MAX_TIME = 10_000_000_000_000;
+const MAX_DURATION = 1_000_000_000;
 
 function sanitizeSeat(value: unknown): PlayedSeat | null {
   const { name, avatar, kind, level, you } = (value ?? {}) as Record<string, unknown>;
@@ -123,14 +126,14 @@ function sanitizeGame(value: unknown): PlayedGame | null {
   const v = (value ?? {}) as Record<string, unknown>;
   if (typeof v.id !== 'string' || !ID_PATTERN.test(v.id) || typeof v.gameId !== 'string' || !GAME_PATTERN.test(v.gameId)) return null;
   if (!MODES.includes(v.mode as Mode) || !OUTCOMES.includes(v.outcome as Outcome)) return null;
-  const endedAt = natural(v.endedAt);
+  const endedAt = natural(v.endedAt, MAX_TIME);
   if (endedAt === 0) return null;
   const seats = (Array.isArray(v.seats) ? v.seats : []).slice(0, MAX_SEATS).flatMap((seat) => sanitizeSeat(seat) ?? []);
   return {
     id: v.id,
     gameId: v.gameId,
     endedAt,
-    durationMs: natural(v.durationMs),
+    durationMs: natural(v.durationMs, MAX_DURATION),
     mode: v.mode as Mode,
     seats,
     outcome: v.outcome as Outcome,

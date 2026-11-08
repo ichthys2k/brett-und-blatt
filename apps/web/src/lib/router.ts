@@ -13,6 +13,7 @@ export type Route =
   | { name: 'display'; code: string }
   | { name: 'tournament'; code: string; claim?: string; helper?: string }
   | { name: 'sound' }
+  | { name: 'pass' }
   | { name: 'imprint' }
   | { name: 'privacy' };
 
@@ -47,6 +48,7 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'tisch' && parts[1]) return { name: 'display', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'turnier' && parts[1]) return { name: 'tournament', code: decodeURIComponent(parts[1]), ...(params.neu ? { claim: params.neu } : {}), ...(params.helfer ? { helper: params.helfer } : {}) };
   if (parts[0] === 'ton') return { name: 'sound' };
+  if (parts[0] === 'pass') return { name: 'pass' };
   if (parts[0] === 'impressum') return { name: 'imprint' };
   if (parts[0] === 'datenschutz') return { name: 'privacy' };
   const players = Number(params.spieler);
@@ -71,6 +73,7 @@ export const paths = {
   display: (code: string) => `#/tisch/${encodeURIComponent(code)}`,
   tournament: (code: string) => `#/turnier/${encodeURIComponent(code)}`,
   sound: '#/ton',
+  pass: '#/pass',
   imprint: '#/impressum',
   privacy: '#/datenschutz',
 };

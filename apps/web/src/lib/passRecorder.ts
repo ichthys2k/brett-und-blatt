@@ -2,6 +2,7 @@ import type { GameSession, Result, SeatConfig } from '@brett-und-blatt/engine';
 import { useEffect, useRef } from 'react';
 import { emptyBook, localMode, outcomeFor, recordGame, sanitizeBook, strongestBot, type Mode, type PlayedGame } from './partiebuch';
 import { passBook } from './passes';
+import { rememberReplay } from './chronikStore';
 import { passSyncSoon } from './playerPass';
 
 /*
@@ -124,6 +125,16 @@ export function usePassRecorder(options: {
       }
     });
     const now = Date.now();
+    // Lokale Partien: Zugliste für das Anheften in der Chronik merken (online kennt der Browser Seed und Züge nicht, siehe #99).
+    try {
+      const local = session as unknown as { snapshot?: () => { config: unknown; log: unknown } };
+      if (!online && typeof local.snapshot === 'function') {
+        const snap = local.snapshot();
+        rememberReplay(session.id, { config: snap.config as never, log: snap.log as never });
+      }
+    } catch {
+      // Zugabe, darf nie stören
+    }
     try {
       saveRows(rowsFor({ gameId, sessionId: session.id, result, seats, endedAt: now, durationMs: now - started.current.at, scores, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.tournament } } : {}) }), seats);
     } catch {
