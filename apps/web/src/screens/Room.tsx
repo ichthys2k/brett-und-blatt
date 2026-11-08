@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { ModeratorPanel, type ModeratorMember } from '../components/ModeratorPanel';
 import { ProfileForm, QrCode, ReactionMenu, SignalToasts } from '../components/OnlineParts';
+import { reloadForUpdate } from '../lib/appUpdate';
 import { t } from '../i18n';
 import { announceAvatar } from '../lib/avatar-sounds';
 import { describeTime, levelLabel } from '../lib/format';
@@ -91,7 +92,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
     case 'kicked':
       return <Notice text={t('online.kicked')} />;
     case 'outdated':
-      return <Notice text={t('online.outdated')} action={<Button onClick={() => window.location.reload()}>↻</Button>} />;
+      return <Notice text={t('online.outdated')} action={<Button onClick={reloadForUpdate}>↻</Button>} />;
     case 'left':
       return <Notice text={t('online.leave')} />;
   }

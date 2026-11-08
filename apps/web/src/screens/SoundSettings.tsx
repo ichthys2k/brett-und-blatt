@@ -1,13 +1,45 @@
 import { playlistTracks, setCardPortraits, useCardPortraits } from '@brett-und-blatt/ui';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../components/controls';
 import { MusicList } from '../components/MusicList';
 import { VolumeControls } from '../components/SoundControl';
 import { t } from '../i18n';
+import { APP_DATE, APP_VERSION, checkForUpdate, resetApp } from '../lib/appUpdate';
 import { contrastForcesPlain, type Look, setLook, useChosenLook } from '../lib/look';
 import { music, useMusicPrefs } from '../lib/music';
 import { navigate, paths } from '../lib/router';
 import { setSoundSettings } from '../lib/sound';
+
+/** Version der App, Suche nach Updates und Notlösung zum Zurücksetzen (#175). */
+function AppVersion() {
+  const [state, setState] = useState<'idle' | 'checking' | 'upToDate' | 'found'>('idle');
+  const check = async () => {
+    setState('checking');
+    const found = await checkForUpdate();
+    setState(found ? 'found' : 'upToDate');
+  };
+  return (
+    <div className="space-y-2 rounded-2xl border border-line bg-surface p-4">
+      <h2 className="font-semibold">{t('update.title')}</h2>
+      <p className="text-sm text-muted">
+        {t('update.version', { version: APP_VERSION })}
+        {APP_DATE ? ` · ${APP_DATE}` : ''}
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button onClick={check} disabled={state === 'checking'}>
+          {state === 'checking' ? t('update.checking') : t('update.check')}
+        </Button>
+        {state === 'upToDate' && <span className="text-sm">{t('update.upToDate')}</span>}
+        {state === 'found' && <span className="text-sm">{t('update.found')}</span>}
+      </div>
+      <details className="text-sm">
+        <summary className="cursor-pointer text-muted">{t('update.reset')}</summary>
+        <p className="py-2 text-muted">{t('update.resetHint')}</p>
+        <Button onClick={() => void resetApp()}>{t('update.reset')}</Button>
+      </details>
+    </div>
+  );
+}
 
 /** Ton-Einstellungen mit allen Stücken zum Probehören (#/ton). */
 function LookChoice() {
@@ -60,6 +92,7 @@ export function SoundSettingsScreen() {
         <h1 className="text-2xl font-bold">{t('sound.settings')}</h1>
       </header>
       <LookChoice />
+      <AppVersion />
       <PortraitChoice />
       <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
         <VolumeControls showClientOption />

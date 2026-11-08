@@ -10,6 +10,7 @@ import { PassPicker } from '../components/PassPicker';
 import { GAME_SERVER, useOpenRooms } from '../lib/online';
 import { findGame, games } from '../lib/registry';
 import { useActiveLook } from '../lib/look';
+import { APP_VERSION } from '../lib/appUpdate';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 
@@ -707,6 +708,9 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
           </a>
           <a className="underline" href={paths.privacy}>
             {t('legal.privacy')}
+          </a>
+          <a className="text-muted underline" href={paths.sound} title={t('update.title')}>
+            {t('update.version', { version: APP_VERSION })}
           </a>
         </nav>
       </footer>
