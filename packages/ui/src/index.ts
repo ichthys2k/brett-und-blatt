@@ -29,6 +29,7 @@ export {
   type SoundSettings,
   soundSettingsFrom,
   type SoundSpec,
+  eventsOfSeats,
 } from './audio/sound';
 export {
   DEFAULT_MUSIC_PREFS,

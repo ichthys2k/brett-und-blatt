@@ -67,6 +67,11 @@ export interface GameUi<V = unknown, M = unknown> {
   /** Klänge zu den Ereignissen, z. B. `{ placed: 'stein-setzen' }`. Sieg, Niederlage und Zeit vertont die Plattform selbst. */
   sounds?: SoundMap;
   /**
+   * Alle spielen gleichzeitig und unabhängig (z. B. Narrenhof): Klänge zu Ereignissen anderer Plätze
+   * bleiben stumm, man hört nur die eigenen. Ereignisse ohne Platz (Rundenstart, Spielende) klingen weiter.
+   */
+  ownSoundsOnly?: boolean;
+  /**
    * Vor dem Start einer Partie auf diesem Gerät: Optionen ergänzen, etwa verborgene Optionen mit
    * Freischaltungen füllen. Online wird das nicht aufgerufen.
    */

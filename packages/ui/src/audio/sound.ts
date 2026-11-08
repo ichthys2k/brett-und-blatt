@@ -41,6 +41,14 @@ export function soundsForEvents(events: GameEvent[], map: SoundMap | undefined):
   return names;
 }
 
+/**
+ * Nur die Ereignisse, die zu den eigenen Plätzen gehören (oder zu keinem bestimmten Platz).
+ * Für Spiele, in denen alle gleichzeitig und unabhängig spielen: Was andere tun, soll man nicht hören (#116).
+ */
+export function eventsOfSeats(events: GameEvent[], seats: readonly number[]): GameEvent[] {
+  return events.filter((event) => typeof event.seat !== 'number' || seats.includes(event.seat));
+}
+
 /** Länge eines Klangs in Sekunden (ohne Ausschnitt nicht bekannt, dann 0,3 s). */
 export function soundDuration(name: SoundName): number {
   const spec = soundCatalog[name];
