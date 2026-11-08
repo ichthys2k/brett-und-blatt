@@ -37,3 +37,5 @@ export * from './lock';
 export * from './share';
 export { ATTEMPT_LIMIT, ATTEMPT_WINDOW_MS, isBlocked, recordMiss, type AttemptState } from './attempts';
 export { CAPABILITIES, can, roomCapabilities, type Capability } from './capabilities';
+export * from './classroom';
+export * from './classcard';

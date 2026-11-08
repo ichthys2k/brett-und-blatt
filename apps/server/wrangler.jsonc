@@ -14,7 +14,8 @@
       { "name": "TOURNAMENTS", "class_name": "TournamentRoom" },
       { "name": "ATTEMPTS", "class_name": "AttemptLimiter" },
       { "name": "PASS_LOCKS", "class_name": "PassLock" },
-      { "name": "SHARES", "class_name": "PassShare" }
+      { "name": "SHARES", "class_name": "PassShare" },
+      { "name": "CLASSES", "class_name": "ClassRoom" }
     ]
   },
   // Im Gratis-Tarif gibt es nur Durable Objects mit SQLite-Speicher.
@@ -25,7 +26,8 @@
     { "tag": "v4", "new_sqlite_classes": ["TournamentRoom"] },
     { "tag": "v5", "new_sqlite_classes": ["AttemptLimiter"] },
     { "tag": "v6", "new_sqlite_classes": ["PassLock"] },
-    { "tag": "v7", "new_sqlite_classes": ["PassShare"] }
+    { "tag": "v7", "new_sqlite_classes": ["PassShare"] },
+    { "tag": "v8", "new_sqlite_classes": ["ClassRoom"] }
   ],
   "vars": {
     // Von diesen Seiten aus dürfen Räume erstellt und betreten werden.

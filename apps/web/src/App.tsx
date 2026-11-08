@@ -9,6 +9,7 @@ import { PassScreen } from './screens/Pass';
 import { PassView } from './screens/PassView';
 import { Play } from './screens/Play';
 import { RoomScreen } from './screens/Room';
+import { ClassPage, Classes } from './screens/Classes';
 import { Tournaments } from './screens/Tournaments';
 import { TournamentScreen } from './screens/Tournament';
 import { Setup } from './screens/Setup';
@@ -34,6 +35,10 @@ function Screen() {
       return <Online />;
     case 'tournaments':
       return <Tournaments />;
+    case 'classes':
+      return <Classes />;
+    case 'class':
+      return <ClassPage key={route.code} code={route.code} />;
     case 'room':
       return <RoomScreen key={route.code} code={route.code} />;
     case 'display':
