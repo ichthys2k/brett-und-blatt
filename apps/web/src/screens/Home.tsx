@@ -5,9 +5,8 @@ import { t } from '../i18n';
 import { discardGame } from '../lib/activeGame';
 import { pickFavorites, useFavorites } from '../lib/favorites';
 import { crestUrl } from '../lib/crest';
-import { OpenRooms } from '../components/OpenRooms';
+import { TavernPage } from '../components/TavernPage';
 import { PassPicker } from '../components/PassPicker';
-import { GAME_SERVER, useOpenRooms } from '../lib/online';
 import { findGame, games } from '../lib/registry';
 import { useActiveLook } from '../lib/look';
 import { APP_VERSION } from '../lib/appUpdate';
@@ -325,7 +324,6 @@ function GameCard({ info, favorite, onToggleFavorite }: { info: GameInfo } & Fav
 export function Home({ initialFilter, initialPlayers }: { initialFilter?: string; initialPlayers?: number }) {
   const tavern = useActiveLook() === 'tavern';
   const [snapshot, setSnapshot] = useState(() => storage.loadActive());
-  const openRooms = useOpenRooms();
   const { favorites, toggle: toggleFavorite } = useFavorites();
   const [searchQuery, setSearchQuery] = useState('');
   const [players, setPlayersState] = useState<number | null>(() => initialPlayers ?? loadPlayerCount());
@@ -433,20 +431,11 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
   });
 
   return (
-    <div className="bub-home mx-auto flex min-h-full max-w-3xl flex-col gap-6 px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-[max(env(safe-area-inset-bottom),1.5rem)]">
-      <header className="bub-home-sign space-y-1">
-        <div className="flex items-center justify-between gap-2">
-          <Button variant="ghost" className="px-3" onClick={() => navigate(paths.menu)}>
-            ‹ Hauptmenü
-          </Button>
-          <PassPicker />
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span aria-hidden="true">{tavern ? '🕯️ ' : '🎲 '}</span>
-          {t('app.title')}
-        </h1>
-        <p className="text-muted">{t(tavern ? 'home.tavern.welcome' : 'app.tagline')}</p>
-      </header>
+    <TavernPage title="Einzelspieler" subtitle="Allein gegen den Computer oder zu mehreren an einem Gerät." wide>
+    <div className="bub-home flex flex-col gap-6">
+      <div className="flex justify-end">
+        <PassPicker />
+      </div>
 
       {snapshot && (
         <ResumeCard
@@ -457,23 +446,6 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
           }}
         />
       )}
-
-      {GAME_SERVER && (
-        <a
-          href={paths.online}
-          className="bub-tile flex items-center gap-4 rounded-2xl border border-accent/40 bg-accent/10 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
-        >
-          <span className="bub-tile-crest text-4xl leading-none" aria-hidden="true">
-            🌐
-          </span>
-          <span className="min-w-0 space-y-1">
-            <span className="block font-semibold">{t('home.online')}</span>
-            <span className="block text-sm text-muted">{t('home.online.text')}</span>
-          </span>
-        </a>
-      )}
-
-      {GAME_SERVER && <OpenRooms rooms={openRooms} />}
 
       {/* Suche */}
       <section className="space-y-2">
@@ -718,5 +690,6 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
         </nav>
       </footer>
     </div>
+    </TavernPage>
   );
 }

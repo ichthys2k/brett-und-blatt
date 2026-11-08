@@ -236,3 +236,4 @@
   box-shadow: 0 10px 40px #000a;
 }
 .bub-tav-frame h2 { font-family: Almendra, Georgia, serif; }
+.bub-tav-inner[data-wide] { max-width: 56rem; }

@@ -6,7 +6,7 @@ import '../screens/menu.css';
  * Seite im Taverne-Rahmen (#184): die ruhige Szene des Hauptmenüs dahinter, davor ein Holzrahmen
  * mit dunklen Farben, in dem die vorhandenen Bausteine (Listen, Formulare) unverändert lesbar bleiben.
  */
-export function TavernPage({ title, subtitle, children, back = paths.menu }: { title: string; subtitle?: string; children: ReactNode; back?: string }) {
+export function TavernPage({ title, subtitle, children, back = paths.menu, wide = false }: { title: string; subtitle?: string; children: ReactNode; back?: string; wide?: boolean }) {
   return (
     <div className="bub-tav">
       <div className="bub-menu-scene" aria-hidden="true">
@@ -18,7 +18,7 @@ export function TavernPage({ title, subtitle, children, back = paths.menu }: { t
         <div className="bub-menu-layer bub-menu-glow" />
         <div className="bub-menu-shade" style={{ background: 'linear-gradient(#140d0799, #140d07dd)' }} />
       </div>
-      <div className="bub-tav-inner">
+      <div className="bub-tav-inner" data-wide={wide || undefined}>
         <header className="bub-tav-head">
           <button type="button" className="bub-tav-back" onClick={() => navigate(back)}>
             ‹ Zurück
