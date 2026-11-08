@@ -62,6 +62,19 @@ const registry = new Map<string, PassBlock<never>>();
 export function registerPassBlock<T>(block: PassBlock<T>): void {
   if (!NAME_PATTERN.test(block.name)) throw new Error(`Ungültiger Blockname: ${block.name}`);
   registry.set(block.name, block as unknown as PassBlock<never>);
+  syncHandler();
+}
+
+let syncHandler: () => void = () => undefined;
+
+/** Die Web-App sagt, was bei einer Abgleich-Bitte geschieht (`passSyncSoon`). Spiele kennen die Web-App nicht und rufen nur `requestPassSync`. */
+export function onPassSyncRequest(handler: () => void): void {
+  syncHandler = handler;
+}
+
+/** Bittet um einen Abgleich der Pass-Blöcke in Kürze (mehrere Bitten ergeben einen Abgleich). */
+export function requestPassSync(): void {
+  syncHandler();
 }
 
 export function passBlockNames(): string[] {

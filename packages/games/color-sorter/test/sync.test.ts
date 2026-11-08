@@ -86,3 +86,11 @@ describe('Narrenhof-Sicherung: Code und Verschlüsselung', () => {
     expect((await deriveKeys(secret, 'passkey')).id).not.toBe((await deriveKeys(secret, 'code')).id);
   });
 });
+
+describe('Narrenhof als Block des Passes (#141)', () => {
+  it('meldet sich beim Laden der Sicherung als Block „narrenhof“ an', async () => {
+    const { passBlockNames } = await import('@brett-und-blatt/ui/sync');
+    await import('../src/ui/sync');
+    expect(passBlockNames()).toContain('narrenhof');
+  });
+});

@@ -1,4 +1,4 @@
-import { DRACHENSPIEL_SALT, scheduleSync, type SyncBlock } from '@brett-und-blatt/ui/sync';
+import { DRACHENSPIEL_SALT, registerPassBlock, requestPassSync, scheduleSync as scheduleBlock, type SyncBlock } from '@brett-und-blatt/ui/sync';
 import { useSyncExternalStore } from 'react';
 import { DECK_CODE_MAX, decodeDeck } from '../deckcode';
 import { emptyBook, mergeBooks, sanitizeBook, type Book } from '../modes/progress';
@@ -86,6 +86,14 @@ export const decksBlock: SyncBlock<DeckStore> = {
   write: replace,
   same: (a, b) => stable(a) === stable(b),
 };
+
+/** Seit dem Spielerpass (#141) liegen die Decks zusätzlich als Block `drachenspiel` hinter dem Passschlüssel; beide Wege führen gleich zusammen. */
+registerPassBlock<DeckStore>({ name: 'drachenspiel', read: decksBlock.read, sanitize: decksBlock.sanitize, merge: decksBlock.merge, write: decksBlock.write, same: decksBlock.same });
+
+function scheduleSync(block: SyncBlock<DeckStore>): void {
+  scheduleBlock(block);
+  requestPassSync();
+}
 
 export function useDecks(): SavedDeck[] {
   const current = useSyncExternalStore(
