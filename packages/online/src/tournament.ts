@@ -13,6 +13,7 @@ import { bestOfStage, checkSeriesScore } from './tournament/best-of';
 import { autoStart, isEvening, isHeld, startStage, startableStage } from './tournament/evening';
 import { seededShuffle } from './tournament/pairing';
 import { formTeams, isTeamed, ownsToken } from './tournament/teams';
+import { isLives, livesRows } from './tournament/lives';
 import { defaultScoring, standings } from './tournament/scoring';
 import {
   DAY_MS,
@@ -53,6 +54,7 @@ export * from './tournament/disciplines';
 export * from './tournament/table-rounds';
 export * from './tournament/best-of';
 export * from './tournament/teams';
+export * from './tournament/lives';
 export * from './tournament/migrate';
 export * from './tournament/protocol';
 
@@ -251,7 +253,8 @@ export class Tournament {
     const now = this.deps.now();
     // Am Turnierabend gibt es Fristen erst, wenn die Leitung eine Runde startet.
     const deadline = (index: number) => (isEvening(this.s) ? 0 : now + (index + 1) * days * DAY_MS);
-    const ids = seededShuffle(this.s.players.map((p) => p.id), `${this.s.seed}/auslosung`);
+    // Setzliste: Die Reihenfolge der Teilnehmerliste gilt, 1 ist der Beste; sonst entscheidet das Los.
+    const ids = this.s.settings.seeded ? this.s.players.map((p) => p.id) : seededShuffle(this.s.players.map((p) => p.id), `${this.s.seed}/auslosung`);
     if (hasDisciplines(this.s)) this.s.disciplineOrder = chooseDisciplines(this.s);
     this.format.setup(this.ctx, ids, deadline);
     const ruleVersion = isLocal(this.s) || hasDisciplines(this.s) ? undefined : this.deps.ruleVersion?.(this.s.settings.gameId);
@@ -620,7 +623,7 @@ export class Tournament {
       players: s.players.map(({ id, name, avatar, withdrawn, members }) => ({ id, name, avatar, withdrawn, ...(members ? { members: members.map((m) => m.name) } : {}) })),
       groups: s.groups.map((players, group) => ({ players, table: this.groupTable(group), settled: this.groupSettled(group) })),
       swissTable: s.settings.format === 'swiss' && s.phase !== 'signup' ? this.overallTable() : [],
-      table: isTables(s) ? (s.phase !== 'signup' ? tableStandings(s) : []) : (s.settings.format === 'swiss' || s.settings.format === 'league') && s.phase !== 'signup' ? this.overallTable() : [],
+      table: isTables(s) ? (s.phase !== 'signup' ? tableStandings(s) : []) : isLives(s) ? (s.phase !== 'signup' ? livesRows(s) : []) : (s.settings.format === 'swiss' || s.settings.format === 'league') && s.phase !== 'signup' ? this.overallTable() : [],
       fields: s.fields ?? 0,
       stages: s.stages,
       currentStage: this.currentStage(),

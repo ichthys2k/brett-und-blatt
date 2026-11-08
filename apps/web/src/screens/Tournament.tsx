@@ -1130,6 +1130,7 @@ function Progress({ view }: { view: TournamentView }) {
 
 function Table({ view, rows, highlight, buchholz = false }: { view: TournamentView; rows: StandingRow[]; highlight: number; buchholz?: boolean }) {
   const { players, label } = useLookup(view);
+  const lives = view.settings.format === 'lives';
   const series = !withScore(view) && hasSeries(view);
   const score = withScore(view) || series;
   const cell = 'px-1 py-1 text-center tabular-nums';
@@ -1146,7 +1147,7 @@ function Table({ view, rows, highlight, buchholz = false }: { view: TournamentVi
           {buchholz && <th className="w-8">{t('tournament.table.buchholz')}</th>}
           {score && <th className="w-12">{series ? t('tournament.table.games') : t('tournament.table.score')}</th>}
           {score && <th className="w-9">{t('tournament.table.diff')}</th>}
-          <th className="w-8">{t('tournament.table.points')}</th>
+          {lives ? <th className="w-10">❤️</th> : <th className="w-8">{t('tournament.table.points')}</th>}
         </tr>
       </thead>
       <tbody>

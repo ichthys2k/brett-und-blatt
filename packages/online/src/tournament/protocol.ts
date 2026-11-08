@@ -4,6 +4,7 @@ import { DISCIPLINES_MAX, DISCIPLINES_MIN } from './disciplines';
 import { isBestOf } from './best-of';
 import { TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN } from './table-rounds';
 import { EVENING_EXTEND_CHOICES, EVENING_MINUTE_CHOICES } from './evening';
+import { LIVES_CHOICES } from './lives';
 import { isTeamGame, validTeamSize } from './teams';
 import { ENTRANT_NAME_LENGTH, TOURNAMENT_MAX_FIELDS, TOURNAMENT_MAX_PLAYERS, TOURNAMENT_NAME_LENGTH, type MatchSide, type ResultKind, type TournamentFormat, type TournamentSettings, type TournamentView } from './types';
 
@@ -132,7 +133,7 @@ export function isTableGame(info: GameInfo): boolean {
 /** Turniercode: 8 Zeichen, zum Erraten zu viele. */
 export const TOURNAMENT_CODE_PATTERN = /^[2-9A-HJ-NP-Z]{8}$/;
 
-const FORMAT_IDS: readonly TournamentFormat[] = ['world', 'swiss', 'knockout', 'double', 'league', 'tables'];
+const FORMAT_IDS: readonly TournamentFormat[] = ['world', 'swiss', 'knockout', 'double', 'league', 'tables', 'lives'];
 const RESULT_KINDS: readonly ResultKind[] = ['winner', 'goals', 'sets', 'points'];
 /** Gruppenzahlen, die die Leitung vor Ort wählen darf. */
 export const GROUP_COUNT_CHOICES = [2, 4, 8, 16] as const;
@@ -174,7 +175,7 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
     }
   }
   const multi = disciplines ? { disciplines, ...(body.wishes === true ? { wishes: true } : {}) } : {};
-  return { ...tables, ...(teamSize === undefined ? parseBestOf(body, format) : { teamSize: teamSize as number }), name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
+  return { ...tables, ...parseLives(body, format), ...(teamSize === undefined ? parseBestOf(body, format) : { teamSize: teamSize as number }), name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
 }
 
 /** Vor Ort: Sportart statt Spiel, keine Zeitvorgabe, nie in „Offene Runden“. */
@@ -191,6 +192,8 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
   if (!sport) return null;
   const result = RESULT_KINDS.includes(body.result as ResultKind) ? (body.result as ResultKind) : 'winner';
   const fieldLabel = typeof body.fieldLabel === 'string' ? cleanName(body.fieldLabel, 12) : null;
+  // Setzliste (Stufe 4): nur Formen mit Baum oder Gruppen; die Teilnehmerliste ist dann die Rangfolge.
+  const seeded = body.seeded === true && (format === 'knockout' || format === 'double' || format === 'world') ? { seeded: true } : {};
   const groupCount = format === 'world' && GROUP_COUNT_CHOICES.includes(body.groupCount as 2) ? { groupCount: body.groupCount as number } : {};
   return {
     name,
@@ -207,13 +210,20 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
     fieldLabel: fieldLabel ?? 'Tisch',
     spectators: body.spectators === true,
     ...returnRound,
+    ...seeded,
     ...groupCount,
     ...(disciplines ? { disciplines } : {}),
     ...tables,
     ...(format === 'tables' && body.lowWins === true ? { lowWins: true } : {}),
     // Vor Ort zählt „Best of N“ nur, wenn der Sieger eingetragen wird (dann der Stand in Partien).
     ...(result === 'winner' ? parseBestOf(body, format) : {}),
+    ...parseLives(body, format),
   };
+}
+
+/** Last One Standing: Leben (1–5), nur für diese Form; fehlt = Standard. */
+function parseLives(body: Record<string, unknown>, format: TournamentFormat): Pick<TournamentSettings, 'lives'> {
+  return format === 'lives' && LIVES_CHOICES.includes(body.lives as 1) ? { lives: body.lives as number } : {};
 }
 
 /** Formen mit eigener K.-o.-Phase neben anderen Runden: nur die WM-Form (K.-o. ist ganz K.-o.). */

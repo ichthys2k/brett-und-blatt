@@ -5,7 +5,7 @@ import type { Options } from '@brett-und-blatt/engine';
  * Kennungen (`token`) sind geheim und stehen nie in einer Sicht.
  */
 
-export const TOURNAMENT_MIN_PLAYERS = { world: 6, swiss: 4, knockout: 4, double: 4, league: 3, tables: 3 } as const;
+export const TOURNAMENT_MIN_PLAYERS = { world: 6, swiss: 4, knockout: 4, double: 4, league: 3, tables: 3, lives: 3 } as const;
 /** Obergrenze für alle Turniere (Entscheidung 7.11.2026). */
 export const TOURNAMENT_MAX_PLAYERS = 128;
 /** Namen von Teilnehmern vor Ort dürfen länger sein als Spitznamen, z. B. „Anna / Ben“. */
@@ -24,7 +24,7 @@ export const LEAGUE_KEEP_MS = 365 * DAY_MS;
 export const TOURNAMENT_NAME_LENGTH = 40;
 
 /** WM-Form (vor Ort „Gruppen + K.-o.“), Schweizer System, K.-o., Doppel-K.-o., Bundesliga-Modus, Tischrunden (Stufe 3). */
-export type TournamentFormat = 'world' | 'swiss' | 'knockout' | 'double' | 'league' | 'tables';
+export type TournamentFormat = 'world' | 'swiss' | 'knockout' | 'double' | 'league' | 'tables' | 'lives';
 /** Online im Spielraum oder vor Ort mit Ergebnis von Hand. */
 export type TournamentMode = 'online' | 'local';
 /** Was vor Ort gezählt wird. */
@@ -84,6 +84,10 @@ export interface TournamentSettings {
   rounds?: number;
   /** Tischrunden vor Ort: Punkte im Spiel zählen niedrig (z. B. Strafpunkte); sonst hoch. */
   lowWins?: boolean;
+  /** Last One Standing (Stufe 4): Leben je Teilnehmer; fehlt = 2. */
+  lives?: number;
+  /** Setzliste (Stufe 4, nur vor Ort, K.-o., Doppel-K.-o. und WM-Form): Die Reihenfolge der Teilnehmerliste ist die Setzung, statt zu losen. */
+  seeded?: boolean;
   /** Best of N (Stufe 3 Teil 5): Partien je Begegnung; fehlt = 1. */
   bestOf?: number;
   /** Teams (Stufe 3 Teil 4, nur online, Spiele mit `GameInfo.teams`): Spieler je Team; fehlt = Einzelne. */
@@ -303,6 +307,8 @@ export interface StandingRow {
   /** Erzielter und erhaltener Spielstand; 0, wenn kein Spielstand gezählt wird. */
   scored: number;
   conceded: number;
+  /** Last One Standing: verbleibende Leben. */
+  lives?: number;
 }
 
 export interface PublicPlayer {

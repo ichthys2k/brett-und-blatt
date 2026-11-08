@@ -1,4 +1,5 @@
 import { firstRoundSlots, groupCountFor, koFirstRound, loserOf, pairKey, roundRobinPairs, roundRobinRounds, swissPairing, swissRoundsFor, winnerOf } from './pairing';
+import { livesFormat } from './lives';
 import { tablesFormat } from './table-rounds';
 import { TOURNAMENT_MIN_PLAYERS, DAY_MS, type MatchSlot, type MatchStatus, type StandingRow, type TournamentFormat, type TournamentMatch, type TournamentSnapshot } from './types';
 
@@ -94,7 +95,7 @@ function knockoutPodium(ctx: FormatContext): string[] {
   return [...place(final, true), ...place(final, false), ...place(ctx.match('k-3'), true)];
 }
 
-const lastStage = (ctx: FormatContext) => Math.max(...ctx.s.matches.map((m) => m.stage));
+export const lastStage = (ctx: FormatContext) => Math.max(...ctx.s.matches.map((m) => m.stage));
 
 // ---------------------------------------------------------------------------
 // WM-Form: Gruppen jeder gegen jeden, die zwei Besten in den Baum
@@ -208,7 +209,7 @@ const double: TournamentFormatRules = {
 // ---------------------------------------------------------------------------
 // Schweizer System
 
-function pairSwissRound(ctx: FormatContext, stage: number, ranked: string[]): void {
+export function pairSwissRound(ctx: FormatContext, stage: number, ranked: string[]): void {
   const s = ctx.s;
   const played = new Set<string>();
   const hadBye = new Set<string>();
@@ -271,4 +272,4 @@ const league: TournamentFormatRules = {
   podium: (ctx) => ctx.overallTable().slice(0, 3).map((r) => r.player),
 };
 
-export const FORMATS: Record<TournamentFormat, TournamentFormatRules> = { world, knockout, double, swiss, league, tables: tablesFormat };
+export const FORMATS: Record<TournamentFormat, TournamentFormatRules> = { world, knockout, double, swiss, league, tables: tablesFormat, lives: livesFormat };

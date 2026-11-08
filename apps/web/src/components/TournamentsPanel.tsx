@@ -1,5 +1,5 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, LIVES_CHOICES, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
@@ -43,6 +43,10 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [fieldLabel, setFieldLabel] = useState(SPORTS[0]!.fieldLabel);
   const [fields, setFields] = useState(2);
   const [groupCount, setGroupCount] = useState(0);
+  /** Setzliste (Stufe 4, vor Ort): Die Reihenfolge der Teilnehmerliste ist die Setzung. */
+  const [seeded, setSeeded] = useState(false);
+  /** Last One Standing (Stufe 4): Leben je Teilnehmer. */
+  const [lives, setLives] = useState(2);
   const [returnRound, setReturnRound] = useState(false);
   /** Spieleabend (Stufe 3 Teil 2): mehrere Disziplinen, je Spieltag eine. */
   const [multi, setMulti] = useState(false);
@@ -137,11 +141,11 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
       const series = !tables && !teamGame && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
       const tableSettings = tables ? { tableSize: size, rounds, ...(local && lowWins ? { lowWins: true } : {}) } : {};
-      const common = { name: name.trim(), format, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...tableSettings, ...series };
+      const common = { name: name.trim(), format, ...(format === 'lives' ? { lives } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...tableSettings, ...series };
       const many = format === 'league' && multi;
       const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
-        ? { ...common, gameId: many ? '' : localGame, time: 'normal' as const, days: 1, isPublic: false, mode, sport: many ? t('tournament.multiSport') : sport.trim(), ...(many ? { disciplines: localList } : {}), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}) }
+        ? { ...common, gameId: many ? '' : localGame, time: 'normal' as const, days: 1, isPublic: false, mode, sport: many ? t('tournament.multiSport') : sport.trim(), ...(many ? { disciplines: localList } : {}), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}), ...(seeded && (format === 'knockout' || format === 'double' || format === 'world') ? { seeded: true } : {}) }
         : { ...common, ...(teamGame ? { teamSize: teamChoices.includes(teamSize) ? teamSize : teamChoices[0] } : {}), gameId: many ? picked[0]! : gameId, time, isPublic, options: many ? {} : chosen, ...(many ? { disciplines: picked, wishes } : {}), ...(pace.startsWith('m') ? { days: 1, minutes: Number(pace.slice(1)) } : { days: Number(pace.slice(1)) }) };
       const code = await createTournament(settings, profile);
       storage.rememberTournament({ code, name: name.trim() });
@@ -296,6 +300,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               <option value="swiss">{t('tournament.format.swiss')}</option>
               <option value="league">{t('tournament.format.league')}</option>
               <option value="tables">{t('tournament.format.tables')}</option>
+              <option value="lives">{t('tournament.format.lives')}</option>
             </select>
           </label>
           {tables && (
@@ -428,6 +433,28 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
                   </option>
                 ))}
               </select>
+            </label>
+          )}
+          {format === 'lives' && (
+            <label className="block space-y-1 text-sm">
+              <span>{t('tournament.lives')}</span>
+              <select className={FIELD} value={lives} onChange={(e) => setLives(Number(e.target.value))}>
+                {LIVES_CHOICES.map((n) => (
+                  <option key={n} value={n}>
+                    {t('tournament.livesN', { n })}
+                  </option>
+                ))}
+              </select>
+              <span className="block text-xs text-muted">{t('tournament.livesHint')}</span>
+            </label>
+          )}
+          {local && (format === 'knockout' || format === 'double' || format === 'world') && (
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={seeded} onChange={(e) => setSeeded(e.target.checked)} />
+              <span>
+                {t('tournament.seeded')}
+                <span className="block text-xs text-muted">{t('tournament.seededHint')}</span>
+              </span>
             </label>
           )}
           {local && format !== 'knockout' && format !== 'double' && !tables && (
