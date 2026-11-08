@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 import './menu.css';
@@ -18,6 +18,7 @@ const ENTRIES: readonly { id: string; label: string; hint: string; to: string }[
 
 export function Menu() {
   const scene = useRef<HTMLDivElement>(null);
+  const [hint, setHint] = useState('');
   const profile = storage.loadProfile();
   const resume = storage.loadActive();
 
@@ -74,11 +75,22 @@ export function Menu() {
           </button>
         ) : null}
         {ENTRIES.map((entry) => (
-          <button key={entry.id} type="button" className="bub-menu-button" onClick={() => navigate(entry.to)} title={entry.hint}>
+          <button
+            key={entry.id}
+            type="button"
+            className="bub-menu-button"
+            onClick={() => navigate(entry.to)}
+            onMouseEnter={() => setHint(entry.hint)}
+            onFocus={() => setHint(entry.hint)}
+            onMouseLeave={() => setHint('')}
+            onBlur={() => setHint('')}
+          >
             {entry.label}
-            <span className="bub-menu-hint">{entry.hint}</span>
           </button>
         ))}
+        <p className="bub-menu-desc" aria-live="polite">
+          {hint}
+        </p>
       </nav>
 
       <div className="bub-menu-plaque" role="status" aria-label={`Angemeldet als ${profile?.name ?? 'niemand'}`}>

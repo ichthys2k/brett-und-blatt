@@ -5,7 +5,7 @@
   --gold: #f2d27a;
   --cream: #f6e7c1;
   position: relative;
-  min-height: 100dvh;
+  height: 100dvh;
   overflow: hidden;
   background: #140d07;
   color: var(--cream);
@@ -137,15 +137,6 @@
   color: #fff;
 }
 .bub-menu-button[data-resume] { border-color: #e0b25a; color: var(--gold); }
-.bub-menu-hint {
-  display: none;
-  margin-top: 0.15rem;
-  font: 400 0.85rem/1.35 system-ui, sans-serif;
-  letter-spacing: 0;
-  color: #d9c9a0;
-}
-.bub-menu-button:hover .bub-menu-hint,
-.bub-menu-button:focus-visible .bub-menu-hint { display: block; }
 
 .bub-menu-plaque {
   grid-column: 2;
@@ -183,7 +174,6 @@
   .bub-menu-foot { grid-row: 4; }
   .bub-menu-shade { background: linear-gradient(#140d0733, #140d07cc 70%); }
   .bub-menu-layer { transform: none !important; }
-  .bub-menu-hint { display: none !important; }
 }
 @media (prefers-reduced-motion: reduce) {
   .bub-menu-layer { transform: none !important; transition: none; }
@@ -311,3 +301,24 @@
 .bub-menu-plaque-link { cursor: pointer; }
 .bub-menu-plaque-link:hover, .bub-menu-plaque-link:focus-visible { border-color: #e0b25a; }
 .bub-menu-switch { font-size: 0.85rem; color: var(--gold); }
+
+/* Beschreibung in fester Zeile: verschiebt nichts, auch ohne Maus bleibt der Platz reserviert */
+.bub-menu-desc {
+  margin: 0;
+  min-height: 2.6rem;
+  font: 400 0.9rem/1.35 system-ui, sans-serif;
+  color: #d9c9a0;
+}
+.bub-menu-frame { min-height: 0; overflow: hidden; }
+@media (max-height: 700px) {
+  .bub-menu { padding-top: 0.75rem; gap: 0.5rem 3rem; }
+  .bub-menu-logo { font-size: clamp(2rem, 5vw, 2.8rem); }
+  .bub-menu-logo small { display: none; }
+  .bub-menu-frame { gap: 0.5rem; padding: 0.9rem; }
+  .bub-menu-button { min-height: 2.7rem; padding-block: 0.4rem; font-size: 1.35rem; }
+  .bub-menu-desc { min-height: 2.2rem; font-size: 0.8rem; }
+}
+@media (max-height: 560px) {
+  .bub-menu-foot { display: none; }
+  .bub-menu-button { min-height: 2.3rem; font-size: 1.15rem; }
+}
