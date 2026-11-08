@@ -1,6 +1,8 @@
 import { onPassSyncRequest, registerPassBlock } from '@brett-und-blatt/ui/sync';
 import { onFavoritesChanged } from './favorites';
 import { passSyncSoon } from './playerPass';
+import { BOOK_KEY } from './passRecorder';
+import { emptyBook, mergeBooks, sameBooks, sanitizeBook, type Book } from './partiebuch';
 import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
 
 /*
@@ -58,6 +60,21 @@ export function registerWebPassBlocks(): void {
     sanitize: (value) => sanitizeItems(value && typeof value === 'object' && 'favorites' in value ? value : { items: value }),
     merge: mergeItems,
     same: sameItems,
+  });
+  // Partiebuch (#142): Zähler je Gerät (wachsen nur), die letzten Partien als Kopfzeilen.
+  registerPassBlock<Book>({
+    name: 'partiebuch',
+    read: () => {
+      try {
+        return sanitizeBook(JSON.parse(read(BOOK_KEY) ?? 'null'));
+      } catch {
+        return emptyBook();
+      }
+    },
+    write: (book) => write(BOOK_KEY, JSON.stringify(book)),
+    sanitize: sanitizeBook,
+    merge: mergeBooks,
+    same: sameBooks,
   });
   onFavoritesChanged(passSyncSoon);
   // Spiele melden sich mit eigenen Blöcken (Narrenhof, Drachenspiel) und bitten um Abgleich.

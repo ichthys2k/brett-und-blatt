@@ -121,6 +121,12 @@ export function Datenschutz() {
         erkennt dich ein Raum auch auf einem anderen Gerät wieder. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>Partiebuch:</strong> Jede beendete Partie trägt dein Gerät im Partiebuch deines Passes ein: Spiel, Zeitpunkt, Dauer, Spielart, Ergebnis und die Mitspieler
+        mit Spitzname, Bild und Bot-Stufe (keine Kennungen), dazu Zähler je Spiel. Das Buch liegt zunächst nur auf deinem Gerät. Legst du den Ausweis in deine
+        Sicherung oder schützt ihn mit PIN, wird es auf dieselbe Weise verschlüsselt auf dem Spieleserver abgelegt, gelesen werden kann es nur mit deinem Passschlüssel.
+        Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+      <p>
         <strong>PIN oder Passwort (Schloss):</strong> Wenn du deinen Ausweis mit PIN oder Passwort schützt, rechnet dein Browser aus Spielercode und
         PIN bzw. Passwort zwei Werte aus. Die PIN selbst verlässt dein Gerät nie. Der Spieleserver in der EU speichert nur einen Prüfwert, den er mit einem
         geheimen Schlüssel des Betreibers (dem „Pfeffer“, der nicht im Speicher liegt) bildet, einen mit demselben Schlüssel verschlüsselten Zufallsanteil,
