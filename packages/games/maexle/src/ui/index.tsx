@@ -195,7 +195,7 @@ function useShake(active: boolean, onShake: () => void) {
   return { allowed, request };
 }
 
-function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint, table }: BoardProps<MaexleState, MaexleMove>) {
+function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint, table, handOnly }: BoardProps<MaexleState, MaexleMove>) {
   const last = lastAnnouncement(view);
   const canRoll = legalMoves.some((m) => m.type === 'roll');
   const announceValues = new Set(legalMoves.flatMap((m) => (m.type === 'announce' ? [m.value] : [])));
@@ -216,6 +216,8 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint, tabl
 
   const center = (
     <>
+      {/* Hand-Ansicht (#100): Verlauf und Aufdecken zeigt der Tisch-Bildschirm; hier nur Becher und Knöpfe. */}
+      {!handOnly && (
       <div className="mx-top">
         {view.lastReveal && (
           <p key={view.round} className={`mx-reveal ${justRevealed ? 'mx-reveal-new' : ''}`}>
@@ -243,6 +245,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint, tabl
           <p className="mx-help">Neue Runde: freie Ansage.</p>
         )}
       </div>
+      )}
 
       <Cup dice={knowsDice ? view.dice : null} canPeek={knowsDice} holder={holder} revealed={revealedDice} rollKey={rollKey} />
 
@@ -295,7 +298,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint, tabl
   );
 
   return (
-    <div className="mx-table" data-around={table ? '' : undefined}>
+    <div className="mx-table" data-around={table ? '' : undefined} data-hand={handOnly ? '' : undefined}>
       {table ? (
         <SeatRing
           seats={seatNames.length}
@@ -321,6 +324,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 }
 
 export const gameUi: GameUi<MaexleState, MaexleMove> = {
+  handView: true,
   Board,
   seatsAround: true,
   SeatSymbol,
