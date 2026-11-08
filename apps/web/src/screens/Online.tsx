@@ -121,6 +121,10 @@ export function Online() {
           )}
 
           <OpenRooms rooms={openRooms?.filter((room) => !room.tournament) ?? null} showEmpty />
+
+          <button type="button" className="bub-menu-button" onClick={() => navigate(paths.classes)}>
+            Klassen
+          </button>
         </>
       )}
 

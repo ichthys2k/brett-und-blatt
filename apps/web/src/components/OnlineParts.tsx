@@ -131,11 +131,11 @@ export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile
 }
 
 /** Raumcode eingeben, ohne Tastatur: die vier Bilder antippen. */
-export function EmojiKeypad({ onComplete }: { onComplete: (code: string) => void }) {
+export function EmojiKeypad({ onComplete, length = ROOM_CODE_LENGTH }: { onComplete: (code: string) => void; length?: number }) {
   const [parts, setParts] = useState<string[]>([]);
   // Jede Eingabe baut auf dem neuesten Stand auf – auch bei sehr schnellem Tippen.
-  const add = (emoji: string) => setParts((current) => (current.length >= ROOM_CODE_LENGTH ? current : [...current, emoji]));
-  const complete = parts.length === ROOM_CODE_LENGTH ? parts.join('') : null;
+  const add = (emoji: string) => setParts((current) => (current.length >= length ? current : [...current, emoji]));
+  const complete = parts.length === length ? parts.join('') : null;
   useEffect(() => {
     if (complete) onComplete(complete);
     // onComplete absichtlich nicht als Abhängigkeit: Nur ein neuer vollständiger Code löst aus.
@@ -144,7 +144,7 @@ export function EmojiKeypad({ onComplete }: { onComplete: (code: string) => void
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <div className="flex flex-1 justify-center gap-2" aria-live="polite">
-          {Array.from({ length: ROOM_CODE_LENGTH }, (_, i) => (
+          {Array.from({ length }, (_, i) => (
             <span key={i} className="grid size-10 place-items-center rounded-xl border border-line bg-surface text-2xl sm:size-12 sm:text-3xl">
               {parts[i] ?? ''}
             </span>

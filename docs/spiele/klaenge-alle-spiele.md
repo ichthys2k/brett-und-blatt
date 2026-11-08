@@ -255,3 +255,7 @@ Weniger Klänge, mehr Wirkung: die Abschnitte 1 und 2 enthalten rund 35 Dateien 
 3. **Abschnitt 1.4 und Stimme** (Abschnitt 2): einheitlicher Rahmen.
 4. **Abschnitt 3** nach Lust: Poker-Chips, Solitaire-Kaskade, Bibel-Quiz, Schiffe, Wortgitter.
 5. Narrenhof-Klänge aus [`narrenhof-klaenge.md`](narrenhof-klaenge.md) laufen parallel (Entwürfe sind schon erzeugt).
+
+## Nachtrag #92 (8.11.2026)
+
+Von Cornelius gewählt und eingebaut: Elf zuerst! ruft „Elf!“ bei der Eröffnung mit der roten Elf (Ereignis `opened`), Verboten! ruft „Verboten!“ statt „Falsch!“, Rübenacker bekommt Maulwurf-Plumps (`fell`) und Hasenhüpfer (`hopped`), das Drachenspiel einen Zauberklang nur für Zauberkarten (`spellCast`; Hauskraft und Aufgabe behalten `stapel-fertig`). Marktstände und Kategorien-Sprint bleiben ohne neue Klänge.

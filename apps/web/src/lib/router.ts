@@ -11,6 +11,8 @@ export type Route =
   | { name: 'play' }
   | { name: 'online' }
   | { name: 'tournaments' }
+  | { name: 'classes' }
+  | { name: 'class'; code: string }
   | { name: 'room'; code: string }
   | { name: 'display'; code: string }
   | { name: 'tournament'; code: string; claim?: string; helper?: string }
@@ -48,6 +50,8 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'partie') return { name: 'play' };
   if (parts[0] === 'online' || parts[0] === 'mehrspieler') return { name: 'online' };
   if (parts[0] === 'turniere') return { name: 'tournaments' };
+  if (parts[0] === 'klassen') return { name: 'classes' };
+  if (parts[0] === 'klasse' && parts[1]) return { name: 'class', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'raum' && parts[1]) return { name: 'room', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'tisch' && parts[1]) return { name: 'display', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'turnier' && parts[1]) return { name: 'tournament', code: decodeURIComponent(parts[1]), ...(params.neu ? { claim: params.neu } : {}), ...(params.helfer ? { helper: params.helfer } : {}) };
@@ -83,6 +87,8 @@ export const paths = {
   play: '#/partie',
   online: '#/online',
   tournaments: '#/turniere',
+  classes: '#/klassen',
+  class: (code: string) => `#/klasse/${encodeURIComponent(code)}`,
   room: (code: string) => `#/raum/${encodeURIComponent(code)}`,
   /** Tisch-Bildschirm für Fernseher, Beamer oder Tablet (#100). */
   display: (code: string) => `#/tisch/${encodeURIComponent(code)}`,

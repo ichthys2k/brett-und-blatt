@@ -7,6 +7,8 @@ import { ALBUM_KEY, mergeAlbum, sameAlbum, sanitizeAlbum, type Album } from './a
 import { BOOK_KEY, TROPHIES_KEY } from './passRecorder';
 import { mergeTrophies, sameTrophies, sanitizeTrophies, type Trophy } from './pokale';
 import { emptyBook, mergeBooks, sameBooks, sanitizeBook, type Book } from './partiebuch';
+import { CHILD_PASSES_KEY } from './classPasses';
+import { mergeChildPasses, sameChildPasses, sanitizeChildPasses, type ChildPasses } from './classPassesCore';
 import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
 
 /*
@@ -64,6 +66,21 @@ export function registerWebPassBlocks(): void {
     sanitize: (value) => sanitizeItems(value && typeof value === 'object' && 'favorites' in value ? value : { items: value }),
     merge: mergeItems,
     same: sameItems,
+  });
+  // Klassenausweise (#152): die Kinder-Pässe der Leitung samt Rettungscode für das Zurücksetzen der PIN („Lehrkraft-Schloss“).
+  registerPassBlock<ChildPasses>({
+    name: 'klassen',
+    read: () => {
+      try {
+        return sanitizeChildPasses(JSON.parse(read(CHILD_PASSES_KEY) ?? 'null'));
+      } catch {
+        return [];
+      }
+    },
+    write: (list) => write(CHILD_PASSES_KEY, JSON.stringify(list)),
+    sanitize: sanitizeChildPasses,
+    merge: mergeChildPasses,
+    same: sameChildPasses,
   });
   // Partiebuch (#142): Zähler je Gerät (wachsen nur), die letzten Partien als Kopfzeilen.
   registerPassBlock<Book>({
