@@ -40,6 +40,7 @@ Ablauf in [`klaenge-alle-spiele.md`](klaenge-alle-spiele.md), Werkzeuge im priva
 - **W-027** Spiele für viele Spieler: Welle 1 fertig ([`klassenspiele.md`](klassenspiele.md)); weitere Themen in [`spiele-fuer-viele.md`](spiele-fuer-viele.md) sind Referenzen, keine Arbeitsfreigaben. Vor einer Umsetzung braucht jedes Thema ein eigenes Issue und Cornelius’ Ready-Freigabe.
 - **W-044** Drachenspiel-Ausbau abgeschlossen: [`drachenspiel-ausbau.md`](drachenspiel-ausbau.md); historischer Eintrag im [Migrationsarchiv #72](https://github.com/ichthys2k/brett-und-blatt/issues/72).
 - **Turniere (W-053):** [Issue #62](https://github.com/ichthys2k/brett-und-blatt/issues/62) enthält den Prüfstatus; [`turnier.md`](turnier.md) bleibt die fachliche Referenz.
+- **Spielerpass (Vorhaben #135, 8.11.2026):** Fortschritt, Familie an einem Gerät, Klassen mit Profilen, Klassenausweise, PIN/Passwort, Google/Microsoft und Lernen hinter dem Spielerausweis; Plan in [`spielerpass.md`](spielerpass.md), Schritte #136–#159 sowie #101 und #103.
 - **Turniersoftware (W-058):** Recherche und Gesamtkonzept für Online- und Vor-Ort-Turniere in [`turniersoftware.md`](turniersoftware.md), Entscheidungen offen ([Issue #63](https://github.com/ichthys2k/brett-und-blatt/issues/63)).
 
 ## 7. Zurückgestellt
