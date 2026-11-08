@@ -109,7 +109,7 @@ export function Datenschutz() {
         Daten kann die gewünschte Online-Partie nicht stattfinden.
       </p>
       <p>
-        <strong>Sicherung (Narrenhof, Drachenspiel):</strong> Wenn du einen Sicherungscode anlegst, verschlüsselt dein Browser je Spiel deinen Stand
+        <strong>Sicherung (Narrenhof, Drachenspiel):</strong> Wenn du einen Rettungscode anlegst, verschlüsselt dein Browser je Spiel deinen Stand
         (im Narrenhof Glöckchen, Freischaltungen und Hofchronik, im Drachenspiel deine eigenen Decks und deinen Solo-Fortschritt) mit einem Schlüssel aus diesem Code und legt nur den verschlüsselten Block unter einer daraus abgeleiteten,
         zufälligen Kennung auf dem Spieleserver in der EU ab; ohne den Code kann niemand ihn lesen, auch ich nicht. Name, E-Mail-Adresse oder ein Konto
         braucht es dafür nicht, ein Passkey bleibt bei dir und deinem Passkey-Speicher. Die Sicherung wird gelöscht, wenn sie 400 Tage lang nicht abgerufen
@@ -137,7 +137,7 @@ export function Datenschutz() {
         PIN bzw. Passwort zwei Werte aus. Die PIN selbst verlässt dein Gerät nie. Der Spieleserver in der EU speichert nur einen Prüfwert, den er mit einem
         geheimen Schlüssel des Betreibers (dem „Pfeffer“, der nicht im Speicher liegt) bildet, einen mit demselben Schlüssel verschlüsselten Zufallsanteil,
         den im Browser verschlüsselten Ausweis und einen Zähler der Fehlversuche mit der Zeit der letzten Sperre. Nach fünf falschen Eingaben muss man
-        warten, nach zehn ist der Ausweis gesperrt, bis die Notfallkarte (Sicherungscode) ihn zurücksetzt. Zusätzlich zählt der Server, wie oft von einer
+        warten, nach zehn ist der Ausweis gesperrt, bis die Rettungskarte (Rettungscode) ihn zurücksetzt. Zusätzlich zählt der Server, wie oft von einer
         IP-Adresse aus nicht vorhandene Codes oder falsche PINs versucht werden, und speichert diese Adresse höchstens eine Stunde. Das Schloss wird gelöscht,
         wenn es 400 Tage lang nicht abgerufen wurde. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b und f DSGVO (Schutz vor Missbrauch).
       </p>
@@ -162,7 +162,7 @@ export function Datenschutz() {
         <li>die zuletzt gewählten Einstellungen je Spiel,</li>
         <li>ob der Ton an ist und wie laut, welche Playlist du je Spiel gewählt hast und welche Musikstücke du markiert oder ausgeschlossen hast,</li>
         <li>für Online-Partien deinen Spitznamen, dein Emoji-Bild und die zufällige Geräte-Kennung,</li>
-        <li>im Narrenhof deinen Spielfortschritt, im Drachenspiel deine eigenen Decks und deinen Solo-Fortschritt und, falls angelegt, deinen Sicherungscode.</li>
+        <li>im Narrenhof deinen Spielfortschritt, im Drachenspiel deine eigenen Decks und deinen Solo-Fortschritt und, falls angelegt, deinen Rettungscode.</li>
       </ul>
       <p>
         Diese Daten verlassen dein Gerät nicht, außer Spitzname, Emoji-Bild und Geräte-Kennung, wenn du einen Online-Raum betrittst, und der verschlüsselte Stand aus Narrenhof und Drachenspiel, wenn du eine Sicherung anlegst. Du kannst sie jederzeit löschen: mit „Verwerfen“ bei der laufenden Partie oder über die Einstellungen

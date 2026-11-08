@@ -54,7 +54,7 @@ export const passBlock = playerBlock(PLAYER_SALT, passServer, { read: readPass, 
 
 /**
  * Vorhandene Ausweise bekommen beim ersten Mal einen Passschlüssel (#137). Ohne Spielercode und ohne
- * Sicherungscode gibt es keinen Ausweis, der ihn tragen könnte – dann bleibt es beim Nichts.
+ * Rettungscode gibt es keinen Ausweis, der ihn tragen könnte – dann bleibt es beim Nichts.
  */
 function ensurePassKey(): string | null {
   const existing = parsePassKey(storage.loadPassKey());
@@ -96,7 +96,7 @@ export function passChanged(): void {
   const secrets = storage.loadLockSecrets();
   if (pass.code && secrets) void savePassLock(passServer, pass.code, secrets, pass).catch(() => undefined);
   else if (pass.code) {
-    // Gibt es das Schloss schon (dieses Gerät kam über den Sicherungscode), darf der Ausweis nicht ohne PIN daneben liegen.
+    // Gibt es das Schloss schon (dieses Gerät kam über den Rettungscode), darf der Ausweis nicht ohne PIN daneben liegen.
     const code = pass.code;
     void hasPassLock(passServer, code)
       .then((exists) => (exists ? undefined : updatePlayerLock(passServer, code, pass)))
@@ -161,7 +161,7 @@ export async function renewPlayerCode(): Promise<void> {
 }
 
 /**
- * Übernimmt einen Ausweis über Spielercode oder Sicherungscode. false: Eingabe ist keins von beiden oder der Abgleich scheiterte.
+ * Übernimmt einen Ausweis über Spielercode oder Rettungscode. false: Eingabe ist keins von beiden oder der Abgleich scheiterte.
  * 'secret': Der Spielercode gehört zu einem Ausweis mit PIN oder Passwort – dann weiter mit `adoptLocked`.
  */
 export async function adoptCode(input: string): Promise<boolean | 'secret'> {
@@ -197,19 +197,19 @@ function checkedSecret(raw: string) {
 }
 
 /**
- * Schützt den Ausweis mit PIN oder Passwort. Dazu braucht es die Notfallkarte (Sicherungscode); gibt es noch keine, wird sie angelegt.
+ * Schützt den Ausweis mit PIN oder Passwort. Dazu braucht es die Rettungskarte (Rettungscode); gibt es noch keine, wird sie angelegt.
  * Danach öffnet der Spielercode allein nichts mehr: Der bisherige PIN-lose Ausweis unter dem Code wird ungültig gemacht.
  */
 export async function setSecret(raw: string): Promise<void> {
   const secret = checkedSecret(raw);
   if (!storage.loadPlayerCode()) await createPlayerCode();
   const code = storage.loadPlayerCode()!;
-  if (!currentSyncCode() && !(await createSync(passBlock))) throw new SyncError('Die Notfallkarte (Sicherungscode) ließ sich nicht anlegen. Später noch einmal versuchen.');
+  if (!currentSyncCode() && !(await createSync(passBlock))) throw new SyncError('Die Rettungskarte (Rettungscode) ließ sich nicht anlegen. Später noch einmal versuchen.');
   const key = ensurePassKey();
   if (!key) throw new SyncError('Der Passschlüssel fehlt.');
   const syncCode = currentSyncCode()!;
   const secrets = await stretchSecret(code, secret.value);
-  // Gab es das Schloss schon (anderes Gerät), setzt die Notfallkarte, die dieses Gerät kennt, eine neue PIN.
+  // Gab es das Schloss schon (anderes Gerät), setzt die Rettungskarte, die dieses Gerät kennt, eine neue PIN.
   if (await hasPassLock(passServer, code)) await resetPassLock(passServer, code, syncCode, secrets, readPass());
   else await createPassLock(passServer, code, secrets, syncCode, readPass());
   await revokePlayerLock(passServer, code).catch(() => undefined);
@@ -227,25 +227,25 @@ export async function changeSecret(oldRaw: string, newRaw: string): Promise<void
   storage.saveLockSecrets(secrets);
 }
 
-/** Vergessene oder gesperrte PIN: Die Notfallkarte (Sicherungscode) setzt eine neue. */
+/** Vergessene oder gesperrte PIN: Die Rettungskarte (Rettungscode) setzt eine neue. */
 export async function resetSecret(cardInput: string, newRaw: string): Promise<void> {
   const code = storage.loadPlayerCode();
   const syncCode = parseCode(cardInput);
   if (!code) throw new SyncError('Es gibt noch keinen Spielercode.');
-  if (!syncCode) throw new SyncError('Der Sicherungscode hat 16 Zeichen (Buchstaben und Ziffern 2–9). Bitte genau abschreiben.');
+  if (!syncCode) throw new SyncError('Der Rettungscode hat 16 Zeichen (Buchstaben und Ziffern 2–9). Bitte genau abschreiben.');
   const secrets = await stretchSecret(code, checkedSecret(newRaw).value);
   await resetPassLock(passServer, code, syncCode, secrets, readPass());
   storage.saveLockSecrets(secrets);
 }
 
-/** Notfallkarte: Spielercode und Sicherungscode zum Aufbewahren und Ausdrucken. */
+/** Rettungskarte: Spielercode und Rettungscode zum Aufbewahren und Ausdrucken. */
 export function emergencyCard(): { playerCode: string; syncCode: string } | null {
   const playerCode = storage.loadPlayerCode();
   const syncCode = currentSyncCode();
   return playerCode && syncCode ? { playerCode, syncCode } : null;
 }
 
-/** Adresse für den QR-Code der Notfallkarte: führt mit dem Sicherungscode zurück in den Ausweis. */
+/** Adresse für den QR-Code der Rettungskarte: führt mit dem Rettungscode zurück in den Ausweis. */
 export function emergencyLink(syncCode: string): string {
   return `${window.location.origin}${window.location.pathname}#/online?sicherung=${encodeURIComponent(syncCode)}`;
 }
@@ -258,7 +258,7 @@ export function playerLink(code: string): string {
   return `${window.location.origin}${window.location.pathname}#/online?ausweis=${encodeURIComponent(code)}`;
 }
 
-/** Spielercode oder Sicherungscode aus der Adresse (QR-Code gescannt); entfernt ihn danach aus der Adresszeile. */
+/** Spielercode oder Rettungscode aus der Adresse (QR-Code gescannt); entfernt ihn danach aus der Adresszeile. */
 export function takeLinkedCode(): string | null {
   const hash = window.location.hash;
   const match = /[?&](?:ausweis|sicherung)=([^&]+)/.exec(hash);

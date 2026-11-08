@@ -7,8 +7,9 @@ import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 import { Button, Section } from './controls';
 import { QrCode } from './OnlineParts';
+import { RescueHint } from './RescueHint';
 
-/** Spielerausweis: dieselbe Person auf mehreren Geräten, mit Spielercode, QR-Code, Sicherungscode oder Passkey. */
+/** Spielerausweis: dieselbe Person auf mehreren Geräten, mit Spielercode, QR-Code, Rettungscode oder Passkey. */
 export function PlayerPassPanel({ onChange }: { onChange: () => void }) {
   const sync = useSyncState();
   const [code, setCode] = useState(() => storage.loadPlayerCode());
@@ -68,6 +69,7 @@ export function PlayerPassPanel({ onChange }: { onChange: () => void }) {
   return (
     <Section title={`🪪 ${t('pass.title')}`}>
       <p className="text-sm text-muted">{t('pass.intro')}</p>
+      <RescueHint onChange={onChange} />
       <Button onClick={() => navigate(paths.pass)}>{t('pass.chronik.link')}</Button>
 
       {code ? (

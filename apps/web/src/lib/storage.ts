@@ -16,6 +16,7 @@ export interface KnownTournament {
 }
 const DEVICE_KEY = 'brett-und-blatt:geraet';
 const PLAYER_CODE_KEY = 'brett-und-blatt:spielercode';
+const RESCUE_KEY = 'brett-und-blatt:rettung';
 const CREST_KEY = 'brett-und-blatt:wappen';
 const LOCK_KEY = 'brett-und-blatt:schloss';
 const PASS_KEY_KEY = 'brett-und-blatt:passschluessel';
@@ -103,12 +104,19 @@ export const storage = {
     remove(PASS_KEY_KEY);
     remove(LOCK_KEY);
     remove(CREST_KEY);
+    remove(RESCUE_KEY);
     remove(TOURNAMENTS_KEY);
   },
   loadPlayerCode: () => {
     const code = read<string>(PLAYER_CODE_KEY);
     return typeof code === 'string' ? code : null;
   },
+  /** Hat der Pass seine Rettungskarte gedruckt oder sicher weggelegt? (#150-Vorarbeit: Hinweis „Rettungskarte sichern“) */
+  loadRescue: (): 'gedruckt' | 'gesichert' | null => {
+    const value = read<string>(RESCUE_KEY);
+    return value === 'gedruckt' || value === 'gesichert' ? value : null;
+  },
+  saveRescue: (value: 'gedruckt' | 'gesichert' | null) => (value ? write(RESCUE_KEY, value) : remove(RESCUE_KEY)),
   /** Wappen des Passes als Beschreibung (#147); die Bedeutung steht in der Engine (`player-crest.ts`). */
   loadCrestText: (): string | null => {
     const text = read<string>(CREST_KEY);

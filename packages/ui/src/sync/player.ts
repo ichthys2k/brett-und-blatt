@@ -8,7 +8,7 @@ import { fetchRemote, putRemote, SyncError, type SyncBlock } from './vault';
  * verschlüsselten Block in der vorhandenen Sicherungsablage.
  *
  * - **Spielercode:** vier Emoji aus 16 (wie der Raumcode), ohne Tastatur zu tippen. Darunter liegt verschlüsselt der Ausweis.
- * - **Sicherungscode und Passkey:** Der Ausweis ist ein weiterer Block der gemeinsamen Sicherung
+ * - **Rettungscode und Passkey:** Der Ausweis ist ein weiterer Block der gemeinsamen Sicherung
  *   (`PLAYER_SALT`), der Passkey kommt damit von selbst mit.
  *
  * Die Kennung selbst bleibt beim Anlegen unverändert, darum laufen begonnene Partien weiter.
@@ -18,7 +18,7 @@ export interface PlayerPass {
   token: string;
   name: string;
   avatar: string;
-  /** Spielercode, damit er auch über Sicherungscode oder Passkey auf ein neues Gerät kommt. */
+  /** Spielercode, damit er auch über Rettungscode oder Passkey auf ein neues Gerät kommt. */
   code: string | null;
   /** Turniere, die dieser Spieler kennt; so findet ein neues Gerät sie ohne Link wieder. */
   tournaments?: KnownTournament[];
@@ -146,7 +146,7 @@ export function playerBlock(salt: string, serverUrl: () => string | null, store:
   };
 }
 
-/** Das Schloss ohne PIN öffnet nur die Identität, nie den Passschlüssel (er liegt hinter Sicherungscode oder PIN). */
+/** Das Schloss ohne PIN öffnet nur die Identität, nie den Passschlüssel (er liegt hinter Rettungscode oder PIN). */
 function withoutPassKey(pass: PlayerPass): PlayerPass {
   const { passKey: _passKey, ...rest } = pass;
   return rest;
