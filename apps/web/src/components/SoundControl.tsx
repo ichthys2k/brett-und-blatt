@@ -1,6 +1,7 @@
 import { defaultPlaylist, musicTracks, playlists } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState } from 'react';
 import { t } from '../i18n';
+import { hapticsSupported, setHaptics, useHaptics } from '../lib/haptics';
 import { choosePlaylist, music, playlistFor, useCurrentTrack, useMusicPrefs } from '../lib/music';
 import { setSoundSettings, sound, useSoundSettings } from '../lib/sound';
 import { Button } from './controls';
@@ -9,6 +10,7 @@ import { MusicList, StarButton } from './MusicList';
 /** Effekte und Musik je an/aus mit ihren Lautstärken – im Spiel und in den Ton-Einstellungen. */
 export function VolumeControls({ showClientOption }: { showClientOption?: boolean } = {}) {
   const settings = useSoundSettings();
+  const haptics = useHaptics();
   return (
     <>
       <label className="flex items-center justify-between gap-3 font-medium">
@@ -57,6 +59,15 @@ export function VolumeControls({ showClientOption }: { showClientOption?: boolea
           onChange={(event) => setSoundSettings({ music: Number(event.target.value) / 100 })}
         />
       </label>
+      {hapticsSupported() && (
+        <label className="flex items-center justify-between gap-3 text-sm">
+          <div>
+            <span className="block font-medium">{t('sound.vibration')}</span>
+            <span className="block text-xs text-muted">{t('sound.vibrationHint')}</span>
+          </div>
+          <input type="checkbox" className="size-5 flex-none accent-[var(--color-accent)]" checked={haptics} onChange={(event) => setHaptics(event.target.checked)} />
+        </label>
+      )}
       {showClientOption && (
         <label className="flex items-center justify-between gap-3 text-sm">
           <div>

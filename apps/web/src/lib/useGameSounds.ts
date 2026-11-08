@@ -1,6 +1,7 @@
 import type { GameSession, Result, SeatId } from '@brett-und-blatt/engine';
 import { eventsOfSeats, soundCatalog, soundDuration, soundsForEvents, type SoundMap, type SoundName } from '@brett-und-blatt/ui';
 import { useEffect, useRef } from 'react';
+import { hapticFor, vibrate } from './haptics';
 import { sound } from './sound';
 
 /** Ab hier warnt die Uhr – aber nur, wenn der Zug mit mehr Zeit begonnen hat. */
@@ -37,11 +38,20 @@ export function useGameSounds(session: GameSession, sounds: SoundMap | undefined
       if (events.some((event) => event.type === 'forfeit' && event.reason === 'time')) names.push('zeit-um');
 
       let delay = 0;
+      // Vibration, wenn an diesem Gerät ein Mensch spielt (auch wenn der Gegner trifft); Zuschauer spüren nichts.
+      const buzz = local.length > 0;
       for (const name of names) {
+        const kind = buzz ? hapticFor(name) : null;
+        if (kind) window.setTimeout(() => vibrate(kind), delay * 1000);
         sound.play(name, { volume, delay });
         delay += Math.min(soundDuration(name) * 0.7, 0.8);
       }
-      if (!previous.result && now.result) sound.play(resultSound(now.result, local), { delay: delay + 0.15 });
+      if (!previous.result && now.result) {
+        const end = resultSound(now.result, local);
+        const kind = local.length > 0 ? hapticFor(end) : null;
+        if (kind) window.setTimeout(() => vibrate(kind), (delay + 0.15) * 1000);
+        sound.play(end, { delay: delay + 0.15 });
+      }
       else if (online && yourSeat !== null && !now.result && now.current.includes(yourSeat) && !previous.current.includes(yourSeat)) {
         sound.play('dein-zug', { volume: 0.8, delay: delay + 0.1 });
       }

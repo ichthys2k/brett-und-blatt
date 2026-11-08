@@ -76,6 +76,8 @@ const de = {
   'play.solved': 'Geschafft!',
   'play.solvedBy': '{name} hat es geschafft!',
   'play.lost': 'Leider verloren.',
+  'sound.vibration': 'Vibration',
+  'sound.vibrationHint': 'Kurzes Brummen bei Treffern, Fehlern und Sieg (nur auf Geräten, die das können).',
   'notes.open': 'Notizen',
   'notes.title': 'Notizen',
   'notes.placeholder': 'Deine Notizen zu dieser Partie …',
