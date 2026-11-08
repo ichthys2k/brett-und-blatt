@@ -2,11 +2,13 @@ import { UpdateBanner } from './components/UpdateBanner';
 import { useRoute } from './lib/router';
 import { DisplayScreen } from './screens/Display';
 import { Home } from './screens/Home';
+import { Menu } from './screens/Menu';
 import { Datenschutz, Impressum } from './screens/Legal';
 import { Online } from './screens/Online';
 import { PassScreen } from './screens/Pass';
 import { Play } from './screens/Play';
 import { RoomScreen } from './screens/Room';
+import { Tournaments } from './screens/Tournaments';
 import { TournamentScreen } from './screens/Tournament';
 import { Setup } from './screens/Setup';
 import { SoundSettingsScreen } from './screens/SoundSettings';
@@ -29,6 +31,8 @@ function Screen() {
       return <Play />;
     case 'online':
       return <Online />;
+    case 'tournaments':
+      return <Tournaments />;
     case 'room':
       return <RoomScreen key={route.code} code={route.code} />;
     case 'display':
@@ -43,7 +47,9 @@ function Screen() {
       return <Impressum />;
     case 'privacy':
       return <Datenschutz />;
-    default:
+    case 'home':
       return <Home initialFilter={route.filter} initialPlayers={route.players} />;
+    default:
+      return <Menu />;
   }
 }

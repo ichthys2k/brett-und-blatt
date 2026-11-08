@@ -1,0 +1,314 @@
+/* Hauptmenü „Taverne“ (#184). Eigene, feste Farben: die Szene soll in Hell und Dunkel gleich warm wirken. */
+.bub-menu {
+  --wood: #5a4128;
+  --wood-dark: #3a2916;
+  --gold: #f2d27a;
+  --cream: #f6e7c1;
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #140d07;
+  color: var(--cream);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  grid-template-rows: auto 1fr auto;
+  gap: 1rem 3rem;
+  padding: max(env(safe-area-inset-top), 1.5rem) 3rem max(env(safe-area-inset-bottom), 1rem);
+}
+
+.bub-menu-scene {
+  position: absolute;
+  inset: 0;
+  --mx: 0;
+  --my: 0;
+  background: radial-gradient(ellipse 60% 70% at 38% 55%, #7a4a1e 0%, #3a2210 45%, #140d07 100%);
+}
+.bub-menu-layer {
+  position: absolute;
+  inset: -3%;
+  transition: transform 0.2s ease-out;
+}
+.bub-menu-wall {
+  transform: translate(calc(var(--mx) * -10px), calc(var(--my) * -6px));
+}
+.bub-menu-window {
+  position: absolute;
+  top: 8%;
+  width: 14%;
+  height: 40%;
+  border: 6px solid #2b1d10;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(#3a4c6a, #0e1522);
+  box-shadow: inset 0 0 40px #000;
+}
+.bub-menu-window:nth-child(1) { left: 5%; }
+.bub-menu-window:nth-child(2) { left: 24%; top: 5%; height: 44%; }
+.bub-menu-window:nth-child(3) { left: 44%; }
+.bub-menu-glow {
+  background: radial-gradient(circle at 24% 28%, #ffd27a66 0, transparent 14%), radial-gradient(circle at 44% 32%, #ffd27a55 0, transparent 12%);
+  transform: translate(calc(var(--mx) * -18px), calc(var(--my) * -10px));
+}
+.bub-menu-table {
+  transform: translate(calc(var(--mx) * -28px), calc(var(--my) * -14px));
+}
+.bub-menu-table::before {
+  content: '';
+  position: absolute;
+  left: 8%;
+  top: 62%;
+  width: 52%;
+  height: 26%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 40% 30%, #a8763a, #5c3b1a 70%);
+  box-shadow: 0 30px 40px #000a;
+}
+.bub-menu-card,
+.bub-menu-die {
+  position: absolute;
+  top: 66%;
+  box-shadow: 2px 5px 7px #0008;
+}
+.bub-menu-card { width: 5.4%; aspect-ratio: 5 / 7; border-radius: 6px; background: #f6efd9; }
+.bub-menu-card:nth-of-type(1) { left: 24%; transform: rotate(-14deg); }
+.bub-menu-card:nth-of-type(2) { left: 28%; top: 65%; transform: rotate(2deg); }
+.bub-menu-card:nth-of-type(3) { left: 32%; background: #b3261e; transform: rotate(16deg); }
+.bub-menu-die { width: 2.6%; aspect-ratio: 1; border-radius: 5px; background: #f6efd9; }
+.bub-menu-die:nth-of-type(4) { left: 42%; top: 70%; transform: rotate(18deg); }
+.bub-menu-die:nth-of-type(5) { left: 46%; top: 72%; transform: rotate(-24deg); }
+.bub-menu-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 40%, #140d07cc 80%);
+}
+
+.bub-menu > :not(.bub-menu-scene) { position: relative; }
+
+.bub-menu-logo {
+  grid-column: 1;
+  margin: 0;
+  font-family: Almendra, Georgia, serif;
+  font-size: clamp(2.6rem, 6vw, 4.2rem);
+  line-height: 1;
+  color: var(--gold);
+  text-shadow: 0 3px 0 #3a2910, 0 0 24px #f2b34a66;
+}
+.bub-menu-logo small {
+  display: block;
+  margin-top: 0.5rem;
+  font: 500 0.95rem/1.3 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  color: #d9c9a0;
+  text-shadow: none;
+}
+
+.bub-menu-frame {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: linear-gradient(#2a1d10ee, #1a110aee);
+  border: 3px solid #8a6a3a;
+  border-radius: 10px;
+  box-shadow: 0 10px 40px #000a;
+}
+.bub-menu-button {
+  display: block;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.7rem 1.25rem;
+  text-align: left;
+  border: 2px solid #8a6a3a;
+  border-radius: 6px;
+  background: linear-gradient(var(--wood), var(--wood-dark));
+  color: var(--cream);
+  font-family: Almendra, Georgia, serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 #9c7c48, 0 3px 8px #000a;
+}
+.bub-menu-button:hover,
+.bub-menu-button:focus-visible {
+  background: linear-gradient(#7a5a32, var(--wood));
+  border-color: #e0b25a;
+  color: #fff;
+}
+.bub-menu-button[data-resume] { border-color: #e0b25a; color: var(--gold); }
+.bub-menu-hint {
+  display: none;
+  margin-top: 0.15rem;
+  font: 400 0.85rem/1.35 system-ui, sans-serif;
+  letter-spacing: 0;
+  color: #d9c9a0;
+}
+.bub-menu-button:hover .bub-menu-hint,
+.bub-menu-button:focus-visible .bub-menu-hint { display: block; }
+
+.bub-menu-plaque {
+  grid-column: 2;
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.6rem 1rem;
+  background: #1a110acc;
+  border: 2px solid #6b522e;
+  border-radius: 10px;
+  color: var(--cream);
+  cursor: pointer;
+  text-align: left;
+}
+.bub-menu-plaque:hover,
+.bub-menu-plaque:focus-visible { border-color: #e0b25a; }
+.bub-menu-shield {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 3.2rem;
+  font-size: 1.5rem;
+  background: #b3261e;
+  border: 2px solid var(--gold);
+  border-radius: 6px 6px 50% 50%;
+}
+.bub-menu-name { flex: 1; font-family: Almendra, Georgia, serif; font-size: 1.35rem; }
+.bub-menu-switch { font-size: 0.85rem; color: var(--gold); }
+.bub-menu-foot { grid-column: 1; grid-row: 3; align-self: end; font-size: 0.8rem; color: #bba77a; }
+.bub-menu-foot a { color: inherit; }
+
+/* Handy und schmale Fenster: Szene still und dunkler, Menü über die ganze Breite */
+@media (max-width: 760px) {
+  .bub-menu { grid-template-columns: minmax(0, 1fr); padding-inline: 1rem; }
+  .bub-menu-logo, .bub-menu-frame, .bub-menu-plaque, .bub-menu-foot { grid-column: 1; }
+  .bub-menu-frame { grid-row: 2; }
+  .bub-menu-plaque { grid-row: 3; }
+  .bub-menu-foot { grid-row: 4; }
+  .bub-menu-shade { background: linear-gradient(#140d0733, #140d07cc 70%); }
+  .bub-menu-layer { transform: none !important; }
+  .bub-menu-hint { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bub-menu-layer { transform: none !important; transition: none; }
+}
+
+/* Seiten im Taverne-Rahmen (TavernPage): dunkle Farb-Tokens im Rahmen, damit alle Bausteine lesbar sind */
+.bub-tav { position: relative; min-height: 100dvh; background: #140d07; color: #f6e7c1; }
+.bub-tav-inner {
+  position: relative;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: max(env(safe-area-inset-top), 1rem) 1rem max(env(safe-area-inset-bottom), 1.5rem);
+}
+.bub-tav-head { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+.bub-tav .bub-menu-logo { font-size: clamp(2rem, 5vw, 3rem); }
+.bub-tav-back {
+  align-self: flex-start;
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  border: 2px solid #6b522e;
+  border-radius: 8px;
+  background: #1a110acc;
+  color: #f2d27a;
+  cursor: pointer;
+}
+.bub-tav-back:hover, .bub-tav-back:focus-visible { border-color: #e0b25a; }
+.bub-tav-frame {
+  --color-bg: #1d1510;
+  --color-surface: #2a1f17;
+  --color-surface-2: #38291e;
+  --color-ink: #f2e6d0;
+  --color-muted: #bfae95;
+  --color-line: #4f3c2c;
+  --color-accent: #e6b450;
+  --color-accent-ink: #241708;
+  --color-warning: #eda45a;
+  --color-danger: #ff8a75;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  color: var(--color-ink);
+  background: linear-gradient(#2a1d10f2, #1a110af2);
+  border: 3px solid #8a6a3a;
+  border-radius: 10px;
+  box-shadow: 0 10px 40px #000a;
+}
+.bub-tav-frame h2 { font-family: Almendra, Georgia, serif; }
+.bub-tav-inner[data-wide] { max-width: 56rem; }
+
+/* Schritt 7: Balken, Kaminglut, flackerndes Laternenlicht, schwebende Funken; Rahmen mit Nieten */
+.bub-menu-beams span {
+  position: absolute;
+  top: 0;
+  width: 5%;
+  height: 100%;
+  background: linear-gradient(90deg, #00000066, #2b1d1055 40%, #00000077);
+}
+.bub-menu-beams span:nth-child(1) { left: 20%; }
+.bub-menu-beams span:nth-child(2) { left: 43%; }
+.bub-menu-beams span:nth-child(3) { left: 66%; }
+.bub-menu-beams::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 7%;
+  background: linear-gradient(#0b0704, #2b1d10);
+  border-bottom: 3px solid #4a331b;
+}
+.bub-menu-glow { animation: bub-flicker 4.5s ease-in-out infinite; }
+.bub-menu-hearth {
+  background: radial-gradient(ellipse 22% 16% at 14% 96%, #ff9a3c99 0, #ff6a1a44 45%, transparent 75%);
+  animation: bub-flicker 3.1s ease-in-out infinite reverse;
+}
+.bub-menu-motes span {
+  position: absolute;
+  bottom: -2%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffd27acc;
+  box-shadow: 0 0 6px #ffb03a;
+  opacity: 0;
+  animation: bub-rise linear infinite;
+}
+@keyframes bub-flicker {
+  0%, 100% { opacity: 1; }
+  38% { opacity: 0.82; }
+  62% { opacity: 0.95; }
+  80% { opacity: 0.78; }
+}
+@keyframes bub-rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  12% { opacity: 0.9; }
+  100% { transform: translate(24px, -78vh); opacity: 0; }
+}
+.bub-menu-frame,
+.bub-tav-frame { position: relative; }
+.bub-menu-frame::before,
+.bub-menu-frame::after,
+.bub-tav-frame::before,
+.bub-tav-frame::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e8c887, #6b4f26);
+  box-shadow: 0 1px 2px #000a;
+}
+.bub-menu-frame::before, .bub-tav-frame::before { left: 8px; }
+.bub-menu-frame::after, .bub-tav-frame::after { right: 8px; }
+.bub-menu-button:active { transform: translateY(1px); }
+.bub-menu-button:focus-visible { outline: 3px solid #f2d27a; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .bub-menu-glow, .bub-menu-hearth { animation: none; }
+  .bub-menu-motes { display: none; }
+}
+@media (max-width: 760px) {
+  .bub-menu-motes { display: none; }
+}

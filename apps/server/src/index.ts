@@ -33,6 +33,12 @@ import {
   type AttemptState,
 } from '@brett-und-blatt/online';
 import {
+  SHARE_ID_PATTERN,
+  SHARE_TTL_MS,
+  isExpired,
+  mayRemoveShare,
+  putShare,
+  type ShareRecord,
   LOCK_ID_PATTERN,
   LOCK_TTL_MS,
   changeLock,
@@ -73,6 +79,7 @@ interface Env {
   BACKUPS: DurableObjectNamespace<BackupVault>;
   ATTEMPTS: DurableObjectNamespace<AttemptLimiter>;
   PASS_LOCKS: DurableObjectNamespace<PassLock>;
+  SHARES: DurableObjectNamespace<PassShare>;
   /** Geheimer Pfeffer für die Schlösser der Ausweise (`wrangler secret put PASS_PEPPER`, lokal in `.dev.vars`). Fehlt er, melden die Schloss-Endpunkte 503. */
   PASS_PEPPER?: string;
   TOURNAMENTS: DurableObjectNamespace<TournamentRoom>;
@@ -116,6 +123,11 @@ function backupStub(env: Env, id: string): DurableObjectStub<BackupVault> {
 
 function lockStub(env: Env, id: string): DurableObjectStub<PassLock> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.PASS_LOCKS : env.PASS_LOCKS.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(id));
+}
+
+function shareStub(env: Env, id: string): DurableObjectStub<PassShare> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.SHARES : env.SHARES.jurisdiction('eu');
   return namespace.get(namespace.idFromName(id));
 }
 
@@ -266,6 +278,37 @@ export default {
         return json({ error: result.error }, 400, noStore);
       }
       return json({ error: 'method' }, 405, cors);
+    }
+
+    const share = /^\/teilen\/([^/]+)(?:\/(loeschen))?$/.exec(url.pathname);
+    if (share) {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const id = share[1]!;
+      if (!SHARE_ID_PATTERN.test(id)) return json({ error: 'id' }, 404, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      const stub = shareStub(env, id);
+      if (request.method === 'GET' && !share[2]) {
+        // Lesen ist für alle mit dem Link möglich; Anfragen an nicht vorhandene Schnappschüsse zählen je Absender wie bei Sicherungen.
+        const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+        if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+        const data = await stub.read();
+        if (data === null) {
+          await limiter.miss();
+          return json({ error: 'missing' }, 404, noStore);
+        }
+        return json({ data }, 200, noStore);
+      }
+      if (request.method !== 'PUT' && request.method !== 'POST') return json({ error: 'method' }, 405, cors);
+      let body: unknown;
+      try {
+        const text = await request.text();
+        if (text.length > 64 * 1024) return json({ error: 'size' }, 413, noStore);
+        body = JSON.parse(text);
+      } catch {
+        return json({ error: 'body' }, 400, noStore);
+      }
+      const status = share[2] ? (request.method === 'POST' ? await stub.remove(body) : 405) : request.method === 'PUT' ? await stub.write(body) : 405;
+      return json({}, status, noStore);
     }
 
     const lock = /^\/schloss\/([^/]+)(?:\/([a-z]+))?$/.exec(url.pathname);
@@ -610,6 +653,50 @@ export class BackupVault extends DurableObject<Env> {
   private async touch(stored: StoredBackup): Promise<void> {
     await this.ctx.storage.put('backup', stored);
     await this.ctx.storage.setAlarm(stored.at + BACKUP_TTL_MS);
+  }
+}
+
+/**
+ * Ein geteilter Pass-Schnappschuss als eigenes Durable Object (eins je Kennung, in der EU). Logik in `packages/online/src/share.ts`;
+ * hier nur Speicher und Frist (ein Jahr ohne Abruf).
+ */
+export class PassShare extends DurableObject<Env> {
+  async read(): Promise<string | null> {
+    const record = (await this.ctx.storage.get<ShareRecord>('share')) ?? null;
+    if (!record || isExpired(record, Date.now())) return null;
+    await this.put({ ...record, at: Date.now() });
+    return record.data;
+  }
+
+  /** Anlegen oder Ersetzen; gibt den HTTP-Status zurück. */
+  async write(body: unknown): Promise<number> {
+    const current = (await this.ctx.storage.get<ShareRecord>('share')) ?? null;
+    const result = await putShare(current && !isExpired(current, Date.now()) ? current : null, body, Date.now());
+    if (result.status !== 200) return result.status;
+    await this.put(result.record);
+    return 200;
+  }
+
+  async remove(body: unknown): Promise<number> {
+    const current = (await this.ctx.storage.get<ShareRecord>('share')) ?? null;
+    if (!current) return 404;
+    if (!(await mayRemoveShare(current, body))) return 401;
+    await this.ctx.storage.deleteAll();
+    return 200;
+  }
+
+  override async alarm(): Promise<void> {
+    const record = await this.ctx.storage.get<ShareRecord>('share');
+    if (!record || isExpired(record, Date.now())) {
+      await this.ctx.storage.deleteAll();
+      return;
+    }
+    await this.ctx.storage.setAlarm(record.at + SHARE_TTL_MS);
+  }
+
+  private async put(record: ShareRecord): Promise<void> {
+    await this.ctx.storage.put('share', record);
+    await this.ctx.storage.setAlarm(record.at + SHARE_TTL_MS);
   }
 }
 

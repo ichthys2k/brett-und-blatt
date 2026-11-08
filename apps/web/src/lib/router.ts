@@ -5,10 +5,12 @@ import { useSyncExternalStore } from 'react';
  * die App auf jedem einfachen Webspace, ohne Einstellungen am Server.
  */
 export type Route =
+  | { name: 'menu' }
   | { name: 'home'; filter?: string; players?: number }
   | { name: 'setup'; gameId: string; params?: Record<string, string> }
   | { name: 'play' }
   | { name: 'online' }
+  | { name: 'tournaments' }
   | { name: 'room'; code: string }
   | { name: 'display'; code: string }
   | { name: 'tournament'; code: string; claim?: string; helper?: string }
@@ -43,15 +45,22 @@ export function parseRoute(hash: string): Route {
     };
   }
   if (parts[0] === 'partie') return { name: 'play' };
-  if (parts[0] === 'online') return { name: 'online' };
+  if (parts[0] === 'online' || parts[0] === 'mehrspieler') return { name: 'online' };
+  if (parts[0] === 'turniere') return { name: 'tournaments' };
   if (parts[0] === 'raum' && parts[1]) return { name: 'room', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'tisch' && parts[1]) return { name: 'display', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'turnier' && parts[1]) return { name: 'tournament', code: decodeURIComponent(parts[1]), ...(params.neu ? { claim: params.neu } : {}), ...(params.helfer ? { helper: params.helfer } : {}) };
   if (parts[0] === 'ton') return { name: 'sound' };
   if (parts[0] === 'pass') return { name: 'pass' };
+  if (parts[0] === 'einzelspieler') {
+    const count = Number(params.spieler);
+    return { name: 'home', ...(params.filter ? { filter: params.filter } : {}), ...(Number.isInteger(count) && count > 0 ? { players: count } : {}) };
+  }
   if (parts[0] === 'impressum') return { name: 'imprint' };
   if (parts[0] === 'datenschutz') return { name: 'privacy' };
   const players = Number(params.spieler);
+  // Alte Links wie #/?filter=mathe oder #/?spieler=8 zeigen weiter die Spielübersicht.
+  if (!params.filter && !(Number.isInteger(players) && players > 0)) return { name: 'menu' };
   return {
     name: 'home',
     ...(params.filter ? { filter: params.filter } : {}),
@@ -60,7 +69,10 @@ export function parseRoute(hash: string): Route {
 }
 
 export const paths = {
-  home: '#/',
+  /** Hauptmenü (#184). */
+  menu: '#/',
+  /** Spielübersicht („Einzelspieler“). */
+  home: '#/einzelspieler',
   setup: (gameId: string, params?: Record<string, string>) => {
     const base = `#/neu/${encodeURIComponent(gameId)}`;
     if (!params || Object.keys(params).length === 0) return base;
@@ -68,6 +80,7 @@ export const paths = {
   },
   play: '#/partie',
   online: '#/online',
+  tournaments: '#/turniere',
   room: (code: string) => `#/raum/${encodeURIComponent(code)}`,
   /** Tisch-Bildschirm für Fernseher, Beamer oder Tablet (#100). */
   display: (code: string) => `#/tisch/${encodeURIComponent(code)}`,
