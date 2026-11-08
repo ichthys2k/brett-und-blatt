@@ -119,3 +119,48 @@ describe('Last One Standing', () => {
     expect(row.lives).toBe(1);
   });
 });
+
+describe('Liga nach Kalender', () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  function online(start: number, extra: Partial<TournamentSettings> = {}) {
+    const clock = { now: start - 1000 };
+    const settings: TournamentSettings = { name: 'Liga', gameId: 'chess', format: 'league', time: 'normal', days: 3, thirdPlace: false, leagueStart: start, leagueDays: 7, ...extra };
+    const t = Tournament.create('ABCD2345', 'seed-1', settings, { token: LEADER, name: 'L' }, { now: () => clock.now, randomClaim: () => 'X' });
+    for (let i = 0; i < 4; i++) t.join(`kennung-spieler-${String(i).padStart(4, '0')}`, `Spieler${i}`, '🦊');
+    return { t, clock };
+  }
+
+  it('Beginn und Abstand werden geprüft', () => {
+    const find = () => ({ info: { id: 'chess', name: 'Schach', players: { min: 2, max: 2 } } as never, options: [] });
+    const body = { name: 'Liga', gameId: 'chess', time: 'normal', days: 3, format: 'league' };
+    const start = Date.now() + 3 * DAY;
+    expect(parseTournamentSettings({ ...body, leagueStart: start, leagueDays: 14 }, find)).toMatchObject({ leagueStart: start, leagueDays: 14 });
+    expect(parseTournamentSettings({ ...body, leagueStart: start, leagueDays: 5 }, find)?.leagueDays).toBeUndefined();
+    expect(parseTournamentSettings({ ...body, leagueStart: 1000 }, find)?.leagueStart).toBeUndefined();
+    expect(parseTournamentSettings({ ...body, format: 'swiss', leagueStart: start }, find)?.leagueStart).toBeUndefined();
+  });
+
+  it('online: spätere Spieltage werden erst an ihrem Datum spielbar', () => {
+    const start = 5_000_000;
+    const { t, clock } = online(start);
+    clock.now = start; // erster Spieltag beginnt jetzt
+    expect(t.start(LEADER)).toBeNull();
+    const status = (stage: number) => new Set(t.view(LEADER).matches.filter((m) => m.stage === stage).map((m) => m.status));
+    expect(status(0)).toEqual(new Set(['open']));
+    expect(status(1)).toEqual(new Set(['waiting']));
+    expect(t.view(LEADER).stages[1]).toMatchObject({ startsAt: start + 7 * DAY, deadline: start + 14 * DAY });
+    expect(t.nextWakeup()).toBeLessThanOrEqual(start + 7 * DAY);
+    clock.now = start + 7 * DAY + 1;
+    t.tick();
+    expect(status(1)).toEqual(new Set(['open']));
+  });
+
+  it('vor Ort: alle Spieltage offen, das Datum steht nur zur Anzeige', () => {
+    const t = local('league', { leagueStart: Date.now() + DAY, leagueDays: 7 }, names(4));
+    t.start(LEADER);
+    const view = t.view(LEADER);
+    expect(view.matches.every((m) => m.status === 'open' || m.status === 'running')).toBe(true);
+    expect(view.stages[2]?.startsAt).toBeDefined();
+  });
+});
+

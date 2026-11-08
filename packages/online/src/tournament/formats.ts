@@ -261,15 +261,40 @@ const league: TournamentFormatRules = {
     const first = roundRobinRounds(ids);
     // Die Rückrunde wiederholt die Hinrunde in derselben Reihenfolge mit getauschtem Heimrecht.
     const rounds = ctx.s.settings.returnRound ? [...first, ...first.map((pairs) => pairs.map(([a, b]) => [b, a] as [string, string]))] : first;
-    ctx.s.stages = rounds.map((_, i) => ({ kind: 'league' as const, round: i + 1, deadline: deadline(i) }));
-    rounds.forEach((pairs, stage) => pairs.forEach(([a, b], i) => ctx.s.matches.push(ctx.newMatch(`t${stage}-${i}`, stage, null, [{ player: a }, { player: b }], 'open'))));
+    // Liga nach Kalender: Jeder Spieltag hat einen Beginn; online sind spätere Spieltage erst ab dann spielbar,
+    // die Frist ist das Ende des Spieltags. Vor Ort dient der Beginn nur der Anzeige.
+    const calendar = calendarOf(ctx.s);
+    ctx.s.stages = rounds.map((_, i) => (calendar ? { kind: 'league' as const, round: i + 1, startsAt: calendar.start + i * calendar.step, deadline: calendar.start + (i + 1) * calendar.step } : { kind: 'league' as const, round: i + 1, deadline: deadline(i) }));
+    const gate = calendar !== null && ctx.s.settings.mode !== 'local';
+    rounds.forEach((pairs, stage) =>
+      pairs.forEach(([a, b], i) => ctx.s.matches.push(ctx.newMatch(`t${stage}-${i}`, stage, null, [{ player: a }, { player: b }], gate && calendar.start + stage * calendar.step > ctx.now() ? 'waiting' : 'open'))),
+    );
   },
-  advance: () => false,
+  /** Kalender: Spieltage, deren Beginn erreicht ist, werden spielbar. */
+  advance(ctx) {
+    if (ctx.s.settings.format !== 'league' || ctx.s.settings.mode === 'local' || !calendarOf(ctx.s)) return false;
+    let moved = false;
+    for (const m of ctx.s.matches) {
+      const startsAt = ctx.s.stages[m.stage]?.startsAt;
+      if (m.status === 'waiting' && startsAt !== undefined && startsAt <= ctx.now()) {
+        m.status = 'open';
+        m.openedAt = ctx.now();
+        moved = true;
+      }
+    }
+    return moved;
+  },
   moreRounds: () => false,
   needsWinner: () => false,
   // An einem Ligaergebnis hängt keine andere Partie.
   mayChangeDone: () => true,
   podium: (ctx) => ctx.overallTable().slice(0, 3).map((r) => r.player),
 };
+
+/** Beginn und Abstand der Spieltage, wenn die Liga nach Kalender läuft. */
+export function calendarOf(s: Pick<TournamentSnapshot, 'settings'>): { start: number; step: number } | null {
+  const { leagueStart, leagueDays } = s.settings;
+  return s.settings.format === 'league' && typeof leagueStart === 'number' ? { start: leagueStart, step: (leagueDays ?? 7) * DAY_MS } : null;
+}
 
 export const FORMATS: Record<TournamentFormat, TournamentFormatRules> = { world, knockout, double, swiss, league, tables: tablesFormat, lives: livesFormat };

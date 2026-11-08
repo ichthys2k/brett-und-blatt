@@ -86,6 +86,9 @@ export interface TournamentSettings {
   lowWins?: boolean;
   /** Last One Standing (Stufe 4): Leben je Teilnehmer; fehlt = 2. */
   lives?: number;
+  /** Liga nach Kalender (Stufe 4, nur Bundesliga-Modus): Beginn des ersten Spieltags (ms) und Abstand der Spieltage in Tagen. */
+  leagueStart?: number;
+  leagueDays?: number;
   /** Setzliste (Stufe 4, nur vor Ort, K.-o., Doppel-K.-o. und WM-Form): Die Reihenfolge der Teilnehmerliste ist die Setzung, statt zu losen. */
   seeded?: boolean;
   /** Best of N (Stufe 3 Teil 5): Partien je Begegnung; fehlt = 1. */
@@ -168,6 +171,8 @@ export interface TournamentStage {
   deadline: number;
   /** Turnierabend: Wann die Leitung die Runde gestartet hat; fehlt = noch nicht. */
   startedAt?: number;
+  /** Liga nach Kalender (Stufe 4): Beginn des Spieltags; online werden die Partien erst dann spielbar. */
+  startsAt?: number;
 }
 
 export interface TournamentPlayer {

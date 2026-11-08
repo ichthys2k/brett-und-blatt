@@ -145,7 +145,7 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
   if (!name || !cleanName(name.slice(0, 16))) return null;
   if (!FORMAT_IDS.includes(body.format as TournamentFormat)) return null;
   const format = body.format as TournamentFormat;
-  const returnRound = format === 'league' && body.returnRound === true ? { returnRound: true } : {};
+  const returnRound: Pick<TournamentSettings, 'returnRound' | 'leagueStart' | 'leagueDays'> = format === 'league' ? { ...(body.returnRound === true ? { returnRound: true } : {}), ...parseCalendar(body) } : {};
   if (body.mode === 'local') return parseLocalSettings(body, name, format, returnRound, findGame);
   // Spieleabend: mehrere Spiele, je Spieltag eines; `gameId` ist dann das erste.
   const disciplines = parseDisciplines(body, format, (id) => {
@@ -179,7 +179,7 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
 }
 
 /** Vor Ort: Sportart statt Spiel, keine Zeitvorgabe, nie in „Offene Runden“. */
-function parseLocalSettings(body: Record<string, unknown>, name: string, format: TournamentFormat, returnRound: { returnRound?: boolean }, findGame: (id: string) => { info: GameInfo } | undefined): TournamentSettings | null {
+function parseLocalSettings(body: Record<string, unknown>, name: string, format: TournamentFormat, returnRound: Pick<TournamentSettings, 'returnRound' | 'leagueStart' | 'leagueDays'>, findGame: (id: string) => { info: GameInfo } | undefined): TournamentSettings | null {
   // Ein Brett-&-Blatt-Spiel als Sportart (Stufe 3): Name aus dem Steckbrief, gespielt wird am Gerät.
   const game = typeof body.gameId === 'string' && body.gameId ? findGame(body.gameId) : undefined;
   if (typeof body.gameId === 'string' && body.gameId && (!game || !(format === 'tables' ? isTableGame(game.info) : isTournamentGame(game.info)))) return null;
@@ -219,6 +219,16 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
     ...(result === 'winner' ? parseBestOf(body, format) : {}),
     ...parseLives(body, format),
   };
+}
+
+/** Liga nach Kalender: Beginn (nicht länger als einen Tag her, höchstens zwei Jahre voraus) und Abstand in Tagen. */
+export const LEAGUE_DAY_CHOICES = [1, 2, 3, 7, 14] as const;
+function parseCalendar(body: Record<string, unknown>): Pick<TournamentSettings, 'leagueStart' | 'leagueDays'> {
+  const start = body.leagueStart;
+  if (typeof start !== 'number' || !Number.isFinite(start)) return {};
+  const now = Date.now();
+  if (start < now - 24 * 60 * 60 * 1000 || start > now + 2 * 365 * 24 * 60 * 60 * 1000) return {};
+  return { leagueStart: Math.floor(start), ...(LEAGUE_DAY_CHOICES.includes(body.leagueDays as 1) ? { leagueDays: body.leagueDays as number } : {}) };
 }
 
 /** Last One Standing: Leben (1–5), nur für diese Form; fehlt = Standard. */

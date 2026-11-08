@@ -577,6 +577,8 @@ export class Tournament {
     const times = [this.expiresAt()];
     if (isLocal(this.s)) return times[0]!;
     for (const match of this.s.matches) if (match.status === 'open' && !isHeld(this.s, match)) times.push(dueAt(this.s, match));
+    // Liga nach Kalender: der nächste Spieltag, der noch nicht begonnen hat.
+    for (const match of this.s.matches) if (match.status === 'waiting') { const at = this.s.stages[match.stage]?.startsAt; if (at !== undefined) times.push(at); }
     for (const table of this.s.tables ?? []) if (table.status === 'open' && !isHeld(this.s, { stage: table.stage } as TournamentMatch)) times.push(this.tableDue(table));
     // Die Ausschreibung muss sich regelmäßig neu melden, sonst fällt sie aus der Liste.
     if (this.publicListing()) times.push(this.deps.now() + OPEN_ROOM_REFRESH_MS);
@@ -723,6 +725,8 @@ export class Tournament {
     let moved = false;
     for (const match of this.s.matches) {
       if (match.status !== 'waiting') continue;
+      // Liga nach Kalender: Der Spieltag hat noch nicht begonnen.
+      if ((this.s.stages[match.stage]?.startsAt ?? 0) > this.deps.now() && this.s.settings.mode !== 'local') continue;
       let known = true;
       for (const slot of match.slots) {
         const source = slot.from;

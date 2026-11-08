@@ -1,5 +1,5 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, LIVES_CHOICES, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, LEAGUE_DAY_CHOICES, LIVES_CHOICES, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
@@ -45,6 +45,9 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [groupCount, setGroupCount] = useState(0);
   /** Setzliste (Stufe 4, vor Ort): Die Reihenfolge der Teilnehmerliste ist die Setzung. */
   const [seeded, setSeeded] = useState(false);
+  /** Liga nach Kalender (Stufe 4): Beginn des ersten Spieltags und Abstand in Tagen. */
+  const [leagueDate, setLeagueDate] = useState('');
+  const [leagueDays, setLeagueDays] = useState(7);
   /** Last One Standing (Stufe 4): Leben je Teilnehmer. */
   const [lives, setLives] = useState(2);
   const [returnRound, setReturnRound] = useState(false);
@@ -141,7 +144,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
       const series = !tables && !teamGame && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
       const tableSettings = tables ? { tableSize: size, rounds, ...(local && lowWins ? { lowWins: true } : {}) } : {};
-      const common = { name: name.trim(), format, ...(format === 'lives' ? { lives } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...tableSettings, ...series };
+      const common = { name: name.trim(), format, ...(format === 'lives' ? { lives } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...(format === 'league' && leagueDate && !Number.isNaN(new Date(leagueDate).getTime()) ? { leagueStart: new Date(leagueDate).getTime(), leagueDays } : {}), ...tableSettings, ...series };
       const many = format === 'league' && multi;
       const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
@@ -380,6 +383,25 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               <input type="checkbox" className="h-4 w-4 accent-accent" checked={returnRound} onChange={(e) => setReturnRound(e.target.checked)} />
               {t('tournament.returnRound')}
             </label>
+          )}
+          {format === 'league' && (
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block space-y-1 text-sm">
+                <span>{t('tournament.leagueStart')}</span>
+                <input className={FIELD} type="datetime-local" value={leagueDate} onChange={(e) => setLeagueDate(e.target.value)} />
+              </label>
+              <label className="block space-y-1 text-sm">
+                <span>{t('tournament.leagueDays')}</span>
+                <select className={FIELD} value={leagueDays} onChange={(e) => setLeagueDays(Number(e.target.value))} disabled={!leagueDate}>
+                  {LEAGUE_DAY_CHOICES.map((n) => (
+                    <option key={n} value={n}>
+                      {t('tournament.leagueDaysN', { n })}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="col-span-2 text-xs text-muted">{t('tournament.leagueHint')}</p>
+            </div>
           )}
           {format === 'league' && (
             <label className="flex items-start gap-2 text-sm">

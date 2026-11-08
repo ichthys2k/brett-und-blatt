@@ -1065,12 +1065,19 @@ function TableResultForm({ view, game, send, onDone }: { view: TournamentView; g
   );
 }
 
+/** „Spieltag 3“, bei einer Liga nach Kalender mit Datum. */
+function matchdayName(view: TournamentView, stage: number): string {
+  const startsAt = view.stages[stage]?.startsAt;
+  if (startsAt === undefined) return t('tournament.matchday', { n: stage + 1 });
+  return t('tournament.matchdayDate', { n: stage + 1, date: new Date(startsAt).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) });
+}
+
 function matchTitle(view: TournamentView, m: Match): string {
   if (m.group !== null) return t('tournament.group', { name: GROUP_LETTERS[m.group]! });
   if (view.stages[m.stage]?.kind === 'swiss') return t('tournament.round', { n: m.stage + 1 });
   if (view.stages[m.stage]?.kind === 'league') {
     const discipline = disciplineOfStage(view, m.stage);
-    return `${t('tournament.matchday', { n: m.stage + 1 })}${discipline ? ` · ${disciplineName(view, discipline)}` : ''}`;
+    return `${matchdayName(view, m.stage)}${discipline ? ` · ${disciplineName(view, discipline)}` : ''}`;
   }
   return koMatchName(m.id);
 }
@@ -1247,7 +1254,7 @@ function SwissRounds({ view }: { view: TournamentView }) {
   return (
     <>
       {rounds.map((stage) => (
-        <Section key={stage} title={`${t(league ? 'tournament.matchday' : 'tournament.round', { n: stage + 1 })}${disciplineOfStage(view, stage) ? ` · ${disciplineName(view, disciplineOfStage(view, stage)!)}` : ''}`}>
+        <Section key={stage} title={`${league ? matchdayName(view, stage) : t('tournament.round', { n: stage + 1 })}${disciplineOfStage(view, stage) ? ` · ${disciplineName(view, disciplineOfStage(view, stage)!)}` : ''}`}>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
             {view.matches
               .filter((m) => m.stage === stage)
@@ -1568,7 +1575,7 @@ function stageTitle(view: TournamentView, index: number): string {
   const stage = view.stages[index];
   if (!stage) return '';
   if (stage.kind === 'group') return t('tournament.groups');
-  if (stage.kind === 'league') return t('tournament.matchday', { n: stage.round });
+  if (stage.kind === 'league') return matchdayName(view, index);
   if (stage.kind === 'ko') return roundName(stage.round);
   return t('tournament.round', { n: stage.round });
 }
