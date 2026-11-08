@@ -16,6 +16,7 @@ export interface KnownTournament {
 }
 const DEVICE_KEY = 'brett-und-blatt:geraet';
 const PLAYER_CODE_KEY = 'brett-und-blatt:spielercode';
+const LOCK_KEY = 'brett-und-blatt:schloss';
 const PASS_KEY_KEY = 'brett-und-blatt:passschluessel';
 
 export interface Profile {
@@ -99,12 +100,19 @@ export const storage = {
     remove(PROFILE_KEY);
     remove(PLAYER_CODE_KEY);
     remove(PASS_KEY_KEY);
+    remove(LOCK_KEY);
     remove(TOURNAMENTS_KEY);
   },
   loadPlayerCode: () => {
     const code = read<string>(PLAYER_CODE_KEY);
     return typeof code === 'string' ? code : null;
   },
+  /** Beweis und Schlüssel des PIN-Schlosses (#138): Das Gerät behält sie, um den Ausweis ohne neue Eingabe zu beschreiben. Die PIN selbst wird nie gespeichert. */
+  loadLockSecrets: (): { auth: string; wrap: string } | null => {
+    const value = read<{ auth?: unknown; wrap?: unknown }>(LOCK_KEY);
+    return value && typeof value.auth === 'string' && typeof value.wrap === 'string' ? { auth: value.auth, wrap: value.wrap } : null;
+  },
+  saveLockSecrets: (secrets: { auth: string; wrap: string } | null) => (secrets ? write(LOCK_KEY, secrets) : remove(LOCK_KEY)),
   /** Passschlüssel des Spielerpasses (#137), nur auf diesem Gerät und hinter dem Ausweis. */
   loadPassKey: () => {
     const key = read<string>(PASS_KEY_KEY);

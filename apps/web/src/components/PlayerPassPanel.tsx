@@ -1,7 +1,8 @@
 import { clearSyncError, connectWithPasskey, createPasskey, createSync, formatCode, passkeySupport, PLAYER_EMOJIS, syncNow, useSyncState } from '@brett-und-blatt/ui/sync';
 import { useEffect, useRef, useState } from 'react';
 import { t } from '../i18n';
-import { adoptCode, createPlayerCode, isPassError, leavePass, passBlock, passServer, playerLink, renewPlayerCode, takeLinkedCode } from '../lib/playerPass';
+import { printEmergencyCard } from '../lib/emergencyCard';
+import { adoptCode, adoptLocked, changeSecret, createPlayerCode, emergencyCard, emergencyLink, hasLock, isPassError, leavePass, passBlock, passServer, playerLink, renewPlayerCode, resetSecret, setSecret, takeLinkedCode } from '../lib/playerPass';
 import { storage } from '../lib/storage';
 import { Button, Section } from './controls';
 import { QrCode } from './OnlineParts';
@@ -17,6 +18,12 @@ export function PlayerPassPanel({ onChange }: { onChange: () => void }) {
   const [showQr, setShowQr] = useState(false);
   const [passkey, setPasskey] = useState(false);
   const linkHandled = useRef(false);
+  const [locked, setLocked] = useState(() => hasLock());
+  /** Spielercode, zu dem noch PIN oder Passwort fehlt (Ausweis auf einem neuen Gerät öffnen). */
+  const [pendingCode, setPendingCode] = useState<string | null>(null);
+  const [secret, setSecretText] = useState('');
+  const [oldSecret, setOldSecret] = useState('');
+  const [cardInput, setCardInput] = useState('');
 
   const run = async (task: () => Promise<unknown>, done?: string) => {
     setBusy(true);
@@ -26,6 +33,7 @@ export function PlayerPassPanel({ onChange }: { onChange: () => void }) {
     try {
       const result = await task();
       setCode(storage.loadPlayerCode());
+      setLocked(hasLock());
       if (result !== false && done) setNotice(done);
       onChange();
     } catch (failure) {
@@ -38,6 +46,10 @@ export function PlayerPassPanel({ onChange }: { onChange: () => void }) {
   const adopt = (text: string) =>
     run(async () => {
       const ok = await adoptCode(text);
+      if (ok === 'secret') {
+        setPendingCode(text);
+        return false;
+      }
       if (ok) setInput('');
       return ok;
     }, t('pass.adopted'));
@@ -70,15 +82,17 @@ export function PlayerPassPanel({ onChange }: { onChange: () => void }) {
             >
               {t('pass.copy')}
             </Button>
-            <Button
-              variant="ghost"
-              disabled={busy}
-              onClick={() => {
-                if (window.confirm(t('pass.renewConfirm'))) void run(renewPlayerCode);
-              }}
-            >
-              {t('pass.renew')}
-            </Button>
+            {!locked && (
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => {
+                  if (window.confirm(t('pass.renewConfirm'))) void run(renewPlayerCode);
+                }}
+              >
+                {t('pass.renew')}
+              </Button>
+            )}
           </div>
           {showQr && <QrCode text={playerLink(code)} label={t('pass.qrLabel')} />}
         </div>
@@ -122,6 +136,111 @@ export function PlayerPassPanel({ onChange }: { onChange: () => void }) {
         <p className="text-xs text-muted">{t('pass.enterWarning')}</p>
       </form>
 
+      {pendingCode && (
+        <form
+          className="space-y-2 rounded-xl border border-line p-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void run(async () => {
+              await adoptLocked(pendingCode, secret);
+              setPendingCode(null);
+              setSecretText('');
+              setInput('');
+            }, t('pass.adopted'));
+          }}
+        >
+          <label className="block space-y-1">
+            <span className="text-sm font-medium">{t('pass.lockOpenLabel')}</span>
+            <input className="min-h-11 w-full rounded-xl border border-line bg-surface px-3" type="password" autoComplete="off" value={secret} onChange={(event) => setSecretText(event.target.value)} />
+          </label>
+          <p className="text-xs text-muted">{t('pass.lockHow')}</p>
+          <Button type="submit" variant="primary" disabled={busy || !secret}>
+            {t('pass.lockOpen')}
+          </Button>
+        </form>
+      )}
+
+      {code && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">{t('pass.lockTitle')}</p>
+          {locked ? (
+            <>
+              <p className="text-sm">{t('pass.lockOn')}</p>
+              <form
+                className="space-y-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void run(async () => {
+                    await changeSecret(oldSecret, secret);
+                    setOldSecret('');
+                    setSecretText('');
+                  }, t('pass.lockChanged'));
+                }}
+              >
+                <input className="min-h-11 w-full rounded-xl border border-line bg-surface px-3" type="password" autoComplete="off" placeholder={t('pass.lockOld')} aria-label={t('pass.lockOld')} value={oldSecret} onChange={(event) => setOldSecret(event.target.value)} />
+                <input className="min-h-11 w-full rounded-xl border border-line bg-surface px-3" type="password" autoComplete="off" placeholder={t('pass.lockNew')} aria-label={t('pass.lockNew')} value={secret} onChange={(event) => setSecretText(event.target.value)} />
+                <Button type="submit" disabled={busy || !oldSecret || !secret}>
+                  {t('pass.lockChange')}
+                </Button>
+              </form>
+              <p className="text-xs text-muted">{t('pass.lockKeepsCode')}</p>
+              <details className="space-y-2">
+                <summary className="cursor-pointer text-sm">{t('pass.lockForgot')}</summary>
+                <form
+                  className="mt-2 space-y-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void run(async () => {
+                      await resetSecret(cardInput, secret);
+                      setCardInput('');
+                      setSecretText('');
+                    }, t('pass.lockResetDone'));
+                  }}
+                >
+                  <input className="min-h-11 w-full rounded-xl border border-line bg-surface px-3" autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder={t('pass.lockCard')} aria-label={t('pass.lockCard')} value={cardInput} onChange={(event) => setCardInput(event.target.value)} />
+                  <input className="min-h-11 w-full rounded-xl border border-line bg-surface px-3" type="password" autoComplete="off" placeholder={t('pass.lockNew')} aria-label={t('pass.lockNew')} value={secret} onChange={(event) => setSecretText(event.target.value)} />
+                  <Button type="submit" disabled={busy || !cardInput || !secret}>
+                    {t('pass.lockReset')}
+                  </Button>
+                </form>
+              </details>
+            </>
+          ) : (
+            <form
+              className="space-y-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void run(async () => {
+                  await setSecret(secret);
+                  setSecretText('');
+                }, t('pass.lockSetDone'));
+              }}
+            >
+              <p className="text-xs text-muted">{t('pass.lockIntro')}</p>
+              <input className="min-h-11 w-full rounded-xl border border-line bg-surface px-3" type="password" autoComplete="new-password" placeholder={t('pass.lockNew')} aria-label={t('pass.lockNew')} value={secret} onChange={(event) => setSecretText(event.target.value)} />
+              <p className="text-xs text-muted">{t('pass.lockHow')}</p>
+              <Button type="submit" disabled={busy || sync.busy || !secret}>
+                {t('pass.lockSet')}
+              </Button>
+            </form>
+          )}
+          {emergencyCard() && (
+            <div className="space-y-1">
+              <p className="text-sm font-medium">{t('pass.cardTitle')}</p>
+              <p className="text-xs text-muted">{t('pass.cardHint')}</p>
+              <Button
+                onClick={() => {
+                  const card = emergencyCard();
+                  if (card) printEmergencyCard(card, emergencyLink(card.syncCode));
+                }}
+              >
+                {t('pass.cardPrint')}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="space-y-2">
         <p className="text-sm font-medium">{t('pass.backup')}</p>
         {sync.code ? (
@@ -163,6 +282,8 @@ export function PlayerPassPanel({ onChange }: { onChange: () => void }) {
           if (!window.confirm(t('pass.leaveConfirm'))) return;
           leavePass();
           setCode(null);
+          setLocked(false);
+          setPendingCode(null);
           setNotice(null);
           onChange();
         }}
