@@ -13,7 +13,7 @@ import {
   type PlayerPass,
 } from '@brett-und-blatt/ui/sync';
 import { GAME_SERVER } from './online';
-import { storage } from './storage';
+import { storage, type Profile } from './storage';
 
 /** Spielerausweis dieses Geräts (W-052); die Logik liegt in `@brett-und-blatt/ui/sync`. */
 export const passServer = () => GAME_SERVER || null;
@@ -39,6 +39,12 @@ export function passChanged(): void {
   const pass = readPass();
   if (pass.code) void updatePlayerLock(passServer, pass.code, pass).catch(() => undefined);
   scheduleSync(passBlock);
+}
+
+/** Speichert das eigene Profil und bringt Schloss und Sicherung auf den neuen Stand (#136). Der einzige Weg, das eigene Profil zu ändern. */
+export function saveOwnProfile(profile: Profile): void {
+  storage.saveProfile(profile);
+  passChanged();
 }
 
 export async function createPlayerCode(): Promise<void> {

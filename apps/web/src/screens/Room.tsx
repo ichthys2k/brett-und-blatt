@@ -8,6 +8,7 @@ import { announceAvatar } from '../lib/avatar-sounds';
 import { describeTime, levelLabel } from '../lib/format';
 import { requestNotificationPermission } from '../lib/notifications';
 import { GAME_SERVER, useRoomConnection, type RoomConnection, type RoomState } from '../lib/online';
+import { saveOwnProfile } from '../lib/playerPass';
 import { games, loadGame, type LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
@@ -74,7 +75,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             initial={null}
             submitLabel={t('online.enter')}
             onSave={(next) => {
-              storage.saveProfile(next);
+              saveOwnProfile(next);
               setProfile(next);
             }}
           />
@@ -529,7 +530,7 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
               canEdit={member.id === state.you ? isHost || (!member.nameFixed && !lobby.namesLocked) : isHost}
               onSave={(profile) => {
                 if (member.id === state.you) {
-                  storage.saveProfile(profile);
+                  saveOwnProfile(profile);
                   connection.rename(profile);
                 } else {
                   send({ type: 'renameMember', memberId: member.id, name: profile.name, avatar: profile.avatar });
