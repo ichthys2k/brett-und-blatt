@@ -1,4 +1,4 @@
-import type { SeatConfig } from '@brett-und-blatt/engine';
+import type { Result, SeatConfig } from '../packages/engine/src';
 import { describe, expect, it, vi } from 'vitest';
 import { emptyBook, localMode, mergeBooks, outcomeFor, recordGame, sameBooks, sanitizeBook, strongestBot, totals, type PlayedGame } from '../apps/web/src/lib/partiebuch';
 import { createPassBook, type Store } from '../apps/web/src/lib/passes';
@@ -94,7 +94,7 @@ describe('Recorder: Zeilen aus einem Partieende (#142)', () => {
 
   it('online nur der eigene Platz, Zuschauer nichts, Turnier als eigener Modus', () => {
     const seats = [human('A'), human('B')];
-    const result = { kind: 'win', winners: [0] } as const;
+    const result: Result = { kind: 'win', winners: [0] };
     expect(rowsFor({ ...base, result, seats, online: { yourSeat: 0, tournament: false } }).map((r) => [r.game.mode, r.game.outcome])).toEqual([['online', 'win']]);
     expect(rowsFor({ ...base, result, seats, online: { yourSeat: 1, tournament: true } }).map((r) => [r.game.mode, r.game.outcome])).toEqual([['tournament', 'loss']]);
     expect(rowsFor({ ...base, result, seats, online: { yourSeat: null, tournament: false } })).toEqual([]);
