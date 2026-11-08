@@ -9,6 +9,7 @@ vi.mock('../apps/web/src/lib/storage', () => ({
     deviceToken: () => 'token',
     loadPlayerCode: () => '🦊🐻🐸🐙',
     loadTournaments: () => [],
+    loadPassKey: () => null,
   },
 }));
 vi.mock('../apps/web/src/lib/online', () => ({ GAME_SERVER: 'http://test' }));
