@@ -1,4 +1,5 @@
 import { deriveKeys, open, seal, type VaultKeys } from './crypto';
+import { parsePassKey } from './pass';
 import { fetchRemote, putRemote, SyncError, type SyncBlock } from './vault';
 
 /**
@@ -21,6 +22,8 @@ export interface PlayerPass {
   code: string | null;
   /** Turniere, die dieser Spieler kennt; so findet ein neues Gerät sie ohne Link wieder. */
   tournaments?: KnownTournament[];
+  /** Passschlüssel des Spielerpasses (#137); aus ihm leiten sich alle weiteren Blöcke ab. */
+  passKey?: string;
 }
 
 export interface KnownTournament {
@@ -103,7 +106,8 @@ export function parsePlayerCode(input: string): string | null {
 /** Macht aus fremden Daten einen gültigen Ausweis oder nichts. */
 export function sanitizePlayerPass(value: unknown): PlayerPass | null {
   if (!value || typeof value !== 'object') return null;
-  const { token, name, avatar, code, tournaments } = value as Record<string, unknown>;
+  const { token, name, avatar, code, tournaments, passKey } = value as Record<string, unknown>;
+  const key = parsePassKey(passKey);
   const known = sanitizeTournaments(tournaments);
   if (typeof token !== 'string' || !/^[\w-]{32,100}$/.test(token)) return null;
   return {
@@ -112,10 +116,12 @@ export function sanitizePlayerPass(value: unknown): PlayerPass | null {
     avatar: typeof avatar === 'string' ? avatar.slice(0, 20) : '',
     code: typeof code === 'string' ? parsePlayerCode(code) : null,
     ...(known.length > 0 ? { tournaments: known } : {}),
+    ...(key ? { passKey: key } : {}),
   };
 }
 
 const withTournaments = (tournaments: KnownTournament[]) => (tournaments.length > 0 ? { tournaments } : {});
+const withPassKey = (passKey: string | undefined) => (passKey ? { passKey } : {});
 const sortedCodes = (pass: PlayerPass) => (pass.tournaments ?? []).map((item) => item.code).sort();
 
 /** Der Ausweis als Block der gemeinsamen Sicherung: Kennung vom Server, der eigene Name bleibt, falls vorhanden. */
@@ -133,8 +139,10 @@ export function playerBlock(salt: string, serverUrl: () => string | null, store:
       avatar: local.name ? local.avatar : remote.avatar,
       code: remote.code ?? local.code,
       ...withTournaments(mergeTournaments(local.tournaments, remote.tournaments)),
+      // Der Schlüssel, den der Server kennt, gilt: Hat ein zweites Gerät unabhängig einen eigenen erzeugt, übernimmt es den gemeinsamen.
+      ...withPassKey(remote.passKey ?? local.passKey),
     }),
-    same: (a, b) => a.token === b.token && a.name === b.name && a.avatar === b.avatar && a.code === b.code && JSON.stringify(sortedCodes(a)) === JSON.stringify(sortedCodes(b)),
+    same: (a, b) => a.token === b.token && a.name === b.name && a.avatar === b.avatar && a.code === b.code && a.passKey === b.passKey && JSON.stringify(sortedCodes(a)) === JSON.stringify(sortedCodes(b)),
   };
 }
 

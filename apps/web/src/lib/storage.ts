@@ -16,6 +16,7 @@ export interface KnownTournament {
 }
 const DEVICE_KEY = 'brett-und-blatt:geraet';
 const PLAYER_CODE_KEY = 'brett-und-blatt:spielercode';
+const PASS_KEY_KEY = 'brett-und-blatt:passschluessel';
 
 export interface Profile {
   name: string;
@@ -97,11 +98,18 @@ export const storage = {
     remove(DEVICE_KEY);
     remove(PROFILE_KEY);
     remove(PLAYER_CODE_KEY);
+    remove(PASS_KEY_KEY);
     remove(TOURNAMENTS_KEY);
   },
   loadPlayerCode: () => {
     const code = read<string>(PLAYER_CODE_KEY);
     return typeof code === 'string' ? code : null;
   },
+  /** Passschlüssel des Spielerpasses (#137), nur auf diesem Gerät und hinter dem Ausweis. */
+  loadPassKey: () => {
+    const key = read<string>(PASS_KEY_KEY);
+    return typeof key === 'string' ? key : null;
+  },
+  savePassKey: (key: string | null) => (key ? write(PASS_KEY_KEY, key) : remove(PASS_KEY_KEY)),
   savePlayerCode: (code: string | null) => (code ? write(PLAYER_CODE_KEY, code) : remove(PLAYER_CODE_KEY)),
 };

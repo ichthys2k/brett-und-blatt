@@ -5,7 +5,7 @@ import { ProfileForm, QrCode } from '../components/OnlineParts';
 import { t } from '../i18n';
 import { notifyTurn, requestNotificationPermission } from '../lib/notifications';
 import { GAME_SERVER } from '../lib/online';
-import { passChanged } from '../lib/playerPass';
+import { passChanged, saveOwnProfile } from '../lib/playerPass';
 import { findGame, loadGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
@@ -227,7 +227,7 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
             initial={null}
             submitLabel={t('online.enter')}
             onSave={(next) => {
-              storage.saveProfile(next);
+              saveOwnProfile(next);
               setProfile(next);
             }}
           />

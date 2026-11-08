@@ -7,7 +7,7 @@ import { PlayerPassPanel } from '../components/PlayerPassPanel';
 import { TournamentsPanel } from '../components/TournamentsPanel';
 import { t } from '../i18n';
 import { GAME_SERVER, createRoom, roomExists, useOpenRooms } from '../lib/online';
-import { passChanged } from '../lib/playerPass';
+import { saveOwnProfile } from '../lib/playerPass';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 
@@ -67,8 +67,7 @@ export function Online() {
             initial={profile}
             submitLabel="OK"
             onSave={(next) => {
-              storage.saveProfile(next);
-              passChanged();
+              saveOwnProfile(next);
               setProfile(next);
               setEditing(false);
             }}
