@@ -1,3 +1,4 @@
+import { bestOfStage } from './best-of';
 import { MATCH_MIN_TIME_MS, type TournamentMatch, type TournamentSnapshot } from './types';
 
 /**
@@ -24,7 +25,8 @@ export function isHeld(s: TournamentSnapshot, match: TournamentMatch): boolean {
 
 /** Spätester Zeitpunkt einer offenen Partie: Frist der Runde, mindestens eine Partiedauer nach dem Öffnen. */
 export function eveningDueAt(s: TournamentSnapshot, match: TournamentMatch): number {
-  const windowMs = (s.settings.minutes ?? 0) * 60_000;
+  // Bei „Best of N“ bekommt eine Begegnung Zeit für alle möglichen Partien.
+  const windowMs = (s.settings.minutes ?? 0) * 60_000 * bestOfStage(s, match.stage);
   return Math.max(s.stages[match.stage]?.deadline ?? 0, (match.openedAt ?? 0) + (windowMs || MATCH_MIN_TIME_MS));
 }
 
@@ -50,7 +52,7 @@ export function startStage(s: TournamentSnapshot, index: number, now: number): v
   }
   const rounds = Math.max(1, ...perPlayer.values());
   stage.startedAt = now;
-  stage.deadline = now + rounds * (s.settings.minutes ?? 0) * 60_000;
+  stage.deadline = now + rounds * (s.settings.minutes ?? 0) * 60_000 * bestOfStage(s, index);
   for (const m of s.matches) if (m.stage === index && m.status === 'open') m.openedAt = now;
 }
 

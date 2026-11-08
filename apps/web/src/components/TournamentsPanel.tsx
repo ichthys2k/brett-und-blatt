@@ -1,5 +1,5 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, TOURNAMENT_MAX_FIELDS, isTableGame, isTournamentGame, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, TOURNAMENT_MAX_FIELDS, isTableGame, isTournamentGame, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
@@ -62,6 +62,9 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [tableSize, setTableSize] = useState(4);
   const [rounds, setRounds] = useState(4);
   const [lowWins, setLowWins] = useState(false);
+  /** Best of N (Stufe 3 Teil 5): Partien je Begegnung, eigens für die K.-o.-Phase (0 = wie oben). */
+  const [bestOf, setBestOf] = useState(1);
+  const [bestOfKo, setBestOfKo] = useState(0);
   const tables = format === 'tables';
   const gameList = tables ? tableGames : tournamentGames;
   // Beim Wechsel der Form ein passendes Spiel wählen.
@@ -123,8 +126,9 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
     setError(null);
     try {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
+      const series = !tables && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
       const tableSettings = tables ? { tableSize: size, rounds, ...(local && lowWins ? { lowWins: true } : {}) } : {};
-      const common = { name: name.trim(), format, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...tableSettings };
+      const common = { name: name.trim(), format, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...tableSettings, ...series };
       const many = format === 'league' && multi;
       const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
@@ -303,6 +307,34 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
                   {t('tournament.lowWins')}
                 </label>
               )}
+            </div>
+          )}
+          {!tables && (!local || result === 'winner') && (
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block space-y-1 text-sm">
+                <span>{t('tournament.bestOf')}</span>
+                <select className={FIELD} value={bestOf} onChange={(e) => setBestOf(Number(e.target.value))}>
+                  {BEST_OF_CHOICES.map((n) => (
+                    <option key={n} value={n}>
+                      {n === 1 ? t('tournament.bestOfOne') : t('tournament.bestOfN', { n })}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {format === 'world' && (
+                <label className="block space-y-1 text-sm">
+                  <span>{t('tournament.bestOfKo')}</span>
+                  <select className={FIELD} value={bestOfKo} onChange={(e) => setBestOfKo(Number(e.target.value))}>
+                    <option value={0}>{t('tournament.bestOfKoSame')}</option>
+                    {BEST_OF_CHOICES.map((n) => (
+                      <option key={n} value={n}>
+                        {n === 1 ? t('tournament.bestOfOne') : t('tournament.bestOfN', { n })}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {(bestOf > 1 || bestOfKo > 1) && <p className="col-span-2 text-xs text-muted">{t('tournament.bestOfHint')}</p>}
             </div>
           )}
           {format === 'league' && (

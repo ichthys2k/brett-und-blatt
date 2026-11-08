@@ -1,3 +1,4 @@
+import { bestOfStage } from './best-of';
 import type { Options } from '@brett-und-blatt/engine';
 import { disciplineOf } from './disciplines';
 import { eveningDueAt, isEvening } from './evening';
@@ -13,7 +14,7 @@ import { MATCH_MIN_TIME_MS, READY_WINDOW_MS, type MatchOutcome, type MatchSide, 
 /** Was eine Spielrunde zurückmeldet. */
 export type RoomReport =
   /** Gewinnerplatz der Partie oder null bei Remis. */
-  | { kind: 'played'; winner: 0 | 1 | null }
+  | { kind: 'played'; winner: 0 | 1 | null; score?: [number, number] }
   /** Nur ein Spieler kam (`winner`), oder gar keiner (null). */
   | { kind: 'noShow'; winner: 0 | 1 | null }
   /** Tischrunde: Platz je Sitz (0 = erster); `walkover`, wenn zu wenige kamen. */
@@ -28,6 +29,8 @@ export interface MatchRoomRequest {
   /** Kennungen in Platzreihenfolge; nach einem Remis im K.-o. getauscht. Tischrunden: einer je Sitz. */
   tokens: string[];
   label: string;
+  /** Best of N: der Raum spielt bis zu so viele Partien (nur wenn größer als 1). */
+  bestOf?: number;
 }
 
 export function bothReady(match: TournamentMatch, now: number): boolean {
@@ -58,7 +61,8 @@ export function roomRequest(s: TournamentSnapshot, match: TournamentMatch): Matc
   const seats: [string, string] = match.replays % 2 === 1 ? [tokens[1], tokens[0]] : [tokens[0], tokens[1]];
   // Spieleabend: das Spiel des Spieltags, mit seinen Standardoptionen.
   const discipline = disciplineOf(s, match.stage);
-  return { match: match.id, gameId: discipline ?? s.settings.gameId, time: match.replays > 0 ? 'fast' : s.settings.time, options: discipline ? {} : (s.settings.options ?? {}), tokens: seats, label: s.settings.name };
+  const bestOf = bestOfStage(s, match.stage);
+  return { match: match.id, gameId: discipline ?? s.settings.gameId, time: match.replays > 0 ? 'fast' : s.settings.time, options: discipline ? {} : (s.settings.options ?? {}), tokens: seats, label: s.settings.name, ...(bestOf > 1 ? { bestOf } : {}) };
 }
 
 /** Der Raum zählt nach Plätzen; nach einem getauschten Entscheidungsspiel sind das andere Seiten. */

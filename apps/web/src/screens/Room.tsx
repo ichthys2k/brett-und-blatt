@@ -106,6 +106,11 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
     connection.leave();
     navigate(room.match ? paths.tournament(room.match.tournament) : paths.online);
   };
+  /** Name am Lobby-Platz, für den Stand einer Serie. */
+  const seatName = (index: number) => {
+    const seat = room.lobby.seats[index];
+    return (seat?.kind === 'human' && room.members.find((m) => m.id === seat.memberId)?.name) || '?';
+  };
   const toTournament = room.match && (
     <Button className="w-full" onClick={() => navigate(paths.tournament(room.match!.tournament))}>
       🏆 {t('tournament.backToPage')}
@@ -139,7 +144,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             yourSeat: session.yourSeat,
             displays: room.displays ?? 0,
             isHost,
-            ...(room.match ? { finishedNote: t('tournament.matchOver') } : {}),
+            ...(room.match ? { finishedNote: room.match.series && !room.match.series.done ? t('tournament.room.seriesNext') : t('tournament.matchOver') } : {}),
             onRestart: (rotate: boolean) => connection.send({ type: 'start', rotate }),
             onLobby: () => connection.send({ type: 'toLobby' }),
             onLeave: leave,
@@ -154,6 +159,11 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             ),
             extra: (
               <>
+                {room.match?.series && (
+                  <p className="rounded-xl bg-accent/10 px-3 py-2 text-center text-sm font-semibold">
+                    🔁 {t('tournament.room.series', { n: room.match.series.bestOf, a: seatName(0), b: seatName(1), sa: room.match.series.score[0], sb: room.match.series.score[1] })}
+                  </p>
+                )}
                 {toTournament}
                 <GameSeats session={session} seatLabel={loaded.ui.seatLabel} room={room} send={connection.send.bind(connection)} />
                 <ModeratorEntry session={session} seatLabel={loaded.ui.seatLabel} room={room} you={state.you} capabilities={roomCapabilities(isHost)} connection={connection} />
