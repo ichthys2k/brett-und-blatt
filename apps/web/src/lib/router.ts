@@ -73,7 +73,7 @@ export function parseRoute(hash: string): Route {
 export const paths = {
   /** Hauptmenü (#184). */
   menu: '#/',
-  /** Spielübersicht („Einzelspieler“). */
+  /** Spielübersicht („Lokales Spiel“). */
   home: '#/einzelspieler',
   setup: (gameId: string, params?: Record<string, string>) => {
     const base = `#/neu/${encodeURIComponent(gameId)}`;

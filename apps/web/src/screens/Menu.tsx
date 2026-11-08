@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { TavernScene } from '../components/TavernScene';
+import { findGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 import './menu.css';
 
 /**
- * Hauptmenü (#184, Schritt 1): eine Taverne (Bild, #191) als Hintergrund und ein Rahmen mit fünf Einträgen,
+ * Hauptmenü (#184, Schritt 1): eine Taverne (Bild, #191) als Hintergrund und ein Rahmen mit vier Einträgen,
  * wie das Menü von Warcraft III. Die Szene (`TavernScene`) ist reiner Schmuck.
  */
 const ENTRIES: readonly { id: string; label: string; hint: string; to: string }[] = [
-  { id: 'single', label: 'Einzelspieler', hint: 'Allein gegen den Computer oder zu mehreren an einem Gerät.', to: paths.home },
-  { id: 'multi', label: 'Mehrspieler', hint: 'Offene Spiele, Spiel eröffnen, mit Code beitreten.', to: paths.online },
+  { id: 'single', label: 'Lokales Spiel', hint: 'Allein gegen den Computer oder zu mehreren an einem Gerät.', to: paths.home },
+  { id: 'multi', label: 'Online Spiel', hint: 'Offene Spiele, Spiel eröffnen, mit Code beitreten.', to: paths.online },
   { id: 'tournaments', label: 'Turniere', hint: 'Turniere finden, anlegen und verfolgen.', to: paths.tournaments },
-  { id: 'profile', label: 'Profil', hint: 'Name, Wappen, Spielerpass und Sicherung.', to: paths.pass },
   { id: 'options', label: 'Optionen', hint: 'Ton, Musik, Aussehen und Updates.', to: paths.sound },
 ];
 
@@ -20,6 +20,7 @@ export function Menu() {
   const [hint, setHint] = useState('');
   const profile = storage.loadProfile();
   const resume = storage.loadActive();
+  const resumeGame = resume ? findGame(resume.config.gameId) : undefined;
 
   return (
     <div className="bub-menu">
@@ -32,8 +33,14 @@ export function Menu() {
 
       <nav className="bub-menu-frame" aria-label="Hauptmenü">
         {resume ? (
-          <button type="button" className="bub-menu-button" data-resume onClick={() => navigate(paths.play)}>
+          <button type="button" className="bub-menu-button" data-resume onClick={() => navigate(paths.play)} aria-label={resumeGame ? `Weiterspielen: ${resumeGame.name}` : 'Weiterspielen'}>
             Weiterspielen
+            {resumeGame && (
+              <span className="bub-menu-sub">
+                <span aria-hidden="true">{resumeGame.emoji} </span>
+                {resumeGame.name}
+              </span>
+            )}
           </button>
         ) : null}
         {ENTRIES.map((entry) => (
@@ -55,12 +62,19 @@ export function Menu() {
         </p>
       </nav>
 
-      <div className="bub-menu-plaque" role="status" aria-label={`Angemeldet als ${profile?.name ?? 'niemand'}`}>
+      <button
+        type="button"
+        className="bub-menu-plaque bub-menu-plaque-link"
+        aria-label={profile ? `Profil von ${profile.name} öffnen` : 'Profil anlegen'}
+        title="Name, Wappen, Spielerpass und Sicherung"
+        onClick={() => navigate(paths.pass)}
+      >
         <span className="bub-menu-shield" aria-hidden="true">
           {profile?.avatar ?? '🛡️'}
         </span>
         <span className="bub-menu-name">{profile?.name ?? 'Noch kein Name'}</span>
-      </div>
+        <span className="bub-menu-switch">Profil</span>
+      </button>
 
       <footer className="bub-menu-foot">
         <a href="#/impressum">Impressum</a> · <a href="#/datenschutz">Datenschutz</a>
