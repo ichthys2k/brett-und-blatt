@@ -1,4 +1,4 @@
-import { registerPassBlock } from '@brett-und-blatt/ui/sync';
+import { onPassSyncRequest, registerPassBlock } from '@brett-und-blatt/ui/sync';
 import { onFavoritesChanged } from './favorites';
 import { passSyncSoon } from './playerPass';
 import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
@@ -60,6 +60,8 @@ export function registerWebPassBlocks(): void {
     same: sameItems,
   });
   onFavoritesChanged(passSyncSoon);
+  // Spiele melden sich mit eigenen Blöcken (Narrenhof, Drachenspiel) und bitten um Abgleich.
+  onPassSyncRequest(() => passSyncSoon());
   // Änderungen an Musik, Aussehen & Co. werden beim nächsten Abgleich bemerkt: beim Start und wenn die Seite in den Hintergrund geht.
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') passSyncSoon(500);
