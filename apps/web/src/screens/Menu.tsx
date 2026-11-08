@@ -40,7 +40,18 @@ export function Menu() {
           <span className="bub-menu-window" />
           <span className="bub-menu-window" />
         </div>
+        <div className="bub-menu-layer bub-menu-beams">
+          <span />
+          <span />
+          <span />
+        </div>
         <div className="bub-menu-layer bub-menu-glow" />
+        <div className="bub-menu-layer bub-menu-hearth" />
+        <div className="bub-menu-layer bub-menu-motes">
+          {Array.from({ length: 14 }, (_, i) => (
+            <span key={i} style={{ left: `${(i * 37) % 97}%`, animationDelay: `${(i * 1.7) % 9}s`, animationDuration: `${9 + (i % 5) * 2}s` }} />
+          ))}
+        </div>
         <div className="bub-menu-layer bub-menu-table">
           <span className="bub-menu-card" />
           <span className="bub-menu-card" />

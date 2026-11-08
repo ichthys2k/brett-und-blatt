@@ -15,6 +15,11 @@ export function TavernPage({ title, subtitle, children, back = paths.menu, wide 
           <span className="bub-menu-window" />
           <span className="bub-menu-window" />
         </div>
+        <div className="bub-menu-layer bub-menu-beams">
+          <span />
+          <span />
+          <span />
+        </div>
         <div className="bub-menu-layer bub-menu-glow" />
         <div className="bub-menu-shade" style={{ background: 'linear-gradient(#140d0799, #140d07dd)' }} />
       </div>

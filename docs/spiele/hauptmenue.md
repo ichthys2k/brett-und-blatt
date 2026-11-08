@@ -35,3 +35,8 @@ Entwürfe: Design-Canvas „Hauptmenü – Entwürfe“ (https://claude.ai/artif
 
 - Bildmaterial für die Szene (Schichten der Taverne): Illustration oder KI-Bild, Kennzeichnung in `THIRD_PARTY.md`.
 - Offene Fragen aus dem Online-Entwurf: Umbenennung PIN → „Geheimzahl“, Passkey → „Fingerabdruck-Schlüssel“; Regel, wer beim Laden eines Passes gewinnt; Voreinstellung „offen für alle“ bei „Neues Spiel“.
+
+## Stand der Umsetzung
+
+- **Schritt 1–7 umgesetzt** (8.11.2026, Zweig `ccr-e6a37a08-zveo47`): Hauptmenü `#/` (`screens/Menu.tsx`, `menu.css`), gemeinsame Hülle `components/TavernPage.tsx` mit dunklen Farb-Tokens im Rahmen, Profil (`#/pass`, Sicherheit aufklappbar), Mehrspieler (`#/online`), Turniere (`#/turniere`, Anlegen in drei Schritten), Einzelspieler (`#/einzelspieler`), Optionen (`#/ton`). Szene aus CSS-Schichten mit Parallaxe, flackerndem Licht, Kaminglut und Funken; steht still bei „Bewegung reduzieren“ und auf schmalen Bildschirmen.
+- **Offen:** Liste „Offen zum Mitmachen“ für Turniere (braucht ein Verzeichnis auf dem Server); echtes Wappen in der Profil-Plakette; Bildmaterial statt CSS-Szene; Aussehen „Taverne“ für Spiel- und Lobby-Bildschirme (Play, Room, Setup) noch nicht auf den neuen Rahmen umgestellt; im Browser noch nicht angesehen.

@@ -237,3 +237,78 @@
 }
 .bub-tav-frame h2 { font-family: Almendra, Georgia, serif; }
 .bub-tav-inner[data-wide] { max-width: 56rem; }
+
+/* Schritt 7: Balken, Kaminglut, flackerndes Laternenlicht, schwebende Funken; Rahmen mit Nieten */
+.bub-menu-beams span {
+  position: absolute;
+  top: 0;
+  width: 5%;
+  height: 100%;
+  background: linear-gradient(90deg, #00000066, #2b1d1055 40%, #00000077);
+}
+.bub-menu-beams span:nth-child(1) { left: 20%; }
+.bub-menu-beams span:nth-child(2) { left: 43%; }
+.bub-menu-beams span:nth-child(3) { left: 66%; }
+.bub-menu-beams::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 7%;
+  background: linear-gradient(#0b0704, #2b1d10);
+  border-bottom: 3px solid #4a331b;
+}
+.bub-menu-glow { animation: bub-flicker 4.5s ease-in-out infinite; }
+.bub-menu-hearth {
+  background: radial-gradient(ellipse 22% 16% at 14% 96%, #ff9a3c99 0, #ff6a1a44 45%, transparent 75%);
+  animation: bub-flicker 3.1s ease-in-out infinite reverse;
+}
+.bub-menu-motes span {
+  position: absolute;
+  bottom: -2%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffd27acc;
+  box-shadow: 0 0 6px #ffb03a;
+  opacity: 0;
+  animation: bub-rise linear infinite;
+}
+@keyframes bub-flicker {
+  0%, 100% { opacity: 1; }
+  38% { opacity: 0.82; }
+  62% { opacity: 0.95; }
+  80% { opacity: 0.78; }
+}
+@keyframes bub-rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  12% { opacity: 0.9; }
+  100% { transform: translate(24px, -78vh); opacity: 0; }
+}
+.bub-menu-frame,
+.bub-tav-frame { position: relative; }
+.bub-menu-frame::before,
+.bub-menu-frame::after,
+.bub-tav-frame::before,
+.bub-tav-frame::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e8c887, #6b4f26);
+  box-shadow: 0 1px 2px #000a;
+}
+.bub-menu-frame::before, .bub-tav-frame::before { left: 8px; }
+.bub-menu-frame::after, .bub-tav-frame::after { right: 8px; }
+.bub-menu-button:active { transform: translateY(1px); }
+.bub-menu-button:focus-visible { outline: 3px solid #f2d27a; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .bub-menu-glow, .bub-menu-hearth { animation: none; }
+  .bub-menu-motes { display: none; }
+}
+@media (max-width: 760px) {
+  .bub-menu-motes { display: none; }
+}
