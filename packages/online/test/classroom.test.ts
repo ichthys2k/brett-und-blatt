@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CLASS_CODE_LENGTH, CLASS_MAX_MEMBERS, classView, configureClass, createClass, decide, joinClass, leaveClass, parseClassCode, randomClassCode, removeMember, setLead, updateMember, type ClassState } from '../src/classroom';
+import { CLASS_CODE_LENGTH, CLASS_MAX_MEMBERS, classView, configureClass, createClass, decide, joinClass, leaveClass, parseClassCode, putCard, randomClassCode, removeMember, setLead, updateMember, type ClassState } from '../src/classroom';
 
 const T = (n: number) => `token-${String(n).padStart(8, '0')}`;
 const person = (n: number, name = `Kind${n}`) => ({ token: T(n), name, avatar: '🦊' });
@@ -107,5 +107,42 @@ describe('Klasse', () => {
     const me = classView(state, T(1)).members.find((m) => m.name === 'Neu');
     expect(me?.avatar).toBe('🐻');
     expect(updateMember(state, T(77), { name: 'X' }, 3)).toEqual({ error: expect.any(String) });
+  });
+});
+
+describe('Klassenkarten (#151)', () => {
+  const full = { stamps: [{ gameId: 'chess', kinds: ['first', 'win', 'bogus'] }, { gameId: '<x>', kinds: ['win'] }], trophies: [{ gameId: 'chess', count: 3 }, { gameId: 'chess', count: -1 }], favorites: ['skat', '../x'] };
+
+  it('legt eine geprüfte Karte ab und zeigt sie nur Mitgliedern', () => {
+    const state = fresh();
+    joinClass(state, person(1), 2);
+    expect(putCard(state, T(1), full, 5)).toEqual({ ok: true });
+    const card = classView(state, T(0)).members.find((m) => m.name === 'Kind1')?.card;
+    expect(card?.stamps).toEqual([{ gameId: 'chess', kinds: ['first', 'win'] }]);
+    expect(card?.trophies).toEqual([{ gameId: 'chess', count: 3 }]);
+    expect(card?.favorites).toEqual(['skat']);
+    expect(classView(state, T(99)).members).toEqual([]);
+    expect(putCard(state, T(99), full, 6)).toEqual({ error: expect.any(String) });
+  });
+
+  it('lässt weg, was die Leitung nicht zeigen will – auch nachträglich', () => {
+    const state = fresh();
+    joinClass(state, person(1), 2);
+    putCard(state, T(1), full, 5);
+    expect(configureClass(state, T(1), { sections: { trophies: false } }, 6)).toEqual({ error: expect.any(String) });
+    expect(configureClass(state, T(0), { sections: { trophies: false, favorites: false } }, 6)).toEqual({ ok: true });
+    const card = classView(state, T(0)).members.find((m) => m.name === 'Kind1')?.card;
+    expect(card?.trophies).toBeUndefined();
+    expect(card?.favorites).toBeUndefined();
+    expect(card?.stamps).toBeDefined();
+    putCard(state, T(1), full, 7);
+    expect(classView(state, T(0)).members.find((m) => m.name === 'Kind1')?.card?.trophies).toBeUndefined();
+  });
+
+  it('enthält keine Geräte-Kennung', () => {
+    const state = fresh();
+    joinClass(state, person(1), 2);
+    putCard(state, T(1), full, 5);
+    expect(JSON.stringify(classView(state, T(0)))).not.toContain('token-');
   });
 });

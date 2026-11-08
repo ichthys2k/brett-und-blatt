@@ -17,6 +17,7 @@ import {
   joinClass,
   leaveClass,
   mayDissolve,
+  putCard,
   parseClassCode,
   randomClassCode,
   removeMember,
@@ -796,6 +797,9 @@ export class ClassRoom extends DurableObject<Env> {
       case 'update':
         outcome = updateMember(state, token, { name: body.name, avatar: body.avatar, ...('crest' in body ? { crest: body.crest } : {}) }, now);
         break;
+      case 'card':
+        outcome = putCard(state, token, body.card, now);
+        break;
       case 'leave':
         outcome = leaveClass(state, token);
         break;
@@ -810,7 +814,7 @@ export class ClassRoom extends DurableObject<Env> {
         outcome = setLead(state, token, body.id, body.lead === true);
         break;
       case 'configure':
-        outcome = configureClass(state, token, { name: body.name, open: body.open, approval: body.approval }, now);
+        outcome = configureClass(state, token, { name: body.name, open: body.open, approval: body.approval, sections: body.sections }, now);
         break;
       case 'dissolve':
         if (!mayDissolve(state, token)) return reply(403, { error: 'Das darf nur die Leitung.' });

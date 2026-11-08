@@ -2,7 +2,9 @@ import type { ClassView } from '@brett-und-blatt/online';
 import { serializeCrest } from '@brett-und-blatt/engine';
 import { currentCrest, hasCrest } from './crestStore';
 import { GAME_SERVER } from './server';
+import { buildSnapshot } from './passShare';
 import { storage } from './storage';
+import type { CardSection, ClassCard } from '@brett-und-blatt/online';
 
 /*
  * Klassen im Browser (#150): Aufrufe an den Spieleserver und die Merkliste dieses Passes.
@@ -73,4 +75,40 @@ export async function classAct(code: string, action: string, extra: Record<strin
   } catch {
     return { ok: false, status: 0, error: 'Keine Verbindung zum Spieleserver.' };
   }
+}
+
+const HIDE_KEY = 'brett-und-blatt:klassen-ausblenden';
+/** Teile, die dieses Mitglied den anderen nicht zeigen will (dieser Pass, nur weglassen). */
+export function hiddenSections(): CardSection[] {
+  try {
+    const list = JSON.parse(window.localStorage.getItem(HIDE_KEY) ?? '[]');
+    return Array.isArray(list) ? list.filter((x): x is CardSection => x === 'stamps' || x === 'trophies' || x === 'favorites') : [];
+  } catch {
+    return [];
+  }
+}
+export function setSectionHidden(section: CardSection, hidden: boolean): void {
+  const next = hiddenSections().filter((x) => x !== section);
+  if (hidden) next.push(section);
+  try {
+    window.localStorage.setItem(HIDE_KEY, JSON.stringify(next));
+  } catch {
+    // ohne Speicher gilt die Wahl nur bis zum Schließen
+  }
+}
+
+/** Die eigene Klassenkarte: nur, was die Klasse erlaubt und das Mitglied nicht ausgeblendet hat. */
+export function buildClassCard(allowed: Record<CardSection, boolean>): Omit<ClassCard, 'at'> {
+  const hidden = hiddenSections();
+  const use = (['stamps', 'trophies', 'favorites'] as const).filter((section) => allowed[section] && !hidden.includes(section));
+  const snapshot = buildSnapshot(use);
+  const card: Omit<ClassCard, 'at'> = {};
+  if (snapshot?.stamps) card.stamps = snapshot.stamps;
+  if (snapshot?.trophies) {
+    const counts = new Map<string, number>();
+    for (const trophy of snapshot.trophies) counts.set(trophy.gameId, (counts.get(trophy.gameId) ?? 0) + 1);
+    card.trophies = [...counts].map(([gameId, count]) => ({ gameId, count }));
+  }
+  if (snapshot?.favorites) card.favorites = snapshot.favorites;
+  return card;
 }

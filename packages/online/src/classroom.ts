@@ -1,4 +1,5 @@
 import { ROOM_EMOJIS } from './codes';
+import { DEFAULT_CARD_SECTIONS, parseSections, sanitizeCard, type CardSections, type ClassCard } from './classcard';
 import { cleanAvatar, cleanName, crestField } from './names';
 
 /*
@@ -39,6 +40,8 @@ export interface ClassMember {
   crest?: string;
   lead: boolean;
   joinedAt: number;
+  /** Spielstand-Schnappschuss für die anderen Mitglieder (#151). */
+  card?: ClassCard;
 }
 export interface ClassPending {
   id: string;
@@ -54,6 +57,8 @@ export interface ClassState {
   open: boolean;
   /** Müssen Beitritte bestätigt werden? */
   approval: boolean;
+  /** Was die Klassenkarten zeigen dürfen (Vorgabe der Leitung). Alte Klassen ohne Angabe zeigen alles. */
+  sections?: CardSections;
   createdAt: number;
   lastActive: number;
   /** Mitglieder nach Geräte-Kennung. */
@@ -71,7 +76,8 @@ export interface ClassView {
   lead: boolean;
   /** Ich warte auf Bestätigung. */
   waiting: boolean;
-  members: Pick<ClassMember, 'id' | 'name' | 'avatar' | 'crest' | 'lead'>[];
+  sections: CardSections;
+  members: Pick<ClassMember, 'id' | 'name' | 'avatar' | 'crest' | 'lead' | 'card'>[];
   /** Nur für die Leitung. */
   pending: Pick<ClassPending, 'id' | 'name' | 'avatar'>[];
 }
@@ -189,7 +195,7 @@ export function setLead(state: ClassState, token: unknown, id: unknown, lead: bo
   return ok;
 }
 
-export function configureClass(state: ClassState, token: unknown, change: { name?: unknown; open?: unknown; approval?: unknown }, now: number): Outcome {
+export function configureClass(state: ClassState, token: unknown, change: { name?: unknown; open?: unknown; approval?: unknown; sections?: unknown }, now: number): Outcome {
   const denied = mustLead(state, token);
   if (denied) return denied;
   if (change.name !== undefined) {
@@ -199,12 +205,31 @@ export function configureClass(state: ClassState, token: unknown, change: { name
   }
   if (typeof change.open === 'boolean') state.open = change.open;
   if (typeof change.approval === 'boolean') state.approval = change.approval;
+  const sections = parseSections(change.sections);
+  if (sections && Object.keys(sections).length > 0) {
+    state.sections = { ...sectionsOf(state), ...sections };
+    // Was die Klasse nicht mehr zeigen will, fällt aus den vorhandenen Karten.
+    for (const member of Object.values(state.members)) if (member.card) member.card = sanitizeCard(member.card, state.sections, member.card.at) ?? undefined;
+  }
   state.lastActive = now;
   return ok;
 }
 
 export const mayDissolve = (state: ClassState, token: unknown): boolean => validToken(token) && state.members[token]?.lead === true;
 export const isClassExpired = (state: ClassState, now: number): boolean => now >= state.lastActive + CLASS_TTL_MS;
+
+export const sectionsOf = (state: ClassState): CardSections => ({ ...DEFAULT_CARD_SECTIONS, ...state.sections });
+
+/** Legt die eigene Klassenkarte ab; die Klasse bestimmt, was sie enthalten darf. */
+export function putCard(state: ClassState, token: unknown, card: unknown, now: number): Outcome {
+  const member = validToken(token) ? state.members[token] : undefined;
+  if (!member) return fail('Du bist nicht in dieser Klasse.');
+  const clean = sanitizeCard(card, sectionsOf(state), now);
+  if (!clean) return fail('Ungültige Karte.');
+  member.card = clean;
+  state.lastActive = now;
+  return ok;
+}
 
 /** Die Sicht für ein Gerät. Ein Fremder sieht nur Name und Zustand, nicht die Mitglieder. */
 export function classView(state: ClassState, token: unknown): ClassView {
@@ -216,10 +241,11 @@ export function classView(state: ClassState, token: unknown): ClassView {
     name: state.name,
     open: state.open,
     approval: state.approval,
+    sections: sectionsOf(state),
     me: member?.id ?? null,
     lead,
     waiting,
-    members: member ? Object.values(state.members).map(({ id, name, avatar, crest, lead: l }) => ({ id, name, avatar, ...(crest ? { crest } : {}), lead: l })) : [],
+    members: member ? Object.values(state.members).map(({ id, name, avatar, crest, lead: l, card }) => ({ id, name, avatar, ...(crest ? { crest } : {}), lead: l, ...(card ? { card } : {}) })) : [],
     pending: lead ? Object.values(state.pending).map(({ id, name, avatar }) => ({ id, name, avatar })) : [],
   };
 }

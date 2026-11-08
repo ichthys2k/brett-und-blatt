@@ -141,7 +141,7 @@ export function Datenschutz() {
       <p>
         <strong>Klassen:</strong> Legst du eine Klasse an oder trittst bei, speichert der Spieleserver in der EU den Namen der Klasse, die Geräte-Kennung jedes Mitglieds (zum Ausweisen, sie wird nie anderen
         Mitgliedern gezeigt) sowie Spitzname, Bild und – wenn du eines gewählt hast – das Wappen. Alle Mitglieder sehen Spitzname, Bild und Wappen der anderen Mitglieder; Fremde ohne Mitgliedschaft sehen nur den
-        Namen der Klasse. Die Leitung kann Mitglieder entfernen und die Klasse auflösen; du kannst jederzeit gehen. Eine Klasse ohne Aktivität wird nach einem Jahr gelöscht. Bei Schulklassen ist die Schule
+        Namen der Klasse. Dazu legt dein Gerät, solange du die Klassenseite offen hast, eine „Klassenkarte“ ab: je nach Einstellung der Leitung und deiner eigenen Wahl deine Stempel, die Zahl deiner Pokale je Spiel und deine Lieblingsspiele (nie Codes, Kennungen oder Lernstände); du kannst jeden Teil abwählen. Die Leitung kann Mitglieder entfernen und die Klasse auflösen; du kannst jederzeit gehen. Eine Klasse ohne Aktivität wird nach einem Jahr gelöscht. Bei Schulklassen ist die Schule
         für die Teilnahme der Kinder verantwortlich. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>

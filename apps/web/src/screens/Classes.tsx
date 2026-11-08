@@ -1,11 +1,13 @@
-import { parseClassCode, CLASS_CODE_LENGTH, type ClassView } from '@brett-und-blatt/online';
+import { parseClassCode, CLASS_CODE_LENGTH, type CardSection, type ClassView } from '@brett-und-blatt/online';
 import { PlayerCrest } from '@brett-und-blatt/ui';
 import { parseCrest } from '@brett-und-blatt/engine';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../components/controls';
 import { EmojiKeypad, QrCode } from '../components/OnlineParts';
 import { TavernPage } from '../components/TavernPage';
-import { classAct, createClassOnServer, forgetClass, loadClasses, rememberClass } from '../lib/classes';
+import { buildClassCard, classAct, createClassOnServer, forgetClass, hiddenSections, loadClasses, rememberClass, setSectionHidden } from '../lib/classes';
+import { findGame } from '../lib/registry';
+import { STAMP_ICON, STAMP_LABEL, type StampKind } from '../lib/stamps';
 import { GAME_SERVER } from '../lib/server';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
@@ -120,6 +122,9 @@ export function ClassPage({ code }: { code: string }) {
   const [state, setState] = useState<'loading' | 'ready' | 'missing' | 'error'>('loading');
   const [message, setMessage] = useState<string | null>(null);
   const [renaming, setRenaming] = useState('');
+  const [selected, setSelected] = useState<string | null>(null);
+  const [hidden, setHidden] = useState<CardSection[]>(hiddenSections);
+  const sent = useRef('');
   const alive = useRef(true);
 
   const apply = useCallback(
@@ -130,7 +135,16 @@ export function ClassPage({ code }: { code: string }) {
         setView(reply.view);
         setState('ready');
         setMessage(null);
-        if (reply.view.me) rememberClass({ code, name: reply.view.name });
+        if (reply.view.me) {
+          rememberClass({ code, name: reply.view.name });
+          // Die eigene Klassenkarte nachführen, wenn sie sich geändert hat (oder die Klasse etwas anderes zeigt).
+          const card = buildClassCard(reply.view.sections);
+          const key = JSON.stringify([card, reply.view.sections]);
+          if (action === 'view' && key !== sent.current) {
+            sent.current = key;
+            void classAct(code, 'card', { card }).then((r) => r.ok && alive.current && setView(r.view));
+          }
+        }
         return reply.view;
       }
       if (reply.status === 404) {
@@ -199,11 +213,13 @@ export function ClassPage({ code }: { code: string }) {
                 const crest = member.crest ? parseCrest(member.crest) : null;
                 return (
                   <li key={member.id} className="flex items-center gap-2 rounded-xl border border-line bg-surface p-2">
-                    {crest ? <PlayerCrest spec={crest} size={36} label={`Wappen von ${member.name}`} /> : <span className="text-2xl" aria-hidden="true">{member.avatar}</span>}
-                    <span className="min-w-0 flex-1 truncate">
-                      {member.name}
-                      {member.lead && <span className="ml-1 text-xs text-muted">(Leitung)</span>}
-                    </span>
+                    <button type="button" className="flex min-w-0 flex-1 items-center gap-2 text-left" aria-label={`Profil von ${member.name} ansehen`} onClick={() => setSelected(member.id)}>
+                      {crest ? <PlayerCrest spec={crest} size={36} label={`Wappen von ${member.name}`} /> : <span className="text-2xl" aria-hidden="true">{member.avatar}</span>}
+                      <span className="min-w-0 flex-1 truncate">
+                        {member.name}
+                        {member.lead && <span className="ml-1 text-xs text-muted">(Leitung)</span>}
+                      </span>
+                    </button>
                     {view.lead && member.id !== view.me && (
                       <span className="flex gap-1">
                         <Button variant="ghost" aria-label={`${member.name} ${member.lead ? 'als Leitung entfernen' : 'zur Leitung machen'}`} onClick={() => void apply('lead', { id: member.id, lead: !member.lead })}>
@@ -221,6 +237,75 @@ export function ClassPage({ code }: { code: string }) {
               })}
             </ul>
           </section>
+
+          {selected && (() => {
+            const member = view.members.find((m) => m.id === selected);
+            if (!member) return null;
+            return (
+              <section className="space-y-2 rounded-xl border border-line bg-surface p-3" aria-labelledby="class-profile">
+                <h2 id="class-profile" className="text-xl">{member.name}</h2>
+                {!member.card ? <p className="text-sm text-muted">Hier gibt es noch nichts zu sehen.</p> : (
+                  <>
+                    {member.card.stamps && member.card.stamps.length > 0 && (
+                      <ul className="space-y-1 text-sm">
+                        {member.card.stamps.map((item) => (
+                          <li key={item.gameId}>{findGame(item.gameId)?.name ?? item.gameId}: {item.kinds.map((kind) => <span key={kind} title={STAMP_LABEL[kind as StampKind]} aria-label={STAMP_LABEL[kind as StampKind]}>{STAMP_ICON[kind as StampKind]} </span>)}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {member.card.trophies && member.card.trophies.length > 0 && (
+                      <p className="text-sm">🏆 {member.card.trophies.map((t) => `${findGame(t.gameId)?.name ?? t.gameId} ${t.count}`).join(' · ')}</p>
+                    )}
+                    {member.card.favorites && member.card.favorites.length > 0 && <p className="text-sm">⭐ {member.card.favorites.map((id) => findGame(id)?.name ?? id).join(' · ')}</p>}
+                  </>
+                )}
+                <Button variant="ghost" onClick={() => setSelected(null)}>Schließen</Button>
+              </section>
+            );
+          })()}
+
+          {view.sections.stamps && (() => {
+            const games = [...new Set(view.members.flatMap((m) => m.card?.stamps?.map((s) => s.gameId) ?? []))];
+            if (games.length === 0) return null;
+            return (
+              <section className="space-y-2" aria-labelledby="class-wall">
+                <h2 id="class-wall" className="text-xl">Stempelwand</h2>
+                <ul className="space-y-1">
+                  {games.map((gameId) => (
+                    <li key={gameId} className="flex flex-wrap items-center gap-2 rounded-lg bg-surface p-2 text-sm">
+                      <span className="min-w-32 font-medium">{findGame(gameId)?.name ?? gameId}</span>
+                      {view.members.flatMap((m) => {
+                        const entry = m.card?.stamps?.find((s) => s.gameId === gameId);
+                        return entry ? [<span key={m.id} className="rounded-full bg-surface-2 px-2 py-0.5" title={`${m.name}: ${entry.kinds.map((k) => STAMP_LABEL[k as StampKind]).join(', ')}`}>{m.avatar} {entry.kinds.length}</span>] : [];
+                      })}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })()}
+
+          <fieldset className="space-y-1 rounded-xl border border-line bg-surface p-3 text-sm">
+            <legend className="px-1">Das zeige ich den anderen</legend>
+            {(['stamps', 'trophies', 'favorites'] as const).map((section) => (
+              <label key={section} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-accent"
+                  disabled={!view.sections[section]}
+                  checked={view.sections[section] && !hidden.includes(section)}
+                  onChange={(e) => {
+                    setSectionHidden(section, !e.target.checked);
+                    setHidden(hiddenSections());
+                    sent.current = '';
+                    void apply('view');
+                  }}
+                />
+                {{ stamps: 'Stempel', trophies: 'Pokale', favorites: 'Lieblingsspiele' }[section]}
+                {!view.sections[section] && <span className="text-xs text-muted">(von der Leitung ausgeschaltet)</span>}
+              </label>
+            ))}
+          </fieldset>
 
           {view.lead && view.pending.length > 0 && (
             <section className="space-y-2" aria-labelledby="class-pending">
@@ -256,6 +341,15 @@ export function ClassPage({ code }: { code: string }) {
                 <input type="checkbox" className="h-4 w-4 accent-accent" checked={view.approval} onChange={(e) => void apply('configure', { approval: e.target.checked })} />
                 Beitritte bestätigen
               </label>
+              <fieldset className="space-y-1 text-sm">
+                <legend className="mb-1">Das dürfen die Klassenkarten zeigen</legend>
+                {(['stamps', 'trophies', 'favorites'] as const).map((section) => (
+                  <label key={section} className="flex items-center gap-2">
+                    <input type="checkbox" className="h-4 w-4 accent-accent" checked={view.sections[section]} onChange={(e) => void apply('configure', { sections: { [section]: e.target.checked } })} />
+                    {{ stamps: 'Stempel (Stempelwand)', trophies: 'Pokale', favorites: 'Lieblingsspiele' }[section]}
+                  </label>
+                ))}
+              </fieldset>
               <form
                 className="flex gap-2"
                 onSubmit={(event) => {

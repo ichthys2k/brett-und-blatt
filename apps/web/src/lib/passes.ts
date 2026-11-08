@@ -64,6 +64,7 @@ export const SCOPED_KEYS = [
   'brett-und-blatt:drachenspiel:decks',
   'brett-und-blatt:teilen',
   'brett-und-blatt:klassen',
+  'brett-und-blatt:klassen-ausblenden',
 ] as const;
 export const SCOPED_PREFIXES = ['brett-und-blatt:einstellungen:'] as const;
 
