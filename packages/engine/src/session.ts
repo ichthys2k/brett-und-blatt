@@ -11,6 +11,8 @@ export interface SeatConfig {
   name: string;
   /** Ausgewähltes Emoji des Spielers (Avatar), erscheint beim Spielernamen. */
   avatar?: string;
+  /** Pass dieses Geräts, für den der Platz spielt (#139). Bleibt lokal und geht nie an einen Server. */
+  passId?: string;
   /** Nur bei Bots: Stärke und welcher Bot (sonst der Standard-Bot des Spiels). */
   level?: BotLevel;
   botId?: string;
