@@ -1,3 +1,4 @@
+import { TavernPage } from '../components/TavernPage';
 import { playlistTracks, setCardPortraits, useCardPortraits } from '@brett-und-blatt/ui';
 import { useEffect, useState } from 'react';
 import { Button } from '../components/controls';
@@ -84,13 +85,7 @@ export function SoundSettingsScreen() {
   useEffect(() => () => music.stop(), []);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),2rem)]">
-      <header className="flex items-center gap-2">
-        <Button variant="ghost" className="px-3" aria-label={t('play.back')} onClick={() => navigate(paths.menu)}>
-          ←
-        </Button>
-        <h1 className="text-2xl font-bold">{t('sound.settings')}</h1>
-      </header>
+    <TavernPage title="Optionen" subtitle="Ton, Musik, Aussehen und Updates.">
       <LookChoice />
       <AppVersion />
       <PortraitChoice />
@@ -107,6 +102,6 @@ export function SoundSettingsScreen() {
           }}
         />
       </div>
-    </div>
+    </TavernPage>
   );
 }
