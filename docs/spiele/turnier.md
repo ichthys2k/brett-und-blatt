@@ -50,7 +50,7 @@ Jeder Eingeschriebene sieht die Turnierseite, auch nach dem Ausscheiden. Sie ist
 
 Räume erkennen Mitglieder an einer geheimen Kennung (`hello.token`). Der Ausweis macht sie übertragbar, ohne Konto:
 
-- **Spielercode:** vier Wörter aus 256 (32 Bit), darunter liegt der Ausweis verschlüsselt in der vorhandenen Ablage `BackupVault`. Drei Wörter wären mit 24 Bit zu leicht zu erraten gewesen.
+- **Spielercode:** vier Emoji aus 16 (16⁴ = 65 536 Codes, wie der Raumcode; Entscheidung Cornelius 7.11.2026, #112), darunter liegt der Ausweis verschlüsselt in der vorhandenen Ablage `BackupVault`. Weil das durchprobiert werden könnte, zählt der Server je Absender (`CF-Connecting-IP`) die Anfragen an nicht vorhandene Sicherungen (`AttemptLimiter`, Logik `packages/online/src/attempts.ts`): ab 60 Fehlversuchen pro Stunde antwortet er mit 429. Frühere Wortcodes (vier Wörter aus 256) bleiben gültig.
 - **QR-Code:** Link `#/online?ausweis=…`; der Teil hinter `#` geht nicht an einen Server, und die Seite entfernt ihn sofort aus der Adresszeile.
 - **Sicherungscode:** Der Ausweis ist ein weiterer Block der gemeinsamen Sicherung (`PLAYER_SALT`), ein Narrenhof- oder Drachenspiel-Code passt also auch. Der Spielercode kommt dabei mit.
 - **Passkey:** liegt über dem Sicherungscode, wie im Narrenhof.

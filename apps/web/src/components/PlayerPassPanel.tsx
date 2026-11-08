@@ -1,4 +1,4 @@
-import { clearSyncError, connectWithPasskey, createPasskey, createSync, formatCode, passkeySupport, syncNow, useSyncState } from '@brett-und-blatt/ui/sync';
+import { clearSyncError, connectWithPasskey, createPasskey, createSync, formatCode, passkeySupport, PLAYER_EMOJIS, syncNow, useSyncState } from '@brett-und-blatt/ui/sync';
 import { useEffect, useRef, useState } from 'react';
 import { t } from '../i18n';
 import { adoptCode, createPlayerCode, isPassError, leavePass, passBlock, passServer, playerLink, renewPlayerCode, takeLinkedCode } from '../lib/playerPass';
@@ -112,6 +112,13 @@ export function PlayerPassPanel({ onChange }: { onChange: () => void }) {
             </Button>
           </span>
         </label>
+        <div className="grid grid-cols-8 gap-1" role="group" aria-label={t('pass.emojiKeys')}>
+          {PLAYER_EMOJIS.map((emoji) => (
+            <button key={emoji} type="button" className="grid aspect-square place-items-center rounded-lg bg-surface-2 text-2xl hover:bg-line" onClick={() => setInput((current) => current + emoji)}>
+              {emoji}
+            </button>
+          ))}
+        </div>
         <p className="text-xs text-muted">{t('pass.enterWarning')}</p>
       </form>
 

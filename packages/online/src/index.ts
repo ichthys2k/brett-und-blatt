@@ -32,3 +32,4 @@ export {
 } from './lobby';
 export * from './tournament';
 export { BACKUP_ID_PATTERN, BACKUP_MAX_BYTES, BACKUP_TTL_MS, applyBackupPut, type BackupPutResult, type StoredBackup } from './backup';
+export { ATTEMPT_LIMIT, ATTEMPT_WINDOW_MS, isBlocked, recordMiss, type AttemptState } from './attempts';

@@ -6,7 +6,7 @@ import { fetchRemote, putRemote, SyncError, type SyncBlock } from './vault';
  * erkennt, auf andere Geräte übertragbar – ohne Konto und ohne neue Serverdaten außer einem
  * verschlüsselten Block in der vorhandenen Sicherungsablage.
  *
- * - **Spielercode:** vier Wörter, leicht abzutippen. Darunter liegt verschlüsselt der Ausweis.
+ * - **Spielercode:** vier Emoji aus 16 (wie der Raumcode), ohne Tastatur zu tippen. Darunter liegt verschlüsselt der Ausweis.
  * - **Sicherungscode und Passkey:** Der Ausweis ist ein weiterer Block der gemeinsamen Sicherung
  *   (`PLAYER_SALT`), der Passkey kommt damit von selbst mit.
  *
@@ -67,20 +67,33 @@ const WORDS = [
 ] as const;
 
 export const PLAYER_WORDS: readonly string[] = WORDS;
+
+/**
+ * Die 16 Bilder des Spielercodes (dieselben wie beim Raumcode), je ein einzelnes Zeichen.
+ * Vier daraus ergeben 65 536 Codes; weil das wenig ist, begrenzt der Server die Fehlversuche je Absender.
+ */
+export const PLAYER_EMOJIS = [
+  '🐶', '🐱', '🦊', '🐻', '🐸', '🐧', '🦄', '🐢',
+  '🍎', '🍌', '🍓', '🍕', '🌈', '⭐', '🚀', '🎈',
+] as const;
+export const PLAYER_CODE_LENGTH = 4;
+/** Frühere Spielercodes bestanden aus vier Wörtern; sie bleiben gültig. */
 export const PLAYER_CODE_WORDS = 4;
 
-/** Vier Wörter aus 256: 32 Bit Zufall; jeder Versuch kostet eine Anfrage an den Server. */
 export function randomPlayerCode(): string {
-  return Array.from(crypto.getRandomValues(new Uint8Array(PLAYER_CODE_WORDS)), (b) => WORDS[b]).join('-');
+  return Array.from(crypto.getRandomValues(new Uint8Array(PLAYER_CODE_LENGTH)), (b) => PLAYER_EMOJIS[b % PLAYER_EMOJIS.length]).join('');
 }
 
 const WORD_BY_KEY = new Map(WORDS.map((word) => [word.toLowerCase(), word]));
+const EMOJI_SET = new Set<string>(PLAYER_EMOJIS);
 
-/** Liest einen eingegebenen Spielercode: Groß/klein und Trennzeichen egal, ein ganzer Link geht auch. */
+/** Liest einen eingegebenen Spielercode: vier Emoji (Leerzeichen und Varianten-Zeichen egal) oder ein früherer Wortcode, ein ganzer Link geht auch. */
 export function parsePlayerCode(input: string): string | null {
   let text = input.trim();
   const fromLink = /[?&#]ausweis=([^&#\s]+)/i.exec(text);
   if (fromLink) text = decodeURIComponent(fromLink[1]!);
+  const emojis = Array.from(text.normalize('NFC').replace(/[\s\u200d\ufe0e\ufe0f-]/g, ''));
+  if (emojis.length === PLAYER_CODE_LENGTH && emojis.every((part) => EMOJI_SET.has(part))) return emojis.join('');
   const parts = text.toLowerCase().split(/[^\p{L}]+/u).filter(Boolean);
   if (parts.length !== PLAYER_CODE_WORDS) return null;
   const words = parts.map((part) => WORD_BY_KEY.get(part));
@@ -131,7 +144,7 @@ function lockKeys(code: string): Promise<VaultKeys> {
 
 /** Legt unter einem frischen Spielercode ein Schloss an und liefert den Code. */
 export async function createPlayerLock(serverUrl: () => string | null, pass: PlayerPass): Promise<string> {
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 5; attempt++) {
     const code = randomPlayerCode();
     const keys = await lockKeys(code);
     if (await fetchRemote(serverUrl, keys.id)) continue;
