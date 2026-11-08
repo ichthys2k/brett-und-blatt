@@ -29,20 +29,82 @@
   inset: -3%;
   transition: transform 0.2s ease-out;
 }
-.bub-menu-back picture,
-.bub-menu-back img,
-.bub-menu-front img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 30% 100%;
+/* Bildbühne: füllt den Rahmen wie „cover“ (unten und links verankert), damit Effekte in Prozent am Bild haften */
+.bub-menu-layer { container-type: size; }
+.bub-menu-stage {
+  position: absolute;
+  bottom: 0;
+  width: max(100cqw, calc(100cqh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  left: calc((100cqw - max(100cqw, calc(100cqh * 16 / 9))) * 0.3);
 }
+.bub-menu-stage picture,
+.bub-menu-stage img { display: block; width: 100%; height: 100%; }
 .bub-menu-back { transform: translate(calc(var(--mx) * -8px), calc(var(--my) * -5px)); }
 .bub-menu-front { transform: translate(calc(var(--mx) * -30px), calc(var(--my) * -14px)); pointer-events: none; }
-.bub-menu-glow {
-  background: radial-gradient(circle at 34% 20%, #ffd27a33 0, transparent 12%), radial-gradient(circle at 52% 14%, #ffd27a33 0, transparent 10%);
-  transform: translate(calc(var(--mx) * -14px), calc(var(--my) * -8px));
+
+/* Lichteffekte (#191): Positionen in Prozent der Bühne, Querformat; Hochformat weiter unten */
+.bub-menu-lamp,
+.bub-menu-fire,
+.bub-menu-sparks { position: absolute; pointer-events: none; mix-blend-mode: screen; }
+.bub-menu-lamp {
+  left: var(--x);
+  top: var(--y);
+  width: 15%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe2a0cc 0, #ffb04a77 22%, #ff8a2a22 48%, transparent 70%);
+  animation: bub-lamp 2.9s linear infinite;
+}
+.bub-menu-lamp[data-n='1'] { --x: 15.3%; --y: 24%; }
+.bub-menu-lamp[data-n='2'] { --x: 34.9%; --y: 15%; animation-duration: 3.7s; animation-delay: -1.2s; }
+.bub-menu-lamp[data-n='3'] { --x: 51.7%; --y: 31.6%; animation-duration: 2.3s; animation-delay: -0.7s; width: 12%; }
+.bub-menu-fire {
+  left: 10.2%;
+  top: 59%;
+  width: 15%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse 34% 40% at 50% 62%, #fff0b0cc 0, #ffb030aa 40%, transparent 100%),
+    radial-gradient(circle, #ff8a2a88 0, #ff6a1a33 38%, transparent 70%);
+  animation: bub-fire 0.9s ease-in-out infinite alternate, bub-lamp 2.1s linear infinite;
+  transform-origin: 50% 80%;
+}
+.bub-menu-sparks { left: 10.2%; top: 54%; width: 0; height: 0; }
+.bub-menu-sparks i {
+  position: absolute;
+  left: var(--ox);
+  top: 0;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: #ffd27a;
+  box-shadow: 0 0 6px 1px #ff9a3c;
+  opacity: 0;
+  animation: bub-spark ease-out infinite;
+}
+@keyframes bub-lamp {
+  0%, 100% { opacity: 0.95; scale: 1; }
+  7% { opacity: 0.62; scale: 0.94; }
+  15% { opacity: 1; scale: 1.03; }
+  31% { opacity: 0.74; scale: 0.96; }
+  44% { opacity: 0.98; scale: 1.02; }
+  58% { opacity: 0.58; scale: 0.93; }
+  71% { opacity: 0.9; scale: 1; }
+  86% { opacity: 0.7; scale: 0.97; }
+}
+@keyframes bub-fire {
+  0% { transform: scale(0.96, 0.9) skewX(-3deg); }
+  50% { transform: scale(1.04, 1.12) skewX(2deg); }
+  100% { transform: scale(0.98, 1.04) skewX(4deg); }
+}
+@keyframes bub-spark {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(var(--dx), calc(var(--rise) * -1cqh)) scale(0.3); opacity: 0; }
 }
 .bub-menu-shade {
   position: absolute;
@@ -147,7 +209,6 @@
   .bub-menu-shade { background: linear-gradient(#140d0733, #140d07cc 70%); }
   .bub-menu-layer { transform: none !important; }
   .bub-menu-front { display: none; }
-  .bub-menu-back img { object-position: 50% 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .bub-menu-layer { transform: none !important; transition: none; }
@@ -199,33 +260,6 @@
 .bub-tav-inner[data-wide] { max-width: 56rem; }
 
 /* Schritt 7: Balken, Kaminglut, flackerndes Laternenlicht, schwebende Funken; Rahmen mit Nieten */
-.bub-menu-glow { animation: bub-flicker 4.5s ease-in-out infinite; }
-.bub-menu-hearth {
-  background: radial-gradient(ellipse 14% 14% at 11% 64%, #ff9a3c66 0, #ff6a1a33 45%, transparent 75%);
-  animation: bub-flicker 3.1s ease-in-out infinite reverse;
-}
-.bub-menu-motes span {
-  position: absolute;
-  bottom: -2%;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #ffd27acc;
-  box-shadow: 0 0 6px #ffb03a;
-  opacity: 0;
-  animation: bub-rise linear infinite;
-}
-@keyframes bub-flicker {
-  0%, 100% { opacity: 1; }
-  38% { opacity: 0.82; }
-  62% { opacity: 0.95; }
-  80% { opacity: 0.78; }
-}
-@keyframes bub-rise {
-  0% { transform: translate(0, 0); opacity: 0; }
-  12% { opacity: 0.9; }
-  100% { transform: translate(24px, -78vh); opacity: 0; }
-}
 .bub-menu-frame,
 .bub-tav-frame { position: relative; }
 .bub-menu-frame::before,
@@ -246,12 +280,17 @@
 .bub-menu-button:active { transform: translateY(1px); }
 .bub-menu-button:focus-visible { outline: 3px solid #f2d27a; outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
-  .bub-menu-glow, .bub-menu-hearth { animation: none; }
-  .bub-menu-motes { display: none; }
+  .bub-menu-lamp, .bub-menu-fire { animation: none; }
+  .bub-menu-sparks { display: none; }
 }
 @media (max-width: 760px) {
-  .bub-menu-motes { display: none; }
-  .bub-menu-hearth { background: radial-gradient(ellipse 22% 10% at 18% 74%, #ff9a3c55 0, transparent 75%); }
+  .bub-menu-stage { width: max(100cqw, calc(100cqh * 9 / 16)); aspect-ratio: 9 / 16; left: calc((100cqw - max(100cqw, calc(100cqh * 9 / 16))) * 0.5); }
+  .bub-menu-lamp { width: 30%; }
+  .bub-menu-lamp[data-n='1'] { --x: 40.8%; --y: 30.2%; }
+  .bub-menu-lamp[data-n='2'] { --x: 87.5%; --y: 43%; }
+  .bub-menu-lamp[data-n='3'] { --x: 31.3%; --y: 54.1%; width: 22%; }
+  .bub-menu-fire { left: 14.3%; top: 72.7%; width: 34%; }
+  .bub-menu-sparks { left: 14.3%; top: 67%; }
 }
 .bub-menu-plaque-link { cursor: pointer; }
 .bub-menu-plaque-link:hover, .bub-menu-plaque-link:focus-visible { border-color: #e0b25a; }
