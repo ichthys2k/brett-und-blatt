@@ -13,7 +13,8 @@
       { "name": "BACKUPS", "class_name": "BackupVault" },
       { "name": "TOURNAMENTS", "class_name": "TournamentRoom" },
       { "name": "ATTEMPTS", "class_name": "AttemptLimiter" },
-      { "name": "PASS_LOCKS", "class_name": "PassLock" }
+      { "name": "PASS_LOCKS", "class_name": "PassLock" },
+      { "name": "SHARES", "class_name": "PassShare" }
     ]
   },
   // Im Gratis-Tarif gibt es nur Durable Objects mit SQLite-Speicher.
@@ -23,7 +24,8 @@
     { "tag": "v3", "new_sqlite_classes": ["BackupVault"] },
     { "tag": "v4", "new_sqlite_classes": ["TournamentRoom"] },
     { "tag": "v5", "new_sqlite_classes": ["AttemptLimiter"] },
-    { "tag": "v6", "new_sqlite_classes": ["PassLock"] }
+    { "tag": "v6", "new_sqlite_classes": ["PassLock"] },
+    { "tag": "v7", "new_sqlite_classes": ["PassShare"] }
   ],
   "vars": {
     // Von diesen Seiten aus dürfen Räume erstellt und betreten werden.
