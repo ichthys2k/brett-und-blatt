@@ -1,6 +1,7 @@
 import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import type { AlbumSpec } from '@brett-und-blatt/ui';
 import { Ceremony } from '../components/Ceremony';
 import { Notes } from '../components/Notes';
 import { hasNote, notesKey } from '../lib/notes';
@@ -195,7 +196,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const around = Boolean(ui.seatsAround) && seatRingFits(seats.length, rootSize.width, rootSize.height - TABLE_BAR_HEIGHT);
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
-  const { trophy: trophyLaid } = usePassRecorder({ session, gameId: info.id, seatScore: ui.seatScore as ((view: never, seat: number) => number | string | null) | undefined, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.finishedNote !== undefined, display: online.display } } : {}) });
+  const { trophy: trophyLaid } = usePassRecorder({ session, gameId: info.id, seatScore: ui.seatScore as ((view: never, seat: number) => number | string | null) | undefined, album: ui.album as AlbumSpec<never> | undefined, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.finishedNote !== undefined, display: online.display } } : {}) });
   const current = session.currentSeats();
   /** Der Mensch, der jetzt am Gerät dran ist – auch während einer Pause. */
   const turnSeat = current.find((seat) => session.isHuman(seat) && !session.isAway(seat));

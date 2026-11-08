@@ -1,5 +1,7 @@
 import type { GameSession, Result, SeatConfig } from '@brett-und-blatt/engine';
+import type { AlbumSpec } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState } from 'react';
+import { ALBUM_KEY, recordFinds, sanitizeAlbum } from './album';
 import { emptyBook, localMode, outcomeFor, recordGame, sanitizeBook, strongestBot, type Mode, type PlayedGame } from './partiebuch';
 import { passBook } from './passes';
 import { rememberReplay } from './chronikStore';
@@ -120,14 +122,41 @@ export function saveRows(rows: readonly RecordRow[], seats: readonly SeatConfig[
   return trophyForActive;
 }
 
+/** Welcher Platz sammelt fürs Album? Online der eigene, lokal der erste Platz mit freiem Namen (er gehört dem aktiven Pass), sonst der des aktiven Passes. */
+export function albumSeat(seats: readonly SeatConfig[], online?: { yourSeat: number | null }): number | null {
+  if (online) return online.yourSeat;
+  const humans = seats.map((seat, index) => ({ seat, index })).filter(({ seat }) => seat.kind === 'human');
+  const free = humans.find(({ seat }) => !seat.passId);
+  if (free) return free.index;
+  const active = passBook.activeId();
+  return humans.find(({ seat }) => seat.passId === active)?.index ?? null;
+}
+
+/** Trägt Funde eines Kapitels ins Album des aktiven Passes ein. */
+export function saveFinds(chapter: string, total: number, ids: readonly string[]): void {
+  if (ids.length === 0) return;
+  passBook.updateStored(null, ALBUM_KEY, (raw) => {
+    let album = sanitizeAlbum(null);
+    try {
+      album = sanitizeAlbum(raw ? JSON.parse(raw) : null);
+    } catch {
+      // kaputtes Album: neu anfangen
+    }
+    return JSON.stringify(recordFinds(album, chapter, total, ids, Date.now()));
+  });
+  passSyncSoon();
+}
+
 /** Haken im Spieltisch: zeichnet das Ergebnis genau einmal je Partie auf. */
 export function usePassRecorder(options: {
   session: GameSession;
   gameId: string;
   seatScore?: (view: never, seat: number) => number | string | null;
+  /** Kapitel des Spiels im Sammelalbum (#148). */
+  album?: AlbumSpec<never>;
   online?: { yourSeat: number | null; tournament: boolean; display?: boolean };
 }): { trophy: boolean } {
-  const { session, gameId, seatScore, online } = options;
+  const { session, gameId, seatScore, album, online } = options;
   const [trophy, setTrophy] = useState(false);
   const started = useRef<{ id: string; at: number }>({ id: session.id, at: Date.now() });
   const done = useRef<string | null>(null);
@@ -166,5 +195,26 @@ export function usePassRecorder(options: {
   useEffect(() => {
     if (!result) setTrophy(false);
   }, [result]);
+  // Sammelalbum (#148): Funde nach jeder Änderung (und einmal beim Öffnen des Tisches).
+  const wantsAlbum = Boolean(album?.finds) && !online?.display;
+  const yourSeat = online?.yourSeat;
+  useEffect(() => {
+    if (!album?.finds || !wantsAlbum) return;
+    const seat = albumSeat(session.config.seats, online ? { yourSeat: yourSeat ?? null } : undefined);
+    if (seat === null) return;
+    let total: number | null = null;
+    const look = (events: readonly import('@brett-und-blatt/engine').GameEvent[]) => {
+      try {
+        const ids = album.finds!({ view: session.view(seat as never) as never, events, seat, result: session.result });
+        if (ids.length === 0) return;
+        total ??= album.catalog().length;
+        saveFinds(gameId, total, ids);
+      } catch {
+        // Das Album ist eine Zugabe und darf nie den Tisch stören.
+      }
+    };
+    look([]);
+    return session.subscribe((change) => look(change.events));
+  }, [session, album, wantsAlbum, gameId, yourSeat, online]);
   return { trophy };
 }

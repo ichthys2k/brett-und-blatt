@@ -3,6 +3,7 @@ import { onFavoritesChanged } from './favorites';
 import { passSyncSoon } from './playerPass';
 import { sameChronik, mergeChronik, sanitizeChronik, type Chronik } from './chronik';
 import { CHRONIK_KEY } from './chronikStore';
+import { ALBUM_KEY, mergeAlbum, sameAlbum, sanitizeAlbum, type Album } from './album';
 import { BOOK_KEY, TROPHIES_KEY } from './passRecorder';
 import { mergeTrophies, sameTrophies, sanitizeTrophies, type Trophy } from './pokale';
 import { emptyBook, mergeBooks, sameBooks, sanitizeBook, type Book } from './partiebuch';
@@ -108,6 +109,21 @@ export function registerWebPassBlocks(): void {
     sanitize: sanitizeTrophies,
     merge: mergeTrophies,
     same: sameTrophies,
+  });
+  // Sammelalbum (#148): Funde je Kapitel mit dem Zeitpunkt des ersten Fundes; die früheste Zeit gewinnt.
+  registerPassBlock<Album>({
+    name: 'album',
+    read: () => {
+      try {
+        return sanitizeAlbum(JSON.parse(read(ALBUM_KEY) ?? 'null'));
+      } catch {
+        return {};
+      }
+    },
+    write: (album) => write(ALBUM_KEY, JSON.stringify(album)),
+    sanitize: sanitizeAlbum,
+    merge: mergeAlbum,
+    same: sameAlbum,
   });
   onFavoritesChanged(passSyncSoon);
   // Spiele melden sich mit eigenen Blöcken (Narrenhof, Drachenspiel) und bitten um Abgleich.

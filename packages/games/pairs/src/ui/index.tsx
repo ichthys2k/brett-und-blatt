@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { faceOf } from '../content';
 import type { PairsMove, PairsState } from '../rules';
 import './styles.css';
+import { albumSpec } from './album';
 
 const SEAT_COLORS = ['#d6336c', '#1c7ed6', '#2f9e44', '#f08c00', '#7048e8', '#0c8599'];
 
@@ -71,6 +72,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 
 export const gameUi: GameUi<PairsState, PairsMove> = {
   Board,
+  album: albumSpec,
   SeatSymbol,
   sounds: { flipped: 'karte-umdrehen', pair: 'paar', mismatch: 'kein-paar' },
   seatLabel: (seat) => `Platz ${seat + 1}`,

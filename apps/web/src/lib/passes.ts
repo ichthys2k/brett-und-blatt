@@ -54,6 +54,7 @@ export const SCOPED_KEYS = [
   'brett-und-blatt:einstellungen-staende',
   'brett-und-blatt:partiebuch',
   'brett-und-blatt:wappen',
+  'brett-und-blatt:album',
   'brett-und-blatt:chronik',
   'brett-und-blatt:pokale',
   'brett-und-blatt:chronik-ablage',

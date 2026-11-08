@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { setOf, type Ask, type QuartettMove, type QuartettState, type Trick } from '../rules';
 import { cardOf, formatWithUnit, groupOf, valueOf, type CardId, type CardSet } from '../sets';
 import './styles.css';
+import { albumSpec } from './album';
 
 const SEAT_COLORS = ['#d6336c', '#1c7ed6', '#2f9e44', '#f08c00', '#7048e8', '#0c8599'];
 const GROUP_COLORS: Record<string, string> = { A: '#e03131', B: '#1971c2', C: '#2f9e44', D: '#f08c00', E: '#7048e8', F: '#0c8599', G: '#c2255c', H: '#5c940d' };
@@ -466,6 +467,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 
 export const gameUi: GameUi<QuartettState, QuartettMove> = {
   Board,
+  album: albumSpec,
   seatsAround: true,
   SeatSymbol,
   sounds: { trick: 'karte-legen', drew: 'karte-ziehen', asked: (event) => (event.got ? 'karte-ziehen' : 'kein-paar'), quartet: 'paar' },

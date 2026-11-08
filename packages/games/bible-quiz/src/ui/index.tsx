@@ -7,6 +7,7 @@ import {
   type QuestionCategory,
 } from '../rules';
 import './styles.css';
+import { albumSpec } from './album';
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'] as const;
 
@@ -292,6 +293,7 @@ function Board({
 
 export const gameUi: GameUi<BibleQuizState, BibleQuizMove> = {
   Board,
+  album: albumSpec,
   SeatSymbol: BibleSymbol,
   seatLabel: (seat) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) => {

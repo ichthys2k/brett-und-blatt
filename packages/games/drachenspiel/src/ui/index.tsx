@@ -6,6 +6,7 @@ import { endAction, markCustomDeck, prepareOptions } from './SoloHub';
 import { DeckSelection, MulliganPhase } from './phases';
 import { PlayBoard } from './PlayBoard';
 import './styles.css';
+import { albumSpec } from './album';
 
 const LABELS = ['Blau', 'Rot'];
 
@@ -24,6 +25,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 
 export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
   Board,
+  album: albumSpec,
   SeatSymbol,
   SetupExtra,
   prepareOptions,
