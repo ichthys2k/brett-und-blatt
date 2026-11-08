@@ -1,4 +1,5 @@
 import { useRoute } from './lib/router';
+import { DisplayScreen } from './screens/Display';
 import { Home } from './screens/Home';
 import { Datenschutz, Impressum } from './screens/Legal';
 import { Online } from './screens/Online';
@@ -19,6 +20,8 @@ export function App() {
       return <Online />;
     case 'room':
       return <RoomScreen key={route.code} code={route.code} />;
+    case 'display':
+      return <DisplayScreen key={route.code} code={route.code} />;
     case 'tournament':
       return <TournamentScreen key={route.code} code={route.code} claim={route.claim} helper={route.helper} />;
     case 'sound':

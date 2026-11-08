@@ -83,6 +83,8 @@ export interface OnlineTableProps {
   invite?: { code: string; link: string };
   /** Leiste über den Knöpfen, etwa die Abstimmung übers Zurücknehmen. */
   bar?: ReactNode;
+  /** Tisch-Bildschirm (#100): ohne Zurück-Knopf und Anleitung, nichts zum Bedienen. */
+  display?: boolean;
 }
 
 interface GameTableProps {
@@ -281,7 +283,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         </Button>
       </>
     ) : (
-      <p className="text-sm text-muted">{online.finishedNote ?? t('online.waitForHost')}</p>
+      online.display ? null : <p className="text-sm text-muted">{online.finishedNote ?? t('online.waitForHost')}</p>
     )
   ) : (
     <>
@@ -438,9 +440,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
       <div className={around ? 'contents' : `contents side:flex side:flex-none side:flex-col side:overflow-y-auto ${crowded ? 'side:w-80' : 'side:w-64 wide:w-72'}`}>
         <header className={`flex h-14 flex-none items-center gap-2 px-3 short:h-11 ${around ? 'relative z-30' : ''}`}>
-          <Button variant="ghost" className="px-3" aria-label={online ? t('online.leave') : t('play.back')} onClick={() => (online ? online.onLeave() : navigate(paths.home))}>
-            ←
-          </Button>
+          {!online?.display && (
+            <Button variant="ghost" className="px-3" aria-label={online ? t('online.leave') : t('play.back')} onClick={() => (online ? online.onLeave() : navigate(paths.home))}>
+              ←
+            </Button>
+          )}
           <h1 className="min-w-0 truncate text-lg font-semibold">
             <span aria-hidden="true">{info.emoji} </span>
             {info.name}
@@ -453,9 +457,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             </footer>
           )}
           {online?.chat && <div className={`flex flex-none ${around ? '' : 'ml-auto'}`}>{online.chat(around)}</div>}
-          <Button variant="ghost" className={`px-3 text-lg ${around || online?.chat ? '' : 'ml-auto'}`} aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
-            ?
-          </Button>
+          {!online?.display && (
+            <Button variant="ghost" className={`px-3 text-lg ${around || online?.chat ? '' : 'ml-auto'}`} aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
+              ?
+            </Button>
+          )}
           <SoundControl gameId={info.id} isClient={isClient} ownMusic={info.ownMusic} inBar={around} />
           {session.timed && !result && !online && (
             <Button

@@ -6,7 +6,9 @@ import {
   AWAY_AFTER_DISCONNECT_MS,
   CLOCK_GRACE_MS,
   CORRESPONDENCE_ROOM_TTL_MS,
+  DISPLAY_MEMBER,
   HOST_HANDOVER_MS,
+  MAX_DISPLAYS,
   PROTOCOL_VERSION,
   Room,
   SIGNAL_INTERVAL_MS,
@@ -993,5 +995,111 @@ describe('Plätze und Namen durch die Raumleitung (W-029 bis W-031)', () => {
     expect(cara.game().yourSeat).toBe(1);
     expect(cara.room().members.find((m) => m.id === 'm2')).toMatchObject({ name: 'Ben M', nameFixed: true });
     expect(cara.room().lobby.seats[1]).toEqual({ kind: 'human', memberId: cara.last('welcome')?.you });
+  });
+});
+
+describe('Tisch-Bildschirm (#100)', () => {
+  const display = (env: Env, connection = 'tisch') => {
+    const screen = env.client(connection);
+    screen.send({ type: 'display', protocol: PROTOCOL_VERSION });
+    return screen;
+  };
+
+  it('ist kein Mitglied: Er taucht nicht in der Mitgliederliste auf, wird aber gezählt', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    anna.hello();
+    const screen = display(env);
+    expect(screen.last('welcome')?.you).toBe(DISPLAY_MEMBER);
+    expect(screen.room().members.map((m) => m.name)).toEqual(['anna']);
+    expect(anna.room().members).toHaveLength(1);
+    expect(anna.room().displays).toBe(1);
+    // Die Raumleitung bleibt bei den Menschen.
+    expect(anna.room().hostId).toBe(anna.last('welcome')?.you);
+  });
+
+  it('sieht die Partie wie ein Zuschauer, ohne Platz und ohne Züge, und keine Geheimnisse', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    anna.hello();
+    ben.hello();
+    anna.send({ type: 'setGame', gameId: 'zugleich' });
+    anna.send({ type: 'takeSeat', index: 0 });
+    ben.send({ type: 'takeSeat', index: 1 });
+    anna.send({ type: 'start' });
+    const screen = display(env);
+    expect(screen.game().yourSeat).toBeNull();
+    expect(screen.game().legalMoves).toEqual([]);
+    anna.send({ type: 'move', version: anna.game().version, move: 3 });
+    expect(screen.game().view).toEqual({ picks: [null, null] });
+    expect(anna.game().view).toEqual({ picks: [3, null] });
+  });
+
+  it('darf nichts außer Lebenszeichen: Züge, Einstellungen und Namen werden abgelehnt', () => {
+    const env = setup();
+    const [anna] = twoPlayers(env);
+    const screen = display(env);
+    const version = screen.game().version;
+    for (const message of [{ type: 'move', version, move: { cell: 0 } }, { type: 'setGame', gameId: 'tic-tac-toe' }, { type: 'resign' }, { type: 'toLobby' }, { type: 'react', emoji: '👍' }]) {
+      screen.clear();
+      screen.send(message);
+      expect(screen.last('error')?.code, JSON.stringify(message)).toBe('notAllowed');
+    }
+    expect(anna.game().version).toBe(version);
+    screen.clear();
+    screen.send({ type: 'ping' });
+    expect(screen.last('pong')).toBeDefined();
+  });
+
+  it('kann sich nicht zusätzlich als Mitglied anmelden und umgekehrt', () => {
+    const env = setup();
+    const screen = display(env);
+    screen.hello();
+    expect(screen.last('error')?.code).toBe('notAllowed');
+    expect(screen.room().members).toHaveLength(0);
+    const anna = env.client('anna');
+    anna.hello();
+    anna.send({ type: 'display', protocol: PROTOCOL_VERSION });
+    expect(anna.last('error')?.code).toBe('notAllowed');
+  });
+
+  it('ist auf wenige Bildschirme je Raum begrenzt', () => {
+    const env = setup();
+    for (let i = 0; i < MAX_DISPLAYS; i++) display(env, `tisch-${i}`);
+    const extra = display(env, 'zu-viel');
+    expect(extra.last('error')?.code).toBe('roomFull');
+    expect(env.closed.has('zu-viel')).toBe(true);
+  });
+
+  it('zählt nicht für die Mindestzahl an Menschen', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    anna.hello();
+    anna.send({ type: 'setGame', gameId: 'menschen' });
+    anna.send({ type: 'takeSeat', index: 0 });
+    anna.send({ type: 'setSeat', index: 1, seat: { bot: 'easy' } });
+    display(env);
+    anna.clear();
+    anna.send({ type: 'start' });
+    expect(anna.last('error')?.code).toBe('notAllowed');
+    expect(anna.last('game')).toBeUndefined();
+  });
+
+  it('meldet sich ab und wird nach einem Neustart des Servers wieder zugeordnet', () => {
+    const env = setup();
+    const [anna] = twoPlayers(env);
+    const screen = display(env);
+    expect(anna.room().displays).toBe(1);
+    env.room.disconnect('tisch');
+    expect(anna.room().displays).toBeUndefined();
+    // Neustart: Der Raum wird aus dem Schnappschuss gebaut, offene Verbindungen kommen per Anhang zurück.
+    const restored = Room.restore(env.room.snapshot(), env.deps);
+    env.replaceRoom(restored);
+    restored.reattach('tisch', DISPLAY_MEMBER);
+    screen.clear();
+    restored.receive('tisch', JSON.stringify({ type: 'ping' }));
+    expect(screen.last('pong')).toBeDefined();
+    restored.receive('anna', JSON.stringify({ type: 'ping' }));
   });
 });

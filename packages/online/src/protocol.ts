@@ -88,6 +88,11 @@ export type { Avatar, AvatarSound } from './avatars';
 export type ClientMessage =
   /** Erste Nachricht jeder Verbindung. `token` ist die geheime, zufällige Kennung des Geräts für den Wiedereinstieg. */
   | { type: 'hello'; protocol: number; token: string; name: string; avatar: string }
+  /**
+   * Erste Nachricht eines Tisch-Bildschirms (Fernseher, Beamer, Tablet auf dem Tisch, #100): Er ist kein Mitglied,
+   * hat keinen Platz und keinen Namen, bekommt nur die Zuschauersicht und darf nichts außer Lebenszeichen senden.
+   */
+  | { type: 'display'; protocol: number }
   | { type: 'setName'; name: string; avatar: string }
   // Lobby (nur die Raumleitung, außer takeSeat/leaveSeat)
   | { type: 'setGame'; gameId: string }
@@ -138,6 +143,8 @@ export interface RoomMessage {
   hostId: string | null;
   members: MemberInfo[];
   lobby: LobbySettings;
+  /** Wie viele Tisch-Bildschirme verbunden sind; fehlt, wenn keiner da ist. */
+  displays?: number;
   /** Nur bei Turnierpartien: zu welchem Turnier der Raum gehört. */
   match?: { tournament: string; label: string; noShow: boolean };
 }
@@ -203,6 +210,9 @@ export type ServerMessage =
   | { type: 'kicked' }
   | { type: 'pong'; serverNow: number };
 
+/** Statt einer Mitgliedsnummer im `welcome` eines Tisch-Bildschirms. */
+export const DISPLAY_MEMBER = '@display';
+
 export type ErrorCode = 'badMessage' | 'protocol' | 'notAllowed' | 'roomFull' | 'badName' | 'notReady' | 'staleMove' | 'illegalMove' | 'tooLate';
 
 // ---------------------------------------------------------------------------
@@ -230,6 +240,8 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return isInt(m.protocol) && isString(m.token, 100) && m.token.length >= 16 && isString(m.name) && isString(m.avatar, 20)
         ? { type: 'hello', protocol: m.protocol, token: m.token, name: m.name, avatar: m.avatar }
         : null;
+    case 'display':
+      return isInt(m.protocol) ? { type: 'display', protocol: m.protocol } : null;
     case 'setName':
       return isString(m.name) && isString(m.avatar, 20) ? { type: 'setName', name: m.name, avatar: m.avatar } : null;
     case 'setGame':

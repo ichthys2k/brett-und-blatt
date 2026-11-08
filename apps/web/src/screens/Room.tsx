@@ -267,7 +267,7 @@ function GameSeats({
   );
 }
 
-function useLoadedGame(gameId: string | null): LoadedGame | null {
+export function useLoadedGame(gameId: string | null): LoadedGame | null {
   const [loaded, setLoaded] = useState<LoadedGame | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -300,6 +300,7 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
     }
   }, [room.members]);
   const link = `${window.location.origin}${window.location.pathname}${paths.room(room.code)}`;
+  const displayLink = `${window.location.origin}${window.location.pathname}${paths.display(room.code)}`;
   const memberName = (id: string | null) => room.members.find((m) => m.id === id);
   const send = connection.send.bind(connection);
   const mySeat = lobby.seats.findIndex((seat) => seat.kind === 'human' && seat.memberId === state.you);
@@ -352,6 +353,16 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
           </Button>
         </div>
         {showQr && <QrCode text={link} label={`${t('online.qr')}: ${link}`} />}
+        <div className="space-y-2 border-t border-line pt-2">
+          <p className="text-xs text-muted">{t('display.openHint')}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => window.open(displayLink, '_blank', 'noopener')}>📺 {t('display.open')}</Button>
+            <Button variant="ghost" onClick={() => void navigator.clipboard?.writeText(displayLink).catch(() => undefined)}>
+              🔗 {t('display.copyLink')}
+            </Button>
+          </div>
+          {(room.displays ?? 0) > 0 && <p className="text-xs text-muted">{t('display.connected', { n: room.displays ?? 0 })}</p>}
+        </div>
         {isHost && (
           <label className="flex cursor-pointer select-none items-center gap-3 border-t border-line pt-2">
             <input
