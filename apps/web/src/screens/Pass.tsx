@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Button, Section } from '../components/controls';
 import { ProfileForm } from '../components/OnlineParts';
+import { ShareDialog } from '../components/ShareDialog';
 import { PlayerPassPanel } from '../components/PlayerPassPanel';
 import { AlbumBook } from '../components/AlbumBook';
 import { RescueHint } from '../components/RescueHint';
@@ -148,6 +149,8 @@ export function PassScreen() {
           </Button>
         </section>
       )}
+
+      <ShareDialog online={Boolean(GAME_SERVER)} />
 
       <RescueHint />
 

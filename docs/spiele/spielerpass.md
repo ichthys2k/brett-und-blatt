@@ -319,3 +319,9 @@ Parallel möglich: nach dem Passschlüssel PIN und Familie; nach dem Partiebuch 
 - Der **Spielercode** (vier Bilder) bleibt das Namensschild; der Rettungscode ist der Geheimschlüssel, den man nur Mama oder Papa zeigt.
 - **Hinweis „Rettungskarte sichern“** (`components/RescueHint.tsx`, Logik `lib/rescue.ts`): erscheint auf `#/pass` und im Ausweis, solange es einen Spielercode, aber noch keinen Rettungscode gibt („anlegen“), oder einen Rettungscode, dessen Karte noch nicht gedruckt und als sicher weggelegt abgehakt ist (Schlüssel `brett-und-blatt:rettung`, je Pass). Drucken allein beendet den Hinweis nicht.
 - **Noch offen:** PIN → „Geheimzahl“ und Passkey → „Fingerabdruck-Schlüssel“ für Kinder; Sammelkarten für Klassen (#152).
+
+### Stand #149 Pass teilen (8.11.2026)
+
+- Server: `PassShare` (Durable Object), Routen `GET/PUT /teilen/<Kennung>` und `POST /teilen/<Kennung>/loeschen`, Logik `packages/online/src/share.ts` (Schreibgeheimnis als Hash, ein Jahr ohne Abruf).
+- Browser: Kern `apps/web/src/lib/passShareCore.ts` (AES-GCM, Schlüssel per HKDF aus dem Linkschlüssel, Kennung per SHA-256, Prüfung), `passShare.ts` (Schnappschuss bauen, ablegen, beenden, abrufen; Schlüssel und Schreibgeheimnis je Pass in `brett-und-blatt:teilen`), Dialog `components/ShareDialog.tsx` im Profil (Teile: Wappen, Stempel, Pokalschrank, Lieblingsspiele; als Link oder PNG-Karte), Ansicht `#/pass/ansehen?k=…` (`screens/PassView.tsx`).
+- Offen: Bot-Wertungen und Album-Fortschritt als Teile; Wappen im PNG; Gegenprobe gegen den echten Server (Sandbox ohne Netz); Telefonprüfung.

@@ -6,6 +6,7 @@ import { Menu } from './screens/Menu';
 import { Datenschutz, Impressum } from './screens/Legal';
 import { Online } from './screens/Online';
 import { PassScreen } from './screens/Pass';
+import { PassView } from './screens/PassView';
 import { Play } from './screens/Play';
 import { RoomScreen } from './screens/Room';
 import { Tournaments } from './screens/Tournaments';
@@ -43,6 +44,8 @@ function Screen() {
       return <SoundSettingsScreen />;
     case 'pass':
       return <PassScreen />;
+    case 'passView':
+      return <PassView passKey={route.key} />;
     case 'imprint':
       return <Impressum />;
     case 'privacy':
