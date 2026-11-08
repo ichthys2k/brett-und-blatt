@@ -13,6 +13,8 @@ Entwürfe: Design-Canvas „Hauptmenü – Entwürfe“ (https://claude.ai/artif
 
 ## Leitlinien
 
+- **Alles soll stark nach Taverne aussehen** (Cornelius, 8.11.2026): nicht nur das Hauptmenü, sondern alle Bildschirme (Holz, Stein, Pergament, Laternenlicht, Almendra-Schrift); der Look „Taverne“ (`look.css`) wird zum durchgängigen Standard und die Menü-Rahmen werden als wiederverwendbare Bausteine gebaut.
+
 - Die Szene ist reiner Hintergrund (Schichten, leichte Parallaxe auf Mausbewegung). Auf dem Handy, bei „Bewegung reduzieren“ und im Energiesparmodus: Standbild. Das Menü ist normales HTML, per Tastatur bedienbar.
 - Der Rahmen bleibt stehen, nur der Inhalt wechselt; „Zurück“ führt eine Ebene hoch.
 - Unten immer die Profil-Plakette mit Wappen, Name und „Wechseln“.
