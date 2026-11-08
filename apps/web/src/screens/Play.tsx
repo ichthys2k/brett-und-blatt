@@ -1,7 +1,8 @@
 import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Ceremony } from '../components/Ceremony';
+import { Replay, canReplay } from '../components/Replay';
 import { usePassRecorder } from '../lib/passRecorder';
 import { setHandView, useHandView, useHandViewChoice } from '../lib/handView';
 import { Button } from '../components/controls';
@@ -123,6 +124,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const [copiedInvite, setCopiedInvite] = useState(false);
   /** Siegerehrung geschlossen (gilt bis zur nächsten Partie in diesem Tisch). */
   const [ceremonyClosed, setCeremonyClosed] = useState(false);
+  /** Nachspielen (#99) geöffnet. */
+  const [replaying, setReplaying] = useState(false);
 
   useSyncExternalStore(
     (onChange) => session.subscribe(onChange),
@@ -231,7 +234,10 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   }, [yourMove]);
 
   useEffect(() => {
-    if (!result) setCeremonyClosed(false);
+    if (!result) {
+      setCeremonyClosed(false);
+      setReplaying(false);
+    }
   }, [result]);
 
   // Wer dran ist, soll auch in einer rollbaren Spielerleiste zu sehen sein.
@@ -282,7 +288,19 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const endAction = result && !online ? (ui.endAction?.(publicView) ?? null) : null;
 
   // Knöpfe nach Partieende – unter dem Spielfeld und in der Siegerehrung.
-  const resultActions = online ? (
+  // Nur neu berechnen, wenn sich die Partie ändert (sonst rechnet das Nachspielen bei jedem Zeichnen neu).
+  const replayData = useMemo(() => (result && !online?.display ? (session.replayData?.() ?? null) : null), [session, session.version, Boolean(result), online?.display]); // eslint-disable-line react-hooks/exhaustive-deps
+  const replayButton = canReplay(replayData) ? (
+    <Button
+      onClick={() => {
+        setCeremonyClosed(true);
+        setReplaying(true);
+      }}
+    >
+      ▶ {t('replay.open')}
+    </Button>
+  ) : null;
+  const resultActionsBase = online ? (
     online.isHost ? (
       <>
         {online.onRestart && (
@@ -312,6 +330,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       <Button variant="ghost" onClick={() => navigate(paths.home)}>
         {t('play.menu')}
       </Button>
+    </>
+  );
+  const resultActions = (
+    <>
+      {replayButton}
+      {resultActionsBase}
     </>
   );
 
@@ -601,6 +625,15 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               : undefined
           }
         />
+        {replaying && canReplay(replayData) && (
+          <Replay
+            game={game}
+            data={replayData}
+            seatNames={seats.map((seat) => seat.name)}
+            startViewer={online ? (online.yourSeat ?? 'spectator') : humans.length === 1 ? (humans[0] as number) : 'spectator'}
+            onClose={() => setReplaying(false)}
+          />
+        )}
         {showHowTo && <HowToOverlay info={info} onClose={() => setShowHowTo(false)} />}
         {result && !ceremonyClosed && (
           <Ceremony

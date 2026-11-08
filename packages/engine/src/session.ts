@@ -1,5 +1,6 @@
 import { Clocks, type ClockReading, type ClocksState } from './clock';
 import type { GameSession } from './game-session';
+import type { ReplayData } from './replay-frames';
 import { isLegalMove, replay, resolveOptions, seatActors } from './module-helpers';
 import { Rng } from './random';
 import type { Actor, BotLevel, GameEvent, GameModule, Options, Result, SeatId, TimeControl } from './types';
@@ -514,6 +515,17 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     this.config.seats[seat] = { kind: 'human', name: nextName };
     this.commit('system', move, 'system');
     return true;
+  }
+
+  /** Zum Nachspielen (#99): erst wenn die Partie zu Ende ist. */
+  replayData(): ReplayData | null {
+    if (!this.result) return null;
+    return {
+      seed: this.config.seed,
+      options: this.config.options,
+      seats: this.config.initialSeats ?? this.config.seats.length,
+      log: this._log.map(({ actor, move }) => ({ actor, move })),
+    };
   }
 
   snapshot(): SessionSnapshot<M> {

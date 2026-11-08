@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AWAY_AFTER_TIMEOUTS, LocalSession, inlineBotRunner, type BotRunner, type GameModule, type SessionConfig } from '../src';
+import { AWAY_AFTER_TIMEOUTS, LocalSession, inlineBotRunner, replayFrames, type BotRunner, type GameModule, type SessionConfig } from '../src';
 import { nim, type NimMove, type NimState } from './nim';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -20,6 +20,35 @@ function makeSession(overrides: Partial<SessionConfig> = {}, runner: BotRunner =
   const session = new LocalSession(nim, config, { botRunner: runner, now: () => time });
   return { session, advanceTime: (ms: number) => (time += ms) };
 }
+
+describe('Nachspielen (#99)', () => {
+  it('gibt Seed und Zugliste erst nach Partieende heraus', () => {
+    const { session } = makeSession();
+    expect(session.replayData()).toBeNull();
+    let seat = 0;
+    while (!session.result) {
+      session.submit(seat, session.legalMoves(seat)[0]!);
+      seat = session.currentSeats()[0] ?? 0;
+    }
+    const data = session.replayData();
+    expect(data).not.toBeNull();
+    expect(data!.log).toHaveLength(session.log.length);
+    expect(data!.seed).toBe('test');
+  });
+
+  it('rechnet jeden Zug nach und endet im Endstand', () => {
+    const { session } = makeSession();
+    let seat = 0;
+    while (!session.result) {
+      session.submit(seat, session.legalMoves(seat)[0]!);
+      seat = session.currentSeats()[0] ?? 0;
+    }
+    const frames = replayFrames(nim, session.replayData()!);
+    expect(frames).toHaveLength(session.log.length + 1);
+    expect(frames[0]!.events).toEqual([]);
+    expect(frames[frames.length - 1]!.state).toEqual(session.state);
+  });
+});
 
 describe('LocalSession', () => {
   it('nimmt erlaubte Züge an und lehnt unerlaubte ab', () => {

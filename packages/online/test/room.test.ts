@@ -430,6 +430,9 @@ describe('Partie', () => {
     anna.send({ type: 'start' });
     const seen = ben.game().version;
     expect(anna.game().current).toEqual([0, 1]);
+    // Solange die Partie läuft, bleibt der Seed beim Server.
+    expect(anna.game().replay ?? null).toBeNull();
+    expect(JSON.stringify(ben.game())).not.toContain('"seed"');
     anna.send({ type: 'move', version: anna.game().version, move: 3 });
     expect(ben.game().version).toBeGreaterThan(seen);
     // Passt ein Zug mit älterer Version nicht mehr, war jemand schneller – kein „nicht erlaubt“.
@@ -443,6 +446,10 @@ describe('Partie', () => {
     // Ein zweiter Zug mit derselben alten Version wäre doppelt: abgelehnt.
     anna.send({ type: 'move', version: seen, move: 1 });
     expect(anna.last('error')?.code).toBe('staleMove');
+    // Nach Partieende dürfen alle Seed und Zugliste zum Nachspielen sehen (#99).
+    expect(ben.game().replay?.seed).toEqual(expect.any(String));
+    expect(ben.game().replay?.log).toHaveLength(2);
+    expect(anna.game().replay?.seed).toBe(ben.game().replay?.seed);
   });
 
   it('der Startwert verlässt nie den Server', () => {

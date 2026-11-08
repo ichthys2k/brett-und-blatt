@@ -6,6 +6,7 @@ import {
   type ClockReading,
   type GameSession,
   type PublicSessionConfig,
+  type ReplayData,
   type Result,
   type SeatId,
   type SessionChange,
@@ -132,6 +133,11 @@ export class OnlineSession<M = unknown, V = unknown> implements GameSession<M, V
 
   get result(): Result | null {
     return this.message.result;
+  }
+
+  /** Seed und Zugliste zum Nachspielen – erst nach Partieende vom Server geliefert (#99). */
+  replayData(): ReplayData | null {
+    return this.message.result ? (this.message.replay ?? null) : null;
   }
 
   get timed(): boolean {

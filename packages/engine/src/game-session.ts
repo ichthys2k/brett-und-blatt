@@ -1,5 +1,6 @@
 import type { ClockReading } from './clock';
 import type { BotLevel, SeatId, Result } from './types';
+import type { ReplayData } from './replay-frames';
 import type { SeatKind, SessionChange, SessionConfig } from './session';
 
 /**
@@ -45,6 +46,11 @@ export interface GameSession<M = unknown, V = unknown> {
   /** Kann dieser Platz gerade aufgeben? (Nicht, wenn er schon ausgeschieden ist.) */
   canResign(seat: SeatId): boolean;
   resign(seat: SeatId): void;
+  /**
+   * Seed und Zugliste zum Nachspielen (#99) – erst nach Partieende, vorher null (der Seed verriete Verdecktes).
+   * Fehlt die Funktion oder ist die Liste unbrauchbar, gibt es kein Nachspielen.
+   */
+  replayData?(): ReplayData | null;
   /** Kann dieser Platz im laufenden Betrieb eingenommen werden (Spiele mit `joinMidGame`)? */
   canJoinSeat?(seat: SeatId): boolean;
   /** Nimmt einen freien Platz für die nächste Runde ein. */

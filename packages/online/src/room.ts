@@ -1,5 +1,7 @@
 import {
   LocalSession,
+  REPLAY_MAX_STEPS,
+  type ReplayData,
   TEAM_OPTION_ID,
   shuffledTeams,
   resolveOptions,
@@ -1289,7 +1291,15 @@ export class Room {
       clocks: voting ? clocks.map((clock) => ({ ...clock, running: false })) : clocks,
       serverNow: now,
       events: filtered,
+      replay: this.replayFor(session),
     };
+  }
+
+  /** Nach Partieende dürfen alle im Raum Seed und Zugliste kennen (#99); vorher nie. */
+  private replayFor(session: LocalSession): ReplayData | null {
+    if (!session.result) return null;
+    const data = session.replayData();
+    return data && data.log.length <= REPLAY_MAX_STEPS ? data : null;
   }
 
   private error(connectionId: string, code: ErrorCode, message: string): void {
