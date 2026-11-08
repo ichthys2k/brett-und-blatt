@@ -659,6 +659,19 @@ describe('Umsortieren', () => {
     const moved = play(next, 0, { type: 'moveMod', from: 0, to: 2 });
     expect(moved.runs[0]!.mods.map((m) => m.key)).toEqual(['fiddler', 'earlyBird', 'juggler']);
   });
+
+  it('die Wertung nutzt die neue Reihenfolge der Narren (#64)', () => {
+    const state = start();
+    const mods = (keys: string[]) => keys.map((key, uid) => ({ uid, key })) as RunState['mods'];
+    const hand = [c(5, 'h'), c(5, 's')];
+    const score = (run: RunState) => scoreHand(run, hand, [], new Rng([1, 2, 3, 4])).score;
+    const first = runWith(state, { mods: mods(['clown', 'earlyBird']) });
+    const second = { ...state, runs: [first] };
+    const swapped = play(second, 0, { type: 'moveMod', from: 1, to: 0 }).runs[0]!;
+    expect(swapped.mods.map((m) => m.key)).toEqual(['earlyBird', 'clown']);
+    // +4 vor ×2 gibt mehr als ×2 vor +4.
+    expect(score(first)).toBeGreaterThan(score(swapped));
+  });
 });
 
 describe('Sprechblasen', () => {
