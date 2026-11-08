@@ -348,6 +348,8 @@ export interface TournamentView {
   podium: string[];
   you: string | null;
   isLeader: boolean;
+  /** Dieses Gerät hat das Turnier angelegt und darf es löschen. */
+  mayDelete: boolean;
   /** Vor Ort: Helfer (trägt Ergebnisse ein) oder Mitleitung; null sonst. */
   helperRole: HelperRole | null;
   /** Nur für die Leitung: die Helferlinks. */

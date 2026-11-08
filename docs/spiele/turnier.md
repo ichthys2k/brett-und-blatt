@@ -82,6 +82,13 @@ Im Turnier kann die Leitung zusätzlich einen Einmal-Link ausstellen (`reissue`,
 - **Turnierliste:** Sie liegt im Spielerausweis (`tournaments`), ein neues Gerät findet die Turniere also ohne Link wieder.
 - **Löschen:** 30 Tage nach Ende oder nach der letzten Aktivität.
 
+## Löschen und Aufräumen (8.11.2026)
+
+- **Löschen durch die Leitung:** Nachricht `delete`; nur das Gerät, das das Turnier angelegt hat (`leaderToken`, `Tournament.mayDelete`, in der Sicht `mayDelete`), nicht Mitleitung oder Helfer. Der Server (`TournamentRoom.deleteTournament`) nimmt den Eintrag aus „Offene Runden“, leert den Speicher, schickt `deleted` und schließt alle Verbindungen; Eingeschriebene sehen „nicht gefunden“ und verlieren den Eintrag in ihrer Liste. Knopf 🗑️ in der Kopfzeile der Turnierseite mit Rückfrage. Laufende Partien im Spielraum enden nach 24 Stunden von selbst.
+- **Aus der Liste entfernen:** ✕ je Eintrag auf „Online spielen“, nur lokal und im Ausweis. Damit der Abgleich den Eintrag nicht zurückbringt, trägt der Ausweis Löschvermerke (`PlayerPass.removed`, Zeitpunkt je Turnier, 90 Tage); ein Eintrag überlebt nur, wenn er jünger ist als sein Vermerk (`survivesRemoval`, `mergeRemoved` in `packages/ui/src/sync/player.ts`). Wer ein Turnier bewusst wieder öffnet und sich einträgt, hat es wieder.
+- **Aufräumen:** 🧹 öffnet eine Auswahl mit „Beendete auswählen“ (Stand beim letzten Öffnen, `KnownTournament.phase`), „Nicht mehr vorhandene entfernen“ (fragt den Server), „Aus meiner Liste entfernen“ und „Für alle löschen“ (öffnet je Turnier kurz eine Verbindung, `deleteTournament`; wo das Gerät nicht die Leitung ist, bleibt der Eintrag und die Meldung zählt es). Ob dieses Gerät leitet (`leader`, 👑), kennt die Liste erst, wenn die Turnierseite einmal offen war.
+- Noch offen: Leitung übertragen (geht das anlegende Gerät verloren, kann niemand mehr löschen), Archivieren statt Löschen (Stufe 5, #189).
+
 ## Noch offen
 
 - **Ausbau zur Turniersoftware:** Gesamtkonzept mit Vor-Ort-Turnieren, Helfern, Zeitplan und weiteren Formen in [`turniersoftware.md`](turniersoftware.md) (W-058, #63).

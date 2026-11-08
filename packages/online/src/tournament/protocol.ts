@@ -34,12 +34,16 @@ export type TournamentClientMessage =
   | { type: 'removeHelper'; helper: string }
   | { type: 'helper'; code: string }
   | { type: 'setSchedule'; schedule: { start: number; matchMinutes: number; breakMinutes: number } | null }
-  | { type: 'setReferees'; on: boolean };
+  | { type: 'setReferees'; on: boolean }
+  /** Turnier endgültig löschen; nur die Hauptleitung. */
+  | { type: 'delete' };
 
 export type TournamentServerMessage =
   | { type: 'tournament'; view: TournamentView }
   /** Fremde sehen nach dem Start nur, dass es das Turnier gibt. */
   | { type: 'closed'; name: string }
+  /** Die Leitung hat das Turnier gelöscht. */
+  | { type: 'deleted' }
   | { type: 'claimCode'; player: string; code: string }
   | { type: 'error'; message: string };
 
@@ -104,6 +108,8 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
       if (!isRecord(sch) || typeof sch.start !== 'number' || typeof sch.matchMinutes !== 'number' || typeof sch.breakMinutes !== 'number') return null;
       return { type: 'setSchedule', schedule: { start: sch.start, matchMinutes: sch.matchMinutes, breakMinutes: sch.breakMinutes } };
     }
+    case 'delete':
+      return { type: 'delete' };
     case 'setReferees':
       return typeof m.on === 'boolean' ? { type: 'setReferees', on: m.on } : null;
     case 'setFields':

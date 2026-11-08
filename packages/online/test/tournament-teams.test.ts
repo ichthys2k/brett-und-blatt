@@ -1,7 +1,7 @@
 import { inlineBotRunner } from '@brett-und-blatt/engine';
 import { gameModule as describeDuel } from '@brett-und-blatt/game-describe-duel';
 import { describe, expect, it } from 'vitest';
-import { PROTOCOL_VERSION, Room, Tournament, formTeams, isTeamGame, parseTournamentSettings, validTeamSize, type RoomDeps, type RoomMessage, type ServerMessage, type TournamentSettings } from '../src';
+import { PROTOCOL_VERSION, Room, Tournament, formTeams, isTeamGame, parseTournamentMessage, parseTournamentSettings, validTeamSize, type RoomDeps, type RoomMessage, type ServerMessage, type TournamentSettings } from '../src';
 
 /** Teams in Online-Turnieren (W-058 Stufe 3 Teil 4, #127). */
 
@@ -113,5 +113,21 @@ describe('Spielraum mit Teams', () => {
     room.tick();
     expect(room.matchReport()?.report).toEqual({ kind: 'noShow', winner: 0 });
     void ({} as RoomMessage);
+  });
+});
+
+describe('Löschen', () => {
+  it('nur wer das Turnier angelegt hat, darf löschen – nicht Mitleitung, Teilnehmer oder Fremde', () => {
+    const { t } = teamTournament(4);
+    expect(t.mayDelete(LEADER)).toBe(true);
+    expect(t.mayDelete(token(0))).toBe(false);
+    expect(t.mayDelete('')).toBe(false);
+    expect(t.view(LEADER).mayDelete).toBe(true);
+    expect(t.view(token(0)).mayDelete).toBe(false);
+    expect(t.view(null).mayDelete).toBe(false);
+  });
+
+  it('die Nachricht wird erkannt', () => {
+    expect(parseTournamentMessage(JSON.stringify({ type: 'delete' }))).toEqual({ type: 'delete' });
   });
 });

@@ -156,6 +156,11 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
     passChanged();
   }, [view, code]);
 
+  // Die Merkliste weiß, ob dieses Gerät das Turnier leitet und wie weit es ist („Aufräumen“ auf „Online spielen“).
+  useEffect(() => {
+    if (view) storage.updateTournament(code, { name: view.settings.name, leader: view.mayDelete, phase: view.phase });
+  }, [view, code]);
+
   // Gelöschte Turniere verschwinden auch aus der eigenen Liste.
   useEffect(() => {
     if (state.status === 'gone') storage.forgetTournament(code);
@@ -244,6 +249,20 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
         ←
       </Button>
       <h1 className="min-w-0 flex-1 truncate text-2xl font-bold">🏆 {view?.settings.name ?? state.closed ?? t('tournament.title')}</h1>
+      {view?.mayDelete && (
+        <Button
+          variant="ghost"
+          className="px-3"
+          aria-label={t('tournament.delete')}
+          title={t('tournament.delete')}
+          onClick={() => {
+            const others = view.players.filter((p) => !p.withdrawn).length;
+            if (window.confirm(t(view.phase === 'signup' && others === 0 ? 'tournament.deleteConfirmEmpty' : 'tournament.deleteConfirm', { name: view.settings.name, n: others }))) send({ type: 'delete' });
+          }}
+        >
+          🗑️
+        </Button>
+      )}
     </header>
   );
   const banners = (

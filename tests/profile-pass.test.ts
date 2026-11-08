@@ -9,6 +9,7 @@ vi.mock('../apps/web/src/lib/storage', () => ({
     deviceToken: () => 'token',
     loadPlayerCode: () => '🦊🐻🐸🐙',
     loadTournaments: () => [],
+    loadRemovedTournaments: () => [],
     loadPassKey: () => null,
     loadLockSecrets: () => null,
     loadCrestText: () => null,

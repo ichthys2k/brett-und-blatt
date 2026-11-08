@@ -833,6 +833,12 @@ export class TournamentRoom extends DurableObject<Env> {
     if (!token) return this.sendTo(ws, { type: 'error', message: 'Erst anmelden.' });
     let error: string | null = null;
     switch (message.type) {
+      case 'delete':
+        if (!t.mayDelete(token)) {
+          error = 'Löschen darf nur, wer das Turnier angelegt hat.';
+          break;
+        }
+        return this.deleteTournament(t);
       case 'join':
         error = t.join(token, name ?? '', avatar ?? '');
         break;
@@ -912,16 +918,21 @@ export class TournamentRoom extends DurableObject<Env> {
     }
   }
 
+  /** Löscht das Turnier samt Eintrag in „Offene Runden“; alle Verbindungen erfahren es. */
+  private async deleteTournament(t: Tournament, reason = 'Turnier gelöscht'): Promise<void> {
+    this.tournament = null;
+    await registryStub(this.env).removeRoom(t.snapshot().code).catch(() => undefined);
+    await this.ctx.storage.deleteAll();
+    for (const ws of this.ctx.getWebSockets()) {
+      if (reason === 'Turnier gelöscht') this.sendTo(ws, { type: 'deleted' });
+      ws.close(1000, reason);
+    }
+  }
+
   override async alarm(): Promise<void> {
     const t = this.tournament;
     if (!t) return;
-    if (Date.now() >= t.expiresAt()) {
-      this.tournament = null;
-      await registryStub(this.env).removeRoom(t.snapshot().code).catch(() => undefined);
-      await this.ctx.storage.deleteAll();
-      for (const ws of this.ctx.getWebSockets()) ws.close(1000, 'Turnier beendet');
-      return;
-    }
+    if (Date.now() >= t.expiresAt()) return this.deleteTournament(t, 'Turnier beendet');
     t.tick();
     await this.changed();
   }

@@ -154,6 +154,11 @@ export class Tournament {
     return this.s.phase === 'signup' || token === this.s.leaderToken || this.playerByToken(token) !== undefined;
   }
 
+  /** Löschen darf nur, wer das Turnier angelegt hat – nicht Mitleitung oder Helfer. */
+  mayDelete(token: string): boolean {
+    return token !== '' && token === this.s.leaderToken;
+  }
+
   /** Leitung oder Mitleitung. */
   isLeader(token: string): boolean {
     return token === this.s.leaderToken || this.helperOf(token)?.role === 'coleader';
@@ -630,6 +635,7 @@ export class Tournament {
       podium: this.podium(),
       you,
       isLeader: token !== null && this.isLeader(token),
+      mayDelete: token !== null && this.mayDelete(token),
       helperRole: token ? (this.helperOf(token)?.role ?? null) : null,
       helpers: token !== null && this.isLeader(token) ? (s.helpers ?? []).map(({ id, name, role, code, tokens }) => ({ id, name, role, code, devices: tokens.length })) : [],
       rulesChanged: s.ruleVersion !== undefined && s.phase === 'running' && this.deps.ruleVersion?.(s.settings.gameId) !== s.ruleVersion,

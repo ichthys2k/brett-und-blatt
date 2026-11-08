@@ -14,6 +14,62 @@ export async function createTournament(settings: TournamentSettings & { fields?:
   return ((await response.json()) as { code: string }).code;
 }
 
+/** Ergebnis eines Löschversuchs. */
+export type DeleteOutcome = 'deleted' | 'gone' | 'denied' | 'failed';
+
+/** Gibt es das Turnier noch? null, wenn der Server nicht antwortet. */
+export async function tournamentExists(code: string): Promise<boolean | null> {
+  if (!GAME_SERVER) return null;
+  try {
+    const response = await fetch(`${GAME_SERVER}/turniere/${encodeURIComponent(code)}`);
+    if (!response.ok) return null;
+    return ((await response.json()) as { exists?: boolean }).exists !== false;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Löscht ein Turnier auf dem Server (nur die Hauptleitung darf). Öffnet dafür kurz eine eigene
+ * Verbindung, damit es auch aus der Liste heraus geht, ohne die Turnierseite zu öffnen.
+ */
+export function deleteTournament(code: string, profile: Profile): Promise<DeleteOutcome> {
+  return new Promise((resolve) => {
+    if (!GAME_SERVER) return resolve('failed');
+    let done = false;
+    const ws = new WebSocket(`${GAME_SERVER.replace(/^http/, 'ws')}/turniere/${encodeURIComponent(code)}`);
+    const finish = (outcome: DeleteOutcome) => {
+      if (done) return;
+      done = true;
+      window.clearTimeout(timer);
+      try {
+        ws.close();
+      } catch {
+        // Schon zu.
+      }
+      resolve(outcome);
+    };
+    const timer = window.setTimeout(() => finish('failed'), 10_000);
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'hello', token: storage.deviceToken(), name: profile.name, avatar: profile.avatar } satisfies TournamentClientMessage));
+      ws.send(JSON.stringify({ type: 'delete' } satisfies TournamentClientMessage));
+    };
+    ws.onmessage = (event) => {
+      if (typeof event.data !== 'string') return;
+      const message = JSON.parse(event.data) as TournamentServerMessage;
+      if (message.type === 'deleted') finish('deleted');
+      else if (message.type === 'error' && /Löschen/.test(message.message)) finish('denied');
+    };
+    ws.onerror = () => {
+      // Kein Turnier mehr (404) oder kein Netz: nachfragen.
+      void tournamentExists(code).then((exists) => finish(exists === false ? 'gone' : 'failed'));
+    };
+    ws.onclose = () => {
+      void tournamentExists(code).then((exists) => finish(exists === false ? 'deleted' : 'failed'));
+    };
+  });
+}
+
 export interface TournamentState {
   status: 'connecting' | 'open' | 'reconnecting' | 'gone';
   view: TournamentView | null;
@@ -58,8 +114,9 @@ export function useTournament(code: string, profile: Profile | null): [Tournamen
         const message = JSON.parse(event.data) as TournamentServerMessage;
         if (message.type === 'tournament') setState((s) => ({ ...s, view: message.view, closed: null }));
         else if (message.type === 'closed') setState((s) => ({ ...s, view: null, closed: message.name }));
+        else if (message.type === 'deleted') setState((s) => ({ ...s, status: 'gone', view: null }));
         else if (message.type === 'claimCode') setState((s) => ({ ...s, claim: { player: message.player, code: message.code } }));
-        else {
+        else if (message.type === 'error') {
           setState((s) => ({ ...s, error: message.message }));
           window.clearTimeout(errorTimer);
           errorTimer = window.setTimeout(() => setState((s) => ({ ...s, error: null })), 4000);
