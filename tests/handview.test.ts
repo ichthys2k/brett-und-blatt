@@ -1,6 +1,8 @@
-import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parseHandView } from '../apps/web/src/lib/handView';
+
+/** Oberflächen aller Spiele als Text (wie `tests/repo.test.ts`: ohne Node-Typen über `?raw`). */
+const uis = import.meta.glob<string>('../packages/games/*/src/ui/index.tsx', { eager: true, query: '?raw', import: 'default' });
 
 describe('Hand-Ansicht (#100)', () => {
   it('ist nur eingeschaltet, wenn „an“ gespeichert ist', () => {
@@ -12,11 +14,9 @@ describe('Hand-Ansicht (#100)', () => {
 
   it('jedes Spiel mit handView wertet auch handOnly aus', () => {
     const withHandView: string[] = [];
-    for (const id of readdirSync('packages/games')) {
-      const file = `packages/games/${id}/src/ui/index.tsx`;
-      if (!existsSync(file)) continue;
-      const source = readFileSync(file, 'utf8');
+    for (const [path, source] of Object.entries(uis)) {
       if (!/handView:\s*true/.test(source)) continue;
+      const id = path.split('/')[3]!;
       withHandView.push(id);
       expect(source, `${id}: handOnly fehlt in der Oberfläche`).toMatch(/\bhandOnly\b/);
     }
