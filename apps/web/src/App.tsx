@@ -3,6 +3,7 @@ import { DisplayScreen } from './screens/Display';
 import { Home } from './screens/Home';
 import { Datenschutz, Impressum } from './screens/Legal';
 import { Online } from './screens/Online';
+import { PassScreen } from './screens/Pass';
 import { Play } from './screens/Play';
 import { RoomScreen } from './screens/Room';
 import { TournamentScreen } from './screens/Tournament';
@@ -26,6 +27,8 @@ export function App() {
       return <TournamentScreen key={route.code} code={route.code} claim={route.claim} helper={route.helper} />;
     case 'sound':
       return <SoundSettingsScreen />;
+    case 'pass':
+      return <PassScreen />;
     case 'imprint':
       return <Impressum />;
     case 'privacy':

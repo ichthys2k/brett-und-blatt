@@ -59,6 +59,14 @@ describe('Partiebuch (#142)', () => {
     expect(totals(book).played).toBe(60);
   });
 
+  it('Zeitpunkte und Dauern überstehen das Bereinigen unverändert', () => {
+    const now = 1_794_132_368_786;
+    const book = recordGame(emptyBook(), game('z', { endedAt: now, durationMs: 3_600_000 }), 'g1', null);
+    const again = sanitizeBook(JSON.parse(JSON.stringify(book)));
+    expect(again.recent[0]).toMatchObject({ endedAt: now, durationMs: 3_600_000 });
+    expect(sameBooks(again, book)).toBe(true);
+  });
+
   it('bereinigt fremde Daten', () => {
     expect(sanitizeBook(null)).toEqual(emptyBook());
     const dirty = sanitizeBook({

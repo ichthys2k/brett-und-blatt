@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { t } from '../i18n';
 import { passBook } from '../lib/passes';
+import { navigate, paths } from '../lib/router';
 import { newPass, removePass, switchPass, syncPassEntry } from '../lib/playerPass';
 import { Button } from './controls';
 
@@ -74,6 +75,14 @@ export function PassPicker() {
               {t('passes.new')}
             </Button>
             <Button onClick={() => newPass({ guest: true })}>{t('passes.guest')}</Button>
+            <Button
+              onClick={() => {
+                setOpen(false);
+                navigate(paths.pass);
+              }}
+            >
+              {t('pass.chronik.link')}
+            </Button>
             <Button variant="ghost" onClick={() => setOpen(false)}>
               {t('passes.close')}
             </Button>

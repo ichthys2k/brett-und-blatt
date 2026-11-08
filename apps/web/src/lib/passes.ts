@@ -48,6 +48,8 @@ export const SCOPED_KEYS = [
   'bub-four-player-chess-zoom',
   'brett-und-blatt:einstellungen-staende',
   'brett-und-blatt:partiebuch',
+  'brett-und-blatt:chronik',
+  'brett-und-blatt:chronik-ablage',
   'brett-und-blatt:farbensortierer',
   'brett-und-blatt:farbensortierer:sicherung',
   'brett-und-blatt:drachenspiel:decks',

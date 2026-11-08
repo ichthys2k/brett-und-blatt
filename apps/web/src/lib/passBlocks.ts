@@ -1,6 +1,8 @@
 import { onPassSyncRequest, registerPassBlock } from '@brett-und-blatt/ui/sync';
 import { onFavoritesChanged } from './favorites';
 import { passSyncSoon } from './playerPass';
+import { sameChronik, mergeChronik, sanitizeChronik, type Chronik } from './chronik';
+import { CHRONIK_KEY } from './chronikStore';
 import { BOOK_KEY } from './passRecorder';
 import { emptyBook, mergeBooks, sameBooks, sanitizeBook, type Book } from './partiebuch';
 import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
@@ -75,6 +77,21 @@ export function registerWebPassBlocks(): void {
     sanitize: sanitizeBook,
     merge: mergeBooks,
     same: sameBooks,
+  });
+  // Chronik (#143): angeheftete Partien mit Zugliste; die jüngere Änderung je Partie gewinnt.
+  registerPassBlock<Chronik>({
+    name: 'chronik',
+    read: () => {
+      try {
+        return sanitizeChronik(JSON.parse(read(CHRONIK_KEY) ?? 'null'));
+      } catch {
+        return {};
+      }
+    },
+    write: (chronik) => write(CHRONIK_KEY, JSON.stringify(chronik)),
+    sanitize: sanitizeChronik,
+    merge: mergeChronik,
+    same: sameChronik,
   });
   onFavoritesChanged(passSyncSoon);
   // Spiele melden sich mit eigenen Blöcken (Narrenhof, Drachenspiel) und bitten um Abgleich.
