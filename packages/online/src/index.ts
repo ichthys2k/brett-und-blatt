@@ -35,3 +35,4 @@ export * from './tournament';
 export { BACKUP_ID_PATTERN, BACKUP_MAX_BYTES, BACKUP_TTL_MS, applyBackupPut, type BackupPutResult, type StoredBackup } from './backup';
 export * from './lock';
 export { ATTEMPT_LIMIT, ATTEMPT_WINDOW_MS, isBlocked, recordMiss, type AttemptState } from './attempts';
+export { CAPABILITIES, can, roomCapabilities, type Capability } from './capabilities';

@@ -1,7 +1,8 @@
 import { BOT_LEVELS, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
-import { MAX_SEATS, TOURNAMENT_CODE_PATTERN, parseRoomCode, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
+import { MAX_SEATS, TOURNAMENT_CODE_PATTERN, parseRoomCode, roomCapabilities, type Capability, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
+import { ModeratorPanel, type ModeratorMember } from '../components/ModeratorPanel';
 import { ProfileForm, QrCode, ReactionMenu, SignalToasts } from '../components/OnlineParts';
 import { t } from '../i18n';
 import { announceAvatar } from '../lib/avatar-sounds';
@@ -152,7 +153,8 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             extra: (
               <>
                 {toTournament}
-                <GameSeats session={session} seatLabel={loaded.ui.seatLabel} room={room} you={state.you} isHost={isHost} send={connection.send.bind(connection)} />
+                <GameSeats session={session} seatLabel={loaded.ui.seatLabel} room={room} send={connection.send.bind(connection)} />
+                <ModeratorEntry session={session} seatLabel={loaded.ui.seatLabel} room={room} you={state.you} capabilities={roomCapabilities(isHost)} connection={connection} />
               </>
             ),
           }}
@@ -206,15 +208,11 @@ function GameSeats({
   session,
   seatLabel,
   room,
-  you,
-  isHost,
   send,
 }: {
   session: OnlineSession;
   seatLabel: LoadedGame['ui']['seatLabel'];
   room: RoomMessage;
-  you: string | null;
-  isHost: boolean;
   send: RoomConnection['send'];
 }) {
   // Neue Spielstände ändern die Sitzung selbst, nicht den Raum – deshalb eigens abonnieren.
@@ -228,11 +226,10 @@ function GameSeats({
     return { index, seat, memberId, member: room.members.find((m) => m.id === memberId), orphaned: seat.kind === 'human' && memberId === null && session.isAway(index) };
   });
   const orphaned = session.yourSeat === null ? seats.filter((s) => s.orphaned) : [];
-  const others = isHost ? seats.filter((s) => s.memberId !== null && s.memberId !== you) : [];
-  if (orphaned.length === 0 && others.length === 0) return null;
+  if (orphaned.length === 0) return null;
   return (
     <div className="mx-3 mt-2 space-y-2 text-sm">
-      {orphaned.map(({ index, seat }) => (
+      {orphaned.map(({ index }) => (
         <div key={index} className="flex flex-wrap items-center gap-2 rounded-xl border border-accent/40 bg-accent/10 p-2">
           <span className="flex-1">
             🪑 {seatLabel(index, seats.length)}: {t('online.seatFreeBot')}
@@ -242,30 +239,77 @@ function GameSeats({
           </Button>
         </div>
       ))}
-      {others.length > 0 && (
-        <details className="rounded-xl border border-line bg-surface p-2">
-          <summary className="cursor-pointer font-medium">🪑 {t('online.seatsInGame')}</summary>
-          <p className="mt-1 text-xs text-muted">{t('online.unseatRunning')}</p>
-          <ul className="mt-2 space-y-1">
-            {others.map(({ index, member, seat }) => {
-              const name = member?.name ?? seat.name;
-              return (
-                <li key={index} className="flex items-center gap-2">
-                  <span className={`min-w-0 flex-1 truncate ${member?.connected === false ? 'text-muted' : ''}`}>
-                    {member?.avatar ?? seat.avatar} {name}
-                    {member?.connected === false && <span className="ml-1 text-xs">· {t('online.offline')}</span>}
-                    {session.isAway(index) && <span className="ml-1 text-xs">· 🤖</span>}
-                  </span>
-                  <Button variant="ghost" className="min-h-9 text-sm" onClick={() => window.confirm(t('online.unseatConfirm', { name })) && send({ type: 'unseat', index })}>
-                    {t('online.unseat')}
-                  </Button>
-                </li>
-              );
-            })}
-          </ul>
-        </details>
-      )}
     </div>
+  );
+}
+
+/**
+ * Spielleiter-Panel während der Partie (#100): Der Knopf erscheint, wenn `capabilities` etwas erlauben. Die Raumleitung
+ * braucht dafür keinen Platz; die Plätze werden aus der laufenden Sitzung gelesen.
+ */
+function ModeratorEntry({
+  session,
+  seatLabel,
+  room,
+  you,
+  capabilities,
+  connection,
+}: {
+  session: OnlineSession;
+  seatLabel: LoadedGame['ui']['seatLabel'];
+  room: RoomMessage;
+  you: string | null;
+  capabilities: readonly Capability[];
+  connection: RoomConnection;
+}) {
+  const [open, setOpen] = useState(false);
+  useSyncExternalStore(
+    (listener) => session.subscribe(listener),
+    () => session.version,
+  );
+  if (capabilities.length === 0) return null;
+  const seatCount = session.config.seats.length;
+  const members: ModeratorMember[] = room.members.map((member) => {
+    const index = session.config.seats.findIndex((_, i) => session.seatMember(i) === member.id);
+    return {
+      member,
+      isYou: member.id === you,
+      isRoomHost: member.id === room.hostId,
+      seatLabel: index >= 0 ? seatLabel(index, seatCount) : null,
+      away: index >= 0 && session.isAway(index),
+      seatIndex: index >= 0 && !session.result ? index : null,
+    };
+  });
+  return (
+    <>
+      <div className="mx-3 mt-2">
+        <Button variant="secondary" className="min-h-9 text-sm" onClick={() => setOpen(true)}>
+          🛠 {t('mod.open')}
+        </Button>
+      </div>
+      {open && (
+        <ModeratorPanel
+          capabilities={capabilities}
+          members={members}
+          namesLocked={room.lobby.namesLocked ?? false}
+          displays={room.displays ?? 0}
+          onRename={(memberId, profile) => {
+            if (memberId === you) {
+              saveOwnProfile(profile);
+              connection.rename(profile);
+            } else {
+              connection.send({ type: 'renameMember', memberId, name: profile.name, avatar: profile.avatar });
+            }
+          }}
+          onKick={(member) => connection.send({ type: 'kick', memberId: member.id })}
+          onUnseat={(index) => connection.send({ type: 'unseat', index })}
+          onLockNames={(locked) => connection.send({ type: 'setNamesLocked', locked })}
+          onRestart={() => connection.send({ type: 'start', rotate: false })}
+          onLobby={() => connection.send({ type: 'toLobby' })}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
