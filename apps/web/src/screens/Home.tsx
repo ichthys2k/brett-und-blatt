@@ -13,10 +13,10 @@ import { useActiveLook } from '../lib/look';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 
-type CategoryId = 'board' | 'cards' | 'family' | 'math';
+export type CategoryId = 'board' | 'cards' | 'family' | 'math';
 type FilterId = 'all' | CategoryId;
 
-interface CategorySpec {
+export interface CategorySpec {
   id: CategoryId;
   icon: string;
   title: string;
@@ -26,7 +26,7 @@ interface CategorySpec {
   gameIds: readonly string[];
 }
 
-const CATEGORIES: readonly CategorySpec[] = [
+export const CATEGORIES: readonly CategorySpec[] = [
   {
     id: 'board',
     icon: '♟️',

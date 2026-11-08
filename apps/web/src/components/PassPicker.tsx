@@ -29,7 +29,14 @@ export function PassPicker() {
   const active = entries.find((entry) => entry.id === activeId);
 
   return (
-    <>
+    <div className="flex flex-wrap justify-end gap-2">
+      <button
+        type="button"
+        className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-line bg-surface px-3 text-sm font-medium hover:bg-surface-2"
+        onClick={() => navigate(paths.pass)}
+      >
+        {t('pass.chronik.link')}
+      </button>
       <button
         type="button"
         className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-line bg-surface px-3 text-sm font-medium hover:bg-surface-2"
@@ -90,6 +97,6 @@ export function PassPicker() {
           <p className="text-xs text-muted">{t('passes.guestHint')}</p>
         </div>
       </dialog>
-    </>
+    </div>
   );
 }

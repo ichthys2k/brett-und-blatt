@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { t } from '../i18n';
 import { printEmergencyCard } from '../lib/emergencyCard';
 import { adoptCode, adoptLocked, changeSecret, createPlayerCode, emergencyCard, emergencyLink, hasLock, isPassError, leavePass, passBlock, passServer, playerLink, renewPlayerCode, resetSecret, setSecret, takeLinkedCode } from '../lib/playerPass';
+import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 import { Button, Section } from './controls';
 import { QrCode } from './OnlineParts';
@@ -67,6 +68,7 @@ export function PlayerPassPanel({ onChange }: { onChange: () => void }) {
   return (
     <Section title={`🪪 ${t('pass.title')}`}>
       <p className="text-sm text-muted">{t('pass.intro')}</p>
+      <Button onClick={() => navigate(paths.pass)}>{t('pass.chronik.link')}</Button>
 
       {code ? (
         <div className="space-y-2">

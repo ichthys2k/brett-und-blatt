@@ -223,6 +223,19 @@ try {
       await context.close();
     }
   }
+  // Pass-Seite (#145): im Handy-Hochformat rollt nichts waagerecht, und es gibt keine Fehler.
+  {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(`${base}#/pass`);
+    await page.getByRole('heading', { name: /Mein Pass/ }).waitFor({ timeout: 10_000 });
+    const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    if (wide > 1) problems.push(`Pass-Seite: rollt waagerecht (${wide} px)`);
+    if (errors.length > 0) problems.push(`Pass-Seite: ${errors[0]}`);
+    await context.close();
+  }
 } finally {
   await browser.close();
   stop();
@@ -233,4 +246,4 @@ if (problems.length) {
   console.error(problems.map((p) => `✗ ${p}`).join('\n'));
   process.exit(1);
 }
-console.log('✓ alle Spiele starten sauber');
+console.log('✓ alle Spiele starten sauber, die Pass-Seite passt');
