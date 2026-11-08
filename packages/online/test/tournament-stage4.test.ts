@@ -208,7 +208,7 @@ describe('Platzierungsspiele', () => {
     expect(view.ranking.map(name(t))).toEqual(names(16));
   });
 
-  it('6 Spieler (Freilose): alle erhalten einen Platz, ohne Platzierungsspiele bleibt die Rangliste leer', () => {
+  it('6 Spieler (Freilose): alle erhalten einen Platz; ohne Platzierungsspiele ergibt sich die Rangliste aus Podium und erreichter Runde', () => {
     const t = local('knockout', { placements: true, thirdPlace: true, seeded: true }, names(6));
     t.start(LEADER);
     playAll(t);
@@ -218,7 +218,7 @@ describe('Platzierungsspiele', () => {
     const plain = local('knockout', { thirdPlace: true }, names(8));
     plain.start(LEADER);
     playAll(plain);
-    expect(plain.view(LEADER).ranking).toEqual([]);
+    expect(plain.view(LEADER).ranking).toHaveLength(8);
   });
 });
 
@@ -309,6 +309,54 @@ describe('Zufallspartner (DYP)', () => {
     const pairs = view.players.filter((p) => p.pair).map((p) => p.name).sort();
     // 8 Spieler, 3 Runden: Es gibt viele mögliche Paare, die Auslosung vermeidet Wiederholungen.
     expect(new Set(pairs).size).toBe(pairs.length);
+  });
+});
+
+describe('Gesamtrangliste für die nächste Phase', () => {
+  function playAll(t: Tournament) {
+    for (let guard = 0; guard < 60; guard++) {
+      const view = t.view(LEADER);
+      if (view.phase === 'finished') return;
+      const open = view.matches.filter((m) => (m.status === 'open' || m.status === 'running') && m.slots[0].player && m.slots[1].player);
+      if (open.length === 0) return;
+      const number = (id: string | null) => Number(view.players.find((p) => p.id === id)!.name.replace('Spieler', ''));
+      for (const m of open) t.enterResult(LEADER, m.id, { winner: number(m.slots[0].player) < number(m.slots[1].player) ? 0 : 1 });
+    }
+  }
+
+  it('K.-o. ohne Platzierungsspiele: Podium, dann nach erreichter Runde', () => {
+    const t = local('knockout', { seeded: true, thirdPlace: true }, names(8));
+    t.start(LEADER);
+    playAll(t);
+    const view = t.view(LEADER);
+    const ranked = view.ranking.map((id) => view.players.find((p) => p.id === id)!.name);
+    expect(ranked.slice(0, 3)).toEqual(['Spieler1', 'Spieler2', 'Spieler3']);
+    expect(ranked).toHaveLength(8);
+    // Die Viertelfinal-Verlierer (5 bis 8) stehen hinten.
+    expect(new Set(ranked.slice(4))).toEqual(new Set(['Spieler5', 'Spieler6', 'Spieler7', 'Spieler8']));
+  });
+
+  it('Schweizer System: Tabellenreihenfolge', () => {
+    const t = local('swiss', {}, names(6));
+    t.start(LEADER);
+    playAll(t);
+    const view = t.view(LEADER);
+    expect(view.ranking).toEqual(view.table.map((r) => r.player));
+    expect(view.ranking).toHaveLength(6);
+  });
+
+  it('Teilnehmer der nächsten Phase kommen in Ranglistenreihenfolge als Setzliste', () => {
+    const first = local('swiss', {}, names(8));
+    first.start(LEADER);
+    playAll(first);
+    const v = first.view(LEADER);
+    const top4 = v.ranking.slice(0, 4).map((id) => v.players.find((p) => p.id === id)!.name);
+    const next = local('knockout', { seeded: true }, top4);
+    next.start(LEADER);
+    const nv = next.view(LEADER);
+    // Setzliste: Platz 1 spielt gegen Platz 4.
+    const firstRound = nv.matches.filter((m) => m.stage === 0).map((m) => m.slots.map((s) => nv.players.find((p) => p.id === s.player)!.name));
+    expect(firstRound.some((pair) => pair.includes(top4[0]!) && pair.includes(top4[3]!))).toBe(true);
   });
 });
 

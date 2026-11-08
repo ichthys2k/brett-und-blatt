@@ -29,6 +29,7 @@ import {
   parseTournamentMessage,
   parseTournamentSettings,
   parseFieldCount,
+  parseEntrants,
   parsePointRules,
   randomRoomCode,
   serverBotRunner,
@@ -241,10 +242,10 @@ export default {
 
     if (url.pathname === '/turniere' && request.method === 'POST') {
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
-      let body: { settings?: unknown; token?: unknown; name?: unknown };
+      let body: { settings?: unknown; token?: unknown; name?: unknown; entrants?: unknown };
       try {
         const text = await request.text();
-        if (text.length > 4000) return json({ error: 'size' }, 413, cors);
+        if (text.length > 12_000) return json({ error: 'size' }, 413, cors);
         body = JSON.parse(text) as typeof body;
       } catch {
         return json({ error: 'body' }, 400, cors);
@@ -253,7 +254,7 @@ export default {
       if (!settings || typeof body.token !== 'string' || body.token.length < 16 || body.token.length > 100 || typeof body.name !== 'string') return json({ error: 'body' }, 400, cors);
       for (let attempt = 0; attempt < 5; attempt++) {
         const code = randomLetters(8);
-        if (await tournamentStub(env, code).create(code, settings, { token: body.token, name: body.name }, parseFieldCount(body.settings), parsePointRules(body.settings))) return json({ code }, 201, cors);
+        if (await tournamentStub(env, code).create(code, settings, { token: body.token, name: body.name }, parseFieldCount(body.settings), parsePointRules(body.settings), parseEntrants(body.entrants))) return json({ code }, 201, cors);
       }
       return json({ error: 'busy' }, 503, cors);
     }
@@ -944,9 +945,11 @@ export class TournamentRoom extends DurableObject<Env> {
     });
   }
 
-  async create(code: string, settings: TournamentSettings, leader: { token: string; name: string }, fields = 0, points?: PointRules): Promise<boolean> {
+  async create(code: string, settings: TournamentSettings, leader: { token: string; name: string }, fields = 0, points?: PointRules, entrants: string[] = []): Promise<boolean> {
     if (this.tournament) return false;
     this.tournament = Tournament.create(code, randomSeed(), settings, leader, this.deps(), fields, points);
+    // Folgephase vor Ort: Die Teilnehmer der vorigen Phase stehen schon in der Reihenfolge der Setzliste auf der Liste.
+    if (entrants.length > 0) this.tournament.addEntrants(leader.token, entrants);
     await this.changed();
     return true;
   }

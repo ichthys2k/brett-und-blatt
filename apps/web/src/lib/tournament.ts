@@ -4,11 +4,11 @@ import { GAME_SERVER } from './server';
 import { storage, type Profile } from './storage';
 
 
-export async function createTournament(settings: TournamentSettings & { fields?: number }, profile: Profile): Promise<string> {
+export async function createTournament(settings: TournamentSettings & { fields?: number }, profile: Profile, entrants: string[] = []): Promise<string> {
   const response = await fetch(`${GAME_SERVER}/turniere`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ settings, token: storage.deviceToken(), name: profile.name }),
+    body: JSON.stringify({ settings, token: storage.deviceToken(), name: profile.name, ...(entrants.length > 0 ? { entrants } : {}) }),
   });
   if (!response.ok) throw new Error(`Server antwortet mit ${response.status}`);
   return ((await response.json()) as { code: string }).code;

@@ -306,3 +306,9 @@ export function parseFieldCount(body: unknown): number {
   const count = isRecord(body) ? body.fields : undefined;
   return Number.isInteger(count) && (count as number) >= 0 && (count as number) <= TOURNAMENT_MAX_FIELDS ? (count as number) : 0;
 }
+
+/** Namen, die beim Anlegen vor Ort schon auf der Teilnehmerliste stehen (Folgephase): höchstens 128, kurz, in Reihenfolge. */
+export function parseEntrants(body: unknown): string[] {
+  if (!Array.isArray(body) || body.length > TOURNAMENT_MAX_PLAYERS) return [];
+  return body.filter((n): n is string => typeof n === 'string' && n.length > 0 && n.length <= ENTRANT_NAME_LENGTH * 2);
+}

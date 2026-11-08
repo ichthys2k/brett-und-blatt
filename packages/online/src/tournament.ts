@@ -627,7 +627,7 @@ export class Tournament {
       players: s.players.map(({ id, name, avatar, withdrawn, members, pair }) => ({ id, name, avatar, withdrawn, ...(members ? { members: members.map((m) => m.name) } : {}), ...(pair ? { pair: true } : {}) })),
       groups: s.groups.map((players, group) => ({ players, table: this.groupTable(group), settled: this.groupSettled(group) })),
       swissTable: s.settings.format === 'swiss' && s.phase !== 'signup' ? this.overallTable() : [],
-      table: isTables(s) ? (s.phase !== 'signup' ? tableStandings(s) : []) : isLives(s) ? (s.phase !== 'signup' ? livesRows(s) : []) : isDyp(s) ? (s.phase !== 'signup' ? dypRows(s) : []) : (s.settings.format === 'swiss' || s.settings.format === 'league') && s.phase !== 'signup' ? this.overallTable() : [],
+      table: this.tableRows(),
       fields: s.fields ?? 0,
       stages: s.stages,
       currentStage: this.currentStage(),
@@ -640,7 +640,7 @@ export class Tournament {
       schedule: s.schedule ?? null,
       referees: s.referees === true,
       podium: this.podium(),
-      ranking: s.settings.placements && s.phase === 'finished' ? placementRanking(s) : [],
+      ranking: this.ranking(),
       you,
       isLeader: token !== null && this.isLeader(token),
       mayDelete: token !== null && this.mayDelete(token),
@@ -835,6 +835,45 @@ export class Tournament {
     return standings(this.s.players.map((p) => p.id), this.s.matches, this.s.seed, this.s.scoring);
   }
 
+  /** Tabelle der Formen mit Gesamttabelle (Schweizer System, Liga, Tischrunden, Last One Standing, Zufallspartner). */
+  private tableRows(): StandingRow[] {
+    const s = this.s;
+    if (s.phase === 'signup') return [];
+    if (isTables(s)) return tableStandings(s);
+    if (isLives(s)) return livesRows(s);
+    if (isDyp(s)) return dypRows(s);
+    return s.settings.format === 'swiss' || s.settings.format === 'league' ? this.overallTable() : [];
+  }
+
+  /**
+   * Gesamtrangliste am Ende (für „Nächste Phase“ und Platzierungsspiele): bei Tabellenformen die Tabelle, mit
+   * Platzierungsspielen deren Plätze, sonst Podium und danach, wer im Baum weiter kam.
+   */
+  private ranking(): string[] {
+    const s = this.s;
+    if (s.phase !== 'finished') return [];
+    if (s.settings.placements) return placementRanking(s);
+    const singles = s.players.filter((p) => !p.pair);
+    const table = this.tableRows();
+    if (table.length > 0) return table.map((r) => r.player);
+    const depth = new Map<string, number>();
+    const wins = new Map<string, number>();
+    for (const m of s.matches) {
+      m.slots.forEach((slot, side) => {
+        if (!slot.player || !m.outcome || m.outcome.bye) return;
+        depth.set(slot.player, Math.max(depth.get(slot.player) ?? 0, m.stage));
+        if (m.outcome.winner === side) wins.set(slot.player, (wins.get(slot.player) ?? 0) + 1);
+      });
+    }
+    const lot = new Map(seededShuffle(singles.map((p) => p.id), `${s.seed}/rang`).map((id, i) => [id, i]));
+    const podium = this.podium();
+    const rest = singles
+      .map((p) => p.id)
+      .filter((id) => !podium.includes(id))
+      .sort((a, b) => (isWithdrawnId(s, a) ? 1 : 0) - (isWithdrawnId(s, b) ? 1 : 0) || (depth.get(b) ?? -1) - (depth.get(a) ?? -1) || (wins.get(b) ?? 0) - (wins.get(a) ?? 0) || lot.get(a)! - lot.get(b)!);
+    return [...podium, ...rest];
+  }
+
   private podium(): string[] {
     return this.s.phase === 'finished' ? this.format.podium(this.ctx) : [];
   }
@@ -856,4 +895,8 @@ export class Tournament {
   private touch(): void {
     this.s.lastActivity = this.deps.now();
   }
+}
+
+function isWithdrawnId(s: TournamentSnapshot, id: string): boolean {
+  return s.players.find((p) => p.id === id)?.withdrawn === true;
 }

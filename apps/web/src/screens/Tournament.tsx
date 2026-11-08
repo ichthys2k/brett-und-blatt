@@ -9,7 +9,7 @@ import { passChanged, saveOwnProfile } from '../lib/playerPass';
 import { findGame, loadGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
-import { useTournament } from '../lib/tournament';
+import { createTournament, useTournament } from '../lib/tournament';
 
 type Match = TournamentView['matches'][number];
 type Slot = Match['slots'][number];
@@ -363,6 +363,7 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
       {header}
       {subtitle}
       {view.phase === 'finished' && <Podium view={view} />}
+      {view.phase === 'finished' && isLocalView(view) && view.isLeader && <NextPhase view={view} />}
       <RoundStart view={view} send={send} />
       {view.helperRole === 'helper' && <p className="text-sm text-muted">🤝 {t('tournament.youHelp')}</p>}
       {view.settings.format === 'tables' ? (
@@ -1067,6 +1068,75 @@ function TableResultForm({ view, game, send, onDone }: { view: TournamentView; g
 }
 
 /** „Spieltag 3“, bei einer Liga nach Kalender mit Datum. */
+/**
+ * Mehrere Phasen hintereinander (Stufe 4, vor Ort): Die Besten dieser Phase werden in der Reihenfolge der Rangliste
+ * (als Setzliste) die Teilnehmer eines neuen Turniers, z. B. Gruppen, dann Endrunde im K.-o.-System.
+ */
+function NextPhase({ view }: { view: TournamentView }) {
+  const players = view.players.filter((p) => !p.pair && !p.withdrawn);
+  const ranked = view.ranking.map((id) => view.players.find((p) => p.id === id)).filter((p): p is NonNullable<typeof p> => !!p && !p.pair && !p.withdrawn);
+  const [format, setFormat] = useState<'knockout' | 'double' | 'world' | 'swiss' | 'league' | 'lives' | 'dyp'>('knockout');
+  const choices = [2, 3, 4, 6, 8, 12, 16, 24, 32].filter((n) => n < ranked.length);
+  const [take, setTake] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (ranked.length < 4 || players.length < 4) return null;
+  const count = take > 0 && take < ranked.length ? take : ranked.length;
+  const start = async () => {
+    const profile = storage.loadProfile();
+    if (!profile) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const s = view.settings;
+      const seeded = format === 'knockout' || format === 'double' || format === 'world';
+      const code = await createTournament(
+        { name: `${s.name} · ${t('tournament.phase2')}`.slice(0, 40), gameId: s.gameId, format, time: 'normal', days: 1, thirdPlace: false, isPublic: false, mode: 'local', sport: s.sport, result: s.result ?? 'winner', draws: s.draws === true, fieldLabel: s.fieldLabel ?? 'Tisch', spectators: s.spectators === true, ...(seeded ? { seeded: true } : {}), fields: view.fields },
+        profile,
+        ranked.slice(0, count).map((p) => p.name),
+      );
+      storage.rememberTournament({ code, name: `${s.name} · ${t('tournament.phase2')}`.slice(0, 40) });
+      navigate(paths.tournament(code));
+    } catch {
+      setError(t('online.serverError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Section title={t('tournament.nextPhase')}>
+      <p className="text-sm text-muted">{t('tournament.nextPhaseHint')}</p>
+      <div className="grid grid-cols-2 gap-3">
+        <label className="block space-y-1 text-sm">
+          <span>{t('tournament.nextPhaseFormat')}</span>
+          <select className="min-h-11 w-full rounded-xl border border-line bg-surface px-3" value={format} onChange={(e) => setFormat(e.target.value as typeof format)}>
+            {(['knockout', 'double', 'world', 'swiss', 'league', 'lives', 'dyp'] as const).map((f) => (
+              <option key={f} value={f}>
+                {t(`tournament.format.${f}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block space-y-1 text-sm">
+          <span>{t('tournament.nextPhaseTake')}</span>
+          <select className="min-h-11 w-full rounded-xl border border-line bg-surface px-3" value={take} onChange={(e) => setTake(Number(e.target.value))}>
+            <option value={0}>{t('tournament.nextPhaseAll', { n: ranked.length })}</option>
+            {choices.map((n) => (
+              <option key={n} value={n}>
+                {t('tournament.nextPhaseBest', { n })}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <Button variant="primary" className="w-full" disabled={busy} onClick={start}>
+        ➡️ {t('tournament.nextPhaseStart', { n: count })}
+      </Button>
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+    </Section>
+  );
+}
+
 function matchdayName(view: TournamentView, stage: number): string {
   const startsAt = view.stages[stage]?.startsAt;
   if (startsAt === undefined) return t('tournament.matchday', { n: stage + 1 });
