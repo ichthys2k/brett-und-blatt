@@ -221,3 +221,37 @@
   height: 100%;
   min-height: 0;
 }
+
+/* Hand-Ansicht (#100): Zusammenfassung oben, die eigene Hand unten */
+.elv-board[data-hand] {
+  min-height: 100%;
+}
+
+.elv-board[data-hand] .elv-hand {
+  margin-top: auto;
+}
+
+.elv-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem;
+}
+
+.elv-summary-status {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.elv-summary-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.8rem;
+  font-size: 0.82rem;
+  opacity: 0.8;
+}
+
+.elv-summary-seats [data-turn] {
+  font-weight: 700;
+  opacity: 1;
+}

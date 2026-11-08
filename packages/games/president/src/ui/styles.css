@@ -363,3 +363,12 @@
 .prs-table[data-around] .prs-center {
   --card-w: clamp(4rem, min(28cqh, 30cqw), 9rem);
 }
+
+/* Hand-Ansicht (#100): größere Handkarten, die eigene Hand unten */
+.prs-table[data-hand] {
+  --card-w: clamp(54px, 17cqi, 110px);
+}
+
+.prs-table[data-hand] .prs-me {
+  margin-top: auto;
+}

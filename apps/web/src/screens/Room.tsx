@@ -134,6 +134,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
           game={loaded}
           online={{
             yourSeat: session.yourSeat,
+            displays: room.displays ?? 0,
             isHost,
             ...(room.match ? { finishedNote: t('tournament.matchOver') } : {}),
             onRestart: (rotate: boolean) => connection.send({ type: 'start', rotate }),

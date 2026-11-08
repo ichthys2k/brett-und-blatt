@@ -12,20 +12,27 @@ export function parseHandView(stored: string | null): boolean {
   return stored === 'an';
 }
 
-function load(): boolean {
+/** Was auf diesem Gerät gewählt wurde: „an“, „aus“ oder noch nichts (dann bietet der Tisch sie bei Bedarf an). */
+export type HandViewChoice = 'an' | 'aus' | null;
+
+export function parseHandViewChoice(stored: string | null): HandViewChoice {
+  return stored === 'an' || stored === 'aus' ? stored : null;
+}
+
+function load(): HandViewChoice {
   try {
-    return parseHandView(window.localStorage.getItem(KEY));
+    return parseHandViewChoice(window.localStorage.getItem(KEY));
   } catch {
-    return false;
+    return null;
   }
 }
 
-let enabled = load();
+let choice: HandViewChoice = load();
 
 export function setHandView(next: boolean): void {
-  enabled = next;
+  choice = next ? 'an' : 'aus';
   try {
-    window.localStorage.setItem(KEY, next ? 'an' : 'aus');
+    window.localStorage.setItem(KEY, choice!);
   } catch {
     // Ohne Speicher gilt die Wahl nur bis zum Neuladen.
   }
@@ -38,4 +45,7 @@ function subscribe(listener: () => void): () => void {
 }
 
 /** Ob die Hand-Ansicht auf diesem Gerät gewählt ist. */
-export const useHandView = (): boolean => useSyncExternalStore(subscribe, () => enabled, () => false);
+export const useHandView = (): boolean => useSyncExternalStore(subscribe, () => choice === 'an', () => false);
+
+/** Die Wahl auf diesem Gerät; `null`, solange noch nie gewählt wurde. */
+export const useHandViewChoice = (): HandViewChoice => useSyncExternalStore(subscribe, () => choice, () => null);

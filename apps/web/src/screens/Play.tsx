@@ -2,7 +2,7 @@ import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId 
 import { PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Ceremony } from '../components/Ceremony';
-import { setHandView, useHandView } from '../lib/handView';
+import { setHandView, useHandView, useHandViewChoice } from '../lib/handView';
 import { Button } from '../components/controls';
 import { HowToOverlay } from '../components/HowTo';
 import { MoreMenu } from '../components/MoreMenu';
@@ -86,6 +86,8 @@ export interface OnlineTableProps {
   bar?: ReactNode;
   /** Tisch-Bildschirm (#100): ohne Zurück-Knopf und Anleitung, nichts zum Bedienen. */
   display?: boolean;
+  /** Wie viele Tisch-Bildschirme im Raum verbunden sind; dann bietet der Tisch die Hand-Ansicht an. */
+  displays?: number;
 }
 
 interface GameTableProps {
@@ -100,7 +102,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const { ui, info } = game;
   const isOnline = online !== undefined;
   const handViewChosen = useHandView();
+  const handViewChoice = useHandViewChoice();
+  /** „Nein“ auf das Angebot gilt, bis die Seite neu geladen wird. */
+  const [handViewDeclined, setHandViewDeclined] = useState(false);
   // Hand-Ansicht (#100): nur online mit eigenem Platz und nur in Spielen, die sie können.
+  const offerHandView = !handViewDeclined && handViewChoice === null && (online?.displays ?? 0) > 0 && Boolean(ui.handView) && online?.yourSeat !== null && !online?.display && !session.result;
   const handOnly = handViewChosen && Boolean(ui.handView) && online !== undefined && online.yourSeat !== null && !online.display;
   const localRef = useRef(local);
   localRef.current = local;
@@ -529,6 +535,17 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         {hintMissing && <p className={`flex-none pt-2 text-center text-sm text-muted ${around ? '' : 'order-2'}`}>{t('play.noHint')}</p>}
 
         {online?.bar && !result && <div className={`flex-none ${around ? '' : 'order-2'}`}>{online.bar}</div>}
+        {offerHandView && (
+          <div className={`flex flex-none flex-wrap items-center gap-2 px-3 py-1 text-sm ${around ? '' : 'order-2'}`} role="status">
+            <span className="min-w-0 flex-1">📺 {t('play.handViewOffer')}</span>
+            <Button className="min-h-9 px-3" variant="primary" onClick={() => setHandView(true)}>
+              {t('play.handViewYes')}
+            </Button>
+            <Button className="min-h-9 px-3" variant="ghost" onClick={() => setHandViewDeclined(true)}>
+              {t('play.handViewNo')}
+            </Button>
+          </div>
+        )}
 
         {awaySeats.length > 0 && !result && (
           <div className={`mx-3 mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm ${around ? '' : 'order-2'}`}>
