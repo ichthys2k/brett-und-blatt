@@ -277,3 +277,15 @@ Parallel möglich: nach dem Passschlüssel PIN und Familie; nach dem Partiebuch 
 - **Datenschutz:** Jede Stufe, die neue Daten an den Server gibt (Schloss, geteilte Schnappschüsse, Wappen im Raum), ergänzt `apps/web/src/screens/Legal.tsx`.
 - **Barrierefreiheit:** Stempel, Pokale und Album sind auch als Liste mit Text lesbar, nicht nur als Bild.
 - **Doku:** Stand in `CLAUDE.md`, `docs/KONZEPT.md` (Grundsatz „keine Konten“ mit Spielerpass erklären), README-Zeile „ohne Konto“ ergänzen.
+
+## Entscheidungen (Cornelius, 8.11.2026, Nachtrag)
+
+- **PIN:** sechs Ziffern **oder** sechs Emoji, wählbar (Vorschlag „nur Ziffern“ und „nur Bilder“ fällt weg, beides bleibt).
+- **Passwort:** mindestens **8 Zeichen**.
+- **Klasse:** standardmäßig **keine Rangliste**, nur die Stempelwand.
+- **Spielerwappen:** erscheint **auch im Raum neben dem Namen**.
+
+## Stand der Umsetzung
+
+- **#136** (Profil → Ausweis): `saveOwnProfile` in `apps/web/src/lib/playerPass.ts` ist der einzige Weg, das eigene Profil zu speichern.
+- **#137** (Passschlüssel): `packages/ui/src/sync/pass.ts` (`randomPassKey`, `deriveBlockKeys`, `registerPassBlock`, `syncPassBlocks`), Schlüssel im Ausweis (`PlayerPass.passKey`, lokal `brett-und-blatt:passschluessel`), Abgleich über `passSyncSoon`. Erster Block: `einstellungen` (Lieblingsspiele, jüngere Änderung gewinnt) in `apps/web/src/lib/passBlocks.ts`. Die alten Blöcke (Narrenhof, Drachenspiel, Ausweis) leiten weiter aus dem Sicherungscode ab. Neue Blöcke: `registerPassBlock({ name, read, write, sanitize, merge, same })`; ein Block darf höchstens 64 KB groß werden.

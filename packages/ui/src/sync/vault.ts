@@ -164,20 +164,33 @@ async function touchOtherBlocks(serverUrl: Server, code: string, salt: string): 
   return found;
 }
 
-/** Ein Abgleich: holen, zusammenführen, zurückschreiben (bei gleichzeitigem Schreiben erneut). */
-async function syncWith<T>(block: SyncBlock<T>, code: string, requireExisting: boolean): Promise<void> {
-  const keys = await keysFromCode(code, block.salt);
-  const others = await touchOtherBlocks(block.serverUrl, code, block.salt);
+/** Größter Block, den der Server annimmt (Base64-Länge, `BACKUP_MAX_BYTES` in `packages/online`). */
+export const SYNC_BLOCK_MAX_BYTES = 64 * 1024;
+
+/**
+ * Gleicht einen Block mit fertigen Schlüsseln ab: holen, zusammenführen, zurückschreiben (bei gleichzeitigem
+ * Schreiben erneut). `missingIsError`: Fehlt der Block beim Server, ist das ein Fehler (falsch abgeschriebener Code).
+ */
+export async function syncBlockWithKeys<T>(block: SyncBlock<T>, keys: VaultKeys, missingIsError: boolean): Promise<void> {
   for (let attempt = 0; attempt < 4; attempt++) {
     const remote = await fetchRemote(block.serverUrl, keys.id);
-    if (!remote && requireExisting && !others) throw new SyncError('Zu diesem Code gibt es keine Sicherung. Bitte genau abschreiben.');
+    if (!remote && missingIsError) throw new SyncError('Zu diesem Code gibt es keine Sicherung. Bitte genau abschreiben.');
     const remoteValue = remote ? await openBlock(block, keys, remote.data) : null;
     const merged = remoteValue ? block.merge(remoteValue, block.read()) : block.read();
     block.write(merged);
     if (remoteValue && block.same(merged, remoteValue)) return;
-    if (await putRemote(block.serverUrl, keys.id, await seal(keys, { v: 1, [block.field]: merged }), remote?.rev ?? 0)) return;
+    const sealed = await seal(keys, { v: 1, [block.field]: merged });
+    if (sealed.length > SYNC_BLOCK_MAX_BYTES) throw new SyncError('Diese Daten sind für die Sicherung zu groß geworden.');
+    if (await putRemote(block.serverUrl, keys.id, sealed, remote?.rev ?? 0)) return;
   }
   throw new SyncError('Andere Geräte schreiben gerade gleichzeitig. Gleich noch einmal versuchen.');
+}
+
+/** Ein Abgleich über den Sicherungscode. */
+async function syncWith<T>(block: SyncBlock<T>, code: string, requireExisting: boolean): Promise<void> {
+  const keys = await keysFromCode(code, block.salt);
+  const others = await touchOtherBlocks(block.serverUrl, code, block.salt);
+  await syncBlockWithKeys(block, keys, requireExisting && !others);
 }
 
 async function run(task: () => Promise<void>): Promise<boolean> {

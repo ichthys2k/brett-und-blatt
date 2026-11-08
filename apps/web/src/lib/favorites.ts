@@ -8,14 +8,18 @@ import { useCallback, useEffect, useState } from 'react';
 export const FAVORITES_KEY = 'brett-und-blatt:lieblingsspiele';
 const MAX_FAVORITES = 100;
 
-/** Liest eine gespeicherte Liste; alles Unbrauchbare fällt weg, Dubletten auch. */
+/** Macht aus beliebigen Daten eine gültige Liste; alles Unbrauchbare fällt weg, Dubletten auch. */
+export function sanitizeFavorites(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const ids = value.filter((id): id is string => typeof id === 'string' && /^[a-z0-9-]{1,40}$/.test(id));
+  return [...new Set(ids)].slice(0, MAX_FAVORITES);
+}
+
+/** Liest eine gespeicherte Liste. */
 export function parseFavorites(raw: string | null): string[] {
   if (!raw) return [];
   try {
-    const value: unknown = JSON.parse(raw);
-    if (!Array.isArray(value)) return [];
-    const ids = value.filter((id): id is string => typeof id === 'string' && /^[a-z0-9-]{1,40}$/.test(id));
-    return [...new Set(ids)].slice(0, MAX_FAVORITES);
+    return sanitizeFavorites(JSON.parse(raw));
   } catch {
     return [];
   }
@@ -43,9 +47,39 @@ function load(): string[] {
   }
 }
 
-function save(list: readonly string[]): void {
+/** Zeitpunkt der letzten Änderung (ms); der Pass nimmt bei zwei Geräten die jüngere Liste. */
+const CHANGED_KEY = 'brett-und-blatt:lieblingsspiele:geaendert';
+
+export interface FavoritesState {
+  favorites: string[];
+  changed: number;
+}
+
+export function readFavoritesState(): FavoritesState {
+  try {
+    const changed = Number(window.localStorage.getItem(CHANGED_KEY));
+    return { favorites: load(), changed: Number.isFinite(changed) && changed > 0 ? changed : 0 };
+  } catch {
+    return { favorites: [], changed: 0 };
+  }
+}
+
+/** Übernimmt einen Stand aus dem Pass und sagt offenen Tabs Bescheid. */
+export function writeFavoritesState(state: FavoritesState): void {
+  save(state.favorites, state.changed);
+  window.dispatchEvent(new StorageEvent('storage', { key: FAVORITES_KEY }));
+}
+
+/** Wird nach jeder eigenen Änderung gerufen (Pass: Abgleich anstoßen). */
+let onChange: () => void = () => undefined;
+export function onFavoritesChanged(handler: () => void): void {
+  onChange = handler;
+}
+
+function save(list: readonly string[], changed = Date.now()): void {
   try {
     window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(list));
+    window.localStorage.setItem(CHANGED_KEY, String(changed));
   } catch {
     // Ohne Speicher gilt die Auswahl nur bis zum Neuladen.
   }
@@ -67,6 +101,7 @@ export function useFavorites(): { favorites: string[]; toggle: (gameId: string) 
     setFavorites((current) => {
       const next = toggleFavorite(current, gameId);
       save(next);
+      onChange();
       return next;
     });
   }, []);
