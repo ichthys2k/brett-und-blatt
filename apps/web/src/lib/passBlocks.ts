@@ -1,23 +1,45 @@
 import { registerPassBlock } from '@brett-und-blatt/ui/sync';
-import { onFavoritesChanged, readFavoritesState, sanitizeFavorites, writeFavoritesState, type FavoritesState } from './favorites';
+import { onFavoritesChanged } from './favorites';
 import { passSyncSoon } from './playerPass';
+import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
 
 /*
  * Blöcke des Spielerpasses, die die Web-App selbst beisteuert (Vorhaben #135). Jeder Block meldet sich bei
  * `registerPassBlock` an; der Abgleich läuft über den Passschlüssel (`passSyncSoon`).
  */
 
-/** Block `einstellungen` (Probe für #137): zunächst nur die Lieblingsspiele; die jüngere Änderung gewinnt. */
-export type Settings = FavoritesState;
+/** Stand beim letzten Abgleich (zusammen mit dem Pass, siehe `SCOPED_KEYS` in `passes.ts`). */
+const KNOWN_KEY = 'brett-und-blatt:einstellungen-staende';
 
-export function mergeSettings(remote: Settings, local: Settings): Settings {
-  return remote.changed > local.changed ? remote : local;
-}
-
-export function sanitizeSettings(value: unknown): Settings {
-  const { favorites, changed } = (value && typeof value === 'object' ? value : {}) as { favorites?: unknown; changed?: unknown };
-  return { favorites: sanitizeFavorites(favorites), changed: typeof changed === 'number' && Number.isFinite(changed) && changed > 0 ? Math.floor(changed) : 0 };
-}
+const read = (key: string): string | null => {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+const write = (key: string, value: string | null): void => {
+  try {
+    if (value === null) window.localStorage.removeItem(key);
+    else window.localStorage.setItem(key, value);
+  } catch {
+    // Speicher gesperrt – dann gilt es nur bis zum Neuladen.
+  }
+};
+const allKeys = (): string[] => {
+  try {
+    return Array.from({ length: window.localStorage.length }, (_, i) => window.localStorage.key(i)).filter((key): key is string => key !== null);
+  } catch {
+    return [];
+  }
+};
+const loadKnown = (): Items => {
+  try {
+    return sanitizeItems({ items: JSON.parse(read(KNOWN_KEY) ?? 'null') });
+  } catch {
+    return {};
+  }
+};
 
 let registered = false;
 
@@ -25,13 +47,21 @@ let registered = false;
 export function registerWebPassBlocks(): void {
   if (registered) return;
   registered = true;
-  registerPassBlock<Settings>({
+  registerPassBlock<Items>({
     name: 'einstellungen',
-    read: readFavoritesState,
-    write: writeFavoritesState,
-    sanitize: sanitizeSettings,
-    merge: mergeSettings,
-    same: (a, b) => a.changed === b.changed && JSON.stringify(a.favorites) === JSON.stringify(b.favorites),
+    read: () => collectItems(read, syncedNames(allKeys()), loadKnown(), Date.now()),
+    write: (items) => {
+      applyItems(items, read, write);
+      write(KNOWN_KEY, JSON.stringify(items));
+    },
+    // Der Block liegt als Eintragsliste vor; der frühere Stand (nur Lieblingsspiele) hatte die Form { favorites, changed }.
+    sanitize: (value) => sanitizeItems(value && typeof value === 'object' && 'favorites' in value ? value : { items: value }),
+    merge: mergeItems,
+    same: sameItems,
   });
   onFavoritesChanged(passSyncSoon);
+  // Änderungen an Musik, Aussehen & Co. werden beim nächsten Abgleich bemerkt: beim Start und wenn die Seite in den Hintergrund geht.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') passSyncSoon(500);
+  });
 }

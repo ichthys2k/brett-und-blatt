@@ -47,39 +47,15 @@ function load(): string[] {
   }
 }
 
-/** Zeitpunkt der letzten Änderung (ms); der Pass nimmt bei zwei Geräten die jüngere Liste. */
-const CHANGED_KEY = 'brett-und-blatt:lieblingsspiele:geaendert';
-
-export interface FavoritesState {
-  favorites: string[];
-  changed: number;
-}
-
-export function readFavoritesState(): FavoritesState {
-  try {
-    const changed = Number(window.localStorage.getItem(CHANGED_KEY));
-    return { favorites: load(), changed: Number.isFinite(changed) && changed > 0 ? changed : 0 };
-  } catch {
-    return { favorites: [], changed: 0 };
-  }
-}
-
-/** Übernimmt einen Stand aus dem Pass und sagt offenen Tabs Bescheid. */
-export function writeFavoritesState(state: FavoritesState): void {
-  save(state.favorites, state.changed);
-  window.dispatchEvent(new StorageEvent('storage', { key: FAVORITES_KEY }));
-}
-
 /** Wird nach jeder eigenen Änderung gerufen (Pass: Abgleich anstoßen). */
 let onChange: () => void = () => undefined;
 export function onFavoritesChanged(handler: () => void): void {
   onChange = handler;
 }
 
-function save(list: readonly string[], changed = Date.now()): void {
+function save(list: readonly string[]): void {
   try {
     window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(list));
-    window.localStorage.setItem(CHANGED_KEY, String(changed));
   } catch {
     // Ohne Speicher gilt die Auswahl nur bis zum Neuladen.
   }
