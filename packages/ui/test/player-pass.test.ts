@@ -8,6 +8,7 @@ import {
   openPlayerLock,
   parsePlayerCode,
   PLAYER_SALT,
+  PLAYER_EMOJIS,
   PLAYER_WORDS,
   playerBlock,
   sanitizePlayerPass,
@@ -54,6 +55,27 @@ describe('Spielercode', () => {
     }
     expect(parsePlayerCode('Fuchs-Birne-Mond')).toBeNull();
     expect(parsePlayerCode('Fuchs-Birne-Mond-Quatsch')).toBeNull();
+  });
+
+  it('ein neuer Spielercode besteht aus vier von 16 Emoji', () => {
+    expect(new Set(PLAYER_EMOJIS).size).toBe(16);
+    for (let i = 0; i < 50; i++) {
+      const code = randomPlayerCode();
+      expect(Array.from(code)).toHaveLength(4);
+      expect(Array.from(code).every((emoji) => (PLAYER_EMOJIS as readonly string[]).includes(emoji))).toBe(true);
+    }
+  });
+
+  it('liest Emoji-Codes mit Leerzeichen und als Link, lehnt falsche ab', () => {
+    expect(parsePlayerCode('🦊 🍎 🚀 🐸')).toBe('🦊🍎🚀🐸');
+    expect(parsePlayerCode(`https://spiele.lipponer.de/#/online?ausweis=${encodeURIComponent('🦊🍎🚀🐸')}`)).toBe('🦊🍎🚀🐸');
+    expect(parsePlayerCode('🦊🍎🚀')).toBeNull();
+    expect(parsePlayerCode('🦊🍎🚀🐸🎈')).toBeNull();
+    expect(parsePlayerCode('🦊🍎🚀🦁')).toBeNull();
+  });
+
+  it('frühere Wortcodes bleiben gültig', () => {
+    expect(parsePlayerCode('fuchs birne mond anker')).toBe('Fuchs-Birne-Mond-Anker');
   });
 
   it('ein zweites Gerät bekommt über den Code dieselbe Kennung', async () => {

@@ -79,7 +79,7 @@ export function CardView({ card, selected, dim, hint, pop, onClick, style, class
         </span>
       ) : (
         <span className="cs-face-art" aria-hidden="true">
-          <PlayingCard card={toCardId(card)} deckStyle={deckStyle} />
+          <PlayingCard card={toCardId(card)} deckStyle={deckStyle} fullPortrait />
         </span>
       )}
       {card.enh && card.enh !== 'granite' && (

@@ -1,5 +1,5 @@
 import type { GameSession, Result, SeatId } from '@brett-und-blatt/engine';
-import { soundCatalog, soundDuration, soundsForEvents, type SoundMap, type SoundName } from '@brett-und-blatt/ui';
+import { eventsOfSeats, soundCatalog, soundDuration, soundsForEvents, type SoundMap, type SoundName } from '@brett-und-blatt/ui';
 import { useEffect, useRef } from 'react';
 import { sound } from './sound';
 
@@ -13,7 +13,7 @@ const OTHERS_VOLUME = 0.6;
  * Spiels), dazu Sieg, Niederlage, Zeitwarnung und online „Du bist dran“.
  * Beim Fortsetzen einer gespeicherten Partie spielt nichts nach.
  */
-export function useGameSounds(session: GameSession, sounds: SoundMap | undefined, yourSeat: SeatId | null | undefined) {
+export function useGameSounds(session: GameSession, sounds: SoundMap | undefined, yourSeat: SeatId | null | undefined, ownOnly = false) {
   const online = yourSeat !== undefined;
   const soundsRef = useRef(sounds);
   soundsRef.current = sounds;
@@ -33,7 +33,7 @@ export function useGameSounds(session: GameSession, sounds: SoundMap | undefined
 
       const movers = entry && typeof entry.actor === 'number' ? [entry.actor] : previous.current;
       const volume = movers.some((seat) => local.includes(seat)) || local.length === 0 ? 1 : OTHERS_VOLUME;
-      const names = soundsForEvents(events, soundsRef.current);
+      const names = soundsForEvents(ownOnly && local.length > 0 ? eventsOfSeats(events, local) : events, soundsRef.current);
       if (events.some((event) => event.type === 'forfeit' && event.reason === 'time')) names.push('zeit-um');
 
       let delay = 0;
@@ -46,7 +46,7 @@ export function useGameSounds(session: GameSession, sounds: SoundMap | undefined
         sound.play('dein-zug', { volume: 0.8, delay: delay + 0.1 });
       }
     });
-  }, [session, online, yourSeat]);
+  }, [session, online, yourSeat, ownOnly]);
 
   // Zeitwarnung für die Plätze an diesem Gerät.
   useEffect(() => {

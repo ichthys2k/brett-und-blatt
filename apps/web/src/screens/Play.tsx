@@ -132,7 +132,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const soundSettings = useSoundSettings();
   const playMusic = !soundSettings.musicOff && (!isClient || Boolean(soundSettings.clientMusic));
 
-  useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined);
+  useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined, ui.ownSoundsOnly);
   useGameMusic(info.id, playMusic && !info.ownMusic);
 
   // Uhren prüfen und anzeigen.

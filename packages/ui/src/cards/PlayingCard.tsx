@@ -145,6 +145,11 @@ export interface PlayingCardProps {
   deckStyle?: DeckStyle;
   /** Optionale Animation (z. B. 'drop' beim Ausspielen, 'shake' bei Erschütterung, 'deal' beim Austeilen). */
   anim?: 'drop' | 'shake' | 'deal' | null;
+  /**
+   * Bildkarten: das Porträt füllt die ganze Karte, Wert und Farbe sitzen nur in den Ecken auf einem
+   * hellen Schild (Narrenhof, #115). Ohne Angabe bleibt das Porträt in der Mitte gerahmt.
+   */
+  fullPortrait?: boolean;
 }
 
 /**
@@ -161,10 +166,11 @@ export function PlayingCard({
   label,
   deckStyle = 'four-color',
   anim,
+  fullPortrait,
 }: PlayingCardProps) {
   const animClass = anim ? `bub-animate-${anim}` : '';
   const classes = `bub-card ${selected ? 'bub-card-selected' : ''} ${highlight ? `bub-card-${highlight}` : ''} ${onClick ? 'bub-card-clickable' : ''} ${animClass} ${className}`;
-  const content = card === null ? <span className="bub-card-back" /> : <CardFace card={card} deckStyle={deckStyle} />;
+  const content = card === null ? <span className="bub-card-back" /> : <CardFace card={card} deckStyle={deckStyle} fullPortrait={fullPortrait} />;
   const name = label ?? (card === null ? 'verdeckte Karte' : cardName(card));
   return onClick ? (
     <button type="button" className={classes} style={style} onClick={onClick} aria-label={name} aria-pressed={selected || undefined}>
@@ -177,7 +183,7 @@ export function PlayingCard({
   );
 }
 
-function CardFace({ card, deckStyle = 'four-color' }: { card: CardId; deckStyle?: DeckStyle }) {
+function CardFace({ card, deckStyle = 'four-color', fullPortrait }: { card: CardId; deckStyle?: DeckStyle; fullPortrait?: boolean }) {
   const suit = cardSuit(card);
   const rank = cardRank(card);
   const label = getRankLabel(rank, deckStyle);
@@ -186,6 +192,35 @@ function CardFace({ card, deckStyle = 'four-color' }: { card: CardId; deckStyle?
   const portraitsOn = useCardPortraits();
   const portrait = portraitsOn ? portraitUrl(card, deckStyle) : undefined;
   const clipId = useId();
+
+  if (portrait && fullPortrait) {
+    // Porträt über die ganze Karte; Wert und Farbe stehen in den Ecken auf einem hellen Schild in der Farbe der Kartenfarbe.
+    const badge = (
+      <>
+        <rect x="6" y="6" width="66" height="94" rx="12" fill="#fff" fillOpacity="0.93" stroke={color} strokeWidth="3" />
+        <g fill={color}>
+          <text x="39" y="52" fontSize="46" fontWeight="700" fontFamily="system-ui, sans-serif" textAnchor="middle">
+            {label}
+          </text>
+          <SuitShape suit={suit} deckStyle={deckStyle} x={25} y={59} size={28} />
+        </g>
+      </>
+    );
+    return (
+      <svg viewBox="0 0 250 350" className="bub-card-face" aria-hidden="true">
+        <defs>
+          <clipPath id={clipId}>
+            <rect x="2" y="2" width="246" height="346" rx="20" />
+          </clipPath>
+        </defs>
+        <rect x="2" y="2" width="246" height="346" rx="20" fill="#fff" />
+        <image href={portrait} x="0" y="0" width="250" height="350" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
+        <rect x="2" y="2" width="246" height="346" rx="20" fill="none" stroke={color} strokeWidth="4" />
+        {badge}
+        <g transform="rotate(180 125 175)">{badge}</g>
+      </svg>
+    );
+  }
 
   if (portrait) {
     // Bildkarte: kleiner Index in den Ecken, das Porträt in der Mitte mit Rahmen in der Farbe der Kartenfarbe.

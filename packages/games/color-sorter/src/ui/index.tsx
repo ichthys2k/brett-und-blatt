@@ -1522,6 +1522,8 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<SorterState, SorterMove> = {
   Board,
   SeatSymbol,
+  // Alle spielen parallel: nur die eigenen Klänge (#116).
+  ownSoundsOnly: true,
   sounds: {
     bought: 'fs-kauf',
     toolBought: 'fs-kauf',

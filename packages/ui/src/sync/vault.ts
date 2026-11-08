@@ -131,6 +131,7 @@ async function request(serverUrl: Server, id: string, init?: RequestInit): Promi
 export async function fetchRemote(serverUrl: Server, id: string): Promise<Remote | null> {
   const res = await request(serverUrl, id);
   if (res.status === 404) return null;
+  if (res.status === 429) throw new SyncError('Zu viele Fehlversuche von diesem Anschluss. Bitte in einer Stunde noch einmal versuchen.');
   if (!res.ok) throw new SyncError(OFFLINE);
   return (await res.json()) as Remote;
 }

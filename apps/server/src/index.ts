@@ -1,5 +1,6 @@
 import { DurableObject } from 'cloudflare:workers';
 import {
+  ATTEMPT_WINDOW_MS,
   BACKUP_ID_PATTERN,
   BACKUP_TTL_MS,
   OpenRoomDirectory,
@@ -27,6 +28,9 @@ import {
   type TournamentSettings,
   type PointRules,
   type StoredTournamentSnapshot,
+  isBlocked,
+  recordMiss,
+  type AttemptState,
 } from '@brett-und-blatt/online';
 import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
 import { bibelQuizKatalog } from './bibelquiz';
@@ -55,6 +59,7 @@ interface Env {
   ROOMS: DurableObjectNamespace<GameRoom>;
   LOBBY_REGISTRY: DurableObjectNamespace<LobbyRegistry>;
   BACKUPS: DurableObjectNamespace<BackupVault>;
+  ATTEMPTS: DurableObjectNamespace<AttemptLimiter>;
   TOURNAMENTS: DurableObjectNamespace<TournamentRoom>;
   ALLOWED_ORIGINS: string;
   /** "eu" im echten Betrieb. Nur der lokale Testserver kennt keine Jurisdiktionen und setzt "none". */
@@ -92,6 +97,11 @@ function registryStub(env: Env): DurableObjectStub<LobbyRegistry> {
 function backupStub(env: Env, id: string): DurableObjectStub<BackupVault> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.BACKUPS : env.BACKUPS.jurisdiction('eu');
   return namespace.get(namespace.idFromName(id));
+}
+
+function attemptStub(env: Env, sender: string): DurableObjectStub<AttemptLimiter> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.ATTEMPTS : env.ATTEMPTS.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(sender));
 }
 
 function tournamentStub(env: Env, code: string): DurableObjectStub<TournamentRoom> {
@@ -209,8 +219,15 @@ export default {
       if (!BACKUP_ID_PATTERN.test(id)) return json({ error: 'id' }, 404, cors);
       const noStore = { ...cors, 'Cache-Control': 'no-store' };
       if (request.method === 'GET') {
+        // Fehlversuche je Absender zählen: Spielercodes sind kurz und dürfen nicht durchprobiert werden.
+        const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+        if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
         const stored = await backupStub(env, id).load();
-        return stored ? json({ data: stored.data, rev: stored.rev }, 200, noStore) : json({ error: 'missing' }, 404, noStore);
+        if (!stored) {
+          await limiter.miss();
+          return json({ error: 'missing' }, 404, noStore);
+        }
+        return json({ data: stored.data, rev: stored.rev }, 200, noStore);
       }
       if (request.method === 'PUT') {
         const length = Number(request.headers.get('Content-Length') ?? 0);
@@ -541,6 +558,24 @@ export class BackupVault extends DurableObject<Env> {
   private async touch(stored: StoredBackup): Promise<void> {
     await this.ctx.storage.put('backup', stored);
     await this.ctx.storage.setAlarm(stored.at + BACKUP_TTL_MS);
+  }
+}
+
+/** Zählt je Absender (Adresse) die Anfragen an nicht vorhandene Sicherungen; Logik in `packages/online/src/attempts.ts`. */
+export class AttemptLimiter extends DurableObject<Env> {
+  async blocked(): Promise<boolean> {
+    return isBlocked((await this.ctx.storage.get<AttemptState>('attempts')) ?? null, Date.now());
+  }
+
+  async miss(): Promise<void> {
+    const now = Date.now();
+    const state = recordMiss((await this.ctx.storage.get<AttemptState>('attempts')) ?? null, now);
+    await this.ctx.storage.put('attempts', state);
+    await this.ctx.storage.setAlarm(state.since + ATTEMPT_WINDOW_MS);
+  }
+
+  override async alarm(): Promise<void> {
+    await this.ctx.storage.deleteAll();
   }
 }
 

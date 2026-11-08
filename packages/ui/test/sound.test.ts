@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SOUND_SETTINGS, soundCatalog, soundDuration, soundSettingsFrom, soundsForEvents, type SoundMap } from '../src/audio/sound';
+import { DEFAULT_SOUND_SETTINGS, soundCatalog, soundDuration, soundSettingsFrom, soundsForEvents, eventsOfSeats, type SoundMap } from '../src/audio/sound';
 
 describe('DEFAULT_SOUND_SETTINGS', () => {
   it('hat clientMusic standardmäßig deaktiviert', () => {
@@ -54,5 +54,13 @@ describe('soundsForEvents', () => {
 
   it('bleibt ohne Zuordnung still', () => {
     expect(soundsForEvents([{ type: 'placed' }], undefined)).toEqual([]);
+  });
+});
+
+describe('eventsOfSeats', () => {
+  it('lässt nur Ereignisse der eigenen Plätze und solche ohne Platz durch', () => {
+    const events = [{ type: 'bought', seat: 0 }, { type: 'bought', seat: 1 }, { type: 'roundStart' }];
+    expect(eventsOfSeats(events, [1])).toEqual([{ type: 'bought', seat: 1 }, { type: 'roundStart' }]);
+    expect(eventsOfSeats(events, [0, 1])).toEqual(events);
   });
 });
