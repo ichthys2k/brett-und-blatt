@@ -121,6 +121,15 @@ export function Datenschutz() {
         erkennt dich ein Raum auch auf einem anderen Gerät wieder. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>PIN oder Passwort (Schloss):</strong> Wenn du deinen Ausweis mit PIN oder Passwort schützt, rechnet dein Browser aus Spielercode und
+        PIN bzw. Passwort zwei Werte aus. Die PIN selbst verlässt dein Gerät nie. Der Spieleserver in der EU speichert nur einen Prüfwert, den er mit einem
+        geheimen Schlüssel des Betreibers (dem „Pfeffer“, der nicht im Speicher liegt) bildet, einen mit demselben Schlüssel verschlüsselten Zufallsanteil,
+        den im Browser verschlüsselten Ausweis und einen Zähler der Fehlversuche mit der Zeit der letzten Sperre. Nach fünf falschen Eingaben muss man
+        warten, nach zehn ist der Ausweis gesperrt, bis die Notfallkarte (Sicherungscode) ihn zurücksetzt. Zusätzlich zählt der Server, wie oft von einer
+        IP-Adresse aus nicht vorhandene Codes oder falsche PINs versucht werden, und speichert diese Adresse höchstens eine Stunde. Das Schloss wird gelöscht,
+        wenn es 400 Tage lang nicht abgerufen wurde. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b und f DSGVO (Schutz vor Missbrauch).
+      </p>
+      <p>
         <strong>Turniere:</strong> Wenn du ein Turnier anlegst, dich einschreibst oder die Turnierseite öffnest, speichert der Spieleserver in der EU den
         Namen des Turniers, deine Geräte-Kennung, deinen Spitznamen und dein Emoji-Bild sowie Paarungen und Ergebnisse. Alle Eingeschriebenen sehen
         Spitznamen, Bilder und Ergebnisse, die Geräte-Kennung sieht niemand. Das Turnier wird 30 Tage nach seinem Ende gelöscht, ein nicht beendetes 30 Tage

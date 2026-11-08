@@ -10,12 +10,18 @@ vi.mock('../apps/web/src/lib/storage', () => ({
     loadPlayerCode: () => '🦊🐻🐸🐙',
     loadTournaments: () => [],
     loadPassKey: () => null,
+    loadLockSecrets: () => null,
   },
 }));
 vi.mock('../apps/web/src/lib/online', () => ({ GAME_SERVER: 'http://test' }));
 vi.mock('../packages/ui/src/sync/index', () => ({
   updatePlayerLock: () => {
     calls.push('updatePlayerLock');
+    return Promise.resolve();
+  },
+  hasPassLock: () => Promise.resolve(false),
+  savePassLock: () => {
+    calls.push('savePassLock');
     return Promise.resolve();
   },
   parsePassKey: () => null,
@@ -36,6 +42,7 @@ describe('Eigenes Profil und Ausweis (#136)', () => {
   it('saveOwnProfile speichert das Profil und frischt das Schloss des Spielercodes auf', async () => {
     const { saveOwnProfile } = await import('../apps/web/src/lib/playerPass');
     saveOwnProfile({ name: 'Mia', avatar: '🦊' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
     expect(calls).toEqual(['saveProfile', 'updatePlayerLock']);
   });
 });

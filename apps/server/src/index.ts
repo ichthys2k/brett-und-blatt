@@ -32,6 +32,18 @@ import {
   recordMiss,
   type AttemptState,
 } from '@brett-und-blatt/online';
+import {
+  LOCK_ID_PATTERN,
+  LOCK_TTL_MS,
+  changeLock,
+  createLock,
+  mayRemoveLock,
+  openLock,
+  resetLock,
+  saveLock,
+  type LockOutcome,
+  type LockRecord,
+} from '@brett-und-blatt/online';
 import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
 import { bibelQuizKatalog } from './bibelquiz';
 import { wortspielKataloge } from './wortspiele';
@@ -60,6 +72,9 @@ interface Env {
   LOBBY_REGISTRY: DurableObjectNamespace<LobbyRegistry>;
   BACKUPS: DurableObjectNamespace<BackupVault>;
   ATTEMPTS: DurableObjectNamespace<AttemptLimiter>;
+  PASS_LOCKS: DurableObjectNamespace<PassLock>;
+  /** Geheimer Pfeffer für die Schlösser der Ausweise (`wrangler secret put PASS_PEPPER`, lokal in `.dev.vars`). Fehlt er, melden die Schloss-Endpunkte 503. */
+  PASS_PEPPER?: string;
   TOURNAMENTS: DurableObjectNamespace<TournamentRoom>;
   ALLOWED_ORIGINS: string;
   /** "eu" im echten Betrieb. Nur der lokale Testserver kennt keine Jurisdiktionen und setzt "none". */
@@ -96,6 +111,11 @@ function registryStub(env: Env): DurableObjectStub<LobbyRegistry> {
 
 function backupStub(env: Env, id: string): DurableObjectStub<BackupVault> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.BACKUPS : env.BACKUPS.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(id));
+}
+
+function lockStub(env: Env, id: string): DurableObjectStub<PassLock> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.PASS_LOCKS : env.PASS_LOCKS.jurisdiction('eu');
   return namespace.get(namespace.idFromName(id));
 }
 
@@ -246,6 +266,38 @@ export default {
         return json({ error: result.error }, 400, noStore);
       }
       return json({ error: 'method' }, 405, cors);
+    }
+
+    const lock = /^\/schloss\/([^/]+)(?:\/([a-z]+))?$/.exec(url.pathname);
+    if (lock) {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const id = lock[1]!;
+      if (!LOCK_ID_PATTERN.test(id)) return json({ error: 'id' }, 404, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      const stub = lockStub(env, id);
+      if (request.method === 'GET' && !lock[2]) {
+        const exists = await stub.exists();
+        if (!exists) await limiter.miss();
+        return json({ exists }, 200, noStore);
+      }
+      const actions = ['anlegen', 'oeffnen', 'speichern', 'aendern', 'zuruecksetzen', 'loeschen'] as const;
+      type Action = (typeof actions)[number];
+      const action = lock[2] as Action | undefined;
+      if (request.method !== 'POST' || !action || !actions.includes(action)) return json({ error: 'method' }, 405, cors);
+      let body: unknown;
+      try {
+        const text = await request.text();
+        if (text.length > 80 * 1024) return json({ error: 'size' }, 413, noStore);
+        body = JSON.parse(text);
+      } catch {
+        return json({ error: 'body' }, 400, noStore);
+      }
+      const result = (await stub.act(action, body, env.PASS_PEPPER)) as { status: number };
+      // Falsche Beweise und Anfragen an nicht vorhandene Schlösser zählen auch je Absender.
+      if (result.status === 401 || result.status === 404) await limiter.miss();
+      return json(result, result.status, noStore);
     }
 
     const match = /^\/rooms\/([^/]+)$/.exec(url.pathname);
@@ -558,6 +610,59 @@ export class BackupVault extends DurableObject<Env> {
   private async touch(stored: StoredBackup): Promise<void> {
     await this.ctx.storage.put('backup', stored);
     await this.ctx.storage.setAlarm(stored.at + BACKUP_TTL_MS);
+  }
+}
+
+/**
+ * Das Schloss eines Ausweises als eigenes Durable Object (eins je Kennung, in der EU).
+ * Logik und Zähler in `packages/online/src/lock.ts`; hier nur Speicher und Frist.
+ */
+export class PassLock extends DurableObject<Env> {
+  async exists(): Promise<boolean> {
+    const record = await this.ctx.storage.get<LockRecord>('lock');
+    return !!record && record.data !== '';
+  }
+
+  async act(action: string, body: unknown, pepper: string | undefined): Promise<{ status: number } & Record<string, unknown>> {
+    const now = Date.now();
+    const stored = (await this.ctx.storage.get<LockRecord>('lock')) ?? null;
+    if (action === 'anlegen') {
+      if (stored) return { status: 409, current: null };
+      const made = await createLock(body, pepper, now);
+      if (made.status !== 200) return made;
+      await this.put(made.record);
+      return { status: 200, share: made.share };
+    }
+    if (!stored) return { status: 404 };
+    let outcome: LockOutcome;
+    if (action === 'oeffnen') outcome = await openLock(stored, body, pepper, now);
+    else if (action === 'speichern') outcome = await saveLock(stored, body, pepper, now);
+    else if (action === 'aendern') outcome = await changeLock(stored, body, pepper, now);
+    else if (action === 'zuruecksetzen') outcome = await resetLock(stored, body, pepper, now);
+    else {
+      outcome = await mayRemoveLock(stored, body, pepper, now);
+      if (outcome.result.status === 200) {
+        await this.ctx.storage.deleteAll();
+        return outcome.result;
+      }
+    }
+    // Zähler und Fristen werden auch nach Fehlversuchen gespeichert.
+    if (outcome.record) await this.put(outcome.record);
+    return outcome.result;
+  }
+
+  override async alarm(): Promise<void> {
+    const stored = await this.ctx.storage.get<LockRecord>('lock');
+    if (!stored || Date.now() >= stored.at + LOCK_TTL_MS) {
+      await this.ctx.storage.deleteAll();
+      return;
+    }
+    await this.ctx.storage.setAlarm(stored.at + LOCK_TTL_MS);
+  }
+
+  private async put(record: LockRecord): Promise<void> {
+    await this.ctx.storage.put('lock', record);
+    await this.ctx.storage.setAlarm(record.at + LOCK_TTL_MS);
   }
 }
 

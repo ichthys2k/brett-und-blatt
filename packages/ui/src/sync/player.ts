@@ -146,6 +146,12 @@ export function playerBlock(salt: string, serverUrl: () => string | null, store:
   };
 }
 
+/** Das Schloss ohne PIN öffnet nur die Identität, nie den Passschlüssel (er liegt hinter Sicherungscode oder PIN). */
+function withoutPassKey(pass: PlayerPass): PlayerPass {
+  const { passKey: _passKey, ...rest } = pass;
+  return rest;
+}
+
 function lockKeys(code: string): Promise<VaultKeys> {
   return deriveKeys(new TextEncoder().encode(code), 'code', CODE_LOCK_SALT);
 }
@@ -156,7 +162,7 @@ export async function createPlayerLock(serverUrl: () => string | null, pass: Pla
     const code = randomPlayerCode();
     const keys = await lockKeys(code);
     if (await fetchRemote(serverUrl, keys.id)) continue;
-    if (await putRemote(serverUrl, keys.id, await seal(keys, { v: 1, player: { ...pass, code } }), 0)) return code;
+    if (await putRemote(serverUrl, keys.id, await seal(keys, { v: 1, player: withoutPassKey({ ...pass, code }) }), 0)) return code;
   }
   throw new SyncError('Kein freier Code gefunden. Noch einmal versuchen.');
 }
@@ -172,7 +178,7 @@ async function replaceLock(serverUrl: () => string | null, code: string, content
 
 /** Schreibt Name und Bild in das vorhandene Schloss, damit ein neues Gerät sie mitbekommt. */
 export function updatePlayerLock(serverUrl: () => string | null, code: string, pass: PlayerPass): Promise<void> {
-  return replaceLock(serverUrl, code, { v: 1, player: { ...pass, code } });
+  return replaceLock(serverUrl, code, { v: 1, player: withoutPassKey({ ...pass, code }) });
 }
 
 /** Macht einen Spielercode ungültig: Das Schloss bleibt, enthält aber keinen Ausweis mehr. */
@@ -194,5 +200,5 @@ export async function openPlayerLock(serverUrl: () => string | null, code: strin
   if (value?.revoked) throw new SyncError('Dieser Spielercode wurde durch einen neuen ersetzt.');
   const pass = sanitizePlayerPass(value?.player);
   if (!pass) throw new SyncError('Der Ausweis lässt sich mit diesem Code nicht öffnen.');
-  return { ...pass, code };
+  return withoutPassKey({ ...pass, code });
 }

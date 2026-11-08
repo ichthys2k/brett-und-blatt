@@ -1,7 +1,17 @@
 import {
+  changePassLock,
   connectSync,
+  createPassLock,
+  createSync,
+  hasPassLock,
+  openPassLock,
+  parseSecret,
+  resetPassLock,
+  savePassLock,
+  stretchSecret,
   createPlayerLock,
   disconnectSync,
+  parseCode,
   parsePassKey,
   randomPassKey,
   syncNow,
@@ -80,7 +90,15 @@ export function passSyncSoon(delayMs = 1500): void {
 /** Nach jeder Änderung: Schloss und Sicherung auf den neuen Stand bringen. Scheitert still, das nächste Mal klappt es. */
 export function passChanged(): void {
   const pass = readPass();
-  if (pass.code) void updatePlayerLock(passServer, pass.code, pass).catch(() => undefined);
+  const secrets = storage.loadLockSecrets();
+  if (pass.code && secrets) void savePassLock(passServer, pass.code, secrets, pass).catch(() => undefined);
+  else if (pass.code) {
+    // Gibt es das Schloss schon (dieses Gerät kam über den Sicherungscode), darf der Ausweis nicht ohne PIN daneben liegen.
+    const code = pass.code;
+    void hasPassLock(passServer, code)
+      .then((exists) => (exists ? undefined : updatePlayerLock(passServer, code, pass)))
+      .catch(() => undefined);
+  }
   passSyncSoon();
 }
 
@@ -102,15 +120,94 @@ export async function renewPlayerCode(): Promise<void> {
   if (old) await revokePlayerLock(passServer, old);
 }
 
-/** Übernimmt einen Ausweis über Spielercode oder Sicherungscode. false: Eingabe ist keins von beiden oder der Abgleich scheiterte. */
-export async function adoptCode(input: string): Promise<boolean> {
+/**
+ * Übernimmt einen Ausweis über Spielercode oder Sicherungscode. false: Eingabe ist keins von beiden oder der Abgleich scheiterte.
+ * 'secret': Der Spielercode gehört zu einem Ausweis mit PIN oder Passwort – dann weiter mit `adoptLocked`.
+ */
+export async function adoptCode(input: string): Promise<boolean | 'secret'> {
   const code = parsePlayerCode(input);
   if (code) {
+    if (await hasPassLock(passServer, code)) return 'secret';
     writePass(await openPlayerLock(passServer, code));
     passSyncSoon();
     return true;
   }
   return connectSync(passBlock, input);
+}
+
+/** Öffnet einen Ausweis mit PIN oder Passwort. */
+export async function adoptLocked(input: string, rawSecret: string): Promise<void> {
+  const code = parsePlayerCode(input);
+  const secret = parseSecret(rawSecret);
+  if (!code || !secret) throw new SyncError('PIN: sechs Ziffern oder sechs Bilder. Passwort: mindestens 8 Zeichen.');
+  const secrets = await stretchSecret(code, secret.value);
+  const { pass } = await openPassLock(passServer, code, secrets);
+  writePass(pass);
+  storage.saveLockSecrets(secrets);
+  passSyncSoon();
+}
+
+/** Hat dieses Gerät ein Schloss mit PIN oder Passwort für seinen Ausweis? */
+export const hasLock = (): boolean => storage.loadLockSecrets() !== null;
+
+function checkedSecret(raw: string) {
+  const secret = parseSecret(raw);
+  if (!secret) throw new SyncError('PIN: sechs Ziffern oder sechs Bilder. Passwort: mindestens 8 Zeichen.');
+  return secret;
+}
+
+/**
+ * Schützt den Ausweis mit PIN oder Passwort. Dazu braucht es die Notfallkarte (Sicherungscode); gibt es noch keine, wird sie angelegt.
+ * Danach öffnet der Spielercode allein nichts mehr: Der bisherige PIN-lose Ausweis unter dem Code wird ungültig gemacht.
+ */
+export async function setSecret(raw: string): Promise<void> {
+  const secret = checkedSecret(raw);
+  if (!storage.loadPlayerCode()) await createPlayerCode();
+  const code = storage.loadPlayerCode()!;
+  if (!currentSyncCode() && !(await createSync(passBlock))) throw new SyncError('Die Notfallkarte (Sicherungscode) ließ sich nicht anlegen. Später noch einmal versuchen.');
+  const key = ensurePassKey();
+  if (!key) throw new SyncError('Der Passschlüssel fehlt.');
+  const syncCode = currentSyncCode()!;
+  const secrets = await stretchSecret(code, secret.value);
+  // Gab es das Schloss schon (anderes Gerät), setzt die Notfallkarte, die dieses Gerät kennt, eine neue PIN.
+  if (await hasPassLock(passServer, code)) await resetPassLock(passServer, code, syncCode, secrets, readPass());
+  else await createPassLock(passServer, code, secrets, syncCode, readPass());
+  await revokePlayerLock(passServer, code).catch(() => undefined);
+  storage.saveLockSecrets(secrets);
+  passSyncSoon();
+}
+
+/** Ändert PIN oder Passwort. */
+export async function changeSecret(oldRaw: string, newRaw: string): Promise<void> {
+  const code = storage.loadPlayerCode();
+  if (!code) throw new SyncError('Es gibt noch keinen Spielercode.');
+  const [oldSecret, newSecret] = [checkedSecret(oldRaw), checkedSecret(newRaw)];
+  const secrets = await stretchSecret(code, newSecret.value);
+  await changePassLock(passServer, code, await stretchSecret(code, oldSecret.value), secrets, readPass());
+  storage.saveLockSecrets(secrets);
+}
+
+/** Vergessene oder gesperrte PIN: Die Notfallkarte (Sicherungscode) setzt eine neue. */
+export async function resetSecret(cardInput: string, newRaw: string): Promise<void> {
+  const code = storage.loadPlayerCode();
+  const syncCode = parseCode(cardInput);
+  if (!code) throw new SyncError('Es gibt noch keinen Spielercode.');
+  if (!syncCode) throw new SyncError('Der Sicherungscode hat 16 Zeichen (Buchstaben und Ziffern 2–9). Bitte genau abschreiben.');
+  const secrets = await stretchSecret(code, checkedSecret(newRaw).value);
+  await resetPassLock(passServer, code, syncCode, secrets, readPass());
+  storage.saveLockSecrets(secrets);
+}
+
+/** Notfallkarte: Spielercode und Sicherungscode zum Aufbewahren und Ausdrucken. */
+export function emergencyCard(): { playerCode: string; syncCode: string } | null {
+  const playerCode = storage.loadPlayerCode();
+  const syncCode = currentSyncCode();
+  return playerCode && syncCode ? { playerCode, syncCode } : null;
+}
+
+/** Adresse für den QR-Code der Notfallkarte: führt mit dem Sicherungscode zurück in den Ausweis. */
+export function emergencyLink(syncCode: string): string {
+  return `${window.location.origin}${window.location.pathname}#/online?sicherung=${encodeURIComponent(syncCode)}`;
 }
 
 export function isPassError(error: unknown): error is SyncError {
