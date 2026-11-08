@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { Button } from '../components/controls';
 import { TavernPage } from '../components/TavernPage';
 import { deletePack, loadLibrary, rowsFromText, savePack, textFromRows } from '../lib/library';
+import { QrCode } from '../components/OnlineParts';
+import { currentPackLink, publishPack, stopPackShare } from '../lib/packShare';
+import { GAME_SERVER } from '../lib/server';
 import { paths } from '../lib/router';
 
 const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
@@ -11,12 +14,15 @@ const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
 export function Library() {
   const [library, setLibrary] = useState(loadLibrary);
   const [editing, setEditing] = useState<UserPack | 'new' | null>(null);
+  const [sharing, setSharing] = useState<UserPack | null>(null);
   const packs = livePacks(library);
   const refresh = () => setLibrary(loadLibrary());
 
   return (
     <TavernPage title="Meine Pakete" subtitle="Eigene Paare für Paare finden, zum Beispiel Vokabeln." back={paths.pass}>
-      {editing ? (
+      {sharing ? (
+        <ShareBox pack={sharing} onClose={() => setSharing(null)} />
+      ) : editing ? (
         <Editor
           existing={editing === 'new' ? null : editing}
           onDone={() => {
@@ -44,6 +50,11 @@ export function Library() {
                   <Button variant="ghost" onClick={() => setEditing(pack)}>
                     ✏️ Bearbeiten
                   </Button>
+                  {GAME_SERVER && !packProblem(pack) && (
+                    <Button variant="ghost" aria-label={`${pack.name} teilen`} onClick={() => setSharing(pack)}>
+                      🔗
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     aria-label={`${pack.name} löschen`}
@@ -114,5 +125,60 @@ function Editor({ existing, onDone }: { existing: UserPack | null; onDone: () =>
         </Button>
       </div>
     </form>
+  );
+}
+
+function ShareBox({ pack, onClose }: { pack: UserPack; onClose: () => void }) {
+  const [link, setLink] = useState<string | null>(() => currentPackLink(pack.id));
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const run = async (task: () => Promise<void>) => {
+    setBusy(true);
+    setMessage(null);
+    try {
+      await task();
+    } catch {
+      setMessage('Das hat nicht geklappt. Bitte später noch einmal versuchen.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="space-y-3" aria-labelledby="pack-share">
+      <h2 id="pack-share" className="text-xl">
+        „{pack.name}“ teilen
+      </h2>
+      <p className="text-sm text-muted">
+        Das Paket wird verschlüsselt abgelegt; nur wer den Link oder QR-Code hat, kann es öffnen. Es gibt keine öffentliche Liste. Nach einem Jahr ohne Abruf wird es gelöscht. Geteilte Pakete stehen unter CC BY-SA 4.0.
+      </p>
+      <Button variant="primary" className="w-full" disabled={busy} onClick={() => run(async () => setLink(await publishPack(pack)))}>
+        🔗 {link ? 'Link aktualisieren (neuer Stand)' : 'Link erstellen'}
+      </Button>
+      {link && (
+        <div className="space-y-2">
+          <input readOnly className={FIELD} value={link} aria-label="Link zum Paket" onFocus={(e) => e.currentTarget.select()} />
+          <QrCode text={link} label={`QR-Code für das Paket ${pack.name}`} />
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => void navigator.clipboard?.writeText(link).then(() => setMessage('Link kopiert.'))}>Kopieren</Button>
+            <Button
+              disabled={busy}
+              onClick={() =>
+                run(async () => {
+                  await stopPackShare(pack.id);
+                  setLink(null);
+                  setMessage('Geteilt wird nicht mehr; der Link zeigt nichts mehr.');
+                })
+              }
+            >
+              Teilen beenden
+            </Button>
+          </div>
+        </div>
+      )}
+      {message && <p role="status" className="text-sm">{message}</p>}
+      <Button variant="ghost" onClick={onClose}>
+        Schließen
+      </Button>
+    </section>
   );
 }
