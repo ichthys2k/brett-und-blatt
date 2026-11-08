@@ -1,3 +1,5 @@
+import { cleanCrest } from '@brett-und-blatt/engine';
+
 /*
  * Mehrere Pässe an einem Gerät (Vorhaben #135, Schritt #139).
  *
@@ -20,6 +22,8 @@ export interface PassEntry {
   id: string;
   name: string;
   avatar: string;
+  /** Wappen des Passes (Beschreibung), für die Passwahl. */
+  crest?: string;
   /** Gibt es einen Spielercode oder Sicherungscode? Ohne ginge der Pass mit dem Gerät verloren. */
   hasCode: boolean;
   /** Gast: zeichnet nichts auf, seine Daten werden beim Wechsel gelöscht. */
@@ -49,6 +53,7 @@ export const SCOPED_KEYS = [
   'bub-four-player-chess-zoom',
   'brett-und-blatt:einstellungen-staende',
   'brett-und-blatt:partiebuch',
+  'brett-und-blatt:wappen',
   'brett-und-blatt:chronik',
   'brett-und-blatt:pokale',
   'brett-und-blatt:chronik-ablage',
@@ -67,10 +72,11 @@ function sanitizeList(value: unknown): PassEntry[] {
   const seen = new Set<string>();
   const out: PassEntry[] = [];
   for (const item of value) {
-    const { id, name, avatar, hasCode, guest } = (item ?? {}) as Record<string, unknown>;
+    const { id, name, avatar, hasCode, guest, crest } = (item ?? {}) as Record<string, unknown>;
+    const cleanedCrest = cleanCrest(crest);
     if (typeof id !== 'string' || !/^[0-9a-f]{12}$/.test(id) || seen.has(id)) continue;
     seen.add(id);
-    out.push({ id, name: typeof name === 'string' ? name.slice(0, 40) : '', avatar: typeof avatar === 'string' ? avatar.slice(0, 20) : '', hasCode: hasCode === true, ...(guest === true ? { guest: true } : {}) });
+    out.push({ id, name: typeof name === 'string' ? name.slice(0, 40) : '', avatar: typeof avatar === 'string' ? avatar.slice(0, 20) : '', hasCode: hasCode === true, ...(cleanedCrest ? { crest: cleanedCrest } : {}), ...(guest === true ? { guest: true } : {}) });
   }
   return out.slice(0, MAX_PASSES);
 }
@@ -120,7 +126,7 @@ export function createPassBook(store: Store) {
    * Der aktive Pass bekommt einen Eintrag (beim ersten Mal wird das bisherige Profil des Geräts zum ersten Pass, mit derselben
    * Kennung) und frische Anzeigedaten. Ohne Profil und ohne bisherige Pässe gibt es noch nichts einzutragen.
    */
-  function touch(info: { name: string; avatar: string; hasCode: boolean }): string | null {
+  function touch(info: { name: string; avatar: string; hasCode: boolean; crest?: string }): string | null {
     const entries = list();
     let id = activeId();
     if (!id) {
@@ -129,12 +135,12 @@ export function createPassBook(store: Store) {
       entries.push({ id, name: '', avatar: '', hasCode: false });
       store.set(ACTIVE_PASS_KEY, id);
     }
-    saveList(entries.map((entry) => (entry.id === id ? { ...entry, name: info.name || entry.name, avatar: info.avatar || entry.avatar, hasCode: info.hasCode } : entry)));
+    saveList(entries.map((entry) => (entry.id === id ? { ...entry, name: info.name || entry.name, avatar: info.avatar || entry.avatar, hasCode: info.hasCode, ...(info.crest ? { crest: info.crest } : {}) } : entry)));
     return id;
   }
 
   /** Auf einen anderen Pass wechseln. Danach muss die Seite neu geladen werden. */
-  function switchTo(targetId: string, current: { name: string; avatar: string; hasCode: boolean }): boolean {
+  function switchTo(targetId: string, current: { name: string; avatar: string; hasCode: boolean; crest?: string }): boolean {
     const entries = list();
     if (!entries.some((entry) => entry.id === targetId)) return false;
     const leaving = touch(current);
@@ -152,7 +158,7 @@ export function createPassBook(store: Store) {
   }
 
   /** Neuer, leerer Pass (oder Gast) und sofort aktiv. Danach muss die Seite neu geladen werden. */
-  function createNew(current: { name: string; avatar: string; hasCode: boolean }, options: { guest?: boolean } = {}): string | null {
+  function createNew(current: { name: string; avatar: string; hasCode: boolean; crest?: string }, options: { guest?: boolean } = {}): string | null {
     if (list().length >= MAX_PASSES) return null;
     const leaving = touch(current);
     if (leaving) {

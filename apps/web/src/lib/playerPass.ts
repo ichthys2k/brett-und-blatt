@@ -26,6 +26,7 @@ import {
   updatePlayerLock,
   type PlayerPass,
 } from '@brett-und-blatt/ui/sync';
+import { cleanCrest } from '@brett-und-blatt/engine';
 import { GAME_SERVER } from './online';
 import { passBook } from './passes';
 import { storage, type Profile } from './storage';
@@ -105,9 +106,10 @@ export function passChanged(): void {
 }
 
 /** Name, Bild und Code-Stand des aktiven Passes auf diesem Gerät. */
-export function currentPassInfo(): { name: string; avatar: string; hasCode: boolean } {
+export function currentPassInfo(): { name: string; avatar: string; hasCode: boolean; crest?: string } {
   const profile = storage.loadProfile();
-  return { name: profile?.name ?? '', avatar: profile?.avatar ?? '', hasCode: !!storage.loadPlayerCode() || !!currentSyncCode() };
+  const crest = cleanCrest(storage.loadCrestText());
+  return { name: profile?.name ?? '', avatar: profile?.avatar ?? '', hasCode: !!storage.loadPlayerCode() || !!currentSyncCode(), ...(crest ? { crest } : {}) };
 }
 
 /** Hält den Eintrag des aktiven Passes in der Passliste des Geräts aktuell (#139). */

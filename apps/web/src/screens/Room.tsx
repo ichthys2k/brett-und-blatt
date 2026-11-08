@@ -1,4 +1,5 @@
-import { BOT_LEVELS, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
+import { PlayerCrest } from '@brett-und-blatt/ui';
+import { BOT_LEVELS, parseCrest, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
 import { MAX_SEATS, TOURNAMENT_CODE_PATTERN, parseRoomCode, roomCapabilities, type Capability, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
@@ -624,9 +625,15 @@ function MemberRow({
   return (
     <li className="space-y-2 rounded-xl bg-surface px-3 py-2">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xl" aria-hidden="true">
-          {member.avatar}
-        </span>
+        {parseCrest(member.crest) ? (
+          <span className="text-ink">
+            <PlayerCrest spec={parseCrest(member.crest)!} size={28} label={t('crest.of', { name: member.name })} />
+          </span>
+        ) : (
+          <span className="text-xl" aria-hidden="true">
+            {member.avatar}
+          </span>
+        )}
         <span className={`min-w-0 flex-1 font-medium ${member.connected ? '' : 'text-muted'}`}>
           {member.name}
           {isYou && ` (${t('online.you')})`}

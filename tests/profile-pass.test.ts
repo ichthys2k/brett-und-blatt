@@ -11,6 +11,7 @@ vi.mock('../apps/web/src/lib/storage', () => ({
     loadTournaments: () => [],
     loadPassKey: () => null,
     loadLockSecrets: () => null,
+    loadCrestText: () => null,
   },
 }));
 vi.mock('../apps/web/src/lib/online', () => ({ GAME_SERVER: 'http://test' }));

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { t } from '../i18n';
+import { parseCrest } from '@brett-und-blatt/engine';
+import { PlayerCrest } from '@brett-und-blatt/ui';
 import { passBook } from '../lib/passes';
 import { navigate, paths } from '../lib/router';
 import { newPass, removePass, switchPass, syncPassEntry } from '../lib/playerPass';
@@ -55,9 +57,15 @@ export function PassPicker() {
           <ul className="space-y-2">
             {entries.map((entry) => (
               <li key={entry.id} className="flex items-center gap-2 rounded-xl border border-line bg-surface p-2">
-                <span aria-hidden="true" className="text-2xl">
-                  {entry.avatar || '🙂'}
-                </span>
+                {parseCrest(entry.crest) ? (
+                  <span className="text-ink">
+                    <PlayerCrest spec={parseCrest(entry.crest)!} size={40} label={t('crest.of', { name: entry.name || t('passes.noName') })} />
+                  </span>
+                ) : (
+                  <span aria-hidden="true" className="text-2xl">
+                    {entry.avatar || '🙂'}
+                  </span>
+                )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{entry.name || t('passes.noName')}</span>
                   {entry.id === activeId && <span className="block text-xs text-muted">{t('passes.active')}</span>}

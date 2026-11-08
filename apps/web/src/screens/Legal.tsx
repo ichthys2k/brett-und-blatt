@@ -127,6 +127,12 @@ export function Datenschutz() {
         Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>Spielerwappen:</strong> Das Wappen deines Passes ist eine kurze Beschreibung (Schildform, Teilung, Farben, Wappentier, Zier). Es bleibt auf deinem Gerät und
+        reist mit deinen Einstellungen in die verschlüsselte Sicherung. Betrittst du einen Online-Raum und hast „Mein Wappen im Raum zeigen“ nicht abgewählt, geht die Beschreibung
+        zusammen mit Spitzname und Bild an den Raum und damit an alle, die darin sind; der Spieleserver prüft sie und speichert sie so lange wie den Raum. Keine Kennung und
+        kein Name außer deinem Spitznamen gehört dazu. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+      <p>
         <strong>PIN oder Passwort (Schloss):</strong> Wenn du deinen Ausweis mit PIN oder Passwort schützt, rechnet dein Browser aus Spielercode und
         PIN bzw. Passwort zwei Werte aus. Die PIN selbst verlässt dein Gerät nie. Der Spieleserver in der EU speichert nur einen Prüfwert, den er mit einem
         geheimen Schlüssel des Betreibers (dem „Pfeffer“, der nicht im Speicher liegt) bildet, einen mit demselben Schlüssel verschlüsselten Zufallsanteil,
