@@ -41,6 +41,26 @@ describe('Turnierpartie im Raum', () => {
     expect(room.snapshot().game?.seatMembers).toEqual([room.snapshot().members.find((m) => m.token === A)?.id, room.snapshot().members.find((m) => m.token === B)?.id]);
   });
 
+  it('ein Tisch-Bildschirm (#100) schaut zu: kein Mitglied, keine Raumleitung, sieht nur die Zuschauersicht', () => {
+    const { room, enter, last } = setup();
+    enter('a', A);
+    enter('b', B);
+    const members = room.snapshot().members.length;
+    room.connect('tv');
+    room.receive('tv', JSON.stringify({ type: 'display', protocol: PROTOCOL_VERSION }));
+    expect(room.snapshot().members).toHaveLength(members);
+    const roomMessage = last('tv', 'room') as RoomMessage;
+    expect(roomMessage.hostId).toBeNull();
+    expect(roomMessage.displays).toBe(1);
+    const game = last('tv', 'game') as unknown as { yourSeat: number | null; legalMoves: unknown[] };
+    expect(game.yourSeat).toBeNull();
+    expect(game.legalMoves).toEqual([]);
+    // Er kann die Partie nicht beeinflussen.
+    room.receive('tv', JSON.stringify({ type: 'resign' }));
+    expect(last('tv', 'error')).toBeTruthy();
+    expect(room.matchReport()).toBeNull();
+  });
+
   it('Zuschauer können keinen Platz nehmen', () => {
     const { room, enter, last } = setup();
     enter('s', 'kennung-zuschauer-0003');
