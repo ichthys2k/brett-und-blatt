@@ -6,6 +6,8 @@ import { Button } from '../components/controls';
 import { EmojiKeypad, QrCode } from '../components/OnlineParts';
 import { TavernPage } from '../components/TavernPage';
 import { buildClassCard, classAct, createClassOnServer, forgetClass, hiddenSections, loadClasses, rememberClass, setSectionHidden } from '../lib/classes';
+import { createClassPasses, loadChildPasses, printChildCards, resetChildPin } from '../lib/classPasses';
+import { parseNames } from '../lib/classPassesCore';
 import { findGame } from '../lib/registry';
 import { STAMP_ICON, STAMP_LABEL, type StampKind } from '../lib/stamps';
 import { GAME_SERVER } from '../lib/server';
@@ -125,6 +127,9 @@ export function ClassPage({ code }: { code: string }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [hidden, setHidden] = useState<CardSection[]>(hiddenSections);
   const sent = useRef('');
+  const [names, setNames] = useState('');
+  const [progress, setProgress] = useState<string | null>(null);
+  const [children, setChildren] = useState(() => loadChildPasses().filter((c) => c.classCode === code));
   const alive = useRef(true);
 
   const apply = useCallback(
@@ -360,6 +365,54 @@ export function ClassPage({ code }: { code: string }) {
                 <input className={FIELD} aria-label="Neuer Name der Klasse" maxLength={30} placeholder="Klasse umbenennen" value={renaming} onChange={(e) => setRenaming(e.target.value)} />
                 <Button type="submit">OK</Button>
               </form>
+              <section className="space-y-2" aria-labelledby="class-passes">
+                <h3 id="class-passes" className="text-lg">Klassenausweise</h3>
+                <p className="text-sm text-muted">Für Kinder ohne eigenen Ausweis: ein Name je Zeile. Jedes Kind bekommt Spielercode und Start-PIN und ist gleich in der Klasse. Die Karten druckst du aus.</p>
+                <textarea className="min-h-24 w-full rounded-xl border border-line bg-surface px-3 py-2" rows={4} aria-label="Namen, ein Kind je Zeile" value={names} onChange={(e) => setNames(e.target.value)} />
+                <Button
+                  disabled={progress !== null || parseNames(names).length === 0}
+                  onClick={async () => {
+                    const list = parseNames(names);
+                    setProgress(`0 von ${list.length}`);
+                    const result = await createClassPasses(code, list, (done, total) => setProgress(`${done} von ${total}`));
+                    setChildren(loadChildPasses().filter((c) => c.classCode === code));
+                    setProgress(null);
+                    setNames('');
+                    setMessage(result.error ? `${result.created.length} angelegt, dann ein Fehler: ${result.error}` : `${result.created.length} Ausweise angelegt.`);
+                    void apply('view');
+                    if (result.created.length > 0) printChildCards(result.created, view.name);
+                  }}
+                >
+                  {progress ? `Lege an … ${progress}` : 'Ausweise anlegen und Karten drucken'}
+                </Button>
+                {children.length > 0 && (
+                  <>
+                    <ul className="space-y-1 text-sm">
+                      {children.map((child) => (
+                        <li key={child.playerCode} className="flex items-center gap-2 rounded-lg bg-surface-2 p-2">
+                          <span aria-hidden="true">{child.avatar}</span>
+                          <span className="flex-1">{child.name} · PIN {child.pin}</span>
+                          <Button
+                            variant="ghost"
+                            onClick={() =>
+                              void resetChildPin(child)
+                                .then((next) => {
+                                  setChildren(loadChildPasses().filter((c) => c.classCode === code));
+                                  setMessage(`Neue PIN für ${next.name}: ${next.pin}`);
+                                })
+                                .catch(() => setMessage('Die PIN ließ sich nicht zurücksetzen. Später noch einmal versuchen.'))
+                            }
+                          >
+                            PIN zurücksetzen
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button onClick={() => printChildCards(children, view.name)}>Alle Karten drucken</Button>
+                    <p className="text-xs text-muted">Hat ein Kind seine PIN geändert, zeigt die Liste noch die Start-PIN; „PIN zurücksetzen“ gilt trotzdem.</p>
+                  </>
+                )}
+              </section>
               <Button
                 onClick={() => {
                   if (window.confirm('Die Klasse wirklich auflösen? Alle Mitglieder verlieren sie.'))

@@ -13,6 +13,7 @@ import {
   configureClass,
   createClass,
   decide,
+  enrollMember,
   isClassExpired,
   joinClass,
   leaveClass,
@@ -794,6 +795,11 @@ export class ClassRoom extends DurableObject<Env> {
       case 'join':
         outcome = joinClass(state, { token, name: body.name, avatar: body.avatar, crest: body.crest }, now);
         break;
+      case 'enroll': {
+        const who = (body.who && typeof body.who === 'object' ? body.who : {}) as Record<string, unknown>;
+        outcome = enrollMember(state, token, { token: who.token, name: who.name, avatar: who.avatar }, now);
+        break;
+      }
       case 'update':
         outcome = updateMember(state, token, { name: body.name, avatar: body.avatar, ...('crest' in body ? { crest: body.crest } : {}) }, now);
         break;

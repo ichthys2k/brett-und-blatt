@@ -132,6 +132,20 @@ export function joinClass(state: ClassState, who: { token: unknown; name: unknow
   return ok;
 }
 
+/** Die Leitung trägt ein Mitglied ein, etwa ein Kind mit Klassenausweis (#152); Beitrittssperre und Bestätigung gelten dafür nicht. */
+export function enrollMember(state: ClassState, leaderToken: unknown, who: { token: unknown; name: unknown; avatar?: unknown }, now: number): Outcome {
+  const denied = mustLead(state, leaderToken);
+  if (denied) return denied;
+  if (!validToken(who.token)) return fail('Ungültige Kennung.');
+  const name = typeof who.name === 'string' ? cleanName(who.name) : null;
+  if (!name) return fail('Der Name ist nicht erlaubt.');
+  if (state.members[who.token]) return ok;
+  if (Object.keys(state.members).length >= CLASS_MAX_MEMBERS) return fail('Die Klasse ist voll.');
+  state.members[who.token] = { id: randomId(), name, avatar: cleanAvatar(typeof who.avatar === 'string' ? who.avatar : ''), lead: false, joinedAt: now };
+  state.lastActive = now;
+  return ok;
+}
+
 /** Ändert Name, Bild und Wappen eines Mitglieds (nach Änderungen am Profil). */
 export function updateMember(state: ClassState, token: unknown, who: { name?: unknown; avatar?: unknown; crest?: unknown }, now: number): Outcome {
   const member = validToken(token) ? state.members[token] : undefined;

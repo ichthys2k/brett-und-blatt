@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CLASS_CODE_LENGTH, CLASS_MAX_MEMBERS, classView, configureClass, createClass, decide, joinClass, leaveClass, parseClassCode, putCard, randomClassCode, removeMember, setLead, updateMember, type ClassState } from '../src/classroom';
+import { CLASS_CODE_LENGTH, CLASS_MAX_MEMBERS, classView, configureClass, createClass, decide, enrollMember, joinClass, leaveClass, parseClassCode, putCard, randomClassCode, removeMember, setLead, updateMember, type ClassState } from '../src/classroom';
 
 const T = (n: number) => `token-${String(n).padStart(8, '0')}`;
 const person = (n: number, name = `Kind${n}`) => ({ token: T(n), name, avatar: '🦊' });
@@ -144,5 +144,23 @@ describe('Klassenkarten (#151)', () => {
     joinClass(state, person(1), 2);
     putCard(state, T(1), full, 5);
     expect(JSON.stringify(classView(state, T(0)))).not.toContain('token-');
+  });
+});
+
+describe('Klassenausweise (#152): Eintragen durch die Leitung', () => {
+  it('trägt ein Kind ein, auch bei geschlossenem Beitritt und mit Bestätigung', () => {
+    const state = fresh();
+    configureClass(state, T(0), { open: false, approval: true }, 2);
+    expect(enrollMember(state, T(0), person(5, 'Mia'), 3)).toEqual({ ok: true });
+    expect(classView(state, T(5)).members).toHaveLength(2);
+    expect(enrollMember(state, T(0), person(5, 'Mia'), 4)).toEqual({ ok: true });
+    expect(Object.keys(state.members)).toHaveLength(2);
+  });
+  it('lässt nur die Leitung eintragen und prüft die Angaben', () => {
+    const state = fresh();
+    joinClass(state, person(1), 2);
+    expect(enrollMember(state, T(1), person(5), 3)).toEqual({ error: expect.any(String) });
+    expect(enrollMember(state, T(0), { token: 'kurz', name: 'A' }, 3)).toEqual({ error: expect.any(String) });
+    expect(enrollMember(state, T(0), { token: T(6), name: '' }, 3)).toEqual({ error: expect.any(String) });
   });
 });
