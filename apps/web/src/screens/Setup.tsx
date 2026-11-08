@@ -7,6 +7,7 @@ import { TeamChip } from '../components/Teams';
 import { t } from '../i18n';
 import { startGame } from '../lib/activeGame';
 import { describeTime, levelLabel } from '../lib/format';
+import { passBook } from '../lib/passes';
 import { loadGame, type LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
@@ -15,6 +16,8 @@ interface SeatDraft {
   kind: SeatKind;
   name: string;
   level: BotLevel;
+  /** Pass dieses Geräts (#139); fehlt bei freiem Namen. */
+  passId?: string;
 }
 
 interface SetupDraft {
@@ -52,7 +55,7 @@ function restoreDraft(game: LoadedGame, params?: Record<string, string>): SetupD
   const { min, max } = game.info.players;
   const seats = saved.seats.filter((s) => s && (s.kind === 'human' || s.kind === 'bot')).slice(0, max);
   return {
-    seats: seats.length >= min ? seats.map((s) => ({ kind: s.kind, name: String(s.name ?? ''), level: BOT_LEVELS.includes(s.level) ? s.level : 'medium' })) : fallback.seats,
+    seats: seats.length >= min ? seats.map((s) => ({ kind: s.kind, name: String(s.name ?? ''), level: BOT_LEVELS.includes(s.level) ? s.level : 'medium', ...(s.kind === 'human' && s.passId && passBook.list().some((p) => p.id === s.passId) ? { passId: s.passId } : {}) })) : fallback.seats,
     options: mergedOptions,
     time: TIME_PRESETS.includes(saved.time) ? saved.time : fallback.time,
   };
@@ -63,7 +66,11 @@ function toSeatConfigs(seats: SeatDraft[]): SeatConfig[] {
   const botCount = seats.filter((s) => s.kind === 'bot').length;
   let botNumber = 0;
   return seats.map((seat, i) => {
-    if (seat.kind === 'human') return { kind: 'human', name: seat.name.trim() || t('setup.defaultName', { n: i + 1 }), avatar: profile?.avatar };
+    if (seat.kind === 'human') {
+      const entry = seat.passId ? passBook.list().find((p) => p.id === seat.passId) : undefined;
+      if (entry) return { kind: 'human', name: entry.name || seat.name.trim() || t('setup.defaultName', { n: i + 1 }), avatar: entry.avatar || undefined, passId: entry.id };
+      return { kind: 'human', name: seat.name.trim() || t('setup.defaultName', { n: i + 1 }), avatar: profile?.avatar };
+    }
     botNumber++;
     return { kind: 'bot', name: botCount > 1 ? `${t('setup.botName')} ${botNumber}` : t('setup.botName'), level: seat.level };
   });
@@ -182,7 +189,25 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
                   />
                 </div>
               </div>
-              {seat.kind === 'human' ? (
+              {seat.kind === 'human' && passBook.list().length > 1 && (
+                <select
+                  className="min-h-11 w-full rounded-xl border border-line bg-bg px-3"
+                  aria-label={`${t('passes.seatPass')} (${ui.seatLabel(index, draft.seats.length)})`}
+                  value={seat.passId ?? ''}
+                  onChange={(event) => {
+                    const entry = passBook.list().find((p) => p.id === event.target.value);
+                    updateSeat(index, { passId: entry?.id, name: entry ? entry.name : seat.name });
+                  }}
+                >
+                  <option value="">{t('passes.seatOwn')}</option>
+                  {passBook.list().map((entry) => (
+                    <option key={entry.id} value={entry.id}>
+                      {`${entry.avatar} ${entry.name || t('passes.noName')}`.trim()}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {seat.kind === 'human' && !seat.passId ? (
                 <input
                   className="min-h-11 w-full rounded-xl border border-line bg-bg px-3"
                   aria-label={`${t('setup.name')} (${ui.seatLabel(index, draft.seats.length)})`}
@@ -191,7 +216,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
                   value={seat.name}
                   onChange={(event) => updateSeat(index, { name: event.target.value })}
                 />
-              ) : (
+              ) : seat.kind === 'human' ? null : (
                 <Segmented
                   label={`Stärke (${ui.seatLabel(index, draft.seats.length)})`}
                   value={seat.level}

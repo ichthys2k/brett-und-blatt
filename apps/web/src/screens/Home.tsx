@@ -6,6 +6,7 @@ import { discardGame } from '../lib/activeGame';
 import { pickFavorites, useFavorites } from '../lib/favorites';
 import { crestUrl } from '../lib/crest';
 import { OpenRooms } from '../components/OpenRooms';
+import { PassPicker } from '../components/PassPicker';
 import { GAME_SERVER, useOpenRooms } from '../lib/online';
 import { findGame, games } from '../lib/registry';
 import { useActiveLook } from '../lib/look';
@@ -433,6 +434,9 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
   return (
     <div className="bub-home mx-auto flex min-h-full max-w-3xl flex-col gap-6 px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-[max(env(safe-area-inset-bottom),1.5rem)]">
       <header className="bub-home-sign space-y-1">
+        <div className="flex justify-end">
+          <PassPicker />
+        </div>
         <h1 className="text-3xl font-bold tracking-tight">
           <span aria-hidden="true">{tavern ? '🕯️ ' : '🎲 '}</span>
           {t('app.title')}

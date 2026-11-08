@@ -27,6 +27,7 @@ import {
   type PlayerPass,
 } from '@brett-und-blatt/ui/sync';
 import { GAME_SERVER } from './online';
+import { passBook } from './passes';
 import { storage, type Profile } from './storage';
 
 /** Spielerausweis dieses Geräts (W-052); die Logik liegt in `@brett-und-blatt/ui/sync`. */
@@ -89,6 +90,7 @@ export function passSyncSoon(delayMs = 1500): void {
 
 /** Nach jeder Änderung: Schloss und Sicherung auf den neuen Stand bringen. Scheitert still, das nächste Mal klappt es. */
 export function passChanged(): void {
+  syncPassEntry();
   const pass = readPass();
   const secrets = storage.loadLockSecrets();
   if (pass.code && secrets) void savePassLock(passServer, pass.code, secrets, pass).catch(() => undefined);
@@ -102,9 +104,45 @@ export function passChanged(): void {
   passSyncSoon();
 }
 
+/** Name, Bild und Code-Stand des aktiven Passes auf diesem Gerät. */
+export function currentPassInfo(): { name: string; avatar: string; hasCode: boolean } {
+  const profile = storage.loadProfile();
+  return { name: profile?.name ?? '', avatar: profile?.avatar ?? '', hasCode: !!storage.loadPlayerCode() || !!currentSyncCode() };
+}
+
+/** Hält den Eintrag des aktiven Passes in der Passliste des Geräts aktuell (#139). */
+export function syncPassEntry(): void {
+  passBook.touch(currentPassInfo());
+}
+
+/** Wechselt zu einem anderen Pass des Geräts; die Seite lädt danach neu und spielt als dieser Pass. */
+export function switchPass(id: string): void {
+  if (!passBook.switchTo(id, currentPassInfo())) return;
+  window.location.hash = '#/';
+  window.location.reload();
+}
+
+/** Legt einen neuen, leeren Pass (oder einen Gast) an und wechselt dorthin. */
+export function newPass(options: { guest?: boolean } = {}): void {
+  if (!passBook.createNew(currentPassInfo(), options)) return;
+  window.location.hash = options.guest ? '#/' : '#/online';
+  window.location.reload();
+}
+
+/** Entfernt einen Pass von diesem Gerät. */
+export function removePass(id: string): void {
+  const wasActive = passBook.activeId() === id;
+  passBook.remove(id);
+  if (wasActive) {
+    window.location.hash = '#/';
+    window.location.reload();
+  }
+}
+
 /** Speichert das eigene Profil und bringt Schloss und Sicherung auf den neuen Stand (#136). Der einzige Weg, das eigene Profil zu ändern. */
 export function saveOwnProfile(profile: Profile): void {
   storage.saveProfile(profile);
+  syncPassEntry();
   passChanged();
 }
 
