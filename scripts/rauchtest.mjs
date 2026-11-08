@@ -230,7 +230,7 @@ try {
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`${base}#/pass`);
-    await page.getByRole('heading', { name: /Mein Pass/ }).waitFor({ timeout: 10_000 });
+    await page.getByRole('heading', { name: /^.{0,3}Profil/ }).waitFor({ timeout: 10_000 });
     const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (wide > 1) problems.push(`Pass-Seite: rollt waagerecht (${wide} px)`);
     if (errors.length > 0) problems.push(`Pass-Seite: ${errors[0]}`);
