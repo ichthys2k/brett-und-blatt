@@ -28,9 +28,13 @@ Statt Rollenabfragen im Code sollen alle Ansichten aus **Fähigkeiten** gespeist
 - **Spielszene:** der vorhandene `GameTable` mit `yourSeat: null` und `display: true` (ohne Zurück-Knopf, Anleitung und Partieende-Knöpfe); Klänge, Musik, Reaktionen und Siegerehrung laufen auf dem großen Gerät.
 - Bildschirm bleibt wach (Wake Lock), Vollbildknopf, Wiederverbinden wie im Raum.
 
-## Noch offen (Schritt 2b und weiter)
+## Schritt 2b (umgesetzt): Größe auf dem Fernseher
 
-- **Größe auf dem Fernseher:** viele Spiele zeichnen ihr Feld nur bis zu einer festen Größe; auf 1920 × 1080 wirkt es klein. Je Spiel eine größere Darstellung (`GameUi.tableView?`) oder eine allgemeine Skalierung.
+Die Spielszene läuft auf einer **Bühne** (`Stage` in `Display.tsx`, Faktor `stageScale` in `lib/stage.ts`): Das Spiel rechnet mit einer Fläche von etwa 1280 × 720 und wird als Ganzes hochskaliert (`transform: scale`, höchstens 2,5; auf Full-HD 1,5, nie kleiner als 1). Karten, Steine und Schrift werden so größer, ohne dass jedes Spiel eine eigene Fernsehansicht braucht. Der `GameTable` nimmt dort `h-full` statt `h-dvh` (`OnlineTableProps.display`). Festgesetzte Elemente (Siegerehrung, Sprechblasen) bleiben in der Bühne. Grenze: Medienabfragen der Spiele (`max-height: 720px` u. ä.) sehen weiter die echte Bildschirmgröße; geprüft mit zwölf Spielen auf 1920 × 1080, ohne Überlauf (Mau-Mau, Schach, Nicht ärgern!, Eins!, Poker, Skat, Domino, Sternhalma, Go, Narrenhof, Doppelkopf).
+
+## Noch offen
+
+- **Spielspezifische Fernsehansicht (`GameUi.tableView?`):** Wo die Zuschauer-Darstellung nicht passt, etwa im Skat der Fußplatz mit „Deine Hand (0 Karten)“ und verdeckten Karten. Dort sollte der Tisch alle Plätze gleich zeigen.
 - **Hand-Ansicht fürs Handy** (`GameUi.handView?`) für Mau-Mau, Eins! und ein Stichspiel.
 - **Spielleiter-Panel** mit dem Fähigkeiten-Modell, auch ohne Platz und während der Partie.
 - **Weitere Szenen** auf demselben Rahmen: Turnierbaum (die Turnierseite hat schon einen Zuschaulink, `settings.spectators`) und Partie nachspielen (#99).

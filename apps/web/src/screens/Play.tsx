@@ -435,7 +435,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   return (
     <div
       ref={rootRef}
-      className={`flex h-dvh flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around ? '' : 'mx-auto max-w-3xl side:max-w-none side:flex-row'}`}
+      className={`flex ${online?.display ? 'h-full' : 'h-dvh'} flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around ? '' : 'mx-auto max-w-3xl side:max-w-none side:flex-row'}`}
     >
       {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
       <div className={around ? 'contents' : `contents side:flex side:flex-none side:flex-col side:overflow-y-auto ${crowded ? 'side:w-80' : 'side:w-64 wide:w-72'}`}>

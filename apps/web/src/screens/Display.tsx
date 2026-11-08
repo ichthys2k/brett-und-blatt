@@ -1,9 +1,10 @@
 import { parseRoomCode, type RoomMessage } from '@brett-und-blatt/online';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Button } from '../components/controls';
 import { QrCode, SignalToasts } from '../components/OnlineParts';
 import { t } from '../i18n';
 import { GAME_SERVER, useRoomConnection, type RoomState } from '../lib/online';
+import { stageScale } from '../lib/stage';
 import type { LoadedGame } from '../lib/registry';
 import { paths } from '../lib/router';
 import { GameTable } from './Play';
@@ -50,6 +51,26 @@ function FullscreenButton() {
     >
       {full ? '🗗' : '⛶'}
     </button>
+  );
+}
+
+/**
+ * Das Spiel auf dem Fernseher: Es denkt, die Fläche sei etwa 1280 × 720 groß, und wird als Ganzes auf den
+ * Bildschirm hochgezogen. So werden Karten, Steine und Schrift groß, ohne dass jedes Spiel eine eigene
+ * Fernsehansicht braucht. Festgesetzte Elemente (Siegerehrung, Sprechblasen) bleiben in der Bühne.
+ */
+function Stage({ children }: { children: ReactNode }) {
+  const [size, setSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
+  useEffect(() => {
+    const onResize = () => setSize({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  const scale = stageScale(size.width, size.height);
+  return (
+    <div className="fixed inset-0 overflow-hidden">
+      <div style={{ width: size.width / scale, height: size.height / scale, transform: `scale(${scale})`, transformOrigin: '0 0' }}>{children}</div>
+    </div>
   );
 }
 
@@ -112,20 +133,22 @@ function Scene({ state }: { state: RoomState }) {
   if (state.game && room.phase !== 'lobby') {
     const { session, loaded } = state.game;
     return (
-      <GameTable
-        key={session.id}
-        session={session}
-        game={loaded}
-        online={{
-          yourSeat: null,
-          isHost: false,
-          display: true,
-          onLobby: () => undefined,
-          onLeave: () => undefined,
-          avatars: room.lobby.seats.map((seat) => (seat.kind === 'human' && seat.memberId ? (room.members.find((m) => m.id === seat.memberId)?.avatar ?? null) : null)),
-          invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
-        }}
-      />
+      <Stage>
+        <GameTable
+          key={session.id}
+          session={session}
+          game={loaded}
+          online={{
+            yourSeat: null,
+            isHost: false,
+            display: true,
+            onLobby: () => undefined,
+            onLeave: () => undefined,
+            avatars: room.lobby.seats.map((seat) => (seat.kind === 'human' && seat.memberId ? (room.members.find((m) => m.id === seat.memberId)?.avatar ?? null) : null)),
+            invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
+          }}
+        />
+      </Stage>
     );
   }
   return <LobbyScene room={room} game={game} />;
