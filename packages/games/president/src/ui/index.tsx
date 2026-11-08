@@ -51,7 +51,7 @@ function Hint({ view, mine, names }: { view: PresidentView; mine: boolean; names
   );
 }
 
-export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table }: BoardProps<PresidentView, PresidentMove>) {
+export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table, handOnly }: BoardProps<PresidentView, PresidentMove>) {
   const me = typeof viewer === 'number' ? viewer : null;
   const hand = me !== null ? view.hands[me] ?? [] : [];
   const deckStyle = view.options.deckStyle;
@@ -229,7 +229,7 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
   );
 
   return (
-    <div className="prs-table" data-around={table ? '' : undefined}>
+    <div className="prs-table" data-around={table ? '' : undefined} data-hand={handOnly ? '' : undefined}>
       {table ? (
         <SeatRing
           seats={view.counts.length}
@@ -260,6 +260,15 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
         >
           {center}
         </SeatRing>
+      ) : handOnly ? (
+        // Hand-Ansicht (#100): Kartenzahlen der anderen und der Hinweis, darunter die eigene Hand; den Stich zeigt der Tisch-Bildschirm.
+        <>
+          {opponents}
+          <div className="prs-hint" aria-live="polite">
+            <Hint view={view} mine={view.phase === 'play' && view.turn === me} names={seatNames} />
+          </div>
+          {own}
+        </>
       ) : (
         <>{opponents}{center}{own}</>
       )}
@@ -307,6 +316,7 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
 }
 
 export const gameUi: GameUi<PresidentView, PresidentMove> = {
+  handView: true,
   Board: PresidentBoard,
   seatsAround: true,
   SeatSymbol: ({ className }) => <span className={className}>🃏</span>,

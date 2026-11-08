@@ -20,6 +20,8 @@ const SEAT_SYMBOLS = ['①', '②', '③', '④', '⑤', '⑥'];
 const VALUES = Array.from({ length: HIGHEST - LOWEST + 1 }, (_, i) => LOWEST + i);
 
 /** Breite der Handkarten nach verfügbarem Platz. */
+/** Handkarten in der Hand-Ansicht (#100): Es gibt nur die Hand, also dürfen sie groß sein. */
+const HAND_VIEW_CARD_WIDTH = 92;
 const handCardWidth = (containerWidth: number) => Math.round(Math.min(78, Math.max(52, containerWidth * 0.17), Math.max(44, window.innerHeight * 0.13)));
 
 function cardLabel(card: CardId): string {
@@ -38,7 +40,7 @@ function NumberCard({ card }: { card: CardId | null }) {
   );
 }
 
-function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint, table }: BoardProps<ElevensState, ElevensMove>) {
+function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint, table, handOnly }: BoardProps<ElevensState, ElevensMove>) {
   const mySeat = typeof viewer === 'number' ? viewer : null;
   const hand = mySeat !== null ? (view.hands[mySeat] ?? []) : [];
   const playable = new Set(
@@ -134,7 +136,7 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint, tabl
           <CardFan
             count={hand.length}
             label="Deine Handkarten"
-            cardWidth={handCardWidth}
+            cardWidth={handOnly ? HAND_VIEW_CARD_WIDTH : handCardWidth}
             minStep={(width) => width * 0.42}
             maxRows={3}
             keyOf={(index) => hand[index]!}
@@ -160,8 +162,20 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint, tabl
   );
 
   return (
-    <div className="elv-board" data-around={table ? '' : undefined}>
-      {table ? (
+    <div className="elv-board" data-around={table ? '' : undefined} data-hand={handOnly ? '' : undefined}>
+      {handOnly ? (
+        // Hand-Ansicht (#100): Status und Kartenzahlen als Zusammenfassung, darunter die eigene Hand; das Legemuster zeigt der Tisch-Bildschirm.
+        <>
+          <div className="elv-summary" aria-live="polite">
+            <p className="elv-summary-status">{status}</p>
+            <p className="elv-summary-seats">
+              {view.hands.map((cards, seat) => (seat === mySeat ? null : <span key={seat} data-turn={view.turn === seat ? '' : undefined}>{seatNames[seat] ?? `Platz ${seat + 1}`}: {cards.length}</span>))}
+              <span>Stapel: {view.stock.length}</span>
+            </p>
+          </div>
+          {own}
+        </>
+      ) : table ? (
         <SeatRing
           seats={view.seats}
           bottomSeat={mySeat ?? 0}
@@ -188,6 +202,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; seats?: number; cl
 }
 
 export const gameUi: GameUi<ElevensState, ElevensMove> = {
+  handView: true,
   Board,
   seatsAround: true,
   SeatSymbol,
