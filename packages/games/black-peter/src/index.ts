@@ -33,6 +33,16 @@ export const gameModule: GameModule<BlackPeterState, BlackPeterMove> = {
   info: meta,
   options: [
     {
+      // Eigenes Paket aus der Bibliothek (#101): füllt `SetupExtra`; der Wert reist mit der Partie.
+      id: 'pack',
+      label: 'Eigenes Paket',
+      hidden: true,
+      pattern: '[\\s\\S]*',
+      maxLength: 6000,
+      choices: [{ value: '', label: 'keines' }],
+      default: '',
+    },
+    {
       id: 'set',
       label: 'Kartenset',
       choices: Object.values(PAIR_SETS).map((set) => ({ value: set.id, label: set.name })),
