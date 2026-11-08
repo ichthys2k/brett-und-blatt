@@ -22,6 +22,7 @@ export const SYNCED_KEYS: Readonly<Record<string, string>> = {
   aussehen: 'brett-und-blatt:aussehen',
   bildkarten: 'brett-und-blatt:bildkarten',
   kartenbild: 'brett-und-blatt:farbensortierer:kartenbild',
+  'bot-vorschlag': 'brett-und-blatt:botvorschlag',
   'zoom-go': 'bub-go-zoom',
   'zoom-vierer-schach': 'bub-four-player-chess-zoom',
 };

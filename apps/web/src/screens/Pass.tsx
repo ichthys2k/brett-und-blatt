@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react';
 import { Button } from '../components/controls';
 import { t } from '../i18n';
 import { pinnedList } from '../lib/chronik';
-import { hasReplay, loadBookRecent, loadChronik, pinGame, unpinGame } from '../lib/chronikStore';
+import { formOf, levelStats, ratingOf, winRate } from '../lib/botRating';
+import { hasReplay, loadBook, loadBookRecent, loadChronik, pinGame, unpinGame } from '../lib/chronikStore';
+import { levelLabel } from '../lib/format';
 import type { PlayedGame } from '../lib/partiebuch';
 import { findGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
@@ -12,6 +14,76 @@ const OUTCOME_ICON = { win: '🏆', draw: '🤝', loss: '▫️' } as const;
 function describe(game: PlayedGame): string {
   const others = game.seats.filter((seat) => !seat.you).map((seat) => `${seat.avatar ?? (seat.kind === 'bot' ? '🤖' : '🙂')} ${seat.name}`);
   return others.join(', ');
+}
+
+/** Bot-Wertung (#144): je Spiel Leistungszahl oder Siegquote gegen die Bots und die Form. */
+function BotRating() {
+  const [hints, setHints] = useState(() => {
+    try {
+      return window.localStorage.getItem('brett-und-blatt:botvorschlag') !== 'aus';
+    } catch {
+      return true;
+    }
+  });
+  const book = loadBook();
+  const rows = [...new Set(Object.values(book.counts).flatMap((games) => Object.keys(games)))]
+    .map((gameId) => ({ gameId, stats: levelStats(book, gameId) }))
+    .filter(({ stats }) => stats.easy.played + stats.medium.played + stats.hard.played > 0)
+    .sort((a, b) => (findGame(a.gameId)?.name ?? a.gameId).localeCompare(findGame(b.gameId)?.name ?? b.gameId, 'de'));
+  return (
+    <section className="space-y-3 rounded-2xl border border-line bg-surface p-4" aria-labelledby="botrating-title">
+      <h2 id="botrating-title" className="text-xl font-bold">
+        {t('botrating.title')}
+      </h2>
+      <p className="text-sm text-muted">{t('botrating.intro')}</p>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted">{t('botrating.empty')}</p>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map(({ gameId, stats }) => {
+            const info = findGame(gameId);
+            const two = info?.players.max === 2;
+            const rating = ratingOf(stats);
+            const form = formOf(book, gameId);
+            return (
+              <li key={gameId} className="rounded-xl border border-line bg-bg p-3">
+                <span className="block font-medium">
+                  {info?.emoji} {info?.name ?? gameId}
+                </span>
+                <span className="block text-sm">
+                  {[two ? (rating.rating !== null ? t('botrating.rating', { n: rating.rating }) : t('botrating.few')) : null, t('botrating.games', { n: rating.games })].filter(Boolean).join(' · ')}
+                </span>
+                <span className="block text-xs text-muted">
+                  {(['easy', 'medium', 'hard'] as const)
+                    .filter((level) => stats[level].played > 0)
+                    .map((level) => `${levelLabel(level)}: ${t('botrating.rate', { p: Math.round((winRate(stats[level]) ?? 0) * 100) })} (${stats[level].played})`)
+                    .join(' · ')}
+                  {form.games > 0 && ` · ${t('botrating.form', { points: form.points, games: form.games })}`}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <label className="flex cursor-pointer items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="accent-accent"
+          checked={hints}
+          onChange={(event) => {
+            setHints(event.target.checked);
+            try {
+              if (event.target.checked) window.localStorage.removeItem('brett-und-blatt:botvorschlag');
+              else window.localStorage.setItem('brett-und-blatt:botvorschlag', 'aus');
+            } catch {
+              // Speicher gesperrt
+            }
+          }}
+        />
+        {t('botrating.suggest')}
+      </label>
+    </section>
+  );
 }
 
 /** Mein Pass (#/pass): vorerst die Chronik der letzten Partien (#143); Stempel, Pokale und Album folgen. */
@@ -41,6 +113,8 @@ export function PassScreen() {
         </Button>
         <h1 className="text-2xl font-bold">🪪 {t('pass.page')}</h1>
       </header>
+
+      <BotRating />
 
       <section className="space-y-3 rounded-2xl border border-line bg-surface p-4" aria-labelledby="chronik-title">
         <h2 id="chronik-title" className="text-xl font-bold">

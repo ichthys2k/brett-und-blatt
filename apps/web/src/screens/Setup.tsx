@@ -7,6 +7,8 @@ import { TeamChip } from '../components/Teams';
 import { t } from '../i18n';
 import { startGame } from '../lib/activeGame';
 import { describeTime, levelLabel } from '../lib/format';
+import { LEVELS, levelStats, suggest } from '../lib/botRating';
+import { loadBook } from '../lib/chronikStore';
 import { passBook } from '../lib/passes';
 import { loadGame, type LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
@@ -118,6 +120,17 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
   const visibleOptions = module.options.filter(
     (spec) => !spec.hidden && (!spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(draft.options[id] ?? module.options.find((o) => o.id === id)?.default ?? ''))),
   );
+  // Bot-Wertung (#144): Vorschlag zur Stufe, wenn der Pass genug Partien gegen die gewählte Stufe hat (abschaltbar auf „Mein Pass“).
+  const botLevels = draft.seats.filter((seat) => seat.kind === 'bot').map((seat) => seat.level);
+  const strongest = botLevels.length > 0 ? LEVELS[Math.max(...botLevels.map((level) => LEVELS.indexOf(level)))] : undefined;
+  const hintsOn = (() => {
+    try {
+      return window.localStorage.getItem('brett-und-blatt:botvorschlag') !== 'aus';
+    } catch {
+      return true;
+    }
+  })();
+  const botHint = hintsOn && strongest ? suggest(levelStats(loadBook(), info.id), strongest, info.players.max === 2) : null;
   const humansMissing = (info.minHumans ?? 1) - draft.seats.filter((seat) => seat.kind === 'human').length;
   const update = (change: Partial<SetupDraft>) => setDraft({ ...draft, ...change });
   // Funktional, damit mehrere Werte nacheinander (z. B. SGF, Brettgröße, Komi) alle ankommen.
@@ -152,6 +165,13 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
           </h1>
         </div>
       </header>
+
+      {botHint && (
+        <div className="space-y-2 rounded-2xl border border-line bg-surface p-3 shadow-sm" role="note">
+          <p className="text-sm">{t(botHint.kind === 'up' ? 'botrating.up' : 'botrating.down', { p: Math.round(botHint.rate * 100), n: botHint.games, from: levelLabel(botHint.from), to: levelLabel(botHint.to) })}</p>
+          <Button onClick={() => update({ seats: draft.seats.map((seat) => (seat.kind === 'bot' ? { ...seat, level: botHint.to } : seat)) })}>{t('botrating.apply', { to: levelLabel(botHint.to) })}</Button>
+        </div>
+      )}
 
       <Button variant="primary" className="w-full text-lg" disabled={humansMissing > 0} onClick={start}>
         {t('setup.start')}

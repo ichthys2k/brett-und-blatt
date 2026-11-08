@@ -64,3 +64,6 @@ export const hasReplay = (id: string): boolean => Boolean(loadChronik()[id]?.rep
 export function loadBookRecent(): Book['recent'] {
   return sanitizeBook(readJson('brett-und-blatt:partiebuch')).recent;
 }
+
+/** Das ganze Partiebuch dieses Passes. */
+export const loadBook = (): Book => sanitizeBook(readJson('brett-und-blatt:partiebuch'));
