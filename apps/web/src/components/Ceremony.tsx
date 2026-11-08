@@ -20,6 +20,8 @@ interface CeremonyProps {
   seats: CeremonySeat[];
   /** Knöpfe wie Revanche oder Menü – dieselben wie unter dem Spielfeld. */
   actions: ReactNode;
+  /** Hinweis „in deinen Pokalschrank gelegt“ (#146). */
+  trophyNote?: boolean;
   onClose(): void;
 }
 
@@ -71,7 +73,7 @@ const CONFETTI = Array.from({ length: 36 }, (_, i) => {
  * Treppchen mit den besten drei und Konfetti. Erscheint kurz nach dem letzten Zug, damit dessen
  * Animation noch zu sehen ist, und lässt sich schließen, um das Spielfeld anzusehen.
  */
-export function Ceremony({ result, title, reason, seats, actions, onClose }: CeremonyProps) {
+export function Ceremony({ result, title, reason, seats, actions, trophyNote, onClose }: CeremonyProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -114,6 +116,7 @@ export function Ceremony({ result, title, reason, seats, actions, onClose }: Cer
           {title}
         </h2>
         {reason && <p className="bub-ceremony-reason">{reason}</p>}
+        {trophyNote && <p className="bub-ceremony-reason">🏆 {t('pass.trophy.laid')}</p>}
 
         {podium.length > 0 && (
           <ol className="bub-podium" aria-label={t('ceremony.podium')}>

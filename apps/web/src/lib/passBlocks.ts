@@ -3,7 +3,8 @@ import { onFavoritesChanged } from './favorites';
 import { passSyncSoon } from './playerPass';
 import { sameChronik, mergeChronik, sanitizeChronik, type Chronik } from './chronik';
 import { CHRONIK_KEY } from './chronikStore';
-import { BOOK_KEY } from './passRecorder';
+import { BOOK_KEY, TROPHIES_KEY } from './passRecorder';
+import { mergeTrophies, sameTrophies, sanitizeTrophies, type Trophy } from './pokale';
 import { emptyBook, mergeBooks, sameBooks, sanitizeBook, type Book } from './partiebuch';
 import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
 
@@ -92,6 +93,21 @@ export function registerWebPassBlocks(): void {
     sanitize: sanitizeChronik,
     merge: mergeChronik,
     same: sameChronik,
+  });
+  // Pokalschrank (#146): die letzten 60 Siege; die Zahl der Siege je Spiel kommt aus den Zählern des Partiebuchs.
+  registerPassBlock<Trophy[]>({
+    name: 'pokale',
+    read: () => {
+      try {
+        return sanitizeTrophies(JSON.parse(read(TROPHIES_KEY) ?? 'null'));
+      } catch {
+        return [];
+      }
+    },
+    write: (list) => write(TROPHIES_KEY, JSON.stringify(list)),
+    sanitize: sanitizeTrophies,
+    merge: mergeTrophies,
+    same: sameTrophies,
   });
   onFavoritesChanged(passSyncSoon);
   // Spiele melden sich mit eigenen Blöcken (Narrenhof, Drachenspiel) und bitten um Abgleich.
