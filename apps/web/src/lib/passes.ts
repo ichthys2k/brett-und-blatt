@@ -47,6 +47,7 @@ export const SCOPED_KEYS = [
   'bub-go-zoom',
   'bub-four-player-chess-zoom',
   'brett-und-blatt:einstellungen-staende',
+  'brett-und-blatt:partiebuch',
   'brett-und-blatt:farbensortierer',
   'brett-und-blatt:farbensortierer:sicherung',
   'brett-und-blatt:drachenspiel:decks',
@@ -180,7 +181,16 @@ export function createPassBook(store: Store) {
     saveList(entries.filter((entry) => entry.id !== id));
   }
 
-  return { list, activeId, touch, switchTo, createNew, remove };
+  /**
+   * Ändert einen Wert eines Passes, auch wenn er gerade nicht aktiv ist (Hot-Seat: Das Ergebnis geht an den Pass des Platzes).
+   * `id` null oder der aktive Pass: der gewohnte Schlüssel; sonst der beiseite gelegte.
+   */
+  function updateStored(id: string | null, key: string, change: (raw: string | null) => string): void {
+    const target = id === null || id === activeId() || !list().some((entry) => entry.id === id) ? key : `${STASH_PREFIX}${id}:${key}`;
+    store.set(target, change(store.get(target)));
+  }
+
+  return { list, activeId, touch, switchTo, createNew, remove, updateStored };
 }
 
 // ---------------------------------------------------------------- Browser
