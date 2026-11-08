@@ -141,3 +141,31 @@ export function swissPairing(ranked: readonly string[], played: ReadonlySet<stri
 
 export const winnerOf = (match: string): MatchSlot => ({ player: null, from: { kind: 'winner', match } });
 export const loserOf = (match: string): MatchSlot => ({ player: null, from: { kind: 'loser', match } });
+
+/** Gruppenzahlen, bei denen zu den zwei Ersten jeder Gruppe noch beste Dritte in den Baum kommen (3 → 8, 6 → 16, 7 → 16, 12 → 32). */
+export const BEST_THIRD_GROUPS = [3, 6, 7, 12] as const;
+
+/** Wie viele beste Dritte nötig sind, damit der Baum voll wird; null, wenn die Gruppenzahl nicht passt. */
+export function bestThirdCount(groups: number): number | null {
+  let size = 2;
+  while (size < groups * 2) size *= 2;
+  const extra = size - groups * 2;
+  return extra > 0 && extra <= groups ? extra : null;
+}
+
+/** Erste Runde mit besten Dritten: Gruppensieger, dann Zweite, dann die Dritten in Setzreihenfolge. */
+export function koFirstRoundWithThirds(groups: number): [SlotSource, SlotSource][] {
+  const extra = bestThirdCount(groups) ?? 0;
+  const list: SlotSource[] = [
+    ...Array.from({ length: groups }, (_, group): SlotSource => ({ kind: 'groupPlace', group, place: 0 })),
+    ...Array.from({ length: groups }, (_, group): SlotSource => ({ kind: 'groupPlace', group, place: 1 })),
+    ...Array.from({ length: extra }, (_, rank): SlotSource => ({ kind: 'bestThird', rank })),
+  ];
+  const order = seedOrder(list.length);
+  const pairs: [SlotSource, SlotSource][] = [];
+  for (let i = 0; i < list.length; i += 2) {
+    const [a, b] = [order[i]!, order[i + 1]!].sort((x, y) => x - y) as [number, number];
+    pairs.push([list[a]!, list[b]!]);
+  }
+  return pairs;
+}

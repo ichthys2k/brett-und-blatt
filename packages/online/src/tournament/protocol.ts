@@ -5,6 +5,7 @@ import { isBestOf } from './best-of';
 import { TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN } from './table-rounds';
 import { EVENING_EXTEND_CHOICES, EVENING_MINUTE_CHOICES } from './evening';
 import { LIVES_CHOICES } from './lives';
+import { BEST_THIRD_GROUPS } from './pairing';
 import { isTeamGame, validTeamSize } from './teams';
 import { ENTRANT_NAME_LENGTH, TOURNAMENT_MAX_FIELDS, TOURNAMENT_MAX_PLAYERS, TOURNAMENT_NAME_LENGTH, type MatchSide, type ResultKind, type TournamentFormat, type TournamentSettings, type TournamentView } from './types';
 
@@ -174,8 +175,10 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
       options[id] = value as string;
     }
   }
+  // Platzierungsspiele (Stufe 4): K.-o. und WM-Form; sie schließen das Spiel um Platz 3 ein.
+  const placements = body.placements === true && (format === 'knockout' || format === 'world');
   const multi = disciplines ? { disciplines, ...(body.wishes === true ? { wishes: true } : {}) } : {};
-  return { ...tables, ...parseLives(body, format), ...(teamSize === undefined ? parseBestOf(body, format) : { teamSize: teamSize as number }), name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
+  return { ...tables, ...parseLives(body, format), ...(teamSize === undefined ? parseBestOf(body, format) : { teamSize: teamSize as number }), name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true || placements, ...(placements ? { placements: true } : {}), isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
 }
 
 /** Vor Ort: Sportart statt Spiel, keine Zeitvorgabe, nie in „Offene Runden“. */
@@ -193,15 +196,19 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
   const result = RESULT_KINDS.includes(body.result as ResultKind) ? (body.result as ResultKind) : 'winner';
   const fieldLabel = typeof body.fieldLabel === 'string' ? cleanName(body.fieldLabel, 12) : null;
   // Setzliste (Stufe 4): nur Formen mit Baum oder Gruppen; die Teilnehmerliste ist dann die Rangfolge.
+  const placementsLocal = body.placements === true && (format === 'knockout' || format === 'world');
   const seeded = body.seeded === true && (format === 'knockout' || format === 'double' || format === 'world') ? { seeded: true } : {};
-  const groupCount = format === 'world' && GROUP_COUNT_CHOICES.includes(body.groupCount as 2) ? { groupCount: body.groupCount as number } : {};
+  // Beste Dritte (Stufe 4): eine Gruppenzahl, die mit den Dritten den Baum füllt (3, 6, 7 oder 12).
+  const bestThirds = format === 'world' && body.bestThirds === true && BEST_THIRD_GROUPS.includes(body.groupCount as 3);
+  const groupCount = format === 'world' && (bestThirds || GROUP_COUNT_CHOICES.includes(body.groupCount as 2)) ? { groupCount: body.groupCount as number } : {};
   return {
     name,
     gameId: game ? (body.gameId as string) : '',
     format,
     time: 'normal',
     days: 1,
-    thirdPlace: body.thirdPlace === true,
+    thirdPlace: body.thirdPlace === true || placementsLocal,
+    ...(placementsLocal ? { placements: true } : {}),
     isPublic: false,
     mode: 'local',
     sport,
@@ -211,6 +218,7 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
     spectators: body.spectators === true,
     ...returnRound,
     ...seeded,
+    ...(bestThirds ? { bestThirds: true } : {}),
     ...groupCount,
     ...(disciplines ? { disciplines } : {}),
     ...tables,

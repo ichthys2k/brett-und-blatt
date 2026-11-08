@@ -107,6 +107,7 @@ function useLookup(view: TournamentView) {
       const from = slot.from;
       if (!from) return t('tournament.nobody');
       if (from.kind === 'groupPlace') return t('tournament.from.group', { place: from.place + 1, group: GROUP_LETTERS[from.group]! });
+      if (from.kind === 'bestThird') return t('tournament.from.bestThird', { n: from.rank + 1 });
       const source = view.matches.find((m) => m.id === from.match);
       if (source?.outcome) return t('tournament.nobody');
       return t(from.kind === 'winner' ? 'tournament.from.winner' : 'tournament.from.loser', { match: koMatchName(from.match) });
@@ -1330,8 +1331,33 @@ function Bracket({ view, title, hint, columns }: { view: TournamentView; title: 
 
 /** Der Baum von WM-Form und K.-o. */
 function KnockoutBracket({ view }: { view: TournamentView }) {
-  const columns = view.stages.flatMap((stage, index) => (stage.kind === 'ko' ? [{ key: String(index), label: roundName(stage.round), deadline: stage.deadline, matches: view.matches.filter((m) => m.stage === index) }] : []));
-  return <Bracket view={view} title={t('tournament.bracket')} columns={columns} />;
+  // Platzierungsspiele (Kennung „c…“) stehen in einem eigenen Abschnitt, nicht im Hauptbaum.
+  const columns = view.stages.flatMap((stage, index) => (stage.kind === 'ko' ? [{ key: String(index), label: roundName(stage.round), deadline: stage.deadline, matches: view.matches.filter((m) => m.stage === index && !m.id.startsWith('c')) }] : []));
+  const placement = view.matches.filter((m) => m.id.startsWith('c')).sort((a, b) => (a.placeFor ?? 0) - (b.placeFor ?? 0) || a.stage - b.stage);
+  return (
+    <>
+      <Bracket view={view} title={t('tournament.bracket')} columns={columns} />
+      {placement.length > 0 && (
+        <Section title={t('tournament.placements')}>
+          <ul className="grid gap-2 md:grid-cols-2">
+            {placement.map((m) => (
+              <MatchCard key={m.id} view={view} m={m} title={t('tournament.placeMatch', { n: m.placeFor ?? 0 })} />
+            ))}
+          </ul>
+          {view.ranking.length > 0 && (
+            <ol className="mt-3 space-y-0.5 text-sm">
+              {view.ranking.map((id, i) => (
+                <li key={id} className="flex gap-2">
+                  <span className="w-8 text-right tabular-nums text-muted">{i + 1}.</span>
+                  <span className="min-w-0 flex-1 truncate">{view.players.find((p) => p.id === id)?.name}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </Section>
+      )}
+    </>
+  );
 }
 
 /** Runden einer Seite des Doppel-K.-o., Partien ohne jeden Spieler fallen weg. */

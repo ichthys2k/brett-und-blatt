@@ -1,4 +1,4 @@
-import { firstRoundSlots, groupCountFor, koFirstRound, loserOf, pairKey, roundRobinPairs, roundRobinRounds, swissPairing, swissRoundsFor, winnerOf } from './pairing';
+import { bestThirdCount, firstRoundSlots, groupCountFor, koFirstRound, koFirstRoundWithThirds, loserOf, pairKey, roundRobinPairs, roundRobinRounds, swissPairing, swissRoundsFor, winnerOf } from './pairing';
 import { livesFormat } from './lives';
 import { tablesFormat } from './table-rounds';
 import { TOURNAMENT_MIN_PLAYERS, DAY_MS, type MatchSlot, type MatchStatus, type StandingRow, type TournamentFormat, type TournamentMatch, type TournamentSnapshot } from './types';
@@ -71,6 +71,66 @@ function addKnockoutTree(ctx: FormatContext, first: [MatchSlot, MatchSlot][], fi
     stage++;
     round--;
   }
+  if (s.settings.placements) addPlacements(ctx);
+}
+
+/**
+ * Platzierungsspiele (Stufe 4): Die Verlierer jeder Runde mit mindestens vier Partien spielen unter
+ * sich einen eigenen Baum, bis jeder Platz vergeben ist (Plätze m + 1 bis 2m für m Verlierer).
+ * Die Spiele stehen in denselben Phasen wie die Runden des Hauptbaums, die Kennungen beginnen mit „c“.
+ */
+function addPlacements(ctx: FormatContext): void {
+  const s = ctx.s;
+  const finalMatch = s.matches.find((m) => m.id === 'k1-0');
+  if (finalMatch) finalMatch.placeFor = 1;
+  const third = s.matches.find((m) => m.id === 'k-3');
+  if (third) third.placeFor = 3;
+  const rounds = [...new Set(s.matches.filter((m) => m.id.startsWith('k') && m.id !== 'k-3').map((m) => Number(m.id.slice(1).split('-')[0])))].sort((a, b) => b - a);
+  for (const round of rounds) {
+    const matches = s.matches.filter((m) => m.id.startsWith(`k${round}-`));
+    if (matches.length < 4) continue;
+    const stage = matches[0]!.stage;
+    addConsolation(ctx, matches.map((m) => loserOf(m.id)), stage + 1, `c${round}`, matches.length);
+  }
+}
+
+/** Ein Baum unter `slots` (Zweierpotenz); `base` Plätze sind schon vergeben, der Sieger bekommt Platz base + 1. */
+function addConsolation(ctx: FormatContext, slots: MatchSlot[], firstStage: number, prefix: string, base: number): void {
+  const s = ctx.s;
+  const rounds = Math.log2(slots.length);
+  let current = slots;
+  for (let round = rounds; round >= 1; round--) {
+    const stage = firstStage + (rounds - round);
+    const ids: string[] = [];
+    for (let i = 0; i + 1 < current.length; i += 2) {
+      const id = `${prefix}.${round}-${i / 2}`;
+      ids.push(id);
+      const match = ctx.newMatch(id, stage, null, [current[i]!, current[i + 1]!], 'waiting');
+      if (round === 1) match.placeFor = base + 1;
+      s.matches.push(match);
+    }
+    const count = ids.length;
+    if (round === 2) {
+      const consolation = ctx.newMatch(`${prefix}.3`, stage + 1, null, [loserOf(ids[0]!), loserOf(ids[1]!)], 'waiting');
+      consolation.placeFor = base + 3;
+      s.matches.push(consolation);
+    } else if (round >= 3) {
+      addConsolation(ctx, ids.map((id) => loserOf(id)), stage + 1, `${prefix}.${round}c`, base + count);
+    }
+    current = ids.map((id) => winnerOf(id));
+  }
+}
+
+/** Gesamtrangliste aus den Platzierungsspielen; leer, solange Plätze fehlen oder keine Platzierungsspiele gewählt sind. */
+export function placementRanking(s: TournamentSnapshot): string[] {
+  const places = new Map<string, number>();
+  for (const m of s.matches) {
+    if (m.placeFor === undefined || !m.outcome || m.outcome.winner === null) continue;
+    const [win, lose] = [m.slots[m.outcome.winner]!.player, m.slots[1 - m.outcome.winner]!.player];
+    if (win) places.set(win, m.placeFor);
+    if (lose) places.set(lose, m.placeFor + 1);
+  }
+  return [...places.entries()].sort((a, b) => a[1] - b[1]).map(([id]) => id);
 }
 
 /** Ein Ergebnis im Baum darf sich ändern, solange keine Folgepartie schon feststeht. */
@@ -80,7 +140,7 @@ function bracketMayChange(ctx: FormatContext, match: TournamentMatch): boolean {
 
 /** Ein Gruppenergebnis darf sich ändern, solange die Gruppe offen ist oder noch niemand aus ihr im Baum steht. */
 function groupMayChange(ctx: FormatContext, group: number): boolean {
-  return !ctx.groupSettled(group) || !ctx.s.matches.some((m) => m.slots.some((slot) => slot.from?.kind === 'groupPlace' && slot.from.group === group && slot.player !== null));
+  return !ctx.groupSettled(group) || !ctx.s.matches.some((m) => m.slots.some((slot) => ((slot.from?.kind === 'groupPlace' && slot.from.group === group) || slot.from?.kind === 'bestThird') && slot.player !== null));
 }
 
 /** Sieger oder Verlierer einer Partie als Platzliste (leer, wenn offen oder ohne Sieger). */
@@ -105,7 +165,9 @@ const world: TournamentFormatRules = {
   setup(ctx, ids, deadline) {
     // Vor Ort darf die Leitung die Gruppenzahl wählen, solange jede Gruppe mindestens zwei hat.
     const wanted = ctx.s.settings.groupCount;
-    const groupCount = wanted && wanted * 2 <= ids.length ? wanted : groupCountFor(ids.length);
+    // Beste Dritte: nur mit einer passenden Gruppenzahl und mindestens drei Spielern je Gruppe.
+    const thirds = ctx.s.settings.bestThirds === true && wanted !== undefined && bestThirdCount(wanted) !== null && wanted * 3 <= ids.length;
+    const groupCount = thirds ? wanted! : wanted && wanted * 2 <= ids.length ? wanted : groupCountFor(ids.length);
     const groups: string[][] = Array.from({ length: groupCount }, () => []);
     ids.forEach((id, i) => groups[i % groupCount]!.push(id));
     ctx.s.groups = groups;
@@ -116,7 +178,7 @@ const world: TournamentFormatRules = {
       });
     });
     // Der Baum steht von Anfang an, mit der Herkunft jedes Platzes.
-    addKnockoutTree(ctx, koFirstRound(groupCount).map(([a, b]) => [{ player: null, from: a }, { player: null, from: b }]), 1, deadline);
+    addKnockoutTree(ctx, (thirds ? koFirstRoundWithThirds(groupCount) : koFirstRound(groupCount)).map(([a, b]) => [{ player: null, from: a }, { player: null, from: b }]), 1, deadline);
   },
   advance: () => false,
   moreRounds: () => false,

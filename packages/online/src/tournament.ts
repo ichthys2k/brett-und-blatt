@@ -2,7 +2,7 @@ import { OPEN_ROOM_REFRESH_MS } from './lobby';
 import { AVATARS } from './avatars';
 import { cleanAvatar, cleanName } from './names';
 import type { OpenRoomListing } from './protocol';
-import { FORMATS, type FormatContext, type TournamentFormatRules } from './tournament/formats';
+import { FORMATS, placementRanking, type FormatContext, type TournamentFormatRules } from './tournament/formats';
 import { upgradeSnapshot, type StoredTournamentSnapshot } from './tournament/migrate';
 import { SCHEDULE_MAX_MINUTES, assignFields, isLocal, outcomeFromEntry, plannedStarts, type ResultEntry } from './tournament/local-play';
 import type { PointRules } from './tournament/protocol';
@@ -638,6 +638,7 @@ export class Tournament {
       schedule: s.schedule ?? null,
       referees: s.referees === true,
       podium: this.podium(),
+      ranking: s.settings.placements && s.phase === 'finished' ? placementRanking(s) : [],
       you,
       isLeader: token !== null && this.isLeader(token),
       mayDelete: token !== null && this.mayDelete(token),
@@ -749,6 +750,17 @@ export class Tournament {
     if (source.kind === 'groupPlace') {
       if (!this.groupSettled(source.group)) return undefined;
       return this.groupTable(source.group).filter((row) => !this.isWithdrawn(row.player))[source.place]?.player ?? null;
+    }
+    if (source.kind === 'bestThird') {
+      // Erst wenn alle Gruppen feststehen, lassen sich die Dritten vergleichen.
+      if (!this.s.groups.every((_, group) => this.groupSettled(group))) return undefined;
+      const thirds = this.s.groups.flatMap((_, group) => {
+        const row = this.groupTable(group).filter((r) => !this.isWithdrawn(r.player))[2];
+        return row ? [row] : [];
+      });
+      const lot = new Map(seededShuffle(thirds.map((r) => r.player), `${this.s.seed}/dritte`).map((p, i) => [p, i]));
+      thirds.sort((a, b) => b.points - a.points || b.scored - b.conceded - (a.scored - a.conceded) || b.scored - a.scored || b.wins - a.wins || lot.get(a.player)! - lot.get(b.player)!);
+      return thirds[source.rank]?.player ?? null;
     }
     const match = this.match(source.match);
     if (!match?.outcome) return undefined;

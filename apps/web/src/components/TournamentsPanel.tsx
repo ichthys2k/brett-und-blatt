@@ -1,5 +1,5 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, LEAGUE_DAY_CHOICES, LIVES_CHOICES, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, BEST_THIRD_GROUPS, LEAGUE_DAY_CHOICES, LIVES_CHOICES, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
@@ -45,6 +45,8 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [groupCount, setGroupCount] = useState(0);
   /** Setzliste (Stufe 4, vor Ort): Die Reihenfolge der Teilnehmerliste ist die Setzung. */
   const [seeded, setSeeded] = useState(false);
+  /** Beste Dritte (Stufe 4, WM-Form vor Ort). */
+  const [bestThirds, setBestThirds] = useState(false);
   /** Liga nach Kalender (Stufe 4): Beginn des ersten Spieltags und Abstand in Tagen. */
   const [leagueDate, setLeagueDate] = useState('');
   const [leagueDays, setLeagueDays] = useState(7);
@@ -66,6 +68,8 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   /** Tempo: „d7“ = 7 Tage je Phase, „m20“ = Turnierabend mit 20 Minuten je Partie. */
   const [pace, setPace] = useState('d7');
   const [thirdPlace, setThirdPlace] = useState(false);
+  /** Platzierungsspiele für alle Plätze (Stufe 4). */
+  const [placements, setPlacements] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
   const [specs, setSpecs] = useState<OptionSpec[]>([]);
   const [options, setOptions] = useState<Options>({});
@@ -144,11 +148,11 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
       const series = !tables && !teamGame && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
       const tableSettings = tables ? { tableSize: size, rounds, ...(local && lowWins ? { lowWins: true } : {}) } : {};
-      const common = { name: name.trim(), format, ...(format === 'lives' ? { lives } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...(format === 'league' && leagueDate && !Number.isNaN(new Date(leagueDate).getTime()) ? { leagueStart: new Date(leagueDate).getTime(), leagueDays } : {}), ...tableSettings, ...series };
+      const common = { name: name.trim(), format, ...(format === 'lives' ? { lives } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(placements && (format === 'world' || format === 'knockout') ? { placements: true } : {}), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...(format === 'league' && leagueDate && !Number.isNaN(new Date(leagueDate).getTime()) ? { leagueStart: new Date(leagueDate).getTime(), leagueDays } : {}), ...tableSettings, ...series };
       const many = format === 'league' && multi;
       const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
-        ? { ...common, gameId: many ? '' : localGame, time: 'normal' as const, days: 1, isPublic: false, mode, sport: many ? t('tournament.multiSport') : sport.trim(), ...(many ? { disciplines: localList } : {}), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}), ...(seeded && (format === 'knockout' || format === 'double' || format === 'world') ? { seeded: true } : {}) }
+        ? { ...common, gameId: many ? '' : localGame, time: 'normal' as const, days: 1, isPublic: false, mode, sport: many ? t('tournament.multiSport') : sport.trim(), ...(many ? { disciplines: localList } : {}), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}), ...(format === 'world' && bestThirds && (BEST_THIRD_GROUPS as readonly number[]).includes(groupCount) ? { bestThirds: true } : {}), ...(seeded && (format === 'knockout' || format === 'double' || format === 'world') ? { seeded: true } : {}) }
         : { ...common, ...(teamGame ? { teamSize: teamChoices.includes(teamSize) ? teamSize : teamChoices[0] } : {}), gameId: many ? picked[0]! : gameId, time, isPublic, options: many ? {} : chosen, ...(many ? { disciplines: picked, wishes } : {}), ...(pace.startsWith('m') ? { days: 1, minutes: Number(pace.slice(1)) } : { days: Number(pace.slice(1)) }) };
       const code = await createTournament(settings, profile);
       storage.rememberTournament({ code, name: name.trim() });
@@ -449,12 +453,29 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               <span>{t('tournament.groupCount')}</span>
               <select className={FIELD} value={groupCount} onChange={(e) => setGroupCount(Number(e.target.value))}>
                 <option value={0}>{t('tournament.groupCount.auto')}</option>
-                {GROUP_COUNT_CHOICES.map((n) => (
+                {(bestThirds ? [...BEST_THIRD_GROUPS] : [...GROUP_COUNT_CHOICES]).map((n) => (
                   <option key={n} value={n}>
                     {n}
                   </option>
                 ))}
               </select>
+            </label>
+          )}
+          {local && format === 'world' && (
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 accent-accent"
+                checked={bestThirds}
+                onChange={(e) => {
+                  setBestThirds(e.target.checked);
+                  setGroupCount(0);
+                }}
+              />
+              <span>
+                {t('tournament.bestThirds')}
+                <span className="block text-xs text-muted">{t('tournament.bestThirdsHint')}</span>
+              </span>
             </label>
           )}
           {format === 'lives' && (
@@ -536,6 +557,15 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" className="h-4 w-4 accent-accent" checked={thirdPlace} onChange={(e) => setThirdPlace(e.target.checked)} />
               {t('tournament.third')}
+            </label>
+          )}
+          {(format === 'world' || format === 'knockout') && (
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={placements} onChange={(e) => setPlacements(e.target.checked)} />
+              <span>
+                {t('tournament.placementsOption')}
+                <span className="block text-xs text-muted">{t('tournament.placementsHint')}</span>
+              </span>
             </label>
           )}
           </div>

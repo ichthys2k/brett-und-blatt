@@ -89,6 +89,10 @@ export interface TournamentSettings {
   /** Liga nach Kalender (Stufe 4, nur Bundesliga-Modus): Beginn des ersten Spieltags (ms) und Abstand der Spieltage in Tagen. */
   leagueStart?: number;
   leagueDays?: number;
+  /** Beste Dritte (Stufe 4, nur vor Ort, WM-Form): Neben den zwei Ersten jeder Gruppe kommen die besten Gruppendritten weiter, bis der Baum voll ist. */
+  bestThirds?: boolean;
+  /** Platzierungsspiele für alle Plätze (Stufe 4, K.-o. und WM-Form): Verlierer jeder Runde spielen ihre Plätze aus. */
+  placements?: boolean;
   /** Setzliste (Stufe 4, nur vor Ort, K.-o., Doppel-K.-o. und WM-Form): Die Reihenfolge der Teilnehmerliste ist die Setzung, statt zu losen. */
   seeded?: boolean;
   /** Best of N (Stufe 3 Teil 5): Partien je Begegnung; fehlt = 1. */
@@ -103,7 +107,9 @@ export interface TournamentSettings {
 export type SlotSource =
   | { kind: 'groupPlace'; group: number; place: number }
   | { kind: 'winner'; match: string }
-  | { kind: 'loser'; match: string };
+  | { kind: 'loser'; match: string }
+  /** Beste Dritte (Stufe 4): der Gruppendritte mit dem `rank`-besten Ergebnis aller Gruppen (ab 0). */
+  | { kind: 'bestThird'; rank: number };
 
 export interface MatchSlot {
   /** Spieler-id; null, solange offen oder wenn niemand weiterkam. */
@@ -146,6 +152,8 @@ export interface TournamentMatch {
   outcome: MatchOutcome | null;
   /** Das Spiel um Platz 3 gehört nicht zum Weg des Siegers. */
   thirdPlace?: boolean;
+  /** Platzierungsspiele (Stufe 4): bester Platz, den diese Partie vergibt (der Sieger bekommt ihn, der Verlierer den nächsten). */
+  placeFor?: number;
   finishedAt?: number;
   /** Vor Ort: Tisch oder Feld (ab 0), solange die Partie dort aufgerufen ist. */
   field?: number;
@@ -357,6 +365,8 @@ export interface TournamentView {
   referees: boolean;
   /** Plätze am Ende: Sieger, Zweiter, ggf. Dritter. */
   podium: string[];
+  /** Platzierungsspiele: alle Plätze der Reihe nach, sobald sie vergeben sind; sonst leer. */
+  ranking: string[];
   you: string | null;
   isLeader: boolean;
   /** Dieses Gerät hat das Turnier angelegt und darf es löschen. */

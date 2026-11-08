@@ -164,3 +164,95 @@ describe('Liga nach Kalender', () => {
   });
 });
 
+describe('Platzierungsspiele', () => {
+  const name = (t: Tournament) => (id: string | null) => t.view(LEADER).players.find((p) => p.id === id)?.name ?? '';
+
+  /** Spielt alles; der Spieler mit der kleineren Nummer gewinnt immer. */
+  function playAll(t: Tournament) {
+    for (let guard = 0; guard < 80; guard++) {
+      const view = t.view(LEADER);
+      if (view.phase === 'finished') return;
+      const open = view.matches.filter((m) => (m.status === 'open' || m.status === 'running') && m.slots[0].player && m.slots[1].player);
+      if (open.length === 0) return;
+      const number = (id: string | null) => Number(view.players.find((p) => p.id === id)!.name.replace('Spieler', ''));
+      for (const m of open) expect(t.enterResult(LEADER, m.id, { winner: number(m.slots[0].player) < number(m.slots[1].player) ? 0 : 1 })).toBeNull();
+    }
+  }
+
+  it('Einstellung nur für K.-o. und WM-Form und schließt das Spiel um Platz 3 ein', () => {
+    const find = () => undefined;
+    const base = { name: 'Abend', mode: 'local', sport: 'Darts' };
+    expect(parseTournamentSettings({ ...base, format: 'knockout', placements: true }, find)).toMatchObject({ placements: true, thirdPlace: true });
+    expect(parseTournamentSettings({ ...base, format: 'swiss', placements: true }, find)?.placements).toBeUndefined();
+  });
+
+  it('8 Spieler: jeder Platz von 1 bis 8 wird ausgespielt', () => {
+    const t = local('knockout', { placements: true, thirdPlace: true, seeded: true }, names(8));
+    expect(t.start(LEADER)).toBeNull();
+    // Hauptbaum 7 Partien + Spiel um 3 + Baum der 4 Verlierer des Viertelfinales (3 Partien + Spiel um 7).
+    const ids = t.view(LEADER).matches.map((m) => m.id).sort();
+    expect(ids.filter((id) => id.startsWith('c'))).toHaveLength(4);
+    playAll(t);
+    const view = t.view(LEADER);
+    expect(view.phase).toBe('finished');
+    expect(view.ranking.map(name(t))).toEqual(['Spieler1', 'Spieler2', 'Spieler3', 'Spieler4', 'Spieler5', 'Spieler6', 'Spieler7', 'Spieler8']);
+  });
+
+  it('16 Spieler: Achtelfinal-Verlierer spielen die Plätze 9 bis 16 aus', () => {
+    const t = local('knockout', { placements: true, thirdPlace: true, seeded: true }, names(16));
+    t.start(LEADER);
+    playAll(t);
+    const view = t.view(LEADER);
+    expect(view.phase).toBe('finished');
+    expect(view.ranking).toHaveLength(16);
+    expect(view.ranking.map(name(t))).toEqual(names(16));
+  });
+
+  it('6 Spieler (Freilose): alle erhalten einen Platz, ohne Platzierungsspiele bleibt die Rangliste leer', () => {
+    const t = local('knockout', { placements: true, thirdPlace: true, seeded: true }, names(6));
+    t.start(LEADER);
+    playAll(t);
+    expect(t.view(LEADER).phase).toBe('finished');
+    const first = t.view(LEADER).ranking.map(name(t)).slice(0, 4);
+    expect(first).toEqual(['Spieler1', 'Spieler2', 'Spieler3', 'Spieler4']);
+    const plain = local('knockout', { thirdPlace: true }, names(8));
+    plain.start(LEADER);
+    playAll(plain);
+    expect(plain.view(LEADER).ranking).toEqual([]);
+  });
+});
+
+describe('Beste Dritte', () => {
+  const find = () => undefined;
+  const base = { name: 'Abend', mode: 'local', sport: 'Darts', format: 'world' };
+
+  it('nur mit passender Gruppenzahl', () => {
+    expect(parseTournamentSettings({ ...base, bestThirds: true, groupCount: 6 }, find)).toMatchObject({ bestThirds: true, groupCount: 6 });
+    expect(parseTournamentSettings({ ...base, bestThirds: true, groupCount: 4 }, find)?.bestThirds).toBeUndefined();
+    expect(parseTournamentSettings({ ...base, bestThirds: true }, find)?.bestThirds).toBeUndefined();
+  });
+
+  it('3 Gruppen: zwei Beste Dritte füllen den Baum auf acht, nur Gruppendritte mit den besten Ergebnissen kommen weiter', () => {
+    const t = local('world', { bestThirds: true, groupCount: 3, seeded: true }, names(12));
+    expect(t.start(LEADER)).toBeNull();
+    const view = t.view(LEADER);
+    expect(view.groups).toHaveLength(3);
+    const first = view.matches.filter((m) => m.id.startsWith('k3-'));
+    expect(first).toHaveLength(4);
+    const kinds = first.flatMap((m) => m.slots.map((s) => s.from?.kind));
+    expect(kinds.filter((k) => k === 'bestThird')).toHaveLength(2);
+    expect(kinds.filter((k) => k === 'groupPlace')).toHaveLength(6);
+    // Gruppenphase spielen: kleinere Nummer gewinnt; danach stehen alle acht im Baum.
+    for (let guard = 0; guard < 40; guard++) {
+      const v = t.view(LEADER);
+      const open = v.matches.filter((m) => (m.status === 'open' || m.status === 'running') && m.slots[0].player && m.slots[1].player);
+      if (open.length === 0) break;
+      const number = (id: string | null) => Number(v.players.find((p) => p.id === id)!.name.replace('Spieler', ''));
+      for (const m of open) t.enterResult(LEADER, m.id, { winner: number(m.slots[0].player) < number(m.slots[1].player) ? 0 : 1 });
+    }
+    const done = t.view(LEADER);
+    expect(done.phase).toBe('finished');
+    expect(done.podium).toHaveLength(2);
+  });
+});
+
