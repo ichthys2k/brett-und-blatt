@@ -5,7 +5,7 @@ import type { Options } from '@brett-und-blatt/engine';
  * Kennungen (`token`) sind geheim und stehen nie in einer Sicht.
  */
 
-export const TOURNAMENT_MIN_PLAYERS = { world: 6, swiss: 4, knockout: 4, double: 4, league: 3, tables: 3, lives: 3 } as const;
+export const TOURNAMENT_MIN_PLAYERS = { world: 6, swiss: 4, knockout: 4, double: 4, league: 3, tables: 3, lives: 3, dyp: 4 } as const;
 /** Obergrenze für alle Turniere (Entscheidung 7.11.2026). */
 export const TOURNAMENT_MAX_PLAYERS = 128;
 /** Namen von Teilnehmern vor Ort dürfen länger sein als Spitznamen, z. B. „Anna / Ben“. */
@@ -24,7 +24,7 @@ export const LEAGUE_KEEP_MS = 365 * DAY_MS;
 export const TOURNAMENT_NAME_LENGTH = 40;
 
 /** WM-Form (vor Ort „Gruppen + K.-o.“), Schweizer System, K.-o., Doppel-K.-o., Bundesliga-Modus, Tischrunden (Stufe 3). */
-export type TournamentFormat = 'world' | 'swiss' | 'knockout' | 'double' | 'league' | 'tables' | 'lives';
+export type TournamentFormat = 'world' | 'swiss' | 'knockout' | 'double' | 'league' | 'tables' | 'lives' | 'dyp';
 /** Online im Spielraum oder vor Ort mit Ergebnis von Hand. */
 export type TournamentMode = 'online' | 'local';
 /** Was vor Ort gezählt wird. */
@@ -189,6 +189,8 @@ export interface TournamentPlayer {
   name: string;
   avatar: string;
   withdrawn: boolean;
+  /** Zufallspartner (Stufe 4, nur vor Ort): Das Team einer Runde, mit den Spieler-ids; kein echter Teilnehmer. */
+  pair?: string[];
   /** Teams (Stufe 3 Teil 4): die Mitglieder in Raumreihenfolge; `token` ist die des ersten. */
   members?: { token: string; name: string; avatar: string }[];
 }
@@ -327,6 +329,8 @@ export interface StandingRow {
 export interface PublicPlayer {
   id: string;
   name: string;
+  /** Zufallspartner: Team einer Runde, kein Teilnehmer. */
+  pair?: boolean;
   avatar: string;
   withdrawn: boolean;
   /** Teams: Namen der Mitglieder. */

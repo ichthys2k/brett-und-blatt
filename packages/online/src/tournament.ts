@@ -14,6 +14,7 @@ import { autoStart, isEvening, isHeld, startStage, startableStage } from './tour
 import { seededShuffle } from './tournament/pairing';
 import { formTeams, isTeamed, ownsToken } from './tournament/teams';
 import { isLives, livesRows } from './tournament/lives';
+import { dypRows, isDyp } from './tournament/dyp';
 import { defaultScoring, standings } from './tournament/scoring';
 import {
   DAY_MS,
@@ -55,6 +56,7 @@ export * from './tournament/table-rounds';
 export * from './tournament/best-of';
 export * from './tournament/teams';
 export * from './tournament/lives';
+export * from './tournament/dyp';
 export * from './tournament/migrate';
 export * from './tournament/protocol';
 
@@ -622,10 +624,10 @@ export class Tournament {
       settings: s.settings,
       leaderName: s.leaderName,
       phase: s.phase,
-      players: s.players.map(({ id, name, avatar, withdrawn, members }) => ({ id, name, avatar, withdrawn, ...(members ? { members: members.map((m) => m.name) } : {}) })),
+      players: s.players.map(({ id, name, avatar, withdrawn, members, pair }) => ({ id, name, avatar, withdrawn, ...(members ? { members: members.map((m) => m.name) } : {}), ...(pair ? { pair: true } : {}) })),
       groups: s.groups.map((players, group) => ({ players, table: this.groupTable(group), settled: this.groupSettled(group) })),
       swissTable: s.settings.format === 'swiss' && s.phase !== 'signup' ? this.overallTable() : [],
-      table: isTables(s) ? (s.phase !== 'signup' ? tableStandings(s) : []) : isLives(s) ? (s.phase !== 'signup' ? livesRows(s) : []) : (s.settings.format === 'swiss' || s.settings.format === 'league') && s.phase !== 'signup' ? this.overallTable() : [],
+      table: isTables(s) ? (s.phase !== 'signup' ? tableStandings(s) : []) : isLives(s) ? (s.phase !== 'signup' ? livesRows(s) : []) : isDyp(s) ? (s.phase !== 'signup' ? dypRows(s) : []) : (s.settings.format === 'swiss' || s.settings.format === 'league') && s.phase !== 'signup' ? this.overallTable() : [],
       fields: s.fields ?? 0,
       stages: s.stages,
       currentStage: this.currentStage(),

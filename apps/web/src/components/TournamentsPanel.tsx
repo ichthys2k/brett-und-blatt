@@ -1,5 +1,5 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, BEST_THIRD_GROUPS, LEAGUE_DAY_CHOICES, LIVES_CHOICES, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, BEST_THIRD_GROUPS, DYP_ROUND_CHOICES, LEAGUE_DAY_CHOICES, LIVES_CHOICES, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
@@ -82,6 +82,10 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [bestOf, setBestOf] = useState(1);
   const [bestOfKo, setBestOfKo] = useState(0);
   const tables = format === 'tables';
+  // Zufallspartner gibt es nur vor Ort.
+  useEffect(() => {
+    if (mode !== 'local' && format === 'dyp') setFormat('world');
+  }, [mode, format]);
   const gameList = tables ? tableGames : mode === 'local' ? tournamentGames : [...tournamentGames, ...teamGames].sort((a, b) => a.name.localeCompare(b.name, 'de'));
   /** Teams: Spieler je Team beim gewählten Teamspiel (nur online). */
   const [teamSize, setTeamSize] = useState(2);
@@ -148,7 +152,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
       const series = !tables && !teamGame && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
       const tableSettings = tables ? { tableSize: size, rounds, ...(local && lowWins ? { lowWins: true } : {}) } : {};
-      const common = { name: name.trim(), format, ...(format === 'lives' ? { lives } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(placements && (format === 'world' || format === 'knockout') ? { placements: true } : {}), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...(format === 'league' && leagueDate && !Number.isNaN(new Date(leagueDate).getTime()) ? { leagueStart: new Date(leagueDate).getTime(), leagueDays } : {}), ...tableSettings, ...series };
+      const common = { name: name.trim(), format, ...(format === 'lives' ? { lives } : {}), ...(format === 'dyp' ? { rounds } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(placements && (format === 'world' || format === 'knockout') ? { placements: true } : {}), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...(format === 'league' && leagueDate && !Number.isNaN(new Date(leagueDate).getTime()) ? { leagueStart: new Date(leagueDate).getTime(), leagueDays } : {}), ...tableSettings, ...series };
       const many = format === 'league' && multi;
       const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
@@ -308,6 +312,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               <option value="league">{t('tournament.format.league')}</option>
               <option value="tables">{t('tournament.format.tables')}</option>
               <option value="lives">{t('tournament.format.lives')}</option>
+              {local && <option value="dyp">{t('tournament.format.dyp')}</option>}
             </select>
           </label>
           {tables && (
@@ -476,6 +481,19 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
                 {t('tournament.bestThirds')}
                 <span className="block text-xs text-muted">{t('tournament.bestThirdsHint')}</span>
               </span>
+            </label>
+          )}
+          {format === 'dyp' && (
+            <label className="block space-y-1 text-sm">
+              <span>{t('tournament.rounds')}</span>
+              <select className={FIELD} value={DYP_ROUND_CHOICES.includes(rounds as 4) ? rounds : 4} onChange={(e) => setRounds(Number(e.target.value))}>
+                {DYP_ROUND_CHOICES.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              <span className="block text-xs text-muted">{t('tournament.dypHint')}</span>
             </label>
           )}
           {format === 'lives' && (

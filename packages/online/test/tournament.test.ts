@@ -546,7 +546,7 @@ describe('Umbau (W-058 Stufe 0)', () => {
   });
 
   it('jede Form nennt ihre Mindestzahl', () => {
-    expect(Object.fromEntries(Object.entries(FORMATS).map(([id, f]) => [id, f.minPlayers]))).toEqual({ world: 6, knockout: 4, double: 4, swiss: 4, league: 3, tables: 3, lives: 3 });
+    expect(Object.fromEntries(Object.entries(FORMATS).map(([id, f]) => [id, f.minPlayers]))).toEqual({ world: 6, knockout: 4, double: 4, swiss: 4, league: 3, tables: 3, lives: 3, dyp: 4 });
   });
 
   it('die Wertung kennt Spielstand, Tordifferenz und erzielte Tore', () => {

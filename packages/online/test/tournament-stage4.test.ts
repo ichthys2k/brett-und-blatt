@@ -256,3 +256,59 @@ describe('Beste Dritte', () => {
   });
 });
 
+describe('Zufallspartner (DYP)', () => {
+  const find = () => undefined;
+  const base = { name: 'Kicker', mode: 'local', sport: 'Tischkicker', format: 'dyp' };
+
+  it('nur vor Ort, Rundenzahl aus der Auswahl', () => {
+    expect(parseTournamentSettings({ ...base, rounds: 5 }, find)).toMatchObject({ format: 'dyp', rounds: 5 });
+    expect(parseTournamentSettings({ ...base, rounds: 7 }, find)?.rounds).toBe(4);
+    expect(parseTournamentSettings({ ...base, mode: undefined, gameId: 'chess' }, find)).toBeNull();
+  });
+
+  function play(t: Tournament) {
+    for (let guard = 0; guard < 30; guard++) {
+      const view = t.view(LEADER);
+      if (view.phase === 'finished') return;
+      const open = view.matches.filter((m) => m.status !== 'done' && m.status !== 'waiting' && m.slots[0].player && m.slots[1].player);
+      if (open.length === 0) return;
+      // Das Team mit der kleineren ersten Spielernummer gewinnt.
+      for (const m of open) expect(t.enterResult(LEADER, m.id, { winner: m.id.length % 2 === 0 ? 0 : 1 })).toBeNull();
+    }
+  }
+
+  it('jede Runde neue Teams aus allen Einzelspielern, Einzelwertung, Freilos bei ungerader Zahl', () => {
+    const t = local('dyp', { rounds: 4 }, names(9));
+    expect(t.start(LEADER)).toBeNull();
+    // Runde 1: 9 Spieler → einer setzt aus, 8 spielen in 4 Teams (2 Partien); dazu das Freilos.
+    const first = t.view(LEADER).matches.filter((m) => m.stage === 0);
+    expect(first.filter((m) => m.outcome?.bye)).toHaveLength(1);
+    expect(first.filter((m) => !m.outcome?.bye)).toHaveLength(2);
+    play(t);
+    const view = t.view(LEADER);
+    expect(view.phase).toBe('finished');
+    expect(view.stages).toHaveLength(4);
+    // Alle neun stehen in der Tabelle, jeder hat 4 Runden gespielt (Freilos zählt als gespielt).
+    const single = view.players.filter((p) => !p.pair);
+    expect(single).toHaveLength(9);
+    expect(view.table).toHaveLength(9);
+    expect(view.table.every((row) => row.played === 4)).toBe(true);
+    // Das Freilos trifft möglichst verschiedene Spieler: höchstens ein Spieler zweimal in vier Runden.
+    const byes = view.matches.filter((m) => m.outcome?.bye).flatMap((m) => view.players.find((p) => p.id === m.slots[0].player)!.name.split(' & '));
+    const counts = new Map<string, number>();
+    for (const n of byes) counts.set(n, (counts.get(n) ?? 0) + 1);
+    expect(Math.max(...counts.values())).toBeLessThanOrEqual(1);
+    expect(view.podium).toHaveLength(3);
+  });
+
+  it('die Partner wechseln: bei acht Spielern dasselbe Paar möglichst nie zweimal', () => {
+    const t = local('dyp', { rounds: 3 }, names(8));
+    t.start(LEADER);
+    play(t);
+    const view = t.view(LEADER);
+    const pairs = view.players.filter((p) => p.pair).map((p) => p.name).sort();
+    // 8 Spieler, 3 Runden: Es gibt viele mögliche Paare, die Auslosung vermeidet Wiederholungen.
+    expect(new Set(pairs).size).toBe(pairs.length);
+  });
+});
+

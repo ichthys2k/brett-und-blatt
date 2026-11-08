@@ -4,6 +4,7 @@ import { DISCIPLINES_MAX, DISCIPLINES_MIN } from './disciplines';
 import { isBestOf } from './best-of';
 import { TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN } from './table-rounds';
 import { EVENING_EXTEND_CHOICES, EVENING_MINUTE_CHOICES } from './evening';
+import { DYP_ROUND_CHOICES } from './dyp';
 import { LIVES_CHOICES } from './lives';
 import { BEST_THIRD_GROUPS } from './pairing';
 import { isTeamGame, validTeamSize } from './teams';
@@ -134,7 +135,7 @@ export function isTableGame(info: GameInfo): boolean {
 /** Turniercode: 8 Zeichen, zum Erraten zu viele. */
 export const TOURNAMENT_CODE_PATTERN = /^[2-9A-HJ-NP-Z]{8}$/;
 
-const FORMAT_IDS: readonly TournamentFormat[] = ['world', 'swiss', 'knockout', 'double', 'league', 'tables', 'lives'];
+const FORMAT_IDS: readonly TournamentFormat[] = ['world', 'swiss', 'knockout', 'double', 'league', 'tables', 'lives', 'dyp'];
 const RESULT_KINDS: readonly ResultKind[] = ['winner', 'goals', 'sets', 'points'];
 /** Gruppenzahlen, die die Leitung vor Ort wählen darf. */
 export const GROUP_COUNT_CHOICES = [2, 4, 8, 16] as const;
@@ -146,6 +147,8 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
   if (!name || !cleanName(name.slice(0, 16))) return null;
   if (!FORMAT_IDS.includes(body.format as TournamentFormat)) return null;
   const format = body.format as TournamentFormat;
+  // Zufallspartner gibt es nur vor Ort: Teams wechseln jede Runde, online sind die Plätze fest.
+  if (format === 'dyp' && body.mode !== 'local') return null;
   const returnRound: Pick<TournamentSettings, 'returnRound' | 'leagueStart' | 'leagueDays'> = format === 'league' ? { ...(body.returnRound === true ? { returnRound: true } : {}), ...parseCalendar(body) } : {};
   if (body.mode === 'local') return parseLocalSettings(body, name, format, returnRound, findGame);
   // Spieleabend: mehrere Spiele, je Spieltag eines; `gameId` ist dann das erste.
@@ -226,6 +229,7 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
     // Vor Ort zählt „Best of N“ nur, wenn der Sieger eingetragen wird (dann der Stand in Partien).
     ...(result === 'winner' ? parseBestOf(body, format) : {}),
     ...parseLives(body, format),
+    ...(format === 'dyp' ? { rounds: DYP_ROUND_CHOICES.includes(body.rounds as 3) ? (body.rounds as number) : 4 } : {}),
   };
 }
 

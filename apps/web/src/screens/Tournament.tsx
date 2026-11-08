@@ -257,7 +257,7 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
           aria-label={t('tournament.delete')}
           title={t('tournament.delete')}
           onClick={() => {
-            const others = view.players.filter((p) => !p.withdrawn).length;
+            const others = view.players.filter((p) => !p.withdrawn && !p.pair).length;
             if (window.confirm(t(view.phase === 'signup' && others === 0 ? 'tournament.deleteConfirmEmpty' : 'tournament.deleteConfirm', { name: view.settings.name, n: others }))) send({ type: 'delete' });
           }}
         >
@@ -387,7 +387,7 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
 /** Namen eintragen, einer je Zeile; der Text bleibt stehen, bis die Namen angekommen sind. */
 function EntrantForm({ view, send, label }: { view: TournamentView; send: Send; label: string }) {
   const [text, setText] = useState('');
-  const count = view.players.length;
+  const count = view.players.filter((p) => !p.pair).length;
   useEffect(() => setText(''), [count]);
   return (
     <form
@@ -412,14 +412,14 @@ function EntrantForm({ view, send, label }: { view: TournamentView; send: Send; 
 /** Einschreibung vor Ort: Die Leitung trägt die Namen ein, Zuschauer sehen die Liste. */
 function LocalSignup({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
   const min = TOURNAMENT_MIN_PLAYERS[view.settings.format];
-  const count = view.players.length;
+  const count = view.players.filter((p) => !p.pair).length;
   return (
     <>
       <Section title={t('tournament.entrants')}>
         <p className="text-sm text-muted">{t('tournament.entrantsCount', { n: count, min })}</p>
         <Wishes view={view} send={send} />
         <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2 md:grid-cols-3">
-          {view.players.map((p) => (
+          {view.players.filter((p) => !p.pair).map((p) => (
             <li key={p.id} className="flex min-w-0 items-center gap-1 rounded-xl border border-line bg-surface py-1 pr-1 pl-2 text-sm">
               <span className="min-w-0 flex-1 truncate">
                 {p.avatar} {p.name}
@@ -815,7 +815,7 @@ function SignupView({ view, code, send }: { view: TournamentView; code: string; 
         <p className="text-sm text-muted">{t('tournament.signupOpen', { n: view.players.length, min })}</p>
         {teamSize > 1 && <p className="text-sm text-muted">{uneven ? t('tournament.teamUneven', { n: teamSize }) : t('tournament.teamsDrawn', { n: teamSize })}</p>}
         <ul className="grid grid-cols-2 gap-1 sm:grid-cols-4">
-          {view.players.map((p) => (
+          {view.players.filter((p) => !p.pair).map((p) => (
             <li key={p.id} className={`truncate rounded-xl border px-2 py-1 text-sm ${p.id === view.you ? 'border-accent bg-accent/10 font-semibold' : 'border-line bg-surface'}`}>
               {p.avatar} {p.name}
             </li>
@@ -1551,7 +1551,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
           </div>
           )}
           <ul className="space-y-1">
-            {view.players.map((p) => (
+            {view.players.filter((p) => !p.pair).map((p) => (
               <li key={p.id} className="flex items-center gap-2 text-sm">
                 <span className={`min-w-0 flex-1 truncate ${p.withdrawn ? 'text-muted line-through' : ''}`}>{label(p.id)}</span>
                 {!local && (

@@ -1,4 +1,5 @@
 import { bestThirdCount, firstRoundSlots, groupCountFor, koFirstRound, koFirstRoundWithThirds, loserOf, pairKey, roundRobinPairs, roundRobinRounds, swissPairing, swissRoundsFor, winnerOf } from './pairing';
+import { dypFormat } from './dyp';
 import { livesFormat } from './lives';
 import { tablesFormat } from './table-rounds';
 import { TOURNAMENT_MIN_PLAYERS, DAY_MS, type MatchSlot, type MatchStatus, type StandingRow, type TournamentFormat, type TournamentMatch, type TournamentSnapshot } from './types';
@@ -359,4 +360,4 @@ export function calendarOf(s: Pick<TournamentSnapshot, 'settings'>): { start: nu
   return s.settings.format === 'league' && typeof leagueStart === 'number' ? { start: leagueStart, step: (leagueDays ?? 7) * DAY_MS } : null;
 }
 
-export const FORMATS: Record<TournamentFormat, TournamentFormatRules> = { world, knockout, double, swiss, league, tables: tablesFormat, lives: livesFormat };
+export const FORMATS: Record<TournamentFormat, TournamentFormatRules> = { world, knockout, double, swiss, league, tables: tablesFormat, lives: livesFormat, dyp: dypFormat };
