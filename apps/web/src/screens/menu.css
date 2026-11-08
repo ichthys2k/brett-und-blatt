@@ -158,11 +158,8 @@
   border: 2px solid #6b522e;
   border-radius: 10px;
   color: var(--cream);
-  cursor: pointer;
   text-align: left;
 }
-.bub-menu-plaque:hover,
-.bub-menu-plaque:focus-visible { border-color: #e0b25a; }
 .bub-menu-shield {
   display: grid;
   place-items: center;
@@ -174,7 +171,6 @@
   border-radius: 6px 6px 50% 50%;
 }
 .bub-menu-name { flex: 1; font-family: Almendra, Georgia, serif; font-size: 1.35rem; }
-.bub-menu-switch { font-size: 0.85rem; color: var(--gold); }
 .bub-menu-foot { grid-column: 1; grid-row: 3; align-self: end; font-size: 0.8rem; color: #bba77a; }
 .bub-menu-foot a { color: inherit; }
 
@@ -312,3 +308,6 @@
 @media (max-width: 760px) {
   .bub-menu-motes { display: none; }
 }
+.bub-menu-plaque-link { cursor: pointer; }
+.bub-menu-plaque-link:hover, .bub-menu-plaque-link:focus-visible { border-color: #e0b25a; }
+.bub-menu-switch { font-size: 0.85rem; color: var(--gold); }

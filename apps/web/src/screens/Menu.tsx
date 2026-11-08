@@ -81,13 +81,12 @@ export function Menu() {
         ))}
       </nav>
 
-      <button type="button" className="bub-menu-plaque" onClick={() => navigate(paths.pass)} aria-label="Profil öffnen">
+      <div className="bub-menu-plaque" role="status" aria-label={`Angemeldet als ${profile?.name ?? 'niemand'}`}>
         <span className="bub-menu-shield" aria-hidden="true">
           {profile?.avatar ?? '🛡️'}
         </span>
         <span className="bub-menu-name">{profile?.name ?? 'Noch kein Name'}</span>
-        <span className="bub-menu-switch">Profil</span>
-      </button>
+      </div>
 
       <footer className="bub-menu-foot">
         <a href="#/impressum">Impressum</a> · <a href="#/datenschutz">Datenschutz</a>
