@@ -2,6 +2,7 @@ import { UpdateBanner } from './components/UpdateBanner';
 import { useRoute } from './lib/router';
 import { DisplayScreen } from './screens/Display';
 import { Home } from './screens/Home';
+import { Menu } from './screens/Menu';
 import { Datenschutz, Impressum } from './screens/Legal';
 import { Online } from './screens/Online';
 import { PassScreen } from './screens/Pass';
@@ -43,7 +44,9 @@ function Screen() {
       return <Impressum />;
     case 'privacy':
       return <Datenschutz />;
-    default:
+    case 'home':
       return <Home initialFilter={route.filter} initialPlayers={route.players} />;
+    default:
+      return <Menu />;
   }
 }

@@ -86,7 +86,7 @@ export function SoundSettingsScreen() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),2rem)]">
       <header className="flex items-center gap-2">
-        <Button variant="ghost" className="px-3" aria-label={t('play.back')} onClick={() => navigate(paths.home)}>
+        <Button variant="ghost" className="px-3" aria-label={t('play.back')} onClick={() => navigate(paths.menu)}>
           ←
         </Button>
         <h1 className="text-2xl font-bold">{t('sound.settings')}</h1>

@@ -50,7 +50,7 @@ export function Online() {
   return (
     <div className="mx-auto flex min-h-full max-w-xl flex-col gap-6 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.5rem)]">
       <header className="flex items-center gap-2">
-        <Button variant="ghost" className="px-3" aria-label={t('play.back')} onClick={() => navigate(paths.home)}>
+        <Button variant="ghost" className="px-3" aria-label={t('play.back')} onClick={() => navigate(paths.menu)}>
           ←
         </Button>
         <h1 className="text-2xl font-bold">
