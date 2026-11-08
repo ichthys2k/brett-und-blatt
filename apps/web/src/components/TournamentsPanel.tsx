@@ -1,5 +1,5 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, TOURNAMENT_MAX_FIELDS, isTableGame, isTournamentGame, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
@@ -12,6 +12,8 @@ import { Button, Section } from './controls';
 const tournamentGames = games.filter(isTournamentGame).sort((a, b) => a.name.localeCompare(b.name, 'de'));
 /** Spiele für Tischrunden: drei und mehr Plätze (Stufe 3 Teil 3). */
 const tableGames = games.filter(isTableGame).sort((a, b) => a.name.localeCompare(b.name, 'de'));
+/** Spiele mit zwei festen Teams (Stufe 3 Teil 4): online als Turnier mit Teams. */
+const teamGames = games.filter(isTeamGame).sort((a, b) => a.name.localeCompare(b.name, 'de'));
 const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
 
 /** Vorlagen vor Ort: Was gezählt wird, ob Remis geht und wie die Spielstätten heißen. */
@@ -68,7 +70,11 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [bestOf, setBestOf] = useState(1);
   const [bestOfKo, setBestOfKo] = useState(0);
   const tables = format === 'tables';
-  const gameList = tables ? tableGames : tournamentGames;
+  const gameList = tables ? tableGames : mode === 'local' ? tournamentGames : [...tournamentGames, ...teamGames].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  /** Teams: Spieler je Team beim gewählten Teamspiel (nur online). */
+  const [teamSize, setTeamSize] = useState(2);
+  const teamGame = mode !== 'local' && !tables && !(format === 'league' && multi) ? teamGames.find((g) => g.id === gameId) : undefined;
+  const teamChoices: number[] = teamGame ? TEAM_SIZE_CHOICES.filter((n) => validTeamSize(teamGame, n)) : [];
   // Beim Wechsel der Form ein passendes Spiel wählen.
   useEffect(() => {
     if (gameList.some((g) => g.id === gameId)) return;
@@ -128,14 +134,14 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
     setError(null);
     try {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
-      const series = !tables && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
+      const series = !tables && !teamGame && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
       const tableSettings = tables ? { tableSize: size, rounds, ...(local && lowWins ? { lowWins: true } : {}) } : {};
       const common = { name: name.trim(), format, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...tableSettings, ...series };
       const many = format === 'league' && multi;
       const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
         ? { ...common, gameId: many ? '' : localGame, time: 'normal' as const, days: 1, isPublic: false, mode, sport: many ? t('tournament.multiSport') : sport.trim(), ...(many ? { disciplines: localList } : {}), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}) }
-        : { ...common, gameId: many ? picked[0]! : gameId, time, isPublic, options: many ? {} : chosen, ...(many ? { disciplines: picked, wishes } : {}), ...(pace.startsWith('m') ? { days: 1, minutes: Number(pace.slice(1)) } : { days: Number(pace.slice(1)) }) };
+        : { ...common, ...(teamGame ? { teamSize: teamChoices.includes(teamSize) ? teamSize : teamChoices[0] } : {}), gameId: many ? picked[0]! : gameId, time, isPublic, options: many ? {} : chosen, ...(many ? { disciplines: picked, wishes } : {}), ...(pace.startsWith('m') ? { days: 1, minutes: Number(pace.slice(1)) } : { days: Number(pace.slice(1)) }) };
       const code = await createTournament(settings, profile);
       storage.rememberTournament({ code, name: name.trim() });
       passChanged();
@@ -323,7 +329,20 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               )}
             </div>
           )}
-          {!tables && (!local || result === 'winner') && (
+          {teamGame && (
+            <label className="block space-y-1 text-sm">
+              <span>{t('tournament.teamSize')}</span>
+              <select className={FIELD} value={teamChoices.includes(teamSize) ? teamSize : teamChoices[0]} onChange={(e) => setTeamSize(Number(e.target.value))}>
+                {teamChoices.map((n) => (
+                  <option key={n} value={n}>
+                    {t('tournament.teamSizeN', { n })}
+                  </option>
+                ))}
+              </select>
+              <span className="block text-xs text-muted">{t('tournament.teamHint')}</span>
+            </label>
+          )}
+          {!tables && !teamGame && (!local || result === 'winner') && (
             <div className="grid grid-cols-2 gap-3">
               <label className="block space-y-1 text-sm">
                 <span>{t('tournament.bestOf')}</span>

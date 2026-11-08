@@ -2,6 +2,7 @@ import { bestOfStage } from './best-of';
 import type { Options } from '@brett-und-blatt/engine';
 import { disciplineOf } from './disciplines';
 import { eveningDueAt, isEvening } from './evening';
+import { tokensOf } from './teams';
 import { MATCH_MIN_TIME_MS, READY_WINDOW_MS, type MatchOutcome, type MatchSide, type TournamentMatch, type TournamentSettings, type TournamentSnapshot } from './types';
 
 /**
@@ -31,6 +32,8 @@ export interface MatchRoomRequest {
   label: string;
   /** Best of N: der Raum spielt bis zu so viele Partien (nur wenn größer als 1). */
   bestOf?: number;
+  /** Teamspiele: Team (0 oder 1) je Kennung; sonst fehlt es. */
+  teams?: number[];
 }
 
 export function bothReady(match: TournamentMatch, now: number): boolean {
@@ -56,13 +59,17 @@ export function setReady(s: TournamentSnapshot, match: TournamentMatch, side: Ma
 /** Auftrag für einen Spielraum, wenn die Partie laufen soll und noch keinen Raum hat. */
 export function roomRequest(s: TournamentSnapshot, match: TournamentMatch): MatchRoomRequest | null {
   if (match.status !== 'running' || match.roomCode) return null;
-  const tokens = match.slots.map((slot) => s.players.find((p) => p.id === slot.player)?.token) as [string | undefined, string | undefined];
-  if (!tokens[0] || !tokens[1]) return null;
-  const seats: [string, string] = match.replays % 2 === 1 ? [tokens[1], tokens[0]] : [tokens[0], tokens[1]];
+  const sides = match.slots.map((slot) => s.players.find((p) => p.id === slot.player));
+  if (!sides[0] || !sides[1]) return null;
+  const swap = match.replays % 2 === 1;
+  const [first, second] = swap ? [sides[1], sides[0]] : [sides[0], sides[1]];
+  const teamed = first.members !== undefined;
+  const seats = [...tokensOf(first), ...tokensOf(second)];
+  if (seats.some((token) => !token)) return null;
   // Spieleabend: das Spiel des Spieltags, mit seinen Standardoptionen.
   const discipline = disciplineOf(s, match.stage);
   const bestOf = bestOfStage(s, match.stage);
-  return { match: match.id, gameId: discipline ?? s.settings.gameId, time: match.replays > 0 ? 'fast' : s.settings.time, options: discipline ? {} : (s.settings.options ?? {}), tokens: seats, label: s.settings.name, ...(bestOf > 1 ? { bestOf } : {}) };
+  return { match: match.id, gameId: discipline ?? s.settings.gameId, time: match.replays > 0 ? 'fast' : s.settings.time, options: discipline ? {} : (s.settings.options ?? {}), tokens: seats, label: s.settings.name, ...(teamed ? { teams: [...tokensOf(first).map(() => 0), ...tokensOf(second).map(() => 1)] } : bestOf > 1 ? { bestOf } : {}) };
 }
 
 /** Der Raum zählt nach Plätzen; nach einem getauschten Entscheidungsspiel sind das andere Seiten. */

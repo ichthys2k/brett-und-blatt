@@ -4,6 +4,7 @@ import { DISCIPLINES_MAX, DISCIPLINES_MIN } from './disciplines';
 import { isBestOf } from './best-of';
 import { TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN } from './table-rounds';
 import { EVENING_EXTEND_CHOICES, EVENING_MINUTE_CHOICES } from './evening';
+import { isTeamGame, validTeamSize } from './teams';
 import { ENTRANT_NAME_LENGTH, TOURNAMENT_MAX_FIELDS, TOURNAMENT_MAX_PLAYERS, TOURNAMENT_NAME_LENGTH, type MatchSide, type ResultKind, type TournamentFormat, type TournamentSettings, type TournamentView } from './types';
 
 /** Nachrichten zwischen Turnierseite und Server und die Prüfung der Angaben beim Anlegen. */
@@ -148,7 +149,10 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
   const gameId = disciplines ? disciplines[0] : body.gameId;
   const game = typeof gameId === 'string' ? findGame(gameId) : undefined;
   if (typeof gameId !== 'string' || !game) return null;
-  if (format === 'tables' ? !isTableGame(game.info) : !isTournamentGame(game.info)) return null;
+  // Teams (Stufe 3 Teil 4): Spiele mit zwei festen Teams, nicht mit Disziplinen und nicht als Tischrunde.
+  const teamSize = body.teamSize === undefined ? undefined : body.teamSize;
+  if (teamSize !== undefined && (format === 'tables' || disciplines || !isTeamGame(game.info) || !validTeamSize(game.info, teamSize))) return null;
+  if (teamSize === undefined && (format === 'tables' ? !isTableGame(game.info) : !isTournamentGame(game.info))) return null;
   const tables = format === 'tables' ? parseTableSettings(body, Math.max(TABLE_SIZE_MIN, game.info.players.min), Math.min(TABLE_SIZE_MAX, game.info.players.max)) : {};
   if (body.time !== 'relaxed' && body.time !== 'normal' && body.time !== 'fast') return null;
   // Turnierabend: Minuten je Partie statt Tage je Phase.
@@ -164,7 +168,7 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
     }
   }
   const multi = disciplines ? { disciplines, ...(body.wishes === true ? { wishes: true } : {}) } : {};
-  return { ...tables, ...parseBestOf(body, format), name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
+  return { ...tables, ...(teamSize === undefined ? parseBestOf(body, format) : { teamSize: teamSize as number }), name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
 }
 
 /** Vor Ort: Sportart statt Spiel, keine Zeitvorgabe, nie in „Offene Runden“. */

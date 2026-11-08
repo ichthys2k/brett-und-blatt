@@ -92,6 +92,8 @@ export interface MatchRoomConfig {
   label: string;
   /** Begegnung über bis zu so viele Partien („Best of N“, nur zu zweit). */
   bestOf?: number;
+  /** Teamspiel: Team (0 oder 1) je Kennung. Der Raum gibt es dem Spiel als Option `teams` mit. */
+  teams?: number[];
 }
 
 /** Was der Raum dem Turnier meldet. */
@@ -222,7 +224,7 @@ export class Room {
     const module = this.deps.findGame(config.gameId);
     if (!module) return false;
     this.match = { config, noShow: null, reported: false, ...(config.bestOf && config.bestOf > 1 && config.tokens.length === 2 ? { series: newSeries(config.bestOf) } : {}) };
-    this.lobby = { gameId: config.gameId, options: resolveOptions(module, config.options), time: config.time, seats: config.tokens.map(() => ({ kind: 'human' as const, memberId: null })), isPublic: false };
+    this.lobby = { gameId: config.gameId, options: resolveOptions(module, config.teams ? { ...config.options, [TEAM_OPTION_ID]: config.teams.join(',') } : config.options), time: config.time, seats: config.tokens.map((_, i) => ({ kind: 'human' as const, memberId: null, ...(config.teams ? { team: config.teams[i] } : {}) })), isPublic: false };
     return true;
   }
 
@@ -236,6 +238,8 @@ export class Room {
       // Best of N: erst melden, wenn die Begegnung entschieden ist. Seiten = Reihenfolge der Kennungen.
       if (match.series.winner === undefined) return null;
       report = match.series.forfeit ? { kind: 'noShow', winner: match.series.winner } : { kind: 'played', winner: match.series.winner, score: [...match.series.score] };
+    } else if (result && match.config.teams) {
+      report = { kind: 'played', winner: this.winningTeam(result) };
     } else if (result && match.config.tokens.length > 2) {
       report = { kind: 'placed', places: this.tablePlaces(result) };
     } else if (result) {
@@ -243,6 +247,16 @@ export class Room {
       report = { kind: 'played', winner: winners.length === 1 ? (winners[0] as 0 | 1) : null };
     }
     return report ? { tournament: match.config.tournament, match: match.config.match, report } : null;
+  }
+
+  /** Teamspiel: das Team, dem alle Sieger angehören; null bei Remis oder gemischten Siegern. */
+  private winningTeam(result: Result): 0 | 1 | null {
+    const teams = this.match!.config.teams!;
+    const lobbyIndex = this.game?.lobbyIndex ?? teams.map((_, i) => i);
+    if (result.kind !== 'win') return null;
+    const sides = new Set(result.winners.map((seat) => teams[lobbyIndex[seat] ?? seat]));
+    const only = sides.size === 1 ? [...sides][0] : undefined;
+    return only === 0 || only === 1 ? only : null;
   }
 
   /**
@@ -582,7 +596,7 @@ export class Room {
       this.members.set(member.id, member);
       this.tokens.set(member.token, member.id);
       if (this.match) {
-        if (matchSeat >= 0) this.lobby.seats[matchSeat] = { kind: 'human', memberId: member.id };
+        if (matchSeat >= 0) this.lobby.seats[matchSeat] = { kind: 'human', memberId: member.id, ...(this.match?.config.teams ? { team: this.match.config.teams[matchSeat] } : {}) };
       } else {
         this.hostId ??= member.id;
       }
@@ -899,11 +913,17 @@ export class Room {
     if (this.phase === 'lobby' && !this.match!.noShow && now >= this.createdAt + MATCH_ARRIVAL_MS) {
       const arrived = this.lobby.seats.flatMap((seat, index) => (seat.kind === 'human' && seat.memberId ? [index as 0 | 1] : []));
       const seats = this.match!.config.tokens.length;
+      const teams = this.match!.config.teams;
       const min = this.lobbyModule()?.info.players.min ?? 2;
       // Beide waren schon da, nur nie gleichzeitig: Dann entscheidet die Wartefrist in der Partie.
       // Am Tisch spielen die, die gekommen sind, wenn es für das Spiel reicht.
-      if (arrived.length === seats || (seats > 2 && arrived.length >= min)) this.start('');
-      else if (seats > 2) {
+      if (arrived.length === seats || (!teams && seats > 2 && arrived.length >= min)) this.start('');
+      else if (teams) {
+        // Teams: Es spielt nur, wer vollzählig ist. Sonst gewinnt das Team mit mehr Anwesenden kampflos.
+        const here = [0, 1].map((team) => arrived.filter((i) => teams[i] === team).length);
+        this.match!.noShow = { kind: 'noShow', winner: here[0]! === here[1]! ? null : here[0]! > here[1]! ? 0 : 1 };
+        this.broadcastRoom();
+      } else if (seats > 2) {
         const rank = this.lobby.seats.map((_, i) => (arrived.includes(i as 0 | 1) ? 0 : 1));
         this.match!.noShow = { kind: 'placed', places: rank.map((v) => rank.filter((o) => o < v).length), walkover: true };
         this.broadcastRoom();
