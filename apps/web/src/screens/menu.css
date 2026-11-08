@@ -109,6 +109,18 @@
   color: #fff;
 }
 .bub-menu-button[data-resume] { border-color: #e0b25a; color: var(--gold); }
+/* Zweite Zeile im Eintrag „Weiterspielen“: welches Spiel weitergeht */
+.bub-menu-sub {
+  display: block;
+  margin-top: 0.1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: system-ui, sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0;
+  color: var(--cream);
+}
 
 .bub-menu-plaque {
   grid-column: 2;

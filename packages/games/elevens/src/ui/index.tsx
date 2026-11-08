@@ -214,5 +214,6 @@ export const gameUi: GameUi<ElevensState, ElevensMove> = {
   sounds: {
     cardPlayed: 'karte-legen',
     cardDrawn: 'karte-ziehen',
+    opened: 'ruf-elf',
   },
 };

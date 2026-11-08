@@ -278,7 +278,7 @@ export const gameUi: GameUi<DuelState, DuelMove> = {
     clue: 'karte-legen',
     wrongGuess: 'quiz-falsch',
     guessed: 'quiz-richtig',
-    buzzed: 'ruf-falsch',
+    buzzed: 'ruf-verboten',
     skipped: 'karte-ziehen',
   },
 };

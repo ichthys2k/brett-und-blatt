@@ -305,8 +305,8 @@ export const gameUi: GameUi<TurnipState, TurnipMove> = {
   },
   sounds: {
     drawn: 'karte-umdrehen',
-    hopped: 'stein-ziehen',
-    fell: 'stein-fallen',
+    hopped: 'ruebenacker-hopps',
+    fell: 'ruebenacker-maulwurf',
     arrived: 'nh-jubel',
     win: 'sieg',
   },

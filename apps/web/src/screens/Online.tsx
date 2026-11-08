@@ -12,7 +12,7 @@ import { storage, type Profile } from '../lib/storage';
 
 type Panel = null | 'new' | 'code';
 
-/** Mehrspieler (#184): offene Spiele live, „Neues Spiel“ (offen oder nur mit Code) und „Mit Code beitreten“. */
+/** Online Spiel (#184): offene Spiele live, „Neues Spiel“ (offen oder nur mit Code) und „Mit Code beitreten“. Turniere stehen nur unter „Turniere“. */
 export function Online() {
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
   const [panel, setPanel] = useState<Panel>(null);
@@ -48,7 +48,7 @@ export function Online() {
   };
 
   return (
-    <TavernPage title="Mehrspieler" subtitle="Mit anderen im Netz, ohne Konto.">
+    <TavernPage title="Online Spiel" subtitle="Mit anderen im Netz, ohne Konto.">
       {!GAME_SERVER ? (
         <p className="text-muted">{t('online.unavailable')}</p>
       ) : !profile ? (
@@ -129,8 +129,7 @@ export function Online() {
             </button>
           </div>
 
-          <OpenRooms rooms={openRooms} showEmpty />
-
+          <OpenRooms rooms={openRooms?.filter((room) => !room.tournament) ?? null} showEmpty />
         </>
       )}
 

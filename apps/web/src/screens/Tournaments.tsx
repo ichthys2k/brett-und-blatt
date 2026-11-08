@@ -1,13 +1,15 @@
+import { OpenRooms } from '../components/OpenRooms';
 import { TavernPage } from '../components/TavernPage';
 import { TournamentsPanel } from '../components/TournamentsPanel';
 import { navigate, paths } from '../lib/router';
-import { GAME_SERVER } from '../lib/online';
+import { GAME_SERVER, useOpenRooms } from '../lib/online';
 import { storage } from '../lib/storage';
 import { t } from '../i18n';
 
 /** Turniere (#184): die eigenen Turniere und das Anlegen; ein Assistent in drei Schritten folgt. */
 export function Tournaments() {
   const profile = storage.loadProfile();
+  const openRooms = useOpenRooms();
   return (
     <TavernPage title="Turniere" subtitle="Finden, anlegen und verfolgen.">
       {!GAME_SERVER ? (
@@ -20,7 +22,11 @@ export function Tournaments() {
           </button>
         </>
       ) : (
-        <TournamentsPanel profile={profile} />
+        <>
+          <TournamentsPanel profile={profile} />
+          {/* Ausgeschriebene Turniere zum Einschreiben; im „Online Spiel“ stehen nur Spielrunden. */}
+          <OpenRooms rooms={openRooms?.filter((room) => room.tournament) ?? null} />
+        </>
       )}
     </TavernPage>
   );

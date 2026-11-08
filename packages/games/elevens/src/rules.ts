@@ -181,6 +181,7 @@ export function applyMove(state: ElevensState, seat: SeatId, move: ElevensMove):
       opening: null,
     };
     events.push({ type: 'cardPlayed', seat, card: move.card });
+    if (state.opening === move.card) events.push({ type: 'opened', seat });
     if (hands[seat]!.length === 0) {
       next = { ...next, winner: seat };
       events.push({ type: 'win', seat });

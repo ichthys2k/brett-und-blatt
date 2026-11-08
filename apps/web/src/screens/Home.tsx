@@ -431,7 +431,7 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
   });
 
   return (
-    <TavernPage title="Einzelspieler" subtitle="Allein gegen den Computer oder zu mehreren an einem Gerät." wide>
+    <TavernPage title="Lokales Spiel" subtitle="Allein gegen den Computer oder zu mehreren an einem Gerät." wide>
     <div className="bub-home flex flex-col gap-6">
       <div className="flex justify-end">
         <PassPicker />
