@@ -1,4 +1,9 @@
+import { PlayerCrest } from '@brett-und-blatt/ui';
+import { useState } from 'react';
 import { t } from '../i18n';
+import { useCrest } from '../lib/crestStore';
+import { Button } from './controls';
+import { CrestDesigner } from './CrestDesigner';
 import { loadBook } from '../lib/chronikStore';
 import { crestUrl } from '../lib/crest';
 import { totals } from '../lib/partiebuch';
@@ -11,6 +16,8 @@ const date = (at: number | null) => (at ? new Date(at).toLocaleDateString('de-DE
 
 /** Das Stempelheft des Passes (#145): Deckblatt und je Rubrik eine Seite mit einem Stempelfeld je Spiel. */
 export function StampBook() {
+  const crest = useCrest();
+  const [designing, setDesigning] = useState(false);
   const book = loadBook();
   const profile = storage.loadProfile();
   const known = new Map(games.map((game) => [game.id, game]));
@@ -21,15 +28,21 @@ export function StampBook() {
   return (
     <div className="space-y-4">
       <section className="bub-pass-cover space-y-1 rounded-2xl border-2 border-line bg-surface p-5 text-center shadow-sm" aria-labelledby="cover-title">
-        <p aria-hidden="true" className="text-5xl">
-          {profile?.avatar || '🪪'}
-        </p>
+        <div className="flex justify-center text-ink">
+          <PlayerCrest spec={crest} size={112} label={t('crest.of', { name: profile?.name || t('pass.cover.noName') })} />
+        </div>
         <h2 id="cover-title" className="text-2xl font-bold">
           {profile?.name || t('pass.cover.noName')}
         </h2>
         <p className="text-sm text-muted">{t('pass.cover.title')}</p>
         <p className="text-sm">{t('pass.cover.numbers', { stamps: stampCount(book, allIds), played: sum.played, won: sum.won })}</p>
+        <div className="pt-2">
+          <Button onClick={() => setDesigning(!designing)} aria-expanded={designing}>
+            {t('crest.change')}
+          </Button>
+        </div>
       </section>
+      {designing && <CrestDesigner name={profile?.name || t('pass.cover.noName')} onClose={() => setDesigning(false)} />}
 
       {pages.map(({ category, list }) => {
         const banner = categoryStamp(book, list.map((game) => game.id));

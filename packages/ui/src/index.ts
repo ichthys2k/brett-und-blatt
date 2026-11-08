@@ -47,3 +47,4 @@ export {
 export { DIE_ROLL_MS, Die3D, useRollCounter, type Die3DProps } from './dice/Die3D';
 export { WordInput, type WordInputProps } from './words/WordInput';
 export { ScorePop, useEventCounter, useLatestEvent, type ScorePopProps } from './effects/ScorePop';
+export { PlayerCrest, CREST_ORNAMENT_MIN_SIZE, type PlayerCrestProps } from './crest/PlayerCrest';

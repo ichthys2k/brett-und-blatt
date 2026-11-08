@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createBotRunner } from './botRunner';
 import { notifyTurn } from './notifications';
 import { loadGame, type LoadedGame } from './registry';
+import { crestForRoom } from './crestText';
 import { GAME_SERVER } from './server';
 import { sound } from './sound';
 import { storage, type Profile } from './storage';
@@ -178,7 +179,8 @@ export class RoomConnection {
   rename(profile: Profile): void {
     if (this.display) return;
     this.profile = profile;
-    this.send({ type: 'setName', name: profile.name, avatar: profile.avatar });
+    const crest = crestForRoom(storage.loadCrestText());
+    this.send({ type: 'setName', name: profile.name, avatar: profile.avatar, ...(crest ? { crest } : {}) });
   }
 
   /** Den Raum endgültig verlassen: Der Platz geht an den Computer. */
@@ -212,7 +214,7 @@ export class RoomConnection {
       this.retries = 0;
       const hello: ClientMessage = this.display
         ? { type: 'display', protocol: PROTOCOL_VERSION }
-        : { type: 'hello', protocol: PROTOCOL_VERSION, token: storage.deviceToken(), name: this.profile?.name ?? '', avatar: this.profile?.avatar ?? '' };
+        : { type: 'hello', protocol: PROTOCOL_VERSION, token: storage.deviceToken(), name: this.profile?.name ?? '', avatar: this.profile?.avatar ?? '', ...(crestForRoom(storage.loadCrestText()) ? { crest: crestForRoom(storage.loadCrestText()) } : {}) };
       ws.send(JSON.stringify(hello));
     };
     ws.onmessage = (event) => {

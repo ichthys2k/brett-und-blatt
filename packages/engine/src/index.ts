@@ -35,3 +35,4 @@ export { alphaBetaSearch, WIN_SCORE, type AlphaBetaOptions, type AlphaBetaResult
 export { generalBot, generalBots, randomBot, stateFor } from './bots/general';
 export { pimcMove, type PimcOptions } from './bots/pimc';
 export { computeBotMove, inlineBotRunner } from './bots/runner';
+export * from './player-crest';

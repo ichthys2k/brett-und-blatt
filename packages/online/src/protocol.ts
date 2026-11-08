@@ -51,6 +51,8 @@ export interface MemberInfo {
   id: string;
   name: string;
   avatar: string;
+  /** Wappen des Spielerpasses (Beschreibung, siehe `player-crest.ts` in der Engine); nur wenn die Person es zeigen will. */
+  crest?: string;
   connected: boolean;
   /** Name und Bild hat die Raumleitung festgelegt – das Mitglied kann sie nicht mehr ändern. */
   nameFixed?: boolean;
@@ -87,13 +89,13 @@ export type { Avatar, AvatarSound } from './avatars';
 
 export type ClientMessage =
   /** Erste Nachricht jeder Verbindung. `token` ist die geheime, zufällige Kennung des Geräts für den Wiedereinstieg. */
-  | { type: 'hello'; protocol: number; token: string; name: string; avatar: string }
+  | { type: 'hello'; protocol: number; token: string; name: string; avatar: string; crest?: string }
   /**
    * Erste Nachricht eines Tisch-Bildschirms (Fernseher, Beamer, Tablet auf dem Tisch, #100): Er ist kein Mitglied,
    * hat keinen Platz und keinen Namen, bekommt nur die Zuschauersicht und darf nichts außer Lebenszeichen senden.
    */
   | { type: 'display'; protocol: number }
-  | { type: 'setName'; name: string; avatar: string }
+  | { type: 'setName'; name: string; avatar: string; crest?: string }
   // Lobby (nur die Raumleitung, außer takeSeat/leaveSeat)
   | { type: 'setGame'; gameId: string }
   | { type: 'setOption'; id: string; value: string }
@@ -243,12 +245,12 @@ export function parseClientMessage(raw: string): ClientMessage | null {
   switch (m.type) {
     case 'hello':
       return isInt(m.protocol) && isString(m.token, 100) && m.token.length >= 16 && isString(m.name) && isString(m.avatar, 20)
-        ? { type: 'hello', protocol: m.protocol, token: m.token, name: m.name, avatar: m.avatar }
+        ? { type: 'hello', protocol: m.protocol, token: m.token, name: m.name, avatar: m.avatar, ...(typeof m.crest === 'string' && m.crest.length <= 120 ? { crest: m.crest } : {}) }
         : null;
     case 'display':
       return isInt(m.protocol) ? { type: 'display', protocol: m.protocol } : null;
     case 'setName':
-      return isString(m.name) && isString(m.avatar, 20) ? { type: 'setName', name: m.name, avatar: m.avatar } : null;
+      return isString(m.name) && isString(m.avatar, 20) ? { type: 'setName', name: m.name, avatar: m.avatar, ...(typeof m.crest === 'string' && m.crest.length <= 120 ? { crest: m.crest } : {}) } : null;
     case 'setGame':
       return isString(m.gameId, 60) ? { type: 'setGame', gameId: m.gameId } : null;
     case 'setOption':
