@@ -1,7 +1,10 @@
 import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Ceremony } from '../components/Ceremony';
+import { Notes } from '../components/Notes';
+import { hasNote, notesKey } from '../lib/notes';
+import { Replay, canReplay } from '../components/Replay';
 import { usePassRecorder } from '../lib/passRecorder';
 import { setHandView, useHandView, useHandViewChoice } from '../lib/handView';
 import { Button } from '../components/controls';
@@ -123,6 +126,10 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const [copiedInvite, setCopiedInvite] = useState(false);
   /** Siegerehrung geschlossen (gilt bis zur nächsten Partie in diesem Tisch). */
   const [ceremonyClosed, setCeremonyClosed] = useState(false);
+  /** Nachspielen (#99) geöffnet. */
+  const [replaying, setReplaying] = useState(false);
+  /** Notizblock (#105) geöffnet. */
+  const [notesOpen, setNotesOpen] = useState(false);
 
   useSyncExternalStore(
     (onChange) => session.subscribe(onChange),
@@ -201,6 +208,10 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     if (handoverSeat !== null && session.timed) session.pause();
   }, [handoverSeat, session]);
 
+  // Beim Weiterreichen des Geräts schließt der Notizblock, damit der Nächste ihn nicht offen vorfindet.
+  useEffect(() => {
+    if (handoverSeat !== null) setNotesOpen(false);
+  }, [handoverSeat]);
   const actingSeat = handoverSeat === null ? session.humanSeatsToAct()[0] : undefined;
   let viewer: SeatId | 'spectator';
   if (online) viewer = online.yourSeat ?? 'spectator';
@@ -231,7 +242,10 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   }, [yourMove]);
 
   useEffect(() => {
-    if (!result) setCeremonyClosed(false);
+    if (!result) {
+      setCeremonyClosed(false);
+      setReplaying(false);
+    }
   }, [result]);
 
   // Wer dran ist, soll auch in einer rollbaren Spielerleiste zu sehen sein.
@@ -282,7 +296,19 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const endAction = result && !online ? (ui.endAction?.(publicView) ?? null) : null;
 
   // Knöpfe nach Partieende – unter dem Spielfeld und in der Siegerehrung.
-  const resultActions = online ? (
+  // Nur neu berechnen, wenn sich die Partie ändert (sonst rechnet das Nachspielen bei jedem Zeichnen neu).
+  const replayData = useMemo(() => (result && !online?.display ? (session.replayData?.() ?? null) : null), [session, session.version, Boolean(result), online?.display]); // eslint-disable-line react-hooks/exhaustive-deps
+  const replayButton = canReplay(replayData) ? (
+    <Button
+      onClick={() => {
+        setCeremonyClosed(true);
+        setReplaying(true);
+      }}
+    >
+      ▶ {t('replay.open')}
+    </Button>
+  ) : null;
+  const resultActionsBase = online ? (
     online.isHost ? (
       <>
         {online.onRestart && (
@@ -312,6 +338,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       <Button variant="ghost" onClick={() => navigate(paths.home)}>
         {t('play.menu')}
       </Button>
+    </>
+  );
+  const resultActions = (
+    <>
+      {replayButton}
+      {resultActionsBase}
     </>
   );
 
@@ -378,6 +410,17 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   );
 
   // Oft gebrauchte Knöpfe; am Tisch liegen die übrigen im Menü „⋯“ der Kopfzeile.
+  // Notizblock (#105): je Gerät; beim Hot-Seat mit Geheimnissen je Platz und nur hinter der Übergabe.
+  const notesSeat = needsHandover ? (revealedFor !== null && revealedFor === turnSeat ? String(revealedFor) : null) : 'ich';
+  const noteOwner = needsHandover && notesSeat !== null ? seats[Number(notesSeat)]?.name : undefined;
+  const gameKey = notesKey(info.id, session.id);
+  const notesButton =
+    online?.display || notesSeat === null || handoverSeat !== null ? null : (
+      <Button onClick={() => setNotesOpen(true)} title={t('notes.title')}>
+        📝{hasNote(gameKey, notesSeat) ? '•' : ''}
+        <span className="sr-only"> {t('notes.open')}</span>
+      </Button>
+    );
   const primaryControls = result ? (
     <>
       {ceremonyClosed && (
@@ -385,10 +428,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           {t('ceremony.show')}
         </Button>
       )}
+      {notesButton}
       {resultActions}
     </>
   ) : (
     <>
+      {notesButton}
       {!online && humans.length > 0 && !info.noUndo && (
         <Button disabled={!session.canUndo()} onClick={() => session.undo()}>
           ↶ {t('play.undo')}
@@ -601,6 +646,16 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               : undefined
           }
         />
+        {notesOpen && notesSeat !== null && handoverSeat === null && <Notes gameKey={gameKey} seat={notesSeat} owner={noteOwner} onClose={() => setNotesOpen(false)} />}
+        {replaying && canReplay(replayData) && (
+          <Replay
+            game={game}
+            data={replayData}
+            seatNames={seats.map((seat) => seat.name)}
+            startViewer={online ? (online.yourSeat ?? 'spectator') : humans.length === 1 ? (humans[0] as number) : 'spectator'}
+            onClose={() => setReplaying(false)}
+          />
+        )}
         {showHowTo && <HowToOverlay info={info} onClose={() => setShowHowTo(false)} />}
         {result && !ceremonyClosed && (
           <Ceremony

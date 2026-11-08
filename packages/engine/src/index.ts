@@ -11,6 +11,7 @@ export * from './teams';
 export * from './round-game';
 export { loadCatalog, type CatalogSource } from './catalog';
 export { isLegalMove, replay, resolveOptions, seatActors, settleSystemMoves, timePresetsOf } from './module-helpers';
+export { REPLAY_MAX_STEPS, replayFrames, replayPlayerSteps, replayResult, type ReplayData, type ReplayFrame } from './replay-frames';
 export { Clocks, type ClockReading, type ClocksState } from './clock';
 export type { GameSession, PublicSessionConfig } from './game-session';
 export {

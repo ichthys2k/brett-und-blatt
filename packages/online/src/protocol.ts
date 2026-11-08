@@ -1,4 +1,4 @@
-import type { BotLevel, ClockReading, Forfeit, GameEvent, Options, Result, SeatId, TimePresetId } from '@brett-und-blatt/engine';
+import type { BotLevel, ClockReading, Forfeit, GameEvent, Options, ReplayData, Result, SeatId, TimePresetId } from '@brett-und-blatt/engine';
 
 /**
  * Das Nachrichtenformat zwischen Browser und Server (JSON über WebSocket).
@@ -199,6 +199,11 @@ export interface GameMessage {
   serverNow: number;
   /** Was seit der letzten Nachricht passiert ist – schon für diesen Platz gefiltert. */
   events: GameEvent[];
+  /**
+   * Seed und Zugliste zum Nachspielen (#99) – nur nach Partieende (der Seed verriete sonst alles Verdeckte)
+   * und nur bei überschaubarer Länge. Fehlt bei älteren Servern.
+   */
+  replay?: ReplayData | null;
 }
 
 export type ServerMessage =
