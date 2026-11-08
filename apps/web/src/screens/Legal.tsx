@@ -133,6 +133,12 @@ export function Datenschutz() {
         kein Name außer deinem Spitznamen gehört dazu. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>Pass teilen:</strong> Wenn du „Link erstellen“ wählst, verschlüsselt dein Browser einen Schnappschuss (Spitzname, Bild und die Teile, die du ankreuzt) mit einem Zufallsschlüssel,
+        der nur im Link hinter dem „#“ steht und nie an den Server geht. Der Spieleserver in der EU speichert nur die verschlüsselten Daten unter einer aus dem Schlüssel abgeleiteten Kennung und den
+        Prüfwert eines Schreibgeheimnisses, das auf deinem Gerät bleibt. Mit „Teilen beenden“ wird alles gelöscht; ohne Abruf löscht der Server den Schnappschuss nach einem Jahr. Wer den Link hat,
+        kann den Schnappschuss lesen. Das Bild („Als Bild“) entsteht auf deinem Gerät. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+      <p>
         <strong>PIN oder Passwort (Schloss):</strong> Wenn du deinen Ausweis mit PIN oder Passwort schützt, rechnet dein Browser aus Spielercode und
         PIN bzw. Passwort zwei Werte aus. Die PIN selbst verlässt dein Gerät nie. Der Spieleserver in der EU speichert nur einen Prüfwert, den er mit einem
         geheimen Schlüssel des Betreibers (dem „Pfeffer“, der nicht im Speicher liegt) bildet, einen mit demselben Schlüssel verschlüsselten Zufallsanteil,
