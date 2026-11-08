@@ -156,6 +156,11 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
     passChanged();
   }, [view, code]);
 
+  // Die Merkliste weiß, ob dieses Gerät das Turnier leitet und wie weit es ist („Aufräumen“ auf „Online spielen“).
+  useEffect(() => {
+    if (view) storage.updateTournament(code, { name: view.settings.name, leader: view.mayDelete, phase: view.phase });
+  }, [view, code]);
+
   // Gelöschte Turniere verschwinden auch aus der eigenen Liste.
   useEffect(() => {
     if (state.status === 'gone') storage.forgetTournament(code);
@@ -244,6 +249,20 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
         ←
       </Button>
       <h1 className="min-w-0 flex-1 truncate text-2xl font-bold">🏆 {view?.settings.name ?? state.closed ?? t('tournament.title')}</h1>
+      {view?.mayDelete && (
+        <Button
+          variant="ghost"
+          className="px-3"
+          aria-label={t('tournament.delete')}
+          title={t('tournament.delete')}
+          onClick={() => {
+            const others = view.players.filter((p) => !p.withdrawn).length;
+            if (window.confirm(t(view.phase === 'signup' && others === 0 ? 'tournament.deleteConfirmEmpty' : 'tournament.deleteConfirm', { name: view.settings.name, n: others }))) send({ type: 'delete' });
+          }}
+        >
+          🗑️
+        </Button>
+      )}
     </header>
   );
   const banners = (
@@ -785,12 +804,15 @@ function Wishes({ view, send }: { view: TournamentView; send: Send }) {
 }
 
 function SignupView({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
-  const min = TOURNAMENT_MIN_PLAYERS[view.settings.format];
+  const teamSize = view.settings.teamSize ?? 1;
+  const min = TOURNAMENT_MIN_PLAYERS[view.settings.format] * teamSize;
+  const uneven = view.players.length % teamSize !== 0;
   const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
   return (
     <>
       <Section title={t('tournament.signup')}>
         <p className="text-sm text-muted">{t('tournament.signupOpen', { n: view.players.length, min })}</p>
+        {teamSize > 1 && <p className="text-sm text-muted">{uneven ? t('tournament.teamUneven', { n: teamSize }) : t('tournament.teamsDrawn', { n: teamSize })}</p>}
         <ul className="grid grid-cols-2 gap-1 sm:grid-cols-4">
           {view.players.map((p) => (
             <li key={p.id} className={`truncate rounded-xl border px-2 py-1 text-sm ${p.id === view.you ? 'border-accent bg-accent/10 font-semibold' : 'border-line bg-surface'}`}>
@@ -812,7 +834,7 @@ function SignupView({ view, code, send }: { view: TournamentView; code: string; 
           <Button
             variant="primary"
             className="w-full"
-            disabled={view.players.length < min}
+            disabled={view.players.length < min || uneven}
             onClick={() => {
               if (window.confirm(t('tournament.startConfirm'))) send({ type: 'start' });
             }}

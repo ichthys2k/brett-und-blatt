@@ -66,7 +66,7 @@ export function Online() {
         </section>
       ) : (
         <>
-          <button type="button" className="bub-menu-plaque" onClick={() => navigate(paths.pass)} aria-label="Profil öffnen">
+          <button type="button" className="bub-menu-plaque bub-menu-plaque-link" onClick={() => navigate(paths.pass)} aria-label="Profil öffnen">
             <span className="bub-menu-shield" aria-hidden="true">
               {profile.avatar}
             </span>

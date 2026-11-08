@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@brett-und-blatt/game-black-peter": "workspace:*",
+    "@brett-und-blatt/game-describe-duel": "workspace:*",
     "@brett-und-blatt/game-tic-tac-toe": "workspace:*"
   }
 }

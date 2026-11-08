@@ -21,6 +21,8 @@ import {
   parsePlayerCode,
   PLAYER_SALT,
   playerBlock,
+  mergeRemoved,
+  survivesRemoval,
   revokePlayerLock,
   SyncError,
   updatePlayerLock,
@@ -37,7 +39,7 @@ export const passServer = () => GAME_SERVER || null;
 function readPass(): PlayerPass {
   const profile = storage.loadProfile();
   const passKey = parsePassKey(storage.loadPassKey());
-  return { token: storage.deviceToken(), name: profile?.name ?? '', avatar: profile?.avatar ?? '', code: storage.loadPlayerCode(), tournaments: storage.loadTournaments(), ...(passKey ? { passKey } : {}) };
+  return { token: storage.deviceToken(), name: profile?.name ?? '', avatar: profile?.avatar ?? '', code: storage.loadPlayerCode(), tournaments: storage.loadTournaments(), ...(storage.loadRemovedTournaments().length > 0 ? { removed: storage.loadRemovedTournaments() } : {}), ...(passKey ? { passKey } : {}) };
 }
 
 function writePass(pass: PlayerPass): void {
@@ -45,8 +47,13 @@ function writePass(pass: PlayerPass): void {
   storage.savePlayerCode(pass.code);
   if (pass.passKey) storage.savePassKey(pass.passKey);
   // Was nur dieses Gerät kennt, bleibt; hinzu kommt, was der Ausweis mitbringt.
+  // Löschvermerke zuerst: Was auf einem Gerät entfernt wurde, verschwindet auch hier (außer es wurde danach neu gemerkt).
+  const removed = mergeRemoved(storage.loadRemovedTournaments(), pass.removed);
+  storage.saveRemovedTournaments(removed);
+  for (const item of storage.loadTournaments()) if (!survivesRemoval(item, removed)) storage.forgetTournament(item.code);
+  storage.saveRemovedTournaments(removed);
   const known = storage.loadTournaments();
-  for (const item of [...(pass.tournaments ?? [])].reverse()) if (!known.some((k) => k.code === item.code)) storage.rememberTournament(item);
+  for (const item of [...(pass.tournaments ?? [])].reverse()) if (!known.some((k) => k.code === item.code) && survivesRemoval(item, removed)) storage.rememberTournament({ ...item, at: item.at ?? 1 });
   if (pass.name && pass.avatar) storage.saveProfile({ name: pass.name, avatar: pass.avatar });
 }
 

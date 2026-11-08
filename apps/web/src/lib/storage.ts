@@ -13,7 +13,20 @@ const TOURNAMENTS_KEY = 'brett-und-blatt:turniere';
 export interface KnownTournament {
   code: string;
   name: string;
+  /** Wann zuletzt gemerkt (ms); ein jüngerer Eintrag schlägt einen älteren Löschvermerk im Ausweis. */
+  at?: number;
+  /** Nur lokal bekannt, sobald die Turnierseite offen war: dieses Gerät leitet das Turnier. */
+  leader?: boolean;
+  /** Nur lokal bekannt: Stand des Turniers beim letzten Öffnen. */
+  phase?: 'signup' | 'running' | 'finished';
 }
+
+/** Löschvermerk für den Abgleich über den Ausweis. */
+export interface RemovedTournament {
+  code: string;
+  at: number;
+}
+const REMOVED_KEY = 'brett-und-blatt:turniere-entfernt';
 const DEVICE_KEY = 'brett-und-blatt:geraet';
 const PLAYER_CODE_KEY = 'brett-und-blatt:spielercode';
 const RESCUE_KEY = 'brett-und-blatt:rettung';
@@ -75,9 +88,31 @@ export const storage = {
   },
   rememberTournament: (entry: KnownTournament) => {
     const others = storage.loadTournaments().filter((item) => item.code !== entry.code);
-    write(TOURNAMENTS_KEY, [entry, ...others].slice(0, 20));
+    write(TOURNAMENTS_KEY, [{ ...entry, at: entry.at ?? Date.now() }, ...others].slice(0, 20));
+    // Wer ein Turnier bewusst wieder öffnet, will es auch wiederhaben.
+    if (entry.at === undefined) write(REMOVED_KEY, storage.loadRemovedTournaments().filter((item) => item.code !== entry.code));
   },
-  forgetTournament: (code: string) => write(TOURNAMENTS_KEY, storage.loadTournaments().filter((item) => item.code !== code)),
+  /** Ergänzt Angaben zu einem gemerkten Turnier, ohne die Reihenfolge oder den Zeitpunkt zu ändern. */
+  updateTournament: (code: string, patch: Partial<Pick<KnownTournament, 'name' | 'leader' | 'phase'>>) => {
+    const list = storage.loadTournaments();
+    const index = list.findIndex((item) => item.code === code);
+    if (index < 0) return false;
+    const current = list[index]!;
+    if (Object.entries(patch).every(([key, value]) => current[key as keyof KnownTournament] === value)) return false;
+    list[index] = { ...current, ...patch };
+    write(TOURNAMENTS_KEY, list);
+    return true;
+  },
+  /** Aus der Merkliste nehmen und vermerken, damit der Ausweis es nicht zurückbringt. */
+  forgetTournament: (code: string) => {
+    write(TOURNAMENTS_KEY, storage.loadTournaments().filter((item) => item.code !== code));
+    storage.saveRemovedTournaments([{ code, at: Date.now() }, ...storage.loadRemovedTournaments().filter((item) => item.code !== code)]);
+  },
+  loadRemovedTournaments: (): RemovedTournament[] => {
+    const list = read<RemovedTournament[]>(REMOVED_KEY);
+    return Array.isArray(list) ? list.filter((item) => typeof item?.code === 'string' && typeof item.at === 'number') : [];
+  },
+  saveRemovedTournaments: (list: RemovedTournament[]) => write(REMOVED_KEY, list.slice(0, 50)),
   /**
    * Geheime, zufällige Kennung dieses Geräts. Mit ihr erkennt ein Online-Raum,
    * wer zurückkommt – sie verlässt das Gerät nur in Richtung Spieleserver.

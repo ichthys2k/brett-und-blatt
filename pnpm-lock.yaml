@@ -1154,6 +1154,9 @@ importers:
       '@brett-und-blatt/game-black-peter':
         specifier: workspace:*
         version: link:../games/black-peter
+      '@brett-und-blatt/game-describe-duel':
+        specifier: workspace:*
+        version: link:../games/describe-duel
       '@brett-und-blatt/game-tic-tac-toe':
         specifier: workspace:*
         version: link:../games/tic-tac-toe

@@ -86,6 +86,8 @@ export interface TournamentSettings {
   lowWins?: boolean;
   /** Best of N (Stufe 3 Teil 5): Partien je Begegnung; fehlt = 1. */
   bestOf?: number;
+  /** Teams (Stufe 3 Teil 4, nur online, Spiele mit `GameInfo.teams`): Spieler je Team; fehlt = Einzelne. */
+  teamSize?: number;
   /** Best of N nur für die K.-o.-Phase (K.-o., Doppel-K.-o., WM-Endrunde); fehlt = wie `bestOf`. */
   bestOfKo?: number;
 }
@@ -170,6 +172,8 @@ export interface TournamentPlayer {
   name: string;
   avatar: string;
   withdrawn: boolean;
+  /** Teams (Stufe 3 Teil 4): die Mitglieder in Raumreihenfolge; `token` ist die des ersten. */
+  members?: { token: string; name: string; avatar: string }[];
 }
 
 /** Gleichstandsregeln in der Reihenfolge, in der sie greifen; am Ende entscheidet immer das Los. */
@@ -229,6 +233,8 @@ export interface TournamentSnapshot {
   disciplineOrder?: string[];
   /** Tischrunden: die Tische aller Runden. */
   tables?: TableGame[];
+  /** Teams: die Einzelnen vor der Auslosung der Teams (bleiben für die Anzeige erhalten). */
+  roster?: TournamentPlayer[];
 }
 
 /**
@@ -304,6 +310,8 @@ export interface PublicPlayer {
   name: string;
   avatar: string;
   withdrawn: boolean;
+  /** Teams: Namen der Mitglieder. */
+  members?: string[];
 }
 
 /** Was ein Eingeschriebener sieht. Enthält weder Kennungen noch Partie-Geheimnisse. */
@@ -340,6 +348,8 @@ export interface TournamentView {
   podium: string[];
   you: string | null;
   isLeader: boolean;
+  /** Dieses Gerät hat das Turnier angelegt und darf es löschen. */
+  mayDelete: boolean;
   /** Vor Ort: Helfer (trägt Ergebnisse ein) oder Mitleitung; null sonst. */
   helperRole: HelperRole | null;
   /** Nur für die Leitung: die Helferlinks. */

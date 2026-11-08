@@ -22,6 +22,8 @@ export interface PlayerPass {
   code: string | null;
   /** Turniere, die dieser Spieler kennt; so findet ein neues Gerät sie ohne Link wieder. */
   tournaments?: KnownTournament[];
+  /** Aus der Merkliste entfernte Turniere (Löschvermerke), damit der Abgleich sie nicht zurückbringt. */
+  removed?: RemovedTournament[];
   /** Passschlüssel des Spielerpasses (#137); aus ihm leiten sich alle weiteren Blöcke ab. */
   passKey?: string;
 }
@@ -29,22 +31,60 @@ export interface PlayerPass {
 export interface KnownTournament {
   code: string;
   name: string;
+  /** Wann das Turnier zuletzt gemerkt wurde (ms); ein jüngerer Eintrag schlägt einen älteren Löschvermerk. */
+  at?: number;
+}
+
+/** Löschvermerk: Das Turnier wurde zu diesem Zeitpunkt aus der Merkliste entfernt. */
+export interface RemovedTournament {
+  code: string;
+  at: number;
 }
 
 const MAX_TOURNAMENTS = 20;
+const MAX_REMOVED = 50;
+/** Löschvermerke so lange behalten; danach ist das Turnier ohnehin vom Server verschwunden. */
+const REMOVED_KEEP_MS = 90 * 24 * 60 * 60 * 1000;
+
+const CODE_PATTERN = /^[2-9A-HJ-NP-Z]{8}$/;
+
+function sanitizeRemoved(value: unknown): RemovedTournament[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is RemovedTournament => typeof item?.code === 'string' && CODE_PATTERN.test(item.code) && typeof item.at === 'number' && Number.isFinite(item.at))
+    .slice(0, MAX_REMOVED)
+    .map(({ code, at }) => ({ code, at }));
+}
+
+/** Vereinigung der Löschvermerke; je Turnier gilt der jüngere. */
+export function mergeRemoved(first: RemovedTournament[] = [], second: RemovedTournament[] = [], now = Date.now()): RemovedTournament[] {
+  const latest = new Map<string, number>();
+  for (const { code, at } of [...first, ...second]) latest.set(code, Math.max(latest.get(code) ?? 0, at));
+  return [...latest.entries()]
+    .filter(([, at]) => now - at < REMOVED_KEEP_MS)
+    .map(([code, at]) => ({ code, at }))
+    .sort((a, b) => b.at - a.at)
+    .slice(0, MAX_REMOVED);
+}
+
+/** Gilt der Eintrag noch? Nur wenn er jünger ist als ein Löschvermerk. */
+export function survivesRemoval(item: KnownTournament, removed: readonly RemovedTournament[]): boolean {
+  const gone = removed.find((r) => r.code === item.code);
+  return !gone || (item.at ?? 0) > gone.at;
+}
 
 function sanitizeTournaments(value: unknown): KnownTournament[] {
   if (!Array.isArray(value)) return [];
   return value
     .filter((item): item is KnownTournament => typeof item?.code === 'string' && /^[2-9A-HJ-NP-Z]{8}$/.test(item.code) && typeof item.name === 'string')
     .slice(0, MAX_TOURNAMENTS)
-    .map(({ code, name }) => ({ code, name: name.slice(0, 40) }));
+    .map(({ code, name, at }) => ({ code, name: name.slice(0, 40), ...(typeof at === 'number' && Number.isFinite(at) ? { at } : {}) }));
 }
 
 /** Vereinigung zweier Listen; bei beiden gilt der Eintrag aus `first`. */
-function mergeTournaments(first: KnownTournament[] = [], second: KnownTournament[] = []): KnownTournament[] {
+function mergeTournaments(first: KnownTournament[] = [], second: KnownTournament[] = [], removed: readonly RemovedTournament[] = []): KnownTournament[] {
   const seen = new Set(first.map((item) => item.code));
-  return [...first, ...second.filter((item) => !seen.has(item.code))].slice(0, MAX_TOURNAMENTS);
+  return [...first, ...second.filter((item) => !seen.has(item.code))].filter((item) => survivesRemoval(item, removed)).slice(0, MAX_TOURNAMENTS);
 }
 
 /** Eigenes Salt für das Schloss des Spielercodes, getrennt vom Block der Sicherung. */
@@ -106,9 +146,10 @@ export function parsePlayerCode(input: string): string | null {
 /** Macht aus fremden Daten einen gültigen Ausweis oder nichts. */
 export function sanitizePlayerPass(value: unknown): PlayerPass | null {
   if (!value || typeof value !== 'object') return null;
-  const { token, name, avatar, code, tournaments, passKey } = value as Record<string, unknown>;
+  const { token, name, avatar, code, tournaments, removed: removedRaw, passKey } = value as Record<string, unknown>;
   const key = parsePassKey(passKey);
-  const known = sanitizeTournaments(tournaments);
+  const removed = sanitizeRemoved(removedRaw);
+  const known = sanitizeTournaments(tournaments).filter((item) => survivesRemoval(item, removed));
   if (typeof token !== 'string' || !/^[\w-]{32,100}$/.test(token)) return null;
   return {
     token,
@@ -116,12 +157,15 @@ export function sanitizePlayerPass(value: unknown): PlayerPass | null {
     avatar: typeof avatar === 'string' ? avatar.slice(0, 20) : '',
     code: typeof code === 'string' ? parsePlayerCode(code) : null,
     ...(known.length > 0 ? { tournaments: known } : {}),
+    ...(removed.length > 0 ? { removed } : {}),
     ...(key ? { passKey: key } : {}),
   };
 }
 
 const withTournaments = (tournaments: KnownTournament[]) => (tournaments.length > 0 ? { tournaments } : {});
+const withRemoved = (removed: RemovedTournament[]) => (removed.length > 0 ? { removed } : {});
 const withPassKey = (passKey: string | undefined) => (passKey ? { passKey } : {});
+const sortedRemoved = (pass: PlayerPass) => (pass.removed ?? []).map((r) => `${r.code}:${r.at}`).sort();
 const sortedCodes = (pass: PlayerPass) => (pass.tournaments ?? []).map((item) => item.code).sort();
 
 /** Der Ausweis als Block der gemeinsamen Sicherung: Kennung vom Server, der eigene Name bleibt, falls vorhanden. */
@@ -138,11 +182,12 @@ export function playerBlock(salt: string, serverUrl: () => string | null, store:
       name: local.name || remote.name,
       avatar: local.name ? local.avatar : remote.avatar,
       code: remote.code ?? local.code,
-      ...withTournaments(mergeTournaments(local.tournaments, remote.tournaments)),
+      ...withTournaments(mergeTournaments(local.tournaments, remote.tournaments, mergeRemoved(local.removed, remote.removed))),
+      ...withRemoved(mergeRemoved(local.removed, remote.removed)),
       // Der Schlüssel, den der Server kennt, gilt: Hat ein zweites Gerät unabhängig einen eigenen erzeugt, übernimmt es den gemeinsamen.
       ...withPassKey(remote.passKey ?? local.passKey),
     }),
-    same: (a, b) => a.token === b.token && a.name === b.name && a.avatar === b.avatar && a.code === b.code && a.passKey === b.passKey && JSON.stringify(sortedCodes(a)) === JSON.stringify(sortedCodes(b)),
+    same: (a, b) => a.token === b.token && a.name === b.name && a.avatar === b.avatar && a.code === b.code && a.passKey === b.passKey && JSON.stringify(sortedCodes(a)) === JSON.stringify(sortedCodes(b)) && JSON.stringify(sortedRemoved(a)) === JSON.stringify(sortedRemoved(b)),
   };
 }
 

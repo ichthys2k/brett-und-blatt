@@ -1,17 +1,19 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, TOURNAMENT_MAX_FIELDS, isTableGame, isTournamentGame, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
 import { games, loadGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
-import { storage, type Profile } from '../lib/storage';
-import { createTournament } from '../lib/tournament';
+import { storage, type KnownTournament, type Profile } from '../lib/storage';
+import { createTournament, deleteTournament, tournamentExists } from '../lib/tournament';
 import { Button, Section } from './controls';
 
 const tournamentGames = games.filter(isTournamentGame).sort((a, b) => a.name.localeCompare(b.name, 'de'));
 /** Spiele für Tischrunden: drei und mehr Plätze (Stufe 3 Teil 3). */
 const tableGames = games.filter(isTableGame).sort((a, b) => a.name.localeCompare(b.name, 'de'));
+/** Spiele mit zwei festen Teams (Stufe 3 Teil 4): online als Turnier mit Teams. */
+const teamGames = games.filter(isTeamGame).sort((a, b) => a.name.localeCompare(b.name, 'de'));
 const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
 
 /** Vorlagen vor Ort: Was gezählt wird, ob Remis geht und wie die Spielstätten heißen. */
@@ -29,6 +31,7 @@ const SPORTS: { name: string; result: ResultKind; draws: boolean; fieldLabel: st
 export function TournamentsPanel({ profile }: { profile: Profile }) {
   // Bei jedem Zeichnen frisch: Ein übernommener Ausweis kann neue Turniere mitbringen.
   const known = storage.loadTournaments();
+  const [, setListVersion] = useState(0);
   const [creating, setCreating] = useState(false);
   /** Assistent: 0 Was (Name, Spiel), 1 Wie (Form, Tempo, Regeln), 2 Wer (Sichtbarkeit). */
   const [step, setStep] = useState(0);
@@ -68,7 +71,11 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [bestOf, setBestOf] = useState(1);
   const [bestOfKo, setBestOfKo] = useState(0);
   const tables = format === 'tables';
-  const gameList = tables ? tableGames : tournamentGames;
+  const gameList = tables ? tableGames : mode === 'local' ? tournamentGames : [...tournamentGames, ...teamGames].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  /** Teams: Spieler je Team beim gewählten Teamspiel (nur online). */
+  const [teamSize, setTeamSize] = useState(2);
+  const teamGame = mode !== 'local' && !tables && !(format === 'league' && multi) ? teamGames.find((g) => g.id === gameId) : undefined;
+  const teamChoices: number[] = teamGame ? TEAM_SIZE_CHOICES.filter((n) => validTeamSize(teamGame, n)) : [];
   // Beim Wechsel der Form ein passendes Spiel wählen.
   useEffect(() => {
     if (gameList.some((g) => g.id === gameId)) return;
@@ -128,14 +135,14 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
     setError(null);
     try {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
-      const series = !tables && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
+      const series = !tables && !teamGame && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
       const tableSettings = tables ? { tableSize: size, rounds, ...(local && lowWins ? { lowWins: true } : {}) } : {};
       const common = { name: name.trim(), format, thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...tableSettings, ...series };
       const many = format === 'league' && multi;
       const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
         ? { ...common, gameId: many ? '' : localGame, time: 'normal' as const, days: 1, isPublic: false, mode, sport: many ? t('tournament.multiSport') : sport.trim(), ...(many ? { disciplines: localList } : {}), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}) }
-        : { ...common, gameId: many ? picked[0]! : gameId, time, isPublic, options: many ? {} : chosen, ...(many ? { disciplines: picked, wishes } : {}), ...(pace.startsWith('m') ? { days: 1, minutes: Number(pace.slice(1)) } : { days: Number(pace.slice(1)) }) };
+        : { ...common, ...(teamGame ? { teamSize: teamChoices.includes(teamSize) ? teamSize : teamChoices[0] } : {}), gameId: many ? picked[0]! : gameId, time, isPublic, options: many ? {} : chosen, ...(many ? { disciplines: picked, wishes } : {}), ...(pace.startsWith('m') ? { days: 1, minutes: Number(pace.slice(1)) } : { days: Number(pace.slice(1)) }) };
       const code = await createTournament(settings, profile);
       storage.rememberTournament({ code, name: name.trim() });
       passChanged();
@@ -151,15 +158,14 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
     <Section title={`🏆 ${t('tournament.title')}`}>
       <p className="text-sm text-muted">{t('tournament.hint')}</p>
       {known.length > 0 && (
-        <ul className="space-y-1">
-          {known.map((item) => (
-            <li key={item.code}>
-              <Button className="w-full justify-start" onClick={() => navigate(paths.tournament(item.code))}>
-                🏆 {item.name}
-              </Button>
-            </li>
-          ))}
-        </ul>
+        <TournamentList
+          known={known}
+          profile={profile}
+          onChanged={() => {
+            setListVersion((n) => n + 1);
+            passChanged();
+          }}
+        />
       )}
       {!creating ? (
         <Button className="w-full" onClick={() => setCreating(true)}>
@@ -323,7 +329,20 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               )}
             </div>
           )}
-          {!tables && (!local || result === 'winner') && (
+          {teamGame && (
+            <label className="block space-y-1 text-sm">
+              <span>{t('tournament.teamSize')}</span>
+              <select className={FIELD} value={teamChoices.includes(teamSize) ? teamSize : teamChoices[0]} onChange={(e) => setTeamSize(Number(e.target.value))}>
+                {teamChoices.map((n) => (
+                  <option key={n} value={n}>
+                    {t('tournament.teamSizeN', { n })}
+                  </option>
+                ))}
+              </select>
+              <span className="block text-xs text-muted">{t('tournament.teamHint')}</span>
+            </label>
+          )}
+          {!tables && !teamGame && (!local || result === 'winner') && (
             <div className="grid grid-cols-2 gap-3">
               <label className="block space-y-1 text-sm">
                 <span>{t('tournament.bestOf')}</span>
@@ -512,5 +531,109 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
         </form>
       )}
     </Section>
+  );
+}
+
+/** Merkliste der Turniere: öffnen, einzeln entfernen, im Aufräum-Modus mehrere auf einmal entfernen oder löschen. */
+function TournamentList({ known, profile, onChanged }: { known: KnownTournament[]; profile: Profile; onChanged: () => void }) {
+  const [tidy, setTidy] = useState(false);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const toggle = (code: string) => setPicked((list) => (list.includes(code) ? list.filter((c) => c !== code) : [...list, code]));
+  const leave = () => {
+    setTidy(false);
+    setPicked([]);
+    setNote(null);
+  };
+  const removeLocal = (codes: string[]) => {
+    for (const code of codes) storage.forgetTournament(code);
+    setPicked((list) => list.filter((c) => !codes.includes(c)));
+    onChanged();
+  };
+  const removePicked = () => {
+    if (picked.length === 0 || !window.confirm(t('tournament.tidyRemoveConfirm', { n: picked.length }))) return;
+    removeLocal(picked);
+  };
+  const deletePicked = async () => {
+    if (picked.length === 0 || !window.confirm(t('tournament.tidyDeleteConfirm', { n: picked.length }))) return;
+    setBusy(true);
+    const counts = { deleted: 0, denied: 0, failed: 0 };
+    const done: string[] = [];
+    for (const code of picked) {
+      const outcome = await deleteTournament(code, profile);
+      if (outcome === 'deleted' || outcome === 'gone') {
+        counts.deleted++;
+        done.push(code);
+      } else counts[outcome]++;
+    }
+    removeLocal(done);
+    setNote(t('tournament.tidyResult', counts));
+    setBusy(false);
+  };
+  const removeMissing = async () => {
+    setBusy(true);
+    const missing: string[] = [];
+    for (const item of known) if ((await tournamentExists(item.code)) === false) missing.push(item.code);
+    removeLocal(missing);
+    setNote(t('tournament.tidyMissingResult', { n: missing.length }));
+    setBusy(false);
+  };
+  return (
+    <div className="space-y-2">
+      <ul className="space-y-1">
+        {known.map((item) => (
+          <li key={item.code} className="flex items-center gap-1">
+            {tidy && <input type="checkbox" className="h-5 w-5 shrink-0 accent-accent" aria-label={item.name} checked={picked.includes(item.code)} onChange={() => toggle(item.code)} />}
+            <Button className="min-w-0 flex-1 justify-start" onClick={() => (tidy ? toggle(item.code) : navigate(paths.tournament(item.code)))}>
+              <span className="truncate">
+                🏆 {item.name}
+                {item.leader ? ' · 👑' : ''}
+                {item.phase === 'finished' ? ' · ✔️' : ''}
+              </span>
+            </Button>
+            {!tidy && (
+              <Button variant="ghost" className="px-3" aria-label={`${t('tournament.removeFromList')}: ${item.name}`} title={t('tournament.removeFromList')} onClick={() => removeLocal([item.code])}>
+                ✕
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {tidy ? (
+        <div className="space-y-2 rounded-xl border border-line p-2">
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" className="text-sm" disabled={busy} onClick={() => setPicked(known.map((k) => k.code))}>
+              {t('tournament.tidyAll')}
+            </Button>
+            <Button type="button" className="text-sm" disabled={busy} onClick={() => setPicked(known.filter((k) => k.phase === 'finished').map((k) => k.code))}>
+              {t('tournament.tidyFinished')}
+            </Button>
+          </div>
+          <Button type="button" className="w-full text-sm" disabled={busy} onClick={removeMissing}>
+            {t('tournament.tidyMissing')}
+          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" className="text-sm" disabled={busy || picked.length === 0} onClick={removePicked}>
+              {t('tournament.tidyRemove', { n: picked.length })}
+            </Button>
+            <Button type="button" variant="primary" className="text-sm" disabled={busy || picked.length === 0} onClick={deletePicked}>
+              {t('tournament.tidyDelete', { n: picked.length })}
+            </Button>
+          </div>
+          {busy && <p className="text-sm text-muted">{t('tournament.tidyBusy')}</p>}
+          {note && <p role="status" className="text-sm text-muted">{note}</p>}
+          <Button type="button" variant="ghost" className="w-full text-sm" onClick={leave}>
+            {t('tournament.tidyDone')}
+          </Button>
+        </div>
+      ) : (
+        known.length > 1 && (
+          <Button type="button" variant="ghost" className="w-full text-sm" onClick={() => setTidy(true)}>
+            🧹 {t('tournament.tidy')}
+          </Button>
+        )
+      )}
+    </div>
   );
 }

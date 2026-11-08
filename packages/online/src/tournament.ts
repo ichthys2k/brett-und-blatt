@@ -12,6 +12,7 @@ import { chooseDisciplines, disciplineOf, hasDisciplines, setWishes, wishCounts 
 import { bestOfStage, checkSeriesScore } from './tournament/best-of';
 import { autoStart, isEvening, isHeld, startStage, startableStage } from './tournament/evening';
 import { seededShuffle } from './tournament/pairing';
+import { formTeams, isTeamed, ownsToken } from './tournament/teams';
 import { defaultScoring, standings } from './tournament/scoring';
 import {
   DAY_MS,
@@ -51,6 +52,7 @@ export * from './tournament/evening';
 export * from './tournament/disciplines';
 export * from './tournament/table-rounds';
 export * from './tournament/best-of';
+export * from './tournament/teams';
 export * from './tournament/migrate';
 export * from './tournament/protocol';
 
@@ -152,6 +154,11 @@ export class Tournament {
     return this.s.phase === 'signup' || token === this.s.leaderToken || this.playerByToken(token) !== undefined;
   }
 
+  /** Löschen darf nur, wer das Turnier angelegt hat – nicht Mitleitung oder Helfer. */
+  mayDelete(token: string): boolean {
+    return token !== '' && token === this.s.leaderToken;
+  }
+
   /** Leitung oder Mitleitung. */
   isLeader(token: string): boolean {
     return token === this.s.leaderToken || this.helperOf(token)?.role === 'coleader';
@@ -171,7 +178,7 @@ export class Tournament {
   greet(token: string, name: string, avatar: string): boolean {
     const player = this.playerByToken(token);
     const clean = cleanName(name);
-    if (!player || !clean) return false;
+    if (!player || !clean || player.members) return false;
     const nextAvatar = cleanAvatar(avatar);
     if (player.name === clean && player.avatar === nextAvatar) return false;
     player.name = clean;
@@ -231,6 +238,14 @@ export class Tournament {
     if (this.s.phase !== 'signup') return 'Das Turnier läuft schon.';
     const { days } = this.s.settings;
     const { minPlayers } = this.format;
+    if (isTeamed(this.s)) {
+      // Teams: erst nach dem Los zu Teams zusammenfassen, dann zählt die Zahl der Teams.
+      const teams = formTeams(this.s);
+      if (typeof teams === 'string') return teams;
+      if (teams.length < minPlayers) return `Es braucht mindestens ${minPlayers} Teams (${minPlayers * (this.s.settings.teamSize ?? 2)} Spieler).`;
+      this.s.roster = this.s.players;
+      this.s.players = teams;
+    }
     if (this.s.players.length < minPlayers) return `Es braucht mindestens ${minPlayers} Spieler.`;
     if (isTables(this.s) && !tableSizes(this.s.players.length, this.s.settings.tableSize ?? 4, this.s.settings.tableMin ?? TABLE_SIZE_MIN, this.s.settings.tableMax ?? TABLE_SIZE_MAX)) return 'So viele Spieler lassen sich nicht auf Tische verteilen.';
     const now = this.deps.now();
@@ -602,7 +617,7 @@ export class Tournament {
       settings: s.settings,
       leaderName: s.leaderName,
       phase: s.phase,
-      players: s.players.map(({ id, name, avatar, withdrawn }) => ({ id, name, avatar, withdrawn })),
+      players: s.players.map(({ id, name, avatar, withdrawn, members }) => ({ id, name, avatar, withdrawn, ...(members ? { members: members.map((m) => m.name) } : {}) })),
       groups: s.groups.map((players, group) => ({ players, table: this.groupTable(group), settled: this.groupSettled(group) })),
       swissTable: s.settings.format === 'swiss' && s.phase !== 'signup' ? this.overallTable() : [],
       table: isTables(s) ? (s.phase !== 'signup' ? tableStandings(s) : []) : (s.settings.format === 'swiss' || s.settings.format === 'league') && s.phase !== 'signup' ? this.overallTable() : [],
@@ -620,6 +635,7 @@ export class Tournament {
       podium: this.podium(),
       you,
       isLeader: token !== null && this.isLeader(token),
+      mayDelete: token !== null && this.mayDelete(token),
       helperRole: token ? (this.helperOf(token)?.role ?? null) : null,
       helpers: token !== null && this.isLeader(token) ? (s.helpers ?? []).map(({ id, name, role, code, tokens }) => ({ id, name, role, code, devices: tokens.length })) : [],
       rulesChanged: s.ruleVersion !== undefined && s.phase === 'running' && this.deps.ruleVersion?.(s.settings.gameId) !== s.ruleVersion,
@@ -809,7 +825,7 @@ export class Tournament {
   private playerByToken(token: string): TournamentPlayer | undefined {
     // Teilnehmer vor Ort haben keine Kennung.
     if (!token) return undefined;
-    return this.s.players.find((p) => p.token === token);
+    return this.s.players.find((p) => ownsToken(p, token));
   }
 
   private isWithdrawn(id: string): boolean {

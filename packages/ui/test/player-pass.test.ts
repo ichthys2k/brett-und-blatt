@@ -143,4 +143,23 @@ describe('Turnierliste im Ausweis', () => {
     expect(block.same(local, merged)).toBe(false);
     expect(block.same(merged, { ...merged, tournaments: [...merged.tournaments!].reverse() })).toBe(true);
   });
+
+  const NOW = Date.now();
+
+  it('Löschvermerke: ein entferntes Turnier kommt beim Abgleich nicht zurück, ein neu gemerktes schon', () => {
+    const local: PlayerPass = { token, name: 'A', avatar: '🦊', code: null, tournaments: [], removed: [{ code: 'BBBB3333', at: NOW + 2000 }] };
+    const block = playerBlock('salz', () => null, { read: () => local, write: () => {} });
+    const remote: PlayerPass = { ...local, removed: undefined, tournaments: [{ code: 'BBBB3333', name: 'Zwei', at: NOW + 1000 }, { code: 'CCCC4444', name: 'Drei', at: NOW + 1500 }] };
+    const merged = block.merge(remote, local);
+    expect(merged.tournaments?.map((t) => t.code)).toEqual(['CCCC4444']);
+    expect(merged.removed).toEqual([{ code: 'BBBB3333', at: NOW + 2000 }]);
+    // Später wieder gemerkt (jünger als der Vermerk): bleibt.
+    const again = block.merge({ ...remote, tournaments: [{ code: 'BBBB3333', name: 'Zwei', at: NOW + 3000 }] }, local);
+    expect(again.tournaments?.map((t) => t.code)).toEqual(['BBBB3333']);
+    expect(block.same(local, merged)).toBe(false);
+  });
+
+  it('prüft fremde Löschvermerke', () => {
+    expect(sanitizePlayerPass({ token, removed: [{ code: 'ABCD2345', at: 5 }, { code: 'x', at: 5 }, { code: 'ABCD2345' }] })?.removed).toEqual([{ code: 'ABCD2345', at: 5 }]);
+  });
 });
