@@ -3,11 +3,25 @@ import {
   ATTEMPT_WINDOW_MS,
   BACKUP_ID_PATTERN,
   BACKUP_TTL_MS,
+  CLASS_TTL_MS,
   OpenRoomDirectory,
   Room,
   TOURNAMENT_CODE_PATTERN,
   Tournament,
   applyBackupPut,
+  classView,
+  configureClass,
+  createClass,
+  decide,
+  isClassExpired,
+  joinClass,
+  leaveClass,
+  mayDissolve,
+  parseClassCode,
+  randomClassCode,
+  removeMember,
+  setLead,
+  updateMember,
   listingNeedsSync,
   parseRoomCode,
   parseTournamentMessage,
@@ -16,6 +30,7 @@ import {
   parsePointRules,
   randomRoomCode,
   serverBotRunner,
+  type ClassState,
   type MatchRoomConfig,
   type OpenRoomListing,
   type OpenRoomsMessage,
@@ -80,6 +95,7 @@ interface Env {
   ATTEMPTS: DurableObjectNamespace<AttemptLimiter>;
   PASS_LOCKS: DurableObjectNamespace<PassLock>;
   SHARES: DurableObjectNamespace<PassShare>;
+  CLASSES: DurableObjectNamespace<ClassRoom>;
   /** Geheimer Pfeffer für die Schlösser der Ausweise (`wrangler secret put PASS_PEPPER`, lokal in `.dev.vars`). Fehlt er, melden die Schloss-Endpunkte 503. */
   PASS_PEPPER?: string;
   TOURNAMENTS: DurableObjectNamespace<TournamentRoom>;
@@ -129,6 +145,11 @@ function lockStub(env: Env, id: string): DurableObjectStub<PassLock> {
 function shareStub(env: Env, id: string): DurableObjectStub<PassShare> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.SHARES : env.SHARES.jurisdiction('eu');
   return namespace.get(namespace.idFromName(id));
+}
+
+function classStub(env: Env, code: string): DurableObjectStub<ClassRoom> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.CLASSES : env.CLASSES.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(code));
 }
 
 function attemptStub(env: Env, sender: string): DurableObjectStub<AttemptLimiter> {
@@ -278,6 +299,49 @@ export default {
         return json({ error: result.error }, 400, noStore);
       }
       return json({ error: 'method' }, 405, cors);
+    }
+
+    if (url.pathname === '/klassen' && request.method === 'POST') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      let body: Record<string, unknown>;
+      try {
+        const text = await request.text();
+        if (text.length > 4000) return json({ error: 'size' }, 413, cors);
+        body = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        return json({ error: 'body' }, 400, cors);
+      }
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const code = randomClassCode((n) => crypto.getRandomValues(new Uint32Array(1))[0]! % n);
+        const created = await classStub(env, code).create(code, JSON.stringify(body));
+        if (created === 'taken') continue;
+        if (created !== 'ok') return json({ error: created }, 400, { ...cors, 'Cache-Control': 'no-store' });
+        return json({ code }, 201, { ...cors, 'Cache-Control': 'no-store' });
+      }
+      return json({ error: 'busy' }, 503, cors);
+    }
+
+    const klasse = /^\/klassen\/([^/]+)$/.exec(url.pathname);
+    if (klasse) {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      if (request.method !== 'POST') return json({ error: 'method' }, 405, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      const code = parseClassCode(decodeURIComponent(klasse[1]!));
+      if (!code) return json({ error: 'code' }, 404, noStore);
+      let body: Record<string, unknown>;
+      try {
+        const text = await request.text();
+        if (text.length > 4000) return json({ error: 'size' }, 413, noStore);
+        body = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        return json({ error: 'body' }, 400, noStore);
+      }
+      // Ein Klassencode hat 16,7 Millionen Möglichkeiten; dennoch zählen Fehlversuche je Absender wie beim Spielercode.
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      const result = await classStub(env, code).act(JSON.stringify(body));
+      if (result.status === 404) await limiter.miss();
+      return json(JSON.parse(result.body) as Record<string, unknown>, result.status, noStore);
     }
 
     const share = /^\/teilen\/([^/]+)(?:\/(loeschen))?$/.exec(url.pathname);
@@ -697,6 +761,81 @@ export class PassShare extends DurableObject<Env> {
   private async put(record: ShareRecord): Promise<void> {
     await this.ctx.storage.put('share', record);
     await this.ctx.storage.setAlarm(record.at + SHARE_TTL_MS);
+  }
+}
+
+/**
+ * Eine Klasse (#150) als eigenes Durable Object (eins je Code, in der EU). Logik in `packages/online/src/classroom.ts`;
+ * hier nur Speicher, Frist (ein Jahr ohne Aktivität) und die Zuordnung der Aktionen.
+ */
+export class ClassRoom extends DurableObject<Env> {
+  async create(code: string, json: string): Promise<string> {
+    if (await this.ctx.storage.get('class')) return 'taken';
+    const body = JSON.parse(json) as Record<string, unknown>;
+    const state = createClass(code, body.className, { token: body.token, name: body.name, avatar: body.avatar, crest: body.crest }, Date.now());
+    if (typeof state === 'string') return state;
+    await this.save(state);
+    return 'ok';
+  }
+
+  /** Nimmt eine Aktion als JSON-Text; Antwort ebenfalls als Text (RPC kennt `unknown` nicht). */
+  async act(json: string): Promise<{ status: number; body: string }> {
+    const reply = (status: number, value: Record<string, unknown>) => ({ status, body: JSON.stringify(value) });
+    const body = JSON.parse(json) as Record<string, unknown>;
+    const state = (await this.ctx.storage.get<ClassState>('class')) ?? null;
+    if (!state || isClassExpired(state, Date.now())) return reply(404, { error: 'missing' });
+    const now = Date.now();
+    const token = body.token;
+    let outcome: { error: string } | { ok: true } = { ok: true };
+    switch (body.action) {
+      case 'view':
+        return reply(200, { view: classView(state, token) });
+      case 'join':
+        outcome = joinClass(state, { token, name: body.name, avatar: body.avatar, crest: body.crest }, now);
+        break;
+      case 'update':
+        outcome = updateMember(state, token, { name: body.name, avatar: body.avatar, ...('crest' in body ? { crest: body.crest } : {}) }, now);
+        break;
+      case 'leave':
+        outcome = leaveClass(state, token);
+        break;
+      case 'accept':
+      case 'reject':
+        outcome = decide(state, token, body.id, body.action === 'accept', now);
+        break;
+      case 'remove':
+        outcome = removeMember(state, token, body.id);
+        break;
+      case 'lead':
+        outcome = setLead(state, token, body.id, body.lead === true);
+        break;
+      case 'configure':
+        outcome = configureClass(state, token, { name: body.name, open: body.open, approval: body.approval }, now);
+        break;
+      case 'dissolve':
+        if (!mayDissolve(state, token)) return reply(403, { error: 'Das darf nur die Leitung.' });
+        await this.ctx.storage.deleteAll();
+        return reply(200, { dissolved: true });
+      default:
+        return reply(400, { error: 'action' });
+    }
+    if ('error' in outcome) return reply(409, { error: outcome.error, view: classView(state, token) });
+    await this.save(state);
+    return reply(200, { view: classView(state, token) });
+  }
+
+  override async alarm(): Promise<void> {
+    const state = await this.ctx.storage.get<ClassState>('class');
+    if (!state || isClassExpired(state, Date.now())) {
+      await this.ctx.storage.deleteAll();
+      return;
+    }
+    await this.ctx.storage.setAlarm(state.lastActive + CLASS_TTL_MS);
+  }
+
+  private async save(state: ClassState): Promise<void> {
+    await this.ctx.storage.put('class', state);
+    await this.ctx.storage.setAlarm(state.lastActive + CLASS_TTL_MS);
   }
 }
 

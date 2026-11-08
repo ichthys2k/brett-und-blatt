@@ -139,6 +139,12 @@ export function Datenschutz() {
         kann den Schnappschuss lesen. Das Bild („Als Bild“) entsteht auf deinem Gerät. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>Klassen:</strong> Legst du eine Klasse an oder trittst bei, speichert der Spieleserver in der EU den Namen der Klasse, die Geräte-Kennung jedes Mitglieds (zum Ausweisen, sie wird nie anderen
+        Mitgliedern gezeigt) sowie Spitzname, Bild und – wenn du eines gewählt hast – das Wappen. Alle Mitglieder sehen Spitzname, Bild und Wappen der anderen Mitglieder; Fremde ohne Mitgliedschaft sehen nur den
+        Namen der Klasse. Die Leitung kann Mitglieder entfernen und die Klasse auflösen; du kannst jederzeit gehen. Eine Klasse ohne Aktivität wird nach einem Jahr gelöscht. Bei Schulklassen ist die Schule
+        für die Teilnahme der Kinder verantwortlich. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+      <p>
         <strong>PIN oder Passwort (Schloss):</strong> Wenn du deinen Ausweis mit PIN oder Passwort schützt, rechnet dein Browser aus Spielercode und
         PIN bzw. Passwort zwei Werte aus. Die PIN selbst verlässt dein Gerät nie. Der Spieleserver in der EU speichert nur einen Prüfwert, den er mit einem
         geheimen Schlüssel des Betreibers (dem „Pfeffer“, der nicht im Speicher liegt) bildet, einen mit demselben Schlüssel verschlüsselten Zufallsanteil,

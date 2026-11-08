@@ -63,6 +63,7 @@ export const SCOPED_KEYS = [
   'brett-und-blatt:farbensortierer:sicherung',
   'brett-und-blatt:drachenspiel:decks',
   'brett-und-blatt:teilen',
+  'brett-und-blatt:klassen',
 ] as const;
 export const SCOPED_PREFIXES = ['brett-und-blatt:einstellungen:'] as const;
 
