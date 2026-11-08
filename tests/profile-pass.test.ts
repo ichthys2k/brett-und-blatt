@@ -17,7 +17,11 @@ vi.mock('../packages/ui/src/sync/index', () => ({
     calls.push('updatePlayerLock');
     return Promise.resolve();
   },
-  scheduleSync: () => calls.push('scheduleSync'),
+  parsePassKey: () => null,
+  randomPassKey: () => 'k',
+  currentSyncCode: () => null,
+  syncNow: () => Promise.resolve(true),
+  syncPassBlocks: () => Promise.resolve({ synced: [], failed: {} }),
   playerBlock: () => ({}),
   PLAYER_SALT: 'x',
   SyncError: class extends Error {},
@@ -28,9 +32,9 @@ describe('Eigenes Profil und Ausweis (#136)', () => {
     calls.length = 0;
   });
 
-  it('saveOwnProfile speichert das Profil und frischt Schloss und Sicherung auf', async () => {
+  it('saveOwnProfile speichert das Profil und frischt das Schloss des Spielercodes auf', async () => {
     const { saveOwnProfile } = await import('../apps/web/src/lib/playerPass');
     saveOwnProfile({ name: 'Mia', avatar: '🦊' });
-    expect(calls).toEqual(['saveProfile', 'updatePlayerLock', 'scheduleSync']);
+    expect(calls).toEqual(['saveProfile', 'updatePlayerLock']);
   });
 });
