@@ -192,3 +192,47 @@
 @media (prefers-reduced-motion: reduce) {
   .bub-menu-layer { transform: none !important; transition: none; }
 }
+
+/* Seiten im Taverne-Rahmen (TavernPage): dunkle Farb-Tokens im Rahmen, damit alle Bausteine lesbar sind */
+.bub-tav { position: relative; min-height: 100dvh; background: #140d07; color: #f6e7c1; }
+.bub-tav-inner {
+  position: relative;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: max(env(safe-area-inset-top), 1rem) 1rem max(env(safe-area-inset-bottom), 1.5rem);
+}
+.bub-tav-head { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+.bub-tav .bub-menu-logo { font-size: clamp(2rem, 5vw, 3rem); }
+.bub-tav-back {
+  align-self: flex-start;
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  border: 2px solid #6b522e;
+  border-radius: 8px;
+  background: #1a110acc;
+  color: #f2d27a;
+  cursor: pointer;
+}
+.bub-tav-back:hover, .bub-tav-back:focus-visible { border-color: #e0b25a; }
+.bub-tav-frame {
+  --color-bg: #1d1510;
+  --color-surface: #2a1f17;
+  --color-surface-2: #38291e;
+  --color-ink: #f2e6d0;
+  --color-muted: #bfae95;
+  --color-line: #4f3c2c;
+  --color-accent: #e6b450;
+  --color-accent-ink: #241708;
+  --color-warning: #eda45a;
+  --color-danger: #ff8a75;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  color: var(--color-ink);
+  background: linear-gradient(#2a1d10f2, #1a110af2);
+  border: 3px solid #8a6a3a;
+  border-radius: 10px;
+  box-shadow: 0 10px 40px #000a;
+}
+.bub-tav-frame h2 { font-family: Almendra, Georgia, serif; }

@@ -11,7 +11,7 @@ import './menu.css';
 const ENTRIES: readonly { id: string; label: string; hint: string; to: string }[] = [
   { id: 'single', label: 'Einzelspieler', hint: 'Allein gegen den Computer oder zu mehreren an einem Gerät.', to: paths.home },
   { id: 'multi', label: 'Mehrspieler', hint: 'Offene Spiele, Spiel eröffnen, mit Code beitreten.', to: paths.online },
-  { id: 'tournaments', label: 'Turniere', hint: 'Turniere finden, anlegen und verfolgen.', to: paths.online },
+  { id: 'tournaments', label: 'Turniere', hint: 'Turniere finden, anlegen und verfolgen.', to: paths.tournaments },
   { id: 'profile', label: 'Profil', hint: 'Name, Wappen, Spielerpass und Sicherung.', to: paths.pass },
   { id: 'options', label: 'Optionen', hint: 'Ton, Musik, Aussehen und Updates.', to: paths.sound },
 ];

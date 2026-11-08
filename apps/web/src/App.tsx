@@ -8,6 +8,7 @@ import { Online } from './screens/Online';
 import { PassScreen } from './screens/Pass';
 import { Play } from './screens/Play';
 import { RoomScreen } from './screens/Room';
+import { Tournaments } from './screens/Tournaments';
 import { TournamentScreen } from './screens/Tournament';
 import { Setup } from './screens/Setup';
 import { SoundSettingsScreen } from './screens/SoundSettings';
@@ -30,6 +31,8 @@ function Screen() {
       return <Play />;
     case 'online':
       return <Online />;
+    case 'tournaments':
+      return <Tournaments />;
     case 'room':
       return <RoomScreen key={route.code} code={route.code} />;
     case 'display':
