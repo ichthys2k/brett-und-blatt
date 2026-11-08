@@ -30,6 +30,8 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   // Bei jedem Zeichnen frisch: Ein übernommener Ausweis kann neue Turniere mitbringen.
   const known = storage.loadTournaments();
   const [creating, setCreating] = useState(false);
+  /** Assistent: 0 Was (Name, Spiel), 1 Wie (Form, Tempo, Regeln), 2 Wer (Sichtbarkeit). */
+  const [step, setStep] = useState(0);
   const [mode, setMode] = useState<TournamentMode>('online');
   const [sportPreset, setSportPreset] = useState(SPORTS[0]!.name);
   const [sport, setSport] = useState(SPORTS[0]!.name);
@@ -162,11 +164,21 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
       ) : (
         <form
           className="space-y-3"
+          noValidate
           onSubmit={(event) => {
             event.preventDefault();
-            create();
+            if (step < 2) setStep(step + 1);
+            else create();
           }}
         >
+          <ol className="grid grid-cols-3 gap-2 text-center text-xs font-semibold" aria-label="Schritte">
+            {['1 Was?', '2 Wie?', '3 Wer?'].map((label, i) => (
+              <li key={label} aria-current={step === i ? 'step' : undefined} className={`rounded-lg px-2 py-1.5 ${step === i ? 'bg-accent text-accent-ink' : 'bg-surface-2 text-muted'}`}>
+                {label}
+              </li>
+            ))}
+          </ol>
+          <div className="space-y-3" hidden={step !== 0}>
           <label className="block space-y-1 text-sm">
             <span>{t('tournament.name')}</span>
             <input className={FIELD} required maxLength={40} value={name} onChange={(e) => setName(e.target.value)} />
@@ -263,6 +275,8 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
           )}
           </>
           )}
+          </div>
+          <div className="space-y-3" hidden={step !== 1}>
           <label className="block space-y-1 text-sm">
             <span>{t('tournament.format')}</span>
             <select className={FIELD} value={format} onChange={(e) => setFormat(e.target.value as TournamentFormat)}>
@@ -424,6 +438,8 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               {t('tournament.third')}
             </label>
           )}
+          </div>
+          <div className="space-y-3" hidden={step !== 2}>
           {local ? (
             <>
               <label className="flex items-start gap-2 text-sm">
@@ -438,9 +454,24 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               {t('tournament.public')}
             </label>
           )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" disabled={step === 0} onClick={() => setStep(step - 1)}>
+              ‹ Zurück
+            </Button>
+            {step < 2 ? (
+              <Button type="submit" variant="primary" disabled={step === 0 && (!name.trim() || (local ? !sport.trim() : !gameId && !(format === 'league' && multi)))}>
+                Weiter ›
+              </Button>
+            ) : (
+              <span />
+            )}
+          </div>
+          {step === 2 && (
           <Button type="submit" variant="primary" className="w-full" disabled={busy || !name.trim() || (format === 'league' && multi ? (local ? localDisciplineCount : picked.length) < DISCIPLINES_MIN || (local && localDisciplineCount > DISCIPLINES_MAX) : false) || (local ? !sport.trim() || !pointsValid : !gameId)}>
             🏆 {t('tournament.create')}
           </Button>
+          )}
           {error && (
             <p role="alert" className="text-sm text-danger">
               {error}
