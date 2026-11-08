@@ -7,6 +7,7 @@ import type { DropLine } from '../drops';
 import { modDef } from '../mods';
 import { altTag, bonusCap, BONUS_STEP, bossFor, effectiveHandSize, FINAL_LEVEL, freeModSlots, HIDDEN_SCORE, isDuelLevel, modCapacity, ROUND_FACTORS, ROUND_REWARDS, sellValue, tableInfo } from '../rules';
 import { CARD_BACKS } from '../unlocks';
+import { albumSpec } from './album';
 import { Atelier, SetupExtra } from './Atelier';
 import { award, discover, readCardLook, useProgress, wasAwarded, withUnlocks, writeCardLook, type CardLook } from './progress';
 import { scheduleSync } from './sync';
@@ -1522,6 +1523,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<SorterState, SorterMove> = {
   Board,
   SeatSymbol,
+  album: albumSpec as GameUi<SorterState, SorterMove>['album'],
   // Alle spielen parallel: nur die eigenen Klänge (#116).
   ownSoundsOnly: true,
   sounds: {

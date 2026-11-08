@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Button } from '../components/controls';
+import { AlbumBook } from '../components/AlbumBook';
 import { StampBook } from '../components/StampBook';
 import { TrophyCabinet } from '../components/TrophyCabinet';
 import { t } from '../i18n';
@@ -119,6 +120,8 @@ export function PassScreen() {
       <StampBook />
 
       <TrophyCabinet />
+
+      <AlbumBook />
 
       <BotRating />
 

@@ -1,4 +1,4 @@
-import type { ClockReading, GameEvent, Options, SeatId } from '@brett-und-blatt/engine';
+import type { ClockReading, GameEvent, Options, Result, SeatId } from '@brett-und-blatt/engine';
 import type { ComponentType, ReactNode } from 'react';
 import type { SoundMap } from './audio/sound';
 
@@ -54,6 +54,31 @@ export interface BoardProps<V, M> {
   display?: boolean;
 }
 
+/** Ein Eintrag im Sammelalbum eines Spiels (Vorhaben #135, Schritt #148). */
+export interface AlbumItem {
+  /** Kennung im Kapitel, stabil über Versionen. */
+  id: string;
+  /** Kurzer Name für die Anzeige (höchstens etwa 30 Zeichen). */
+  label: string;
+  /** Unterteilung im Kapitel, z. B. ein Kartensatz oder ein Themenbereich. */
+  group?: string;
+  /** Ein Zeichen oder Emoji als Bild des Eintrags. */
+  icon?: string;
+}
+
+/**
+ * Das Kapitel eines Spiels im Sammelalbum des Passes. Freiwillig: Spiele ohne `album` machen nicht mit.
+ * Die Kapitelkennung ist die Spiel-ID. Funde dürfen nichts Geheimes verraten: Das Spiel sieht nur die
+ * Sicht des eigenen Platzes und die Ereignisse, die auch die Klänge bekommen.
+ */
+export interface AlbumSpec<V = unknown> {
+  title: string;
+  /** Alle Einträge des Kapitels; zeigt die leeren Plätze und die Gesamtzahl. */
+  catalog(): AlbumItem[];
+  /** Neu gefundene Einträge nach einer Änderung (Sicht des Platzes, Ereignisse, Ergebnis); leer, wenn nichts neu ist. */
+  finds?(context: { view: V; events: readonly GameEvent[]; seat: SeatId; result: Result | null }): string[];
+}
+
 /** Was ein Spiel der Oberfläche liefert. Die Plattform findet es über den Export `gameUi`. */
 export interface GameUi<V = unknown, M = unknown> {
   Board: ComponentType<BoardProps<V, M>>;
@@ -71,6 +96,8 @@ export interface GameUi<V = unknown, M = unknown> {
    * kein „denkt nach“ – etwa nachts bei geheimen Rollen, wo sich sonst jemand durch Zögern verrät.
    */
   concealTurns?: (view: V) => boolean;
+  /** Kapitel im Sammelalbum des Passes (#148). */
+  album?: AlbumSpec<V>;
   /** Das Spiel unterstützt `BoardProps.handOnly`; online erscheint dann der Schalter „Hand-Ansicht“. */
   handView?: boolean;
   /** Das Spiel kann seine Plätze mit `SeatRing` um den Tisch setzen, wenn `BoardProps.table` gesetzt ist. */

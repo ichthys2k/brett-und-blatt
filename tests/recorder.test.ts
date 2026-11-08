@@ -16,7 +16,8 @@ vi.stubGlobal('window', {
 vi.mock('../apps/web/src/lib/playerPass', () => ({ passSyncSoon: () => undefined }));
 vi.mock('../apps/web/src/lib/chronikStore', () => ({ rememberReplay: () => undefined }));
 
-const { rowsFor, saveRows, BOOK_KEY, TROPHIES_KEY } = await import('../apps/web/src/lib/passRecorder');
+const { rowsFor, saveRows, saveFinds, albumSeat, BOOK_KEY, TROPHIES_KEY } = await import('../apps/web/src/lib/passRecorder');
+const { ALBUM_KEY, sanitizeAlbum } = await import('../apps/web/src/lib/album');
 const { sanitizeBook } = await import('../apps/web/src/lib/partiebuch');
 const { sanitizeTrophies } = await import('../apps/web/src/lib/pokale');
 const { createPassBook } = await import('../apps/web/src/lib/passes');
@@ -76,5 +77,30 @@ describe('Recorder schreibt Buch und Pokale (#142, #146)', () => {
     expect(data.get(TROPHIES_KEY)).toBeUndefined();
     const stashed = JSON.parse(data.get(`brett-und-blatt:pass:${lena}:${TROPHIES_KEY}`)!);
     expect(sanitizeTrophies(stashed).map((t) => [t.id, t.mode])).toEqual([['h1', 'hotseat']]);
+  });
+});
+
+describe('Recorder: Sammelalbum (#148)', () => {
+  beforeEach(() => data.clear());
+
+  it('welcher Platz sammelt: online der eigene, lokal der erste mit freiem Namen', () => {
+    const humanFree = { kind: 'human' as const, name: 'Mia' };
+    const bot = { kind: 'bot' as const, name: 'Computer' };
+    expect(albumSeat([bot, humanFree])).toBe(1);
+    expect(albumSeat([humanFree, humanFree])).toBe(0);
+    expect(albumSeat([bot, bot])).toBeNull();
+    expect(albumSeat([humanFree, bot], { yourSeat: 1 })).toBe(1);
+    expect(albumSeat([humanFree, bot], { yourSeat: null })).toBeNull();
+    expect(albumSeat([{ kind: 'human' as const, name: 'Lena', passId: 'bbbbbbbbbbbb' }])).toBeNull();
+  });
+
+  it('schreibt Funde ins Album des aktiven Passes, doppelte zählen nicht', () => {
+    saveFinds('quartett', 32, ['tiere:A1', 'tiere:A2']);
+    saveFinds('quartett', 32, ['tiere:A2', 'tiere:B1']);
+    saveFinds('pairs', 20, []);
+    const album = sanitizeAlbum(JSON.parse(data.get(ALBUM_KEY)!));
+    expect(Object.keys(album)).toEqual(['quartett']);
+    expect(Object.keys(album.quartett!.found).sort()).toEqual(['tiere:A1', 'tiere:A2', 'tiere:B1']);
+    expect(album.quartett!.total).toBe(32);
   });
 });
