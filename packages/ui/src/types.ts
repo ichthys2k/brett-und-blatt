@@ -41,6 +41,12 @@ export interface BoardProps<V, M> {
    * ausgeblendet. Das Spiel zeigt seine Plätze dann mit `SeatRing` und diesem Chip.
    */
   table?: { seatChip: (seat: SeatId) => ReactNode; status: ReactNode };
+  /**
+   * Hand-Ansicht (#100): Online, am Handy neben einem Tisch-Bildschirm. Das Spiel zeigt nur die eigene Hand,
+   * die Aktionsknöpfe und eine kleine Zusammenfassung des Tisches (Ablage, aktuelle Farbe, Kartenzahlen).
+   * Nur Spiele mit `GameUi.handView` bekommen das gesetzt.
+   */
+  handOnly?: boolean;
 }
 
 /** Was ein Spiel der Oberfläche liefert. Die Plattform findet es über den Export `gameUi`. */
@@ -60,6 +66,8 @@ export interface GameUi<V = unknown, M = unknown> {
    * kein „denkt nach“ – etwa nachts bei geheimen Rollen, wo sich sonst jemand durch Zögern verrät.
    */
   concealTurns?: (view: V) => boolean;
+  /** Das Spiel unterstützt `BoardProps.handOnly`; online erscheint dann der Schalter „Hand-Ansicht“. */
+  handView?: boolean;
   /** Das Spiel kann seine Plätze mit `SeatRing` um den Tisch setzen, wenn `BoardProps.table` gesetzt ist. */
   seatsAround?: boolean;
   /** Online: Schnellnachrichten an diesem Tisch statt der üblichen, z. B. die Tierrufe des Drachenspiels. */

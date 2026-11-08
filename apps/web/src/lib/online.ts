@@ -155,7 +155,9 @@ export class RoomConnection {
 
   constructor(
     readonly code: string,
-    private profile: Profile,
+    private profile: Profile | null,
+    /** Tisch-Bildschirm (#100): kein Mitglied, nur zuschauen. */
+    private readonly display = false,
   ) {
     this.connect();
     document.addEventListener('visibilitychange', this.onVisible);
@@ -174,6 +176,7 @@ export class RoomConnection {
 
   /** Eigenen Namen und Bild im Raum ändern; gilt auch beim Wiederverbinden. */
   rename(profile: Profile): void {
+    if (this.display) return;
     this.profile = profile;
     this.send({ type: 'setName', name: profile.name, avatar: profile.avatar });
   }
@@ -207,7 +210,10 @@ export class RoomConnection {
     ws.onopen = () => {
       opened = true;
       this.retries = 0;
-      ws.send(JSON.stringify({ type: 'hello', protocol: PROTOCOL_VERSION, token: storage.deviceToken(), name: this.profile.name, avatar: this.profile.avatar } satisfies ClientMessage));
+      const hello: ClientMessage = this.display
+        ? { type: 'display', protocol: PROTOCOL_VERSION }
+        : { type: 'hello', protocol: PROTOCOL_VERSION, token: storage.deviceToken(), name: this.profile?.name ?? '', avatar: this.profile?.avatar ?? '' };
+      ws.send(JSON.stringify(hello));
     };
     ws.onmessage = (event) => {
       if (typeof event.data === 'string') this.receive(JSON.parse(event.data) as ServerMessage);
@@ -309,14 +315,14 @@ export class RoomConnection {
 }
 
 /** Verbindung zu einem Raum für die Dauer eines Bildschirms. */
-export function useRoomConnection(code: string, profile: Profile | null): [RoomState | null, RoomConnection | null] {
+export function useRoomConnection(code: string, profile: Profile | null, display = false): [RoomState | null, RoomConnection | null] {
   const [connection, setConnection] = useState<RoomConnection | null>(null);
   useEffect(() => {
-    if (!profile || !GAME_SERVER) return;
-    const next = new RoomConnection(code, profile);
+    if ((!profile && !display) || !GAME_SERVER) return;
+    const next = new RoomConnection(code, profile, display);
     setConnection(next);
     return () => next.dispose();
-  }, [code, profile]);
+  }, [code, profile, display]);
   const state = useSyncExternalStore(connection?.subscribe ?? noopSubscribe, connection?.getState ?? nullState);
   return [connection ? state : null, connection];
 }

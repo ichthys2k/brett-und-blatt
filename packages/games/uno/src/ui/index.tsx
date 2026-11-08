@@ -36,6 +36,8 @@ const TIGHT_HAND_CARD_WIDTH = 48;
 const HAND_MIN_STEP = 26;
 /** Mehr Rückseiten zeichnet der Fächer am Mitspieler nicht; die Zahl daneben nennt den Rest. */
 const OPPONENT_FAN_MAX = 20;
+/** Handkarten in der Hand-Ansicht (#100): Es gibt nur die Hand, also dürfen sie groß sein. */
+const HAND_VIEW_CARD_WIDTH = 96;
 
 function cardTilt(id: string): number {
   let hash = 0;
@@ -71,6 +73,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   viewer,
   seatNames,
   table,
+  handOnly,
 }) => {
   const [selectedWildCard, setSelectedWildCard] = useState<UnoCard | null>(null);
   const [selectedSevenCard, setSelectedSevenCard] = useState<UnoCard | null>(null);
@@ -246,7 +249,8 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
       typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-    if (prefersReducedMotion) return;
+    // In der Hand-Ansicht gibt es weder Ablage noch Stapel, zu denen etwas fliegen könnte.
+    if (prefersReducedMotion || handOnly) return;
 
     const tableRect = tableRef.current?.getBoundingClientRect();
     if (!tableRect) return;
@@ -571,7 +575,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   const own = (
     <>
       {/* 3. Unterer Bereich: Eigene Hand und Aktionen */}
-      <div ref={handRef} className="w-full flex flex-col items-center gap-2">
+      <div ref={handRef} className="uno-own w-full flex flex-col items-center gap-2">
         {/* Aktionsleiste (Ziehen / Passen / "EINS!"-Button) */}
         <div className="flex items-center justify-between w-full px-4 max-w-lg min-h-10">
           {canPass && isActor ? (
@@ -629,7 +633,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
           <CardFan
             count={myHand.length}
             label="Deine Handkarten"
-            cardWidth={tight ? TIGHT_HAND_CARD_WIDTH : handCardWidth}
+            cardWidth={handOnly ? HAND_VIEW_CARD_WIDTH : tight ? TIGHT_HAND_CARD_WIDTH : handCardWidth}
             cardAspect={1.5}
             minStep={HAND_MIN_STEP}
             maxRows={4}
@@ -688,7 +692,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   );
 
   return (
-    <div ref={bindTable} className={`uno-table ${isDark ? 'bg-zinc-950 text-white' : 'text-zinc-900'}`} data-tight={tight || undefined} data-around={table ? '' : undefined}>
+    <div ref={bindTable} className={`uno-table ${isDark ? 'bg-zinc-950 text-white' : 'text-zinc-900'}`} data-tight={tight || undefined} data-around={table ? '' : undefined} data-hand={handOnly ? '' : undefined}>
       {/* 0. Animation Layer für fliegende Karten */}
       <div className="uno-flying-layer">
         {flyingCards.map((fc) => (
@@ -724,7 +728,35 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
         ))}
       </div>
 
-      {table ? (
+      {handOnly ? (
+        // Hand-Ansicht (#100): kleine Zusammenfassung des Tisches, darunter die eigene Hand mit den Knöpfen.
+        <>
+          <div className="uno-summary" aria-label="Tisch">
+            <div style={{ transform: `rotate(${topTilt}deg)` }} className="uno-summary-card">
+              <UnoCardView card={topDiscard} side={side} size="sm" mathMode={state.options.mathLabels === 'on'} disabled />
+            </div>
+            <div className="uno-summary-info">
+              <span className="uno-color-badge" style={{ backgroundColor: colorHex[state.activeColor] ?? '#18181b' }}>
+                <span className="w-2.5 h-2.5 rounded-full bg-white shadow-sm" />
+                <span>{colorLabels[state.activeColor] ?? 'Wunschfarbe'}</span>
+              </span>
+              {state.pendingDraw > 0 && <span className="uno-summary-warn">⚠️ +{state.pendingDraw} Strafkarten ausstehend</span>}
+              <span className="uno-summary-seats">
+                {state.hands.map((hand, seat) =>
+                  seat === actor ? null : (
+                    <span key={seat} className="uno-summary-seat" data-turn={state.turn === seat ? '' : undefined} data-out={state.eliminated[seat] ? '' : undefined}>
+                      {seatNames[seat] ?? `Spieler ${seat + 1}`}: {hand.length}
+                      {hand.length === 1 ? ' · Eins!' : ''}
+                    </span>
+                  ),
+                )}
+                <span className="uno-summary-seat">Stapel: {state.stock.length}</span>
+              </span>
+            </div>
+          </div>
+          {own}
+        </>
+      ) : table ? (
         <SeatRing
           seats={state.hands.length}
           bottomSeat={actor ?? 0}
@@ -819,6 +851,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
 };
 
 export const gameUi: GameUi<UnoState, UnoMove> = {
+  handView: true,
   Board: UnoBoard,
   seatsAround: true,
   SeatSymbol: ({ className }) => <span className={className}>🃏</span>,

@@ -20,6 +20,7 @@ import type { RoomReport } from './tournament';
 import {
   MAX_SEATS,
   PHRASES,
+  DISPLAY_MEMBER,
   PROTOCOL_VERSION,
   REACTIONS,
   parseClientMessage,
@@ -38,6 +39,8 @@ import {
 
 /** Höchstens so viele Mitglieder (Spieler und Zuschauer) pro Raum. */
 export const MAX_MEMBERS = 40;
+/** Wie viele Tisch-Bildschirme (Fernseher, Beamer, Tafel) ein Raum bedient. Sie zählen nicht als Mitglieder. */
+export const MAX_DISPLAYS = 3;
 /** Kulanz bei Zeitablauf für die Netzverzögerung. */
 export const CLOCK_GRACE_MS = 1000;
 /** So lange darf die Verbindung weg sein, bevor ein Bot den Platz übernimmt. */
@@ -177,6 +180,8 @@ export class Room {
   /** Verbindung → Mitglied (null, solange noch kein „hello“ kam). */
   private connections = new Map<string, string | null>();
   private kicked = new Set<string>();
+  /** Verbindungen von Tisch-Bildschirmen (#100): keine Mitglieder, nur Zuschauersicht. */
+  private displays = new Set<string>();
   private hostId: string | null = null;
   private phase: RoomPhase = 'lobby';
   private lobby: LobbySettings;
@@ -255,6 +260,11 @@ export class Room {
 
   /** Nach einem Neustart des Servers: eine noch offene Verbindung wieder einem Mitglied zuordnen. */
   reattach(connectionId: string, memberId: string): void {
+    if (memberId === DISPLAY_MEMBER) {
+      this.connections.set(connectionId, null);
+      this.displays.add(connectionId);
+      return;
+    }
     const member = this.members.get(memberId);
     if (!member) return;
     this.connections.set(connectionId, memberId);
@@ -263,6 +273,12 @@ export class Room {
   }
 
   disconnect(connectionId: string): void {
+    if (this.displays.delete(connectionId)) {
+      this.connections.delete(connectionId);
+      this.broadcastRoom();
+      this.deps.changed?.();
+      return;
+    }
     const memberId = this.connections.get(connectionId);
     this.connections.delete(connectionId);
     const member = memberId ? this.members.get(memberId) : undefined;
@@ -277,10 +293,14 @@ export class Room {
 
   receive(connectionId: string, raw: string): void {
     if (!this.connections.has(connectionId)) return;
-    this.touch();
+    const isDisplay = this.displays.has(connectionId);
+    // Lebenszeichen eines Tisch-Bildschirms halten den Raum nicht am Leben: Er läuft nach 24 h ohne Spielende ab.
+    if (!isDisplay) this.touch();
     const message = parseClientMessage(raw);
     if (!message) return this.error(connectionId, 'badMessage', 'Unbekannte Nachricht.');
     if (message.type === 'ping') return this.deps.send(connectionId, { type: 'pong', serverNow: this.deps.now() });
+    if (message.type === 'display') return this.attachDisplay(connectionId, message);
+    if (isDisplay) return message.type === 'leave' ? this.deps.close(connectionId) : this.error(connectionId, 'notAllowed', 'Ein Tisch-Bildschirm kann nur zuschauen.');
     if (message.type === 'hello') return this.hello(connectionId, message);
     const member = this.memberOf(connectionId);
     if (!member) return this.error(connectionId, 'notReady', 'Erst anmelden.');
@@ -466,6 +486,24 @@ export class Room {
 
   // -------------------------------------------------------------------------
   // Nachrichten
+
+  /** Ein Tisch-Bildschirm meldet sich an: kein Mitglied, keine Raumleitung, nur Zuschauen. */
+  private attachDisplay(connectionId: string, message: Extract<ClientMessage, { type: 'display' }>): void {
+    if (message.protocol !== PROTOCOL_VERSION) {
+      this.error(connectionId, 'protocol', 'Bitte die Seite neu laden – es gibt eine neue Version.');
+      return this.deps.close(connectionId);
+    }
+    if (this.connections.get(connectionId)) return this.error(connectionId, 'notAllowed', 'Diese Verbindung gehört schon zu einem Mitglied.');
+    if (!this.displays.has(connectionId) && this.displays.size >= MAX_DISPLAYS) {
+      this.error(connectionId, 'roomFull', 'Es sind schon genug Tisch-Bildschirme verbunden.');
+      return this.deps.close(connectionId);
+    }
+    this.displays.add(connectionId);
+    this.deps.send(connectionId, { type: 'welcome', protocol: PROTOCOL_VERSION, you: DISPLAY_MEMBER, serverNow: this.deps.now() });
+    this.broadcastRoom();
+    if (this.game) this.sendGame(connectionId, []);
+    this.deps.changed?.();
+  }
 
   private hello(connectionId: string, message: Extract<ClientMessage, { type: 'hello' }>): void {
     if (message.protocol !== PROTOCOL_VERSION) {
@@ -1196,7 +1234,7 @@ export class Room {
   private roomMessage(): RoomMessage {
     const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}) }));
     const match = this.match ? { tournament: this.match.config.tournament, label: this.match.config.label, noShow: this.match.noShow !== null } : undefined;
-    return { type: 'room', code: this.code, phase: this.phase, hostId: this.hostId, members, lobby: this.lobby, ...(match ? { match } : {}) };
+    return { type: 'room', code: this.code, phase: this.phase, hostId: this.hostId, members, lobby: this.lobby, ...(this.displays.size > 0 ? { displays: this.displays.size } : {}), ...(match ? { match } : {}) };
   }
 
   private broadcastRoom(): void {
@@ -1204,7 +1242,7 @@ export class Room {
   }
 
   private broadcast(message: ServerMessage): void {
-    for (const [connection, memberId] of this.connections) if (memberId) this.deps.send(connection, message);
+    for (const [connection, memberId] of this.connections) if (memberId || this.displays.has(connection)) this.deps.send(connection, message);
   }
 
   private broadcastGame(events: GameEvent[]): void {
@@ -1212,8 +1250,11 @@ export class Room {
   }
 
   private sendGame(connectionId: string, events: GameEvent[]): void {
+    if (!this.game) return;
+    // Ein Tisch-Bildschirm sieht wie ein Zuschauer nur, was alle sehen.
+    if (this.displays.has(connectionId)) return this.deps.send(connectionId, this.gameMessage(null, events));
     const member = this.memberOf(connectionId);
-    if (!member || !this.game) return;
+    if (!member) return;
     this.deps.send(connectionId, this.gameMessage(this.seatOf(member.id), events));
   }
 

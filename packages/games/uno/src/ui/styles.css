@@ -269,3 +269,57 @@
   zoom: 1.35;
   margin-block: auto;
 }
+
+/* Hand-Ansicht (#100): kleine Tischübersicht oben, die eigene Hand unten */
+.uno-table[data-hand] {
+  justify-content: flex-start;
+}
+
+.uno-table[data-hand] .uno-own {
+  margin-top: auto;
+}
+
+.uno-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+}
+
+.uno-summary-card {
+  flex: none;
+}
+
+.uno-summary-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.uno-summary-warn {
+  color: #fca5a5;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.uno-summary-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.7rem;
+  opacity: 0.8;
+  font-size: 0.78rem;
+}
+
+.uno-summary-seat[data-turn] {
+  color: #facc15;
+  font-weight: 700;
+}
+
+.uno-summary-seat[data-out] {
+  text-decoration: line-through;
+  opacity: 0.5;
+}

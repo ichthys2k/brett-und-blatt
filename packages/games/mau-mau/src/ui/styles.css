@@ -614,3 +614,61 @@
 .mau-table[data-around] .mau-direction small {
   display: inline;
 }
+
+/* Hand-Ansicht (#100): kleine Tischübersicht oben, die eigene Hand unten */
+.mau-table[data-hand] {
+  justify-content: flex-start;
+  min-height: 0;
+}
+
+.mau-table[data-hand] .mau-hand-area {
+  margin-top: auto;
+}
+
+.mau-summary {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+}
+
+.mau-summary-card {
+  flex: none;
+  width: 4.2rem;
+}
+
+.mau-summary-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.mau-summary-suit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.mau-summary-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.7rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.78rem;
+}
+
+.mau-summary-seat[data-turn] {
+  color: #fde68a;
+  font-weight: 700;
+}
+
+.mau-summary-last {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.75rem;
+}
