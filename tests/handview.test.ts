@@ -20,6 +20,6 @@ describe('Hand-Ansicht (#100)', () => {
       withHandView.push(id);
       expect(source, `${id}: handOnly fehlt in der Oberfläche`).toMatch(/\bhandOnly\b/);
     }
-    expect(withHandView.sort()).toEqual(['mau-mau', 'skat', 'uno']);
+    expect(withHandView.sort()).toEqual(['binokel', 'doppelkopf', 'mau-mau', 'schafkopf', 'skat', 'uno']);
   });
 });

@@ -26,7 +26,10 @@ function SuitLabel({ suit, deck }: { suit: Suit; deck: DeckStyle }) {
   );
 }
 
-function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table }: BoardProps<BinokelState, BinokelMove>) {
+/** Handkarten in der Hand-Ansicht (#100): Es gibt nur die Hand, also dürfen sie größer sein. */
+const HAND_VIEW_CARD_WIDTH = 72;
+
+function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table, handOnly }: BoardProps<BinokelState, BinokelMove>) {
   const mySeat = typeof viewer === 'number' ? viewer : 0;
   const name = (s: number) => seatNames[s] ?? `Platz ${s + 1}`;
   const myTurn = legalMoves.length > 0;
@@ -191,7 +194,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
           className="w-full flex-none pb-1"
           count={myHand.length}
           label="Deine Handkarten"
-          cardWidth={trickHandCardWidth}
+          cardWidth={handOnly ? HAND_VIEW_CARD_WIDTH : trickHandCardWidth}
           minStep={TRICK_HAND_MIN_STEP}
           maxRows={2}
           keyOf={(idx) => myHand[idx]!}
@@ -286,6 +289,16 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
           {roundEnd}
           {trick}
         </SeatRing>
+      ) : handOnly ? (
+        // Hand-Ansicht (#100): der Stich klein als Zusammenfassung des Tisches, darunter die eigene Hand.
+        <>
+          {dialogs}
+          <div className="flex min-h-[170px] flex-col">
+            <TrickTable slots={slots} bottomSeat={mySeat} deckStyle={view.deckStyle} cardWidth={44} collecting={display.collecting} />
+          </div>
+          {handFan}
+          {roundEnd}
+        </>
       ) : (
         <>
           {dialogs}
@@ -299,6 +312,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
 }
 
 export const gameUi: GameUi<BinokelState, BinokelMove> = {
+  handView: true,
   Board: BinokelBoard,
   seatsAround: true,
   SeatSymbol: ({ seat, className = '' }) => <SuitIcon suit={(['C', 'S', 'H', 'D'] as Suit[])[seat % 4]!} className={`h-6 w-6 ${className}`} />,
