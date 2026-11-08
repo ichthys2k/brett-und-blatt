@@ -9,6 +9,9 @@ import {
   type SchafkopfState,
 } from '../rules.js';
 
+/** Handkarten in der Hand-Ansicht (#100): Es gibt nur die Hand, also dürfen sie größer sein. */
+const HAND_VIEW_CARD_WIDTH = 72;
+
 export function SchafkopfBoard({
   view,
   legalMoves,
@@ -16,6 +19,7 @@ export function SchafkopfBoard({
   viewer,
   seatNames,
   table,
+  handOnly,
 }: BoardProps<SchafkopfState, SchafkopfMove>) {
   const mySeat: number = typeof viewer === 'number' ? viewer : 0;
   // Sortiert nach dem laufenden Spiel (vor der Ansage nach dem üblichen Standardspiel).
@@ -214,7 +218,7 @@ export function SchafkopfBoard({
           className="w-full pb-1"
           count={myHand.length}
           label="Deine Handkarten"
-          cardWidth={trickHandCardWidth}
+          cardWidth={handOnly ? HAND_VIEW_CARD_WIDTH : trickHandCardWidth}
           minStep={TRICK_HAND_MIN_STEP}
           maxRows={2}
           keyOf={(idx) => (myHand[idx] === 'back' ? `back-${idx}` : myHand[idx]!)}
@@ -297,6 +301,16 @@ export function SchafkopfBoard({
           {roundEnd}
           {trick}
         </SeatRing>
+      ) : handOnly ? (
+        // Hand-Ansicht (#100): der Stich klein als Zusammenfassung des Tisches, darunter die eigene Hand.
+        <>
+          {dialogs}
+          <div className="flex min-h-[170px] flex-col">
+            <TrickTable slots={trickSlots} bottomSeat={mySeat} deckStyle={view.deckStyle} cardWidth={44} collecting={displayTrick.collecting} />
+          </div>
+          {hand}
+          {roundEnd}
+        </>
       ) : (
         <>
           {dialogs}
@@ -365,6 +379,7 @@ function formatContract(contract: SchafkopfContract): string {
 }
 
 export const gameUi: GameUi<SchafkopfState, SchafkopfMove> = {
+  handView: true,
   Board: SchafkopfBoard,
   seatsAround: true,
   sounds: {
