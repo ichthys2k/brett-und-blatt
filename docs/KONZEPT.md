@@ -140,6 +140,7 @@ Was den Spielfluss außerdem beschleunigt: automatische Pflichtzüge, Vorab-Züg
   - Würfel und Becher
   - Spielrahmen: Spielerleiste mit Uhr-Ring, Übergabe-Bildschirm, Ergebnis- und Listenansicht
 - **Kartenblätter:** Französisch (32, 48 und 52 Karten, wahlweise vierfarbig wie das Skat-Turnierbild), Deutsch/Bayerisch (32 und 24 Karten), später Württembergisch. Alle werden aus Daten als SVG erzeugt: scharf, klein, im Dunkelmodus nutzbar und lizenzrechtlich sauber.
+- **Drei Ansichten (#100, 8.11.2026):** Dieselbe Online-Verbindung dient drei Darstellungen. **Spieler:** eigene Sicht und Züge, auf Wunsch als **Hand-Ansicht** (`GameUi.handView`, `BoardProps.handOnly`: nur Hand, Knöpfe und Tischübersicht). **Beamer / Tisch-Bildschirm** (`#/tisch/<Raumcode>`): Rolle `display` im Raum, kein Mitglied, nur Zuschauersicht, auf einer Bühne hochskaliert, Spiele zeigen alle Plätze gleich (`BoardProps.display`). **Spielleiter:** Panel mit Fähigkeiten (`roomCapabilities`: Mitglieder umbenennen, vom Platz nehmen, entfernen, Neu starten), auch ohne eigenen Platz. Das Turnier soll später dieselben Fähigkeiten aus Leitung, Mitleitung und Helfer füllen. Entscheidungen und Stand: [`spiele/tisch-bildschirm.md`](spiele/tisch-bildschirm.md).
 - **Barrierearm:** Farben immer zusätzlich mit Symbolen unterschieden, Koordinaten als Text, Vorlesen optional.
 
 ## Klänge
