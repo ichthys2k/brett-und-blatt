@@ -336,3 +336,8 @@ button.mx-cup {
   height: 100%;
   min-height: 0;
 }
+
+/* Hand-Ansicht (#100): Becher und Knöpfe ohne Verlauf; etwas Luft nach oben */
+.mx-table[data-hand] {
+  padding-top: 1.5rem;
+}

@@ -12,7 +12,7 @@ import './styles.css';
 
 const nameOf = (names: string[], seat: number) => names[seat] ?? `Platz ${seat + 1}`;
 
-function Board({ view, legalMoves, onMove, viewer, seatNames, events }: BoardProps<KniffelState, KniffelMove>) {
+function Board({ view, legalMoves, onMove, viewer, seatNames, events, handOnly }: BoardProps<KniffelState, KniffelMove>) {
   const rollKey = useRollCounter(events);
   const scoredPop = useLatestEvent(events, (e) => e.type === 'scored');
   // Fünf Gleiche leuchten golden auf.
@@ -21,7 +21,8 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events }: BoardPro
   const canRoll = myTurn && legalMoves.some((m) => m.type === 'roll');
   const canHold = myTurn && view.phase === 'roll' && view.rollsLeft > 0 && view.dice !== null;
   const scorable = new Set(myTurn ? legalMoves.flatMap((m) => (m.type === 'score' ? [m.category] : [])) : []);
-  const seats = view.sheets.map((_, seat) => seat);
+  // Hand-Ansicht (#100): nur die eigene Spalte der Tafel, die anderen zeigt der Tisch-Bildschirm.
+  const seats = handOnly && viewer !== 'spectator' ? [viewer] : view.sheets.map((_, seat) => seat);
 
   const cell = (seat: number, category: Category) => {
     const filled = view.sheets[seat]!.scores[category];
@@ -142,6 +143,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events }: BoardPro
 }
 
 export const gameUi: GameUi<KniffelState, KniffelMove> = {
+  handView: true,
   Board,
   SeatSymbol: ({ className = '' }) => <span className={className}>🎲</span>,
   seatLabel: (seat) => `Spieler ${seat + 1}`,
