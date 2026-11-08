@@ -2352,6 +2352,35 @@ button.cs-tile {
   font-size: 0.9rem;
 }
 
+/* Handy (#108): Vorführen, Sortieren, Stapel und Tauschen bleiben in einer Zeile */
+@media (max-width: 520px), (orientation: landscape) and (max-height: 540px) {
+  .cs-actions:not(.cs-deskmode .cs-actions) {
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+  }
+
+  .cs-actions:not(.cs-deskmode .cs-actions) > .cs-btn {
+    min-height: 2.5rem;
+    padding: 0 0.6rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .cs-actions:not(.cs-deskmode .cs-actions) .cs-sort {
+    gap: 0.25rem;
+  }
+
+  .cs-actions:not(.cs-deskmode .cs-actions) .cs-sort small {
+    display: none;
+  }
+
+  .cs-actions:not(.cs-deskmode .cs-actions) .cs-sort .cs-btn {
+    min-height: 2.25rem;
+    padding: 0 0.55rem;
+    font-size: 0.8rem;
+  }
+}
+
 /* Vorführen blau wie „Witz“, Tauschen rot wie „Lachen“ */
 .cs-btn-play,
 .cs-btn-discard {
@@ -2419,4 +2448,35 @@ button.cs-tile {
   background:
     linear-gradient(color-mix(in srgb, var(--color-surface) 48%, transparent), color-mix(in srgb, var(--color-surface) 74%, transparent)),
     var(--cs-kulisse) center / cover no-repeat;
+}
+
+/* Handy quer (#109): Kopf enger, damit das Brett nicht rollt */
+@media (orientation: landscape) and (max-height: 540px) {
+  .cs-board:not(.cs-bigmode) {
+    gap: 0.25rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-stats {
+    flex-wrap: nowrap;
+    gap: 0.15rem 0.4rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-enemy {
+    padding: 0.2rem 0.5rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-enemy-emoji {
+    zoom: 0.75;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-stats .cs-link {
+    padding: 0.05rem 0.4rem;
+    font-size: 0.72rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-stagehint {
+    display: none;
+  }
 }

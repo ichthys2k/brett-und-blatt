@@ -101,11 +101,14 @@ describe('Skat-Bot', () => {
   it('überreizt nicht und gewinnt einen guten Teil seiner Spiele', () => {
     let won = 0;
     let played = 0;
+    // Zähl-Uhr statt Systemzeit (#69): Die Zahl der Stichproben hängt sonst von der Rechnerlast ab und der Test wackelt.
+    let ticks = 0;
+    const countingClock = () => (ticks += 10);
     for (const seed of ['bot-a', 'bot-b', 'bot-c']) {
       let state: any = gameModule.setup(3, resolveOptions(gameModule), seed);
       for (let i = 0; i < 6_000 && !gameModule.result(state); i++) {
         const seat = gameModule.currentPlayers(state)[0] as number;
-        const move = computeBotMove(gameModule, { gameId: 'skat', botId: 'skat', level: 'hard', seat, view: gameModule.playerView(state, seat), seed: `${seed}/${i}`, timeBudgetMs: 50 }) as SkatMove;
+        const move = computeBotMove(gameModule, { gameId: 'skat', botId: 'skat', level: 'hard', seat, view: gameModule.playerView(state, seat), seed: `${seed}/${i}`, timeBudgetMs: 50 }, countingClock) as SkatMove;
         state = gameModule.applyMove(state, seat, move).state;
       }
       for (const game of state.history) {
