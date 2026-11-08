@@ -1,4 +1,4 @@
-import { AVATARS, EVENING_EXTEND_CHOICES, MAX_SCORE, READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentView } from '@brett-und-blatt/online';
+import { AVATARS, EVENING_EXTEND_CHOICES, MAX_SCORE, bestOfStage, checkSeriesScore, seriesTarget, READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentView } from '@brett-und-blatt/online';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, Section } from '../components/controls';
 import { ProfileForm, QrCode } from '../components/OnlineParts';
@@ -46,6 +46,8 @@ function formatDate(ms: number): string {
 const isLocalView = (view: TournamentView) => view.settings.mode === 'local';
 /** Wird ein Spielstand gezählt (Tore, Sätze, Punkte)? */
 const withScore = (view: TournamentView) => isLocalView(view) && view.settings.result !== undefined && view.settings.result !== 'winner';
+/** Best of N (Stufe 3 Teil 5): Begegnungen über mehrere Partien, Stand in gewonnenen Partien. */
+const hasSeries = (view: TournamentView) => (view.settings.bestOf ?? 1) > 1 || (view.settings.bestOfKo ?? 1) > 1;
 
 /** Turnierabend (Stufe 3): Minuten je Partie, die Leitung startet jede Runde. */
 const isEveningView = (view: TournamentView) => !isLocalView(view) && (view.settings.minutes ?? 0) > 0;
@@ -298,6 +300,7 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
       {view.disciplines.length > 0 ? `🎲 ${view.settings.sport ?? t('tournament.multiSport')}` : local ? `${game?.emoji ?? '🏟️'} ${view.settings.sport ?? ''}` : `${game?.emoji ?? ''} ${game?.name ?? ''}`} · {t(`tournament.format.${view.settings.format}`)} · {t('tournament.leader', { name: view.leaderName })}
       {view.disciplines.length > 0 && <span className="block">{view.disciplines.map((d) => disciplineName(view, d.id)).join(' · ')}</span>}
       {isEveningView(view) && <span className="block">🌙 {t('tournament.evening', { n: view.settings.minutes ?? 0 })}</span>}
+      {hasSeries(view) && <span className="block">🔁 {seriesNote(view)}</span>}
       {optionText.length > 0 && <span className="block">{optionText.join(' · ')}</span>}
       {view.rulesChanged && <span className="block text-warning">⚠️ {t('tournament.rulesChanged')}</span>}
     </p>
@@ -653,6 +656,8 @@ function ResultForm({ view, m, send, onDone }: { view: TournamentView; m: Match;
     send({ type: 'enterResult', match: m.id, ...message });
     onDone?.();
   };
+  const bestOf = bestOfStage(view, m.stage);
+  if (!withScore(view) && bestOf > 1) return <SeriesForm view={view} m={m} bestOf={bestOf} enter={enter} />;
   if (!withScore(view)) {
     return (
       <div className="grid grid-cols-2 gap-2">
@@ -697,6 +702,54 @@ function ResultForm({ view, m, send, onDone }: { view: TournamentView; m: Match;
       <Button type="submit" variant="primary" className="flex-1 text-sm" disabled={!valid}>
         {t('tournament.enter')}
       </Button>
+    </form>
+  );
+}
+
+/** „Best of 3“, mit eigenem Wert für die K.-o.-Phase. */
+function seriesNote(view: TournamentView): string {
+  const all = view.settings.bestOf ?? 1;
+  const ko = view.settings.bestOfKo;
+  return ko && ko !== all ? t('tournament.seriesSplit', { all, ko }) : t('tournament.seriesAll', { n: all });
+}
+
+/** Best of N vor Ort: gewonnene Partien je Seite; das Formular prüft den Stand. */
+function SeriesForm({ view, m, bestOf, enter }: { view: TournamentView; m: Match; bestOf: number; enter: (message: { score: [number, number] }) => void }) {
+  const { label } = useLookup(view);
+  const [a, setA] = useState(m.outcome?.score?.[0]?.toString() ?? '');
+  const [b, setB] = useState(m.outcome?.score?.[1]?.toString() ?? '');
+  const filled = [a, b].every((v) => /^\d$/.test(v));
+  const problem = filled ? checkSeriesScore([Number(a), Number(b)], bestOf) : null;
+  const input = (value: string, set: (v: string) => void, side: 0 | 1) => (
+    <input
+      className="min-h-11 w-16 rounded-xl border border-line bg-surface px-2 text-center text-lg tabular-nums"
+      type="number"
+      inputMode="numeric"
+      min={0}
+      max={seriesTarget(bestOf)}
+      aria-label={`${t('tournament.seriesGames')} ${label(m.slots[side].player)}`}
+      value={value}
+      onChange={(e) => set(e.target.value)}
+    />
+  );
+  return (
+    <form
+      className="space-y-1"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (filled && !problem) enter({ score: [Number(a), Number(b)] });
+      }}
+    >
+      <p className="text-xs text-muted">{t('tournament.seriesHint', { n: bestOf, need: seriesTarget(bestOf) })}</p>
+      <div className="flex items-center gap-2">
+        {input(a, setA, 0)}
+        <span className="text-lg font-bold">:</span>
+        {input(b, setB, 1)}
+        <Button type="submit" variant="primary" className="flex-1 text-sm" disabled={!filled || problem !== null}>
+          {t('tournament.enter')}
+        </Button>
+      </div>
+      {problem && <p className="text-xs text-warning">{problem}</p>}
     </form>
   );
 }
@@ -1055,7 +1108,8 @@ function Progress({ view }: { view: TournamentView }) {
 
 function Table({ view, rows, highlight, buchholz = false }: { view: TournamentView; rows: StandingRow[]; highlight: number; buchholz?: boolean }) {
   const { players, label } = useLookup(view);
-  const score = withScore(view);
+  const series = !withScore(view) && hasSeries(view);
+  const score = withScore(view) || series;
   const cell = 'px-1 py-1 text-center tabular-nums';
   return (
     <table className="w-full table-fixed text-sm">
@@ -1068,7 +1122,7 @@ function Table({ view, rows, highlight, buchholz = false }: { view: TournamentVi
           <th className="w-7">{t('tournament.table.draws')}</th>
           <th className="w-7">{t('tournament.table.losses')}</th>
           {buchholz && <th className="w-8">{t('tournament.table.buchholz')}</th>}
-          {score && <th className="w-12">{t('tournament.table.score')}</th>}
+          {score && <th className="w-12">{series ? t('tournament.table.games') : t('tournament.table.score')}</th>}
           {score && <th className="w-9">{t('tournament.table.diff')}</th>}
           <th className="w-8">{t('tournament.table.points')}</th>
         </tr>

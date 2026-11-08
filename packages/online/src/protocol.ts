@@ -148,7 +148,7 @@ export interface RoomMessage {
   /** Wie viele Tisch-Bildschirme verbunden sind; fehlt, wenn keiner da ist. */
   displays?: number;
   /** Nur bei Turnierpartien: zu welchem Turnier der Raum gehört. */
-  match?: { tournament: string; label: string; noShow: boolean };
+  match?: { tournament: string; label: string; noShow: boolean; series?: { bestOf: number; score: [number, number]; next: number | null; done: boolean } };
 }
 
 /**

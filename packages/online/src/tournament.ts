@@ -9,6 +9,7 @@ import type { PointRules } from './tournament/protocol';
 import { deadlineOutcome, dueAt, roomRequest, setReady, sideOfSeat, type MatchRoomRequest, type RoomReport } from './tournament/online-play';
 import { TABLE_SIZE_MAX, TABLE_SIZE_MIN, autoStartTables, decideTable, isTables, rerank, setTableReady, tableDeadlinePlaces, tableRoomRequest, tableSizes, tableStandings, validPlaces, placesFromScores } from './tournament/table-rounds';
 import { chooseDisciplines, disciplineOf, hasDisciplines, setWishes, wishCounts } from './tournament/disciplines';
+import { bestOfStage, checkSeriesScore } from './tournament/best-of';
 import { autoStart, isEvening, isHeld, startStage, startableStage } from './tournament/evening';
 import { seededShuffle } from './tournament/pairing';
 import { defaultScoring, standings } from './tournament/scoring';
@@ -25,6 +26,7 @@ import {
   TOURNAMENT_MAX_PLAYERS,
   TOURNAMENT_KEEP_MS,
   type MatchOutcome,
+  type MatchScore,
   type MatchSide,
   type MatchSlot,
   type MatchStatus,
@@ -48,6 +50,7 @@ export * from './tournament/local-play';
 export * from './tournament/evening';
 export * from './tournament/disciplines';
 export * from './tournament/table-rounds';
+export * from './tournament/best-of';
 export * from './tournament/migrate';
 export * from './tournament/protocol';
 
@@ -77,7 +80,8 @@ export class Tournament {
   static create(code: string, seed: string, settings: TournamentSettings, leader: { token: string; name: string }, deps: TournamentDeps, fields = 0, points?: PointRules): Tournament {
     const now = deps.now();
     const local = settings.mode === 'local';
-    const withScore = local && settings.result !== undefined && settings.result !== 'winner';
+    // Mit Spielstand: vor Ort Tore/Sätze/Punkte, sonst bei „Best of N“ die gewonnenen Partien.
+    const withScore = (local && settings.result !== undefined && settings.result !== 'winner') || (settings.bestOf ?? 1) > 1 || (settings.bestOfKo ?? 1) > 1;
     return new Tournament(
       {
         version: 2,
@@ -297,17 +301,19 @@ export class Tournament {
     const match = this.match(matchId);
     if (!match || match.status !== 'running' || match.roomCode !== roomCode || report.kind === 'placed') return false;
     const winner = sideOfSeat(match, report.winner);
+    // Best of N: Stand der Serie in der Reihenfolge der Seiten (nach einem Tausch umgedreht).
+    const score: MatchScore | undefined = report.kind === 'played' && report.score ? (match.replays % 2 === 1 ? [report.score[1], report.score[0]] : [report.score[0], report.score[1]]) : undefined;
     if (report.kind === 'noShow') {
       if (winner === null) this.reopen(match);
       else this.decide(match, { winner, draw: false, walkover: true });
     } else if (winner !== null) {
-      this.decide(match, { winner, draw: false, walkover: false });
+      this.decide(match, { winner, draw: false, walkover: false, ...(score ? { score } : {}) });
     } else if (this.needsWinner(match)) {
       // K.-o. braucht einen Sieger: neu ansetzen, Farben getauscht, schnelle Zeit.
       match.replays++;
       this.reopen(match);
     } else {
-      this.decide(match, { winner: null, draw: true, walkover: false });
+      this.decide(match, { winner: null, draw: true, walkover: false, ...(score ? { score } : {}) });
     }
     this.settle();
     this.touch();
@@ -425,6 +431,12 @@ export class Tournament {
     if (!match || match.status === 'waiting' || match.slots.some((slot) => !slot.player)) return 'Diese Partie steht noch nicht fest.';
     if (match.outcome?.bye) return 'Ein Freilos hat kein Ergebnis.';
     if (!this.mayChange(match)) return 'Daran hängen schon weitere Partien.';
+    // Best of N vor Ort: Der Stand in gewonnenen Partien muss zur Begegnung passen.
+    const bestOf = bestOfStage(this.s, match.stage);
+    if (bestOf > 1 && 'score' in entry) {
+      const wrong = checkSeriesScore(entry.score, bestOf);
+      if (wrong) return wrong;
+    }
     const outcome = outcomeFromEntry(entry, this.s.settings.draws === true && !this.needsWinner(match));
     if (typeof outcome === 'string') return outcome;
     this.decide(match, outcome);

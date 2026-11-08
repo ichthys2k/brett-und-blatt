@@ -84,6 +84,10 @@ export interface TournamentSettings {
   rounds?: number;
   /** Tischrunden vor Ort: Punkte im Spiel zählen niedrig (z. B. Strafpunkte); sonst hoch. */
   lowWins?: boolean;
+  /** Best of N (Stufe 3 Teil 5): Partien je Begegnung; fehlt = 1. */
+  bestOf?: number;
+  /** Best of N nur für die K.-o.-Phase (K.-o., Doppel-K.-o., WM-Endrunde); fehlt = wie `bestOf`. */
+  bestOfKo?: number;
 }
 
 /** Woher ein noch offener Platz seinen Spieler bekommt. */

@@ -19,6 +19,7 @@ import {
 } from '@brett-und-blatt/engine';
 import { cleanAvatar, cleanName, crestField, setCrest } from './names';
 import type { RoomReport } from './tournament';
+import { SERIES_PAUSE_MS, forfeitSeries, newSeries, recordSeriesGame, type SeriesState } from './tournament/best-of';
 import {
   MAX_SEATS,
   PHRASES,
@@ -89,6 +90,8 @@ export interface MatchRoomConfig {
   /** Geheime Kennungen je Platz; zwei, bei Tischrunden mehr. */
   tokens: string[];
   label: string;
+  /** Begegnung über bis zu so viele Partien („Best of N“, nur zu zweit). */
+  bestOf?: number;
 }
 
 /** Was der Raum dem Turnier meldet. */
@@ -170,7 +173,7 @@ export interface RoomSnapshot {
   createdAt?: number;
   lastActivity: number;
   game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; lobbyIndex?: number[]; time: LobbySettings['time']; version: number; round: number; takeBack?: TakeBackState } | null;
-  match?: { config: MatchRoomConfig; noShow: RoomReport | null; reported: boolean };
+  match?: { config: MatchRoomConfig; noShow: RoomReport | null; reported: boolean; series?: SeriesState };
 }
 
 /**
@@ -197,7 +200,7 @@ export class Room {
   private createdAt: number;
   private lastActivity: number;
   /** Nur bei Turnierpartien. */
-  private match: { config: MatchRoomConfig; noShow: RoomReport | null; reported: boolean } | null = null;
+  private match: { config: MatchRoomConfig; noShow: RoomReport | null; reported: boolean; series?: SeriesState } | null = null;
   /** Mehrere Schritte der Spielleitung hintereinander (Zurücknehmen): erst am Ende eine Nachricht an alle. */
   private muted = false;
 
@@ -218,7 +221,7 @@ export class Room {
   setupMatch(config: MatchRoomConfig): boolean {
     const module = this.deps.findGame(config.gameId);
     if (!module) return false;
-    this.match = { config, noShow: null, reported: false };
+    this.match = { config, noShow: null, reported: false, ...(config.bestOf && config.bestOf > 1 && config.tokens.length === 2 ? { series: newSeries(config.bestOf) } : {}) };
     this.lobby = { gameId: config.gameId, options: resolveOptions(module, config.options), time: config.time, seats: config.tokens.map(() => ({ kind: 'human' as const, memberId: null })), isPublic: false };
     return true;
   }
@@ -229,7 +232,11 @@ export class Room {
     if (!match || match.reported) return null;
     const result = this.game?.session.result;
     let report: RoomReport | null = match.noShow;
-    if (result && match.config.tokens.length > 2) {
+    if (match.series && !match.noShow) {
+      // Best of N: erst melden, wenn die Begegnung entschieden ist. Seiten = Reihenfolge der Kennungen.
+      if (match.series.winner === undefined) return null;
+      report = match.series.forfeit ? { kind: 'noShow', winner: match.series.winner } : { kind: 'played', winner: match.series.winner, score: [...match.series.score] };
+    } else if (result && match.config.tokens.length > 2) {
       report = { kind: 'placed', places: this.tablePlaces(result) };
     } else if (result) {
       const winners = result.kind === 'win' ? result.winners : [];
@@ -250,6 +257,34 @@ export class Room {
       rank[lobbySeat] = result.kind === 'win' && !result.winners.includes(gameSeat) ? 1 : 0;
     });
     return rank.map((v) => rank.filter((other) => other < v).length);
+  }
+
+  /** Eine Partie der Serie ist aus: Stand fortschreiben, sonst nach einer Pause die nächste. */
+  private seriesGameOver(): void {
+    const series = this.match?.series;
+    const result = this.game?.session.result;
+    if (!series || !result || series.winner !== undefined) return;
+    const winners = result.kind === 'win' ? result.winners : [];
+    const side = winners.length === 1 ? this.sideOfGameSeat(winners[0]!) : null;
+    if (!recordSeriesGame(series, side)) series.nextAt = this.deps.now() + SERIES_PAUSE_MS;
+  }
+
+  /** Seite (Reihenfolge der Kennungen) eines Partieplatzes; nach dem Farbwechsel nicht mehr gleich. */
+  private sideOfGameSeat(gameSeat: number): 0 | 1 | null {
+    const lobbySeat = this.lobby.seats[this.game?.lobbyIndex?.[gameSeat] ?? gameSeat];
+    const member = lobbySeat?.kind === 'human' && lobbySeat.memberId ? this.members.get(lobbySeat.memberId) : undefined;
+    const side = member ? this.match!.config.tokens.indexOf(member.token) : -1;
+    return side === 0 || side === 1 ? side : null;
+  }
+
+  /** Stand der Serie in der Reihenfolge der Lobby-Plätze, so wie die Spieler ihn sehen. */
+  private seriesScoreBySeat(series: SeriesState): [number, number] {
+    const sides = [0, 1].map((seat) => {
+      const lobbySeat = this.lobby.seats[seat];
+      const member = lobbySeat?.kind === 'human' && lobbySeat.memberId ? this.members.get(lobbySeat.memberId) : undefined;
+      return member ? this.match!.config.tokens.indexOf(member.token) : seat;
+    });
+    return [series.score[sides[0] === 1 ? 1 : 0], series.score[sides[0] === 1 ? 0 : 1]];
   }
 
   markMatchReported(): void {
@@ -366,6 +401,7 @@ export class Room {
     if (takeBack) times.push(takeBack.deadline);
     if (this.match) {
       if (this.phase === 'lobby' && !this.match.noShow) times.push(this.createdAt + MATCH_ARRIVAL_MS);
+      if (this.match.series?.nextAt != null) times.push(this.match.series.nextAt);
       if (this.phase === 'playing') {
         for (const member of this.members.values()) {
           if (member.disconnectedAt !== null && this.seatOf(member.id) !== null) times.push(member.disconnectedAt + MATCH_AWAY_MS);
@@ -876,10 +912,22 @@ export class Room {
         this.broadcastRoom();
       }
     }
+    const series = this.match!.series;
+    if (series && series.nextAt !== null && series.winner === undefined && this.phase === 'finished' && now >= series.nextAt) {
+      // Nächste Partie der Serie: Farben getauscht.
+      series.nextAt = null;
+      const [first, second] = this.lobby.seats;
+      if (first && second) this.lobby.seats = [second, first, ...this.lobby.seats.slice(2)];
+      this.start('');
+      return;
+    }
     if (this.phase !== 'playing') return;
     for (const member of this.members.values()) {
       const seat = this.seatOf(member.id);
       if (seat !== null && member.disconnectedAt !== null && now - member.disconnectedAt >= MATCH_AWAY_MS) {
+        // Wer in einer Serie wegbleibt, verliert die ganze Begegnung.
+        const side = this.match!.config.tokens.indexOf(member.token);
+        if (this.match!.series && (side === 0 || side === 1)) forfeitSeries(this.match!.series, side);
         this.game?.session.resign(seat);
         break;
       }
@@ -965,6 +1013,7 @@ export class Room {
     if (this.muted) return;
     if (finished && this.phase === 'playing') {
       this.phase = 'finished';
+      this.seriesGameOver();
       this.broadcastRoom();
     }
     this.broadcastGame(change.events);
@@ -1240,7 +1289,10 @@ export class Room {
 
   private roomMessage(): RoomMessage {
     const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, ...(m.crest ? { crest: m.crest } : {}), connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}) }));
-    const match = this.match ? { tournament: this.match.config.tournament, label: this.match.config.label, noShow: this.match.noShow !== null } : undefined;
+    const series = this.match?.series;
+    const match = this.match
+      ? { tournament: this.match.config.tournament, label: this.match.config.label, noShow: this.match.noShow !== null, ...(series ? { series: { bestOf: series.bestOf, score: this.seriesScoreBySeat(series), next: series.nextAt, done: series.winner !== undefined } } : {}) }
+      : undefined;
     return { type: 'room', code: this.code, phase: this.phase, hostId: this.hostId, members, lobby: this.lobby, ...(this.displays.size > 0 ? { displays: this.displays.size } : {}), ...(match ? { match } : {}) };
   }
 

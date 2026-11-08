@@ -845,7 +845,7 @@ export class TournamentRoom extends DurableObject<Env> {
     if (!t) return;
     let retry = false;
     for (const request of t.pendingRooms()) {
-      const code = await this.createMatchRoom({ tournament: t.snapshot().code, match: request.match, gameId: request.gameId, time: request.time, options: request.options, tokens: request.tokens, label: request.label });
+      const code = await this.createMatchRoom({ tournament: t.snapshot().code, match: request.match, gameId: request.gameId, time: request.time, options: request.options, tokens: request.tokens, label: request.label, ...(request.bestOf ? { bestOf: request.bestOf } : {}) });
       if (code) t.roomCreated(request.match, code);
       else retry = true;
     }

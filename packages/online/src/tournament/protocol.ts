@@ -1,6 +1,7 @@
 import type { GameInfo, OptionSpec, Options } from '@brett-und-blatt/engine';
 import { cleanName } from '../names';
 import { DISCIPLINES_MAX, DISCIPLINES_MIN } from './disciplines';
+import { isBestOf } from './best-of';
 import { TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN } from './table-rounds';
 import { EVENING_EXTEND_CHOICES, EVENING_MINUTE_CHOICES } from './evening';
 import { ENTRANT_NAME_LENGTH, TOURNAMENT_MAX_FIELDS, TOURNAMENT_MAX_PLAYERS, TOURNAMENT_NAME_LENGTH, type MatchSide, type ResultKind, type TournamentFormat, type TournamentSettings, type TournamentView } from './types';
@@ -163,7 +164,7 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
     }
   }
   const multi = disciplines ? { disciplines, ...(body.wishes === true ? { wishes: true } : {}) } : {};
-  return { ...tables, name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
+  return { ...tables, ...parseBestOf(body, format), name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true, isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
 }
 
 /** Vor Ort: Sportart statt Spiel, keine Zeitvorgabe, nie in „Offene Runden“. */
@@ -200,7 +201,20 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
     ...(disciplines ? { disciplines } : {}),
     ...tables,
     ...(format === 'tables' && body.lowWins === true ? { lowWins: true } : {}),
+    // Vor Ort zählt „Best of N“ nur, wenn der Sieger eingetragen wird (dann der Stand in Partien).
+    ...(result === 'winner' ? parseBestOf(body, format) : {}),
   };
+}
+
+/** Formen mit eigener K.-o.-Phase neben anderen Runden: nur die WM-Form (K.-o. ist ganz K.-o.). */
+const KO_FORMATS: readonly TournamentFormat[] = ['world'];
+
+/** „Best of N“ für alle Begegnungen und eigens für die K.-o.-Phase; 1 und Ungültiges fallen weg. */
+function parseBestOf(body: Record<string, unknown>, format: TournamentFormat): Pick<TournamentSettings, 'bestOf' | 'bestOfKo'> {
+  if (format === 'tables') return {};
+  const all = isBestOf(body.bestOf) && body.bestOf > 1 ? { bestOf: body.bestOf } : {};
+  const ko = KO_FORMATS.includes(format) && isBestOf(body.bestOfKo) && body.bestOfKo !== (all.bestOf ?? 1) ? { bestOfKo: body.bestOfKo } : {};
+  return { ...all, ...ko };
 }
 
 /** Tischgröße, Grenzen und Rundenzahl der Tischrunden. */
