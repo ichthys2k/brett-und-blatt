@@ -188,7 +188,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const around = Boolean(ui.seatsAround) && seatRingFits(seats.length, rootSize.width, rootSize.height - TABLE_BAR_HEIGHT);
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
-  usePassRecorder({ session, gameId: info.id, seatScore: ui.seatScore as ((view: never, seat: number) => number | string | null) | undefined, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.finishedNote !== undefined, display: online.display } } : {}) });
+  const { trophy: trophyLaid } = usePassRecorder({ session, gameId: info.id, seatScore: ui.seatScore as ((view: never, seat: number) => number | string | null) | undefined, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.finishedNote !== undefined, display: online.display } } : {}) });
   const current = session.currentSeats();
   /** Der Mensch, der jetzt am Gerät dran ist – auch während einer Pause. */
   const turnSeat = current.find((seat) => session.isHuman(seat) && !session.isAway(seat));
@@ -616,6 +616,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               you: online ? index === online.yourSeat : seat.kind === 'human',
             }))}
             actions={resultActions}
+            trophyNote={trophyLaid}
             onClose={() => setCeremonyClosed(true)}
           />
         )}

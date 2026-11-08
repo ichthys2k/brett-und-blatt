@@ -1,9 +1,11 @@
 import type { GameSession, Result, SeatConfig } from '@brett-und-blatt/engine';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { emptyBook, localMode, outcomeFor, recordGame, sanitizeBook, strongestBot, type Mode, type PlayedGame } from './partiebuch';
 import { passBook } from './passes';
 import { rememberReplay } from './chronikStore';
+import { addTrophy, sanitizeTrophies, trophyFor } from './pokale';
 import { passSyncSoon } from './playerPass';
+import { stampsFor } from './stamps';
 
 /*
  * Der Recorder (Vorhaben #135, Schritt #142): Eine Stelle in der Web-App zeichnet jedes Partieende im Partiebuch des Passes auf –
@@ -12,6 +14,7 @@ import { passSyncSoon } from './playerPass';
  */
 
 export const BOOK_KEY = 'brett-und-blatt:partiebuch';
+export const TROPHIES_KEY = 'brett-und-blatt:pokale';
 
 export interface RecordRow {
   /** Pass, dem die Zeile gehört; null: der aktive. */
@@ -81,12 +84,14 @@ function deviceCounterId(): string {
   }
 }
 
-/** Schreibt die Zeilen ins Partiebuch ihrer Pässe. */
-export function saveRows(rows: readonly RecordRow[], seats: readonly SeatConfig[]): void {
-  if (rows.length === 0) return;
+/** Schreibt die Zeilen ins Partiebuch ihrer Pässe und legt Pokale ab. Liefert, ob der aktive Pass einen Pokal bekam. */
+export function saveRows(rows: readonly RecordRow[], seats: readonly SeatConfig[]): boolean {
+  if (rows.length === 0) return false;
   const level = strongestBot(seats);
   const device = deviceCounterId();
+  let trophyForActive = false;
   for (const row of rows) {
+    let firstHardWin = false;
     passBook.updateStored(row.passId, BOOK_KEY, (raw) => {
       let book = emptyBook();
       try {
@@ -94,10 +99,25 @@ export function saveRows(rows: readonly RecordRow[], seats: readonly SeatConfig[
       } catch {
         // kaputtes Buch: neu anfangen
       }
+      firstHardWin = !stampsFor(book, row.game.gameId).find((stamp) => stamp.kind === 'win-hard')!.earned;
       return JSON.stringify(recordGame(book, row.game, device, level));
     });
+    const trophy = trophyFor(row.game, level, firstHardWin);
+    if (trophy) {
+      passBook.updateStored(row.passId, TROPHIES_KEY, (raw) => {
+        let list = sanitizeTrophies(null);
+        try {
+          list = sanitizeTrophies(raw ? JSON.parse(raw) : null);
+        } catch {
+          // kaputte Liste: neu anfangen
+        }
+        return JSON.stringify(addTrophy(list, trophy));
+      });
+      if (row.passId === null) trophyForActive = true;
+    }
   }
   passSyncSoon();
+  return trophyForActive;
 }
 
 /** Haken im Spieltisch: zeichnet das Ergebnis genau einmal je Partie auf. */
@@ -106,8 +126,9 @@ export function usePassRecorder(options: {
   gameId: string;
   seatScore?: (view: never, seat: number) => number | string | null;
   online?: { yourSeat: number | null; tournament: boolean; display?: boolean };
-}): void {
+}): { trophy: boolean } {
   const { session, gameId, seatScore, online } = options;
+  const [trophy, setTrophy] = useState(false);
   const started = useRef<{ id: string; at: number }>({ id: session.id, at: Date.now() });
   const done = useRef<string | null>(null);
   if (started.current.id !== session.id) started.current = { id: session.id, at: Date.now() };
@@ -136,9 +157,14 @@ export function usePassRecorder(options: {
       // Zugabe, darf nie stören
     }
     try {
-      saveRows(rowsFor({ gameId, sessionId: session.id, result, seats, endedAt: now, durationMs: now - started.current.at, scores, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.tournament } } : {}) }), seats);
+      const saved = saveRows(rowsFor({ gameId, sessionId: session.id, result, seats, endedAt: now, durationMs: now - started.current.at, scores, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.tournament } } : {}) }), seats);
+      if (saved) setTrophy(true);
     } catch {
       // Das Partiebuch ist eine Zugabe und darf nie den Tisch stören.
     }
   }, [result, session, gameId, seatScore, online]);
+  useEffect(() => {
+    if (!result) setTrophy(false);
+  }, [result]);
+  return { trophy };
 }

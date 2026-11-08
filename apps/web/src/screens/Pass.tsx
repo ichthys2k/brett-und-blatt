@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Button } from '../components/controls';
 import { StampBook } from '../components/StampBook';
+import { TrophyCabinet } from '../components/TrophyCabinet';
 import { t } from '../i18n';
 import { pinnedList } from '../lib/chronik';
 import { formOf, levelStats, ratingOf, winRate } from '../lib/botRating';
@@ -116,6 +117,8 @@ export function PassScreen() {
       </header>
 
       <StampBook />
+
+      <TrophyCabinet />
 
       <BotRating />
 
