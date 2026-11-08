@@ -42,7 +42,7 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
     damage: (event) => ('targetType' in event && event.targetType === 'hero' ? 'drachen-schaden-held' : 'drachen-schaden-tier'),
     minionLeft: 'leben-weg',
     bubblePopped: 'stein-heraus',
-    spellCast: 'stapel-fertig',
+    spellCast: 'ds-zauber',
     mulliganDone: 'mischen',
     cardTraded: 'mischen',
     damageBlocked: 'stein-heraus',
