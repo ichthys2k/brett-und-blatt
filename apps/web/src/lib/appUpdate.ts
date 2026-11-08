@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { registerSW } from 'virtual:pwa-register';
+import { isNewerBuild, parseBuildInfo } from './buildVersion';
 import { isTableRoute } from './tableRoute';
 
 /*
@@ -10,6 +11,7 @@ import { isTableRoute } from './tableRoute';
  *    (Hinweisleiste) oder sobald die Person den Tisch verlässt.
  */
 export const APP_VERSION = typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev';
+export const APP_TIME = typeof __BUILD_TIME__ === 'number' ? __BUILD_TIME__ : 0;
 export const APP_DATE = typeof __BUILD_DATE__ === 'string' ? __BUILD_DATE__ : '';
 
 /** So oft fragt eine offene App nach einer neuen Version. */
@@ -37,10 +39,44 @@ export function applyUpdateNow(): void {
   void applyUpdate?.(true);
 }
 
+/**
+ * Steht wirklich ein jüngerer Build bereit? Fragt `version.json` am Zwischenspeicher vorbei. Ohne Antwort (offline,
+ * Datei fehlt) gilt die bereitstehende Version als neu, damit nie eine echte Aktualisierung verloren geht.
+ */
+async function newerBuildAvailable(): Promise<boolean> {
+  if (APP_TIME === 0) return true;
+  try {
+    const response = await fetch(`${import.meta.env.BASE_URL}version.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!response.ok) return true;
+    const remote = parseBuildInfo(await response.json());
+    return remote ? isNewerBuild(remote, { id: APP_VERSION, time: APP_TIME }) : true;
+  } catch {
+    return true;
+  }
+}
+
+let verifying = false;
+
+/** Prüft eine bereitstehende Version und meldet sie erst, wenn sie wirklich jünger ist. */
+async function announceWaiting(): Promise<void> {
+  if (verifying || ready) return;
+  verifying = true;
+  try {
+    if (!(await newerBuildAvailable())) return;
+    set(true);
+    // Nicht in einer Partie: dann sofort aktualisieren.
+    if (!isTableRoute(window.location.hash)) applyUpdateNow();
+  } finally {
+    verifying = false;
+  }
+}
+
 /** Fragt jetzt nach einer neuen Version. `true`, wenn eine bereitsteht. */
 export async function checkForUpdate(): Promise<boolean> {
   try {
     await registration?.update();
+    // Ein Worker, der früher als nicht jünger galt, wird erneut geprüft (der Zwischenspeicher kann inzwischen nachgezogen haben).
+    if (!ready && registration?.waiting) await announceWaiting();
   } catch {
     // offline – dann eben später
   }
@@ -75,9 +111,7 @@ export function startAppUpdates(): void {
   applyUpdate = registerSW({
     immediate: true,
     onNeedRefresh() {
-      set(true);
-      // Nicht in einer Partie: dann sofort aktualisieren.
-      if (!isTableRoute(window.location.hash)) applyUpdateNow();
+      void announceWaiting();
     },
     onRegisteredSW(_url, reg) {
       registration = reg;

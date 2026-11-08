@@ -8,12 +8,21 @@ import { klaenge } from './klaenge.ts';
 /** Kennung dieses Builds (Commit-Kurzform aus der CI, sonst „dev“) und Zeitpunkt – für die Versionsanzeige (#175). */
 const buildId = (process.env.GITHUB_SHA ?? 'dev').slice(0, 7);
 const buildDate = new Date().toISOString().slice(0, 10);
+const buildTime = Date.now();
 
 export default defineConfig({
-  define: { __BUILD_ID__: JSON.stringify(buildId), __BUILD_DATE__: JSON.stringify(buildDate) },
+  define: { __BUILD_ID__: JSON.stringify(buildId), __BUILD_DATE__: JSON.stringify(buildDate), __BUILD_TIME__: buildTime },
   // Unter einer Unteradresse (z. B. GitHub Pages) mit BASE_PATH=/brett-und-blatt/ bauen.
   base: process.env.BASE_PATH ?? '/',
   plugins: [
+    {
+      // `version.json` liegt neben der App und wird nicht vorab gespeichert: Die App fragt damit nach, ob die
+      // bereitstehende Version wirklich jünger ist als die laufende (#175).
+      name: 'brett-und-blatt:version',
+      generateBundle() {
+        this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ id: buildId, time: buildTime }) });
+      },
+    },
     react(),
     tailwindcss(),
     klaenge(),
@@ -44,7 +53,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,mp3,json,woff2}'],
         // Musik, Tierstimmen (Drachenspiel, rund 14 MB), Avatar-Ansagen (gut 5 MB) und Enten-Rallye-Ton
         // sind zu groß zum Vorab-Speichern: Sie kommen beim ersten Abspielen in einen eigenen Speicher.
-        globIgnores: ['**/klaenge/musik/**', '**/klaenge/tiere/**', '**/klaenge/avatare/**', '**/klaenge/duck-rally/**'],
+        globIgnores: ['**/version.json', '**/klaenge/musik/**', '**/klaenge/tiere/**', '**/klaenge/avatare/**', '**/klaenge/duck-rally/**'],
         navigateFallback: 'index.html',
         runtimeCaching: [
           {
