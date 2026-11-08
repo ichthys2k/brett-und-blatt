@@ -10,6 +10,7 @@ import { PassView } from './screens/PassView';
 import { Play } from './screens/Play';
 import { RoomScreen } from './screens/Room';
 import { ClassPage, Classes } from './screens/Classes';
+import { Library } from './screens/Library';
 import { Tournaments } from './screens/Tournaments';
 import { TournamentScreen } from './screens/Tournament';
 import { Setup } from './screens/Setup';
@@ -35,6 +36,8 @@ function Screen() {
       return <Online />;
     case 'tournaments':
       return <Tournaments />;
+    case 'library':
+      return <Library />;
     case 'classes':
       return <Classes />;
     case 'class':

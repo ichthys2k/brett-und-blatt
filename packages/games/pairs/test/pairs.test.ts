@@ -123,3 +123,26 @@ describe('Bot', () => {
 describe('Vertrag für Spielmodule', () => {
   for (const check of gameContractChecks(gameModule, { randomGames: 10, seatCounts: [1, 2, 6] })) test(check.name, check.run);
 });
+
+describe('Eigenes Paket (#101)', () => {
+  const pairs = Array.from({ length: 10 }, (_, i) => [`A${i}`, `B${i}`]);
+  const pack = JSON.stringify({ n: 'Vokabeln', p: pairs });
+
+  it('spielt mit den Paaren des Pakets', () => {
+    const state = start(1, { pack, size: '16' }, 'seed');
+    expect(state.set).toBe('eigen');
+    expect(state.custom).toHaveLength(10);
+    expect(state.faces).toHaveLength(16);
+    expect(state.customName).toBe('Vokabeln');
+  });
+  it('wählt ein kleineres Raster, wenn das Paket nicht reicht', () => {
+    const small = JSON.stringify({ n: 'Klein', p: pairs.slice(0, 6) });
+    const state = start(1, { pack: small, size: '36' }, 'seed');
+    expect(state.faces).toHaveLength(12);
+  });
+  it('ignoriert ein unbrauchbares Paket und nimmt das Kartenset', () => {
+    const state = start(1, { pack: '{"n":"x","p":[["a","b"]]}', set: 'tiere' }, 'seed');
+    expect(state.set).toBe('tiere');
+    expect(state.custom).toBeUndefined();
+  });
+});
