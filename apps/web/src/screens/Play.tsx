@@ -2,6 +2,7 @@ import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId 
 import { PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { Ceremony } from '../components/Ceremony';
+import { setHandView, useHandView } from '../lib/handView';
 import { Button } from '../components/controls';
 import { HowToOverlay } from '../components/HowTo';
 import { MoreMenu } from '../components/MoreMenu';
@@ -98,6 +99,9 @@ interface GameTableProps {
 export function GameTable({ session, game, local, online }: GameTableProps) {
   const { ui, info } = game;
   const isOnline = online !== undefined;
+  const handViewChosen = useHandView();
+  // Hand-Ansicht (#100): nur online mit eigenem Platz und nur in Spielen, die sie können.
+  const handOnly = handViewChosen && Boolean(ui.handView) && online !== undefined && online.yourSeat !== null && !online.display;
   const localRef = useRef(local);
   localRef.current = local;
   // Im Ref, damit Sicht und Ereignisse auch bei Bot-Zügen im selben Durchlauf ankommen.
@@ -415,6 +419,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           {t('online.toLobby')}
         </Button>
       )}
+      {ui.handView && online.yourSeat !== null && !online.display && (
+        <Button variant="ghost" aria-pressed={handOnly} onClick={() => setHandView(!handOnly)}>
+          🃏 {handOnly ? t('play.handViewOff') : t('play.handView')}
+        </Button>
+      )}
       {canResign && (
         <Button variant="ghost" onClick={resign}>
           {t('play.resign')}
@@ -560,7 +569,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           seatNames={seats.map((seat) => seat.name)}
           audio={{ muted: soundSettings.effectsOff && soundSettings.musicOff, music: playMusic ? soundSettings.music : 0, effects: soundSettings.effectsOff ? 0 : soundSettings.effects }}
           invite={online?.invite}
-          table={around ? { seatChip, status: statusContent } : undefined}
+          table={around && !handOnly ? { seatChip, status: statusContent } : undefined}
+          handOnly={handOnly}
           canJoinSeat={session.canJoinSeat ? (seat) => session.canJoinSeat!(seat) : undefined}
           onJoinSeat={session.joinSeat ? (seat, kind, name) => session.joinSeat!(seat, kind, name) : undefined}
           canLeaveSeat={session.canLeaveSeat ? (seat) => session.canLeaveSeat!(seat) : undefined}

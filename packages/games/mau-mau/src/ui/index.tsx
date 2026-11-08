@@ -22,6 +22,8 @@ const handCardWidth = (containerWidth: number) => Math.round(Math.min(76, Math.m
 const HAND_MIN_VISIBLE = 0.4;
 /** Mehr Rückseiten zeichnet der Fächer am Mitspieler nicht; die Zahl daneben nennt den Rest. */
 const OPPONENT_FAN_MAX = 20;
+/** Handkarten in der Hand-Ansicht (#100): Es gibt nur die Hand, also dürfen sie groß sein. */
+const HAND_VIEW_CARD_WIDTH = 104;
 
 interface FlyingCard {
   id: string;
@@ -85,6 +87,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
   viewer,
   seatNames,
   table,
+  handOnly,
 }) => {
   const [selectedJack, setSelectedJack] = useState<CardId | null>(null);
   const [callMauToggled, setCallMauToggled] = useState(false);
@@ -219,7 +222,8 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
 
     const prefersReducedMotion =
       typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return;
+    // In der Hand-Ansicht gibt es weder Ablage noch Talon, zu denen etwas fliegen könnte.
+    if (prefersReducedMotion || handOnly) return;
 
     const tableRect = tableRef.current?.getBoundingClientRect();
     if (!tableRect) return;
@@ -352,7 +356,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
     }
 
     if (newFlying.length > 0) setFlyingCards((previous) => [...previous, ...newFlying]);
-  }, [actor, events]);
+  }, [actor, events, handOnly]);
 
   const handleSuitSelect = (suit: Suit) => {
     if (!selectedJack) return;
@@ -379,7 +383,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
   );
 
   return (
-    <div ref={tableRef} className="mau-table" data-around={table ? '' : undefined}>
+    <div ref={tableRef} className="mau-table" data-around={table ? '' : undefined} data-hand={handOnly ? '' : undefined}>
       <div className="mau-flying-layer">
         {flyingCards.map((card) => (
           <div
@@ -406,7 +410,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
       </div>
 
       {/* Mitspieler */}
-      {!table && <div className="mau-opponents">
+      {!table && !handOnly && <div className="mau-opponents">
         {state.hands.map((hand, index) => {
           if (index === actor) return null;
           const isTurn = state.turn === index;
@@ -532,7 +536,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
           <CardFan
             count={myHand.length}
             label="Deine Handkarten"
-            cardWidth={table ? tableHandCardWidth : handCardWidth}
+            cardWidth={handOnly ? HAND_VIEW_CARD_WIDTH : table ? tableHandCardWidth : handCardWidth}
             minStep={(width) => width * HAND_MIN_VISIBLE}
             rowOverlap={0.55}
             keyOf={(index) => myHand[index]!}
@@ -576,6 +580,38 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
         </div>
       </div>
         );
+        if (handOnly) {
+          // Hand-Ansicht (#100): kleine Zusammenfassung des Tisches, darunter die eigene Hand mit den Knöpfen.
+          return (
+            <>
+              <div className="mau-summary" aria-label="Tisch">
+                <div className="mau-summary-card" style={{ transform: `rotate(${topTilt}deg)` }}>
+                  {topDiscard ? <PlayingCard card={topDiscard} deckStyle={deckStyle} /> : null}
+                </div>
+                <div className="mau-summary-info">
+                  <span className="mau-summary-suit">
+                    <SuitIcon suit={state.activeSuit} style={deckStyle} className="h-5 w-5" />
+                    {suitLabel(deckStyle, state.activeSuit)}
+                    {state.pendingDraw > 0 ? ` · +${state.pendingDraw} offen` : ''}
+                  </span>
+                  <span className="mau-summary-seats">
+                    {state.hands.map((hand, seat) =>
+                      seat === actor ? null : (
+                        <span key={seat} className="mau-summary-seat" data-turn={state.turn === seat ? '' : undefined}>
+                          {seatNames[seat] ?? `Platz ${seat + 1}`}: {hand.length}
+                          {hand.length === 1 ? ' · Mau!' : ''}
+                        </span>
+                      ),
+                    )}
+                    <span className="mau-summary-seat">Talon: {state.stock.length}</span>
+                  </span>
+                  {state.lastAction && <span className="mau-summary-last">{state.lastAction.text}</span>}
+                </div>
+              </div>
+              {handArea}
+            </>
+          );
+        }
         if (!table) return <>{center}{handArea}</>;
         return (
           <SeatRing
@@ -626,6 +662,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
 };
 
 export const gameUi: GameUi<MauMauState, MauMauMove> = {
+  handView: true,
   Board: MauMauBoard,
   seatsAround: true,
   SeatSymbol: ({ seat, className }) => (

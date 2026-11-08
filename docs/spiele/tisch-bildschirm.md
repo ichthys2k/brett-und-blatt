@@ -32,10 +32,18 @@ Statt Rollenabfragen im Code sollen alle Ansichten aus **Fähigkeiten** gespeist
 
 Die Spielszene läuft auf einer **Bühne** (`Stage` in `Display.tsx`, Faktor `stageScale` in `lib/stage.ts`): Das Spiel rechnet mit einer Fläche von etwa 1280 × 720 und wird als Ganzes hochskaliert (`transform: scale`, höchstens 2,5; auf Full-HD 1,5, nie kleiner als 1). Karten, Steine und Schrift werden so größer, ohne dass jedes Spiel eine eigene Fernsehansicht braucht. Der `GameTable` nimmt dort `h-full` statt `h-dvh` (`OnlineTableProps.display`). Festgesetzte Elemente (Siegerehrung, Sprechblasen) bleiben in der Bühne. Grenze: Medienabfragen der Spiele (`max-height: 720px` u. ä.) sehen weiter die echte Bildschirmgröße; geprüft mit zwölf Spielen auf 1920 × 1080, ohne Überlauf (Mau-Mau, Schach, Nicht ärgern!, Eins!, Poker, Skat, Domino, Sternhalma, Go, Narrenhof, Doppelkopf).
 
+## Schritt 3 (umgesetzt für Mau-Mau, Eins! und Skat): Hand-Ansicht fürs Handy
+
+- `BoardProps.handOnly` und `GameUi.handView` (`packages/ui/src/types.ts`): Ein Spiel mit `handView: true` zeigt in der Hand-Ansicht nur die eigene Hand mit den Aktionsknöpfen und eine kleine Zusammenfassung des Tisches (Ablage, aktuelle Farbe, Kartenzahlen der anderen, Talon; im Skat der Stich klein und die Reiz- und Ansagefelder).
+- Der Schalter „🃏 Hand-Ansicht“ / „Ganzer Tisch“ steht online in den Knöpfen unter dem Spielfeld (am Tablet im Menü „⋯“) und wirkt je Gerät (`lib/handView.ts`, `localStorage` `brett-und-blatt:handansicht`). Er erscheint nur mit eigenem Platz und nicht auf dem Tisch-Bildschirm.
+- Flug-Animationen der Karten entfallen in der Hand-Ansicht, weil es Ablage und Stapel dort nicht gibt. Die Handkarten sind größer (Mau-Mau 104, Eins! 96, Skat 72 px).
+- Neue Spiele: `handOnly` auswerten, `handView: true` setzen, eigene CSS-Klassen mit Spielpräfix. Weitere Stichspiele (Doppelkopf, Schafkopf, Binokel) und Karten-Anlegespiele folgen nach demselben Muster.
+
 ## Noch offen
 
 - **Spielspezifische Fernsehansicht (`GameUi.tableView?`):** Wo die Zuschauer-Darstellung nicht passt, etwa im Skat der Fußplatz mit „Deine Hand (0 Karten)“ und verdeckten Karten. Dort sollte der Tisch alle Plätze gleich zeigen.
-- **Hand-Ansicht fürs Handy** (`GameUi.handView?`) für Mau-Mau, Eins! und ein Stichspiel.
+- **Hand-Ansicht für weitere Spiele** (Doppelkopf, Schafkopf, Binokel, Würfelspiele).
+- **Hand-Ansicht automatisch anbieten**, sobald ein Tisch-Bildschirm im Raum ist (`RoomMessage.displays`).
 - **Spielleiter-Panel** mit dem Fähigkeiten-Modell, auch ohne Platz und während der Partie.
 - **Weitere Szenen** auf demselben Rahmen: Turnierbaum (die Turnierseite hat schon einen Zuschaulink, `settings.spectators`) und Partie nachspielen (#99).
 - **Punkte setzen** ist spielabhängig; erst mit den Turnier-Stufen und einem optionalen `GameModule`-Haken klären.

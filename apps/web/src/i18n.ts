@@ -385,6 +385,8 @@ const de = {
   'online.waitForHost': 'Die Raumleitung startet die nächste Partie.',
   'online.room': 'Raum',
   'online.copyLink': 'Link kopieren',
+  'play.handView': 'Hand-Ansicht',
+  'play.handViewOff': 'Ganzer Tisch',
   'display.title': 'Tisch-Bildschirm',
   'display.join': 'Mitspielen: QR-Code scannen oder den Code eingeben',
   'display.noGame': 'Noch kein Spiel gewählt',

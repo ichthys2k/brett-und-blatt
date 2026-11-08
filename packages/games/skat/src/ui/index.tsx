@@ -15,6 +15,9 @@ import {
   type SkatState,
 } from '../rules.js';
 
+/** Handkarten in der Hand-Ansicht (#100): Es gibt nur die Hand, also dürfen sie größer sein. */
+const HAND_VIEW_CARD_WIDTH = 72;
+
 export function SkatBoard({
   view,
   legalMoves,
@@ -22,6 +25,7 @@ export function SkatBoard({
   viewer,
   seatNames,
   table,
+  handOnly,
 }: BoardProps<SkatState, SkatMove>) {
   const mySeat: number = typeof viewer === 'number' ? viewer : view.activeSeats[0];
   const isDeclarer = mySeat === view.declarerSeat;
@@ -240,7 +244,7 @@ export function SkatBoard({
           className="w-full pb-1"
           count={myHand.length}
           label="Deine Handkarten"
-          cardWidth={trickHandCardWidth}
+          cardWidth={handOnly ? HAND_VIEW_CARD_WIDTH : trickHandCardWidth}
           minStep={TRICK_HAND_MIN_STEP}
           maxRows={2}
           keyOf={(idx) => (myHand[idx] === 'back' ? `back-${idx}` : myHand[idx]!)}
@@ -333,6 +337,16 @@ export function SkatBoard({
           {roundEnd}
           {trick}
         </SeatRing>
+      ) : handOnly ? (
+        // Hand-Ansicht (#100): der Stich klein als Zusammenfassung des Tisches, darunter die eigene Hand.
+        <>
+          {dialogs}
+          <div className="flex min-h-[170px] flex-col">
+            <TrickTable slots={trickSlots} bottomSeat={mySeat} deckStyle={view.deckStyle} cardWidth={44} collecting={displayTrick.collecting} />
+          </div>
+          {hand}
+          {roundEnd}
+        </>
       ) : (
         <>
           {dialogs}
@@ -372,6 +386,7 @@ function formatDeclaration(decl: SkatDeclaration): string {
 }
 
 export const gameUi: GameUi<SkatState, SkatMove> = {
+  handView: true,
   Board: SkatBoard,
   seatsAround: true,
   sounds: {
