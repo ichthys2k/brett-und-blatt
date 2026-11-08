@@ -71,6 +71,7 @@ import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
 import { bibelQuizKatalog } from './bibelquiz';
 import { wortspielKataloge } from './wortspiele';
 import { onlineGames } from './games';
+import { isOperator } from './operator';
 
 /**
  * Der Spieleserver auf Cloudflare – nur ein dünner Adapter: Die ganze Spiellogik
@@ -100,6 +101,8 @@ interface Env {
   CLASSES: DurableObjectNamespace<ClassRoom>;
   /** Geheimer Pfeffer für die Schlösser der Ausweise (`wrangler secret put PASS_PEPPER`, lokal in `.dev.vars`). Fehlt er, melden die Schloss-Endpunkte 503. */
   PASS_PEPPER?: string;
+  /** Betreiber-Schlüssel (`wrangler secret put OPERATOR_KEY`): löscht per `DELETE /betreiber/…` Turniere und Klassen. Fehlt er, gibt es die Endpunkte nicht. */
+  OPERATOR_KEY?: string;
   TOURNAMENTS: DurableObjectNamespace<TournamentRoom>;
   ALLOWED_ORIGINS: string;
   /** "eu" im echten Betrieb. Nur der lokale Testserver kennt keine Jurisdiktionen und setzt "none". */
@@ -237,6 +240,31 @@ export default {
     if (wortspiel !== undefined && request.method === 'GET') {
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
       return json(wortspiel, 200, { ...cors, 'Cache-Control': 'public, max-age=300' });
+    }
+
+    const operator = /^\/betreiber\/(turnier|klasse)\/([^/]+)$/.exec(url.pathname);
+    if (operator) {
+      if (!env.OPERATOR_KEY) return json({ error: 'aus' }, 404, cors);
+      if (request.method !== 'DELETE') return json({ error: 'method' }, 405, cors);
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...cors, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      if (!(await isOperator(request, env.OPERATOR_KEY))) {
+        await limiter.miss();
+        return json({ error: 'nicht erlaubt' }, 401, cors);
+      }
+      const target = decodeURIComponent(operator[2]!);
+      let done = false;
+      if (operator[1] === 'turnier') {
+        if (!TOURNAMENT_CODE_PATTERN.test(target)) return json({ error: 'code' }, 400, cors);
+        done = await tournamentStub(env, target).operatorDelete();
+      } else {
+        const code = parseClassCode(target);
+        if (!code) return json({ error: 'code' }, 400, cors);
+        done = await classStub(env, code).operatorDissolve();
+      }
+      // Ohne den Schlüssel: Spur im Protokoll, was wann gelöscht wurde.
+      console.log(JSON.stringify({ betreiber: operator[1], ziel: target, am: new Date().toISOString(), geloescht: done }));
+      return json({ ok: done }, done ? 200 : 404, { ...cors, 'Cache-Control': 'no-store' });
     }
 
     if (url.pathname === '/turniere' && request.method === 'POST') {
@@ -834,6 +862,13 @@ export class ClassRoom extends DurableObject<Env> {
     return reply(200, { view: classView(state, token) });
   }
 
+  /** Auflösen durch den Betreiber (`/betreiber/klasse/<Code>`). */
+  async operatorDissolve(): Promise<boolean> {
+    if (!(await this.ctx.storage.get('class'))) return false;
+    await this.ctx.storage.deleteAll();
+    return true;
+  }
+
   override async alarm(): Promise<void> {
     const state = await this.ctx.storage.get<ClassState>('class');
     if (!state || isClassExpired(state, Date.now())) {
@@ -1065,6 +1100,14 @@ export class TournamentRoom extends DurableObject<Env> {
     } catch {
       // Schon zu.
     }
+  }
+
+  /** Löschen durch den Betreiber (`/betreiber/turnier/<Code>`). */
+  async operatorDelete(): Promise<boolean> {
+    const t = this.tournament;
+    if (!t) return false;
+    await this.deleteTournament(t, 'Vom Betreiber gelöscht');
+    return true;
   }
 
   /** Löscht das Turnier samt Eintrag in „Offene Runden“; alle Verbindungen erfahren es. */

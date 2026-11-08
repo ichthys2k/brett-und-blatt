@@ -120,11 +120,16 @@ export function Online() {
             </section>
           )}
 
-          <OpenRooms rooms={openRooms?.filter((room) => !room.tournament) ?? null} showEmpty />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button type="button" className="bub-menu-button" onClick={() => navigate(paths.tournaments)}>
+              Turniere
+            </button>
+            <button type="button" className="bub-menu-button" onClick={() => navigate(paths.classes)}>
+              Klassen
+            </button>
+          </div>
 
-          <button type="button" className="bub-menu-button" onClick={() => navigate(paths.classes)}>
-            Klassen
-          </button>
+          <OpenRooms rooms={openRooms?.filter((room) => !room.tournament) ?? null} showEmpty />
         </>
       )}
 

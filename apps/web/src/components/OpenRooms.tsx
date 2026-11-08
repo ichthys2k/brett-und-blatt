@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import type { OpenRoomListing } from '../lib/online';
+import { hideRoom, loadHidden, showAllHidden } from '../lib/hiddenRooms';
 import { navigate, paths } from '../lib/router';
 import { Button } from './controls';
 
@@ -12,7 +13,7 @@ function formatTimeAgo(timeMs: number, now: number): string {
   return t('home.openGames.hoursAgo', { n: Math.floor(diffMin / 60) });
 }
 
-function OpenGameCard({ room, now }: { room: OpenRoomListing; now: number }) {
+function OpenGameCard({ room, now, onHide }: { room: OpenRoomListing; now: number; onHide?: () => void }) {
   const freeSeats = room.totalSeats - room.filledSeats;
   const seatsText = room.tournament
     ? t('home.openGames.signedUp', { n: room.filledSeats })
@@ -37,9 +38,16 @@ function OpenGameCard({ room, now }: { room: OpenRoomListing; now: number }) {
           </p>
         </div>
       </div>
-      <Button variant="primary" onClick={() => navigate(room.tournament ? paths.tournament(room.code) : paths.room(room.code))}>
-        {room.tournament ? t('home.openGames.signUp') : t('home.openGames.join')}
-      </Button>
+      <div className="flex items-center gap-1">
+        {onHide && (
+          <Button variant="ghost" className="px-3" aria-label={`Ausblenden: ${room.gameName}`} title="Auf diesem Gerät ausblenden" onClick={onHide}>
+            ✕
+          </Button>
+        )}
+        <Button variant="primary" onClick={() => navigate(room.tournament ? paths.tournament(room.code) : paths.room(room.code))}>
+          {room.tournament ? t('home.openGames.signUp') : t('home.openGames.join')}
+        </Button>
+      </div>
     </li>
   );
 }
@@ -57,8 +65,11 @@ export function OpenRooms({ rooms, showEmpty = false }: { rooms: OpenRoomListing
     return () => window.clearInterval(timer);
   }, []);
 
-  const empty = !rooms || rooms.length === 0;
-  if (empty && !showEmpty) return null;
+  const [hidden, setHidden] = useState(loadHidden);
+  const visible = rooms ? rooms.filter((room) => !(room.tournament && hidden.includes(room.code))) : rooms;
+  const hiddenCount = rooms ? rooms.length - (visible?.length ?? 0) : 0;
+  const empty = !visible || visible.length === 0;
+  if (empty && !showEmpty && hiddenCount === 0) return null;
 
   return (
     <section className="space-y-3" aria-live="polite">
@@ -71,14 +82,19 @@ export function OpenRooms({ rooms, showEmpty = false }: { rooms: OpenRoomListing
       </h2>
       {empty ? (
         <p className="rounded-2xl border border-dashed border-line p-4 text-sm text-muted">
-          {rooms === null ? t('online.connecting') : t('home.openGames.none')}
+          {visible === null ? t('online.connecting') : t('home.openGames.none')}
         </p>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
-          {rooms.map((room) => (
-            <OpenGameCard key={room.code} room={room} now={now} />
+          {visible.map((room) => (
+            <OpenGameCard key={room.code} room={room} now={now} onHide={room.tournament ? () => setHidden(hideRoom(room.code)) : undefined} />
           ))}
         </ul>
+      )}
+      {hiddenCount > 0 && (
+        <button type="button" className="text-xs text-muted underline" onClick={() => setHidden(showAllHidden())}>
+          {hiddenCount} ausgeblendet – wieder zeigen
+        </button>
       )}
     </section>
   );
