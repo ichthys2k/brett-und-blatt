@@ -5,7 +5,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { kataloge } from './kataloge.ts';
 import { klaenge } from './klaenge.ts';
 
+/** Kennung dieses Builds (Commit-Kurzform aus der CI, sonst „dev“) und Zeitpunkt – für die Versionsanzeige (#175). */
+const buildId = (process.env.GITHUB_SHA ?? 'dev').slice(0, 7);
+const buildDate = new Date().toISOString().slice(0, 10);
+
 export default defineConfig({
+  define: { __BUILD_ID__: JSON.stringify(buildId), __BUILD_DATE__: JSON.stringify(buildDate) },
   // Unter einer Unteradresse (z. B. GitHub Pages) mit BASE_PATH=/brett-und-blatt/ bauen.
   base: process.env.BASE_PATH ?? '/',
   plugins: [
@@ -14,7 +19,8 @@ export default defineConfig({
     klaenge(),
     kataloge(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // „prompt“: Eine neue Version wartet, bis wir sie anwenden (Hinweisleiste oder Pause zwischen Partien) – statt mitten im Spiel neu zu laden.
+      registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Brett & Blatt',

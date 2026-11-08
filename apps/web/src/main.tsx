@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { registerSW } from 'virtual:pwa-register';
 import { App } from './App';
+import { startAppUpdates } from './lib/appUpdate';
 import './lib/look';
 import { registerWebPassBlocks } from './lib/passBlocks';
 import { passSyncSoon, syncPassEntry } from './lib/playerPass';
@@ -12,8 +12,8 @@ registerWebPassBlocks();
 syncPassEntry();
 passSyncSoon(3000);
 
-// Service Worker: speichert die App für die Nutzung ohne Internet und holt Updates automatisch.
-registerSW({ immediate: true });
+// Service Worker: speichert die App für die Nutzung ohne Internet; Updates holt und meldet `appUpdate` (#175).
+startAppUpdates();
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Element #root fehlt.');

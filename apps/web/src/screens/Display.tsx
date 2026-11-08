@@ -2,6 +2,7 @@ import { parseRoomCode, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Button } from '../components/controls';
 import { QrCode, SignalToasts } from '../components/OnlineParts';
+import { reloadForUpdate } from '../lib/appUpdate';
 import { t } from '../i18n';
 import { GAME_SERVER, useRoomConnection, type RoomState } from '../lib/online';
 import { stageScale } from '../lib/stage';
@@ -166,7 +167,7 @@ export function DisplayScreen({ code: rawCode }: { code: string }) {
     case 'gone':
       return <Message text={t('online.notFound')} />;
     case 'outdated':
-      return <Message text={t('online.outdated')} action={<Button onClick={() => window.location.reload()}>↻</Button>} />;
+      return <Message text={t('online.outdated')} action={<Button onClick={reloadForUpdate}>↻</Button>} />;
     case 'kicked':
     case 'left':
       return <Message text={t('online.notFound')} />;

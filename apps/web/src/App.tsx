@@ -1,3 +1,4 @@
+import { UpdateBanner } from './components/UpdateBanner';
 import { useRoute } from './lib/router';
 import { DisplayScreen } from './screens/Display';
 import { Home } from './screens/Home';
@@ -11,6 +12,15 @@ import { Setup } from './screens/Setup';
 import { SoundSettingsScreen } from './screens/SoundSettings';
 
 export function App() {
+  return (
+    <>
+      <Screen />
+      <UpdateBanner />
+    </>
+  );
+}
+
+function Screen() {
   const route = useRoute();
   switch (route.name) {
     case 'setup':
