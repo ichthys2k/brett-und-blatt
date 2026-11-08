@@ -248,7 +248,7 @@ function Album() {
 
 function QrCode({ text }: { text: string }) {
   const svg = useMemo(() => renderSVG(text, { border: 2, whiteColor: '#ffffff', blackColor: '#1f2328' }), [text]);
-  return <div role="img" aria-label="QR-Code mit dem Sicherungscode" className="cs-qr" dangerouslySetInnerHTML={{ __html: svg }} />;
+  return <div role="img" aria-label="QR-Code mit dem Rettungscode" className="cs-qr" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
 function timeText(ms: number): string {
@@ -286,7 +286,7 @@ function CloudSync({ linkCode }: { linkCode?: string | null }) {
         autoCapitalize="characters"
         autoComplete="off"
         spellCheck={false}
-        aria-label="Sicherungscode eingeben"
+        aria-label="Rettungscode eingeben"
       />
       <button type="button" className={`cs-btn ${linkCode ? 'cs-btn-primary' : ''}`} disabled={sync.busy || !input.trim()} onClick={() => void connectSync(input)}>
         {sync.busy && linkCode ? 'Einen Moment …' : 'Mit Code verbinden'}
@@ -295,7 +295,7 @@ function CloudSync({ linkCode }: { linkCode?: string | null }) {
   );
   const create = (
     <button type="button" className={`cs-btn ${linkCode ? '' : 'cs-btn-primary'}`} disabled={sync.busy} onClick={() => void createSync()}>
-      {sync.busy && !linkCode ? 'Einen Moment …' : 'Sicherungscode anlegen'}
+      {sync.busy && !linkCode ? 'Einen Moment …' : 'Rettungscode anlegen'}
     </button>
   );
 
@@ -305,7 +305,7 @@ function CloudSync({ linkCode }: { linkCode?: string | null }) {
         <strong>☁️ Auf mehreren Geräten spielen</strong>
         {linkCode ? (
           <>
-            <p className="cs-small-text">Der Sicherungscode aus dem QR-Code ist eingetragen. Verbinde dieses Gerät, dann kommt dein Fortschritt hierher und wird mit dem Stand auf diesem Gerät zusammengeführt.</p>
+            <p className="cs-small-text">Der Rettungscode aus dem QR-Code ist eingetragen. Verbinde dieses Gerät, dann kommt dein Fortschritt hierher und wird mit dem Stand auf diesem Gerät zusammengeführt.</p>
             {connect}
             <p className="cs-small-text">Oder eine neue, eigene Sicherung beginnen:</p>
             {create}
@@ -313,7 +313,7 @@ function CloudSync({ linkCode }: { linkCode?: string | null }) {
         ) : (
           <>
             <p className="cs-small-text">
-              Lege einen Sicherungscode an. Dein Fortschritt wird damit schon in diesem Browser verschlüsselt und auf dem Spieleserver abgelegt. Mit dem Code
+              Lege einen Rettungscode an. Dein Fortschritt wird damit schon in diesem Browser verschlüsselt und auf dem Spieleserver abgelegt. Mit dem Code
               holst du ihn auf jedes andere Gerät, danach gleichen sich die Geräte nach jedem Hoftag von selbst ab. Kein Konto, kein Name.
             </p>
             {create}
@@ -334,7 +334,7 @@ function CloudSync({ linkCode }: { linkCode?: string | null }) {
   return (
     <section className="cs-panel">
       <strong>☁️ Verbunden</strong>
-      <p className="cs-small-text">Dein Sicherungscode:</p>
+      <p className="cs-small-text">Dein Rettungscode:</p>
       <code className="cs-sync-code">{formatCode(sync.code)}</code>
       <p className="cs-small-text">
         Gib ihn auf dem anderen Gerät unter „💾 Sichern“ ein oder scanne dort den QR-Code. Bewahre ihn gut auf: Ohne Code lässt sich die Sicherung nicht öffnen, auch

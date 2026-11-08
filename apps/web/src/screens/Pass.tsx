@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Button } from '../components/controls';
 import { AlbumBook } from '../components/AlbumBook';
+import { RescueHint } from '../components/RescueHint';
 import { StampBook } from '../components/StampBook';
 import { TrophyCabinet } from '../components/TrophyCabinet';
 import { t } from '../i18n';
@@ -116,6 +117,8 @@ export function PassScreen() {
         </Button>
         <h1 className="text-2xl font-bold">🪪 {t('pass.page')}</h1>
       </header>
+
+      <RescueHint />
 
       <StampBook />
 

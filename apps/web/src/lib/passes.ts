@@ -24,7 +24,7 @@ export interface PassEntry {
   avatar: string;
   /** Wappen des Passes (Beschreibung), für die Passwahl. */
   crest?: string;
-  /** Gibt es einen Spielercode oder Sicherungscode? Ohne ginge der Pass mit dem Gerät verloren. */
+  /** Gibt es einen Spielercode oder Rettungscode? Ohne ginge der Pass mit dem Gerät verloren. */
   hasCode: boolean;
   /** Gast: zeichnet nichts auf, seine Daten werden beim Wechsel gelöscht. */
   guest?: boolean;
@@ -54,6 +54,7 @@ export const SCOPED_KEYS = [
   'brett-und-blatt:einstellungen-staende',
   'brett-und-blatt:partiebuch',
   'brett-und-blatt:wappen',
+  'brett-und-blatt:rettung',
   'brett-und-blatt:album',
   'brett-und-blatt:chronik',
   'brett-und-blatt:pokale',

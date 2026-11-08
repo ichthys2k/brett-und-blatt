@@ -4,12 +4,12 @@ import { deriveKeys, keysFromCode, NARRENHOF_SALT, open, parseCode, randomCode, 
 /**
  * Sicherung über Geräte hinweg (W-018, W-050), ohne Konto.
  *
- * - **Sicherungscode:** 16 Zeichen, gilt für die ganze Plattform. Jedes Spiel leitet daraus mit
+ * - **Rettungscode:** 16 Zeichen, gilt für die ganze Plattform. Jedes Spiel leitet daraus mit
  *   eigenem Salt eine eigene Kennung und einen eigenen Schlüssel ab und legt einen eigenen Block
  *   ab; der Server sieht nur verschlüsselte Daten (`PUT/GET /sicherung/<Kennung>`).
  * - **Abgleich:** holen, mit dem eigenen Stand zusammenführen, zurückschreiben.
  * - **Passkey:** Ein Passkey mit PRF-Erweiterung liefert ein zweites Geheimnis. Darunter liegt
- *   verschlüsselt nur der Sicherungscode – so holt ein neues Gerät den Code per Fingerabdruck
+ *   verschlüsselt nur der Rettungscode – so holt ein neues Gerät den Code per Fingerabdruck
  *   statt per Abtippen. Wo PRF fehlt, bleibt der Code.
  */
 
@@ -41,7 +41,7 @@ export interface SyncState {
   /**
    * Passkeys, die von diesem Gerät aus angelegt oder benutzt wurden (Kennungen als Base64url).
    * Es dürfen beliebig viele sein – etwa einer in iCloud, einer bei Google, ein Sicherheitsschlüssel.
-   * Jeder hat sein eigenes Schloss beim Server, darin jeweils der Sicherungscode.
+   * Jeder hat sein eigenes Schloss beim Server, darin jeweils der Rettungscode.
    */
   passkeys: string[];
   busy: boolean;
@@ -95,7 +95,7 @@ export function useSyncState(): SyncState {
   );
 }
 
-/** Der Sicherungscode dieses Geräts, außerhalb von React. */
+/** Der Rettungscode dieses Geräts, außerhalb von React. */
 export function currentSyncCode(): string | null {
   return state.code;
 }
@@ -186,7 +186,7 @@ export async function syncBlockWithKeys<T>(block: SyncBlock<T>, keys: VaultKeys,
   throw new SyncError('Andere Geräte schreiben gerade gleichzeitig. Gleich noch einmal versuchen.');
 }
 
-/** Ein Abgleich über den Sicherungscode. */
+/** Ein Abgleich über den Rettungscode. */
 async function syncWith<T>(block: SyncBlock<T>, code: string, requireExisting: boolean): Promise<void> {
   const keys = await keysFromCode(code, block.salt);
   const others = await touchOtherBlocks(block.serverUrl, code, block.salt);
@@ -329,7 +329,7 @@ export async function passkeySupport(): Promise<'yes' | 'maybe' | 'no'> {
   return 'maybe';
 }
 
-const NO_PRF = 'Dieser Browser oder Passkey-Speicher kann die nötige Erweiterung (PRF) noch nicht. Nimm hier bitte den Sicherungscode.';
+const NO_PRF = 'Dieser Browser oder Passkey-Speicher kann die nötige Erweiterung (PRF) noch nicht. Nimm hier bitte den Rettungscode.';
 
 function passkeyError(error: unknown): never {
   if (error instanceof SyncError) throw error;
@@ -340,7 +340,7 @@ function passkeyError(error: unknown): never {
 }
 
 /**
- * Legt einen (weiteren) Passkey an und hinterlegt darunter verschlüsselt den Sicherungscode.
+ * Legt einen (weiteren) Passkey an und hinterlegt darunter verschlüsselt den Rettungscode.
  * Schon bekannte Passkeys werden ausgeschlossen, damit derselbe Speicher keinen zweiten bekommt.
  */
 export function createPasskey(serverUrl: Server): Promise<boolean> {
@@ -394,7 +394,7 @@ export function createPasskey(serverUrl: Server): Promise<boolean> {
   });
 }
 
-/** Holt mit einem Passkey den Sicherungscode und verbindet dieses Gerät. */
+/** Holt mit einem Passkey den Rettungscode und verbindet dieses Gerät. */
 export function connectWithPasskey<T>(block: SyncBlock<T>): Promise<boolean> {
   return run(async () => {
     const salt = await prfSalt();

@@ -6,11 +6,11 @@ import { SyncError, syncBlockWithKeys, type SyncBlock } from './vault';
  *
  * Aus ihm leitet HKDF für jeden Block des Passes (`einstellungen`, `partiebuch`, `chronik`, `album`, …) eine eigene
  * Kennung und einen eigenen Schlüssel ab. Wer den Passschlüssel hat, öffnet alle Blöcke; der Server sieht nur
- * verschlüsselte Daten. Der Passschlüssel selbst liegt im Ausweis (`PlayerPass.passKey`), den Sicherungscode,
+ * verschlüsselte Daten. Der Passschlüssel selbst liegt im Ausweis (`PlayerPass.passKey`), den Rettungscode,
  * Spielercode und Passkey öffnen – später zusätzlich hinter PIN oder Passwort (#138).
  *
  * Blöcke melden sich mit `registerPassBlock` an, statt in einer festen Liste zu stehen. Die älteren Blöcke
- * (Narrenhof, Drachenspiel, Ausweis) leiten ihre Schlüssel weiter aus dem Sicherungscode ab und bleiben unverändert.
+ * (Narrenhof, Drachenspiel, Ausweis) leiten ihre Schlüssel weiter aus dem Rettungscode ab und bleiben unverändert.
  */
 
 const KEY_BYTES = 32;

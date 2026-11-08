@@ -9,7 +9,7 @@ import { SyncError } from './vault';
  * Aus Spielercode und **PIN oder Passwort** rechnet PBKDF2 zwei Werte: `auth` (der Beweis, den der Server
  * prüft) und `wrap` (bleibt im Browser). Der Inhalt – der Ausweis mit Passschlüssel – ist mit
  * `HKDF(wrap ‖ Serveranteil)` verschlüsselt. Den Serveranteil gibt der Server nur bei richtigem `auth` heraus.
- * Die **Notfallkarte** ist der Sicherungscode; aus ihm leitet HKDF den Wert `recovery` ab, mit dem sich ein
+ * Die **Rettungskarte** ist der Rettungscode; aus ihm leitet HKDF den Wert `recovery` ab, mit dem sich ein
  * vergessenes oder gesperrtes Schloss zurücksetzen lässt.
  */
 
@@ -65,7 +65,7 @@ export async function stretchSecret(code: string, secret: string, rounds = LOCK_
   return { auth: toBase64Url(bits.slice(0, 32)), wrap: toBase64Url(bits.slice(32)) };
 }
 
-/** Notfallwert aus dem Sicherungscode (die Notfallkarte). */
+/** Notfallwert aus dem Rettungscode (die Rettungskarte). */
 export async function recoveryProof(syncCode: string): Promise<string> {
   const base = await crypto.subtle.importKey('raw', enc.encode(syncCode), 'HKDF', false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: enc.encode('brett-und-blatt/schloss-notfall/v1'), info: enc.encode('recovery') }, base, 256);
@@ -100,7 +100,7 @@ export function lockMessage(status: number, body: Json): string {
     return left === null ? 'Das stimmt nicht.' : left > 0 ? `Falsch. Noch ${left} ${left === 1 ? 'Versuch' : 'Versuche'}, danach ist der Ausweis gesperrt.` : 'Falsch. Der Ausweis ist jetzt gesperrt.';
   }
   if (status === 423) {
-    if (body.locked) return 'Dieser Ausweis ist nach zu vielen Fehlversuchen gesperrt. Mit der Notfallkarte (Sicherungscode) lässt er sich wieder öffnen.';
+    if (body.locked) return 'Dieser Ausweis ist nach zu vielen Fehlversuchen gesperrt. Mit der Rettungskarte (Rettungscode) lässt er sich wieder öffnen.';
     return `Zu viele Fehlversuche. Bitte in ${waitText(Number(body.waitMs) || 60_000)} noch einmal versuchen.`;
   }
   if (status === 404) return 'Zu diesem Spielercode gibt es keinen Ausweis. Bitte genau abschreiben.';
@@ -144,7 +144,7 @@ async function sealPass(secrets: LockSecrets, share: string, pass: PlayerPass): 
 }
 
 async function openPassContent(secrets: LockSecrets, share: string, data: string): Promise<PlayerPass> {
-  if (!data) throw new SyncError('Das Schloss ist unvollständig. Bitte mit der Notfallkarte zurücksetzen.');
+  if (!data) throw new SyncError('Das Schloss ist unvollständig. Bitte mit der Rettungskarte zurücksetzen.');
   try {
     const value = (await open(await contentKeys(secrets, share), data)) as { player?: unknown };
     const pass = sanitizePlayerPass(value?.player);
@@ -155,7 +155,7 @@ async function openPassContent(secrets: LockSecrets, share: string, data: string
   throw new SyncError('Der Ausweis lässt sich nicht öffnen.');
 }
 
-/** Legt das Schloss an. Die Notfallkarte (Sicherungscode) muss es schon geben. */
+/** Legt das Schloss an. Die Rettungskarte (Rettungscode) muss es schon geben. */
 export async function createPassLock(serverUrl: Server, code: string, secrets: LockSecrets, syncCode: string, pass: PlayerPass): Promise<void> {
   const id = await lockId(code);
   const made = await call(serverUrl, id, 'anlegen', { auth: secrets.auth, recovery: await recoveryProof(syncCode) });
@@ -189,7 +189,7 @@ export async function changePassLock(serverUrl: Server, code: string, oldSecrets
   await call(serverUrl, id, 'aendern', { auth: oldSecrets.auth, newAuth: newSecrets.auth, data: await sealPass(newSecrets, String(opened.share), { ...pass, code }) });
 }
 
-/** Setzt das Schloss mit der Notfallkarte zurück (vergessene oder gesperrte PIN) und setzt eine neue. */
+/** Setzt das Schloss mit der Rettungskarte zurück (vergessene oder gesperrte PIN) und setzt eine neue. */
 export async function resetPassLock(serverUrl: Server, code: string, syncCode: string, newSecrets: LockSecrets, pass: PlayerPass): Promise<void> {
   const id = await lockId(code);
   // Der Serveranteil kommt erst mit der Antwort; darum zuerst mit leerem Inhalt zurücksetzen lassen, dann beschreiben.
@@ -201,7 +201,7 @@ export async function resetPassLock(serverUrl: Server, code: string, syncCode: s
   await call(serverUrl, id, 'speichern', { auth: newSecrets.auth, data: await sealPass(newSecrets, share, { ...pass, code }), rev: Number(opened.rev) });
 }
 
-/** Entfernt das Schloss (mit PIN oder Notfallkarte). */
+/** Entfernt das Schloss (mit PIN oder Rettungskarte). */
 export async function removePassLock(serverUrl: Server, code: string, proof: { auth: string } | { syncCode: string }): Promise<void> {
   const body = 'auth' in proof ? { auth: proof.auth } : { recovery: await recoveryProof(proof.syncCode) };
   await call(serverUrl, await lockId(code), 'loeschen', body);

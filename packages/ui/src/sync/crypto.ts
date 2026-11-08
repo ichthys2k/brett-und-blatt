@@ -1,7 +1,7 @@
 /**
  * Schlüssel und Verschlüsselung der Sicherungen (W-018, W-050), nur mit Web Crypto.
  *
- * Aus einem Geheimnis – dem Sicherungscode oder der PRF-Ausgabe eines Passkeys – leitet HKDF
+ * Aus einem Geheimnis – dem Rettungscode oder der PRF-Ausgabe eines Passkeys – leitet HKDF
  * (SHA-256) zwei unabhängige Werte ab: die **Kennung**, unter der der Server den Block ablegt,
  * und den **Schlüssel** (AES-GCM, 256 Bit), mit dem der Browser ver- und entschlüsselt. Aus der
  * Kennung lässt sich der Schlüssel nicht zurückrechnen; der Server sieht nur Datensalat.
@@ -53,7 +53,7 @@ function hex(bytes: ArrayBuffer): string {
 export const NARRENHOF_SALT = 'brett-und-blatt/narrenhof-sicherung/v1';
 
 /**
- * Leitet Kennung und Schlüssel ab. `purpose` trennt Sicherungscode und Passkey-Schloss, `saltText` die
+ * Leitet Kennung und Schlüssel ab. `purpose` trennt Rettungscode und Passkey-Schloss, `saltText` die
  * Spiele: Aus demselben Code entsteht je Spiel ein eigener Block.
  */
 export async function deriveKeys(secret: Uint8Array, purpose: 'code' | 'passkey', saltText = NARRENHOF_SALT): Promise<VaultKeys> {

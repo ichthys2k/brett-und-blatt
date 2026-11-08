@@ -220,11 +220,11 @@ function CloudDecks() {
     return (
       <details className="ds-builder-list" open={Boolean(linkCode)}>
         <summary>☁️ Decks auf anderen Geräten</summary>
-        <p className="ds-builder-hint">Der Sicherungscode gilt für alle Spiele, auch ein Code aus dem Narrenhof passt. Deine Decks werden schon im Browser verschlüsselt. Kein Konto, kein Name.</p>
+        <p className="ds-builder-hint">Der Rettungscode gilt für alle Spiele, auch ein Code aus dem Narrenhof passt. Deine Decks werden schon im Browser verschlüsselt. Kein Konto, kein Name.</p>
         <button type="button" className="ds-btn" disabled={sync.busy} onClick={() => void createSync(decksBlock)}>
-          Sicherungscode anlegen
+          Rettungscode anlegen
         </button>
-        <input className="ds-input" value={input} placeholder="XXXX-XXXX-XXXX-XXXX" autoCapitalize="characters" autoComplete="off" spellCheck={false} aria-label="Sicherungscode eingeben" onChange={(event) => setInput(event.target.value)} />
+        <input className="ds-input" value={input} placeholder="XXXX-XXXX-XXXX-XXXX" autoCapitalize="characters" autoComplete="off" spellCheck={false} aria-label="Rettungscode eingeben" onChange={(event) => setInput(event.target.value)} />
         <button type="button" className="ds-btn" disabled={sync.busy || !input.trim()} onClick={() => void connectSync(decksBlock, input)}>
           Mit Code verbinden
         </button>
@@ -258,7 +258,7 @@ function CloudDecks() {
           Gerät trennen
         </button>
       </div>
-      {showQr && <QrCode text={syncLink(sync.code, 'drachenspiel')} label="QR-Code mit dem Sicherungscode" />}
+      {showQr && <QrCode text={syncLink(sync.code, 'drachenspiel')} label="QR-Code mit dem Rettungscode" />}
       {error}
     </details>
   );
