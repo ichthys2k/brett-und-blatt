@@ -210,3 +210,5 @@ DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
 ```
+
+Das Hauptbild der Taverne im Hauptmenü und auf den Unterseiten (`apps/web/src/menu/taverne-hinten.webp`, `taverne-vorn.webp`, `taverne-hoch.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen, November 2026. Auswahl durch Cornelius Lipponer. Die Ebenen (Raum ohne Tisch, Tisch freigestellt auf grünem Grund) entstanden aus dem gewählten Querformat-Bild durch Bildbearbeitung mit demselben Modell; das Freistellen übernahm ein kleines Skript (Grün entfernen, Rand glätten). Das Bild zeigt einen leeren Raum mit Kamin, Laternen sowie Karten und Würfeln auf einem Tisch, ohne Personen, Schrift, Logos oder Marken; die Kartenbilder sind frei erfunden. Es trug kein sichtbares Wasserzeichen.

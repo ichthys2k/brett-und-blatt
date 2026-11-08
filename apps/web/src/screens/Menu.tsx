@@ -1,12 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { TavernScene } from '../components/TavernScene';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 import './menu.css';
 
 /**
- * Hauptmenü (#184, Schritt 1): eine Taverne als Hintergrund und ein Rahmen mit fünf Einträgen,
- * wie das Menü von Warcraft III. Die Szene ist reiner Schmuck (aria-hidden); sie folgt der Maus
- * nur leicht und steht bei „Bewegung reduzieren“ still.
+ * Hauptmenü (#184, Schritt 1): eine Taverne (Bild, #191) als Hintergrund und ein Rahmen mit fünf Einträgen,
+ * wie das Menü von Warcraft III. Die Szene (`TavernScene`) ist reiner Schmuck.
  */
 const ENTRIES: readonly { id: string; label: string; hint: string; to: string }[] = [
   { id: 'single', label: 'Einzelspieler', hint: 'Allein gegen den Computer oder zu mehreren an einem Gerät.', to: paths.home },
@@ -17,50 +16,12 @@ const ENTRIES: readonly { id: string; label: string; hint: string; to: string }[
 ];
 
 export function Menu() {
-  const scene = useRef<HTMLDivElement>(null);
   const profile = storage.loadProfile();
   const resume = storage.loadActive();
 
-  useEffect(() => {
-    const el = scene.current;
-    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const move = (event: PointerEvent) => {
-      el.style.setProperty('--mx', String(event.clientX / window.innerWidth - 0.5));
-      el.style.setProperty('--my', String(event.clientY / window.innerHeight - 0.5));
-    };
-    window.addEventListener('pointermove', move);
-    return () => window.removeEventListener('pointermove', move);
-  }, []);
-
   return (
     <div className="bub-menu">
-      <div className="bub-menu-scene" ref={scene} aria-hidden="true">
-        <div className="bub-menu-layer bub-menu-wall">
-          <span className="bub-menu-window" />
-          <span className="bub-menu-window" />
-          <span className="bub-menu-window" />
-        </div>
-        <div className="bub-menu-layer bub-menu-beams">
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className="bub-menu-layer bub-menu-glow" />
-        <div className="bub-menu-layer bub-menu-hearth" />
-        <div className="bub-menu-layer bub-menu-motes">
-          {Array.from({ length: 14 }, (_, i) => (
-            <span key={i} style={{ left: `${(i * 37) % 97}%`, animationDelay: `${(i * 1.7) % 9}s`, animationDuration: `${9 + (i % 5) * 2}s` }} />
-          ))}
-        </div>
-        <div className="bub-menu-layer bub-menu-table">
-          <span className="bub-menu-card" />
-          <span className="bub-menu-card" />
-          <span className="bub-menu-card" />
-          <span className="bub-menu-die" />
-          <span className="bub-menu-die" />
-        </div>
-        <div className="bub-menu-shade" />
-      </div>
+      <TavernScene />
 
       <h1 className="bub-menu-logo">
         Brett &amp; Blatt
