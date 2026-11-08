@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Button, Section } from '../components/controls';
 import { EmojiKeypad, ProfileForm } from '../components/OnlineParts';
 import { OpenRooms } from '../components/OpenRooms';
-import { PlayerPassPanel } from '../components/PlayerPassPanel';
 import { TournamentsPanel } from '../components/TournamentsPanel';
 import { t } from '../i18n';
 import { GAME_SERVER, createRoom, roomExists, useOpenRooms } from '../lib/online';
@@ -80,8 +79,8 @@ export function Online() {
               {profile.avatar}
             </span>
             <span className="flex-1 font-semibold">{profile.name}</span>
-            <Button variant="ghost" onClick={() => setEditing(true)}>
-              ✏️ {t('online.name')}
+            <Button variant="ghost" onClick={() => navigate(paths.pass)}>
+              ✏️ Profil
             </Button>
           </section>
 
@@ -125,16 +124,6 @@ export function Online() {
             </form>
           </Section>
         </>
-      )}
-
-      {GAME_SERVER && (
-        <PlayerPassPanel
-          onChange={() => {
-            const next = storage.loadProfile();
-            setProfile(next);
-            setEditing(next === null);
-          }}
-        />
       )}
 
       {error && (

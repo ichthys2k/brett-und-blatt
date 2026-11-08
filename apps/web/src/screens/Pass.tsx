@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Button } from '../components/controls';
+import { Button, Section } from '../components/controls';
+import { ProfileForm } from '../components/OnlineParts';
+import { PlayerPassPanel } from '../components/PlayerPassPanel';
 import { AlbumBook } from '../components/AlbumBook';
 import { RescueHint } from '../components/RescueHint';
 import { StampBook } from '../components/StampBook';
@@ -11,7 +13,10 @@ import { hasReplay, loadBook, loadBookRecent, loadChronik, pinGame, unpinGame } 
 import { levelLabel } from '../lib/format';
 import type { PlayedGame } from '../lib/partiebuch';
 import { findGame } from '../lib/registry';
+import { GAME_SERVER } from '../lib/online';
+import { saveOwnProfile } from '../lib/playerPass';
 import { navigate, paths } from '../lib/router';
+import { storage, type Profile } from '../lib/storage';
 
 const OUTCOME_ICON = { win: '🏆', draw: '🤝', loss: '▫️' } as const;
 
@@ -95,6 +100,8 @@ export function PassScreen() {
   const [version, setVersion] = useState(0);
   const [gameFilter, setGameFilter] = useState('');
   const [message, setMessage] = useState<string | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
+  const [editing, setEditing] = useState(profile === null);
   void version;
   const chronik = loadChronik();
   const pinnedIds = new Set(pinnedList(chronik).map((item) => item.id));
@@ -117,6 +124,30 @@ export function PassScreen() {
         </Button>
         <h1 className="text-2xl font-bold">🪪 {t('pass.page')}</h1>
       </header>
+
+      {editing || !profile ? (
+        <Section title={t('online.profile')}>
+          <ProfileForm
+            initial={profile}
+            submitLabel="OK"
+            onSave={(next) => {
+              saveOwnProfile(next);
+              setProfile(next);
+              setEditing(false);
+            }}
+          />
+        </Section>
+      ) : (
+        <section className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 shadow-sm">
+          <span className="text-3xl" aria-hidden="true">
+            {profile.avatar}
+          </span>
+          <span className="flex-1 text-lg font-semibold">{profile.name}</span>
+          <Button variant="ghost" onClick={() => setEditing(true)}>
+            ✏️ {t('online.name')}
+          </Button>
+        </section>
+      )}
 
       <RescueHint />
 
@@ -199,6 +230,21 @@ export function PassScreen() {
           </p>
         )}
       </section>
+
+      {GAME_SERVER && (
+        <details className="rounded-2xl border border-line bg-surface p-4">
+          <summary className="cursor-pointer text-xl font-bold">🔐 Sicherheit &amp; Geräte</summary>
+          <div className="mt-3">
+            <PlayerPassPanel
+              onChange={() => {
+                const next = storage.loadProfile();
+                setProfile(next);
+                setEditing(next === null);
+              }}
+            />
+          </div>
+        </details>
+      )}
     </div>
   );
 }
