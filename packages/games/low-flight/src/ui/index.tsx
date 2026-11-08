@@ -107,12 +107,13 @@ function name(names: string[], seat: SeatId): string {
   return names[seat] ?? `Platz ${seat + 1}`;
 }
 
-export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, seatNames, events, hint }: BoardProps<LowFlightView, LowFlightMove>) {
+export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, seatNames, events, hint, display }: BoardProps<LowFlightView, LowFlightMove>) {
   const junior = view.options.variant === 'junior';
   // Am geteilten Gerät gilt der Platz, der gerade handelt; während Bot-Zügen bleibt der letzte Mensch unten.
   const lastMe = useRef<SeatId>(0);
   if (typeof viewer === 'number') lastMe.current = viewer;
-  const me = lastMe.current;
+  // Tisch-Bildschirm (#100): Wer gerade dran ist, sitzt unten und groß, die anderen klein darüber.
+  const me = display ? view.turn : lastMe.current;
   const myTurn = activeSeat === me && legalMoves.length > 0;
   const [discarding, setDiscarding] = useState(false);
   useEffect(() => setDiscarding(false), [view.drawn, view.turn]);

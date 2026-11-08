@@ -32,3 +32,13 @@ describe('Hand-Ansicht anbieten (#100)', () => {
     expect(parseHandViewChoice('quatsch')).toBeNull();
   });
 });
+
+describe('Tisch-Bildschirm-Ansicht der Spiele (#100)', () => {
+  it('diese Spiele werten BoardProps.display aus (alle Plätze gleich, keine eigene Hand)', () => {
+    const withDisplay: string[] = [];
+    for (const [path, source] of Object.entries(uis)) {
+      if (/\bdisplay(:\s*\w+)?,?\s*\}\s*:\s*BoardProps|^\s*display(:\s*\w+)?,\s*$/m.test(source)) withDisplay.push(path.split('/')[3]!);
+    }
+    expect(withDisplay.sort()).toEqual(['binokel', 'doppelkopf', 'low-flight', 'schafkopf', 'skat']);
+  });
+});

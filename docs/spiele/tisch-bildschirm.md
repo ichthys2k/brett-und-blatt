@@ -43,10 +43,26 @@ Die Spielszene läuft auf einer **Bühne** (`Stage` in `Display.tsx`, Faktor `st
 - Bewusst ohne Hand-Ansicht: Schwarzer Peter (Ziehen aus der Mitte), Quartett (Mitspieler wählen), Domino (Anlegeseite wählen am Tisch), Tiefflug (Stapel und eigenes Raster gehören zusammen) – die Züge hängen am Tisch, eine reine Handansicht wäre nicht spielbar.
 - Neue Spiele: `handOnly` auswerten, `handView: true` setzen, eigene CSS-Klassen mit Spielpräfix. Weitere Spiele (Karten-Anlegespiele, Würfelspiele) folgen nach demselben Muster.
 
+## Schritt 2c (umgesetzt für Stichspiele und Tiefflug): Ansicht der Spiele auf dem Tisch-Bildschirm
+
+`BoardProps.display` sagt dem Spielfeld, dass es auf dem Tisch-Bildschirm läuft: kein eigener Platz, keine eigene Hand, alle Plätze gleich. Zuschauer sehen weiter die bisherige Darstellung (der erste Platz als „Ich“).
+
+- **Skat, Doppelkopf, Schafkopf, Binokel:** Der Platz unten zeigt wie die anderen Chip und verdeckten Fächer; „Deine Hand (n Karten)“ entfällt.
+- **Tiefflug:** Wer gerade dran ist, sitzt groß unten, die anderen klein darüber (statt immer Platz 0 groß).
+- Geprüft auf 1920 × 1080 an vierzehn Spielen; die übrigen sehen als Zuschauer-Darstellung schon passend aus (Mau-Mau, Eins!, Elf zuerst!, Präsident, Schwarzer Peter, Domino, Poker, Marktstände). Mäxle zeigt nur Becher und Verlauf, Quartett nur Kartenzahlen, weil die Karten geheim sind; dort bliebe der Tisch leer, bis aufgedeckt wird.
+
+## Schritt 4 (umgesetzt für den Raum): Spielleiter-Panel
+
+- **Fähigkeiten** (`packages/online/src/capabilities.ts`): `kick`, `rename`, `unseat`, `lockNames`, `restart`. `roomCapabilities(isHost)` füllt sie aus der Raumleitung; das Turnier kann sie später aus Leitung, Mitleitung und Helfer füllen und dasselbe Panel nutzen. Die Liste ist nur Anzeigehilfe, der Server prüft jede Nachricht weiter selbst.
+- **Panel** (`apps/web/src/components/ModeratorPanel.tsx`, Eintrag „🛠 Spielleitung“ unter dem Spielfeld, `ModeratorEntry` in `Room.tsx`): Mitglieder mit Platz, Zuschauer-Status, „Computer spielt“ und Verbindung; je Mitglied Namen und Bild festlegen, vom Platz nehmen, entfernen; dazu „Namen festlegen“, „Neu starten“, „Zurück in die Lobby“ und die Zahl der Tisch-Bildschirme. Es zeigt nur, was `capabilities` erlaubt.
+- Die Raumleitung braucht **keinen Platz**: In der Lobby muss sie sich nicht setzen, im Spiel sieht sie als Zuschauer alles Offene und moderiert über das Panel (etwa Lehrkraft am Tablet, Tisch-Bildschirm an der Tafel).
+- Die frühere Liste „Plätze im Spiel“ (nur vom Platz nehmen) ist im Panel aufgegangen; „Platz übernehmen“ für Zuschauer bleibt am Tisch.
+- Getestet im Browser mit Leitung ohne Platz und zwei Gästen: umbenennen, vom Platz nehmen, entfernen (der Gast bekommt „entfernt“).
+
 ## Noch offen
 
-- **Spielspezifische Fernsehansicht (`GameUi.tableView?`):** Wo die Zuschauer-Darstellung nicht passt, etwa im Skat der Fußplatz mit „Deine Hand (0 Karten)“ und verdeckten Karten. Dort sollte der Tisch alle Plätze gleich zeigen.
+- **Fernsehansicht für die übrigen Spiele** nur bei Bedarf: Spiele mit verborgenen Aktionen (Quartett, Mäxle) könnten auf dem Tisch den Verlauf größer zeigen.
 - **Hand-Ansicht für Spiele, deren Züge am Tisch hängen** (Schwarzer Peter, Quartett, Domino, Tiefflug): bräuchte eine kleine Tischfläche mit den nötigen Zielen statt einer reinen Hand.
-- **Spielleiter-Panel** mit dem Fähigkeiten-Modell, auch ohne Platz und während der Partie.
+- **Spielleiter-Panel im Turnier** (Leitung, Mitleitung, Helfer über dieselben Fähigkeiten) und **Punkte setzen** (spielabhängig, siehe unten).
 - **Weitere Szenen** auf demselben Rahmen: Turnierbaum (die Turnierseite hat schon einen Zuschaulink, `settings.spectators`) und Partie nachspielen (#99).
 - **Punkte setzen** ist spielabhängig; erst mit den Turnier-Stufen und einem optionalen `GameModule`-Haken klären.

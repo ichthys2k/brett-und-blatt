@@ -26,6 +26,7 @@ export function SkatBoard({
   seatNames,
   table,
   handOnly,
+  display,
 }: BoardProps<SkatState, SkatMove>) {
   const mySeat: number = typeof viewer === 'number' ? viewer : view.activeSeats[0];
   const isDeclarer = mySeat === view.declarerSeat;
@@ -321,10 +322,10 @@ export function SkatBoard({
           seats={seatNames.length}
           bottomSeat={mySeat}
           status={table.status}
-          bottom={hand}
+          bottom={display ? undefined : hand}
           renderSeat={(seat) => (
             <>
-              {seat !== mySeat && (view.hands[seat]?.length ?? 0) > 0 && (
+              {(display || seat !== mySeat) && (view.hands[seat]?.length ?? 0) > 0 && (
                 <div className="w-20" aria-hidden="true">
                   <CardFan count={view.hands[seat]!.length} label="" cardWidth={16} renderCard={() => <PlayingCard card={null} deckStyle={view.deckStyle} />} />
                 </div>
@@ -351,7 +352,7 @@ export function SkatBoard({
         <>
           {dialogs}
           {trick}
-          {hand}
+          {!display && hand}
           {roundEnd}
         </>
       )}
