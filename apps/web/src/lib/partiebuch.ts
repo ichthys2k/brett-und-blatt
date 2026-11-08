@@ -47,6 +47,8 @@ export type Counts = Record<string, Record<string, Record<string, Counter>>>;
 
 export interface Book {
   counts: Counts;
+  /** Stempel des Passes: Name → Zeitpunkt des ersten Mals (ms). Beim Zusammenführen gewinnt die früheste Zeit. */
+  stamps: Record<string, number>;
   /** Neueste zuerst. */
   recent: PlayedGame[];
 }
@@ -60,7 +62,7 @@ const LEVELS: readonly BotLevel[] = ['easy', 'medium', 'hard'];
 const ID_PATTERN = /^[\w.:/-]{1,80}$/;
 const GAME_PATTERN = /^[a-z0-9-]{1,40}$/;
 
-export const emptyBook = (): Book => ({ counts: {}, recent: [] });
+export const emptyBook = (): Book => ({ counts: {}, stamps: {}, recent: [] });
 
 /** Spielart aus den Plätzen: allein, gegen Bots oder mit mehreren Menschen an einem Gerät. */
 export function localMode(seats: readonly Pick<SeatConfig, 'kind'>[]): Mode {
@@ -86,6 +88,18 @@ export function outcomeFor(result: Result, seat: number): Outcome {
 const bucketOf = (mode: Mode, level: BotLevel | null) => `${mode}/${level ?? '-'}`;
 export const bucketKey = bucketOf;
 
+/** Welche Stempel verdient diese Partie? Namen: `<Spiel>/<Art>`; Arten siehe `stamps.ts`. */
+export function stampsEarnedBy(game: PlayedGame, level: BotLevel | null): string[] {
+  const out = [`${game.gameId}/first`];
+  if (game.outcome === 'win') {
+    out.push(`${game.gameId}/win`);
+    if (game.mode === 'bots' && level) out.push(`${game.gameId}/win-${level}`);
+  }
+  if (game.mode === 'online') out.push(`${game.gameId}/online`);
+  if (game.mode === 'tournament') out.push(`${game.gameId}/tournament`);
+  return out;
+}
+
 /** Trägt eine Partie ein; liegt ihre Kennung schon in den letzten Partien, geschieht nichts. */
 export function recordGame(book: Book, game: PlayedGame, deviceId: string, level: BotLevel | null): Book {
   if (book.recent.some((entry) => entry.id === game.id)) return book;
@@ -99,8 +113,11 @@ export function recordGame(book: Book, game: PlayedGame, deviceId: string, level
     drawn: before.drawn + (game.outcome === 'draw' ? 1 : 0),
     lost: before.lost + (game.outcome === 'loss' ? 1 : 0),
   };
+  const stamps = { ...(book.stamps ?? {}) };
+  for (const name of stampsEarnedBy(game, level)) if (!(name in stamps)) stamps[name] = game.endedAt;
   return {
     counts: { ...book.counts, [deviceId]: { ...device, [game.gameId]: { ...forGame, [key]: after } } },
+    stamps,
     recent: [game, ...book.recent].sort((a, b) => b.endedAt - a.endedAt).slice(0, MAX_RECENT),
   };
 }
@@ -146,7 +163,12 @@ function sanitizeGame(value: unknown): PlayedGame | null {
 export function sanitizeBook(value: unknown): Book {
   const book = emptyBook();
   if (!value || typeof value !== 'object') return book;
-  const { counts, recent } = value as { counts?: unknown; recent?: unknown };
+  const { counts, recent, stamps } = value as { counts?: unknown; recent?: unknown; stamps?: unknown };
+  if (stamps && typeof stamps === 'object') {
+    for (const [name, at] of Object.entries(stamps as Record<string, unknown>).slice(0, 800)) {
+      if (/^[a-z0-9-]{1,40}\/[a-z-]{3,20}$/.test(name) && typeof at === 'number' && Number.isFinite(at) && at > 0 && at <= MAX_TIME) book.stamps[name] = Math.floor(at);
+    }
+  }
   if (counts && typeof counts === 'object') {
     for (const [deviceId, games] of Object.entries(counts as Record<string, unknown>).slice(0, 20)) {
       if (!/^[\w-]{2,60}$/.test(deviceId) || !games || typeof games !== 'object') continue;
@@ -195,7 +217,9 @@ export function mergeBooks(remote: Book, local: Book): Book {
       }
     }
   }
-  return { counts, recent: dedupe([...local.recent, ...remote.recent]).slice(0, MAX_RECENT) };
+  const stamps: Record<string, number> = { ...(local.stamps ?? {}) };
+  for (const [name, at] of Object.entries(remote.stamps ?? {})) stamps[name] = name in stamps ? Math.min(stamps[name]!, at) : at;
+  return { counts, stamps, recent: dedupe([...local.recent, ...remote.recent]).slice(0, MAX_RECENT) };
 }
 
 /** Gleich, unabhängig von der Reihenfolge der Schlüssel. */

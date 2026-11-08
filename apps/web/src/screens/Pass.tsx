@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Button } from '../components/controls';
+import { StampBook } from '../components/StampBook';
 import { t } from '../i18n';
 import { pinnedList } from '../lib/chronik';
 import { formOf, levelStats, ratingOf, winRate } from '../lib/botRating';
@@ -113,6 +114,8 @@ export function PassScreen() {
         </Button>
         <h1 className="text-2xl font-bold">🪪 {t('pass.page')}</h1>
       </header>
+
+      <StampBook />
 
       <BotRating />
 
