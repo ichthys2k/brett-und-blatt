@@ -47,6 +47,11 @@ export interface BoardProps<V, M> {
    * Nur Spiele mit `GameUi.handView` bekommen das gesetzt.
    */
   handOnly?: boolean;
+  /**
+   * Das Spielfeld läuft auf einem Tisch-Bildschirm (#100): Es gibt keinen eigenen Platz und keine eigene Hand,
+   * alle Plätze sollen gleich aussehen (statt des ersten Platzes als „Ich“ wie bei Zuschauern).
+   */
+  display?: boolean;
 }
 
 /** Was ein Spiel der Oberfläche liefert. Die Plattform findet es über den Export `gameUi`. */

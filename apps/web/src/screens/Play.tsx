@@ -588,6 +588,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           invite={online?.invite}
           table={around && !handOnly ? { seatChip, status: statusContent } : undefined}
           handOnly={handOnly}
+          display={online?.display}
           canJoinSeat={session.canJoinSeat ? (seat) => session.canJoinSeat!(seat) : undefined}
           onJoinSeat={session.joinSeat ? (seat, kind, name) => session.joinSeat!(seat, kind, name) : undefined}
           canLeaveSeat={session.canLeaveSeat ? (seat) => session.canLeaveSeat!(seat) : undefined}

@@ -29,7 +29,7 @@ function SuitLabel({ suit, deck }: { suit: Suit; deck: DeckStyle }) {
 /** Handkarten in der Hand-Ansicht (#100): Es gibt nur die Hand, also dürfen sie größer sein. */
 const HAND_VIEW_CARD_WIDTH = 72;
 
-function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table, handOnly }: BoardProps<BinokelState, BinokelMove>) {
+function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table, handOnly, display: onTv }: BoardProps<BinokelState, BinokelMove>) {
   const mySeat = typeof viewer === 'number' ? viewer : 0;
   const name = (s: number) => seatNames[s] ?? `Platz ${s + 1}`;
   const myTurn = legalMoves.length > 0;
@@ -273,10 +273,10 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
           seats={seatNames.length}
           bottomSeat={mySeat}
           status={table.status}
-          bottom={handFan || undefined}
+          bottom={onTv ? undefined : handFan || undefined}
           renderSeat={(seat) => (
             <>
-              {seat !== mySeat && (view.hands[seat]?.length ?? 0) > 0 && (
+              {(onTv || seat !== mySeat) && (view.hands[seat]?.length ?? 0) > 0 && (
                 <div className="w-20" aria-hidden="true">
                   <CardFan count={view.hands[seat]!.length} label="" cardWidth={16} renderCard={() => <PlayingCard card={null} deckStyle={view.deckStyle} />} />
                 </div>
@@ -303,7 +303,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
         <>
           {dialogs}
           {trick}
-          {handFan}
+          {!onTv && handFan}
           {roundEnd}
         </>
       )}

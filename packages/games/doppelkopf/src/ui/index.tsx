@@ -21,6 +21,7 @@ export function DokoBoard({
   seatNames,
   table,
   handOnly,
+  display,
 }: BoardProps<DokoState, DokoMove>) {
   const mySeat: number = typeof viewer === 'number' ? viewer : view.activeSeats[0];
   // Sortiert nach dem laufenden Spiel (vor der Ansage nach dem üblichen Standardspiel).
@@ -289,10 +290,10 @@ export function DokoBoard({
           seats={seatNames.length}
           bottomSeat={mySeat}
           status={table.status}
-          bottom={hand}
+          bottom={display ? undefined : hand}
           renderSeat={(seat) => (
             <>
-              {seat !== mySeat && (view.hands[seat]?.length ?? 0) > 0 && (
+              {(display || seat !== mySeat) && (view.hands[seat]?.length ?? 0) > 0 && (
                 <div className="w-20" aria-hidden="true">
                   <CardFan count={view.hands[seat]!.length} label="" cardWidth={16} renderCard={() => <PlayingCard card={null} deckStyle={view.deckStyle} />} />
                 </div>
@@ -319,7 +320,7 @@ export function DokoBoard({
         <>
           {dialogs}
           {trick}
-          {hand}
+          {!display && hand}
           {roundEnd}
         </>
       )}

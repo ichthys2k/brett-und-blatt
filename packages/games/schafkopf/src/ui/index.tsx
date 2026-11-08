@@ -20,6 +20,7 @@ export function SchafkopfBoard({
   seatNames,
   table,
   handOnly,
+  display,
 }: BoardProps<SchafkopfState, SchafkopfMove>) {
   const mySeat: number = typeof viewer === 'number' ? viewer : 0;
   // Sortiert nach dem laufenden Spiel (vor der Ansage nach dem üblichen Standardspiel).
@@ -285,10 +286,10 @@ export function SchafkopfBoard({
           seats={seatNames.length}
           bottomSeat={mySeat}
           status={table.status}
-          bottom={hand}
+          bottom={display ? undefined : hand}
           renderSeat={(seat) => (
             <>
-              {seat !== mySeat && (view.hands[seat]?.length ?? 0) > 0 && (
+              {(display || seat !== mySeat) && (view.hands[seat]?.length ?? 0) > 0 && (
                 <div className="w-20" aria-hidden="true">
                   <CardFan count={view.hands[seat]!.length} label="" cardWidth={16} renderCard={() => <PlayingCard card={null} deckStyle={view.deckStyle} />} />
                 </div>
@@ -315,7 +316,7 @@ export function SchafkopfBoard({
         <>
           {dialogs}
           {trick}
-          {hand}
+          {!display && hand}
           {roundEnd}
         </>
       )}
