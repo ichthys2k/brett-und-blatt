@@ -9,6 +9,7 @@ import { passChanged, saveOwnProfile } from '../lib/playerPass';
 import { findGame, loadGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
+import { applyOfflineMessage, createOfflineTournament, isOfflineCode, loadOfflineRecord, syncOfflineTournament } from '../lib/offlineTournament';
 import { createTournament, useTournament } from '../lib/tournament';
 
 type Match = TournamentView['matches'][number];
@@ -363,6 +364,7 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
       <Page>
         {header}
         {subtitle}
+        {isOfflineCode(code) && <OfflineBar code={code} />}
         {local ? <LocalSignup view={view} code={code} send={send} /> : <SignupView view={view} code={code} send={send} />}
         {banners}
       </Page>
@@ -394,6 +396,7 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
     <Page>
       {header}
       {subtitle}
+      {isOfflineCode(code) && <OfflineBar code={code} />}
       {view.phase === 'finished' && <Podium view={view} />}
       {view.phase === 'finished' && isLocalView(view) && view.isLeader && <NextPhase view={view} />}
       <RoundStart view={view} send={send} />
@@ -1232,11 +1235,15 @@ function NextPhase({ view }: { view: TournamentView }) {
     try {
       const s = view.settings;
       const seeded = format === 'knockout' || format === 'double' || format === 'world';
-      const code = await createTournament(
-        { name: `${s.name} · ${t('tournament.phase2')}`.slice(0, 40), gameId: s.gameId, format, time: 'normal', days: 1, thirdPlace: false, isPublic: false, mode: 'local', sport: s.sport, result: s.result ?? 'winner', draws: s.draws === true, fieldLabel: s.fieldLabel ?? 'Tisch', spectators: s.spectators === true, ...(seeded ? { seeded: true } : {}), fields: view.fields },
-        profile,
-        ranked.slice(0, count).map((p) => p.name),
-      );
+      const next = { name: `${s.name} · ${t('tournament.phase2')}`.slice(0, 40), gameId: s.gameId, format, time: 'normal' as const, days: 1, thirdPlace: false, isPublic: false, mode: 'local' as const, sport: s.sport, result: s.result ?? 'winner', draws: s.draws === true, fieldLabel: s.fieldLabel ?? 'Tisch', spectators: s.spectators === true, ...(seeded ? { seeded: true } : {}) };
+      const names = ranked.slice(0, count).map((p) => p.name);
+      let code: string;
+      if (isOfflineCode(view.code)) {
+        // Ohne Netz bleibt auch die nächste Phase auf diesem Gerät.
+        const created = createOfflineTournament(next, profile, view.fields);
+        if (!created || !applyOfflineMessage(created, profile, { type: 'addEntrants', names }).ok) throw new Error('offline');
+        code = created;
+      } else code = await createTournament({ ...next, fields: view.fields }, profile, names);
       storage.rememberTournament({ code, name: `${s.name} · ${t('tournament.phase2')}`.slice(0, 40) });
       navigate(paths.tournament(code));
     } catch {
@@ -1276,6 +1283,55 @@ function NextPhase({ view }: { view: TournamentView }) {
       </Button>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
     </Section>
+  );
+}
+
+/** Hinweis und Abgleich für ein Turnier, das ohne Netz auf diesem Gerät geleitet wird (Stufe 6). */
+function OfflineBar({ code }: { code: string }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [online, setOnline] = useState(() => navigator.onLine);
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, []);
+  const record = loadOfflineRecord(code);
+  const profile = storage.loadProfile() ?? GUEST;
+  const sync = async () => {
+    setBusy(true);
+    setError(null);
+    const outcome = await syncOfflineTournament(code, profile);
+    setBusy(false);
+    if (!outcome.ok) return setError(outcome.error);
+    storage.rememberTournament({ code: outcome.code, name: record?.settings.name ?? outcome.code });
+    storage.updateTournament(outcome.code, { leader: true });
+    storage.forgetTournament(code);
+    navigate(paths.tournament(outcome.code));
+  };
+  if (record?.syncedCode) {
+    return (
+      <div className="space-y-2 rounded-xl border border-accent p-3 text-sm">
+        <p>✅ {t('tournament.offlineDone')}</p>
+        <Button variant="primary" className="w-full" onClick={() => navigate(paths.tournament(record.syncedCode!))}>
+          {t('tournament.offlineOpen')}
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2 rounded-xl border border-line bg-surface-2 p-3 text-sm">
+      <p>📴 {t('tournament.offlineBar')}</p>
+      <Button variant="primary" className="w-full" disabled={busy || !online} onClick={sync}>
+        {busy ? t('tournament.offlineSyncing') : t('tournament.offlineSync')}
+      </Button>
+      {!online && <p className="text-xs text-muted">{t('tournament.offlineNoNet')}</p>}
+      {error && <p role="alert" className="text-danger">{error}</p>}
+    </div>
   );
 }
 
@@ -1674,9 +1730,10 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
       <Button className="w-full" onClick={onBoard}>
         📺 {t('tournament.board')}
       </Button>
-      {local && <SpectatorLink view={view} code={code} />}
-      <CopyTools view={view} />
-      {view.phase !== 'signup' && (
+      {local && !isOfflineCode(code) && <SpectatorLink view={view} code={code} />}
+      {local && isOfflineCode(code) && <p className="text-sm text-muted">{t('tournament.offlineNoSpectators')}</p>}
+      {!isOfflineCode(code) && <CopyTools view={view} />}
+      {view.phase !== 'signup' && !isOfflineCode(code) && (
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={view.keepLong} onChange={(e) => send({ type: 'keepLong', on: e.target.checked })} />
           <span>
@@ -1685,7 +1742,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
           </span>
         </label>
       )}
-      {local && view.phase !== 'finished' && <Helpers view={view} code={code} send={send} />}
+      {local && !isOfflineCode(code) && view.phase !== 'finished' && <Helpers view={view} code={code} send={send} />}
       {local && view.phase === 'running' && view.settings.format === 'swiss' && <EntrantForm view={view} send={send} label={t('tournament.lateEntry')} />}
       {local && view.phase === 'running' && view.settings.format !== 'tables' && (
         <label className="block space-y-1 text-sm">

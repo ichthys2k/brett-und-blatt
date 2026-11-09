@@ -215,6 +215,13 @@ Ursprüngliche Planung:
 - Längere Aufbewahrung für Ligen und Serien.
 
 ### Stufe 6 – Ohne Netz (L)
+**Stand 9.11.2026 (#190):**
+- ✅ **Leitung ohne Netz:** Beim Anlegen vor Ort gibt es „Ohne Netz leiten (nur auf diesem Gerät)“ (📴). Das Turnier läuft ganz im Browser: derselbe Turnierkern wie auf dem Server (`Tournament`), die Nachrichten der Turnierseite wendet der gemeinsame Verteiler an (`applyTournamentMessage` in `tournament/dispatch.ts`, vom Server mitbenutzt). Kennung `LOKAL-XXXXXX`, Code in `apps/web/src/lib/offlineTournament.ts`, Einbindung über `useTournament` (die Turnierseite merkt den Unterschied nicht).
+- ✅ **Lokal gespeichert:** `localStorage` (`brett-und-blatt:offline-turniere`), Neuladen und App-Neustart ändern nichts; die App selbst steht dank PWA ohne Netz bereit. Bis zu 12 Turniere, nie ein noch nicht übertragenes verworfen. Druckansichten und Export gehen ohne Netz.
+- ✅ **Abgleich mit dem Server:** Hinweisleiste „Mit dem Server abgleichen“ (nur online). Das Turnier wird mit demselben Startwert der Auslosung angelegt (`POST /turniere` mit `seed`, nur vor Ort) und alle Nachrichten der Leitung werden in der alten Reihenfolge wiederholt; das ergibt denselben Stand (Test). Danach läuft es auf dem Server weiter, die Kopie auf dem Gerät ist nur noch zum Ansehen (`syncedCode`). **Konfliktregel:** Es gibt keine Konflikte, weil nur auf dem Gerät angelegte Turniere offline laufen; auf dem Server entsteht ein neues Turnier. Wird ein Eintrag vom Server abgelehnt, bleibt die lokale Kopie unverändert und der Fehler steht in der Leiste.
+- ⬜ **Grenzen:** Helferlinks und Zuschaulink gibt es ohne Netz nicht (nach dem Abgleich schon); bereits auf dem Server angelegte Turniere lassen sich ohne Netz nicht weiterleiten; ein Abgleich, der mittendrin abbricht, kann ein unvollständiges Turnier auf dem Server hinterlassen (die Kopie bleibt erhalten, der Server-Eintrag lässt sich löschen).
+
+Ursprüngliche Planung:
 Leitung läuft vollständig im Browser (der Kern ist schon ohne Server lauffähig), Zustand lokal gespeichert, Abgleich mit dem Server, sobald Netz da ist; Helfer im selben Raum ohne Internet bleiben außen vor (bräuchte lokales Netz, nicht vorgesehen).
 
 ## Entscheidungen (7.11.2026)

@@ -328,3 +328,8 @@ export function parseEntrants(body: unknown): string[] {
   if (!Array.isArray(body) || body.length > TOURNAMENT_MAX_PLAYERS) return [];
   return body.filter((n): n is string => typeof n === 'string' && n.length > 0 && n.length <= ENTRANT_NAME_LENGTH * 2);
 }
+
+/** Startwert der Auslosung eines Turniers, das ohne Netz geleitet wurde (nur vor Ort; kein Geheimnis, es gibt nichts Verdecktes). */
+export function parseSeed(value: unknown): string | undefined {
+  return typeof value === 'string' && /^[\w-]{8,64}$/.test(value) ? value : undefined;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEAGUE_KEEP_MS, TOURNAMENT_KEEP_MS, Tournament, parseTournamentMessage, parseTournamentSettings, type TournamentSettings } from '../src';
+import { LEAGUE_KEEP_MS, TOURNAMENT_KEEP_MS, Tournament, applyTournamentMessage, parseSeed, parseTournamentMessage, parseTournamentSettings, type TournamentSettings } from '../src';
 
 /** Stufe 5 (#189): Anmeldung mit Freigabe, Check-in, längere Aufbewahrung. */
 
@@ -109,3 +109,32 @@ describe('Längere Aufbewahrung', () => {
     expect(t.view(LEADER).keepLong).toBe(false);
   });
 });
+
+describe('Leitung ohne Netz (Stufe 6)', () => {
+  it('Startwert der Auslosung wird streng gelesen', () => {
+    expect(parseSeed('0123456789abcdef01234567')).toBe('0123456789abcdef01234567');
+    for (const bad of [undefined, 5, '', 'kurz', 'mit Leerzeichen und mehr', 'x'.repeat(65)]) expect(parseSeed(bad)).toBeUndefined();
+  });
+
+  it('der gemeinsame Verteiler lehnt ab und nimmt an wie die Methoden', () => {
+    const t = online({}, 4);
+    const from = { token: LEADER, name: 'L', avatar: '🏆' };
+    expect(applyTournamentMessage(t, { token: token(0), name: 'x', avatar: '🦊' }, { type: 'start' })).toMatchObject({ kind: 'error' });
+    expect(applyTournamentMessage(t, from, { type: 'start' })).toEqual({ kind: 'ok' });
+    expect(applyTournamentMessage(t, { token: token(0), name: 'x', avatar: '🦊' }, { type: 'delete' })).toMatchObject({ kind: 'error' });
+    expect(applyTournamentMessage(t, from, { type: 'delete' })).toEqual({ kind: 'delete' });
+  });
+
+  it('gleicher Startwert, gleiche Auslosung', () => {
+    const make = (seed: string) => {
+      const s: TournamentSettings = { name: 'Cup', gameId: '', format: 'knockout', time: 'normal', days: 1, thirdPlace: false, mode: 'local', sport: 'Darts', result: 'winner' };
+      const t = Tournament.create('ABCD2345', seed, s, { token: LEADER, name: 'L' }, deps);
+      t.addEntrants(LEADER, ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']);
+      t.start(LEADER);
+      return JSON.stringify(t.view(LEADER).matches.filter((m) => m.stage === 0).map((m) => m.slots.map((x) => x.player)));
+    };
+    expect(make('seed-gleich-0001')).toBe(make('seed-gleich-0001'));
+    expect(new Set(['a-seed-00001', 'b-seed-00002', 'c-seed-00003', 'd-seed-00004', 'e-seed-00005'].map(make)).size).toBeGreaterThan(1);
+  });
+});
+

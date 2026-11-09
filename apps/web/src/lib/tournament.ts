@@ -1,6 +1,7 @@
 import type { TournamentClientMessage, TournamentServerMessage, TournamentSettings, TournamentView } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState } from 'react';
 import { GAME_SERVER } from './server';
+import { applyOfflineMessage, deleteOfflineRecord, isOfflineCode, loadOfflineRecord, offlineView } from './offlineTournament';
 import { storage, type Profile } from './storage';
 
 
@@ -19,6 +20,7 @@ export type DeleteOutcome = 'deleted' | 'gone' | 'denied' | 'failed';
 
 /** Gibt es das Turnier noch? null, wenn der Server nicht antwortet. */
 export async function tournamentExists(code: string): Promise<boolean | null> {
+  if (isOfflineCode(code)) return loadOfflineRecord(code) !== null;
   if (!GAME_SERVER) return null;
   try {
     const response = await fetch(`${GAME_SERVER}/turniere/${encodeURIComponent(code)}`);
@@ -34,6 +36,11 @@ export async function tournamentExists(code: string): Promise<boolean | null> {
  * Verbindung, damit es auch aus der Liste heraus geht, ohne die Turnierseite zu öffnen.
  */
 export function deleteTournament(code: string, profile: Profile): Promise<DeleteOutcome> {
+  if (isOfflineCode(code)) {
+    const existed = loadOfflineRecord(code) !== null;
+    deleteOfflineRecord(code);
+    return Promise.resolve(existed ? 'deleted' : 'gone');
+  }
   return new Promise((resolve) => {
     if (!GAME_SERVER) return resolve('failed');
     let done = false;
@@ -75,6 +82,7 @@ export function deleteTournament(code: string, profile: Profile): Promise<Delete
  * und schließt wieder. null, wenn es das Turnier nicht gibt oder kein Zugang besteht.
  */
 export function fetchTournamentView(code: string, profile: Profile): Promise<TournamentView | null> {
+  if (isOfflineCode(code)) return Promise.resolve(offlineView(code));
   return new Promise((resolve) => {
     if (!GAME_SERVER) return resolve(null);
     let done = false;
@@ -103,6 +111,40 @@ export function fetchTournamentView(code: string, profile: Profile): Promise<Tou
   });
 }
 
+/** Turnier ohne Netz (Stufe 6): derselbe Turnierkern im Browser, Stand in `localStorage`. */
+function useOfflineTournament(code: string, profile: Profile | null): [TournamentState, (message: TournamentClientMessage) => void] {
+  const offline = isOfflineCode(code);
+  const [state, setState] = useState<TournamentState>(() => {
+    const view = offline ? offlineView(code) : null;
+    return { status: offline && !view ? 'gone' : 'open', view, closed: null, error: null, claim: null };
+  });
+  const errorTimer = useRef<number | undefined>(undefined);
+  const send = (message: TournamentClientMessage) => {
+    if (!offline || message.type === 'hello') return;
+    const result = applyOfflineMessage(code, profile ?? { name: 'Leitung', avatar: '🏆' }, message);
+    if (!result.ok) {
+      setState((s) => ({ ...s, error: result.error }));
+      window.clearTimeout(errorTimer.current);
+      errorTimer.current = window.setTimeout(() => setState((s) => ({ ...s, error: null })), 4000);
+    } else if ('deleted' in result) setState({ status: 'gone', view: null, closed: null, error: null, claim: null });
+    else setState((s) => ({ ...s, view: result.view, error: null, ...(result.claim ? { claim: result.claim } : {}) }));
+  };
+  // Nach einer Übertragung auf den Server ändert sich der Stand von außen; beim erneuten Öffnen neu lesen.
+  useEffect(() => {
+    if (!offline) return;
+    const view = offlineView(code);
+    setState({ status: view ? 'open' : 'gone', view, closed: null, error: null, claim: null });
+  }, [code, offline]);
+  return [state, send];
+}
+
+/** Hält die Turnierseite live (Server) oder liest ein Turnier ohne Netz vom Gerät; die Seite merkt den Unterschied nicht. */
+export function useTournament(code: string, profile: Profile | null): [TournamentState, (message: TournamentClientMessage) => void] {
+  const online = useOnlineTournament(code, profile);
+  const offline = useOfflineTournament(code, profile);
+  return isOfflineCode(code) ? offline : online;
+}
+
 export interface TournamentState {
   status: 'connecting' | 'open' | 'reconnecting' | 'gone';
   view: TournamentView | null;
@@ -118,12 +160,13 @@ const PING_MS = 30_000;
  * Hält die Turnierseite live: eine schlafende WebSocket-Verbindung, über die bei jeder
  * Änderung der neue Stand kommt. Bei Abbruch wird mit wachsenden Pausen neu verbunden.
  */
-export function useTournament(code: string, profile: Profile | null): [TournamentState, (message: TournamentClientMessage) => void] {
+function useOnlineTournament(code: string, profile: Profile | null): [TournamentState, (message: TournamentClientMessage) => void] {
   const [state, setState] = useState<TournamentState>({ status: 'connecting', view: null, closed: null, error: null, claim: null });
   const socket = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    if (!GAME_SERVER || !profile) return;
+    // Turniere ohne Netz (Stufe 6) liegen auf diesem Gerät; für sie gibt es keine Verbindung.
+    if (!GAME_SERVER || !profile || isOfflineCode(code)) return;
     let stopped = false;
     let retries = 0;
     let retryTimer: number | undefined;

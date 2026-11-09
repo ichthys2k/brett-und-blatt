@@ -1,5 +1,5 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, BEST_THIRD_GROUPS, DYP_ROUND_CHOICES, LEAGUE_DAY_CHOICES, LIVES_CHOICES, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, BEST_THIRD_GROUPS, DYP_ROUND_CHOICES, parseFieldCount, parsePointRules, parseTournamentSettings, LEAGUE_DAY_CHOICES, LIVES_CHOICES, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
@@ -7,6 +7,8 @@ import { games, loadGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type KnownTournament, type Profile, type TournamentTemplate } from '../lib/storage';
 import { seriesCsv, seriesStandings, type PointScheme, type SeriesRow } from '../lib/series';
+import { createOfflineTournament, isOfflineCode } from '../lib/offlineTournament';
+import { findGame as findGameInfo } from '../lib/registry';
 import { createTournament, deleteTournament, fetchTournamentView, tournamentExists } from '../lib/tournament';
 import { Button, Section } from './controls';
 
@@ -46,6 +48,8 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [groupCount, setGroupCount] = useState(0);
   /** Setzliste (Stufe 4, vor Ort): Die Reihenfolge der Teilnehmerliste ist die Setzung. */
   const [seeded, setSeeded] = useState(false);
+  /** Ohne Netz leiten (Stufe 6): Das Turnier liegt nur auf diesem Gerät und wird später mit dem Server abgeglichen. */
+  const [offline, setOffline] = useState(false);
   /** Anmeldung mit Freigabe und Check-in (Stufe 5). */
   const [approval, setApproval] = useState(false);
   const [checkin, setCheckin] = useState(false);
@@ -162,7 +166,17 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
       const settings = local
         ? { ...common, gameId: many ? '' : localGame, time: 'normal' as const, days: 1, isPublic: false, mode, sport: many ? t('tournament.multiSport') : sport.trim(), ...(many ? { disciplines: localList } : {}), result, draws, fieldLabel: fieldLabel.trim() || 'Tisch', spectators, fields, points, ...(format === 'world' && groupCount ? { groupCount } : {}), ...(format === 'world' && bestThirds && (BEST_THIRD_GROUPS as readonly number[]).includes(groupCount) ? { bestThirds: true } : {}), ...(seeded && (format === 'knockout' || format === 'double' || format === 'world') ? { seeded: true } : {}) }
         : { ...common, ...(teamGame ? { teamSize: teamChoices.includes(teamSize) ? teamSize : teamChoices[0] } : {}), gameId: many ? picked[0]! : gameId, time, isPublic, options: many ? {} : chosen, ...(many ? { disciplines: picked, wishes } : {}), ...(pace.startsWith('m') ? { days: 1, minutes: Number(pace.slice(1)) } : { days: Number(pace.slice(1)) }) };
-      const code = await createTournament(settings, profile);
+      let code: string;
+      if (local && offline) {
+        // Ohne Netz: derselbe Turnierkern im Browser, geprüft wie auf dem Server.
+        const parsed = parseTournamentSettings(settings, (id) => {
+          const info = findGameInfo(id);
+          return info ? { info, options: [] } : undefined;
+        });
+        const created = parsed ? createOfflineTournament(parsed, profile, parseFieldCount(settings), parsePointRules(settings)) : null;
+        if (!created) throw new Error('offline');
+        code = created;
+      } else code = await createTournament(settings, profile);
       storage.rememberTournament({ code, name: name.trim() });
       passChanged();
       navigate(paths.tournament(code));
@@ -619,6 +633,13 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
           {local ? (
             <>
               <label className="flex items-start gap-2 text-sm">
+                <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={offline} onChange={(e) => setOffline(e.target.checked)} />
+                <span>
+                  📴 {t('tournament.offline')}
+                  <span className="block text-xs text-muted">{t('tournament.offlineHint')}</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 text-sm">
                 <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={spectators} onChange={(e) => setSpectators(e.target.checked)} />
                 {t('tournament.spectators')}
               </label>
@@ -717,7 +738,7 @@ function TournamentList({ known, profile, onChanged }: { known: KnownTournament[
             {tidy && <input type="checkbox" className="h-5 w-5 shrink-0 accent-accent" aria-label={item.name} checked={picked.includes(item.code)} onChange={() => toggle(item.code)} />}
             <Button className="min-w-0 flex-1 justify-start" onClick={() => (tidy ? toggle(item.code) : navigate(paths.tournament(item.code)))}>
               <span className="truncate">
-                🏆 {item.name}
+                {isOfflineCode(item.code) ? '📴' : '🏆'} {item.name}
                 {item.leader ? ' · 👑' : ''}
                 {item.phase === 'finished' ? ' · ✔️' : ''}
               </span>

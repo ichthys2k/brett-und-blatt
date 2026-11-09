@@ -29,7 +29,9 @@ import {
   parseTournamentMessage,
   parseTournamentSettings,
   parseFieldCount,
+  applyTournamentMessage,
   parseEntrants,
+  parseSeed,
   parsePointRules,
   randomRoomCode,
   serverBotRunner,
@@ -270,7 +272,7 @@ export default {
 
     if (url.pathname === '/turniere' && request.method === 'POST') {
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
-      let body: { settings?: unknown; token?: unknown; name?: unknown; entrants?: unknown };
+      let body: { settings?: unknown; token?: unknown; name?: unknown; entrants?: unknown; seed?: unknown };
       try {
         const text = await request.text();
         if (text.length > 12_000) return json({ error: 'size' }, 413, cors);
@@ -282,7 +284,7 @@ export default {
       if (!settings || typeof body.token !== 'string' || body.token.length < 16 || body.token.length > 100 || typeof body.name !== 'string') return json({ error: 'body' }, 400, cors);
       for (let attempt = 0; attempt < 5; attempt++) {
         const code = randomLetters(8);
-        if (await tournamentStub(env, code).create(code, settings, { token: body.token, name: body.name }, parseFieldCount(body.settings), parsePointRules(body.settings), parseEntrants(body.entrants))) return json({ code }, 201, cors);
+        if (await tournamentStub(env, code).create(code, settings, { token: body.token, name: body.name }, parseFieldCount(body.settings), parsePointRules(body.settings), parseEntrants(body.entrants), settings.mode === 'local' ? parseSeed(body.seed) : undefined)) return json({ code }, 201, cors);
       }
       return json({ error: 'busy' }, 503, cors);
     }
@@ -980,9 +982,10 @@ export class TournamentRoom extends DurableObject<Env> {
     });
   }
 
-  async create(code: string, settings: TournamentSettings, leader: { token: string; name: string }, fields = 0, points?: PointRules, entrants: string[] = []): Promise<boolean> {
+  async create(code: string, settings: TournamentSettings, leader: { token: string; name: string }, fields = 0, points?: PointRules, entrants: string[] = [], seed?: string): Promise<boolean> {
     if (this.tournament) return false;
-    this.tournament = Tournament.create(code, randomSeed(), settings, leader, this.deps(), fields, points);
+    // Ein Turnier, das ohne Netz geleitet wurde, bringt seinen Startwert der Auslosung mit, damit die Wiedergabe dieselbe Auslosung ergibt.
+    this.tournament = Tournament.create(code, seed ?? randomSeed(), settings, leader, this.deps(), fields, points);
     // Folgephase vor Ort: Die Teilnehmer der vorigen Phase stehen schon in der Reihenfolge der Setzliste auf der Liste.
     if (entrants.length > 0) this.tournament.addEntrants(leader.token, entrants);
     await this.changed();
@@ -1018,91 +1021,10 @@ export class TournamentRoom extends DurableObject<Env> {
     }
     const { token, name, avatar } = ws.deserializeAttachment() as TournamentAttachment;
     if (!token) return this.sendTo(ws, { type: 'error', message: 'Erst anmelden.' });
-    let error: string | null = null;
-    switch (message.type) {
-      case 'approve':
-        error = t.approve(token, message.player, message.ok);
-        break;
-      case 'present':
-        error = t.setPresent(token, message.player, message.on);
-        break;
-      case 'keepLong':
-        error = t.setKeepLong(token, message.on);
-        break;
-      case 'delete':
-        if (!t.mayDelete(token)) {
-          error = 'Löschen darf nur, wer das Turnier angelegt hat.';
-          break;
-        }
-        return this.deleteTournament(t);
-      case 'join':
-        error = t.join(token, name ?? '', avatar ?? '');
-        break;
-      case 'leave':
-        error = t.leave(token);
-        break;
-      case 'claim':
-        error = t.claim(token, message.code);
-        break;
-      case 'start':
-        error = t.start(token);
-        break;
-      case 'ready':
-        error = t.ready(token, message.match, message.ready);
-        break;
-      case 'setResult':
-        error = t.setResult(token, message.match, message.winner);
-        break;
-      case 'extend':
-        error = t.extend(token, message.days, message.minutes);
-        break;
-      case 'startRound':
-        error = t.startRound(token);
-        break;
-      case 'wish':
-        error = t.wish(token, message.disciplines);
-        break;
-      case 'enterTable':
-        error = t.enterTable(token, message.table, { ...(message.places ? { places: message.places } : {}), ...(message.scores ? { scores: message.scores } : {}) });
-        break;
-      case 'withdraw':
-        error = t.withdraw(token, message.player);
-        break;
-      case 'reissue': {
-        const issued = t.reissue(token, message.player);
-        if ('error' in issued) error = issued.error;
-        else this.sendTo(ws, { type: 'claimCode', player: message.player, code: issued.code });
-        break;
-      }
-      case 'addEntrants':
-        error = t.addEntrants(token, message.names);
-        break;
-      case 'removeEntrant':
-        error = t.removeEntrant(token, message.player);
-        break;
-      case 'enterResult':
-        error = t.enterResult(token, message.match, message.score ? { score: message.score } : { winner: message.winner! });
-        break;
-      case 'setFields':
-        error = t.setFields(token, message.count);
-        break;
-      case 'addHelper':
-        error = t.addHelper(token, message.name, message.role);
-        break;
-      case 'removeHelper':
-        error = t.removeHelper(token, message.helper);
-        break;
-      case 'helper':
-        error = t.joinAsHelper(token, message.code);
-        break;
-      case 'setSchedule':
-        error = t.setSchedule(token, message.schedule);
-        break;
-      case 'setReferees':
-        error = t.setReferees(token, message.on);
-        break;
-    }
-    if (error) return this.sendTo(ws, { type: 'error', message: error });
+    const result = applyTournamentMessage(t, { token, name: name ?? '', avatar: avatar ?? '' }, message);
+    if (result.kind === 'delete') return this.deleteTournament(t);
+    if (result.kind === 'error') return this.sendTo(ws, { type: 'error', message: result.message });
+    if (result.claim) this.sendTo(ws, { type: 'claimCode', player: result.claim.player, code: result.claim.code });
     await this.changed();
   }
 

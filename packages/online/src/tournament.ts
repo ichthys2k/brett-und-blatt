@@ -57,6 +57,7 @@ export * from './tournament/best-of';
 export * from './tournament/teams';
 export * from './tournament/lives';
 export * from './tournament/dyp';
+export * from './tournament/dispatch';
 export * from './tournament/migrate';
 export * from './tournament/protocol';
 
