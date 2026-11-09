@@ -11,6 +11,9 @@ import { seriesStandings, type PointScheme, type SeriesRow, type SeriesTournamen
 export const SERIES_KEEP_MS = 365 * 24 * 60 * 60 * 1000;
 export const SERIES_MAX_TOURNAMENTS = 40;
 export const SERIES_NAME_LENGTH = 40;
+/** Übergabecode der Serienleitung: einen Tag gültig, höchstens fünf Fehlversuche. */
+export const SERIES_TRANSFER_MS = 24 * 60 * 60 * 1000;
+export const SERIES_TRANSFER_ATTEMPTS = 5;
 const ENTRY_MAX_PLAYERS = 256;
 const ENTRY_MAX_MATCHES = 2500;
 export const SERIES_CODE_PATTERN = /^[2-9A-HJ-NP-Z]{8}$/;
@@ -33,6 +36,8 @@ export interface SeriesRecord {
   createdAt: number;
   lastActive: number;
   entries: SeriesEntry[];
+  /** Offene Übergabe der Leitung auf ein anderes Gerät (wie bei Turnieren, #203). */
+  transfer?: { code: string; expiresAt: number; attempts: number };
 }
 
 export interface SeriesView {
@@ -131,6 +136,37 @@ export class SeriesBook {
     if (!this.mayManage(token)) return 'Das darf nur die Leitung der Serie.';
     if (!this.s.entries.some((e) => e.code === code)) return 'Dieses Turnier gehört nicht zur Serie.';
     this.s.entries = this.s.entries.filter((e) => e.code !== code);
+    this.touch();
+    return null;
+  }
+
+  /** Erzeugt einen Einmalcode, mit dem ein anderes Gerät die Leitung der Serie übernimmt. */
+  issueTransfer(token: string): { code: string; expiresAt: number } | { error: string } {
+    if (!this.mayManage(token)) return { error: 'Das darf nur die Leitung der Serie.' };
+    const code = this.deps.randomKey();
+    const expiresAt = this.deps.now() + SERIES_TRANSFER_MS;
+    this.s.transfer = { code, expiresAt, attempts: 0 };
+    this.touch();
+    return { code, expiresAt };
+  }
+
+  /** Dieses Gerät übernimmt die Leitung; das bisherige Gerät ist danach nicht mehr Leitung. */
+  takeLeadership(token: string, code: string): string | null {
+    const transfer = this.s.transfer;
+    if (token.length < 16 || token.length > 100) return 'Dieses Gerät kann die Leitung nicht übernehmen.';
+    if (!transfer) return 'Es liegt keine Übergabe vor.';
+    if (this.deps.now() >= transfer.expiresAt) {
+      delete this.s.transfer;
+      return 'Der Übergabecode ist abgelaufen. Die Leitung erzeugt einen neuen.';
+    }
+    if (token === this.s.leaderToken) return 'Dieses Gerät ist schon die Leitung.';
+    if (code.trim().toUpperCase() !== transfer.code) {
+      transfer.attempts++;
+      if (transfer.attempts >= SERIES_TRANSFER_ATTEMPTS) delete this.s.transfer;
+      return 'Dieser Übergabecode passt nicht.';
+    }
+    this.s.leaderToken = token;
+    delete this.s.transfer;
     this.touch();
     return null;
   }

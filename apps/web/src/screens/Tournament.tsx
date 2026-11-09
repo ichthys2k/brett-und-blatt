@@ -713,11 +713,12 @@ function LeaderTransfer({ code, state, send }: { code: string; state: Tournament
 }
 
 /** Das Turnier einer Serie zuordnen (#205): Der Zuordnungscode steht auf der Serienseite; nach dem Ende meldet sich das Turnier selbst. */
-function SeriesAttach({ view, send }: { view: TournamentView; send: Send }) {
+function SeriesAttach({ view, send, offline }: { view: TournamentView; send: Send; offline: boolean }) {
   const [link, setLink] = useState('');
   return (
     <div className="space-y-2 rounded-xl border border-line p-3">
       <p className="text-sm font-semibold">📈 {t('series.attachTitle')}</p>
+      {offline && <p className="text-xs text-muted">{t('series.offlineNote')}</p>}
       {view.series ? (
         <>
           <p className="text-sm">
@@ -1385,6 +1386,7 @@ function OfflineBar({ code }: { code: string }) {
     storage.rememberTournament({ code: outcome.code, name: record?.settings.name ?? outcome.code });
     storage.updateTournament(outcome.code, { leader: true });
     storage.forgetTournament(code);
+    if (outcome.seriesError) window.alert(t('series.syncFailed', { error: outcome.seriesError }));
     navigate(paths.tournament(outcome.code));
   };
   if (record?.syncedCode) {

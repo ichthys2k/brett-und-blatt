@@ -58,7 +58,7 @@ function Screen() {
     case 'tournamentEmbed':
       return <TournamentEmbedScreen key={route.code} code={route.code} />;
     case 'series':
-      return <SeriesScreen key={route.code} code={route.code} />;
+      return <SeriesScreen key={route.code} code={route.code} leader={route.leader} />;
     case 'seriesEmbed':
       return <SeriesScreen key={route.code} code={route.code} embed />;
     case 'sound':

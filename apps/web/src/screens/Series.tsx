@@ -1,10 +1,11 @@
 import { seriesCsv, type PointScheme, type SeriesView } from '@brett-und-blatt/online';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Section } from '../components/controls';
 import { TavernPage } from '../components/TavernPage';
 import { t } from '../i18n';
 import { navigate, paths } from '../lib/router';
-import { deleteSeries, fetchSeries, manageSeries, rememberSeries, type SeriesAction } from '../lib/seriesServer';
+import { deleteSeries, fetchSeries, issueSeriesTransfer, manageSeries, rememberSeries, takeSeriesLeadership, type SeriesAction } from '../lib/seriesServer';
+import { QrCode } from '../components/OnlineParts';
 
 const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
 /** Die Rangliste aktualisiert sich von selbst, solange die Seite offen ist. */
@@ -14,13 +15,25 @@ const REFRESH_MS = 30_000;
  * Serienseite (#205): gemeinsame Rangliste über mehrere Turniere, live aus dem Server. Mit `embed` die schlichte Ansicht zum
  * Einbetten; die Leitung (das anlegende Gerät) sieht zusätzlich Zuordnungscode und Verwaltung.
  */
-export function SeriesScreen({ code, embed = false }: { code: string; embed?: boolean }) {
+export function SeriesScreen({ code, embed = false, leader }: { code: string; embed?: boolean; leader?: string }) {
   const [view, setView] = useState<SeriesView | null | 'failed' | undefined>(undefined);
+  const [takeError, setTakeError] = useState<string | null>(null);
   const load = useCallback(async () => {
     const result = await fetchSeries(code);
     setView((old) => (result === 'failed' && old && old !== 'failed' ? old : result));
     if (result && result !== 'failed') rememberSeries({ code, name: result.name });
   }, [code]);
+  // Übergabelink der bisherigen Leitung (#203 für Serien): einmal einlösen und aus der Adresszeile nehmen.
+  const took = useRef(false);
+  useEffect(() => {
+    if (!leader || took.current) return;
+    took.current = true;
+    window.history.replaceState(null, '', paths.series(code));
+    void takeSeriesLeadership(code, leader).then(async (error) => {
+      setTakeError(error);
+      await load();
+    });
+  }, [leader, code, load]);
   useEffect(() => {
     void load();
     const timer = window.setInterval(() => void load(), REFRESH_MS);
@@ -43,6 +56,7 @@ export function SeriesScreen({ code, embed = false }: { code: string; embed?: bo
       <Standings view={view} />
     ) : (
       <>
+        {takeError && <p role="alert" className="text-sm text-danger">{takeError}</p>}
         <Standings view={view} />
         <Tournaments view={view} />
         <Share code={code} />
@@ -175,6 +189,7 @@ function Manage({ view, onChanged, onDeleted }: { view: SeriesView; onChanged: (
           </Button>
         </div>
       </div>
+      <Transfer code={view.code} />
       <label className="block space-y-1 text-sm">
         <span>{t('series.name')}</span>
         <div className="flex gap-2">
@@ -220,5 +235,44 @@ function Manage({ view, onChanged, onDeleted }: { view: SeriesView; onChanged: (
       </Button>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
     </Section>
+  );
+}
+
+/** Leitung auf ein anderes Gerät übergeben: Einmalcode, Link und QR-Code, einen Tag gültig. */
+function Transfer({ code }: { code: string }) {
+  const [issued, setIssued] = useState<{ code: string; expiresAt: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const link = issued ? `${window.location.origin}${window.location.pathname}${paths.series(code)}?leitung=${issued.code}` : '';
+  return (
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <p className="text-sm font-semibold">🔑 {t('series.transferTitle')}</p>
+      <p className="text-xs text-muted">{t('series.transferHint')}</p>
+      <Button
+        className="w-full"
+        onClick={async () => {
+          const result = await issueSeriesTransfer(code);
+          if ('error' in result) setError(result.error);
+          else {
+            setError(null);
+            setIssued(result);
+          }
+        }}
+      >
+        {issued ? t('tournament.transferNew') : t('tournament.transferStart')}
+      </Button>
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+      {issued && (
+        <div className="space-y-2 text-center">
+          <p className="text-2xl font-bold tracking-widest">{issued.code}</p>
+          <p className="text-xs text-muted">{t('tournament.transferUntil', { time: new Date(issued.expiresAt).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) })}</p>
+          <div className="mx-auto w-44">
+            <QrCode text={link} label={t('series.transferTitle')} />
+          </div>
+          <Button className="w-full" onClick={() => navigator.clipboard?.writeText(link)}>
+            🔗 {t('tournament.copy')}
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
