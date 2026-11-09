@@ -1,7 +1,10 @@
+import { CREST_COLOR_SETS } from './crest-colors';
+
 /*
- * Spielerwappen (Vorhaben #135, Schritt #147): Das Wappen eines Passes besteht aus Schildform, Teilung, Farbpaar,
+ * Spielerwappen (Vorhaben #135, Schritt #147): Das Wappen eines Passes besteht aus Schildform, Teilung, Farben,
  * Wappentier und Zier. Es wird als kurzer Text gespeichert und übertragen, z. B.
- * `schild:klassisch;teilung:quer;farben:rot-gold;tier:🦊;zier:krone,rahmen;raum:1`.
+ * `schild:klassisch;teilung:quer;farben:rot-gold;tier:🦊;zier:krone,rahmen;raum:1`. Die Farben sind eine Kennung aus
+ * `crest-colors.ts` (2 bis 4 Farben, auch Städte, Länder, Vereine).
  *
  * Dieses Modul ist rein und ohne Browser: Die Oberfläche (`packages/ui`), die Web-App und der Raum auf dem Server prüfen
  * damit dieselbe Beschreibung. Was nicht erlaubt ist, wird beim Lesen verworfen – nie wird fremder Text ausgeführt oder
@@ -10,12 +13,13 @@
 
 export const CREST_SHIELDS = ['klassisch', 'rund', 'spitz', 'rolle'] as const;
 export const CREST_DIVISIONS = ['einfarbig', 'quer', 'geteilt', 'schraeg'] as const;
-export const CREST_COLORS = ['rot-gold', 'blau-silber', 'gruen-gold', 'schwarz-gold', 'purpur-silber', 'orange-blau'] as const;
+export const CREST_COLORS: readonly string[] = CREST_COLOR_SETS.map((set) => set.id);
 export const CREST_ORNAMENTS = ['rahmen', 'krone', 'lorbeer', 'band'] as const;
 
 export type CrestShield = (typeof CREST_SHIELDS)[number];
 export type CrestDivision = (typeof CREST_DIVISIONS)[number];
-export type CrestColors = (typeof CREST_COLORS)[number];
+/** Kennung einer Farbkombination aus `CREST_COLOR_SETS` (z. B. `rot-gold`, `land-de`). */
+export type CrestColors = string;
 export type CrestOrnament = (typeof CREST_ORNAMENTS)[number];
 
 export interface CrestSpec {
@@ -31,28 +35,25 @@ export interface CrestSpec {
 
 export const DEFAULT_CREST: CrestSpec = { shield: 'klassisch', division: 'quer', colors: 'rot-gold', animal: '🎲', ornaments: [], inRoom: true };
 
-/** Farben je Paar: Feld 1, Feld 2 (Hex). */
-export const CREST_PALETTE: Readonly<Record<CrestColors, readonly [string, string]>> = {
-  'rot-gold': ['#B3261E', '#E0A800'],
-  'blau-silber': ['#1F4E99', '#C9D1D9'],
-  'gruen-gold': ['#2E7D32', '#E0A800'],
-  'schwarz-gold': ['#22252B', '#E0A800'],
-  'purpur-silber': ['#6A3FA0', '#C9D1D9'],
-  'orange-blau': ['#D9622B', '#1F4E99'],
-};
+/** Farben je Kombination (2 bis 4, Hex), nach Kennung. */
+export const CREST_PALETTE: Readonly<Record<CrestColors, readonly string[]>> = Object.fromEntries(CREST_COLOR_SETS.map((set) => [set.id, set.colors]));
 
 export const CREST_LABELS = {
   shield: { klassisch: 'Klassisch', rund: 'Rund', spitz: 'Spitz', rolle: 'Wappenrolle' },
   division: { einfarbig: 'Einfarbig', quer: 'Quer', geteilt: 'Geteilt', schraeg: 'Schräg' },
-  colors: { 'rot-gold': 'Rot und Gold', 'blau-silber': 'Blau und Silber', 'gruen-gold': 'Grün und Gold', 'schwarz-gold': 'Schwarz und Gold', 'purpur-silber': 'Purpur und Silber', 'orange-blau': 'Orange und Blau' },
+  colors: Object.fromEntries(CREST_COLOR_SETS.map((set) => [set.id, set.name])) as Readonly<Record<CrestColors, string>>,
   ornament: { rahmen: 'Rahmen', krone: 'Krone', lorbeer: 'Lorbeer', band: 'Band' },
 } as const;
+
+/** Hinweis für die Oberfläche: Städte, Länder und Vereine liefern nur Farben. */
+export const CREST_COLORS_NOTICE = 'Nur Farben, keine offiziellen Zeichen der Städte, Länder oder Vereine.';
 
 const MAX_TEXT = 120;
 /** Genau ein Emoji: ein Piktogramm mit Varianten- und Hautton-Zeichen, auch mehrere durch Verbinder zu einem verbunden (👩‍🚀). */
 const ANIMAL_PATTERN = /^\p{Extended_Pictographic}[\ufe0f\u{1F3FB}-\u{1F3FF}]?(?:\u200d\p{Extended_Pictographic}[\ufe0f\u{1F3FB}-\u{1F3FF}]?)*$/u;
 
 const oneOf = <T extends string>(list: readonly T[], value: unknown): T | null => (typeof value === 'string' && (list as readonly string[]).includes(value) ? (value as T) : null);
+const COLOR_IDS: ReadonlySet<string> = new Set(CREST_COLORS);
 
 /** Liest eine Beschreibung. Fehlendes und Ungültiges fällt auf die Vorgabe zurück; `null`, wenn gar nichts Brauchbares da ist. */
 export function parseCrest(text: unknown): CrestSpec | null {
@@ -70,7 +71,7 @@ export function parseCrest(text: unknown): CrestSpec | null {
   const spec: CrestSpec = {
     shield: oneOf(CREST_SHIELDS, parts.get('schild')) ?? DEFAULT_CREST.shield,
     division: oneOf(CREST_DIVISIONS, parts.get('teilung')) ?? DEFAULT_CREST.division,
-    colors: oneOf(CREST_COLORS, parts.get('farben')) ?? DEFAULT_CREST.colors,
+    colors: COLOR_IDS.has(parts.get('farben') ?? '') ? parts.get('farben')! : DEFAULT_CREST.colors,
     animal: ANIMAL_PATTERN.test(animal) ? animal : DEFAULT_CREST.animal,
     ornaments: [...new Set(ornaments)],
     inRoom: parts.get('raum') !== '0',

@@ -30,7 +30,10 @@ export interface PlayerCrestProps {
 export function PlayerCrest({ spec, size = 64, label, className }: PlayerCrestProps) {
   const id = useId().replace(/:/g, '');
   const small = size < CREST_ORNAMENT_MIN_SIZE;
-  const [a, b] = CREST_PALETTE[spec.colors];
+  const palette = CREST_PALETTE[spec.colors] ?? CREST_PALETTE['rot-gold']!;
+  const a = palette[0]!;
+  const b = palette[palette.length - 1]!;
+  const n = palette.length;
   const path = SHIELDS[spec.shield];
   const y = MEDALLION_Y[spec.shield];
   const ornaments = small ? [] : spec.ornaments;
@@ -48,9 +51,9 @@ export function PlayerCrest({ spec, size = 64, label, className }: PlayerCrestPr
       </defs>
       <g clipPath={`url(#crest-${id})`}>
         <rect width="100" height="150" fill={a} />
-        {spec.division === 'quer' && <rect y="82" width="100" height="70" fill={b} />}
-        {spec.division === 'geteilt' && <rect x="50" width="50" height="150" fill={b} />}
-        {spec.division === 'schraeg' && <polygon points="0,150 100,30 100,150" fill={b} />}
+        {spec.division === 'quer' && (n === 2 ? <rect y="82" width="100" height="70" fill={b} /> : palette.slice(1).map((color, i) => <rect key={i} y={((i + 1) * 150) / n} width="100" height={150 / n + 1} fill={color} />))}
+        {spec.division === 'geteilt' && palette.slice(1).map((color, i) => <rect key={i} x={((i + 1) * 100) / n} width={100 / n + 1} height="150" fill={color} />)}
+        {spec.division === 'schraeg' && palette.slice(1).map((color, i) => { const y0 = 150 - (n - 2 - i) * (96 / (n - 1)); return <polygon key={i} points={`0,${y0} 100,${y0 - 120} 100,150 0,150`} fill={color} />; })}
       </g>
       {has('rahmen') && <path d={path} transform="translate(50 81) scale(.86) translate(-50 -81)" fill="none" stroke="#FFF7E3" strokeWidth="2.4" />}
       <path d={path} fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinejoin="round" />
