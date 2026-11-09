@@ -11,6 +11,7 @@ import { Play } from './screens/Play';
 import { RoomScreen } from './screens/Room';
 import { ClassPage, Classes } from './screens/Classes';
 import { Library } from './screens/Library';
+import { Operator } from './screens/Operator';
 import { PackView } from './screens/PackView';
 import { Tournaments } from './screens/Tournaments';
 import { TournamentEmbedScreen, TournamentScreen } from './screens/Tournament';
@@ -39,6 +40,8 @@ function Screen() {
       return <Tournaments />;
     case 'packView':
       return <PackView passKey={route.key} />;
+    case 'operator':
+      return <Operator />;
     case 'library':
       return <Library />;
     case 'classes':

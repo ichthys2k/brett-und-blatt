@@ -183,8 +183,8 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
   return allowed.includes(origin)
     ? {
         'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         Vary: 'Origin',
       }
     : {};
@@ -245,17 +245,24 @@ export default {
       return json(wortspiel, 200, { ...cors, 'Cache-Control': 'public, max-age=300' });
     }
 
-    const operator = /^\/betreiber\/(turnier|klasse)\/([^/]+)$/.exec(url.pathname);
+    // Betreiber-Endpunkte (Schlüssel `OPERATOR_KEY`): Liste der offenen Turniere und Löschen von Turnieren und Klassen.
+    const operator = /^\/betreiber\/(turnier|klasse|liste)(?:\/([^/]+))?$/.exec(url.pathname);
     if (operator) {
       if (!env.OPERATOR_KEY) return json({ error: 'aus' }, 404, cors);
-      if (request.method !== 'DELETE') return json({ error: 'method' }, 405, cors);
+      const wanted = operator[1] === 'liste' ? 'GET' : 'DELETE';
+      if (request.method !== wanted) return json({ error: 'method' }, 405, cors);
       const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
       if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...cors, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
       if (!(await isOperator(request, env.OPERATOR_KEY))) {
         await limiter.miss();
         return json({ error: 'nicht erlaubt' }, 401, cors);
       }
-      const target = decodeURIComponent(operator[2]!);
+      if (operator[1] === 'liste') {
+        const rooms = await registryStub(env).listOpen();
+        return json({ turniere: rooms.filter((room) => room.tournament) }, 200, { ...cors, 'Cache-Control': 'no-store' });
+      }
+      if (!operator[2]) return json({ error: 'code' }, 400, cors);
+      const target = decodeURIComponent(operator[2]);
       let done = false;
       if (operator[1] === 'turnier') {
         if (!TOURNAMENT_CODE_PATTERN.test(target)) return json({ error: 'code' }, 400, cors);
