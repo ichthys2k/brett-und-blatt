@@ -43,6 +43,7 @@ export const SCOPED_KEYS = [
   'brett-und-blatt:turniere',
   'brett-und-blatt:passschluessel',
   'brett-und-blatt:schloss',
+  'brett-und-blatt:konten',
   'brett-und-blatt:lieblingsspiele',
   'brett-und-blatt:musik',
   'brett-und-blatt:aussehen',

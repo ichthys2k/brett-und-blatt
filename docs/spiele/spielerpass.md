@@ -226,6 +226,8 @@ Für Klassen, in denen Kinder keinen eigenen Ausweis mitbringen:
 
 ## 8.3 Anmeldung mit Google- oder Microsoft-Konto
 
+**Ergebnis von #153 (9.11.2026): [`konto-anmeldung.md`](konto-anmeldung.md)** (Ablauf, Schlüsselführung, Bedrohungen, Anbieter, Recht) und [`konto-anmeldung-einrichtung.md`](konto-anmeldung-einrichtung.md) (Anleitung für Cornelius). Kernpunkt: Es gibt keinen Weg stärker als Pfeffer allein, wenn das Konto der einzige Öffner ist; stärker ist „Konto + PIN“. Der folgende Text ist der ursprüngliche Vorschlag.
+
 Ein weiterer **Öffner** neben PIN, Passwort, Passkey und Notfallkarte, kein Ersatz für den Ausweis:
 
 - **Ablauf:** „Mit Google anmelden“ bzw. „Mit Microsoft anmelden“ (OpenID Connect mit PKCE). Der Worker bekommt die feste Kennung des Kontos (`sub` bei Google, `oid` + `tid` bei Microsoft) und sucht damit ein **Konto-Schloss**: Kennung `HMAC(Pfeffer, Anbieter + Kontokennung)`, darin der Passschlüssel, verschlüsselt mit einem Serveranteil, der selbst mit dem Pfeffer verschlüsselt liegt. Nach erfolgreicher Anmeldung gibt der Server Serveranteil und Inhalt heraus.
