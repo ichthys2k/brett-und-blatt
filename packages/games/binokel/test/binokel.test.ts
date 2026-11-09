@@ -1,8 +1,8 @@
-import { cardId, computeBotMove, isLegalMove, type CardId } from '@brett-und-blatt/engine';
+import { cardId, computeBotMove, isLegalMove, teamsFor, type CardId } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it } from 'vitest';
 import { binokelContract, findMelds, gameModule, meldPoints } from '../src';
-import { legalCardsFor, type BinokelMove, type BinokelState } from '../src/rules';
+import { legalCardsFor, teamOf, type BinokelMove, type BinokelState } from '../src/rules';
 
 describe('Vertrag für Spielmodule', () => {
   for (const check of gameContractChecks(gameModule)) it(check.name, check.run);
@@ -152,6 +152,43 @@ describe('Binokel – Vierertisch und Kreuzbinokel', () => {
     const res = gameModule.result(s)!;
     if (res.kind === 'win') expect([[0, 2], [1, 3]]).toContainEqual([...res.winners].sort());
   }, 60_000);
+
+  it('Teams gelten nur im Kreuzbinokel mit vier Plätzen (#204)', () => {
+    expect(teamsFor(gameModule.info, { fourTable: 'kreuz' }, 4)?.count).toBe(2);
+    expect(teamsFor(gameModule.info, { fourTable: 'kreuz' }, 3)).toBeUndefined();
+    expect(teamsFor(gameModule.info, { fourTable: 'sitOut' }, 4)).toBeUndefined();
+    expect(teamsFor(gameModule.info, {}, 4)).toBeUndefined();
+  });
+
+  it('Kreuzbinokel: Partner richten sich nach der Teamoption', () => {
+    const s = gameModule.setup(4, { fourTable: 'kreuz', teams: '0,0,1,1' }, 'teams');
+    expect(s.teams).toEqual([0, 0, 1, 1]);
+    expect(teamOf(s, 0)).toEqual([0, 1]);
+    expect(teamOf(s, 3)).toEqual([2, 3]);
+    // ungültige Aufteilung (3 gegen 1) fällt auf die Gegenübersitzenden zurück
+    const fallback = gameModule.setup(4, { fourTable: 'kreuz', teams: '0,0,0,1' }, 'teams');
+    expect(teamOf(fallback, 0)).toEqual([0, 2]);
+    // ohne Kreuz gibt es keine Teams
+    expect(gameModule.setup(4, { teams: '0,0,1,1' }, 'teams').teams).toBeUndefined();
+    expect(gameModule.setup(3, { fourTable: 'kreuz', teams: '0,0,1' }, 'teams').kreuz).toBe(false);
+  });
+
+  it('Kreuzbinokel mit frei gewählten Teams: Partner haben gleiche Punkte, das Team gewinnt', () => {
+    const { s, rounds } = runSeries({ fourTable: 'kreuz', teams: '0,1,1,0' }, 'teams-serie');
+    for (const r of rounds) {
+      expect(r.points[0]).toBe(r.points[3]);
+      expect(r.points[1]).toBe(r.points[2]);
+    }
+    const res = gameModule.result(s)!;
+    if (res.kind === 'win') expect([[0, 3], [1, 2]]).toContainEqual([...res.winners].sort());
+    else expect(s.scores[0]).toBe(s.scores[1]);
+  }, 60_000);
+
+  it('Kreuzbinokel: Siegerpartei mit zwei Siegern, nicht Remis', () => {
+    const s = { ...gameModule.setup(4, { fourTable: 'kreuz' }, 'sieg'), phase: 'finished' as const, scores: [1100, 800, 1100, 800] };
+    expect(gameModule.result(s)).toEqual({ kind: 'win', winners: [0, 2] });
+    expect(gameModule.result({ ...s, scores: [900, 900, 900, 900] })).toEqual({ kind: 'draw' });
+  });
 
   it('Kreuzbinokel: Meldungen zählen nur mit eigenem Stich', () => {
     let s = gameModule.setup(4, { fourTable: 'kreuz' }, 'kreuz-meld');

@@ -3,6 +3,7 @@ import {
   REPLAY_MAX_STEPS,
   type ReplayData,
   TEAM_OPTION_ID,
+  teamsFor,
   shuffledTeams,
   resolveOptions,
   type AnyGameModule,
@@ -719,6 +720,7 @@ export class Room {
         const spec = module?.options.find((o) => o.id === message.id);
         if (!isHost || this.phase !== 'lobby' || !spec?.choices.some((c) => c.value === message.value)) return deny();
         this.lobby.options = { ...this.lobby.options, [message.id]: message.value };
+        this.applyTeams();
         return this.broadcastRoom();
       }
       case 'setTime':
@@ -742,7 +744,7 @@ export class Room {
         return this.broadcastRoom();
       }
       case 'setTeam': {
-        const count = this.lobbyModule()?.info.teams?.count ?? 0;
+        const count = this.lobbyTeams()?.count ?? 0;
         const seat = this.lobby.seats[message.index];
         const own = seat?.kind === 'human' && seat.memberId === member.id;
         if (this.phase !== 'lobby' || !seat || message.team >= count || !(isHost || own)) return deny();
@@ -750,7 +752,7 @@ export class Room {
         return this.broadcastRoom();
       }
       case 'shuffleTeams': {
-        const count = this.lobbyModule()?.info.teams?.count ?? 0;
+        const count = this.lobbyTeams()?.count ?? 0;
         if (!isHost || this.phase !== 'lobby' || count < 2) return deny();
         // Besetzte Plätze gleichmäßig mischen, freie Plätze behalten ihr Team.
         const occupied = this.lobby.seats.flatMap((s, i) => (s.kind === 'bot' || s.memberId !== null ? [i] : []));
@@ -990,7 +992,7 @@ export class Room {
           ? { kind: 'human', name: 'Frei', memberId: null }
           : { kind: 'human', name: this.members.get(seat.memberId)?.name ?? '?', avatar: this.members.get(seat.memberId)?.avatar, memberId: seat.memberId },
     );
-    const teamCount = module.info.teams?.count ?? 0;
+    const teamCount = teamsFor(module.info, this.lobby.options, seats.length)?.count ?? 0;
     const teamOptions: Options = teamCount >= 2 ? { [TEAM_OPTION_ID]: seats.map((seat, i) => seat.team ?? i % teamCount).join(',') } : {};
     const resolvedOptions = resolveOptions(module, { ...this.lobby.options, ...teamOptions });
     const config: SessionConfig = {
@@ -1075,6 +1077,12 @@ export class Room {
     };
   }
 
+  /** Die Teams, die für Spiel, Optionen und Platzzahl der Lobby gelten (Kreuzbinokel nur zu viert mit Option). */
+  private lobbyTeams(): ReturnType<typeof teamsFor> {
+    const module = this.lobbyModule();
+    return module ? teamsFor(module.info, this.lobby.options, this.lobby.seats.length) : undefined;
+  }
+
   private lobbyModule(): AnyGameModule | undefined {
     return this.lobby.gameId ? this.deps.findGame(this.lobby.gameId) : undefined;
   }
@@ -1088,7 +1096,7 @@ export class Room {
 
   /** Teamspiel: jedem Platz ein gültiges Team (sonst im Wechsel); sonst die Teamangaben entfernen. */
   private applyTeams(): void {
-    const count = this.lobbyModule()?.info.teams?.count ?? 0;
+    const count = this.lobbyTeams()?.count ?? 0;
     this.lobby.seats.forEach((seat, index) => {
       if (count < 2) delete seat.team;
       else if (seat.team === undefined || seat.team >= count) seat.team = index % count;

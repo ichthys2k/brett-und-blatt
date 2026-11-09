@@ -20,7 +20,8 @@ export function isTeamGame(info: GameInfo): boolean {
 
 /** Ist die Teamgröße für dieses Spiel möglich (zwei Teams, passend zu den Plätzen)? */
 export function validTeamSize(info: GameInfo, size: unknown): boolean {
-  return TEAM_SIZE_CHOICES.includes(size as 2) && (size as number) * 2 >= info.players.min && (size as number) * 2 <= info.players.max;
+  const seats = info.teams?.when?.seats;
+  return TEAM_SIZE_CHOICES.includes(size as 2) && (seats === undefined || (size as number) * 2 === seats) && (size as number) * 2 >= info.players.min && (size as number) * 2 <= info.players.max;
 }
 
 export function isTeamed(s: Pick<TournamentSnapshot, 'settings'>): boolean {

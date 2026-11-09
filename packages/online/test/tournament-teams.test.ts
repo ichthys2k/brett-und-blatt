@@ -34,6 +34,21 @@ describe('Einstellungen', () => {
   });
 });
 
+describe('Teamspiel mit Bedingung (Kreuzbinokel, #204)', () => {
+  const binokel = { id: 'binokel', name: 'Binokel', players: { min: 3, max: 4 }, teams: { count: 2, names: ['A', 'B'], minPerTeam: 2, when: { option: 'fourTable', value: 'kreuz', seats: 4 } } };
+  const find = (id: string) => (id === 'binokel' ? { info: binokel as never, options: [{ id: 'fourTable', label: 'Zu viert', choices: [{ value: 'sitOut', label: 'a' }, { value: 'kreuz', label: 'k' }], default: 'sitOut' }] } : undefined);
+  const base = { name: 'Cup', gameId: 'binokel', time: 'normal', days: 3, format: 'knockout' };
+
+  it('nur Teams zu zweit; die Kreuz-Option wird fest gesetzt', () => {
+    expect(isTeamGame(binokel as never)).toBe(true);
+    expect(validTeamSize(binokel as never, 2)).toBe(true);
+    expect(validTeamSize(binokel as never, 3)).toBe(false);
+    expect(parseTournamentSettings({ ...base, teamSize: 2 }, find)).toMatchObject({ teamSize: 2, options: { fourTable: 'kreuz' } });
+    expect(parseTournamentSettings({ ...base, teamSize: 3 }, find)).toBeNull();
+    expect(parseTournamentSettings(base, find)).toBeNull();
+  });
+});
+
 describe('Turnier mit Teams', () => {
   it('teilt beim Start auf Teams auf; die Zahl muss aufgehen', () => {
     const odd = teamTournament(9);

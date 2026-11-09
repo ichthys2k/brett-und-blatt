@@ -67,3 +67,17 @@ export function shuffledTeams(seats: number, count: number, random: () => number
   });
   return teams;
 }
+
+/**
+ * Die Teamangaben eines Spiels, soweit sie für diese Einstellungen gelten: ohne `when` immer,
+ * sonst nur bei passender Option und Platzzahl (Binokel: nur Kreuzbinokel zu viert).
+ */
+export function teamsFor(info: Pick<GameInfo, 'teams'>, options: Options, seats?: number): NonNullable<GameInfo['teams']> | undefined {
+  const teams = info.teams;
+  if (!teams) return undefined;
+  const when = teams.when;
+  if (!when) return teams;
+  if (String(options[when.option] ?? '') !== when.value) return undefined;
+  if (when.seats !== undefined && seats !== undefined && seats !== when.seats) return undefined;
+  return teams;
+}

@@ -13,6 +13,7 @@ import {
   type SeatId,
   type Suit,
   parseDeckStyle,
+  teamsFromOptions,
   type DeckStyle,
 } from '@brett-und-blatt/engine';
 import { binokelContract, createDeck, eyes, SUITS } from './cards';
@@ -44,6 +45,8 @@ export interface BinokelState {
   seats?: number;
   /** Kreuzbinokel: vier spielen, die Gegenübersitzenden (0+2, 1+3) sind Partner. */
   kreuz?: boolean;
+  /** Kreuzbinokel: Partei (0 oder 1) je Platz; fehlt in alten Spielständen (= Gegenübersitzende, 0+2 und 1+3). */
+  teams?: number[];
   /** Plätze im laufenden Spiel in Spielreihenfolge, beginnend mit der Vorhand. */
   active?: number[];
   deckStyle: DeckStyle;
@@ -120,8 +123,10 @@ function nextSeat(state: BinokelState, seat: number): number {
 }
 
 /** Partei eines Platzes: im Kreuzbinokel er und sein Gegenüber, sonst er allein. */
-export function teamOf(state: Pick<BinokelState, 'kreuz'>, seat: number): number[] {
-  return state.kreuz ? [seat, (seat + 2) % 4] : [seat];
+export function teamOf(state: Pick<BinokelState, 'kreuz' | 'teams'>, seat: number): number[] {
+  if (!state.kreuz) return [seat];
+  const teams = state.teams ?? [0, 1, 0, 1];
+  return teams.flatMap((team, s) => (team === teams[seat] ? [s] : []));
 }
 
 function deal(base: Omit<BinokelState, 'hands' | 'dabb' | 'dealRng'>, dealRng: RngState): BinokelState {
@@ -175,6 +180,7 @@ export function setup(seatsAtTable: number, options: Options, seed: string): Bin
   const base = {
     seats,
     kreuz: seats === 4 && String(options.fourTable ?? 'sitOut') === 'kreuz',
+    ...(seats === 4 && String(options.fourTable ?? 'sitOut') === 'kreuz' ? { teams: teamsFromOptions(options, 4, 2, 2) } : {}),
     deckStyle: parseDeckStyle(options.deckStyle),
     deckSize,
     minBid: Number(options.minBid ?? 150) || 150,
@@ -424,6 +430,8 @@ export function result(state: BinokelState): Result | null {
   if (state.phase !== 'finished') return null;
   const best = Math.max(...state.scores);
   const winners = state.scores.flatMap((s, seat) => (s === best ? [seat] : []));
+  // Kreuzbinokel: Partner haben denselben Stand und gewinnen zusammen; Gleichstand nur zwischen den Parteien.
+  if (state.kreuz) return winners.every((seat) => teamOf(state, winners[0]!).includes(seat)) ? { kind: 'win', winners } : { kind: 'draw' };
   return winners.length === 1 ? { kind: 'win', winners } : { kind: 'draw' };
 }
 

@@ -45,7 +45,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
   const display = useTrickDisplay(view.currentTrick, view.completedTricks);
   const playing = activeSeats(view);
   const allSeats = Array.from({ length: seatCount(view) }, (_, s) => s);
-  const partnerOfDeclarer = view.kreuz && view.declarer !== null ? teamOf(view, view.declarer)[1] : null;
+  const partnerOfDeclarer = view.kreuz && view.declarer !== null ? teamOf(view, view.declarer).find((s) => s !== view.declarer) ?? null : null;
   const slots: TrickTableSlot[] = playing.map((seat) => ({
     seat,
     name: `${name(seat)}${seat === view.declarer ? ' (Spielmacher)' : seat === partnerOfDeclarer ? ' (Partner)' : ''}`,
@@ -86,7 +86,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
         <span className="text-muted">
           Geber: {name(view.dealer)}
           {!playing.includes(view.dealer) ? ' (setzt aus)' : ''}
-          {view.kreuz ? ` · Kreuzbinokel: ${name(0)} + ${name(2)} gegen ${name(1)} + ${name(3)}` : ''}
+          {view.kreuz ? ` · Kreuzbinokel: ${teamOf(view, 0).map(name).join(' + ')} gegen ${activeSeats(view).filter((s) => !teamOf(view, 0).includes(s)).map(name).join(' + ')}` : ''}
         </span>
       </div>
 
@@ -318,7 +318,7 @@ export const gameUi: GameUi<BinokelState, BinokelMove> = {
   SeatSymbol: ({ seat, className = '' }) => <SuitIcon suit={(['C', 'S', 'H', 'D'] as Suit[])[seat % 4]!} className={`h-6 w-6 ${className}`} />,
   seatLabel: (seat: SeatId) => `Platz ${seat + 1}`,
   seatDetail: (view, seat) =>
-    `${view.scores[seat]} Punkte${seat === view.declarer ? ' · Spielmacher' : ''}${view.kreuz ? ` · Partei ${seat % 2 === 0 ? 'A' : 'B'}` : ''}${!activeSeats(view).includes(seat) ? ' · setzt aus' : ''}`,
+    `${view.scores[seat]} Punkte${seat === view.declarer ? ' · Spielmacher' : ''}${view.kreuz ? ` · Partei ${teamOf(view, 0).includes(seat) ? 'A' : 'B'}` : ''}${!activeSeats(view).includes(seat) ? ' · setzt aus' : ''}`,
   sounds: {
     cardPlayed: 'karte-legen',
     trickTaken: 'stich-einsammeln',

@@ -244,3 +244,7 @@ Cornelius hat alle Vorschläge übernommen:
 
 - **#202:** Die Bundesliga-Form ist online auf `LEAGUE_ONLINE_MAX_PLAYERS` = 30 Teilnehmer begrenzt (`Tournament.join`, Hinweis auf WM-Form und Schweizer System, auch beim Anlegen und in der Anmeldung). Vor Ort (`addEntrants`) bleibt es bei 128.
 - **#203:** Die Hauptleitung (`mayDelete`) erzeugt mit „Leitung übergeben“ einen Einmalcode (`issueLeaderTransfer`, 24 h, höchstens 5 Fehlversuche). Auf dem neuen Gerät löst ihn der Link `#/turnier/<Code>?leitung=<CODE>` (auch als QR) ein (`takeLeadership`); das alte Gerät ist danach keine Leitung mehr. Nachrichten `leaderCode`/`takeLeader`, nicht für LOKAL-Turniere ohne Netz.
+
+## Kreuzbinokel im Teamturnier (#204, 9.11.2026)
+
+`GameInfo.teams` hat nun optional `when: { option, value, seats }` und `minPerTeam`. Binokel nutzt es für Kreuzbinokel (vier Plätze); `isTeamGame`/`validTeamSize` lassen dort nur Teams zu zweit zu (`when.seats`), `parseTournamentSettings` setzt die Option `fourTable=kreuz` fest. Lobby, Raum (`lobbyTeams`) und Einrichtung (`teamsFor`) zeigen Teams nur bei passender Option und Platzzahl.

@@ -201,6 +201,9 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
       options[id] = value as string;
     }
   }
+  // Teamspiele, die nur mit einer Option Teams haben (Kreuzbinokel), spielen im Turnier immer so.
+  const teamWhen = teamSize !== undefined ? game.info.teams?.when : undefined;
+  if (teamWhen) options[teamWhen.option] = teamWhen.value;
   // Platzierungsspiele (Stufe 4): K.-o. und WM-Form; sie schließen das Spiel um Platz 3 ein.
   const placements = body.placements === true && (format === 'knockout' || format === 'world');
   // Anmeldung mit Freigabe und Check-in (Stufe 5).

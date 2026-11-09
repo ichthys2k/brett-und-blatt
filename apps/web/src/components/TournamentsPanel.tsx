@@ -122,7 +122,9 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   }, [creating, gameId]);
 
   const valueOf = (spec: OptionSpec) => options[spec.id] ?? spec.default;
-  const visible = specs.filter((spec) => !spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(options[id] ?? specs.find((s) => s.id === id)?.default ?? '')));
+  // Bei Teamspielen mit Bedingung (Kreuzbinokel) legt das Turnier die Option selbst fest.
+  const forcedOption = teamGame?.teams?.when?.option;
+  const visible = specs.filter((spec) => spec.id !== forcedOption && (!spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(options[id] ?? specs.find((s) => s.id === id)?.default ?? ''))));
   const [error, setError] = useState<string | null>(null);
 
   const local = mode === 'local';

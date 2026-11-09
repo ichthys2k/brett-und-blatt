@@ -116,8 +116,16 @@ const teamGame: GameModule<TeamState, RoundMove> = {
   setup: (seats, opts) => ({ ...round.setup(seats, opts, ''), teams: teamsFromOptions(opts, seats) }),
 };
 
+/** Teams nur mit Option und vier Plätzen (wie Kreuzbinokel, #204). */
+const conditionalTeamGame: GameModule<TeamState, RoundMove> = {
+  ...(teamGame as GameModule<TeamState, RoundMove>),
+  info: { ...teamGame.info, id: 'kreuzspiel', name: 'Kreuzspiel', players: { min: 3, max: 4 }, teams: { count: 2, names: ['A', 'B'], minPerTeam: 2, when: { option: 'zuViert', value: 'kreuz', seats: 4 } } },
+  options: [{ id: 'zuViert', label: 'Zu viert', choices: [{ value: 'aussetzen', label: 'Aussetzen' }, { value: 'kreuz', label: 'Kreuz' }], default: 'aussetzen' }, teamOption()],
+};
+
 const modules = new Map<string, AnyGameModule>([
   [teamGame.info.id, teamGame],
+  [conditionalTeamGame.info.id, conditionalTeamGame],
   ['menschen', { ...together, info: { ...together.info, id: 'menschen', minHumans: 2 } } as AnyGameModule],
   [round.info.id, round],
   [ticTacToe.info.id, ticTacToe],
@@ -241,6 +249,33 @@ describe('Teams in der Lobby', () => {
     anna.send({ type: 'start' });
     // Freie Plätze fallen weg: Anna (0), Ben (1), Bot (1), Cara (1).
     expect((env.room as unknown as { game: { session: { state: TeamState } } }).game.session.state.teams).toEqual([0, 1, 1, 1]);
+  });
+
+  it('Teams nur dort, wo Option und Platzzahl passen (Kreuzbinokel, #204)', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    anna.hello();
+    anna.send({ type: 'setGame', gameId: 'kreuzspiel' });
+    // drei Plätze, Standardoption: keine Teams, Mischen geht nicht
+    expect(anna.room().lobby.seats.every((s) => s.team === undefined)).toBe(true);
+    anna.send({ type: 'shuffleTeams' });
+    expect(anna.last('error')?.code).toBe('notAllowed');
+    // vier Plätze reichen allein nicht
+    anna.send({ type: 'setSeatCount', count: 4 });
+    expect(anna.room().lobby.seats.every((s) => s.team === undefined)).toBe(true);
+    // mit der Option gibt es Teams im Wechsel
+    anna.send({ type: 'setOption', id: 'zuViert', value: 'kreuz' });
+    expect(anna.room().lobby.seats.map((s) => s.team)).toEqual([0, 1, 0, 1]);
+    anna.send({ type: 'setTeam', index: 1, team: 0 });
+    anna.send({ type: 'setTeam', index: 2, team: 1 });
+    expect(anna.room().lobby.seats.map((s) => s.team)).toEqual([0, 0, 1, 1]);
+    for (let i = 0; i < 4; i++) anna.send({ type: 'setSeat', index: i, seat: { bot: 'easy' } });
+    anna.send({ type: 'shuffleTeams' });
+    const teams = anna.room().lobby.seats.map((s) => s.team);
+    expect(teams.filter((x) => x === 0)).toHaveLength(2);
+    // zurück auf drei Plätze: Teams weg
+    anna.send({ type: 'setOption', id: 'zuViert', value: 'aussetzen' });
+    expect(anna.room().lobby.seats.every((s) => s.team === undefined)).toBe(true);
   });
 
   it('mischt besetzte Plätze gleichmäßig', () => {

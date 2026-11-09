@@ -1,5 +1,5 @@
 import { PlayerCrest } from '@brett-und-blatt/ui';
-import { BOT_LEVELS, parseCrest, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
+import { BOT_LEVELS, parseCrest, teamsFor, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
 import { MAX_SEATS, TOURNAMENT_CODE_PATTERN, parseRoomCode, roomCapabilities, type Capability, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
@@ -341,6 +341,7 @@ export function useLoadedGame(gameId: string | null): LoadedGame | null {
 function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage; state: RoomState; connection: RoomConnection; isHost: boolean; onLeave: () => void }) {
   const { lobby } = room;
   const game = useLoadedGame(lobby.gameId);
+  const teams = game ? teamsFor(game.info, lobby.options, lobby.seats.length) : undefined;
   const [showQr, setShowQr] = useState(false);
   const [copied, setCopied] = useState(false);
   // Neue Mitglieder kündigen sich mit ihrem Tier an – nicht beim Öffnen der Lobby und
@@ -521,17 +522,17 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
                     🪑 {t('online.fillSeats', { n: unseatedConnected })}
                   </Button>
                 )}
-                {game.info.teams && (
+                {teams && (
                   <Button variant="secondary" className="min-h-9 text-sm" onClick={() => send({ type: 'shuffleTeams' })}>
                     🔀 {t('online.shuffleTeams')}
                   </Button>
                 )}
               </div>
             )}
-            {game.info.teams && <TeamSummary names={game.info.teams.names} seats={lobby.seats} />}
+            {teams && <TeamSummary names={teams.names} seats={lobby.seats} />}
             <ol className="space-y-2">
               {lobby.seats.map((seat, index) => (
-                <SeatRow key={index} compact={lobby.seats.length > 10} seatCount={lobby.seats.length} index={index} seat={seat} game={game} isHost={isHost} you={state.you} mySeat={mySeat} member={seat.kind === 'human' ? memberName(seat.memberId) : undefined} send={send} />
+                <SeatRow key={index} teams={teams} compact={lobby.seats.length > 10} seatCount={lobby.seats.length} index={index} seat={seat} game={game} isHost={isHost} you={state.you} mySeat={mySeat} member={seat.kind === 'human' ? memberName(seat.memberId) : undefined} send={send} />
               ))}
             </ol>
           </Section>
@@ -692,6 +693,7 @@ function MemberRow({
 }
 
 function SeatRow({
+  teams,
   compact,
   seatCount,
   index,
@@ -709,6 +711,7 @@ function SeatRow({
   index: number;
   seat: LobbySeat;
   game: LoadedGame;
+  teams: ReturnType<typeof teamsFor>;
   isHost: boolean;
   you: string | null;
   mySeat: number;
@@ -722,11 +725,11 @@ function SeatRow({
       <div className={`flex items-center ${compact ? 'gap-2' : 'flex-wrap gap-3'}`}>
         <ui.SeatSymbol seat={index} seats={seatCount} className={`block flex-none ${compact ? 'size-6' : 'size-8'}`} />
         <span className="text-sm whitespace-nowrap text-muted">{ui.seatLabel(index, seatCount)}</span>
-        {game.info.teams && seat.team !== undefined && (
+        {teams && seat.team !== undefined && (
           <TeamChip
-            names={game.info.teams.names}
+            names={teams.names}
             team={seat.team}
-            onSwitch={isHost || mine ? () => send({ type: 'setTeam', index, team: (seat.team! + 1) % game.info.teams!.count }) : undefined}
+            onSwitch={isHost || mine ? () => send({ type: 'setTeam', index, team: (seat.team! + 1) % teams.count }) : undefined}
           />
         )}
         <span className={`flex-1 font-medium ${compact ? 'min-w-0 truncate' : ''}`}>

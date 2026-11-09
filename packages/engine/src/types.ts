@@ -47,9 +47,11 @@ export interface GameInfo {
   ownMusic?: boolean;
   /**
    * Teamspiel: Die Lobby zeigt je Platz das Team und lässt es wechseln (`teamOption`,
-   * `teamsFromOptions` in `teams.ts`). `names` sind die Anzeigenamen der Teams.
+   * `teamsFromOptions` in `teams.ts`). `names` sind die Anzeigenamen der Teams. Mit `when` gilt
+   * das Teamspiel nur bei einer bestimmten Option und Platzzahl (Binokel: Kreuzbinokel zu viert,
+   * siehe `teamsFor`); `minPerTeam` verlangt Mindestgröße je Team (Kreuzbinokel: 2).
    */
-  teams?: { count: number; names: string[] };
+  teams?: { count: number; names: string[]; minPerTeam?: number; when?: { option: string; value: string; seats?: number } };
   /** Mindestens so viele Menschen braucht eine Partie; ohne Gespräch unter Menschen ist sie sinnlos. Fehlt die Angabe, reicht einer. */
   minHumans?: number;
   /** Kein „Zug zurück“: Bei geheimen Rollen an einem Gerät würde das Zurücknehmen Wissen verraten. */
