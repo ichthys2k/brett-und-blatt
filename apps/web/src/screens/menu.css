@@ -139,11 +139,8 @@
   display: grid;
   place-items: center;
   width: 2.6rem;
-  height: 3.2rem;
-  font-size: 1.5rem;
-  background: #b3261e;
-  border: 2px solid var(--gold);
-  border-radius: 6px 6px 50% 50%;
+  height: 3.4rem;
+  color: var(--cream);
 }
 .bub-menu-name { flex: 1; font-family: Almendra, Georgia, serif; font-size: 1.35rem; }
 .bub-menu-foot { grid-column: 1; grid-row: 3; align-self: end; font-size: 0.8rem; color: #bba77a; }

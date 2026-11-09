@@ -1,5 +1,7 @@
+import { PlayerCrest } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import { TavernScene } from '../components/TavernScene';
+import { useCrest } from '../lib/crestStore';
 import { findGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
@@ -17,6 +19,7 @@ const ENTRIES: readonly { id: string; label: string; hint: string; to: string }[
 ];
 
 export function Menu() {
+  const crest = useCrest();
   const [hint, setHint] = useState('');
   const profile = storage.loadProfile();
   const resume = storage.loadActive();
@@ -70,7 +73,7 @@ export function Menu() {
         onClick={() => navigate(paths.pass)}
       >
         <span className="bub-menu-shield" aria-hidden="true">
-          {profile?.avatar ?? '🛡️'}
+          <PlayerCrest spec={crest} size={40} />
         </span>
         <span className="bub-menu-name">{profile?.name ?? 'Noch kein Name'}</span>
         <span className="bub-menu-switch">Profil</span>
