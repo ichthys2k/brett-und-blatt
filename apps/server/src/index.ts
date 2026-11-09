@@ -14,6 +14,7 @@ import {
   saveAccountLock,
   sha256Url,
   ticketValid,
+  isPlausibleClientId,
   type AccountProvider,
   type AccountRecord,
   type FlowRecord,
@@ -210,8 +211,12 @@ function accountLockStub(env: Env, id: string): DurableObjectStub<AccountLockBox
 
 /** Zugangsdaten des Anbieters aus den Secrets; null, wenn er nicht eingerichtet ist. */
 function providerCredentials(env: Env, provider: AccountProvider): { clientId: string; clientSecret: string } | null {
-  const [clientId, clientSecret] = provider === 'google' ? [env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET] : [env.MS_CLIENT_ID, env.MS_CLIENT_SECRET];
-  return clientId && clientSecret ? { clientId, clientSecret } : null;
+  const [rawId, rawSecret] = provider === 'google' ? [env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET] : [env.MS_CLIENT_ID, env.MS_CLIENT_SECRET];
+  const clientId = rawId?.trim();
+  const clientSecret = rawSecret?.trim();
+  if (!clientId || !clientSecret) return null;
+  // Sicherung gegen vertauschte Werte: Ein Geheimnis in der ID-Zeile würde sonst in der Adresse an den Anbieter gehen.
+  return isPlausibleClientId(provider, clientId) ? { clientId, clientSecret } : null;
 }
 
 function attemptStub(env: Env, sender: string): DurableObjectStub<AttemptLimiter> {
@@ -587,7 +592,7 @@ export default {
       if (url.searchParams.get('error') || !code || code.length > 2048) return back('fehler=abgebrochen');
       if (!credentials || !env.PASS_PEPPER) return back('fehler=nicht-eingerichtet');
       const done = await exchangeCode({ provider, clientId: credentials.clientId, clientSecret: credentials.clientSecret, redirectUri, code, verifier: flow.verifier, nonce: flow.nonce });
-      if (!done.ok) return back('fehler=anmeldung');
+      if (!done.ok) return back(`fehler=anmeldung&grund=${encodeURIComponent(`${done.reason}${'detail' in done && done.detail ? ` ${done.detail}` : ''}`)}`);
       const ticket = randomToken(24);
       const record: TicketRecord = { provider, lockId: await accountLockId(env.PASS_PEPPER, provider, done.accountKey), binding: flow.binding, at: Date.now() };
       await flowStub(env, `ticket:${ticket}`).put(JSON.stringify(record), TICKET_TTL_MS);

@@ -4,6 +4,7 @@ import {
   accountLockId,
   buildAuthorizeUrl,
   checkIdTokenClaims,
+  isPlausibleClientId,
   createAccountLock,
   openAccountLock,
   randomToken,
@@ -127,5 +128,15 @@ describe('Konto-Schloss', () => {
   it('ohne Pfeffer geht nichts', async () => {
     expect((await createAccountLock({}, undefined, NOW)).status).toBe(503);
     expect((await createAccountLock({ auth: 'zu kurz' }, 'pfeffer', NOW)).status).toBe(400);
+  });
+});
+
+describe('Client-Kennung prüfen', () => {
+  it('erkennt vertauschte Werte', () => {
+    expect(isPlausibleClientId('microsoft', '9188040d-6c67-4c5b-b112-36a304b66dad')).toBe(true);
+    expect(isPlausibleClientId('microsoft', 'abcDE~fghIJklMNopQRstUVwxYZ.0123_456789')).toBe(false);
+    expect(isPlausibleClientId('google', '1234567890-abc_def.apps.googleusercontent.com')).toBe(true);
+    expect(isPlausibleClientId('google', 'GOCSPX-abcdefg')).toBe(false);
+    expect(isPlausibleClientId('google', '9188040d-6c67-4c5b-b112-36a304b66dad')).toBe(false);
   });
 });

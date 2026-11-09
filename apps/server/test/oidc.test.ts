@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { exchangeCode, verifyIdToken } from '../src/oidc';
+import { errorCode, exchangeCode, verifyIdToken } from '../src/oidc';
 
 const enc = new TextEncoder();
 const b64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -44,9 +44,17 @@ describe('ID-Token (#154)', () => {
     const params = { provider: 'google' as const, clientId: 'client', clientSecret: 's', redirectUri: 'https://w/konto/google/rueckruf', code: 'c', verifier: 'v', nonce: 'n' };
     const good = await sign(pair, 'k2', claims);
     expect(await exchangeCode(params, fakeFetch([jwk], good), now + 28_800_000)).toEqual({ ok: true, accountKey: 'u1' });
-    expect(await exchangeCode(params, fakeFetch([jwk]), now)).toEqual({ ok: false, reason: 'token' });
+    expect(await exchangeCode(params, fakeFetch([jwk]), now)).toEqual({ ok: false, reason: 'token', detail: 'invalid_grant' });
     expect(await exchangeCode({ ...params, nonce: 'anderer' }, fakeFetch([jwk], good), now + 36_000_000)).toEqual({ ok: false, reason: 'nonce' });
     const forged = await sign((await makeKey('k2')).pair, 'k2', claims);
     expect(await exchangeCode(params, fakeFetch([jwk], forged), now + 43_200_000)).toEqual({ ok: false, reason: 'verify' });
+  });
+});
+
+describe('Fehlercode des Anbieters', () => {
+  it('nur kurze Codes, keine freien Texte', () => {
+    expect(errorCode({ error: 'invalid_client', error_description: 'AADSTS7000215: Invalid client secret provided. Trace ID: 1234' })).toBe('invalid_client AADSTS7000215');
+    expect(errorCode({ error: 'x'.repeat(100), error_description: 'ohne Nummer' })).toBeUndefined();
+    expect(errorCode({})).toBeUndefined();
   });
 });

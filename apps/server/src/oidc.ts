@@ -52,6 +52,13 @@ export async function verifyIdToken(provider: AccountProvider, token: string, fe
   return JSON.parse(new TextDecoder().decode(fromBase64Url(parts[1]!)));
 }
 
+/** Kurzer, unbedenklicher Fehlercode der Antwort des Anbieters (z. B. `invalid_client`, `AADSTS7000215`); nie ein Wert aus unserer Anfrage. */
+export function errorCode(json: { error?: unknown; error_description?: unknown }): string | undefined {
+  const aad = typeof json.error_description === 'string' ? /AADSTS\d{3,7}/.exec(json.error_description)?.[0] : undefined;
+  const code = typeof json.error === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(json.error) ? json.error : undefined;
+  return [code, aad].filter(Boolean).join(' ') || undefined;
+}
+
 export interface ExchangeParams {
   provider: AccountProvider;
   clientId: string;
@@ -63,7 +70,7 @@ export interface ExchangeParams {
 }
 
 /** Tauscht den Code (mit PKCE und Client-Geheimnis) gegen das ID-Token und prüft es. Liefert die Kontokennung oder den Grund des Scheiterns. */
-export async function exchangeCode(params: ExchangeParams, fetcher: typeof fetch = fetch, now = Date.now()): Promise<ClaimsResult | { ok: false; reason: 'token' | 'verify' }> {
+export async function exchangeCode(params: ExchangeParams, fetcher: typeof fetch = fetch, now = Date.now()): Promise<ClaimsResult | { ok: false; reason: 'token' | 'verify'; detail?: string }> {
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code: params.code,
@@ -78,8 +85,8 @@ export async function exchangeCode(params: ExchangeParams, fetcher: typeof fetch
   } catch {
     return { ok: false, reason: 'token' };
   }
-  const json = (await res.json().catch(() => ({}))) as { id_token?: unknown };
-  if (!res.ok || typeof json.id_token !== 'string') return { ok: false, reason: 'token' };
+  const json = (await res.json().catch(() => ({}))) as { id_token?: unknown; error?: unknown; error_description?: unknown };
+  if (!res.ok || typeof json.id_token !== 'string') return { ok: false, reason: 'token', detail: errorCode(json) };
   let claims: unknown;
   try {
     claims = await verifyIdToken(params.provider, json.id_token, fetcher, now);

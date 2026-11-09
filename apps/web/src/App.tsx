@@ -67,7 +67,7 @@ function Screen() {
     case 'pass':
       return <PassScreen />;
     case 'account':
-      return <AccountScreen ticket={route.ticket} error={route.error} />;
+      return <AccountScreen ticket={route.ticket} error={route.error} reason={route.reason} />;
     case 'passView':
       return <PassView passKey={route.key} />;
     case 'imprint':
