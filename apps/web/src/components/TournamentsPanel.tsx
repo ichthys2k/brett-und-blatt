@@ -5,8 +5,9 @@ import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
 import { games, loadGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
-import { storage, type KnownTournament, type Profile } from '../lib/storage';
-import { createTournament, deleteTournament, tournamentExists } from '../lib/tournament';
+import { storage, type KnownTournament, type Profile, type TournamentTemplate } from '../lib/storage';
+import { seriesCsv, seriesStandings, type PointScheme, type SeriesRow } from '../lib/series';
+import { createTournament, deleteTournament, fetchTournamentView, tournamentExists } from '../lib/tournament';
 import { Button, Section } from './controls';
 
 const tournamentGames = games.filter(isTournamentGame).sort((a, b) => a.name.localeCompare(b.name, 'de'));
@@ -45,6 +46,9 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [groupCount, setGroupCount] = useState(0);
   /** Setzliste (Stufe 4, vor Ort): Die Reihenfolge der Teilnehmerliste ist die Setzung. */
   const [seeded, setSeeded] = useState(false);
+  /** Anmeldung mit Freigabe und Check-in (Stufe 5). */
+  const [approval, setApproval] = useState(false);
+  const [checkin, setCheckin] = useState(false);
   /** Beste Dritte (Stufe 4, WM-Form vor Ort). */
   const [bestThirds, setBestThirds] = useState(false);
   /** Liga nach Kalender (Stufe 4): Beginn des ersten Spieltags und Abstand in Tagen. */
@@ -152,7 +156,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
       const series = !tables && !teamGame && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
       const tableSettings = tables ? { tableSize: size, rounds, ...(local && lowWins ? { lowWins: true } : {}) } : {};
-      const common = { name: name.trim(), format, ...(format === 'lives' ? { lives } : {}), ...(format === 'dyp' ? { rounds } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(placements && (format === 'world' || format === 'knockout') ? { placements: true } : {}), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...(format === 'league' && leagueDate && !Number.isNaN(new Date(leagueDate).getTime()) ? { leagueStart: new Date(leagueDate).getTime(), leagueDays } : {}), ...tableSettings, ...series };
+      const common = { name: name.trim(), format, ...(format === 'lives' ? { lives } : {}), ...(format === 'dyp' ? { rounds } : {}), ...(checkin ? { checkin: true } : {}), ...(approval && !local ? { approval: true } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(placements && (format === 'world' || format === 'knockout') ? { placements: true } : {}), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...(format === 'league' && leagueDate && !Number.isNaN(new Date(leagueDate).getTime()) ? { leagueStart: new Date(leagueDate).getTime(), leagueDays } : {}), ...tableSettings, ...series };
       const many = format === 'league' && multi;
       const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
@@ -172,6 +176,14 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   return (
     <Section title={`🏆 ${t('tournament.title')}`}>
       <p className="text-sm text-muted">{t('tournament.hint')}</p>
+      <SeriesPanel profile={profile} known={known} />
+      <TemplateList
+        profile={profile}
+        onChanged={() => {
+          setListVersion((n) => n + 1);
+          passChanged();
+        }}
+      />
       {known.length > 0 && (
         <TournamentList
           known={known}
@@ -588,6 +600,22 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
           )}
           </div>
           <div className="space-y-3" hidden={step !== 2}>
+          {!local && (
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={approval} onChange={(e) => setApproval(e.target.checked)} />
+              <span>
+                {t('tournament.approval')}
+                <span className="block text-xs text-muted">{t('tournament.approvalHint')}</span>
+              </span>
+            </label>
+          )}
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={checkin} onChange={(e) => setCheckin(e.target.checked)} />
+            <span>
+              {t('tournament.checkin')}
+              <span className="block text-xs text-muted">{t('tournament.checkinHint')}</span>
+            </span>
+          </label>
           {local ? (
             <>
               <label className="flex items-start gap-2 text-sm">
@@ -643,6 +671,11 @@ function TournamentList({ known, profile, onChanged }: { known: KnownTournament[
     setPicked([]);
     setNote(null);
   };
+  const archive = (code: string, on: boolean) => {
+    storage.updateTournament(code, { archived: on });
+    onChanged();
+  };
+  const archived = known.filter((item) => item.archived);
   const removeLocal = (codes: string[]) => {
     for (const code of codes) storage.forgetTournament(code);
     setPicked((list) => list.filter((c) => !codes.includes(c)));
@@ -679,7 +712,7 @@ function TournamentList({ known, profile, onChanged }: { known: KnownTournament[
   return (
     <div className="space-y-2">
       <ul className="space-y-1">
-        {known.map((item) => (
+        {known.filter((item) => !item.archived || tidy).map((item) => (
           <li key={item.code} className="flex items-center gap-1">
             {tidy && <input type="checkbox" className="h-5 w-5 shrink-0 accent-accent" aria-label={item.name} checked={picked.includes(item.code)} onChange={() => toggle(item.code)} />}
             <Button className="min-w-0 flex-1 justify-start" onClick={() => (tidy ? toggle(item.code) : navigate(paths.tournament(item.code)))}>
@@ -690,13 +723,35 @@ function TournamentList({ known, profile, onChanged }: { known: KnownTournament[
               </span>
             </Button>
             {!tidy && (
-              <Button variant="ghost" className="px-3" aria-label={`${t('tournament.removeFromList')}: ${item.name}`} title={t('tournament.removeFromList')} onClick={() => removeLocal([item.code])}>
-                ✕
-              </Button>
+              <>
+                <Button variant="ghost" className="px-3" aria-label={`${t('tournament.archive')}: ${item.name}`} title={t('tournament.archive')} onClick={() => archive(item.code, true)}>
+                  🗄️
+                </Button>
+                <Button variant="ghost" className="px-3" aria-label={`${t('tournament.removeFromList')}: ${item.name}`} title={t('tournament.removeFromList')} onClick={() => removeLocal([item.code])}>
+                  ✕
+                </Button>
+              </>
             )}
           </li>
         ))}
       </ul>
+      {!tidy && archived.length > 0 && (
+        <details className="rounded-xl border border-line p-2">
+          <summary className="cursor-pointer text-sm">🗄️ {t('tournament.archived', { n: archived.length })}</summary>
+          <ul className="mt-2 space-y-1">
+            {archived.map((item) => (
+              <li key={item.code} className="flex items-center gap-1">
+                <Button className="min-w-0 flex-1 justify-start" onClick={() => navigate(paths.tournament(item.code))}>
+                  <span className="truncate">🏆 {item.name}</span>
+                </Button>
+                <Button variant="ghost" className="px-3" aria-label={`${t('tournament.unarchive')}: ${item.name}`} title={t('tournament.unarchive')} onClick={() => archive(item.code, false)}>
+                  ↩
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       {tidy ? (
         <div className="space-y-2 rounded-xl border border-line p-2">
           <div className="grid grid-cols-2 gap-2">
@@ -732,5 +787,151 @@ function TournamentList({ known, profile, onChanged }: { known: KnownTournament[
         )
       )}
     </div>
+  );
+}
+
+/** Gemerkte Vorlagen (Stufe 5): ein Tipp legt ein neues Turnier mit denselben Einstellungen an. */
+function TemplateList({ profile, onChanged }: { profile: Profile; onChanged: () => void }) {
+  const templates = storage.loadTemplates();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  if (templates.length === 0) return null;
+  const create = async (template: TournamentTemplate) => {
+    const name = window.prompt(t('tournament.templateName'), template.name)?.trim();
+    if (!name) return;
+    setBusy(template.name);
+    setError(null);
+    try {
+      const code = await createTournament({ ...(template.settings as unknown as TournamentSettings), name: name.slice(0, 40) }, profile);
+      storage.rememberTournament({ code, name: name.slice(0, 40) });
+      onChanged();
+      navigate(paths.tournament(code));
+    } catch {
+      setError(t('online.serverError'));
+    } finally {
+      setBusy(null);
+    }
+  };
+  return (
+    <details className="rounded-xl border border-line p-2">
+      <summary className="cursor-pointer text-sm">📑 {t('tournament.templates', { n: templates.length })}</summary>
+      <ul className="mt-2 space-y-1">
+        {templates.map((template) => (
+          <li key={template.name} className="flex items-center gap-1">
+            <Button className="min-w-0 flex-1 justify-start" disabled={busy !== null} onClick={() => create(template)}>
+              <span className="truncate">➕ {template.name}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="px-3"
+              aria-label={`${t('tournament.templateDelete')}: ${template.name}`}
+              title={t('tournament.templateDelete')}
+              onClick={() => {
+                storage.deleteTemplate(template.name);
+                onChanged();
+              }}
+            >
+              ✕
+            </Button>
+          </li>
+        ))}
+      </ul>
+      {error && <p role="alert" className="mt-2 text-sm text-danger">{error}</p>}
+    </details>
+  );
+}
+
+/**
+ * Serie auswerten (Stufe 5): Mehrere abgeschlossene Turniere ergeben eine gemeinsame Rangliste mit Punkten nach Platz
+ * und Elo. Die Auswertung läuft hier im Browser aus den Sichten der gewählten Turniere; nichts wird gespeichert.
+ */
+function SeriesPanel({ profile, known }: { profile: Profile; known: KnownTournament[] }) {
+  const [picked, setPicked] = useState<string[]>([]);
+  const [scheme, setScheme] = useState<PointScheme>('linear');
+  const [rows, setRows] = useState<SeriesRow[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  if (known.length < 2) return null;
+  const run = async () => {
+    setBusy(true);
+    setNote(null);
+    setRows(null);
+    const views = [];
+    let skipped = 0;
+    // In der Reihenfolge der Auswahl; so lässt sich die zeitliche Folge bestimmen.
+    for (const code of picked) {
+      const view = await fetchTournamentView(code, profile);
+      if (view && view.phase === 'finished' && view.ranking.length > 0) views.push(view);
+      else skipped++;
+    }
+    setRows(
+      seriesStandings(
+        views.map((view) => ({ name: view.settings.name, players: view.players, matches: view.matches.map((m) => ({ stage: m.stage, id: m.id, slots: m.slots, outcome: m.outcome })), ranking: view.ranking })),
+        scheme,
+      ),
+    );
+    setNote(skipped > 0 ? t('tournament.seriesSkipped', { n: skipped }) : null);
+    setBusy(false);
+  };
+  const toggle = (code: string) => setPicked((list) => (list.includes(code) ? list.filter((c) => c !== code) : [...list, code]));
+  return (
+    <details className="rounded-xl border border-line p-2">
+      <summary className="cursor-pointer text-sm">📈 {t('tournament.series')}</summary>
+      <div className="mt-2 space-y-2">
+        <p className="text-xs text-muted">{t('tournament.seriesAbout')}</p>
+        <ul className="space-y-1">
+          {[...known].reverse().map((item) => (
+            <li key={item.code}>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" className="h-4 w-4 accent-accent" checked={picked.includes(item.code)} onChange={() => toggle(item.code)} />
+                <span className="min-w-0 flex-1 truncate">{item.name}</span>
+                {picked.includes(item.code) && <span className="text-xs text-muted">{picked.indexOf(item.code) + 1}.</span>}
+              </label>
+            </li>
+          ))}
+        </ul>
+        <label className="block space-y-1 text-sm">
+          <span>{t('tournament.seriesScheme')}</span>
+          <select className={FIELD} value={scheme} onChange={(e) => setScheme(e.target.value as PointScheme)}>
+            <option value="linear">{t('tournament.seriesLinear')}</option>
+            <option value="f1">{t('tournament.seriesF1')}</option>
+          </select>
+        </label>
+        <Button className="w-full" variant="primary" disabled={busy || picked.length === 0} onClick={run}>
+          {busy ? t('tournament.tidyBusy') : t('tournament.seriesRun', { n: picked.length })}
+        </Button>
+        {note && <p role="status" className="text-sm text-muted">{note}</p>}
+        {rows && rows.length > 0 && (
+          <div className="space-y-2">
+            <table className="w-full table-fixed text-sm">
+              <thead className="text-xs text-muted">
+                <tr>
+                  <th className="w-7 text-left">#</th>
+                  <th className="text-left">{t('tournament.table.player')}</th>
+                  <th className="w-10">{t('tournament.seriesCount')}</th>
+                  <th className="w-12">{t('tournament.table.points')}</th>
+                  <th className="w-12">Elo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, i) => (
+                  <tr key={row.name} className="border-t border-line">
+                    <td className="py-1 tabular-nums">{i + 1}</td>
+                    <td className="truncate py-1">{row.name}</td>
+                    <td className="text-center tabular-nums">{row.tournaments}</td>
+                    <td className="text-center font-bold tabular-nums">{row.points}</td>
+                    <td className="text-center tabular-nums">{row.elo}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Button className="w-full text-sm" onClick={() => navigator.clipboard?.writeText(seriesCsv(rows))}>
+              {t('tournament.seriesCopy')}
+            </Button>
+          </div>
+        )}
+        {rows && rows.length === 0 && <p className="text-sm text-muted">{t('tournament.seriesEmpty')}</p>}
+      </div>
+    </details>
   );
 }

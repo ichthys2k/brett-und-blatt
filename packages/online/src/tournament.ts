@@ -200,7 +200,41 @@ export class Tournament {
     if (this.s.players.length >= TOURNAMENT_MAX_PLAYERS) return 'Das Turnier ist voll.';
     const clean = cleanName(name);
     if (!clean) return 'Bitte einen anderen Spitznamen wählen.';
-    this.s.players.push({ id: `p${this.s.nextPlayer++}`, token, name: clean, avatar: cleanAvatar(avatar), withdrawn: false });
+    this.s.players.push({ id: `p${this.s.nextPlayer++}`, token, name: clean, avatar: cleanAvatar(avatar), withdrawn: false, ...(this.s.settings.approval ? { pending: true } : {}), ...(this.s.settings.checkin ? { present: false } : {}) });
+    this.touch();
+    return null;
+  }
+
+  /** Anmeldung mit Freigabe: Die Leitung lässt zu oder lehnt ab (dann ist der Eintrag weg). */
+  approve(token: string, playerId: string, ok: boolean): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (this.s.phase !== 'signup') return 'Die Einschreibung ist beendet.';
+    const player = this.s.players.find((p) => p.id === playerId);
+    if (!player?.pending) return 'Dazu gibt es keine offene Anfrage.';
+    if (ok) delete player.pending;
+    else this.s.players = this.s.players.filter((p) => p.id !== playerId);
+    this.touch();
+    return null;
+  }
+
+  /** Check-in: jeder für sich („Ich bin da“), Leitung und Helfer für alle. */
+  setPresent(token: string, playerId: string | undefined, on: boolean): string | null {
+    if (this.s.phase !== 'signup') return 'Die Einschreibung ist beendet.';
+    if (!this.s.settings.checkin) return 'Bei diesem Turnier gibt es keinen Check-in.';
+    const own = this.playerByToken(token);
+    const target = playerId === undefined ? own : this.s.players.find((p) => p.id === playerId);
+    if (!target) return 'Diesen Teilnehmer gibt es nicht.';
+    if (target !== own && !this.mayEnter(token)) return 'Das darf nur die Leitung.';
+    target.present = on;
+    this.touch();
+    return null;
+  }
+
+  /** Längere Aufbewahrung ein- oder ausschalten (Leitung). */
+  setKeepLong(token: string, on: boolean): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    this.s.keepLong = on ? true : undefined;
+    if (!on) delete this.s.keepLong;
     this.touch();
     return null;
   }
@@ -242,6 +276,14 @@ export class Tournament {
     if (this.s.phase !== 'signup') return 'Das Turnier läuft schon.';
     const { days } = this.s.settings;
     const { minPlayers } = this.format;
+    const waiting = this.s.players.filter((p) => p.pending).length;
+    if (waiting > 0) return `Noch ${waiting} Anmeldung${waiting === 1 ? '' : 'en'} wartet auf deine Freigabe.`;
+    // Check-in: Wer fehlt, spielt nicht mit.
+    if (this.s.settings.checkin) {
+      const here = this.s.players.filter((p) => p.present);
+      if (here.length < minPlayers) return `Es braucht mindestens ${minPlayers} Anwesende (${here.length} eingecheckt).`;
+      this.s.players = here;
+    }
     if (isTeamed(this.s)) {
       // Teams: erst nach dem Los zu Teams zusammenfassen, dann zählt die Zahl der Teams.
       const teams = formTeams(this.s);
@@ -429,7 +471,7 @@ export class Tournament {
     }
     for (const name of clean as string[]) {
       const number = this.s.nextPlayer++;
-      this.s.players.push({ id: `p${number}`, token: '', name, avatar: AVATARS[(number - 1) % AVATARS.length]!, withdrawn: false });
+      this.s.players.push({ id: `p${number}`, token: '', name, avatar: AVATARS[(number - 1) % AVATARS.length]!, withdrawn: false, ...(this.s.settings.checkin && this.s.phase === 'signup' ? { present: false } : {}) });
     }
     this.touch();
     return null;
@@ -607,7 +649,8 @@ export class Tournament {
 
   /** Ab dann darf das Turnier samt allen Daten verschwinden. */
   expiresAt(): number {
-    // Ligen laufen über Monate und bleiben ein Jahr nach der letzten Aktivität.
+    // Ligen laufen über Monate und bleiben ein Jahr nach der letzten Aktivität; die Leitung kann das für jedes Turnier verlangen.
+    if (this.s.keepLong === true) return (this.s.finishedAt ?? this.s.lastActivity) + LEAGUE_KEEP_MS;
     if (this.s.settings.format === 'league') return this.s.lastActivity + LEAGUE_KEEP_MS;
     return (this.s.finishedAt ?? this.s.lastActivity) + TOURNAMENT_KEEP_MS;
   }
@@ -624,7 +667,8 @@ export class Tournament {
       settings: s.settings,
       leaderName: s.leaderName,
       phase: s.phase,
-      players: s.players.map(({ id, name, avatar, withdrawn, members, pair }) => ({ id, name, avatar, withdrawn, ...(members ? { members: members.map((m) => m.name) } : {}), ...(pair ? { pair: true } : {}) })),
+      // Wer auf Freigabe wartet, sehen nur die Leitung und er selbst.
+      players: s.players.filter((p) => !p.pending || p.id === you || (token !== null && this.isLeader(token))).map(({ id, name, avatar, withdrawn, members, pair, pending, present }) => ({ id, name, avatar, withdrawn, ...(members ? { members: members.map((m) => m.name) } : {}), ...(pair ? { pair: true } : {}), ...(pending ? { pending: true } : {}), ...(present !== undefined ? { present } : {}) })),
       groups: s.groups.map((players, group) => ({ players, table: this.groupTable(group), settled: this.groupSettled(group) })),
       swissTable: s.settings.format === 'swiss' && s.phase !== 'signup' ? this.overallTable() : [],
       table: this.tableRows(),
@@ -641,6 +685,7 @@ export class Tournament {
       referees: s.referees === true,
       podium: this.podium(),
       ranking: this.ranking(),
+      keepLong: s.keepLong === true,
       you,
       isLeader: token !== null && this.isLeader(token),
       mayDelete: token !== null && this.mayDelete(token),

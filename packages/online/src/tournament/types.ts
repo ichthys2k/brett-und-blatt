@@ -84,6 +84,10 @@ export interface TournamentSettings {
   rounds?: number;
   /** Tischrunden vor Ort: Punkte im Spiel zählen niedrig (z. B. Strafpunkte); sonst hoch. */
   lowWins?: boolean;
+  /** Anmeldung nur mit Freigabe durch die Leitung (Stufe 5, nur online). */
+  approval?: boolean;
+  /** Check-in vor dem Start (Stufe 5): Nur wer als anwesend gilt, spielt mit. */
+  checkin?: boolean;
   /** Last One Standing (Stufe 4): Leben je Teilnehmer; fehlt = 2. */
   lives?: number;
   /** Liga nach Kalender (Stufe 4, nur Bundesliga-Modus): Beginn des ersten Spieltags (ms) und Abstand der Spieltage in Tagen. */
@@ -189,6 +193,10 @@ export interface TournamentPlayer {
   name: string;
   avatar: string;
   withdrawn: boolean;
+  /** Anmeldung mit Freigabe (Stufe 5): wartet, bis die Leitung zugelassen hat. */
+  pending?: boolean;
+  /** Check-in (Stufe 5): ist da; wer beim Start fehlt, nimmt nicht teil. */
+  present?: boolean;
   /** Zufallspartner (Stufe 4, nur vor Ort): Das Team einer Runde, mit den Spieler-ids; kein echter Teilnehmer. */
   pair?: string[];
   /** Teams (Stufe 3 Teil 4): die Mitglieder in Raumreihenfolge; `token` ist die des ersten. */
@@ -254,6 +262,8 @@ export interface TournamentSnapshot {
   tables?: TableGame[];
   /** Teams: die Einzelnen vor der Auslosung der Teams (bleiben für die Anzeige erhalten). */
   roster?: TournamentPlayer[];
+  /** Längere Aufbewahrung (Stufe 5): wie bei Ligen ein Jahr nach der letzten Aktivität. */
+  keepLong?: boolean;
 }
 
 /**
@@ -331,6 +341,10 @@ export interface PublicPlayer {
   name: string;
   /** Zufallspartner: Team einer Runde, kein Teilnehmer. */
   pair?: boolean;
+  /** Wartet auf Freigabe durch die Leitung. */
+  pending?: boolean;
+  /** Check-in: ist anwesend. */
+  present?: boolean;
   avatar: string;
   withdrawn: boolean;
   /** Teams: Namen der Mitglieder. */
@@ -369,6 +383,8 @@ export interface TournamentView {
   referees: boolean;
   /** Plätze am Ende: Sieger, Zweiter, ggf. Dritter. */
   podium: string[];
+  /** Längere Aufbewahrung ist eingeschaltet. */
+  keepLong: boolean;
   /** Platzierungsspiele: alle Plätze der Reihe nach, sobald sie vergeben sind; sonst leer. */
   ranking: string[];
   you: string | null;

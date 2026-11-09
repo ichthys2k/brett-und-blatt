@@ -18,6 +18,8 @@ export type Route =
   | { name: 'room'; code: string }
   | { name: 'display'; code: string }
   | { name: 'tournament'; code: string; claim?: string; helper?: string }
+  /** Schlichte Ansicht zum Einbetten (iframe): nur lesen, nur Turniere vor Ort mit Zuschaulink. */
+  | { name: 'tournamentEmbed'; code: string }
   | { name: 'sound' }
   | { name: 'pass' }
   | { name: 'passView'; key: string }
@@ -58,6 +60,7 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'klasse' && parts[1]) return { name: 'class', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'raum' && parts[1]) return { name: 'room', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'tisch' && parts[1]) return { name: 'display', code: decodeURIComponent(parts[1]) };
+  if (parts[0] === 'turnier' && parts[1] && parts[2] === 'ansicht') return { name: 'tournamentEmbed', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'turnier' && parts[1]) return { name: 'tournament', code: decodeURIComponent(parts[1]), ...(params.neu ? { claim: params.neu } : {}), ...(params.helfer ? { helper: params.helfer } : {}) };
   if (parts[0] === 'ton') return { name: 'sound' };
   if (parts[0] === 'pass' && parts[1] === 'ansehen') return { name: 'passView', key: params.k ?? '' };
@@ -98,6 +101,7 @@ export const paths = {
   /** Tisch-Bildschirm für Fernseher, Beamer oder Tablet (#100). */
   display: (code: string) => `#/tisch/${encodeURIComponent(code)}`,
   tournament: (code: string) => `#/turnier/${encodeURIComponent(code)}`,
+  tournamentEmbed: (code: string) => `#/turnier/${encodeURIComponent(code)}/ansicht`,
   sound: '#/ton',
   pass: '#/pass',
   imprint: '#/impressum',

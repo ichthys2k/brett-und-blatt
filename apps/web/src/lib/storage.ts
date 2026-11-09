@@ -19,7 +19,16 @@ export interface KnownTournament {
   leader?: boolean;
   /** Nur lokal bekannt: Stand des Turniers beim letzten Öffnen. */
   phase?: 'signup' | 'running' | 'finished';
+  /** Nur lokal: ins Archiv gelegt, steht nicht mehr oben in der Liste. */
+  archived?: boolean;
 }
+
+/** Gemerkte Einstellungen eines Turniers (Stufe 5): neue Turniere lassen sich daraus mit einem Tipp anlegen. */
+export interface TournamentTemplate {
+  name: string;
+  settings: Record<string, unknown>;
+}
+const TEMPLATES_KEY = 'brett-und-blatt:turniervorlagen';
 
 /** Löschvermerk für den Abgleich über den Ausweis. */
 export interface RemovedTournament {
@@ -93,7 +102,7 @@ export const storage = {
     if (entry.at === undefined) write(REMOVED_KEY, storage.loadRemovedTournaments().filter((item) => item.code !== entry.code));
   },
   /** Ergänzt Angaben zu einem gemerkten Turnier, ohne die Reihenfolge oder den Zeitpunkt zu ändern. */
-  updateTournament: (code: string, patch: Partial<Pick<KnownTournament, 'name' | 'leader' | 'phase'>>) => {
+  updateTournament: (code: string, patch: Partial<Pick<KnownTournament, 'name' | 'leader' | 'phase' | 'archived'>>) => {
     const list = storage.loadTournaments();
     const index = list.findIndex((item) => item.code === code);
     if (index < 0) return false;
@@ -108,6 +117,15 @@ export const storage = {
     write(TOURNAMENTS_KEY, storage.loadTournaments().filter((item) => item.code !== code));
     storage.saveRemovedTournaments([{ code, at: Date.now() }, ...storage.loadRemovedTournaments().filter((item) => item.code !== code)]);
   },
+  loadTemplates: (): TournamentTemplate[] => {
+    const list = read<TournamentTemplate[]>(TEMPLATES_KEY);
+    return Array.isArray(list) ? list.filter((item) => typeof item?.name === 'string' && item.settings && typeof item.settings === 'object') : [];
+  },
+  saveTemplate: (template: TournamentTemplate) => {
+    const others = storage.loadTemplates().filter((item) => item.name !== template.name);
+    write(TEMPLATES_KEY, [template, ...others].slice(0, 12));
+  },
+  deleteTemplate: (name: string) => write(TEMPLATES_KEY, storage.loadTemplates().filter((item) => item.name !== name)),
   loadRemovedTournaments: (): RemovedTournament[] => {
     const list = read<RemovedTournament[]>(REMOVED_KEY);
     return Array.isArray(list) ? list.filter((item) => typeof item?.code === 'string' && typeof item.at === 'number') : [];

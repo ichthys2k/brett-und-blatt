@@ -39,7 +39,13 @@ export type TournamentClientMessage =
   | { type: 'setSchedule'; schedule: { start: number; matchMinutes: number; breakMinutes: number } | null }
   | { type: 'setReferees'; on: boolean }
   /** Turnier endgültig löschen; nur die Hauptleitung. */
-  | { type: 'delete' };
+  | { type: 'delete' }
+  /** Anmeldung mit Freigabe: zulassen (`ok`) oder ablehnen. */
+  | { type: 'approve'; player: string; ok: boolean }
+  /** Check-in: ohne `player` für sich selbst, Leitung und Helfer für andere. */
+  | { type: 'present'; player?: string; on: boolean }
+  /** Längere Aufbewahrung. */
+  | { type: 'keepLong'; on: boolean };
 
 export type TournamentServerMessage =
   | { type: 'tournament'; view: TournamentView }
@@ -113,6 +119,13 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
     }
     case 'delete':
       return { type: 'delete' };
+    case 'approve':
+      return isShort(m.player) && typeof m.ok === 'boolean' ? { type: 'approve', player: m.player, ok: m.ok } : null;
+    case 'present':
+      if (typeof m.on !== 'boolean' || (m.player !== undefined && !isShort(m.player))) return null;
+      return { type: 'present', ...(typeof m.player === 'string' ? { player: m.player } : {}), on: m.on };
+    case 'keepLong':
+      return typeof m.on === 'boolean' ? { type: 'keepLong', on: m.on } : null;
     case 'setReferees':
       return typeof m.on === 'boolean' ? { type: 'setReferees', on: m.on } : null;
     case 'setFields':
@@ -180,8 +193,10 @@ export function parseTournamentSettings(body: unknown, findGame: (id: string) =>
   }
   // Platzierungsspiele (Stufe 4): K.-o. und WM-Form; sie schließen das Spiel um Platz 3 ein.
   const placements = body.placements === true && (format === 'knockout' || format === 'world');
+  // Anmeldung mit Freigabe und Check-in (Stufe 5).
+  const entry = { ...(body.approval === true ? { approval: true } : {}), ...(body.checkin === true ? { checkin: true } : {}) };
   const multi = disciplines ? { disciplines, ...(body.wishes === true ? { wishes: true } : {}) } : {};
-  return { ...tables, ...parseLives(body, format), ...(teamSize === undefined ? parseBestOf(body, format) : { teamSize: teamSize as number }), name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true || placements, ...(placements ? { placements: true } : {}), isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
+  return { ...tables, ...parseLives(body, format), ...(teamSize === undefined ? parseBestOf(body, format) : { teamSize: teamSize as number }), name, gameId, format, time: body.time, days: minutes.minutes ? 1 : (body.days as number), ...minutes, ...multi, thirdPlace: body.thirdPlace === true || placements, ...entry, ...(placements ? { placements: true } : {}), isPublic: body.isPublic !== false, ...returnRound, ...(Object.keys(options).length > 0 ? { options } : {}) };
 }
 
 /** Vor Ort: Sportart statt Spiel, keine Zeitvorgabe, nie in „Offene Runden“. */
@@ -220,6 +235,7 @@ function parseLocalSettings(body: Record<string, unknown>, name: string, format:
     fieldLabel: fieldLabel ?? 'Tisch',
     spectators: body.spectators === true,
     ...returnRound,
+    ...(body.checkin === true ? { checkin: true } : {}),
     ...seeded,
     ...(bestThirds ? { bestThirds: true } : {}),
     ...groupCount,

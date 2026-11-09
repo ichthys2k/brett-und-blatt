@@ -198,6 +198,16 @@ Issue #127, in fünf Teilen:
 Ursprüngliche Planung: Zufallspartner (DYP, Monster-DYP), Last One Standing, Liga über Wochen mit Spieltagen nach Kalender (Grundform schon in Stufe 1), Platzierungsspiele für alle Plätze, beste Dritte, Setzliste, beliebig viele Phasen hintereinander.
 
 ### Stufe 5 – Verwaltung und Dauer (M)
+**Stand 9.11.2026 (#189):**
+- ✅ **Kopieren, Vorlage, Archivieren:** Auf der Turnierseite („Noch einmal anlegen“, nur Leitung): Kopie mit gleichen Einstellungen (vor Ort optional mit Teilnehmerliste) oder „Als Vorlage merken“ (je Gerät in `localStorage`, `TournamentTemplate`, bis zu 12). In der Liste auf „Turniere“: Vorlagen („➕ Name“ legt sofort ein neues an), 🗄️ legt ein Turnier ins Archiv (nur lokal, `KnownTournament.archived`), Archiv klappt auf. Löschen gibt es seit #192. Die Punkte vor Ort (`points`) und ein vergangener Ligabeginn gehen beim Kopieren verloren.
+- ✅ **Anmeldung mit Freigabe (online):** `settings.approval`; wer sich einschreibt, ist `pending`, die Leitung lässt zu oder lehnt ab (`approve`), der Start ist gesperrt, solange Anfragen offen sind; Wartende sehen nur die Leitung und sie selbst.
+- ✅ **Check-in:** `settings.checkin`, online und vor Ort; Teilnehmer melden sich mit „Ich bin da“ (`present`), Leitung (und Helfer vor Ort) haken für andere ab; beim Start nehmen nur Eingecheckte teil. Der Check-in „per QR-Code“ besteht aus dem QR-Code der Turnierseite zum Anmelden und dem Knopf „Ich bin da“; ein Einlass-QR-Code je Teilnehmer ist nicht gebaut.
+- ✅ **Serien:** „Serie auswerten“ auf „Turniere“ (`apps/web/src/lib/series.ts`): abgeschlossene Turniere wählen, Punkte nach Platz (linear oder 25-18-15 …), gemeinsame Rangliste über den Namen, Elo (Start 1000, K = 32) aus allen Partien in der Auswahlreihenfolge, CSV zum Kopieren. Die Auswertung läuft im Browser der Leitung aus den Sichten der Turniere; es gibt keine gespeicherte Serie auf dem Server und kein Dauer-Ranking, das sich selbst aktualisiert.
+- ✅ **Einbetten:** `#/turnier/<Code>/ansicht` ist eine schlichte Ansicht ohne Bedienelemente (`TournamentEmbedScreen`); der Zuschaulink-Abschnitt der Leitung bietet den fertigen iframe-Code. Sie zeigt, was der Zuschaulink zeigt, also nur Turniere vor Ort mit Zuschaulink.
+- ✅ **Längere Aufbewahrung:** Schalter „Länger aufbewahren (1 Jahr)“ für jedes Turnier (`snapshot.keepLong`), bisher nur Ligen.
+- ⬜ **Offen:** Web Push für „Du bist dran“ (braucht deine Entscheidung zu Schlüsseln, Speicherung der Empfänger und Datenschutz), ein auf dem Server gespeicherter Serienstand, Einlass-QR-Code je Teilnehmer, Größe des gespeicherten Stands bei großen Ligen (Messung in `turnier.md`).
+
+Ursprüngliche Planung:
 - „Meine Turniere“ als Verwaltung: kopieren, als Vorlage speichern, archivieren, löschen.
 - Anmeldung über Link mit Freigabe durch die Leitung, Check-in vor Ort per QR-Code.
 - Serien: mehrere Turniere mit gemeinsamer Rangliste (z. B. Kicker-Monatsturnier, Schuljahr); optional Elo über die Serie.

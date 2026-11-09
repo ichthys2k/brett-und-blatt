@@ -1020,6 +1020,15 @@ export class TournamentRoom extends DurableObject<Env> {
     if (!token) return this.sendTo(ws, { type: 'error', message: 'Erst anmelden.' });
     let error: string | null = null;
     switch (message.type) {
+      case 'approve':
+        error = t.approve(token, message.player, message.ok);
+        break;
+      case 'present':
+        error = t.setPresent(token, message.player, message.on);
+        break;
+      case 'keepLong':
+        error = t.setKeepLong(token, message.on);
+        break;
       case 'delete':
         if (!t.mayDelete(token)) {
           error = 'Löschen darf nur, wer das Turnier angelegt hat.';

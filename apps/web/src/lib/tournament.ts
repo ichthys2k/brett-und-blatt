@@ -70,6 +70,39 @@ export function deleteTournament(code: string, profile: Profile): Promise<Delete
   });
 }
 
+/**
+ * Holt die aktuelle Sicht eines Turniers (für die Serienauswertung): öffnet kurz eine Verbindung, wartet auf den Stand
+ * und schließt wieder. null, wenn es das Turnier nicht gibt oder kein Zugang besteht.
+ */
+export function fetchTournamentView(code: string, profile: Profile): Promise<TournamentView | null> {
+  return new Promise((resolve) => {
+    if (!GAME_SERVER) return resolve(null);
+    let done = false;
+    const ws = new WebSocket(`${GAME_SERVER.replace(/^http/, 'ws')}/turniere/${encodeURIComponent(code)}`);
+    const finish = (view: TournamentView | null) => {
+      if (done) return;
+      done = true;
+      window.clearTimeout(timer);
+      try {
+        ws.close();
+      } catch {
+        // Schon zu.
+      }
+      resolve(view);
+    };
+    const timer = window.setTimeout(() => finish(null), 10_000);
+    ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', token: storage.deviceToken(), name: profile.name, avatar: profile.avatar } satisfies TournamentClientMessage));
+    ws.onmessage = (event) => {
+      if (typeof event.data !== 'string') return;
+      const message = JSON.parse(event.data) as TournamentServerMessage;
+      if (message.type === 'tournament') finish(message.view);
+      else if (message.type === 'closed' || message.type === 'deleted') finish(null);
+    };
+    ws.onerror = () => finish(null);
+    ws.onclose = () => finish(null);
+  });
+}
+
 export interface TournamentState {
   status: 'connecting' | 'open' | 'reconnecting' | 'gone';
   view: TournamentView | null;

@@ -1,4 +1,4 @@
-import { AVATARS, EVENING_EXTEND_CHOICES, MAX_SCORE, bestOfStage, checkSeriesScore, seriesTarget, READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentView } from '@brett-und-blatt/online';
+import { AVATARS, EVENING_EXTEND_CHOICES, MAX_SCORE, bestOfStage, checkSeriesScore, seriesTarget, READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentSettings, type TournamentView } from '@brett-und-blatt/online';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, Section } from '../components/controls';
 import { ProfileForm, QrCode } from '../components/OnlineParts';
@@ -114,6 +114,38 @@ function useLookup(view: TournamentView) {
     };
     return { players, label, slotLabel };
   }, [view]);
+}
+
+/**
+ * Schlichte Ansicht zum Einbetten in eine andere Seite (iframe): ohne Kopfzeile und Bedienelemente, nur Stand,
+ * Tabellen und Baum. Sie zeigt, was auch der öffentliche Zuschaulink zeigt, also nur Turniere vor Ort mit Zuschaulink.
+ */
+export function TournamentEmbedScreen({ code }: { code: string }) {
+  const [state] = useTournament(code, GUEST);
+  const view = state.view;
+  if (!view) return <div className="p-4 text-sm text-muted">{state.status === 'gone' ? t('tournament.notFound') : state.closed !== null ? t('tournament.embedClosed') : t('online.connecting')}</div>;
+  const tables = view.settings.format === 'tables';
+  return (
+    <div className="mx-auto max-w-5xl space-y-4 p-3">
+      <h1 className="truncate text-xl font-bold">🏆 {view.settings.name}</h1>
+      {view.phase === 'finished' && <Podium view={view} />}
+      {view.phase === 'signup' ? (
+        <p className="text-sm text-muted">{t('tournament.entrantsCount', { n: view.players.filter((p) => !p.pair).length, min: TOURNAMENT_MIN_PLAYERS[view.settings.format] })}</p>
+      ) : tables ? (
+        <TableRounds view={view} send={null} />
+      ) : (
+        <>
+          {isLocalView(view) && <FieldBoard view={view} send={null} />}
+          <Progress view={view} />
+        </>
+      )}
+      <p className="text-center text-xs text-muted">
+        <a className="underline" href={`${window.location.origin}${window.location.pathname}${paths.tournament(code)}`} target="_blank" rel="noopener">
+          {t('tournament.embedMore')}
+        </a>
+      </p>
+    </div>
+  );
 }
 
 export function TournamentScreen({ code, claim, helper }: { code: string; claim?: string; helper?: string }) {
@@ -413,7 +445,7 @@ function EntrantForm({ view, send, label }: { view: TournamentView; send: Send; 
 /** Einschreibung vor Ort: Die Leitung trägt die Namen ein, Zuschauer sehen die Liste. */
 function LocalSignup({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
   const min = TOURNAMENT_MIN_PLAYERS[view.settings.format];
-  const count = view.players.filter((p) => !p.pair).length;
+  const count = view.settings.checkin ? view.players.filter((p) => !p.pair && p.present).length : view.players.filter((p) => !p.pair).length;
   return (
     <>
       <Section title={t('tournament.entrants')}>
@@ -423,8 +455,14 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
           {view.players.filter((p) => !p.pair).map((p) => (
             <li key={p.id} className="flex min-w-0 items-center gap-1 rounded-xl border border-line bg-surface py-1 pr-1 pl-2 text-sm">
               <span className="min-w-0 flex-1 truncate">
+                {view.settings.checkin && <span aria-hidden="true">{p.present ? '✅ ' : '⬜ '}</span>}
                 {p.avatar} {p.name}
               </span>
+              {view.settings.checkin && (view.isLeader || view.helperRole !== null) && (
+                <button type="button" className="min-h-8 rounded-lg px-2 text-muted hover:bg-line/40" aria-label={`${p.present ? t('tournament.checkoutOne') : t('tournament.checkinOne')}: ${p.name}`} onClick={() => send({ type: 'present', player: p.id, on: !p.present })}>
+                  {p.present ? '↩' : '✔'}
+                </button>
+              )}
               {view.isLeader && (
                 <button type="button" className="min-h-8 rounded-lg px-2 text-muted hover:bg-line/40" aria-label={`${t('tournament.remove')}: ${p.name}`} onClick={() => send({ type: 'removeEntrant', player: p.id })}>
                   ✕
@@ -575,8 +613,65 @@ function SchedulePanel({ view, send }: { view: TournamentView; send: Send }) {
   );
 }
 
+/**
+ * Verwaltung (Stufe 5): ein Turnier mit denselben Einstellungen noch einmal anlegen (vor Ort optional mit der
+ * Teilnehmerliste) oder die Einstellungen als Vorlage auf diesem Gerät merken.
+ */
+function CopyTools({ view }: { view: TournamentView }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const local = isLocalView(view);
+  const base = () => {
+    const { isPublic: _public, ...rest } = view.settings;
+    return { ...rest, ...(view.fields > 0 ? { fields: view.fields } : {}) };
+  };
+  const copy = async (withEntrants: boolean) => {
+    const profile = storage.loadProfile();
+    if (!profile) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const name = `${view.settings.name} ${t('tournament.copySuffix')}`.slice(0, 40);
+      const entrants = withEntrants ? view.players.filter((p) => !p.pair && !p.pending && !p.withdrawn).map((p) => p.name) : [];
+      const code = await createTournament({ ...base(), name, isPublic: false } as TournamentSettings & { fields?: number }, profile, entrants);
+      storage.rememberTournament({ code, name });
+      navigate(paths.tournament(code));
+    } catch {
+      setError(t('online.serverError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <p className="text-sm font-semibold">📋 {t('tournament.copyTitle')}</p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Button disabled={busy} onClick={() => copy(false)}>
+          {t('tournament.copyPlain')}
+        </Button>
+        {local && (
+          <Button disabled={busy} onClick={() => copy(true)}>
+            {t('tournament.copyWithEntrants')}
+          </Button>
+        )}
+        <Button
+          onClick={() => {
+            const name = window.prompt(t('tournament.templateName'), view.settings.name)?.trim();
+            if (!name) return;
+            storage.saveTemplate({ name: name.slice(0, 40), settings: base() as unknown as Record<string, unknown> });
+          }}
+        >
+          📑 {t('tournament.saveTemplate')}
+        </Button>
+      </div>
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+    </div>
+  );
+}
+
 function SpectatorLink({ view, code }: { view: TournamentView; code: string }) {
   const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
+  const embed = `<iframe src="${window.location.origin}${window.location.pathname}${paths.tournamentEmbed(code)}" title="${view.settings.name.replace(/"/g, '')}" width="100%" height="600" style="border:0" loading="lazy"></iframe>`;
   if (!view.settings.spectators) return <p className="text-sm text-muted">{t('tournament.noSpectators')}</p>;
   return (
     <div className="space-y-2 rounded-xl border border-line p-3">
@@ -587,6 +682,10 @@ function SpectatorLink({ view, code }: { view: TournamentView; code: string }) {
       </div>
       <Button className="w-full" onClick={() => navigator.clipboard?.writeText(link)}>
         🔗 {t('tournament.copy')}
+      </Button>
+      <p className="pt-1 text-xs text-muted">{t('tournament.embedHint')}</p>
+      <Button className="w-full" onClick={() => navigator.clipboard?.writeText(embed)}>
+        &lt;/&gt; {t('tournament.embedCopy')}
       </Button>
     </div>
   );
@@ -808,27 +907,70 @@ function Wishes({ view, send }: { view: TournamentView; send: Send }) {
 function SignupView({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
   const teamSize = view.settings.teamSize ?? 1;
   const min = TOURNAMENT_MIN_PLAYERS[view.settings.format] * teamSize;
-  const uneven = view.players.length % teamSize !== 0;
+  const joined = view.players.filter((p) => !p.pair && !p.pending);
+  const waiting = view.players.filter((p) => p.pending);
+  const checkin = view.settings.checkin === true;
+  const here = joined.filter((p) => p.present).length;
+  const counted = checkin ? here : joined.length;
+  const uneven = counted % teamSize !== 0;
+  const mine = view.players.find((p) => p.id === view.you);
   const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
   return (
     <>
       <Section title={t('tournament.signup')}>
-        <p className="text-sm text-muted">{t('tournament.signupOpen', { n: view.players.length, min })}</p>
+        <p className="text-sm text-muted">{t('tournament.signupOpen', { n: joined.length, min })}</p>
+        {checkin && <p className="text-sm text-muted">{t('tournament.checkinCount', { here, n: joined.length })}</p>}
         {teamSize > 1 && <p className="text-sm text-muted">{uneven ? t('tournament.teamUneven', { n: teamSize }) : t('tournament.teamsDrawn', { n: teamSize })}</p>}
+        {view.isLeader && waiting.length > 0 && (
+          <div className="space-y-1 rounded-xl border border-accent p-2">
+            <p className="text-sm font-semibold">{t('tournament.requests', { n: waiting.length })}</p>
+            <ul className="space-y-1">
+              {waiting.map((p) => (
+                <li key={p.id} className="flex items-center gap-2 text-sm">
+                  <span className="min-w-0 flex-1 truncate">
+                    {p.avatar} {p.name}
+                  </span>
+                  <Button className="text-xs" variant="primary" onClick={() => send({ type: 'approve', player: p.id, ok: true })}>
+                    ✔️ {t('tournament.approve')}
+                  </Button>
+                  <Button className="text-xs" onClick={() => send({ type: 'approve', player: p.id, ok: false })}>
+                    ✖️ {t('tournament.reject')}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <ul className="grid grid-cols-2 gap-1 sm:grid-cols-4">
-          {view.players.filter((p) => !p.pair).map((p) => (
-            <li key={p.id} className={`truncate rounded-xl border px-2 py-1 text-sm ${p.id === view.you ? 'border-accent bg-accent/10 font-semibold' : 'border-line bg-surface'}`}>
-              {p.avatar} {p.name}
+          {joined.map((p) => (
+            <li key={p.id} className={`flex min-w-0 items-center gap-1 rounded-xl border px-2 py-1 text-sm ${p.id === view.you ? 'border-accent bg-accent/10 font-semibold' : 'border-line bg-surface'}`}>
+              <span className="min-w-0 flex-1 truncate">
+                {checkin && <span aria-hidden="true">{p.present ? '✅ ' : '⬜ '}</span>}
+                {p.avatar} {p.name}
+              </span>
+              {checkin && view.isLeader && (
+                <button type="button" className="min-h-8 rounded-lg px-1 text-xs text-muted hover:bg-line/40" aria-label={`${p.present ? t('tournament.checkoutOne') : t('tournament.checkinOne')}: ${p.name}`} onClick={() => send({ type: 'present', player: p.id, on: !p.present })}>
+                  {p.present ? '↩' : '✔'}
+                </button>
+              )}
             </li>
           ))}
         </ul>
+        {mine?.pending && <p className="rounded-xl bg-surface-2 p-2 text-sm">⏳ {t('tournament.waitingApproval')}</p>}
         {view.you ? (
-          <Button className="w-full" onClick={() => send({ type: 'leave' })}>
-            {t('tournament.leave')}
-          </Button>
+          <>
+            {checkin && !mine?.pending && (
+              <Button variant={mine?.present ? 'secondary' : 'primary'} className="w-full" onClick={() => send({ type: 'present', on: !mine?.present })}>
+                {mine?.present ? t('tournament.notHere') : `🙋 ${t('tournament.imHere')}`}
+              </Button>
+            )}
+            <Button className="w-full" onClick={() => send({ type: 'leave' })}>
+              {t('tournament.leave')}
+            </Button>
+          </>
         ) : (
           <Button variant="primary" className="w-full" onClick={() => send({ type: 'join' })}>
-            ✍️ {t('tournament.join')}
+            ✍️ {view.settings.approval ? t('tournament.requestJoin') : t('tournament.join')}
           </Button>
         )}
         <Wishes view={view} send={send} />
@@ -836,7 +978,7 @@ function SignupView({ view, code, send }: { view: TournamentView; code: string; 
           <Button
             variant="primary"
             className="w-full"
-            disabled={view.players.length < min || uneven}
+            disabled={counted < min || uneven || waiting.length > 0}
             onClick={() => {
               if (window.confirm(t('tournament.startConfirm'))) send({ type: 'start' });
             }}
@@ -1533,6 +1675,16 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
         📺 {t('tournament.board')}
       </Button>
       {local && <SpectatorLink view={view} code={code} />}
+      <CopyTools view={view} />
+      {view.phase !== 'signup' && (
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={view.keepLong} onChange={(e) => send({ type: 'keepLong', on: e.target.checked })} />
+          <span>
+            {t('tournament.keepLong')}
+            <span className="block text-xs text-muted">{t('tournament.keepLongHint')}</span>
+          </span>
+        </label>
+      )}
       {local && view.phase !== 'finished' && <Helpers view={view} code={code} send={send} />}
       {local && view.phase === 'running' && view.settings.format === 'swiss' && <EntrantForm view={view} send={send} label={t('tournament.lateEntry')} />}
       {local && view.phase === 'running' && view.settings.format !== 'tables' && (
