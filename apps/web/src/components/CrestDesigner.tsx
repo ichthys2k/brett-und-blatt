@@ -16,6 +16,8 @@ import { PlayerCrest } from '@brett-und-blatt/ui';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { crestProgress, saveCrest, useCrest } from '../lib/crestStore';
+import { saveOwnProfile } from '../lib/playerPass';
+import { storage } from '../lib/storage';
 import { Button } from './controls';
 
 const base = 'min-h-11 rounded-xl px-4 text-sm';
@@ -34,7 +36,12 @@ export function CrestDesigner({ name, onClose }: { name: string; onClose(): void
   }, []);
   // Beim ersten Öffnen: nur freigeschaltete Teile übernehmen.
   const safe = progress ? clampCrest(spec, progress) : spec;
-  const change = (patch: Partial<CrestSpec>) => saveCrest(progress ? clampCrest({ ...safe, ...patch }, progress) : { ...safe, ...patch });
+  const change = (patch: Partial<CrestSpec>) => {
+    saveCrest(progress ? clampCrest({ ...safe, ...patch }, progress) : { ...safe, ...patch });
+    // Das Wappentier ist auch das Bild beim Spitznamen (Profil, Raum, Turniere): beides bleibt gleich.
+    const profile = storage.loadProfile();
+    if (patch.animal && profile && profile.avatar !== patch.animal) saveOwnProfile({ ...profile, avatar: patch.animal });
+  };
 
   const choice = <T extends string>(kind: 'shield' | 'division' | 'colors' | 'ornament', value: T, current: boolean, label: string, onPick: () => void) => {
     const lock = progress ? unlockOf(kind, value, progress) : { ok: true, hint: '' };
@@ -96,7 +103,8 @@ export function CrestDesigner({ name, onClose }: { name: string; onClose(): void
                               <span key={index} className="flex-1" style={{ background: color }} />
                             ))}
                           </span>
-                          <span className="text-xs">{lock.ok ? set.name : t('crest.locked', { hint: lock.hint })}</span>
+                          <span className="text-xs">{set.name}</span>
+                          {!lock.ok && <span className="text-xs">{t('crest.locked', { hint: lock.hint })}</span>}
                         </button>
                       );
                     })}

@@ -1,4 +1,4 @@
-import { CREST_COLOR_SETS } from './crest-colors';
+import { CREST_COLOR_SETS, CREST_GROUPS, type CrestGroup } from './crest-colors';
 
 /*
  * Spielerwappen (Vorhaben #135, Schritt #147): Das Wappen eines Passes besteht aus Schildform, Teilung, Farben,
@@ -114,7 +114,25 @@ export interface Unlock {
 
 type Need = { stat: keyof CrestProgress; min: number; text: string };
 
+/** Städte, Länder, Vereine: jede Kombination will einzeln erspielt werden, die Schwelle steigt mit der Stelle in der Liste. */
+const GROUP_NEED: Readonly<Partial<Record<CrestGroup, { stat: keyof CrestProgress; first: number; step: number; text: string }>>> = {
+  staedte: { stat: 'played', first: 3, step: 3, text: 'Partien' },
+  laender: { stat: 'stamps', first: 1, step: 1, text: 'Stempel' },
+  fussball: { stat: 'wins', first: 2, step: 2, text: 'Siege' },
+  sport: { stat: 'tournamentWins', first: 1, step: 1, text: 'Turniersiege' },
+};
+
+const GROUP_NEEDS: Record<string, Need> = {};
+for (const group of CREST_GROUPS) {
+  const rule = GROUP_NEED[group];
+  if (!rule) continue;
+  CREST_COLOR_SETS.filter((set) => set.group === group).forEach((set, index) => {
+    GROUP_NEEDS[`colors:${set.id}`] = { stat: rule.stat, min: rule.first + index * rule.step, text: rule.text };
+  });
+}
+
 const NEED: Readonly<Record<string, Need | undefined>> = {
+  ...GROUP_NEEDS,
   'shield:rund': { stat: 'stamps', min: 5, text: 'Stempel' },
   'shield:spitz': { stat: 'stamps', min: 10, text: 'Stempel' },
   'shield:rolle': { stat: 'stamps', min: 20, text: 'Stempel' },

@@ -86,7 +86,15 @@ describe('Farbkombinationen (#201)', () => {
 
   it('die alten Kennungen gelten weiter, neue sind frei, alle überstehen Schreiben und Lesen', () => {
     for (const id of ['rot-gold', 'blau-silber', 'gruen-gold', 'schwarz-gold', 'purpur-silber', 'orange-blau']) expect(CREST_COLORS).toContain(id);
-    expect(unlockOf('colors', 'land-de', none).ok).toBe(true);
+    // Städte, Länder, Vereine müssen erspielt werden; die Schwelle steigt mit der Stelle in der Liste.
+    expect(unlockOf('colors', 'stadt-reutlingen', none).ok).toBe(false);
+    expect(unlockOf('colors', 'stadt-reutlingen', { ...none, played: 3 }).ok).toBe(true);
+    expect(unlockOf('colors', 'stadt-tuebingen', { ...none, played: 3 }).hint).toBe('6 Partien (du hast 3)');
+    expect(unlockOf('colors', 'land-be', { ...none, stamps: 1 }).ok).toBe(true);
+    expect(unlockOf('colors', 'land-bg', { ...none, stamps: 1 }).ok).toBe(false);
+    expect(unlockOf('colors', 'bl-bayern', { ...none, wins: 2 }).ok).toBe(true);
+    expect(unlockOf('colors', 'sport-ssv-reutlingen', none).ok).toBe(false);
+    expect(unlockOf('colors', 'sport-ssv-reutlingen', { ...none, tournamentWins: 1 }).ok).toBe(true);
     expect(parseCrest('farben:bl-bayern')!.colors).toBe('bl-bayern');
     expect(parseCrest('farben:land-de')!.colors).toBe('land-de');
     expect(parseCrest('farben:gibt-es-nicht')!.colors).toBe(DEFAULT_CREST.colors);
