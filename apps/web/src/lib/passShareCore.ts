@@ -53,23 +53,32 @@ async function aesKey(key: string): Promise<CryptoKey> {
   return crypto.subtle.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(0), info: enc.encode('brett-und-blatt/teilen/key') }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
 }
 
-export async function encryptSnapshot(key: string, snapshot: PassSnapshot): Promise<string> {
+/** Verschlüsselt beliebiges JSON mit dem Linkschlüssel (AES-GCM); Ergebnis ist Base64 für die Server-Ablage. */
+export async function sealJson(key: string, value: unknown): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const cipher = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await aesKey(key), enc.encode(JSON.stringify(snapshot))));
+  const cipher = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await aesKey(key), enc.encode(JSON.stringify(value))));
   const out = new Uint8Array(iv.length + cipher.length);
   out.set(iv);
   out.set(cipher, iv.length);
   return b64(out);
 }
 
-export async function decryptSnapshot(key: string, data: string): Promise<PassSnapshot | null> {
+/** Gegenstück zu `sealJson`; null bei falschem Schlüssel oder beschädigten Daten. */
+export async function openJson(key: string, data: string): Promise<unknown | null> {
   try {
     const bytes = new Uint8Array(Array.from(atob(data), (c) => c.charCodeAt(0)));
     const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes.slice(0, 12) }, await aesKey(key), bytes.slice(12));
-    return sanitizeSnapshot(JSON.parse(new TextDecoder().decode(plain)));
+    return JSON.parse(new TextDecoder().decode(plain));
   } catch {
     return null;
   }
+}
+
+export const encryptSnapshot = (key: string, snapshot: PassSnapshot): Promise<string> => sealJson(key, snapshot);
+
+export async function decryptSnapshot(key: string, data: string): Promise<PassSnapshot | null> {
+  const value = await openJson(key, data);
+  return value === null ? null : sanitizeSnapshot(value);
 }
 
 /** Prüft einen empfangenen Schnappschuss; unbekannte oder zu lange Teile fallen weg. */

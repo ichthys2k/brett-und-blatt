@@ -21,6 +21,16 @@ export const gameModule: GameModule<BingoState, BingoMove> = {
       default: 'zahlen',
     },
     {
+      // Eigenes Paket aus der Bibliothek (#101): füllt `SetupExtra`; der Wert reist mit der Partie.
+      id: 'pack',
+      label: 'Eigenes Paket',
+      hidden: true,
+      pattern: '[\\s\\S]*',
+      maxLength: 6000,
+      choices: [{ value: '', label: 'keines' }],
+      default: '',
+    },
+    {
       id: 'size',
       label: 'Kartengröße',
       choices: [

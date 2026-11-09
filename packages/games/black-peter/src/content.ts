@@ -33,8 +33,8 @@ export function pairSet(id: string): PairSet {
   return PAIR_SETS[id] ?? tiere;
 }
 
-export function faceOf(setId: string, pair: number, side: 'a' | 'b'): string {
+export function faceOf(setId: string, pair: number, side: 'a' | 'b', custom?: { a: string; b: string }[]): string {
   if (pair === PETER) return '🐈‍⬛';
-  const entry = pairSet(setId).pairs[pair];
+  const entry = (custom ?? pairSet(setId).pairs)[pair];
   return entry ? entry[side] : '?';
 }

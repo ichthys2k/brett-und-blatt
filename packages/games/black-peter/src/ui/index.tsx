@@ -1,5 +1,5 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import { SeatRing, CardFan, ContentCard, useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, CardFan, ContentCard, PackPicker, useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState } from 'react';
 import { faceOf, PETER } from '../content';
 import { sourceOf, type BlackPeterMove, type BlackPeterState, type Card } from '../rules';
@@ -7,10 +7,10 @@ import './styles.css';
 
 const SEAT_COLORS = ['#d6336c', '#1c7ed6', '#2f9e44', '#f08c00', '#7048e8', '#0c8599'];
 
-function Face({ set, card, small = false, anim }: { set: string; card: Card; small?: boolean; anim?: 'drop' | 'shake' | 'deal' | null }) {
+function Face({ set, custom, card, small = false, anim }: { set: string; custom?: { a: string; b: string }[]; card: Card; small?: boolean; anim?: 'drop' | 'shake' | 'deal' | null }) {
   return (
     <ContentCard
-      content={faceOf(set, card.pair, card.side)}
+      content={faceOf(set, card.pair, card.side, custom)}
       caption={card.pair === PETER && !small ? 'Schwarzer Peter' : undefined}
       className={card.pair === PETER ? 'bp-peter' : ''}
       anim={anim}
@@ -87,10 +87,10 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events, tabl
           {recent.map((entry, i) => (
             <span key={`${entry.pair}-${i}`} className="bp-pair" title={seatNames[entry.seat]}>
               <span className="bp-mini">
-                <Face set={view.set} card={{ pair: entry.pair, side: 'a' }} small anim={i === 0 ? 'drop' : null} />
+                <Face set={view.set} custom={view.custom} card={{ pair: entry.pair, side: 'a' }} small anim={i === 0 ? 'drop' : null} />
               </span>
               <span className="bp-mini">
-                <Face set={view.set} card={{ pair: entry.pair, side: 'b' }} small anim={i === 0 ? 'drop' : null} />
+                <Face set={view.set} custom={view.custom} card={{ pair: entry.pair, side: 'b' }} small anim={i === 0 ? 'drop' : null} />
               </span>
             </span>
           ))}
@@ -112,7 +112,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events, tabl
             shuffling={shufflingSeat === viewer}
             renderCard={(index) => {
               const card = own[index];
-              return card ? <Face set={view.set} card={card} /> : <ContentCard content={null} />;
+              return card ? <Face set={view.set} custom={view.custom} card={card} /> : <ContentCard content={null} />;
             }}
           />
           {canShuffle && (
@@ -179,8 +179,13 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
   );
 }
 
+function PeterSetup({ options, setOption }: { options: Record<string, string>; setOption: (id: string, value: string) => void }) {
+  return <PackPicker options={options} setOption={setOption} />;
+}
+
 export const gameUi: GameUi<BlackPeterState, BlackPeterMove> = {
   Board,
+  SetupExtra: PeterSetup,
   seatsAround: true,
   SeatSymbol,
   sounds: { drawn: 'karte-ziehen', discarded: 'paar', shuffled: 'mischen', lost: 'peter-gezogen' },

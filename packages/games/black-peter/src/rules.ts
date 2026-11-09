@@ -1,4 +1,4 @@
-import { Rng, type Actor, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
+import { Rng, decodePairsOption, type Actor, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
 import { PETER, pairSet } from './content';
 
 export interface Card {
@@ -9,6 +9,8 @@ export interface Card {
 
 export interface BlackPeterState {
   set: string;
+  /** Eigenes Paket (#101): die Paare dieser Partie; `Card.pair` zählt dann in dieser Liste. */
+  custom?: { a: string; b: string }[];
   /** Hände je Platz. In der Sicht sind fremde Karten null (nur die Anzahl ist bekannt). */
   hands: (Card | null)[][];
   /** Offen abgelegte Paare in der Reihenfolge des Ablegens. */
@@ -33,7 +35,8 @@ function removePairs(hand: Card[]): { hand: Card[]; pairs: number[] } {
 }
 
 export function setup(seats: number, options: Options, seed: string): BlackPeterState {
-  const set = pairSet(options.set ?? 'tiere');
+  const custom = decodePairsOption(options.pack);
+  const set = custom ? { id: 'eigen', name: custom.name, pairs: custom.pairs } : pairSet(options.set ?? 'tiere');
   const rng = Rng.fromSeed(seed, 'karten');
   const pairCount = Math.min(Number(options.pairs ?? 12), set.pairs.length);
   const chosen = rng.shuffle(set.pairs.map((_, i) => i)).slice(0, pairCount);
@@ -47,7 +50,7 @@ export function setup(seats: number, options: Options, seed: string): BlackPeter
     for (const pair of pairs) discarded.push({ seat, pair });
     return rest;
   });
-  const state: BlackPeterState = { set: set.id, hands: cleaned, discarded, turn: 0, shuffledThisTurn: false, rng: rng.state, loser: null, lastDraw: null };
+  const state: BlackPeterState = { set: set.id, ...(custom ? { custom: custom.pairs } : {}), hands: cleaned, discarded, turn: 0, shuffledThisTurn: false, rng: rng.state, loser: null, lastDraw: null };
   return { ...state, turn: nextWithCards(state, seats - 1) ?? 0 };
 }
 

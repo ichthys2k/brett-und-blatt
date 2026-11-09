@@ -1,4 +1,4 @@
-import { Rng, type Actor, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
+import { Rng, decodePairsOption, type Actor, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { pairSet } from './content';
 
 export interface Face {
@@ -11,6 +11,9 @@ export type CardStatus = 'down' | 'up' | { takenBy: SeatId };
 
 export interface PairsState {
   set: string;
+  /** Eigenes Paket (#101): die Paare dieser Partie; `Face.pair` zählt dann in dieser Liste. */
+  custom?: { a: string; b: string }[];
+  customName?: string;
   cols: number;
   rows: number;
   /** Inhalt je Karte. In der Sicht sind verdeckte Karten null. */
@@ -46,14 +49,23 @@ export const LAYOUTS: Record<string, [cols: number, rows: number]> = {
 };
 
 export function setup(seats: number, options: Options, seed: string): PairsState {
-  const [cols, rows] = LAYOUTS[options.size ?? '16'] ?? [4, 4];
-  const set = pairSet(options.set ?? 'tiere');
+  const custom = decodePairsOption(options.pack);
+  const set = custom ? { id: 'eigen', name: custom.name, pairs: custom.pairs } : pairSet(options.set ?? 'tiere');
+  // Reicht ein eigenes Paket nicht für das gewählte Raster, nimmt die Partie das größte, das passt.
+  let [cols, rows] = LAYOUTS[options.size ?? '16'] ?? [4, 4];
+  if ((cols * rows) / 2 > set.pairs.length) {
+    const fit = Object.values(LAYOUTS)
+      .filter(([c, r]) => (c * r) / 2 <= set.pairs.length)
+      .sort((x, y) => y[0] * y[1] - x[0] * x[1])[0];
+    if (fit) [cols, rows] = fit;
+  }
   const pairCount = (cols * rows) / 2;
   const rng = Rng.fromSeed(seed, 'karten');
   const chosen = rng.shuffle(set.pairs.map((_, i) => i)).slice(0, pairCount);
   const faces = rng.shuffle(chosen.flatMap((pair): Face[] => [{ pair, side: 'a' }, { pair, side: 'b' }]));
   return {
     set: set.id,
+    ...(custom ? { custom: custom.pairs, customName: custom.name } : {}),
     cols,
     rows,
     faces,

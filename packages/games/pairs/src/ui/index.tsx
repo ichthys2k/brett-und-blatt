@@ -1,5 +1,5 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import { ContentCard, FitBox, GridBoard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { ContentCard, FitBox, GridBoard, PackPicker, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState } from 'react';
 import { faceOf } from '../content';
 import type { PairsMove, PairsState } from '../rules';
@@ -41,7 +41,7 @@ function Board({ view, legalMoves, onMove, hint, events }: BoardProps<PairsState
             <span className="pf-slot" style={taken !== null ? { outlineColor: SEAT_COLORS[taken % SEAT_COLORS.length] } : undefined}>
               <ContentCard
                 key={face ? 'offen' : 'verdeckt'}
-                content={face ? faceOf(view.set, face.pair, face.side) : null}
+                content={face ? faceOf(view.set, face.pair, face.side, view.custom) : null}
                 dimmed={taken !== null}
                 highlight={hint?.card === card ? 'hint' : null}
                 anim={isMismatched ? 'shake' : null}
@@ -55,7 +55,7 @@ function Board({ view, legalMoves, onMove, hint, events }: BoardProps<PairsState
         cellLabel={(col, row) => {
           const card = row * view.cols + col;
           const face = view.faces[card];
-          return `Karte ${card + 1}: ${face ? faceOf(view.set, face.pair, face.side) : 'verdeckt'}`;
+          return `Karte ${card + 1}: ${face ? faceOf(view.set, face.pair, face.side, view.custom) : 'verdeckt'}`;
         }}
       />
     </FitBox>
@@ -70,8 +70,13 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
   );
 }
 
+function PairsSetup({ options, setOption }: { options: Record<string, string>; setOption: (id: string, value: string) => void }) {
+  return <PackPicker options={options} setOption={setOption} />;
+}
+
 export const gameUi: GameUi<PairsState, PairsMove> = {
   Board,
+  SetupExtra: PairsSetup,
   album: albumSpec,
   SeatSymbol,
   sounds: { flipped: 'karte-umdrehen', pair: 'paar', mismatch: 'kein-paar' },

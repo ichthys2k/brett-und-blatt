@@ -68,6 +68,16 @@ export const gameModule: GameModule<PairsState, PairsMove> = {
       default: 'tiere',
     },
     {
+      // Eigenes Paket aus der Bibliothek (#101): füllt `SetupExtra` der Oberfläche; der Wert reist mit der Partie.
+      id: 'pack',
+      label: 'Eigenes Paket',
+      hidden: true,
+      pattern: '[\\s\\S]*',
+      maxLength: 6000,
+      choices: [{ value: '', label: 'keines' }],
+      default: '',
+    },
+    {
       id: 'size',
       label: 'Anzahl Karten',
       choices: ['12', '16', '20', '24', '30', '36'].map((value) => ({ value, label: value })),

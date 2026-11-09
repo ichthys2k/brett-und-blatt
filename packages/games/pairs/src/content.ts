@@ -32,7 +32,7 @@ export function pairSet(id: string): PairSet {
 }
 
 /** Inhalt einer Kartenseite. */
-export function faceOf(setId: string, pair: number, side: 'a' | 'b'): string {
-  const entry = pairSet(setId).pairs[pair];
+export function faceOf(setId: string, pair: number, side: 'a' | 'b', custom?: { a: string; b: string }[]): string {
+  const entry = (custom ?? pairSet(setId).pairs)[pair];
   return entry ? entry[side] : '?';
 }
