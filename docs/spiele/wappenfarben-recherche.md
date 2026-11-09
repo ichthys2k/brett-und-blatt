@@ -12,26 +12,26 @@ Teilnehmer laut Quellen ([Die Falsche 9](https://www.diefalsche9.de/die-teilnehm
 
 | Verein | Farben | Status | Quelle |
 |---|---|---|---|
-| FC Bayern München | Rot, Weiß | ◐ | [90min, Trikots 2025/26](https://www.90min.de/die-neuen-bundesliga-trikots-fur-die-saison-2025-26) („Vereinsfarben Rot und Weiß“) |
-| Borussia Dortmund | Gelb, Schwarz | ◐ | 90min (siehe oben) |
-| RB Leipzig | Rot, Weiß | ◐ | 90min (siehe oben) |
-| Eintracht Frankfurt | Schwarz, Rot, Weiß | ◐ | [ran/Flashscore Trikots 2026/27](https://www.flashscore.de/news/fu-ball-bundesliga-bundesliga-2026-27-von-bayern-bis-schalke-die-trikots-aller-18-erstliga-teams/ltZ05G7j/) |
-| FC Augsburg | Rot, Grün, Weiß | ◐ | 90min (siehe oben) |
-| 1. FC Union Berlin | Rot, Weiß | ◐ | [bundesliga.com 2021/22](https://www.bundesliga.com/de/bundesliga/news/neue-trikots-saison-2021-2022-clubs-fan-shop-15902) |
-| SC Freiburg | Weiß, Rot (offiziell auch Schwarz?) | ❓ | Trikotbericht nennt nur Weiß/Rot; Vereinsfarben an Vereinsseite prüfen |
-| Borussia Mönchengladbach | Grün, Weiß, Schwarz | ❓ | [bundesliga.com 2023/24](https://www.bundesliga.com/de/bundesliga/news/neue-trikots-saison-2023-24-clubs-heim-auswarts-fanshop-23516) nennt Grün/Weiß mit roten Streifen; Schwarz prüfen |
-| Bayer 04 Leverkusen | Rot, Schwarz | ❓ | Vereinsseite prüfen |
-| VfB Stuttgart | Weiß, Rot | ❓ | Vereinsseite prüfen |
-| TSG Hoffenheim | Blau, Weiß | ❓ | Vereinsseite prüfen |
-| 1. FSV Mainz 05 | Rot, Weiß | ❓ | Vereinsseite prüfen |
-| SV Werder Bremen | Grün, Weiß | ❓ | Vereinsseite prüfen |
-| 1. FC Köln | Rot, Weiß | ❓ | Vereinsseite prüfen |
-| Hamburger SV | Blau, Weiß, Schwarz | ❓ | Vereinsseite prüfen |
-| FC Schalke 04 | Blau, Weiß | ❓ | Vereinsseite prüfen |
-| SV Elversberg | Schwarz, Weiß | ❓ | Vereinsseite prüfen |
-| SC Paderborn 07 | Blau, Schwarz | ❓ | Vereinsseite prüfen (Farbfolge unsicher) |
+| FC Bayern München | Rot, Weiß | ✅ | [de.wikipedia.org/wiki/FC_Bayern_München](https://de.wikipedia.org/wiki/FC_Bayern_München): Infobox „Vereinsfarben“ (9.11.2026) |
+| Borussia Dortmund | Schwarz, Gelb | ✅ | [de.wikipedia.org/wiki/Borussia_Dortmund](https://de.wikipedia.org/wiki/Borussia_Dortmund): Infobox „Vereinsfarben“ (9.11.2026) |
+| RB Leipzig | Rot, Weiß | ✅ | [de.wikipedia.org/wiki/RB_Leipzig](https://de.wikipedia.org/wiki/RB_Leipzig): Infobox „Vereinsfarben“ (9.11.2026) |
+| Eintracht Frankfurt | Rot, Schwarz, Weiß | ✅ | [de.wikipedia.org/wiki/Eintracht_Frankfurt](https://de.wikipedia.org/wiki/Eintracht_Frankfurt): Infobox „Vereinsfarben“ (9.11.2026) |
+| FC Augsburg | Rot, Grün, Weiß | ✅ | [de.wikipedia.org/wiki/FC_Augsburg](https://de.wikipedia.org/wiki/FC_Augsburg): Infobox „Vereinsfarben“ (9.11.2026) |
+| 1. FC Union Berlin | Rot, Weiß | ✅ | [de.wikipedia.org/wiki/1._FC_Union_Berlin](https://de.wikipedia.org/wiki/1._FC_Union_Berlin): Infobox „Vereinsfarben“ (9.11.2026) |
+| SC Freiburg | Weiß, Rot | ✅ | [de.wikipedia.org/wiki/SC_Freiburg](https://de.wikipedia.org/wiki/SC_Freiburg): Infobox „Vereinsfarben“ (9.11.2026) |
+| Borussia Mönchengladbach | Schwarz, Weiß, Grün | ✅ | [de.wikipedia.org/wiki/Borussia_Mönchengladbach](https://de.wikipedia.org/wiki/Borussia_Mönchengladbach): Infobox „Vereinsfarben“ (9.11.2026) |
+| Bayer 04 Leverkusen | Rot, Schwarz | ✅ | [de.wikipedia.org/wiki/Bayer_04_Leverkusen](https://de.wikipedia.org/wiki/Bayer_04_Leverkusen): Infobox „Vereinsfarben“ (9.11.2026) |
+| VfB Stuttgart | Weiß, Rot | ✅ | [de.wikipedia.org/wiki/VfB_Stuttgart](https://de.wikipedia.org/wiki/VfB_Stuttgart): Infobox „Vereinsfarben“ (9.11.2026) |
+| TSG Hoffenheim | Blau, Weiß | ✅ | [de.wikipedia.org/wiki/TSG_1899_Hoffenheim](https://de.wikipedia.org/wiki/TSG_1899_Hoffenheim): Infobox „Vereinsfarben“ (9.11.2026) |
+| 1. FSV Mainz 05 | Rot, Weiß | ✅ | [de.wikipedia.org/wiki/1._FSV_Mainz_05](https://de.wikipedia.org/wiki/1._FSV_Mainz_05): Infobox „Vereinsfarben“ (9.11.2026) |
+| SV Werder Bremen | Grün, Weiß | ✅ | [de.wikipedia.org/wiki/Werder_Bremen](https://de.wikipedia.org/wiki/Werder_Bremen): Infobox „Vereinsfarben“ (9.11.2026) |
+| 1. FC Köln | Rot, Weiß | ✅ | [de.wikipedia.org/wiki/1._FC_Köln](https://de.wikipedia.org/wiki/1._FC_Köln): Infobox „Vereinsfarben“ (9.11.2026) |
+| Hamburger SV | Blau, Weiß, Schwarz | ✅ | [de.wikipedia.org/wiki/Hamburger_SV](https://de.wikipedia.org/wiki/Hamburger_SV): Infobox „Vereinsfarben“ (9.11.2026) |
+| FC Schalke 04 | Blau, Weiß | ✅ | [de.wikipedia.org/wiki/FC_Schalke_04](https://de.wikipedia.org/wiki/FC_Schalke_04): Infobox „Vereinsfarben“ (9.11.2026) |
+| SV Elversberg | Schwarz, Weiß | ✅ | [de.wikipedia.org/wiki/SV_Elversberg](https://de.wikipedia.org/wiki/SV_Elversberg): Infobox „Vereinsfarben“ (9.11.2026) |
+| SC Paderborn 07 | Blau, Schwarz | ✅ | [de.wikipedia.org/wiki/SC_Paderborn_07](https://de.wikipedia.org/wiki/SC_Paderborn_07): Infobox „Vereinsfarben“ (9.11.2026) |
 
-Empfohlene Quelle für alle: **Satzung oder Vereinsseite** des jeweiligen Vereins („Vereinsfarben“), ersatzweise die Vereinsseite beim DFB-Datencenter.
+Alle 18 Vereine sind seit dem 9.11.2026 mit der Infobox der deutschen Wikipedia belegt (die Reihenfolge der Farben folgt dort; für die Auswahl zählt nur die Farbmenge). Wo die Satzung des Vereins abweicht, gewinnt sie. Empfohlene Quelle sonst: **Satzung oder Vereinsseite** des jeweiligen Vereins („Vereinsfarben“), ersatzweise die Vereinsseite beim DFB-Datencenter.
 
 ## 2. Städte und Orte rund um Reutlingen
 
@@ -84,7 +84,7 @@ Auf Wunsch von Cornelius (9.11.2026) sollen auch die Teilorte zur Auswahl stehen
 
 ## 3. Länder: EU und Ukraine
 
-Quelle noch nicht belegt (Wikipedia/Seiten der Regierungen waren nicht abrufbar). ❓ Vorschlag nach allgemein bekannten Nationalflaggen, **an einer Quelle zu prüfen** (z. B. offizielle Flaggenbeschreibung oder Wikipedia „Flagge von …“):
+Stand 9.11.2026: laut deutscher Wikipedia („Flagge …“) belegt sind Belgien (Schwarz, Gelb, Rot), Bulgarien (Weiß, Grün, Rot), Deutschland (Schwarz, Rot, Gold), Griechenland (Blau, Weiß), Kroatien (Rot, Weiß, Blau), Österreich (Rot, Weiß), Spanien (Rot, Gelb), Tschechien (Rot, Weiß, dazu Blau im Keil) und die Ukraine (Blau, Gelb). Für die übrigen 18 Länder (darunter die Niederlande, deren Fundstelle nur die frühere orange Trikolore nennt) fehlt noch ein Beleg. ❓ Vorschlag nach allgemein bekannten Nationalflaggen, **an einer Quelle zu prüfen** (z. B. offizielle Flaggenbeschreibung oder Wikipedia „Flagge von …“):
 
 Belgien Schwarz-Gelb-Rot · Bulgarien Weiß-Grün-Rot · Dänemark Rot-Weiß · Deutschland Schwarz-Rot-Gold · Estland Blau-Schwarz-Weiß · Finnland Weiß-Blau · Frankreich Blau-Weiß-Rot · Griechenland Blau-Weiß · Irland Grün-Weiß-Orange · Italien Grün-Weiß-Rot · Kroatien Rot-Weiß-Blau · Lettland Karminrot-Weiß · Litauen Gelb-Grün-Rot · Luxemburg Rot-Weiß-Hellblau · Malta Weiß-Rot · Niederlande Rot-Weiß-Blau · Österreich Rot-Weiß · Polen Weiß-Rot · Portugal Grün-Rot · Rumänien Blau-Gelb-Rot · Schweden Blau-Gelb · Slowakei Weiß-Blau-Rot · Slowenien Weiß-Blau-Rot · Spanien Rot-Gelb · Tschechien Weiß-Rot-Blau · Ungarn Rot-Weiß-Grün · Zypern Weiß-Kupfer(Orange)-Grün · **Ukraine Blau-Gelb**.
 
