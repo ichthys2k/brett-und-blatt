@@ -43,10 +43,32 @@ Empfohlene Quelle für alle: **Satzung oder Vereinsseite** des jeweiligen Verein
 | Friedrichshafen | Grün, Weiß | ◐ | [FOTW Friedrichshafen](https://local.fotw.info/flags/de-fn-fn.html): Flagge grün-weiß |
 | Reutlingen | – | ❓ | nicht gefunden |
 
-**Landkreis Reutlingen** hat 26 Kommunen, davon 7 Städte (Bad Urach, Hayingen, Metzingen, Münsingen, Pfullingen, Reutlingen, Trochtelfingen; [Satzung Landkreis](https://kreis-reutlingen.de/resources/01%20Website/Bekanntmachungen/2023-12-21%20Neufassung%20der%20Abfallwirtschaftssatzung%20des%20Landkreises%20Reutlingen_sig.pdf)). In Suchtreffern belegt sind außerdem Dettingen an der Erms, Eningen unter Achalm, Engstingen, Gomadingen, Grabenstetten, Grafenberg, Hohenstein, Lichtenstein, Mehrstetten, Pfronstetten, Pliezhausen, Riederich, Römerstein, St. Johann, Sonnenbühl, Wannweil und Zwiefalten (17). ❓ Zu ergänzen aus eigenem Wissen: Kusterdingen, Walddorfhäslach. Die Liste muss an der amtlichen Quelle ([Statistisches Landesamt BW, Regionalschlüssel](https://www.statistik-bw.de/Service/LIS/Regionalschluesselverzeichnis.pdf)) geprüft werden.
+**Umkreis (Entscheidung Cornelius, 9.11.2026):** Von den Orten des Landkreises kommen **nur die im Radius von höchstens 15 km um Reutlingen** dazu. Der Landkreis hat 26 Kommunen, davon 7 Städte ([Satzung Landkreis](https://kreis-reutlingen.de/resources/01%20Website/Bekanntmachungen/2023-12-21%20Neufassung%20der%20Abfallwirtschaftssatzung%20des%20Landkreises%20Reutlingen_sig.pdf)). Die Entfernungen sind **Luftlinie vom Zentrum Reutlingens (48,491 N, 9,204 O) zum Ortszentrum, gerechnet aus ungefähren Koordinaten** (aus dem Gedächtnis, Fehler bis etwa 1 km). ❓ Vor dem Einbau mit amtlichen Koordinaten (Wikipedia/OpenStreetMap) nachrechnen; **Grenzfälle** (Bad Urach, Grabenstetten) entscheiden dann.
 
-**Farben der Gemeinden:** für keine der 26 belegt. Quelle je Gemeinde: Hauptsatzung (Flagge) oder Wappenbeschreibung beim Landesarchiv Baden-Württemberg. Aufwand: eine Zeile je Gemeinde mit Quelle.
+| Ort | Entfernung (ca.) | Stand |
+|---|---|---|
+| Pfullingen (Stadt) | 3,6 km | im Radius |
+| Eningen unter Achalm | 3,9 km | im Radius |
+| Wannweil | 4,6 km | im Radius |
+| Pliezhausen | 4,7 km | im Radius |
+| Riederich | 6,9 km | im Radius |
+| Kusterdingen | 7,7 km | im Radius |
+| Walddorfhäslach | 7,8 km | im Radius |
+| Metzingen (Stadt, mit Glems und Neuhausen) | 8,0 km | im Radius |
+| Lichtenstein (Honau) | 8,7 km | im Radius |
+| Dettingen an der Erms | 9,1 km | im Radius |
+| Engstingen | 11,1 km | im Radius |
+| Sonnenbühl | 11,2 km | im Radius |
+| St. Johann | 12,7 km | im Radius |
+| Grafenberg | 13,9 km | im Radius, Koordinate unsicher |
+| Bad Urach (Stadt) | 14,3 km | **Grenzfall** |
+| Grabenstetten | 14,4 km | **Grenzfall** |
+| Hohenstein | 17,3 km | außerhalb |
+| Römerstein, Münsingen, Gomadingen, Mehrstetten, Trochtelfingen, Hayingen, Pfronstetten, Zwiefalten | weiter als 17 km | außerhalb (nicht nachgerechnet) |
 
+Tübingen (11,3 km, anderer Landkreis) und Friedrichshafen stehen als eigene Einträge, nicht wegen des Umkreises. Reutlingen selbst mit Stadtteilen siehe unten. Die Gemeinden des Landkreises sind durch Suchtreffer belegt, bis auf Kusterdingen und Walddorfhäslach (❓ aus eigenem Wissen); Prüfung an [Statistisches Landesamt BW, Regionalschlüssel](https://www.statistik-bw.de/Service/LIS/Regionalschluesselverzeichnis.pdf).
+
+**Farben der Gemeinden:** für keine belegt. Quelle je Gemeinde: Hauptsatzung (Flagge) oder Wappenbeschreibung beim Landesarchiv Baden-Württemberg. Aufwand: eine Zeile je Gemeinde mit Quelle. Ohne Farbe ist ein Ort nicht auswählbar.
 
 ### Teilorte (Stadtteile) von Reutlingen und Metzingen
 
@@ -75,7 +97,7 @@ Hinweis: Wo die Farbreihenfolge die Anordnung der Flagge betrifft (Streifen waag
 | TSG Reutlingen / TSG Solcom Ravens Reutlingen | Basketball | – | ❓ | Es gibt eine Männermannschaft in der 2. Basketball-Bundesliga ProB Süd ([Hessenschau](https://www.hessenschau.de/sport/ergebnisse-tabellen/basketball-110~_matchday-17.html)) und die Reutlingen Ravens in der Regionalliga; **welcher Name zu welchem Team gehört und welche Farben sie haben, ist offen** |
 | Young Boys Reutlingen | Fußball | – | ❓ | in einem Zeitungsbericht als Verbandsligist genannt, Farben nicht gefunden |
 
-Weitere Reutlinger Vereine (Handball, Eishockey, …) wurden nicht gesucht. Vorschlag: Cornelius nennt die Teams, die er dabeihaben will.
+**Entscheidung Cornelius (9.11.2026):** Die gefundenen Reutlinger Teams (Fußball: SSV Reutlingen 05, Young Boys Reutlingen; Football: Reutlingen Eagles; Basketball: die beiden Reutlinger Teams) passen so. Weitere Sportarten sind nicht gewünscht. Offen bleibt, welche Farben die Teams offiziell führen (siehe Tabelle).
 
 ## 5. Daten und Hinweis im Spiel
 
