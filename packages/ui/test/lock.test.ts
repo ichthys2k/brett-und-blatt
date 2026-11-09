@@ -82,7 +82,11 @@ describe('PIN und Passwort (#138)', () => {
     expect(await hasPassLock(server, CODE)).toBe(true);
     const opened = await openPassLock(server, CODE, s);
     expect(opened.pass).toMatchObject({ name: 'Ada', passKey: pass.passKey, code: CODE });
-    expect(JSON.stringify([...locks.values()])).not.toContain('Ada');
+    // Base64-Geheimtext kann zufällig „Ada“ enthalten; Klartext wäre als JSON-Feld mit Anführungszeichen erkennbar.
+    const stored = JSON.stringify([...locks.values()]);
+    expect(stored).not.toContain('"Ada"');
+    expect(stored).not.toContain('\\"Ada\\"');
+    expect(stored).not.toContain('passKey');
   });
 
   it('eine falsche PIN scheitert, zählt und nennt die übrigen Versuche', async () => {
