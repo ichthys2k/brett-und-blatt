@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEAGUE_KEEP_MS, TOURNAMENT_KEEP_MS, Tournament, applyTournamentMessage, parseSeed, parseTournamentMessage, parseTournamentSettings, type TournamentSettings } from '../src';
+import { LEAGUE_KEEP_MS, LEAGUE_ONLINE_MAX_PLAYERS, TOURNAMENT_KEEP_MS, Tournament, applyTournamentMessage, parseSeed, parseTournamentMessage, parseTournamentSettings, type TournamentSettings } from '../src';
 
 /** Stufe 5 (#189): Anmeldung mit Freigabe, Check-in, längere Aufbewahrung. */
 
@@ -138,3 +138,81 @@ describe('Leitung ohne Netz (Stufe 6)', () => {
   });
 });
 
+describe('Online-Bundesliga begrenzen (#202)', () => {
+  it('ab 30 Teilnehmern ist die Einschreibung zu, mit Hinweis auf Alternativen', () => {
+    const t = online({ format: 'league' }, LEAGUE_ONLINE_MAX_PLAYERS);
+    expect(t.view(LEADER).players).toHaveLength(30);
+    const refused = t.join(token(99), 'Zu viel', '🦊');
+    expect(refused).toMatch(/30 Teilnehmer/);
+    expect(refused).toMatch(/WM-Form|Schweizer System/);
+    expect(t.view(LEADER).players).toHaveLength(30);
+  });
+
+  it('andere Formen online und die Liga vor Ort sind nicht betroffen', () => {
+    const swiss = online({ format: 'swiss' }, 31);
+    expect(swiss.view(LEADER).players).toHaveLength(31);
+    const settings: TournamentSettings = { name: 'Abend', gameId: '', format: 'league', time: 'normal', days: 1, thirdPlace: false, mode: 'local', sport: 'Darts', result: 'winner' };
+    const local = Tournament.create('ABCD2345', 'seed-1', settings, { token: LEADER, name: 'L' }, deps);
+    expect(local.addEntrants(LEADER, Array.from({ length: 40 }, (_, i) => `Spieler${i + 1}`))).toBeNull();
+    expect(local.view(LEADER).players).toHaveLength(40);
+  });
+});
+
+
+describe('Leitung übertragen (#203)', () => {
+  const NEW = 'kennung-neues-geraet-01';
+
+  it('nur die Hauptleitung erzeugt einen Code; Mitleitung und Spieler nicht', () => {
+    const t = online({}, 2);
+    expect(t.issueLeaderTransfer(token(0))).toMatchObject({ error: expect.stringMatching(/Hauptleitung/) });
+    const ok = t.issueLeaderTransfer(LEADER);
+    expect(ok).toMatchObject({ code: 'NEUCODE1', expiresAt: clock.now + 24 * 60 * 60 * 1000 });
+  });
+
+  it('mit dem Code wechselt die Hauptleitung; das alte Gerät verliert sie', () => {
+    const t = online({}, 2);
+    t.issueLeaderTransfer(LEADER);
+    expect(t.takeLeadership(NEW, 'Neu', 'neucode1')).toBeNull();
+    expect(t.mayDelete(NEW)).toBe(true);
+    expect(t.isLeader(NEW)).toBe(true);
+    expect(t.mayDelete(LEADER)).toBe(false);
+    expect(t.isLeader(LEADER)).toBe(false);
+    // einmalig: der Code gilt danach nicht mehr
+    expect(t.takeLeadership(token(1), 'Dritter', 'NEUCODE1')).toMatch(/keine Übergabe/);
+  });
+
+  it('falscher Code zählt Versuche und sperrt nach fünf', () => {
+    const t = online({}, 0);
+    t.issueLeaderTransfer(LEADER);
+    for (let i = 0; i < 4; i++) expect(t.takeLeadership(NEW, 'X', 'FALSCH')).toMatch(/passt nicht/);
+    expect(t.takeLeadership(NEW, 'X', 'FALSCH')).toMatch(/passt nicht/);
+    expect(t.takeLeadership(NEW, 'X', 'NEUCODE1')).toMatch(/keine Übergabe/);
+    expect(t.mayDelete(LEADER)).toBe(true);
+  });
+
+  it('der Code läuft nach einem Tag ab', () => {
+    const t = online({}, 0);
+    t.issueLeaderTransfer(LEADER);
+    clock.now += 24 * 60 * 60 * 1000;
+    expect(t.takeLeadership(NEW, 'X', 'NEUCODE1')).toMatch(/abgelaufen/);
+    expect(t.mayDelete(LEADER)).toBe(true);
+  });
+
+  it('die bisherige Leitung kann den eigenen Code nicht einlösen', () => {
+    const t = online({}, 0);
+    t.issueLeaderTransfer(LEADER);
+    expect(t.takeLeadership(LEADER, 'L', 'NEUCODE1')).toMatch(/schon die Leitung/);
+  });
+
+  it('Nachrichten werden gelesen und über den Verteiler ausgeführt', () => {
+    expect(parseTournamentMessage(JSON.stringify({ type: 'leaderCode' }))).toEqual({ type: 'leaderCode' });
+    expect(parseTournamentMessage(JSON.stringify({ type: 'takeLeader', code: 'ABC' }))).toEqual({ type: 'takeLeader', code: 'ABC' });
+    expect(parseTournamentMessage(JSON.stringify({ type: 'takeLeader' }))).toBeNull();
+    const t = online({}, 0);
+    const issued = applyTournamentMessage(t, { token: LEADER, name: 'L', avatar: '🦊' }, { type: 'leaderCode' });
+    expect(issued).toMatchObject({ kind: 'ok', leaderCode: { code: 'NEUCODE1' } });
+    const taken = applyTournamentMessage(t, { token: NEW, name: 'Neu', avatar: '🦊' }, { type: 'takeLeader', code: 'NEUCODE1' });
+    expect(taken).toMatchObject({ kind: 'ok' });
+    expect(t.mayDelete(NEW)).toBe(true);
+  });
+});

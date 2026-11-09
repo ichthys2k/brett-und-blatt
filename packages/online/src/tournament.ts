@@ -26,6 +26,9 @@ import {
   type TournamentHelper,
   LEAGUE_KEEP_MS,
   TOURNAMENT_MAX_FIELDS,
+  LEADER_TRANSFER_ATTEMPTS,
+  LEADER_TRANSFER_MS,
+  LEAGUE_ONLINE_MAX_PLAYERS,
   TOURNAMENT_MAX_PLAYERS,
   TOURNAMENT_KEEP_MS,
   type MatchOutcome,
@@ -159,6 +162,43 @@ export class Tournament {
     return this.s.phase === 'signup' || token === this.s.leaderToken || this.playerByToken(token) !== undefined;
   }
 
+  /**
+   * Übergabe der Hauptleitung (#203): Die Hauptleitung erzeugt einen Einmalcode, mit dem ein anderes Gerät die
+   * Hauptleitung übernimmt. Der Code gilt einen Tag, ein neuer ersetzt den alten.
+   */
+  issueLeaderTransfer(token: string): { code: string; expiresAt: number } | { error: string } {
+    if (!this.mayDelete(token)) return { error: 'Die Leitung übergeben kann nur die Hauptleitung.' };
+    const code = this.deps.randomClaim().toUpperCase();
+    const expiresAt = this.deps.now() + LEADER_TRANSFER_MS;
+    this.s.leaderTransfer = { code, expiresAt, attempts: 0 };
+    this.touch();
+    return { code, expiresAt };
+  }
+
+  /** Dieses Gerät übernimmt die Hauptleitung mit dem Einmalcode; das bisherige Gerät ist danach keine Leitung mehr. */
+  takeLeadership(token: string, name: string, code: string): string | null {
+    const transfer = this.s.leaderTransfer;
+    if (!token) return 'Dieses Gerät kann die Leitung nicht übernehmen.';
+    if (!transfer) return 'Es liegt keine Übergabe vor.';
+    if (this.deps.now() >= transfer.expiresAt) {
+      delete this.s.leaderTransfer;
+      return 'Der Übergabecode ist abgelaufen. Die Leitung erzeugt einen neuen.';
+    }
+    if (token === this.s.leaderToken) return 'Dieses Gerät ist schon die Leitung.';
+    if (code.trim().toUpperCase() !== transfer.code) {
+      transfer.attempts++;
+      if (transfer.attempts >= LEADER_TRANSFER_ATTEMPTS) delete this.s.leaderTransfer;
+      return 'Dieser Übergabecode passt nicht.';
+    }
+    this.s.leaderToken = token;
+    this.s.leaderName = cleanName(name) ?? this.s.leaderName;
+    // Wer als Helfer eingetragen war, ist jetzt Hauptleitung.
+    for (const helper of this.s.helpers ?? []) helper.tokens = helper.tokens.filter((t) => t !== token);
+    delete this.s.leaderTransfer;
+    this.touch();
+    return null;
+  }
+
   /** Löschen darf nur, wer das Turnier angelegt hat – nicht Mitleitung oder Helfer. */
   mayDelete(token: string): boolean {
     return token !== '' && token === this.s.leaderToken;
@@ -199,6 +239,8 @@ export class Tournament {
     if (this.s.phase !== 'signup') return 'Die Einschreibung ist beendet.';
     if (this.playerByToken(token)) return null;
     if (this.s.players.length >= TOURNAMENT_MAX_PLAYERS) return 'Das Turnier ist voll.';
+    // Bundesliga online: Jeder gegen jeden wird bei vielen Teilnehmern zu groß (#202).
+    if (this.s.settings.format === 'league' && this.s.players.filter((p) => !p.pair).length >= LEAGUE_ONLINE_MAX_PLAYERS) return `Der Bundesliga-Modus ist online auf ${LEAGUE_ONLINE_MAX_PLAYERS} Teilnehmer begrenzt. Für mehr eignen sich die WM-Form (Gruppen) oder das Schweizer System.`;
     const clean = cleanName(name);
     if (!clean) return 'Bitte einen anderen Spitznamen wählen.';
     this.s.players.push({ id: `p${this.s.nextPlayer++}`, token, name: clean, avatar: cleanAvatar(avatar), withdrawn: false, ...(this.s.settings.approval ? { pending: true } : {}), ...(this.s.settings.checkin ? { present: false } : {}) });

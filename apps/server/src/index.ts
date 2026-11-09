@@ -1032,6 +1032,7 @@ export class TournamentRoom extends DurableObject<Env> {
     if (result.kind === 'delete') return this.deleteTournament(t);
     if (result.kind === 'error') return this.sendTo(ws, { type: 'error', message: result.message });
     if (result.claim) this.sendTo(ws, { type: 'claimCode', player: result.claim.player, code: result.claim.code });
+    if (result.leaderCode) this.sendTo(ws, { type: 'leaderCode', code: result.leaderCode.code, expiresAt: result.leaderCode.expiresAt });
     await this.changed();
   }
 

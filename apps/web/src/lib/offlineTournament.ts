@@ -91,6 +91,8 @@ export type OfflineResult = { ok: true; view: TournamentView; claim?: { player: 
 
 /** Wendet eine Nachricht der Leitung an, speichert und liefert die neue Sicht. */
 export function applyOfflineMessage(code: string, profile: Profile, message: LeaderMessage): OfflineResult {
+  // Die Leitung gehört bei einem Turnier ohne Netz zu diesem Gerät; übergeben lässt sie sich erst nach dem Abgleich.
+  if (message.type === 'leaderCode' || message.type === 'takeLeader') return { ok: false, error: 'Ohne Netz lässt sich die Leitung nicht übergeben. Erst mit dem Server abgleichen.' };
   const all = readAll();
   const record = all[code];
   if (!record) return { ok: false, error: 'Dieses Turnier gibt es nicht mehr.' };

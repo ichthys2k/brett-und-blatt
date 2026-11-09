@@ -17,7 +17,7 @@ export type DispatchResult =
   /** Abgelehnt, mit Begründung. */
   | { kind: 'error'; message: string }
   /** Angenommen; `claim` ist ein Einmalcode, der nur an den Absender geht. */
-  | { kind: 'ok'; claim?: { player: string; code: string } }
+  | { kind: 'ok'; claim?: { player: string; code: string }; leaderCode?: { code: string; expiresAt: number } }
   /** Das Turnier soll gelöscht werden (nur Hauptleitung). */
   | { kind: 'delete' };
 
@@ -33,6 +33,13 @@ export function applyTournamentMessage(t: Tournament, from: Sender, message: Exc
       break;
     case 'keepLong':
       error = t.setKeepLong(token, message.on);
+      break;
+    case 'leaderCode': {
+      const issued = t.issueLeaderTransfer(token);
+      return 'error' in issued ? { kind: 'error', message: issued.error } : { kind: 'ok', leaderCode: issued };
+    }
+    case 'takeLeader':
+      error = t.takeLeadership(token, from.name, message.code);
       break;
     case 'delete':
       return t.mayDelete(token) ? { kind: 'delete' } : { kind: 'error', message: 'Löschen darf nur, wer das Turnier angelegt hat.' };

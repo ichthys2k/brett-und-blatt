@@ -53,7 +53,7 @@ function Screen() {
     case 'display':
       return <DisplayScreen key={route.code} code={route.code} />;
     case 'tournament':
-      return <TournamentScreen key={route.code} code={route.code} claim={route.claim} helper={route.helper} />;
+      return <TournamentScreen key={route.code} code={route.code} claim={route.claim} helper={route.helper} leader={route.leader} />;
     case 'tournamentEmbed':
       return <TournamentEmbedScreen key={route.code} code={route.code} />;
     case 'sound':

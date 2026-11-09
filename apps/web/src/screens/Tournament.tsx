@@ -1,4 +1,4 @@
-import { AVATARS, EVENING_EXTEND_CHOICES, MAX_SCORE, bestOfStage, checkSeriesScore, seriesTarget, READY_WINDOW_MS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentSettings, type TournamentView } from '@brett-und-blatt/online';
+import { AVATARS, EVENING_EXTEND_CHOICES, MAX_SCORE, bestOfStage, checkSeriesScore, seriesTarget, READY_WINDOW_MS, LEAGUE_ONLINE_MAX_PLAYERS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentSettings, type TournamentView } from '@brett-und-blatt/online';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, Section } from '../components/controls';
 import { ProfileForm, QrCode } from '../components/OnlineParts';
@@ -10,7 +10,7 @@ import { findGame, loadGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { applyOfflineMessage, createOfflineTournament, isOfflineCode, loadOfflineRecord, syncOfflineTournament } from '../lib/offlineTournament';
-import { createTournament, useTournament } from '../lib/tournament';
+import { createTournament, useTournament, type TournamentState } from '../lib/tournament';
 
 type Match = TournamentView['matches'][number];
 type Slot = Match['slots'][number];
@@ -149,7 +149,7 @@ export function TournamentEmbedScreen({ code }: { code: string }) {
   );
 }
 
-export function TournamentScreen({ code, claim, helper }: { code: string; claim?: string; helper?: string }) {
+export function TournamentScreen({ code, claim, helper, leader }: { code: string; claim?: string; helper?: string; leader?: string }) {
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
   const [state, send] = useTournament(code, profile ?? GUEST);
   const [board, setBoard] = useState(false);
@@ -180,6 +180,16 @@ export function TournamentScreen({ code, claim, helper }: { code: string; claim?
       window.history.replaceState(null, '', paths.tournament(code));
     }
   }, [helper, state.status, code, send]);
+
+  // Der Übergabelink der Hauptleitung (#203): einlösen und aus der Adresszeile nehmen.
+  const took = useRef(false);
+  useEffect(() => {
+    if (leader && state.status === 'open' && !took.current) {
+      took.current = true;
+      send({ type: 'takeLeader', code: leader });
+      window.history.replaceState(null, '', paths.tournament(code));
+    }
+  }, [leader, state.status, code, send]);
 
   // Wer hier eingeschrieben ist oder leitet, findet das Turnier auf „Online spielen“ wieder.
   useEffect(() => {
@@ -672,6 +682,36 @@ function CopyTools({ view }: { view: TournamentView }) {
   );
 }
 
+/**
+ * Leitung übertragen (#203): Die Hauptleitung erzeugt einen Einmalcode (und Link mit QR-Code, einen Tag gültig),
+ * mit dem ein anderes Gerät die Hauptleitung übernimmt; das bisherige Gerät ist danach keine Leitung mehr.
+ */
+function LeaderTransfer({ code, state, send }: { code: string; state: TournamentState; send: Send }) {
+  const issued = state.leaderCode;
+  const link = issued ? `${window.location.origin}${window.location.pathname}${paths.tournament(code)}?leitung=${issued.code}` : '';
+  return (
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <p className="text-sm font-semibold">🔑 {t('tournament.transferTitle')}</p>
+      <p className="text-xs text-muted">{t('tournament.transferHint')}</p>
+      <Button className="w-full" onClick={() => send({ type: 'leaderCode' })}>
+        {issued ? t('tournament.transferNew') : t('tournament.transferStart')}
+      </Button>
+      {issued && (
+        <div className="space-y-2 text-center">
+          <p className="text-2xl font-bold tracking-widest">{issued.code}</p>
+          <p className="text-xs text-muted">{t('tournament.transferUntil', { time: new Date(issued.expiresAt).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) })}</p>
+          <div className="mx-auto w-44">
+            <QrCode text={link} label={t('tournament.transferTitle')} />
+          </div>
+          <Button className="w-full" onClick={() => navigator.clipboard?.writeText(link)}>
+            🔗 {t('tournament.copy')}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SpectatorLink({ view, code }: { view: TournamentView; code: string }) {
   const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
   const embed = `<iframe src="${window.location.origin}${window.location.pathname}${paths.tournamentEmbed(code)}" title="${view.settings.name.replace(/"/g, '')}" width="100%" height="600" style="border:0" loading="lazy"></iframe>`;
@@ -922,6 +962,7 @@ function SignupView({ view, code, send }: { view: TournamentView; code: string; 
     <>
       <Section title={t('tournament.signup')}>
         <p className="text-sm text-muted">{t('tournament.signupOpen', { n: joined.length, min })}</p>
+        {view.settings.format === 'league' && <p className="text-xs text-muted">{t('tournament.leagueLimit', { n: LEAGUE_ONLINE_MAX_PLAYERS })}</p>}
         {checkin && <p className="text-sm text-muted">{t('tournament.checkinCount', { here, n: joined.length })}</p>}
         {teamSize > 1 && <p className="text-sm text-muted">{uneven ? t('tournament.teamUneven', { n: teamSize }) : t('tournament.teamsDrawn', { n: teamSize })}</p>}
         {view.isLeader && waiting.length > 0 && (

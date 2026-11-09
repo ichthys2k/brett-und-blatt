@@ -152,6 +152,8 @@ export interface TournamentState {
   closed: string | null;
   error: string | null;
   claim: { player: string; code: string } | null;
+  /** Übergabecode für die Hauptleitung, den die Hauptleitung gerade erzeugt hat (#203). */
+  leaderCode?: { code: string; expiresAt: number } | null;
 }
 
 const PING_MS = 30_000;
@@ -192,6 +194,7 @@ function useOnlineTournament(code: string, profile: Profile | null): [Tournament
         else if (message.type === 'closed') setState((s) => ({ ...s, view: null, closed: message.name }));
         else if (message.type === 'deleted') setState((s) => ({ ...s, status: 'gone', view: null }));
         else if (message.type === 'claimCode') setState((s) => ({ ...s, claim: { player: message.player, code: message.code } }));
+        else if (message.type === 'leaderCode') setState((s) => ({ ...s, leaderCode: { code: message.code, expiresAt: message.expiresAt } }));
         else if (message.type === 'error') {
           setState((s) => ({ ...s, error: message.message }));
           window.clearTimeout(errorTimer);

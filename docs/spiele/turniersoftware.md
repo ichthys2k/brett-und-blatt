@@ -239,3 +239,8 @@ Cornelius hat alle Vorschläge übernommen:
 
 - Handbuch-Unterseiten von meinturnierplan (Turniermodi, Schiedsrichter, Platzierungsregeln) und Hilfeseiten von start.gg/Toornament wurden nicht im Einzelnen gelesen; vor Stufe 2 und 4 lohnt ein genauerer Blick auf meinturnierplans Platzierungsregeln und den DFB-Turnierschlüssel.
 - Messen, wie groß ein Schnappschuss mit 128 Teilnehmern im Schweizer System wird.
+
+## Online-Liga begrenzen und Leitung übergeben (#202, #203, 9.11.2026)
+
+- **#202:** Die Bundesliga-Form ist online auf `LEAGUE_ONLINE_MAX_PLAYERS` = 30 Teilnehmer begrenzt (`Tournament.join`, Hinweis auf WM-Form und Schweizer System, auch beim Anlegen und in der Anmeldung). Vor Ort (`addEntrants`) bleibt es bei 128.
+- **#203:** Die Hauptleitung (`mayDelete`) erzeugt mit „Leitung übergeben“ einen Einmalcode (`issueLeaderTransfer`, 24 h, höchstens 5 Fehlversuche). Auf dem neuen Gerät löst ihn der Link `#/turnier/<Code>?leitung=<CODE>` (auch als QR) ein (`takeLeadership`); das alte Gerät ist danach keine Leitung mehr. Nachrichten `leaderCode`/`takeLeader`, nicht für LOKAL-Turniere ohne Netz.

@@ -45,7 +45,11 @@ export type TournamentClientMessage =
   /** Check-in: ohne `player` für sich selbst, Leitung und Helfer für andere. */
   | { type: 'present'; player?: string; on: boolean }
   /** Längere Aufbewahrung. */
-  | { type: 'keepLong'; on: boolean };
+  | { type: 'keepLong'; on: boolean }
+  /** Übergabecode für die Hauptleitung erzeugen (nur Hauptleitung). */
+  | { type: 'leaderCode' }
+  /** Die Hauptleitung mit einem Übergabecode übernehmen. */
+  | { type: 'takeLeader'; code: string };
 
 export type TournamentServerMessage =
   | { type: 'tournament'; view: TournamentView }
@@ -53,6 +57,8 @@ export type TournamentServerMessage =
   | { type: 'closed'; name: string }
   /** Die Leitung hat das Turnier gelöscht. */
   | { type: 'deleted' }
+  /** Antwort auf `leaderCode`: der Übergabecode und wann er abläuft; nur an den Absender. */
+  | { type: 'leaderCode'; code: string; expiresAt: number }
   | { type: 'claimCode'; player: string; code: string }
   | { type: 'error'; message: string };
 
@@ -124,6 +130,10 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
     case 'present':
       if (typeof m.on !== 'boolean' || (m.player !== undefined && !isShort(m.player))) return null;
       return { type: 'present', ...(typeof m.player === 'string' ? { player: m.player } : {}), on: m.on };
+    case 'leaderCode':
+      return { type: 'leaderCode' };
+    case 'takeLeader':
+      return isShort(m.code, 20) ? { type: 'takeLeader', code: m.code } : null;
     case 'keepLong':
       return typeof m.on === 'boolean' ? { type: 'keepLong', on: m.on } : null;
     case 'setReferees':

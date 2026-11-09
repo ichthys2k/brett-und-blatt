@@ -8,6 +8,8 @@ import type { Options } from '@brett-und-blatt/engine';
 export const TOURNAMENT_MIN_PLAYERS = { world: 6, swiss: 4, knockout: 4, double: 4, league: 3, tables: 3, lives: 3, dyp: 4 } as const;
 /** Obergrenze für alle Turniere (Entscheidung 7.11.2026). */
 export const TOURNAMENT_MAX_PLAYERS = 128;
+/** Bundesliga-Modus (jeder gegen jeden) online: so viele Partien (n·(n−1)/2) passen nur bis hierher sicher in den Speicher des Servers (#202). */
+export const LEAGUE_ONLINE_MAX_PLAYERS = 30;
 /** Namen von Teilnehmern vor Ort dürfen länger sein als Spitznamen, z. B. „Anna / Ben“. */
 export const ENTRANT_NAME_LENGTH = 30;
 /** Höchstens so viele Tische oder Felder. */
@@ -22,6 +24,10 @@ export const TOURNAMENT_KEEP_MS = 30 * DAY_MS;
 /** Ligen laufen über Monate: ein Jahr nach der letzten Aktivität. */
 export const LEAGUE_KEEP_MS = 365 * DAY_MS;
 export const TOURNAMENT_NAME_LENGTH = 40;
+/** Ein Übergabecode für die Hauptleitung gilt so lange (#203). */
+export const LEADER_TRANSFER_MS = DAY_MS;
+/** So viele falsche Eingaben, dann ist der Übergabecode ungültig. */
+export const LEADER_TRANSFER_ATTEMPTS = 5;
 
 /** WM-Form (vor Ort „Gruppen + K.-o.“), Schweizer System, K.-o., Doppel-K.-o., Bundesliga-Modus, Tischrunden (Stufe 3). */
 export type TournamentFormat = 'world' | 'swiss' | 'knockout' | 'double' | 'league' | 'tables' | 'lives' | 'dyp';
@@ -262,6 +268,8 @@ export interface TournamentSnapshot {
   tables?: TableGame[];
   /** Teams: die Einzelnen vor der Auslosung der Teams (bleiben für die Anzeige erhalten). */
   roster?: TournamentPlayer[];
+  /** Übergabe der Hauptleitung auf ein anderes Gerät (#203): Einmalcode, nur eine Übergabe zugleich. */
+  leaderTransfer?: { code: string; expiresAt: number; attempts: number };
   /** Längere Aufbewahrung (Stufe 5): wie bei Ligen ein Jahr nach der letzten Aktivität. */
   keepLong?: boolean;
 }

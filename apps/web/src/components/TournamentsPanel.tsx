@@ -1,5 +1,5 @@
 import type { OptionSpec, Options } from '@brett-und-blatt/engine';
-import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, BEST_THIRD_GROUPS, DYP_ROUND_CHOICES, parseFieldCount, parsePointRules, parseTournamentSettings, LEAGUE_DAY_CHOICES, LIVES_CHOICES, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
+import { BEST_OF_CHOICES, DISCIPLINES_MAX, DISCIPLINES_MIN, EVENING_MINUTE_CHOICES, GROUP_COUNT_CHOICES, TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN, BEST_THIRD_GROUPS, DYP_ROUND_CHOICES, LEAGUE_ONLINE_MAX_PLAYERS, parseFieldCount, parsePointRules, parseTournamentSettings, LEAGUE_DAY_CHOICES, LIVES_CHOICES, TEAM_SIZE_CHOICES, TOURNAMENT_MAX_FIELDS, isTableGame, isTeamGame, isTournamentGame, validTeamSize, type ResultKind, type TournamentFormat, type TournamentMode, type TournamentSettings } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { passChanged } from '../lib/playerPass';
@@ -419,6 +419,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
               {t('tournament.returnRound')}
             </label>
           )}
+          {format === 'league' && !local && <p className="text-xs text-muted">{t('tournament.leagueLimit', { n: LEAGUE_ONLINE_MAX_PLAYERS })}</p>}
           {format === 'league' && (
             <div className="grid grid-cols-2 gap-3">
               <label className="block space-y-1 text-sm">

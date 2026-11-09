@@ -18,7 +18,7 @@ export type Route =
   | { name: 'class'; code: string }
   | { name: 'room'; code: string }
   | { name: 'display'; code: string }
-  | { name: 'tournament'; code: string; claim?: string; helper?: string }
+  | { name: 'tournament'; code: string; claim?: string; helper?: string; leader?: string }
   /** Schlichte Ansicht zum Einbetten (iframe): nur lesen, nur Turniere vor Ort mit Zuschaulink. */
   | { name: 'tournamentEmbed'; code: string }
   | { name: 'sound' }
@@ -63,7 +63,7 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'raum' && parts[1]) return { name: 'room', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'tisch' && parts[1]) return { name: 'display', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'turnier' && parts[1] && parts[2] === 'ansicht') return { name: 'tournamentEmbed', code: decodeURIComponent(parts[1]) };
-  if (parts[0] === 'turnier' && parts[1]) return { name: 'tournament', code: decodeURIComponent(parts[1]), ...(params.neu ? { claim: params.neu } : {}), ...(params.helfer ? { helper: params.helfer } : {}) };
+  if (parts[0] === 'turnier' && parts[1]) return { name: 'tournament', code: decodeURIComponent(parts[1]), ...(params.neu ? { claim: params.neu } : {}), ...(params.helfer ? { helper: params.helfer } : {}), ...(params.leitung ? { leader: params.leitung } : {}) };
   if (parts[0] === 'ton') return { name: 'sound' };
   if (parts[0] === 'pass' && parts[1] === 'ansehen') return { name: 'passView', key: params.k ?? '' };
   if (parts[0] === 'pass') return { name: 'pass' };
