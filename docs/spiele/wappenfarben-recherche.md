@@ -97,7 +97,7 @@ Hinweis: Wo die Farbreihenfolge die Anordnung der Flagge betrifft (Streifen waag
 | Team | Sportart | Farben | Status | Quelle |
 |---|---|---|---|---|
 | SSV Reutlingen 05 | Fußball | Rot, Schwarz | ✅ | [DFB-Datencenter](https://datencenter.dfb.de/en/clubs/ssv-reutlingen-1905-fussball-e-v) (Oberliga Baden-Württemberg, 2025/26) |
-| Reutlingen Eagles | American Football | Lila (Spielkleidung) | ◐ | [Stuttgarter Zeitung, Spielbericht](https://www.stuttgarter-zeitung.de/sport/football-regionalliga-leonberg-alligators-verputzen-tabellenfuehrer-reutlingen-eagles-79236011.html): Eagles „in Lila“; offizielle Vereinsfarben prüfen (Regionalliga, gegründet 2012) |
+| Reutlingen Eagles | American Football | Lila, Weiß | ✅ | Angabe von Cornelius (9.11.2026); Spielberichte nennen Lila |
 | TSG Reutlingen / TSG Solcom Ravens Reutlingen | Basketball | – | ❓ | Es gibt eine Männermannschaft in der 2. Basketball-Bundesliga ProB Süd ([Hessenschau](https://www.hessenschau.de/sport/ergebnisse-tabellen/basketball-110~_matchday-17.html)) und die Reutlingen Ravens in der Regionalliga; **welcher Name zu welchem Team gehört und welche Farben sie haben, ist offen** |
 | Young Boys Reutlingen | Fußball | Blau, Silber | ✅ | [de.wikipedia.org/wiki/Young_Boys_Reutlingen](https://de.wikipedia.org/wiki/Young_Boys_Reutlingen): Vereinsfarben „blau / silber“ (9.11.2026) |
 

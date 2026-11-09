@@ -136,6 +136,8 @@ const BUNDESLIGA = make('fussball', [
 const SPORT = make('sport', [
   ['sport-ssv-reutlingen', 'SSV Reutlingen 05', ['schwarz', 'rot', 'weiss']],
   ['sport-young-boys-reutlingen', 'Young Boys Reutlingen', ['blau', 'silber']],
+  // Reutlingen Eagles (American Football): Farben laut Cornelius, 9.11.2026.
+  ['sport-reutlingen-eagles', 'Reutlingen Eagles', ['purpur', 'weiss']],
 ]);
 
 export const CREST_COLOR_SETS: readonly CrestColorSet[] = [...CLASSIC, ...CITIES, ...COUNTRIES, ...BUNDESLIGA, ...SPORT];
