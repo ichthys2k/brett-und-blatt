@@ -712,6 +712,39 @@ function LeaderTransfer({ code, state, send }: { code: string; state: Tournament
   );
 }
 
+/** Das Turnier einer Serie zuordnen (#205): Der Zuordnungscode steht auf der Serienseite; nach dem Ende meldet sich das Turnier selbst. */
+function SeriesAttach({ view, send }: { view: TournamentView; send: Send }) {
+  const [link, setLink] = useState('');
+  return (
+    <div className="space-y-2 rounded-xl border border-line p-3">
+      <p className="text-sm font-semibold">📈 {t('series.attachTitle')}</p>
+      {view.series ? (
+        <>
+          <p className="text-sm">
+            {t('series.attached', { code: view.series })}{' '}
+            <a className="underline" href={paths.series(view.series)}>
+              {t('series.open')}
+            </a>
+          </p>
+          <Button className="w-full" onClick={() => send({ type: 'detachSeries' })}>
+            {t('series.detach')}
+          </Button>
+        </>
+      ) : (
+        <>
+          <p className="text-xs text-muted">{t('series.attachHint')}</p>
+          <div className="flex gap-2">
+            <input className="min-h-11 w-full rounded-xl border border-line bg-surface px-3 uppercase" value={link} maxLength={40} placeholder={t('series.attachPlaceholder')} aria-label={t('series.attachPlaceholder')} onChange={(e) => setLink(e.target.value)} />
+            <Button disabled={!link.trim()} onClick={() => send({ type: 'attachSeries', link })}>
+              {t('series.attach')}
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function SpectatorLink({ view, code }: { view: TournamentView; code: string }) {
   const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
   const embed = `<iframe src="${window.location.origin}${window.location.pathname}${paths.tournamentEmbed(code)}" title="${view.settings.name.replace(/"/g, '')}" width="100%" height="600" style="border:0" loading="lazy"></iframe>`;

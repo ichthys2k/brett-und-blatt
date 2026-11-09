@@ -39,3 +39,5 @@ export { ATTEMPT_LIMIT, ATTEMPT_WINDOW_MS, isBlocked, recordMiss, type AttemptSt
 export { CAPABILITIES, can, roomCapabilities, type Capability } from './capabilities';
 export * from './classroom';
 export * from './classcard';
+export * from './series';
+export * from './series-book';

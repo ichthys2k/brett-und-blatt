@@ -14,6 +14,7 @@ import { Library } from './screens/Library';
 import { Operator } from './screens/Operator';
 import { PackView } from './screens/PackView';
 import { Tournaments } from './screens/Tournaments';
+import { SeriesScreen } from './screens/Series';
 import { TournamentEmbedScreen, TournamentScreen } from './screens/Tournament';
 import { Setup } from './screens/Setup';
 import { SoundSettingsScreen } from './screens/SoundSettings';
@@ -56,6 +57,10 @@ function Screen() {
       return <TournamentScreen key={route.code} code={route.code} claim={route.claim} helper={route.helper} leader={route.leader} />;
     case 'tournamentEmbed':
       return <TournamentEmbedScreen key={route.code} code={route.code} />;
+    case 'series':
+      return <SeriesScreen key={route.code} code={route.code} />;
+    case 'seriesEmbed':
+      return <SeriesScreen key={route.code} code={route.code} embed />;
     case 'sound':
       return <SoundSettingsScreen />;
     case 'pass':

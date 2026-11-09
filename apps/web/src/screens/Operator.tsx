@@ -15,7 +15,7 @@ export function Operator() {
   const [key, setKey] = useState('');
   const [list, setList] = useState<OpenRoomListing[] | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [kind, setKind] = useState<'turnier' | 'klasse'>('turnier');
+  const [kind, setKind] = useState<'turnier' | 'klasse' | 'serie'>('turnier');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -43,8 +43,8 @@ export function Operator() {
     }
   };
 
-  const remove = async (what: 'turnier' | 'klasse', target: string, label: string) => {
-    if (!window.confirm(`${what === 'turnier' ? 'Das Turnier' : 'Die Klasse'} „${label}“ endgültig löschen? Das lässt sich nicht rückgängig machen.`)) return;
+  const remove = async (what: 'turnier' | 'klasse' | 'serie', target: string, label: string) => {
+    if (!window.confirm(`${what === 'turnier' ? 'Das Turnier' : what === 'serie' ? 'Die Serie' : 'Die Klasse'} „${label}“ endgültig löschen? Das lässt sich nicht rückgängig machen.`)) return;
     setBusy(true);
     setMessage(null);
     try {
@@ -110,9 +110,10 @@ export function Operator() {
         <h2 id="op-code" className="text-xl">
           Per Code löschen
         </h2>
-        <select className={FIELD} aria-label="Was löschen?" value={kind} onChange={(e) => setKind(e.target.value as 'turnier' | 'klasse')}>
+        <select className={FIELD} aria-label="Was löschen?" value={kind} onChange={(e) => setKind(e.target.value as 'turnier' | 'klasse' | 'serie')}>
           <option value="turnier">Turnier (Code aus der Adresse)</option>
           <option value="klasse">Klasse (sechs Bilder)</option>
+          <option value="serie">Serie</option>
         </select>
         <input className={FIELD} aria-label="Code" placeholder={kind === 'turnier' ? 'K7M2QX4P' : '🐶🐱🦊🐻🐸🐧'} value={code} onChange={(e) => setCode(e.target.value)} />
         <Button

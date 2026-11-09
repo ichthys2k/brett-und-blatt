@@ -270,6 +270,8 @@ export interface TournamentSnapshot {
   roster?: TournamentPlayer[];
   /** Übergabe der Hauptleitung auf ein anderes Gerät (#203): Einmalcode, nur eine Übergabe zugleich. */
   leaderTransfer?: { code: string; expiresAt: number; attempts: number };
+  /** Serie auf dem Server (#205): Code, geheimer Zuordnungsschlüssel und wann das Ergebnis gemeldet wurde. */
+  series?: { code: string; key: string; reportedAt?: number };
   /** Längere Aufbewahrung (Stufe 5): wie bei Ligen ein Jahr nach der letzten Aktivität. */
   keepLong?: boolean;
 }
@@ -393,6 +395,8 @@ export interface TournamentView {
   podium: string[];
   /** Längere Aufbewahrung ist eingeschaltet. */
   keepLong: boolean;
+  /** Code der Serie, zu der das Turnier gehört (#205); nur der Code, nie der Schlüssel. */
+  series: string | null;
   /** Platzierungsspiele: alle Plätze der Reihe nach, sobald sie vergeben sind; sonst leer. */
   ranking: string[];
   you: string | null;

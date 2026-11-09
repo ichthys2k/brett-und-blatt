@@ -38,6 +38,10 @@ export function applyTournamentMessage(t: Tournament, from: Sender, message: Exc
       const issued = t.issueLeaderTransfer(token);
       return 'error' in issued ? { kind: 'error', message: issued.error } : { kind: 'ok', leaderCode: issued };
     }
+    case 'attachSeries':
+    case 'detachSeries':
+      // Braucht den Server (Prüfung beim Serien-Objekt); `TournamentRoom` fängt diese Nachrichten vorher ab.
+      return { kind: 'error', message: 'Serien gibt es nur online.' };
     case 'takeLeader':
       error = t.takeLeadership(token, from.name, message.code);
       break;

@@ -166,6 +166,13 @@ export function Datenschutz() {
         nach der letzten Aktivität. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>Serien:</strong> Legt die Leitung eine Serie an und ordnet ihr Turniere zu, speichert der Spieleserver in der EU den Namen der Serie, die
+        Geräte-Kennung der Leitung und von jedem beendeten Turnier Name, Spitznamen der Teilnehmer, Platzierungen und Ergebnisse der Partien sowie
+        je Teilnehmer eine daraus abgeleitete Kurzform der Geräte-Kennung (ein Pseudonym, mit dem derselbe Mensch über mehrere Turniere erkannt wird; die
+        Kennung selbst ist daraus nicht zu lesen). Wer die Adresse der Serie kennt, sieht Spitznamen, Platzierungen, Punkte und Elo-Zahlen. Die Serie wird ein Jahr
+        nach der letzten Aktivität gelöscht; die Leitung kann sie jederzeit löschen oder verlängern. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b und f DSGVO.
+      </p>
+      <p>
         Beim Verbindungsaufbau verarbeitet Cloudflare außerdem technisch notwendige Daten wie deine IP-Adresse, Datum und Uhrzeit sowie Angaben zum
         Browser, um die Verbindung herzustellen und den Dienst vor Angriffen zu schützen (Art. 6 Abs. 1 lit. f DSGVO). Dabei können Daten in die USA
         übermittelt werden. Cloudflare ist nach dem EU-US Data Privacy Framework zertifiziert. Wie lange Cloudflare diese Daten speichert, bestimmt

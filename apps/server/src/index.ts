@@ -6,6 +6,8 @@ import {
   CLASS_TTL_MS,
   OpenRoomDirectory,
   Room,
+  SERIES_CODE_PATTERN,
+  SeriesBook,
   TOURNAMENT_CODE_PATTERN,
   Tournament,
   applyBackupPut,
@@ -31,6 +33,7 @@ import {
   parseFieldCount,
   applyTournamentMessage,
   parseEntrants,
+  parseSeriesLink,
   parseSeed,
   parsePointRules,
   randomRoomCode,
@@ -42,6 +45,10 @@ import {
   type RoomDeps,
   type RoomReport,
   type RoomSnapshot,
+  type SeriesEntry,
+  type SeriesRecord,
+  type SeriesView,
+  type PointScheme,
   type ServerMessage,
   type StoredBackup,
   type TournamentServerMessage,
@@ -102,6 +109,7 @@ interface Env {
   PASS_LOCKS: DurableObjectNamespace<PassLock>;
   SHARES: DurableObjectNamespace<PassShare>;
   CLASSES: DurableObjectNamespace<ClassRoom>;
+  SERIES: DurableObjectNamespace<SeriesRoom>;
   /** Geheimer Pfeffer für die Schlösser der Ausweise (`wrangler secret put PASS_PEPPER`, lokal in `.dev.vars`). Fehlt er, melden die Schloss-Endpunkte 503. */
   PASS_PEPPER?: string;
   /** Betreiber-Schlüssel (`wrangler secret put OPERATOR_KEY`): löscht per `DELETE /betreiber/…` Turniere und Klassen. Fehlt er, gibt es die Endpunkte nicht. */
@@ -160,6 +168,11 @@ function classStub(env: Env, code: string): DurableObjectStub<ClassRoom> {
   return namespace.get(namespace.idFromName(code));
 }
 
+function seriesStub(env: Env, code: string): DurableObjectStub<SeriesRoom> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.SERIES : env.SERIES.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(code));
+}
+
 function attemptStub(env: Env, sender: string): DurableObjectStub<AttemptLimiter> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.ATTEMPTS : env.ATTEMPTS.jurisdiction('eu');
   return namespace.get(namespace.idFromName(sender));
@@ -194,6 +207,24 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
 function originAllowed(request: Request, env: Env): boolean {
   const origin = request.headers.get('Origin');
   return origin !== null && env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).includes(origin);
+}
+
+/** Liest einen kleinen JSON-Körper; null bei Fehlern oder zu großer Länge. */
+async function readJson(request: Request, maxLength: number): Promise<Record<string, unknown> | null> {
+  try {
+    const text = await request.text();
+    if (text.length > maxLength) return null;
+    const body = JSON.parse(text) as unknown;
+    return typeof body === 'object' && body !== null && !Array.isArray(body) ? (body as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Kurzform einer Geräte-Kennung: erkennt dieselbe Person über Turniere hinweg, verrät die Kennung nicht. */
+async function personKey(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${token}/serie`));
+  return Array.from(new Uint8Array(digest).slice(0, 8), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 function json(data: unknown, status: number, headers: Record<string, string>): Response {
@@ -246,7 +277,7 @@ export default {
     }
 
     // Betreiber-Endpunkte (Schlüssel `OPERATOR_KEY`): Liste der offenen Turniere und Löschen von Turnieren und Klassen.
-    const operator = /^\/betreiber\/(turnier|klasse|liste)(?:\/([^/]+))?$/.exec(url.pathname);
+    const operator = /^\/betreiber\/(turnier|klasse|serie|liste)(?:\/([^/]+))?$/.exec(url.pathname);
     if (operator) {
       if (!env.OPERATOR_KEY) return json({ error: 'aus' }, 404, cors);
       const wanted = operator[1] === 'liste' ? 'GET' : 'DELETE';
@@ -267,6 +298,9 @@ export default {
       if (operator[1] === 'turnier') {
         if (!TOURNAMENT_CODE_PATTERN.test(target)) return json({ error: 'code' }, 400, cors);
         done = await tournamentStub(env, target).operatorDelete();
+      } else if (operator[1] === 'serie') {
+        if (!SERIES_CODE_PATTERN.test(target)) return json({ error: 'code' }, 400, cors);
+        done = await seriesStub(env, target).operatorDelete();
       } else {
         const code = parseClassCode(target);
         if (!code) return json({ error: 'code' }, 400, cors);
@@ -303,6 +337,46 @@ export default {
       if (!originAllowed(request, env)) return new Response('Origin nicht erlaubt', { status: 403 });
       if (request.headers.get('Upgrade') !== 'websocket') return json({ exists: await tournamentStub(env, code).exists() }, 200, cors);
       return tournamentStub(env, code).fetch(request);
+    }
+
+    // Serien (#205): `POST /serien` legt eine an, `GET`/`POST`/`DELETE /serien/<Code>` zeigen und verwalten sie (Kennung der Leitung als `Authorization: Bearer`).
+    if (url.pathname === '/serien' && request.method === 'POST') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const body = await readJson(request, 2_000);
+      if (!body || typeof body.name !== 'string' || typeof body.token !== 'string' || (body.scheme !== 'linear' && body.scheme !== 'f1')) return json({ error: 'body' }, 400, cors);
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const code = randomLetters(8);
+        const error = await seriesStub(env, code).create(code, body.name, body.scheme, body.token);
+        if (error === null) return json({ code }, 201, cors);
+        if (error !== 'belegt') return json({ error }, 400, cors);
+      }
+      return json({ error: 'busy' }, 503, cors);
+    }
+
+    const series = /^\/serien\/([^/]+)$/.exec(url.pathname);
+    if (series) {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const code = series[1]!.toUpperCase();
+      if (!SERIES_CODE_PATTERN.test(code)) return json({ error: 'code' }, 404, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      const bearer = /^Bearer (.{16,100})$/.exec(request.headers.get('Authorization') ?? '')?.[1] ?? null;
+      const stub = seriesStub(env, code);
+      if (request.method === 'GET') {
+        const view = await stub.view(bearer);
+        return view ? json(view, 200, noStore) : json({ error: 'missing' }, 404, noStore);
+      }
+      if (!bearer) return json({ error: 'token' }, 401, noStore);
+      if (request.method === 'DELETE') {
+        const error = await stub.deleteByLeader(bearer);
+        return error ? json({ error }, 403, noStore) : json({ ok: true }, 200, noStore);
+      }
+      if (request.method === 'POST') {
+        const body = await readJson(request, 2_000);
+        if (!body || typeof body.action !== 'string') return json({ error: 'body' }, 400, noStore);
+        const error = await stub.manage(bearer, { action: body.action, name: typeof body.name === 'string' ? body.name : undefined, scheme: body.scheme === 'linear' || body.scheme === 'f1' ? body.scheme : undefined, tournament: typeof body.tournament === 'string' ? body.tournament : undefined });
+        return error ? json({ error }, 400, noStore) : json({ ok: true }, 200, noStore);
+      }
+      return json({ error: 'method' }, 405, cors);
     }
 
     const backup = /^\/sicherung\/([^/]+)$/.exec(url.pathname);
@@ -976,6 +1050,109 @@ interface TournamentAttachment {
  * Ein Turnier als Durable Object (in der EU): hält Stand und Stichtage, legt für jede Partie
  * einen normalen Spielraum an und schickt jede Änderung an alle offenen Turnierseiten.
  */
+/**
+ * Eine Serie als eigenes Durable Object (eins je Code, in der EU, #205). Die Logik steht in `packages/online/src/series-book.ts`;
+ * hier nur Speicher und Frist (ein Jahr nach der letzten Aktivität).
+ */
+export class SeriesRoom extends DurableObject<Env> {
+  private book: SeriesBook | null = null;
+
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    ctx.blockConcurrencyWhile(async () => {
+      const record = await ctx.storage.get<SeriesRecord>('series');
+      if (record) this.book = SeriesBook.restore(record, this.deps());
+    });
+  }
+
+  /** Legt die Serie an; gibt einen Fehlertext zurück, `'belegt'`, wenn der Code schon vergeben ist, sonst null. */
+  async create(code: string, name: string, scheme: PointScheme, token: string): Promise<string | null> {
+    if (this.book) return 'belegt';
+    const book = SeriesBook.create(code, name, scheme, token, this.deps());
+    if (typeof book === 'string') return book;
+    this.book = book;
+    await this.save();
+    return null;
+  }
+
+  async view(token: string | null): Promise<SeriesView | null> {
+    return this.book ? this.book.view(token) : null;
+  }
+
+  async accepts(key: string): Promise<boolean> {
+    return this.book?.accepts(key) ?? false;
+  }
+
+  async report(key: string, entry: SeriesEntry): Promise<string | null> {
+    if (!this.book) return 'Diese Serie gibt es nicht (mehr).';
+    const error = this.book.report(key, entry);
+    if (!error) await this.save();
+    return error;
+  }
+
+  async manage(token: string, request: { action: string; name?: string; scheme?: PointScheme; tournament?: string }): Promise<string | null> {
+    const book = this.book;
+    if (!book) return 'Diese Serie gibt es nicht (mehr).';
+    let error: string | null;
+    switch (request.action) {
+      case 'rename':
+        error = book.rename(token, request.name ?? '');
+        break;
+      case 'scheme':
+        error = request.scheme ? book.setScheme(token, request.scheme) : 'Unbekannte Punktewertung.';
+        break;
+      case 'remove':
+        error = book.remove(token, request.tournament ?? '');
+        break;
+      case 'extend':
+        error = book.extend(token);
+        break;
+      case 'newKey':
+        error = book.newKey(token);
+        break;
+      default:
+        error = 'Unbekannte Aktion.';
+    }
+    if (!error) await this.save();
+    return error;
+  }
+
+  async deleteByLeader(token: string): Promise<string | null> {
+    if (!this.book) return 'Diese Serie gibt es nicht (mehr).';
+    if (!this.book.mayManage(token)) return 'Das darf nur die Leitung der Serie.';
+    await this.wipe();
+    return null;
+  }
+
+  async operatorDelete(): Promise<boolean> {
+    if (!this.book) return false;
+    await this.wipe();
+    return true;
+  }
+
+  override async alarm(): Promise<void> {
+    const book = this.book;
+    if (!book) return;
+    if (Date.now() >= book.expiresAt()) return this.wipe();
+    await this.ctx.storage.setAlarm(book.expiresAt());
+  }
+
+  private async wipe(): Promise<void> {
+    this.book = null;
+    await this.ctx.storage.deleteAll();
+  }
+
+  private async save(): Promise<void> {
+    if (!this.book) return;
+    await this.ctx.storage.put('series', this.book.snapshot());
+    await this.ctx.storage.setAlarm(this.book.expiresAt());
+  }
+
+  private deps() {
+    return { now: () => Date.now(), randomKey: () => randomLetters(8) };
+  }
+}
+
 export class TournamentRoom extends DurableObject<Env> {
   private tournament: Tournament | null = null;
   private lastListing: OpenRoomListing | null | undefined = undefined;
@@ -1028,6 +1205,7 @@ export class TournamentRoom extends DurableObject<Env> {
     }
     const { token, name, avatar } = ws.deserializeAttachment() as TournamentAttachment;
     if (!token) return this.sendTo(ws, { type: 'error', message: 'Erst anmelden.' });
+    if (message.type === 'attachSeries' || message.type === 'detachSeries') return this.handleSeries(ws, t, token, message);
     const result = applyTournamentMessage(t, { token, name: name ?? '', avatar: avatar ?? '' }, message);
     if (result.kind === 'delete') return this.deleteTournament(t);
     if (result.kind === 'error') return this.sendTo(ws, { type: 'error', message: result.message });
@@ -1041,6 +1219,46 @@ export class TournamentRoom extends DurableObject<Env> {
       ws.close(code === 1005 ? 1000 : code, 'Tschüss');
     } catch {
       // Schon zu.
+    }
+  }
+
+  /** Serie zuordnen oder lösen (#205): Der Zuordnungscode wird beim Serien-Objekt geprüft. */
+  private async handleSeries(ws: WebSocket, t: Tournament, token: string, message: { type: 'attachSeries'; link: string } | { type: 'detachSeries' }): Promise<void> {
+    if (message.type === 'detachSeries') {
+      const error = t.detachSeries(token);
+      if (error) return this.sendTo(ws, { type: 'error', message: error });
+      return this.changed();
+    }
+    if (!t.mayDelete(token)) return this.sendTo(ws, { type: 'error', message: 'Das Turnier einer Serie zuordnen kann nur die Hauptleitung.' });
+    const link = parseSeriesLink(message.link);
+    if (!link) return this.sendTo(ws, { type: 'error', message: 'Bitte den Zuordnungscode der Serie eingeben (zweimal acht Zeichen).' });
+    let accepted = false;
+    try {
+      accepted = await seriesStub(this.env, link.code).accepts(link.key);
+    } catch (err) {
+      console.error('Serie nicht erreichbar:', err);
+    }
+    if (!accepted) return this.sendTo(ws, { type: 'error', message: 'Diese Serie gibt es nicht, oder der Zuordnungscode passt nicht.' });
+    t.attachSeries(token, link.code, link.key);
+    return this.changed();
+  }
+
+  /** Meldet ein beendetes Turnier an seine Serie; bei Fehlern wird beim nächsten Wecken erneut versucht. */
+  private async reportSeries(t: Tournament): Promise<boolean> {
+    const link = t.seriesLink();
+    if (!link || !t.seriesDue()) return false;
+    const source = t.seriesSource();
+    if (!source) return false;
+    try {
+      const players = await Promise.all(source.entry.players.map(async (p) => ({ ...p, ...(source.tokens[p.id] ? { key: await personKey(source.tokens[p.id]!) } : {}) })));
+      const error = await seriesStub(this.env, link.code).report(link.key, { ...source.entry, players });
+      if (error) console.error('Serie hat das Ergebnis nicht angenommen:', error);
+      // Eine abgelehnte Meldung (Serie weg, Schlüssel erneuert) wird nicht endlos wiederholt.
+      t.markSeriesReported();
+      return true;
+    } catch (err) {
+      console.error('Serie nicht erreichbar:', err);
+      return false;
     }
   }
 
@@ -1081,6 +1299,7 @@ export class TournamentRoom extends DurableObject<Env> {
       if (code) t.roomCreated(request.match, code);
       else retry = true;
     }
+    if (!(await this.reportSeries(t)) && t.seriesDue()) retry = true;
     await this.ctx.storage.put('tournament', t.snapshot());
     const wake = retry ? Date.now() + 30_000 : t.nextWakeup();
     await this.ctx.storage.setAlarm(Math.max(wake, Date.now() + 1000));

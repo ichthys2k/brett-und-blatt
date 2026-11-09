@@ -1,3 +1,4 @@
+import type { SeriesEntry } from './series-book';
 import { OPEN_ROOM_REFRESH_MS } from './lobby';
 import { AVATARS } from './avatars';
 import { cleanAvatar, cleanName } from './names';
@@ -197,6 +198,55 @@ export class Tournament {
     delete this.s.leaderTransfer;
     this.touch();
     return null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Serie (#205)
+
+  /** Ordnet das Turnier einer Serie zu. Ob der Schlüssel stimmt, prüft vorher der Server beim Serien-Objekt. */
+  attachSeries(token: string, code: string, key: string): string | null {
+    if (!this.mayDelete(token)) return 'Das Turnier einer Serie zuordnen kann nur die Hauptleitung.';
+    this.s.series = { code, key };
+    this.touch();
+    return null;
+  }
+
+  detachSeries(token: string): string | null {
+    if (!this.mayDelete(token)) return 'Das Turnier aus einer Serie lösen kann nur die Hauptleitung.';
+    delete this.s.series;
+    this.touch();
+    return null;
+  }
+
+  seriesLink(): { code: string; key: string; reportedAt?: number } | null {
+    return this.s.series ?? null;
+  }
+
+  /** Ist das Turnier beendet und sein Ergebnis noch nicht an die Serie gemeldet? */
+  seriesDue(): boolean {
+    return !!this.s.series && this.s.phase === 'finished' && this.s.series.reportedAt === undefined;
+  }
+
+  markSeriesReported(): void {
+    if (this.s.series) this.s.series.reportedAt = this.deps.now();
+  }
+
+  /** Das Ergebnis für die Serie; die Kennungen der Teilnehmer gibt es getrennt, der Server macht daraus die Kurzform `key`. */
+  seriesSource(): { entry: SeriesEntry; tokens: Record<string, string> } | null {
+    const s = this.s;
+    if (s.phase !== 'finished') return null;
+    const singles = s.players.filter((p) => !p.pending);
+    return {
+      entry: {
+        code: s.code,
+        name: s.settings.name,
+        at: s.finishedAt ?? this.deps.now(),
+        players: singles.map((p) => ({ id: p.id, name: p.name, ...(p.pair ? { pair: true } : {}) })),
+        matches: s.matches.map((m) => ({ stage: m.stage, id: m.id, slots: m.slots.map((slot) => ({ player: slot.player })), outcome: m.outcome ? { winner: m.outcome.winner ?? null, draw: m.outcome.draw === true, ...(m.outcome.bye ? { bye: true } : {}) } : null })),
+        ranking: this.ranking(),
+      },
+      tokens: Object.fromEntries(singles.filter((p) => !p.pair && !p.members).map((p) => [p.id, p.token])),
+    };
   }
 
   /** Löschen darf nur, wer das Turnier angelegt hat – nicht Mitleitung oder Helfer. */
@@ -729,6 +779,7 @@ export class Tournament {
       podium: this.podium(),
       ranking: this.ranking(),
       keepLong: s.keepLong === true,
+      series: s.series?.code ?? null,
       you,
       isLeader: token !== null && this.isLeader(token),
       mayDelete: token !== null && this.mayDelete(token),

@@ -8,6 +8,7 @@ import { navigate, paths } from '../lib/router';
 import { storage, type KnownTournament, type Profile, type TournamentTemplate } from '../lib/storage';
 import { seriesCsv, seriesStandings, type PointScheme, type SeriesRow } from '../lib/series';
 import { createOfflineTournament, isOfflineCode } from '../lib/offlineTournament';
+import { createSeries, knownSeries } from '../lib/seriesServer';
 import { findGame as findGameInfo } from '../lib/registry';
 import { createTournament, deleteTournament, fetchTournamentView, tournamentExists } from '../lib/tournament';
 import { Button, Section } from './controls';
@@ -192,6 +193,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   return (
     <Section title={`🏆 ${t('tournament.title')}`}>
       <p className="text-sm text-muted">{t('tournament.hint')}</p>
+      <SeriesCreate />
       <SeriesPanel profile={profile} known={known} />
       <TemplateList
         profile={profile}
@@ -861,6 +863,60 @@ function TemplateList({ profile, onChanged }: { profile: Profile; onChanged: () 
         ))}
       </ul>
       {error && <p role="alert" className="mt-2 text-sm text-danger">{error}</p>}
+    </details>
+  );
+}
+
+/**
+ * Serie auf dem Server anlegen (#205): eigener Name, Code und Link; Turniere werden ihr zugeordnet und melden sich nach dem
+ * Ende von selbst. Die eigenen Serien stehen darunter.
+ */
+function SeriesCreate() {
+  const [name, setName] = useState('');
+  const [scheme, setScheme] = useState<PointScheme>('linear');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const mine = knownSeries();
+  const create = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      navigate(paths.series(await createSeries(name, scheme)));
+    } catch {
+      setError(t('online.serverError'));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <details className="rounded-xl border border-line p-2">
+      <summary className="cursor-pointer text-sm">📈 {t('series.create')}</summary>
+      <div className="mt-2 space-y-2">
+        <p className="text-sm text-muted">{t('series.createHint')}</p>
+        <input className={FIELD} value={name} maxLength={40} placeholder={t('series.createName')} aria-label={t('series.createName')} onChange={(e) => setName(e.target.value)} />
+        <select className={FIELD} value={scheme} aria-label={t('tournament.seriesScheme')} onChange={(e) => setScheme(e.target.value as PointScheme)}>
+          <option value="linear">{t('tournament.seriesLinear')}</option>
+          <option value="f1">{t('tournament.seriesF1')}</option>
+        </select>
+        <Button variant="primary" className="w-full" disabled={busy || !name.trim()} onClick={() => void create()}>
+          {t('series.create')}
+        </Button>
+        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+        {mine.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-sm font-semibold">{t('series.mine')}</p>
+            <ul className="space-y-1">
+              {mine.map((series) => (
+                <li key={series.code}>
+                  <Button className="w-full justify-start" onClick={() => navigate(paths.series(series.code))}>
+                    <span className="truncate">📈 {series.name}</span>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </details>
   );
 }

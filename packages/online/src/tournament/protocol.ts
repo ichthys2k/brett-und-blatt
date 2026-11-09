@@ -48,6 +48,9 @@ export type TournamentClientMessage =
   | { type: 'keepLong'; on: boolean }
   /** Übergabecode für die Hauptleitung erzeugen (nur Hauptleitung). */
   | { type: 'leaderCode' }
+  /** Turnier einer Serie zuordnen (`CODE-SCHLÜSSEL`) oder lösen (#205); prüft der Server. */
+  | { type: 'attachSeries'; link: string }
+  | { type: 'detachSeries' }
   /** Die Hauptleitung mit einem Übergabecode übernehmen. */
   | { type: 'takeLeader'; code: string };
 
@@ -132,6 +135,10 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
       return { type: 'present', ...(typeof m.player === 'string' ? { player: m.player } : {}), on: m.on };
     case 'leaderCode':
       return { type: 'leaderCode' };
+    case 'attachSeries':
+      return isShort(m.link, 40) ? { type: 'attachSeries', link: m.link } : null;
+    case 'detachSeries':
+      return { type: 'detachSeries' };
     case 'takeLeader':
       return isShort(m.code, 20) ? { type: 'takeLeader', code: m.code } : null;
     case 'keepLong':
