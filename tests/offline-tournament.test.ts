@@ -88,3 +88,26 @@ describe('Turnier ohne Netz', () => {
     expect(b.phase).toBe(a.phase);
   });
 });
+
+describe('Serie ohne Netz (#205)', () => {
+  it('merkt sich den Zuordnungscode, zeigt die Serie und nimmt nur gültige Codes', async () => {
+    const { createOfflineTournament, applyOfflineMessage, loadOfflineRecord } = await offline();
+    const code = createOfflineTournament(base, profile, 0)!;
+    const bad = applyOfflineMessage(code, profile, { type: 'attachSeries', link: 'quatsch' });
+    expect(bad).toMatchObject({ ok: false });
+    const good = applyOfflineMessage(code, profile, { type: 'attachSeries', link: 'serue234-key22222' });
+    expect(good.ok && 'view' in good && good.view.series).toBe('SERUE234');
+    expect(loadOfflineRecord(code)?.seriesLink).toBe('SERUE234-KEY22222');
+    // Die Serie gehört nicht ins Protokoll, das der Abgleich wiederholt.
+    expect(loadOfflineRecord(code)?.log.some((m) => m.type === 'attachSeries')).toBe(false);
+    const gone = applyOfflineMessage(code, profile, { type: 'detachSeries' });
+    expect(gone.ok && 'view' in gone && gone.view.series).toBeNull();
+    expect(loadOfflineRecord(code)?.seriesLink).toBeUndefined();
+  });
+
+  it('die Leitung übergeben geht ohne Netz nicht', async () => {
+    const { createOfflineTournament, applyOfflineMessage } = await offline();
+    const code = createOfflineTournament(base, profile, 0)!;
+    expect(applyOfflineMessage(code, profile, { type: 'leaderCode' })).toMatchObject({ ok: false, error: expect.stringMatching(/Ohne Netz/) });
+  });
+});

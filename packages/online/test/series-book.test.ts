@@ -103,6 +103,41 @@ describe('Verwalten', () => {
   });
 });
 
+describe('Leitung der Serie übergeben', () => {
+  const NEW = 'kennung-neues-geraet-01';
+  it('nur die Leitung erzeugt den Code; nach dem Einlösen wechselt die Leitung', () => {
+    const b = book();
+    expect(b.issueTransfer(NEW)).toMatchObject({ error: expect.stringMatching(/Leitung/) });
+    const issued = b.issueTransfer(LEADER);
+    expect('code' in issued).toBe(true);
+    const code = (issued as { code: string }).code;
+    expect(b.takeLeadership(NEW, code.toLowerCase())).toBeNull();
+    expect(b.mayManage(NEW)).toBe(true);
+    expect(b.mayManage(LEADER)).toBe(false);
+    expect(b.view(NEW).isLeader).toBe(true);
+    expect(b.takeLeadership('noch-ein-geraet-0001', code)).toMatch(/keine Übergabe/);
+  });
+
+  it('falsche Codes zählen und sperren nach fünf; der Code läuft nach einem Tag ab', () => {
+    const b = book();
+    b.issueTransfer(LEADER);
+    for (let i = 0; i < 5; i++) expect(b.takeLeadership(NEW, 'FALSCH22')).toMatch(/passt nicht/);
+    expect(b.takeLeadership(NEW, 'FALSCH22')).toMatch(/keine Übergabe/);
+    clock.now = 9_000_000;
+    const c = book();
+    c.issueTransfer(LEADER);
+    clock.now += 24 * 60 * 60 * 1000;
+    expect(c.takeLeadership(NEW, 'EGAL2222')).toMatch(/abgelaufen/);
+    expect(c.mayManage(LEADER)).toBe(true);
+  });
+
+  it('die bisherige Leitung kann den eigenen Code nicht einlösen', () => {
+    const b = book();
+    const issued = b.issueTransfer(LEADER) as { code: string };
+    expect(b.takeLeadership(LEADER, issued.code)).toMatch(/schon die Leitung/);
+  });
+});
+
 describe('Zuordnungscode', () => {
   it('wird gelesen, egal ob mit Strich, Leerzeichen oder Kleinbuchstaben', () => {
     expect(parseSeriesLink('serue234-key22222')).toEqual({ code: 'SERUE234', key: 'KEY22222' });

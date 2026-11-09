@@ -88,3 +88,25 @@ export async function deleteSeries(code: string): Promise<string | null> {
     return 'Keine Verbindung zum Server.';
   }
 }
+
+/** Übergabecode für die Leitung der Serie erzeugen. */
+export async function issueSeriesTransfer(code: string): Promise<{ code: string; expiresAt: number } | { error: string }> {
+  try {
+    const response = await fetch(`${GAME_SERVER}/serien/${encodeURIComponent(code)}`, { method: 'POST', headers: headers(), body: JSON.stringify({ action: 'transfer' }) });
+    const body = (await response.json().catch(() => ({}))) as { code?: string; expiresAt?: number; error?: string };
+    return response.ok && body.code && body.expiresAt ? { code: body.code, expiresAt: body.expiresAt } : { error: body.error ?? `Server antwortet mit ${response.status}` };
+  } catch {
+    return { error: 'Keine Verbindung zum Server.' };
+  }
+}
+
+/** Die Leitung auf diesem Gerät übernehmen; Fehlertext oder null. */
+export async function takeSeriesLeadership(code: string, transferCode: string): Promise<string | null> {
+  try {
+    const response = await fetch(`${GAME_SERVER}/serien/${encodeURIComponent(code)}`, { method: 'POST', headers: headers(), body: JSON.stringify({ action: 'take', code: transferCode }) });
+    if (response.ok) return null;
+    return ((await response.json().catch(() => ({}))) as { error?: string }).error ?? `Server antwortet mit ${response.status}`;
+  } catch {
+    return 'Keine Verbindung zum Server.';
+  }
+}

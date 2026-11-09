@@ -1,4 +1,4 @@
-import { Tournament, applyTournamentMessage, type PointRules, type TournamentClientMessage, type TournamentSettings, type TournamentSnapshot, type TournamentView } from '@brett-und-blatt/online';
+import { Tournament, parseSeriesLink, applyTournamentMessage, type PointRules, type TournamentClientMessage, type TournamentSettings, type TournamentSnapshot, type TournamentView } from '@brett-und-blatt/online';
 import { GAME_SERVER } from './server';
 import { storage, type Profile } from './storage';
 
@@ -33,6 +33,8 @@ export interface OfflineRecord {
   updatedAt: number;
   /** Servercode, sobald das Turnier übertragen ist; danach nur noch zum Ansehen. */
   syncedCode?: string;
+  /** Zuordnungscode einer Serie (#205): wird beim Abgleich mit dem Server eingelöst, ohne Netz nur vorgemerkt. */
+  seriesLink?: string;
 }
 
 function readAll(): Record<string, OfflineRecord> {
@@ -96,6 +98,18 @@ export function applyOfflineMessage(code: string, profile: Profile, message: Lea
   const all = readAll();
   const record = all[code];
   if (!record) return { ok: false, error: 'Dieses Turnier gibt es nicht mehr.' };
+  // Serie vormerken: Der Server prüft den Code erst beim Abgleich; das Ergebnis geht erst dann an die Serie.
+  if (message.type === 'attachSeries' || message.type === 'detachSeries') {
+    if (record.syncedCode) return { ok: false, error: 'Dieses Turnier ist schon auf den Server übertragen; dort lässt sich die Serie zuordnen.' };
+    if (message.type === 'attachSeries') {
+      const link = parseSeriesLink(message.link);
+      if (!link) return { ok: false, error: 'Bitte den Zuordnungscode der Serie eingeben (zweimal acht Zeichen).' };
+      record.seriesLink = `${link.code}-${link.key}`;
+    } else delete record.seriesLink;
+    record.updatedAt = Date.now();
+    if (!writeAll(all)) return { ok: false, error: 'Der Speicher dieses Geräts ist voll oder gesperrt; die Änderung wurde nicht gespeichert.' };
+    return { ok: true, view: { ...Tournament.restore(record.snapshot, deps).view(storage.deviceToken()), series: record.seriesLink?.slice(0, 8) ?? null } };
+  }
   if (record.syncedCode) return { ok: false, error: 'Dieses Turnier ist schon auf den Server übertragen; dort geht es weiter.' };
   const t = Tournament.restore(record.snapshot, deps);
   const token = storage.deviceToken();
@@ -110,7 +124,7 @@ export function applyOfflineMessage(code: string, profile: Profile, message: Lea
   record.log.push(message);
   record.updatedAt = Date.now();
   if (!writeAll(all)) return { ok: false, error: 'Der Speicher dieses Geräts ist voll oder gesperrt; die Änderung wurde nicht gespeichert.' };
-  return { ok: true, view: t.view(token), ...(result.claim ? { claim: result.claim } : {}) };
+  return { ok: true, view: { ...t.view(token), series: record.seriesLink?.slice(0, 8) ?? null }, ...(result.claim ? { claim: result.claim } : {}) };
 }
 
 export function deleteOfflineRecord(code: string): void {
@@ -119,7 +133,7 @@ export function deleteOfflineRecord(code: string): void {
   writeAll(all);
 }
 
-export type SyncOutcome = { ok: true; code: string } | { ok: false; error: string };
+export type SyncOutcome = { ok: true; code: string; seriesError?: string } | { ok: false; error: string };
 
 /**
  * Überträgt ein Turnier ohne Netz auf den Server: anlegen mit demselben Startwert, dann alle Nachrichten der Leitung
@@ -142,18 +156,18 @@ export async function syncOfflineTournament(code: string, profile: Profile): Pro
   } catch {
     return { ok: false, error: 'Der Server ist nicht erreichbar. Später noch einmal versuchen.' };
   }
-  const outcome = await replay(serverCode, profile, record.log);
+  const outcome = await replay(serverCode, profile, record.log, record.seriesLink);
   if (!outcome.ok) return outcome;
   const all = readAll();
   if (all[code]) {
     all[code]!.syncedCode = serverCode;
     writeAll(all);
   }
-  return { ok: true, code: serverCode };
+  return outcome.seriesError ? { ok: true, code: serverCode, seriesError: outcome.seriesError } : { ok: true, code: serverCode };
 }
 
 /** Wiederholt die Nachrichten auf dem Server und prüft, dass keine abgelehnt wurde. */
-function replay(serverCode: string, profile: Profile, log: LeaderMessage[]): Promise<SyncOutcome> {
+function replay(serverCode: string, profile: Profile, log: LeaderMessage[], seriesLink?: string): Promise<SyncOutcome> {
   return new Promise((resolve) => {
     const ws = new WebSocket(`${GAME_SERVER!.replace(/^http/, 'ws')}/turniere/${encodeURIComponent(serverCode)}`);
     let done = false;
@@ -171,18 +185,29 @@ function replay(serverCode: string, profile: Profile, log: LeaderMessage[]): Pro
     const timer = window.setTimeout(() => finish({ ok: false, error: 'Der Server antwortet nicht. Das Turnier ist dort angelegt, aber nicht vollständig; auf diesem Gerät bleibt die Kopie.' }), 30_000);
     const hello = { type: 'hello', token: storage.deviceToken(), name: profile.name, avatar: profile.avatar } satisfies TournamentClientMessage;
     let views = 0;
+    let responses = 0;
+    let seriesError: string | undefined;
+    // hello, Nachrichten der Leitung, optional die Serie, zweites hello: je eine Antwort.
+    const total = log.length + (seriesLink ? 1 : 0) + 2;
     ws.onopen = () => {
       ws.send(JSON.stringify(hello));
       for (const message of log) ws.send(JSON.stringify(message));
+      // Die Serie zuletzt: Ein Fehler dort (Code falsch, Serie weg) bricht den Abgleich nicht ab.
+      if (seriesLink) ws.send(JSON.stringify({ type: 'attachSeries', link: seriesLink } satisfies TournamentClientMessage));
       // Die Nachrichten laufen auf dem Server der Reihe nach; die Antwort auf dieses zweite „hello“ kommt als letzte.
       ws.send(JSON.stringify(hello));
     };
     ws.onmessage = (event) => {
       if (typeof event.data !== 'string' || event.data === 'pong') return;
       const message = JSON.parse(event.data) as { type: string; message?: string };
-      if (message.type === 'error') finish({ ok: false, error: `Der Server hat eine Eingabe abgelehnt: ${message.message ?? ''} Auf diesem Gerät bleibt die Kopie.` });
-      // Jede angenommene Nachricht schickt den neuen Stand: zwei „hello“ und eine Sicht je Nachricht der Leitung.
-      else if (message.type === 'tournament' && ++views >= log.length + 2) finish({ ok: true, code: serverCode });
+      if (message.type !== 'error' && message.type !== 'tournament') return;
+      responses++;
+      if (message.type === 'error') {
+        // Antwort Nummer log.length + 2 gehört zur Serie (hello zählt als erste).
+        if (seriesLink && responses === log.length + 2) seriesError = message.message ?? 'Die Serie hat das Turnier nicht angenommen.';
+        else return finish({ ok: false, error: `Der Server hat eine Eingabe abgelehnt: ${message.message ?? ''} Auf diesem Gerät bleibt die Kopie.` });
+      } else views++;
+      if (responses >= total) finish({ ok: true, code: serverCode, ...(seriesError ? { seriesError } : {}) });
     };
     ws.onerror = () => finish({ ok: false, error: 'Die Verbindung zum Server ist abgebrochen.' });
   });

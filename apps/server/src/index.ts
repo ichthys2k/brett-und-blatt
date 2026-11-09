@@ -373,6 +373,21 @@ export default {
       if (request.method === 'POST') {
         const body = await readJson(request, 2_000);
         if (!body || typeof body.action !== 'string') return json({ error: 'body' }, 400, noStore);
+        if (body.action === 'transfer') {
+          const issued = await stub.issueTransfer(bearer);
+          return 'error' in issued ? json({ error: issued.error }, 400, noStore) : json(issued, 200, noStore);
+        }
+        if (body.action === 'take') {
+          // Fehlversuche je Absender zählen, damit sich der Code nicht durchprobieren lässt.
+          const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+          if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+          const failure = await stub.takeLeadership(bearer, typeof body.code === 'string' ? body.code.slice(0, 20) : '');
+          if (failure) {
+            await limiter.miss();
+            return json({ error: failure }, 400, noStore);
+          }
+          return json({ ok: true }, 200, noStore);
+        }
         const error = await stub.manage(bearer, { action: body.action, name: typeof body.name === 'string' ? body.name : undefined, scheme: body.scheme === 'linear' || body.scheme === 'f1' ? body.scheme : undefined, tournament: typeof body.tournament === 'string' ? body.tournament : undefined });
         return error ? json({ error }, 400, noStore) : json({ ok: true }, 200, noStore);
       }
@@ -1114,6 +1129,22 @@ export class SeriesRoom extends DurableObject<Env> {
         error = 'Unbekannte Aktion.';
     }
     if (!error) await this.save();
+    return error;
+  }
+
+  /** Übergabecode für ein anderes Gerät (nur die Leitung). */
+  async issueTransfer(token: string): Promise<{ code: string; expiresAt: number } | { error: string }> {
+    if (!this.book) return { error: 'Diese Serie gibt es nicht (mehr).' };
+    const issued = this.book.issueTransfer(token);
+    if (!('error' in issued)) await this.save();
+    return issued;
+  }
+
+  async takeLeadership(token: string, code: string): Promise<string | null> {
+    if (!this.book) return 'Diese Serie gibt es nicht (mehr).';
+    const error = this.book.takeLeadership(token, code);
+    // Auch ein falscher Code zählt als Versuch und muss gespeichert werden.
+    await this.save();
     return error;
   }
 

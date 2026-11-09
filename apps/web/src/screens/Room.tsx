@@ -529,7 +529,7 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
                 )}
               </div>
             )}
-            {teams && <TeamSummary names={teams.names} seats={lobby.seats} />}
+            {teams && <TeamSummary names={teams.names} seats={lobby.seats} minPerTeam={teams.minPerTeam} />}
             <ol className="space-y-2">
               {lobby.seats.map((seat, index) => (
                 <SeatRow key={index} teams={teams} compact={lobby.seats.length > 10} seatCount={lobby.seats.length} index={index} seat={seat} game={game} isHost={isHost} you={state.you} mySeat={mySeat} member={seat.kind === 'human' ? memberName(seat.memberId) : undefined} send={send} />

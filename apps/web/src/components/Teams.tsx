@@ -18,16 +18,26 @@ export function TeamChip({ names, team, onSwitch }: { names: string[]; team: num
 }
 
 /** Wie viele besetzte Plätze je Team – damit die Raumleitung sieht, ob die Teams ausgeglichen sind. */
-export function TeamSummary({ names, seats }: { names: string[]; seats: LobbySeat[] }) {
+export function TeamSummary({ names, seats, minPerTeam = 1 }: { names: string[]; seats: LobbySeat[]; minPerTeam?: number }) {
+  // Verlangt das Spiel Mindestgrößen (Kreuzbinokel: zwei je Team), zählen alle Plätze – so wertet es die Spielregel.
+  const sizes = names.map((_, team) => seats.filter((s) => s.team === team).length);
+  const uneven = minPerTeam > 1 && sizes.some((n) => n < minPerTeam);
   const counts = names.map((_, team) => seats.filter((s) => s.team === team && (s.kind === 'bot' || s.memberId !== null)).length);
   return (
-    <p className="flex flex-wrap gap-2 text-sm">
-      {names.map((name, team) => (
-        <span key={team} className={`rounded-full border px-2 py-0.5 ${TEAM_STYLES[team] ?? ''}`}>
-          {TEAM_ICONS[team]} {name}: <strong>{counts[team]}</strong>
-        </span>
-      ))}
-    </p>
+    <div className="space-y-1">
+      <p className="flex flex-wrap gap-2 text-sm">
+        {names.map((name, team) => (
+          <span key={team} className={`rounded-full border px-2 py-0.5 ${TEAM_STYLES[team] ?? ''}`}>
+            {TEAM_ICONS[team]} {name}: <strong>{counts[team]}</strong>
+          </span>
+        ))}
+      </p>
+      {uneven && (
+        <p role="status" className="text-xs text-danger">
+          {t('online.teamsUneven', { n: minPerTeam })}
+        </p>
+      )}
+    </div>
   );
 }
 
