@@ -41,7 +41,9 @@ Empfohlene Quelle für alle: **Satzung oder Vereinsseite** des jeweiligen Verein
 |---|---|---|---|
 | Tübingen | Rot, Gelb (Gold) | ◐ | [FOTW Tübingen](https://crwflags.com/FOTW/FLAGS/de-tu-tu.html): Fahne rot-gelb gestreift, Farben des Hauses der Pfalzgrafen von Tübingen |
 | Friedrichshafen | Grün, Weiß | ◐ | [FOTW Friedrichshafen](https://local.fotw.info/flags/de-fn-fn.html): Flagge grün-weiß |
-| Reutlingen | – | ❓ | nicht gefunden |
+| Reutlingen | Schwarz, Rot, Weiß | ✅ | [de.wikipedia.org/wiki/Reutlingen](https://de.wikipedia.org/wiki/Reutlingen): „Die Stadtflagge ist Schwarz-Rot-Weiß“ (abgerufen 9.11.2026) |
+| Metzingen | Blau, Weiß | ✅ | [de.wikipedia.org/wiki/Metzingen](https://de.wikipedia.org/wiki/Metzingen): „Die Stadtflagge ist blau-weiß“ (9.11.2026) |
+| Pfullingen | Blau, Weiß, Rot | ✅ | [de.wikipedia.org/wiki/Pfullingen](https://de.wikipedia.org/wiki/Pfullingen): Stadtflagge Blau-Weiß-Rot (9.11.2026) |
 
 **Umkreis (Entscheidung Cornelius, 9.11.2026):** Von den Orten des Landkreises kommen **nur die im Radius von höchstens 15 km um Reutlingen** dazu. Der Landkreis hat 26 Kommunen, davon 7 Städte ([Satzung Landkreis](https://kreis-reutlingen.de/resources/01%20Website/Bekanntmachungen/2023-12-21%20Neufassung%20der%20Abfallwirtschaftssatzung%20des%20Landkreises%20Reutlingen_sig.pdf)). Die Entfernungen sind **Luftlinie vom Zentrum Reutlingens (48,491 N, 9,204 O) zum Ortszentrum, gerechnet aus ungefähren Koordinaten** (aus dem Gedächtnis, Fehler bis etwa 1 km). ❓ Vor dem Einbau mit amtlichen Koordinaten (Wikipedia/OpenStreetMap) nachrechnen; **Grenzfälle** (Bad Urach, Grabenstetten) entscheiden dann.
 
@@ -68,13 +70,13 @@ Empfohlene Quelle für alle: **Satzung oder Vereinsseite** des jeweiligen Verein
 
 Tübingen (11,3 km, anderer Landkreis) und Friedrichshafen stehen als eigene Einträge, nicht wegen des Umkreises. Reutlingen selbst mit Stadtteilen siehe unten. Die Gemeinden des Landkreises sind durch Suchtreffer belegt, bis auf Kusterdingen und Walddorfhäslach (❓ aus eigenem Wissen); Prüfung an [Statistisches Landesamt BW, Regionalschlüssel](https://www.statistik-bw.de/Service/LIS/Regionalschluesselverzeichnis.pdf).
 
-**Farben der Gemeinden:** für keine belegt. Quelle je Gemeinde: Hauptsatzung (Flagge) oder Wappenbeschreibung beim Landesarchiv Baden-Württemberg. Aufwand: eine Zeile je Gemeinde mit Quelle. Ohne Farbe ist ein Ort nicht auswählbar.
+**Farben der Gemeinden (Stand 9.11.2026):** belegt sind Reutlingen, Metzingen und Pfullingen (siehe Tabelle oben). Kusterdingen führt laut Wikipedia weder Wappen noch Flagge, kommt also ohne Farben nicht in Frage. Bei Eningen, Wannweil, Pliezhausen, Riederich, Dettingen, Engstingen, Bad Urach und Grabenstetten nennt Wikipedia nur die Wappenfarben (Blasonierung), nicht die Flagge; bei Walddorfhäslach, Lichtenstein, Sonnenbühl, St. Johann und Grafenberg fand der Abruf nichts. Die Flaggenfarben stehen meist in der Hauptsatzung oder beim Landesarchiv BW. Für die übrigen Gemeinden bleibt die Farbe offen. Quelle je Gemeinde: Hauptsatzung (Flagge) oder Wappenbeschreibung beim Landesarchiv Baden-Württemberg. Aufwand: eine Zeile je Gemeinde mit Quelle. Ohne Farbe ist ein Ort nicht auswählbar.
 
 ### Teilorte (Stadtteile) von Reutlingen und Metzingen
 
 Auf Wunsch von Cornelius (9.11.2026) sollen auch die Teilorte zur Auswahl stehen.
 
-**Reutlingen:** Kernstadt (Reutlingen-Mitte) und **12 Stadtteile**, früher selbständige Gemeinden, zwischen 1907 und 1975 eingemeindet ◐ ([Suchtreffer zur Stadtstruktur](https://www.bitkom.org/Smart-City-2024/Reutlingen); die Zahl 12 und die Eingemeindungszeit stehen dort bzw. in der englischen Wikipedia). Namen ❓ nicht an einer Quelle belegt, nach eigenem Wissen: Altenburg, Betzingen, Bronnweiler, Degerschlacht, Gönningen, Mittelstadt, Oferdingen, Ohmenhausen, Reicheneck, Rommelsbach, Sickenhausen, Sondelfingen (zusammen 12). Betzingen, Sondelfingen und Mittelstadt tauchten in Suchtreffern als Ortsnamen auf. Quelle zu prüfen: Stadt Reutlingen, „Stadtbezirke“ (reutlingen.de).
+**Reutlingen:** Kernstadt (Reutlingen-Mitte) und **12 Stadtteile** ✅ ([de.wikipedia.org/wiki/Reutlingen](https://de.wikipedia.org/wiki/Reutlingen), 9.11.2026): Altenburg, Betzingen, Bronnweiler, Degerschlacht, Gönningen, Mittelstadt, Oferdingen, Ohmenhausen, Reicheneck, Rommelsbach, Sickenhausen, Sondelfingen, früher selbständige Gemeinden, 1907 bis 1975 eingemeindet. Eigene Farben der Stadtteile: aus den Wappen (Datei-Namen in der Wikipedia), noch nicht gelesen ❓.
 
 **Metzingen:** Kernstadt und **zwei Stadtteile, Glems und Neuhausen**, beide Ortschaften mit eigenem Ortschaftsrat, ◐ ([Suchtreffer: Metzingen](https://www.wikipedia.com/wiki/Metzingen), mehrere Postleitzahlverzeichnisse). Moosburg und Böhringen gehören nach den Treffern nicht dazu (Böhringen ist ein Ort der Gemeinde Römerstein, ❓ zu prüfen). Quelle zu prüfen: Stadt Metzingen (metzingen.de).
 
@@ -95,7 +97,7 @@ Hinweis: Wo die Farbreihenfolge die Anordnung der Flagge betrifft (Streifen waag
 | SSV Reutlingen 05 | Fußball | Rot, Schwarz | ✅ | [DFB-Datencenter](https://datencenter.dfb.de/en/clubs/ssv-reutlingen-1905-fussball-e-v) (Oberliga Baden-Württemberg, 2025/26) |
 | Reutlingen Eagles | American Football | Lila (Spielkleidung) | ◐ | [Stuttgarter Zeitung, Spielbericht](https://www.stuttgarter-zeitung.de/sport/football-regionalliga-leonberg-alligators-verputzen-tabellenfuehrer-reutlingen-eagles-79236011.html): Eagles „in Lila“; offizielle Vereinsfarben prüfen (Regionalliga, gegründet 2012) |
 | TSG Reutlingen / TSG Solcom Ravens Reutlingen | Basketball | – | ❓ | Es gibt eine Männermannschaft in der 2. Basketball-Bundesliga ProB Süd ([Hessenschau](https://www.hessenschau.de/sport/ergebnisse-tabellen/basketball-110~_matchday-17.html)) und die Reutlingen Ravens in der Regionalliga; **welcher Name zu welchem Team gehört und welche Farben sie haben, ist offen** |
-| Young Boys Reutlingen | Fußball | – | ❓ | in einem Zeitungsbericht als Verbandsligist genannt, Farben nicht gefunden |
+| Young Boys Reutlingen | Fußball | Blau, Silber | ✅ | [de.wikipedia.org/wiki/Young_Boys_Reutlingen](https://de.wikipedia.org/wiki/Young_Boys_Reutlingen): Vereinsfarben „blau / silber“ (9.11.2026) |
 
 **Entscheidung Cornelius (9.11.2026):** Die gefundenen Reutlinger Teams (Fußball: SSV Reutlingen 05, Young Boys Reutlingen; Football: Reutlingen Eagles; Basketball: die beiden Reutlinger Teams) passen so. Weitere Sportarten sind nicht gewünscht. Offen bleibt, welche Farben die Teams offiziell führen (siehe Tabelle).
 
