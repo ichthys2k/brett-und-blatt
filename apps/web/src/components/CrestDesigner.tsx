@@ -1,9 +1,10 @@
 import { AVATARS } from '@brett-und-blatt/online';
 import {
-  CREST_COLORS,
+  CREST_COLOR_SETS,
+  CREST_GROUPS,
+  CREST_GROUP_LABELS,
   CREST_LABELS,
   CREST_ORNAMENTS,
-  CREST_PALETTE,
   CREST_DIVISIONS,
   CREST_SHIELDS,
   clampCrest,
@@ -15,6 +16,8 @@ import { PlayerCrest } from '@brett-und-blatt/ui';
 import { useEffect, useState } from 'react';
 import { t } from '../i18n';
 import { crestProgress, saveCrest, useCrest } from '../lib/crestStore';
+import { saveOwnProfile } from '../lib/playerPass';
+import { storage } from '../lib/storage';
 import { Button } from './controls';
 
 const base = 'min-h-11 rounded-xl px-4 text-sm';
@@ -26,12 +29,19 @@ const locked = 'cursor-not-allowed border border-dashed border-line bg-surface-2
 export function CrestDesigner({ name, onClose }: { name: string; onClose(): void }) {
   const spec = useCrest();
   const [progress, setProgress] = useState<CrestProgress | null>(null);
+  const [query, setQuery] = useState('');
+  const needle = query.trim().toLowerCase();
   useEffect(() => {
     void crestProgress().then(setProgress);
   }, []);
   // Beim ersten Öffnen: nur freigeschaltete Teile übernehmen.
   const safe = progress ? clampCrest(spec, progress) : spec;
-  const change = (patch: Partial<CrestSpec>) => saveCrest(progress ? clampCrest({ ...safe, ...patch }, progress) : { ...safe, ...patch });
+  const change = (patch: Partial<CrestSpec>) => {
+    saveCrest(progress ? clampCrest({ ...safe, ...patch }, progress) : { ...safe, ...patch });
+    // Das Wappentier ist auch das Bild beim Spitznamen (Profil, Raum, Turniere): beides bleibt gleich.
+    const profile = storage.loadProfile();
+    if (patch.animal && profile && profile.avatar !== patch.animal) saveOwnProfile({ ...profile, avatar: patch.animal });
+  };
 
   const choice = <T extends string>(kind: 'shield' | 'division' | 'colors' | 'ornament', value: T, current: boolean, label: string, onPick: () => void) => {
     const lock = progress ? unlockOf(kind, value, progress) : { ok: true, hint: '' };
@@ -67,29 +77,44 @@ export function CrestDesigner({ name, onClose }: { name: string; onClose(): void
         </fieldset>
         <fieldset className="space-y-2">
           <legend className="font-semibold">{t('crest.colors')}</legend>
-          <div className="flex flex-wrap gap-2">
-            {CREST_COLORS.map((value) => {
-              const lock = progress ? unlockOf('colors', value, progress) : { ok: true, hint: '' };
-              const [a, b] = CREST_PALETTE[value];
+          <input type="search" className="min-h-11 w-full rounded-xl border border-line bg-bg px-3 text-sm" placeholder={t('crest.search')} aria-label={t('crest.search')} value={query} onChange={(event) => setQuery(event.target.value)} />
+          <div className="max-h-64 space-y-3 overflow-y-auto rounded-xl border border-line bg-bg p-2">
+            {CREST_GROUPS.map((group) => {
+              const sets = CREST_COLOR_SETS.filter((set) => set.group === group && (needle === '' || `${set.name} ${set.colorNames}`.toLowerCase().includes(needle)));
+              if (sets.length === 0) return null;
               return (
-                <button
-                  key={value}
-                  type="button"
-                  className={`${base} flex flex-col items-start gap-1 !px-2 py-1 ${!lock.ok ? locked : safe.colors === value ? chosen : free}`}
-                  disabled={!lock.ok}
-                  aria-pressed={safe.colors === value}
-                  aria-label={`${CREST_LABELS.colors[value]}${lock.ok ? '' : `, ${t('crest.locked', { hint: lock.hint })}`}`}
-                  onClick={() => change({ colors: value })}
-                >
-                  <span className={`flex h-6 w-16 overflow-hidden rounded ${lock.ok ? '' : 'opacity-60'}`} aria-hidden="true">
-                    <span className="flex-1" style={{ background: a }} />
-                    <span className="flex-1" style={{ background: b }} />
-                  </span>
-                  <span className="text-xs">{lock.ok ? CREST_LABELS.colors[value] : t('crest.locked', { hint: lock.hint })}</span>
-                </button>
+                <div key={group} className="space-y-1">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted">{CREST_GROUP_LABELS[group]}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {sets.map((set) => {
+                      const lock = progress ? unlockOf('colors', set.id, progress) : { ok: true, hint: '' };
+                      return (
+                        <button
+                          key={set.id}
+                          type="button"
+                          className={`${base} flex flex-col items-start gap-1 !px-2 py-1 ${!lock.ok ? locked : safe.colors === set.id ? chosen : free}`}
+                          disabled={!lock.ok}
+                          aria-pressed={safe.colors === set.id}
+                          aria-label={`${set.name}: ${set.colorNames}${lock.ok ? '' : `, ${t('crest.locked', { hint: lock.hint })}`}`}
+                          onClick={() => change({ colors: set.id })}
+                        >
+                          <span className={`flex h-6 w-20 overflow-hidden rounded ${lock.ok ? '' : 'opacity-60'}`} aria-hidden="true">
+                            {set.colors.map((color, index) => (
+                              <span key={index} className="flex-1" style={{ background: color }} />
+                            ))}
+                          </span>
+                          <span className="text-xs">{set.name}</span>
+                          {!lock.ok && <span className="text-xs">{t('crest.locked', { hint: lock.hint })}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
+            {needle !== '' && !CREST_COLOR_SETS.some((set) => `${set.name} ${set.colorNames}`.toLowerCase().includes(needle)) && <p className="text-sm text-muted">{t('crest.noMatch')}</p>}
           </div>
+          <p className="text-xs text-muted">{t('crest.notice')}</p>
         </fieldset>
         <fieldset className="space-y-2">
           <legend className="font-semibold">{t('crest.ornament')}</legend>
