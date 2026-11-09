@@ -43,6 +43,15 @@ export const PROVIDER_CONFIG: Readonly<Record<AccountProvider, ProviderConfig>> 
   microsoft: { authorize: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize', token: 'https://login.microsoftonline.com/common/oauth2/v2.0/token', jwks: 'https://login.microsoftonline.com/common/discovery/v2.0/keys' },
 };
 
+/**
+ * Sieht die Client-Kennung nach dem richtigen Anbieter aus? Google: `…apps.googleusercontent.com`; Microsoft: eine GUID.
+ * Fängt vertauschte Werte ab (ein Client-Geheimnis in der Kennungs-Zeile), bevor sie in eine Adresse gelangen.
+ */
+export function isPlausibleClientId(provider: AccountProvider, clientId: string): boolean {
+  if (provider === 'google') return /^[0-9]+-[A-Za-z0-9_]+\.apps\.googleusercontent\.com$/.test(clientId);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clientId);
+}
+
 const enc = new TextEncoder();
 
 /** Zufallswert als Base64url (`bytes` Byte). */

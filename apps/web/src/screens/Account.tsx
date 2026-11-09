@@ -19,9 +19,9 @@ const ERRORS: Record<string, string> = {
  * Rückkehr vom Anbieter (`#/konto?ticket=…`, #154): je nach Absicht den Pass verknüpfen, über das Konto öffnen oder die Verknüpfung lösen.
  * Das Ticket gilt wenige Minuten; danach muss man sich neu anmelden.
  */
-export function AccountScreen({ ticket, error }: { ticket?: string; error?: string }) {
+export function AccountScreen({ ticket, error, reason }: { ticket?: string; error?: string; reason?: string }) {
   const [state, setState] = useState<ReturnedAccount | null>(null);
-  const [message, setMessage] = useState<string | null>(error ? (ERRORS[error] ?? 'Die Anmeldung ist fehlgeschlagen.') : null);
+  const [message, setMessage] = useState<string | null>(error ? `${ERRORS[error] ?? 'Die Anmeldung ist fehlgeschlagen.'}${reason ? ` (Grund: ${reason})` : ''}` : null);
   const [busy, setBusy] = useState(!!ticket && !error);
   const [withPin, setWithPin] = useState(false);
   const [pin, setPin] = useState('');
