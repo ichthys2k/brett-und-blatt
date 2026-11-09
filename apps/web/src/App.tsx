@@ -5,6 +5,7 @@ import { Home } from './screens/Home';
 import { Menu } from './screens/Menu';
 import { Datenschutz, Impressum } from './screens/Legal';
 import { Online } from './screens/Online';
+import { AccountScreen } from './screens/Account';
 import { PassScreen } from './screens/Pass';
 import { PassView } from './screens/PassView';
 import { Play } from './screens/Play';
@@ -65,6 +66,8 @@ function Screen() {
       return <SoundSettingsScreen />;
     case 'pass':
       return <PassScreen />;
+    case 'account':
+      return <AccountScreen ticket={route.ticket} error={route.error} />;
     case 'passView':
       return <PassView passKey={route.key} />;
     case 'imprint':

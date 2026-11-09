@@ -160,6 +160,20 @@ export function Datenschutz() {
         wenn es 400 Tage lang nicht abgerufen wurde. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b und f DSGVO (Schutz vor Missbrauch).
       </p>
       <p>
+        <strong>Anmeldung mit Google oder Microsoft (freiwillig):</strong> Du kannst ein Google- oder Microsoft-Konto (auch ein Schul- oder Arbeitskonto) mit
+        deinem Pass verknüpfen und dich damit auf einem neuen Gerät anmelden. Dabei leitet dich der Spieleserver zum Anbieter weiter (Google Ireland Limited,
+        Gordon House, Barrow Street, Dublin 4, Irland, bzw. Microsoft Ireland Operations Limited, One Microsoft Place, Dublin 18, Irland; die Anbieter können
+        Daten in die USA übermitteln). Angefordert wird nur die Anmeldung („openid“), keine E-Mail-Adresse und kein Name. Der Spieleserver erhält vom
+        Anbieter die feste Kennung deines Kontos, bildet daraus mit dem geheimen Schlüssel des Betreibers (dem „Pfeffer“) einen Prüfwert und verwirft die
+        Kennung wieder. Gespeichert werden der Prüfwert, ein mit dem Pfeffer verschlüsselter Zufallsanteil, der im Browser verschlüsselte Inhalt (dein Pass mit
+        Passschlüssel) und, wenn du „Konto + PIN“ wählst, ein Prüfwert deiner PIN samt Zähler der Fehlversuche. <strong>Wichtig:</strong> Bei „nur Konto“
+        könnte, wer dein Konto übernimmt oder wer den Spieleserver samt Pfeffer betreibt, den Pass öffnen; bei „Konto + PIN“ nicht. Die Verknüpfung kannst du
+        jederzeit im Pass lösen, dann wird das Schloss gelöscht; es verfällt sonst nach 400 Tagen ohne Abruf. Der Prüfwert ist ein Pseudonym und zählt als
+        personenbezogenes Datum. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO) durch die Verknüpfung. Kinder unter 16 Jahren brauchen
+        dafür das Einverständnis ihrer Eltern; Schulen entscheiden selbst, ob Schülerkonten Apps von außen anmelden dürfen. Ohne Verknüpfung wird nichts an
+        Google oder Microsoft übermittelt.
+      </p>
+      <p>
         <strong>Turniere:</strong> Wenn du ein Turnier anlegst, dich einschreibst oder die Turnierseite öffnest, speichert der Spieleserver in der EU den
         Namen des Turniers, deine Geräte-Kennung, deinen Spitznamen und dein Emoji-Bild sowie Paarungen und Ergebnisse. Alle Eingeschriebenen sehen
         Spitznamen, Bilder und Ergebnisse, die Geräte-Kennung sieht niemand. Das Turnier wird 30 Tage nach seinem Ende gelöscht, ein nicht beendetes 30 Tage

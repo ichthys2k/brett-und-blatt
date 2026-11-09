@@ -24,13 +24,13 @@ Browser ── Weiterleitung ──► Anbieter (Anmeldung, Einwilligung)
 Anbieter ── Weiterleitung ──► Worker /konto/<anbieter>/rueckruf?code&state
 Worker: tauscht den Code (mit Client-Geheimnis + code_verifier), prüft das ID-Token
         (Signatur über JWKS, iss, aud, exp, nonce), bildet die Kontokennung,
-        legt ein einmaliges Ticket an (2 Minuten, an `binden` gebunden)
+        legt ein Ticket an (5 Minuten, an `binden` gebunden)
 Worker ── Weiterleitung ──► spiele.lipponer.de/#/konto?ticket=…
 Browser ── POST /konto-schloss/<Kennung>/<aktion> {ticket, binden, …} ──► Worker
 ```
 
 - **Scope nur `openid`.** Keine E-Mail, kein Profil, kein Token wird gespeichert; nach der Prüfung des ID-Tokens wirft der Worker alles weg außer der Kontokennung im Ticket.
-- **Ticket:** einmalig, 2 Minuten, an den Browser gebunden (`binden` bleibt im Browser, im Rückruf-Link steht nur das Ticket). Ein abgefangener Link nützt nichts.
+- **Ticket:** 5 Minuten gültig, für mehrere Aufrufe (Anlegen und Schreiben brauchen zwei), an den Browser gebunden (das Geheimnis `binding` bleibt im Browser, im Rückruf-Link steht nur das Ticket). Ein abgefangener Link nützt nichts. Die Seite nimmt das Ticket sofort aus der Adresse.
 - **Kontokennung:** bei Google `sub`; bei Microsoft `tid` + `sub` (das `sub` von Microsoft ist je App und Nutzer stabil; `oid` wäre über Apps hinweg gleich und damit weniger privat; ❓ am echten Konto prüfen, ob `sub` bei privaten und bei Schulkonten immer vorhanden ist). Das Konto-Schloss liegt unter `HMAC(Pfeffer, "konto\n" + anbieter + "\n" + kontokennung)`, auf 128 Bit gekürzt.
 - **Microsoft „common“:** ID-Tokens tragen die Mandanten-Kennung im Aussteller (`https://login.microsoftonline.com/<tid>/v2.0`); der Worker prüft den Aussteller gegen die `tid` im Token, nicht gegen eine feste Adresse.
 
@@ -51,7 +51,7 @@ Liegt in einem eigenen Durable Object (`AccountLock`, ein Objekt je Kontokennung
 | Fremder kapert das Google-/Microsoft-Konto | öffnet bei „nur Konto“ den Pass | „Konto + PIN“ wählbar; Hinweis im Dialog |
 | Betreiber oder Cloudflare (Datenbank + Pfeffer) | kann „nur Konto“-Schlösser öffnen | offen in der Datenschutzerklärung; bei „Konto + PIN“ nicht möglich; Pfeffer nur als Secret |
 | Datenbank-Kopie ohne Pfeffer | nichts durchprobierbar | Kontokennung nur als HMAC mit Pfeffer, Serveranteil mit Pfeffer verschlüsselt |
-| Abgefangener Rückruf-Link | nichts | Ticket einmalig, 2 Minuten, an den Browser gebunden |
+| Abgefangener Rückruf-Link | nichts | Ticket 5 Minuten, an das Geheimnis des Browsers gebunden |
 | Gefälschter Rückruf (CSRF, Code-Einschleusung) | Anmeldung am falschen Konto | `state` + `nonce` + PKCE, `state` einmalig und 10 Minuten gültig |
 | Aussteller-Fälschung bei Microsoft „common“ | gefälschte ID-Token | Signatur über JWKS, Aussteller gegen `tid` im Token, `aud` = eigene Client-Kennung |
 | Durchprobieren der PIN bei „Konto + PIN“ | – | Zähler je Konto-Schloss, ab 10 gesperrt; Zurücksetzen nur über die Notfallkarte |
@@ -86,3 +86,10 @@ Nur bewertet, nicht geplant:
 - **Microsoft:** Die Bildungs-API (Education/EduRoster) braucht Berechtigungen, die ein **Administrator der Schule** erteilen muss, und eine Anmeldung mit Schul-Mandant. Ohne Zusage der Schule geht es nicht; pro Schule wäre eine Freigabe nötig.
 - **Google Classroom:** Die Classroom-API-Bereiche (Kurse, Teilnehmer) sind „sensible“ Bereiche: Google verlangt eine **Überprüfung der App** (Datenschutz, Sicherheitsbewertung) und Workspace-Administratoren müssen den Zugriff zulassen.
 - **Empfehlung:** nicht bauen. Der bestehende Weg (Klassencode, Klassenausweise zum Drucken, Liste einfügen) deckt den Bedarf ohne Fremdzugriff auf Schülerdaten. Eine Übernahme per Datei (CSV-Export aus Teams oder Classroom) ist ein kleiner, späterer Schritt ohne Anbieteranbindung.
+
+## 8. Umsetzung (#154, 9.11.2026)
+
+- **Server:** `apps/server/src/index.ts` (Routen `GET /konto`, `POST /konto/<anbieter>/start`, `GET /konto/<anbieter>/rueckruf`, `POST /konto/ticket`, `POST /konto-schloss/<Kennung>/<aktion>`, Durable Objects `AccountFlow` für Vorgang und Ticket, `AccountLockBox` für das Konto-Schloss, **Wrangler-Migration v10**), `apps/server/src/oidc.ts` (Tausch des Codes, Signatur über JWKS), Logik ohne Anbieterbindung in `packages/online/src/account.ts`. Secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET` (und der vorhandene `PASS_PEPPER`); ohne sie meldet `GET /konto` den Anbieter nicht, und die Oberfläche zeigt nichts.
+- **Browser:** `packages/ui/src/sync/account.ts` (Schlüssel, Aufrufe), `apps/web/src/lib/accountLogin.ts`, Seite `#/konto` (`screens/Account.tsx`), Bereich „Mit Konto anmelden“ im Pass (`components/AccountPanel.tsx`). Die verknüpften Anbieter stehen je Pass in `brett-und-blatt:konten` (nur Anbieter und Zeit).
+- **Abweichung vom Konzept:** Die verknüpfte Kennung der Konto-Schlösser steht nicht im Pass-Block (wie in Abschnitt 3 angedacht), sondern nur auf dem Gerät; „Lösen“ geht auf jedem Gerät nach einer Anmeldung, weil das Ticket die Kennung liefert. Der Inhalt eines Konto-Schlosses wird nur beim Verknüpfen geschrieben; Änderungen am Pass (Blöcke) laufen über den Passschlüssel, der darin steht.
+- **Nicht geprüft:** der Ablauf mit echten Google-, Microsoft- und Schulkonten (Apps müssen erst angelegt werden, Anleitung: `konto-anmeldung-einrichtung.md`). Getestet sind die Logik (Token-Prüfung mit eigenem Schlüsselpaar, Konto-Schloss, Ticket) und der Browser-Teil gegen einen nachgebauten Server.

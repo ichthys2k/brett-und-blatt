@@ -245,6 +245,19 @@ export async function resetSecret(cardInput: string, newRaw: string): Promise<vo
   storage.saveLockSecrets(secrets);
 }
 
+/** Für die Verknüpfung mit einem Konto (#154): der Pass mit Passschlüssel; legt Spielercode und Schlüssel an, wenn es sie noch nicht gibt. */
+export async function passForAccount(): Promise<PlayerPass> {
+  if (!storage.loadPlayerCode()) await createPlayerCode();
+  if (!ensurePassKey()) throw new SyncError('Der Passschlüssel fehlt.');
+  return readPass();
+}
+
+/** Übernimmt den Pass, den ein Konto geöffnet hat (neues Gerät). */
+export function adoptAccountPass(pass: PlayerPass): void {
+  writePass(pass);
+  passSyncSoon();
+}
+
 /** Rettungskarte: Spielercode und Rettungscode zum Aufbewahren und Ausdrucken. */
 export function emergencyCard(): { playerCode: string; syncCode: string } | null {
   const playerCode = storage.loadPlayerCode();

@@ -25,6 +25,7 @@ export type Route =
   | { name: 'seriesEmbed'; code: string }
   | { name: 'sound' }
   | { name: 'pass' }
+  | { name: 'account'; ticket?: string; provider?: string; error?: string }
   | { name: 'passView'; key: string }
   | { name: 'imprint' }
   | { name: 'privacy' };
@@ -69,6 +70,7 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'turnier' && parts[1] && parts[2] === 'ansicht') return { name: 'tournamentEmbed', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'turnier' && parts[1]) return { name: 'tournament', code: decodeURIComponent(parts[1]), ...(params.neu ? { claim: params.neu } : {}), ...(params.helfer ? { helper: params.helfer } : {}), ...(params.leitung ? { leader: params.leitung } : {}) };
   if (parts[0] === 'ton') return { name: 'sound' };
+  if (parts[0] === 'konto') return { name: 'account', ...(params.ticket ? { ticket: params.ticket } : {}), ...(params.anbieter ? { provider: params.anbieter } : {}), ...(params.fehler ? { error: params.fehler } : {}) };
   if (parts[0] === 'pass' && parts[1] === 'ansehen') return { name: 'passView', key: params.k ?? '' };
   if (parts[0] === 'pass') return { name: 'pass' };
   if (parts[0] === 'einzelspieler') {
@@ -112,6 +114,7 @@ export const paths = {
   seriesEmbed: (code: string) => `#/serie/${encodeURIComponent(code)}/ansicht`,
   sound: '#/ton',
   pass: '#/pass',
+  account: '#/konto',
   imprint: '#/impressum',
   privacy: '#/datenschutz',
 };

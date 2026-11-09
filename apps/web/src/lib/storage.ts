@@ -188,5 +188,11 @@ export const storage = {
     return typeof key === 'string' ? key : null;
   },
   savePassKey: (key: string | null) => (key ? write(PASS_KEY_KEY, key) : remove(PASS_KEY_KEY)),
+  /** Mit Google oder Microsoft verknüpfte Konten dieses Passes (nur Anbieter und Zeitpunkt, kein Name, keine E-Mail). */
+  loadLinkedAccounts: (): { provider: 'google' | 'microsoft'; at: number }[] => {
+    const list = read<unknown>('brett-und-blatt:konten');
+    return Array.isArray(list) ? list.filter((item): item is { provider: 'google' | 'microsoft'; at: number } => !!item && (item.provider === 'google' || item.provider === 'microsoft') && typeof item.at === 'number') : [];
+  },
+  saveLinkedAccounts: (list: { provider: 'google' | 'microsoft'; at: number }[]) => (list.length > 0 ? write('brett-und-blatt:konten', list) : remove('brett-und-blatt:konten')),
   savePlayerCode: (code: string | null) => (code ? write(PLAYER_CODE_KEY, code) : remove(PLAYER_CODE_KEY)),
 };
