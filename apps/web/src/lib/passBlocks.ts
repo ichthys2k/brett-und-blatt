@@ -8,6 +8,8 @@ import { BOOK_KEY, TROPHIES_KEY } from './passRecorder';
 import { mergeTrophies, sameTrophies, sanitizeTrophies, type Trophy } from './pokale';
 import { emptyBook, mergeBooks, sameBooks, sanitizeBook, type Book } from './partiebuch';
 import { CHILD_PASSES_KEY } from './classPasses';
+import { LIBRARY_KEY, mergeLibrary, sameLibrary, sanitizeLibrary } from './library';
+import type { UserPack } from '@brett-und-blatt/engine';
 import { mergeChildPasses, sameChildPasses, sanitizeChildPasses, type ChildPasses } from './classPassesCore';
 import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
 
@@ -81,6 +83,21 @@ export function registerWebPassBlocks(): void {
     sanitize: sanitizeChildPasses,
     merge: mergeChildPasses,
     same: sameChildPasses,
+  });
+  // Bibliothek (#101): eigene Pakete; je Paket gilt die jüngere Änderung, Löschvermerke verhindern, dass ein Gerät sie zurückbringt.
+  registerPassBlock<UserPack[]>({
+    name: 'bibliothek',
+    read: () => {
+      try {
+        return sanitizeLibrary(JSON.parse(read(LIBRARY_KEY) ?? 'null'));
+      } catch {
+        return [];
+      }
+    },
+    write: (list) => write(LIBRARY_KEY, JSON.stringify(list)),
+    sanitize: sanitizeLibrary,
+    merge: (remote, local) => mergeLibrary(remote, local),
+    same: sameLibrary,
   });
   // Partiebuch (#142): Zähler je Gerät (wachsen nur), die letzten Partien als Kopfzeilen.
   registerPassBlock<Book>({

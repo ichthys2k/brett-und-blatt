@@ -84,20 +84,21 @@ export async function resetChildPin(entry: ChildPass): Promise<ChildPass> {
 
 const escape = (text: string) => text.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
 
-/** Druckansicht: je Kind eine Karte mit Bild, Name, QR-Code (Spielercode) und Start-PIN. Nichts davon geht an einen Server. */
+/** Druckansicht: je Kind eine Karte von 5 cm Höhe (zwei nebeneinander, fünf Reihen je A4-Seite) mit Bild, Name, QR-Code (Spielercode) und Start-PIN. Nichts davon geht an einen Server. */
 export function printChildCards(entries: readonly ChildPass[], className: string): void {
   const win = window.open('', '_blank', 'width=900,height=1000');
   if (!win) return;
   const cards = entries
     .map((e) => {
       const qr = renderSVG(playerLink(e.playerCode), { border: 1, whiteColor: '#ffffff', blackColor: '#000000' });
-      return `<div class="card"><div class="top"><span class="av">${escape(e.avatar)}</span><strong>${escape(e.name)}</strong></div><div class="qr">${qr}</div>
-<p>Spielercode: <span class="code">${escape(e.playerCode)}</span></p><p>PIN: <span class="pin">${escape(e.pin)}</span></p><p class="small">Brett &amp; Blatt · spiele.lipponer.de · ${escape(className)}</p></div>`;
+      return `<div class="card"><div class="qr">${qr}</div><div class="info"><div class="name"><span class="av">${escape(e.avatar)}</span>${escape(e.name)}</div>
+<div class="row">Code <span class="code">${escape(e.playerCode)}</span></div><div class="row">PIN <span class="pin">${escape(e.pin)}</span></div><div class="small">Brett &amp; Blatt · spiele.lipponer.de · ${escape(className)}</div></div></div>`;
     })
     .join('');
   win.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Klassenausweise – ${escape(className)}</title>
-<style>body{font:16px system-ui,sans-serif;margin:16px;color:#000}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.card{border:2px solid #000;border-radius:10px;padding:12px;break-inside:avoid}
-.top{display:flex;align-items:center;gap:10px;font-size:20px}.av{font-size:34px}.qr{width:140px;margin:8px 0}.qr svg{width:100%;height:auto}.code{font-size:24px}.pin{font:bold 24px monospace;letter-spacing:.1em}.small{font-size:11px;color:#444}p{margin:4px 0}</style></head>
-<body><h1>Klassenausweise – ${escape(className)}</h1><div class="grid">${cards}</div><script>window.onload=function(){window.print()}</script></body></html>`);
+<style>@page{size:A4;margin:10mm}*{box-sizing:border-box}body{font:11pt system-ui,sans-serif;margin:0;color:#000}.grid{display:grid;grid-template-columns:repeat(2,95mm);grid-auto-rows:50mm}
+.card{display:flex;align-items:center;gap:3mm;height:50mm;padding:3mm;border:0.3mm dashed #000;break-inside:avoid}.qr{flex:none;width:34mm;height:34mm}.qr svg{width:100%;height:100%;display:block}.info{min-width:0;display:flex;flex-direction:column;gap:1.5mm}
+.name{display:flex;align-items:center;gap:2mm;font-size:14pt;font-weight:bold;overflow-wrap:anywhere}.av{font-size:20pt}.row{font-size:10pt}.code{font-size:15pt;letter-spacing:.05em}.pin{font:bold 15pt monospace;letter-spacing:.1em}.small{font-size:6.5pt;color:#444}</style></head>
+<body><div class="grid">${cards}</div><script>window.onload=function(){window.print()}</script></body></html>`);
   win.document.close();
 }

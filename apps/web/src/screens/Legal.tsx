@@ -139,6 +139,11 @@ export function Datenschutz() {
         kann den Schnappschuss lesen. Das Bild („Als Bild“) entsteht auf deinem Gerät. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>Eigene Pakete:</strong> Deine Pakete (Paare aus zwei Feldern, z. B. Vokabeln) liegen in deinem Pass und reisen mit der verschlüsselten Sicherung auf deine Geräte. Wählst du „Link erstellen“, verschlüsselt dein Browser das
+        Paket mit einem Zufallsschlüssel, der nur im Link hinter dem „#“ steht; der Spieleserver in der EU speichert nur die verschlüsselten Daten und den Prüfwert eines Schreibgeheimnisses, das auf deinem Gerät bleibt. „Teilen beenden“ löscht sie,
+        ohne Abruf löscht der Server sie nach einem Jahr. Es gibt keine öffentliche Liste. Wer den Link hat, kann das Paket lesen. Spielst du eine Partie mit einem eigenen Paket, gehen dessen Paare (höchstens 18) mit der Partie an die Mitspielenden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+      <p>
         <strong>Klassen:</strong> Legst du eine Klasse an oder trittst bei, speichert der Spieleserver in der EU den Namen der Klasse, die Geräte-Kennung jedes Mitglieds (zum Ausweisen, sie wird nie anderen
         Mitgliedern gezeigt) sowie Spitzname, Bild und – wenn du eines gewählt hast – das Wappen. Alle Mitglieder sehen Spitzname, Bild und Wappen der anderen Mitglieder; Fremde ohne Mitgliedschaft sehen nur den
         Namen der Klasse. Dazu legt dein Gerät, solange du die Klassenseite offen hast, eine „Klassenkarte“ ab: je nach Einstellung der Leitung und deiner eigenen Wahl deine Stempel, die Zahl deiner Pokale je Spiel und deine Lieblingsspiele (nie Codes, Kennungen oder Lernstände); du kannst jeden Teil abwählen. Die Leitung kann Mitglieder entfernen und die Klasse auflösen; du kannst jederzeit gehen. Eine Klasse ohne Aktivität wird nach einem Jahr gelöscht. Legt die Leitung Klassenausweise an, entstehen dabei auf dem Spieleserver Ausweise für die Kinder (nur Spitzname und ein Tierbild als Platzhalter) mit Spielercode und Start-PIN; die zugehörigen Codes

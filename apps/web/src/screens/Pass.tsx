@@ -152,6 +152,10 @@ export function PassScreen() {
 
       <ShareDialog online={Boolean(GAME_SERVER)} />
 
+      <a className="block rounded-2xl border border-line bg-surface p-3 text-center font-semibold shadow-sm" href={paths.library}>
+        📚 Meine Pakete
+      </a>
+
       <RescueHint />
 
       <StampBook />

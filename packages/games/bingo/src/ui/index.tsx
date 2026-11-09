@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
+import { PackPicker, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { renderSVG } from 'uqr';
 import { LETTERS, NUMBERS, callOf, columnOf, entryIds, faceOf } from '../content';
@@ -34,7 +34,7 @@ function useDrawReveal(view: BingoState) {
     }
     const duration = reducedMotion() ? 500 : SPIN_MS;
     const earlier = new Set(view.order.slice(0, view.drawn - 1));
-    const pool = entryIds(view.content).filter((id) => !earlier.has(id));
+    const pool = entryIds(view.content, view.custom).filter((id) => !earlier.has(id));
     const timers: number[] = [];
     const started = performance.now();
     // Immer längere Pausen zwischen den Wechseln: erst ein Wirbel, dann ein Tröpfeln.
@@ -58,11 +58,11 @@ function useDrawReveal(view: BingoState) {
   return { shown, spinning, flicker, current };
 }
 
-function Ball({ content, id, size = 'large', spinning = false }: { content: string; id: number | null; size?: 'large' | 'small'; spinning?: boolean }) {
+function Ball({ content, custom, id, size = 'large', spinning = false }: { content: string; custom?: { a: string; b: string }[]; id: number | null; size?: 'large' | 'small'; spinning?: boolean }) {
   if (content !== NUMBERS) {
     return (
       <span className={`bg-ball bg-ball-text bg-ball-${size} ${spinning ? 'bg-spinning' : ''}`}>
-        <span className="bg-ball-call">{id === null ? '?' : callOf(content, id)}</span>
+        <span className="bg-ball-call">{id === null ? '?' : callOf(content, id, custom)}</span>
       </span>
     );
   }
@@ -89,16 +89,16 @@ function Stage({ view, reveal, canDraw, onDraw, callerName }: { view: BingoState
         {spinning ? (
           <>
             <span className="bg-drum-glow" aria-hidden="true" />
-            <Ball content={view.content} id={flicker} spinning />
+            <Ball content={view.content} custom={view.custom} id={flicker} spinning />
             <span className="sr-only">Es wird gezogen …</span>
           </>
         ) : current !== null ? (
           <span key={shown} className="bg-reveal">
-            <Ball content={view.content} id={current} />
-            <span className="sr-only">Gezogen: {callOf(view.content, current)}</span>
+            <Ball content={view.content} custom={view.custom} id={current} />
+            <span className="sr-only">Gezogen: {callOf(view.content, current, view.custom)}</span>
           </span>
         ) : (
-          <Ball content={view.content} id={null} />
+          <Ball content={view.content} custom={view.custom} id={null} />
         )}
       </div>
       <div className="bg-stage-side">
@@ -109,7 +109,7 @@ function Stage({ view, reveal, canDraw, onDraw, callerName }: { view: BingoState
           <ol className="bg-recent" aria-label="Zuletzt gezogen">
             {recent.map((id) => (
               <li key={id}>
-                <Ball content={view.content} id={id} size="small" />
+                <Ball content={view.content} custom={view.custom} id={id} size="small" />
               </li>
             ))}
           </ol>
@@ -192,7 +192,7 @@ function Card({
           ))}
         {card.map((id, cell) => {
           const marked = marks[cell] === true && id !== hidden;
-          const face = id === null ? '⭐' : faceOf(view.content, id);
+          const face = id === null ? '⭐' : faceOf(view.content, id, view.custom);
           return (
             <button
               key={cell}
@@ -223,13 +223,13 @@ function Card({
 function Tally({ view, shown }: { view: BingoState; shown: number }) {
   const drawn = new Set(view.order.slice(0, shown));
   const latest = shown > 0 ? view.order[shown - 1] : undefined;
-  const ids = entryIds(view.content);
+  const ids = entryIds(view.content, view.custom);
   const numbers = view.content === NUMBERS;
   return (
     <div className={`bg-tally ${numbers ? 'bg-tally-numbers' : ''}`} aria-label="Gezogene Einträge">
       {ids.map((id) => (
         <span key={id} className={`bg-tally-cell ${drawn.has(id) ? 'bg-on' : ''} ${id === latest ? 'bg-latest' : ''}`} style={numbers ? ({ '--bg-ball': BALL_COLORS[columnOf(id)] } as CSSProperties) : undefined}>
-          {numbers ? id : callOf(view.content, id)}
+          {numbers ? id : callOf(view.content, id, view.custom)}
         </span>
       ))}
     </div>
@@ -399,8 +399,13 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
   );
 }
 
+function BingoSetup({ options, setOption }: { options: Record<string, string>; setOption: (id: string, value: string) => void }) {
+  return <PackPicker options={options} setOption={setOption} />;
+}
+
 export const gameUi: GameUi<BingoState, BingoMove> = {
   Board,
+  SetupExtra: BingoSetup,
   SeatSymbol,
   sounds: {
     drawn: 'bingo-kugel',

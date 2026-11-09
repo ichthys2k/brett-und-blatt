@@ -68,3 +68,20 @@ describe('Regeln', () => {
 describe('Vertrag für Spielmodule', () => {
   for (const check of gameContractChecks(gameModule, { randomGames: 12, seatCounts: [2, 4, 6] })) test(check.name, check.run);
 });
+
+describe('Eigenes Paket (#101)', () => {
+  const pairs = Array.from({ length: 10 }, (_, i) => [`A${i}`, `B${i}`]);
+  const pack = JSON.stringify({ n: 'Vokabeln', p: pairs });
+  it('spielt mit den Paaren des Pakets', () => {
+    const state = start(3, { pack, pairs: '12' });
+    expect(state.set).toBe('eigen');
+    expect(state.custom).toHaveLength(10);
+    const cards = [...state.hands.flat(), ...state.discarded.flatMap((d) => [d.pair, d.pair])];
+    expect(cards.length).toBeGreaterThan(0);
+  });
+  it('ignoriert ein unbrauchbares Paket', () => {
+    const state = start(3, { pack: '{"n":"x","p":[["a","b"]]}', set: 'tiere' });
+    expect(state.set).toBe('tiere');
+    expect(state.custom).toBeUndefined();
+  });
+});

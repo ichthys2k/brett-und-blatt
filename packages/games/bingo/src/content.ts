@@ -41,20 +41,23 @@ export function columnOf(n: number): number {
 }
 
 /** Alle Kennungen eines Inhalts: bei Zahlen 1–75, sonst die Nummern der Paare. */
-export function entryIds(content: string): number[] {
+export function entryIds(content: string, custom?: { a: string; b: string }[]): number[] {
+  if (custom) return custom.map((_, i) => i);
   const pack = PACKS[content];
   if (!pack) return Array.from({ length: NUMBER_COUNT }, (_, i) => i + 1);
   return pack.pairs.map((_, i) => i);
 }
 
 /** Was auf der Karte steht. */
-export function faceOf(content: string, id: number): string {
+export function faceOf(content: string, id: number, custom?: { a: string; b: string }[]): string {
+  if (custom) return custom[id]?.b ?? '?';
   const pack = PACKS[content];
   return pack ? (pack.pairs[id]?.b ?? '?') : String(id);
 }
 
 /** Was angesagt wird: bei Zahlen mit Spaltenbuchstabe („B 7“), im Lern-Bingo die Aufgabe. */
-export function callOf(content: string, id: number): string {
+export function callOf(content: string, id: number, custom?: { a: string; b: string }[]): string {
+  if (custom) return custom[id]?.a ?? '?';
   const pack = PACKS[content];
   return pack ? (pack.pairs[id]?.a ?? '?') : `${LETTERS[columnOf(id)]} ${id}`;
 }

@@ -275,3 +275,28 @@ describe('Bot', () => {
 });
 
 for (const check of gameContractChecks(gameModule, { seatCounts: [1, 2, 30], randomGames: 30, maxMoves: 5_000 })) test(check.name, check.run, 60_000);
+
+describe('Eigenes Paket (#101)', () => {
+  const pairs = Array.from({ length: 12 }, (_, i) => [`Aufgabe ${i}`, `L${i}`]);
+  const pack = JSON.stringify({ n: 'Eigene', p: pairs });
+  it('sagt `a` an und zeigt `b` auf der Karte', () => {
+    const state = start(2, { pack, size: '3' });
+    expect(state.content).toBe('eigen');
+    expect(state.custom).toHaveLength(12);
+    const id = state.order[0]!;
+    expect(callOf(state.content, id, state.custom)).toBe(`Aufgabe ${id}`);
+    expect(faceOf(state.content, id, state.custom)).toBe(`L${id}`);
+  });
+  it('wählt eine Kantenlänge, die das Paket füllen kann', () => {
+    const state = start(2, { pack, size: '5' });
+    expect(state.size).toBe(3);
+    const big = JSON.stringify({ n: 'Groß', p: Array.from({ length: 18 }, (_, i) => [`F${i}`, `S${i}`]) });
+    expect(start(2, { pack: big, size: '5' }).size).toBe(4);
+    for (const card of state.cards) expect(card.filter((id) => id !== null).length).toBeLessThanOrEqual(12);
+  });
+  it('verwirft doppelte Lösungen', () => {
+    const twice = JSON.stringify({ n: 'Doppelt', p: [...pairs, ['Noch eine', 'L0'], ['Und', 'L1']] });
+    const state = start(2, { pack: twice });
+    expect(state.custom).toHaveLength(12);
+  });
+});

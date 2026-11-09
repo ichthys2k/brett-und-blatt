@@ -1,4 +1,5 @@
 import { Rng, type Actor, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
+import { decodePairsOption } from '@brett-und-blatt/engine';
 import { NUMBERS, PACKS, entryIds } from './content';
 
 /** Platz 1 ist die Spielleitung: Sie zieht die Zahlen – und spielt je nach Option mit. */
@@ -15,6 +16,8 @@ export interface BingoCall {
 }
 
 export interface BingoState {
+  /** Eigenes Paket (#101): die Paare dieser Partie (`b` steht auf der Karte, `a` wird angesagt). Dann ist `content` `eigen`. */
+  custom?: { a: string; b: string }[];
   /** 'zahlen' oder die Kennung eines Inhaltspakets (Lern-Bingo). */
   content: string;
   /** Kantenlänge der Karte (3, 4 oder 5). */
@@ -62,14 +65,14 @@ function freeCenter(size: number): number | null {
   return size % 2 === 1 ? (size * size - 1) / 2 : null;
 }
 
-function makeCard(content: string, size: number, rng: Rng): (number | null)[] {
+function makeCard(content: string, size: number, rng: Rng, custom?: { a: string; b: string }[]): (number | null)[] {
   const center = freeCenter(size);
   if (content === NUMBERS) {
     // Spalte B hat 1–15, I 16–30 usw.
     const columns = [...Array(5).keys()].map((c) => rng.shuffle(Array.from({ length: 15 }, (_, i) => c * 15 + i + 1)).slice(0, 5));
     return Array.from({ length: 25 }, (_, i) => (i === center ? null : columns[i % 5]![Math.floor(i / 5)]!));
   }
-  const ids = rng.shuffle(entryIds(content));
+  const ids = rng.shuffle(entryIds(content, custom));
   let next = 0;
   return Array.from({ length: size * size }, (_, i) => (i === center ? null : ids[next++]!));
 }
@@ -78,8 +81,14 @@ const cardKey = (card: (number | null)[]) => card.join(',');
 
 export function setup(seats: number, options: Options, seed: string): BingoState {
   const rng = Rng.fromSeed(seed, 'bingo');
-  const content = options.content && PACKS[options.content] ? options.content : NUMBERS;
-  const size = content === NUMBERS ? 5 : [3, 4, 5].includes(Number(options.size)) ? Number(options.size) : 4;
+  const decoded = decodePairsOption(options.pack);
+  // Auf der Karte steht `b`: Doppelte Lösungen würden Felder mehrdeutig machen, darum bleibt je Lösung nur der erste Eintrag.
+  const unique = decoded ? decoded.pairs.filter((pair, i, all) => all.findIndex((q) => q.b === pair.b) === i) : [];
+  const custom = decoded && unique.length >= 6 ? unique : undefined;
+  const content = custom ? 'eigen' : options.content && PACKS[options.content] ? options.content : NUMBERS;
+  let size = content === NUMBERS ? 5 : [3, 4, 5].includes(Number(options.size)) ? Number(options.size) : 4;
+  // Ein eigenes Paket muss die Felder der Karte füllen können (ohne freies Mittelfeld bei gerader Kantenlänge).
+  if (custom) while (size > 3 && size * size - (size % 2 === 1 ? 1 : 0) > custom.length) size--;
   const goal: Goal = (['line', 'twoLines', 'corners', 'full'] as const).find((g) => g === options.goal) ?? 'line';
   const falseCall: FalseCall = options.falseCall === 'out' || options.falseCall === 'none' ? options.falseCall : 'pause';
   // Allein muss die Spielleitung mitspielen, sonst gäbe es keine Karte.
@@ -89,14 +98,15 @@ export function setup(seats: number, options: Options, seed: string): BingoState
   const cards = Array.from({ length: seats }, (_, seat) => {
     if (seat === CALLER && !callerPlays) return [];
     // Jede Karte ist anders – bei kleinen Paketen notfalls ein paar Versuche.
-    let card = makeCard(content, size, rng);
-    for (let tries = 0; used.has(cardKey(card)) && tries < 50; tries++) card = makeCard(content, size, rng);
+    let card = makeCard(content, size, rng, custom);
+    for (let tries = 0; used.has(cardKey(card)) && tries < 50; tries++) card = makeCard(content, size, rng, custom);
     used.add(cardKey(card));
     return card;
   });
-  const order = rng.shuffle(entryIds(content));
+  const order = rng.shuffle(entryIds(content, custom));
   return {
     content,
+    ...(custom ? { custom } : {}),
     size,
     goal,
     autoMark: options.marking === 'auto',
