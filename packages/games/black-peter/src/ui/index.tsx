@@ -18,7 +18,7 @@ function Face({ set, custom, card, small = false, anim }: { set: string; custom?
   );
 }
 
-function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events, table }: BoardProps<BlackPeterState, BlackPeterMove>) {
+function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events, table, handOnly }: BoardProps<BlackPeterState, BlackPeterMove>) {
   const [ref, { width, height }] = useElementSize<HTMLDivElement>();
   const [shufflingSeat, setShufflingSeat] = useState<SeatId | null>(null);
   const seenEventsRef = useRef<GameEvent[] | null>(null);
@@ -45,10 +45,17 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events, tabl
   const hintIndex = hint?.type === 'draw' ? hint.index : null;
   const recent = view.discarded.slice(-6).reverse();
 
+  // Hand-Ansicht fürs Handy (#214): Nur wer gezogen wird, zeigt seine Karten zum Antippen; alle anderen stehen als Zeile mit Kartenzahl da.
+  const shownOthers = handOnly ? others.filter((seat) => seat === source && canDraw) : others;
   const othersRow = (
     <>
+      {handOnly && (
+        <p className="bp-count" aria-label="Mitspieler">
+          {others.map((seat) => `${seatNames[seat] ?? `Platz ${seat + 1}`}: ${view.hands[seat]?.length ?? 0}`).join(' · ')}
+        </p>
+      )}
       <div className="bp-others">
-        {others.map((seat) => {
+        {shownOthers.map((seat) => {
           const hand = view.hands[seat] ?? [];
           const isSource = seat === source && canDraw;
           return (
@@ -83,7 +90,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint, events, tabl
     <>
       <div className="bp-middle" aria-label="Abgelegte Paare">
         {canDraw && <p className="bp-help">Tippe eine Karte von {seatNames[source ?? 0] ?? 'deinem Nachbarn'} an.</p>}
-        <div className="bp-pairs">
+        <div className="bp-pairs" hidden={handOnly}>
           {recent.map((entry, i) => (
             <span key={`${entry.pair}-${i}`} className="bp-pair" title={seatNames[entry.seat]}>
               <span className="bp-mini">
@@ -187,6 +194,7 @@ export const gameUi: GameUi<BlackPeterState, BlackPeterMove> = {
   Board,
   SetupExtra: PeterSetup,
   seatsAround: true,
+  handView: true,
   SeatSymbol,
   sounds: { drawn: 'karte-ziehen', discarded: 'paar', shuffled: 'mischen', lost: 'peter-gezogen' },
   seatLabel: (seat) => `Platz ${seat + 1}`,

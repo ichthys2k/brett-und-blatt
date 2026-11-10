@@ -267,3 +267,25 @@
   height: 100%;
   min-height: 0;
 }
+
+/* Hand-Ansicht fürs Handy (#214): nur die Enden der Kette, zum Anlegen. */
+.dm-ends {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+.dm-end-value {
+  min-width: 2.2rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.6rem;
+  background: var(--color-surface-2, rgba(0, 0, 0, 0.08));
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.dm-end-sep {
+  opacity: 0.5;
+}

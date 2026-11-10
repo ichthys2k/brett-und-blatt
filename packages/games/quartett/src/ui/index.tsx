@@ -144,7 +144,7 @@ function TrickText({ trick, set, names }: { trick: Trick; set: CardSet; names: s
   );
 }
 
-function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint, table }: BoardProps<QuartettState, QuartettMove>) {
+function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint, table, handOnly }: BoardProps<QuartettState, QuartettMove>) {
   const set = setOf(view);
   const shown = useTrickQueue(events, view.revealMs);
   const own = viewer === 'spectator' ? null : (view.stacks[viewer]?.[0]?.card ?? null);
@@ -152,7 +152,8 @@ function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint,
   const hintProperty = hint?.type === 'chooseProperty' ? hint.property : null;
   const others = view.stacks.map((_, seat) => seat).filter((seat) => seat !== viewer);
 
-  const seatsRow = (
+  // Hand-Ansicht fürs Handy (#214): Die Stapel der anderen und die aufgedeckten Karten zeigt der Tisch-Bildschirm.
+  const seatsRow = handOnly ? null : (
     <>
       <div className="qt-others">
         {others.map((seat) => (
@@ -182,7 +183,7 @@ function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint,
             <p className="qt-said">
               <TrickText trick={shown} set={set} names={seatNames} />
             </p>
-            <div className="qt-reveal-cards">
+            <div className="qt-reveal-cards" hidden={handOnly}>
               {shown.plays.map((play) => (
                 <div key={play.seat} className="qt-play">
                   <span className="qt-seat-name" style={{ color: SEAT_COLORS[play.seat % SEAT_COLORS.length] }}>
@@ -256,7 +257,7 @@ function AskText({ ask, set, names }: { ask: Ask; set: CardSet; names: string[] 
   );
 }
 
-function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table }: BoardProps<QuartettState, QuartettMove>) {
+function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table, handOnly }: BoardProps<QuartettState, QuartettMove>) {
   const set = setOf(view);
   const hand = viewer === 'spectator' ? [] : (view.hands[viewer] ?? []).filter((c): c is CardId => c !== null);
   const targets = [...new Set(legalMoves.flatMap((m) => (m.type === 'ask' ? [m.target] : [])))];
@@ -286,8 +287,8 @@ function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
               <span className="qt-seat-name" style={{ color: SEAT_COLORS[seat % SEAT_COLORS.length] }}>
                 {nameOf(seatNames, seat)}
               </span>
-              <CardBack count={view.hands[seat]!.length} label={`${view.hands[seat]!.length} Karten`} />
-              <span className="qt-quartets">{quartetsOf(seat).map((q) => <span key={q.group} className="qt-q" style={{ background: GROUP_COLORS[q.group] }}>{q.group}</span>)}</span>
+              {!handOnly && <CardBack count={view.hands[seat]!.length} label={`${view.hands[seat]!.length} Karten`} />}
+              {!handOnly && <span className="qt-quartets">{quartetsOf(seat).map((q) => <span key={q.group} className="qt-q" style={{ background: GROUP_COLORS[q.group] }}>{q.group}</span>)}</span>}
             </>
           );
           return selectable ? (
@@ -389,7 +390,7 @@ function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
             </span>
           </p>
         )}
-        {view.asks.length > 0 && (
+        {view.asks.length > 0 && !handOnly && (
           <details className="qt-log">
             <summary>Fragen bisher ({view.asks.length})</summary>
             <ol reversed>
@@ -469,6 +470,7 @@ export const gameUi: GameUi<QuartettState, QuartettMove> = {
   Board,
   album: albumSpec,
   seatsAround: true,
+  handView: true,
   SeatSymbol,
   sounds: { trick: 'karte-legen', drew: 'karte-ziehen', asked: (event) => (event.got ? 'karte-ziehen' : 'kein-paar'), quartet: 'paar' },
   seatLabel: (seat) => `Platz ${seat + 1}`,

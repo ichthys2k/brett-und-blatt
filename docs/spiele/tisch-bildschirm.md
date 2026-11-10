@@ -40,7 +40,11 @@ Die Spielszene läuft auf einer **Bühne** (`Stage` in `Display.tsx`, Faktor `st
 - - **Anbieten:** Ist ein Tisch-Bildschirm im Raum (`RoomMessage.displays` > 0) und auf dem Gerät noch nichts gewählt (`useHandViewChoice() === null`), erscheint unter dem Spielfeld „Ein Tisch-Bildschirm ist verbunden. Nur die Hand zeigen?“ mit „Hand-Ansicht“ und „Nein“. „Nein“ gilt bis zum Neuladen, der Schalter „Ganzer Tisch“ speichert „aus“ dauerhaft.
 - Anlegespiele zeigen statt des Legemusters den Status und die Kartenzahlen (Elf zuerst!), Präsident die Kartenzahlen der anderen und den Hinweis; den Stich bzw. das Muster zeigt der Tisch-Bildschirm.
 - Mäxle zeigt nur Becher und Knöpfe (Verlauf und Aufdecken zeigt der Tisch-Bildschirm), Würfelblock Würfel und die eigene Spalte der Tafel.
-- Bewusst ohne Hand-Ansicht: Schwarzer Peter (Ziehen aus der Mitte), Quartett (Mitspieler wählen), Domino (Anlegeseite wählen am Tisch), Tiefflug (Stapel und eigenes Raster gehören zusammen) – die Züge hängen am Tisch, eine reine Handansicht wäre nicht spielbar.
+- **Spiele, deren Züge am Tisch hängen (#214, 10.11.2026):** Schwarzer Peter, Quartett, Domino und Tiefflug haben jetzt ebenfalls eine Hand-Ansicht; das Handy zeigt dort die eigene Hand plus nur die Ziele, die ein Zug braucht:
+  - **Schwarzer Peter:** nur die Karten des Nachbarn, von dem gezogen wird (antippen), die übrigen Mitspieler als eine Zeile mit Kartenzahl, die abgelegten Paare entfallen.
+  - **Domino:** statt der Kette die beiden Enden als Zahlen mit den Knöpfen zum Anlegen (links, rechts, oben, unten bei Spinnern), dazu Ziehen und Passen.
+  - **Tiefflug:** das eigene Raster bleibt groß, Stapel, Ablage und gezogene Karte bleiben; die Raster der anderen entfallen.
+  - **Quartett:** Sammeln – Mitspieler antippen und fehlende Karte wählen, ohne Kartenstapel und Fragenverlauf; Trumpf – die eigene Karte mit den Eigenschaften, ohne Stapel der anderen und ohne die aufgedeckten Karten (die zeigt der Tisch-Bildschirm).
 - Neue Spiele: `handOnly` auswerten, `handView: true` setzen, eigene CSS-Klassen mit Spielpräfix. Weitere Spiele (Karten-Anlegespiele, Würfelspiele) folgen nach demselben Muster.
 
 ## Schritt 2c (umgesetzt für Stichspiele und Tiefflug): Ansicht der Spiele auf dem Tisch-Bildschirm
@@ -75,5 +79,4 @@ Die Spielszene läuft auf einer **Bühne** (`Stage` in `Display.tsx`, Faktor `st
 ## Noch offen
 
 - **Fernsehansicht für die übrigen Spiele** nur bei Bedarf: Spiele mit verborgenen Aktionen (Quartett, Mäxle) könnten auf dem Tisch den Verlauf größer zeigen.
-- **Hand-Ansicht für Spiele, deren Züge am Tisch hängen** (Schwarzer Peter, Quartett, Domino, Tiefflug): bräuchte eine kleine Tischfläche mit den nötigen Zielen statt einer reinen Hand.
 - **Weitere Szenen** auf demselben Rahmen: Partie nachspielen (#99, Issue #215); Turnier-Bildschirm siehe Schritt 5.

@@ -107,7 +107,7 @@ function name(names: string[], seat: SeatId): string {
   return names[seat] ?? `Platz ${seat + 1}`;
 }
 
-export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, seatNames, events, hint, display }: BoardProps<LowFlightView, LowFlightMove>) {
+export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, seatNames, events, hint, handOnly, display }: BoardProps<LowFlightView, LowFlightMove>) {
   const junior = view.options.variant === 'junior';
   // Am geteilten Gerät gilt der Platz, der gerade handelt; während Bot-Zügen bleibt der letzte Mensch unten.
   const lastMe = useRef<SeatId>(0);
@@ -163,7 +163,7 @@ export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, s
   const ordered = [...others.filter((s) => s > me), ...others.filter((s) => s < me)];
 
   return (
-    <div className={`lf-table${junior ? ' lf-junior' : ''}`} data-crowded={view.players.length > 4 || undefined}>
+    <div className={`lf-table${junior ? ' lf-junior' : ''}`} data-crowded={view.players.length > 4 || undefined} data-hand={handOnly ? '' : undefined}>
       <div className="lf-others">
         {ordered.map((seat) => {
           const p = view.players[seat]!;
@@ -175,7 +175,7 @@ export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, s
                   Σ {openSum(p.grid)}
                 </span>
               </div>
-              <Grid grid={p.grid} cols={view.cols} junior={junior} fresh={freshSlots(events, seat)} small />
+              {!handOnly && <Grid grid={p.grid} cols={view.cols} junior={junior} fresh={freshSlots(events, seat)} small />}
             </div>
           );
         })}
@@ -287,6 +287,7 @@ export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, s
 
 export const gameUi: GameUi<LowFlightView, LowFlightMove> = {
   Board: LowFlightBoard,
+  handView: true,
   SeatSymbol: ({ className }) => <span className={className}>🛩️</span>,
   seatLabel: (seat) => `Platz ${Number(seat) + 1}`,
   seatDetail: (view, seat) => `Σ ${openSum(view.players[seat]?.grid ?? [])} offen`,
