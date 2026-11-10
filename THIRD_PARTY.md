@@ -212,3 +212,10 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 ```
 
 Das Hauptbild der Taverne im Hauptmenü und auf den Unterseiten (`apps/web/src/menu/taverne-hinten.webp`, `taverne-vorn.webp`, `taverne-hoch.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen, November 2026. Auswahl durch Cornelius Lipponer. Die Ebenen (Raum ohne Tisch, Tisch freigestellt auf grünem Grund) entstanden aus dem gewählten Querformat-Bild durch Bildbearbeitung mit demselben Modell; das Freistellen übernahm ein kleines Skript (Grün entfernen, Rand glätten). Das Bild zeigt einen leeren Raum mit Kamin, Laternen sowie Karten und Würfeln auf einem Tisch, ohne Personen, Schrift, Logos oder Marken; die Kartenbilder sind frei erfunden. Es trug kein sichtbares Wasserzeichen.
+
+## Marktplatz-Figuren (KI-erzeugt)
+
+Die fünf Porträts der Nebenfiguren für das Spiel Marktplatz (`packages/games/marketplace/src/ui/figures/*.webp`: Ausrufer, Tavernenwirtin, Abt Esel, König Löwe, Hofnarr): **KI-erzeugt** mit einem Bildmodell nach eigenen Bildbeschreibungen im Narrenhof-Ölstil, November 2026. Auswahl durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `marktplatz-figuren.json`). Die Figuren sind eigene Erfindungen (Fabeltiere im mittelalterlichen Gewand), keine echten Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+

@@ -150,15 +150,107 @@
 }
 
 .mkt-news {
-  padding: 0.15rem 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.2rem 0.45rem;
   border-radius: 6px;
   background: #fff8e5;
   border: 1px solid #c9a860;
 }
 
+.mkt-news-img {
+  flex: none;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 5px;
+  object-fit: cover;
+  border: 1px solid #9c7b44;
+}
+
+.mkt-news-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  line-height: 1.25;
+}
+
 .mkt-news strong {
   margin-right: 0.3rem;
 }
+
+/* Figuren & Porträts (#73) */
+.mkt-figure-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  background: #fdf5e2;
+  border: 1px solid #d4be8a;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+}
+
+.mkt-figure-img {
+  flex: none;
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1.5px solid #8a6a3a;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
+}
+
+.mkt-figure-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.mkt-figure-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #3e2610;
+}
+
+.mkt-figure-title {
+  font-size: 0.78rem;
+  color: #7a5c32;
+  font-style: italic;
+}
+
+.mkt-figure-quote {
+  font-size: 0.82rem;
+  color: #4a341b;
+  margin-top: 0.15rem;
+  line-height: 1.25;
+}
+
+.mkt-figure-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.mkt-figure-badge {
+  flex: none;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1.5px solid #8a6a3a;
+}
+
+.mkt-figure-sub {
+  font-size: 0.85em;
+  color: #6a5232;
+  font-style: italic;
+  line-height: 1.2;
+}
+
 
 .mkt-dice {
   display: flex;

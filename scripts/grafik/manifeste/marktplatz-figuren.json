@@ -1,0 +1,47 @@
+{
+  "beschreibung": "Issue #73: Porträts für die Nebenfiguren des Handelsspiels Marktplatz (5 Motive: Ausrufer, Tavernenwirtin, Abt Esel, König Löwe, Hofnarr). Stilvorlage sind die Narrenhof-Ölbildporträts.",
+  "stil": "Painterly warm baroque oil portrait of a whimsical storybook animal character of a fairy-tale kingdom, in the same style as Narrenhof: warm lighting, rich textures, gentle friendly expression, humorous but dignified, bust portrait facing the viewer. Centred with space around. No text, no letters, no numbers, no watermark.",
+  "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos",
+  "referenzen": [
+    "packages/games/color-sorter/src/ui/portraits/boss-bear-2.webp",
+    "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp"
+  ],
+  "format": "1:1",
+  "groesse": [320, 320],
+  "qualitaet": 78,
+  "ziel": "packages/games/marketplace/src/ui/figures",
+  "praefix": "",
+  "suffix": "",
+  "motive": [
+    {
+      "id": "herald",
+      "titel": "Der Ausrufer",
+      "feld": "Ausrufer & Hofnachrichten",
+      "prompt": "Painterly warm baroque oil portrait of a whimsical storybook animal herald, an anthropomorphic friendly badger in an ornate medieval herald tabard embroidered with a small golden pretzel emblem. He holds a brass horn with a heraldic pennant, standing on a charming cobblestone marketplace. Soft warm daylight, rich fabric textures, gentle smirk, humorous and dignified, bust portrait facing the viewer."
+    },
+    {
+      "id": "innkeeper",
+      "titel": "Die Tavernenwirtin",
+      "feld": "Taverne „Zum Brett & Blatt“",
+      "prompt": "Painterly warm baroque oil portrait of a whimsical storybook tavern keeper, a friendly anthropomorphic motherly brown bear in a cozy medieval tavern dress and linen apron, holding a rustic earthenware pitcher of spiced apple cider with small cinnamon sticks. Background of a cozy timber-framed tavern 'Zum Brett & Blatt' with soft glowing lanterns and wooden shelves. Warm inviting lighting, rich textures, welcoming genial smile, dignified and humorous, bust portrait facing the viewer."
+    },
+    {
+      "id": "abbot",
+      "titel": "Abt Esel",
+      "feld": "Kloster & Zehnt",
+      "prompt": "Painterly warm baroque oil portrait of a whimsical storybook monk abbot, an anthropomorphic gentle donkey wearing a rustic monastic brown hooded cowl with a wooden pretzel medallion around the neck. He holds a small fragrant sprig of garden lavender and thyme from the herb garden. Background of a peaceful monastery cloister with stone arches, sunny courtyard and herb beds. Kind, peaceful, wise and gentle smiling expression, dignified and humorous, bust portrait facing the viewer."
+    },
+    {
+      "id": "king",
+      "titel": "König Löwe",
+      "feld": "Thronsaal & Königszoll",
+      "prompt": "Painterly warm baroque oil portrait of a majestic and benevolent storybook king, an anthropomorphic golden lion with a grand noble mane wearing a royal crimson velvet mantle with ermine collar and a delicate golden crown. Background of a warm sunny castle throne room with gothic arched windows and soft red banners. Benevolent, wise, generous and gentle smiling expression, dignified and humorous, bust portrait facing the viewer."
+    },
+    {
+      "id": "jester",
+      "titel": "Der Hofnarr",
+      "feld": "Kerker",
+      "prompt": "Painterly warm baroque oil portrait of a whimsical storybook court jester, an anthropomorphic playful fox in a colorful two-toned jester cap with tiny golden bells and a ruffled scalloped collar. Background of an old castle stone chamber with a cozy lantern and an arched window opening to blue sky. Cheerful, witty, friendly smiling expression with a gentle wink, humorous and dignified, bust portrait facing the viewer."
+    }
+  ]
+}
