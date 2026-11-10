@@ -8,6 +8,7 @@ import { navigate, paths } from '../lib/router';
 import { storage, type KnownTournament, type Profile, type TournamentTemplate } from '../lib/storage';
 import { seriesCsv, seriesStandings, type PointScheme, type SeriesRow } from '../lib/series';
 import { createOfflineTournament, isOfflineCode } from '../lib/offlineTournament';
+import { classAct, loadClasses } from '../lib/classes';
 import { loadOrgs, orgAct } from '../lib/orgServer';
 import { createSeries, knownSeries } from '../lib/seriesServer';
 import { findGame as findGameInfo } from '../lib/registry';
@@ -894,10 +895,10 @@ function useCreatorGroups(): { code: string; name: string }[] {
   const [groups, setGroups] = useState<{ code: string; name: string }[]>([]);
   useEffect(() => {
     let alive = true;
-    void Promise.all(loadOrgs().map(async (entry) => ({ entry, reply: await orgAct(entry.code, 'view') }))).then((results) => {
-      if (!alive) return;
-      setGroups(results.filter(({ reply }) => reply.ok && reply.view.status === 'active' && reply.view.me?.capabilities.includes('createTournament')).map(({ entry }) => entry));
-    });
+    const orgs = Promise.all(loadOrgs().map(async (entry) => ({ entry, reply: await orgAct(entry.code, 'view') }))).then((results) => results.filter(({ reply }) => reply.ok && reply.view.status === 'active' && reply.view.me?.capabilities.includes('createTournament')).map(({ entry }) => entry));
+    // Eine Klasse, die dieses Gerät leitet, ist ebenfalls eine Gruppe (#232).
+    const classes = Promise.all(loadClasses().map(async (entry) => ({ entry, reply: await classAct(entry.code, 'view') }))).then((results) => results.filter(({ reply }) => reply.ok && reply.view.lead).map(({ entry }) => ({ code: entry.code, name: `${entry.name} (Klasse)` })));
+    void Promise.all([orgs, classes]).then(([a, b]) => alive && setGroups([...a, ...b]));
     return () => {
       alive = false;
     };

@@ -1,4 +1,5 @@
 import { ROOM_EMOJIS } from './codes';
+import type { OrgRole } from './org-roles';
 import { DEFAULT_CARD_SECTIONS, parseSections, sanitizeCard, type CardSections, type ClassCard } from './classcard';
 import { cleanAvatar, cleanName, crestField } from './names';
 
@@ -262,4 +263,18 @@ export function classView(state: ClassState, token: unknown): ClassView {
     members: member ? Object.values(state.members).map(({ id, name, avatar, crest, lead: l, card }) => ({ id, name, avatar, ...(crest ? { crest } : {}), lead: l, ...(card ? { card } : {}) })) : [],
     pending: lead ? Object.values(state.pending).map(({ id, name, avatar }) => ({ id, name, avatar })) : [],
   };
+}
+
+/**
+ * Rollen einer Klasse im Rollenmodell der Organisationen (#232): Eine Klasse ist eine Gruppe mit Lehrkräften als Leitung. Die
+ * dienstälteste Leitung gilt als Betreiber, weitere Leitungen als Leitung, Schüler haben keine Rolle. So kann eine Klasse
+ * Turniere und Serien tragen, ohne dass ihr Speicher umgebaut werden muss.
+ */
+export function classRoles(state: ClassState, token: unknown): OrgRole[] {
+  const member = validToken(token) ? state.members[token] : undefined;
+  if (!member?.lead) return [];
+  const oldest = Object.entries(state.members)
+    .filter(([, m]) => m.lead)
+    .sort(([, a], [, b]) => a.joinedAt - b.joinedAt || a.id.localeCompare(b.id))[0];
+  return oldest?.[0] === token ? ['operator'] : ['lead'];
 }

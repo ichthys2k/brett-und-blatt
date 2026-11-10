@@ -168,6 +168,33 @@ const transfer = await fetch(`${base}/serien/${seriesMade.body.code}`, { method:
 check('Übergabe gibt es bei einer Serie der Gruppe nicht', transfer.status === 400);
 await operatorCall('DELETE', `/betreiber/serie/${seriesMade.body.code}`);
 for (const box of [asReg, asRef, asStranger, asOperator]) box.close();
+
+// Klassen als Gruppen (#232)
+const T1 = 'kennung-lehrkraft-0001';
+const T2 = 'kennung-lehrkraft-0002';
+const K1 = 'kennung-schueler-00003';
+const classMade = await post('/klassen', { token: T1, name: 'Frau Alt', avatar: '🦊', className: 'Klasse 5a' });
+check('Klasse angelegt', classMade.status === 201 && classMade.body?.code, JSON.stringify(classMade));
+const classCode = classMade.body.code;
+const classAct2 = (token, body) => post(`/klassen/${encodeURIComponent(classCode)}`, { token, ...body });
+await classAct2(T2, { action: 'join', name: 'Herr Neu', avatar: '🐻' });
+await classAct2(K1, { action: 'join', name: 'Kind', avatar: '🐸' });
+const classView1 = (await classAct2(T1, { action: 'view' })).body.view;
+await classAct2(T1, { action: 'lead', id: classView1.members.find((m) => m.name === 'Herr Neu').id, lead: true });
+const classSettings = { name: 'Klassenturnier', mode: 'local', sport: 'Darts', format: 'knockout', result: 'winner', org: classCode };
+check('Klassenturnier: Schüler darf nicht anlegen', (await post('/turniere', { settings: classSettings, token: K1, name: 'Kind' })).status === 403);
+const classTournament = await post('/turniere', { settings: classSettings, token: T1, name: 'Frau Alt' });
+check('Klassenturnier: Klassenleitung legt an', classTournament.status === 201, JSON.stringify(classTournament));
+const asTeacher2 = await connectT(classTournament.body.code, T2);
+check('zweite Lehrkraft leitet das Klassenturnier', asTeacher2.view?.isLeader === true && asTeacher2.view?.orgRoles?.[0] === 'lead', JSON.stringify(asTeacher2.view?.orgRoles));
+const asFirst = await connectT(classTournament.body.code, T1);
+check('dienstälteste Lehrkraft ist Betreiber der Klasse', asFirst.view?.mayDelete === true && asFirst.view?.orgRoles?.[0] === 'operator');
+const asKid = await connectT(classTournament.body.code, K1);
+check('Schüler sieht das Klassenturnier nicht', asKid.closed === true && !asKid.view);
+for (const box of [asTeacher2, asFirst, asKid]) box.close();
+await operatorCall('DELETE', `/betreiber/turnier/${classTournament.body.code}`);
+await operatorCall('DELETE', `/betreiber/klasse/${encodeURIComponent(classCode)}`);
+
 await operatorCall('DELETE', `/betreiber/turnier/${tc}`);
 await operatorCall('DELETE', `/betreiber/org/${encodeURIComponent(org2)}`);
 

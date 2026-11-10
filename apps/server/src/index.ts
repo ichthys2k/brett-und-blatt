@@ -22,6 +22,7 @@ import {
   BACKUP_ID_PATTERN,
   BACKUP_TTL_MS,
   CLASS_TTL_MS,
+  classRoles,
   OpenRoomDirectory,
   Room,
   SERIES_CODE_PATTERN,
@@ -231,7 +232,9 @@ function classStub(env: Env, code: string): DurableObjectStub<ClassRoom> {
 /** Rollen eines Geräts in einer Organisation; bei Fehlern keine (lieber zu wenig Recht als zu viel). */
 async function orgRolesOf(env: Env, orgCode: string, token: string): Promise<OrgRole[]> {
   try {
-    const parsed = JSON.parse(await orgStub(env, orgCode).rolesOf(token)) as unknown;
+    let parsed = JSON.parse(await orgStub(env, orgCode).rolesOf(token)) as unknown;
+    // Gibt es keine Organisation unter dem Code, kann er einer Klasse gehören (#232): Lehrkräfte sind dort Betreiber und Leitung.
+    if (parsed === null) parsed = JSON.parse(await classStub(env, orgCode).rolesOf(token)) as unknown;
     return Array.isArray(parsed) ? parsed.filter(isOrgRole) : [];
   } catch (err) {
     console.error('Organisation nicht erreichbar:', err);
@@ -437,6 +440,7 @@ export default {
       const req = decided.request;
       for (let attempt = 0; attempt < 8; attempt++) {
         const code = randomOrgCode((n) => crypto.getRandomValues(new Uint32Array(1))[0]! % n);
+        if (await classStub(env, code).exists()) continue;
         const created = await orgStub(env, code).create(code, JSON.stringify({ name: req.orgName, kind: req.kind, founder: { token: req.token, name: req.name, avatar: req.avatar, crest: req.crest } }));
         if (created === 'taken') continue;
         if (created !== 'ok') return json({ error: created }, 400, noStore);
@@ -629,6 +633,8 @@ export default {
       }
       for (let attempt = 0; attempt < 8; attempt++) {
         const code = randomClassCode((n) => crypto.getRandomValues(new Uint32Array(1))[0]! % n);
+        // Klassen und Organisationen teilen die Form des Codes; ein Code gehört nur einer von beiden (#232).
+        if (await orgStub(env, code).exists()) continue;
         const created = await classStub(env, code).create(code, JSON.stringify(body));
         if (created === 'taken') continue;
         if (created !== 'ok') return json({ error: created }, 400, { ...cors, 'Cache-Control': 'no-store' });
@@ -681,6 +687,7 @@ export default {
       }
       for (let attempt = 0; attempt < 8; attempt++) {
         const code = randomOrgCode((n) => crypto.getRandomValues(new Uint32Array(1))[0]! % n);
+        if (await classStub(env, code).exists()) continue;
         const created = await orgStub(env, code).create(code, JSON.stringify(body));
         if (created === 'taken') continue;
         if (created !== 'ok') return json({ error: created }, 400, noStore);
@@ -1287,6 +1294,17 @@ export class ClassRoom extends DurableObject<Env> {
     return reply(200, { view: classView(state, token) });
   }
 
+  /** Rollen eines Geräts in dieser Klasse im Rollenmodell der Organisationen (#232); 'null', wenn es die Klasse nicht gibt. */
+  async rolesOf(token: string): Promise<string> {
+    const state = await this.ctx.storage.get<ClassState>('class');
+    if (!state || isClassExpired(state, Date.now())) return 'null';
+    return JSON.stringify(classRoles(state, token));
+  }
+
+  async exists(): Promise<boolean> {
+    return (await this.ctx.storage.get('class')) !== undefined;
+  }
+
   /** Auflösen durch den Betreiber (`/betreiber/klasse/<Code>`). */
   async operatorDissolve(): Promise<boolean> {
     if (!(await this.ctx.storage.get('class'))) return false;
@@ -1426,8 +1444,13 @@ export class OrgRoom extends DurableObject<Env> {
   /** Rollen eines Geräts in dieser Organisation (für Turniere, #230); leer in gesperrten, unbekannten und für Fremde. */
   async rolesOf(token: string): Promise<string> {
     const state = await this.ctx.storage.get<OrgState>('org');
-    if (!state || isOrgExpired(state, Date.now()) || state.status !== 'active') return '[]';
+    if (!state || isOrgExpired(state, Date.now())) return 'null';
+    if (state.status !== 'active') return '[]';
     return JSON.stringify(rolesOf(state, token));
+  }
+
+  async exists(): Promise<boolean> {
+    return (await this.ctx.storage.get('org')) !== undefined;
   }
 
   /** Sperrt oder gibt eine Organisation wieder frei (Betreiber der Plattform); gesperrt gelten keine Rollen und keine Einladungen. */
