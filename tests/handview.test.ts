@@ -39,6 +39,6 @@ describe('Tisch-Bildschirm-Ansicht der Spiele (#100)', () => {
     for (const [path, source] of Object.entries(uis)) {
       if (/\bdisplay(:\s*\w+)?,?\s*\}\s*:\s*BoardProps|^\s*display(:\s*\w+)?,\s*$/m.test(source)) withDisplay.push(path.split('/')[3]!);
     }
-    expect(withDisplay.sort()).toEqual(['binokel', 'doppelkopf', 'low-flight', 'schafkopf', 'skat']);
+    expect(withDisplay.sort()).toEqual(['binokel', 'doppelkopf', 'low-flight', 'maexle', 'quartett', 'schafkopf', 'skat']);
   });
 });

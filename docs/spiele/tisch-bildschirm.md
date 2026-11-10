@@ -76,7 +76,12 @@ Die Spielszene läuft auf einer **Bühne** (`Stage` in `Display.tsx`, Faktor `st
 - Ein eigenes Panel nach dem Vorbild von `ModeratorPanel` gibt es im Turnier nicht: Teilnehmer und Tische verwaltet die Turnierseite selbst, das Raum-Panel (Namen festlegen, vom Platz nehmen) passt dort nicht.
 - **Punkte setzen** (Entscheidung): bleibt Sache der Leitung über `enterResult` bzw. `enterTable` (Plätze oder Punkte im Spiel); ein spielabhängiger `GameModule`-Haken ist nicht nötig, solange vor Ort nur Ergebnis, Punkte oder Plätze zählen.
 
+## Schritt 7 (umgesetzt, #215): Verlauf bei geheimen Karten und Nachspielen auf dem Beamer
+
+- **Quartett Sammeln:** Auf dem Tisch-Bildschirm steht der Verlauf der Fragen (die letzten acht) groß und offen statt als eingeklapptes „Fragen bisher“. **Quartett Trumpf:** Die letzte aufgedeckte Runde bleibt stehen, bis die nächste kommt (statt „X wählt …“ ohne Bild). **Mäxle:** Verlauf der Ansagen und Aufdecken größer (`data-display`). Alle drei werten `BoardProps.display` aus.
+- **Nachspielen auf dem Tisch-Bildschirm:** Nach Partieende erscheint „▶ Nachspielen“ auch dort (Bedienung per Maus oder Tastatur am Beamer-Rechner); die Zuschauersicht läuft mit `display`. Der Raum schickt die Daten (`GameMessage.replay`) an Tisch-Bildschirme wie an Mitglieder, und zwar erst nach Partieende.
+- **Nicht geprüft:** auf einem echten Fernseher oder Beamer (Live-Test steht bei Cornelius).
+
 ## Noch offen
 
-- **Fernsehansicht für die übrigen Spiele** nur bei Bedarf: Spiele mit verborgenen Aktionen (Quartett, Mäxle) könnten auf dem Tisch den Verlauf größer zeigen.
-- **Weitere Szenen** auf demselben Rahmen: Partie nachspielen (#99, Issue #215); Turnier-Bildschirm siehe Schritt 5.
+- **Weitere Szenen** auf demselben Rahmen: Turnier-Bildschirm siehe Schritt 5, Nachspielen siehe Schritt 7.

@@ -15,6 +15,8 @@ interface ReplayProps {
   seatNames: string[];
   /** Sicht, mit der das Nachspielen beginnt (eigener Platz) – sonst Zuschauer. */
   startViewer: SeatId | 'spectator';
+  /** Auf dem Tisch-Bildschirm (#215): alle Plätze gleich, keine eigene Hand. */
+  display?: boolean;
   onClose(): void;
 }
 
@@ -23,7 +25,7 @@ interface ReplayProps {
  * Die Zustände werden aus Seed und Zugliste neu gerechnet; gewählt wird, aus wessen Sicht man schaut
  * (bei Spielen mit Verdecktem also auch jede einzelne Hand).
  */
-export function Replay({ game, data, seatNames, startViewer, onClose }: ReplayProps) {
+export function Replay({ game, data, seatNames, startViewer, display, onClose }: ReplayProps) {
   const { ui, info, module } = game;
   const frames = useMemo(() => replayFrames<unknown>(module, data), [module, data]);
   const last = frames.length - 1;
@@ -83,6 +85,7 @@ export function Replay({ game, data, seatNames, startViewer, onClose }: ReplayPr
           hint={null}
           viewer={viewer}
           seatNames={seatNames}
+          display={display}
           audio={{ muted: true, music: 0, effects: 0 }}
         />
       </div>

@@ -298,7 +298,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
 
   // Knöpfe nach Partieende – unter dem Spielfeld und in der Siegerehrung.
   // Nur neu berechnen, wenn sich die Partie ändert (sonst rechnet das Nachspielen bei jedem Zeichnen neu).
-  const replayData = useMemo(() => (result && !online?.display ? (session.replayData?.() ?? null) : null), [session, session.version, Boolean(result), online?.display]); // eslint-disable-line react-hooks/exhaustive-deps
+  const replayData = useMemo(() => (result ? (session.replayData?.() ?? null) : null), [session, session.version, Boolean(result)]); // eslint-disable-line react-hooks/exhaustive-deps
   const replayButton = canReplay(replayData) ? (
     <Button
       onClick={() => {
@@ -654,6 +654,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             data={replayData}
             seatNames={seats.map((seat) => seat.name)}
             startViewer={online ? (online.yourSeat ?? 'spectator') : humans.length === 1 ? (humans[0] as number) : 'spectator'}
+            display={online?.display}
             onClose={() => setReplaying(false)}
           />
         )}
