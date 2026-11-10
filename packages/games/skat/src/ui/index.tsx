@@ -1,5 +1,18 @@
 import { sortHand, cardEyePoints, cardSuit, type CardId, type SeatId } from '@brett-und-blatt/engine';
-import { CardFan, PlayingCard, SeatRing, TRICK_HAND_MIN_STEP, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import {
+  CardFan,
+  PlayingCard,
+  RoundSummary,
+  type RoundSummaryPlayer,
+  SeatRing,
+  TRICK_HAND_MIN_STEP,
+  TrickTable,
+  trickHandCardWidth,
+  useTrickDisplay,
+  type BoardProps,
+  type GameUi,
+  type TrickTableSlot,
+} from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import {
   getContract,
@@ -278,41 +291,83 @@ export function SkatBoard({
   );
 
   // Runden-Auswertung
+  const lastSummary =
+    view.history.length > 0 && view.phase === 'roundOver'
+      ? view.history[view.history.length - 1]
+      : null;
+
+  const roundPlayers: RoundSummaryPlayer[] = Array.from({ length: view.playerCount }, (_, s) => {
+    const currentScore = view.scores[s] ?? 0;
+    let roundChange = 0;
+    let detail: string | null = null;
+
+    if (lastSummary) {
+      if (s === lastSummary.declarerSeat) {
+        roundChange = lastSummary.declarerScoreDiff;
+        detail = `Alleinspieler · ${lastSummary.declarerEyes} Augen`;
+      } else if (view.activeSeats.includes(s)) {
+        roundChange = lastSummary.opponentScoreDiff;
+        detail = `Gegenspieler · ${120 - lastSummary.declarerEyes} Augen`;
+      } else {
+        roundChange = 0;
+        detail = 'Aussetzer (Geber)';
+      }
+    }
+
+    return {
+      seat: s,
+      name: seatNames[s] ?? `Spieler ${s + 1}`,
+      previousScore: currentScore - roundChange,
+      roundChange,
+      currentScore,
+      detail,
+      isMe: s === mySeat,
+    };
+  });
+
   const roundEnd = (
     <>
       {(view.phase === 'roundOver' || view.phase === 'passedOut') && (
-        <div className="p-4 bg-stone-900/90 text-white rounded-2xl shadow-xl flex flex-col items-center gap-3">
-          <h2 className="text-lg font-bold">
-            {view.phase === 'passedOut' ? 'Spiel eingepasst' : 'Runde beendet'}
-          </h2>
-          {view.history.length > 0 && view.phase === 'roundOver' && (
-            <div className="text-sm text-stone-200 text-center">
-              {view.history[view.history.length - 1].won ? (
-                <span className="text-emerald-400 font-semibold">
-                  Alleinspieler ({seatNames[view.history[view.history.length - 1].declarerSeat] ?? `Spieler ${view.history[view.history.length - 1].declarerSeat + 1}`}) hat gewonnen!
+        <RoundSummary
+          title={view.phase === 'passedOut' ? 'Spiel eingepasst' : `Spiel ${view.gameNumber} beendet`}
+          subtitle={
+            lastSummary ? (
+              lastSummary.won ? (
+                <span className="text-emerald-400">
+                  Alleinspieler ({seatNames[lastSummary.declarerSeat] ?? `Spieler ${lastSummary.declarerSeat + 1}`}) gewinnt!
                 </span>
               ) : (
-                <span className="text-rose-400 font-semibold">
-                  Alleinspieler ({seatNames[view.history[view.history.length - 1].declarerSeat] ?? `Spieler ${view.history[view.history.length - 1].declarerSeat + 1}`}) hat verloren!
+                <span className="text-rose-400">
+                  Alleinspieler ({seatNames[lastSummary.declarerSeat] ?? `Spieler ${lastSummary.declarerSeat + 1}`}) verliert!
                 </span>
-              )}
-              <div className="mt-1 text-xs text-stone-400">
-                Spielwert: {view.history[view.history.length - 1].gameValue} (Reizwert: {view.history[view.history.length - 1].highestBid})
-                {' • '}Augen: {view.history[view.history.length - 1].declarerEyes} : {120 - view.history[view.history.length - 1].declarerEyes}
-              </div>
-            </div>
-          )}
-          <button
-            type="button"
-            className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-xl shadow transition"
-            onClick={() => onMove({ type: 'nextGame' })}
-          >
-            Nächstes Spiel
-          </button>
-        </div>
+              )
+            ) : (
+              'Alle haben gepasst – neu geben.'
+            )
+          }
+          roundDetail={
+            lastSummary ? (
+              <span>
+                Spielwert: {lastSummary.gameValue} (Reizwert: {lastSummary.highestBid})
+                {' • '}Augen: {lastSummary.declarerEyes} : {120 - lastSummary.declarerEyes}
+              </span>
+            ) : null
+          }
+          players={roundPlayers}
+          actions={
+            <button
+              type="button"
+              className="bub-round-summary-btn bg-amber-500 hover:bg-amber-400 text-stone-950"
+              onClick={() => onMove({ type: 'nextGame' })}
+            >
+              Nächstes Spiel
+            </button>
+          }
+        />
       )}
     </>
   );
+
 
   return (
     <div className={`flex h-full flex-col w-full mx-auto p-1 gap-2 sm:p-2 flat:p-0 ${table ? '' : 'max-w-4xl'}`}>
