@@ -143,7 +143,8 @@ describe('Grafschaft – Bot „Landvogt“', () => {
 });
 
 describe('Vertrag für Spielmodule', () => {
-  for (const check of gameContractChecks(gameModule)) {
-    it(check.name, check.run);
+  // Der allgemeine Such-Bot rechnet auf dem großen Brett etwa 0,4 s je Zug; 12 Züge je Stufe genügen für die Prüfung (sonst über 60 s in der CI).
+  for (const check of gameContractChecks(gameModule, { botMoveLimit: 12 })) {
+    it(check.name, check.run, 120_000);
   }
 });
