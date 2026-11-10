@@ -65,5 +65,40 @@ const gone = await fetch(`${base}/betreiber/org/${code}`, { method: 'DELETE', he
 check('Betreiber löscht die Organisation', gone.status === 200);
 check('danach nicht mehr da', (await act(A, { action: 'view' })).status === 404);
 
+
+// Antrag und Freigabe (#228)
+const D = 'kennung-antrag-000004';
+const operatorCall = async (method, path, body) => {
+  const response = await fetch(`${base}${path}`, { method, headers: { ...H, Authorization: `Bearer ${key}` }, ...(body ? { body: JSON.stringify(body) } : {}) });
+  return { status: response.status, body: await response.json().catch(() => null) };
+};
+const apply = (extra = {}) => post('/org-antrag', { action: 'submit', token: D, name: 'Dora', avatar: '🐻', orgName: 'Schachclub', kind: 'verein', purpose: 'Unser Vereinsturnier am Freitag', ...extra });
+const first2 = await apply();
+check('Antrag gestellt', first2.status === 201 && first2.body?.id, JSON.stringify(first2));
+check('zweiter offener Antrag abgelehnt', (await apply()).status === 409);
+check('Antragsteller sieht seinen Antrag', (await post('/org-antrag', { action: 'status', token: D })).body?.requests?.[0]?.status === 'open');
+check('Liste ohne Schlüssel abgelehnt', (await fetch(`${base}/betreiber/antraege`, { headers: H })).status === 401);
+const list = await operatorCall('GET', '/betreiber/antraege');
+const mine = list.body?.antraege?.find((r) => r.orgName === 'Schachclub');
+check('Betreiber sieht den Antrag ohne Kennung', mine && !JSON.stringify(list.body).includes('kennung-'));
+check('Ablehnung', (await operatorCall('POST', `/betreiber/antrag/${mine.id}`, { approve: false, note: 'Bitte genauer beschreiben' })).status === 200);
+const rejected = (await post('/org-antrag', { action: 'status', token: D })).body?.requests?.[0];
+check('Antragsteller sieht Ablehnung mit Anmerkung', rejected?.status === 'rejected' && rejected?.note === 'Bitte genauer beschreiben');
+const second2 = await apply();
+const list2 = await operatorCall('GET', '/betreiber/antraege');
+const approved = await operatorCall('POST', `/betreiber/antrag/${list2.body.antraege[0].id}`, { approve: true });
+check('Freigabe legt die Organisation an', approved.status === 200 && approved.body?.code, JSON.stringify(approved));
+const mineNow = (await post('/org-antrag', { action: 'status', token: D })).body?.requests?.find((r) => r.status === 'approved');
+check('Antragsteller bekommt den Code', mineNow?.code === approved.body.code);
+const orgCode = encodeURIComponent(approved.body.code);
+check('Antragsteller ist Betreiber', (await post(`/org/${orgCode}`, { token: D, action: 'view' })).body?.view?.me?.roles?.[0] === 'operator');
+check('Sperren', (await operatorCall('POST', `/betreiber/org-sperre/${orgCode}`, { blocked: true })).status === 200);
+const blockedView = (await post(`/org/${orgCode}`, { token: D, action: 'view' })).body?.view;
+check('gesperrt: keine Rechte', blockedView?.status === 'blocked' && blockedView?.me?.capabilities?.length === 0);
+check('gesperrt: keine Einladung', (await post(`/org/${orgCode}`, { token: D, action: 'invite', roles: ['referee'] })).status === 409);
+check('Entsperren', (await operatorCall('POST', `/betreiber/org-sperre/${orgCode}`, { blocked: false })).status === 200);
+check('Auflösen', (await operatorCall('DELETE', `/betreiber/org/${orgCode}`)).status === 200);
+void second2;
+
 console.log(failed === 0 ? 'Alles in Ordnung.' : `${failed} Fehler.`);
 process.exit(failed === 0 ? 0 : 1);

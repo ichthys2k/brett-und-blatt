@@ -41,6 +41,7 @@ export { LEAD_GRANTABLE, ORG_ROLES, ROLE_CAPABILITIES, canGrantRole, isOrgRole, 
 export { CAPABILITIES, can, roomCapabilities, tournamentCapabilities, type Capability, type TournamentRole } from './capabilities';
 export * from './classroom';
 export * from './org';
+export * from './org-requests';
 export * from './classcard';
 export * from './series';
 export * from './series-book';

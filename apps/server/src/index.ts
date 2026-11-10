@@ -102,6 +102,13 @@ import { onlineGames } from './games';
 import { isOperator } from './operator';
 import {
   answerOffer,
+  decideRequest,
+  emptyDesk,
+  openRequests,
+  requestsOf,
+  setApproved,
+  submitRequest,
+  type OrgDeskState,
   configureOrg,
   createInvite,
   createOrg,
@@ -150,6 +157,7 @@ interface Env {
   CLASSES: DurableObjectNamespace<ClassRoom>;
   SERIES: DurableObjectNamespace<SeriesRoom>;
   ORGS: DurableObjectNamespace<OrgRoom>;
+  ORG_DESK: DurableObjectNamespace<OrgDesk>;
   ACCOUNT_FLOWS: DurableObjectNamespace<AccountFlow>;
   ACCOUNT_LOCKS: DurableObjectNamespace<AccountLockBox>;
   /** Anmeldung mit Google (`wrangler secret put GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`). Fehlen sie, ist der Anbieter nicht eingerichtet. */
@@ -214,6 +222,11 @@ function shareStub(env: Env, id: string): DurableObjectStub<PassShare> {
 function classStub(env: Env, code: string): DurableObjectStub<ClassRoom> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.CLASSES : env.CLASSES.jurisdiction('eu');
   return namespace.get(namespace.idFromName(code));
+}
+
+function orgDeskStub(env: Env): DurableObjectStub<OrgDesk> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.ORG_DESK : env.ORG_DESK.jurisdiction('eu');
+  return namespace.get(namespace.idFromName('antraege'));
 }
 
 function orgStub(env: Env, code: string): DurableObjectStub<OrgRoom> {
@@ -347,6 +360,76 @@ export default {
     if (wortspiel !== undefined && request.method === 'GET') {
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
       return json(wortspiel, 200, { ...cors, 'Cache-Control': 'public, max-age=300' });
+    }
+
+    // Anträge auf Organisationen (#228): Antragsteller stellen und fragen ab, der Betreiber entscheidet und sperrt.
+    if (url.pathname === '/org-antrag' && request.method === 'POST') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      let body: Record<string, unknown>;
+      try {
+        const text = await request.text();
+        if (text.length > 4000) return json({ error: 'size' }, 413, noStore);
+        body = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        return json({ error: 'body' }, 400, noStore);
+      }
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      if (body.action === 'status') return json({ requests: JSON.parse(await orgDeskStub(env).mine(String(body.token ?? ''))) as unknown }, 200, noStore);
+      if (body.action !== 'submit') return json({ error: 'action' }, 400, noStore);
+      const result = JSON.parse(await orgDeskStub(env).submit(JSON.stringify(body))) as { error?: string; id?: string };
+      if (result.error) {
+        await limiter.miss();
+        return json({ error: result.error }, 409, noStore);
+      }
+      return json({ id: result.id }, 201, noStore);
+    }
+
+    const operatorDesk = /^\/betreiber\/(antraege|antrag\/([0-9a-f]{12})|org-sperre\/([^/]+))$/.exec(url.pathname);
+    if (operatorDesk) {
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      if (!env.OPERATOR_KEY) return json({ error: 'aus' }, 404, cors);
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      const wanted = operatorDesk[1] === 'antraege' ? 'GET' : 'POST';
+      if (request.method !== wanted) return json({ error: 'method' }, 405, cors);
+      if (!(await isOperator(request, env.OPERATOR_KEY))) {
+        await limiter.miss();
+        return json({ error: 'nicht erlaubt' }, 401, noStore);
+      }
+      if (operatorDesk[1] === 'antraege') return json({ antraege: JSON.parse(await orgDeskStub(env).list()) as unknown }, 200, noStore);
+      let body: Record<string, unknown> = {};
+      try {
+        const text = await request.text();
+        if (text.length > 4000) return json({ error: 'size' }, 413, noStore);
+        if (text) body = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        return json({ error: 'body' }, 400, noStore);
+      }
+      if (operatorDesk[3]) {
+        const code = parseOrgCode(decodeURIComponent(operatorDesk[3]));
+        if (!code || typeof body.blocked !== 'boolean') return json({ error: 'code' }, 400, noStore);
+        const done = await orgStub(env, code).setBlocked(body.blocked);
+        console.log(JSON.stringify({ betreiber: 'org-sperre', ziel: code, gesperrt: body.blocked, am: new Date().toISOString(), ok: done }));
+        return json({ ok: done }, done ? 200 : 404, noStore);
+      }
+      const id = operatorDesk[2]!;
+      const approve = body.approve === true;
+      const decided = JSON.parse(await orgDeskStub(env).decide(id, approve, body.note ?? '')) as { error?: string; request?: { token: string; name: string; avatar: string; crest?: string; orgName: string; kind: string } };
+      if (decided.error || !decided.request) return json({ error: decided.error ?? 'missing' }, 409, noStore);
+      if (!approve) return json({ ok: true }, 200, noStore);
+      const req = decided.request;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const code = randomOrgCode((n) => crypto.getRandomValues(new Uint32Array(1))[0]! % n);
+        const created = await orgStub(env, code).create(code, JSON.stringify({ name: req.orgName, kind: req.kind, founder: { token: req.token, name: req.name, avatar: req.avatar, crest: req.crest } }));
+        if (created === 'taken') continue;
+        if (created !== 'ok') return json({ error: created }, 400, noStore);
+        await orgDeskStub(env).approved(id, code);
+        console.log(JSON.stringify({ betreiber: 'org-freigabe', antrag: id, am: new Date().toISOString() }));
+        return json({ ok: true, code }, 200, noStore);
+      }
+      return json({ error: 'busy' }, 503, noStore);
     }
 
     // Betreiber-Endpunkte (Schlüssel `OPERATOR_KEY`): Liste der offenen Turniere und Löschen von Turnieren und Klassen.
@@ -1200,6 +1283,45 @@ export class ClassRoom extends DurableObject<Env> {
 }
 
 /**
+ * Der Schalter für Anträge auf Organisationen (#228): ein einziges Durable Object (in der EU), das die offenen und kürzlich
+ * entschiedenen Anträge hält. Logik in `packages/online/src/org-requests.ts`; Antworten gehen als JSON-Text.
+ */
+export class OrgDesk extends DurableObject<Env> {
+  private async load(): Promise<OrgDeskState> {
+    return (await this.ctx.storage.get<OrgDeskState>('desk')) ?? emptyDesk();
+  }
+
+  async submit(json: string): Promise<string> {
+    const body = JSON.parse(json) as Record<string, unknown>;
+    const desk = await this.load();
+    const result = submitRequest(desk, { token: body.token, name: body.name, avatar: body.avatar, crest: body.crest, orgName: body.orgName, kind: body.kind, purpose: body.purpose }, Date.now());
+    if ('ok' in result) await this.ctx.storage.put('desk', desk);
+    return JSON.stringify(result);
+  }
+
+  async mine(token: string): Promise<string> {
+    return JSON.stringify(requestsOf(await this.load(), token));
+  }
+
+  async list(): Promise<string> {
+    return JSON.stringify(openRequests(await this.load()));
+  }
+
+  async decide(id: string, approve: boolean, note: unknown): Promise<string> {
+    const desk = await this.load();
+    const result = decideRequest(desk, id, approve, note, Date.now());
+    if ('ok' in result && !approve) await this.ctx.storage.put('desk', desk);
+    return JSON.stringify(result);
+  }
+
+  async approved(id: string, code: string): Promise<void> {
+    const desk = await this.load();
+    setApproved(desk, id, code, Date.now());
+    await this.ctx.storage.put('desk', desk);
+  }
+}
+
+/**
  * Eine Organisation als Durable Object (eins je Code, in der EU, #217). Die Logik steht in `packages/online/src/org.ts`;
  * hier nur Speicher und Frist (ein Jahr nach der letzten Aktivität).
  */
@@ -1272,6 +1394,15 @@ export class OrgRoom extends DurableObject<Env> {
     if ('error' in outcome) return reply(409, { error: outcome.error, view: orgView(state, token, now) });
     await this.save(state);
     return reply(200, { view: orgView(state, token, now), ...extra });
+  }
+
+  /** Sperrt oder gibt eine Organisation wieder frei (Betreiber der Plattform); gesperrt gelten keine Rollen und keine Einladungen. */
+  async setBlocked(blocked: boolean): Promise<boolean> {
+    const state = await this.ctx.storage.get<OrgState>('org');
+    if (!state) return false;
+    state.status = blocked ? 'blocked' : 'active';
+    await this.save(state);
+    return true;
   }
 
   /** Auflösen durch den Betreiber der Plattform (`/betreiber/org/<Code>`). */

@@ -18,6 +18,7 @@
       { "name": "CLASSES", "class_name": "ClassRoom" },
       { "name": "SERIES", "class_name": "SeriesRoom" },
       { "name": "ORGS", "class_name": "OrgRoom" },
+      { "name": "ORG_DESK", "class_name": "OrgDesk" },
       { "name": "ACCOUNT_FLOWS", "class_name": "AccountFlow" },
       { "name": "ACCOUNT_LOCKS", "class_name": "AccountLockBox" }
     ]
@@ -34,7 +35,7 @@
     { "tag": "v8", "new_sqlite_classes": ["ClassRoom"] },
     { "tag": "v9", "new_sqlite_classes": ["SeriesRoom"] },
     { "tag": "v10", "new_sqlite_classes": ["AccountFlow", "AccountLockBox"] },
-    { "tag": "v11", "new_sqlite_classes": ["OrgRoom"] }
+    { "tag": "v11", "new_sqlite_classes": ["OrgRoom", "OrgDesk"] }
   ],
   "vars": {
     // Von diesen Seiten aus dürfen Räume erstellt und betreten werden.
