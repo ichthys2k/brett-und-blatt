@@ -2,7 +2,7 @@ import { packProblem, type UserPack } from '@brett-und-blatt/engine';
 import { useEffect, useState } from 'react';
 import { Button } from '../components/controls';
 import { TavernPage } from '../components/TavernPage';
-import { loadLibrary, saveLibrary } from '../lib/library';
+import { savePack } from '../lib/library';
 import { fetchPack } from '../lib/packShare';
 import { navigate, paths } from '../lib/router';
 
@@ -38,7 +38,7 @@ export function PackView({ passKey }: { passKey: string }) {
             variant="primary"
             className="w-full"
             onClick={() => {
-              saveLibrary([state, ...loadLibrary()]);
+              savePack(null, state.name, state.rows);
               navigate(paths.library);
             }}
           >

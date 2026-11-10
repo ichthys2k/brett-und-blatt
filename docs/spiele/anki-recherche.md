@@ -164,6 +164,8 @@ Notiztypen, Stapel und Optionsvorlagen bleiben als JSON in Anki-Form (Schema 11)
 
 ### 8.2 Speicher und Pass
 
+**Umsetzung L1 (10.11.2026):** Bis zum Paketimport (L3) liegt die Sammlung als Text im bisherigen Schlüssel `brett-und-blatt:bibliothek` (Block `bibliothek`); IndexedDB und Medien kommen mit L3. Grund: Wechsel und Abgleich der Pässe hängen an `localStorage`-Schlüsseln, und ohne Medien passt die Sammlung noch in den Block.
+
 - **Inhalt (Notizen, Notiztypen, Karten, Medien):** IndexedDB auf dem Gerät, je Pass getrennt (Familie, #139).
 - **Lernstand (Zustand je Karte und Protokoll):** im Pass-Block `lernen` (64 KB). Je Karte reichen Kennung (GUID plus Vorlage), `due`, `s`, `d`, Datum der letzten Wiederholung, Zähler; das ergibt grob 25 bis 30 Byte je Karte, also einige tausend Karten je Block; darüber teilt der Block in Gruppen je Paket (Plan Abschnitt 5). Das Protokoll wird verdichtet (alle Antworten der letzten 30 Tage, ältere nur als Zähler und Retention je Monat), **außer** der Nutzer bittet um den vollen Export.
 - **Inhalt über Geräte:** Das ist die offene Frage 3 unten. Pass-Blöcke sind für Pakete mit Medien zu klein.

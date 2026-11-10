@@ -8,8 +8,8 @@ import { BOOK_KEY, TROPHIES_KEY } from './passRecorder';
 import { mergeTrophies, sameTrophies, sanitizeTrophies, type Trophy } from './pokale';
 import { emptyBook, mergeBooks, sameBooks, sanitizeBook, type Book } from './partiebuch';
 import { CHILD_PASSES_KEY } from './classPasses';
-import { LIBRARY_KEY, mergeLibrary, sameLibrary, sanitizeLibrary } from './library';
-import type { UserPack } from '@brett-und-blatt/engine';
+import { LIBRARY_KEY } from './library';
+import { collectionFromStored, compactCollection, emptyCollection, mergeCollections, sameCollection, sanitizeCollection, type AnkiCollection } from '@brett-und-blatt/engine';
 import { mergeChildPasses, sameChildPasses, sanitizeChildPasses, type ChildPasses } from './classPassesCore';
 import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
 
@@ -84,20 +84,21 @@ export function registerWebPassBlocks(): void {
     merge: mergeChildPasses,
     same: sameChildPasses,
   });
-  // Bibliothek (#101): eigene Pakete; je Paket gilt die jüngere Änderung, Löschvermerke verhindern, dass ein Gerät sie zurückbringt.
-  registerPassBlock<UserPack[]>({
+  // Bibliothek (#101, L1): Sammlung im Anki-Modell (Notizen, Stapel, Notiztypen); je Notiz gilt die jüngere Änderung, Löschvermerke verhindern,
+  // dass ein Gerät Gelöschtes zurückbringt. Die frühere Liste von Paketen (ältere Geräte) wird beim Einlesen umgestellt.
+  registerPassBlock<AnkiCollection>({
     name: 'bibliothek',
     read: () => {
       try {
-        return sanitizeLibrary(JSON.parse(read(LIBRARY_KEY) ?? 'null'));
+        return compactCollection(collectionFromStored(JSON.parse(read(LIBRARY_KEY) ?? 'null')));
       } catch {
-        return [];
+        return compactCollection(emptyCollection());
       }
     },
-    write: (list) => write(LIBRARY_KEY, JSON.stringify(list)),
-    sanitize: sanitizeLibrary,
-    merge: (remote, local) => mergeLibrary(remote, local),
-    same: sameLibrary,
+    write: (col) => write(LIBRARY_KEY, JSON.stringify(compactCollection(col))),
+    sanitize: (value) => compactCollection(collectionFromStored(value)),
+    merge: (remote, local) => compactCollection(mergeCollections(sanitizeCollection(remote), sanitizeCollection(local))),
+    same: (a, b) => sameCollection(sanitizeCollection(a), sanitizeCollection(b)),
   });
   // Partiebuch (#142): Zähler je Gerät (wachsen nur), die letzten Partien als Kopfzeilen.
   registerPassBlock<Book>({

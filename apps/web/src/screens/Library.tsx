@@ -47,7 +47,7 @@ export function Library() {
                       {pack.rows.length} Paare{packProblem(pack) ? ` – ${packProblem(pack)}` : ''}
                     </span>
                   </span>
-                  <Button variant="ghost" onClick={() => setEditing(pack)}>
+                  <Button variant="ghost" onClick={() => setEditing(pack)} disabled={pack.rows.length > PACK_ROWS_MAX} title={pack.rows.length > PACK_ROWS_MAX ? `Zu groß für diesen Editor (über ${PACK_ROWS_MAX} Paare)` : undefined}>
                     ✏️ Bearbeiten
                   </Button>
                   {GAME_SERVER && !packProblem(pack) && (

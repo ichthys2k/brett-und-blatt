@@ -1,4 +1,4 @@
-import { encodePairsOption, livePacks, packProblem, sanitizeLibrary } from '@brett-und-blatt/engine';
+import { collectionFromStored, encodePairsOption, livePacks, packProblem, packsOf } from '@brett-und-blatt/engine';
 import { useState } from 'react';
 
 /** Wo die Bibliothek eines Passes liegt (Pass-Block `bibliothek`, je Pass getrennt). */
@@ -6,7 +6,7 @@ export const LIBRARY_KEY = 'brett-und-blatt:bibliothek';
 
 function loadLibrary() {
   try {
-    return sanitizeLibrary(JSON.parse(window.localStorage.getItem(LIBRARY_KEY) ?? 'null'));
+    return packsOf(collectionFromStored(JSON.parse(window.localStorage.getItem(LIBRARY_KEY) ?? 'null')));
   } catch {
     return [];
   }

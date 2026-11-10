@@ -38,3 +38,4 @@ export { computeBotMove, inlineBotRunner } from './bots/runner';
 export * from './crest-colors';
 export * from './player-crest';
 export * from './packs';
+export * from './anki';
