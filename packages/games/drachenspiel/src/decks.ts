@@ -14,7 +14,7 @@ export interface DeckThemeInfo {
 export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
   forest: {
     id: 'forest',
-    spellSwap: { out: ['f_jay', 'c7', 'f_badger'], in: ['s_honey', 'f_seed', 'f_roottrap'] },
+    spellSwap: { out: ['c28', 'c7', 'f_badger'], in: ['s_honey', 'f_seed', 'f_roottrap'] },
     name: 'Wald',
     houseName: 'Haus Eichenhain',
     emoji: '🌳',
@@ -46,7 +46,7 @@ export const DECK_THEMES: Record<DeckThemeId, DeckThemeInfo> = {
     houseName: 'Fernländer Karawane',
     emoji: '🌍',
     description: 'Rüstung und Tempo, der Held kämpft mit. Dafür wenig neue Karten.',
-    cardIds: ['wild_meerkat', 'wild_meerkat', 'wild_jackal', 'wild_jackal', 'wild_warthog', 'wild_warthog', 'wild_hyena', 'wild_hyena', 'wild_lioncub', 'wild_lioncub', 'wild_armadillo', 'wild_armadillo', 'wild_ostrich', 'wild_ostrich', 'wild_cub', 'wild_cub', 'wild_cheetah', 'wild_cheetah', 'c43', 'c43', 'wild_gorilla', 'wild_gorilla', 'wild_pool', 'wild_quest', 'c47', 'c47', 'c48', 'c48', 'wild_oda', 'wild_mammoth'],
+    cardIds: ['wild_meerkat', 'wild_meerkat', 'wild_jackal', 'wild_jackal', 'wild_warthog', 'wild_warthog', 'wild_hyena', 'wild_hyena', 'wild_lioncub', 'wild_lioncub', 'wild_armadillo', 'wild_armadillo', 'wild_ostrich', 'wild_ostrich', 'wild_cub', 'wild_cub', 'wild_cheetah', 'wild_cheetah', 'wild_croc', 'wild_croc', 'wild_gorilla', 'wild_gorilla', 'wild_pool', 'wild_quest', 'c47', 'c47', 'c48', 'c48', 'wild_oda', 'wild_mammoth'],
   },
   bugs: {
     id: 'bugs',

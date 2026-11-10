@@ -746,7 +746,7 @@ describe('Held und Grundregeln', () => {
       expect(power.text.length).toBeGreaterThan(5);
       expect(power.text).not.toContain('undefined');
     }
-    expect(HOUSE_POWERS.sea.text).toBe('Ruft zufällig eine Muschel (0/2 mit Beschützer), eine Garnele (1/1 mit Flink) oder ein Seepferdchen (1/2) herbei.');
+    expect(HOUSE_POWERS.sea.text).toBe('Ruft zufällig eine Muschel (0/1 mit Beschützer), eine Garnele (1/1 mit Flink) oder ein Seepferdchen (1/1) herbei.');
     for (const id of ['token_chick', 'token_mussel', 'token_shrimp', 'token_seahorse']) expect(ALL_CARD_IDS).not.toContain(id);
   });
 });

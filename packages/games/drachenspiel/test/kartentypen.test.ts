@@ -30,7 +30,7 @@ describe('Bauten', () => {
     const dam = state.players[me].board[0]!;
     expect(drachenspiel.legalMoves(state, me).some((m) => m.type === 'attack')).toBe(false);
     state = drachenspiel.applyMove(state, me, { type: 'useBuilding', minionId: dam.id }).state;
-    expect(state.players[me].armor).toBe(s.players[me].armor + 3);
+    expect(state.players[me].armor).toBe(s.players[me].armor + 2);
     expect(state.players[me].board[0]!.health).toBe(3);
     expect(() => drachenspiel.applyMove(state, me, { type: 'useBuilding', minionId: dam.id })).toThrow();
     for (let i = 0; i < 3; i++) {

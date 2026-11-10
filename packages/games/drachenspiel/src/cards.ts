@@ -27,7 +27,7 @@ export const SPELLS_DB: Record<string, CardDefinition> = {
   s_growth: { id: 's_growth', name: 'Wachstumsschub', cost: 3, attack: 0, health: 0, emoji: '🌱', quote: 'Groß und stark!', isSpell: true, effects: [{ kind: 'buff', attack: 1, health: 1, to: { pick: 'allMinions', side: 'own' } }], targeting: 'none' },
   s_summerRain: { id: 's_summerRain', name: 'Sommerregen', cost: 2, attack: 0, health: 0, emoji: '🌦️', quote: 'Das tut gut!', isSpell: true, effects: [{ kind: 'heal', amount: 3, to: { pick: 'hero', side: 'own' } }, { kind: 'heal', amount: 'full', to: { pick: 'allMinions', side: 'own' } }], targeting: 'none' },
   s_clover: { id: 's_clover', name: 'Glücksklee', cost: 2, attack: 0, health: 0, emoji: '🍀', quote: 'Vier Blätter, zwei Karten!', isSpell: true, effects: [{ kind: 'draw', count: 2 }], targeting: 'none' },
-  s_flood: { id: 's_flood', name: 'Flutwelle', cost: 3, attack: 0, health: 0, emoji: '🌊', quote: 'Ab nach Hause!', isSpell: true, effects: [{ kind: 'returnToHand', to: { pick: 'chosen' } }], targeting: 'enemyMinion' },
+  s_flood: { id: 's_flood', name: 'Flutwelle', cost: 4, attack: 0, health: 0, emoji: '🌊', quote: 'Ab nach Hause!', isSpell: true, effects: [{ kind: 'returnToHand', to: { pick: 'chosen' } }], targeting: 'enemyMinion' },
   s_frost: { id: 's_frost', name: 'Raureif', cost: 1, attack: 0, health: 0, emoji: '❄️', quote: 'Bibber!', isSpell: true, effects: [{ kind: 'freeze', to: { pick: 'chosen' } }, { kind: 'draw', count: 1 }], targeting: 'enemyMinion' },
   s_quiet: { id: 's_quiet', name: 'Stille Stunde', cost: 2, attack: 0, health: 0, emoji: '😌', quote: 'Psst.', isSpell: true, effects: [{ kind: 'silence', to: { pick: 'chosen' } }, { kind: 'draw', count: 1 }], targeting: 'enemyMinion' },
   s_tracks: { id: 's_tracks', name: 'Spurenlesen', cost: 1, attack: 0, health: 0, emoji: '🐾', quote: 'Da lang!', isSpell: true, effects: [{ kind: 'discover', pool: 'animal' }], targeting: 'none' },
@@ -64,9 +64,9 @@ export const ANT_TOKEN: CardDefinition = {
 
 /** Spielsteine der Hauskräfte (siehe `powers.ts`). */
 const CHICK_TOKEN: CardDefinition = { id: 'token_chick', token: true, textName: 'ein Küken', name: 'Küken', cost: 1, attack: 1, health: 2, emoji: '🐥', quote: 'Piep!' };
-const MUSSEL_TOKEN: CardDefinition = { id: 'token_mussel', token: true, textName: 'eine Muschel', name: 'Muschel', cost: 1, attack: 0, health: 2, emoji: '🐚', quote: 'Bleibt zu.', keywords: ['taunt'] };
+const MUSSEL_TOKEN: CardDefinition = { id: 'token_mussel', token: true, textName: 'eine Muschel', name: 'Muschel', cost: 1, attack: 0, health: 1, emoji: '🐚', quote: 'Bleibt zu.', keywords: ['taunt'] };
 const SHRIMP_TOKEN: CardDefinition = { id: 'token_shrimp', token: true, textName: 'eine Garnele', name: 'Garnele', cost: 1, attack: 1, health: 1, emoji: '🍤', quote: 'Husch!', keywords: ['rush'] };
-const SEAHORSE_TOKEN: CardDefinition = { id: 'token_seahorse', token: true, textName: 'ein Seepferdchen', name: 'Seepferdchen', cost: 1, attack: 1, health: 2, emoji: '🌊', quote: 'Hüa, ihr Wellen!' };
+const SEAHORSE_TOKEN: CardDefinition = { id: 'token_seahorse', token: true, textName: 'ein Seepferdchen', name: 'Seepferdchen', cost: 1, attack: 1, health: 1, emoji: '🌊', quote: 'Hüa, ihr Wellen!' };
 
 export const CARDS_DB: Record<string, CardDefinition> = {
   c1: {

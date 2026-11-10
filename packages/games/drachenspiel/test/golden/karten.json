@@ -5406,7 +5406,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "f_faun:5/3/3"
+     "f_faun:5/2/2"
     ]
    }
   ],
@@ -5658,7 +5658,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "f_marmot:3/4/4"
+     "f_marmot:3/3/3"
     ]
    }
   ],
@@ -5788,7 +5788,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "f_nymph:3/4/4"
+     "f_nymph:3/5/5"
     ]
    }
   ],
@@ -6070,7 +6070,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "f_treefolk:2/5/5"
+     "f_treefolk:2/4/4"
     ]
    }
   ],
@@ -6172,7 +6172,7 @@
  "f_woodpecker>hero": {
   "played": [
    {
-    "health": 19,
+    "health": 18,
     "mana": 0,
     "deck": 26,
     "hand": [
@@ -6202,7 +6202,7 @@
   ],
   "gone": [
    {
-    "health": 19,
+    "health": 18,
     "mana": 1,
     "deck": 25,
     "hand": [
@@ -6246,7 +6246,7 @@
      "special_star"
     ],
     "board": [
-     "c43:3/4/5 ready",
+     "c43:3/3/5 ready",
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready"
@@ -6277,7 +6277,7 @@
      "f_treefolk"
     ],
     "board": [
-     "c43:3/4/5 ready",
+     "c43:3/3/5 ready",
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",
@@ -7173,7 +7173,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "farm_hen:2/2/2"
+     "farm_hen:2/4/4"
     ]
    }
   ],
@@ -7403,7 +7403,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "farm_nest:0/3/3"
+     "farm_nest:0/4/4"
     ]
    }
   ],
@@ -7560,7 +7560,7 @@
     "hand": [],
     "board": [
      "c43:3/4/5 ready",
-     "farm_sheepdog:2/3/3"
+     "farm_sheepdog:3/3/3"
     ]
    }
   ],
@@ -7582,7 +7582,7 @@
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",
-     "c43:50/48/50 ready"
+     "c43:50/47/50 ready"
     ]
    },
    {
@@ -9386,7 +9386,7 @@
     "deck": 24,
     "hand": [
      "f_marmot",
-     "c28"
+     "s_honey"
     ],
     "board": [
      "c43:2/3/4 ready"
@@ -9416,7 +9416,7 @@
    },
    {
     "health": 20,
-    "mana": 7,
+    "mana": 6,
     "deck": 26,
     "hand": [],
     "board": [
@@ -9447,7 +9447,7 @@
    },
    {
     "health": 20,
-    "mana": 7,
+    "mana": 6,
     "deck": 26,
     "hand": [],
     "board": [
@@ -9478,7 +9478,7 @@
    },
    {
     "health": 20,
-    "mana": 7,
+    "mana": 6,
     "deck": 26,
     "hand": [],
     "board": [
@@ -9643,7 +9643,7 @@
     "deck": 24,
     "hand": [
      "f_marmot",
-     "c28"
+     "s_honey"
     ],
     "board": [
      "c43:2/3/4 ready"
@@ -10272,7 +10272,7 @@
    },
    {
     "health": 20,
-    "mana": 7,
+    "mana": 6,
     "deck": 26,
     "hand": [],
     "board": [
@@ -10366,12 +10366,12 @@
    },
    {
     "health": 20,
-    "mana": 7,
+    "mana": 6,
     "deck": 26,
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "sea_moray:2/2/2 poison stealth"
+     "sea_moray:2/3/3 poison stealth"
     ]
    }
   ],
@@ -10397,7 +10397,7 @@
    },
    {
     "health": 20,
-    "mana": 7,
+    "mana": 6,
     "deck": 26,
     "hand": [],
     "board": [
@@ -10514,7 +10514,7 @@
      "special_star"
     ],
     "board": [
-     "c43:3/2/5 ready",
+     "c43:3/3/5 ready",
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready"
@@ -10545,7 +10545,7 @@
      "f_treefolk"
     ],
     "board": [
-     "c43:3/2/5 ready",
+     "c43:3/3/5 ready",
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",
@@ -11245,7 +11245,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "sea_shark:6/4/4 ready"
+     "sea_shark:5/4/4 ready"
     ]
    }
   ],
@@ -11267,7 +11267,7 @@
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",
-     "c43:50/44/50 ready"
+     "c43:50/45/50 ready"
     ]
    },
    {
@@ -11404,7 +11404,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "sea_turtle:2/5/5 taunt"
+     "sea_turtle:2/4/4 taunt"
     ]
    }
   ],
@@ -11462,7 +11462,7 @@
    },
    {
     "health": 20,
-    "mana": 9,
+    "mana": 8,
     "deck": 26,
     "hand": [],
     "board": [
@@ -11494,7 +11494,7 @@
    },
    {
     "health": 20,
-    "mana": 9,
+    "mana": 8,
     "deck": 26,
     "hand": [],
     "board": [
@@ -12258,7 +12258,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "token_mussel:0/2/2 taunt"
+     "token_mussel:0/1/1 taunt"
     ]
    }
   ],
@@ -12447,7 +12447,7 @@
     "hand": [],
     "board": [
      "c43:2/3/4 ready",
-     "token_seahorse:1/2/2"
+     "token_seahorse:1/1/1"
     ]
    }
   ],
@@ -13007,7 +13007,7 @@
      "special_star"
     ],
     "board": [
-     "c43:3/2/5 ready",
+     "c43:3/1/5 ready",
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready"
@@ -13038,7 +13038,7 @@
      "f_treefolk"
     ],
     "board": [
-     "c43:3/2/5 ready",
+     "c43:3/1/5 ready",
      "c43:2/1/1 ready",
      "c43:1/2/2 bubble ready",
      "c43:1/1/1 stealth ready",

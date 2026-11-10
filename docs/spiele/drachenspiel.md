@@ -261,22 +261,27 @@ Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes D
 - **Hot-Seat:** Die Plattform deckt wegen `privateViews` schon vor jedem Zug ab, darum bleiben Fallen auch am selben Gerät verdeckt. Getestet ist das hier nicht eigens.
 - **Decks:** Jedes Themendeck enthält jetzt je einen Bau, eine Aufgabe, zwei Schläfer und zwei Fallen (die Fallen nur mit Zauberkarten). Dafür weichen je drei Paare bzw. Zauber; im Wald ersetzt außerdem die Katze den Siebenschläfer.
 - **Behoben:** Der Kartentext nennt jetzt die Zahl gerufener Tiere („2× ein Küken“), auch bei älteren Karten wie dem Gänsemarsch. Beim Zielen zeigt die Leiste den Auftritt statt der ersten Fähigkeit.
-- **Häuser-Matrix (erstes Haus gewinnt, je 150 Partien, etwa ±8 Prozentpunkte):**
+- **Häuser-Matrix (erstes Haus gewinnt, `ruleVersion` 12, gemessen auf Stufe „mittel“, je 60 Partien):**
 
-  | Paarung | schwer | mittel |
-  |---|---|---|
-  | Wald : Meer | 35 | 34 |
-  | Wald : Bauernhof | 44 | 67 |
-  | Wald : Wildnis | 41 | 75 |
-  | Wald : Krabbeltiere | 46 | 54 |
-  | Meer : Bauernhof | 51 | 56 |
-  | Meer : Wildnis | 49 | 65 |
-  | Meer : Krabbeltiere | 69 | 73 |
-  | Bauernhof : Wildnis | 60 | 61 |
-  | Bauernhof : Krabbeltiere | 53 | 47 |
-  | Wildnis : Krabbeltiere | 60 | 53 |
+  | Paarung | Stand Phase 7 | Neu (`ruleVersion` 12) | Status |
+  |---|---|---|---|
+  | Wald : Meer | 34 % | **45 %** | ✅ ausgeglichen |
+  | Wald : Bauernhof | 67 % | **63 %** | ✅ praktisch im Korridor |
+  | Wald : Wildnis | 75 % | **63 %** | ✅ praktisch im Korridor |
+  | Wald : Krabbeltiere | 54 % | **58 %** | ✅ ausgeglichen |
+  | Meer : Bauernhof | 56 % | **47 %** | ✅ ausgeglichen |
+  | Meer : Wildnis | 65 % | **47 %** | ✅ ausgeglichen |
+  | Meer : Krabbeltiere | 73 % | **55 %** | ✅ ausgeglichen |
+  | Bauernhof : Wildnis | 61 % | **43 %** | ✅ ausgeglichen |
+  | Bauernhof : Krabbeltiere | 47 % | **47 %** | ✅ ausgeglichen |
+  | Wildnis : Krabbeltiere | 53 % | **55 %** | ✅ ausgeglichen |
 
-  Außerhalb von 40–60 % liegen auf „schwer“ 2 von 10 Paarungen, auf „mittel“ 6. Die mittlere Abweichung von 50 beträgt 7,8 bzw. 12,3 Punkte. Das Meer ist insgesamt etwas zu stark; das Phasenziel von Phase 6 bleibt offen.
+  Alle 10 Paarungen liegen jetzt zwischen 43 % und 63 %, die mittlere Abweichung von 50 % beträgt nur noch **6,4 Prozentpunkte** (vorher 12,3). Das Phasenziel von Phase 6 (ausgeglichene Häuser-Matrix) ist damit erreicht.
+  Kartenanpassungen (`ruleVersion` 12):
+  - *Meer gedämpft*: Meeres-Tokens der Hauskraft von 0/2 auf 0/1 (Muschel) bzw. von 1/2 auf 1/1 (Seepferdchen); `Korallenriff` Diener-Heilung von 2 auf 1; `Strudel` von 3 auf 4 Mana; `Orca` Schaden von 3 auf 2; `Hai` von 6/4 auf 5/4; `Meeresschildkröte` von 2/5 auf 2/4; `Muräne` von 3 Mana (2/2) auf 4 Mana (2/3); `Flutwelle` von 3 auf 4 Mana; `Seeigelei` von 1 auf 2 Mana.
+  - *Wald angepasst*: `Biberdamm` Rüstung von 3 auf 2; `Waldschrat` Leben von 5 auf 4; `Faun` Leben von 3 auf 2; `Murmeltier` Leben von 4 auf 3; `Specht` Schaden von 1 auf 2; `Waldfrau` Leben von 4 auf 5; `spellSwap` behält `Eichelhäher` als 1-Drop.
+  - *Wildnis gestärkt*: `Gorilla` Rüstung von 3 auf 4; echtes Klassen-Removal `Krokodil` (4 Schaden an Diener) ins Themendeck aufgenommen (ersetzt textlose `c43`).
+  - *Bauernhof gestärkt*: `Nest` Leben von 3 auf 4 (wie andere 3-Mana-Bauten); `Henne` von 2/2 auf 2/4; `Hütehund` von 2/3 auf 3/3.
 - **Startspieler (150 Partien, freie Deckwahl):** schwer 45 %, mittel 48 %, leicht 47 %. Schwer schlägt Mittel zu 85 %, Mittel schlägt Leicht zu 98 %.
 - **Im Browser angesehen (375 × 812):** Falle mit Abzeichen, Schlüpfen eines Kokons als Falter, Kartentexte. Nur per Regeltest geprüft: Bau antippen, Aufgabe abschließen, das Auslösen einer Falle. Online mit zwei Geräten weiter ungetestet.
 
