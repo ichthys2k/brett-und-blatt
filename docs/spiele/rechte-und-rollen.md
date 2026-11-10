@@ -12,12 +12,15 @@ Stand: 10.11.2026. Konzept zum Issue #217; Entscheidungen von Cornelius stehen i
 | Wie wird vergeben? | **Beides**: Einmal-Link/Code für Gäste und Neue, direkte Zuweisung an bekannte Mitglieder. |
 | Wer legt Organisationen an? | **Auf Antrag**; der Betreiber (Cornelius) gibt frei. Der Antragsteller wird Betreiber seiner Organisation. |
 | Geltung in der Organisation | **Alle Turniere der Organisation.** |
-| Klassen | Eine Klasse ist ein **Sonderfall** einer Organisation (Lehrkraft = Betreiber, Schüler = Mitglieder). |
+| Klassen | Eine Klasse ist ein **Sonderfall** einer Organisation (Lehrkraft = Betreiber, Schüler = Mitglieder). Klassen legen Lehrkräfte **ohne Antrag** an, solange sie intern bleiben. |
+| Rollen je Person | **Mehrere** Rollen je Person und Organisation sind möglich; die Rechte sind die Vereinigung aller Rollen. |
+| Rollen vergeben | Die **Leitung darf** (außer Leitung und Betreiber); der Betreiber kann es je Organisation abschalten. |
+| Name und Größe | In der Oberfläche **„Verein oder Schule“**; höchstens **200 Mitglieder**, bei Klassen **40**. |
 
 ## 2. Begriffe
 
 - **Organisation:** Eine benannte Gruppe mit Mitgliedern und Rollen. Hat einen Code (wie `ClassRoom`: 6 Emoji aus 16, weil sie lange lebt), einen Namen und eine Art (`verein`, `schule`, `klasse`).
-- **Mitglied:** Eine Pass-Kennung in einer Organisation, mit genau einer Rolle (siehe Abschnitt 4: eine Rolle je Person und Organisation, damit das Modell einfach bleibt).
+- **Mitglied:** Eine Pass-Kennung in einer Organisation, mit einer oder mehreren Rollen.
 - **Rolle:** Ein festes Bündel aus Rechten (`Capability`).
 - **Recht:** Eine einzelne Fähigkeit (`kick`, `enterResult`, `entrants`, …), wie bisher.
 - **Plattform-Betreiber:** Wer den `OPERATOR_KEY` hält. Er gibt Organisationen frei und kann sie sperren oder auflösen, ist aber kein Mitglied und sieht keine Spielinhalte.
@@ -34,7 +37,7 @@ Stand: 10.11.2026. Konzept zum Issue #217; Entscheidungen von Cornelius stehen i
 | **Protokoll** | `print` (Ansicht, Druck, Export); keine Änderungen |
 | **Bildschirm** | nur Ansicht, kein Pass nötig (Beamer, Turniertafel, `#/turnier/<Code>/beamer`) |
 
-Neue Fähigkeiten brauchen:
+Neue Fähigkeiten brauchen (dazu `leaderMayGrant` als Einstellung der Organisation):
 - `manageRoles` (Rollen vergeben/entziehen, nur Betreiber),
 - `manageMembers` (Mitglieder aufnehmen/entfernen, Betreiber, optional Leitung),
 - `createTournament` (Turnier unter dem Namen der Organisation anlegen, Leitung und Betreiber),
@@ -46,14 +49,14 @@ Zuordnung der bestehenden Rollen (Migration): Hauptleitung → Betreiber, Mitlei
 
 ```
 Organisation { code, name, kind, createdAt, status: 'pending' | 'active' | 'blocked' }
-Mitglied     { org, passKey, role, since, via: 'link' | 'direct', by }
+Mitglied     { org, passKey, roles: Rolle[], since, via: 'link' | 'direct', by }
 Einladung    { org, role, code, expiresAt, attempts }          // Einmal-Link
 Protokoll    { org, at, by, action, subject, role?, note? }    // nur Anfügen
 Antrag       { code?, name, kind, requester: passKey, text, at, status }
 ```
 
 - Der Server speichert die **Pass-Kennung** (nicht den Spielercode) mit der Rolle. Weder E-Mail noch Klarnamen: Mitglieder zeigen Spitzname, Bild und Wappen aus dem Pass, wie bei Klassen.
-- **Eine Rolle je Person und Organisation.** Wer mehr braucht, bekommt die höhere Rolle. Das hält die Prüfung einfach (`can(role, recht)`), Verschachtelung gibt es nicht.
+- **Mehrere Rollen je Person und Organisation.** Die Rechte sind die Vereinigung der Rollen (`can(roles, recht)`); es gibt keine Verschachtelung. Entzug und Protokoll gelten je Rolle. Hat jemand Betreiber, wirkt der Rest nur als Anzeige.
 - **Turnier → Organisation:** `settings.org` (Code der Organisation) oder leer. Eine Serie gehört ebenfalls höchstens einer Organisation. Ein Raum hat die Raumleitung wie bisher; Organisationsrollen im Raum bleiben eine spätere Erweiterung.
 - **Speicherung:** Ein Durable Object je Organisation (`OrgRoom`, Muster `ClassRoom`), in der EU. Anträge liegen in einem kleinen Verzeichnis-Objekt, das der Betreiber über `/betreiber/…` einsieht.
 
@@ -77,7 +80,7 @@ Der Server prüft **bei jeder Nachricht**, ob die Kennung des Absenders in der z
 ## 6. Wer darf was vergeben
 
 - **Betreiber:** alle Rollen, an alle.
-- **Leitung:** Schiedsrichter, Tischhelfer, Anmeldung, Protokoll, Bildschirm; nicht Leitung oder Betreiber. (Einstellbar durch den Betreiber: „Leitung darf Rollen vergeben: ja/nein“, Standard ja.)
+- **Leitung:** Schiedsrichter, Tischhelfer, Anmeldung, Protokoll, Bildschirm; nicht Leitung oder Betreiber. Der Betreiber kann das je Organisation abschalten (`leaderMayGrant`, Standard ja).
 - Alle anderen: nichts.
 
 ## 7. Zusammenspiel mit dem Bestehenden
@@ -97,7 +100,7 @@ Der Server prüft **bei jeder Nachricht**, ob die Kennung des Absenders in der z
 - **Missbrauch bei Anträgen:** Begrenzung je Pass (ein offener Antrag), Name und Zweck werden gefiltert (`isBlockedText`); der Betreiber sieht nur Antragstext, keine Spielinhalte.
 - **Datenschutz:** Mitglieder und Rollen sind personenbezogen (Pass-Kennung plus Spitzname). Die Datenschutzerklärung braucht einen Abschnitt „Organisationen“ (wie bei Klassen). Aufbewahrung: ein Jahr ohne Aktivität löscht die Organisation (wie `ClassRoom`), Protokoll nur so lange wie die Organisation.
 - **`ownFieldsOnly` für Tischhelfer:** Ein Tischhelfer soll nur an den ihm zugewiesenen Tischen eintragen. Dafür muss die Leitung Tische zuweisen (`assignFields` kennt Felder, aber keine Personen). Erste Fassung: Tischhelfer dürfen wie bisher alle Ergebnisse eintragen; die Einschränkung folgt, wenn Tischzuweisung an Personen gebaut ist.
-- **Mehrfach-Mitgliedschaft:** Eine Person kann in mehreren Organisationen sein, je Organisation mit einer Rolle. Die Oberfläche muss bei einem Turnier die zuständige Organisation anzeigen.
+- **Mehrfach-Mitgliedschaft:** Eine Person kann in mehreren Organisationen sein, je Organisation mit mehreren Rollen. Die Oberfläche muss bei einem Turnier die zuständige Organisation anzeigen.
 
 ## 9. Umsetzung in Schritten (neue Issues nach Freigabe)
 
@@ -112,10 +115,12 @@ Der Server prüft **bei jeder Nachricht**, ob die Kennung des Absenders in der z
 
 Reihenfolge: 1 → 2 → 3 → 4 → 5; 6 bis 8 danach, jeweils nach Cornelius' Review.
 
-## 10. Offene Fragen an Cornelius
+## 10. Entschiedene Fragen (10.11.2026)
 
-1. **Klassen:** Brauchen auch Klassen einen Antrag, oder dürfen Lehrkräfte sie weiter selbst anlegen (mein Vorschlag: ohne Antrag, solange sie intern bleiben)?
-2. **Eine Rolle je Person:** Reicht das, oder soll jemand mehrere Rollen haben können (zum Beispiel Schiedsrichter und Anmeldung)?
-3. **Leitung darf Rollen vergeben:** Standard „ja“ (außer Leitung/Betreiber) oder „nein“, bis der Betreiber es erlaubt?
-4. **Größe:** Gibt es eine Obergrenze für Mitglieder je Organisation (Vorschlag: 200, Klassen 40)?
-5. **Namen:** „Organisation“ heißt in der Oberfläche besser „Verein oder Schule“ oder „Gruppe“?
+1. **Klassen** brauchen keinen Antrag, solange sie intern bleiben (kein öffentlicher Zuschaulink); sonst gilt der Antragsweg.
+2. **Mehrere Rollen** je Person sind möglich.
+3. **Leitung darf Rollen vergeben**, abschaltbar durch den Betreiber.
+4. **Obergrenze** 200 Mitglieder, bei Klassen 40.
+5. **Name** in der Oberfläche: „Verein oder Schule“.
+
+Noch offen: nichts am Konzept; als Nächstes die Freigabe der Umsetzungsschritte (Abschnitt 9) als eigene Issues.
