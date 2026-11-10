@@ -1,6 +1,6 @@
 {
- "status": "entwurf",
- "hinweis": "Von Claude erstellt (1.11.2026), wartet auf Freigabe durch Cornelius. Lösungen vor der Freigabe prüfen. Bibelzahlen nach der Lutherbibel.",
+ "status": "freigegeben",
+ "hinweis": "Von Claude erstellt (1.11.2026), von Cornelius freigegeben (10.11.2026). Lösungen vor der Freigabe geprüft. Bibelzahlen nach der Lutherbibel.",
  "packs": [
   {
    "id": "allgemein",
