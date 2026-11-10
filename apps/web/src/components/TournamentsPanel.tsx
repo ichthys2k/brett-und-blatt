@@ -8,6 +8,8 @@ import { navigate, paths } from '../lib/router';
 import { storage, type KnownTournament, type Profile, type TournamentTemplate } from '../lib/storage';
 import { seriesCsv, seriesStandings, type PointScheme, type SeriesRow } from '../lib/series';
 import { createOfflineTournament, isOfflineCode } from '../lib/offlineTournament';
+import { classAct, loadClasses } from '../lib/classes';
+import { loadOrgs, orgAct } from '../lib/orgServer';
 import { createSeries, knownSeries } from '../lib/seriesServer';
 import { findGame as findGameInfo } from '../lib/registry';
 import { createTournament, deleteTournament, fetchTournamentView, tournamentExists } from '../lib/tournament';
@@ -68,6 +70,9 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [localDisciplines, setLocalDisciplines] = useState('');
   const [wishes, setWishes] = useState(true);
   const [spectators, setSpectators] = useState(true);
+  /** Gruppe („Verein oder Schule“, #230): nur solche, in denen dieses Gerät Turniere anlegen darf. */
+  const groups = useCreatorGroups();
+  const [org, setOrg] = useState('');
   const [points, setPoints] = useState({ win: 3, draw: 1, loss: 0 });
   const pointsValid = points.win > points.draw && points.draw >= points.loss;
   const [name, setName] = useState('');
@@ -163,7 +168,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
       const series = !tables && !teamGame && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
       const tableSettings = tables ? { tableSize: size, rounds, ...(local && lowWins ? { lowWins: true } : {}) } : {};
-      const common = { name: name.trim(), format, ...(format === 'lives' ? { lives } : {}), ...(format === 'dyp' ? { rounds } : {}), ...(checkin ? { checkin: true } : {}), ...(approval && !local ? { approval: true } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(placements && (format === 'world' || format === 'knockout') ? { placements: true } : {}), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...(format === 'league' && leagueDate && !Number.isNaN(new Date(leagueDate).getTime()) ? { leagueStart: new Date(leagueDate).getTime(), leagueDays } : {}), ...tableSettings, ...series };
+      const common = { name: name.trim(), format, ...(org && !offline ? { org } : {}), ...(format === 'lives' ? { lives } : {}), ...(format === 'dyp' ? { rounds } : {}), ...(checkin ? { checkin: true } : {}), ...(approval && !local ? { approval: true } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(placements && (format === 'world' || format === 'knockout') ? { placements: true } : {}), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...(format === 'league' && leagueDate && !Number.isNaN(new Date(leagueDate).getTime()) ? { leagueStart: new Date(leagueDate).getTime(), leagueDays } : {}), ...tableSettings, ...series };
       const many = format === 'league' && multi;
       const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
@@ -238,6 +243,20 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
             <span>{t('tournament.name')}</span>
             <input className={FIELD} required maxLength={40} value={name} onChange={(e) => setName(e.target.value)} />
           </label>
+          {groups.length > 0 && !offline && (
+            <label className="block space-y-1 text-sm">
+              <span>Gruppe (Verein oder Schule)</span>
+              <select className={FIELD} value={org} onChange={(e) => setOrg(e.target.value)}>
+                <option value="">Keine – nur ich leite</option>
+                {groups.map((group) => (
+                  <option key={group.code} value={group.code}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+              <span className="block text-xs text-muted">Die Rollen der Gruppe (Leitung, Schiedsrichter, Anmeldung …) gelten dann auch in diesem Turnier.</span>
+            </label>
+          )}
           <fieldset className="space-y-1 text-sm">
             <legend className="mb-1">{t('tournament.mode')}</legend>
             <div className="grid grid-cols-2 gap-2">
@@ -871,17 +890,35 @@ function TemplateList({ profile, onChanged }: { profile: Profile; onChanged: () 
  * Serie auf dem Server anlegen (#205): eigener Name, Code und Link; Turniere werden ihr zugeordnet und melden sich nach dem
  * Ende von selbst. Die eigenen Serien stehen darunter.
  */
+/** Gruppen („Verein oder Schule“), in denen dieses Gerät Turniere und Serien anlegen darf (#230, #231). */
+function useCreatorGroups(): { code: string; name: string }[] {
+  const [groups, setGroups] = useState<{ code: string; name: string }[]>([]);
+  useEffect(() => {
+    let alive = true;
+    const orgs = Promise.all(loadOrgs().map(async (entry) => ({ entry, reply: await orgAct(entry.code, 'view') }))).then((results) => results.filter(({ reply }) => reply.ok && reply.view.status === 'active' && reply.view.me?.capabilities.includes('createTournament')).map(({ entry }) => entry));
+    // Eine Klasse, die dieses Gerät leitet, ist ebenfalls eine Gruppe (#232).
+    const classes = Promise.all(loadClasses().map(async (entry) => ({ entry, reply: await classAct(entry.code, 'view') }))).then((results) => results.filter(({ reply }) => reply.ok && reply.view.lead).map(({ entry }) => ({ code: entry.code, name: `${entry.name} (Klasse)` })));
+    void Promise.all([orgs, classes]).then(([a, b]) => alive && setGroups([...a, ...b]));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return groups;
+}
+
 function SeriesCreate() {
   const [name, setName] = useState('');
   const [scheme, setScheme] = useState<PointScheme>('linear');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mine = knownSeries();
+  const groups = useCreatorGroups();
+  const [org, setOrg] = useState('');
   const create = async () => {
     setBusy(true);
     setError(null);
     try {
-      navigate(paths.series(await createSeries(name, scheme)));
+      navigate(paths.series(await createSeries(name, scheme, org || undefined)));
     } catch {
       setError(t('online.serverError'));
     } finally {
@@ -898,6 +935,16 @@ function SeriesCreate() {
           <option value="linear">{t('tournament.seriesLinear')}</option>
           <option value="f1">{t('tournament.seriesF1')}</option>
         </select>
+        {groups.length > 0 && (
+          <select className={FIELD} value={org} aria-label="Gruppe (Verein oder Schule)" onChange={(e) => setOrg(e.target.value)}>
+            <option value="">Keine Gruppe – nur ich leite</option>
+            {groups.map((group) => (
+              <option key={group.code} value={group.code}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+        )}
         <Button variant="primary" className="w-full" disabled={busy || !name.trim()} onClick={() => void create()}>
           {t('series.create')}
         </Button>

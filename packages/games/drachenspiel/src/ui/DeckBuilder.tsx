@@ -12,6 +12,7 @@ import { CardFace, CardZoom, type ZoomItem } from './parts';
 import { getCardFullTitle } from './traits';
 import { SoloHub } from './SoloHub';
 import { useLongPress } from './useLongPress';
+import { championImage } from './champions';
 
 const LOOK = [
   { id: 'all', label: 'Alle' },
@@ -45,15 +46,23 @@ function Builder({ start, onDone, onCancel }: { start: { id?: string; name: stri
         <h2 className="ds-phase-title">Welches Haus?</h2>
         <p className="ds-phase-subtitle">Dein Deck bekommt die Hauskraft und die Karten dieses Hauses, dazu alle neutralen.</p>
         <div className="ds-deck-grid">
-          {DECK_THEME_IDS.map((id) => (
-            <button key={id} type="button" className="ds-deck-choice" onClick={() => setHouse(id)}>
-              <span className="ds-deck-emoji">{DECK_THEMES[id].emoji}</span>
-              <span className="ds-deck-name">{DECK_THEMES[id].name}</span>
-              <span className="ds-deck-power">
-                {HOUSE_POWERS[id].emoji} <strong>{HOUSE_POWERS[id].name}:</strong> {HOUSE_POWERS[id].text}
-              </span>
-            </button>
-          ))}
+          {DECK_THEME_IDS.map((id) => {
+            const img = championImage(id);
+            return (
+              <button key={id} type="button" className="ds-deck-choice" onClick={() => setHouse(id)}>
+                {img ? (
+                  <img src={img} alt={DECK_THEMES[id].houseName} className="ds-deck-champion" width={60} height={80} loading="lazy" />
+                ) : (
+                  <span className="ds-deck-emoji">{DECK_THEMES[id].emoji}</span>
+                )}
+                <span className="ds-deck-name">{DECK_THEMES[id].houseName}</span>
+                <span className="ds-deck-sub">{DECK_THEMES[id].emoji} {DECK_THEMES[id].name}</span>
+                <span className="ds-deck-power">
+                  {HOUSE_POWERS[id].emoji} <strong>{HOUSE_POWERS[id].name}:</strong> {HOUSE_POWERS[id].text}
+                </span>
+              </button>
+            );
+          })}
         </div>
         <button type="button" className="ds-btn" onClick={onCancel}>
           Abbrechen

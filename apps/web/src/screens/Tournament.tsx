@@ -7,6 +7,7 @@ import { notifyTurn, requestNotificationPermission } from '../lib/notifications'
 import { GAME_SERVER } from '../lib/online';
 import { passChanged, saveOwnProfile } from '../lib/playerPass';
 import { findGame, loadGame } from '../lib/registry';
+import { roleList } from '../lib/orgLabels';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { applyOfflineMessage, createOfflineTournament, isOfflineCode, loadOfflineRecord, syncOfflineTournament } from '../lib/offlineTournament';
@@ -48,7 +49,7 @@ function formatDate(ms: number): string {
 const isLocalView = (view: TournamentView) => view.settings.mode === 'local';
 
 /** Was dieses Gerät im Turnier darf (Leitung, Mitleitung, Helfer): die Seite fragt `can`, nicht die Rolle. */
-const capsOf = (view: TournamentView) => tournamentCapabilities({ isLeader: view.isLeader, helperRole: view.helperRole, mayDelete: view.mayDelete, local: view.settings.mode === 'local' });
+const capsOf = (view: TournamentView) => tournamentCapabilities({ isLeader: view.isLeader, helperRole: view.helperRole, mayDelete: view.mayDelete, orgRoles: view.orgRoles, local: view.settings.mode === 'local' });
 /** Wird ein Spielstand gezählt (Tore, Sätze, Punkte)? */
 const withScore = (view: TournamentView) => isLocalView(view) && view.settings.result !== undefined && view.settings.result !== 'winner';
 /** Best of N (Stufe 3 Teil 5): Begegnungen über mehrere Partien, Stand in gewonnenen Partien. */
@@ -472,6 +473,11 @@ export function TournamentScreen({ code, claim, helper, leader }: { code: string
       {view.phase === 'finished' && isLocalView(view) && view.isLeader && <NextPhase view={view} />}
       <RoundStart view={view} send={send} />
       {view.helperRole === 'helper' && <p className="text-sm text-muted">🤝 {t('tournament.youHelp')}</p>}
+      {view.orgRoles.length > 0 && (
+        <p className="text-sm text-muted">
+          🏛️ Deine Rolle in der Gruppe dieses Turniers: {roleList(view.orgRoles)}
+        </p>
+      )}
       {view.helperRole === 'coleader' && <p className="text-sm text-muted">🛠 {t('tournament.youColead')}</p>}
       {view.settings.format === 'tables' ? (
         <TableRounds view={view} send={send} />

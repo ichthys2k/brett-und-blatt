@@ -14,6 +14,7 @@ import { ClassPage, Classes } from './screens/Classes';
 import { Library } from './screens/Library';
 import { Operator } from './screens/Operator';
 import { PackView } from './screens/PackView';
+import { Org, Orgs } from './screens/Org';
 import { Tournaments } from './screens/Tournaments';
 import { SeriesScreen } from './screens/Series';
 import { TournamentBeamerScreen, TournamentEmbedScreen, TournamentScreen } from './screens/Tournament';
@@ -48,6 +49,10 @@ function Screen() {
       return <Library />;
     case 'classes':
       return <Classes />;
+    case 'orgs':
+      return <Orgs />;
+    case 'org':
+      return <Org key={route.code} code={route.code} invite={route.invite} />;
     case 'class':
       return <ClassPage key={route.code} code={route.code} />;
     case 'room':

@@ -164,3 +164,21 @@ describe('Klassenausweise (#152): Eintragen durch die Leitung', () => {
     expect(enrollMember(state, T(0), { token: T(6), name: '' }, 3)).toEqual({ error: expect.any(String) });
   });
 });
+
+describe('Klassen im Rollenmodell (#232)', () => {
+  it('die dienstälteste Leitung ist Betreiber, weitere Leitungen Leitung, Schüler nichts', async () => {
+    const { classRoles, createClass, joinClass, setLead } = await import('../src/classroom');
+    const A = 'kennung-lehrkraft-0001';
+    const B = 'kennung-lehrkraft-0002';
+    const C = 'kennung-schueler-00003';
+    const state = createClass('🦊🦊🦊🦊🦊🦊', 'Klasse 5a', { token: A, name: 'Frau Alt' }, 1000);
+    if (typeof state === 'string') throw new Error(state);
+    joinClass(state, { token: B, name: 'Herr Neu' }, 2000);
+    joinClass(state, { token: C, name: 'Kind' }, 3000);
+    expect(setLead(state, A, state.members[B]!.id, true)).toEqual({ ok: true });
+    expect(classRoles(state, A)).toEqual(['operator']);
+    expect(classRoles(state, B)).toEqual(['lead']);
+    expect(classRoles(state, C)).toEqual([]);
+    expect(classRoles(state, 'kennung-fremder-0000001')).toEqual([]);
+  });
+});

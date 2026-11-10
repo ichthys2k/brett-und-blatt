@@ -91,9 +91,25 @@
   font-size: 2.2rem;
 }
 
+.ds-deck-choice .ds-deck-champion {
+  width: 72px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .ds-deck-choice .ds-deck-name {
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.ds-deck-choice .ds-deck-sub {
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #636e72);
+  margin-top: -4px;
 }
 
 .ds-deck-choice .ds-deck-desc {

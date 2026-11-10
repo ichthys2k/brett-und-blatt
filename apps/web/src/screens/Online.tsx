@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '../components/controls';
 import { EmojiKeypad, ProfileForm } from '../components/OnlineParts';
 import { OpenRooms } from '../components/OpenRooms';
+import { OrgRequestNotice } from '../components/OrgRequestNotice';
 import { TavernPage } from '../components/TavernPage';
 import { t } from '../i18n';
 import { GAME_SERVER, createRoom, roomExists, useOpenRooms } from '../lib/online';
@@ -66,6 +67,7 @@ export function Online() {
         </section>
       ) : (
         <>
+          <OrgRequestNotice />
           <button type="button" className="bub-menu-plaque bub-menu-plaque-link" onClick={() => navigate(paths.pass)} aria-label="Profil öffnen">
             <span className="bub-menu-shield" aria-hidden="true">
               {profile.avatar}
@@ -126,6 +128,9 @@ export function Online() {
             </button>
             <button type="button" className="bub-menu-button" onClick={() => navigate(paths.classes)}>
               Klassen
+            </button>
+            <button type="button" className="bub-menu-button" onClick={() => navigate(paths.orgs)}>
+              Verein oder Schule
             </button>
           </div>
 
