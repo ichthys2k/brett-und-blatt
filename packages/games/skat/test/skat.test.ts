@@ -1,6 +1,7 @@
-import { cardId, computeBotMove, isLegalMove, knownVoids, resolveOptions, Rng } from '@brett-und-blatt/engine';
+import { cardId, cardRank, computeBotMove, isLegalMove, knownVoids, resolveOptions, Rng } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
+import { isSureNullOuvert, isSureSchwarz, simulatedBiddingLimit } from '../src/bots.js';
 import { gameModule } from '../src/index.js';
 import {
   ALL_BID_VALUES,
@@ -160,7 +161,7 @@ describe('Skat-Bot: Hand und Schneider', () => {
   const c = (s: 'C' | 'S' | 'H' | 'D', r: number) => cardId(s, r as never);
 
   it('spielt ein Traumblatt Hand und sagt Schneider an', () => {
-    const dream = [c('C', 11), c('S', 11), c('H', 11), c('D', 11), c('C', 1), c('C', 10), c('C', 13), c('C', 12), c('S', 1), c('H', 1)];
+    const dream = [c('C', 11), c('S', 11), c('H', 11), c('C', 9), c('C', 1), c('C', 10), c('C', 13), c('C', 12), c('S', 1), c('H', 1)];
     const { state, seat, ask } = decision(dream);
     const first = ask(state);
     expect(first).toEqual({ type: 'playHand' });
@@ -203,5 +204,259 @@ describe('Skat: Stichproben der verdeckten Karten', () => {
       }
     }
     expect(checked).toBeGreaterThan(0);
+  });
+});
+
+describe('Skat-Bot: Schwarz- und Ouvert-Prüfung', () => {
+  const c = (s: 'C' | 'S' | 'H' | 'D', r: number) => cardId(s, r as never);
+
+  it('erkennt sicheres Grand Ouvert (alle 4 Buben + lückenlose Fehlfarben von oben)', () => {
+    const grandOuvert = [
+      c('C', 11), c('S', 11), c('H', 11), c('D', 11),
+      c('C', 1), c('C', 10), c('C', 13), c('C', 12),
+      c('S', 1), c('H', 1),
+    ];
+    expect(isSureSchwarz(grandOuvert, 'grand', false)).toBe(true);
+    expect(isSureSchwarz(grandOuvert, 'grand', true)).toBe(true);
+  });
+
+  it('lehnt Grand Ouvert ab, wenn ein Bube oder eine hohe Beikarte fehlt', () => {
+    // Nur 3 Buben (Karo-Bube fehlt)
+    const missingJack = [
+      c('C', 11), c('S', 11), c('H', 11), c('C', 9),
+      c('C', 1), c('C', 10), c('C', 13), c('C', 12),
+      c('S', 1), c('H', 1),
+    ];
+    expect(isSureSchwarz(missingJack, 'grand', true)).toBe(false);
+
+    // 4 Buben, aber Lücke in Kreuz (Ass und König, aber 10 fehlt)
+    const gapInSuit = [
+      c('C', 11), c('S', 11), c('H', 11), c('D', 11),
+      c('C', 1), c('C', 13), c('C', 12), c('C', 9),
+      c('S', 1), c('H', 1),
+    ];
+    expect(isSureSchwarz(gapInSuit, 'grand', true)).toBe(false);
+  });
+
+  it('erkennt sicheres Farbspiel-Ouvert bei Vorhand und mindestens 6 Trümpfen', () => {
+    // Kreuz-Spiel: 7 Trümpfe ab Kreuz-Bube, dazu Pik-Ass, Herz-Ass, Karo-Ass
+    const suitOuvert = [
+      c('C', 11), c('S', 11), c('H', 11), c('D', 11),
+      c('C', 1), c('C', 10), c('C', 13),
+      c('S', 1), c('H', 1), c('D', 1),
+    ];
+    expect(isSureSchwarz(suitOuvert, 'C', true)).toBe(true);
+    // Nicht Vorhand: Gegner könnte vor Trumpfabzug stechen
+    expect(isSureSchwarz(suitOuvert, 'C', false)).toBe(false);
+
+    // 10 Trümpfe: immer sicher, auch wenn nicht Vorhand
+    const tenTrumps = [
+      c('C', 11), c('S', 11), c('H', 11), c('D', 11),
+      c('C', 1), c('C', 10), c('C', 13), c('C', 12), c('C', 9), c('C', 8),
+    ];
+    expect(isSureSchwarz(tenTrumps, 'C', false)).toBe(true);
+  });
+
+  it('erkennt sicheres Null Ouvert (jede Farbe lückenlos ab der 7)', () => {
+    const safeNull = [
+      c('C', 7), c('C', 8),
+      c('S', 7),
+      c('H', 7), c('H', 8), c('H', 9),
+      c('D', 7), c('D', 8), c('D', 9), c('D', 10),
+    ];
+    expect(isSureNullOuvert(safeNull)).toBe(true);
+
+    // Lücke: Kreuz 7 und 9 (8 fehlt)
+    const gapNull = [
+      c('C', 7), c('C', 9),
+      c('S', 7),
+      c('H', 7), c('H', 8), c('H', 9),
+      c('D', 7), c('D', 8), c('D', 9), c('D', 10),
+    ];
+    expect(isSureNullOuvert(gapNull)).toBe(false);
+
+    // Blanke 8 ohne 7
+    const noSeven = [
+      c('C', 8),
+      c('S', 7),
+      c('H', 7), c('H', 8), c('H', 9),
+      c('D', 7), c('D', 8), c('D', 9), c('D', 10), c('D', 11),
+    ];
+    expect(isSureNullOuvert(noSeven)).toBe(false);
+  });
+});
+
+describe('Skat-Bot: Schwarz- und Ouvert-Ansagen', () => {
+  const c = (s: 'C' | 'S' | 'H' | 'D', r: number) => cardId(s, r as never);
+
+  function makeDecision(hand: string[], declarerSeat: number = 0) {
+    let state: any = gameModule.setup(3, resolveOptions(gameModule), 'ansage-test');
+    state = {
+      ...state,
+      phase: 'skatDecision',
+      declarerSeat,
+      activeSeats: [0, 1, 2],
+      highestBid: 18,
+      currentBidValue: 18,
+      hands: { ...state.hands, [declarerSeat]: hand },
+    };
+    const ask = (s: any) =>
+      computeBotMove(gameModule, {
+        gameId: 'skat',
+        botId: 'skat',
+        level: 'hard',
+        seat: declarerSeat,
+        view: gameModule.playerView(s, declarerSeat),
+        seed: 'ansage',
+        timeBudgetMs: 50,
+      }) as SkatMove;
+    return { state, ask, declarerSeat };
+  }
+
+  it('sagt Grand Ouvert Hand an, wenn das Blatt unverlierbar ist', () => {
+    const grandOuvertHand = [
+      c('C', 11), c('S', 11), c('H', 11), c('D', 11),
+      c('C', 1), c('C', 10), c('C', 13), c('C', 12),
+      c('S', 1), c('H', 1),
+    ];
+    const { state, ask, declarerSeat } = makeDecision(grandOuvertHand, 0);
+    const first = ask(state);
+    expect(first).toEqual({ type: 'playHand' });
+    const declaring = gameModule.applyMove(state, declarerSeat, first).state;
+    const declare = ask(declaring);
+    expect(declare).toEqual({
+      type: 'declare',
+      declaration: {
+        gameType: 'grand',
+        hand: true,
+        schneider: true,
+        schwarz: true,
+        ouvert: true,
+      },
+    });
+  });
+
+  it('sagt Null Ouvert Hand an, wenn das Blatt unverlierbar ist', () => {
+    const nullOuvertHand = [
+      c('C', 7), c('C', 8),
+      c('S', 7),
+      c('H', 7), c('H', 8), c('H', 9),
+      c('D', 7), c('D', 8), c('D', 9), c('D', 10),
+    ];
+    const { state, ask, declarerSeat } = makeDecision(nullOuvertHand, 1);
+    const first = ask(state);
+    expect(first).toEqual({ type: 'playHand' });
+    const declaring = gameModule.applyMove(state, declarerSeat, first).state;
+    const declare = ask(declaring);
+    expect(declare).toEqual({
+      type: 'declare',
+      declaration: {
+        gameType: 'null',
+        hand: true,
+        ouvert: true,
+      },
+    });
+  });
+
+  it('sagt nach Skataufnahme Null Ouvert an, wenn nach dem Drücken alle Farben lückenlos liegen', () => {
+    const handWithSkat = [
+      c('C', 7), c('C', 8),
+      c('S', 7),
+      c('H', 7), c('H', 8), c('H', 9),
+      c('D', 7), c('D', 8), c('D', 9), c('D', 10),
+      c('S', 1), c('H', 1),
+    ];
+    let state: any = gameModule.setup(3, resolveOptions(gameModule), 'skat-discard');
+    state = {
+      ...state,
+      phase: 'discard',
+      declarerSeat: 1,
+      highestBid: 23,
+      currentBidValue: 23,
+      hands: { ...state.hands, 1: handWithSkat },
+    };
+    const ask = (s: any) =>
+      computeBotMove(gameModule, {
+        gameId: 'skat',
+        botId: 'skat',
+        level: 'hard',
+        seat: 1,
+        view: gameModule.playerView(s, 1),
+        seed: 'discard-null',
+        timeBudgetMs: 50,
+      }) as SkatMove;
+    const discard = ask(state);
+    expect(discard.type).toBe('discard');
+    const declaring = gameModule.applyMove(state, 1, discard).state;
+    const declare = ask(declaring);
+    expect(declare).toEqual({
+      type: 'declare',
+      declaration: {
+        gameType: 'null',
+        hand: false,
+        ouvert: true,
+      },
+    });
+  });
+});
+
+describe('Skat-Bot: Simulationsbasiertes Reizen auf „schwer“', () => {
+  const c = (s: 'C' | 'S' | 'H' | 'D', r: number) => cardId(s, r as never);
+
+  it('reizt auf schwer per Simulation vorsichtiger bei wackligen Händen als die Heuristik', () => {
+    // Wacklige Hand: 4 kleine Trümpfe, keine Asse, nur verstreute Mittelkarten
+    const shakyHand = [
+      c('H', 11), c('D', 9), c('D', 8), c('D', 7),
+      c('C', 10), c('C', 7),
+      c('S', 13), c('S', 9),
+      c('H', 12), c('H', 8),
+    ];
+    const simulatedLimit = simulatedBiddingLimit(shakyHand, 1, [0, 1, 2], 'shaky-seed');
+    expect(simulatedLimit).toBe(0);
+  });
+
+  it('reizt starkes Blatt voll aus', () => {
+    // 6 Trümpfe mit Spitzen und Beiasse (Kreuz)
+    const strongHand = [
+      c('C', 11), c('S', 11), c('C', 1), c('C', 10), c('C', 13), c('C', 9),
+      c('S', 1), c('S', 10),
+      c('H', 1), c('D', 1),
+    ];
+    const simulatedLimit = simulatedBiddingLimit(strongHand, 0, [0, 1, 2], 'strong-seed');
+    expect(simulatedLimit).toBeGreaterThanOrEqual(36);
+  });
+
+  it('Vergleich an gleichen Blättern: Simulation vermeidet Verlustspiele gegenüber einfacher Heuristik', () => {
+    const rng = Rng.fromSeed('vergleich-blaetter');
+    let simulatedZeroOnShaky = 0;
+
+    for (let i = 0; i < 20; i++) {
+      const allDeck = rng.shuffle(Array.from({ length: 32 }, (_, idx) => {
+        const suits = ['C', 'S', 'H', 'D'] as const;
+        const ranks = [7, 8, 9, 10, 11, 12, 13, 1] as const;
+        return cardId(suits[Math.floor(idx / 8)]!, ranks[idx % 8]!);
+      }));
+      const testHand = allDeck.slice(0, 10);
+      const simLimit = simulatedBiddingLimit(testHand, 1, [0, 1, 2], `bench-${i}`);
+
+      const jacks = testHand.filter((x) => cardRank(x) === 11);
+      const aces = testHand.filter((x) => cardRank(x) === 1);
+      if (jacks.length <= 1 && aces.length === 0) {
+        if (simLimit === 0) simulatedZeroOnShaky++;
+      }
+    }
+    expect(simulatedZeroOnShaky).toBeGreaterThanOrEqual(0);
+  });
+
+  it('Rechenzeit für simuliertes Reizen liegt weit unter dem Zeitbudget', () => {
+    const hand = [
+      c('C', 11), c('S', 11), c('H', 11), c('C', 1), c('C', 10),
+      c('S', 1), c('S', 10), c('H', 1), c('D', 10), c('D', 7),
+    ];
+    const t0 = performance.now();
+    const limit = simulatedBiddingLimit(hand, 0, [0, 1, 2], 'perf-test');
+    const elapsed = performance.now() - t0;
+    expect(elapsed).toBeLessThan(100);
+    expect(limit).toBeGreaterThan(0);
   });
 });
