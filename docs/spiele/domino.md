@@ -17,16 +17,19 @@
 - Rundenende: Wer zuerst leer ist, bekommt die Augen der anderen (Fünfer: auf 5 gerundet). Passen alle nacheinander (gesperrt), gewinnt die wenigsten Augen; bei Gleichstand punktet niemand.
 - **Fünfer-Domino (All Fives):** Nach jedem Anlegen zählen die offenen Enden zusammen; ist die Summe ein Vielfaches von 5, gibt es sofort so viele Punkte. Ein Pasch am Ende zählt doppelt. Mit optionaler „Spinner“-Regel (der erste Pasch öffnet nach Belegen beider Hauptseiten zwei zusätzliche vertikale Äste).
 - Ziel 50, 100, 150 oder 250 Punkte; wer es erreicht, gewinnt sofort.
-- **Darstellung (Mathe-Modus):** Neben klassischen Augen (`pips`, 0–6) können auf den Steinhälften **Rechenterme (Kl. 5)** (`terms`, z. B. `18 : 3`, `2²`, `15 − 9`) oder **Brüche & Dezimalzahlen (Kl. 6)** (`fractions`, z. B. `12/2`, `1,5 · 4`, `100 %`) angezeigt werden. Angelegt wird an wertgleiche Steinhälften.
+- **Mannschaften zu viert (2 gegen 2):** Die gegenübersitzenden Plätze (1 & 3 gegen 2 & 4) bilden ein Team. Punkte aus Fünfer-Wertungen und am Rundenende zählen für das gemeinsame Team-Konto; beim Rundenende zahlen nur die gegnerischen Plätze ihre Restaugen.
+- **Mexican Train:** Spielart mit zentralem Bahnhof (`[n|n]`, pro Runde absteigend), je einem persönlichen Zug pro Platz sowie dem gemeinsamen „Mexican Train“. Wer nicht anlegen kann, zieht einmal; passt es weiterhin nicht, wird gepasst und der eigene Zug mit einer Münze (`🪙 Offen`) für alle Mitspieler geöffnet, bis man wieder selbst daran anlegt. Wer einen Pasch legt, erhält sofort einen Zusatzzug.
+- **Dominosatz:** Wahlweise **Doppel-6** (28 Steine), **Doppel-9** (55 Steine) oder **Doppel-12** (91 Steine).
+- **Darstellung (Mathe-Modus):** Neben klassischen Augen (`pips`, 0–12) können auf den Steinhälften **Rechenterme (Kl. 5)** (`terms`, z. B. `18 : 3`, `2²`, `15 − 9`) oder **Brüche & Dezimalzahlen (Kl. 6)** (`fractions`, z. B. `12/2`, `1,5 · 4`, `100 %`) angezeigt werden. Angelegt wird an wertgleiche Steinhälften.
 
 ## Umsetzung
 
 - Mischen über einen Zufallsstand im Spielstand (`rng`, in der Sicht genullt), wie bei Mäxle.
 - `lacks`: öffentlich, welche Zahlen ein Platz nicht bedienen konnte; nutzen der schwere Bot und `sampleHidden`.
-- Bot: leicht zufällig, mittel gierig (Fünferpunkte, dann schwere Steine), schwer zusätzlich Pasche früh, eigene Zahlen offen halten, Zahlen legen, die der Nächste nicht hat, beim Fünfer die Antwort des Nächsten über sechs Belegungen schätzen.
-- Kette als umbrechende Reihe, Pasche quer, Spinner-Zweige nach oben und unten.
-- Steuerung: Steine können per Antippen/Klick oder per Drag & Drop direkt auf das Spielfeld bzw. an die offenen Enden gezogen werden.
+- Bot: leicht zufällig, mittel gierig (Fünferpunkte, dann schwere Steine, beim Mexican Train eigenen offenen Zug schließen), schwer zusätzlich Pasche früh, eigene Zahlen offen halten, Zahlen legen, die der Nächste nicht hat, beim Fünfer die Antwort des Nächsten über sechs Belegungen schätzen.
+- Kette als umbrechende Reihe, Pasche quer, Spinner-Zweige nach oben und unten; beim Mexican Train übersichtliche Zugreihen mit Bahnhof-Kopfzeile und Münz-Markierung.
+- Steuerung: Steine können per Antippen/Klick oder per Drag & Drop direkt auf das Spielfeld bzw. an die offenen Enden/Züge gezogen werden.
 
 ## Offen
 
-- Mannschaften zu viert, Mexican Train.
+- *(Keine offenen Punkte — alle geplanten Varianten umgesetzt.)*
