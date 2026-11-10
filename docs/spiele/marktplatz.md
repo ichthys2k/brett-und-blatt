@@ -214,6 +214,8 @@ Wer auf einen Ausrufer kommt, zieht die oberste Karte vom verdeckten Ausrufersta
 
 **Neu beim Bau:** Ersteigerte Betriebe zählen bei der Wertung mit dem gezahlten Preis, nicht mit dem Listenpreis. Sonst lohnte es sich zu sehr, gezielt abzulehnen und billig zu ersteigern (der Bot gewann so 54 Brezeln gegen 94 Listenwert). Ein Pfand gilt als Darlehen über den halben Listenpreis.
 
-**Noch nicht drin:** Narrenhof-Porträts und Sprüche der Höflinge, Fachwerkhäuser als Feldgrafik (Felder zeigen Emojis), eigene Klänge (es laufen vorhandene aus dem Katalog). Der Hofnarr erzählt noch keinen echten Witz, die Meldung nennt ihn nur.
+**Porträts & Sprüche (10.11., #73):** Fünf gemalte Porträts der Nebenfiguren (Ausrufer, Tavernenwirtin, Abt Esel, König Löwe, Hofnarr) im Narrenhof-Ölstil eingebaut samt Zitaten, Hofnarr-Witzen im Kerker und Ausrufer bei den Hofnachrichten.
+
+**Noch nicht drin:** Fachwerkhäuser als Feldgrafik (Felder zeigen Emojis), eigene Klänge (es laufen vorhandene aus dem Katalog).
 
 **Entschieden (1.11.):** Das Spiel heißt **Marktplatz**; Brezelbach bleibt der Name des Ortes. Setting im Königreich des Narrenhofs mit Tierfamilien, die sechs Zünfte, Brezeln als Währung sowie Zunftpartnerschaft, verdeckte Hofnachrichten und die zwölf Ausruferkarten bleiben so. Vor dem Bau läuft eine Probeversion nur mit Bots, die Ergebnisse bekommt Cornelius zu sehen.

@@ -1,0 +1,31 @@
+{
+  "beschreibung": "Issue #107: Kulissen für die wählbaren Räume (Burgsaal, Bibliothek & Schreibstube, Schlossgarten) als 16:9-Hintergründe im Narrenhof-Ölstil.",
+  "stil": "Painterly storybook oil illustration of an empty medieval fantasy scene, wide landscape background for a game screen: rich warm colours, soft atmospheric light, detailed decoration at the edges while the centre and lower middle stay calm, darker and uncluttered so that interface elements can be laid over it. No people, no animals, no characters, no faces, no text, no letters, no numbers, no frame.",
+  "ohne": "people, animals, characters, faces, text, letters, numbers, watermark, border, frame, modern objects, logos, photo",
+  "format": "16:9",
+  "groesse": [
+    960,
+    540
+  ],
+  "qualitaet": 70,
+  "ziel": "apps/web/src/assets/raeume",
+  "praefix": "",
+  "suffix": "",
+  "motive": [
+    {
+      "id": "burgsaal",
+      "titel": "Burgsaal",
+      "prompt": "Painterly storybook oil illustration of a majestic empty medieval castle hall (Burgsaal), wide landscape background for a game interface: rich warm colours, glowing torchlight and chandeliers with candles, stone pillars draped with burgundy and gold heraldic banners, gothic arched stone windows with soft atmospheric daylight, warm stone fireplace at the side. The centre and lower area stay calm, soft, uncluttered and darker so user interface elements can be overlaid."
+    },
+    {
+      "id": "bibliothek",
+      "titel": "Bibliothek & Schreibstube",
+      "prompt": "Painterly storybook oil illustration of a cozy empty medieval monastery library and scriptorium (Schreibstube), wide landscape background for a game interface: tall dark oak bookshelves lined with ancient leather-bound tomes, warm candle lanterns and soft golden sunlight streaming through leaded arched glass windows, scroll racks and wooden reading lecterns at the sides. The centre and lower area stay calm, soft, uncluttered and darker so user interface elements can be overlaid."
+    },
+    {
+      "id": "schlossgarten",
+      "titel": "Schlossgarten",
+      "prompt": "Painterly storybook oil illustration of a serene empty castle garden cloister courtyard (Schlossgarten), wide landscape background for a game interface: stone arcades draped in climbing pink and red wild roses, neat clipped boxwood hedges, lavender flowerbeds, stone garden bench, distant castle towers against a warm sunny afternoon sky with soft clouds. The centre and lower area stay calm, soft, uncluttered and slightly darker so user interface elements can be overlaid."
+    }
+  ]
+}

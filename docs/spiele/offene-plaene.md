@@ -8,11 +8,9 @@ Vor der Arbeit ein von Cornelius auf `status: Ready` gesetztes Issue auswählen 
 
 Spiel: `packages/games/marketplace`, Plan: [`marktplatz.md`](marktplatz.md), Probe: [`marktplatz-probe.md`](marktplatz-probe.md). Verbleibende optionale Abschlussarbeiten sind in [Issue #73](https://github.com/ichthys2k/brett-und-blatt/issues/73); Status und Freigabe ausschließlich dort.
 
-## 2. Grafschaft (W-039, Paket C; Marktstände ist fertig) – wartet auf Cornelius' Ja zum Entwurf
+## 2. Grafschaft (W-039, Paket C; Marktstände ist fertig) – Bot-Probe abgeschlossen
 
-**Stand 1.11.2026:** Marktstände ist gebaut ([Plan](marktstaende.md), [Probe](marktstaende-probe.md)), mit geänderter Wertung und drei Markttagen. Grafschaft ist noch nicht geprobt und wartet auf Cornelius' Ja.
-
-Plan: [`umsetzungsplan-pakete-a-b-c.md`](umsetzungsplan-pakete-a-b-c.md), Abschnitte „Reihenbauer wird Marktstände“ und „Landschaftsleger wird Grafschaft“. Eigene Fassungen statt 6 nimmt! und Carcassonne. Offen ist nur die erste Frage im Plan („Sind die eigenen Fassungen so in Ordnung?“). Nach dem Ja: erst Probepartien mit Bots im Prüfstand (Marktstände 1 Tag, Grafschaft 2 Tage), dann Bau (3 bzw. 7 Tage).
+**Stand 10.11.2026:** Cornelius hat die Grundzüge am 7.11.2026 freigegeben. Die Bot-Probe ist mit 1000 simulierten Partien je Fall durchgeführt ([Bericht](grafschaft-probe.md)); der Spielplan steht in [`grafschaft.md`](grafschaft.md). Als Nächstes folgt der Bau des Spielmoduls (`packages/games/grafschaft`).
 
 Pakete A und B aus diesem Plan sind fertig und veröffentlicht (Nicht ärgern! zu sechst, Elf zuerst!, Sternhalma, Rübenacker; Kategorien-Sprint, Wer bin ich?, Verboten!).
 

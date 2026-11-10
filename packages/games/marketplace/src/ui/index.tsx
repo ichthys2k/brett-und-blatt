@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { CARD_TEXT, FAMILIES, FAMILY_COLORS, FAMILY_ICONS, FIELD_COUNT, FIELD_ICONS, FIELD_NAMES, GUILDS, NEWS_TEXT, SEASONS, guildOf, priceOf, type CardId, type NewsId } from '../board';
 import { buildCost, isLegal, isTradable, redeemCost, rentOf, worth, type MarketMove, type MarketView } from '../rules';
+import { FIGURES, figureForField, jesterJoke } from './figures';
 import './styles.css';
 
 type Props = BoardProps<MarketView, MarketMove>;
@@ -50,7 +51,8 @@ function describeEvent(event: GameEvent, name: (seat: SeatId) => string): string
     case 'goMoney':
       return `${name(seat)} bekommt ${event.amount} 🥨 Marktgeld.`;
     case 'jailed':
-      return `${name(seat)} muss in den Kerker. Der Hofnarr erzählt einen Witz.`;
+      return `${name(seat)} muss in den Kerker. Der Hofnarr scherzt: „${jesterJoke(event.seat as number)}“`;
+
     case 'freed':
       return `${name(seat)} verlässt den Kerker.`;
     case 'card':
@@ -85,12 +87,23 @@ function fieldInfo(view: MarketView, field: number, name: (seat: SeatId) => stri
 function FieldSheet({ view, field, name, onClose }: { view: MarketView; field: number; name: (seat: SeatId) => string; onClose(): void }) {
   const { g, ownerName, rent } = fieldInfo(view, field, name);
   const guild = g !== null && g >= 0 ? GUILDS[g]! : null;
+  const figure = figureForField(field);
   return (
     <div className="mkt-sheet" onClick={onClose}>
       <div className="mkt-sheet-card" onClick={(e) => e.stopPropagation()}>
         <h3>
           {FIELD_ICONS[field]} {FIELD_NAMES[field]}
         </h3>
+        {figure && (
+          <div className="mkt-figure-card">
+            {figure.image && <img src={figure.image} alt={figure.name} className="mkt-figure-img" width={68} height={68} />}
+            <div className="mkt-figure-body">
+              <div className="mkt-figure-name">{figure.name}</div>
+              <div className="mkt-figure-title">{figure.title}</div>
+              <div className="mkt-figure-quote">„{field === 9 ? jesterJoke(view.round) : figure.quote}“</div>
+            </div>
+          </div>
+        )}
         {g !== null ? (
           <>
             <div>{guild ? `Zunft der ${guild.name}` : 'Gemeinschaftsbetrieb'} · Preis {priceOf(field)} 🥨</div>
@@ -279,15 +292,28 @@ function Actions({ view, seat, legalMoves, hint, onMove, name, openManage, openT
     </>
   );
   switch (view.phase) {
-    case 'roll':
+    case 'roll': {
+      const inJail = view.players[seat]!.jailTurns >= 0;
       return (
-        <div className="mkt-actions">
-          {btn({ type: 'roll' }, view.players[seat]!.jailTurns >= 0 ? '🎲 Auf Pasch würfeln' : '🎲 Würfeln', true)}
-          {has('payBail') && btn({ type: 'payBail' }, 'Kaution zahlen (5)')}
-          {has('usePardon') && btn({ type: 'usePardon' }, 'Freibrief nutzen')}
-          {tools}
+        <div className={inJail ? 'mkt-panel' : 'mkt-actions'}>
+          {inJail && (
+            <div className="mkt-figure-banner">
+              {FIGURES.jester.image && <img src={FIGURES.jester.image} alt="Der Hofnarr" className="mkt-figure-badge" width={40} height={40} />}
+              <div>
+                <div className="mkt-panel-title">Im Kerker – Der Hofnarr scherzt:</div>
+                <div className="mkt-figure-sub">„{jesterJoke(view.round)}“</div>
+              </div>
+            </div>
+          )}
+          <div className="mkt-actions">
+            {btn({ type: 'roll' }, inJail ? '🎲 Auf Pasch würfeln' : '🎲 Würfeln', true)}
+            {has('payBail') && btn({ type: 'payBail' }, 'Kaution zahlen (5)')}
+            {has('usePardon') && btn({ type: 'usePardon' }, 'Freibrief nutzen')}
+            {tools}
+          </div>
         </div>
       );
+    }
     case 'end':
       return (
         <div className="mkt-actions">
@@ -336,7 +362,13 @@ function Actions({ view, seat, legalMoves, hint, onMove, name, openManage, openT
     case 'errand':
       return (
         <div className="mkt-panel">
-          <div className="mkt-panel-title">Botengang</div>
+          <div className="mkt-figure-banner">
+            {FIGURES.herald.image && <img src={FIGURES.herald.image} alt="Der Ausrufer" className="mkt-figure-badge" width={40} height={40} />}
+            <div>
+              <div className="mkt-panel-title">Botengang des Ausrufers</div>
+              <div className="mkt-figure-sub">„Wohin soll die Reise gehen?“</div>
+            </div>
+          </div>
           <div className="mkt-actions">
             {btn({ type: 'errand', choice: 'cash' }, '+2 🥨', true)}
             {([1, 2, 3] as const).map((n) => btn({ type: 'errand', choice: n }, `${n} weiter`))}
@@ -346,7 +378,13 @@ function Actions({ view, seat, legalMoves, hint, onMove, name, openManage, openT
     case 'audience':
       return (
         <div className="mkt-panel">
-          <div className="mkt-panel-title">Audienz beim König</div>
+          <div className="mkt-figure-banner">
+            {FIGURES.king.image && <img src={FIGURES.king.image} alt="König Löwe" className="mkt-figure-badge" width={40} height={40} />}
+            <div>
+              <div className="mkt-panel-title">Audienz bei König Löwe</div>
+              <div className="mkt-figure-sub">„Seid gegrüßt am Hofe! Wählt Eure königliche Gnade.“</div>
+            </div>
+          </div>
           <div className="mkt-actions">
             {btn({ type: 'audience', build: null }, '4 🥨 Hofsold', true)}
             {legalMoves.flatMap((m) => (m.type === 'audience' && m.build !== null ? [btn(m, `Bauen: ${FIELD_NAMES[m.build]}`)] : []))}
@@ -459,8 +497,15 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint }: Pr
           </div>
           {view.news && (
             <div className="mkt-news">
-              <strong>📣 {NEWS_TEXT[view.news].title}</strong>
-              {NEWS_TEXT[view.news].text}
+              {FIGURES.herald.image && (
+                <img src={FIGURES.herald.image} alt="Der Ausrufer" className="mkt-news-img" width={36} height={36} />
+              )}
+              <div className="mkt-news-body">
+                <div>
+                  <strong>📣 {NEWS_TEXT[view.news].title}</strong>
+                </div>
+                <div>{NEWS_TEXT[view.news].text}</div>
+              </div>
             </div>
           )}
           {view.dice && (
