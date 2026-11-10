@@ -22,12 +22,24 @@ const options: OptionSpec[] = [
   {
     id: 'pieces',
     label: 'Steine je Spieler',
-    description: 'Mit 6 Steinen ist eine Partie etwa halb so lang – gut für Kinder und zum Kennenlernen.',
+    description: 'Mit 6 Steinen für eine kurze Partie; 15 oder 19 Steine für tiefere Duelle (bei 2–3 Spielern).',
     choices: [
       { value: '10', label: '10 Steine (ganze Zacke)' },
       { value: '6', label: '6 Steine (kurze Partie)' },
+      { value: '15', label: '15 Steine (2–3 Spieler, tiefere Partie)' },
+      { value: '19', label: '19 Steine (2–3 Spieler, Halma-Klassiker)' },
     ],
     default: '10',
+  },
+  {
+    id: 'rotateBoard',
+    label: 'Brett drehen im Hot-Seat',
+    description: 'Dreht das Brett nach jedem Zug zum aktiven Spieler. Ausschalten für eine feste Ausrichtung am Tisch.',
+    choices: [
+      { value: 'true', label: 'Automatisch drehen' },
+      { value: 'false', label: 'Fest ausrichten (nicht drehen)' },
+    ],
+    default: 'true',
   },
 ];
 
