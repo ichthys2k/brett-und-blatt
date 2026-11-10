@@ -23,6 +23,9 @@ import {
   BACKUP_TTL_MS,
   CLASS_TTL_MS,
   addClassPack,
+  aggregateDue,
+  cleanDueReport,
+  mayReportDue,
   clearProgress,
   markProgress,
   mayStoreProgress,
@@ -1189,7 +1192,7 @@ export class ClassRoom extends DurableObject<Env> {
         break;
       case 'leave':
         outcome = leaveClass(state, token);
-        if ('ok' in outcome && typeof token === 'string') await this.ctx.storage.delete(`progress:${token}`);
+        if ('ok' in outcome && typeof token === 'string') await this.ctx.storage.delete([`progress:${token}`, `due:${token}`]);
         break;
       case 'accept':
       case 'reject':
@@ -1198,16 +1201,17 @@ export class ClassRoom extends DurableObject<Env> {
       case 'remove': {
         const gone = Object.entries(state.members).find(([, m]) => m.id === body.id)?.[0];
         outcome = removeMember(state, token, body.id);
-        if ('ok' in outcome && gone) await this.ctx.storage.delete(`progress:${gone}`);
+        if ('ok' in outcome && gone) await this.ctx.storage.delete([`progress:${gone}`, `due:${gone}`]);
         break;
       }
       case 'lead':
         outcome = setLead(state, token, body.id, body.lead === true);
         break;
       case 'configure':
-        outcome = configureClass(state, token, { name: body.name, open: body.open, approval: body.approval, sections: body.sections, learning: body.learning }, now);
+        outcome = configureClass(state, token, { name: body.name, open: body.open, approval: body.approval, sections: body.sections, learning: body.learning, dueCards: body.dueCards }, now);
         // Ausgeschalteter Lernstand: alles Abgelegte wird gelöscht.
         if ('ok' in outcome && body.learning === false) await this.ctx.storage.delete([...(await this.ctx.storage.list({ prefix: 'progress:' })).keys()]);
+        if ('ok' in outcome && body.dueCards === false) await this.ctx.storage.delete([...(await this.ctx.storage.list({ prefix: 'due:' })).keys()]);
         break;
       case 'addPack':
         outcome = addClassPack(state, token, { name: body.name, key: body.key }, now);
@@ -1232,6 +1236,26 @@ export class ClassRoom extends DurableObject<Env> {
           markProgress(state, token, now);
         }
         break;
+      }
+      case 'due': {
+        // Ein Gerät meldet anonym, welche Karten bei ihm fällig sind (leere Liste: widerrufen). Der Server speichert die Meldung je Gerät,
+        // damit eine neue Meldung die alte ersetzt, gibt aber nie heraus, von wem sie kommt.
+        if (typeof token !== 'string') return reply(400, { error: 'token' });
+        const cards = body.cards === undefined ? [] : cleanDueReport(body.cards);
+        if (!cards) return reply(400, { error: 'cards' });
+        if (cards.length === 0) {
+          await this.ctx.storage.delete(`due:${token}`);
+          break;
+        }
+        outcome = mayReportDue(state, token);
+        if ('ok' in outcome) await this.ctx.storage.put(`due:${token}`, { at: now, cards });
+        break;
+      }
+      case 'dueCards': {
+        if (!mayDissolve(state, token)) return reply(403, { error: 'Das darf nur die Leitung.' });
+        const stored = await this.ctx.storage.list<{ at: number; cards: string[] }>({ prefix: 'due:' });
+        const live = [...stored].filter(([key]) => state.members[key.slice('due:'.length)]).map(([, value]) => value);
+        return reply(200, state.dueCards ? { ...aggregateDue(live, now), on: true } : { on: false, reporters: 0, cards: [] });
       }
       case 'getProgress': {
         // Nur die Leitung bekommt die verschlüsselten Stände; sie kann sie nur mit ihrem privaten Schlüssel öffnen.

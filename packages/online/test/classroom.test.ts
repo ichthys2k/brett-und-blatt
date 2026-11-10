@@ -219,3 +219,36 @@ describe('Pakete und Lernstand (#224)', () => {
     clearProgress(state, 'kid-token-0001');
   });
 });
+
+import { DUE_MAX_CARDS, DUE_MIN_REPORTERS, DUE_REPORT_DAYS, aggregateDue, cleanDueReport, mayReportDue } from '../src';
+
+describe('Fällige Karten der Klasse (#224)', () => {
+  it('prüft die Meldung streng: nur Kennungen, keine Namen, keine Leerzeichen', () => {
+    expect(cleanDueReport(['abc', 'x_y-1', 'abc'])).toEqual(['abc', 'x_y-1']);
+    expect(cleanDueReport([])).toEqual([]);
+    expect(cleanDueReport('abc')).toBeNull();
+    expect(cleanDueReport(['mit Leerzeichen'])).toBeNull();
+    expect(cleanDueReport([42])).toBeNull();
+    expect(cleanDueReport(['a'.repeat(41)])).toBeNull();
+    expect(cleanDueReport(Array.from({ length: DUE_MAX_CARDS + 1 }, (_, i) => `k${i}`))).toBeNull();
+  });
+  it('gemeldet wird nur bei eingeschaltetem Sammeln und von Mitgliedern', () => {
+    const state = createClass('🍎🍌🍇🍊🍓🥝', 'K', { token: 'lead-token-1', name: 'L', avatar: '🦊' }, 1) as ClassState;
+    joinClass(state, { token: 'kid-token-0001', name: 'Kind', avatar: '🐼' }, 2);
+    expect('error' in mayReportDue(state, 'kid-token-0001')).toBe(true);
+    expect(configureClass(state, 'lead-token-1', { dueCards: true }, 3)).toEqual({ ok: true });
+    expect(classView(state, 'kid-token-0001').dueCards).toBe(true);
+    expect(mayReportDue(state, 'kid-token-0001')).toEqual({ ok: true });
+    expect('error' in mayReportDue(state, 'fremd-token-99')).toBe(true);
+  });
+  it('wertet erst ab drei Meldungen aus und zählt nur frische', () => {
+    const now = 100 * 86_400_000;
+    const report = (cards: string[], ageDays = 0) => ({ at: now - ageDays * 86_400_000, cards });
+    expect(aggregateDue([report(['a']), report(['a', 'b'])], now)).toEqual({ reporters: 2, cards: [] });
+    const three = aggregateDue([report(['a', 'b']), report(['a']), report(['a', 'c'], 1)], now);
+    expect(three.reporters).toBe(DUE_MIN_REPORTERS);
+    expect(three.cards).toEqual([{ card: 'a', n: 3 }, { card: 'b', n: 1 }, { card: 'c', n: 1 }]);
+    // alte Meldungen fallen weg
+    expect(aggregateDue([report(['a']), report(['a']), report(['a'], DUE_REPORT_DAYS)], now).cards).toEqual([]);
+  });
+});

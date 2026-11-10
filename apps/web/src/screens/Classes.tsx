@@ -2,7 +2,7 @@ import { parseClassCode, CLASS_CODE_LENGTH, type CardSection, type ClassView } f
 import { PlayerCrest } from '@brett-und-blatt/ui';
 import { parseCrest } from '@brett-und-blatt/engine';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ClassPacks, LearningLead, LearningMember, LearningNotice } from './ClassLearning';
+import { ClassPacks, DueLead, DueMember, LearningLead, LearningMember, LearningNotice } from './ClassLearning';
 import { Button } from '../components/controls';
 import { EmojiKeypad, QrCode } from '../components/OnlineParts';
 import { TavernPage } from '../components/TavernPage';
@@ -336,6 +336,8 @@ export function ClassPage({ code }: { code: string }) {
 
           <LearningMember code={code} view={view} />
 
+          <DueMember code={code} view={view} />
+
           {view.lead && (
             <section className="space-y-3 rounded-xl border border-line bg-surface p-3" aria-labelledby="class-lead">
               <h2 id="class-lead" className="text-xl">
@@ -362,6 +364,7 @@ export function ClassPage({ code }: { code: string }) {
                 ))}
               </fieldset>
               <LearningLead code={code} view={view} apply={apply} />
+              <DueLead code={code} view={view} apply={apply} />
               <form
                 className="flex gap-2"
                 onSubmit={(event) => {

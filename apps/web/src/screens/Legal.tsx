@@ -162,7 +162,8 @@ export function Datenschutz() {
         der Pakete dieser Klasse ab: die Kennungen der Karten, wie oft sie wiederholt und vergessen wurden, die Art des Lernstands, Zahl und Zeitpunkt der Antworten der letzten Tage und die Lerntage in Folge, nichts anderes aus deinem Pass (keine Partien, keine Notizen).
         Der Stand wird auf deinem Gerät mit einem Schlüssel verschlüsselt, den nur die Leitung öffnen kann; der Spieleserver speichert nur diese unlesbaren Daten und den Zeitpunkt der Ablage. Du kannst die Zustimmung jederzeit widerrufen oder die Klasse verlassen; dann wird der
         abgelegte Stand gelöscht. Schaltet die Leitung den Lernstand aus oder löst sie die Klasse auf, wird er ebenfalls gelöscht; eine Klasse ohne Aktivität wird nach einem Jahr gelöscht. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), bei Kindern unter 16 Jahren
-        die der Eltern (Art. 8 DSGVO).
+        die der Eltern (Art. 8 DSGVO). Schaltet die Leitung „Fällige Karten der Klasse“ ein, kann dein Gerät nach deiner Zustimmung anonym melden, welche Karten der Klassenpakete bei dir fällig sind (nur die Kennungen der Karten, ohne Namen und Zahlen). Der Spieleserver speichert die
+        Meldung je Gerät, damit eine neue die alte ersetzt, zeigt der Leitung aber nur eine Liste der in der Klasse am häufigsten fälligen Karten, und erst ab drei Meldungen. Du kannst die Zustimmung jederzeit widerrufen; dann wird deine Meldung gelöscht.
       </p>
       <p>
         <strong>PIN oder Passwort (Schloss):</strong> Wenn du deinen Ausweis mit PIN oder Passwort schützt, rechnet dein Browser aus Spielercode und

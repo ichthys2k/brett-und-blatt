@@ -44,9 +44,9 @@ const PACKS = 'packs';
 const MEDIA = 'media';
 const dbName = (): string => `brett-und-blatt-anki-${passBook.activeId() ?? 'standard'}`;
 
-function open(): Promise<IDBDatabase> {
+function openNamed(name: string): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbName(), 1);
+    const request = indexedDB.open(name, 1);
     request.onupgradeneeded = () => {
       const db = request.result;
       db.createObjectStore(PACKS, { keyPath: 'id' });
@@ -55,6 +55,54 @@ function open(): Promise<IDBDatabase> {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error('IndexedDB nicht verfügbar'));
   });
+}
+
+const STANDARD = 'brett-und-blatt-anki-standard';
+const adopted = new Set<string>();
+
+/**
+ * Wer Pakete importiert, bevor sein Gerät einen Pass hat, speichert unter „standard“. Bekommt das Gerät später seinen ersten Pass (das
+ * bisherige Profil wird dazu der erste Pass), zieht der Bestand in dessen Datenbank um; sonst wären die Pakete plötzlich unsichtbar.
+ */
+async function adoptStandard(target: string): Promise<void> {
+  if (target === STANDARD || adopted.has(target) || typeof indexedDB.databases !== 'function') return;
+  adopted.add(target);
+  try {
+    if (!(await indexedDB.databases()).some((d) => d.name === STANDARD)) return;
+    const from = await openNamed(STANDARD);
+    try {
+      const packs = await result(from.transaction(PACKS).objectStore(PACKS).getAll() as IDBRequest<StoredPack[]>);
+      const keys = await result(from.transaction(MEDIA).objectStore(MEDIA).getAllKeys());
+      const media = new Map<IDBValidKey, unknown>();
+      for (const key of keys) media.set(key, await result(from.transaction(MEDIA).objectStore(MEDIA).get(key)));
+      if (packs.length > 0 || media.size > 0) {
+        const to = await openNamed(target);
+        try {
+          const tx = to.transaction([PACKS, MEDIA], 'readwrite');
+          for (const pack of packs) tx.objectStore(PACKS).put(pack);
+          for (const [key, value] of media) tx.objectStore(MEDIA).put(value, key);
+          await done(tx);
+        } finally {
+          to.close();
+        }
+      }
+    } finally {
+      from.close();
+    }
+    await new Promise<void>((resolve) => {
+      const request = indexedDB.deleteDatabase(STANDARD);
+      request.onsuccess = request.onerror = request.onblocked = () => resolve();
+    });
+  } catch {
+    // Der Umzug ist eine Zugabe: scheitert er, bleiben die Pakete unter „standard“ liegen (und gehen nicht verloren).
+    adopted.delete(target);
+  }
+}
+
+async function open(): Promise<IDBDatabase> {
+  const name = dbName();
+  await adoptStandard(name);
+  return openNamed(name);
 }
 const done = (tx: IDBTransaction): Promise<void> =>
   new Promise((resolve, reject) => {

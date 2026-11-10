@@ -84,6 +84,8 @@ export interface ClassState {
   packs?: ClassPack[];
   /** Darf die Leitung den Lernstand der Mitglieder sehen? Nur wenn die Leitung es einschaltet; gesendet wird erst nach der Einwilligung des Mitglieds. */
   learning?: boolean;
+  /** Dürfen Geräte anonym melden, welche Karten der Klassenpakete bei ihnen fällig sind (für das Klassenspiel)? Nur wenn die Leitung es einschaltet und das Mitglied zustimmt. */
+  dueCards?: boolean;
   createdAt: number;
   lastActive: number;
   /** Mitglieder nach Geräte-Kennung. */
@@ -106,6 +108,8 @@ export interface ClassView {
   packs: ClassPack[];
   /** Sieht die Leitung den Lernstand? */
   learning: boolean;
+  /** Melden Geräte anonym fällige Karten? */
+  dueCards: boolean;
   /** Öffentliche Schlüssel der Leitungen, nur für Mitglieder und nur bei eingeschaltetem Lernstand. */
   leadKeys: { id: string; key: string }[];
   members: (Pick<ClassMember, 'id' | 'name' | 'avatar' | 'crest' | 'lead' | 'card'> & { progressAt?: number })[];
@@ -240,7 +244,7 @@ export function setLead(state: ClassState, token: unknown, id: unknown, lead: bo
   return ok;
 }
 
-export function configureClass(state: ClassState, token: unknown, change: { name?: unknown; open?: unknown; approval?: unknown; sections?: unknown; learning?: unknown }, now: number): Outcome {
+export function configureClass(state: ClassState, token: unknown, change: { name?: unknown; open?: unknown; approval?: unknown; sections?: unknown; learning?: unknown; dueCards?: unknown }, now: number): Outcome {
   const denied = mustLead(state, token);
   if (denied) return denied;
   if (change.name !== undefined) {
@@ -255,6 +259,7 @@ export function configureClass(state: ClassState, token: unknown, change: { name
     // Wird der Lernstand ausgeschaltet, fällt alles Abgelegte weg (der Server löscht die Daten, siehe `ClassRoom`).
     if (!change.learning) for (const member of Object.values(state.members)) delete member.progressAt;
   }
+  if (typeof change.dueCards === 'boolean') state.dueCards = change.dueCards;
   const sections = parseSections(change.sections);
   if (sections && Object.keys(sections).length > 0) {
     state.sections = { ...sectionsOf(state), ...sections };
@@ -294,6 +299,7 @@ export function classView(state: ClassState, token: unknown): ClassView {
     sections: sectionsOf(state),
     packs: member ? (state.packs ?? []).map(({ id, name, key, at }) => ({ id, name, key, at })) : [],
     learning: state.learning === true,
+    dueCards: state.dueCards === true,
     leadKeys: member && state.learning ? Object.values(state.members).flatMap((m) => (m.lead && m.key ? [{ id: m.id, key: m.key }] : [])) : [],
     me: member?.id ?? null,
     lead,
@@ -363,4 +369,40 @@ export function markProgress(state: ClassState, token: string, now: number): voi
 export function clearProgress(state: ClassState, token: string): void {
   const member = state.members[token];
   if (member) delete member.progressAt;
+}
+
+// ---------------------------------------------------------------- Fällige Karten der Klasse (#224)
+
+export const DUE_MAX_CARDS = 300;
+export const DUE_REPORT_DAYS = 14;
+/** Erst ab so vielen Meldungen gibt es eine Auswertung, damit niemand aus der Liste erraten kann, wer was fällig hat. */
+export const DUE_MIN_REPORTERS = 3;
+export const DUE_TOP = 100;
+const CARD_KEY = /^[\x21-\x7e]{1,40}$/;
+
+/** Prüft die Meldung eines Geräts: nur Kennungen von Karten (die guid der Notiz), keine Namen. */
+export function cleanDueReport(cards: unknown): string[] | null {
+  if (!Array.isArray(cards) || cards.length > DUE_MAX_CARDS) return null;
+  const out: string[] = [];
+  for (const card of cards) {
+    if (typeof card !== 'string' || !CARD_KEY.test(card)) return null;
+    if (!out.includes(card)) out.push(card);
+  }
+  return out;
+}
+
+export function mayReportDue(state: ClassState, token: unknown): Outcome {
+  if (!validToken(token) || !state.members[token]) return fail('Du bist nicht in dieser Klasse.');
+  if (!state.dueCards) return fail('Die Leitung sammelt gerade keine fälligen Karten.');
+  return ok;
+}
+
+/** Wie viele Geräte haben die Karte als fällig gemeldet? Nur aktuelle Meldungen zählen; unter `DUE_MIN_REPORTERS` Meldungen gibt es nichts zu sehen. */
+export function aggregateDue(reports: readonly { at: number; cards: readonly string[] }[], now: number): { reporters: number; cards: { card: string; n: number }[] } {
+  const fresh = reports.filter((r) => now - r.at < DUE_REPORT_DAYS * 24 * 60 * 60 * 1000);
+  if (fresh.length < DUE_MIN_REPORTERS) return { reporters: fresh.length, cards: [] };
+  const counts = new Map<string, number>();
+  for (const report of fresh) for (const card of report.cards) counts.set(card, (counts.get(card) ?? 0) + 1);
+  const cards = [...counts].map(([card, n]) => ({ card, n })).sort((a, b) => b.n - a.n || a.card.localeCompare(b.card)).slice(0, DUE_TOP);
+  return { reporters: fresh.length, cards };
 }

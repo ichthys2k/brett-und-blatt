@@ -1,4 +1,4 @@
-import { reconcileCards, stripHtmlKeepMedia, streakOf, dayNumber, isDue, type ApkgCard } from '@brett-und-blatt/engine';
+import { encodePairsOption, packsOf, reconcileCards, rowIdOf, stripHtmlKeepMedia, streakOf, dayNumber, isDue, type ApkgCard } from '@brett-und-blatt/engine';
 import type { ClassPack, ClassView } from '@brett-und-blatt/online';
 import { importApkg } from './ankiPackage';
 import { exportApkg } from './ankiPackage';
@@ -204,6 +204,72 @@ export async function frontTexts(code: string, classPackId: string): Promise<Map
   return new Map((pack?.collection.notes ?? []).map((n) => [n.guid, stripHtmlKeepMedia(n.fields[0] ?? '').replace(/\s+/g, ' ').trim().slice(0, 80)]));
 }
 
+// ---------------------------------------------------------------- Fällige Karten der Klasse
+
+export const DUE_CONSENT_KEY = 'brett-und-blatt:klassenfaellig';
+export const hasDueConsent = (code: string): boolean => (read(DUE_CONSENT_KEY) as Record<string, boolean> | null)?.[code] === true;
+export function setDueConsent(code: string, on: boolean): void {
+  const all = (read(DUE_CONSENT_KEY) as Record<string, boolean> | null) ?? {};
+  if (on) all[code] = true;
+  else delete all[code];
+  write(DUE_CONSENT_KEY, all);
+}
+
+/** Die Kennungen (guid der Notiz) der Karten der Klassenpakete, die bei diesem Gerät jetzt fällig sind. Keine Namen, keine Zahlen. */
+export async function buildDue(code: string, packs: readonly ClassPack[], now = Date.now()): Promise<string[]> {
+  const links = classPackLinks(code);
+  const out = new Set<string>();
+  for (const classPack of packs) {
+    const localId = links[classPack.id];
+    const pack = localId ? await loadPackLight(localId) : null;
+    if (!pack) continue;
+    const crt = pack.crt ?? localMidnight(now);
+    const guids = new Map(pack.collection.notes.map((n) => [n.id, n.guid]));
+    for (const card of reconcileCards(pack.collection, pack.cards)) {
+      const guid = guids.get(card.nid);
+      if (guid && card.type > 0 && isDue(card, crt, now) && /^[\x21-\x7e]{1,40}$/.test(guid)) out.add(guid);
+    }
+  }
+  return [...out].slice(0, 300);
+}
+
+/** Meldet anonym die fälligen Karten (nur mit Einwilligung und eingeschaltetem Sammeln). */
+export async function sendDue(code: string, view: ClassView): Promise<boolean> {
+  if (!view.me || !view.dueCards || !hasDueConsent(code) || view.packs.length === 0) return false;
+  const reply = await classAct(code, 'due', { cards: await buildDue(code, view.packs) });
+  return reply.ok;
+}
+
+export async function withdrawDue(code: string): Promise<void> {
+  setDueConsent(code, false);
+  await classAct(code, 'due', { cards: [] });
+}
+
+export interface DueAggregate {
+  on: boolean;
+  reporters: number;
+  cards: { card: string; n: number }[];
+}
+export const loadDueAggregate = (code: string): Promise<DueAggregate | null> => classData<DueAggregate>(code, 'dueCards');
+
+/**
+ * Der Link zu einem Klassenspiel „Paare finden“: die Paare des Klassenpakets, die fälligen Karten zuerst (höchstens 18). Wer den Link öffnet,
+ * spielt allein am eigenen Gerät; das Spiel kennt keine Namen. Liefert null, wenn das Paket auf diesem Gerät fehlt oder zu wenige Paare hat.
+ */
+export async function classGameLink(code: string, classPack: ClassPack, due: readonly { card: string; n: number }[]): Promise<{ link: string; pairs: number; preferred: number } | null> {
+  const localId = classPackLinks(code)[classPack.id];
+  const pack = localId ? await loadPackLight(localId) : null;
+  if (!pack) return null;
+  const rows = packsOf(pack.collection).flatMap((p) => p.rows);
+  if (rows.length < 6) return null;
+  const ids = new Map(pack.collection.notes.map((n) => [rowIdOf(n.id), n.guid]));
+  const wanted = new Set(due.map((d) => d.card));
+  const prefer = new Set(rows.filter((row) => wanted.has(ids.get(row.id) ?? '')).map((row) => row.id));
+  const value = encodePairsOption({ name: classPack.name, rows }, (n) => Math.floor(Math.random() * n), prefer);
+  const link = `${window.location.origin}${window.location.pathname}#/neu/pairs?pack=${encodeURIComponent(value)}&autostart=1`;
+  return { link, pairs: Math.min(rows.length, 18), preferred: Math.min(prefer.size, 18) };
+}
+
 // ---------------------------------------------------------------- Abgleich im Hintergrund
 
 let timer: number | undefined;
@@ -211,9 +277,11 @@ let soon: number | undefined;
 
 async function syncAll(): Promise<void> {
   for (const known of loadClasses()) {
-    if (!hasLearningConsent(known.code)) continue;
+    if (!hasLearningConsent(known.code) && !hasDueConsent(known.code)) continue;
     const reply = await classAct(known.code, 'view');
-    if (reply.ok) await sendProgress(known.code, reply.view).catch(() => false);
+    if (!reply.ok) continue;
+    if (hasLearningConsent(known.code)) await sendProgress(known.code, reply.view).catch(() => false);
+    if (hasDueConsent(known.code)) await sendDue(known.code, reply.view).catch(() => false);
   }
 }
 
