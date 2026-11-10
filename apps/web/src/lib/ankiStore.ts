@@ -156,3 +156,39 @@ export async function updatePackCollection(id: string, collection: AnkiCollectio
     db.close();
   }
 }
+
+// ---------------------------------------------------------------- Medien einer Sammlung (eigene Notizen `meine` oder ein Paket)
+
+/** Alle Medien einer Sammlung (Name → Inhalt). */
+export async function loadMedia(id: string): Promise<Map<string, Uint8Array>> {
+  const db = await open();
+  try {
+    const store = db.transaction(MEDIA).objectStore(MEDIA);
+    const keys = (await result(store.getAllKeys())).filter((k): k is string => typeof k === 'string' && k.startsWith(`${id}\u0000`));
+    const media = new Map<string, Uint8Array>();
+    for (const key of keys) {
+      const value = await result(store.get(key) as IDBRequest<Uint8Array | ArrayBuffer>);
+      media.set(key.slice(id.length + 1), value instanceof Uint8Array ? value : new Uint8Array(value));
+    }
+    return media;
+  } finally {
+    db.close();
+  }
+}
+
+/** Legt eine Datei zu einer Sammlung; bei einem Paket zählt `mediaBytes` mit. */
+export async function putMedia(id: string, name: string, bytes: Uint8Array): Promise<void> {
+  const db = await open();
+  try {
+    const tx = db.transaction([PACKS, MEDIA], 'readwrite');
+    tx.objectStore(MEDIA).put(bytes, mediaKey(id, name));
+    const request = tx.objectStore(PACKS).get(id) as IDBRequest<StoredPack | undefined>;
+    request.onsuccess = () => {
+      const pack = request.result;
+      if (pack) tx.objectStore(PACKS).put({ ...pack, mediaBytes: pack.mediaBytes + bytes.length });
+    };
+    await done(tx);
+  } finally {
+    db.close();
+  }
+}

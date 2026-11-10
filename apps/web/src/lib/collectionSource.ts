@@ -1,6 +1,7 @@
 import { emptyCollection, type AnkiCollection } from '@brett-und-blatt/engine';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { loadPack, updatePackCollection } from './ankiStore';
+import { checkMediaFile, mediaFileName } from '@brett-und-blatt/engine';
+import { loadMedia, loadPack, putMedia, updatePackCollection } from './ankiStore';
 import { loadCollection, saveCollection } from './library';
 
 /*
@@ -18,6 +19,8 @@ export interface Source {
   media: Map<string, Uint8Array>;
   /** Neuer Stand: sofort anzeigen und speichern. */
   update(next: AnkiCollection): void;
+  /** Fügt ein Bild oder eine Tondatei hinzu; liefert den Dateinamen im Feld oder die Meldung, warum es nicht ging. */
+  addMedia(file: File): Promise<{ name: string } | { error: string }>;
 }
 
 const MIME: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', svg: 'image/svg+xml', bmp: 'image/bmp', mp3: 'audio/mpeg', ogg: 'audio/ogg', oga: 'audio/ogg', opus: 'audio/ogg', wav: 'audio/wav', m4a: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac', mp4: 'video/mp4', webm: 'video/webm', ogv: 'video/ogg', mov: 'video/quicktime' };
@@ -54,7 +57,13 @@ export function useSource(id: string): Source {
     let cancelled = false;
     if (id === OWN) {
       setState({ status: 'ready', name: 'Meine Notizen', collection: loadCollection(), media: new Map() });
-      return;
+      loadMedia(OWN).then(
+        (media) => !cancelled && setState((s) => ({ ...s, media })),
+        () => undefined,
+      );
+      return () => {
+        cancelled = true;
+      };
     }
     loadPack(id).then(
       (loaded) => {
@@ -75,5 +84,28 @@ export function useSource(id: string): Source {
     },
     [id],
   );
-  return useMemo(() => ({ ...state, update }), [state, update]);
+  const mediaRef = useRef(state.media);
+  mediaRef.current = state.media;
+  const addMedia = useCallback(
+    async (file: File): Promise<{ name: string } | { error: string }> => {
+      const media = mediaRef.current;
+      const used = [...media.values()].reduce((sum, b) => sum + b.length, 0);
+      const problem = checkMediaFile(file.name, file.size, used);
+      if (problem) return { error: problem };
+      try {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const { name, existing } = mediaFileName(file.name, bytes, media);
+        if (!existing) {
+          await putMedia(id, name, bytes);
+          // Die Tabelle wird an Ort und Stelle ergänzt, damit der Anzeige-Zwischenspeicher gültig bleibt und die Datei sofort zu sehen ist.
+          media.set(name, bytes);
+        }
+        return { name };
+      } catch {
+        return { error: 'Die Datei konnte nicht gespeichert werden (Speicher voll oder gesperrt?).' };
+      }
+    },
+    [id],
+  );
+  return useMemo(() => ({ ...state, update, addMedia }), [state, update, addMedia]);
 }

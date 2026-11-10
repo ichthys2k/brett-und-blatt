@@ -1,4 +1,4 @@
-import { sanitizeHtml } from '@brett-und-blatt/engine';
+import { kindOf, sanitizeHtml } from '@brett-und-blatt/engine';
 import { useEffect, useRef, useState } from 'react';
 
 /*
@@ -20,12 +20,15 @@ function toStored(el: HTMLElement, reverse: Map<string, string>): string {
   return sanitizeHtml(clone.innerHTML, { media: (name) => name }).replace(/<audio\b[^>]*?\bsrc="([^"]+)"[^>]*><\/audio>/g, (_m, name: string) => `[sound:${name.replace(/&amp;/g, '&')}]`);
 }
 
-export function RichField({ id, label, value, onChange, media, cloze = false, plain = false }: { id: string; label: string; value: string; onChange: (html: string) => void; media: (name: string) => string | null; cloze?: boolean; plain?: boolean }) {
+export function RichField({ id, label, value, onChange, media, onAddMedia, cloze = false, plain = false }: { id: string; label: string; value: string; onChange: (html: string) => void; media: (name: string) => string | null; onAddMedia?: (file: File) => Promise<{ name: string } | { error: string }>; cloze?: boolean; plain?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const reverse = useRef(new Map<string, string>());
   const [html, setHtml] = useState(false);
   const [source, setSource] = useState(value);
   const last = useRef(value);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const range = useRef<Range | null>(null);
 
   const shown = (stored: string): string => {
     reverse.current = new Map();
@@ -57,6 +60,33 @@ export function RichField({ id, label, value, onChange, media, cloze = false, pl
   const run = (command: string) => {
     ref.current?.focus();
     document.execCommand(command);
+    emit();
+  };
+  /** Merkt sich die Schreibmarke, bevor der Dateidialog den Fokus nimmt. */
+  const rememberRange = () => {
+    const sel = window.getSelection();
+    range.current = sel && sel.rangeCount > 0 && ref.current?.contains(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null;
+  };
+  const addFile = async (file: File) => {
+    if (!onAddMedia) return;
+    setMediaError(null);
+    const result = await onAddMedia(file);
+    if ('error' in result) {
+      setMediaError(result.error);
+      return;
+    }
+    const url = media(result.name);
+    const el = ref.current;
+    if (!url || !el) return;
+    reverse.current.set(url, result.name);
+    el.focus();
+    if (range.current) {
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range.current);
+    }
+    const tag = kindOf(result.name) === 'audio' ? `<audio controls src="${url}"></audio>` : `<img src="${url}" alt="">`;
+    document.execCommand('insertHTML', false, tag);
     emit();
   };
   const addCloze = (same: boolean) => {
@@ -107,10 +137,43 @@ export function RichField({ id, label, value, onChange, media, cloze = false, pl
               […]
             </button>
           )}
+          {onAddMedia && (
+            <>
+              <button
+                type="button"
+                className={BTN}
+                aria-label="Bild oder Ton einfügen"
+                onMouseDown={rememberRange}
+                onTouchStart={rememberRange}
+                onClick={() => fileInput.current?.click()}
+                disabled={html}
+              >
+                📎
+              </button>
+              <input
+                ref={fileInput}
+                type="file"
+                className="sr-only"
+                tabIndex={-1}
+                aria-hidden="true"
+                accept="image/jpeg,image/png,image/gif,image/webp,audio/mpeg,audio/ogg,audio/mp4,audio/wav,.mp3,.ogg,.m4a,.wav,.jpg,.jpeg,.png,.gif,.webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = '';
+                  if (file) void addFile(file);
+                }}
+              />
+            </>
+          )}
           <button type="button" className={BTN} aria-pressed={html} onClick={() => setHtml(!html)}>
             {'</>'}
           </button>
         </div>
+      )}
+      {mediaError && (
+        <p role="alert" className="text-sm text-danger">
+          {mediaError}
+        </p>
       )}
       {html ? (
         <textarea

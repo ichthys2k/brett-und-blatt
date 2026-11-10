@@ -304,3 +304,36 @@ export function deckTree(col: AnkiCollection): DeckNode[] {
       return { id: d.id, name: d.name, label: parts[parts.length - 1]!, depth: parts.length - 1, own, total };
     });
 }
+
+// ---------------------------------------------------------------- Mehrere Notizen auf einmal
+
+const touch = (col: AnkiCollection, ids: ReadonlySet<number>, change: (n: AnkiNote) => AnkiNote, now: number): AnkiCollection => ({ ...col, notes: col.notes.map((n) => (ids.has(n.id) ? { ...change(n), mod: sec(now) } : n)) });
+
+/** Verschiebt Notizen in einen anderen Stapel. */
+export function moveNotes(col: AnkiCollection, ids: readonly number[], deckId: number, now = Date.now()): AnkiCollection {
+  if (!col.decks.some((d) => d.id === deckId)) return col;
+  return touch(col, new Set(ids), (n) => (n.did === deckId ? n : { ...n, did: deckId }), now);
+}
+
+/** Fügt Tags hinzu oder nimmt sie weg. */
+export function tagNotes(col: AnkiCollection, ids: readonly number[], add: readonly string[], remove: readonly string[] = [], now = Date.now()): AnkiCollection {
+  const clean = (list: readonly string[]) => list.map((t) => t.trim().replace(/\s+/g, '_')).filter(Boolean);
+  const plus = clean(add);
+  const minus = new Set(clean(remove).map((t) => t.toLowerCase()));
+  return touch(col, new Set(ids), (n) => ({ ...n, tags: [...new Set([...n.tags.filter((t) => !minus.has(t.toLowerCase())), ...plus])] }), now);
+}
+
+/** Standard-Zuordnung beim Wechsel des Notiztyps: Felder gleichen Namens, sonst nach Reihenfolge. */
+export function defaultFieldMap(from: Pick<AnkiNotetype, 'flds'>, to: Pick<AnkiNotetype, 'flds'>): number[] {
+  return to.flds.map((f, i) => {
+    const byName = from.flds.findIndex((o) => o.name === f.name);
+    return byName >= 0 ? byName : i < from.flds.length ? i : -1;
+  });
+}
+
+/** Wechselt den Notiztyp mehrerer Notizen (alle mit demselben alten Typ) mit derselben Zuordnung. */
+export function changeNotetypeMany(col: AnkiCollection, ids: readonly number[], newMid: number, map: readonly number[], now = Date.now()): AnkiCollection {
+  let next = col;
+  for (const id of ids) next = changeNotetype(next, id, newMid, map, now);
+  return next;
+}

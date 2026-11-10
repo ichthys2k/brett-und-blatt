@@ -7,7 +7,7 @@ import { RichField } from '../components/RichField';
 const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
 
 /** Neue oder vorhandene Notiz bearbeiten (#101, L4): Felder, Tags, Stapel, Notiztyp, dazu die Vorschau der Karten. */
-export function NoteEditor({ collection, note, defaultDeckId, media, onSave, onClose }: { collection: AnkiCollection; note: AnkiNote | null; defaultDeckId: number; media: (name: string) => string | null; onSave: (next: AnkiCollection) => void; onClose: () => void }) {
+export function NoteEditor({ collection, note, defaultDeckId, media, onAddMedia, onSave, onClose }: { collection: AnkiCollection; note: AnkiNote | null; defaultDeckId: number; media: (name: string) => string | null; onAddMedia?: (file: File) => Promise<{ name: string } | { error: string }>; onSave: (next: AnkiCollection) => void; onClose: () => void }) {
   const firstType = collection.notetypes[0]!;
   const [mid, setMid] = useState(note?.mid ?? firstType.id);
   const [deckId, setDeckId] = useState(note?.did ?? defaultDeckId);
@@ -80,7 +80,7 @@ export function NoteEditor({ collection, note, defaultDeckId, media, onSave, onC
         </label>
       </div>
       {nt.flds.map((f, i) => (
-        <RichField key={`${mid}-${f.name}`} id={`note-field-${i}`} label={f.name} value={fields[i] ?? ''} media={media} cloze={nt.type === 1 && i === 0} onChange={(html) => setFields((old) => old.map((v, j) => (j === i ? html : v)))} />
+        <RichField key={`${mid}-${f.name}`} id={`note-field-${i}`} label={f.name} value={fields[i] ?? ''} media={media} {...(onAddMedia ? { onAddMedia } : {})} cloze={nt.type === 1 && i === 0} onChange={(html) => setFields((old) => old.map((v, j) => (j === i ? html : v)))} />
       ))}
       <label className="block space-y-1 text-sm">
         <span>Tags (mit Leerzeichen getrennt)</span>

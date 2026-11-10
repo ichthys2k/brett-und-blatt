@@ -1,4 +1,4 @@
-import { addDeck, deckTree, findDuplicates, notesWithoutCards, removeDeck, removeNote, renameDeck, searchNotes, stripHtmlKeepMedia, type AnkiCollection, type AnkiNote } from '@brett-und-blatt/engine';
+import { addDeck, changeNotetypeMany, deckTree, defaultFieldMap, moveNotes, tagNotes, findDuplicates, notesWithoutCards, removeDeck, removeNote, renameDeck, searchNotes, stripHtmlKeepMedia, type AnkiCollection, type AnkiNote } from '@brett-und-blatt/engine';
 import { useMemo, useState } from 'react';
 import { Button } from '../components/controls';
 import { TavernPage } from '../components/TavernPage';
@@ -26,6 +26,7 @@ export function CollectionScreen({ source }: { source: string }) {
   const [deckId, setDeckId] = useState<number | 'all'>('all');
   const [selected, setSelected] = useState<AnkiNote | null>(null);
   const [limit, setLimit] = useState(PAGE);
+  const [picked, setPicked] = useState<ReadonlySet<number>>(new Set());
   const col = src.collection;
   const tree = useMemo(() => deckTree(col), [col]);
 
@@ -56,6 +57,7 @@ export function CollectionScreen({ source }: { source: string }) {
           note={selected}
           defaultDeckId={deckId === 'all' ? (tree.find((d) => d.id !== 1)?.id ?? 1) : deckId}
           media={media}
+          onAddMedia={src.addMedia}
           onSave={src.update}
           onClose={() => (setMode('list'), setSelected(null))}
         />
@@ -97,12 +99,40 @@ export function CollectionScreen({ source }: { source: string }) {
             {notes.length} {notes.length === 1 ? 'Notiz' : 'Notizen'}
             {query ? ' gefunden' : ''}
           </p>
+          {picked.size > 0 && <BulkBar collection={col} ids={[...picked]} onChange={src.update} onClear={() => setPicked(new Set())} />}
+          {notes.length > 0 && (
+            <label className="flex min-h-11 items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="size-5"
+                checked={notes.every((n) => picked.has(n.id))}
+                onChange={(e) => setPicked(e.target.checked ? new Set(notes.map((n) => n.id)) : new Set())}
+              />
+              Alle {notes.length} {notes.length === 1 ? 'gezeigte Notiz' : 'gezeigten Notizen'} auswählen
+            </label>
+          )}
           {notes.length === 0 ? (
             <p className="text-muted">{col.notes.length === 0 ? 'Noch keine Notizen. Lege mit „➕ Notiz“ die erste an.' : 'Nichts gefunden.'}</p>
           ) : (
             <ul className="space-y-1" aria-label="Notizen">
               {notes.slice(0, limit).map((n) => (
-                <li key={n.id}>
+                <li key={n.id} className="flex items-stretch gap-2">
+                  <label className="flex min-h-11 min-w-11 flex-none items-center justify-center">
+                    <input
+                      type="checkbox"
+                      className="size-5"
+                      aria-label={`„${plain(n.fields[0] ?? '', 30) || 'leer'}“ auswählen`}
+                      checked={picked.has(n.id)}
+                      onChange={(e) =>
+                        setPicked((old) => {
+                          const next = new Set(old);
+                          if (e.target.checked) next.add(n.id);
+                          else next.delete(n.id);
+                          return next;
+                        })
+                      }
+                    />
+                  </label>
                   <button type="button" className="flex w-full min-h-11 items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2 text-left hover:bg-surface-2" onClick={() => (setSelected(n), setMode('note'))}>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{plain(n.fields[0] ?? '') || '(leer)'}</span>
@@ -118,6 +148,97 @@ export function CollectionScreen({ source }: { source: string }) {
         </div>
       )}
     </TavernPage>
+  );
+}
+
+/** Aktionen für mehrere ausgewählte Notizen: Stapel, Tags, Notiztyp, Löschen. */
+function BulkBar({ collection, ids, onChange, onClear }: { collection: AnkiCollection; ids: number[]; onChange: (c: AnkiCollection) => void; onClear: () => void }) {
+  const tree = deckTree(collection);
+  const [tag, setTag] = useState('');
+  const chosen = collection.notes.filter((n) => ids.includes(n.id));
+  const types = new Set(chosen.map((n) => n.mid));
+  const from = types.size === 1 ? collection.notetypes.find((t) => t.id === [...types][0]) : undefined;
+  return (
+    <section className="space-y-2 rounded-xl border border-line bg-surface-2 p-3" aria-label="Auswahl bearbeiten">
+      <p role="status" className="text-sm font-medium">
+        {ids.length} {ids.length === 1 ? 'Notiz' : 'Notizen'} ausgewählt
+      </p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="block space-y-1 text-sm">
+          <span>In Stapel verschieben</span>
+          <select
+            className={FIELD}
+            value=""
+            onChange={(e) => {
+              if (e.target.value) onChange(moveNotes(collection, ids, Number(e.target.value)));
+            }}
+          >
+            <option value="">Stapel wählen …</option>
+            {tree.map((d) => (
+              <option key={d.id} value={d.id}>
+                {'– '.repeat(d.depth)}
+                {d.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block space-y-1 text-sm">
+          <span>Notiztyp wechseln{from ? '' : ' (nur bei gleichem Typ)'}</span>
+          <select
+            className={FIELD}
+            value=""
+            disabled={!from}
+            onChange={(e) => {
+              const to = collection.notetypes.find((t) => t.id === Number(e.target.value));
+              if (!to || !from) return;
+              if (window.confirm(`Notiztyp von ${ids.length} Notizen zu „${to.name}“ wechseln? Felder gleichen Namens bleiben, sonst gilt die Reihenfolge; Felder ohne Gegenstück gehen verloren.`)) onChange(changeNotetypeMany(collection, ids, to.id, defaultFieldMap(from, to)));
+            }}
+          >
+            <option value="">Notiztyp wählen …</option>
+            {collection.notetypes.filter((t) => t.id !== from?.id).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (tag.trim()) onChange(tagNotes(collection, ids, tag.split(/\s+/)));
+          setTag('');
+        }}
+      >
+        <input className={FIELD} value={tag} onChange={(e) => setTag(e.target.value)} placeholder="Tag hinzufügen" aria-label="Tag für alle ausgewählten Notizen" />
+        <Button type="submit" disabled={!tag.trim()}>
+          ➕ Tag
+        </Button>
+        <Button
+          disabled={!tag.trim()}
+          onClick={() => {
+            onChange(tagNotes(collection, ids, [], tag.split(/\s+/)));
+            setTag('');
+          }}
+        >
+          ➖ Tag
+        </Button>
+      </form>
+      <div className="grid grid-cols-2 gap-2">
+        <Button onClick={onClear}>Auswahl aufheben</Button>
+        <Button
+          onClick={() => {
+            if (window.confirm(`${ids.length} Notizen mit allen ihren Karten löschen?`)) {
+              onChange(ids.reduce((c, id) => removeNote(c, id), collection));
+              onClear();
+            }
+          }}
+        >
+          🗑️ Löschen
+        </Button>
+      </div>
+    </section>
   );
 }
 

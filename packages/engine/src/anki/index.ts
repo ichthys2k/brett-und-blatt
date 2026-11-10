@@ -10,3 +10,4 @@ export * from './apkg';
 export * from './sanitize';
 export * from './render';
 export * from './edit';
+export * from './media';

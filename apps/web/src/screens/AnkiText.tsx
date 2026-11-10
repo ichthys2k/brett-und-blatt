@@ -2,6 +2,8 @@ import { addDeck, deckSummaries, exportTextFile, importTextFile, parseTextFile, 
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { Button } from '../components/controls';
 import { exportApkg } from '../lib/ankiPackage';
+import { loadMedia } from '../lib/ankiStore';
+import { OWN } from '../lib/collectionSource';
 import { downloadFile } from '../lib/download';
 import { loadCollection, saveCollection } from '../lib/library';
 
@@ -241,7 +243,8 @@ export function AnkiExport({ onDone }: { onDone: () => void }) {
   const save = () => downloadFile('brett-und-blatt-karten.txt', out, 'text/plain;charset=utf-8');
   const savePackage = async () => {
     try {
-      const bytes = await exportApkg({ collection: col, ...(deck === 'all' ? {} : { deckId: deck }) }, { scheduling: false, media: false });
+      const media = await loadMedia(OWN);
+      const bytes = await exportApkg({ collection: col, media, ...(deck === 'all' ? {} : { deckId: deck }) }, { scheduling: false, media: true });
       downloadFile('brett-und-blatt.apkg', bytes as BlobPart, 'application/octet-stream');
     } catch {
       setMessage('Das Paket konnte nicht erstellt werden.');
