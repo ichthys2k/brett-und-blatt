@@ -22,6 +22,12 @@
   --tavern-table-cards: #d3dec6;
   --tavern-table-family: #efdfbd;
   --tavern-table-math: #f8f1dd;
+  --tavern-table-oak: #e6d3ad;
+  --tavern-table-walnut: #deceb2;
+  --tavern-table-green-felt: #d3dec6;
+  --tavern-table-red-felt: #ebd3cf;
+  --tavern-table-slate: #d8dce0;
+  --tavern-table-marble: #f4f1ea;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -44,6 +50,12 @@
     --tavern-table-cards: #1a2a20;
     --tavern-table-family: #2a2118;
     --tavern-table-math: #262019;
+    --tavern-table-oak: #2e2015;
+    --tavern-table-walnut: #241810;
+    --tavern-table-green-felt: #1a2a20;
+    --tavern-table-red-felt: #2b1818;
+    --tavern-table-slate: #1c2024;
+    --tavern-table-marble: #252320;
   }
 }
 
@@ -73,6 +85,32 @@
   background: var(--tavern-table-math);
 }
 
+/* Fest gewählte Tischoberfläche (#107) überschreibt die Rubrik-Zuordnung */
+[data-look='tavern'][data-table='oak'] .bub-table {
+  background: repeating-linear-gradient(0deg, transparent 0 22px, var(--tavern-grain) 22px 24px), var(--tavern-table-oak);
+}
+
+[data-look='tavern'][data-table='walnut'] .bub-table {
+  background: repeating-linear-gradient(0deg, transparent 0 16px, var(--tavern-grain) 16px 18px), var(--tavern-table-walnut);
+}
+
+[data-look='tavern'][data-table='green-felt'] .bub-table {
+  background: radial-gradient(ellipse at center, transparent 40%, rgb(0 0 0 / 0.04) 100%), var(--tavern-table-green-felt);
+}
+
+[data-look='tavern'][data-table='red-felt'] .bub-table {
+  background: radial-gradient(ellipse at center, transparent 40%, rgb(0 0 0 / 0.04) 100%), var(--tavern-table-red-felt);
+}
+
+[data-look='tavern'][data-table='slate'] .bub-table {
+  background: repeating-linear-gradient(135deg, transparent 0 36px, var(--tavern-grain) 36px 38px), var(--tavern-table-slate);
+}
+
+[data-look='tavern'][data-table='marble'] .bub-table {
+  background: repeating-linear-gradient(115deg, transparent 0 44px, var(--tavern-grain) 44px 46px), var(--tavern-table-marble);
+}
+
+
 /* Lobby: Tische mit Holzkante, das Tischzeichen auf grünem Filz */
 [data-look='tavern'] .bub-lobby > section.rounded-2xl {
   border: 2px solid var(--tavern-wood);
@@ -92,6 +130,24 @@
 [data-look='tavern'] .bub-ceremony-card {
   border: 3px solid var(--tavern-wood);
   border-radius: 14px;
+}
+
+[data-look='tavern'][data-room='castle'] .bub-ceremony-backdrop {
+  background:
+    linear-gradient(rgb(18 12 8 / 0.72), rgb(18 12 8 / 0.85)),
+    url('./assets/raeume/burgsaal.webp') center / cover no-repeat;
+}
+
+[data-look='tavern'][data-room='library'] .bub-ceremony-backdrop {
+  background:
+    linear-gradient(rgb(18 12 8 / 0.72), rgb(18 12 8 / 0.85)),
+    url('./assets/raeume/bibliothek.webp') center / cover no-repeat;
+}
+
+[data-look='tavern'][data-room='garden'] .bub-ceremony-backdrop {
+  background:
+    linear-gradient(rgb(18 12 8 / 0.68), rgb(18 12 8 / 0.82)),
+    url('./assets/raeume/schlossgarten.webp') center / cover no-repeat;
 }
 
 [data-look='tavern'] .bub-podium-step[data-place] .bub-podium-block {
