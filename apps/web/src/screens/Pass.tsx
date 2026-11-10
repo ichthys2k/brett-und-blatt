@@ -7,6 +7,7 @@ import { PlayerPassPanel } from '../components/PlayerPassPanel';
 import { AlbumBook } from '../components/AlbumBook';
 import { RescueHint } from '../components/RescueHint';
 import { StampBook } from '../components/StampBook';
+import { TavernPage } from '../components/TavernPage';
 import { TrophyCabinet } from '../components/TrophyCabinet';
 import { t } from '../i18n';
 import { pinnedList } from '../lib/chronik';
@@ -17,7 +18,7 @@ import type { PlayedGame } from '../lib/partiebuch';
 import { findGame } from '../lib/registry';
 import { GAME_SERVER } from '../lib/online';
 import { saveOwnProfile } from '../lib/playerPass';
-import { navigate, paths } from '../lib/router';
+import { paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 
 const OUTCOME_ICON = { win: '🏆', draw: '🤝', loss: '▫️' } as const;
@@ -119,14 +120,7 @@ export function PassScreen() {
   const nameOf = (id: string) => findGame(id)?.name ?? id;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),2rem)]">
-      <header className="flex items-center gap-2">
-        <Button variant="ghost" className="px-3" aria-label={t('play.back')} onClick={() => navigate(paths.menu)}>
-          ←
-        </Button>
-        <h1 className="text-2xl font-bold">🪪 {t('pass.page')}</h1>
-      </header>
-
+    <TavernPage title={t('pass.page')} subtitle="Name, Wappen, Chronik, Abzeichen und Sicherung.">
       {editing || !profile ? (
         <Section title={t('online.profile')}>
           <ProfileForm
@@ -255,6 +249,6 @@ export function PassScreen() {
           </div>
         </details>
       )}
-    </div>
+    </TavernPage>
   );
 }
