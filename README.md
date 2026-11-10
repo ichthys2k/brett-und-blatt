@@ -4,7 +4,7 @@ Eine freie Sammlung von Karten- und Brettspielen für den Browser, für Handy un
 
 - **Allein** gegen Bots in mehreren Stärkestufen
 - **Zu mehreren an einem Gerät** (Hot-Seat)
-- **Online** mit Freunden, der Familie oder der Klasse, ganz ohne Konto
+- **Online** mit Freunden, der Familie oder der Klasse, ohne eigenes Konto (eine Anmeldung mit Google oder Microsoft ist freiwillig)
 
 Geplant sind unter anderem Skat, Doppelkopf, Schafkopf, Quartett, Paare finden, Mühle, Vier in einer Reihe, Reversi, Go, Ultimate Tic-Tac-Toe, Schiffe versenken und Mäxle. Weitere Spiele lassen sich als Module ergänzen.
 

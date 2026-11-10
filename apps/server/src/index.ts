@@ -1,6 +1,24 @@
 import { DurableObject } from 'cloudflare:workers';
+import { exchangeCode } from './oidc';
 import {
   ATTEMPT_WINDOW_MS,
+  FLOW_TTL_MS,
+  TICKET_TTL_MS,
+  ACCOUNT_PROVIDERS,
+  accountLockId,
+  buildAuthorizeUrl,
+  createAccountLock,
+  isAccountProvider,
+  openAccountLock,
+  randomToken,
+  saveAccountLock,
+  sha256Url,
+  ticketValid,
+  isPlausibleClientId,
+  type AccountProvider,
+  type AccountRecord,
+  type FlowRecord,
+  type TicketRecord,
   BACKUP_ID_PATTERN,
   BACKUP_TTL_MS,
   CLASS_TTL_MS,
@@ -110,6 +128,14 @@ interface Env {
   SHARES: DurableObjectNamespace<PassShare>;
   CLASSES: DurableObjectNamespace<ClassRoom>;
   SERIES: DurableObjectNamespace<SeriesRoom>;
+  ACCOUNT_FLOWS: DurableObjectNamespace<AccountFlow>;
+  ACCOUNT_LOCKS: DurableObjectNamespace<AccountLockBox>;
+  /** Anmeldung mit Google (`wrangler secret put GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`). Fehlen sie, ist der Anbieter nicht eingerichtet. */
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  /** Anmeldung mit Microsoft (`MS_CLIENT_ID`/`MS_CLIENT_SECRET`). */
+  MS_CLIENT_ID?: string;
+  MS_CLIENT_SECRET?: string;
   /** Geheimer Pfeffer für die Schlösser der Ausweise (`wrangler secret put PASS_PEPPER`, lokal in `.dev.vars`). Fehlt er, melden die Schloss-Endpunkte 503. */
   PASS_PEPPER?: string;
   /** Betreiber-Schlüssel (`wrangler secret put OPERATOR_KEY`): löscht per `DELETE /betreiber/…` Turniere und Klassen. Fehlt er, gibt es die Endpunkte nicht. */
@@ -171,6 +197,26 @@ function classStub(env: Env, code: string): DurableObjectStub<ClassRoom> {
 function seriesStub(env: Env, code: string): DurableObjectStub<SeriesRoom> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.SERIES : env.SERIES.jurisdiction('eu');
   return namespace.get(namespace.idFromName(code));
+}
+
+function flowStub(env: Env, name: string): DurableObjectStub<AccountFlow> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.ACCOUNT_FLOWS : env.ACCOUNT_FLOWS.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(name));
+}
+
+function accountLockStub(env: Env, id: string): DurableObjectStub<AccountLockBox> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.ACCOUNT_LOCKS : env.ACCOUNT_LOCKS.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(id));
+}
+
+/** Zugangsdaten des Anbieters aus den Secrets; null, wenn er nicht eingerichtet ist. */
+function providerCredentials(env: Env, provider: AccountProvider): { clientId: string; clientSecret: string } | null {
+  const [rawId, rawSecret] = provider === 'google' ? [env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET] : [env.MS_CLIENT_ID, env.MS_CLIENT_SECRET];
+  const clientId = rawId?.trim();
+  const clientSecret = rawSecret?.trim();
+  if (!clientId || !clientSecret) return null;
+  // Sicherung gegen vertauschte Werte: Ein Geheimnis in der ID-Zeile würde sonst in der Adresse an den Anbieter gehen.
+  return isPlausibleClientId(provider, clientId) ? { clientId, clientSecret } : null;
 }
 
 function attemptStub(env: Env, sender: string): DurableObjectStub<AttemptLimiter> {
@@ -502,6 +548,94 @@ export default {
       }
       const status = share[2] ? (request.method === 'POST' ? await stub.remove(body) : 405) : request.method === 'PUT' ? await stub.write(body) : 405;
       return json({}, status, noStore);
+    }
+
+    // Anmeldung mit Google oder Microsoft (#154): welche Anbieter sind eingerichtet?
+    if (url.pathname === '/konto' && request.method === 'GET') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const providers = ACCOUNT_PROVIDERS.filter((p) => providerCredentials(env, p) && env.PASS_PEPPER);
+      return json({ providers }, 200, { ...cors, 'Cache-Control': 'no-store' });
+    }
+
+    const accountFlow = /^\/konto\/([a-z]+)\/(start|rueckruf)$/.exec(url.pathname);
+    if (accountFlow) {
+      const provider = accountFlow[1];
+      if (!isAccountProvider(provider)) return json({ error: 'provider' }, 404, cors);
+      const credentials = providerCredentials(env, provider);
+      const redirectUri = `${url.origin}/konto/${provider}/rueckruf`;
+      if (accountFlow[2] === 'start') {
+        if (request.method !== 'POST') return json({ error: 'method' }, 405, cors);
+        if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+        if (!credentials || !env.PASS_PEPPER) return json({ error: 'not-configured' }, 503, { ...cors, 'Cache-Control': 'no-store' });
+        const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+        if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...cors, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+        const body = await readJson(request, 1024);
+        const binding = body?.binding;
+        if (typeof binding !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(binding)) return json({ error: 'binding' }, 400, cors);
+        const state = randomToken(24);
+        const verifier = randomToken(48);
+        const nonce = randomToken(24);
+        const flow: FlowRecord = { provider, verifier, nonce, binding, returnTo: request.headers.get('Origin')!, at: Date.now() };
+        await flowStub(env, `flow:${state}`).put(JSON.stringify(flow), FLOW_TTL_MS);
+        const authorize = buildAuthorizeUrl({ provider, clientId: credentials.clientId, redirectUri, state, nonce, challenge: await sha256Url(verifier) });
+        return json({ url: authorize }, 200, { ...cors, 'Cache-Control': 'no-store' });
+      }
+      // Rückkehr vom Anbieter (Weiterleitung des Browsers, ohne Origin).
+      if (request.method !== 'GET') return json({ error: 'method' }, 405, cors);
+      const state = url.searchParams.get('state') ?? '';
+      const code = url.searchParams.get('code') ?? '';
+      if (!/^[A-Za-z0-9_-]{32}$/.test(state)) return new Response('Ungültiger Anmeldevorgang', { status: 400 });
+      const taken = await flowStub(env, `flow:${state}`).take();
+      const flow = taken ? (JSON.parse(taken) as FlowRecord) : null;
+      const back = (query: string): Response => Response.redirect(`${flow?.returnTo ?? env.ALLOWED_ORIGINS.split(',')[0]!.trim()}/#/konto?${query}`, 302);
+      if (!flow || flow.provider !== provider || Date.now() > flow.at + FLOW_TTL_MS) return back('fehler=abgelaufen');
+      if (url.searchParams.get('error') || !code || code.length > 2048) return back('fehler=abgebrochen');
+      if (!credentials || !env.PASS_PEPPER) return back('fehler=nicht-eingerichtet');
+      const done = await exchangeCode({ provider, clientId: credentials.clientId, clientSecret: credentials.clientSecret, redirectUri, code, verifier: flow.verifier, nonce: flow.nonce });
+      if (!done.ok) return back(`fehler=anmeldung&grund=${encodeURIComponent(`${done.reason}${'detail' in done && done.detail ? ` ${done.detail}` : ''}`)}`);
+      const ticket = randomToken(24);
+      const record: TicketRecord = { provider, lockId: await accountLockId(env.PASS_PEPPER, provider, done.accountKey), binding: flow.binding, at: Date.now() };
+      await flowStub(env, `ticket:${ticket}`).put(JSON.stringify(record), TICKET_TTL_MS);
+      return back(`ticket=${ticket}&anbieter=${provider}`);
+    }
+
+    // Dem Browser sagen, zu welchem Konto-Schloss sein Ticket gehört (nur mit dem Geheimnis, das er beim Start hatte).
+    if (url.pathname === '/konto/ticket' && request.method === 'POST') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      const body = await readJson(request, 1024);
+      const ticketText = body && typeof body.ticket === 'string' && /^[A-Za-z0-9_-]{32}$/.test(body.ticket) ? await flowStub(env, `ticket:${body.ticket}`).peek() : null;
+      const ticket = ticketText ? (JSON.parse(ticketText) as TicketRecord) : null;
+      if (!ticket || !(await ticketValid(ticket, null, body?.binding, Date.now()))) {
+        await limiter.miss();
+        return json({ error: 'ticket' }, 401, noStore);
+      }
+      return json({ lockId: ticket.lockId, provider: ticket.provider }, 200, noStore);
+    }
+
+    const accountLock = /^\/konto-schloss\/([^/]+)\/([a-z]+)$/.exec(url.pathname);
+    if (accountLock) {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      const id = accountLock[1]!;
+      const action = accountLock[2]!;
+      if (!/^[0-9a-f]{32}$/.test(id)) return json({ error: 'id' }, 404, cors);
+      if (request.method !== 'POST' || !['status', 'anlegen', 'oeffnen', 'speichern', 'loeschen'].includes(action)) return json({ error: 'method' }, 405, cors);
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      const body = await readJson(request, 80 * 1024);
+      if (!body) return json({ error: 'body' }, 400, noStore);
+      const ticketText = typeof body.ticket === 'string' && /^[A-Za-z0-9_-]{32}$/.test(body.ticket) ? await flowStub(env, `ticket:${body.ticket}`).peek() : null;
+      const ticket = ticketText ? (JSON.parse(ticketText) as TicketRecord) : null;
+      if (!(await ticketValid(ticket, id, body.binding, Date.now()))) {
+        await limiter.miss();
+        return json({ error: 'ticket' }, 401, noStore);
+      }
+      const result = (await accountLockStub(env, id).act(action, JSON.stringify(body), env.PASS_PEPPER)) as { status: number };
+      if (result.status === 401) await limiter.miss();
+      return json(result, result.status, noStore);
     }
 
     const lock = /^\/schloss\/([^/]+)(?:\/([a-z]+))?$/.exec(url.pathname);
@@ -1031,6 +1165,68 @@ export class PassLock extends DurableObject<Env> {
   }
 
   private async put(record: LockRecord): Promise<void> {
+    await this.ctx.storage.put('lock', record);
+    await this.ctx.storage.setAlarm(record.at + LOCK_TTL_MS);
+  }
+}
+
+/** Vorgänge und Tickets der Anmeldung mit Google oder Microsoft (#154): ein kurzlebiger Wert je Objekt, nach der Frist weg. */
+export class AccountFlow extends DurableObject<Env> {
+  async put(value: string, ttlMs: number): Promise<void> {
+    await this.ctx.storage.put('value', value);
+    await this.ctx.storage.setAlarm(Date.now() + ttlMs);
+  }
+
+  /** Einmal lesen und löschen (Vorgang). */
+  async take(): Promise<string | null> {
+    const value = (await this.ctx.storage.get<string>('value')) ?? null;
+    await this.ctx.storage.deleteAll();
+    return value;
+  }
+
+  /** Lesen, ohne zu löschen (Ticket gilt für mehrere Aufrufe bis zum Ablauf). */
+  async peek(): Promise<string | null> {
+    return (await this.ctx.storage.get<string>('value')) ?? null;
+  }
+
+  override async alarm(): Promise<void> {
+    await this.ctx.storage.deleteAll();
+  }
+}
+
+/** Das Konto-Schloss (#154), ein Objekt je Kennung. Logik in `packages/online/src/account.ts`; die Ticket-Prüfung geschieht vorher im Worker. */
+export class AccountLockBox extends DurableObject<Env> {
+  async act(action: string, bodyText: string, pepper: string | undefined): Promise<{ status: number } & Record<string, unknown>> {
+    const body = JSON.parse(bodyText) as unknown;
+    const now = Date.now();
+    const stored = (await this.ctx.storage.get<AccountRecord>('lock')) ?? null;
+    if (action === 'status') return { status: 200, exists: !!stored && stored.data !== '', pin: stored?.authMac != null };
+    if (action === 'anlegen') {
+      const made = await createAccountLock(body, pepper, now);
+      if (made.status !== 200) return made;
+      await this.put(made.record);
+      return { status: 200, share: made.share };
+    }
+    if (action === 'loeschen') {
+      await this.ctx.storage.deleteAll();
+      return { status: 200 };
+    }
+    if (!stored) return { status: 404 };
+    const outcome = action === 'oeffnen' ? await openAccountLock(stored, body, pepper, now) : await saveAccountLock(stored, body, pepper, now);
+    if (outcome.record) await this.put(outcome.record);
+    return outcome.result;
+  }
+
+  override async alarm(): Promise<void> {
+    const stored = await this.ctx.storage.get<AccountRecord>('lock');
+    if (!stored || Date.now() >= stored.at + LOCK_TTL_MS) {
+      await this.ctx.storage.deleteAll();
+      return;
+    }
+    await this.ctx.storage.setAlarm(stored.at + LOCK_TTL_MS);
+  }
+
+  private async put(record: AccountRecord): Promise<void> {
     await this.ctx.storage.put('lock', record);
     await this.ctx.storage.setAlarm(record.at + LOCK_TTL_MS);
   }

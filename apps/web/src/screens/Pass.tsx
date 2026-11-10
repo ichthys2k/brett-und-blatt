@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Button, Section } from '../components/controls';
 import { ProfileForm } from '../components/OnlineParts';
 import { ShareDialog } from '../components/ShareDialog';
+import { AccountPanel } from '../components/AccountPanel';
 import { PlayerPassPanel } from '../components/PlayerPassPanel';
 import { AlbumBook } from '../components/AlbumBook';
 import { RescueHint } from '../components/RescueHint';
@@ -237,6 +238,8 @@ export function PassScreen() {
           </p>
         )}
       </section>
+
+      {GAME_SERVER && <AccountPanel />}
 
       {GAME_SERVER && (
         <details className="rounded-2xl border border-line bg-surface p-4">

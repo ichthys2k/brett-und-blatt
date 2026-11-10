@@ -208,3 +208,5 @@ export async function mayRemoveLock(record: LockRecord, body: unknown, pepper: s
 }
 
 export { validData as isValidLockData };
+/** Bausteine für das Konto-Schloss (`account.ts`): gleicher Pfeffer, gleiche Verschlüsselung des Serveranteils. */
+export { hmac as lockHmac, openShare as lockOpenShare, sealShare as lockSealShare, same as lockSame, toBase64Url as lockToBase64Url, validSecret as isValidLockSecret };

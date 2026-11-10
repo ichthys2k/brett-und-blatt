@@ -9,3 +9,7 @@ Für den Betreiber (Cornelius) gibt es kein Konto, sondern einen **Schlüssel**:
 - **Was er nicht kann:** Ausweise, Sicherungen, Schlösser, geteilte Pässe oder Partien lesen oder ändern.
 - **Schutz:** Falsche Schlüssel zählt der Server wie Fehlversuche beim Spielercode (Sperre je Absender). Jeder Löschbefehl steht ohne den Schlüssel im Protokoll des Workers (Art, Ziel, Zeit).
 - **Schlüssel getauscht oder verloren:** neues Secret setzen, der alte gilt sofort nicht mehr.
+
+## Anmeldung mit Google und Microsoft (#154)
+
+Secrets `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET` (Einrichtung: [`spiele/konto-anmeldung-einrichtung.md`](spiele/konto-anmeldung-einrichtung.md)). **Das Client-Geheimnis von Microsoft läuft spätestens nach 24 Monaten ab:** Ablauftermin notieren und vorher ein neues Secret setzen, sonst scheitert die Anmeldung mit Microsoft. Ohne die Secrets eines Anbieters ist er im Spiel nicht sichtbar.
