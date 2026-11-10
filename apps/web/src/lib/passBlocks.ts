@@ -15,6 +15,8 @@ import type { LeadKeyPair } from './classCrypto';
 import { collectionFromStored, compactCollection, compactLearnBook, emptyCollection, emptyLearnBook, learnBookToStored, mergeCollections, mergeLearnBooks, sameCollection, sameLearnBook, sanitizeCollection, sanitizeLearnBook, type AnkiCollection, type LearnBook } from '@brett-und-blatt/engine';
 import { mergeChildPasses, sameChildPasses, sanitizeChildPasses, type ChildPasses } from './classPassesCore';
 import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
+import { CLASSES_KEY, loadAllClassEntries, mergeKnownClasses, sameKnownClasses, sanitizeKnownClasses, type KnownClass } from './classes';
+
 
 /*
  * Blöcke des Spielerpasses, die die Web-App selbst beisteuert (Vorhaben #135). Jeder Block meldet sich bei
@@ -91,6 +93,15 @@ export function registerWebPassBlocks(): void {
     sanitize: sanitizeChildPasses,
     merge: mergeChildPasses,
     same: sameChildPasses,
+  });
+  // Merkliste der Klassen (#150): Klassen, denen dieser Pass beigetreten ist, reisen mit dem Ausweis mit.
+  registerPassBlock<KnownClass[]>({
+    name: 'klassenliste',
+    read: () => loadAllClassEntries(),
+    write: (list) => write(CLASSES_KEY, JSON.stringify(list)),
+    sanitize: sanitizeKnownClasses,
+    merge: mergeKnownClasses,
+    same: sameKnownClasses,
   });
   // Bibliothek (#101, L1): Sammlung im Anki-Modell (Notizen, Stapel, Notiztypen); je Notiz gilt die jüngere Änderung, Löschvermerke verhindern,
   // dass ein Gerät Gelöschtes zurückbringt. Die frühere Liste von Paketen (ältere Geräte) wird beim Einlesen umgestellt.

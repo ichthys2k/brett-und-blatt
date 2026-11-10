@@ -1,6 +1,6 @@
 import type { ClassView } from '@brett-und-blatt/online';
 import { serializeCrest } from '@brett-und-blatt/engine';
-import { currentCrest, hasCrest } from './crestStore';
+import { currentCrest, hasCrest, onCrestSaved } from './crestStore';
 import { GAME_SERVER } from './server';
 import { buildSnapshot } from './passShare';
 import { storage } from './storage';
@@ -11,34 +11,103 @@ import type { CardSection, ClassCard } from '@brett-und-blatt/online';
  * Die Geräte-Kennung (`storage.deviceToken()`) weist das Mitglied aus; sie geht nie in eine Ansicht.
  */
 
+import { requestPassSync } from '@brett-und-blatt/ui/sync';
+
 export const CLASSES_KEY = 'brett-und-blatt:klassen';
 export interface KnownClass {
   code: string;
   name: string;
+  /** Zeitpunkt der letzten Änderung (Hinzufügen oder Entfernen), jüngerer Eintrag gewinnt beim Abgleich. */
+  at?: number;
+  /** Löschvermerk für den Abgleich über den Ausweis: auf einem anderen Gerät entfernt. */
+  removed?: boolean;
 }
 
+/** Bereinigt Klassen-Einträge aus dem Speicher oder entfernten Quellen. */
+export function sanitizeKnownClasses(value: unknown): KnownClass[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((c): c is KnownClass => !!c && typeof c.code === 'string' && typeof c.name === 'string')
+    .map((c) => ({
+      code: c.code,
+      name: c.name.slice(0, 40),
+      ...(typeof c.at === 'number' ? { at: c.at } : {}),
+      ...(c.removed ? { removed: true } : {}),
+    }))
+    .slice(0, 50);
+}
+
+/** Führt die lokale und entfernte Klassenliste zusammen; das jüngere Datum je Code entscheidet. */
+export function mergeKnownClasses(remote: KnownClass[], local: KnownClass[]): KnownClass[] {
+  const map = new Map<string, KnownClass>();
+  for (const item of sanitizeKnownClasses(local)) map.set(item.code, item);
+  for (const item of sanitizeKnownClasses(remote)) {
+    const existing = map.get(item.code);
+    if (!existing) {
+      map.set(item.code, item);
+    } else {
+      const localAt = existing.at ?? 0;
+      const remoteAt = item.at ?? 0;
+      if (remoteAt >= localAt) {
+        map.set(item.code, item);
+      }
+    }
+  }
+  return Array.from(map.values()).slice(0, 50);
+}
+
+/** Prüft, ob zwei Klassenlisten inhaltlich identisch sind. */
+export function sameKnownClasses(a: KnownClass[], b: KnownClass[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((item, i) => item.code === b[i]?.code && item.name === b[i]?.name && !!item.removed === !!b[i]?.removed && item.at === b[i]?.at);
+}
+
+/** Alle gemerkten Klassen, die nicht gelöscht wurden (für die Ansicht). */
 export function loadClasses(): KnownClass[] {
   try {
     const list = JSON.parse(window.localStorage.getItem(CLASSES_KEY) ?? '[]');
-    return Array.isArray(list) ? list.filter((c): c is KnownClass => typeof c?.code === 'string' && typeof c?.name === 'string').slice(0, 20) : [];
+    return Array.isArray(list)
+      ? list.filter((c): c is KnownClass => typeof c?.code === 'string' && typeof c?.name === 'string' && !c.removed).slice(0, 20)
+      : [];
   } catch {
     return [];
   }
 }
-export function rememberClass(entry: KnownClass): void {
-  const others = loadClasses().filter((c) => c.code !== entry.code);
+
+/** Alle gemerkten Klassen inkl. Löschvermerke (für den Abgleich mit dem Pass). */
+export function loadAllClassEntries(): KnownClass[] {
   try {
-    window.localStorage.setItem(CLASSES_KEY, JSON.stringify([entry, ...others].slice(0, 20)));
+    const list = JSON.parse(window.localStorage.getItem(CLASSES_KEY) ?? '[]');
+    return sanitizeKnownClasses(list);
+  } catch {
+    return [];
+  }
+}
+
+export function rememberClass(entry: { code: string; name: string }): void {
+  const others = loadAllClassEntries().filter((c) => c.code !== entry.code);
+  const updated: KnownClass = { code: entry.code, name: entry.name, at: Date.now(), removed: false };
+  try {
+    window.localStorage.setItem(CLASSES_KEY, JSON.stringify([updated, ...others].slice(0, 50)));
   } catch {
     // ohne Speicher gibt es keine Merkliste; die Klasse bleibt auf dem Server
   }
+  requestPassSync();
 }
+
 export function forgetClass(code: string): void {
+  const all = loadAllClassEntries();
+  const found = all.find((c) => c.code === code);
+  const others = all.filter((c) => c.code !== code);
+  const updated: KnownClass = found
+    ? { ...found, removed: true, at: Date.now() }
+    : { code, name: '', removed: true, at: Date.now() };
   try {
-    window.localStorage.setItem(CLASSES_KEY, JSON.stringify(loadClasses().filter((c) => c.code !== code)));
+    window.localStorage.setItem(CLASSES_KEY, JSON.stringify([updated, ...others].slice(0, 50)));
   } catch {
     // nichts zu tun
   }
+  requestPassSync();
 }
 
 function identity(): { token: string; name: string; avatar: string; crest?: string } {
@@ -123,3 +192,16 @@ export function buildClassCard(allowed: Record<CardSection, boolean>): Omit<Clas
   if (snapshot?.favorites) card.favorites = snapshot.favorites;
   return card;
 }
+
+/** Aktualisiert Name, Bild und Wappen bei allen Klassen, in denen man Mitglied ist (#150). */
+export function updateClassesAfterProfileChange(): void {
+  const classes = loadClasses();
+  if (classes.length === 0) return;
+  for (const item of classes) {
+    void classAct(item.code, 'update').catch(() => undefined);
+  }
+}
+
+onCrestSaved(updateClassesAfterProfileChange);
+
+
