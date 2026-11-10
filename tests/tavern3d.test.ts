@@ -30,6 +30,9 @@ describe('Begehbare 3D-Taverne (#262)', () => {
     expect(stationForRoute('pass')).toBe('profile');
     expect(stationForRoute('account')).toBe('profile');
     expect(stationForRoute('library')).toBe('profile');
+    expect(stationForRoute('learn')).toBe('profile');
+    expect(stationForRoute('learning')).toBe('profile');
+    expect(stationForRoute('collection')).toBe('profile');
   });
 
   it('fährt die Kamera weich zur Zielstation und springt bei prefers-reduced-motion direkt', () => {

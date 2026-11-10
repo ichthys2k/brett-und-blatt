@@ -12,12 +12,20 @@ import './menu.css';
  * Hauptmenü (#184, #262): begehbare 3D-Taverne als Hintergrund und ein räumlich geneigter
  * Holzrahmen mit vier Einträgen wie in Warcraft III. Überfahren/Fokussieren hebt die Station im Raum hervor.
  */
-const ENTRIES: readonly { id: Exclude<TavernStationId, 'home'>; label: string; hint: string; to: string }[] = [
-  { id: 'single', label: 'Lokales Spiel', hint: 'Allein gegen den Computer oder zu mehreren an einem Gerät.', to: paths.home },
-  { id: 'online', label: 'Online Spiel', hint: 'Offene Spiele, Spiel eröffnen, mit Code beitreten.', to: paths.online },
-  { id: 'tournaments', label: 'Turniere', hint: 'Turniere finden, anlegen und verfolgen.', to: paths.tournaments },
-  { id: 'learn', label: 'Lernen', hint: 'Karteikasten: Karten aus deinen Notizen und Anki-Paketen wiederholen.', to: paths.learn },
-  { id: 'options', label: 'Optionen', hint: 'Ton, Musik, Aussehen und Updates.', to: paths.sound },
+interface MenuEntry {
+  id: string;
+  station: Exclude<TavernStationId, 'home'>;
+  label: string;
+  hint: string;
+  to: string;
+}
+
+const ENTRIES: readonly MenuEntry[] = [
+  { id: 'single', station: 'single', label: 'Lokales Spiel', hint: 'Allein gegen den Computer oder zu mehreren an einem Gerät.', to: paths.home },
+  { id: 'online', station: 'online', label: 'Online Spiel', hint: 'Offene Spiele, Spiel eröffnen, mit Code beitreten.', to: paths.online },
+  { id: 'tournaments', station: 'tournaments', label: 'Turniere', hint: 'Turniere finden, anlegen und verfolgen.', to: paths.tournaments },
+  { id: 'learn', station: 'profile', label: 'Lernen', hint: 'Karteikasten: Karten aus deinen Notizen und Anki-Paketen wiederholen.', to: paths.learn },
+  { id: 'options', station: 'options', label: 'Optionen', hint: 'Ton, Musik, Aussehen und Updates.', to: paths.sound },
 ];
 
 export function Menu() {
@@ -76,8 +84,8 @@ export function Menu() {
             type="button"
             className="bub-menu-button"
             onClick={() => navigate(entry.to)}
-            onMouseEnter={() => activate(entry.id, entry.hint)}
-            onFocus={() => activate(entry.id, entry.hint)}
+            onMouseEnter={() => activate(entry.station, entry.hint)}
+            onFocus={() => activate(entry.station, entry.hint)}
             onMouseLeave={deactivate}
             onBlur={deactivate}
           >

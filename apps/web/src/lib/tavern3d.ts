@@ -94,6 +94,9 @@ export function stationForRoute(routeName: Route['name']): TavernStationId {
     case 'account':
     case 'library':
     case 'packView':
+    case 'learn':
+    case 'learning':
+    case 'collection':
       return 'profile';
     default:
       return 'home';
