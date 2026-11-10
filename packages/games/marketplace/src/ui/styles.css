@@ -76,9 +76,66 @@
   pointer-events: none;
 }
 
-.mkt-field[data-mortgaged] .mkt-icon {
+.mkt-field-thumb {
+  position: absolute;
+  inset: 16% 0 20%;
+  width: 100%;
+  height: 64%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.mkt-field[data-corner] .mkt-field-thumb {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mkt-field[data-mortgaged] .mkt-icon,
+.mkt-field[data-mortgaged] .mkt-field-thumb {
   filter: grayscale(1);
   opacity: 0.45;
+}
+
+.mkt-field-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  background: #fdf5e2;
+  border: 1px solid #d4be8a;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+}
+
+.mkt-field-card-img {
+  flex: none;
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1.5px solid #8a6a3a;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
+}
+
+.mkt-field-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.mkt-field-card-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #3e2610;
+}
+
+.mkt-field-card-sub {
+  font-size: 0.8rem;
+  color: #7a5c32;
+  font-style: italic;
+  line-height: 1.25;
 }
 
 .mkt-field[data-pick] {

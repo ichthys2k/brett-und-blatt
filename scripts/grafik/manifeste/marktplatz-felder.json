@@ -1,0 +1,32 @@
+{
+  "beschreibung": "Issue #73: Feldgrafiken und Fachwerk-Zunfthäuser für das Handelsspiel Marktplatz (14 Motive: 6 Zünfte, 4 Gemeinschaftsbetriebe, 4 Eckfelder). Stilvorlage sind die Narrenhof-Ölgemälde und Fabeltier-Geschichten aus Reineke Fuchs.",
+  "stil": "A quaint medieval half-timbered guild house or scene in the fantasy animal kingdom of Brezelbach. Classic oil painting and storybook fairy tale style, Goethe Reineke Fuchs aesthetic. Warm lighting, rich textures, charming details, square format, no text, no modern elements.",
+  "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, modern technology, cars, asphalt",
+  "referenzen": [
+    "packages/games/marketplace/src/ui/figures/herald.webp",
+    "packages/games/marketplace/src/ui/figures/innkeeper.webp"
+  ],
+  "format": "1:1",
+  "groesse": [320, 320],
+  "qualitaet": 78,
+  "ziel": "packages/games/marketplace/src/ui/fields",
+  "praefix": "",
+  "suffix": "",
+  "motive": [
+    { "id": "guild-baker", "titel": "Bäcker-Zunfthaus", "feld": "1 Brezelstube, 3 Backhaus, 5 Lebkuchenbäckerei" },
+    { "id": "guild-weaver", "titel": "Weber-Zunfthaus", "feld": "7 Spinnstube, 8 Färberei, 10 Tuchhalle" },
+    { "id": "guild-beekeeper", "titel": "Imker-Zunfthaus", "feld": "12 Bienenhaus, 13 Kerzenzieherei, 15 Honigladen" },
+    { "id": "guild-cobbler", "titel": "Schuster-Zunfthaus", "feld": "17 Gerberei, 19 Schusterei, 21 Sattlerei" },
+    { "id": "guild-smith", "titel": "Schmiede-Zunfthaus", "feld": "23 Hufschmiede, 25 Glockengießerei, 26 Goldschmiede" },
+    { "id": "guild-mason", "titel": "Steinmetze & Dombauhütte", "feld": "28 Steinbruch, 30 Steinmetzhütte, 34 Dombauhütte" },
+    { "id": "comm-mill", "titel": "Mühle am Bach", "feld": "6 Mühle am Bach" },
+    { "id": "comm-bridge", "titel": "Steinbogenbrücke", "feld": "14 Brücke" },
+    { "id": "comm-scale", "titel": "Marktwaage", "feld": "22 Marktwaage" },
+    { "id": "comm-tavern", "titel": "Taverne „Zum Brett & Blatt“", "feld": "31 Taverne" },
+    { "id": "corner-gate", "titel": "Stadttor", "feld": "0 Stadttor (Start)" },
+    { "id": "corner-jail", "titel": "Kerker", "feld": "9 Kerker" },
+    { "id": "corner-fair", "titel": "Jahrmarkt", "feld": "18 Jahrmarkt" },
+    { "id": "corner-guard", "titel": "Burgwache", "feld": "27 Burgwache" },
+    { "id": "special-forest", "titel": "Waldweg", "feld": "29 Waldweg" }
+  ]
+}
