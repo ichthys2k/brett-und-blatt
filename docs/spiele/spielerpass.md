@@ -334,12 +334,14 @@ Parallel möglich: nach dem Passschlüssel PIN und Familie; nach dem Partiebuch 
 - Server: Durable Object `ClassRoom` (Migration v8, Bindung `CLASSES`), `POST /klassen` legt an, `POST /klassen/<Code>` nimmt Aktionen (view, join, update, leave, accept, reject, remove, lead, configure, dissolve); Fehlversuche (unbekannter Code) zählt der `AttemptLimiter`; ein Jahr ohne Aktivität löscht die Klasse.
 - Browser: `lib/classes.ts` (Aufrufe, Merkliste je Pass in `brett-und-blatt:klassen`), Seiten `#/klassen` und `#/klasse/<Code>` (`screens/Classes.tsx`) mit Emoji-Tastatur, QR-Code und Link, Mitgliedern mit Wappen, Beitritt offen/geschlossen und mit Bestätigung, Leitung ernennen und entfernen, Auflösen; Einstieg über „Klassen“ auf der Mehrspieler-Seite. Die Klasse fragt den Stand alle 10 Sekunden ab (kein WebSocket).
 - Offen: Merkliste der Klassen im Block `ausweis` (reist noch nicht auf andere Geräte; die Mitgliedschaft liegt beim Server unter der Geräte-Kennung und reist mit dem Ausweis); Fragment `#` aus der Adresszeile entfernen; Hinweis, einen Spielercode anzulegen, wenn der Pass keinen hat; Wappen-Aktualisierung (`update`) nach Wappenänderung auslösen; Gegenprobe gegen den echten Server.
+- **Nachtrag 10.11.2026:** Der Kern liegt auf `main` (`b99b77e`). Restarbeiten in #150 neu gefasst: `#` aus der Adresszeile nehmen, Hinweis ohne Spielercode, Wappen aktualisieren, Merkliste im Block `ausweis`, Gegenprobe mit `apps/server/scripts/klasse.mjs`. #150–#152 stehen auf `status: Ready`.
 
 ### Stand #151 Klassen: Profile und Erfolge (8.11.2026)
 
 - Klassenkarte rein in `packages/online/src/classcard.ts` (Prüfung `sanitizeCard`, Teile Stempel, Pokale als Zahl je Spiel, Lieblingsspiele); die Leitung wählt `sections` der Klasse, jedes Mitglied blendet für sich Teile aus (`brett-und-blatt:klassen-ausblenden`). Server: Aktion `card`; wird ein Teil ausgeschaltet, fällt er auch aus vorhandenen Karten.
 - Klassenseite: Antippen eines Mitglieds zeigt Stempel, Pokale und Lieblingsspiele; **Stempelwand** (je Spiel, wer welchen Stempel hat), keine Rangliste (Entscheidung Cornelius). Die Karte wird beim Öffnen der Klassenseite und bei jeder Abfrage (10 s) nachgeführt, wenn sie sich geändert hat.
 - Offen: Karte auch ohne offene Klassenseite nachführen (nach Partieende), Album-Fortschritt und Bot-Wertung als Teile, Rangliste je Spiel als Leitungs-Option, Klassen-Stempel („Die ganze Klasse hat Schach gespielt“), offene Räume der Klasse.
+- **Nachtrag 10.11.2026:** Restarbeiten als Aufträge in #151 neu gefasst (Karte nach Partieende, Album und Bot-Wertung als Kartenteile, Rangliste als Leitungs-Option, Klassen-Stempel, offene Räume der Klasse). Der Punkt „offene Räume“ ist der größte und kann das Nachrichtenformat berühren.
 
 ### Stand #152 Klassenausweise (8.11.2026)
 
@@ -347,6 +349,7 @@ Parallel möglich: nach dem Passschlüssel PIN und Familie; nach dem Partiebuch 
 - **Lehrkraft-Schloss:** Die Liste mit Rettungscode und Passschlüssel der Kinder liegt im Pass-Block `klassen` der Leitung (mit dem Passschlüssel der Leitung verschlüsselt, `lib/classPasses.ts`, Kern `classPassesCore.ts`, Tests `tests/classpasses.test.ts`). „PIN zurücksetzen“ nutzt den Rettungscode des Kindes (`resetPassLock`) und schreibt eine neue Start-PIN.
 - Das Kind öffnet den Ausweis auf seinem Gerät über Profil → Sicherheit mit Spielercode und PIN.
 - Offen: **„Selbstständig werden“** (Kind löst den Klassenausweis; dafür braucht es einen neuen Rettungscode, den es heute nicht zu erneuern gibt, und eine Anzeige für die Leitung); Spielercode vorab auf Dubletten gegen vorhandene Schlösser prüfen; Namensliste aus Zwischenablage mit Bildern; Gegenprobe gegen den echten Server.
+- **Nachtrag 10.11.2026:** Restarbeiten (Dubletten-Prüfung, Namensliste mit Bildern, Probeklasse messen, Gegenprobe) stehen weiter in #152. „Selbstständig werden“ ist als eigenes Issue #259 ausgelagert (sicherheitsrelevant: braucht erst einen freigegebenen Entwurf zur Erneuerung des Rettungscodes).
 
 ### Stand #101 Eigene Pakete, erste Scheibe (9.11.2026)
 
