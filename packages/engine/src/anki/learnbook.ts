@@ -1,5 +1,5 @@
 import { cardOrds, derivedCardId } from './collection';
-import { clampOptions, type LearnOptions } from './learn';
+import { answerCard, clampOptions, type LearnOptions } from './learn';
 import type { ApkgCard, ApkgRevlog } from './apkg/types';
 import type { AnkiCollection } from './types';
 
@@ -178,4 +178,82 @@ export function recordAnswer(book: LearnBook, card: ApkgCard, log: ApkgRevlog, n
 /** Stellt eine Karte wieder auf „neu“. Der Eintrag bleibt (mit neuer Änderungszeit), damit andere Geräte die Karte nicht zurückbringen. */
 export function forgetCard(book: LearnBook, cardId: number, now: number): LearnBook {
   return { ...book, cards: { ...book.cards, [String(cardId)]: [0, 0, 0, 0, 0, 0, 0, 0, Math.floor(now / 1000), 0, 0, 0] } };
+}
+
+// ---------------------------------------------------------------- Lernen beim Spielen (L6)
+
+const NOTE_ROW = /^n-([0-9a-f]{6,16})$/;
+/** Die Notiz hinter der Kennung einer Paar-Zeile (`n-<hex>`); null bei Kennungen anderer Herkunft. */
+export const noteIdOfRow = (rowId: string): number | null => {
+  const m = NOTE_ROW.exec(rowId);
+  return m ? parseInt(m[1]!, 16) : null;
+};
+
+/** Die erste Karte einer Notiz (Vorderseite → Rückseite), die im Spiel abgefragt wird. */
+function firstCardOf(col: AnkiCollection, noteId: number): number | null {
+  const note = col.notes.find((n) => n.id === noteId);
+  const nt = note && col.notetypes.find((t) => t.id === note.mid);
+  if (!note || !nt) return null;
+  const ords = cardOrds(nt, note.fields);
+  return ords.length > 0 ? derivedCardId(note.id, Math.min(...ords)) : null;
+}
+
+/**
+ * Kennungen der Paar-Zeilen, die heute zu lernen sind: fällige Wiederholungs- und Lernkarten, nicht die neuen (die kommen aus dem
+ * Zufall dazu). Für die Option „Fällige Karten bevorzugen“.
+ */
+export function dueRowIds(col: AnkiCollection, book: LearnBook, rowIds: Iterable<string>, now: number): Set<string> {
+  const crt = book.crt;
+  const today = Math.floor((now / 1000 - crt) / DAY);
+  const nowSec = Math.floor(now / 1000);
+  const out = new Set<string>();
+  for (const row of rowIds) {
+    const noteId = noteIdOfRow(row);
+    const cardId = noteId === null ? null : firstCardOf(col, noteId);
+    const c = cardId === null ? undefined : book.cards[String(cardId)];
+    if (!c || c[0] === 0) continue;
+    // queue 1: Zeitpunkt (Sekunden), queue 2/3: Tageszahl
+    if (c[1] === 1 ? c[2] <= nowSec : (c[1] === 2 || c[1] === 3) && c[2] <= today) out.add(row);
+  }
+  return out;
+}
+
+/** Was ein Spiel über eine Karte weiß. */
+export interface GameResult {
+  /** Kennung der Paar-Zeile (`n-<hex>`). */
+  row: string;
+  /** Sicher gewusst (Gut) oder unsicher (Schwer). */
+  sure: boolean;
+}
+
+/**
+ * Trägt Spielergebnisse als Wiederholungen ein. Das Gewicht ist niedriger als im Karteikasten: Spiele haben Glück im Spiel, deshalb zählt
+ * „sicher“ nur als Gut, „unsicher“ nur als Schwer (nie als Nochmal), und eine Karte, die noch gar nicht fällig ist, bleibt unberührt
+ * (zu frühes Wiederholen verfälscht den Plan). Neue Karten beginnen damit zu lernen.
+ */
+export function applyGameResults(col: AnkiCollection, book: LearnBook, results: readonly GameResult[], now: number): { book: LearnBook; applied: number } {
+  const crt = book.crt;
+  const today = Math.floor((now / 1000 - crt) / DAY);
+  const nowSec = Math.floor(now / 1000);
+  const seen = new Set<string>();
+  let next = book;
+  let applied = 0;
+  for (const result of results) {
+    if (seen.has(result.row)) continue;
+    seen.add(result.row);
+    const noteId = noteIdOfRow(result.row);
+    const note = noteId === null ? undefined : col.notes.find((n) => n.id === noteId);
+    const cardId = noteId === null ? null : firstCardOf(col, noteId);
+    if (!note || cardId === null) continue;
+    const card = learnCards({ ...col, notes: [note] }, next).find((c) => c.id === cardId);
+    if (!card) continue;
+    const early = (card.queue === 2 || card.queue === 3) && card.due > today;
+    const waiting = card.queue === 1 && card.due > nowSec + 20 * 60;
+    if (early || waiting || card.queue < 0) continue;
+    const r = answerCard(card, result.sure ? 3 : 2, crt, now, next.options, next.log.filter((e) => e.cid === card.id));
+    next = recordAnswer(next, r.card, r.log, now, col);
+    now += 1; // gleiche Millisekunde wäre dieselbe Protokoll-Kennung
+    applied++;
+  }
+  return { book: next, applied };
 }

@@ -207,3 +207,64 @@ describe('Lernbuch der eigenen Sammlung', () => {
     expect(sanitizeLearnBook(null)).toEqual(emptyLearnBook());
   });
 });
+
+import { applyGameResults, decodePairsOption, dueRowIds, encodePairsOption, noteIdOfRow, rowIdOf, packsOf } from '../src';
+
+describe('Lernen beim Spielen', () => {
+  const setup = () => {
+    let c = emptyCollection();
+    for (let i = 0; i < 8; i++) c = addNote(c, { notetypeId: STOCK_BASIC_ID, deckId: 1, fields: [`v${i}`, `h${i}`] }, T0 + i).col;
+    return c;
+  };
+  it('die Zeilenkennung führt zur Notiz zurück', () => {
+    const c = setup();
+    const row = rowIdOf(c.notes[3]!.id);
+    expect(noteIdOfRow(row)).toBe(c.notes[3]!.id);
+    expect(noteIdOfRow('p-123456')).toBeNull();
+  });
+  it('die Auswahl nimmt fällige Zeilen zuerst und die Kennungen reisen im Optionswert mit', () => {
+    const rows = Array.from({ length: 30 }, (_, i) => ({ id: `n-${(i + 1).toString(16).padStart(6, '0')}`, a: `a${i}`, b: `b${i}` }));
+    const prefer = new Set([rows[25]!.id, rows[27]!.id, rows[29]!.id]);
+    const value = encodePairsOption({ name: 'Test', rows }, (n) => n - 1, prefer);
+    const pack = decodePairsOption(value)!;
+    expect(pack.pairs).toHaveLength(18);
+    expect(pack.pairs.slice(0, 3).map((p) => p.id).sort()).toEqual([...prefer].sort());
+    expect(pack.pairs.every((p) => p.id)).toBe(true);
+    // ohne Vorliebe bleibt es eine Zufallsauswahl, Kennungen sind trotzdem dabei
+    expect(decodePairsOption(encodePairsOption({ name: 'Test', rows }, (n) => n - 1))!.pairs[0]!.id).toMatch(/^n-/);
+  });
+  it('zählt „sicher“ als Gut und „unsicher“ als Schwer, lässt noch nicht fällige Karten in Ruhe', () => {
+    const c = setup();
+    const rowA = rowIdOf(c.notes[0]!.id);
+    const rowB = rowIdOf(c.notes[1]!.id);
+    const rowC = rowIdOf(c.notes[2]!.id);
+    let book = emptyLearnBook(crt);
+    // A und B sind neu: beginnen zu lernen
+    const first = applyGameResults(c, book, [{ row: rowA, sure: true }, { row: rowB, sure: false }, { row: rowA, sure: false }], T0);
+    expect(first.applied).toBe(2); // doppelte Meldung zählt einmal
+    book = first.book;
+    const cards = learnCards(c, book);
+    expect(cards[0]!.type).toBe(CARD_LEARNING);
+    expect(book.log.map((e) => e.ease).sort()).toEqual([2, 3]);
+    // Karte C ist längst gelernt und erst in 20 Tagen fällig: bleibt unberührt
+    const cardC = { ...cards[2]!, type: CARD_REVIEW, queue: 2, due: dayNumber(crt, T0) + 20, ivl: 30, reps: 5 };
+    const withC = recordAnswer(book, cardC, { id: T0 - 5, cid: cardC.id, usn: -1, ease: 3, ivl: 30, lastIvl: 20, factor: 2500, time: 0, type: 1 }, T0 - 5, c);
+    const early = applyGameResults(c, withC, [{ row: rowC, sure: true }], T0 + 1000);
+    expect(early.applied).toBe(0);
+    expect(early.book).toBe(withC);
+    // eine fällige Karte zählt
+    const due = applyGameResults(c, withC, [{ row: rowC, sure: true }], T0 + 25 * DAYMS);
+    expect(due.applied).toBe(1);
+    expect(learnCards(c, due.book)[2]!.ivl).toBeGreaterThan(30);
+  });
+  it('findet die heute fälligen Zeilen, nicht die neuen', () => {
+    const c = setup();
+    const ids = c.notes.map((n) => rowIdOf(n.id));
+    const first = applyGameResults(c, emptyLearnBook(crt), [{ row: ids[0]!, sure: true }, { row: ids[1]!, sure: true }], T0);
+    // direkt danach: Lernschritt in 10 Minuten (noch nicht fällig)
+    expect(dueRowIds(c, first.book, ids, T0 + 60_000).size).toBe(0);
+    // nach 11 Minuten sind beide fällig, die neuen weiterhin nicht
+    expect([...dueRowIds(c, first.book, ids, T0 + 11 * 60_000)].sort()).toEqual([ids[0]!, ids[1]!].sort());
+    expect(packsOf(c)).toEqual([]); // Standardstapel ist kein Paket
+  });
+});

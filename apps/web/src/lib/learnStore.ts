@@ -1,4 +1,5 @@
-import { compactLearnBook, emptyLearnBook, learnBookToStored, sanitizeLearnBook, type AnkiCollection, type LearnBook } from '@brett-und-blatt/engine';
+import { applyGameResults, compactLearnBook, emptyLearnBook, learnBookToStored, sanitizeLearnBook, type AnkiCollection, type GameResult, type LearnBook } from '@brett-und-blatt/engine';
+import { loadCollection } from './library';
 import { passSyncSoon } from './playerPass';
 
 /*
@@ -6,7 +7,9 @@ import { passSyncSoon } from './playerPass';
  * führen ihren Lernstand selbst (IndexedDB, siehe `ankiStore.ts`).
  */
 
-export const LEARN_KEY = 'brett-und-blatt:lernen';
+import { LEARN_KEY } from '@brett-und-blatt/ui';
+
+export { LEARN_KEY };
 
 /** Mitternacht dieses Tages nach der Uhr des Geräts (Sekunden): der Tag 0 für neue Lernbücher. */
 export function localMidnight(now = Date.now()): number {
@@ -31,4 +34,13 @@ export function saveLearnBook(book: LearnBook, col?: AnkiCollection): void {
     // ohne Speicher gilt der Lernstand nur bis zum Neuladen
   }
   passSyncSoon();
+}
+
+/** Trägt das Ergebnis einer Partie als Wiederholungen ein (Lernen beim Spielen, #223). Liefert, wie viele Karten gezählt wurden. */
+export function recordGameLearning(results: readonly GameResult[], now = Date.now()): number {
+  if (results.length === 0) return 0;
+  const col = loadCollection();
+  const { book, applied } = applyGameResults(col, loadLearnBook(), results, now);
+  if (applied > 0) saveLearnBook(book, col);
+  return applied;
 }

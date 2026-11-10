@@ -2,7 +2,7 @@ import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { ContentCard, FitBox, GridBoard, PackPicker, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState } from 'react';
 import { faceOf } from '../content';
-import type { PairsMove, PairsState } from '../rules';
+import { learningReport, type PairsMove, type PairsState } from '../rules';
 import './styles.css';
 import { albumSpec } from './album';
 
@@ -78,6 +78,7 @@ export const gameUi: GameUi<PairsState, PairsMove> = {
   Board,
   SetupExtra: PairsSetup,
   album: albumSpec,
+  learning: { report: learningReport },
   SeatSymbol,
   sounds: { flipped: 'karte-umdrehen', pair: 'paar', mismatch: 'kein-paar' },
   seatLabel: (seat) => `Platz ${seat + 1}`,
