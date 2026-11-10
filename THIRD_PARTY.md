@@ -225,6 +225,12 @@ Die fünf Porträts der Nebenfiguren für das Spiel Marktplatz (`packages/games/
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 
+## Marktplatz-Feldgrafiken (KI-erzeugt)
+
+Die 15 Fachwerkhäuser, Zunftwerkstätten und Ortsgrafiken für das Spiel Marktplatz (`packages/games/marketplace/src/ui/fields/*.webp`: Bäcker, Weber, Imker, Schuster, Schmiede, Steinmetze, Mühle, Brücke, Marktwaage, Taverne, Stadttor, Kerker, Jahrmarkt, Burgwache, Waldweg): **KI-erzeugt** mit einem Bildmodell nach eigenen Bildbeschreibungen im Narrenhof-Ölstil, November 2026. Auswahl durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `marktplatz-felder.json`). Die Bilder zeigen Fachwerk-Architektur und Zunfthäuser im Fabeltier-Königreich Brezelbach.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
 ## Raum-Kulissen (KI-erzeugt)
 
 Die drei zusätzlichen Raumkulissen (`apps/web/src/assets/raeume/*.webp`: Burgsaal, Bibliothek & Schreibstube, Schlossgarten): **KI-erzeugt** mit einem Bildmodell nach eigenen Bildbeschreibungen im Narrenhof-Ölstil, November 2026. Auswahl durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `raeume.json`). Die Bilder zeigen leere Räume und Gärten ohne Personen, Tiere oder Text.

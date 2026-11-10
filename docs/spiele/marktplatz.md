@@ -216,6 +216,13 @@ Wer auf einen Ausrufer kommt, zieht die oberste Karte vom verdeckten Ausrufersta
 
 **Porträts & Sprüche (10.11., #73):** Fünf gemalte Porträts der Nebenfiguren (Ausrufer, Tavernenwirtin, Abt Esel, König Löwe, Hofnarr) im Narrenhof-Ölstil eingebaut samt Zitaten, Hofnarr-Witzen im Kerker und Ausrufer bei den Hofnachrichten.
 
-**Noch nicht drin:** Fachwerkhäuser als Feldgrafik (Felder zeigen Emojis), eigene Klänge (es laufen vorhandene aus dem Katalog).
+**Feldgrafiken (10.11., #73):** 15 liebevoll gemalte Fachwerk-Zunfthäuser und Ortsgrafiken im Narrenhof-Ölstil eingebaut (`packages/games/marketplace/src/ui/fields/`): Bäcker, Weber, Imker, Schuster, Schmiede, Steinmetze, Mühle am Bach, Brücke, Marktwaage, Taverne „Zum Brett & Blatt“, Stadttor, Kerker, Jahrmarkt, Burgwache, Waldweg. Die Infokarte (`FieldSheet`) zeigt die Vignetten im Großformat, auf dem Brett sind alle Felder damit bebildert.
+
+**Eigene Klänge (Vorschlag für Auswahl durch Cornelius, #73):**
+1. `mkt_wuerfelbecher`: Hölzerner Würfelbecher schüttelt und rollt auf Holztisch
+2. `mkt_brezeln`: Fröhliches, helles Klimpern von Brezel-Token bei Einnahmen und Zolleinnahmen
+3. `mkt_kauf`: Siegelstempel auf Pergament / Zuschlag bei Erwerb eines Zunftbetriebs
+4. `mkt_kerker`: Schweres Eichentor schlägt zu mit leisem Klirren des Kerkerschlüssels
+5. `mkt_herold`: Kurzer dreitöniger Signalstoß des Heroldshorns beim Ziehen einer Ausruferkarte
 
 **Entschieden (1.11.):** Das Spiel heißt **Marktplatz**; Brezelbach bleibt der Name des Ortes. Setting im Königreich des Narrenhofs mit Tierfamilien, die sechs Zünfte, Brezeln als Währung sowie Zunftpartnerschaft, verdeckte Hofnachrichten und die zwölf Ausruferkarten bleiben so. Vor dem Bau läuft eine Probeversion nur mit Bots, die Ergebnisse bekommt Cornelius zu sehen.

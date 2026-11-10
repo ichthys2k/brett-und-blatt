@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { CARD_TEXT, FAMILIES, FAMILY_COLORS, FAMILY_ICONS, FIELD_COUNT, FIELD_ICONS, FIELD_NAMES, GUILDS, NEWS_TEXT, SEASONS, guildOf, priceOf, type CardId, type NewsId } from '../board';
 import { buildCost, isLegal, isTradable, redeemCost, rentOf, worth, type MarketMove, type MarketView } from '../rules';
+import { fieldGraphicFor } from './fields';
 import { FIGURES, figureForField, jesterJoke } from './figures';
 import './styles.css';
 
@@ -88,13 +89,14 @@ function FieldSheet({ view, field, name, onClose }: { view: MarketView; field: n
   const { g, ownerName, rent } = fieldInfo(view, field, name);
   const guild = g !== null && g >= 0 ? GUILDS[g]! : null;
   const figure = figureForField(field);
+  const graphic = fieldGraphicFor(field);
   return (
     <div className="mkt-sheet" onClick={onClose}>
       <div className="mkt-sheet-card" onClick={(e) => e.stopPropagation()}>
         <h3>
           {FIELD_ICONS[field]} {FIELD_NAMES[field]}
         </h3>
-        {figure && (
+        {figure ? (
           <div className="mkt-figure-card">
             {figure.image && <img src={figure.image} alt={figure.name} className="mkt-figure-img" width={68} height={68} />}
             <div className="mkt-figure-body">
@@ -103,7 +105,15 @@ function FieldSheet({ view, field, name, onClose }: { view: MarketView; field: n
               <div className="mkt-figure-quote">„{field === 9 ? jesterJoke(view.round) : figure.quote}“</div>
             </div>
           </div>
-        )}
+        ) : graphic ? (
+          <div className="mkt-field-card">
+            <img src={graphic} alt={FIELD_NAMES[field]} className="mkt-field-card-img" width={68} height={68} />
+            <div className="mkt-field-card-body">
+              <div className="mkt-field-card-title">{guild ? `Zunft der ${guild.name}` : FIELD_NAMES[field]}</div>
+              <div className="mkt-field-card-sub">{SPECIAL[field] ?? (guild ? `Feld ${field + 1} von 36` : 'Brezelbach')}</div>
+            </div>
+          </div>
+        ) : null}
         {g !== null ? (
           <>
             <div>{guild ? `Zunft der ${guild.name}` : 'Gemeinschaftsbetrieb'} · Preis {priceOf(field)} 🥨</div>
@@ -463,6 +473,8 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint }: Pr
           const { row, col } = cellOf(field);
           const g = guildOf(field);
           const owner = view.owner[field]!;
+          const figure = figureForField(field);
+          const graphic = fieldGraphicFor(field) ?? figure?.image ?? null;
           return (
             <button
               key={field}
@@ -476,9 +488,13 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint }: Pr
               onClick={() => tapField(field)}
             >
               {g !== null && <span className="mkt-strip" style={{ background: g >= 0 ? GUILDS[g]!.color : '#a8a29e' }} />}
-              <span className="mkt-icon" aria-hidden="true">
-                {FIELD_ICONS[field]}
-              </span>
+              {graphic ? (
+                <img src={graphic} alt="" className="mkt-field-thumb" />
+              ) : (
+                <span className="mkt-icon" aria-hidden="true">
+                  {FIELD_ICONS[field]}
+                </span>
+              )}
               {g !== null && owner < 0 && <span className="mkt-price">{priceOf(field)}</span>}
               {view.level[field]! > 0 && <span className="mkt-levels">{levelMark(view.level[field]!)}</span>}
               {owner >= 0 && <span className="mkt-owner" style={{ '--mkt-owner': FAMILY_COLORS[owner] } as React.CSSProperties} />}
