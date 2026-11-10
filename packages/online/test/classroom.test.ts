@@ -164,3 +164,58 @@ describe('Klassenausweise (#152): Eintragen durch die Leitung', () => {
     expect(enrollMember(state, T(0), { token: T(6), name: '' }, 3)).toEqual({ error: expect.any(String) });
   });
 });
+
+import { addClassPack, clearProgress, markProgress, mayStoreProgress, removeClassPack, setLeadKey, CLASS_MAX_PACKS, PROGRESS_MAX_CHARS } from '../src';
+
+describe('Pakete und Lernstand (#224)', () => {
+  const key43 = 'k'.repeat(43);
+  const pub = 'P'.repeat(87);
+  const make = () => {
+    const state = createClass('🍎🍌🍇🍊🍓🥝', 'Klasse 5a', { token: 'lead-token-1', name: 'Frau Muster', avatar: '🦊' }, 1000) as ClassState;
+    joinClass(state, { token: 'kid-token-0001', name: 'Kind', avatar: '🐼' }, 2000);
+    return state;
+  };
+  it('nur die Leitung legt Pakete in die Klasse; Mitglieder sehen sie samt Schlüssel, Fremde nicht', () => {
+    const state = make();
+    expect('error' in addClassPack(state, 'kid-token-0001', { name: 'Latein', key: key43 }, 3000)).toBe(true);
+    expect('error' in addClassPack(state, 'lead-token-1', { name: 'Latein', key: 'zu kurz' }, 3000)).toBe(true);
+    expect(addClassPack(state, 'lead-token-1', { name: 'Latein', key: key43 }, 3000)).toEqual({ ok: true });
+    expect(classView(state, 'kid-token-0001').packs).toMatchObject([{ name: 'Latein', key: key43 }]);
+    expect(classView(state, 'fremd-token-99').packs).toEqual([]);
+    // derselbe Link: kein Doppelter
+    addClassPack(state, 'lead-token-1', { name: 'Latein 2', key: key43 }, 4000);
+    expect(state.packs).toHaveLength(1);
+    expect(state.packs![0]!.name).toBe('Latein 2');
+    const id = state.packs![0]!.id;
+    expect('error' in removeClassPack(state, 'kid-token-0001', id)).toBe(true);
+    expect(removeClassPack(state, 'lead-token-1', id)).toEqual({ ok: true });
+    expect(state.packs).toEqual([]);
+  });
+  it('höchstens zwölf Pakete', () => {
+    const state = make();
+    for (let i = 0; i < CLASS_MAX_PACKS; i++) expect(addClassPack(state, 'lead-token-1', { name: `P${i}`, key: String(i).padStart(43, 'a') }, 3000)).toEqual({ ok: true });
+    expect('error' in addClassPack(state, 'lead-token-1', { name: 'zu viel', key: 'z'.repeat(43) }, 3000)).toBe(true);
+  });
+  it('der Lernstand wird nur bei eingeschaltetem Lernstand abgelegt und nur für die Leitung sichtbar gemeldet', () => {
+    const state = make();
+    expect('error' in mayStoreProgress(state, 'kid-token-0001', 'abc')).toBe(true); // aus
+    expect(setLeadKey(state, 'lead-token-1', pub)).toEqual({ ok: true });
+    expect('error' in setLeadKey(state, 'kid-token-0001', pub)).toBe(true);
+    expect('error' in setLeadKey(state, 'lead-token-1', 'kurz')).toBe(true);
+    expect(configureClass(state, 'lead-token-1', { learning: true }, 3000)).toEqual({ ok: true });
+    expect(mayStoreProgress(state, 'kid-token-0001', 'YWJj')).toEqual({ ok: true });
+    expect('error' in mayStoreProgress(state, 'kid-token-0001', 'a'.repeat(PROGRESS_MAX_CHARS + 1))).toBe(true);
+    expect('error' in mayStoreProgress(state, 'kid-token-0001', 'nicht gültig!')).toBe(true);
+    expect('error' in mayStoreProgress(state, 'fremd-token-99', 'YWJj')).toBe(true);
+    markProgress(state, 'kid-token-0001', 5000);
+    // Mitglieder sehen die Schlüssel der Leitung, nur die Leitung sieht, wer abgelegt hat
+    expect(classView(state, 'kid-token-0001').leadKeys).toEqual([{ id: state.members['lead-token-1']!.id, key: pub }]);
+    expect(classView(state, 'lead-token-1').members.find((m) => !m.lead)?.progressAt).toBe(5000);
+    expect(classView(state, 'kid-token-0001').members.find((m) => !m.lead)?.progressAt).toBeUndefined();
+    // Ausschalten nimmt den Hinweis weg
+    configureClass(state, 'lead-token-1', { learning: false }, 6000);
+    expect(classView(state, 'lead-token-1').members.find((m) => !m.lead)?.progressAt).toBeUndefined();
+    expect(classView(state, 'kid-token-0001').leadKeys).toEqual([]);
+    clearProgress(state, 'kid-token-0001');
+  });
+});

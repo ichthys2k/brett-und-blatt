@@ -240,3 +240,13 @@ export async function savePackLearnSettings(id: string, patch: { crt?: number; l
     db.close();
   }
 }
+
+/** Das Paket ohne Medien (für Auswertungen; Medien können Hunderte Dateien sein). */
+export async function loadPackLight(id: string): Promise<StoredPack | null> {
+  const db = await open();
+  try {
+    return (await result(db.transaction(PACKS).objectStore(PACKS).get(id) as IDBRequest<StoredPack | undefined>)) ?? null;
+  } finally {
+    db.close();
+  }
+}

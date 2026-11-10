@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { loadPack, savePackAnswer, savePackLearnSettings } from './ankiStore';
 import { OWN } from './collectionSource';
 import { loadCollection } from './library';
+import { announceLearning } from './classLearning';
 import { loadLearnBook, localMidnight, saveLearnBook } from './learnStore';
 
 /*
@@ -101,6 +102,7 @@ export function useLearner(source: string): Learner {
         next = { ...s, cards, revlog: book.log, days: book.days, book };
       } else {
         void savePackAnswer(source, result.card, result.log);
+        announceLearning();
         const day = dayNumber(s.crt, now);
         next = { ...s, cards, revlog: [...s.revlog, result.log], days: s.days.includes(day) ? s.days : [...s.days, day] };
       }

@@ -77,6 +77,17 @@ export async function classAct(code: string, action: string, extra: Record<strin
   }
 }
 
+/** Eine Aktion, deren Antwort Daten statt der Klassenansicht enthält (z. B. `getProgress`). */
+export async function classData<T>(code: string, action: string, extra: Record<string, unknown> = {}): Promise<T | null> {
+  if (!GAME_SERVER) return null;
+  try {
+    const response = await fetch(`${GAME_SERVER}/klassen/${encodeURIComponent(code)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: storage.deviceToken(), ...extra, action }) });
+    return response.ok ? ((await response.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
 const HIDE_KEY = 'brett-und-blatt:klassen-ausblenden';
 /** Teile, die dieses Mitglied den anderen nicht zeigen will (dieser Pass, nur weglassen). */
 export function hiddenSections(): CardSection[] {

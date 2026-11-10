@@ -157,6 +157,14 @@ export function Datenschutz() {
         für die Teilnahme der Kinder verantwortlich. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>Pakete und Lernstand in der Klasse:</strong> Die Leitung kann Anki-Pakete in die Klasse legen. Dafür speichert der Spieleserver in der EU den Namen des Pakets und den Linkschlüssel, mit dem das Paket (verschlüsselt in Cloudflare R2, EU) geöffnet wird; er gibt den
+        Schlüssel nur an Mitglieder der Klasse weiter und könnte das Paket damit lesen. Schaltet die Leitung „Lernstand“ ein, erscheint für jedes Mitglied zuerst ein Hinweis, und erst nach der Zustimmung (bei Kindern: der Eltern) legt das Gerät den Lernstand
+        der Pakete dieser Klasse ab: die Kennungen der Karten, wie oft sie wiederholt und vergessen wurden, die Art des Lernstands, Zahl und Zeitpunkt der Antworten der letzten Tage und die Lerntage in Folge, nichts anderes aus deinem Pass (keine Partien, keine Notizen).
+        Der Stand wird auf deinem Gerät mit einem Schlüssel verschlüsselt, den nur die Leitung öffnen kann; der Spieleserver speichert nur diese unlesbaren Daten und den Zeitpunkt der Ablage. Du kannst die Zustimmung jederzeit widerrufen oder die Klasse verlassen; dann wird der
+        abgelegte Stand gelöscht. Schaltet die Leitung den Lernstand aus oder löst sie die Klasse auf, wird er ebenfalls gelöscht; eine Klasse ohne Aktivität wird nach einem Jahr gelöscht. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), bei Kindern unter 16 Jahren
+        die der Eltern (Art. 8 DSGVO).
+      </p>
+      <p>
         <strong>PIN oder Passwort (Schloss):</strong> Wenn du deinen Ausweis mit PIN oder Passwort schützt, rechnet dein Browser aus Spielercode und
         PIN bzw. Passwort zwei Werte aus. Die PIN selbst verlässt dein Gerät nie. Der Spieleserver in der EU speichert nur einen Prüfwert, den er mit einem
         geheimen Schlüssel des Betreibers (dem „Pfeffer“, der nicht im Speicher liegt) bildet, einen mit demselben Schlüssel verschlüsselten Zufallsanteil,

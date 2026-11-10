@@ -22,6 +22,12 @@ import {
   BACKUP_ID_PATTERN,
   BACKUP_TTL_MS,
   CLASS_TTL_MS,
+  addClassPack,
+  clearProgress,
+  markProgress,
+  mayStoreProgress,
+  removeClassPack,
+  setLeadKey,
   OpenRoomDirectory,
   Room,
   SERIES_CODE_PATTERN,
@@ -520,8 +526,10 @@ export default {
       let body: Record<string, unknown>;
       try {
         const text = await request.text();
-        if (text.length > 4000) return json({ error: 'size' }, 413, noStore);
+        if (text.length > 70_000) return json({ error: 'size' }, 413, noStore);
         body = JSON.parse(text) as Record<string, unknown>;
+        // Nur der verschlüsselte Lernstand (Aktion `progress`) darf groß sein.
+        if (text.length > 4000 && body.action !== 'progress') return json({ error: 'size' }, 413, noStore);
       } catch {
         return json({ error: 'body' }, 400, noStore);
       }
@@ -1181,20 +1189,60 @@ export class ClassRoom extends DurableObject<Env> {
         break;
       case 'leave':
         outcome = leaveClass(state, token);
+        if ('ok' in outcome && typeof token === 'string') await this.ctx.storage.delete(`progress:${token}`);
         break;
       case 'accept':
       case 'reject':
         outcome = decide(state, token, body.id, body.action === 'accept', now);
         break;
-      case 'remove':
+      case 'remove': {
+        const gone = Object.entries(state.members).find(([, m]) => m.id === body.id)?.[0];
         outcome = removeMember(state, token, body.id);
+        if ('ok' in outcome && gone) await this.ctx.storage.delete(`progress:${gone}`);
         break;
+      }
       case 'lead':
         outcome = setLead(state, token, body.id, body.lead === true);
         break;
       case 'configure':
-        outcome = configureClass(state, token, { name: body.name, open: body.open, approval: body.approval, sections: body.sections }, now);
+        outcome = configureClass(state, token, { name: body.name, open: body.open, approval: body.approval, sections: body.sections, learning: body.learning }, now);
+        // Ausgeschalteter Lernstand: alles Abgelegte wird gelöscht.
+        if ('ok' in outcome && body.learning === false) await this.ctx.storage.delete([...(await this.ctx.storage.list({ prefix: 'progress:' })).keys()]);
         break;
+      case 'addPack':
+        outcome = addClassPack(state, token, { name: body.name, key: body.key }, now);
+        break;
+      case 'removePack':
+        outcome = removeClassPack(state, token, body.id);
+        break;
+      case 'leadKey':
+        outcome = setLeadKey(state, token, body.key);
+        break;
+      case 'progress': {
+        // Mitglied legt seinen verschlüsselten Lernstand ab (leerer Wert: widerrufen und löschen).
+        if (typeof token !== 'string') return reply(400, { error: 'token' });
+        if (body.blob === '') {
+          await this.ctx.storage.delete(`progress:${token}`);
+          clearProgress(state, token);
+          break;
+        }
+        outcome = mayStoreProgress(state, token, body.blob);
+        if ('ok' in outcome) {
+          await this.ctx.storage.put(`progress:${token}`, { at: now, blob: body.blob });
+          markProgress(state, token, now);
+        }
+        break;
+      }
+      case 'getProgress': {
+        // Nur die Leitung bekommt die verschlüsselten Stände; sie kann sie nur mit ihrem privaten Schlüssel öffnen.
+        if (!mayDissolve(state, token)) return reply(403, { error: 'Das darf nur die Leitung.' });
+        const stored = await this.ctx.storage.list<{ at: number; blob: string }>({ prefix: 'progress:' });
+        const list = [...stored].flatMap(([key, value]) => {
+          const member = state.members[key.slice('progress:'.length)];
+          return member && state.learning ? [{ id: member.id, at: value.at, blob: value.blob }] : [];
+        });
+        return reply(200, { progress: list });
+      }
       case 'dissolve':
         if (!mayDissolve(state, token)) return reply(403, { error: 'Das darf nur die Leitung.' });
         await this.ctx.storage.deleteAll();
