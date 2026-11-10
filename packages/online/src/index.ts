@@ -40,6 +40,7 @@ export { ATTEMPT_LIMIT, ATTEMPT_WINDOW_MS, isBlocked, recordMiss, type AttemptSt
 export { LEAD_GRANTABLE, ORG_ROLES, ROLE_CAPABILITIES, canGrantRole, isOrgRole, orgCapabilities, orgRoleOfLegacy, ownFieldsOnly, type LegacyTournamentRole, type OrgRole } from './org-roles';
 export { CAPABILITIES, can, roomCapabilities, tournamentCapabilities, type Capability, type TournamentRole } from './capabilities';
 export * from './classroom';
+export * from './org';
 export * from './classcard';
 export * from './series';
 export * from './series-book';

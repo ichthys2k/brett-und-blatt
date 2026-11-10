@@ -124,3 +124,8 @@ Reihenfolge: 1 → 2 → 3 → 4 → 5; 6 bis 8 danach, jeweils nach Cornelius' 
 5. **Name** in der Oberfläche: „Verein oder Schule“.
 
 Noch offen: nichts am Konzept; als Nächstes die Freigabe der Umsetzungsschritte (Abschnitt 9) als eigene Issues.
+
+## 11. Stand der Umsetzung
+
+- **#226 Rechtekern** (10.11.2026): `packages/online/src/org-roles.ts` – sieben Rollen-Bündel, Vereinigung bei Mehrfachrollen (`orgCapabilities`), Vergaberegel (`canGrantRole`, `leaderMayGrant`), Abbildung der alten Rollen (`orgRoleOfLegacy`), `tournamentCapabilities` nimmt optional `orgRoles` hinzu.
+- **#227 Organisation auf dem Server** (10.11.2026): Logik `packages/online/src/org.ts` (Code aus sechs Emoji, Mitglieder mit Rollen und angebotenen Rollen, Einmal-Einladungen mit 24 h und fünf Fehlversuchen, Annahme/Ablehnung, Entzug, Entfernen, Austritt, Protokoll mit 200 Einträgen, Obergrenze 200/40), Durable Object `OrgRoom` (Binding `ORGS`, **Wrangler-Migration v11**), `POST /org` (anlegen, **nur mit Betreiber-Schlüssel**, bis Antrag und Freigabe #228 folgen), `POST /org/<Code>` mit den Aktionen `view`, `redeem`, `invite`, `revokeInvite`, `offer`, `accept`, `decline`, `revoke`, `remove`, `leave`, `configure`, `update`, `dissolve`, `DELETE /betreiber/org/<Code>`. Sichten enthalten nie Kennungen oder Einladungs-Codes; Einladungen und Protokoll sehen nur Betreiber und Leitung. Rauchtest: `OPERATOR_KEY=… node apps/server/scripts/org.mjs` (Server mit `OPERATOR_KEY` in `apps/server/.dev.vars`).

@@ -4,8 +4,8 @@
 // Der Schlüssel steht nur in der Umgebungsvariable, nie in der Befehlszeile, im Repo oder im Chat.
 const [server, kind, target] = process.argv.slice(2);
 const key = process.env.OPERATOR_KEY;
-if (!server || !['turnier', 'klasse', 'serie'].includes(kind) || !target || !key) {
-  console.error('Aufruf: OPERATOR_KEY=… node apps/server/scripts/betreiber.mjs <Server-Adresse> turnier|klasse|serie <Code>');
+if (!server || !['turnier', 'klasse', 'serie', 'org'].includes(kind) || !target || !key) {
+  console.error('Aufruf: OPERATOR_KEY=… node apps/server/scripts/betreiber.mjs <Server-Adresse> turnier|klasse|serie|org <Code>');
   process.exit(2);
 }
 const response = await fetch(`${server.replace(/\/$/, '')}/betreiber/${kind}/${encodeURIComponent(target)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${key}` } });

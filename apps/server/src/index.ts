@@ -100,6 +100,27 @@ import { bibelQuizKatalog } from './bibelquiz';
 import { wortspielKataloge } from './wortspiele';
 import { onlineGames } from './games';
 import { isOperator } from './operator';
+import {
+  answerOffer,
+  configureOrg,
+  createInvite,
+  createOrg,
+  isOrgExpired,
+  leaveOrg,
+  mayDissolveOrg,
+  offerRoles,
+  ORG_TTL_MS,
+  ORG_KINDS,
+  orgView,
+  parseOrgCode,
+  randomOrgCode,
+  redeemInvite,
+  removeOrgMember,
+  revokeInvite,
+  revokeRoles,
+  updateOrgMember,
+  type OrgState,
+} from '@brett-und-blatt/online';
 
 /**
  * Der Spieleserver auf Cloudflare – nur ein dünner Adapter: Die ganze Spiellogik
@@ -128,6 +149,7 @@ interface Env {
   SHARES: DurableObjectNamespace<PassShare>;
   CLASSES: DurableObjectNamespace<ClassRoom>;
   SERIES: DurableObjectNamespace<SeriesRoom>;
+  ORGS: DurableObjectNamespace<OrgRoom>;
   ACCOUNT_FLOWS: DurableObjectNamespace<AccountFlow>;
   ACCOUNT_LOCKS: DurableObjectNamespace<AccountLockBox>;
   /** Anmeldung mit Google (`wrangler secret put GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`). Fehlen sie, ist der Anbieter nicht eingerichtet. */
@@ -191,6 +213,11 @@ function shareStub(env: Env, id: string): DurableObjectStub<PassShare> {
 
 function classStub(env: Env, code: string): DurableObjectStub<ClassRoom> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.CLASSES : env.CLASSES.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(code));
+}
+
+function orgStub(env: Env, code: string): DurableObjectStub<OrgRoom> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.ORGS : env.ORGS.jurisdiction('eu');
   return namespace.get(namespace.idFromName(code));
 }
 
@@ -323,7 +350,7 @@ export default {
     }
 
     // Betreiber-Endpunkte (Schlüssel `OPERATOR_KEY`): Liste der offenen Turniere und Löschen von Turnieren und Klassen.
-    const operator = /^\/betreiber\/(turnier|klasse|serie|liste)(?:\/([^/]+))?$/.exec(url.pathname);
+    const operator = /^\/betreiber\/(turnier|klasse|serie|org|liste)(?:\/([^/]+))?$/.exec(url.pathname);
     if (operator) {
       if (!env.OPERATOR_KEY) return json({ error: 'aus' }, 404, cors);
       const wanted = operator[1] === 'liste' ? 'GET' : 'DELETE';
@@ -344,6 +371,10 @@ export default {
       if (operator[1] === 'turnier') {
         if (!TOURNAMENT_CODE_PATTERN.test(target)) return json({ error: 'code' }, 400, cors);
         done = await tournamentStub(env, target).operatorDelete();
+      } else if (operator[1] === 'org') {
+        const code = parseOrgCode(target);
+        if (!code) return json({ error: 'code' }, 400, cors);
+        done = await orgStub(env, code).operatorDelete();
       } else if (operator[1] === 'serie') {
         if (!SERIES_CODE_PATTERN.test(target)) return json({ error: 'code' }, 400, cors);
         done = await seriesStub(env, target).operatorDelete();
@@ -515,6 +546,57 @@ export default {
       const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
       if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
       const result = await classStub(env, code).act(JSON.stringify(body));
+      if (result.status === 404) await limiter.miss();
+      return json(JSON.parse(result.body) as Record<string, unknown>, result.status, noStore);
+    }
+
+    // Organisationen (#217): Anlegen nur mit dem Betreiber-Schlüssel, bis Antrag und Freigabe (#228) folgen.
+    if (url.pathname === '/org' && request.method === 'POST') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      if (!env.OPERATOR_KEY) return json({ error: 'aus' }, 404, cors);
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      if (!(await isOperator(request, env.OPERATOR_KEY))) {
+        await limiter.miss();
+        return json({ error: 'nicht erlaubt' }, 401, noStore);
+      }
+      let body: Record<string, unknown>;
+      try {
+        const text = await request.text();
+        if (text.length > 4000) return json({ error: 'size' }, 413, noStore);
+        body = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        return json({ error: 'body' }, 400, noStore);
+      }
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const code = randomOrgCode((n) => crypto.getRandomValues(new Uint32Array(1))[0]! % n);
+        const created = await orgStub(env, code).create(code, JSON.stringify(body));
+        if (created === 'taken') continue;
+        if (created !== 'ok') return json({ error: created }, 400, noStore);
+        return json({ code }, 201, noStore);
+      }
+      return json({ error: 'busy' }, 503, noStore);
+    }
+
+    const org = /^\/org\/([^/]+)$/.exec(url.pathname);
+    if (org) {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      if (request.method !== 'POST') return json({ error: 'method' }, 405, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      const code = parseOrgCode(decodeURIComponent(org[1]!));
+      if (!code) return json({ error: 'code' }, 404, noStore);
+      let body: Record<string, unknown>;
+      try {
+        const text = await request.text();
+        if (text.length > 4000) return json({ error: 'size' }, 413, noStore);
+        body = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        return json({ error: 'body' }, 400, noStore);
+      }
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      const result = await orgStub(env, code).act(JSON.stringify(body));
       if (result.status === 404) await limiter.miss();
       return json(JSON.parse(result.body) as Record<string, unknown>, result.status, noStore);
     }
@@ -1114,6 +1196,103 @@ export class ClassRoom extends DurableObject<Env> {
   private async save(state: ClassState): Promise<void> {
     await this.ctx.storage.put('class', state);
     await this.ctx.storage.setAlarm(state.lastActive + CLASS_TTL_MS);
+  }
+}
+
+/**
+ * Eine Organisation als Durable Object (eins je Code, in der EU, #217). Die Logik steht in `packages/online/src/org.ts`;
+ * hier nur Speicher und Frist (ein Jahr nach der letzten Aktivität).
+ */
+export class OrgRoom extends DurableObject<Env> {
+  async create(code: string, json: string): Promise<string> {
+    if (await this.ctx.storage.get('org')) return 'taken';
+    const body = JSON.parse(json) as Record<string, unknown>;
+    const founder = (body.founder && typeof body.founder === 'object' ? body.founder : {}) as Record<string, unknown>;
+    if (!ORG_KINDS.some((k) => k === body.kind)) return 'Art der Organisation fehlt.';
+    const state = createOrg(code, { name: body.name, kind: body.kind }, { token: founder.token, name: founder.name, avatar: founder.avatar, crest: founder.crest }, Date.now());
+    if (typeof state === 'string') return state;
+    await this.save(state);
+    return 'ok';
+  }
+
+  /** Nimmt eine Aktion als JSON-Text; Antwort ebenfalls als Text (RPC kennt `unknown` nicht). */
+  async act(json: string): Promise<{ status: number; body: string }> {
+    const reply = (status: number, value: Record<string, unknown>) => ({ status, body: JSON.stringify(value) });
+    const body = JSON.parse(json) as Record<string, unknown>;
+    const state = (await this.ctx.storage.get<OrgState>('org')) ?? null;
+    const now = Date.now();
+    if (!state || isOrgExpired(state, now)) return reply(404, { error: 'missing' });
+    const token = body.token;
+    let outcome: { error: string } | { ok: true } = { ok: true };
+    let extra: Record<string, unknown> = {};
+    switch (body.action) {
+      case 'view':
+        return reply(200, { view: orgView(state, token, now) });
+      case 'redeem':
+        outcome = redeemInvite(state, { token, name: body.name, avatar: body.avatar, crest: body.crest }, body.invite, now);
+        break;
+      case 'invite': {
+        const made = createInvite(state, token, body.roles, now);
+        if ('error' in made) outcome = made;
+        else extra = { invite: { id: made.id, code: made.code, expiresAt: made.expiresAt } };
+        break;
+      }
+      case 'revokeInvite':
+        outcome = revokeInvite(state, token, body.id, now);
+        break;
+      case 'offer':
+        outcome = offerRoles(state, token, body.id, body.roles, now);
+        break;
+      case 'accept':
+      case 'decline':
+        outcome = answerOffer(state, token, body.action === 'accept', now);
+        break;
+      case 'revoke':
+        outcome = revokeRoles(state, token, body.id, body.roles, now);
+        break;
+      case 'remove':
+        outcome = removeOrgMember(state, token, body.id, now);
+        break;
+      case 'leave':
+        outcome = leaveOrg(state, token, now);
+        break;
+      case 'configure':
+        outcome = configureOrg(state, token, { name: body.name, leaderMayGrant: body.leaderMayGrant }, now);
+        break;
+      case 'update':
+        outcome = updateOrgMember(state, token, { name: body.name, avatar: body.avatar, ...('crest' in body ? { crest: body.crest } : {}) }, now);
+        break;
+      case 'dissolve':
+        if (!mayDissolveOrg(state, token)) return reply(403, { error: 'Das darf nur der Betreiber.' });
+        await this.ctx.storage.deleteAll();
+        return reply(200, { dissolved: true });
+      default:
+        return reply(400, { error: 'action' });
+    }
+    if ('error' in outcome) return reply(409, { error: outcome.error, view: orgView(state, token, now) });
+    await this.save(state);
+    return reply(200, { view: orgView(state, token, now), ...extra });
+  }
+
+  /** Auflösen durch den Betreiber der Plattform (`/betreiber/org/<Code>`). */
+  async operatorDelete(): Promise<boolean> {
+    if (!(await this.ctx.storage.get('org'))) return false;
+    await this.ctx.storage.deleteAll();
+    return true;
+  }
+
+  override async alarm(): Promise<void> {
+    const state = await this.ctx.storage.get<OrgState>('org');
+    if (!state || isOrgExpired(state, Date.now())) {
+      await this.ctx.storage.deleteAll();
+      return;
+    }
+    await this.ctx.storage.setAlarm(state.lastActive + ORG_TTL_MS);
+  }
+
+  private async save(state: OrgState): Promise<void> {
+    await this.ctx.storage.put('org', state);
+    await this.ctx.storage.setAlarm(state.lastActive + ORG_TTL_MS);
   }
 }
 
