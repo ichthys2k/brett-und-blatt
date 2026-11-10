@@ -46,10 +46,11 @@ Ein Paket ist eine **ZIP-Datei** (verifiziert an `meta.rs`, `import_export.proto
 
 | Version | Erkennung | Sammlung | Medienliste | Kompression |
 |---|---|---|---|---|
-| Legacy 1 | keine Datei `meta`, `collection.anki2` | SQLite, Schema 11 | `media` als JSON-Objekt (Nummer → Dateiname) | keine |
-| Legacy 2 | keine Datei `meta`, `collection.anki21` | SQLite, Schema 11 | wie oben | keine |
+| Legacy 1 | keine Datei `meta` oder `meta` mit Version 1, `collection.anki2` | SQLite, Schema 11 | `media` als JSON-Objekt (Nummer → Dateiname) | keine |
+| Legacy 2 | keine Datei `meta` oder `meta` mit Version 2, `collection.anki21` | SQLite, Schema 11 | wie oben | keine |
 | Neu (Latest) | Datei `meta` (Protobuf, Version 3) | `collection.anki21b`, SQLite, **Schema 18** | `media` als Protobuf (`MediaEntries`: Name, Größe, SHA-1) | **zstd** für Sammlung, Medienliste und Medien |
 
+- **An einem echten Paket geprüft (10.11.2026, AnkiWeb, „Practice Mathematics Exercises on Khan Academy“):** ZIP mit `meta` (zwei Byte `08 02` = Version 2, Legacy 2), `collection.anki21` (2,4 MB, die eigentliche Sammlung), `collection.anki2` (50 KB, Platzhalter für alte Anki-Versionen) und `media` (`{}`, keine Medien). Das Schreiben von Legacy 2 soll deshalb `meta`, `collection.anki21`, einen Platzhalter `collection.anki2` und `media` enthalten (Platzhalter-Inhalt **zu prüfen**).
 - Medien liegen im ZIP unter ihrer Nummer (`0`, `1`, …). Die Zuordnung Nummer → Dateiname steht in `media`.
 - Eine `.apkg` mit dem Namen `collection.apkg` gilt als Sammlung. Sonst ist es ein Stapelpaket (ein Stapel mit Unterstapeln).
 - Beim Export bietet Anki „Ältere Anki-Versionen unterstützen“: dann Legacy 2. Beide Wege lesen aktuelle Anki-Versionen weiterhin.
