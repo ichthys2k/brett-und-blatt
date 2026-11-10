@@ -1,0 +1,51 @@
+{
+  "beschreibung": "W-025: Champions der fünf Wappenhäuser für das Drachenspiel (Turnier der Wappentiere): Haus Eichenhain (Wald), Seefahrergilde (Meer), Dorfgemeinschaft Hahnfeld (Bauernhof), Fernländer Karawane (Wildnis), Schwarm vom Moorbach (Krabbeltiere).",
+  "stil": "Painterly storybook oil illustration of an anthropomorphic animal knight champion, half-figure portrait facing the viewer in rich painterly fantasy card art style: medieval heraldic tournament attire, shields, warm atmospheric lighting, expressive dignified face. No text, no letters, no watermark, no card border, no frame.",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern clothing, logos, photo, real people",
+  "format": "3:4",
+  "groesse": [
+    360,
+    480
+  ],
+  "qualitaet": 78,
+  "ziel": "packages/games/drachenspiel/src/ui/champions",
+  "praefix": "",
+  "suffix": "",
+  "motive": [
+    {
+      "id": "forest",
+      "titel": "Haus Eichenhain (Wald)",
+      "haus": "Haus Eichenhain",
+      "tier": "Bär",
+      "prompt": "Painterly storybook oil illustration of an anthropomorphic bear knight champion, the noble guardian of House Oakgrove (Haus Eichenhain). Half-figure portrait facing the viewer. The brown bear wears a sturdy leather gambeson with embroidered oak leaf emblems, a forest green mantle pinned with an acorn brooch, and holds a wooden tournament shield. Warm golden sunlight filtering through misty oak trees in the background, dignified and loyal expression, rich painterly fantasy card art style. No text, no letters, no watermark, no card border, no frame."
+    },
+    {
+      "id": "sea",
+      "titel": "Seefahrergilde (Meer)",
+      "haus": "Seefahrergilde",
+      "tier": "Seeotter",
+      "prompt": "Painterly storybook oil illustration of an anthropomorphic sea otter captain champion, the noble herald of the Seafarer's Guild (Seefahrergilde). Half-figure portrait facing the viewer. The otter wears a navy blue naval officer coat with brass buttons, a nautical rope and anchor crest badge, and holds a wooden nautical shield with an anchor and wave emblem. Misty coastal harbour background with distant sailing ships at sunrise, warm salt-spray light, proud and adventurous expression, rich painterly fantasy card art style. No text, no letters, no watermark, no card border, no frame."
+    },
+    {
+      "id": "farm",
+      "titel": "Dorfgemeinschaft Hahnfeld (Bauernhof)",
+      "haus": "Dorfgemeinschaft Hahnfeld",
+      "tier": "Hahn",
+      "prompt": "Painterly storybook oil illustration of an anthropomorphic rooster knight champion, the proud champion of the Hahnfeld Village Community (Dorfgemeinschaft Hahnfeld). Half-figure portrait facing the viewer. The rooster wears an ornate medieval tabard in crimson red and warm wheat-yellow with embroidered wheat sheaf patterns, leather bracers, and holds a wooden heraldic shield bearing a golden wheat sheaf and sun emblem. Rolling golden wheat fields and a rustic timber-framed farm village in the background, golden morning sunrise, proud, cheerful and chivalrous expression, rich painterly fantasy card art style. No text, no letters, no watermark, no card border, no frame."
+    },
+    {
+      "id": "wild",
+      "titel": "Fernländer Karawane (Wildnis)",
+      "haus": "Fernländer Karawane",
+      "tier": "Wüstenluchs (Karakal)",
+      "prompt": "Painterly storybook oil illustration of an anthropomorphic caracal desert lynx champion, the agile warrior of the Faraway Caravan (Fernländer Karawane). Half-figure portrait facing the viewer. The caracal has tufted ears and keen golden eyes, wears elegant flowing desert traveler robes in warm terracotta and indigo silk over decorated bronze-studded leather armor, and holds a curved scimitar and a round bronze shield with a desert sun and crescent oasis emblem. Sweeping golden sand dunes and caravan silk tents in the warm twilight background, alert, graceful and dignified expression, rich painterly fantasy card art style. No text, no letters, no watermark, no card border, no frame."
+    },
+    {
+      "id": "bugs",
+      "titel": "Schwarm vom Moorbach (Krabbeltiere)",
+      "haus": "Schwarm vom Moorbach",
+      "tier": "Hirschkäfer",
+      "prompt": "Painterly storybook oil illustration of an anthropomorphic stag beetle knight champion, the gallant champion of the Moorstream Swarm (Schwarm vom Moorbach). Half-figure portrait facing the viewer. The stag beetle wears exquisitely crafted burnished iridescent emerald-green and bronze chitin plate armor, a small heraldic wooden shield bearing a glowing water lily and dragonfly emblem, and holds a delicate knightly rapier. Misty enchanted peat bog and mossy stream in the background with tiny floating fireflies and reed grass at twilight, chivalrous, brave and elegant expression, rich painterly fantasy card art style. No text, no letters, no watermark, no card border, no frame."
+    }
+  ]
+}
