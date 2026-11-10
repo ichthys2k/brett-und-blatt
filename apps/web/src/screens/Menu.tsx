@@ -1,19 +1,20 @@
 import { PlayerCrest } from '@brett-und-blatt/ui';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TavernScene } from '../components/TavernScene';
 import { useCrest } from '../lib/crestStore';
 import { findGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
+import { setHoveredStation, type TavernStationId } from '../lib/tavern3d';
 import './menu.css';
 
 /**
- * Hauptmenü (#184, Schritt 1): eine Taverne (Bild, #191) als Hintergrund und ein Rahmen mit vier Einträgen,
- * wie das Menü von Warcraft III. Die Szene (`TavernScene`) ist reiner Schmuck.
+ * Hauptmenü (#184, #262): begehbare 3D-Taverne als Hintergrund und ein räumlich geneigter
+ * Holzrahmen mit vier Einträgen wie in Warcraft III. Überfahren/Fokussieren hebt die Station im Raum hervor.
  */
-const ENTRIES: readonly { id: string; label: string; hint: string; to: string }[] = [
+const ENTRIES: readonly { id: Exclude<TavernStationId, 'home'>; label: string; hint: string; to: string }[] = [
   { id: 'single', label: 'Lokales Spiel', hint: 'Allein gegen den Computer oder zu mehreren an einem Gerät.', to: paths.home },
-  { id: 'multi', label: 'Online Spiel', hint: 'Offene Spiele, Spiel eröffnen, mit Code beitreten.', to: paths.online },
+  { id: 'online', label: 'Online Spiel', hint: 'Offene Spiele, Spiel eröffnen, mit Code beitreten.', to: paths.online },
   { id: 'tournaments', label: 'Turniere', hint: 'Turniere finden, anlegen und verfolgen.', to: paths.tournaments },
   { id: 'learn', label: 'Lernen', hint: 'Karteikasten: Karten aus deinen Notizen und Anki-Paketen wiederholen.', to: paths.learn },
   { id: 'options', label: 'Optionen', hint: 'Ton, Musik, Aussehen und Updates.', to: paths.sound },
@@ -26,6 +27,18 @@ export function Menu() {
   const resume = storage.loadActive();
   const resumeGame = resume ? findGame(resume.config.gameId) : undefined;
 
+  useEffect(() => () => setHoveredStation(null), []);
+
+  const activate = (station: Exclude<TavernStationId, 'home'>, text: string) => {
+    setHoveredStation(station);
+    setHint(text);
+  };
+
+  const deactivate = () => {
+    setHoveredStation(null);
+    setHint('');
+  };
+
   return (
     <div className="bub-menu">
       <TavernScene />
@@ -37,7 +50,17 @@ export function Menu() {
 
       <nav className="bub-menu-frame" aria-label="Hauptmenü">
         {resume ? (
-          <button type="button" className="bub-menu-button" data-resume onClick={() => navigate(paths.play)} aria-label={resumeGame ? `Weiterspielen: ${resumeGame.name}` : 'Weiterspielen'}>
+          <button
+            type="button"
+            className="bub-menu-button"
+            data-resume
+            onClick={() => navigate(paths.play)}
+            onMouseEnter={() => activate('single', 'Laufende lokale Partie fortsetzen.')}
+            onFocus={() => activate('single', 'Laufende lokale Partie fortsetzen.')}
+            onMouseLeave={deactivate}
+            onBlur={deactivate}
+            aria-label={resumeGame ? `Weiterspielen: ${resumeGame.name}` : 'Weiterspielen'}
+          >
             Weiterspielen
             {resumeGame && (
               <span className="bub-menu-sub">
@@ -53,10 +76,10 @@ export function Menu() {
             type="button"
             className="bub-menu-button"
             onClick={() => navigate(entry.to)}
-            onMouseEnter={() => setHint(entry.hint)}
-            onFocus={() => setHint(entry.hint)}
-            onMouseLeave={() => setHint('')}
-            onBlur={() => setHint('')}
+            onMouseEnter={() => activate(entry.id, entry.hint)}
+            onFocus={() => activate(entry.id, entry.hint)}
+            onMouseLeave={deactivate}
+            onBlur={deactivate}
           >
             {entry.label}
           </button>
@@ -72,6 +95,10 @@ export function Menu() {
         aria-label={profile ? `Profil von ${profile.name} öffnen` : 'Profil anlegen'}
         title="Name, Wappen, Spielerpass und Sicherung"
         onClick={() => navigate(paths.pass)}
+        onMouseEnter={() => activate('profile', 'Name, Wappen, Spielerpass und Sicherung.')}
+        onFocus={() => activate('profile', 'Name, Wappen, Spielerpass und Sicherung.')}
+        onMouseLeave={deactivate}
+        onBlur={deactivate}
       >
         <span className="bub-menu-shield" aria-hidden="true">
           <PlayerCrest spec={crest} size={40} />
