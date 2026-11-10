@@ -45,3 +45,4 @@ export * from './org-requests';
 export * from './classcard';
 export * from './series';
 export * from './series-book';
+export * from './package-share';

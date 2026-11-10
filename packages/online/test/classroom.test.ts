@@ -165,6 +165,94 @@ describe('Klassenausweise (#152): Eintragen durch die Leitung', () => {
   });
 });
 
+import { addClassPack, clearProgress, markProgress, mayStoreProgress, removeClassPack, setLeadKey, CLASS_MAX_PACKS, PROGRESS_MAX_CHARS } from '../src';
+
+describe('Pakete und Lernstand (#224)', () => {
+  const key43 = 'k'.repeat(43);
+  const pub = 'P'.repeat(87);
+  const make = () => {
+    const state = createClass('🍎🍌🍇🍊🍓🥝', 'Klasse 5a', { token: 'lead-token-1', name: 'Frau Muster', avatar: '🦊' }, 1000) as ClassState;
+    joinClass(state, { token: 'kid-token-0001', name: 'Kind', avatar: '🐼' }, 2000);
+    return state;
+  };
+  it('nur die Leitung legt Pakete in die Klasse; Mitglieder sehen sie samt Schlüssel, Fremde nicht', () => {
+    const state = make();
+    expect('error' in addClassPack(state, 'kid-token-0001', { name: 'Latein', key: key43 }, 3000)).toBe(true);
+    expect('error' in addClassPack(state, 'lead-token-1', { name: 'Latein', key: 'zu kurz' }, 3000)).toBe(true);
+    expect(addClassPack(state, 'lead-token-1', { name: 'Latein', key: key43 }, 3000)).toEqual({ ok: true });
+    expect(classView(state, 'kid-token-0001').packs).toMatchObject([{ name: 'Latein', key: key43 }]);
+    expect(classView(state, 'fremd-token-99').packs).toEqual([]);
+    // derselbe Link: kein Doppelter
+    addClassPack(state, 'lead-token-1', { name: 'Latein 2', key: key43 }, 4000);
+    expect(state.packs).toHaveLength(1);
+    expect(state.packs![0]!.name).toBe('Latein 2');
+    const id = state.packs![0]!.id;
+    expect('error' in removeClassPack(state, 'kid-token-0001', id)).toBe(true);
+    expect(removeClassPack(state, 'lead-token-1', id)).toEqual({ ok: true });
+    expect(state.packs).toEqual([]);
+  });
+  it('höchstens zwölf Pakete', () => {
+    const state = make();
+    for (let i = 0; i < CLASS_MAX_PACKS; i++) expect(addClassPack(state, 'lead-token-1', { name: `P${i}`, key: String(i).padStart(43, 'a') }, 3000)).toEqual({ ok: true });
+    expect('error' in addClassPack(state, 'lead-token-1', { name: 'zu viel', key: 'z'.repeat(43) }, 3000)).toBe(true);
+  });
+  it('der Lernstand wird nur bei eingeschaltetem Lernstand abgelegt und nur für die Leitung sichtbar gemeldet', () => {
+    const state = make();
+    expect('error' in mayStoreProgress(state, 'kid-token-0001', 'abc')).toBe(true); // aus
+    expect(setLeadKey(state, 'lead-token-1', pub)).toEqual({ ok: true });
+    expect('error' in setLeadKey(state, 'kid-token-0001', pub)).toBe(true);
+    expect('error' in setLeadKey(state, 'lead-token-1', 'kurz')).toBe(true);
+    expect(configureClass(state, 'lead-token-1', { learning: true }, 3000)).toEqual({ ok: true });
+    expect(mayStoreProgress(state, 'kid-token-0001', 'YWJj')).toEqual({ ok: true });
+    expect('error' in mayStoreProgress(state, 'kid-token-0001', 'a'.repeat(PROGRESS_MAX_CHARS + 1))).toBe(true);
+    expect('error' in mayStoreProgress(state, 'kid-token-0001', 'nicht gültig!')).toBe(true);
+    expect('error' in mayStoreProgress(state, 'fremd-token-99', 'YWJj')).toBe(true);
+    markProgress(state, 'kid-token-0001', 5000);
+    // Mitglieder sehen die Schlüssel der Leitung, nur die Leitung sieht, wer abgelegt hat
+    expect(classView(state, 'kid-token-0001').leadKeys).toEqual([{ id: state.members['lead-token-1']!.id, key: pub }]);
+    expect(classView(state, 'lead-token-1').members.find((m) => !m.lead)?.progressAt).toBe(5000);
+    expect(classView(state, 'kid-token-0001').members.find((m) => !m.lead)?.progressAt).toBeUndefined();
+    // Ausschalten nimmt den Hinweis weg
+    configureClass(state, 'lead-token-1', { learning: false }, 6000);
+    expect(classView(state, 'lead-token-1').members.find((m) => !m.lead)?.progressAt).toBeUndefined();
+    expect(classView(state, 'kid-token-0001').leadKeys).toEqual([]);
+    clearProgress(state, 'kid-token-0001');
+  });
+});
+
+import { DUE_MAX_CARDS, DUE_MIN_REPORTERS, DUE_REPORT_DAYS, aggregateDue, cleanDueReport, mayReportDue } from '../src';
+
+describe('Fällige Karten der Klasse (#224)', () => {
+  it('prüft die Meldung streng: nur Kennungen, keine Namen, keine Leerzeichen', () => {
+    expect(cleanDueReport(['abc', 'x_y-1', 'abc'])).toEqual(['abc', 'x_y-1']);
+    expect(cleanDueReport([])).toEqual([]);
+    expect(cleanDueReport('abc')).toBeNull();
+    expect(cleanDueReport(['mit Leerzeichen'])).toBeNull();
+    expect(cleanDueReport([42])).toBeNull();
+    expect(cleanDueReport(['a'.repeat(41)])).toBeNull();
+    expect(cleanDueReport(Array.from({ length: DUE_MAX_CARDS + 1 }, (_, i) => `k${i}`))).toBeNull();
+  });
+  it('gemeldet wird nur bei eingeschaltetem Sammeln und von Mitgliedern', () => {
+    const state = createClass('🍎🍌🍇🍊🍓🥝', 'K', { token: 'lead-token-1', name: 'L', avatar: '🦊' }, 1) as ClassState;
+    joinClass(state, { token: 'kid-token-0001', name: 'Kind', avatar: '🐼' }, 2);
+    expect('error' in mayReportDue(state, 'kid-token-0001')).toBe(true);
+    expect(configureClass(state, 'lead-token-1', { dueCards: true }, 3)).toEqual({ ok: true });
+    expect(classView(state, 'kid-token-0001').dueCards).toBe(true);
+    expect(mayReportDue(state, 'kid-token-0001')).toEqual({ ok: true });
+    expect('error' in mayReportDue(state, 'fremd-token-99')).toBe(true);
+  });
+  it('wertet erst ab drei Meldungen aus und zählt nur frische', () => {
+    const now = 100 * 86_400_000;
+    const report = (cards: string[], ageDays = 0) => ({ at: now - ageDays * 86_400_000, cards });
+    expect(aggregateDue([report(['a']), report(['a', 'b'])], now)).toEqual({ reporters: 2, cards: [] });
+    const three = aggregateDue([report(['a', 'b']), report(['a']), report(['a', 'c'], 1)], now);
+    expect(three.reporters).toBe(DUE_MIN_REPORTERS);
+    expect(three.cards).toEqual([{ card: 'a', n: 3 }, { card: 'b', n: 1 }, { card: 'c', n: 1 }]);
+    // alte Meldungen fallen weg
+    expect(aggregateDue([report(['a']), report(['a']), report(['a'], DUE_REPORT_DAYS)], now).cards).toEqual([]);
+  });
+});
+
 describe('Klassen im Rollenmodell (#232)', () => {
   it('die dienstälteste Leitung ist Betreiber, weitere Leitungen Leitung, Schüler nichts', async () => {
     const { classRoles, createClass, joinClass, setLead } = await import('../src/classroom');

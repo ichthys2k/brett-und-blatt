@@ -34,6 +34,23 @@ export function parseClassCode(input: string): string | null {
   return parts.join('');
 }
 
+/** Ein Paket der Klasse (#101, L7): die Leitung legt ein geteiltes Anki-Paket (`/pakete/…`) in die Klasse; der Schlüssel geht nur an Mitglieder. */
+export interface ClassPack {
+  id: string;
+  name: string;
+  /** Linkschlüssel des geteilten Pakets (43 Zeichen). Der Server gibt ihn nur an Mitglieder weiter und könnte das Paket damit lesen. */
+  key: string;
+  at: number;
+}
+export const CLASS_MAX_PACKS = 12;
+export const CLASS_PACK_NAME_MAX = 40;
+/** Größe des verschlüsselten Lernstands je Mitglied (Base64-Zeichen). */
+export const PROGRESS_MAX_CHARS = 60_000;
+const SHARE_KEY = /^[A-Za-z0-9_-]{43}$/;
+/** Öffentlicher Schlüssel (P-256, 65 Byte roh) als Base64url. */
+const PUBLIC_KEY = /^[A-Za-z0-9_-]{86,90}$/;
+const PROGRESS_BLOB = /^[A-Za-z0-9_-]+$/;
+
 export interface ClassMember {
   id: string;
   name: string;
@@ -41,6 +58,10 @@ export interface ClassMember {
   crest?: string;
   lead: boolean;
   joinedAt: number;
+  /** Nur Leitungen: öffentlicher Schlüssel, mit dem Mitglieder ihren Lernstand für sie verschlüsseln (#224). */
+  key?: string;
+  /** Wann das Mitglied zuletzt seinen (verschlüsselten) Lernstand abgelegt hat. */
+  progressAt?: number;
   /** Spielstand-Schnappschuss für die anderen Mitglieder (#151). */
   card?: ClassCard;
 }
@@ -60,6 +81,12 @@ export interface ClassState {
   approval: boolean;
   /** Was die Klassenkarten zeigen dürfen (Vorgabe der Leitung). Alte Klassen ohne Angabe zeigen alles. */
   sections?: CardSections;
+  /** Pakete der Klasse (#224). */
+  packs?: ClassPack[];
+  /** Darf die Leitung den Lernstand der Mitglieder sehen? Nur wenn die Leitung es einschaltet; gesendet wird erst nach der Einwilligung des Mitglieds. */
+  learning?: boolean;
+  /** Dürfen Geräte anonym melden, welche Karten der Klassenpakete bei ihnen fällig sind (für das Klassenspiel)? Nur wenn die Leitung es einschaltet und das Mitglied zustimmt. */
+  dueCards?: boolean;
   createdAt: number;
   lastActive: number;
   /** Mitglieder nach Geräte-Kennung. */
@@ -78,7 +105,15 @@ export interface ClassView {
   /** Ich warte auf Bestätigung. */
   waiting: boolean;
   sections: CardSections;
-  members: Pick<ClassMember, 'id' | 'name' | 'avatar' | 'crest' | 'lead' | 'card'>[];
+  /** Pakete der Klasse, nur für Mitglieder. */
+  packs: ClassPack[];
+  /** Sieht die Leitung den Lernstand? */
+  learning: boolean;
+  /** Melden Geräte anonym fällige Karten? */
+  dueCards: boolean;
+  /** Öffentliche Schlüssel der Leitungen, nur für Mitglieder und nur bei eingeschaltetem Lernstand. */
+  leadKeys: { id: string; key: string }[];
+  members: (Pick<ClassMember, 'id' | 'name' | 'avatar' | 'crest' | 'lead' | 'card'> & { progressAt?: number })[];
   /** Nur für die Leitung. */
   pending: Pick<ClassPending, 'id' | 'name' | 'avatar'>[];
 }
@@ -210,7 +245,7 @@ export function setLead(state: ClassState, token: unknown, id: unknown, lead: bo
   return ok;
 }
 
-export function configureClass(state: ClassState, token: unknown, change: { name?: unknown; open?: unknown; approval?: unknown; sections?: unknown }, now: number): Outcome {
+export function configureClass(state: ClassState, token: unknown, change: { name?: unknown; open?: unknown; approval?: unknown; sections?: unknown; learning?: unknown; dueCards?: unknown }, now: number): Outcome {
   const denied = mustLead(state, token);
   if (denied) return denied;
   if (change.name !== undefined) {
@@ -220,6 +255,12 @@ export function configureClass(state: ClassState, token: unknown, change: { name
   }
   if (typeof change.open === 'boolean') state.open = change.open;
   if (typeof change.approval === 'boolean') state.approval = change.approval;
+  if (typeof change.learning === 'boolean') {
+    state.learning = change.learning;
+    // Wird der Lernstand ausgeschaltet, fällt alles Abgelegte weg (der Server löscht die Daten, siehe `ClassRoom`).
+    if (!change.learning) for (const member of Object.values(state.members)) delete member.progressAt;
+  }
+  if (typeof change.dueCards === 'boolean') state.dueCards = change.dueCards;
   const sections = parseSections(change.sections);
   if (sections && Object.keys(sections).length > 0) {
     state.sections = { ...sectionsOf(state), ...sections };
@@ -257,12 +298,114 @@ export function classView(state: ClassState, token: unknown): ClassView {
     open: state.open,
     approval: state.approval,
     sections: sectionsOf(state),
+    packs: member ? (state.packs ?? []).map(({ id, name, key, at }) => ({ id, name, key, at })) : [],
+    learning: state.learning === true,
+    dueCards: state.dueCards === true,
+    leadKeys: member && state.learning ? Object.values(state.members).flatMap((m) => (m.lead && m.key ? [{ id: m.id, key: m.key }] : [])) : [],
     me: member?.id ?? null,
     lead,
     waiting,
-    members: member ? Object.values(state.members).map(({ id, name, avatar, crest, lead: l, card }) => ({ id, name, avatar, ...(crest ? { crest } : {}), lead: l, ...(card ? { card } : {}) })) : [],
+    members: member ? Object.values(state.members).map(({ id, name, avatar, crest, lead: l, card, progressAt }) => ({ id, name, avatar, ...(crest ? { crest } : {}), lead: l, ...(card ? { card } : {}), ...(lead && progressAt ? { progressAt } : {}) })) : [],
     pending: lead ? Object.values(state.pending).map(({ id, name, avatar }) => ({ id, name, avatar })) : [],
   };
+}
+
+// ---------------------------------------------------------------- Pakete und Lernstand (#224)
+
+/** Die Leitung legt ein geteiltes Paket in die Klasse. */
+export function addClassPack(state: ClassState, token: unknown, pack: { name?: unknown; key?: unknown }, now: number): Outcome {
+  const denied = mustLead(state, token);
+  if (denied) return denied;
+  const name = typeof pack.name === 'string' ? cleanName(pack.name, CLASS_PACK_NAME_MAX) : null;
+  if (!name || typeof pack.key !== 'string' || !SHARE_KEY.test(pack.key)) return fail('Name oder Link des Pakets fehlt.');
+  const packs = state.packs ?? [];
+  const same = packs.find((p) => p.key === pack.key);
+  if (same) {
+    // Gleicher Link: nur Name und Zeit nachführen.
+    same.name = name;
+    same.at = now;
+  } else {
+    if (packs.length >= CLASS_MAX_PACKS) return fail(`Eine Klasse kann höchstens ${CLASS_MAX_PACKS} Pakete haben.`);
+    packs.push({ id: randomId(), name, key: pack.key, at: now });
+  }
+  state.packs = packs;
+  state.lastActive = now;
+  return ok;
+}
+
+export function removeClassPack(state: ClassState, token: unknown, id: unknown): Outcome {
+  const denied = mustLead(state, token);
+  if (denied) return denied;
+  const packs = state.packs ?? [];
+  if (!packs.some((p) => p.id === id)) return fail('Dieses Paket gibt es nicht.');
+  state.packs = packs.filter((p) => p.id !== id);
+  return ok;
+}
+
+/** Eine Leitung hinterlegt ihren öffentlichen Schlüssel; Mitglieder verschlüsseln ihren Lernstand dafür. */
+export function setLeadKey(state: ClassState, token: unknown, key: unknown): Outcome {
+  const denied = mustLead(state, token);
+  if (denied) return denied;
+  if (typeof key !== 'string' || !PUBLIC_KEY.test(key)) return fail('Ungültiger Schlüssel.');
+  state.members[token as string]!.key = key;
+  return ok;
+}
+
+/** Darf dieses Mitglied seinen Lernstand ablegen? Nur bei eingeschaltetem Lernstand und mit vorhandener Leitungs-Schlüssel. */
+export function mayStoreProgress(state: ClassState, token: unknown, blob: unknown): Outcome {
+  const member = validToken(token) ? state.members[token] : undefined;
+  if (!member) return fail('Du bist nicht in dieser Klasse.');
+  if (!state.learning) return fail('Die Leitung sieht den Lernstand gerade nicht.');
+  if (typeof blob !== 'string' || blob.length === 0 || blob.length > PROGRESS_MAX_CHARS || !PROGRESS_BLOB.test(blob)) return fail('Ungültiger Lernstand.');
+  return ok;
+}
+
+export function markProgress(state: ClassState, token: string, now: number): void {
+  const member = state.members[token];
+  if (member) member.progressAt = now;
+  state.lastActive = now;
+}
+
+/** Nimmt den Lernstand weg (Mitglied widerruft). */
+export function clearProgress(state: ClassState, token: string): void {
+  const member = state.members[token];
+  if (member) delete member.progressAt;
+}
+
+// ---------------------------------------------------------------- Fällige Karten der Klasse (#224)
+
+export const DUE_MAX_CARDS = 300;
+export const DUE_REPORT_DAYS = 14;
+/** Erst ab so vielen Meldungen gibt es eine Auswertung, damit niemand aus der Liste erraten kann, wer was fällig hat. */
+export const DUE_MIN_REPORTERS = 3;
+export const DUE_TOP = 100;
+const CARD_KEY = /^[\x21-\x7e]{1,40}$/;
+
+/** Prüft die Meldung eines Geräts: nur Kennungen von Karten (die guid der Notiz), keine Namen. */
+export function cleanDueReport(cards: unknown): string[] | null {
+  if (!Array.isArray(cards) || cards.length > DUE_MAX_CARDS) return null;
+  const out: string[] = [];
+  for (const card of cards) {
+    if (typeof card !== 'string' || !CARD_KEY.test(card)) return null;
+    if (!out.includes(card)) out.push(card);
+  }
+  return out;
+}
+
+export function mayReportDue(state: ClassState, token: unknown): Outcome {
+  if (!validToken(token) || !state.members[token]) return fail('Du bist nicht in dieser Klasse.');
+  if (!state.dueCards) return fail('Die Leitung sammelt gerade keine fälligen Karten.');
+  return ok;
+}
+
+/** Wie viele Geräte haben die Karte als fällig gemeldet? Nur aktuelle Meldungen zählen; unter `DUE_MIN_REPORTERS` Meldungen gibt es nichts zu sehen. */
+export function aggregateDue(reports: readonly { at: number; cards: readonly string[] }[], now: number): { reporters: number; cards: { card: string; n: number }[] } {
+  const fresh = reports.filter((r) => now - r.at < DUE_REPORT_DAYS * 24 * 60 * 60 * 1000);
+  if (fresh.length < DUE_MIN_REPORTERS) return { reporters: fresh.length, cards: [] };
+  const counts = new Map<string, number>();
+  for (const report of fresh) for (const card of report.cards) counts.set(card, (counts.get(card) ?? 0) + 1);
+  const cards = [...counts].map(([card, n]) => ({ card, n })).sort((a, b) => b.n - a.n || a.card.localeCompare(b.card)).slice(0, DUE_TOP);
+  return { reporters: fresh.length, cards };
 }
 
 /**

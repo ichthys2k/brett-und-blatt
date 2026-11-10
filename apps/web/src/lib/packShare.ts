@@ -33,6 +33,15 @@ function save(shares: Shares): void {
   }
 }
 
+/** Beim Umstellen der Bibliothek bekommen die Pakete neue Kennungen; geteilte Pakete behalten Schlüssel und Schreibgeheimnis (Link und „Teilen beenden“ gehen weiter). */
+export function moveShare(oldId: string, newId: string): void {
+  const shares = load();
+  const entry = shares[oldId];
+  if (!entry || shares[newId]) return;
+  const { [oldId]: _moved, ...rest } = shares;
+  save({ ...rest, [newId]: entry });
+}
+
 export const packLink = (key: string): string => `${window.location.origin}${window.location.pathname}#/paket?k=${key}`;
 /** Der Link, wenn dieses Paket gerade geteilt wird. */
 export const currentPackLink = (packId: string): string | null => {

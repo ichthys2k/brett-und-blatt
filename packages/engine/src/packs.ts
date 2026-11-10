@@ -120,19 +120,30 @@ export function packProblem(pack: Pick<UserPack, 'rows'>): string | null {
   return null;
 }
 
-/** Wählt für eine Partie zufällig bis zu `PACK_PLAY_MAX` Paare und macht daraus den Wert der verborgenen Option `pack`. */
-export function encodePairsOption(pack: Pick<UserPack, 'name' | 'rows'>, randomInt: (n: number) => number): string {
-  const rows = [...pack.rows];
-  for (let i = rows.length - 1; i > 0; i--) {
-    const j = randomInt(i + 1);
-    [rows[i], rows[j]] = [rows[j]!, rows[i]!];
-  }
-  return JSON.stringify({ n: pack.name, p: rows.slice(0, PACK_PLAY_MAX).map((row) => [row.a, row.b]) });
+/**
+ * Wählt für eine Partie bis zu `PACK_PLAY_MAX` Paare und macht daraus den Wert der verborgenen Option `pack`. Die Kennung der Zeile reist mit
+ * (`[A, B, Kennung]`), damit das Ergebnis der Partie dem Lernstand zugeordnet werden kann. Mit `prefer` (Kennungen fälliger Karten) kommen
+ * diese zuerst in die Auswahl, der Rest wird zufällig aufgefüllt.
+ */
+export function encodePairsOption(pack: Pick<UserPack, 'name' | 'rows'>, randomInt: (n: number) => number, prefer?: ReadonlySet<string>): string {
+  const shuffle = <T>(list: readonly T[]): T[] => {
+    const out = [...list];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = randomInt(i + 1);
+      [out[i], out[j]] = [out[j]!, out[i]!];
+    }
+    return out;
+  };
+  const first = prefer ? shuffle(pack.rows.filter((row) => prefer.has(row.id))) : [];
+  const rest = shuffle(pack.rows.filter((row) => !prefer?.has(row.id)));
+  const rows = [...first, ...rest].slice(0, PACK_PLAY_MAX);
+  return JSON.stringify({ n: pack.name, p: rows.map((row) => [row.a, row.b, row.id]) });
 }
 
 export interface PairsPack {
   name: string;
-  pairs: { a: string; b: string }[];
+  /** `id`: Kennung der Zeile in der Bibliothek, falls der Wert sie mitbringt. */
+  pairs: { a: string; b: string; id?: string }[];
 }
 
 /** Liest den Wert der Option `pack`; null, wenn er nicht brauchbar ist (der Server vertraut keinem Browser). */
@@ -148,12 +159,13 @@ export function decodePairsOption(text: unknown): PairsPack | null {
   const { n, p } = value as { n?: unknown; p?: unknown };
   const name = cleanEntry(n, PACK_NAME_MAX);
   if (!name || !Array.isArray(p)) return null;
-  const pairs: { a: string; b: string }[] = [];
+  const pairs: { a: string; b: string; id?: string }[] = [];
   for (const entry of p.slice(0, PACK_PLAY_MAX)) {
     if (!Array.isArray(entry)) continue;
     const a = cleanEntry(entry[0], PACK_FIELD_MAX);
     const b = cleanEntry(entry[1], PACK_FIELD_MAX);
-    if (a && b) pairs.push({ a, b });
+    const id = typeof entry[2] === 'string' && ID.test(entry[2]) ? entry[2] : undefined;
+    if (a && b) pairs.push({ a, b, ...(id ? { id } : {}) });
   }
   return pairs.length >= PACK_PAIRS_MIN ? { name, pairs } : null;
 }

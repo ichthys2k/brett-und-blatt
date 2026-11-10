@@ -6,6 +6,7 @@ import { emptyBook, localMode, outcomeFor, recordGame, sanitizeBook, strongestBo
 import { passBook } from './passes';
 import { rememberReplay } from './chronikStore';
 import { addTrophy, sanitizeTrophies, trophyFor } from './pokale';
+import { recordGameLearning } from './learnStore';
 import { passSyncSoon } from './playerPass';
 import { stampsFor } from './stamps';
 
@@ -154,9 +155,11 @@ export function usePassRecorder(options: {
   seatScore?: (view: never, seat: number) => number | string | null;
   /** Kapitel des Spiels im Sammelalbum (#148). */
   album?: AlbumSpec<never>;
+  /** Lernen beim Spielen (#223): was die Partie über das Wissen des eigenen Platzes zeigt. */
+  learning?: { report: (view: never, seat: number) => { row: string; sure: boolean }[] };
   online?: { yourSeat: number | null; tournament: boolean; display?: boolean };
 }): { trophy: boolean } {
-  const { session, gameId, seatScore, album, online } = options;
+  const { session, gameId, seatScore, album, learning, online } = options;
   const [trophy, setTrophy] = useState(false);
   const started = useRef<{ id: string; at: number }>({ id: session.id, at: Date.now() });
   const done = useRef<string | null>(null);
@@ -185,13 +188,20 @@ export function usePassRecorder(options: {
     } catch {
       // Zugabe, darf nie stören
     }
+    // Lernen beim Spielen: das Ergebnis des eigenen Platzes zählt als Wiederholung der Karten (mit niedrigem Gewicht).
+    try {
+      const seat = learning ? albumSeat(seats, online ? { yourSeat: online.yourSeat } : undefined) : null;
+      if (learning && seat !== null && !online?.tournament) recordGameLearning(learning.report(view, seat));
+    } catch {
+      // Zugabe, darf nie stören
+    }
     try {
       const saved = saveRows(rowsFor({ gameId, sessionId: session.id, result, seats, endedAt: now, durationMs: now - started.current.at, scores, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.tournament } } : {}) }), seats);
       if (saved) setTrophy(true);
     } catch {
       // Das Partiebuch ist eine Zugabe und darf nie den Tisch stören.
     }
-  }, [result, session, gameId, seatScore, online]);
+  }, [result, session, gameId, seatScore, learning, online]);
   useEffect(() => {
     if (!result) setTrophy(false);
   }, [result]);

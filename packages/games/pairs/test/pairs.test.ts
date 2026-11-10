@@ -146,3 +146,45 @@ describe('Eigenes Paket (#101)', () => {
     expect(state.custom).toBeUndefined();
   });
 });
+
+import { encodePairsOption } from '@brett-und-blatt/engine';
+import { learningReport } from '../src/rules';
+
+describe('Lernen beim Spielen (#223)', () => {
+  const rows = Array.from({ length: 12 }, (_, i) => ({ id: `n-${(i + 1).toString(16).padStart(6, '0')}`, a: `Frage ${i}`, b: `Antwort ${i}` }));
+  const pack = encodePairsOption({ name: 'Eigen', rows }, (n) => n - 1);
+
+  it('merkt Fehlgriffe je Paar und Platz; wer ohne Fehlgriff nimmt, kannte es „sicher“', () => {
+    let state = start(2, { pack, size: '12' });
+    expect(state.custom?.every((p) => p.id)).toBe(true);
+    const a = state.faces.findIndex((f) => f?.pair === state.faces[0]?.pair);
+    void a;
+    // Platz 0 deckt Karte 0 und eine falsche auf (Fehlgriff, Zug wechselt), Platz 1 findet danach Karte 0 mit ihrem Partner
+    const wrong = otherThan(state, 0);
+    state = gameModule.applyMove(state, 0, flip(0)).state;
+    state = gameModule.applyMove(state, 0, flip(wrong)).state;
+    expect(state.turn).toBe(1);
+    state = gameModule.applyMove(state, 1, flip(0)).state;
+    state = gameModule.applyMove(state, 1, flip(partnerOf(state, 0))).state;
+    const pairOfZero = state.faces[0]!.pair;
+    const wrongPair = state.faces[wrong]!.pair;
+    expect(state.slips?.[`${pairOfZero}:0`]).toBe(1);
+    expect(state.slips?.[`${wrongPair}:0`]).toBe(1);
+    // Platz 1 hat Paar 0 ohne eigenen Fehlgriff genommen
+    expect(learningReport(state, 1)).toEqual([{ row: state.custom![pairOfZero]!.id, sure: true }]);
+    expect(learningReport(state, 0)).toEqual([]);
+  });
+  it('meldet unsicher, wenn der Platz beim Paar danebenlag, und nichts ohne eigenes Paket', () => {
+    let state = start(1, { pack, size: '12' });
+    const first = 0;
+    const wrong = otherThan(state, first);
+    state = gameModule.applyMove(state, 0, flip(first)).state;
+    state = gameModule.applyMove(state, 0, flip(wrong)).state; // Fehlgriff, bei einem Spieler bleibt er dran
+    state = gameModule.applyMove(state, 0, flip(first)).state;
+    state = gameModule.applyMove(state, 0, flip(partnerOf(state, first))).state;
+    const report = learningReport(state, 0);
+    const pairId = state.custom![state.faces[first]!.pair]!.id;
+    expect(report).toEqual([{ row: pairId, sure: false }]);
+    expect(learningReport(start(1, {}), 0)).toEqual([]);
+  });
+});

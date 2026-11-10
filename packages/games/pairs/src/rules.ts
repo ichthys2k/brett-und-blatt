@@ -12,7 +12,7 @@ export type CardStatus = 'down' | 'up' | { takenBy: SeatId };
 export interface PairsState {
   set: string;
   /** Eigenes Paket (#101): die Paare dieser Partie; `Face.pair` zählt dann in dieser Liste. */
-  custom?: { a: string; b: string }[];
+  custom?: { a: string; b: string; id?: string }[];
   customName?: string;
   cols: number;
   rows: number;
@@ -29,6 +29,8 @@ export interface PairsState {
   /** Öffentliches Protokoll: welche Karte wann mit welchem Inhalt aufgedeckt wurde. */
   log: { card: number; face: Face; step: number }[];
   step: number;
+  /** Fehlgriffe je Paar und Platz (Schlüssel `Paar:Platz`): wer ein Paar ohne Fehlgriff nimmt, kannte es sicher (Lernen beim Spielen, #223). */
+  slips?: Record<string, number>;
 }
 
 export interface PairsMove {
@@ -77,6 +79,7 @@ export function setup(seats: number, options: Options, seed: string): PairsState
     continueOnPair: options.continueOnPair !== 'off',
     log: [],
     step: 0,
+    slips: {},
   };
 }
 
@@ -129,6 +132,9 @@ export function applyMove(state: PairsState, actor: Actor, move: PairsMove): Mov
     events.push({ type: 'pair', cards: [a, b], seat: actor });
     if (!state.continueOnPair) next.turn = (state.turn + 1) % state.scores.length;
   } else {
+    const slips = { ...(state.slips ?? {}) };
+    for (const pair of new Set([state.faces[a]?.pair, state.faces[b]?.pair])) if (pair !== undefined) slips[`${pair}:${actor}`] = (slips[`${pair}:${actor}`] ?? 0) + 1;
+    next.slips = slips;
     events.push({ type: 'mismatch', cards: [a, b] });
     next.turn = (state.turn + 1) % state.scores.length;
   }
@@ -160,4 +166,21 @@ export function sampleHidden(view: PairsState, _seat: SeatId, rng: Rng): PairsSt
   const unknown = rng.shuffle([...pairs].flatMap((pair): Face[] => [{ pair, side: 'a' }, { pair, side: 'b' }]).filter((f) => !known.has(`${f.pair}${f.side}`)));
   let next = 0;
   return { ...view, faces: view.faces.map((face) => face ?? unknown[next++] ?? null) };
+}
+
+/**
+ * Was die Partie über das Wissen eines Platzes zeigt (Lernen beim Spielen): je Paar mit Kennung aus der Bibliothek, das der Platz genommen hat,
+ * „sicher“ ohne Fehlgriff, sonst „unsicher“. Nur Paare aus einem eigenen Paket tragen Kennungen.
+ */
+export function learningReport(state: PairsState, seat: SeatId): { row: string; sure: boolean }[] {
+  const out: { row: string; sure: boolean }[] = [];
+  const seen = new Set<number>();
+  state.faces.forEach((face, card) => {
+    const status = state.status[card];
+    if (!face || typeof status !== 'object' || status.takenBy !== seat || seen.has(face.pair)) return;
+    seen.add(face.pair);
+    const id = state.custom?.[face.pair]?.id;
+    if (id) out.push({ row: id, sure: (state.slips?.[`${face.pair}:${seat}`] ?? 0) === 0 });
+  });
+  return out;
 }

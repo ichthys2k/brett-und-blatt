@@ -6,7 +6,9 @@ import { deletePack, loadLibrary, rowsFromText, savePack, textFromRows } from '.
 import { QrCode } from '../components/OnlineParts';
 import { currentPackLink, publishPack, stopPackShare } from '../lib/packShare';
 import { GAME_SERVER } from '../lib/server';
-import { paths } from '../lib/router';
+import { navigate, paths } from '../lib/router';
+import { AiHelp, AnkiExport, AnkiImport } from './AnkiText';
+import { ApkgImport, ApkgList } from './AnkiPackages';
 
 const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
 
@@ -15,12 +17,24 @@ export function Library() {
   const [library, setLibrary] = useState(loadLibrary);
   const [editing, setEditing] = useState<UserPack | 'new' | null>(null);
   const [sharing, setSharing] = useState<UserPack | null>(null);
+  const [anki, setAnki] = useState<'import' | 'export' | 'apkg' | null>(null);
   const packs = livePacks(library);
   const refresh = () => setLibrary(loadLibrary());
 
   return (
     <TavernPage title="Meine Pakete" subtitle="Eigene Paare für Paare finden, zum Beispiel Vokabeln." back={paths.pass}>
-      {sharing ? (
+      {anki === 'import' ? (
+        <AnkiImport
+          onDone={() => {
+            setAnki(null);
+            refresh();
+          }}
+        />
+      ) : anki === 'apkg' ? (
+        <ApkgImport onDone={() => setAnki(null)} />
+      ) : anki === 'export' ? (
+        <AnkiExport onDone={() => setAnki(null)} />
+      ) : sharing ? (
         <ShareBox pack={sharing} onClose={() => setSharing(null)} />
       ) : editing ? (
         <Editor
@@ -35,6 +49,18 @@ export function Library() {
           <Button variant="primary" className="w-full" onClick={() => setEditing('new')}>
             ➕ Neues Paket
           </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => setAnki('import')}>📥 Aus Anki-Text importieren</Button>
+            <Button onClick={() => setAnki('export')}>📤 Als Anki-Text exportieren</Button>
+          </div>
+          <Button className="w-full" onClick={() => navigate(paths.collection('meine'))}>
+            ✏️ Notizen und Notiztypen bearbeiten
+          </Button>
+          <Button className="w-full" onClick={() => setAnki('apkg')}>
+            📦 Anki-Paket (.apkg) importieren
+          </Button>
+          <ApkgList onPacksChanged={refresh} />
+          <AiHelp />
           {packs.length === 0 ? (
             <p className="text-muted">Noch keine Pakete. Lege eins an, wähle es dann in der Einrichtung von „Paare finden“ unter „Eigenes Paket“.</p>
           ) : (
@@ -47,7 +73,7 @@ export function Library() {
                       {pack.rows.length} Paare{packProblem(pack) ? ` – ${packProblem(pack)}` : ''}
                     </span>
                   </span>
-                  <Button variant="ghost" onClick={() => setEditing(pack)}>
+                  <Button variant="ghost" onClick={() => setEditing(pack)} disabled={pack.rows.length > PACK_ROWS_MAX} title={pack.rows.length > PACK_ROWS_MAX ? `Zu groß für diesen Editor (über ${PACK_ROWS_MAX} Paare)` : undefined}>
                     ✏️ Bearbeiten
                   </Button>
                   {GAME_SERVER && !packProblem(pack) && (

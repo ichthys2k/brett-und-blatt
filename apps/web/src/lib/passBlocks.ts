@@ -8,8 +8,11 @@ import { BOOK_KEY, TROPHIES_KEY } from './passRecorder';
 import { mergeTrophies, sameTrophies, sanitizeTrophies, type Trophy } from './pokale';
 import { emptyBook, mergeBooks, sameBooks, sanitizeBook, type Book } from './partiebuch';
 import { CHILD_PASSES_KEY } from './classPasses';
-import { LIBRARY_KEY, mergeLibrary, sameLibrary, sanitizeLibrary } from './library';
-import type { UserPack } from '@brett-und-blatt/engine';
+import { LIBRARY_KEY } from './library';
+import { LEARN_KEY } from './learnStore';
+import { LEAD_KEYS_KEY } from './classLearning';
+import type { LeadKeyPair } from './classCrypto';
+import { collectionFromStored, compactCollection, compactLearnBook, emptyCollection, emptyLearnBook, learnBookToStored, mergeCollections, mergeLearnBooks, sameCollection, sameLearnBook, sanitizeCollection, sanitizeLearnBook, type AnkiCollection, type LearnBook } from '@brett-und-blatt/engine';
 import { mergeChildPasses, sameChildPasses, sanitizeChildPasses, type ChildPasses } from './classPassesCore';
 import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
 
@@ -51,6 +54,11 @@ const loadKnown = (): Items => {
   }
 };
 
+function sanitizeLeadKeys(value: unknown): LeadKeyPair | null {
+  const v = value as Partial<LeadKeyPair> | null;
+  return v && typeof v.pub === 'string' && /^[A-Za-z0-9_-]{86,90}$/.test(v.pub) && v.priv && typeof v.priv === 'object' && typeof v.at === 'number' ? { pub: v.pub, priv: v.priv, at: v.at } : null;
+}
+
 let registered = false;
 
 /** Meldet die Blöcke der Web-App an und verbindet Änderungen mit dem Abgleich. Einmal beim Start. */
@@ -84,20 +92,54 @@ export function registerWebPassBlocks(): void {
     merge: mergeChildPasses,
     same: sameChildPasses,
   });
-  // Bibliothek (#101): eigene Pakete; je Paket gilt die jüngere Änderung, Löschvermerke verhindern, dass ein Gerät sie zurückbringt.
-  registerPassBlock<UserPack[]>({
+  // Bibliothek (#101, L1): Sammlung im Anki-Modell (Notizen, Stapel, Notiztypen); je Notiz gilt die jüngere Änderung, Löschvermerke verhindern,
+  // dass ein Gerät Gelöschtes zurückbringt. Die frühere Liste von Paketen (ältere Geräte) wird beim Einlesen umgestellt.
+  registerPassBlock<AnkiCollection>({
     name: 'bibliothek',
     read: () => {
       try {
-        return sanitizeLibrary(JSON.parse(read(LIBRARY_KEY) ?? 'null'));
+        return compactCollection(collectionFromStored(JSON.parse(read(LIBRARY_KEY) ?? 'null')));
       } catch {
-        return [];
+        return compactCollection(emptyCollection());
       }
     },
-    write: (list) => write(LIBRARY_KEY, JSON.stringify(list)),
-    sanitize: sanitizeLibrary,
-    merge: (remote, local) => mergeLibrary(remote, local),
-    same: sameLibrary,
+    write: (col) => write(LIBRARY_KEY, JSON.stringify(compactCollection(col))),
+    sanitize: (value) => compactCollection(collectionFromStored(value)),
+    merge: (remote, local) => compactCollection(mergeCollections(sanitizeCollection(remote), sanitizeCollection(local))),
+    same: (a, b) => sameCollection(sanitizeCollection(a), sanitizeCollection(b)),
+  });
+  // Lernbuch (#101, L5): Lernstand der eigenen Sammlung; je Karte gilt die jüngste Antwort, das Protokoll vereint sich (30 Tage), höchstens 60 000 Zeichen.
+  registerPassBlock<LearnBook>({
+    name: 'lernen',
+    read: () => {
+      try {
+        return sanitizeLearnBook(JSON.parse(read(LEARN_KEY) ?? 'null'));
+      } catch {
+        return emptyLearnBook();
+      }
+    },
+    write: (book) => write(LEARN_KEY, JSON.stringify(learnBookToStored(book))),
+    sanitize: (value) => sanitizeLearnBook(value),
+    merge: (remote, local) => compactLearnBook(mergeLearnBooks(sanitizeLearnBook(remote), sanitizeLearnBook(local)), Date.now()),
+    same: (a, b) => sameLearnBook(sanitizeLearnBook(a), sanitizeLearnBook(b)),
+  });
+  // Schlüssel der Leitung für den Lernstand der Klasse (#224): das älteste Paar gilt auf allen Geräten, damit jede Leitung ihre Stände öffnen kann.
+  registerPassBlock<LeadKeyPair | null>({
+    name: 'klassenschluessel',
+    read: () => {
+      try {
+        return sanitizeLeadKeys(JSON.parse(read(LEAD_KEYS_KEY) ?? 'null'));
+      } catch {
+        return null;
+      }
+    },
+    write: (keys) => (keys ? write(LEAD_KEYS_KEY, JSON.stringify(keys)) : undefined),
+    sanitize: sanitizeLeadKeys,
+    merge: (remote, local) => {
+      const [a, b] = [sanitizeLeadKeys(remote), sanitizeLeadKeys(local)];
+      return !a ? b : !b ? a : a.at <= b.at ? a : b;
+    },
+    same: (a, b) => JSON.stringify(sanitizeLeadKeys(a)) === JSON.stringify(sanitizeLeadKeys(b)),
   });
   // Partiebuch (#142): Zähler je Gerät (wachsen nur), die letzten Partien als Kopfzeilen.
   registerPassBlock<Book>({

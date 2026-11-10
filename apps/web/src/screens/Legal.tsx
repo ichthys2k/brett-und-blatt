@@ -144,11 +144,26 @@ export function Datenschutz() {
         ohne Abruf löscht der Server sie nach einem Jahr. Es gibt keine öffentliche Liste. Wer den Link hat, kann das Paket lesen. Spielst du eine Partie mit einem eigenen Paket, gehen dessen Paare (höchstens 18) mit der Partie an die Mitspielenden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>Anki-Pakete teilen:</strong> Importierte Anki-Pakete liegen auf deinem Gerät (im Browser-Speicher) und gehen nicht an den Server. Wählst du „Link erstellen“, verpackt dein Browser das Paket mit seinen Bildern und Tönen (ohne deinen Lernstand),
+        verschlüsselt es mit einem Zufallsschlüssel, der nur im Link hinter dem „#“ steht, und legt es als eine Datei im Speicherdienst Cloudflare R2 (Rechtsraum EU) ab. Der Spieleserver speichert dazu nur den Prüfwert eines
+        Schreibgeheimnisses, das auf deinem Gerät bleibt, die Größe und den Zeitpunkt des letzten Abrufs; Cloudflare sieht nur verschlüsselte Daten. „Teilen beenden“ löscht alles; ohne Abruf löscht der Server das Paket nach einem Jahr.
+        Es gibt keine öffentliche Liste. Wer den Link hat, kann das Paket lesen. Teile nur Pakete, die du teilen darfst. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+      <p>
         <strong>Klassen:</strong> Legst du eine Klasse an oder trittst bei, speichert der Spieleserver in der EU den Namen der Klasse, die Geräte-Kennung jedes Mitglieds (zum Ausweisen, sie wird nie anderen
         Mitgliedern gezeigt) sowie Spitzname, Bild und – wenn du eines gewählt hast – das Wappen. Alle Mitglieder sehen Spitzname, Bild und Wappen der anderen Mitglieder; Fremde ohne Mitgliedschaft sehen nur den
         Namen der Klasse. Dazu legt dein Gerät, solange du die Klassenseite offen hast, eine „Klassenkarte“ ab: je nach Einstellung der Leitung und deiner eigenen Wahl deine Stempel, die Zahl deiner Pokale je Spiel und deine Lieblingsspiele (nie Codes, Kennungen oder Lernstände); du kannst jeden Teil abwählen. Die Leitung kann Mitglieder entfernen und die Klasse auflösen; du kannst jederzeit gehen. Eine Klasse ohne Aktivität wird nach einem Jahr gelöscht. Legt die Leitung Klassenausweise an, entstehen dabei auf dem Spieleserver Ausweise für die Kinder (nur Spitzname und ein Tierbild als Platzhalter) mit Spielercode und Start-PIN; die zugehörigen Codes
         speichert die Leitung verschlüsselt in ihrem eigenen Pass, um vergessene PINs zurückzusetzen. Bei Schulklassen ist die Schule
         für die Teilnahme der Kinder verantwortlich. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+      <p>
+        <strong>Pakete und Lernstand in der Klasse:</strong> Die Leitung kann Anki-Pakete in die Klasse legen. Dafür speichert der Spieleserver in der EU den Namen des Pakets und den Linkschlüssel, mit dem das Paket (verschlüsselt in Cloudflare R2, EU) geöffnet wird; er gibt den
+        Schlüssel nur an Mitglieder der Klasse weiter und könnte das Paket damit lesen. Schaltet die Leitung „Lernstand“ ein, erscheint für jedes Mitglied zuerst ein Hinweis, und erst nach der Zustimmung (bei Kindern: der Eltern) legt das Gerät den Lernstand
+        der Pakete dieser Klasse ab: die Kennungen der Karten, wie oft sie wiederholt und vergessen wurden, die Art des Lernstands, Zahl und Zeitpunkt der Antworten der letzten Tage und die Lerntage in Folge, nichts anderes aus deinem Pass (keine Partien, keine Notizen).
+        Der Stand wird auf deinem Gerät mit einem Schlüssel verschlüsselt, den nur die Leitung öffnen kann; der Spieleserver speichert nur diese unlesbaren Daten und den Zeitpunkt der Ablage. Du kannst die Zustimmung jederzeit widerrufen oder die Klasse verlassen; dann wird der
+        abgelegte Stand gelöscht. Schaltet die Leitung den Lernstand aus oder löst sie die Klasse auf, wird er ebenfalls gelöscht; eine Klasse ohne Aktivität wird nach einem Jahr gelöscht. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), bei Kindern unter 16 Jahren
+        die der Eltern (Art. 8 DSGVO). Schaltet die Leitung „Fällige Karten der Klasse“ ein, kann dein Gerät nach deiner Zustimmung anonym melden, welche Karten der Klassenpakete bei dir fällig sind (nur die Kennungen der Karten, ohne Namen und Zahlen). Der Spieleserver speichert die
+        Meldung je Gerät, damit eine neue die alte ersetzt, zeigt der Leitung aber nur eine Liste der in der Klasse am häufigsten fälligen Karten, und erst ab drei Meldungen. Du kannst die Zustimmung jederzeit widerrufen; dann wird deine Meldung gelöscht.
       </p>
       <p>
         <strong>PIN oder Passwort (Schloss):</strong> Wenn du deinen Ausweis mit PIN oder Passwort schützt, rechnet dein Browser aus Spielercode und

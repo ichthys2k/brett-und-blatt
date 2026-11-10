@@ -63,6 +63,26 @@ export async function sealJson(key: string, value: unknown): Promise<string> {
   return b64(out);
 }
 
+/** Verschlüsselt Bytes (ein Anki-Paket) mit dem Linkschlüssel; Ergebnis: 12 Byte Vektor, dann Geheimtext mit Etikett. */
+export async function sealBytes(key: string, bytes: Uint8Array): Promise<Uint8Array> {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const cipher = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await aesKey(key), bytes as BufferSource));
+  const out = new Uint8Array(iv.length + cipher.length);
+  out.set(iv);
+  out.set(cipher, iv.length);
+  return out;
+}
+
+/** Gegenstück zu `sealBytes`; null bei falschem Schlüssel oder beschädigten Daten. */
+export async function openBytes(key: string, data: Uint8Array): Promise<Uint8Array | null> {
+  try {
+    if (data.length < 28) return null;
+    return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: data.slice(0, 12) }, await aesKey(key), data.slice(12)));
+  } catch {
+    return null;
+  }
+}
+
 /** Gegenstück zu `sealJson`; null bei falschem Schlüssel oder beschädigten Daten. */
 export async function openJson(key: string, data: string): Promise<unknown | null> {
   try {

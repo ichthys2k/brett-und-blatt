@@ -4,11 +4,13 @@ import { App } from './App';
 import { startAppUpdates } from './lib/appUpdate';
 import './lib/look';
 import { registerWebPassBlocks } from './lib/passBlocks';
+import { startClassProgressSync } from './lib/classLearning';
 import { passSyncSoon, syncPassEntry } from './lib/playerPass';
 import './styles.css';
 
 // Spielerpass (#137): Blöcke anmelden und beim Start einmal abgleichen.
 registerWebPassBlocks();
+startClassProgressSync();
 syncPassEntry();
 passSyncSoon(3000);
 

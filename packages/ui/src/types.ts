@@ -98,6 +98,11 @@ export interface GameUi<V = unknown, M = unknown> {
   concealTurns?: (view: V) => boolean;
   /** Kapitel im Sammelalbum des Passes (#148). */
   album?: AlbumSpec<V>;
+  /**
+   * Lernen beim Spielen (#223): was die Partie über das Wissen eines Platzes zeigt, je Karte der Bibliothek „sicher“ oder „unsicher“.
+   * Die Web-App wertet das nach Partieende für den eigenen Platz aus (als Wiederholung mit niedrigem Gewicht).
+   */
+  learning?: { report: (view: V, seat: SeatId) => { row: string; sure: boolean }[] };
   /** Das Spiel unterstützt `BoardProps.handOnly`; online erscheint dann der Schalter „Hand-Ansicht“. */
   handView?: boolean;
   /** Das Spiel kann seine Plätze mit `SeatRing` um den Tisch setzen, wenn `BoardProps.table` gesetzt ist. */
