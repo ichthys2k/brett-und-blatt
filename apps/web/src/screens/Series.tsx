@@ -189,7 +189,7 @@ function Manage({ view, onChanged, onDeleted }: { view: SeriesView; onChanged: (
           </Button>
         </div>
       </div>
-      <Transfer code={view.code} />
+      {view.org ? <p className="text-xs text-muted">🏛️ Diese Serie gehört einer Gruppe: Leitung und Betreiber der Gruppe verwalten sie mit. Rollen vergibt der Betreiber der Gruppe.</p> : <Transfer code={view.code} />}
       <label className="block space-y-1 text-sm">
         <span>{t('series.name')}</span>
         <div className="flex gap-2">

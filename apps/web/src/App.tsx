@@ -16,9 +16,10 @@ import { Library } from './screens/Library';
 import { CollectionScreen } from './screens/Collection';
 import { Operator } from './screens/Operator';
 import { PackView } from './screens/PackView';
+import { Org, Orgs } from './screens/Org';
 import { Tournaments } from './screens/Tournaments';
 import { SeriesScreen } from './screens/Series';
-import { TournamentEmbedScreen, TournamentScreen } from './screens/Tournament';
+import { TournamentBeamerScreen, TournamentEmbedScreen, TournamentScreen } from './screens/Tournament';
 import { Setup } from './screens/Setup';
 import { SoundSettingsScreen } from './screens/SoundSettings';
 
@@ -56,6 +57,10 @@ function Screen() {
       return <CollectionScreen key={route.source} source={route.source} />;
     case 'classes':
       return <Classes />;
+    case 'orgs':
+      return <Orgs />;
+    case 'org':
+      return <Org key={route.code} code={route.code} invite={route.invite} />;
     case 'class':
       return <ClassPage key={route.code} code={route.code} />;
     case 'room':
@@ -64,6 +69,8 @@ function Screen() {
       return <DisplayScreen key={route.code} code={route.code} />;
     case 'tournament':
       return <TournamentScreen key={route.code} code={route.code} claim={route.claim} helper={route.helper} leader={route.leader} />;
+    case 'tournamentBeamer':
+      return <TournamentBeamerScreen key={route.code} code={route.code} />;
     case 'tournamentEmbed':
       return <TournamentEmbedScreen key={route.code} code={route.code} />;
     case 'series':

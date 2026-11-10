@@ -8,11 +8,9 @@ Vor der Arbeit ein von Cornelius auf `status: Ready` gesetztes Issue auswählen 
 
 Spiel: `packages/games/marketplace`, Plan: [`marktplatz.md`](marktplatz.md), Probe: [`marktplatz-probe.md`](marktplatz-probe.md). Verbleibende optionale Abschlussarbeiten sind in [Issue #73](https://github.com/ichthys2k/brett-und-blatt/issues/73); Status und Freigabe ausschließlich dort.
 
-## 2. Grafschaft (W-039, Paket C; Marktstände ist fertig) – wartet auf Cornelius' Ja zum Entwurf
+## 2. Grafschaft (W-039, Paket C; Marktstände ist fertig) – Spielmodul umgesetzt
 
-**Stand 1.11.2026:** Marktstände ist gebaut ([Plan](marktstaende.md), [Probe](marktstaende-probe.md)), mit geänderter Wertung und drei Markttagen. Grafschaft ist noch nicht geprobt und wartet auf Cornelius' Ja.
-
-Plan: [`umsetzungsplan-pakete-a-b-c.md`](umsetzungsplan-pakete-a-b-c.md), Abschnitte „Reihenbauer wird Marktstände“ und „Landschaftsleger wird Grafschaft“. Eigene Fassungen statt 6 nimmt! und Carcassonne. Offen ist nur die erste Frage im Plan („Sind die eigenen Fassungen so in Ordnung?“). Nach dem Ja: erst Probepartien mit Bots im Prüfstand (Marktstände 1 Tag, Grafschaft 2 Tage), dann Bau (3 bzw. 7 Tage).
+**Stand 10.11.2026:** Das Spielmodul `packages/games/grafschaft` ist vollständig umgesetzt (Sechseck-Legespiel, 20 Hofaufträge, Bot „Landvogt“, SVG-Oberfläche mit Tavernen-Look, Server-Registrierung). Alle Tests, Vertragsprüfungen, Prüfstand und Rauchtests sind grün (PR für Issue #57).
 
 Pakete A und B aus diesem Plan sind fertig und veröffentlicht (Nicht ärgern! zu sechst, Elf zuerst!, Sternhalma, Rübenacker; Kategorien-Sprint, Wer bin ich?, Verboten!).
 
@@ -41,6 +39,7 @@ Ablauf in [`klaenge-alle-spiele.md`](klaenge-alle-spiele.md), Werkzeuge im priva
 - **W-044** Drachenspiel-Ausbau abgeschlossen: [`drachenspiel-ausbau.md`](drachenspiel-ausbau.md); historischer Eintrag im [Migrationsarchiv #72](https://github.com/ichthys2k/brett-und-blatt/issues/72).
 - **Turniere (W-053):** [Issue #62](https://github.com/ichthys2k/brett-und-blatt/issues/62) enthält den Prüfstatus; [`turnier.md`](turnier.md) bleibt die fachliche Referenz.
 - **Spielerpass (Vorhaben #135, 8.11.2026):** Fortschritt, Familie an einem Gerät, Klassen mit Profilen, Klassenausweise, PIN/Passwort, Google/Microsoft und Lernen hinter dem Spielerausweis; Plan in [`spielerpass.md`](spielerpass.md), Schritte #136–#159 sowie #101 und #103.
+- **Web Push für Turniere und Fernpartien (#242):** Fragen entschieden am 10.11.2026, Schritt-für-Schritt-Fahrplan zur Übergabe an einen anderen Agenten in [`web-push.md`](web-push.md); beginnt erst mit `status: Ready`. Die Kalenderdatei (#243) ist fertig.
 - **Turniersoftware (W-058):** Recherche und Gesamtkonzept für Online- und Vor-Ort-Turniere in [`turniersoftware.md`](turniersoftware.md) ([Issue #63](https://github.com/ichthys2k/brett-und-blatt/issues/63)). Stufe 0–2 fertig; Stufe 3 ([Issue #127](https://github.com/ichthys2k/brett-und-blatt/issues/127)): Teil 1 Turnierabend, Teil 2 Spieleabend (#129), Teil 3 Tischrunden und Teil 5 Best of N (#131) fertig, offen nur Teil 4 Teams (Übergabe-Hinweise im Konzept). Danach Stufe 4–6.
 
 ## 7. Zurückgestellt

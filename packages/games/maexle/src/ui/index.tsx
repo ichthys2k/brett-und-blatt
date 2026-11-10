@@ -195,7 +195,7 @@ function useShake(active: boolean, onShake: () => void) {
   return { allowed, request };
 }
 
-function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint, table, handOnly }: BoardProps<MaexleState, MaexleMove>) {
+function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint, table, handOnly, display }: BoardProps<MaexleState, MaexleMove>) {
   const last = lastAnnouncement(view);
   const canRoll = legalMoves.some((m) => m.type === 'roll');
   const announceValues = new Set(legalMoves.flatMap((m) => (m.type === 'announce' ? [m.value] : [])));
@@ -298,7 +298,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, events, hint, tabl
   );
 
   return (
-    <div className="mx-table" data-around={table ? '' : undefined} data-hand={handOnly ? '' : undefined}>
+    <div className="mx-table" data-around={table ? '' : undefined} data-hand={handOnly ? '' : undefined} data-display={display ? '' : undefined}>
       {table ? (
         <SeatRing
           seats={seatNames.length}

@@ -144,15 +144,18 @@ function TrickText({ trick, set, names }: { trick: Trick; set: CardSet; names: s
   );
 }
 
-function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint, table }: BoardProps<QuartettState, QuartettMove>) {
+function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint, table, handOnly, display }: BoardProps<QuartettState, QuartettMove>) {
   const set = setOf(view);
-  const shown = useTrickQueue(events, view.revealMs);
+  const queued = useTrickQueue(events, view.revealMs);
+  // Tisch-Bildschirm (#215): Die Karten sind geheim, also bleibt die letzte aufgedeckte Runde stehen, bis die nächste kommt.
+  const shown = queued ?? (display ? view.lastTrick : null);
   const own = viewer === 'spectator' ? null : (view.stacks[viewer]?.[0]?.card ?? null);
-  const canChoose = legalMoves.length > 0 && shown === null;
+  const canChoose = legalMoves.length > 0 && queued === null;
   const hintProperty = hint?.type === 'chooseProperty' ? hint.property : null;
   const others = view.stacks.map((_, seat) => seat).filter((seat) => seat !== viewer);
 
-  const seatsRow = (
+  // Hand-Ansicht fürs Handy (#214): Die Stapel der anderen und die aufgedeckten Karten zeigt der Tisch-Bildschirm.
+  const seatsRow = handOnly ? null : (
     <>
       <div className="qt-others">
         {others.map((seat) => (
@@ -182,7 +185,7 @@ function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint,
             <p className="qt-said">
               <TrickText trick={shown} set={set} names={seatNames} />
             </p>
-            <div className="qt-reveal-cards">
+            <div className="qt-reveal-cards" hidden={handOnly}>
               {shown.plays.map((play) => (
                 <div key={play.seat} className="qt-play">
                   <span className="qt-seat-name" style={{ color: SEAT_COLORS[play.seat % SEAT_COLORS.length] }}>
@@ -256,7 +259,7 @@ function AskText({ ask, set, names }: { ask: Ask; set: CardSet; names: string[] 
   );
 }
 
-function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table }: BoardProps<QuartettState, QuartettMove>) {
+function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table, handOnly, display }: BoardProps<QuartettState, QuartettMove>) {
   const set = setOf(view);
   const hand = viewer === 'spectator' ? [] : (view.hands[viewer] ?? []).filter((c): c is CardId => c !== null);
   const targets = [...new Set(legalMoves.flatMap((m) => (m.type === 'ask' ? [m.target] : [])))];
@@ -286,8 +289,8 @@ function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
               <span className="qt-seat-name" style={{ color: SEAT_COLORS[seat % SEAT_COLORS.length] }}>
                 {nameOf(seatNames, seat)}
               </span>
-              <CardBack count={view.hands[seat]!.length} label={`${view.hands[seat]!.length} Karten`} />
-              <span className="qt-quartets">{quartetsOf(seat).map((q) => <span key={q.group} className="qt-q" style={{ background: GROUP_COLORS[q.group] }}>{q.group}</span>)}</span>
+              {!handOnly && <CardBack count={view.hands[seat]!.length} label={`${view.hands[seat]!.length} Karten`} />}
+              {!handOnly && <span className="qt-quartets">{quartetsOf(seat).map((q) => <span key={q.group} className="qt-q" style={{ background: GROUP_COLORS[q.group] }}>{q.group}</span>)}</span>}
             </>
           );
           return selectable ? (
@@ -389,7 +392,20 @@ function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
             </span>
           </p>
         )}
-        {view.asks.length > 0 && (
+        {view.asks.length > 0 && display && (
+          // Tisch-Bildschirm (#215): Die Karten sind geheim, also steht der Verlauf der Fragen groß und offen da.
+          <ol className="qt-log-big" aria-label="Fragen bisher" reversed>
+            {view.asks
+              .slice(-8)
+              .reverse()
+              .map((ask, i) => (
+                <li key={view.asks.length - i} className={ask.got ? 'qt-got' : ''}>
+                  <AskText ask={ask} set={set} names={seatNames} />
+                </li>
+              ))}
+          </ol>
+        )}
+        {view.asks.length > 0 && !handOnly && !display && (
           <details className="qt-log">
             <summary>Fragen bisher ({view.asks.length})</summary>
             <ol reversed>
@@ -469,6 +485,7 @@ export const gameUi: GameUi<QuartettState, QuartettMove> = {
   Board,
   album: albumSpec,
   seatsAround: true,
+  handView: true,
   SeatSymbol,
   sounds: { trick: 'karte-legen', drew: 'karte-ziehen', asked: (event) => (event.got ? 'karte-ziehen' : 'kein-paar'), quartet: 'paar' },
   seatLabel: (seat) => `Platz ${seat + 1}`,

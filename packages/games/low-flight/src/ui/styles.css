@@ -483,3 +483,11 @@
     align-content: flex-start;
   }
 }
+
+/* Hand-Ansicht fürs Handy (#214): Die Raster der anderen zeigt der Tisch-Bildschirm, hier bleibt eine Zeile je Mitspieler. */
+.lf-table[data-hand] .lf-others {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}

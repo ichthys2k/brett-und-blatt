@@ -202,6 +202,18 @@ export function Datenschutz() {
         nach der letzten Aktivität gelöscht; die Leitung kann sie jederzeit löschen oder verlängern. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b und f DSGVO.
       </p>
       <p>
+        <strong>Verein oder Schule (Organisationen):</strong> Stellst du einen Antrag auf eine Gruppe oder bist du Mitglied einer, speichert der Spieleserver in der EU
+        deine Geräte-Kennung, deinen Spitznamen, dein Tierbild (und, wenn du es zeigst, dein Wappen), den Namen und die Art der Gruppe, deine Rollen darin
+        (etwa Leitung, Schiedsrichter oder Anmeldung) und ein Protokoll, wer wann welche Rolle vergeben, angenommen, abgelehnt oder entzogen hat (nur die
+        öffentlichen Kurzkennungen und Spitznamen, keine Geräte-Kennungen). Bei einem Antrag kommen der Zweck, den du angibst, und der Zeitpunkt hinzu; der
+        Betreiber der Seite sieht ihn ohne deine Geräte-Kennung und gibt die Gruppe frei oder lehnt ab (entschiedene Anträge werden nach 30 Tagen gelöscht). Einladungs-Codes
+        gelten einen Tag und nur einmal. Mitglieder sehen die Mitgliederliste mit Rollen; Einladungen und Protokoll sehen nur Betreiber und Leitung. Ordnet die Leitung ein
+        Turnier oder eine Serie der Gruppe zu, gelten die Rollen dort, und der Server fragt sie bei der Gruppe ab. Eine Klasse zählt dabei als Gruppe: Ihre Leitung hat die
+        Rolle der Leitung. Das Gerät merkt sich, dass es einen Antrag gestellt hat, nur in seinem Speicher. Eine Gruppe ohne Aktivität wird nach einem Jahr gelöscht; du
+        kannst jederzeit austreten, der Betreiber der Gruppe kann Mitglieder entfernen, und der Betreiber der Seite kann eine Gruppe sperren oder auflösen. Rechtsgrundlage ist
+        Art. 6 Abs. 1 lit. b und f DSGVO.
+      </p>
+      <p>
         Beim Verbindungsaufbau verarbeitet Cloudflare außerdem technisch notwendige Daten wie deine IP-Adresse, Datum und Uhrzeit sowie Angaben zum
         Browser, um die Verbindung herzustellen und den Dienst vor Angriffen zu schützen (Art. 6 Abs. 1 lit. f DSGVO). Dabei können Daten in die USA
         übermittelt werden. Cloudflare ist nach dem EU-US Data Privacy Framework zertifiziert. Wie lange Cloudflare diese Daten speichert, bestimmt
@@ -252,7 +264,7 @@ export function Datenschutz() {
 
       <h2>Änderungen</h2>
       <p>
-        Wenn neue Funktionen hinzukommen, wird diese Erklärung vorher ergänzt. Stand: Oktober 2026.
+        Wenn neue Funktionen hinzukommen, wird diese Erklärung vorher ergänzt. Stand: November 2026.
       </p>
     </LegalPage>
   );

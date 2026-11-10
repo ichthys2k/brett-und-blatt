@@ -1,0 +1,424 @@
+/* ==========================================================================
+   Grafschaft – Mittelalterliches Sechseck-Legespiel
+   Klassenpräfix: gs-
+   ========================================================================== */
+
+.gs-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  gap: 12px;
+  padding: 8px;
+  box-sizing: border-box;
+  font-family: inherit;
+  color: var(--text, #1f2937);
+  user-select: none;
+}
+
+/* --- Statusleiste / Header --- */
+.gs-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--surface-2, rgba(0, 0, 0, 0.04));
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+}
+
+.gs-turn-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.gs-turn-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.gs-scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gs-player-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--surface-1, #fff);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.15));
+  font-size: 0.9rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gs-player-chip--active {
+  font-weight: bold;
+  border-color: var(--accent, #e76f51);
+  box-shadow: 0 0 0 2px var(--accent-light, rgba(231, 111, 81, 0.25));
+  transform: translateY(-1px);
+}
+
+.gs-player-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.gs-deck-info {
+  font-size: 0.85rem;
+  color: var(--text-muted, #6b7280);
+}
+
+/* --- Jahrmarkt (Plättchenauslage) --- */
+.gs-market-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface-1, #f9fafb);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.gs-market-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted, #4b5563);
+}
+
+.gs-market-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.gs-market-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 82px;
+  height: 94px;
+  padding: 6px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: var(--surface-2, #f3f4f6);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+}
+
+.gs-market-tile:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.gs-market-tile--selected {
+  border-color: var(--accent, #d97706) !important;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.35) !important;
+  transform: translateY(-3px) scale(1.03);
+}
+
+.gs-market-tile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gs-tile-preview-svg {
+  width: 52px;
+  height: 52px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.gs-tile-label {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.1;
+  text-transform: capitalize;
+}
+
+.gs-tile-features {
+  display: flex;
+  gap: 3px;
+  margin-top: 2px;
+  font-size: 0.7rem;
+}
+
+/* --- Spielfeld / Board --- */
+.gs-board-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  min-height: 380px;
+  max-height: 600px;
+  background: var(--board-bg, #f3efe0);
+  border-radius: 12px;
+  border: 2px solid var(--border, #d1c7ad);
+  overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.gs-board-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Hexagons */
+.gs-hex {
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.gs-hex--wald {
+  fill: #2d6a4f;
+  stroke: #1b4332;
+}
+
+.gs-hex--wiese {
+  fill: #74c69d;
+  stroke: #40916c;
+}
+
+.gs-hex--feld {
+  fill: #e9c46a;
+  stroke: #d4a373;
+}
+
+.gs-hex--teich {
+  fill: #48cae4;
+  stroke: #0077b6;
+}
+
+.gs-hex--dorf {
+  fill: #e76f51;
+  stroke: #b04a32;
+}
+
+.gs-hex--berg {
+  fill: #6c757d;
+  stroke: #343a40;
+}
+
+/* Geister-Felder (Legbare Felder) */
+.gs-hex--ghost {
+  fill: rgba(255, 255, 255, 0.4);
+  stroke: var(--accent, #d97706);
+  stroke-width: 2;
+  stroke-dasharray: 5 3;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gs-hex--ghost:hover,
+.gs-hex--ghost:focus-visible {
+  fill: rgba(217, 119, 6, 0.3);
+  stroke-width: 3.5;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 6px rgba(217, 119, 6, 0.6));
+  outline: none;
+}
+
+/* Zuletzt gelegtes Feld */
+.gs-hex--last {
+  stroke: #ffea00;
+  stroke-width: 4;
+  filter: drop-shadow(0 0 5px rgba(255, 234, 0, 0.8));
+}
+
+/* Hex-Details */
+.gs-feature-river {
+  stroke: #0096c7;
+  stroke-width: 5.5;
+  stroke-linecap: round;
+  fill: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+.gs-feature-road {
+  stroke: #8d6e63;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-dasharray: 6 3;
+  fill: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+.gs-feature-mill {
+  fill: #fdf0d5;
+  stroke: #5e503f;
+  stroke-width: 1.2;
+}
+
+.gs-hex-symbol {
+  font-size: 16px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+/* --- Hofaufträge Panel --- */
+.gs-quests-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gs-quests-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gs-quests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.gs-quest-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--surface-1, #fff);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+  border-left: 4px solid var(--accent, #d97706);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.gs-quest-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.gs-quest-name {
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.gs-quest-badge {
+  background: #fef3c7;
+  color: #92400e;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 2px 7px;
+  border-radius: 12px;
+  border: 1px solid #fde68a;
+}
+
+.gs-quest-text {
+  font-size: 0.8rem;
+  color: var(--text-muted, #4b5563);
+  line-height: 1.3;
+}
+
+/* Erledigte Aufträge */
+.gs-completed-quests {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted, #6b7280);
+}
+
+.gs-completed-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Tavernen-Look Integration
+   ========================================================================== */
+:root[data-look='tavern'] .gs-root {
+  color: #f6e8cc;
+}
+
+:root[data-look='tavern'] .gs-header,
+:root[data-look='tavern'] .gs-market-section {
+  background: rgba(38, 24, 15, 0.85);
+  border-color: #6b4c2a;
+}
+
+:root[data-look='tavern'] .gs-player-chip {
+  background: #2a1a10;
+  border-color: #6b4c2a;
+  color: #edd9b9;
+}
+
+:root[data-look='tavern'] .gs-player-chip--active {
+  border-color: #d4a373;
+  box-shadow: 0 0 0 2px rgba(212, 163, 115, 0.4);
+}
+
+:root[data-look='tavern'] .gs-board-wrapper {
+  background: #1e140d;
+  border-color: #5c3e21;
+}
+
+:root[data-look='tavern'] .gs-market-tile {
+  background: #332014;
+  color: #edd9b9;
+}
+
+:root[data-look='tavern'] .gs-market-tile--selected {
+  border-color: #e09f3e !important;
+  box-shadow: 0 0 0 3px rgba(224, 159, 62, 0.5) !important;
+}
+
+:root[data-look='tavern'] .gs-quest-card {
+  background: #2c1b11;
+  border-color: #5c3e21;
+  border-left-color: #e09f3e;
+  color: #edd9b9;
+}
+
+:root[data-look='tavern'] .gs-quest-text {
+  color: #bfa58a;
+}
+
+:root[data-look='tavern'] .gs-quest-badge {
+  background: #472c19;
+  color: #e09f3e;
+  border-color: #6b4c2a;
+}
+
+:root[data-look='tavern'] .gs-completed-tag {
+  background: rgba(224, 159, 62, 0.15);
+  color: #e09f3e;
+  border-color: rgba(224, 159, 62, 0.3);
+}

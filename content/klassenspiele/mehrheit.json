@@ -1,6 +1,6 @@
 {
- "status": "entwurf",
- "hinweis": "Von Claude erstellt (1.11.2026), wartet auf Freigabe durch Cornelius. Es gibt keine richtige Antwort, Punkte gibt es für die Mehrheit.",
+ "status": "freigegeben",
+ "hinweis": "Von Claude erstellt (1.11.2026), von Cornelius freigegeben (10.11.2026). Es gibt keine richtige Antwort, Punkte gibt es für die Mehrheit.",
  "packs": [
   { "id": "alltag", "name": "Alltag", "questions": [
    { "id": "a01", "text": "Was isst du am liebsten zum Frühstück?", "options": ["Brot oder Brötchen", "Müsli", "Obst", "Gar nichts"] },

@@ -200,3 +200,40 @@ describe('Turnier und Serie', () => {
     expect(parseTournamentMessage(JSON.stringify({ type: 'detachSeries' }))).toEqual({ type: 'detachSeries' });
   });
 });
+
+describe('Serie einer Gruppe (#231)', () => {
+  const ORG = '🦊🦊🦊🦊🦊🦊';
+  const LEAD = 'kennung-leitung-org-0001';
+  const REF = 'kennung-schiedsrichter-1';
+  const fresh = () => {
+    const book = SeriesBook.create('ABCD2345', 'Liga', 'linear', 'kennung-der-leitung-01', { now: () => 1_000_000, randomKey: () => 'KEYKEY23' }, ORG);
+    if (typeof book === 'string') throw new Error(book);
+    book.setOrgRoles(LEAD, ['lead']);
+    book.setOrgRoles(REF, ['referee']);
+    return book;
+  };
+  it('Leitung der Gruppe verwaltet mit, Schiedsrichter und Fremde nicht', () => {
+    const book = fresh();
+    expect(book.mayManage(LEAD)).toBe(true);
+    expect(book.mayManage(REF)).toBe(false);
+    expect(book.mayManage('kennung-fremder-0000001')).toBe(false);
+    expect(book.rename(LEAD, 'Neue Liga')).toBeNull();
+    expect(book.rename(REF, 'X')).toMatch(/Leitung/);
+    expect(book.view(LEAD).isLeader).toBe(true);
+    expect(book.view(LEAD).org).toBe(ORG);
+    expect(book.view(LEAD).link).toBeTruthy();
+    expect(book.view(REF).link).toBeUndefined();
+  });
+  it('Die Übergabe per Einmalcode gibt es nur ohne Gruppe', () => {
+    const book = fresh();
+    expect(book.issueTransfer('kennung-der-leitung-01')).toHaveProperty('error');
+    expect(book.takeLeadership('kennung-neues-geraet-001', 'ABCD2345')).toMatch(/Gruppe/);
+  });
+  it('Ohne Gruppe bleiben Rollen wirkungslos', () => {
+    const plain = SeriesBook.create('ABCD2345', 'Liga', 'linear', 'kennung-der-leitung-01', { now: () => 1_000_000, randomKey: () => 'KEYKEY23' });
+    if (typeof plain === 'string') throw new Error(plain);
+    plain.setOrgRoles(LEAD, ['lead']);
+    expect(plain.mayManage(LEAD)).toBe(false);
+    expect(plain.view(LEAD).org).toBeUndefined();
+  });
+});

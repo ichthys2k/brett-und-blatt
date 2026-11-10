@@ -20,7 +20,7 @@ describe('Hand-Ansicht (#100)', () => {
       withHandView.push(id);
       expect(source, `${id}: handOnly fehlt in der Oberfläche`).toMatch(/\bhandOnly\b/);
     }
-    expect(withHandView.sort()).toEqual(['binokel', 'doppelkopf', 'elevens', 'kniffel', 'maexle', 'mau-mau', 'president', 'schafkopf', 'skat', 'uno']);
+    expect(withHandView.sort()).toEqual(['binokel', 'black-peter', 'dominoes', 'doppelkopf', 'elevens', 'kniffel', 'low-flight', 'maexle', 'mau-mau', 'president', 'quartett', 'schafkopf', 'skat', 'uno']);
   });
 });
 
@@ -39,6 +39,6 @@ describe('Tisch-Bildschirm-Ansicht der Spiele (#100)', () => {
     for (const [path, source] of Object.entries(uis)) {
       if (/\bdisplay(:\s*\w+)?,?\s*\}\s*:\s*BoardProps|^\s*display(:\s*\w+)?,\s*$/m.test(source)) withDisplay.push(path.split('/')[3]!);
     }
-    expect(withDisplay.sort()).toEqual(['binokel', 'doppelkopf', 'low-flight', 'schafkopf', 'skat']);
+    expect(withDisplay.sort()).toEqual(['binokel', 'doppelkopf', 'low-flight', 'maexle', 'quartett', 'schafkopf', 'skat']);
   });
 });

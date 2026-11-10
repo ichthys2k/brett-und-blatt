@@ -65,6 +65,15 @@ const firstSteps = {
     await page.locator('.ds-arena').waitFor({ timeout: 10_000 });
     await page.waitForTimeout(500);
   },
+  'four-in-a-row': async (page) => {
+    const active = page.locator('.c4-board button:not([disabled])');
+    if ((await active.count()) > 0) {
+      await active.first().click();
+      await page.waitForTimeout(600);
+      await active.nth(3).click();
+      await page.waitForTimeout(600);
+    }
+  },
 };
 
 async function startGame(page, id) {

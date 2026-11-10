@@ -82,7 +82,7 @@ const stoneName = (s: StoneId, display: DominoDisplay = 'pips') => {
   return `[${halfLabel(a, display, s, 0)} = ${a} | ${halfLabel(b, display, s, 1)} = ${b}]`;
 };
 
-function Board({ view, legalMoves, onMove, viewer, hint, seatNames, table }: BoardProps<DominoState, DominoMove>) {
+function Board({ view, legalMoves, onMove, viewer, hint, seatNames, table, handOnly }: BoardProps<DominoState, DominoMove>) {
   const seat = typeof viewer === 'number' ? viewer : null;
   const hand = seat !== null ? (view.hands[seat] ?? []).filter((s): s is StoneId => s !== null) : [];
   const [selected, setSelected] = useState<StoneId | null>(null);
@@ -185,6 +185,24 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, table }: Boa
             </div>
           </div>
         )}
+        {handOnly ? (
+          // Hand-Ansicht fürs Handy (#214): Die Kette zeigt der Tisch-Bildschirm; hier stehen nur die Enden zum Anlegen.
+          <div className="dm-ends" aria-label="Enden der Kette">
+            {view.chain.length === 0 ? (
+              <p className="dm-empty">Der erste Stein kommt in die Mitte.</p>
+            ) : (
+              <>
+                {endButton('left')}
+                <span className="dm-end-value">{view.chain[0]!.left}</span>
+                <span className="dm-end-sep">·</span>
+                <span className="dm-end-value">{view.chain[view.chain.length - 1]!.right}</span>
+                {endButton('right')}
+                {endButton('up')}
+                {endButton('down')}
+              </>
+            )}
+          </div>
+        ) : (
         <div className="dm-chain" aria-label="Kette">
           {endButton('left')}
           {view.chain.map((c, i) => {
@@ -221,6 +239,7 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, table }: Boa
           {endButton('right')}
           {view.chain.length === 0 && !summary && <p className="dm-empty">Der erste Stein kommt in die Mitte.</p>}
         </div>
+        )}
       </div>
 
       <div className="dm-controls" aria-live="polite">
@@ -310,6 +329,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 export const gameUi: GameUi<DominoState, DominoMove> = {
   Board,
   seatsAround: true,
+  handView: true,
   SeatSymbol,
   sounds: { played: 'domino-klack', drew: 'stein-ziehen' },
   seatLabel: (seat) => `Platz ${seat + 1}`,

@@ -7,6 +7,7 @@ import type { DrachenspielMove, DrachenspielView, HiddenPlayerView } from '../ty
 import { DeckManager } from './DeckBuilder';
 import { CardFace } from './parts';
 import { getCardFullTitle, getCardTraits } from './traits';
+import { championImage } from './champions';
 
 /** Deckwahl: eigene Komponente, damit jede Phase ihre eigenen Hooks hat. */
 export function DeckSelection({ view, me, onMove, timed }: { view: DrachenspielView; me: HiddenPlayerView; onMove: (move: DrachenspielMove) => void; timed: boolean }) {
@@ -43,6 +44,7 @@ export function DeckSelection({ view, me, onMove, timed }: { view: DrachenspielV
         <div className="ds-deck-grid">
           {DECK_THEME_IDS.map((themeId) => {
             const theme = DECK_THEMES[themeId];
+            const img = championImage(themeId);
             return (
               <div
                 key={themeId}
@@ -51,8 +53,13 @@ export function DeckSelection({ view, me, onMove, timed }: { view: DrachenspielV
                 role="button"
                 tabIndex={0}
               >
-                <span className="ds-deck-emoji">{theme.emoji}</span>
-                <span className="ds-deck-name">{theme.name}</span>
+                {img ? (
+                  <img src={img} alt={theme.houseName} className="ds-deck-champion" width={72} height={96} loading="lazy" />
+                ) : (
+                  <span className="ds-deck-emoji">{theme.emoji}</span>
+                )}
+                <span className="ds-deck-name">{theme.houseName}</span>
+                <span className="ds-deck-sub">{theme.emoji} {theme.name}</span>
                 <span className="ds-deck-desc">{theme.description}</span>
                 <span className="ds-deck-power">
                   {HOUSE_POWERS[themeId].emoji} <strong>{HOUSE_POWERS[themeId].name}:</strong> {HOUSE_POWERS[themeId].text}

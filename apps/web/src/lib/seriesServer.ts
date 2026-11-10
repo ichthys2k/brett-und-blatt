@@ -42,8 +42,8 @@ export function forgetSeries(code: string): void {
 const headers = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${storage.deviceToken()}` });
 
 /** Legt eine Serie an und gibt ihren Code zurück. */
-export async function createSeries(name: string, scheme: PointScheme): Promise<string> {
-  const response = await fetch(`${GAME_SERVER}/serien`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, scheme, token: storage.deviceToken() }) });
+export async function createSeries(name: string, scheme: PointScheme, org?: string): Promise<string> {
+  const response = await fetch(`${GAME_SERVER}/serien`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, scheme, token: storage.deviceToken(), ...(org ? { org } : {}) }) });
   if (!response.ok) throw new Error(`Server antwortet mit ${response.status}`);
   const { code } = (await response.json()) as { code: string };
   rememberSeries({ code, name: name.trim() });

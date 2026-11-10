@@ -40,7 +40,11 @@ Die Spielszene läuft auf einer **Bühne** (`Stage` in `Display.tsx`, Faktor `st
 - - **Anbieten:** Ist ein Tisch-Bildschirm im Raum (`RoomMessage.displays` > 0) und auf dem Gerät noch nichts gewählt (`useHandViewChoice() === null`), erscheint unter dem Spielfeld „Ein Tisch-Bildschirm ist verbunden. Nur die Hand zeigen?“ mit „Hand-Ansicht“ und „Nein“. „Nein“ gilt bis zum Neuladen, der Schalter „Ganzer Tisch“ speichert „aus“ dauerhaft.
 - Anlegespiele zeigen statt des Legemusters den Status und die Kartenzahlen (Elf zuerst!), Präsident die Kartenzahlen der anderen und den Hinweis; den Stich bzw. das Muster zeigt der Tisch-Bildschirm.
 - Mäxle zeigt nur Becher und Knöpfe (Verlauf und Aufdecken zeigt der Tisch-Bildschirm), Würfelblock Würfel und die eigene Spalte der Tafel.
-- Bewusst ohne Hand-Ansicht: Schwarzer Peter (Ziehen aus der Mitte), Quartett (Mitspieler wählen), Domino (Anlegeseite wählen am Tisch), Tiefflug (Stapel und eigenes Raster gehören zusammen) – die Züge hängen am Tisch, eine reine Handansicht wäre nicht spielbar.
+- **Spiele, deren Züge am Tisch hängen (#214, 10.11.2026):** Schwarzer Peter, Quartett, Domino und Tiefflug haben jetzt ebenfalls eine Hand-Ansicht; das Handy zeigt dort die eigene Hand plus nur die Ziele, die ein Zug braucht:
+  - **Schwarzer Peter:** nur die Karten des Nachbarn, von dem gezogen wird (antippen), die übrigen Mitspieler als eine Zeile mit Kartenzahl, die abgelegten Paare entfallen.
+  - **Domino:** statt der Kette die beiden Enden als Zahlen mit den Knöpfen zum Anlegen (links, rechts, oben, unten bei Spinnern), dazu Ziehen und Passen.
+  - **Tiefflug:** das eigene Raster bleibt groß, Stapel, Ablage und gezogene Karte bleiben; die Raster der anderen entfallen.
+  - **Quartett:** Sammeln – Mitspieler antippen und fehlende Karte wählen, ohne Kartenstapel und Fragenverlauf; Trumpf – die eigene Karte mit den Eigenschaften, ohne Stapel der anderen und ohne die aufgedeckten Karten (die zeigt der Tisch-Bildschirm).
 - Neue Spiele: `handOnly` auswerten, `handView: true` setzen, eigene CSS-Klassen mit Spielpräfix. Weitere Spiele (Karten-Anlegespiele, Würfelspiele) folgen nach demselben Muster.
 
 ## Schritt 2c (umgesetzt für Stichspiele und Tiefflug): Ansicht der Spiele auf dem Tisch-Bildschirm
@@ -59,10 +63,25 @@ Die Spielszene läuft auf einer **Bühne** (`Stage` in `Display.tsx`, Faktor `st
 - Die frühere Liste „Plätze im Spiel“ (nur vom Platz nehmen) ist im Panel aufgegangen; „Platz übernehmen“ für Zuschauer bleibt am Tisch.
 - Getestet im Browser mit Leitung ohne Platz und zwei Gästen: umbenennen, vom Platz nehmen, entfernen (der Gast bekommt „entfernt“).
 
+## Schritt 5 (umgesetzt, #212): Turnier-Bildschirm
+
+- `#/turnier/<Code>/beamer` (`TournamentBeamerScreen` in `Tournament.tsx`, Knopf „📺 Als Turnier-Bildschirm öffnen“ im Zuschau-Block der Turnierseite): nur Ansicht, auf der Bühne des Tisch-Bildschirms (`Stage`, `FullscreenButton`, `useWakeLock` aus `Display.tsx`).
+- Vor Ort im Spielbetrieb wechselt die Ansicht alle 20 s zwischen „Als Nächstes“ (laufende Partien mit Tisch, nächste Partien) und „Stand“ (Baum bzw. Tabelle); Tischrunden, Anmeldung und Ende zeigen eine feste Seite (Ende mit Siegerehrung).
+- Nutzt das gespeicherte Profil des Geräts, sonst Gast: auf dem Gerät der Leitung läuft es immer, auf einem fremden Gerät nur bei Turnieren mit Zuschaulink.
+
+## Schritt 6 (umgesetzt, #213): Fähigkeiten im Turnier
+
+- `tournamentCapabilities` (`packages/online/src/capabilities.ts`) macht aus der Rolle eines Geräts (`isLeader`, `helperRole`, `mayDelete`, vor Ort oder online) eine Liste im selben Format wie `roomCapabilities`: `entrants`, `tools`, `enterResult`, `checkin`, `print`, `deleteTournament`. Leitung und Mitleitung verwalten, ein Helfer trägt nur vor Ort Ergebnisse ein, setzt Check-in und druckt, gelöscht wird nur von der Hauptleitung. `roomCapabilities` bleibt bei den fünf Raum-Fähigkeiten.
+- Die Turnierseite (`Tournament.tsx`, `capsOf`) fragt nur noch `can(…)` statt die Rolle; Mitleitung bekommt einen Hinweis. Der Server prüft weiter jede Nachricht selbst.
+- Ein eigenes Panel nach dem Vorbild von `ModeratorPanel` gibt es im Turnier nicht: Teilnehmer und Tische verwaltet die Turnierseite selbst, das Raum-Panel (Namen festlegen, vom Platz nehmen) passt dort nicht.
+- **Punkte setzen** (Entscheidung): bleibt Sache der Leitung über `enterResult` bzw. `enterTable` (Plätze oder Punkte im Spiel); ein spielabhängiger `GameModule`-Haken ist nicht nötig, solange vor Ort nur Ergebnis, Punkte oder Plätze zählen.
+
+## Schritt 7 (umgesetzt, #215): Verlauf bei geheimen Karten und Nachspielen auf dem Beamer
+
+- **Quartett Sammeln:** Auf dem Tisch-Bildschirm steht der Verlauf der Fragen (die letzten acht) groß und offen statt als eingeklapptes „Fragen bisher“. **Quartett Trumpf:** Die letzte aufgedeckte Runde bleibt stehen, bis die nächste kommt (statt „X wählt …“ ohne Bild). **Mäxle:** Verlauf der Ansagen und Aufdecken größer (`data-display`). Alle drei werten `BoardProps.display` aus.
+- **Nachspielen auf dem Tisch-Bildschirm:** Nach Partieende erscheint „▶ Nachspielen“ auch dort (Bedienung per Maus oder Tastatur am Beamer-Rechner); die Zuschauersicht läuft mit `display`. Der Raum schickt die Daten (`GameMessage.replay`) an Tisch-Bildschirme wie an Mitglieder, und zwar erst nach Partieende.
+- **Nicht geprüft:** auf einem echten Fernseher oder Beamer (Live-Test steht bei Cornelius).
+
 ## Noch offen
 
-- **Fernsehansicht für die übrigen Spiele** nur bei Bedarf: Spiele mit verborgenen Aktionen (Quartett, Mäxle) könnten auf dem Tisch den Verlauf größer zeigen.
-- **Hand-Ansicht für Spiele, deren Züge am Tisch hängen** (Schwarzer Peter, Quartett, Domino, Tiefflug): bräuchte eine kleine Tischfläche mit den nötigen Zielen statt einer reinen Hand.
-- **Spielleiter-Panel im Turnier** (Leitung, Mitleitung, Helfer über dieselben Fähigkeiten) und **Punkte setzen** (spielabhängig, siehe unten).
-- **Weitere Szenen** auf demselben Rahmen: Turnierbaum (die Turnierseite hat schon einen Zuschaulink, `settings.spectators`) und Partie nachspielen (#99).
-- **Punkte setzen** ist spielabhängig; erst mit den Turnier-Stufen und einem optionalen `GameModule`-Haken klären.
+- **Weitere Szenen** auf demselben Rahmen: Turnier-Bildschirm siehe Schritt 5, Nachspielen siehe Schritt 7.

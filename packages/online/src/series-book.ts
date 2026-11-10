@@ -1,3 +1,5 @@
+import { can } from './capabilities';
+import { orgCapabilities, type OrgRole } from './org-roles';
 import { seriesStandings, type PointScheme, type SeriesRow, type SeriesTournament } from './series';
 
 /*
@@ -31,6 +33,8 @@ export interface SeriesRecord {
   name: string;
   scheme: PointScheme;
   leaderToken: string;
+  /** Code der Gruppe („Verein oder Schule", #231): ihre Leitung und ihr Betreiber verwalten die Serie mit. */
+  org?: string;
   /** Zuordnungscode: Wer ihn kennt, darf Turniere melden. Nur die Leitung sieht ihn. */
   linkKey: string;
   createdAt: number;
@@ -47,6 +51,8 @@ export interface SeriesView {
   tournaments: { code: string; name: string; at: number; players: number }[];
   standings: SeriesRow[];
   isLeader: boolean;
+  /** Code der Gruppe, der die Serie gehört; sonst weggelassen. */
+  org?: string;
   /** Nur für die Leitung: der Zuordnungscode (`Code-Schlüssel`). */
   link?: string;
   expiresAt: number;
@@ -65,13 +71,13 @@ export class SeriesBook {
     private deps: SeriesDeps,
   ) {}
 
-  static create(code: string, name: string, scheme: PointScheme, leaderToken: string, deps: SeriesDeps): SeriesBook | string {
+  static create(code: string, name: string, scheme: PointScheme, leaderToken: string, deps: SeriesDeps, org?: string): SeriesBook | string {
     const title = clean(name, SERIES_NAME_LENGTH);
     if (!title) return 'Bitte einen Namen für die Serie eingeben.';
     if (scheme !== 'linear' && scheme !== 'f1') return 'Unbekannte Punktewertung.';
     if (leaderToken.length < 16 || leaderToken.length > 100) return 'Ungültige Kennung.';
     const now = deps.now();
-    return new SeriesBook({ code, name: title, scheme, leaderToken, linkKey: deps.randomKey(), createdAt: now, lastActive: now, entries: [] }, deps);
+    return new SeriesBook({ code, name: title, scheme, leaderToken, ...(org ? { org } : {}), linkKey: deps.randomKey(), createdAt: now, lastActive: now, entries: [] }, deps);
   }
 
   static restore(record: SeriesRecord, deps: SeriesDeps): SeriesBook {
@@ -91,7 +97,24 @@ export class SeriesBook {
   }
 
   mayManage(token: string): boolean {
-    return token !== '' && token === this.s.leaderToken;
+    return token !== '' && (token === this.s.leaderToken || this.orgCan(token, 'tools'));
+  }
+
+  /** Rollen aus der Gruppe der Serie (#231); der Server trägt sie je Kennung ein, sie werden nicht gespeichert. */
+  setOrgRoles(token: string, roles: readonly OrgRole[]): void {
+    if (roles.length === 0) this.orgRoles.delete(token);
+    else this.orgRoles.set(token, [...roles]);
+  }
+
+  private orgRoles = new Map<string, OrgRole[]>();
+
+  private orgCan(token: string, cap: Parameters<typeof can>[1]): boolean {
+    return this.s.org !== undefined && can(orgCapabilities(this.orgRoles.get(token) ?? []), cap);
+  }
+
+  /** Die Gruppe der Serie, falls sie einer gehört. */
+  get org(): string | undefined {
+    return this.s.org;
   }
 
   /** Passt der Schlüssel? (Der Turnier-Raum prüft damit die Zuordnung.) */
@@ -142,6 +165,7 @@ export class SeriesBook {
 
   /** Erzeugt einen Einmalcode, mit dem ein anderes Gerät die Leitung der Serie übernimmt. */
   issueTransfer(token: string): { code: string; expiresAt: number } | { error: string } {
+    if (this.s.org) return { error: 'Die Leitung dieser Serie hängt an ihrer Gruppe. Rollen vergibt der Betreiber der Gruppe.' };
     if (!this.mayManage(token)) return { error: 'Das darf nur die Leitung der Serie.' };
     const code = this.deps.randomKey();
     const expiresAt = this.deps.now() + SERIES_TRANSFER_MS;
@@ -152,6 +176,7 @@ export class SeriesBook {
 
   /** Dieses Gerät übernimmt die Leitung; das bisherige Gerät ist danach nicht mehr Leitung. */
   takeLeadership(token: string, code: string): string | null {
+    if (this.s.org) return 'Die Leitung dieser Serie hängt an ihrer Gruppe.';
     const transfer = this.s.transfer;
     if (token.length < 16 || token.length > 100) return 'Dieses Gerät kann die Leitung nicht übernehmen.';
     if (!transfer) return 'Es liegt keine Übergabe vor.';
@@ -196,6 +221,7 @@ export class SeriesBook {
       tournaments: s.entries.map((e) => ({ code: e.code, name: e.name, at: e.at, players: e.players.filter((p) => !p.pair).length })),
       standings: seriesStandings(s.entries, s.scheme),
       isLeader: leader,
+      ...(s.org ? { org: s.org } : {}),
       ...(leader ? { link: `${s.code}-${s.linkKey}` } : {}),
       expiresAt: this.expiresAt(),
     };

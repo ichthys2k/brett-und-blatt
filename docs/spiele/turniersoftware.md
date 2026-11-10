@@ -263,3 +263,8 @@ Cornelius hat alle Vorschläge übernommen:
 - **Kreuzbinokel-Lobby:** Die Teamübersicht warnt, wenn ein Team weniger als `minPerTeam` Plätze hat (dann gilt die feste Sitzordnung).
 - **Rauchtest:** `node apps/server/scripts/serie.mjs [Adresse]` gegen den laufenden Server (Serie anlegen, zuordnen, Turnier beenden, Rangliste, Leitung von Turnier und Serie übergeben, löschen).
 - **Offen:** Web Push (#206, Entscheidung bei Cornelius).
+
+
+## Kalenderdatei (#243, 10.11.2026)
+
+Unter „Drucken und Export“ gibt es „Meine Partien (Kalender)“ und „Ganzer Zeitplan (Kalender)". Die `.ics`-Datei entsteht im Browser (`apps/web/src/lib/calendar.ts`, Tests `tests/calendar.test.ts`), Zeiten in UTC. Uhrzeit je Partie aus dem Zeitplan (`plannedAt`, Dauer `matchMinutes`), sonst die Frist der Phase (30 Minuten, Zusatz „Frist"); beendete Partien fehlen. UID `<Code>-<Partie>@spiele.lipponer.de`, ein erneuter Download ersetzt also Einträge. Schnappschuss: Verschiebungen brauchen einen neuen Download; ein Abo-Link ist nicht gebaut. Erinnerungen aufs Gerät: #242 (Web Push).

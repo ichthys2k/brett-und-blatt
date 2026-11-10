@@ -17,6 +17,8 @@
       { "name": "SHARES", "class_name": "PassShare" },
       { "name": "CLASSES", "class_name": "ClassRoom" },
       { "name": "SERIES", "class_name": "SeriesRoom" },
+      { "name": "ORGS", "class_name": "OrgRoom" },
+      { "name": "ORG_DESK", "class_name": "OrgDesk" },
       { "name": "ACCOUNT_FLOWS", "class_name": "AccountFlow" },
       { "name": "ACCOUNT_LOCKS", "class_name": "AccountLockBox" },
       { "name": "PACKAGE_SHARES", "class_name": "PackageShare" }
@@ -36,7 +38,8 @@
     { "tag": "v8", "new_sqlite_classes": ["ClassRoom"] },
     { "tag": "v9", "new_sqlite_classes": ["SeriesRoom"] },
     { "tag": "v10", "new_sqlite_classes": ["AccountFlow", "AccountLockBox"] },
-    { "tag": "v11", "new_sqlite_classes": ["PackageShare"] }
+    { "tag": "v11", "new_sqlite_classes": ["OrgRoom", "OrgDesk"] },
+    { "tag": "v12", "new_sqlite_classes": ["PackageShare"] }
   ],
   "vars": {
     // Von diesen Seiten aus dürfen Räume erstellt und betreten werden.

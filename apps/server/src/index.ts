@@ -31,6 +31,7 @@ import {
   mayStoreProgress,
   removeClassPack,
   setLeadKey,
+  classRoles,
   OpenRoomDirectory,
   Room,
   SERIES_CODE_PATTERN,
@@ -115,6 +116,38 @@ import { bibelQuizKatalog } from './bibelquiz';
 import { wortspielKataloge } from './wortspiele';
 import { onlineGames } from './games';
 import { isOperator } from './operator';
+import {
+  answerOffer,
+  decideRequest,
+  emptyDesk,
+  openRequests,
+  requestsOf,
+  setApproved,
+  submitRequest,
+  type OrgDeskState,
+  configureOrg,
+  createInvite,
+  createOrg,
+  isOrgExpired,
+  leaveOrg,
+  mayDissolveOrg,
+  offerRoles,
+  ORG_TTL_MS,
+  ORG_KINDS,
+  orgView,
+  parseOrgCode,
+  randomOrgCode,
+  redeemInvite,
+  removeOrgMember,
+  revokeInvite,
+  revokeRoles,
+  rolesOf,
+  orgCapabilities,
+  isOrgRole,
+  type OrgRole,
+  updateOrgMember,
+  type OrgState,
+} from '@brett-und-blatt/online';
 
 /**
  * Der Spieleserver auf Cloudflare – nur ein dünner Adapter: Die ganze Spiellogik
@@ -146,6 +179,8 @@ interface Env {
   PACKAGES: R2Bucket;
   CLASSES: DurableObjectNamespace<ClassRoom>;
   SERIES: DurableObjectNamespace<SeriesRoom>;
+  ORGS: DurableObjectNamespace<OrgRoom>;
+  ORG_DESK: DurableObjectNamespace<OrgDesk>;
   ACCOUNT_FLOWS: DurableObjectNamespace<AccountFlow>;
   ACCOUNT_LOCKS: DurableObjectNamespace<AccountLockBox>;
   /** Anmeldung mit Google (`wrangler secret put GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`). Fehlen sie, ist der Anbieter nicht eingerichtet. */
@@ -214,6 +249,29 @@ function packageStub(env: Env, id: string): DurableObjectStub<PackageShare> {
 
 function classStub(env: Env, code: string): DurableObjectStub<ClassRoom> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.CLASSES : env.CLASSES.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(code));
+}
+
+/** Rollen eines Geräts in einer Organisation; bei Fehlern keine (lieber zu wenig Recht als zu viel). */
+async function orgRolesOf(env: Env, orgCode: string, token: string): Promise<OrgRole[]> {
+  try {
+    let parsed = JSON.parse(await orgStub(env, orgCode).rolesOf(token)) as unknown;
+    // Gibt es keine Organisation unter dem Code, kann er einer Klasse gehören (#232): Lehrkräfte sind dort Betreiber und Leitung.
+    if (parsed === null) parsed = JSON.parse(await classStub(env, orgCode).rolesOf(token)) as unknown;
+    return Array.isArray(parsed) ? parsed.filter(isOrgRole) : [];
+  } catch (err) {
+    console.error('Organisation nicht erreichbar:', err);
+    return [];
+  }
+}
+
+function orgDeskStub(env: Env): DurableObjectStub<OrgDesk> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.ORG_DESK : env.ORG_DESK.jurisdiction('eu');
+  return namespace.get(namespace.idFromName('antraege'));
+}
+
+function orgStub(env: Env, code: string): DurableObjectStub<OrgRoom> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.ORGS : env.ORGS.jurisdiction('eu');
   return namespace.get(namespace.idFromName(code));
 }
 
@@ -345,8 +403,79 @@ export default {
       return json(wortspiel, 200, { ...cors, 'Cache-Control': 'public, max-age=300' });
     }
 
+    // Anträge auf Organisationen (#228): Antragsteller stellen und fragen ab, der Betreiber entscheidet und sperrt.
+    if (url.pathname === '/org-antrag' && request.method === 'POST') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      let body: Record<string, unknown>;
+      try {
+        const text = await request.text();
+        if (text.length > 4000) return json({ error: 'size' }, 413, noStore);
+        body = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        return json({ error: 'body' }, 400, noStore);
+      }
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      if (body.action === 'status') return json({ requests: JSON.parse(await orgDeskStub(env).mine(String(body.token ?? ''))) as unknown }, 200, noStore);
+      if (body.action !== 'submit') return json({ error: 'action' }, 400, noStore);
+      const result = JSON.parse(await orgDeskStub(env).submit(JSON.stringify(body))) as { error?: string; id?: string };
+      if (result.error) {
+        await limiter.miss();
+        return json({ error: result.error }, 409, noStore);
+      }
+      return json({ id: result.id }, 201, noStore);
+    }
+
+    const operatorDesk = /^\/betreiber\/(antraege|antrag\/([0-9a-f]{12})|org-sperre\/([^/]+))$/.exec(url.pathname);
+    if (operatorDesk) {
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      if (!env.OPERATOR_KEY) return json({ error: 'aus' }, 404, cors);
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      const wanted = operatorDesk[1] === 'antraege' ? 'GET' : 'POST';
+      if (request.method !== wanted) return json({ error: 'method' }, 405, cors);
+      if (!(await isOperator(request, env.OPERATOR_KEY))) {
+        await limiter.miss();
+        return json({ error: 'nicht erlaubt' }, 401, noStore);
+      }
+      if (operatorDesk[1] === 'antraege') return json({ antraege: JSON.parse(await orgDeskStub(env).list()) as unknown }, 200, noStore);
+      let body: Record<string, unknown> = {};
+      try {
+        const text = await request.text();
+        if (text.length > 4000) return json({ error: 'size' }, 413, noStore);
+        if (text) body = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        return json({ error: 'body' }, 400, noStore);
+      }
+      if (operatorDesk[3]) {
+        const code = parseOrgCode(decodeURIComponent(operatorDesk[3]));
+        if (!code || typeof body.blocked !== 'boolean') return json({ error: 'code' }, 400, noStore);
+        const done = await orgStub(env, code).setBlocked(body.blocked);
+        console.log(JSON.stringify({ betreiber: 'org-sperre', ziel: code, gesperrt: body.blocked, am: new Date().toISOString(), ok: done }));
+        return json({ ok: done }, done ? 200 : 404, noStore);
+      }
+      const id = operatorDesk[2]!;
+      const approve = body.approve === true;
+      const decided = JSON.parse(await orgDeskStub(env).decide(id, approve, body.note ?? '')) as { error?: string; request?: { token: string; name: string; avatar: string; crest?: string; orgName: string; kind: string } };
+      if (decided.error || !decided.request) return json({ error: decided.error ?? 'missing' }, 409, noStore);
+      if (!approve) return json({ ok: true }, 200, noStore);
+      const req = decided.request;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const code = randomOrgCode((n) => crypto.getRandomValues(new Uint32Array(1))[0]! % n);
+        if (await classStub(env, code).exists()) continue;
+        const created = await orgStub(env, code).create(code, JSON.stringify({ name: req.orgName, kind: req.kind, founder: { token: req.token, name: req.name, avatar: req.avatar, crest: req.crest } }));
+        if (created === 'taken') continue;
+        if (created !== 'ok') return json({ error: created }, 400, noStore);
+        await orgDeskStub(env).approved(id, code);
+        console.log(JSON.stringify({ betreiber: 'org-freigabe', antrag: id, am: new Date().toISOString() }));
+        return json({ ok: true, code }, 200, noStore);
+      }
+      return json({ error: 'busy' }, 503, noStore);
+    }
+
     // Betreiber-Endpunkte (Schlüssel `OPERATOR_KEY`): Liste der offenen Turniere und Löschen von Turnieren und Klassen.
-    const operator = /^\/betreiber\/(turnier|klasse|serie|liste)(?:\/([^/]+))?$/.exec(url.pathname);
+    const operator = /^\/betreiber\/(turnier|klasse|serie|org|liste)(?:\/([^/]+))?$/.exec(url.pathname);
     if (operator) {
       if (!env.OPERATOR_KEY) return json({ error: 'aus' }, 404, cors);
       const wanted = operator[1] === 'liste' ? 'GET' : 'DELETE';
@@ -367,6 +496,10 @@ export default {
       if (operator[1] === 'turnier') {
         if (!TOURNAMENT_CODE_PATTERN.test(target)) return json({ error: 'code' }, 400, cors);
         done = await tournamentStub(env, target).operatorDelete();
+      } else if (operator[1] === 'org') {
+        const code = parseOrgCode(target);
+        if (!code) return json({ error: 'code' }, 400, cors);
+        done = await orgStub(env, code).operatorDelete();
       } else if (operator[1] === 'serie') {
         if (!SERIES_CODE_PATTERN.test(target)) return json({ error: 'code' }, 400, cors);
         done = await seriesStub(env, target).operatorDelete();
@@ -392,6 +525,11 @@ export default {
       }
       const settings = parseTournamentSettings(body.settings, (id) => gamesById.get(id));
       if (!settings || typeof body.token !== 'string' || body.token.length < 16 || body.token.length > 100 || typeof body.name !== 'string') return json({ error: 'body' }, 400, cors);
+      // Ein Turnier unter dem Namen einer Organisation (#230) darf nur anlegen, wer dort das Recht dazu hat.
+      if (settings.org) {
+        const roles = await orgRolesOf(env, settings.org, body.token);
+        if (!orgCapabilities(roles).includes('createTournament')) return json({ error: 'Du darfst in dieser Gruppe keine Turniere anlegen.' }, 403, cors);
+      }
       for (let attempt = 0; attempt < 5; attempt++) {
         const code = randomLetters(8);
         if (await tournamentStub(env, code).create(code, settings, { token: body.token, name: body.name }, parseFieldCount(body.settings), parsePointRules(body.settings), parseEntrants(body.entrants), settings.mode === 'local' ? parseSeed(body.seed) : undefined)) return json({ code }, 201, cors);
@@ -413,9 +551,16 @@ export default {
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
       const body = await readJson(request, 2_000);
       if (!body || typeof body.name !== 'string' || typeof body.token !== 'string' || (body.scheme !== 'linear' && body.scheme !== 'f1')) return json({ error: 'body' }, 400, cors);
+      // Eine Serie der Gruppe (#231) darf nur anlegen, wer dort Turniere anlegen darf.
+      let org: string | undefined;
+      if (body.org !== undefined && body.org !== '') {
+        org = typeof body.org === 'string' ? (parseOrgCode(body.org) ?? undefined) : undefined;
+        if (!org) return json({ error: 'org' }, 400, cors);
+        if (!orgCapabilities(await orgRolesOf(env, org, body.token)).includes('createTournament')) return json({ error: 'Du darfst in dieser Gruppe keine Serien anlegen.' }, 403, cors);
+      }
       for (let attempt = 0; attempt < 5; attempt++) {
         const code = randomLetters(8);
-        const error = await seriesStub(env, code).create(code, body.name, body.scheme, body.token);
+        const error = await seriesStub(env, code).create(code, body.name, body.scheme, body.token, org);
         if (error === null) return json({ code }, 201, cors);
         if (error !== 'belegt') return json({ error }, 400, cors);
       }
@@ -511,6 +656,8 @@ export default {
       }
       for (let attempt = 0; attempt < 8; attempt++) {
         const code = randomClassCode((n) => crypto.getRandomValues(new Uint32Array(1))[0]! % n);
+        // Klassen und Organisationen teilen die Form des Codes; ein Code gehört nur einer von beiden (#232).
+        if (await orgStub(env, code).exists()) continue;
         const created = await classStub(env, code).create(code, JSON.stringify(body));
         if (created === 'taken') continue;
         if (created !== 'ok') return json({ error: created }, 400, { ...cors, 'Cache-Control': 'no-store' });
@@ -540,6 +687,58 @@ export default {
       const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
       if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
       const result = await classStub(env, code).act(JSON.stringify(body));
+      if (result.status === 404) await limiter.miss();
+      return json(JSON.parse(result.body) as Record<string, unknown>, result.status, noStore);
+    }
+
+    // Organisationen (#217): Anlegen nur mit dem Betreiber-Schlüssel, bis Antrag und Freigabe (#228) folgen.
+    if (url.pathname === '/org' && request.method === 'POST') {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      if (!env.OPERATOR_KEY) return json({ error: 'aus' }, 404, cors);
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      if (!(await isOperator(request, env.OPERATOR_KEY))) {
+        await limiter.miss();
+        return json({ error: 'nicht erlaubt' }, 401, noStore);
+      }
+      let body: Record<string, unknown>;
+      try {
+        const text = await request.text();
+        if (text.length > 4000) return json({ error: 'size' }, 413, noStore);
+        body = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        return json({ error: 'body' }, 400, noStore);
+      }
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const code = randomOrgCode((n) => crypto.getRandomValues(new Uint32Array(1))[0]! % n);
+        if (await classStub(env, code).exists()) continue;
+        const created = await orgStub(env, code).create(code, JSON.stringify(body));
+        if (created === 'taken') continue;
+        if (created !== 'ok') return json({ error: created }, 400, noStore);
+        return json({ code }, 201, noStore);
+      }
+      return json({ error: 'busy' }, 503, noStore);
+    }
+
+    const org = /^\/org\/([^/]+)$/.exec(url.pathname);
+    if (org) {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      if (request.method !== 'POST') return json({ error: 'method' }, 405, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      const code = parseOrgCode(decodeURIComponent(org[1]!));
+      if (!code) return json({ error: 'code' }, 404, noStore);
+      let body: Record<string, unknown>;
+      try {
+        const text = await request.text();
+        if (text.length > 4000) return json({ error: 'size' }, 413, noStore);
+        body = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        return json({ error: 'body' }, 400, noStore);
+      }
+      const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+      if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+      const result = await orgStub(env, code).act(JSON.stringify(body));
       if (result.status === 404) await limiter.miss();
       return json(JSON.parse(result.body) as Record<string, unknown>, result.status, noStore);
     }
@@ -1279,6 +1478,17 @@ export class ClassRoom extends DurableObject<Env> {
     return reply(200, { view: classView(state, token) });
   }
 
+  /** Rollen eines Geräts in dieser Klasse im Rollenmodell der Organisationen (#232); 'null', wenn es die Klasse nicht gibt. */
+  async rolesOf(token: string): Promise<string> {
+    const state = await this.ctx.storage.get<ClassState>('class');
+    if (!state || isClassExpired(state, Date.now())) return 'null';
+    return JSON.stringify(classRoles(state, token));
+  }
+
+  async exists(): Promise<boolean> {
+    return (await this.ctx.storage.get('class')) !== undefined;
+  }
+
   /** Auflösen durch den Betreiber (`/betreiber/klasse/<Code>`). */
   async operatorDissolve(): Promise<boolean> {
     if (!(await this.ctx.storage.get('class'))) return false;
@@ -1298,6 +1508,163 @@ export class ClassRoom extends DurableObject<Env> {
   private async save(state: ClassState): Promise<void> {
     await this.ctx.storage.put('class', state);
     await this.ctx.storage.setAlarm(state.lastActive + CLASS_TTL_MS);
+  }
+}
+
+/**
+ * Der Schalter für Anträge auf Organisationen (#228): ein einziges Durable Object (in der EU), das die offenen und kürzlich
+ * entschiedenen Anträge hält. Logik in `packages/online/src/org-requests.ts`; Antworten gehen als JSON-Text.
+ */
+export class OrgDesk extends DurableObject<Env> {
+  private async load(): Promise<OrgDeskState> {
+    return (await this.ctx.storage.get<OrgDeskState>('desk')) ?? emptyDesk();
+  }
+
+  async submit(json: string): Promise<string> {
+    const body = JSON.parse(json) as Record<string, unknown>;
+    const desk = await this.load();
+    const result = submitRequest(desk, { token: body.token, name: body.name, avatar: body.avatar, crest: body.crest, orgName: body.orgName, kind: body.kind, purpose: body.purpose }, Date.now());
+    if ('ok' in result) await this.ctx.storage.put('desk', desk);
+    return JSON.stringify(result);
+  }
+
+  async mine(token: string): Promise<string> {
+    return JSON.stringify(requestsOf(await this.load(), token));
+  }
+
+  async list(): Promise<string> {
+    return JSON.stringify(openRequests(await this.load()));
+  }
+
+  async decide(id: string, approve: boolean, note: unknown): Promise<string> {
+    const desk = await this.load();
+    const result = decideRequest(desk, id, approve, note, Date.now());
+    if ('ok' in result && !approve) await this.ctx.storage.put('desk', desk);
+    return JSON.stringify(result);
+  }
+
+  async approved(id: string, code: string): Promise<void> {
+    const desk = await this.load();
+    setApproved(desk, id, code, Date.now());
+    await this.ctx.storage.put('desk', desk);
+  }
+}
+
+/**
+ * Eine Organisation als Durable Object (eins je Code, in der EU, #217). Die Logik steht in `packages/online/src/org.ts`;
+ * hier nur Speicher und Frist (ein Jahr nach der letzten Aktivität).
+ */
+export class OrgRoom extends DurableObject<Env> {
+  async create(code: string, json: string): Promise<string> {
+    if (await this.ctx.storage.get('org')) return 'taken';
+    const body = JSON.parse(json) as Record<string, unknown>;
+    const founder = (body.founder && typeof body.founder === 'object' ? body.founder : {}) as Record<string, unknown>;
+    if (!ORG_KINDS.some((k) => k === body.kind)) return 'Art der Organisation fehlt.';
+    const state = createOrg(code, { name: body.name, kind: body.kind }, { token: founder.token, name: founder.name, avatar: founder.avatar, crest: founder.crest }, Date.now());
+    if (typeof state === 'string') return state;
+    await this.save(state);
+    return 'ok';
+  }
+
+  /** Nimmt eine Aktion als JSON-Text; Antwort ebenfalls als Text (RPC kennt `unknown` nicht). */
+  async act(json: string): Promise<{ status: number; body: string }> {
+    const reply = (status: number, value: Record<string, unknown>) => ({ status, body: JSON.stringify(value) });
+    const body = JSON.parse(json) as Record<string, unknown>;
+    const state = (await this.ctx.storage.get<OrgState>('org')) ?? null;
+    const now = Date.now();
+    if (!state || isOrgExpired(state, now)) return reply(404, { error: 'missing' });
+    const token = body.token;
+    let outcome: { error: string } | { ok: true } = { ok: true };
+    let extra: Record<string, unknown> = {};
+    switch (body.action) {
+      case 'view':
+        return reply(200, { view: orgView(state, token, now) });
+      case 'redeem':
+        outcome = redeemInvite(state, { token, name: body.name, avatar: body.avatar, crest: body.crest }, body.invite, now);
+        break;
+      case 'invite': {
+        const made = createInvite(state, token, body.roles, now);
+        if ('error' in made) outcome = made;
+        else extra = { invite: { id: made.id, code: made.code, expiresAt: made.expiresAt } };
+        break;
+      }
+      case 'revokeInvite':
+        outcome = revokeInvite(state, token, body.id, now);
+        break;
+      case 'offer':
+        outcome = offerRoles(state, token, body.id, body.roles, now);
+        break;
+      case 'accept':
+      case 'decline':
+        outcome = answerOffer(state, token, body.action === 'accept', now);
+        break;
+      case 'revoke':
+        outcome = revokeRoles(state, token, body.id, body.roles, now);
+        break;
+      case 'remove':
+        outcome = removeOrgMember(state, token, body.id, now);
+        break;
+      case 'leave':
+        outcome = leaveOrg(state, token, now);
+        break;
+      case 'configure':
+        outcome = configureOrg(state, token, { name: body.name, leaderMayGrant: body.leaderMayGrant }, now);
+        break;
+      case 'update':
+        outcome = updateOrgMember(state, token, { name: body.name, avatar: body.avatar, ...('crest' in body ? { crest: body.crest } : {}) }, now);
+        break;
+      case 'dissolve':
+        if (!mayDissolveOrg(state, token)) return reply(403, { error: 'Das darf nur der Betreiber.' });
+        await this.ctx.storage.deleteAll();
+        return reply(200, { dissolved: true });
+      default:
+        return reply(400, { error: 'action' });
+    }
+    if ('error' in outcome) return reply(409, { error: outcome.error, view: orgView(state, token, now) });
+    await this.save(state);
+    return reply(200, { view: orgView(state, token, now), ...extra });
+  }
+
+  /** Rollen eines Geräts in dieser Organisation (für Turniere, #230); leer in gesperrten, unbekannten und für Fremde. */
+  async rolesOf(token: string): Promise<string> {
+    const state = await this.ctx.storage.get<OrgState>('org');
+    if (!state || isOrgExpired(state, Date.now())) return 'null';
+    if (state.status !== 'active') return '[]';
+    return JSON.stringify(rolesOf(state, token));
+  }
+
+  async exists(): Promise<boolean> {
+    return (await this.ctx.storage.get('org')) !== undefined;
+  }
+
+  /** Sperrt oder gibt eine Organisation wieder frei (Betreiber der Plattform); gesperrt gelten keine Rollen und keine Einladungen. */
+  async setBlocked(blocked: boolean): Promise<boolean> {
+    const state = await this.ctx.storage.get<OrgState>('org');
+    if (!state) return false;
+    state.status = blocked ? 'blocked' : 'active';
+    await this.save(state);
+    return true;
+  }
+
+  /** Auflösen durch den Betreiber der Plattform (`/betreiber/org/<Code>`). */
+  async operatorDelete(): Promise<boolean> {
+    if (!(await this.ctx.storage.get('org'))) return false;
+    await this.ctx.storage.deleteAll();
+    return true;
+  }
+
+  override async alarm(): Promise<void> {
+    const state = await this.ctx.storage.get<OrgState>('org');
+    if (!state || isOrgExpired(state, Date.now())) {
+      await this.ctx.storage.deleteAll();
+      return;
+    }
+    await this.ctx.storage.setAlarm(state.lastActive + ORG_TTL_MS);
+  }
+
+  private async save(state: OrgState): Promise<void> {
+    await this.ctx.storage.put('org', state);
+    await this.ctx.storage.setAlarm(state.lastActive + ORG_TTL_MS);
   }
 }
 
@@ -1461,16 +1828,28 @@ export class SeriesRoom extends DurableObject<Env> {
   }
 
   /** Legt die Serie an; gibt einen Fehlertext zurück, `'belegt'`, wenn der Code schon vergeben ist, sonst null. */
-  async create(code: string, name: string, scheme: PointScheme, token: string): Promise<string | null> {
+  async create(code: string, name: string, scheme: PointScheme, token: string, org?: string): Promise<string | null> {
     if (this.book) return 'belegt';
-    const book = SeriesBook.create(code, name, scheme, token, this.deps());
+    const book = SeriesBook.create(code, name, scheme, token, this.deps(), org);
     if (typeof book === 'string') return book;
     this.book = book;
     await this.save();
     return null;
   }
 
+  /** Trägt die Rollen aus der Gruppe der Serie für diese Kennung ein (#231), kurz gemerkt. */
+  private async loadRoles(token: string | null): Promise<void> {
+    const org = this.book?.org;
+    if (!this.book || !org || !token) return;
+    const cached = this.roleCache.get(token);
+    if (!cached || Date.now() - cached.at > 15_000) this.roleCache.set(token, { roles: await orgRolesOf(this.env, org, token), at: Date.now() });
+    this.book.setOrgRoles(token, this.roleCache.get(token)!.roles);
+  }
+
+  private roleCache = new Map<string, { roles: OrgRole[]; at: number }>();
+
   async view(token: string | null): Promise<SeriesView | null> {
+    await this.loadRoles(token);
     return this.book ? this.book.view(token) : null;
   }
 
@@ -1488,6 +1867,7 @@ export class SeriesRoom extends DurableObject<Env> {
   async manage(token: string, request: { action: string; name?: string; scheme?: PointScheme; tournament?: string }): Promise<string | null> {
     const book = this.book;
     if (!book) return 'Diese Serie gibt es nicht (mehr).';
+    await this.loadRoles(token);
     let error: string | null;
     switch (request.action) {
       case 'rename':
@@ -1515,6 +1895,7 @@ export class SeriesRoom extends DurableObject<Env> {
   /** Übergabecode für ein anderes Gerät (nur die Leitung). */
   async issueTransfer(token: string): Promise<{ code: string; expiresAt: number } | { error: string }> {
     if (!this.book) return { error: 'Diese Serie gibt es nicht (mehr).' };
+    await this.loadRoles(token);
     const issued = this.book.issueTransfer(token);
     if (!('error' in issued)) await this.save();
     return issued;
@@ -1530,6 +1911,7 @@ export class SeriesRoom extends DurableObject<Env> {
 
   async deleteByLeader(token: string): Promise<string | null> {
     if (!this.book) return 'Diese Serie gibt es nicht (mehr).';
+    await this.loadRoles(token);
     if (!this.book.mayManage(token)) return 'Das darf nur die Leitung der Serie.';
     await this.wipe();
     return null;
@@ -1566,6 +1948,8 @@ export class SeriesRoom extends DurableObject<Env> {
 
 export class TournamentRoom extends DurableObject<Env> {
   private tournament: Tournament | null = null;
+  /** Rollen aus der Organisation je Kennung, kurz gemerkt (#230); sie ändern sich selten, die Abfrage soll nicht jede Nachricht bremsen. */
+  private orgCache = new Map<string, { roles: OrgRole[]; at: number }>();
   private lastListing: OpenRoomListing | null | undefined = undefined;
 
   constructor(ctx: DurableObjectState, env: Env) {
@@ -1604,18 +1988,37 @@ export class TournamentRoom extends DurableObject<Env> {
     return new Response(null, { status: 101, webSocket: client });
   }
 
+  /** Holt die Rollen aus der Organisation des Turniers für diese Kennungen (höchstens alle 15 Sekunden je Kennung). */
+  private async loadOrgRoles(tokens: readonly (string | null | undefined)[]): Promise<void> {
+    const t = this.tournament;
+    const org = t?.snapshot().settings.org;
+    if (!t || !org) return;
+    const now = Date.now();
+    for (const token of new Set(tokens)) {
+      if (!token) continue;
+      const cached = this.orgCache.get(token);
+      if (!cached || now - cached.at > 15_000) {
+        const roles = await orgRolesOf(this.env, org, token);
+        this.orgCache.set(token, { roles, at: now });
+      }
+      t.setOrgRoles(token, this.orgCache.get(token)!.roles);
+    }
+  }
+
   override async webSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
     const t = this.tournament;
     if (!t || typeof raw !== 'string') return;
     const message = parseTournamentMessage(raw);
     if (!message) return this.sendTo(ws, { type: 'error', message: 'Unbekannte Nachricht.' });
     if (message.type === 'hello') {
+      await this.loadOrgRoles([message.token]);
       ws.serializeAttachment({ token: message.token, name: message.name, avatar: message.avatar } satisfies TournamentAttachment);
       if (t.greet(message.token, message.name, message.avatar)) return this.changed();
       return this.sendView(ws);
     }
     const { token, name, avatar } = ws.deserializeAttachment() as TournamentAttachment;
     if (!token) return this.sendTo(ws, { type: 'error', message: 'Erst anmelden.' });
+    await this.loadOrgRoles([token]);
     if (message.type === 'attachSeries' || message.type === 'detachSeries') return this.handleSeries(ws, t, token, message);
     const result = applyTournamentMessage(t, { token, name: name ?? '', avatar: avatar ?? '' }, message);
     if (result.kind === 'delete') return this.deleteTournament(t);
@@ -1714,6 +2117,7 @@ export class TournamentRoom extends DurableObject<Env> {
     await this.ctx.storage.put('tournament', t.snapshot());
     const wake = retry ? Date.now() + 30_000 : t.nextWakeup();
     await this.ctx.storage.setAlarm(Math.max(wake, Date.now() + 1000));
+    await this.loadOrgRoles(this.ctx.getWebSockets().map((ws) => (ws.deserializeAttachment() as TournamentAttachment).token));
     for (const ws of this.ctx.getWebSockets()) this.sendView(ws);
     await this.syncRegistry(t);
   }

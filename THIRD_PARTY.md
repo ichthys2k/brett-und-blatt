@@ -380,3 +380,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Wappenhäuser-Champions im Drachenspiel (KI-erzeugt)
+
+Die Porträts der fünf Champions der Wappenhäuser im Drachenspiel (`packages/games/drachenspiel/src/ui/champions/*.webp`: Bär für Haus Eichenhain, Seeotter für die Seefahrergilde, Hahn für die Dorfgemeinschaft Hahnfeld, Wüstenluchs für die Fernländer Karawane, Hirschkäfer für den Schwarm vom Moorbach): **KI-erzeugt** mit einem Bildmodell nach eigenen Bildbeschreibungen, November 2026. Auswahl durch Cornelius Lipponer; Manifest und Prompts in `scripts/grafik/manifeste/drachenspiel-champions.json`. Die Figuren sind eigene Erfindungen (Fabeltiere in heraldischer Turnierrüstung), keine echten Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Marktplatz-Figuren (KI-erzeugt)
+
+Die fünf Porträts der Nebenfiguren für das Spiel Marktplatz (`packages/games/marketplace/src/ui/figures/*.webp`: Ausrufer, Tavernenwirtin, Abt Esel, König Löwe, Hofnarr): **KI-erzeugt** mit einem Bildmodell nach eigenen Bildbeschreibungen im Narrenhof-Ölstil, November 2026. Auswahl durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `marktplatz-figuren.json`). Die Figuren sind eigene Erfindungen (Fabeltiere im mittelalterlichen Gewand), keine echten Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Raum-Kulissen (KI-erzeugt)
+
+Die drei zusätzlichen Raumkulissen (`apps/web/src/assets/raeume/*.webp`: Burgsaal, Bibliothek & Schreibstube, Schlossgarten): **KI-erzeugt** mit einem Bildmodell nach eigenen Bildbeschreibungen im Narrenhof-Ölstil, November 2026. Auswahl durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `raeume.json`). Die Bilder zeigen leere Räume und Gärten ohne Personen, Tiere oder Text.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+

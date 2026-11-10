@@ -1,5 +1,18 @@
 import { sortHand, cardSuit, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
-import { CardFan, PlayingCard, TRICK_HAND_MIN_STEP, SeatRing, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import {
+  CardFan,
+  PlayingCard,
+  RoundSummary,
+  type RoundSummaryPlayer,
+  TRICK_HAND_MIN_STEP,
+  SeatRing,
+  TrickTable,
+  trickHandCardWidth,
+  useTrickDisplay,
+  type BoardProps,
+  type GameUi,
+  type TrickTableSlot,
+} from '@brett-und-blatt/ui';
 import {
   getContract,
   owingSolo,
@@ -246,41 +259,76 @@ export function DokoBoard({
   );
 
   // Runden-Auswertung
+  const lastSummary =
+    view.history.length > 0 && view.phase === 'roundOver'
+      ? view.history[view.history.length - 1]
+      : null;
+
+  const roundPlayers: RoundSummaryPlayer[] = Array.from({ length: view.playerCount }, (_, s) => {
+    const currentScore = view.scores[s] ?? 0;
+    const roundChange = lastSummary ? (lastSummary.scorePerPlayer[s] ?? 0) : 0;
+    let detail: string | null = null;
+
+    if (lastSummary) {
+      const isRe = lastSummary.reTeam.includes(s);
+      const isSolo = lastSummary.contract.type !== 'normal';
+      detail = `${isSolo ? 'Solo · ' : ''}${isRe ? 'Team Re' : 'Team Kontra'}`;
+    }
+
+    return {
+      seat: s,
+      name: seatNames[s] ?? `Spieler ${s + 1}`,
+      previousScore: currentScore - roundChange,
+      roundChange,
+      currentScore,
+      detail,
+      isMe: s === mySeat,
+    };
+  });
+
   const roundEnd = (
     <>
       {view.phase === 'roundOver' && (
-        <div className="p-4 bg-stone-900/90 text-white rounded-2xl shadow-xl flex flex-col items-center gap-3">
-          <h2 className="text-lg font-bold">Runde beendet</h2>
-          {view.history.length > 0 && (
-            <div className="text-sm text-stone-200 text-center">
-              {view.history[view.history.length - 1].won ? (
-                <span className="text-emerald-400 font-semibold">
-                  Team Re hat gewonnen! ({view.history[view.history.length - 1].reEyes} Augen)
-                </span>
+        <RoundSummary
+          title={lastSummary?.mandatory ? 'Pflichtsolo beendet' : `Spiel ${view.gameNumber} beendet`}
+          subtitle={
+            lastSummary ? (
+              lastSummary.won ? (
+                <span className="text-emerald-400">Team Re hat gewonnen!</span>
               ) : (
-                <span className="text-rose-400 font-semibold">
-                  Team Kontra hat gewonnen! ({view.history[view.history.length - 1].kontraEyes} Augen)
-                </span>
-              )}
-              <div className="mt-1 text-xs text-stone-400">
-                Punkte: {view.history[view.history.length - 1].points} Pkt
-              </div>
-              {view.history[view.history.length - 1].mandatory && (
-                <div className="mt-1 text-xs text-stone-300">Pflichtsolo – zählt nicht als Spiel der Serie, der Geber gibt noch einmal.</div>
-              )}
-            </div>
-          )}
-          <button
-            type="button"
-            className="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl shadow transition"
-            onClick={() => onMove({ type: 'nextGame' })}
-          >
-            Nächstes Spiel
-          </button>
-        </div>
+                <span className="text-rose-400">Team Kontra hat gewonnen!</span>
+              )
+            ) : (
+              'Runde beendet'
+            )
+          }
+          roundDetail={
+            lastSummary ? (
+              <span>
+                Augen: Re {lastSummary.reEyes} : Kontra {lastSummary.kontraEyes} • {lastSummary.points} {lastSummary.points === 1 ? 'Punkt' : 'Punkte'}
+              </span>
+            ) : null
+          }
+          note={
+            lastSummary?.mandatory
+              ? 'Pflichtsolo – zählt nicht als Spiel der Serie, der Geber gibt noch einmal.'
+              : null
+          }
+          players={roundPlayers}
+          actions={
+            <button
+              type="button"
+              className="bub-round-summary-btn bg-indigo-500 hover:bg-indigo-400 text-white"
+              onClick={() => onMove({ type: 'nextGame' })}
+            >
+              Nächstes Spiel
+            </button>
+          }
+        />
       )}
     </>
   );
+
 
   return (
     <div className={`flex h-full flex-col w-full mx-auto p-1 gap-2 sm:p-2 flat:p-0 ${table ? '' : 'max-w-4xl'}`}>

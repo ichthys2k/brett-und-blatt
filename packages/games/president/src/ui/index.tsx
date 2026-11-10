@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { cardRank, rankLabel, type CardId, type SeatId } from '@brett-und-blatt/engine';
-import { SeatRing, PlayingCard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, PlayingCard, RoundSummary, type RoundSummaryPlayer, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { cardValue, groupsOf, placeKind, placeTitle, topPlay, type PlaceKind, type PresidentMove, type PresidentView, type Titles } from '../rules';
 import './styles.css';
 
@@ -272,45 +272,51 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
       ) : (
         <>{opponents}{center}{own}</>
       )}
-      {(view.phase === 'roundEnd' || view.phase === 'gameEnd') && view.lastRound && (
-        <div className="prs-overlay">
-          <div className="prs-overlay-box">
-            <div className="prs-overlay-title">
-              Runde {view.lastRound.round} von {view.options.rounds}
-            </div>
-            <table className="prs-scores">
-              <thead>
-                <tr>
-                  <th>Platz</th>
-                  <th>Runde</th>
-                  <th>Gesamt</th>
-                </tr>
-              </thead>
-              <tbody>
-                {view.lastRound.order.map((seat, place) => (
-                  <tr key={seat} className={seat === me ? 'prs-row-me' : undefined}>
-                    <td>
-                      {BADGES[view.options.titles][placeKind(place, view.counts.length)]} {placeTitle(place, view.counts.length, view.options.titles)}: {seatName(seatNames, seat)}
-                    </td>
-                    <td>{view.lastRound!.points[seat]! > 0 ? `+${view.lastRound!.points[seat]}` : view.lastRound!.points[seat]}</td>
-                    <td className="prs-total">{view.scores[seat]}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {view.phase === 'roundEnd' && (
-              <p className="prs-note">In der nächsten Runde gibt der Bettler dem Präsidenten seine zwei besten Karten.</p>
-            )}
-            {canReady ? (
-              <button type="button" className="prs-button prs-button-main" onClick={() => onMove({ type: 'ready' })}>
+      {view.phase === 'roundEnd' && view.lastRound && (
+        <RoundSummary
+          title={`Runde ${view.lastRound.round} von ${view.options.rounds} beendet`}
+          players={view.counts.map((_, seat) => {
+            const roundChange = view.lastRound!.points[seat] ?? 0;
+            const currentScore = view.scores[seat] ?? 0;
+            const previousScore = currentScore - roundChange;
+            const placeIndex = view.lastRound!.order.indexOf(seat);
+            const badge =
+              placeIndex >= 0
+                ? BADGES[view.options.titles][placeKind(placeIndex, view.counts.length)]
+                : undefined;
+            const detail =
+              placeIndex >= 0
+                ? placeTitle(placeIndex, view.counts.length, view.options.titles)
+                : undefined;
+
+            return {
+              seat,
+              name: seatName(seatNames, seat),
+              badge,
+              previousScore,
+              roundChange,
+              currentScore,
+              detail,
+              isMe: seat === me,
+            };
+          })}
+          note="In der nächsten Runde gibt der Bettler dem Präsidenten seine zwei besten Karten."
+          actions={
+            canReady ? (
+              <button
+                type="button"
+                className="bub-round-summary-btn"
+                onClick={() => onMove({ type: 'ready' })}
+              >
                 Nächste Runde
               </button>
             ) : (
-              view.phase === 'roundEnd' && <p className="prs-note">Warte auf die anderen …</p>
-            )}
-          </div>
-        </div>
+              <p className="bub-round-summary-note">Warte auf die anderen …</p>
+            )
+          }
+        />
       )}
+
     </div>
   );
 }

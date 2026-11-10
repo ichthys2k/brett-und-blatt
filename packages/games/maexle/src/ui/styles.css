@@ -341,3 +341,12 @@ button.mx-cup {
 .mx-table[data-hand] {
   padding-top: 1.5rem;
 }
+
+/* Tisch-Bildschirm (#215): Verlauf der Ansagen und das Aufdecken groß, denn der Becher bleibt geheim. */
+.mx-table[data-display] .mx-history {
+  font-size: 1.5rem;
+  line-height: 1.6;
+}
+.mx-table[data-display] .mx-reveal {
+  font-size: 1.4rem;
+}
