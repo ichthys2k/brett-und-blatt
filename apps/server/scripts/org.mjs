@@ -146,6 +146,27 @@ const asStranger = await connectT(tc, 'kennung-fremder-000099');
 check('Fremder sieht das Turnier nicht', asStranger.closed === true && !asStranger.view);
 const asOperator = await connectT(tc, A);
 check('Hauptleitung leitet', asOperator.view?.isLeader === true);
+// Serien einer Organisation (#231)
+const getSeries = async (code, token) => {
+  const response = await fetch(`${base}/serien/${code}`, { headers: { ...H, ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
+  return { status: response.status, body: await response.json().catch(() => null) };
+};
+const seriesDenied = await post('/serien', { name: 'Kickerliga', scheme: 'linear', token: C, org: org2 });
+check('Serie der Gruppe: Schiedsrichter darf nicht anlegen', seriesDenied.status === 403, JSON.stringify(seriesDenied));
+check('Serie mit ungültigem Gruppencode abgelehnt', (await post('/serien', { name: 'Kickerliga', scheme: 'linear', token: A, org: 'kein Code' })).status === 400);
+const seriesMade = await post('/serien', { name: 'Kickerliga', scheme: 'linear', token: A, org: org2 });
+check('Serie der Gruppe: Betreiber legt an', seriesMade.status === 201, JSON.stringify(seriesMade));
+const leadInvite = await act2(A, { action: 'invite', roles: ['lead'] });
+const LEAD2 = 'kennung-leitung-org-0001';
+await act2(LEAD2, { action: 'redeem', name: 'Lea', invite: leadInvite.body.invite.code });
+const leadView = await getSeries(seriesMade.body.code, LEAD2);
+check('Leitung der Gruppe leitet die Serie mit', leadView.body?.isLeader === true && leadView.body?.org === org2 && typeof leadView.body?.link === 'string', JSON.stringify(leadView.body));
+check('Schiedsrichter leitet die Serie nicht', (await getSeries(seriesMade.body.code, C)).body?.isLeader === false);
+const renamed = await fetch(`${base}/serien/${seriesMade.body.code}`, { method: 'POST', headers: { ...H, Authorization: `Bearer ${LEAD2}` }, body: JSON.stringify({ action: 'rename', name: 'Kickerliga 2' }) });
+check('Leitung der Gruppe benennt die Serie um', renamed.status === 200);
+const transfer = await fetch(`${base}/serien/${seriesMade.body.code}`, { method: 'POST', headers: { ...H, Authorization: `Bearer ${A}` }, body: JSON.stringify({ action: 'transfer' }) });
+check('Übergabe gibt es bei einer Serie der Gruppe nicht', transfer.status === 400);
+await operatorCall('DELETE', `/betreiber/serie/${seriesMade.body.code}`);
 for (const box of [asReg, asRef, asStranger, asOperator]) box.close();
 await operatorCall('DELETE', `/betreiber/turnier/${tc}`);
 await operatorCall('DELETE', `/betreiber/org/${encodeURIComponent(org2)}`);

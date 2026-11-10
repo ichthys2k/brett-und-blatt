@@ -524,9 +524,16 @@ export default {
       if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
       const body = await readJson(request, 2_000);
       if (!body || typeof body.name !== 'string' || typeof body.token !== 'string' || (body.scheme !== 'linear' && body.scheme !== 'f1')) return json({ error: 'body' }, 400, cors);
+      // Eine Serie der Gruppe (#231) darf nur anlegen, wer dort Turniere anlegen darf.
+      let org: string | undefined;
+      if (body.org !== undefined && body.org !== '') {
+        org = typeof body.org === 'string' ? (parseOrgCode(body.org) ?? undefined) : undefined;
+        if (!org) return json({ error: 'org' }, 400, cors);
+        if (!orgCapabilities(await orgRolesOf(env, org, body.token)).includes('createTournament')) return json({ error: 'Du darfst in dieser Gruppe keine Serien anlegen.' }, 403, cors);
+      }
       for (let attempt = 0; attempt < 5; attempt++) {
         const code = randomLetters(8);
-        const error = await seriesStub(env, code).create(code, body.name, body.scheme, body.token);
+        const error = await seriesStub(env, code).create(code, body.name, body.scheme, body.token, org);
         if (error === null) return json({ code }, 201, cors);
         if (error !== 'belegt') return json({ error }, 400, cors);
       }
@@ -1614,16 +1621,28 @@ export class SeriesRoom extends DurableObject<Env> {
   }
 
   /** Legt die Serie an; gibt einen Fehlertext zurück, `'belegt'`, wenn der Code schon vergeben ist, sonst null. */
-  async create(code: string, name: string, scheme: PointScheme, token: string): Promise<string | null> {
+  async create(code: string, name: string, scheme: PointScheme, token: string, org?: string): Promise<string | null> {
     if (this.book) return 'belegt';
-    const book = SeriesBook.create(code, name, scheme, token, this.deps());
+    const book = SeriesBook.create(code, name, scheme, token, this.deps(), org);
     if (typeof book === 'string') return book;
     this.book = book;
     await this.save();
     return null;
   }
 
+  /** Trägt die Rollen aus der Gruppe der Serie für diese Kennung ein (#231), kurz gemerkt. */
+  private async loadRoles(token: string | null): Promise<void> {
+    const org = this.book?.org;
+    if (!this.book || !org || !token) return;
+    const cached = this.roleCache.get(token);
+    if (!cached || Date.now() - cached.at > 15_000) this.roleCache.set(token, { roles: await orgRolesOf(this.env, org, token), at: Date.now() });
+    this.book.setOrgRoles(token, this.roleCache.get(token)!.roles);
+  }
+
+  private roleCache = new Map<string, { roles: OrgRole[]; at: number }>();
+
   async view(token: string | null): Promise<SeriesView | null> {
+    await this.loadRoles(token);
     return this.book ? this.book.view(token) : null;
   }
 
@@ -1641,6 +1660,7 @@ export class SeriesRoom extends DurableObject<Env> {
   async manage(token: string, request: { action: string; name?: string; scheme?: PointScheme; tournament?: string }): Promise<string | null> {
     const book = this.book;
     if (!book) return 'Diese Serie gibt es nicht (mehr).';
+    await this.loadRoles(token);
     let error: string | null;
     switch (request.action) {
       case 'rename':
@@ -1668,6 +1688,7 @@ export class SeriesRoom extends DurableObject<Env> {
   /** Übergabecode für ein anderes Gerät (nur die Leitung). */
   async issueTransfer(token: string): Promise<{ code: string; expiresAt: number } | { error: string }> {
     if (!this.book) return { error: 'Diese Serie gibt es nicht (mehr).' };
+    await this.loadRoles(token);
     const issued = this.book.issueTransfer(token);
     if (!('error' in issued)) await this.save();
     return issued;
@@ -1683,6 +1704,7 @@ export class SeriesRoom extends DurableObject<Env> {
 
   async deleteByLeader(token: string): Promise<string | null> {
     if (!this.book) return 'Diese Serie gibt es nicht (mehr).';
+    await this.loadRoles(token);
     if (!this.book.mayManage(token)) return 'Das darf nur die Leitung der Serie.';
     await this.wipe();
     return null;
