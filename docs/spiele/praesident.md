@@ -100,8 +100,10 @@ Cornelius: „die üblichen Regeln“. Standard ist darum die verbreitete deutsc
   - Tausch mit Hinweis, was man bekommen hat. Zu Rundenbeginn steht kurz da, was getauscht wurde. Rundenende als Tabelle mit Titel, Rundenpunkten und Gesamtstand.
 - **Klänge** aus dem Katalog: `karte-legen`, `poker-check` (Klopfen beim Passen), `karte-ziehen`, `mischen`, `ansage` (ausgegangen, Revolution). Playlist „Kartentisch“.
 - Hot-Seat mit Übergabe-Bildschirm, online eingetragen.
+- **Varianten-Erweiterungen (#246):**
+  - Joker als Option (Aus, 2 Joker, 3 Joker): Ein Joker schlägt jede Auslage sofort (Einzelkarten, Paare, Drillinge, Vierlinge) und räumt den Tisch ab; der Leger spielt neu frei an.
+  - Animierte Tauschphase: Zu Beginn jeder Folgerunde wandern die Karten auf einer eigenen Tausch-Bühne im Zentrum mit Fluganimationen zwischen Bettler/Vize-Bettler und Präsident/Vizepräsident.
 
 ## Offene Punkte
 
-- Joker (52er-Blatt mit 2–3 Jokern) als Option.
-- Tauschphase mit fliegenden Karten zwischen den Beteiligten.
+- Keine – alle Punkte aus dem Plan und #246 sind umgesetzt.

@@ -1,5 +1,5 @@
-import { Rng, cardRank, createDeck, type BotDefinition, type BotLevel, type CardId, type SeatId } from '@brett-und-blatt/engine';
-import { applyMove, beats, cardValue, groupsOf, legalMoves, sampleHidden, topPlay, type PresidentMove, type PresidentState, type PresidentView } from './rules';
+import { Rng, cardRank, createDeck, isJoker, type BotDefinition, type BotLevel, type CardId, type SeatId } from '@brett-und-blatt/engine';
+import { applyMove, beats, cardValue, deckFor, groupsOf, JOKER_VALUE, legalMoves, sampleHidden, topPlay, type PresidentMove, type PresidentState, type PresidentView } from './rules';
 
 /** Was der Bot zum Entscheiden braucht – aus der Sicht oder (in der Vorausschau) aus dem ganzen Spielstand. */
 type Table = Pick<PresidentState, 'options' | 'reversed' | 'deckSize' | 'trick' | 'played' | 'swaps'> & { hands: CardId[][] };
@@ -12,7 +12,7 @@ interface Group {
 /** Alle Karten, die der Bot weder auf der Hand hat noch schon gelegt sieht. */
 function unseen(table: Table, seat: SeatId): CardId[] {
   const known = new Set([...table.hands[seat]!, ...table.played]);
-  const all = createDeck().filter((c) => table.deckSize === 52 || cardRank(c) === 1 || cardRank(c) >= 7);
+  const all = deckFor(table.deckSize, table.options.jokers);
   return all.filter((c) => !known.has(c));
 }
 
@@ -30,6 +30,7 @@ function isBoss(table: Table, seat: SeatId, value: number, size: number): boolea
 
 /** Wie stark ein Wert ist, von 0 (schwächste Karte) bis 1 (stärkste). */
 function strength(table: Table, value: number): number {
+  if (value === JOKER_VALUE) return 1;
   const lo = table.deckSize === 32 ? 7 : table.options.twoHigh ? 3 : 2;
   const hi = table.options.twoHigh && table.deckSize === 52 ? 15 : 14;
   const s = (value - lo) / (hi - lo);
@@ -44,16 +45,19 @@ function play(cards: CardId[]): PresidentMove {
 function lead(table: Table, seat: SeatId, level: BotLevel, rng: Rng): PresidentMove {
   const groups = groupsOf(table, table.hands[seat]!);
   if (groups.length === 1) return play(groups[0]!.cards);
-  if (level === 'easy') return play(rng.chance(0.3) ? groups[0]!.cards.slice(0, 1) : groups[0]!.cards);
-  const bosses = groups.filter((g) => isBoss(table, seat, g.value, g.cards.length) || (table.options.eightClears && cardRank(g.cards[0]!) === 8));
+  // Nicht mit Joker eröffnen, wenn noch andere Karten da sind
+  const normalGroups = groups.filter((g) => g.value !== JOKER_VALUE);
+  const candidates = normalGroups.length > 0 ? normalGroups : groups;
+  if (level === 'easy') return play(rng.chance(0.3) ? candidates[0]!.cards.slice(0, 1) : candidates[0]!.cards);
+  const bosses = candidates.filter((g) => isBoss(table, seat, g.value, g.cards.length) || (table.options.eightClears && !isJoker(g.cards[0]!) && cardRank(g.cards[0]!) === 8));
   // Höchstens eine unsichere Gruppe übrig: erst die sicheren Stiche, die letzte zum Schluss.
   if (bosses.length > 0 && groups.length - bosses.length <= 1) return play(bosses[0]!.cards);
-  if (groups.length > 2) {
+  if (candidates.length > 2) {
     // Schwache Einzelkarten zuerst – Paare schwächerer Werte bleiben für später zusammen.
-    const weakSingle = groups.find((g) => g.cards.length === 1 && strength(table, g.value) < 0.5);
+    const weakSingle = candidates.find((g) => g.cards.length === 1 && strength(table, g.value) < 0.5);
     if (weakSingle) return play(weakSingle.cards);
   }
-  return play(groups[0]!.cards);
+  return play(candidates[0]!.cards);
 }
 
 /** Bedienen: die günstigste passende Gruppe, oder passen, wenn es zu teuer wäre. */
@@ -63,8 +67,24 @@ function follow(table: Table, seat: SeatId, level: BotLevel, rng: Rng): Presiden
   const need = top.cards.length;
   const topValue = cardValue(top.cards[0]!, table.options.twoHigh && table.deckSize === 52);
   const groups = groupsOf(table, hand);
-  const options = groups.filter((g) => g.cards.length >= need && (beats(table, g.value, topValue) || (table.options.sameSkips && g.value === topValue)));
-  if (options.length === 0) return { type: 'pass' };
+  const normalGroups = groups.filter((g) => g.value !== JOKER_VALUE);
+  const jokerGroup = groups.find((g) => g.value === JOKER_VALUE);
+
+  // Wenn Joker die letzte Handkarte ist, sofort spielen und gewinnen!
+  if (jokerGroup && hand.length === 1) return play([jokerGroup.cards[0]!]);
+
+  const options = normalGroups.filter((g) => g.cards.length >= need && (beats(table, g.value, topValue) || (table.options.sameSkips && g.value === topValue)));
+  if (options.length === 0) {
+    // Keine normale passende Gruppe – lohnt sich ein Joker?
+    if (jokerGroup) {
+      if (level === 'easy') return rng.chance(0.2) ? play([jokerGroup.cards[0]!]) : { type: 'pass' };
+      if (hand.length <= 3 || topValue >= 13 || need >= 3) {
+        return play([jokerGroup.cards[0]!]);
+      }
+    }
+    return { type: 'pass' };
+  }
+
   const finishing = need === hand.length ? options[0] : undefined;
   if (finishing) return play(finishing.cards);
   if (level === 'easy') return rng.chance(0.15) ? { type: 'pass' } : play(options[0]!.cards.slice(0, need));
@@ -84,7 +104,10 @@ function follow(table: Table, seat: SeatId, level: BotLevel, rng: Rng): Presiden
     const unsafe = restAfter.filter((g) => !isBoss(table, seat, g.value, g.cards.length));
     if (isBoss(table, seat, best.value, need) && unsafe.length <= 1) return play(best.cards.slice(0, need));
   }
-  if (cost(best) > 13 && hand.length > 4) return { type: 'pass' };
+  if (cost(best) > 13 && hand.length > 4) {
+    if (jokerGroup && hand.length <= 3) return play([jokerGroup.cards[0]!]);
+    return { type: 'pass' };
+  }
   return play(best.cards.slice(0, need));
 }
 

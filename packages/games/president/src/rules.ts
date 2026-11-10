@@ -8,7 +8,7 @@
  * gibt der Bettler dem Präsidenten seine zwei besten Karten und bekommt zwei beliebige zurück
  * (Vize-Bettler und Vize je eine); der Bettler beginnt.
  */
-import { Rng, parseDeckStyle, type DeckStyle, cardRank, cardSuit, createDeck, type Actor, type CardId, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
+import { Rng, parseDeckStyle, type DeckStyle, cardRank, cardSuit, createDeck, isJoker, type Actor, type CardId, type GameEvent, type MoveResult, type Options, type Result, type RngState, type SeatId } from '@brett-und-blatt/engine';
 
 export type DeckChoice = 'auto' | '32' | '52';
 export type Titles = 'president' | 'court';
@@ -26,6 +26,8 @@ export interface PresidentOptions {
   eightClears: boolean;
   /** Vier Gleiche kehren die Rangfolge bis zum Rundenende um. */
   revolution: boolean;
+  /** Anzahl der Joker: 0 (aus), 2 oder 3. */
+  jokers: 0 | 2 | 3;
   titles: Titles;
   rounds: number;
 }
@@ -38,6 +40,7 @@ export const DEFAULT_OPTIONS: PresidentOptions = {
   sameSkips: false,
   eightClears: false,
   revolution: false,
+  jokers: 0,
   titles: 'president',
   rounds: 5,
 };
@@ -105,8 +108,11 @@ export type PresidentMove =
 
 // ── Rangfolge ────────────────────────────────────────────────────────────────
 
-/** Stärke einer Karte ohne Revolution: höher ist besser. Ass 14, mit „2 hoch“ die 2 = 15. */
+export const JOKER_VALUE = 99;
+
+/** Stärke einer Karte ohne Revolution: höher ist besser. Ass 14, mit „2 hoch“ die 2 = 15, Joker = 99. */
 export function cardValue(card: CardId, twoHigh: boolean): number {
+  if (isJoker(card)) return JOKER_VALUE;
   const rank = cardRank(card);
   if (rank === 1) return 14;
   if (rank === 2 && twoHigh) return 15;
@@ -119,15 +125,24 @@ function valueOf(state: Ranking, card: CardId): number {
   return cardValue(card, state.options.twoHigh && state.deckSize === 52);
 }
 
-/** Schlägt Wert `a` den Wert `b`? Mit Revolution gilt die umgekehrte Reihenfolge. */
+/** Schlägt Wert `a` den Wert `b`? Mit Revolution gilt die umgekehrte Reihenfolge; Joker schlägt alles. */
 export function beats(state: Ranking, a: number, b: number): boolean {
+  if (a === JOKER_VALUE) return true;
+  if (b === JOKER_VALUE) return false;
   return state.reversed ? a < b : a > b;
 }
 
-/** Sortiert Karten von schwach nach stark (unter Beachtung der Revolution). */
+/** Sortiert Karten von schwach nach stark (unter Beachtung der Revolution; Joker immer stärkste). */
 export function sortCards(state: Ranking, cards: readonly CardId[]): CardId[] {
-  const sign = state.reversed ? -1 : 1;
-  return [...cards].sort((a, b) => sign * (valueOf(state, a) - valueOf(state, b)) || a.localeCompare(b));
+  return [...cards].sort((a, b) => {
+    const aJoker = isJoker(a);
+    const bJoker = isJoker(b);
+    if (aJoker && bJoker) return a.localeCompare(b);
+    if (aJoker) return 1;
+    if (bJoker) return -1;
+    const sign = state.reversed ? -1 : 1;
+    return sign * (valueOf(state, a) - valueOf(state, b)) || a.localeCompare(b);
+  });
 }
 
 /** Gruppen gleichen Rangs aus einer Hand, von schwach nach stark. */
@@ -174,13 +189,18 @@ export function placePoints(place: number, players: number): number {
 
 // ── Aufbau ───────────────────────────────────────────────────────────────────
 
-function deckFor(size: 32 | 52): CardId[] {
+export function deckFor(size: 32 | 52, jokers = 0): CardId[] {
   const deck = createDeck();
-  return size === 52 ? deck : deck.filter((c) => cardRank(c) === 1 || cardRank(c) >= 7);
+  const base = size === 52 ? deck : deck.filter((c) => cardRank(c) === 1 || cardRank(c) >= 7);
+  for (let i = 1; i <= jokers; i++) {
+    base.push(`JK${i}.1`);
+  }
+  return base;
 }
 
 function parseOptions(options: Options): PresidentOptions {
   const rounds = Number(options.rounds);
+  const jokers = options.jokers === '2' ? 2 : options.jokers === '3' ? 3 : 0;
   return {
     deck: options.deck === '32' || options.deck === '52' ? options.deck : 'auto',
     deckStyle: parseDeckStyle(options.deckStyle),
@@ -189,6 +209,7 @@ function parseOptions(options: Options): PresidentOptions {
     sameSkips: options.sameSkips === 'on',
     eightClears: options.eightClears === 'on',
     revolution: options.revolution === 'on',
+    jokers,
     titles: options.titles === 'court' ? 'court' : 'president',
     rounds: ROUND_CHOICES.includes(rounds) ? rounds : DEFAULT_OPTIONS.rounds,
   };
@@ -218,14 +239,14 @@ export function setup(seats: number, options: Options, seed: string): PresidentS
   };
   deal(state);
   // Erste Runde: Wer die niedrigste Kreuzkarte hat, beginnt.
-  const clubs = sortCards(state, deckFor(deckSize).filter((c) => cardSuit(c) === 'C'));
+  const clubs = sortCards(state, deckFor(deckSize, opts.jokers).filter((c) => !isJoker(c) && cardSuit(c) === 'C'));
   state.turn = Math.max(0, state.hands.findIndex((h) => h.includes(clubs[0]!)));
   return state;
 }
 
 function deal(state: PresidentState): void {
   const rng = new Rng(state.rng);
-  const deck = rng.shuffle(deckFor(state.deckSize));
+  const deck = rng.shuffle(deckFor(state.deckSize, state.options.jokers));
   state.rng = rng.state;
   const seats = state.hands.length || state.scores.length;
   state.hands = Array.from({ length: seats }, () => []);
@@ -261,11 +282,14 @@ export function currentPlayers(state: PresidentState): Actor[] {
   return [];
 }
 
-/** Prüft eine Legung: alles eigene Karten, gleicher Rang, passt auf den Stich. */
+/** Prüft eine Legung: alles eigene Karten, gleicher Rang (oder Joker), passt auf den Stich. */
 function playOk(state: PresidentState, seat: SeatId, cards: readonly CardId[]): boolean {
   const hand = state.hands[seat]!;
   if (cards.length === 0 || new Set(cards).size !== cards.length) return false;
   if (!cards.every((c) => hand.includes(c))) return false;
+  // Joker schlägt jede Auslage sofort und räumt ab
+  if (cards.every(isJoker)) return true;
+  if (cards.some(isJoker)) return false;
   const value = valueOf(state, cards[0]!);
   if (!cards.every((c) => valueOf(state, c) === value)) return false;
   const top = topPlay(state);
@@ -291,6 +315,12 @@ export function legalMoves(state: PresidentState, actor: Actor): PresidentMove[]
   const moves: PresidentMove[] = [];
   const top = topPlay(state);
   for (const group of groupsOf(state, hand)) {
+    if (group.value === JOKER_VALUE) {
+      // Joker schlägt jede Auslage sofort: einzeln immer spielbar
+      for (const jc of group.cards) moves.push({ type: 'play', cards: [jc] });
+      if (group.cards.length > 1) moves.push({ type: 'play', cards: [...group.cards] });
+      continue;
+    }
     for (let n = 1; n <= group.cards.length; n++) {
       if (top && n !== top.cards.length) continue;
       const cards = group.cards.slice(0, n);
@@ -391,7 +421,7 @@ export function applyMove(state: PresidentState, actor: Actor, move: PresidentMo
   if (next.options.reenter) next.passed = next.passed.map(() => false);
   events.push({ type: 'played', seat, cards });
 
-  if (next.options.revolution && cards.length === 4) {
+  if (next.options.revolution && cards.length === 4 && !cards.some(isJoker)) {
     next.reversed = !next.reversed;
     next.hands = next.hands.map((h) => sortCards(next, h));
     events.push({ type: 'revolution', reversed: next.reversed });
@@ -405,6 +435,12 @@ export function applyMove(state: PresidentState, actor: Actor, move: PresidentMo
       endRound(next, events);
       return { state: next, events };
     }
+  }
+
+  if (cards.some(isJoker)) {
+    events.push({ type: 'cleared', seat, reason: 'joker' });
+    clearTrick(next, seat, events);
+    return { state: next, events };
   }
 
   if (next.options.eightClears && cardRank(cards[0]!) === 8) {
@@ -528,7 +564,7 @@ export function sampleHidden(view: PresidentView, seat: SeatId, rng: Rng): Presi
       known.add(card);
     }
   }
-  const unknown = rng.shuffle(deckFor(view.deckSize).filter((c) => !known.has(c)));
+  const unknown = rng.shuffle(deckFor(view.deckSize, view.options.jokers).filter((c) => !known.has(c)));
   view.counts.forEach((count, s) => {
     if (s === seat) return;
     while (hands[s]!.length < count) hands[s]!.push(unknown.pop()!);

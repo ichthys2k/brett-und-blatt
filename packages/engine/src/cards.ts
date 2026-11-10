@@ -41,8 +41,13 @@ export function rankLabel(rank: number): string {
 
 const RANK_NAMES: Record<number, string> = { 1: 'Ass', 11: 'Bube', 12: 'Dame', 13: 'König' };
 
+export function isJoker(card: CardId): boolean {
+  return card.startsWith('JK') || card.startsWith('JOKER');
+}
+
 /** Name für Screenreader, z. B. „Herz Dame“. */
 export function cardName(card: CardId): string {
+  if (isJoker(card)) return 'Joker';
   const rank = cardRank(card);
   return `${SUIT_NAMES[cardSuit(card)]} ${RANK_NAMES[rank] ?? rank}`;
 }
