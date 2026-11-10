@@ -1,5 +1,6 @@
 import { CARD_SCOPE, renderCard, type AnkiCollection, type AnkiNote } from '@brett-und-blatt/engine';
 import { useMemo, useState } from 'react';
+import { CardHtml } from './CardHtml';
 
 /*
  * Vorder- und Rückseite einer Karte (#101, L4). Der Renderer der Engine liefert bereinigtes HTML und CSS, das auf die Karte beschränkt ist;
@@ -18,9 +19,8 @@ export function CardPreview({ collection, note, ord, media, label }: { collectio
       {label && <figcaption className="text-sm font-medium">{label}</figcaption>}
       <style>{`${CARD_BASE_CSS}\n${card.css}`}</style>
       <div className={CARD_SCOPE.slice(1)} data-side={side}>
-        <div
-          // eslint-disable-next-line react/no-danger -- vom Renderer der Engine bereinigt (sanitize.ts)
-          dangerouslySetInnerHTML={{ __html: side === 'question' ? card.question : card.answer }}
+        <CardHtml
+          html={side === 'question' ? card.question : card.answer}
           onInput={(e) => {
             const t = e.target as HTMLInputElement;
             if (t.classList?.contains('bub-typeans')) setTyped(t.value);

@@ -190,3 +190,102 @@ describe('Anki-Bereiniger: CSS', () => {
     expect(scopeCss('@media (max-width: 600px) { .card { font-size: 16px } }', '.k')).toBe('@media (max-width: 600px) { .k { font-size: 16px } }');
   });
 });
+
+import { hasMath, replaceMath } from '../src';
+
+describe('Formeln (L8)', () => {
+  const show = (tex: string, display: boolean) => `«${display ? 'D' : 'I'}:${tex}»`;
+  it('findet Formeln im Text und im abgesetzten Stil', () => {
+    expect(replaceMath('a \\(x^2\\) b \\[y=\\frac{1}{2}\\] c', show)).toBe('a «I:x^2» b «D:y=\\frac{1}{2}» c');
+    expect(hasMath('keine Formel')).toBe(false);
+    expect(replaceMath('keine Formel', show)).toBe('keine Formel');
+  });
+  it('entschlüsselt HTML-Zeichen in der Formel und lässt Tags und Attribute in Ruhe', () => {
+    expect(replaceMath('<b title="\\(a\\)">\\(a &lt; b\\)</b>', show)).toBe('<b title="\\(a\\)">«I:a < b»</b>');
+  });
+  it('lässt [latex]-Blöcke, leere Formeln und abgelehnte Formeln unverändert', () => {
+    expect(replaceMath('[latex]\\begin{x}[/latex]', show)).toBe('[latex]\\begin{x}[/latex]');
+    expect(replaceMath('[$]a[/$] \\( \\)', show)).toBe('[$]a[/$] \\( \\)');
+    expect(replaceMath('\\(kaputt\\)', () => null)).toBe('\\(kaputt\\)');
+  });
+});
+
+describe('Sprachausgabe (L8)', () => {
+  const tts = (qfmt: string, front: string) => {
+    const col = emptyCollection();
+    const base = col.notetypes.find((t) => t.id === STOCK_BASIC_ID)!;
+    const nt = { ...base, tmpls: [{ ...base.tmpls[0]!, qfmt: qfmt.replace('FELD', base.flds[0]!.name), afmt: '{{FrontSide}}' }] };
+    const c = { ...col, notetypes: col.notetypes.map((t) => (t.id === STOCK_BASIC_ID ? nt : t)) };
+    return renderCard(c, { id: 1, guid: 'g', mid: STOCK_BASIC_ID, did: 1, mod: 0, tags: [], fields: [front, 'x'] }, 0);
+  };
+  it('{{tts en_US:Feld}} zeigt nur das Vorlesezeichen mit Text und Sprache, nicht den Text', () => {
+    const out = tts('{{tts en_US voices=Apple_Samantha speed=1.5:FELD}}', 'Hello <b>world</b> & "co"');
+    expect(out.question).toContain('class="bub-tts"');
+    expect(out.question).toContain('data-bub-lang="en_US"');
+    expect(out.question).toContain('data-bub-tts="Hello world &amp; &quot;co&quot;"');
+    expect(out.question).not.toContain('<b>');
+    expect(out.errors).toEqual([]);
+  });
+  it('ohne Sprache oder mit leerem Feld', () => {
+    expect(tts('{{tts:FELD}}', 'Hallo').question).toContain('data-bub-lang=""');
+    expect(tts('{{tts en_US:FELD}}', '').question).toBe('');
+  });
+  it('fremde Seiten können kein Skript über das Vorlesezeichen einschmuggeln', () => {
+    const out = tts('<span class="bub-tts" data-bub-tts="x" onclick="alert(1)" data-bub-lang="en_US;evil">🔊</span>', 'a');
+    expect(out.question).not.toContain('onclick');
+    expect(out.question).toContain('data-bub-lang=""');
+  });
+});
+
+import { hasOcclusion, occlusionSvg, parseOcclusion } from '../src';
+
+describe('Bilder verdecken (L8)', () => {
+  const field = '{{c1::image-occlusion:rect:left=.1:top=.2:width=.3:height=.1:oi=1}}<br>{{c2::image-occlusion:ellipse:left=.5:top=.5:rx=.1:ry=.2:oi=1}}<br>{{c2::image-occlusion:polygon:points=0.1,0.1 0.4,0.1 0.4,0.4:oi=1}}';
+  it('liest Rechteck, Ellipse und Vieleck', () => {
+    expect(hasOcclusion(field)).toBe(true);
+    expect(hasOcclusion('{{c1::nur Text}}')).toBe(false);
+    const shapes = parseOcclusion(field);
+    expect(shapes.map((s) => [s.kind, s.n])).toEqual([['rect', 1], ['ellipse', 2], ['polygon', 2]]);
+    expect(shapes[0]).toMatchObject({ left: 0.1, top: 0.2, width: 0.3, height: 0.1, hideOthers: true });
+    // unbrauchbare Angaben fallen weg
+    expect(parseOcclusion('{{c1::image-occlusion:rect:left=x:top=1:width=1:height=1}}{{c1::image-occlusion:polygon:points=1,1 2,2}}')).toEqual([]);
+  });
+  it('zeichnet die aktive Maske zu (vorn) und als Umriss (hinten), die anderen bleiben bei „alle verdecken“ zu', () => {
+    const shapes = parseOcclusion(field);
+    const front = occlusionSvg(shapes, 1, false);
+    expect(front).toContain('<rect');
+    expect(front).toContain('<ellipse');
+    expect(front.match(/fill="#ffeba2"/g)).toHaveLength(4 - 1); // rect (aktiv) + ellipse + polygon (inaktiv, oi=1)
+    const back = occlusionSvg(shapes, 1, true);
+    expect(back).toContain('fill="none"');
+    // ohne oi=1 fehlen die inaktiven
+    const single = parseOcclusion('{{c1::image-occlusion:rect:left=.1:top=.1:width=.1:height=.1}}{{c2::image-occlusion:rect:left=.5:top=.5:width=.1:height=.1}}');
+    expect(occlusionSvg(single, 1, false).match(/<rect/g)).toHaveLength(1);
+  });
+  it('die Karte zeigt Kopfzeile, Bild mit Masken und auf der Rückseite Zusatz; das Feld bleibt unverändert', () => {
+    let col = emptyCollection();
+    const nt = { ...col.notetypes.find((t) => t.id === STOCK_CLOZE_ID)!, id: 777, name: 'Image Occlusion', flds: ['Occlusion', 'Image', 'Header', 'Back Extra', 'Comments'].map((name, ord) => ({ name, ord, sticky: false, rtl: false, font: 'Arial', size: 20, plainText: false, collapsed: false, excludeFromSearch: false }) as never) };
+    col = { ...col, notetypes: [...col.notetypes, nt] };
+    const note = { id: 5, guid: 'io', mid: 777, did: 1, mod: 0, tags: [], fields: [field, '<img src="karte.png">', 'Die Karte', 'Mehr dazu', ''] };
+    const media = (name: string) => `blob:${name}`;
+    const card = renderCard(col, note, 0, { media });
+    expect(card.question).toContain('Die Karte');
+    expect(card.question).toContain('<img src="blob:karte.png"');
+    expect(card.question).toContain('<svg');
+    expect(card.question).not.toContain('Mehr dazu');
+    expect(card.answer).toContain('Mehr dazu');
+    expect(card.answer).toContain('fill="none"');
+    expect(note.fields[0]).toBe(field);
+  });
+});
+
+import { unsupportedHints } from '../src';
+
+describe('Hinweise auf Nicht-Unterstütztes (L8)', () => {
+  it('nennt nur, was wirklich vorkommt', () => {
+    expect(unsupportedHints(['Hallo', '{{Front}}'])).toEqual([]);
+    expect(unsupportedHints(['[latex]x[/latex]'])).toHaveLength(1);
+    expect(unsupportedHints(['<script>alert(1)</script>', '{{tts en_US voices=A:Front}}'])).toHaveLength(2);
+    expect(unsupportedHints(['{{c1::image-occlusion:text:left=1}}'])).toHaveLength(1);
+  });
+});

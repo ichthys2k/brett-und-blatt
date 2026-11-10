@@ -1,3 +1,4 @@
+import { hasOcclusion, occlusionSvg, parseOcclusion } from './occlusion';
 import { clozeOrds } from './collection';
 import { fieldIsEmpty, stripHtml } from './text';
 import { sanitizeHtml, scopeCss } from './sanitize';
@@ -87,6 +88,18 @@ export const clozeField = (value: string, active: number, answer: boolean): stri
 
 // ---------------------------------------------------------------- Filter
 
+/**
+ * `{{tts en_US voices=… speed=…:Feld}}` (L8): wie in Anki steht nur das Vorlesen auf der Karte, nicht der Text. Der Renderer setzt ein Zeichen 🔊 mit dem Text und der
+ * Sprache; die Web-App liest beim Antippen mit der Stimme des Browsers vor. Stimmen und Tempo aus der Vorlage bleiben im Paket, werden aber nicht ausgewertet.
+ */
+function ttsElement(filter: string, value: string): string {
+  const lang = filter.split(/\s+/).slice(1).find((part) => !part.includes('=')) ?? '';
+  const text = stripHtml(value).replace(/\s+/g, ' ').trim().slice(0, 600);
+  if (!text) return '';
+  const attr = (v: string) => v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return `<span class="bub-tts" data-bub-tts="${attr(text)}" data-bub-lang="${/^[A-Za-z]{2,3}(?:[_-][A-Za-z0-9]{2,4})?$/.test(lang) ? lang : ''}">🔊</span>`;
+}
+
 const RUBY = / ?([^ >]+?)\[(.+?)\]/g;
 
 function applyFilter(filter: string, value: string, ctx: Context): string {
@@ -104,8 +117,10 @@ function applyFilter(filter: string, value: string, ctx: Context): string {
       return value.replace(RUBY, (_m, base: string) => base);
     case 'kana':
       return value.replace(RUBY, (_m, _base: string, reading: string) => reading);
+    case 'tts':
+      return ttsElement(filter, value);
     default:
-      // `tts …`, `type` (hier gesondert) und unbekannte Filter lassen den Wert unverändert.
+      // `type` (hier gesondert) und unbekannte Filter lassen den Wert unverändert.
       return value;
   }
 }
@@ -267,7 +282,30 @@ export function renderCard(col: AnkiCollection, note: AnkiNote, ord: number, opt
   const frontForAnswer = frontCtx.typeExpected === null ? front : front.split(TYPE_INPUT).join(typeAnswerHtml(frontCtx.typeExpected, options.typed));
   const answer = renderTokens(tokenize(template.afmt), { values, cloze, errors, answer: true, front: frontForAnswer, typeExpected: frontCtx.typeExpected, typed: options.typed });
   const safe = (html: string) => sanitizeHtml(html, options.media ? { media: options.media } : {});
+  // Bilder verdecken (L8): Die Vorlage von Anki zeichnet die Masken mit einem Programm; hier zeichnen wir sie selbst.
+  const occluded = nt.type === 1 ? occlusionCard(nt, note, cloze, safe) : null;
+  if (occluded) return { question: occluded.question, answer: occluded.answer, css: scopeCss(nt.css, CARD_SCOPE, options.media), errors: [...new Set(errors)] };
   return { question: safe(front), answer: safe(answer), css: scopeCss(nt.css, CARD_SCOPE, options.media), errors: [...new Set(errors)] };
+}
+
+/**
+ * Die Karte einer Notiz mit Bildmasken: Kopfzeile, Bild mit Masken, auf der Rückseite „Zusatz“ und Kommentare. Felder nach der Anki-Vorlage:
+ * Occlusion, Image, Header, Back Extra, Comments; die Masken-Lücken stehen im ersten Feld, das welche enthält.
+ */
+function occlusionCard(nt: AnkiNotetype, note: AnkiNote, active: number, safe: (html: string) => string): { question: string; answer: string } | null {
+  const at = note.fields.findIndex((v) => hasOcclusion(v));
+  if (at < 0) return null;
+  const shapes = parseOcclusion(note.fields[at]!);
+  const rest = nt.flds.map((_, i) => (i === at ? '' : (note.fields[i] ?? '')));
+  const imageAt = rest.findIndex((v) => /<img\b/i.test(v));
+  if (imageAt < 0) return null;
+  const [header, extra, comments] = [rest[imageAt + 1] ?? '', rest[imageAt + 2] ?? '', rest[imageAt + 3] ?? ''];
+  const box = (answer: boolean) => `<div class="bub-io" style="position:relative;display:inline-block;max-width:100%;line-height:0">${safe(rest[imageAt]!)}${occlusionSvg(shapes, active, answer)}</div>`;
+  const text = (html: string) => (html.trim() ? `<div class="bub-io-text">${safe(html)}</div>` : '');
+  return {
+    question: `${text(header)}${box(false)}`,
+    answer: `${text(header)}${box(true)}${text(extra)}${text(comments)}`,
+  };
 }
 
 /** Vorschau für Notiztyp-Editor und Notizen: die Karten (Vorlagen bzw. Lücken), die diese Notiz ergibt, mit Vorder- und Rückseite. */

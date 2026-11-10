@@ -268,3 +268,52 @@ describe('Lernen beim Spielen', () => {
     expect(packsOf(c)).toEqual([]); // Standardstapel ist kein Paket
   });
 });
+
+import { clampOptions } from '../src';
+
+describe('Klassischer Planer (SM-2) und Egel (L8)', () => {
+  const sm2 = clampOptions({ scheduler: 'sm2' });
+  const reviewCard = (over: Partial<ApkgCard> = {}): ApkgCard => ({ ...fresh(9), type: CARD_REVIEW, queue: 2, due: dayNumber(crt, T0), ivl: 10, factor: 2500, reps: 5, ...over });
+
+  it('Lernschritte, dann Abschluss mit einem Tag (Gut) oder vier Tagen (Leicht)', () => {
+    const o = outcomes(fresh(1), crt, T0, sm2);
+    expect(o[3].card).toMatchObject({ type: CARD_LEARNING, queue: 1 });
+    expect(o[3].label).toBe('10 Min');
+    expect(o[1].label).toBe('1 Min');
+    expect(o[4].card).toMatchObject({ type: CARD_REVIEW, ivl: 4 });
+    // zweiter Schritt, dann Gut: Wiederholungskarte mit einem Tag
+    const second = outcomes(o[3].card, crt, T0 + 10 * 60_000, sm2);
+    expect(second[3].card).toMatchObject({ type: CARD_REVIEW, ivl: 1, due: dayNumber(crt, T0 + 10 * 60_000) + 1, factor: 2500 });
+  });
+  it('Wiederholung: Intervall mal Faktor, Faktor wandert, Vergessen führt in die Neu-Lernen-Schritte', () => {
+    const o = outcomes(reviewCard(), crt, T0, sm2);
+    expect(o[3].card).toMatchObject({ ivl: 25, factor: 2500 });
+    expect(o[2].card).toMatchObject({ ivl: 12, factor: 2350 });
+    expect(o[4].card).toMatchObject({ ivl: 34, factor: 2650 });
+    expect(o[1].card).toMatchObject({ type: 3, queue: 1, lapses: 1, factor: 2300 });
+    // Verspätung zählt zur Hälfte
+    expect(outcomes(reviewCard({ due: dayNumber(crt, T0) - 4 }), crt, T0, sm2)[3].card.ivl).toBe(30);
+    // aus dem Neu-Lernen zurück: das reduzierte Intervall gilt
+    const lapsed = o[1].card;
+    expect(outcomes(lapsed, crt, T0 + 11 * 60_000, sm2)[3].card).toMatchObject({ type: CARD_REVIEW, ivl: 1 });
+  });
+  it('das Ergebnis bleibt im Anki-Format und die Karte lässt sich mit FSRS weiterlernen', () => {
+    const next = answerCard(reviewCard(), 3, crt, T0, sm2).card;
+    expect(next.queue).toBe(2);
+    expect(() => outcomes(next, crt, T0 + 30 * DAYMS)).not.toThrow(); // Standard-Einstellung (FSRS)
+  });
+  it('Egel: ab der Schwelle zurückgestellt, danach alle halbe Schwelle wieder', () => {
+    const lapsesTo = (lapses: number) => outcomes(reviewCard({ lapses }), crt, T0, clampOptions({ leech: 8 }))[1];
+    expect(lapsesTo(6).leech).toBeUndefined();
+    expect(lapsesTo(7)).toMatchObject({ leech: true, card: { queue: -1, lapses: 8 } });
+    expect(lapsesTo(8).leech).toBeUndefined();
+    expect(lapsesTo(11).leech).toBe(true); // 12 Mal vergessen
+    expect(outcomes(reviewCard({ lapses: 7 }), crt, T0, clampOptions({ leech: 0 }))[1].leech).toBeUndefined();
+    expect(answerCard(reviewCard({ lapses: 7 }), 1, crt, T0).leech).toBe(true);
+  });
+  it('Einstellungen werden geprüft', () => {
+    expect(clampOptions({ scheduler: 'bogus' as never }).scheduler).toBe('fsrs');
+    expect(clampOptions({ leech: 500 }).leech).toBe(99);
+    expect(clampOptions(undefined)).toMatchObject({ scheduler: 'fsrs', fuzz: false, leech: 8, burySiblings: false });
+  });
+});

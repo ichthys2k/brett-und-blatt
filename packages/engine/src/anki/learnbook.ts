@@ -175,6 +175,13 @@ export function recordAnswer(book: LearnBook, card: ApkgCard, log: ApkgRevlog, n
   return compactLearnBook({ ...book, cards: { ...book.cards, [String(card.id)]: toStoredCard(card) }, log: [...book.log, log], days }, now, col);
 }
 
+/** Trägt nur einen Protokolleintrag ein, ohne die Karte zu ändern (Üben einer Auswahl, Art 3 „Filterstapel“). */
+export function recordPractice(book: LearnBook, log: ApkgRevlog, now: number, col?: AnkiCollection): LearnBook {
+  const today = Math.floor((now / 1000 - book.crt) / DAY);
+  const days = book.days.includes(today) ? book.days : [...book.days, today];
+  return compactLearnBook({ ...book, log: [...book.log, log], days }, now, col);
+}
+
 /** Stellt eine Karte wieder auf „neu“. Der Eintrag bleibt (mit neuer Änderungszeit), damit andere Geräte die Karte nicht zurückbringen. */
 export function forgetCard(book: LearnBook, cardId: number, now: number): LearnBook {
   return { ...book, cards: { ...book.cards, [String(cardId)]: [0, 0, 0, 0, 0, 0, 0, 0, Math.floor(now / 1000), 0, 0, 0] } };

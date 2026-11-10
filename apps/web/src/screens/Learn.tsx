@@ -1,6 +1,7 @@
-import { ANSWER_LABELS, CARD_SCOPE, DEFAULT_LEARN_OPTIONS, deckTree, outcomes, renderCard, type Answer, type ApkgCard, type LearnOptions } from '@brett-und-blatt/engine';
+import { ANSWER_LABELS, CARD_SCOPE, DEFAULT_LEARN_OPTIONS, deckTree, outcomes, renderCard, searchNotes, unsupportedHints, type Answer, type ApkgCard, type LearnOptions } from '@brett-und-blatt/engine';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CARD_BASE_CSS } from '../components/CardPreview';
+import { CardHtml } from '../components/CardHtml';
 import { Button } from '../components/controls';
 import { TavernPage } from '../components/TavernPage';
 import { listPacks, type PackSummary } from '../lib/ankiStore';
@@ -88,6 +89,7 @@ export function LearnScreen({ source }: { source: string }) {
   const [now, refreshNow] = useNow();
   const [deck, setDeck] = useState<number | 'all'>('all');
   const [running, setRunning] = useState(false);
+  const [practice, setPractice] = useState<ApkgCard[] | null>(null);
   const title = learner.name || 'Lernen';
   if (learner.status === 'loading') return <TavernPage title={title} back={paths.learn}><p role="status">Einen Moment …</p></TavernPage>;
   if (learner.status === 'missing')
@@ -100,12 +102,12 @@ export function LearnScreen({ source }: { source: string }) {
   return (
     <TavernPage title={title} subtitle="Karteikasten" back={running ? paths.learning(source) : paths.learn}>
       {learner.notice && <p role="note" className="mb-3 rounded-xl border border-line bg-surface-2 p-3 text-sm">{learner.notice}</p>}
-      {running ? <Session learner={learner} media={media} deck={deck} now={now} refreshNow={refreshNow} onStop={() => setRunning(false)} /> : <Overview learner={learner} deck={deck} setDeck={setDeck} info={info} onStart={() => (refreshNow(), setRunning(true))} />}
+      {running ? <Session learner={learner} media={media} deck={deck} now={now} refreshNow={refreshNow} practice={practice} onStop={() => (setRunning(false), setPractice(null))} /> : <Overview learner={learner} deck={deck} setDeck={setDeck} info={info} onStart={() => (refreshNow(), setRunning(true))} onPractice={(cards) => (setPractice(cards), setRunning(true))} />}
     </TavernPage>
   );
 }
 
-function Overview({ learner, deck, setDeck, info, onStart }: { learner: Learner; deck: number | 'all'; setDeck: (d: number | 'all') => void; info: ReturnType<typeof dueInfo>; onStart: () => void }) {
+function Overview({ learner, deck, setDeck, info, onStart, onPractice }: { learner: Learner; deck: number | 'all'; setDeck: (d: number | 'all') => void; info: ReturnType<typeof dueInfo>; onStart: () => void; onPractice: (cards: ApkgCard[]) => void }) {
   const tree = useMemo(() => deckTree(learner.collection), [learner.collection]);
   const open = total(info.counts);
   return (
@@ -137,6 +139,7 @@ function Overview({ learner, deck, setDeck, info, onStart }: { learner: Learner;
       <Button variant="primary" className="w-full" disabled={open === 0} onClick={onStart}>
         {open === 0 ? 'Für heute ist alles geschafft 🎉' : `Lernen starten (${open})`}
       </Button>
+      <PracticePanel learner={learner} onPractice={onPractice} />
       <OptionsEditor options={learner.options} onChange={learner.setOptions} />
     </div>
   );
@@ -168,14 +171,41 @@ function OptionsEditor({ options, onChange }: { options: LearnOptions; onChange:
           <input className={FIELD} value={resteps} onChange={(e) => setResteps(e.target.value)} onBlur={() => onChange({ ...options, relearningSteps: resteps.split(/\s+/).filter(Boolean) })} />
         </label>
       </div>
+      <div className="mt-3 space-y-2 text-sm">
+        <label className="block space-y-1">
+          <span>Planer</span>
+          <select className={FIELD} value={options.scheduler} onChange={(e) => onChange({ ...options, scheduler: e.target.value === 'sm2' ? 'sm2' : 'fsrs' })}>
+            <option value="fsrs">FSRS (empfohlen, Behaltensquote)</option>
+            <option value="sm2">SM-2 (klassisch: Faktor und Intervalle)</option>
+          </select>
+        </label>
+        {options.scheduler === 'fsrs' && (
+          <label className="flex min-h-11 items-center gap-2">
+            <input type="checkbox" className="size-5 accent-accent" checked={options.fuzz} onChange={(e) => onChange({ ...options, fuzz: e.target.checked })} />
+            <span>Intervalle leicht streuen (Fuzz)</span>
+          </label>
+        )}
+        <label className="flex min-h-11 items-center gap-2">
+          <input type="checkbox" className="size-5 accent-accent" checked={options.burySiblings} onChange={(e) => onChange({ ...options, burySiblings: e.target.checked })} />
+          <span>Geschwisterkarten am selben Tag zurückhalten</span>
+        </label>
+        <label className="block space-y-1">
+          <span>Egel: Karte nach so vielen Malen Vergessen zurückstellen (0 = nie)</span>
+          <input className={FIELD} type="number" inputMode="numeric" min={0} max={99} value={options.leech} onChange={(e) => e.target.value !== '' && onChange({ ...options, leech: Number(e.target.value) })} />
+        </label>
+        <p className="text-xs text-muted">Nicht unterstützt: „Easy Days“ (Lernlast auf Wochentage verteilen) und der Anki-Planer v3 mit Tageslernen; die Einstellungen aus Anki bleiben im Paket erhalten.</p>
+      </div>
       <p className="mt-2 text-xs text-muted">Minuten (m), Stunden (h) oder Tage (d). Ungültige Eingaben werden durch die Vorgabe ({DEFAULT_LEARN_OPTIONS.learningSteps.join(' ')}) ersetzt.</p>
     </details>
   );
 }
 
-function Session({ learner, media, deck, now, refreshNow, onStop }: { learner: Learner; media: (name: string) => string | null; deck: number | 'all'; now: number; refreshNow: () => void; onStop: () => void }) {
+function Session({ learner, media, deck, now, refreshNow, practice, onStop }: { learner: Learner; media: (name: string) => string | null; deck: number | 'all'; now: number; refreshNow: () => void; practice: ApkgCard[] | null; onStop: () => void }) {
   const info = dueInfo(learner, now, deck);
-  const current: ApkgCard | undefined = info.queue[0];
+  const [done, setDone] = useState(0);
+  const [leechNote, setLeechNote] = useState(false);
+  // Üben einer Auswahl: feste Reihenfolge, nichts am Plan ändern; sonst die Warteschlange von heute.
+  const current: ApkgCard | undefined = practice ? practice[done] : info.queue[0];
   const [shown, setShown] = useState(false);
   const [typed, setTyped] = useState('');
   const since = useRef(Date.now());
@@ -189,15 +219,24 @@ function Session({ learner, media, deck, now, refreshNow, onStop }: { learner: L
   }, [current?.id, current?.reps]);
 
   const rendered = useMemo(() => (current && note ? renderCard(learner.collection, note, current.ord, { media, typed: shown ? typed : undefined }) : null), [current, note, learner.collection, media, shown, typed]);
-  const preview = useMemo(() => (current ? outcomes(current, learner.crt, now, learner.options, learner.revlog.filter((r) => r.cid === current.id)) : null), [current, learner.crt, now, learner.options, learner.revlog]);
+  const hints = useMemo(() => {
+    const nt = note ? learner.collection.notetypes.find((t) => t.id === note.mid) : undefined;
+    return note ? unsupportedHints([...note.fields, ...(nt?.tmpls.flatMap((t) => [t.qfmt, t.afmt]) ?? [])]) : [];
+  }, [note, learner.collection]);
+  const preview = useMemo(() => (current && !practice ? outcomes(current, learner.crt, now, learner.options, learner.revlog.filter((r) => r.cid === current.id)) : null), [current, practice, learner.crt, now, learner.options, learner.revlog]);
 
   const give = useCallback(
     (answer: Answer) => {
       if (!current) return;
-      learner.answer(current, answer, Date.now() - since.current);
-      refreshNow();
+      if (practice) {
+        learner.practice(current, answer, Date.now() - since.current);
+        setDone((n) => n + 1);
+      } else {
+        setLeechNote(learner.answer(current, answer, Date.now() - since.current).leech);
+        refreshNow();
+      }
     },
-    [current, learner, refreshNow],
+    [current, learner, refreshNow, practice],
   );
 
   useEffect(() => {
@@ -230,7 +269,7 @@ function Session({ learner, media, deck, now, refreshNow, onStop }: { learner: L
         </p>
         <p className="text-sm text-muted">
           {info.streak > 0 ? `🔥 ${info.streak} ${info.streak === 1 ? 'Lerntag' : 'Lerntage'} in Folge. ` : ''}
-          {next > 0 ? 'Die nächsten Karten werden nach dem Plan von FSRS fällig.' : 'Alle Karten sind gelernt oder zurückgestellt.'}
+          {practice ? 'Die Auswahl ist durch; dein Plan hat sich nicht geändert.' : next > 0 ? `Die nächsten Karten werden nach dem Plan von ${learner.options.scheduler === 'sm2' ? 'SM-2' : 'FSRS'} fällig.` : 'Alle Karten sind gelernt oder zurückgestellt.'}
         </p>
         <Button variant="primary" className="w-full" onClick={onStop}>
           Zur Übersicht
@@ -241,15 +280,19 @@ function Session({ learner, media, deck, now, refreshNow, onStop }: { learner: L
   return (
     <div className="space-y-3">
       <p role="status" aria-live="polite" className="text-sm text-muted">
-        Neu {info.counts.new} · Lernen {info.counts.learning} · Fällig {info.counts.review}
+        {practice ? `Üben: Karte ${Math.min(done + 1, practice.length)} von ${practice.length} (ohne Änderung am Plan)` : `Neu ${info.counts.new} · Lernen ${info.counts.learning} · Fällig ${info.counts.review}`}
       </p>
+      {leechNote && (
+        <p role="alert" className="rounded-xl border border-line bg-surface-2 p-2 text-sm">
+          🐛 Egel: Diese Karte wurde zu oft vergessen. Sie ist zurückgestellt und die Notiz hat die Markierung „leech“. Überarbeite die Karte unter „Notizen bearbeiten“.
+        </p>
+      )}
       {rendered && (
         <figure className="space-y-2" aria-label={shown ? 'Rückseite' : 'Vorderseite'}>
           <style>{`${CARD_BASE_CSS}\n${rendered.css}`}</style>
           <div className={CARD_SCOPE.slice(1)} data-side={shown ? 'answer' : 'question'}>
-            <div
-              // eslint-disable-next-line react/no-danger -- vom Renderer der Engine bereinigt (sanitize.ts)
-              dangerouslySetInnerHTML={{ __html: shown ? rendered.answer : rendered.question }}
+            <CardHtml
+              html={shown ? rendered.answer : rendered.question}
               onInput={(e) => {
                 const t = e.target as HTMLInputElement;
                 if (t.classList?.contains('bub-typeans')) setTyped(t.value);
@@ -257,6 +300,13 @@ function Session({ learner, media, deck, now, refreshNow, onStop }: { learner: L
             />
           </div>
           {rendered.errors.length > 0 && <p className="text-sm text-danger">{rendered.errors.join(' ')}</p>}
+          {hints.length > 0 && (
+            <ul className="list-disc pl-5 text-xs text-muted" aria-label="Hinweise zur Karte">
+              {hints.map((h) => (
+                <li key={h}>{h}</li>
+              ))}
+            </ul>
+          )}
         </figure>
       )}
       {!shown ? (
@@ -266,9 +316,9 @@ function Session({ learner, media, deck, now, refreshNow, onStop }: { learner: L
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label="Wie gut hast du die Karte gewusst?">
           {([1, 2, 3, 4] as const).map((a) => (
-            <Button key={a} variant={a === 3 ? 'primary' : 'secondary'} className="flex-col" onClick={() => give(a)} aria-label={`${ANSWER_LABELS[a]}, nächster Termin in ${preview?.[a].label ?? ''}`}>
+            <Button key={a} variant={a === 3 ? 'primary' : 'secondary'} className="flex-col" onClick={() => give(a)} aria-label={preview ? `${ANSWER_LABELS[a]}, nächster Termin in ${preview[a].label}` : ANSWER_LABELS[a]}>
               <span>{ANSWER_LABELS[a]}</span>
-              <span className="text-xs opacity-80">{preview?.[a].label} · Taste {a}</span>
+              <span className="text-xs opacity-80">{preview ? `${preview[a].label} · ` : ''}Taste {a}</span>
             </Button>
           ))}
         </div>
@@ -277,5 +327,41 @@ function Session({ learner, media, deck, now, refreshNow, onStop }: { learner: L
         Aufhören
       </Button>
     </div>
+  );
+}
+
+/** Üben einer Auswahl (wie ein gefilterter Stapel in Anki, aber ohne den Plan zu ändern): Suche mit Wort, tag:, deck:, note:, -nicht. */
+function PracticePanel({ learner, onPractice }: { learner: Learner; onPractice: (cards: ApkgCard[]) => void }) {
+  const [query, setQuery] = useState('');
+  const [problem, setProblem] = useState<string | null>(null);
+  return (
+    <details className="rounded-xl border border-line p-3">
+      <summary className="min-h-11 cursor-pointer py-2 font-medium">Auswahl üben (ohne Plan)</summary>
+      <form
+        className="mt-2 space-y-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const ids = new Set(searchNotes(learner.collection, query).map((n) => n.id));
+          const cards = learner.cards.filter((c) => ids.has(c.nid) && c.queue !== -1 && c.type !== 0).sort(() => Math.random() - 0.5);
+          // Neue Karten kann man auch üben: sie zählen mit, ändern aber nichts.
+          const fresh = learner.cards.filter((c) => ids.has(c.nid) && c.type === 0).sort(() => Math.random() - 0.5);
+          const all = [...cards, ...fresh].slice(0, 200);
+          if (all.length === 0) return setProblem('Dazu gibt es keine Karten.');
+          setProblem(null);
+          onPractice(all);
+        }}
+      >
+        <p className="text-sm text-muted">Übe Karten, die du suchst, auch wenn sie nicht fällig sind, zum Beispiel vor einer Prüfung. Dein Plan (Termine, Faktor) bleibt dabei unverändert; die Antworten stehen nur im Protokoll. Beispiele: <code>tag:nomen</code>, <code>deck:Latein</code>, <code>tag:leech</code>.</p>
+        <input className={FIELD} aria-label="Suche für die Auswahl" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Suche, leer = alle Karten" />
+        <Button type="submit" className="w-full">
+          Auswahl üben (höchstens 200 Karten)
+        </Button>
+        {problem && (
+          <p role="alert" className="text-sm text-danger">
+            {problem}
+          </p>
+        )}
+      </form>
+    </details>
   );
 }

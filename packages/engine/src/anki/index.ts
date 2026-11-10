@@ -13,3 +13,6 @@ export * from './edit';
 export * from './media';
 export * from './learn';
 export * from './learnbook';
+export * from './math';
+export * from './occlusion';
+export * from './hints';

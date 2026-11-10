@@ -1,8 +1,8 @@
-import { answerCard, buildQueue, clampOptions, dayNumber, emptyCollection, learnCards, recordAnswer, reconcileCards, streakOf, todaysCounts, type AnkiCollection, type ApkgCard, type ApkgRevlog, type LearnBook, type LearnOptions, type QueueCounts, type Answer } from '@brett-und-blatt/engine';
+import { answerCard, buildQueue, clampOptions, dayNumber, emptyCollection, learnCards, recordAnswer, recordPractice, reconcileCards, streakOf, tagNotes, todaysCounts, type AnkiCollection, type ApkgCard, type ApkgRevlog, type LearnBook, type LearnOptions, type QueueCounts, type Answer } from '@brett-und-blatt/engine';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { loadPack, savePackAnswer, savePackLearnSettings } from './ankiStore';
+import { loadPack, savePackAnswer, savePackLearnSettings, updatePackCollection } from './ankiStore';
 import { OWN } from './collectionSource';
-import { loadCollection } from './library';
+import { loadCollection, saveCollection } from './library';
 import { announceLearning } from './classLearning';
 import { loadLearnBook, localMidnight, saveLearnBook } from './learnStore';
 
@@ -25,7 +25,10 @@ export interface Learner {
   days: ReadonlySet<number>;
   /** Hinweis, wenn Termine nicht stimmen können. */
   notice: string | null;
-  answer(card: ApkgCard, answer: Answer, timeMs: number, now?: number): void;
+  /** Antwortet auf eine Karte; `leech`: die Karte wurde zum Egel (zu oft vergessen) und zurückgestellt. */
+  answer(card: ApkgCard, answer: Answer, timeMs: number, now?: number): { leech: boolean };
+  /** Üben einer Auswahl: nur das Protokoll, die Karte und ihr Plan bleiben unberührt. */
+  practice(card: ApkgCard, answer: Answer, timeMs: number, now?: number): void;
   setOptions(next: LearnOptions): void;
 }
 
@@ -90,21 +93,45 @@ export function useLearner(source: string): Learner {
   const latest = useRef(state);
   latest.current = state;
   const answer = useCallback(
-    (card: ApkgCard, ease: Answer, timeMs: number, now = Date.now()) => {
+    (card: ApkgCard, ease: Answer, timeMs: number, now = Date.now()): { leech: boolean } => {
       const s = latest.current;
       const history = s.revlog.filter((r) => r.cid === card.id);
       const result = answerCard(card, ease, s.crt, now, s.options, history, timeMs);
       const cards = s.cards.map((c) => (c.id === card.id ? result.card : c));
+      // Egel: Die Notiz bekommt die Markierung `leech` (wie in Anki), die Karte ist zurückgestellt.
+      const collection = result.leech ? tagNotes(s.collection, [card.nid], ['leech']) : s.collection;
       let next: typeof s;
       if (source === OWN && s.book) {
-        const book = recordAnswer(s.book, result.card, result.log, now, s.collection);
-        saveLearnBook(book, s.collection);
-        next = { ...s, cards, revlog: book.log, days: book.days, book };
+        const book = recordAnswer(s.book, result.card, result.log, now, collection);
+        saveLearnBook(book, collection);
+        if (result.leech) saveCollection(collection);
+        next = { ...s, cards, collection, revlog: book.log, days: book.days, book };
       } else {
         void savePackAnswer(source, result.card, result.log);
+        if (result.leech) void updatePackCollection(source, collection);
         announceLearning();
         const day = dayNumber(s.crt, now);
-        next = { ...s, cards, revlog: [...s.revlog, result.log], days: s.days.includes(day) ? s.days : [...s.days, day] };
+        next = { ...s, cards, collection, revlog: [...s.revlog, result.log], days: s.days.includes(day) ? s.days : [...s.days, day] };
+      }
+      latest.current = next;
+      setState(next);
+      return { leech: result.leech };
+    },
+    [source],
+  );
+  const practice = useCallback(
+    (card: ApkgCard, ease: Answer, timeMs: number, now = Date.now()): void => {
+      const s = latest.current;
+      const log = { id: now, cid: card.id, usn: -1, ease, ivl: 0, lastIvl: 0, factor: 0, time: Math.min(Math.max(Math.round(timeMs), 0), 3_600_000), type: 3 };
+      let next: typeof s;
+      if (source === OWN && s.book) {
+        const book = recordPractice(s.book, log, now, s.collection);
+        saveLearnBook(book, s.collection);
+        next = { ...s, revlog: book.log, days: book.days, book };
+      } else {
+        void savePackAnswer(source, card, log);
+        const day = dayNumber(s.crt, now);
+        next = { ...s, revlog: [...s.revlog, log], days: s.days.includes(day) ? s.days : [...s.days, day] };
       }
       latest.current = next;
       setState(next);
@@ -130,7 +157,7 @@ export function useLearner(source: string): Learner {
     [source],
   );
 
-  return useMemo<Learner>(() => ({ ...state, days: new Set(state.days), answer, setOptions }), [state, answer, setOptions]);
+  return useMemo<Learner>(() => ({ ...state, days: new Set(state.days), answer, practice, setOptions }), [state, answer, practice, setOptions]);
 }
 
 export interface DueInfo {
@@ -151,6 +178,13 @@ export function dueInfo(learner: Pick<Learner, 'cards' | 'revlog' | 'crt' | 'opt
     }
   }
   const today = todaysCounts(learner.revlog, learner.crt, now);
+  if (learner.options.burySiblings) {
+    // Geschwisterkarten: Wer heute eine Karte einer Notiz beantwortet hat, sieht deren andere Karten (neu oder Wiederholung) erst morgen.
+    const start = (learner.crt + dayNumber(learner.crt, now) * 86400) * 1000;
+    const answered = new Set(learner.revlog.filter((r) => r.id >= start && r.type !== 3).map((r) => r.cid));
+    const nids = new Set(learner.cards.filter((c) => answered.has(c.id)).map((c) => c.nid));
+    cards = cards.filter((c) => answered.has(c.id) || c.queue === 1 || !nids.has(c.nid));
+  }
   const { queue, counts } = buildQueue(cards, learner.crt, now, { newPerDay: learner.options.newPerDay, reviewsPerDay: learner.options.reviewsPerDay, doneNew: today.new, doneReviews: today.reviews, learnAheadSec: AHEAD_SEC });
   return { queue, counts, today, streak: streakOf(learner.days, dayNumber(learner.crt, now)) };
 }

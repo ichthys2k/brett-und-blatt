@@ -57,6 +57,11 @@ function mediaName(src: string): string | null {
 function cleanAttrs(tag: string, attrs: Map<string, string>, options: SanitizeOptions): string | null {
   // Das einzige Eingabefeld, das erlaubt ist: das der Antwort zum Eintippen (`{{type:Feld}}`), das der Renderer selbst erzeugt.
   if (tag === 'input') return attrs.get('class') === 'bub-typeans' && attrs.get('data-bub-type') === '1' ? ' type="text" class="bub-typeans" autocomplete="off" autocapitalize="off" spellcheck="false"' : null;
+  // Das Vorlesezeichen, das der Renderer für `{{tts …}}` erzeugt: nur Text und Sprache, kein Programm.
+  if (tag === 'span' && attrs.get('class') === 'bub-tts' && attrs.has('data-bub-tts')) {
+    const lang = attrs.get('data-bub-lang') ?? '';
+    return ` class="bub-tts" data-bub-tts="${escapeAttr(decodeAttr(attrs.get('data-bub-tts') ?? '').slice(0, 600))}" data-bub-lang="${/^[A-Za-z]{2,3}(?:[_-][A-Za-z0-9]{2,4})?$/.test(lang) ? lang : ''}"`;
+  }
   const out: string[] = [];
   const get = (name: string) => attrs.get(name);
   const num = (name: string) => {

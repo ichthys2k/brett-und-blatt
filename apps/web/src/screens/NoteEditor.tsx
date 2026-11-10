@@ -1,4 +1,4 @@
-import { addNote, changeNotetype, deckTree, previewCards, removeNote, stripHtmlKeepMedia, updateNote, type AnkiCollection, type AnkiNote } from '@brett-und-blatt/engine';
+import { addNote, changeNotetype, deckTree, previewCards, removeNote, stripHtmlKeepMedia, unsupportedHints, updateNote, type AnkiCollection, type AnkiNote } from '@brett-und-blatt/engine';
 import { useMemo, useState } from 'react';
 import { CardPreview } from '../components/CardPreview';
 import { Button } from '../components/controls';
@@ -32,6 +32,7 @@ export function NoteEditor({ collection, note, defaultDeckId, media, onAddMedia,
   const draft: AnkiNote = useMemo(() => ({ id: note?.id ?? 0, guid: note?.guid ?? 'neu', mid, did: deckId, mod: 0, tags: tags.split(/\s+/).filter(Boolean), fields }), [note, mid, deckId, tags, fields]);
   const cards = useMemo(() => (fields.length === nt.flds.length ? previewCards(collection, draft, { media }) : []), [collection, draft, media, fields.length, nt.flds.length]);
   const empty = !stripHtmlKeepMedia(fields[0] ?? '').trim();
+  const hints = useMemo(() => unsupportedHints([...fields, ...nt.tmpls.flatMap((t) => [t.qfmt, t.afmt])]), [fields, nt]);
 
   const save = (close: boolean) => {
     setError(null);
@@ -93,6 +94,13 @@ export function NoteEditor({ collection, note, defaultDeckId, media, onAddMedia,
       )}
       <div className="space-y-3" aria-label="Vorschau der Karten">
         <h3 className="text-lg">Karten</h3>
+        {hints.length > 0 && (
+          <ul className="list-disc pl-5 text-sm text-muted" aria-label="Hinweise zu dieser Notiz">
+            {hints.map((h) => (
+              <li key={h}>{h}</li>
+            ))}
+          </ul>
+        )}
         {cards.length === 0 ? <p className="text-sm text-muted">{empty ? 'Mit einer leeren Vorderseite entsteht keine Karte.' : 'Aus diesen Feldern entsteht keine Karte.'}</p> : cards.map((c) => <CardPreview key={c.ord} collection={collection} note={draft} ord={c.ord} media={media} label={c.name} />)}
       </div>
       <div className="grid grid-cols-2 gap-2">

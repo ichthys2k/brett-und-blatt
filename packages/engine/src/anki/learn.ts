@@ -16,9 +16,17 @@ export interface LearnOptions {
   relearningSteps: readonly string[];
   newPerDay: number;
   reviewsPerDay: number;
+  /** `fsrs` (Standard) oder `sm2`: das klassische Verfahren von Anki (Faktor, Intervalle). */
+  scheduler: 'fsrs' | 'sm2';
+  /** Zufällige Streuung der Intervalle (Fuzz); aus: gleiche Eingabe, gleiches Ergebnis. */
+  fuzz: boolean;
+  /** Nach so vielen Mal Vergessen wird die Karte zum Egel und zurückgestellt (0: nie). */
+  leech: number;
+  /** Andere Karten derselben Notiz kommen am selben Tag nicht mehr dran. */
+  burySiblings: boolean;
 }
 
-export const DEFAULT_LEARN_OPTIONS: LearnOptions = { retention: 0.9, maxInterval: 36500, learningSteps: ['1m', '10m'], relearningSteps: ['10m'], newPerDay: 20, reviewsPerDay: 200 };
+export const DEFAULT_LEARN_OPTIONS: LearnOptions = { retention: 0.9, maxInterval: 36500, learningSteps: ['1m', '10m'], relearningSteps: ['10m'], newPerDay: 20, reviewsPerDay: 200, scheduler: 'fsrs', fuzz: false, leech: 8, burySiblings: false };
 
 export type Answer = 1 | 2 | 3 | 4;
 export const ANSWER_LABELS: Record<Answer, string> = { 1: 'Nochmal', 2: 'Schwer', 3: 'Gut', 4: 'Leicht' };
@@ -42,15 +50,19 @@ export function clampOptions(value: Partial<LearnOptions> | undefined): LearnOpt
     relearningSteps: steps(value?.relearningSteps, d.relearningSteps),
     newPerDay: Math.round(num(value?.newPerDay, 0, 9999, d.newPerDay)),
     reviewsPerDay: Math.round(num(value?.reviewsPerDay, 0, 9999, d.reviewsPerDay)),
+    scheduler: value?.scheduler === 'sm2' ? 'sm2' : 'fsrs',
+    fuzz: value?.fuzz === true,
+    leech: Math.round(num(value?.leech, 0, 99, d.leech)),
+    burySiblings: value?.burySiblings === true,
   };
 }
 
 const schedulers = new Map<string, FSRS>();
 function schedulerFor(opts: LearnOptions): FSRS {
-  const key = JSON.stringify([opts.retention, opts.maxInterval, opts.learningSteps, opts.relearningSteps]);
+  const key = JSON.stringify([opts.retention, opts.maxInterval, opts.learningSteps, opts.relearningSteps, opts.fuzz]);
   let f = schedulers.get(key);
   if (!f) {
-    f = new FSRS(generatorParameters({ request_retention: opts.retention, maximum_interval: opts.maxInterval, enable_fuzz: false, enable_short_term: true, learning_steps: opts.learningSteps as Steps, relearning_steps: opts.relearningSteps as Steps }));
+    f = new FSRS(generatorParameters({ request_retention: opts.retention, maximum_interval: opts.maxInterval, enable_fuzz: opts.fuzz, enable_short_term: true, learning_steps: opts.learningSteps as Steps, relearning_steps: opts.relearningSteps as Steps }));
     if (schedulers.size > 8) schedulers.clear();
     schedulers.set(key, f);
   }
@@ -167,10 +179,24 @@ export interface Outcome {
   log: ApkgRevlog;
   /** Zeit bis zur nächsten Wiederholung, schon formatiert. */
   label: string;
+  /** Die Karte wurde zum Egel (zu oft vergessen) und zurückgestellt; die Notiz bekommt die Markierung `leech`. */
+  leech?: boolean;
 }
 
 /** Was passiert bei „Nochmal, Schwer, Gut, Leicht“ – für die Vorschau der Termine unter den Knöpfen. */
 export function outcomes(card: ApkgCard, crt: number, now: number, opts: LearnOptions = DEFAULT_LEARN_OPTIONS, history: readonly ApkgRevlog[] = [], timeMs = 0): Record<Answer, Outcome> {
+  const out = (opts.scheduler === 'sm2' ? sm2Outcomes(card, crt, now, opts, timeMs) : fsrsOutcomes(card, crt, now, opts, history, timeMs)) as Record<Answer, Outcome>;
+  // Egel: Wer eine Wiederholungskarte oft vergisst, bekommt sie zurückgestellt (und die Notiz die Markierung `leech`).
+  if (opts.leech > 0 && card.type === CARD_REVIEW) {
+    const again = out[1];
+    const lapses = again.card.lapses;
+    const step = Math.max(1, Math.ceil(opts.leech / 2));
+    if (lapses >= opts.leech && (lapses - opts.leech) % step === 0) out[1] = { ...again, card: { ...again.card, queue: -1 }, leech: true };
+  }
+  return out;
+}
+
+function fsrsOutcomes(card: ApkgCard, crt: number, now: number, opts: LearnOptions, history: readonly ApkgRevlog[], timeMs: number): Record<Answer, Outcome> {
   const f = schedulerFor(opts);
   const fsrsCard = toFsrsCard(card, crt, now, opts, history);
   const out = {} as Record<Answer, Outcome>;
@@ -182,16 +208,108 @@ export function outcomes(card: ApkgCard, crt: number, now: number, opts: LearnOp
     out[answer] = {
       card: row,
       log: { id: now, cid: card.id, usn: -1, ease: answer, ivl, lastIvl, factor: row.type === CARD_REVIEW ? row.factor : 0, time: Math.min(Math.max(Math.round(timeMs), 0), 3_600_000), type: card.type === CARD_NEW || card.type === CARD_LEARNING ? 0 : card.type === CARD_REVIEW ? 1 : 2 },
-      label: formatInterval(next.due.getTime() - now),
+      // Wiederholungskarten sind nach Tagen fällig (wie in Anki: „4 Tage“, nicht „3,6“).
+      label: row.type === CARD_REVIEW ? formatInterval(row.ivl * 86_400_000) : formatInterval(next.due.getTime() - now),
+    };
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- SM-2 (klassischer Planer von Anki)
+
+const stepMinutes = (step: string): number => {
+  const n = Number.parseInt(step, 10) || 1;
+  return step.endsWith('d') ? n * 1440 : step.endsWith('h') ? n * 60 : n;
+};
+const START_EASE = 2500;
+const EASY_BONUS = 1.3;
+const HARD_INTERVAL = 1.2;
+const GRADUATING_INTERVAL = 1;
+const EASY_INTERVAL = 4;
+
+/**
+ * Das Verfahren von Anki vor FSRS: Lernschritte, danach Intervall mal Faktor (Vorgabe 250 %), Faktor sinkt bei „Nochmal“ (−20 %) und „Schwer“ (−15 %) und steigt
+ * bei „Leicht“ (+15 %); verspätete Karten bekommen einen Teil der Verspätung gutgeschrieben. Für alle, die so lernen wollen (Einstellung „Planer“).
+ */
+function sm2Outcomes(card: ApkgCard, crt: number, now: number, opts: LearnOptions, timeMs: number): Record<Answer, Outcome> {
+  const today = dayNumber(crt, now);
+  const nowSec = Math.floor(now / 1000);
+  const out = {} as Record<Answer, Outcome>;
+  const lastIvl = card.type === CARD_NEW ? 0 : card.type === CARD_REVIEW ? card.ivl : -Math.max(1, card.due - nowSec);
+  for (const answer of [1, 2, 3, 4] as const) {
+    let row: ApkgCard = { ...card, mod: nowSec, usn: -1, reps: card.reps + 1, odue: 0, factor: card.factor || START_EASE };
+    let dueSec: number;
+    let logIvl: number;
+    if (card.type === CARD_REVIEW) {
+      const late = Math.max(0, today - card.due);
+      let factor = row.factor;
+      let ivl = card.ivl;
+      if (answer === 1) {
+        factor = Math.max(1300, factor - 200);
+        ivl = Math.max(1, Math.round(card.ivl * 0)); // „Neues Intervall“ 0 %: mindestens ein Tag
+        row = { ...row, lapses: card.lapses + 1, factor, ivl };
+        const steps = opts.relearningSteps;
+        if (steps.length > 0) {
+          row = { ...row, type: CARD_RELEARNING, queue: 1, left: steps.length + steps.length * 1000 };
+          dueSec = nowSec + stepMinutes(steps[0]!) * 60;
+          logIvl = -(dueSec - nowSec);
+        } else {
+          row = { ...row, type: CARD_REVIEW, queue: 2, due: today + ivl, left: 0 };
+          dueSec = crt + row.due * DAY;
+          logIvl = ivl;
+        }
+      } else {
+        if (answer === 2) {
+          factor = Math.max(1300, factor - 150);
+          ivl = Math.max(card.ivl + 1, Math.round((card.ivl + late / 4) * HARD_INTERVAL));
+        } else if (answer === 3) ivl = Math.max(card.ivl + 1, Math.round((card.ivl + late / 2) * (factor / 1000)));
+        else {
+          factor += 150;
+          ivl = Math.max(card.ivl + 1, Math.round((card.ivl + late) * (factor / 1000) * EASY_BONUS));
+        }
+        ivl = Math.min(ivl, opts.maxInterval);
+        row = { ...row, type: CARD_REVIEW, queue: 2, due: today + ivl, ivl, factor, left: 0 };
+        dueSec = crt + row.due * DAY;
+        logIvl = ivl;
+      }
+    } else {
+      // Neu, Lernen, Neu lernen: Schritte durchlaufen
+      const relearn = card.type === CARD_RELEARNING;
+      const steps = relearn ? opts.relearningSteps : opts.learningSteps;
+      const remaining = card.type === CARD_NEW ? steps.length : Math.max(1, card.left % 1000);
+      const index = Math.min(Math.max(steps.length - remaining, 0), Math.max(steps.length - 1, 0));
+      const graduate = (ivl: number) => {
+        const days = Math.min(Math.max(1, ivl), opts.maxInterval);
+        row = { ...row, type: CARD_REVIEW, queue: 2, due: today + days, ivl: relearn ? Math.max(card.ivl, 1) : days, left: 0 };
+        dueSec = crt + row.due * DAY;
+        logIvl = row.ivl;
+      };
+      const stay = (at: number, minutes: number) => {
+        dueSec = nowSec + Math.round(minutes * 60);
+        row = { ...row, type: relearn ? CARD_RELEARNING : CARD_LEARNING, queue: 1, due: dueSec, ivl: relearn ? Math.max(card.ivl, 1) : 0, left: steps.length - at + (steps.length - at) * 1000 };
+        logIvl = -Math.round(minutes * 60);
+      };
+      dueSec = nowSec;
+      logIvl = 0;
+      if (steps.length === 0) graduate(relearn ? card.ivl : answer === 4 ? EASY_INTERVAL : GRADUATING_INTERVAL);
+      else if (answer === 1) stay(0, stepMinutes(steps[0]!));
+      else if (answer === 2) stay(index, index === 0 && steps.length > 1 ? (stepMinutes(steps[0]!) + stepMinutes(steps[1]!)) / 2 : stepMinutes(steps[index]!) * (index === 0 ? 1.5 : 1));
+      else if (answer === 3) (index + 1 >= steps.length ? graduate(relearn ? card.ivl : GRADUATING_INTERVAL) : stay(index + 1, stepMinutes(steps[index + 1]!)));
+      else graduate(relearn ? card.ivl : EASY_INTERVAL);
+    }
+    out[answer] = {
+      card: { ...row, data: card.data },
+      log: { id: now, cid: card.id, usn: -1, ease: answer, ivl: logIvl!, lastIvl, factor: row.type === CARD_REVIEW ? row.factor : 0, time: Math.min(Math.max(Math.round(timeMs), 0), 3_600_000), type: card.type === CARD_NEW || card.type === CARD_LEARNING ? 0 : card.type === CARD_REVIEW ? 1 : 2 },
+      label: row.type === CARD_REVIEW ? formatInterval(row.ivl * 86_400_000) : formatInterval((dueSec! - nowSec) * 1000),
     };
   }
   return out;
 }
 
 /** Antwortet auf eine Karte; liefert die neue Karte und den Protokolleintrag. */
-export function answerCard(card: ApkgCard, answer: Answer, crt: number, now: number, opts: LearnOptions = DEFAULT_LEARN_OPTIONS, history: readonly ApkgRevlog[] = [], timeMs = 0): { card: ApkgCard; log: ApkgRevlog } {
+export function answerCard(card: ApkgCard, answer: Answer, crt: number, now: number, opts: LearnOptions = DEFAULT_LEARN_OPTIONS, history: readonly ApkgRevlog[] = [], timeMs = 0): { card: ApkgCard; log: ApkgRevlog; leech: boolean } {
   const o = outcomes(card, crt, now, opts, history, timeMs)[answer];
-  return { card: o.card, log: o.log };
+  return { card: o.card, log: o.log, leech: o.leech === true };
 }
 
 // ---------------------------------------------------------------- Warteschlange
