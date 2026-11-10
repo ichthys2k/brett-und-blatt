@@ -1,0 +1,121 @@
+# Rechte und Rollen über Organisationen (#217)
+
+Stand: 10.11.2026. Konzept zum Issue #217; Entscheidungen von Cornelius stehen in den Issue-Kommentaren. Es ist noch nichts gebaut. Grundlage ist #213: Die Liste `Capability` und `tournamentCapabilities` (`packages/online/src/capabilities.ts`) kennen Rechte, die Rollen sind aber fest verdrahtet (Raumleitung; im Turnier Leitung, Mitleitung, Helfer).
+
+## 1. Entscheidungen
+
+| Frage | Entscheidung |
+|---|---|
+| Woran hängt eine Rolle? | Am **Spielerpass** (Kennung aus dem Ausweis, `hello.token`), nicht an einem Gerät. Die Rolle zieht mit dem Pass um. |
+| Wo gilt sie? | **Übergreifend** in einer **Organisation** (Verein, Schule, Klasse): für alle ihre Turniere, Räume und Serien. |
+| Wie frei sind Rollen? | **Feste Bündel** (Vorlagen), keine freie Zusammenstellung einzelner Rechte. |
+| Wie wird vergeben? | **Beides**: Einmal-Link/Code für Gäste und Neue, direkte Zuweisung an bekannte Mitglieder. |
+| Wer legt Organisationen an? | **Auf Antrag**; der Betreiber (Cornelius) gibt frei. Der Antragsteller wird Betreiber seiner Organisation. |
+| Geltung in der Organisation | **Alle Turniere der Organisation.** |
+| Klassen | Eine Klasse ist ein **Sonderfall** einer Organisation (Lehrkraft = Betreiber, Schüler = Mitglieder). |
+
+## 2. Begriffe
+
+- **Organisation:** Eine benannte Gruppe mit Mitgliedern und Rollen. Hat einen Code (wie `ClassRoom`: 6 Emoji aus 16, weil sie lange lebt), einen Namen und eine Art (`verein`, `schule`, `klasse`).
+- **Mitglied:** Eine Pass-Kennung in einer Organisation, mit genau einer Rolle (siehe Abschnitt 4: eine Rolle je Person und Organisation, damit das Modell einfach bleibt).
+- **Rolle:** Ein festes Bündel aus Rechten (`Capability`).
+- **Recht:** Eine einzelne Fähigkeit (`kick`, `enterResult`, `entrants`, …), wie bisher.
+- **Plattform-Betreiber:** Wer den `OPERATOR_KEY` hält. Er gibt Organisationen frei und kann sie sperren oder auflösen, ist aber kein Mitglied und sieht keine Spielinhalte.
+
+## 3. Rollen (Bündel)
+
+| Rolle | Rechte |
+|---|---|
+| **Betreiber** | alles, dazu Rollen vergeben und entziehen, Mitglieder verwalten, Organisation verwalten, Turniere löschen |
+| **Leitung** | Turniere anlegen und leiten: `entrants`, `tools` (Zuschaulink, Helfer, Zeitplan, Serie), `enterResult`, `checkin`, `print`; nicht löschen, keine Rollen vergeben |
+| **Schiedsrichter** | `enterResult`, `checkin` |
+| **Tischhelfer** | `enterResult` an den eigenen Tischen (Feld/Tisch), `checkin` |
+| **Anmeldung** | `entrants` (eintragen, freigeben), `checkin`; keine Ergebnisse |
+| **Protokoll** | `print` (Ansicht, Druck, Export); keine Änderungen |
+| **Bildschirm** | nur Ansicht, kein Pass nötig (Beamer, Turniertafel, `#/turnier/<Code>/beamer`) |
+
+Neue Fähigkeiten brauchen:
+- `manageRoles` (Rollen vergeben/entziehen, nur Betreiber),
+- `manageMembers` (Mitglieder aufnehmen/entfernen, Betreiber, optional Leitung),
+- `createTournament` (Turnier unter dem Namen der Organisation anlegen, Leitung und Betreiber),
+- `ownFieldsOnly` (Einschränkung für Tischhelfer; Umsetzung siehe Abschnitt 8).
+
+Zuordnung der bestehenden Rollen (Migration): Hauptleitung → Betreiber, Mitleitung → Leitung, Helfer → Tischhelfer. Solange ein Turnier keiner Organisation gehört, gilt wie bisher die Rolle aus dem Turnier selbst (Abschnitt 7).
+
+## 4. Datenmodell
+
+```
+Organisation { code, name, kind, createdAt, status: 'pending' | 'active' | 'blocked' }
+Mitglied     { org, passKey, role, since, via: 'link' | 'direct', by }
+Einladung    { org, role, code, expiresAt, attempts }          // Einmal-Link
+Protokoll    { org, at, by, action, subject, role?, note? }    // nur Anfügen
+Antrag       { code?, name, kind, requester: passKey, text, at, status }
+```
+
+- Der Server speichert die **Pass-Kennung** (nicht den Spielercode) mit der Rolle. Weder E-Mail noch Klarnamen: Mitglieder zeigen Spitzname, Bild und Wappen aus dem Pass, wie bei Klassen.
+- **Eine Rolle je Person und Organisation.** Wer mehr braucht, bekommt die höhere Rolle. Das hält die Prüfung einfach (`can(role, recht)`), Verschachtelung gibt es nicht.
+- **Turnier → Organisation:** `settings.org` (Code der Organisation) oder leer. Eine Serie gehört ebenfalls höchstens einer Organisation. Ein Raum hat die Raumleitung wie bisher; Organisationsrollen im Raum bleiben eine spätere Erweiterung.
+- **Speicherung:** Ein Durable Object je Organisation (`OrgRoom`, Muster `ClassRoom`), in der EU. Anträge liegen in einem kleinen Verzeichnis-Objekt, das der Betreiber über `/betreiber/…` einsieht.
+
+## 5. Ablauf
+
+### 5.1 Antrag und Freigabe
+1. Ein Pass-Inhaber stellt auf `#/organisationen` einen **Antrag** (Name, Art, kurzer Zweck).
+2. Der Betreiber sieht die offenen Anträge auf `#/betreiber` (Betreiber-Schlüssel) und gibt frei oder lehnt ab. Das ist der einzige Eingriff der Plattform.
+3. Nach der Freigabe entsteht die Organisation, der Antragsteller wird **Betreiber** und bekommt einen Hinweis beim nächsten Öffnen.
+4. Klassen: Der Weg bleibt wie bei #150 (jeder Pass legt eine Klasse an, ohne Antrag). Eine Klasse ist eine Organisation der Art `klasse` mit der Beschränkung auf Schulzwecke; der Antrag entfällt dort, solange die Klasse keine Turniere mit Außenwirkung (öffentlicher Zuschaulink) anlegt. Offen: Genügt das, oder soll auch die Klasse einen Antrag brauchen? (Abschnitt 10)
+
+### 5.2 Rollen vergeben
+- **Einmal-Link/Code:** Betreiber oder Leitung (je nach Stufe, Abschnitt 6) erzeugt eine Einladung für eine Rolle. Link `#/org/<Code>?rolle=<Einladung>`. 24 Stunden gültig, fünf Fehlversuche, nach Einlösen verbraucht (Muster `LEADER_TRANSFER_*` aus #203). Der Link nennt die Rolle fest und wird nach dem Einlösen aus der Adresszeile genommen.
+- **Direkt:** In der Mitgliederliste wählt die berechtigte Person ein Mitglied und eine Rolle. Das Mitglied sieht die Zuweisung beim nächsten Öffnen und kann **ablehnen**. Bis zur Annahme gilt die Rolle nicht.
+- **Entzug:** Jederzeit durch den Betreiber (Leitung nur für niedrigere Rollen). Wer Mitglied ist, kann selbst austreten.
+- **Protokoll:** Jede Änderung wird angefügt (wer, wann, was, Person, Rolle) und ist für Betreiber und Leitung einsehbar. Es enthält keine Klarnamen, nur das, was der Pass anzeigt.
+
+### 5.3 Prüfung auf dem Server
+Der Server prüft **bei jeder Nachricht**, ob die Kennung des Absenders in der zuständigen Organisation eine Rolle hat, die das Recht umfasst. Die Oberfläche fragt nur zur Anzeige `can(...)`, wie in #213. Ein Recht steht **nie** nur im Pass oder in der Oberfläche; der Pass liefert die Kennung, der Server kennt die Rolle.
+
+## 6. Wer darf was vergeben
+
+- **Betreiber:** alle Rollen, an alle.
+- **Leitung:** Schiedsrichter, Tischhelfer, Anmeldung, Protokoll, Bildschirm; nicht Leitung oder Betreiber. (Einstellbar durch den Betreiber: „Leitung darf Rollen vergeben: ja/nein“, Standard ja.)
+- Alle anderen: nichts.
+
+## 7. Zusammenspiel mit dem Bestehenden
+
+- **Turniere ohne Organisation** laufen unverändert (Gerätekennung der Leitung, `leaderToken`, Helferlinks). Wird ein Turnier einer Organisation zugeordnet, wirken die Organisationsrollen zusätzlich: Ein Mitglied mit Rolle `Leitung` leitet jedes Turnier der Organisation, der Anleger bleibt Hauptleitung dieses Turniers.
+- **Helferlinks** (`addHelper`) bleiben für Turniere ohne Organisation, in Organisationen ersetzt die Einladung sie (Helfer = Tischhelfer).
+- **Serien (#205):** Eine Serie kann einer Organisation gehören; Serienleitung wird eine Rolle der Organisation, die Übergabe per Einmalcode bleibt für Serien ohne Organisation.
+- **Betreiber-Schlüssel (`OPERATOR_KEY`):** bleibt der Plattform-Eingriff (löschen, sperren), bekommt aber `org` als weiteres Ziel (`DELETE /betreiber/org/<Code>`).
+- **Klassen (#150–#152):** `ClassRoom` wird zur Organisation der Art `klasse` (Mitglieder, Warteliste, Leitung gibt es dort schon). Die Klassenleitung ist Betreiber, weitere Lehrkräfte sind `Leitung`, Schüler haben keine Rolle (nur Mitgliedschaft). Der Umbau ist ein eigener Schritt (Abschnitt 9), bis dahin laufen Klassen wie bisher.
+- **Konto-Anmeldung (#154):** ein Konto ist ein weiterer Öffner des Passes; Rollen hängen am Pass und ändern sich dadurch nicht.
+- **Tisch-Bildschirm und Turnier-Bildschirm (#100, #212):** Die Rolle `Bildschirm` ist ein Zuschaulink mit Zeichen „nur Ansicht“ und braucht keinen Pass.
+
+## 8. Risiken und offene technische Punkte
+
+- **Pass verloren oder weitergegeben:** Die Rolle hängt an der Kennung. Wer den Ausweis hat, hat die Rolle. Gegenmittel: Betreiber entzieht, Rolle wird neu vergeben; wichtige Rollen (Betreiber, Leitung) sollten mit PIN/Passkey gesichert sein, die Oberfläche weist darauf hin.
+- **Betreiber verschwindet:** Jede Organisation braucht mindestens einen Betreiber; ein zweiter lässt sich ernennen, der letzte kann nicht austreten (nur Übergabe oder Auflösung). Der Plattform-Betreiber kann im Notfall einen neuen einsetzen (protokolliert).
+- **Missbrauch bei Anträgen:** Begrenzung je Pass (ein offener Antrag), Name und Zweck werden gefiltert (`isBlockedText`); der Betreiber sieht nur Antragstext, keine Spielinhalte.
+- **Datenschutz:** Mitglieder und Rollen sind personenbezogen (Pass-Kennung plus Spitzname). Die Datenschutzerklärung braucht einen Abschnitt „Organisationen“ (wie bei Klassen). Aufbewahrung: ein Jahr ohne Aktivität löscht die Organisation (wie `ClassRoom`), Protokoll nur so lange wie die Organisation.
+- **`ownFieldsOnly` für Tischhelfer:** Ein Tischhelfer soll nur an den ihm zugewiesenen Tischen eintragen. Dafür muss die Leitung Tische zuweisen (`assignFields` kennt Felder, aber keine Personen). Erste Fassung: Tischhelfer dürfen wie bisher alle Ergebnisse eintragen; die Einschränkung folgt, wenn Tischzuweisung an Personen gebaut ist.
+- **Mehrfach-Mitgliedschaft:** Eine Person kann in mehreren Organisationen sein, je Organisation mit einer Rolle. Die Oberfläche muss bei einem Turnier die zuständige Organisation anzeigen.
+
+## 9. Umsetzung in Schritten (neue Issues nach Freigabe)
+
+1. **Rechtekern:** `OrgRole`, Rollen-Bündel → `Capability`, reine Logik und Tests in `packages/online` (`org.ts`, `org-roles.ts`); `tournamentCapabilities` leitet aus Organisationsrolle ab, bisherige Rollen bleiben als Abbildung. Kein Server, keine Oberfläche.
+2. **Organisation auf dem Server:** `OrgRoom` (Durable Object, Migration v11), Anlegen, Mitglieder, Einladungen, Protokoll, Zugriffsprüfung, Rauchtest.
+3. **Antrag und Betreiberseite:** Anträge, Freigabe auf `#/betreiber`, `betreiber.mjs org`.
+4. **Oberfläche:** `#/organisationen` (Antrag, eigene Organisationen), `#/org/<Code>` (Mitglieder, Rollen, Einladungen, Protokoll).
+5. **Anbindung der Turniere:** `settings.org`, Prüfung auf dem Server, Anzeige der Rolle, Turnierseite.
+6. **Serien und Räume:** Serien einer Organisation zuordnen; Rollen im Raum (optional).
+7. **Klassen als Organisationen:** `ClassRoom` in das Modell überführen.
+8. **Datenschutzerklärung und Hilfetexte.**
+
+Reihenfolge: 1 → 2 → 3 → 4 → 5; 6 bis 8 danach, jeweils nach Cornelius' Review.
+
+## 10. Offene Fragen an Cornelius
+
+1. **Klassen:** Brauchen auch Klassen einen Antrag, oder dürfen Lehrkräfte sie weiter selbst anlegen (mein Vorschlag: ohne Antrag, solange sie intern bleiben)?
+2. **Eine Rolle je Person:** Reicht das, oder soll jemand mehrere Rollen haben können (zum Beispiel Schiedsrichter und Anmeldung)?
+3. **Leitung darf Rollen vergeben:** Standard „ja“ (außer Leitung/Betreiber) oder „nein“, bis der Betreiber es erlaubt?
+4. **Größe:** Gibt es eine Obergrenze für Mitglieder je Organisation (Vorschlag: 200, Klassen 40)?
+5. **Namen:** „Organisation“ heißt in der Oberfläche besser „Verein oder Schule“ oder „Gruppe“?
