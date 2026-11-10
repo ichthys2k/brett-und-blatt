@@ -213,18 +213,20 @@ Die fünf Unter-Issues passen nicht mehr (sie gingen von „Pakete aus zwei Feld
 
 | Neu | Inhalt | ersetzt |
 |---|---|---|
-| **L1** Datenmodell und Speicher (Stufe A) | Anki-nahe Typen, IndexedDB, feste Kennungen, `content/…` als Notizen, Spiele lesen Notizen | #101 (Teil), #155 (Teil) |
-| **L2** Text-Import und -Export (Stufe B) | alle Kopfzeilen, Spaltenzuordnung, Duplikate, Hilfeseite mit KI-Vorlage | #158 |
-| **L3** Pakete lesen und schreiben (Stufe C) | `.apkg` alle Versionen, Medien, Stapelbaum, Rundlauftests mit echten Paketen | #101 (Teil), #158 (Teil) |
-| **L4** Notizen und Notiztypen bearbeiten (Stufe D) | Editor, Notiztyp-Editor, Vorlagen-Renderer, Cloze, Stapel, Tags, Suche | #101 (Teil) |
-| **L5** Karteikasten mit FSRS (Stufe E, Teil 1) | `ts-fsrs`, Protokoll, Block `lernen`, Tagesziel, Stempel | #155, #157 |
-| **L6** Lernen beim Spielen (Stufe E, Teil 2) | Paare finden, Schwarzer Peter, Bingo, Quartett melden Ergebnisse; fällige Karten bevorzugen | #156 |
-| **L7** Teilen und Klasse (Stufe F) | Teilen per Code, Stapel in der Klasse, fällige Karten der Klasse | #101 (Teil), #159 |
-| **L8** Erweiterungen (Stufe G) | Bilder verdecken, TTS, `type:`, Ruby, Formeln, gefilterte Stapel, Anki-Planer, FSRS-Training | neu |
+| **L1** (#218) Datenmodell und Speicher (Stufe A) | Anki-nahe Typen, IndexedDB, feste Kennungen, `content/…` als Notizen, Spiele lesen Notizen | #101 (Teil), #155 (Teil) |
+| **L2** (#219) Text-Import und -Export (Stufe B) | alle Kopfzeilen, Spaltenzuordnung, Duplikate, Hilfeseite mit KI-Vorlage | #158 |
+| **L3** (#220) Pakete lesen und schreiben (Stufe C) | `.apkg` alle Versionen, Medien, Stapelbaum, Rundlauftests mit echten Paketen | #101 (Teil), #158 (Teil) |
+| **L4** (#221) Notizen und Notiztypen bearbeiten (Stufe D) | Editor, Notiztyp-Editor, Vorlagen-Renderer, Cloze, Stapel, Tags, Suche | #101 (Teil) |
+| **L5** (#222) Karteikasten mit FSRS (Stufe E, Teil 1) | `ts-fsrs`, Protokoll, Block `lernen`, Tagesziel, Stempel | #155, #157 |
+| **L6** (#223) Lernen beim Spielen (Stufe E, Teil 2) | Paare finden, Schwarzer Peter, Bingo, Quartett melden Ergebnisse; fällige Karten bevorzugen | #156 |
+| **L7** (#224) Teilen, R2 und Klasse (Stufe F) | Teilen per Code, Stapel in der Klasse, fällige Karten der Klasse | #101 (Teil), #159 |
+| **L8** (#225) Erweiterungen (Stufe G) | Bilder verdecken, TTS, `type:`, Ruby, Formeln, gefilterte Stapel, Anki-Planer, FSRS-Training | neu |
 
 Jeder Schritt ist für sich prüfbar (Rundlauftests mit echten Paketen aus Anki, Rauchtest, Blick am Handy). Die echten Pakete zum Testen (von dir aus Anki exportiert, mindestens: Einfach, Einfach und umgekehrt, Cloze, mit Bild und Ton, mit Lernfortschritt, ein Stapel mit Unterstapeln) brauche ich ab L3.
 
-## 11. Was sich an #101 ändert
+## 11. Was sich an #101 ändert (umgesetzt am 10.11.2026)
+
+#101 ist jetzt das Vorhaben mit den Unter-Issues #218 bis #225; #155 bis #159 sind geschlossen (nicht geplant, Inhalt übernommen).
 
 - **Ziel:** nicht mehr „Editor mit Feld A und B“, sondern Anki-Notizen und -Notiztypen bearbeiten, mit Paketen als Austauschformat.
 - **Bilder und Ton:** gehören dazu (Anki-Pakete haben sie).
