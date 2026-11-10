@@ -1,6 +1,21 @@
-# Web Push für „Du bist dran“ – Konzept (#206, 9.11.2026)
+# Web Push für Partie-Aufrufe und „Du bist dran“ (Konzept #206, Umsetzung #242)
 
-Stand: **nur Konzept, nichts gebaut.** Cornelius entscheidet nach diesem Text, ob und wie es weitergeht. Rechtliches (Datenschutzerklärung, Einwilligung) ist hier nur skizziert und nicht juristisch geprüft.
+Stand (10.11.2026): **Konzept entschieden, Umsetzung noch nicht begonnen.** Cornelius hat die offenen Fragen beantwortet (Abschnitt „Entscheidungen“), der Fahrplan unten ist so geschrieben, dass ein anderer Agent (z. B. Gemini) ihn Schritt für Schritt abarbeiten kann. Umsetzung erst, wenn Cornelius [#242](https://github.com/ichthys2k/brett-und-blatt/issues/242) auf `status: Ready` setzt. Rechtliches (Datenschutzerklärung, Einwilligung) ist nicht juristisch geprüft.
+
+Verwandt: Kalenderdatei für feste Termine ([#243](https://github.com/ichthys2k/brett-und-blatt/issues/243), fertig und live), Turniersoftware (`turniersoftware.md`), PWA-Aktualisierung (#175, siehe `CLAUDE.md`).
+
+## Entscheidungen (Cornelius, 10.11.2026)
+
+| Frage | Entscheidung |
+|---|---|
+| Web Push überhaupt? | Ja, **zusätzlich** zur Kalenderdatei (#206: „Beides“). Die Kalenderdatei kam zuerst. |
+| Umfang | **Turniere und Fernpartien.** Turniere: Partie aufgerufen, Frist läuft bald ab, Turnier beginnt/endet. Fernpartien: „Du bist dran“, nur wenn niemand verbunden ist. **Nicht** für normale Online-Räume. |
+| Service Worker | **Kleines Zusatzskript** `push-sw.js`, per `workbox.importScripts` in den bestehenden `generateSW` eingebunden. **Kein** Umbau auf `injectManifest` (schont #175 und den Offline-Betrieb). |
+| Fristerinnerung | **Fest 2 Stunden vor Fristende**, eine Erinnerung an alle, die noch fehlen. Keine Einstellung durch die Leitung, keine zweite Stufe. |
+| Datenschutz | Claude/der umsetzende Agent **entwirft den Text**, Cornelius liest gegen und entscheidet über eine rechtliche Prüfung. Bis zur Freigabe des Textes bleibt die Funktion **unsichtbar** (kein öffentlicher VAPID-Schlüssel im Build, siehe Schritt 9). |
+| Mehrere Geräte | Ein Abonnement gilt **je Gerät** und wird nicht im Spielerpass synchronisiert (die Endpunkt-URL ist gerätegebunden). Wer mehrere Geräte will, schaltet es auf jedem ein. |
+| Absenderangabe (VAPID `sub`) | `https://spiele.lipponer.de` statt einer E-Mail-Adresse (Vorschlag; Push-Dienste akzeptieren URL oder `mailto:`). Cornelius kann eine Adresse nachreichen. |
+| Nicht entschieden, hier festgelegt | Höchstens **eine Meldung je Person und Ereignisart alle 30 Minuten** (Spam-Schutz); Meldungstexte ohne Namen Dritter; Meldung gilt nur, solange Turnier/Raum bestehen. |
 
 ## Ausgangslage
 
@@ -25,7 +40,7 @@ Nicht Teil des Vorschlags: Werbung, Chat-Inhalte, Sammelhinweise „Es gibt neue
 2. **Abonnement:** Auf Wunsch (Knopf „Hinweise aufs Gerät“) fragt die App die Berechtigung an und ruft `registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })`. Ergebnis: Endpunkt-URL des Push-Dienstes des Browsers plus zwei Schlüssel (`p256dh`, `auth`).
 3. **Speicherung:** Das Abonnement geht per WebSocket-Nachricht an den Raum bzw. das Turnier (Durable Object), gebunden an die Geräte-Kennung (`token`) und dort nur, solange die Partie bzw. das Turnier läuft. Es gehört in den Speicher des jeweiligen Objekts, nicht in eine globale Tabelle; wird das Objekt gelöscht, ist auch das Abonnement weg.
 4. **Versand:** Fällt ein Ereignis an (Zug fällig, Aufruf, Frist), sendet das Durable Object aus seinem bestehenden Wecker (`alarm`) eine Web-Push-Anfrage (RFC 8030/8291, verschlüsselter Inhalt, VAPID-Kopf) an den Endpunkt. Cloudflare Workers können das mit der Web-Crypto-API selbst; eine kleine Bibliothek (z. B. `web-push`-kompatibel für Workers) oder eigener Code von etwa 150 Zeilen genügt. Antwortet der Push-Dienst mit 404/410, wird das Abonnement gelöscht.
-5. **Anzeige:** Der Service Worker der PWA (`generateSW` bisher; für Push wäre auf `injectManifest` oder ein ergänzendes Skript umzustellen) zeigt die Nachricht (`push`-Ereignis) und öffnet beim Antippen `#/raum/<Code>` oder `#/turnier/<Code>` (`notificationclick`).
+5. **Anzeige:** Der Service Worker der PWA bleibt `generateSW`; ein Zusatzskript `push-sw.js` (per `workbox.importScripts`) zeigt die Nachricht (`push`-Ereignis) und öffnet beim Antippen `#/raum/<Code>` oder `#/turnier/<Code>` (`notificationclick`). **Entschieden: kein `injectManifest`.**
 6. **Widerruf:** Knopf „Hinweise ausschalten“ ruft `unsubscribe()` und löscht das Abonnement im Objekt. Wer in den Browser-Einstellungen widerruft, wird beim nächsten Versand durch 410 bereinigt.
 
 ## Grenzen je Plattform
@@ -60,9 +75,175 @@ Nicht Teil des Vorschlags: Werbung, Chat-Inhalte, Sammelhinweise „Es gibt neue
 
 **Empfehlung:** Erst **C** für Termine (billig, ohne Datenspeicherung), und **A** nur für Fernpartien und Turnierfristen, **wenn** der Bedarf bleibt – in kleinem Umfang (nur „Du bist dran“ bei Fernpartien und „Frist läuft ab“), auf Wunsch und mit Abonnement im jeweiligen Objekt. B nicht.
 
-## Offene Fragen an Cornelius
+## Fahrplan für die Umsetzung (Übergabe an einen anderen Agenten)
 
-1. Soll es Web Push überhaupt geben, oder reicht zunächst C (Kalenderdatei)?
-2. Wenn Push: nur Fernpartien und Turnierfristen, oder auch normale Online-Räume?
-3. Ist der Umbau des Service Workers (`injectManifest`) in Ordnung, auch wenn er die PWA-Aktualisierung (#175) anfasst?
-4. Wer prüft die Datenschutzerklärung rechtlich?
+### Regeln, die vorab gelten
+
+Lies `AGENTS.md` und `CLAUDE.md` (Regeln für die Zusammenarbeit). Kurz das Wichtigste für diese Aufgabe:
+
+- Nur arbeiten, wenn [#242](https://github.com/ichthys2k/brett-und-blatt/issues/242) `status: Ready` hat; vorher einen Reservierungskommentar (`🔒 Übernehme ich: @konto, zweig — Datum`) schreiben. GitHub nur über das GitHub-MCP oder `gh`, nach den Regeln des Repos.
+- Eigener Zweig (z. B. `gemini/web-push` oder `claude/web-push`), nie direkt auf `main`; Commit-Adresse `855814+ichthys2k@users.noreply.github.com`; PR mit `Refs #242`, nicht `Fixes`.
+- Vor jedem Push `corepack pnpm check` grün. **Nach `main` nur auf Cornelius' Wort „deploy“.**
+- **Keine Geheimnisse ins Repo:** der private VAPID-Schlüssel gehört nur als Wrangler-Secret auf den Server und lokal in `apps/server/.dev.vars` (gitignored). Den Schlüssel nie in Chat, Issue oder Commit schreiben.
+- Neue Fremdbibliotheken wären in `THIRD_PARTY.md` einzutragen. Empfehlung: **keine** neue Bibliothek, die Krypto läuft über die Web-Crypto-API (Cloudflare Workers und Browser können das).
+- Neue Nachrichten zwischen Browser und Server sind **zusätzlich** (nicht abwärtsinkompatibel), `PROTOCOL_VERSION` bleibt also. Ein älterer Server beantwortet sie mit „Unbekannte Nachricht“, das ist hinnehmbar, weil die Oberfläche Push nur anbietet, wenn der Build den öffentlichen Schlüssel hat.
+- Arbeitsmuster des Projekts: **Reine Logik in `packages/online` (ohne Anbieterbindung, mit Tests), dünner Adapter in `apps/server/src/index.ts`**. Das Senden hängt als Schnittstelle (`PushSender`) in den Abhängigkeiten, Tests setzen eine Attrappe ein. In Workers steht `Date.now()` während einer Berechnung still; das spielt hier keine Rolle (kleine Anfragen), aber nicht auf Zeitmessung innerhalb einer Rechnung bauen.
+
+### Überblick der Schritte
+
+| Schritt | Inhalt | Wo | Abhängig von |
+|---|---|---|---|
+| 1 | Datentypen, Prüfung des Abonnements, Abo-Buch | `packages/online/src/push.ts` | – |
+| 2 | Krypto und Versand (RFC 8291, VAPID) | `packages/online/src/webpush.ts` | – |
+| 3 | Nachrichten im Protokoll | `packages/online/src/protocol.ts`, `tournament/protocol.ts` | 1 |
+| 4 | Turnier: Abos halten, Ereignisse, Erinnerung | `packages/online/src/tournament.ts`, `apps/server/src/index.ts` (`TournamentRoom`) | 1, 2, 3 |
+| 5 | Fernpartien: „Du bist dran“ | `packages/online/src/room.ts`, `apps/server/src/index.ts` (`GameRoom`) | 1, 2, 3 |
+| 6 | Service Worker und Browser-Seite | `apps/web/public/push-sw.js`, `apps/web/vite.config.ts`, `apps/web/src/lib/push.ts` | 3 |
+| 7 | Oberfläche (Schalter, iOS-Hinweis) | `apps/web/src/screens/Tournament.tsx`, `Room.tsx`, `#/ton` | 6 |
+| 8 | Datenschutzerklärung, Hilfetext | `apps/web/src/screens/Legal.tsx` | – (parallel) |
+| 9 | Schlüssel, Rauchtest, Freischaltung | `apps/server/scripts/vapid.mjs`, `push.mjs`, `.github/workflows/ci.yml` | 1–7 |
+
+Die Schritte 1 und 2 sind unabhängig und können parallel entstehen. Jeder Schritt endet mit Tests und einem lauffähigen `corepack pnpm check`.
+
+### Schritt 1 – Datentypen und Abo-Buch (`packages/online/src/push.ts`)
+
+**Ziel:** Alles, was nicht kryptografisch ist.
+
+- Typ `PushSubscriptionData = { endpoint: string; keys: { p256dh: string; auth: string } }`.
+- `parsePushSubscription(raw: unknown): PushSubscriptionData | null`: Endpunkt muss `https:` sein, höchstens 600 Zeichen, **Host auf einer Zulassungsliste** (`fcm.googleapis.com`, `updates.push.services.mozilla.com`, Endungen `.push.services.mozilla.com`, `.notify.windows.com`, `web.push.apple.com` und `.push.apple.com`); `p256dh` base64url, dekodiert 65 Byte; `auth` base64url, dekodiert 16 Byte. **Das ist eine Sicherheitsgrenze:** Ohne Zulassungsliste würde der Server beliebige vom Browser genannte Adressen anrufen (SSRF). Für den lokalen Rauchtest darf eine Ausnahme für `127.0.0.1`/`localhost` nur gelten, wenn die Umgebung als Testserver läuft (`ROOM_JURISDICTION === 'none'`), nie im echten Betrieb.
+- Klasse `PushBook`: speichert höchstens **ein Abo je Geräte-Kennung** (`token`), höchstens 300 Abos je Objekt; `set(token, sub, now)`, `remove(token)`, `removeByEndpoint(endpoint)`, `get(token)`, `toJSON()`/`fromJSON()` für den Speicher des Durable Object. Zeitstempel je Abo für die Aufräum-Regel.
+- Meldungsarten als `type PushKind = 'matchCalled' | 'deadline' | 'tournamentStarted' | 'tournamentFinished' | 'yourTurn'`.
+- Spam-Schutz `PushLimiter`: je (Kennung, Art) höchstens eine Meldung in 30 Minuten (`allow(token, kind, now)`).
+- `pushPayload(kind, url): string`: kleines JSON `{ k: kind, u: url }`, **ohne Namen oder Spielinhalte**. Der Service Worker baut daraus den sichtbaren Text.
+
+**Tests (`packages/online/test/push.test.ts`):** Zulassungsliste lehnt `http://`, fremde Hosts, `https://evil.example/x`, zu lange Adressen und falsche Schlüssel ab; Buch begrenzt und überschreibt; Limiter lässt nach 30 Minuten wieder zu; Speicher-Rundlauf.
+
+### Schritt 2 – Krypto und Versand (`packages/online/src/webpush.ts`)
+
+**Ziel:** Eine Web-Push-Nachricht ausliefern, nur mit Web Crypto und `fetch`.
+
+- **VAPID (RFC 8292):** JWT (`ES256`) mit `aud` = Ursprung des Endpunkts, `exp` ≤ 12 Stunden, `sub` = `https://spiele.lipponer.de`. Kopf: `Authorization: vapid t=<jwt>, k=<öffentlicher Schlüssel, base64url>`.
+- **Verschlüsselung (RFC 8291, `aes128gcm`):** ECDH P-256 mit dem Schlüssel des Empfängers (`p256dh`), HKDF mit `auth`, Inhalt mit Auffüllung und 4096-Byte-Datensatzgröße. Kopfzeilen `Content-Encoding: aes128gcm`, `TTL` (z. B. 3600 für Aufrufe, 7200 für Fristen), `Urgency: normal`, `Topic` (≤ 32 Zeichen, ersetzt eine ältere Meldung derselben Sache, z. B. `m-<Partie>`).
+- `interface PushSender { send(sub: PushSubscriptionData, payload: string, opts: { ttl: number; topic?: string }): Promise<'ok' | 'gone' | 'retry' | 'failed'> }` und die Umsetzung `createPushSender({ publicKey, privateKey, subject, fetch })`. Antworten: 201 → `ok`; 404/410 → `gone` (Abo löschen); 429 und 5xx → `retry` (einmal nach Pause, sonst verwerfen); sonst `failed` (nur protokollieren, ohne Endpunkt-URL im Log).
+- Schlüsselformat: der private Schlüssel als base64url der 32 Byte (`d`), der öffentliche als 65 Byte unkomprimiert; Hilfsfunktion zum Import als JWK.
+
+**Tests (`packages/online/test/webpush.test.ts`):** Der **Testvektor aus RFC 8291, Abschnitt 5** (Beispiel mit festem Absenderschlüssel und Salt) ergibt genau den dort genannten Chiffretext; VAPID-JWT lässt sich mit dem öffentlichen Schlüssel prüfen; Statuscode-Abbildung mit einer Attrappe für `fetch`.
+
+### Schritt 3 – Nachrichten im Protokoll
+
+- Browser → Server: `{ type: 'pushSubscribe', subscription }` und `{ type: 'pushUnsubscribe' }`. In `tournament/protocol.ts` (Turnier) **und** `protocol.ts` (Raum) mit `parsePushSubscription` prüfen; ungültige Abos mit einer Fehlermeldung ablehnen.
+- Server → Browser: `{ type: 'pushState', enabled: boolean }` als Antwort, damit die Oberfläche den Schalter richtig zeigt (auch nach Wiederverbinden).
+- Das Abo gehört zur **Geräte-Kennung** des Absenders (`hello.token`), nie zu einer fremden. Die Abo-Daten gehen **nie** an andere Verbindungen und stehen nicht in `TournamentView`/Raumsichten.
+
+**Tests:** Nachrichten werden geprüft, `pushState` kommt nur an den Absender.
+
+### Schritt 4 – Turnier (`TournamentRoom`)
+
+**Speicherung:** Das `PushBook` liegt im Speicher des Durable Object unter dem eigenen Schlüssel `push` (nicht im Turnier-`snapshot`), `ctx.storage.put('push', book.toJSON())`. `deleteTournament` löscht alles mit `storage.deleteAll()`, das Abo verschwindet also mit dem Turnier.
+
+**Ereignisse** (nur online-Turniere, nicht `LOKAL-…` und nicht vor Ort):
+
+| Art | Wann | Empfänger | Anschluss im Code |
+|---|---|---|---|
+| `matchCalled` | Für eine Partie wurde der Raum angelegt und beide sind angesetzt | beide Seiten (bei Teams alle Mitglieder) | `changed()`: nach `t.roomCreated(...)` |
+| `deadline` | `dueAt(...)` minus 2 Stunden; nur für die, die noch nicht „bereit“ waren | wer fehlt | `nextWakeup()` um den Zeitpunkt ergänzen, in `alarm()` auslösen |
+| `tournamentStarted` | Phase wechselt von `signup` zu `running` | alle Teilnehmer mit Abo | Wechsel im `Tournament` |
+| `tournamentFinished` | Phase `finished` | alle Teilnehmer mit Abo | ebenso |
+
+- Damit nach einem Aufwachen nichts doppelt kommt, merkt sich das Objekt gesendete Meldungen (Schlüssel `art:partie`) im Speicher `push` und räumt sie beim Löschen der Partie auf.
+- Die Erinnerung gilt **nicht**, wenn die Frist weniger als 2 Stunden entfernt entsteht (dann nur `matchCalled`).
+- Teilnehmer ohne Abo, Zuschauer, Helfer und Leitung bekommen nichts (Leitung hat ihre Sicht).
+- **Abo je Kennung zu Teilnehmer:** `playerByToken(token)` bzw. `players[].token` (bei Teams `members[].token`).
+- Nach jedem Versand: `gone` → Abo löschen. Fehler dürfen den Turnierablauf nie aufhalten (`try/catch`, kein `await` auf langsamen Versand im Pfad, der Zustand wird zuerst gespeichert).
+
+**Tests (`packages/online/test/tournament-push.test.ts`):** Mit Attrappe für `PushSender` und fester Uhr: Aufruf erzeugt zwei Meldungen, Erinnerung genau einmal 2 Stunden vor Fristende und nur für Fehlende, Start/Ende einmalig, Limiter greift, Abo-Entzug, Löschen räumt auf, Turnier ohne Abo sendet nichts.
+
+### Schritt 5 – Fernpartien (`GameRoom`)
+
+- Voraussetzung: `room.isCorrespondence()` (Bedenkzeit ≥ 12 Stunden oder Option `correspondence`).
+- **Ereignis `yourTurn`:** Nach einem Zug (`broadcastGame` in `packages/online/src/room.ts`) gilt: Für jeden Platz, der neu am Zug ist, dessen Mitglied **keine Verbindung** hat (`member.connections.size === 0`) und ein Abo besitzt, geht `yourTurn`. Wer verbunden ist, bekommt wie bisher die Meldung im Browser (`notifyTurn`).
+- Abos liegen im Speicher des `GameRoom` (Schlüssel `push`), gelöscht mit dem Raum (`storage.deleteAll()` beim Aufräumen nach 30 Tagen).
+- Auch hier der 30-Minuten-Limiter und ein Eintrag in `alarm()` ist nicht nötig (kein Zeitpunkt, nur Zugwechsel).
+- **Nicht** für normale Online-Räume und nicht für Turnierpartien (dort gilt Schritt 4).
+
+**Tests (`packages/online/test/room-push.test.ts`):** Fernpartie, Mitglied getrennt → eine Meldung; Mitglied verbunden → keine; normale Partie → keine; Limiter; Abo wird mit dem Raum gelöscht.
+
+### Schritt 6 – Service Worker und Browser-Seite
+
+- `apps/web/public/push-sw.js`: `self.addEventListener('push', …)` liest `{k,u}` und zeigt `registration.showNotification(titel, { body, tag: k + u, icon: 'icons/icon-192.png', data: { url: u } })`. Deutsche Texte nach Art: `matchCalled` „Deine Turnierpartie ist bereit“, `deadline` „Die Frist deiner Partie läuft bald ab“, `tournamentStarted` „Das Turnier hat begonnen“, `tournamentFinished` „Das Turnier ist beendet“, `yourTurn` „Du bist am Zug“. **Keine Namen.** `notificationclick`: `clients.matchAll({ type: 'window' })`, ein vorhandenes Fenster fokussieren und zur Adresse navigieren, sonst `clients.openWindow(scope + '#/…')`.
+- `apps/web/vite.config.ts`: bei `workbox` `importScripts: ['push-sw.js']`, die Datei liegt in `public/` und wird kopiert. **Prüfen:** `dist/sw.js` enthält den Aufruf; `registerType: 'prompt'` bleibt; das Aktualisierungsverhalten (#175, `appUpdate.ts`) ändert sich nicht; Solo-Betrieb ohne Netz funktioniert weiter (Rauchtest).
+- `apps/web/src/lib/push.ts` (Browser-Seite): `pushSupported()` (Service Worker, `PushManager`, `Notification`), `pushNeedsInstall()` (iOS im Safari-Tab: `navigator.userAgent` iOS und nicht `display-mode: standalone`), `enablePush()` (fragt `Notification.requestPermission()` **nur auf Knopfdruck**, `registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })`, sendet `pushSubscribe`), `disablePush()` (`unsubscribe()` + `pushUnsubscribe`), Zustand je Gerät in `localStorage` (`brett-und-blatt:push`, mit `try/catch`). Nach jedem Wiederverbinden (`hello`) das Abo erneut melden, falls aktiviert, weil Endpunkte wechseln können; Ereignis `pushsubscriptionchange` im Service Worker fürs Erneuern.
+- Der öffentliche Schlüssel kommt aus `import.meta.env.VITE_VAPID_PUBLIC_KEY`. **Ohne ihn ist Push in der Oberfläche unsichtbar** (gleiches Muster wie `VITE_GAME_SERVER`).
+
+**Tests (`tests/push-client.test.ts`):** reine Teile (Erkennung, Zustandsablage, Umwandlung des Schlüssels `urlBase64ToUint8Array`); Service-Worker-Texte als reine Funktion testbar machen (`pushTexts`).
+
+### Schritt 7 – Oberfläche
+
+- **Schalter „Hinweise aufs Gerät“** mit kurzer Erklärung: im Turnier (`Tournament.tsx`, für Teilnehmer, nicht für Zuschauer), im Raum (`Room.tsx`, nur bei Fernpartien) und auf `#/ton` (Gesamtschalter mit Liste). Zustände: nicht verfügbar (versteckt), „Hinweise einschalten“, „Hinweise sind an – ausschalten“, „Vom Browser blockiert“ (mit Hinweis, wo man es freigibt).
+- **iOS-Hinweis** (`pushNeedsInstall()`): „Auf dem iPhone geht das nur, wenn du die Seite zum Home-Bildschirm hinzufügst und von dort öffnest.“
+- Satz „Ein Hinweis ist keine Zustellgarantie – verlass dich nicht darauf.“ und Link zur Datenschutzerklärung.
+- UI-Texte deutsch in `apps/web/src/i18n.ts`.
+
+### Schritt 8 – Datenschutzerklärung und Hilfe (`apps/web/src/screens/Legal.tsx`)
+
+Entwurf für einen neuen Abschnitt „Hinweise aufs Gerät (Web Push)“; **Cornelius liest gegen und entscheidet über eine rechtliche Prüfung**:
+
+- **Zweck:** Hinweise auf aufgerufene Turnierpartien, ablaufende Fristen und „Du bist dran“ bei Fernpartien, nur auf ausdrücklichen Wunsch (Knopf), freiwillig, fürs Spielen nicht nötig.
+- **Gespeichert wird:** Endpunkt-Adresse des Push-Dienstes, zwei Schlüssel für die Verschlüsselung, die Geräte-Kennung und ein Zeitstempel, im Speicher des Turniers bzw. des Raums bei Cloudflare (EU).
+- **Empfänger:** Der Browser-Hersteller betreibt den Push-Dienst (Google, Apple, Mozilla, Microsoft), über den die verschlüsselte Meldung läuft; dabei kann eine Übermittlung in Drittländer stattfinden. Der Inhalt enthält keine Namen und keine Spielinhalte.
+- **Dauer:** bis zum Ende oder Löschen des Turniers bzw. Raums, spätestens bei Widerruf oder wenn der Push-Dienst das Abo als ungültig meldet.
+- **Widerruf:** jederzeit in der App („ausschalten“) und in den Browsereinstellungen.
+- Dazu ein Satz in der Hilfe und ein Verweis im Abschnitt „Online-Partien über Cloudflare“.
+- Der Abschnitt darf schon im Code stehen, solange die Funktion unsichtbar bleibt (Schritt 9). Veröffentlichung nur auf „deploy“.
+
+### Schritt 9 – Schlüssel, Rauchtest, Freischaltung
+
+1. `apps/server/scripts/vapid.mjs` erzeugt ein Schlüsselpaar und gibt beide Teile aus (privat nur zur direkten Eingabe in `wrangler secret put VAPID_PRIVATE_KEY`, nie speichern oder loggen). Öffentlicher Schlüssel und `sub` als Konfiguration: `VAPID_PUBLIC_KEY` (`wrangler.jsonc` `vars`, nicht geheim) und `VAPID_SUBJECT`.
+2. `Env` in `apps/server/src/index.ts` um `VAPID_PRIVATE_KEY?`, `VAPID_PUBLIC_KEY?`, `VAPID_SUBJECT?` erweitern. **Fehlt ein Teil, ignoriert der Server Abos** (Muster wie `GOOGLE_CLIENT_ID`).
+3. `.github/workflows/ci.yml`: im Build `VITE_VAPID_PUBLIC_KEY: ${{ vars.VAPID_PUBLIC_KEY }}` neben `VITE_GAME_SERVER` ergänzen. Solange die GitHub-Variable `VAPID_PUBLIC_KEY` leer ist, bleibt die Funktion unsichtbar. **Das ist der Schalter für die Freigabe.**
+4. Rauchtest `node apps/server/scripts/push.mjs` gegen den lokalen Wrangler-Server mit einem kleinen **Attrappen-Push-Dienst** (HTTP-Server auf `127.0.0.1`, nur im Testserver erlaubt): Abo anmelden, Turnier mit Aufruf, Erinnerung (Zeit durch kurze Fristen beschleunigen), Fernpartie mit getrenntem Mitglied, 410-Antwort löscht das Abo. Das Skript gehört zu `docs/spiele/turniersoftware.md`/`CLAUDE.md` wie `turnier.mjs`.
+5. **Prüfen auf echten Geräten (Cornelius, nicht automatisierbar):** Android-Chrome (Seite geschlossen, Meldung kommt, Antippen öffnet das Turnier), iPhone als installierte App, Desktop. Dazu Widerruf in den Browsereinstellungen.
+6. Wrangler-Migration: **keine nötig**, solange kein neues Durable-Object-Gerüst entsteht (die Abos liegen in `TournamentRoom` und `GameRoom`). Entsteht doch eines, Migration `v12` anlegen.
+
+### Fertig, wenn (Abnahme durch Cornelius, Status `Review`)
+
+- [ ] Schritte 1–9 umgesetzt, `corepack pnpm check` grün, Rauchtest `push.mjs` grün
+- [ ] Ohne gesetzte Variable `VAPID_PUBLIC_KEY` ist Push in der Oberfläche unsichtbar und der Server ignoriert Abos
+- [ ] Entwurf der Datenschutzerklärung von Cornelius gelesen und freigegeben
+- [ ] Auf echten Geräten geprüft (Android, iPhone als installierte App, Desktop)
+- [ ] `CLAUDE.md` (Abschnitt Turniere) und `turniersoftware.md` mit einem Satz zum Stand ergänzt
+
+### Risiken und Fallen
+
+- **SSRF über Abo-Adressen:** Zulassungsliste (Schritt 1) ist Pflicht, nie freie URLs anrufen.
+- **Service Worker:** Eine fehlerhafte `push-sw.js` kann das Registrieren des ganzen Service Workers brechen und damit den Offline-Betrieb. Rauchtest und `dist/sw.js` prüfen; im Zweifel Skript klein halten.
+- **iOS:** Berechtigung nur nach Nutzeraktion und nur in der installierten Web-App; ältere Versionen (vor 16.4) bieten nichts an.
+- **Datenschutz:** Meldungen ohne Namen und Inhalte; Endpunkt-Adresse nie loggen oder in Sichten geben.
+- **Doppelte Meldungen** nach dem Aufwachen eines Durable Object: Merkmal im Speicher `push` (Schritt 4).
+- **Zeit:** Fristen sind absolute Zeiten (`dueAt`); Erinnerung = `dueAt − 2 h`, nicht aus Relativzeiten berechnen.
+- **Keine Zustellgarantie:** Spielregeln und Fristen dürfen nie davon abhängen, dass eine Meldung ankam.
+
+### Aufwand
+
+Etwa 3–5 Arbeitstage mit Tests (Schätzung aus dem Konzept bleibt): Schritte 1–2 je 0,5 Tage, 3–5 zusammen etwa 1,5 Tage, 6–7 etwa 1 Tag, 8–9 etwa 0,5 bis 1 Tag. Das größte Risiko ist der Service Worker (Schritt 6).
+
+## Wo steht was im Code (Hilfe für den Einstieg)
+
+| Thema | Datei |
+|---|---|
+| Browser-Benachrichtigungen heute | `apps/web/src/lib/notifications.ts`, Aufrufe in `lib/online.ts`, `screens/Tournament.tsx`, `screens/Room.tsx` |
+| Turnier-Objekt, Wecker, Aufruf von Partien | `apps/server/src/index.ts` (`class TournamentRoom`, `changed()`, `alarm()`), `packages/online/src/tournament.ts` (`nextWakeup`, `roomCreated`, `tick`) |
+| Frist einer Partie | `packages/online/src/tournament/online-play.ts` (`dueAt`, `deadlineOutcome`) |
+| Teilnehmer und ihre Kennungen | `packages/online/src/tournament/types.ts` (`TournamentPlayer.token`, `members`) |
+| Raum, Fernpartie, Mitglieder | `packages/online/src/room.ts` (`isCorrespondence`, `Member.connections`, `broadcastGame`) |
+| Protokolle | `packages/online/src/protocol.ts`, `packages/online/src/tournament/protocol.ts` |
+| PWA-Konfiguration | `apps/web/vite.config.ts` (`VitePWA`, `workbox`) |
+| Muster „Feature nur mit Secret sichtbar“ | `apps/server/src/oidc.ts`, `Env` in `apps/server/src/index.ts` (`GOOGLE_CLIENT_ID`) |
+| Datenschutzerklärung | `apps/web/src/screens/Legal.tsx` |
+
+## Offene Punkte für Cornelius
+
+1. Freigabe: #242 auf `status: Ready` setzen (erst dann beginnt die Umsetzung).
+2. Secrets setzen: `wrangler secret put VAPID_PRIVATE_KEY` (Schlüssel erzeugt `vapid.mjs`), GitHub-Variable `VAPID_PUBLIC_KEY` und `VAPID_SUBJECT` (Vorschlag `https://spiele.lipponer.de`).
+3. Den Entwurf der Datenschutzerklärung lesen und über eine rechtliche Prüfung entscheiden.
+4. Live-Test auf echten Geräten.
