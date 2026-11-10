@@ -57,3 +57,18 @@ describe('Sammelaktionen', () => {
     expect(next.notes.map((n) => [n.mid, n.fields])).toEqual([[STOCK_CLOZE_ID, ['a', '1']], [STOCK_CLOZE_ID, ['b', '2']]]);
   });
 });
+
+describe('Stapel verschieben', () => {
+  it('hängt Stapel samt Unterstapeln um und verbietet Zyklen', async () => {
+    const { moveDeck, renameDeck } = await import('../src');
+    let col = emptyCollection();
+    const a = addDeck(col, 'A', T0);
+    const b = addDeck(a.col, 'B', T0 + 1);
+    const c = addDeck(b.col, 'B::Kind', T0 + 2);
+    col = moveDeck(c.col, b.deck.id, a.deck.id);
+    expect(col.decks.map((d) => d.name).sort()).toEqual(['A', 'A::B', 'A::B::Kind', 'Standard']);
+    expect(moveDeck(col, a.deck.id, b.deck.id)).toBe(col);
+    expect(moveDeck(col, b.deck.id, null).decks.map((d) => d.name).sort()).toEqual(['A', 'B', 'B::Kind', 'Standard']);
+    expect(renameDeck(col, a.deck.id, 'Z').decks.map((d) => d.name).sort()).toEqual(['Standard', 'Z', 'Z::B', 'Z::B::Kind']);
+  });
+});

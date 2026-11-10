@@ -1,4 +1,4 @@
-import { addDeck, changeNotetypeMany, deckTree, defaultFieldMap, moveNotes, tagNotes, findDuplicates, notesWithoutCards, removeDeck, removeNote, renameDeck, searchNotes, stripHtmlKeepMedia, type AnkiCollection, type AnkiNote } from '@brett-und-blatt/engine';
+import { addDeck, changeNotetypeMany, deckTree, defaultFieldMap, moveDeck, moveNotes, tagNotes, findDuplicates, notesWithoutCards, removeDeck, removeNote, renameDeck, searchNotes, stripHtmlKeepMedia, type AnkiCollection, type AnkiNote } from '@brett-und-blatt/engine';
 import { useMemo, useState } from 'react';
 import { Button } from '../components/controls';
 import { TavernPage } from '../components/TavernPage';
@@ -244,18 +244,59 @@ function BulkBar({ collection, ids, onChange, onClear }: { collection: AnkiColle
 
 function DeckManager({ collection, onChange, onClose }: { collection: AnkiCollection; onChange: (c: AnkiCollection) => void; onClose: () => void }) {
   const [name, setName] = useState('');
+  const [dragged, setDragged] = useState<number | null>(null);
+  const [over, setOver] = useState<number | 'top' | null>(null);
   const tree = deckTree(collection);
+  const drop = (target: number | null) => {
+    if (dragged !== null) onChange(moveDeck(collection, dragged, target));
+    setDragged(null);
+    setOver(null);
+  };
   return (
     <section className="space-y-3" aria-labelledby="deck-mgr">
       <h2 id="deck-mgr" className="text-xl">
         Stapel
       </h2>
-      <p className="text-sm text-muted">Unterstapel schreibst du mit zwei Doppelpunkten: <code>Latein::Nomen</code>.</p>
+      <p className="text-sm text-muted">
+        Unterstapel schreibst du mit zwei Doppelpunkten: <code>Latein::Nomen</code>. Verschieben geht mit dem Auswahlfeld „Unter …“ oder am Computer durch Ziehen auf einen anderen Stapel.
+      </p>
       <ul className="space-y-2">
         {tree.map((d) => (
-          <li key={d.id} className="flex items-center gap-2" style={{ paddingLeft: `${d.depth * 1.25}rem` }}>
-            <input key={d.name} className={FIELD} defaultValue={d.name} aria-label={`Name des Stapels ${d.name}`} disabled={d.id === 1} onBlur={(e) => onChange(renameDeck(collection, d.id, e.target.value))} />
+          <li
+            key={d.id}
+            className={`flex flex-wrap items-center gap-2 rounded-xl ${over === d.id ? 'outline outline-2 outline-accent' : ''}`}
+            style={{ paddingLeft: `${d.depth * 1.25}rem` }}
+            draggable={d.id !== 1}
+            onDragStart={() => setDragged(d.id)}
+            onDragEnd={() => (setDragged(null), setOver(null))}
+            onDragOver={(e) => {
+              if (dragged !== null && dragged !== d.id) (e.preventDefault(), setOver(d.id));
+            }}
+            onDragLeave={() => setOver((o) => (o === d.id ? null : o))}
+            onDrop={(e) => (e.preventDefault(), drop(d.id))}
+          >
+            <input key={d.name} className={`${FIELD} min-w-0 flex-1`} defaultValue={d.name} aria-label={`Name des Stapels ${d.name}`} disabled={d.id === 1} onBlur={(e) => onChange(renameDeck(collection, d.id, e.target.value))} />
             <span className="flex-none text-xs text-muted">{d.total}</span>
+            <select
+              className="min-h-11 flex-none rounded-xl border border-line bg-surface px-2 text-sm"
+              aria-label={`${d.name} verschieben unter`}
+              disabled={d.id === 1}
+              value=""
+              onChange={(e) => {
+                if (e.target.value) onChange(moveDeck(collection, d.id, e.target.value === 'top' ? null : Number(e.target.value)));
+              }}
+            >
+              <option value="">Unter …</option>
+              <option value="top">(oberste Ebene)</option>
+              {tree
+                .filter((o) => o.id !== d.id && !o.name.startsWith(`${collection.decks.find((x) => x.id === d.id)?.name ?? '\u0000'}::`))
+                .map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {'– '.repeat(o.depth)}
+                    {o.label}
+                  </option>
+                ))}
+            </select>
             <Button
               variant="ghost"
               aria-label={`${d.name} löschen`}
@@ -268,6 +309,16 @@ function DeckManager({ collection, onChange, onClose }: { collection: AnkiCollec
             </Button>
           </li>
         ))}
+        {dragged !== null && (
+          <li
+            className={`rounded-xl border border-dashed border-line px-3 py-2 text-sm text-muted ${over === 'top' ? 'outline outline-2 outline-accent' : ''}`}
+            onDragOver={(e) => (e.preventDefault(), setOver('top'))}
+            onDragLeave={() => setOver((o) => (o === 'top' ? null : o))}
+            onDrop={(e) => (e.preventDefault(), drop(null))}
+          >
+            Hierher ziehen: oberste Ebene
+          </li>
+        )}
       </ul>
       <form
         className="flex gap-2"

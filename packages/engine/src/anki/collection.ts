@@ -100,7 +100,20 @@ export function renameDeck(col: AnkiCollection, id: number, name: string, now = 
   if (!deck || deck.id === DEFAULT_DECK_ID) return col;
   const next = uniqueDeckName(col, name, id);
   if (next === deck.name) return col;
-  return { ...col, decks: col.decks.map((d) => (d.id === id ? { ...d, name: next, mod: sec(now) } : d)) };
+  // Unterstapel ziehen mit um (wie in Anki: der Name ist ein Pfad).
+  const prefix = `${deck.name}::`;
+  return { ...col, decks: col.decks.map((d) => (d.id === id ? { ...d, name: next, mod: sec(now) } : d.name.startsWith(prefix) ? { ...d, name: `${next}::${d.name.slice(prefix.length)}`, mod: sec(now) } : d)) };
+}
+
+/** Hängt einen Stapel samt Unterstapeln unter einen anderen (`parentId` = `null`: an die Spitze). Ein Stapel lässt sich nicht in sich selbst schieben. */
+export function moveDeck(col: AnkiCollection, id: number, parentId: number | null, now = Date.now()): AnkiCollection {
+  const deck = deckOf(col, id);
+  if (!deck || deck.id === DEFAULT_DECK_ID) return col;
+  const leaf = deck.name.split('::').pop()!;
+  if (parentId === null) return renameDeck(col, id, leaf, now);
+  const parent = deckOf(col, parentId);
+  if (!parent || parent.id === id || parent.name.startsWith(`${deck.name}::`)) return col;
+  return renameDeck(col, id, `${parent.name}::${leaf}`, now);
 }
 
 /** Löscht einen Stapel samt seinen Notizen (der Standardstapel bleibt). */
