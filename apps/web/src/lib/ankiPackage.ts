@@ -1,4 +1,5 @@
 import { APKG_MAX_BYTES, ApkgError, buildApkg, readApkg, subsetCollection, type AnkiCollection, type ApkgData, type ApkgDeps } from '@brett-und-blatt/engine';
+import zstdWasmUrl from '../../node_modules/@bokuweb/zstd-wasm/dist/web/zstd.wasm?url';
 import { sqlDeps } from './ankiSql';
 
 /*
@@ -13,19 +14,24 @@ interface Libs {
   deps: ApkgDeps;
   unzipSync: typeof import('fflate').unzipSync;
   zipSync: typeof import('fflate').zipSync;
+  startPacker(): Promise<void>;
 }
 let libs: Promise<Libs> | null = null;
 
 function load(): Promise<Libs> {
   libs ??= (async () => {
-    const [{ default: initSqlJs }, { default: wasmUrl }, fflate, { decompress }] = await Promise.all([
+    const [{ default: initSqlJs }, { default: wasmUrl }, fflate, { decompress }, zstd] = await Promise.all([
       import('sql.js'),
       import('sql.js/dist/sql-wasm.wasm?url'),
       import('fflate'),
       import('fzstd'),
+      import('@bokuweb/zstd-wasm'),
     ]);
     const SQL = await initSqlJs({ locateFile: () => wasmUrl });
-    return { deps: sqlDeps(SQL, decompress), unzipSync: fflate.unzipSync, zipSync: fflate.zipSync };
+    // Der zstd-Packer wird nur für das neue Paketformat gebraucht und erst dann gestartet.
+    let packerReady: Promise<void> | null = null;
+    const deps = sqlDeps(SQL, decompress, (bytes) => zstd.compress(bytes, 6));
+    return { deps, unzipSync: fflate.unzipSync, zipSync: fflate.zipSync, startPacker: () => (packerReady ??= (zstd.init as (path?: string) => Promise<void>)(zstdWasmUrl)) };
   })();
   libs.catch(() => (libs = null));
   return libs;
@@ -70,9 +76,10 @@ export interface ApkgExportInput {
   dconf?: ApkgData['dconf'];
 }
 
-/** Baut eine `.apkg`-Datei (Format Legacy 2). */
-export async function exportApkg(input: ApkgExportInput, options: { scheduling: boolean; media: boolean }): Promise<Uint8Array> {
-  const { deps, zipSync } = await load();
+/** Baut eine `.apkg`-Datei (Standard: Format Legacy 2, `latest` ist kleiner und für neuere Anki-Versionen). */
+export async function exportApkg(input: ApkgExportInput, options: { scheduling: boolean; media: boolean; format?: 'legacy2' | 'latest' }): Promise<Uint8Array> {
+  const { deps, zipSync, startPacker } = await load();
+  if (options.format === 'latest') await startPacker();
   const collection = input.deckId === undefined ? input.collection : subsetCollection(input.collection, input.deckId);
   const files = buildApkg({ collection, cards: input.cards ?? [], revlog: input.revlog ?? [], media: input.media ?? new Map(), conf: input.conf ?? null, dconf: input.dconf ?? null }, options, deps);
   // Medien sind schon gepackt (Bilder, Ton); Sammlung und Liste werden gepackt.

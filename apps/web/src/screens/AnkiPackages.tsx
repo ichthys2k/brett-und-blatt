@@ -121,7 +121,7 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
   const [packs, setPacks] = useState<PackSummary[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
-  const [options, setOptions] = useState<{ id: string; scheduling: boolean; media: boolean } | null>(null);
+  const [options, setOptions] = useState<{ id: string; scheduling: boolean; media: boolean; latest: boolean } | null>(null);
   const refresh = useCallback(() => {
     listPacks().then(setPacks, () => setPacks([]));
   }, []);
@@ -139,11 +139,11 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
       setBusy(null);
     }
   };
-  const exportPack = (pack: PackSummary, scheduling: boolean, media: boolean) =>
+  const exportPack = (pack: PackSummary, scheduling: boolean, media: boolean, latest: boolean) =>
     run(pack.id, async () => {
       const stored = await loadPack(pack.id);
       if (!stored) return;
-      const bytes = await exportApkg({ collection: stored.pack.collection, cards: stored.pack.cards, revlog: stored.pack.revlog, media: stored.media, conf: stored.pack.conf, dconf: stored.pack.dconf }, { scheduling, media });
+      const bytes = await exportApkg({ collection: stored.pack.collection, cards: stored.pack.cards, revlog: stored.pack.revlog, media: stored.media, conf: stored.pack.conf, dconf: stored.pack.dconf }, { scheduling, media, format: latest ? 'latest' : 'legacy2' });
       downloadFile(`${safeFileName(pack.name)}.apkg`, bytes as BlobPart, 'application/octet-stream');
       setOptions(null);
     });
@@ -194,16 +194,23 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
                     <span>Bilder und Ton mitgeben</span>
                   </label>
                 )}
+                <label className="flex min-h-11 items-start gap-2 text-sm">
+                  <input type="checkbox" className="mt-1 size-5 accent-accent" checked={options.latest} onChange={(e) => setOptions({ ...options, latest: e.target.checked })} />
+                  <span>
+                    Neues Paketformat (kleiner)
+                    <span className="block text-xs text-muted">Nur für neuere Anki-Versionen. Ohne Haken lesen es alle.</span>
+                  </span>
+                </label>
                 <div className="grid grid-cols-2 gap-2">
                   <Button onClick={() => setOptions(null)}>Abbrechen</Button>
-                  <Button variant="primary" disabled={busy === pack.id} onClick={() => void exportPack(pack, options.scheduling, options.media)}>
+                  <Button variant="primary" disabled={busy === pack.id} onClick={() => void exportPack(pack, options.scheduling, options.media, options.latest)}>
                     .apkg speichern
                   </Button>
                 </div>
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
-                <Button variant="ghost" disabled={busy === pack.id} onClick={() => setOptions({ id: pack.id, scheduling: pack.learned > 0, media: true })}>
+                <Button variant="ghost" disabled={busy === pack.id} onClick={() => setOptions({ id: pack.id, scheduling: pack.learned > 0, media: true, latest: false })}>
                   📤 Exportieren
                 </Button>
                 <Button variant="ghost" disabled={busy === pack.id} onClick={() => void takePairs(pack)}>

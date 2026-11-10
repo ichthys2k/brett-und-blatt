@@ -2,7 +2,8 @@ import { cardOrds, derivedCardId, emptyCollection } from '../collection';
 import { noteKeys } from '../text';
 import { defaultDeck, STOCK_BASIC_ID } from '../stock';
 import type { AnkiCollection, AnkiDeck, AnkiNotetype } from '../types';
-import { pbVarint } from './proto';
+import { encodeMediaEntries, pbVarint } from './proto';
+import { sha1 } from '../sha1';
 import type { ApkgCard, ApkgData, ApkgDeps, ApkgRevlog, SqlDb } from './types';
 
 /*
@@ -49,6 +50,8 @@ export interface ApkgWriteOptions {
   scheduling: boolean;
   /** Medien mitgeben? */
   media: boolean;
+  /** `legacy2` (Standard): alle Anki-Versionen lesen es. `latest`: kleiner (zstd), für neuere Anki-Versionen. */
+  format?: 'legacy2' | 'latest';
   now?: number;
 }
 
@@ -165,23 +168,26 @@ export function buildApkg(data: Pick<ApkgData, 'collection'> & Partial<Pick<Apkg
     const basic = emptyCollection().notetypes.find((nt) => nt.id === STOCK_BASIC_ID) as AnkiNotetype;
     const placeholder: AnkiCollection = { ...emptyCollection(), notetypes: [basic], notes: [{ id: now, guid: 'placeholder', mid: STOCK_BASIC_ID, did: 1, mod: Math.floor(now / 1000), tags: [], fields: [PLACEHOLDER_TEXT, ''] }] };
     fillDb(placeholderDb, { collection: placeholder, cards: cardsFor(placeholder, undefined, false, now), revlog: [], conf: null, dconf: null }, now);
-    const files: Record<string, Uint8Array> = {
-      meta: new Uint8Array([0x08, ...pbVarint(2)]),
-      'collection.anki21': main.export(),
-      'collection.anki2': placeholderDb.export(),
-    };
+    const latest = options.format === 'latest';
+    if (latest && !deps.zstd) throw new Error('Für das neue Paketformat fehlt der zstd-Packer.');
+    const pack = (bytes: Uint8Array): Uint8Array => (latest ? deps.zstd!(bytes) : bytes);
+    const files: Record<string, Uint8Array> = latest
+      ? { meta: new Uint8Array([0x08, ...pbVarint(3)]), 'collection.anki21b': pack(main.export()) }
+      : { meta: new Uint8Array([0x08, ...pbVarint(2)]), 'collection.anki21': main.export(), 'collection.anki2': placeholderDb.export() };
     const media: Record<string, string> = {};
+    const entries: { name: string; size: number; sha1: Uint8Array }[] = [];
     if (options.media && data.media) {
       let index = 0;
       for (const name of [...usedMedia(col)].sort()) {
         const bytes = data.media.get(name);
         if (!bytes) continue;
-        files[String(index)] = bytes;
+        files[String(index)] = pack(bytes);
         media[String(index)] = name;
+        entries.push({ name, size: bytes.length, sha1: sha1(bytes) });
         index++;
       }
     }
-    files.media = new TextEncoder().encode(JSON.stringify(media));
+    files.media = latest ? pack(encodeMediaEntries(entries)) : new TextEncoder().encode(JSON.stringify(media));
     return files;
   } finally {
     main.close();

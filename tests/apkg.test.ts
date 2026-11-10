@@ -1,6 +1,7 @@
 import { unzipSync, zipSync } from 'fflate';
 import { decompress } from 'fzstd';
 import initSqlJs from 'sql.js';
+import { init as initZstd, compress as zstdCompress } from '@bokuweb/zstd-wasm';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
   ApkgError,
@@ -20,11 +21,14 @@ import {
   type ApkgDeps,
 } from '../packages/engine/src';
 import { sqlDeps } from '../apps/web/src/lib/ankiSql';
+import { encodeMediaEntries, pbEncodeBytes, pbEncodeString, pbEncodeVarint } from '../packages/engine/src/anki/apkg/proto';
 
 let deps: ApkgDeps;
 beforeAll(async () => {
   const SQL = await initSqlJs();
-  deps = sqlDeps(SQL, decompress);
+  await initZstd();
+  // Packen mit zstd-wasm, Entpacken mit fzstd: so zeigt der Test auch, dass beide dasselbe Format meinen.
+  deps = sqlDeps(SQL, decompress, (bytes) => zstdCompress(bytes, 6));
 });
 const T0 = 1_700_000_000_000;
 
@@ -132,6 +136,72 @@ describe('Anki-Pakete: Schutz', () => {
     const { col, deckId } = sample();
     const back = readApkg(pack(buildApkg({ collection: subsetCollection(col, deckId) }, { scheduling: true, media: false, now: T0 }, deps)), deps);
     expect(back.collection.decks.some((d) => d.id === DEFAULT_DECK_ID)).toBe(true);
+  });
+});
+
+
+describe('Anki-Pakete: neues Format (zstd)', () => {
+  it('schreibt meta Version 3, zstd-gepackte Sammlung und Medien mit Protobuf-Liste; Lesen ergibt dasselbe', () => {
+    const { col, media } = sample();
+    const files = buildApkg({ collection: col, media }, { scheduling: true, media: true, format: 'latest', now: T0 }, deps);
+    expect(Object.keys(files).sort()).toEqual(['0', '1', 'collection.anki21b', 'media', 'meta']);
+    expect([...files.meta!]).toEqual([0x08, 0x03]);
+    expect(zstdContentSize(files['collection.anki21b']!)).toBeGreaterThan(1000);
+    const back = readApkg(pack(files), deps);
+    expect(back.version).toBe('latest');
+    expect(back.collection.notes.map((n) => [n.guid, n.fields]).sort()).toEqual(col.notes.map((n) => [n.guid, n.fields]).sort());
+    expect([...back.media.keys()].sort()).toEqual(['knabe.jpg', 'puer.mp3']);
+    expect([...back.media.get('puer.mp3')!]).toEqual([4, 5]);
+  });
+  it('ohne zstd-Packer kein neues Format', () => {
+    const { col } = sample();
+    expect(() => buildApkg({ collection: col }, { scheduling: true, media: false, format: 'latest' }, { open: deps.open, unzstd: deps.unzstd })).toThrow(/zstd/);
+  });
+  it('die Medienliste enthält Namen, Größe und SHA-1 in der Reihenfolge der Dateien', () => {
+    const bytes = encodeMediaEntries([{ name: 'a.png', size: 3, sha1: new Uint8Array(20).fill(7) }]);
+    expect(bytes[0]).toBe(0x0a);
+    expect([...bytes].slice(-22)).toEqual([0x1a, 20, ...new Array(20).fill(7)]);
+  });
+  it('liest Schema 18: Notiztypen, Felder, Vorlagen und Stapel aus eigenen Tabellen mit Protobuf', () => {
+    const db = deps.open();
+    for (const sql of [
+      'CREATE TABLE col (id integer PRIMARY KEY, crt integer, mod integer, scm integer, ver integer, dty integer, usn integer, ls integer, conf text, models text, decks text, dconf text, tags text)',
+      'CREATE TABLE notetypes (id integer NOT NULL PRIMARY KEY, name text NOT NULL, mtime_secs integer NOT NULL, usn integer NOT NULL, config blob NOT NULL)',
+      'CREATE TABLE fields (ntid integer NOT NULL, ord integer NOT NULL, name text NOT NULL, config blob NOT NULL, PRIMARY KEY (ntid, ord))',
+      'CREATE TABLE templates (ntid integer NOT NULL, ord integer NOT NULL, name text NOT NULL, mtime_secs integer NOT NULL, usn integer NOT NULL, config blob NOT NULL, PRIMARY KEY (ntid, ord))',
+      'CREATE TABLE decks (id integer PRIMARY KEY NOT NULL, name text NOT NULL, mtime_secs integer NOT NULL, usn integer NOT NULL, common blob NOT NULL, kind blob NOT NULL)',
+      'CREATE TABLE notes (id integer PRIMARY KEY, guid text, mid integer, mod integer, usn integer, tags text, flds text, sfld integer, csum integer, flags integer, data text)',
+      'CREATE TABLE cards (id integer PRIMARY KEY, nid integer, did integer, ord integer, mod integer, usn integer, type integer, queue integer, due integer, ivl integer, factor integer, reps integer, lapses integer, left integer, odue integer, odid integer, flags integer, data text)',
+      'CREATE TABLE revlog (id integer PRIMARY KEY, cid integer, usn integer, ease integer, ivl integer, lastIvl integer, factor integer, time integer, type integer)',
+    ]) db.run(sql);
+    const cat = (...parts: Uint8Array[]) => Uint8Array.from(parts.flatMap((p) => [...p]));
+    db.run("INSERT INTO col VALUES (1, 0, 0, 0, 18, 0, 0, 0, '', '', '', '', '')");
+    const ntConfig = cat(pbEncodeString(3, '.card{color:red}'), pbEncodeString(5, 'pre'), pbEncodeBytes(8, cat(pbEncodeVarint(2, 1), pbEncodeBytes(3, new Uint8Array([0])))), pbEncodeBytes(255, new TextEncoder().encode('{"zukunft":1}')));
+    db.run('INSERT INTO notetypes VALUES (?, ?, ?, ?, ?)', [77, 'Mein Typ', 1000, 0, ntConfig]);
+    db.run('INSERT INTO fields VALUES (77, 0, ?, ?)', ['Vorn', cat(pbEncodeString(3, 'Arial'), pbEncodeVarint(4, 22), pbEncodeVarint(9, 555))]);
+    db.run('INSERT INTO fields VALUES (77, 1, ?, ?)', ['Hinten', cat(pbEncodeVarint(1, 1))]);
+    db.run('INSERT INTO templates VALUES (77, 0, ?, 1000, 0, ?)', ['Karte 1', cat(pbEncodeString(1, '{{Vorn}}'), pbEncodeString(2, '{{FrontSide}}<hr>{{Hinten}}'), pbEncodeVarint(8, 99))]);
+    db.run('INSERT INTO decks VALUES (?, ?, 1000, 0, ?, ?)', [1, 'Default', new Uint8Array(), pbEncodeBytes(1, pbEncodeVarint(1, 1))]);
+    db.run('INSERT INTO decks VALUES (?, ?, 1000, 0, ?, ?)', [5, 'Latein\x1fNomen', new Uint8Array(), pbEncodeBytes(1, cat(pbEncodeVarint(1, 1), pbEncodeString(4, 'Beschreibung')))]);
+    db.run("INSERT INTO notes VALUES (10, 'gx', 77, 1000, 0, ' a b ', ?, 'x', 1, 0, '')", ['eins\x1fzwei']);
+    db.run('INSERT INTO cards VALUES (20, 10, 5, 0, 1000, 0, 2, 2, 5, 9, 2500, 3, 0, 0, 0, 0, 0, ?)', ['{"s":3.2}']);
+    const raw = db.export();
+    db.close();
+    const files = { meta: new Uint8Array([0x08, 0x03]), 'collection.anki21b': zstdCompress(raw, 3), media: zstdCompress(new Uint8Array(0), 3) };
+    const back = readApkg(files, deps);
+    expect(back.version).toBe('latest');
+    expect(back.collection.notetypes).toHaveLength(1);
+    expect(back.collection.notetypes[0]).toMatchObject({ id: 77, name: 'Mein Typ', type: 0, css: '.card{color:red}', latexPre: 'pre', req: [[0, 'any', [0]]], zukunft: 1 });
+    expect(back.collection.notetypes[0]!.flds).toMatchObject([{ name: 'Vorn', ord: 0, font: 'Arial', size: 22, id: 555 }, { name: 'Hinten', ord: 1, sticky: true }]);
+    expect(back.collection.notetypes[0]!.tmpls[0]).toMatchObject({ name: 'Karte 1', qfmt: '{{Vorn}}', afmt: '{{FrontSide}}<hr>{{Hinten}}', id: 99 });
+    expect(back.collection.decks.map((d) => d.name).sort()).toEqual(['Default', 'Latein::Nomen']);
+    expect(back.collection.decks.find((d) => d.id === 5)).toMatchObject({ desc: 'Beschreibung', dyn: 0 });
+    expect(back.collection.notes[0]).toMatchObject({ guid: 'gx', did: 5, fields: ['eins', 'zwei'], tags: ['a', 'b'] });
+    expect(back.cards[0]).toMatchObject({ id: 20, ivl: 9, data: '{"s":3.2}' });
+    // und wieder zurück ins ältere Format
+    const again = readApkg(pack(buildApkg(back, { scheduling: true, media: false, now: T0 }, deps)), deps);
+    expect(again.collection.notetypes[0]).toMatchObject({ name: 'Mein Typ', zukunft: 1 });
+    expect(again.cards[0]).toMatchObject({ ivl: 9 });
   });
 });
 

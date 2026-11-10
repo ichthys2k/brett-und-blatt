@@ -115,3 +115,23 @@ export function pbVarint(value: number): number[] {
   out.push(v);
   return out;
 }
+
+// ---------------------------------------------------------------- Schreiben (nur, was Pakete brauchen)
+
+const concat = (parts: Uint8Array[]): Uint8Array => {
+  const out = new Uint8Array(parts.reduce((sum, p) => sum + p.length, 0));
+  let at = 0;
+  for (const part of parts) {
+    out.set(part, at);
+    at += part.length;
+  }
+  return out;
+};
+export const pbEncodeVarint = (field: number, value: number): Uint8Array => new Uint8Array([...pbVarint(field * 8), ...pbVarint(value)]);
+export const pbEncodeBytes = (field: number, bytes: Uint8Array): Uint8Array => concat([new Uint8Array(pbVarint(field * 8 + 2)), new Uint8Array(pbVarint(bytes.length)), bytes]);
+export const pbEncodeString = (field: number, text: string): Uint8Array => pbEncodeBytes(field, new TextEncoder().encode(text));
+
+/** Die Medienliste des neuen Paketformats (`MediaEntries`): je Datei Name, Größe und SHA-1; die Nummer in der Liste ist der Dateiname im ZIP. */
+export function encodeMediaEntries(entries: readonly { name: string; size: number; sha1: Uint8Array }[]): Uint8Array {
+  return concat(entries.map((e) => pbEncodeBytes(1, concat([pbEncodeString(1, e.name), pbEncodeVarint(2, e.size), pbEncodeBytes(3, e.sha1)]))));
+}
