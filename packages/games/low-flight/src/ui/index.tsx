@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
+import type { BoardProps, GameUi, RoundSummaryPlayer } from '@brett-und-blatt/ui';
+import { RoundSummary } from '@brett-und-blatt/ui';
 import { hiddenSlots, openSum, type LowFlightMove, type LowFlightView } from '../rules';
 import './styles.css';
 
@@ -242,45 +243,53 @@ export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, s
         />
       </div>
 
-      {(view.phase === 'roundEnd' || view.phase === 'gameEnd') && view.lastRound && (
-        <div className="lf-overlay">
-          <div className="lf-overlay-box">
-            <div className="lf-overlay-title">Runde {view.lastRound.round}</div>
-            <table className="lf-scores">
-              <thead>
-                <tr>
-                  <th />
-                  <th>Runde</th>
-                  <th>Gesamt</th>
-                </tr>
-              </thead>
-              <tbody>
-                {view.players.map((p, seat) => (
-                  <tr key={seat} className={seat === me ? 'lf-row-me' : undefined}>
-                    <td>
-                      {name(seatNames, seat)}
-                      {seat === view.lastRound!.ender ? ' ✈️' : ''}
-                    </td>
-                    <td className={seat === view.lastRound!.ender && view.lastRound!.doubled ? 'lf-doubled' : undefined}>
-                      {view.lastRound!.points[seat]}
-                      {seat === view.lastRound!.ender && view.lastRound!.doubled ? ' (×2)' : ''}
-                    </td>
-                    <td className="lf-total">{p.total}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {view.lastRound.doubled && <p className="lf-note">✈️ {name(seatNames, view.lastRound.ender)} hat die Runde beendet, hatte aber nicht allein die niedrigste Summe – doppelt!</p>}
-            {legalMoves.some((m) => m.type === 'ready') ? (
-              <button type="button" className="lf-button lf-button-main" onClick={() => onMove({ type: 'ready' })}>
+      {view.phase === 'roundEnd' && view.lastRound && (
+        <RoundSummary
+          title={`Runde ${view.lastRound.round} beendet`}
+          subtitle={
+            view.lastRound.doubled
+              ? `${name(seatNames, view.lastRound.ender)} hat beendet, hatte aber nicht allein die niedrigste Summe – verdoppelt!`
+              : `${name(seatNames, view.lastRound.ender)} hat die Runde beendet.`
+          }
+          sortDirection="asc"
+          players={view.players.map((p, seat) => {
+            const roundChange = view.lastRound!.points[seat];
+            const currentScore = p.total;
+            const previousScore = currentScore - roundChange;
+            const isEnder = seat === view.lastRound!.ender;
+            const detail = isEnder
+              ? view.lastRound!.doubled
+                ? 'Runde beendet (verdoppelt)'
+                : 'Runde beendet'
+              : undefined;
+
+            return {
+              seat,
+              name: name(seatNames, seat),
+              badge: isEnder ? '✈️' : undefined,
+              previousScore,
+              roundChange,
+              currentScore,
+              detail,
+              isMe: seat === me,
+            };
+          })}
+          actions={
+            legalMoves.some((m) => m.type === 'ready') ? (
+              <button
+                type="button"
+                className="bub-round-summary-btn"
+                onClick={() => onMove({ type: 'ready' })}
+              >
                 Nächste Runde
               </button>
             ) : (
-              view.phase === 'roundEnd' && <p className="lf-note">Warte auf die anderen …</p>
-            )}
-          </div>
-        </div>
+              <p className="bub-round-summary-note">Warte auf die anderen …</p>
+            )
+          }
+        />
       )}
+
     </div>
   );
 }

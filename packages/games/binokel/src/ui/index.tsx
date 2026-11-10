@@ -1,5 +1,20 @@
 import { sortHand, type CardId, type DeckStyle, type SeatId, type Suit } from '@brett-und-blatt/engine';
-import { cardSuitColor, CardFan, PlayingCard, TRICK_HAND_MIN_STEP, SuitShape, SeatRing, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import {
+  cardSuitColor,
+  CardFan,
+  PlayingCard,
+  RoundSummary,
+  type RoundSummaryPlayer,
+  TRICK_HAND_MIN_STEP,
+  SuitShape,
+  SeatRing,
+  TrickTable,
+  trickHandCardWidth,
+  useTrickDisplay,
+  type BoardProps,
+  type GameUi,
+  type TrickTableSlot,
+} from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import { binokelContract, SUIT_NAMES, SUITS } from '../cards';
 import { findMelds, meldPoints } from '../melds';
@@ -214,56 +229,68 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
   );
 
   // Abrechnung
+  const roundPlayers: RoundSummaryPlayer[] = round && round.kind !== 'passedOut'
+    ? allSeats.map((seat) => {
+        const currentScore = view.scores[seat] ?? 0;
+        const roundChange = round.points[seat] ?? 0;
+        const meldText =
+          round.melds[seat]! > 0 && !round.madeTrick[seat] && round.kind === 'normal'
+            ? `Meldung: ${round.melds[seat]} (kein Stich) · Augen: ${round.eyes[seat]}`
+            : `Meldung: ${round.melds[seat]} · Augen: ${round.eyes[seat]}`;
+
+        return {
+          seat,
+          name: name(seat),
+          previousScore: currentScore - roundChange,
+          roundChange,
+          currentScore,
+          detail: meldText,
+          isMe: seat === mySeat,
+        };
+      })
+    : allSeats.map((seat) => ({
+        seat,
+        name: name(seat),
+        previousScore: view.scores[seat] ?? 0,
+        roundChange: 0,
+        currentScore: view.scores[seat] ?? 0,
+        isMe: seat === mySeat,
+      }));
+
   const roundEnd = (
     <>
-      {(view.phase === 'roundOver' || view.phase === 'finished') && round && (
-        <div className={`${panel} flex flex-col gap-2`}>
-          <h3 className="font-bold">
-            {round.kind === 'passedOut'
+      {view.phase === 'roundOver' && round && (
+        <RoundSummary
+          title="Runde beendet"
+          subtitle={
+            round.kind === 'passedOut'
               ? 'Alle haben gepasst – neu geben.'
               : round.kind === 'fold'
                 ? `${name(round.declarer!)} ist abgegangen.`
-                : `${name(round.declarer!)} hat ${round.kind === 'durch' ? 'den Durch' : `mit ${round.bid}`} ${round.won ? 'gewonnen' : 'verloren'}.`}
-          </h3>
-          {round.kind !== 'passedOut' && view.kreuz && (
-            <p className="text-xs text-muted">Partner zählen zusammen: Beide bekommen die Punkte ihrer Partei.</p>
-          )}
-          {round.kind !== 'passedOut' && (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-muted">
-                  <th />
-                  <th>Meldung</th>
-                  <th>Augen</th>
-                  <th>Runde</th>
-                  <th>Stand</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allSeats.map((seat) => (
-                  <tr key={seat}>
-                    <td className="font-semibold">{name(seat)}</td>
-                    <td>
-                      {round.melds[seat]}
-                      {round.melds[seat]! > 0 && !round.madeTrick[seat] && round.kind === 'normal' ? ' (kein Stich)' : ''}
-                    </td>
-                    <td>{round.eyes[seat]}</td>
-                    <td>{round.points[seat]! > 0 ? `+${round.points[seat]}` : round.points[seat]}</td>
-                    <td>{view.scores[seat]}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {legalMoves.some((m) => m.type === 'nextGame') && (
-            <button type="button" className={primary} onClick={() => onMove({ type: 'nextGame' })}>
-              Nächstes Spiel
-            </button>
-          )}
-        </div>
+                : `${name(round.declarer!)} hat ${round.kind === 'durch' ? 'den Durch' : `mit ${round.bid}`} ${round.won ? 'gewonnen' : 'verloren'}.`
+          }
+          note={
+            round.kind !== 'passedOut' && view.kreuz
+              ? 'Partner zählen zusammen: Beide bekommen die Punkte ihrer Partei.'
+              : null
+          }
+          players={roundPlayers}
+          actions={
+            legalMoves.some((m) => m.type === 'nextGame') && (
+              <button
+                type="button"
+                className="bub-round-summary-btn"
+                onClick={() => onMove({ type: 'nextGame' })}
+              >
+                Nächstes Spiel
+              </button>
+            )
+          }
+        />
       )}
     </>
   );
+
 
   return (
     <div className={`flex h-full flex-col w-full mx-auto p-1 gap-2 sm:p-2 flat:p-0 text-ink ${table ? '' : 'max-w-4xl'}`}>

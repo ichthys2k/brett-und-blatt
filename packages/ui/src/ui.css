@@ -1200,3 +1200,320 @@ button.bub-net-point:not(:disabled) {
   align-items: center;
   width: 11rem;
 }
+
+/* =========================================================================
+   Rundenende-Zwischenstand für Serienspiele (RoundSummary, Issue #88)
+   ========================================================================= */
+
+.bub-round-summary {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  animation: bub-fade-in 0.25s ease-out;
+}
+
+.bub-round-summary-inline {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.bub-round-summary-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+  border: none;
+  margin: 0;
+  padding: 0;
+  cursor: default;
+}
+
+.bub-round-summary-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 32rem);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--color-surface, #1e1e24);
+  color: var(--color-ink, #f3f4f6);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.14));
+  border-radius: 1.25rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  animation: bub-scale-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bub-round-summary-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.bub-round-summary-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.bub-round-summary-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bub-round-summary-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-ink, #fff);
+}
+
+.bub-round-summary-subtitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-accent, #38bdf8);
+}
+
+.bub-round-summary-round-detail {
+  font-size: 0.85rem;
+  color: var(--color-ink-muted, #9ca3af);
+}
+
+.bub-round-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bub-round-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.85rem;
+  background: var(--color-surface-2, rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  will-change: transform;
+}
+
+.bub-round-summary-row[data-me] {
+  border-color: var(--color-accent, #38bdf8);
+  background: color-mix(in srgb, var(--color-accent, #38bdf8) 12%, var(--color-surface-2, rgba(255, 255, 255, 0.06)));
+}
+
+.bub-round-summary-place {
+  width: 2rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.bub-round-summary-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.bub-round-summary-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bub-round-summary-symbol {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.bub-round-summary-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.bub-round-summary-name-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.bub-round-summary-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bub-round-summary-badge {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.bub-round-summary-detail {
+  font-size: 0.75rem;
+  color: var(--color-ink-muted, #9ca3af);
+  line-height: 1.25;
+}
+
+.bub-round-summary-score-area {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.bub-round-summary-change {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  min-width: 2.4rem;
+  text-align: center;
+}
+
+.bub-round-summary-change[data-kind='pos'] {
+  background: rgba(16, 185, 129, 0.22);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.bub-round-summary-change[data-kind='neg'] {
+  background: rgba(244, 63, 94, 0.22);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
+
+.bub-round-summary-change[data-kind='zero'] {
+  background: rgba(156, 163, 175, 0.15);
+  color: #9ca3af;
+  border: 1px solid rgba(156, 163, 175, 0.25);
+}
+
+.bub-round-summary-change[data-animating] {
+  animation: bub-change-pulse 0.4s ease-in-out infinite alternate;
+}
+
+.bub-round-summary-total {
+  font-size: 1.3rem;
+  font-weight: 800;
+  min-width: 2.75rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink, #fff);
+}
+
+.bub-round-summary-note {
+  font-size: 0.85rem;
+  color: var(--color-ink-muted, #9ca3af);
+  text-align: center;
+  line-height: 1.35;
+}
+
+.bub-round-summary-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.bub-round-summary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.6rem;
+  border-radius: 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 750;
+  cursor: pointer;
+  border: none;
+  background: var(--color-accent, #38bdf8);
+  color: #0b0f19;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+  transition: transform 0.15s, filter 0.15s, box-shadow 0.15s;
+}
+
+.bub-round-summary-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4);
+}
+
+.bub-round-summary-btn:active {
+  transform: translateY(0);
+}
+
+@keyframes bub-change-pulse {
+  from {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  to {
+    transform: scale(1.08);
+    filter: brightness(1.25);
+  }
+}
+
+@keyframes bub-scale-up {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bub-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bub-round-summary,
+  .bub-round-summary-card,
+  .bub-round-summary-row,
+  .bub-round-summary-change {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+

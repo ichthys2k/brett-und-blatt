@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { cardName, type CardId, type GameEvent, type SeatId } from '@brett-und-blatt/engine';
-import { PlayingCard, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { PlayingCard, RoundSummary, usePointerDrag, type BoardProps, type GameUi, type RoundSummaryPlayer } from '@brett-und-blatt/ui';
 import { topOf, winsNeeded, type PlayerView, type SpeedMove, type SpeedView } from '../rules';
 import './styles.css';
 
@@ -308,7 +308,7 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, humanSeats
 
       {zone(bottom, false)}
 
-      {view.phase !== 'play' && <RoundOverlay view={view} name={name} readyActions={readyActions} />}
+      {view.phase !== 'play' && <RoundOverlay view={view} name={name} readyActions={readyActions} me={me} />}
 
       {tableRect &&
         flights.map((f) => (
@@ -339,51 +339,69 @@ function RoundOverlay({
   view,
   name,
   readyActions,
+  me,
 }: {
   view: SpeedView;
   name: (seat: SeatId) => string;
   /** Wer an diesem Gerät noch „Nächste Runde“ drücken kann. */
   readyActions: { seat: SeatId; name: string; onReady: () => void }[];
+  me: SeatId | null;
 }) {
   const last = view.lastRound;
   const waiting = view.players.flatMap((p, seat) => (p.ready ? [] : [seat]));
+  const roundPlayers: RoundSummaryPlayer[] = view.players.map((p, seat) => {
+    const isWinner = last?.winner === seat;
+    const roundChange = isWinner ? 1 : 0;
+    const currentScore = p.wins;
+    const previousScore = currentScore - roundChange;
+    const detail = last ? `${last.left[seat]} Restkarten` : undefined;
+
+    return {
+      seat,
+      name: name(seat),
+      badge: isWinner ? '🏎️' : undefined,
+      previousScore,
+      roundChange,
+      currentScore,
+      detail,
+      isMe: me !== null && seat === me,
+    };
+  });
+
+
   return (
-    <div className="spd-overlay">
-      <div className="spd-overlay-box">
-        <p className="spd-overlay-title">{last ? `Speed! ${name(last.winner)} gewinnt Runde ${last.round}.` : 'Runde vorbei'}</p>
-        <table className="spd-scores">
-          <thead>
-            <tr>
-              <th />
-              <th title="Karten, die noch übrig waren">Rest</th>
-              <th>Siege</th>
-            </tr>
-          </thead>
-          <tbody>
-            {view.players.map((p, seat) => (
-              <tr key={seat} className={last?.winner === seat ? 'spd-winner' : undefined}>
-                <td>{name(seat)}</td>
-                <td>{last?.left[seat]}</td>
-                <td className="spd-total">
-                  {p.wins} / {winsNeeded(view.goal)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {view.phase === 'roundEnd' && (
-          <>
-            {readyActions.map((r) => (
-              <button key={r.seat} type="button" className="spd-button spd-button-main" onClick={r.onReady}>
-                {readyActions.length > 1 ? `${r.name}: Nächste Runde` : 'Nächste Runde'}
-              </button>
-            ))}
-            {readyActions.length === 0 && <p className="spd-wait">Warte auf {waiting.map(name).join(', ')} …</p>}
-          </>
-        )}
-      </div>
-    </div>
+    <RoundSummary
+      title={
+        last
+          ? `🏎️ Speed! ${name(last.winner)} gewinnt Runde ${last.round}.`
+          : 'Runde beendet'
+      }
+      subtitle={`Ziel: ${winsNeeded(view.goal)} ${winsNeeded(view.goal) === 1 ? 'Sieg' : 'Siege'}`}
+      players={roundPlayers}
+      actions={
+        view.phase === 'roundEnd' && (
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
+              {readyActions.map((r) => (
+                <button
+                  key={r.seat}
+                  type="button"
+                  className="bub-round-summary-btn"
+                  onClick={r.onReady}
+                >
+                  {readyActions.length > 1 ? `${r.name}: Nächste Runde` : 'Nächste Runde'}
+                </button>
+              ))}
+            </div>
+            {readyActions.length === 0 && (
+              <p className="bub-round-summary-note">Warte auf {waiting.map(name).join(', ')} …</p>
+            )}
+          </div>
+        )
+      }
+    />
   );
+
 }
 
 export const gameUi: GameUi<SpeedView, SpeedMove> = {

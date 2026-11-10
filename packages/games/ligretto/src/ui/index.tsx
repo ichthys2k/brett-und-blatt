@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import { usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { RoundSummary, usePointerDrag, type BoardProps, type GameUi, type RoundSummaryPlayer } from '@brett-und-blatt/ui';
 import { totals, type Card, type CardSource, type LigrettoMove, type LigrettoView, type PlayerView } from '../rules';
 import { CardBack, CardFace, SUIT_INFO, cardLabel } from './LigrettoCard';
 import './styles.css';
@@ -379,50 +379,63 @@ function RoundOverlay({
 }) {
   const last = view.lastRound;
   const sums = totals(view.scores);
-  const order = view.players.map((_, seat) => seat).sort((a, b) => sums[b]! - sums[a]!);
   const name = (seat: SeatId) => seatNames[seat] ?? `Spieler ${seat + 1}`;
   const waiting = view.players.flatMap((p, seat) => (p.ready ? [] : [seat]));
+
+  const roundPlayers: RoundSummaryPlayer[] = view.players.map((_, seat) => {
+    const roundChange = last?.points[seat] ?? 0;
+    const currentScore = sums[seat] ?? 0;
+    const previousScore = currentScore - roundChange;
+    const isEnder = last?.endedBy === seat;
+    const detail = last
+      ? `+${last.played[seat] ?? 0} gelegt · −${(last.left[seat] ?? 0) * 2} im Stapel`
+      : undefined;
+
+    return {
+      seat,
+      name: name(seat),
+      badge: isEnder ? '⚡' : undefined,
+      previousScore,
+      roundChange,
+      currentScore,
+      detail,
+      isMe: mine.has(seat),
+    };
+  });
+
   return (
-    <div className="lg-overlay">
-      <div className="lg-overlay-box">
-        <p className="lg-overlay-title">
-          {last?.endedBy !== null && last?.endedBy !== undefined ? `Blitz! ${name(last.endedBy)} ist fertig.` : 'Runde vorbei'}
-        </p>
-        <table className="lg-scores">
-          <thead>
-            <tr>
-              <th />
-              <th title="Karten in der Mitte">+</th>
-              <th title="Karten im Blitzstapel (×2)">−</th>
-              <th>Runde {last?.round}</th>
-              <th>Gesamt</th>
-            </tr>
-          </thead>
-          <tbody>
-            {order.map((seat) => (
-              <tr key={seat} className={mine.has(seat) ? 'lg-me' : undefined}>
-                <td>{name(seat)}</td>
-                <td>{last?.played[seat]}</td>
-                <td>{last ? last.left[seat]! * 2 : ''}</td>
-                <td>{last?.points[seat]}</td>
-                <td className="lg-total">{sums[seat]}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {view.phase === 'roundEnd' && (
-          <>
-            {readyActions.map((r) => (
-              <button key={r.seat} type="button" className="lg-button lg-button-main" onClick={r.onReady}>
-                {readyActions.length > 1 || mine.size > 1 ? `${r.name}: Nächste Runde` : 'Nächste Runde'}
-              </button>
-            ))}
-            {readyActions.length === 0 && <p className="lg-wait">Warte auf {waiting.map(name).join(', ')} …</p>}
-          </>
-        )}
-      </div>
-    </div>
+    <RoundSummary
+      title={
+        last?.endedBy !== null && last?.endedBy !== undefined
+          ? `⚡ Blitz! ${name(last.endedBy)} ist fertig.`
+          : 'Runde beendet'
+      }
+      subtitle={last ? `Runde ${last.round}` : undefined}
+      players={roundPlayers}
+      actions={
+        view.phase === 'roundEnd' && (
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
+              {readyActions.map((r) => (
+                <button
+                  key={r.seat}
+                  type="button"
+                  className="bub-round-summary-btn"
+                  onClick={r.onReady}
+                >
+                  {readyActions.length > 1 || mine.size > 1 ? `${r.name}: Nächste Runde` : 'Nächste Runde'}
+                </button>
+              ))}
+            </div>
+            {readyActions.length === 0 && (
+              <p className="bub-round-summary-note">Warte auf {waiting.map(name).join(', ')} …</p>
+            )}
+          </div>
+        )
+      }
+    />
   );
+
 }
 
 export const gameUi: GameUi<LigrettoView, LigrettoMove> = {

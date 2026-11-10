@@ -1,5 +1,18 @@
 import { sortHand, cardId, type CardId, type SeatId, type Suit } from '@brett-und-blatt/engine';
-import { CardFan, PlayingCard, TRICK_HAND_MIN_STEP, SeatRing, TrickTable, trickHandCardWidth, useTrickDisplay, type BoardProps, type GameUi, type TrickTableSlot } from '@brett-und-blatt/ui';
+import {
+  CardFan,
+  PlayingCard,
+  RoundSummary,
+  type RoundSummaryPlayer,
+  TRICK_HAND_MIN_STEP,
+  SeatRing,
+  TrickTable,
+  trickHandCardWidth,
+  useTrickDisplay,
+  type BoardProps,
+  type GameUi,
+  type TrickTableSlot,
+} from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import {
   getContract,
@@ -245,38 +258,69 @@ export function SchafkopfBoard({
   );
 
   // Runden-Auswertung
+  const lastSummary =
+    view.history.length > 0 && view.phase === 'roundOver'
+      ? view.history[view.history.length - 1]
+      : null;
+
+  const roundPlayers: RoundSummaryPlayer[] = Array.from({ length: 4 }, (_, s) => {
+    const currentScore = view.scores[s] ?? 0;
+    const roundChange = lastSummary ? (lastSummary.scorePerPlayer[s] ?? 0) : 0;
+    let detail: string | null = null;
+
+    if (lastSummary) {
+      if (s === lastSummary.declarerSeat) {
+        detail = lastSummary.contract.gameType === 'sauspiel' ? 'Spieler (Rufspiel)' : 'Alleinspieler';
+      } else if (s === lastSummary.partnerSeat && lastSummary.contract.gameType === 'sauspiel') {
+        detail = 'Mitspieler (Rufkarte)';
+      } else {
+        detail = 'Gegenspieler';
+      }
+    }
+
+    return {
+      seat: s,
+      name: seatNames[s] ?? `Spieler ${s + 1}`,
+      previousScore: currentScore - roundChange,
+      roundChange,
+      currentScore,
+      detail,
+      isMe: s === mySeat,
+    };
+  });
+
   const roundEnd = (
     <>
       {(view.phase === 'roundOver' || view.phase === 'passedOut') && (
-        <div className="p-4 bg-stone-900/90 text-white rounded-2xl shadow-xl flex flex-col items-center gap-3">
-          <h2 className="text-lg font-bold">
-            {view.phase === 'passedOut' ? 'Alle weiter – neu geben' : 'Runde beendet'}
-          </h2>
-          {view.history.length > 0 && view.phase === 'roundOver' && (
-            <div className="text-sm text-stone-200 text-center">
-              {view.history[view.history.length - 1].won ? (
-                <span className="text-emerald-400 font-semibold">
-                  Spielende Partei hat gewonnen!
-                </span>
+        <RoundSummary
+          title={view.phase === 'passedOut' ? 'Alle weiter – neu geben' : `Spiel ${view.gameNumber} beendet`}
+          subtitle={
+            lastSummary ? (
+              lastSummary.won ? (
+                <span className="text-emerald-400">Spielende Partei hat gewonnen!</span>
               ) : (
-                <span className="text-rose-400 font-semibold">
-                  Spielende Partei hat verloren!
-                </span>
-              )}
-              <div className="mt-1 text-xs text-stone-400">{roundDetail(view)}</div>
-            </div>
-          )}
-          <button
-            type="button"
-            className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold rounded-xl shadow transition"
-            onClick={() => onMove({ type: 'nextGame' })}
-          >
-            Nächstes Spiel
-          </button>
-        </div>
+                <span className="text-rose-400">Spielende Partei hat verloren!</span>
+              )
+            ) : (
+              'Kein Spiel angesagt.'
+            )
+          }
+          roundDetail={lastSummary ? roundDetail(view) : null}
+          players={roundPlayers}
+          actions={
+            <button
+              type="button"
+              className="bub-round-summary-btn bg-emerald-500 hover:bg-emerald-400 text-stone-950"
+              onClick={() => onMove({ type: 'nextGame' })}
+            >
+              Nächstes Spiel
+            </button>
+          }
+        />
       )}
     </>
   );
+
 
   return (
     <div className={`flex h-full flex-col w-full mx-auto p-1 gap-2 sm:p-2 flat:p-0 ${table ? '' : 'max-w-4xl'}`}>
