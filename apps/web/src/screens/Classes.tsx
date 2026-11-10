@@ -77,6 +77,19 @@ export function Classes() {
         </section>
       )}
 
+      {!storage.loadPlayerCode() && (
+        <section className="space-y-1 rounded-xl border border-line bg-surface p-3 text-sm">
+          <p className="font-medium">💡 Tipp: Spielercode anlegen</p>
+          <p className="text-muted">
+            Dein Ausweis ist gerade nur auf diesem Gerät gespeichert. Lege auf deinem{' '}
+            <button type="button" className="underline font-medium" onClick={() => navigate(paths.pass)}>
+              Spielerausweis
+            </button>{' '}
+            einen Spielercode an, damit deine Klassenmitgliedschaft nicht verloren geht, wenn du das Gerät wechselst oder Browser-Daten löschst.
+          </p>
+        </section>
+      )}
+
       <section className="space-y-3">
         <h2 className="text-xl">Mit Code beitreten</h2>
         <p className="text-sm text-muted">Den Code mit sechs Bildern gibt dir die Lehrkraft, oder du scannst den QR-Code.</p>
@@ -147,7 +160,15 @@ export function ClassPage({ code }: { code: string }) {
   const [names, setNames] = useState('');
   const [progress, setProgress] = useState<string | null>(null);
   const [children, setChildren] = useState(() => loadChildPasses().filter((c) => c.classCode === code));
+  const [bigQr, setBigQr] = useState(false);
   const alive = useRef(true);
+
+  useEffect(() => {
+    // #150: Klassencode nach dem Einlesen aus der Adresszeile nehmen
+    if (window.location.hash.startsWith('#/klasse/')) {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#/klassen`);
+    }
+  }, []);
 
   const apply = useCallback(
     async (action: string, extra: Record<string, unknown> = {}) => {
@@ -215,6 +236,18 @@ export function ClassPage({ code }: { code: string }) {
               <p>
                 Willst du der Klasse <strong>{view.name}</strong> beitreten? Die anderen sehen dann deinen Namen, dein Bild und dein Wappen.
               </p>
+              {!storage.loadPlayerCode() && (
+                <div className="space-y-1 rounded-xl border border-line bg-surface p-3 text-sm">
+                  <p className="font-medium">💡 Tipp: Spielercode anlegen</p>
+                  <p className="text-muted">
+                    Dein Ausweis ist gerade nur auf diesem Gerät gespeichert. Lege auf deinem{' '}
+                    <button type="button" className="underline font-medium" onClick={() => navigate(paths.pass)}>
+                      Spielerausweis
+                    </button>{' '}
+                    einen Spielercode an, damit deine Klassenmitgliedschaft nicht verloren geht, wenn du das Gerät wechselst oder Browser-Daten löschst.
+                  </p>
+                </div>
+              )}
               {view.learning && <LearningNotice />}
               <Button variant="primary" className="w-full" onClick={() => void apply('join')}>
                 Beitreten{view.approval ? ' (die Leitung muss zustimmen)' : ''}
@@ -485,7 +518,34 @@ export function ClassPage({ code }: { code: string }) {
               </h2>
               <p className="text-sm text-muted">Zeig den QR-Code an der Tafel oder schick den Link. Der Code: <span className="text-xl">{code}</span></p>
               <QrCode text={link} label={`QR-Code für die Klasse ${view.name}`} />
-              <Button onClick={() => void navigator.clipboard?.writeText(link).then(() => setMessage('Link kopiert.'))}>Link kopieren</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => void navigator.clipboard?.writeText(link).then(() => setMessage('Link kopiert.'))}>Link kopieren</Button>
+                <Button onClick={() => setBigQr(true)}>An der Tafel groß anzeigen</Button>
+              </div>
+              {bigQr && (
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Klassencode für die Tafel"
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                  onClick={() => setBigQr(false)}
+                >
+                  <div
+                    className="max-h-[90vh] w-full max-w-lg space-y-4 overflow-y-auto rounded-3xl border border-line bg-surface p-6 text-center text-text shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <h2 className="text-2xl sm:text-3xl font-bold">{view.name}</h2>
+                    <p className="text-sm text-muted">Mit der Kamera scannen oder auf brett-und-blatt.de/klassen eingeben:</p>
+                    <div className="text-4xl sm:text-5xl font-mono tracking-widest py-2 select-all">{code}</div>
+                    <div className="mx-auto max-w-xs sm:max-w-sm rounded-2xl bg-white p-4 shadow-inner">
+                      <QrCode text={link} label={`QR-Code für die Klasse ${view.name}`} />
+                    </div>
+                    <Button variant="primary" className="w-full" onClick={() => setBigQr(false)}>
+                      Schließen
+                    </Button>
+                  </div>
+                </div>
+              )}
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" className="h-4 w-4 accent-accent" checked={view.open} onChange={(e) => void apply('configure', { open: e.target.checked })} />
                 Beitritt ist offen
