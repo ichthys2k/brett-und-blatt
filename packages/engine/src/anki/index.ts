@@ -5,3 +5,4 @@ export * from './ids';
 export * from './stock';
 export * from './collection';
 export * from './pairs';
+export * from './textfile';
