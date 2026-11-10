@@ -32,6 +32,7 @@
     "@brett-und-blatt/game-four-player-chess": "workspace:*",
     "@brett-und-blatt/game-gomoku": "workspace:*",
     "@brett-und-blatt/game-go": "workspace:*",
+    "@brett-und-blatt/game-grafschaft": "workspace:*",
     "@brett-und-blatt/game-hangman": "workspace:*",
     "@brett-und-blatt/game-estimate": "workspace:*",
     "@brett-und-blatt/game-ludo": "workspace:*",

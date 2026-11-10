@@ -52,3 +52,13 @@ In 1000 simulierten Partien (Bericht in [`grafschaft-probe.md`](grafschaft-probe
 - **Faire Chancen:** Alle 4 Startplätze liegen zwischen 21,5 % und 25,7 % Siegquote (fair: 25 %).
 - **Können entscheidet:** Ein planender Bot schlägt Zufallsspieler in 97,6 % der Partien.
 - **Spannung:** Durchschnittlich 4,2 Punkte Abstand zwischen Platz 1 und 2.
+
+## Umsetzungsstand (November 2026)
+
+- Vollständiges Spielmodul in `packages/games/grafschaft`:
+  - Spiellogik in `src/rules.ts` (axiale Sechseckkoordinaten `(q, r)`, 20 Hofaufträge, Dorf-Vielfalt 1–6 Punkte, Nachbarschafts- und Zusammenhangs-Prüfungen).
+  - Taktik-Bot „Landvogt“ in `src/bots.ts` mit drei Stufen (`easy`, `medium`, `hard`).
+  - Responsive Benutzeroberfläche in `src/ui/` mit dynamischer SVG-Bounding-Box, Kachelvorschau auf dem Jahrmarkt, anlegbaren Geister-Sechsecken, Auftragsanzeige und voller Tavernen-Look-Unterstützung (`:root[data-look='tavern']`).
+  - Klänge angebunden: `plaettchen-setzen` beim Anlegen, `stein-setzen` bei Dorf-Wertung, `paar` bei Auftragserfüllung.
+  - Mehrspieler-Registrierung in `apps/server/src/games.ts` und `apps/server/package.json`.
+  - Verifikation: `corepack pnpm typecheck`, `corepack pnpm exec vitest run packages/games/grafschaft` (15/15 inkl. Vertragsprüfung), `PRUEFSTAND=1 PRUEFSTAND_SPIELE=grafschaft corepack pnpm pruefstand` (36 Partien, 8/8 Siege gegen Zufall), und Browser-Rauchtests (`scripts/rauchtest.mjs`) im Standard-, Tavernen- und Dunkelmodus grün.
