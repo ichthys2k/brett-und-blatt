@@ -11,6 +11,7 @@ import { roleList } from '../lib/orgLabels';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { applyOfflineMessage, createOfflineTournament, isOfflineCode, loadOfflineRecord, syncOfflineTournament } from '../lib/offlineTournament';
+import { buildIcs, calendarEvents } from '../lib/calendar';
 import { createTournament, useTournament, type TournamentState } from '../lib/tournament';
 import { FullscreenButton, Stage, useWakeLock } from './Display';
 
@@ -2086,6 +2087,27 @@ function PrintTools({ view, onPrint }: { view: TournamentView; onPrint: (kind: P
       ]),
     );
   };
+  // Kalenderdatei (#243): Schnappschuss beim Klick, Zeiten aus Zeitplan oder Phasenfrist.
+  const { label: calendarLabel } = useLookup(view);
+  const exportCalendar = (mine: boolean) => {
+    const url = `${location.origin}${location.pathname}${paths.tournament(view.code)}`;
+    const events = calendarEvents(
+      view,
+      {
+        player: (id) => (id ? (names.get(id) ?? calendarLabel(id)) : t('tournament.nobody')),
+        title: (id) => {
+          const m = view.matches.find((x) => x.id === id);
+          return m ? matchTitle(view, m) : id;
+        },
+        field: (n) => fieldName(view, n),
+        deadline: t('tournament.cal.deadline'),
+      },
+      { mine, url },
+    );
+    download(`${base}-${mine ? 'meine-partien' : 'zeitplan'}.ics`, 'text/calendar;charset=utf-8', buildIcs(events, { name: view.settings.name, now: Date.now() }));
+  };
+  const calendarTimed = (mine: boolean) =>
+    view.matches.some((m) => m.status !== 'done' && (m.plannedAt !== undefined || (view.stages[m.stage]?.deadline ?? 0) > 0) && (!mine || (view.you !== null && m.slots.some((s) => s.player === view.you))));
   const kinds: [PrintKind, string][] = [
     ['plan', `📋 ${t('tournament.print.plan')}`],
     ['sheets', `📝 ${t('tournament.print.sheets')}`],
@@ -2113,6 +2135,16 @@ function PrintTools({ view, onPrint }: { view: TournamentView; onPrint: (kind: P
           ⬇️ JSON
         </Button>
       </div>
+      {(calendarTimed(false) || calendarTimed(true)) && (
+        <div className="grid grid-cols-2 gap-2">
+          <Button className="text-xs" onClick={() => exportCalendar(true)} disabled={!calendarTimed(true)}>
+            📅 {t('tournament.cal.mine')}
+          </Button>
+          <Button className="text-xs" onClick={() => exportCalendar(false)} disabled={!calendarTimed(false)}>
+            📅 {t('tournament.cal.all')}
+          </Button>
+        </div>
+      )}
     </Section>
   );
 }
