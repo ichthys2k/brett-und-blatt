@@ -81,6 +81,8 @@ export interface ClassState {
   approval: boolean;
   /** Was die Klassenkarten zeigen dürfen (Vorgabe der Leitung). Alte Klassen ohne Angabe zeigen alles. */
   sections?: CardSections;
+  /** Rangliste je Spiel anzeigen (Vorgabe der Leitung, Standard aus). */
+  leaderboard?: boolean;
   /** Pakete der Klasse (#224). */
   packs?: ClassPack[];
   /** Darf die Leitung den Lernstand der Mitglieder sehen? Nur wenn die Leitung es einschaltet; gesendet wird erst nach der Einwilligung des Mitglieds. */
@@ -105,6 +107,8 @@ export interface ClassView {
   /** Ich warte auf Bestätigung. */
   waiting: boolean;
   sections: CardSections;
+  /** Rangliste je Spiel anzeigen (Vorgabe der Leitung, Standard aus). */
+  leaderboard: boolean;
   /** Pakete der Klasse, nur für Mitglieder. */
   packs: ClassPack[];
   /** Sieht die Leitung den Lernstand? */
@@ -245,7 +249,7 @@ export function setLead(state: ClassState, token: unknown, id: unknown, lead: bo
   return ok;
 }
 
-export function configureClass(state: ClassState, token: unknown, change: { name?: unknown; open?: unknown; approval?: unknown; sections?: unknown; learning?: unknown; dueCards?: unknown }, now: number): Outcome {
+export function configureClass(state: ClassState, token: unknown, change: { name?: unknown; open?: unknown; approval?: unknown; sections?: unknown; leaderboard?: unknown; learning?: unknown; dueCards?: unknown }, now: number): Outcome {
   const denied = mustLead(state, token);
   if (denied) return denied;
   if (change.name !== undefined) {
@@ -255,6 +259,7 @@ export function configureClass(state: ClassState, token: unknown, change: { name
   }
   if (typeof change.open === 'boolean') state.open = change.open;
   if (typeof change.approval === 'boolean') state.approval = change.approval;
+  if (typeof change.leaderboard === 'boolean') state.leaderboard = change.leaderboard;
   if (typeof change.learning === 'boolean') {
     state.learning = change.learning;
     // Wird der Lernstand ausgeschaltet, fällt alles Abgelegte weg (der Server löscht die Daten, siehe `ClassRoom`).
@@ -298,6 +303,7 @@ export function classView(state: ClassState, token: unknown): ClassView {
     open: state.open,
     approval: state.approval,
     sections: sectionsOf(state),
+    leaderboard: state.leaderboard === true,
     packs: member ? (state.packs ?? []).map(({ id, name, key, at }) => ({ id, name, key, at })) : [],
     learning: state.learning === true,
     dueCards: state.dueCards === true,

@@ -336,12 +336,14 @@ Parallel möglich: nach dem Passschlüssel PIN und Familie; nach dem Partiebuch 
 - Offen: Merkliste der Klassen im Block `ausweis` (reist noch nicht auf andere Geräte; die Mitgliedschaft liegt beim Server unter der Geräte-Kennung und reist mit dem Ausweis); Fragment `#` aus der Adresszeile entfernen; Hinweis, einen Spielercode anzulegen, wenn der Pass keinen hat; Wappen-Aktualisierung (`update`) nach Wappenänderung auslösen; Gegenprobe gegen den echten Server.
 - **Nachtrag 10.11.2026:** Der Kern liegt auf `main` (`b99b77e`). Restarbeiten in #150 neu gefasst: `#` aus der Adresszeile nehmen, Hinweis ohne Spielercode, Wappen aktualisieren, Merkliste im Block `ausweis`, Gegenprobe mit `apps/server/scripts/klasse.mjs`. #150–#152 stehen auf `status: Ready`.
 
-### Stand #151 Klassen: Profile und Erfolge (8.11.2026)
+### Stand #151 Klassen: Profile und Erfolge (10.11.2026)
 
-- Klassenkarte rein in `packages/online/src/classcard.ts` (Prüfung `sanitizeCard`, Teile Stempel, Pokale als Zahl je Spiel, Lieblingsspiele); die Leitung wählt `sections` der Klasse, jedes Mitglied blendet für sich Teile aus (`brett-und-blatt:klassen-ausblenden`). Server: Aktion `card`; wird ein Teil ausgeschaltet, fällt er auch aus vorhandenen Karten.
-- Klassenseite: Antippen eines Mitglieds zeigt Stempel, Pokale und Lieblingsspiele; **Stempelwand** (je Spiel, wer welchen Stempel hat), keine Rangliste (Entscheidung Cornelius). Die Karte wird beim Öffnen der Klassenseite und bei jeder Abfrage (10 s) nachgeführt, wenn sie sich geändert hat.
-- Offen: Karte auch ohne offene Klassenseite nachführen (nach Partieende), Album-Fortschritt und Bot-Wertung als Teile, Rangliste je Spiel als Leitungs-Option, Klassen-Stempel („Die ganze Klasse hat Schach gespielt“), offene Räume der Klasse.
-- **Nachtrag 10.11.2026:** Restarbeiten als Aufträge in #151 neu gefasst (Karte nach Partieende, Album und Bot-Wertung als Kartenteile, Rangliste als Leitungs-Option, Klassen-Stempel, offene Räume der Klasse). Der Punkt „offene Räume“ ist der größte und kann das Nachrichtenformat berühren.
+- Klassenkarte (`packages/online/src/classcard.ts`): Abschnitte `stamps`, `trophies`, `favorites`, neu: `album` (Fundzahl je Spiel) und `botRating` (aggregierte Zahlen: Elo-Leistungszahl, Partien, Siege). `sanitizeCard` filtert und begrenzt beides; alte Karten ohne neue Teile bleiben gültig. Die Leitung wählt `sections` der Klasse, jedes Mitglied blendet für sich Teile aus (`brett-und-blatt:klassen-ausblenden`).
+- Automatisches Nachführen (`apps/web/src/lib/classes.ts`, `passRecorder.ts`): `updateClassCardsSoon` führt nach Partieende, neuem Stempel, Pokal oder Fund die Klassenkarte für alle Klassen der Merkliste nach (`classAct(code, 'card', …)`), wenn sich der Inhalt geändert hat (`markCardSent`).
+- **Rangliste je Spiel** (Bot-Wertung, Pokale): neue Leitungs-Option in der Klassenkonfiguration (`ClassState.leaderboard`, Vorgabe aus). Ist sie eingeschaltet, zeigt die Klassenseite eine Rangliste je Spiel sortiert nach Elo-Wertung, Pokalen, Siegen und Partien.
+- **Klassen-Stempel** (`classStamps`): Gemeinschaftserfolge (Spiele, für die alle aktuellen Mitglieder den Stempel `first` haben) oben auf der Stempelwand und mit Stern-Symbol an den Spielen markiert.
+- Barrierefreiheit als Liste; Datenschutzerklärung in `Legal.tsx` um Album-Fortschritt, Bot-Wertung und Rangliste ergänzt.
+- Offen: Offene Räume der Klasse (separates Vorhaben/Abstimmung im Issue).
 
 ### Stand #152 Klassenausweise (8.11.2026)
 
