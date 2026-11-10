@@ -9,7 +9,7 @@ const localStorageMock = {
 (globalThis as unknown as { window: unknown }).window = { localStorage: localStorageMock };
 (globalThis as unknown as { localStorage: unknown }).localStorage = localStorageMock;
 
-const load = () => import('../apps/web/src/lib/orgServer');
+const load = () => import('../apps/web/src/lib/orgNotice');
 const mine = (id: string, status: 'open' | 'approved' | 'rejected') => ({ id, orgName: 'SV', kind: 'verein' as const, at: 1, status });
 
 beforeEach(() => store.clear());

@@ -1,6 +1,7 @@
 import type { OrgRequestMine } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
-import { hasAppliedForOrg, loadMyOrgRequests, markOrgSeen, unseenOrgDecisions } from '../lib/orgServer';
+import { hasAppliedForOrg, markOrgSeen, unseenOrgDecisions } from '../lib/orgNotice';
+import { loadMyOrgRequests } from '../lib/orgServer';
 import { Button } from './controls';
 
 /**
