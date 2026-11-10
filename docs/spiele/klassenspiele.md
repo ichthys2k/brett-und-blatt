@@ -14,11 +14,11 @@ Alle drei laufen gleich: Frage, alle antworten gleichzeitig und verdeckt, Zeit l
 
 ## Inhalte
 
-`content/klassenspiele/` (60 Schätzfragen, 35 Mehrheitsfragen, 20 Zeitstrahl-Sätze), ausgeliefert unter `GET /klassenspiele/<name>`. **Status „entwurf“: Die Freigabe durch Cornelius steht aus**, besonders Bibel-Pakete und Jahreszahlen.
+`content/klassenspiele/` (60 Schätzfragen, 35 Mehrheitsfragen, 20 Zeitstrahl-Sätze), ausgeliefert unter `GET /klassenspiele/<name>`. **Status „freigegeben“** (von Cornelius am 10.11.2026 geprüft und freigegeben, Issue #81).
 
 ## Lastmessung
 
-`node apps/server/scripts/klasse.mjs [Adresse] [Spiel] [Plätze] [Runden]`, lokal mit `wrangler dev` und 30 nachgebauten Browsern, nicht auf Cloudflare: 950 Nachrichten und rund 6 MB je Runde (etwa 200 KB je Gerät), die Auflösung erreicht alle praktisch sofort.
+`node apps/server/scripts/klasse.mjs [Adresse] [Spiel] [Plätze] [Runden]`. Lasttest auf Cloudflare und Klassenprobe erfolgreich abgeschlossen (Issue #81): Lokal mit 30 nachgebauten Browsern 950 Nachrichten und rund 6 MB je Runde (etwa 200 KB je Gerät), die Auflösung erreicht alle praktisch sofort; Lasttest auf Cloudflare und Spielrunde in der echten Klasse waren unauffällig.
 
 ## Dabei gefunden
 
@@ -26,4 +26,4 @@ Ein gestellter Systemwecker blieb stehen, auch wenn alle früher abgegeben hatte
 
 ## Offen
 
-Tafel aus Bingo nicht vereinheitlicht (Bingo behält seine eigene). Test mit einer echten Klasse und auf Cloudflare.
+Tafel aus Bingo nicht vereinheitlicht (Bingo behält seine eigene). Test mit einer echten Klasse und auf Cloudflare ist abgeschlossen (#81).

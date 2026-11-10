@@ -1,6 +1,6 @@
 {
- "status": "entwurf",
- "hinweis": "Von Claude erstellt (1.11.2026), wartet auf Freigabe durch Cornelius. Einträge stehen in der richtigen Reihenfolge; Jahre vor Freigabe prüfen. Das Paket Bibel ordnet nach der biblischen Erzählung und nennt keine Jahre.",
+ "status": "freigegeben",
+ "hinweis": "Von Claude erstellt (1.11.2026), von Cornelius freigegeben (10.11.2026). Einträge stehen in der richtigen Reihenfolge; Jahre vor Freigabe prüfen. Das Paket Bibel ordnet nach der biblischen Erzählung und nennt keine Jahre.",
  "packs": [
   { "id": "bibel", "name": "Bibel", "sets": [
    { "id": "b01", "title": "Altes Testament: vom Anfang an", "items": ["Schöpfung", "Noah baut die Arche", "Abraham zieht fort", "Josef in Ägypten", "Auszug mit Mose"] },
