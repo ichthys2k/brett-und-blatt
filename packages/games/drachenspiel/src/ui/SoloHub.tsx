@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { CARDS_DB } from '../cards';
 import { DECK_SIZE, encodeDeck } from '../deckcode';
 import { DECK_THEMES, DECK_THEME_IDS } from '../decks';
+import { championImage } from './champions';
 import {
   ARENA_LOSSES,
   ARENA_WINS,
@@ -114,15 +115,23 @@ export function ScenarioTip({ options }: { options: Record<string, string> }) {
 function HousePicker({ houses, onPick }: { houses: DeckThemeId[]; onPick: (house: DeckThemeId) => void }) {
   return (
     <div className="ds-deck-grid">
-      {houses.map((id) => (
-        <button key={id} type="button" className="ds-deck-choice" onClick={() => onPick(id)}>
-          <span className="ds-deck-emoji">{DECK_THEMES[id].emoji}</span>
-          <span className="ds-deck-name">{DECK_THEMES[id].name}</span>
-          <span className="ds-deck-power">
-            {HOUSE_POWERS[id].emoji} <strong>{HOUSE_POWERS[id].name}:</strong> {HOUSE_POWERS[id].text}
-          </span>
-        </button>
-      ))}
+      {houses.map((id) => {
+        const img = championImage(id);
+        return (
+          <button key={id} type="button" className="ds-deck-choice" onClick={() => onPick(id)}>
+            {img ? (
+              <img src={img} alt={DECK_THEMES[id].houseName} className="ds-deck-champion" width={60} height={80} loading="lazy" />
+            ) : (
+              <span className="ds-deck-emoji">{DECK_THEMES[id].emoji}</span>
+            )}
+            <span className="ds-deck-name">{DECK_THEMES[id].houseName}</span>
+            <span className="ds-deck-sub">{DECK_THEMES[id].emoji} {DECK_THEMES[id].name}</span>
+            <span className="ds-deck-power">
+              {HOUSE_POWERS[id].emoji} <strong>{HOUSE_POWERS[id].name}:</strong> {HOUSE_POWERS[id].text}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
