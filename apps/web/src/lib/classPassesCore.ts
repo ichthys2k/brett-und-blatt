@@ -64,16 +64,99 @@ export const sameChildPasses = (a: ChildPasses, b: ChildPasses): boolean => {
   return key(a) === key(b);
 };
 
+import { AVATARS } from '@brett-und-blatt/online';
+
+const AVATAR_SET = new Set<string>(AVATARS);
+
+export interface ParsedChildName {
+  name: string;
+  avatar?: string;
+}
+
+/** Liest eine Zeile der Namensliste: erkennt Namen und optionales Tierbild (z. B. "Mia 🦊" oder "Mia;🦊"). Unbekannte Bilder werden verworfen. */
+export function parseNameLine(rawLine: string): ParsedChildName | null {
+  const line = rawLine.trim();
+  if (!line) return null;
+
+  let namePart = line;
+  let avatarCandidate: string | null = null;
+
+  const delimiterMatch = /^(.*?)[;\t,]\s*(.*)$/.exec(line);
+  if (delimiterMatch) {
+    const left = delimiterMatch[1]!.trim();
+    const right = delimiterMatch[2]!.trim();
+    if (AVATAR_SET.has(right)) {
+      namePart = left;
+      avatarCandidate = right;
+    } else if (AVATAR_SET.has(left)) {
+      namePart = right;
+      avatarCandidate = left;
+    } else {
+      if (/^\p{Extended_Pictographic}+$/u.test(right)) {
+        namePart = left;
+      } else if (/^\p{Extended_Pictographic}+$/u.test(left)) {
+        namePart = right;
+      } else {
+        namePart = left;
+      }
+    }
+  } else {
+    const tokens = line.split(/\s+/);
+    if (tokens.length >= 2) {
+      const first = tokens[0]!;
+      const last = tokens[tokens.length - 1]!;
+      if (AVATAR_SET.has(last)) {
+        avatarCandidate = last;
+        namePart = tokens.slice(0, -1).join(' ');
+      } else if (AVATAR_SET.has(first)) {
+        avatarCandidate = first;
+        namePart = tokens.slice(1).join(' ');
+      } else if (/^\p{Extended_Pictographic}+$/u.test(last)) {
+        namePart = tokens.slice(0, -1).join(' ');
+      } else if (/^\p{Extended_Pictographic}+$/u.test(first)) {
+        namePart = tokens.slice(1).join(' ');
+      }
+    }
+  }
+
+  const name = namePart.replace(/\s+/g, ' ').slice(0, 16).trim();
+  if (!name) return null;
+
+  return avatarCandidate && AVATAR_SET.has(avatarCandidate) ? { name, avatar: avatarCandidate } : { name };
+}
+
 /** Namen aus einem Textfeld: eine Zeile je Kind, leere und doppelte Zeilen fallen weg. */
-export function parseNames(input: string, max = 60): string[] {
+export function parseNames(input: string, max = 60): ParsedChildName[] {
   const seen = new Set<string>();
-  const out: string[] = [];
+  const out: ParsedChildName[] = [];
   for (const line of input.split(/\r?\n/)) {
-    const name = line.trim().replace(/\s+/g, ' ').slice(0, 16);
-    if (name && !seen.has(name.toLowerCase())) {
-      seen.add(name.toLowerCase());
-      out.push(name);
+    const parsed = parseNameLine(line);
+    if (parsed && !seen.has(parsed.name.toLowerCase())) {
+      seen.add(parsed.name.toLowerCase());
+      out.push(parsed);
     }
   }
   return out.slice(0, max);
 }
+
+/**
+ * Dubletten-Prüfung (#152): Zieht einen Spielercode und prüft, ob bereits ein Schloss mit PIN/Passwort existiert.
+ * Kollidiert der Code, wird er verworfen und ein neuer Versuch unternommen.
+ */
+export async function pickFreePlayerCode(
+  createCandidate: () => Promise<string>,
+  checkHasLock: (code: string) => Promise<boolean>,
+  revokeCandidate: (code: string) => Promise<void>,
+  maxAttempts = 5,
+): Promise<string> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const candidate = await createCandidate();
+    if (await checkHasLock(candidate)) {
+      await revokeCandidate(candidate).catch(() => undefined);
+      continue;
+    }
+    return candidate;
+  }
+  throw new Error('Kein freier Spielercode gefunden. Noch einmal versuchen.');
+}
+
