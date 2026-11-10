@@ -32,7 +32,7 @@ Stand: 10.11.2026. Konzept zum Issue #217; Entscheidungen von Cornelius stehen i
 | **Betreiber** | alles, dazu Rollen vergeben und entziehen, Mitglieder verwalten, Organisation verwalten, Turniere löschen |
 | **Leitung** | Turniere anlegen und leiten: `entrants`, `tools` (Zuschaulink, Helfer, Zeitplan, Serie), `enterResult`, `checkin`, `print`; nicht löschen, keine Rollen vergeben |
 | **Schiedsrichter** | `enterResult`, `checkin` |
-| **Tischhelfer** | `enterResult` an den eigenen Tischen (Feld/Tisch), `checkin` |
+| **Tischhelfer** | `enterResult` an den eigenen Tischen (Feld/Tisch), `checkin`, `print` (wie der bisherige Helfer) |
 | **Anmeldung** | `entrants` (eintragen, freigeben), `checkin`; keine Ergebnisse |
 | **Protokoll** | `print` (Ansicht, Druck, Export); keine Änderungen |
 | **Bildschirm** | nur Ansicht, kein Pass nötig (Beamer, Turniertafel, `#/turnier/<Code>/beamer`) |

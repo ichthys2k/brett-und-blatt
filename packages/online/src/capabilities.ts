@@ -28,9 +28,17 @@ export const CAPABILITIES = [
   'print',
   /** Turnier: das ganze Turnier löschen (nur die Hauptleitung). */
   'deleteTournament',
+  /** Organisation: Rollen vergeben und entziehen (Betreiber; die Leitung nur nach `canGrantRole`). */
+  'manageRoles',
+  /** Organisation: Mitglieder aufnehmen und entfernen, Organisation verwalten. */
+  'manageMembers',
+  /** Organisation: ein Turnier unter dem Namen der Organisation anlegen. */
+  'createTournament',
 ] as const;
 
 export type Capability = (typeof CAPABILITIES)[number];
+
+import { orgCapabilities, type OrgRole } from './org-roles';
 
 const ROOM_CAPABILITIES: readonly Capability[] = ['kick', 'rename', 'unseat', 'lockNames', 'restart'];
 
@@ -44,6 +52,8 @@ export interface TournamentRole {
   isLeader: boolean;
   helperRole: 'helper' | 'coleader' | null;
   mayDelete: boolean;
+  /** Rollen aus der Organisation des Turniers (#217); ohne Organisation leer oder weggelassen. */
+  orgRoles?: readonly OrgRole[];
   /** Vor Ort (Leitung trägt ein) oder online (Teilnehmer spielen selbst). */
   local: boolean;
 }
@@ -60,6 +70,8 @@ export function tournamentCapabilities(role: TournamentRole): Capability[] {
   else if (role.local && role.helperRole === 'helper') caps.push('enterResult');
   if (staff) caps.push('checkin', 'print');
   if (role.mayDelete) caps.push('deleteTournament');
+  // Organisationsrollen kommen hinzu, ersetzen nichts: ohne Organisation bleibt alles wie vorher.
+  for (const cap of orgCapabilities(role.orgRoles ?? [])) if (!caps.includes(cap)) caps.push(cap);
   return caps;
 }
 

@@ -37,6 +37,7 @@ export * from './lock';
 export * from './account';
 export * from './share';
 export { ATTEMPT_LIMIT, ATTEMPT_WINDOW_MS, isBlocked, recordMiss, type AttemptState } from './attempts';
+export { LEAD_GRANTABLE, ORG_ROLES, ROLE_CAPABILITIES, canGrantRole, isOrgRole, orgCapabilities, orgRoleOfLegacy, ownFieldsOnly, type LegacyTournamentRole, type OrgRole } from './org-roles';
 export { CAPABILITIES, can, roomCapabilities, tournamentCapabilities, type Capability, type TournamentRole } from './capabilities';
 export * from './classroom';
 export * from './classcard';
