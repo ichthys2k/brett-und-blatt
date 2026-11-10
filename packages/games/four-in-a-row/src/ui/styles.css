@@ -125,3 +125,86 @@
     animation: none;
   }
 }
+
+/* Taverne-Aussehen (W-026) */
+:root[data-look='tavern'] .c4-board {
+  border-radius: 16px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 28px, rgb(0 0 0 / 0.05) 28px 30px),
+    linear-gradient(180deg, #6b4423, #432813 60%, #301b0b);
+  border: 3px solid #331e0d;
+  box-shadow:
+    inset 0 2px 4px rgb(255 255 255 / 0.15),
+    inset 0 -6px 0 rgb(0 0 0 / 0.45),
+    0 4px 12px rgb(0 0 0 / 0.35);
+}
+
+:root[data-look='tavern'] .c4-hole {
+  background: rgb(20 12 7 / 0.55);
+  box-shadow:
+    inset 0 4px 6px rgb(0 0 0 / 0.75),
+    inset 0 -1px 1px rgb(255 255 255 / 0.08),
+    0 1px 1px rgb(255 255 255 / 0.12);
+}
+
+:root[data-look='tavern'] .c4-board .c4-column-hover .c4-hole {
+  box-shadow:
+    inset 0 4px 6px rgb(0 0 0 / 0.75),
+    0 0 0 3px rgb(218 165 32 / 0.75);
+}
+
+:root[data-look='tavern'] .c4-seat-0 {
+  background: radial-gradient(circle at 35% 30%, #e65c5c, #a82020 55%, #660e12 90%);
+  box-shadow:
+    inset 0 2px 3px rgb(255 255 255 / 0.3),
+    inset 0 -4px 0 rgb(0 0 0 / 0.35),
+    0 2px 4px rgb(0 0 0 / 0.45);
+}
+
+:root[data-look='tavern'] .c4-seat-0 .c4-ring {
+  stroke: rgb(255 220 160 / 0.8);
+}
+
+:root[data-look='tavern'] .c4-seat-1 {
+  background: radial-gradient(circle at 35% 30%, #fadc6e, #c6941b 55%, #7a5206 90%);
+  box-shadow:
+    inset 0 2px 3px rgb(255 255 255 / 0.45),
+    inset 0 -4px 0 rgb(0 0 0 / 0.35),
+    0 2px 4px rgb(0 0 0 / 0.45);
+}
+
+:root[data-look='tavern'] .c4-seat-1 .c4-symbol {
+  fill: rgb(255 248 220 / 0.85);
+}
+
+:root[data-look='tavern'] .c4-win {
+  animation: c4-tavern-pulse 0.9s ease-in-out infinite alternate;
+}
+
+:root[data-look='tavern'] .c4-pop {
+  background: linear-gradient(180deg, #6b4423, #432813);
+  color: #f6ead2;
+  border: 1px solid #331e0d;
+  box-shadow: 0 2px 0 #2a180b;
+}
+
+:root[data-look='tavern'] .c4-pop:hover:not(:disabled) {
+  background: linear-gradient(180deg, #7d502a, #4e3017);
+}
+
+@keyframes c4-tavern-pulse {
+  from {
+    box-shadow:
+      inset 0 2px 3px rgb(255 255 255 / 0.3),
+      inset 0 -4px 0 rgb(0 0 0 / 0.35),
+      0 0 0 0 rgb(240 190 70 / 0.9);
+  }
+  to {
+    box-shadow:
+      inset 0 2px 3px rgb(255 255 255 / 0.3),
+      inset 0 -4px 0 rgb(0 0 0 / 0.35),
+      0 0 0 6px rgb(240 190 70 / 0.95),
+      0 0 14px rgb(240 190 70 / 0.6);
+  }
+}
+
