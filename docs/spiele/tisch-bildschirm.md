@@ -59,10 +59,16 @@ Die Spielszene läuft auf einer **Bühne** (`Stage` in `Display.tsx`, Faktor `st
 - Die frühere Liste „Plätze im Spiel“ (nur vom Platz nehmen) ist im Panel aufgegangen; „Platz übernehmen“ für Zuschauer bleibt am Tisch.
 - Getestet im Browser mit Leitung ohne Platz und zwei Gästen: umbenennen, vom Platz nehmen, entfernen (der Gast bekommt „entfernt“).
 
+## Schritt 5 (umgesetzt, #212): Turnier-Bildschirm
+
+- `#/turnier/<Code>/beamer` (`TournamentBeamerScreen` in `Tournament.tsx`, Knopf „📺 Als Turnier-Bildschirm öffnen“ im Zuschau-Block der Turnierseite): nur Ansicht, auf der Bühne des Tisch-Bildschirms (`Stage`, `FullscreenButton`, `useWakeLock` aus `Display.tsx`).
+- Vor Ort im Spielbetrieb wechselt die Ansicht alle 20 s zwischen „Als Nächstes“ (laufende Partien mit Tisch, nächste Partien) und „Stand“ (Baum bzw. Tabelle); Tischrunden, Anmeldung und Ende zeigen eine feste Seite (Ende mit Siegerehrung).
+- Nutzt das gespeicherte Profil des Geräts, sonst Gast: auf dem Gerät der Leitung läuft es immer, auf einem fremden Gerät nur bei Turnieren mit Zuschaulink.
+
 ## Noch offen
 
 - **Fernsehansicht für die übrigen Spiele** nur bei Bedarf: Spiele mit verborgenen Aktionen (Quartett, Mäxle) könnten auf dem Tisch den Verlauf größer zeigen.
 - **Hand-Ansicht für Spiele, deren Züge am Tisch hängen** (Schwarzer Peter, Quartett, Domino, Tiefflug): bräuchte eine kleine Tischfläche mit den nötigen Zielen statt einer reinen Hand.
 - **Spielleiter-Panel im Turnier** (Leitung, Mitleitung, Helfer über dieselben Fähigkeiten) und **Punkte setzen** (spielabhängig, siehe unten).
-- **Weitere Szenen** auf demselben Rahmen: Turnierbaum (die Turnierseite hat schon einen Zuschaulink, `settings.spectators`) und Partie nachspielen (#99).
+- **Weitere Szenen** auf demselben Rahmen: Partie nachspielen (#99, Issue #215); Turnier-Bildschirm siehe Schritt 5.
 - **Punkte setzen** ist spielabhängig; erst mit den Turnier-Stufen und einem optionalen `GameModule`-Haken klären.

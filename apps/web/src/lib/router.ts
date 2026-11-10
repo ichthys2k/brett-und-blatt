@@ -21,6 +21,7 @@ export type Route =
   | { name: 'tournament'; code: string; claim?: string; helper?: string; leader?: string }
   /** Schlichte Ansicht zum Einbetten (iframe): nur lesen, nur Turniere vor Ort mit Zuschaulink. */
   | { name: 'tournamentEmbed'; code: string }
+  | { name: 'tournamentBeamer'; code: string }
   | { name: 'series'; code: string; leader?: string }
   | { name: 'seriesEmbed'; code: string }
   | { name: 'sound' }
@@ -66,6 +67,7 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'tisch' && parts[1]) return { name: 'display', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'serie' && parts[1] && parts[2] === 'ansicht') return { name: 'seriesEmbed', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'serie' && parts[1]) return { name: 'series', code: decodeURIComponent(parts[1]), ...(params.leitung ? { leader: params.leitung } : {}) };
+  if (parts[0] === 'turnier' && parts[1] && parts[2] === 'beamer') return { name: 'tournamentBeamer', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'turnier' && parts[1] && parts[2] === 'ansicht') return { name: 'tournamentEmbed', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'turnier' && parts[1]) return { name: 'tournament', code: decodeURIComponent(parts[1]), ...(params.neu ? { claim: params.neu } : {}), ...(params.helfer ? { helper: params.helfer } : {}), ...(params.leitung ? { leader: params.leitung } : {}) };
   if (parts[0] === 'ton') return { name: 'sound' };
@@ -107,6 +109,8 @@ export const paths = {
   /** Tisch-Bildschirm für Fernseher, Beamer oder Tablet (#100). */
   display: (code: string) => `#/tisch/${encodeURIComponent(code)}`,
   tournament: (code: string) => `#/turnier/${encodeURIComponent(code)}`,
+  /** Turnier-Bildschirm für Fernseher oder Beamer (#212). */
+  tournamentBeamer: (code: string) => `#/turnier/${encodeURIComponent(code)}/beamer`,
   tournamentEmbed: (code: string) => `#/turnier/${encodeURIComponent(code)}/ansicht`,
   series: (code: string) => `#/serie/${encodeURIComponent(code)}`,
   seriesEmbed: (code: string) => `#/serie/${encodeURIComponent(code)}/ansicht`,

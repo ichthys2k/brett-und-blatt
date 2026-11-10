@@ -11,6 +11,7 @@ import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { applyOfflineMessage, createOfflineTournament, isOfflineCode, loadOfflineRecord, syncOfflineTournament } from '../lib/offlineTournament';
 import { createTournament, useTournament, type TournamentState } from '../lib/tournament';
+import { FullscreenButton, Stage, useWakeLock } from './Display';
 
 type Match = TournamentView['matches'][number];
 type Slot = Match['slots'][number];
@@ -146,6 +147,63 @@ export function TournamentEmbedScreen({ code }: { code: string }) {
         </a>
       </p>
     </div>
+  );
+}
+
+/**
+ * Turnier-Bildschirm für Fernseher oder Beamer (#212): dieselben Bausteine wie die Einbettungsansicht, aber groß auf der
+ * Bühne des Tisch-Bildschirms (Vollbild, Wake Lock), ohne Bedienung. Bei mehreren Teilen wechselt die Ansicht
+ * alle 20 Sekunden zwischen „Als Nächstes“ (Tische, Aufruf) und „Stand“ (Baum bzw. Tabelle).
+ */
+const BEAMER_ROTATE_MS = 20_000;
+
+export function TournamentBeamerScreen({ code }: { code: string }) {
+  const [state] = useTournament(code, storage.loadProfile() ?? GUEST);
+  const view = state.view;
+  const [page, setPage] = useState(0);
+  useWakeLock();
+  const tables = view?.settings.format === 'tables';
+  const showNext = Boolean(view && view.phase !== 'signup' && view.phase !== 'finished' && !tables && isLocalView(view));
+  const pages = view && view.phase !== 'signup' ? (showNext ? 2 : 1) : 1;
+  useEffect(() => {
+    if (pages < 2) return;
+    const id = window.setInterval(() => setPage((p) => (p + 1) % pages), BEAMER_ROTATE_MS);
+    return () => window.clearInterval(id);
+  }, [pages]);
+  if (!view) return <div className="grid min-h-dvh place-items-center p-8 text-center text-3xl">{state.status === 'gone' ? t('tournament.notFound') : state.closed !== null ? t('tournament.embedClosed') : t('online.connecting')}</div>;
+  const current = showNext ? page % 2 : 0;
+  return (
+    <>
+      <Stage>
+        <div className="mx-auto flex h-full max-w-[1200px] flex-col gap-3 overflow-hidden p-6">
+          <div className="flex items-baseline justify-between gap-4">
+            <h1 className="truncate text-4xl font-bold">🏆 {view.settings.name}</h1>
+            {showNext && (
+              <p className="shrink-0 text-lg text-muted" aria-live="polite">
+                {current === 0 ? t('tournament.beamerNext') : t('tournament.beamerStanding')} · {current + 1}/2
+              </p>
+            )}
+          </div>
+          <div className="min-h-0 flex-1 overflow-hidden text-lg">
+            {view.phase === 'signup' ? (
+              <p className="text-2xl text-muted">{t('tournament.entrantsCount', { n: view.players.filter((p) => !p.pair).length, min: TOURNAMENT_MIN_PLAYERS[view.settings.format] })}</p>
+            ) : view.phase === 'finished' ? (
+              <>
+                <Podium view={view} />
+                <Progress view={view} />
+              </>
+            ) : tables ? (
+              <TableRounds view={view} send={null} />
+            ) : current === 0 && showNext ? (
+              <FieldBoard view={view} send={null} />
+            ) : (
+              <Progress view={view} />
+            )}
+          </div>
+        </div>
+      </Stage>
+      <FullscreenButton />
+    </>
   );
 }
 
@@ -749,7 +807,17 @@ function SeriesAttach({ view, send, offline }: { view: TournamentView; send: Sen
 function SpectatorLink({ view, code }: { view: TournamentView; code: string }) {
   const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
   const embed = `<iframe src="${window.location.origin}${window.location.pathname}${paths.tournamentEmbed(code)}" title="${view.settings.name.replace(/"/g, '')}" width="100%" height="600" style="border:0" loading="lazy"></iframe>`;
-  if (!view.settings.spectators) return <p className="text-sm text-muted">{t('tournament.noSpectators')}</p>;
+  if (!view.settings.spectators)
+    return (
+      <div className="space-y-2">
+        <p className="text-sm text-muted">{t('tournament.noSpectators')}</p>
+        <a className="block" href={paths.tournamentBeamer(code)} target="_blank" rel="noopener">
+          <Button className="w-full" tabIndex={-1}>
+            📺 {t('tournament.beamer')}
+          </Button>
+        </a>
+      </div>
+    );
   return (
     <div className="space-y-2 rounded-xl border border-line p-3">
       <p className="text-sm font-semibold">👀 {t('tournament.spectatorLink')}</p>
@@ -760,6 +828,12 @@ function SpectatorLink({ view, code }: { view: TournamentView; code: string }) {
       <Button className="w-full" onClick={() => navigator.clipboard?.writeText(link)}>
         🔗 {t('tournament.copy')}
       </Button>
+      <a className="block" href={paths.tournamentBeamer(code)} target="_blank" rel="noopener">
+        <Button className="w-full" tabIndex={-1}>
+          📺 {t('tournament.beamer')}
+        </Button>
+      </a>
+      <p className="text-xs text-muted">{t('tournament.beamerHint')}</p>
       <p className="pt-1 text-xs text-muted">{t('tournament.embedHint')}</p>
       <Button className="w-full" onClick={() => navigator.clipboard?.writeText(embed)}>
         &lt;/&gt; {t('tournament.embedCopy')}

@@ -12,7 +12,7 @@ import { GameTable } from './Play';
 import { useLoadedGame } from './Room';
 
 /** Hält den Bildschirm wach, solange der Tisch läuft (Fernseher, Beamer, Tablet). */
-function useWakeLock(): void {
+export function useWakeLock(): void {
   useEffect(() => {
     let lock: WakeLockSentinel | null = null;
     const request = async () => {
@@ -34,7 +34,7 @@ function useWakeLock(): void {
   }, []);
 }
 
-function FullscreenButton() {
+export function FullscreenButton() {
   const [full, setFull] = useState(Boolean(document.fullscreenElement));
   useEffect(() => {
     const onChange = () => setFull(Boolean(document.fullscreenElement));
@@ -60,7 +60,7 @@ function FullscreenButton() {
  * Bildschirm hochgezogen. So werden Karten, Steine und Schrift groß, ohne dass jedes Spiel eine eigene
  * Fernsehansicht braucht. Festgesetzte Elemente (Siegerehrung, Sprechblasen) bleiben in der Bühne.
  */
-function Stage({ children }: { children: ReactNode }) {
+export function Stage({ children }: { children: ReactNode }) {
   const [size, setSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   useEffect(() => {
     const onResize = () => setSize({ width: window.innerWidth, height: window.innerHeight });
