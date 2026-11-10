@@ -43,7 +43,7 @@ function Screen() {
     case 'tournaments':
       return <Tournaments />;
     case 'packView':
-      return <PackView passKey={route.key} />;
+      return <PackView passKey={route.key} archive={route.archive === true} />;
     case 'operator':
       return <Operator />;
     case 'library':

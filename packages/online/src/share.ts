@@ -23,14 +23,14 @@ export interface ShareRecord {
 
 export type ShareResult<T = object> = ({ status: 200 } & T) | { status: 400; error: string } | { status: 401 };
 
-async function hashSecret(secret: string): Promise<string> {
+export async function hashSecret(secret: string): Promise<string> {
   const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`brett-und-blatt/teilen\n${secret}`)));
   let binary = '';
   for (const b of digest) binary += String.fromCharCode(b);
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function same(a: string, b: string): boolean {
+export function same(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);

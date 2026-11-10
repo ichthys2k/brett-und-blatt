@@ -78,6 +78,12 @@ import {
   type AttemptState,
 } from '@brett-und-blatt/online';
 import {
+  PACKAGE_TTL_MS,
+  authorizePackage,
+  isPackageExpired,
+  packageRecord,
+  validPackageSize,
+  type PackageRecord,
   SHARE_ID_PATTERN,
   SHARE_TTL_MS,
   isExpired,
@@ -126,6 +132,9 @@ interface Env {
   ATTEMPTS: DurableObjectNamespace<AttemptLimiter>;
   PASS_LOCKS: DurableObjectNamespace<PassLock>;
   SHARES: DurableObjectNamespace<PassShare>;
+  /** Geteilte Anki-Pakete mit Medien (#101, L7): Verwaltung im Durable Object, die verschlüsselten Bytes in R2 (EU). */
+  PACKAGE_SHARES: DurableObjectNamespace<PackageShare>;
+  PACKAGES: R2Bucket;
   CLASSES: DurableObjectNamespace<ClassRoom>;
   SERIES: DurableObjectNamespace<SeriesRoom>;
   ACCOUNT_FLOWS: DurableObjectNamespace<AccountFlow>;
@@ -189,6 +198,11 @@ function shareStub(env: Env, id: string): DurableObjectStub<PassShare> {
   return namespace.get(namespace.idFromName(id));
 }
 
+function packageStub(env: Env, id: string): DurableObjectStub<PackageShare> {
+  const namespace = env.ROOM_JURISDICTION === 'none' ? env.PACKAGE_SHARES : env.PACKAGE_SHARES.jurisdiction('eu');
+  return namespace.get(namespace.idFromName(id));
+}
+
 function classStub(env: Env, code: string): DurableObjectStub<ClassRoom> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.CLASSES : env.CLASSES.jurisdiction('eu');
   return namespace.get(namespace.idFromName(code));
@@ -243,7 +257,7 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
     ? {
         'Access-Control-Allow-Origin': origin,
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Geheimnis',
         Vary: 'Origin',
       }
     : {};
@@ -547,6 +561,44 @@ export default {
         return json({ error: 'body' }, 400, noStore);
       }
       const status = share[2] ? (request.method === 'POST' ? await stub.remove(body) : 405) : request.method === 'PUT' ? await stub.write(body) : 405;
+      return json({}, status, noStore);
+    }
+
+    // Geteilte Anki-Pakete mit Medien (#101, L7): verschlüsselte Bytes in R2, Verwaltung im Durable Object. Gleiche Regeln wie `/teilen/…`.
+    const packageShare = /^\/pakete\/([^/]+)(?:\/(loeschen))?$/.exec(url.pathname);
+    if (packageShare) {
+      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      const id = packageShare[1]!;
+      if (!SHARE_ID_PATTERN.test(id)) return json({ error: 'id' }, 404, cors);
+      const noStore = { ...cors, 'Cache-Control': 'no-store' };
+      const stub = packageStub(env, id);
+      if (request.method === 'GET' && !packageShare[2]) {
+        const limiter = attemptStub(env, request.headers.get('CF-Connecting-IP') ?? 'unbekannt');
+        if (await limiter.blocked()) return json({ error: 'rate' }, 429, { ...noStore, 'Retry-After': String(ATTEMPT_WINDOW_MS / 1000) });
+        const size = await stub.touch();
+        const object = size === null ? null : await env.PACKAGES.get(id);
+        if (!object) {
+          await limiter.miss();
+          return json({ error: 'missing' }, 404, noStore);
+        }
+        return new Response(object.body, { status: 200, headers: { ...noStore, 'Content-Type': 'application/octet-stream', 'Content-Length': String(object.size) } });
+      }
+      const secret = request.headers.get('X-Geheimnis');
+      if (packageShare[2]) {
+        if (request.method !== 'POST') return json({}, 405, cors);
+        const status = await stub.remove(secret);
+        if (status === 200) await env.PACKAGES.delete(id);
+        return json({}, status, noStore);
+      }
+      if (request.method !== 'PUT') return json({}, 405, cors);
+      const length = Number(request.headers.get('Content-Length'));
+      if (!validPackageSize(length) || !request.body) return json({ error: 'size' }, length > 0 ? 413 : 400, noStore);
+      const allowed = await stub.authorize(secret);
+      if (allowed !== 200) return json({}, allowed, noStore);
+      await env.PACKAGES.put(id, request.body, { httpMetadata: { contentType: 'application/octet-stream' } });
+      const stored = await env.PACKAGES.head(id);
+      const status = stored && stored.size === length ? await stub.commit(id, secret, length) : 400;
+      if (status !== 200) await env.PACKAGES.delete(id);
       return json({}, status, noStore);
     }
 
@@ -1024,6 +1076,66 @@ export class PassShare extends DurableObject<Env> {
   private async put(record: ShareRecord): Promise<void> {
     await this.ctx.storage.put('share', record);
     await this.ctx.storage.setAlarm(record.at + SHARE_TTL_MS);
+  }
+}
+
+/**
+ * Ein geteiltes Anki-Paket (#101, L7) als eigenes Durable Object (eins je Kennung, in der EU): Schreibgeheimnis, Größe und Zeitpunkt des
+ * letzten Abrufs. Die verschlüsselten Bytes liegen in R2 (`PACKAGES`, Schlüssel = Kennung); nach einem Jahr ohne Abruf löscht der Alarm beides.
+ */
+export class PackageShare extends DurableObject<Env> {
+  private async record(): Promise<PackageRecord | null> {
+    const record = (await this.ctx.storage.get<PackageRecord>('package')) ?? null;
+    return record && !isPackageExpired(record, Date.now()) ? record : null;
+  }
+
+  /** Abruf: liefert die Größe und rückt die Frist vor; null, wenn es das Paket nicht (mehr) gibt. */
+  async touch(): Promise<number | null> {
+    const record = await this.record();
+    if (!record) return null;
+    await this.put({ ...record, at: Date.now() });
+    return record.size;
+  }
+
+  /** Darf mit diesem Geheimnis geschrieben werden? */
+  async authorize(secret: string | null): Promise<number> {
+    return authorizePackage(await this.record(), secret);
+  }
+
+  /** Nach dem Hochladen: Eintrag anlegen oder ersetzen. */
+  async commit(id: string, secret: string | null, size: number): Promise<number> {
+    const current = await this.record();
+    const status = await authorizePackage(current, secret);
+    if (status !== 200) return status;
+    await this.ctx.storage.put('id', id);
+    await this.put(await packageRecord(current, secret as string, size, Date.now()));
+    return 200;
+  }
+
+  async remove(secret: string | null): Promise<number> {
+    const current = (await this.ctx.storage.get<PackageRecord>('package')) ?? null;
+    if (!current) return 404;
+    const status = await authorizePackage(current, secret);
+    if (status !== 200) return status === 400 ? 401 : status;
+    await this.ctx.storage.deleteAll();
+    return 200;
+  }
+
+  override async alarm(): Promise<void> {
+    const record = await this.ctx.storage.get<PackageRecord>('package');
+    if (!record || isPackageExpired(record, Date.now())) {
+      // Die Kennung ist der Schlüssel in R2; das Objekt merkt sie sich beim Schreiben (`commit`).
+      const id = await this.ctx.storage.get<string>('id');
+      if (id) await this.env.PACKAGES.delete(id);
+      await this.ctx.storage.deleteAll();
+      return;
+    }
+    await this.ctx.storage.setAlarm(record.at + PACKAGE_TTL_MS);
+  }
+
+  private async put(record: PackageRecord): Promise<void> {
+    await this.ctx.storage.put('package', record);
+    await this.ctx.storage.setAlarm(record.at + PACKAGE_TTL_MS);
   }
 }
 

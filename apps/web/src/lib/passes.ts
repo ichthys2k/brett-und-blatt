@@ -69,6 +69,7 @@ export const SCOPED_KEYS = [
   'brett-und-blatt:klassenausweise',
   'brett-und-blatt:bibliothek',
   'brett-und-blatt:lernen',
+  'brett-und-blatt:paketarchive',
   'brett-und-blatt:paketteilen',
 ] as const;
 export const SCOPED_PREFIXES = ['brett-und-blatt:einstellungen:'] as const;

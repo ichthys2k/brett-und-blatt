@@ -18,9 +18,12 @@
       { "name": "CLASSES", "class_name": "ClassRoom" },
       { "name": "SERIES", "class_name": "SeriesRoom" },
       { "name": "ACCOUNT_FLOWS", "class_name": "AccountFlow" },
-      { "name": "ACCOUNT_LOCKS", "class_name": "AccountLockBox" }
+      { "name": "ACCOUNT_LOCKS", "class_name": "AccountLockBox" },
+      { "name": "PACKAGE_SHARES", "class_name": "PackageShare" }
     ]
   },
+  // Geteilte Anki-Pakete mit Medien (#101, L7): verschlüsselte Bytes, Rechtsraum EU (nachträglich nicht änderbar).
+  "r2_buckets": [{ "binding": "PACKAGES", "bucket_name": "anki-brett-blatt", "jurisdiction": "eu" }],
   // Im Gratis-Tarif gibt es nur Durable Objects mit SQLite-Speicher.
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["GameRoom"] },
@@ -32,7 +35,8 @@
     { "tag": "v7", "new_sqlite_classes": ["PassShare"] },
     { "tag": "v8", "new_sqlite_classes": ["ClassRoom"] },
     { "tag": "v9", "new_sqlite_classes": ["SeriesRoom"] },
-    { "tag": "v10", "new_sqlite_classes": ["AccountFlow", "AccountLockBox"] }
+    { "tag": "v10", "new_sqlite_classes": ["AccountFlow", "AccountLockBox"] },
+    { "tag": "v11", "new_sqlite_classes": ["PackageShare"] }
   ],
   "vars": {
     // Von diesen Seiten aus dürfen Räume erstellt und betreten werden.

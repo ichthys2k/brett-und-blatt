@@ -17,7 +17,7 @@ export type Route =
   | { name: 'learning'; source: string }
   | { name: 'collection'; source: string }
   | { name: 'operator' }
-  | { name: 'packView'; key: string }
+  | { name: 'packView'; key: string; archive?: boolean }
   | { name: 'class'; code: string }
   | { name: 'room'; code: string }
   | { name: 'display'; code: string }
@@ -66,7 +66,7 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'lernen') return parts[1] ? { name: 'learning', source: decodeURIComponent(parts[1]) } : { name: 'learn' };
   if (parts[0] === 'sammlung') return { name: 'collection', source: decodeURIComponent(parts[1] ?? 'meine') };
   if (parts[0] === 'betreiber') return { name: 'operator' };
-  if (parts[0] === 'paket') return { name: 'packView', key: params.k ?? '' };
+  if (parts[0] === 'paket') return { name: 'packView', key: params.k ?? '', ...(params.t === 'apkg' ? { archive: true } : {}) };
   if (parts[0] === 'klasse' && parts[1]) return { name: 'class', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'raum' && parts[1]) return { name: 'room', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'tisch' && parts[1]) return { name: 'display', code: decodeURIComponent(parts[1]) };

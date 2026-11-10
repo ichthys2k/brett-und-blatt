@@ -144,6 +144,12 @@ export function Datenschutz() {
         ohne Abruf löscht der Server sie nach einem Jahr. Es gibt keine öffentliche Liste. Wer den Link hat, kann das Paket lesen. Spielst du eine Partie mit einem eigenen Paket, gehen dessen Paare (höchstens 18) mit der Partie an die Mitspielenden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
       <p>
+        <strong>Anki-Pakete teilen:</strong> Importierte Anki-Pakete liegen auf deinem Gerät (im Browser-Speicher) und gehen nicht an den Server. Wählst du „Link erstellen“, verpackt dein Browser das Paket mit seinen Bildern und Tönen (ohne deinen Lernstand),
+        verschlüsselt es mit einem Zufallsschlüssel, der nur im Link hinter dem „#“ steht, und legt es als eine Datei im Speicherdienst Cloudflare R2 (Rechtsraum EU) ab. Der Spieleserver speichert dazu nur den Prüfwert eines
+        Schreibgeheimnisses, das auf deinem Gerät bleibt, die Größe und den Zeitpunkt des letzten Abrufs; Cloudflare sieht nur verschlüsselte Daten. „Teilen beenden“ löscht alles; ohne Abruf löscht der Server das Paket nach einem Jahr.
+        Es gibt keine öffentliche Liste. Wer den Link hat, kann das Paket lesen. Teile nur Pakete, die du teilen darfst. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+      <p>
         <strong>Klassen:</strong> Legst du eine Klasse an oder trittst bei, speichert der Spieleserver in der EU den Namen der Klasse, die Geräte-Kennung jedes Mitglieds (zum Ausweisen, sie wird nie anderen
         Mitgliedern gezeigt) sowie Spitzname, Bild und – wenn du eines gewählt hast – das Wappen. Alle Mitglieder sehen Spitzname, Bild und Wappen der anderen Mitglieder; Fremde ohne Mitgliedschaft sehen nur den
         Namen der Klasse. Dazu legt dein Gerät, solange du die Klassenseite offen hast, eine „Klassenkarte“ ab: je nach Einstellung der Leitung und deiner eigenen Wahl deine Stempel, die Zahl deiner Pokale je Spiel und deine Lieblingsspiele (nie Codes, Kennungen oder Lernstände); du kannst jeden Teil abwählen. Die Leitung kann Mitglieder entfernen und die Klasse auflösen; du kannst jederzeit gehen. Eine Klasse ohne Aktivität wird nach einem Jahr gelöscht. Legt die Leitung Klassenausweise an, entstehen dabei auf dem Spieleserver Ausweise für die Kinder (nur Spitzname und ein Tierbild als Platzhalter) mit Spielercode und Start-PIN; die zugehörigen Codes

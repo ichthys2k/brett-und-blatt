@@ -1,7 +1,9 @@
 import { ApkgError, packsOf, savePackRows, withoutScheduling, type ApkgData } from '@brett-und-blatt/engine';
 import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
 import { Button } from '../components/controls';
+import { QrCode } from '../components/OnlineParts';
 import { APKG_LIMIT_TEXT, exportApkg, importApkg } from '../lib/ankiPackage';
+import { currentArchiveLink, publishArchive, stopArchiveShare } from '../lib/archiveShare';
 import { deletePackStored, keepStorage, listPacks, loadPack, savePack, type PackSummary } from '../lib/ankiStore';
 import { downloadFile, safeFileName } from '../lib/download';
 import { loadCollection, saveCollection } from '../lib/library';
@@ -123,6 +125,8 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [options, setOptions] = useState<{ id: string; scheduling: boolean; media: boolean; latest: boolean } | null>(null);
+  const [sharing, setSharing] = useState<string | null>(null);
+  const [links, setLinks] = useState<Record<string, string | null>>({});
   const refresh = useCallback(() => {
     listPacks().then(setPacks, () => setPacks([]));
   }, []);
@@ -147,6 +151,15 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
       const bytes = await exportApkg({ collection: stored.pack.collection, cards: stored.pack.cards, revlog: stored.pack.revlog, media: stored.media, crt: stored.pack.crt, conf: stored.pack.conf, dconf: stored.pack.dconf }, { scheduling, media, format: latest ? 'latest' : 'legacy2' });
       downloadFile(`${safeFileName(pack.name)}.apkg`, bytes as BlobPart, 'application/octet-stream');
       setOptions(null);
+    });
+  /** Teilen: das Paket ohne Lernstand als `.apkg` (Medien dabei), im Browser verschlüsselt, als eine Datei in R2. */
+  const sharePack = (pack: PackSummary) =>
+    run(pack.id, async () => {
+      const stored = await loadPack(pack.id);
+      if (!stored) return;
+      const bytes = await exportApkg({ collection: stored.pack.collection, media: stored.media, conf: stored.pack.conf, dconf: stored.pack.dconf }, { scheduling: false, media: true });
+      const link = await publishArchive(pack.id, bytes);
+      setLinks((old) => ({ ...old, [pack.id]: link }));
     });
   const takePairs = (pack: PackSummary) =>
     run(pack.id, async () => {
@@ -217,6 +230,9 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
                 <Button variant="ghost" disabled={busy === pack.id} onClick={() => setOptions({ id: pack.id, scheduling: pack.learned > 0, media: true, latest: false })}>
                   📤 Exportieren
                 </Button>
+                <Button variant="ghost" disabled={busy === pack.id} onClick={() => (setSharing(sharing === pack.id ? null : pack.id), setLinks((old) => ({ ...old, [pack.id]: old[pack.id] ?? currentArchiveLink(pack.id) })))}>
+                  🔗 Teilen
+                </Button>
                 <Button variant="ghost" disabled={busy === pack.id} onClick={() => void takePairs(pack)}>
                   🧩 Paare übernehmen
                 </Button>
@@ -230,6 +246,37 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
                 >
                   🗑️
                 </Button>
+              </div>
+            )}
+            {sharing === pack.id && (
+              <div className="space-y-2 rounded-xl border border-line p-3">
+                <p className="text-sm text-muted">
+                  Das Paket wird mit allen Bildern und Tönen, aber ohne deinen Lernstand, im Browser verschlüsselt und als eine Datei abgelegt. Nur wer den Link oder QR-Code hat, kann es öffnen; es gibt keine öffentliche Liste. Nach einem Jahr ohne Abruf wird es gelöscht. Teile nur, was du teilen darfst.
+                </p>
+                <Button variant="primary" className="w-full" disabled={busy === pack.id} onClick={() => void sharePack(pack)}>
+                  🔗 {links[pack.id] ? 'Link aktualisieren (neuer Stand)' : 'Link erstellen'}
+                </Button>
+                {links[pack.id] && (
+                  <div className="space-y-2">
+                    <input readOnly className={FIELD} value={links[pack.id]!} aria-label="Link zum Paket" onFocus={(e) => e.currentTarget.select()} />
+                    <QrCode text={links[pack.id]!} label={`QR-Code für das Paket ${pack.name}`} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button onClick={() => void navigator.clipboard?.writeText(links[pack.id]!).then(() => setNote('Link kopiert.'))}>Kopieren</Button>
+                      <Button
+                        disabled={busy === pack.id}
+                        onClick={() =>
+                          void run(pack.id, async () => {
+                            await stopArchiveShare(pack.id);
+                            setLinks((old) => ({ ...old, [pack.id]: null }));
+                            setNote('Geteilt wird nicht mehr; der Link zeigt nichts mehr.');
+                          })
+                        }
+                      >
+                        Teilen beenden
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </li>
