@@ -2354,27 +2354,27 @@ button.cs-tile {
 
 /* Handy (#108): Vorführen, Sortieren, Stapel und Tauschen bleiben in einer Zeile */
 @media (max-width: 520px), (orientation: landscape) and (max-height: 540px) {
-  .cs-actions:not(.cs-deskmode .cs-actions) {
+  .cs-play .cs-actions {
     flex-wrap: nowrap;
     gap: 0.3rem;
   }
 
-  .cs-actions:not(.cs-deskmode .cs-actions) > .cs-btn {
+  .cs-play .cs-actions > .cs-btn {
     min-height: 2.5rem;
     padding: 0 0.6rem;
     font-size: 0.85rem;
     white-space: nowrap;
   }
 
-  .cs-actions:not(.cs-deskmode .cs-actions) .cs-sort {
+  .cs-play .cs-actions .cs-sort {
     gap: 0.25rem;
   }
 
-  .cs-actions:not(.cs-deskmode .cs-actions) .cs-sort small {
+  .cs-play .cs-actions .cs-sort small {
     display: none;
   }
 
-  .cs-actions:not(.cs-deskmode .cs-actions) .cs-sort .cs-btn {
+  .cs-play .cs-actions .cs-sort .cs-btn {
     min-height: 2.25rem;
     padding: 0 0.55rem;
     font-size: 0.8rem;
@@ -2453,30 +2453,101 @@ button.cs-tile {
 /* Handy quer (#109): Kopf enger, damit das Brett nicht rollt */
 @media (orientation: landscape) and (max-height: 540px) {
   .cs-board:not(.cs-bigmode) {
-    gap: 0.25rem;
+    gap: 0.15rem;
   }
 
   .cs-board:not(.cs-bigmode) .cs-stats {
-    flex-wrap: nowrap;
-    gap: 0.15rem 0.4rem;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.35rem;
     font-size: 0.75rem;
-    white-space: nowrap;
+    white-space: normal;
   }
 
   .cs-board:not(.cs-bigmode) .cs-enemy {
-    padding: 0.2rem 0.5rem;
+    padding: 0.15rem 0.4rem;
   }
 
   .cs-board:not(.cs-bigmode) .cs-enemy-emoji {
-    zoom: 0.75;
+    font-size: 1.35rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-portrait {
+    height: 1.1em;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-title {
+    font-size: 0.85rem;
   }
 
   .cs-board:not(.cs-bigmode) .cs-stats .cs-link {
-    padding: 0.05rem 0.4rem;
+    padding: 0.05rem 0.35rem;
     font-size: 0.72rem;
   }
 
   .cs-board:not(.cs-bigmode) .cs-stagehint {
     display: none;
+  }
+
+  .cs-play .cs-actions {
+    gap: 0.15rem;
+  }
+
+  .cs-play .cs-actions > .cs-btn {
+    min-height: 1.85rem;
+    padding: 0 0.45rem;
+    font-size: 0.78rem;
+  }
+
+  .cs-play .cs-actions .cs-sort .cs-btn {
+    min-height: 1.7rem;
+    padding: 0 0.35rem;
+    font-size: 0.72rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-tile {
+    width: 2.8rem;
+    min-height: 2.8rem;
+    font-size: 0.7rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-hand {
+    --cw: min(var(--cw), 44px) !important;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-score {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-play {
+    gap: 0.15rem;
+  }
+
+  /* Audienz-Vorbereitung und Panels im Querformat kompakt halten (#109) */
+  .cs-board:not(.cs-bigmode) .cs-panel.cs-center {
+    padding: 0.35rem 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-panel.cs-center .cs-portrait-big {
+    height: 1.4em;
+    max-height: 48px;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-panel.cs-center .cs-big {
+    font-size: 1.5rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-panel.cs-center .cs-title {
+    font-size: 0.95rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-panel.cs-center .cs-actions {
+    gap: 0.25rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-panel.cs-center .cs-btn {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.8rem;
   }
 }
