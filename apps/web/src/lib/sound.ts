@@ -50,4 +50,3 @@ export function useSoundSettings(): SoundSettings {
 if (typeof window !== 'undefined') {
   for (const type of ['pointerdown', 'keydown'] as const) window.addEventListener(type, () => sound.unlock(), { capture: true, passive: true });
 }
-

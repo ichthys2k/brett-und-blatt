@@ -1,10 +1,13 @@
-import type { ClassView } from '@brett-und-blatt/online';
+import { CARD_SECTIONS, DEFAULT_CARD_SECTIONS, type CardSection, type CardSections, type ClassCard, type ClassView } from '@brett-und-blatt/online';
 import { serializeCrest } from '@brett-und-blatt/engine';
 import { currentCrest, hasCrest, onCrestSaved } from './crestStore';
 import { GAME_SERVER } from './server';
 import { buildSnapshot } from './passShare';
 import { storage } from './storage';
-import type { CardSection, ClassCard } from '@brett-und-blatt/online';
+import { ALBUM_KEY, sanitizeAlbum } from './album';
+import { loadBook } from './chronikStore';
+import { levelStats, ratingOf } from './botRating';
+import { onGameRecorded } from './passRecorder';
 
 /*
  * Klassen im Browser (#150): Aufrufe an den Spieleserver und die Merkliste dieses Passes.
@@ -162,7 +165,7 @@ const HIDE_KEY = 'brett-und-blatt:klassen-ausblenden';
 export function hiddenSections(): CardSection[] {
   try {
     const list = JSON.parse(window.localStorage.getItem(HIDE_KEY) ?? '[]');
-    return Array.isArray(list) ? list.filter((x): x is CardSection => x === 'stamps' || x === 'trophies' || x === 'favorites') : [];
+    return Array.isArray(list) ? list.filter((x): x is CardSection => (CARD_SECTIONS as readonly string[]).includes(x)) : [];
   } catch {
     return [];
   }
@@ -175,22 +178,110 @@ export function setSectionHidden(section: CardSection, hidden: boolean): void {
   } catch {
     // ohne Speicher gilt die Wahl nur bis zum Schließen
   }
+  updateClassCardsSoon(0);
 }
 
 /** Die eigene Klassenkarte: nur, was die Klasse erlaubt und das Mitglied nicht ausgeblendet hat. */
 export function buildClassCard(allowed: Record<CardSection, boolean>): Omit<ClassCard, 'at'> {
   const hidden = hiddenSections();
-  const use = (['stamps', 'trophies', 'favorites'] as const).filter((section) => allowed[section] && !hidden.includes(section));
-  const snapshot = buildSnapshot(use);
   const card: Omit<ClassCard, 'at'> = {};
-  if (snapshot?.stamps) card.stamps = snapshot.stamps;
-  if (snapshot?.trophies) {
-    const counts = new Map<string, number>();
-    for (const trophy of snapshot.trophies) counts.set(trophy.gameId, (counts.get(trophy.gameId) ?? 0) + 1);
-    card.trophies = [...counts].map(([gameId, count]) => ({ gameId, count }));
+
+  const shareSections = (['stamps', 'trophies', 'favorites'] as const).filter((section) => allowed[section] && !hidden.includes(section));
+  if (shareSections.length > 0) {
+    const snapshot = buildSnapshot(shareSections);
+    if (snapshot?.stamps && allowed.stamps && !hidden.includes('stamps')) card.stamps = snapshot.stamps;
+    if (snapshot?.trophies && allowed.trophies && !hidden.includes('trophies')) {
+      const counts = new Map<string, number>();
+      for (const trophy of snapshot.trophies) counts.set(trophy.gameId, (counts.get(trophy.gameId) ?? 0) + 1);
+      card.trophies = [...counts].map(([gameId, count]) => ({ gameId, count }));
+    }
+    if (snapshot?.favorites && allowed.favorites && !hidden.includes('favorites')) card.favorites = snapshot.favorites;
   }
-  if (snapshot?.favorites) card.favorites = snapshot.favorites;
+
+  if (allowed.album && !hidden.includes('album')) {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem(ALBUM_KEY) : null;
+      const album = sanitizeAlbum(raw ? JSON.parse(raw) : null);
+      const entries = Object.entries(album).flatMap(([gameId, ch]) => {
+        const count = Object.keys(ch.found ?? {}).length;
+        return count > 0 ? [{ gameId, count }] : [];
+      });
+      if (entries.length > 0) card.album = entries;
+    } catch {
+      // ohne Album
+    }
+  }
+
+  if (allowed.botRating && !hidden.includes('botRating')) {
+    try {
+      const book = loadBook();
+      const allGames = new Set<string>();
+      for (const games of Object.values(book.counts)) {
+        for (const [id, buckets] of Object.entries(games)) {
+          if (Object.keys(buckets).some((k) => k.startsWith('bots/'))) allGames.add(id);
+        }
+      }
+      const botRatings = [...allGames].flatMap((gameId) => {
+        const stats = levelStats(book, gameId);
+        const games = stats.easy.played + stats.medium.played + stats.hard.played;
+        const wins = stats.easy.won + stats.medium.won + stats.hard.won;
+        if (games === 0) return [];
+        const r = ratingOf(stats);
+        return [{ gameId, games, ...(r.rating !== null ? { rating: r.rating } : {}), wins }];
+      });
+      if (botRatings.length > 0) card.botRating = botRatings;
+    } catch {
+      // ohne Bot-Wertung
+    }
+  }
+
   return card;
+}
+
+let updateCardsTimer: ReturnType<typeof setTimeout> | null = null;
+const lastSentCardPerClass = new Map<string, string>();
+
+/** Merkt sich die gesendete Karte, um doppeltes Senden zu vermeiden. */
+export function markCardSent(code: string, card: Omit<ClassCard, 'at'>): void {
+  lastSentCardPerClass.set(code, JSON.stringify(card));
+}
+
+/** Führt die Klassenkarte in allen bekannten Klassen nach, wenn sich der Spielstand geändert hat (#151). */
+export function updateClassCardsSoon(delayMs = 1200): void {
+  if (typeof window === 'undefined' || !GAME_SERVER) return;
+  if (updateCardsTimer) clearTimeout(updateCardsTimer);
+  updateCardsTimer = setTimeout(() => {
+    updateCardsTimer = null;
+    void updateClassCardsNow();
+  }, delayMs);
+}
+
+export async function updateClassCardsNow(): Promise<void> {
+  const classes = loadClasses();
+  if (classes.length === 0) return;
+  const card = buildClassCard(DEFAULT_CARD_SECTIONS);
+  const cardKey = JSON.stringify(card);
+
+  for (const c of classes) {
+    if (lastSentCardPerClass.get(c.code) === cardKey) continue;
+    try {
+      const reply = await classAct(c.code, 'card', { card });
+      if (reply.ok) {
+        lastSentCardPerClass.set(c.code, cardKey);
+      } else if (reply.status === 404) {
+        forgetClass(c.code);
+      }
+    } catch {
+      // stiller Hintergrund-Abgleich
+    }
+  }
+}
+
+// Nach jedem Partieende oder Fund werden die Klassenkarten aller gemerkten Klassen nachgeführt (#151).
+if (typeof window !== 'undefined') {
+  onGameRecorded(() => {
+    updateClassCardsSoon();
+  });
 }
 
 /** Aktualisiert Name, Bild und Wappen bei allen Klassen, in denen man Mitglied ist (#150). */
@@ -203,5 +294,4 @@ export function updateClassesAfterProfileChange(): void {
 }
 
 onCrestSaved(updateClassesAfterProfileChange);
-
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CLASS_CODE_LENGTH, CLASS_MAX_MEMBERS, classView, configureClass, createClass, decide, enrollMember, joinClass, leaveClass, parseClassCode, putCard, randomClassCode, removeMember, setLead, updateMember, type ClassState } from '../src/classroom';
+import { classStamps, sanitizeCard, DEFAULT_CARD_SECTIONS } from '../src/classcard';
 
 const T = (n: number) => `token-${String(n).padStart(8, '0')}`;
 const person = (n: number, name = `Kind${n}`) => ({ token: T(n), name, avatar: '🦊' });
@@ -111,7 +112,13 @@ describe('Klasse', () => {
 });
 
 describe('Klassenkarten (#151)', () => {
-  const full = { stamps: [{ gameId: 'chess', kinds: ['first', 'win', 'bogus'] }, { gameId: '<x>', kinds: ['win'] }], trophies: [{ gameId: 'chess', count: 3 }, { gameId: 'chess', count: -1 }], favorites: ['skat', '../x'] };
+  const full = {
+    stamps: [{ gameId: 'chess', kinds: ['first', 'win', 'bogus'] }, { gameId: '<x>', kinds: ['win'] }],
+    trophies: [{ gameId: 'chess', count: 3 }, { gameId: 'chess', count: -1 }],
+    favorites: ['skat', '../x'],
+    album: [{ gameId: 'drachenspiel', count: 7 }, { gameId: 'bad', count: -1 }],
+    botRating: [{ gameId: 'chess', rating: 1250, games: 10, wins: 6 }, { gameId: 'bad', games: -5 }],
+  };
 
   it('legt eine geprüfte Karte ab und zeigt sie nur Mitgliedern', () => {
     const state = fresh();
@@ -121,6 +128,8 @@ describe('Klassenkarten (#151)', () => {
     expect(card?.stamps).toEqual([{ gameId: 'chess', kinds: ['first', 'win'] }]);
     expect(card?.trophies).toEqual([{ gameId: 'chess', count: 3 }]);
     expect(card?.favorites).toEqual(['skat']);
+    expect(card?.album).toEqual([{ gameId: 'drachenspiel', count: 7 }]);
+    expect(card?.botRating).toEqual([{ gameId: 'chess', rating: 1250, games: 10, wins: 6 }]);
     expect(classView(state, T(99)).members).toEqual([]);
     expect(putCard(state, T(99), full, 6)).toEqual({ error: expect.any(String) });
   });
@@ -130,13 +139,43 @@ describe('Klassenkarten (#151)', () => {
     joinClass(state, person(1), 2);
     putCard(state, T(1), full, 5);
     expect(configureClass(state, T(1), { sections: { trophies: false } }, 6)).toEqual({ error: expect.any(String) });
-    expect(configureClass(state, T(0), { sections: { trophies: false, favorites: false } }, 6)).toEqual({ ok: true });
+    expect(configureClass(state, T(0), { sections: { trophies: false, favorites: false, album: false, botRating: false } }, 6)).toEqual({ ok: true });
     const card = classView(state, T(0)).members.find((m) => m.name === 'Kind1')?.card;
     expect(card?.trophies).toBeUndefined();
     expect(card?.favorites).toBeUndefined();
+    expect(card?.album).toBeUndefined();
+    expect(card?.botRating).toBeUndefined();
     expect(card?.stamps).toBeDefined();
     putCard(state, T(1), full, 7);
     expect(classView(state, T(0)).members.find((m) => m.name === 'Kind1')?.card?.trophies).toBeUndefined();
+  });
+
+  it('berechnet Klassen-Stempel für Spiele, die alle aktuellen Mitglieder gespielt haben', () => {
+    const card1 = sanitizeCard({ stamps: [{ gameId: 'chess', kinds: ['first', 'win'] }, { gameId: 'skat', kinds: ['first'] }] }, DEFAULT_CARD_SECTIONS, 1)!;
+    const card2 = sanitizeCard({ stamps: [{ gameId: 'chess', kinds: ['first'] }, { gameId: 'checkers', kinds: ['first'] }] }, DEFAULT_CARD_SECTIONS, 1)!;
+    const card3 = sanitizeCard({ stamps: [{ gameId: 'chess', kinds: ['first'] }] }, DEFAULT_CARD_SECTIONS, 1)!;
+
+    // Mindestens 2 Mitglieder
+    expect(classStamps([card1])).toEqual([]);
+    // Schach haben beide Mitglieder gespielt
+    expect(classStamps([card1, card2])).toEqual(['chess']);
+    // Alle 3 Mitglieder haben Schach gespielt
+    expect(classStamps([card1, card2, card3])).toEqual(['chess']);
+    // Wenn ein Mitglied fehlt oder keinen Stempel hat: leer
+    expect(classStamps([card1, card2, undefined])).toEqual([]);
+    expect(classStamps([card1, card2, { at: 1, stamps: [] }])).toEqual([]);
+  });
+
+  it('steuert die Ranglisten-Option (Vorgabe aus)', () => {
+    const state = fresh();
+    joinClass(state, person(1), 2);
+    expect(classView(state, T(0)).leaderboard).toBe(false);
+    expect(configureClass(state, T(1), { leaderboard: true }, 3)).toEqual({ error: expect.any(String) });
+    expect(configureClass(state, T(0), { leaderboard: true }, 3)).toEqual({ ok: true });
+    expect(classView(state, T(0)).leaderboard).toBe(true);
+    expect(classView(state, T(1)).leaderboard).toBe(true);
+    expect(configureClass(state, T(0), { leaderboard: false }, 4)).toEqual({ ok: true });
+    expect(classView(state, T(1)).leaderboard).toBe(false);
   });
 
   it('enthält keine Geräte-Kennung', () => {
