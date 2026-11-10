@@ -12,6 +12,8 @@ export type Route =
   | { name: 'online' }
   | { name: 'tournaments' }
   | { name: 'classes' }
+  | { name: 'orgs' }
+  | { name: 'org'; code: string; invite?: string }
   | { name: 'library' }
   | { name: 'operator' }
   | { name: 'packView'; key: string }
@@ -60,6 +62,8 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'online' || parts[0] === 'mehrspieler') return { name: 'online' };
   if (parts[0] === 'turniere') return { name: 'tournaments' };
   if (parts[0] === 'klassen') return { name: 'classes' };
+  if (parts[0] === 'organisationen') return { name: 'orgs' };
+  if (parts[0] === 'org' && parts[1]) return { name: 'org', code: decodeURIComponent(parts[1]), ...(params.einladung ? { invite: params.einladung.slice(0, 20) } : {}) };
   if (parts[0] === 'bibliothek') return { name: 'library' };
   if (parts[0] === 'betreiber') return { name: 'operator' };
   if (parts[0] === 'paket') return { name: 'packView', key: params.k ?? '' };
@@ -105,6 +109,9 @@ export const paths = {
   online: '#/online',
   tournaments: '#/turniere',
   classes: '#/klassen',
+  /** „Verein oder Schule“ (#217). */
+  orgs: '#/organisationen',
+  org: (code: string) => `#/org/${encodeURIComponent(code)}`,
   library: '#/bibliothek',
   class: (code: string) => `#/klasse/${encodeURIComponent(code)}`,
   room: (code: string) => `#/raum/${encodeURIComponent(code)}`,

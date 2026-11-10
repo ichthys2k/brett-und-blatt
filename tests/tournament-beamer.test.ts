@@ -10,3 +10,11 @@ describe('Turnier-Bildschirm (#212)', () => {
     expect(parseRoute(paths.tournamentEmbed('X'))).toEqual({ name: 'tournamentEmbed', code: 'X' });
   });
 });
+
+describe('Verein oder Schule (#229)', () => {
+  it('Pfade und Routen passen zusammen', () => {
+    expect(parseRoute(paths.orgs)).toEqual({ name: 'orgs' });
+    expect(parseRoute(`${paths.org('🦊🦊🦊🦊🦊🦊')}?einladung=ABCD2345`)).toEqual({ name: 'org', code: '🦊🦊🦊🦊🦊🦊', invite: 'ABCD2345' });
+    expect(parseRoute(paths.org('🦊🦊🦊🦊🦊🦊'))).toEqual({ name: 'org', code: '🦊🦊🦊🦊🦊🦊' });
+  });
+});

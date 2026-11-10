@@ -129,6 +129,9 @@ export function Online() {
             <button type="button" className="bub-menu-button" onClick={() => navigate(paths.classes)}>
               Klassen
             </button>
+            <button type="button" className="bub-menu-button" onClick={() => navigate(paths.orgs)}>
+              Verein oder Schule
+            </button>
           </div>
 
           <OpenRooms rooms={openRooms?.filter((room) => !room.tournament) ?? null} showEmpty />
