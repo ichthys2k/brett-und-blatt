@@ -67,6 +67,8 @@ export interface ApkgData {
   revlog: ApkgRevlog[];
   /** Dateiname → Inhalt. */
   media: Map<string, Uint8Array>;
+  /** Tag 0 der Sammlung (Sekunden): Fälligkeitstage der Wiederholungskarten zählen ab hier. */
+  crt?: number;
   /** Einstellungen der Sammlung und Stapeloptionen (Schema-11-JSON), soweit das Paket sie mitbringt. */
   conf: Record<string, unknown> | null;
   dconf: Record<string, unknown> | null;

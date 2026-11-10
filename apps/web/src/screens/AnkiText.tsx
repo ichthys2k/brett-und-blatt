@@ -1,8 +1,9 @@
-import { addDeck, deckSummaries, exportTextFile, importTextFile, parseTextFile, suggestImport, type DuplicateMode, type TextImportLog, type TextImportOptions } from '@brett-und-blatt/engine';
+import { addDeck, deckSummaries, learnCards, exportTextFile, importTextFile, parseTextFile, suggestImport, type DuplicateMode, type TextImportLog, type TextImportOptions } from '@brett-und-blatt/engine';
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { Button } from '../components/controls';
 import { exportApkg } from '../lib/ankiPackage';
 import { loadMedia } from '../lib/ankiStore';
+import { loadLearnBook } from '../lib/learnStore';
 import { OWN } from '../lib/collectionSource';
 import { downloadFile } from '../lib/download';
 import { loadCollection, saveCollection } from '../lib/library';
@@ -230,6 +231,8 @@ export function AnkiExport({ onDone }: { onDone: () => void }) {
   const [deckCol, setDeckCol] = useState(true);
   const [tags, setTags] = useState(true);
   const [html, setHtml] = useState(true);
+  const [withLearning, setWithLearning] = useState(false);
+  const learned = useMemo(() => Object.keys(loadLearnBook().cards).length, []);
   const [message, setMessage] = useState<string | null>(null);
   const out = useMemo(() => exportTextFile(col, { ...(deck === 'all' ? {} : { deckId: deck }), guid, notetype, deck: deckCol, tags, html }), [col, deck, guid, notetype, deckCol, tags, html]);
   const count = out.split('\n').filter((line) => line && !line.startsWith('#')).length;
@@ -244,7 +247,9 @@ export function AnkiExport({ onDone }: { onDone: () => void }) {
   const savePackage = async () => {
     try {
       const media = await loadMedia(OWN);
-      const bytes = await exportApkg({ collection: col, media, ...(deck === 'all' ? {} : { deckId: deck }) }, { scheduling: false, media: true });
+      const book = loadLearnBook();
+      const learning = withLearning && learned > 0 ? { cards: learnCards(col, book), revlog: book.log, crt: book.crt } : {};
+      const bytes = await exportApkg({ collection: col, media, ...learning, ...(deck === 'all' ? {} : { deckId: deck }) }, { scheduling: withLearning && learned > 0, media: true });
       downloadFile('brett-und-blatt.apkg', bytes as BlobPart, 'application/octet-stream');
     } catch {
       setMessage('Das Paket konnte nicht erstellt werden.');
@@ -292,6 +297,12 @@ export function AnkiExport({ onDone }: { onDone: () => void }) {
           Als Datei speichern
         </Button>
       </div>
+      {learned > 0 && (
+        <label className="flex min-h-11 items-center gap-2 text-sm">
+          <input type="checkbox" className="size-5 accent-accent" checked={withLearning} onChange={(e) => setWithLearning(e.target.checked)} />
+          <span>Lernstand ins Anki-Paket mitgeben (Protokoll der letzten 30 Tage)</span>
+        </label>
+      )}
       <Button className="w-full" disabled={count === 0} onClick={() => void savePackage()}>
         📦 Als Anki-Paket (.apkg) speichern
       </Button>

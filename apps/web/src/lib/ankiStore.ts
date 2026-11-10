@@ -1,4 +1,4 @@
-import { reconcileCards, type AnkiCollection, type ApkgData } from '@brett-und-blatt/engine';
+import { buildQueue, clampOptions, reconcileCards, todaysCounts, type AnkiCollection, type ApkgData, type LearnOptions } from '@brett-und-blatt/engine';
 import { passBook } from './passes';
 
 /*
@@ -19,6 +19,10 @@ export interface StoredPack {
   dconf: ApkgData['dconf'];
   warnings: string[];
   mediaBytes: number;
+  /** Tag 0 des Pakets (Sekunden); fehlt bei Paketen, die vor der Lernfunktion importiert wurden. */
+  crt?: number;
+  /** Eigene Lerneinstellungen für dieses Paket. */
+  learnOptions?: Partial<LearnOptions>;
 }
 
 export interface PackSummary {
@@ -31,6 +35,9 @@ export interface PackSummary {
   media: number;
   mediaBytes: number;
   learned: number;
+  crt: number | null;
+  /** Heute zu lernen: neue, Lern- und Wiederholungskarten (mit den Tageslimits des Pakets). */
+  due: { new: number; learning: number; review: number };
 }
 
 const PACKS = 'packs';
@@ -66,7 +73,7 @@ const mediaKey = (packId: string, name: string): string => `${packId}\u0000${nam
 export async function savePack(name: string, data: ApkgData): Promise<string> {
   const id = Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, '0')).join('');
   const mediaBytes = [...data.media.values()].reduce((sum, bytes) => sum + bytes.length, 0);
-  const pack: StoredPack = { id, name, importedAt: Date.now(), version: data.version, collection: data.collection, cards: data.cards, revlog: data.revlog, conf: data.conf, dconf: data.dconf, warnings: data.warnings, mediaBytes };
+  const pack: StoredPack = { id, name, importedAt: Date.now(), version: data.version, collection: data.collection, cards: data.cards, revlog: data.revlog, conf: data.conf, dconf: data.dconf, warnings: data.warnings, mediaBytes, ...(data.crt ? { crt: data.crt } : {}) };
   const db = await open();
   try {
     const tx = db.transaction([PACKS, MEDIA], 'readwrite');
@@ -95,6 +102,14 @@ export async function listPacks(): Promise<PackSummary[]> {
         media: keys.filter((k) => typeof k === 'string' && k.startsWith(`${p.id}\u0000`)).length,
         mediaBytes: p.mediaBytes,
         learned: p.cards.filter((c) => c.reps > 0 || c.type > 0).length,
+        crt: p.crt ?? null,
+        due: (() => {
+          const crt = p.crt ?? Math.floor(Date.now() / 1000 / 86400) * 86400;
+          const now = Date.now();
+          const opts = clampOptions(p.learnOptions);
+          const today = todaysCounts(p.revlog, crt, now);
+          return buildQueue(p.cards, crt, now, { newPerDay: opts.newPerDay, reviewsPerDay: opts.reviewsPerDay, doneNew: today.new, doneReviews: today.reviews, learnAheadSec: 1200 }).counts;
+        })(),
       }))
       .sort((a, b) => b.importedAt - a.importedAt);
   } finally {
@@ -186,6 +201,39 @@ export async function putMedia(id: string, name: string, bytes: Uint8Array): Pro
     request.onsuccess = () => {
       const pack = request.result;
       if (pack) tx.objectStore(PACKS).put({ ...pack, mediaBytes: pack.mediaBytes + bytes.length });
+    };
+    await done(tx);
+  } finally {
+    db.close();
+  }
+}
+
+/** Speichert eine Antwort auf eine Karte des Pakets (Karte und Protokoll in einem Zug). */
+export async function savePackAnswer(id: string, card: ApkgData['cards'][number], log: ApkgData['revlog'][number]): Promise<void> {
+  const db = await open();
+  try {
+    const tx = db.transaction(PACKS, 'readwrite');
+    const request = tx.objectStore(PACKS).get(id) as IDBRequest<StoredPack | undefined>;
+    request.onsuccess = () => {
+      const pack = request.result;
+      if (!pack) return;
+      tx.objectStore(PACKS).put({ ...pack, cards: pack.cards.map((c) => (c.id === card.id ? card : c)), revlog: [...pack.revlog, log] });
+    };
+    await done(tx);
+  } finally {
+    db.close();
+  }
+}
+
+/** Speichert Tag 0 (für Pakete aus der Zeit vor der Lernfunktion) und die Lerneinstellungen eines Pakets. */
+export async function savePackLearnSettings(id: string, patch: { crt?: number; learnOptions?: Partial<LearnOptions> }): Promise<void> {
+  const db = await open();
+  try {
+    const tx = db.transaction(PACKS, 'readwrite');
+    const request = tx.objectStore(PACKS).get(id) as IDBRequest<StoredPack | undefined>;
+    request.onsuccess = () => {
+      const pack = request.result;
+      if (pack) tx.objectStore(PACKS).put({ ...pack, ...patch });
     };
     await done(tx);
   } finally {

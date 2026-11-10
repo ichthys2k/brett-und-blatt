@@ -90,7 +90,7 @@ export const reconcileCards = (col: AnkiCollection, existing: readonly ApkgCard[
 
 const csv = (tags: readonly string[]): string => (tags.length ? ` ${tags.join(' ')} ` : '');
 
-function fillDb(db: SqlDb, data: { collection: AnkiCollection; cards: ApkgCard[]; revlog: ApkgRevlog[]; conf: Record<string, unknown> | null; dconf: Record<string, unknown> | null }, now: number): void {
+function fillDb(db: SqlDb, data: { collection: AnkiCollection; cards: ApkgCard[]; revlog: ApkgRevlog[]; crt?: number | undefined; conf: Record<string, unknown> | null; dconf: Record<string, unknown> | null }, now: number): void {
   for (const sql of SCHEMA_11) db.run(sql);
   const sec = Math.floor(now / 1000);
   const models: Record<string, unknown> = {};
@@ -98,7 +98,8 @@ function fillDb(db: SqlDb, data: { collection: AnkiCollection; cards: ApkgCard[]
   const decks: Record<string, unknown> = {};
   const baseDeck = { ...defaultDeck(), lrnToday: [0, 0], revToday: [0, 0], newToday: [0, 0], timeToday: [0, 0], browserCollapsed: true, extendNew: 0, extendRev: 0 };
   for (const d of data.collection.decks) decks[String(d.id)] = { ...baseDeck, ...d, usn: -1, mod: d.mod || sec, ...(d.id === 1 ? { name: 'Default' } : {}) };
-  const crt = Math.floor(sec / 86400) * 86400;
+  // Mit Lernstand muss Tag 0 der Sammlung derselbe bleiben, sonst verschieben sich alle Fälligkeitstage.
+  const crt = data.crt && data.crt > 0 ? data.crt : Math.floor(sec / 86400) * 86400;
   db.run('INSERT INTO col VALUES (1, ?, ?, ?, 11, 0, 0, 0, ?, ?, ?, ?, ?)', [crt, now, now, JSON.stringify(data.conf ?? DEFAULT_CONF), JSON.stringify(models), JSON.stringify(decks), JSON.stringify(data.dconf ?? DEFAULT_DCONF), '{}']);
   const sortf = new Map(data.collection.notetypes.map((nt) => [nt.id, nt.sortf]));
   db.batch(
@@ -131,7 +132,8 @@ function cardsFor(col: AnkiCollection, existing: readonly ApkgCard[] | undefined
     for (const ord of cardOrds(nt, note.fields)) {
       const known = byKey.get(`${note.id}:${ord}`);
       if (known && scheduling) {
-        out.push(known);
+        // Wurde die Notiz in einen anderen Stapel verschoben, folgt die Karte (außer in einem Filterstapel, dort steht der Ursprung in `odid`).
+        out.push(known.odid ? known : known.did === note.did ? known : { ...known, did: note.did });
         continue;
       }
       out.push({ id: known?.id ?? derivedCardId(note.id, ord), nid: note.id, did: known ? known.odid || known.did : note.did, ord, mod: sec, usn: -1, type: 0, queue: 0, due: position++, ivl: 0, factor: 0, reps: 0, lapses: 0, left: 0, odue: 0, odid: 0, flags: 0, data: '' });
@@ -153,7 +155,7 @@ export function withoutScheduling(data: ApkgData, now = Date.now()): ApkgData {
 const PLACEHOLDER_TEXT = 'Please update to the latest Anki version, then import the .colpkg/.apkg file again.';
 
 /** Baut die Dateien eines Pakets im Format Legacy 2 (Dateiname → Inhalt, noch nicht gepackt). */
-export function buildApkg(data: Pick<ApkgData, 'collection'> & Partial<Pick<ApkgData, 'cards' | 'revlog' | 'media' | 'conf' | 'dconf'>>, options: ApkgWriteOptions, deps: ApkgDeps): Record<string, Uint8Array> {
+export function buildApkg(data: Pick<ApkgData, 'collection'> & Partial<Pick<ApkgData, 'cards' | 'revlog' | 'media' | 'conf' | 'dconf' | 'crt'>>, options: ApkgWriteOptions, deps: ApkgDeps): Record<string, Uint8Array> {
   const now = options.now ?? Date.now();
   const collection = options.scheduling ? data.collection : stripTags(data.collection);
   const cards = cardsFor(collection, data.cards, options.scheduling, now);
@@ -167,7 +169,7 @@ export function buildApkg(data: Pick<ApkgData, 'collection'> & Partial<Pick<Apkg
   const main = deps.open();
   const placeholderDb = deps.open();
   try {
-    fillDb(main, { collection: col, cards, revlog, conf: data.conf ?? null, dconf: data.dconf ?? null }, now);
+    fillDb(main, { collection: col, cards, revlog, crt: options.scheduling ? data.crt : undefined, conf: data.conf ?? null, dconf: data.dconf ?? null }, now);
     const basic = emptyCollection().notetypes.find((nt) => nt.id === STOCK_BASIC_ID) as AnkiNotetype;
     const placeholder: AnkiCollection = { ...emptyCollection(), notetypes: [basic], notes: [{ id: now, guid: 'placeholder', mid: STOCK_BASIC_ID, did: 1, mod: Math.floor(now / 1000), tags: [], fields: [PLACEHOLDER_TEXT, ''] }] };
     fillDb(placeholderDb, { collection: placeholder, cards: cardsFor(placeholder, undefined, false, now), revlog: [], conf: null, dconf: null }, now);

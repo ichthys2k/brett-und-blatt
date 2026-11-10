@@ -72,6 +72,7 @@ export interface ApkgExportInput {
   cards?: ApkgData['cards'];
   revlog?: ApkgData['revlog'];
   media?: ApkgData['media'];
+  crt?: number | undefined;
   conf?: ApkgData['conf'];
   dconf?: ApkgData['dconf'];
 }
@@ -81,7 +82,7 @@ export async function exportApkg(input: ApkgExportInput, options: { scheduling: 
   const { deps, zipSync, startPacker } = await load();
   if (options.format === 'latest') await startPacker();
   const collection = input.deckId === undefined ? input.collection : subsetCollection(input.collection, input.deckId);
-  const files = buildApkg({ collection, cards: input.cards ?? [], revlog: input.revlog ?? [], media: input.media ?? new Map(), conf: input.conf ?? null, dconf: input.dconf ?? null }, options, deps);
+  const files = buildApkg({ collection, cards: input.cards ?? [], revlog: input.revlog ?? [], media: input.media ?? new Map(), ...(input.crt ? { crt: input.crt } : {}), conf: input.conf ?? null, dconf: input.dconf ?? null }, options, deps);
   // Medien sind schon gepackt (Bilder, Ton); Sammlung und Liste werden gepackt.
   return zipSync(Object.fromEntries(Object.entries(files).map(([name, data]) => [name, [data, { level: name.startsWith('collection') || name === 'media' ? 6 : 0 }]])));
 }

@@ -11,6 +11,7 @@ import { PassView } from './screens/PassView';
 import { Play } from './screens/Play';
 import { RoomScreen } from './screens/Room';
 import { ClassPage, Classes } from './screens/Classes';
+import { LearnHome, LearnScreen } from './screens/Learn';
 import { Library } from './screens/Library';
 import { CollectionScreen } from './screens/Collection';
 import { Operator } from './screens/Operator';
@@ -47,6 +48,10 @@ function Screen() {
       return <Operator />;
     case 'library':
       return <Library />;
+    case 'learn':
+      return <LearnHome />;
+    case 'learning':
+      return <LearnScreen key={route.source} source={route.source} />;
     case 'collection':
       return <CollectionScreen key={route.source} source={route.source} />;
     case 'classes':

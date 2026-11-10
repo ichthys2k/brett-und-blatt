@@ -15,6 +15,7 @@ const ENTRIES: readonly { id: string; label: string; hint: string; to: string }[
   { id: 'single', label: 'Lokales Spiel', hint: 'Allein gegen den Computer oder zu mehreren an einem Gerät.', to: paths.home },
   { id: 'multi', label: 'Online Spiel', hint: 'Offene Spiele, Spiel eröffnen, mit Code beitreten.', to: paths.online },
   { id: 'tournaments', label: 'Turniere', hint: 'Turniere finden, anlegen und verfolgen.', to: paths.tournaments },
+  { id: 'learn', label: 'Lernen', hint: 'Karteikasten: Karten aus deinen Notizen und Anki-Paketen wiederholen.', to: paths.learn },
   { id: 'options', label: 'Optionen', hint: 'Ton, Musik, Aussehen und Updates.', to: paths.sound },
 ];
 

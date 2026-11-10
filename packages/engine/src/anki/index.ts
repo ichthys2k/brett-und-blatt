@@ -11,3 +11,5 @@ export * from './sanitize';
 export * from './render';
 export * from './edit';
 export * from './media';
+export * from './learn';
+export * from './learnbook';

@@ -144,7 +144,7 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
     run(pack.id, async () => {
       const stored = await loadPack(pack.id);
       if (!stored) return;
-      const bytes = await exportApkg({ collection: stored.pack.collection, cards: stored.pack.cards, revlog: stored.pack.revlog, media: stored.media, conf: stored.pack.conf, dconf: stored.pack.dconf }, { scheduling, media, format: latest ? 'latest' : 'legacy2' });
+      const bytes = await exportApkg({ collection: stored.pack.collection, cards: stored.pack.cards, revlog: stored.pack.revlog, media: stored.media, crt: stored.pack.crt, conf: stored.pack.conf, dconf: stored.pack.dconf }, { scheduling, media, format: latest ? 'latest' : 'legacy2' });
       downloadFile(`${safeFileName(pack.name)}.apkg`, bytes as BlobPart, 'application/octet-stream');
       setOptions(null);
     });

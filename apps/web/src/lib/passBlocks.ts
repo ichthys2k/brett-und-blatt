@@ -9,7 +9,8 @@ import { mergeTrophies, sameTrophies, sanitizeTrophies, type Trophy } from './po
 import { emptyBook, mergeBooks, sameBooks, sanitizeBook, type Book } from './partiebuch';
 import { CHILD_PASSES_KEY } from './classPasses';
 import { LIBRARY_KEY } from './library';
-import { collectionFromStored, compactCollection, emptyCollection, mergeCollections, sameCollection, sanitizeCollection, type AnkiCollection } from '@brett-und-blatt/engine';
+import { LEARN_KEY } from './learnStore';
+import { collectionFromStored, compactCollection, compactLearnBook, emptyCollection, emptyLearnBook, learnBookToStored, mergeCollections, mergeLearnBooks, sameCollection, sameLearnBook, sanitizeCollection, sanitizeLearnBook, type AnkiCollection, type LearnBook } from '@brett-und-blatt/engine';
 import { mergeChildPasses, sameChildPasses, sanitizeChildPasses, type ChildPasses } from './classPassesCore';
 import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
 
@@ -99,6 +100,21 @@ export function registerWebPassBlocks(): void {
     sanitize: (value) => compactCollection(collectionFromStored(value)),
     merge: (remote, local) => compactCollection(mergeCollections(sanitizeCollection(remote), sanitizeCollection(local))),
     same: (a, b) => sameCollection(sanitizeCollection(a), sanitizeCollection(b)),
+  });
+  // Lernbuch (#101, L5): Lernstand der eigenen Sammlung; je Karte gilt die jüngste Antwort, das Protokoll vereint sich (30 Tage), höchstens 60 000 Zeichen.
+  registerPassBlock<LearnBook>({
+    name: 'lernen',
+    read: () => {
+      try {
+        return sanitizeLearnBook(JSON.parse(read(LEARN_KEY) ?? 'null'));
+      } catch {
+        return emptyLearnBook();
+      }
+    },
+    write: (book) => write(LEARN_KEY, JSON.stringify(learnBookToStored(book))),
+    sanitize: (value) => sanitizeLearnBook(value),
+    merge: (remote, local) => compactLearnBook(mergeLearnBooks(sanitizeLearnBook(remote), sanitizeLearnBook(local)), Date.now()),
+    same: (a, b) => sameLearnBook(sanitizeLearnBook(a), sanitizeLearnBook(b)),
   });
   // Partiebuch (#142): Zähler je Gerät (wachsen nur), die letzten Partien als Kopfzeilen.
   registerPassBlock<Book>({

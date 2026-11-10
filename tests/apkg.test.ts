@@ -10,7 +10,13 @@ import {
   STOCK_CLOZE_ID,
   addDeck,
   addNote,
+  answerCard,
   buildApkg,
+  dayNumber,
+  emptyLearnBook,
+  learnCards,
+  outcomes,
+  recordAnswer,
   cardsOf,
   emptyCollection,
   readApkg,
@@ -99,6 +105,48 @@ describe('Anki-Pakete: Schreiben (Legacy 2) und Lesen', () => {
     expect(subset.decks.map((d) => d.name).sort()).toEqual(['Latein::Nomen', 'Standard']);
     const added = addDeck(withOther, 'Latein', T0 + 20);
     expect(subsetCollection(added.col, added.deck.id).notes.map((n) => n.guid).sort()).toEqual(['g1', 'g2']);
+  });
+});
+
+describe('Anki-Pakete: Lernstand (FSRS)', () => {
+  it('Rundlauf: gelernte Karten, Protokoll und Tag 0 bleiben erhalten; danach lässt sich weiterlernen', () => {
+    const { col } = sample();
+    const crt = Math.floor(Date.UTC(2026, 0, 1) / 1000);
+    let book = emptyLearnBook(crt);
+    let now = Date.UTC(2026, 10, 1, 9);
+    const first = learnCards(col, book)[0]!;
+    // zweimal „Gut“, dann Wiederholung nach Plan
+    let card = first;
+    let history: ReturnType<typeof answerCard>['log'][] = [];
+    for (let i = 0; i < 3; i++) {
+      const r = answerCard(card, 3, crt, now, undefined, history);
+      card = r.card;
+      history = [...history, r.log];
+      book = recordAnswer(book, r.card, r.log, now, col);
+      now += i === 0 ? 11 * 60_000 : card.ivl * 86_400_000;
+    }
+    expect(card.type).toBe(2);
+    const cards = learnCards(col, book);
+    const files = buildApkg({ collection: col, cards, revlog: book.log, crt }, { scheduling: true, media: false, now }, deps);
+    const back = readApkg(pack(files), deps);
+    expect(back.crt).toBe(crt);
+    const same = back.cards.find((c) => c.id === card.id)!;
+    expect(same).toMatchObject({ type: 2, queue: 2, due: card.due, ivl: card.ivl, reps: 3 });
+    expect(JSON.parse(same.data)).toMatchObject({ s: expect.any(Number), d: expect.any(Number), dr: 0.9 });
+    expect(back.revlog.map((r) => r.ease)).toEqual([3, 3, 3]);
+    // Weiterlernen aus dem gelesenen Stand ergibt dasselbe wie aus dem eigenen
+    const o1 = outcomes(same, back.crt!, now, undefined, back.revlog);
+    const o2 = outcomes(card, crt, now, undefined, history);
+    expect(o1[3].card.due).toBe(o2[3].card.due);
+    expect(dayNumber(crt, now)).toBeGreaterThan(0);
+  });
+  it('Karten, die in einen anderen Stapel verschoben wurden, ziehen im Paket mit um', () => {
+    const { col, deckId } = sample();
+    const crt = Math.floor(Date.UTC(2026, 0, 1) / 1000);
+    const cards = learnCards(col, emptyLearnBook(crt)).map((c) => ({ ...c, did: 1 }));
+    const files = buildApkg({ collection: col, cards, revlog: [], crt }, { scheduling: true, media: false, now: T0 }, deps);
+    const back = readApkg(pack(files), deps);
+    expect(new Set(back.cards.map((c) => c.did))).toEqual(new Set([deckId]));
   });
 });
 

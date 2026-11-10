@@ -212,7 +212,9 @@ export function readApkg(files: Record<string, Uint8Array>, deps: ApkgDeps): Apk
   }
   const db = deps.open(bytes);
   try {
-    const ver = num(db.all('SELECT ver FROM col')[0]?.ver);
+    const colRow = db.all('SELECT ver, crt FROM col')[0];
+    const ver = num(colRow?.ver);
+    const crt = num(colRow?.crt);
     let notetypes: unknown[];
     let decks: unknown[];
     let conf: Record<string, unknown> | null = null;
@@ -284,7 +286,7 @@ export function readApkg(files: Record<string, Uint8Array>, deps: ApkgDeps): Apk
     const cardIds = new Set(keptCards.map((c) => c.id));
     if (collection.notetypes.some((nt) => nt.tmpls.some((t) => /<script\b/i.test(t.qfmt) || /<script\b/i.test(t.afmt)))) warnings.push('Vorlagen enthalten Skripte. Sie werden hier nicht ausgeführt, bleiben aber im Paket erhalten.');
     if (collection.notetypes.some((nt) => /@import|url\(\s*["']?https?:/i.test(nt.css))) warnings.push('Das Aussehen (CSS) verweist auf Adressen im Netz. Das wird hier nicht geladen.');
-    return { version, collection, cards: keptCards, revlog: revlog.filter((r) => cardIds.has(r.cid)), media: readMedia(files, version, deps, warnings), conf, dconf, warnings };
+    return { version, collection, cards: keptCards, revlog: revlog.filter((r) => cardIds.has(r.cid)), media: readMedia(files, version, deps, warnings), ...(crt > 0 ? { crt } : {}), conf, dconf, warnings };
   } finally {
     db.close();
   }
