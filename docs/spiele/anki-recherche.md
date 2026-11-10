@@ -237,3 +237,17 @@ Jeder Schritt ist für sich prüfbar (Rundlauftests mit echten Paketen aus Anki,
 - **Feste Kennungen:** GUID und Vorlagennummer, wie in Anki, statt eigener Kennungen.
 - **Pakete im Pass:** `bibliothek` trägt nur die Verzeichnisliste (Name, GUID, Stand), nicht den Inhalt (Abschnitt 8.2).
 - **Kurz:** #101 wird zum Vorhaben mit den Schritten L1 bis L4 und L7; #155 bis #159 werden an L5, L6, L7 angepasst.
+
+
+## 10. L7 – Vorarbeit: Cloudflare R2 und Lernstand für die Leitung (10.11.2026)
+
+**R2, Bedingungen** (Cloudflare-Dokumentation, Stand 30.10.2026, `developers.cloudflare.com/r2/pricing`, `…/reference/data-location`, `…/buckets/object-lifecycles`):
+- Kostenlos je Monat: 10 GB-Monate Speicher, 1 Million Class-A-Vorgänge (Schreiben, Auflisten), 10 Millionen Class-B-Vorgänge (Lesen); **Datenabruf (Egress) ist immer kostenlos**. Darüber: 0,015 USD je GB-Monat, 4,50 USD je Million Class A, 0,36 USD je Million Class B. Löschen ist kostenlos. Die Gratisstufe gilt nur für die Standard-Speicherklasse.
+- **Ob für die Gratisstufe ein Zahlungsmittel hinterlegt werden muss, steht in diesen Seiten nicht.** Das zeigt sich beim Aktivieren von R2 im Cloudflare-Dashboard; Einrichtung macht Cornelius.
+- **EU:** Ein Bucket lässt sich mit Rechtsraum `eu` anlegen (Datenhaltung und -verarbeitung in der EU); der Rechtsraum lässt sich **nachträglich nicht ändern**, deshalb beim Anlegen wählen. Im Worker steht er in der Bindung (`"jurisdiction": "eu"`), wie bei den Durable Objects schon (`ROOM_JURISDICTION`).
+- **„Löschung ein Jahr nach dem letzten Abruf“ geht nicht allein mit einer Lebenszyklus-Regel:** Regeln löschen nach dem Alter seit dem Hochladen, nicht seit dem letzten Lesen. Plan: wie bei den heutigen Text-Paketen (`/teilen/<Kennung>`) führt ein Durable Object je geteiltem Paket den Zeitpunkt des letzten Abrufs und löscht das Objekt über einen Alarm; R2 hält nur die verschlüsselten Bytes.
+- Rechenbeispiel: 50 MB je Paket, 100 Pakete = 5 GB, unter der Grenze; jeder Abruf eines Pakets mit 100 Dateien sind 101 Class-B-Vorgänge, also rund 100 000 Abrufe im Monat gratis. Ein Paket als **eine** Datei (verschlüsseltes `.apkg`) braucht nur 1 Vorgang je Abruf; das ist die einfachere Wahl.
+
+**Offen für Cornelius (vor dem Bau von L7):**
+1. R2 einrichten (Bucket mit Rechtsraum EU, Bindung im Worker, ggf. Zahlungsmittel) und mitteilen, wie der Bucket heißt.
+2. Wortlaut des Hinweises beim Beitritt zu einer Klasse und der Ergänzung der Datenschutzerklärung (Entwurf in #224).
