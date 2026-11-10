@@ -65,10 +65,15 @@ Die Spielszene läuft auf einer **Bühne** (`Stage` in `Display.tsx`, Faktor `st
 - Vor Ort im Spielbetrieb wechselt die Ansicht alle 20 s zwischen „Als Nächstes“ (laufende Partien mit Tisch, nächste Partien) und „Stand“ (Baum bzw. Tabelle); Tischrunden, Anmeldung und Ende zeigen eine feste Seite (Ende mit Siegerehrung).
 - Nutzt das gespeicherte Profil des Geräts, sonst Gast: auf dem Gerät der Leitung läuft es immer, auf einem fremden Gerät nur bei Turnieren mit Zuschaulink.
 
+## Schritt 6 (umgesetzt, #213): Fähigkeiten im Turnier
+
+- `tournamentCapabilities` (`packages/online/src/capabilities.ts`) macht aus der Rolle eines Geräts (`isLeader`, `helperRole`, `mayDelete`, vor Ort oder online) eine Liste im selben Format wie `roomCapabilities`: `entrants`, `tools`, `enterResult`, `checkin`, `print`, `deleteTournament`. Leitung und Mitleitung verwalten, ein Helfer trägt nur vor Ort Ergebnisse ein, setzt Check-in und druckt, gelöscht wird nur von der Hauptleitung. `roomCapabilities` bleibt bei den fünf Raum-Fähigkeiten.
+- Die Turnierseite (`Tournament.tsx`, `capsOf`) fragt nur noch `can(…)` statt die Rolle; Mitleitung bekommt einen Hinweis. Der Server prüft weiter jede Nachricht selbst.
+- Ein eigenes Panel nach dem Vorbild von `ModeratorPanel` gibt es im Turnier nicht: Teilnehmer und Tische verwaltet die Turnierseite selbst, das Raum-Panel (Namen festlegen, vom Platz nehmen) passt dort nicht.
+- **Punkte setzen** (Entscheidung): bleibt Sache der Leitung über `enterResult` bzw. `enterTable` (Plätze oder Punkte im Spiel); ein spielabhängiger `GameModule`-Haken ist nicht nötig, solange vor Ort nur Ergebnis, Punkte oder Plätze zählen.
+
 ## Noch offen
 
 - **Fernsehansicht für die übrigen Spiele** nur bei Bedarf: Spiele mit verborgenen Aktionen (Quartett, Mäxle) könnten auf dem Tisch den Verlauf größer zeigen.
 - **Hand-Ansicht für Spiele, deren Züge am Tisch hängen** (Schwarzer Peter, Quartett, Domino, Tiefflug): bräuchte eine kleine Tischfläche mit den nötigen Zielen statt einer reinen Hand.
-- **Spielleiter-Panel im Turnier** (Leitung, Mitleitung, Helfer über dieselben Fähigkeiten) und **Punkte setzen** (spielabhängig, siehe unten).
 - **Weitere Szenen** auf demselben Rahmen: Partie nachspielen (#99, Issue #215); Turnier-Bildschirm siehe Schritt 5.
-- **Punkte setzen** ist spielabhängig; erst mit den Turnier-Stufen und einem optionalen `GameModule`-Haken klären.

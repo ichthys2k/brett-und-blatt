@@ -37,7 +37,7 @@ export * from './lock';
 export * from './account';
 export * from './share';
 export { ATTEMPT_LIMIT, ATTEMPT_WINDOW_MS, isBlocked, recordMiss, type AttemptState } from './attempts';
-export { CAPABILITIES, can, roomCapabilities, type Capability } from './capabilities';
+export { CAPABILITIES, can, roomCapabilities, tournamentCapabilities, type Capability, type TournamentRole } from './capabilities';
 export * from './classroom';
 export * from './classcard';
 export * from './series';

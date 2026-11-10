@@ -1,4 +1,4 @@
-import { AVATARS, EVENING_EXTEND_CHOICES, MAX_SCORE, bestOfStage, checkSeriesScore, seriesTarget, READY_WINDOW_MS, LEAGUE_ONLINE_MAX_PLAYERS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentSettings, type TournamentView } from '@brett-und-blatt/online';
+import { AVATARS, can, tournamentCapabilities, EVENING_EXTEND_CHOICES, MAX_SCORE, bestOfStage, checkSeriesScore, seriesTarget, READY_WINDOW_MS, LEAGUE_ONLINE_MAX_PLAYERS, TOURNAMENT_MIN_PLAYERS, type StandingRow, type TournamentSettings, type TournamentView } from '@brett-und-blatt/online';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button, Section } from '../components/controls';
 import { ProfileForm, QrCode } from '../components/OnlineParts';
@@ -46,6 +46,9 @@ function formatDate(ms: number): string {
 
 /** Vor Ort (W-058 Stufe 1): Die Leitung trägt ein, es gibt keine Stichtage. */
 const isLocalView = (view: TournamentView) => view.settings.mode === 'local';
+
+/** Was dieses Gerät im Turnier darf (Leitung, Mitleitung, Helfer): die Seite fragt `can`, nicht die Rolle. */
+const capsOf = (view: TournamentView) => tournamentCapabilities({ isLeader: view.isLeader, helperRole: view.helperRole, mayDelete: view.mayDelete, local: view.settings.mode === 'local' });
 /** Wird ein Spielstand gezählt (Tore, Sätze, Punkte)? */
 const withScore = (view: TournamentView) => isLocalView(view) && view.settings.result !== undefined && view.settings.result !== 'winner';
 /** Best of N (Stufe 3 Teil 5): Begegnungen über mehrere Partien, Stand in gewonnenen Partien. */
@@ -469,17 +472,18 @@ export function TournamentScreen({ code, claim, helper, leader }: { code: string
       {view.phase === 'finished' && isLocalView(view) && view.isLeader && <NextPhase view={view} />}
       <RoundStart view={view} send={send} />
       {view.helperRole === 'helper' && <p className="text-sm text-muted">🤝 {t('tournament.youHelp')}</p>}
+      {view.helperRole === 'coleader' && <p className="text-sm text-muted">🛠 {t('tournament.youColead')}</p>}
       {view.settings.format === 'tables' ? (
         <TableRounds view={view} send={send} />
       ) : (
         <>
-          {local ? <FieldBoard view={view} send={view.isLeader || view.helperRole ? send : null} /> : <MyStand view={view} send={send} />}
+          {local ? <FieldBoard view={view} send={can(capsOf(view), 'enterResult') ? send : null} /> : <MyStand view={view} send={send} />}
           <Progress view={view} />
           <History view={view} />
         </>
       )}
-      {view.isLeader && <LeaderTools view={view} code={code} send={send} claim={state.claim} onBoard={() => setBoard(true)} />}
-      {(view.isLeader || view.helperRole) && <PrintTools view={view} onPrint={setPrinting} />}
+      {can(capsOf(view), 'tools') && <LeaderTools view={view} code={code} send={send} claim={state.claim} onBoard={() => setBoard(true)} />}
+      {can(capsOf(view), 'print') && <PrintTools view={view} onPrint={setPrinting} />}
       {banners}
     </Page>
   );
@@ -529,12 +533,12 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
                 {view.settings.checkin && <span aria-hidden="true">{p.present ? '✅ ' : '⬜ '}</span>}
                 {p.avatar} {p.name}
               </span>
-              {view.settings.checkin && (view.isLeader || view.helperRole !== null) && (
+              {view.settings.checkin && can(capsOf(view), 'checkin') && (
                 <button type="button" className="min-h-8 rounded-lg px-2 text-muted hover:bg-line/40" aria-label={`${p.present ? t('tournament.checkoutOne') : t('tournament.checkinOne')}: ${p.name}`} onClick={() => send({ type: 'present', player: p.id, on: !p.present })}>
                   {p.present ? '↩' : '✔'}
                 </button>
               )}
-              {view.isLeader && (
+              {can(capsOf(view), 'entrants') && (
                 <button type="button" className="min-h-8 rounded-lg px-2 text-muted hover:bg-line/40" aria-label={`${t('tournament.remove')}: ${p.name}`} onClick={() => send({ type: 'removeEntrant', player: p.id })}>
                   ✕
                 </button>
@@ -542,7 +546,7 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
             </li>
           ))}
         </ul>
-        {view.isLeader && (
+        {can(capsOf(view), 'entrants') && (
           <>
             <EntrantForm view={view} send={send} label={t('tournament.addEntrants')} />
             <p className="text-xs text-muted">{t('tournament.namesHint')}</p>
@@ -559,7 +563,7 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
           </>
         )}
       </Section>
-      {view.isLeader && (
+      {can(capsOf(view), 'tools') && (
         <Section title={t('tournament.tools')}>
           <SpectatorLink view={view} code={code} />
           <Helpers view={view} code={code} send={send} />
@@ -1273,7 +1277,7 @@ function TableCard({ view, game, send }: { view: TournamentView; game: TableGame
   const seat = view.you ? game.seats.indexOf(view.you) : -1;
   const iAmReady = seat >= 0 && game.readyAt[seat] !== null && view.serverNow - game.readyAt[seat]! < READY_WINDOW_MS;
   const held = isEveningView(view) && view.stages[game.stage]?.startedAt === undefined;
-  const mayEnter = send !== null && (isLocalView(view) ? view.isLeader || view.helperRole !== null : view.isLeader);
+  const mayEnter = send !== null && can(capsOf(view), 'enterResult');
   const order = game.seats.map((_, i) => i).sort((a, b) => (game.places ? game.places[a]! - game.places[b]! : 0));
   return (
     <li className={`space-y-2 rounded-2xl border-2 p-3 ${mine && game.status !== 'done' ? 'border-accent bg-accent/5' : 'border-line bg-surface'}`}>

@@ -173,6 +173,7 @@ const de = {
   'tournament.keepLongHint': 'Sonst wird das Turnier 30 Tage nach dem Ende gelöscht, Ligen nach einem Jahr.',
   'tournament.embedHint': 'Zum Einbetten in eine andere Seite (z. B. Vereinsseite): schlichte Ansicht ohne Bedienelemente, immer aktuell.',
   'tournament.embedCopy': 'Einbettungscode kopieren',
+  'tournament.youColead': 'Du bist Mitleitung: Du darfst alles außer das Turnier löschen.',
   'tournament.beamer': 'Als Turnier-Bildschirm öffnen',
   'tournament.beamerHint': 'Zeigt Stand, Tische und Aufruf groß auf Fernseher oder Beamer (nur Ansicht).',
   'tournament.beamerNext': 'Als Nächstes',
