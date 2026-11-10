@@ -65,6 +65,17 @@ export const gameModule: GameModule<PresidentState, PresidentMove, PresidentView
       default: 'off',
       when: { deck: ['52'] },
     },
+    {
+      id: 'jokers',
+      label: 'Joker',
+      description: 'Joker schlagen jede Auslage sofort und räumen den Tisch ab.',
+      choices: [
+        { value: 'off', label: 'Aus' },
+        { value: '2', label: '2 Joker' },
+        { value: '3', label: '3 Joker' },
+      ],
+      default: 'off',
+    },
   ],
   timePresets: {
     relaxed: { kind: 'none' },

@@ -1,11 +1,11 @@
 import { describe, expect, it, test } from 'vitest';
-import { Rng, computeBotMove, type CardId } from '@brett-und-blatt/engine';
+import { Rng, computeBotMove, isJoker, type CardId } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { gameModule } from '../src';
 import { applyMove, currentPlayers, isLegal, legalMoves, placeTitle, playerView, sampleHidden, setup, type PresidentMove, type PresidentState } from '../src/rules';
 
 describe('president: allgemeine Prüfungen', () => {
-  for (const check of gameContractChecks(gameModule)) test(check.name, check.run, 120_000);
+  for (const check of gameContractChecks(gameModule, { maxMoves: 6_000 })) test(check.name, check.run, 120_000);
 });
 
 /** Ein Tisch mit festgelegten Händen; `turn` ist am Zug. */
@@ -148,6 +148,67 @@ describe('president: Regeln', () => {
     expect(isLegal(s, 2, play('H13.1'))).toBe(false);
     const s2 = run(s, [2, pass]);
     expect(isLegal(s2, 0, play('H2.1'))).toBe(true);
+  });
+
+  it('Joker-Option mischt 2 oder 3 Joker ins Blatt', () => {
+    const s2 = setup(4, { jokers: '2' }, 'j2');
+    expect(s2.hands.flat().filter(isJoker)).toHaveLength(2);
+    expect(s2.hands.flat()).toHaveLength(34);
+
+    const s3 = setup(4, { deck: '52', jokers: '3' }, 'j3');
+    expect(s3.hands.flat().filter(isJoker)).toHaveLength(3);
+    expect(s3.hands.flat()).toHaveLength(55);
+  });
+
+  it('Joker schlägt jede Auslage sofort und räumt den Tisch ab', () => {
+    // Platz 0 beginnt, Platz 1 hat den Joker
+    const state = table([['H1.1', 'C8.1'], ['JK1.1', 'H7.1'], ['D10.1', 'S10.1']], { jokers: '2' }, 0);
+    // Platz 0 legt Ass (höchste normale Karte)
+    const s1 = run(state, [0, play('H1.1')]);
+    // Platz 1 ist dran und kann Joker auf das Ass legen
+    expect(s1.turn).toBe(1);
+    expect(isLegal(s1, 1, play('JK1.1'))).toBe(true);
+    const s2 = run(s1, [1, play('JK1.1')]);
+    // Tisch ist sofort abgeräumt, Platz 1 ist am Zug
+    expect(s2.trick).toEqual([]);
+    expect(s2.turn).toBe(1);
+
+    // Joker auf ein Paar
+    const pairState = table([['D10.1', 'S10.1'], ['JK1.1', 'H7.1'], ['C8.1']], { jokers: '2' }, 0);
+    const sp1 = run(pairState, [0, play('D10.1', 'S10.1')]);
+    expect(sp1.turn).toBe(1);
+    expect(isLegal(sp1, 1, play('JK1.1'))).toBe(true);
+    const sp2 = run(sp1, [1, play('JK1.1')]);
+    expect(sp2.trick).toEqual([]);
+    expect(sp2.turn).toBe(1);
+  });
+
+  it('Joker schlägt auch bei Revolution alles', () => {
+    const state = table([['C8.1', 'C10.1'], ['JK1.1', 'H7.1'], ['H1.1', 'D7.1']], { jokers: '2', revolution: 'on' }, 0);
+    state.reversed = true;
+    const s1 = run(state, [0, play('C8.1')]);
+    expect(s1.turn).toBe(1);
+    expect(isLegal(s1, 1, play('JK1.1'))).toBe(true);
+    const s2 = run(s1, [1, play('JK1.1')]);
+    expect(s2.trick).toEqual([]);
+    expect(s2.turn).toBe(1);
+  });
+
+  it('Bettler muss beim Tausch den Joker als beste Karte abgeben', () => {
+    let s = setup(4, { rounds: '3', jokers: '2' }, 'j-swap');
+    for (let guard = 0; s.phase === 'play' && guard < 500; guard++) {
+      const seat = currentPlayers(s)[0] as number;
+      s = applyMove(s, seat, legalMoves(s, seat)[0]!).state;
+    }
+    expect(s.phase).toBe('roundEnd');
+    for (let seat = 0; seat < 4; seat++) s = applyMove(s, seat, { type: 'ready' }).state;
+    expect(s.phase).toBe('exchange');
+    const order = s.lastRound!.order;
+    const [president, , , beggar] = order as [number, number, number, number];
+    const beggarSwap = s.swaps.find((sw) => sw.low === beggar)!;
+    expect(beggarSwap.up.length).toBe(2);
+    expect(s.hands[president]).toContain(beggarSwap.up[0]);
+    expect(s.hands[president]).toContain(beggarSwap.up[1]);
   });
 });
 

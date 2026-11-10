@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { cardRank, rankLabel, type CardId, type SeatId } from '@brett-und-blatt/engine';
+import { cardRank, isJoker, rankLabel, type CardId, type DeckStyle, type SeatId } from '@brett-und-blatt/engine';
 import { SeatRing, PlayingCard, RoundSummary, type RoundSummaryPlayer, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
-import { cardValue, groupsOf, placeKind, placeTitle, topPlay, type PlaceKind, type PresidentMove, type PresidentView, type Titles } from '../rules';
+import { cardValue, groupsOf, JOKER_VALUE, placeKind, placeTitle, topPlay, type PlaceKind, type PresidentMove, type PresidentView, type Titles } from '../rules';
 import './styles.css';
 
 const BADGES: Record<Titles, Record<PlaceKind, string>> = {
@@ -16,6 +16,7 @@ function seatName(names: string[], seat: SeatId): string {
 }
 
 function rankName(card: CardId, deckStyle: string): string {
+  if (isJoker(card)) return 'Joker';
   const rank = cardRank(card);
   if (deckStyle === 'german') return ({ 1: 'Sau', 11: 'Unter', 12: 'Ober', 13: 'König' } as Record<number, string>)[rank] ?? String(rank);
   return ({ 1: 'Ass', 11: 'Bube', 12: 'Dame', 13: 'König' } as Record<number, string>)[rank] ?? rankLabel(rank);
@@ -51,6 +52,104 @@ function Hint({ view, mine, names }: { view: PresidentView; mine: boolean; names
   );
 }
 
+function ExchangeStage({
+  view,
+  names,
+  me,
+  deckStyle,
+}: {
+  view: PresidentView;
+  names: string[];
+  me: SeatId | null;
+  deckStyle: DeckStyle;
+}) {
+  const currentSwap = view.swaps.find((s) => !s.done) ?? view.swaps[view.swaps.length - 1];
+
+  return (
+    <div className="prs-exchange-stage">
+      <div className="prs-exchange-title">👑 Kartentausch – Runde {view.round}</div>
+      <div className="prs-exchange-lanes">
+        {view.swaps.map((s, idx) => {
+          const isCurrent = s === currentSwap;
+          const lowTitle = titleOf(view, s.low);
+          const highTitle = titleOf(view, s.high);
+          const iAmInvolved = me !== null && (s.low === me || s.high === me);
+
+          return (
+            <div key={idx} className={`prs-exchange-lane${isCurrent ? ' prs-lane-active' : ''}${s.done ? ' prs-lane-done' : ''}`}>
+              <div className="prs-exchange-party prs-party-low">
+                <span className="prs-exchange-badge">{lowTitle?.badge}</span>
+                <span className="prs-exchange-role">{lowTitle?.title ?? 'Bettler'}</span>
+                <span className="prs-exchange-name">{seatName(names, s.low)}</span>
+              </div>
+
+              <div className="prs-exchange-track">
+                {/* Aufwärts: Bettler gibt beste Karten an Präsident */}
+                <div className="prs-exchange-direction">
+                  <span className="prs-exchange-label">
+                    {s.count === 1 ? 'Beste Karte' : `${s.count} beste Karten`} ➔
+                  </span>
+                  <div className="prs-exchange-cards">
+                    {(s.up.length > 0 ? s.up : Array.from({ length: s.count }, () => null)).map((card, cIdx) => (
+                      <div
+                        key={`up-${cIdx}`}
+                        className="prs-flying-card prs-fly-up"
+                        style={{ animationDelay: `${cIdx * 160}ms` }}
+                      >
+                        <PlayingCard
+                          card={card}
+                          deckStyle={deckStyle}
+                          className="prs-card prs-mini-card"
+                          label={iAmInvolved && card ? undefined : 'Verdeckte Karte'}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Abwärts: Präsident gibt gewählte Karten zurück */}
+                {s.done ? (
+                  <div className="prs-exchange-direction prs-dir-return">
+                    <span className="prs-exchange-label">
+                      ⬅ {s.count === 1 ? 'Rückgabe' : `${s.count} Karten Rückgabe`}
+                    </span>
+                    <div className="prs-exchange-cards">
+                      {(s.down.length > 0 ? s.down : Array.from({ length: s.count }, () => null)).map((card, cIdx) => (
+                        <div
+                          key={`down-${cIdx}`}
+                          className="prs-flying-card prs-fly-down"
+                          style={{ animationDelay: `${cIdx * 160}ms` }}
+                        >
+                          <PlayingCard
+                            card={card}
+                            deckStyle={deckStyle}
+                            className="prs-card prs-mini-card"
+                            label={iAmInvolved && card ? undefined : 'Verdeckte Karte'}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="prs-exchange-status">
+                    {s.high === me ? 'Wähle deine Rückgabe-Karten' : `Warte auf ${seatName(names, s.high)} …`}
+                  </div>
+                )}
+              </div>
+
+              <div className="prs-exchange-party prs-party-high">
+                <span className="prs-exchange-badge">{highTitle?.badge}</span>
+                <span className="prs-exchange-role">{highTitle?.title ?? 'Präsident'}</span>
+                <span className="prs-exchange-name">{seatName(names, s.high)}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table, handOnly }: BoardProps<PresidentView, PresidentMove>) {
   const me = typeof viewer === 'number' ? viewer : null;
   const hand = me !== null ? view.hands[me] ?? [] : [];
@@ -80,6 +179,11 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
     if (swap) return selected.length === swap.count ? { type: 'give', cards: selected } : null;
     if (selected.length === 0) return null;
     const value = cardValue(selected[0]!, twoHigh);
+    if (value === JOKER_VALUE) {
+      return plays.some((m) => m.cards.length === selected.length && m.cards.every(isJoker))
+        ? { type: 'play', cards: selected }
+        : null;
+    }
     const ok = plays.some((m) => cardValue(m.cards[0]!, twoHigh) === value && m.cards.length === selected.length);
     return ok && selected.every((c) => cardValue(c, twoHigh) === value) ? { type: 'play', cards: selected } : null;
   }, [selected, swap, plays, twoHigh]);
@@ -91,6 +195,10 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
     }
     const value = cardValue(card, twoHigh);
     if (!playable.has(value)) return;
+    if (value === JOKER_VALUE) {
+      setSelected((s) => (s.includes(card) ? [] : [card]));
+      return;
+    }
     setSelected((s) => {
       if (s.includes(card)) return s.filter((c) => c !== card);
       const same = s.filter((c) => cardValue(c, twoHigh) === value);
@@ -139,30 +247,33 @@ export function PresidentBoard({ view, legalMoves, onMove, viewer, seatNames, hi
     <>
       <div className="prs-center">
         {view.reversed && <div className="prs-revolution">✊ Revolution – die Rangfolge ist umgekehrt</div>}
-        <div className="prs-trick">
-          {previous && (
-            <div className="prs-play prs-play-prev">
-              {previous.cards.map((c) => (
-                <PlayingCard key={c} card={c} deckStyle={deckStyle} className="prs-card" />
-              ))}
-            </div>
-          )}
-          {top ? (
-            <div className={`prs-play prs-play-top ${top.seat === me ? 'prs-from-me' : 'prs-from-opp'}`} key={top.cards.join()}>
-              {top.cards.map((c) => (
-                <PlayingCard key={c} card={c} deckStyle={deckStyle} className="prs-card" />
-              ))}
-              <span className="prs-play-who">{top.seat === me ? 'Du' : seatName(seatNames, top.seat)}</span>
-            </div>
-          ) : (
-            <div className="prs-empty">{view.phase === 'play' ? 'Neuer Stich' : ''}</div>
-          )}
-        </div>
+        {view.phase === 'exchange' ? (
+          <ExchangeStage view={view} names={seatNames} me={me} deckStyle={deckStyle} />
+        ) : (
+          <div className="prs-trick">
+            {previous && (
+              <div className="prs-play prs-play-prev">
+                {previous.cards.map((c) => (
+                  <PlayingCard key={c} card={c} deckStyle={deckStyle} className="prs-card" />
+                ))}
+              </div>
+            )}
+            {top ? (
+              <div className={`prs-play prs-play-top ${top.seat === me ? 'prs-from-me' : 'prs-from-opp'}`} key={top.cards.join()}>
+                {top.cards.map((c) => (
+                  <PlayingCard key={c} card={c} deckStyle={deckStyle} className="prs-card" />
+                ))}
+                <span className="prs-play-who">{top.seat === me ? 'Du' : seatName(seatNames, top.seat)}</span>
+              </div>
+            ) : (
+              <div className="prs-empty">{view.phase === 'play' ? 'Neuer Stich' : ''}</div>
+            )}
+          </div>
+        )}
         <div className="prs-hint" aria-live="polite">
           <Hint view={view} mine={view.phase === 'play' && view.turn === me} names={seatNames} />
         </div>
       </div>
-
     </>
   );
 
@@ -337,6 +448,7 @@ export const gameUi: GameUi<PresidentView, PresidentMove> = {
     played: 'karte-legen',
     passed: 'poker-check',
     trickWon: 'stich-einsammeln',
+    cleared: 'stich-einsammeln',
     exchanged: 'karten-tausch',
     roundStarted: 'mischen',
     out: 'ansage',

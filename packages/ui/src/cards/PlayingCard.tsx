@@ -1,4 +1,4 @@
-import { cardName, cardRank, cardSuit, isRed, rankLabel, type CardId, type DeckStyle, type Suit } from '@brett-und-blatt/engine';
+import { cardName, cardRank, cardSuit, isJoker, isRed, rankLabel, type CardId, type DeckStyle, type Suit } from '@brett-und-blatt/engine';
 import { useId, type CSSProperties, type MouseEventHandler } from 'react';
 import { portraitUrl, useCardPortraits } from './portraits';
 
@@ -184,6 +184,56 @@ export function PlayingCard({
 }
 
 function CardFace({ card, deckStyle = 'four-color', fullPortrait }: { card: CardId; deckStyle?: DeckStyle; fullPortrait?: boolean }) {
+  if (isJoker(card)) {
+    const jokerColor = '#7c3aed';
+    const corner = (
+      <>
+        <text x="14" y="44" fontSize="36" fontWeight="800" fontFamily="system-ui, sans-serif" fill={jokerColor}>
+          J
+        </text>
+        <text x="14" y="60" fontSize="16" fontWeight="700" fontFamily="system-ui, sans-serif" fill={jokerColor}>
+          ★
+        </text>
+      </>
+    );
+    return (
+      <svg viewBox="0 0 250 350" className="bub-card-face bub-card-joker" aria-hidden="true">
+        <rect x="2" y="2" width="246" height="346" rx="20" fill="#fff" stroke="#c9c2b6" strokeWidth="3" />
+        <rect x="10" y="10" width="230" height="330" rx="14" fill="none" stroke={jokerColor} strokeWidth="1.5" strokeDasharray="4 3" opacity="0.6" />
+        <g>{corner}</g>
+        <g transform="rotate(180 125 175)">{corner}</g>
+        <g transform="translate(125 155)">
+          <path
+            d="M-55 20 C-65 -25 -25 -50 0 -25 C25 -50 65 -25 55 20 C35 30 -35 30 -55 20 Z"
+            fill={jokerColor}
+          />
+          <path
+            d="M0 -25 C-15 -75 0 -85 0 -85 C0 -85 15 -75 0 -25 Z"
+            fill="#d97706"
+          />
+          <path
+            d="M-40 2 C-70 -20 -80 -5 0 10 Z"
+            fill="#dc2626"
+          />
+          <path
+            d="M40 2 C70 -20 80 -5 0 10 Z"
+            fill="#2563eb"
+          />
+          <circle cx="0" cy="-86" r="6" fill="#facc15" stroke="#78350f" strokeWidth="1.5" />
+          <circle cx="-68" cy="-12" r="5" fill="#facc15" stroke="#78350f" strokeWidth="1.5" />
+          <circle cx="68" cy="-12" r="5" fill="#facc15" stroke="#78350f" strokeWidth="1.5" />
+          <path
+            d="M-48 18 Q0 32 48 18 Q0 24 -48 18 Z"
+            fill="#facc15"
+          />
+        </g>
+        <text x="125" y="222" fontSize="28" fontWeight="800" fontFamily="system-ui, sans-serif" textAnchor="middle" fill={jokerColor} letterSpacing="4">
+          JOKER
+        </text>
+      </svg>
+    );
+  }
+
   const suit = cardSuit(card);
   const rank = cardRank(card);
   const label = getRankLabel(rank, deckStyle);
