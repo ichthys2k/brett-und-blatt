@@ -58,6 +58,9 @@ export interface AnkiNote {
   mod: number;
   tags: string[];
   fields: string[];
+  /** Aus einem Paket: Markierungen und Zusatzdaten der Notiz (bleiben für den Rückweg nach Anki erhalten). */
+  flags?: number;
+  data?: string;
 }
 
 /** Löschvermerk: damit ein anderes Gerät Gelöschtes nicht zurückbringt. Notizen über die `guid`, Stapel und Notiztypen über die `id`. */

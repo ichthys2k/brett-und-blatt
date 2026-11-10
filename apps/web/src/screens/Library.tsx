@@ -8,6 +8,7 @@ import { currentPackLink, publishPack, stopPackShare } from '../lib/packShare';
 import { GAME_SERVER } from '../lib/server';
 import { paths } from '../lib/router';
 import { AiHelp, AnkiExport, AnkiImport } from './AnkiText';
+import { ApkgImport, ApkgList } from './AnkiPackages';
 
 const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
 
@@ -16,7 +17,7 @@ export function Library() {
   const [library, setLibrary] = useState(loadLibrary);
   const [editing, setEditing] = useState<UserPack | 'new' | null>(null);
   const [sharing, setSharing] = useState<UserPack | null>(null);
-  const [anki, setAnki] = useState<'import' | 'export' | null>(null);
+  const [anki, setAnki] = useState<'import' | 'export' | 'apkg' | null>(null);
   const packs = livePacks(library);
   const refresh = () => setLibrary(loadLibrary());
 
@@ -29,6 +30,8 @@ export function Library() {
             refresh();
           }}
         />
+      ) : anki === 'apkg' ? (
+        <ApkgImport onDone={() => setAnki(null)} />
       ) : anki === 'export' ? (
         <AnkiExport onDone={() => setAnki(null)} />
       ) : sharing ? (
@@ -50,6 +53,10 @@ export function Library() {
             <Button onClick={() => setAnki('import')}>📥 Aus Anki-Text importieren</Button>
             <Button onClick={() => setAnki('export')}>📤 Als Anki-Text exportieren</Button>
           </div>
+          <Button className="w-full" onClick={() => setAnki('apkg')}>
+            📦 Anki-Paket (.apkg) importieren
+          </Button>
+          <ApkgList onPacksChanged={refresh} />
           <AiHelp />
           {packs.length === 0 ? (
             <p className="text-muted">Noch keine Pakete. Lege eins an, wähle es dann in der Einrichtung von „Paare finden“ unter „Eigenes Paket“.</p>

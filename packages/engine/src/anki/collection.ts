@@ -80,7 +80,7 @@ export function cardsOf(col: AnkiCollection): AnkiCard[] {
 
 /** Stapelnamen sind eindeutig; ein gleicher Name bekommt eine Zahl angehängt. */
 function uniqueDeckName(col: AnkiCollection, name: string, except?: number): string {
-  const base = name.trim().replace(/::+/g, ':').slice(0, 80) || 'Stapel';
+  const base = name.split('::').map((part) => part.trim()).filter(Boolean).join('::').slice(0, 120) || 'Stapel';
   const taken = new Set(col.decks.filter((d) => d.id !== except).map((d) => d.name.toLowerCase()));
   let candidate = base;
   for (let n = 2; taken.has(candidate.toLowerCase()); n++) candidate = `${base} (${n})`;
@@ -222,7 +222,18 @@ export function sanitizeCollection(value: unknown): AnkiCollection {
     if (id === null || typeof item.guid !== 'string' || !item.guid || item.guid.length > 40 || !nt || !Array.isArray(item.fields) || item.fields.length !== nt.flds.length || !item.fields.every((f) => typeof f === 'string')) continue;
     const did = typeof item.did === 'number' && decks.has(item.did) ? item.did : DEFAULT_DECK_ID;
     const tags = Array.isArray(item.tags) ? cleanTags(item.tags.filter((t): t is string => typeof t === 'string')) : [];
-    notes.set(item.guid, { id, guid: item.guid, mid: nt.id, did, mod: int(item.mod) ?? 0, tags, fields: (item.fields as string[]).map((f) => cleanFieldText(f).slice(0, FIELD_LENGTH_MAX)) });
+    const flags = int(item.flags);
+    notes.set(item.guid, {
+      id,
+      guid: item.guid,
+      mid: nt.id,
+      did,
+      mod: int(item.mod) ?? 0,
+      tags,
+      fields: (item.fields as string[]).map((f) => cleanFieldText(f).slice(0, FIELD_LENGTH_MAX)),
+      ...(flags ? { flags } : {}),
+      ...(typeof item.data === 'string' && item.data ? { data: item.data.slice(0, 5000) } : {}),
+    });
   }
   const graves: AnkiGrave[] = [];
   if (Array.isArray(v.graves)) for (const item of v.graves.slice(0, 50_000)) {

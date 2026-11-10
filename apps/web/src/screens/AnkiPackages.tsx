@@ -1,0 +1,236 @@
+import { ApkgError, packsOf, savePackRows, withoutScheduling, type ApkgData } from '@brett-und-blatt/engine';
+import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import { Button } from '../components/controls';
+import { APKG_LIMIT_TEXT, exportApkg, importApkg } from '../lib/ankiPackage';
+import { deletePackStored, keepStorage, listPacks, loadPack, savePack, type PackSummary } from '../lib/ankiStore';
+import { downloadFile, safeFileName } from '../lib/download';
+import { loadCollection, saveCollection } from '../lib/library';
+
+/*
+ * Anki-Pakete (.apkg) importieren, ansehen, wieder nach Anki exportieren (#101, L3). Ein importiertes Paket bleibt unverändert als Ganzes
+ * gespeichert; „Paare übernehmen“ kopiert seine Paare in „Meine Pakete“, damit Paare finden, Schwarzer Peter und Bingo sie spielen.
+ */
+
+const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
+const mb = (bytes: number): string => (bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`);
+const message = (error: unknown): string => (error instanceof ApkgError ? error.message : 'Das hat nicht geklappt. Bitte noch einmal versuchen.');
+
+export function ApkgImport({ onDone }: { onDone: () => void }) {
+  const [data, setData] = useState<ApkgData | null>(null);
+  const [name, setName] = useState('');
+  const [keepProgress, setKeepProgress] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const pick = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    setError(null);
+    setData(null);
+    setSaved(false);
+    try {
+      const read = await importApkg(new Uint8Array(await file.arrayBuffer()));
+      setData(read);
+      setName(file.name.replace(/\.(apkg|colpkg)$/i, ''));
+      setKeepProgress(false);
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const learned = data ? data.cards.filter((c) => c.reps > 0 || c.type > 0).length : 0;
+  const store = async () => {
+    if (!data) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await keepStorage();
+      await savePack(name.trim() || 'Anki-Paket', keepProgress ? data : withoutScheduling(data));
+      setSaved(true);
+      setData(null);
+    } catch {
+      setError('Das Paket konnte nicht gespeichert werden (vermutlich ist kein Speicherplatz frei).');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="space-y-3" aria-labelledby="apkg-import">
+      <h2 id="apkg-import" className="text-xl">
+        Anki-Paket importieren
+      </h2>
+      <p className="text-sm text-muted">Eine Datei <code>.apkg</code> oder <code>.colpkg</code> aus Anki, bis {APKG_LIMIT_TEXT}. Alles bleibt auf diesem Gerät; Skripte in den Karten werden nicht ausgeführt.</p>
+      <label className="block space-y-1 text-sm">
+        <span>Datei wählen</span>
+        <input type="file" accept=".apkg,.colpkg" className={FIELD} onChange={pick} disabled={busy} />
+      </label>
+      {busy && <p role="status" className="text-sm">Einen Moment …</p>}
+      {error && (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      )}
+      {data && (
+        <div className="space-y-3">
+          <p role="status" className="rounded-xl border border-line bg-surface-2 p-3 text-sm">
+            {data.collection.notes.length} Notizen, {data.cards.length} Karten, {data.collection.decks.length} Stapel, {data.collection.notetypes.length} Notiztypen, {data.media.size} Mediendateien ({mb([...data.media.values()].reduce((s, b) => s + b.length, 0))}).
+          </p>
+          {data.warnings.length > 0 && (
+            <ul className="list-disc space-y-1 pl-5 text-sm" aria-label="Hinweise">
+              {data.warnings.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+          )}
+          <label className="block space-y-1 text-sm">
+            <span>Name</span>
+            <input className={FIELD} value={name} maxLength={80} onChange={(e) => setName(e.target.value)} />
+          </label>
+          {learned > 0 && (
+            <label className="flex min-h-11 items-start gap-2 text-sm">
+              <input type="checkbox" className="mt-1 size-5 accent-accent" checked={keepProgress} onChange={(e) => setKeepProgress(e.target.checked)} />
+              <span>
+                Lernfortschritt übernehmen ({learned} Karten schon gelernt)
+                <span className="block text-xs text-muted">Bei fremden Stapeln lieber nicht: Sonst übernimmst du deren Abstände und Markierungen.</span>
+              </span>
+            </label>
+          )}
+        </div>
+      )}
+      {saved && (
+        <p role="status" className="text-sm">
+          Gespeichert. Das Paket steht unter „Anki-Pakete“.
+        </p>
+      )}
+      <div className="grid grid-cols-2 gap-2">
+        <Button onClick={onDone}>{saved ? 'Fertig' : 'Abbrechen'}</Button>
+        <Button variant="primary" disabled={!data || busy} onClick={store}>
+          Speichern
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+/** Liste der gespeicherten Pakete mit Export, „Paare übernehmen“ und Löschen. */
+export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
+  const [packs, setPacks] = useState<PackSummary[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [options, setOptions] = useState<{ id: string; scheduling: boolean; media: boolean } | null>(null);
+  const refresh = useCallback(() => {
+    listPacks().then(setPacks, () => setPacks([]));
+  }, []);
+  useEffect(refresh, [refresh]);
+  if (!packs || packs.length === 0) return null;
+
+  const run = async (id: string, task: () => Promise<void>) => {
+    setBusy(id);
+    setNote(null);
+    try {
+      await task();
+    } catch (e) {
+      setNote(message(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+  const exportPack = (pack: PackSummary, scheduling: boolean, media: boolean) =>
+    run(pack.id, async () => {
+      const stored = await loadPack(pack.id);
+      if (!stored) return;
+      const bytes = await exportApkg({ collection: stored.pack.collection, cards: stored.pack.cards, revlog: stored.pack.revlog, media: stored.media, conf: stored.pack.conf, dconf: stored.pack.dconf }, { scheduling, media });
+      downloadFile(`${safeFileName(pack.name)}.apkg`, bytes as BlobPart, 'application/octet-stream');
+      setOptions(null);
+    });
+  const takePairs = (pack: PackSummary) =>
+    run(pack.id, async () => {
+      const stored = await loadPack(pack.id);
+      if (!stored) return;
+      let col = loadCollection();
+      let count = 0;
+      for (const view of packsOf(stored.pack.collection)) {
+        col = savePackRows(col, null, view.name.includes(pack.name) ? view.name : `${pack.name}: ${view.name}`, view.rows.map((r) => ({ a: r.a, b: r.b }))).col;
+        count += view.rows.length;
+      }
+      if (count === 0) {
+        setNote('In diesem Paket stecken keine Paare (Notizen mit zwei Textfeldern, ohne Bild und Ton).');
+        return;
+      }
+      saveCollection(col);
+      onPacksChanged();
+      setNote(`${count} Paare stehen jetzt unter „Meine Pakete“.`);
+    });
+
+  return (
+    <section className="space-y-2" aria-labelledby="apkg-list">
+      <h2 id="apkg-list" className="text-lg">
+        Anki-Pakete
+      </h2>
+      <ul className="space-y-2">
+        {packs.map((pack) => (
+          <li key={pack.id} className="space-y-2 rounded-xl border border-line bg-surface p-3">
+            <div>
+              <span className="block truncate font-medium">{pack.name}</span>
+              <span className="block text-xs text-muted">
+                {pack.notes} Notizen · {pack.cards} Karten · {pack.decks} Stapel · {pack.media} Medien ({mb(pack.mediaBytes)}){pack.learned > 0 ? ` · ${pack.learned} gelernt` : ''}
+              </span>
+            </div>
+            {options?.id === pack.id ? (
+              <div className="space-y-2">
+                {pack.learned > 0 && (
+                  <label className="flex min-h-11 items-center gap-2 text-sm">
+                    <input type="checkbox" className="size-5 accent-accent" checked={options.scheduling} onChange={(e) => setOptions({ ...options, scheduling: e.target.checked })} />
+                    <span>Lernfortschritt mitgeben</span>
+                  </label>
+                )}
+                {pack.media > 0 && (
+                  <label className="flex min-h-11 items-center gap-2 text-sm">
+                    <input type="checkbox" className="size-5 accent-accent" checked={options.media} onChange={(e) => setOptions({ ...options, media: e.target.checked })} />
+                    <span>Bilder und Ton mitgeben</span>
+                  </label>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button onClick={() => setOptions(null)}>Abbrechen</Button>
+                  <Button variant="primary" disabled={busy === pack.id} onClick={() => void exportPack(pack, options.scheduling, options.media)}>
+                    .apkg speichern
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                <Button variant="ghost" disabled={busy === pack.id} onClick={() => setOptions({ id: pack.id, scheduling: pack.learned > 0, media: true })}>
+                  📤 Exportieren
+                </Button>
+                <Button variant="ghost" disabled={busy === pack.id} onClick={() => void takePairs(pack)}>
+                  🧩 Paare übernehmen
+                </Button>
+                <Button
+                  variant="ghost"
+                  aria-label={`${pack.name} löschen`}
+                  disabled={busy === pack.id}
+                  onClick={() => {
+                    if (window.confirm(`Das Anki-Paket „${pack.name}“ löschen?`)) void run(pack.id, async () => (await deletePackStored(pack.id), refresh()));
+                  }}
+                >
+                  🗑️
+                </Button>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+      {note && (
+        <p role="status" className="text-sm">
+          {note}
+        </p>
+      )}
+    </section>
+  );
+}
+
+export { listPacks };

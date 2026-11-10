@@ -1,6 +1,8 @@
 import { addDeck, deckSummaries, exportTextFile, importTextFile, parseTextFile, suggestImport, type DuplicateMode, type TextImportLog, type TextImportOptions } from '@brett-und-blatt/engine';
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { Button } from '../components/controls';
+import { exportApkg } from '../lib/ankiPackage';
+import { downloadFile } from '../lib/download';
 import { loadCollection, saveCollection } from '../lib/library';
 
 /*
@@ -236,13 +238,14 @@ export function AnkiExport({ onDone }: { onDone: () => void }) {
     ['Tags', tags, setTags],
     ['Mit HTML (sonst reiner Text)', html, setHtml],
   ];
-  const save = () => {
-    const url = URL.createObjectURL(new Blob([out], { type: 'text/plain;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'brett-und-blatt-karten.txt';
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const save = () => downloadFile('brett-und-blatt-karten.txt', out, 'text/plain;charset=utf-8');
+  const savePackage = async () => {
+    try {
+      const bytes = await exportApkg({ collection: col, ...(deck === 'all' ? {} : { deckId: deck }) }, { scheduling: false, media: false });
+      downloadFile('brett-und-blatt.apkg', bytes as BlobPart, 'application/octet-stream');
+    } catch {
+      setMessage('Das Paket konnte nicht erstellt werden.');
+    }
   };
   return (
     <section className="space-y-3" aria-labelledby="anki-export">
@@ -286,6 +289,9 @@ export function AnkiExport({ onDone }: { onDone: () => void }) {
           Als Datei speichern
         </Button>
       </div>
+      <Button className="w-full" disabled={count === 0} onClick={() => void savePackage()}>
+        📦 Als Anki-Paket (.apkg) speichern
+      </Button>
       {message && <p role="status" className="text-sm">{message}</p>}
       <Button variant="ghost" onClick={onDone}>
         Schließen
