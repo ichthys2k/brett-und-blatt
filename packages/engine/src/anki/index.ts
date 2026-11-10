@@ -7,3 +7,6 @@ export * from './collection';
 export * from './pairs';
 export * from './textfile';
 export * from './apkg';
+export * from './sanitize';
+export * from './render';
+export * from './edit';

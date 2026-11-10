@@ -42,9 +42,11 @@ export function clozeOrds(nt: AnkiNotetype, fields: readonly string[]): number[]
   for (const name of used) {
     const at = nt.flds.findIndex((f) => f.name === name);
     const text = at >= 0 ? (fields[at] ?? '') : '';
-    for (const m of text.matchAll(/\{\{c(\d+)::/g)) {
-      const n = Number(m[1]);
-      if (n >= 1 && n <= 99) ords.add(n - 1);
+    for (const m of text.matchAll(/\{\{c(\d+(?:,\d+)*)::/g)) {
+      for (const part of m[1]!.split(',')) {
+        const n = Number(part);
+        if (n >= 1 && n <= 99) ords.add(n - 1);
+      }
     }
   }
   return [...ords].sort((a, b) => a - b);

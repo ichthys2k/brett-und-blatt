@@ -1,4 +1,4 @@
-import type { AnkiCollection, ApkgData } from '@brett-und-blatt/engine';
+import { reconcileCards, type AnkiCollection, type ApkgData } from '@brett-und-blatt/engine';
 import { passBook } from './passes';
 
 /*
@@ -139,5 +139,20 @@ export async function keepStorage(): Promise<void> {
     await navigator.storage?.persist?.();
   } catch {
     // ohne Zusage kann der Browser den Speicher bei Platzmangel räumen; der Export bleibt der Sicherungsweg
+  }
+}
+
+/** Speichert die bearbeitete Sammlung eines importierten Pakets; die Karten werden mit den Notizen abgeglichen (neuer Stand bleibt erhalten, Neues kommt dazu). */
+export async function updatePackCollection(id: string, collection: AnkiCollection): Promise<void> {
+  const db = await open();
+  try {
+    const current = await result(db.transaction(PACKS).objectStore(PACKS).get(id) as IDBRequest<StoredPack | undefined>);
+    if (!current) throw new Error('Paket nicht gefunden');
+    const next: StoredPack = { ...current, collection, cards: reconcileCards(collection, current.cards) };
+    const tx = db.transaction(PACKS, 'readwrite');
+    tx.objectStore(PACKS).put(next);
+    await done(tx);
+  } finally {
+    db.close();
   }
 }

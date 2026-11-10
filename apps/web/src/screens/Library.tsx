@@ -6,7 +6,7 @@ import { deletePack, loadLibrary, rowsFromText, savePack, textFromRows } from '.
 import { QrCode } from '../components/OnlineParts';
 import { currentPackLink, publishPack, stopPackShare } from '../lib/packShare';
 import { GAME_SERVER } from '../lib/server';
-import { paths } from '../lib/router';
+import { navigate, paths } from '../lib/router';
 import { AiHelp, AnkiExport, AnkiImport } from './AnkiText';
 import { ApkgImport, ApkgList } from './AnkiPackages';
 
@@ -53,6 +53,9 @@ export function Library() {
             <Button onClick={() => setAnki('import')}>📥 Aus Anki-Text importieren</Button>
             <Button onClick={() => setAnki('export')}>📤 Als Anki-Text exportieren</Button>
           </div>
+          <Button className="w-full" onClick={() => navigate(paths.collection('meine'))}>
+            ✏️ Notizen und Notiztypen bearbeiten
+          </Button>
           <Button className="w-full" onClick={() => setAnki('apkg')}>
             📦 Anki-Paket (.apkg) importieren
           </Button>

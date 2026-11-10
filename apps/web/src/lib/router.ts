@@ -13,6 +13,7 @@ export type Route =
   | { name: 'tournaments' }
   | { name: 'classes' }
   | { name: 'library' }
+  | { name: 'collection'; source: string }
   | { name: 'operator' }
   | { name: 'packView'; key: string }
   | { name: 'class'; code: string }
@@ -60,6 +61,7 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'turniere') return { name: 'tournaments' };
   if (parts[0] === 'klassen') return { name: 'classes' };
   if (parts[0] === 'bibliothek') return { name: 'library' };
+  if (parts[0] === 'sammlung') return { name: 'collection', source: decodeURIComponent(parts[1] ?? 'meine') };
   if (parts[0] === 'betreiber') return { name: 'operator' };
   if (parts[0] === 'paket') return { name: 'packView', key: params.k ?? '' };
   if (parts[0] === 'klasse' && parts[1]) return { name: 'class', code: decodeURIComponent(parts[1]) };
@@ -104,6 +106,8 @@ export const paths = {
   tournaments: '#/turniere',
   classes: '#/klassen',
   library: '#/bibliothek',
+  /** Notizen, Notiztypen und Stapel bearbeiten (#101, L4): `meine` oder die Kennung eines importierten Anki-Pakets. */
+  collection: (source: string) => `#/sammlung/${encodeURIComponent(source)}`,
   class: (code: string) => `#/klasse/${encodeURIComponent(code)}`,
   room: (code: string) => `#/raum/${encodeURIComponent(code)}`,
   /** Tisch-Bildschirm für Fernseher, Beamer oder Tablet (#100). */

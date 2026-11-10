@@ -12,6 +12,7 @@ import { Play } from './screens/Play';
 import { RoomScreen } from './screens/Room';
 import { ClassPage, Classes } from './screens/Classes';
 import { Library } from './screens/Library';
+import { CollectionScreen } from './screens/Collection';
 import { Operator } from './screens/Operator';
 import { PackView } from './screens/PackView';
 import { Tournaments } from './screens/Tournaments';
@@ -46,6 +47,8 @@ function Screen() {
       return <Operator />;
     case 'library':
       return <Library />;
+    case 'collection':
+      return <CollectionScreen key={route.source} source={route.source} />;
     case 'classes':
       return <Classes />;
     case 'class':

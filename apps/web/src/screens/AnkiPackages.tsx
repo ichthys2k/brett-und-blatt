@@ -5,6 +5,7 @@ import { APKG_LIMIT_TEXT, exportApkg, importApkg } from '../lib/ankiPackage';
 import { deletePackStored, keepStorage, listPacks, loadPack, savePack, type PackSummary } from '../lib/ankiStore';
 import { downloadFile, safeFileName } from '../lib/download';
 import { loadCollection, saveCollection } from '../lib/library';
+import { navigate, paths } from '../lib/router';
 
 /*
  * Anki-Pakete (.apkg) importieren, ansehen, wieder nach Anki exportieren (#101, L3). Ein importiertes Paket bleibt unverändert als Ganzes
@@ -210,6 +211,9 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
+                <Button variant="ghost" onClick={() => navigate(paths.collection(pack.id))}>
+                  ✏️ Bearbeiten
+                </Button>
                 <Button variant="ghost" disabled={busy === pack.id} onClick={() => setOptions({ id: pack.id, scheduling: pack.learned > 0, media: true, latest: false })}>
                   📤 Exportieren
                 </Button>

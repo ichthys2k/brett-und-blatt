@@ -85,6 +85,9 @@ export function subsetCollection(col: AnkiCollection, deckId: number): AnkiColle
   return { ...col, decks, notes, notetypes: col.notetypes.filter((nt) => used.has(nt.id)), graves: [] };
 }
 
+/** Gleicht gespeicherte Karten mit den Notizen ab: bekannte Karten behalten ihren Stand, fehlende kommen neu dazu, überzählige fallen weg. */
+export const reconcileCards = (col: AnkiCollection, existing: readonly ApkgCard[], now = Date.now()): ApkgCard[] => cardsFor(col, existing, true, now);
+
 const csv = (tags: readonly string[]): string => (tags.length ? ` ${tags.join(' ')} ` : '');
 
 function fillDb(db: SqlDb, data: { collection: AnkiCollection; cards: ApkgCard[]; revlog: ApkgRevlog[]; conf: Record<string, unknown> | null; dconf: Record<string, unknown> | null }, now: number): void {
