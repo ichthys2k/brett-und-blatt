@@ -174,7 +174,7 @@ Notiztypen, Stapel und Optionsvorlagen bleiben als JSON in Anki-Form (Schema 11)
 - **Wortspiele und Klassenspiele:** später (wie in #101 beschrieben), nach Stufe E.
 - Die bestehenden `content/…/*.json` bleiben als Quelle im Repository; ein Skript erzeugt daraus Anki-Pakete (`.apkg`) und prüft, dass der Rundlauf stimmt.
 
-## 9. Was nicht oder anders gehen wird – und offene Fragen
+## 9. Was nicht oder anders gehen wird – und gestellte Fragen (beantwortet in 9a)
 
 **Nicht kompatibel (und warum):**
 - **AnkiWeb-Sync und Anki-Server:** Das Protokoll ist nicht dokumentiert und der Dienst hängt an einem Konto. Austausch geht über Pakete.
@@ -191,6 +191,21 @@ Notiztypen, Stapel und Optionsvorlagen bleiben als JSON in Anki-Form (Schema 11)
 6. **Bilder und Audio:** Anki-Pakete enthalten Medien; die Beschränkung „keine Bilder“ in #101 fällt damit. Größenlimit je Paket (Vorschlag: 50 MB) und Medienarten (Abschnitt 7) bitte bestätigen.
 7. **Name und Ort im Menü:** „Lernen“ als eigener Bereich auf der Startseite oder nur im Pass?
 8. **Datenschutz und Klasse (Stufe F):** Soll die Lehrkraft Lernberichte sehen? Vorschlag aus Plan Abschnitt 8 bleibt: nur freiwillig geteilt.
+
+## 9a. Entscheidungen (Cornelius, 10.11.2026)
+
+| # | Frage | Entscheidung | Folge |
+|---|---|---|---|
+| 1 | Reihenfolge | **Bearbeiten (D) vor Lernen (E)** | L4 vor L5 |
+| 2 | Exportform | **Legacy 2 und das neue Format (zstd)** | zusätzlich ein zstd-**Packer** nötig (`fzstd` kann nur entpacken); Bibliothek und Größe noch zu prüfen, Tests mit beiden Formaten |
+| 3 | Ablage über Geräte | **Cloudflare R2 für Medien** | Neuer Speicher im Cloudflare-Konto: Bucket, Bindung im Worker, Verschlüsselung im Browser (Server sieht nur Bytes). Voraussetzungen der kostenlosen Stufe (z. B. hinterlegte Zahlungsmethode, Grenzen für Speicher und Anfragen) **vor dem Bau prüfen**; Einrichtung macht Cornelius selbst, Geheimnisse nie in den Chat |
+| 4 | SM-2-Zustand importierter Karten | **Aus dem Protokoll berechnen, sonst aus Intervall und Faktor schätzen** | Rechenweg in L5; Protokoll muss beim Import gelesen werden (L3) |
+| 5 | Größe je Paket | **50 MB** | Prüfung vor dem Entpacken (Abschnitt 7), Hinweis beim Überschreiten |
+| 6 | Feld-Editor | **Eigenes kleines Feld** (`contenteditable` mit HTML-Ansicht) | Kein TipTap/ProseMirror |
+| 7 | Platz in der App | **Beides**: Kachel „Lernen“ auf der Startseite, Pakete und Lernstand im Pass | Startseite und `#/pass` bekommen Einstiege |
+| 8 | Lernberichte | **Pro Schüler sichtbar** für die Leitung | Weicht vom bisherigen Plan („nur freiwillig geteilt“) ab; siehe Hinweis unten |
+
+**Hinweis zu Entscheidung 8:** Der Plan (Spielerpass, Abschnitt 8) und die Datenschutzerklärung gehen bisher davon aus, dass der Server keine Lernstände einzelner Personen sieht. Der Lernstand je Schüler für die Leitung braucht daher einen eigenen, **für die Schüler sichtbaren** Weg: Beim Beitritt zur Klasse erfährt jedes Mitglied (und bei Kindern die Eltern), dass die Leitung den Lernstand sieht; der Stand reist verschlüsselt an die Leitung (nur die Leitung kann ihn öffnen), und die Datenschutzerklärung wird ergänzt. Das ist Teil von L7 und wird dort noch einmal entworfen und mit Cornelius abgestimmt, bevor es gebaut wird.
 
 ## 10. Vorschlag für den neuen Zuschnitt der Issues
 
