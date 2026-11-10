@@ -144,5 +144,5 @@ Umgesetzt ist eine gemeinsame Vorgabe für beide Spielweisen (Zeitvorgaben gelte
 
 ## Offene Punkte
 
-- Werte der Sets sind mit Quellen hinterlegt (PR #20, die Set-Prüfung verlangt Quellen); eine inhaltliche Durchsicht, besonders der biblischen Personen, macht Cornelius später selbst.
+- Werte der Sets sind mit Quellen hinterlegt (PR #20, die Set-Prüfung verlangt Quellen); inhaltliche Durchsicht durch Cornelius abgeschlossen (alle 5 Sets geprüft und bestätigt, #82).
 - Später: ein Editor für eigene Sets, z. B. von einer Klasse erstellt.

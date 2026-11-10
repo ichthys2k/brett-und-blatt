@@ -261,7 +261,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - ✅ **F3 Tiefflug** (29.10.2026, `packages/games/low-flight`, 2–8 Plätze): Skyjo-artig, 150 Karten, Spalten (optional Zeilen) abräumen, Verdopplung, bis 100/50 Punkte oder 3/1 Runden; Junior mit Obstkarten 1–5 im 3×3-Raster (eigene Fassung, niedrigste Summe gewinnt). Bot „Wolkenspringer“, online registriert. Details in `docs/spiele/tiefflug.md`.
 - ✅ **F4 Fix gefunden!** (29.10.2026, `packages/games/symbol-match`, 1–8 Plätze): Dobble-artig, Kartensatz aus einer projektiven Ebene (13/31/57 Karten), Turmbau, Brunnen und Vergiftetes Geschenk, Symbolpakete Emoji/Tiere/Bibel/Mathe (gleicher Wert), Strafe als Sperre bis zur nächsten Mittelkarte (keine Uhr im Zustand), Bot „Adlerauge“, geteilter Bildschirm, online registriert. Details in `docs/spiele/fix-gefunden.md`.
 - **F – Neue Spiele (Ideen 29.10.2026):** Speed ✅, Präsident ✅, Tiefflug ✅, Fix gefunden! ✅ – damit ist F abgeschlossen.
-- **Entscheidungen (29.10.2026):** Bibel-Quiz vom Server – ja (D2). Chromium für den Rauchtest ist auf dem Desktop installiert. Quartett-Werte prüft Cornelius später selbst. KataGo entfällt. Farbensortierer geht Cornelius separat an.
+- **Entscheidungen (29.10.2026):** Bibel-Quiz vom Server – ja (D2). Chromium für den Rauchtest ist auf dem Desktop installiert. Quartett-Werte durch Cornelius geprüft und freigegeben (#82). KataGo entfällt. Farbensortierer geht Cornelius separat an.
 
 Korrekturplan aus dem Prüfbericht:
 1. ✅ Etappe 1 – Lecks und Kaputtes (veröffentlicht 28.10.2026, Commit `2ff0822`).
