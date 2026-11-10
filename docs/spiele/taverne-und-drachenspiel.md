@@ -113,6 +113,7 @@ Jeder Schritt auf eigenem Zweig mit `corepack pnpm check`, Blick im Browser und 
 2. ✅ **Rahmen fertig (31.10.2026):** Schrift, Lobby, Siegerehrung, Fläche um das Spielfeld, Korrekturen einzelner Spiele. Test am Handy und am Beamer.
 3. **Drachenspiel-Thema:** Begriffe, Wimpel, Knappen, Wappenrahmen, Turnierplatz. Keine Regeländerung, unabhängig von 1 und 2.
 4. **Nach Wunsch einzeln:** Wirtin, Klänge und Playlist, gemalte Karten, Drachenei.
+5. ✅ **Weitere Tische und Räume (10.11.2026, #107):** Auf `#/ton` lassen sich neben „Automatisch je Rubrik“ sechs feste Tischoberflächen (Eichenholz, dunkles Nussholz, grüner Spielfilz, roter Samtfilz, Schiefer, heller Marmor; reine CSS-Verläufe, WCAG-AA-geprüft) sowie vier Raumkulissen (Taverne, Burgsaal, Bibliothek & Schreibstube, Schlossgarten) für Hauptmenü, Unterseiten und Siegerehrung wählen.
 
 ## Offene Fragen an Cornelius
 

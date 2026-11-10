@@ -6,7 +6,20 @@ import { MusicList } from '../components/MusicList';
 import { VolumeControls } from '../components/SoundControl';
 import { t } from '../i18n';
 import { APP_DATE, APP_VERSION, checkForUpdate, resetApp } from '../lib/appUpdate';
-import { contrastForcesPlain, type Look, setLook, useChosenLook } from '../lib/look';
+import {
+  contrastForcesPlain,
+  ROOM_SCENES,
+  type Look,
+  type RoomScene,
+  type TableSurface,
+  setLook,
+  setRoomScene,
+  setTableSurface,
+  TABLE_SURFACES,
+  useChosenLook,
+  useChosenRoom,
+  useChosenTable,
+} from '../lib/look';
 import { music, useMusicPrefs } from '../lib/music';
 import { navigate, paths } from '../lib/router';
 import { setSoundSettings } from '../lib/sound';
@@ -45,24 +58,58 @@ function AppVersion() {
 /** Ton-Einstellungen mit allen Stücken zum Probehören (#/ton). */
 function LookChoice() {
   const chosen = useChosenLook();
+  const table = useChosenTable();
+  const room = useChosenRoom();
   const options: readonly { id: Look; label: string; text: string }[] = [
     { id: 'plain', label: t('look.plain'), text: t('look.plain.text') },
     { id: 'tavern', label: t('look.tavern'), text: t('look.tavern.text') },
   ];
   return (
-    <fieldset className="space-y-2 rounded-2xl border border-line bg-surface p-4">
-      <legend className="px-1 font-semibold">{t('look.title')}</legend>
-      {options.map((option) => (
-        <label key={option.id} className="flex cursor-pointer items-start gap-3 rounded-xl p-2 hover:bg-surface-2">
-          <input type="radio" name="look" className="mt-1 accent-accent" checked={chosen === option.id} onChange={() => setLook(option.id)} />
-          <span>
-            <span className="block font-medium">{option.label}</span>
-            <span className="block text-sm text-muted">{option.text}</span>
-          </span>
-        </label>
-      ))}
-      {contrastForcesPlain() && <p className="text-sm text-muted">{t('look.contrast')}</p>}
-    </fieldset>
+    <div className="space-y-4">
+      <fieldset className="space-y-2 rounded-2xl border border-line bg-surface p-4">
+        <legend className="px-1 font-semibold">{t('look.title')}</legend>
+        {options.map((option) => (
+          <label key={option.id} className="flex cursor-pointer items-start gap-3 rounded-xl p-2 hover:bg-surface-2">
+            <input type="radio" name="look" className="mt-1 accent-accent" checked={chosen === option.id} onChange={() => setLook(option.id)} />
+            <span>
+              <span className="block font-medium">{option.label}</span>
+              <span className="block text-sm text-muted">{option.text}</span>
+            </span>
+          </label>
+        ))}
+        {contrastForcesPlain() && <p className="text-sm text-muted">{t('look.contrast')}</p>}
+      </fieldset>
+
+      {chosen === 'tavern' && !contrastForcesPlain() && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <fieldset className="space-y-2 rounded-2xl border border-line bg-surface p-4">
+            <legend className="px-1 font-semibold">{t('look.table.title')}</legend>
+            <p className="text-xs text-muted">{t('look.table.hint')}</p>
+            <div className="grid gap-1 pt-1">
+              {TABLE_SURFACES.map((id: TableSurface) => (
+                <label key={id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-2">
+                  <input type="radio" name="table-surface" className="accent-accent" checked={table === id} onChange={() => setTableSurface(id)} />
+                  <span className="text-sm font-medium">{t(`look.table.${id}`)}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="space-y-2 rounded-2xl border border-line bg-surface p-4">
+            <legend className="px-1 font-semibold">{t('look.room.title')}</legend>
+            <p className="text-xs text-muted">{t('look.room.hint')}</p>
+            <div className="grid gap-1 pt-1">
+              {ROOM_SCENES.map((id: RoomScene) => (
+                <label key={id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-2">
+                  <input type="radio" name="room-scene" className="accent-accent" checked={room === id} onChange={() => setRoomScene(id)} />
+                  <span className="text-sm font-medium">{t(`look.room.${id}`)}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </div>
+      )}
+    </div>
   );
 }
 
