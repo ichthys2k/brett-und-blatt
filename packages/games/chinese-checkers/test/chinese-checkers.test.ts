@@ -48,6 +48,8 @@ describe('Brett', () => {
     for (let arm = 0; arm < 6; arm++) {
       expect(armCells(arm, 10)).toHaveLength(10);
       expect(armCells(arm, 6)).toHaveLength(6);
+      expect(armCells(arm, 15)).toHaveLength(15);
+      expect(armCells(arm, 19)).toHaveLength(19);
       expect(armOfCell(TIPS[arm]!)).toBe(arm);
     }
     expect(CELLS.filter((_, i) => armOfCell(i) === null)).toHaveLength(61);
@@ -62,6 +64,18 @@ describe('Brett', () => {
       }
     }
     expect(gameModule.setup(3, { pieces: '6' }, 'x').board.filter((s) => s === 0)).toHaveLength(6);
+    const s15 = gameModule.setup(2, { pieces: '15' }, 'x');
+    expect(s15.board.filter((s) => s === 0)).toHaveLength(15);
+    expect(s15.board.filter((s) => s === 1)).toHaveLength(15);
+    expect(targetCells(s15, 0)).toHaveLength(15);
+
+    const s19 = gameModule.setup(2, { pieces: '19' }, 'x');
+    expect(s19.board.filter((s) => s === 0)).toHaveLength(19);
+    expect(s19.board.filter((s) => s === 1)).toHaveLength(19);
+    expect(targetCells(s19, 0)).toHaveLength(19);
+
+    const sFixed = gameModule.setup(2, { rotateBoard: 'false' }, 'x');
+    expect(sFixed.rotateBoard).toBe(false);
   });
 });
 
@@ -142,6 +156,14 @@ describe('Bot', () => {
   it('Bots spielen zu sechst eine Partie zu Ende', () => {
     const { result } = botGame(['hard', 'medium', 'easy', 'hard', 'medium', 'easy'], 'sechs');
     expect(result?.kind).toBe('win');
+  });
+
+  it('Bots spielen mit 15 und 19 Steinen zu Ende', () => {
+    const g15 = botGame(['medium', 'medium'], 'seed15', undefined, { pieces: '15' });
+    expect(g15.result?.kind).toBe('win');
+
+    const g19 = botGame(['medium', 'medium'], 'seed19', undefined, { pieces: '19' });
+    expect(g19.result?.kind).toBe('win');
   });
 });
 

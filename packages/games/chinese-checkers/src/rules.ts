@@ -109,15 +109,48 @@ export function homeArms(seats: number): number[] {
 
 export const opposite = (arm: number) => (arm + 3) % 6;
 
-/** Steine je Spieler: 10 (ganze Zacke) oder 6 (die drei Reihen an der Spitze). */
-export type PieceCount = 10 | 6;
+/** Steine je Spieler: 10 (ganze Zacke), 6 (drei Reihen an der Spitze), 15 (fünf Reihen) oder 19 (15 plus 4 Halma-Vorposten). */
+export type PieceCount = 10 | 6 | 15 | 19;
+
+/** Vorausberechnete Löcher je Zacke und Steinzahl. */
+const PRECOMPUTED_ARM_CELLS: number[][][] = (() => {
+  return Array.from({ length: 6 }, (_, arm) => {
+    const tip = TIPS[arm]!;
+    const c6 = CELLS.map((_, i) => i).filter((i) => hexDistance(i, tip) <= 2);
+    const c10 = CELLS.map((_, i) => i).filter((i) => hexDistance(i, tip) <= 3);
+    const c15 = CELLS.map((_, i) => i).filter((i) => hexDistance(i, tip) <= 4);
+    const base15 = new Set(c15);
+    const extra4 = CELLS.map((_, i) => i).filter((i) => {
+      if (hexDistance(i, tip) !== 5) return false;
+      const c = CELLS[i]!;
+      let n = 0;
+      for (const d of DIRECTIONS) {
+        const idx = cellIndex(c.q + d.q, c.r + d.r);
+        if (idx !== undefined && base15.has(idx) && hexDistance(idx, tip) === 4) n++;
+      }
+      return n === 2;
+    });
+    const c19 = [...c15, ...extra4];
+    return [c6, c10, c15, c19];
+  });
+})();
 
 /** Löcher einer Zacke, die bei dieser Steinzahl belegt bzw. gefüllt werden. */
 export function armCells(arm: number, pieces: PieceCount): number[] {
-  const minDepth = pieces === 6 ? 1 : 0;
-  const cells: number[] = [];
-  for (let i = 0; i < CELLS.length; i++) if (armOfCell(i) === arm && depthOfCell(i) >= minDepth) cells.push(i);
-  return cells;
+  const armData = PRECOMPUTED_ARM_CELLS[arm];
+  if (!armData) return [];
+  switch (pieces) {
+    case 6:
+      return armData[0]!;
+    case 10:
+      return armData[1]!;
+    case 15:
+      return armData[2]!;
+    case 19:
+      return armData[3]!;
+    default:
+      return armData[1]!;
+  }
 }
 
 /** Nach so vielen Runden endet die Partie; es gewinnt, wer dem Ziel am nächsten ist. */
@@ -126,6 +159,7 @@ export const ROUND_LIMIT = 150;
 export interface ChineseCheckersState {
   seats: number;
   pieces: PieceCount;
+  rotateBoard: boolean;
   /** Belegung je Loch: Platz oder null. */
   board: (SeatId | null)[];
   /** Startzacke je Platz; das Ziel ist die gegenüberliegende. */
@@ -146,13 +180,21 @@ export type ChineseCheckersMove =
   | { type: 'pass' }
   | { type: 'resign'; seat: SeatId };
 
-export function parsePieces(value: unknown): PieceCount {
-  return value === '6' ? 6 : 10;
+export function parsePieces(value: unknown, seats = 2): PieceCount {
+  if (value === '6' || value === 6) return 6;
+  if (value === '15' || value === 15) return seats <= 3 ? 15 : 10;
+  if (value === '19' || value === 19) return seats <= 3 ? 19 : 10;
+  return 10;
+}
+
+export function parseRotateBoard(value: unknown): boolean {
+  return value !== 'false' && value !== false;
 }
 
 export function setup(seats: number, options: Options): ChineseCheckersState {
   const count = Math.max(2, Math.min(6, Number(seats) || 2));
-  const pieces = parsePieces(options.pieces);
+  const pieces = parsePieces(options.pieces, count);
+  const rotateBoard = parseRotateBoard(options.rotateBoard);
   const homes = homeArms(count);
   const board: (SeatId | null)[] = CELLS.map(() => null);
   homes.forEach((arm, seat) => {
@@ -161,6 +203,7 @@ export function setup(seats: number, options: Options): ChineseCheckersState {
   return {
     seats: count,
     pieces,
+    rotateBoard,
     board,
     homes,
     turn: 0,

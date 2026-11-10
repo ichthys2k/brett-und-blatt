@@ -10,6 +10,7 @@ import {
   armOfCell,
   destinations,
   targetArm,
+  targetCells,
   type ChineseCheckersMove,
   type ChineseCheckersState,
 } from '../rules';
@@ -72,9 +73,23 @@ function Board({ view, legalMoves, onMove, events, viewer, activeSeat, hint, sea
     return destinations(view, mover, selected);
   }, [selected, mover, view]);
 
-  // Eigene Zacke nach unten drehen.
+  const [autoRotate, setAutoRotate] = useState<boolean>(view.rotateBoard ?? true);
+
+  // Eigene Zacke nach unten drehen, wenn automatisches Drehen aktiv ist.
   const ownSeat = typeof viewer === 'number' ? viewer : null;
-  const rotation = ownSeat !== null ? (3 - view.homes[ownSeat]!) * 60 : 0;
+  const rotation = autoRotate && ownSeat !== null ? (3 - view.homes[ownSeat]!) * 60 : 0;
+
+  // Ziellöcher für 15/19 Steine im Mittelsechseck kennzeichnen.
+  const extendedGoalOwner = useMemo(() => {
+    if (view.pieces <= 10) return null;
+    const map = new Map<number, number>();
+    for (let s = 0; s < view.seats; s++) {
+      for (const cell of targetCells(view, s)) {
+        if (armOfCell(cell) === null) map.set(cell, s);
+      }
+    }
+    return map;
+  }, [view]);
 
   // Sprungkette Loch für Loch ablaufen lassen.
   const lastMove = useLatestEvent(events, (e) => e.type === 'jumped' || e.type === 'stepped');
@@ -158,6 +173,7 @@ function Board({ view, legalMoves, onMove, events, viewer, activeSeat, hint, sea
                   : isTarget
                     ? 'Freies Loch, Ziel'
                     : 'Freies Loch';
+              const goalOwner = extendedGoalOwner?.get(cell);
               return (
                 <g
                   key={cell}
@@ -168,6 +184,9 @@ function Board({ view, legalMoves, onMove, events, viewer, activeSeat, hint, sea
                   aria-label={label}
                   onKeyDown={interactive ? (e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), click(cell)) : undefined}
                 >
+                  {goalOwner !== undefined && (
+                    <circle cx={p.x} cy={p.y} r={0.34} fill={PLAYERS[goalOwner]!.light} opacity={0.65} />
+                  )}
                   <circle className="chk-hole" cx={p.x} cy={p.y} r={0.24} data-arm={armOfCell(cell) ?? 'mitte'} />
                   {isTarget && <circle className="chk-target" cx={p.x} cy={p.y} r={0.36} />}
                   {isHint && <circle className="chk-hint" cx={p.x} cy={p.y} r={0.46} />}
@@ -207,6 +226,14 @@ function Board({ view, legalMoves, onMove, events, viewer, activeSeat, hint, sea
             Passen
           </button>
         )}
+        <button
+          type="button"
+          className="chk-btn chk-btn-secondary"
+          onClick={() => setAutoRotate((r) => !r)}
+          title={autoRotate ? 'Automatische Drehung ausschalten (feste Ausrichtung)' : 'Automatische Drehung einschalten'}
+        >
+          {autoRotate ? '🔄 Drehen: An' : '🔒 Drehen: Aus'}
+        </button>
       </div>
     </div>
   );
@@ -226,7 +253,7 @@ export const gameUi: GameUi<ChineseCheckersState, ChineseCheckersMove> = {
   SeatSymbol,
   seatLabel: (seat) => PLAYERS[Number(seat) % PLAYERS.length]!.name,
   seatDetail: (view, seat) => {
-    const target = new Set(view.board.flatMap((_, cell) => (armOfCell(cell) === targetArm(view, seat) ? [cell] : [])));
+    const target = new Set(targetCells(view, seat));
     const home = view.board.filter((owner, cell) => owner === seat && target.has(cell)).length;
     return view.out[seat] ? 'aufgegeben' : `${home}/${view.pieces} im Ziel`;
   },
