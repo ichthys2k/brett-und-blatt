@@ -47,4 +47,7 @@ export function useSoundSettings(): SoundSettings {
 }
 
 // Browser erlauben Ton erst nach einer Berührung; jede weitere weckt den Ton auch nach einer Unterbrechung (z. B. Anruf).
-for (const type of ['pointerdown', 'keydown'] as const) window.addEventListener(type, () => sound.unlock(), { capture: true, passive: true });
+if (typeof window !== 'undefined') {
+  for (const type of ['pointerdown', 'keydown'] as const) window.addEventListener(type, () => sound.unlock(), { capture: true, passive: true });
+}
+
