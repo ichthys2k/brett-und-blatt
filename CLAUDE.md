@@ -214,7 +214,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
 - „Gesagt!“ (`buzz`) in „Verboten!“ darf außer der Reihe kommen – wie `callUno`/`callMau` in `LocalSession` und im Online-Client freigegeben.
 
 **Bekannte offene Punkte:**
-- **Stichspiel-Bots** spielen beim Reizen und Ansagen nach Faustregeln; das Kartenspiel rechnet auf „schwer“ in Skat, Schafkopf und Binokel per Stichproben-Suche, in Doppelkopf nur nach Faustregeln. Skat-Schwarz- und Ouvert-Ansagen, Geier und Farbwenz macht kein Bot.
+- **Stichspiel-Bots** spielen beim Reizen und Ansagen nach Faustregeln (Skat-Bot reizt auf „schwer“ per Stichproben-Simulation und sagt Schwarz und Ouvert an, wenn unverlierbar, #90); das Kartenspiel rechnet auf „schwer“ in Skat, Schafkopf und Binokel per Stichproben-Suche, in Doppelkopf nur nach Faustregeln. Schafkopf Geier und Farbwenz macht noch kein Bot.
 - **Gomoku-Bot** beschleunigt: `findWinLine` prüft nur noch Linien durch den gesetzten Stein statt das ganze Brett (O(b²) → O(1) je Zug), Kandidatenfelder auf Nachbarschaft (≤ 2) begrenzt, Vertragsprüfung mit `randomGames: 8, botMoveLimit: 60`. Testzeit 10 s → 2,2 s; Prüfstand grün.
 - **Bibel-Quiz:** Der Fragenkatalog mit Antworten und Erklärungen liegt in `content/bibelquiz/fragen.json` und kommt zur Laufzeit vom Spieleserver (`GET /bibelquiz/fragen`, Rückfall: mitgelieferte Datei `bibelquiz/fragen.json`) – nicht mehr im JS-Bundle (Option 0 ist richtig). Wer die Fragen im Browser durchsucht, findet die Lösungen weiterhin; ganz verbergen ließe sich das nur mit einer Prüfung auf dem Server bei jeder Antwort.
 
