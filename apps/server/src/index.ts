@@ -125,6 +125,10 @@ import {
   removeOrgMember,
   revokeInvite,
   revokeRoles,
+  rolesOf,
+  orgCapabilities,
+  isOrgRole,
+  type OrgRole,
   updateOrgMember,
   type OrgState,
 } from '@brett-und-blatt/online';
@@ -222,6 +226,17 @@ function shareStub(env: Env, id: string): DurableObjectStub<PassShare> {
 function classStub(env: Env, code: string): DurableObjectStub<ClassRoom> {
   const namespace = env.ROOM_JURISDICTION === 'none' ? env.CLASSES : env.CLASSES.jurisdiction('eu');
   return namespace.get(namespace.idFromName(code));
+}
+
+/** Rollen eines Geräts in einer Organisation; bei Fehlern keine (lieber zu wenig Recht als zu viel). */
+async function orgRolesOf(env: Env, orgCode: string, token: string): Promise<OrgRole[]> {
+  try {
+    const parsed = JSON.parse(await orgStub(env, orgCode).rolesOf(token)) as unknown;
+    return Array.isArray(parsed) ? parsed.filter(isOrgRole) : [];
+  } catch (err) {
+    console.error('Organisation nicht erreichbar:', err);
+    return [];
+  }
 }
 
 function orgDeskStub(env: Env): DurableObjectStub<OrgDesk> {
@@ -483,6 +498,11 @@ export default {
       }
       const settings = parseTournamentSettings(body.settings, (id) => gamesById.get(id));
       if (!settings || typeof body.token !== 'string' || body.token.length < 16 || body.token.length > 100 || typeof body.name !== 'string') return json({ error: 'body' }, 400, cors);
+      // Ein Turnier unter dem Namen einer Organisation (#230) darf nur anlegen, wer dort das Recht dazu hat.
+      if (settings.org) {
+        const roles = await orgRolesOf(env, settings.org, body.token);
+        if (!orgCapabilities(roles).includes('createTournament')) return json({ error: 'Du darfst in dieser Gruppe keine Turniere anlegen.' }, 403, cors);
+      }
       for (let attempt = 0; attempt < 5; attempt++) {
         const code = randomLetters(8);
         if (await tournamentStub(env, code).create(code, settings, { token: body.token, name: body.name }, parseFieldCount(body.settings), parsePointRules(body.settings), parseEntrants(body.entrants), settings.mode === 'local' ? parseSeed(body.seed) : undefined)) return json({ code }, 201, cors);
@@ -1396,6 +1416,13 @@ export class OrgRoom extends DurableObject<Env> {
     return reply(200, { view: orgView(state, token, now), ...extra });
   }
 
+  /** Rollen eines Geräts in dieser Organisation (für Turniere, #230); leer in gesperrten, unbekannten und für Fremde. */
+  async rolesOf(token: string): Promise<string> {
+    const state = await this.ctx.storage.get<OrgState>('org');
+    if (!state || isOrgExpired(state, Date.now()) || state.status !== 'active') return '[]';
+    return JSON.stringify(rolesOf(state, token));
+  }
+
   /** Sperrt oder gibt eine Organisation wieder frei (Betreiber der Plattform); gesperrt gelten keine Rollen und keine Einladungen. */
   async setBlocked(blocked: boolean): Promise<boolean> {
     const state = await this.ctx.storage.get<OrgState>('org');
@@ -1692,6 +1719,8 @@ export class SeriesRoom extends DurableObject<Env> {
 
 export class TournamentRoom extends DurableObject<Env> {
   private tournament: Tournament | null = null;
+  /** Rollen aus der Organisation je Kennung, kurz gemerkt (#230); sie ändern sich selten, die Abfrage soll nicht jede Nachricht bremsen. */
+  private orgCache = new Map<string, { roles: OrgRole[]; at: number }>();
   private lastListing: OpenRoomListing | null | undefined = undefined;
 
   constructor(ctx: DurableObjectState, env: Env) {
@@ -1730,18 +1759,37 @@ export class TournamentRoom extends DurableObject<Env> {
     return new Response(null, { status: 101, webSocket: client });
   }
 
+  /** Holt die Rollen aus der Organisation des Turniers für diese Kennungen (höchstens alle 15 Sekunden je Kennung). */
+  private async loadOrgRoles(tokens: readonly (string | null | undefined)[]): Promise<void> {
+    const t = this.tournament;
+    const org = t?.snapshot().settings.org;
+    if (!t || !org) return;
+    const now = Date.now();
+    for (const token of new Set(tokens)) {
+      if (!token) continue;
+      const cached = this.orgCache.get(token);
+      if (!cached || now - cached.at > 15_000) {
+        const roles = await orgRolesOf(this.env, org, token);
+        this.orgCache.set(token, { roles, at: now });
+      }
+      t.setOrgRoles(token, this.orgCache.get(token)!.roles);
+    }
+  }
+
   override async webSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
     const t = this.tournament;
     if (!t || typeof raw !== 'string') return;
     const message = parseTournamentMessage(raw);
     if (!message) return this.sendTo(ws, { type: 'error', message: 'Unbekannte Nachricht.' });
     if (message.type === 'hello') {
+      await this.loadOrgRoles([message.token]);
       ws.serializeAttachment({ token: message.token, name: message.name, avatar: message.avatar } satisfies TournamentAttachment);
       if (t.greet(message.token, message.name, message.avatar)) return this.changed();
       return this.sendView(ws);
     }
     const { token, name, avatar } = ws.deserializeAttachment() as TournamentAttachment;
     if (!token) return this.sendTo(ws, { type: 'error', message: 'Erst anmelden.' });
+    await this.loadOrgRoles([token]);
     if (message.type === 'attachSeries' || message.type === 'detachSeries') return this.handleSeries(ws, t, token, message);
     const result = applyTournamentMessage(t, { token, name: name ?? '', avatar: avatar ?? '' }, message);
     if (result.kind === 'delete') return this.deleteTournament(t);
@@ -1840,6 +1888,7 @@ export class TournamentRoom extends DurableObject<Env> {
     await this.ctx.storage.put('tournament', t.snapshot());
     const wake = retry ? Date.now() + 30_000 : t.nextWakeup();
     await this.ctx.storage.setAlarm(Math.max(wake, Date.now() + 1000));
+    await this.loadOrgRoles(this.ctx.getWebSockets().map((ws) => (ws.deserializeAttachment() as TournamentAttachment).token));
     for (const ws of this.ctx.getWebSockets()) this.sendView(ws);
     await this.syncRegistry(t);
   }

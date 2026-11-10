@@ -1,5 +1,6 @@
 import type { GameInfo, OptionSpec, Options } from '@brett-und-blatt/engine';
 import { cleanName } from '../names';
+import { parseOrgCode } from '../org';
 import { DISCIPLINES_MAX, DISCIPLINES_MIN } from './disciplines';
 import { isBestOf } from './best-of';
 import { TABLE_ROUND_CHOICES, TABLE_SIZE_MAX, TABLE_SIZE_MIN } from './table-rounds';
@@ -172,6 +173,14 @@ export const GROUP_COUNT_CHOICES = [2, 4, 8, 16] as const;
 
 /** Prüft die Angaben beim Anlegen. `isTournamentGame` kennt der Server. */
 export function parseTournamentSettings(body: unknown, findGame: (id: string) => { info: GameInfo; options: OptionSpec[] } | undefined): TournamentSettings | null {
+  const base = parseSettingsBase(body, findGame);
+  if (!base || !isRecord(body) || body.org === undefined || body.org === '') return base;
+  // Die Organisation (#230): ein gültiger Code oder ein abgelehntes Turnier; ob das Gerät dort anlegen darf, prüft der Server.
+  const org = typeof body.org === 'string' ? parseOrgCode(body.org) : null;
+  return org ? { ...base, org } : null;
+}
+
+function parseSettingsBase(body: unknown, findGame: (id: string) => { info: GameInfo; options: OptionSpec[] } | undefined): TournamentSettings | null {
   if (!isRecord(body)) return null;
   const name = typeof body.name === 'string' ? body.name.trim().slice(0, TOURNAMENT_NAME_LENGTH) : '';
   if (!name || !cleanName(name.slice(0, 16))) return null;

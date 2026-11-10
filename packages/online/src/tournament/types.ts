@@ -1,4 +1,5 @@
 import type { Options } from '@brett-und-blatt/engine';
+import type { OrgRole } from '../org-roles';
 
 /**
  * Datenmodell der Turniere (W-053, Umbau W-058 Stufe 0). Der Zustand ist reines JSON;
@@ -65,6 +66,8 @@ export interface TournamentSettings {
   fieldLabel?: string;
   /** Vor Ort: öffentlicher Lese-Link, auch für Menschen ohne Ausweis. */
   spectators?: boolean;
+  /** Code der Organisation („Verein oder Schule“, #230); ihre Rollen gelten für dieses Turnier. */
+  org?: string;
   /** Bundesliga-Modus: Rückrunde mit getauschtem Heimrecht. */
   returnRound?: boolean;
   /** WM-Form: Gruppenzahl (Zweierpotenz); fehlt = automatisch. */
@@ -405,6 +408,8 @@ export interface TournamentView {
   mayDelete: boolean;
   /** Vor Ort: Helfer (trägt Ergebnisse ein) oder Mitleitung; null sonst. */
   helperRole: HelperRole | null;
+  /** Rollen dieses Geräts in der Organisation des Turniers (#230); leer ohne Organisation. */
+  orgRoles: OrgRole[];
   /** Nur für die Leitung: die Helferlinks. */
   helpers: HelperView[];
   /** Das Spiel hat seit dem Turnierstart neue Regeln bekommen. */

@@ -76,19 +76,19 @@ const apply = (extra = {}) => post('/org-antrag', { action: 'submit', token: D, 
 const first2 = await apply();
 check('Antrag gestellt', first2.status === 201 && first2.body?.id, JSON.stringify(first2));
 check('zweiter offener Antrag abgelehnt', (await apply()).status === 409);
-check('Antragsteller sieht seinen Antrag', (await post('/org-antrag', { action: 'status', token: D })).body?.requests?.[0]?.status === 'open');
+check('Antragsteller sieht seinen Antrag', (await post('/org-antrag', { action: 'status', token: D })).body?.requests?.at(-1)?.status === 'open');
 check('Liste ohne Schlüssel abgelehnt', (await fetch(`${base}/betreiber/antraege`, { headers: H })).status === 401);
 const list = await operatorCall('GET', '/betreiber/antraege');
 const mine = list.body?.antraege?.find((r) => r.orgName === 'Schachclub');
 check('Betreiber sieht den Antrag ohne Kennung', mine && !JSON.stringify(list.body).includes('kennung-'));
 check('Ablehnung', (await operatorCall('POST', `/betreiber/antrag/${mine.id}`, { approve: false, note: 'Bitte genauer beschreiben' })).status === 200);
-const rejected = (await post('/org-antrag', { action: 'status', token: D })).body?.requests?.[0];
+const rejected = (await post('/org-antrag', { action: 'status', token: D })).body?.requests?.at(-1);
 check('Antragsteller sieht Ablehnung mit Anmerkung', rejected?.status === 'rejected' && rejected?.note === 'Bitte genauer beschreiben');
 const second2 = await apply();
 const list2 = await operatorCall('GET', '/betreiber/antraege');
 const approved = await operatorCall('POST', `/betreiber/antrag/${list2.body.antraege[0].id}`, { approve: true });
 check('Freigabe legt die Organisation an', approved.status === 200 && approved.body?.code, JSON.stringify(approved));
-const mineNow = (await post('/org-antrag', { action: 'status', token: D })).body?.requests?.find((r) => r.status === 'approved');
+const mineNow = (await post('/org-antrag', { action: 'status', token: D })).body?.requests?.filter((r) => r.status === 'approved').at(-1);
 check('Antragsteller bekommt den Code', mineNow?.code === approved.body.code);
 const orgCode = encodeURIComponent(approved.body.code);
 check('Antragsteller ist Betreiber', (await post(`/org/${orgCode}`, { token: D, action: 'view' })).body?.view?.me?.roles?.[0] === 'operator');
@@ -99,6 +99,56 @@ check('gesperrt: keine Einladung', (await post(`/org/${orgCode}`, { token: D, ac
 check('Entsperren', (await operatorCall('POST', `/betreiber/org-sperre/${orgCode}`, { blocked: false })).status === 200);
 check('Auflösen', (await operatorCall('DELETE', `/betreiber/org/${orgCode}`)).status === 200);
 void second2;
+
+
+// Turniere einer Organisation (#230)
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const E = 'kennung-gast-0000005';
+const created2 = await post('/org', { name: 'SV Turnier', kind: 'verein', founder: { token: A, name: 'Bea', avatar: '🦊' } }, key);
+const org2 = created2.body.code;
+const act2 = (token, body) => post(`/org/${encodeURIComponent(org2)}`, { token, ...body });
+const refInvite = await act2(A, { action: 'invite', roles: ['referee'] });
+await act2(C, { action: 'redeem', name: 'Cem', invite: refInvite.body.invite.code });
+const regInvite = await act2(A, { action: 'invite', roles: ['registration'] });
+await act2(E, { action: 'redeem', name: 'Emil', invite: regInvite.body.invite.code });
+const orgSettings = { name: 'Vereinsabend', mode: 'local', sport: 'Darts', format: 'knockout', result: 'winner', checkin: true, org: org2 };
+const denied2 = await post('/turniere', { settings: orgSettings, token: C, name: 'Cem' });
+check('Turnier der Gruppe: Schiedsrichter darf nicht anlegen', denied2.status === 403, JSON.stringify(denied2));
+const made = await post('/turniere', { settings: orgSettings, token: A, name: 'Bea' });
+check('Turnier der Gruppe: Betreiber legt an', made.status === 201, JSON.stringify(made));
+check('ungültiger Gruppencode abgelehnt', (await post('/turniere', { settings: { ...orgSettings, org: 'kein Code' }, token: A, name: 'Bea' })).status === 400);
+async function connectT(code, token) {
+  const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/turniere/${code}`, { headers: { Origin: 'http://localhost:5173' } });
+  const box = { view: null, errors: [], closed: false, send: (m) => ws.send(JSON.stringify(m)), close: () => ws.close() };
+  ws.onmessage = (e) => {
+    const m = JSON.parse(e.data);
+    if (m.type === 'tournament') box.view = m.view;
+    if (m.type === 'closed') box.closed = true;
+    if (m.type === 'error') box.errors.push(m.message);
+  };
+  await new Promise((r) => (ws.onopen = r));
+  box.send({ type: 'hello', protocol: 1, token, name: 'Gerät', avatar: '🦊' });
+  await sleep(500);
+  return box;
+}
+const tc = made.body.code;
+const asReg = await connectT(tc, E);
+check('Anmeldung sieht das Turnier mit seiner Rolle', asReg.view?.orgRoles?.[0] === 'registration', JSON.stringify(asReg.view?.orgRoles));
+asReg.send({ type: 'addEntrants', names: ['Anna', 'Ben', 'Cem', 'Dora'] });
+await sleep(400);
+check('Anmeldung trägt Teilnehmer ein', asReg.view?.players?.length === 4, asReg.errors.join());
+const asRef = await connectT(tc, C);
+check('Schiedsrichter sieht das Turnier', asRef.view?.orgRoles?.[0] === 'referee');
+asRef.send({ type: 'addEntrants', names: ['Zora'] });
+await sleep(400);
+check('Schiedsrichter darf keine Teilnehmer eintragen', asRef.errors.length === 1);
+const asStranger = await connectT(tc, 'kennung-fremder-000099');
+check('Fremder sieht das Turnier nicht', asStranger.closed === true && !asStranger.view);
+const asOperator = await connectT(tc, A);
+check('Hauptleitung leitet', asOperator.view?.isLeader === true);
+for (const box of [asReg, asRef, asStranger, asOperator]) box.close();
+await operatorCall('DELETE', `/betreiber/turnier/${tc}`);
+await operatorCall('DELETE', `/betreiber/org/${encodeURIComponent(org2)}`);
 
 console.log(failed === 0 ? 'Alles in Ordnung.' : `${failed} Fehler.`);
 process.exit(failed === 0 ? 0 : 1);

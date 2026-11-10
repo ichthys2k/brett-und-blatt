@@ -8,6 +8,7 @@ import { navigate, paths } from '../lib/router';
 import { storage, type KnownTournament, type Profile, type TournamentTemplate } from '../lib/storage';
 import { seriesCsv, seriesStandings, type PointScheme, type SeriesRow } from '../lib/series';
 import { createOfflineTournament, isOfflineCode } from '../lib/offlineTournament';
+import { loadOrgs, orgAct } from '../lib/orgServer';
 import { createSeries, knownSeries } from '../lib/seriesServer';
 import { findGame as findGameInfo } from '../lib/registry';
 import { createTournament, deleteTournament, fetchTournamentView, tournamentExists } from '../lib/tournament';
@@ -68,6 +69,19 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
   const [localDisciplines, setLocalDisciplines] = useState('');
   const [wishes, setWishes] = useState(true);
   const [spectators, setSpectators] = useState(true);
+  /** Gruppe („Verein oder Schule“, #230): nur solche, in denen dieses Gerät Turniere anlegen darf. */
+  const [groups, setGroups] = useState<{ code: string; name: string }[]>([]);
+  const [org, setOrg] = useState('');
+  useEffect(() => {
+    let alive = true;
+    void Promise.all(loadOrgs().map(async (entry) => ({ entry, reply: await orgAct(entry.code, 'view') }))).then((results) => {
+      if (!alive) return;
+      setGroups(results.filter(({ reply }) => reply.ok && reply.view.status === 'active' && reply.view.me?.capabilities.includes('createTournament')).map(({ entry }) => entry));
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
   const [points, setPoints] = useState({ win: 3, draw: 1, loss: 0 });
   const pointsValid = points.win > points.draw && points.draw >= points.loss;
   const [name, setName] = useState('');
@@ -163,7 +177,7 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
       const chosen = Object.fromEntries(visible.filter((spec) => valueOf(spec) !== spec.default).map((spec) => [spec.id, valueOf(spec)]));
       const series = !tables && !teamGame && (!local || result === 'winner') ? { ...(bestOf > 1 ? { bestOf } : {}), ...(format === 'world' && bestOfKo ? { bestOfKo } : {}) } : {};
       const tableSettings = tables ? { tableSize: size, rounds, ...(local && lowWins ? { lowWins: true } : {}) } : {};
-      const common = { name: name.trim(), format, ...(format === 'lives' ? { lives } : {}), ...(format === 'dyp' ? { rounds } : {}), ...(checkin ? { checkin: true } : {}), ...(approval && !local ? { approval: true } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(placements && (format === 'world' || format === 'knockout') ? { placements: true } : {}), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...(format === 'league' && leagueDate && !Number.isNaN(new Date(leagueDate).getTime()) ? { leagueStart: new Date(leagueDate).getTime(), leagueDays } : {}), ...tableSettings, ...series };
+      const common = { name: name.trim(), format, ...(org && !offline ? { org } : {}), ...(format === 'lives' ? { lives } : {}), ...(format === 'dyp' ? { rounds } : {}), ...(checkin ? { checkin: true } : {}), ...(approval && !local ? { approval: true } : {}), thirdPlace: thirdPlace && (format === 'world' || format === 'knockout'), ...(placements && (format === 'world' || format === 'knockout') ? { placements: true } : {}), ...(format === 'league' && returnRound ? { returnRound: true } : {}), ...(format === 'league' && leagueDate && !Number.isNaN(new Date(leagueDate).getTime()) ? { leagueStart: new Date(leagueDate).getTime(), leagueDays } : {}), ...tableSettings, ...series };
       const many = format === 'league' && multi;
       const localList = localDisciplines.split('\n').map((line) => line.trim()).filter(Boolean);
       const settings = local
@@ -238,6 +252,20 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
             <span>{t('tournament.name')}</span>
             <input className={FIELD} required maxLength={40} value={name} onChange={(e) => setName(e.target.value)} />
           </label>
+          {groups.length > 0 && !offline && (
+            <label className="block space-y-1 text-sm">
+              <span>Gruppe (Verein oder Schule)</span>
+              <select className={FIELD} value={org} onChange={(e) => setOrg(e.target.value)}>
+                <option value="">Keine – nur ich leite</option>
+                {groups.map((group) => (
+                  <option key={group.code} value={group.code}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+              <span className="block text-xs text-muted">Die Rollen der Gruppe (Leitung, Schiedsrichter, Anmeldung …) gelten dann auch in diesem Turnier.</span>
+            </label>
+          )}
           <fieldset className="space-y-1 text-sm">
             <legend className="mb-1">{t('tournament.mode')}</legend>
             <div className="grid grid-cols-2 gap-2">

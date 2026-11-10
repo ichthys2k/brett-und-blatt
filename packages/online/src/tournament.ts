@@ -2,6 +2,8 @@ import type { SeriesEntry } from './series-book';
 import { OPEN_ROOM_REFRESH_MS } from './lobby';
 import { AVATARS } from './avatars';
 import { cleanAvatar, cleanName } from './names';
+import { can } from './capabilities';
+import { orgCapabilities, type OrgRole } from './org-roles';
 import type { OpenRoomListing } from './protocol';
 import { FORMATS, placementRanking, type FormatContext, type TournamentFormatRules } from './tournament/formats';
 import { upgradeSnapshot, type StoredTournamentSnapshot } from './tournament/migrate';
@@ -159,6 +161,7 @@ export class Tournament {
    * vor Ort nur die Leitung, mit Zuschaulink jeder.
    */
   maySee(token: string): boolean {
+    if (this.orgCan(token, 'print') || this.orgCan(token, 'enterResult') || this.orgCan(token, 'entrants') || this.orgCan(token, 'checkin')) return true;
     if (isLocal(this.s)) return this.s.settings.spectators === true || this.isLeader(token) || this.helperOf(token) !== undefined;
     return this.s.phase === 'signup' || token === this.s.leaderToken || this.playerByToken(token) !== undefined;
   }
@@ -251,17 +254,42 @@ export class Tournament {
 
   /** Löschen darf nur, wer das Turnier angelegt hat – nicht Mitleitung oder Helfer. */
   mayDelete(token: string): boolean {
-    return token !== '' && token === this.s.leaderToken;
+    return token !== '' && (token === this.s.leaderToken || this.orgCan(token, 'deleteTournament'));
   }
 
   /** Leitung oder Mitleitung. */
   isLeader(token: string): boolean {
-    return token === this.s.leaderToken || this.helperOf(token)?.role === 'coleader';
+    return token === this.s.leaderToken || this.helperOf(token)?.role === 'coleader' || this.orgCan(token, 'tools');
+  }
+
+  /**
+   * Rollen aus der Organisation des Turniers (#230): Der Server fragt sie je Kennung bei der Organisation ab und trägt sie vor
+   * jeder Nachricht und jeder Sicht ein. Sie werden nicht gespeichert; ohne Organisation bleiben sie wirkungslos.
+   */
+  setOrgRoles(token: string, roles: readonly OrgRole[]): void {
+    if (roles.length === 0) this.orgRoles.delete(token);
+    else this.orgRoles.set(token, [...roles]);
+  }
+
+  private orgRoles = new Map<string, OrgRole[]>();
+
+  private orgCan(token: string, cap: Parameters<typeof can>[1]): boolean {
+    return this.s.settings.org !== undefined && token !== '' && can(orgCapabilities(this.orgRoles.get(token) ?? []), cap);
+  }
+
+  /** Teilnehmer eintragen, entfernen, freigeben: Leitung oder die Rolle „Anmeldung“. */
+  private mayEntrants(token: string): boolean {
+    return this.isLeader(token) || this.orgCan(token, 'entrants');
+  }
+
+  /** Anwesenheit setzen: Leitung, Helfer oder jede Rolle mit Check-in. */
+  private mayCheckin(token: string): boolean {
+    return this.mayEnter(token) || this.orgCan(token, 'checkin');
   }
 
   /** Darf Ergebnisse eintragen: Leitung, Mitleitung oder Helfer. */
   private mayEnter(token: string): boolean {
-    return this.isLeader(token) || this.helperOf(token) !== undefined;
+    return this.isLeader(token) || this.helperOf(token) !== undefined || this.orgCan(token, 'enterResult');
   }
 
   private helperOf(token: string): TournamentHelper | undefined {
@@ -300,7 +328,7 @@ export class Tournament {
 
   /** Anmeldung mit Freigabe: Die Leitung lässt zu oder lehnt ab (dann ist der Eintrag weg). */
   approve(token: string, playerId: string, ok: boolean): string | null {
-    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!this.mayEntrants(token)) return 'Das darf nur die Leitung.';
     if (this.s.phase !== 'signup') return 'Die Einschreibung ist beendet.';
     const player = this.s.players.find((p) => p.id === playerId);
     if (!player?.pending) return 'Dazu gibt es keine offene Anfrage.';
@@ -317,7 +345,7 @@ export class Tournament {
     const own = this.playerByToken(token);
     const target = playerId === undefined ? own : this.s.players.find((p) => p.id === playerId);
     if (!target) return 'Diesen Teilnehmer gibt es nicht.';
-    if (target !== own && !this.mayEnter(token)) return 'Das darf nur die Leitung.';
+    if (target !== own && !this.mayCheckin(token)) return 'Das darf nur die Leitung.';
     target.present = on;
     this.touch();
     return null;
@@ -549,7 +577,7 @@ export class Tournament {
 
   /** Teilnehmer eintragen, einer je Name. Ohne Kennung: Sie brauchen kein Gerät. */
   addEntrants(token: string, names: readonly string[]): string | null {
-    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!this.mayEntrants(token)) return 'Das darf nur die Leitung.';
     if (!isLocal(this.s)) return 'Online schreiben sich die Spieler selbst ein.';
     // Nachmelden geht nur im Schweizer System: Wer neu ist, wird ab der nächsten Runde mit gepaart.
     const late = this.s.phase === 'running' && this.s.settings.format === 'swiss';
@@ -571,7 +599,7 @@ export class Tournament {
   }
 
   removeEntrant(token: string, playerId: string): string | null {
-    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!this.mayEntrants(token)) return 'Das darf nur die Leitung.';
     if (!isLocal(this.s) || this.s.phase !== 'signup') return 'Das geht gerade nicht.';
     this.s.players = this.s.players.filter((p) => p.id !== playerId);
     this.touch();
@@ -784,6 +812,7 @@ export class Tournament {
       isLeader: token !== null && this.isLeader(token),
       mayDelete: token !== null && this.mayDelete(token),
       helperRole: token ? (this.helperOf(token)?.role ?? null) : null,
+      orgRoles: token ? [...(this.orgRoles.get(token) ?? [])] : [],
       helpers: token !== null && this.isLeader(token) ? (s.helpers ?? []).map(({ id, name, role, code, tokens }) => ({ id, name, role, code, devices: tokens.length })) : [],
       rulesChanged: s.ruleVersion !== undefined && s.phase === 'running' && this.deps.ruleVersion?.(s.settings.gameId) !== s.ruleVersion,
       serverNow: this.deps.now(),
