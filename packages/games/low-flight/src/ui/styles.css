@@ -441,6 +441,53 @@
   text-align: center;
 }
 
+/* Aktionskarten & Gedächtnis-Hinweise */
+
+.lf-memo-badge {
+  position: absolute;
+  top: 4%;
+  right: 6%;
+  background: rgba(15, 23, 42, 0.85);
+  color: #fef08a;
+  font-size: calc(var(--lf-card) * 0.22);
+  line-height: 1;
+  font-weight: 800;
+  padding: 2px 4px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 5;
+  border: 1px solid rgba(254, 240, 138, 0.4);
+}
+
+.lf-grid-small .lf-memo-badge {
+  font-size: calc(var(--lf-small) * 0.35);
+  padding: 1px 2px;
+}
+
+.lf-selected {
+  box-shadow:
+    0 0 0 3px #3b82f6,
+    0 0 14px rgba(59, 130, 246, 0.7) !important;
+}
+
+.lf-action-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.lf-action-btn {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.lf-action-btn:hover {
+  background: #fde68a;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lf-card {
     transition: none;
