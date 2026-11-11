@@ -10,7 +10,7 @@ export const meta: GameInfo = {
   patterns: ['hidden', 'simultaneous'],
   hiddenInformation: true,
   privateViews: true,
-  ruleVersion: 12,
+  ruleVersion: 13,
   // Karten ziehen und Zufall zeigen Neues: Ein Zurücknehmen ließe sich ausnutzen.
   noUndo: true,
   hints: true,
@@ -21,6 +21,7 @@ export const meta: GameInfo = {
     'Greife gegnerische Tiere oder direkt den gegnerischen Turnierherrn an. Hat der Gegner Tiere im 🛡️ Schildwall, musst du sie zuerst angreifen.',
     'Wer als Zweiter beginnt, erhält eine Handkarte mehr, die ⭐ Sternschnuppe für +1 Knappe und 5 Rüstung.',
     'Kniffe (Option, Standard an): einmalige taktische Kniffe wie ⚡ Blitzschlag (3 Schaden), 🍯 Honigtopf (+2/+2), 🌊 Flutwelle (Tier zurück auf die Hand) oder 🍀 Glücksklee (2 Karten). Kniffe mit Ziel erst antippen, dann das Ziel wählen – oder die Karte aufs Ziel ziehen.',
+    'Drachenei (Option): Neben jedem Turnierherrn liegt zu Beginn ein Drachenei, das nach drei Runden schlüpft. Der Jungdrache besitzt eine charakteristische Fähigkeit seines Wappenhauses.',
     'Karte groß ansehen: lange drücken, rechts klicken oder mit der Taste i. Unter „Verlauf“ steht, was zuletzt geschah.',
     'Hauskraft: Einmal je Zug kannst du mit 2 Knappen die Kraft deines Hauses nutzen (Knopf neben „Zug beenden“). Lange drücken zeigt, was sie tut.',
     'Rüstung 🛡️ fängt Schaden ab, bevor deine Wimpel fallen. Hat dein Turnierherr Angriff (⚔️), tippe ihn an und wähle ein Ziel, einmal je Zug. Greift er ein Tier an, schlägt es zurück.',
