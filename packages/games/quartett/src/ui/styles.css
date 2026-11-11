@@ -67,6 +67,20 @@ button.qt-seat:hover {
   box-shadow: 0 0 0 1px var(--color-line);
 }
 
+.qt-back.qt-back-gamecard {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  position: relative;
+  overflow: visible;
+}
+
+.qt-back-gamecard .bub-game-card {
+  width: 100%;
+  height: 100%;
+}
+
 .qt-back-count {
   min-width: 1.3rem;
   padding: 0 0.15rem;
@@ -76,6 +90,9 @@ button.qt-seat:hover {
   font-weight: 700;
   font-size: 0.8rem;
   text-align: center;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
 }
 
 .qt-center {
@@ -116,6 +133,16 @@ button.qt-seat:hover {
   background: var(--color-surface);
   overflow: hidden;
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.12);
+}
+
+.qt-card.qt-gamecard {
+  position: relative;
+  aspect-ratio: auto;
+}
+
+.qt-card.qt-gamecard .bub-game-card-anki {
+  width: 100%;
+  height: 100%;
 }
 
 .qt-small {

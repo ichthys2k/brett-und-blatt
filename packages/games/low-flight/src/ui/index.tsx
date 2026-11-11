@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import type { BoardProps, GameUi, RoundSummaryPlayer } from '@brett-und-blatt/ui';
-import { RoundSummary } from '@brett-und-blatt/ui';
+import { GameCard, RoundSummary, getNoteField, useCardCosmetics, useCardOverride, type BoardProps, type GameUi, type RoundSummaryPlayer } from '@brett-und-blatt/ui';
 import { hiddenSlots, openSum, type LowFlightMove, type LowFlightView } from '../rules';
 import './styles.css';
 
@@ -24,35 +23,59 @@ function valueLabel(value: number, junior: boolean): string {
   return junior ? `${FRUIT_NAMES[value]} (${value})` : String(value);
 }
 
-function Card({ value, junior, hidden, label, className = '', onClick }: { value: number | null; junior: boolean; hidden?: boolean; label?: string; className?: string; onClick?: () => void }) {
-  const face =
-    hidden || value === null ? (
-      <span className="lf-back" aria-hidden="true">
-        🛩️
+export function Card({
+  value,
+  junior,
+  hidden,
+  label,
+  className = '',
+  onClick,
+}: {
+  value: number | null;
+  junior: boolean;
+  hidden?: boolean;
+  label?: string;
+  className?: string;
+  onClick?: () => void;
+}) {
+  const cosmetics = useCardCosmetics();
+  const isHidden = hidden || value === null;
+
+  const overrideNote =
+    value !== null
+      ? useCardOverride(`tiefflug:${value}`) ?? useCardOverride(String(value))
+      : undefined;
+
+  const text = label ?? (isHidden ? 'verdeckte Karte' : valueLabel(value, junior));
+  const toneClass = !isHidden ? tone(value, junior) : '';
+  const frameAsset = getNoteField(overrideNote, 12) || getNoteField(overrideNote, 30);
+  const overrideVal = getNoteField(overrideNote, 3) || getNoteField(overrideNote, 4);
+
+  const face = isHidden ? null : junior ? (
+    <>
+      <span className="lf-num">{overrideVal || value}</span>
+      <span className="lf-fruits" aria-hidden="true">
+        {FRUITS[value]!.repeat(value)}
       </span>
-    ) : junior ? (
-      <>
-        <span className="lf-num">{value}</span>
-        <span className="lf-fruits" aria-hidden="true">
-          {FRUITS[value]!.repeat(value)}
-        </span>
-      </>
-    ) : (
-      <>
-        <span className="lf-corner">{value}</span>
-        <span className="lf-num">{value}</span>
-      </>
-    );
-  const cls = `lf-card ${hidden || value === null ? 'lf-card-hidden' : tone(value, junior)} ${className}`;
-  const text = label ?? (hidden || value === null ? 'verdeckte Karte' : valueLabel(value, junior));
-  return onClick ? (
-    <button type="button" className={cls} onClick={onClick} aria-label={text}>
-      {face}
-    </button>
+    </>
   ) : (
-    <div className={cls} role="img" aria-label={text}>
+    <>
+      <span className="lf-corner">{overrideVal || value}</span>
+      <span className="lf-num">{overrideVal || value}</span>
+    </>
+  );
+
+  return (
+    <GameCard
+      faceDown={isHidden}
+      cardBackProps={{ design: cosmetics.cardBack, crest: cosmetics.crest }}
+      frameAsset={frameAsset}
+      className={`lf-card ${isHidden ? 'lf-card-hidden' : toneClass} ${className} lf-gamecard`}
+      label={text}
+      onClick={onClick}
+    >
       {face}
-    </div>
+    </GameCard>
   );
 }
 

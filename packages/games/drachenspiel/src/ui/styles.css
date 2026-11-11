@@ -1787,3 +1787,41 @@
     font-size: 1.25rem;
   }
 }
+
+/* Einheitliches Kartensystem: GameCard & CardBack Integration (K6) */
+.ds-deck-with-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ds-deck-with-back .bub-card-size-xs {
+  width: 18px;
+  height: 25px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.ds-card .ds-combat-card-game {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: inherit;
+}
+
+.ds-minion .ds-minion-gamecard {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: inherit;
+  position: relative;
+}
+
+.ds-minion .ds-minion-gamecard .bub-game-card-anki {
+  border-radius: inherit;
+}

@@ -1,12 +1,12 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { usePointerDrag, type BoardProps } from '@brett-und-blatt/ui';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { GameCard, useCardCosmetics, useCardOverride, usePointerDrag, type BoardProps } from '@brett-und-blatt/ui';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { CARDS_DB } from '../cards';
 import { HOUSE_POWERS } from '../powers';
 import { heroAttackValue } from '../rules';
 import type { DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
 import { playCreatureAudio } from './audio';
-import { attackClass, CardFace, CardZoom, Fuse, GameLog, healthClass, TargetArrow, TraitBadge, type ArrowPoints, type ZoomItem } from './parts';
+import { attackClass, CardFace, CardZoom, Fuse, GameLog, healthClass, renderCombatCardAnki, TargetArrow, TraitBadge, type ArrowPoints, type ZoomItem } from './parts';
 import type { Float, ShownMinion } from './sequence';
 import { getCardFullTitle, getCardTraits, getMinionFullTitle, getMinionTraits } from './traits';
 import { currentCrest, ScenarioTip, useCosmetics } from './SoloHub';
@@ -85,6 +85,28 @@ function MinionView({
 }) {
   const { minion, dying, fresh } = shown;
   const traits = getMinionTraits(minion);
+  const def = CARDS_DB[minion.cardId] ?? {
+    id: minion.cardId,
+    name: minion.name,
+    cost: 0,
+    attack: minion.attack,
+    health: minion.health,
+    emoji: minion.emoji,
+  };
+  const cosmetics = useCardCosmetics();
+  const overrideNote = useCardOverride(def.id);
+  const rendered = useMemo(
+    () =>
+      renderCombatCardAnki(def, {
+        attack: minion.attack,
+        health: minion.health,
+        hint: traits.length > 0 ? traits.map((t) => t.name).join(', ') : undefined,
+        overrideNote,
+        mediaUrlMap: cosmetics.mediaUrlMap,
+      }),
+    [def, minion.attack, minion.health, traits, overrideNote, cosmetics.mediaUrlMap],
+  );
+
   const classes = [
     'ds-minion',
     canAttack && !attackVector && 'can-attack',
@@ -126,18 +148,29 @@ function MinionView({
       aria-label={`${minion.name}, Angriff ${minion.attack}, Leben ${minion.health}${traits.length > 0 ? ` [${traits.map((t) => t.name).join(', ')}]` : ''}`}
       title={getMinionFullTitle(minion)}
     >
-      <FloatBadges floats={floats} />
-      <div className="ds-minion-icons">
-        {traits.map((trait) => (
-          <TraitBadge key={trait.id} trait={trait} isOpponent={!isOwner} />
-        ))}
-      </div>
-      <div className="ds-minion-emoji">{minion.emoji}</div>
-      <div className="ds-minion-name">{minion.name}</div>
-      <div className="ds-minion-stats">
-        <span className={attackClass(minion)}>{minion.attack}</span>
-        <span className={healthClass(minion)}>{minion.health}</span>
-      </div>
+      <GameCard
+        ankiFront={rendered}
+        className="ds-minion-gamecard"
+        runtimeBadges={[
+          {
+            position: 'bottom-left',
+            label: String(minion.attack),
+            tone: minion.attack > minion.baseAttack ? 'success' : minion.attack < minion.baseAttack ? 'danger' : 'default',
+          },
+          {
+            position: 'bottom-right',
+            label: String(minion.health),
+            tone: minion.health < minion.maxHealth ? 'danger' : minion.maxHealth > minion.baseHealth ? 'success' : 'default',
+          },
+        ]}
+      >
+        <FloatBadges floats={floats} />
+        <div className="ds-minion-icons">
+          {traits.map((trait) => (
+            <TraitBadge key={trait.id} trait={trait} isOpponent={!isOwner} />
+          ))}
+        </div>
+      </GameCard>
     </div>
   );
 }
@@ -249,6 +282,7 @@ function HeroBar({
 }
 
 export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint, clock }: BoardProps<DrachenspielView, DrachenspielMove>) {
+  const cardCosmetics = useCardCosmetics();
   const [selectedAttackerId, setSelectedAttackerId] = useState<string | null>(null);
   /** Handkarte eines Zaubers mit Ziel, der gerade auf sein Ziel wartet. */
   const [selectedSpell, setSelectedSpell] = useState<number | null>(null);
@@ -538,8 +572,14 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
               {oppPower.emoji}
             </button>
           )}
-          <span className="ds-badge ds-badge-deck">🎴 {opp.handCount}</span>
-          <span className="ds-badge ds-badge-deck">📚 {opp.deckCount}</span>
+          <span className="ds-badge ds-badge-deck ds-deck-with-back" title={`Gegnerische Hand: ${opp.handCount} Karten`}>
+            <GameCard faceDown size="xs" cardBackProps={{ design: 'dragon-scale' }} />
+            <span>🎴 {opp.handCount}</span>
+          </span>
+          <span className="ds-badge ds-badge-deck ds-deck-with-back" title={`Gegnerisches Deck: ${opp.deckCount} Karten`}>
+            <GameCard faceDown size="xs" cardBackProps={{ design: 'dragon-scale' }} />
+            <span>📚 {opp.deckCount}</span>
+          </span>
           <GameLog entries={log} />
         </div>
       </div>
@@ -640,7 +680,10 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           elementRef={heroRef(mySeat)}
         />
         <div className="ds-actions">
-          <span className="ds-badge ds-badge-deck">📚 {me.deckCount}</span>
+          <span className="ds-badge ds-badge-deck ds-deck-with-back" title={`Dein Nachziehstapel: ${me.deckCount} Karten`}>
+            <GameCard faceDown size="xs" cardBackProps={{ design: cardCosmetics.cardBack, crest: cardCosmetics.crest }} />
+            <span>📚 {me.deckCount}</span>
+          </span>
           {myPower && (
             <button
               type="button"

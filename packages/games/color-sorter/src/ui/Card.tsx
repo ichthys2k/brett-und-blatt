@@ -1,6 +1,13 @@
 import { cardId, type CardId, type Suit } from '@brett-und-blatt/engine';
-import { PlayingCard, type DeckStyle } from '@brett-und-blatt/ui';
-import { createContext, useContext, type CSSProperties, type MouseEventHandler, type ReactNode } from 'react';
+import {
+  BUB_COURT_CARD_NOTETYPE,
+  narrenhofCardsToAnki,
+  renderCardSide,
+  type AnkiNote,
+  type CourtCardLike,
+} from '@brett-und-blatt/engine';
+import { GameCard, PlayingCard, useCardCosmetics, useCardOverride, type DeckStyle } from '@brett-und-blatt/ui';
+import { createContext, useContext, useMemo, type CSSProperties, type MouseEventHandler, type ReactNode } from 'react';
 import { ACE, cardLabel, rankChips } from '../cards';
 import { ENHANCEMENTS, FOILS, SEALS } from '../content';
 import type { Card, Color, ViewCard } from '../types';
@@ -59,6 +66,7 @@ export function CardView({ card, selected, dim, hint, pop, onClick, style, class
   const open = isOpen(card);
   const backEmoji = useContext(BackContext);
   const deckStyle = useContext(DeckStyleContext);
+  const cosmetics = useCardCosmetics();
   const classes = [
     'cs-card',
     open ? (card.enh === 'granite' ? 'cs-c-granite' : 'cs-face') : 'cs-back',
@@ -94,9 +102,15 @@ export function CardView({ card, selected, dim, hint, pop, onClick, style, class
       )}
     </>
   ) : (
-    <span className="cs-back-mark" aria-hidden="true">
-      {backEmoji}
-    </span>
+    <GameCard
+      faceDown
+      cardBackProps={{ design: cosmetics.cardBack, crest: cosmetics.crest }}
+      className="cs-gamecard-back"
+    >
+      <span className="cs-back-mark" aria-hidden="true">
+        {backEmoji}
+      </span>
+    </GameCard>
   );
   return onClick ? (
     <button type="button" {...props} className={`${classes} ${props.className ?? ''}`} style={merged} onClick={onClick} aria-label={label} aria-pressed={selected || undefined}>
@@ -111,7 +125,7 @@ export function CardView({ card, selected, dim, hint, pop, onClick, style, class
   );
 }
 
-interface TileProps {
+export interface TileProps {
   emoji: string;
   /** Porträt für die große Karte am Desktop; sonst bleibt das Emoji. */
   image?: string;
@@ -133,14 +147,66 @@ interface TileProps {
   /** Wirkung als Text: erscheint nur am Desktop, wo die Kachel zur großen Karte wird. */
   body?: ReactNode;
   foot?: ReactNode;
+  /** Identifikator oder Hofkarten-Daten für BUB_COURT_CARD_NOTETYPE Integration */
+  courtCard?: CourtCardLike;
+  runtimeFields?: Record<string, string>;
 }
 
-/** Kachel für Mods, Zauberkarten, Angebote und Lieferungen. */
-export function Tile({ emoji, image, symbol, title, sub, badge, tone = '', selected, hint, dim, pop, onClick, className = '', label, tip, extra, body: text, foot }: TileProps) {
+/** Kachel für Mods, Zauberkarten, Angebote und Lieferungen mit <GameCard>-Integration. */
+export function Tile({
+  emoji,
+  image,
+  symbol,
+  title,
+  sub,
+  badge,
+  tone = '',
+  selected,
+  hint,
+  dim,
+  pop,
+  onClick,
+  className = '',
+  label,
+  tip,
+  extra,
+  body: text,
+  foot,
+  courtCard,
+  runtimeFields,
+}: TileProps) {
+  const cosmetics = useCardCosmetics();
+  const overrideNote = useCardOverride(courtCard?.id ?? title);
+
+  const effectiveCourtCard: CourtCardLike | undefined = useMemo(() => {
+    if (courtCard) return courtCard;
+    if (text !== undefined || image) {
+      return {
+        id: title,
+        name: title,
+        game: 'narrenhof',
+        category: 'Narr',
+        text: typeof text === 'string' ? text : undefined,
+        emoji,
+        image,
+      };
+    }
+    return undefined;
+  }, [courtCard, title, text, image, emoji]);
+
+  const ankiFront = useMemo(() => {
+    if (!effectiveCourtCard && !overrideNote) return undefined;
+    const note = overrideNote ?? narrenhofCardsToAnki([effectiveCourtCard!]).notes[0]!;
+    return renderCardSide(BUB_COURT_CARD_NOTETYPE, note, 0, 'front', {
+      runtimeFields,
+      mediaUrlMap: cosmetics.mediaUrlMap,
+    });
+  }, [effectiveCourtCard, overrideNote, runtimeFields, cosmetics.mediaUrlMap]);
+
   const props = useTipProps(tip, extra);
   const classes = ['cs-tile', text !== undefined ? 'cs-tile-text' : '', tone, selected ? 'cs-selected' : '', hint ? 'cs-hint' : '', dim ? 'cs-dim' : '', className].join(' ');
-  const body = (
-    <>
+  const content = (
+    <GameCard ankiFront={ankiFront} className="cs-tile-gamecard">
       <span className="cs-tile-emoji" data-image={image ? '' : undefined} aria-hidden="true">
         {image && <img src={image} alt="" className="cs-tile-photo" loading="lazy" decoding="async" />}
         {image && !symbol && <img src={image} alt="" className="cs-tile-symbol cs-tile-face" loading="lazy" decoding="async" />}
@@ -152,15 +218,15 @@ export function Tile({ emoji, image, symbol, title, sub, badge, tone = '', selec
       {foot !== undefined && <span className="cs-tile-foot">{foot}</span>}
       {badge !== undefined && <span className="cs-tile-badge">{badge}</span>}
       {pop && <span className="cs-pop">{pop}</span>}
-    </>
+    </GameCard>
   );
   return onClick ? (
     <button type="button" {...props} className={`${classes} ${props.className ?? ''}`} onClick={onClick} aria-pressed={selected || undefined} aria-label={label ?? (tip ? `${title}. ${tip.lines.join('. ')}` : undefined)}>
-      {body}
+      {content}
     </button>
   ) : (
     <span {...(props as object)} className={`${classes} ${props.className ?? ''}`} aria-label={label ?? (tip ? `${title}. ${tip.lines.join('. ')}` : undefined)}>
-      {body}
+      {content}
     </span>
   );
 }

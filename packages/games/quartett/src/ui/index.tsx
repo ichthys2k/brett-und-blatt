@@ -1,6 +1,6 @@
-import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import { SeatRing, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { BUB_QUARTETT_CARD_NOTETYPE, renderCardSide, type GameEvent, type SeatId } from '@brett-und-blatt/engine';
+import { GameCard, SeatRing, getNoteField, useCardCosmetics, useCardOverride, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { setOf, type Ask, type QuartettMove, type QuartettState, type Trick } from '../rules';
 import { cardOf, formatWithUnit, groupOf, valueOf, type CardId, type CardSet } from '../sets';
 import './styles.css';
@@ -11,8 +11,8 @@ const GROUP_COLORS: Record<string, string> = { A: '#e03131', B: '#1971c2', C: '#
 
 const nameOf = (names: string[], seat: SeatId) => names[seat] ?? `Platz ${seat + 1}`;
 
-/** Eine Quartettkarte: Kopf mit Gruppe, Bild, Name und die Werte – auf Wunsch als Tippflächen. */
-function QCard({
+/** Eine Quartettkarte: Kopf mit Gruppe, Bild, Name und die Werte – über <GameCard> gerendert. */
+export function QCard({
   set,
   card,
   size = 'large',
@@ -37,76 +37,145 @@ function QCard({
   useEffect(() => setInfo(false), [card]);
   const sources = [...new Set([data.source, ...Object.values(data.sources ?? {})].filter(Boolean))];
 
+  const cosmetics = useCardCosmetics();
+  const overrideNote =
+    useCardOverride(`${set.id}:${card}`) ??
+    useCardOverride(`${set.id}-${card}`) ??
+    useCardOverride(card);
+
+  const effectiveName = getNoteField(overrideNote, 4) || data.name;
+  const effectiveEmoji = getNoteField(overrideNote, 5) || data.emoji;
+  const effectiveInfo = getNoteField(overrideNote, 29) || set.note;
+  const frameAsset = getNoteField(overrideNote, 30);
+
+  const ankiFront = useMemo(() => {
+    if (!overrideNote) return undefined;
+    return renderCardSide(BUB_QUARTETT_CARD_NOTETYPE, overrideNote, 0, 'front', {
+      mediaUrlMap: cosmetics.mediaUrlMap,
+    });
+  }, [overrideNote, cosmetics.mediaUrlMap]);
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (!onPick || !ankiFront) return;
+    const target = (e.target as HTMLElement).closest('.bub-quartett-row');
+    if (target) {
+      const rows = Array.from(target.parentElement?.querySelectorAll('.bub-quartett-row') ?? []);
+      const idx = rows.indexOf(target);
+      if (idx >= 0 && set.properties[idx]) {
+        onPick(set.properties[idx].id);
+      }
+    }
+  };
+
   return (
-    <article className={`qt-card qt-${size} ${winner ? 'qt-winner' : ''}`} style={{ '--qt-group': GROUP_COLORS[group] } as CSSProperties} aria-label={`${card} ${data.name}`}>
-      <header className="qt-card-head">
-        <span className="qt-card-id">{card}</span>
-        <span className="qt-card-group">{groupName}</span>
-        {size === 'large' && (
-          <button type="button" className="qt-info" aria-expanded={info} aria-label="Quellen der Werte" onClick={() => setInfo((open) => !open)}>
-            ⓘ
-          </button>
-        )}
-      </header>
-      <div className="qt-card-face">
-        <span className="qt-emoji" aria-hidden="true">
-          {data.emoji}
-        </span>
-        <span className="qt-name">{data.name}</span>
-      </div>
-      {info ? (
-        <div className="qt-sources">
-          <p>{set.note}</p>
-          <p>Quelle{sources.length > 1 ? 'n' : ''}:</p>
-          <ul>
-            {sources.map((source) => (
-              <li key={source}>{source!.startsWith('http') ? <a href={source} target="_blank" rel="noreferrer">{source}</a> : source}</li>
-            ))}
-          </ul>
-          {set.status && <p className="qt-status">Stand: {set.status}</p>}
-        </div>
-      ) : (
-        <ul className="qt-values">
-          {set.properties.filter((p) => size === 'large' || !highlight || p.id === highlight).map((p) => {
-            const text = formatWithUnit(p, valueOf(set.id, card, p.id));
-            const classes = `qt-value ${highlight === p.id ? 'qt-chosen' : ''} ${hint === p.id ? 'qt-hint' : ''}`;
-            const content = (
-              <>
-                <span className="qt-label">
-                  {p.label}
-                  {!p.higherWins && (
-                    <span className="qt-lower" title="Hier gewinnt der kleinere Wert">
-                      {' '}
-                      ▼
-                    </span>
-                  )}
-                </span>
-                <span className="qt-number">{text}</span>
-              </>
-            );
-            return (
-              <li key={p.id}>
-                {onPick ? (
-                  <button type="button" className={classes} onClick={() => onPick(p.id)} aria-label={`${p.label}: ${text}${p.higherWins ? '' : ' (kleiner gewinnt)'}`}>
-                    {content}
-                  </button>
-                ) : (
-                  <span className={classes}>{content}</span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+    <GameCard
+      ankiFront={ankiFront}
+      frameAsset={frameAsset}
+      className={`qt-card qt-${size} ${winner ? 'qt-winner' : ''} qt-gamecard`}
+      style={{ '--qt-group': GROUP_COLORS[group] } as CSSProperties}
+      label={`${card} ${effectiveName}`}
+      onClick={handleCardClick}
+    >
+      {!ankiFront && (
+        <>
+          <header className="qt-card-head">
+            <span className="qt-card-id">{card}</span>
+            <span className="qt-card-group">{groupName}</span>
+            {size === 'large' && (
+              <button
+                type="button"
+                className="qt-info"
+                aria-expanded={info}
+                aria-label="Quellen der Werte"
+                onClick={() => setInfo((open) => !open)}
+              >
+                ⓘ
+              </button>
+            )}
+          </header>
+          <div className="qt-card-face">
+            <span className="qt-emoji" aria-hidden="true">
+              {effectiveEmoji}
+            </span>
+            <span className="qt-name">{effectiveName}</span>
+          </div>
+          {info ? (
+            <div className="qt-sources">
+              <p>{effectiveInfo}</p>
+              <p>Quelle{sources.length > 1 ? 'n' : ''}:</p>
+              <ul>
+                {sources.map((source) => (
+                  <li key={source}>
+                    {source!.startsWith('http') ? (
+                      <a href={source} target="_blank" rel="noreferrer">
+                        {source}
+                      </a>
+                    ) : (
+                      source
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {set.status && <p className="qt-status">Stand: {set.status}</p>}
+            </div>
+          ) : (
+            <ul className="qt-values">
+              {set.properties
+                .filter((p) => size === 'large' || !highlight || p.id === highlight)
+                .map((p) => {
+                  const text = formatWithUnit(p, valueOf(set.id, card, p.id));
+                  const classes = `qt-value ${highlight === p.id ? 'qt-chosen' : ''} ${hint === p.id ? 'qt-hint' : ''}`;
+                  const content = (
+                    <>
+                      <span className="qt-label">
+                        {p.label}
+                        {!p.higherWins && (
+                          <span className="qt-lower" title="Hier gewinnt der kleinere Wert">
+                            {' '}
+                            ▼
+                          </span>
+                        )}
+                      </span>
+                      <span className="qt-number">{text}</span>
+                    </>
+                  );
+                  return (
+                    <li key={p.id}>
+                      {onPick ? (
+                        <button
+                          type="button"
+                          className={classes}
+                          onClick={() => onPick(p.id)}
+                          aria-label={`${p.label}: ${text}${p.higherWins ? '' : ' (kleiner gewinnt)'}`}
+                        >
+                          {content}
+                        </button>
+                      ) : (
+                        <span className={classes}>{content}</span>
+                      )}
+                    </li>
+                  );
+                })}
+            </ul>
+          )}
+        </>
       )}
-    </article>
+    </GameCard>
   );
 }
 
-function CardBack({ count, label }: { count: number; label: string }) {
+export function CardBack({ count, label }: { count: number; label: string }) {
+  const cosmetics = useCardCosmetics();
   return (
-    <span className="qt-back" aria-label={label}>
+    <GameCard
+      faceDown
+      size="xs"
+      cardBackProps={{ design: cosmetics.cardBack, crest: cosmetics.crest }}
+      className="qt-back qt-back-gamecard"
+      label={label}
+    >
       <span className="qt-back-count">{count}</span>
-    </span>
+    </GameCard>
   );
 }
 

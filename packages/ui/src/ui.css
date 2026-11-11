@@ -473,6 +473,12 @@ button.bub-cell:focus-visible {
   align-items: center;
 }
 
+.bub-game-card-anki-html > * {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
 .bub-card-selected {
   transform: translateY(-8%);
   box-shadow:
