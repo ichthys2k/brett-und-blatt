@@ -1,13 +1,13 @@
 import type { BotDefinition, BotLevel, Rng, SeatId } from '@brett-und-blatt/engine';
 import { askTargets, askableCards, collectKnowledge, setOf, type QuartettMove, type QuartettState } from './rules';
-import { compareValues, groupOf, valueOf, type CardId, type CardProperty } from './sets';
+import { compareValues, groupOf, valueOf, type CardId, type CardProperty, type CardSet } from './sets';
 
 /** Anteil der Karten, die `value` schlägt; Gleichstand zählt halb. */
-function beatShare(setId: string, property: CardProperty, value: number, others: CardId[]): number {
+function beatShare(setId: string, property: CardProperty, value: number, others: CardId[], set?: CardSet): number {
   if (others.length === 0) return 1;
   let score = 0;
   for (const card of others) {
-    const diff = compareValues(property, value, valueOf(setId, card, property.id));
+    const diff = compareValues(property, value, valueOf(setId, card, property.id, set));
     score += diff > 0 ? 1 : diff === 0 ? 0.5 : 0;
   }
   return score / others.length;
@@ -40,7 +40,7 @@ function chooseProperty(view: QuartettState, seat: SeatId, level: BotLevel, rng:
   const others = set.cards.map((c) => c.id).filter((card) => card !== own);
 
   if (level === 'medium') {
-    const property = pickBest(set.properties, (p) => beatShare(set.id, p, valueOf(set.id, own, p.id), others), rng);
+    const property = pickBest(set.properties, (p) => beatShare(set.id, p, valueOf(set.id, own, p.id, set), others, set), rng);
     return { type: 'chooseProperty', property: property.id };
   }
 
@@ -50,14 +50,14 @@ function chooseProperty(view: QuartettState, seat: SeatId, level: BotLevel, rng:
   const property = pickBest(
     set.properties,
     (p) => {
-      const mine = valueOf(set.id, own, p.id);
+      const mine = valueOf(set.id, own, p.id, set);
       // Wahrscheinlichkeit, alle Gegner zu schlagen (Gleichstand zählt halb).
       return opponents.reduce((chance, top) => {
         if (top) {
-          const diff = compareValues(p, mine, valueOf(set.id, top, p.id));
+          const diff = compareValues(p, mine, valueOf(set.id, top, p.id, set));
           return chance * (diff > 0 ? 1 : diff === 0 ? 0.5 : 0);
         }
-        return chance * beatShare(set.id, p, mine, unknown);
+        return chance * beatShare(set.id, p, mine, unknown, set);
       }, 1);
     },
     rng,

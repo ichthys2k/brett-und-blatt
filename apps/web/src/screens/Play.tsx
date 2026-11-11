@@ -9,6 +9,7 @@ import { Replay, canReplay } from '../components/Replay';
 import { usePassRecorder } from '../lib/passRecorder';
 import { setHandView, useHandView, useHandViewChoice } from '../lib/handView';
 import { Button } from '../components/controls';
+import { CustomCardsOverlay } from '../components/CustomCardsOverlay';
 import { HowToOverlay } from '../components/HowTo';
 import { MoreMenu } from '../components/MoreMenu';
 import { SoundControl } from '../components/SoundControl';
@@ -131,6 +132,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const [replaying, setReplaying] = useState(false);
   /** Notizblock (#105) geöffnet. */
   const [notesOpen, setNotesOpen] = useState(false);
+  /** Anki-Kartenset Modal geöffnet. */
+  const [showCustomCards, setShowCustomCards] = useState(false);
 
   useSyncExternalStore(
     (onChange) => session.subscribe(onChange),
@@ -222,6 +225,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   // Online geht der Hinweis nur an den, dessen Platz der Computer übernommen hat.
   const awaySeats = humans.filter((seat) => session.isAway(seat) && (!online || seat === online.yourSeat));
   const publicView = session.view('spectator');
+  const customCatalog = (session.config.options as any)?.customCardCatalog;
+  const cardCatalogChecksum =
+    ((publicView as any)?.cardCatalogChecksum as string | undefined) ??
+    ((session.config.options as any)?.cardCatalogChecksum as string | undefined) ??
+    (customCatalog?.checksum as string | undefined);
 
   const askHint = async () => {
     if (actingSeat === undefined) return;
@@ -512,6 +520,16 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             <span aria-hidden="true">{info.emoji} </span>
             {info.name}
           </h1>
+          {cardCatalogChecksum && (
+            <button
+              type="button"
+              onClick={() => setShowCustomCards(true)}
+              className="inline-flex flex-none items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent hover:bg-accent/20 cursor-pointer transition"
+              title={`Eigenes Kartenset (Anki) #${cardCatalogChecksum} – Details anzeigen`}
+            >
+              <span>✨ Anki #{cardCatalogChecksum}</span>
+            </button>
+          )}
           {around && inviteBox}
           {around && (
             <footer className="ml-auto flex flex-none items-center gap-1 [&>button]:min-h-9 [&>button]:px-2 [&>button]:text-sm [&>button]:whitespace-nowrap">
@@ -659,6 +677,16 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           />
         )}
         {showHowTo && <HowToOverlay info={info} onClose={() => setShowHowTo(false)} />}
+        {showCustomCards && cardCatalogChecksum && (
+          <CustomCardsOverlay
+            checksum={cardCatalogChecksum}
+            catalog={customCatalog}
+            customCards={(publicView as any)?.customCards}
+            customMods={(publicView as any)?.customMods}
+            customCardSet={(publicView as any)?.customCardSet}
+            onClose={() => setShowCustomCards(false)}
+          />
+        )}
         {result && !ceremonyClosed && (
           <Ceremony
             result={result}

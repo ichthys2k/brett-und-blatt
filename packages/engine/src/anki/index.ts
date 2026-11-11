@@ -19,3 +19,4 @@ export * from './hints';
 export * from './gameNotetypes';
 export * from './gameConverters';
 export * from './sheetOverrides';
+export * from './cardSpecParser';

@@ -1,8 +1,7 @@
 import type { BotContext, BotDefinition } from '@brett-und-blatt/engine';
-import { CARDS_DB } from './cards';
 import { scenarioFrom } from './modes/scenarios';
 import { HARD_PLAN, MEDIUM_PLAN, planTurn } from './planner';
-import { legalMoves } from './rules';
+import { cardDefOf, legalMoves } from './rules';
 import type { DrachenspielMove, DrachenspielState, DrachenspielView } from './types';
 
 export const botDrachenhueter: BotDefinition<
@@ -37,7 +36,7 @@ export const botDrachenhueter: BotDefinition<
 
     if (ctx.view.phase === 'mulligan') {
       const me = ctx.view.players[ctx.seat];
-      const costs = (me.hand ?? []).map((card) => CARDS_DB[card.defId]?.cost ?? 0);
+      const costs = (me.hand ?? []).map((card) => cardDefOf(ctx.view, card.defId)?.cost ?? 0);
       const discardIndices = costs.flatMap((cost, idx) => (cost >= 4 ? [idx] : []));
       // Schwer behält eine Vierer-Karte, wenn der frühe Zug schon gesichert ist.
       if (ctx.level === 'hard' && costs.filter((cost) => cost <= 2).length >= 2) {
