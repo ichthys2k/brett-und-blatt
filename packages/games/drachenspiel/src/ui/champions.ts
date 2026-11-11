@@ -10,6 +10,14 @@ export const HOUSE_NAMES: Record<DeckThemeId, string> = {
   bugs: 'Schwarm vom Moorbach',
 };
 
+export const HOUSE_ICONS: Record<DeckThemeId, string> = {
+  forest: '🍃',
+  sea: '⚓',
+  farm: '🌾',
+  wild: '🐪',
+  bugs: '🪲',
+};
+
 export const HOUSE_CHAMPIONS: Record<DeckThemeId, { title: string; animal: string }> = {
   forest: { title: 'Wächter von Eichenhain', animal: 'Bär' },
   sea: { title: 'Gildekapitän', animal: 'Seeotter' },

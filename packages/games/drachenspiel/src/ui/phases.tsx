@@ -61,18 +61,20 @@ export function DeckSelection({
             return (
               <div
                 key={themeId}
-                className="ds-deck-choice"
+                className={`ds-deck-choice ds-house-${themeId}`}
                 onClick={() => onMove({ type: 'chooseDeck', deck: themeId })}
                 role="button"
                 tabIndex={0}
               >
-                {img ? (
-                  <img src={img} alt={theme.houseName} className="ds-deck-champion" width={72} height={96} loading="lazy" />
-                ) : (
-                  <span className="ds-deck-emoji">{theme.emoji}</span>
-                )}
+                <div className={`ds-deck-champion-frame ds-crest-frame-${themeId}`}>
+                  {img ? (
+                    <img src={img} alt={theme.houseName} className="ds-deck-champion" width={72} height={96} loading="lazy" />
+                  ) : (
+                    <span className="ds-deck-emoji">{theme.emoji}</span>
+                  )}
+                </div>
                 <span className="ds-deck-name">{theme.houseName}</span>
-                <span className="ds-deck-sub">{theme.emoji} {theme.name}</span>
+                <span className={`ds-house-banner ds-banner-${themeId}`}>{theme.emoji} {theme.name}</span>
                 <span className="ds-deck-desc">{theme.description}</span>
                 <span className="ds-deck-power">
                   {HOUSE_POWERS[themeId].emoji} <strong>{HOUSE_POWERS[themeId].name}:</strong> {HOUSE_POWERS[themeId].text}

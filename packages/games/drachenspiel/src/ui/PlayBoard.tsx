@@ -4,12 +4,13 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { CARDS_DB } from '../cards';
 import { HOUSE_POWERS } from '../powers';
 import { heroAttackValue } from '../rules';
-import type { DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
+import type { DeckThemeId, DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
 import { playCreatureAudio } from './audio';
 import { attackClass, CardFace, CardZoom, Fuse, GameLog, healthClass, renderCombatCardAnki, TargetArrow, TraitBadge, type ArrowPoints, type ZoomItem } from './parts';
 import type { Float, ShownMinion } from './sequence';
 import { getCardFullTitle, getCardTraits, getMinionFullTitle, getMinionTraits } from './traits';
 import { currentCrest, ScenarioTip, useCosmetics } from './SoloHub';
+import { HOUSE_ICONS, HOUSE_NAMES } from './champions';
 import { useBeats } from './useBeats';
 import { useLongPress } from './useLongPress';
 
@@ -107,8 +108,10 @@ function MinionView({
     [def, minion.attack, minion.health, traits, overrideNote, cosmetics.mediaUrlMap],
   );
 
+  const cardHouse = def.house && def.house !== 'neutral' ? def.house : undefined;
   const classes = [
     'ds-minion',
+    cardHouse && `ds-minion-house-${cardHouse}`,
     canAttack && !attackVector && 'can-attack',
     isSelected && !attackVector && 'selected',
     isTargetable && 'targetable',
@@ -222,12 +225,16 @@ function HeroBar({
     onInfo(text);
   };
   const trapText = player.traps ? player.traps.map((card) => CARDS_DB[card.defId]?.text ?? '').join(' ') : `${player.trapCount} verdeckte ${player.trapCount === 1 ? 'Falle' : 'Fallen'}.`;
+  const house: DeckThemeId =
+    player.power ?? (player.deckTheme && player.deckTheme !== 'mixed' ? player.deckTheme : null) ?? (seat === 0 ? 'forest' : 'sea');
+  const houseName = HOUSE_NAMES[house];
+  const houseIcon = HOUSE_ICONS[house];
   const strength = heroAttackValue(player);
   const interactive = targetable || canAttack;
   return (
     <div
       ref={elementRef}
-      className={`ds-hero-card ${targetable ? 'targetable' : ''} ${canAttack && !attackVector ? 'can-attack' : ''} ${selected && !attackVector ? 'selected' : ''} ${attackVector ? 'ds-attacking' : ''} ${hinted ? 'ds-hinted' : ''} ${impacted ? 'bub-animate-shake ds-hit-impact' : ''}`}
+      className={`ds-hero-card ds-hero-${house} ${targetable ? 'targetable' : ''} ${canAttack && !attackVector ? 'can-attack' : ''} ${selected && !attackVector ? 'selected' : ''} ${attackVector ? 'ds-attacking' : ''} ${hinted ? 'ds-hinted' : ''} ${impacted ? 'bub-animate-shake ds-hit-impact' : ''}`}
       onClick={onClick}
       onPointerDown={onPointerDown}
       onKeyDown={interactive && onClick ? (event) => activate(event, onClick, () => undefined) : undefined}
@@ -244,9 +251,27 @@ function HeroBar({
       data-hero-seat={seat}
     >
       <FloatBadges floats={floats} />
-      <span className="ds-hero-avatar">{crest ?? (seat === 0 ? '🐉' : '🐲')}</span>
-      <div>
-        <div className="ds-hero-name" style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{name}</div>
+      <div className={`ds-hero-avatar-frame ds-crest-frame-${house}`}>
+        <span className="ds-hero-avatar">{crest ?? (seat === 0 ? '🐉' : '🐲')}</span>
+      </div>
+      <div className="ds-hero-details">
+        <div className="ds-hero-header">
+          <div className="ds-hero-name" style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{name}</div>
+          <span className={`ds-hero-house-banner ds-banner-${house}`} title={`Wappenhaus: ${houseName}`}>
+            <span className="ds-house-icon">{houseIcon}</span>
+            <span className="ds-house-name">{houseName}</span>
+          </span>
+        </div>
+        <div className="ds-tribune" aria-hidden="true" title={`${health}/30 Wimpel an der Tribüne`}>
+          <div className="ds-tribune-pennants">
+            {Array.from({ length: 30 }, (_, i) => (
+              <span
+                key={i}
+                className={`ds-wimpel ${i < health ? 'active' : 'fallen'}`}
+              />
+            ))}
+          </div>
+        </div>
         <div className="ds-hero-badges">
           <span className="ds-badge ds-badge-hp" title="Wimpel an der Tribüne">🚩 {health}</span>
           {armor > 0 && (
@@ -270,11 +295,26 @@ function HeroBar({
               {player.gear ? ` · ${player.gear.durability}×` : ''}
             </span>
           )}
-          <span className="ds-badge ds-badge-mana" title="Knappen (bereit / herbeigeeilt)">
-            🏇 {player.mana}/{player.maxMana}
-            {player.locked > 0 ? ` 🔒${player.locked}` : ''}
-            {player.overloadNext > 0 ? ` →🔒${player.overloadNext}` : ''}
-          </span>
+          <div className="ds-mana-group">
+            <span className="ds-badge ds-badge-mana" title="Knappen (bereit / herbeigeeilt)">
+              🏇 {player.mana}/{player.maxMana}
+              {player.locked > 0 ? ` 🔒${player.locked}` : ''}
+              {player.overloadNext > 0 ? ` →🔒${player.overloadNext}` : ''}
+            </span>
+            <div className="ds-knappen-track" aria-hidden="true" title={`Knappen: ${player.mana}/${player.maxMana} bereit`}>
+              {Array.from({ length: 10 }, (_, i) => {
+                const isRecruited = i < player.maxMana;
+                const isReady = i < player.mana;
+                const isLocked = !isReady && isRecruited && i >= player.maxMana - player.locked;
+                return (
+                  <span
+                    key={i}
+                    className={`ds-knappe-slot ${!isRecruited ? 'unrecruited' : isReady ? 'ready' : isLocked ? 'locked' : 'spent'}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
