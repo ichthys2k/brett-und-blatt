@@ -89,19 +89,18 @@ function deviceCounterId(): string {
 
 type RecordListener = () => void;
 let recordListeners: Set<RecordListener> | undefined;
-
 function getRecordListeners(): Set<RecordListener> {
-  recordListeners ??= new Set<RecordListener>();
-  return recordListeners;
+  return (recordListeners ??= new Set<RecordListener>());
 }
 
 export function onGameRecorded(listener: RecordListener): () => void {
-  const listeners = getRecordListeners();
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+  const set = getRecordListeners();
+  set.add(listener);
+  return () => set.delete(listener);
 }
 function notifyRecordListeners(): void {
-  for (const l of getRecordListeners()) {
+  if (!recordListeners) return;
+  for (const l of recordListeners) {
     try {
       l();
     } catch {
