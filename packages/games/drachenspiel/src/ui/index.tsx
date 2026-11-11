@@ -12,10 +12,13 @@ const LABELS = ['Blau', 'Rot'];
 
 function Board(props: BoardProps<DrachenspielView, DrachenspielMove>) {
   const { view, viewer, onMove } = props;
-  const me = view.players[typeof viewer === 'number' ? viewer : 0];
+  const mySeat: SeatId = typeof viewer === 'number' ? viewer : 0;
+  const oppSeat: SeatId = (1 - mySeat) as SeatId;
+  const me = view.players[mySeat];
+  const opp = view.players[oppSeat];
   if (me.customDeck) markCustomDeck(view.options.playId);
-  if (view.phase === 'deckSelection') return <DeckSelection view={view} me={me} onMove={onMove} timed={Boolean(props.clock?.running)} />;
-  if (view.phase === 'mulligan') return <MulliganPhase me={me} onMove={onMove} />;
+  if (view.phase === 'deckSelection') return <DeckSelection view={view} me={me} oppTheme={opp?.deckTheme} onMove={onMove} timed={Boolean(props.clock?.running)} />;
+  if (view.phase === 'mulligan') return <MulliganPhase me={me} oppTheme={opp?.deckTheme} onMove={onMove} />;
   return <PlayBoard {...props} />;
 }
 
