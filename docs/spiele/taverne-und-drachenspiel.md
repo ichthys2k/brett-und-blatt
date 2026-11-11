@@ -114,7 +114,7 @@ Jeder Schritt auf eigenem Zweig mit `corepack pnpm check`, Blick im Browser und 
 3. **Drachenspiel-Thema (W-025, #55):**
    - ✅ **Schritt 1 (#258, 11.11.2026):** Begriffe, Wimpel, Knappen, Fähigkeiten (Schildwall, Verkleidet, Prunkschild, Meisterstoß, Ansturm, Fanfare, Vermächtnis), Kniffe mit Pergamentrahmen.
    - ✅ **Schritt 2 (#260, 11.11.2026):** Wappenrahmen, Banner der 5 Häuser, Tribüne mit fallenden Wimpeln, Knappen-Leiste (1–10), Siegel für Kniffe, Verbeugungs- und Abtret-Animation.
-   - **Schritt 3 (#261):** Option Drachenei mit Hausfähigkeiten.
+   - ✅ **Schritt 3 (#261, 11.11.2026):** Option Drachenei (`dragonEgg: 'off' | 'on'`) mit Hausfähigkeiten, Schlüpfen nach 3 Runden, Bot-Planer und Prüfstand.
 4. **Nach Wunsch einzeln:** Wirtin, Klänge und Playlist, gemalte Karten.
 5. ✅ **Weitere Tische und Räume (10.11.2026, #107):** Auf `#/ton` lassen sich neben „Automatisch je Rubrik“ sechs feste Tischoberflächen (Eichenholz, dunkles Nussholz, grüner Spielfilz, roter Samtfilz, Schiefer, heller Marmor; reine CSS-Verläufe, WCAG-AA-geprüft) sowie vier Raumkulissen (Taverne, Burgsaal, Bibliothek & Schreibstube, Schlossgarten) für Hauptmenü, Unterseiten und Siegerehrung wählen.
 

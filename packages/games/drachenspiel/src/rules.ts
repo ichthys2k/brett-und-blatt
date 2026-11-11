@@ -122,6 +122,16 @@ export const options: OptionSpec[] = [
     ],
     default: 'on',
   },
+  {
+    id: 'dragonEgg',
+    label: 'Drachenei',
+    description: 'Neben jedem Turnierherrn liegt ein Drachenei, das nach drei Runden als Jungdrache mit der Fähigkeit seines Wappenhauses schlüpft.',
+    choices: [
+      { value: 'off', label: 'Aus' },
+      { value: 'on', label: 'An (Jungdrachen)' },
+    ],
+    default: 'off',
+  },
 ];
 
 export const timePresets: TimePresets = {
@@ -131,6 +141,19 @@ export const timePresets: TimePresets = {
 };
 
 export const spellsOn = (opts: Options) => (opts.spells ?? 'on') !== 'off';
+export const dragonEggOn = (opts: Options) => (opts.dragonEgg ?? 'off') === 'on';
+
+export function placeDragonEgg(state: DrachenspielState, seat: SeatId, events?: GameEvent[]): void {
+  const player = state.players[seat];
+  if (player.board.length >= BOARD_LIMIT) return;
+  const house = player.power ?? (player.deckTheme && player.deckTheme !== 'mixed' ? player.deckTheme : null) ?? 'forest';
+  const eggCardId = `egg_${house}`;
+  const def = CARDS_DB[eggCardId];
+  if (!def) return;
+  const minion = createMinion(state, def, seat);
+  player.board.push(minion);
+  events?.push({ type: 'minionSummoned', seat, minion });
+}
 
 function createDeck(theme: string, rng: Rng, nextId: () => number, withSpells: boolean, custom?: string[]): CardInstance[] {
   let cardIds: string[];
@@ -290,6 +313,10 @@ function setupScenario(scenario: Scenario, opts: Options, seed: string): Drachen
       state.players[seat as SeatId].board.push(minion);
     }
   });
+  if (dragonEggOn(state.options)) {
+    placeDragonEgg(state, 0);
+    placeDragonEgg(state, 1);
+  }
   startTurn(state, 0, []);
   return state;
 }
@@ -363,6 +390,10 @@ function dealStartingHands(state: DrachenspielState, willMulligan: boolean): voi
     // Second player gets Star card
     pSecond.hand.push({ uid: `star_${state.nextEntityId++}`, defId: STAR_CARD.id });
     state.phase = 'play';
+    if (dragonEggOn(state.options)) {
+      placeDragonEgg(state, 0);
+      placeDragonEgg(state, 1);
+    }
     startTurn(state, state.startingSeat, []);
   }
 }
@@ -590,6 +621,10 @@ export function applyMove(
       const pSecond = next.players[1 - next.startingSeat];
       pSecond.hand.push({ uid: `star_${nextEntityId()}`, defId: STAR_CARD.id });
       next.phase = 'play';
+      if (dragonEggOn(next.options)) {
+        placeDragonEgg(next, 0, events);
+        placeDragonEgg(next, 1, events);
+      }
       startTurn(next, next.startingSeat, events);
     }
     return { state: next, events };
