@@ -1,4 +1,5 @@
 import type { CSSProperties, MouseEventHandler } from 'react';
+import { CardBack } from './CardBack';
 
 /** Kurze Zeichenfolge aus Emojis? Dann groß zeigen, sonst als Text. */
 const EMOJI = /^(\p{Extended_Pictographic}|\p{Emoji_Component}|‍|️)+$/u;
@@ -28,7 +29,7 @@ export function ContentCard({ content, caption, highlight, dimmed, onClick, labe
   const classes = `bub-ccard ${content === null ? 'bub-ccard-down' : ''} ${highlight ? `bub-card-${highlight}` : ''} ${dimmed ? 'bub-ccard-dimmed' : ''} ${onClick ? 'bub-card-clickable' : ''} ${animClass} ${className}`;
   const inner =
     content === null ? (
-      <span className="bub-card-back" />
+      <CardBack />
     ) : (
       <span className="bub-ccard-face">
         <span className={EMOJI.test(content) ? 'bub-ccard-emoji' : 'bub-ccard-text'}>{content}</span>

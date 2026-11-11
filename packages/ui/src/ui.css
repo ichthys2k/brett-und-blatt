@@ -208,13 +208,269 @@ button.bub-cell:focus-visible {
   display: block;
   width: 100%;
   height: 100%;
-  border: 2px solid #fff;
   border-radius: inherit;
+  overflow: hidden;
+  box-sizing: border-box;
   background:
     repeating-linear-gradient(45deg, rgb(255 255 255 / 0.12) 0 4px, transparent 4px 9px),
     repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.12) 0 4px, transparent 4px 9px),
-    #1f6f5c;
-  box-shadow: inset 0 0 0 3px #1f6f5c;
+    #881313;
+}
+
+/* Kartengrößen (kompatibel mit CardFan und TrickTable) */
+.bub-card-size-xs {
+  width: 44px;
+}
+.bub-card-size-sm {
+  width: 56px;
+}
+.bub-card-size-md {
+  width: 72px;
+}
+.bub-card-size-lg {
+  width: 96px;
+}
+.bub-card-size-xl {
+  width: 140px;
+}
+
+/* GameCard 3D-Wende-Container */
+.bub-game-card {
+  perspective: 1000px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.bub-game-card-flipper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: inherit;
+}
+
+.bub-game-card-flipped {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bub-game-card-flipper {
+    transition: none !important;
+  }
+}
+
+.bub-game-card-side {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.bub-game-card-front {
+  transform: rotateY(0deg);
+  background: #ffffff;
+  color: #1f2328;
+  display: flex;
+  flex-direction: column;
+}
+
+.bub-game-card-back {
+  transform: rotateY(180deg);
+}
+
+/* GameCard Zustände */
+.bub-card-playable {
+  box-shadow:
+    0 0 0 2.5px #22c55e,
+    0 4px 10px rgba(34, 197, 94, 0.35);
+}
+
+.bub-card-disabled {
+  opacity: 0.55;
+  filter: grayscale(40%);
+  cursor: not-allowed;
+}
+
+/* Glanz-/Foil-Effekte */
+.bub-game-card-foil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 5;
+}
+
+.bub-game-card-foil--gold {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0) 25%,
+    rgba(255, 235, 120, 0.35) 50%,
+    rgba(255, 215, 0, 0) 75%
+  );
+  mix-blend-mode: overlay;
+}
+
+.bub-game-card-foil--holo {
+  background: linear-gradient(
+    125deg,
+    rgba(255, 0, 0, 0.18) 0%,
+    rgba(255, 154, 0, 0.18) 20%,
+    rgba(208, 222, 33, 0.18) 40%,
+    rgba(79, 220, 74, 0.18) 60%,
+    rgba(63, 218, 216, 0.18) 80%,
+    rgba(188, 42, 228, 0.18) 100%
+  );
+  mix-blend-mode: color-dodge;
+}
+
+/* Dynamische Plaketten in den Ecken */
+.bub-game-card-runtime-badges {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.bub-game-card-runtime-badge {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15em 0.45em;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  color: #ffffff;
+  background: #475569;
+}
+
+.bub-game-card-runtime-badge--top-left {
+  top: 5px;
+  left: 5px;
+}
+.bub-game-card-runtime-badge--top-right {
+  top: 5px;
+  right: 5px;
+}
+.bub-game-card-runtime-badge--bottom-left {
+  bottom: 5px;
+  left: 5px;
+}
+.bub-game-card-runtime-badge--bottom-right {
+  bottom: 5px;
+  right: 5px;
+}
+
+.bub-game-card-runtime-badge--accent { background: var(--color-accent, #2563eb); }
+.bub-game-card-runtime-badge--danger { background: #dc2626; }
+.bub-game-card-runtime-badge--warning { background: #d97706; }
+.bub-game-card-runtime-badge--success { background: #16a34a; }
+.bub-game-card-runtime-badge--gold { background: #ca8a04; color: #1e1b4b; }
+
+/* Strukturierter Rahmen */
+.bub-game-card-structured {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 6px;
+  gap: 4px;
+  background: #ffffff;
+  color: #1f2328;
+  position: relative;
+  border-radius: inherit;
+}
+
+.bub-game-card-header,
+.bub-game-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  min-height: 20px;
+  z-index: 2;
+}
+
+.bub-game-card-title {
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-align: center;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bub-game-card-illustration {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #f1f5f9;
+}
+
+.bub-game-card-body {
+  font-size: 0.72rem;
+  line-height: 1.25;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.03);
+  max-height: 35%;
+  overflow-y: auto;
+}
+
+.bub-game-card-footer-text {
+  font-size: 0.7rem;
+  opacity: 0.75;
+  flex: 1;
+  text-align: center;
+}
+
+.bub-card-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #0f172a;
+}
+.bub-card-pill--accent { background: var(--color-accent, #2563eb); color: #fff; }
+.bub-card-pill--danger { background: #ef4444; color: #fff; }
+.bub-card-pill--warning { background: #f59e0b; color: #fff; }
+.bub-card-pill--success { background: #22c55e; color: #fff; }
+.bub-card-pill--gold { background: #facc15; color: #78350f; }
+.bub-card-pill--mana { background: #0284c7; color: #fff; }
+
+.bub-game-card-anki {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  border-radius: inherit;
+}
+
+.bub-game-card-anki-html {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .bub-card-selected {
