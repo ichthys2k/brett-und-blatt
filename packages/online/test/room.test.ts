@@ -859,6 +859,16 @@ describe('Offene Spiele (publicListing)', () => {
     expect(env.room.publicListing()).not.toBeNull();
   });
 
+  it('übernimmt cardCatalogChecksum ins publicListing, wenn Optionen ein Kartenset enthalten', () => {
+    const env = setup();
+    const anna = env.client('anna');
+    anna.hello();
+    anna.send({ type: 'setGame', gameId: 'tic-tac-toe' });
+    anna.send({ type: 'setCustomCardCatalog', catalog: { checksum: 'a1b2c3d4', cards: [] } });
+    const listing = env.room.publicListing();
+    expect(listing?.cardCatalogChecksum).toBe('a1b2c3d4');
+  });
+
   it('liefert null, sobald das Spiel gestartet wurde oder alle Plätze belegt sind', () => {
     const env = setup();
     const anna = env.client('anna');

@@ -296,6 +296,8 @@ export interface DrachenspielState {
   /** Die Wahl fiel am Zugende: Danach ist der andere dran. */
   turnEnding?: boolean;
   options: Options;
+  customCards?: Record<string, Partial<CardDefinition>>;
+  cardCatalogChecksum?: string;
 }
 
 /** Offene Wahl in der Sicht: Wer nicht wählt, sieht nur die Anzahl der Möglichkeiten. */
@@ -341,6 +343,8 @@ export interface DrachenspielView {
   viewerSeat: SeatId | 'spectator';
   pending?: PendingView;
   options: Options;
+  customCards?: Record<string, Partial<CardDefinition>>;
+  cardCatalogChecksum?: string;
 }
 
 export type DrachenspielMove =

@@ -18,6 +18,7 @@ import { storage, type Profile } from '../lib/storage';
 import { GameTable } from './Play';
 import { TakeBackBar } from '../components/TakeBackBar';
 import { TeamChip, TeamSummary } from '../components/Teams';
+import { CustomCardsOverlay } from '../components/CustomCardsOverlay';
 
 const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
 /** Online gibt es nur Spiele für mehrere Personen. */
@@ -344,6 +345,12 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
   const teams = game ? teamsFor(game.info, lobby.options, lobby.seats.length) : undefined;
   const [showQr, setShowQr] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showCustomCards, setShowCustomCards] = useState(false);
+  const checksum =
+    (typeof lobby.options?.cardCatalogChecksum === 'string' && lobby.options.cardCatalogChecksum) ||
+    (lobby.options?.customCardCatalog && typeof (lobby.options.customCardCatalog as any).checksum === 'string'
+      ? (lobby.options.customCardCatalog as any).checksum
+      : undefined);
   // Neue Mitglieder kündigen sich mit ihrem Tier an – nicht beim Öffnen der Lobby und
   // nicht beim Wiederverbinden, denn dabei bleibt die Mitglieds-ID gleich.
   const announced = useRef<Set<string> | null>(null);
@@ -391,11 +398,21 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
           ←
         </Button>
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm text-muted">{t('online.room')}</p>
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${lobby.isPublic ? 'border-accent/40 bg-accent/10 text-accent' : 'border-line bg-surface text-muted'}`}>
               {lobby.isPublic ? `🌐 ${t('online.badge.public')}` : `🔒 ${t('online.badge.private')}`}
             </span>
+            {checksum && (
+              <button
+                type="button"
+                onClick={() => setShowCustomCards(true)}
+                className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent hover:bg-accent/20 cursor-pointer"
+                title={`Eigenes Kartenset (Anki) #${checksum} – Details anzeigen`}
+              >
+                ✨ Anki #{checksum}
+              </button>
+            )}
           </div>
           <h1 className="bub-room-code text-3xl tracking-widest">{room.code}</h1>
         </div>
@@ -611,6 +628,13 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
       ) : !isHost ? (
         <p className="text-center text-sm text-muted">{t('online.startHint')}</p>
       ) : null}
+      {showCustomCards && checksum && (
+        <CustomCardsOverlay
+          checksum={checksum}
+          catalog={lobby.options?.customCardCatalog as any}
+          onClose={() => setShowCustomCards(false)}
+        />
+      )}
     </Page>
   );
 }

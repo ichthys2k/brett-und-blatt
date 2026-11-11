@@ -64,6 +64,8 @@ export interface QuartettState {
   quartets: { seat: SeatId; group: string }[];
   /** Alle Fragen der Partie. */
   asks: Ask[];
+  customCardSet?: CardSet;
+  cardCatalogChecksum?: string;
 }
 
 export type QuartettMove =
@@ -73,12 +75,54 @@ export type QuartettMove =
 /** Bis zu so vielen Spielern bekommt beim Sammeln jeder nur einige Karten, der Rest bildet einen Stapel. */
 export const HAND_WITH_TALON = { maxSeats: 3, cards: 7 };
 
-export function setOf(state: Pick<QuartettState, 'set'>): CardSet {
-  return cardSet(state.set);
+export function setOf(state: { set: string; customCardSet?: CardSet }): CardSet {
+  return state.customCardSet ?? cardSet(state.set);
 }
 
 export function setup(seats: number, options: Options, seed: string): QuartettState {
-  const set = cardSet(options.set ?? 'tiere');
+  const baseSet = cardSet(options.set ?? 'tiere');
+  let customCardSet: CardSet | undefined;
+  let cardCatalogChecksum: string | undefined;
+
+  const rawCatalog = (options as Record<string, unknown>).customCardCatalog ?? (options as Record<string, unknown>).customCards ?? options.cardCatalog;
+  if (rawCatalog) {
+    try {
+      const cat = typeof rawCatalog === 'string' ? JSON.parse(rawCatalog) : rawCatalog;
+      if (cat.quartettCards) {
+        const cards = baseSet.cards.map((c) => {
+          const override = cat.quartettCards[c.id];
+          if (!override) return c;
+          const mergedValues: Record<string, number> = { ...c.values };
+          for (const [key, rawVal] of Object.entries(override.values as Record<string, unknown>)) {
+            const val = typeof rawVal === 'number' ? rawVal : Number(rawVal);
+            if (baseSet.properties.some((p) => p.id === key)) {
+              mergedValues[key] = val;
+            } else {
+              const matchedProp = baseSet.properties.find(
+                (p) => p.label.toLowerCase() === key.toLowerCase() || p.id.toLowerCase() === key.toLowerCase(),
+              );
+              if (matchedProp) {
+                mergedValues[matchedProp.id] = val;
+              } else {
+                mergedValues[key] = val;
+              }
+            }
+          }
+          return {
+            ...c,
+            ...override,
+            values: mergedValues,
+          };
+        });
+        customCardSet = { ...baseSet, cards };
+        cardCatalogChecksum = cat.checksum;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const set = customCardSet ?? baseSet;
   const mode: QuartettMode = options.mode === 'collect' ? 'collect' : 'trump';
   const rng = Rng.fromSeed(seed, 'karten');
   const deck = rng.shuffle(set.cards.map((card) => card.id));
@@ -102,6 +146,8 @@ export function setup(seats: number, options: Options, seed: string): QuartettSt
     talon: [],
     quartets: [],
     asks: [],
+    ...(customCardSet ? { customCardSet } : {}),
+    ...(cardCatalogChecksum ? { cardCatalogChecksum } : {}),
   };
   if (mode === 'trump') {
     state.stacks = dealt.map((cards) => cards.map((card) => ({ card, open: false })));
@@ -180,7 +226,7 @@ function playTrick(state: QuartettState, chooser: SeatId, propertyId: string): M
     plays.push({ seat, card: top.card });
     return stack.slice(1);
   });
-  const value = (play: Play) => valueOf(set.id, play.card, property.id);
+  const value = (play: Play) => valueOf(set.id, play.card, property.id, set);
   const best = plays.reduce((a, b) => (compareValues(property, value(b), value(a)) > 0 ? b : a));
   const leaders = plays.filter((play) => compareValues(property, value(play), value(best)) === 0);
   const events: GameEvent[] = [];

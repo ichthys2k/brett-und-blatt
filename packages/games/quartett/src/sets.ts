@@ -67,7 +67,11 @@ export function groupOf(card: CardId): string {
 
 const byId = new Map<string, Map<CardId, QuartettCard>>();
 
-export function cardOf(setId: string, card: CardId): QuartettCard {
+export function cardOf(setId: string, card: CardId, customSet?: CardSet): QuartettCard {
+  if (customSet) {
+    const found = customSet.cards.find((c) => c.id === card);
+    if (found) return found;
+  }
   let cards = byId.get(setId);
   if (!cards) {
     cards = new Map(cardSet(setId).cards.map((c) => [c.id, c]));
@@ -78,8 +82,8 @@ export function cardOf(setId: string, card: CardId): QuartettCard {
   return found;
 }
 
-export function valueOf(setId: string, card: CardId, property: string): number {
-  return cardOf(setId, card).values[property] ?? 0;
+export function valueOf(setId: string, card: CardId, property: string, customSet?: CardSet): number {
+  return cardOf(setId, card, customSet).values[property] ?? 0;
 }
 
 /** Vergleich zweier Werte: > 0, wenn `a` besser ist. */

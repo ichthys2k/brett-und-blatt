@@ -93,6 +93,23 @@ export function setup(seats: number, options: Options, seed: string): SorterStat
   const fx = Rng.fromSeed(seed, 'effekte').state;
   const ids = new Rng(Rng.fromSeed(seed, 'kennungen').state).shuffle([...Array(52).keys()]);
 
+  let customMods: Record<string, any> | undefined;
+  let cardCatalogChecksum: string | undefined;
+  const rawCatalog = (options as Record<string, unknown>).customCardCatalog ?? (options as Record<string, unknown>).customMods ?? options.cardCatalog;
+  if (rawCatalog) {
+    try {
+      const cat = typeof rawCatalog === 'string' ? JSON.parse(rawCatalog) : rawCatalog;
+      if (cat.courtCards) {
+        customMods = cat.courtCards;
+        cardCatalogChecksum = cat.checksum;
+      } else if (typeof cat === 'object') {
+        customMods = cat;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   const runs: RunState[] = Array.from({ length: seats }, (_, seat) => {
     const deck = standardDeck().map((card, i): Card => ({ ...card, id: ids[i]! }));
     const run: RunState = {
@@ -139,6 +156,7 @@ export function setup(seats: number, options: Options, seed: string): SorterStat
       duelsWon: 0,
       discardsUsed: 0,
       livesLost: 0,
+      ...(customMods ? { customMods } : {}),
     };
     return run;
   });
@@ -157,6 +175,8 @@ export function setup(seats: number, options: Options, seed: string): SorterStat
     key,
     endless,
     locked,
+    ...(customMods ? { customMods } : {}),
+    ...(cardCatalogChecksum ? { cardCatalogChecksum } : {}),
   };
   for (const run of runs) {
     const rng = new Rng(run.rng.shop);

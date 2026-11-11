@@ -1,4 +1,4 @@
-import type { BotLevel, ClockReading, Forfeit, GameEvent, Options, ReplayData, Result, SeatId, TimePresetId } from '@brett-und-blatt/engine';
+import type { BotLevel, ClockReading, CustomCardCatalog, Forfeit, GameEvent, Options, ReplayData, Result, SeatId, TimePresetId } from '@brett-und-blatt/engine';
 
 /**
  * Das Nachrichtenformat zwischen Browser und Server (JSON über WebSocket).
@@ -44,6 +44,8 @@ export interface OpenRoomListing {
   updatedAt: number;
   /** Ausschreibung eines Turniers (Einschreibung läuft): `code` ist der Turniercode, `gameName` der Turniername. */
   tournament?: boolean;
+  /** Prüfsumme eines aktiven Anki-Kartensets (falls Raum benutzerdefinierte Karten nutzt) */
+  cardCatalogChecksum?: string;
 }
 
 /** Ein Mitglied des Raums, wie es alle sehen. Die geheime Kennung steht nie darin. */
@@ -99,6 +101,7 @@ export type ClientMessage =
   // Lobby (nur die Raumleitung, außer takeSeat/leaveSeat)
   | { type: 'setGame'; gameId: string }
   | { type: 'setOption'; id: string; value: string }
+  | { type: 'setCustomCardCatalog'; catalog: CustomCardCatalog | null }
   | { type: 'setTime'; time: TimePresetId }
   | { type: 'setSeatCount'; count: number }
   | { type: 'setSeat'; index: number; seat: 'open' | { bot: BotLevel } }
@@ -255,6 +258,10 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return isString(m.gameId, 60) ? { type: 'setGame', gameId: m.gameId } : null;
     case 'setOption':
       return isString(m.id, 60) && isString(m.value, 60) ? { type: 'setOption', id: m.id, value: m.value } : null;
+    case 'setCustomCardCatalog':
+      if (m.catalog === null) return { type: 'setCustomCardCatalog', catalog: null };
+      if (!isRecord(m.catalog) || typeof m.catalog.checksum !== 'string' || !Array.isArray(m.catalog.cards)) return null;
+      return { type: 'setCustomCardCatalog', catalog: m.catalog as unknown as CustomCardCatalog };
     case 'setTime':
       return isTime(m.time) ? { type: 'setTime', time: m.time } : null;
     case 'setSeatCount':

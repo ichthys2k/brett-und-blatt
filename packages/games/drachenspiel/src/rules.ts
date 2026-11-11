@@ -18,6 +18,20 @@ import { DECK_THEMES, DECK_THEME_IDS, themeCardIds } from './decks';
 import { SCENARIO_PATTERN, scenarioFrom, TREASURES_PATTERN, type Scenario, type SideSetup } from './modes/scenarios';
 import { HOUSE_POWERS, powerIsUsable } from './powers';
 import { meta } from './meta';
+
+/**
+ * Liefert die Kartendefinition unter Berücksichtigung von Anki-Kartenwert-Übersteuerungen (#277, K7).
+ */
+export function cardDefOf(
+  state: { customCards?: Record<string, Partial<CardDefinition>> },
+  id: string,
+): CardDefinition | undefined {
+  const base = CARDS_DB[id];
+  if (!base) return undefined;
+  const override = state.customCards?.[id];
+  if (!override) return base;
+  return { ...base, ...override };
+}
 import type {
   CardDefinition,
   CardInstance,
@@ -204,11 +218,38 @@ function createPlayer(seat: SeatId): PlayerState {
   };
 }
 
+function parseCustomCardsFromOptions(opts: Options): {
+  customCards?: Record<string, Partial<CardDefinition>>;
+  cardCatalogChecksum?: string;
+} {
+  const raw = (opts as Record<string, unknown>).customCards ?? (opts as Record<string, unknown>).customCardCatalog ?? opts.cardCatalog;
+  if (!raw) return {};
+  try {
+    const cat = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (cat.combatCards) {
+      return {
+        customCards: cat.combatCards,
+        cardCatalogChecksum: cat.checksum,
+      };
+    }
+    if (typeof cat === 'object') {
+      return {
+        customCards: cat,
+        cardCatalogChecksum: (cat as any).checksum,
+      };
+    }
+  } catch {
+    // ungültiges JSON ignorieren
+  }
+  return {};
+}
+
 /** Ein Solo-Kampf: Platz 0 beginnt, Aufstellung und Decks kommen aus dem Szenario. */
 function setupScenario(scenario: Scenario, opts: Options, seed: string): DrachenspielState {
   const rng = Rng.fromSeed(seed);
   let entityCounter = 1;
   const nextId = () => entityCounter++;
+  const { customCards, cardCatalogChecksum } = parseCustomCardsFromOptions(opts);
   const state: DrachenspielState = {
     phase: 'play',
     activeSeat: 0,
@@ -219,6 +260,8 @@ function setupScenario(scenario: Scenario, opts: Options, seed: string): Drachen
     rng: rng.state,
     queue: [],
     options: { ...opts },
+    ...(customCards ? { customCards } : {}),
+    ...(cardCatalogChecksum ? { cardCatalogChecksum } : {}),
   };
   const sides: [SideSetup, SideSetup] = [scenario.me, scenario.enemy];
   sides.forEach((side, seat) => {
@@ -239,7 +282,7 @@ function setupScenario(scenario: Scenario, opts: Options, seed: string): Drachen
   state.nextEntityId = entityCounter;
   sides.forEach((side, seat) => {
     for (const cardId of side.board ?? []) {
-      const def = CARDS_DB[cardId];
+      const def = cardDefOf(state, cardId);
       if (!def) continue;
       const minion = createMinion(state, def, seat as SeatId);
       minion.canAttack = true;
@@ -266,6 +309,8 @@ export function setup(seats: number, opts: Options, seed: string): DrachenspielS
   const deckOption = preset ? preset.house : opts.deckSelection === 'code' ? 'inGame' : (opts.deckSelection ?? 'inGame');
   const mulliganOption = opts.mulligan ?? 'on';
 
+  const { customCards, cardCatalogChecksum } = parseCustomCardsFromOptions(opts);
+
   const state: DrachenspielState = {
     phase: deckOption === 'inGame' ? 'deckSelection' : 'mulligan',
     activeSeat: startingSeat,
@@ -276,6 +321,8 @@ export function setup(seats: number, opts: Options, seed: string): DrachenspielS
     rng: rng.state,
     queue: [],
     options: { ...opts },
+    ...(customCards ? { customCards } : {}),
+    ...(cardCatalogChecksum ? { cardCatalogChecksum } : {}),
   };
 
   if (deckOption !== 'inGame') {
@@ -412,7 +459,7 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
     // Play card
     for (let i = 0; i < player.hand.length; i++) {
       const card = player.hand[i];
-      const def = CARDS_DB[card.defId];
+      const def = cardDefOf(state, card.defId);
       if (!def) continue;
       if (def.cost <= player.mana) {
         if (def.trap) {
@@ -447,7 +494,7 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
       if (canUseBuilding(minion)) moves.push({ type: 'useBuilding', minionId: minion.id });
     }
     for (let i = 0; i < player.hand.length; i++) {
-      if (player.mana >= TRADE_COST && player.hand[i]!.fleeting !== true && CARDS_DB[player.hand[i]!.defId]?.keywords?.includes('tradeable')) {
+      if (player.mana >= TRADE_COST && player.hand[i]!.fleeting !== true && cardDefOf(state, player.hand[i]!.defId)?.keywords?.includes('tradeable')) {
         moves.push({ type: 'tradeCard', handIndex: i });
       }
     }
@@ -571,7 +618,7 @@ export function applyMove(
   if (move.type === 'playCard') {
     const card = player.hand[move.handIndex];
     if (!card) throw new Error('Karte nicht vorhanden');
-    const def = CARDS_DB[card.defId];
+    const def = cardDefOf(next, card.defId);
     if (!def) throw new Error('Unbekannte Karte');
     if (def.cost > player.mana) throw new Error('Nicht genug Mana');
 
@@ -635,14 +682,14 @@ export function applyMove(
     minion.damage += 1;
     refreshStats(minion);
     events.push({ type: 'buildingUsed', seat: actor, minionId: minion.id, name: minion.name, health: minion.health });
-    enqueue(next, CARDS_DB[minion.cardId]?.building, actor, minion.cardId, minion.id, null);
+    enqueue(next, cardDefOf(next, minion.cardId)?.building, actor, minion.cardId, minion.id, null);
     settle(next, events);
     return { state: next, events };
   }
 
   if (move.type === 'tradeCard') {
     const card = player.hand[move.handIndex];
-    if (!card || card.fleeting || !CARDS_DB[card.defId]?.keywords?.includes('tradeable')) throw new Error('Karte lässt sich nicht tauschen');
+    if (!card || card.fleeting || !cardDefOf(next, card.defId)?.keywords?.includes('tradeable')) throw new Error('Karte lässt sich nicht tauschen');
     if (player.mana < TRADE_COST) throw new Error('Nicht genug Mana');
     player.mana -= TRADE_COST;
     player.hand.splice(move.handIndex, 1);
@@ -870,6 +917,8 @@ export function playerView(
     viewerSeat: seat,
     ...(state.pending ? { pending: { ...state.pending, count: state.pending.options.length, options: state.pending.seat === seat ? state.pending.options : [] } } : {}),
     options: { ...state.options },
+    ...(state.customCards ? { customCards: state.customCards } : {}),
+    ...(state.cardCatalogChecksum ? { cardCatalogChecksum: state.cardCatalogChecksum } : {}),
   };
 }
 
@@ -923,6 +972,8 @@ export function sampleHidden(
     queue: [],
     ...(view.pending ? { pending: samplePending(view.pending) } : {}),
     options: { ...view.options },
+    ...(view.customCards ? { customCards: view.customCards } : {}),
+    ...(view.cardCatalogChecksum ? { cardCatalogChecksum: view.cardCatalogChecksum } : {}),
   };
 }
 

@@ -464,6 +464,10 @@ export class Room {
     const hasConnected = [...this.members.values()].some((m) => m.disconnectedAt === null);
     if (!hasConnected) return null;
     const host = this.hostId ? this.members.get(this.hostId) : undefined;
+    const cardCatalogChecksum =
+      typeof this.lobby.options?.cardCatalogChecksum === 'string'
+        ? this.lobby.options.cardCatalogChecksum
+        : undefined;
     return {
       code: this.code,
       gameId: this.lobby.gameId,
@@ -475,6 +479,7 @@ export class Room {
       filledSeats: seats.length - openSeats,
       createdAt: this.createdAt,
       updatedAt: this.lastActivity,
+      ...(cardCatalogChecksum ? { cardCatalogChecksum } : {}),
     };
   }
 
@@ -721,6 +726,20 @@ export class Room {
         if (!isHost || this.phase !== 'lobby' || !spec?.choices.some((c) => c.value === message.value)) return deny();
         this.lobby.options = { ...this.lobby.options, [message.id]: message.value };
         this.applyTeams();
+        return this.broadcastRoom();
+      }
+      case 'setCustomCardCatalog': {
+        if (!isHost || this.phase !== 'lobby') return deny();
+        if (message.catalog) {
+          this.lobby.options = {
+            ...this.lobby.options,
+            customCardCatalog: JSON.stringify(message.catalog),
+            cardCatalogChecksum: message.catalog.checksum,
+          };
+        } else {
+          const { customCardCatalog, cardCatalogChecksum, ...rest } = this.lobby.options;
+          this.lobby.options = rest;
+        }
         return this.broadcastRoom();
       }
       case 'setTime':
