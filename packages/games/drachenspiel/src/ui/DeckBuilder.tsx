@@ -17,7 +17,7 @@ import { championImage } from './champions';
 const LOOK = [
   { id: 'all', label: 'Alle' },
   { id: 'animals', label: 'Tiere' },
-  { id: 'spells', label: 'Zauber' },
+  { id: 'spells', label: 'Kniffe' },
   { id: 'special', label: 'Besondere' },
 ] as const;
 type Look = (typeof LOOK)[number]['id'];
@@ -100,7 +100,7 @@ function Builder({ start, onDone, onCancel }: { start: { id?: string; name: stri
           {cards.length}/{DECK_SIZE}
         </strong>
       </div>
-      <div className="ds-curve" role="img" aria-label={`Karten nach Kosten: ${curve.map((n, cost) => `${cost === 6 ? '6 und mehr' : cost} Mana: ${n}`).join(', ')}`}>
+      <div className="ds-curve" role="img" aria-label={`Karten nach Kosten: ${curve.map((n, cost) => `${cost === 6 ? '6 und mehr' : cost} Knappen: ${n}`).join(', ')}`}>
         {curve.map((n, cost) => (
           <div key={cost} className="ds-curve-col">
             <div className="ds-curve-bar" style={{ height: `${Math.min(100, n * 12)}%` }} />

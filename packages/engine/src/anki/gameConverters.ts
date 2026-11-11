@@ -66,7 +66,7 @@ export function drachenspielCardsToAnki<T extends CombatCardLike>(cards: readonl
 
   const notes: AnkiNote[] = cards.map((card) => {
     const guid = `bub-combat-${card.id}`;
-    const kartenart = card.isSpell ? 'Zauber' : card.building ? 'Gebäude' : 'Begleiter';
+    const kartenart = card.isSpell ? 'Kniff' : card.building ? 'Gebäude' : 'Begleiter';
     const klasse = card.house ?? 'neutral';
     const seltenheit = card.rarity ?? 'common';
     const kosten = String(card.cost ?? 0);
@@ -163,7 +163,7 @@ export function ankiToDrachenspielCards<T extends CombatCardLike = CombatCardLik
       id,
       name: name || (base.name as string) || id,
       cost: kostenRaw !== '' ? Number.parseInt(kostenRaw, 10) : ((base.cost as number) ?? 0),
-      isSpell: kartenart === 'Zauber' ? true : (base.isSpell as boolean | undefined),
+      isSpell: (kartenart === 'Zauber' || kartenart === 'Kniff') ? true : (base.isSpell as boolean | undefined),
       quote: spruch || (base.quote as string) || '',
       text: regeltext || (base.text as string) || '',
     };

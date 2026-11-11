@@ -13,28 +13,28 @@ export interface TraitInfo {
 export const TRAIT_DEFINITIONS = {
   taunt: {
     emoji: '🛡️',
-    name: 'Beschützer',
+    name: 'Schildwall',
     description: 'Muss angegriffen werden, bevor andere Ziele gewählt werden dürfen.',
   },
   stealth: {
     emoji: '🌙',
-    name: 'Versteckt',
+    name: 'Verkleidet',
     description: 'Kann nicht als Ziel gewählt werden, bis es selbst einmal angreift.',
   },
   bubble: {
     emoji: '🫧',
-    name: 'Schutzblase',
-    description: 'Verhindert die nächste Schadensinstanz komplett und platzt danach.',
+    name: 'Prunkschild',
+    description: 'Fängt den ersten Treffer komplett ab und splittert danach.',
   },
   poisonous: {
     emoji: '🧪',
-    name: 'Giftig',
+    name: 'Meisterstoß',
     description: 'Jedes Tier, das von diesem Tier Schaden nimmt, scheidet sofort aus.',
   },
   rush: {
     emoji: '⚡',
-    name: 'Flink',
-    description: 'Darf direkt in der Runde des Ausspielens angreifen, auch den gegnerischen Helden.',
+    name: 'Ansturm',
+    description: 'Darf direkt in der Runde des Rufens angreifen, auch den gegnerischen Turnierherrn.',
   },
   sprinter: {
     emoji: '🏃',
@@ -49,7 +49,7 @@ export const TRAIT_DEFINITIONS = {
   lifesteal: {
     emoji: '💚',
     name: 'Lebenskraft',
-    description: 'Schaden, den dieses Tier im Kampf zufügt, heilt deinen Helden.',
+    description: 'Schaden, den dieses Tier im Gefecht zufügt, erneuert die Wimpel deines Turnierherrn.',
   },
   frostbite: {
     emoji: '❄️',
@@ -59,7 +59,7 @@ export const TRAIT_DEFINITIONS = {
   reborn: {
     emoji: '🌱',
     name: 'Zweite Chance',
-    description: 'Kehrt beim ersten Mal, wenn es vom Feld geht, mit 1 Leben zurück.',
+    description: 'Kehrt beim ersten Verlassen des Feldes mit 1 Ausdauer zurück.',
   },
   immune: {
     emoji: '🌀',
@@ -69,12 +69,12 @@ export const TRAIT_DEFINITIONS = {
   elusive: {
     emoji: '🍃',
     name: 'Scheu',
-    description: 'Zauber und Auftritte können es nicht als Ziel wählen. Flächenzauber treffen es trotzdem.',
+    description: 'Kniffe und Fanfaren können es nicht als Ziel wählen. Flächeneffekte treffen es trotzdem.',
   },
   tradeable: {
     emoji: '🔄',
     name: 'Tauschen',
-    description: 'Auf der Hand: Für 1 Mana zurück ins Deck mischen und neu ziehen.',
+    description: 'Auf der Hand: Mit 1 Knappe zurück ins Deck mischen und neu ziehen.',
   },
 } as const;
 
@@ -88,7 +88,7 @@ function stateTrait(id: string, emoji: string, name: string, description: string
 }
 
 function natureTrait(amount: number): TraitInfo {
-  return stateTrait('spellPower', '🌿', `Naturkraft +${amount}`, `Deine Zauber machen ${amount} Schaden mehr.`);
+  return stateTrait('spellPower', '🌿', `Naturkraft +${amount}`, `Deine Kniffe machen ${amount} Schaden mehr.`);
 }
 
 function triggerTrait(trigger: Trigger, index: number, targeting: SpellTargeting = 'none'): TraitInfo {
@@ -101,15 +101,15 @@ function triggerTrait(trigger: Trigger, index: number, targeting: SpellTargeting
         : trigger.if
           ? ['🐾', 'Sippe', 'kin']
           : trigger.on === 'played'
-            ? ['🎺', 'Auftritt', 'battlecry']
+            ? ['🎺', 'Fanfare', 'battlecry']
             : trigger.on === 'turnEnd'
               ? ['🌙', 'Zugende', 'turnend']
               : trigger.on === 'spellCast'
-                ? ['✨', 'Nach Zauber', 'aftercast']
-                : ['👋', 'Abschied', 'deathrattle'];
+                ? ['✨', 'Nach Kniff', 'aftercast']
+                : ['📜', 'Vermächtnis', 'deathrattle'];
   const condition =
     trigger.if === 'combo'
-      ? 'Hast du in diesem Zug schon eine Karte gespielt: '
+      ? 'Hast du in diesem Zug schon eine Karte gerufen: '
       : trigger.if === 'outcast'
         ? 'Lag die Karte ganz links oder rechts auf der Hand: '
         : trigger.if
@@ -163,7 +163,7 @@ export function getCardTraits(card: CardDefinition): TraitInfo[] {
     ...(card.dormant ? [stateTrait('dormant', '💤', 'Winterschlaf', card.text ?? '')] : []),
     ...(card.trap ? [stateTrait('trap', '🪤', 'Falle', card.text ?? '')] : []),
     ...(card.quest ? [stateTrait('quest', '📜', 'Aufgabe', card.text ?? '')] : []),
-    ...(card.overload ? [stateTrait('overload', '🔒', `Erschöpfung ${card.overload}`, `Im nächsten Zug fehlen dir ${card.overload} Mana.`)] : []),
+    ...(card.overload ? [stateTrait('overload', '🔒', `Erschöpfung ${card.overload}`, `Im nächsten Zug fehlen dir ${card.overload} Knappen.`)] : []),
     ...(card.triggers ?? []).map((trigger, index) => triggerTrait(trigger, index, card.targeting)),
   ];
 }
@@ -179,7 +179,7 @@ export function cardOrigin(card: CardDefinition): string {
 }
 
 export function getCardFullTitle(card: CardDefinition): string {
-  const lines: string[] = [card.isSpell ? `${card.name} (Zauber)` : card.name];
+  const lines: string[] = [card.isSpell ? `${card.name} (Kniff)` : card.name];
   if (card.text) lines.push(card.text);
   if (card.quote) {
     lines.push(`„${card.quote}“`);

@@ -49,7 +49,7 @@ export function DeckSelection({
       <div className="ds-phase-overlay" data-theme={themeAttr}>
         <h2 className="ds-phase-title">Wähle dein Themendeck</h2>
         <p className="ds-phase-subtitle">
-          {view.options.spells === 'off' ? 'Jedes Deck enthält 30 Tierkarten mit besonderen Stärken.' : 'Jedes Deck enthält 30 Karten: 24 Tiere und 6 Zauber.'}
+          {view.options.spells === 'off' ? 'Jedes Deck enthält 30 Tierkarten mit besonderen Stärken.' : 'Jedes Deck enthält 30 Karten: 24 Tiere und 6 Kniffe.'}
         </p>
         <button type="button" className="ds-btn" onClick={() => setOwn(true)}>
           🃏 Eigenes Deck, Vorschläge, Deck-Code
