@@ -17,3 +17,4 @@ export * from './math';
 export * from './occlusion';
 export * from './hints';
 export * from './gameNotetypes';
+export * from './gameConverters';
