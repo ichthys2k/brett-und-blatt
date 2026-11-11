@@ -2,6 +2,7 @@ import { sortHand, cardSuit, type CardId, type SeatId, type Suit } from '@brett-
 import {
   CardFan,
   PlayingCard,
+  resolveSharedCardBack,
   RoundSummary,
   type RoundSummaryPlayer,
   TRICK_HAND_MIN_STEP,
@@ -13,6 +14,7 @@ import {
   type GameUi,
   type TrickTableSlot,
 } from '@brett-und-blatt/ui';
+import { doppelkopfCardDescription } from '../cardDescription.js';
 import {
   getContract,
   owingSolo,
@@ -244,6 +246,7 @@ export function DokoBoard({
               <PlayingCard
                 card={card === 'back' ? null : card}
                 deckStyle={view.deckStyle}
+                description={card === 'back' ? undefined : doppelkopfCardDescription(card, view)}
                 highlight={playableCards.has(card) ? 'target' : null}
                 onClick={() => {
                   if (view.phase === 'play' && card !== 'back') {
@@ -290,6 +293,7 @@ export function DokoBoard({
     <>
       {view.phase === 'roundOver' && (
         <RoundSummary
+          modal={Boolean(table)}
           title={lastSummary?.mandatory ? 'Pflichtsolo beendet' : `Spiel ${view.gameNumber} beendet`}
           subtitle={
             lastSummary ? (
@@ -343,7 +347,18 @@ export function DokoBoard({
             <>
               {(display || seat !== mySeat) && (view.hands[seat]?.length ?? 0) > 0 && (
                 <div className="w-20" aria-hidden="true">
-                  <CardFan count={view.hands[seat]!.length} label="" cardWidth={16} renderCard={() => <PlayingCard card={null} deckStyle={view.deckStyle} />} />
+                  <CardFan
+                    count={view.hands[seat]!.length}
+                    label=""
+                    cardWidth={16}
+                    renderCard={() => (
+                      <PlayingCard
+                        card={null}
+                        deckStyle={view.deckStyle}
+                        cardBackProps={resolveSharedCardBack({ deckStyle: view.deckStyle })}
+                      />
+                    )}
+                  />
                 </div>
               )}
               {table.seatChip(seat)}

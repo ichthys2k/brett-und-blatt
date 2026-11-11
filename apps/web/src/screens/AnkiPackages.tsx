@@ -9,6 +9,7 @@ import { downloadFile, safeFileName } from '../lib/download';
 import { loadCollection, saveCollection } from '../lib/library';
 import { navigate, paths } from '../lib/router';
 import { GAME_CARD_TEMPLATES, exportGameCardTemplateApkg, type GameCardTemplateId } from '../lib/gameCardTemplates';
+import { setActiveSheetPackageId, useActiveSheetPackageId } from '../lib/activeSheetPackage';
 
 /*
  * Anki-Pakete (.apkg) importieren, ansehen, wieder nach Anki exportieren (#101, L3). Ein importiertes Paket bleibt unverändert als Ganzes
@@ -122,6 +123,7 @@ export function ApkgImport({ onDone }: { onDone: () => void }) {
 
 /** Liste der gespeicherten Pakete mit Export, „Paare übernehmen“ und Löschen. */
 export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
+  const activeSheetId = useActiveSheetPackageId();
   const [packs, setPacks] = useState<PackSummary[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -225,6 +227,15 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={activeSheetId === pack.id ? 'primary' : 'ghost'}
+                  title={activeSheetId === pack.id ? 'Aktives Spielblatt in klassischen Spielen (Klicken zum Deaktivieren)' : 'Dieses Anki-Paket als Spielblatt für Skat, Schafkopf, Mau-Mau etc. verwenden'}
+                  onClick={() => {
+                    setActiveSheetPackageId(activeSheetId === pack.id ? null : pack.id);
+                  }}
+                >
+                  {activeSheetId === pack.id ? '✅ Aktives Spielblatt' : '🃏 Als Spielblatt verwenden'}
+                </Button>
                 <Button variant="ghost" onClick={() => navigate(paths.collection(pack.id))}>
                   ✏️ Bearbeiten
                 </Button>

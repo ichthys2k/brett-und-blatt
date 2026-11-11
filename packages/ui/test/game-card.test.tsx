@@ -164,3 +164,73 @@ describe('PlayingCard Integration with CardBack', () => {
     expect(html).toContain('bub-card-back--bavarian-gold');
   });
 });
+
+describe('PlayingCard with Anki Overrides and Dynamic Hints (K5)', () => {
+  it('renders custom name, image, and frame from active Anki overrides', () => {
+    const html = renderToStaticMarkup(
+      <CardCosmeticsProvider
+        value={{
+          playingCardOverrides: {
+            'fr:hearts-A': {
+              kennung: 'fr:hearts-A',
+              name: 'Die Rote Kaiserin',
+              image: 'https://example.com/kaiserin.png',
+              frame: 'gold',
+            },
+          },
+        }}
+      >
+        <PlayingCard card="H1.1" deckStyle="four-color" />
+      </CardCosmeticsProvider>,
+    );
+
+    expect(html).toContain('Die Rote Kaiserin');
+    expect(html).toContain('href="https://example.com/kaiserin.png"');
+    expect(html).toContain('bub-card-frame--gold');
+  });
+
+  it('renders dynamic description in title tooltip and aria-label', () => {
+    const html = renderToStaticMarkup(
+      <PlayingCard
+        card="H11.1"
+        deckStyle="four-color"
+        description="Höchster Trumpf · 2 Augen"
+      />,
+    );
+
+    expect(html).toContain('title="Höchster Trumpf · 2 Augen"');
+    expect(html).toContain('aria-label="Herz Bube – Höchster Trumpf · 2 Augen"');
+  });
+
+  it('renders pre-rendered ankiFront via GameCard when available', () => {
+    const html = renderToStaticMarkup(
+      <CardCosmeticsProvider
+        value={{
+          playingCardOverrides: {
+            'fr:hearts-A': {
+              kennung: 'fr:hearts-A',
+              name: 'Anki Kaiserin',
+              ankiFront: {
+                html: '<div class="anki-custom-front">Custom Anki Front</div>',
+                scopedCss: '.anki-custom-front { color: red; }',
+              },
+            },
+          },
+        }}
+      >
+        <PlayingCard card="H1.1" deckStyle="four-color" />
+      </CardCosmeticsProvider>,
+    );
+
+    expect(html).toContain('bub-game-card-anki');
+    expect(html).toContain('Custom Anki Front');
+  });
+
+  it('falls back to fast standard template when no override matches', () => {
+    const html = renderToStaticMarkup(<PlayingCard card="S13.1" deckStyle="four-color" />);
+    expect(html).toContain('Pik König');
+    expect(html).toContain('bub-card-face');
+    expect(html).not.toContain('bub-card-frame--');
+  });
+});
+

@@ -4,6 +4,7 @@ import { getActiveFace } from '../rules';
 import { DARK_COLORS, LIGHT_COLORS, type UnoCard, type UnoColor, type UnoMove, type UnoState } from '../types';
 import './styles.css';
 import { UnoCardView } from './UnoCard';
+import { unoCardDescription } from '../cardDescription';
 
 interface FlyingCard {
   id: string;
@@ -676,6 +677,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                     card={card}
                     side={side}
                     size="md"
+                    description={unoCardDescription(card, state)}
                     mathMode={state.options.mathLabels === 'on'}
                     highlight={isPlayable}
                     disabled={!isPlayable}

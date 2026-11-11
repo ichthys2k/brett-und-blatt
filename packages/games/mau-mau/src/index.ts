@@ -14,6 +14,7 @@ import {
 } from './rules';
 import type { MauMauMove, MauMauOptions, MauMauState } from './types';
 
+export { mauMauCardDescription } from './cardDescription';
 export const options: OptionSpec[] = [
   deckStyleOption(),
   {

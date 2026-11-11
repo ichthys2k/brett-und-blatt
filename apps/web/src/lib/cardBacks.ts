@@ -234,11 +234,15 @@ export function useActiveCardBack(): CardBackId {
   );
 }
 
+import { useActivePlayingCardOverrides } from './activeSheetPackage';
+import type { CardCosmetics } from '@brett-und-blatt/ui';
+
 /**
- * Liefert die Kosmetik-Daten (Kartenrücken + Pass-Wappen) für den CardCosmeticsProvider.
+ * Liefert die Kosmetik-Daten (Kartenrücken, Pass-Wappen und aktive Anki-Spielblatt-Overrides) für den CardCosmeticsProvider.
  */
-export function useActiveCardCosmetics(): { cardBack: CardBackId; crest: CrestSpec } {
+export function useActiveCardCosmetics(): CardCosmetics {
   const cardBack = useActiveCardBack();
   const crest = useCrest();
-  return { cardBack, crest };
+  const playingCardOverrides = useActivePlayingCardOverrides();
+  return { cardBack, crest, playingCardOverrides };
 }

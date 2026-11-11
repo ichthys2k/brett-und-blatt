@@ -25,6 +25,7 @@ export type {
   DokoPhase,
   DokoState,
 };
+export { doppelkopfCardDescription } from './cardDescription.js';
 export { DOKO_RANKS, createDokoDeck } from './rules.js';
 
 export const gameModule: GameModule<DokoState, DokoMove> = {
