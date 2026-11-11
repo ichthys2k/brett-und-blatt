@@ -1,5 +1,6 @@
 import { cardName, cardRank, cardSuit, isJoker, isRed, rankLabel, type CardId, type DeckStyle, type Suit } from '@brett-und-blatt/engine';
 import { useId, type CSSProperties, type MouseEventHandler } from 'react';
+import { CardBack, type CardBackProps } from './CardBack';
 import { portraitUrl, useCardPortraits } from './portraits';
 
 export type { DeckStyle };
@@ -134,6 +135,10 @@ export function getRankLabel(rank: number, deckStyle: DeckStyle = 'french'): str
 export interface PlayingCardProps {
   /** Die Karte – oder null für eine verdeckte Karte. */
   card: CardId | null;
+  /** Optionale Kennzeichnung als verdeckte Karte (auch wenn card angegeben ist). */
+  faceDown?: boolean;
+  /** Eigener Kartenrücken für verdeckte Karten (überschreibt Standard/Context). */
+  cardBackProps?: CardBackProps;
   selected?: boolean;
   /** Hervorhebung, z. B. als mögliches Ziel oder als Tipp. */
   highlight?: 'target' | 'hint' | null;
@@ -158,6 +163,8 @@ export interface PlayingCardProps {
  */
 export function PlayingCard({
   card,
+  faceDown = false,
+  cardBackProps,
   selected,
   highlight,
   onClick,
@@ -170,8 +177,9 @@ export function PlayingCard({
 }: PlayingCardProps) {
   const animClass = anim ? `bub-animate-${anim}` : '';
   const classes = `bub-card ${selected ? 'bub-card-selected' : ''} ${highlight ? `bub-card-${highlight}` : ''} ${onClick ? 'bub-card-clickable' : ''} ${animClass} ${className}`;
-  const content = card === null ? <span className="bub-card-back" /> : <CardFace card={card} deckStyle={deckStyle} fullPortrait={fullPortrait} />;
-  const name = label ?? (card === null ? 'verdeckte Karte' : cardName(card));
+  const isDown = card === null || faceDown;
+  const content = isDown ? <CardBack {...cardBackProps} /> : <CardFace card={card} deckStyle={deckStyle} fullPortrait={fullPortrait} />;
+  const name = label ?? (isDown ? 'verdeckte Karte' : cardName(card));
   return onClick ? (
     <button type="button" className={classes} style={style} onClick={onClick} aria-label={name} aria-pressed={selected || undefined}>
       {content}
