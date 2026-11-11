@@ -25,6 +25,7 @@ function valueLabel(value: number, junior: boolean): string {
 
 export function Card({
   value,
+  knownValue,
   junior,
   hidden,
   label,
@@ -32,6 +33,7 @@ export function Card({
   onClick,
 }: {
   value: number | null;
+  knownValue?: number;
   junior: boolean;
   hidden?: boolean;
   label?: string;
@@ -46,7 +48,7 @@ export function Card({
       ? useCardOverride(`tiefflug:${value}`) ?? useCardOverride(String(value))
       : undefined;
 
-  const text = label ?? (isHidden ? 'verdeckte Karte' : valueLabel(value, junior));
+  const text = label ?? (isHidden ? (typeof knownValue === 'number' ? `verdeckte Karte (gemerkt: ${knownValue})` : 'verdeckte Karte') : valueLabel(value, junior));
   const toneClass = !isHidden ? tone(value, junior) : '';
   const frameAsset = getNoteField(overrideNote, 12) || getNoteField(overrideNote, 30);
   const overrideVal = getNoteField(overrideNote, 3) || getNoteField(overrideNote, 4);
@@ -75,6 +77,11 @@ export function Card({
       onClick={onClick}
     >
       {face}
+      {isHidden && typeof knownValue === 'number' && (
+        <span className="lf-memo-badge" title={`Gespäht: ${knownValue}`}>
+          👁️ {knownValue}
+        </span>
+      )}
     </GameCard>
   );
 }
@@ -88,6 +95,8 @@ function Grid({
   onTap,
   small,
   hintSlot = null,
+  knownMap,
+  selectedSlot = null,
 }: {
   grid: ViewCell[];
   cols: number;
@@ -97,6 +106,8 @@ function Grid({
   onTap?: (slot: number) => void;
   small?: boolean;
   hintSlot?: number | null;
+  knownMap?: Map<number, number>;
+  selectedSlot?: number | null;
 }) {
   return (
     <div className={`lf-grid${small ? ' lf-grid-small' : ''}`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
@@ -105,8 +116,9 @@ function Grid({
           <Card
             key={slot}
             value={cell.open ? cell.value : null}
+            knownValue={cell.open ? undefined : knownMap?.get(slot)}
             junior={junior}
-            className={`${fresh.has(slot) ? 'lf-fresh' : ''}${canTap?.(slot) ? ' lf-tap' : ''}${hintSlot === slot ? ' lf-hint' : ''}`}
+            className={`${fresh.has(slot) ? 'lf-fresh' : ''}${canTap?.(slot) ? ' lf-tap' : ''}${hintSlot === slot ? ' lf-hint' : ''}${selectedSlot === slot ? ' lf-selected' : ''}`}
             onClick={canTap?.(slot) && onTap ? () => onTap(slot) : undefined}
           />
         ) : (
@@ -140,7 +152,17 @@ export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, s
   const me = display ? view.turn : lastMe.current;
   const myTurn = activeSeat === me && legalMoves.length > 0;
   const [discarding, setDiscarding] = useState(false);
-  useEffect(() => setDiscarding(false), [view.drawn, view.turn]);
+  const [actionState, setActionState] = useState<
+    | { type: 'none' }
+    | { type: 'peek' }
+    | { type: 'swap'; mySlot?: number }
+    | { type: 'doubleFlip'; firstSlot?: number }
+  >({ type: 'none' });
+
+  useEffect(() => {
+    setDiscarding(false);
+    setActionState({ type: 'none' });
+  }, [view.drawn, view.turn]);
 
   const has = (type: LowFlightMove['type'], slot?: number) => legalMoves.some((m) => m.type === type && (slot === undefined || ('slot' in m && m.slot === slot)));
   const top = view.discard[view.discard.length - 1];
@@ -148,25 +170,91 @@ export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, s
   const drawnFromDeck = view.drawn?.from === 'deck';
   const hintSlot = hint && 'slot' in hint ? hint.slot : null;
 
+  function getKnownMap(seat: SeatId): Map<number, number> {
+    const map = new Map<number, number>();
+    if (view.knownCards) {
+      for (const k of view.knownCards) {
+        if (k.targetSeat === seat) map.set(k.slot, k.value);
+      }
+    }
+    return map;
+  }
+
   function tapSlot(slot: number) {
     if (view.phase === 'reveal') return onMove({ type: 'reveal', slot });
     if (!view.drawn) return;
+    if (actionState.type === 'peek') {
+      return onMove({ type: 'actionPeek', targetSeat: me, slot });
+    }
+    if (actionState.type === 'swap') {
+      if (actionState.mySlot === undefined) {
+        return setActionState({ type: 'swap', mySlot: slot });
+      }
+    }
+    if (actionState.type === 'doubleFlip') {
+      if (actionState.firstSlot === undefined) {
+        if (hiddenSlots(mine.grid).length <= 1) {
+          return onMove({ type: 'actionDoubleFlip', slot1: slot, slot2: slot });
+        }
+        return setActionState({ type: 'doubleFlip', firstSlot: slot });
+      } else {
+        return onMove({ type: 'actionDoubleFlip', slot1: actionState.firstSlot, slot2: slot });
+      }
+    }
     if (discarding && has('flip', slot)) return onMove({ type: 'flip', slot });
     if (has('swap', slot)) onMove({ type: 'swap', slot });
   }
+
   const canTap = (slot: number) => {
     if (!myTurn) return false;
     if (view.phase === 'reveal') return has('reveal', slot);
     if (!view.drawn) return false;
+    if (actionState.type === 'peek') {
+      return legalMoves.some((m) => m.type === 'actionPeek' && m.targetSeat === me && m.slot === slot);
+    }
+    if (actionState.type === 'swap') {
+      return actionState.mySlot === undefined && mine.grid[slot] !== null;
+    }
+    if (actionState.type === 'doubleFlip') {
+      const isHidden = mine.grid[slot] && !mine.grid[slot]!.open;
+      if (actionState.firstSlot === undefined) return Boolean(isHidden);
+      return Boolean(isHidden && slot !== actionState.firstSlot);
+    }
     return discarding ? has('flip', slot) : has('swap', slot);
   };
+
+  function tapOppSlot(oppSeat: SeatId, slot: number) {
+    if (!myTurn || !view.drawn) return;
+    if (actionState.type === 'peek') {
+      return onMove({ type: 'actionPeek', targetSeat: oppSeat, slot });
+    }
+    if (actionState.type === 'swap' && actionState.mySlot !== undefined) {
+      return onMove({ type: 'actionSwap', mySlot: actionState.mySlot, targetSeat: oppSeat, targetSlot: slot });
+    }
+  }
+
+  function canTapOppSlot(oppSeat: SeatId, slot: number) {
+    if (!myTurn || !view.drawn) return false;
+    if (actionState.type === 'peek') {
+      return legalMoves.some((m) => m.type === 'actionPeek' && m.targetSeat === oppSeat && m.slot === slot);
+    }
+    if (actionState.type === 'swap' && actionState.mySlot !== undefined) {
+      return legalMoves.some(
+        (m) => m.type === 'actionSwap' && m.mySlot === actionState.mySlot && m.targetSeat === oppSeat && m.targetSlot === slot,
+      );
+    }
+    return false;
+  }
 
   function tapDiscard() {
     if (!myTurn) return;
     if (!view.drawn && has('takeDiscard')) onMove({ type: 'takeDiscard' });
     else if (drawnFromDeck) {
       if (has('discardDrawn')) onMove({ type: 'discardDrawn' });
-      else setDiscarding((d) => !d);
+      else {
+        setActionState({ type: 'none' });
+        setDiscarding((d) => !d);
+      }
     }
   }
 
@@ -177,10 +265,21 @@ export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, s
   } else if (view.phase === 'turn') {
     if (!myTurn) status = `${name(seatNames, view.turn)} ist dran …`;
     else if (!view.drawn) status = 'Ziehe vom Stapel oder nimm die Ablagekarte.';
+    else if (actionState.type === 'peek') status = 'Aktion Spähen: Wähle eine beliebige verdeckte Karte zum Ansehen.';
+    else if (actionState.type === 'swap') status = actionState.mySlot === undefined ? 'Aktion Tauschen: Wähle zuerst eine eigene Karte.' : 'Aktion Tauschen: Wähle nun eine gegnerische Karte.';
+    else if (actionState.type === 'doubleFlip') status = actionState.firstSlot === undefined ? 'Aktion Doppel-Aufdecken: Wähle die erste verdeckte Karte.' : 'Aktion Doppel-Aufdecken: Wähle die zweite verdeckte Karte.';
     else if (discarding) status = 'Decke eine verdeckte Karte auf.';
-    else if (drawnFromDeck) status = 'Tausche die Karte gegen eine eigene – oder tippe auf die Ablage, um sie abzuwerfen.';
+    else if (drawnFromDeck) status = 'Tausche die Karte gegen eine eigene – oder wähle eine Aktion / tippe auf die Ablage.';
     else status = 'Tausche die Karte gegen eine eigene.';
     if (view.ender !== null) status = `Letzte Runde (${name(seatNames, view.ender)} hat alles aufgedeckt). ${status}`;
+  }
+
+  if (view.lastPeek) {
+    const peekInfo =
+      view.lastPeek.peeker === me
+        ? `👁️ Du hast Karte ${view.lastPeek.slot + 1} von ${name(seatNames, view.lastPeek.targetSeat)} erspäht: Wert ${view.lastPeek.value}.`
+        : `👁️ ${name(seatNames, view.lastPeek.peeker)} hat eine Karte von ${name(seatNames, view.lastPeek.targetSeat)} erspäht.`;
+    status = status ? `${status} (${peekInfo})` : peekInfo;
   }
 
   const others = view.players.map((_, s) => s).filter((s) => s !== me);
@@ -199,7 +298,18 @@ export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, s
                   Σ {openSum(p.grid)}
                 </span>
               </div>
-              {!handOnly && <Grid grid={p.grid} cols={view.cols} junior={junior} fresh={freshSlots(events, seat)} small />}
+              {!handOnly && (
+                <Grid
+                  grid={p.grid}
+                  cols={view.cols}
+                  junior={junior}
+                  fresh={freshSlots(events, seat)}
+                  knownMap={getKnownMap(seat)}
+                  canTap={(slot) => canTapOppSlot(seat, slot)}
+                  onTap={(slot) => tapOppSlot(seat, slot)}
+                  small
+                />
+              )}
             </div>
           );
         })}
@@ -249,10 +359,62 @@ export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, s
         <div className="lf-other-head">
           <span className="lf-other-name">{name(seatNames, me)}</span>
           <span className="lf-sum">Σ {openSum(mine.grid)} offen</span>
-          {myTurn && drawnFromDeck && hiddenSlots(mine.grid).length > 0 && (
-            <button type="button" className={`lf-button${discarding ? ' lf-button-on' : ''}`} onClick={() => setDiscarding((d) => !d)}>
-              {discarding ? 'Doch tauschen' : 'Abwerfen & aufdecken'}
-            </button>
+          {myTurn && drawnFromDeck && (
+            <div className="lf-action-controls">
+              {hiddenSlots(mine.grid).length > 0 && (
+                <button
+                  type="button"
+                  className={`lf-button${discarding ? ' lf-button-on' : ''}`}
+                  onClick={() => {
+                    setActionState({ type: 'none' });
+                    setDiscarding((d) => !d);
+                  }}
+                >
+                  {discarding ? 'Doch tauschen' : 'Abwerfen & aufdecken'}
+                </button>
+              )}
+              {legalMoves.some((m) => m.type === 'actionExtraTurn') && (
+                <button type="button" className="lf-button lf-action-btn" onClick={() => onMove({ type: 'actionExtraTurn' })}>
+                  ⚡ Doppelzug (Nochmal)
+                </button>
+              )}
+              {legalMoves.some((m) => m.type === 'actionPeek') && (
+                <button
+                  type="button"
+                  className={`lf-button lf-action-btn${actionState.type === 'peek' ? ' lf-button-on' : ''}`}
+                  onClick={() => {
+                    setDiscarding(false);
+                    setActionState((s) => (s.type === 'peek' ? { type: 'none' } : { type: 'peek' }));
+                  }}
+                >
+                  {actionState.type === 'peek' ? 'Spähen abbrechen' : '👁️ Karte spähen'}
+                </button>
+              )}
+              {legalMoves.some((m) => m.type === 'actionSwap') && (
+                <button
+                  type="button"
+                  className={`lf-button lf-action-btn${actionState.type === 'swap' ? ' lf-button-on' : ''}`}
+                  onClick={() => {
+                    setDiscarding(false);
+                    setActionState((s) => (s.type === 'swap' ? { type: 'none' } : { type: 'swap' }));
+                  }}
+                >
+                  {actionState.type === 'swap' ? 'Tausch abbrechen' : '🔄 Karten tauschen'}
+                </button>
+              )}
+              {legalMoves.some((m) => m.type === 'actionDoubleFlip') && (
+                <button
+                  type="button"
+                  className={`lf-button lf-action-btn${actionState.type === 'doubleFlip' ? ' lf-button-on' : ''}`}
+                  onClick={() => {
+                    setDiscarding(false);
+                    setActionState((s) => (s.type === 'doubleFlip' ? { type: 'none' } : { type: 'doubleFlip' }));
+                  }}
+                >
+                  {actionState.type === 'doubleFlip' ? 'Aufdecken abbrechen' : '✨ 2 Karten aufdecken'}
+                </button>
+              )}
+            </div>
           )}
         </div>
         <Grid
@@ -261,6 +423,8 @@ export function LowFlightBoard({ view, legalMoves, onMove, viewer, activeSeat, s
           junior={junior}
           fresh={freshSlots(events, me)}
           hintSlot={myTurn ? hintSlot : null}
+          knownMap={getKnownMap(me)}
+          selectedSlot={actionState.type === 'swap' ? actionState.mySlot : actionState.type === 'doubleFlip' ? actionState.firstSlot : null}
           canTap={canTap}
           onTap={tapSlot}
         />
