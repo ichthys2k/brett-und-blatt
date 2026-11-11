@@ -22,13 +22,16 @@ import { SeriesScreen } from './screens/Series';
 import { TournamentBeamerScreen, TournamentEmbedScreen, TournamentScreen } from './screens/Tournament';
 import { Setup } from './screens/Setup';
 import { SoundSettingsScreen } from './screens/SoundSettings';
+import { CardCosmeticsProvider } from '@brett-und-blatt/ui';
+import { useActiveCardCosmetics } from './lib/cardBacks';
 
 export function App() {
+  const cosmetics = useActiveCardCosmetics();
   return (
-    <>
+    <CardCosmeticsProvider value={cosmetics}>
       <Screen />
       <UpdateBanner />
-    </>
+    </CardCosmeticsProvider>
   );
 }
 
