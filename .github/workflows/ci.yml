@@ -58,7 +58,7 @@ jobs:
       # Jedes Spiel einmal frisch und einmal nach allen anderen im Browser starten
       # (Abstürze, riesige Seiten, CSS-Kollisionen zwischen Spielen).
       - name: Browser für den Rauchtest installieren
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install chromium
 
       - name: Rauchtest im Browser
         run: node scripts/rauchtest.mjs
