@@ -323,7 +323,8 @@ export function renderCard(
   if (!template) return { question: '', answer: '', css: '', errors: [`Der Notiztyp „${nt.name}“ hat keine Vorlage Nummer ${ord + 1}.`] };
   const deck = options.deckName ?? (isCol ? (colOrNotetype as AnkiCollection).decks.find((d) => d.id === note.did)?.name : undefined) ?? '';
   const values = new Map<string, string>();
-  nt.flds.forEach((f, i) => values.set(f.name, note.fields[i] ?? ''));
+  const rawFields = note.fields ?? (note as unknown as { flds?: string[] }).flds ?? [];
+  nt.flds.forEach((f, i) => values.set(f.name, rawFields[i] ?? ''));
   const specials: Record<string, string> = {
     Tags: note.tags.join(' '),
     Type: nt.name,

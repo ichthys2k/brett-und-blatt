@@ -19,7 +19,9 @@ export {
 export {
   CardCosmeticsProvider,
   DEFAULT_CARD_COSMETICS,
+  getNoteField,
   useCardCosmetics,
+  useCardOverride,
   type CardCosmetics,
   type CardCosmeticsProviderProps,
 } from './cards/CardCosmeticsContext';

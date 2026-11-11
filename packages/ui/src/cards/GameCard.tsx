@@ -113,8 +113,9 @@ export function GameCard({
   const selectedClass = selected ? 'bub-card-selected' : '';
   const playableClass = playable ? 'bub-card-playable' : '';
   const disabledClass = disabled ? 'bub-card-disabled' : '';
+  const faceDownClass = faceDown ? 'bub-game-card--face-down' : '';
   const interactiveClass = onClick && !disabled ? 'bub-card-clickable' : '';
-  const classes = `bub-card bub-game-card ${sizeClass} ${selectedClass} ${playableClass} ${disabledClass} ${interactiveClass} ${className}`.trim();
+  const classes = `bub-card bub-game-card ${sizeClass} ${selectedClass} ${playableClass} ${disabledClass} ${faceDownClass} ${interactiveClass} ${className}`.trim();
 
   // Tastaturbedienung für Barrierefreiheit (Enter & Space aktivieren onClick)
   const handleKeyDown: KeyboardEventHandler<HTMLElement> = (event) => {
@@ -129,9 +130,7 @@ export function GameCard({
 
   const frontContent = (
     <>
-      {children ? (
-        children
-      ) : effectiveHtml ? (
+      {effectiveHtml ? (
         <div className={`bub-game-card-anki bub-game-card-anki-${scopeId}`}>
           {effectiveCss && <style>{effectiveCss}</style>}
           <div
@@ -139,7 +138,10 @@ export function GameCard({
             // eslint-disable-next-line react/no-danger -- aus der Anki-Engine bereitgestellt
             dangerouslySetInnerHTML={{ __html: effectiveHtml }}
           />
+          {children}
         </div>
+      ) : children ? (
+        children
       ) : (
         <div className={`bub-game-card-structured ${frameAsset ? `bub-game-card-frame--${frameAsset}` : ''}`}>
           {(title || (badges && badges.length > 0)) && (

@@ -1,7 +1,57 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  BUB_COMBAT_CARD_NOTETYPE,
+  drachenspielCardsToAnki,
+  renderCardSide,
+  type AnkiNote,
+} from '@brett-und-blatt/engine';
+import { GameCard, useCardCosmetics, useCardOverride } from '@brett-und-blatt/ui';
 import { CARDS_DB } from '../cards';
 import type { CardDefinition, HousePower, Minion } from '../types';
 import { cardOrigin, getCardTraits, getMinionTraits, type TraitInfo } from './traits';
+
+const baseCombatNotes = new Map<string, AnkiNote>();
+
+export function getCombatCardBaseNote(def: CardDefinition): AnkiNote {
+  let note = baseCombatNotes.get(def.id);
+  if (!note) {
+    const col = drachenspielCardsToAnki([def]);
+    note = col.notes[0]!;
+    baseCombatNotes.set(def.id, note);
+  }
+  return note;
+}
+
+export function renderCombatCardAnki(
+  def: CardDefinition,
+  options: {
+    attack?: number;
+    health?: number;
+    hint?: string;
+    overrideNote?: AnkiNote;
+    mediaUrlMap?: Record<string, string>;
+  } = {},
+) {
+  const note = options.overrideNote ?? getCombatCardBaseNote(def);
+  const runtimeFields: Record<string, string> = {};
+  const atk = options.attack ?? (def.isSpell ? undefined : def.attack);
+  const hp = options.health ?? (def.isSpell ? undefined : def.health);
+  if (atk !== undefined) {
+    runtimeFields.AktuellerAngriff = String(atk);
+    runtimeFields.Angriff = String(atk);
+  }
+  if (hp !== undefined) {
+    runtimeFields.AktuellesLeben = String(hp);
+    runtimeFields.Leben = String(hp);
+  }
+  if (options.hint) {
+    runtimeFields.SpielHinweis = options.hint;
+  }
+  return renderCardSide(BUB_COMBAT_CARD_NOTETYPE, note, 0, 'front', {
+    runtimeFields,
+    mediaUrlMap: options.mediaUrlMap,
+  });
+}
 
 export function TraitBadge({ trait, isOpponent }: { trait: TraitInfo; isOpponent?: boolean }) {
   return (
@@ -21,30 +71,40 @@ export function TraitBadge({ trait, isOpponent }: { trait: TraitInfo; isOpponent
   );
 }
 
-/** Inhalt einer Karte auf der Hand und beim Kartentausch. */
-export function CardFace({ def }: { def: CardDefinition }) {
+/** Inhalt einer Karte auf der Hand und beim Kartentausch über <GameCard> und BUB_COMBAT_CARD_NOTETYPE. */
+export function CardFace({
+  def,
+  currentAttack,
+  currentHealth,
+  hint,
+  className = '',
+}: {
+  def: CardDefinition;
+  currentAttack?: number;
+  currentHealth?: number;
+  hint?: string;
+  className?: string;
+}) {
+  const cosmetics = useCardCosmetics();
+  const overrideNote = useCardOverride(def.id);
+  const rendered = useMemo(
+    () =>
+      renderCombatCardAnki(def, {
+        attack: currentAttack,
+        health: currentHealth,
+        hint,
+        overrideNote,
+        mediaUrlMap: cosmetics.mediaUrlMap,
+      }),
+    [def, currentAttack, currentHealth, hint, overrideNote, cosmetics.mediaUrlMap],
+  );
+
   return (
-    <>
-      <div className="ds-card-top">
-        <span className="ds-card-cost">{def.cost}</span>
-        <div className="ds-card-traits">
-          {getCardTraits(def).map((trait) => (
-            <TraitBadge key={trait.id} trait={trait} />
-          ))}
-        </div>
-      </div>
-      <div className="ds-card-center">
-        <span className="ds-card-emoji">{def.emoji}</span>
-        <span className="ds-card-name">{def.name}</span>
-      </div>
-      {def.text && <span className="ds-card-spelltext">{def.text}</span>}
-      {!def.isSpell && !def.quest && (
-        <div className="ds-minion-stats">
-          <span className="ds-stat-atk">{def.attack}</span>
-          <span className="ds-stat-hp">{def.health}</span>
-        </div>
-      )}
-    </>
+    <GameCard
+      ankiFront={rendered}
+      className={`ds-combat-card-game ${className}`}
+      label={`${def.name}, Kosten ${def.cost}${currentAttack !== undefined || def.attack !== undefined ? `, Angriff ${currentAttack ?? def.attack}` : ''}${currentHealth !== undefined || def.health !== undefined ? `, Leben ${currentHealth ?? def.health}` : ''}`}
+    />
   );
 }
 
