@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { applyItems, collectItems, mergeItems, nameToKey, sameItems, sanitizeItems, syncedNames, type Items } from '../apps/web/src/lib/settingsBlock';
+import { mergeArchiveShares, sameArchiveShares, sanitizeArchiveShares } from '../apps/web/src/lib/archiveShare';
+import { mergePackShares, samePackShares, sanitizePackShares } from '../apps/web/src/lib/packShare';
+import { mergeClassPackLinks, sameClassPackLinks, sanitizeClassPackLinks } from '../apps/web/src/lib/classLearning';
 
 /** Ein „Gerät“: ein Speicher aus Schlüssel und Text. */
 function device(initial: Record<string, string> = {}) {
@@ -72,3 +75,61 @@ describe('Pass-Block „einstellungen“ (#140)', () => {
     expect(sanitizeItems({ favorites: ['chess', 3, '<b>', 'chess'], changed: 12 })).toEqual({ lieblingsspiele: { v: '["chess"]', t: 12 } });
   });
 });
+
+describe('Pass-Block „paketarchive“ (#224)', () => {
+  const validKey = 'A'.repeat(43);
+  it('bereinigt ungültige Einträge und behält gültige Archive', () => {
+    expect(sanitizeArchiveShares(null)).toEqual({});
+    expect(sanitizeArchiveShares({ 'p1': { key: validKey, secret: 'sec123', name: 'Latein', notes: 25, cards: 50, at: 1000 } })).toEqual({
+      'p1': { key: validKey, secret: 'sec123', name: 'Latein', notes: 25, cards: 50, at: 1000 },
+    });
+    // falscher Schlüssel
+    expect(sanitizeArchiveShares({ 'p1': { key: 'kurz', secret: 'sec123' } })).toEqual({});
+  });
+
+  it('führt Archive zusammen (jüngeres at gewinnt je Eintrag)', () => {
+    const remote = {
+      'p1': { key: validKey, secret: 's1', name: 'Alt', at: 100 },
+      'p2': { key: validKey, secret: 's2', name: 'Zwei', at: 200 },
+    };
+    const local = {
+      'p1': { key: validKey, secret: 's1-neu', name: 'Neu', at: 150 },
+      'p3': { key: validKey, secret: 's3', name: 'Drei', at: 300 },
+    };
+    const merged = mergeArchiveShares(remote, local);
+    expect(merged['p1']?.name).toBe('Neu');
+    expect(merged['p2']?.name).toBe('Zwei');
+    expect(merged['p3']?.name).toBe('Drei');
+    expect(sameArchiveShares(merged, { ...merged })).toBe(true);
+    expect(sameArchiveShares(merged, remote)).toBe(false);
+  });
+});
+
+describe('Pass-Block „paketteilen“ (#101)', () => {
+  const validKey = 'B'.repeat(43);
+  it('bereinigt und führt zusammen', () => {
+    expect(sanitizePackShares(null)).toEqual({});
+    expect(sanitizePackShares({ 't1': { key: validKey, secret: 'secret' } })).toEqual({
+      't1': { key: validKey, secret: 'secret' },
+    });
+    const a = { 't1': { key: validKey, secret: 's1' } };
+    const b = { 't2': { key: validKey, secret: 's2' } };
+    expect(mergePackShares(a, b)).toEqual({ ...a, ...b });
+    expect(samePackShares(a, { ...a })).toBe(true);
+  });
+});
+
+describe('Pass-Block „klassenpakete“ (#224)', () => {
+  it('bereinigt und führt Zuordnungen zusammen', () => {
+    expect(sanitizeClassPackLinks(null)).toEqual({});
+    const local = { 'ABC1': { 'cp1': 'local1' } };
+    const remote = { 'ABC1': { 'cp2': 'local2' }, 'DEF2': { 'cp3': 'local3' } };
+    const merged = mergeClassPackLinks(remote, local);
+    expect(merged).toEqual({
+      'ABC1': { 'cp1': 'local1', 'cp2': 'local2' },
+      'DEF2': { 'cp3': 'local3' },
+    });
+    expect(sameClassPackLinks(merged, { ...merged })).toBe(true);
+  });
+});
+

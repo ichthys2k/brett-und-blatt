@@ -10,7 +10,9 @@ import { emptyBook, mergeBooks, sameBooks, sanitizeBook, type Book } from './par
 import { CHILD_PASSES_KEY } from './classPasses';
 import { LIBRARY_KEY } from './library';
 import { LEARN_KEY } from './learnStore';
-import { LEAD_KEYS_KEY } from './classLearning';
+import { CLASS_PACKS_KEY, LEAD_KEYS_KEY, mergeClassPackLinks, sameClassPackLinks, sanitizeClassPackLinks, type ClassPackLinks } from './classLearning';
+import { ARCHIVE_SHARES_KEY, mergeArchiveShares, sameArchiveShares, sanitizeArchiveShares, type Shares as ArchiveShares } from './archiveShare';
+import { PACK_SHARES_KEY, mergePackShares, samePackShares, sanitizePackShares, type Shares as PackShares } from './packShare';
 import type { LeadKeyPair } from './classCrypto';
 import { collectionFromStored, compactCollection, compactLearnBook, emptyCollection, emptyLearnBook, learnBookToStored, mergeCollections, mergeLearnBooks, sameCollection, sameLearnBook, sanitizeCollection, sanitizeLearnBook, type AnkiCollection, type LearnBook } from '@brett-und-blatt/engine';
 import { mergeChildPasses, sameChildPasses, sanitizeChildPasses, type ChildPasses } from './classPassesCore';
@@ -151,6 +153,51 @@ export function registerWebPassBlocks(): void {
       return !a ? b : !b ? a : a.at <= b.at ? a : b;
     },
     same: (a, b) => JSON.stringify(sanitizeLeadKeys(a)) === JSON.stringify(sanitizeLeadKeys(b)),
+  });
+  // Geteilte Anki-Paketarchive (#224, L7): Schlüssel und Geheimnisse geteilter .apkg-Dateien (R2).
+  registerPassBlock<ArchiveShares>({
+    name: 'paketarchive',
+    read: () => {
+      try {
+        return sanitizeArchiveShares(JSON.parse(read(ARCHIVE_SHARES_KEY) ?? 'null'));
+      } catch {
+        return {};
+      }
+    },
+    write: (shares) => write(ARCHIVE_SHARES_KEY, JSON.stringify(shares)),
+    sanitize: sanitizeArchiveShares,
+    merge: mergeArchiveShares,
+    same: sameArchiveShares,
+  });
+  // Geteilte Text-Pakete (#101): Schlüssel und Geheimnisse geteilter Text-Pakete.
+  registerPassBlock<PackShares>({
+    name: 'paketteilen',
+    read: () => {
+      try {
+        return sanitizePackShares(JSON.parse(read(PACK_SHARES_KEY) ?? 'null'));
+      } catch {
+        return {};
+      }
+    },
+    write: (shares) => write(PACK_SHARES_KEY, JSON.stringify(shares)),
+    sanitize: sanitizePackShares,
+    merge: mergePackShares,
+    same: samePackShares,
+  });
+  // Klassenpakete-Zuordnung (#224, L7): Zuordnung Klassenpaket ↔ lokales Paket reist mit dem Pass.
+  registerPassBlock<ClassPackLinks>({
+    name: 'klassenpakete',
+    read: () => {
+      try {
+        return sanitizeClassPackLinks(JSON.parse(read(CLASS_PACKS_KEY) ?? 'null'));
+      } catch {
+        return {};
+      }
+    },
+    write: (links) => write(CLASS_PACKS_KEY, JSON.stringify(links)),
+    sanitize: sanitizeClassPackLinks,
+    merge: mergeClassPackLinks,
+    same: sameClassPackLinks,
   });
   // Partiebuch (#142): Zähler je Gerät (wachsen nur), die letzten Partien als Kopfzeilen.
   registerPassBlock<Book>({

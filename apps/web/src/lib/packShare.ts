@@ -1,5 +1,6 @@
 import { newPackId, sanitizePack, type UserPack } from '@brett-und-blatt/engine';
 import { KEY_PATTERN, openJson, sealJson, shareId } from './passShareCore';
+import { passSyncSoon } from './playerPass';
 import { GAME_SERVER } from './server';
 
 /*
@@ -8,8 +9,8 @@ import { GAME_SERVER } from './server';
  * bleibt auf dem Gerät. Es gibt keine öffentliche Liste. Nach einem Jahr ohne Abruf löscht der Server das Paket.
  */
 
-const STORE = 'brett-und-blatt:paketteilen';
-type Shares = Record<string, { key: string; secret: string }>;
+export const PACK_SHARES_KEY = 'brett-und-blatt:paketteilen';
+export type Shares = Record<string, { key: string; secret: string }>;
 
 function randomText(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
@@ -17,20 +18,23 @@ function randomText(): string {
   for (const b of bytes) binary += String.fromCharCode(b);
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
+
 function load(): Shares {
   try {
-    const value = JSON.parse(window.localStorage.getItem(STORE) ?? '{}');
+    const value = JSON.parse(window.localStorage.getItem(PACK_SHARES_KEY) ?? '{}');
     return value && typeof value === 'object' ? (value as Shares) : {};
   } catch {
     return {};
   }
 }
+
 function save(shares: Shares): void {
   try {
-    window.localStorage.setItem(STORE, JSON.stringify(shares));
+    window.localStorage.setItem(PACK_SHARES_KEY, JSON.stringify(shares));
   } catch {
     // ohne Speicher gilt der Link nur bis zum Schließen
   }
+  passSyncSoon();
 }
 
 /** Beim Umstellen der Bibliothek bekommen die Pakete neue Kennungen; geteilte Pakete behalten Schlüssel und Schreibgeheimnis (Link und „Teilen beenden“ gehen weiter). */
@@ -43,6 +47,7 @@ export function moveShare(oldId: string, newId: string): void {
 }
 
 export const packLink = (key: string): string => `${window.location.origin}${window.location.pathname}#/paket?k=${key}`;
+
 /** Der Link, wenn dieses Paket gerade geteilt wird. */
 export const currentPackLink = (packId: string): string | null => {
   const entry = load()[packId];
@@ -93,4 +98,27 @@ export async function fetchPack(key: string): Promise<UserPack | 'missing' | 'er
   } catch {
     return 'error';
   }
+}
+
+// ---------------------------------------------------------------- Pass-Block-Hilfsfunktionen
+
+export function sanitizePackShares(value: unknown): Shares {
+  if (!value || typeof value !== 'object') return {};
+  const out: Shares = {};
+  for (const [k, v] of Object.entries(value)) {
+    if (typeof k !== 'string' || !v || typeof v !== 'object') continue;
+    const entry = v as Record<string, unknown>;
+    if (typeof entry.key === 'string' && KEY_PATTERN.test(entry.key) && typeof entry.secret === 'string' && entry.secret.length > 0 && entry.secret.length < 200) {
+      out[k] = { key: entry.key, secret: entry.secret };
+    }
+  }
+  return out;
+}
+
+export function mergePackShares(remote: Shares, local: Shares): Shares {
+  return { ...remote, ...local };
+}
+
+export function samePackShares(a: Shares, b: Shares): boolean {
+  return JSON.stringify(sanitizePackShares(a)) === JSON.stringify(sanitizePackShares(b));
 }
