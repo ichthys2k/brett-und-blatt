@@ -8,6 +8,7 @@ import { deletePackStored, keepStorage, listPacks, loadPack, savePack, type Pack
 import { downloadFile, safeFileName } from '../lib/download';
 import { loadCollection, saveCollection } from '../lib/library';
 import { navigate, paths } from '../lib/router';
+import { GAME_CARD_TEMPLATES, exportGameCardTemplateApkg, type GameCardTemplateId } from '../lib/gameCardTemplates';
 
 /*
  * Anki-Pakete (.apkg) importieren, ansehen, wieder nach Anki exportieren (#101, L3). Ein importiertes Paket bleibt unverändert als Ganzes
@@ -285,6 +286,77 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
       {note && (
         <p role="status" className="text-sm">
           {note}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** Vorlagen-Export für Spielkarten als .apkg (K4, #274). */
+export function GameCardTemplatesExport() {
+  const [open, setOpen] = useState(false);
+  const [busyId, setBusyId] = useState<GameCardTemplateId | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+
+  const download = async (id: GameCardTemplateId) => {
+    setBusyId(id);
+    setStatus(null);
+    try {
+      const { fileName, bytes } = await exportGameCardTemplateApkg(id);
+      downloadFile(fileName, bytes as BlobPart, 'application/octet-stream');
+      setStatus(`„${fileName}“ wurde heruntergeladen.`);
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : 'Export fehlgeschlagen.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <section className="space-y-3 rounded-xl border border-line bg-surface p-3" aria-labelledby="game-templates-title">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h2 id="game-templates-title" className="text-lg font-medium">
+            🎴 Spielkarten-Vorlagen für Anki (.apkg)
+          </h2>
+          <p className="text-xs text-muted">
+            Offizielle Kartensätze (Spielblatt, Drachenspiel, Narrenhof, Quartett, Wölfe) direkt als Anki-Paket exportieren.
+          </p>
+        </div>
+        <Button variant="ghost" onClick={() => setOpen(!open)} aria-expanded={open}>
+          {open ? 'Schließen' : 'Anzeigen'}
+        </Button>
+      </div>
+
+      {open && (
+        <div className="space-y-2 pt-2 border-t border-line">
+          <ul className="space-y-2">
+            {GAME_CARD_TEMPLATES.map((tmpl) => (
+              <li key={tmpl.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-line bg-surface-2 p-2.5">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 font-medium text-sm">
+                    <span>{tmpl.emoji}</span>
+                    <span>{tmpl.title}</span>
+                  </div>
+                  <p className="text-xs text-muted mt-0.5">{tmpl.description}</p>
+                </div>
+                <Button
+                  variant="primary"
+                  className="sm:self-center shrink-0 text-xs"
+                  disabled={busyId === tmpl.id}
+                  onClick={() => void download(tmpl.id)}
+                >
+                  {busyId === tmpl.id ? 'Erstelle …' : '📥 .apkg laden'}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {status && (
+        <p role="status" className="text-xs text-muted">
+          {status}
         </p>
       )}
     </section>
