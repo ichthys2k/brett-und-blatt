@@ -22,5 +22,12 @@ for (const wahl of positionen.slice(1)) {
   const quelle = resolve(ordner(manifest.name, id), `v${v}.png`);
   const ziel = resolve(zielDir, `${manifest.praefix ?? ''}${id}${manifest.suffix ?? ''}.webp`);
   execFileSync('magick', [quelle, ...(rand ? ['-gravity', 'center', '-crop', `${Math.round((1 - 2 * rand) * 100)}%x${Math.round((1 - 2 * rand) * 100)}%+0+0`, '+repage'] : []), '-resize', `${breite}x${hoehe}^`, '-gravity', 'center', '-extent', `${breite}x${hoehe}`, '-quality', String(manifest.qualitaet ?? 80), ziel]);
-  console.log(`${id} v${v} → ${ziel.replace(WURZEL + '/', '')} (${Math.round(statSync(ziel).size / 1024)} KB)`);
+  
+  // Cornelius-Regel: Das ausgewählte Original in voller Auflösung im Repo archivieren
+  const originalDir = resolve(zielDir, 'original');
+  mkdirSync(originalDir, { recursive: true });
+  const zielOriginal = resolve(originalDir, `${manifest.praefix ?? ''}${id}${manifest.suffix ?? ''}.png`);
+  execFileSync('cp', [quelle, zielOriginal]);
+
+  console.log(`${id} v${v} → ${ziel.replace(WURZEL + '/', '')} (${Math.round(statSync(ziel).size / 1024)} KB) + Original: ${zielOriginal.replace(WURZEL + '/', '')}`);
 }
