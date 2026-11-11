@@ -13,3 +13,4 @@ Lies vor jeder Aufgabe `AGENTS.md` und die ausführliche Übergabe `CLAUDE.md` i
 - Vor dem Hochladen muss `corepack pnpm check` grün sein; die Änderung im Browser ansehen.
 - Immer `corepack pnpm …` statt `pnpm …`. Keine `minimumReleaseAgeExclude`-Ausnahmen.
 - Keine Geheimnisse ins Repo. Klänge (MP3) aus dem privaten Repo `brett-und-blatt-klaenge` nie ins öffentliche Repo kopieren.
+- **Grafik-Assets in maximaler Auflösung speichern:** Alle generierten Bilder, Kulissen, Karten und Porträts müssen immer in ihrer **maximal verfügbaren Original-Auflösung** im Repository archiviert werden (z. B. unter `assets/originale/` oder `<ordner>/original/`), selbst wenn die Web-App zur Laufzeit eine herunterskalierte Fassung (WebP) nutzt. Niemals nur die verkleinerte Fassung committen und das hochauflösende Original verwerfen, damit Abwandlungen und Druckvarianten jederzeit möglich bleiben.
