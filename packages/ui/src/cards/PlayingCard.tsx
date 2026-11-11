@@ -1,6 +1,19 @@
-import { cardName, cardRank, cardSuit, isJoker, isRed, rankLabel, type CardId, type DeckStyle, type Suit } from '@brett-und-blatt/engine';
+import {
+  cardKennungCandidates,
+  cardName,
+  cardRank,
+  cardSuit,
+  isJoker,
+  rankLabel,
+  type CardId,
+  type DeckStyle,
+  type PlayingCardOverride,
+  type Suit,
+} from '@brett-und-blatt/engine';
 import { useId, type CSSProperties, type MouseEventHandler } from 'react';
 import { CardBack, type CardBackProps } from './CardBack';
+import { useCardCosmetics } from './CardCosmeticsContext';
+import { GameCard } from './GameCard';
 import { portraitUrl, useCardPortraits } from './portraits';
 
 export type { DeckStyle };
@@ -155,11 +168,18 @@ export interface PlayingCardProps {
    * hellen Schild (Narrenhof, #115). Ohne Angabe bleibt das Porträt in der Mitte gerahmt.
    */
   fullPortrait?: boolean;
+  /**
+   * Dynamische Funktionsbeschreibung oder Untertitel für die Karte
+   * (z. B. aus cardDescriptionProvider / runtimeFields.SpielHinweis).
+   */
+  description?: string;
 }
 
 /**
  * Eine Spielkarte (französisches, 4-farbiges oder bayerisch/deutsches Blatt).
  * Die Größe bestimmt die umgebende Breite (Seitenverhältnis 5:7); Vorderseiten werden als SVG gezeichnet.
+ * Unterstützt Anki-Overrides (Bilder, Rahmen, Namen) aus einem aktiven Anki-Spielblatt-Paket
+ * sowie dynamische Spielhinweise (runtimeFields.SpielHinweis).
  */
 export function PlayingCard({
   card,
@@ -174,24 +194,88 @@ export function PlayingCard({
   deckStyle = 'four-color',
   anim,
   fullPortrait,
+  description,
 }: PlayingCardProps) {
+  const cosmetics = useCardCosmetics();
   const animClass = anim ? `bub-animate-${anim}` : '';
-  const classes = `bub-card ${selected ? 'bub-card-selected' : ''} ${highlight ? `bub-card-${highlight}` : ''} ${onClick ? 'bub-card-clickable' : ''} ${animClass} ${className}`;
   const isDown = card === null || faceDown;
-  const content = isDown ? <CardBack {...cardBackProps} /> : <CardFace card={card} deckStyle={deckStyle} fullPortrait={fullPortrait} />;
-  const name = label ?? (isDown ? 'verdeckte Karte' : cardName(card));
+
+  // Prüfen auf Anki-Overrides über useCardCosmetics()
+  const candidates = card ? cardKennungCandidates(card, deckStyle) : [];
+  const override = card && !isDown
+    ? candidates.reduce<PlayingCardOverride | undefined>(
+        (found, k) => found ?? cosmetics.playingCardOverrides?.[k] ?? cosmetics.getCardOverride?.(k),
+        undefined,
+      )
+    : undefined;
+
+  const frameClass = override?.frame ? `bub-card-frame--${override.frame}` : '';
+  const classes = `bub-card ${selected ? 'bub-card-selected' : ''} ${highlight ? `bub-card-${highlight}` : ''} ${onClick ? 'bub-card-clickable' : ''} ${animClass} ${frameClass} ${className}`.trim();
+
+  // Falls ein vollständiges Anki-HTML vorgerendert bereitliegt, direkt GameCard verwenden
+  if (!isDown && override?.ankiFront) {
+    return (
+      <GameCard
+        ankiFront={override.ankiFront}
+        selected={selected}
+        playable={highlight === 'target' || highlight === 'hint'}
+        onClick={onClick}
+        label={label ?? (description ? `${override.name ?? cardName(card)} – ${description}` : (override.name ?? cardName(card)))}
+        className={`${animClass} ${className}`.trim()}
+        style={style}
+      />
+    );
+  }
+
+  const effectiveCardBackProps: CardBackProps | undefined = cardBackProps ?? (cosmetics.tableCardBack ? { design: cosmetics.tableCardBack } : undefined);
+  const content = isDown ? (
+    <CardBack {...effectiveCardBackProps} />
+  ) : (
+    <CardFace
+      card={card}
+      deckStyle={deckStyle}
+      fullPortrait={fullPortrait}
+      override={override}
+      description={description}
+    />
+  );
+
+  const baseName = override?.name ?? (isDown ? 'verdeckte Karte' : cardName(card));
+  const fullLabel = label ?? (description && !isDown ? `${baseName} – ${description}` : baseName);
+  const titleText = description || undefined;
+
   return onClick ? (
-    <button type="button" className={classes} style={style} onClick={onClick} aria-label={name} aria-pressed={selected || undefined}>
+    <button
+      type="button"
+      className={classes}
+      style={style}
+      onClick={onClick}
+      title={titleText}
+      aria-label={fullLabel}
+      aria-pressed={selected || undefined}
+    >
       {content}
     </button>
   ) : (
-    <span className={classes} style={style} role="img" aria-label={name}>
+    <span className={classes} style={style} role="img" title={titleText} aria-label={fullLabel}>
       {content}
     </span>
   );
 }
 
-function CardFace({ card, deckStyle = 'four-color', fullPortrait }: { card: CardId; deckStyle?: DeckStyle; fullPortrait?: boolean }) {
+function CardFace({
+  card,
+  deckStyle = 'four-color',
+  fullPortrait,
+  override,
+  description,
+}: {
+  card: CardId;
+  deckStyle?: DeckStyle;
+  fullPortrait?: boolean;
+  override?: PlayingCardOverride;
+  description?: string;
+}) {
   if (isJoker(card)) {
     const jokerColor = '#7c3aed';
     const corner = (
@@ -204,6 +288,7 @@ function CardFace({ card, deckStyle = 'four-color', fullPortrait }: { card: Card
         </text>
       </>
     );
+    const jokerTitle = override?.name ?? 'JOKER';
     return (
       <svg viewBox="0 0 250 350" className="bub-card-face bub-card-joker" aria-hidden="true">
         <rect x="2" y="2" width="246" height="346" rx="20" fill="#fff" stroke="#c9c2b6" strokeWidth="3" />
@@ -236,7 +321,7 @@ function CardFace({ card, deckStyle = 'four-color', fullPortrait }: { card: Card
           />
         </g>
         <text x="125" y="222" fontSize="28" fontWeight="800" fontFamily="system-ui, sans-serif" textAnchor="middle" fill={jokerColor} letterSpacing="4">
-          JOKER
+          {jokerTitle}
         </text>
       </svg>
     );
@@ -248,14 +333,30 @@ function CardFace({ card, deckStyle = 'four-color', fullPortrait }: { card: Card
   const simple = deckStyle === 'simple';
   const color = simple ? SIMPLE_COLORS[suit].fg : cardSuitColor(suit, deckStyle);
   const portraitsOn = useCardPortraits();
-  const portrait = portraitsOn ? portraitUrl(card, deckStyle) : undefined;
+  const defaultPortrait = portraitsOn ? portraitUrl(card, deckStyle) : undefined;
+  // Anki-Override-Bild hat Vorrang vor Standard-Porträt
+  const portrait = override?.image || defaultPortrait;
   const clipId = useId();
+
+  // Rahmen-Styling aus Anki-Override
+  const frameColor =
+    override?.frame === 'gold' || override?.frame === 'gold-barock'
+      ? '#ca8a04'
+      : override?.frame === 'wood-tavern'
+        ? '#78350f'
+        : override?.frame === 'emerald'
+          ? '#059669'
+          : override?.frame === 'crimson'
+            ? '#b91c1c'
+            : override?.frame && override.frame.startsWith('#')
+              ? override.frame
+              : null;
 
   if (portrait && fullPortrait) {
     // Porträt über die ganze Karte; Wert und Farbe stehen in den Ecken auf einem hellen Schild in der Farbe der Kartenfarbe.
     const badge = (
       <>
-        <rect x="6" y="6" width="66" height="94" rx="12" fill="#fff" fillOpacity="0.93" stroke={color} strokeWidth="3" />
+        <rect x="6" y="6" width="66" height="94" rx="12" fill="#fff" fillOpacity="0.93" stroke={frameColor ?? color} strokeWidth="3" />
         <g fill={color}>
           <text x="39" y="52" fontSize="46" fontWeight="700" fontFamily="system-ui, sans-serif" textAnchor="middle">
             {label}
@@ -273,7 +374,10 @@ function CardFace({ card, deckStyle = 'four-color', fullPortrait }: { card: Card
         </defs>
         <rect x="2" y="2" width="246" height="346" rx="20" fill="#fff" />
         <image href={portrait} x="0" y="0" width="250" height="350" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
-        <rect x="2" y="2" width="246" height="346" rx="20" fill="none" stroke={color} strokeWidth="4" />
+        <rect x="2" y="2" width="246" height="346" rx="20" fill="none" stroke={frameColor ?? color} strokeWidth="4" />
+        {frameColor && (
+          <rect x="6" y="6" width="238" height="338" rx="16" fill="none" stroke="#fde047" strokeWidth="1.5" strokeDasharray="4 2" />
+        )}
         {badge}
         <g transform="rotate(180 125 175)">{badge}</g>
       </svg>
@@ -281,7 +385,7 @@ function CardFace({ card, deckStyle = 'four-color', fullPortrait }: { card: Card
   }
 
   if (portrait) {
-    // Bildkarte: kleiner Index in den Ecken, das Porträt in der Mitte mit Rahmen in der Farbe der Kartenfarbe.
+    // Bildkarte oder Anki-Kartenbild: Index in den Ecken, Porträt in der Mitte mit Rahmen.
     const corner = (
       <>
         <text x="10" y="50" fontSize="46" fontWeight="700" fontFamily="system-ui, sans-serif">
@@ -297,13 +401,24 @@ function CardFace({ card, deckStyle = 'four-color', fullPortrait }: { card: Card
             <rect x="50" y="22" width="150" height="306" rx="10" />
           </clipPath>
         </defs>
-        <rect x="2" y="2" width="246" height="346" rx="20" fill="#fff" stroke="#c9c2b6" strokeWidth="3" />
+        <rect x="2" y="2" width="246" height="346" rx="20" fill="#fff" stroke={frameColor ?? '#c9c2b6'} strokeWidth={frameColor ? '4' : '3'} />
+        {frameColor && (
+          <rect x="6" y="6" width="238" height="338" rx="16" fill="none" stroke={frameColor} strokeWidth="1.5" strokeDasharray="3 3" opacity="0.7" />
+        )}
         <g fill={color}>
           {corner}
           <g transform="rotate(180 125 175)">{corner}</g>
         </g>
         <image href={portrait} x="-5" y="22" width="260" height="306" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
-        <rect x="50" y="22" width="150" height="306" rx="10" fill="none" stroke={color} strokeWidth="4" />
+        <rect x="50" y="22" width="150" height="306" rx="10" fill="none" stroke={frameColor ?? color} strokeWidth="4" />
+        {override?.name && (
+          <g>
+            <rect x="54" y="296" width="142" height="26" rx="5" fill="#ffffff" fillOpacity="0.88" />
+            <text x="125" y="314" fontSize="13" fontWeight="700" fontFamily="system-ui, sans-serif" textAnchor="middle" fill="#1f2328">
+              {override.name}
+            </text>
+          </g>
+        )}
       </svg>
     );
   }
@@ -317,9 +432,12 @@ function CardFace({ card, deckStyle = 'four-color', fullPortrait }: { card: Card
         height="346"
         rx="20"
         fill={simple ? SIMPLE_COLORS[suit].bg : '#fff'}
-        stroke={simple ? 'rgba(0,0,0,.35)' : '#c9c2b6'}
-        strokeWidth="3"
+        stroke={frameColor ?? (simple ? 'rgba(0,0,0,.35)' : '#c9c2b6')}
+        strokeWidth={frameColor ? '4' : '3'}
       />
+      {frameColor && (
+        <rect x="6" y="6" width="238" height="338" rx="16" fill="none" stroke={frameColor} strokeWidth="1.5" strokeDasharray="3 3" opacity="0.7" />
+      )}
       <g fill={color}>
         <text x="20" y="72" fontSize="70" fontWeight="700" fontFamily="system-ui, sans-serif" letterSpacing="-4">
           {label}
@@ -341,7 +459,13 @@ function CardFace({ card, deckStyle = 'four-color', fullPortrait }: { card: Card
         ) : (
           <SuitShape suit={suit} deckStyle={deckStyle} x={rank === 1 ? 55 : 70} y={rank === 1 ? 105 : 120} size={rank === 1 ? 140 : 110} />
         )}
+        {override?.name && (
+          <text x="125" y="320" fontSize="14" fontWeight="700" fontFamily="system-ui, sans-serif" textAnchor="middle" fill="#1f2328">
+            {override.name}
+          </text>
+        )}
       </g>
     </svg>
   );
 }
+

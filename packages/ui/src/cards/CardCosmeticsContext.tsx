@@ -1,6 +1,8 @@
-import type { AnkiNote, CrestSpec } from '@brett-und-blatt/engine';
+import type { AnkiNote, CrestSpec, PlayingCardOverride } from '@brett-und-blatt/engine';
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import type { CardBackId } from './CardBack';
+
+export type { PlayingCardOverride };
 
 export interface CardCosmetics {
   cardBack: CardBackId;
@@ -8,6 +10,12 @@ export interface CardCosmetics {
   customImageUrl?: string;
   ankiOverrides?: Record<string, AnkiNote>;
   mediaUrlMap?: Record<string, string>;
+  /** Einheitlicher Kartenrücken für den gemeinsamen Spieltisch (Geheimhaltungs-Regel). */
+  tableCardBack?: CardBackId;
+  /** Karten-Vorderseiten-Overrides aus einem aktiven Anki-Spielblatt-Paket (Kennung -> Override). */
+  playingCardOverrides?: Record<string, PlayingCardOverride>;
+  /** Dynamischer Lookup für Karten-Overrides. */
+  getCardOverride?: (kennung: string) => PlayingCardOverride | undefined;
 }
 
 export const DEFAULT_CARD_COSMETICS: CardCosmetics = {
@@ -33,8 +41,20 @@ export function CardCosmeticsProvider({ children, value }: CardCosmeticsProvider
       customImageUrl: value?.customImageUrl ?? DEFAULT_CARD_COSMETICS.customImageUrl,
       ankiOverrides: value?.ankiOverrides,
       mediaUrlMap: value?.mediaUrlMap,
+      tableCardBack: value?.tableCardBack ?? DEFAULT_CARD_COSMETICS.tableCardBack,
+      playingCardOverrides: value?.playingCardOverrides ?? DEFAULT_CARD_COSMETICS.playingCardOverrides,
+      getCardOverride: value?.getCardOverride ?? DEFAULT_CARD_COSMETICS.getCardOverride,
     }),
-    [value?.cardBack, value?.crest, value?.customImageUrl, value?.ankiOverrides, value?.mediaUrlMap],
+    [
+      value?.cardBack,
+      value?.crest,
+      value?.customImageUrl,
+      value?.ankiOverrides,
+      value?.mediaUrlMap,
+      value?.tableCardBack,
+      value?.playingCardOverrides,
+      value?.getCardOverride,
+    ],
   );
 
   return <CardCosmeticsContext.Provider value={merged}>{children}</CardCosmeticsContext.Provider>;

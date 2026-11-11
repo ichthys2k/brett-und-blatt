@@ -17,6 +17,10 @@ export {
   type PlayerCrestData,
 } from './cards/CardBack';
 export {
+  resolveSharedCardBack,
+  type SharedCardBackOptions,
+} from './cards/sharedCardBack';
+export {
   CardCosmeticsProvider,
   DEFAULT_CARD_COSMETICS,
   getNoteField,

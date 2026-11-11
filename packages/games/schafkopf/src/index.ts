@@ -23,6 +23,7 @@ export type {
   SchafkopfPhase,
   SchafkopfState,
 };
+export { schafkopfCardDescription } from './cardDescription.js';
 export {
   CONTRACT_RANKS,
   SCHAFKOPF_RANKS_LONG,

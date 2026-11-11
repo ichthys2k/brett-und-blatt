@@ -5,6 +5,7 @@ import { applyMove, currentPlayers, defaultOptions, isLegal, legalMoves, mathCar
 import type { UnoMove, UnoOptions, UnoState } from './types';
 
 export { mathCardLabel, UNO_MATH_POOL };
+export { unoCardDescription } from './cardDescription';
 
 export const options: OptionSpec[] = [
   {

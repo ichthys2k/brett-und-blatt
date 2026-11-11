@@ -12,6 +12,7 @@ export interface UnoCardViewProps {
   selected?: boolean;
   size?: 'sm' | 'md' | 'lg';
   mathMode?: boolean;
+  description?: string;
   onClick?: () => void;
   className?: string;
 }
@@ -95,6 +96,7 @@ export const UnoCardView: React.FC<UnoCardViewProps> = ({
   selected = false,
   size = 'md',
   mathMode = false,
+  description,
   onClick,
   className = '',
 }) => {
@@ -133,6 +135,9 @@ export const UnoCardView: React.FC<UnoCardViewProps> = ({
   const mathExpr = mathMode ? mathCardLabel(face.type, card?.id ?? face.type) : null;
   const symbols = formatCardSymbol(face, mathExpr);
 
+  const baseTitle = `${colorInfo.name} ${mathExpr ?? face.type}`;
+  const fullTitle = description ? `${baseTitle} – ${description}` : baseTitle;
+
   return (
     <button
       type="button"
@@ -147,7 +152,8 @@ export const UnoCardView: React.FC<UnoCardViewProps> = ({
         backgroundColor: isWild ? '#18181b' : colorInfo.bg,
         borderColor: isWild ? '#a1a1aa' : '#ffffff44',
       }}
-      title={`${colorInfo.name} ${mathExpr ?? face.type}`}
+      title={fullTitle}
+      aria-label={fullTitle}
     >
       {/* Obere linke Ecke */}
       <div className="text-left font-black leading-none drop-shadow-sm text-white">{symbols.corner}</div>

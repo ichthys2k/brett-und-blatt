@@ -17,6 +17,7 @@ import {
 } from './rules.js';
 
 export type { SkatDeclaration, SkatGameType, SkatMove, SkatPhase, SkatState };
+export { skatCardDescription } from './cardDescription.js';
 export {
   ALL_BID_VALUES,
   SKAT_BASE_VALUES,
