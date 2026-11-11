@@ -55,7 +55,7 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
   seatDetail: (view, seat) => {
     const p = view.players[seat];
     if (!p) return null;
-    return `❤️ ${p.health}${p.armor > 0 ? ` 🛡️ ${p.armor}` : ''} | 💧 ${p.mana}/${p.maxMana}`;
+    return `🚩 ${p.health}${p.armor > 0 ? ` 🛡️ ${p.armor}` : ''} | 🏇 ${p.mana}/${p.maxMana}`;
   },
 };
 

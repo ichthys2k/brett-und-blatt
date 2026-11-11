@@ -91,8 +91,8 @@ export const options: OptionSpec[] = [
   },
   {
     id: 'spells',
-    label: 'Zauberkarten',
-    description: 'Jedes Deck tauscht drei Tierpaare gegen drei Zauberpaare (Blitzschlag, Honigtopf, Flutwelle …).',
+    label: 'Kniffe',
+    description: 'Jedes Deck tauscht drei Tierpaare gegen drei Kniffe (Blitzschlag, Honigtopf, Flutwelle …).',
     choices: [
       { value: 'on', label: 'An' },
       { value: 'off', label: 'Aus (nur Tiere)' },

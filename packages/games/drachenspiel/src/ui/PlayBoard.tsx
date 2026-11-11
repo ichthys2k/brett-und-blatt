@@ -233,7 +233,7 @@ function HeroBar({
       onKeyDown={interactive && onClick ? (event) => activate(event, onClick, () => undefined) : undefined}
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
-      title={targetable ? 'Gegnerischen Helden angreifen!' : canAttack ? 'Mit deinem Helden angreifen' : undefined}
+      title={targetable ? 'Gegnerischen Turnierherrn angreifen!' : canAttack ? 'Mit deinem Turnierherrn angreifen' : undefined}
       style={{
         position: 'relative',
         touchAction: canAttack ? 'none' : undefined,
@@ -248,9 +248,9 @@ function HeroBar({
       <div>
         <div className="ds-hero-name" style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{name}</div>
         <div className="ds-hero-badges">
-          <span className="ds-badge ds-badge-hp">❤️ {health}</span>
+          <span className="ds-badge ds-badge-hp" title="Wimpel an der Tribüne">🚩 {health}</span>
           {armor > 0 && (
-            <span className="ds-badge ds-badge-armor" title="Rüstung fängt Schaden vor den Leben ab">
+            <span className="ds-badge ds-badge-armor" title="Rüstung fängt Schaden vor den Wimpeln ab">
               🛡️ {armor}
             </span>
           )}
@@ -265,13 +265,13 @@ function HeroBar({
             </button>
           )}
           {strength > 0 && (
-            <span className="ds-badge ds-badge-gear" title={player.gear ? `${player.gear.name}: hält noch ${player.gear.durability} Angriffe` : 'Angriff des Helden in diesem Zug'}>
+            <span className="ds-badge ds-badge-gear" title={player.gear ? `${player.gear.name}: hält noch ${player.gear.durability} Angriffe` : 'Angriff des Turnierherrn in diesem Zug'}>
               ⚔️ {strength}
               {player.gear ? ` · ${player.gear.durability}×` : ''}
             </span>
           )}
-          <span className="ds-badge ds-badge-mana">
-            💧 {player.mana}/{player.maxMana}
+          <span className="ds-badge ds-badge-mana" title="Knappen (bereit / herbeigeeilt)">
+            🏇 {player.mana}/{player.maxMana}
             {player.locked > 0 ? ` 🔒${player.locked}` : ''}
             {player.overloadNext > 0 ? ` →🔒${player.overloadNext}` : ''}
           </span>
@@ -838,8 +838,8 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
                 <button
                   type="button"
                   className="ds-card-trade"
-                  title="Für 1 Mana zurück ins Deck mischen und neu ziehen"
-                  aria-label={`${def.name} für 1 Mana tauschen`}
+                  title="Mit 1 Knappe zurück ins Deck mischen und neu ziehen"
+                  aria-label={`${def.name} mit 1 Knappe tauschen`}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={(event) => {
                     event.stopPropagation();

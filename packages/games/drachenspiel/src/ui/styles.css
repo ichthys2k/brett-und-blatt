@@ -1386,26 +1386,38 @@
 }
 
 
-/* Zauberkarten (W-004) */
+/* Kniffe (früher Zauberkarten, W-025) mit Pergamentrahmen */
 .ds-card.ds-card-spell {
-  background: linear-gradient(160deg, #f3e8ff 0%, var(--color-surface, #ffffff) 70%);
-  border-color: #a78bfa;
+  background: linear-gradient(155deg, #fbf7ee 0%, #f4ebd9 50%, #eae0c8 100%);
+  border: 2px double #b89758;
+  box-shadow: inset 0 0 8px rgba(139, 90, 43, 0.15);
+  color: #2b1f14;
 }
 @media (prefers-color-scheme: dark) {
   .ds-card.ds-card-spell {
-    background: linear-gradient(160deg, #3b2a5c 0%, var(--color-surface, #1e1e2a) 70%);
+    background: linear-gradient(155deg, #2e261d 0%, #221c15 50%, #1a1510 100%);
+    border-color: #8c734b;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
+    color: #f4ebd9;
   }
   .ds-spell-hint {
-    background: #3b2a5c;
-    color: #ede9fe;
+    background: #3a2e1d;
+    color: #f7eedb;
   }
 }
 .ds-card.ds-card-spell.playable {
-  border-color: #7c3aed;
+  border-color: #d97706;
+  box-shadow: 0 0 8px rgba(217, 119, 6, 0.45);
 }
 .ds-card.ds-card-selected {
   transform: translateY(-10px);
-  box-shadow: 0 0 0 3px #7c3aed, 0 8px 18px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 0 0 3px #d97706, 0 8px 18px rgba(217, 119, 6, 0.35);
+}
+.bub-kind-Kniff.bub-combat-card,
+.bub-kind-Kniff .bub-combat-card {
+  background: linear-gradient(155deg, #fbf7ee 0%, #f4ebd9 50%, #eae0c8 100%) !important;
+  border: 2px double #b89758 !important;
+  box-shadow: inset 0 0 10px rgba(139, 90, 43, 0.15) !important;
 }
 .ds-card-spelltext {
   font-size: 0.52rem;
