@@ -499,11 +499,13 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
 
   const myBoard = boardOf(mySeat);
   const oppBoard = boardOf(oppSeat);
+  const oppTheme = opp?.deckTheme;
 
   return (
     <div
       ref={arenaRef}
       className={`ds-arena ${beat?.heavy ? 'ds-heavy' : ''}`}
+      data-theme={oppTheme && oppTheme !== 'mixed' ? oppTheme : undefined}
       onPointerMove={aiming && !dragState.isDragging ? (event) => setAimPoint({ x: event.clientX, y: event.clientY }) : undefined}
     >
       <div className="ds-opponent-zone">

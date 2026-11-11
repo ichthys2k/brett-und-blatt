@@ -1,14 +1,36 @@
-/* Original-Hintergrundbild aus dem Vorlagen-Klon (Emojiclicker), unter einem Schleier in der
-   Flächenfarbe, damit Text und Karten lesbar bleiben (wie die Kulissen im Narrenhof). */
+/* Arena-Kulisse: wird dynamisch durch das Themenhaus des Gegners bestimmt
+   (unter einem Schleier in der Flächenfarbe, damit Text und Karten lesbar bleiben). */
 .ds-arena,
 .ds-phase-overlay {
+  --ds-bg-image: url('./kulissen/drachenarena.webp');
   background:
     linear-gradient(
       color-mix(in srgb, var(--color-surface, #ffffff) 48%, transparent),
       color-mix(in srgb, var(--color-surface, #ffffff) 74%, transparent)
     ),
-    url('./kulissen/drachenarena.webp') center / cover no-repeat;
+    var(--ds-bg-image) center / cover no-repeat;
   border-radius: 16px;
+}
+
+.ds-arena[data-theme='forest'],
+.ds-phase-overlay[data-theme='forest'] {
+  --ds-bg-image: url('./kulissen/wald.webp');
+}
+.ds-arena[data-theme='sea'],
+.ds-phase-overlay[data-theme='sea'] {
+  --ds-bg-image: url('./kulissen/meer.webp');
+}
+.ds-arena[data-theme='farm'],
+.ds-phase-overlay[data-theme='farm'] {
+  --ds-bg-image: url('./kulissen/bauernhof.webp');
+}
+.ds-arena[data-theme='wild'],
+.ds-phase-overlay[data-theme='wild'] {
+  --ds-bg-image: url('./kulissen/wildnis.webp');
+}
+.ds-arena[data-theme='bugs'],
+.ds-phase-overlay[data-theme='bugs'] {
+  --ds-bg-image: url('./kulissen/krabbeltiere.webp');
 }
 
 .ds-arena {

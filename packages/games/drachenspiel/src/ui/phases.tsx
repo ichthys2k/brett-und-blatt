@@ -3,18 +3,31 @@ import { CARDS_DB } from '../cards';
 import { DECK_THEMES, DECK_THEME_IDS } from '../decks';
 import { HOUSE_POWERS } from '../powers';
 import { decodeDeck } from '../deckcode';
-import type { DrachenspielMove, DrachenspielView, HiddenPlayerView } from '../types';
+import type { DeckThemeId, DrachenspielMove, DrachenspielView, HiddenPlayerView } from '../types';
 import { DeckManager } from './DeckBuilder';
 import { CardFace } from './parts';
 import { getCardFullTitle, getCardTraits } from './traits';
 import { championImage } from './champions';
 
 /** Deckwahl: eigene Komponente, damit jede Phase ihre eigenen Hooks hat. */
-export function DeckSelection({ view, me, onMove, timed }: { view: DrachenspielView; me: HiddenPlayerView; onMove: (move: DrachenspielMove) => void; timed: boolean }) {
+export function DeckSelection({
+  view,
+  me,
+  oppTheme,
+  onMove,
+  timed,
+}: {
+  view: DrachenspielView;
+  me: HiddenPlayerView;
+  oppTheme?: DeckThemeId | 'mixed' | null;
+  onMove: (move: DrachenspielMove) => void;
+  timed: boolean;
+}) {
   const [own, setOwn] = useState(false);
+  const themeAttr = oppTheme && oppTheme !== 'mixed' ? oppTheme : undefined;
   if (!me.deckTheme && own) {
     return (
-      <div className="ds-phase-overlay ds-phase-top">
+      <div className="ds-phase-overlay ds-phase-top" data-theme={themeAttr}>
         <h2 className="ds-phase-title">Eigene Decks</h2>
         {timed && (
           <p className="ds-phase-subtitle" role="status">
@@ -33,7 +46,7 @@ export function DeckSelection({ view, me, onMove, timed }: { view: DrachenspielV
   }
   if (!me.deckTheme) {
     return (
-      <div className="ds-phase-overlay">
+      <div className="ds-phase-overlay" data-theme={themeAttr}>
         <h2 className="ds-phase-title">Wähle dein Themendeck</h2>
         <p className="ds-phase-subtitle">
           {view.options.spells === 'off' ? 'Jedes Deck enthält 30 Tierkarten mit besonderen Stärken.' : 'Jedes Deck enthält 30 Karten: 24 Tiere und 6 Zauber.'}
@@ -72,15 +85,24 @@ export function DeckSelection({ view, me, onMove, timed }: { view: DrachenspielV
     );
   }
   return (
-    <div className="ds-phase-overlay">
+    <div className="ds-phase-overlay" data-theme={themeAttr}>
       <h2 className="ds-phase-title">Deck gewählt!</h2>
       <p className="ds-phase-subtitle">Warte auf deinen Mitspieler...</p>
     </div>
   );
 }
 
-export function MulliganPhase({ me, onMove }: { me: HiddenPlayerView; onMove: (move: DrachenspielMove) => void }) {
+export function MulliganPhase({
+  me,
+  oppTheme,
+  onMove,
+}: {
+  me: HiddenPlayerView;
+  oppTheme?: DeckThemeId | 'mixed' | null;
+  onMove: (move: DrachenspielMove) => void;
+}) {
   const [mulliganDiscard, setMulliganDiscard] = useState<Set<number>>(new Set());
+  const themeAttr = oppTheme && oppTheme !== 'mixed' ? oppTheme : undefined;
 
   if (!me.mulliganDone && me.hand) {
     const toggleDiscard = (idx: number) => {
@@ -93,7 +115,7 @@ export function MulliganPhase({ me, onMove }: { me: HiddenPlayerView; onMove: (m
     };
 
     return (
-      <div className="ds-phase-overlay">
+      <div className="ds-phase-overlay" data-theme={themeAttr}>
         <h2 className="ds-phase-title">Startkarten tauschen</h2>
         <p className="ds-phase-subtitle">
           Tippe auf Karten, die du abwerfen möchtest, um neue aus dem Deck zu ziehen.
@@ -135,7 +157,7 @@ export function MulliganPhase({ me, onMove }: { me: HiddenPlayerView; onMove: (m
     );
   }
   return (
-    <div className="ds-phase-overlay">
+    <div className="ds-phase-overlay" data-theme={themeAttr}>
       <h2 className="ds-phase-title">Startkarten gewählt!</h2>
       <p className="ds-phase-subtitle">Warte auf den Start der Partie...</p>
     </div>
