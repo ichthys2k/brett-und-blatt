@@ -1,9 +1,9 @@
 import { ApkgError, packsOf, savePackRows, withoutScheduling, type ApkgData } from '@brett-und-blatt/engine';
-import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { Button } from '../components/controls';
 import { QrCode } from '../components/OnlineParts';
 import { APKG_LIMIT_TEXT, exportApkg, importApkg } from '../lib/ankiPackage';
-import { currentArchiveLink, publishArchive, stopArchiveShare } from '../lib/archiveShare';
+import { currentArchiveLink, fetchArchive, listArchiveShares, publishArchive, stopArchiveShare } from '../lib/archiveShare';
 import { deletePackStored, keepStorage, listPacks, loadPack, savePack, type PackSummary } from '../lib/ankiStore';
 import { downloadFile, safeFileName } from '../lib/download';
 import { loadCollection, saveCollection } from '../lib/library';
@@ -130,11 +130,24 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
   const [options, setOptions] = useState<{ id: string; scheduling: boolean; media: boolean; latest: boolean } | null>(null);
   const [sharing, setSharing] = useState<string | null>(null);
   const [links, setLinks] = useState<Record<string, string | null>>({});
+  const [shares, setShares] = useState(() => listArchiveShares());
   const refresh = useCallback(() => {
-    listPacks().then(setPacks, () => setPacks([]));
+    listPacks().then((loaded) => {
+      setPacks(loaded);
+      setShares(listArchiveShares());
+    }, () => {
+      setPacks([]);
+      setShares(listArchiveShares());
+    });
   }, []);
   useEffect(refresh, [refresh]);
-  if (!packs || packs.length === 0) return null;
+
+  const uninstalled = useMemo(() => {
+    const localIds = new Set(packs?.map((p) => p.id) ?? []);
+    return Object.entries(shares).filter(([id]) => !id.startsWith('own:') && !localIds.has(id));
+  }, [packs, shares]);
+
+  if ((!packs || packs.length === 0) && uninstalled.length === 0) return null;
 
   const run = async (id: string, task: () => Promise<void>) => {
     setBusy(id);
@@ -161,8 +174,9 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
       const stored = await loadPack(pack.id);
       if (!stored) return;
       const bytes = await exportApkg({ collection: stored.pack.collection, media: stored.media, conf: stored.pack.conf, dconf: stored.pack.dconf }, { scheduling: false, media: true });
-      const link = await publishArchive(pack.id, bytes);
+      const link = await publishArchive(pack.id, bytes, { name: pack.name, notes: pack.notes, cards: pack.cards });
       setLinks((old) => ({ ...old, [pack.id]: link }));
+      setShares(listArchiveShares());
     });
   const takePairs = (pack: PackSummary) =>
     run(pack.id, async () => {
@@ -189,7 +203,7 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
         Anki-Pakete
       </h2>
       <ul className="space-y-2">
-        {packs.map((pack) => (
+        {(packs ?? []).map((pack) => (
           <li key={pack.id} className="space-y-2 rounded-xl border border-line bg-surface p-3">
             <div>
               <span className="block truncate font-medium">{pack.name}</span>
@@ -294,6 +308,61 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
           </li>
         ))}
       </ul>
+      {uninstalled.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <h3 className="text-sm font-medium text-muted">Aus deinem Spielerpass verfügbar (auf diesem Gerät noch nicht geladen)</h3>
+          <ul className="space-y-2">
+            {uninstalled.map(([id, entry]) => (
+              <li key={id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-3">
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">📦 {entry.name || 'Geteiltes Paket'}</span>
+                  <span className="block text-xs text-muted">
+                    {entry.notes ? `${entry.notes} Notizen` : ''}
+                    {entry.cards ? ` · ${entry.cards} Karten` : ''}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="primary"
+                    disabled={busy === id}
+                    onClick={() =>
+                      void run(id, async () => {
+                        const bytes = await fetchArchive(entry.key);
+                        if (typeof bytes === 'string') {
+                          setNote(bytes === 'missing' ? 'Dieses Paket gibt es nicht mehr.' : 'Konnte nicht geladen werden.');
+                          return;
+                        }
+                        await keepStorage();
+                        const data = await importApkg(bytes);
+                        await savePack(entry.name || 'Anki-Paket', withoutScheduling(data));
+                        refresh();
+                        onPacksChanged();
+                        setNote(`„${entry.name || 'Paket'}“ wurde auf dieses Gerät geladen.`);
+                      })
+                    }
+                  >
+                    {busy === id ? 'Lade …' : '📥 Auf dieses Gerät laden'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    aria-label="Teilen beenden"
+                    disabled={busy === id}
+                    onClick={() =>
+                      void run(id, async () => {
+                        await stopArchiveShare(id);
+                        refresh();
+                        setNote('Teilen beendet.');
+                      })
+                    }
+                  >
+                    🗑️
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {note && (
         <p role="status" className="text-sm">
           {note}
