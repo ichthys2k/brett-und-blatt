@@ -279,7 +279,7 @@ describe('Bilder verdecken (L8)', () => {
   });
 });
 
-import { unsupportedHints } from '../src';
+import { unsupportedHints, renderCardSide, BUB_PLAYING_CARD_NOTETYPE, createPlayingCardCollection } from '../src';
 
 describe('Hinweise auf Nicht-Unterstütztes (L8)', () => {
   it('nennt nur, was wirklich vorkommt', () => {
@@ -287,5 +287,117 @@ describe('Hinweise auf Nicht-Unterstütztes (L8)', () => {
     expect(unsupportedHints(['[latex]x[/latex]'])).toHaveLength(1);
     expect(unsupportedHints(['<script>alert(1)</script>', '{{tts en_US voices=A:Front}}'])).toHaveLength(2);
     expect(unsupportedHints(['{{c1::image-occlusion:text:left=1}}'])).toHaveLength(1);
+  });
+});
+
+describe('Anki-Renderer: renderCardSide, Laufzeit-Felder (runtimeFields) und mediaUrlMap (K3)', () => {
+  const col = createPlayingCardCollection({ deck: 'french-52' });
+  const aceNote = col.notes.find((n) => n.guid === 'bub-card-fr-hearts-A')!;
+
+  it('rendert Vorderseite mit renderCardSide standardmäßig oder explizit', () => {
+    const frontDefault = renderCardSide(col, aceNote, 0);
+    const frontExplicit = renderCardSide(col, aceNote, 0, 'front');
+
+    expect(frontDefault.errors).toEqual([]);
+    expect(frontDefault.html).toContain('Herz-Ass');
+    expect(frontDefault.html).toContain('Höchste Farbkarte, zählt 11 Augen.');
+    expect(frontDefault.scopedCss).toContain('.bub-playing-card');
+    expect(frontDefault.html).toBe(frontExplicit.html);
+  });
+
+  it('rendert Rückseite mit renderCardSide', () => {
+    const back = renderCardSide(col, aceNote, 0, 'back');
+    expect(back.errors).toEqual([]);
+    expect(back.html).toContain('bub-card-answer-info');
+    expect(back.html).toContain('id="bub-answer"');
+    expect(back.html).toContain('Punkte: 11 Augen');
+  });
+
+  it('funktioniert mit AnkiNotetype direkt ohne AnkiCollection', () => {
+    const direct = renderCardSide(BUB_PLAYING_CARD_NOTETYPE, aceNote, 0, 'front');
+    expect(direct.errors).toEqual([]);
+    expect(direct.html).toContain('Herz-Ass');
+    expect(direct.scopedCss).toContain('.bub-playing-card');
+  });
+
+  it('unterstützt options als 4. Argument ohne Seite', () => {
+    const rendered = renderCardSide(col, aceNote, 0, {
+      runtimeFields: { SpielHinweis: 'Optionen ohne Seite' },
+    });
+    expect(rendered.errors).toEqual([]);
+    expect(rendered.html).toContain('Optionen ohne Seite');
+  });
+
+  it('runtimeFields überschreibt bestehende Felder und liefert SpielHinweis', () => {
+    const rendered = renderCardSide(col, aceNote, 0, 'front', {
+      runtimeFields: {
+        Name: 'Spezial-Ass',
+        SpielHinweis: 'Trumpf im Stich!',
+      },
+    });
+
+    expect(rendered.errors).toEqual([]);
+    expect(rendered.html).toContain('Spezial-Ass');
+    expect(rendered.html).toContain('Trumpf im Stich!');
+    // Standard-Beschreibung soll durch den bedingten Block nicht mehr erscheinen
+    expect(rendered.html).not.toContain('Höchste Farbkarte, zählt 11 Augen.');
+  });
+
+  it('virtuelle Laufzeit-Felder erzeugen keine Fehler, wenn sie nicht übergeben werden', () => {
+    const rendered = renderCardSide(col, aceNote, 0, 'front');
+    expect(rendered.errors).toEqual([]);
+    // Ohne SpielHinweis greift der {{^SpielHinweis}}-Zweig
+    expect(rendered.html).toContain('Höchste Farbkarte, zählt 11 Augen.');
+  });
+
+  it('mediaUrlMap ersetzt relative Bild-Verweise sicher durch konfigurierte Asset-URLs', () => {
+    // Note mit Bildangabe
+    const customNote = {
+      ...aceNote,
+      fields: [...aceNote.fields],
+    };
+    customNote.fields[7] = '<img src="custom-card-art.webp">';
+
+    const rendered = renderCardSide(col, customNote, 0, 'front', {
+      mediaUrlMap: {
+        'custom-card-art.webp': '/assets/cards/custom-art-123.webp',
+      },
+    });
+
+    expect(rendered.errors).toEqual([]);
+    expect(rendered.html).toContain('<img');
+    expect(rendered.html).toContain('src="/assets/cards/custom-art-123.webp"');
+  });
+
+  it('mediaUrlMap ersetzt auch Pfade mit führendem ./', () => {
+    const customNote = {
+      ...aceNote,
+      fields: [...aceNote.fields],
+    };
+    customNote.fields[7] = '<img src="./herz_ass_art.png">';
+
+    const rendered = renderCardSide(col, customNote, 0, 'front', {
+      mediaUrlMap: {
+        'herz_ass_art.png': 'blob:http://localhost/blob-herz-ass',
+      },
+    });
+
+    expect(rendered.errors).toEqual([]);
+    expect(rendered.html).toContain('src="blob:http://localhost/blob-herz-ass"');
+  });
+
+  it('nicht in mediaUrlMap vorhandene Bilder werden zum Schutz entfernt', () => {
+    const customNote = {
+      ...aceNote,
+      fields: [...aceNote.fields],
+    };
+    customNote.fields[7] = '<img src="unknown.png">';
+
+    const rendered = renderCardSide(col, customNote, 0, 'front', {
+      mediaUrlMap: {},
+    });
+
+    expect(rendered.errors).toEqual([]);
+    expect(rendered.html).not.toContain('<img');
   });
 });
