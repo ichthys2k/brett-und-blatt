@@ -95,7 +95,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 1. ~~**Mehrheit oder alle?**~~ **Entschieden (Cornelius, 12.11.2026): einfache Mehrheit der Abstimmenden, bei Gleichstand Nochmal.**
 2. **Frist:** 45 s ausreichend? Was, wenn niemand abstimmt – Raum bleibt wie heute am Spielfeld stehen (Vorschlag).
 3. **Eigenes Issue?** Der Wunsch gilt für alle Räume und ist größer als das Brett. Vorschlag: eigenes Issue „Online: Abstimmung am Rundenende“ (`status: Idee`, bis du es freigibst), #65 verweist darauf.
-4. **Reihenfolge:** Zuerst die Abstimmung am Rundenende (hilft jedem Raum sofort), dann das Brett – oder umgekehrt?
+4. ~~**Reihenfolge**~~ **Entschieden (Cornelius, 12.11.2026): 1. Abstimmung am Rundenende (#298), 2. Anfrage für Neue (#299), 3. Schwarzes Brett (#65).**
 
 ## Erweiterung: Laufende Runde offen für Neue (Cornelius, 12.11.2026; Issue #299)
 
