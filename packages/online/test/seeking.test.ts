@@ -10,10 +10,13 @@ const games: SeekGame[] = [
 
 function setup(saved?: ConstructorParameters<typeof SeekingBoard>[1]) {
   let time = 1_000_000;
-  const deps: SeekDeps = { now: () => time, game: (id) => games.find((g) => g.id === id), games: () => games, random: () => 0 };
+  const deps: SeekDeps = { now: () => time, game: (id) => games.find((g) => g.id === id), games: () => games, room: (code) => openRooms.get(code), random: () => 0 };
   const board = new SeekingBoard(deps, saved);
   return { board, advance: (ms: number) => (time += ms), deps };
 }
+
+/** Offene Runden, wie das Verzeichnis sie kennt – ein Test darf sie wieder schließen. */
+const openRooms = new Map<string, { gameId: string }>([['🦊🍎🚀🎈', { gameId: 'party' }]]);
 
 const note = (games: string[] = ['duo'], extra = {}) => ({ name: 'Anna', avatar: '🦊', games, seats: 'any', mood: 'relaxed', ...extra });
 
@@ -237,5 +240,54 @@ describe('Nachrichten des Schwarzen Bretts', () => {
     expect(parseBoardMessage('[]')).toBeNull();
     expect(parseBoardMessage('{"type":"x"}')).toBeNull();
     expect(parseBoardMessage('x'.repeat(2001))).toBeNull();
+  });
+});
+
+describe('Zettel für eine offene Runde', () => {
+  const room = '🦊🍎🚀🎈';
+  const post = (extra = {}) => ({ name: 'Anna', avatar: '🦊', code: room, seats: 'any', mood: 'relaxed', ...extra });
+
+  it('hängt eine bestehende offene Runde als Zettel auf, ohne Abstimmung', () => {
+    const { board } = setup();
+    expect(board.postRoom('a', post()).ok).toBe(true);
+    const view = board.view('b');
+    expect(view.notes[0]).toMatchObject({ name: 'Anna', games: ['party'], room });
+    expect(board.join('b', view.notes[0]!.id, 'party', 'Ben').error).toBe('room');
+    expect(board.view('b').proposal).toBeNull();
+  });
+
+  it('verlangt eine wirklich offene Runde und gültige Auswahlwerte', () => {
+    const { board, advance } = setup();
+    expect(board.postRoom('a', post({ code: '🐶🐶🐶🐶' })).error).toBe('room');
+    advance(SEEK_POST_GAP_MS + 1);
+    expect(board.postRoom('a', post({ mood: 'wild' })).error).toBe('mood');
+    advance(SEEK_POST_GAP_MS + 1);
+    expect(board.postRoom('a', post({ seats: '99' })).error).toBe('seats');
+    advance(SEEK_POST_GAP_MS + 1);
+    expect(board.postRoom('a', post({ name: '  ' })).error).toBe('name');
+  });
+
+  it('bleibt trotz Weggehen hängen, solange die Runde offen ist, und fällt weg, wenn sie schließt', () => {
+    const { board, advance } = setup();
+    board.postRoom('a', post());
+    board.markAway('a', true);
+    advance(SEEK_AWAY_MS * 3);
+    board.tick();
+    expect(board.size).toBe(1);
+    openRooms.delete(room);
+    board.tick();
+    expect(board.size).toBe(0);
+    openRooms.set(room, { gameId: 'party' });
+  });
+
+  it('ersetzt den eigenen Zettel und liest die Nachricht', () => {
+    const { board, advance } = setup();
+    board.post('a', note(['duo']));
+    advance(SEEK_POST_GAP_MS + 1);
+    board.postRoom('a', post());
+    expect(board.view('a').notes).toHaveLength(1);
+    expect(board.view('a').notes[0]!.room).toBe(room);
+    expect(parseBoardMessage(JSON.stringify({ type: 'postRoom', name: 'Anna', avatar: '🦊', code: room, seats: 'any', mood: 'relaxed' }))).toMatchObject({ type: 'postRoom', code: room });
+    expect(parseBoardMessage('{"type":"postRoom","name":"Anna"}')).toBeNull();
   });
 });
