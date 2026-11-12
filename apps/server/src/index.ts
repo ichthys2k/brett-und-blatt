@@ -1053,6 +1053,7 @@ export class GameRoom extends DurableObject<Env> {
     return {
       now: () => Date.now(),
       findGame: (id) => gamesById.get(id),
+      listGames: () => [...gamesById.values()],
       botRunner,
       botBudgetMs: BOT_BUDGET_MS,
       randomSeed,

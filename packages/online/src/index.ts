@@ -16,6 +16,7 @@ export {
   SIGNAL_MAX_PER_WINDOW,
   SIGNAL_WINDOW_MS,
   TAKE_BACK_GAP,
+  AFTER_GAME_MS,
   TAKE_BACK_MS,
   type MatchRoomConfig,
   type MatchRoomReport,
