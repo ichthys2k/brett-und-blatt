@@ -18,6 +18,8 @@ import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { GameTable } from './Play';
 import { TakeBackBar } from '../components/TakeBackBar';
+import { PinRoom } from '../components/PinRoom';
+import { GAME_SERVER as BOARD_SERVER } from '../lib/server';
 import { TeamChip, TeamSummary } from '../components/Teams';
 import { CustomCardsOverlay } from '../components/CustomCardsOverlay';
 
@@ -488,6 +490,7 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle }: { room:
             </span>
           </label>
         )}
+        {isHost && lobby.isPublic && lobby.gameId && BOARD_SERVER && <PinRoom code={room.code} />}
         {isHost && (
           <label className="flex cursor-pointer select-none items-center gap-3 border-t border-line pt-2">
             <input

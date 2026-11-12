@@ -4,9 +4,10 @@ import { Button, Section, Segmented } from '../components/controls';
 import { ProfileForm } from '../components/OnlineParts';
 import { TavernPage } from '../components/TavernPage';
 import { useBoard, type BoardState } from '../lib/board';
+import { setBoardHidden, useBoardHidden } from '../lib/boardPrefs';
 import { saveOwnProfile } from '../lib/playerPass';
 import { findGame, games } from '../lib/registry';
-import { paths } from '../lib/router';
+import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 
 const MOODS: Record<SeekMood, { emoji: string; label: string }> = {
@@ -52,11 +53,39 @@ function useNow(intervalMs = 1000): number {
  * entsteht der Raum. Es gibt keinen Chat – alles läuft über Auswahl.
  */
 export function BoardScreen() {
+  const hidden = useBoardHidden();
+  if (hidden) {
+    return (
+      <TavernPage title="Schwarzes Brett" subtitle="Ausgeblendet." back={paths.menu}>
+        <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
+          <p>Du hast die Spielersuche auf diesem Gerät ausgeblendet.</p>
+          <Button variant="primary" onClick={() => setBoardHidden(false)}>
+            Wieder einblenden
+          </Button>
+        </div>
+      </TavernPage>
+    );
+  }
+  return <Board />;
+}
+
+/** Zettel passen zur Wahl der Spielerzahl, wenn sie „egal“ sagen oder dieselbe Größe nennen. */
+const matchesSeats = (note: SeekNoteView, wanted: SeekSeats): boolean => wanted === 'any' || note.seats === 'any' || note.seats === wanted;
+
+function Board() {
   const [state, actions] = useBoard();
   const now = useNow();
   const mine = state.notes.find((note) => note.mine) ?? null;
   const [filter, setFilter] = useState('');
-  const others = state.notes.filter((note) => !note.mine && (filter === '' || note.games.includes(filter) || note.games.includes(SEEK_ANY)));
+  const [seatsFilter, setSeatsFilter] = useState<SeekSeats>('any');
+  const [moodFilter, setMoodFilter] = useState<SeekMood | ''>('');
+  const others = state.notes.filter(
+    (note) =>
+      !note.mine &&
+      (filter === '' || note.games.includes(filter) || note.games.includes(SEEK_ANY)) &&
+      matchesSeats(note, seatsFilter) &&
+      (moodFilter === '' || note.mood === moodFilter),
+  );
 
   return (
     <TavernPage title="Schwarzes Brett" subtitle="Wer hat Lust? Zettel anheften, „Bin dabei“ sagen – ohne Chat." back={paths.menu}>
@@ -90,8 +119,17 @@ export function BoardScreen() {
               ))}
             </select>
           </label>
+          <Segmented<SeekSeats> label="Wie viele?" value={seatsFilter} choices={SEEK_SEATS.map((value) => ({ value, label: value === 'any' ? 'alle' : SEATS[value] }))} onChange={setSeatsFilter} />
+          <Segmented<SeekMood | 'all'>
+            label="Stimmung"
+            value={moodFilter === '' ? 'all' : moodFilter}
+            choices={[{ value: 'all', label: 'alle' }, ...SEEK_MOODS.map((value) => ({ value, label: `${MOODS[value].emoji} ${MOODS[value].label}` }))]}
+            onChange={(value) => setMoodFilter(value === 'all' ? '' : value)}
+          />
           {others.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">Gerade hängt kein Zettel{filter ? ' für dieses Spiel' : ''}. Hänge deinen auf – wer Lust hat, sagt „Bin dabei“.</p>
+            <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">
+              {state.notes.some((note) => !note.mine) ? 'Kein Zettel passt zu deiner Auswahl.' : `Gerade hängt kein Zettel${filter ? ' für dieses Spiel' : ''}. Hänge deinen auf – wer Lust hat, sagt „Bin dabei“.`}
+            </p>
           ) : (
             <ul className="grid gap-3 sm:grid-cols-2">
               {others.map((note) => (
@@ -133,6 +171,14 @@ function NoteCard({ note, now, onJoin, onUnjoin }: { note: SeekNoteView; now: nu
           <p className="text-[11px] text-muted">{minutesLeft(note, now)}</p>
         </div>
       </div>
+      {note.room !== undefined ? (
+        <div className="space-y-1">
+          <p className="text-sm">{gameLabel(note.games[0]!)} – Mitspieler gesucht</p>
+          <Button variant="primary" className="min-h-10 text-sm" onClick={() => navigate(paths.room(note.room!))}>
+            🚪 Mitspielen
+          </Button>
+        </div>
+      ) : (
       <div className="flex flex-wrap gap-2">
         {note.games.map((gameId) => {
           const joined = note.joined === gameId;
@@ -145,6 +191,7 @@ function NoteCard({ note, now, onJoin, onUnjoin }: { note: SeekNoteView; now: nu
           );
         })}
       </div>
+      )}
     </li>
   );
 }
@@ -155,10 +202,11 @@ function MyNote({ note, now, onExtend, onWithdraw }: { note: SeekNoteView; now: 
     <div className="space-y-2 rounded-2xl border border-accent/40 bg-accent/5 p-3">
       <p className="font-semibold">📌 Dein Zettel hängt – {minutesLeft(note, now)}</p>
       <p className="text-sm">
+        {note.room !== undefined ? 'Deine offene Runde: ' : ''}
         {note.games.map(gameLabel).join(' · ')}
         <span className="text-muted"> · {MOODS[note.mood].label} · {SEATS[note.seats]}</span>
       </p>
-      <p className="text-sm text-muted">{votes === 0 ? 'Noch hat niemand „Bin dabei“ gesagt. Lass diese Seite offen – sobald genug Leute zusagen, fragt das Brett dich.' : `${votes} ${votes === 1 ? 'Person ist' : 'Personen sind'} dabei.`}</p>
+      <p className="text-sm text-muted">{note.room !== undefined ? 'Wer Lust hat, kommt mit „Mitspielen“ direkt in deinen Raum. Der Zettel verschwindet, sobald die Runde voll ist oder startet.' : votes === 0 ? 'Noch hat niemand „Bin dabei“ gesagt. Lass diese Seite offen – sobald genug Leute zusagen, fragt das Brett dich.' : `${votes} ${votes === 1 ? 'Person ist' : 'Personen sind'} dabei.`}</p>
       <div className="flex flex-wrap gap-2">
         <Button onClick={onExtend}>⏳ Verlängern</Button>
         <Button variant="ghost" onClick={onWithdraw}>

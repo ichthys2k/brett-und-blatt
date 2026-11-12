@@ -101,6 +101,46 @@ const after = await ben.next((m) => m.type === 'board' && m.notes.every((n) => n
 check(Boolean(after), 'vermittelte Zettel verschwinden vom Brett');
 
 anna.send({ type: 'withdraw' });
-[anna, ben, roomA, roomB].forEach((c) => c.close());
+
+// Zettel für eine bestehende offene Runde („Mitspieler gesucht“): Cara leitet eine öffentliche Runde, Dora sieht den Zettel.
+const created = await fetch(`${base}/rooms`, { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify({ isPublic: true }) });
+const { code: openCode } = await created.json();
+const tokenC = 'cara-' + crypto.randomUUID().replaceAll('-', '') + 'xx';
+const tokenD = 'dora-' + crypto.randomUUID().replaceAll('-', '') + 'xx';
+const caraRoom = socket(`${wsBase}/rooms/${encodeURIComponent(openCode)}`, tokenC, 'Cara im Raum');
+await caraRoom.ready;
+caraRoom.send({ type: 'hello', protocol: 1, token: tokenC, name: 'Cara', avatar: '🐸' });
+await caraRoom.next((m) => m.type === 'welcome');
+caraRoom.send({ type: 'setGame', gameId: 'black-peter' });
+await caraRoom.next((m) => m.type === 'room' && m.lobby.gameId === 'black-peter');
+const cara = socket(`${wsBase}/brett`, tokenC, 'Cara');
+const dora = socket(`${wsBase}/brett`, tokenD, 'Dora');
+await Promise.all([cara.ready, dora.ready]);
+cara.send({ type: 'hello', token: tokenC });
+dora.send({ type: 'hello', token: tokenD });
+await cara.next((m) => m.type === 'board' && m.you);
+cara.send({ type: 'postRoom', name: 'Cara', avatar: '🐸', code: '🐶🐶🐶🐶', seats: 'any', mood: 'relaxed' });
+await cara.next((m) => m.type === 'boardError' && m.error === 'room');
+check(true, 'ein Zettel für einen Raum, der nicht offen ist, wird abgelehnt');
+// Das Verzeichnis meldet den Raum erst nach einer Weile; ein paar Versuche genügen.
+let roomNote;
+for (let attempt = 0; attempt < 10 && !roomNote; attempt++) {
+  cara.send({ type: 'postRoom', name: 'Cara', avatar: '🐸', code: openCode, seats: '3-4', mood: 'kids' });
+  roomNote = await dora.next((m) => m.type === 'board' && m.notes.some((n) => n.room === openCode), 1500).catch(() => null);
+  if (!roomNote) await new Promise((r) => setTimeout(r, 1200));
+}
+check(Boolean(roomNote), 'die offene Runde hängt als Zettel „Mitspieler gesucht“ am Brett');
+if (roomNote) {
+  const note = roomNote.notes.find((n) => n.room === openCode);
+  check(note.games[0] === 'black-peter' && note.mood === 'kids' && note.seats === '3-4', 'Spiel, Stimmung und Spielerzahl stehen auf dem Zettel');
+  dora.send({ type: 'join', noteId: note.id, gameId: 'black-peter', name: 'Dora' });
+  await dora.next((m) => m.type === 'boardError' && m.error === 'room');
+  check(true, 'auf einem Raum-Zettel gibt es kein „Bin dabei“, nur den Weg in den Raum');
+}
+cara.close();
+const stays = await dora.next((m) => m.type === 'board' && m.notes.some((n) => n.room === openCode), 1500).catch(() => null);
+check(Boolean(stays), 'der Zettel bleibt hängen, auch wenn die Verfasserin die Brett-Verbindung schließt');
+
+[anna, ben, roomA, roomB, caraRoom, dora].forEach((c) => c.close());
 console.log(failures === 0 ? '\nAlles in Ordnung.' : `\n${failures} Prüfung(en) fehlgeschlagen.`);
 process.exit(failures === 0 ? 0 : 1);

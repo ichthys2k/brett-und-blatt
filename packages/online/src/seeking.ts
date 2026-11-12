@@ -44,6 +44,8 @@ export interface SeekDeps {
   game(id: string): SeekGame | undefined;
   /** Alle online angebotenen Spiele – für „Egal“. */
   games(): SeekGame[];
+  /** Eine offene Runde (öffentlich, mit freien Plätzen) oder undefined – für Zettel, die auf einen Raum zeigen. */
+  room(code: string): { gameId: string } | undefined;
   random(): number;
 }
 
@@ -70,6 +72,8 @@ interface Note {
   proposal: Proposal | null;
   /** Seit wann der Verfasser nicht mehr verbunden ist (null: verbunden). */
   awaySince: number | null;
+  /** Zettel „Mitspieler gesucht“ für eine offene Runde: Code des Raums. Hier stimmt niemand ab, man geht direkt hinein. */
+  room?: string;
 }
 
 /** Was nach außen dringt: ein Treffer, aus dem der Adapter einen Raum macht. */
@@ -89,7 +93,7 @@ export interface SeekPostInput {
   mood: string;
 }
 
-export type SeekError = 'name' | 'games' | 'seats' | 'mood' | 'busy' | 'rate' | 'unknown' | 'own' | 'gone';
+export type SeekError = 'name' | 'games' | 'seats' | 'mood' | 'busy' | 'rate' | 'unknown' | 'own' | 'gone' | 'room';
 
 export interface SeekResult {
   ok: boolean;
@@ -110,6 +114,8 @@ export interface SeekNoteView {
   /** Zustimmungen je Spiel. */
   votes: Record<string, number>;
   mine: boolean;
+  /** Zettel für eine offene Runde: Code des Raums (statt „Bin dabei“ gibt es „Mitspielen“). */
+  room?: string;
   /** Das Spiel, für das diese Person hier „Bin dabei“ gewählt hat. */
   joined: string | null;
 }
@@ -200,6 +206,41 @@ export class SeekingBoard {
     return { ok: true, matches: [] };
   }
 
+  /**
+   * „Mitspieler gesucht“ für eine bestehende offene Runde (Konzept Punkt 5): Der Zettel zeigt auf den Raum, das Brett
+   * prüft, dass er wirklich in „Offene Runden“ steht, und nimmt den Zettel ab, sobald er dort fehlt.
+   */
+  postRoom(owner: string, input: { name: string; avatar: string; code: string; seats: string; mood: string }): SeekResult {
+    const now = this.deps.now();
+    const fail = (error: SeekError): SeekResult => ({ ok: false, error, matches: [] });
+    if (now - (this.lastPost.get(owner) ?? -Infinity) < SEEK_POST_GAP_MS) return fail('rate');
+    this.lastPost.set(owner, now);
+    const name = cleanName(input.name);
+    if (!name) return fail('name');
+    const room = this.deps.room(input.code);
+    if (!room) return fail('room');
+    if (!(SEEK_SEATS as readonly string[]).includes(input.seats)) return fail('seats');
+    if (!(SEEK_MOODS as readonly string[]).includes(input.mood)) return fail('mood');
+    this.removeNoteOf(owner);
+    this.notes.push({
+      id: `z${this.nextId++}`,
+      owner,
+      name,
+      avatar: cleanAvatar(input.avatar),
+      games: [room.gameId],
+      seats: input.seats as SeekSeats,
+      mood: input.mood as SeekMood,
+      createdAt: now,
+      expiresAt: now + SEEK_NOTE_MS,
+      votes: {},
+      proposal: null,
+      awaySince: null,
+      room: input.code,
+    });
+    while (this.notes.length > SEEK_MAX_NOTES) this.removeNote(this.notes[0]!);
+    return { ok: true, matches: [] };
+  }
+
   withdraw(owner: string): SeekResult {
     const had = this.removeNoteOf(owner);
     return { ok: had, ...(had ? {} : { error: 'unknown' as const }), matches: [] };
@@ -216,7 +257,8 @@ export class SeekingBoard {
   /** Die Verfasserin oder der Verfasser ist weg oder wieder da. */
   markAway(owner: string, away: boolean): void {
     const note = this.notes.find((n) => n.owner === owner);
-    if (note) note.awaySince = away ? (note.awaySince ?? this.deps.now()) : null;
+    // Wer eine offene Runde ausschreibt, sitzt im Raum und ist nicht auf der Brett-Seite – dort zählt das Weggehen nicht.
+    if (note && note.room === undefined) note.awaySince = away ? (note.awaySince ?? this.deps.now()) : null;
   }
 
   // -------------------------------------------------------------------------
@@ -227,6 +269,7 @@ export class SeekingBoard {
     const note = this.notes.find((n) => n.id === noteId);
     if (!note) return { ok: false, error: 'gone', matches: [] };
     if (note.owner === voter) return { ok: false, error: 'own', matches: [] };
+    if (note.room !== undefined) return { ok: false, error: 'room', matches: [] };
     if (!note.games.includes(gameId)) return { ok: false, error: 'games', matches: [] };
     const now = this.deps.now();
     const times = (this.voteTimes.get(voter) ?? []).filter((t) => now - t < 60_000);
@@ -268,7 +311,7 @@ export class SeekingBoard {
     const matches: SeekMatch[] = [];
     for (const note of [...this.notes]) {
       if (!this.notes.includes(note)) continue;
-      if (note.expiresAt <= now || (note.awaySince !== null && now - note.awaySince >= SEEK_AWAY_MS)) {
+      if (note.expiresAt <= now || (note.awaySince !== null && now - note.awaySince >= SEEK_AWAY_MS) || (note.room !== undefined && !this.deps.room(note.room))) {
         this.removeNote(note);
         continue;
       }
@@ -317,6 +360,7 @@ export class SeekingBoard {
         expiresAt: note.expiresAt,
         votes: Object.fromEntries(Object.entries(note.votes).map(([gameId, ids]) => [gameId, ids.length])),
         mine: viewer !== null && note.owner === viewer,
+        ...(note.room !== undefined ? { room: note.room } : {}),
         joined: viewer === null ? null : (Object.entries(note.votes).find(([, ids]) => ids.includes(viewer))?.[0] ?? null),
       }));
     let proposal: SeekProposalView | null = null;
@@ -427,6 +471,8 @@ export type BoardClientMessage =
   | { type: 'post'; name: string; avatar: string; games: string[]; seats: string; mood: string }
   | { type: 'withdraw' }
   | { type: 'extend' }
+  /** „Mitspieler gesucht“ für eine offene Runde (Code des Raums). */
+  | { type: 'postRoom'; name: string; avatar: string; code: string; seats: string; mood: string }
   | { type: 'join'; noteId: string; gameId: string; name: string }
   | { type: 'unjoin'; noteId: string }
   | { type: 'confirm'; noteId: string; ok: boolean };
@@ -456,6 +502,10 @@ export function parseBoardMessage(raw: string): BoardClientMessage | null {
     case 'post':
       return typeof m.name === 'string' && m.name.length <= 100 && isStr(m.avatar, 20) && Array.isArray(m.games) && m.games.length <= 10 && m.games.every((g) => isStr(g, 60)) && isStr(m.seats, 10) && isStr(m.mood, 20)
         ? { type: 'post', name: m.name, avatar: m.avatar, games: m.games as string[], seats: m.seats, mood: m.mood }
+        : null;
+    case 'postRoom':
+      return typeof m.name === 'string' && m.name.length <= 100 && isStr(m.avatar, 20) && isStr(m.code, 40) && isStr(m.seats, 10) && isStr(m.mood, 20)
+        ? { type: 'postRoom', name: m.name, avatar: m.avatar, code: m.code, seats: m.seats, mood: m.mood }
         : null;
     case 'join':
       return isStr(m.noteId, 20) && isStr(m.gameId, 60) && typeof m.name === 'string' && m.name.length <= 100 ? { type: 'join', noteId: m.noteId, gameId: m.gameId, name: m.name } : null;

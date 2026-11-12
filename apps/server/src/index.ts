@@ -1267,13 +1267,14 @@ async function boardOwnerId(token: string): Promise<string> {
 }
 
 /** Das Brett kennt nur Spiele, die der Server online anbietet und die mindestens zwei spielen können. */
-function boardDeps() {
+function boardDeps(room: (code: string) => { gameId: string } | undefined) {
   const asGame = (m: (typeof onlineGames)[number]) => ({ id: m.info.id, min: m.info.players.min, max: m.info.players.max });
   const playable = () => onlineGames.filter((m) => m.info.players.max >= 2).map(asGame);
   return {
     now: () => Date.now(),
     game: (id: string) => playable().find((g) => g.id === id),
     games: playable,
+    room,
     random: () => Math.random(),
   };
 }
@@ -1286,7 +1287,7 @@ function boardDeps() {
  */
 export class LobbyRegistry extends DurableObject<Env> {
   private directory = new OpenRoomDirectory();
-  private board = new SeekingBoard(boardDeps());
+  private board = this.makeBoard();
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -1296,8 +1297,19 @@ export class LobbyRegistry extends DurableObject<Env> {
       const saved = await ctx.storage.get<Record<string, OpenRoomListing>>('listings');
       this.directory = new OpenRoomDirectory(saved);
       const board = await ctx.storage.get<ReturnType<SeekingBoard['toJSON']>>('board');
-      if (board) this.board = new SeekingBoard(boardDeps(), board);
+      if (board) this.board = this.makeBoard(board);
     });
+  }
+
+  private makeBoard(saved?: ReturnType<SeekingBoard['toJSON']>): SeekingBoard {
+    // Eine offene Runde ist eine, die gerade im Verzeichnis steht (öffentlich, mit freien Plätzen, kein Turnier).
+    return new SeekingBoard(
+      boardDeps((code) => {
+        const listing = this.directory.list().find((room) => room.code === code && !room.tournament);
+        return listing ? { gameId: listing.gameId } : undefined;
+      }),
+      saved,
+    );
   }
 
   override async fetch(request?: Request): Promise<Response> {
@@ -1333,6 +1345,9 @@ export class LobbyRegistry extends DurableObject<Env> {
     switch (msg.type) {
       case 'post':
         result = this.board.post(owner, msg);
+        break;
+      case 'postRoom':
+        result = this.board.postRoom(owner, msg);
         break;
       case 'withdraw':
         result = this.board.withdraw(owner);
@@ -1433,6 +1448,10 @@ export class LobbyRegistry extends DurableObject<Env> {
     await this.scheduleExpiry();
     const message = this.message();
     for (const ws of this.ctx.getWebSockets()) if (!boardAttachment(ws)) this.sendTo(ws, message);
+    // Zettel für eine Runde, die nicht mehr offen ist, fallen vom Brett.
+    const before = this.board.size;
+    const matches = this.board.tick();
+    if (matches.length > 0 || this.board.size !== before) await this.boardChanged(matches);
   }
 
   private async scheduleExpiry(): Promise<void> {
