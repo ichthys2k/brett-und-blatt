@@ -121,6 +121,11 @@ export interface RoomDeps {
   botBudgetMs?: Partial<Record<BotLevel, number>>;
   /** Zufallszahl in [0, 1) für Lobby-Dinge wie „Teams mischen“ (Standard: Math.random). */
   random?(): number;
+  /**
+   * Fernpartie (#242): Diese Geräte-Kennungen sind neu am Zug und haben keine Verbindung zum Raum.
+   * Der Adapter schickt ihnen, falls sie es wünschen, einen Hinweis aufs Gerät.
+   */
+  notifyTurn?(tokens: string[]): void;
 }
 
 interface Member {
@@ -196,6 +201,8 @@ export class Room {
   private phase: RoomPhase = 'lobby';
   private lobby: LobbySettings;
   private game: Game | null = null;
+  /** Wer beim letzten Zug schon am Zug war (für „Du bist dran“ bei Fernpartien); nicht gespeichert. */
+  private turnSeen: SeatId[] = [];
   private nextMember = 1;
   private lastVersion = 0;
   /** Wie viele Partien in diesem Raum schon begonnen haben. */
@@ -1036,6 +1043,7 @@ export class Room {
     game.seatMoved = game.seats.map(() => this.gameVersion());
     if (game.module.info.takeBack && !game.module.info.noUndo) game.takeBack ??= { pending: null, last: null, ownMoves: game.seats.map(() => 0), nextAllowed: game.seats.map(() => 0) };
     this.phase = game.session.result ? 'finished' : 'playing';
+    this.turnSeen = game.session.currentSeats();
     game.unsubscribe = game.session.subscribe((change) => this.onSessionChange(change));
   }
 
@@ -1058,7 +1066,42 @@ export class Room {
       this.broadcastRoom();
     }
     this.broadcastGame(change.events);
+    this.noticeTurn();
     this.deps.changed?.();
+  }
+
+  /**
+   * „Du bist dran“ bei Fernpartien (#242): Wer neu am Zug ist und gerade nicht verbunden ist, wird dem Adapter gemeldet.
+   * Nicht für normale Online-Räume und nicht für Turnierpartien (dort ruft das Turnier auf).
+   */
+  private noticeTurn(): void {
+    const game = this.game;
+    if (!game) return;
+    const current = game.session.currentSeats();
+    const fresh = current.filter((seat) => !this.turnSeen.includes(seat));
+    this.turnSeen = current;
+    if (fresh.length === 0 || game.session.result || this.match || !this.deps.notifyTurn || !this.isCorrespondence()) return;
+    const tokens: string[] = [];
+    for (const seat of fresh) {
+      const memberId = game.seatMembers[seat];
+      const member = memberId ? this.members.get(memberId) : undefined;
+      if (member && member.connections.size === 0) tokens.push(member.token);
+    }
+    if (tokens.length > 0) this.deps.notifyTurn(tokens);
+  }
+
+  /** Geräte-Kennung hinter einer Verbindung (nur für den Adapter, geht nie an andere Mitglieder). */
+  tokenOfConnection(connectionId: string): string | null {
+    return this.memberOf(connectionId)?.token ?? null;
+  }
+
+  tokenOfMember(memberId: string): string | null {
+    return this.members.get(memberId)?.token ?? null;
+  }
+
+  /** Läuft der Raum als Turnierpartie? */
+  isMatchRoom(): boolean {
+    return this.match !== null && this.match !== undefined;
   }
 
   /**

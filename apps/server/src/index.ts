@@ -113,7 +113,8 @@ import {
 } from '@brett-und-blatt/online';
 import {
   claimSilently,
-  createPushSender,
+  deliverTurnPush,
+  parseClientMessage,
   nextPushWakeup,
   ownsToken,
   pushStateFromJSON,
@@ -128,6 +129,7 @@ import { bibelQuizKatalog } from './bibelquiz';
 import { wortspielKataloge } from './wortspiele';
 import { onlineGames } from './games';
 import { isOperator } from './operator';
+import { allowLocalPush, makePushSender, pushConfigured } from './push';
 import {
   answerOffer,
   decideRequest,
@@ -975,6 +977,9 @@ export class GameRoom extends DurableObject<Env> {
   private sockets = new Map<string, WebSocket>();
   /** Zuletzt ans Verzeichnis gemeldete Karte (undefined: seit dem Aufwachen noch nicht). */
   private lastListing: OpenRoomListing | null | undefined = undefined;
+  /** Web Push (#242, nur Fernpartien): Abos und Spam-Schutz unter dem eigenen Schlüssel `push`; weg mit dem Raum. */
+  private pushState: TournamentPushState | null = null;
+  private pushSenderCache: PushSender | null = null;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -1027,7 +1032,79 @@ export class GameRoom extends DurableObject<Env> {
 
   override async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
     if (typeof message !== 'string') return;
+    // Hinweise aufs Gerät (#242) gehören nicht in die Spielleitung: Abos bleiben im Adapter.
+    if (message.includes('"push') && (await this.handlePush(this.idOf(ws), message))) return;
     this.room?.receive(this.idOf(ws), message);
+  }
+
+  private pushSender(): PushSender | null {
+    this.pushSenderCache ??= makePushSender(this.env);
+    return this.pushSenderCache;
+  }
+
+  private async loadPush(): Promise<TournamentPushState> {
+    this.pushState ??= pushStateFromJSON(await this.ctx.storage.get('push'), { allowLocal: allowLocalPush(this.env) });
+    return this.pushState;
+  }
+
+  private async savePush(): Promise<void> {
+    if (this.pushState) await this.ctx.storage.put('push', pushStateToJSON(this.pushState));
+  }
+
+  /** `true`, wenn die Nachricht ein Push-Abo betraf und hier erledigt ist. */
+  private async handlePush(connectionId: string, raw: string): Promise<boolean> {
+    const room = this.room;
+    const message = parseClientMessage(raw, { allowLocal: allowLocalPush(this.env) });
+    if (!room || !message || (message.type !== 'pushSubscribe' && message.type !== 'pushUnsubscribe')) return false;
+    const error = (text: string) => this.send(connectionId, { type: 'error', code: 'notAllowed', message: text });
+    if (!pushConfigured(this.env)) {
+      error('Hinweise aufs Gerät sind hier nicht eingerichtet.');
+      return true;
+    }
+    const token = room.tokenOfConnection(connectionId);
+    if (!token) {
+      this.send(connectionId, { type: 'error', code: 'notReady', message: 'Erst anmelden.' });
+      return true;
+    }
+    const state = await this.loadPush();
+    if (message.type === 'pushUnsubscribe') {
+      state.book.remove(token);
+      await this.savePush();
+      this.send(connectionId, { type: 'pushState', enabled: false });
+      return true;
+    }
+    if (room.isMatchRoom() || !room.isCorrespondence()) {
+      error('Hinweise gibt es nur bei Fernpartien.');
+      return true;
+    }
+    if (!state.book.set(token, message.subscription, Date.now())) {
+      error('Es gibt schon zu viele Hinweis-Abos.');
+      return true;
+    }
+    await this.savePush();
+    this.send(connectionId, { type: 'pushState', enabled: true });
+    return true;
+  }
+
+  /** Nach dem Anmelden: Sagt dem Gerät, ob für es Hinweise an sind. Die Abo-Daten gehen nie an jemanden. */
+  private async sendPushState(connectionId: string, memberId: string): Promise<void> {
+    const token = this.room?.tokenOfMember(memberId);
+    if (!token) return;
+    this.send(connectionId, { type: 'pushState', enabled: (await this.loadPush()).book.has(token) });
+  }
+
+  /** „Du bist am Zug“ an getrennte Mitglieder einer Fernpartie, im Hintergrund. */
+  private async deliverTurn(tokens: string[]): Promise<void> {
+    const sender = this.pushSender();
+    const room = this.room;
+    if (!sender || !room) return;
+    try {
+      const state = await this.loadPush();
+      if (state.book.size === 0) return;
+      await deliverTurnPush(state, tokens, room.code, sender, Date.now(), { persist: () => this.savePush() });
+    } catch (err) {
+      console.error('Web Push fehlgeschlagen:', err instanceof Error ? err.name : 'Fehler');
+    }
   }
 
   override async webSocketClose(ws: WebSocket): Promise<void> {
@@ -1045,6 +1122,7 @@ export class GameRoom extends DurableObject<Env> {
     if (Date.now() >= room.expiresAt() && room.connectionCount === 0) {
       const code = room.code;
       this.room = null;
+      this.pushState = null;
       await this.ctx.storage.deleteAll();
       await registryStub(this.env).removeRoom(code);
       return;
@@ -1080,6 +1158,9 @@ export class GameRoom extends DurableObject<Env> {
         this.sockets.delete(id);
       },
       changed: () => void this.persist(),
+      notifyTurn: (tokens) => {
+        if (pushConfigured(this.env)) this.ctx.waitUntil(this.deliverTurn(tokens));
+      },
     };
   }
 
@@ -1087,7 +1168,10 @@ export class GameRoom extends DurableObject<Env> {
     const ws = this.sockets.get(id);
     if (!ws) return;
     // Nach der Anmeldung merkt sich die Verbindung ihr Mitglied – für das Aufwachen.
-    if (message.type === 'welcome') ws.serializeAttachment({ id, memberId: message.you } satisfies Attachment);
+    if (message.type === 'welcome') {
+      ws.serializeAttachment({ id, memberId: message.you } satisfies Attachment);
+      if (pushConfigured(this.env)) void this.sendPushState(id, message.you);
+    }
     try {
       ws.send(JSON.stringify(message));
     } catch {
@@ -2027,7 +2111,7 @@ export class TournamentRoom extends DurableObject<Env> {
   override async webSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
     const t = this.tournament;
     if (!t || typeof raw !== 'string') return;
-    const message = parseTournamentMessage(raw, { allowLocal: this.env.ROOM_JURISDICTION === 'none' });
+    const message = parseTournamentMessage(raw, { allowLocal: allowLocalPush(this.env) });
     if (!message) return this.sendTo(ws, { type: 'error', message: 'Unbekannte Nachricht.' });
     if (message.type === 'hello') {
       await this.loadOrgRoles([message.token]);
@@ -2061,17 +2145,16 @@ export class TournamentRoom extends DurableObject<Env> {
   // Web Push (#242)
 
   private pushConfigured(): boolean {
-    return Boolean(this.env.VAPID_PRIVATE_KEY && this.env.VAPID_PUBLIC_KEY && this.env.VAPID_SUBJECT);
+    return pushConfigured(this.env);
   }
 
   private pushSender(): PushSender | null {
-    if (!this.pushConfigured()) return null;
-    this.pushSenderCache ??= createPushSender({ publicKey: this.env.VAPID_PUBLIC_KEY!, privateKey: this.env.VAPID_PRIVATE_KEY!, subject: this.env.VAPID_SUBJECT! });
+    this.pushSenderCache ??= makePushSender(this.env);
     return this.pushSenderCache;
   }
 
   private async loadPush(): Promise<TournamentPushState> {
-    this.pushState ??= pushStateFromJSON(await this.ctx.storage.get('push'), { allowLocal: this.env.ROOM_JURISDICTION === 'none' });
+    this.pushState ??= pushStateFromJSON(await this.ctx.storage.get('push'), { allowLocal: allowLocalPush(this.env) });
     return this.pushState;
   }
 
