@@ -16,6 +16,17 @@ export async function requestNotificationPermission(): Promise<boolean> {
   return false;
 }
 
+/** Allgemeiner Hinweis, nur wenn die Seite im Hintergrund liegt (z. B. Schwarzes Brett). */
+export function notifyHidden(title: string, body: string): void {
+  if (typeof window === 'undefined' || !('Notification' in window)) return;
+  if (Notification.permission !== 'granted' || !document.hidden) return;
+  try {
+    new Notification(title, { body, icon: '/favicon.ico' });
+  } catch {
+    // Ignorieren, falls Benachrichtigungen nicht erlaubt sind.
+  }
+}
+
 export function notifyTurn(gameName: string, detail?: string): void {
   if (typeof window === 'undefined' || !('Notification' in window)) return;
   if (Notification.permission !== 'granted') return;
