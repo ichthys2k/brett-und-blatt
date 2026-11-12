@@ -109,7 +109,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 2. **Anfragen:** Wer als Zuschauer im Raum ist, sieht den Knopf „🙋 Ich möchte ab der nächsten Runde mitspielen“. Ein Tipp schickt die Anfrage (kein Text, keine Begründung); „Zurückziehen“ geht jederzeit. Ein Zuschauer hat höchstens eine offene Anfrage.
 3. **Entscheiden:** Die Raumleitung sieht ein Zeichen am Spielleiter-Knopf (`ModeratorPanel`) und eine Liste mit Bild und Name der Fragenden: **✅ Annehmen** / **❌ Ablehnen** (und „Alle annehmen“). Ohne Entscheidung bleibt die Anfrage bis zum Rundenende offen und verfällt dann **nicht**, sondern erinnert dort noch einmal.
 4. **Angenommen:** Die Person ist **vorgemerkt** (für alle sichtbar mit Bild und Name in der Mitgliederliste: „ab nächster Runde dabei“). Mitten in der Runde ändert sich nichts am Tisch – keine Geheimnisse, keine Uhr, kein Zugriff auf die laufende Partie.
-5. **Nächste Runde:** Beim Start der nächsten Runde (Revanche oder Neustart) bekommen Vorgemerkte der Reihe nach einen **freien oder neu geöffneten Platz**; die Plätze steigen dazu bis `max` des Spiels (`setSeatCount`), danach bleibt der Rest auf der **Warteliste** (höchstens 8) und rückt nach, wenn jemand aussteigt. Bei Spielen mit Teams ordnet die Raumleitung die Neuen in der Lobby zu (`setTeam`, `shuffleTeams`); Spiele mit fester Spielerzahl (z. B. nur zu zweit) bieten die Funktion gar nicht an.
+5. **Nächste Runde:** Beim Start der nächsten Runde (Revanche oder Neustart) bekommen Vorgemerkte der Reihe nach einen **freien oder neu geöffneten Platz**; die Plätze steigen dazu bis `max` des Spiels (`setSeatCount`), danach bleibt der Rest auf der **Warteliste** (höchstens 30) und rückt nach, wenn jemand aussteigt. Bei Spielen mit Teams ordnet die Raumleitung die Neuen in der Lobby zu (`setTeam`, `shuffleTeams`); Spiele mit fester Spielerzahl (z. B. nur zu zweit) bieten die Funktion gar nicht an.
 6. **Abgelehnt:** Die Person sieht „Leider nicht dabei“ und bleibt Zuschauer; neue Anfrage frühestens nach 2 Minuten. Wer zu oft nervt, kann wie heute entfernt werden (`kick`).
 7. **Verbindung zur Abstimmung am Rundenende:** Vorgemerkte dürfen dort **mit abstimmen** (Vorschlag), weil sie in der nächsten Runde mitspielen; das ändert auch die Zahl der Verbliebenen für die Kandidatenliste (`min ≤ n ≤ max`).
 8. **Verbindung zum Schwarzen Brett:** Ein Zettel kann auf eine **laufende** Runde zeigen („Plätze frei, Anfrage möglich“); wer dort „Bin dabei“ tippt, schickt damit die Anfrage.
@@ -127,7 +127,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 1. **Standard:** Soll „Neue dürfen anfragen“ von Anfang an **an** oder **aus** sein? (Vorschlag: an für öffentliche Räume, aus für private.)
 2. ~~**Mit abstimmen**~~ **Entschieden (Cornelius, 12.11.2026): Ja, Vorgemerkte stimmen am Rundenende mit ab.**
 3. ~~**In „Offene Runden“**~~ **Entschieden (Cornelius, 12.11.2026): Ja, laufende Runden stehen dort mit „läuft – Anfrage möglich“.**
-4. **Warteliste:** Reichen 8 Plätze; soll die Raumleitung sie umsortieren können (Vorschlag: nein, Reihenfolge der Annahme)?
+4. ~~**Warteliste**~~ **Entschieden (Cornelius, 12.11.2026): höchstens 30 Plätze.** Reihenfolge: wie vorgeschlagen die Reihenfolge der Annahme (nicht umsortierbar), sofern du nichts anderes willst.
 
 ## Schritte nach Zustimmung
 
