@@ -115,6 +115,14 @@ describe('Fernpartie: „Du bist dran“ (Raum)', () => {
     expect(env.notified).toEqual([[anna.token]]);
   });
 
+  it('sagt den Browsern, ob der Raum eine Fernpartie ist (nur dann gibt es den Schalter)', () => {
+    const corrRoom = started(true);
+    const normal = started(false);
+    const lastRoom = (c: { token: string }, env: ReturnType<typeof setup>) => [...(env.inbox.get(c.token.split('-')[1]!) ?? [])].reverse().find((m) => m.type === 'room') as { correspondence?: boolean } | undefined;
+    expect(lastRoom(corrRoom.anna, corrRoom.env)?.correspondence).toBe(true);
+    expect(lastRoom(normal.anna, normal.env)?.correspondence).toBeUndefined();
+  });
+
   it('gibt Kennungen nur über die Adapter-Abfrage heraus', () => {
     const { env, ben } = started(true);
     expect(env.room.tokenOfConnection('ben')).toBe(ben.token);

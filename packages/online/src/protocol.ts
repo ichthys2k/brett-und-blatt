@@ -154,6 +154,8 @@ export interface RoomMessage {
   lobby: LobbySettings;
   /** Wie viele Tisch-Bildschirme verbunden sind; fehlt, wenn keiner da ist. */
   displays?: number;
+  /** Läuft der Raum als Fernpartie? Nur dann bietet die Oberfläche Hinweise aufs Gerät an (#242); fehlt sonst. */
+  correspondence?: true;
   /** Nur bei Turnierpartien: zu welchem Turnier der Raum gehört. */
   match?: { tournament: string; label: string; noShow: boolean; series?: { bestOf: number; score: [number, number]; next: number | null; done: boolean } };
 }

@@ -3,6 +3,7 @@ import type { SoundName } from '@brett-und-blatt/ui';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createBotRunner } from './botRunner';
 import { notifyTurn } from './notifications';
+import { currentSubscribeMessage, onPushSubscriptionChange } from './push';
 import { loadGame, type LoadedGame } from './registry';
 import { crestForRoom } from './crestText';
 import { GAME_SERVER } from './server';
@@ -133,6 +134,8 @@ export interface RoomState {
   /** Kurzer, freundlicher Hinweis ohne Fehler, z. B. „Zu spät – jemand war schneller.“ */
   notice: string | null;
   signals: Signal[];
+  /** Hinweise aufs Gerät (#242): hat der Server für dieses Gerät ein Abo? `null`, solange er nichts gesagt hat (nicht eingerichtet). */
+  push: boolean | null;
 }
 
 let botRunner: ReturnType<typeof createBotRunner> | null = null;
@@ -143,7 +146,7 @@ let botRunner: ReturnType<typeof createBotRunner> | null = null;
  * nicht von allen gleichzeitig überrannt wird.
  */
 export class RoomConnection {
-  state: RoomState = { status: 'connecting', you: null, room: null, game: null, error: null, notice: null, signals: [] };
+  state: RoomState = { status: 'connecting', you: null, room: null, game: null, error: null, notice: null, signals: [], push: null };
   private ws: WebSocket | null = null;
   private listeners = new Set<() => void>();
   private retries = 0;
@@ -162,7 +165,11 @@ export class RoomConnection {
   ) {
     this.connect();
     document.addEventListener('visibilitychange', this.onVisible);
+    // Der Service Worker hat das Abo erneuert (#242): dem Server das neue melden.
+    if (!display) this.stopPushWatch = onPushSubscriptionChange(() => void this.reportPush());
   }
+
+  private stopPushWatch: () => void = () => {};
 
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
@@ -194,6 +201,7 @@ export class RoomConnection {
     this.stopped = true;
     window.clearTimeout(this.retryTimer);
     document.removeEventListener('visibilitychange', this.onVisible);
+    this.stopPushWatch();
     this.ws?.close();
     this.ws = null;
   }
@@ -234,6 +242,12 @@ export class RoomConnection {
       }
       this.retry();
     };
+  }
+
+  /** Meldet das Abo dieses Geräts, falls es Hinweise wünscht (#242). */
+  private async reportPush(): Promise<void> {
+    const message = await currentSubscribeMessage();
+    if (message && !this.stopped) this.send(message);
   }
 
   private retry(): void {
@@ -283,6 +297,11 @@ export class RoomConnection {
         return;
       case 'kicked':
         return this.set({ status: 'kicked' });
+      case 'pushState':
+        this.set({ push: message.enabled });
+        // Wünscht dieses Gerät Hinweise, der Server kennt aber kein Abo (neu verbunden, Endpunkt gewechselt): neu melden.
+        if (!message.enabled) void this.reportPush();
+        return;
       case 'pong':
         return;
     }

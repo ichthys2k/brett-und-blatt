@@ -21,6 +21,8 @@ import {
   useChosenTable,
 } from '../lib/look';
 import { music, useMusicPrefs } from '../lib/music';
+import { PushToggle } from '../components/PushToggle';
+import { loadPushWish } from '../lib/push';
 import { navigate, paths } from '../lib/router';
 import { setSoundSettings } from '../lib/sound';
 
@@ -126,6 +128,12 @@ function PortraitChoice() {
   );
 }
 
+/** Gesamtschalter für Hinweise aufs Gerät (#242): gilt für dieses Gerät; Turniere und Fernpartien melden das Abo beim nächsten Öffnen selbst. */
+function PushSwitch() {
+  const [on, setOn] = useState(() => loadPushWish());
+  return <PushToggle enabled={on} onEnable={() => setOn(true)} onDisable={() => setOn(false)} note={t('push.global')} />;
+}
+
 export function SoundSettingsScreen() {
   const prefs = useMusicPrefs();
   // Probehören endet mit dem Verlassen der Seite.
@@ -135,6 +143,7 @@ export function SoundSettingsScreen() {
     <TavernPage title="Optionen" subtitle="Ton, Musik, Aussehen und Updates.">
       <LookChoice />
       <AppVersion />
+      <PushSwitch />
       <PortraitChoice />
       <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
         <VolumeControls showClientOption />

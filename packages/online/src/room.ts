@@ -1383,7 +1383,7 @@ export class Room {
     const match = this.match
       ? { tournament: this.match.config.tournament, label: this.match.config.label, noShow: this.match.noShow !== null, ...(series ? { series: { bestOf: series.bestOf, score: this.seriesScoreBySeat(series), next: series.nextAt, done: series.winner !== undefined } } : {}) }
       : undefined;
-    return { type: 'room', code: this.code, phase: this.phase, hostId: this.hostId, members, lobby: this.lobby, ...(this.displays.size > 0 ? { displays: this.displays.size } : {}), ...(match ? { match } : {}) };
+    return { type: 'room', code: this.code, phase: this.phase, hostId: this.hostId, members, lobby: this.lobby, ...(this.displays.size > 0 ? { displays: this.displays.size } : {}), ...(!this.match && this.isCorrespondence() ? { correspondence: true as const } : {}), ...(match ? { match } : {}) };
   }
 
   private broadcastRoom(): void {
