@@ -58,7 +58,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 5. ~~**Stimmungen**~~ **Entschieden (Cornelius, 12.11.2026): Locker, Ernst, Mit Kindern, Lernen.**
 6. ~~**Umfang der ersten Stufe**~~ **Entschieden (Cornelius, 12.11.2026): Brett, Zettel, „Bin dabei“ und automatischer Raum.** Das Anheften bestehender offener Runden als Zettel (Ablauf Punkt 5) kommt später.
 
-## Erweiterung: Entscheidung am Rundenende (Cornelius, 12.11.2026)
+## Erweiterung: Entscheidung am Rundenende (Cornelius, 12.11.2026; Issue #298)
 
 **Wunsch:** Jede Spielergruppe – egal ob über das Schwarze Brett zusammengekommen oder über „Online spielen“ in einen Raum gekommen – entscheidet **am Ende einer Runde gemeinsam**, wie es weitergeht:
 
@@ -97,7 +97,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 3. **Eigenes Issue?** Der Wunsch gilt für alle Räume und ist größer als das Brett. Vorschlag: eigenes Issue „Online: Abstimmung am Rundenende“ (`status: Idee`, bis du es freigibst), #65 verweist darauf.
 4. **Reihenfolge:** Zuerst die Abstimmung am Rundenende (hilft jedem Raum sofort), dann das Brett – oder umgekehrt?
 
-## Erweiterung: Laufende Runde offen für Neue (Cornelius, 12.11.2026)
+## Erweiterung: Laufende Runde offen für Neue (Cornelius, 12.11.2026; Issue #299)
 
 **Wunsch:** Eine laufende Session kann **offen für neue Spieler** sein. Neue **fragen an**, ob sie **ab der nächsten Runde** mitspielen dürfen; **die Raumleitung (Spielleiter) entscheidet**.
 
