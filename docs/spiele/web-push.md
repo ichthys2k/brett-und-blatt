@@ -1,6 +1,6 @@
 # Web Push für Partie-Aufrufe und „Du bist dran“ (Konzept #206, Umsetzung #242)
 
-Stand (12.11.2026): **Schritte 1–9 umgesetzt** auf dem Zweig `claude/youthful-carson-mb10am` (Refs #242), noch nicht auf `main`. Offen sind nur noch Dinge, die Cornelius tun muss: Datenschutztext lesen und freigeben (Entwurf `PushPrivacy` in `Legal.tsx`, nicht juristisch geprüft), Schlüssel anlegen und die Funktion freischalten (Abschnitt „Freischalten“ unten), Live-Test auf echten Geräten. Ursprünglich entschieden am 10.11.2026 (Abschnitt „Entscheidungen“); der Fahrplan unten ist als Übergabe an andere Agenten geschrieben worden.
+Stand (12.11.2026): **Schritte 1–9 umgesetzt** auf dem Zweig `claude/youthful-carson-mb10am` (Refs #242), noch nicht auf `main`. Offen sind nur noch Dinge, die Cornelius tun muss: Datenschutztext (Entwurf `PushPrivacy` in `Legal.tsx`) ist von Cornelius am 12.11.2026 freigegeben, nicht juristisch geprüft; es bleiben Schlüssel anlegen und die Funktion freischalten (Abschnitt „Freischalten“ unten), Live-Test auf echten Geräten. Ursprünglich entschieden am 10.11.2026 (Abschnitt „Entscheidungen“); der Fahrplan unten ist als Übergabe an andere Agenten geschrieben worden.
 
 Verwandt: Kalenderdatei für feste Termine ([#243](https://github.com/ichthys2k/brett-und-blatt/issues/243), fertig und live), Turniersoftware (`turniersoftware.md`), PWA-Aktualisierung (#175, siehe `CLAUDE.md`).
 
@@ -209,7 +209,7 @@ Entwurf für einen neuen Abschnitt „Hinweise aufs Gerät (Web Push)“; **Corn
 
 - [x] Schritte 1–9 umgesetzt, `corepack pnpm check` grün, Rauchtest `push.mjs` grün
 - [x] Ohne gesetzte Variable `VAPID_PUBLIC_KEY` ist Push in der Oberfläche unsichtbar und der Server ignoriert Abos
-- [ ] Entwurf der Datenschutzerklärung von Cornelius gelesen und freigegeben
+- [x] Entwurf der Datenschutzerklärung von Cornelius gelesen und freigegeben (12.11.2026; keine rechtliche Prüfung)
 - [ ] Auf echten Geräten geprüft (Android, iPhone als installierte App, Desktop)
 - [x] `CLAUDE.md` (Abschnitt Turniere) und `turniersoftware.md` mit einem Satz zum Stand ergänzt
 
@@ -247,7 +247,7 @@ Bis die GitHub-Variable `VAPID_PUBLIC_KEY` gesetzt ist, ist die Funktion unsicht
 
 1. Schlüsselpaar anlegen und den privaten Teil als Secret ablegen, ohne ihn anzuzeigen: `node apps/server/scripts/vapid.mjs --put` (ruft `wrangler secret put VAPID_PRIVATE_KEY`; das Skript gibt nur den öffentlichen Schlüssel aus). Ohne Wrangler-Anmeldung auf dem Rechner: `node apps/server/scripts/vapid.mjs` zeigt beide Teile, den privaten dann direkt mit `corepack pnpm --filter @brett-und-blatt/server exec wrangler secret put VAPID_PRIVATE_KEY` eingeben und nirgends sonst speichern.
 2. GitHub-Variablen (Settings → Variables → Actions) setzen: `VAPID_PUBLIC_KEY` (der öffentliche Schlüssel, nicht geheim) und optional `VAPID_SUBJECT` (Standard `https://spiele.lipponer.de`). Die CI gibt sie an den Build der Web-App (`VITE_VAPID_PUBLIC_KEY`) und an den Worker (`wrangler deploy --var …`).
-3. Datenschutzabschnitt lesen und freigeben, bevor die Variable gesetzt wird: Der Abschnitt erscheint mit der Funktion.
+3. Datenschutzabschnitt: freigegeben (12.11.2026). Er erscheint mit der Funktion, sobald die Variable gesetzt ist.
 4. Danach `deploy`: neuer Build und neuer Worker. **Wird die Variable später wieder geleert, ist die Funktion mit dem nächsten Deploy aus.**
 5. Live-Test (nicht automatisierbar): Android-Chrome (Seite geschlossen, Meldung kommt, Antippen öffnet das Turnier), iPhone als installierte App, Desktop; Widerruf in den Browsereinstellungen.
 
