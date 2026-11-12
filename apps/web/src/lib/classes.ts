@@ -1,6 +1,7 @@
 import { CARD_SECTIONS, DEFAULT_CARD_SECTIONS, type CardSection, type CardSections, type ClassCard, type ClassView } from '@brett-und-blatt/online';
 import { serializeCrest } from '@brett-und-blatt/engine';
 import { currentCrest, hasCrest, onCrestSaved } from './crestStore';
+import { createRoom } from './online';
 import { GAME_SERVER } from './server';
 import { buildSnapshot } from './passShare';
 import { storage } from './storage';
@@ -96,6 +97,22 @@ export function rememberClass(entry: { code: string; name: string }): void {
     // ohne Speicher gibt es keine Merkliste; die Klasse bleibt auf dem Server
   }
   requestPassSync();
+}
+
+/**
+ * Öffnet einen Raum für die Klasse (#151): ein nicht öffentlicher Raum, dessen Code nur die Mitglieder der Klasse auf der Klassenseite sehen.
+ * Gibt den Raumcode zurück oder eine Fehlermeldung.
+ */
+export async function openClassRoom(classCode: string): Promise<{ room: string; warning?: string } | { error: string }> {
+  let room: string;
+  try {
+    room = await createRoom({ isPublic: false });
+  } catch {
+    return { error: 'Der Raum ließ sich nicht öffnen. Bitte später noch einmal versuchen.' };
+  }
+  const reply = await classAct(classCode, 'announceRoom', { room });
+  // Auch wenn die Meldung scheitert, ist der Raum offen – die Person kann ihn trotzdem betreten und den Code weitergeben.
+  return reply.ok ? { room } : { room, warning: `Der Raum ist offen, steht aber nicht in der Liste der Klasse: ${reply.error}` };
 }
 
 export function forgetClass(code: string): void {

@@ -6,7 +6,7 @@ import { ClassPacks, DueLead, DueMember, LearningLead, LearningMember, LearningN
 import { Button } from '../components/controls';
 import { EmojiKeypad, QrCode } from '../components/OnlineParts';
 import { TavernPage } from '../components/TavernPage';
-import { buildClassCard, classAct, createClassOnServer, forgetClass, hiddenSections, loadClasses, markCardSent, rememberClass, setSectionHidden } from '../lib/classes';
+import { buildClassCard, classAct, createClassOnServer, forgetClass, hiddenSections, loadClasses, markCardSent, openClassRoom, rememberClass, setSectionHidden } from '../lib/classes';
 import { createClassPasses, loadChildPasses, printChildCards, resetChildPin } from '../lib/classPasses';
 import { parseNames } from '../lib/classPassesCore';
 import { findGame } from '../lib/registry';
@@ -261,6 +261,47 @@ export function ClassPage({ code }: { code: string }) {
 
       {view?.me && (
         <>
+          <section className="space-y-2" aria-labelledby="class-rooms">
+            <h2 id="class-rooms" className="text-xl">
+              Offene Räume der Klasse
+            </h2>
+            {view.rooms.length === 0 ? (
+              <p className="text-sm text-muted">Gerade ist kein Raum für die Klasse offen.</p>
+            ) : (
+              <ul className="space-y-2">
+                {view.rooms.map((room) => (
+                  <li key={room.code} className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3">
+                    <span aria-hidden="true">{room.avatar}</span>
+                    <span className="min-w-0 flex-1 text-sm">
+                      Raum von <strong>{room.name}</strong>
+                    </span>
+                    <Button variant="primary" onClick={() => navigate(paths.room(room.code))}>
+                      Beitreten
+                    </Button>
+                    {(room.mine || view.lead) && (
+                      <Button variant="ghost" aria-label={`Raum von ${room.name} aus der Liste nehmen`} title="Aus der Liste nehmen" onClick={() => void apply('closeRoom', { room: room.code })}>
+                        ✕
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Button
+              onClick={() =>
+                void openClassRoom(code).then((result) => {
+                  if (!alive.current) return;
+                  if ('error' in result) return setMessage(result.error);
+                  if (result.warning) setMessage(result.warning);
+                  navigate(paths.room(result.room));
+                })
+              }
+            >
+              Raum für die Klasse öffnen
+            </Button>
+            <p className="text-xs text-muted">Der Raum ist nicht öffentlich: Nur Mitglieder dieser Klasse sehen ihn hier. Er bleibt sechs Stunden in der Liste.</p>
+          </section>
+
           <section className="space-y-2" aria-labelledby="class-members">
             <h2 id="class-members" className="text-xl">
               Mitglieder ({view.members.length})
