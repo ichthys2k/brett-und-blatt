@@ -124,7 +124,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 
 ### Offene Fragen dazu
 
-1. **Standard:** Soll „Neue dürfen anfragen“ von Anfang an **an** oder **aus** sein? (Vorschlag: an für öffentliche Räume, aus für private.)
+1. ~~**Standard**~~ **Entschieden (Cornelius, 12.11.2026): an für öffentliche Räume, aus für private.**
 2. ~~**Mit abstimmen**~~ **Entschieden (Cornelius, 12.11.2026): Ja, Vorgemerkte stimmen am Rundenende mit ab.**
 3. ~~**In „Offene Runden“**~~ **Entschieden (Cornelius, 12.11.2026): Ja, laufende Runden stehen dort mit „läuft – Anfrage möglich“.**
 4. ~~**Warteliste**~~ **Entschieden (Cornelius, 12.11.2026): höchstens 30 Plätze.** Reihenfolge: wie vorgeschlagen die Reihenfolge der Annahme (nicht umsortierbar), sofern du nichts anderes willst.
