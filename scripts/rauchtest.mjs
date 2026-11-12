@@ -234,7 +234,7 @@ try {
   }
   // Poker setzt bis zu zehn Spieler mit dem gemeinsamen Tisch (SeatRing): kein Überlappen, nichts außerhalb.
   if (ids.includes('poker')) {
-    for (const [width, height, count] of [[1280, 800, 10], [768, 1024, 10], [1280, 800, 2]]) {
+    for (const [width, height, count] of [[1280, 800, 10], [768, 1024, 10], [1024, 768, 6], [1280, 800, 2]]) {
       const context = await browser.newContext({ viewport: { width, height } });
       const pokerPage = await context.newPage();
       await pokerPage.goto(base);
