@@ -111,6 +111,18 @@ import {
   type LockOutcome,
   type LockRecord,
 } from '@brett-und-blatt/online';
+import {
+  claimSilently,
+  createPushSender,
+  nextPushWakeup,
+  ownsToken,
+  pushStateFromJSON,
+  pushStateToJSON,
+  runTournamentPush,
+  type PushSender,
+  type PushSubscriptionData,
+  type TournamentPushState,
+} from '@brett-und-blatt/online';
 import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
 import { bibelQuizKatalog } from './bibelquiz';
 import { wortspielKataloge } from './wortspiele';
@@ -193,6 +205,10 @@ interface Env {
   PASS_PEPPER?: string;
   /** Betreiber-Schlüssel (`wrangler secret put OPERATOR_KEY`): löscht per `DELETE /betreiber/…` Turniere und Klassen. Fehlt er, gibt es die Endpunkte nicht. */
   OPERATOR_KEY?: string;
+  /** Web Push (#242): privater Schlüssel als Secret (`wrangler secret put VAPID_PRIVATE_KEY`), öffentlicher Schlüssel und Absender als Variablen. Fehlt einer, ignoriert der Server Abos. */
+  VAPID_PRIVATE_KEY?: string;
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_SUBJECT?: string;
   TOURNAMENTS: DurableObjectNamespace<TournamentRoom>;
   ALLOWED_ORIGINS: string;
   /** "eu" im echten Betrieb. Nur der lokale Testserver kennt keine Jurisdiktionen und setzt "none". */
@@ -1951,6 +1967,9 @@ export class TournamentRoom extends DurableObject<Env> {
   /** Rollen aus der Organisation je Kennung, kurz gemerkt (#230); sie ändern sich selten, die Abfrage soll nicht jede Nachricht bremsen. */
   private orgCache = new Map<string, { roles: OrgRole[]; at: number }>();
   private lastListing: OpenRoomListing | null | undefined = undefined;
+  /** Web Push (#242): Abos, Spam-Schutz und gesendete Meldungen; liegt unter dem eigenen Schlüssel `push`, nicht im Turnier-Stand. */
+  private pushState: TournamentPushState | null = null;
+  private pushSenderCache: PushSender | null = null;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -2008,11 +2027,12 @@ export class TournamentRoom extends DurableObject<Env> {
   override async webSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
     const t = this.tournament;
     if (!t || typeof raw !== 'string') return;
-    const message = parseTournamentMessage(raw);
+    const message = parseTournamentMessage(raw, { allowLocal: this.env.ROOM_JURISDICTION === 'none' });
     if (!message) return this.sendTo(ws, { type: 'error', message: 'Unbekannte Nachricht.' });
     if (message.type === 'hello') {
       await this.loadOrgRoles([message.token]);
       ws.serializeAttachment({ token: message.token, name: message.name, avatar: message.avatar } satisfies TournamentAttachment);
+      await this.sendPushState(ws, message.token);
       if (t.greet(message.token, message.name, message.avatar)) return this.changed();
       return this.sendView(ws);
     }
@@ -2020,6 +2040,7 @@ export class TournamentRoom extends DurableObject<Env> {
     if (!token) return this.sendTo(ws, { type: 'error', message: 'Erst anmelden.' });
     await this.loadOrgRoles([token]);
     if (message.type === 'attachSeries' || message.type === 'detachSeries') return this.handleSeries(ws, t, token, message);
+    if (message.type === 'pushSubscribe' || message.type === 'pushUnsubscribe') return this.handlePush(ws, t, token, message);
     const result = applyTournamentMessage(t, { token, name: name ?? '', avatar: avatar ?? '' }, message);
     if (result.kind === 'delete') return this.deleteTournament(t);
     if (result.kind === 'error') return this.sendTo(ws, { type: 'error', message: result.message });
@@ -2033,6 +2054,70 @@ export class TournamentRoom extends DurableObject<Env> {
       ws.close(code === 1005 ? 1000 : code, 'Tschüss');
     } catch {
       // Schon zu.
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Web Push (#242)
+
+  private pushConfigured(): boolean {
+    return Boolean(this.env.VAPID_PRIVATE_KEY && this.env.VAPID_PUBLIC_KEY && this.env.VAPID_SUBJECT);
+  }
+
+  private pushSender(): PushSender | null {
+    if (!this.pushConfigured()) return null;
+    this.pushSenderCache ??= createPushSender({ publicKey: this.env.VAPID_PUBLIC_KEY!, privateKey: this.env.VAPID_PRIVATE_KEY!, subject: this.env.VAPID_SUBJECT! });
+    return this.pushSenderCache;
+  }
+
+  private async loadPush(): Promise<TournamentPushState> {
+    this.pushState ??= pushStateFromJSON(await this.ctx.storage.get('push'), { allowLocal: this.env.ROOM_JURISDICTION === 'none' });
+    return this.pushState;
+  }
+
+  private async savePush(): Promise<void> {
+    if (this.pushState) await this.ctx.storage.put('push', pushStateToJSON(this.pushState));
+  }
+
+  /** Sagt dem Gerät, ob für es Hinweise eingeschaltet sind; die Abo-Daten selbst gehen nie an jemanden. */
+  private async sendPushState(ws: WebSocket, token: string): Promise<void> {
+    if (!this.pushConfigured()) return;
+    this.sendTo(ws, { type: 'pushState', enabled: (await this.loadPush()).book.has(token) });
+  }
+
+  private async handlePush(ws: WebSocket, t: Tournament, token: string, message: { type: 'pushSubscribe'; subscription: PushSubscriptionData } | { type: 'pushUnsubscribe' }): Promise<void> {
+    if (!this.pushConfigured()) return this.sendTo(ws, { type: 'error', message: 'Hinweise aufs Gerät sind hier nicht eingerichtet.' });
+    const state = await this.loadPush();
+    if (message.type === 'pushUnsubscribe') {
+      state.book.remove(token);
+      await this.savePush();
+      return this.sendTo(ws, { type: 'pushState', enabled: false });
+    }
+    const snapshot = t.snapshot();
+    if (!snapshot.players.some((p) => ownsToken(p, token))) return this.sendTo(ws, { type: 'error', message: 'Hinweise gibt es nur für Teilnehmer.' });
+    if (!state.book.set(token, message.subscription, Date.now())) return this.sendTo(ws, { type: 'error', message: 'Es gibt schon zu viele Hinweis-Abos.' });
+    // Wer sich erst jetzt anmeldet, bekommt nichts über Vergangenes.
+    claimSilently(snapshot, state, token, Date.now());
+    await this.savePush();
+    this.sendTo(ws, { type: 'pushState', enabled: true });
+    await this.ctx.storage.setAlarm(Math.max(Math.min(t.nextWakeup(), nextPushWakeup(snapshot, Date.now()) ?? Infinity), Date.now() + 1000));
+  }
+
+  /** Versand im Hintergrund: Der Turnierablauf wartet nie darauf, Fehler halten ihn nicht auf. */
+  private async deliverPush(t: Tournament): Promise<void> {
+    const sender = this.pushSender();
+    if (!sender) return;
+    const state = await this.loadPush();
+    if (state.book.size === 0) return;
+    try {
+      const result = await runTournamentPush(t.snapshot(), state, sender, Date.now(), { persist: () => this.savePush() });
+      if (result.more) {
+        const soon = Date.now() + 10_000;
+        const current = await this.ctx.storage.getAlarm();
+        if (current === null || current > soon) await this.ctx.storage.setAlarm(soon);
+      }
+    } catch (err) {
+      console.error('Web Push fehlgeschlagen:', err instanceof Error ? err.name : 'Fehler');
     }
   }
 
@@ -2087,6 +2172,7 @@ export class TournamentRoom extends DurableObject<Env> {
   /** Löscht das Turnier samt Eintrag in „Offene Runden“; alle Verbindungen erfahren es. */
   private async deleteTournament(t: Tournament, reason = 'Turnier gelöscht'): Promise<void> {
     this.tournament = null;
+    this.pushState = null;
     await registryStub(this.env).removeRoom(t.snapshot().code).catch(() => undefined);
     await this.ctx.storage.deleteAll();
     for (const ws of this.ctx.getWebSockets()) {
@@ -2115,7 +2201,12 @@ export class TournamentRoom extends DurableObject<Env> {
     }
     if (!(await this.reportSeries(t)) && t.seriesDue()) retry = true;
     await this.ctx.storage.put('tournament', t.snapshot());
-    const wake = retry ? Date.now() + 30_000 : t.nextWakeup();
+    let wake = retry ? Date.now() + 30_000 : t.nextWakeup();
+    if (this.pushConfigured() && (await this.loadPush()).book.size > 0) {
+      // Erinnerung an die Frist (#242): der Wecker muss auch dann klingeln, wenn sonst nichts ansteht.
+      wake = Math.min(wake, nextPushWakeup(t.snapshot(), Date.now()) ?? Infinity);
+      this.ctx.waitUntil(this.deliverPush(t));
+    }
     await this.ctx.storage.setAlarm(Math.max(wake, Date.now() + 1000));
     await this.loadOrgRoles(this.ctx.getWebSockets().map((ws) => (ws.deserializeAttachment() as TournamentAttachment).token));
     for (const ws of this.ctx.getWebSockets()) this.sendView(ws);
