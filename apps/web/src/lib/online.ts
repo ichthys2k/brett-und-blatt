@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createBotRunner } from './botRunner';
 import { notifyTurn } from './notifications';
 import { loadGame, type LoadedGame } from './registry';
+import { t } from '../i18n';
 import { crestForRoom } from './crestText';
 import { GAME_SERVER } from './server';
 import { sound } from './sound';
@@ -288,6 +289,12 @@ export class RoomConnection {
         this.set({ error: message.message });
         window.setTimeout(() => this.state.error === message.message && this.set({ error: null }), 4000);
         return;
+      case 'joinDenied': {
+        const text = t('join.denied');
+        this.set({ notice: text });
+        window.setTimeout(() => this.state.notice === text && this.set({ notice: null }), 4000);
+        return;
+      }
       case 'kicked':
         return this.set({ status: 'kicked' });
       case 'pong':

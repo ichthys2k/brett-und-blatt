@@ -15,7 +15,9 @@ function formatTimeAgo(timeMs: number, now: number): string {
 
 function OpenGameCard({ room, now, onHide }: { room: OpenRoomListing; now: number; onHide?: () => void }) {
   const freeSeats = room.totalSeats - room.filledSeats;
-  const seatsText = room.tournament
+  const seatsText = room.running
+    ? t('join.running')
+    : room.tournament
     ? t('home.openGames.signedUp', { n: room.filledSeats })
     : freeSeats === 1
       ? t('home.openGames.oneSeat', { total: room.totalSeats })
@@ -55,7 +57,7 @@ function OpenGameCard({ room, now, onHide }: { room: OpenRoomListing; now: numbe
           </Button>
         )}
         <Button variant="primary" onClick={() => navigate(room.tournament ? paths.tournament(room.code) : paths.room(room.code))}>
-          {room.tournament ? t('home.openGames.signUp') : t('home.openGames.join')}
+          {room.tournament ? t('home.openGames.signUp') : room.running ? t('join.watch') : t('home.openGames.join')}
         </Button>
       </div>
     </li>
