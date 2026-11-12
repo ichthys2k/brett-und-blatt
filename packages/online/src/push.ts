@@ -11,7 +11,7 @@ export interface PushSubscriptionData {
   keys: { p256dh: string; auth: string };
 }
 
-export const PUSH_KINDS = ['matchCalled', 'deadline', 'tournamentStarted', 'tournamentFinished', 'yourTurn'] as const;
+export const PUSH_KINDS = ['matchCalled', 'deadline', 'tournamentStarted', 'tournamentFinished', 'yourTurn', 'boardYes', 'boardProposal', 'boardRoom'] as const;
 export type PushKind = (typeof PUSH_KINDS)[number];
 
 export function isPushKind(value: unknown): value is PushKind {

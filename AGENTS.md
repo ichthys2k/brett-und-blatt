@@ -59,22 +59,6 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) – wie ein neues Spiel angelegt wird.
 - Code: `apps/web` (React-App), `apps/server` (Cloudflare-Worker), `packages/engine`, `packages/online`, `packages/ui`, `packages/games/<id>` (Ordnername = Spiel-`id`), `content/`.
 
-## Fahrplan-Stand (Oktober 2026)
-
-- ✅ Etappe 1 Fundament, ✅ Etappe 2 Offline-Sammlung, ✅ Etappe 3 Online (Schiffe versenken, Quartett, Mäxle, Bingo), ✅ Etappe 4 Großes Brett (Go, Domino, Farbe & Form).
-- ✅ Etappe 5 Stichspiele (Skat, Schafkopf, Doppelkopf): Stich-Kern und Serien-Rahmen in der Engine, 4-Farben- und Bayerisch/Deutsches Blatt, Skat (ISkO, Seeger-Fabian), Schafkopf (Sauspiel, Wenz, Solo, Ramsch), Doppelkopf (DDV, Soli, Hochzeit, Ansagen).
-- ✅ Etappe 6 Eigene Spiele: abgeschlossen – Farbensortierer und Drachenspiel (Emojistone) sind live.
-- ✅ Etappe 7: **Eins!** (Uno), **Mau-Mau**, **Dame** (Checkers), **Nicht ärgern!** (Ludo), **Poker** (Texas Hold'em), **Wortgitter/Scrabble**, sowie **Bibel-Quiz**, **Galgenmännchen**, **Wort-Salat**. **Binokel** und **Wortgitter** wurden am 28.10. neu geschrieben und sind spielbar.
-- ✅ Weitere Spiele: **Gomoku** (Fünf in einer Reihe), **Kartenblitz** (früher Ligretto, Reaktionsspiel), **Würfelblock** (früher Kniffel). Mathe-Übungen für Klasse 5 & 6 (Zielzahl, Teiler-Duell, Rechenmauer, Enten-Rallye) und erweiterte Mathe-Modi in Klassikern umgesetzt.
-
-- Korrekturplan aus dem Prüfbericht (28.10.2026): ✅ Etappe 1 Lecks, ✅ Etappe 2 Prüfnetz, ✅ Etappe 3 Reparaturen (Stichspiele, Bots für Skat, Schafkopf, Doppelkopf, Kniffel; Wortgitter und Binokel neu), ✅ Etappe 4 Rechtliches (Umbenennungen, freies Wörterbuch, Enten-Rallye-Klänge im privaten Klang-Repo). Details in `docs/CHRONIK.md`.
-
-- Nachträge 28.10.2026: Sonderspiele der Stichspiel-Bots (Null, Tout, Bettel, Durch), Schafkopf-Ansagen und -Abrechnung korrigiert, Bibel-Quiz-Lösung in der Sicht verborgen, PWA lädt vorab nur ~6 MB, Git-Geschichte von den Enten-Rallye-MP3s bereinigt (andere Rechner: `git fetch && git reset --hard origin/main`).
-- Fahrplan ab 29.10.2026: A Doku-Abgleich → B Schach (Remis, PGN, Eröffnungsbuch) → C Stichspiele (Schafkopf-Frühende, Skat-Ansagen, PIMC-Bot) → D Klassenzimmer (Kartenblitz geteilter Bildschirm) → E Spieltiefe ✅ → F neue Spiele (Speed ✅, Präsident ✅, Tiefflug ✅, Fix gefunden! ✅; Pläne in `docs/spiele/`). Details unter „Nächste Schritte“ in `docs/CHRONIK.md`.
-- Paket B Wortspiele (1.11.2026): Bausteine Texteingabe mit Prüfung, Abstimmung, Teams in der Lobby; Spiele Kategorien-Sprint, Wer bin ich?, Verboten!. Kataloge (freigegeben) in `content/wortspiele/`, vom Spieleserver geladen. Kein freier Chat.
-
-Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; alle 20 Musikstücke sind eingetragen. Der Verlauf steht in `docs/CHRONIK.md`, offene Aufgaben in den GitHub Issues.
-
 ## Zum Abschluss einer Aufgabe
 
 Wenn sich am Stand etwas ändert, die Chronik `docs/CHRONIK.md` (neuer Stand gehört in die Chronik, nicht nach `CLAUDE.md`) und den Plan des Spiels in `docs/spiele/` nachtragen – mit auf dem Arbeitszweig, damit es im PR sichtbar ist.

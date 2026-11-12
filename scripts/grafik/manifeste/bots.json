@@ -45,8 +45,8 @@
       "prompt": "A thoughtful eagle owl scholar in a dark robe, one wing at its chin, a wooden chess knight on the table."
     },
     {
-      "id": "vorausschau",
-      "titel": "Vorausschau (Vierer-Schach)",
+      "id": "weitblick",
+      "titel": "Weitblick (Vierer-Schach)",
       "prompt": "A four-eyed-looking wise old tortoise with two pairs of spectacles pushed up on its head, a tiny crown-shaped game piece before it."
     },
     {
@@ -55,8 +55,8 @@
       "prompt": "A lively frog in a star-patterned cape, caught mid-hop."
     },
     {
-      "id": "legebot",
-      "titel": "Legebot (Farbe & Form)",
+      "id": "musterelster",
+      "titel": "Musterelster (Farbe & Form)",
       "prompt": "A tidy magpie craftsman with a leather apron holding a coloured wooden tile."
     },
     {
@@ -140,8 +140,8 @@
       "prompt": "A beaver master builder with a trowel and a brick."
     },
     {
-      "id": "gedaechtnis",
-      "titel": "Gedächtnis (Paare finden)",
+      "id": "merkfant",
+      "titel": "Merkfant (Paare finden)",
       "prompt": "A small elephant in a scholar's cap, one finger of its trunk raised as if remembering."
     },
     {
@@ -200,48 +200,48 @@
       "prompt": "A hare with very long ears and a turnip under its arm."
     },
     {
-      "id": "kreuz-bube",
-      "titel": "Skat-Bot (Skat)",
+      "id": "reizkeiler",
+      "titel": "Reizkeiler (Skat)",
       "prompt": "A boar in a card player's cap, one eyebrow raised, counting on its hooves."
     },
     {
-      "id": "kreuz-dame",
-      "titel": "Doppelkopf-Bot (Doppelkopf)",
+      "id": "frau-dulle",
+      "titel": "Frau Dulle (Doppelkopf)",
       "prompt": "An elegant goose lady with a lace collar and a fan of face-down cards."
     },
     {
-      "id": "ober",
-      "titel": "Schafkopf-Bot (Schafkopf)",
+      "id": "sauspieler",
+      "titel": "Sauspieler (Schafkopf)",
       "prompt": "A sturdy ibex in an alpine felt hat with a feather, cards face down."
     },
     {
-      "id": "go-meister",
-      "titel": "Go-Bot (Go)",
+      "id": "steinmeister",
+      "titel": "Steinmeister (Go)",
       "prompt": "A serene crane in a plain grey robe holding one black stone between its feathers."
     },
     {
-      "id": "domino-meister",
-      "titel": "Domino-Bot (Domino)",
+      "id": "steinleger",
+      "titel": "Steinleger (Domino)",
       "prompt": "A walrus with a big moustache stacking blank-faced tiles."
     },
     {
-      "id": "bingo-rufer",
-      "titel": "Bingo-Bot (Bingo)",
+      "id": "kugelrufer",
+      "titel": "Kugelrufer (Bingo)",
       "prompt": "A frog caller with a small hand bell and a lottery ball without number."
     },
     {
-      "id": "patience",
-      "titel": "Faustregeln (Solitaire)",
+      "id": "geduldsschnecke",
+      "titel": "Geduldsschnecke (Solitaire)",
       "prompt": "A patient old snail with spectacles, a single card on its shell-side table."
     },
     {
-      "id": "tic",
-      "titel": "Tic-Tac-Toe-Bot, Monte-Carlo (Tic-Tac-Toe, Ultimate)",
+      "id": "kreidekaetzchen",
+      "titel": "Kreidekätzchen (Tic-Tac-Toe), Würfelprobe (Ultimate Tic-Tac-Toe)",
       "prompt": "A playful kitten with chalk on its paws."
     },
     {
-      "id": "gomoku",
-      "titel": "Anfänger / Fortgeschritten (Gomoku)",
+      "id": "fuenferpanda",
+      "titel": "Fünferpanda (Gomoku)",
       "prompt": "A young panda student holding a white stone."
     },
     {

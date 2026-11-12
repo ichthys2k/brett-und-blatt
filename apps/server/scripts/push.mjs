@@ -271,6 +271,72 @@ await until('Fehler im normalen Raum', () => count(nAnna, 'error') > nErrors);
 check(/Fernpartien/.test(latest(nAnna, 'error').message), 'normaler Raum lehnt Hinweise ab');
 
 for (const box of [rAnna, rBen, nAnna, mover]) box.close();
+
+// ---------------------------------------------------------------------------
+// Schwarzes Brett
+
+console.log('— Schwarzes Brett —');
+async function boardUser(name) {
+  const box = await open(`${wsBase}/brett`);
+  box.token = `kennung-brett-${name}-0123456789abcdef`;
+  box.send({ type: 'hello', token: box.token });
+  await until('Brett-Sicht', () => latest(box, 'board')?.you);
+  return box;
+}
+async function boardReconnect(box) {
+  box.close();
+  await sleep(200);
+}
+
+// Zusage und fertiger Raum erreichen eine Verfasserin bei geschlossenem Browser.
+const bAnna = await boardUser('anna');
+const annaReceiver = await newReceiver('b-anna');
+bAnna.send({ type: 'pushSubscribe', subscription: annaReceiver.subscription });
+await expectPushState(bAnna, true, 'Anna am Brett');
+bAnna.send({ type: 'post', name: 'Anna', avatar: '🦊', games: ['tic-tac-toe'], seats: 'any', mood: 'relaxed' });
+await until('Annas Zettel', () => latest(bAnna, 'board').notes.some((n) => n.mine));
+const noteId = latest(bAnna, 'board').notes.find((n) => n.mine).id;
+await boardReconnect(bAnna);
+const bBen = await boardUser('ben');
+bBen.send({ type: 'join', noteId, gameId: 'tic-tac-toe', name: 'Ben' });
+const [yes] = await received(annaReceiver, 1);
+check(yes.payload.k === 'boardYes' && yes.payload.u === '#/brett', '„Bin dabei“ erreicht die Verfasserin bei geschlossenem Browser');
+check(await vapidOk(yes.headers), 'VAPID-Kopf stimmt (Brett)');
+check(!/Anna|Ben|tic/i.test(JSON.stringify(yes.payload)), 'Inhalt ohne Namen und Spielnamen (Brett)');
+bBen.send({ type: 'confirm', noteId, ok: true });
+const matched = await until('Treffer', () => latest(bBen, 'matched'));
+const [, room] = await received(annaReceiver, 2);
+check(room.payload.k === 'boardRoom' && room.payload.u === `#/raum/${matched.code}`, '„Der Raum steht“ erreicht die Verfasserin');
+
+// Ein Vorschlag erreicht eine Zustimmende, die nicht mehr verbunden ist.
+const bDora = await boardUser('dora');
+bDora.send({ type: 'post', name: 'Dora', avatar: '🦉', games: ['skat'], seats: 'any', mood: 'relaxed' });
+await until('Doras Zettel', () => latest(bDora, 'board').notes.some((n) => n.mine));
+const doraNote = latest(bDora, 'board').notes.find((n) => n.mine).id;
+const bCara = await boardUser('cara');
+const caraReceiver = await newReceiver('b-cara');
+bCara.send({ type: 'pushSubscribe', subscription: caraReceiver.subscription });
+await expectPushState(bCara, true, 'Cara am Brett');
+bCara.send({ type: 'join', noteId: doraNote, gameId: 'skat', name: 'Cara' });
+await until('Caras Zusage', () => latest(bCara, 'board').notes.some((n) => n.joined === 'skat'));
+await boardReconnect(bCara);
+const bEva = await boardUser('eva');
+bEva.send({ type: 'join', noteId: doraNote, gameId: 'skat', name: 'Eva' });
+const [proposal] = await received(caraReceiver, 1);
+check(proposal.payload.k === 'boardProposal', 'ein Vorschlag erreicht eine Zustimmende bei geschlossenem Browser');
+
+// Widerruf und Spam-Schutz.
+const bCara2 = await boardUser('cara');
+bCara2.send({ type: 'pushUnsubscribe' });
+await expectPushState(bCara2, false, 'Cara nach Widerruf');
+check(true, 'Widerruf am Brett wird bestätigt');
+const evilBoard = await boardUser('evil');
+const errs = count(evilBoard, 'boardError');
+evilBoard.send({ type: 'pushSubscribe', subscription: { endpoint: 'https://evil.example/x', keys: (await newReceiver('x')).subscription.keys } });
+await until('Fehler für fremden Host (Brett)', () => count(evilBoard, 'boardError') > errs);
+check(true, 'Brett: Abo mit fremdem Host wird abgelehnt');
+for (const box of [bBen, bDora, bEva, bCara2, evilBoard]) box.close();
+
 service.close();
 console.log(failures === 0 ? '✓ Push-Rauchtest bestanden' : `✗ ${failures} Prüfung(en) fehlgeschlagen`);
 process.exit(failures === 0 ? 0 : 1);

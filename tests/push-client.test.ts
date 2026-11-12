@@ -138,6 +138,9 @@ describe('Service-Worker-Skript push-sw.js', () => {
       tournamentStarted: 'Das Turnier hat begonnen.',
       tournamentFinished: 'Das Turnier ist beendet.',
       yourTurn: 'Du bist am Zug.',
+      boardYes: 'Jemand hat auf deinem Zettel „Bin dabei“ gesagt.',
+      boardProposal: 'Ein Vorschlag am Schwarzen Brett wartet auf deine Zusage.',
+      boardRoom: 'Dein Raum steht – komm herein!',
     };
     for (const [k, body] of Object.entries(expected)) {
       sw.shown.length = 0;
