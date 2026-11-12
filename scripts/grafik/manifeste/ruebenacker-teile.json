@@ -1,0 +1,73 @@
+{
+  "beschreibung": "G9 (#318) C: Hasen in den sechs Platzfarben aus packages/games/turnip-patch/src/ui/index.tsx (Rot, Blau, Grün, Gelb, Lila, Türkis), Rübe, Maulwurf, Erdhügel, Zaunpfahl; freigestellt.",
+  "stil": "Painterly storybook oil illustration for young children, friendly and round shapes, bright but warm colours, a single subject centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, soft contact shadow only. No text, no numbers.",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo",
+  "format": "1:1",
+  "ziel": "packages/games/turnip-patch/src/ui/teile",
+  "groesse": [
+    256,
+    256
+  ],
+  "motive": [
+    {
+      "id": "hase-rot",
+      "titel": "Hase rot",
+      "freistellen": true,
+      "prompt": "A cheerful running hare seen from the side wearing a small red neckerchief and a matching cap (colour close to #DC2626), with upright pointed ears."
+    },
+    {
+      "id": "hase-blau",
+      "titel": "Hase blau",
+      "freistellen": true,
+      "prompt": "A cheerful running hare seen from the side wearing a small blue neckerchief and a matching cap (colour close to #2563EB), with one ear folded down."
+    },
+    {
+      "id": "hase-gruen",
+      "titel": "Hase gruen",
+      "freistellen": true,
+      "prompt": "A cheerful running hare seen from the side wearing a small green neckerchief and a matching cap (colour close to #16A34A), with short round ears and a white blaze on the nose."
+    },
+    {
+      "id": "hase-gelb",
+      "titel": "Hase gelb",
+      "freistellen": true,
+      "prompt": "A cheerful running hare seen from the side wearing a small yellow neckerchief and a matching cap (colour close to #CA8A04), with very long ears and a spotted coat."
+    },
+    {
+      "id": "hase-lila",
+      "titel": "Hase lila",
+      "freistellen": true,
+      "prompt": "A cheerful running hare seen from the side wearing a small purple neckerchief and a matching cap (colour close to #9333EA), with lop ears hanging down."
+    },
+    {
+      "id": "hase-tuerkis",
+      "titel": "Hase tuerkis",
+      "freistellen": true,
+      "prompt": "A cheerful running hare seen from the side wearing a small turquoise neckerchief and a matching cap (colour close to #0D9488), with a dark coat with white paws."
+    },
+    {
+      "id": "ruebe",
+      "titel": "Riesenrübe",
+      "prompt": "A giant white-and-purple turnip with lush green leaves, half out of the earth.",
+      "freistellen": true
+    },
+    {
+      "id": "maulwurf",
+      "titel": "Maulwurf",
+      "prompt": "A friendly mole with tiny spectacles peeking out of a molehill.",
+      "freistellen": true
+    },
+    {
+      "id": "erdhuegel",
+      "titel": "Erdhügel",
+      "prompt": "A small fresh molehill of dark crumbly earth.",
+      "freistellen": true
+    },
+    {
+      "id": "zaunpfahl",
+      "titel": "Zaunpfahl",
+      "prompt": "A short wooden fence post with a tuft of grass.",
+      "freistellen": true
+    }
+  ]
+}

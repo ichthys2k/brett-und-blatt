@@ -1,0 +1,34 @@
+{
+  "beschreibung": "G9 (#318) B1: vier Waren als Kartenmotiv (Anki-Medien, #270).",
+  "stil": "Painterly storybook oil illustration of market goods as the motif of a playing card: the goods centred on a plain warm dark wooden background, rich colours, warm light, clearly readable at small size. Square composition, the goods fill about 70% of the image. No text, no numbers, no characters, no faces, no hands.",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo",
+  "format": "1:1",
+  "ziel": "packages/games/market-stalls/src/ui/waren",
+  "groesse": [
+    256,
+    256
+  ],
+  "praefix": "bub-marktstaende-",
+  "motive": [
+    {
+      "id": "bread",
+      "titel": "Brot",
+      "prompt": "A basket with a round crusty loaf, two pretzels and a braided bun."
+    },
+    {
+      "id": "cheese",
+      "titel": "Käse",
+      "prompt": "A wheel of yellow cheese with one wedge cut out on a wooden board."
+    },
+    {
+      "id": "apples",
+      "titel": "Äpfel",
+      "prompt": "A wicker basket of red and green apples with a few leaves."
+    },
+    {
+      "id": "fish",
+      "titel": "Fisch",
+      "prompt": "Three silver fish on a bed of leaves in a flat wooden tray."
+    }
+  ]
+}

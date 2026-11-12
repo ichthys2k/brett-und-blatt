@@ -1,0 +1,173 @@
+{
+  "beschreibung": "G7 (#315): Pokale, Siegel, Urkunde, Pokalschrank. Format und Größe je Motiv; \"freistellen\": grünen Grund (#00B140) entfernen, WebP mit Alphakanal.",
+  "stil": "Painterly storybook oil illustration of a single object, medieval tavern and fairy-tale kingdom mood: warm candlelight from the upper left, rich colours, soft shadow directly beneath, the object centred and fully inside the image with margin around it, on a plain flat pure green background (#00B140) so that it can be cut out. No text, no letters, no numbers, no engraving, no figures, no faces.",
+  "ohne": "text, letters, numbers, engraved writing, coats of arms with letters, people, animals, faces, hands, modern objects, logos, watermark, photo; bei Gegenständen zusätzlich: green on the object itself, background gradient",
+  "format": "1:1",
+  "ziel": "apps/web/src/assets/ehrung",
+  "groesse": [
+    384,
+    384
+  ],
+  "referenzen": [
+    "packages/games/color-sorter/src/ui/items/dream-crestBook.webp"
+  ],
+  "motive": [
+    {
+      "id": "pokal-gold",
+      "titel": "Pokal Gold (Sieg)",
+      "format": "1:1",
+      "groesse": [
+        384,
+        384
+      ],
+      "freistellen": true,
+      "prompt": "A golden goblet-shaped trophy cup with two handles and a smooth blank front, small red gemstones on the stem."
+    },
+    {
+      "id": "pokal-silber",
+      "titel": "Pokal Silber",
+      "format": "1:1",
+      "groesse": [
+        384,
+        384
+      ],
+      "freistellen": true,
+      "prompt": "A silver trophy cup with two handles and a smooth blank front, slightly smaller and simpler."
+    },
+    {
+      "id": "pokal-bronze",
+      "titel": "Pokal Bronze",
+      "format": "1:1",
+      "groesse": [
+        384,
+        384
+      ],
+      "freistellen": true,
+      "prompt": "A bronze trophy cup with two handles and a smooth blank front, sturdy and plain."
+    },
+    {
+      "id": "kranz",
+      "titel": "Lorbeerkranz (Solo-Erfolg)",
+      "format": "1:1",
+      "groesse": [
+        384,
+        384
+      ],
+      "freistellen": true,
+      "prompt": "A laurel wreath with golden-tipped leaves tied with a red ribbon."
+    },
+    {
+      "id": "handschlag",
+      "titel": "Remis",
+      "format": "1:1",
+      "groesse": [
+        384,
+        384
+      ],
+      "freistellen": true,
+      "prompt": "Two tankards clinking together in a friendly toast, foam splashing, no hands visible."
+    },
+    {
+      "id": "trostkerze",
+      "titel": "Niederlage",
+      "format": "1:1",
+      "groesse": [
+        384,
+        384
+      ],
+      "freistellen": true,
+      "prompt": "A small candle in a brass holder that has just gone out, a thin curl of smoke, next to it a fresh candle waiting to be lit."
+    },
+    {
+      "id": "turnierkelch",
+      "titel": "Turniersieg",
+      "format": "1:1",
+      "groesse": [
+        384,
+        384
+      ],
+      "freistellen": true,
+      "prompt": "A tall ornate golden tournament chalice with a lid and small pennant-shaped decorations, blank front."
+    },
+    {
+      "id": "siegel-rot",
+      "titel": "Urkundensiegel",
+      "format": "1:1",
+      "groesse": [
+        256,
+        256
+      ],
+      "freistellen": true,
+      "prompt": "A round red wax seal with a simple embossed star and two short ribbons."
+    },
+    {
+      "id": "siegel-gold",
+      "titel": "Siegel Turnier",
+      "format": "1:1",
+      "groesse": [
+        256,
+        256
+      ],
+      "freistellen": true,
+      "prompt": "A round golden seal with a simple embossed crown and two short blue ribbons."
+    },
+    {
+      "id": "stempelkissen",
+      "titel": "Stempelwand-Schmuck",
+      "format": "1:1",
+      "groesse": [
+        256,
+        256
+      ],
+      "freistellen": true,
+      "prompt": "A wooden hand stamp next to an open ink pad with dark blue ink."
+    },
+    {
+      "id": "treppchen",
+      "titel": "Siegertreppchen",
+      "format": "16:9",
+      "groesse": [
+        960,
+        540
+      ],
+      "freistellen": true,
+      "prompt": "A three-step wooden winners' podium made of tavern barrels and planks, the middle step highest, decorated with small bunting, empty."
+    },
+    {
+      "id": "urkunde-hoch",
+      "titel": "Urkunde (A4 hoch, Druck)",
+      "format": "3:4",
+      "groesse": [
+        1500,
+        2000
+      ],
+      "freistellen": false,
+      "prompt": "A sheet of aged parchment with an ornate painted border of oak leaves, gold lines and small corner medallions; the whole inner area is plain empty parchment.",
+      "stil": "Painterly storybook oil illustration of a single object, medieval tavern and fairy-tale kingdom mood: warm candlelight from the upper left, rich colours, soft shadow directly beneath, filling the whole image edge to edge, viewed straight from the front, evenly lit. No text, no letters, no numbers, no engraving, no figures, no faces."
+    },
+    {
+      "id": "pokalschrank",
+      "titel": "Pokalschrank-Hintergrund",
+      "format": "4:3",
+      "groesse": [
+        1200,
+        900
+      ],
+      "freistellen": false,
+      "prompt": "An open dark oak display cabinet with three empty shelves and carved frame, warm light from inside, no objects on the shelves.",
+      "stil": "Painterly storybook oil illustration of a single object, medieval tavern and fairy-tale kingdom mood: warm candlelight from the upper left, rich colours, soft shadow directly beneath, filling the whole image edge to edge, viewed straight from the front, evenly lit. No text, no letters, no numbers, no engraving, no figures, no faces."
+    },
+    {
+      "id": "pass-einband",
+      "titel": "Einband des Spielerpasses",
+      "format": "3:4",
+      "groesse": [
+        600,
+        800
+      ],
+      "freistellen": false,
+      "prompt": "A worn brown leather book cover with brass corners and an empty embossed oval in the centre.",
+      "stil": "Painterly storybook oil illustration of a single object, medieval tavern and fairy-tale kingdom mood: warm candlelight from the upper left, rich colours, soft shadow directly beneath, filling the whole image edge to edge, viewed straight from the front, evenly lit. No text, no letters, no numbers, no engraving, no figures, no faces."
+    }
+  ]
+}

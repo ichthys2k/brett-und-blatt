@@ -1,0 +1,34 @@
+{
+  "beschreibung": "G9 (#318) C: Kartenmotive ohne Zahl (Anki-Medien, #270).",
+  "stil": "Painterly storybook oil illustration for young children, friendly and round shapes, bright but warm colours, the motif of a playing card: the subject centred on a plain dark earth-brown background, filling about 70% of the image. No text, no numbers.",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo",
+  "format": "3:4",
+  "ziel": "packages/games/turnip-patch/src/ui/karten",
+  "groesse": [
+    300,
+    400
+  ],
+  "praefix": "bub-ruebenacker-",
+  "motive": [
+    {
+      "id": "karte-1",
+      "titel": "Karte 1",
+      "prompt": "One carrot lying on dark earth."
+    },
+    {
+      "id": "karte-2",
+      "titel": "Karte 2",
+      "prompt": "Two carrots crossed."
+    },
+    {
+      "id": "karte-3",
+      "titel": "Karte 3",
+      "prompt": "Three carrots in a bunch."
+    },
+    {
+      "id": "karte-maulwurf",
+      "titel": "Maulwurf-Karte",
+      "prompt": "A mole's paws and nose breaking through the earth."
+    }
+  ]
+}

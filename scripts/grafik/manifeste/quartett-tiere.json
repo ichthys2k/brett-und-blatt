@@ -1,0 +1,207 @@
+{
+  "beschreibung": "G9a (#319): Quartett-Set tiere, ein Bild je Karte (Anki-Medien, #270). Sachlich richtig; jede Auswahl gegen die Quelle der Karte prüfen.",
+  "stil": "Painterly natural-history illustration in warm oil colours, like a plate from an old illustrated bestiary of a fairy-tale kingdom but anatomically accurate: one animal, whole body visible, in a calm characteristic pose in a softly painted hint of its natural habitat, warm even light, background slightly darker towards the edges. No clothes, no human expression. No text.",
+  "ohne": "text, letters, numbers, labels, watermark, border, frame, card layout, modern objects, logos, photo",
+  "format": "4:3",
+  "ziel": "content/quartett/bilder/tiere",
+  "groesse": [
+    480,
+    360
+  ],
+  "praefix": "bub-quartett-tiere-",
+  "qualitaet": 78,
+  "motive": [
+    {
+      "id": "a1",
+      "titel": "A1 Afrikanischer Elefant",
+      "gruppe": "A Savanne",
+      "prompt": "Subject: a African elephant, typical adult, in its natural habitat (African savannah)."
+    },
+    {
+      "id": "a2",
+      "titel": "A2 Giraffe",
+      "gruppe": "A Savanne",
+      "prompt": "Subject: a giraffe, typical adult, in its natural habitat (African savannah)."
+    },
+    {
+      "id": "a3",
+      "titel": "A3 Löwe",
+      "gruppe": "A Savanne",
+      "prompt": "Subject: a male lion, typical adult, in its natural habitat (African savannah)."
+    },
+    {
+      "id": "a4",
+      "titel": "A4 Breitmaulnashorn",
+      "gruppe": "A Savanne",
+      "prompt": "Subject: a white rhinoceros, typical adult, in its natural habitat (African savannah)."
+    },
+    {
+      "id": "b1",
+      "titel": "B1 Rothirsch",
+      "gruppe": "B Wald",
+      "prompt": "Subject: a red deer stag, typical adult, in its natural habitat (European forest)."
+    },
+    {
+      "id": "b2",
+      "titel": "B2 Wildschwein",
+      "gruppe": "B Wald",
+      "prompt": "Subject: a wild boar, typical adult, in its natural habitat (European forest)."
+    },
+    {
+      "id": "b3",
+      "titel": "B3 Rotfuchs",
+      "gruppe": "B Wald",
+      "prompt": "Subject: a red fox, typical adult, in its natural habitat (European forest)."
+    },
+    {
+      "id": "b4",
+      "titel": "B4 Braunbär",
+      "gruppe": "B Wald",
+      "prompt": "Subject: a brown bear, typical adult, in its natural habitat (European forest)."
+    },
+    {
+      "id": "c1",
+      "titel": "C1 Hausrind",
+      "gruppe": "C Bauernhof",
+      "prompt": "Subject: a domestic cow, typical adult, in its natural habitat (farm)."
+    },
+    {
+      "id": "c2",
+      "titel": "C2 Hausschwein",
+      "gruppe": "C Bauernhof",
+      "prompt": "Subject: a domestic pig, typical adult, in its natural habitat (farm)."
+    },
+    {
+      "id": "c3",
+      "titel": "C3 Hauspferd",
+      "gruppe": "C Bauernhof",
+      "prompt": "Subject: a domestic horse, typical adult, in its natural habitat (farm)."
+    },
+    {
+      "id": "c4",
+      "titel": "C4 Hausschaf",
+      "gruppe": "C Bauernhof",
+      "prompt": "Subject: a domestic sheep, typical adult, in its natural habitat (farm)."
+    },
+    {
+      "id": "d1",
+      "titel": "D1 Blauwal",
+      "gruppe": "D Meer",
+      "prompt": "Subject: a blue whale (whole animal under water), typical adult, in its natural habitat (open sea)."
+    },
+    {
+      "id": "d2",
+      "titel": "D2 Schwertwal",
+      "gruppe": "D Meer",
+      "prompt": "Subject: a orca, typical adult, in its natural habitat (open sea)."
+    },
+    {
+      "id": "d3",
+      "titel": "D3 Weißer Hai",
+      "gruppe": "D Meer",
+      "prompt": "Subject: a great white shark (calm, mouth closed), typical adult, in its natural habitat (open sea)."
+    },
+    {
+      "id": "d4",
+      "titel": "D4 Großer Tümmler",
+      "gruppe": "D Meer",
+      "prompt": "Subject: a bottlenose dolphin, typical adult, in its natural habitat (open sea)."
+    },
+    {
+      "id": "e1",
+      "titel": "E1 Haushund",
+      "gruppe": "E Haustiere",
+      "prompt": "Subject: a dog (medium-sized mixed breed), typical adult, in its natural habitat (home and garden)."
+    },
+    {
+      "id": "e2",
+      "titel": "E2 Hauskatze",
+      "gruppe": "E Haustiere",
+      "prompt": "Subject: a house cat, typical adult, in its natural habitat (home and garden)."
+    },
+    {
+      "id": "e3",
+      "titel": "E3 Hauskaninchen",
+      "gruppe": "E Haustiere",
+      "prompt": "Subject: a domestic rabbit, typical adult, in its natural habitat (home and garden)."
+    },
+    {
+      "id": "e4",
+      "titel": "E4 Meerschweinchen",
+      "gruppe": "E Haustiere",
+      "prompt": "Subject: a guinea pig, typical adult, in its natural habitat (home and garden)."
+    },
+    {
+      "id": "f1",
+      "titel": "F1 Strauß",
+      "gruppe": "F Vögel",
+      "prompt": "Subject: a ostrich, typical adult, in its natural habitat (its typical bird habitat)."
+    },
+    {
+      "id": "f2",
+      "titel": "F2 Steinadler",
+      "gruppe": "F Vögel",
+      "prompt": "Subject: a golden eagle, typical adult, in its natural habitat (its typical bird habitat)."
+    },
+    {
+      "id": "f3",
+      "titel": "F3 Wanderfalke",
+      "gruppe": "F Vögel",
+      "prompt": "Subject: a peregrine falcon, typical adult, in its natural habitat (its typical bird habitat)."
+    },
+    {
+      "id": "f4",
+      "titel": "F4 Kaiserpinguin",
+      "gruppe": "F Vögel",
+      "prompt": "Subject: a emperor penguin, typical adult, in its natural habitat (its typical bird habitat)."
+    },
+    {
+      "id": "g1",
+      "titel": "G1 Tiger",
+      "gruppe": "G Asien",
+      "prompt": "Subject: a tiger, typical adult, in its natural habitat (Asia)."
+    },
+    {
+      "id": "g2",
+      "titel": "G2 Großer Panda",
+      "gruppe": "G Asien",
+      "prompt": "Subject: a giant panda, typical adult, in its natural habitat (Asia)."
+    },
+    {
+      "id": "g3",
+      "titel": "G3 Orang-Utan",
+      "gruppe": "G Asien",
+      "prompt": "Subject: a orangutan, typical adult, in its natural habitat (Asia)."
+    },
+    {
+      "id": "g4",
+      "titel": "G4 Komodowaran",
+      "gruppe": "G Asien",
+      "prompt": "Subject: a Komodo dragon, typical adult, in its natural habitat (Asia)."
+    },
+    {
+      "id": "h1",
+      "titel": "H1 Eisbär",
+      "gruppe": "H Polargebiete",
+      "prompt": "Subject: a polar bear, typical adult, in its natural habitat (polar regions)."
+    },
+    {
+      "id": "h2",
+      "titel": "H2 Walross",
+      "gruppe": "H Polargebiete",
+      "prompt": "Subject: a walrus, typical adult, in its natural habitat (polar regions)."
+    },
+    {
+      "id": "h3",
+      "titel": "H3 Rentier",
+      "gruppe": "H Polargebiete",
+      "prompt": "Subject: a reindeer, typical adult, in its natural habitat (polar regions)."
+    },
+    {
+      "id": "h4",
+      "titel": "H4 Polarfuchs",
+      "gruppe": "H Polargebiete",
+      "prompt": "Subject: a arctic fox in white winter coat, typical adult, in its natural habitat (polar regions)."
+    }
+  ]
+}

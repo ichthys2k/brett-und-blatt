@@ -1,0 +1,74 @@
+{
+  "beschreibung": "G8 (#316): Kulissen je Rubrik und Spiel; zusätzlich je Bild eine Fassung @2x (2560 × 1440) für den Tisch-Bildschirm.",
+  "stil": "Painterly storybook oil illustration of an empty medieval fantasy scene, wide landscape background for a game screen: rich warm colours, soft atmospheric light, detailed decoration at the left and right edges and the top, while the centre and lower middle stay calm, darker and uncluttered so that interface elements can be laid over it. No people, no animals, no characters, no faces, no text, no letters, no numbers, no frame.",
+  "ohne": "people, animals, characters, faces, text, letters, numbers, signs with writing, watermark, border, frame, modern objects, logos, photo",
+  "format": "16:9",
+  "ziel": "apps/web/src/assets/kulissen",
+  "groesse": [
+    1280,
+    720
+  ],
+  "qualitaet": 72,
+  "motive": [
+    {
+      "id": "rubrik-strategie",
+      "titel": "Rubrik Strategie & Brett",
+      "prompt": "A quiet scholar's corner of a tavern: shelves with wooden game boxes and carved game pieces at the sides, a tall window with evening light, an empty heavy table in the calm centre."
+    },
+    {
+      "id": "rubrik-karten",
+      "titel": "Rubrik Karten & Stich",
+      "prompt": "A cosy back room of a tavern for card players: green felt wall hangings, brass lanterns, beer barrels and hanging hop garlands at the sides, an empty round table in the calm centre."
+    },
+    {
+      "id": "rubrik-familie",
+      "titel": "Rubrik Familie & Gesellschaft",
+      "prompt": "A cheerful village fair ground in the afternoon: colourful bunting, market tents and a maypole at the sides, an open meadow in the calm centre."
+    },
+    {
+      "id": "rubrik-mathe",
+      "titel": "Rubrik Mathe",
+      "prompt": "A medieval school room and counting house: abacus, hourglass, measuring rods, a globe and stacked slates at the sides (all slates blank), warm window light, an empty desk in the calm centre."
+    },
+    {
+      "id": "hafen",
+      "titel": "Schiffe versenken",
+      "prompt": "A medieval harbour at dawn: wooden piers, moored sailing ships and a lighthouse at the sides, open calm sea in the centre."
+    },
+    {
+      "id": "acker",
+      "titel": "Rübenacker",
+      "prompt": "A vegetable field at the edge of a village in morning light: fence posts, a scarecrow without face and big turnip leaves at the sides, soft earth rows in the calm centre."
+    },
+    {
+      "id": "bach",
+      "titel": "Enten-Rallye",
+      "prompt": "A lively brook winding through a meadow with reeds, a small wooden bridge and bunting at the sides, open water in the calm centre."
+    },
+    {
+      "id": "nachtweide",
+      "titel": "Wölfe im Schafspelz",
+      "prompt": "A moonlit sheep pasture with a shepherd's hut, a fold fence and dark forest edge at the sides, misty grass in the calm centre."
+    },
+    {
+      "id": "schreibstube",
+      "titel": "Bibel-Quiz, Wortspiele",
+      "prompt": "A monastery scriptorium: tall shelves with old books, a writing desk with quill and candle at the sides (pages blank), soft light through a round window, calm stone floor in the centre."
+    },
+    {
+      "id": "sternwarte",
+      "titel": "Quartett Weltraum, Zeitstrahl, Schätzmeister",
+      "prompt": "A medieval astronomer's tower room: brass telescope, armillary sphere and star charts without writing at the sides, an open roof hatch with night sky, calm floor in the centre."
+    },
+    {
+      "id": "marktplatz",
+      "titel": "Marktplatz, Marktstände, Grafschaft",
+      "prompt": "A half-timbered town market square in the morning: guild houses, a fountain and covered stalls at the sides, empty cobblestones in the calm centre."
+    },
+    {
+      "id": "wuerfelstube",
+      "titel": "Mäxle, Würfelblock, Poker",
+      "prompt": "A dim tavern corner by the fireplace: tankards on shelves, a dice cup on a windowsill and candle stubs at the sides, an empty scarred wooden table in the calm centre."
+    }
+  ]
+}

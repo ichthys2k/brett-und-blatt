@@ -1,0 +1,114 @@
+{
+  "beschreibung": "G9 (#318) A2: 20 Hofaufträge als runde Vignetten (Anki-Medien, #270).",
+  "stil": "Painterly warm oil vignette in a round composition on a dark warm brown background, storybook fairy-tale county, humorous but dignified: the described character (an anthropomorphic animal in medieval clothes, bust or half figure) or the described small landscape scene, centred with margin so it can be cropped to a circle. No text, no letters, no numbers.",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo",
+  "format": "1:1",
+  "ziel": "packages/games/grafschaft/src/ui/auftraege",
+  "groesse": [
+    256,
+    256
+  ],
+  "praefix": "bub-grafschaft-",
+  "motive": [
+    {
+      "id": "q1",
+      "titel": "Die Gans",
+      "prompt": "A stately goose in a bonnet standing between three small ponds."
+    },
+    {
+      "id": "q2",
+      "titel": "Der Müller",
+      "prompt": "A flour-dusted mouse miller with a sack, a watermill wheel behind."
+    },
+    {
+      "id": "q3",
+      "titel": "Der Bär",
+      "prompt": "A brown bear forester with an axe over the shoulder in front of tall trees."
+    },
+    {
+      "id": "q4",
+      "titel": "Der Ritter",
+      "prompt": "A fox knight with a pennant lance on a road below a mountain."
+    },
+    {
+      "id": "q5",
+      "titel": "Der Schäfer",
+      "prompt": "A sheepdog shepherd with a crook, village roofs behind a meadow."
+    },
+    {
+      "id": "q6",
+      "titel": "Die Wirtin",
+      "prompt": "A cheerful sow innkeeper with tankards at an inn door."
+    },
+    {
+      "id": "q7",
+      "titel": "Der Fischer",
+      "prompt": "An otter fisherman with a rod at a pond by the forest edge."
+    },
+    {
+      "id": "q8",
+      "titel": "Der Einsiedler",
+      "prompt": "An old ibex hermit with a lantern before a mountain cave."
+    },
+    {
+      "id": "q9",
+      "titel": "Der Bauer",
+      "prompt": "A hare farmer with a scythe in wide grain fields."
+    },
+    {
+      "id": "q10",
+      "titel": "Der Bote",
+      "prompt": "A hurrying stork messenger with a satchel on a long road."
+    },
+    {
+      "id": "q11",
+      "titel": "Der Flusslauf",
+      "prompt": "A winding river through green land seen from above, no characters."
+    },
+    {
+      "id": "q12",
+      "titel": "Das Bergnest",
+      "prompt": "A tiny village clinging to a mountain side, no characters."
+    },
+    {
+      "id": "q13",
+      "titel": "Die Schafweide",
+      "prompt": "A wide meadow with a low stone wall and a wooden gate, tufts of wool on the fence, no characters."
+    },
+    {
+      "id": "q14",
+      "titel": "Der Hofnarr",
+      "prompt": "A fox jester with a bell cap juggling small hexagonal tiles."
+    },
+    {
+      "id": "q15",
+      "titel": "Der Baumeister",
+      "prompt": "A beaver master builder with compass and plan (plan blank) before a walled village."
+    },
+    {
+      "id": "q16",
+      "titel": "Die Kornkammer",
+      "prompt": "A granary with a windmill between two grain fields, no characters."
+    },
+    {
+      "id": "q17",
+      "titel": "Der Wanderer",
+      "prompt": "A hedgehog wanderer with a walking stick on a path between a mountain and a pond."
+    },
+    {
+      "id": "q18",
+      "titel": "Das Doppeldorf",
+      "prompt": "Two small half-timbered villages side by side joined by a little bridge, no characters."
+    },
+    {
+      "id": "q19",
+      "titel": "Der Schilfgürtel",
+      "prompt": "A pond with a broad belt of reeds between a meadow and a field, no characters."
+    },
+    {
+      "id": "q20",
+      "titel": "Die Waldlichtung",
+      "prompt": "A sunny clearing surrounded by dark forest, no characters."
+    }
+  ]
+}
