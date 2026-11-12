@@ -205,7 +205,7 @@ Ursprüngliche Planung: Zufallspartner (DYP, Monster-DYP), Last One Standing, Li
 - ✅ **Serien:** „Serie auswerten“ auf „Turniere“ (`apps/web/src/lib/series.ts`): abgeschlossene Turniere wählen, Punkte nach Platz (linear oder 25-18-15 …), gemeinsame Rangliste über den Namen, Elo (Start 1000, K = 32) aus allen Partien in der Auswahlreihenfolge, CSV zum Kopieren. Die Auswertung läuft im Browser der Leitung aus den Sichten der Turniere; es gibt keine gespeicherte Serie auf dem Server und kein Dauer-Ranking, das sich selbst aktualisiert.
 - ✅ **Einbetten:** `#/turnier/<Code>/ansicht` ist eine schlichte Ansicht ohne Bedienelemente (`TournamentEmbedScreen`); der Zuschaulink-Abschnitt der Leitung bietet den fertigen iframe-Code. Sie zeigt, was der Zuschaulink zeigt, also nur Turniere vor Ort mit Zuschaulink.
 - ✅ **Längere Aufbewahrung:** Schalter „Länger aufbewahren (1 Jahr)“ für jedes Turnier (`snapshot.keepLong`), bisher nur Ligen.
-- ⬜ **Offen:** Web Push für „Du bist dran“ (braucht deine Entscheidung zu Schlüsseln, Speicherung der Empfänger und Datenschutz), ein auf dem Server gespeicherter Serienstand, Einlass-QR-Code je Teilnehmer, Größe des gespeicherten Stands bei großen Ligen (Messung in `turnier.md`).
+- ⬜ **Offen:** ein auf dem Server gespeicherter Serienstand, Einlass-QR-Code je Teilnehmer, Größe des gespeicherten Stands bei großen Ligen (Messung in `turnier.md`).
 
 Ursprüngliche Planung:
 - „Meine Turniere“ als Verwaltung: kopieren, als Vorlage speichern, archivieren, löschen.
@@ -262,7 +262,7 @@ Cornelius hat alle Vorschläge übernommen:
 - **Turniere ohne Netz:** `attachSeries` merkt den Zuordnungscode am `LOKAL-…`-Eintrag vor (`OfflineRecord.seriesLink`, nicht im Nachrichtenprotokoll); beim Abgleich mit dem Server wird er als letzte Nachricht eingelöst, ein Fehler dort bricht den Abgleich nicht ab (Hinweis, Zuordnung auf dem Server wiederholbar). Die Leitung eines `LOKAL-…`-Turniers lässt sich ohne Netz nicht übergeben; nach dem Abgleich geht es wie bei jedem Turnier.
 - **Kreuzbinokel-Lobby:** Die Teamübersicht warnt, wenn ein Team weniger als `minPerTeam` Plätze hat (dann gilt die feste Sitzordnung).
 - **Rauchtest:** `node apps/server/scripts/serie.mjs [Adresse]` gegen den laufenden Server (Serie anlegen, zuordnen, Turnier beenden, Rangliste, Leitung von Turnier und Serie übergeben, löschen).
-- **Offen:** Web Push (#206, Entscheidung bei Cornelius).
+- **Web Push (#242, 12.11.2026):** umgesetzt, wartet auf Freigabe (`VAPID_PUBLIC_KEY`) und Live-Test; Details und Abweichungen in `web-push.md`.
 
 
 ## Kalenderdatei (#243, 10.11.2026)

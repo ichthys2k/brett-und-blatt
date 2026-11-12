@@ -46,5 +46,7 @@
     "ALLOWED_ORIGINS": "https://spiele.lipponer.de,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173",
     // Räume liegen in der EU. Der lokale Testserver kann das nicht und überschreibt es mit "none".
     "ROOM_JURISDICTION": "eu"
+    // Web Push (#242): VAPID_PUBLIC_KEY und VAPID_SUBJECT setzt die CI aus den GitHub-Variablen gleichen Namens, der private
+    // Schlüssel VAPID_PRIVATE_KEY ist ein Wrangler-Secret. Fehlt einer, ignoriert der Server Abos. Siehe docs/spiele/web-push.md.
   }
 }
