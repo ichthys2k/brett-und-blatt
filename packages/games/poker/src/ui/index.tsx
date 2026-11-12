@@ -1,6 +1,6 @@
 import type { CardId, SeatId } from '@brett-und-blatt/engine';
-import { PlayingCard, type BoardProps, type DeckStyle, type GameUi } from '@brett-und-blatt/ui';
-import { useEffect, useState } from 'react';
+import { PlayingCard, SEAT_RING_WIDE_MAX_SEATS, SeatRing, seatRingFits, useElementSize, type BoardProps, type DeckStyle, type GameUi } from '@brett-und-blatt/ui';
+import { useEffect, useState, type ReactNode } from 'react';
 import { bestFive, describeValue } from '../eval';
 import { currentPots, isLegal, raiseBounds, totalPot, type ChipTheme, type PokerMove, type PokerView } from '../rules';
 import './styles.css';
@@ -73,6 +73,8 @@ function Board({
   canLeaveSeat,
   onLeaveSeat,
 }: BoardProps<PokerView, PokerMove>) {
+  const [rootRef, rootSize] = useElementSize<HTMLDivElement>();
+  const ring = seatRingFits(view.seats.length, rootSize.width, rootSize.height, 2, SEAT_RING_WIDE_MAX_SEATS);
   const isHotseatMulti = humanSeats !== undefined && humanSeats.length > 1;
   const heroSeat: SeatId = typeof viewer === 'number' ? viewer : (activeSeat ?? 0);
   const mySeatObj = typeof viewer === 'number' ? view.seats[viewer] : undefined;
@@ -147,8 +149,155 @@ function Board({
     if (isLegal(view, viewer, move)) onMove(move);
   };
 
+  const renderSeatNode = (s: (typeof view.seats)[number]): ReactNode => {
+    const nodeStyle = ring ? undefined : seatCoordinates(s.seat, view.seats.length, heroSeat);
+    const nodeClass = ring ? 'poker-seat-node poker-seat-node-ring' : 'poker-seat-node';
+    const isTurn = activeSeat === s.seat && view.street !== 'complete';
+    const name = seatNames[s.seat] ?? `Platz ${s.seat + 1}`;
+    const joinable = Boolean(canJoinSeat?.(s.seat)) && Boolean(onJoinSeat);
+
+    if (s.status === 'empty') {
+      return (
+        <div key={s.seat} className={nodeClass} style={nodeStyle}>
+          <div className="poker-seat-box poker-seat-box-empty">
+            <span className="text-[11px] text-slate-300">Freier Platz {s.seat + 1}</span>
+            {joinable && (
+              <div className="mt-1 flex gap-1">
+                <button
+                  type="button"
+                  className="poker-join-btn"
+                  onClick={() => onJoinSeat?.(s.seat, 'human')}
+                >
+                  + Hinsetzen
+                </button>
+                {humanSeats !== undefined && (
+                  <button
+                    type="button"
+                    className="poker-join-btn"
+                    style={{ background: 'rgba(59, 130, 246, 0.85)' }}
+                    onClick={() => onJoinSeat?.(s.seat, 'bot')}
+                  >
+                    + Bot
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const isDealer = view.button === s.seat;
+    const isSb = view.smallBlindSeat === s.seat;
+    const isBb = view.bigBlindSeat === s.seat;
+
+    return (
+      <div key={s.seat} className={nodeClass} style={nodeStyle}>
+        {/* Einsatz-Blase vor dem Platz */}
+        {s.streetBet > 0 && (
+          <div className="poker-bet-bubble">
+            {s.streetBet} {unit.icon}
+          </div>
+        )}
+
+        {/* Karten am Platz (für andere Plätze verdeckt bzw. beim Showdown offen) */}
+        {s.seat !== viewer && s.inHand && !s.folded && (
+          <div className="poker-mini-cards">
+            {s.revealed && s.holeCards.length === 2 ? (
+              s.holeCards.map((c) => (
+                <div key={c} className="poker-mini-card-showdown">
+                  <PlayingCard card={c} deckStyle={deckStyle} />
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="poker-mini-card">
+                  <PlayingCard card={null} deckStyle={deckStyle} />
+                </div>
+                <div className="poker-mini-card">
+                  <PlayingCard card={null} deckStyle={deckStyle} />
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        <div
+          className={`poker-seat-box ${isTurn ? 'poker-seat-box-active' : ''} ${
+            s.folded && s.status === 'active' ? 'poker-seat-box-folded' : ''
+          }`}
+        >
+          <div className="poker-seat-badges">
+            {isDealer && <span className="poker-role-badge" title="Dealer">D</span>}
+            {isSb && <span className="poker-role-badge poker-role-sb" title="Small Blind">SB</span>}
+            {isBb && <span className="poker-role-badge poker-role-bb" title="Big Blind">BB</span>}
+            <span className="truncate font-semibold">{name}</span>
+          </div>
+          <div className="text-[11px] text-amber-300 font-semibold">
+            {s.chips} {unit.icon}
+          </div>
+          {s.status === 'waiting' && (
+            <span className="mt-0.5 rounded bg-emerald-500/25 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-200">
+              ⏳ Ab nächster Hand
+            </span>
+          )}
+          {s.status === 'eliminated' && (
+            <div className="mt-0.5 flex flex-col items-center gap-0.5">
+              <span className="text-[10px] text-rose-300">Ausgeschieden {s.place ? `(#${s.place})` : ''}</span>
+              {joinable && (
+                <button type="button" className="poker-join-btn" onClick={() => onJoinSeat?.(s.seat, 'human')}>
+                  ↻ Neu einsteigen
+                </button>
+              )}
+            </div>
+          )}
+          {s.status === 'active' && s.lastAction && (
+            <span className="text-[10px] text-slate-300">{s.lastAction}</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Tischmitte: Pot und 5 Gemeinschaftskarten
+  const centerContent = (
+  <div className="poker-center">
+    <div className="poker-pot-pill" aria-live="polite">
+      Pot: {potTotal} {unit.icon}
+    </div>
+    {pots.length > 1 && (
+      <div className="poker-sidepots">
+        {pots.map((p, idx) => (
+          <span key={idx} className="poker-sidepot-tag">
+            {idx === 0 ? 'Hauptpot' : `Side ${idx}`}: {p.amount}
+          </span>
+        ))}
+      </div>
+    )}
+    <div className="poker-board-row" aria-label="Gemeinschaftskarten">
+      {[0, 1, 2, 3, 4].map((idx) => {
+        const card = view.board[idx] ?? null;
+        const isBest = card !== null && highlightCards.has(card);
+        return (
+          <div key={idx} className={`poker-board-slot ${isBest ? 'poker-board-slot-highlight' : ''}`}>
+            {card ? <PlayingCard card={card} deckStyle={deckStyle} anim="deal" /> : null}
+          </div>
+        );
+      })}
+    </div>
+    {view.lastHand && !showLastHand && (
+      <div className="text-[11px] text-amber-200/90">
+        Letzte Hand #{view.lastHand.handNumber}:{' '}
+        {view.lastHand.pots
+          .map((p) => `${p.winners.map((w) => seatNames[w] ?? `P${w + 1}`).join('/')} (+${p.amount})`)
+          .join(', ')}
+      </div>
+    )}
+  </div>
+  );
+
   return (
-    <div className="poker-root">
+    <div className="poker-root" ref={rootRef}>
       {/* Kopfzeile mit Blind-Stufe, Handnummer, letzter Hand und Ranglisten-Knopf */}
       <div className="poker-topbar">
         <div className="flex flex-wrap items-center gap-2">
@@ -225,154 +374,27 @@ function Board({
         </div>
       )}
 
-      {/* Ovaler Pokertisch */}
+      {/* Pokertisch: bei viel Platz mit dem gemeinsamen SeatRing, sonst das kleine Oval */}
       <div className="poker-arena">
-        <div className="poker-table-felt" role="region" aria-label="Pokertisch">
-          {/* Tischmitte: Pot und 5 Gemeinschaftskarten */}
-          <div className="poker-center">
-            <div className="poker-pot-pill" aria-live="polite">
-              Pot: {potTotal} {unit.icon}
-            </div>
-            {pots.length > 1 && (
-              <div className="poker-sidepots">
-                {pots.map((p, idx) => (
-                  <span key={idx} className="poker-sidepot-tag">
-                    {idx === 0 ? 'Hauptpot' : `Side ${idx}`}: {p.amount}
-                  </span>
-                ))}
-              </div>
-            )}
-            <div className="poker-board-row" aria-label="Gemeinschaftskarten">
-              {[0, 1, 2, 3, 4].map((idx) => {
-                const card = view.board[idx] ?? null;
-                const isBest = card !== null && highlightCards.has(card);
-                return (
-                  <div key={idx} className={`poker-board-slot ${isBest ? 'poker-board-slot-highlight' : ''}`}>
-                    {card ? <PlayingCard card={card} deckStyle={deckStyle} anim="deal" /> : null}
-                  </div>
-                );
-              })}
-            </div>
-            {view.lastHand && !showLastHand && (
-              <div className="text-[11px] text-amber-200/90">
-                Letzte Hand #{view.lastHand.handNumber}:{' '}
-                {view.lastHand.pots
-                  .map((p) => `${p.winners.map((w) => seatNames[w] ?? `P${w + 1}`).join('/')} (+${p.amount})`)
-                  .join(', ')}
-              </div>
-            )}
+        {ring ? (
+          <div className="poker-ring" role="region" aria-label="Pokertisch">
+            <SeatRing
+              seats={view.seats.length}
+              bottomSeat={heroSeat}
+              renderSeat={(seat) => {
+                const s = view.seats[seat];
+                return s ? renderSeatNode(s) : null;
+              }}
+            >
+              {centerContent}
+            </SeatRing>
           </div>
-
-          {/* Plätze rings um den Tisch */}
-          {view.seats.map((s) => {
-            const pos = seatCoordinates(s.seat, view.seats.length, heroSeat);
-            const isTurn = activeSeat === s.seat && view.street !== 'complete';
-            const name = seatNames[s.seat] ?? `Platz ${s.seat + 1}`;
-            const joinable = Boolean(canJoinSeat?.(s.seat)) && Boolean(onJoinSeat);
-
-            if (s.status === 'empty') {
-              return (
-                <div key={s.seat} className="poker-seat-node" style={pos}>
-                  <div className="poker-seat-box poker-seat-box-empty">
-                    <span className="text-[11px] text-slate-300">Freier Platz {s.seat + 1}</span>
-                    {joinable && (
-                      <div className="mt-1 flex gap-1">
-                        <button
-                          type="button"
-                          className="poker-join-btn"
-                          onClick={() => onJoinSeat?.(s.seat, 'human')}
-                        >
-                          + Hinsetzen
-                        </button>
-                        {humanSeats !== undefined && (
-                          <button
-                            type="button"
-                            className="poker-join-btn"
-                            style={{ background: 'rgba(59, 130, 246, 0.85)' }}
-                            onClick={() => onJoinSeat?.(s.seat, 'bot')}
-                          >
-                            + Bot
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            }
-
-            const isDealer = view.button === s.seat;
-            const isSb = view.smallBlindSeat === s.seat;
-            const isBb = view.bigBlindSeat === s.seat;
-
-            return (
-              <div key={s.seat} className="poker-seat-node" style={pos}>
-                {/* Einsatz-Blase vor dem Platz */}
-                {s.streetBet > 0 && (
-                  <div className="poker-bet-bubble">
-                    {s.streetBet} {unit.icon}
-                  </div>
-                )}
-
-                {/* Karten am Platz (für andere Plätze verdeckt bzw. beim Showdown offen) */}
-                {s.seat !== viewer && s.inHand && !s.folded && (
-                  <div className="poker-mini-cards">
-                    {s.revealed && s.holeCards.length === 2 ? (
-                      s.holeCards.map((c) => (
-                        <div key={c} className="poker-mini-card-showdown">
-                          <PlayingCard card={c} deckStyle={deckStyle} />
-                        </div>
-                      ))
-                    ) : (
-                      <>
-                        <div className="poker-mini-card">
-                          <PlayingCard card={null} deckStyle={deckStyle} />
-                        </div>
-                        <div className="poker-mini-card">
-                          <PlayingCard card={null} deckStyle={deckStyle} />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                <div
-                  className={`poker-seat-box ${isTurn ? 'poker-seat-box-active' : ''} ${
-                    s.folded && s.status === 'active' ? 'poker-seat-box-folded' : ''
-                  }`}
-                >
-                  <div className="poker-seat-badges">
-                    {isDealer && <span className="poker-role-badge" title="Dealer">D</span>}
-                    {isSb && <span className="poker-role-badge poker-role-sb" title="Small Blind">SB</span>}
-                    {isBb && <span className="poker-role-badge poker-role-bb" title="Big Blind">BB</span>}
-                    <span className="truncate font-semibold">{name}</span>
-                  </div>
-                  <div className="text-[11px] text-amber-300 font-semibold">
-                    {s.chips} {unit.icon}
-                  </div>
-                  {s.status === 'waiting' && (
-                    <span className="mt-0.5 rounded bg-emerald-500/25 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-200">
-                      ⏳ Ab nächster Hand
-                    </span>
-                  )}
-                  {s.status === 'eliminated' && (
-                    <div className="mt-0.5 flex flex-col items-center gap-0.5">
-                      <span className="text-[10px] text-rose-300">Ausgeschieden {s.place ? `(#${s.place})` : ''}</span>
-                      {joinable && (
-                        <button type="button" className="poker-join-btn" onClick={() => onJoinSeat?.(s.seat, 'human')}>
-                          ↻ Neu einsteigen
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  {s.status === 'active' && s.lastAction && (
-                    <span className="text-[10px] text-slate-300">{s.lastAction}</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        ) : (
+          <div className="poker-table-felt" role="region" aria-label="Pokertisch">
+            {centerContent}
+            {view.seats.map(renderSeatNode)}
+          </div>
+        )}
       </div>
 
       {/* Unterer Bereich: Eigene Handkarten, Lernhilfe, Ein-/Ausstieg und Setz-Steuerung */}
