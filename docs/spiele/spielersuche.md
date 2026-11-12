@@ -53,7 +53,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 
 1. ~~**Öffentlichkeit**~~ **Entschieden (Cornelius, 12.11.2026): Ja, das Brett ist öffentlich** – alle sehen alle Zettel. Mit Gerät-Schalter zum Ausblenden; „private Bretter“ mit Code bleiben eine spätere Möglichkeit.
 2. ~~**Wer wird Raumleitung?**~~ **Entschieden (Cornelius, 12.11.2026): wer den Zettel geschrieben hat.** Folge: Zustimmungen zählen je Zettel, nicht je Spiel über alle Zettel; hängen mehrere Zettel mit demselben Spiel, entsteht der Raum beim Zettel, der zuerst genug Zustimmungen hat. Wer zugestimmt hat, ist danach auf anderen Zetteln nicht mehr zustimmend gebucht.
-3. **Anonymität:** Reicht „Profilname + Bild“ oder wollen wir auf dem Brett nur das Bild und einen automatisch erzeugten Namen zeigen (strenger)?
+3. ~~**Anonymität**~~ **Entschieden (Cornelius, 12.11.2026): Profilname und Bild reichen**, gefiltert wie bisher (`cleanName`).
 4. **Dauer:** 30 Minuten richtig, oder länger (z. B. „Heute Abend“ ≈ 3 h)?
 5. **Stimmungen:** Welche Auswahlwerte sollen es sein (Vorschlag: Locker, Ernst, Mit Kindern, Lernen)?
 6. **Umfang der ersten Stufe:** Nur Schritte 1–4 (ohne „Raum existiert schon“-Umbau), kleinster Schnitt, danach Rückmeldung.
