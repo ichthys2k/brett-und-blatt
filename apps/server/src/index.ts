@@ -23,6 +23,8 @@ import {
   BACKUP_TTL_MS,
   CLASS_TTL_MS,
   addClassPack,
+  announceClassRoom,
+  closeClassRoom,
   aggregateDue,
   cleanDueReport,
   mayReportDue,
@@ -1411,6 +1413,12 @@ export class ClassRoom extends DurableObject<Env> {
         // Ausgeschalteter Lernstand: alles Abgelegte wird gelöscht.
         if ('ok' in outcome && body.learning === false) await this.ctx.storage.delete([...(await this.ctx.storage.list({ prefix: 'progress:' })).keys()]);
         if ('ok' in outcome && body.dueCards === false) await this.ctx.storage.delete([...(await this.ctx.storage.list({ prefix: 'due:' })).keys()]);
+        break;
+      case 'announceRoom':
+        outcome = announceClassRoom(state, token, body.room, now);
+        break;
+      case 'closeRoom':
+        outcome = closeClassRoom(state, token, body.room);
         break;
       case 'addPack':
         outcome = addClassPack(state, token, { name: body.name, key: body.key }, now);
