@@ -1,6 +1,6 @@
 # Spielersuche: „Ich will spielen“ (W-063, Issue #65)
 
-**Stand 12.11.2026: Konzept, wartet auf Cornelius' Entscheidung.** Nichts davon ist umgesetzt.
+**Stand 12.11.2026: Konzept, alle sechs Fragen von Cornelius entschieden (siehe unten); wartet auf sein Wort zur Umsetzung.** Nichts davon ist umgesetzt.
 
 ## Ziel
 
@@ -56,7 +56,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 3. ~~**Anonymität**~~ **Entschieden (Cornelius, 12.11.2026): Profilname und Bild reichen**, gefiltert wie bisher (`cleanName`).
 4. ~~**Dauer**~~ **Entschieden (Cornelius, 12.11.2026): 30 Minuten** (verlängerbar per Tipp, wie im Ablauf beschrieben).
 5. ~~**Stimmungen**~~ **Entschieden (Cornelius, 12.11.2026): Locker, Ernst, Mit Kindern, Lernen.**
-6. **Umfang der ersten Stufe:** Nur Schritte 1–4 (ohne „Raum existiert schon“-Umbau), kleinster Schnitt, danach Rückmeldung.
+6. ~~**Umfang der ersten Stufe**~~ **Entschieden (Cornelius, 12.11.2026): Brett, Zettel, „Bin dabei“ und automatischer Raum.** Das Anheften bestehender offener Runden als Zettel (Ablauf Punkt 5) kommt später.
 
 ## Schritte nach Zustimmung
 
