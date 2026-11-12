@@ -1,5 +1,7 @@
 import type { BoardServerMessage, SeekBoardView, SeekError } from '@brett-und-blatt/online';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { boardAlerts } from './boardAlerts';
+import { notifyHidden } from './notifications';
 import { GAME_SERVER } from './server';
 import { navigate, paths } from './router';
 import { storage } from './storage';
@@ -32,6 +34,7 @@ export interface BoardActions {
 export function useBoard(): [BoardState, BoardActions] {
   const [state, setState] = useState<BoardState>(INITIAL);
   const socket = useRef<WebSocket | null>(null);
+  const lastView = useRef<SeekBoardView | null>(null);
 
   useEffect(() => {
     const server = GAME_SERVER;
@@ -61,9 +64,17 @@ export function useBoard(): [BoardState, BoardActions] {
         } catch {
           return;
         }
-        if (message.type === 'board') setState((s) => ({ ...s, status: 'open', you: message.you, notes: message.notes, proposal: message.proposal }));
+        if (message.type === 'board') {
+          // Liegt die Seite im Hintergrund, sagt eine Benachrichtigung Bescheid (falls erlaubt).
+          for (const alert of boardAlerts(lastView.current, message)) notifyHidden(alert.title, alert.body);
+          lastView.current = { notes: message.notes, proposal: message.proposal };
+          setState((s) => ({ ...s, status: 'open', you: message.you, notes: message.notes, proposal: message.proposal }));
+        }
         else if (message.type === 'boardError') setState((s) => ({ ...s, error: message.error }));
-        else if (message.type === 'matched') navigate(paths.room(message.code));
+        else if (message.type === 'matched') {
+          notifyHidden('Schwarzes Brett', 'Dein Raum steht – komm herein!');
+          navigate(paths.room(message.code));
+        }
       };
       ws.onclose = () => {
         window.clearInterval(pingTimer);

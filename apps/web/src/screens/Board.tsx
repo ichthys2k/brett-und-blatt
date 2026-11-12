@@ -5,6 +5,9 @@ import { ProfileForm } from '../components/OnlineParts';
 import { TavernPage } from '../components/TavernPage';
 import { useBoard, type BoardState } from '../lib/board';
 import { setBoardHidden, useBoardHidden } from '../lib/boardPrefs';
+import { loadChoice, saveChoice, startingChoice } from '../lib/boardChoice';
+import { useFavorites } from '../lib/favorites';
+import { requestNotificationPermission } from '../lib/notifications';
 import { saveOwnProfile } from '../lib/playerPass';
 import { findGame, games } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
@@ -219,9 +222,14 @@ function MyNote({ note, now, onExtend, onWithdraw }: { note: SeekNoteView; now: 
 
 function NewNote({ disabled, onPost }: { disabled: boolean; onPost(input: { name: string; avatar: string; games: string[]; seats: string; mood: string }): void }) {
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
-  const [picked, setPicked] = useState<string[]>([]);
-  const [seats, setSeats] = useState<SeekSeats>('any');
-  const [mood, setMood] = useState<SeekMood>('relaxed');
+  const { favorites } = useFavorites();
+  const [start] = useState(() => {
+    const known = BOARD_GAMES.map((game) => game.id);
+    return startingChoice(loadChoice(known), favorites, known);
+  });
+  const [picked, setPicked] = useState<string[]>(start.games);
+  const [seats, setSeats] = useState<SeekSeats>(start.seats);
+  const [mood, setMood] = useState<SeekMood>(start.mood);
 
   if (!profile) {
     return (
@@ -269,10 +277,22 @@ function NewNote({ disabled, onPost }: { disabled: boolean; onPost(input: { name
       </div>
       <Segmented<SeekSeats> label="Wie viele?" value={seats} choices={SEEK_SEATS.map((value) => ({ value, label: SEATS[value] }))} onChange={setSeats} />
       <Segmented<SeekMood> label="Stimmung" value={mood} choices={SEEK_MOODS.map((value) => ({ value, label: `${MOODS[value].emoji} ${MOODS[value].label}` }))} onChange={setMood} />
-      <Button variant="primary" className="w-full" disabled={disabled} onClick={() => onPost({ name: profile.name, avatar: profile.avatar, games: picked, seats, mood })}>
+      <Button
+        variant="primary"
+        className="w-full"
+        disabled={disabled}
+        onClick={() => {
+          saveChoice({ games: picked, seats, mood });
+          // Wer anheftet, will wissen, wenn jemand zusagt – auch wenn die Seite im Hintergrund liegt.
+          void requestNotificationPermission();
+          onPost({ name: profile.name, avatar: profile.avatar, games: picked, seats, mood });
+        }}
+      >
         📌 Zettel anheften
       </Button>
-      <p className="text-xs text-muted">Der Zettel hängt 30 Minuten (du kannst ihn verlängern) und verschwindet, wenn du die Seite schließt.</p>
+      <p className="text-xs text-muted">
+        Der Zettel hängt 30 Minuten (du kannst ihn verlängern) und verschwindet, wenn du die Seite schließt. Dein nächster Zettel ist so vorbelegt{favorites.length > 0 ? ' (sonst mit deinen Lieblingsspielen)' : ''}. Lass die Seite offen, auch im Hintergrund – dann meldet sich dein Gerät, wenn jemand zusagt.
+      </p>
     </div>
   );
 }
