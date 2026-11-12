@@ -1,4 +1,5 @@
 import { cleanAvatar, cleanName } from './names';
+import { parsePushSubscription, type ParsePushOptions, type PushSubscriptionData } from './push';
 
 /**
  * Das Schwarze Brett „Wer hat Lust?“ (#65): Zettel mit Wunschspielen, „Bin dabei“ und ein Vorschlag,
@@ -47,6 +48,8 @@ export interface SeekDeps {
   /** Eine offene Runde (öffentlich, mit freien Plätzen) oder undefined – für Zettel, die auf einen Raum zeigen. */
   room(code: string): { gameId: string } | undefined;
   random(): number;
+  /** Hat diese Person Hinweise aufs Gerät eingeschaltet? Dann bleibt ihr Zettel auch bei geschlossenem Browser hängen. */
+  keepAway?(owner: string): boolean;
 }
 
 interface Proposal {
@@ -311,7 +314,7 @@ export class SeekingBoard {
     const matches: SeekMatch[] = [];
     for (const note of [...this.notes]) {
       if (!this.notes.includes(note)) continue;
-      if (note.expiresAt <= now || (note.awaySince !== null && now - note.awaySince >= SEEK_AWAY_MS) || (note.room !== undefined && !this.deps.room(note.room))) {
+      if (note.expiresAt <= now || (note.awaySince !== null && now - note.awaySince >= SEEK_AWAY_MS && !this.deps.keepAway?.(note.owner)) || (note.room !== undefined && !this.deps.room(note.room))) {
         this.removeNote(note);
         continue;
       }
@@ -338,10 +341,25 @@ export class SeekingBoard {
     };
     for (const note of this.notes) {
       consider(note.expiresAt);
-      if (note.awaySince !== null) consider(note.awaySince + SEEK_AWAY_MS);
+      if (note.awaySince !== null && !this.deps.keepAway?.(note.owner)) consider(note.awaySince + SEEK_AWAY_MS);
       if (note.proposal) consider(note.proposal.deadline);
     }
     return next;
+  }
+
+  /**
+   * Was für Hinweise aufs Gerät zählt: Zustimmungen auf dem eigenen Zettel und ein Vorschlag, der auf die eigene
+   * Zusage wartet. Der Adapter vergleicht vorher und nachher.
+   */
+  pushSignature(owner: string): { votes: number; proposal: string | null } {
+    const note = this.notes.find((n) => n.owner === owner);
+    const votes = note ? Object.values(note.votes).reduce((sum, ids) => sum + ids.length, 0) : 0;
+    let proposal: string | null = null;
+    for (const n of this.notes) {
+      const p = n.proposal;
+      if (p && p.members.includes(owner) && !p.confirmed.includes(owner)) proposal = `${n.id}:${p.gameId}`;
+    }
+    return { votes, proposal };
   }
 
   // -------------------------------------------------------------------------
@@ -475,9 +493,13 @@ export type BoardClientMessage =
   | { type: 'postRoom'; name: string; avatar: string; code: string; seats: string; mood: string }
   | { type: 'join'; noteId: string; gameId: string; name: string }
   | { type: 'unjoin'; noteId: string }
-  | { type: 'confirm'; noteId: string; ok: boolean };
+  | { type: 'confirm'; noteId: string; ok: boolean }
+  /** Hinweise aufs Gerät (Web Push): Abo des Browsers melden oder widerrufen. */
+  | { type: 'pushSubscribe'; subscription: PushSubscriptionData }
+  | { type: 'pushUnsubscribe' };
 
 export type BoardServerMessage =
+  | { type: 'pushState'; enabled: boolean }
   | ({ type: 'board'; you: string | null } & SeekBoardView)
   /** Eine Gruppe hat sich gefunden: Der Raum steht, alle gehen hinein. */
   | { type: 'matched'; code: string; gameId: string }
@@ -486,7 +508,7 @@ export type BoardServerMessage =
 const isStr = (v: unknown, max: number): v is string => typeof v === 'string' && v.length > 0 && v.length <= max;
 
 /** Liest eine Nachricht vom Brett-Browser; alles Ungültige ergibt null. */
-export function parseBoardMessage(raw: string): BoardClientMessage | null {
+export function parseBoardMessage(raw: string, push: ParsePushOptions = {}): BoardClientMessage | null {
   if (raw.length > 2000) return null;
   let m: Record<string, unknown>;
   try {
@@ -513,8 +535,13 @@ export function parseBoardMessage(raw: string): BoardClientMessage | null {
       return isStr(m.noteId, 20) ? { type: 'unjoin', noteId: m.noteId } : null;
     case 'confirm':
       return isStr(m.noteId, 20) && typeof m.ok === 'boolean' ? { type: 'confirm', noteId: m.noteId, ok: m.ok } : null;
+    case 'pushSubscribe': {
+      const subscription = parsePushSubscription(m.subscription, push);
+      return subscription ? { type: 'pushSubscribe', subscription } : null;
+    }
     case 'withdraw':
     case 'extend':
+    case 'pushUnsubscribe':
       return { type: m.type };
     default:
       return null;

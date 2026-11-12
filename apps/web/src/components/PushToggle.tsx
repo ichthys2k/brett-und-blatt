@@ -16,12 +16,15 @@ export function PushToggle({
   onEnable,
   onDisable,
   note,
+  explain,
 }: {
   enabled: boolean;
   onEnable: (message: PushSubscribeMessage) => void;
   onDisable: () => void;
   /** Zusatzzeile, z. B. wann der Schalter wirkt. */
   note?: string;
+  /** Eigener Erklärtext statt des allgemeinen (z. B. fürs Schwarze Brett). */
+  explain?: string;
 }) {
   const [problem, setProblem] = useState<'denied' | 'error' | null>(null);
   const [busy, setBusy] = useState(false);
@@ -46,7 +49,7 @@ export function PushToggle({
   return (
     <section className="space-y-2 rounded-2xl border border-line bg-surface p-4" aria-label={t('push.title')}>
       <h2 className="text-sm font-semibold tracking-wide text-muted uppercase">🔔 {t('push.title')}</h2>
-      <p className="text-sm">{t('push.explain')}</p>
+      <p className="text-sm">{explain ?? t('push.explain')}</p>
       {availability === 'needsInstall' && <p className="text-sm text-muted">{t('push.ios')}</p>}
       {availability === 'blocked' && <p className="text-sm text-warning">{t('push.blocked')}</p>}
       {availability === 'ready' && (

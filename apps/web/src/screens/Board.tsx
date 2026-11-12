@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, Section, Segmented } from '../components/controls';
 import { ProfileForm } from '../components/OnlineParts';
 import { TavernPage } from '../components/TavernPage';
+import { PushToggle } from '../components/PushToggle';
 import { useBoard, type BoardState } from '../lib/board';
 import { setBoardHidden, useBoardHidden } from '../lib/boardPrefs';
 import { loadChoice, saveChoice, startingChoice } from '../lib/boardChoice';
@@ -109,6 +110,16 @@ function Board() {
         <Section title="Dein Zettel">
           {mine ? <MyNote note={mine} now={now} onExtend={actions.extend} onWithdraw={actions.withdraw} /> : <NewNote disabled={state.status !== 'open'} onPost={actions.post} />}
         </Section>
+
+        {state.push !== null && (
+          <PushToggle
+            enabled={state.push}
+            onEnable={actions.pushOn}
+            onDisable={actions.pushOff}
+            explain="Auch bei geschlossener App: eine Meldung, wenn jemand auf deinem Zettel „Bin dabei“ sagt, ein Vorschlag auf deine Zusage wartet oder dein Raum steht. Dein Zettel bleibt dann hängen, bis er abläuft. Die Meldung nennt keine Namen."
+            note="Gilt nur für diesen Zettel und endet mit ihm."
+          />
+        )}
 
         <Section title={`Zettel (${others.length})`}>
           <label className="flex flex-wrap items-center gap-2 text-sm">
