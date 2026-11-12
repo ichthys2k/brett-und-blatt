@@ -49,6 +49,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Hinweise aufs Gerät (Web Push, #242): kleines Zusatzskript im selben Service Worker, kein Umbau auf injectManifest.
+        importScripts: ['push-sw.js'],
         // Alles vorab speichern: Solo und Hot-Seat funktionieren dann ohne Internet (Effekte zusammen etwa 1 MB).
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,mp3,json,woff2}'],
         // Musik, Tierstimmen (Drachenspiel, rund 14 MB), Avatar-Ansagen (gut 5 MB) und Enten-Rallye-Ton
