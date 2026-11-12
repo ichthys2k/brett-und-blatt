@@ -1,4 +1,4 @@
-import type { SeekBoardView, SeekNoteView } from '@brett-und-blatt/online';
+import type { SeekBoardView, SeekNoteView } from '../packages/online/src';
 import { describe, expect, it } from 'vitest';
 import { boardAlerts } from '../apps/web/src/lib/boardAlerts';
 import { DEFAULT_CHOICE, sanitizeChoice, startingChoice } from '../apps/web/src/lib/boardChoice';
