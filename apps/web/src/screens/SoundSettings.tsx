@@ -21,6 +21,8 @@ import {
   useChosenTable,
 } from '../lib/look';
 import { music, useMusicPrefs } from '../lib/music';
+import { PushToggle } from '../components/PushToggle';
+import { loadPushWish } from '../lib/push';
 import { setBoardHidden, useBoardHidden } from '../lib/boardPrefs';
 import { navigate, paths } from '../lib/router';
 import { GAME_SERVER } from '../lib/server';
@@ -128,6 +130,12 @@ function PortraitChoice() {
   );
 }
 
+/** Gesamtschalter für Hinweise aufs Gerät (#242): gilt für dieses Gerät; Turniere und Fernpartien melden das Abo beim nächsten Öffnen selbst. */
+function PushSwitch() {
+  const [on, setOn] = useState(() => loadPushWish());
+  return <PushToggle enabled={on} onEnable={() => setOn(true)} onDisable={() => setOn(false)} note={t('push.global')} />;
+}
+
 /** Schwarzes Brett ausblenden (#65): je Gerät, für Eltern, Schulen und alle, die es nicht brauchen. */
 function BoardChoice() {
   const hidden = useBoardHidden();
@@ -152,6 +160,7 @@ export function SoundSettingsScreen() {
     <TavernPage title="Optionen" subtitle="Ton, Musik, Aussehen und Updates.">
       <LookChoice />
       <AppVersion />
+      <PushSwitch />
       <PortraitChoice />
       <BoardChoice />
       <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">

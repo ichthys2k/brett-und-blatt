@@ -1,6 +1,6 @@
 # Web Push für Partie-Aufrufe und „Du bist dran“ (Konzept #206, Umsetzung #242)
 
-Stand (10.11.2026): **Konzept entschieden, Umsetzung noch nicht begonnen.** Cornelius hat die offenen Fragen beantwortet (Abschnitt „Entscheidungen“), der Fahrplan unten ist so geschrieben, dass ein anderer Agent (z. B. Gemini) ihn Schritt für Schritt abarbeiten kann. Umsetzung erst, wenn Cornelius [#242](https://github.com/ichthys2k/brett-und-blatt/issues/242) auf `status: Ready` setzt. Rechtliches (Datenschutzerklärung, Einwilligung) ist nicht juristisch geprüft.
+Stand (12.11.2026): **Schritte 1–9 umgesetzt** auf dem Zweig `claude/youthful-carson-mb10am` (Refs #242), noch nicht auf `main`. Offen sind nur noch Dinge, die Cornelius tun muss: Datenschutztext (Entwurf `PushPrivacy` in `Legal.tsx`) ist von Cornelius am 12.11.2026 freigegeben, nicht juristisch geprüft; es bleiben Schlüssel anlegen und die Funktion freischalten (Abschnitt „Freischalten“ unten), Live-Test auf echten Geräten. Ursprünglich entschieden am 10.11.2026 (Abschnitt „Entscheidungen“); der Fahrplan unten ist als Übergabe an andere Agenten geschrieben worden.
 
 Verwandt: Kalenderdatei für feste Termine ([#243](https://github.com/ichthys2k/brett-und-blatt/issues/243), fertig und live), Turniersoftware (`turniersoftware.md`), PWA-Aktualisierung (#175, siehe `CLAUDE.md`).
 
@@ -207,11 +207,11 @@ Entwurf für einen neuen Abschnitt „Hinweise aufs Gerät (Web Push)“; **Corn
 
 ### Fertig, wenn (Abnahme durch Cornelius, Status `Review`)
 
-- [ ] Schritte 1–9 umgesetzt, `corepack pnpm check` grün, Rauchtest `push.mjs` grün
-- [ ] Ohne gesetzte Variable `VAPID_PUBLIC_KEY` ist Push in der Oberfläche unsichtbar und der Server ignoriert Abos
-- [ ] Entwurf der Datenschutzerklärung von Cornelius gelesen und freigegeben
+- [x] Schritte 1–9 umgesetzt, `corepack pnpm check` grün, Rauchtest `push.mjs` grün
+- [x] Ohne gesetzte Variable `VAPID_PUBLIC_KEY` ist Push in der Oberfläche unsichtbar und der Server ignoriert Abos
+- [x] Entwurf der Datenschutzerklärung von Cornelius gelesen und freigegeben (12.11.2026; keine rechtliche Prüfung)
 - [ ] Auf echten Geräten geprüft (Android, iPhone als installierte App, Desktop)
-- [ ] `CLAUDE.md` (Abschnitt Turniere) und `turniersoftware.md` mit einem Satz zum Stand ergänzt
+- [x] `CLAUDE.md` (Abschnitt Turniere) und `turniersoftware.md` mit einem Satz zum Stand ergänzt
 
 ### Risiken und Fallen
 
@@ -226,6 +226,32 @@ Entwurf für einen neuen Abschnitt „Hinweise aufs Gerät (Web Push)“; **Corn
 ### Aufwand
 
 Etwa 3–5 Arbeitstage mit Tests (Schätzung aus dem Konzept bleibt): Schritte 1–2 je 0,5 Tage, 3–5 zusammen etwa 1,5 Tage, 6–7 etwa 1 Tag, 8–9 etwa 0,5 bis 1 Tag. Das größte Risiko ist der Service Worker (Schritt 6).
+
+## Umsetzungsstand und Abweichungen (12.11.2026)
+
+Gebaut nach dem Fahrplan, mit diesen Abweichungen:
+
+- **Aufruf (`matchCalled`):** kommt schon, wenn die Partie offen ist und beide angesetzt sind (am Turnierabend ohne „Bereit“: beim Start der Partie), nicht erst bei der Raumanlage. Die Raumanlage folgt erst auf „Bereit“ beider Seiten, dann wäre die Meldung sinnlos.
+- **Gemerkte Meldungen** gelten je Empfänger (`art:anlass:kennung`); wer sich erst später anmeldet, bekommt nichts über Vergangenes (`claimSilently`). Je Durchlauf höchstens 25 Sendungen (Grenze für Unteranfragen), der Rest folgt per Wecker nach 10 Sekunden.
+- **Meldung „Du bist dran“** lebt bis zu 24 Stunden beim Push-Dienst (Fernpartie-Züge warten Tage), Aufrufe 1 Stunde, Fristen 2 Stunden.
+- **`RoomMessage.correspondence`** (neu, optional): sagt den Browsern, dass der Raum eine Fernpartie ist; nur dann gibt es den Schalter.
+- **`#/ton`:** Gesamtschalter ohne Liste der Turniere und Räume (das Gerät kennt sie nicht); Ausschalten beendet das Abo im Browser, die Server räumen beim nächsten Versand über 404/410 auf. Eine Verbindung meldet das Abo beim nächsten Öffnen von selbst neu, wenn das Gerät Hinweise wünscht.
+- **Nicht umgesetzt:** Abo entfernen, wenn jemand ein Turnier verlässt oder sich zurückzieht (er bekommt dann nichts mehr, das Abo bleibt bis zum Turnierende).
+- **Die Erinnerung zwei Stunden vor Fristende** lässt sich im Rauchtest nicht beschleunigen (eine kürzere Frist erzeugt keine Erinnerung); sie deckt `packages/online/test/tournament-push.test.ts` ab.
+- **Datenschutz:** `PushPrivacy` in `Legal.tsx` erscheint nur, wenn die Funktion sichtbar ist (`VITE_VAPID_PUBLIC_KEY`).
+- **Bekannt, nicht neu:** Turnier- und Raumseite fragen schon beim Öffnen die Berechtigung für normale Browser-Benachrichtigungen an (`requestNotificationPermission`); das widerspricht dem Grundsatz „Push nie beim Seitenaufruf“ nicht, sollte aber mit entschieden werden.
+
+## Freischalten (Cornelius)
+
+Bis die GitHub-Variable `VAPID_PUBLIC_KEY` gesetzt ist, ist die Funktion unsichtbar und der Server ignoriert Abos.
+
+1. Schlüsselpaar anlegen und den privaten Teil als Secret ablegen, ohne ihn anzuzeigen: `node apps/server/scripts/vapid.mjs --put` (ruft `wrangler secret put VAPID_PRIVATE_KEY`; das Skript gibt nur den öffentlichen Schlüssel aus). Ohne Wrangler-Anmeldung auf dem Rechner: `node apps/server/scripts/vapid.mjs` zeigt beide Teile, den privaten dann direkt mit `corepack pnpm --filter @brett-und-blatt/server exec wrangler secret put VAPID_PRIVATE_KEY` eingeben und nirgends sonst speichern.
+2. GitHub-Variablen (Settings → Variables → Actions) setzen: `VAPID_PUBLIC_KEY` (der öffentliche Schlüssel, nicht geheim) und optional `VAPID_SUBJECT` (Standard `https://spiele.lipponer.de`). Die CI gibt sie an den Build der Web-App (`VITE_VAPID_PUBLIC_KEY`) und an den Worker (`wrangler deploy --var …`).
+3. Datenschutzabschnitt: freigegeben (12.11.2026). Er erscheint mit der Funktion, sobald die Variable gesetzt ist.
+4. Danach `deploy`: neuer Build und neuer Worker. **Wird die Variable später wieder geleert, ist die Funktion mit dem nächsten Deploy aus.**
+5. Live-Test (nicht automatisierbar): Android-Chrome (Seite geschlossen, Meldung kommt, Antippen öffnet das Turnier), iPhone als installierte App, Desktop; Widerruf in den Browsereinstellungen.
+
+Lokal ausprobieren: `node apps/server/scripts/vapid.mjs --dev` (schreibt `apps/server/.dev.vars`, steht in `.gitignore`), Server starten (`WRANGLER_SEND_METRICS=false corepack pnpm --filter @brett-und-blatt/server dev`), dann `node apps/server/scripts/push.mjs`. Für die Oberfläche lokal die Web-App mit `VITE_VAPID_PUBLIC_KEY=<öffentlicher Schlüssel aus der Ausgabe>` bauen oder starten.
 
 ## Wo steht was im Code (Hilfe für den Einstieg)
 

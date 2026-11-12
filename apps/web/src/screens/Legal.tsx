@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button } from '../components/controls';
 import { t } from '../i18n';
+import { PUSH_PUBLIC_KEY } from '../lib/push';
 import { navigate, paths } from '../lib/router';
 
 /**
@@ -61,6 +62,44 @@ export function Impressum() {
         </a>
       </p>
     </LegalPage>
+  );
+}
+
+/**
+ * Hinweise aufs Gerät (Web Push, #242). **Entwurf, nicht juristisch geprüft** – Cornelius liest gegen. Der Abschnitt erscheint nur,
+ * wenn die Funktion sichtbar ist (öffentlicher Schlüssel im Build), damit die Erklärung nie etwas beschreibt, das es noch nicht gibt.
+ */
+export function PushPrivacy() {
+  return (
+    <>
+      <h2>Hinweise aufs Gerät (Web Push)</h2>
+      <p>
+        Auf Wunsch schickt der Spieleserver dir eine Meldung aufs Gerät, auch wenn die App geschlossen ist: wenn eine Turnierpartie von dir aufgerufen wird,
+        eine Frist bald abläuft, ein Turnier beginnt oder endet oder du in einer Fernpartie am Zug bist. Das ist freiwillig und für das Spielen nicht nötig. Es
+        passiert nur, wenn du ausdrücklich „Hinweise einschalten“ wählst und dein Browser es zusätzlich erlaubt; nie beim bloßen Öffnen einer Seite.
+      </p>
+      <p>Dafür speichert der Spieleserver beim jeweiligen Turnier oder Raum (Rechenzentren in der EU):</p>
+      <ul>
+        <li>die Adresse („Endpunkt“) des Push-Dienstes deines Browsers und zwei Schlüssel, mit denen die Meldung nur für dein Gerät lesbar verschlüsselt wird,</li>
+        <li>deine Geräte-Kennung und den Zeitpunkt der Anmeldung,</li>
+        <li>zum Schutz vor zu vielen Meldungen die Zeitpunkte der zuletzt gesendeten Meldungen (höchstens eine je Art und 30 Minuten) und welche Meldungen schon gesendet wurden.</li>
+      </ul>
+      <p>
+        Die Meldung enthält nur die Art („Du bist am Zug“) und den Link zum Turnier oder Raum, keine Namen und keine Spielinhalte. Sie läuft über den Push-Dienst
+        deines Browser-Herstellers (Google, Apple, Mozilla oder Microsoft); dort können Daten in Länder außerhalb der EU gelangen, und es gelten deren
+        Datenschutzbestimmungen. Der Inhalt ist Ende-zu-Ende verschlüsselt, der Push-Dienst sieht nur Endpunkt, Größe und Zeitpunkt.
+      </p>
+      <p>
+        Die Daten bleiben, bis du die Hinweise ausschaltest, bis der Push-Dienst das Abo als ungültig meldet oder bis das Turnier (30 Tage nach seinem Ende, Ligen
+        nach einem Jahr) bzw. der Raum (Fernpartien 30 Tage nach der letzten Aktivität) gelöscht wird. Widerrufen kannst du jederzeit: in der App mit „Hinweise sind an –
+        ausschalten“ (in einem Turnier, in einer Fernpartie oder unter „Optionen“) und in den Einstellungen deines Browsers. Auf deinem Gerät merkt sich die App nur,
+        dass du Hinweise wünschst (Local Storage); das Abo selbst verwaltet dein Browser.
+      </p>
+      <p>
+        Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du mit dem Einschalten erteilst und jederzeit mit Wirkung für die Zukunft widerrufen
+        kannst. Ein Hinweis ist keine Zustellgarantie; Spielregeln und Fristen hängen nie davon ab, dass eine Meldung ankam.
+      </p>
+    </>
   );
 }
 
@@ -220,6 +259,8 @@ export function Datenschutz() {
         Cloudflare; Näheres steht in der <ExternalLink href={CLOUDFLARE_PRIVACY_URL}>Datenschutzerklärung von Cloudflare</ExternalLink>. Ich selbst
         werte keine Zugriffsprotokolle aus und speichere keine IP-Adressen.
       </p>
+
+      {PUSH_PUBLIC_KEY && <PushPrivacy />}
 
       <h2>Speicherung auf deinem Gerät</h2>
       <p>Damit du eine Partie fortsetzen kannst, speichert die App im Speicher deines Browsers (Local Storage):</p>

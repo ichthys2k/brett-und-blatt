@@ -1,3 +1,4 @@
+import { parsePushSubscription, type ParsePushOptions, type PushSubscriptionData } from './push';
 import type { BotLevel, ClockReading, CustomCardCatalog, Forfeit, GameEvent, Options, ReplayData, Result, SeatId, TimePresetId } from '@brett-und-blatt/engine';
 
 /**
@@ -166,6 +167,9 @@ export type ClientMessage =
   | { type: 'react'; emoji: string }
   | { type: 'say'; phrase: string }
   | { type: 'leave' }
+  /** Hinweise aufs Gerät (Web Push, #242): Abo des Browsers melden oder widerrufen; nur für Fernpartien wirksam. */
+  | { type: 'pushSubscribe'; subscription: PushSubscriptionData }
+  | { type: 'pushUnsubscribe' }
   | { type: 'ping' };
 
 // ---------------------------------------------------------------------------
@@ -210,6 +214,8 @@ export interface RoomMessage {
   lobby: LobbySettings;
   /** Wie viele Tisch-Bildschirme verbunden sind; fehlt, wenn keiner da ist. */
   displays?: number;
+  /** Läuft der Raum als Fernpartie? Nur dann bietet die Oberfläche Hinweise aufs Gerät an (#242); fehlt sonst. */
+  correspondence?: true;
   /** Nur bei Turnierpartien: zu welchem Turnier der Raum gehört. */
   match?: { tournament: string; label: string; noShow: boolean; series?: { bestOf: number; score: [number, number]; next: number | null; done: boolean } };
 }
@@ -282,6 +288,8 @@ export type ServerMessage =
   | { type: 'joinDenied' }
   | { type: 'error'; code: ErrorCode; message: string }
   | { type: 'kicked' }
+  /** Antwort auf `pushSubscribe`/`pushUnsubscribe` und nach `hello`: gilt für das Gerät des Empfängers, geht nur an ihn. */
+  | { type: 'pushState'; enabled: boolean }
   | { type: 'pong'; serverNow: number };
 
 /** Statt einer Mitgliedsnummer im `welcome` eines Tisch-Bildschirms. */
@@ -298,8 +306,11 @@ const isInt = (v: unknown, min = 0, max = 1_000_000): v is number => typeof v ==
 const isLevel = (v: unknown): v is BotLevel => v === 'easy' || v === 'medium' || v === 'hard';
 const isTime = (v: unknown): v is TimePresetId => v === 'relaxed' || v === 'normal' || v === 'fast';
 
-/** Liest eine Nachricht vom Browser. Ungültiges ergibt null. */
-export function parseClientMessage(raw: string): ClientMessage | null {
+/**
+ * Liest eine Nachricht vom Browser. Ungültiges ergibt null.
+ * `push.allowLocal` erlaubt Loopback-Abos nur im Testserver (siehe `parsePushSubscription`).
+ */
+export function parseClientMessage(raw: string, push: ParsePushOptions = {}): ClientMessage | null {
   if (raw.length > MAX_MESSAGE_LENGTH) return null;
   let data: unknown;
   try {
@@ -375,6 +386,10 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return isString(m.phrase, 40) ? { type: 'say', phrase: m.phrase } : null;
     case 'start':
       return { type: 'start', ...(typeof m.rotate === 'boolean' ? { rotate: m.rotate } : {}) };
+    case 'pushSubscribe': {
+      const subscription = parsePushSubscription(m.subscription, push);
+      return subscription ? { type: 'pushSubscribe', subscription } : null;
+    }
     case 'leaveSeat':
     case 'fillSeats':
     case 'shuffleTeams':
@@ -383,6 +398,7 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     case 'returnSeat':
     case 'takeBack':
     case 'leave':
+    case 'pushUnsubscribe':
     case 'ping':
       return { type: m.type };
     default:

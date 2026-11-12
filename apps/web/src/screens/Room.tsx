@@ -10,6 +10,7 @@ import { t } from '../i18n';
 import { announceAvatar } from '../lib/avatar-sounds';
 import { describeTime, levelLabel } from '../lib/format';
 import { requestNotificationPermission } from '../lib/notifications';
+import { PushToggle } from '../components/PushToggle';
 import { GAME_SERVER, useRoomConnection, type RoomConnection, type RoomState } from '../lib/online';
 import { saveOwnProfile } from '../lib/playerPass';
 import { games, loadGame, type LoadedGame } from '../lib/registry';
@@ -114,6 +115,13 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
     const seat = room.lobby.seats[index];
     return (seat?.kind === 'human' && room.members.find((m) => m.id === seat.memberId)?.name) || '?';
   };
+  /** Hinweise aufs Gerät (#242): nur bei Fernpartien und nur, wenn der Server sie eingerichtet hat. */
+  const pushToggle =
+    room.correspondence && state.push !== null ? (
+      <div className="mx-3 mt-2">
+        <PushToggle enabled={state.push} onEnable={(message) => connection.send(message)} onDisable={() => connection.send({ type: 'pushUnsubscribe' })} />
+      </div>
+    ) : null;
   const toTournament = room.match && (
     <Button className="w-full" onClick={() => navigate(paths.tournament(room.match!.tournament))}>
       🏆 {t('tournament.backToPage')}
@@ -179,6 +187,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
                   </p>
                 )}
                 {toTournament}
+                {pushToggle}
                 <JoinRequest room={room} you={state.you} yourSeat={session.yourSeat} info={loaded.info} connection={connection} />
                 <GameSeats session={session} seatLabel={loaded.ui.seatLabel} room={room} send={connection.send.bind(connection)} />
                 <ModeratorEntry session={session} seatLabel={loaded.ui.seatLabel} room={room} you={state.you} capabilities={roomCapabilities(isHost)} connection={connection} />
@@ -219,7 +228,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
 
   return (
     <>
-      <Lobby room={room} state={state} connection={connection} isHost={isHost} onLeave={leave} />
+      <Lobby room={room} state={state} connection={connection} isHost={isHost} onLeave={leave} pushToggle={pushToggle} />
       {toasts}
       {errorBox}
       {banner}
@@ -364,7 +373,7 @@ export function useLoadedGame(gameId: string | null): LoadedGame | null {
   return loaded;
 }
 
-function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage; state: RoomState; connection: RoomConnection; isHost: boolean; onLeave: () => void }) {
+function Lobby({ room, state, connection, isHost, onLeave, pushToggle }: { room: RoomMessage; state: RoomState; connection: RoomConnection; isHost: boolean; onLeave: () => void; pushToggle?: React.ReactNode }) {
   const { lobby } = room;
   const game = useLoadedGame(lobby.gameId);
   const teams = game ? teamsFor(game.info, lobby.options, lobby.seats.length) : undefined;
@@ -634,6 +643,8 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
           </Section>
         </>
       )}
+
+      {pushToggle}
 
       <Section title={t('online.members')}>
         {!isHost && lobby.namesLocked && <p className="text-sm text-muted">🔒 {t('online.namesLockedNotice')}</p>}
