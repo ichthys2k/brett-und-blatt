@@ -4,7 +4,7 @@ Aufgabenstatus und Freigabe: [GitHub Issue #53](https://github.com/ichthys2k/bre
 
 Stand 2.11.2026. 13 Spiele sitzen am Tisch und sind veröffentlicht. Tiefflug bleibt ohne Tisch (Raster passen nicht). Poker sitzt seit 12.11.2026 ebenfalls auf `SeatRing` (bis zu 10 Plätze, siehe unten).
 
-Geprüft mit Zufallspartien auf 1280 × 800, 1024 × 768 und 768 × 1024: keine Fehler, kein Überlauf in Ruhe, Plätze im Bild. Online zu dritt (Skat, lokaler Spieleserver): Jeder sitzt bei sich unten. Nicht geprüft: echte Tablets mit Fingerbedienung, Start- und Zielpunkte der Flug-Animationen.
+Geprüft mit Zufallspartien auf 1280 × 800, 1024 × 768 und 768 × 1024: keine Fehler, kein Überlauf in Ruhe, Plätze im Bild. Online zu dritt (Skat, lokaler Spieleserver): Jeder sitzt bei sich unten. Nicht geprüft: echte Tablets mit Fingerbedienung. Die Flug-Animationen sind am 12.11.2026 für Mau-Mau und Eins! zu viert bei 1280 × 800 nachgemessen: Sie beginnen und enden an den Sitzen, am Talon und an der Ablage (Eins!: die Flugkarte landete zu groß, weil sie am Rahmen der Ablage samt Farbmarke maß, nicht an der Karte; behoben).
 
 ## Ziel
 

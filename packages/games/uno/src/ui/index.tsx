@@ -256,8 +256,17 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
     const tableRect = tableRef.current?.getBoundingClientRect();
     if (!tableRect) return;
 
-    const discardRect = discardRef.current?.getBoundingClientRect();
-    const deckRect = deckRef.current?.getBoundingClientRect();
+    // Ablage und Stapel messen wir an der Karte selbst, nicht an ihrem Rahmen: Der trägt unter der Karte noch die Farbmarke
+    // bzw. die Zahl der Karten, und die Flugkarte landete sonst zu hoch und zu groß. Größe ohne Drehung, Mitte aus dem Bild.
+    const cardRectOf = (el: Element | null | undefined) => {
+      if (!(el instanceof HTMLElement)) return undefined;
+      const r = el.getBoundingClientRect();
+      const width = el.offsetWidth || r.width;
+      const height = el.offsetHeight || r.height;
+      return { left: r.left + r.width / 2 - width / 2, top: r.top + r.height / 2 - height / 2, width, height };
+    };
+    const discardRect = cardRectOf(discardRef.current?.firstElementChild?.firstElementChild);
+    const deckRect = cardRectOf(deckRef.current?.firstElementChild);
     const handRect = handRef.current?.getBoundingClientRect();
 
     const newFlying: FlyingCard[] = [];
