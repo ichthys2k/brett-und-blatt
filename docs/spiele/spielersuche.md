@@ -97,6 +97,38 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 3. **Eigenes Issue?** Der Wunsch gilt für alle Räume und ist größer als das Brett. Vorschlag: eigenes Issue „Online: Abstimmung am Rundenende“ (`status: Idee`, bis du es freigibst), #65 verweist darauf.
 4. **Reihenfolge:** Zuerst die Abstimmung am Rundenende (hilft jedem Raum sofort), dann das Brett – oder umgekehrt?
 
+## Erweiterung: Laufende Runde offen für Neue (Cornelius, 12.11.2026)
+
+**Wunsch:** Eine laufende Session kann **offen für neue Spieler** sein. Neue **fragen an**, ob sie **ab der nächsten Runde** mitspielen dürfen; **die Raumleitung (Spielleiter) entscheidet**.
+
+**Heute:** Wer den Link oder Code kennt (oder in „Offene Runden“ klickt), kommt als **Zuschauer** in den Raum (bis 40 Mitglieder). In der Lobby kann man sich auf einen freien Platz setzen (`takeSeat`); in einer laufenden Partie nur, wenn das Spiel `joinMidGame` kann (Poker) oder ein Platz verwaist ist. Sonst bleibt nur Zusehen, bis die Raumleitung etwas tut. Eine Anfrage gibt es nicht.
+
+### Ablauf (Vorschlag)
+
+1. **Einstellung der Raumleitung:** „Neue Spieler dürfen anfragen“ (aus/an, in Lobby und Spiel umschaltbar). Bei „an“ steht der Raum in „Offene Runden“ auch während der Partie, mit dem Zusatz „läuft – Anfrage möglich“ (bisher nur mit freien Plätzen in der Lobby, zu prüfen). Die Raumleitung bleibt die einzige Stelle, die entscheidet.
+2. **Anfragen:** Wer als Zuschauer im Raum ist, sieht den Knopf „🙋 Ich möchte ab der nächsten Runde mitspielen“. Ein Tipp schickt die Anfrage (kein Text, keine Begründung); „Zurückziehen“ geht jederzeit. Ein Zuschauer hat höchstens eine offene Anfrage.
+3. **Entscheiden:** Die Raumleitung sieht ein Zeichen am Spielleiter-Knopf (`ModeratorPanel`) und eine Liste mit Bild und Name der Fragenden: **✅ Annehmen** / **❌ Ablehnen** (und „Alle annehmen“). Ohne Entscheidung bleibt die Anfrage bis zum Rundenende offen und verfällt dann **nicht**, sondern erinnert dort noch einmal.
+4. **Angenommen:** Die Person ist **vorgemerkt** (für alle sichtbar mit Bild und Name in der Mitgliederliste: „ab nächster Runde dabei“). Mitten in der Runde ändert sich nichts am Tisch – keine Geheimnisse, keine Uhr, kein Zugriff auf die laufende Partie.
+5. **Nächste Runde:** Beim Start der nächsten Runde (Revanche oder Neustart) bekommen Vorgemerkte der Reihe nach einen **freien oder neu geöffneten Platz**; die Plätze steigen dazu bis `max` des Spiels (`setSeatCount`), danach bleibt der Rest auf der **Warteliste** (höchstens 8) und rückt nach, wenn jemand aussteigt. Bei Spielen mit Teams ordnet die Raumleitung die Neuen in der Lobby zu (`setTeam`, `shuffleTeams`); Spiele mit fester Spielerzahl (z. B. nur zu zweit) bieten die Funktion gar nicht an.
+6. **Abgelehnt:** Die Person sieht „Leider nicht dabei“ und bleibt Zuschauer; neue Anfrage frühestens nach 2 Minuten. Wer zu oft nervt, kann wie heute entfernt werden (`kick`).
+7. **Verbindung zur Abstimmung am Rundenende:** Vorgemerkte dürfen dort **mit abstimmen** (Vorschlag), weil sie in der nächsten Runde mitspielen; das ändert auch die Zahl der Verbliebenen für die Kandidatenliste (`min ≤ n ≤ max`).
+8. **Verbindung zum Schwarzen Brett:** Ein Zettel kann auf eine **laufende** Runde zeigen („Plätze frei, Anfrage möglich“); wer dort „Bin dabei“ tippt, schickt damit die Anfrage.
+9. **Ausgenommen:** Turnierpartien, Klassenräume (dort setzt die Lehrkraft Plätze selbst) und Spiele mit eigener Mitspielerlogik (Poker: bleibt bei `joinSeat`).
+
+### Technik (Skizze)
+
+- Im Raum (`room.ts`) je Mitglied `join?: 'asking' | 'queued'` (mit Zeit für die Reihenfolge), Raumeinstellung `acceptRequests`. Neue Nachrichten: `askToJoin`, `cancelAskToJoin` (Zuschauer), `answerJoin { memberId, ok }` (nur Raumleitung); `MemberInfo.join` zeigt für alle, wer vorgemerkt ist, und für Raumleitung und Anfragenden den Stand „fragt an“. Bei Raumleitungswechsel (nach 60 s) gehen offene Anfragen auf die neue Leitung über.
+- Plätze verteilen beim Start einer neuen Runde in `start`/Revanche; bestehende Plätze bleiben unverändert. Anzeige in der Lobby und im `ModeratorPanel`; Fähigkeit in `roomCapabilities` ergänzen.
+- Alles Auswahl, kein Freitext; Ratenbegrenzung je Kennung (eine offene Anfrage, 2 Minuten Sperre nach Ablehnung). `PROTOCOL_VERSION` bleibt (nur Neues dazu); ältere Browser sehen die Anfrage-Knöpfe nicht.
+- Tests: Anfrage, Zurückziehen, Annehmen/Ablehnen, Zuteilung zur nächsten Runde, Warteliste, Leitungswechsel; Rauchtest `node apps/server/scripts/anfrage.mjs` (Raum mit laufender Partie, Zuschauer fragt an, Leitung nimmt an, Revanche setzt ihn an den Tisch).
+
+### Offene Fragen dazu
+
+1. **Standard:** Soll „Neue dürfen anfragen“ von Anfang an **an** oder **aus** sein? (Vorschlag: an für öffentliche Räume, aus für private.)
+2. **Mit abstimmen:** Dürfen Vorgemerkte am Rundenende mit abstimmen (Vorschlag: ja)?
+3. **In „Offene Runden“:** Sollen laufende Runden dort mit „läuft – Anfrage möglich“ stehen (Vorschlag: ja)?
+4. **Warteliste:** Reichen 8 Plätze; soll die Raumleitung sie umsortieren können (Vorschlag: nein, Reihenfolge der Annahme)?
+
 ## Schritte nach Zustimmung
 
 1. `seeking.ts` mit Tests (Zettel, Zustimmung, Treffer, Fristen, Raten).
