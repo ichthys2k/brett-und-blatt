@@ -1,4 +1,4 @@
-import { ROOM_EMOJIS } from './codes';
+import { ROOM_EMOJIS, parseRoomCode } from './codes';
 import type { OrgRole } from './org-roles';
 import { DEFAULT_CARD_SECTIONS, parseSections, sanitizeCard, type CardSections, type ClassCard } from './classcard';
 import { cleanAvatar, cleanName, crestField } from './names';
@@ -51,6 +51,18 @@ const SHARE_KEY = /^[A-Za-z0-9_-]{43}$/;
 const PUBLIC_KEY = /^[A-Za-z0-9_-]{86,90}$/;
 const PROGRESS_BLOB = /^[A-Za-z0-9_-]+$/;
 
+/** Ein Raum, den ein Mitglied „für die Klasse“ geöffnet hat (#151). Nur Raumcode und Zeit; Name und Bild kommen aus dem Mitglied. */
+export interface ClassRoomEntry {
+  /** Raumcode (vier Emoji). */
+  code: string;
+  /** Öffentliche Kennung des Mitglieds, das den Raum geöffnet hat. */
+  by: string;
+  at: number;
+}
+/** So lange bleibt ein Raum der Klasse in der Liste (ein Raum lebt höchstens 24 h; die Klasse zeigt ihn kürzer). */
+export const CLASS_ROOM_TTL_MS = 6 * 60 * 60 * 1000;
+export const CLASS_MAX_ROOMS = 5;
+
 export interface ClassMember {
   id: string;
   name: string;
@@ -85,6 +97,8 @@ export interface ClassState {
   leaderboard?: boolean;
   /** Pakete der Klasse (#224). */
   packs?: ClassPack[];
+  /** Räume, die Mitglieder für die Klasse geöffnet haben (#151). */
+  rooms?: ClassRoomEntry[];
   /** Darf die Leitung den Lernstand der Mitglieder sehen? Nur wenn die Leitung es einschaltet; gesendet wird erst nach der Einwilligung des Mitglieds. */
   learning?: boolean;
   /** Dürfen Geräte anonym melden, welche Karten der Klassenpakete bei ihnen fällig sind (für das Klassenspiel)? Nur wenn die Leitung es einschaltet und das Mitglied zustimmt. */
@@ -111,6 +125,8 @@ export interface ClassView {
   leaderboard: boolean;
   /** Pakete der Klasse, nur für Mitglieder. */
   packs: ClassPack[];
+  /** Offene Räume der Klasse (neueste zuerst), nur für Mitglieder; `mine`: den Raum hat dieses Mitglied geöffnet. */
+  rooms: { code: string; by: string; name: string; avatar: string; at: number; mine: boolean }[];
   /** Sieht die Leitung den Lernstand? */
   learning: boolean;
   /** Melden Geräte anonym fällige Karten? */
@@ -293,7 +309,7 @@ export function putCard(state: ClassState, token: unknown, card: unknown, now: n
 }
 
 /** Die Sicht für ein Gerät. Ein Fremder sieht nur Name und Zustand, nicht die Mitglieder. */
-export function classView(state: ClassState, token: unknown): ClassView {
+export function classView(state: ClassState, token: unknown, now = Date.now()): ClassView {
   const member = validToken(token) ? state.members[token] : undefined;
   const lead = member?.lead === true;
   const waiting = validToken(token) && !!state.pending[token];
@@ -305,6 +321,10 @@ export function classView(state: ClassState, token: unknown): ClassView {
     sections: sectionsOf(state),
     leaderboard: state.leaderboard === true,
     packs: member ? (state.packs ?? []).map(({ id, name, key, at }) => ({ id, name, key, at })) : [],
+    rooms: member ? liveClassRooms(state, now).flatMap((room) => {
+      const by = Object.values(state.members).find((m) => m.id === room.by);
+      return by ? [{ code: room.code, by: by.id, name: by.name, avatar: by.avatar, at: room.at, mine: by.id === member.id }] : [];
+    }) : [],
     learning: state.learning === true,
     dueCards: state.dueCards === true,
     leadKeys: member && state.learning ? Object.values(state.members).flatMap((m) => (m.lead && m.key ? [{ id: m.id, key: m.key }] : [])) : [],
@@ -314,6 +334,38 @@ export function classView(state: ClassState, token: unknown): ClassView {
     members: member ? Object.values(state.members).map(({ id, name, avatar, crest, lead: l, card, progressAt }) => ({ id, name, avatar, ...(crest ? { crest } : {}), lead: l, ...(card ? { card } : {}), ...(lead && progressAt ? { progressAt } : {}) })) : [],
     pending: lead ? Object.values(state.pending).map(({ id, name, avatar }) => ({ id, name, avatar })) : [],
   };
+}
+
+// ---------------------------------------------------------------- Offene Räume der Klasse (#151)
+
+/** Die noch frischen Räume der Klasse, neueste zuerst. */
+export function liveClassRooms(state: ClassState, now: number): ClassRoomEntry[] {
+  return (state.rooms ?? []).filter((room) => now - room.at < CLASS_ROOM_TTL_MS).sort((a, b) => b.at - a.at);
+}
+
+/** Ein Mitglied meldet einen Raum, den es für die Klasse geöffnet hat. Der Raum bleibt nicht öffentlich; nur Mitglieder sehen den Code hier. */
+export function announceClassRoom(state: ClassState, token: unknown, roomCode: unknown, now: number): Outcome {
+  const member = validToken(token) ? state.members[token] : undefined;
+  if (!member) return fail('Du bist nicht in dieser Klasse.');
+  const code = typeof roomCode === 'string' ? parseRoomCode(roomCode) : null;
+  if (!code) return fail('Ungültiger Raumcode.');
+  const rooms = liveClassRooms(state, now).filter((room) => room.code !== code);
+  rooms.unshift({ code, by: member.id, at: now });
+  state.rooms = rooms.slice(0, CLASS_MAX_ROOMS);
+  state.lastActive = now;
+  return ok;
+}
+
+/** Den eigenen Raum aus der Liste nehmen; die Leitung darf jeden nehmen. */
+export function closeClassRoom(state: ClassState, token: unknown, roomCode: unknown): Outcome {
+  const member = validToken(token) ? state.members[token] : undefined;
+  if (!member) return fail('Du bist nicht in dieser Klasse.');
+  const rooms = state.rooms ?? [];
+  const found = rooms.find((room) => room.code === roomCode);
+  if (!found) return fail('Diesen Raum gibt es in der Liste nicht.');
+  if (found.by !== member.id && !member.lead) return fail('Das darf nur, wer den Raum geöffnet hat, oder die Leitung.');
+  state.rooms = rooms.filter((room) => room !== found);
+  return ok;
 }
 
 // ---------------------------------------------------------------- Pakete und Lernstand (#224)

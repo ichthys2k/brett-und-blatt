@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CLASS_CODE_LENGTH, CLASS_MAX_MEMBERS, classView, configureClass, createClass, decide, enrollMember, joinClass, leaveClass, parseClassCode, putCard, randomClassCode, removeMember, setLead, updateMember, type ClassState } from '../src/classroom';
+import { CLASS_MAX_ROOMS, CLASS_ROOM_TTL_MS, announceClassRoom, closeClassRoom, CLASS_CODE_LENGTH, CLASS_MAX_MEMBERS, classView, configureClass, createClass, decide, enrollMember, joinClass, leaveClass, parseClassCode, putCard, randomClassCode, removeMember, setLead, updateMember, type ClassState } from '../src/classroom';
 import { classStamps, sanitizeCard, DEFAULT_CARD_SECTIONS } from '../src/classcard';
 
 const T = (n: number) => `token-${String(n).padStart(8, '0')}`;
@@ -307,5 +307,65 @@ describe('Klassen im Rollenmodell (#232)', () => {
     expect(classRoles(state, B)).toEqual(['lead']);
     expect(classRoles(state, C)).toEqual([]);
     expect(classRoles(state, 'kennung-fremder-0000001')).toEqual([]);
+  });
+});
+
+describe('Offene Räume der Klasse (#151)', () => {
+  const ROOM = '🐶🐱🦊🐻';
+  function withMember(): ClassState {
+    const state = fresh();
+    joinClass(state, person(1, 'Mia'), 2);
+    joinClass(state, person(2, 'Ben'), 2);
+    return state;
+  }
+
+  it('zeigt Mitgliedern den Raum mit dem Namen, der ihn geöffnet hat', () => {
+    const state = withMember();
+    expect(announceClassRoom(state, T(1), ROOM, 10)).toEqual({ ok: true });
+    const view = classView(state, T(2), 11);
+    expect(view.rooms).toEqual([expect.objectContaining({ code: ROOM, name: 'Mia', mine: false })]);
+    expect(classView(state, T(1), 11).rooms[0]?.mine).toBe(true);
+  });
+
+  it('zeigt Fremden und Wartenden nichts', () => {
+    const state = withMember();
+    announceClassRoom(state, T(1), ROOM, 10);
+    expect(classView(state, T(99), 11).rooms).toEqual([]);
+  });
+
+  it('lehnt Fremde und ungültige Raumcodes ab', () => {
+    const state = withMember();
+    expect(announceClassRoom(state, T(99), ROOM, 10)).toEqual({ error: expect.any(String) });
+    expect(announceClassRoom(state, T(1), 'abc', 10)).toEqual({ error: expect.any(String) });
+    expect(announceClassRoom(state, T(1), '🐶🐱🦊', 10)).toEqual({ error: expect.any(String) });
+    expect(state.rooms).toBeUndefined();
+  });
+
+  it('meldet denselben Raum nicht doppelt, hält höchstens fünf und lässt alte verfallen', () => {
+    const state = withMember();
+    announceClassRoom(state, T(1), ROOM, 10);
+    announceClassRoom(state, T(1), ROOM, 20);
+    expect(classView(state, T(1), 21).rooms).toHaveLength(1);
+    const codes = ['🐶🐶🐶🐶', '🐱🐱🐱🐱', '🦊🦊🦊🦊', '🐻🐻🐻🐻', '🐸🐸🐸🐸', '🐧🐧🐧🐧'];
+    codes.forEach((code, i) => announceClassRoom(state, T(1), code, 100 + i));
+    expect(classView(state, T(1), 200).rooms).toHaveLength(CLASS_MAX_ROOMS);
+    expect(classView(state, T(1), 100 + CLASS_ROOM_TTL_MS + 10).rooms).toEqual([]);
+  });
+
+  it('erlaubt das Schließen dem Öffnenden und der Leitung, sonst niemandem', () => {
+    const state = withMember();
+    announceClassRoom(state, T(1), ROOM, 10);
+    expect(closeClassRoom(state, T(2), ROOM)).toEqual({ error: expect.any(String) });
+    expect(closeClassRoom(state, T(1), ROOM)).toEqual({ ok: true });
+    announceClassRoom(state, T(1), ROOM, 30);
+    expect(closeClassRoom(state, T(0), ROOM)).toEqual({ ok: true });
+    expect(closeClassRoom(state, T(0), ROOM)).toEqual({ error: expect.any(String) });
+  });
+
+  it('lässt den Raum verschwinden, wenn das Mitglied die Klasse verlässt', () => {
+    const state = withMember();
+    announceClassRoom(state, T(1), ROOM, 10);
+    leaveClass(state, T(1));
+    expect(classView(state, T(2), 11).rooms).toEqual([]);
   });
 });
