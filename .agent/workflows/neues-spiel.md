@@ -9,4 +9,4 @@ description: Legt ein neues Spiel aus der Vorlage Tic-Tac-Toe an
 5. Bei 2 oder mehr Plätzen: in `apps/server/src/games.ts` (`onlineGames`) und als Abhängigkeit in `apps/server/package.json` eintragen, `corepack pnpm install`. Bei eigenem Bot `BOT_STEP_MS` in `apps/server/src/bots.ts` prüfen.
 6. GitHub-Label anlegen: `gh label create "spiel: <Name>" --color <Rubrikfarbe> --description "Spiel-id <id> · Rubrik <Rubrik>"` (Farben in `issue-bearbeiten.md`).
 7. Dev-Server neu starten, Spiel im Browser durchspielen, dann den Workflow `/pruefen`.
-8. Spielplan („Umsetzung“) und Stand in `CLAUDE.md` nachtragen. Auf dem eigenen Zweig committen und hochladen, PR öffnen; nach `main` nur auf „deploy“.
+8. Spielplan („Umsetzung“) und Stand in `docs/CHRONIK.md` nachtragen. Auf dem eigenen Zweig committen und hochladen, PR öffnen; nach `main` nur auf „deploy“.

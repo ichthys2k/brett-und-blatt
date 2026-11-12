@@ -4,7 +4,7 @@
 //   GEMINI_API_KEY=… node scripts/grafik/erzeugen.mjs scripts/grafik/manifeste/bildkarten.json
 //     --varianten=3   Varianten je Motiv (Standard 3)
 //     --nur=k-h,d-s   nur diese Motive (Kennungen, kommagetrennt)
-//     --modell=…      Bildmodell (Standard: GEMINI_BILDMODELL oder gemini-2.5-flash-image)
+//     --modell=…      Bildmodell (Standard: GEMINI_BILDMODELL oder gemini-3.1-flash-image)
 //     --pause=4       Sekunden Pause zwischen Anfragen (Standard 4)
 //   node scripts/grafik/erzeugen.mjs --modelle   zeigt die Modelle, die dein Schlüssel kennt
 //
@@ -48,7 +48,7 @@ if (optionen.modelle) {
 const manifestPfad = positionen[0];
 if (!manifestPfad) { console.error('Manifest angeben, siehe Kopf von erzeugen.mjs'); process.exit(1); }
 const manifest = ladeManifest(manifestPfad);
-const modell = optionen.modell ?? process.env.GEMINI_BILDMODELL ?? 'gemini-2.5-flash-image';
+const modell = optionen.modell ?? process.env.GEMINI_BILDMODELL ?? 'gemini-3.1-flash-image';
 const varianten = Number(optionen.varianten ?? 3);
 const pause = Number(optionen.pause ?? 4);
 const nur = optionen.nur ? new Set(String(optionen.nur).split(',')) : null;

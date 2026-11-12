@@ -1,6 +1,6 @@
 # Brett & Blatt – Hinweise für KI-Agenten
 
-Diese Datei ist für Agenten außer Claude Code gedacht (Google Antigravity/Gemini, Codex, Cursor u. a.). **Die ausführliche Übergabe steht in [`CLAUDE.md`](CLAUDE.md) – lies sie vor jeder Aufgabe ganz.** Sie gilt für alle Agenten gleich, auch wenn sie nach Claude benannt ist. Hier stehen nur die Kernregeln und Wegweiser; bei Widersprüchen gilt `CLAUDE.md`, und neue Erkenntnisse gehören dorthin (nicht hierher), damit es nur eine Quelle gibt.
+Diese Datei ist für Agenten außer Claude Code gedacht (Google Antigravity/Gemini, Codex, Cursor u. a.). **Die ausführliche Übergabe steht in [`CLAUDE.md`](CLAUDE.md) – lies sie vor jeder Aufgabe ganz.** Sie gilt für alle Agenten gleich, auch wenn sie nach Claude benannt ist. Hier stehen nur die Kernregeln und Wegweiser; bei Widersprüchen gilt `CLAUDE.md`. Neue Regeln und Technik-Erkenntnisse gehören nach `CLAUDE.md`, **neuer Stand gehört in die Chronik [`docs/CHRONIK.md`](docs/CHRONIK.md)** (nicht hierher), damit es je Sache nur eine Quelle gibt.
 
 Freie Spielesammlung im Browser (Karten- und Brettspiele für Handy und Desktop): allein gegen Bots, zu mehreren an einem Gerät, online. Live unter https://spiele.lipponer.de, Spieleserver auf Cloudflare unter https://brett-und-blatt.lipponer.workers.dev. Lizenz AGPL-3.0, Inhalte CC BY-SA 4.0.
 
@@ -50,7 +50,8 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 
 ## Wo was steht
 
-- [`CLAUDE.md`](CLAUDE.md) – Übergabe: Regeln, Technik, aktueller Stand, nächste Schritte.
+- [`CLAUDE.md`](CLAUDE.md) – Übergabe: Regeln, Werkzeuge, Technik, Rechnerwechsel.
+- [`docs/CHRONIK.md`](docs/CHRONIK.md) – Chronik: was wann umgesetzt wurde, mit Dateipfaden (früher „Stand“, „Nächste Schritte“ und „Rückblick“ in `CLAUDE.md`). Neuer Stand gehört hierher.
 - [`PLANUNG.md`](PLANUNG.md) – Wegweiser: fertige Filter-Links (Ansichten), Projekt-Board, Archiv #72; die Aufgabenliste selbst sind [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues).
 - [`docs/spiele/offene-plaene.md`](docs/spiele/offene-plaene.md) – Übergabe: offene Pläne mit nächstem Auftrag (zuerst Marktplatz-Probe nur mit Bots, Paket C wartet auf Ja), Fehler, Konzepte.
 - [`docs/KONZEPT.md`](docs/KONZEPT.md) – Entscheidungen, Spielmodul-Schnittstelle, Muster, Fahrplan.
@@ -66,14 +67,14 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 - ✅ Etappe 7: **Eins!** (Uno), **Mau-Mau**, **Dame** (Checkers), **Nicht ärgern!** (Ludo), **Poker** (Texas Hold'em), **Wortgitter/Scrabble**, sowie **Bibel-Quiz**, **Galgenmännchen**, **Wort-Salat**. **Binokel** und **Wortgitter** wurden am 28.10. neu geschrieben und sind spielbar.
 - ✅ Weitere Spiele: **Gomoku** (Fünf in einer Reihe), **Kartenblitz** (früher Ligretto, Reaktionsspiel), **Würfelblock** (früher Kniffel). Mathe-Übungen für Klasse 5 & 6 (Zielzahl, Teiler-Duell, Rechenmauer, Enten-Rallye) und erweiterte Mathe-Modi in Klassikern umgesetzt.
 
-- Korrekturplan aus dem Prüfbericht (28.10.2026): ✅ Etappe 1 Lecks, ✅ Etappe 2 Prüfnetz, ✅ Etappe 3 Reparaturen (Stichspiele, Bots für Skat, Schafkopf, Doppelkopf, Kniffel; Wortgitter und Binokel neu), ✅ Etappe 4 Rechtliches (Umbenennungen, freies Wörterbuch, Enten-Rallye-Klänge im privaten Klang-Repo). Details in `CLAUDE.md`.
+- Korrekturplan aus dem Prüfbericht (28.10.2026): ✅ Etappe 1 Lecks, ✅ Etappe 2 Prüfnetz, ✅ Etappe 3 Reparaturen (Stichspiele, Bots für Skat, Schafkopf, Doppelkopf, Kniffel; Wortgitter und Binokel neu), ✅ Etappe 4 Rechtliches (Umbenennungen, freies Wörterbuch, Enten-Rallye-Klänge im privaten Klang-Repo). Details in `docs/CHRONIK.md`.
 
 - Nachträge 28.10.2026: Sonderspiele der Stichspiel-Bots (Null, Tout, Bettel, Durch), Schafkopf-Ansagen und -Abrechnung korrigiert, Bibel-Quiz-Lösung in der Sicht verborgen, PWA lädt vorab nur ~6 MB, Git-Geschichte von den Enten-Rallye-MP3s bereinigt (andere Rechner: `git fetch && git reset --hard origin/main`).
-- Fahrplan ab 29.10.2026: A Doku-Abgleich → B Schach (Remis, PGN, Eröffnungsbuch) → C Stichspiele (Schafkopf-Frühende, Skat-Ansagen, PIMC-Bot) → D Klassenzimmer (Kartenblitz geteilter Bildschirm) → E Spieltiefe ✅ → F neue Spiele (Speed ✅, Präsident ✅, Tiefflug ✅, Fix gefunden! ✅; Pläne in `docs/spiele/`). Details unter „Nächste Schritte“ in `CLAUDE.md`.
+- Fahrplan ab 29.10.2026: A Doku-Abgleich → B Schach (Remis, PGN, Eröffnungsbuch) → C Stichspiele (Schafkopf-Frühende, Skat-Ansagen, PIMC-Bot) → D Klassenzimmer (Kartenblitz geteilter Bildschirm) → E Spieltiefe ✅ → F neue Spiele (Speed ✅, Präsident ✅, Tiefflug ✅, Fix gefunden! ✅; Pläne in `docs/spiele/`). Details unter „Nächste Schritte“ in `docs/CHRONIK.md`.
 - Paket B Wortspiele (1.11.2026): Bausteine Texteingabe mit Prüfung, Abstimmung, Teams in der Lobby; Spiele Kategorien-Sprint, Wer bin ich?, Verboten!. Kataloge (freigegeben) in `content/wortspiele/`, vom Spieleserver geladen. Kein freier Chat.
 
-Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; alle 20 Musikstücke sind eingetragen. Offene Punkte und nächste Schritte stehen in `CLAUDE.md`.
+Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; alle 20 Musikstücke sind eingetragen. Der Verlauf steht in `docs/CHRONIK.md`, offene Aufgaben in den GitHub Issues.
 
 ## Zum Abschluss einer Aufgabe
 
-Wenn sich am Stand etwas ändert, den Abschnitt „Stand“ bzw. „Nächste Schritte“ in `CLAUDE.md` und den Plan des Spiels in `docs/spiele/` nachtragen – mit auf dem Arbeitszweig, damit es im PR sichtbar ist.
+Wenn sich am Stand etwas ändert, die Chronik `docs/CHRONIK.md` (neuer Stand gehört in die Chronik, nicht nach `CLAUDE.md`) und den Plan des Spiels in `docs/spiele/` nachtragen – mit auf dem Arbeitszweig, damit es im PR sichtbar ist.
