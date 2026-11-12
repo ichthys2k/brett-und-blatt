@@ -51,7 +51,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 
 ## Offene Fragen an Cornelius
 
-1. **Öffentlichkeit:** Sollen Zettel **alle** sehen (Fremde finden einander) oder nur Leute mit gemeinsamem Link/Gruppe (z. B. Klassenraum, Freundeskreis)? Vorschlag: öffentlich, mit Gerät-Schalter zum Ausblenden; später „private Bretter“ mit Code.
+1. ~~**Öffentlichkeit**~~ **Entschieden (Cornelius, 12.11.2026): Ja, das Brett ist öffentlich** – alle sehen alle Zettel. Mit Gerät-Schalter zum Ausblenden; „private Bretter“ mit Code bleiben eine spätere Möglichkeit.
 2. **Wer wird Raumleitung?** Vorschlag: wer zuerst bestätigt; Alternative: wer den Zettel mit dem gewählten Spiel angeheftet hat.
 3. **Anonymität:** Reicht „Profilname + Bild“ oder wollen wir auf dem Brett nur das Bild und einen automatisch erzeugten Namen zeigen (strenger)?
 4. **Dauer:** 30 Minuten richtig, oder länger (z. B. „Heute Abend“ ≈ 3 h)?
