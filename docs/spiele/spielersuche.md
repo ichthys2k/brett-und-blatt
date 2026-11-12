@@ -73,7 +73,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 1. Mit dem Ergebnis erscheint am Tisch und in der Siegerehrung die Leiste **„Wie geht's weiter?“** mit drei Knöpfen: Aussteigen, Nochmal, Anderes Spiel. Jeder Mensch mit Platz stimmt einmal ab und kann bis zum Schluss umstimmen; die anderen sehen als Zähler, wie viele wofür sind (nicht wer – bis zur Entscheidung).
 2. **Aussteigen** wirkt sofort für die Person (sie verlässt den Raum, wie „Verlassen“ heute) und zählt nicht mehr mit. Die übrigen entscheiden weiter. Wer sitzen bleibt, stimmt für Nochmal oder Anderes Spiel.
 3. **Anderes Spiel:** Wer dafür stimmt, wählt zugleich ein Spiel aus der **Kandidatenliste**. Die Liste füllt sich ohne Freitext: jede Person darf **ein** Spiel vorschlagen (Auswahl aus den online spielbaren, nicht-Entwurf-Spielen, die zur Zahl der Verbliebenen passen, `min ≤ n ≤ max`), dazu steht immer „🎲 Zufällig“ darin. Höchstens 4 Kandidaten; wer eins vorschlägt, hat damit schon dafür gestimmt. Danach kann jede Person ihre Stimme auf einen Kandidaten legen.
-4. **Auswertung**, sobald alle abgestimmt haben oder nach **45 s** (Nichtstimmen zählt als Enthaltung):
+4. **Auswertung**, sobald alle abgestimmt haben oder nach **30 s** (Nichtstimmen zählt als Enthaltung):
    - **Mehrheit** der abgegebenen Stimmen unter den Verbliebenen gewinnt zwischen Nochmal und Anderes Spiel; bei Gleichstand gilt **Nochmal** (die kleinste Änderung).
    - Gewinnt Nochmal: die Partie startet sofort neu, bei zwei Plätzen mit Farb-/Platzwechsel wie heute (`rotate`). Die Raumleitung muss nichts drücken.
    - Gewinnt Anderes Spiel: der Raum geht in die Lobby, das gewählte Spiel mit Standardoptionen ist eingestellt, die Leute behalten ihre Plätze; die Raumleitung stellt Optionen ein und startet wie gewohnt. Bei mehreren Kandidaten gewinnt der mit den meisten Stimmen, bei Gleichstand zieht der Server den Sieger zufällig.
@@ -93,7 +93,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 ### Offene Fragen dazu
 
 1. ~~**Mehrheit oder alle?**~~ **Entschieden (Cornelius, 12.11.2026): einfache Mehrheit der Abstimmenden, bei Gleichstand Nochmal.**
-2. **Frist:** 45 s ausreichend? Was, wenn niemand abstimmt – Raum bleibt wie heute am Spielfeld stehen (Vorschlag).
+2. ~~**Frist**~~ **Entschieden (Cornelius, 12.11.2026): 30 Sekunden.** Stimmt niemand ab, bleibt der Raum wie heute am Spielfeld stehen (Vorschlag, nicht widersprochen).
 3. **Eigenes Issue?** Der Wunsch gilt für alle Räume und ist größer als das Brett. Vorschlag: eigenes Issue „Online: Abstimmung am Rundenende“ (`status: Idee`, bis du es freigibst), #65 verweist darauf.
 4. ~~**Reihenfolge**~~ **Entschieden (Cornelius, 12.11.2026): 1. Abstimmung am Rundenende (#298), 2. Anfrage für Neue (#299), 3. Schwarzes Brett (#65).**
 
