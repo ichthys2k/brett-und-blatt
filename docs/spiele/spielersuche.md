@@ -1,6 +1,8 @@
 # Spielersuche: „Ich will spielen“ (W-063, Issue #65)
 
-**Stand 12.11.2026: Konzept, alle sechs Fragen von Cornelius entschieden (siehe unten); wartet auf sein Wort zur Umsetzung.** Nichts davon ist umgesetzt.
+**Stand 12.11.2026:** Konzept steht, alle Fragen sind von Cornelius entschieden. Reihenfolge der Umsetzung: 1. Abstimmung am Rundenende (#298) – **umgesetzt, wartet auf Prüfung**; 2. Anfrage für Neue (#299) und 3. Schwarzes Brett (#65) – noch nicht begonnen.
+
+**Umgesetzt für #298:** Raum-Logik `packages/online/src/room.ts` (Abschnitt „Rundenende“: `AFTER_GAME_MS` = 30 s, Zustand `after`, `settleAfter`, nach Ende der Partie bei mindestens zwei verbundenen Menschen mit Platz, nie in Turnierpartien), Nachrichten `afterVote`/`afterPropose`/`afterPick` und `afterGame` (`protocol.ts`, je Verbindung, nur Zähler und eigene Stimme), `RoomDeps.listGames` für „Zufälliges Spiel“ (Server: `apps/server/src/index.ts`), Oberfläche `apps/web/src/components/AfterGameBar.tsx` (unter dem Spielfeld und in der Siegerehrung), Tests `packages/online/test/after-game.test.ts`, Rauchtest `node apps/server/scripts/rundenende.mjs`. Aussteigen ist das bestehende `leave`. Die Knöpfe der Raumleitung bleiben als Abkürzung.
 
 ## Ziel
 
