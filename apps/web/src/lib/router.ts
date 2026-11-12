@@ -10,6 +10,8 @@ export type Route =
   | { name: 'setup'; gameId: string; params?: Record<string, string> }
   | { name: 'play' }
   | { name: 'online' }
+  /** Schwarzes Brett „Wer hat Lust?“ (#65). */
+  | { name: 'board' }
   | { name: 'tournaments' }
   | { name: 'classes' }
   | { name: 'orgs' }
@@ -63,6 +65,7 @@ export function parseRoute(hash: string): Route {
   }
   if (parts[0] === 'partie') return { name: 'play' };
   if (parts[0] === 'online' || parts[0] === 'mehrspieler') return { name: 'online' };
+  if (parts[0] === 'brett' || parts[0] === 'spielersuche') return { name: 'board' };
   if (parts[0] === 'turniere') return { name: 'tournaments' };
   if (parts[0] === 'klassen') return { name: 'classes' };
   if (parts[0] === 'organisationen') return { name: 'orgs' };
@@ -112,6 +115,8 @@ export const paths = {
   },
   play: '#/partie',
   online: '#/online',
+  /** Schwarzes Brett „Wer hat Lust?“ (#65). */
+  board: '#/brett',
   tournaments: '#/turniere',
   classes: '#/klassen',
   /** „Verein oder Schule“ (#217). */

@@ -27,6 +27,7 @@ describe('Begehbare 3D-Taverne (#262)', () => {
     expect(stationForRoute('series')).toBe('tournaments');
     expect(stationForRoute('sound')).toBe('options');
     expect(stationForRoute('imprint')).toBe('options');
+    expect(stationForRoute('board')).toBe('board');
     expect(stationForRoute('pass')).toBe('profile');
     expect(stationForRoute('account')).toBe('profile');
     expect(stationForRoute('library')).toBe('profile');
@@ -45,7 +46,7 @@ describe('Begehbare 3D-Taverne (#262)', () => {
     expect(snapped).toEqual(STATION_CAMERAS.tournaments);
   });
 
-  it('projiziert alle 5 Stationen in der Totale sichtbar und erkennt Klicks auf die Hotspots', () => {
+  it('projiziert alle 6 Stationen in der Totale sichtbar und erkennt Klicks auf die Hotspots', () => {
     const width = 1280;
     const height = 720;
     const cam = STATION_CAMERAS.home;
@@ -65,13 +66,13 @@ describe('Begehbare 3D-Taverne (#262)', () => {
     expect(pickHotspot(-500, -500, cam, width, height)).toBeNull();
   });
 
-  it('baut Geometrie für alle 5 Stationen, Raumkulissen und Tischoberflächen', () => {
+  it('baut Geometrie für alle 6 Stationen, Raumkulissen und Tischoberflächen', () => {
     for (const room of ROOM_SCENES) {
       for (const table of TABLE_SURFACES) {
         const faces = buildTavernGeometry({ room, table, time: 1.2 });
         expect(faces.length).toBeGreaterThan(80);
         const stations = new Set(faces.map((f) => f.station).filter(Boolean));
-        expect(stations).toEqual(new Set(['single', 'online', 'tournaments', 'options', 'profile']));
+        expect(stations).toEqual(new Set(['single', 'online', 'tournaments', 'options', 'profile', 'board']));
       }
     }
   });

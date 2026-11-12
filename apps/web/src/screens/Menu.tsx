@@ -1,9 +1,11 @@
 import { PlayerCrest } from '@brett-und-blatt/ui';
 import { useEffect, useState } from 'react';
 import { TavernScene } from '../components/TavernScene';
+import { fetchBoardCount } from '../lib/board';
 import { useCrest } from '../lib/crestStore';
 import { findGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
+import { GAME_SERVER } from '../lib/server';
 import { storage } from '../lib/storage';
 import { setHoveredStation, type TavernStationId } from '../lib/tavern3d';
 import './menu.css';
@@ -34,8 +36,18 @@ export function Menu() {
   const profile = storage.loadProfile();
   const resume = storage.loadActive();
   const resumeGame = resume ? findGame(resume.config.gameId) : undefined;
+  const [boardCount, setBoardCount] = useState<number | null>(null);
 
   useEffect(() => () => setHoveredStation(null), []);
+
+  // Wie viele Zettel hängen am Schwarzen Brett? Nur eine kleine Zahl, ohne Verbindung zum Brett.
+  useEffect(() => {
+    let cancelled = false;
+    fetchBoardCount().then((count) => !cancelled && setBoardCount(count));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const activate = (station: Exclude<TavernStationId, 'home'>, text: string) => {
     setHoveredStation(station);
@@ -96,6 +108,25 @@ export function Menu() {
           {hint}
         </p>
       </nav>
+
+      {GAME_SERVER && (
+        <button
+          type="button"
+          className="bub-menu-board"
+          aria-label={`Schwarzes Brett${boardCount !== null ? `, ${boardCount} ${boardCount === 1 ? 'Zettel' : 'Zettel'}` : ''}`}
+          onClick={() => navigate(paths.board)}
+          onMouseEnter={() => activate('board', 'Mitspieler finden: Zettel anheften und „Bin dabei“ sagen – ohne Chat.')}
+          onFocus={() => activate('board', 'Mitspieler finden: Zettel anheften und „Bin dabei“ sagen – ohne Chat.')}
+          onMouseLeave={deactivate}
+          onBlur={deactivate}
+        >
+          <span aria-hidden="true">📌</span>
+          <span className="bub-menu-board-text">
+            <span className="bub-menu-board-title">Schwarzes Brett</span>
+            <span className="bub-menu-board-sub">Wer hat Lust? {boardCount !== null && boardCount > 0 ? `${boardCount} ${boardCount === 1 ? 'Zettel' : 'Zettel'}` : 'Hänge einen Zettel auf'}</span>
+          </span>
+        </button>
+      )}
 
       <button
         type="button"
