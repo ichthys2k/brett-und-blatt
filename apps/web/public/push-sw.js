@@ -14,10 +14,13 @@
     tournamentStarted: 'Das Turnier hat begonnen.',
     tournamentFinished: 'Das Turnier ist beendet.',
     yourTurn: 'Du bist am Zug.',
+    boardYes: 'Jemand hat auf deinem Zettel „Bin dabei“ gesagt.',
+    boardProposal: 'Ein Vorschlag am Schwarzen Brett wartet auf deine Zusage.',
+    boardRoom: 'Dein Raum steht – komm herein!',
   };
   var FALLBACK = 'Es gibt etwas Neues.';
-  // Ziel nur innerhalb der App: #/raum/<Code> oder #/turnier/<Code>.
-  var TARGET = /^#\/(raum|turnier)\/[^\s/?#]{1,40}$/;
+  // Ziel nur innerhalb der App: #/raum/<Code>, #/turnier/<Code> oder #/brett.
+  var TARGET = /^#\/((raum|turnier)\/[^\s/?#]{1,40}|brett)$/;
 
   /** Sichtbarer Text zu einer Art; unbekannte Arten bekommen einen neutralen Text. */
   function pushText(kind) {

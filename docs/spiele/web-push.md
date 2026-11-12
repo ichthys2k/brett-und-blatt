@@ -9,7 +9,7 @@ Verwandt: Kalenderdatei für feste Termine ([#243](https://github.com/ichthys2k/
 | Frage | Entscheidung |
 |---|---|
 | Web Push überhaupt? | Ja, **zusätzlich** zur Kalenderdatei (#206: „Beides“). Die Kalenderdatei kam zuerst. |
-| Umfang | **Turniere und Fernpartien.** Turniere: Partie aufgerufen, Frist läuft bald ab, Turnier beginnt/endet. Fernpartien: „Du bist dran“, nur wenn niemand verbunden ist. **Nicht** für normale Online-Räume. |
+| Umfang | **Turniere und Fernpartien.** Turniere: Partie aufgerufen, Frist läuft bald ab, Turnier beginnt/endet. Fernpartien: „Du bist dran“, nur wenn niemand verbunden ist. **Nicht** für normale Online-Räume. **Nachtrag 12.11.2026 (Cornelius: „Ja“):** auch fürs Schwarze Brett (Zusage, Vorschlag, Raum steht), siehe `spielersuche.md`, „Vierte Stufe“. |
 | Service Worker | **Kleines Zusatzskript** `push-sw.js`, per `workbox.importScripts` in den bestehenden `generateSW` eingebunden. **Kein** Umbau auf `injectManifest` (schont #175 und den Offline-Betrieb). |
 | Fristerinnerung | **Fest 2 Stunden vor Fristende**, eine Erinnerung an alle, die noch fehlen. Keine Einstellung durch die Leitung, keine zweite Stufe. |
 | Datenschutz | Claude/der umsetzende Agent **entwirft den Text**, Cornelius liest gegen und entscheidet über eine rechtliche Prüfung. Bis zur Freigabe des Textes bleibt die Funktion **unsichtbar** (kein öffentlicher VAPID-Schlüssel im Build, siehe Schritt 9). |

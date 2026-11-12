@@ -78,6 +78,12 @@ export function PushPrivacy() {
         eine Frist bald abläuft, ein Turnier beginnt oder endet oder du in einer Fernpartie am Zug bist. Das ist freiwillig und für das Spielen nicht nötig. Es
         passiert nur, wenn du ausdrücklich „Hinweise einschalten“ wählst und dein Browser es zusätzlich erlaubt; nie beim bloßen Öffnen einer Seite.
       </p>
+      <p>
+        Auch am Schwarzen Brett („Wer hat Lust?“) gibt es diese Hinweise, ebenfalls nur auf ausdrücklichen Wunsch: wenn jemand auf deinem Zettel „Bin dabei“ sagt, ein
+        Vorschlag auf deine Zusage wartet oder dein Raum steht. Dort speichert der Spieleserver das Abo unter einer aus deiner Geräte-Kennung abgeleiteten
+        Kurzkennung (nicht unter der Kennung selbst) und vergisst es spätestens nach drei Stunden; mit einem Abo bleibt dein Zettel hängen, auch wenn du die Seite schließt,
+        bis er nach 30 Minuten (mit Verlängern später) abläuft. Die Meldung nennt weder Namen noch Spielnamen.
+      </p>
       <p>Dafür speichert der Spieleserver beim jeweiligen Turnier oder Raum (Rechenzentren in der EU):</p>
       <ul>
         <li>die Adresse („Endpunkt“) des Push-Dienstes deines Browsers und zwei Schlüssel, mit denen die Meldung nur für dein Gerät lesbar verschlüsselt wird,</li>

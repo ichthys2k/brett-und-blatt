@@ -118,6 +118,14 @@ import {
   type LockRecord,
 } from '@brett-und-blatt/online';
 import {
+  BOARD_PUSH_MAX_AGE_MS,
+  boardPushFromJSON,
+  boardPushKinds,
+  boardPushToJSON,
+  deliverBoardPush,
+  newBoardPushState,
+  type BoardPushState,
+  type BoardSignature,
   claimSilently,
   deliverTurnPush,
   parseClientMessage,
@@ -1267,7 +1275,7 @@ async function boardOwnerId(token: string): Promise<string> {
 }
 
 /** Das Brett kennt nur Spiele, die der Server online anbietet und die mindestens zwei spielen können. */
-function boardDeps(room: (code: string) => { gameId: string } | undefined) {
+function boardDeps(room: (code: string) => { gameId: string } | undefined, keepAway: (owner: string) => boolean) {
   const asGame = (m: (typeof onlineGames)[number]) => ({ id: m.info.id, min: m.info.players.min, max: m.info.players.max });
   const playable = () => onlineGames.filter((m) => m.info.players.max >= 2).map(asGame);
   return {
@@ -1276,6 +1284,7 @@ function boardDeps(room: (code: string) => { gameId: string } | undefined) {
     games: playable,
     room,
     random: () => Math.random(),
+    keepAway,
   };
 }
 
@@ -1288,6 +1297,9 @@ function boardDeps(room: (code: string) => { gameId: string } | undefined) {
 export class LobbyRegistry extends DurableObject<Env> {
   private directory = new OpenRoomDirectory();
   private board = this.makeBoard();
+  /** Web Push fürs Brett: Abos je Kurzkennung (nie die Geräte-Kennung) und Spam-Schutz, unter dem Schlüssel `boardPush`. */
+  private boardPush: BoardPushState = newBoardPushState();
+  private boardPushSender: PushSender | null = null;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -1298,6 +1310,7 @@ export class LobbyRegistry extends DurableObject<Env> {
       this.directory = new OpenRoomDirectory(saved);
       const board = await ctx.storage.get<ReturnType<SeekingBoard['toJSON']>>('board');
       if (board) this.board = this.makeBoard(board);
+      this.boardPush = boardPushFromJSON(await ctx.storage.get('boardPush'), { allowLocal: allowLocalPush(env) });
     });
   }
 
@@ -1307,7 +1320,7 @@ export class LobbyRegistry extends DurableObject<Env> {
       boardDeps((code) => {
         const listing = this.directory.list().find((room) => room.code === code && !room.tournament);
         return listing ? { gameId: listing.gameId } : undefined;
-      }),
+      }, (owner) => this.boardPush.book.has(owner)),
       saved,
     );
   }
@@ -1330,17 +1343,20 @@ export class LobbyRegistry extends DurableObject<Env> {
     // Die Liste der offenen Runden kennt nur „ping“ (beantwortet Cloudflare selbst); das Schwarze Brett spricht mehr.
     const attachment = boardAttachment(ws);
     if (!attachment || typeof message !== 'string') return;
-    const msg = parseBoardMessage(message);
+    const msg = parseBoardMessage(message, { allowLocal: allowLocalPush(this.env) });
     if (!msg) return this.sendTo(ws, JSON.stringify({ type: 'boardError', error: 'message' } satisfies BoardServerMessage));
     if (msg.type === 'hello') {
       const owner = await boardOwnerId(msg.token);
       ws.serializeAttachment({ kind: 'board', owner, token: msg.token } satisfies BoardAttachment);
       this.board.markAway(owner, false);
       await this.boardChanged();
+      if (pushConfigured(this.env)) this.sendTo(ws, JSON.stringify({ type: 'pushState', enabled: this.boardPush.book.has(owner) } satisfies BoardServerMessage));
       return;
     }
     const owner = attachment.owner;
     if (!owner) return this.sendTo(ws, JSON.stringify({ type: 'boardError', error: 'hello' } satisfies BoardServerMessage));
+    if (msg.type === 'pushSubscribe' || msg.type === 'pushUnsubscribe') return this.handleBoardPush(ws, owner, msg);
+    const before = this.boardSignatures();
     let result;
     switch (msg.type) {
       case 'post':
@@ -1366,7 +1382,56 @@ export class LobbyRegistry extends DurableObject<Env> {
         break;
     }
     if (!result.ok && result.error) this.sendTo(ws, JSON.stringify({ type: 'boardError', error: result.error } satisfies BoardServerMessage));
-    await this.boardChanged(result.matches);
+    await this.boardChanged(result.matches, before);
+  }
+
+  // Web Push fürs Brett
+
+  private pushSender(): PushSender | null {
+    this.boardPushSender ??= makePushSender(this.env);
+    return this.boardPushSender;
+  }
+
+  private async saveBoardPush(): Promise<void> {
+    await this.ctx.storage.put('boardPush', boardPushToJSON(this.boardPush));
+  }
+
+  private async handleBoardPush(ws: WebSocket, owner: string, msg: { type: 'pushSubscribe'; subscription: PushSubscriptionData } | { type: 'pushUnsubscribe' }): Promise<void> {
+    if (!pushConfigured(this.env)) return this.sendTo(ws, JSON.stringify({ type: 'pushState', enabled: false } satisfies BoardServerMessage));
+    if (msg.type === 'pushUnsubscribe') this.boardPush.book.remove(owner);
+    else if (!this.boardPush.book.set(owner, msg.subscription, Date.now())) return this.sendTo(ws, JSON.stringify({ type: 'boardError', error: 'rate' } satisfies BoardServerMessage));
+    await this.saveBoardPush();
+    this.sendTo(ws, JSON.stringify({ type: 'pushState', enabled: this.boardPush.book.has(owner) } satisfies BoardServerMessage));
+    await this.scheduleExpiry();
+  }
+
+  /** Zustand je Person mit Abo, vor einer Änderung des Bretts – damit danach klar ist, was neu ist. */
+  private boardSignatures(): Map<string, BoardSignature> {
+    const out = new Map<string, BoardSignature>();
+    if (!pushConfigured(this.env)) return out;
+    for (const { token: owner } of this.boardPush.book.toJSON()) out.set(owner, this.board.pushSignature(owner));
+    return out;
+  }
+
+  /** Hat die Person gerade eine offene Brett-Seite? Dann übernimmt die Seite selbst (Benachrichtigung im Browser). */
+  private boardConnected(owner: string): boolean {
+    return this.ctx.getWebSockets().some((ws) => boardAttachment(ws)?.owner === owner);
+  }
+
+  private async pushBoard(before: Map<string, BoardSignature>, matches: { owners: string[]; code: string }[]): Promise<void> {
+    const sender = this.pushSender();
+    if (!sender || !pushConfigured(this.env)) return;
+    try {
+      const now = Date.now();
+      const opts = { persist: () => this.saveBoardPush() };
+      for (const [owner, was] of before) {
+        if (this.boardConnected(owner)) continue;
+        for (const kind of boardPushKinds(was, this.board.pushSignature(owner))) await deliverBoardPush(this.boardPush, owner, kind, '#/brett', sender, now, opts);
+      }
+      for (const match of matches) for (const owner of match.owners) if (!this.boardConnected(owner)) await deliverBoardPush(this.boardPush, owner, 'boardRoom', `#/raum/${match.code}`, sender, now, opts);
+    } catch (err) {
+      console.error('Web Push (Brett) fehlgeschlagen:', err instanceof Error ? err.name : 'Fehler');
+    }
   }
 
   override async webSocketClose(ws: WebSocket, code: number): Promise<void> {
@@ -1401,8 +1466,9 @@ export class LobbyRegistry extends DurableObject<Env> {
 
   override async alarm(): Promise<void> {
     await this.prune();
+    const before = this.boardSignatures();
     const matches = this.board.tick();
-    await this.boardChanged(matches);
+    await this.boardChanged(matches, before);
     await this.scheduleExpiry();
   }
 
@@ -1413,11 +1479,17 @@ export class LobbyRegistry extends DurableObject<Env> {
   }
 
   /** Das Brett hat sich geändert: Treffer zu Räumen machen, speichern, Wecker stellen und allen die neue Sicht schicken. */
-  private async boardChanged(matches: SeekMatch[] = []): Promise<void> {
-    for (const match of matches) await this.openMatchedRoom(match);
+  private async boardChanged(matches: SeekMatch[] = [], before: Map<string, BoardSignature> = new Map()): Promise<void> {
+    const opened: { owners: string[]; code: string }[] = [];
+    for (const match of matches) {
+      const code = await this.openMatchedRoom(match);
+      if (code) opened.push({ owners: match.owners, code });
+    }
+    if (this.boardPush.book.prune(BOARD_PUSH_MAX_AGE_MS, Date.now()) > 0) await this.saveBoardPush();
     await this.ctx.storage.put('board', this.board.toJSON());
     await this.scheduleExpiry();
     for (const ws of this.ctx.getWebSockets()) if (boardAttachment(ws)) this.sendTo(ws, this.boardMessage(boardAttachment(ws)!.owner));
+    await this.pushBoard(before, opened);
   }
 
   private boardMessage(owner: string | null): string {
@@ -1425,17 +1497,18 @@ export class LobbyRegistry extends DurableObject<Env> {
   }
 
   /** Eine Gruppe hat sich gefunden: Raum anlegen (die Verfasserin wird Raumleitung) und allen Bescheid geben. */
-  private async openMatchedRoom(match: SeekMatch): Promise<void> {
+  private async openMatchedRoom(match: SeekMatch): Promise<string | null> {
     const sockets = this.ctx.getWebSockets().filter((ws) => boardAttachment(ws)?.owner && match.owners.includes(boardAttachment(ws)!.owner!));
     const hostToken = sockets.map((ws) => boardAttachment(ws)!).find((a) => a.owner === match.host)?.token ?? null;
     for (let attempt = 0; attempt < 5; attempt++) {
       const code = randomRoomCode(randomInt);
       if (await roomStub(this.env, code).createSeeking(code, match.gameId, hostToken)) {
         for (const ws of sockets) this.sendTo(ws, JSON.stringify({ type: 'matched', code, gameId: match.gameId } satisfies BoardServerMessage));
-        return;
+        return code;
       }
     }
     console.error('Schwarzes Brett: Raum für einen Treffer ließ sich nicht anlegen');
+    return null;
   }
 
   private async prune(): Promise<void> {
@@ -1449,9 +1522,10 @@ export class LobbyRegistry extends DurableObject<Env> {
     const message = this.message();
     for (const ws of this.ctx.getWebSockets()) if (!boardAttachment(ws)) this.sendTo(ws, message);
     // Zettel für eine Runde, die nicht mehr offen ist, fallen vom Brett.
-    const before = this.board.size;
+    const size = this.board.size;
+    const signatures = this.boardSignatures();
     const matches = this.board.tick();
-    if (matches.length > 0 || this.board.size !== before) await this.boardChanged(matches);
+    if (matches.length > 0 || this.board.size !== size) await this.boardChanged(matches, signatures);
   }
 
   private async scheduleExpiry(): Promise<void> {

@@ -1,6 +1,7 @@
 import type { BoardServerMessage, SeekBoardView, SeekError } from '@brett-und-blatt/online';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { boardAlerts } from './boardAlerts';
+import { disablePush, type PushSubscribeMessage } from './push';
 import { notifyHidden } from './notifications';
 import { GAME_SERVER } from './server';
 import { navigate, paths } from './router';
@@ -16,9 +17,11 @@ export interface BoardState extends SeekBoardView {
   you: string | null;
   /** Letzte Fehlermeldung des Bretts (z. B. „zu schnell“), bis zur nächsten Aktion. */
   error: SeekError | 'hello' | 'message' | null;
+  /** Hinweise aufs Gerät: Antwort des Servers (`null`, solange sie fehlt oder die Funktion aus ist). */
+  push: boolean | null;
 }
 
-const INITIAL: BoardState = { status: 'connecting', you: null, notes: [], proposal: null, error: null };
+const INITIAL: BoardState = { status: 'connecting', you: null, notes: [], proposal: null, error: null, push: null };
 const PING_MS = 25_000;
 
 export interface BoardActions {
@@ -28,6 +31,8 @@ export interface BoardActions {
   join(noteId: string, gameId: string): void;
   unjoin(noteId: string): void;
   confirm(noteId: string, ok: boolean): void;
+  pushOn(message: PushSubscribeMessage): void;
+  pushOff(): void;
 }
 
 /** Hängt die Seite ans Schwarze Brett; ohne Spieleserver bleibt sie leer. */
@@ -70,6 +75,7 @@ export function useBoard(): [BoardState, BoardActions] {
           lastView.current = { notes: message.notes, proposal: message.proposal };
           setState((s) => ({ ...s, status: 'open', you: message.you, notes: message.notes, proposal: message.proposal }));
         }
+        else if (message.type === 'pushState') setState((s) => ({ ...s, push: message.enabled }));
         else if (message.type === 'boardError') setState((s) => ({ ...s, error: message.error }));
         else if (message.type === 'matched') {
           notifyHidden('Schwarzes Brett', 'Dein Raum steht – komm herein!');
@@ -109,6 +115,11 @@ export function useBoard(): [BoardState, BoardActions] {
     join: (noteId, gameId) => send({ type: 'join', noteId, gameId, name: storage.loadProfile()?.name ?? 'Jemand' }),
     unjoin: (noteId) => send({ type: 'unjoin', noteId }),
     confirm: (noteId, ok) => send({ type: 'confirm', noteId, ok }),
+    pushOn: (message) => send(message),
+    pushOff: () => {
+      send({ type: 'pushUnsubscribe' });
+      void disablePush();
+    },
   };
   return [state, actions];
 }
