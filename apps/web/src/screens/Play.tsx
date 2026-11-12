@@ -2,6 +2,7 @@ import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId 
 import { PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { AlbumSpec } from '@brett-und-blatt/ui';
+import { AfterGameBar } from '../components/AfterGameBar';
 import { Ceremony } from '../components/Ceremony';
 import { Notes } from '../components/Notes';
 import { hasNote, notesKey } from '../lib/notes';
@@ -17,6 +18,7 @@ import { useDismiss } from '../components/useDismiss';
 import { t } from '../i18n';
 import { getActiveGame, resumeGame, saveProgress, startGame, type ActiveGame } from '../lib/activeGame';
 import { levelLabel } from '../lib/format';
+import type { AfterState } from '../lib/online';
 import type { LoadedGame } from '../lib/registry';
 import { useGameMusic } from '../lib/music';
 import { categoryOf } from './Home';
@@ -80,6 +82,8 @@ export interface OnlineTableProps {
   onRestart?(rotate: boolean): void;
   onLobby(): void;
   onLeave(): void;
+  /** Abstimmung am Rundenende (#298): Nochmal, anderes Spiel oder Aussteigen. */
+  after?: { info: AfterState; seatCount: number; onVote(choice: 'again' | 'other'): void; onPropose(gameId: string): void; onPick(gameId: string): void };
   /** Avatare (Emojis) der Plätze in Sitzreihenfolge, falls bekannt. */
   avatars?: (string | null)[];
   /** Z. B. die Plätze zum Übernehmen. */
@@ -317,7 +321,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       ▶ {t('replay.open')}
     </Button>
   ) : null;
-  const resultActionsBase = online ? (
+  const afterBar =
+    online?.after?.info.canVote && result ? (
+      <AfterGameBar after={online.after.info} gameId={info.id} seatCount={online.after.seatCount} onVote={online.after.onVote} onPropose={online.after.onPropose} onPick={online.after.onPick} onLeave={online.onLeave} />
+    ) : null;
+  const resultActionsOnline = online ? (
     online.isHost ? (
       <>
         {online.onRestart && (
@@ -330,8 +338,14 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         </Button>
       </>
     ) : (
-      online.display ? null : <p className="text-sm text-muted">{online.finishedNote ?? t('online.waitForHost')}</p>
+      online.display || afterBar ? null : <p className="text-sm text-muted">{online.finishedNote ?? t('online.waitForHost')}</p>
     )
+  ) : null;
+  const resultActionsBase = online ? (
+    <>
+      {afterBar}
+      {resultActionsOnline}
+    </>
   ) : (
     <>
       {endAction ? (

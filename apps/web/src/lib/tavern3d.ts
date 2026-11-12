@@ -9,7 +9,7 @@ import type { Route } from './router';
  * direkt prüfbar sind und der Canvas-Zustand über Routenwechsel hinweg erhalten bleibt.
  */
 
-export type TavernStationId = 'home' | 'single' | 'online' | 'tournaments' | 'options' | 'profile';
+export type TavernStationId = 'home' | 'single' | 'online' | 'tournaments' | 'options' | 'profile' | 'board';
 
 export interface Vec3 {
   x: number;
@@ -55,6 +55,7 @@ export const STATION_CAMERAS: Record<TavernStationId, CameraPose> = {
   tournaments: { x: -0.55, y: 1.86, z: -2.65, yaw: 0.2, pitch: 0.06 },
   options: { x: -1.78, y: 1.32, z: -2.85, yaw: 0.54, pitch: 0.12 },
   profile: { x: -1.68, y: 2.18, z: -2.75, yaw: 0.5, pitch: -0.06 },
+  board: { x: -1.7, y: 1.35, z: -4.7, yaw: -0.25, pitch: 0.14 },
 };
 
 /** Anklickbare 3D-Stationen im Raum (für das Hauptmenü `#/`). */
@@ -64,6 +65,7 @@ export const TAVERN_HOTSPOTS: readonly TavernHotspot[] = [
   { id: 'tournaments', label: '🏆 Turniere', to: '#/turniere', pos: { x: -1.05, y: 1.95, z: 1.45 }, radius: 42 },
   { id: 'options', label: '🔥 Optionen', to: '#/ton', pos: { x: -2.85, y: 1.0, z: 0.65 }, radius: 40 },
   { id: 'profile', label: '🛡️ Profil & Pass', to: '#/pass', pos: { x: -2.75, y: 2.25, z: 0.65 }, radius: 36 },
+  { id: 'board', label: '📌 Schwarzes Brett', to: '#/brett', pos: { x: -2.55, y: 1.1, z: -2.7 }, radius: 40 },
 ];
 
 /** Ordnet jeder Route die passende 3D-Kamerastation zu. */
@@ -74,6 +76,8 @@ export function stationForRoute(routeName: Route['name']): TavernStationId {
     case 'home':
     case 'setup':
       return 'single';
+    case 'board':
+      return 'board';
     case 'online':
     case 'classes':
     case 'class':
@@ -431,6 +435,15 @@ export function buildTavernGeometry(options: {
   // Zwei Hocker am Online-Tisch
   addBox(faces, 0.1, 0.44, 0.1, 0.42, 0.44, 0.42, '#5a3b22', 'online');
   addBox(faces, 2.4, 0.44, 0.1, 0.42, 0.44, 0.42, '#5a3b22', 'online');
+
+  // 7. Station „Schwarzes Brett“ (#/brett): Brett auf Beinen links vorn, mit angehefteten Zetteln
+  addBox(faces, -2.55, 0.5, -2.7, 0.08, 1.0, 0.08, '#4a2e16', 'board'); // linkes Bein
+  addBox(faces, -1.75, 0.5, -2.7, 0.08, 1.0, 0.08, '#4a2e16', 'board'); // rechtes Bein
+  addBox(faces, -2.15, 1.3, -2.7, 1.0, 0.8, 0.07, '#4a2e16', 'board'); // Rahmen
+  addBox(faces, -2.15, 1.3, -2.75, 0.88, 0.68, 0.04, '#2a2a2a', 'board'); // schwarze Tafel
+  addBox(faces, -2.42, 1.45, -2.8, 0.26, 0.22, 0.02, '#f6ead2', 'board'); // Zettel
+  addBox(faces, -2.1, 1.2, -2.8, 0.26, 0.22, 0.02, '#fde68a', 'board', true);
+  addBox(faces, -1.86, 1.42, -2.8, 0.22, 0.26, 0.02, '#f6ead2', 'board');
 
   return faces;
 }

@@ -64,6 +64,10 @@ Regel für Sets: Jede Karte hat **alle** Werte des Sets. Leere Werte sind nicht 
 - Hat der Gefragte sie, muss er sie abgeben, und der Fragende darf weiterfragen. Sonst ist der Gefragte am Zug.
 - Vollständige Vierergruppen werden offen abgelegt. Wer am Ende die meisten Quartette hat, gewinnt.
 
+## Lernpakete (Anki, #101)
+
+Quartett ist **noch nicht** an die Anki-Pakete angebunden: Die Kartensets bleiben eigene Inhaltspakete unter `content/quartett/` mit Werten und Quellen. Eine Anbindung (Stapel als Quartett-Set, Lernstand) ist offen und kein Teil von L6 (#223).
+
 ## Optionen in der Lobby
 
 | Option | Werte | Standard |

@@ -232,6 +232,36 @@ try {
       await context.close();
     }
   }
+  // Poker setzt bis zu zehn Spieler mit dem gemeinsamen Tisch (SeatRing): kein Überlappen, nichts außerhalb.
+  if (ids.includes('poker')) {
+    for (const [width, height, count] of [[1280, 800, 10], [768, 1024, 10], [1024, 768, 6], [1280, 800, 2]]) {
+      const context = await browser.newContext({ viewport: { width, height } });
+      const pokerPage = await context.newPage();
+      await pokerPage.goto(base);
+      await pokerPage.evaluate(
+        ([seats]) => localStorage.setItem('brett-und-blatt:einstellungen:poker', JSON.stringify({ seats, options: {} })),
+        [Array.from({ length: count }, (_, i) => (i === 0 ? { kind: 'human', name: 'Du' } : { kind: 'bot', name: '', level: 'medium' }))],
+      );
+      const m = await startGame(pokerPage, 'poker');
+      const ring = await pokerPage.evaluate(() => {
+        const stage = document.querySelector('.bub-seat-ring-stage')?.getBoundingClientRect();
+        const center = document.querySelector('.bub-seat-ring-center')?.getBoundingClientRect();
+        const seats = [...document.querySelectorAll('.bub-seat-ring-seat')].map((el) => el.firstElementChild.getBoundingClientRect());
+        const overlap = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+        return {
+          shown: Boolean(center),
+          collisions: seats.filter((a, i) => seats.slice(i + 1).some((b) => overlap(a, b)) || (center && overlap(a, center))).length,
+          outside: stage ? seats.filter((a) => a.left < 0 || a.right > innerWidth || a.top < 0).length : 0,
+        };
+      });
+      const where = `poker zu ${count} bei ${width}×${height}`;
+      if (!ring.shown) problems.push(`${where}: Tisch fehlt`);
+      if (ring.collisions > 0) problems.push(`${where}: ${ring.collisions} Plätze überlappen`);
+      if (ring.outside > 0) problems.push(`${where}: ${ring.outside} Plätze ragen aus dem Bild`);
+      if (m.pageHeight > height + 2) problems.push(`${where}: Seite rollt (${m.pageHeight} px)`);
+      await context.close();
+    }
+  }
   // Pass-Seite (#145): im Handy-Hochformat rollt nichts waagerecht, und es gibt keine Fehler.
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });

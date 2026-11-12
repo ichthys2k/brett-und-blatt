@@ -10,7 +10,7 @@ describe('seatRingPosition', () => {
   });
 
   it('bleibt für jede Platzzahl auf der Fläche', () => {
-    for (let seats = 3; seats <= 8; seats++) {
+    for (let seats = 3; seats <= 10; seats++) {
       for (let seat = 0; seat < seats; seat++) {
         const { x, y } = seatRingPosition(seat, seats, 0);
         expect(Math.min(x, y)).toBeGreaterThanOrEqual(0);
@@ -21,12 +21,17 @@ describe('seatRingPosition', () => {
 });
 
 describe('seatRingFits', () => {
-  it('gilt nur bei genug Platz und drei bis acht Plätzen', () => {
+  it('gilt nur bei genug Platz und drei bis acht Plätzen (Poker weitet auf zwei bis zehn)', () => {
     expect(seatRingFits(3, 960, 760)).toBe(true);
     expect(seatRingFits(8, 960, 760)).toBe(true);
-    expect(seatRingFits(2, 960, 760)).toBe(false);
     expect(seatRingFits(9, 960, 760)).toBe(false);
+    expect(seatRingFits(10, 960, 760, { minSeats: 2, maxSeats: 10 })).toBe(true);
+    expect(seatRingFits(2, 960, 760)).toBe(false);
+    expect(seatRingFits(2, 960, 760, { minSeats: 2 })).toBe(true);
+    expect(seatRingFits(11, 960, 760, { minSeats: 2, maxSeats: 10 })).toBe(false);
     expect(seatRingFits(4, 390, 600)).toBe(false);
+    expect(seatRingFits(4, 672, 700)).toBe(false);
+    expect(seatRingFits(4, 672, 700, { minWidth: 640 })).toBe(true);
     expect(seatRingFits(4, 700, 400)).toBe(false);
   });
 });

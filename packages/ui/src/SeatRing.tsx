@@ -6,14 +6,28 @@ export const SEAT_RING_MIN_WIDTH = 680;
 export const SEAT_RING_MIN_HEIGHT = 560;
 export const SEAT_RING_MIN_SEATS = 3;
 export const SEAT_RING_MAX_SEATS = 8;
+/** Poker setzt bis zu zehn Spieler um den Tisch (`seatRingFits` mit `maxSeats`). */
+export const SEAT_RING_WIDE_MAX_SEATS = 10;
+/** Poker braucht weniger Breite: Seine Sitzschilder sind schmaler als die allgemeinen Chips (siehe `.poker-ring`). */
+export const SEAT_RING_POKER_MIN_WIDTH = 640;
 /** Bis zu dieser Entfernung vom Rand (in %) sitzt ein Platz neben der Mitte, nicht darüber oder darunter. */
 const SIDE_LIMIT = 22;
 /** Halbe Breite eines Platzes (siehe `.bub-seat-ring-seat`): So weit bleibt seine Mitte vom Rand weg. */
 const SEAT_HALF_WIDTH = '5.25rem';
 
-/** Passt der Tisch in diese Fläche? Kleine Bildschirme behalten ihre Spielerleiste. */
-export function seatRingFits(seats: number, width: number, height: number): boolean {
-  return seats >= SEAT_RING_MIN_SEATS && seats <= SEAT_RING_MAX_SEATS && width >= SEAT_RING_MIN_WIDTH && height >= SEAT_RING_MIN_HEIGHT;
+export interface SeatRingFitOptions {
+  /** Kleinste Platzzahl (Standard 3; Poker auch zu zweit). */
+  minSeats?: number;
+  /** Größte Platzzahl (Standard 8; Poker bis 10). */
+  maxSeats?: number;
+  /** Kleinste Breite in px (Standard 680). */
+  minWidth?: number;
+}
+
+/** Passt der Tisch in diese Fläche? Kleine Bildschirme behalten ihre Spielerleiste. Mit `options` weitet ein Spiel den Bereich (Poker: 2 bis 10 Plätze, ab 640 px). */
+export function seatRingFits(seats: number, width: number, height: number, options: SeatRingFitOptions = {}): boolean {
+  const { minSeats = SEAT_RING_MIN_SEATS, maxSeats = SEAT_RING_MAX_SEATS, minWidth = SEAT_RING_MIN_WIDTH } = options;
+  return seats >= minSeats && seats <= maxSeats && width >= minWidth && height >= SEAT_RING_MIN_HEIGHT;
 }
 
 /**

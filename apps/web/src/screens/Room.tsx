@@ -157,6 +157,17 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             onRestart: (rotate: boolean) => connection.send({ type: 'start', rotate }),
             onLobby: () => connection.send({ type: 'toLobby' }),
             onLeave: leave,
+            ...(state.after
+              ? {
+                  after: {
+                    info: state.after,
+                    seatCount: room.lobby.seats.filter((seat) => seat.kind === 'bot' || seat.memberId !== null).length,
+                    onVote: (choice: 'again' | 'other') => connection.send({ type: 'afterVote', choice }),
+                    onPropose: (gameId: string) => connection.send({ type: 'afterPropose', gameId }),
+                    onPick: (gameId: string) => connection.send({ type: 'afterPick', gameId }),
+                  },
+                }
+              : {}),
             avatars: state.room?.lobby.seats.map((seat) => {
               if (seat.kind !== 'human' || !seat.memberId) return null;
               return state.room?.members.find((m) => m.id === seat.memberId)?.avatar ?? null;
@@ -175,6 +186,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
                 )}
                 {toTournament}
                 {pushToggle}
+                <JoinRequest room={room} you={state.you} yourSeat={session.yourSeat} info={loaded.info} connection={connection} />
                 <GameSeats session={session} seatLabel={loaded.ui.seatLabel} room={room} send={connection.send.bind(connection)} />
                 <ModeratorEntry session={session} seatLabel={loaded.ui.seatLabel} room={room} you={state.you} capabilities={roomCapabilities(isHost)} connection={connection} />
               </>
@@ -290,6 +302,7 @@ function ModeratorEntry({
     () => session.version,
   );
   if (capabilities.length === 0) return null;
+  const requests = room.members.filter((member) => member.join === 'asking');
   const seatCount = session.config.seats.length;
   const members: ModeratorMember[] = room.members.map((member) => {
     const index = session.config.seats.findIndex((_, i) => session.seatMember(i) === member.id);
@@ -307,6 +320,11 @@ function ModeratorEntry({
       <div className="mx-3 mt-2">
         <Button variant="secondary" className="min-h-9 text-sm" onClick={() => setOpen(true)}>
           🛠 {t('mod.open')}
+          {requests.length > 0 && (
+            <span className="rounded-full bg-accent px-1.5 text-xs text-white" aria-label={t('join.requests')}>
+              🙋 {requests.length}
+            </span>
+          )}
         </Button>
       </div>
       {open && (
@@ -315,6 +333,11 @@ function ModeratorEntry({
           members={members}
           namesLocked={room.lobby.namesLocked ?? false}
           displays={room.displays ?? 0}
+          requests={requests}
+          acceptRequests={room.lobby.acceptRequests ?? room.lobby.isPublic}
+          onAnswerJoin={(memberId, ok) => connection.send({ type: 'answerJoin', memberId, ok })}
+          onAcceptAllJoins={() => connection.send({ type: 'acceptAllJoins' })}
+          onSetAcceptRequests={(allowed) => connection.send({ type: 'setAcceptRequests', allowed })}
           onRename={(memberId, profile) => {
             if (memberId === you) {
               saveOwnProfile(profile);
@@ -462,6 +485,23 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle }: { room:
             </div>
             <span className="text-xl" aria-hidden="true">
               🌐
+            </span>
+          </label>
+        )}
+        {isHost && (
+          <label className="flex cursor-pointer select-none items-center gap-3 border-t border-line pt-2">
+            <input
+              type="checkbox"
+              checked={lobby.acceptRequests ?? lobby.isPublic}
+              onChange={(e) => send({ type: 'setAcceptRequests', allowed: e.target.checked })}
+              className="h-4 w-4 rounded accent-accent"
+            />
+            <div className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">{t('join.allow')}</span>
+              <span className="block text-xs text-muted">{t('join.allowHint')}</span>
+            </div>
+            <span className="text-xl" aria-hidden="true">
+              🙋
             </span>
           </label>
         )}
@@ -650,6 +690,34 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle }: { room:
   );
 }
 
+/**
+ * Zuschauer in einer laufenden Partie: fragen, ob sie ab der nächsten Runde mitspielen dürfen (#299). Die Raumleitung
+ * entscheidet; hier steht nur der eigene Stand (frei, angefragt, vorgemerkt).
+ */
+function JoinRequest({ room, you, yourSeat, info, connection }: { room: RoomMessage; you: string | null; yourSeat: number | null; info: LoadedGame['info']; connection: RoomConnection }) {
+  const me = room.members.find((member) => member.id === you);
+  const allowed = !room.match && (room.lobby.acceptRequests ?? room.lobby.isPublic) && !info.joinMidGame && info.players.max > info.players.min;
+  if (!me || yourSeat !== null || !allowed) return null;
+  if (me.join === 'queued') return <p className="mx-3 mt-2 rounded-xl bg-accent/10 px-3 py-2 text-center text-sm font-semibold">✅ {t('join.queued')}</p>;
+  if (me.join === 'asking') {
+    return (
+      <div className="mx-3 mt-2 flex flex-wrap items-center justify-center gap-2 rounded-xl bg-surface-2 px-3 py-2 text-sm">
+        <span>🙋 {t('join.asking')}</span>
+        <Button variant="ghost" className="min-h-9 text-sm" onClick={() => connection.send({ type: 'cancelAskToJoin' })}>
+          {t('join.cancel')}
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <div className="mx-3 mt-2">
+      <Button variant="secondary" className="min-h-9 w-full text-sm" onClick={() => connection.send({ type: 'askToJoin' })}>
+        🙋 {t('join.ask')}
+      </Button>
+    </div>
+  );
+}
+
 function MemberRow({
   member,
   isYou,
@@ -684,6 +752,7 @@ function MemberRow({
           {member.name}
           {isYou && ` (${t('online.you')})`}
           {isRoomHost && <span className="ml-2 text-xs text-muted">👑 {t('online.host')}</span>}
+          {member.join && <span className="ml-2 text-xs text-muted">🙋 {member.join === 'queued' ? t('join.queuedTag') : t('join.askingTag')}</span>}
           {member.nameFixed && (
             <span className="ml-1 text-xs" title={t('online.nameFixed')}>
               🔒<span className="sr-only"> {t('online.nameFixed')}</span>

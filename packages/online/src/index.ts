@@ -16,6 +16,7 @@ export {
   SIGNAL_MAX_PER_WINDOW,
   SIGNAL_WINDOW_MS,
   TAKE_BACK_GAP,
+  AFTER_GAME_MS,
   TAKE_BACK_MS,
   type MatchRoomConfig,
   type MatchRoomReport,
@@ -44,6 +45,7 @@ export * from './org';
 export * from './org-requests';
 export * from './classcard';
 export * from './series';
+export * from './seeking';
 export * from './series-book';
 export * from './package-share';
 export * from './push';
