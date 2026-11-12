@@ -18,7 +18,8 @@ Ein **Schwarzes Brett „Wer hat Lust?“** neben den offenen Runden: Man steckt
 
 ## Ablauf
 
-1. **Ankündigen.** Auf `#/online` (und als Karte auf der Startseite): „🙋 Ich hätte Lust zu spielen“. Auswahl, nichts zum Tippen:
+0. **Wo es steht (Cornelius, 12.11.2026):** Das Schwarze Brett hängt im **Hauptmenü links unten**. Es wird eine sechste Station der begehbaren Taverne (`tavern3d.ts`, `TavernStationId` um `board` erweitert, Route z. B. `#/spielersuche`): ein Brett mit angehefteten Zetteln in der linken unteren Ecke der Szene, mit eigenem Menüeintrag in `Menu.tsx` an derselben Stelle (Überfahren hebt die Station hervor, Kamera gleitet beim Öffnen hin wie bei den anderen Stationen). Auf schmalen Bildschirmen (Standbild-Hochformat) erscheint es als Eintrag unten im Menü. Eine kleine Zahl am Brett zeigt, wie viele Zettel hängen. Die Startseite braucht dann keine eigene Karte.
+1. **Ankündigen.** Auf der Seite des Schwarzen Bretts (zusätzlich ein Link auf `#/online`): „🙋 Ich hätte Lust zu spielen“. Auswahl, nichts zum Tippen:
    - bis zu **3 Spiele** aus der Spieleliste, die online gehen (oder „Egal, überrascht mich“),
    - **Spielerzahl** (2, 3–4, 5+, egal),
    - **Stimmung** (Emoji-Kette aus fester Liste: „Locker“ 😌, „Ernst“ 🎯, „Mit Kindern“ 🧒 …),
@@ -45,7 +46,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 - Kein neues Durable Object, sondern `LobbyRegistry` erweitern (gleiche Live-Verbindung, gleicher Wecker). Zettel als `SeekingNote { id, name, avatar, games[], seats, mood, createdAt, expiresAt, votes: Record<gameId, string[]> }` in einer neuen Klasse `SeekingBoard` in `packages/online/src/seeking.ts` (ohne Anbieterbindung, Tests mit festem `now`).
 - Nachrichten an die Registry (WebSocket): `post`, `withdraw`, `extend`, `join` (Zustimmung), `confirm`, Antwort `board` (ganze Liste, wie `openRooms`) und `match` (Vorschlag mit Frist). Alles über `parse…` geprüft wie in `protocol.ts`; `PROTOCOL_VERSION` bleibt, weil neue Nachrichten, kein bestehendes Format brechen.
 - Raum anlegen wie `POST /rooms`, dann Link an die Bestätigten schicken; Teilnehmer treten per `hello` bei, Platz reservieren wir nicht (wer nicht auftaucht, lässt den Platz frei bzw. der Bot springt ein, wie bisher).
-- Oberfläche: `components/SeekingBoard.tsx`, Eintrag auf `#/online`, Karte auf der Startseite; Texte in `i18n.ts`.
+- Oberfläche: `components/SeekingBoard.tsx` als Seite in der `TavernPage`-Hülle, neue Station links unten in `tavern3d.ts`/`TavernScene.tsx`/`Menu.tsx` (Test in `tests/tavern3d.test.ts`), Link auf `#/online`; Texte in `i18n.ts`.
 - Tests: `seeking.test.ts` (Ablauf, Frist, Raten, Obergrenze), `apps/server/test/…`, Rauchtest `node apps/server/scripts/spielersuche.mjs` mit zwei nachgebauten Browsern (Zettel, Zustimmung, Treffer, Raum).
 
 ## Offene Fragen an Cornelius
@@ -61,5 +62,5 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 
 1. `seeking.ts` mit Tests (Zettel, Zustimmung, Treffer, Fristen, Raten).
 2. Registry-Erweiterung und Server-Rauchtest.
-3. Oberfläche auf `#/online` und Startseite.
+3. Station „Schwarzes Brett“ im Hauptmenü links unten und Seite mit Zetteln.
 4. Doku nachziehen (`CLAUDE.md` Stand, `docs/KONZEPT.md`), Prüfung durch Cornelius.
