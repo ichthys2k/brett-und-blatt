@@ -6,6 +6,14 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 **Berichtigung (12.11.2026):** Der Abschnitt „Klassen“ nennt #259 („Selbstständig werden“) noch als `status: Idee`; das Issue wurde am 11.11.2026 als „nicht geplant“ geschlossen.
 
+## Nachträge ab 12.11.2026
+
+**Doku-Umbau (12.11.2026):** `CLAUDE.md` enthält nur noch Regeln, Werkzeuge, Technik und Rechnerwechsel; der Verlauf steht in dieser Datei. `AGENTS.md`, `GEMINI.md` und `.agent/` verweisen für neuen Stand hierher. `scripts/grafik/erzeugen.mjs` nimmt standardmäßig `gemini-3.1-flash-image`.
+
+**Grafik-Vorhaben „Taverne überall“ (#306, 12.11.2026, alles `status: Idee`):** Unter-Issues G0 Stilbibel, Originale-Archiv und Antigravity-Ablauf (#307), G1 fehlende Wappen und Test (#308), G2 Drachenspiel-Kartenbilder (#309), G3 Bot-Porträts (#311), G4 Avatare (#312), G5 Tischflächen (#313), G6 Kartenrücken (#314), G7 Siegerehrung und Pass (#315), G8 Kulissen (#316), G9 Spielteile (#318), G9a Quartett-Bilder (#319), G10 Hauptmenü (#317), G11 Animation (#320). Die Issues sind für Antigravity geschrieben (Stil-Kopf, Verbote, Format, Referenzpfade, Prompt je Motiv, Zielordner, Größe, Dateinamen). Entscheidungen von Cornelius: Originale in ein privates Repo; Avatare ersetzen die Emoji (die Emoji-Zeichenkette bleibt die Kennung); Kartenbilder sind Anki-Medien (#270): nur das Motiv, festes Seitenverhältnis, Dateinamen `bub-<spiel>-<kennung>.webp`.
+
+**Durchsicht Sicherheit (12.11.2026):** Drei Schwächen des Spieleservers (Spielercode ohne PIN, Anlegen ohne Bremse, Raum-Abfrage) nimmt Cornelius bewusst hin; festgehalten im zurückgestellten Issue #321. Unabhängige Härtung (CSP, localhost-Origins, Actions per SHA, KaTeX) als #322 (`status: Idee`). #242 und #135 stehen auf `status: Review`.
+
 ## Technik-Bausteine mit Datum (aus „Technik in Kürze“)
 
 - **Lieblingsspiele (#111, 7.11.2026):** Jede Spielkachel der Startseite hat oben rechts einen Stern (eigener Knopf neben dem Link). Markierte Spiele stehen im Abschnitt „⭐ Lieblingsspiele“ über den Rubriken (Reihenfolge des Markierens, gefiltert nach Rubrik und Spielerzahl, nicht bei Suche) und bleiben zusätzlich in ihrer Rubrik. Je Gerät in `localStorage` (`brett-und-blatt:lieblingsspiele`), Logik in `apps/web/src/lib/favorites.ts`, Tests in `tests/favorites.test.ts`.
