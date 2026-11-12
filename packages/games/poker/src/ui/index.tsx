@@ -1,5 +1,5 @@
 import type { CardId, SeatId } from '@brett-und-blatt/engine';
-import { PlayingCard, SEAT_RING_WIDE_MAX_SEATS, SeatRing, seatRingFits, useElementSize, type BoardProps, type DeckStyle, type GameUi } from '@brett-und-blatt/ui';
+import { PlayingCard, SEAT_RING_POKER_MIN_WIDTH, SEAT_RING_WIDE_MAX_SEATS, SeatRing, seatRingFits, useElementSize, type BoardProps, type DeckStyle, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useState, type ReactNode } from 'react';
 import { bestFive, describeValue } from '../eval';
 import { currentPots, isLegal, raiseBounds, totalPot, type ChipTheme, type PokerMove, type PokerView } from '../rules';
@@ -74,7 +74,7 @@ function Board({
   onLeaveSeat,
 }: BoardProps<PokerView, PokerMove>) {
   const [rootRef, rootSize] = useElementSize<HTMLDivElement>();
-  const ring = seatRingFits(view.seats.length, rootSize.width, rootSize.height, 2, SEAT_RING_WIDE_MAX_SEATS);
+  const ring = seatRingFits(view.seats.length, rootSize.width, rootSize.height, { minSeats: 2, maxSeats: SEAT_RING_WIDE_MAX_SEATS, minWidth: SEAT_RING_POKER_MIN_WIDTH });
   const isHotseatMulti = humanSeats !== undefined && humanSeats.length > 1;
   const heroSeat: SeatId = typeof viewer === 'number' ? viewer : (activeSeat ?? 0);
   const mySeatObj = typeof viewer === 'number' ? view.seats[viewer] : undefined;

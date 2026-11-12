@@ -25,11 +25,13 @@ describe('seatRingFits', () => {
     expect(seatRingFits(3, 960, 760)).toBe(true);
     expect(seatRingFits(8, 960, 760)).toBe(true);
     expect(seatRingFits(9, 960, 760)).toBe(false);
-    expect(seatRingFits(10, 960, 760, 2, 10)).toBe(true);
+    expect(seatRingFits(10, 960, 760, { minSeats: 2, maxSeats: 10 })).toBe(true);
     expect(seatRingFits(2, 960, 760)).toBe(false);
-    expect(seatRingFits(2, 960, 760, 2)).toBe(true);
-    expect(seatRingFits(11, 960, 760, 2, 10)).toBe(false);
+    expect(seatRingFits(2, 960, 760, { minSeats: 2 })).toBe(true);
+    expect(seatRingFits(11, 960, 760, { minSeats: 2, maxSeats: 10 })).toBe(false);
     expect(seatRingFits(4, 390, 600)).toBe(false);
+    expect(seatRingFits(4, 672, 700)).toBe(false);
+    expect(seatRingFits(4, 672, 700, { minWidth: 640 })).toBe(true);
     expect(seatRingFits(4, 700, 400)).toBe(false);
   });
 });
