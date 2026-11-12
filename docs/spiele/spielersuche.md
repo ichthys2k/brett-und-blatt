@@ -125,7 +125,7 @@ Ohne Chat bleiben Rückfragen (z. B. „Mit Regelvariante X?“) bewusst außen 
 ### Offene Fragen dazu
 
 1. **Standard:** Soll „Neue dürfen anfragen“ von Anfang an **an** oder **aus** sein? (Vorschlag: an für öffentliche Räume, aus für private.)
-2. **Mit abstimmen:** Dürfen Vorgemerkte am Rundenende mit abstimmen (Vorschlag: ja)?
+2. ~~**Mit abstimmen**~~ **Entschieden (Cornelius, 12.11.2026): Ja, Vorgemerkte stimmen am Rundenende mit ab.**
 3. **In „Offene Runden“:** Sollen laufende Runden dort mit „läuft – Anfrage möglich“ stehen (Vorschlag: ja)?
 4. **Warteliste:** Reichen 8 Plätze; soll die Raumleitung sie umsortieren können (Vorschlag: nein, Reihenfolge der Annahme)?
 
