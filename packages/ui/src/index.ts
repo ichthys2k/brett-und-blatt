@@ -5,7 +5,7 @@ export { GridBoard, type GridBoardProps } from './GridBoard';
 export { ClockRing, PlayerChip, formatClock, type PlayerChipProps } from './PlayerChip';
 export { NetBoard, type NetBoardProps } from './NetBoard';
 export { useElementSize } from './useElementSize';
-export { SeatRing, seatRingFits, seatRingPosition, type SeatRingProps } from './SeatRing';
+export { SEAT_RING_WIDE_MAX_SEATS, SeatRing, seatRingFits, seatRingPosition, type SeatRingProps } from './SeatRing';
 export { useCallDeadline } from './useCallDeadline';
 export { cardSuitColor, PlayingCard, SuitShape, type DeckStyle, type PlayingCardProps } from './cards/PlayingCard';
 export {

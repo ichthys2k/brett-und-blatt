@@ -2,7 +2,7 @@
 
 Aufgabenstatus und Freigabe: [GitHub Issue #53](https://github.com/ichthys2k/brett-und-blatt/issues/53). Dieser Plan enthält technische Details, nicht den aktuellen Aufgabenstatus.
 
-Stand 2.11.2026. 13 Spiele sitzen am Tisch und sind veröffentlicht. Tiefflug bleibt ohne Tisch (Raster passen nicht), Poker behält seinen eigenen.
+Stand 2.11.2026. 13 Spiele sitzen am Tisch und sind veröffentlicht. Tiefflug bleibt ohne Tisch (Raster passen nicht). Poker sitzt seit 12.11.2026 ebenfalls auf `SeatRing` (bis zu 10 Plätze, siehe unten).
 
 Geprüft mit Zufallspartien auf 1280 × 800, 1024 × 768 und 768 × 1024: keine Fehler, kein Überlauf in Ruhe, Plätze im Bild. Online zu dritt (Skat, lokaler Spieleserver): Jeder sitzt bei sich unten. Nicht geprüft: echte Tablets mit Fingerbedienung, Start- und Zielpunkte der Flug-Animationen.
 
@@ -23,7 +23,7 @@ Der Spieler erscheint dort also doppelt. Am Tisch darf er nur noch einmal vorkom
 
 | Gruppe | Spiele | Tisch? |
 | --- | --- | --- |
-| Hat schon einen Tisch | Poker | bleibt; später auf den gemeinsamen Baustein umstellen |
+| Hatte schon einen Tisch | Poker | seit 12.11.2026 auf `SeatRing`, 2 bis 10 Plätze; auf kleiner Fläche weiter das kompakte Oval |
 | Stichspiele | Skat, Schafkopf, Doppelkopf, Binokel | ja, am einfachsten: die Mitte steht schon |
 | Karten und Würfel reihum | Mau-Mau, Eins!, Elf zuerst!, Präsident, Schwarzer Peter, Quartett, Domino, Mäxle, Tiefflug | ja |
 | Brett mit festen Plätzen | Nicht ärgern!, Sternhalma, Vierer-Schach, Rübenacker, Marktplatz | nein: das Brett zeigt die Plätze schon |
@@ -87,6 +87,6 @@ Spiele ohne `seatsAround` behalten ihre Leiste.
 Am Tisch: Mau-Mau, Skat, Schafkopf, Doppelkopf, Binokel, Elf zuerst!, Präsident, Schwarzer Peter, Eins!, Quartett, Domino, Mäxle, Marktstände.
 
 - **Tiefflug bleibt ohne Tisch:** Jeder Mitspieler hat ein ganzes Kartenraster, bei 8 Spielern überlappen die Plätze.
-- **Poker ist nicht umgestellt:** Es hat seinen eigenen Tisch mit bis zu 10 Plätzen, die Leiste bleibt vorerst.
+- **Poker auf `SeatRing` (12.11.2026, #53):** `seatRingFits` hat zwei weitere Angaben, `minSeats` und `maxSeats` (`SEAT_RING_WIDE_MAX_SEATS` = 10); alle anderen Spiele bleiben bei 3 bis 8. Poker misst seine eigene Fläche (`useElementSize`, wie `Play.tsx`) und setzt ab 680 × 560 px alle Plätze mit `SeatRing`, die Tischmitte (Pot, Gemeinschaftskarten) in die Mitte, den eigenen Platz unten. Darunter oder bei 1024 × 768 mit mehr als zwei Spielern, wo die breitere Seitenleiste die Fläche unter 680 px drückt, bleibt das bisherige Oval (`poker-table-felt`). Sitz, Einsatz-Blase und Karten sind in beiden Fällen dieselbe Funktion (`renderSeatNode`). Poker meldet kein `seatsAround`: Die Seitenleiste bleibt, weil die Sitzschilder mehr zeigen als der allgemeine Chip. Rauchtest prüft 10 Plätze bei 1280 × 800 und 768 × 1024 sowie 2 Plätze auf Überlappung und Lage im Bild.
 - Schwarzer Peter zieht in der Mitte: Am Sitz wären die Karten zu eng zum Antippen.
 - `SeatRing` trennt seitliche Plätze (begrenzen die Breite der Mitte) und Plätze darüber oder darunter (begrenzen ihre Höhe).
