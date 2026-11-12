@@ -2,6 +2,7 @@ import { PlayerCrest } from '@brett-und-blatt/ui';
 import { useEffect, useState } from 'react';
 import { TavernScene } from '../components/TavernScene';
 import { fetchBoardCount } from '../lib/board';
+import { useBoardHidden } from '../lib/boardPrefs';
 import { useCrest } from '../lib/crestStore';
 import { findGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
@@ -37,17 +38,19 @@ export function Menu() {
   const resume = storage.loadActive();
   const resumeGame = resume ? findGame(resume.config.gameId) : undefined;
   const [boardCount, setBoardCount] = useState<number | null>(null);
+  const boardHidden = useBoardHidden();
 
   useEffect(() => () => setHoveredStation(null), []);
 
   // Wie viele Zettel hängen am Schwarzen Brett? Nur eine kleine Zahl, ohne Verbindung zum Brett.
   useEffect(() => {
+    if (boardHidden) return;
     let cancelled = false;
     fetchBoardCount().then((count) => !cancelled && setBoardCount(count));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [boardHidden]);
 
   const activate = (station: Exclude<TavernStationId, 'home'>, text: string) => {
     setHoveredStation(station);
@@ -109,7 +112,7 @@ export function Menu() {
         </p>
       </nav>
 
-      {GAME_SERVER && (
+      {GAME_SERVER && !boardHidden && (
         <button
           type="button"
           className="bub-menu-board"

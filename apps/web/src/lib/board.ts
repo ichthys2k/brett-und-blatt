@@ -114,3 +114,40 @@ export async function fetchBoardCount(): Promise<number | null> {
     return null;
   }
 }
+
+/**
+ * Hängt die eigene offene Runde als Zettel ans Brett („Mitspieler gesucht“, Konzept Punkt 5). Dafür genügt eine kurze
+ * Verbindung: Das Brett prüft, dass die Runde wirklich in „Offene Runden“ steht, und nimmt den Zettel ab, sobald sie voll
+ * ist oder startet. Gibt `'ok'` oder den Fehlercode des Bretts zurück.
+ */
+export function postRoomNote(input: { name: string; avatar: string; code: string; seats: string; mood: string }): Promise<'ok' | SeekError | 'hello' | 'message' | 'offline'> {
+  const server = GAME_SERVER;
+  if (!server) return Promise.resolve('offline');
+  return new Promise((resolve) => {
+    const ws = new WebSocket(`${server.replace(/^http/, 'ws')}/brett`);
+    let sent = false;
+    const done = (result: Awaited<ReturnType<typeof postRoomNote>>) => {
+      window.clearTimeout(timer);
+      ws.close();
+      resolve(result);
+    };
+    const timer = window.setTimeout(() => done('offline'), 8000);
+    ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', token: storage.deviceToken() }));
+    ws.onerror = () => done('offline');
+    ws.onmessage = (event) => {
+      if (typeof event.data !== 'string') return;
+      let message: BoardServerMessage;
+      try {
+        message = JSON.parse(event.data) as BoardServerMessage;
+      } catch {
+        return;
+      }
+      if (message.type === 'boardError') return done(message.error);
+      if (message.type !== 'board' || message.you === null) return;
+      if (!sent) {
+        sent = true;
+        ws.send(JSON.stringify({ type: 'postRoom', ...input }));
+      } else if (message.notes.some((note) => note.mine && note.room === input.code)) done('ok');
+    };
+  });
+}

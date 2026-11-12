@@ -21,7 +21,9 @@ import {
   useChosenTable,
 } from '../lib/look';
 import { music, useMusicPrefs } from '../lib/music';
+import { setBoardHidden, useBoardHidden } from '../lib/boardPrefs';
 import { navigate, paths } from '../lib/router';
+import { GAME_SERVER } from '../lib/server';
 import { setSoundSettings } from '../lib/sound';
 
 /** Version der App, Suche nach Updates und Notlösung zum Zurücksetzen (#175). */
@@ -126,6 +128,21 @@ function PortraitChoice() {
   );
 }
 
+/** Schwarzes Brett ausblenden (#65): je Gerät, für Eltern, Schulen und alle, die es nicht brauchen. */
+function BoardChoice() {
+  const hidden = useBoardHidden();
+  if (!GAME_SERVER) return null;
+  return (
+    <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line bg-surface p-4">
+      <input type="checkbox" className="mt-1 accent-accent" checked={hidden} onChange={(event) => setBoardHidden(event.target.checked)} />
+      <span>
+        <span className="block font-semibold">Spielersuche ausblenden</span>
+        <span className="block text-sm text-muted">Das Schwarze Brett „Wer hat Lust?“ verschwindet aus dem Hauptmenü. Auf diesem Gerät, jederzeit wieder einzuschalten.</span>
+      </span>
+    </label>
+  );
+}
+
 export function SoundSettingsScreen() {
   const prefs = useMusicPrefs();
   // Probehören endet mit dem Verlassen der Seite.
@@ -136,6 +153,7 @@ export function SoundSettingsScreen() {
       <LookChoice />
       <AppVersion />
       <PortraitChoice />
+      <BoardChoice />
       <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
         <VolumeControls showClientOption />
       </div>
