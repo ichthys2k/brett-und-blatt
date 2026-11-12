@@ -28,7 +28,17 @@ export interface LobbySettings {
   namesLocked?: boolean;
   /** Dürfen Spieler online einen Zug zurücknehmen, wenn alle zustimmen (`GameInfo.takeBack`)? Fehlt: an. */
   takeBack?: boolean;
+  /**
+   * Dürfen Zuschauer anfragen, ab der nächsten Runde mitzuspielen (#299)? Die Raumleitung entscheidet.
+   * Fehlt: an in öffentlichen, aus in privaten Räumen.
+   */
+  acceptRequests?: boolean;
 }
+
+/** Wie lange eine abgelehnte Anfrage gesperrt bleibt, bevor dieselbe Person wieder fragen darf. */
+export const JOIN_DENIED_MS = 2 * 60 * 1000;
+/** Höchstens so viele Anfragen und Vorgemerkte zugleich (Anfragende plus Warteliste). */
+export const MAX_JOIN_QUEUE = 30;
 
 /** Kompakte Übersicht für offene Spiele auf dem Startbildschirm. */
 export interface OpenRoomListing {
@@ -44,6 +54,8 @@ export interface OpenRoomListing {
   updatedAt: number;
   /** Ausschreibung eines Turniers (Einschreibung läuft): `code` ist der Turniercode, `gameName` der Turniername. */
   tournament?: boolean;
+  /** Die Partie läuft schon: Zuschauer können anfragen, ob sie ab der nächsten Runde mitspielen dürfen (#299). */
+  running?: boolean;
   /** Prüfsumme eines aktiven Anki-Kartensets (falls Raum benutzerdefinierte Karten nutzt) */
   cardCatalogChecksum?: string;
 }
@@ -58,6 +70,8 @@ export interface MemberInfo {
   connected: boolean;
   /** Name und Bild hat die Raumleitung festgelegt – das Mitglied kann sie nicht mehr ändern. */
   nameFixed?: boolean;
+  /** Anfrage ums Mitspielen ab der nächsten Runde (#299): `asking` wartet auf die Raumleitung, `queued` ist angenommen. */
+  join?: 'asking' | 'queued';
 }
 
 export type RoomPhase = 'lobby' | 'playing' | 'finished';
@@ -138,6 +152,16 @@ export type ClientMessage =
   | { type: 'afterPropose'; gameId: string }
   /** Für einen Kandidaten stimmen (`random` = zufälliges Spiel); zählt zugleich als Stimme für „anderes Spiel“. */
   | { type: 'afterPick'; gameId: string }
+  // Mitspielen ab der nächsten Runde (#299)
+  /** Zuschauer: fragt an, ob er ab der nächsten Runde mitspielen darf. */
+  | { type: 'askToJoin' }
+  | { type: 'cancelAskToJoin' }
+  /** Raumleitung: eine Anfrage annehmen oder ablehnen. */
+  | { type: 'answerJoin'; memberId: string; ok: boolean }
+  /** Raumleitung: alle offenen Anfragen annehmen. */
+  | { type: 'acceptAllJoins' }
+  /** Raumleitung: Anfragen zulassen oder nicht. */
+  | { type: 'setAcceptRequests'; allowed: boolean }
   // Flüchtige Signale
   | { type: 'react'; emoji: string }
   | { type: 'say'; phrase: string }
@@ -254,6 +278,8 @@ export type ServerMessage =
   | { type: 'signal'; from: string; kind: 'react' | 'say'; value: string }
   /** Abstimmung am Rundenende; `null`, wenn keine (mehr) läuft. */
   | { type: 'afterGame'; after: AfterGameInfo | null }
+  /** Die Raumleitung hat die Anfrage abgelehnt (nur an die fragende Person). */
+  | { type: 'joinDenied' }
   | { type: 'error'; code: ErrorCode; message: string }
   | { type: 'kicked' }
   | { type: 'pong'; serverNow: number };
@@ -333,6 +359,14 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return isString(m.gameId, 60) && m.gameId !== AFTER_RANDOM ? { type: 'afterPropose', gameId: m.gameId } : null;
     case 'afterPick':
       return isString(m.gameId, 60) ? { type: 'afterPick', gameId: m.gameId } : null;
+    case 'answerJoin':
+      return isString(m.memberId, 20) && typeof m.ok === 'boolean' ? { type: 'answerJoin', memberId: m.memberId, ok: m.ok } : null;
+    case 'setAcceptRequests':
+      return typeof m.allowed === 'boolean' ? { type: 'setAcceptRequests', allowed: m.allowed } : null;
+    case 'askToJoin':
+    case 'cancelAskToJoin':
+    case 'acceptAllJoins':
+      return { type: m.type };
     case 'move':
       return isInt(m.version) && 'move' in m ? { type: 'move', version: m.version, move: m.move } : null;
     case 'react':
