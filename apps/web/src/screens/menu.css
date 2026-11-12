@@ -144,6 +144,32 @@
 }
 .bub-menu-name { flex: 1; font-family: Almendra, Georgia, serif; font-size: 1.35rem; }
 .bub-menu-foot { grid-column: 1; grid-row: 3; align-self: end; font-size: 0.8rem; color: #bba77a; }
+
+/* Schwarzes Brett (#65): ein Zettel links unten, über dem Fuß. Die 3D-Station gleichen Namens steht in der Szene links vorn. */
+.bub-menu > .bub-menu-board {
+  position: absolute;
+  left: 3rem;
+  bottom: 3rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 17rem;
+  padding: 0.6rem 0.9rem;
+  background: #1a110add;
+  border: 2px solid #6b522e;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px #000a;
+  color: var(--cream);
+  font-size: 1.6rem;
+  text-align: left;
+  transform: rotate(-1.5deg);
+  cursor: pointer;
+}
+.bub-menu-board:hover, .bub-menu-board:focus-visible { border-color: #e0b25a; transform: rotate(0deg); }
+.bub-menu-board-text { display: grid; gap: 0.1rem; }
+.bub-menu-board-title { font-family: Almendra, Georgia, serif; font-size: 1.2rem; color: var(--gold); }
+.bub-menu-board-sub { font-family: system-ui, sans-serif; font-size: 0.82rem; }
 .bub-menu-foot a { color: inherit; }
 
 /* Handy und schmale Fenster: Szene still und dunkler, Menü über die ganze Breite */
@@ -151,8 +177,9 @@
   .bub-menu { grid-template-columns: minmax(0, 1fr); padding-inline: 1rem; }
   .bub-menu-logo, .bub-menu-frame, .bub-menu-plaque, .bub-menu-foot { grid-column: 1; }
   .bub-menu-frame { grid-row: 2; }
-  .bub-menu-plaque { grid-row: 3; }
-  .bub-menu-foot { grid-row: 4; }
+  .bub-menu > .bub-menu-board { position: static; grid-column: 1; grid-row: 3; max-width: none; transform: none; }
+  .bub-menu-plaque { grid-row: 4; }
+  .bub-menu-foot { grid-row: 5; }
   .bub-menu-shade { background: linear-gradient(#140d0733, #140d07cc 70%); }
   .bub-menu-layer { transform: none !important; }
   .bub-menu-front { display: none; }

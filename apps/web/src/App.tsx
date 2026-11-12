@@ -5,6 +5,7 @@ import { Home } from './screens/Home';
 import { Menu } from './screens/Menu';
 import { Datenschutz, Impressum } from './screens/Legal';
 import { Online } from './screens/Online';
+import { BoardScreen } from './screens/Board';
 import { AccountScreen } from './screens/Account';
 import { PassScreen } from './screens/Pass';
 import { PassView } from './screens/PassView';
@@ -44,6 +45,8 @@ function Screen() {
       return <Play />;
     case 'online':
       return <Online />;
+    case 'board':
+      return <BoardScreen />;
     case 'tournaments':
       return <Tournaments />;
     case 'packView':

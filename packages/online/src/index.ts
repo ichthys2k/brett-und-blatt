@@ -45,5 +45,6 @@ export * from './org';
 export * from './org-requests';
 export * from './classcard';
 export * from './series';
+export * from './seeking';
 export * from './series-book';
 export * from './package-share';
