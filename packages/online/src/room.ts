@@ -193,6 +193,8 @@ export interface RoomSnapshot {
   version: 1;
   code: string;
   hostId: string | null;
+  /** Wer beim Eintreten die Raumleitung wird (Schwarzes Brett, #65). */
+  reservedHost?: string;
   phase: RoomPhase;
   lobby: LobbySettings;
   /** `disconnectedAt`: seit wann ohne Verbindung (null: beim Speichern verbunden). */
@@ -222,6 +224,8 @@ export class Room {
   /** Verbindungen von Tisch-Bildschirmen (#100): keine Mitglieder, nur Zuschauersicht. */
   private displays = new Set<string>();
   private hostId: string | null = null;
+  /** Geheime Kennung, die beim Eintreten die Raumleitung bekommt – etwa die Verfasserin eines Zettels vom Schwarzen Brett (#65). */
+  private reservedHost: string | null = null;
   private phase: RoomPhase = 'lobby';
   private lobby: LobbySettings;
   private game: Game | null = null;
@@ -480,6 +484,18 @@ export class Room {
   }
 
   /**
+   * Richtet einen Raum für eine Gruppe vom Schwarzen Brett ein (#65): Das Spiel ist gewählt, und wer die Raumleitung
+   * werden soll, bekommt sie beim Eintreten – auch wenn andere schneller sind. false, wenn das Spiel nicht angeboten wird.
+   */
+  preset(gameId: string, hostToken: string | null): boolean {
+    const module = this.deps.findGame(gameId);
+    if (!module || this.match) return false;
+    this.applyGame(module);
+    this.reservedHost = hostToken;
+    return true;
+  }
+
+  /**
    * Erzeugt ein kompaktes Listing für die Startseite, sofern der Raum öffentlich,
    * in der Lobby-Phase, mit gewähltem Spiel und mit freien Plätzen ist und
    * mindestens ein Mitglied verbunden ist. Sonst null.
@@ -525,6 +541,7 @@ export class Room {
       version: 1,
       code: this.code,
       hostId: this.hostId,
+      ...(this.reservedHost !== null ? { reservedHost: this.reservedHost } : {}),
       phase: this.phase,
       lobby: structuredClone(this.lobby),
       members: [...this.members.values()].map(({ id, token, name, avatar, crest, awayByDisconnect, disconnectedAt, nameFixed, join, joinAt, declinedUntil }) => ({ id, token, name, avatar, ...(crest ? { crest } : {}), awayByDisconnect, disconnectedAt, ...(nameFixed ? { nameFixed } : {}), ...(join ? { join, ...(joinAt !== undefined ? { joinAt } : {}) } : {}), ...(declinedUntil !== undefined ? { declinedUntil } : {}) })),
@@ -551,6 +568,7 @@ export class Room {
     const isPublic = snapshot.lobby.isPublic ?? true;
     const room = new Room(snapshot.code, deps, isPublic);
     room.hostId = snapshot.hostId;
+    room.reservedHost = snapshot.reservedHost ?? null;
     room.phase = snapshot.phase;
     room.lobby = { ...snapshot.lobby, isPublic };
     room.kicked = new Set(snapshot.kicked);
@@ -643,7 +661,10 @@ export class Room {
       if (this.match) {
         if (matchSeat >= 0) this.lobby.seats[matchSeat] = { kind: 'human', memberId: member.id, ...(this.match?.config.teams ? { team: this.match.config.teams[matchSeat] } : {}) };
       } else {
-        this.hostId ??= member.id;
+        if (this.reservedHost !== null && message.token === this.reservedHost) {
+          this.hostId = member.id;
+          this.reservedHost = null;
+        } else this.hostId ??= member.id;
       }
     } else if (this.mayRename(member)) {
       // Beim Wiederkommen gilt der Name aus dem Profil – außer die Raumleitung hat ihn festgelegt.
