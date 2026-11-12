@@ -149,6 +149,17 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             onRestart: (rotate: boolean) => connection.send({ type: 'start', rotate }),
             onLobby: () => connection.send({ type: 'toLobby' }),
             onLeave: leave,
+            ...(state.after
+              ? {
+                  after: {
+                    info: state.after,
+                    seatCount: room.lobby.seats.filter((seat) => seat.kind === 'bot' || seat.memberId !== null).length,
+                    onVote: (choice: 'again' | 'other') => connection.send({ type: 'afterVote', choice }),
+                    onPropose: (gameId: string) => connection.send({ type: 'afterPropose', gameId }),
+                    onPick: (gameId: string) => connection.send({ type: 'afterPick', gameId }),
+                  },
+                }
+              : {}),
             avatars: state.room?.lobby.seats.map((seat) => {
               if (seat.kind !== 'human' || !seat.memberId) return null;
               return state.room?.members.find((m) => m.id === seat.memberId)?.avatar ?? null;
