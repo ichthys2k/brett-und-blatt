@@ -12,6 +12,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 **Grafik-Vorhaben „Taverne überall“ (#306, 12.11.2026, alles `status: Idee`):** Unter-Issues G0 Stilbibel, Originale-Archiv und Antigravity-Ablauf (#307), G1 fehlende Wappen und Test (#308), G2 Drachenspiel-Kartenbilder (#309), G3 Bot-Porträts (#311), G4 Avatare (#312), G5 Tischflächen (#313), G6 Kartenrücken (#314), G7 Siegerehrung und Pass (#315), G8 Kulissen (#316), G9 Spielteile (#318), G9a Quartett-Bilder (#319), G10 Hauptmenü (#317), G11 Animation (#320). Die Issues sind für Antigravity geschrieben (Stil-Kopf, Verbote, Format, Referenzpfade, Prompt je Motiv, Zielordner, Größe, Dateinamen). Entscheidungen von Cornelius: Originale in ein privates Repo; Avatare ersetzen die Emoji (die Emoji-Zeichenkette bleibt die Kennung); Kartenbilder sind Anki-Medien (#270): nur das Motiv, festes Seitenverhältnis, Dateinamen `bub-<spiel>-<kennung>.webp`.
 
+**Manifeste für die Grafik-Pakete (12.11.2026):** 19 Manifeste für G2 bis G10 in `scripts/grafik/manifeste/` (589 Motive, noch keine Bilder; Übersicht in `scripts/grafik/README.md`). Sie sind die maßgebliche Motivliste; das Drachenspiel-Manifest deckt alle 234 Karten aus `CARDS_DB` ab. `uebernehmen.mjs` beachtet eine eigene `groesse` je Motiv.
+
 **Durchsicht Sicherheit (12.11.2026):** Drei Schwächen des Spieleservers (Spielercode ohne PIN, Anlegen ohne Bremse, Raum-Abfrage) nimmt Cornelius bewusst hin; festgehalten im zurückgestellten Issue #321. Unabhängige Härtung (CSP, localhost-Origins, Actions per SHA, KaTeX) als #322 (`status: Idee`). #242 und #135 stehen auf `status: Review`.
 
 ## Technik-Bausteine mit Datum (aus „Technik in Kürze“)

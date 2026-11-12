@@ -1,0 +1,74 @@
+{
+  "beschreibung": "G5 (#313): kachelbare Tischflächen, hell und dunkel; Zielfarben aus apps/web/src/look.css.",
+  "stil": "Seamless tileable texture, painted in a soft painterly oil style, viewed exactly from straight above, perfectly flat and evenly lit with no light source, no shadows, no vignette, no perspective. Very low contrast and calm, so that playing cards and text placed on top stay clearly readable. The left edge continues into the right edge and the top edge into the bottom edge without any visible seam. No objects, no text, no letters, no numbers.",
+  "ohne": "objects, cards, dice, cups, stains, knots larger than a coin, strong highlights, shadows, vignette, perspective, border, frame, text, watermark, visible seams, repeating eye-catching spots",
+  "format": "1:1",
+  "ziel": "apps/web/src/assets/tische",
+  "groesse": [
+    512,
+    512
+  ],
+  "qualitaet": 72,
+  "motive": [
+    {
+      "id": "oak-light",
+      "titel": "Eichenholz hell",
+      "prompt": "Pale golden oak table planks with fine straight grain, plank joints running horizontally, overall colour close to #e6d3ad."
+    },
+    {
+      "id": "oak-dark",
+      "titel": "Eichenholz dunkel",
+      "prompt": "Dark stained old oak table planks with fine straight grain, plank joints running horizontally, overall colour close to #2e2015."
+    },
+    {
+      "id": "walnut-light",
+      "titel": "Nussholz hell",
+      "prompt": "Light walnut wood with gentle wavy grain, overall colour close to #deceb2."
+    },
+    {
+      "id": "walnut-dark",
+      "titel": "Nussholz dunkel",
+      "prompt": "Very dark walnut wood with gentle wavy grain, overall colour close to #241810."
+    },
+    {
+      "id": "green-felt-light",
+      "titel": "Grüner Spielfilz hell",
+      "prompt": "Soft green gaming-table felt with a fine woven fibre texture, muted sage green, overall colour close to #d3dec6."
+    },
+    {
+      "id": "green-felt-dark",
+      "titel": "Grüner Spielfilz dunkel",
+      "prompt": "Deep forest-green gaming-table felt with a fine woven fibre texture, overall colour close to #1a2a20."
+    },
+    {
+      "id": "red-felt-light",
+      "titel": "Roter Samtfilz hell",
+      "prompt": "Soft rose-red velvet cloth with a subtle nap, muted and light, overall colour close to #ebd3cf."
+    },
+    {
+      "id": "red-felt-dark",
+      "titel": "Roter Samtfilz dunkel",
+      "prompt": "Deep wine-red velvet cloth with a subtle nap, overall colour close to #2b1818."
+    },
+    {
+      "id": "slate-light",
+      "titel": "Schiefer hell",
+      "prompt": "Light grey slate stone slab with faint layered veins, overall colour close to #d8dce0."
+    },
+    {
+      "id": "slate-dark",
+      "titel": "Schiefer dunkel",
+      "prompt": "Dark anthracite slate stone slab with faint layered veins, overall colour close to #1c2024."
+    },
+    {
+      "id": "marble-light",
+      "titel": "Marmor hell",
+      "prompt": "Cream-white marble with very faint warm grey veins, overall colour close to #f4f1ea."
+    },
+    {
+      "id": "marble-dark",
+      "titel": "Marmor dunkel",
+      "prompt": "Dark green-black marble with very faint pale veins, overall colour close to #252320."
+    }
+  ]
+}

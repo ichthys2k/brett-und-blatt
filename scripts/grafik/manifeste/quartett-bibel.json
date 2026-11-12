@@ -1,0 +1,207 @@
+{
+  "beschreibung": "G9a (#319): Quartett-Set bibel, ein Bild je Karte (Anki-Medien, #270). Sachlich richtig; jede Auswahl gegen die Quelle der Karte prüfen.",
+  "stil": "Painterly illustration in warm oil colours in the manner of an old children's Bible: one or two human figures in simple ancient Near Eastern clothing in a softly painted landscape or interior of the story, calm dignified mood, faces gentle and slightly stylised (not portraits of real people), people of the ancient Near East. Half or full figure with the described attribute clearly visible. No halos with text, no writing, no text.",
+  "ohne": "text, letters, numbers, labels, watermark, border, frame, card layout, modern objects, logos, photo, depiction of God, caricature, violence, blood, modern or European medieval clothing, Christ on the cross",
+  "format": "4:3",
+  "ziel": "content/quartett/bilder/bibel",
+  "groesse": [
+    480,
+    360
+  ],
+  "praefix": "bub-quartett-bibel-",
+  "qualitaet": 78,
+  "motive": [
+    {
+      "id": "a1",
+      "titel": "A1 Abraham",
+      "gruppe": "A Erzeltern",
+      "prompt": "Subject: an old man looking up at a night sky full of stars."
+    },
+    {
+      "id": "a2",
+      "titel": "A2 Sara",
+      "gruppe": "A Erzeltern",
+      "prompt": "Subject: an old woman laughing gently at a tent entrance."
+    },
+    {
+      "id": "a3",
+      "titel": "A3 Isaak",
+      "gruppe": "A Erzeltern",
+      "prompt": "Subject: a young man beside a ram caught in a thicket."
+    },
+    {
+      "id": "a4",
+      "titel": "A4 Jakob",
+      "gruppe": "A Erzeltern",
+      "prompt": "Subject: a sleeping traveller, a ladder of light rising into the sky."
+    },
+    {
+      "id": "b1",
+      "titel": "B1 Mose",
+      "gruppe": "B Auszug",
+      "prompt": "Subject: a man with a staff holding two stone tablets (blank)."
+    },
+    {
+      "id": "b2",
+      "titel": "B2 Aaron",
+      "gruppe": "B Auszug",
+      "prompt": "Subject: a priest with a staff that sprouts almond blossoms."
+    },
+    {
+      "id": "b3",
+      "titel": "B3 Mirjam",
+      "gruppe": "B Auszug",
+      "prompt": "Subject: a woman dancing with a hand drum by the sea."
+    },
+    {
+      "id": "b4",
+      "titel": "B4 Josua",
+      "gruppe": "B Auszug",
+      "prompt": "Subject: a leader with a ram's horn before city walls."
+    },
+    {
+      "id": "c1",
+      "titel": "C1 Saul",
+      "gruppe": "C Könige",
+      "prompt": "Subject: a tall king with a spear, troubled look."
+    },
+    {
+      "id": "c2",
+      "titel": "C2 David",
+      "gruppe": "C Könige",
+      "prompt": "Subject: a young shepherd with a harp."
+    },
+    {
+      "id": "c3",
+      "titel": "C3 Salomo",
+      "gruppe": "C Könige",
+      "prompt": "Subject: a king before a temple with pillars."
+    },
+    {
+      "id": "c4",
+      "titel": "C4 Hiskia",
+      "gruppe": "C Könige",
+      "prompt": "Subject: a king praying on a city wall."
+    },
+    {
+      "id": "d1",
+      "titel": "D1 Elia",
+      "gruppe": "D Propheten",
+      "prompt": "Subject: a prophet on a mountain, fire on an altar."
+    },
+    {
+      "id": "d2",
+      "titel": "D2 Elisa",
+      "gruppe": "D Propheten",
+      "prompt": "Subject: a prophet picking up a cloak by a river."
+    },
+    {
+      "id": "d3",
+      "titel": "D3 Jesaja",
+      "gruppe": "D Propheten",
+      "prompt": "Subject: a prophet with a scroll (blank), a dove above."
+    },
+    {
+      "id": "d4",
+      "titel": "D4 Jeremia",
+      "gruppe": "D Propheten",
+      "prompt": "Subject: a sorrowful prophet beside a broken clay jar."
+    },
+    {
+      "id": "e1",
+      "titel": "E1 Rut",
+      "gruppe": "E Frauen im AT",
+      "prompt": "Subject: a woman gleaning ears of grain in a field."
+    },
+    {
+      "id": "e2",
+      "titel": "E2 Ester",
+      "gruppe": "E Frauen im AT",
+      "prompt": "Subject: a queen with a simple crown before a throne room."
+    },
+    {
+      "id": "e3",
+      "titel": "E3 Debora",
+      "gruppe": "E Frauen im AT",
+      "prompt": "Subject: a woman judge seated under a palm tree."
+    },
+    {
+      "id": "e4",
+      "titel": "E4 Hanna",
+      "gruppe": "E Frauen im AT",
+      "prompt": "Subject: a woman praying in a sanctuary."
+    },
+    {
+      "id": "f1",
+      "titel": "F1 Petrus",
+      "gruppe": "F Jünger",
+      "prompt": "Subject: a fisherman holding a large key."
+    },
+    {
+      "id": "f2",
+      "titel": "F2 Andreas",
+      "gruppe": "F Jünger",
+      "prompt": "Subject: a fisherman with a net at a lake shore."
+    },
+    {
+      "id": "f3",
+      "titel": "F3 Thomas",
+      "gruppe": "F Jünger",
+      "prompt": "Subject: a man reaching out his hand in wonder."
+    },
+    {
+      "id": "f4",
+      "titel": "F4 Matthäus",
+      "gruppe": "F Jünger",
+      "prompt": "Subject: a tax collector rising from a table with coins."
+    },
+    {
+      "id": "g1",
+      "titel": "G1 Paulus",
+      "gruppe": "G Paulus und Begleiter",
+      "prompt": "Subject: a man writing a letter (blank page) by lamplight."
+    },
+    {
+      "id": "g2",
+      "titel": "G2 Barnabas",
+      "gruppe": "G Paulus und Begleiter",
+      "prompt": "Subject: a man offering an open hand in welcome."
+    },
+    {
+      "id": "g3",
+      "titel": "G3 Timotheus",
+      "gruppe": "G Paulus und Begleiter",
+      "prompt": "Subject: a young man reading a scroll (blank)."
+    },
+    {
+      "id": "g4",
+      "titel": "G4 Silas",
+      "gruppe": "G Paulus und Begleiter",
+      "prompt": "Subject: a man singing in a prison cell, an open door behind."
+    },
+    {
+      "id": "h1",
+      "titel": "H1 Maria Magdalena",
+      "gruppe": "H Begegnungen",
+      "prompt": "Subject: a woman at an empty garden tomb at sunrise."
+    },
+    {
+      "id": "h2",
+      "titel": "H2 Marta",
+      "gruppe": "H Begegnungen",
+      "prompt": "Subject: a woman carrying a pot of food in a house."
+    },
+    {
+      "id": "h3",
+      "titel": "H3 Zachäus",
+      "gruppe": "H Begegnungen",
+      "prompt": "Subject: a small man looking down from a sycamore tree."
+    },
+    {
+      "id": "h4",
+      "titel": "H4 Nikodemus",
+      "gruppe": "H Begegnungen",
+      "prompt": "Subject: an old scholar walking at night with a lamp."
+    }
+  ]
+}

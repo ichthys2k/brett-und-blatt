@@ -1,0 +1,1474 @@
+{
+  "beschreibung": "G2 (#309): Kartenbilder des Drachenspiels. Kartenbild = Anki-Medium (#270): nur das Motiv, Dateiname bub-ds-<id>.webp. Gegenstände tragen einen eigenen Stil-Kopf.",
+  "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single animal character as the main subject, three-quarter view, natural animal body with small medieval accessories (heraldic cloth, leather straps, a small pennant or piece of armour in the house colours), warm atmospheric lighting, rich colours, expressive friendly face, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred, fully inside the image with generous margin on all sides so the picture can be cropped. No text, no letters, no numbers, no card frame, no border.",
+  "ohne": "text, letters, numbers, watermark, border, frame, card layout, stat icons, logos, modern objects, photo, real people, blood, gore, frightening horror imagery (die Karten sind für Kinder)",
+  "format": "3:4",
+  "ziel": "packages/games/drachenspiel/src/ui/karten",
+  "groesse": [
+    360,
+    480
+  ],
+  "praefix": "bub-ds-",
+  "qualitaet": 78,
+  "motive": [
+    {
+      "id": "f_jay",
+      "titel": "Eichelhäher",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A jay with bright blue wing feathers carrying an acorn, a tiny green scarf."
+    },
+    {
+      "id": "f_dormouse",
+      "titel": "Siebenschläfer",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A sleepy dormouse curled on a mossy branch with a tiny nightcap."
+    },
+    {
+      "id": "f_badger",
+      "titel": "Dachs",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A sturdy badger with a small wooden shield bearing an oak leaf."
+    },
+    {
+      "id": "f_woodpecker",
+      "titel": "Specht",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A woodpecker drumming on an oak trunk, wood chips flying."
+    },
+    {
+      "id": "f_lynx",
+      "titel": "Luchs",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A lynx with tufted ears stepping silently out of the shadows, green hood."
+    },
+    {
+      "id": "f_treefolk",
+      "titel": "Waldschrat",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A small gnarled woodland spirit made of bark and moss with kind glowing eyes."
+    },
+    {
+      "id": "f_faun",
+      "titel": "Faun",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A friendly young faun with small horns playing a wooden flute."
+    },
+    {
+      "id": "f_boar",
+      "titel": "Wildschwein",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A wild boar charging, a green tournament cloth on its back."
+    },
+    {
+      "id": "f_wolf",
+      "titel": "Wolf",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A grey wolf standing watchful, a leather collar with an oak-leaf pendant."
+    },
+    {
+      "id": "f_nymph",
+      "titel": "Waldfrau",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A gentle forest spirit woman with a dress of leaves and flowers in her hair, face softly stylised."
+    },
+    {
+      "id": "f_stag",
+      "titel": "Platzhirsch",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A proud stag with wide antlers hung with green and gold ribbons."
+    },
+    {
+      "id": "f_bear",
+      "titel": "Braunbär",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A big brown bear standing upright, a green sash across its chest."
+    },
+    {
+      "id": "f_eagleowl",
+      "titel": "Uhu",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. An eagle owl with orange eyes on a branch at dusk, wings half spread."
+    },
+    {
+      "id": "f_oakgiant",
+      "titel": "Eichenriese",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A towering walking oak tree giant with a kind face in the bark."
+    },
+    {
+      "id": "f_moose",
+      "titel": "Elch",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A huge moose wading through a forest pond, moss on its antlers."
+    },
+    {
+      "id": "f_grimbart",
+      "titel": "Grimbart der Alte",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A very old wise badger with grey fur, a carved staff and a green cloak, legendary aura."
+    },
+    {
+      "id": "token_elder",
+      "titel": "Wächter des Hains",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A stone-and-root guardian statue of a bear overgrown with ivy, softly glowing."
+    },
+    {
+      "id": "dragon_forest",
+      "titel": "Grüner Jungdrache",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A small friendly green dragon hatchling with leaf-like wings sitting on a tree stump."
+    },
+    {
+      "id": "f_dam",
+      "titel": "Biberdamm (Bau)",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A beaver dam of logs across a forest stream, no animals visible.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "f_seed",
+      "titel": "Saatkorn (Kniff)",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A single glowing acorn sprouting a tiny shoot in dark soil.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "f_blossom",
+      "titel": "Blütenregen (Kniff)",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A shower of pink and white blossoms falling through sunbeams in a forest glade.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "f_call",
+      "titel": "Waldruf (Kniff)",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A carved wooden hunting horn hanging on an oak branch, sound waves suggested by swirling leaves.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "f_roottrap",
+      "titel": "Wurzelfalle (Falle)",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. Thick tree roots forming a hidden snare loop on the forest floor.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "sea_seal",
+      "titel": "Robbe",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A cheerful seal on a rock with a blue neckerchief."
+    },
+    {
+      "id": "sea_sardine",
+      "titel": "Sardinenschwarm",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A glittering school of sardines moving as one silver shape."
+    },
+    {
+      "id": "sea_starfish",
+      "titel": "Seestern",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. An orange starfish on a rock in shallow clear water."
+    },
+    {
+      "id": "sea_ray",
+      "titel": "Zitterrochen",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. An electric ray gliding over sand with small blue sparks."
+    },
+    {
+      "id": "sea_penguin",
+      "titel": "Pinguin",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A penguin standing upright like a little squire holding a small silver pennant."
+    },
+    {
+      "id": "sea_hermit",
+      "titel": "Einsiedlerkrebs",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A hermit crab in a shell decorated like a tiny helmet."
+    },
+    {
+      "id": "sea_dolphin",
+      "titel": "Delfin",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A dolphin leaping out of a wave in sunlight."
+    },
+    {
+      "id": "sea_moray",
+      "titel": "Muräne",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A moray eel peering out of a rock crevice, more curious than scary."
+    },
+    {
+      "id": "sea_turtle",
+      "titel": "Meeresschildkröte",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. An old sea turtle swimming, shell patterned like a shield."
+    },
+    {
+      "id": "sea_gull",
+      "titel": "Möwe",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A seagull on a harbour post, wings spread, wind in its feathers."
+    },
+    {
+      "id": "sea_walrus",
+      "titel": "Walross",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A big walrus with long tusks and a silver chain on an ice floe."
+    },
+    {
+      "id": "sea_manta",
+      "titel": "Mantarochen",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A manta ray soaring through blue water like a flying banner."
+    },
+    {
+      "id": "sea_orca",
+      "titel": "Orca",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. An orca breaching, powerful and elegant."
+    },
+    {
+      "id": "sea_shark",
+      "titel": "Hai",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A shark cruising, strong but not gory, light rays from above."
+    },
+    {
+      "id": "sea_narwhal",
+      "titel": "Narwal",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A narwhal with its spiral tusk like a jousting lance among ice."
+    },
+    {
+      "id": "sea_whale",
+      "titel": "Blauwal",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. An enormous blue whale under a tiny sailing boat for scale."
+    },
+    {
+      "id": "sea_serpent",
+      "titel": "Seeschlange",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A long legendary sea serpent arching out of the waves, scales shimmering blue and silver."
+    },
+    {
+      "id": "token_krake",
+      "titel": "Riesenkrake",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A giant octopus with curling arms rising from the deep, big clever eye."
+    },
+    {
+      "id": "dragon_sea",
+      "titel": "Blauer Jungdrache",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A small friendly blue dragon hatchling with fin-like wings in a tide pool."
+    },
+    {
+      "id": "sea_reef",
+      "titel": "Korallenriff (Bau)",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A colourful coral reef with sea fans, no fish in focus.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "sea_tide",
+      "titel": "Gezeitenwechsel (Kniff)",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A beach half flooded, half dry, moon above pulling the water.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "sea_maelstrom",
+      "titel": "Strudel (Kniff)",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A swirling whirlpool in dark blue sea seen from above.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "sea_net",
+      "titel": "Treibnetz (Falle)",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A fishing net with glass floats drifting half hidden under the surface.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "farm_fieldmouse",
+      "titel": "Feldmaus",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A tiny field mouse on a wheat stalk holding a grain."
+    },
+    {
+      "id": "farm_duck",
+      "titel": "Renn-Ente",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A white duck running fast with a little red racing ribbon."
+    },
+    {
+      "id": "farm_lamb",
+      "titel": "Lamm",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A fluffy lamb with a small bell on a yellow ribbon."
+    },
+    {
+      "id": "farm_goose",
+      "titel": "Gans",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A goose with outstretched neck, hissing bravely, farmyard behind."
+    },
+    {
+      "id": "farm_cat",
+      "titel": "Hofkatze",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A tabby farm cat on a barrel, tail curled, watchful eyes."
+    },
+    {
+      "id": "farm_hen",
+      "titel": "Henne",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A brown hen sitting proudly on a nest of straw."
+    },
+    {
+      "id": "farm_sheepdog",
+      "titel": "Hütehund",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A shaggy sheepdog standing guard, a red neckerchief."
+    },
+    {
+      "id": "farm_donkey",
+      "titel": "Esel",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A grey donkey with a pack saddle and a stubborn friendly look."
+    },
+    {
+      "id": "farm_wolfsheep",
+      "titel": "Wolf im Schafspelz",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A wolf wearing a white sheep fleece like a hood, one amber eye peeking out, sly smile."
+    },
+    {
+      "id": "farm_ram",
+      "titel": "Leithammel",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A ram with big curled horns and a large bell, leading."
+    },
+    {
+      "id": "farm_cow",
+      "titel": "Kuh",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A spotted cow with a flower wreath and a cowbell."
+    },
+    {
+      "id": "farm_bull",
+      "titel": "Stier",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A strong bull pawing the ground, red and yellow tournament cloth."
+    },
+    {
+      "id": "farm_goldgoose",
+      "titel": "Goldene Gans",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A goose with shining golden feathers beside one golden egg."
+    },
+    {
+      "id": "farm_coldblood",
+      "titel": "Kaltblut",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A massive draught horse with feathered hooves and decorated harness."
+    },
+    {
+      "id": "farm_musicians",
+      "titel": "Stadtmusikanten",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A donkey, a dog, a cat and a rooster standing on each other's backs, singing."
+    },
+    {
+      "id": "token_hen",
+      "titel": "Junghenne",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A small young hen pecking, simple and cute."
+    },
+    {
+      "id": "token_prize",
+      "titel": "Preisbulle",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A magnificent prize bull with a rosette ribbon on its halter."
+    },
+    {
+      "id": "dragon_farm",
+      "titel": "Goldener Jungdrache",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A small friendly golden dragon hatchling sitting in a hay nest."
+    },
+    {
+      "id": "farm_nest",
+      "titel": "Nest (Bau)",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A straw nest with three eggs in a barn corner, warm light.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "farm_march",
+      "titel": "Gänsemarsch (Kniff)",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A row of goose footprints across a muddy path leading to a gate.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "farm_harvest",
+      "titel": "Erntedank (Kniff)",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A harvest crown of wheat, apples and pumpkins on a wooden table.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "farm_hay",
+      "titel": "Heuballen (Kniff)",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A big round hay bale in a mown field at evening.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "farm_alarm",
+      "titel": "Falscher Alarm (Falle)",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A brass farm bell swinging wildly on a post, startled feathers in the air.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "wild_meerkat",
+      "titel": "Erdmännchen",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A meerkat standing upright on lookout."
+    },
+    {
+      "id": "wild_jackal",
+      "titel": "Schakal",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A lean jackal trotting at dusk."
+    },
+    {
+      "id": "wild_warthog",
+      "titel": "Warzenschwein",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A warthog with tail straight up, running."
+    },
+    {
+      "id": "wild_hyena",
+      "titel": "Hyäne",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A spotted hyena grinning cheekily, not menacing."
+    },
+    {
+      "id": "wild_gazelle",
+      "titel": "Gazelle",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A gazelle leaping high over grass."
+    },
+    {
+      "id": "wild_lioncub",
+      "titel": "Junglöwe",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A young lion with a small mane practising a roar."
+    },
+    {
+      "id": "wild_armadillo",
+      "titel": "Gürteltier",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. An armadillo half rolled up, armour plates like a knight's."
+    },
+    {
+      "id": "wild_ostrich",
+      "titel": "Strauß",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. An ostrich sprinting, feathers flying, a crimson ribbon."
+    },
+    {
+      "id": "wild_buffalo",
+      "titel": "Büffel",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A heavy buffalo with wide horns, head lowered."
+    },
+    {
+      "id": "wild_lioness",
+      "titel": "Löwin",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A lioness crouching in golden grass, focused."
+    },
+    {
+      "id": "wild_cheetah",
+      "titel": "Gepard",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A cheetah at full sprint, blurred grass."
+    },
+    {
+      "id": "wild_gorilla",
+      "titel": "Gorilla",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A silverback gorilla sitting calmly, arms crossed, an ochre sash."
+    },
+    {
+      "id": "wild_tiger",
+      "titel": "Tiger",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A tiger stepping out of tall reeds, crimson cloth collar."
+    },
+    {
+      "id": "wild_croc",
+      "titel": "Krokodil",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A crocodile at the water's edge, jaws closed, eyes above the water."
+    },
+    {
+      "id": "wild_mammoth",
+      "titel": "Mammut",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A woolly mammoth with huge curved tusks, snow dust in its fur."
+    },
+    {
+      "id": "wild_oda",
+      "titel": "Elefantin Oda",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A wise old elephant matriarch with a decorated headcloth in ochre and crimson, legendary aura."
+    },
+    {
+      "id": "token_warlord",
+      "titel": "Herrin der Steppe",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A majestic lioness on a rock with a small golden circlet, sunset behind."
+    },
+    {
+      "id": "dragon_wild",
+      "titel": "Roter Jungdrache",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A small friendly red dragon hatchling on a warm rock."
+    },
+    {
+      "id": "wild_pool",
+      "titel": "Wasserloch (Bau)",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A water hole in the savannah with acacia trees, hoof prints in the mud.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "wild_tusk",
+      "titel": "Stoßzahn (Kniff)",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A single ivory-coloured tusk mounted like a tournament lance tip with a crimson ribbon (carved horn, not from a hunted animal).",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "wild_grassfire",
+      "titel": "Steppenwind (Kniff)",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. Wind sweeping across tall golden grass, dust swirling.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "wild_shield",
+      "titel": "Dicker Panzer (Kniff)",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A round shield made of layered hide plates like armadillo armour.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "wild_pit",
+      "titel": "Fallgrube (Falle)",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A pit covered with branches and grass on a savannah path.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "bug_bee",
+      "titel": "Honigbiene",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A honey bee carrying a tiny honey pot."
+    },
+    {
+      "id": "bug_moth",
+      "titel": "Motte",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A soft grey moth circling a lantern."
+    },
+    {
+      "id": "bug_ladybug",
+      "titel": "Marienkäfer",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A ladybird on a leaf, shell like a small red shield."
+    },
+    {
+      "id": "bug_firefly",
+      "titel": "Glühwürmchen",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A firefly glowing warmly in the dusk."
+    },
+    {
+      "id": "bug_wasp",
+      "titel": "Wespe",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A wasp in flight, sting like a tiny lance."
+    },
+    {
+      "id": "bug_centipede",
+      "titel": "Tausendfüßler",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A centipede marching, many tiny boots."
+    },
+    {
+      "id": "bug_dragonfly",
+      "titel": "Libelle",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A dragonfly hovering over water, shimmering wings."
+    },
+    {
+      "id": "bug_stagbeetle",
+      "titel": "Hirschkäfer",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A stag beetle with mighty antler jaws, polished armour."
+    },
+    {
+      "id": "bug_tarantula",
+      "titel": "Vogelspinne",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A fluffy tarantula sitting calmly, big friendly eyes."
+    },
+    {
+      "id": "bug_mantis",
+      "titel": "Fangschrecke",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A praying mantis in a duelling pose."
+    },
+    {
+      "id": "bug_queen",
+      "titel": "Bienenkönigin",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A queen bee with a tiny crown and violet cape."
+    },
+    {
+      "id": "bug_hornet",
+      "titel": "Hornisse",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A large hornet in flight, golden and strong."
+    },
+    {
+      "id": "bug_motherspider",
+      "titel": "Mutterspinne",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A big garden spider in the middle of a dewy web."
+    },
+    {
+      "id": "bug_mira",
+      "titel": "Spinnfrau Mira",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A legendary elegant spider weaving a shimmering violet tapestry, tiny spectacles."
+    },
+    {
+      "id": "token_bigmoth",
+      "titel": "Falter",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A large colourful butterfly with patterned wings."
+    },
+    {
+      "id": "token_swarmqueen",
+      "titel": "Schwarmkönigin",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A queen bee surrounded by a ring of bees like a royal guard."
+    },
+    {
+      "id": "dragon_bugs",
+      "titel": "Violetter Jungdrache",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A small friendly violet dragon hatchling with dragonfly wings on a flower."
+    },
+    {
+      "id": "bug_hive",
+      "titel": "Bienenstock (Bau)",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A woven straw beehive on a wooden stand among flowers.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "bug_swarm",
+      "titel": "Schwarmruf (Kniff)",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A swirling cloud of tiny bees forming a spiral in the air.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "bug_fog",
+      "titel": "Giftnebel (Kniff)",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A pale green mist drifting between mushrooms.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "bug_sticky",
+      "titel": "Klebefalle (Falle)",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A drop of golden honey spread across a leaf as a sticky trap.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "n_sparrow",
+      "titel": "Spatz",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A sparrow on a tavern windowsill."
+    },
+    {
+      "id": "n_kobold",
+      "titel": "Kobold",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small friendly house goblin with a pointed cap and a lantern."
+    },
+    {
+      "id": "n_hamster",
+      "titel": "Hamster",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A hamster with stuffed cheeks holding a grain."
+    },
+    {
+      "id": "n_pigeon",
+      "titel": "Taube",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A carrier pigeon with a tiny scroll tied to its leg."
+    },
+    {
+      "id": "n_crow",
+      "titel": "Krähe",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A crow on a fence post with a shiny button in its beak."
+    },
+    {
+      "id": "n_mole",
+      "titel": "Maulwurf",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A mole popping out of a molehill with tiny spectacles."
+    },
+    {
+      "id": "n_weasel",
+      "titel": "Wiesel",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A quick weasel darting between barrels."
+    },
+    {
+      "id": "n_magpie",
+      "titel": "Elster",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A magpie with a silver spoon."
+    },
+    {
+      "id": "n_heron",
+      "titel": "Reiher",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A grey heron standing still in shallow water."
+    },
+    {
+      "id": "n_stork",
+      "titel": "Storch",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A stork on a rooftop nest."
+    },
+    {
+      "id": "n_pony",
+      "titel": "Pony",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A sturdy pony with a simple blanket."
+    },
+    {
+      "id": "n_wildcat",
+      "titel": "Wildkatze",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A wildcat crouching on a branch."
+    },
+    {
+      "id": "n_bison",
+      "titel": "Bison",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A shaggy bison in morning mist."
+    },
+    {
+      "id": "n_eagle",
+      "titel": "Adler",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. An eagle soaring over mountains."
+    },
+    {
+      "id": "n_dragonling",
+      "titel": "Jungdrache",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small grey-brown dragon hatchling trying out its wings."
+    },
+    {
+      "id": "n_giant",
+      "titel": "Waldriese",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A gentle giant in simple clothes stepping over treetops, face kind and stylised."
+    },
+    {
+      "id": "n_hippogriff",
+      "titel": "Hippogryph",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A hippogriff, front half eagle and back half horse, on a cliff."
+    },
+    {
+      "id": "n_unicorn",
+      "titel": "Einhorn",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A white unicorn in a moonlit clearing."
+    },
+    {
+      "id": "n_phoenix",
+      "titel": "Phönix",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A phoenix rising with wings of warm flame."
+    },
+    {
+      "id": "n_basilisk",
+      "titel": "Basilisk",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A basilisk, part rooster and part serpent, with a small crown-like comb, more curious than frightening."
+    },
+    {
+      "id": "n_lindworm",
+      "titel": "Lindwurm",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A long wingless dragon coiled around a rock."
+    },
+    {
+      "id": "n_dragonmother",
+      "titel": "Drachenmutter",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A great wise dragon curled protectively around a clutch of eggs, legendary aura."
+    },
+    {
+      "id": "token_eggdragon",
+      "titel": "Eidrache",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A tiny dragon just hatching, half still in its eggshell."
+    },
+    {
+      "id": "n_tower",
+      "titel": "Turm (Bau)",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A round stone watchtower with a banner on a hill.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "n_ballbolt",
+      "titel": "Kugelblitz (Kniff)",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A crackling ball of lightning floating over a field.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "n_dragonbreath",
+      "titel": "Drachenatem (Kniff)",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A stream of orange flame across a dark sky, no dragon visible.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "n_mask",
+      "titel": "Maskerade (Falle)",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A carnival mask with ribbons lying on a table.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "c1",
+      "titel": "Ameise",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. An ant carrying a crumb, tiny violet scarf."
+    },
+    {
+      "id": "c2",
+      "titel": "Mücke",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A mosquito in flight with a long thin nose, comical not creepy."
+    },
+    {
+      "id": "c3",
+      "titel": "Fliege",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A housefly with big round eyes sitting on a leaf."
+    },
+    {
+      "id": "c4",
+      "titel": "Käfer",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A shiny green beetle with a polished shell."
+    },
+    {
+      "id": "c5",
+      "titel": "Schmetterling",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A butterfly with violet and gold wings on a flower."
+    },
+    {
+      "id": "c6",
+      "titel": "Ratte",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A brown farm rat peeking out of a grain sack."
+    },
+    {
+      "id": "c7",
+      "titel": "Maus",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A wood mouse with big ears holding a beech nut."
+    },
+    {
+      "id": "c8",
+      "titel": "Frosch",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A green frog on a lily pad at the meadow pond."
+    },
+    {
+      "id": "c9",
+      "titel": "Eidechse",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A lizard basking on a warm stone wall."
+    },
+    {
+      "id": "c10",
+      "titel": "Schnecke",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A snail with a spiral shell on a dewy leaf."
+    },
+    {
+      "id": "c11",
+      "titel": "Spinne",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A small garden spider in a neat web with dew drops, friendly eyes."
+    },
+    {
+      "id": "c12",
+      "titel": "Skorpion",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A scorpion with raised tail on sandy ground, more proud than threatening."
+    },
+    {
+      "id": "c13",
+      "titel": "Schildkröte",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A small turtle paddling in shallow water."
+    },
+    {
+      "id": "c14",
+      "titel": "Schlange",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A grass snake coiled among meadow flowers, friendly."
+    },
+    {
+      "id": "c15",
+      "titel": "Krabbe",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A red crab raising one claw on the beach."
+    },
+    {
+      "id": "c16",
+      "titel": "Hummer",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A lobster with big claws on a rock under water."
+    },
+    {
+      "id": "c17",
+      "titel": "Tintenfisch",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A squid gliding through blue water."
+    },
+    {
+      "id": "c18",
+      "titel": "Krake",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. An octopus peeking out of a clay pot on the sea floor."
+    },
+    {
+      "id": "c19",
+      "titel": "Fisch",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A silver river-mouth fish leaping from a wave."
+    },
+    {
+      "id": "c20",
+      "titel": "Kugelfisch",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A round pufferfish, puffed up, surprised look."
+    },
+    {
+      "id": "c21",
+      "titel": "Hase",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A brown hare sitting upright in forest grass, ears high."
+    },
+    {
+      "id": "c22",
+      "titel": "Kaninchen",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A white farm rabbit nibbling a carrot."
+    },
+    {
+      "id": "c23",
+      "titel": "Biber",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A beaver gnawing a branch at a stream."
+    },
+    {
+      "id": "c24",
+      "titel": "Eichhörnchen",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A red squirrel on a branch with a hazelnut."
+    },
+    {
+      "id": "c25",
+      "titel": "Igel",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A hedgehog among autumn leaves."
+    },
+    {
+      "id": "c26",
+      "titel": "Fledermaus",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A bat hanging from a branch at dusk, wings wrapped."
+    },
+    {
+      "id": "c27",
+      "titel": "Eule",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A tawny owl on a branch at night."
+    },
+    {
+      "id": "c28",
+      "titel": "Katze",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A wild tabby forest cat stalking through ferns."
+    },
+    {
+      "id": "c29",
+      "titel": "Hund",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A loyal farm dog with a red neckerchief by a gate."
+    },
+    {
+      "id": "c30",
+      "titel": "Waschbär",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A raccoon with a traveller's bundle on a stick."
+    },
+    {
+      "id": "c31",
+      "titel": "Stinktier",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A skunk with raised tail holding a flower."
+    },
+    {
+      "id": "c32",
+      "titel": "Otter",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. An otter floating on its back holding a shell."
+    },
+    {
+      "id": "c33",
+      "titel": "Faultier",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A sloth hanging from a branch, smiling sleepily."
+    },
+    {
+      "id": "c34",
+      "titel": "Affe",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A small monkey swinging on a liana."
+    },
+    {
+      "id": "c35",
+      "titel": "Hahn",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A rooster crowing on a fence post."
+    },
+    {
+      "id": "c36",
+      "titel": "Truthahn",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A turkey with fanned tail in the farmyard."
+    },
+    {
+      "id": "c37",
+      "titel": "Schaf",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A woolly sheep with a small bell."
+    },
+    {
+      "id": "c38",
+      "titel": "Ziege",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A goat standing on a hay cart."
+    },
+    {
+      "id": "c39",
+      "titel": "Schwein",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A pink pig happily in a mud puddle."
+    },
+    {
+      "id": "c40",
+      "titel": "Hirsch",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A young deer with small antlers at the forest edge."
+    },
+    {
+      "id": "c41",
+      "titel": "Lama",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A llama with a woven saddle blanket in ochre and crimson."
+    },
+    {
+      "id": "c42",
+      "titel": "Känguru",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A kangaroo in mid hop."
+    },
+    {
+      "id": "c43",
+      "titel": "Zebra",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A zebra trotting through golden grass."
+    },
+    {
+      "id": "c44",
+      "titel": "Pferd",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A brown farm horse with a decorated bridle."
+    },
+    {
+      "id": "c45",
+      "titel": "Ochse",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. An ox with a wooden yoke."
+    },
+    {
+      "id": "c46",
+      "titel": "Kamel",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A two-humped camel with a tasselled blanket."
+    },
+    {
+      "id": "c47",
+      "titel": "Giraffe",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A giraffe reaching for acacia leaves."
+    },
+    {
+      "id": "c48",
+      "titel": "Elefant",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. An elephant with a small crimson headcloth."
+    },
+    {
+      "id": "c49",
+      "titel": "Nashorn",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A rhinoceros standing firm, dust at its feet."
+    },
+    {
+      "id": "c50",
+      "titel": "Nilpferd",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A hippopotamus rising from the water, ears twitching."
+    },
+    {
+      "id": "c51",
+      "titel": "Raupe",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A green caterpillar on a leaf with a bite taken out."
+    },
+    {
+      "id": "c52",
+      "titel": "Grille",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A cricket playing a tiny fiddle on a grass blade."
+    },
+    {
+      "id": "c53",
+      "titel": "Fuchs",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A red fox in a traveller's hooded cape on a country road."
+    },
+    {
+      "id": "c54",
+      "titel": "Drache",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A friendly full-grown dragon with small wings sitting on a hill above a village."
+    },
+    {
+      "id": "token_butterfly",
+      "titel": "Schmetterling",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small pale butterfly fluttering over a road-side flower."
+    },
+    {
+      "id": "token_mussel",
+      "titel": "Muschel",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A closed mussel shell on wet sand with a tiny pearl glint."
+    },
+    {
+      "id": "token_shrimp",
+      "titel": "Garnele",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small pink shrimp on a pebble."
+    },
+    {
+      "id": "token_seahorse",
+      "titel": "Seepferdchen",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small seahorse holding on to a blade of seagrass."
+    },
+    {
+      "id": "egg_forest",
+      "titel": "Drachenei (Kniff)",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A large green speckled dragon egg in a nest of moss and oak leaves.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "egg_sea",
+      "titel": "Drachenei (Kniff)",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A large blue pearly dragon egg in a nest of shells and seaweed.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "egg_farm",
+      "titel": "Drachenei (Kniff)",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A large golden dragon egg in a nest of straw.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "egg_wild",
+      "titel": "Drachenei (Kniff)",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A large red dragon egg on warm rocks.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "egg_bugs",
+      "titel": "Drachenei (Kniff)",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A large violet dragon egg among flowers and honeycomb.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "special_star",
+      "titel": "Sternschnuppe (Kniff)",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A bright shooting star crossing a deep blue evening sky.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_lightning",
+      "titel": "Blitzschlag (Kniff)",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A single bright lightning bolt striking from a dark cloud.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_honey",
+      "titel": "Honigtopf (Kniff)",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A clay honey pot with a wooden dipper, golden honey dripping.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_tailwind",
+      "titel": "Rückenwind (Kniff)",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A gust of wind carrying leaves and a small pennant across the grass.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_soapBubble",
+      "titel": "Seifenblase (Kniff)",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A large shimmering soap bubble floating above water.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_growth",
+      "titel": "Wachstumsschub (Kniff)",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A young green shoot growing quickly out of farm soil, small sparkles.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_summerRain",
+      "titel": "Sommerregen (Kniff)",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. Warm summer rain falling on a field with a rainbow.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_clover",
+      "titel": "Glücksklee (Kniff)",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A four-leaf clover with dew drops.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_flood",
+      "titel": "Flutwelle (Kniff)",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A big rolling wave about to break on a beach.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_frost",
+      "titel": "Raureif (Kniff)",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. Hoarfrost crystals covering reeds at a frozen shore.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_quiet",
+      "titel": "Stille Stunde (Kniff)",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A hammock between two apple trees in the quiet afternoon sun.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_tracks",
+      "titel": "Spurenlesen (Kniff)",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A trail of small paw prints across soft earth with a magnifying glass lying beside it.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_harvest",
+      "titel": "Mondscheinernte (Kniff)",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A basket of mushrooms and berries on the forest floor in moonlight.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "s_whirlwind",
+      "titel": "Wirbelsturm (Kniff)",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A whirlwind twisting across the savannah, dust spiralling.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "token_ant",
+      "titel": "Ameisen-Soldat",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A brave soldier ant with a tiny helmet and spear."
+    },
+    {
+      "id": "token_chick",
+      "titel": "Küken",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A fluffy yellow chick just out of the shell."
+    },
+    {
+      "id": "token_treant",
+      "titel": "Waldkind",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A tiny walking tree sapling with two leaf arms and a friendly face in the bark."
+    },
+    {
+      "id": "token_sardine",
+      "titel": "Sardine",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A single small silver sardine."
+    },
+    {
+      "id": "token_bee",
+      "titel": "Biene",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small worker bee in flight."
+    },
+    {
+      "id": "token_youngdragon",
+      "titel": "Drachenkind",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A young dragon child, bigger than a hatchling, practising a tiny puff of smoke."
+    },
+    {
+      "id": "f_marmot",
+      "titel": "Murmeltier",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A marmot sleeping curled up in a burrow lined with dry grass (hibernating)."
+    },
+    {
+      "id": "sea_urchin",
+      "titel": "Seeigelei (Kniff)",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A round spiny sea urchin egg case resting between rocks under water, softly glowing.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "farm_egg",
+      "titel": "Hühnerei (Kniff)",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A single brown hen's egg in a straw nest, a small crack starting.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "wild_cub",
+      "titel": "Bärenjunges",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A sleepy bear cub curled up in a den."
+    },
+    {
+      "id": "bug_cocoon",
+      "titel": "Kokon (Kniff)",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A silk cocoon hanging from a twig, softly glowing from inside.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "n_dragonegg",
+      "titel": "Drachenei (Kniff)",
+      "haus": "neutral",
+      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A large grey-brown dragon egg in a nest of stones on a mountain ledge.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "f_quest",
+      "titel": "Versammlung im Bau (Kniff)",
+      "haus": "forest",
+      "prompt": "House colours forest green and gold, oak leaf emblem; misty oak forest background. A rolled parchment with a green wax seal lying at the entrance of a cosy burrow lit by a lantern, parchment blank.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "sea_quest",
+      "titel": "Ruf der Tiefe (Kniff)",
+      "haus": "sea",
+      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. A rolled parchment with a blue wax seal inside an open shell on the sea floor, a beam of light from above, parchment blank.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "farm_quest",
+      "titel": "Viehmarkt (Kniff)",
+      "haus": "farm",
+      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A rolled parchment with a yellow wax seal on a fence post at a village cattle market with empty pens, parchment blank.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "wild_quest",
+      "titel": "Dickes Fell (Kniff)",
+      "haus": "wild",
+      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A rolled parchment with a crimson wax seal lying on a thick fur hide on a rock, parchment blank.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    },
+    {
+      "id": "bug_quest",
+      "titel": "Großes Krabbeln (Kniff)",
+      "haus": "bugs",
+      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A rolled parchment with a violet wax seal on a leaf, many tiny footprints leading to it, parchment blank.",
+      "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single object or small scene without characters as the main subject, warm atmospheric lighting, rich colours, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred with generous margin on all sides. No text, no letters, no numbers, no card frame, no border."
+    }
+  ]
+}
