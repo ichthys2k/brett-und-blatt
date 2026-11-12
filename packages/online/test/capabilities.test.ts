@@ -3,7 +3,7 @@ import { can, roomCapabilities, tournamentCapabilities } from '../src/capabiliti
 
 describe('Moderations-Fähigkeiten', () => {
   it('die Raumleitung darf alles, wer nicht Raumleitung ist, nichts', () => {
-    expect(roomCapabilities(true)).toEqual(['kick', 'rename', 'unseat', 'lockNames', 'restart']);
+    expect(roomCapabilities(true)).toEqual(['kick', 'rename', 'unseat', 'lockNames', 'restart', 'joinRequests']);
     expect(roomCapabilities(false)).toEqual([]);
   });
 

@@ -1,9 +1,10 @@
-import { OnlineSession, PROTOCOL_VERSION, type ClientMessage, type GameMessage, type OpenRoomListing, type OpenRoomsMessage, type Reaction, type RoomMessage, type ServerMessage } from '@brett-und-blatt/online';
+import { OnlineSession, PROTOCOL_VERSION, type AfterGameInfo, type ClientMessage, type GameMessage, type OpenRoomListing, type OpenRoomsMessage, type Reaction, type RoomMessage, type ServerMessage } from '@brett-und-blatt/online';
 import type { SoundName } from '@brett-und-blatt/ui';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createBotRunner } from './botRunner';
 import { notifyTurn } from './notifications';
 import { loadGame, type LoadedGame } from './registry';
+import { t } from '../i18n';
 import { crestForRoom } from './crestText';
 import { GAME_SERVER } from './server';
 import { sound } from './sound';
@@ -123,6 +124,9 @@ export interface Signal {
   value: string;
 }
 
+/** Die Abstimmung am Rundenende mit der Endzeit nach der Uhr dieses Geräts. */
+export type AfterState = AfterGameInfo & { endsAt: number };
+
 export interface RoomState {
   status: ConnectionStatus;
   /** Die eigene Mitgliedsnummer im Raum. */
@@ -133,6 +137,8 @@ export interface RoomState {
   /** Kurzer, freundlicher Hinweis ohne Fehler, z. B. „Zu spät – jemand war schneller.“ */
   notice: string | null;
   signals: Signal[];
+  /** Abstimmung am Rundenende (#298); null, wenn keine läuft. */
+  after: AfterState | null;
 }
 
 let botRunner: ReturnType<typeof createBotRunner> | null = null;
@@ -143,7 +149,7 @@ let botRunner: ReturnType<typeof createBotRunner> | null = null;
  * nicht von allen gleichzeitig überrannt wird.
  */
 export class RoomConnection {
-  state: RoomState = { status: 'connecting', you: null, room: null, game: null, error: null, notice: null, signals: [] };
+  state: RoomState = { status: 'connecting', you: null, room: null, game: null, error: null, notice: null, signals: [], after: null };
   private ws: WebSocket | null = null;
   private listeners = new Set<() => void>();
   private retries = 0;
@@ -258,7 +264,9 @@ export class RoomConnection {
       case 'room':
         // In der Lobby gibt es keine laufende Partie mehr – auch keine, die gerade noch lädt.
         if (message.phase === 'lobby') this.pendingGame = null;
-        return this.set(message.phase === 'lobby' ? { room: message, game: null } : { room: message });
+        return this.set(message.phase === 'lobby' ? { room: message, game: null, after: null } : { room: message });
+      case 'afterGame':
+        return this.set({ after: message.after ? { ...message.after, endsAt: Date.now() + (message.after.deadline - message.after.serverNow) } : null });
       case 'game':
         return this.receiveGame(message);
       case 'signal': {
@@ -281,6 +289,12 @@ export class RoomConnection {
         this.set({ error: message.message });
         window.setTimeout(() => this.state.error === message.message && this.set({ error: null }), 4000);
         return;
+      case 'joinDenied': {
+        const text = t('join.denied');
+        this.set({ notice: text });
+        window.setTimeout(() => this.state.notice === text && this.set({ notice: null }), 4000);
+        return;
+      }
       case 'kicked':
         return this.set({ status: 'kicked' });
       case 'pong':

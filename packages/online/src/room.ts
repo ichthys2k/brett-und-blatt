@@ -22,12 +22,18 @@ import { cleanAvatar, cleanName, crestField, setCrest } from './names';
 import type { RoomReport } from './tournament';
 import { SERIES_PAUSE_MS, forfeitSeries, newSeries, recordSeriesGame, type SeriesState } from './tournament/best-of';
 import {
+  AFTER_MAX_CANDIDATES,
+  AFTER_RANDOM,
+  JOIN_DENIED_MS,
+  MAX_JOIN_QUEUE,
   MAX_SEATS,
   PHRASES,
   DISPLAY_MEMBER,
   PROTOCOL_VERSION,
   REACTIONS,
   parseClientMessage,
+  type AfterChoice,
+  type AfterGameInfo,
   type ClientMessage,
   type ErrorCode,
   type GameMessage,
@@ -70,6 +76,21 @@ export const MATCH_AWAY_MS = 5 * 60 * 1000;
 export const TAKE_BACK_MS = 30_000;
 /** Nach einer Bitte ums Zurücknehmen darf derselbe Platz erst nach so vielen eigenen Zügen wieder bitten. */
 export const TAKE_BACK_GAP = 3;
+
+/** So lange können alle nach einer Partie über Nochmal oder ein anderes Spiel abstimmen (#298). */
+export const AFTER_GAME_MS = 30_000;
+
+/** Abstimmung am Rundenende: wer was gewählt hat, bleibt bis zur Entscheidung im Raum. */
+interface AfterGameState {
+  /** Partie (`Game.round`), nach der abgestimmt wird. */
+  round: number;
+  deadline: number;
+  votes: Record<string, AfterChoice>;
+  /** Ein vorgeschlagenes Spiel je Mitglied. */
+  proposals: Record<string, string>;
+  /** Gewählter Kandidat je Mitglied (Spiel-id oder `random`). */
+  picks: Record<string, string>;
+}
 
 /** Zurücknehmen mit Zustimmung (`GameInfo.takeBack`): offene Bitte, letzter Ausgang und Sperren je Platz. */
 interface TakeBackState {
@@ -119,6 +140,8 @@ export interface RoomDeps {
   changed?(): void;
   /** Bedenkzeit der Bots je Stufe – auf dem Server eventuell knapper. */
   botBudgetMs?: Partial<Record<BotLevel, number>>;
+  /** Alle online angebotenen Spiele – für „zufälliges Spiel“ am Rundenende. Fehlt: nur vorgeschlagene Spiele. */
+  listGames?(): AnyGameModule[];
   /** Zufallszahl in [0, 1) für Lobby-Dinge wie „Teams mischen“ (Standard: Math.random). */
   random?(): number;
 }
@@ -140,6 +163,11 @@ interface Member {
   nameFixed: boolean;
   /** Zeitstempel kürzlich gesendeter Signale zur Spam-Begrenzung. */
   recentSignals: number[];
+  /** Anfrage ums Mitspielen ab der nächsten Runde (#299) und seit wann (Reihenfolge der Annahme). */
+  join?: 'asking' | 'queued';
+  joinAt?: number;
+  /** Bis wann die Person nach einer Ablehnung nicht erneut fragen darf. */
+  declinedUntil?: number;
 }
 
 interface Game {
@@ -168,13 +196,14 @@ export interface RoomSnapshot {
   phase: RoomPhase;
   lobby: LobbySettings;
   /** `disconnectedAt`: seit wann ohne Verbindung (null: beim Speichern verbunden). */
-  members: { id: string; token: string; name: string; avatar: string; crest?: string; awayByDisconnect: boolean; disconnectedAt: number | null; nameFixed?: boolean }[];
+  members: { id: string; token: string; name: string; avatar: string; crest?: string; awayByDisconnect: boolean; disconnectedAt: number | null; nameFixed?: boolean; join?: 'asking' | 'queued'; joinAt?: number; declinedUntil?: number }[];
   kicked: string[];
   nextMember: number;
   lastVersion: number;
   rounds: number;
   createdAt?: number;
   lastActivity: number;
+  after?: AfterGameState;
   game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; lobbyIndex?: number[]; time: LobbySettings['time']; version: number; round: number; takeBack?: TakeBackState } | null;
   match?: { config: MatchRoomConfig; noShow: RoomReport | null; reported: boolean; series?: SeriesState };
 }
@@ -196,6 +225,8 @@ export class Room {
   private phase: RoomPhase = 'lobby';
   private lobby: LobbySettings;
   private game: Game | null = null;
+  /** Läuft nach der Partie gerade eine Abstimmung (#298)? */
+  private after: AfterGameState | null = null;
   private nextMember = 1;
   private lastVersion = 0;
   /** Wie viele Partien in diesem Raum schon begonnen haben. */
@@ -376,6 +407,7 @@ export class Room {
     const now = this.deps.now();
     this.game?.session.tick();
     this.settleTakeBack();
+    if (this.after && now >= this.after.deadline) this.settleAfter(true);
     if (this.match) {
       this.tickMatch(now);
       this.deps.changed?.();
@@ -414,6 +446,7 @@ export class Room {
     if (deadline != null) times.push(deadline);
     const takeBack = this.game?.takeBack?.pending;
     if (takeBack) times.push(takeBack.deadline);
+    if (this.after) times.push(this.after.deadline);
     if (this.match) {
       if (this.phase === 'lobby' && !this.match.noShow) times.push(this.createdAt + MATCH_ARRIVAL_MS);
       if (this.match.series?.nextAt != null) times.push(this.match.series.nextAt);
@@ -457,10 +490,12 @@ export class Room {
     const module = this.deps.findGame(this.lobby.gameId);
     if (!module) return null;
     const playingJoinable = this.phase === 'playing' && Boolean(module.info.joinMidGame) && Boolean(this.game && !this.game.session.result);
-    if (this.phase !== 'lobby' && !playingJoinable) return null;
-    const seats = playingJoinable && this.game ? this.game.seats : this.lobby.seats;
+    // Läuft die Partie schon, aber Zuschauer dürfen anfragen (#299): „läuft – Anfrage möglich“.
+    const running = this.phase !== 'lobby' && !playingJoinable && Boolean(this.game) && this.joinOffered();
+    if (this.phase !== 'lobby' && !playingJoinable && !running) return null;
+    const seats = (playingJoinable || running) && this.game ? this.game.seats : this.lobby.seats;
     const openSeats = seats.filter((s) => s.kind === 'human' && s.memberId === null).length;
-    if (openSeats === 0) return null;
+    if (openSeats === 0 && !running) return null;
     const hasConnected = [...this.members.values()].some((m) => m.disconnectedAt === null);
     if (!hasConnected) return null;
     const host = this.hostId ? this.members.get(this.hostId) : undefined;
@@ -477,6 +512,7 @@ export class Room {
       hostAvatar: host?.avatar ?? '🎲',
       totalSeats: seats.length,
       filledSeats: seats.length - openSeats,
+      ...(running ? { running: true } : {}),
       createdAt: this.createdAt,
       updatedAt: this.lastActivity,
       ...(cardCatalogChecksum ? { cardCatalogChecksum } : {}),
@@ -491,7 +527,7 @@ export class Room {
       hostId: this.hostId,
       phase: this.phase,
       lobby: structuredClone(this.lobby),
-      members: [...this.members.values()].map(({ id, token, name, avatar, crest, awayByDisconnect, disconnectedAt, nameFixed }) => ({ id, token, name, avatar, ...(crest ? { crest } : {}), awayByDisconnect, disconnectedAt, ...(nameFixed ? { nameFixed } : {}) })),
+      members: [...this.members.values()].map(({ id, token, name, avatar, crest, awayByDisconnect, disconnectedAt, nameFixed, join, joinAt, declinedUntil }) => ({ id, token, name, avatar, ...(crest ? { crest } : {}), awayByDisconnect, disconnectedAt, ...(nameFixed ? { nameFixed } : {}), ...(join ? { join, ...(joinAt !== undefined ? { joinAt } : {}) } : {}), ...(declinedUntil !== undefined ? { declinedUntil } : {}) })),
       kicked: [...this.kicked],
       nextMember: this.nextMember,
       lastVersion: this.lastVersion,
@@ -501,6 +537,7 @@ export class Room {
       game: game
         ? { session: game.session.snapshot(), seatMembers: [...game.seatMembers], seats: game.seats, ...(game.lobbyIndex ? { lobbyIndex: game.lobbyIndex } : {}), time: game.time, version: this.gameVersion(), round: game.round, ...(game.takeBack ? { takeBack: structuredClone(game.takeBack) } : {}) }
         : null,
+      ...(this.after ? { after: structuredClone(this.after) } : {}),
       ...(this.match ? { match: structuredClone(this.match) } : {}),
     };
   }
@@ -541,6 +578,7 @@ export class Room {
     } else if (saved) {
       room.phase = 'lobby';
     }
+    if (snapshot.after && room.phase === 'finished' && room.game?.round === snapshot.after.round) room.after = structuredClone(snapshot.after);
     return room;
   }
 
@@ -562,6 +600,7 @@ export class Room {
     this.deps.send(connectionId, { type: 'welcome', protocol: PROTOCOL_VERSION, you: DISPLAY_MEMBER, serverNow: this.deps.now() });
     this.broadcastRoom();
     if (this.game) this.sendGame(connectionId, []);
+    if (this.after) this.sendAfter(connectionId);
     this.deps.changed?.();
   }
 
@@ -626,6 +665,7 @@ export class Room {
     }
     this.broadcastRoom();
     if (this.game) this.sendGame(connectionId, []);
+    if (this.after) this.sendAfter(connectionId);
     this.startMatchIfComplete(connectionId);
     this.deps.changed?.();
   }
@@ -707,13 +747,7 @@ export class Room {
       case 'setGame': {
         const module = this.deps.findGame(message.gameId);
         if (!isHost || this.phase !== 'lobby' || !module) return deny();
-        const { min, max } = module.info.players;
-        // Bei Klassen-Simultanspielen (Bingo, Zielzahl, Rechenmauer) gleich 30 Plätze öffnen, bei Spielen mit laufendem Einstieg (Poker) 6 Plätze.
-        const isClassGame = message.gameId === 'bingo' || message.gameId === 'target-number' || message.gameId === 'number-wall';
-        const defaultSeats = isClassGame ? Math.min(max, MAX_SEATS) : module.info.joinMidGame ? Math.min(max, 6) : min;
-        const count = Math.min(Math.min(max, MAX_SEATS), Math.max(defaultSeats, this.lobby.seats.length));
-        this.lobby = { gameId: message.gameId, options: resolveOptions(module), time: this.lobby.time, seats: this.resizeSeats(count), isPublic: this.lobby.isPublic };
-        this.applyTeams();
+        this.applyGame(module);
         return this.broadcastRoom();
       }
       case 'setPublic':
@@ -824,6 +858,8 @@ export class Room {
         if (this.phase !== 'lobby' || seat?.kind !== 'human' || seat.memberId !== null) return deny();
         this.unseat(member.id);
         seat.memberId = member.id;
+        delete member.join;
+        delete member.joinAt;
         return this.broadcastRoom();
       }
       case 'leaveSeat': {
@@ -854,22 +890,57 @@ export class Room {
       }
       case 'start': {
         if (!isHost) return deny();
-        const activeSeats = this.lobby.seats.filter((s) => s.kind === 'bot' || s.memberId !== null);
-        if (message.rotate && activeSeats.length === 2) {
-          const firstIndex = this.lobby.seats.findIndex((s) => s.kind === 'bot' || s.memberId !== null);
-          const secondIndex = this.lobby.seats.findIndex((s, i) => i > firstIndex && (s.kind === 'bot' || s.memberId !== null));
-          if (firstIndex >= 0 && secondIndex >= 0) {
-            const temp = this.lobby.seats[firstIndex]!;
-            this.lobby.seats[firstIndex] = this.lobby.seats[secondIndex]!;
-            this.lobby.seats[secondIndex] = temp;
-          }
-        }
+        if (message.rotate) this.swapTwoSeats();
         return this.start(connectionId);
       }
       case 'toLobby':
         if (!isHost || this.phase === 'lobby') return deny();
         this.endGame();
+        this.seatQueued();
         return this.broadcastRoom();
+      case 'afterVote':
+      case 'afterPropose':
+      case 'afterPick':
+        return this.afterMessage(connectionId, member, message);
+      case 'setAcceptRequests': {
+        if (!isHost || this.match) return deny();
+        this.lobby.acceptRequests = message.allowed;
+        if (!message.allowed) for (const m of this.members.values()) if (m.join === 'asking') delete m.join;
+        return this.broadcastRoom();
+      }
+      case 'askToJoin': {
+        if (this.seatOf(member.id) !== null || this.lobby.seats.some((s) => s.kind === 'human' && s.memberId === member.id)) return deny();
+        if (!this.joinOffered()) return deny();
+        if (member.join) return;
+        if ((member.declinedUntil ?? 0) > this.deps.now()) return this.error(connectionId, 'notAllowed', 'Bitte warte einen Moment, bevor du noch einmal fragst.');
+        if ([...this.members.values()].filter((m) => m.join).length >= MAX_JOIN_QUEUE) return this.error(connectionId, 'notAllowed', 'Es warten schon genug Anfragen.');
+        member.join = 'asking';
+        member.joinAt = this.deps.now();
+        return this.broadcastRoom();
+      }
+      case 'cancelAskToJoin': {
+        if (!member.join) return;
+        delete member.join;
+        delete member.joinAt;
+        this.broadcastRoom();
+        if (this.after) this.broadcastAfter();
+        return;
+      }
+      case 'answerJoin': {
+        const target = this.members.get(message.memberId);
+        if (!isHost || !target || target.join !== 'asking') return deny();
+        this.answerJoin(target, message.ok);
+        this.broadcastRoom();
+        if (this.after) this.broadcastAfter();
+        return;
+      }
+      case 'acceptAllJoins': {
+        if (!isHost) return deny();
+        for (const target of [...this.members.values()].filter((m) => m.join === 'asking').sort((a, b) => (a.joinAt ?? 0) - (b.joinAt ?? 0))) this.answerJoin(target, true);
+        this.broadcastRoom();
+        if (this.after) this.broadcastAfter();
+        return;
+      }
       case 'move': {
         const seat = this.seatOf(member.id);
         const session = this.game?.session;
@@ -981,6 +1052,7 @@ export class Room {
   private start(connectionId: string): void {
     const module = this.lobbyModule();
     if (!module) return this.error(connectionId, 'notAllowed', 'Bitte zuerst ein Spiel wählen.');
+    this.seatQueued();
     // Freie Plätze bleiben weg, solange genug Spieler übrig sind – bei 30 Plätzen fürs Bingo muss
     // die Raumleitung so nicht genau abzählen, wer mitspielt. Bei Spielen mit laufendem Einstieg
     // (z. B. Poker) bleiben freie Plätze am Tisch erhalten, damit Nachzügler einsteigen können.
@@ -998,6 +1070,7 @@ export class Room {
     const emptyIndices = module.info.joinMidGame
       ? seats.map((s, i) => (s.kind === 'human' && s.memberId === null ? i : -1)).filter((i) => i >= 0)
       : [];
+    this.clearAfter();
     if (this.game) {
       this.lastVersion = this.gameVersion();
       this.game.unsubscribe();
@@ -1055,6 +1128,7 @@ export class Room {
     if (finished && this.phase === 'playing') {
       this.phase = 'finished';
       this.seriesGameOver();
+      this.openAfter();
       this.broadcastRoom();
     }
     this.broadcastGame(change.events);
@@ -1076,6 +1150,7 @@ export class Room {
   }
 
   private endGame(): void {
+    this.clearAfter();
     this.lastVersion = this.gameVersion();
     if (this.game) {
       this.game.unsubscribe();
@@ -1220,6 +1295,230 @@ export class Room {
     if (this.hostId === member.id) this.hostId = [...this.members.values()].find((m) => m.disconnectedAt === null)?.id ?? this.members.keys().next().value ?? null;
     this.broadcastRoom();
     this.settleTakeBack();
+    if (this.after) {
+      delete this.after.votes[member.id];
+      delete this.after.proposals[member.id];
+      delete this.after.picks[member.id];
+      this.settleAfter();
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Mitspielen ab der nächsten Runde (#299)
+
+  /** Dürfen Zuschauer anfragen? Standard: in öffentlichen Räumen ja, in privaten nein. */
+  private requestsOpen(): boolean {
+    return !this.match && (this.lobby.acceptRequests ?? this.lobby.isPublic);
+  }
+
+  /** Läuft eine Partie, in der neue Spieler ab der nächsten Runde dazukommen können? Nicht bei fester Spielerzahl. */
+  private joinOffered(): boolean {
+    const module = this.game?.module;
+    if (!module || this.phase === 'lobby' || !this.requestsOpen()) return false;
+    // Poker u. a. lassen Neue schon mitten in der Partie an den Tisch (`joinSeat`).
+    return !module.info.joinMidGame && module.info.players.max > module.info.players.min;
+  }
+
+  private answerJoin(target: Member, ok: boolean): void {
+    if (ok) {
+      target.join = 'queued';
+      target.joinAt = this.deps.now();
+      return;
+    }
+    delete target.join;
+    delete target.joinAt;
+    target.declinedUntil = this.deps.now() + JOIN_DENIED_MS;
+    for (const connection of target.connections) this.deps.send(connection, { type: 'joinDenied' });
+  }
+
+  /**
+   * Vorgemerkte bekommen der Reihe nach einen freien Platz, bei Bedarf werden neue geöffnet (bis zum Maximum des Spiels).
+   * Wer keinen Platz findet, bleibt vorgemerkt (Warteliste).
+   */
+  private seatQueued(): void {
+    const module = this.lobbyModule();
+    if (!module || this.match) return;
+    const cap = Math.min(module.info.players.max, MAX_SEATS);
+    const queued = [...this.members.values()].filter((m) => m.join === 'queued').sort((a, b) => (a.joinAt ?? 0) - (b.joinAt ?? 0));
+    for (const member of queued) {
+      if (this.lobby.seats.some((s) => s.kind === 'human' && s.memberId === member.id)) {
+        delete member.join;
+        delete member.joinAt;
+        continue;
+      }
+      if (member.disconnectedAt !== null) continue;
+      let index = this.lobby.seats.findIndex((s) => s.kind === 'human' && s.memberId === null);
+      if (index < 0 && this.lobby.seats.length < cap) {
+        this.lobby.seats.push({ kind: 'human', memberId: null });
+        index = this.lobby.seats.length - 1;
+      }
+      if (index < 0) break;
+      this.lobby.seats[index] = { ...this.lobby.seats[index]!, kind: 'human', memberId: member.id };
+      delete member.join;
+      delete member.joinAt;
+    }
+    this.applyTeams();
+  }
+
+  // -------------------------------------------------------------------------
+  // Rundenende: Nochmal, anderes Spiel oder Aussteigen (#298)
+
+  /** Bei zwei besetzten Plätzen die Plätze tauschen (Revanche mit Farbwechsel). */
+  private swapTwoSeats(): void {
+    const activeSeats = this.lobby.seats.filter((s) => s.kind === 'bot' || s.memberId !== null);
+    if (activeSeats.length !== 2) return;
+    const firstIndex = this.lobby.seats.findIndex((s) => s.kind === 'bot' || s.memberId !== null);
+    const secondIndex = this.lobby.seats.findIndex((s, i) => i > firstIndex && (s.kind === 'bot' || s.memberId !== null));
+    if (firstIndex < 0 || secondIndex < 0) return;
+    const temp = this.lobby.seats[firstIndex]!;
+    this.lobby.seats[firstIndex] = this.lobby.seats[secondIndex]!;
+    this.lobby.seats[secondIndex] = temp;
+  }
+
+  /** Stellt ein Spiel in der Lobby ein: Plätze bleiben, Optionen gehen auf die Standardwerte. */
+  private applyGame(module: AnyGameModule): void {
+    const { min, max } = module.info.players;
+    // Bei Klassen-Simultanspielen (Bingo, Zielzahl, Rechenmauer) gleich 30 Plätze öffnen, bei Spielen mit laufendem Einstieg (Poker) 6 Plätze.
+    const gameId = module.info.id;
+    const isClassGame = gameId === 'bingo' || gameId === 'target-number' || gameId === 'number-wall';
+    const defaultSeats = isClassGame ? Math.min(max, MAX_SEATS) : module.info.joinMidGame ? Math.min(max, 6) : min;
+    const count = Math.min(Math.min(max, MAX_SEATS), Math.max(defaultSeats, this.lobby.seats.length));
+    this.lobby = { ...this.lobby, gameId, options: resolveOptions(module), seats: this.resizeSeats(count) };
+    this.applyTeams();
+  }
+
+  /** Menschen mit Platz in der Partie, die gerade verbunden sind – nur sie stimmen ab. */
+  private afterVoters(): string[] {
+    const ids = this.game?.seatMembers ?? [];
+    const seated = ids.filter((id): id is string => id !== null && this.members.get(id)?.disconnectedAt === null);
+    // Wer fürs nächste Mal vorgemerkt ist, spielt mit und stimmt mit ab (#299).
+    const queued = [...this.members.values()].filter((m) => m.join === 'queued' && m.disconnectedAt === null).map((m) => m.id);
+    return [...seated, ...queued];
+  }
+
+  /** Verbundene Vorgemerkte – sie bekommen in der nächsten Runde einen Platz. */
+  private queuedCount(): number {
+    return [...this.members.values()].filter((m) => m.join === 'queued' && m.disconnectedAt === null).length;
+  }
+
+  private openAfter(): void {
+    if (this.match || !this.game || this.afterVoters().length < 2) return;
+    this.after = { round: this.game.round, deadline: this.deps.now() + AFTER_GAME_MS, votes: {}, proposals: {}, picks: {} };
+    this.broadcastAfter();
+  }
+
+  private clearAfter(): void {
+    if (!this.after) return;
+    this.after = null;
+    this.broadcastAfter();
+  }
+
+  /** Darf dieses Spiel jetzt zur Wahl stehen? (Anderes Spiel, online angeboten, passt zu Plätzen und Menschen.) */
+  private afterCandidateOk(gameId: string): boolean {
+    const module = this.deps.findGame(gameId);
+    if (!module || module.info.draft || gameId === this.game?.module.info.id) return false;
+    const occupied = this.lobby.seats.filter((s) => s.kind === 'bot' || s.memberId !== null);
+    const queued = this.queuedCount();
+    const humans = occupied.filter((s) => s.kind === 'human').length + queued;
+    const { min, max } = module.info.players;
+    return occupied.length + queued >= min && occupied.length + queued <= max && humans >= (module.info.minHumans ?? 1);
+  }
+
+  private afterCandidates(after: AfterGameState): string[] {
+    return [...new Set(Object.values(after.proposals))].filter((id) => this.afterCandidateOk(id));
+  }
+
+  private afterMessage(connectionId: string, member: Member, message: Extract<ClientMessage, { type: 'afterVote' | 'afterPropose' | 'afterPick' }>): void {
+    const after = this.after;
+    if (!after || !this.afterVoters().includes(member.id)) return this.error(connectionId, 'notAllowed', 'Gerade läuft keine Abstimmung für dich.');
+    if (message.type === 'afterVote') {
+      after.votes[member.id] = message.choice;
+    } else if (message.type === 'afterPropose') {
+      const candidates = this.afterCandidates(after);
+      if (!this.afterCandidateOk(message.gameId)) return this.error(connectionId, 'notAllowed', 'Dieses Spiel passt gerade nicht.');
+      if (!candidates.includes(message.gameId) && candidates.length >= AFTER_MAX_CANDIDATES && !Object.entries(after.proposals).some(([id, game]) => id === member.id && !Object.entries(after.proposals).some(([other, g]) => other !== id && g === game))) {
+        return this.error(connectionId, 'notAllowed', 'Es stehen schon genug Spiele zur Wahl.');
+      }
+      after.proposals[member.id] = message.gameId;
+      after.picks[member.id] = message.gameId;
+      after.votes[member.id] = 'other';
+    } else {
+      if (message.gameId !== AFTER_RANDOM && !this.afterCandidates(after).includes(message.gameId)) return this.error(connectionId, 'notAllowed', 'Dieses Spiel steht nicht zur Wahl.');
+      after.picks[member.id] = message.gameId;
+      after.votes[member.id] = 'other';
+    }
+    this.settleAfter();
+  }
+
+  /** Entscheidet, sobald alle abgestimmt haben oder die Frist um ist; sonst schickt es den Zwischenstand. */
+  private settleAfter(deadlineReached = false): void {
+    const after = this.after;
+    if (!after) return;
+    const voters = this.afterVoters();
+    const voted = voters.filter((id) => after.votes[id] !== undefined);
+    if (voters.length === 0 || (deadlineReached && voted.length === 0)) return this.clearAfter();
+    if (!deadlineReached && voted.length < voters.length) return this.broadcastAfter();
+    const again = voted.filter((id) => after.votes[id] === 'again').length;
+    const other = voted.length - again;
+    // Gleichstand: Nochmal (die kleinste Änderung).
+    if (other > again && this.resolveOtherGame(after, voted)) return;
+    this.clearAfter();
+    this.swapTwoSeats();
+    this.start('');
+  }
+
+  /** Das gewählte andere Spiel einstellen und zurück in die Lobby. false, wenn keins zur Wahl steht. */
+  private resolveOtherGame(after: AfterGameState, voted: string[]): boolean {
+    const candidates = this.afterCandidates(after);
+    const tally = new Map<string, number>();
+    for (const id of voted) {
+      const pick = after.votes[id] === 'other' ? after.picks[id] : undefined;
+      if (pick && (pick === AFTER_RANDOM || candidates.includes(pick))) tally.set(pick, (tally.get(pick) ?? 0) + 1);
+    }
+    const best = Math.max(0, ...tally.values());
+    const leaders = best > 0 ? [...tally].filter(([, n]) => n === best).map(([id]) => id) : candidates.length > 0 ? candidates : [AFTER_RANDOM];
+    const random = this.deps.random ?? Math.random;
+    let gameId = leaders[Math.floor(random() * leaders.length)] ?? AFTER_RANDOM;
+    if (gameId === AFTER_RANDOM) {
+      const pool = (this.deps.listGames?.() ?? []).map((m) => m.info.id).filter((id) => this.afterCandidateOk(id));
+      const choice = pool[Math.floor(random() * pool.length)];
+      if (choice === undefined) return false;
+      gameId = choice;
+    }
+    const module = this.deps.findGame(gameId);
+    if (!module) return false;
+    // Besetzte Plätze rücken zusammen, damit beim kleineren Spiel niemand abgeschnitten wird.
+    this.lobby.seats = this.lobby.seats.filter((s) => s.kind === 'bot' || s.memberId !== null);
+    this.endGame();
+    this.applyGame(module);
+    this.seatQueued();
+    this.broadcastRoom();
+    return true;
+  }
+
+  private afterInfo(connectionId: string): AfterGameInfo | null {
+    const after = this.after;
+    if (!after) return null;
+    const voters = this.afterVoters();
+    const voted = voters.filter((id) => after.votes[id] !== undefined);
+    const again = voted.filter((id) => after.votes[id] === 'again').length;
+    const memberId = this.connections.get(connectionId);
+    const canVote = Boolean(memberId && voters.includes(memberId));
+    const candidates = this.afterCandidates(after).map((gameId) => ({ gameId, votes: voted.filter((id) => after.votes[id] === 'other' && after.picks[id] === gameId).length }));
+    candidates.push({ gameId: AFTER_RANDOM, votes: voted.filter((id) => after.votes[id] === 'other' && after.picks[id] === AFTER_RANDOM).length });
+    const choice = memberId ? after.votes[memberId] : undefined;
+    const pick = memberId ? after.picks[memberId] : undefined;
+    const proposed = memberId ? after.proposals[memberId] : undefined;
+    const you = { ...(choice ? { choice } : {}), ...(pick ? { pick } : {}), ...(proposed ? { proposed } : {}) };
+    return { round: after.round, deadline: after.deadline, serverNow: this.deps.now(), voters: voters.length, voted: voted.length, again, other: voted.length - again, candidates, ...(canVote ? { you } : {}), canVote };
+  }
+
+  private sendAfter(connectionId: string): void {
+    this.deps.send(connectionId, { type: 'afterGame', after: this.afterInfo(connectionId) });
+  }
+
+  private broadcastAfter(): void {
+    for (const [connection, memberId] of this.connections) if (memberId || this.displays.has(connection)) this.sendAfter(connection);
   }
 
   // -------------------------------------------------------------------------
@@ -1335,7 +1634,7 @@ export class Room {
   }
 
   private roomMessage(): RoomMessage {
-    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, ...(m.crest ? { crest: m.crest } : {}), connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}) }));
+    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, ...(m.crest ? { crest: m.crest } : {}), connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}), ...(m.join ? { join: m.join } : {}) }));
     const series = this.match?.series;
     const match = this.match
       ? { tournament: this.match.config.tournament, label: this.match.config.label, noShow: this.match.noShow !== null, ...(series ? { series: { bestOf: series.bestOf, score: this.seriesScoreBySeat(series), next: series.nextAt, done: series.winner !== undefined } } : {}) }
