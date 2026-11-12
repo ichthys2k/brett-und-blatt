@@ -47,6 +47,10 @@ type BlackPeterMove = { type: 'draw'; index: number } | { type: 'shuffle' };
 - Abgelegte Paare in der Mitte.
 - Beim Hot-Seat kommt vor jedem Zug der Übergabe-Bildschirm.
 
+## Lernpakete (Anki, #101)
+
+Das Paket kommt aus der Sammlung im Pass („Paket = Stapel“, Option `pack`); mit „Fällige Karten bevorzugen“ steht Fälliges vorn. Schwarzer Peter meldet **keine** Ergebnisse ans Lernbuch zurück. Siehe #101, L6 (#223).
+
 ## Tests
 
 - Austeilen: jede Karte genau einmal, Paare sofort abgelegt.
