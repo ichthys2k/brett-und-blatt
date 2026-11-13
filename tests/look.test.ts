@@ -51,3 +51,28 @@ describe('Aussehen Taverne: Kontraste nach WCAG AA', () => {
     }
   }
 });
+
+/**
+ * Gemessene dunkelste und hellste Stellen der übernommenen Tischtexturen (#313).
+ * Garantiert, dass Schrift überall auf der gemalten Fläche WCAG AA (≥ 4,5:1) erreicht.
+ */
+const TEXTURE_EXTREMES: Record<string, { theme: 'hell' | 'dunkel'; min: string; max: string }> = {
+  'oak-light': { theme: 'hell', min: '#c3a977', max: '#f1d9a8' },
+  'walnut-light': { theme: 'hell', min: '#cfb18b', max: '#dfc39d' },
+  'green-felt-light': { theme: 'hell', min: '#b4c1a6', max: '#c0ceae' },
+  'oak-dark': { theme: 'dunkel', min: '#261609', max: '#352818' },
+  'walnut-dark': { theme: 'dunkel', min: '#19100f', max: '#34251d' },
+};
+
+describe('Tischtexturen: Kontraste an dunkelster und hellster Stelle (#313)', () => {
+  for (const [name, info] of Object.entries(TEXTURE_EXTREMES)) {
+    const block = info.theme === 'hell' ? blocks[0]! : blocks[1]!;
+    it(`${name}: color-ink auf dunkelster Stelle (${info.min}) erreicht mindestens 4,5:1`, () => {
+      expect(contrast(block['color-ink']!, info.min)).toBeGreaterThanOrEqual(4.5);
+    });
+    it(`${name}: color-ink auf hellster Stelle (${info.max}) erreicht mindestens 4,5:1`, () => {
+      expect(contrast(block['color-ink']!, info.max)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+});
+

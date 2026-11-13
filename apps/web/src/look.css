@@ -68,34 +68,34 @@
   font-family: Almendra, Georgia, 'Noto Serif', serif;
 }
 
-/* Fläche um das Spielfeld je Raum. Hell und ruhig, weil viele Spiele direkt darauf schreiben. */
-[data-look='tavern'] .bub-table[data-category='board'] {
-  background: repeating-linear-gradient(0deg, transparent 0 22px, var(--tavern-grain) 22px 24px), var(--tavern-table-board);
+/* Fläche um das Spielfeld je Raum (#313). Gemalte Kacheltexturen mit Farb-Rückfall. */
+[data-look='tavern'] .bub-table[data-category='board'],
+[data-look='tavern'][data-table='oak'] .bub-table {
+  background: url('./assets/tische/oak-light.webp') repeat, var(--tavern-table-oak);
+  background-size: 256px 256px;
 }
 
-[data-look='tavern'] .bub-table[data-category='cards'] {
-  background: var(--tavern-table-cards);
+[data-look='tavern'] .bub-table[data-category='cards'],
+[data-look='tavern'][data-table='green-felt'] .bub-table {
+  background: url('./assets/tische/green-felt-light.webp') repeat, var(--tavern-table-green-felt);
+  background-size: 256px 256px;
 }
 
 [data-look='tavern'] .bub-table[data-category='family'] {
-  background: repeating-linear-gradient(0deg, transparent 0 22px, var(--tavern-grain) 22px 24px), var(--tavern-table-family);
+  background: url('./assets/tische/oak-light.webp') repeat, var(--tavern-table-family);
+  background-size: 256px 256px;
+  background-blend-mode: multiply;
 }
 
 [data-look='tavern'] .bub-table[data-category='math'] {
-  background: var(--tavern-table-math);
-}
-
-/* Fest gewählte Tischoberfläche (#107) überschreibt die Rubrik-Zuordnung */
-[data-look='tavern'][data-table='oak'] .bub-table {
-  background: repeating-linear-gradient(0deg, transparent 0 22px, var(--tavern-grain) 22px 24px), var(--tavern-table-oak);
+  background: url('./assets/tische/oak-light.webp') repeat, var(--tavern-table-math);
+  background-size: 256px 256px;
+  background-blend-mode: multiply;
 }
 
 [data-look='tavern'][data-table='walnut'] .bub-table {
-  background: repeating-linear-gradient(0deg, transparent 0 16px, var(--tavern-grain) 16px 18px), var(--tavern-table-walnut);
-}
-
-[data-look='tavern'][data-table='green-felt'] .bub-table {
-  background: radial-gradient(ellipse at center, transparent 40%, rgb(0 0 0 / 0.04) 100%), var(--tavern-table-green-felt);
+  background: url('./assets/tische/walnut-light.webp') repeat, var(--tavern-table-walnut);
+  background-size: 256px 256px;
 }
 
 [data-look='tavern'][data-table='red-felt'] .bub-table {
@@ -109,6 +109,90 @@
 [data-look='tavern'][data-table='marble'] .bub-table {
   background: repeating-linear-gradient(115deg, transparent 0 44px, var(--tavern-grain) 44px 46px), var(--tavern-table-marble);
 }
+
+@media (prefers-color-scheme: dark) {
+  [data-look='tavern'] .bub-table[data-category='board'],
+  [data-look='tavern'][data-table='oak'] .bub-table {
+    background: url('./assets/tische/oak-dark.webp') repeat, var(--tavern-table-oak);
+    background-size: 256px 256px;
+  }
+
+  [data-look='tavern'] .bub-table[data-category='cards'],
+  [data-look='tavern'][data-table='green-felt'] .bub-table {
+    background: radial-gradient(ellipse at center, transparent 40%, rgb(0 0 0 / 0.04) 100%), var(--tavern-table-green-felt);
+  }
+
+  [data-look='tavern'] .bub-table[data-category='family'] {
+    background: url('./assets/tische/oak-dark.webp') repeat, var(--tavern-table-family);
+    background-size: 256px 256px;
+    background-blend-mode: multiply;
+  }
+
+  [data-look='tavern'] .bub-table[data-category='math'] {
+    background: url('./assets/tische/oak-dark.webp') repeat, var(--tavern-table-math);
+    background-size: 256px 256px;
+    background-blend-mode: multiply;
+  }
+
+  [data-look='tavern'][data-table='walnut'] .bub-table {
+    background: url('./assets/tische/walnut-dark.webp') repeat, var(--tavern-table-walnut);
+    background-size: 256px 256px;
+  }
+}
+
+/* Erhöhter Kontrast oder Datensparmodus: nur schlichte Farbe (#313) */
+@media (prefers-contrast: more), (prefers-reduced-data: reduce) {
+  [data-look='tavern'] .bub-table {
+    background-image: none !important;
+  }
+}
+
+/* Vorschau der Tischflächen in den Einstellungen (#/ton) */
+.bub-table-preview {
+  display: inline-block;
+  width: 2.25rem;
+  height: 1.5rem;
+  flex: none;
+  border-radius: 0.35rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface-2);
+}
+
+[data-look='tavern'] .bub-table-preview[data-surface='auto'],
+[data-look='tavern'] .bub-table-preview[data-surface='oak'] {
+  background: url('./assets/tische/oak-light.webp') repeat, var(--tavern-table-oak);
+  background-size: 64px 64px;
+}
+[data-look='tavern'] .bub-table-preview[data-surface='walnut'] {
+  background: url('./assets/tische/walnut-light.webp') repeat, var(--tavern-table-walnut);
+  background-size: 64px 64px;
+}
+[data-look='tavern'] .bub-table-preview[data-surface='green-felt'] {
+  background: url('./assets/tische/green-felt-light.webp') repeat, var(--tavern-table-green-felt);
+  background-size: 64px 64px;
+}
+[data-look='tavern'] .bub-table-preview[data-surface='red-felt'] {
+  background: var(--tavern-table-red-felt);
+}
+[data-look='tavern'] .bub-table-preview[data-surface='slate'] {
+  background: var(--tavern-table-slate);
+}
+[data-look='tavern'] .bub-table-preview[data-surface='marble'] {
+  background: var(--tavern-table-marble);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-look='tavern'] .bub-table-preview[data-surface='auto'],
+  [data-look='tavern'] .bub-table-preview[data-surface='oak'] {
+    background: url('./assets/tische/oak-dark.webp') repeat, var(--tavern-table-oak);
+    background-size: 64px 64px;
+  }
+  [data-look='tavern'] .bub-table-preview[data-surface='walnut'] {
+    background: url('./assets/tische/walnut-dark.webp') repeat, var(--tavern-table-walnut);
+    background-size: 64px 64px;
+  }
+}
+
 
 
 /* Lobby: Tische mit Holzkante, das Tischzeichen auf grünem Filz */
