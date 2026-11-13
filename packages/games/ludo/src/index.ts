@@ -12,6 +12,7 @@ import {
   type LudoMove,
   type LudoState,
 } from './rules';
+import { describeMove } from './describe';
 
 export * from './rules';
 export * from './bots';
@@ -83,6 +84,7 @@ export const gameModule: GameModule<LudoState, LudoMove> = {
   legalMoves,
   applyMove,
   playerView,
+  describeMove,
   result,
   timeoutMove,
   bots: [ludoBot, ...generalBots<LudoState, LudoMove, LudoState>()],

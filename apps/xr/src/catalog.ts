@@ -4,7 +4,22 @@
  */
 import { CARD_GAMES } from './scene/card-views';
 
-export const BOARD_GAMES = ['tic-tac-toe', 'four-in-a-row', 'chess', 'checkers', 'mill', 'reversi', 'gomoku', 'go'] as const;
+export const BOARD_GAMES = [
+  'tic-tac-toe',
+  'four-in-a-row',
+  'chess',
+  'checkers',
+  'mill',
+  'reversi',
+  'gomoku',
+  'go',
+  'ultimate-tic-tac-toe',
+  'factor-grid',
+  'battleship',
+  'four-player-chess',
+  'chinese-checkers',
+  'ludo',
+] as const;
 export type BoardGameId = (typeof BOARD_GAMES)[number];
 
 export function isBoardGame(id: string | null | undefined): id is BoardGameId {

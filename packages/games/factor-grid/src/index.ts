@@ -17,6 +17,7 @@ import {
   type FactorVariant,
   type LastAction,
 } from './rules';
+import { describeMove } from './describe';
 
 export type { FactorGridMove, FactorGridState, FactorVariant, LastAction };
 export { freeChainNeighbors, freeProperDivisors, validNumbers };
@@ -56,6 +57,7 @@ export const gameModule: GameModule<FactorGridState, FactorGridMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   bots: [factorGridBot],
 };
