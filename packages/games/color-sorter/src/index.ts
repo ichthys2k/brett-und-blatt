@@ -5,6 +5,7 @@ import { meta } from './meta';
 import { applyMove, currentPlayers, eventView, isLegal, legalMoves, playerView, result, setup } from './rules';
 import { prepare } from './server';
 import type { SorterMove, SorterState } from './types';
+import { describeMove } from './describe';
 
 export type * from './types';
 export * from './cards';
@@ -108,6 +109,7 @@ export const gameModule: GameModule<SorterState, SorterMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   eventView,
   result,
   bots: [sorterBot],

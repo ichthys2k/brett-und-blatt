@@ -19,6 +19,7 @@ import {
   type GrafschaftMove,
   type GrafschaftState,
 } from './rules';
+import { describeMove } from './describe';
 
 export type { GrafschaftMove, GrafschaftState, Landscape, PlacedTile, QuestDef, Tile } from './rules';
 export { checkQuestCondition, getNeighbors, hexDistance, hexKey, parseHexKey };
@@ -60,6 +61,7 @@ export const gameModule: GameModule<GrafschaftState, GrafschaftMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   sampleHidden,
   result,
   evaluate,

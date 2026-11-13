@@ -16,6 +16,7 @@ import {
   type WolvesSheepMove,
   type WolvesSheepState,
 } from './rules';
+import { describeMove } from './describe';
 
 export type { Departure, DepartureCause, ElectionRecord, Examination, PendingAction, Phase, Role, RolesInPlay, VoteRecord, WolvesSheepMove, WolvesSheepState } from './rules';
 export { buildDeck, livingSeats, nightTargets, partnerOf, speakerOf, wolfCount } from './rules';
@@ -117,6 +118,7 @@ export const gameModule: GameModule<WolvesSheepState, WolvesSheepMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   resignMove,
   systemDelayMs,

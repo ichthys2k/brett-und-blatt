@@ -13,6 +13,7 @@ import {
   type TurnipMove,
   type TurnipState,
 } from './rules';
+import { describeMove } from './describe';
 
 export * from './rules';
 export * from './bots';
@@ -62,6 +63,7 @@ export const gameModule: GameModule<TurnipState, TurnipMove> = {
   legalMoves,
   applyMove,
   playerView,
+  describeMove,
   result,
   timeoutMove,
   sampleHidden,

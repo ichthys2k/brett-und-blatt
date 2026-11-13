@@ -2,6 +2,7 @@ import { generalBots, type GameModule, type OptionSpec } from '@brett-und-blatt/
 import { kraemerBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, eventView, isLegal, legalMoves, playerView, result, sampleHidden, setup, timeoutMove, worth, type MarketMove, type MarketState, type MarketView } from './rules';
+import { describeMove } from './describe';
 
 export * from './rules';
 export { kraemerBot } from './bots';
@@ -85,6 +86,7 @@ export const gameModule: GameModule<MarketState, MarketMove, MarketView> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   timeoutMove,

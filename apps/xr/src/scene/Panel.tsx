@@ -79,7 +79,8 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice
   const [confirmReport, setConfirmReport] = useState(false);
   const [, redraw] = useState(0);
   useEffect(() => onVolumeChange(() => redraw((n) => n + 1)), []);
-  const beside = Boolean(game && !game.result && isBoardGame(game.gameId));
+  // Während der Partie rückt das Fenster zur Seite, damit Brett oder Spieltafel frei bleiben (#358); nur beim Kartentisch bleibt es mittig.
+  const beside = Boolean(game && !game.result && !isCardGame(game.gameId));
   const position = beside ? SIDE_POS : CENTER_POS;
   const rotation = beside ? SIDE_ROT : CENTER_ROT;
   if (!room) return <Sign lines={['Verbinde …']} position={CENTER_POS} rotation={CENTER_ROT} width={0.5} height={0.08} />;
@@ -141,6 +142,12 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice
         { label: '◀', press: () => step(-1) },
         { label: lobby.gameId ? gameName(lobby.gameId) : 'Spiel wählen', press: () => step(lobby.gameId ? 1 : 0), active: true },
         { label: '▶', press: () => step(1) },
+      ]);
+      // Über 50 Spiele: in Zehnerschritten blättern (#358).
+      rows.push([
+        { label: '⏪ 10 zurück', press: () => step(-10) },
+        { label: GAME_CHOICES.find((g) => g.id === lobby.gameId)?.board ? 'in 3D' : 'mit Spieltafel', press: () => {}, disabled: true },
+        { label: '10 vor ⏩', press: () => step(10) },
       ]);
       rows.push([
         { label: '− Platz', press: () => send({ type: 'setSeatCount', count: lobby.seats.length - 1 }) },

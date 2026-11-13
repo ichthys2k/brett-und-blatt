@@ -2,6 +2,7 @@ import { generalBots, type BotDefinition, type BotLevel, type GameModule } from 
 import { faceOf, PAIR_SETS } from './content';
 import { meta } from './meta';
 import { applyMove, currentPlayers, legalMoves, playerView, result, sampleHidden, setup, type Face, type PairsMove, type PairsState } from './rules';
+import { describeMove } from './describe';
 
 export type { CardStatus, Face, PairsMove, PairsState } from './rules';
 export { faceOf, PAIR_SETS };
@@ -103,6 +104,7 @@ export const gameModule: GameModule<PairsState, PairsMove> = {
   legalMoves,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [pairsBot, ...generalBots<PairsState, PairsMove, PairsState>()],

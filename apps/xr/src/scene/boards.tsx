@@ -24,19 +24,31 @@ const YELLOW = '#e6b450';
 export function boardMoveIndexes(gameId: string, moves: unknown[]): Set<number> {
   const handled = new Set<number>();
   moves.forEach((m, i) => {
-    const t = (m as { type?: string }).type;
+    const t = (m as { type?: string; t?: string }).type ?? (m as { t?: string }).t;
     if (gameId === 'tic-tac-toe' && t === 'place') handled.add(i);
     if (gameId === 'four-in-a-row' && (t === 'drop' || t === 'pop')) handled.add(i);
     if (gameId === 'chess' && t === 'move') handled.add(i);
     if ((gameId === 'reversi' || gameId === 'gomoku' || gameId === 'go') && t === 'place') handled.add(i);
     if (gameId === 'checkers' && t === 'move') handled.add(i);
     if (gameId === 'mill' && (t === 'place' || t === 'move')) handled.add(i);
+    if (gameId === 'ultimate-tic-tac-toe' && t === 'place') handled.add(i);
+    if (gameId === 'factor-grid' && t === 'pick') handled.add(i);
+    if (gameId === 'battleship' && t === 'shoot') handled.add(i);
+    if (gameId === 'four-player-chess' && t === 'm') handled.add(i);
+    if (gameId === 'chinese-checkers' && t === 'move') handled.add(i);
+    if (gameId === 'ludo' && (t === 'roll' || t === 'move')) handled.add(i);
+    if (gameId === 'dominoes' && (t === 'play' || t === 'draw')) handled.add(i);
+    if ((gameId === 'scrabble' || gameId === 'color-and-shape' || gameId === 'grafschaft') && (t === 'play' || t === 'place')) handled.add(i);
+    if (gameId === 'kniffel' && (t === 'roll' || t === 'hold' || t === 'unhold' || t === 'toggleHold')) handled.add(i);
+    if (gameId === 'maexle' && t === 'roll') handled.add(i);
+    if (gameId === 'pairs' && t === 'flip') handled.add(i);
+    if (gameId === 'low-flight' && (t === 'draw' || t === 'takeDiscard' || t === 'reveal' || t === 'swap' || t === 'flip')) handled.add(i);
   });
   return handled;
 }
 
 /** Ein leuchtendes Ziel auf dem Brett: Zeigen, Antippen oder Greifen löst den Zug aus. */
-function Target({ position, size, onPress, label }: { position: [number, number, number]; size: number; onPress: () => void; label?: string }) {
+export function Target({ position, size, onPress, label }: { position: [number, number, number]; size: number; onPress: () => void; label?: string }) {
   const [hover, setHover] = useState(false);
   return (
     <mesh
@@ -59,7 +71,7 @@ function Target({ position, size, onPress, label }: { position: [number, number,
   );
 }
 
-function Plate({ size, children, color = '#7a5230' }: { size: [number, number]; children?: ReactNode; color?: string }) {
+export function Plate({ size, children, color = '#7a5230' }: { size: [number, number]; children?: ReactNode; color?: string }) {
   return (
     <group position={[TABLE_CENTER[0], TOP, TABLE_CENTER[2]]}>
       <mesh position={[0, 0.008, 0]}>
@@ -236,8 +248,8 @@ function parsePlacement(fen: string): Map<string, { type: string; white: boolean
   return pieces;
 }
 
-function Piece({ type, white }: { type: string; white: boolean }) {
-  const color = white ? IVORY : EBONY;
+export function Piece({ type, white, tint }: { type: string; white: boolean; tint?: string }) {
+  const color = tint ?? (white ? IVORY : EBONY);
   const mat = <meshStandardMaterial color={color} roughness={0.45} metalness={0.05} />;
   const body = type === 'p' ? 0.028 : type === 'k' || type === 'q' ? 0.05 : 0.04;
   return (

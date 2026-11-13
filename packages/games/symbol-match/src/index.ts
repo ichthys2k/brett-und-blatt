@@ -3,6 +3,7 @@ import { symbolMatchBot } from './bots';
 import { SYMBOL_SETS } from './deck';
 import { meta } from './meta';
 import { MODES, applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type SymbolMatchMove, type SymbolMatchState, type SymbolMatchView } from './rules';
+import { describeMove } from './describe';
 
 export type { SymbolMatchMove, SymbolMatchState, SymbolMatchView } from './rules';
 
@@ -51,6 +52,7 @@ export const gameModule: GameModule<SymbolMatchState, SymbolMatchMove, SymbolMat
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [symbolMatchBot],

@@ -24,6 +24,7 @@ import {
   type TargetNumberMove,
   type TargetNumberState,
 } from './rules';
+import { describeMove } from './describe';
 
 export type { AllowedOps, CalcStep, EvalItem, MathOp, RoundSummary, TargetMode, TargetNumberMove, TargetNumberState };
 export { allowedOpList, applySingleStep, findCandidateMoves, scoreSubmission, simulateSteps };
@@ -75,6 +76,7 @@ export const gameModule: GameModule<TargetNumberState, TargetNumberMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   sampleHidden,
   result,
   bots: [targetNumberBot],

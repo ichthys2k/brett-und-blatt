@@ -2,6 +2,7 @@ import { deckStyleOption, teamOption, type GameModule } from '@brett-und-blatt/e
 import { binokelBot } from './bot/index';
 import { meta } from './meta';
 import { applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type BinokelMove, type BinokelState } from './rules';
+import { describeMove } from './describe';
 
 export { activeSeats, teamOf } from './rules';
 export type { BinokelMove, BinokelPhase, BinokelState, RoundResult } from './rules';
@@ -84,6 +85,7 @@ export const gameModule: GameModule<BinokelState, BinokelMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [binokelBot],

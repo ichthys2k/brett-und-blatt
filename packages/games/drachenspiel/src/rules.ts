@@ -49,6 +49,7 @@ import type {
 } from './types';
 import { bots } from './bots';
 import { prepare } from './server';
+import { describeMove } from './describe';
 
 export const options: OptionSpec[] = [
   {
@@ -1132,6 +1133,7 @@ export const drachenspiel: GameModule<DrachenspielState, DrachenspielMove, Drach
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   timeoutMove,
   sampleHidden,

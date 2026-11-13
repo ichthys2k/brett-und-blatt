@@ -3,6 +3,7 @@ import { quartettBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, legalMoves, playerView, result, sampleHidden, setup, type QuartettMove, type QuartettState } from './rules';
 import { CARD_SETS, SET_IDS } from './sets';
+import { describeMove } from './describe';
 
 export type { Ask, Play, QuartettMode, QuartettMove, QuartettState, StackCard, Trick } from './rules';
 export { askTargets, askableCards, cardsInPlay, collectKnowledge, setOf } from './rules';
@@ -62,6 +63,7 @@ export const gameModule: GameModule<QuartettState, QuartettMove> = {
   legalMoves,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [quartettBot, ...generalBots<QuartettState, QuartettMove, QuartettState>()],
