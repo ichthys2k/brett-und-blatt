@@ -1,7 +1,7 @@
 {
   "beschreibung": "Issue #73: Feldgrafiken und Fachwerk-Zunfthäuser für das Handelsspiel Marktplatz (14 Motive: 6 Zünfte, 4 Gemeinschaftsbetriebe, 4 Eckfelder). Stilvorlage sind die Narrenhof-Ölgemälde und Fabeltier-Geschichten aus Reineke Fuchs.",
   "stil": "A quaint medieval half-timbered guild house or scene in the fantasy animal kingdom of Brezelbach. Classic oil painting and storybook fairy tale style, Goethe Reineke Fuchs aesthetic. Warm lighting, rich textures, charming details, square format, no text, no modern elements.",
-  "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, modern technology, cars, asphalt",
+  "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, modern technology, cars, asphalt, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "referenzen": [
     "packages/games/marketplace/src/ui/figures/herald.webp",
     "packages/games/marketplace/src/ui/figures/innkeeper.webp"

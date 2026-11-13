@@ -53,3 +53,37 @@ describe('Originale-Archiv', () => {
     expect(new Set(list.dateien).size).toBe(list.dateien.length);
   });
 });
+
+/*
+ * Kein Alkohol, kein Tabak, keine Drogen (Stilbibel Abschnitt 1, Cornelius 13.11.2026): Jedes
+ * Manifest verbietet sie im Feld `ohne`, und kein Prompt bestellt sie.
+ */
+type Motif = { id: string; prompt?: string; stil?: string; ohne?: string };
+type Manifest = { stil?: string; ohne?: string; motive?: Motif[] };
+const manifests = import.meta.glob<Manifest>('../scripts/grafik/manifeste/*.json', { eager: true, import: 'default' });
+const ASKS_FOR_INTOXICANTS = /\b(beer|ale|tankards?|liquor|spirits|cider|mead|schnapps|tobacco|cigars?|cigarettes?|drunk\w*|smoking pipes?|(red|white) wine|wine (glass|glasses|bottles?)|(glass|goblet|bottle|cup) of wine)\b/i;
+
+describe('Grafik-Manifeste', () => {
+  it('jedes Feld ohne verbietet Alkohol, Tabak und Drogen', () => {
+    const missing: string[] = [];
+    for (const [path, manifest] of Object.entries(manifests)) {
+      const name = path.split('/').pop()!;
+      for (const [where, ohne] of [['Manifest', manifest.ohne] as const, ...(manifest.motive ?? []).filter((m) => m.ohne !== undefined).map((m) => [m.id, m.ohne] as const)]) {
+        if (!ohne || !/\balcohol\b/.test(ohne) || !/\btobacco\b/.test(ohne) || !/\bdrugs\b/.test(ohne)) missing.push(`${name}: ${where}`);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it('kein Stil-Kopf und kein Motiv-Prompt bestellt Alkohol oder Tabak', () => {
+    const found: string[] = [];
+    for (const [path, manifest] of Object.entries(manifests)) {
+      const name = path.split('/').pop()!;
+      for (const [where, text] of [['stil', manifest.stil] as const, ...(manifest.motive ?? []).flatMap((m) => [[m.id, m.prompt], [`${m.id} stil`, m.stil]] as const)]) {
+        const hit = text && ASKS_FOR_INTOXICANTS.exec(text);
+        if (hit) found.push(`${name} ${where}: „${hit[0]}“`);
+      }
+    }
+    expect(found).toEqual([]);
+  });
+});

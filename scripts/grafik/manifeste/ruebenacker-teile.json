@@ -1,7 +1,7 @@
 {
   "beschreibung": "G9 (#318) C: Hasen in den sechs Platzfarben aus packages/games/turnip-patch/src/ui/index.tsx (Rot, Blau, Grün, Gelb, Lila, Türkis), Rübe, Maulwurf, Erdhügel, Zaunpfahl; freigestellt.",
   "stil": "Painterly storybook oil illustration for young children, friendly and round shapes, bright but warm colours, a single subject centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, soft contact shadow only. No text, no numbers.",
-  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "1:1",
   "ziel": "packages/games/turnip-patch/src/ui/teile",
   "groesse": [

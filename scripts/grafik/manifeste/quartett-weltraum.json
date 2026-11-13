@@ -1,7 +1,7 @@
 {
   "beschreibung": "G9a (#319): Quartett-Set weltraum, ein Bild je Karte (Anki-Medien, #270). Sachlich richtig; jede Auswahl gegen die Quelle der Karte prüfen.",
   "stil": "Painterly astronomical illustration in oil colours, like a plate from a royal astronomer's star atlas: one celestial body as a sphere centred against a deep midnight-blue starry background, lit from the upper left, surface painted after its real known appearance. No spacecraft, no labels, no constellation lines, no text.",
-  "ohne": "text, letters, numbers, labels, watermark, border, frame, card layout, modern objects, logos, photo",
+  "ohne": "text, letters, numbers, labels, watermark, border, frame, card layout, modern objects, logos, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "4:3",
   "ziel": "content/quartett/bilder/weltraum",
   "groesse": [

@@ -1,7 +1,7 @@
 {
   "beschreibung": "G9a (#319): Quartett-Set bibel, ein Bild je Karte (Anki-Medien, #270). Sachlich richtig; jede Auswahl gegen die Quelle der Karte prüfen.",
   "stil": "Painterly illustration in warm oil colours in the manner of an old children's Bible: one or two human figures in simple ancient Near Eastern clothing in a softly painted landscape or interior of the story, calm dignified mood, faces gentle and slightly stylised (not portraits of real people), people of the ancient Near East. Half or full figure with the described attribute clearly visible. No halos with text, no writing, no text.",
-  "ohne": "text, letters, numbers, labels, watermark, border, frame, card layout, modern objects, logos, photo, depiction of God, caricature, violence, blood, modern or European medieval clothing, Christ on the cross",
+  "ohne": "text, letters, numbers, labels, watermark, border, frame, card layout, modern objects, logos, photo, depiction of God, caricature, violence, blood, modern or European medieval clothing, Christ on the cross, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "4:3",
   "ziel": "content/quartett/bilder/bibel",
   "groesse": [

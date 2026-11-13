@@ -1,7 +1,7 @@
 {
   "beschreibung": "G10 (#317) Teil A: Stationen als freigestellte Gegenstände.",
   "stil": "Painterly storybook oil illustration of a single object from a medieval tavern, in exactly the style, colour palette and warm candlelight of the reference image, lit from the fireplace side, seen slightly from above at the same viewing angle as the tavern table in the reference. The object is centred and fully inside the image with margin around it, on a plain flat pure green background (#00B140) so that it can be cut out, with only a soft contact shadow beneath. No text, no letters, no numbers, no figures, no faces.",
-  "ohne": "text, letters, numbers, writing on paper or signs, people, animals, faces, hands, modern objects, logos, watermark, green on the object, background gradient",
+  "ohne": "text, letters, numbers, writing on paper or signs, people, animals, faces, hands, modern objects, logos, watermark, green on the object, background gradient, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "1:1",
   "ziel": "apps/web/src/menu/stationen",
   "groesse": [

@@ -1,7 +1,7 @@
 {
   "beschreibung": "G8 (#316): Kulissen je Rubrik und Spiel; zusätzlich je Bild eine Fassung @2x (2560 × 1440) für den Tisch-Bildschirm.",
   "stil": "Painterly storybook oil illustration of an empty medieval fantasy scene, wide landscape background for a game screen: rich warm colours, soft atmospheric light, detailed decoration at the left and right edges and the top, while the centre and lower middle stay calm, darker and uncluttered so that interface elements can be laid over it. No people, no animals, no characters, no faces, no text, no letters, no numbers, no frame.",
-  "ohne": "people, animals, characters, faces, text, letters, numbers, signs with writing, watermark, border, frame, modern objects, logos, photo",
+  "ohne": "people, animals, characters, faces, text, letters, numbers, signs with writing, watermark, border, frame, modern objects, logos, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "16:9",
   "ziel": "apps/web/src/assets/kulissen",
   "groesse": [
@@ -18,7 +18,7 @@
     {
       "id": "rubrik-karten",
       "titel": "Rubrik Karten & Stich",
-      "prompt": "A cosy back room of a tavern for card players: green felt wall hangings, brass lanterns, beer barrels and hanging hop garlands at the sides, an empty round table in the calm centre."
+      "prompt": "A cosy back room of a tavern for card players: green felt wall hangings, brass lanterns, stacked wooden card boxes and hanging garlands of dried flowers at the sides, an empty round table in the calm centre."
     },
     {
       "id": "rubrik-familie",
@@ -68,7 +68,7 @@
     {
       "id": "wuerfelstube",
       "titel": "Mäxle, Würfelblock, Poker",
-      "prompt": "A dim tavern corner by the fireplace: tankards on shelves, a dice cup on a windowsill and candle stubs at the sides, an empty scarred wooden table in the calm centre."
+      "prompt": "A dim tavern corner by the fireplace: pewter plates and wooden bowls on shelves, a dice cup on a windowsill and candle stubs at the sides, an empty scarred wooden table in the calm centre."
     }
   ]
 }

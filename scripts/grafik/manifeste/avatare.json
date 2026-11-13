@@ -1,7 +1,7 @@
 {
   "beschreibung": "G4 (#312): 76 Spieler-Avatare; id = slug aus packages/online/src/avatars.ts, titel = Emoji-Kennung.",
   "stil": "Painterly warm oil portrait of a friendly storybook animal as a guest in a medieval tavern, in the style of the reference images: simple medieval travelling clothes (hood, scarf, cap or collar, no armour), warm candlelight, plain dark warm brown background, big expressive eyes, cheerful and kind, suitable for children. Bust portrait facing the viewer, head large and centred so it stays recognisable inside a small circle, head and ears fully inside the image. No text, no letters, no numbers, no watermark.",
-  "ohne": "text, letters, numbers, watermark, border, frame, modern clothing, logos, real people, weapons, scary or aggressive expression, busy background",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern clothing, logos, real people, weapons, scary or aggressive expression, busy background, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "1:1",
   "ziel": "apps/web/src/assets/avatare",
   "groesse": [

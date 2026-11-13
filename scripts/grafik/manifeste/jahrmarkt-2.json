@@ -1,7 +1,7 @@
 {
   "beschreibung": "Jahrmarkt-Symbole, Teil 2: 14 Kuriositäten und 8 Gefallen als Medaillon-Bilder (Narrenhof).",
   "stil": "Painterly storybook oil illustration of a single object as a round medieval fairground medallion icon: the object centred on a deep warm brown wooden background with a thin gold ring, rich colours, warm candlelight, soft shadows, detailed but clearly readable at small size, whimsical royal fool's court and travelling fair mood. Square composition, object fills about 70% of the image with margin around. No text, no letters, no numbers, no characters, no faces, no card frame.",
-  "ohne": "text, letters, numbers, watermark, people, animals, faces, hands, modern objects, logos, border, frame, photo",
+  "ohne": "text, letters, numbers, watermark, people, animals, faces, hands, modern objects, logos, border, frame, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "1:1",
   "groesse": [
     256,
@@ -101,7 +101,7 @@
     {
       "id": "tag-stock",
       "titel": "Festschmaus",
-      "prompt": "A roasted chicken leg and a golden roast on a pewter platter with a mug of ale, steaming."
+      "prompt": "A roasted chicken leg and a golden roast on a pewter platter with a jug of apple juice, steaming."
     },
     {
       "id": "tag-bakery",

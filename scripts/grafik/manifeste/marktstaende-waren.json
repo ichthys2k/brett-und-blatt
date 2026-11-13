@@ -1,7 +1,7 @@
 {
   "beschreibung": "G9 (#318) B1: vier Waren als Kartenmotiv (Anki-Medien, #270).",
   "stil": "Painterly storybook oil illustration of market goods as the motif of a playing card: the goods centred on a plain warm dark wooden background, rich colours, warm light, clearly readable at small size. Square composition, the goods fill about 70% of the image. No text, no numbers, no characters, no faces, no hands.",
-  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "1:1",
   "ziel": "packages/games/market-stalls/src/ui/waren",
   "groesse": [

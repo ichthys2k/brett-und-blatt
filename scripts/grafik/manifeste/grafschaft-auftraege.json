@@ -1,7 +1,7 @@
 {
   "beschreibung": "G9 (#318) A2: 20 Hofaufträge als runde Vignetten (Anki-Medien, #270).",
   "stil": "Painterly warm oil vignette in a round composition on a dark warm brown background, storybook fairy-tale county, humorous but dignified: the described character (an anthropomorphic animal in medieval clothes, bust or half figure) or the described small landscape scene, centred with margin so it can be cropped to a circle. No text, no letters, no numbers.",
-  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "1:1",
   "ziel": "packages/games/grafschaft/src/ui/auftraege",
   "groesse": [
@@ -38,7 +38,7 @@
     {
       "id": "q6",
       "titel": "Die Wirtin",
-      "prompt": "A cheerful sow innkeeper with tankards at an inn door."
+      "prompt": "A cheerful sow innkeeper with a basket of fresh bread and a jug of milk at an inn door."
     },
     {
       "id": "q7",

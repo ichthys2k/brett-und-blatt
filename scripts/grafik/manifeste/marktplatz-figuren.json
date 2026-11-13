@@ -1,7 +1,7 @@
 {
   "beschreibung": "Issue #73: Porträts für die Nebenfiguren des Handelsspiels Marktplatz (5 Motive: Ausrufer, Tavernenwirtin, Abt Esel, König Löwe, Hofnarr). Stilvorlage sind die Narrenhof-Ölbildporträts.",
   "stil": "Painterly warm baroque oil portrait of a whimsical storybook animal character of a fairy-tale kingdom, in the same style as Narrenhof: warm lighting, rich textures, gentle friendly expression, humorous but dignified, bust portrait facing the viewer. Centred with space around. No text, no letters, no numbers, no watermark.",
-  "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos",
+  "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "referenzen": [
     "packages/games/color-sorter/src/ui/portraits/boss-bear-2.webp",
     "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp"
@@ -23,7 +23,7 @@
       "id": "innkeeper",
       "titel": "Die Tavernenwirtin",
       "feld": "Taverne „Zum Brett & Blatt“",
-      "prompt": "Painterly warm baroque oil portrait of a whimsical storybook tavern keeper, a friendly anthropomorphic motherly brown bear in a cozy medieval tavern dress and linen apron, holding a rustic earthenware pitcher of spiced apple cider with small cinnamon sticks. Background of a cozy timber-framed tavern 'Zum Brett & Blatt' with soft glowing lanterns and wooden shelves. Warm inviting lighting, rich textures, welcoming genial smile, dignified and humorous, bust portrait facing the viewer."
+      "prompt": "Painterly warm baroque oil portrait of a whimsical storybook tavern keeper, a friendly anthropomorphic motherly brown bear in a cozy medieval tavern dress and linen apron, holding a rustic earthenware pitcher of warm spiced apple juice with small cinnamon sticks. Background of a cozy timber-framed tavern 'Zum Brett & Blatt' with soft glowing lanterns and wooden shelves. Warm inviting lighting, rich textures, welcoming genial smile, dignified and humorous, bust portrait facing the viewer."
     },
     {
       "id": "abbot",

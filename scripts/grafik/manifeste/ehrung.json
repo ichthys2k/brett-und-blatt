@@ -1,7 +1,7 @@
 {
   "beschreibung": "G7 (#315): Pokale, Siegel, Urkunde, Pokalschrank. Format und Größe je Motiv; \"freistellen\": grünen Grund (#00B140) entfernen, WebP mit Alphakanal.",
   "stil": "Painterly storybook oil illustration of a single object, medieval tavern and fairy-tale kingdom mood: warm candlelight from the upper left, rich colours, soft shadow directly beneath, the object centred and fully inside the image with margin around it, on a plain flat pure green background (#00B140) so that it can be cut out. No text, no letters, no numbers, no engraving, no figures, no faces.",
-  "ohne": "text, letters, numbers, engraved writing, coats of arms with letters, people, animals, faces, hands, modern objects, logos, watermark, photo; bei Gegenständen zusätzlich: green on the object itself, background gradient",
+  "ohne": "text, letters, numbers, engraved writing, coats of arms with letters, people, animals, faces, hands, modern objects, logos, watermark, photo; bei Gegenständen zusätzlich: green on the object itself, background gradient, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "1:1",
   "ziel": "apps/web/src/assets/ehrung",
   "groesse": [
@@ -65,7 +65,7 @@
         384
       ],
       "freistellen": true,
-      "prompt": "Two tankards clinking together in a friendly toast, foam splashing, no hands visible."
+      "prompt": "Two warm clay cups of steaming cocoa clinking together in a friendly toast, a few drops splashing."
     },
     {
       "id": "trostkerze",
