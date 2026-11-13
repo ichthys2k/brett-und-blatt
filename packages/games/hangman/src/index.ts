@@ -26,6 +26,7 @@ import {
   normalizeWord,
   type HangmanCategory,
 } from './words';
+import { describeMove } from './describe';
 
 export {
   ALPHABET,
@@ -128,6 +129,7 @@ export const gameModule: GameModule<HangmanState, HangmanMove> = {
   legalMoves,
   applyMove,
   playerView,
+  describeMove,
   result,
   bots: [hangmanBot],
 };

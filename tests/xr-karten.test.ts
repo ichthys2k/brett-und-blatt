@@ -31,6 +31,10 @@ function messageFor(module: AnyGameModule, state: unknown, seat: number, seats: 
 }
 
 describe('VR-Kartentisch', () => {
+  it('jedes Online-Spiel hat Zugtexte (für Fenster, Tafel und Bildschirmleser)', () => {
+    expect(onlineGames.filter((m) => !m.describeMove).map((m) => m.info.id)).toEqual([]);
+  });
+
   it('kennt alle Online-Spiele in der Lobby', () => {
     expect(GAME_CHOICES.map((g) => g.id).sort()).toEqual(onlineGames.map((m) => m.info.id).sort());
   });

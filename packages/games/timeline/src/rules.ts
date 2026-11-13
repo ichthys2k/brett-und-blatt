@@ -110,6 +110,7 @@ export const gameModule = makeRoundGame<TimelineQuestion, number[]>({
   },
   publicQuestion: (q) => ({ ...q, order: null, years: null }),
   isValidAnswer: (q, a): a is number[] => isPermutation(a, q.items.length),
+  describeAnswer: (q, a) => `Reihenfolge: ${a.map((i) => q.items[i] ?? '?').join(' → ')}`,
   sampleAnswers: (q) => [q.items.map((_, i) => i), q.items.map((_, i) => q.items.length - 1 - i)],
   scoreRound: (q, answers) => scoreTimeline(q.order!, answers),
   botAnswer(q, level, rng) {
