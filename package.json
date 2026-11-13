@@ -27,6 +27,7 @@
     "fzstd": "0.1.1",
     "playwright": "1.63.0",
     "sql.js": "1.15.2",
+    "ts-json-schema-generator": "2.9.0",
     "typescript": "~6.0.3",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"

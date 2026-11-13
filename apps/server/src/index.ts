@@ -1,4 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
+import { CLIENT_PARAM, MessageBudget, PROTOCOL_VERSION, accessFor, type Access } from '@brett-und-blatt/online';
 import { exchangeCode } from './oidc';
 import {
   ATTEMPT_WINDOW_MS,
@@ -235,7 +236,12 @@ interface Env {
 interface Attachment {
   id: string;
   memberId: string | null;
+  /** Kennung eines Clients ohne Webseite (#334); fehlt bei der Web-App. */
+  client?: string;
 }
+
+/** Kopf, mit dem der Worker dem Raum die geprüfte Client-Kennung weiterreicht (nie vom Client übernommen). */
+const CLIENT_HEADER = 'X-Brett-Client';
 
 const gamesById = new Map(onlineGames.map((m) => [m.info.id, m]));
 const botRunner = serverBotRunner(onlineGames, { stepMs: BOT_STEP_MS });
@@ -362,10 +368,26 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
     : {};
 }
 
-/** Nur die eigene Web-App darf Räume anlegen und betreten. */
+/** Nur die eigene Web-App darf diese Wege nutzen (Schwarzes Brett, Turniere, Konten …). */
 function originAllowed(request: Request, env: Env): boolean {
   const origin = request.headers.get('Origin');
   return origin !== null && env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).includes(origin);
+}
+
+/**
+ * Räume anlegen, betreten und offene Räume ansehen dürfen auch Programme ohne Webseite (#334):
+ * ohne `Origin`, aber mit öffentlicher Kennung `?client=…`. Siehe `packages/online/src/access.ts`.
+ */
+function roomAccess(request: Request, url: URL, env: Env): Access | null {
+  return accessFor(request.headers.get('Origin'), url.searchParams.get(CLIENT_PARAM), env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()));
+}
+
+/** Reicht die Anfrage an den Raum weiter; die Client-Kennung kommt nur vom Worker, nie vom Client. */
+function forwardWithAccess(request: Request, access: Access): Request {
+  const headers = new Headers(request.headers);
+  headers.delete(CLIENT_HEADER);
+  if (access.kind === 'client') headers.set(CLIENT_HEADER, access.client);
+  return new Request(request, { headers });
 }
 
 /** Liest einen kleinen JSON-Körper; null bei Fehlern oder zu großer Länge. */
@@ -390,6 +412,18 @@ function json(data: unknown, status: number, headers: Record<string, string>): R
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...headers } });
 }
 
+/** Startseite des Servers: wohin fremde Clients schauen (#334). */
+const SERVER_INFO = [
+  'Brett & Blatt – Spieleserver',
+  '',
+  'Quellcode (AGPL-3.0): https://github.com/ichthys2k/brett-und-blatt',
+  `Protokoll (Version ${PROTOCOL_VERSION}) für eigene Clients: https://github.com/ichthys2k/brett-und-blatt/blob/main/docs/protokoll.md`,
+  '',
+  'Eigene Clients sind willkommen: kostenlos, ohne Anmeldung und ohne Gewähr.',
+  'Programme ohne Webseite hängen ?client=<name> an (3–40 Zeichen: a–z, 0–9, -).',
+  '',
+].join('\n');
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -397,7 +431,7 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
     if (url.pathname === '/rooms' && request.method === 'POST') {
-      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      if (!roomAccess(request, url, env)) return json({ error: 'origin' }, 403, cors);
       let isPublic = true;
       try {
         const body = (await request.json()) as { isPublic?: boolean };
@@ -422,10 +456,10 @@ export default {
 
     if ((url.pathname === '/rooms' || url.pathname === '/rooms/open') && request.method === 'GET') {
       if (request.headers.get('Upgrade') === 'websocket') {
-        if (!originAllowed(request, env)) return new Response('Origin nicht erlaubt', { status: 403 });
+        if (!roomAccess(request, url, env)) return new Response('Origin nicht erlaubt', { status: 403 });
         return registryStub(env).fetch(request);
       }
-      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      if (!roomAccess(request, url, env)) return json({ error: 'origin' }, 403, cors);
       const rooms = await registryStub(env).listOpen();
       return json(rooms, 200, cors);
     }
@@ -978,11 +1012,12 @@ export default {
       if (request.headers.get('Upgrade') !== 'websocket') {
         return json({ exists: await roomStub(env, code).exists() }, 200, cors);
       }
-      if (!originAllowed(request, env)) return new Response('Origin nicht erlaubt', { status: 403 });
-      return roomStub(env, code).fetch(request);
+      const access = roomAccess(request, url, env);
+      if (!access) return new Response('Origin nicht erlaubt', { status: 403 });
+      return roomStub(env, code).fetch(forwardWithAccess(request, access));
     }
 
-    if (url.pathname === '/') return new Response('Brett & Blatt – Spieleserver. Quellcode: https://github.com/ichthys2k/brett-und-blatt', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    if (url.pathname === '/') return new Response(SERVER_INFO, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
     return new Response('Nicht gefunden', { status: 404 });
   },
 } satisfies ExportedHandler<Env>;
@@ -996,6 +1031,8 @@ export default {
 export class GameRoom extends DurableObject<Env> {
   private room: Room | null = null;
   private sockets = new Map<string, WebSocket>();
+  /** Ratenbegrenzung je Verbindung eines Clients ohne Webseite; nur im Speicher, beim Aufwachen frisch. */
+  private budgets = new Map<string, { budget: MessageBudget; warnedAt: number }>();
   /** Zuletzt ans Verzeichnis gemeldete Karte (undefined: seit dem Aufwachen noch nicht). */
   private lastListing: OpenRoomListing | null | undefined = undefined;
   /** Web Push (#242, nur Fernpartien): Abos und Spam-Schutz unter dem eigenen Schlüssel `push`; weg mit dem Raum. */
@@ -1055,7 +1092,8 @@ export class GameRoom extends DurableObject<Env> {
     const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
     const id = crypto.randomUUID();
     this.ctx.acceptWebSocket(server);
-    server.serializeAttachment({ id, memberId: null } satisfies Attachment);
+    const clientId = request.headers.get(CLIENT_HEADER) ?? undefined;
+    server.serializeAttachment({ id, memberId: null, ...(clientId ? { client: clientId } : {}) } satisfies Attachment);
     this.sockets.set(id, server);
     this.room.connect(id);
     return new Response(null, { status: 101, webSocket: client });
@@ -1063,6 +1101,7 @@ export class GameRoom extends DurableObject<Env> {
 
   override async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
     if (typeof message !== 'string') return;
+    if (!this.withinBudget(ws)) return;
     // Hinweise aufs Gerät (#242) gehören nicht in die Spielleitung: Abos bleiben im Adapter.
     if (message.includes('"push') && (await this.handlePush(this.idOf(ws), message))) return;
     this.room?.receive(this.idOf(ws), message);
@@ -1165,7 +1204,26 @@ export class GameRoom extends DurableObject<Env> {
   private dropSocket(ws: WebSocket): void {
     const id = this.idOf(ws);
     this.sockets.delete(id);
+    this.budgets.delete(id);
     this.room?.disconnect(id);
+  }
+
+  /**
+   * Ratenbegrenzung für Clients ohne Webseite (#334). Die Web-App bleibt unbegrenzt wie bisher.
+   * Zu schnelle Nachrichten werden verworfen; eine Fehlermeldung geht höchstens einmal je Sekunde hinaus.
+   */
+  private withinBudget(ws: WebSocket): boolean {
+    const attachment = ws.deserializeAttachment() as Attachment;
+    if (!attachment.client) return true;
+    const now = Date.now();
+    let budget = this.budgets.get(attachment.id);
+    if (!budget) this.budgets.set(attachment.id, (budget = { budget: new MessageBudget(now), warnedAt: 0 }));
+    if (budget.budget.take(now)) return true;
+    if (now - budget.warnedAt >= 1000) {
+      budget.warnedAt = now;
+      this.send(attachment.id, { type: 'error', code: 'tooFast', message: 'Zu viele Nachrichten – bitte langsamer.' });
+    }
+    return false;
   }
 
   private idOf(ws: WebSocket): string {
@@ -1201,7 +1259,8 @@ export class GameRoom extends DurableObject<Env> {
     if (!ws) return;
     // Nach der Anmeldung merkt sich die Verbindung ihr Mitglied – für das Aufwachen.
     if (message.type === 'welcome') {
-      ws.serializeAttachment({ id, memberId: message.you } satisfies Attachment);
+      const client = (ws.deserializeAttachment() as Attachment).client;
+      ws.serializeAttachment({ id, memberId: message.you, ...(client ? { client } : {}) } satisfies Attachment);
       if (pushConfigured(this.env)) void this.sendPushState(id, message.you);
     }
     try {
