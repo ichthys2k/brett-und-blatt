@@ -83,6 +83,34 @@ export function tafelLines(game: GameMessage): string[] {
       const role = me === null ? null : v.roles[me];
       return [`${v.phase === 'night' ? 'Nacht' : 'Tag'} ${v.day}`, role ? `Deine Rolle: ${ROLES[role] ?? role}` : '', `Noch im Spiel: ${v.alive.map((a, s) => (a ? name(game, s) : '')).filter(Boolean).join(', ')}`].filter(Boolean);
     }
+    case 'bible-quiz': {
+      const v = view as { currentRound: number; totalRounds: number; currentQuestion: { category: string; emojis: string; shuffledOptions: string[] } | null; scores: number[] };
+      const q = v.currentQuestion;
+      return [`Frage ${v.currentRound} von ${v.totalRounds}${q ? ` · ${q.category}` : ''}`, q ? q.emojis : '', ...(q?.shuffledOptions.map((o, i) => `${String.fromCharCode(65 + i)}: ${o}`) ?? []), ...scoreLine(game, view)].filter(Boolean);
+    }
+    case 'hangman': {
+      const v = view as { boards: { maskedWord: string; wrongLetters: string[]; mistakes: number }[]; maxMistakes: number };
+      return v.boards.flatMap((b) => [b.maskedWord.split('').join(' '), `Fehler: ${b.mistakes} von ${v.maxMistakes}${b.wrongLetters.length ? ` (${b.wrongLetters.join(', ')})` : ''}`]);
+    }
+    case 'bingo': {
+      const v = view as { size: number; cards: (number | string | null)[][]; marks: boolean[][]; lastCall: number | string | null; drawn: number };
+      const card = me === null ? [] : (v.cards[me] ?? []);
+      const marks = me === null ? [] : (v.marks[me] ?? []);
+      const rows = Array.from({ length: v.size }, (_, r) => card.slice(r * v.size, r * v.size + v.size).map((c, k) => (marks[r * v.size + k] ? `[${c ?? '★'}]` : String(c ?? '★'))).join('  '));
+      return [`Gerufen: ${v.lastCall ?? '–'} (${v.drawn} gezogen)`, ...rows];
+    }
+    case 'word-salad': {
+      const v = view as { currentDisplay: string; currentHint: string; players: { foundWords: string[]; score: number }[] };
+      const mine = me === null ? undefined : v.players[me];
+      return [`${v.currentDisplay} – ${v.currentHint}`, mine ? `Gefunden: ${mine.foundWords.join(', ') || '–'}` : '', ...v.players.map((p, s) => `${name(game, s)}: ${p.score} Punkte`)].filter(Boolean);
+    }
+    case 'majority':
+    case 'estimate':
+    case 'timeline': {
+      const v = view as { questions: ({ text?: string; title?: string; options?: string[] } | null)[]; round: number; phase: string };
+      const q = v.questions[v.round];
+      return [`Runde ${v.round + 1} von ${v.questions.length}`, q?.text ?? q?.title ?? '', ...(game.gameId === 'majority' ? (q?.options ?? []) : []), ...scoreLine(game, view)].filter(Boolean);
+    }
   }
   const lines: string[] = [];
   if (typeof view.round === 'number' && typeof view.totalRounds === 'number') lines.push(`Runde ${view.round + 1} von ${view.totalRounds}`);

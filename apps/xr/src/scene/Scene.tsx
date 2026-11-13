@@ -13,6 +13,8 @@ import { CheckersBoard, GoBoard, GomokuBoard, MillBoard, ReversiBoard } from './
 import { BattleshipBoard, ChineseCheckersBoard, FactorGridBoard, FourPlayerChessBoard, LudoBoard, UltimateTicTacToeBoard } from './boards3';
 import { ColorShapeBoard, DominoBoard, GrafschaftBoard, WordGridBoard } from './boards4';
 import { KniffelBoard, LowFlightBoard, MaexleBoard, PairsBoard, Tafel } from './boards5';
+import { InputDesk } from './input';
+import { hiddenMoveIndexes, inputPlan } from './input-spec';
 import { CardTable, cardMoveIndexes, isCardGame } from './cards';
 import { Panel, ReactionBar, type VoiceControls } from './Panel';
 import { Seats, seatAngle, type SeatInfo } from './Seats';
@@ -158,7 +160,13 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
   const seatCount = game ? game.seats.length : (room?.lobby.seats.length ?? 0);
   const myBase = you ? (seatOf(you) ?? 0) : 0;
   const boardMoves = useMemo(
-    () => (game && isBoardGame(game.gameId) ? boardMoveIndexes(game.gameId, game.legalMoves) : game && isCardGame(game.gameId) ? cardMoveIndexes(game.legalMoves) : new Set<number>()),
+    () => {
+      if (!game) return new Set<number>();
+      const handled = isBoardGame(game.gameId) ? boardMoveIndexes(game.gameId, game.legalMoves) : isCardGame(game.gameId) ? cardMoveIndexes(game.legalMoves) : new Set<number>();
+      // Beispielzüge zu Spielen mit eigener Eingabe (#358) stehen nicht im Fenster.
+      for (const i of hiddenMoveIndexes(game)) handled.add(i);
+      return handled;
+    },
     [game],
   );
   const playing = game && !game.result ? game : null;
@@ -200,7 +208,8 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         {shown?.gameId === 'maexle' && <MaexleBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'pairs' && <PairsBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'low-flight' && <LowFlightBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
-        {shown && !isBoardGame(shown.gameId) && !isCardGame(shown.gameId) && <Tafel game={shown} />}
+        {shown && !isBoardGame(shown.gameId) && !isCardGame(shown.gameId) && !(playing && inputPlan(playing)) && <Tafel game={shown} />}
+        {playing && <InputDesk game={playing} onMove={(move) => send({ type: 'move', version: playing.version, move })} />}
         {shown?.gameId === 'grafschaft' && <GrafschaftBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         {shown && isCardGame(shown.gameId) && <CardTable key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={onMove} adjust={adjust} voice={voice} />
