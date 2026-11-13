@@ -117,6 +117,22 @@ Brillen können sich gegenseitig als Figur sehen. Kopf und Hände laufen **direk
 - Koordinaten in Metern und als Quaternion, im **eigenen Tischsystem**: Der eigene Platz liegt vorn (+z), die Tischmitte bei `(0, 0.74, -0.55)`. Der Empfänger dreht um die Tischmitte auf den Platz des Absenders.
 - `GET /rtc/ice` liefert die ICE-Server, gleiche Zugangsregel wie `/rooms`: immer STUN von Cloudflare, mit eingerichtetem Schlüssel zusätzlich TURN.
 
+### Sprachchat (optional, #352)
+
+Nur in **privaten Räumen**. Die Stimme läuft wie der VR-Treffpunkt direkt zwischen den Geräten (WebRTC); der Raum vermittelt nur, über dieselben `rtc`-Nachrichten.
+
+| Nachricht | Bedeutung |
+| --- | --- |
+| `{ "type": "voice", "on": true }` | Mitsprechen. In `room.members` steht danach `"voice": true`. Zwischen allen mit `voice` oder `xr` reicht der Raum `rtc` weiter. |
+| `{ "type": "voice", "on": false }` | Aussteigen. |
+| `{ "type": "reportVoice" }` | Melden: Der Raum beendet den Sprachchat für alle und lässt ihn bis zur nächsten Partie nicht mehr zu. |
+| `room.voiceOff` | `"public"` (öffentlicher Raum) oder `"reported"` (gemeldet). Fehlt das Feld, kann man mitsprechen. |
+
+- Ein Client schickt seine Tonspur nur an andere Mitglieder mit `voice` und spielt nur deren Ton ab.
+- Die Brillen der VR-App teilen sich mit dem Treffpunkt eine Verbindung je Paar: Datenkanal `pose` (ausgehandelt, Kennung 0) und Tonspur.
+- Neu verhandelt wird nach „perfect negotiation“; die größere Mitglieds-Kennung ist die höfliche Seite.
+- Gemeinsamer Browser-Code: `packages/rtc` (`RtcMesh`, `VoiceChat`).
+
 ### 5. Fehler und Verbindungsabbruch
 
 - `{ "type": "error", "code": …, "message": … }`. `code` ist einer von `badMessage`, `protocol`, `notAllowed`, `roomFull`, `badName`, `notReady`, `staleMove`, `illegalMove`, `tooLate` oder `tooFast`; `message` ist ein deutscher Text für Menschen.
@@ -163,6 +179,7 @@ Der Prüfstein [`apps/cli/test/partie.mjs`](../apps/cli/test/partie.mjs) spielt 
 | 13.11.2026 | 1 | Neues Feld `GameMessage.moveLabels` mit Zugtexten für elf Spiele (#335) |
 | 13.11.2026 | 1 | Text-Client `apps/cli` als Vorlage (#336); `avatar` in `hello` ist Pflicht (war es schon, jetzt dokumentiert) |
 | 13.11.2026 | 1 | VR-Treffpunkt (#351): Nachrichten `xr`, `rtc`, `pose`, Feld `MemberInfo.xr`, Endpunkt `GET /rtc/ice` |
+| 13.11.2026 | 1 | Sprachchat (#352): Nachrichten `voice`, `reportVoice`, Felder `MemberInfo.voice`, `RoomMessage.voiceOff` |
 
 ## Lizenz
 

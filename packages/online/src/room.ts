@@ -155,6 +155,17 @@ export interface RoomDeps {
    * Der Adapter schickt ihnen, falls sie es wünschen, einen Hinweis aufs Gerät.
    */
   notifyTurn?(tokens: string[]): void;
+  /**
+   * VR-Treffpunkt und Sprachchat (#351, #352): Merkmale einer Verbindung haben sich geändert. Der Adapter
+   * hängt sie an die Verbindung, damit sie das Schlafen des Raums überstehen (`restoreFlags`).
+   */
+  flagsChanged?(connectionId: string, flags: ConnectionFlags): void;
+}
+
+/** Merkmale einer Verbindung, die nicht im Raum-Schnappschuss stehen (#351, #352). */
+export interface ConnectionFlags {
+  xr?: boolean;
+  voice?: boolean;
 }
 
 interface Member {
@@ -219,6 +230,8 @@ export interface RoomSnapshot {
   after?: AfterGameState;
   game: { session: SessionSnapshot; seatMembers: (string | null)[]; seats: PublicSeat[]; lobbyIndex?: number[]; time: LobbySettings['time']; version: number; round: number; takeBack?: TakeBackState } | null;
   match?: { config: MatchRoomConfig; noShow: RoomReport | null; reported: boolean; series?: SeriesState };
+  /** Sprachchat gemeldet in Runde … (#352). */
+  voiceReported?: number;
 }
 
 /**
@@ -234,8 +247,12 @@ export class Room {
   private kicked = new Set<string>();
   /** Verbindungen von Tisch-Bildschirmen (#100): keine Mitglieder, nur Zuschauersicht. */
   private displays = new Set<string>();
-  /** VR-Treffpunkt (#351): Verbindungen von Brillen, die andere Brillen sehen möchten (nicht gespeichert). */
+  /** VR-Treffpunkt (#351): Verbindungen von Brillen, die andere Brillen sehen möchten (am Adapter gespeichert, nicht im Schnappschuss). */
   private xrConnections = new Set<string>();
+  /** Sprachchat (#352): Verbindungen, die mitsprechen. */
+  private voiceConnections = new Set<string>();
+  /** Sprachchat gemeldet in dieser Runde (`rounds` beim Melden); mit der nächsten Partie wieder frei. */
+  private voiceReported: number | null = null;
   /** VR-Treffpunkt: wann je Verbindung zuletzt ein Rückfall-Kopf weitergereicht wurde und wie viele Vermittlungen zuletzt kamen. */
   private xrLimits = new Map<string, { pose: number; rtc: number[] }>();
   private hostId: string | null = null;
@@ -387,7 +404,8 @@ export class Room {
     }
     const memberId = this.connections.get(connectionId);
     this.connections.delete(connectionId);
-    const wasXr = this.xrConnections.delete(connectionId);
+    const wasXr = this.xrConnections.delete(connectionId) || this.voiceConnections.delete(connectionId);
+    this.voiceConnections.delete(connectionId);
     this.xrLimits.delete(connectionId);
     const member = memberId ? this.members.get(memberId) : undefined;
     if (!member) return;
@@ -408,7 +426,7 @@ export class Room {
     const message = parseClientMessage(raw);
     if (!message) return this.error(connectionId, 'badMessage', 'Unbekannte Nachricht.');
     if (message.type === 'ping') return this.deps.send(connectionId, { type: 'pong', serverNow: this.deps.now() });
-    if (message.type === 'xr' || message.type === 'rtc' || message.type === 'pose') return this.receiveXr(connectionId, message);
+    if (message.type === 'xr' || message.type === 'rtc' || message.type === 'pose' || message.type === 'voice' || message.type === 'reportVoice') return this.receiveXr(connectionId, message);
     if (message.type === 'display') return this.attachDisplay(connectionId, message);
     if (isDisplay) return message.type === 'leave' ? this.deps.close(connectionId) : this.error(connectionId, 'notAllowed', 'Ein Tisch-Bildschirm kann nur zuschauen.');
     if (message.type === 'hello') return this.hello(connectionId, message);
@@ -577,6 +595,7 @@ export class Room {
         : null,
       ...(this.after ? { after: structuredClone(this.after) } : {}),
       ...(this.match ? { match: structuredClone(this.match) } : {}),
+      ...(this.voiceReported !== null ? { voiceReported: this.voiceReported } : {}),
     };
   }
 
@@ -599,6 +618,7 @@ export class Room {
     room.createdAt = snapshot.createdAt ?? snapshot.lastActivity;
     room.lastActivity = snapshot.lastActivity;
     room.match = snapshot.match ?? null;
+    room.voiceReported = snapshot.voiceReported ?? null;
     const now = deps.now();
     for (const m of snapshot.members) {
       // Wer schon vorher weg war, behält seinen Zeitpunkt – sonst begänne die Frist bei jedem
@@ -795,6 +815,8 @@ export class Room {
       case 'setPublic':
         if (!isHost || this.phase !== 'lobby') return deny();
         this.lobby.isPublic = message.isPublic;
+        // Öffentliche Räume ohne Sprachchat (#352).
+        if (message.isPublic) this.dropVoice();
         return this.broadcastRoom();
       case 'setOption': {
         const module = this.lobbyModule();
@@ -1712,12 +1734,12 @@ export class Room {
   }
 
   private roomMessage(): RoomMessage {
-    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, ...(m.crest ? { crest: m.crest } : {}), connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}), ...(m.join ? { join: m.join } : {}), ...(this.isXrMember(m) ? { xr: true as const } : {}) }));
+    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, ...(m.crest ? { crest: m.crest } : {}), connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}), ...(m.join ? { join: m.join } : {}), ...(this.isXrMember(m) ? { xr: true as const } : {}), ...(this.isVoiceMember(m) ? { voice: true as const } : {}) }));
     const series = this.match?.series;
     const match = this.match
       ? { tournament: this.match.config.tournament, label: this.match.config.label, noShow: this.match.noShow !== null, ...(series ? { series: { bestOf: series.bestOf, score: this.seriesScoreBySeat(series), next: series.nextAt, done: series.winner !== undefined } } : {}) }
       : undefined;
-    return { type: 'room', code: this.code, phase: this.phase, hostId: this.hostId, members, lobby: this.lobby, ...(this.displays.size > 0 ? { displays: this.displays.size } : {}), ...(!this.match && this.isCorrespondence() ? { correspondence: true as const } : {}), ...(match ? { match } : {}) };
+    return { type: 'room', code: this.code, phase: this.phase, hostId: this.hostId, members, lobby: this.lobby, ...(this.displays.size > 0 ? { displays: this.displays.size } : {}), ...(!this.match && this.isCorrespondence() ? { correspondence: true as const } : {}), ...(match ? { match } : {}), ...(this.voiceOff() ? { voiceOff: this.voiceOff()! } : {}) };
   }
 
   private broadcastRoom(): void {
@@ -1798,28 +1820,77 @@ export class Room {
     return false;
   }
 
+  private isVoiceMember(member: Member): boolean {
+    for (const connection of member.connections) if (this.voiceConnections.has(connection)) return true;
+    return false;
+  }
+
+  /** Darf diese Verbindung direkte Verbindungen aufbauen (Brille oder Sprachchat)? */
+  private isRtcConnection(connectionId: string): boolean {
+    return this.xrConnections.has(connectionId) || this.voiceConnections.has(connectionId);
+  }
+
+  /** Warum der Sprachchat gerade nicht geht – oder null. */
+  private voiceOff(): 'public' | 'reported' | null {
+    if (this.lobby.isPublic) return 'public';
+    return this.voiceReported === this.rounds ? 'reported' : null;
+  }
+
+  /** Nach einem Neustart des Servers: Merkmale einer Verbindung zurückholen (siehe `RoomDeps.flagsChanged`). */
+  restoreFlags(connectionId: string, flags: ConnectionFlags): void {
+    if (!this.connections.has(connectionId)) return;
+    if (flags.xr) this.xrConnections.add(connectionId);
+    if (flags.voice && !this.voiceOff()) this.voiceConnections.add(connectionId);
+  }
+
+  private reportFlags(connectionId: string): void {
+    this.deps.flagsChanged?.(connectionId, { xr: this.xrConnections.has(connectionId), voice: this.voiceConnections.has(connectionId) });
+  }
+
+  /** Sprachchat für alle beenden (Meldung oder öffentlicher Raum). */
+  private dropVoice(): void {
+    const dropped = [...this.voiceConnections];
+    this.voiceConnections.clear();
+    for (const connection of dropped) this.reportFlags(connection);
+  }
+
   /**
-   * VR-Treffpunkt (#351): Der Raum vermittelt nur zwischen Brillen. Er speichert nichts, schickt
-   * nichts an Web-Clients und begrenzt, damit der Gratis-Tarif nicht leidet: Vermittlungen höchstens
-   * 120 je Minute und Verbindung, Rückfall-Köpfe höchstens zwei je Sekunde.
+   * VR-Treffpunkt (#351) und Sprachchat (#352): Der Raum vermittelt nur zwischen Brillen bzw. Geräten
+   * im Sprachchat. Er speichert nichts davon, schickt nichts an andere und begrenzt, damit der
+   * Gratis-Tarif nicht leidet: Vermittlungen höchstens 120 je Minute und Verbindung, Rückfall-Köpfe
+   * höchstens zwei je Sekunde.
    */
-  private receiveXr(connectionId: string, message: Extract<ClientMessage, { type: 'xr' | 'rtc' | 'pose' }>): void {
+  private receiveXr(connectionId: string, message: Extract<ClientMessage, { type: 'xr' | 'rtc' | 'pose' | 'voice' | 'reportVoice' }>): void {
     const memberId = this.connections.get(connectionId);
     const member = memberId ? this.members.get(memberId) : undefined;
     if (!member || this.displays.has(connectionId)) return this.error(connectionId, 'notAllowed', 'Erst anmelden.');
-    if (message.type === 'xr') {
-      const before = this.isXrMember(member);
-      if (message.on) this.xrConnections.add(connectionId);
-      else this.xrConnections.delete(connectionId);
-      if (before !== this.isXrMember(member)) this.broadcastRoom();
+    if (message.type === 'xr' || message.type === 'voice') {
+      const set = message.type === 'xr' ? this.xrConnections : this.voiceConnections;
+      if (message.type === 'voice' && message.on && this.voiceOff()) {
+        return this.error(connectionId, 'notAllowed', this.voiceOff() === 'public' ? 'Sprachchat gibt es nur in privaten Räumen.' : 'Der Sprachchat ist für diese Runde abgeschaltet.');
+      }
+      const before = message.type === 'xr' ? this.isXrMember(member) : this.isVoiceMember(member);
+      if (message.on) set.add(connectionId);
+      else set.delete(connectionId);
+      this.reportFlags(connectionId);
+      const after = message.type === 'xr' ? this.isXrMember(member) : this.isVoiceMember(member);
+      if (before !== after) this.broadcastRoom();
       return;
     }
-    if (!this.xrConnections.has(connectionId)) return;
+    if (message.type === 'reportVoice') {
+      if (this.voiceOff()) return;
+      this.voiceReported = this.rounds;
+      this.dropVoice();
+      this.broadcastRoom();
+      this.deps.changed?.();
+      return;
+    }
+    if (!this.isRtcConnection(connectionId)) return;
     const now = this.deps.now();
     const limits = this.xrLimits.get(connectionId) ?? { pose: 0, rtc: [] };
     this.xrLimits.set(connectionId, limits);
     if (message.type === 'pose') {
-      if (now - limits.pose < XR_POSE_INTERVAL_MS) return;
+      if (!this.xrConnections.has(connectionId) || now - limits.pose < XR_POSE_INTERVAL_MS) return;
       limits.pose = now;
       for (const other of this.members.values()) {
         if (other.id === member.id) continue;
@@ -1832,7 +1903,7 @@ export class Room {
     limits.rtc.push(now);
     const target = this.members.get(message.to);
     if (!target || target.id === member.id) return;
-    for (const connection of target.connections) if (this.xrConnections.has(connection)) this.deps.send(connection, { type: 'rtc', from: member.id, signal: message.signal });
+    for (const connection of target.connections) if (this.isRtcConnection(connection)) this.deps.send(connection, { type: 'rtc', from: member.id, signal: message.signal });
   }
 
   private touch(): void {

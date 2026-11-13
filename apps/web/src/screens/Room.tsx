@@ -22,6 +22,8 @@ import { PinRoom } from '../components/PinRoom';
 import { GAME_SERVER as BOARD_SERVER } from '../lib/server';
 import { TeamChip, TeamSummary } from '../components/Teams';
 import { CustomCardsOverlay } from '../components/CustomCardsOverlay';
+import { VoiceMenu } from '../components/VoiceMenu';
+import { useVoice } from '../lib/voice';
 
 const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
 /** Online gibt es nur Spiele für mehrere Personen. */
@@ -49,6 +51,8 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
   const code = parseRoomCode(rawCode);
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
   const [state, connection] = useRoomConnection(code ?? '', code ? profile : null);
+  // Sprachchat (#352): vor allen frühen Rückgaben, wie es React für Hooks verlangt.
+  const { voice, voiceState } = useVoice(connection, state);
 
   useEffect(() => {
     if (code && profile) {
@@ -131,6 +135,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
     <p className="fixed inset-x-0 bottom-0 z-30 bg-warning px-3 py-2 text-center text-sm font-medium text-white">{t('online.reconnecting')}</p>
   );
   const toasts = <SignalToasts signals={state.signals} members={room.members} />;
+  const voiceMenu = (inBar: boolean) => <VoiceMenu voice={voice} state={voiceState} members={room.members} you={state.you} off={room.voiceOff} onReport={() => connection.send({ type: 'reportVoice' })} inBar={inBar} />;
   const errorBox = state.error ? (
     <p role="alert" className="fixed inset-x-3 top-3 z-30 mx-auto max-w-md rounded-xl bg-danger px-3 py-2 text-center text-sm text-white shadow-md">
       {state.error}
@@ -177,7 +182,10 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
             ...(loaded.info.takeBack ? { bar: <TakeBackBar session={session} /> } : {}),
             chat: (inBar: boolean) => (
-              <ReactionMenu inBar={inBar} onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} phrases={loaded.ui.phrases} />
+              <>
+                {voiceMenu(inBar)}
+                <ReactionMenu inBar={inBar} onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} phrases={loaded.ui.phrases} />
+              </>
             ),
             extra: (
               <>
@@ -228,7 +236,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
 
   return (
     <>
-      <Lobby room={room} state={state} connection={connection} isHost={isHost} onLeave={leave} pushToggle={pushToggle} />
+      <Lobby room={room} state={state} connection={connection} isHost={isHost} onLeave={leave} pushToggle={pushToggle} voiceMenu={voiceMenu(false)} />
       {toasts}
       {errorBox}
       {banner}
@@ -373,7 +381,7 @@ export function useLoadedGame(gameId: string | null): LoadedGame | null {
   return loaded;
 }
 
-function Lobby({ room, state, connection, isHost, onLeave, pushToggle }: { room: RoomMessage; state: RoomState; connection: RoomConnection; isHost: boolean; onLeave: () => void; pushToggle?: React.ReactNode }) {
+function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu }: { room: RoomMessage; state: RoomState; connection: RoomConnection; isHost: boolean; onLeave: () => void; pushToggle?: React.ReactNode; voiceMenu?: React.ReactNode }) {
   const { lobby } = room;
   const game = useLoadedGame(lobby.gameId);
   const teams = game ? teamsFor(game.info, lobby.options, lobby.seats.length) : undefined;
@@ -448,7 +456,10 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle }: { room:
               </button>
             )}
           </div>
-          <h1 className="bub-room-code text-3xl tracking-widest">{room.code}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="bub-room-code text-3xl tracking-widest">{room.code}</h1>
+            {voiceMenu}
+          </div>
         </div>
       </header>
 

@@ -87,6 +87,8 @@ export interface MemberInfo {
   join?: 'asking' | 'queued';
   /** Ist das Mitglied gerade mit einer VR-Brille da, die andere Brillen sehen möchte (#351)? Fehlt sonst. */
   xr?: true;
+  /** Macht das Mitglied gerade beim Sprachchat mit (#352)? Fehlt sonst. */
+  voice?: true;
 }
 
 export type RoomPhase = 'lobby' | 'playing' | 'finished';
@@ -191,7 +193,11 @@ export type ClientMessage =
   /** Verbindungsaufbau zu einem anderen VR-Mitglied weiterreichen (Angebot, Antwort, ICE-Kandidat, Ende). */
   | { type: 'rtc'; to: string; signal: RtcSignal }
   /** Rückfall ohne direkte Verbindung: nur der Kopf, höchstens zweimal je Sekunde, an die anderen Brillen. */
-  | { type: 'pose'; head: number[] };
+  | { type: 'pose'; head: number[] }
+  /** Sprachchat (#352, nur private Räume): mitmachen oder aussteigen. Die Stimme läuft direkt zwischen den Geräten. */
+  | { type: 'voice'; on: boolean }
+  /** Sprachchat melden: schaltet ihn für alle bis zur nächsten Partie ab. */
+  | { type: 'reportVoice' };
 
 /** Vermittlungsdaten für WebRTC zwischen zwei Brillen (#351); der Raum liest sie nicht, er reicht sie nur weiter. */
 export type RtcSignal =
@@ -249,6 +255,11 @@ export interface RoomMessage {
   displays?: number;
   /** Läuft der Raum als Fernpartie? Nur dann bietet die Oberfläche Hinweise aufs Gerät an (#242); fehlt sonst. */
   correspondence?: true;
+  /**
+   * Sprachchat (#352) nicht möglich: `public` in öffentlichen Räumen, `reported` nach einer Meldung bis zur
+   * nächsten Partie. Fehlt, wenn man mitsprechen kann.
+   */
+  voiceOff?: 'public' | 'reported';
   /** Nur bei Turnierpartien: zu welchem Turnier der Raum gehört. */
   match?: { tournament: string; label: string; noShow: boolean; series?: { bestOf: number; score: [number, number]; next: number | null; done: boolean } };
 }
@@ -458,7 +469,10 @@ export function parseClientMessage(raw: string, push: ParsePushOptions = {}): Cl
     case 'ping':
       return { type: m.type };
     case 'xr':
-      return typeof m.on === 'boolean' ? { type: 'xr', on: m.on } : null;
+    case 'voice':
+      return typeof m.on === 'boolean' ? { type: m.type, on: m.on } : null;
+    case 'reportVoice':
+      return { type: 'reportVoice' };
     case 'rtc': {
       const signal = parseRtcSignal(m.signal);
       return isString(m.to, 20) && signal ? { type: 'rtc', to: m.to, signal } : null;

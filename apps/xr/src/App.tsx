@@ -5,12 +5,18 @@
  */
 import { AVATARS, parseRoomCode } from '@brett-und-blatt/online';
 import { createXRStore } from '@react-three/xr';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { GAME_CHOICES, LEVEL_TEXT, gameName } from './catalog';
 import { createRoom, loadProfile, saveProfile, sendMove, serverUrl, useRoom } from './net';
 import { Scene } from './scene/Scene';
+import type { VoiceControls } from './scene/Panel';
 import { play, soundsFor, unlockAudio } from './sound';
 import { PeerMesh } from './peers';
+import { VoiceChat, type VoiceState } from '@brett-und-blatt/rtc';
+
+const noSubscribe = () => () => {};
+const NO_VOICE: VoiceState = { joined: false, muted: false, silenced: [], speaking: [], error: null };
+const noVoice = () => NO_VOICE;
 
 const store = createXRStore({
   // Im Entwicklungsbetrieb ohne Brille eine Quest 3 nachbilden (IWER), sonst nie.
@@ -44,34 +50,46 @@ export function App() {
   const room = useRoom(server, code, profile);
   const { send, game } = room;
 
-  // VR-Treffpunkt (#351): direkte Verbindungen zu den anderen Brillen im Raum.
+  // VR-Treffpunkt (#351) und Sprachchat (#352): direkte Verbindungen zu den anderen Geräten im Raum.
   const [mesh, setMesh] = useState<PeerMesh | null>(null);
+  const [voice, setVoice] = useState<VoiceChat | null>(null);
   useEffect(() => {
     if (!room.you || room.status !== 'open') return;
-    const next = new PeerMesh(send, room.you);
+    let chat: VoiceChat | null = null;
+    const next = new PeerMesh(send, room.you, (from, stream) => chat?.remoteAudio(from, stream));
+    chat = new VoiceChat(next.rtc, room.you, (on) => send({ type: 'voice', on }));
     void next.loadIceServers(server);
     setMesh(next);
+    setVoice(chat);
     const off = room.onXr((message) => {
       if (message.type === 'rtc') void next.handle(message.from, message.signal);
       else next.roomPose(message.from, message.head);
     });
     return () => {
       off();
+      chat?.dispose();
       next.close();
       setMesh(null);
+      setVoice(null);
     };
   }, [room.you, room.status === 'open', send, server]);
-  const xrMembers = useMemo(() => (room.room?.members ?? []).filter((m) => m.xr && m.connected).map((m) => m.id), [room.room]);
+  const voiceState = useSyncExternalStore(voice?.subscribe ?? noSubscribe, voice?.getState ?? noVoice);
+  const members = room.room?.members;
+  const xrMembers = useMemo(() => (members ?? []).filter((m) => m.xr && m.connected).map((m) => m.id), [members]);
+  // Meldung oder öffentlicher Raum: Sprachchat sofort beenden.
+  useEffect(() => {
+    if (room.room?.voiceOff && voiceState.joined) voice?.stopByRoom();
+  }, [room.room?.voiceOff, voiceState.joined, voice]);
   useEffect(() => {
     if (!mesh) return;
-    mesh.update(xrMembers);
+    mesh.update(members ?? [], voiceState.joined);
     // Gescheiterte Verbindungen regelmäßig neu versuchen; Zustand für Tests lesbar.
     const id = window.setInterval(() => {
-      mesh.update(xrMembers);
-      (window as unknown as { __brettXrPeers?: unknown }).__brettXrPeers = { peers: mesh.status(), poses: [...mesh.poses.keys()] };
+      mesh.update(members ?? [], voiceState.joined);
+      (window as unknown as { __brettXrPeers?: unknown }).__brettXrPeers = { peers: mesh.status(), poses: [...mesh.poses.keys()], voice: voice?.getState() };
     }, 2000);
     return () => window.clearInterval(id);
-  }, [mesh, xrMembers]);
+  }, [mesh, members, voiceState.joined, voice]);
 
   // Ton erst nach der ersten Berührung (Vorgabe der Browser).
   useEffect(() => {
@@ -156,12 +174,24 @@ export function App() {
     );
   }
 
+  const voiceOff = room.room?.voiceOff ?? null;
+  const voiceControls: VoiceControls = {
+    joined: voiceState.joined,
+    muted: voiceState.muted,
+    off: voiceOff,
+    error: voiceState.error,
+    join: () => void voice?.join(),
+    leave: () => voice?.leave(),
+    mute: (muted) => voice?.setMuted(muted),
+    report: () => send({ type: 'reportVoice' }),
+  };
+  const voiceMembers = (room.room?.members ?? []).filter((m) => m.voice && m.id !== room.you);
   const lobby = room.room?.phase === 'lobby' ? room.room.lobby : null;
   const mySeat = lobby?.seats.findIndex((s) => s.kind === 'human' && s.memberId === room.you) ?? -1;
   return (
     <div className="xr-shell">
       <div className="xr-canvas">
-        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} gameAt={room.gameAt} mesh={mesh} xrMembers={xrMembers} />
+        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} gameAt={room.gameAt} mesh={mesh} xrMembers={xrMembers} voice={voiceControls} speaking={voiceState.speaking} />
       </div>
       <aside className="xr-bar" aria-label="Raum und Züge">
         <header>
@@ -177,6 +207,52 @@ export function App() {
           </button>
         </header>
         {room.error && <p role="alert">{room.error}</p>}
+        <section aria-label="Sprachchat">
+          <h2>Sprachchat</h2>
+          {voiceOff ? (
+            <p>{voiceOff === 'public' ? 'Sprachchat gibt es nur in privaten Räumen.' : 'Der Sprachchat ist für diese Runde abgeschaltet.'}</p>
+          ) : !voiceState.joined ? (
+            <>
+              {voiceState.error && <p role="alert">{voiceState.error}</p>}
+              <button type="button" onClick={() => void voice?.join()}>
+                🎙 Mitsprechen
+              </button>
+              {voiceMembers.length > 0 && <p>Es sprechen: {voiceMembers.map((m) => `${m.avatar} ${m.name}`).join(', ')}</p>}
+            </>
+          ) : (
+            <>
+              <p>
+                <button type="button" aria-pressed={voiceState.muted} onClick={() => voice?.setMuted(!voiceState.muted)}>
+                  {voiceState.muted ? '🎙 Mikrofon an' : '🔇 Stumm'}
+                </button>{' '}
+                <button type="button" onClick={() => voice?.leave()}>
+                  Aussteigen
+                </button>{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Sprachchat für alle bis zur nächsten Partie abschalten?')) send({ type: 'reportVoice' });
+                  }}
+                >
+                  ⚠ Melden
+                </button>
+              </p>
+              <ul className="xr-seats">
+                {voiceMembers.map((m) => (
+                  <li key={m.id}>
+                    <span>
+                      {voiceState.speaking.includes(m.id) ? '🔊 ' : ''}
+                      {m.avatar} {m.name}
+                    </span>
+                    <button type="button" aria-pressed={voiceState.silenced.includes(m.id)} onClick={() => voice?.silence(m.id, !voiceState.silenced.includes(m.id))}>
+                      {voiceState.silenced.includes(m.id) ? 'Wieder hören' : 'Für mich stumm'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
         {lobby && room.room && (
           <section>
             <h2>Lobby</h2>

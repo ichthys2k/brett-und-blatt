@@ -11,7 +11,7 @@ import type { Signal } from '../net';
 import { ChessBoard, FourInARowBoard, TicTacToeBoard, boardMoveIndexes } from './boards';
 import { CheckersBoard, GoBoard, GomokuBoard, MillBoard, ReversiBoard } from './boards2';
 import { CardTable, cardMoveIndexes, isCardGame } from './cards';
-import { Panel, ReactionBar } from './Panel';
+import { Panel, ReactionBar, type VoiceControls } from './Panel';
 import { Seats, seatAngle, type SeatInfo } from './Seats';
 import { TABLE_CENTER, Tavern } from './Tavern';
 import { Figures, POSE_STALE_MS, PoseSender } from './Meet';
@@ -30,6 +30,9 @@ interface SceneProps {
   /** VR-Treffpunkt (#351): Verbindungen zu den anderen Brillen und wer gerade mit Brille da ist. */
   mesh: PeerMesh | null;
   xrMembers: string[];
+  /** Sprachchat (#352): Bedienung für das 2D-Fenster und wer gerade spricht. */
+  voice: VoiceControls;
+  speaking: string[];
 }
 
 const VIEW_KEY = 'brett-und-blatt-xr-tisch';
@@ -118,7 +121,7 @@ function seatInfos(room: RoomMessage | null, game: GameMessage | null, you: stri
   });
 }
 
-export function Scene({ store, room, game, you, signals, send, onMove, gameAt, mesh, xrMembers }: SceneProps) {
+export function Scene({ store, room, game, you, signals, send, onMove, gameAt, mesh, xrMembers, voice, speaking }: SceneProps) {
   const [now, setNow] = useState(() => Date.now());
   const ticking = Boolean(game && !game.result && game.clocks.some((c) => c?.running));
   useEffect(() => {
@@ -127,7 +130,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
     return () => window.clearInterval(id);
   }, [ticking]);
   const { offset, adjust } = useViewOffset();
-  const seats = seatInfos(room, game, you, gameAt, now);
+  const seats = seatInfos(room, game, you, gameAt, now).map((s) => (s.memberId && speaking.includes(s.memberId) ? { ...s, speaking: true } : s));
 
   // Figuren der anderen Brillen: nur mit frischer Pose; einmal je Sekunde neu entschieden.
   const [figures, setFigures] = useState<string[]>([]);
@@ -182,7 +185,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         {shown?.gameId === 'gomoku' && <GomokuBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'go' && <GoBoard game={shown} onMove={moveByValue} />}
         {shown && isCardGame(shown.gameId) && <CardTable key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
-        <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={onMove} adjust={adjust} />
+        <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={onMove} adjust={adjust} voice={voice} />
         {room && <ReactionBar send={send} />}
       </XR>
     </Canvas>
