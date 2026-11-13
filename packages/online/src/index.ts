@@ -24,6 +24,7 @@ export {
   type MatchRoomReport,
   type RoomDeps,
   type RoomSnapshot,
+  type ConnectionFlags,
 } from './room';
 export { serverBotRunner } from './server-bots';
 export { CLIENT_BURST, CLIENT_ID_PATTERN, CLIENT_PARAM, CLIENT_PER_SECOND, MessageBudget, accessFor, parseClientId, type Access } from './access';

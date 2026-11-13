@@ -244,6 +244,9 @@ interface Attachment {
   memberId: string | null;
   /** Kennung eines Clients ohne Webseite (#334); fehlt bei der Web-App. */
   client?: string;
+  /** VR-Brille bzw. im Sprachchat (#351, #352). */
+  xr?: boolean;
+  voice?: boolean;
 }
 
 /** Kopf, mit dem der Worker dem Raum die geprüfte Client-Kennung weiterreicht (nie vom Client übernommen). */
@@ -1083,6 +1086,7 @@ export class GameRoom extends DurableObject<Env> {
         this.sockets.set(attachment.id, ws);
         if (attachment.memberId) this.room.reattach(attachment.id, attachment.memberId);
         else this.room.connect(attachment.id);
+        if (attachment.xr || attachment.voice) this.room.restoreFlags(attachment.id, { xr: attachment.xr, voice: attachment.voice });
       }
     });
   }
@@ -1281,6 +1285,13 @@ export class GameRoom extends DurableObject<Env> {
         this.sockets.delete(id);
       },
       changed: () => void this.persist(),
+      // Brille und Sprachchat (#351, #352) hängen an der Verbindung, damit sie das Schlafen des Raums überstehen.
+      flagsChanged: (id, flags) => {
+        const ws = this.sockets.get(id);
+        if (!ws) return;
+        const attachment = ws.deserializeAttachment() as Attachment;
+        ws.serializeAttachment({ ...attachment, xr: flags.xr || undefined, voice: flags.voice || undefined } satisfies Attachment);
+      },
       notifyTurn: (tokens) => {
         if (pushConfigured(this.env)) this.ctx.waitUntil(this.deliverTurn(tokens));
       },
@@ -1292,8 +1303,8 @@ export class GameRoom extends DurableObject<Env> {
     if (!ws) return;
     // Nach der Anmeldung merkt sich die Verbindung ihr Mitglied – für das Aufwachen.
     if (message.type === 'welcome') {
-      const client = (ws.deserializeAttachment() as Attachment).client;
-      ws.serializeAttachment({ id, memberId: message.you, ...(client ? { client } : {}) } satisfies Attachment);
+      const { client, xr, voice } = ws.deserializeAttachment() as Attachment;
+      ws.serializeAttachment({ id, memberId: message.you, ...(client ? { client } : {}), ...(xr ? { xr } : {}), ...(voice ? { voice } : {}) } satisfies Attachment);
       if (pushConfigured(this.env)) void this.sendPushState(id, message.you);
     }
     try {

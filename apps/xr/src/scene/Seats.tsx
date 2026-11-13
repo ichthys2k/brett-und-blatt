@@ -22,6 +22,8 @@ export interface SeatInfo {
   winner: boolean;
   /** Restzeit, z. B. „⏱ 0:42“; leer ohne Uhr. */
   clock?: string;
+  /** Spricht gerade im Sprachchat (#352). */
+  speaking?: boolean;
 }
 
 /** Winkel eines Platzes: der eigene vorn (zum Betrachter), die anderen reihum. */
@@ -56,7 +58,7 @@ export function Seats({ seats, signals, memberAvatar, figures = [] }: { seats: S
         // Der eigene Platz ist man selbst; sein Schild liegt flach vor einem auf dem Tisch.
         const signPos: [number, number, number] = seat.mine ? [TABLE_CENTER[0] - 0.33, TABLE_CENTER[1] + 0.03, TABLE_CENTER[2] + 0.36] : seatPoint(seat.angle, TABLE_RADIUS + 0.38, 1.28);
         const rotation: [number, number, number] = seat.mine ? [-Math.PI / 2.4, 0, 0] : [0, seat.angle + Math.PI, 0];
-        const status = [seat.winner ? '🏆 gewinnt' : seat.turn ? '⏳ am Zug' : seat.bot ? `Bot ${LEVEL_TEXT[seat.bot] ?? ''}` : '', seat.clock ?? ''].filter(Boolean).join('  ');
+        const status = [seat.speaking ? '🔊' : '', seat.winner ? '🏆 gewinnt' : seat.turn ? '⏳ am Zug' : seat.bot ? `Bot ${LEVEL_TEXT[seat.bot] ?? ''}` : '', seat.clock ?? ''].filter(Boolean).join('  ');
         const own = signals.filter((s) => s.from === seat.memberId);
         return (
           <group key={seat.index}>

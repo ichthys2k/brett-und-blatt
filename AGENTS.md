@@ -61,7 +61,7 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 - [`docs/spiele/`](docs/spiele/README.md) – ein Plan pro Spiel (Regeln, Optionen, Bot, Oberfläche, Umsetzungsstand), Übersicht im README.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) – wie ein neues Spiel angelegt wird.
 - [`docs/grafik/STILBIBEL.md`](docs/grafik/STILBIBEL.md) – Stil, Verbote und Regeln für gemalte Bilder; Ablauf zum Erzeugen in [`.agent/workflows/grafik-erzeugen.md`](.agent/workflows/grafik-erzeugen.md), Bestand in [`docs/grafik/BESTAND.md`](docs/grafik/BESTAND.md).
-- Code: `apps/web` (React-App), `apps/xr` (VR-App, `docs/vr.md`), `apps/cli` (Text-Client), `apps/server` (Cloudflare-Worker), `packages/engine`, `packages/online`, `packages/ui`, `packages/games/<id>` (Ordnername = Spiel-`id`), `content/`.
+- Code: `apps/web` (React-App), `apps/xr` (VR-App, `docs/vr.md`), `apps/cli` (Text-Client), `apps/server` (Cloudflare-Worker), `packages/engine`, `packages/online`, `packages/rtc` (WebRTC: VR-Treffpunkt, Sprachchat), `packages/ui`, `packages/games/<id>` (Ordnername = Spiel-`id`), `content/`.
 
 ## Zum Abschluss einer Aufgabe
 

@@ -32,6 +32,18 @@ const LEVELS: BotLevel[] = ['easy', 'medium', 'hard'];
 /** Spiele, bei denen man Remis anbieten kann (Angebot steht nicht in legalMoves). */
 const DRAW_GAMES = new Set(['chess', 'checkers']);
 
+/** Sprachchat (#352) für das 2D-Fenster. */
+export interface VoiceControls {
+  joined: boolean;
+  muted: boolean;
+  off: 'public' | 'reported' | null;
+  error: string | null;
+  join: () => void;
+  leave: () => void;
+  mute: (muted: boolean) => void;
+  report: () => void;
+}
+
 export interface ViewAdjust {
   up: () => void;
   down: () => void;
@@ -48,6 +60,7 @@ interface PanelProps {
   boardMoves: Set<number>;
   onMove: (index: number) => void;
   adjust: ViewAdjust;
+  voice: VoiceControls;
 }
 
 interface Btn {
@@ -57,12 +70,13 @@ interface Btn {
   disabled?: boolean;
 }
 
-type Mode = 'main' | 'phrases' | 'view';
+type Mode = 'main' | 'phrases' | 'view' | 'voice';
 
-export function Panel({ room, game, you, send, boardMoves, onMove, adjust }: PanelProps) {
+export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice }: PanelProps) {
   const [page, setPage] = useState(0);
   const [mode, setMode] = useState<Mode>('main');
   const [confirmResign, setConfirmResign] = useState(false);
+  const [confirmReport, setConfirmReport] = useState(false);
   const [, redraw] = useState(0);
   useEffect(() => onVolumeChange(() => redraw((n) => n + 1)), []);
   const beside = Boolean(game && !game.result && isBoardGame(game.gameId));
@@ -79,6 +93,24 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust }: Pan
     lines.push('Schnellnachricht an den Tisch');
     for (let i = 0; i < PHRASES.length; i += 2) {
       rows.push(PHRASES.slice(i, i + 2).map((p) => ({ label: PHRASE_TEXT[p] ?? p, press: () => (send({ type: 'say', phrase: p }), setMode('main')) })));
+    }
+    rows.push([back]);
+  } else if (mode === 'voice') {
+    lines.push('Sprachchat');
+    if (voice.off) lines.push(voice.off === 'public' ? 'Nur in privaten Räumen.' : 'Für diese Runde abgeschaltet.');
+    else if (!voice.joined) {
+      if (voice.error) lines.push(voice.error);
+      rows.push([{ label: '🎙 Mitsprechen', press: voice.join, active: true }]);
+    } else {
+      rows.push([
+        { label: voice.muted ? '🎙 Mikro an' : '🔇 Stumm', press: () => voice.mute(!voice.muted), active: voice.muted },
+        { label: 'Aussteigen', press: voice.leave },
+      ]);
+      rows.push([
+        confirmReport
+          ? { label: 'Wirklich für alle abschalten?', press: () => (voice.report(), setConfirmReport(false)), active: true }
+          : { label: '⚠ Melden', press: () => setConfirmReport(true) },
+      ]);
     }
     rows.push([back]);
   } else if (mode === 'view') {
@@ -134,6 +166,7 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust }: Pan
     else lines.push('Die Raumleitung beginnt die Partie.');
     rows.push([
       { label: '💬 Nachricht', press: () => setMode('phrases') },
+      { label: voice.joined ? (voice.muted ? '🔇 Sprache' : '🎙 Sprache') : '🎙 Sprache', press: () => setMode('voice'), active: voice.joined && !voice.muted },
       { label: '↕ Tisch', press: () => setMode('view') },
     ]);
   } else if (game.result) {
@@ -143,6 +176,7 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust }: Pan
     rows.push([{ label: 'Nochmal', press: () => send({ type: 'afterVote', choice: 'again' }), active: true }, ...(host ? [{ label: 'Zur Lobby', press: () => send({ type: 'toLobby' }) }] : [])]);
     rows.push([
       { label: '💬 Nachricht', press: () => setMode('phrases') },
+      { label: voice.joined ? (voice.muted ? '🔇 Sprache' : '🎙 Sprache') : '🎙 Sprache', press: () => setMode('voice'), active: voice.joined && !voice.muted },
       { label: '↕ Tisch', press: () => setMode('view') },
     ]);
   } else {
@@ -183,6 +217,7 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust }: Pan
     if (controls.length) rows.push(controls);
     rows.push([
       { label: '💬 Nachricht', press: () => setMode('phrases') },
+      { label: voice.joined ? (voice.muted ? '🔇 Sprache' : '🎙 Sprache') : '🎙 Sprache', press: () => setMode('voice'), active: voice.joined && !voice.muted },
       { label: '↕ Tisch', press: () => setMode('view') },
     ]);
   }

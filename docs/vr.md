@@ -26,6 +26,8 @@ Eine eigene Web-App für die Meta Quest (und jeden Browser mit WebGL): ein Tisch
 
 **Treffpunkt (#351):** Wer mit Brille im Raum ist, erscheint bei den anderen Brillen als **Figur** mit Kopf (das Avatar-Emoji als Gesicht), Händen und einem Schild mit Avatar und Name vor der Brust. Kopf und Hände laufen direkt zwischen den Brillen (WebRTC), der Spieleserver vermittelt nur. Klappt keine direkte Verbindung, wird nach zehn Sekunden einmal je Sekunde nur der Kopf über den Server geschickt. Wer am **Handy oder Rechner** spielt, sitzt weiter als **Schild am Stuhl**, ohne Figur, mit „am Zug“, Uhr und Reaktionen.
 
+**Sprachchat (#352):** In privaten Räumen über **„🎙 Sprache“** im Fenster über dem Tisch oder in der Leiste: Mitsprechen, Stumm, Aussteigen und Melden. Melden schaltet den Sprachchat für alle bis zur nächsten Partie ab. In der Leiste kann man außerdem einzelne Mitspieler für sich stumm schalten. Wer spricht, zeigt 🔊 auf Schild bzw. Brustschild. Handy- und Web-Spieler sprechen über den Knopf 🎙 neben den Reaktionen mit.
+
 Mitspieler stehen als Schild mit Avatar-Emoji über ihrem Stuhl. Emoji-Reaktionen schickt man über die Leiste an der eigenen Tischkante; sie schweben über dem Schild der Person. Sprache gibt es bewusst nicht (später nur in privaten Räumen, siehe [weitere-plattformen.md](spiele/weitere-plattformen.md)).
 
 Ohne Brille läuft dieselbe Seite im Browser: Klick auf die Ziele im Bild oder auf die Zugliste in der Leiste rechts (auch für Bildschirmleser).
@@ -88,5 +90,5 @@ Den alten Worker `brett-und-blatt-xr` (erster Versuch) kann man danach im Dashbo
 
 ## Grenzen des Probelaufs
 
-- Keine Sprache (#352). Die Figuren sind schlicht (Kopf, Hände, Körper); Finger und Mimik gibt es nicht.
+- Die Figuren sind schlicht (Kopf, Hände, Körper); Finger und Mimik gibt es nicht.
 - Der Kartenfächer schwebt vor dir; an der Hand oder am Controller hängt er noch nicht, und Karten werden angetippt statt gegriffen. Weitere Kartenspiele (z. B. Doppelkopf, Schafkopf) laufen noch über das 2D-Fenster.

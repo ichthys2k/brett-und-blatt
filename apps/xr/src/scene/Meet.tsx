@@ -60,7 +60,7 @@ export function PoseSender({ mesh, xrMembers, sendRoomPose, origin }: { mesh: Pe
     const changed = moved(head, state.head) || moved(left, state.left) || moved(right, state.right);
     if (!changed && now - state.at < HEARTBEAT_MS) return;
     mesh.broadcast(head, left, right);
-    if (now - state.fallbackAt >= FALLBACK_EVERY_MS && mesh.needsFallback(xrMembers)) {
+    if (now - state.fallbackAt >= FALLBACK_EVERY_MS && mesh.needsFallback()) {
       sendRoomPose(head);
       state.fallbackAt = now;
     }
@@ -118,7 +118,7 @@ function Figure({ pose, angle, info }: { pose: () => RemotePose | undefined; ang
       }
     }
   });
-  const status = info ? [info.winner ? '🏆' : info.turn ? '⏳ am Zug' : '', info.clock ?? ''].filter(Boolean).join('  ') : '';
+  const status = info ? [info.speaking ? '🔊' : '', info.winner ? '🏆' : info.turn ? '⏳ am Zug' : '', info.clock ?? ''].filter(Boolean).join('  ') : '';
   return (
     <group>
       <group ref={head}>

@@ -13,6 +13,7 @@
     "@bokuweb/zstd-wasm": "0.0.27",
     "@brett-und-blatt/engine": "workspace:*",
     "@brett-und-blatt/online": "workspace:*",
+    "@brett-und-blatt/rtc": "workspace:*",
     "@brett-und-blatt/ui": "workspace:*",
     "@fontsource/almendra": "5.3.0",
     "fflate": "0.8.3",

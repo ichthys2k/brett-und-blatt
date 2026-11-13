@@ -1219,3 +1219,76 @@ describe('VR-Treffpunkt (#351)', () => {
     expect(anna.last('error')?.code).toBe('badMessage');
   });
 });
+
+describe('Sprachchat (#352)', () => {
+  let env: Env;
+  beforeEach(() => {
+    env = setup();
+  });
+
+  const privateRoom = () => {
+    const anna = env.client('anna');
+    const handy = env.client('handy');
+    [anna, handy].forEach((c) => c.hello());
+    anna.send({ type: 'setPublic', isPublic: false });
+    return { anna, handy };
+  };
+
+  it('gibt es nur in privaten Räumen', () => {
+    const anna = env.client('anna');
+    anna.hello();
+    anna.send({ type: 'setPublic', isPublic: true });
+    expect(anna.room().voiceOff).toBe('public');
+    anna.send({ type: 'voice', on: true });
+    expect(anna.last('error')?.code).toBe('notAllowed');
+  });
+
+  it('vermittelt zwischen allen, die mitsprechen – auch Web und Handy', () => {
+    const { anna, handy } = privateRoom();
+    expect(anna.room().voiceOff).toBeUndefined();
+    anna.send({ type: 'voice', on: true });
+    handy.send({ type: 'voice', on: true });
+    expect(handy.room().members.every((m) => m.voice)).toBe(true);
+    const handyId = handy.room().members.find((m) => m.name === 'handy')!.id;
+    anna.send({ type: 'rtc', to: handyId, signal: { kind: 'offer', sdp: 'v=0' } });
+    expect(handy.last('rtc')?.signal).toEqual({ kind: 'offer', sdp: 'v=0' });
+    // Rückfall-Köpfe bleiben den Brillen vorbehalten.
+    anna.send({ type: 'pose', head: [0, 1, 0, 0, 0, 0, 1] });
+    expect(handy.last('pose')).toBeUndefined();
+  });
+
+  it('Melden schaltet den Sprachchat bis zur nächsten Partie ab', () => {
+    const { anna, handy } = privateRoom();
+    anna.send({ type: 'voice', on: true });
+    handy.send({ type: 'voice', on: true });
+    handy.send({ type: 'reportVoice' });
+    expect(anna.room().voiceOff).toBe('reported');
+    expect(anna.room().members.some((m) => m.voice)).toBe(false);
+    anna.send({ type: 'voice', on: true });
+    expect(anna.last('error')?.code).toBe('notAllowed');
+    // Neue Partie: wieder frei.
+    anna.send({ type: 'setGame', gameId: 'tic-tac-toe' });
+    anna.send({ type: 'takeSeat', index: 0 });
+    handy.send({ type: 'takeSeat', index: 1 });
+    anna.send({ type: 'start' });
+    expect(anna.room().voiceOff).toBeUndefined();
+  });
+
+  it('übersteht das Schlafen des Raums', () => {
+    const flags = new Map<string, unknown>();
+    env.deps.flagsChanged = (id, f) => flags.set(id, f);
+    const { anna } = privateRoom();
+    anna.send({ type: 'voice', on: true });
+    anna.send({ type: 'xr', on: true });
+    expect(flags.get('anna')).toEqual({ xr: true, voice: true });
+    const restored = Room.restore(env.room.snapshot(), env.deps);
+    restored.reattach('anna', anna.room().members.find((m) => m.name === 'anna')!.id);
+    restored.restoreFlags('anna', { xr: true, voice: true });
+    env.replaceRoom(restored);
+    anna.send({ type: 'ping' });
+    restored.receive('anna', JSON.stringify({ type: 'setName', name: 'anna', avatar: '🦊' }));
+    const member = anna.room().members.find((m) => m.name === 'anna')!;
+    expect(member.xr).toBe(true);
+    expect(member.voice).toBe(true);
+  });
+});
