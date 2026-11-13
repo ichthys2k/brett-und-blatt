@@ -427,6 +427,15 @@ describe('Partie', () => {
     expect(ben.game().legalMoves.length).toBeGreaterThan(0);
   });
 
+  it('schickt Zugtexte passend zu den eigenen Zügen mit (#335)', () => {
+    const [anna, ben] = twoPlayers(env);
+    const first = anna.game();
+    expect(first.moveLabels).toHaveLength(first.legalMoves.length);
+    expect(first.moveLabels?.[0]).toBe('Kreuz auf oben links');
+    // Wer nicht am Zug ist, hat keine Züge und bekommt keine Texte.
+    expect(ben.game().moveLabels).toBeUndefined();
+  });
+
   it('veraltete und unerlaubte Züge werden abgelehnt', () => {
     const [anna, ben] = twoPlayers(env);
     const first = anna.game();

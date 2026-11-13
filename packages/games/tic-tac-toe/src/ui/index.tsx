@@ -4,6 +4,7 @@
  */
 import type { SeatId } from '@brett-und-blatt/engine';
 import { FitBox, GridBoard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { CELL_NAMES, describeMove } from '../describe';
 import type { TicTacToeMove, TicTacToeState } from '../rules';
 import './styles.css';
 
@@ -46,8 +47,11 @@ function Board({ view, legalMoves, onMove }: BoardProps<TicTacToeState, TicTacTo
         onActivate={(col, row) => onMove({ type: 'place', cell: cellAt(col, row) })}
         cellClassName={(col, row) => (winning.has(cellAt(col, row)) ? 'ttt-win' : '')}
         cellLabel={(col, row) => {
-          const seat = view.board[cellAt(col, row)];
-          return `Reihe ${row + 1}, Spalte ${col + 1}: ${seat === null || seat === undefined ? 'frei' : LABELS[seat]}`;
+          const cell = cellAt(col, row);
+          // Spielbare Felder nennen den Zug (#335), die anderen ihren Inhalt.
+          if (playable.has(cell)) return describeMove(view, { type: 'place', cell });
+          const seat = view.board[cell];
+          return `${CELL_NAMES[cell]}: ${seat === null || seat === undefined ? 'frei' : LABELS[seat]}`;
         }}
       />
         {line && (

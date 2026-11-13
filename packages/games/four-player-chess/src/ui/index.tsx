@@ -1,6 +1,7 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import { FitBox, GridBoard, useElementSize, useGridMoveAnimation, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { describeMove } from '../describe';
 import { legalMoves as engineLegalMoves, type LogEntry } from '../legacy/engine';
 import { COLORS, type Color, type FourChessMove, type FourChessState, type Piece } from '../rules';
 import { getCheckWarning, type CheckWarning } from './checkWarning';
@@ -436,7 +437,10 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                 cellLabel={(dc, dr) => {
                   const index = toBoard(dc, dr, perspective);
                   const piece = shown.board[index];
-                  return `${squareName(index)}: ${piece ? `${piece.d ? 'tote Figur' : NAMES[piece.c]} ${PIECE_NAMES[piece.t]}` : 'frei'}${kingSquares.has(index) ? ' – steht im Schach' : ''}`;
+                  const where = `${squareName(index)}: ${piece ? `${piece.d ? 'tote Figur' : NAMES[piece.c]} ${PIECE_NAMES[piece.t]}` : 'frei'}${kingSquares.has(index) ? ' – steht im Schach' : ''}`;
+                  // Bei gewählter Figur nennen die Zielfelder den Zug (#335); die Umwandlung folgt im Dialog.
+                  const toHere = !canPremove && selected !== null && targets.has(index) ? moves.find((m) => m.f === selected && m.to === index) : undefined;
+                  return toHere ? `${where} – ${describeMove(view, { t: 'm', p: toHere.p, f: toHere.f, to: toHere.to })}` : where;
                 }}
               />
               {checkList.length > 0 && (

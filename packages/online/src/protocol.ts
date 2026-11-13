@@ -266,6 +266,11 @@ export interface GameMessage {
   view: unknown;
   /** Nur die Züge, die der eigene Platz gerade machen darf. */
   legalMoves: unknown[];
+  /**
+   * Kurze deutsche Texte zu `legalMoves`, gleiche Reihenfolge (#335) – etwa „Kreuz auf Mitte“.
+   * Nur bei Spielen mit Zugtexten und nur, wenn es Züge gibt; aus der eigenen Sicht erzeugt.
+   */
+  moveLabels?: string[];
   /** Darf der eigene Platz aufgeben? (Nicht mehr, wenn er schon ausgeschieden ist.) */
   canResign: boolean;
   /** Darf der eigene Platz gerade bitten, seinen letzten Zug zurückzunehmen? Fehlt bei älteren Servern. */

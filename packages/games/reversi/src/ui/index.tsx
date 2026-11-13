@@ -1,5 +1,6 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import { FitBox, GridBoard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { describeMove } from '../describe';
 import { countStones, type ReversiMove, type ReversiState } from '../rules';
 import './styles.css';
 
@@ -39,7 +40,10 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<ReversiState, Reve
           return [cell === view.lastMove ? 'rv-last' : '', hint?.cell === cell ? 'rv-hint' : ''].join(' ');
         }}
         cellLabel={(col, row) => {
-          const seat = view.cells[row * view.size + col];
+          const cell = row * view.size + col;
+          // Spielbare Felder nennen den Zug (#335).
+          if (playable.has(cell)) return describeMove(view, { type: 'place', cell });
+          const seat = view.cells[cell];
           return `${letters[col]}${row + 1}: ${seat === null || seat === undefined ? 'frei' : LABELS[seat]}`;
         }}
       />

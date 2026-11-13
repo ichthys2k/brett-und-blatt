@@ -1,6 +1,6 @@
 import { inlineBotRunner, computeBotMove } from '../bots/runner';
 import { canonicalJson, sameValue } from '../canonical';
-import { isLegalMove, replay, resolveOptions, settleSystemMoves } from '../module-helpers';
+import { describeMoves, isLegalMove, replay, resolveOptions, settleSystemMoves } from '../module-helpers';
 import { Rng } from '../random';
 import { LocalSession } from '../session';
 import type { Actor, AnyGameModule, Options, SeatId } from '../types';
@@ -109,6 +109,18 @@ export function gameContractChecks(module: AnyGameModule, options: ContractOptio
         });
       },
     },
+    ...(module.describeMove
+      ? [
+          {
+            name: 'Zugtexte sind vorhanden und je Zugliste eindeutig',
+            run() {
+              forEachSetup((seats, opts, label) => {
+                checkMoveLabels(module, seats, opts, `${seed}/zugtexte/${label}`, maxMoves);
+              });
+            },
+          },
+        ]
+      : []),
     {
       name: 'Jeder Bot spielt auf jeder Stufe ganze Partien mit erlaubten Zügen',
       run() {
@@ -216,6 +228,34 @@ export function playRandomGame(
     assert(result.winners.every((w) => Number.isInteger(w) && w >= 0 && w < seats), 'Ungültige Gewinner');
   }
   return { state, log };
+}
+
+/**
+ * Spielt eine Zufallspartie und prüft bei jedem Zug die Zugtexte (#335): Jeder erlaubte Zug
+ * bekommt aus der Sicht des ziehenden Platzes einen nicht leeren Text, keine zwei sind gleich.
+ */
+export function checkMoveLabels(module: AnyGameModule, seats: number, options: Options, seed: string, maxMoves = 2_000): void {
+  const rng = Rng.fromSeed(seed, 'zugtexte');
+  let state = settleSystemMoves(module, module.setup(seats, options, seed));
+  for (let step = 0; step <= maxMoves && !module.result(state); step++) {
+    const actors = module.currentPlayers(state);
+    if (actors.length === 0) break;
+    for (const seat of actors) {
+      if (seat === 'system') continue;
+      const moves = module.legalMoves(state, seat);
+      const labels = describeMoves(module, module.playerView(state, seat), moves)!;
+      const seen = new Map<string, unknown>();
+      labels.forEach((text, i) => {
+        assert(typeof text === 'string' && text.trim().length > 0, `Schritt ${step}: leerer Zugtext für ${canonicalJson(moves[i])}`);
+        assert(!seen.has(text), `Schritt ${step}: Zugtext „${text}“ doppelt (${canonicalJson(seen.get(text))} und ${canonicalJson(moves[i])})`);
+        seen.set(text, moves[i]);
+      });
+    }
+    const actor = rng.pick(actors);
+    const moves = module.legalMoves(state, actor);
+    if (moves.length === 0) break;
+    state = settleSystemMoves(module, module.applyMove(state, actor, actor === 'system' ? moves[0] : rng.pick(moves)).state);
+  }
 }
 
 /**

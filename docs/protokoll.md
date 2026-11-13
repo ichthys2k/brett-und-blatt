@@ -74,6 +74,7 @@ In der Partie schickt der Server nach jeder Änderung eine `game`-Nachricht (`Ga
 | `yourSeat` | eigener Platz (0, 1, …) oder `null` als Zuschauer |
 | `view` | die eigene Sicht, je Spiel verschieden (siehe unten) |
 | `legalMoves` | die Züge, die der eigene Platz **jetzt** machen darf; leer, wenn er nicht dran ist |
+| `moveLabels` | kurze deutsche Texte zu `legalMoves` in derselben Reihenfolge, etwa „Kreuz auf Mitte“; nur bei Spielen mit Zugtexten und nur, wenn es Züge gibt |
 | `current` | wer gerade am Zug ist |
 | `clocks`, `serverNow` | Uhrenstände; der Client zählt zur Anzeige selbst weiter, der Server entscheidet |
 | `events` | was seit der letzten Nachricht passiert ist, schon für diesen Platz gefiltert (für Klänge und Animationen) |
@@ -88,13 +89,15 @@ Ein Zug:
 
 `move` ist **ein Eintrag aus `legalMoves`, unverändert**. Ist die Version veraltet, antwortet der Server mit `error`/`staleMove`, bei einem unerlaubten Zug mit `illegalMove`. Danach auf die nächste `game`-Nachricht warten. Weitere Nachrichten: `resign` (aufgeben), `takeBack` und `answerTakeBack` (Zurücknehmen mit Zustimmung, nur bei offenen Spielen), `react` und `say` (Emoji und Schnellnachrichten), `toLobby` (Raumleitung) und `ping` (der Server antwortet mit `pong` und seiner Uhrzeit).
 
-**Sicht und Züge je Spiel:** `view` und die Einträge von `legalMoves` sind je Spiel eigenes JSON. Bis es Beschreibungen und Zugtexte gibt (#335), helfen die Typen im Spielordner: `packages/games/<id>/src/rules.ts`, zum Beispiel bei Tic-Tac-Toe:
+**Zugtexte:** Bei Tic-Tac-Toe, Vier in einer Reihe, Schach, Vierer-Schach, Dame, Mühle, Reversi, Gomoku, Go, Mau-Mau und Eins! steht neben `legalMoves` die Liste `moveLabels` (#335). Ein Client kann sie einfach als Auswahl zeigen, etwa „Springer g1–f3“, „Weiß setzt auf d6, Mühle, nimmt b2“ oder „Herz Bube spielen, Pik wünschen“. Die Texte sind je Liste eindeutig und entstehen nur aus der eigenen Sicht, verraten also nichts Verdecktes. Zurück an den Server geht immer der Eintrag aus `legalMoves`, nie der Text.
+
+**Sicht und Züge je Spiel:** `view` und die Einträge von `legalMoves` sind je Spiel eigenes JSON. Wer mehr als die Zugtexte braucht, findet die Typen im Spielordner: `packages/games/<id>/src/rules.ts`, zum Beispiel bei Tic-Tac-Toe:
 
 ```ts
 interface TicTacToeMove { type: 'place'; cell: number } // Felder 0–8 zeilenweise
 ```
 
-Ein Client kann aber jedes Spiel auch ohne dieses Wissen spielen, indem er die Einträge von `legalMoves` als Liste zur Wahl stellt.
+Ein Client kann aber jedes Spiel auch ohne dieses Wissen spielen, indem er die Einträge von `legalMoves` (oder ihre `moveLabels`) als Liste zur Wahl stellt.
 
 ### 5. Fehler und Verbindungsabbruch
 
@@ -114,6 +117,7 @@ Ein Client kann aber jedes Spiel auch ohne dieses Wissen spielen, indem er die E
 | Datum | Version | Änderung |
 | --- | --- | --- |
 | 13.11.2026 | 1 | Protokoll offengelegt: Zugang ohne `Origin` mit `?client=…`, Ratenbegrenzung, Fehlercode `tooFast` |
+| 13.11.2026 | 1 | Neues Feld `GameMessage.moveLabels` mit Zugtexten für elf Spiele (#335) |
 
 ## Lizenz
 

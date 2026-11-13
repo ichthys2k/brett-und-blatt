@@ -14,6 +14,7 @@ import {
 import { mauMauCardDescription } from '../cardDescription';
 import { getNextPlayer } from '../rules';
 import type { MauMauDeckStyle, MauMauMove, MauMauState } from '../types';
+import { describeMove } from '../describe';
 import './styles.css';
 
 /** Breite der Handkarten nach verfügbarem Platz (vorher per CSS: 3,1–4,75 rem). */
@@ -580,6 +581,8 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
                     card={card}
                     deckStyle={deckStyle}
                     description={mauMauCardDescription(card, state)}
+                    // Spielbare Karten nennen den Zug (#335); die Wunschfarbe folgt im Dialog.
+                    label={isPlayable && isActor ? `${describeMove(state, { type: 'play', cardId: card })} – ${mauMauCardDescription(card, state)}` : undefined}
                     highlight={isPlayable ? 'hint' : null}
                     onClick={() => !dragState.isDragging && handleCardClick(card)}
                   />
