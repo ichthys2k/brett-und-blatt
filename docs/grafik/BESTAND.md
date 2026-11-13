@@ -10,17 +10,17 @@ Spalten: **WebP** im öffentlichen Repo · **Original im Archiv** (privates Repo
 |---|---:|---:|---:|---:|---|---|
 | `apps/web/src/assets/raeume` | 3 | 0 | 3 |  | `raeume` | Bildmodell ohne Angabe, November 2026 |
 | `apps/web/src/menu` | 3 | 0 | 3 |  | `menue-licht` | gemini-3.1-flash-image, November 2026 |
-| `apps/web/src/wappen` | 54 | 0 | 54 |  | `wappen` | gemini-3.1-flash-image, November 2026 |
+| `apps/web/src/wappen` | 56 | 2 | 54 |  | `wappen` | gemini-3.1-flash-image, November 2026 |
 | `packages/games/color-sorter/src/ui/items` | 70 | 0 | 70 |  | `jahrmarkt-2`, `jahrmarkt-3`, `jahrmarkt` | gemini-2.5-flash-image, November 2026 |
 | `packages/games/color-sorter/src/ui/kulissen` | 5 | 0 | 5 |  | `kulissen` | gemini-2.5-flash-image, November 2026 |
 | `packages/games/color-sorter/src/ui/portraits` | 286 | 0 | 286 |  | `narren` | Canva AI, Oktober 2026; gemini-3.1-flash-image, November 2026 |
 | `packages/games/drachenspiel/src/ui/champions` | 5 | 0 | 5 |  | `drachenspiel-champions` | Bildmodell ohne Angabe, November 2026 |
-| `packages/games/drachenspiel/src/ui/kulissen` | 6 | 6 |  |  | – | Bildmodell ohne Angabe, November 2026 |
+| `packages/games/drachenspiel/src/ui/kulissen` | 6 | 0 |  | 6 | – | Bildmodell ohne Angabe, November 2026 |
 | `packages/games/marketplace/src/ui/fields` | 15 | 0 | 15 |  | `marktplatz-felder` | Bildmodell ohne Angabe, November 2026 |
 | `packages/games/marketplace/src/ui/figures` | 5 | 0 | 5 |  | `marktplatz-figuren` | Bildmodell ohne Angabe, November 2026 |
 | `packages/games/wolves-sheep/src/ui/cards` | 11 | 0 | 11 |  | `rollenkarten` | gemini-3.1-flash-image, November 2026 |
 | `packages/ui/src/cards/portraits` | 24 | 0 | 24 |  | `bildkarten-deutsch`, `bildkarten` | gemini-3.1-flash-image, November 2026 |
-| **Summe** | **487** | **6** | **481** | **0** | | |
+| **Summe** | **489** | **2** | **481** | **6** | | |
 
 ## Geplant (Manifest vorhanden, noch keine Bilder)
 
