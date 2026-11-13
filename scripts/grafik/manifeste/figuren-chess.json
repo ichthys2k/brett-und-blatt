@@ -1,0 +1,306 @@
+{
+  "beschreibung": "G12 (#325): Spielfiguren für Schach (hell und dunkel). Motiv-id = <satz>-<figur>[-<seite>]; w = hell, b = dunkel, n = neutraler Meister zum Einfärben in die Platzfarben. Alle Motive freistellen (grüner Grund #00B140 → Alphakanal).",
+  "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+  "ohne": "text, letters, numbers, watermark, border, frame, background scene, hands, people, modern objects, logos, photo, green on the object itself, cast shadow",
+  "format": "1:1",
+  "ziel": "packages/games/chess/src/ui/figuren",
+  "groesse": [
+    192,
+    192
+  ],
+  "referenzen": [
+    "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp",
+    "packages/ui/src/cards/portraits/koenig-herz.webp",
+    "packages/games/marketplace/src/ui/figures/herald.webp"
+  ],
+  "motive": [
+    {
+      "id": "wood-k-w",
+      "titel": "König · wood · hell",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess king, tall, with a cross-topped crown, made of pale maple wood."
+    },
+    {
+      "id": "wood-k-b",
+      "titel": "König · wood · dunkel",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess king, tall, with a cross-topped crown, made of dark walnut wood."
+    },
+    {
+      "id": "wood-q-w",
+      "titel": "Dame · wood · hell",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess queen with a pointed coronet, made of pale maple wood."
+    },
+    {
+      "id": "wood-q-b",
+      "titel": "Dame · wood · dunkel",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess queen with a pointed coronet, made of dark walnut wood."
+    },
+    {
+      "id": "wood-r-w",
+      "titel": "Turm · wood · hell",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess rook, a round crenellated tower, made of pale maple wood."
+    },
+    {
+      "id": "wood-r-b",
+      "titel": "Turm · wood · dunkel",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess rook, a round crenellated tower, made of dark walnut wood."
+    },
+    {
+      "id": "wood-b-w",
+      "titel": "Läufer · wood · hell",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess bishop with a slit mitre top, made of pale maple wood."
+    },
+    {
+      "id": "wood-b-b",
+      "titel": "Läufer · wood · dunkel",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess bishop with a slit mitre top, made of dark walnut wood."
+    },
+    {
+      "id": "wood-n-w",
+      "titel": "Springer · wood · hell",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess knight, a horse head in profile facing left, made of pale maple wood."
+    },
+    {
+      "id": "wood-n-b",
+      "titel": "Springer · wood · dunkel",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess knight, a horse head in profile facing left, made of dark walnut wood."
+    },
+    {
+      "id": "wood-p-w",
+      "titel": "Bauer · wood · hell",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess pawn, small with a round head, made of pale maple wood."
+    },
+    {
+      "id": "wood-p-b",
+      "titel": "Bauer · wood · dunkel",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess pawn, small with a round head, made of dark walnut wood."
+    },
+    {
+      "id": "metal-k-w",
+      "titel": "König · metal · hell",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess king, tall, with a cross-topped crown, made of bright pewter."
+    },
+    {
+      "id": "metal-k-b",
+      "titel": "König · metal · dunkel",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess king, tall, with a cross-topped crown, made of dark bronze."
+    },
+    {
+      "id": "metal-q-w",
+      "titel": "Dame · metal · hell",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess queen with a pointed coronet, made of bright pewter."
+    },
+    {
+      "id": "metal-q-b",
+      "titel": "Dame · metal · dunkel",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess queen with a pointed coronet, made of dark bronze."
+    },
+    {
+      "id": "metal-r-w",
+      "titel": "Turm · metal · hell",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess rook, a round crenellated tower, made of bright pewter."
+    },
+    {
+      "id": "metal-r-b",
+      "titel": "Turm · metal · dunkel",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess rook, a round crenellated tower, made of dark bronze."
+    },
+    {
+      "id": "metal-b-w",
+      "titel": "Läufer · metal · hell",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess bishop with a slit mitre top, made of bright pewter."
+    },
+    {
+      "id": "metal-b-b",
+      "titel": "Läufer · metal · dunkel",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess bishop with a slit mitre top, made of dark bronze."
+    },
+    {
+      "id": "metal-n-w",
+      "titel": "Springer · metal · hell",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess knight, a horse head in profile facing left, made of bright pewter."
+    },
+    {
+      "id": "metal-n-b",
+      "titel": "Springer · metal · dunkel",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess knight, a horse head in profile facing left, made of dark bronze."
+    },
+    {
+      "id": "metal-p-w",
+      "titel": "Bauer · metal · hell",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess pawn, small with a round head, made of bright pewter."
+    },
+    {
+      "id": "metal-p-b",
+      "titel": "Bauer · metal · dunkel",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess pawn, small with a round head, made of dark bronze."
+    },
+    {
+      "id": "fable-k-w",
+      "titel": "König · fable · hell",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a lion king with crown and sceptre, the tallest figure of the set, in cream and gold clothes on a pale base."
+    },
+    {
+      "id": "fable-k-b",
+      "titel": "König · fable · dunkel",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a lion king with crown and sceptre, the tallest figure of the set, in deep burgundy and black clothes on a dark base."
+    },
+    {
+      "id": "fable-q-w",
+      "titel": "Dame · fable · hell",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a swan queen with a small crown, almost as tall as the king, in cream and gold clothes on a pale base."
+    },
+    {
+      "id": "fable-q-b",
+      "titel": "Dame · fable · dunkel",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a swan queen with a small crown, almost as tall as the king, in deep burgundy and black clothes on a dark base."
+    },
+    {
+      "id": "fable-r-w",
+      "titel": "Turm · fable · hell",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a bear guard holding a tower-shaped shield, in cream and gold clothes on a pale base."
+    },
+    {
+      "id": "fable-r-b",
+      "titel": "Turm · fable · dunkel",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a bear guard holding a tower-shaped shield, in deep burgundy and black clothes on a dark base."
+    },
+    {
+      "id": "fable-b-w",
+      "titel": "Läufer · fable · hell",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a fox herald with a tall pointed hat and a staff, in cream and gold clothes on a pale base."
+    },
+    {
+      "id": "fable-b-b",
+      "titel": "Läufer · fable · dunkel",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a fox herald with a tall pointed hat and a staff, in deep burgundy and black clothes on a dark base."
+    },
+    {
+      "id": "fable-n-w",
+      "titel": "Springer · fable · hell",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a horse knight in profile facing left, in cream and gold clothes on a pale base."
+    },
+    {
+      "id": "fable-n-b",
+      "titel": "Springer · fable · dunkel",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a horse knight in profile facing left, in deep burgundy and black clothes on a dark base."
+    },
+    {
+      "id": "fable-p-w",
+      "titel": "Bauer · fable · hell",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a small hedgehog squire with a simple cap, the smallest figure of the set, in cream and gold clothes on a pale base."
+    },
+    {
+      "id": "fable-p-b",
+      "titel": "Bauer · fable · dunkel",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a small hedgehog squire with a simple cap, the smallest figure of the set, in deep burgundy and black clothes on a dark base."
+    }
+  ]
+}

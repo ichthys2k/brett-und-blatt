@@ -16,6 +16,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 **Entscheidungen zum Grafik-Vorhaben (12.11.2026):** „Lernen“ wird siebte Station im Hauptmenü (#317). Bot-Namen statt Notnamen (#311): Reizkeiler (Skat), Frau Dulle (Doppelkopf), Sauspieler (Schafkopf), Steinmeister (Go), Steinleger (Domino), Kugelrufer (Bingo), Geduldsschnecke (Solitaire), Kreidekätzchen (Tic-Tac-Toe), Würfelprobe (Ultimate Tic-Tac-Toe), Fünferpanda (Gomoku), Weitblick (Vierer-Schach), Musterelster (Farbe & Form), Merkfant (Paare finden); „Vorausrechner“ bleibt ein gemeinsamer Charakter der fünf Denkspiele. Kartenrücken werden freigeschaltet, Regeln in #314. `grafik-roh/` existiert nicht mehr: Die Originale der bis 12.11. erzeugten Bilder sind verloren, es bleiben die WebP-Fassungen.
 
+**Spielfiguren der Brettspiele (G12, #325, 13.11.2026, `status: Idee`):** Der Grundsatz, Brettspiele von gemalten Figuren auszunehmen, ist aufgehoben. Je Spiel vier Figurensätze: „Klassisch“ (heutige Darstellung) sowie erzeugt „Geschnitztes Holz“ (`wood`), „Zinn und Messing“ (`metal`) und „Fabeltiere“ (`fable`); der Spieler wählt je Spiel, den Standard je Spiel legt Cornelius fest. Manifeste `scripts/grafik/manifeste/figuren-<spiel>.json` für elf Spiele (120 Motive, noch keine Bilder).
+
 **Durchsicht Sicherheit (12.11.2026):** Drei Schwächen des Spieleservers (Spielercode ohne PIN, Anlegen ohne Bremse, Raum-Abfrage) nimmt Cornelius bewusst hin; festgehalten im zurückgestellten Issue #321. Unabhängige Härtung (CSP, localhost-Origins, Actions per SHA, KaTeX) als #322 (`status: Idee`). #242 und #135 stehen auf `status: Review`.
 
 ## Technik-Bausteine mit Datum (aus „Technik in Kürze“)

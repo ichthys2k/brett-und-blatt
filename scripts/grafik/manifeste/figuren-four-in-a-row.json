@@ -1,0 +1,66 @@
+{
+  "beschreibung": "G12 (#325): Spielfiguren für Vier in einer Reihe (Mitte leer für Ring und Stern). Motiv-id = <satz>-<figur>[-<seite>]; w = hell, b = dunkel, n = neutraler Meister zum Einfärben in die Platzfarben. Alle Motive freistellen (grüner Grund #00B140 → Alphakanal).",
+  "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+  "ohne": "text, letters, numbers, watermark, border, frame, background scene, hands, people, modern objects, logos, photo, green on the object itself, cast shadow",
+  "format": "1:1",
+  "ziel": "packages/games/four-in-a-row/src/ui/figuren",
+  "groesse": [
+    192,
+    192
+  ],
+  "referenzen": [
+    "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp",
+    "packages/ui/src/cards/portraits/koenig-herz.webp",
+    "packages/games/marketplace/src/ui/figures/herald.webp"
+  ],
+  "motive": [
+    {
+      "id": "wood-disc-w",
+      "titel": "Spielstein · wood · hell",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a round flat disc with a raised rim and an empty smooth centre, made of pale maple wood."
+    },
+    {
+      "id": "wood-disc-b",
+      "titel": "Spielstein · wood · dunkel",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a round flat disc with a raised rim and an empty smooth centre, made of dark walnut wood."
+    },
+    {
+      "id": "metal-disc-w",
+      "titel": "Spielstein · metal · hell",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a round flat disc with a raised rim and an empty smooth centre, made of bright pewter."
+    },
+    {
+      "id": "metal-disc-b",
+      "titel": "Spielstein · metal · dunkel",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a round flat disc with a raised rim and an empty smooth centre, made of dark bronze."
+    },
+    {
+      "id": "fable-disc-w",
+      "titel": "Spielstein · fable · hell",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a round flat disc of honey-yellow glazed clay with a raised rim and an empty smooth centre."
+    },
+    {
+      "id": "fable-disc-b",
+      "titel": "Spielstein · fable · dunkel",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a round flat disc of deep-red glazed clay with a raised rim and an empty smooth centre."
+    }
+  ]
+}
