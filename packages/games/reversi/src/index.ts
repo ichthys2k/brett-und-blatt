@@ -1,6 +1,7 @@
 import { alphaBetaSearch, generalBots, stateFor, type BotDefinition, type BotLevel, type GameModule } from '@brett-und-blatt/engine';
 import { meta } from './meta';
 import { applyMove, currentPlayers, evaluate, legalMoves, result, setup, type ReversiMove, type ReversiState } from './rules';
+import { describeMove } from './describe';
 
 export type { ReversiMove, ReversiState } from './rules';
 export { countStones, flipsFor } from './rules';
@@ -79,5 +80,7 @@ export const gameModule: GameModule<ReversiState, ReversiMove> = {
   playerView: (state) => state,
   result,
   evaluate,
+  // Kurzer Text je Zug für fremde Clients und den Bildschirmleser (#335).
+  describeMove,
   bots: [reversiBot, ...generalBots<ReversiState, ReversiMove, ReversiState>()],
 };

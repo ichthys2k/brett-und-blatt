@@ -2,17 +2,13 @@ import { Rng, type SeatId } from '@brett-und-blatt/engine';
 import { FitBox, GridBoard, useElementSize, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { BLACK, estimateOwnership, WHITE } from '../board';
+import { describeMove, pointName } from '../describe';
 import { handicapPoints, scoreOf, toSgf, type GoMove, type GoState } from '../rules';
 import { SgfImportModal } from './SgfImport';
 import './styles.css';
 
 const LABELS = ['Schwarz', 'Weiß'];
-/** Go-Koordinaten: Spalten ohne „I“, Reihen von unten gezählt. */
-const COLUMNS = 'ABCDEFGHJKLMNOPQRST';
-
-export function pointName(point: number, size: number): string {
-  return `${COLUMNS[point % size]}${size - Math.floor(point / size)}`;
-}
+export { pointName };
 
 /** Unter dieser Punktgröße (in Pixeln) wird erst eine Vorschau gezeigt und dann bestätigt. */
 const CONFIRM_BELOW = 30;
@@ -160,7 +156,11 @@ function Board({ view, legalMoves, onMove, hint, activeSeat, seatNames }: BoardP
                   const point = row * size + col;
                   const stone = view.board[point];
                   const what = stone ? `${LABELS[stone - 1]}${dead.has(point) ? ' (tot)' : ''}` : view.ko === point ? 'frei, Ko' : 'frei';
-                  return `${pointName(point, size)}: ${what}`;
+                  const where = `${pointName(point, size)}: ${what}`;
+                  // Spielbare Punkte und markierbare Gruppen nennen den Zug (#335).
+                  if (!scoring && playable.has(point)) return describeMove(view, { type: 'place', point });
+                  if (scoring && canScore && stone) return `${where} – ${describeMove(view, { type: 'toggleDead', point })}`;
+                  return where;
                 }}
               />
             </div>

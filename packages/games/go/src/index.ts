@@ -2,6 +2,7 @@ import { randomBot, type BotDefinition, type GameModule, type TimePresets } from
 import { goBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, isLegal, legalMoves, resignMove, result, setup, type GoMove, type GoState } from './rules';
+import { describeMove } from './describe';
 
 export type { GoEnd, GoMove, GoState, GoVariant } from './rules';
 export { handicapPoints, loadFromSgf, parseSgf, scoreOf, toSgf, tryPlace } from './rules';
@@ -126,5 +127,7 @@ export const gameModule: GameModule<GoState, GoMove> = {
   playerView: (state) => state,
   result,
   resignMove,
+  // Kurzer Text je Zug für fremde Clients und den Bildschirmleser (#335).
+  describeMove,
   bots: [goBot, randomBot as unknown as BotDefinition<GoState, GoMove>],
 };

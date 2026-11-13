@@ -1,5 +1,6 @@
 import {
   LocalSession,
+  describeMoves,
   REPLAY_MAX_STEPS,
   type ReplayData,
   TEAM_OPTION_ID,
@@ -1736,6 +1737,10 @@ export class Room {
     const now = this.deps.now();
     const voting = Boolean(this.game!.takeBack?.pending);
     const clocks = seats.map((_, i) => session.clock(i));
+    const legalMoves = seat !== null && !session.isAway(seat) && !voting ? session.legalMoves(seat) : [];
+    const view = session.view(viewer);
+    // Zugtexte nur aus der eigenen Sicht (#335), damit sie nichts Verdecktes verraten.
+    const labels = legalMoves.length > 0 ? describeMoves(module, view, legalMoves) : null;
     return {
       type: 'game',
       gameId: module.info.id,
@@ -1745,8 +1750,9 @@ export class Room {
       options: session.config.options,
       time,
       yourSeat: seat,
-      view: session.view(viewer),
-      legalMoves: seat !== null && !session.isAway(seat) && !voting ? session.legalMoves(seat) : [],
+      view,
+      legalMoves,
+      ...(labels ? { moveLabels: labels } : {}),
       canResign: seat !== null && session.canResign(seat),
       canTakeBack: seat !== null && this.canTakeBack(seat),
       takeBack: this.takeBackInfo(),

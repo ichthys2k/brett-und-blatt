@@ -48,7 +48,7 @@ function centerCells(size: number): number[] {
   return [(m - 1) * size + (m - 1), (m - 1) * size + m, m * size + (m - 1), m * size + m];
 }
 
-function inOpening(state: ReversiState): boolean {
+export function inOpening(state: ReversiState): boolean {
   return state.freeOpening && state.cells.filter((c) => c !== null).length < 4;
 }
 

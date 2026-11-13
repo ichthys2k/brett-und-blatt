@@ -2,6 +2,7 @@ import { generalBots, type GameModule } from '@brett-und-blatt/engine';
 import { fourInARowBot } from './bot';
 import { meta } from './meta';
 import { applyMove, currentPlayers, legalMoves, result, setup, type FourInARowMove, type FourInARowState } from './rules';
+import { describeMove } from './describe';
 
 export type { FourInARowMove, FourInARowState } from './rules';
 export { cellIndex, columnHeight } from './rules';
@@ -42,5 +43,7 @@ export const gameModule: GameModule<FourInARowState, FourInARowMove> = {
   applyMove,
   playerView: (state) => state,
   result,
+  // Kurzer Text je Zug für fremde Clients und den Bildschirmleser (#335).
+  describeMove,
   bots: [fourInARowBot, ...generalBots<FourInARowState, FourInARowMove, FourInARowState>()],
 };

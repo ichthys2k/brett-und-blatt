@@ -1,6 +1,7 @@
 import { alphaBetaSearch, generalBots, stateFor, type BotDefinition, type BotLevel, type GameModule } from '@brett-und-blatt/engine';
 import { meta } from './meta';
 import { applyMove, currentPlayers, evaluate, legalMoves, result, setup, type MillMove, type MillState } from './rules';
+import { describeMove } from './describe';
 
 export type { MillMove, MillState, Phase } from './rules';
 export { isInMill, phaseOf, removable, stonesOnBoard } from './rules';
@@ -89,5 +90,7 @@ export const gameModule: GameModule<MillState, MillMove> = {
   playerView: (state) => state,
   result,
   evaluate,
+  // Kurzer Text je Zug für fremde Clients und den Bildschirmleser (#335).
+  describeMove,
   bots: [millBot, ...generalBots<MillState, MillMove, MillState>()],
 };

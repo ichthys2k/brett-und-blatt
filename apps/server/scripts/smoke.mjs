@@ -228,6 +228,7 @@ for (let turn = 0; turn < 20 && !cliGame.result; turn++) {
     cliGame = await cli.next((m) => m.type === 'game' && m.version > cliGame.version);
     continue;
   }
+  if (turn < 2) check(cliGame.moveLabels?.length === cliGame.legalMoves.length && cliGame.moveLabels[0].startsWith('Kreuz auf'), `Zugtexte kommen mit (#335): ${cliGame.moveLabels?.[0]}`);
   const next = cli.next((m) => m.type === 'game' && m.version > cliGame.version);
   cli.send({ type: 'move', version: cliGame.version, move: cliGame.legalMoves[0] });
   cliGame = await next;

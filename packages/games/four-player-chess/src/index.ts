@@ -4,6 +4,7 @@ import { promotionChoice } from './legacy/engine';
 import { meta } from './meta';
 import { SEARCH_WIDTH, searchMove } from './search';
 import { applyMove, COLORS, currentPlayers, legalMoves, resignMove, result, setup, type FourChessMove, type FourChessState } from './rules';
+import { describeMove } from './describe';
 
 export type { Color, FourChessMove, FourChessState, Piece } from './rules';
 export { COLORS, seatOf } from './rules';
@@ -78,6 +79,8 @@ export const gameModule: GameModule<FourChessState, FourChessMove> = {
   playerView: (state) => state,
   result,
   resignMove,
+  // Kurzer Text je Zug für fremde Clients und den Bildschirmleser (#335).
+  describeMove,
   // Die allgemeine Monte-Carlo-Suche wäre bei vier Spielern auf 160 Feldern zu langsam.
   bots: [fourChessBot, randomBot as unknown as BotDefinition<FourChessState, FourChessMove>],
 };

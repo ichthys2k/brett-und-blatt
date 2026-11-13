@@ -986,6 +986,13 @@
           "items": {},
           "description": "Nur die Züge, die der eigene Platz gerade machen darf."
         },
+        "moveLabels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kurze deutsche Texte zu `legalMoves`, gleiche Reihenfolge (#335) – etwa „Kreuz auf Mitte“. Nur bei Spielen mit Zugtexten und nur, wenn es Züge gibt; aus der eigenen Sicht erzeugt."
+        },
         "canResign": {
           "type": "boolean",
           "description": "Darf der eigene Platz aufgeben? (Nicht mehr, wenn er schon ausgeschieden ist.)"
