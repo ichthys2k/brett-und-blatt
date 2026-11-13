@@ -182,6 +182,25 @@ Wenn Cornelius weitermachen will, bekommt jeder Schritt ein eigenes Issue (`stat
 | Sprache | später nur in privaten Räumen, Probelauf ohne |
 | Adresse | eigene Unterdomain (etwa `vr.spiele.lipponer.de`), eigener Auftritt und eigener erlaubter Origin |
 
+## Gemessene Last (13.11.2026, #339)
+
+Gemessen mit dem Text-Client (`node apps/cli/test/last.mjs`) gegen den lokalen Spieleserver: ein Mensch gegen einen Server-Bot (leicht), Zählung an der WebSocket des Clients. Bots laufen auf dem Server und erzeugen keine eigenen Verbindungen.
+
+| Spiel | Dauer | Nachrichten an den Client | Zeichen an den Client | Nachrichten vom Client | Zeichen vom Client |
+| --- | --- | --- | --- | --- | --- |
+| Tic-Tac-Toe | 9 Züge | 16 | 10 500 | 9 | 487 |
+| Vier in einer Reihe | etwa 20 Züge | 22 | 21 169 | 12 | 678 |
+| Schach | etwa 70 Halbzüge | 75 | 255 693 | 39 | 2 660 |
+| Mau-Mau (2 Plätze) | etwa 30 Züge | 28 | 37 816 | 16 | 961 |
+
+Dazu die gemischte Partie aus der XR-App (`node apps/xr/test/gemischt.mjs`): Mau-Mau zu dritt (XR-App, Web-App im Handyformat, Server-Bot), 30 s, 23 Züge der Menschen. Die XR-App empfing dabei 48 Nachrichten mit 68 117 Zeichen und sendete 18. Bei Tic-Tac-Toe XR gegen Handy waren es 18 empfangene und 7 gesendete Nachrichten.
+
+**Einordnung:**
+- Kosten verursachen bei Cloudflare vor allem die **eingehenden** WebSocket-Nachrichten an das Durable Object. Laut Preisliste zählen sie im Verhältnis 20 : 1 als Anfrage; vor einer Entscheidung über Workers Paid im Dashboard nachprüfen.
+- Eine Schachpartie kostet einen Menschen damit etwa zwei Anfragen, Tic-Tac-Toe weniger als eine. Für den Probelauf und normale Runden reicht der Gratis-Tarif bei weitem.
+- Ins Gewicht fällt die Datenmenge der Schachpartie: etwa 3,4 KB je Nachricht, weil jede `game`-Nachricht alle erlaubten Züge mit Zugtexten trägt. Das ist für Quest und Handy unkritisch. Die Liste geht nur an den Platz am Zug; die anderen bekommen eine leere Liste.
+- Der eigentliche Kostentreiber käme erst mit dem **Treffpunkt in VR** (#340): Kopf- und Handpositionen mit 10 bis 20 Nachrichten je Sekunde und Person wären rund 1 800 bis 3 600 Anfragen je Stunde und Person. Das wird vor #340 eigens geplant (flüchtiger Kanal, gedrosselt, oder direkt zwischen den Geräten).
+
 ## Quellen
 
 - [Meta: Progressive Web Apps auf Meta Horizon OS](https://developers.meta.com/horizon/documentation/web/pwa-overview/)

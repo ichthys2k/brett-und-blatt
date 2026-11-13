@@ -105,6 +105,8 @@ export function useRoom(server: string, code: string | null, profile: Stored) {
         const text = String(event.data);
         stats.current.received++;
         stats.current.receivedChars += text.length;
+        // Für Tests und die Lastmessung lesbar (keine Geheimnisse, nur Zähler).
+        (window as unknown as { __brettXrStats?: unknown }).__brettXrStats = stats.current;
         let message: ServerMessage;
         try {
           message = JSON.parse(text) as ServerMessage;
