@@ -81,13 +81,9 @@ jobs:
           # Gesetzt, wenn die Klänge geholt wurden – dann bricht der Build ab, falls eine Datei fehlt.
           KLAENGE_DIR: ${{ env.HAS_KLAENGE == 'true' && format('{0}/klaenge-repo', github.workspace) || '' }}
 
-      # VR-App (#339) bauen und ihre Cloudflare-Konfiguration ohne Hochladen prüfen.
-      - name: VR-App bauen und prüfen
-        env:
-          WRANGLER_SEND_METRICS: 'false'
-        run: |
-          pnpm --filter @brett-und-blatt/xr build
-          pnpm --filter @brett-und-blatt/xr exec wrangler deploy --dry-run
+      # VR-App (#339) bauen; veröffentlicht wird sie nur auf main (Job deploy-xr).
+      - name: VR-App bauen
+        run: pnpm --filter @brett-und-blatt/xr build
 
       # Jedes Spiel einmal frisch und einmal nach allen anderen im Browser starten
       # (Abstürze, riesige Seiten, CSS-Kollisionen zwischen Spielen).
@@ -145,9 +141,9 @@ jobs:
           VAPID_SUBJECT: ${{ vars.VAPID_SUBJECT }}
           WRANGLER_SEND_METRICS: 'false'
 
-  # VR-App (#339): statische Dateien als eigener Cloudflare-Worker unter vr.spiele.lipponer.de.
-  # Läuft nach dem Spieleserver, blockiert aber die Web-App nicht. Für die eigene Unterdomain
-  # braucht CLOUDFLARE_API_TOKEN zusätzlich Rechte an der Zone lipponer.de (siehe docs/vr.md).
+  # VR-App (#339): statische Dateien bei Cloudflare Pages (Projekt brett-und-blatt-vr), eigene
+  # Unterdomain vr.spiele.lipponer.de per CNAME bei Strato. Läuft nach dem Spieleserver, blockiert
+  # aber die Web-App nicht. CLOUDFLARE_API_TOKEN braucht dafür „Cloudflare Pages: Edit“ (docs/vr.md).
   deploy-xr:
     name: VR-App auf Cloudflare veröffentlichen
     needs: [check, deploy-server]
@@ -174,10 +170,15 @@ jobs:
         env:
           VITE_GAME_SERVER: ${{ vars.GAME_SERVER }}
 
+      # Das Pages-Projekt legt der erste Lauf an; danach meldet der Befehl nur, dass es schon da ist.
       - name: VR-App veröffentlichen
-        run: pnpm --filter @brett-und-blatt/xr exec wrangler deploy
+        run: |
+          pnpm --filter @brett-und-blatt/xr exec wrangler pages project create brett-und-blatt-vr --production-branch main || true
+          pnpm --filter @brett-und-blatt/xr exec wrangler pages deploy dist --project-name brett-und-blatt-vr --branch main --commit-dirty=true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Konto von Cornelius, wie in apps/server/wrangler.jsonc (nicht geheim).
+          CLOUDFLARE_ACCOUNT_ID: edce5b79ce86adb04d7e64f0f41c44d2
           WRANGLER_SEND_METRICS: 'false'
 
   # Veröffentlicht wird nur, was alle Prüfungen bestanden hat und erst,

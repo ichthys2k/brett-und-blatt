@@ -43,7 +43,7 @@
   ],
   "vars": {
     // Von diesen Seiten aus dürfen Räume erstellt und betreten werden.
-    "ALLOWED_ORIGINS": "https://spiele.lipponer.de,https://vr.spiele.lipponer.de,https://brett-und-blatt-xr.lipponer.workers.dev,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,http://localhost:5175,http://127.0.0.1:5175,http://localhost:4175,http://127.0.0.1:4175",
+    "ALLOWED_ORIGINS": "https://spiele.lipponer.de,https://vr.spiele.lipponer.de,https://brett-und-blatt-xr.lipponer.workers.dev,https://brett-und-blatt-vr.pages.dev,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,http://localhost:5175,http://127.0.0.1:5175,http://localhost:4175,http://127.0.0.1:4175",
     // Räume liegen in der EU. Der lokale Testserver kann das nicht und überschreibt es mit "none".
     "ROOM_JURISDICTION": "eu"
     // Web Push (#242): VAPID_PUBLIC_KEY und VAPID_SUBJECT setzt die CI aus den GitHub-Variablen gleichen Namens, der private
