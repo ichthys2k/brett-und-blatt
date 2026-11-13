@@ -52,6 +52,31 @@ export function cardName(card: CardId): string {
   return `${SUIT_NAMES[cardSuit(card)]} ${RANK_NAMES[rank] ?? rank}`;
 }
 
+const GERMAN_SUIT_NAMES: Record<Suit, string> = { C: 'Eichel', D: 'Schellen', H: 'Herz', S: 'Gras' };
+const GERMAN_RANK_NAMES: Record<number, string> = { 1: 'Sau', 11: 'Unter', 12: 'Ober', 13: 'König' };
+
+/** Name im deutschen Blatt (Schafkopf, Binokel), z. B. „Eichel Ober“ oder „Herz Sau“. */
+export function germanCardName(card: CardId, suitNames: Record<Suit, string> = GERMAN_SUIT_NAMES): string {
+  const rank = cardRank(card);
+  return `${suitNames[cardSuit(card)]} ${GERMAN_RANK_NAMES[rank] ?? rank}`;
+}
+
+/**
+ * Kartenname für Zugtexte bei doppelten Blättern (Doppelkopf, Binokel): Liegt dieselbe Karte
+ * schon mit kleinerer Kopie-Nummer in `hand`, bekommt sie den Zusatz „(2)“, „(3)“ …, damit jeder Zugtext eindeutig bleibt.
+ */
+export function cardNameIn(card: CardId, hand: readonly (CardId | null)[] | undefined, name: (card: CardId) => string = cardName): string {
+  if (isJoker(card)) {
+    const jokers = (hand ?? []).filter((other): other is CardId => other !== null && isJoker(other)).sort();
+    const index = jokers.indexOf(card);
+    return jokers.length > 1 && index > 0 ? `${name(card)} (${index + 1})` : name(card);
+  }
+  const base = card.slice(0, card.indexOf('.'));
+  const copy = Number(card.slice(card.indexOf('.') + 1));
+  const lower = (hand ?? []).filter((other) => other !== null && other !== card && other.slice(0, other.indexOf('.')) === base && Number(other.slice(other.indexOf('.') + 1)) < copy).length;
+  return lower > 0 ? `${name(card)} (${lower + 1})` : name(card);
+}
+
 /** Ein oder mehrere Kartenspiele zu 52 Karten, optional nur mit bestimmten Farben (Spider). */
 export function createDeck(copies = 1, suits: Suit[] = SUITS): CardId[] {
   const deck: CardId[] = [];

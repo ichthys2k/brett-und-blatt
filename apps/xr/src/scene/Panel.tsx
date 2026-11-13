@@ -142,6 +142,12 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice
         { label: lobby.gameId ? gameName(lobby.gameId) : 'Spiel wählen', press: () => step(lobby.gameId ? 1 : 0), active: true },
         { label: '▶', press: () => step(1) },
       ]);
+      // Über 50 Spiele: in Zehnerschritten blättern (#358).
+      rows.push([
+        { label: '⏪ 10 zurück', press: () => step(-10) },
+        { label: GAME_CHOICES.find((g) => g.id === lobby.gameId)?.board ? 'in 3D' : 'im Fenster', press: () => {}, disabled: true },
+        { label: '10 vor ⏩', press: () => step(10) },
+      ]);
       rows.push([
         { label: '− Platz', press: () => send({ type: 'setSeatCount', count: lobby.seats.length - 1 }) },
         { label: `${lobby.seats.length} Plätze`, press: () => {}, disabled: true },

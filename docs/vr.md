@@ -11,14 +11,14 @@ Eine eigene Web-App für die Meta Quest (und jeden Browser mit WebGL): ein Tisch
 
 1. In der Quest den Browser öffnen, die Adresse aufrufen, Name und Bild wählen.
 2. **Neuen Raum anlegen** oder den **Raumcode** einer Runde eingeben. Ein Link mit `#<Raumcode>` führt direkt in den Raum.
-3. In der Lobby (Leiste rechts oder 2D-Fenster über dem Tisch) wählt die Raumleitung das Spiel, besetzt Plätze mit Bots und beginnt.
+3. In der Lobby (Leiste rechts oder 2D-Fenster über dem Tisch) wählt die Raumleitung eines der 55 Online-Spiele (im Fenster mit ◀ ▶, in Zehnerschritten mit ⏪ ⏩), besetzt Plätze mit Bots und beginnt.
 4. **In VR betreten.** Gezogen wird durch Zeigen mit dem Controller (Abzug) oder Antippen mit dem Finger.
 
 | Spiel | Darstellung |
 | --- | --- |
 | Tic-Tac-Toe, Vier in einer Reihe, Schach, Dame, Mühle, Reversi, Gomoku, Go | 3D-Figuren auf dem Tisch. Leuchtende Ziele sind die erlaubten Züge. Bei Schach und Dame erst die Figur, dann das Ziel; bei Mühle nach einer Mühle den Stein antippen, der weg soll. Passen, Auszählen (Go) und Ähnliches stehen im 2D-Fenster. |
-| Mau-Mau, Eins!, Skat | Karten in der Hand (#350): Der eigene Fächer steht vor dir an der Tischkante; spielbare Karten leuchten und werden durch Antippen gespielt. Ablage und Nachziehstapel (zum Ziehen antippen) bzw. der Stich liegen in der Tischmitte, die Karten der anderen verdeckt vor ihren Plätzen. Hat eine Karte mehrere Möglichkeiten (Bube mit Wunschfarbe, Farbwahl, Handtausch), erscheinen Knöpfe zur Wahl; beim Skat-Drücken tippst du zwei Karten an und bestätigst. Reizen und Ansagen stehen im 2D-Fenster. |
-| alle anderen Online-Spiele | 2D-Fenster über dem Tisch mit der Zugliste und den Zugtexten des Servers (#335) |
+| Mau-Mau, Eins!, Skat, Doppelkopf, Schafkopf, Binokel, Präsident, Speed, Schwarzer Peter, Elf zuerst!, Poker | Karten in der Hand (#350, #358): Der eigene Fächer steht vor dir an der Tischkante; spielbare Karten leuchten und werden durch Antippen gespielt. Ablage und Nachziehstapel (zum Ziehen antippen) bzw. der Stich liegen in der Tischmitte, die Karten der anderen verdeckt vor ihren Plätzen. Hat eine Karte mehrere Möglichkeiten (Bube mit Wunschfarbe, Farbwahl, Handtausch), erscheinen Knöpfe zur Wahl; beim Skat-Drücken tippst du zwei Karten an und bestätigst. Wer mehrere Karten auf einmal spielt (Präsident, Binokel drücken), tippt sie nacheinander an und wählt dann den Knopf. Bei Schwarzer Peter leuchten die verdeckten Karten des Nachbarn zum Ziehen. Bei Speed liegen zwei Stapel in der Mitte, bei Elf zuerst! die Farbreihen, beim Poker die Gemeinschaftskarten und der Pot. Reizen, Ansagen und Einsätze stehen im 2D-Fenster. |
+| alle anderen Online-Spiele | 2D-Fenster über dem Tisch mit der Zugliste und den Zugtexten des Servers (#335). Sie kommen nach und nach in 3D dazu ([#358](https://github.com/ichthys2k/brett-und-blatt/issues/358)). |
 
 **Alles in der Brille (#349):** Das 2D-Fenster über dem Tisch kann alles, was die Leiste kann. In der Lobby wählt die Raumleitung mit ◀ ▶ das Spiel, ändert die Platzzahl und schaltet freie Plätze durch: frei → Bot leicht → mittel → schwer → frei. In der Partie gibt es dort Aufgeben (mit Rückfrage), Remis anbieten (Schach, Dame), die Bitte ums Zurücknehmen samt Abstimmung und **„💬 Nachricht“** für die Schnellnachrichten. Unter **„↕ Tisch“** stellt man Tischhöhe und Abstand ein (bleibt im Gerät gespeichert) und die Lautstärke. Neu ausrichten geht wie immer mit gedrückter Meta-Taste. Uhren stehen als „⏱ 0:42“ auf den Schildern.
 
@@ -91,4 +91,4 @@ Den alten Worker `brett-und-blatt-xr` (erster Versuch) kann man danach im Dashbo
 ## Grenzen des Probelaufs
 
 - Die Figuren sind schlicht (Kopf, Hände, Körper); Finger und Mimik gibt es nicht.
-- Der Kartenfächer schwebt vor dir; an der Hand oder am Controller hängt er noch nicht, und Karten werden angetippt statt gegriffen. Weitere Kartenspiele (z. B. Doppelkopf, Schafkopf) laufen noch über das 2D-Fenster.
+- Der Kartenfächer schwebt vor dir; an der Hand oder am Controller hängt er noch nicht, und Karten werden angetippt statt gegriffen. Kartenblitz, Quartett und weitere Spiele mit Karten folgen in Paket 3 von #358.

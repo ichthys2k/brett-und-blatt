@@ -16,6 +16,7 @@ import {
   type DokoPhase,
   type DokoState,
 } from './rules.js';
+import { describeMove } from './describe';
 
 export type {
   DokoAnnouncement,
@@ -75,6 +76,7 @@ export const gameModule: GameModule<DokoState, DokoMove> = {
   },
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [dokoBot, ...generalBots<DokoState, DokoMove, DokoState>()],
