@@ -1,5 +1,7 @@
 # Kulissen-Masters (Drachenspiel)
 
+> **Zieht um (G0, #307):** Originale gehören seit 13.11.2026 ausschließlich ins private Repo `ichthys2k/brett-und-blatt-grafik` (`originale/packages/games/drachenspiel/src/ui/kulissen/`). Umzug mit `node scripts/grafik/master-umziehen.mjs`; danach werden die Dateien hier gelöscht und dieser Ordner entfällt.
+
 Dieses Verzeichnis enthält die Master-Assets aller Spiel-Kulissen in ihrer **maximal verfügbaren Auflösung**.
 
 ## Richtlinie
