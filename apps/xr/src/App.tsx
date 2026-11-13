@@ -10,6 +10,7 @@ import { GAME_CHOICES, LEVEL_TEXT, gameName } from './catalog';
 import { createRoom, loadProfile, saveProfile, sendMove, serverUrl, useRoom } from './net';
 import { Scene } from './scene/Scene';
 import { play, soundsFor, unlockAudio } from './sound';
+import { PeerMesh } from './peers';
 
 const store = createXRStore({
   // Im Entwicklungsbetrieb ohne Brille eine Quest 3 nachbilden (IWER), sonst nie.
@@ -42,6 +43,35 @@ export function App() {
 
   const room = useRoom(server, code, profile);
   const { send, game } = room;
+
+  // VR-Treffpunkt (#351): direkte Verbindungen zu den anderen Brillen im Raum.
+  const [mesh, setMesh] = useState<PeerMesh | null>(null);
+  useEffect(() => {
+    if (!room.you || room.status !== 'open') return;
+    const next = new PeerMesh(send, room.you);
+    void next.loadIceServers(server);
+    setMesh(next);
+    const off = room.onXr((message) => {
+      if (message.type === 'rtc') void next.handle(message.from, message.signal);
+      else next.roomPose(message.from, message.head);
+    });
+    return () => {
+      off();
+      next.close();
+      setMesh(null);
+    };
+  }, [room.you, room.status === 'open', send, server]);
+  const xrMembers = useMemo(() => (room.room?.members ?? []).filter((m) => m.xr && m.connected).map((m) => m.id), [room.room]);
+  useEffect(() => {
+    if (!mesh) return;
+    mesh.update(xrMembers);
+    // Gescheiterte Verbindungen regelmäßig neu versuchen; Zustand für Tests lesbar.
+    const id = window.setInterval(() => {
+      mesh.update(xrMembers);
+      (window as unknown as { __brettXrPeers?: unknown }).__brettXrPeers = { peers: mesh.status(), poses: [...mesh.poses.keys()] };
+    }, 2000);
+    return () => window.clearInterval(id);
+  }, [mesh, xrMembers]);
 
   // Ton erst nach der ersten Berührung (Vorgabe der Browser).
   useEffect(() => {
@@ -131,7 +161,7 @@ export function App() {
   return (
     <div className="xr-shell">
       <div className="xr-canvas">
-        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} gameAt={room.gameAt} />
+        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} gameAt={room.gameAt} mesh={mesh} xrMembers={xrMembers} />
       </div>
       <aside className="xr-bar" aria-label="Raum und Züge">
         <header>

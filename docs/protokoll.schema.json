@@ -794,6 +794,61 @@
           "required": [
             "type"
           ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "xr"
+            },
+            "on": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "on"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "rtc"
+            },
+            "to": {
+              "type": "string"
+            },
+            "signal": {
+              "$ref": "#/definitions/RtcSignal"
+            }
+          },
+          "required": [
+            "type",
+            "to",
+            "signal"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "pose"
+            },
+            "head": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "type",
+            "head"
+          ]
         }
       ]
     },
@@ -1224,6 +1279,11 @@
             "queued"
           ],
           "description": "Anfrage ums Mitspielen ab der nächsten Runde (#299): `asking` wartet auf die Raumleitung, `queued` ist angenommen."
+        },
+        "xr": {
+          "type": "boolean",
+          "const": true,
+          "description": "Ist das Mitglied gerade mit einer VR-Brille da, die andere Brillen sehen möchte (#351)? Fehlt sonst."
         }
       },
       "required": [
@@ -1649,6 +1709,70 @@
         "finished"
       ]
     },
+    "RtcSignal": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "offer",
+                "answer"
+              ]
+            },
+            "sdp": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "sdp"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "ice"
+            },
+            "candidate": {
+              "type": "string"
+            },
+            "sdpMid": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sdpMLineIndex": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "candidate"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "bye"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ],
+      "description": "Vermittlungsdaten für WebRTC zwischen zwei Brillen (#351); der Raum liest sie nicht, er reicht sie nur weiter."
+    },
     "SeatId": {
       "type": "number",
       "description": "Platz am Tisch: 0, 1, 2, … in Sitzreihenfolge."
@@ -1711,6 +1835,49 @@
             "from",
             "kind",
             "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "rtc"
+            },
+            "from": {
+              "type": "string"
+            },
+            "signal": {
+              "$ref": "#/definitions/RtcSignal"
+            }
+          },
+          "required": [
+            "type",
+            "from",
+            "signal"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "pose"
+            },
+            "from": {
+              "type": "string"
+            },
+            "head": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "type",
+            "from",
+            "head"
           ]
         },
         {

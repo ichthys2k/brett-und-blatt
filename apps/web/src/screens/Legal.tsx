@@ -268,6 +268,17 @@ export function Datenschutz() {
 
       {PUSH_PUBLIC_KEY && <PushPrivacy />}
 
+      <h2>VR-App (vr.spiele.lipponer.de)</h2>
+      <p>
+        Die VR-App für die Meta Quest nutzt denselben Spieleserver wie diese Seite; dafür gilt das oben Gesagte. Sie wird von Cloudflare Pages ausgeliefert, wobei
+        Cloudflare wie oben technisch notwendige Daten wie deine IP-Adresse verarbeitet. Sitzen mehrere Leute mit Brille im selben Raum, schicken sich die Brillen
+        Kopf- und Handpositionen direkt zu (WebRTC), damit ihr euch als Figuren seht. Dabei erfahren die Brillen gegenseitig ihre IP-Adressen; der Spieleserver
+        vermittelt nur den Verbindungsaufbau und speichert weder Positionen noch Adressen. Kommt keine direkte Verbindung zustande, geht höchstens einmal je
+        Sekunde nur die Kopfposition über den Spieleserver an die anderen Brillen, ohne gespeichert zu werden. Für den Verbindungsaufbau wird der STUN-Server von
+        Cloudflare genutzt, bei schwierigen Netzen gegebenenfalls ein TURN-Server von Cloudflare, der die Daten nur durchleitet. Wer am Handy oder Rechner
+        spielt, sendet keine Positionen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+
       <h2>Speicherung auf deinem Gerät</h2>
       <p>Damit du eine Partie fortsetzen kannst, speichert die App im Speicher deines Browsers (Local Storage):</p>
       <ul>

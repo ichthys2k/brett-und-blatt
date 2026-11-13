@@ -24,6 +24,8 @@ Eine eigene Web-App für die Meta Quest (und jeden Browser mit WebGL): ein Tisch
 
 **Klänge:** Züge, Schlagen, Mühle, Sieg und „Du bist dran“ klingen wie in der Web-App. Die Dateien kommen nur beim Bauen aus dem privaten Klang-Repo (`apps/xr/klaenge.ts`, Auswahl in `apps/xr/src/sound-names.ts`); ohne sie bleibt die App stumm.
 
+**Treffpunkt (#351):** Wer mit Brille im Raum ist, erscheint bei den anderen Brillen als **Figur** mit Kopf (das Avatar-Emoji als Gesicht), Händen und einem Schild mit Avatar und Name vor der Brust. Kopf und Hände laufen direkt zwischen den Brillen (WebRTC), der Spieleserver vermittelt nur. Klappt keine direkte Verbindung, wird nach zehn Sekunden einmal je Sekunde nur der Kopf über den Server geschickt. Wer am **Handy oder Rechner** spielt, sitzt weiter als **Schild am Stuhl**, ohne Figur, mit „am Zug“, Uhr und Reaktionen.
+
 Mitspieler stehen als Schild mit Avatar-Emoji über ihrem Stuhl. Emoji-Reaktionen schickt man über die Leiste an der eigenen Tischkante; sie schweben über dem Schild der Person. Sprache gibt es bewusst nicht (später nur in privaten Räumen, siehe [weitere-plattformen.md](spiele/weitere-plattformen.md)).
 
 Ohne Brille läuft dieselbe Seite im Browser: Klick auf die Ziele im Bild oder auf die Zugliste in der Leiste rechts (auch für Bildschirmleser).
@@ -64,6 +66,16 @@ Die Lastmessung steht in [weitere-plattformen.md](spiele/weitere-plattformen.md#
 
 **Warum Pages und kein Worker:** Das DNS von `lipponer.de` liegt bei Strato, nicht bei Cloudflare. Eine Custom Domain für einen Worker verlangt die Zone bei Cloudflare (erster Versuch scheiterte mit „Can't infer zone from route“). Pages nimmt dagegen eine Unterdomain per CNAME von einem fremden DNS-Anbieter.
 
+### Umweg-Server (TURN) für den Treffpunkt, nur bei Bedarf
+
+Scheitern direkte Verbindungen zwischen Brillen oft (etwa in Schul- oder Firmennetzen), kann der Spieleserver Zugangsdaten für den TURN-Server von Cloudflare ausgeben (`GET /rtc/ice`):
+
+1. Im Cloudflare-Dashboard unter *Realtime → TURN Server* einen TURN-Schlüssel anlegen.
+2. Die beiden Werte als Secrets des Spieleservers setzen, nie ins Repo oder in den Chat:
+   - `corepack pnpm --filter @brett-und-blatt/server exec wrangler secret put TURN_KEY_ID`
+   - `corepack pnpm --filter @brett-und-blatt/server exec wrangler secret put TURN_KEY_API_TOKEN`
+3. Fertig; ohne die Secrets bleibt es beim freien STUN-Server. Die ersten 1 000 GB im Monat sind frei.
+
 ### Einmalig einrichten
 
 1. **Token:** Im Cloudflare-Dashboard unter *My Profile → API Tokens* beim Token der CI (*⋯ → Edit*) in der bestehenden Account-Policy das Recht **„Cloudflare Pages: Edit“** ergänzen (Bereich *Developer Platform*). „Workers Scripts: Edit“ bleibt. Zonenrechte sind nicht nötig.
@@ -76,5 +88,5 @@ Den alten Worker `brett-und-blatt-xr` (erster Versuch) kann man danach im Dashbo
 
 ## Grenzen des Probelaufs
 
-- Kein Treffpunkt mit Körpern oder Händen der anderen (#351), keine Sprache (#352).
+- Keine Sprache (#352). Die Figuren sind schlicht (Kopf, Hände, Körper); Finger und Mimik gibt es nicht.
 - Der Kartenfächer schwebt vor dir; an der Hand oder am Controller hängt er noch nicht, und Karten werden angetippt statt gegriffen. Weitere Kartenspiele (z. B. Doppelkopf, Schafkopf) laufen noch über das 2D-Fenster.

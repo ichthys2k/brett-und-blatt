@@ -100,6 +100,23 @@ interface TicTacToeMove { type: 'place'; cell: number } // Felder 0–8 zeilenwe
 
 Ein Client kann aber jedes Spiel auch ohne dieses Wissen spielen, indem er die Einträge von `legalMoves` (oder ihre `moveLabels`) als Liste zur Wahl stellt.
 
+### VR-Treffpunkt (optional, #351)
+
+Brillen können sich gegenseitig als Figur sehen. Kopf und Hände laufen **direkt zwischen den Geräten** über einen WebRTC-Datenkanal; der Raum vermittelt nur.
+
+| Nachricht | Richtung | Bedeutung |
+| --- | --- | --- |
+| `{ "type": "xr", "on": true }` | Client → Server | Diese Verbindung ist eine Brille. In `room.members` steht danach `"xr": true`. |
+| `{ "type": "rtc", "to": "<Mitglied>", "signal": … }` | Client → Server → Client | Vermittlung zwischen zwei Brillen: `signal` ist `{ "kind": "offer" \| "answer", "sdp": … }`, `{ "kind": "ice", "candidate": …, "sdpMid": …, "sdpMLineIndex": … }` oder `{ "kind": "bye" }`. Beim Empfänger kommt `{ "type": "rtc", "from": …, "signal": … }` an. |
+| `{ "type": "pose", "head": [x, y, z, qx, qy, qz, qw] }` | Client → Server → Client | Rückfall ohne direkte Verbindung: nur der Kopf, höchstens zweimal je Sekunde weitergereicht. |
+
+- Der Raum reicht `rtc` und `pose` nur zwischen Verbindungen mit `xr` weiter, nie an Web-Clients. Er speichert nichts davon.
+- Er begrenzt auf 120 Vermittlungen je Minute und eine Pose je 500 ms.
+- Die Brille mit der kleineren Mitglieds-Kennung macht das Angebot.
+- Den Datenkanal nennt die VR-App `pose`, ungeordnet und ohne Wiederholung. Jedes Paket ist JSON `{ "h": [7 Zahlen], "l": … | null, "r": … | null }`.
+- Koordinaten in Metern und als Quaternion, im **eigenen Tischsystem**: Der eigene Platz liegt vorn (+z), die Tischmitte bei `(0, 0.74, -0.55)`. Der Empfänger dreht um die Tischmitte auf den Platz des Absenders.
+- `GET /rtc/ice` liefert die ICE-Server, gleiche Zugangsregel wie `/rooms`: immer STUN von Cloudflare, mit eingerichtetem Schlüssel zusätzlich TURN.
+
 ### 5. Fehler und Verbindungsabbruch
 
 - `{ "type": "error", "code": …, "message": … }`. `code` ist einer von `badMessage`, `protocol`, `notAllowed`, `roomFull`, `badName`, `notReady`, `staleMove`, `illegalMove`, `tooLate` oder `tooFast`; `message` ist ein deutscher Text für Menschen.
@@ -145,6 +162,7 @@ Der Prüfstein [`apps/cli/test/partie.mjs`](../apps/cli/test/partie.mjs) spielt 
 | 13.11.2026 | 1 | Protokoll offengelegt: Zugang ohne `Origin` mit `?client=…`, Ratenbegrenzung, Fehlercode `tooFast` |
 | 13.11.2026 | 1 | Neues Feld `GameMessage.moveLabels` mit Zugtexten für elf Spiele (#335) |
 | 13.11.2026 | 1 | Text-Client `apps/cli` als Vorlage (#336); `avatar` in `hello` ist Pflicht (war es schon, jetzt dokumentiert) |
+| 13.11.2026 | 1 | VR-Treffpunkt (#351): Nachrichten `xr`, `rtc`, `pose`, Feld `MemberInfo.xr`, Endpunkt `GET /rtc/ice` |
 
 ## Lizenz
 

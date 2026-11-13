@@ -1164,3 +1164,58 @@ describe('Tisch-Bildschirm (#100)', () => {
     restored.receive('anna', JSON.stringify({ type: 'ping' }));
   });
 });
+
+describe('VR-Treffpunkt (#351)', () => {
+  let env: Env;
+  beforeEach(() => {
+    env = setup();
+  });
+
+  const three = () => {
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    const handy = env.client('handy');
+    [anna, ben, handy].forEach((c) => c.hello());
+    anna.send({ type: 'xr', on: true });
+    ben.send({ type: 'xr', on: true });
+    return { anna, ben, handy };
+  };
+
+  it('zeigt Brillen in der Mitgliederliste', () => {
+    const { anna, handy } = three();
+    const members = handy.room().members;
+    expect(members.find((m) => m.id === anna.room().members[0]!.id)?.xr).toBe(true);
+    expect(members.find((m) => m.name === 'handy')?.xr).toBeUndefined();
+    anna.send({ type: 'xr', on: false });
+    expect(handy.room().members.find((m) => m.name === 'anna')?.xr).toBeUndefined();
+  });
+
+  it('reicht Vermittlungsdaten nur von Brille zu Brille weiter', () => {
+    const { anna, ben, handy } = three();
+    const benId = ben.room().members.find((m) => m.name === 'ben')!.id;
+    const handyId = handy.room().members.find((m) => m.name === 'handy')!.id;
+    anna.send({ type: 'rtc', to: benId, signal: { kind: 'offer', sdp: 'v=0' } });
+    expect(ben.last('rtc')?.signal).toEqual({ kind: 'offer', sdp: 'v=0' });
+    expect(ben.last('rtc')?.from).toBe(anna.room().members.find((m) => m.name === 'anna')!.id);
+    // An ein Handy geht nichts, und ein Handy kann nichts schicken.
+    anna.send({ type: 'rtc', to: handyId, signal: { kind: 'bye' } });
+    expect(handy.last('rtc')).toBeUndefined();
+    handy.send({ type: 'rtc', to: benId, signal: { kind: 'bye' } });
+    expect(ben.all().filter((m) => m.type === 'rtc')).toHaveLength(1);
+  });
+
+  it('reicht Rückfall-Köpfe gedrosselt nur an Brillen weiter', () => {
+    const { anna, ben, handy } = three();
+    const head = [0, 1.2, 0.3, 0, 0, 0, 1];
+    anna.send({ type: 'pose', head });
+    anna.send({ type: 'pose', head });
+    expect(ben.all().filter((m) => m.type === 'pose')).toHaveLength(1);
+    expect(handy.last('pose')).toBeUndefined();
+    env.advance(600);
+    anna.send({ type: 'pose', head });
+    expect(ben.all().filter((m) => m.type === 'pose')).toHaveLength(2);
+    // Unsinn wird abgelehnt.
+    anna.send({ type: 'pose', head: [1, 2, 3] });
+    expect(anna.last('error')?.code).toBe('badMessage');
+  });
+});

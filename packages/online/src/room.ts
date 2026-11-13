@@ -69,6 +69,10 @@ export const SIGNAL_INTERVAL_MS = 1000;
 export const SIGNAL_WINDOW_MS = 60_000;
 /** Maximale Anzahl an Signalen innerhalb des Zeitfensters. */
 export const SIGNAL_MAX_PER_WINDOW = 8;
+/** VR-Treffpunkt (#351): Rückfall-Köpfe höchstens alle 500 ms je Verbindung weiterreichen. */
+export const XR_POSE_INTERVAL_MS = 500;
+/** VR-Treffpunkt (#351): höchstens so viele Vermittlungsnachrichten je Minute und Verbindung. */
+export const XR_RTC_PER_MINUTE = 120;
 /** Turnierpartie: So lange wartet der Raum darauf, dass beide Gegner erscheinen. */
 export const MATCH_ARRIVAL_MS = 5 * 60 * 1000;
 /** Turnierpartie: So lange darf die Verbindung weg sein, dann ist die Partie verloren (kein Bot). */
@@ -230,6 +234,10 @@ export class Room {
   private kicked = new Set<string>();
   /** Verbindungen von Tisch-Bildschirmen (#100): keine Mitglieder, nur Zuschauersicht. */
   private displays = new Set<string>();
+  /** VR-Treffpunkt (#351): Verbindungen von Brillen, die andere Brillen sehen möchten (nicht gespeichert). */
+  private xrConnections = new Set<string>();
+  /** VR-Treffpunkt: wann je Verbindung zuletzt ein Rückfall-Kopf weitergereicht wurde und wie viele Vermittlungen zuletzt kamen. */
+  private xrLimits = new Map<string, { pose: number; rtc: number[] }>();
   private hostId: string | null = null;
   /** Geheime Kennung, die beim Eintreten die Raumleitung bekommt – etwa die Verfasserin eines Zettels vom Schwarzen Brett (#65). */
   private reservedHost: string | null = null;
@@ -379,9 +387,12 @@ export class Room {
     }
     const memberId = this.connections.get(connectionId);
     this.connections.delete(connectionId);
+    const wasXr = this.xrConnections.delete(connectionId);
+    this.xrLimits.delete(connectionId);
     const member = memberId ? this.members.get(memberId) : undefined;
     if (!member) return;
     member.connections.delete(connectionId);
+    if (wasXr && member.connections.size > 0) this.broadcastRoom();
     if (member.connections.size === 0) {
       member.disconnectedAt = this.deps.now();
       this.broadcastRoom();
@@ -397,6 +408,7 @@ export class Room {
     const message = parseClientMessage(raw);
     if (!message) return this.error(connectionId, 'badMessage', 'Unbekannte Nachricht.');
     if (message.type === 'ping') return this.deps.send(connectionId, { type: 'pong', serverNow: this.deps.now() });
+    if (message.type === 'xr' || message.type === 'rtc' || message.type === 'pose') return this.receiveXr(connectionId, message);
     if (message.type === 'display') return this.attachDisplay(connectionId, message);
     if (isDisplay) return message.type === 'leave' ? this.deps.close(connectionId) : this.error(connectionId, 'notAllowed', 'Ein Tisch-Bildschirm kann nur zuschauen.');
     if (message.type === 'hello') return this.hello(connectionId, message);
@@ -1700,7 +1712,7 @@ export class Room {
   }
 
   private roomMessage(): RoomMessage {
-    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, ...(m.crest ? { crest: m.crest } : {}), connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}), ...(m.join ? { join: m.join } : {}) }));
+    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, ...(m.crest ? { crest: m.crest } : {}), connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}), ...(m.join ? { join: m.join } : {}), ...(this.isXrMember(m) ? { xr: true as const } : {}) }));
     const series = this.match?.series;
     const match = this.match
       ? { tournament: this.match.config.tournament, label: this.match.config.label, noShow: this.match.noShow !== null, ...(series ? { series: { bestOf: series.bestOf, score: this.seriesScoreBySeat(series), next: series.nextAt, done: series.winner !== undefined } } : {}) }
@@ -1778,6 +1790,49 @@ export class Room {
 
   private error(connectionId: string, code: ErrorCode, message: string): void {
     this.deps.send(connectionId, { type: 'error', code, message });
+  }
+
+  /** Ist das Mitglied gerade mit mindestens einer Brille da? */
+  private isXrMember(member: Member): boolean {
+    for (const connection of member.connections) if (this.xrConnections.has(connection)) return true;
+    return false;
+  }
+
+  /**
+   * VR-Treffpunkt (#351): Der Raum vermittelt nur zwischen Brillen. Er speichert nichts, schickt
+   * nichts an Web-Clients und begrenzt, damit der Gratis-Tarif nicht leidet: Vermittlungen höchstens
+   * 120 je Minute und Verbindung, Rückfall-Köpfe höchstens zwei je Sekunde.
+   */
+  private receiveXr(connectionId: string, message: Extract<ClientMessage, { type: 'xr' | 'rtc' | 'pose' }>): void {
+    const memberId = this.connections.get(connectionId);
+    const member = memberId ? this.members.get(memberId) : undefined;
+    if (!member || this.displays.has(connectionId)) return this.error(connectionId, 'notAllowed', 'Erst anmelden.');
+    if (message.type === 'xr') {
+      const before = this.isXrMember(member);
+      if (message.on) this.xrConnections.add(connectionId);
+      else this.xrConnections.delete(connectionId);
+      if (before !== this.isXrMember(member)) this.broadcastRoom();
+      return;
+    }
+    if (!this.xrConnections.has(connectionId)) return;
+    const now = this.deps.now();
+    const limits = this.xrLimits.get(connectionId) ?? { pose: 0, rtc: [] };
+    this.xrLimits.set(connectionId, limits);
+    if (message.type === 'pose') {
+      if (now - limits.pose < XR_POSE_INTERVAL_MS) return;
+      limits.pose = now;
+      for (const other of this.members.values()) {
+        if (other.id === member.id) continue;
+        for (const connection of other.connections) if (this.xrConnections.has(connection)) this.deps.send(connection, { type: 'pose', from: member.id, head: message.head });
+      }
+      return;
+    }
+    limits.rtc = limits.rtc.filter((t) => now - t < 60_000);
+    if (limits.rtc.length >= XR_RTC_PER_MINUTE) return;
+    limits.rtc.push(now);
+    const target = this.members.get(message.to);
+    if (!target || target.id === member.id) return;
+    for (const connection of target.connections) if (this.xrConnections.has(connection)) this.deps.send(connection, { type: 'rtc', from: member.id, signal: message.signal });
   }
 
   private touch(): void {

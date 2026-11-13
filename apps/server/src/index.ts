@@ -228,6 +228,12 @@ interface Env {
   VAPID_SUBJECT?: string;
   TOURNAMENTS: DurableObjectNamespace<TournamentRoom>;
   ALLOWED_ORIGINS: string;
+  /**
+   * VR-Treffpunkt (#351): TURN-Schlüssel von Cloudflare Realtime (`wrangler secret put TURN_KEY_ID` und
+   * `TURN_KEY_API_TOKEN`). Fehlen sie, gibt `/rtc/ice` nur den freien STUN-Server aus.
+   */
+  TURN_KEY_ID?: string;
+  TURN_KEY_API_TOKEN?: string;
   /** "eu" im echten Betrieb. Nur der lokale Testserver kennt keine Jurisdiktionen und setzt "none". */
   ROOM_JURISDICTION: string;
 }
@@ -408,6 +414,26 @@ async function personKey(token: string): Promise<string> {
   return Array.from(new Uint8Array(digest).slice(0, 8), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+const STUN_SERVERS = [{ urls: 'stun:stun.cloudflare.com:3478' }];
+
+/** ICE-Server für WebRTC (#351): immer STUN, dazu TURN von Cloudflare Realtime, wenn der Schlüssel eingerichtet ist. */
+async function iceServers(env: Env): Promise<unknown[]> {
+  if (!env.TURN_KEY_ID || !env.TURN_KEY_API_TOKEN) return STUN_SERVERS;
+  try {
+    const response = await fetch(`https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(env.TURN_KEY_ID)}/credentials/generate-ice-servers`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.TURN_KEY_API_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ttl: 86_400 }),
+    });
+    if (!response.ok) return STUN_SERVERS;
+    const data = (await response.json()) as { iceServers?: unknown };
+    const servers = Array.isArray(data.iceServers) ? data.iceServers : data.iceServers ? [data.iceServers] : [];
+    return servers.length ? servers : STUN_SERVERS;
+  } catch {
+    return STUN_SERVERS;
+  }
+}
+
 function json(data: unknown, status: number, headers: Record<string, string>): Response {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...headers } });
 }
@@ -462,6 +488,13 @@ export default {
       if (!roomAccess(request, url, env)) return json({ error: 'origin' }, 403, cors);
       const rooms = await registryStub(env).listOpen();
       return json(rooms, 200, cors);
+    }
+
+    // VR-Treffpunkt (#351): Server für den Verbindungsaufbau zwischen Brillen. STUN ist frei; TURN nur mit
+    // eingerichtetem Schlüssel, die Zugangsdaten gelten einen Tag und werden je Abruf neu erzeugt.
+    if (url.pathname === '/rtc/ice' && request.method === 'GET') {
+      if (!roomAccess(request, url, env)) return json({ error: 'origin' }, 403, cors);
+      return json({ iceServers: await iceServers(env) }, 200, { ...cors, 'Cache-Control': 'no-store' });
     }
 
     if (url.pathname === '/bibelquiz/fragen' && request.method === 'GET') {
