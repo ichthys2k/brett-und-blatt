@@ -85,6 +85,8 @@ export interface MemberInfo {
   nameFixed?: boolean;
   /** Anfrage ums Mitspielen ab der nächsten Runde (#299): `asking` wartet auf die Raumleitung, `queued` ist angenommen. */
   join?: 'asking' | 'queued';
+  /** Ist das Mitglied gerade mit einer VR-Brille da, die andere Brillen sehen möchte (#351)? Fehlt sonst. */
+  xr?: true;
 }
 
 export type RoomPhase = 'lobby' | 'playing' | 'finished';
@@ -182,7 +184,26 @@ export type ClientMessage =
   /** Hinweise aufs Gerät (Web Push, #242): Abo des Browsers melden oder widerrufen; nur für Fernpartien wirksam. */
   | { type: 'pushSubscribe'; subscription: PushSubscriptionData }
   | { type: 'pushUnsubscribe' }
-  | { type: 'ping' };
+  | { type: 'ping' }
+  // VR-Treffpunkt (#351): Kopf und Hände laufen direkt zwischen den Brillen (WebRTC); der Raum vermittelt nur.
+  /** Diese Verbindung ist eine VR-Brille, die andere Brillen sehen möchte (oder nicht mehr). */
+  | { type: 'xr'; on: boolean }
+  /** Verbindungsaufbau zu einem anderen VR-Mitglied weiterreichen (Angebot, Antwort, ICE-Kandidat, Ende). */
+  | { type: 'rtc'; to: string; signal: RtcSignal }
+  /** Rückfall ohne direkte Verbindung: nur der Kopf, höchstens zweimal je Sekunde, an die anderen Brillen. */
+  | { type: 'pose'; head: number[] };
+
+/** Vermittlungsdaten für WebRTC zwischen zwei Brillen (#351); der Raum liest sie nicht, er reicht sie nur weiter. */
+export type RtcSignal =
+  | { kind: 'offer' | 'answer'; sdp: string }
+  | { kind: 'ice'; candidate: string; sdpMid?: string | null; sdpMLineIndex?: number | null }
+  | { kind: 'bye' };
+
+/** Höchstlängen für weitergereichte Vermittlungsdaten. */
+export const RTC_SDP_MAX = 12_000;
+export const RTC_CANDIDATE_MAX = 1_000;
+/** Kopf als [x, y, z, qx, qy, qz, qw] in Metern bzw. als Quaternion, im eigenen Tischsystem. */
+export const POSE_LENGTH = 7;
 
 // ---------------------------------------------------------------------------
 // Server → Browser
@@ -299,6 +320,10 @@ export type ServerMessage =
   | RoomMessage
   | GameMessage
   | { type: 'signal'; from: string; kind: 'react' | 'say'; value: string }
+  /** VR-Treffpunkt (#351): Vermittlungsdaten von einem anderen VR-Mitglied – nur an Brillen. */
+  | { type: 'rtc'; from: string; signal: RtcSignal }
+  /** VR-Treffpunkt (#351): Kopf eines anderen VR-Mitglieds ohne direkte Verbindung – nur an Brillen. */
+  | { type: 'pose'; from: string; head: number[] }
   /** Abstimmung am Rundenende; `null`, wenn keine (mehr) läuft. */
   | { type: 'afterGame'; after: AfterGameInfo | null }
   /** Die Raumleitung hat die Anfrage abgelehnt (nur an die fragende Person). */
@@ -316,6 +341,20 @@ export type ErrorCode = 'badMessage' | 'protocol' | 'notAllowed' | 'roomFull' | 
 
 // ---------------------------------------------------------------------------
 // Prüfen eingehender Nachrichten: Alles vom Browser ist erst einmal unbekannt.
+
+function parseRtcSignal(v: unknown): RtcSignal | null {
+  if (!isRecord(v)) return null;
+  if ((v.kind === 'offer' || v.kind === 'answer') && isString(v.sdp, RTC_SDP_MAX)) return { kind: v.kind, sdp: v.sdp };
+  if (v.kind === 'ice' && isString(v.candidate, RTC_CANDIDATE_MAX)) {
+    return {
+      kind: 'ice',
+      candidate: v.candidate,
+      ...(v.sdpMid === null || isString(v.sdpMid, 50) ? { sdpMid: v.sdpMid as string | null } : {}),
+      ...(v.sdpMLineIndex === null || isInt(v.sdpMLineIndex, 0, 100) ? { sdpMLineIndex: v.sdpMLineIndex as number | null } : {}),
+    };
+  }
+  return v.kind === 'bye' ? { kind: 'bye' } : null;
+}
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isString = (v: unknown, max = 200): v is string => typeof v === 'string' && v.length <= max;
@@ -418,6 +457,16 @@ export function parseClientMessage(raw: string, push: ParsePushOptions = {}): Cl
     case 'pushUnsubscribe':
     case 'ping':
       return { type: m.type };
+    case 'xr':
+      return typeof m.on === 'boolean' ? { type: 'xr', on: m.on } : null;
+    case 'rtc': {
+      const signal = parseRtcSignal(m.signal);
+      return isString(m.to, 20) && signal ? { type: 'rtc', to: m.to, signal } : null;
+    }
+    case 'pose':
+      return Array.isArray(m.head) && m.head.length === POSE_LENGTH && m.head.every((n) => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= 100)
+        ? { type: 'pose', head: m.head.map((n) => Math.round((n as number) * 1000) / 1000) }
+        : null;
     default:
       return null;
   }

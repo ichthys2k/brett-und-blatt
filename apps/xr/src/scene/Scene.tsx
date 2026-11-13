@@ -14,6 +14,8 @@ import { CardTable, cardMoveIndexes, isCardGame } from './cards';
 import { Panel, ReactionBar } from './Panel';
 import { Seats, seatAngle, type SeatInfo } from './Seats';
 import { TABLE_CENTER, Tavern } from './Tavern';
+import { Figures, POSE_STALE_MS, PoseSender } from './Meet';
+import type { PeerMesh } from '../peers';
 
 interface SceneProps {
   store: XRStore;
@@ -25,6 +27,9 @@ interface SceneProps {
   onMove: (index: number) => void;
   /** Ortszeit der letzten game-Nachricht, zum Weiterzählen der Uhren. */
   gameAt: number;
+  /** VR-Treffpunkt (#351): Verbindungen zu den anderen Brillen und wer gerade mit Brille da ist. */
+  mesh: PeerMesh | null;
+  xrMembers: string[];
 }
 
 const VIEW_KEY = 'brett-und-blatt-xr-tisch';
@@ -113,7 +118,7 @@ function seatInfos(room: RoomMessage | null, game: GameMessage | null, you: stri
   });
 }
 
-export function Scene({ store, room, game, you, signals, send, onMove, gameAt }: SceneProps) {
+export function Scene({ store, room, game, you, signals, send, onMove, gameAt, mesh, xrMembers }: SceneProps) {
   const [now, setNow] = useState(() => Date.now());
   const ticking = Boolean(game && !game.result && game.clocks.some((c) => c?.running));
   useEffect(() => {
@@ -123,6 +128,29 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt }:
   }, [ticking]);
   const { offset, adjust } = useViewOffset();
   const seats = seatInfos(room, game, you, gameAt, now);
+
+  // Figuren der anderen Brillen: nur mit frischer Pose; einmal je Sekunde neu entschieden.
+  const [figures, setFigures] = useState<string[]>([]);
+  useEffect(() => {
+    if (!mesh) return setFigures([]);
+    const pick = () => {
+      const fresh = xrMembers.filter((id) => id !== you && Date.now() - (mesh.poses.get(id)?.at ?? 0) < POSE_STALE_MS);
+      setFigures((before) => (before.join() === fresh.join() ? before : fresh));
+    };
+    pick();
+    const id = window.setInterval(pick, 1000);
+    return () => window.clearInterval(id);
+  }, [mesh, xrMembers, you]);
+  const seatOf = (memberId: string): number | null => {
+    if (game) {
+      const i = game.seats.findIndex((s) => s.memberId === memberId);
+      return i >= 0 ? i : null;
+    }
+    const i = room?.lobby.seats.findIndex((s) => s.kind === 'human' && s.memberId === memberId) ?? -1;
+    return i >= 0 ? i : null;
+  };
+  const seatCount = game ? game.seats.length : (room?.lobby.seats.length ?? 0);
+  const myBase = you ? (seatOf(you) ?? 0) : 0;
   const boardMoves = useMemo(
     () => (game && isBoardGame(game.gameId) ? boardMoveIndexes(game.gameId, game.legalMoves) : game && isCardGame(game.gameId) ? cardMoveIndexes(game.legalMoves) : new Set<number>()),
     [game],
@@ -142,7 +170,9 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt }:
         <XROrigin position={[0, -offset.y, offset.z]} />
         <DesktopCamera />
         <Tavern chairs={seats.filter((s) => !s.mine).map((s) => ({ angle: s.angle, mine: false }))} />
-        <Seats seats={seats} signals={signals} memberAvatar={(id) => room?.members.find((m) => m.id === id)?.avatar ?? null} />
+        <Seats seats={seats} signals={signals} memberAvatar={(id) => room?.members.find((m) => m.id === id)?.avatar ?? null} figures={figures} />
+        {mesh && <PoseSender mesh={mesh} xrMembers={xrMembers} sendRoomPose={(head) => send({ type: 'pose', head })} origin={[0, -offset.y, offset.z]} />}
+        {mesh && <Figures mesh={mesh} members={figures} seatOf={seatOf} mySeatBase={myBase} count={seatCount} infos={seats} />}
         {shown?.gameId === 'tic-tac-toe' && <TicTacToeBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'four-in-a-row' && <FourInARowBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'chess' && <ChessBoard key={`${shown.round}`} game={shown} onMove={moveByValue} />}

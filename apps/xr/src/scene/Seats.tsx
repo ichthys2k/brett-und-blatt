@@ -49,7 +49,7 @@ function Floating({ text, born, position, rotation }: { text: string; born: numb
   );
 }
 
-export function Seats({ seats, signals, memberAvatar }: { seats: SeatInfo[]; signals: Signal[]; memberAvatar: (memberId: string) => string | null }) {
+export function Seats({ seats, signals, memberAvatar, figures = [] }: { seats: SeatInfo[]; signals: Signal[]; memberAvatar: (memberId: string) => string | null; figures?: string[] }) {
   return (
     <group>
       {seats.map((seat) => {
@@ -60,7 +60,10 @@ export function Seats({ seats, signals, memberAvatar }: { seats: SeatInfo[]; sig
         const own = signals.filter((s) => s.from === seat.memberId);
         return (
           <group key={seat.index}>
-            <Sign lines={[`${seat.avatar} ${seat.name}`, status]} position={signPos} rotation={rotation} width={seat.mine ? 0.26 : 0.36} height={seat.mine ? 0.08 : 0.13} />
+            {/* VR-Spieler mit Figur tragen ihr Schild selbst (scene/Meet.tsx); Handy-Spieler bleiben Schild am Stuhl. */}
+            {!(seat.memberId && !seat.mine && figures.includes(seat.memberId)) && (
+              <Sign lines={[`${seat.avatar} ${seat.name}`, status]} position={signPos} rotation={rotation} width={seat.mine ? 0.26 : 0.36} height={seat.mine ? 0.08 : 0.13} />
+            )}
             {own.map((signal) => (
               <Floating
                   key={signal.id}

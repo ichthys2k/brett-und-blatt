@@ -6,6 +6,9 @@
 import { AVATARS, PROTOCOL_VERSION, type ClientMessage, type GameMessage, type RoomMessage, type ServerMessage } from '@brett-und-blatt/online';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+/** Flüchtige VR-Nachrichten (#351), die nicht in den Zustand gehören. */
+export type XrMessage = Extract<ServerMessage, { type: 'rtc' | 'pose' }>;
+
 const DEFAULT_SERVER = 'https://brett-und-blatt.lipponer.workers.dev';
 
 /** Adresse des Spieleservers: `?server=` (Tests, lokal) vor Build-Variable vor dem echten Server. */
@@ -80,6 +83,7 @@ export interface RoomState {
 export function useRoom(server: string, code: string | null, profile: Stored) {
   const [state, setState] = useState<RoomState>({ status: 'connecting', you: null, room: null, game: null, gameAt: 0, signals: [], error: null, stats: { received: 0, receivedChars: 0, sent: 0 } });
   const socket = useRef<WebSocket | null>(null);
+  const xrListeners = useRef(new Set<(message: XrMessage) => void>());
   const stats = useRef({ received: 0, receivedChars: 0, sent: 0 });
 
   const send = useCallback((message: ClientMessage) => {
@@ -114,6 +118,14 @@ export function useRoom(server: string, code: string | null, profile: Stored) {
           message = JSON.parse(text) as ServerMessage;
         } catch {
           return;
+        }
+        if (message.type === 'rtc' || message.type === 'pose') {
+          for (const fn of xrListeners.current) fn(message);
+          return;
+        }
+        if (message.type === 'welcome') {
+          // Die VR-App ist immer eine Brille im Sinne des Treffpunkts (#351).
+          ws.send(JSON.stringify({ type: 'xr', on: true } satisfies ClientMessage));
         }
         setState((s) => {
           const next = { ...s, stats: { ...stats.current } };
@@ -160,7 +172,14 @@ export function useRoom(server: string, code: string | null, profile: Stored) {
     };
   }, [server, code, profile.token, profile.name, profile.avatar]);
 
-  return { ...state, send };
+  const onXr = useCallback((fn: (message: XrMessage) => void) => {
+    xrListeners.current.add(fn);
+    return () => {
+      xrListeners.current.delete(fn);
+    };
+  }, []);
+
+  return { ...state, send, onXr };
 }
 
 /** Den Zug aus `legalMoves` mit der zuletzt gesehenen Version schicken. */
