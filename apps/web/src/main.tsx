@@ -5,6 +5,8 @@ import { startAppUpdates } from './lib/appUpdate';
 import './lib/look';
 import { registerWebPassBlocks } from './lib/passBlocks';
 import { startClassProgressSync } from './lib/classLearning';
+import { startClassCardSync } from './lib/classes';
+import { onGameRecorded } from './lib/passRecorder';
 import { passSyncSoon, syncPassEntry } from './lib/playerPass';
 import { disablePinchZoom } from './lib/preventZoom';
 import './styles.css';
@@ -12,6 +14,8 @@ import './styles.css';
 // Spielerpass (#137): Blöcke anmelden und beim Start einmal abgleichen.
 registerWebPassBlocks();
 startClassProgressSync();
+// Klassenkarten nach jeder Partie nachführen (#151); hier statt in classes.ts, damit kein Importkreis entsteht (#361).
+startClassCardSync(onGameRecorded);
 syncPassEntry();
 passSyncSoon(3000);
 
