@@ -17,7 +17,7 @@ const FRONT = TABLE_RADIUS - 0.2;
 const HAND_Y = 0.11;
 
 /** Ein Plättchen mit Schrift; flach (Standard) oder aufgestellt. */
-function Tile({ label, position, size, background, color = '#1d1510', onPress, glow, selected, rotation = [-Math.PI / 2, 0, 0] }: { label: string; position: [number, number, number]; size: number; background: string; color?: string; onPress?: () => void; glow?: boolean; selected?: boolean; rotation?: [number, number, number] }) {
+export function Tile({ label, position, size, background, color = '#1d1510', onPress, glow, selected, rotation = [-Math.PI / 2, 0, 0] }: { label: string; position: [number, number, number]; size: number; background: string; color?: string; onPress?: () => void; glow?: boolean; selected?: boolean; rotation?: [number, number, number] }) {
   const [hover, setHover] = useState(false);
   const texture = labelTexture([label], { width: 128, height: 128, background, color, border: selected ? '#7fd18b' : hover && onPress ? '#ffffff' : glow ? GOLD : null, font: label.length > 2 ? 38 : label.length === 2 ? 50 : 70 });
   return (
@@ -47,7 +47,7 @@ function Tile({ label, position, size, background, color = '#1d1510', onPress, g
 }
 
 /** Knöpfe zur Wahl zwischen mehreren Zügen, seitenweise zu acht; liegt in einer Gruppe in der Tischmitte. */
-function Choices({ options, onPick, onClose }: { options: { move: unknown; label: string }[]; onPick: (move: unknown) => void; onClose: () => void }) {
+export function Choices({ options, onPick, onClose }: { options: { move: unknown; label: string }[]; onPick: (move: unknown) => void; onClose: () => void }) {
   const [page, setPage] = useState(0);
   const per = 8;
   const pages = Math.max(1, Math.ceil(options.length / per));

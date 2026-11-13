@@ -39,6 +39,10 @@ export function boardMoveIndexes(gameId: string, moves: unknown[]): Set<number> 
     if (gameId === 'ludo' && (t === 'roll' || t === 'move')) handled.add(i);
     if (gameId === 'dominoes' && (t === 'play' || t === 'draw')) handled.add(i);
     if ((gameId === 'scrabble' || gameId === 'color-and-shape' || gameId === 'grafschaft') && (t === 'play' || t === 'place')) handled.add(i);
+    if (gameId === 'kniffel' && (t === 'roll' || t === 'hold' || t === 'unhold' || t === 'toggleHold')) handled.add(i);
+    if (gameId === 'maexle' && t === 'roll') handled.add(i);
+    if (gameId === 'pairs' && t === 'flip') handled.add(i);
+    if (gameId === 'low-flight' && (t === 'draw' || t === 'takeDiscard' || t === 'reveal' || t === 'swap' || t === 'flip')) handled.add(i);
   });
   return handled;
 }

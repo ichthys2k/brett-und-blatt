@@ -12,6 +12,7 @@ import { ChessBoard, FourInARowBoard, TicTacToeBoard, boardMoveIndexes } from '.
 import { CheckersBoard, GoBoard, GomokuBoard, MillBoard, ReversiBoard } from './boards2';
 import { BattleshipBoard, ChineseCheckersBoard, FactorGridBoard, FourPlayerChessBoard, LudoBoard, UltimateTicTacToeBoard } from './boards3';
 import { ColorShapeBoard, DominoBoard, GrafschaftBoard, WordGridBoard } from './boards4';
+import { KniffelBoard, LowFlightBoard, MaexleBoard, PairsBoard, Tafel } from './boards5';
 import { CardTable, cardMoveIndexes, isCardGame } from './cards';
 import { Panel, ReactionBar, type VoiceControls } from './Panel';
 import { Seats, seatAngle, type SeatInfo } from './Seats';
@@ -195,6 +196,11 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         {shown?.gameId === 'dominoes' && <DominoBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'scrabble' && <WordGridBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'color-and-shape' && <ColorShapeBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'kniffel' && <KniffelBoard game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'maexle' && <MaexleBoard game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'pairs' && <PairsBoard game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'low-flight' && <LowFlightBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
+        {shown && !isBoardGame(shown.gameId) && !isCardGame(shown.gameId) && <Tafel game={shown} />}
         {shown?.gameId === 'grafschaft' && <GrafschaftBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         {shown && isCardGame(shown.gameId) && <CardTable key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={onMove} adjust={adjust} voice={voice} />

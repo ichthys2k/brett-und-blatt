@@ -23,6 +23,10 @@ export const BOARD_GAMES = [
   'scrabble',
   'color-and-shape',
   'grafschaft',
+  'kniffel',
+  'maexle',
+  'pairs',
+  'low-flight',
 ] as const;
 export type BoardGameId = (typeof BOARD_GAMES)[number];
 

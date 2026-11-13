@@ -171,7 +171,7 @@ const PAIR_SETS: Record<string, { pairs: { a: string; b: string }[] }> = {
   englisch,
 };
 
-function peterFace(set: string, card: { pair: number; side: 'a' | 'b' }): Face {
+export function peterFace(set: string, card: { pair: number; side: 'a' | 'b' }): Face {
   const text = card.pair < 0 ? '🐈‍⬛' : (PAIR_SETS[set]?.pairs[card.pair]?.[card.side] ?? '?');
   return { center: text, corner: '', color: '#1d1510', background: card.pair < 0 ? '#e9d7b0' : '#fbf5e6' };
 }

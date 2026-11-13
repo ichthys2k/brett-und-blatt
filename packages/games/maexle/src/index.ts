@@ -2,6 +2,7 @@ import { generalBots, type GameModule } from '@brett-und-blatt/engine';
 import { maexleBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, legalMoves, playerView, result, sampleHidden, setup, type MaexleMove, type MaexleState } from './rules';
+import { describeMove } from './describe';
 
 export type { Announcement, MaexleMove, MaexleState, MaexleValue, Phase, Reveal } from './rules';
 export { MAEXLE, RANKING, isDouble, isIn, lastAnnouncement, rankOf, valueOf, valuesAbove } from './rules';
@@ -65,6 +66,7 @@ export const gameModule: GameModule<MaexleState, MaexleMove> = {
   legalMoves,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [maexleBot, ...generalBots<MaexleState, MaexleMove, MaexleState>()],

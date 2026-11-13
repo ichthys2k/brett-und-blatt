@@ -84,7 +84,7 @@ function faceTexture(face: Face | null): CanvasTexture {
   return texture;
 }
 
-function Card({ face, position, rotation, highlight, selected, onPress, scale = 1 }: { face: Face | null; position: [number, number, number]; rotation?: [number, number, number]; highlight?: boolean; selected?: boolean; onPress?: () => void; scale?: number }) {
+export function Card({ face, position, rotation, highlight, selected, onPress, scale = 1 }: { face: Face | null; position: [number, number, number]; rotation?: [number, number, number]; highlight?: boolean; selected?: boolean; onPress?: () => void; scale?: number }) {
   const [hover, setHover] = useState(false);
   return (
     <group position={position} rotation={rotation} scale={scale * (hover && onPress ? 1.08 : 1)}>
