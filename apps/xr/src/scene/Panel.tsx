@@ -12,6 +12,7 @@ import { GAME_CHOICES, LEVEL_TEXT, PHRASE_TEXT, gameName, isBoardGame } from '..
 import { TABLE_CENTER } from './Tavern';
 import { WOOD_DARK } from './text';
 import { Button3D, Sign } from './ui3d';
+import { isCardGame } from './cards';
 import { getVolume, onVolumeChange, setVolume } from '../sound';
 
 const PAGE = 6;
@@ -161,6 +162,7 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust }: Pan
     }
     const listed = game.legalMoves.map((_, i) => i).filter((i) => !boardMoves.has(i));
     if (listed.length === 0 && isBoardGame(game.gameId) && myTurn) lines.push('Zeig auf ein leuchtendes Ziel auf dem Brett.');
+    if (isCardGame(game.gameId) && myTurn && listed.length < game.legalMoves.length) lines.push('Leuchtende Karten und Stapel kannst du antippen.');
     const pages = Math.max(1, Math.ceil(listed.length / PAGE));
     const current = Math.min(page, pages - 1);
     for (const i of listed.slice(current * PAGE, current * PAGE + PAGE)) {

@@ -90,7 +90,7 @@ Ein Zug:
 
 `move` ist **ein Eintrag aus `legalMoves`, unverändert**. Ist die Version veraltet, antwortet der Server mit `error`/`staleMove`, bei einem unerlaubten Zug mit `illegalMove`. Danach auf die nächste `game`-Nachricht warten. Weitere Nachrichten: `resign` (aufgeben), `takeBack` und `answerTakeBack` (Zurücknehmen mit Zustimmung, nur bei offenen Spielen), `react` und `say` (Emoji und Schnellnachrichten), `toLobby` (Raumleitung) und `ping` (der Server antwortet mit `pong` und seiner Uhrzeit).
 
-**Zugtexte:** Bei Tic-Tac-Toe, Vier in einer Reihe, Schach, Vierer-Schach, Dame, Mühle, Reversi, Gomoku, Go, Mau-Mau und Eins! steht neben `legalMoves` die Liste `moveLabels` (#335). Ein Client kann sie einfach als Auswahl zeigen, etwa „Springer g1–f3“, „Weiß setzt auf d6, Mühle, nimmt b2“ oder „Herz Bube spielen, Pik wünschen“. Die Texte sind je Liste eindeutig und entstehen nur aus der eigenen Sicht, verraten also nichts Verdecktes. Zurück an den Server geht immer der Eintrag aus `legalMoves`, nie der Text.
+**Zugtexte:** Bei Tic-Tac-Toe, Vier in einer Reihe, Schach, Vierer-Schach, Dame, Mühle, Reversi, Gomoku, Go, Mau-Mau, Eins! und Skat steht neben `legalMoves` die Liste `moveLabels` (#335). Ein Client kann sie einfach als Auswahl zeigen, etwa „Springer g1–f3“, „Weiß setzt auf d6, Mühle, nimmt b2“ oder „Herz Bube spielen, Pik wünschen“. Die Texte sind je Liste eindeutig und entstehen nur aus der eigenen Sicht, verraten also nichts Verdecktes. Zurück an den Server geht immer der Eintrag aus `legalMoves`, nie der Text.
 
 **Sicht und Züge je Spiel:** `view` und die Einträge von `legalMoves` sind je Spiel eigenes JSON. Wer mehr als die Zugtexte braucht, findet die Typen im Spielordner: `packages/games/<id>/src/rules.ts`, zum Beispiel bei Tic-Tac-Toe:
 

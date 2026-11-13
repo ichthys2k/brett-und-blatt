@@ -17,6 +17,7 @@ Eine eigene Web-App für die Meta Quest (und jeden Browser mit WebGL): ein Tisch
 | Spiel | Darstellung |
 | --- | --- |
 | Tic-Tac-Toe, Vier in einer Reihe, Schach, Dame, Mühle, Reversi, Gomoku, Go | 3D-Figuren auf dem Tisch. Leuchtende Ziele sind die erlaubten Züge. Bei Schach und Dame erst die Figur, dann das Ziel; bei Mühle nach einer Mühle den Stein antippen, der weg soll. Passen, Auszählen (Go) und Ähnliches stehen im 2D-Fenster. |
+| Mau-Mau, Eins!, Skat | Karten in der Hand (#350): Der eigene Fächer steht vor dir an der Tischkante; spielbare Karten leuchten und werden durch Antippen gespielt. Ablage und Nachziehstapel (zum Ziehen antippen) bzw. der Stich liegen in der Tischmitte, die Karten der anderen verdeckt vor ihren Plätzen. Hat eine Karte mehrere Möglichkeiten (Bube mit Wunschfarbe, Farbwahl, Handtausch), erscheinen Knöpfe zur Wahl; beim Skat-Drücken tippst du zwei Karten an und bestätigst. Reizen und Ansagen stehen im 2D-Fenster. |
 | alle anderen Online-Spiele | 2D-Fenster über dem Tisch mit der Zugliste und den Zugtexten des Servers (#335) |
 
 **Alles in der Brille (#349):** Das 2D-Fenster über dem Tisch kann alles, was die Leiste kann. In der Lobby wählt die Raumleitung mit ◀ ▶ das Spiel, ändert die Platzzahl und schaltet freie Plätze durch: frei → Bot leicht → mittel → schwer → frei. In der Partie gibt es dort Aufgeben (mit Rückfrage), Remis anbieten (Schach, Dame), die Bitte ums Zurücknehmen samt Abstimmung und **„💬 Nachricht“** für die Schnellnachrichten. Unter **„↕ Tisch“** stellt man Tischhöhe und Abstand ein (bleibt im Gerät gespeichert) und die Lautstärke. Neu ausrichten geht wie immer mit gedrückter Meta-Taste. Uhren stehen als „⏱ 0:42“ auf den Schildern.
@@ -76,4 +77,4 @@ Den alten Worker `brett-und-blatt-xr` (erster Versuch) kann man danach im Dashbo
 ## Grenzen des Probelaufs
 
 - Kein Treffpunkt mit Körpern oder Händen der anderen (#351), keine Sprache (#352).
-- Karten in der Hand gibt es noch nicht; Kartenspiele laufen über das 2D-Fenster (#350).
+- Der Kartenfächer schwebt vor dir; an der Hand oder am Controller hängt er noch nicht, und Karten werden angetippt statt gegriffen. Weitere Kartenspiele (z. B. Doppelkopf, Schafkopf) laufen noch über das 2D-Fenster.
