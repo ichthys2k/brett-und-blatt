@@ -1,5 +1,6 @@
 import { PlayerCrest } from '@brett-und-blatt/ui';
-import { BOT_LEVELS, parseCrest, teamsFor, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
+import { BOT_LEVELS, parseCrest, teamsFor, timePresetsOf, type CustomCardCatalog, type TimePresetId } from '@brett-und-blatt/engine';
+import { CARD_SET_GAMES, useActiveCardSet, useChangedCatalog } from '../lib/activeCardSet';
 import { MAX_SEATS, TOURNAMENT_CODE_PATTERN, parseRoomCode, roomCapabilities, type Capability, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
@@ -390,9 +391,7 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu
   const [showCustomCards, setShowCustomCards] = useState(false);
   const checksum =
     (typeof lobby.options?.cardCatalogChecksum === 'string' && lobby.options.cardCatalogChecksum) ||
-    (lobby.options?.customCardCatalog && typeof (lobby.options.customCardCatalog as any).checksum === 'string'
-      ? (lobby.options.customCardCatalog as any).checksum
-      : undefined);
+    parseCatalogOption(lobby.options?.customCardCatalog)?.checksum;
   // Neue Mitglieder kündigen sich mit ihrem Tier an – nicht beim Öffnen der Lobby und
   // nicht beim Wiederverbinden, denn dabei bleibt die Mitglieds-ID gleich.
   const announced = useRef<Set<string> | null>(null);
@@ -582,6 +581,7 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu
           <p className="text-muted">{t('online.noGame')}</p>
         )}
       </Section>
+      {isHost && lobby.gameId && <CardSetLobbyControl gameId={lobby.gameId} checksum={checksum} onSet={(catalog) => send({ type: 'setCustomCardCatalog', catalog })} />}
 
       {game && (
         <>
@@ -696,7 +696,7 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu
       {showCustomCards && checksum && (
         <CustomCardsOverlay
           checksum={checksum}
-          catalog={lobby.options?.customCardCatalog as any}
+          catalog={parseCatalogOption(lobby.options?.customCardCatalog)}
           onClose={() => setShowCustomCards(false)}
         />
       )}
@@ -895,3 +895,37 @@ function SeatRow({
     </li>
   );
 }
+
+/** Die Option `customCardCatalog` steht im Raum als JSON-Text (#270). */
+function parseCatalogOption(value: unknown): CustomCardCatalog | undefined {
+  if (typeof value !== 'string') return undefined;
+  try {
+    return JSON.parse(value) as CustomCardCatalog;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Raumleitung: das aktive Kartenset aus der Bibliothek für diese Partie verwenden oder entfernen (#270). */
+function CardSetLobbyControl({ gameId, checksum, onSet }: { gameId: string; checksum: string | undefined; onSet: (catalog: CustomCardCatalog | null) => void }) {
+  const set = useActiveCardSet();
+  const changed = useChangedCatalog(gameId, set?.catalog);
+  if (!CARD_SET_GAMES[gameId]) return null;
+  if (checksum) {
+    return (
+      <p className="flex flex-wrap items-center gap-2 text-sm">
+        🎴 Eigenes Kartenset aktiv (Anki #{checksum}).
+        <Button variant="ghost" onClick={() => onSet(null)}>
+          Standardkarten verwenden
+        </Button>
+      </p>
+    );
+  }
+  if (!set || !changed) return null;
+  return (
+    <Button variant="ghost" onClick={() => onSet(changed)}>
+      🎴 Eigenes Kartenset „{set.name}“ verwenden
+    </Button>
+  );
+}
+

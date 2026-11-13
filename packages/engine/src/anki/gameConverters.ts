@@ -64,7 +64,9 @@ export function drachenspielCardsToAnki<T extends CombatCardLike>(cards: readonl
     desc: 'Offizielle Kampfkarten für das Drachenspiel von Brett & Blatt',
   };
 
-  const notes: AnkiNote[] = cards.map((card) => {
+  // Jede Karte nur einmal: doppelte Kennungen ergäben doppelte Notiz-IDs, und SQLite lehnt das Paket ab.
+  const unique = cards.filter((card, i) => cards.findIndex((other) => other.id === card.id) === i);
+  const notes: AnkiNote[] = unique.map((card) => {
     const guid = `bub-combat-${card.id}`;
     const kartenart = card.isSpell ? 'Kniff' : card.building ? 'Gebäude' : 'Begleiter';
     const klasse = card.house ?? 'neutral';

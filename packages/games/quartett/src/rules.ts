@@ -1,4 +1,4 @@
-import { Rng, type Actor, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
+import { Rng, sanitizeCustomCardCatalog, type Actor, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { cardSet, compareValues, groupOf, valueOf, type CardId, type CardSet } from './sets';
 
 export type QuartettMode = 'trump' | 'collect';
@@ -86,39 +86,29 @@ export function setup(seats: number, options: Options, seed: string): QuartettSt
 
   const rawCatalog = (options as Record<string, unknown>).customCardCatalog ?? (options as Record<string, unknown>).customCards ?? options.cardCatalog;
   if (rawCatalog) {
-    try {
-      const cat = typeof rawCatalog === 'string' ? JSON.parse(rawCatalog) : rawCatalog;
-      if (cat.quartettCards) {
+    // Nur Werte, Name und Bild in sicheren Grenzen (#277).
+    const cat = sanitizeCustomCardCatalog(rawCatalog, 'quartett');
+    {
+      if (cat && Object.keys(cat.quartettCards).length > 0) {
         const cards = baseSet.cards.map((c) => {
           const override = cat.quartettCards[c.id];
           if (!override) return c;
           const mergedValues: Record<string, number> = { ...c.values };
-          for (const [key, rawVal] of Object.entries(override.values as Record<string, unknown>)) {
-            const val = typeof rawVal === 'number' ? rawVal : Number(rawVal);
+          for (const [key, val] of Object.entries(override.values)) {
             if (baseSet.properties.some((p) => p.id === key)) {
               mergedValues[key] = val;
             } else {
               const matchedProp = baseSet.properties.find(
                 (p) => p.label.toLowerCase() === key.toLowerCase() || p.id.toLowerCase() === key.toLowerCase(),
               );
-              if (matchedProp) {
-                mergedValues[matchedProp.id] = val;
-              } else {
-                mergedValues[key] = val;
-              }
+              if (matchedProp) mergedValues[matchedProp.id] = val;
             }
           }
-          return {
-            ...c,
-            ...override,
-            values: mergedValues,
-          };
+          return { ...c, name: override.name, ...(override.emoji ? { emoji: override.emoji } : {}), values: mergedValues };
         });
         customCardSet = { ...baseSet, cards };
-        cardCatalogChecksum = cat.checksum;
+        cardCatalogChecksum = cat.checksum || undefined;
       }
-    } catch {
-      // ignore
     }
   }
 

@@ -130,12 +130,9 @@ export async function generateTemplateCollection(id: GameCardTemplateId): Promis
     case 'spielblatt-bayer':
       return createPlayingCardCollection({ deck: 'bavarian-32' });
     case 'drachenspiel': {
-      const { CARDS_DB, SPELLS_DB } = await import('../../../../packages/games/drachenspiel/src/cards');
-      const cards = [
-        ...Object.values(CARDS_DB),
-        ...Object.values(SPELLS_DB),
-      ];
-      return drachenspielCardsToAnki(cards);
+      // CARDS_DB enthält die Zauber schon; doppelte Karten ließen den Export scheitern (#270).
+      const { CARDS_DB } = await import('../../../../packages/games/drachenspiel/src/cards');
+      return drachenspielCardsToAnki(Object.values(CARDS_DB));
     }
     case 'narrenhof': {
       const { MODS } = await import('../../../../packages/games/color-sorter/src/mods');

@@ -1,4 +1,5 @@
 import type { CardBackId } from '@brett-und-blatt/ui';
+import { useActiveCardSet } from './activeCardSet';
 import type { CrestSpec } from '@brett-und-blatt/engine';
 import { useSyncExternalStore } from 'react';
 import { loadBook } from './chronikStore';
@@ -244,5 +245,7 @@ export function useActiveCardCosmetics(): CardCosmetics {
   const cardBack = useActiveCardBack();
   const crest = useCrest();
   const playingCardOverrides = useActivePlayingCardOverrides();
-  return { cardBack, crest, playingCardOverrides };
+  // Bilder, Namen und Texte der Spezialkarten aus dem aktiven Kartenset (#270).
+  const cardSet = useActiveCardSet();
+  return { cardBack, crest, playingCardOverrides, ...(cardSet ? { ankiOverrides: cardSet.ankiOverrides, mediaUrlMap: cardSet.mediaUrlMap } : {}) };
 }

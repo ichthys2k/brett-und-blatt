@@ -58,6 +58,7 @@ Der Server schickt nach jeder Änderung die ganze `room`-Nachricht: Phase, Mitgl
 | Nachricht | Wer | Wirkung |
 | --- | --- | --- |
 | `{ "type": "setGame", "gameId": "tic-tac-toe" }` | Raumleitung | Spiel wählen; die ids stehen in `packages/games/*/src/meta.ts` |
+| `{ "type": "setCustomCardCatalog", "catalog": { "checksum": "…", "combatCards": {}, "courtCards": {}, "quartettCards": {} } }` | Raumleitung | Eigenes Kartenset für Drachenspiel, Narrenhof oder Quartett (#270), `null` nimmt es zurück. Der Server übernimmt nur Werte und Darstellung in festen Grenzen (`sanitizeCustomCardCatalog`), nie Effekte |
 | `{ "type": "setSeat", "index": 1, "seat": { "bot": "easy" } }` | Raumleitung | Platz mit einem Bot (`easy`, `medium`, `hard`) oder `"open"` besetzen |
 | `{ "type": "takeSeat", "index": 0 }` / `{ "type": "leaveSeat" }` | alle | sich setzen oder aufstehen |
 | `{ "type": "setOption", "id": "…", "value": "…" }`, `setTime`, `setSeatCount` | Raumleitung | Einstellungen |

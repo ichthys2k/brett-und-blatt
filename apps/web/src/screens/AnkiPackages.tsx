@@ -9,6 +9,7 @@ import { downloadFile, safeFileName } from '../lib/download';
 import { loadCollection, saveCollection } from '../lib/library';
 import { navigate, paths } from '../lib/router';
 import { GAME_CARD_TEMPLATES, exportGameCardTemplateApkg, type GameCardTemplateId } from '../lib/gameCardTemplates';
+import { setActiveCardSetId, useActiveCardSetId } from '../lib/activeCardSet';
 import { setActiveSheetPackageId, useActiveSheetPackageId } from '../lib/activeSheetPackage';
 
 /*
@@ -124,6 +125,7 @@ export function ApkgImport({ onDone }: { onDone: () => void }) {
 /** Liste der gespeicherten Pakete mit Export, „Paare übernehmen“ und Löschen. */
 export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
   const activeSheetId = useActiveSheetPackageId();
+  const activeCardSetId = useActiveCardSetId();
   const [packs, setPacks] = useState<PackSummary[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -250,6 +252,19 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
                 >
                   {activeSheetId === pack.id ? '✅ Aktives Spielblatt' : '🃏 Als Spielblatt verwenden'}
                 </Button>
+                {pack.specialCards > 0 && (
+                  <Button
+                    variant={activeCardSetId === pack.id ? 'primary' : 'ghost'}
+                    title={
+                      activeCardSetId === pack.id
+                        ? 'Aktives Kartenset für Drachenspiel, Narrenhof, Quartett und Wölfe (Klicken zum Deaktivieren)'
+                        : 'Geänderte Werte, Namen und Bilder dieser Karten in Drachenspiel, Narrenhof, Quartett und Wölfe verwenden'
+                    }
+                    onClick={() => setActiveCardSetId(activeCardSetId === pack.id ? null : pack.id)}
+                  >
+                    {activeCardSetId === pack.id ? '✅ Aktives Kartenset' : `🎴 Als Kartenset verwenden (${pack.specialCards})`}
+                  </Button>
+                )}
                 <Button variant="ghost" onClick={() => navigate(paths.collection(pack.id))}>
                   ✏️ Bearbeiten
                 </Button>

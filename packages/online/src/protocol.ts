@@ -1,4 +1,5 @@
 import { parsePushSubscription, type ParsePushOptions, type PushSubscriptionData } from './push';
+import { sanitizeCustomCardCatalog } from '@brett-und-blatt/engine';
 import type { BotLevel, ClockReading, CustomCardCatalog, Forfeit, GameEvent, Options, ReplayData, Result, SeatId, TimePresetId } from '@brett-und-blatt/engine';
 
 /**
@@ -402,8 +403,11 @@ export function parseClientMessage(raw: string, push: ParsePushOptions = {}): Cl
       return isString(m.id, 60) && isString(m.value, 60) ? { type: 'setOption', id: m.id, value: m.value } : null;
     case 'setCustomCardCatalog':
       if (m.catalog === null) return { type: 'setCustomCardCatalog', catalog: null };
-      if (!isRecord(m.catalog) || typeof m.catalog.checksum !== 'string' || !Array.isArray(m.catalog.cards)) return null;
-      return { type: 'setCustomCardCatalog', catalog: m.catalog as unknown as CustomCardCatalog };
+      {
+        // Nur Werte und Darstellung in sicheren Grenzen (#270, #277); fremde Felder fallen weg.
+        const catalog = sanitizeCustomCardCatalog(m.catalog);
+        return catalog ? { type: 'setCustomCardCatalog', catalog } : null;
+      }
     case 'setTime':
       return isTime(m.time) ? { type: 'setTime', time: m.time } : null;
     case 'setSeatCount':
