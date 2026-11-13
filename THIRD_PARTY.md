@@ -407,7 +407,7 @@ Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis:
 
 ## Themenhaus-Kulissen im Drachenspiel (KI-erzeugt)
 
-Die fünf Hintergrundkulissen für die Themenhäuser im Drachenspiel (`packages/games/drachenspiel/src/ui/kulissen/*.webp`: Wald, Meer, Bauernhof, Wildnis, Krabbeltiere sowie Master-Dateien in `packages/games/drachenspiel/assets/kulissen/`): **KI-erzeugt** mit einem Bildmodell nach eigenen Bildbeschreibungen im Storybook-Fantasy-Stil, November 2026. Auswahl durch Cornelius Lipponer. Die Bilder zeigen leere Landschaften und Naturkulissen ohne Personen, Figuren, Text oder Interface-Elemente.
+Die fünf Hintergrundkulissen für die Themenhäuser im Drachenspiel (`packages/games/drachenspiel/src/ui/kulissen/*.webp`: Wald, Meer, Bauernhof, Wildnis, Krabbeltiere ; die Originale in voller Auflösung liegen im privaten Repo `ichthys2k/brett-und-blatt-grafik`): **KI-erzeugt** mit einem Bildmodell nach eigenen Bildbeschreibungen im Storybook-Fantasy-Stil, November 2026. Auswahl durch Cornelius Lipponer. Die Bilder zeigen leere Landschaften und Naturkulissen ohne Personen, Figuren, Text oder Interface-Elemente.
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 

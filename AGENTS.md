@@ -17,7 +17,7 @@ Freie Spielesammlung im Browser (Karten- und Brettspiele für Handy und Desktop)
 - **Keine Geheimnisse ins Repo** (`.env`, Tokens, Zugangsdaten). Nichts außerhalb dieses Repos anfassen, was nicht zur Aufgabe gehört.
 - **Klänge:** Die MP3s liegen im **privaten** Repo `ichthys2k/brett-und-blatt-klaenge` (ElevenLabs-Lizenz) und dürfen nie ins öffentliche Repo kopiert werden. Nur die CI holt sie per Secret. Lokal läuft alles auch ohne – fehlende Klänge sind dann nur ein Hinweis. Neue Klänge nur nach Auswahl durch Cornelius – Werkzeuge im Klang-Repo (`tools/erzeugen.mjs`, `stimme.mjs`, `hoerprobe.mjs`, `uebernehmen.mjs`), Stand in `docs/spiele/klaenge-alle-spiele.md`. Dateinamen dort mit Unterstrichen, Katalognamen mit Bindestrichen, Sprachausrufe `ruf-…`; in Worktrees `KLAENGE_DIR=$HOME/code/brett-und-blatt-klaenge` setzen.
 - **Abhängigkeiten:** pnpm 12 nur über corepack (`corepack pnpm …`, `pnpm` ist nicht im PATH). pnpm hat eine Wartefrist für neue Paketversionen – **keine `minimumReleaseAgeExclude`-Ausnahmen**, sondern ältere Versionen wählen. Neue Fremdbibliotheken in `THIRD_PARTY.md` eintragen.
-- **Grafik-Assets in maximaler Auflösung speichern:** Alle generierten Bilder, Kulissen, Karten und Porträts müssen immer in ihrer **maximal verfügbaren Original-Auflösung** im Repository archiviert werden (z. B. unter `assets/originale/` oder `<zielordner>/original/`), selbst wenn die Web-App zur Laufzeit eine herunterskalierte Fassung (WebP) nutzt. Niemals nur die verkleinerte Web-Fassung committen und das hochauflösende Original verwerfen, damit spätere Abwandlungen und Druckvarianten jederzeit möglich bleiben.
+- **Originale der gemalten Bilder nur im privaten Repo:** Jedes generierte Bild wird in **maximaler Original-Auflösung** archiviert, ausschließlich im privaten Repo `ichthys2k/brett-und-blatt-grafik` (`../brett-und-blatt-grafik/originale/<Zielordner>/<name>.png`); ins öffentliche Repo kommt nur die WebP-Fassung, nie ein Ordner `original/` oder ein PNG über 1 MB. `scripts/grafik/uebernehmen.mjs` legt das Original ab und bricht ohne das private Repo ab. Bilder erzeugen nach [`.agent/workflows/grafik-erzeugen.md`](.agent/workflows/grafik-erzeugen.md) und der Stilbibel [`docs/grafik/STILBIBEL.md`](docs/grafik/STILBIBEL.md).
 
 ## Arbeitsablauf mit GitHub Issues
 
@@ -57,6 +57,7 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 - [`docs/KONZEPT.md`](docs/KONZEPT.md) – Entscheidungen, Spielmodul-Schnittstelle, Muster, Fahrplan.
 - [`docs/spiele/`](docs/spiele/README.md) – ein Plan pro Spiel (Regeln, Optionen, Bot, Oberfläche, Umsetzungsstand), Übersicht im README.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) – wie ein neues Spiel angelegt wird.
+- [`docs/grafik/STILBIBEL.md`](docs/grafik/STILBIBEL.md) – Stil, Verbote und Regeln für gemalte Bilder; Ablauf zum Erzeugen in [`.agent/workflows/grafik-erzeugen.md`](.agent/workflows/grafik-erzeugen.md), Bestand in [`docs/grafik/BESTAND.md`](docs/grafik/BESTAND.md).
 - Code: `apps/web` (React-App), `apps/server` (Cloudflare-Worker), `packages/engine`, `packages/online`, `packages/ui`, `packages/games/<id>` (Ordnername = Spiel-`id`), `content/`.
 
 ## Zum Abschluss einer Aufgabe
