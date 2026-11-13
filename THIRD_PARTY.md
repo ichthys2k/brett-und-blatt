@@ -271,7 +271,7 @@ SOFTWARE.
 
 ## KaTeX
 
-Formeln `\(…\)` und `\[…\]` in Anki-Karten setzen (`apps/web`, Version 0.16.47, erst bei Bedarf geladen, Schriften aus dem Paket). https://github.com/KaTeX/KaTeX
+Formeln `\(…\)` und `\[…\]` in Anki-Karten setzen (`apps/web`, Version 0.18.11, erst bei Bedarf geladen, Schriften aus dem Paket). https://github.com/KaTeX/KaTeX
 
 ```
 The MIT License (MIT)

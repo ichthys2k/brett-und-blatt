@@ -13,3 +13,14 @@ Für den Betreiber (Cornelius) gibt es kein Konto, sondern einen **Schlüssel**:
 ## Anmeldung mit Google und Microsoft (#154)
 
 Secrets `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET` (Einrichtung: [`spiele/konto-anmeldung-einrichtung.md`](spiele/konto-anmeldung-einrichtung.md)). **Das Client-Geheimnis von Microsoft läuft spätestens nach 24 Monaten ab:** Ablauftermin notieren und vorher ein neues Secret setzen, sonst scheitert die Anmeldung mit Microsoft. Ohne die Secrets eines Anbieters ist er im Spiel nicht sichtbar.
+
+## Erlaubte Herkünfte (Origins)
+
+Seit #322 erlaubt der echte Spieleserver nur noch die echten Seiten: `https://spiele.lipponer.de`, `https://vr.spiele.lipponer.de` und `https://brett-und-blatt-vr.pages.dev` (`ALLOWED_ORIGINS` in `apps/server/wrangler.jsonc`). Die lokalen Adressen (Vite 5173 und 4173, VR-App 5175 und 4175) setzt nur der lokale Server über `corepack pnpm --filter @brett-und-blatt/server dev` (Skript `dev` in `apps/server/package.json`).
+
+**Bewusst gegen die Produktion testen:** Eine lokal laufende Web-App kommt am echten Server nicht mehr vorbei, das ist gewollt. Zum Prüfen gibt es zwei Wege:
+- die veröffentlichte Seite selbst;
+- Programme ohne Webseite über das offene Protokoll mit `?client=<name>`, etwa der Text-Client `node apps/cli/src/main.mjs neu --spiel tic-tac-toe --bot leicht --start` (Standard-Server ist die Produktion).
+
+Eine weitere Webseite kommt nur durch einen Eintrag in `ALLOWED_ORIGINS` dazu, also per PR und „deploy“.
+
