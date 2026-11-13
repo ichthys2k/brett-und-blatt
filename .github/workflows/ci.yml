@@ -19,6 +19,18 @@ jobs:
       HAS_KLAENGE: ${{ secrets.KLAENGE_DEPLOY_KEY != '' }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Ganze Geschichte, damit die Prüfung der Commit-Adressen den Bereich des Pushes bzw. PRs sieht.
+          fetch-depth: 0
+
+      # Jeder neue Commit muss Cornelius' Noreply-Adresse tragen (Autor und Committer).
+      # PRs aus Forks sind ausgenommen: Fremde Mitwirkende committen mit ihrer eigenen Adresse.
+      - name: Commit-Adressen prüfen
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        run: bash scripts/commit-adresse-pruefen.sh "$VON" "$BIS"
+        env:
+          VON: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          BIS: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Klänge aus dem privaten Repo holen
         if: env.HAS_KLAENGE == 'true'
