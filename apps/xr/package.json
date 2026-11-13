@@ -9,7 +9,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler pages deploy dist --project-name brett-und-blatt-vr --branch main"
   },
   "dependencies": {
     "@brett-und-blatt/online": "workspace:*",

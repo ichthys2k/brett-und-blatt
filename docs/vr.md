@@ -4,7 +4,7 @@ Stand 13.11.2026 · [Issue #339](https://github.com/ichthys2k/brett-und-blatt/is
 
 Eine eigene Web-App für die Meta Quest (und jeden Browser mit WebGL): ein Tisch in der Taverne, an dem man mit denselben Raumcodes wie auf spiele.lipponer.de spielt – gegen Freunde am Handy, am Rechner, in der Brille oder gegen Server-Bots.
 
-- **Adresse:** https://vr.spiele.lipponer.de (nach dem ersten „deploy“; vorher und als Rückfall https://brett-und-blatt-xr.lipponer.workers.dev)
+- **Adresse:** https://vr.spiele.lipponer.de, sobald die Unterdomain eingerichtet ist (siehe unten). Immer erreichbar unter https://brett-und-blatt-vr.pages.dev; der erste Probelauf lag unter https://brett-und-blatt-xr.lipponer.workers.dev.
 - **Code:** `apps/xr` – React Three Fiber mit `@react-three/xr`. Die App kennt **keine Spielregeln**: Sie spricht nur das [offene Protokoll](protokoll.md) mit dem Spieleserver und nutzt aus `packages/online` nur Typen und Listen (Avatare, Reaktionen, Raumcodes).
 
 ## So spielt man
@@ -53,11 +53,21 @@ Die Lastmessung steht in [weitere-plattformen.md](spiele/weitere-plattformen.md#
 
 ## Veröffentlichen
 
-- Die CI prüft bei jedem Push, dass die App baut und ihre Cloudflare-Konfiguration stimmt (`wrangler deploy --dry-run`).
-- **Nur auf `main`, also nach „deploy“**, veröffentlicht der Job „VR-App auf Cloudflare veröffentlichen“ die statischen Dateien als Worker `brett-und-blatt-xr` (`apps/xr/wrangler.jsonc`). Er läuft nach dem Spieleserver und hält die Web-App nicht auf.
-- Die Origins `https://vr.spiele.lipponer.de` und `https://brett-und-blatt-xr.lipponer.workers.dev` stehen in `ALLOWED_ORIGINS` des Spieleservers (`apps/server/wrangler.jsonc`).
+- Die CI baut die App bei jedem Push.
+- **Nur auf `main`, also nach „deploy“**, lädt der Job „VR-App auf Cloudflare veröffentlichen“ die statischen Dateien zu **Cloudflare Pages** hoch (Projekt `brett-und-blatt-vr`, beim ersten Lauf angelegt). Er läuft nach dem Spieleserver und hält die Web-App nicht auf. Von Hand: `corepack pnpm --filter @brett-und-blatt/xr build`, dann `corepack pnpm --filter @brett-und-blatt/xr run deploy`.
+- Die Origins `https://vr.spiele.lipponer.de` und `https://brett-und-blatt-vr.pages.dev` (dazu die alte Probe-Adresse unter workers.dev) stehen in `ALLOWED_ORIGINS` des Spieleservers (`apps/server/wrangler.jsonc`).
 
-**Einmalig für die Unterdomain:** Der Worker trägt `vr.spiele.lipponer.de` als Custom Domain; Cloudflare legt DNS-Eintrag und Zertifikat selbst an, weil die Zone `lipponer.de` dort liegt. Dafür braucht das Secret `CLOUDFLARE_API_TOKEN` neben „Workers Scripts: Bearbeiten“ auch Rechte an der Zone `lipponer.de`, nämlich „Workers Routes: Bearbeiten“ und „DNS: Bearbeiten“. Fehlen sie, scheitert nur dieser Job. Den Token im Cloudflare-Dashboard unter „Mein Profil → API-Token“ erweitern. Den Token selbst nie ins Repo oder in den Chat geben.
+**Warum Pages und kein Worker:** Das DNS von `lipponer.de` liegt bei Strato, nicht bei Cloudflare. Eine Custom Domain für einen Worker verlangt die Zone bei Cloudflare (erster Versuch scheiterte mit „Can't infer zone from route“). Pages nimmt dagegen eine Unterdomain per CNAME von einem fremden DNS-Anbieter.
+
+### Einmalig einrichten
+
+1. **Token:** Im Cloudflare-Dashboard unter *My Profile → API Tokens* beim Token der CI (*⋯ → Edit*) in der bestehenden Account-Policy das Recht **„Cloudflare Pages: Edit“** ergänzen (Bereich *Developer Platform*). „Workers Scripts: Edit“ bleibt. Zonenrechte sind nicht nötig.
+2. **Deploy** abwarten (oder den Job in GitHub mit *Re-run failed jobs* wiederholen). Danach gibt es unter *Workers & Pages* das Pages-Projekt `brett-und-blatt-vr`, erreichbar unter https://brett-und-blatt-vr.pages.dev. Hängt Cloudflare an den Namen ein Kürzel an, weil `brett-und-blatt-vr.pages.dev` schon vergeben ist, diese Adresse melden – sie muss dann in `ALLOWED_ORIGINS`.
+3. **Domain im Pages-Projekt:** `brett-und-blatt-vr` → *Custom domains* → *Set up a custom domain* → `vr.spiele.lipponer.de` → *Continue*. Cloudflare zeigt dann den CNAME-Eintrag, den es erwartet.
+4. **Bei Strato:** Im Kundenlogin unter *Domains → Domainverwaltung* bei `lipponer.de` die Subdomain `vr.spiele` anlegen, dann in deren *DNS-Verwaltung* einen **CNAME-Record** auf `brett-und-blatt-vr.pages.dev` setzen (so wie `spiele` auf GitHub Pages zeigt). Lässt Strato keine Subdomain unter `spiele` zu, stattdessen `vr.lipponer.de` nehmen und hier Bescheid geben, damit der Origin angepasst wird.
+5. Nach einigen Minuten meldet Cloudflare im Pages-Projekt die Domain als *Active* und stellt das Zertifikat aus.
+
+Den alten Worker `brett-und-blatt-xr` (erster Versuch) kann man danach im Dashboard löschen; seine Adresse fällt dann bei Gelegenheit aus `ALLOWED_ORIGINS`. Den Worker **`brett-und-blatt`** nie anfassen – das ist der Spieleserver.
 
 ## Grenzen des Probelaufs
 
