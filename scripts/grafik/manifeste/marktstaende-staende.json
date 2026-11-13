@@ -1,7 +1,7 @@
 {
   "beschreibung": "G9 (#318) B2: vier Marktstände, Tresen unten leer.",
   "stil": "A quaint medieval market stall in the fantasy animal kingdom of Brezelbach, seen straight from the front, the counter at the bottom empty so that cards can be laid on it. Classic oil painting and storybook fairy tale style, warm lighting, rich textures, charming details. No text, no modern elements, no characters.",
-  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo, people, animals, goods on the counter",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo, people, animals, goods on the counter, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "4:3",
   "ziel": "packages/games/market-stalls/src/ui/staende",
   "groesse": [

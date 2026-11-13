@@ -1,7 +1,7 @@
 {
   "beschreibung": "G12 (#325): Spielfiguren für Reversi (beide Seiten dieselbe Scheibe). Motiv-id = <satz>-<figur>[-<seite>]; w = hell, b = dunkel, n = neutraler Meister zum Einfärben in die Platzfarben. Alle Motive freistellen (grüner Grund #00B140 → Alphakanal).",
   "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
-  "ohne": "text, letters, numbers, watermark, border, frame, background scene, hands, people, modern objects, logos, photo, green on the object itself, cast shadow",
+  "ohne": "text, letters, numbers, watermark, border, frame, background scene, hands, people, modern objects, logos, photo, green on the object itself, cast shadow, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "1:1",
   "ziel": "packages/games/reversi/src/ui/figuren",
   "groesse": [

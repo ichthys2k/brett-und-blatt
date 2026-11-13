@@ -1,7 +1,7 @@
 {
   "beschreibung": "Wappen für die Spielkacheln der Startseite (54 Spiele, ein Motiv je Spiel). Angezeigt werden sie klein (etwa 52 × 60 px) in einem wappenförmigen Feld; die Bilder müssen deshalb schlicht und kontrastreich sein.",
   "stil": "A bold, simple heraldic emblem for a board-game tile, painted like enamel on metal: ONE single central symbol, thick clean shapes, strong contrast, limited palette of deep colours with gold accents, subtle painterly texture, dark warm background filling the whole image, readable even when shrunk to 50 pixels. Medieval tavern and fairy-tale kingdom mood, consistent with a set of crests. The painted emblem artwork extends all the way to every edge of the square image: no margin, no visible plate or medallion edge, no corners, no white or black areas outside the artwork, the background texture continues to the borders. No text, no letters, no numbers, no border, no shield outline.",
-  "ohne": "text, letters, numbers, watermark, border, frame, shield outline, real people, logos, thin details, plate, medallion edge, white background, black corners, letters on cards",
+  "ohne": "text, letters, numbers, watermark, border, frame, shield outline, real people, logos, thin details, plate, medallion edge, white background, black corners, letters on cards, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "referenzen": [],
   "format": "4:5",
   "groesse": [

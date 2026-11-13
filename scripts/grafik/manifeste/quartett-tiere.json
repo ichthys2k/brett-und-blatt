@@ -1,7 +1,7 @@
 {
   "beschreibung": "G9a (#319): Quartett-Set tiere, ein Bild je Karte (Anki-Medien, #270). Sachlich richtig; jede Auswahl gegen die Quelle der Karte prüfen.",
   "stil": "Painterly natural-history illustration in warm oil colours, like a plate from an old illustrated bestiary of a fairy-tale kingdom but anatomically accurate: one animal, whole body visible, in a calm characteristic pose in a softly painted hint of its natural habitat, warm even light, background slightly darker towards the edges. No clothes, no human expression. No text.",
-  "ohne": "text, letters, numbers, labels, watermark, border, frame, card layout, modern objects, logos, photo",
+  "ohne": "text, letters, numbers, labels, watermark, border, frame, card layout, modern objects, logos, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "4:3",
   "ziel": "content/quartett/bilder/tiere",
   "groesse": [

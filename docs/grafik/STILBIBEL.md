@@ -8,6 +8,10 @@ Grundlage aller Grafik-Pakete des Vorhabens „Taverne überall“ (#306, G0 = #
 
 Ein Märchen-Königreich mit **Taverne, Narrenhof, Jahrmarkt und Turnierplatz**. Die Bewohner sind **Fabeltiere in Gewändern** (Fuchs, Bär, Dachs, Eule, Esel, Löwe …) und wenige frei erfundene Menschenfiguren. Der Ton ist **humorvoll, würdevoll und kindgerecht**: freundliche Gesichter mit einem verschmitzten Funkeln, nie bedrohlich, kein Blut, keine Waffen, die auf den Betrachter zeigen.
 
+**Kein Alkohol, kein Tabak, keine Drogen** (Cornelius, 13.11.2026): Auch in der Taverne gibt es **keine Bierkrüge, Weingläser, Flaschen mit Schnaps oder Wein, Bierfässer, Betrunkenen, Pfeifen oder Zigaretten**. Getrunken wird – wenn überhaupt – Wasser, Milch, Saft, Tee oder Kakao aus Bechern, Kannen und Tassen; Fässer und Krüge nur, wenn klar ist, dass etwas anderes darin ist (Äpfel, Mehl, Wasser), sonst weglassen. Die Sammlung ist für Kinder und Klassen gedacht.
+
+**Altbestand, der dagegen verstößt** (vor dem 13.11.2026 erzeugt, beim Neuerzeugen ersetzen; Prompts in den Manifesten sind schon berichtigt): Narrenhof-Mundschenk `packages/games/color-sorter/src/ui/portraits/fool-cupbearer-1.webp` (Rotweinglas), Medaillon „Festschmaus“ `packages/games/color-sorter/src/ui/items/tag-stock.webp` (Bierkrug). Fraglich, bitte ansehen: Flaschen im Hintergrund der Tavernenwirtin `packages/games/marketplace/src/ui/figures/innkeeper.webp` und auf dem Kaminsims im Hauptmenü `apps/web/src/menu/taverne-*.webp`, Pokale im Narrenhof-Thronsaal `packages/games/color-sorter/src/ui/kulissen/thronsaal.webp`. Durchgesehen wurden nur die Szenen, Medaillon-Namen und Prompts, nicht jedes der 286 Porträts.
+
 Gemalt wird wie ein **Ölbild alter Meister bzw. ein Märchenbuch**: sichtbarer Pinselduktus, reiche Stoffe (Samt, Brokat, Pelzbesatz), warmes Kerzen- und Laternenlicht, tiefe Farben mit Gold. **Keine Schrift im Bild** – Namen, Werte und Beschriftungen setzt immer die Oberfläche.
 
 ## 2. Stil-Köpfe je Bildart
@@ -55,9 +59,11 @@ Figurensätze der Brettspiele (`figuren-<spiel>.json`), freigestellt auf Grün. 
 
 ## 3. Verbote
 
-**Immer** (an jeden Prompt nach „Avoid: “):
+**Immer** (an jeden Prompt nach „Avoid: “; steht auch im Feld `ohne` jedes Manifests, `tests/grafik.test.ts` prüft das):
 
-> text, letters, numbers, watermark, border, frame, logos, real people, celebrities, modern clothing, modern objects, photo
+> text, letters, numbers, watermark, border, frame, logos, real people, celebrities, modern clothing, modern objects, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs
+
+Trägt ein Manifest oder Motiv ein eigenes `ohne`, gilt diese Liste trotzdem zusätzlich. Auch im Motiv-Prompt keine Getränke nennen, die wie Alkohol aussehen könnten (statt „Kelch mit Rotwein“: „Krug mit Wasser“).
 
 **Zusätze je Bildart** (aus den Manifesten, Feld `ohne`):
 

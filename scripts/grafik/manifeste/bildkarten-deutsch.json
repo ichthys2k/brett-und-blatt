@@ -1,7 +1,7 @@
 {
   "beschreibung": "W-048: Porträts für Unter, Ober und König im deutschen/bayerischen Blatt (Eichel, Gras, Herz, Schellen), 12 Motive. Eigene Tiere, damit sich das Blatt vom französischen unterscheidet; Stilvorlage sind der Narrenhof-Bär und die gewählten französischen Könige.",
   "stil": "Painterly Old-Master style portrait of an anthropomorphic animal in costume, in the same style as the reference images: dark warm background with subtle damask pattern, rich velvet, brocade and fur trim, soft light, warm gold and deep colours, detailed expressive face, dignified with a touch of humour, bust portrait facing the viewer. Figure of a traditional German playing-card deck (Unter = young soldier, Ober = officer with feathered hat, König = king with crown). Vertical composition, figure centred with space around so it can be cropped. No text, no letters, no numbers, no card frame.",
-  "ohne": "text, watermark, border, frame, playing card layout, miniature playing cards or card corners as jewellery, candles at the image edge, real people, celebrities, modern clothing",
+  "ohne": "text, watermark, border, frame, playing card layout, miniature playing cards or card corners as jewellery, candles at the image edge, real people, celebrities, modern clothing, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "referenzen": [
     "packages/games/color-sorter/src/ui/portraits/boss-bear-2.webp",
     "packages/ui/src/cards/portraits/koenig-pik.webp"

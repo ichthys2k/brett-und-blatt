@@ -1,7 +1,7 @@
 {
   "beschreibung": "G10 (#317) Teil B: BEARBEITUNG des Referenzbilds (nur Licht und Fensterausblick). Größe wie taverne-hinten.webp (1376 × 768).",
   "stil": "Edit the reference image. Keep the composition, the camera, every object and every position exactly as they are. Change only the lighting and what is seen through the windows as described. Same painterly oil style. No text, no people, no animals.",
-  "ohne": "text, people, animals, changed composition, moved or added objects other than described",
+  "ohne": "text, people, animals, changed composition, moved or added objects other than described, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "16:9",
   "ziel": "apps/web/src/menu",
   "groesse": [

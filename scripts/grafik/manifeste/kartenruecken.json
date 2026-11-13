@@ -1,7 +1,7 @@
 {
   "beschreibung": "G6 (#314): erzeugt wird das linke obere VIERTEL; der ganze Rücken entsteht durch Spiegeln (siehe Issue). Übernommen wird die zusammengesetzte Datei.",
   "stil": "Painterly ornamental pattern for the back of a playing card, painted in rich oil colours with fine gold line work, medieval tavern and fairy-tale kingdom mood. This image is the TOP-LEFT QUARTER of the card back: the ornament grows from the bottom-right corner of the image (which will be the centre of the card) outwards, and a decorative border runs along the top edge and the left edge only. Flat, evenly lit, no perspective, no shadows. No text, no letters, no numbers, no figures, no faces.",
-  "ohne": "text, letters, numbers, suit symbols, figures, animals with faces, people, perspective, shadows, vignette, watermark, photo, border on the right or bottom edge",
+  "ohne": "text, letters, numbers, suit symbols, figures, animals with faces, people, perspective, shadows, vignette, watermark, photo, border on the right or bottom edge, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "5:7",
   "ziel": "packages/ui/src/cards/backs",
   "groesse": [

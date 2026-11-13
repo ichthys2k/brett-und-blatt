@@ -1,7 +1,7 @@
 {
   "beschreibung": "G3 (#311): Bot-Porträts, rund beschnitten im Spielerchip.",
   "stil": "Painterly warm baroque oil portrait of a whimsical storybook animal character of a fairy-tale kingdom, a regular guest at a medieval tavern gaming table: warm candlelight, rich textures, dark warm background with subtle damask pattern, gentle friendly expression with a clever twinkle, humorous but dignified, bust portrait facing the viewer, head and shoulders fully inside the image, centred with space around so it can be cropped to a circle. No text, no letters, no numbers, no watermark.",
-  "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer",
+  "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "1:1",
   "ziel": "packages/ui/src/bots/portraits",
   "groesse": [
