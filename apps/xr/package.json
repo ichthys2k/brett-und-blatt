@@ -1,0 +1,28 @@
+{
+  "name": "@brett-und-blatt/xr",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "description": "WebXR-Probelauf für die Meta Quest (#339): Tisch im Taverne-Stil, spielt über das offene Protokoll",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@brett-und-blatt/online": "workspace:*",
+    "@react-three/fiber": "9.8.1",
+    "@react-three/xr": "6.6.31",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "0.186.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.5",
+    "wrangler": "4.149.0"
+  }
+}

@@ -1,0 +1,152 @@
+/* Brett & Blatt VR (#339) – Farben der Taverne aus apps/web/src/look.css (dunkle Fassung). */
+:root {
+  color-scheme: dark;
+  --xr-bg: #1d1510;
+  --xr-surface: #2a1f17;
+  --xr-ink: #f2e6d0;
+  --xr-accent: #e6b450;
+  --xr-wood: #6b4728;
+  font-family: system-ui, sans-serif;
+  background: var(--xr-bg);
+  color: var(--xr-ink);
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: var(--xr-ink);
+  background: var(--xr-surface);
+  border: 1px solid var(--xr-wood);
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+.xr-primary {
+  background: var(--xr-accent);
+  color: #2e2014;
+  border-color: var(--xr-accent);
+  font-weight: 600;
+}
+
+.xr-start {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.xr-start label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.xr-start form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.xr-avatars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  border: 1px solid var(--xr-wood);
+  border-radius: 8px;
+}
+
+.xr-avatars button {
+  font-size: 1.4rem;
+  padding: 0.2rem 0.4rem;
+}
+
+.xr-avatars button[aria-pressed='true'] {
+  border-color: var(--xr-accent);
+  background: var(--xr-wood);
+}
+
+.xr-shell {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr minmax(16rem, 22rem);
+}
+
+.xr-canvas {
+  position: relative;
+  min-height: 0;
+}
+
+.xr-bar {
+  overflow-y: auto;
+  padding: 0.8rem;
+  background: var(--xr-surface);
+  border-left: 2px solid var(--xr-wood);
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+}
+
+.xr-bar header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.xr-bar h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--xr-accent);
+}
+
+.xr-status {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.xr-seats,
+.xr-moves {
+  list-style: none;
+  padding: 0;
+  margin: 0.4rem 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.xr-seats li {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.xr-moves button {
+  width: 100%;
+  text-align: left;
+}
+
+@media (max-width: 700px) {
+  .xr-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 55vh 1fr;
+  }
+
+  .xr-bar {
+    border-left: 0;
+    border-top: 2px solid var(--xr-wood);
+  }
+}

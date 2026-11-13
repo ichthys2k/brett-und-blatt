@@ -441,3 +441,34 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
+
+## three.js, React Three Fiber, @react-three/xr (VR-App)
+
+Nur in der VR-App `apps/xr` (#339), nicht in der Web-App oder im Server. Alle unter der MIT-Lizenz; der Lizenztext unten gilt jeweils mit dem genannten Urheberhinweis.
+
+- **three.js** – Copyright © 2010-2024 three.js authors – https://github.com/mrdoob/three.js
+- **@react-three/fiber**, **its-fine**, **tunnel-rat** – Copyright (c) 2019–2025 Poimandres – https://github.com/pmndrs/react-three-fiber
+- **@react-three/xr**, **@pmndrs/xr**, **@pmndrs/pointer-events**, **@pmndrs/handle** – Copyright 2024 Bela Bohlender – https://github.com/pmndrs/xr
+- **zustand**, **suspend-react** – Copyright (c) 2019/2021 Paul Henschel – https://github.com/pmndrs/zustand
+
+Der Quest-Nachbau aus @react-three/xr (IWER mit Font-Awesome-Symbolen) wird nur beim Entwickeln geladen; der Build ersetzt ihn durch ein leeres Modul (`apps/xr/vite.config.ts`). Die Taverne der VR-App besteht aus selbst gebauten einfachen Körpern und gemalten Texturen – **keine fremden 3D-Modelle**.
+
+```
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
