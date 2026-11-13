@@ -1,0 +1,10 @@
+# Aktualisierungen der GitHub Actions als PR (#322). Die Actions sind per Commit-SHA festgelegt;
+# Dependabot hebt SHA und Versionskommentar gemeinsam. Mergen nur nach Prüfung, wie jeder PR.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: 'CI'

@@ -36,7 +36,7 @@ Lies vor größeren Arbeiten [`docs/KONZEPT.md`](docs/KONZEPT.md) (Entscheidunge
   - `corepack pnpm exec vitest run packages/games/<id>` – Tests eines Spiels
   - `corepack pnpm neues-spiel <id> "<Name>"` – neues Spiel als Kopie der Vorlage Tic-Tac-Toe (danach `corepack pnpm install` und im Server eintragen, siehe unten)
   - `corepack pnpm --filter @brett-und-blatt/web dev` – Dev-Server auf http://localhost:5173
-  - `corepack pnpm --filter @brett-und-blatt/server dev` – Spieleserver lokal auf http://127.0.0.1:8787 (Wrangler, kein Konto nötig; für Telemetrie aus `WRANGLER_SEND_METRICS=false` davor)
+  - `corepack pnpm --filter @brett-und-blatt/server dev` – Spieleserver lokal auf http://127.0.0.1:8787 (Wrangler, kein Konto nötig; für Telemetrie aus `WRANGLER_SEND_METRICS=false` davor). Nur er erlaubt die localhost-Origins; die Produktion kennt seit #322 nur die echten Seiten (`docs/betreiber.md`)
   - `corepack pnpm --filter @brett-und-blatt/xr dev` – VR-App auf http://localhost:5175/?server=http://127.0.0.1:8787 (#339, mit nachgebildeter Quest 3); `node apps/xr/test/gemischt.mjs` spielt eine gemischte Partie XR-App gegen Web-App, Ablauf in `docs/vr.md`
   - `node apps/server/scripts/smoke.mjs` – Rauchtest gegen den laufenden Spieleserver (zwei nachgebaute Browser: Raum, Partie, Wiedereinstieg, Bot, Zeitablauf)
   - `node apps/cli/src/main.mjs neu --spiel tic-tac-toe --bot leicht --start --server http://127.0.0.1:8787` – Text-Client (#336) ohne Spielregeln, nur über das offene Protokoll; `node apps/cli/test/partie.mjs` spielt mit ihm ganze Partien gegen den laufenden Server (beides läuft auch in der CI)
