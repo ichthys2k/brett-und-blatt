@@ -20,19 +20,10 @@ import { SCENARIO_PATTERN, scenarioFrom, TREASURES_PATTERN, type Scenario, type 
 import { HOUSE_POWERS, powerIsUsable } from './powers';
 import { meta } from './meta';
 
-/**
- * Liefert die Kartendefinition unter Berücksichtigung von Anki-Kartenwert-Übersteuerungen (#277, K7).
- */
-export function cardDefOf(
-  state: { customCards?: Record<string, Partial<CardDefinition>> },
-  id: string,
-): CardDefinition | undefined {
-  const base = CARDS_DB[id];
-  if (!base) return undefined;
-  const override = state.customCards?.[id];
-  if (!override) return base;
-  return { ...base, ...override };
-}
+import { cardDefOf } from './carddefs';
+import { drachenspielCustomCards } from './customcards';
+
+export { cardDefOf };
 import type {
   CardDefinition,
   CardInstance,
@@ -160,7 +151,7 @@ export function placeDragonEgg(state: DrachenspielState, seat: SeatId, events?: 
   if (player.board.length >= BOARD_LIMIT) return;
   const house = player.power ?? (player.deckTheme && player.deckTheme !== 'mixed' ? player.deckTheme : null) ?? 'forest';
   const eggCardId = `egg_${house}`;
-  const def = CARDS_DB[eggCardId];
+  const def = cardDefOf(state, eggCardId);
   if (!def) return;
   const minion = createMinion(state, def, seat);
   player.board.push(minion);
@@ -259,10 +250,11 @@ function parseCustomCardsFromOptions(opts: Options): {
 } {
   const raw = (opts as Record<string, unknown>).customCards ?? (opts as Record<string, unknown>).customCardCatalog ?? opts.cardCatalog;
   if (!raw) return {};
-  // Nur Werte und Darstellung in sicheren Grenzen (#277): nie Effekte oder Kartenart.
+  // Werte, Darstellung, geprüfte Effekte und neue Begleiter (#270, #277); nie Kartenart oder unbekannte Effekte.
   const catalog = sanitizeCustomCardCatalog(raw, 'combat');
-  if (!catalog || Object.keys(catalog.combatCards).length === 0) return {};
-  return { customCards: catalog.combatCards as Record<string, Partial<CardDefinition>>, ...(catalog.checksum ? { cardCatalogChecksum: catalog.checksum } : {}) };
+  const customCards = drachenspielCustomCards(catalog);
+  if (!customCards) return {};
+  return { customCards: customCards as Record<string, Partial<CardDefinition>>, ...(catalog?.checksum ? { cardCatalogChecksum: catalog.checksum } : {}) };
 }
 
 /** Ein Solo-Kampf: Platz 0 beginnt, Aufstellung und Decks kommen aus dem Szenario. */
@@ -330,7 +322,7 @@ export function setup(seats: number, opts: Options, seed: string): DrachenspielS
   const players: [PlayerState, PlayerState] = [createPlayer(0), createPlayer(1)];
 
   // Ein vorgegebener Code gilt für beide Plätze; ist er ungültig, wählt jeder im Spiel.
-  const preset = opts.deckSelection === 'code' ? parseDeckCode(opts.deckCode ?? '') : null;
+  const preset = opts.deckSelection === 'code' ? parseDeckCode(opts.deckCode ?? '', parseCustomCardsFromOptions(opts).customCards) : null;
   const deckOption = preset ? preset.house : opts.deckSelection === 'code' ? 'inGame' : (opts.deckSelection ?? 'inGame');
   const mulliganOption = opts.mulligan ?? 'on';
 
@@ -568,7 +560,7 @@ export function applyMove(
       throw new Error('Deck-Wahl jetzt nicht erlaubt');
     }
     // Die Spielleitung prüft hier auch online jedes eigene Deck.
-    const custom = move.code === undefined ? null : parseDeckCode(move.code);
+    const custom = move.code === undefined ? null : parseDeckCode(move.code, next.customCards);
     if (move.code !== undefined && custom?.house !== move.deck) throw new Error('Ungültiges Deck');
     player.deckTheme = move.deck;
     player.power = move.deck;

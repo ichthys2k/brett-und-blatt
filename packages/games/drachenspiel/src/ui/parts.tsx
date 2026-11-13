@@ -9,6 +9,7 @@ import { GameCard, useCardCosmetics, useCardOverride } from '@brett-und-blatt/ui
 import { CARDS_DB } from '../cards';
 import type { CardDefinition, HousePower, Minion } from '../types';
 import { cardOrigin, getCardTraits, getMinionTraits, type TraitInfo } from './traits';
+import { uiCard } from './cardLookup';
 
 const baseCombatNotes = new Map<string, AnkiNote>();
 
@@ -152,7 +153,7 @@ export function CardZoom({ item, onClose }: { item: ZoomItem; onClose: () => voi
     );
   }
 
-  const def = CARDS_DB[item.kind === 'card' ? item.defId : item.minion.cardId];
+  const def = uiCard(item.kind === 'card' ? item.defId : item.minion.cardId);
   if (!def) return null;
   const minion = item.kind === 'minion' ? item.minion : null;
   const traits = minion ? getMinionTraits(minion) : getCardTraits(def);

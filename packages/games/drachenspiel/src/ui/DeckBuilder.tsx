@@ -13,6 +13,7 @@ import { getCardFullTitle } from './traits';
 import { SoloHub } from './SoloHub';
 import { useLongPress } from './useLongPress';
 import { championImage } from './champions';
+import { partyCards, uiCard } from './cardLookup';
 
 const LOOK = [
   { id: 'all', label: 'Alle' },
@@ -72,7 +73,7 @@ function Builder({ start, onDone, onCancel }: { start: { id?: string; name: stri
   }
 
   const count = (id: string) => cards.filter((card) => card === id).length;
-  const shown = buildableCards(house).filter((def) => {
+  const shown = buildableCards(house, partyCards()).filter((def) => {
     if (search && !def.name.toLowerCase().includes(search.toLowerCase())) return false;
     if (look === 'animals') return !def.isSpell && !def.quest;
     if (look === 'spells') return Boolean(def.isSpell);
@@ -81,16 +82,16 @@ function Builder({ start, onDone, onCancel }: { start: { id?: string; name: stri
   });
   const add = (id: string) => {
     const next = [...cards, id];
-    if (cards.length < DECK_SIZE && !deckProblems(house, next).some((text) => text.includes('höchstens'))) setCards(next);
+    if (cards.length < DECK_SIZE && !deckProblems(house, next, partyCards()).some((text) => text.includes('höchstens'))) setCards(next);
   };
   const remove = (id: string) => {
     const at = cards.lastIndexOf(id);
     if (at >= 0) setCards(cards.filter((_, index) => index !== at));
   };
   const curve = [0, 0, 0, 0, 0, 0, 0];
-  for (const id of cards) curve[Math.min(6, CARDS_DB[id]?.cost ?? 0)]!++;
-  const ready = deckProblems(house, cards).length === 0;
-  const inDeck = [...new Set(cards)].map((id) => CARDS_DB[id]!).sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, 'de'));
+  for (const id of cards) curve[Math.min(6, uiCard(id)?.cost ?? 0)]!++;
+  const ready = deckProblems(house, cards, partyCards()).length === 0;
+  const inDeck = [...new Set(cards)].map((id) => uiCard(id)!).sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, 'de'));
 
   return (
     <div className="ds-builder">
@@ -296,7 +297,7 @@ export function DeckManager({ onPlay, onClose }: { onPlay?: (code: string) => vo
     return deck ? `${DECK_THEMES[deck.house].emoji} ${DECK_THEMES[deck.house].name}` : '';
   };
   const takeCode = (save: boolean) => {
-    const parsed = parseDeckCode(codeInput);
+    const parsed = parseDeckCode(codeInput, partyCards());
     setCodeError(!parsed);
     if (!parsed) return;
     if (save) {
@@ -316,10 +317,10 @@ export function DeckManager({ onPlay, onClose }: { onPlay?: (code: string) => vo
         <section key={deck.id} className="ds-deck-row">
           <strong>{deck.name}</strong>
           <span className="ds-builder-hint">{label(deck.code)}</span>
-          {!parseDeckCode(deck.code) && <span className="ds-builder-hint">Stimmt nach einer Regeländerung nicht mehr, bitte umbauen.</span>}
+          {!parseDeckCode(deck.code, partyCards()) && <span className="ds-builder-hint">Stimmt nach einer Regeländerung nicht mehr, bitte umbauen.</span>}
           <div className="ds-builder-actions">
             {onPlay && (
-              <button type="button" className="ds-btn ds-btn-endturn" disabled={!parseDeckCode(deck.code)} onClick={() => onPlay(deck.code)}>
+              <button type="button" className="ds-btn ds-btn-endturn" disabled={!parseDeckCode(deck.code, partyCards())} onClick={() => onPlay(deck.code)}>
                 Spielen
               </button>
             )}
@@ -405,7 +406,7 @@ export function SetupExtra({ options, setOption }: { options: Record<string, str
   const [open, setOpen] = useState(() => /[?&]sicherung=/.test(typeof window === 'undefined' ? '' : window.location.hash));
   const [solo, setSolo] = useState(() => /[?&]solo=1/.test(typeof window === 'undefined' ? '' : window.location.hash));
   const code = options.deckCode && options.deckCode !== 'none' ? options.deckCode : '';
-  const invalid = code !== '' && !parseDeckCode(code);
+  const invalid = code !== '' && !parseDeckCode(code, partyCards());
   const decks = useDecks();
   return (
     <div className="ds-setup-extra">

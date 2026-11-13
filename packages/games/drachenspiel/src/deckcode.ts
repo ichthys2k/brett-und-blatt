@@ -1,6 +1,10 @@
 import { CARDS_DB } from './cards';
 import { DECK_THEME_IDS } from './decks';
+import { cardDefOf, type CustomCard } from './carddefs';
 import type { CardDefinition, DeckThemeId } from './types';
+
+/** Eigene Karten aus Anki (#270): neue Begleiter dürfen ins eigene Deck. */
+type Extra = Record<string, CustomCard> | undefined;
 
 /**
  * Eigene Decks (Phase 8): Regeln und Deck-Code, ohne Oberfläche. Auch der Server prüft hiermit,
@@ -20,20 +24,21 @@ export interface BuiltDeck {
 const copiesAllowed = (def: CardDefinition) => (def.rarity === 'mythic' || def.singleCopy ? 1 : MAX_COPIES);
 
 /** Alle Karten, die in ein Deck dieses Hauses dürfen: eigene und neutrale. */
-export function buildableCards(house: DeckThemeId): CardDefinition[] {
-  return Object.values(CARDS_DB)
+export function buildableCards(house: DeckThemeId, extra?: Extra): CardDefinition[] {
+  const fresh = Object.entries(extra ?? {}).flatMap(([id, card]) => (card.custom ? [cardDefOf({ customCards: extra }, id)!] : []));
+  return [...Object.values(CARDS_DB).map((def) => (extra?.[def.id] ? cardDefOf({ customCards: extra }, def.id)! : def)), ...fresh]
     .filter((def) => !def.token && def.id !== 'special_star' && (def.house === house || def.house === 'neutral'))
     .sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, 'de'));
 }
 
 /** Was an einem Deck noch nicht stimmt, in Worten für die Oberfläche. Leer: spielbar. */
-export function deckProblems(house: DeckThemeId, cardIds: string[]): string[] {
+export function deckProblems(house: DeckThemeId, cardIds: string[], extra?: Extra): string[] {
   const problems: string[] = [];
   if (cardIds.length !== DECK_SIZE) problems.push(`Das Deck hat ${cardIds.length} statt ${DECK_SIZE} Karten.`);
   const counts = new Map<string, number>();
   for (const id of cardIds) counts.set(id, (counts.get(id) ?? 0) + 1);
   for (const [id, count] of counts) {
-    const def = CARDS_DB[id];
+    const def = cardDefOf({ customCards: extra }, id);
     if (!def || def.token || id === 'special_star') problems.push(`Die Karte „${id}“ gibt es nicht im Deckbau.`);
     else if (def.house !== house && def.house !== 'neutral') problems.push(`${def.name} gehört zu einem anderen Haus.`);
     else if (count > copiesAllowed(def)) problems.push(`${def.name} darf höchstens ${copiesAllowed(def)}-mal ins Deck.`);
@@ -65,9 +70,9 @@ export function decodeDeck(input: string): BuiltDeck | null {
 }
 
 /** Ein spielbares Deck aus dem Code oder `null`. */
-export function parseDeckCode(input: string): BuiltDeck | null {
+export function parseDeckCode(input: string, extra?: Extra): BuiltDeck | null {
   const deck = decodeDeck(input);
-  return deck && deckProblems(deck.house, deck.cardIds).length === 0 ? deck : null;
+  return deck && deckProblems(deck.house, deck.cardIds, extra).length === 0 ? deck : null;
 }
 
 /** Füllt ein angefangenes Deck auf: billige, mittlere und teure Karten in vernünftiger Mischung. `pick` lost aus. */
