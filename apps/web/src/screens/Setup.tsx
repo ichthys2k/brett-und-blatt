@@ -1,4 +1,5 @@
 import { BOT_LEVELS, randomSeed, resolveOptions, teamsFor, timePresetsOf, type BotLevel, type Options, type SeatConfig, type SeatKind, type TimePresetId } from '@brett-und-blatt/engine';
+import { CardSetNote } from '../components/CardSetNote';
 import { useEffect, useState } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { HowToList } from '../components/HowTo';
@@ -174,6 +175,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
         </div>
       )}
 
+      <CardSetNote gameId={info.id} />
       <Button variant="primary" className="w-full text-lg" disabled={humansMissing > 0} onClick={start}>
         {t('setup.start')}
       </Button>
