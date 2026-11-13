@@ -10,7 +10,7 @@ export function isBoardGame(id: string | null | undefined): id is BoardGameId {
   return (BOARD_GAMES as readonly string[]).includes(id ?? '');
 }
 
-/** Auswahl in der Lobby: zuerst die 3D-Spiele, dann Spiele mit Zugtexten (#335). */
+/** Auswahl in der Lobby: zuerst die 3D-Spiele, dann Spiele mit Zugtexten (#335); Mau-Mau, Eins! und Skat mit Karten in der Hand (#350). */
 export const GAME_CHOICES: { id: string; name: string; board: boolean }[] = [
   { id: 'tic-tac-toe', name: 'Tic-Tac-Toe', board: true },
   { id: 'four-in-a-row', name: 'Vier in einer Reihe', board: true },
@@ -23,6 +23,7 @@ export const GAME_CHOICES: { id: string; name: string; board: boolean }[] = [
   { id: 'four-player-chess', name: 'Vierer-Schach', board: false },
   { id: 'mau-mau', name: 'Mau-Mau', board: false },
   { id: 'uno', name: 'Eins!', board: false },
+  { id: 'skat', name: 'Skat', board: false },
 ];
 
 export function gameName(id: string | null | undefined): string {

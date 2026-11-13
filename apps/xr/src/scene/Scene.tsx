@@ -10,6 +10,7 @@ import { isBoardGame } from '../catalog';
 import type { Signal } from '../net';
 import { ChessBoard, FourInARowBoard, TicTacToeBoard, boardMoveIndexes } from './boards';
 import { CheckersBoard, GoBoard, GomokuBoard, MillBoard, ReversiBoard } from './boards2';
+import { CardTable, cardMoveIndexes, isCardGame } from './cards';
 import { Panel, ReactionBar } from './Panel';
 import { Seats, seatAngle, type SeatInfo } from './Seats';
 import { TABLE_CENTER, Tavern } from './Tavern';
@@ -122,7 +123,10 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt }:
   }, [ticking]);
   const { offset, adjust } = useViewOffset();
   const seats = seatInfos(room, game, you, gameAt, now);
-  const boardMoves = useMemo(() => (game && isBoardGame(game.gameId) ? boardMoveIndexes(game.gameId, game.legalMoves) : new Set<number>()), [game]);
+  const boardMoves = useMemo(
+    () => (game && isBoardGame(game.gameId) ? boardMoveIndexes(game.gameId, game.legalMoves) : game && isCardGame(game.gameId) ? cardMoveIndexes(game.legalMoves) : new Set<number>()),
+    [game],
+  );
   const playing = game && !game.result ? game : null;
   const moveByValue = (move: unknown) => {
     if (!game) return;
@@ -147,6 +151,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt }:
         {shown?.gameId === 'reversi' && <ReversiBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'gomoku' && <GomokuBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'go' && <GoBoard game={shown} onMove={moveByValue} />}
+        {shown && isCardGame(shown.gameId) && <CardTable key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={onMove} adjust={adjust} />
         {room && <ReactionBar send={send} />}
       </XR>
