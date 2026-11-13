@@ -13,23 +13,11 @@ const ordnerListe = bildordner();
 const manifeste = alleManifeste();
 const archivDa = existsSync(ORIGINALE);
 
-/*
- * Alte Ablageorte von Originalen im öffentlichen Repo, die noch ins private Repo umziehen
- * (scripts/grafik/master-umziehen.mjs). Danach diesen Eintrag löschen.
- */
-const ALTE_ORTE = {
-  'packages/games/drachenspiel/src/ui/kulissen': (name) => `packages/games/drachenspiel/assets/kulissen/${name}_master.jpg`,
-};
-const alterOrt = (ordner, datei) => {
-  const pfad = ALTE_ORTE[ordner]?.(datei.replace(/\.webp$/, ''));
-  return pfad && existsSync(resolve(WURZEL, pfad)) ? pfad : null;
-};
-
 if (optionen['ausnahmen-schreiben']) {
   const dateien = [];
   for (const [ordner, liste] of ordnerListe) for (const datei of liste) {
     const pfad = `${ordner}/${datei}`;
-    if (!alterOrt(ordner, datei) && !(archivDa && originalZu(pfad))) dateien.push(pfad);
+    if (!(archivDa && originalZu(pfad))) dateien.push(pfad);
   }
   writeFileSync(AUSNAHMEN_DATEI, `${JSON.stringify({
     beschreibung: 'Bilder, deren Original verloren ist (grafik-roh/ existiert auf keinem Rechner mehr, Auskunft Cornelius 12.11.2026). Kein Neu-Erzeugen nur fürs Archiv; wird ein Bild neu gemacht, kommt sein Original ins private Repo und der Eintrag hier raus. Neue Einträge sind nicht erlaubt.',
@@ -56,19 +44,18 @@ function herkunft(ordner) {
 
 const ausnahmen = ladeAusnahmen();
 const zeilen = [];
-let summe = { webp: 0, original: 0, alt: 0, verloren: 0, offen: 0 };
+let summe = { webp: 0, original: 0, verloren: 0, offen: 0 };
 for (const [ordner, liste] of ordnerListe) {
-  let original = 0, alt = 0, verloren = 0, offen = 0;
+  let original = 0, verloren = 0, offen = 0;
   for (const datei of liste) {
     const pfad = `${ordner}/${datei}`;
     if (archivDa && originalZu(pfad)) original++;
-    else if (alterOrt(ordner, datei)) alt++;
     else if (ausnahmen.has(pfad)) verloren++;
     else offen++;
   }
   const zu = manifeste.filter((m) => m.ziel === ordner).map((m) => `\`${m.name}\``).join(', ') || '–';
-  summe = { webp: summe.webp + liste.length, original: summe.original + original, alt: summe.alt + alt, verloren: summe.verloren + verloren, offen: summe.offen + offen };
-  zeilen.push(`| \`${ordner}\` | ${liste.length} | ${archivDa ? original : '?'} | ${alt || ''} | ${verloren || ''} | ${offen || ''} | ${zu} | ${herkunft(ordner)} |`);
+  summe = { webp: summe.webp + liste.length, original: summe.original + original, verloren: summe.verloren + verloren, offen: summe.offen + offen };
+  zeilen.push(`| \`${ordner}\` | ${liste.length} | ${archivDa ? original : '?'} | ${verloren || ''} | ${offen || ''} | ${zu} | ${herkunft(ordner)} |`);
 }
 
 const geplant = manifeste
@@ -81,12 +68,12 @@ const md = `# Bestand der gemalten Bilder
 
 ${archivDa ? `Originale geprüft in \`${ORIGINALE.replace(resolve(WURZEL, '..') + '/', '../')}\`.` : '**Privates Repo nicht gefunden** – Spalte „Original im Archiv“ ungeprüft (?). Auf einem Rechner mit `../brett-und-blatt-grafik` erneut erzeugen.'}
 
-Spalten: **WebP** im öffentlichen Repo · **Original im Archiv** (privates Repo) · **noch am alten Ort** (Master im öffentlichen Repo, ziehen mit \`scripts/grafik/master-umziehen.mjs\` um) · **Original verloren (vor 12.11.2026)** laut \`scripts/grafik/originale-fehlen.json\` · **ohne Original** (Fehler, meldet \`originale-pruefen.mjs\`).
+Spalten: **WebP** im öffentlichen Repo · **Original im Archiv** (privates Repo) · **Original verloren (vor 12.11.2026)** laut \`scripts/grafik/originale-fehlen.json\` · **ohne Original** (Fehler, meldet \`originale-pruefen.mjs\`).
 
-| Bildordner | WebP | Original im Archiv | noch am alten Ort | Original verloren (vor 12.11.2026) | ohne Original | Manifest | Modell laut THIRD_PARTY.md |
-|---|---:|---:|---:|---:|---:|---|---|
+| Bildordner | WebP | Original im Archiv | Original verloren (vor 12.11.2026) | ohne Original | Manifest | Modell laut THIRD_PARTY.md |
+|---|---:|---:|---:|---:|---|---|
 ${zeilen.join('\n')}
-| **Summe** | **${summe.webp}** | **${archivDa ? summe.original : '?'}** | **${summe.alt}** | **${summe.verloren}** | **${summe.offen}** | | |
+| **Summe** | **${summe.webp}** | **${archivDa ? summe.original : '?'}** | **${summe.verloren}** | **${summe.offen}** | | |
 
 ## Geplant (Manifest vorhanden, noch keine Bilder)
 

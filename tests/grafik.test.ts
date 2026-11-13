@@ -18,12 +18,6 @@ const root = new URL('../', import.meta.url);
 
 /** Ordner, die nicht zum Quellstand gehören (Bauergebnisse, Abhängigkeiten, lokale Rohbilder). */
 const SKIPPED = new Set(['node_modules', 'dist', '.git', '.wrangler', 'grafik-roh', 'test-results', 'playwright-report', 'coverage']);
-/*
- * Die Drachenspiel-Master liegen noch im öffentlichen Repo, bis Cornelius sie mit
- * `node scripts/grafik/master-umziehen.mjs` ins private Repo verschoben hat. Danach diese
- * Ausnahme löschen.
- */
-const LEGACY_MASTERS = 'packages/games/drachenspiel/assets/kulissen/';
 const PNG_MAX_BYTES = 1024 * 1024;
 
 function walk(relative: string, visit: (path: string, isDir: boolean) => void) {
@@ -46,7 +40,7 @@ describe('Originale-Archiv', () => {
   it('kein PNG über 1 MB im öffentlichen Repo', () => {
     const found: string[] = [];
     walk('', (path, isDir) => {
-      if (isDir || !path.toLowerCase().endsWith('.png') || path.startsWith(LEGACY_MASTERS)) return;
+      if (isDir || !path.toLowerCase().endsWith('.png')) return;
       if (fs.statSync(new URL(path, root)).size > PNG_MAX_BYTES) found.push(path);
     });
     expect(found).toEqual([]);

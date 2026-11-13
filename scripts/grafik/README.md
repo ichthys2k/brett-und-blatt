@@ -19,7 +19,6 @@ Stil, Verbote, Kartenregeln und Referenzbilder: [`docs/grafik/STILBIBEL.md`](../
 | `uebernehmen.mjs <Manifest> <id>=<v> …` | WebP schreiben, bei `"freistellen": true` grünen Grund entfernen (`--fuzz=<Prozent>`, Standard 22), Original ins private Repo; ImageMagick 6 (`convert`) oder 7 (`magick`) |
 | `originale-pruefen.mjs [--alle]` | WebP ohne Original melden (Altfälle in `originale-fehlen.json`); nicht in der CI |
 | `bestand.mjs` | `docs/grafik/BESTAND.md` neu erzeugen |
-| `master-umziehen.mjs` | einmalig: Drachenspiel-Kulissen-Master ins private Repo kopieren |
 
 ## Manifeste für das Vorhaben „Taverne überall“ (#306)
 

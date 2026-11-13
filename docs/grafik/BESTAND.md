@@ -2,25 +2,25 @@
 
 > Erzeugt von `node scripts/grafik/bestand.mjs` – nicht von Hand bearbeiten. Regeln in [STILBIBEL.md](STILBIBEL.md), Archiv der Originale im privaten Repo `ichthys2k/brett-und-blatt-grafik` (Ordner `originale/<Bildordner>/`).
 
-**Privates Repo nicht gefunden** – Spalte „Original im Archiv“ ungeprüft (?). Auf einem Rechner mit `../brett-und-blatt-grafik` erneut erzeugen.
+Originale geprüft in `../brett-und-blatt-grafik/originale`.
 
-Spalten: **WebP** im öffentlichen Repo · **Original im Archiv** (privates Repo) · **noch am alten Ort** (Master im öffentlichen Repo, ziehen mit `scripts/grafik/master-umziehen.mjs` um) · **Original verloren (vor 12.11.2026)** laut `scripts/grafik/originale-fehlen.json` · **ohne Original** (Fehler, meldet `originale-pruefen.mjs`).
+Spalten: **WebP** im öffentlichen Repo · **Original im Archiv** (privates Repo) · **Original verloren (vor 12.11.2026)** laut `scripts/grafik/originale-fehlen.json` · **ohne Original** (Fehler, meldet `originale-pruefen.mjs`).
 
-| Bildordner | WebP | Original im Archiv | noch am alten Ort | Original verloren (vor 12.11.2026) | ohne Original | Manifest | Modell laut THIRD_PARTY.md |
-|---|---:|---:|---:|---:|---:|---|---|
-| `apps/web/src/assets/raeume` | 3 | ? |  | 3 |  | `raeume` | Bildmodell ohne Angabe, November 2026 |
-| `apps/web/src/menu` | 3 | ? |  | 3 |  | `menue-licht` | gemini-3.1-flash-image, November 2026 |
-| `apps/web/src/wappen` | 54 | ? |  | 54 |  | `wappen` | gemini-3.1-flash-image, November 2026 |
-| `packages/games/color-sorter/src/ui/items` | 70 | ? |  | 70 |  | `jahrmarkt-2`, `jahrmarkt-3`, `jahrmarkt` | gemini-2.5-flash-image, November 2026 |
-| `packages/games/color-sorter/src/ui/kulissen` | 5 | ? |  | 5 |  | `kulissen` | gemini-2.5-flash-image, November 2026 |
-| `packages/games/color-sorter/src/ui/portraits` | 286 | ? |  | 286 |  | `narren` | Canva AI, Oktober 2026; gemini-3.1-flash-image, November 2026 |
-| `packages/games/drachenspiel/src/ui/champions` | 5 | ? |  | 5 |  | `drachenspiel-champions` | Bildmodell ohne Angabe, November 2026 |
-| `packages/games/drachenspiel/src/ui/kulissen` | 6 | ? | 6 |  |  | – | Bildmodell ohne Angabe, November 2026 |
-| `packages/games/marketplace/src/ui/fields` | 15 | ? |  | 15 |  | `marktplatz-felder` | Bildmodell ohne Angabe, November 2026 |
-| `packages/games/marketplace/src/ui/figures` | 5 | ? |  | 5 |  | `marktplatz-figuren` | Bildmodell ohne Angabe, November 2026 |
-| `packages/games/wolves-sheep/src/ui/cards` | 11 | ? |  | 11 |  | `rollenkarten` | gemini-3.1-flash-image, November 2026 |
-| `packages/ui/src/cards/portraits` | 24 | ? |  | 24 |  | `bildkarten-deutsch`, `bildkarten` | gemini-3.1-flash-image, November 2026 |
-| **Summe** | **487** | **?** | **6** | **481** | **0** | | |
+| Bildordner | WebP | Original im Archiv | Original verloren (vor 12.11.2026) | ohne Original | Manifest | Modell laut THIRD_PARTY.md |
+|---|---:|---:|---:|---:|---|---|
+| `apps/web/src/assets/raeume` | 3 | 0 | 3 |  | `raeume` | Bildmodell ohne Angabe, November 2026 |
+| `apps/web/src/menu` | 3 | 0 | 3 |  | `menue-licht` | gemini-3.1-flash-image, November 2026 |
+| `apps/web/src/wappen` | 54 | 0 | 54 |  | `wappen` | gemini-3.1-flash-image, November 2026 |
+| `packages/games/color-sorter/src/ui/items` | 70 | 0 | 70 |  | `jahrmarkt-2`, `jahrmarkt-3`, `jahrmarkt` | gemini-2.5-flash-image, November 2026 |
+| `packages/games/color-sorter/src/ui/kulissen` | 5 | 0 | 5 |  | `kulissen` | gemini-2.5-flash-image, November 2026 |
+| `packages/games/color-sorter/src/ui/portraits` | 286 | 0 | 286 |  | `narren` | Canva AI, Oktober 2026; gemini-3.1-flash-image, November 2026 |
+| `packages/games/drachenspiel/src/ui/champions` | 5 | 0 | 5 |  | `drachenspiel-champions` | Bildmodell ohne Angabe, November 2026 |
+| `packages/games/drachenspiel/src/ui/kulissen` | 6 | 6 |  |  | – | Bildmodell ohne Angabe, November 2026 |
+| `packages/games/marketplace/src/ui/fields` | 15 | 0 | 15 |  | `marktplatz-felder` | Bildmodell ohne Angabe, November 2026 |
+| `packages/games/marketplace/src/ui/figures` | 5 | 0 | 5 |  | `marktplatz-figuren` | Bildmodell ohne Angabe, November 2026 |
+| `packages/games/wolves-sheep/src/ui/cards` | 11 | 0 | 11 |  | `rollenkarten` | gemini-3.1-flash-image, November 2026 |
+| `packages/ui/src/cards/portraits` | 24 | 0 | 24 |  | `bildkarten-deutsch`, `bildkarten` | gemini-3.1-flash-image, November 2026 |
+| **Summe** | **487** | **6** | **481** | **0** | | |
 
 ## Geplant (Manifest vorhanden, noch keine Bilder)
 
