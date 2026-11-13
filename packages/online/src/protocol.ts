@@ -7,6 +7,18 @@ import type { BotLevel, ClockReading, CustomCardCatalog, Forfeit, GameEvent, Opt
  */
 export const PROTOCOL_VERSION = 1;
 
+/**
+ * Älteste Version, die der Server noch versteht (#334, offenes Protokoll). Wer `PROTOCOL_VERSION`
+ * erhöht, lässt diese Grenze eine Übergangszeit lang stehen (Richtwert: drei Monate), damit fremde
+ * Clients nachziehen können, und beschreibt die Änderung in `docs/protokoll.md`.
+ */
+export const MIN_PROTOCOL_VERSION = 1;
+
+/** Versteht der Server einen Client dieser Protokollversion? */
+export function protocolSupported(version: number): boolean {
+  return Number.isInteger(version) && version >= MIN_PROTOCOL_VERSION && version <= PROTOCOL_VERSION;
+}
+
 /** Größte erlaubte Nachricht vom Browser in Zeichen – schützt den Server vor Datenmüll. */
 export const MAX_MESSAGE_LENGTH = 16_000;
 
@@ -295,7 +307,7 @@ export type ServerMessage =
 /** Statt einer Mitgliedsnummer im `welcome` eines Tisch-Bildschirms. */
 export const DISPLAY_MEMBER = '@display';
 
-export type ErrorCode = 'badMessage' | 'protocol' | 'notAllowed' | 'roomFull' | 'badName' | 'notReady' | 'staleMove' | 'illegalMove' | 'tooLate';
+export type ErrorCode = 'badMessage' | 'protocol' | 'notAllowed' | 'roomFull' | 'badName' | 'notReady' | 'staleMove' | 'illegalMove' | 'tooLate' | 'tooFast';
 
 // ---------------------------------------------------------------------------
 // Prüfen eingehender Nachrichten: Alles vom Browser ist erst einmal unbekannt.

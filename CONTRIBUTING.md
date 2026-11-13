@@ -76,6 +76,10 @@ sounds: {
 
 Sieg, Niederlage und Zeit vertont die Plattform selbst. Die Klangdateien liegen nicht in diesem Repo (Lizenz von ElevenLabs, siehe Konzept); wer sie nicht hat, baut und spielt die App einfach ohne Ton. Neue Klänge trägt Cornelius im Katalog und im privaten Klang-Repo ein. Hintergrundmusik spielt die Plattform je Spielfamilie (`packages/ui/src/audio/music.json`); ein neues Spiel trägt man dort bei der passenden Playlist unter `games` ein, sonst läuft der „Spielabend“.
 
+## Einen eigenen Client bauen
+
+Der Spieleserver ist offen: Eigene Programme (eine VR-App, ein Kommandozeilen-Client, ein Mod) dürfen Räume anlegen und mitspielen, kostenlos und ohne Anmeldung. Der Server prüft jeden Zug und schickt jedem Platz seine Sicht und die erlaubten Züge; ein Client muss also keine Spielregeln kennen. Ablauf, Zugang (`?client=<name>` statt `Origin`) und Ratenbegrenzung stehen in [docs/protokoll.md](docs/protokoll.md), das Nachrichtenformat als JSON-Schema in [docs/protokoll.schema.json](docs/protokoll.schema.json). Wer `packages/online/src/protocol.ts` ändert, erzeugt das Schema mit `node scripts/protokoll-schema.mjs` neu.
+
 ## Konventionen
 
 - Bezeichner im Code auf Englisch, Kommentare, Doku und Commit-Nachrichten auf Deutsch.

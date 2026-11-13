@@ -24,6 +24,7 @@ export {
   type RoomSnapshot,
 } from './room';
 export { serverBotRunner } from './server-bots';
+export { CLIENT_BURST, CLIENT_ID_PATTERN, CLIENT_PARAM, CLIENT_PER_SECOND, MessageBudget, accessFor, parseClientId, type Access } from './access';
 export { OnlineSession, extrapolateClock, type OnlineSessionDeps } from './client';
 export {
   OPEN_ROOM_MAX_AGE_MS,

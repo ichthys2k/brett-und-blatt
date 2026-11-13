@@ -30,6 +30,7 @@ import {
   PHRASES,
   DISPLAY_MEMBER,
   PROTOCOL_VERSION,
+  protocolSupported,
   REACTIONS,
   parseClientMessage,
   type AfterChoice,
@@ -612,7 +613,7 @@ export class Room {
 
   /** Ein Tisch-Bildschirm meldet sich an: kein Mitglied, keine Raumleitung, nur Zuschauen. */
   private attachDisplay(connectionId: string, message: Extract<ClientMessage, { type: 'display' }>): void {
-    if (message.protocol !== PROTOCOL_VERSION) {
+    if (!protocolSupported(message.protocol)) {
       this.error(connectionId, 'protocol', 'Bitte die Seite neu laden – es gibt eine neue Version.');
       return this.deps.close(connectionId);
     }
@@ -630,7 +631,7 @@ export class Room {
   }
 
   private hello(connectionId: string, message: Extract<ClientMessage, { type: 'hello' }>): void {
-    if (message.protocol !== PROTOCOL_VERSION) {
+    if (!protocolSupported(message.protocol)) {
       this.error(connectionId, 'protocol', 'Bitte die Seite neu laden – es gibt eine neue Version.');
       return this.deps.close(connectionId);
     }
