@@ -8,7 +8,7 @@ Der Spieleserver von Brett & Blatt ist offen: Neben der Web-App dürfen auch eig
 
 - **Nachrichtenformat als JSON-Schema:** [`protokoll.schema.json`](protokoll.schema.json). Es ist aus [`packages/online/src/protocol.ts`](../packages/online/src/protocol.ts) erzeugt und maßgeblich; diese Seite erklärt den Ablauf.
 - **Server:** `https://brett-und-blatt.lipponer.workers.dev`. Lokal startet ihn `corepack pnpm --filter @brett-und-blatt/server dev` (http://127.0.0.1:8787).
-- **Beispiel:** [`apps/server/scripts/smoke.mjs`](../apps/server/scripts/smoke.mjs) spielt unter anderem als fremder Client eine Partie gegen einen Bot.
+- **Beispiel:** der Text-Client [`apps/cli`](../apps/cli/src), siehe [unten](#vorlage-der-text-client). Auch [`apps/server/scripts/smoke.mjs`](../apps/server/scripts/smoke.mjs) spielt als fremder Client eine Partie gegen einen Bot.
 
 ## Zugang
 
@@ -46,6 +46,7 @@ WebSocket auf `wss://…/rooms/<Code>?client=mein-client`. Die erste Nachricht i
 { "type": "hello", "protocol": 1, "token": "zufällige-kennung-mindestens-16-zeichen", "name": "Ada", "avatar": "🦊" }
 ```
 
+- `avatar` muss mitkommen. Ein Bild außerhalb der Liste `AVATARS` (`packages/online/src/avatars.ts`) ersetzt der Server durch das erste.
 - `token` ist die **geheime Kennung dieses Geräts** (16 bis 100 Zeichen, zufällig erzeugen und sicher aufbewahren). Wer mit demselben Token wiederkommt, bekommt seinen Platz zurück (Wiedereinstieg). Das Token nie anzeigen oder weitergeben.
 - Antwort: `{ "type": "welcome", "protocol": 1, "you": "m1", "serverNow": … }`, danach sofort eine `room`-Nachricht. Das erste Mitglied leitet den Raum (`hostId`).
 - Ein Tisch-Bildschirm ohne Platz meldet sich stattdessen mit `{ "type": "display", "protocol": 1 }` an und bekommt nur die Zuschauersicht.
@@ -105,6 +106,31 @@ Ein Client kann aber jedes Spiel auch ohne dieses Wissen spielen, indem er die E
 - Bricht die Verbindung ab, bleibt der Platz frei. Nach 20 Sekunden gilt er als abwesend; bei Zeitablauf zieht ein Bot. Mit demselben `token` neu verbinden und `hello` schicken.
 - Räume ohne Verbindung werden nach 24 Stunden gelöscht, Fernpartien nach 30 Tagen.
 
+## Vorlage: der Text-Client
+
+[`apps/cli`](../apps/cli/src) ist ein vollständiger Client in gut 500 Zeilen Node ohne Abhängigkeiten und ohne Code aus den Spielmodulen (#336). Er kennt keine einzige Spielregel und spielt trotzdem jedes Spiel: Er zeigt die Sicht als gekürztes JSON, die erlaubten Züge als nummerierte Liste mit den Zugtexten und schickt den gewählten Eintrag zurück.
+
+```bash
+node apps/cli/src/main.mjs neu --spiel tic-tac-toe --bot leicht --start
+```
+
+```bash
+node apps/cli/src/main.mjs 🐻🦊🌈🚀 --name Ada --platz 2
+```
+
+Der erste Befehl legt einen Raum an, wählt das Spiel, besetzt die übrigen Plätze mit Bots und beginnt. Der zweite tritt einem Raum per Code bei und setzt sich auf Platz 2. `--server http://127.0.0.1:8787` wählt den lokalen Server, `hilfe` zeigt die Befehle während des Spiels, `--auto` spielt ohne Eingabe. Die Gerätekennung liegt in `~/.config/brett-und-blatt/cli.json`; wer den Client neu startet, sitzt wieder auf seinem Platz.
+
+Aufbau, zum Übertragen in eine andere Sprache:
+
+| Datei | Inhalt |
+| --- | --- |
+| [`connection.mjs`](../apps/cli/src/connection.mjs) | Raum anlegen (`POST /rooms`), WebSocket mit `?client=`, `hello`, Herzschlag mit `ping`, nach einem Abbruch mit demselben Token neu verbinden |
+| [`play.mjs`](../apps/cli/src/play.mjs) | Lobby einrichten (`setGame`, `setSeat`, `takeSeat`, `start`), auf `game` reagieren, Zug aus `legalMoves` mit der zuletzt gesehenen `version` schicken |
+| [`format.mjs`](../apps/cli/src/format.mjs) | Textausgabe: Raum, Sicht, Zugliste, Ergebnis |
+| [`main.mjs`](../apps/cli/src/main.mjs) | Befehlszeile, Gerätekennung, Tastatur |
+
+Der Prüfstein [`apps/cli/test/partie.mjs`](../apps/cli/test/partie.mjs) spielt mit dem Client Tic-Tac-Toe und Mau-Mau gegen Server-Bots und trennt dabei einmal die Verbindung; die CI führt ihn bei jedem Push gegen den lokalen Spieleserver aus. Der Client steht wie alles im Repo unter AGPL-3.0: Wer ihn kopiert und anpasst, gibt seinen Client unter derselben Lizenz weiter; wer nur das Protokoll nachbaut, ist frei (siehe [Lizenz](#lizenz)).
+
 ## Versionen
 
 - `protocol` in `hello` nennt die Version des Clients. Der Server versteht alle Versionen von `MIN_PROTOCOL_VERSION` bis `PROTOCOL_VERSION`, sonst antwortet er mit `error`/`protocol`.
@@ -118,6 +144,7 @@ Ein Client kann aber jedes Spiel auch ohne dieses Wissen spielen, indem er die E
 | --- | --- | --- |
 | 13.11.2026 | 1 | Protokoll offengelegt: Zugang ohne `Origin` mit `?client=…`, Ratenbegrenzung, Fehlercode `tooFast` |
 | 13.11.2026 | 1 | Neues Feld `GameMessage.moveLabels` mit Zugtexten für elf Spiele (#335) |
+| 13.11.2026 | 1 | Text-Client `apps/cli` als Vorlage (#336); `avatar` in `hello` ist Pflicht (war es schon, jetzt dokumentiert) |
 
 ## Lizenz
 

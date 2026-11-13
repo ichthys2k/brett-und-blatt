@@ -1,0 +1,14 @@
+{
+  "name": "@brett-und-blatt/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "description": "Text-Client auf der Kommandozeile (#336): spielt jedes Spiel nur über das offene Protokoll, ohne Spielregeln",
+  "bin": {
+    "brett": "./src/main.mjs"
+  },
+  "scripts": {
+    "start": "node src/main.mjs"
+  }
+}
