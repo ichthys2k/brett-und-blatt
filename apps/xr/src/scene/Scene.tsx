@@ -11,6 +11,7 @@ import type { Signal } from '../net';
 import { ChessBoard, FourInARowBoard, TicTacToeBoard, boardMoveIndexes } from './boards';
 import { CheckersBoard, GoBoard, GomokuBoard, MillBoard, ReversiBoard } from './boards2';
 import { BattleshipBoard, ChineseCheckersBoard, FactorGridBoard, FourPlayerChessBoard, LudoBoard, UltimateTicTacToeBoard } from './boards3';
+import { ColorShapeBoard, DominoBoard, GrafschaftBoard, WordGridBoard } from './boards4';
 import { CardTable, cardMoveIndexes, isCardGame } from './cards';
 import { Panel, ReactionBar, type VoiceControls } from './Panel';
 import { Seats, seatAngle, type SeatInfo } from './Seats';
@@ -191,6 +192,10 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         {shown?.gameId === 'four-player-chess' && <FourPlayerChessBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'chinese-checkers' && <ChineseCheckersBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'ludo' && <LudoBoard game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'dominoes' && <DominoBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'scrabble' && <WordGridBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'color-and-shape' && <ColorShapeBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'grafschaft' && <GrafschaftBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         {shown && isCardGame(shown.gameId) && <CardTable key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={onMove} adjust={adjust} voice={voice} />
         {room && <ReactionBar send={send} />}

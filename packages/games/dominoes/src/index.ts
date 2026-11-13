@@ -2,6 +2,7 @@ import { randomBot, type BotDefinition, type GameModule } from '@brett-und-blatt
 import { dominoBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, eventView, isLegal, legalMoves, playerView, result, sampleHidden, setup, type DominoMove, type DominoState } from './rules';
+import { describeMove } from './describe';
 
 export type { ChainStone, DominoDisplay, DominoMove, DominoState, DominoVariant, RoundSummary, StoneId } from './rules';
 export { endSum, ends, FRACTION_POOL, halfLabel, isDouble, pipsOf, playsFor, STONES, TERM_POOL } from './rules';
@@ -65,6 +66,7 @@ export const gameModule: GameModule<DominoState, DominoMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   eventView,

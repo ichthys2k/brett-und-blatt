@@ -19,6 +19,10 @@ export const BOARD_GAMES = [
   'four-player-chess',
   'chinese-checkers',
   'ludo',
+  'dominoes',
+  'scrabble',
+  'color-and-shape',
+  'grafschaft',
 ] as const;
 export type BoardGameId = (typeof BOARD_GAMES)[number];
 

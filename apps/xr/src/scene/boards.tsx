@@ -37,6 +37,8 @@ export function boardMoveIndexes(gameId: string, moves: unknown[]): Set<number> 
     if (gameId === 'four-player-chess' && t === 'm') handled.add(i);
     if (gameId === 'chinese-checkers' && t === 'move') handled.add(i);
     if (gameId === 'ludo' && (t === 'roll' || t === 'move')) handled.add(i);
+    if (gameId === 'dominoes' && (t === 'play' || t === 'draw')) handled.add(i);
+    if ((gameId === 'scrabble' || gameId === 'color-and-shape' || gameId === 'grafschaft') && (t === 'play' || t === 'place')) handled.add(i);
   });
   return handled;
 }
