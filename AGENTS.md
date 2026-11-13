@@ -43,6 +43,7 @@ corepack pnpm neues-spiel <id> "<Name>"               # neues Spiel aus der Vorl
 corepack pnpm --filter @brett-und-blatt/web dev       # Web-App, http://localhost:5173
 corepack pnpm --filter @brett-und-blatt/server dev    # Spieleserver, http://127.0.0.1:8787
 node apps/server/scripts/smoke.mjs                    # Rauchtest gegen den lokalen Server
+node apps/cli/test/partie.mjs                         # Text-Client spielt gegen den lokalen Server (#336)
 corepack pnpm rauchtest                               # nach dem Build: jedes Spiel im Browser starten
 PRUEFSTAND=1 corepack pnpm pruefstand                 # gründlicher Prüfstand (PRUEFSTAND_SPIELE=<id> für einzelne)
 ```

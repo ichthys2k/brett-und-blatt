@@ -58,6 +58,18 @@ jobs:
       - name: Tests (inkl. Prüfungen für jedes Spielmodul)
         run: pnpm test
 
+      # Spieleserver lokal starten (Wrangler, kein Konto nötig), dann der Rauchtest wie zwei Browser
+      # und der Text-Client als Prüfstein für fremde Clients (#336): ganze Partien gegen Server-Bots
+      # nur über das offene Protokoll, mit Wiedereinstieg nach einem Verbindungsabbruch.
+      - name: Spieleserver lokal mit Rauchtest und Text-Client
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          pnpm --filter @brett-und-blatt/server dev > wrangler.log 2>&1 &
+          for i in $(seq 1 90); do curl -sf http://127.0.0.1:8787/ > /dev/null && break; sleep 1; done
+          node apps/server/scripts/smoke.mjs || { tail -50 wrangler.log; exit 1; }
+          node apps/cli/test/partie.mjs || { tail -50 wrangler.log; exit 1; }
+
       # Adresse des Spieleservers aus der GitHub-Variable GAME_SERVER.
       # Ohne Variable bleibt der Online-Bereich unsichtbar.
       - name: Web-App bauen
