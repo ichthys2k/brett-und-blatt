@@ -157,7 +157,11 @@ Wenn Cornelius weitermachen will, bekommt jeder Schritt ein eigenes Issue (`stat
 
 - [ ] Soll es mit der Grundlage (Schritte 1 bis 3) weitergehen, auch ohne festes Ziel-Gerät?
 - [ ] Hast du eine Meta Quest zum Ausprobieren, und welche (Quest 2, 3, 3S)?
-- [ ] Dürfen fremde Leute eigene Clients gegen den Spieleserver bauen (offenes Protokoll), oder nur eigene Clients aus diesem Repo?
+- [x] Dürfen fremde Leute eigene Clients gegen den Spieleserver bauen (offenes Protokoll), oder nur eigene Clients aus diesem Repo? **Entschieden (13.11.2026): offen.** Folgen:
+  - Das Protokoll wird eine öffentliche Schnittstelle: `docs/protokoll.md` und JSON-Schema gehören zum Projekt, Änderungen, die alte Clients brechen, erhöhen `PROTOCOL_VERSION`, und der Server soll die vorige Version eine Übergangszeit lang weiter verstehen.
+  - Zugang ohne `Origin`: Clients melden sich mit einer frei gewählten, öffentlichen Kennung (etwa `?client=mein-quest-client`), ohne Anmeldung oder Schlüssel. Sie dient nur der Ratenbegrenzung je Client-Art und der Statistik, nicht als Schutz. Missbrauch wird über Ratenbegrenzung je Verbindung und die vorhandenen Server-Prüfungen abgefangen, nicht über Geheimhaltung.
+  - Fremde Clients bekommen dieselben Regeln wie die Web-App: kein freier Text (nur `react` und `say` mit den festen Listen), Namen laufen durch dieselbe Prüfung.
+  - Hinweis für Mitwirkende in `CONTRIBUTING.md` und auf der Startseite des Servers (`GET /`): Wo das Protokoll steht, dass es kostenlos und ohne Gewähr ist und dass die AGPL nur für den Server-Code gilt, nicht für Clients, die bloß das Protokoll nutzen.
 - [ ] Sprache im VR-Raum: grundsätzlich denkbar, oder bleibt es bei Emoji und Schnellnachrichten?
 
 ## Quellen
