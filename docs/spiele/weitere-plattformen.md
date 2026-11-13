@@ -155,10 +155,32 @@ Wenn Cornelius weitermachen will, bekommt jeder Schritt ein eigenes Issue (`stat
 
 ## Offene Fragen an Cornelius
 
-- [ ] Soll es mit der Grundlage (Schritte 1 bis 3) weitergehen, auch ohne festes Ziel-Gerät?
-- [ ] Hast du eine Meta Quest zum Ausprobieren, und welche (Quest 2, 3, 3S)?
-- [ ] Dürfen fremde Leute eigene Clients gegen den Spieleserver bauen (offenes Protokoll), oder nur eigene Clients aus diesem Repo?
-- [ ] Sprache im VR-Raum: grundsätzlich denkbar, oder bleibt es bei Emoji und Schnellnachrichten?
+- [x] Soll es mit der Grundlage (Schritte 1 bis 3) weitergehen? **Ja:** Vorhaben „Weitere Clients“ mit Unter-Issues, alle `status: Idee`.
+- [x] Hast du eine Meta Quest zum Ausprobieren? **Quest 3.**
+- [x] Dürfen fremde Leute eigene Clients gegen den Spieleserver bauen (offenes Protokoll), oder nur eigene Clients aus diesem Repo? **Entschieden (13.11.2026): offen.** Folgen:
+  - Das Protokoll wird eine öffentliche Schnittstelle: `docs/protokoll.md` und JSON-Schema gehören zum Projekt, Änderungen, die alte Clients brechen, erhöhen `PROTOCOL_VERSION`, und der Server soll die vorige Version eine Übergangszeit lang weiter verstehen.
+  - Zugang ohne `Origin`: Clients melden sich mit einer frei gewählten, öffentlichen Kennung (etwa `?client=mein-quest-client`), ohne Anmeldung oder Schlüssel. Sie dient nur der Ratenbegrenzung je Client-Art und der Statistik, nicht als Schutz. Missbrauch wird über Ratenbegrenzung je Verbindung und die vorhandenen Server-Prüfungen abgefangen, nicht über Geheimhaltung.
+  - Fremde Clients bekommen dieselben Regeln wie die Web-App: kein freier Text (nur `react` und `say` mit den festen Listen), Namen laufen durch dieselbe Prüfung.
+  - Hinweis für Mitwirkende in `CONTRIBUTING.md` und auf der Startseite des Servers (`GET /`): Wo das Protokoll steht, dass es kostenlos und ohne Gewähr ist und dass die AGPL nur für den Server-Code gilt, nicht für Clients, die bloß das Protokoll nutzen.
+- [x] Sprache im VR-Raum? **Später denkbar, nur in privaten Räumen** (nur wer den Code hat), mit Stummschalten; Altersgrenze wird vor der Umsetzung eigens entschieden. Der Probelauf kommt ohne Sprache aus.
+
+## Entscheidungen (13.11.2026)
+
+| Frage | Entscheidung |
+| --- | --- |
+| Protokoll | offen für fremde Clients (siehe oben) |
+| Kosten | Gratis-Tarif von Cloudflare, Last messen; über Workers Paid erst entscheiden, wenn nötig |
+| Vorhaben | [#333](https://github.com/ichthys2k/brett-und-blatt/issues/333) „Weitere Clients“ mit den Unter-Issues #334 (Protokoll), #335 (Zugtexte), #336 (Text-Client), #337 (Quest-Store), #338 (Android), #339 (WebXR-Probelauf), #340 (VR-Ausbau), alle `status: Idee` |
+| Zugtexte zuerst für | Tic-Tac-Toe, Vier in einer Reihe, Schach, Vierer-Schach, Dame, Mühle, Reversi, Gomoku, Go, Mau-Mau, Eins! (elf Spiele) |
+| Bildschirmleser | Zugtexte dienen gleich auch der Barrierefreiheit der Web-App |
+| Text-Client | Kommandozeilen-Werkzeug im Repo (kein Chat-Bot) |
+| Quest-Store | neues Meta-Entwicklerkonto, Herausgeber „Brett & Blatt“ |
+| Android | eigenes Issue: TWA für den Play Store mit derselben Bubblewrap-Werkzeugkette |
+| Testgerät | Meta Quest 3 |
+| 3D-Bibliothek | React Three Fiber mit `@react-three/xr` |
+| Aussehen | Taverne-Stil laut [Stilbibel](../grafik/STILBIBEL.md); freie 3D-Modelle (CC0, CC BY) erlaubt, Lizenz in `THIRD_PARTY.md` |
+| Sprache | später nur in privaten Räumen, Probelauf ohne |
+| Adresse | eigene Unterdomain (etwa `vr.spiele.lipponer.de`), eigener Auftritt und eigener erlaubter Origin |
 
 ## Quellen
 
