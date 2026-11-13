@@ -26,6 +26,7 @@
     "tests",
     "packages/games/*/src",
     "packages/games/*/test",
-    "apps/web/src"
+    "apps/web/src",
+    "apps/xr/src"
   ]
 }
