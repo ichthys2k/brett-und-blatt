@@ -23,7 +23,7 @@ Bots, Avatare, Narren, Nebenfiguren (`narren.json`, `bots.json`, `avatare.json`,
 
 > Painterly warm baroque oil portrait of a whimsical storybook animal character of a fairy-tale kingdom, in the style of the reference images: warm candlelight, rich fabric textures, dark warm background with subtle damask pattern, warm gold and deep colours, detailed expressive friendly face with a clever twinkle, humorous but dignified, suitable for children. Bust portrait facing the viewer, head and shoulders fully inside the image, centred with space around so it can be cropped (to a circle where the manifest says so). No text, no letters, no numbers, no watermark.
 
-Abwandlungen: Avatare tragen schlichte Reisekleidung vor **schlichtem dunkelbraunem Grund** (der Kopf muss im kleinen Kreis erkennbar bleiben); Narren tragen kleine Narrenattribute; Spielkartenfiguren (`bildkarten*.json`) sind Hochformat 4:5.
+Abwandlungen: **Bots sind Uhrwerk-Automaten des Barock** (Vorschlag 13.11.2026, #311, noch im Probelauf): gleiche Tiere, Stoffe und Kerzenlicht, dazu als gemeinsames Erkennungszeichen ein Aufziehschlüssel aus Messing hinter der Schulter, feine Messingnähte an den Gelenken und Glasaugen – ausdrücklich kein Steampunk (Dampfrohre, Kessel, Zylinder, Nieten stehen in den Verboten von `bots.json`); so unterscheiden sie sich von den Avataren der Menschen. Avatare tragen schlichte Reisekleidung vor **schlichtem dunkelbraunem Grund** (der Kopf muss im kleinen Kreis erkennbar bleiben); Narren tragen kleine Narrenattribute; Spielkartenfiguren (`bildkarten*.json`) sind Hochformat 4:5.
 
 ### Gegenstand / Medaillon
 Pokale, Urkunden, Stempel, Jahrmarkt-Symbole, Hauptmenü-Stationen (`ehrung.json`, `jahrmarkt*.json`, `menue-stationen.json`).
