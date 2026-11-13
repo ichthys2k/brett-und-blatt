@@ -149,11 +149,23 @@ jobs:
     needs: [check, deploy-server]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    env:
+      HAS_KLAENGE: ${{ secrets.KLAENGE_DEPLOY_KEY != '' }}
     concurrency:
       group: cloudflare-xr
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7
+
+      # Klänge wie bei der Web-App aus dem privaten Repo; sie landen nur im Build (#349).
+      - name: Klänge aus dem privaten Repo holen
+        if: env.HAS_KLAENGE == 'true'
+        uses: actions/checkout@v7
+        with:
+          repository: ichthys2k/brett-und-blatt-klaenge
+          ssh-key: ${{ secrets.KLAENGE_DEPLOY_KEY }}
+          path: klaenge-repo
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v6
 
@@ -169,6 +181,7 @@ jobs:
         run: pnpm --filter @brett-und-blatt/xr build
         env:
           VITE_GAME_SERVER: ${{ vars.GAME_SERVER }}
+          KLAENGE_DIR: ${{ env.HAS_KLAENGE == 'true' && format('{0}/klaenge-repo', github.workspace) || '' }}
 
       # Das Pages-Projekt legt der erste Lauf an; danach meldet der Befehl nur, dass es schon da ist.
       - name: VR-App veröffentlichen

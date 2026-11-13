@@ -28,6 +28,9 @@ export function boardMoveIndexes(gameId: string, moves: unknown[]): Set<number> 
     if (gameId === 'tic-tac-toe' && t === 'place') handled.add(i);
     if (gameId === 'four-in-a-row' && (t === 'drop' || t === 'pop')) handled.add(i);
     if (gameId === 'chess' && t === 'move') handled.add(i);
+    if ((gameId === 'reversi' || gameId === 'gomoku' || gameId === 'go') && t === 'place') handled.add(i);
+    if (gameId === 'checkers' && t === 'move') handled.add(i);
+    if (gameId === 'mill' && (t === 'place' || t === 'move')) handled.add(i);
   });
   return handled;
 }

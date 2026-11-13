@@ -5,10 +5,11 @@
  */
 import { AVATARS, parseRoomCode } from '@brett-und-blatt/online';
 import { createXRStore } from '@react-three/xr';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { GAME_CHOICES, LEVEL_TEXT, gameName } from './catalog';
 import { createRoom, loadProfile, saveProfile, sendMove, serverUrl, useRoom } from './net';
 import { Scene } from './scene/Scene';
+import { play, soundsFor, unlockAudio } from './sound';
 
 const store = createXRStore({
   // Im Entwicklungsbetrieb ohne Brille eine Quest 3 nachbilden (IWER), sonst nie.
@@ -41,6 +42,29 @@ export function App() {
 
   const room = useRoom(server, code, profile);
   const { send, game } = room;
+
+  // Ton erst nach der ersten Berührung (Vorgabe der Browser).
+  useEffect(() => {
+    const unlock = () => unlockAudio();
+    window.addEventListener('pointerdown', unlock);
+    return () => window.removeEventListener('pointerdown', unlock);
+  }, []);
+
+  // Klänge zu den Ereignissen jeder neuen game-Nachricht, dazu „Du bist dran“ und Sieg.
+  const heard = useRef<{ round: number; version: number; myTurn: boolean }>({ round: -1, version: -1, myTurn: false });
+  useEffect(() => {
+    if (!game) return;
+    const last = heard.current;
+    const fresh = game.round !== last.round || game.version > last.version;
+    const myTurn = game.yourSeat !== null && !game.result && game.current.includes(game.yourSeat) && game.legalMoves.length > 0;
+    if (fresh && last.version >= 0) {
+      const names = new Set(game.events.flatMap((event) => soundsFor(game.gameId, event)));
+      for (const name of names) play(name);
+      if (myTurn && !last.myTurn && game.seats.length > 1) play('dein-zug');
+      if (game.result?.kind === 'win' && game.yourSeat !== null && game.result.winners.includes(game.yourSeat)) play('sieg');
+    }
+    heard.current = { round: game.round, version: game.version, myTurn };
+  }, [game]);
   const host = room.room?.hostId === room.you;
   const onMove = (index: number) => {
     if (game && game.legalMoves[index] !== undefined) sendMove(send, game, game.legalMoves[index]);
@@ -107,7 +131,7 @@ export function App() {
   return (
     <div className="xr-shell">
       <div className="xr-canvas">
-        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} />
+        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} gameAt={room.gameAt} />
       </div>
       <aside className="xr-bar" aria-label="Raum und Züge">
         <header>
