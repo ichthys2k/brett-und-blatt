@@ -3,7 +3,7 @@
  * alle anderen Spiele laufen über das 2D-Fenster mit der Zugliste des Servers.
  */
 
-export const BOARD_GAMES = ['tic-tac-toe', 'four-in-a-row', 'chess'] as const;
+export const BOARD_GAMES = ['tic-tac-toe', 'four-in-a-row', 'chess', 'checkers', 'mill', 'reversi', 'gomoku', 'go'] as const;
 export type BoardGameId = (typeof BOARD_GAMES)[number];
 
 export function isBoardGame(id: string | null | undefined): id is BoardGameId {
@@ -15,11 +15,11 @@ export const GAME_CHOICES: { id: string; name: string; board: boolean }[] = [
   { id: 'tic-tac-toe', name: 'Tic-Tac-Toe', board: true },
   { id: 'four-in-a-row', name: 'Vier in einer Reihe', board: true },
   { id: 'chess', name: 'Schach', board: true },
-  { id: 'checkers', name: 'Dame', board: false },
-  { id: 'mill', name: 'Mühle', board: false },
-  { id: 'reversi', name: 'Reversi', board: false },
-  { id: 'gomoku', name: 'Gomoku', board: false },
-  { id: 'go', name: 'Go', board: false },
+  { id: 'checkers', name: 'Dame', board: true },
+  { id: 'mill', name: 'Mühle', board: true },
+  { id: 'reversi', name: 'Reversi', board: true },
+  { id: 'gomoku', name: 'Gomoku', board: true },
+  { id: 'go', name: 'Go', board: true },
   { id: 'four-player-chess', name: 'Vierer-Schach', board: false },
   { id: 'mau-mau', name: 'Mau-Mau', board: false },
   { id: 'uno', name: 'Eins!', board: false },

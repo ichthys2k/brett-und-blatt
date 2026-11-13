@@ -1,21 +1,42 @@
 /**
- * Das 2D-Fenster über dem Tisch (#339): Raum und Plätze in der Lobby, in der Partie die Züge
- * als Liste mit den Zugtexten des Servers – damit läuft jedes Spiel, auch ohne 3D-Figuren.
+ * Das 2D-Fenster über dem Tisch (#339, #349). Alles, was man ohne Absetzen der Brille braucht:
+ * - Lobby: Spiel wählen, Platzzahl, Bots, Platz nehmen, Partie beginnen (Raumleitung);
+ * - Partie: Züge, die kein 3D-Brett anbietet, als Liste mit Zugtexten, dazu Aufgeben, Remis,
+ *   Zurücknehmen und Schnellnachrichten;
+ * - Ende: Nochmal oder zurück in die Lobby;
+ * - immer: Tisch höher/tiefer, näher/weiter.
  */
-import { REACTIONS, type ClientMessage, type GameMessage, type RoomMessage } from '@brett-und-blatt/online';
-import { useState } from 'react';
-import { gameName, isBoardGame } from '../catalog';
+import { PHRASES, REACTIONS, type ClientMessage, type GameMessage, type LobbySeat, type RoomMessage } from '@brett-und-blatt/online';
+import { useEffect, useState } from 'react';
+import { GAME_CHOICES, LEVEL_TEXT, PHRASE_TEXT, gameName, isBoardGame } from '../catalog';
 import { TABLE_CENTER } from './Tavern';
 import { WOOD_DARK } from './text';
 import { Button3D, Sign } from './ui3d';
+import { getVolume, onVolumeChange, setVolume } from '../sound';
 
 const PAGE = 6;
 // Neben einem 3D-Brett schräg links hinter dem Tisch, dem eigenen Platz zugewandt; ohne Brett
 // (Lobby und Spiele ohne 3D-Figuren) mittig über dem Tisch.
 const SIDE_POS: [number, number, number] = [TABLE_CENTER[0] - 0.68, 1.22, TABLE_CENTER[2] - 0.62];
 const SIDE_ROT: [number, number, number] = [0, Math.atan2(0.68, 0.62 - TABLE_CENTER[2]), 0];
-const CENTER_POS: [number, number, number] = [TABLE_CENTER[0], 1.2, TABLE_CENTER[2] - 0.25];
+const CENTER_POS: [number, number, number] = [TABLE_CENTER[0], 1.25, TABLE_CENTER[2] - 0.3];
 const CENTER_ROT: [number, number, number] = [0, 0, 0];
+const WIDTH = 0.62;
+const ROW = 0.05;
+
+type BotLevel = Extract<LobbySeat, { kind: 'bot' }>['level'];
+
+/** Bot-Stufen in der Reihenfolge, in der ein Platz beim Antippen durchgeschaltet wird. */
+const LEVELS: BotLevel[] = ['easy', 'medium', 'hard'];
+/** Spiele, bei denen man Remis anbieten kann (Angebot steht nicht in legalMoves). */
+const DRAW_GAMES = new Set(['chess', 'checkers']);
+
+export interface ViewAdjust {
+  up: () => void;
+  down: () => void;
+  closer: () => void;
+  farther: () => void;
+}
 
 interface PanelProps {
   room: RoomMessage | null;
@@ -25,61 +46,166 @@ interface PanelProps {
   /** Indizes der Züge, die das 3D-Brett schon anbietet. */
   boardMoves: Set<number>;
   onMove: (index: number) => void;
+  adjust: ViewAdjust;
 }
 
-export function Panel({ room, game, you, send, boardMoves, onMove }: PanelProps) {
+interface Btn {
+  label: string;
+  press: () => void;
+  active?: boolean;
+  disabled?: boolean;
+}
+
+type Mode = 'main' | 'phrases' | 'view';
+
+export function Panel({ room, game, you, send, boardMoves, onMove, adjust }: PanelProps) {
   const [page, setPage] = useState(0);
-  const beside = Boolean(game && isBoardGame(game.gameId));
-  const PANEL_POS = beside ? SIDE_POS : CENTER_POS;
-  const PANEL_ROT = beside ? SIDE_ROT : CENTER_ROT;
+  const [mode, setMode] = useState<Mode>('main');
+  const [confirmResign, setConfirmResign] = useState(false);
+  const [, redraw] = useState(0);
+  useEffect(() => onVolumeChange(() => redraw((n) => n + 1)), []);
+  const beside = Boolean(game && !game.result && isBoardGame(game.gameId));
+  const position = beside ? SIDE_POS : CENTER_POS;
+  const rotation = beside ? SIDE_ROT : CENTER_ROT;
   if (!room) return <Sign lines={['Verbinde …']} position={CENTER_POS} rotation={CENTER_ROT} width={0.5} height={0.08} />;
+
   const host = room.hostId === you;
   const lines: string[] = [];
-  const buttons: { label: string; press: () => void; active?: boolean }[] = [];
+  const rows: Btn[][] = [];
+  const back: Btn = { label: '◀ Zurück', press: () => setMode('main') };
 
-  if (room.phase === 'lobby' || !game) {
-    lines.push(`Raum ${room.code} · ${gameName(room.lobby.gameId)}`);
-    room.lobby.seats.forEach((seat, i) => {
-      const member = seat.kind === 'human' ? room.members.find((m) => m.id === seat.memberId) : null;
-      lines.push(`Platz ${i + 1}: ${seat.kind === 'bot' ? '🤖 Bot' : member ? `${member.avatar} ${member.name}${member.id === you ? ' (du)' : ''}` : 'frei'}`);
+  if (mode === 'phrases') {
+    lines.push('Schnellnachricht an den Tisch');
+    for (let i = 0; i < PHRASES.length; i += 2) {
+      rows.push(PHRASES.slice(i, i + 2).map((p) => ({ label: PHRASE_TEXT[p] ?? p, press: () => (send({ type: 'say', phrase: p }), setMode('main')) })));
+    }
+    rows.push([back]);
+  } else if (mode === 'view') {
+    lines.push('Tisch einstellen');
+    rows.push([
+      { label: 'Tisch höher ▲', press: adjust.up },
+      { label: 'Tisch tiefer ▼', press: adjust.down },
+    ]);
+    rows.push([
+      { label: 'Tisch näher', press: adjust.closer },
+      { label: 'Tisch weiter weg', press: adjust.farther },
+    ]);
+    const volume = getVolume();
+    rows.push([
+      { label: '🔈 leiser', press: () => setVolume(volume - 0.1) },
+      { label: volume > 0 ? `Ton ${Math.round(volume * 100)} %` : 'Ton aus', press: () => setVolume(volume > 0 ? 0 : 0.7), active: volume > 0 },
+      { label: '🔊 lauter', press: () => setVolume(volume + 0.1) },
+    ]);
+    lines.push('Neu ausrichten: Meta-Taste gedrückt halten.');
+    rows.push([back]);
+  } else if (room.phase === 'lobby' || !game) {
+    const lobby = room.lobby;
+    lines.push(`Raum ${room.code}`);
+    if (host) {
+      const index = Math.max(0, GAME_CHOICES.findIndex((g) => g.id === lobby.gameId));
+      const step = (d: number) => send({ type: 'setGame', gameId: GAME_CHOICES[(index + d + GAME_CHOICES.length) % GAME_CHOICES.length]!.id });
+      rows.push([
+        { label: '◀', press: () => step(-1) },
+        { label: lobby.gameId ? gameName(lobby.gameId) : 'Spiel wählen', press: () => step(lobby.gameId ? 1 : 0), active: true },
+        { label: '▶', press: () => step(1) },
+      ]);
+      rows.push([
+        { label: '− Platz', press: () => send({ type: 'setSeatCount', count: lobby.seats.length - 1 }) },
+        { label: `${lobby.seats.length} Plätze`, press: () => {}, disabled: true },
+        { label: '+ Platz', press: () => send({ type: 'setSeatCount', count: lobby.seats.length + 1 }) },
+      ]);
+    } else lines.push(`Spiel: ${gameName(lobby.gameId)}`);
+    const mine = lobby.seats.findIndex((s) => s.kind === 'human' && s.memberId === you);
+    lobby.seats.forEach((seat, i) => {
+      const member = seat.kind === 'human' ? room.members.find((m) => m.id === seat.memberId) : undefined;
+      const text = seat.kind === 'bot' ? `🤖 Bot ${LEVEL_TEXT[seat.level]}` : member ? `${member.avatar} ${member.name}${member.id === you ? ' (du)' : ''}` : 'frei';
+      const row: Btn[] = [{ label: `${i + 1}: ${text}`, press: () => {}, disabled: true }];
+      if (seat.kind === 'human' && !seat.memberId && mine < 0) row.push({ label: 'Hinsetzen', press: () => send({ type: 'takeSeat', index: i }), active: true });
+      if (host && (seat.kind === 'bot' || !seat.memberId)) {
+        // Frei → leicht → mittel → schwer → frei
+        const next = seat.kind === 'bot' ? LEVELS[LEVELS.indexOf(seat.level) + 1] : 'easy';
+        row.push({ label: seat.kind === 'bot' ? (next ? `Bot ${LEVEL_TEXT[next]}` : 'Freigeben') : 'Bot', press: () => send({ type: 'setSeat', index: i, seat: next ? { bot: next } : 'open' }) });
+      }
+      if (seat.kind === 'human' && seat.memberId === you) row.push({ label: 'Aufstehen', press: () => send({ type: 'leaveSeat' }) });
+      rows.push(row);
     });
-    const mine = room.lobby.seats.findIndex((s) => s.kind === 'human' && s.memberId === you);
-    const free = room.lobby.seats.findIndex((s) => s.kind === 'human' && !s.memberId);
-    if (mine < 0 && free >= 0) buttons.push({ label: `Auf Platz ${free + 1} setzen`, press: () => send({ type: 'takeSeat', index: free }) });
-    if (host && room.lobby.gameId) buttons.push({ label: 'Partie beginnen', press: () => send({ type: 'start' }), active: true });
-    if (!host) lines.push('Die Raumleitung beginnt die Partie.');
+    if (host) rows.push([{ label: 'Partie beginnen', press: () => send({ type: 'start' }), active: true, disabled: !lobby.gameId }]);
+    else lines.push('Die Raumleitung beginnt die Partie.');
+    rows.push([
+      { label: '💬 Nachricht', press: () => setMode('phrases') },
+      { label: '↕ Tisch', press: () => setMode('view') },
+    ]);
+  } else if (game.result) {
+    const r = game.result;
+    const me = game.yourSeat ?? -1;
+    lines.push(r.kind === 'win' ? (r.winners.includes(me) ? 'Gewonnen! 🎉' : `Es gewinnt ${r.winners.map((w) => game.seats[w]?.name ?? `Platz ${w + 1}`).join(' und ')}`) : r.kind === 'draw' ? 'Unentschieden' : 'Niemand gewinnt');
+    rows.push([{ label: 'Nochmal', press: () => send({ type: 'afterVote', choice: 'again' }), active: true }, ...(host ? [{ label: 'Zur Lobby', press: () => send({ type: 'toLobby' }) }] : [])]);
+    rows.push([
+      { label: '💬 Nachricht', press: () => setMode('phrases') },
+      { label: '↕ Tisch', press: () => setMode('view') },
+    ]);
   } else {
     const me = game.yourSeat;
-    if (game.result) {
-      const r = game.result;
-      lines.push(r.kind === 'win' ? (r.winners.includes(me ?? -1) ? 'Gewonnen! 🎉' : `Es gewinnt ${r.winners.map((w) => game.seats[w]?.name ?? `Platz ${w + 1}`).join(' und ')}`) : r.kind === 'draw' ? 'Unentschieden' : 'Niemand gewinnt');
-      buttons.push({ label: 'Nochmal', press: () => send({ type: 'afterVote', choice: 'again' }), active: true });
-      if (host) buttons.push({ label: 'Zur Lobby', press: () => send({ type: 'toLobby' }) });
-    } else {
-      lines.push(`${gameName(game.gameId)} · ${game.current.includes(me ?? -1) ? 'Du bist am Zug' : `Am Zug: ${game.current.map((s) => game.seats[s]?.name ?? s + 1).join(', ')}`}`);
-      const listed = game.legalMoves.map((_, i) => i).filter((i) => !boardMoves.has(i));
-      if (listed.length === 0 && isBoardGame(game.gameId) && game.legalMoves.length > 0) lines.push('Zeig auf ein leuchtendes Ziel auf dem Brett.');
-      const pages = Math.max(1, Math.ceil(listed.length / PAGE));
-      const current = Math.min(page, pages - 1);
-      for (const i of listed.slice(current * PAGE, current * PAGE + PAGE)) {
-        buttons.push({ label: game.moveLabels?.[i] ?? JSON.stringify(game.legalMoves[i]).slice(0, 40), press: () => onMove(i) });
-      }
-      if (pages > 1) {
-        buttons.push({ label: `◀ Seite ${current + 1}/${pages}`, press: () => setPage((current - 1 + pages) % pages) });
-        buttons.push({ label: 'Weiter ▶', press: () => setPage((current + 1) % pages) });
-      }
+    const myTurn = me !== null && game.current.includes(me);
+    lines.push(`${gameName(game.gameId)} · ${myTurn ? 'Du bist am Zug' : `Am Zug: ${game.current.map((s) => game.seats[s]?.name ?? s + 1).join(', ')}`}`);
+    // Bitte ums Zurücknehmen: abstimmen, wenn man gefragt ist.
+    const tb = game.takeBack;
+    if (tb?.status === 'pending' && me !== null) {
+      if (tb.waiting.includes(me)) {
+        lines.push(`${game.seats[tb.seat]?.name ?? 'Jemand'} möchte zurücknehmen.`);
+        rows.push([
+          { label: 'Erlauben', press: () => send({ type: 'answerTakeBack', accept: true }), active: true },
+          { label: 'Ablehnen', press: () => send({ type: 'answerTakeBack', accept: false }) },
+        ]);
+      } else if (tb.seat === me) lines.push('Warte auf die Zustimmung der anderen …');
     }
+    const listed = game.legalMoves.map((_, i) => i).filter((i) => !boardMoves.has(i));
+    if (listed.length === 0 && isBoardGame(game.gameId) && myTurn) lines.push('Zeig auf ein leuchtendes Ziel auf dem Brett.');
+    const pages = Math.max(1, Math.ceil(listed.length / PAGE));
+    const current = Math.min(page, pages - 1);
+    for (const i of listed.slice(current * PAGE, current * PAGE + PAGE)) {
+      rows.push([{ label: game.moveLabels?.[i] ?? JSON.stringify(game.legalMoves[i]).slice(0, 40), press: () => onMove(i) }]);
+    }
+    if (pages > 1) {
+      rows.push([
+        { label: `◀ Seite ${current + 1}/${pages}`, press: () => setPage((current - 1 + pages) % pages) },
+        { label: 'Weiter ▶', press: () => setPage((current + 1) % pages) },
+      ]);
+    }
+    const controls: Btn[] = [];
+    if (game.canResign) {
+      controls.push(confirmResign ? { label: 'Wirklich aufgeben?', press: () => (send({ type: 'resign' }), setConfirmResign(false)), active: true } : { label: 'Aufgeben', press: () => setConfirmResign(true) });
+    }
+    if (DRAW_GAMES.has(game.gameId) && myTurn) controls.push({ label: 'Remis anbieten', press: () => send({ type: 'move', version: game.version, move: { type: 'offerDraw' } }) });
+    if (game.canTakeBack) controls.push({ label: 'Zurücknehmen?', press: () => send({ type: 'takeBack' }) });
+    if (controls.length) rows.push(controls);
+    rows.push([
+      { label: '💬 Nachricht', press: () => setMode('phrases') },
+      { label: '↕ Tisch', press: () => setMode('view') },
+    ]);
   }
 
-  const width = 0.62;
   const lineH = 0.045;
   const height = lines.length * lineH + 0.04;
   return (
-    <group position={PANEL_POS} rotation={PANEL_ROT}>
-      <Sign lines={lines} position={[0, 0, 0]} width={width} height={height} background={WOOD_DARK} />
-      {buttons.map((b, i) => (
-        <Button3D key={`${b.label}-${i}`} label={b.label} position={[0, -height / 2 - 0.035 - i * 0.052, 0]} width={width - 0.04} height={0.045} onPress={b.press} active={b.active} />
-      ))}
+    <group position={position} rotation={rotation}>
+      <Sign lines={lines} position={[0, 0, 0]} width={WIDTH} height={height} background={WOOD_DARK} />
+      {rows.map((row, r) => {
+        const gap = 0.01;
+        const w = (WIDTH - 0.04 - gap * (row.length - 1)) / row.length;
+        return row.map((b, k) => (
+          <Button3D
+            key={`${r}-${k}-${b.label}`}
+            label={b.label}
+            position={[-(WIDTH - 0.04) / 2 + w / 2 + k * (w + gap), -height / 2 - 0.035 - r * ROW, 0]}
+            width={w}
+            height={0.042}
+            onPress={b.press}
+            active={b.active}
+            disabled={b.disabled}
+          />
+        ));
+      })}
     </group>
   );
 }

@@ -64,6 +64,8 @@ export interface RoomState {
   you: string | null;
   room: RoomMessage | null;
   game: GameMessage | null;
+  /** Ortszeit, zu der die letzte `game`-Nachricht ankam (zum Weiterzählen der Uhren). */
+  gameAt: number;
   signals: Signal[];
   error: string | null;
   /** Für die Lastmessung (#339): empfangene Nachrichten und Zeichen, gesendete Nachrichten. */
@@ -76,7 +78,7 @@ export interface RoomState {
  * Funklöcher, die sich sonst nicht melden.
  */
 export function useRoom(server: string, code: string | null, profile: Stored) {
-  const [state, setState] = useState<RoomState>({ status: 'connecting', you: null, room: null, game: null, signals: [], error: null, stats: { received: 0, receivedChars: 0, sent: 0 } });
+  const [state, setState] = useState<RoomState>({ status: 'connecting', you: null, room: null, game: null, gameAt: 0, signals: [], error: null, stats: { received: 0, receivedChars: 0, sent: 0 } });
   const socket = useRef<WebSocket | null>(null);
   const stats = useRef({ received: 0, receivedChars: 0, sent: 0 });
 
@@ -122,7 +124,7 @@ export function useRoom(server: string, code: string | null, profile: Stored) {
             case 'room':
               return { ...next, room: message, game: message.phase === 'lobby' ? null : s.game };
             case 'game':
-              return { ...next, game: message };
+              return { ...next, game: message, gameAt: Date.now() };
             case 'signal': {
               const now = Date.now();
               const fresh = s.signals.filter((x) => now - x.at < 4000);

@@ -5,10 +5,11 @@
 import type { ClientMessage, GameMessage, RoomMessage } from '@brett-und-blatt/online';
 import { Canvas, useThree } from '@react-three/fiber';
 import { XR, XROrigin, type XRStore } from '@react-three/xr';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { isBoardGame } from '../catalog';
 import type { Signal } from '../net';
 import { ChessBoard, FourInARowBoard, TicTacToeBoard, boardMoveIndexes } from './boards';
+import { CheckersBoard, GoBoard, GomokuBoard, MillBoard, ReversiBoard } from './boards2';
 import { Panel, ReactionBar } from './Panel';
 import { Seats, seatAngle, type SeatInfo } from './Seats';
 import { TABLE_CENTER, Tavern } from './Tavern';
@@ -21,6 +22,45 @@ interface SceneProps {
   signals: Signal[];
   send: (m: ClientMessage) => void;
   onMove: (index: number) => void;
+  /** Ortszeit der letzten game-Nachricht, zum Weiterzählen der Uhren. */
+  gameAt: number;
+}
+
+const VIEW_KEY = 'brett-und-blatt-xr-tisch';
+
+/** Tischhöhe und Abstand je Gerät (Sitzen oder Stehen); verschiebt den eigenen Standpunkt. */
+function useViewOffset() {
+  const [offset, setOffset] = useState<{ y: number; z: number }>(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(VIEW_KEY) ?? 'null') as { y?: number; z?: number } | null;
+      return { y: raw?.y ?? 0, z: raw?.z ?? 0 };
+    } catch {
+      return { y: 0, z: 0 };
+    }
+  });
+  const change = (dy: number, dz: number) =>
+    setOffset((o) => {
+      const next = { y: Math.max(-0.5, Math.min(0.5, o.y + dy)), z: Math.max(-0.6, Math.min(0.6, o.z + dz)) };
+      try {
+        localStorage.setItem(VIEW_KEY, JSON.stringify(next));
+      } catch {
+        // ohne Speicher gilt die Einstellung nur bis zum Neuladen
+      }
+      return next;
+    });
+  return {
+    offset,
+    adjust: { up: () => change(0.05, 0), down: () => change(-0.05, 0), closer: () => change(0, -0.05), farther: () => change(0, 0.05) },
+  };
+}
+
+/** Restzeit als m:ss, weitergezählt seit der letzten Nachricht. */
+function clockText(game: GameMessage, seat: number, gameAt: number, now: number): string {
+  const reading = game.clocks[seat];
+  if (!reading || reading.leftMs === null || reading.leftMs === undefined) return '';
+  const left = Math.max(0, reading.running ? reading.leftMs - (now - gameAt) : reading.leftMs);
+  const s = Math.ceil(left / 1000);
+  return `⏱ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
 /** Ohne Brille: Blick vom eigenen Platz schräg auf den Tisch. */
@@ -33,7 +73,7 @@ function DesktopCamera() {
   return null;
 }
 
-function seatInfos(room: RoomMessage | null, game: GameMessage | null, you: string | null): SeatInfo[] {
+function seatInfos(room: RoomMessage | null, game: GameMessage | null, you: string | null, gameAt: number, now: number): SeatInfo[] {
   if (game) {
     const count = game.seats.length;
     const winners = game.result?.kind === 'win' ? game.result.winners : [];
@@ -49,6 +89,7 @@ function seatInfos(room: RoomMessage | null, game: GameMessage | null, you: stri
         bot: seat.kind === 'bot' ? (seat.level ?? null) : null,
         turn: !game.result && game.current.includes(index),
         winner: winners.includes(index),
+        clock: game.result ? '' : clockText(game, index, gameAt, now),
       };
     });
   }
@@ -71,8 +112,16 @@ function seatInfos(room: RoomMessage | null, game: GameMessage | null, you: stri
   });
 }
 
-export function Scene({ store, room, game, you, signals, send, onMove }: SceneProps) {
-  const seats = seatInfos(room, game, you);
+export function Scene({ store, room, game, you, signals, send, onMove, gameAt }: SceneProps) {
+  const [now, setNow] = useState(() => Date.now());
+  const ticking = Boolean(game && !game.result && game.clocks.some((c) => c?.running));
+  useEffect(() => {
+    if (!ticking) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [ticking]);
+  const { offset, adjust } = useViewOffset();
+  const seats = seatInfos(room, game, you, gameAt, now);
   const boardMoves = useMemo(() => (game && isBoardGame(game.gameId) ? boardMoveIndexes(game.gameId, game.legalMoves) : new Set<number>()), [game]);
   const playing = game && !game.result ? game : null;
   const moveByValue = (move: unknown) => {
@@ -86,14 +135,19 @@ export function Scene({ store, room, game, you, signals, send, onMove }: ScenePr
       <color attach="background" args={['#1d1510']} />
       <fog attach="fog" args={['#1d1510', 4, 11]} />
       <XR store={store}>
-        <XROrigin position={[0, 0, 0]} />
+        <XROrigin position={[0, -offset.y, offset.z]} />
         <DesktopCamera />
         <Tavern chairs={seats.filter((s) => !s.mine).map((s) => ({ angle: s.angle, mine: false }))} />
         <Seats seats={seats} signals={signals} memberAvatar={(id) => room?.members.find((m) => m.id === id)?.avatar ?? null} />
         {shown?.gameId === 'tic-tac-toe' && <TicTacToeBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'four-in-a-row' && <FourInARowBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'chess' && <ChessBoard key={`${shown.round}`} game={shown} onMove={moveByValue} />}
-        <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={onMove} />
+        {shown?.gameId === 'checkers' && <CheckersBoard key={`${shown.round}`} game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'mill' && <MillBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'reversi' && <ReversiBoard game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'gomoku' && <GomokuBoard game={shown} onMove={moveByValue} />}
+        {shown?.gameId === 'go' && <GoBoard game={shown} onMove={moveByValue} />}
+        <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={onMove} adjust={adjust} />
         {room && <ReactionBar send={send} />}
       </XR>
     </Canvas>
