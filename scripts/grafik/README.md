@@ -10,7 +10,7 @@ Ablauf für gemalte Bilder (Porträts, Tierkarten, Illustrationen); Symbole, Fig
 
 ## Manifeste für das Vorhaben „Taverne überall“ (#306)
 
-Für die Grafik-Pakete G2 bis G10 liegen fertige Manifeste in `scripts/grafik/manifeste/` (Stand 12.11.2026, noch keine Bilder erzeugt). Sie sind die **maßgebliche Motivliste**; die Issues nennen dieselben Prompts im Klartext.
+Für die Grafik-Pakete G2 bis G10 und G12 liegen fertige Manifeste in `scripts/grafik/manifeste/` (Stand 12.11.2026, noch keine Bilder erzeugt). Sie sind die **maßgebliche Motivliste**; die Issues nennen dieselben Prompts im Klartext.
 
 | Paket | Issue | Manifest(e) |
 |---|---|---|
@@ -24,11 +24,13 @@ Für die Grafik-Pakete G2 bis G10 liegen fertige Manifeste in `scripts/grafik/ma
 | G9 Spielteile | #318 | `grafschaft-land.json`, `grafschaft-auftraege.json`, `marktstaende-waren.json`, `marktstaende-staende.json`, `ruebenacker-teile.json`, `ruebenacker-karten.json` |
 | G9a Quartett | #319 | `quartett-tiere.json`, `quartett-dinosaurier.json`, `quartett-weltraum.json`, `quartett-bibel.json` |
 | G10 Hauptmenü | #317 | `menue-stationen.json`, `menue-licht.json` |
+| G12 Spielfiguren der Brettspiele | #325 | `figuren-<spiel>.json` für `chess`, `four-player-chess`, `checkers`, `mill`, `go`, `reversi`, `four-in-a-row`, `ludo`, `chinese-checkers`, `tic-tac-toe`, `battleship` |
 
 Zusätze in diesen Manifesten:
 
 - Ein Motiv darf neben `stil`, `ohne`, `format` und `referenzen` auch eine eigene `groesse` tragen (`uebernehmen.mjs` beachtet sie).
 - `"freistellen": true` ist ein Hinweis für den Menschen bzw. Agenten: grünen Grund (#00B140) entfernen und als WebP mit Alphakanal ablegen. Das Skript tut das noch nicht.
-- `haus`, `gruppe` und `beschreibung` sind nur Erläuterungen.
+- `haus`, `gruppe`, `satz` und `beschreibung` sind nur Erläuterungen.
+- Figuren (G12): Motiv-id `<satz>-<figur>[-<seite>]` mit den Sätzen `wood`, `metal`, `fable` und den Seiten `w` (hell), `b` (dunkel), `n` (neutraler Meister, wird in die Platzfarben eingefärbt). Zieldatei ist `figuren/<Motiv-id>.webp`.
 
 **Mit Antigravity (ohne API-Schlüssel):** Bilder mit dem eingebauten Bildwerkzeug erzeugen (Prompt = `stil` + `prompt` + „Avoid: “ + `ohne`, Referenzbilder aus `referenzen` mitgeben) und als `grafik-roh/<Manifestname>/<Motiv-id>/v1.png`, `v2.png`, `v3.png` ablegen – genau dort, wo `erzeugen.mjs` sie hinschreibt. Kontaktbogen und Übernahme laufen dann unverändert. Der ausführliche Ablauf kommt mit G0 (#307).
