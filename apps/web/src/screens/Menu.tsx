@@ -5,6 +5,7 @@ import { fetchBoardCount } from '../lib/board';
 import { useBoardHidden } from '../lib/boardPrefs';
 import { useCrest } from '../lib/crestStore';
 import { findGame } from '../lib/registry';
+import { useMenu3d } from '../lib/look';
 import { navigate, paths } from '../lib/router';
 import { GAME_SERVER } from '../lib/server';
 import { storage } from '../lib/storage';
@@ -27,12 +28,13 @@ const ENTRIES: readonly MenuEntry[] = [
   { id: 'single', station: 'single', label: 'Lokales Spiel', hint: 'Allein gegen den Computer oder zu mehreren an einem Gerät.', to: paths.home },
   { id: 'online', station: 'online', label: 'Online Spiel', hint: 'Offene Spiele, Spiel eröffnen, mit Code beitreten.', to: paths.online },
   { id: 'tournaments', station: 'tournaments', label: 'Turniere', hint: 'Turniere finden, anlegen und verfolgen.', to: paths.tournaments },
-  { id: 'learn', station: 'profile', label: 'Lernen', hint: 'Karteikasten: Karten aus deinen Notizen und Anki-Paketen wiederholen.', to: paths.learn },
+  { id: 'learn', station: 'learn', label: 'Lernen', hint: 'Karteikasten: Karten aus deinen Notizen und Anki-Paketen wiederholen.', to: paths.learn },
   { id: 'options', station: 'options', label: 'Optionen', hint: 'Ton, Musik, Aussehen und Updates.', to: paths.sound },
 ];
 
 export function Menu() {
   const crest = useCrest();
+  const animated = useMenu3d();
   const [hint, setHint] = useState('');
   const profile = storage.loadProfile();
   const resume = storage.loadActive();
@@ -64,7 +66,7 @@ export function Menu() {
 
   return (
     <div className="bub-menu">
-      <TavernScene />
+      <TavernScene still={!animated} />
 
       <h1 className="bub-menu-logo">
         Brett &amp; Blatt

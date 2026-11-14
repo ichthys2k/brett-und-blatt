@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useActiveLook, useChosenRoom, useChosenTable, type RoomScene } from '../lib/look';
+import { useActiveLook, useChosenLight, useChosenRoom, useChosenTable, type RoomScene, type TavernMood } from '../lib/look';
 import { navigate, useRoute } from '../lib/router';
 import {
   buildTavernGeometry,
@@ -7,6 +7,7 @@ import {
   getLiveCamera,
   pickHotspot,
   projectPoint,
+  moodAt,
   roomPalette,
   setHoveredStation,
   setLiveCamera,
@@ -21,6 +22,27 @@ import {
 import behind from '../menu/taverne-hinten.webp';
 import portrait from '../menu/taverne-hoch.webp';
 import front from '../menu/taverne-vorn.webp';
+
+/** Hintergrund je Lichtstimmung (#317); der Abend ist die Grundebene. */
+const MOOD_IMAGES: Record<TavernMood, string> = {
+  morgen: new URL('../menu/taverne-hinten-morgen.webp', import.meta.url).href,
+  tag: new URL('../menu/taverne-hinten-tag.webp', import.meta.url).href,
+  abend: behind,
+  nacht: new URL('../menu/taverne-hinten-nacht.webp', import.meta.url).href,
+  winter: new URL('../menu/taverne-hinten-winter.webp', import.meta.url).href,
+  fest: new URL('../menu/taverne-hinten-fest.webp', import.meta.url).href,
+};
+
+/** Gemalte Stationen im Raum (#317, freigestellt); Größe in Metern, die Beschriftung liefert der Hotspot. */
+const STATION_SPRITES: Record<string, { url: string; size: number }> = {
+  single: { url: new URL('../menu/stationen/single.webp', import.meta.url).href, size: 0.9 },
+  online: { url: new URL('../menu/stationen/online.webp', import.meta.url).href, size: 1.1 },
+  tournaments: { url: new URL('../menu/stationen/tournaments.webp', import.meta.url).href, size: 1.0 },
+  options: { url: new URL('../menu/stationen/options.webp', import.meta.url).href, size: 1.2 },
+  profile: { url: new URL('../menu/stationen/profile.webp', import.meta.url).href, size: 0.9 },
+  board: { url: new URL('../menu/stationen/board.webp', import.meta.url).href, size: 1.0 },
+  learn: { url: new URL('../menu/stationen/learn.webp', import.meta.url).href, size: 0.8 },
+};
 import castle from '../assets/raeume/burgsaal.webp';
 import library from '../assets/raeume/bibliothek.webp';
 import garden from '../assets/raeume/schlossgarten.webp';
@@ -53,13 +75,16 @@ const MOTES_3D: Mote3D[] = Array.from({ length: 22 }, (_, i) => ({
  *   (Spieltisch, Online-Rundtisch, Turniertafel, Kamin oder Wappenschild).
  * - Bei `prefers-reduced-motion: reduce` oder im Aussehen „Schlicht“ steht die Szene still.
  */
-export function TavernScene({ calm = false, station }: { calm?: boolean; station?: TavernStationId }) {
+/** `still`: ruhiges Standbild ohne Parallax, Kamerafahrt und Funken (Hauptmenü ohne die optionale 3D-Taverne). */
+export function TavernScene({ calm = false, station, still = false }: { calm?: boolean; station?: TavernStationId; still?: boolean }) {
   const scene = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const route = useRoute();
   const room = useChosenRoom();
   const table = useChosenTable();
   const look = useActiveLook();
+  const light = useChosenLight();
+  const mood: TavernMood = light === 'auto' ? moodAt(new Date()) : light;
   const isTavern = room === 'tavern';
   const targetStation: TavernStationId = station ?? (calm ? stationForRoute(route.name) : 'home');
   const [spotLabel, setSpotLabel] = useState<{ text: string; x: number; y: number } | null>(null);
@@ -71,12 +96,25 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches || look === 'plain';
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches || look === 'plain' || still;
     const pointer = { x: 0, y: 0 };
     const smoothPointer = { x: 0, y: 0 };
     let localHover: TavernHotspot | null = null;
     let rafId = 0;
     let time = 0;
+
+    // Gemalte Stationen (nur im Taverne-Aussehen); bis ein Bild geladen ist, bleibt der gelbe Punkt.
+    const sprites = new Map<string, HTMLImageElement>();
+    if (look === 'tavern') {
+      for (const [id, sprite] of Object.entries(STATION_SPRITES)) {
+        const img = new Image();
+        img.onload = () => {
+          if (reducedMotion) drawFrame();
+        };
+        img.src = sprite.url;
+        sprites.set(id, img);
+      }
+    }
 
     const drawFrame = () => {
       time += reducedMotion ? 0 : 0.025;
@@ -96,7 +134,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const pal = roomPalette(room);
+      const pal = roomPalette(room, mood);
       const bgGrad = ctx.createLinearGradient(0, 0, w, h);
       bgGrad.addColorStop(0, pal.bgTop);
       bgGrad.addColorStop(0.6, pal.bgMid);
@@ -167,6 +205,19 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
           const sp = projectPoint(spot.pos, nextCam, w, h);
           if (!sp) continue;
           const isHot = activeHighlight === spot.id;
+          const sprite = sprites.get(spot.id);
+          if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+            const size = (STATION_SPRITES[spot.id]?.size ?? 0.9) * sp.scale * (isHot ? 1.12 : 1);
+            if (isHot) {
+              const glow = ctx.createRadialGradient(sp.x, sp.y, size * 0.1, sp.x, sp.y, size * 0.75);
+              glow.addColorStop(0, 'rgba(242, 210, 122, 0.55)');
+              glow.addColorStop(1, 'rgba(242, 210, 122, 0)');
+              ctx.fillStyle = glow;
+              ctx.fillRect(sp.x - size, sp.y - size, size * 2, size * 2);
+            }
+            ctx.drawImage(sprite, sp.x - size / 2, sp.y - size / 2, size, size);
+            continue;
+          }
           ctx.beginPath();
           ctx.arc(sp.x, sp.y, isHot ? 9.5 : 6, 0, Math.PI * 2);
           ctx.fillStyle = isHot ? 'rgba(242, 210, 122, 0.95)' : 'rgba(242, 210, 122, 0.42)';
@@ -267,7 +318,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
       window.removeEventListener('click', onClick);
       window.removeEventListener('resize', onResize);
     };
-  }, [calm, look, room, table, targetStation]);
+  }, [calm, still, look, room, table, targetStation, mood]);
 
   return (
     <div
@@ -284,7 +335,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
         {isTavern ? (
           <picture>
             <source media="(max-width: 760px)" srcSet={portrait} />
-            <img src={behind} alt="" draggable={false} />
+            <img src={MOOD_IMAGES[mood]} alt="" draggable={false} />
           </picture>
         ) : (
           <img src={ROOM_IMAGES[room]} alt="" draggable={false} />
@@ -296,7 +347,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
 
       <div className="bub-menu-layer bub-menu-glow" />
       {isTavern && <div className="bub-menu-layer bub-menu-hearth" />}
-      {calm ? null : (
+      {calm || still ? null : (
         <div className="bub-menu-layer bub-menu-motes">
           {Array.from({ length: 14 }, (_, i) => (
             <span

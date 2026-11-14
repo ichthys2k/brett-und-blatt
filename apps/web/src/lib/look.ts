@@ -12,12 +12,20 @@ export type Look = 'plain' | 'tavern';
 export type TableSurface = 'auto' | 'oak' | 'walnut' | 'green-felt' | 'red-felt' | 'slate' | 'marble';
 export type RoomScene = 'tavern' | 'castle' | 'library' | 'garden';
 
+/** Lichtstimmung der Taverne im Hauptmenü (#317): nach Tageszeit und Jahreszeit oder fest gewählt. */
+export type TavernMood = 'morgen' | 'tag' | 'abend' | 'nacht' | 'winter' | 'fest';
+export type LightChoice = 'auto' | TavernMood;
+export const TAVERN_MOODS: readonly TavernMood[] = ['morgen', 'tag', 'abend', 'nacht', 'winter', 'fest'];
+export const LIGHT_CHOICES: readonly LightChoice[] = ['auto', ...TAVERN_MOODS];
+
 export const TABLE_SURFACES: readonly TableSurface[] = ['auto', 'oak', 'walnut', 'green-felt', 'red-felt', 'slate', 'marble'];
 export const ROOM_SCENES: readonly RoomScene[] = ['tavern', 'castle', 'library', 'garden'];
 
 const LOOK_KEY = 'brett-und-blatt:aussehen';
 const TABLE_KEY = 'brett-und-blatt:tisch';
 const ROOM_KEY = 'brett-und-blatt:raum';
+const MENU3D_KEY = 'brett-und-blatt:menue-3d';
+const LIGHT_KEY = 'brett-und-blatt:licht';
 
 function loadLook(): Look {
   try {
@@ -45,11 +53,31 @@ function loadRoom(): RoomScene {
   }
 }
 
+/** Bewegte 3D-Taverne im Hauptmenü: nur wer sie einschaltet, bekommt Parallax, Kamerafahrt und Funken (Standard: aus). */
+function loadMenu3d(): boolean {
+  try {
+    return window.localStorage.getItem(MENU3D_KEY) === 'an';
+  } catch {
+    return false;
+  }
+}
+
+function loadLight(): LightChoice {
+  try {
+    const val = window.localStorage.getItem(LIGHT_KEY);
+    return val && (LIGHT_CHOICES as readonly string[]).includes(val) ? (val as LightChoice) : 'auto';
+  } catch {
+    return 'auto';
+  }
+}
+
 const contrastQuery = window.matchMedia('(prefers-contrast: more)');
 const listeners = new Set<() => void>();
 let chosen = loadLook();
 let chosenTable = loadTable();
 let chosenRoom = loadRoom();
+let chosenMenu3d = loadMenu3d();
+let chosenLight = loadLight();
 
 /** Das Aussehen, das gerade wirklich gilt. */
 export function activeLook(): Look {
@@ -159,6 +187,26 @@ export function setRoomScene(next: RoomScene): void {
   apply();
 }
 
+export function setMenu3d(next: boolean): void {
+  chosenMenu3d = next;
+  try {
+    window.localStorage.setItem(MENU3D_KEY, next ? 'an' : 'aus');
+  } catch {
+    // Ohne Speicher gilt die Wahl nur bis zum Neuladen.
+  }
+  apply();
+}
+
+export function setLight(next: LightChoice): void {
+  chosenLight = next;
+  try {
+    window.localStorage.setItem(LIGHT_KEY, next);
+  } catch {
+    // Ohne Speicher gilt die Wahl nur bis zum Neuladen.
+  }
+  apply();
+}
+
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
@@ -168,6 +216,11 @@ export const useChosenLook = (): Look => useSyncExternalStore(subscribe, () => c
 export const useActiveLook = (): Look => useSyncExternalStore(subscribe, activeLook);
 export const useChosenTable = (): TableSurface => useSyncExternalStore(subscribe, () => chosenTable);
 export const useChosenRoom = (): RoomScene => useSyncExternalStore(subscribe, () => chosenRoom);
+/** Ob die bewegte 3D-Taverne im Hauptmenü gilt (Standard: nein). */
+export const menu3dEnabled = (): boolean => chosenMenu3d;
+export const useChosenLight = (): LightChoice => useSyncExternalStore(subscribe, () => chosenLight);
+export const lightChoice = (): LightChoice => chosenLight;
+export const useMenu3d = (): boolean => useSyncExternalStore(subscribe, () => chosenMenu3d);
 export const contrastForcesPlain = (): boolean => contrastQuery.matches;
 
 contrastQuery.addEventListener('change', apply);
