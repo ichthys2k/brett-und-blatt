@@ -1,5 +1,5 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import { DIE_ROLL_MS, Die3D, FitBox, useRollCounter, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { DIE_ROLL_MS, Die3D, FitBox, TintFilter, tintFilter, useRollCounter, usePieceSet, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useId, useState, type CSSProperties } from 'react';
 import {
   colorIndex,
@@ -11,6 +11,7 @@ import {
   type PiecePosition,
 } from '../rules';
 import { cornerColors, cornerOf, geometryOf, type BoardGeometry, type Point } from './geometry';
+import { pawnImage } from './bilder';
 import './styles.css';
 
 export interface PlayerStyle {
@@ -290,6 +291,23 @@ function PiecePin({
   shadow?: boolean;
 }) {
   const gradId = useId();
+  const pawn = pawnImage(usePieceSet('ludo'));
+
+  // Gemalte Figur (#325): getöntes Bild statt Sockel und Kopf, das Formsymbol bleibt am Fuß sichtbar.
+  if (pawn) {
+    return (
+      <g className={`ludo-piece ${isMovable ? 'ludo-piece-movable' : 'ludo-piece-static'}`} onClick={onClick}>
+        <defs>
+          <TintFilter color={style.fill} />
+        </defs>
+        {shadow && <ellipse cx="0" cy="22" rx="20" ry="7" fill="rgba(0, 0, 0, 0.25)" />}
+        <image href={pawn} x={-34} y={-46} width={68} height={68} filter={tintFilter(style.fill)} />
+        <text x="0" y="12" textAnchor="middle" dominantBaseline="central" fill="#FFFFFF" fontSize="12" fontWeight="bold" stroke="rgba(0,0,0,0.55)" strokeWidth="0.8" paintOrder="stroke">
+          {style.symbol}
+        </text>
+      </g>
+    );
+  }
 
   return (
     <g

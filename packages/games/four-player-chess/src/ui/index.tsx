@@ -1,15 +1,23 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { FitBox, GridBoard, useElementSize, useGridMoveAnimation, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { FitBox, GridBoard, TintFilters, tintFilter, useElementSize, useGridMoveAnimation, usePieceSet, type BoardProps, type GameUi, type PieceSetId } from '@brett-und-blatt/ui';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { describeMove } from '../describe';
 import { legalMoves as engineLegalMoves, type LogEntry } from '../legacy/engine';
 import { COLORS, type Color, type FourChessMove, type FourChessState, type Piece } from '../rules';
 import { getCheckWarning, type CheckWarning } from './checkWarning';
 import { checks, replayStates, trophies, type CheckInfo } from './history';
+import { pieceImage, TINTS } from './bilder';
 import './styles.css';
 
 const NAMES: Record<Color, string> = { r: 'Rot', b: 'Blau', y: 'Gelb', g: 'Grün' };
 /** Schachfiguren als Textzeichen; ︎ verhindert, dass Handys sie als bunte Emojis zeigen. */
+/** Figur als Zeichen oder – bei einem gemalten Satz – als getöntes Bild (1em = Figurengröße). */
+function PieceFace({ t, c, dead, set }: { t: Piece['t']; c: Color; dead?: boolean; set: PieceSetId }) {
+  const url = pieceImage(set, t);
+  if (!url) return <>{GLYPHS[t]}</>;
+  return <img className="fc-piece-img" src={url} alt="" draggable={false} style={{ filter: tintFilter(dead ? TINTS.dead : TINTS[c as keyof typeof TINTS]) }} />;
+}
+
 const GLYPHS: Record<Piece['t'], string> = { K: '♚︎', Q: '♛︎', R: '♜︎', B: '♝︎', N: '♞︎', P: '♟︎' };
 const PIECE_NAMES: Record<Piece['t'], string> = { K: 'König', Q: 'Dame', R: 'Turm', B: 'Läufer', N: 'Springer', P: 'Bauer' };
 /** Dativ für „von der Dame …“, „vom Turm …“. */
@@ -129,6 +137,7 @@ interface Fly {
 }
 
 function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProps<FourChessState, FourChessMove>) {
+  const pieceSet = usePieceSet('four-player-chess');
   const [selected, setSelected] = useState<number | null>(null);
   const [promotion, setPromotion] = useState<MoveMove[] | null>(null);
   const [warning, setWarning] = useState<CheckWarning | null>(null);
@@ -378,6 +387,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   return (
     <FitBox ratio={14 / 15}>
       <div className="fc-wrap">
+        {pieceSet !== 'classic' && <TintFilters colors={Object.values(TINTS)} />}
         <div className="fc-area" ref={sizeRef}>
           <div className={`fc-scroll ${zoomed ? 'fc-zoomed' : ''}`} ref={scrollRef}>
             <div className="fc-zoom">
@@ -398,7 +408,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                       style={slide.style}
                       onAnimationEnd={slide.onAnimationEnd}
                     >
-                      {GLYPHS[piece.t]}
+                      <PieceFace t={piece.t} c={piece.c} dead={piece.d} set={pieceSet} />
                     </span>
                   ) : targets.has(index) ? (
                     <span className={canPremove ? 'fc-dot fc-dot-pre' : 'fc-dot'} />
@@ -493,7 +503,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                     <div className="fc-corner-trophies" aria-hidden="true">
                       {list.map((t, i) => (
                         <span key={i} className={`fc-glyph fc-${t.dead ? 'dead' : t.c}`}>
-                          {GLYPHS[t.t]}
+                          <PieceFace t={t.t} c={t.c} dead={t.dead} set={pieceSet} />
                         </span>
                       ))}
                     </div>
@@ -515,7 +525,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                   onAnimationEnd={() => setFly(null)}
                   aria-hidden="true"
                 >
-                  {GLYPHS[fly.t]}
+                  <PieceFace t={fly.t} c={fly.c} dead={fly.dead} set={pieceSet} />
                 </span>
               )}
             </div>
@@ -540,7 +550,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                       }}
                       aria-label={PIECE_NAMES[m.pr ?? 'Q']}
                     >
-                      {GLYPHS[m.pr ?? 'Q']}
+                      <PieceFace t={m.pr ?? 'Q'} c={m.p} set={pieceSet} />
                     </button>
                   ))}
                 </div>

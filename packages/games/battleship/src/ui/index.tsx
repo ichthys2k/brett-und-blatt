@@ -131,14 +131,21 @@ function targetLook(view: BattleshipState, target: SeatId): (cell: number) => Ce
 /** Das eigene Meer: Schiffe und die Schüsse des Gegners darauf. */
 function ownLook(view: BattleshipState, seat: SeatId): (cell: number) => CellLook {
   const ships = new Map<number, boolean>();
-  for (const ship of view.fleets[seat] ?? []) for (const cell of ship.cells) ships.set(cell, ship.sunk);
+  // Stück eines Schiffs je Feld (#325): Länge, Nummer von vorn und Richtung, damit ein gemaltes Schiffsbild auf die Felder verteilt werden kann.
+  const segments = new Map<number, string>();
+  for (const ship of view.fleets[seat] ?? []) {
+    const cells = [...ship.cells].sort((a, b) => a - b);
+    const horizontal = cells.length < 2 || cells[1]! - cells[0]! === 1;
+    cells.forEach((cell, k) => segments.set(cell, `bs-seg bs-L${cells.length} bs-k${k} ${horizontal ? 'bs-h' : 'bs-v'}`));
+    for (const cell of ship.cells) ships.set(cell, ship.sunk);
+  }
   const shots = new Map<number, Shot>((view.shots[opponentOf(seat)] ?? []).map((s) => [s.cell, s]));
   return (cell) => {
     const ship = ships.get(cell);
     const shot = shots.get(cell);
     if (ship !== undefined) {
-      if (shot) return { className: `bs-ship ${ship ? 'bs-sunk' : 'bs-hit'}`, content: <span className="bs-mark">✕</span>, label: ship ? 'eigenes Schiff, versenkt' : 'eigenes Schiff, getroffen' };
-      return { className: 'bs-ship', label: 'eigenes Schiff' };
+      if (shot) return { className: `bs-ship ${segments.get(cell) ?? ''} ${ship ? 'bs-sunk' : 'bs-hit'}`, content: <span className="bs-mark">✕</span>, label: ship ? 'eigenes Schiff, versenkt' : 'eigenes Schiff, getroffen' };
+      return { className: `bs-ship ${segments.get(cell) ?? ''}`, label: 'eigenes Schiff' };
     }
     if (shot) return { className: 'bs-water', content: <span className="bs-dot" />, label: 'Wasser' };
     return { className: '', label: 'Wasser' };

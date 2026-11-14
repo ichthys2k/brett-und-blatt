@@ -28,4 +28,8 @@ export const PIECE_GAMES: readonly PieceGame[] = [
   { id: 'go', name: 'Go', classicGlyph: '●', previews: previews('go', 'stone-b') },
   { id: 'four-in-a-row', name: 'Vier in einer Reihe', classicGlyph: '🔴', previews: previews('four-in-a-row', 'disc-w') },
   { id: 'tic-tac-toe', name: 'Tic-Tac-Toe', classicGlyph: '✕', previews: previews('tic-tac-toe', 'x') },
+  { id: 'four-player-chess', name: 'Vierer-Schach', classicGlyph: '♛', previews: previews('four-player-chess', 'q-n') },
+  { id: 'ludo', name: 'Ludo', classicGlyph: '♟', previews: previews('ludo', 'pawn-n') },
+  { id: 'chinese-checkers', name: 'Chinesisches Dame', classicGlyph: '●', previews: previews('chinese-checkers', 'marble-n') },
+  { id: 'battleship', name: 'Schiffe versenken', classicGlyph: '🚢', previews: previews('battleship', 'ship-3') },
 ];
