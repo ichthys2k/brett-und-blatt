@@ -116,7 +116,7 @@ async function einBildCloudflare(motiv, nr) {
     const antwort = await fetch(`https://api.cloudflare.com/client/v4/accounts/${konto}/ai/run/${modell}`, {
       method: 'POST',
       headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ prompt, steps: 8, seed: Math.floor(Math.random() * 2 ** 31) }),
+      body: JSON.stringify({ prompt, steps: 8 }),
     });
     const text = await antwort.text();
     let json;
