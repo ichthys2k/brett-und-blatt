@@ -12,9 +12,10 @@ import { GAME_CHOICES, LEVEL_TEXT, gameName } from './catalog';
 import { createRoom, loadProfile, saveProfile, sendMove, serverUrl, useRoom } from './net';
 import { Scene } from './scene/Scene';
 import type { VoiceControls } from './scene/Panel';
-import { play, soundsFor, unlockAudio } from './sound';
+import { placeOf, play, soundsFor, unlockAudio } from './sound';
 import { PeerMesh } from './peers';
 import { VoiceChat, type VoiceState } from '@brett-und-blatt/rtc';
+import type { XrSoundName } from './sound-names';
 
 const noSubscribe = () => () => {};
 const NO_VOICE: VoiceState = { joined: false, muted: false, silenced: [], speaking: [], error: null };
@@ -110,8 +111,10 @@ export function App() {
     const fresh = game.round !== last.round || game.version > last.version;
     const myTurn = game.yourSeat !== null && !game.result && game.current.includes(game.yourSeat) && game.legalMoves.length > 0;
     if (fresh && last.version >= 0) {
-      const names = new Set(game.events.flatMap((event) => soundsFor(game.gameId, event)));
-      for (const name of names) play(name);
+      // Jeder Klang einmal, am Ort des ersten Ereignisses, das ihn auslöst (in der Brille, #381).
+      const names = new Map<XrSoundName, unknown>();
+      for (const event of game.events) for (const name of soundsFor(game.gameId, event)) if (!names.has(name)) names.set(name, event);
+      for (const [name, event] of names) play(name, placeOf(event));
       if (myTurn && !last.myTurn && game.seats.length > 1) play('dein-zug');
       if (game.result?.kind === 'win' && game.yourSeat !== null && game.result.winners.includes(game.yourSeat)) play('sieg');
     }
@@ -196,7 +199,7 @@ export function App() {
   return (
     <div className="xr-shell">
       <div className="xr-canvas">
-        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} gameAt={room.gameAt} mesh={mesh} xrMembers={xrMembers} voice={voiceControls} speaking={voiceState.speaking} error={room.error} />
+        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} gameAt={room.gameAt} mesh={mesh} xrMembers={xrMembers} voice={voiceControls} speaking={voiceState.speaking} voiceChat={voice} error={room.error} />
       </div>
       <aside className="xr-bar" aria-label="Raum und Züge">
         <header>

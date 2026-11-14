@@ -24,6 +24,8 @@ import { TABLE_CENTER, Tavern } from './Tavern';
 import { bindHapticSession, pulse } from '../haptics';
 import { alignOffset, type Offset } from './view-align';
 import { SCALE_STEP, TablePlacer, clampScale, placementOrigin, type Placement } from './Placement';
+import { SpatialAudio } from './SpatialAudio';
+import type { VoiceChat } from '@brett-und-blatt/rtc';
 import { Figures, POSE_STALE_MS, PoseSender } from './Meet';
 import type { PeerMesh } from '../peers';
 
@@ -43,6 +45,8 @@ interface SceneProps {
   /** Sprachchat (#352): Bedienung für das 2D-Fenster und wer gerade spricht. */
   voice: VoiceControls;
   speaking: string[];
+  /** Sprachchat-Objekt für räumliche Stimmen (#381). */
+  voiceChat?: VoiceChat | null;
   /** Letzte Fehlermeldung des Raums (abgelehnte Eingabe), löst einen Fehlerimpuls aus. */
   error?: string | null;
 }
@@ -204,7 +208,7 @@ function seatInfos(room: RoomMessage | null, game: GameMessage | null, you: stri
   });
 }
 
-export function Scene({ store, room, game, you, signals, send, onMove, gameAt, mesh, xrMembers, voice, speaking, error = null }: SceneProps) {
+export function Scene({ store, room, game, you, signals, send, onMove, gameAt, mesh, xrMembers, voice, speaking, voiceChat = null, error = null }: SceneProps) {
   const [now, setNow] = useState(() => Date.now());
   const ticking = Boolean(game && !game.result && game.clocks.some((c) => c?.running));
   useEffect(() => {
@@ -293,6 +297,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
       <XR store={store}>
         <Backdrop />
         <HapticsBridge />
+        <SpatialAudio seats={seats} scale={scale} voice={voiceChat} />
         <ModeProbe onMixed={setMixed} />
         <TablePlacer
           active={placing && mixed}

@@ -28,6 +28,11 @@ export class VoiceChat {
   private outputs = new Map<string, HTMLAudioElement>();
   private analysers = new Map<string, AnalyserNode>();
   private context: AudioContext | null = null;
+  /** Räumlicher Ton (#381): je Mitspieler Quelle → Verstärker → Panner; Ort setzt die Oberfläche. */
+  private spatialOn = false;
+  private spots = new Map<string, [number, number, number]>();
+  private nodes = new Map<string, { source: MediaStreamAudioSourceNode; gain: GainNode; panner: PannerNode }>();
+  private streams = new Map<string, MediaStream>();
   private timer: number | undefined;
 
   constructor(
@@ -98,10 +103,45 @@ export class VoiceChat {
     this.set({ muted });
   }
 
+  /** Stimmen aus der Richtung des Sprechers (nur in der Brille); schaltet bestehende Verbindungen um. */
+  setSpatial(on: boolean): void {
+    if (this.spatialOn === on) return;
+    this.spatialOn = on;
+    for (const [id, stream] of [...this.streams]) this.remoteAudio(id, stream);
+  }
+
+  /** Ort einer Stimme im Raum, z. B. Kopf des Sprechers. */
+  place(id: string, at: [number, number, number]): void {
+    this.spots.set(id, at);
+    const panner = this.nodes.get(id)?.panner;
+    if (panner) {
+      panner.positionX.value = at[0];
+      panner.positionY.value = at[1];
+      panner.positionZ.value = at[2];
+    }
+  }
+
+  /** Kopf des Hörers (Position, Blick- und Aufwärtsrichtung). */
+  listen(at: [number, number, number], forward: [number, number, number], up: [number, number, number]): void {
+    const l = this.context?.listener;
+    if (!l?.positionX) return;
+    l.positionX.value = at[0];
+    l.positionY.value = at[1];
+    l.positionZ.value = at[2];
+    l.forwardX.value = forward[0];
+    l.forwardY.value = forward[1];
+    l.forwardZ.value = forward[2];
+    l.upX.value = up[0];
+    l.upY.value = up[1];
+    l.upZ.value = up[2];
+  }
+
   /** Einen Mitspieler für sich selbst stumm schalten (oder wieder hören). */
   silence(id: string, silenced: boolean): void {
     const output = this.outputs.get(id);
-    if (output) output.muted = silenced;
+    if (output && !this.nodes.has(id)) output.muted = silenced;
+    const node = this.nodes.get(id);
+    if (node) node.gain.gain.value = silenced ? 0 : 1;
     this.set({ silenced: silenced ? [...new Set([...this.state.silenced, id])] : this.state.silenced.filter((x) => x !== id) });
   }
 
@@ -113,13 +153,43 @@ export class VoiceChat {
       this.outputs.delete(id);
       this.analysers.delete(id);
     }
+    const oldNode = this.nodes.get(id);
+    if (oldNode) {
+      oldNode.source.disconnect();
+      oldNode.gain.disconnect();
+      oldNode.panner.disconnect();
+      this.nodes.delete(id);
+    }
+    if (!stream) this.streams.delete(id);
     if (!stream || !this.state.joined) return;
+    this.streams.set(id, stream);
     const output = new Audio();
     output.autoplay = true;
     output.srcObject = stream;
-    output.muted = this.state.silenced.includes(id);
+    const silenced = this.state.silenced.includes(id);
+    output.muted = silenced;
+    // Chrome liefert den Strom an Web Audio nur, solange ein Element ihn abspielt (stumm genügt).
+    const spatial = this.spatialOn && this.context !== null;
+    if (spatial) output.muted = true;
     void output.play().catch(() => {});
     this.outputs.set(id, output);
+    if (spatial && this.context) {
+      const source = this.context.createMediaStreamSource(stream);
+      const gain = this.context.createGain();
+      gain.gain.value = silenced ? 0 : 1;
+      const panner = this.context.createPanner();
+      panner.panningModel = 'HRTF';
+      panner.distanceModel = 'inverse';
+      // Sanfte Abschwächung: am Tisch soll niemand zu leise werden.
+      panner.refDistance = 1.2;
+      panner.rolloffFactor = 0.5;
+      const at = this.spots.get(id) ?? [0, 1.2, 0];
+      panner.positionX.value = at[0];
+      panner.positionY.value = at[1];
+      panner.positionZ.value = at[2];
+      source.connect(gain).connect(panner).connect(this.context.destination);
+      this.nodes.set(id, { source, gain, panner });
+    }
     this.watch(id, stream);
   }
 
