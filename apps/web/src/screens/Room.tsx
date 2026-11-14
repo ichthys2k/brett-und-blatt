@@ -25,6 +25,7 @@ import { TeamChip, TeamSummary } from '../components/Teams';
 import { CustomCardsOverlay } from '../components/CustomCardsOverlay';
 import { VoiceMenu } from '../components/VoiceMenu';
 import { useVoice } from '../lib/voice';
+import { Avatar } from '../components/Avatar';
 
 const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
 /** Online gibt es nur Spiele für mehrere Personen. */
@@ -764,7 +765,7 @@ function MemberRow({
           </span>
         ) : (
           <span className="text-xl" aria-hidden="true">
-            {member.avatar}
+            <Avatar value={member.avatar} />
           </span>
         )}
         <span className={`min-w-0 flex-1 font-medium ${member.connected ? '' : 'text-muted'}`}>

@@ -6,6 +6,7 @@ import { passBook } from '../lib/passes';
 import { navigate, paths } from '../lib/router';
 import { newPass, removePass, switchPass, syncPassEntry } from '../lib/playerPass';
 import { Button } from './controls';
+import { Avatar } from './Avatar';
 
 /** „Wer spielt?“ (#139): Bild des aktiven Passes, antippen öffnet die Passwahl des Geräts. */
 export function PassPicker() {
@@ -46,7 +47,7 @@ export function PassPicker() {
         onClick={() => setOpen(true)}
       >
         <span aria-hidden="true" className="text-xl">
-          {active?.avatar || '🙂'}
+          {active?.avatar ? <Avatar value={active.avatar} /> : '🙂'}
         </span>
         <span className="max-w-32 truncate">{active?.name || t('passes.button')}</span>
       </button>
@@ -63,7 +64,7 @@ export function PassPicker() {
                   </span>
                 ) : (
                   <span aria-hidden="true" className="text-2xl">
-                    {entry.avatar || '🙂'}
+                    {entry.avatar ? <Avatar value={entry.avatar} /> : '🙂'}
                   </span>
                 )}
                 <span className="min-w-0 flex-1">

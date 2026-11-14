@@ -428,3 +428,26 @@
     text-shadow: none;
   }
 }
+
+/* Gemalte Avatare (#312): nur im Taverne-Aussehen; sonst das Emoji (Schlicht, erhöhter Kontrast, Avatare ohne Bild). */
+.bub-av-img {
+  display: none;
+}
+[data-look='tavern'] .bub-av-img {
+  display: inline-block;
+  width: 1.35em;
+  height: 1.35em;
+  border-radius: 50%;
+  object-fit: cover;
+  vertical-align: -0.3em;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.3);
+}
+[data-look='tavern'] .bub-av-img + .bub-av-emoji {
+  display: none;
+}
+[data-look='tavern'] button[data-avatar] .bub-av-img,
+[data-look='tavern'] fieldset button .bub-av-img {
+  width: 2.3rem;
+  height: 2.3rem;
+  vertical-align: middle;
+}

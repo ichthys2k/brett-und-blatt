@@ -13,6 +13,7 @@ import { saveOwnProfile } from '../lib/playerPass';
 import { findGame, games } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
+import { Avatar } from '../components/Avatar';
 
 const MOODS: Record<SeekMood, { emoji: string; label: string }> = {
   relaxed: { emoji: '😌', label: 'Locker' },
@@ -177,7 +178,7 @@ function NoteCard({ note, now, onJoin, onUnjoin }: { note: SeekNoteView; now: nu
     <li className="bub-plop space-y-2 rounded-2xl border border-line bg-surface p-3 shadow-sm">
       <div className="flex items-start gap-3">
         <span className="text-3xl" aria-hidden="true">
-          {note.avatar}
+          <Avatar value={note.avatar} />
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{note.name}</p>

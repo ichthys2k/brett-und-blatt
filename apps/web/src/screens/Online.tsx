@@ -11,6 +11,7 @@ import { GAME_SERVER, createRoom, roomExists, useOpenRooms } from '../lib/online
 import { saveOwnProfile } from '../lib/playerPass';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
+import { Avatar } from '../components/Avatar';
 
 type Panel = null | 'new' | 'code';
 
@@ -71,7 +72,7 @@ export function Online() {
           <OrgRequestNotice />
           <button type="button" className="bub-menu-plaque bub-menu-plaque-link" onClick={() => navigate(paths.pass)} aria-label="Profil öffnen">
             <span className="bub-menu-shield" aria-hidden="true">
-              {profile.avatar}
+              <Avatar value={profile.avatar} />
             </span>
             <span className="bub-menu-name">{profile.name}</span>
             <span className="bub-menu-switch">Profil</span>

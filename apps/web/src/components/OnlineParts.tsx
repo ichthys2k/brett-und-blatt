@@ -17,6 +17,7 @@ import type { Signal } from '../lib/online';
 import type { Profile } from '../lib/storage';
 import { Button } from './controls';
 import { useDismiss } from './useDismiss';
+import { Avatar } from './Avatar';
 
 /** Spitzname und Bild – mehr gibt niemand von sich preis. */
 export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile | null; onSave: (profile: Profile) => void; submitLabel: string }) {
@@ -78,7 +79,7 @@ export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile
             aria-label={`Ausgewählt: ${avatar}`}
             title={`Ausgewählt: ${avatar}`}
           >
-            {avatar}
+            <Avatar value={avatar} />
           </div>
         </div>
       </div>
@@ -116,7 +117,7 @@ export function ProfileForm({ initial, onSave, submitLabel }: { initial: Profile
                 }`}
                 onClick={() => setAvatar(emoji)}
               >
-                {emoji}
+                <Avatar value={emoji} />
               </button>
             );
           })}
@@ -286,7 +287,7 @@ export function SignalToasts({ signals, members }: { signals: Signal[]; members:
         const member = members.find((m) => m.id === signal.from);
         return (
           <div key={signal.id} className="flex items-center gap-2 rounded-full bg-surface px-3 py-1.5 shadow-md">
-            <span aria-hidden="true">{member?.avatar}</span>
+            <span aria-hidden="true">{member?.avatar ? <Avatar value={member.avatar} /> : null}</span>
             <span className="text-sm font-medium">{member?.name}</span>
             <span className={signal.kind === 'react' ? 'text-2xl' : 'text-sm'}>{signal.kind === 'react' ? signal.value : phraseText(signal.value)}</span>
           </div>

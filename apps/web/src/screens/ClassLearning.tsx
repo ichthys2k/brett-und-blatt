@@ -6,6 +6,7 @@ import { QrCode } from '../components/OnlineParts';
 import { LEARNING_NOTICE, classGameLink, hasDueConsent, loadDueAggregate, sendDue, setDueConsent, withdrawDue, type DueAggregate, addPackToClass, adoptClassPack, classPackLinks, ensureLeadKeys, frontTexts, hasLearningConsent, loadMemberProgress, sendProgress, setLearningConsent, withdrawProgress, type MemberProgress } from '../lib/classLearning';
 import { classAct } from '../lib/classes';
 import { navigate, paths } from '../lib/router';
+import { Avatar } from '../components/Avatar';
 
 type Apply = (action: string, extra?: Record<string, unknown>) => Promise<ClassView | undefined>;
 
@@ -243,7 +244,7 @@ export function LearningLead({ code, view, apply }: { code: string; view: ClassV
               <li key={row.id} className="space-y-1 rounded-xl border border-line bg-surface p-3">
                 <button type="button" className="flex min-h-11 w-full items-center gap-2 text-left" aria-expanded={open === row.id} onClick={() => setOpen(open === row.id ? null : row.id)}>
                   <span aria-hidden="true" className="text-2xl">
-                    {member?.avatar ?? '👤'}
+                    {member?.avatar ? <Avatar value={member.avatar} /> : '👤'}
                   </span>
                   <span className="min-w-0 flex-1 truncate font-medium">{member?.name ?? 'Mitglied'}</span>
                   <span className="flex-none text-xs text-muted">{new Date(row.at).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })}</span>

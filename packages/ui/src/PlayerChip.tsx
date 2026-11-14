@@ -1,5 +1,6 @@
 import type { ClockReading } from '@brett-und-blatt/engine';
 import type { ReactNode } from 'react';
+import { renderAvatar } from './avatarRenderer';
 
 /** Ring um das Spielerzeichen, der mit der Zeit abläuft. */
 export function ClockRing({ clock, children }: { clock: ClockReading | null; children: ReactNode }) {
@@ -53,7 +54,7 @@ export function PlayerChip({ name, symbol, avatar, detail, active, thinking, awa
       <span className="bub-chip-text">
         <span className="bub-chip-name">
           {winner ? '🏆 ' : ''}
-          {avatar ? <span aria-hidden="true">{avatar} </span> : null}
+          {avatar ? <span aria-hidden="true">{renderAvatar(avatar)} </span> : null}
           {name}
         </span>
         <span className="bub-chip-detail">{away ? 'abwesend – Computer spielt' : thinking ? 'denkt nach …' : (time ?? detail ?? '')}</span>

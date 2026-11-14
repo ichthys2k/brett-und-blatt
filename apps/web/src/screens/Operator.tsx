@@ -4,6 +4,7 @@ import { Button } from '../components/controls';
 import { TavernPage } from '../components/TavernPage';
 import { GAME_SERVER } from '../lib/server';
 import { paths } from '../lib/router';
+import { Avatar } from '../components/Avatar';
 
 const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
 
@@ -156,7 +157,7 @@ export function Operator() {
                     {request.orgName} <span className="text-xs font-normal text-muted">({request.kind === 'verein' ? 'Verein' : request.kind === 'schule' ? 'Schule' : 'Klasse'})</span>
                   </span>
                   <span className="block text-xs text-muted">
-                    {request.avatar} {request.name} · {new Date(request.at).toLocaleDateString('de-DE')}
+                    <Avatar value={request.avatar} /> {request.name} · {new Date(request.at).toLocaleDateString('de-DE')}
                   </span>
                   <span className="block text-sm">{request.purpose}</span>
                   <span className="flex gap-2">
