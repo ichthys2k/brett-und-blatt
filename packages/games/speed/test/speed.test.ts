@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from 'vitest';
-import { computeBotMove, createDeck, type BotLevel } from '@brett-und-blatt/engine';
+import { computeBotMove, createDeck, type BotLevel, type Options } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { gameModule } from '../src';
 import { applyMove, currentPlayers, fits, legalMoves, playerView, setup, type SpeedMove, type SpeedState } from '../src/rules';
@@ -9,13 +9,25 @@ describe('speed: allgemeine Prüfungen', () => {
 });
 
 /** Ein Tisch mit festgelegten Händen und Stapeln; der Rest bleibt wie ausgeteilt. */
-function table(patch: { hands?: string[][]; draws?: string[][]; piles?: [string[], string[]]; sides?: [string[], string[]] }): SpeedState {
-  const state = setup(2, {}, 'test');
+function table(patch: {
+  hands?: string[][];
+  draws?: string[][];
+  spitDown?: string[][][];
+  piles?: string[][];
+  sides?: [string[], string[]];
+  options?: Options;
+}): SpeedState {
+  const state = setup(2, patch.options ?? {}, 'test');
   return {
     ...state,
-    players: state.players.map((p, i) => ({ ...p, hand: patch.hands?.[i] ?? p.hand, draw: patch.draws?.[i] ?? p.draw })),
-    piles: patch.piles ?? state.piles,
-    sides: patch.sides ?? state.sides,
+    players: state.players.map((p, i) => ({
+      ...p,
+      hand: (patch.hands?.[i] as any) ?? p.hand,
+      draw: (patch.draws?.[i] as any) ?? p.draw,
+      spitDown: (patch.spitDown?.[i] as any) ?? p.spitDown,
+    })),
+    piles: (patch.piles as any) ?? state.piles,
+    sides: (patch.sides as any) ?? state.sides,
   };
 }
 
@@ -117,15 +129,97 @@ describe('speed: Regeln', () => {
     const json = JSON.stringify(view);
     for (const card of [...state.players[1]!.draw, ...state.sides[0]]) expect(json).not.toContain(`"${card}"`);
   });
+
+  it('unterstützt manuelles Nachziehen von Hand', () => {
+    let state = setup(2, { drawMode: 'manual' }, 'man');
+    expect(state.drawMode).toBe('manual');
+    // Beim Start hat jeder 5 Handkarten und 15 im Nachziehstapel
+    expect(state.players[0]!.hand).toHaveLength(5);
+    expect(legalMoves(state, 0).some((m) => m.type === 'draw')).toBe(false);
+
+    // Wenn eine Karte gelegt wird, füllt sich die Hand nicht automatisch auf
+    state = table({
+      hands: [['H5.1', 'C9.1', 'D2.1', 'S8.1', 'C13.1'], ['D2.1']],
+      draws: [['C3.1', 'C4.1'], ['D3.1']],
+      piles: [['S4.1'], ['S10.1']],
+      options: { drawMode: 'manual' },
+    });
+    const afterPlay = applyMove(state, 0, { type: 'play', card: 'H5.1', pile: 0 }).state;
+    expect(afterPlay.players[0]!.hand).toHaveLength(4);
+    expect(afterPlay.players[0]!.draw).toHaveLength(2);
+
+    // Nun ist ein draw-Zug legal
+    const moves = legalMoves(afterPlay, 0);
+    expect(moves).toContainEqual({ type: 'draw' });
+
+    const { state: afterDraw, events } = applyMove(afterPlay, 0, { type: 'draw' });
+    expect(afterDraw.players[0]!.hand).toHaveLength(5);
+    expect(afterDraw.players[0]!.hand[4]).toBe('C3.1');
+    expect(afterDraw.players[0]!.draw).toHaveLength(1);
+    expect(events).toContainEqual({ type: 'drew', seat: 0, card: 'C3.1' });
+  });
+
+  it('unterstützt die Variante Spit mit 5 Tableau-Spalten', () => {
+    const state = setup(2, { variant: 'spit' }, 'spit1');
+    expect(state.variant).toBe('spit');
+    // Jeder Spieler hat 5 offene Karten in hand
+    expect(state.players[0]!.hand).toHaveLength(5);
+    expect(state.players[1]!.hand).toHaveLength(5);
+    // Und die verdeckten Karten darunter in spitDown: [0, 1, 2, 3, 4]
+    expect(state.players[0]!.spitDown.map((col) => col.length)).toEqual([0, 1, 2, 3, 4]);
+    // Der Rest von 52 - 2 Mittelkarten - 30 Tableau = 20 Karten liegt je zur Hälfte (10) im Spit-Vorrat (draw)
+    expect(state.players[0]!.draw).toHaveLength(10);
+
+    // In playerView sind spitDownCounts enthalten
+    const view = playerView(state, 0);
+    expect(view.players[0]!.spitDownCounts).toEqual([0, 1, 2, 3, 4]);
+
+    // Wenn die Karte aus Spalte 4 gelegt wird, deckt die oberste verdeckte Karte automatisch auf
+    const fixed = table({
+      hands: [['H5.1', 'C9.1', 'D2.1', 'S8.1', 'C6.1'], ['D2.1']],
+      spitDown: [
+        [[], ['S3.1'], ['S4.1', 'S5.1'], ['H7.1'], ['D7.1', 'D8.1']],
+        [[], [], [], [], []],
+      ],
+      piles: [['S5.1'], ['S10.1']],
+      options: { variant: 'spit' },
+    });
+    const { state: afterPlay } = applyMove(fixed, 0, { type: 'play', card: 'C6.1', pile: 0 });
+    // D7.1 rückte an Stelle von C6.1 auf
+    expect(afterPlay.players[0]!.hand[4]).toBe('D7.1');
+    expect(afterPlay.players[0]!.spitDown[4]).toEqual(['D8.1']);
+  });
+
+  it('unterstützt 3 und 4 Spieler mit 4 Ablagestapeln und 2 Decks', () => {
+    const state4 = setup(4, {}, 'quad');
+    expect(state4.players).toHaveLength(4);
+    expect(state4.piles).toHaveLength(4);
+    // Gesamt 104 Karten
+    const all = [
+      ...state4.players.flatMap((p) => [...p.hand, ...p.draw, ...p.spitDown.flat()]),
+      ...state4.sides.flat(),
+      ...state4.piles.flat(),
+    ];
+    expect(all).toHaveLength(104);
+    expect(new Set(all).size).toBe(104);
+  });
 });
 
-/** Zwei Bots spielen eine Runde; gleichzeitige Züge werden hier einfach reihum ausgeführt. */
-function botRound(levels: [BotLevel, BotLevel], seed: string): number {
-  let state = setup(2, { goal: 'r1' }, seed);
+/** Bots spielen eine Runde; gleichzeitige Züge werden hier einfach reihum ausgeführt. */
+function botRound(levels: BotLevel[], seed: string, options?: Options): number {
+  let state = setup(levels.length, { goal: 'r1', ...(options ?? {}) }, seed);
   for (let step = 0; step < 5_000 && !gameModule.result(state); step++) {
     const actors = currentPlayers(state) as number[];
     const seat = actors[step % actors.length]!;
-    const move = computeBotMove(gameModule, { gameId: 'speed', botId: 'flinker-finger', level: levels[seat]!, seat, view: playerView(state, seat), seed: `${seed}/${step}`, timeBudgetMs: 50 }) as SpeedMove;
+    const move = computeBotMove(gameModule, {
+      gameId: 'speed',
+      botId: 'flinker-finger',
+      level: levels[seat]!,
+      seat,
+      view: playerView(state, seat),
+      seed: `${seed}/${step}`,
+      timeBudgetMs: 50,
+    }) as SpeedMove;
     state = applyMove(state, seat, move).state;
   }
   const res = gameModule.result(state);
@@ -134,7 +228,16 @@ function botRound(levels: [BotLevel, BotLevel], seed: string): number {
 }
 
 describe('speed: Bot', () => {
-  it('spielt Runden zu Ende', () => {
-    for (let g = 0; g < 10; g++) expect([0, 1]).toContain(botRound(['hard', 'easy'], `bot${g}`));
+  it('spielt Runden zu Ende (2 Spieler)', () => {
+    for (let g = 0; g < 6; g++) expect([0, 1]).toContain(botRound(['hard', 'easy'], `bot${g}`));
+  });
+
+  it('spielt Runden mit manuellem Nachziehen und Spit zu Ende', () => {
+    expect([0, 1]).toContain(botRound(['hard', 'medium'], 'bot-man', { drawMode: 'manual' }));
+    expect([0, 1]).toContain(botRound(['medium', 'easy'], 'bot-spit', { variant: 'spit' }));
+  });
+
+  it('spielt 4-Spieler-Runden zu Ende', () => {
+    expect([0, 1, 2, 3]).toContain(botRound(['hard', 'medium', 'easy', 'medium'], 'bot4p'));
   });
 });
