@@ -115,6 +115,50 @@ describe('Bot', () => {
     expect(checkPlacement(five, s.hands[0] as TileId[], (move as { tiles: Placed[] }).tiles)).toMatchObject({ points: 12 });
   });
 
+  it('der schwere Bot vermeidet eine gefährliche 5er-Vorlage, nutzt sie aber wenn der 6. Stein tot ist', () => {
+    // 4er-Reihe (0,0)..(3,0) in Farbe 0, Formen 0..3; dazu (0,1)..(0,2) = 3er-Spalte in Form 0.
+    const four = [0, 1, 2, 3].map((s) => at(s, 0, t(0, s)));
+    const baseBoard = [...four, at(0, 1, t(1, 0)), at(0, 2, t(2, 0))];
+    // t(0,4) an (4,0) ergibt 5 Punkte, legt aber eine 5er-Reihe vor (t(0,5) fehlt).
+    // t(3,0) an (0,3) ergibt 4 Punkte und nur eine sichere 4er-Spalte.
+    const dangerousState = {
+      ...state(baseBoard, [t(0, 4), t(3, 0)]),
+      bag: [t(5, 5)],
+      hands: [[t(0, 4), t(3, 0)], [t(0, 5), t(1, 1), t(2, 2), t(3, 3), t(4, 4), t(5, 0)]],
+    };
+    const safeMove = computeBotMove(gameModule, {
+      gameId: 'color-and-shape',
+      botId: 'color-and-shape',
+      level: 'hard',
+      seat: 0,
+      view: gameModule.playerView(dangerousState, 0),
+      seed: 'v1',
+      timeBudgetMs: 100,
+    }) as { type: 'place'; tiles: Placed[] };
+    expect(safeMove.type).toBe('place');
+    expect(safeMove.tiles.some((p) => (p.x === 4 || p.x === -1) && p.y === 0)).toBe(false);
+    expect(safeMove.tiles.some((p) => p.x === 0 && p.y === 3)).toBe(true);
+
+    // Jetzt liegen alle 3 Kopien von t(0,5) bereits auf dem Brett -> 5er-Reihe bei (4,0) oder (-1,0) ist völlig sicher (5 Pkt > 4 Pkt).
+    const deadBoard = [...baseBoard, at(-10, 0, t(0, 5, 0)), at(-10, 2, t(0, 5, 1)), at(-10, 4, t(0, 5, 2))];
+    const safeFiveState = {
+      ...state(deadBoard, [t(0, 4), t(3, 0)]),
+      bag: [t(5, 5)],
+      hands: [[t(0, 4), t(3, 0)], [t(1, 1), t(2, 2), t(3, 3), t(4, 4), t(5, 0), t(5, 1)]],
+    };
+    const fiveMove = computeBotMove(gameModule, {
+      gameId: 'color-and-shape',
+      botId: 'color-and-shape',
+      level: 'hard',
+      seat: 0,
+      view: gameModule.playerView(safeFiveState, 0),
+      seed: 'v2',
+      timeBudgetMs: 100,
+    }) as { type: 'place'; tiles: Placed[] };
+    expect(fiveMove.type).toBe('place');
+    expect(fiveMove.tiles.some((p) => (p.x === 4 || p.x === -1) && p.y === 0)).toBe(true);
+  });
+
   it('der schwere Bot schlägt den leichten meistens', () => {
     let wins = 0;
     for (let g = 0; g < 6; g++) {
