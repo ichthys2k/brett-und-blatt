@@ -380,3 +380,22 @@
 [data-look='tavern'] .bub-trick-table .bub-trick-name {
   color: #f5efe0;
 }
+
+/* Siegerehrung (#315): gemalte Bilder statt Emoji, nur im Tavernen-Aussehen; Rückfall auf das Emoji */
+.bub-art-img {
+  display: none;
+}
+[data-look='tavern'] .bub-art-img {
+  display: inline-block;
+  width: 5.5rem;
+  height: 5.5rem;
+  object-fit: contain;
+  vertical-align: middle;
+}
+[data-look='tavern'] .bub-art-img + .bub-art-emoji {
+  display: none;
+}
+[data-look='tavern'] .bub-podium-block .bub-art-img {
+  width: 2.5rem;
+  height: 2.5rem;
+}
