@@ -193,7 +193,7 @@ export function App() {
   return (
     <div className="xr-shell">
       <div className="xr-canvas">
-        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} gameAt={room.gameAt} mesh={mesh} xrMembers={xrMembers} voice={voiceControls} speaking={voiceState.speaking} />
+        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} gameAt={room.gameAt} mesh={mesh} xrMembers={xrMembers} voice={voiceControls} speaking={voiceState.speaking} error={room.error} />
       </div>
       <aside className="xr-bar" aria-label="Raum und Züge">
         <header>

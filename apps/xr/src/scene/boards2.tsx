@@ -7,6 +7,7 @@ import { useState, type ReactNode } from 'react';
 import { TABLE_CENTER } from './Tavern';
 import { GOLD } from './text';
 import type { BoardProps } from './boards';
+import { pulse } from '../haptics';
 
 const TOP = TABLE_CENTER[1] + 0.002;
 const BOARD = 0.42;
@@ -39,6 +40,7 @@ function Spot({ x, z, r, onPress, y = 0.019 }: { x: number; z: number; r: number
       onPointerOver={(e) => {
         e.stopPropagation();
         setHover(true);
+        pulse('hover');
       }}
       onPointerOut={() => setHover(false)}
     >

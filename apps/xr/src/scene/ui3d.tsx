@@ -6,6 +6,7 @@
 import type { ThreeEvent } from '@react-three/fiber';
 import { useState } from 'react';
 import { GOLD, GREEN, INK, WOOD, WOOD_DARK, labelTexture } from './text';
+import { pulse } from '../haptics';
 
 export interface Button3DProps {
   label: string;
@@ -46,6 +47,7 @@ export function Button3D({ label, position, rotation, width = 0.3, height = 0.06
       onPointerOver={(e) => {
         e.stopPropagation();
         setHover(true);
+        pulse('hover');
       }}
       onPointerOut={() => setHover(false)}
     >
