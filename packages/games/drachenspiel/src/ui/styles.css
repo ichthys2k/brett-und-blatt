@@ -1811,6 +1811,13 @@
   justify-content: center;
   padding: 12px;
   background: rgba(0, 0, 0, 0.6);
+  /* Die Großansicht richtet sich nach ihrer eigenen Fläche, nicht nach dem Fenster: so gilt sie gleich in Partie, Deckbau und Solo. */
+  container: ds-zoom / size;
+}
+
+/* Deckbau und Solo rollen in einer eigenen Ebene: Dort steht die Großansicht fest im Fenster statt mitten in der langen Kartenliste. */
+.ds-builder-overlay .ds-zoom {
+  position: fixed;
 }
 
 .ds-zoom-card {
@@ -1836,7 +1843,62 @@
   position: absolute;
   top: 10px;
   left: 10px;
+  z-index: 1;
   transform: scale(1.4);
+}
+
+/* Gemaltes Kartenbild (#417): nie breiter als die Datei (360 px) und höchstens 42 % der Höhe der Fläche, damit Text und „Schließen“ daneben Platz haben. */
+.ds-zoom-art {
+  display: block;
+  flex: none;
+  width: min(100%, 360px, calc(42cqh * 3 / 4));
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.ds-zoom-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Genug Platz: Bild links, Text rechts. */
+@container ds-zoom (min-width: 620px) {
+  .ds-zoom-card.ds-zoom-has-art {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 18px;
+    width: min(660px, 100%);
+    padding: 18px;
+  }
+
+  .ds-zoom-has-art .ds-zoom-art {
+    width: min(300px, calc(85cqh * 3 / 4));
+  }
+
+  .ds-zoom-has-art .ds-zoom-info {
+    flex: 1;
+    align-items: stretch;
+    text-align: left;
+  }
+
+  .ds-zoom-has-art .ds-zoom-name {
+    font-size: 1.45rem;
+  }
+
+  .ds-zoom-has-art .ds-zoom-text {
+    font-size: 1.05rem;
+  }
+
+  .ds-zoom-has-art .ds-btn {
+    align-self: flex-end;
+    margin-top: auto;
+  }
 }
 
 .ds-zoom-emoji {

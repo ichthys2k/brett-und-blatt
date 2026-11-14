@@ -20,6 +20,22 @@ export function cardArtOf(cardId: string): string | undefined {
   return CARD_ART_MEDIA[file] ? file : undefined;
 }
 
+/**
+ * Medienname des Bilds, das eine Karte zeigt: zuerst das Bild aus dem Anki-Feld „Bild“ eines
+ * aktiven Kartensets (`<img src="…">`), sonst das eingebaute. Steht im Feld nur ein Emoji, gilt
+ * das eingebaute Bild.
+ */
+export function cardArtFileFor(cardId: string, bildField: string | undefined, builtIn: (id: string) => string | undefined = cardArtOf): string | undefined {
+  const fromNote = /<img[^>]*\bsrc\s*=\s*["']([^"']+)["']/i.exec(bildField ?? '')?.[1];
+  return fromNote ?? builtIn(cardId);
+}
+
+/** Adresse des Kartenbilds für die Großansicht oder undefined, wenn die Karte keines hat (#417). */
+export function cardArtUrl(cardId: string, bildField: string | undefined, mediaUrlMap: Record<string, string> | undefined): string | undefined {
+  const file = cardArtFileFor(cardId, bildField);
+  return file ? withCardArt(mediaUrlMap)?.[file] : undefined;
+}
+
 /** Eingebaute Bilder, darüber die des aktiven Kartensets. */
 export function withCardArt(mediaUrlMap: Record<string, string> | undefined): Record<string, string> | undefined {
   if (Object.keys(CARD_ART_MEDIA).length === 0) return mediaUrlMap;
