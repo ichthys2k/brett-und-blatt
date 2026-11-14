@@ -99,15 +99,18 @@
 }
 
 [data-look='tavern'][data-table='red-felt'] .bub-table {
-  background: radial-gradient(ellipse at center, transparent 40%, rgb(0 0 0 / 0.04) 100%), var(--tavern-table-red-felt);
+  background: url('./assets/tische/red-felt-light.webp') repeat, var(--tavern-table-red-felt);
+  background-size: 256px 256px;
 }
 
 [data-look='tavern'][data-table='slate'] .bub-table {
-  background: repeating-linear-gradient(135deg, transparent 0 36px, var(--tavern-grain) 36px 38px), var(--tavern-table-slate);
+  background: url('./assets/tische/slate-light.webp') repeat, var(--tavern-table-slate);
+  background-size: 256px 256px;
 }
 
 [data-look='tavern'][data-table='marble'] .bub-table {
-  background: repeating-linear-gradient(115deg, transparent 0 44px, var(--tavern-grain) 44px 46px), var(--tavern-table-marble);
+  background: url('./assets/tische/marble-light.webp') repeat, var(--tavern-table-marble);
+  background-size: 256px 256px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -119,7 +122,8 @@
 
   [data-look='tavern'] .bub-table[data-category='cards'],
   [data-look='tavern'][data-table='green-felt'] .bub-table {
-    background: radial-gradient(ellipse at center, transparent 40%, rgb(0 0 0 / 0.04) 100%), var(--tavern-table-green-felt);
+    background: url('./assets/tische/green-felt-dark.webp') repeat, var(--tavern-table-green-felt);
+    background-size: 256px 256px;
   }
 
   [data-look='tavern'] .bub-table[data-category='family'] {
@@ -136,6 +140,21 @@
 
   [data-look='tavern'][data-table='walnut'] .bub-table {
     background: url('./assets/tische/walnut-dark.webp') repeat, var(--tavern-table-walnut);
+    background-size: 256px 256px;
+  }
+
+  [data-look='tavern'][data-table='red-felt'] .bub-table {
+    background: url('./assets/tische/red-felt-dark.webp') repeat, var(--tavern-table-red-felt);
+    background-size: 256px 256px;
+  }
+
+  [data-look='tavern'][data-table='slate'] .bub-table {
+    background: url('./assets/tische/slate-dark.webp') repeat, var(--tavern-table-slate);
+    background-size: 256px 256px;
+  }
+
+  [data-look='tavern'][data-table='marble'] .bub-table {
+    background: url('./assets/tische/marble-dark.webp') repeat, var(--tavern-table-marble);
     background-size: 256px 256px;
   }
 }
@@ -172,13 +191,16 @@
   background-size: 64px 64px;
 }
 [data-look='tavern'] .bub-table-preview[data-surface='red-felt'] {
-  background: var(--tavern-table-red-felt);
+  background: url('./assets/tische/red-felt-light.webp') repeat, var(--tavern-table-red-felt);
+  background-size: 64px 64px;
 }
 [data-look='tavern'] .bub-table-preview[data-surface='slate'] {
-  background: var(--tavern-table-slate);
+  background: url('./assets/tische/slate-light.webp') repeat, var(--tavern-table-slate);
+  background-size: 64px 64px;
 }
 [data-look='tavern'] .bub-table-preview[data-surface='marble'] {
-  background: var(--tavern-table-marble);
+  background: url('./assets/tische/marble-light.webp') repeat, var(--tavern-table-marble);
+  background-size: 64px 64px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -189,6 +211,22 @@
   }
   [data-look='tavern'] .bub-table-preview[data-surface='walnut'] {
     background: url('./assets/tische/walnut-dark.webp') repeat, var(--tavern-table-walnut);
+    background-size: 64px 64px;
+  }
+  [data-look='tavern'] .bub-table-preview[data-surface='green-felt'] {
+    background: url('./assets/tische/green-felt-dark.webp') repeat, var(--tavern-table-green-felt);
+    background-size: 64px 64px;
+  }
+  [data-look='tavern'] .bub-table-preview[data-surface='red-felt'] {
+    background: url('./assets/tische/red-felt-dark.webp') repeat, var(--tavern-table-red-felt);
+    background-size: 64px 64px;
+  }
+  [data-look='tavern'] .bub-table-preview[data-surface='slate'] {
+    background: url('./assets/tische/slate-dark.webp') repeat, var(--tavern-table-slate);
+    background-size: 64px 64px;
+  }
+  [data-look='tavern'] .bub-table-preview[data-surface='marble'] {
+    background: url('./assets/tische/marble-dark.webp') repeat, var(--tavern-table-marble);
     background-size: 64px 64px;
   }
 }
