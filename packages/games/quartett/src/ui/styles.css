@@ -635,6 +635,83 @@ button.qt-value:hover {
   }
 }
 
+/*
+ * Mitwachsende Karte (#420): Hat die Tischmitte genug Fläche (Desktop, Tablet), steht das Bild als Kopf
+ * über der ganzen Kartenbreite (bei knapper Höhe im Ausschnitt 2:1, sonst ganz in 4:3), und die Karte wird breiter. Gemessen wird die Mitte selbst: ohne
+ * Sitzring `.qt-center`, mit Sitzring dessen Mitte (`.bub-seat-ring-center`, ebenfalls ein
+ * Größen-Container). Am Handy und im Querformat bleibt es bei der kleinen Vignette neben dem Namen.
+ */
+.qt-table:not([data-around]) .qt-center {
+  container-type: size;
+}
+
+@container (min-width: 440px) and (min-height: 540px) {
+  :root:not([data-look='plain']) .qt-card:not(.qt-small) .qt-card-face.qt-has-image {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+    padding: 0 0 0.3rem;
+  }
+
+  /* Etwas wenig Höhe (Sitzring mit vier bis sechs Plätzen): breiterer Ausschnitt, damit die Werte darunter Platz haben. */
+  :root:not([data-look='plain']) .qt-card:not(.qt-small) .qt-has-image .qt-image {
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  :root:not([data-look='plain']) .qt-card:not(.qt-small) .qt-has-image .qt-name {
+    padding: 0 0.6rem;
+    font-size: 1.3em;
+  }
+}
+
+@container (min-width: 440px) and (min-height: 620px) {
+  :root:not([data-look='plain']) .qt-card:not(.qt-small) .qt-has-image .qt-image {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+@container (min-width: 600px) and (min-height: 700px) {
+  .qt-card:not(.qt-small) {
+    width: min(100%, 26rem);
+  }
+
+  /* Vergleichskarten beim Aufdecken: Bild als Kopf, groß genug, um die Tiere der anderen zu erkennen; der Name hat darunter die volle Breite. */
+  .qt-card.qt-small {
+    width: 13.5rem;
+  }
+
+  :root:not([data-look='plain']) .qt-small .qt-card-face.qt-has-image {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+    padding: 0 0 0.2rem;
+  }
+
+  :root:not([data-look='plain']) .qt-small .qt-has-image .qt-image {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  :root:not([data-look='plain']) .qt-small .qt-has-image .qt-name {
+    padding: 0 0.4rem;
+    text-align: center;
+  }
+}
+
+/* Hoher Kontrast zeigt das Emoji: dann bleibt die Kopfzeile wie bisher neben dem Namen. */
+@media (prefers-contrast: more) {
+  .qt-card .qt-card-face.qt-has-image {
+    flex-direction: row;
+    align-items: center;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
 /* Spieler rund um den Tisch (ab genug Platz, SeatRing). */
 .qt-table[data-around] {
   display: flex;

@@ -150,3 +150,7 @@ Umgesetzt ist eine gemeinsame Vorgabe für beide Spielweisen (Zeitvorgaben gelte
 
 - Werte der Sets sind mit Quellen hinterlegt (PR #20, die Set-Prüfung verlangt Quellen); inhaltliche Durchsicht durch Cornelius abgeschlossen (alle 5 Sets geprüft und bestätigt, #82).
 - Später: ein Editor für eigene Sets, z. B. von einer Klasse erstellt.
+
+## Großes Kartenbild am Desktop (14.11.2026, #420)
+
+Hat die Tischmitte genug Fläche, steht das Bild als Kopf über der ganzen Karte: ab 440 × 540 px im Ausschnitt 2:1 (Sitzring mit vier bis sechs Plätzen bei 1440 × 900), ab 620 px Höhe ganz in 4:3. Ab 600 × 700 px wird die Karte 26rem breit, und die Vergleichskarten beim Aufdecken zeigen ihr Bild ebenfalls als Kopf. Gemessen wird die Tischmitte selbst (Container-Regeln), nicht das Fenster. „Schlicht“ und hoher Kontrast zeigen weiter das Emoji neben dem Namen; am Handy bleibt alles wie bisher.

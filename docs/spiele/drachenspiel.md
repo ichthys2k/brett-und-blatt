@@ -314,3 +314,11 @@ Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes D
 ## Zug beenden am Handy (14.11.2026, #391)
 
 In schmalen Arenen (Container `ds-arena` bis 420 px, Handy im Hochformat) war die Heldenzeile breiter als die Arena: Der Knopf „Zug beenden“ ragte bis zu 42 px über den Rand und wurde abgeschnitten. Jetzt gibt die Heldenkarte Platz ab (`flex: 1 1 0`, kleinere Abstände), der Nachziehstapel zeigt nur die Zahl, und die Aktionen behalten ihre Breite. Der Rauchtest (`scripts/rauchtest.mjs`) meldet es, wenn der Knopf nach dem Start über den Rand der Arena ragt. Geprüft bei 320 × 568, 360 × 640, 375 × 667, 390 × 844, 412 × 915 und im Querformat 844 × 390.
+
+## Großansicht mit Kartenbild (14.11.2026, #417)
+
+Die große Karte (lange drücken, Rechtsklick, Taste `i`) zeigt in Partie, Deckbau und Solo das gemalte Kartenbild statt des Emojis; ein Bild aus einem eigenen Kartenset (Anki-Feld „Bild“) hat Vorrang. Am Handy steht das Bild über dem Text und nimmt höchstens 42 % der Höhe ein, ab 620 px Breite liegt es links neben dem Text. Teil des Vorhabens #416 (gemalte Bilder zur Geltung bringen).
+
+## Mitwachsende Karten (14.11.2026, #420)
+
+Auf großen Flächen werden Handkarten und Tiere größer, damit die Kartenbilder zur Geltung kommen: ab 660 × 640 px Arena-Fläche 104 px breite Handkarten, ab 1000 × 800 px 132 px (Tiere 96 bzw. 118 px), Schrift und Plaketten wachsen mit. Die Maße stehen als Variablen auf `.ds-arena`; Handy und Querformat behalten die bisherigen Werte. Die Arena ist höchstens 1240 × 1000 px groß.
