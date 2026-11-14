@@ -4,6 +4,8 @@
  * In der Brille übernimmt das 2D-Fenster über dem Tisch dieselben Aufgaben.
  */
 import { AVATARS, parseRoomCode } from '@brett-und-blatt/online';
+import { CodeKeyboard } from './CodeKeyboard';
+import { codeComplete } from './code-keys';
 import { createXRStore } from '@react-three/xr';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { GAME_CHOICES, LEVEL_TEXT, gameName } from './catalog';
@@ -169,7 +171,8 @@ export function App() {
             Raumcode
             <input value={joining} onChange={(e) => setJoining(e.target.value)} placeholder="🐻🦊🌈🚀" />
           </label>
-          <button type="submit">Beitreten</button>
+          <CodeKeyboard value={joining} onChange={setJoining} />
+          <button type="submit" disabled={!codeComplete(joining) && !parseRoomCode(joining)}>Beitreten</button>
         </form>
         {problem && <p role="alert">{problem}</p>}
       </main>

@@ -10,7 +10,7 @@ Eine eigene Web-App für die Meta Quest (und jeden Browser mit WebGL): ein Tisch
 ## So spielt man
 
 1. In der Quest den Browser öffnen, die Adresse aufrufen, Name und Bild wählen.
-2. **Neuen Raum anlegen** oder den **Raumcode** einer Runde eingeben. Ein Link mit `#<Raumcode>` führt direkt in den Raum.
+2. **Neuen Raum anlegen** oder den **Raumcode** einer Runde eingeben – mit den Emoji-Tasten auf der Seite, ohne Systemtastatur (#393). Ein Link mit `#<Raumcode>` führt direkt in den Raum.
 3. In der Lobby (Leiste rechts oder 2D-Fenster über dem Tisch) wählt die Raumleitung eines der 55 Online-Spiele (im Fenster mit ◀ ▶, in Zehnerschritten mit ⏪ ⏩), besetzt Plätze mit Bots und beginnt.
 4. **In VR betreten** – oder auf der Quest 3 **In Mixed Reality betreten**: Dann bleibt deine echte Umgebung sichtbar (Passthrough), und nur Tischplatte, Kerzen, Karten und Menü schweben vor dir (#369). Unter „↕ Tisch“ lässt sich der Tisch mit „Auf Fläche legen“ (Blick auf Tisch oder Boden, Abzug oder Antippen) auf eine echte Fläche setzen und mit „Tisch kleiner/größer“ verkleinern (#370). Gezogen wird durch Zeigen mit dem Controller (Abzug) oder Antippen mit dem Finger.
 
