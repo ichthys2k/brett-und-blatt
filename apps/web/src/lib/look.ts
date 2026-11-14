@@ -26,6 +26,7 @@ const TABLE_KEY = 'brett-und-blatt:tisch';
 const ROOM_KEY = 'brett-und-blatt:raum';
 const MENU3D_KEY = 'brett-und-blatt:menue-3d';
 const LIGHT_KEY = 'brett-und-blatt:licht';
+const SCENES_KEY = 'brett-und-blatt:kulissen';
 
 function loadLook(): Look {
   try {
@@ -70,6 +71,15 @@ function loadMenu3d(): boolean {
   }
 }
 
+/** Kulissen der Spiele als Seitenhintergrund (#316): Standard an. */
+function loadScenes(): boolean {
+  try {
+    return window.localStorage.getItem(SCENES_KEY) !== 'aus';
+  } catch {
+    return true;
+  }
+}
+
 function loadLight(): LightChoice {
   try {
     const val = window.localStorage.getItem(LIGHT_KEY);
@@ -86,6 +96,7 @@ let chosenTable = loadTable();
 let chosenRoom = loadRoom();
 let chosenMenu3d = loadMenu3d();
 let chosenLight = loadLight();
+let chosenScenes = loadScenes();
 
 /** Das Aussehen, das gerade wirklich gilt. */
 export function activeLook(): Look {
@@ -158,6 +169,8 @@ function apply(): void {
     document.documentElement.dataset.table = chosenTable;
   }
   document.documentElement.dataset.room = chosenRoom;
+  if (chosenScenes) delete document.documentElement.dataset.scenes;
+  else document.documentElement.dataset.scenes = 'off';
   for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
     meta.content = BAR_COLORS[look][meta.media.includes('dark') ? 'dark' : 'light'];
   }
@@ -205,6 +218,16 @@ export function setMenu3d(next: boolean): void {
   apply();
 }
 
+export function setScenes(next: boolean): void {
+  chosenScenes = next;
+  try {
+    window.localStorage.setItem(SCENES_KEY, next ? 'an' : 'aus');
+  } catch {
+    // Ohne Speicher gilt die Wahl nur bis zum Neuladen.
+  }
+  apply();
+}
+
 export function setLight(next: LightChoice): void {
   chosenLight = next;
   try {
@@ -228,6 +251,8 @@ export const useChosenRoom = (): RoomScene => useSyncExternalStore(subscribe, ()
 export const menu3dEnabled = (): boolean => chosenMenu3d;
 /** Ob die 3D-Taverne gerade gilt: nur wenn sie angeboten wird und gewählt ist. */
 export const menu3dActive = (): boolean => MENU_3D_AVAILABLE && chosenMenu3d;
+export const useScenesOn = (): boolean => useSyncExternalStore(subscribe, () => chosenScenes);
+export const scenesEnabled = (): boolean => chosenScenes;
 export const useChosenLight = (): LightChoice => useSyncExternalStore(subscribe, () => chosenLight);
 export const lightChoice = (): LightChoice => chosenLight;
 export const useMenu3d = (): boolean => useSyncExternalStore(subscribe, menu3dActive);
