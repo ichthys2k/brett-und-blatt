@@ -107,7 +107,7 @@ Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis:
 
 ## Wappen der Spielkacheln (KI-erzeugt)
 
-Die 54 Wappen auf den Kacheln der Startseite (`apps/web/src/wappen/*.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge in `scripts/grafik/`. Sie zeigen allgemeine Sinnbilder (Schachpferd, Würfel, Drache u. a.), keine echten Personen und keine fremden Marken. Die Spiele selbst sind eigene Fassungen.
+Die 56 Wappen auf den Kacheln der Startseite (`apps/web/src/wappen/*.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge in `scripts/grafik/`. Sie zeigen allgemeine Sinnbilder (Schachpferd, Würfel, Drache u. a.), keine echten Personen und keine fremden Marken. Die Spiele selbst sind eigene Fassungen.
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 

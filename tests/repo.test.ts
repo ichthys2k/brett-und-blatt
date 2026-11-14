@@ -8,6 +8,8 @@ import { describe, expect, it } from 'vitest';
 
 const metas = import.meta.glob<GameInfo>('../packages/games/*/src/meta.ts', { eager: true, import: 'meta' });
 const tests = import.meta.glob<string>('../packages/games/*/test*/*.test.ts', { eager: true, query: '?raw', import: 'default' });
+const crests = import.meta.glob('../apps/web/src/wappen/*.webp');
+const crestIds = new Set(Object.keys(crests).map((p) => p.split('/').pop()!.replace(/\.webp$/, '')));
 // CSS liefert Vitest leer aus (auch mit `?raw`), deshalb direkt von der Platte lesen.
 const fs = (globalThis as unknown as { process: { getBuiltinModule(name: 'node:fs'): { readFileSync(path: URL, encoding: 'utf8'): string } } }).process.getBuiltinModule('node:fs');
 const styles = Object.fromEntries(
@@ -35,6 +37,18 @@ describe('Repo-Regeln', () => {
     // `gameContractChecks(modul)` allein liefert nur die Liste der Prüfungen – sie muss mit
     // `for (const check of gameContractChecks(modul)) it(check.name, check.run)` laufen.
     expect(missing).toEqual([]);
+  });
+
+  it('jedes fertige Spiel hat ein Wappen und jedes Wappen gehört zu einem Spiel', () => {
+    const missing = games
+      .filter(({ info }) => !info.draft)
+      .filter(({ folder }) => !crestIds.has(folder))
+      .map(({ folder }) => folder);
+    expect(missing).toEqual([]);
+
+    const gameFolders = new Set(games.map(({ folder }) => folder));
+    const orphaned = [...crestIds].filter((id) => !gameFolders.has(id));
+    expect(orphaned).toEqual([]);
   });
 
   it('Zurücknehmen mit Zustimmung nur bei offener Information und nie zusammen mit noUndo', () => {

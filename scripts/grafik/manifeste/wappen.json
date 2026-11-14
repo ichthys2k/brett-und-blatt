@@ -2,7 +2,11 @@
   "beschreibung": "Wappen für die Spielkacheln der Startseite (54 Spiele, ein Motiv je Spiel). Angezeigt werden sie klein (etwa 52 × 60 px) in einem wappenförmigen Feld; die Bilder müssen deshalb schlicht und kontrastreich sein.",
   "stil": "A bold, simple heraldic emblem for a board-game tile, painted like enamel on metal: ONE single central symbol, thick clean shapes, strong contrast, limited palette of deep colours with gold accents, subtle painterly texture, dark warm background filling the whole image, readable even when shrunk to 50 pixels. Medieval tavern and fairy-tale kingdom mood, consistent with a set of crests. The painted emblem artwork extends all the way to every edge of the square image: no margin, no visible plate or medallion edge, no corners, no white or black areas outside the artwork, the background texture continues to the borders. No text, no letters, no numbers, no border, no shield outline.",
   "ohne": "text, letters, numbers, watermark, border, frame, shield outline, real people, logos, thin details, plate, medallion edge, white background, black corners, letters on cards, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
-  "referenzen": [],
+  "referenzen": [
+    "apps/web/src/wappen/marketplace.webp",
+    "apps/web/src/wappen/dominoes.webp",
+    "apps/web/src/wappen/chess.webp"
+  ],
   "format": "4:5",
   "groesse": [
     160,
@@ -128,6 +132,11 @@
       "prompt": "Emblem motif: five black stones in a line on a wooden board, a few white stones nearby."
     },
     {
+      "id": "grafschaft",
+      "titel": "Grafschaft",
+      "prompt": "Emblem motif: three interlocking hexagonal land tiles seen from above, one with a small half-timbered village, one with dark green forest, one with a blue pond, a thin golden border between the tiles."
+    },
+    {
       "id": "hangman",
       "titel": "Galgenmännchen",
       "prompt": "Emblem motif: a friendly snowman standing next to a small wooden gallows."
@@ -166,6 +175,11 @@
       "id": "marketplace",
       "titel": "Marktplatz",
       "prompt": "Emblem motif: a market stall with a striped canopy and pretzels on display."
+    },
+    {
+      "id": "market-stalls",
+      "titel": "Marktstände",
+      "prompt": "Emblem motif: a single medieval market stall with a red and gold striped awning, a round loaf of bread, a wheel of cheese and a red apple on its counter."
     },
     {
       "id": "mau-mau",
