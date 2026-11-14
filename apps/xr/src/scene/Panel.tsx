@@ -12,6 +12,7 @@ import { GAME_CHOICES, LEVEL_TEXT, PHRASE_TEXT, gameName, isBoardGame } from '..
 import { TABLE_CENTER } from './Tavern';
 import { WOOD_DARK } from './text';
 import { Button3D, Sign } from './ui3d';
+import { HEAD_PAD, ROW_GAP, ROW_STEP, BUTTON_H, headHeight, liftAboveTable, seatPageRange } from './panel-layout';
 import { isCardGame } from './cards';
 import { getVolume, onVolumeChange, setVolume } from '../sound';
 
@@ -23,7 +24,6 @@ const SIDE_ROT: [number, number, number] = [0, Math.atan2(0.68, 0.62 - TABLE_CEN
 const CENTER_POS: [number, number, number] = [TABLE_CENTER[0], 1.25, TABLE_CENTER[2] - 0.3];
 const CENTER_ROT: [number, number, number] = [0, 0, 0];
 const WIDTH = 0.62;
-const ROW = 0.05;
 
 type BotLevel = Extract<LobbySeat, { kind: 'bot' }>['level'];
 
@@ -74,6 +74,7 @@ type Mode = 'main' | 'phrases' | 'view' | 'voice';
 
 export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice }: PanelProps) {
   const [page, setPage] = useState(0);
+  const [seatPage, setSeatPage] = useState(0);
   const [mode, setMode] = useState<Mode>('main');
   const [confirmResign, setConfirmResign] = useState(false);
   const [confirmReport, setConfirmReport] = useState(false);
@@ -156,7 +157,9 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice
       ]);
     } else lines.push(`Spiel: ${gameName(lobby.gameId)}`);
     const mine = lobby.seats.findIndex((s) => s.kind === 'human' && s.memberId === you);
+    const seatRange = seatPageRange(lobby.seats.length, seatPage);
     lobby.seats.forEach((seat, i) => {
+      if (i < seatRange.from || i >= seatRange.to) return;
       const member = seat.kind === 'human' ? room.members.find((m) => m.id === seat.memberId) : undefined;
       const text = seat.kind === 'bot' ? `🤖 Bot ${LEVEL_TEXT[seat.level]}` : member ? `${member.avatar} ${member.name}${member.id === you ? ' (du)' : ''}` : 'frei';
       const row: Btn[] = [{ label: `${i + 1}: ${text}`, press: () => {}, disabled: true }];
@@ -169,6 +172,14 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice
       if (seat.kind === 'human' && seat.memberId === you) row.push({ label: 'Aufstehen', press: () => send({ type: 'leaveSeat' }) });
       rows.push(row);
     });
+    // Viele Plätze: seitenweise zeigen, damit das Fenster nicht unter den Tisch reicht (#364).
+    if (seatRange.pages > 1) {
+      rows.push([
+        { label: '▲ davor', press: () => setSeatPage((seatRange.current - 1 + seatRange.pages) % seatRange.pages) },
+        { label: `Plätze ${seatRange.from + 1}–${seatRange.to} von ${lobby.seats.length}`, press: () => {}, disabled: true },
+        { label: 'danach ▼', press: () => setSeatPage((seatRange.current + 1) % seatRange.pages) },
+      ]);
+    }
     if (host) rows.push([{ label: 'Partie beginnen', press: () => send({ type: 'start' }), active: true, disabled: !lobby.gameId }]);
     else lines.push('Die Raumleitung beginnt die Partie.');
     rows.push([
@@ -229,21 +240,23 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice
     ]);
   }
 
-  const lineH = 0.045;
-  const height = lines.length * lineH + 0.04;
+  const height = headHeight(lines.length);
+  // Reicht das Fenster nach unten bis unter die Tischplatte, rückt es als Ganzes nach oben (#364).
+  const lift = liftAboveTable(position[1], lines.length, rows.length, TABLE_CENTER[1]);
   return (
-    <group position={position} rotation={rotation}>
-      <Sign lines={lines} position={[0, 0, 0]} width={WIDTH} height={height} background={WOOD_DARK} />
+    <group position={[position[0], position[1] + lift, position[2]]} rotation={rotation}>
+      <Sign lines={lines} position={[0, 0, 0]} width={WIDTH} height={height} background={WOOD_DARK} overlay />
       {rows.map((row, r) => {
         const gap = 0.01;
-        const w = (WIDTH - 0.04 - gap * (row.length - 1)) / row.length;
+        const w = (WIDTH - HEAD_PAD - gap * (row.length - 1)) / row.length;
         return row.map((b, k) => (
           <Button3D
             key={`${r}-${k}-${b.label}`}
             label={b.label}
-            position={[-(WIDTH - 0.04) / 2 + w / 2 + k * (w + gap), -height / 2 - 0.035 - r * ROW, 0]}
+            position={[-(WIDTH - HEAD_PAD) / 2 + w / 2 + k * (w + gap), -height / 2 - ROW_GAP - r * ROW_STEP, 0]}
             width={w}
-            height={0.042}
+            height={BUTTON_H}
+            overlay
             onPress={b.press}
             active={b.active}
             disabled={b.disabled}

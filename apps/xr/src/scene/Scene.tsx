@@ -3,9 +3,10 @@
  * Brille mit Controllern oder Händen (Zeigen, Antippen, Greifen über @react-three/xr).
  */
 import type { ClientMessage, GameMessage, RoomMessage } from '@brett-und-blatt/online';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { XR, XROrigin, type XRStore } from '@react-three/xr';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Vector3 } from 'three';
 import { isBoardGame } from '../catalog';
 import type { Signal } from '../net';
 import { ChessBoard, FourInARowBoard, TicTacToeBoard, boardMoveIndexes } from './boards';
@@ -19,6 +20,7 @@ import { CardTable, cardMoveIndexes, isCardGame } from './cards';
 import { Panel, ReactionBar, type VoiceControls } from './Panel';
 import { Seats, seatAngle, type SeatInfo } from './Seats';
 import { TABLE_CENTER, Tavern } from './Tavern';
+import { alignOffset, type Offset } from './view-align';
 import { Figures, POSE_STALE_MS, PoseSender } from './Meet';
 import type { PeerMesh } from '../peers';
 
@@ -75,6 +77,48 @@ function clockText(game: GameMessage, seat: number, gameAt: number, now: number)
   const left = Math.max(0, reading.running ? reading.leftMs - (now - gameAt) : reading.leftMs);
   const s = Math.ceil(left / 1000);
   return `⏱ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+/** Frames, die nach dem Eintreten oder Neuausrichten gewartet werden, bis die Kopfhaltung stimmt. */
+const ALIGN_SETTLE_FRAMES = 20;
+
+/**
+ * Misst in der Brille einmal die Kopfposition (nach dem Eintreten und nach jedem Neuausrichten)
+ * und meldet die Verschiebung, mit der man mittig vor dem Tisch und über der Tischplatte sitzt (#365).
+ */
+function HeadAlign({ origin, onAlign }: { origin: [number, number, number]; onAlign: (offset: Offset) => void }) {
+  const camera = useThree((s) => s.camera);
+  const frames = useRef(0);
+  const measured = useRef(false);
+  const space = useRef<XRReferenceSpace | null>(null);
+  const originRef = useRef(origin);
+  originRef.current = origin;
+  const head = useMemo(() => new Vector3(), []);
+  useFrame((state) => {
+    if (!state.gl.xr.isPresenting) {
+      frames.current = 0;
+      measured.current = false;
+      space.current = null;
+      return;
+    }
+    // Meta-Taste gedrückt halten: Der Bezugsraum meldet „reset“, dann neu messen.
+    const current = state.gl.xr.getReferenceSpace();
+    if (current && current !== space.current) {
+      space.current = current;
+      current.addEventListener('reset', () => {
+        frames.current = 0;
+        measured.current = false;
+      });
+    }
+    if (measured.current) return;
+    frames.current += 1;
+    if (frames.current < ALIGN_SETTLE_FRAMES) return;
+    camera.getWorldPosition(head);
+    const o = originRef.current;
+    onAlign(alignOffset({ x: head.x - o[0], y: head.y - o[1], z: head.z - o[2] }));
+    measured.current = true;
+  });
+  return null;
 }
 
 /** Ohne Brille: Blick vom eigenen Platz schräg auf den Tisch. */
@@ -135,6 +179,8 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
     return () => window.clearInterval(id);
   }, [ticking]);
   const { offset, adjust } = useViewOffset();
+  const [align, setAlign] = useState<Offset>({ x: 0, y: 0, z: 0 });
+  const origin: [number, number, number] = [align.x, align.y - offset.y, align.z + offset.z];
   const seats = seatInfos(room, game, you, gameAt, now).map((s) => (s.memberId && speaking.includes(s.memberId) ? { ...s, speaking: true } : s));
 
   // Figuren der anderen Brillen: nur mit frischer Pose; einmal je Sekunde neu entschieden.
@@ -181,11 +227,12 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
       <color attach="background" args={['#1d1510']} />
       <fog attach="fog" args={['#1d1510', 4, 11]} />
       <XR store={store}>
-        <XROrigin position={[0, -offset.y, offset.z]} />
+        <XROrigin position={origin} />
+        <HeadAlign origin={origin} onAlign={setAlign} />
         <DesktopCamera />
         <Tavern chairs={seats.filter((s) => !s.mine).map((s) => ({ angle: s.angle, mine: false }))} />
         <Seats seats={seats} signals={signals} memberAvatar={(id) => room?.members.find((m) => m.id === id)?.avatar ?? null} figures={figures} />
-        {mesh && <PoseSender mesh={mesh} xrMembers={xrMembers} sendRoomPose={(head) => send({ type: 'pose', head })} origin={[0, -offset.y, offset.z]} />}
+        {mesh && <PoseSender mesh={mesh} xrMembers={xrMembers} sendRoomPose={(head) => send({ type: 'pose', head })} origin={origin} />}
         {mesh && <Figures mesh={mesh} members={figures} seatOf={seatOf} mySeatBase={myBase} count={seatCount} infos={seats} />}
         {shown?.gameId === 'tic-tac-toe' && <TicTacToeBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'four-in-a-row' && <FourInARowBoard game={shown} onMove={moveByValue} />}
