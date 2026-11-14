@@ -240,27 +240,11 @@
   background: radial-gradient(ellipse 14% 14% at 11% 64%, #ff9a3c66 0, #ff6a1a33 45%, transparent 75%);
   animation: bub-flicker 3.1s ease-in-out infinite reverse;
 }
-.bub-menu-motes span {
-  position: absolute;
-  bottom: -2%;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #ffd27acc;
-  box-shadow: 0 0 6px #ffb03a;
-  opacity: 0;
-  animation: bub-rise linear infinite;
-}
 @keyframes bub-flicker {
   0%, 100% { opacity: 1; }
   38% { opacity: 0.82; }
   62% { opacity: 0.95; }
   80% { opacity: 0.78; }
-}
-@keyframes bub-rise {
-  0% { transform: translate(0, 0); opacity: 0; }
-  12% { opacity: 0.9; }
-  100% { transform: translate(24px, -78vh); opacity: 0; }
 }
 .bub-menu-frame,
 .bub-tav-frame { position: relative; }
@@ -283,10 +267,8 @@
 .bub-menu-button:focus-visible { outline: 3px solid #f2d27a; outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   .bub-menu-glow, .bub-menu-hearth { animation: none; }
-  .bub-menu-motes { display: none; }
 }
 @media (max-width: 760px) {
-  .bub-menu-motes { display: none; }
   .bub-menu-hearth { background: radial-gradient(ellipse 22% 10% at 18% 74%, #ff9a3c55 0, transparent 75%); }
 }
 .bub-menu-plaque-link { cursor: pointer; }
@@ -329,9 +311,6 @@
 }
 .bub-menu-scene[data-clickable='true'] {
   cursor: pointer;
-}
-.bub-menu-scene .bub-menu-front {
-  opacity: 0.22;
 }
 .bub-menu-scene[data-calm] .bub-menu-shade {
   background: linear-gradient(180deg, #140d0777 0%, #140d07bb 55%, #140d07dd 100%);

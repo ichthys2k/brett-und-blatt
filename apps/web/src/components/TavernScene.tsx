@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useActiveLook, useChosenLight, useChosenRoom, useChosenTable, type RoomScene, type TavernMood } from '../lib/look';
+import { useActiveLook, useChosenLight, useChosenRoom, useChosenTable, useMenu3d, type RoomScene, type TavernMood } from '../lib/look';
 import { navigate, useRoute } from '../lib/router';
 import {
   buildTavernGeometry,
@@ -83,16 +83,21 @@ const MOTES_3D: Mote3D[] = Array.from({ length: 22 }, (_, i) => ({
  *   heben die jeweilige Station hervor und sind direkt anklickbar.
  * - Auf Unterseiten (`calm = true`) gleitet die Kamera fließend zur jeweiligen Station
  *   (Spieltisch, Online-Rundtisch, Turniertafel, Kamin oder Wappenschild).
- * - Bei `prefers-reduced-motion: reduce` oder im Aussehen „Schlicht“ steht die Szene still.
+ * - Bei `prefers-reduced-motion: reduce` steht die 3D-Bühne still.
+ *
+ * Die 3D-Bühne gibt es nur, wenn „3D-Taverne im Hauptmenü“ eingeschaltet ist und das Aussehen
+ * „Taverne“ gilt. Sonst zeigt die Szene allein das gemalte Bild der Lichtstimmung bzw. der
+ * Raumkulisse – beide Ebenen liegen nie übereinander (sonst mischen sich 2D und 3D).
  */
-/** `still`: ruhiges Standbild ohne Parallax, Kamerafahrt und Funken (Hauptmenü ohne die optionale 3D-Taverne). */
-export function TavernScene({ calm = false, station, still = false }: { calm?: boolean; station?: TavernStationId; still?: boolean }) {
+export function TavernScene({ calm = false, station }: { calm?: boolean; station?: TavernStationId }) {
   const scene = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const route = useRoute();
   const room = useChosenRoom();
   const table = useChosenTable();
   const look = useActiveLook();
+  const menu3d = useMenu3d();
+  const use3d = menu3d && look === 'tavern';
   const light = useChosenLight();
   const mood: TavernMood = light === 'auto' ? moodAt(new Date()) : light;
   const isTavern = room === 'tavern';
@@ -102,28 +107,29 @@ export function TavernScene({ calm = false, station, still = false }: { calm?: b
   useEffect(() => {
     const el = scene.current;
     const canvas = canvasRef.current;
-    if (!el || !canvas) return;
+    if (!use3d || !el || !canvas) {
+      setSpotLabel(null);
+      return;
+    }
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches || look === 'plain' || still;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const pointer = { x: 0, y: 0 };
     const smoothPointer = { x: 0, y: 0 };
     let localHover: TavernHotspot | null = null;
     let rafId = 0;
     let time = 0;
 
-    // Gemalte Stationen (nur im Taverne-Aussehen); bis ein Bild geladen ist, bleibt der gelbe Punkt.
+    // Gemalte Stationen; bis ein Bild geladen ist, bleibt der gelbe Punkt.
     const sprites = new Map<string, HTMLImageElement>();
-    if (look === 'tavern') {
-      for (const [id, sprite] of Object.entries(STATION_SPRITES)) {
-        const img = new Image();
-        img.onload = () => {
-          if (reducedMotion) drawFrame();
-        };
-        img.src = sprite.url;
-        sprites.set(id, img);
-      }
+    for (const [id, sprite] of Object.entries(STATION_SPRITES)) {
+      const img = new Image();
+      img.onload = () => {
+        if (reducedMotion) drawFrame();
+      };
+      img.src = sprite.url;
+      sprites.set(id, img);
     }
 
     const drawFrame = () => {
@@ -149,13 +155,9 @@ export function TavernScene({ calm = false, station, still = false }: { calm?: b
       bgGrad.addColorStop(0, pal.bgTop);
       bgGrad.addColorStop(0.6, pal.bgMid);
       bgGrad.addColorStop(1, pal.bgBot);
-      // Im Taverne-Aussehen bleibt der Grund durchsichtig: Dahinter liegt das gemalte Bild der Lichtstimmung (#317).
-      if (look === 'tavern') {
-        ctx.clearRect(0, 0, w, h);
-      } else {
-        ctx.fillStyle = bgGrad;
-        ctx.fillRect(0, 0, w, h);
-      }
+      // Deckender Grund in den Farben der Lichtstimmung: Das gemalte Bild liegt nicht darunter.
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
 
       const activeHighlight =
         getHoveredStation() ?? localHover?.id ?? (targetStation !== 'home' ? targetStation : null);
@@ -333,7 +335,7 @@ export function TavernScene({ calm = false, station, still = false }: { calm?: b
       window.removeEventListener('click', onClick);
       window.removeEventListener('resize', onResize);
     };
-  }, [calm, still, look, room, table, targetStation, mood]);
+  }, [use3d, calm, room, table, targetStation, mood]);
 
   return (
     <div
@@ -342,44 +344,34 @@ export function TavernScene({ calm = false, station, still = false }: { calm?: b
       aria-hidden="true"
       data-calm={calm || undefined}
       data-room={room}
+      data-mode={use3d ? '3d' : 'bild'}
       data-station={targetStation}
       data-clickable={spotLabel ? 'true' : undefined}
     >
-      {/* Rückfall-Bildschicht (falls Canvas deaktiviert ist oder auf sehr schmalen Ansichten) */}
-      <div className="bub-menu-layer bub-menu-back">
-        {isTavern ? (
-          <picture>
-            <source media="(max-width: 760px)" srcSet={MOOD_PORTRAITS[mood]} />
-            <img src={MOOD_IMAGES[mood]} alt="" draggable={false} />
-          </picture>
-        ) : (
-          <img src={ROOM_IMAGES[room]} alt="" draggable={false} />
-        )}
-      </div>
-
-      {/* Stilisierte 3D-Tavernen-Bühne (Stil A, #262) */}
-      <canvas ref={canvasRef} className="bub-menu-canvas" />
-
-      <div className="bub-menu-layer bub-menu-glow" />
-      {isTavern && <div className="bub-menu-layer bub-menu-hearth" />}
-      {calm || still ? null : (
-        <div className="bub-menu-layer bub-menu-motes">
-          {Array.from({ length: 14 }, (_, i) => (
-            <span
-              key={i}
-              style={{
-                left: `${(i * 37) % 97}%`,
-                animationDelay: `${(i * 1.7) % 9}s`,
-                animationDuration: `${9 + (i % 5) * 2}s`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-      {calm || !isTavern ? null : (
-        <div className="bub-menu-layer bub-menu-front">
-          <img src={front} alt="" draggable={false} />
-        </div>
+      {use3d ? (
+        /* Stilisierte 3D-Tavernen-Bühne (Stil A, #262) */
+        <canvas ref={canvasRef} className="bub-menu-canvas" />
+      ) : (
+        <>
+          {/* Gemaltes Standbild: Lichtstimmung (#317) bzw. Raumkulisse (#107) */}
+          <div className="bub-menu-layer bub-menu-back">
+            {isTavern ? (
+              <picture>
+                <source media="(max-width: 760px)" srcSet={MOOD_PORTRAITS[mood]} />
+                <img src={MOOD_IMAGES[mood]} alt="" draggable={false} />
+              </picture>
+            ) : (
+              <img src={ROOM_IMAGES[room]} alt="" draggable={false} />
+            )}
+          </div>
+          <div className="bub-menu-layer bub-menu-glow" />
+          {isTavern && <div className="bub-menu-layer bub-menu-hearth" />}
+          {calm || !isTavern ? null : (
+            <div className="bub-menu-layer bub-menu-front">
+              <img src={front} alt="" draggable={false} />
+            </div>
+          )}
+        </>
       )}
       {!calm && spotLabel && (
         <div
