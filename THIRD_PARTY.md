@@ -115,6 +115,18 @@ Die Tischflächen des Tavernen-Aussehens (`apps/web/src/assets/tische/*.webp`: E
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 
+## Bot-Porträts (KI-erzeugt)
+
+Die 47 Porträts der Computergegner (`packages/ui/src/bots/portraits/bot-*.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-lite-image“) nach eigenen Bildbeschreibungen und mit zwei Porträts aus Marktplatz und Narrenhof als Stilvorlage, November 2026 (#311). Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `bots.json`). Die Figuren sind eigene Erfindungen (Fabeltiere als Uhrwerk-Automaten im barocken Gewand), keine echten Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Kulissen je Rubrik und Spiel (KI-erzeugt)
+
+Die zwölf Hintergrundbilder je Rubrik und Spiel (`apps/web/src/assets/kulissen/*.webp` und `*@2x.webp`: Strategie, Karten, Familie, Mathe, Hafen, Acker, Bach, Nachtweide, Schreibstube, Sternwarte, Marktplatz, Würfelstube): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3-pro-image“) nach eigenen Bildbeschreibungen, November 2026 (#316). Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `kulissen-spiele.json`). Die Bilder zeigen leere Räume und Landschaften ohne Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
 ## Almendra
 
 

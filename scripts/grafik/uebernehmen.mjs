@@ -63,24 +63,29 @@ for (const wahl of positionen.slice(1)) {
   const [breite, hoehe] = groesseFuer(id);
   const frei = freistellenFuer(id);
   const zuschnitt = rand ? ['-gravity', 'center', '-crop', `${Math.round((1 - 2 * rand) * 100)}%x${Math.round((1 - 2 * rand) * 100)}%+0+0`, '+repage'] : [];
-  execFileSync(im, [
-    quelle,
-    ...zuschnitt,
-    ...(frei ? freistellen : []),
-    ...(frei ? ['-background', 'none'] : []),
-    '-resize', `${breite}x${hoehe}^`, '-gravity', 'center', '-extent', `${breite}x${hoehe}`,
-    ...(frei ? gruenSaumDaempfen : []),
-    '-quality', String(manifest.qualitaet ?? 80),
-    ...(frei ? ['-define', 'webp:alpha-quality=95', '-define', 'webp:exact=false'] : []),
-    ziel,
-  ]);
+  // Manifest-Option „zweifach“: zusätzlich <name>@2x.webp in doppelter Größe (z. B. Kulissen für den Tisch-Bildschirm).
+  const fassungen = [[ziel, 1], ...(manifest.zweifach ? [[resolve(zielDir, `${name}@2x.webp`), 2]] : [])];
+  for (const [datei, faktor] of fassungen) {
+    execFileSync(im, [
+      quelle,
+      ...zuschnitt,
+      ...(frei ? freistellen : []),
+      ...(frei ? ['-background', 'none'] : []),
+      '-resize', `${breite * faktor}x${hoehe * faktor}^`, '-gravity', 'center', '-extent', `${breite * faktor}x${hoehe * faktor}`,
+      ...(frei ? gruenSaumDaempfen : []),
+      '-quality', String(manifest.qualitaet ?? 80),
+      ...(frei ? ['-define', 'webp:alpha-quality=95', '-define', 'webp:exact=false'] : []),
+      datei,
+    ]);
+    if (faktor === 2) uebernommen.push(relative(WURZEL, datei));
+  }
 
   // Original in voller Auflösung ins private Repo (nicht ins öffentliche).
   const zielOriginal = resolve(originale, relative(WURZEL, zielDir), `${name}.png`);
   mkdirSync(dirname(zielOriginal), { recursive: true });
   copyFileSync(quelle, zielOriginal);
   uebernommen.push(relative(WURZEL, ziel));
-  console.log(`${id} v${v}${frei ? ' (freigestellt)' : ''} → ${relative(WURZEL, ziel)} (${Math.round(statSync(ziel).size / 1024)} KB) + Original: ${zielOriginal}`);
+  console.log(`${id} v${v}${frei ? ' (freigestellt)' : ''} → ${relative(WURZEL, ziel)} (${Math.round(statSync(ziel).size / 1024)} KB${manifest.zweifach ? `, @2x ${Math.round(statSync(resolve(zielDir, `${name}@2x.webp`)).size / 1024)} KB` : ''}) + Original: ${zielOriginal}`);
 }
 
 const gewaehlteIds = positionen.slice(1).map((w) => w.split('=')[0]);

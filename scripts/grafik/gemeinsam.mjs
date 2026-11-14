@@ -90,7 +90,7 @@ oder einen anderen Ort angeben: GRAFIK_ORIGINALE_DIR=/pfad/zu/originale node …
 
 /** Pfad des Originals zu einer WebP-Datei (relativ zur Repo-Wurzel), falls im Archiv vorhanden. */
 export function originalZu(webpRelativ) {
-  const ohneEndung = webpRelativ.replace(/\.webp$/, '');
+  const ohneEndung = webpRelativ.replace(/\.webp$/, '').replace(/@2x$/, ''); // @2x-Fassungen teilen das Original
   for (const endung of ORIGINAL_ENDUNGEN) {
     const pfad = resolve(ORIGINALE, `${ohneEndung}.${endung}`);
     if (existsSync(pfad)) return pfad;
