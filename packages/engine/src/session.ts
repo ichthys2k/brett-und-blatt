@@ -98,7 +98,17 @@ export interface SessionDeps {
    * hat sich also geändert. Ein Server stellt daraufhin seinen Wecker neu.
    */
   deadlineChanged?: () => void;
+  /**
+   * Mindest-Bedenkzeit für Bots, die kein eigenes `delayMs` haben (rundenbasierte Spiele): Der
+   * Zug wird zwischen `minMs` und `maxMs` geparkt (deterministisch aus dem Seed), damit er nicht
+   * im selben Augenblick erscheint. Fehlt die Angabe, ziehen solche Bots sofort. Mit begrenzter
+   * Restzeit höchstens ein Zehntel davon, damit schnelle Uhren nicht an der Pause scheitern.
+   */
+  botPauseMs?: { minMs: number; maxMs: number };
 }
+
+/** Anteil der Restzeit, den die Mindest-Bedenkzeit höchstens verbrauchen darf. */
+const BOT_PAUSE_CLOCK_SHARE = 0.1;
 
 /** Ein Bot-Zug, der erst nach seiner Bedenkpause ausgeführt wird. */
 interface ParkedMove<M> {
@@ -132,6 +142,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
   private now: () => number;
   private graceMs: number;
   private botBudgets: Record<BotLevel, number>;
+  private botPause: { minMs: number; maxMs: number } | undefined;
   private botRunner: BotRunner;
   private listeners = new Set<(change: SessionChange) => void>();
   private pendingBots = new Map<SeatId, number>();
@@ -170,6 +181,7 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
     this.graceMs = deps.graceMs ?? 0;
     this.botBudgets = { ...BOT_BUDGET_MS, ...deps.botBudgetMs };
     this.botRunner = deps.botRunner;
+    this.botPause = deps.botPauseMs;
     this.deadlineChanged = deps.deadlineChanged;
     this.clocks = new Clocks(config.time, config.seats.length);
     this.consecutiveTimeouts = config.seats.map(() => 0);
@@ -676,7 +688,8 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
       if (this._disposed || this.pendingBots.get(seat) !== token) return;
       // Mit Bedenkpause: Der Zug wird geparkt und erst bei Fälligkeit geprüft – auch wenn
       // inzwischen andere gezogen haben (bei gleichzeitigen Spielen wie Bingo der Normalfall).
-      const wait = cause === 'bot' && move !== undefined && bot.delayMs ? bot.delayMs({ view: request.view as V, seat, level, move, rng: Rng.fromSeed(request.seed, 'pause') }) : 0;
+      let wait = cause === 'bot' && move !== undefined && bot.delayMs ? bot.delayMs({ view: request.view as V, seat, level, move, rng: Rng.fromSeed(request.seed, 'pause') }) : 0;
+      if (cause === 'bot' && move !== undefined && !bot.delayMs && this.botPause) wait = this.thinkPause(seat, request.seed);
       if (wait > 0) {
         this.park(seat, { move: move as M, cause, due: this.now() + wait, token });
         return;
@@ -693,6 +706,15 @@ export class LocalSession<S = unknown, M = unknown, V = unknown> implements Game
       (move) => finish(move as M),
       () => finish(undefined),
     );
+  }
+
+  /** Mindest-Bedenkzeit eines Bots ohne eigenes `delayMs` (siehe `SessionDeps.botPauseMs`). */
+  private thinkPause(seat: SeatId, seed: string): number {
+    const { minMs, maxMs } = this.botPause!;
+    let wait = Math.round(minMs + Rng.fromSeed(seed, 'think').next() * Math.max(0, maxMs - minMs));
+    const left = this.clocks.read(seat, this.now()).leftMs;
+    if (left !== null && left !== undefined) wait = Math.min(wait, Math.floor(Math.max(0, left) * BOT_PAUSE_CLOCK_SHARE));
+    return Math.max(0, wait);
   }
 
   private park(seat: SeatId, parked: ParkedMove<M>): void {

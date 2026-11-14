@@ -238,6 +238,52 @@ describe('LocalSession für den Server', () => {
   });
 });
 
+describe('Mindest-Bedenkzeit der Bots (botPauseMs, #367)', () => {
+  function pausedSession(time: { kind: 'none' } | { kind: 'perMove'; moveMs: number } = { kind: 'none' }, botPauseMs: { minMs: number; maxMs: number } | null = { minMs: 1_200, maxMs: 2_000 }) {
+    let now = 0;
+    const session = new LocalSession(
+      nim,
+      { gameId: 'nim', seats: [{ kind: 'human', name: 'Anna' }, { kind: 'bot', name: 'Bot', level: 'hard' }], options: {}, seed: 'test', time },
+      { botRunner: inlineBotRunner([nim]), now: () => now, botPauseMs: botPauseMs ?? undefined },
+    );
+    return { session, advance: (ms: number) => (now += ms) };
+  }
+
+  it('lässt einen Bot ohne eigenes delayMs erst nach der Mindestzeit ziehen', async () => {
+    const { session, advance } = pausedSession();
+    session.submit(0, { take: 1 });
+    await flush();
+    expect(session.log).toHaveLength(1);
+    const due = session.nextDeadline();
+    expect(due).not.toBeNull();
+    expect(due!).toBeGreaterThanOrEqual(1_200);
+    expect(due!).toBeLessThanOrEqual(2_000);
+    advance(1_199);
+    session.tick();
+    expect(session.log).toHaveLength(1);
+    advance(801);
+    session.tick();
+    expect(session.log).toHaveLength(2);
+    session.dispose();
+  });
+
+  it('zieht ohne Angabe sofort wie bisher', async () => {
+    const { session } = pausedSession({ kind: 'none' }, null);
+    session.submit(0, { take: 1 });
+    await flush();
+    expect(session.log).toHaveLength(2);
+    session.dispose();
+  });
+
+  it('kürzt die Pause bei knapper Restzeit auf ein Zehntel', async () => {
+    const { session } = pausedSession({ kind: 'perMove', moveMs: 5_000 });
+    session.submit(0, { take: 1 });
+    await flush();
+    expect(session.nextDeadline()).toBeLessThanOrEqual(500);
+    session.dispose();
+  });
+});
+
 describe('Bedenkpause der Bots (delayMs)', () => {
   const slowNim = { ...nim, bots: nim.bots.map((bot) => ({ ...bot, delayMs: () => 5_000 })) };
 
