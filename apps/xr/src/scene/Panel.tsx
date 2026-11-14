@@ -44,6 +44,18 @@ export interface VoiceControls {
   report: () => void;
 }
 
+/** Mixed Reality (#370): Tisch auf eine Fläche legen und verkleinern; nur in einer Mixed-Reality-Sitzung vorhanden. */
+export interface ViewPlacement {
+  placing: boolean;
+  placed: boolean;
+  percent: number;
+  start: () => void;
+  cancel: () => void;
+  release: () => void;
+  bigger: () => void;
+  smaller: () => void;
+}
+
 export interface ViewAdjust {
   up: () => void;
   down: () => void;
@@ -60,6 +72,7 @@ interface PanelProps {
   boardMoves: Set<number>;
   onMove: (index: number) => void;
   adjust: ViewAdjust;
+  placement?: ViewPlacement;
   voice: VoiceControls;
 }
 
@@ -72,7 +85,7 @@ interface Btn {
 
 type Mode = 'main' | 'phrases' | 'view' | 'voice';
 
-export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice }: PanelProps) {
+export function Panel({ room, game, you, send, boardMoves, onMove, adjust, placement, voice }: PanelProps) {
   const [page, setPage] = useState(0);
   const [seatPage, setSeatPage] = useState(0);
   const [mode, setMode] = useState<Mode>('main');
@@ -125,6 +138,18 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice
       { label: 'Tisch näher', press: adjust.closer },
       { label: 'Tisch weiter weg', press: adjust.farther },
     ]);
+    if (placement) {
+      if (placement.placing) lines.push('Blick auf eine Fläche, Abzug oder Tippen legt den Tisch ab.');
+      rows.push([
+        placement.placing ? { label: 'Abbrechen', press: placement.cancel } : { label: 'Auf Fläche legen', press: placement.start, active: placement.placed },
+        { label: 'Schweben', press: placement.release, disabled: !placement.placed },
+      ]);
+      rows.push([
+        { label: 'Tisch kleiner', press: placement.smaller },
+        { label: `Größe ${placement.percent} %`, press: () => {}, disabled: true },
+        { label: 'Tisch größer', press: placement.bigger },
+      ]);
+    }
     const volume = getVolume();
     rows.push([
       { label: '🔈 leiser', press: () => setVolume(volume - 0.1) },

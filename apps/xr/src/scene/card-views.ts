@@ -355,3 +355,76 @@ export function cardMoveIndexes(moves: unknown[]): Set<number> {
   });
   return handled;
 }
+
+// ---------------------------------------------------------------------------
+// Kartenflug (#366): Aus zwei aufeinanderfolgenden Sichten ergibt sich, woher eine neue Karte kam.
+
+/** Wo eine Karte losfliegt. */
+export type Origin = { kind: 'hand'; index: number; count: number } | { kind: 'seat'; seat: number } | { kind: 'stock' };
+
+export interface Flights {
+  /** Neue Runde: Die Karten kommen alle vom Stapel. */
+  deal: boolean;
+  /** Je Ablage: Herkunft der neuen oberen Karte (null: unverändert oder unbekannt). */
+  piles: (Origin | null)[];
+  /** Je Reihe und Karte. */
+  rows: (Origin | null)[][];
+  /** Parallel zu `view.trick`. */
+  trick: (Origin | null)[];
+  /** Neue Karten der eigenen Hand nach Karten-ID. */
+  handDraws: Record<string, Origin>;
+  /** Je Platz: Zahl der neu in die Hand gekommenen (äußersten) Karten. */
+  otherDraws: Record<number, number>;
+}
+
+export const NO_FLIGHTS: Flights = { deal: false, piles: [], rows: [], trick: [], handDraws: {}, otherDraws: {} };
+
+const faceKey = (face: Face | null | undefined): string => (face ? `${face.corner}|${face.center}|${face.color}` : '');
+
+/**
+ * Vergleicht die vorige mit der neuen Sicht. `deal`: Neue Runde, alles kommt vom Stapel.
+ * Wer eine Karte gespielt hat, ergibt sich daraus, wessen Hand kleiner wurde; bei mehreren
+ * gleichzeitig (Speed) bleibt die Herkunft unbekannt und die Karte erscheint ohne Flug.
+ */
+export function diffFlights(prev: CardView | null, next: CardView, opts: { mySeat: number | null; deal: boolean }): Flights {
+  if (opts.deal) {
+    return {
+      ...NO_FLIGHTS,
+      deal: true,
+      handDraws: Object.fromEntries(next.hand.map((c) => [c.id, { kind: 'stock' } as Origin])),
+      otherDraws: Object.fromEntries(next.others.map((o) => [o.seat, o.count])),
+    };
+  }
+  if (!prev) return NO_FLIGHTS;
+
+  const nextIds = new Set(next.hand.map((c) => c.id));
+  const prevIds = new Set(prev.hand.map((c) => c.id));
+  const missing = prev.hand.map((c, index) => ({ id: c.id, index })).filter((x) => !nextIds.has(x.id));
+  const movers: Origin[] = [];
+  if (missing.length > 0) movers.push({ kind: 'hand', index: missing[0]!.index, count: prev.hand.length });
+  for (const o of next.others) {
+    const before = prev.others.find((p) => p.seat === o.seat);
+    if (before && o.count < before.count) movers.push({ kind: 'seat', seat: o.seat });
+  }
+  const mover = movers.length === 1 ? movers[0]! : null;
+
+  const piles = next.piles.map((face, k) => (face && faceKey(face) !== faceKey(prev.piles[k]) ? mover : null));
+  const rows = next.rows.map((row, r) => {
+    const before = new Set((prev.rows[r] ?? []).map(faceKey));
+    return row.map((face) => (before.has(faceKey(face)) ? null : mover));
+  });
+  const trick = next.trick.map((t) => {
+    const sameBefore = prev.trick.some((p) => p.seat === t.seat && p.faces.map(faceKey).join() === t.faces.map(faceKey).join());
+    if (sameBefore) return null;
+    if (t.seat === opts.mySeat) return mover?.kind === 'hand' ? mover : ({ kind: 'seat', seat: t.seat } as Origin);
+    return { kind: 'seat', seat: t.seat } as Origin;
+  });
+  const handDraws: Record<string, Origin> = {};
+  for (const c of next.hand) if (!prevIds.has(c.id)) handDraws[c.id] = { kind: 'stock' };
+  const otherDraws: Record<number, number> = {};
+  for (const o of next.others) {
+    const before = prev.others.find((p) => p.seat === o.seat);
+    if (before && o.count > before.count) otherDraws[o.seat] = o.count - before.count;
+  }
+  return { deal: false, piles, rows, trick, handDraws, otherDraws };
+}

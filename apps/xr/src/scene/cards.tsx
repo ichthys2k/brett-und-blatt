@@ -5,13 +5,14 @@
  * geschickt wird immer ein Eintrag daraus.
  */
 import type { GameMessage } from '@brett-und-blatt/online';
-import { useState } from 'react';
-import { CanvasTexture, SRGBColorSpace } from 'three';
+import { useFrame } from '@react-three/fiber';
+import { useRef, useState } from 'react';
+import { CanvasTexture, SRGBColorSpace, type Group } from 'three';
 import { seatAngle } from './Seats';
 import { TABLE_CENTER, TABLE_RADIUS } from './Tavern';
 import { GOLD } from './text';
 import { Button3D } from './ui3d';
-import { cardsOfMove, readCardView, type Face } from './card-views';
+import { NO_FLIGHTS, cardsOfMove, diffFlights, readCardView, type CardView, type Face, type Flights, type Origin } from './card-views';
 
 export { cardMoveIndexes, isCardGame } from './card-views';
 
@@ -84,10 +85,34 @@ function faceTexture(face: Face | null): CanvasTexture {
   return texture;
 }
 
-export function Card({ face, position, rotation, highlight, selected, onPress, scale = 1 }: { face: Face | null; position: [number, number, number]; rotation?: [number, number, number]; highlight?: boolean; selected?: boolean; onPress?: () => void; scale?: number }) {
+/** Dauer eines Kartenflugs in Sekunden und Höhe des Bogens. */
+const FLY_SECONDS = 0.4;
+const FLY_ARC = 0.1;
+
+type Euler3 = [number, number, number, ('XYZ' | 'YXZ')?];
+
+export function Card({ face, position, rotation, highlight, selected, onPress, scale = 1, flyFrom, flyDelay = 0 }: { face: Face | null; position: [number, number, number]; rotation?: Euler3; highlight?: boolean; selected?: boolean; onPress?: () => void; scale?: number; flyFrom?: [number, number, number]; flyDelay?: number }) {
   const [hover, setHover] = useState(false);
+  // Kartenflug (#366): Nur beim Entstehen der Karte; danach gelten wieder die Eigenschaften.
+  const [landed, setLanded] = useState(!flyFrom);
+  const group = useRef<Group>(null);
+  const startedAt = useRef<number | null>(null);
+  useFrame((state) => {
+    const g = group.current;
+    if (!flyFrom || landed || !g) return;
+    if (startedAt.current === null) startedAt.current = state.clock.elapsedTime + flyDelay;
+    const t = (state.clock.elapsedTime - startedAt.current) / FLY_SECONDS;
+    if (t >= 1) {
+      setLanded(true);
+      return;
+    }
+    const k = t <= 0 ? 0 : 1 - (1 - t) * (1 - t);
+    g.position.set(flyFrom[0] + (position[0] - flyFrom[0]) * k, flyFrom[1] + (position[1] - flyFrom[1]) * k + Math.sin(Math.PI * k) * FLY_ARC, flyFrom[2] + (position[2] - flyFrom[2]) * k);
+    const r = rotation ?? [0, 0, 0];
+    g.rotation.set(r[0] + 0.9 * (1 - k), r[1], r[2], r[3] ?? 'XYZ');
+  });
   return (
-    <group position={position} rotation={rotation} scale={scale * (hover && onPress ? 1.08 : 1)}>
+    <group ref={group} position={landed ? position : flyFrom} rotation={rotation} scale={scale * (hover && onPress ? 1.08 : 1)}>
       <mesh
         onClick={
           onPress
@@ -117,13 +142,45 @@ export function Card({ face, position, rotation, highlight, selected, onPress, s
   );
 }
 
-function FaceDownStack({ count, position, rotation }: { count: number; position: [number, number, number]; rotation?: [number, number, number] }) {
-  const shown = Math.min(count, 8);
+/** Merkt sich die letzte Sicht und liefert, woher die neuen Karten dieser Version kamen (#366). */
+let flightMemory: { gameId: string; round: number; version: number; view: CardView; flights: Flights } | null = null;
+
+function flightsFor(game: GameMessage, view: CardView): Flights {
+  const before = flightMemory;
+  if (before && before.gameId === game.gameId && before.round === game.round && before.version === game.version) return before.flights;
+  const newRound = !before || before.gameId !== game.gameId || before.round !== game.round;
+  const deal = newRound && game.version <= 2;
+  const flights = newRound ? (deal ? diffFlights(null, view, { mySeat: game.yourSeat, deal: true }) : NO_FLIGHTS) : diffFlights(before!.view, view, { mySeat: game.yourSeat, deal: false });
+  flightMemory = { gameId: game.gameId, round: game.round, version: game.version, view, flights };
+  return flights;
+}
+
+/** Hand eines Gegners (#366): aufrechter Fächer an seinem Platz, die Rücken zur Tischmitte. */
+function OpponentHand({ seat, angle, count, newCount, stock, y, onPress, highlight }: { seat: number; angle: number; count: number; newCount: number; stock: [number, number, number]; y: number; onPress?: (index: number) => (() => void) | undefined; highlight?: (index: number) => boolean }) {
+  const shown = Math.min(count, 14);
+  const spread = Math.min(0.045, 0.34 / Math.max(shown, 1));
+  const r = TABLE_RADIUS - 0.06;
+  const base: [number, number] = [TABLE_CENTER[0] + Math.sin(angle) * r, TABLE_CENTER[2] + Math.cos(angle) * r];
   return (
-    <group position={position} rotation={rotation}>
-      {Array.from({ length: shown }, (_, i) => (
-        <Card key={i} face={null} position={[(i - (shown - 1) / 2) * 0.012, 0.0006 * i, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={0.8} />
-      ))}
+    <group>
+      {Array.from({ length: shown }, (_, i) => {
+        const offset = i - (shown - 1) / 2;
+        const position: [number, number, number] = [base[0] + Math.cos(angle) * offset * spread, y + 0.1 - Math.abs(offset) * 0.002, base[1] - Math.sin(angle) * offset * spread];
+        const fresh = i >= shown - newCount;
+        return (
+          <Card
+            key={`${seat}-${i}`}
+            face={null}
+            position={position}
+            rotation={[-0.3, angle + Math.PI, offset * 0.04, 'YXZ']}
+            scale={0.8}
+            highlight={highlight?.(i)}
+            onPress={onPress?.(i)}
+            flyFrom={fresh ? stock : undefined}
+            flyDelay={fresh ? (i - (shown - newCount)) * 0.08 : 0}
+          />
+        );
+      })}
     </group>
   );
 }
@@ -133,6 +190,7 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
   const [picked, setPicked] = useState<string[]>([]);
   const view = readCardView(game);
   if (!view) return null;
+  const flights = flightsFor(game, view);
   const y = TABLE_CENTER[1] + 0.003;
   const count = game.seats.length;
   const moves = game.legalMoves.map((move, i) => ({ move, label: game.moveLabels?.[i] ?? '', cards: cardsOfMove(move) }));
@@ -164,6 +222,22 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
   const pileX = (k: number) => TABLE_CENTER[0] + 0.05 + (k - (view.piles.length - 1) / 2) * 0.1;
   // Ist der Stapel leer, darf aber gezogen werden (die Ablage wird gemischt), liegt trotzdem eine Karte da.
   const stockShown = Math.max(drawMove ? 1 : 0, Math.min(6, Math.ceil(view.stock / 5)));
+  const stockPos: [number, number, number] = [TABLE_CENTER[0] - (view.rows.length ? 0.32 : 0.08) - (view.piles.length > 1 ? 0.08 : 0), y + 0.01, TABLE_CENTER[2]];
+  const handPos = (index: number, total: number): [number, number, number] => {
+    const off = index - (total - 1) / 2;
+    return [off * Math.min(0.055, 0.5 / Math.max(total, 1)), y + 0.11, fanZ - Math.abs(off) * 0.004];
+  };
+  /** Weltposition, von der eine Karte losfliegt (#366). */
+  const startOf = (origin: Origin | null | undefined): [number, number, number] | undefined => {
+    if (!origin) return undefined;
+    if (origin.kind === 'stock') return stockPos;
+    if (origin.kind === 'hand') return handPos(origin.index, origin.count);
+    if (origin.seat === game.yourSeat) return handPos(0, 1);
+    const a = seatAngle(origin.seat, game.yourSeat, count);
+    const r = TABLE_RADIUS - 0.06;
+    return [TABLE_CENTER[0] + Math.sin(a) * r, y + 0.1, TABLE_CENTER[2] + Math.cos(a) * r];
+  };
+  let dealt = 0;
   return (
     <group>
       {view.hand.map((card, i) => {
@@ -178,10 +252,12 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
             highlight={isPlayable}
             selected={picked.includes(card.id) || choice === card.id}
             onPress={isPlayable ? () => press(card.id) : undefined}
+            flyFrom={startOf(flights.handDraws[card.id])}
+            flyDelay={flights.handDraws[card.id] ? dealt++ * 0.08 : 0}
           />
         );
       })}
-      {view.piles.map((face, k) => (face ? <Card key={`pile-${k}`} face={face} position={[pileX(k), y + 0.001, TABLE_CENTER[2]]} rotation={[-Math.PI / 2, 0, 0]} scale={1.2} /> : null))}
+      {view.piles.map((face, k) => (face ? <Card key={`pile-${k}`} face={face} position={[pileX(k), y + 0.001, TABLE_CENTER[2]]} rotation={[-Math.PI / 2, 0, 0]} scale={1.2} flyFrom={startOf(flights.piles[k])} /> : null))}
       {view.rows.map((row, r) => (
         <group key={`row-${r}`} position={[TABLE_CENTER[0], y + 0.001, TABLE_CENTER[2] - 0.05 + (r - (view.rows.length - 1) / 2) * 0.1]}>
           {row.map((face, k) => (
@@ -205,6 +281,7 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
             position={[TABLE_CENTER[0] + Math.sin(angle) * 0.09 + Math.cos(angle) * (j - (t.faces.length - 1) / 2) * 0.03, y + 0.001 + (k + j) * 0.001, TABLE_CENTER[2] + Math.cos(angle) * 0.09 - Math.sin(angle) * (j - (t.faces.length - 1) / 2) * 0.03]}
             rotation={[-Math.PI / 2, 0, angle]}
             scale={1.1}
+            flyFrom={startOf(flights.trick[k])}
           />
         ));
       })}
@@ -212,20 +289,22 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
         const angle = seatAngle(o.seat, game.yourSeat, count);
         const r = TABLE_RADIUS - 0.14;
         const position: [number, number, number] = [TABLE_CENTER[0] + Math.sin(angle) * r, y, TABLE_CENTER[2] + Math.cos(angle) * r];
-        if (o.seat === view.drawFrom) {
-          // Schwarzer Peter: jede verdeckte Karte einzeln zum Ziehen antippen.
-          return (
-            <group key={o.seat} position={position} rotation={[0, angle, 0]}>
-              {Array.from({ length: o.count }, (_, i) => {
-                const move = drawAt(i);
-                return <Card key={i} face={null} position={[(i - (o.count - 1) / 2) * 0.05, 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={0.8} highlight={Boolean(move)} onPress={move ? () => onMove(move.move) : undefined} />;
-              })}
-            </group>
-          );
-        }
+        // Handkarten der anderen: aufrechter Fächer an ihrem Platz (#366); bei Schwarzer Peter einzeln zum Ziehen antippbar.
+        const drawing = o.seat === view.drawFrom;
         return (
           <group key={o.seat}>
-            {o.count > 0 && <FaceDownStack count={o.count} position={position} rotation={[0, angle, 0]} />}
+            {o.count > 0 && (
+              <OpponentHand
+                seat={o.seat}
+                angle={angle}
+                count={o.count}
+                newCount={flights.otherDraws[o.seat] ?? 0}
+                stock={stockPos}
+                y={y}
+                highlight={drawing ? (i) => Boolean(drawAt(i)) : undefined}
+                onPress={drawing ? (i) => (drawAt(i) ? () => onMove(drawAt(i)!.move) : undefined) : undefined}
+              />
+            )}
             {(o.open ?? []).map((face, j) => (
               <Card key={j} face={face} position={[position[0] + Math.cos(angle) * (j - ((o.open?.length ?? 1) - 1) / 2) * 0.07, y + 0.002, position[2] - Math.sin(angle) * (j - ((o.open?.length ?? 1) - 1) / 2) * 0.07]} rotation={[-Math.PI / 2, 0, angle]} />
             ))}

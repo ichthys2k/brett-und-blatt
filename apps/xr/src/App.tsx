@@ -39,9 +39,11 @@ export function App() {
   const [joining, setJoining] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
   const [vrSupported, setVrSupported] = useState(false);
+  const [arSupported, setArSupported] = useState(false);
 
   useEffect(() => {
     void navigator.xr?.isSessionSupported('immersive-vr').then(setVrSupported, () => setVrSupported(false));
+    void navigator.xr?.isSessionSupported('immersive-ar').then(setArSupported, () => setArSupported(false));
     const onHash = () => setCode(codeFromHash());
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
@@ -200,6 +202,11 @@ export function App() {
           {vrSupported && (
             <button type="button" className="xr-primary" onClick={() => void store.enterVR()}>
               In VR betreten
+            </button>
+          )}
+          {arSupported && (
+            <button type="button" className="xr-primary" onClick={() => void store.enterAR()}>
+              In Mixed Reality betreten
             </button>
           )}
           <button type="button" onClick={() => { location.hash = ''; setCode(null); }}>

@@ -146,6 +146,8 @@ export interface RoomDeps {
   changed?(): void;
   /** Bedenkzeit der Bots je Stufe – auf dem Server eventuell knapper. */
   botBudgetMs?: Partial<Record<BotLevel, number>>;
+  /** Mindest-Bedenkzeit der Bots in rundenbasierten Spielen (`SessionDeps.botPauseMs`); fehlt: ohne Pause. */
+  botPauseMs?: { minMs: number; maxMs: number };
   /** Alle online angebotenen Spiele – für „zufälliges Spiel“ am Rundenende. Fehlt: nur vorgeschlagene Spiele. */
   listGames?(): AnyGameModule[];
   /** Zufallszahl in [0, 1) für Lobby-Dinge wie „Teams mischen“ (Standard: Math.random). */
@@ -1268,6 +1270,7 @@ export class Room {
       now: () => this.deps.now(),
       graceMs: CLOCK_GRACE_MS,
       botBudgetMs: this.deps.botBudgetMs,
+      botPauseMs: this.deps.botPauseMs,
       // Ein Bot hat einen Zug mit Bedenkpause geparkt: speichern lassen, damit der Wecker neu gestellt wird.
       deadlineChanged: () => this.deps.changed?.(),
     };

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MIN_ABOVE_TABLE, SEAT_PAGE, headHeight, liftAboveTable, lowestEdge, seatPageRange } from '../apps/xr/src/scene/panel-layout';
+import { SCALE_MAX, SCALE_MIN, SCALE_STEP, clampScale, placementOrigin, scaleAboutTable } from '../apps/xr/src/scene/Placement';
+import { TABLE_CENTER } from '../apps/xr/src/scene/Tavern';
 import { EYE_MAX, EYE_MIN, alignOffset } from '../apps/xr/src/scene/view-align';
 
 const TABLE_TOP = 0.74;
@@ -46,5 +48,24 @@ describe('Tisch am Kopf ausrichten (#365)', () => {
     expect(2.1 + o.y).toBe(EYE_MAX);
     expect(o.x).toBe(-0.3);
     expect(o.z).toBe(0.2);
+  });
+});
+
+describe('Mixed Reality: Tisch auf Fläche (#370)', () => {
+  it('legt die Tischmitte auf den Treffer', () => {
+    const o = placementOrigin({ x: 0.4, y: 0.9, z: -1.2 });
+    expect(o).toEqual({ x: TABLE_CENTER[0] - 0.4, y: TABLE_CENTER[1] - 0.9, z: TABLE_CENTER[2] + 1.2 });
+  });
+
+  it('begrenzt die Größe auf 30 bis 100 Prozent', () => {
+    expect(clampScale(0.1)).toBe(SCALE_MIN);
+    expect(clampScale(2)).toBe(SCALE_MAX);
+    expect(clampScale(0.7 + SCALE_STEP)).toBe(0.8);
+  });
+
+  it('rechnet Punkte um die Tischmitte um und hält die Mitte fest', () => {
+    expect(scaleAboutTable([...TABLE_CENTER], 0.5)).toEqual([...TABLE_CENTER]);
+    const p = scaleAboutTable([TABLE_CENTER[0] + 0.2, TABLE_CENTER[1], TABLE_CENTER[2]], 0.5);
+    expect(p[0]).toBeCloseTo(TABLE_CENTER[0] + 0.4);
   });
 });
