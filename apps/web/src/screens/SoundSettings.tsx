@@ -13,11 +13,13 @@ import {
   type RoomScene,
   type TableSurface,
   setLook,
+  setMenu3d,
   setRoomScene,
   setTableSurface,
   TABLE_SURFACES,
   useChosenLook,
   useChosenRoom,
+  useMenu3d,
   useChosenTable,
 } from '../lib/look';
 import { music, useMusicPrefs } from '../lib/music';
@@ -64,6 +66,7 @@ function LookChoice() {
   const chosen = useChosenLook();
   const table = useChosenTable();
   const room = useChosenRoom();
+  const menu3d = useMenu3d();
   const options: readonly { id: Look; label: string; text: string }[] = [
     { id: 'plain', label: t('look.plain'), text: t('look.plain.text') },
     { id: 'tavern', label: t('look.tavern'), text: t('look.tavern.text') },
@@ -83,6 +86,16 @@ function LookChoice() {
         ))}
         {contrastForcesPlain() && <p className="text-sm text-muted">{t('look.contrast')}</p>}
       </fieldset>
+
+      {chosen === 'tavern' && !contrastForcesPlain() && (
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line bg-surface p-4">
+          <input type="checkbox" className="mt-1 accent-accent" checked={menu3d} onChange={(event) => setMenu3d(event.target.checked)} />
+          <span>
+            <span className="block font-medium">{t('look.menu3d.title')}</span>
+            <span className="block text-sm text-muted">{t('look.menu3d.text')}</span>
+          </span>
+        </label>
+      )}
 
       {chosen === 'tavern' && !contrastForcesPlain() && (
         <div className="grid gap-4 sm:grid-cols-2">

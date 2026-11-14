@@ -868,6 +868,8 @@ const de = {
   'look.room.garden': 'Schlossgarten',
   'cards.portraits': 'Bildkarten',
   'cards.portraits.text': 'Bube, Dame und König (beim deutschen Blatt Unter, Ober und König) zeigen gemalte Tierporträts. Am Desktop standardmäßig an, auf dem Handy aus.',
+  'look.menu3d.title': '3D-Taverne im Hauptmenü',
+  'look.menu3d.text': 'Bewegte Taverne mit Kamerafahrt, Funken und Mausbewegung. Aus: ruhiges Standbild (schont Akku und Augen).',
   'look.contrast': 'Dein Gerät wünscht erhöhten Kontrast, darum bleibt es bei „Schlicht“.',
   'home.tavern.welcome': 'Tritt ein und such dir einen Tisch: Karten- und Brettspiele, allein gegen den Computer oder zu mehreren.',
   'sound.title': 'Ton',
