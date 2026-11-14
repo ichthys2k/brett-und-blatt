@@ -50,6 +50,12 @@ interface GrabOptions<I> {
   onDrop: (from: I, to: string | number | null) => void;
   /** Kantenlänge des Bretts, bestimmt die Größe der Auffangfläche. */
   size: number;
+  /** `wall`: senkrechtes Brett (Vier in einer Reihe), Auffangfläche vor dem Gestell, z der Figur ist dort die Höhe. */
+  plane?: 'floor' | 'wall';
+  /** Nur die Lage entlang x zählt (Spalten über einem senkrechten Brett). */
+  alongX?: boolean;
+  /** Mitte der Auffangfläche beim senkrechten Brett (Höhe des Gestells). */
+  wallCenterY?: number;
 }
 
 /** Hält die gegriffene Figur und liefert die unsichtbare Fläche, die Bewegung und Loslassen auffängt. */
@@ -68,9 +74,10 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
   const track = (x: number, z: number) => {
     const h = current.current;
     if (!h) return;
-    const snap = nearestTarget([x, z], latest.current.targets(h.id), latest.current.radius);
+    const all = latest.current.targets(h.id);
+    const snap = latest.current.alongX ? nearestTarget([x, 0], all.map((t) => ({ ...t, z: 0 })), latest.current.radius) : nearestTarget([x, z], all, latest.current.radius);
     if (snap && snap.id !== h.snap?.id) pulse('move');
-    setHeld({ id: h.id, x: snap?.x ?? x, z: snap?.z ?? z, snap });
+    setHeld({ id: h.id, x: snap?.x ?? x, z: latest.current.alongX ? z : (snap?.z ?? z), snap });
   };
   const release = (drop: boolean) => {
     const h = current.current;
@@ -80,15 +87,16 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
     if (drop) latest.current.onDrop(h.id, h.snap?.id ?? null);
   };
 
+  const wall = latest.current.plane === 'wall';
   const layer = held ? (
     <group ref={frame}>
       <mesh
-        position={[0, 0.09, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
+        position={wall ? [0, latest.current.wallCenterY ?? 0, 0.03] : [0, 0.09, 0]}
+        rotation={wall ? [0, 0, 0] : [-Math.PI / 2, 0, 0]}
         onPointerMove={(e) => {
           e.stopPropagation();
           const local = frame.current?.worldToLocal(e.point.clone());
-          if (local) track(local.x, local.z);
+          if (local) track(local.x, wall ? local.y : local.z);
         }}
         onPointerUp={(e) => {
           e.stopPropagation();
@@ -102,4 +110,23 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
     </group>
   ) : null;
   return { held, begin, layer };
+}
+
+/** Schale mit Spielsteinen am eigenen Platz: daraus nimmt man den Stein, den man setzen will (Setzspiele). */
+export function Bowl({ x, z, onGrab, children }: { x: number; z: number; onGrab: () => void; children?: ReactNode }) {
+  return (
+    <group
+      position={[x, 0, z]}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        onGrab();
+      }}
+    >
+      <mesh position={[0, 0.02, 0]}>
+        <cylinderGeometry args={[0.04, 0.03, 0.012, 28]} />
+        <meshStandardMaterial color="#a8825a" roughness={0.8} />
+      </mesh>
+      {children}
+    </group>
+  );
 }

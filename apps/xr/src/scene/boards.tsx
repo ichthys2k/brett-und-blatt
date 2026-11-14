@@ -9,7 +9,7 @@ import { TABLE_CENTER } from './Tavern';
 import { GOLD } from './text';
 import { Button3D } from './ui3d';
 import { pulse } from '../haptics';
-import { movesFor, useGrab } from './grab';
+import { Bowl, movesFor, useGrab } from './grab';
 
 export interface BoardProps {
   game: GameMessage;
@@ -100,8 +100,44 @@ export function TicTacToeBoard({ game, onMove }: BoardProps) {
   const at = (cell: number): [number, number] => [((cell % 3) - 1) * step, (Math.floor(cell / 3) - 1) * step];
   const moves = game.legalMoves as { type: string; cell: number }[];
   const win = new Set(view.winLine ?? []);
+  const places = moves.flatMap((move, i) => (move.type === 'place' ? [{ move, i }] : []));
+  const bowlZ = 0.27;
+  const grab = useGrab<string>({
+    size: 0.4,
+    radius: 0.05,
+    targets: () => places.map((p) => ({ id: p.move.cell, x: at(p.move.cell)[0], z: at(p.move.cell)[1] })),
+    onDrop: (_, to) => {
+      const hit = places.find((p) => p.move.cell === to);
+      if (hit) onMove(hit.move);
+    },
+  });
+  const mark = (seat: number | null, x: number, z: number, y: number) =>
+    seat === 0 ? (
+      <group position={[x, y, z]} rotation={[0, Math.PI / 4, 0]}>
+        <mesh>
+          <boxGeometry args={[0.09, 0.02, 0.018]} />
+          <meshStandardMaterial color={RED} />
+        </mesh>
+        <mesh>
+          <boxGeometry args={[0.018, 0.02, 0.09]} />
+          <meshStandardMaterial color={RED} />
+        </mesh>
+      </group>
+    ) : (
+      <mesh position={[x, y, z]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.035, 0.009, 12, 32]} />
+        <meshStandardMaterial color="#2f5d3a" />
+      </mesh>
+    );
   return (
     <Plate size={[0.4, 0.4]}>
+      {places.length > 0 && game.yourSeat !== null && (
+        <Bowl x={0} z={bowlZ} onGrab={() => grab.begin('bowl', 0, bowlZ)}>
+          {grab.held === null && mark(game.yourSeat, 0, 0, 0.04)}
+        </Bowl>
+      )}
+      {grab.held && mark(game.yourSeat, grab.held.x, grab.held.z, 0.07)}
+      {grab.layer}
       {[-0.5, 0.5].map((k) => (
         <group key={k}>
           <mesh position={[k * step, 0.018, 0]}>
@@ -163,8 +199,44 @@ export function FourInARowBoard({ game, onMove }: BoardProps) {
   const win = new Set(view.winLines.flat());
   const colX = (col: number) => (col - (view.cols - 1) / 2) * s;
   const base = TOP + 0.03;
+  // Greifen: Scheibe oben über dem Gestell nehmen, über einer Spalte loslassen (#383).
+  const drops = moves.flatMap((move) => (move.type === 'drop' ? [move] : []));
+  const discY = base + height + 0.06;
+  const grab = useGrab<string>({
+    size: Math.max(width, height) + 0.1,
+    plane: 'wall',
+    wallCenterY: base + height / 2,
+    alongX: true,
+    radius: s * 0.55,
+    targets: () => drops.map((m) => ({ id: m.column, x: colX(m.column), z: 0 })),
+    onDrop: (_, to) => {
+      const hit = drops.find((m) => m.column === to);
+      if (hit) onMove(hit);
+    },
+  });
+  const disc = (x: number, y: number, glow = false) => (
+    <mesh position={[x, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
+      <cylinderGeometry args={[s * 0.42, s * 0.42, 0.012, 24]} />
+      <meshStandardMaterial color={game.yourSeat === 0 ? RED : YELLOW} emissive={glow ? GOLD : '#000000'} emissiveIntensity={glow ? 0.5 : 0} />
+    </mesh>
+  );
   return (
     <group position={[TABLE_CENTER[0], 0, TABLE_CENTER[2] - 0.05]}>
+      {drops.length > 0 && game.yourSeat !== null && (
+        <group
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            grab.begin('disc', 0, discY);
+          }}
+        >
+          {grab.held === null && disc(0, discY)}
+          <mesh position={[0, discY, 0]} visible={false}>
+            <boxGeometry args={[s, s, 0.03]} />
+          </mesh>
+        </group>
+      )}
+      {grab.held && disc(grab.held.x, grab.held.z, true)}
+      {grab.layer}
       {/* Gestell: Rückwand und Füße */}
       <mesh position={[0, base + height / 2, -0.012]}>
         <boxGeometry args={[width + 0.03, height + 0.03, 0.008]} />

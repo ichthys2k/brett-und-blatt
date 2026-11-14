@@ -8,7 +8,7 @@ import { TABLE_CENTER } from './Tavern';
 import { GOLD } from './text';
 import type { BoardProps } from './boards';
 import { pulse } from '../haptics';
-import { movesFor, useGrab } from './grab';
+import { Bowl, movesFor, useGrab } from './grab';
 
 const TOP = TABLE_CENTER[1] + 0.002;
 const BOARD = 0.42;
@@ -97,9 +97,40 @@ function GridBoard({ game, onMove, spec }: BoardProps & { spec: GridSpec }) {
     );
   }
   const r = cell * 0.43;
+  // Setzen durch Greifen: Stein aus der Schale am eigenen Platz auf ein leuchtendes Feld legen (#383).
+  const placeMoves = game.legalMoves.flatMap((move) => {
+    const target = spec.targetOf(move);
+    return target === null ? [] : [{ move, target }];
+  });
+  const myWhite = game.yourSeat === 1;
+  const bowlZ = BOARD / 2 + 0.07;
+  const grab = useGrab<string>({
+    size: BOARD,
+    radius: cell * 0.6,
+    targets: () => placeMoves.map((p) => ({ id: p.target, x: at(p.target)[0], z: at(p.target)[1] })),
+    onDrop: (_, to) => {
+      const hit = placeMoves.find((p) => p.target === to);
+      if (hit) onMove(hit.move);
+    },
+  });
   return (
     <Plate size={BOARD + (points ? cell : 0.02)} color={spec.surface}>
       {lines}
+      {placeMoves.length > 0 && game.yourSeat !== null && (
+        <Bowl x={0} z={bowlZ} onGrab={() => grab.begin('bowl', 0, bowlZ)}>
+          {grab.held === null && (
+            <group position={[0, 0.014, 0]}>
+              <Stone x={0} z={0} r={r} white={myWhite} />
+            </group>
+          )}
+        </Bowl>
+      )}
+      {grab.held && (
+        <group position={[0, 0.03, 0]}>
+          <Stone x={grab.held.x} z={grab.held.z} r={r} white={myWhite} glow />
+        </group>
+      )}
+      {grab.layer}
       {Array.from({ length: size * size }, (_, i) => {
         const white = spec.stone(i);
         if (white === null) return null;

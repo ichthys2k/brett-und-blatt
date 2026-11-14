@@ -10,6 +10,7 @@ import { TABLE_CENTER } from './Tavern';
 import { GOLD, labelTexture } from './text';
 import { Button3D, Sign } from './ui3d';
 import { pulse } from '../haptics';
+import { useGrab } from './grab';
 
 const TOP = TABLE_CENTER[1] + 0.002;
 /** Farben der Plätze 1–6 (wie die Spielfarben der Web-App ungefähr). */
@@ -80,11 +81,19 @@ function Peg({ color, height = 0.012, radius = 0.007 }: { color: string; height?
 }
 
 /** Ein Spielstein zum Antippen (Kugel auf Fuß); leuchtet, wenn er gewählt oder wählbar ist. */
-function Stone({ color, selected, movable, onPress, scale = 1 }: { color: string; selected?: boolean; movable?: boolean; onPress?: () => void; scale?: number }) {
+function Stone({ color, selected, movable, onPress, onGrab, scale = 1 }: { color: string; selected?: boolean; movable?: boolean; onPress?: () => void; onGrab?: () => void; scale?: number }) {
   const [hover, setHover] = useState(false);
   return (
     <group
       scale={scale * (hover && onPress ? 1.12 : 1)}
+      onPointerDown={
+        onGrab
+          ? (e) => {
+              e.stopPropagation();
+              onGrab();
+            }
+          : undefined
+      }
       onClick={
         onPress
           ? (e) => {
@@ -140,6 +149,18 @@ function useFromTo<M>(entries: { from: number; to: number; move: M; label: strin
         send(found[0]!.move);
         setSelected(null);
       } else if (found.length > 1) setOptions(found.map((f) => ({ move: f.move, label: f.label })));
+    },
+    /** Gegriffene Figur über einem Ziel losgelassen: Zug senden, bei mehreren Möglichkeiten die Wahlknöpfe zeigen. */
+    drop: (from: number, to: number, send: (move: M) => void) => {
+      const found = entries.filter((e) => e.from === from && e.to === to);
+      if (found.length === 1) {
+        send(found[0]!.move);
+        setSelected(null);
+        setOptions(null);
+      } else if (found.length > 1) {
+        setSelected(from);
+        setOptions(found.map((f) => ({ move: f.move, label: f.label })));
+      }
     },
     clear: () => {
       setOptions(null);
@@ -368,6 +389,15 @@ export function FourPlayerChessBoard({ game, onMove }: BoardProps) {
   const pos = (i: number): [number, number] => [((i % 14) - 6.5) * s, (Math.floor(i / 14) - 6.5) * s];
   const entries = (game.legalMoves as FourChessMove[]).flatMap((move, i) => (move.t === 'm' ? [{ from: move.f, to: move.to, move: move as unknown, label: game.moveLabels?.[i] ?? '' }] : []));
   const select = useFromTo(entries);
+  const grab = useGrab<number>({
+    size: 14 * s,
+    radius: s * 0.7,
+    targets: (from) => [...new Set(entries.filter((e) => e.from === from).map((e) => e.to))].map((to) => ({ id: to, x: pos(to)[0], z: pos(to)[1] })),
+    onDrop: (from, to) => {
+      if (to !== null) select.drop(from, to as number, onMove);
+    },
+  });
+  const shownTargets = grab.held ? [...new Set(entries.filter((e) => e.from === grab.held!.id).map((e) => e.to))].map((to) => ({ to, label: entries.find((e) => e.from === grab.held!.id && e.to === to)?.label })) : select.targets;
   const turn = FOUR_TURN[FOUR_COLORS[game.yourSeat ?? 0] ?? 'r'] ?? 0;
   const squares: ReactNode[] = [];
   for (let i = 0; i < 196; i++) {
@@ -377,7 +407,7 @@ export function FourPlayerChessBoard({ game, onMove }: BoardProps) {
     const [x, z] = pos(i);
     const piece = view.board[i];
     const canSelect = select.movable.has(i);
-    const isTarget = select.targets.some((t) => t.to === i);
+    const isTarget = shownTargets.some((t) => t.to === i);
     const press = () => (canSelect ? select.pick(i) : isTarget ? select.choose(i, onMove) : undefined);
     squares.push(
       <group key={i} position={[x, 0, z]}>
@@ -391,10 +421,15 @@ export function FourPlayerChessBoard({ game, onMove }: BoardProps) {
           <boxGeometry args={[s, 0.002, s]} />
           <meshStandardMaterial color={i === select.selected ? '#2f5d3a' : (row + col) % 2 === 0 ? '#d9b98a' : '#6b4728'} />
         </mesh>
-        {piece && (
+        {piece && grab.held?.id !== i && (
           <group
             position={[0, 0.018, 0]}
             scale={0.62}
+            onPointerDown={(e) => {
+              if (!canSelect) return;
+              e.stopPropagation();
+              grab.begin(i, x, z);
+            }}
             onClick={(e) => {
               e.stopPropagation();
               press();
@@ -410,7 +445,13 @@ export function FourPlayerChessBoard({ game, onMove }: BoardProps) {
     <Plate size={[14 * s + 0.03, 14 * s + 0.03]} color="#3f2a18">
       <group rotation={[0, turn, 0]}>
         {squares}
-        {select.targets.map(({ to, label }) => {
+        {grab.held && view.board[grab.held.id] && (
+          <group position={[grab.held.x, 0.05, grab.held.z]} scale={0.62}>
+            <Piece type={view.board[grab.held.id]!.t.toLowerCase()} white={false} tint={view.board[grab.held.id]!.d ? '#7d7d7d' : FOUR_TINTS[view.board[grab.held.id]!.c]} />
+          </group>
+        )}
+        {grab.layer}
+        {shownTargets.map(({ to, label }) => {
           const [x, z] = pos(to);
           return <Target key={to} position={[x, 0.02, z]} size={s * 0.3} onPress={() => select.choose(to, onMove)} label={label} />;
         })}
@@ -458,6 +499,15 @@ export function ChineseCheckersBoard({ game, onMove }: BoardProps) {
   };
   const entries = (game.legalMoves as { type: string; from: number; to: number }[]).flatMap((move, i) => (move.type === 'move' ? [{ from: move.from, to: move.to, move: move as unknown, label: game.moveLabels?.[i] ?? '' }] : []));
   const select = useFromTo(entries);
+  const grab = useGrab<number>({
+    size: 0.5,
+    radius: d * 0.7,
+    targets: (from) => [...new Set(entries.filter((e) => e.from === from).map((e) => e.to))].map((to) => ({ id: to, x: pos(to)[0], z: pos(to)[1] })),
+    onDrop: (from, to) => {
+      if (to !== null) select.drop(from, to as number, onMove);
+    },
+  });
+  const shownTargets = grab.held ? [...new Set(entries.filter((e) => e.from === grab.held!.id).map((e) => e.to))].map((to) => ({ to, label: undefined as string | undefined })) : select.targets;
   // Zacke 3 liegt unten; jede weitere Zacke ist 60° weiter im Uhrzeigersinn.
   const arm = view.homes[game.yourSeat ?? 0] ?? 3;
   const turn = ((arm - 3) * Math.PI) / 3;
@@ -471,20 +521,26 @@ export function ChineseCheckersBoard({ game, onMove }: BoardProps) {
         {STAR.map((_, i) => {
           const [x, z] = pos(i);
           const owner = view.board[i];
-          const isTarget = select.targets.some((t) => t.to === i);
+          const isTarget = shownTargets.some((t) => t.to === i);
           return (
             <group key={i} position={[x, 0.016, z]}>
               <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.0005, 0]}>
                 <circleGeometry args={[0.0075, 16]} />
                 <meshStandardMaterial color="#3f2a18" />
               </mesh>
-              {owner !== null && owner !== undefined && (
-                <Stone color={SEAT_COLORS[owner % SEAT_COLORS.length]!} selected={select.selected === i} movable={select.movable.has(i) && select.selected === null} onPress={select.movable.has(i) ? () => select.pick(i) : undefined} />
+              {owner !== null && owner !== undefined && grab.held?.id !== i && (
+                <Stone color={SEAT_COLORS[owner % SEAT_COLORS.length]!} selected={select.selected === i} movable={select.movable.has(i) && select.selected === null} onPress={select.movable.has(i) ? () => select.pick(i) : undefined} onGrab={select.movable.has(i) ? () => grab.begin(i, x, z) : undefined} />
               )}
               {isTarget && <Target position={[0, 0.003, 0]} size={0.01} onPress={() => select.choose(i, onMove)} label={select.targets.find((t) => t.to === i)?.label} />}
             </group>
           );
         })}
+        {grab.held && view.board[grab.held.id] !== null && view.board[grab.held.id] !== undefined && (
+          <group position={[grab.held.x, 0.03, grab.held.z]}>
+            <Stone color={SEAT_COLORS[view.board[grab.held.id]! % SEAT_COLORS.length]!} selected />
+          </group>
+        )}
+        {grab.layer}
       </group>
     </group>
   );

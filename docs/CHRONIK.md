@@ -8,6 +8,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**VR: Greifen in weiteren Spielen, Teil 1 (14.11.2026, #383):** Mit dem Baustein aus #382 (`scene/grab.tsx`, neu `Bowl`, senkrechte Auffangfläche) spielbar durch Greifen: Tic-Tac-Toe, Go, Gomoku, Reversi, Vier in einer Reihe, Sternhalma, Vierer-Schach (`boards.tsx`, `boards2.tsx`, `boards3.tsx`). Im Browser mit der Maus geprüft (Tic-Tac-Toe, Gomoku, Vier in einer Reihe), nicht in der Brille. Offen: Nicht ärgern!, Domino, Grafschaft, Farbe & Form, Wortgitter, Schiffe versenken.
+
 **VR: Greifen und Ablegen (14.11.2026, #382):** Schach, Dame und Mühle: Figur greifen, über das Brett führen, am erlaubten Ziel einrasten, loslassen sendet den Zug aus `legalMoves`. Baustein `apps/xr/src/scene/grab.tsx` (`useGrab` mit unsichtbarer Auffangfläche, reine `nearestTarget`/`movesFor`, Test `tests/xr-greifen.test.ts`), eingehängt in `boards.tsx` (Schach, mit Umwandlungsauswahl) und `boards2.tsx` (Dame, Mühle inkl. Vorrat). Mit der Maus im Browser geprüft (e2–e3 gegen den Bot); nicht in der Brille. Entfernen nach Mühle bleibt Antippen.
 
 **VR: Räumlicher Klang (14.11.2026, #381):** In der Brille erklingen Spielklänge am Ort des Geschehens (Platz am Tischrand, sonst Tischmitte) und Stimmen aus Richtung des Sprecherplatzes (`PannerNode`/HRTF). Reine Ortsrechnung `apps/xr/src/sound-spot.ts` (Test `tests/xr-klang.test.ts`), `apps/xr/src/scene/SpatialAudio.tsx` (Hörer = Kopf, Tischgröße eingerechnet), `play(name, ort)`/`setPlacer` in `apps/xr/src/sound.ts`, `VoiceChat.setSpatial/place/listen` in `packages/rtc/src/voice.ts`. Im Browser unverändert. Noch nicht in der Brille geprüft; Zugklänge von Brettspielen kommen vom Platz, nicht vom Zielfeld.
