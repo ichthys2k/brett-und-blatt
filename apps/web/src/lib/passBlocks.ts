@@ -18,6 +18,7 @@ import { collectionFromStored, compactCollection, compactLearnBook, emptyCollect
 import { mergeChildPasses, sameChildPasses, sanitizeChildPasses, type ChildPasses } from './classPassesCore';
 import { applyItems, collectItems, mergeItems, sameItems, sanitizeItems, syncedNames, type Items } from './settingsBlock';
 import { CLASSES_KEY, loadAllClassEntries, mergeKnownClasses, sameKnownClasses, sanitizeKnownClasses, type KnownClass } from './classes';
+import { reloadPieceSets } from '@brett-und-blatt/ui';
 
 
 /*
@@ -73,7 +74,8 @@ export function registerWebPassBlocks(): void {
     name: 'einstellungen',
     read: () => collectItems(read, syncedNames(allKeys()), loadKnown(), Date.now()),
     write: (items) => {
-      applyItems(items, read, write);
+      // Neue Figurenwahl aus dem Pass sofort übernehmen (die Wahl wird sonst nur beim Start gelesen).
+      if (applyItems(items, read, write)) reloadPieceSets();
       write(KNOWN_KEY, JSON.stringify(items));
     },
     // Der Block liegt als Eintragsliste vor; der frühere Stand (nur Lieblingsspiele) hatte die Form { favorites, changed }.

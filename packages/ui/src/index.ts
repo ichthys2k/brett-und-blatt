@@ -4,7 +4,7 @@ export { FitBox } from './FitBox';
 export { GridBoard, type GridBoardProps } from './GridBoard';
 export { renderAvatar, setAvatarRenderer } from './avatarRenderer';
 export { TintFilter, TintFilters, tintFilter, tintId } from './pieces/tint';
-export { PIECE_SET_DEFAULTS, PIECE_SET_IDS, PIECE_SET_LABELS, chosenPieceSet, resolvePieceSet, setPieceImageResolver, setPieceSet, usePieceSet, type PieceSetId } from './pieces/pieceSets';
+export { PIECE_SET_DEFAULTS, PIECE_SET_IDS, PIECE_SET_LABELS, chosenPieceSet, reloadPieceSets, resolvePieceSet, setPieceImageResolver, setPieceSet, usePieceSet, type PieceSetId } from './pieces/pieceSets';
 export { ClockRing, PlayerChip, formatClock, type PlayerChipProps } from './PlayerChip';
 export { NetBoard, type NetBoardProps } from './NetBoard';
 export { useElementSize } from './useElementSize';

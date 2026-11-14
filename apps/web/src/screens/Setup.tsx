@@ -1,6 +1,7 @@
 import { BOT_LEVELS, randomSeed, resolveOptions, teamsFor, timePresetsOf, type BotLevel, type Options, type SeatConfig, type SeatKind, type TimePresetId } from '@brett-und-blatt/engine';
 import { CardSetNote } from '../components/CardSetNote';
 import { useEffect, useState } from 'react';
+import { PieceSetPicker } from '../components/PieceSetPicker';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { HowToList } from '../components/HowTo';
 import { QrCode } from '../components/OnlineParts';
@@ -10,6 +11,7 @@ import { startGame } from '../lib/activeGame';
 import { describeTime, levelLabel } from '../lib/format';
 import { LEVELS, levelStats, suggest } from '../lib/botRating';
 import { loadBook } from '../lib/chronikStore';
+import { PIECE_GAMES } from '../lib/pieceGames';
 import { passBook } from '../lib/passes';
 import { loadGame, type LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
@@ -140,6 +142,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
   if (!game || !draft) return <p className="p-6 text-center text-muted">{t('setup.loading')}</p>;
 
   const { info, module, ui } = game;
+  const pieceGame = PIECE_GAMES.find((g) => g.id === info.id);
   const teamsInfo = teamsFor(info, draft.options, draft.seats.length);
   const visibleOptions = module.options.filter(
     (spec) => !spec.hidden && (!spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(draft.options[id] ?? module.options.find((o) => o.id === id)?.default ?? ''))),
@@ -322,6 +325,8 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
       )}
 
       {ui.SetupExtra && <ui.SetupExtra options={resolveOptions(module, draft.options)} seats={draft.seats.length} setOption={setOption} />}
+
+      {pieceGame && <PieceSetPicker game={pieceGame} />}
 
       <Section title={t('setup.time')}>
         <Segmented
