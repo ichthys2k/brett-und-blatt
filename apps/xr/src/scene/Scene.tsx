@@ -28,7 +28,8 @@ import { handAnchor } from '../hand-fan';
 import { POSTURE_LIFT, getPosture, holdingHand, onUiStateChange } from '../ui-state';
 import { WristMenu } from './WristMenu';
 import { clampOffset, dragOffset, inEdgeZone, pinchScale, tableGrab, tableLocked, type Offset as GrabOffset } from '../table-grab';
-import { GESTURE_REACTION, GestureTracker, gesturesEnabled, type Joints, type Vec3 } from '../gestures';
+import { GESTURE_REACTION, GestureTracker, fingerCurls, gesturesEnabled, type Joints, type Vec3 } from '../gestures';
+import { presence } from '../presence';
 import { SpatialAudio } from './SpatialAudio';
 import type { VoiceChat } from '@brett-und-blatt/rtc';
 import { Figures, POSE_STALE_MS, PoseSender } from './Meet';
@@ -217,7 +218,9 @@ function GestureWatcher({ send }: { send: (m: ClientMessage) => void }) {
   const gl = useThree((s) => s.gl);
   const tracker = useRef(new GestureTracker());
   useFrame((_, __, frame) => {
-    if (!gesturesEnabled() || !frame) return;
+    presence.fingers.left = null;
+    presence.fingers.right = null;
+    if (!frame) return;
     const session = gl.xr.getSession();
     const space = gl.xr.getReferenceSpace();
     if (!session || !space) return;
@@ -226,6 +229,10 @@ function GestureWatcher({ send }: { send: (m: ClientMessage) => void }) {
       if (!source.hand || (source.handedness !== 'left' && source.handedness !== 'right')) continue;
       hands[source.handedness] = readJoints(frame, source.hand, space);
     }
+    // Fingerhaltung für die Mitspieler (#385), unabhängig davon, ob Gesten an sind.
+    if (hands.left) presence.fingers.left = fingerCurls(hands.left);
+    if (hands.right) presence.fingers.right = fingerCurls(hands.right);
+    if (!gesturesEnabled()) return;
     if (!hands.left && !hands.right) return;
     const gesture = tracker.current.feed(performance.now(), hands);
     if (gesture) {

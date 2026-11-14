@@ -36,6 +36,40 @@ function seatPoint(angle: number, radius: number, y: number): [number, number, n
   return [TABLE_CENTER[0] + Math.sin(angle) * radius, y, TABLE_CENTER[2] + Math.cos(angle) * radius];
 }
 
+/** Um wie viel das Schild dem Spieler am Zug zugewandt wird (0 = zur Tischmitte, 1 = ganz zu ihm). */
+export const TURN_BLEND = 0.45;
+
+/** Blickrichtung (Drehung um die Hochachse) eines Stuhlschilds: zur Tischmitte, sanft zum Spieler am Zug gedreht. */
+export function signYaw(angle: number, activeAngle: number | null, radius: number): number {
+  const base = angle + Math.PI;
+  if (activeAngle === null || activeAngle === angle) return base;
+  const from = [Math.sin(angle) * radius, Math.cos(angle) * radius];
+  const to = [Math.sin(activeAngle) * radius, Math.cos(activeAngle) * radius];
+  const wanted = Math.atan2(to[0]! - from[0]!, to[1]! - from[1]!);
+  let delta = wanted - base;
+  while (delta > Math.PI) delta -= 2 * Math.PI;
+  while (delta < -Math.PI) delta += 2 * Math.PI;
+  return base + TURN_BLEND * delta;
+}
+
+/** Schild am Stuhl, das sich sanft zum Spieler am Zug dreht (#385). */
+function TurningSign({ position, yaw, lines, width, height }: { position: [number, number, number]; yaw: number; lines: string[]; width: number; height: number }) {
+  const group = useRef<Group>(null);
+  useFrame((_, delta) => {
+    const g = group.current;
+    if (!g) return;
+    let diff = yaw - g.rotation.y;
+    while (diff > Math.PI) diff -= 2 * Math.PI;
+    while (diff < -Math.PI) diff += 2 * Math.PI;
+    g.rotation.y += diff * Math.min(1, delta * 4);
+  });
+  return (
+    <group ref={group} position={position} rotation={[0, yaw, 0]}>
+      <Sign lines={lines} position={[0, 0, 0]} width={width} height={height} />
+    </group>
+  );
+}
+
 function Floating({ text, born, position, rotation }: { text: string; born: number; position: [number, number, number]; rotation: [number, number, number] }) {
   const group = useRef<Group>(null);
   useFrame(() => {
@@ -52,6 +86,7 @@ function Floating({ text, born, position, rotation }: { text: string; born: numb
 }
 
 export function Seats({ seats, signals, memberAvatar, figures = [] }: { seats: SeatInfo[]; signals: Signal[]; memberAvatar: (memberId: string) => string | null; figures?: string[] }) {
+  const activeAngle = seats.find((s) => s.turn)?.angle ?? null;
   return (
     <group>
       {seats.map((seat) => {
@@ -64,7 +99,11 @@ export function Seats({ seats, signals, memberAvatar, figures = [] }: { seats: S
           <group key={seat.index}>
             {/* VR-Spieler mit Figur tragen ihr Schild selbst (scene/Meet.tsx); Handy-Spieler bleiben Schild am Stuhl. */}
             {!(seat.memberId && !seat.mine && figures.includes(seat.memberId)) && (
-              <Sign lines={[`${seat.avatar} ${seat.name}`, status]} position={signPos} rotation={rotation} width={seat.mine ? 0.26 : 0.36} height={seat.mine ? 0.08 : 0.13} />
+              seat.mine ? (
+                <Sign lines={[`${seat.avatar} ${seat.name}`, status]} position={signPos} rotation={rotation} width={0.26} height={0.08} />
+              ) : (
+                <TurningSign position={signPos} yaw={signYaw(seat.angle, activeAngle, TABLE_RADIUS + 0.38)} lines={[`${seat.avatar} ${seat.name}`, status]} width={0.36} height={0.13} />
+              )
             )}
             {own.map((signal) => (
               <Floating

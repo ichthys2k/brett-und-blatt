@@ -22,6 +22,8 @@ export interface RemotePose {
   held?: Held | null;
   pointLeft?: boolean;
   pointRight?: boolean;
+  fingerLeft?: number[] | null;
+  fingerRight?: number[] | null;
 }
 
 /** Nach so langer Zeit ohne offenen Kanal gilt der Rückfall über den Raum. */
@@ -77,8 +79,8 @@ export class PeerMesh {
     });
   }
 
-  broadcast(head: Pose7, left: Pose7 | null, right: Pose7 | null, held: Held | null = null, point: [boolean, boolean] = [false, false]): void {
-    this.rtc.broadcast(encodePacket({ head, left, right, held, pointLeft: point[0], pointRight: point[1] }));
+  broadcast(head: Pose7, left: Pose7 | null, right: Pose7 | null, held: Held | null = null, point: [boolean, boolean] = [false, false], fingers: { left: number[] | null; right: number[] | null } = { left: null, right: null }): void {
+    this.rtc.broadcast(encodePacket({ head, left, right, held, pointLeft: point[0], pointRight: point[1], fingerLeft: fingers.left, fingerRight: fingers.right }));
   }
 
   status(): Record<string, string> {

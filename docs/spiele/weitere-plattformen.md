@@ -213,3 +213,5 @@ Dazu die gemischte Partie aus der XR-App (`node apps/xr/test/gemischt.mjs`): Mau
 - [Factorio Lua-API: LuaHelpers (`write_file`)](https://lua-api.factorio.com/latest/classes/LuaHelpers.html)
 - [Factorio-Mod Wiretap (Brückenprogramm)](https://mods.factorio.com/mod/wiretap?from=updated)
 - [Bedrock Wiki: `@minecraft/server-net`](https://wiki.bedrock.dev/scripting/script-net)
+
+**Zusatzlast der Präsenz im VR-Treffpunkt (14.11.2026, #385):** Kopf, beide Hände, gegriffene Figur, Zeigen und Finger gehen im selben Paket über den Datenkanal zwischen den Brillen, nicht über den Spieleserver. Ein Paket mit allen Feldern ist etwa 210 Zeichen groß (mit zufälligen Posen gemessen), höchstens 400 (Test `tests/xr-praesenz.test.ts`); bei zehn Paketen je Sekunde sind das etwa 2 bis 4 kB/s je Gegenstelle. Der Server sieht nur den Rückfall (Kopf, einmal je Sekunde) und die Reaktionen aus Gesten (höchstens eine je 5 s, unter der bestehenden Ratenbegrenzung). Nicht mit zwei echten Brillen gemessen.

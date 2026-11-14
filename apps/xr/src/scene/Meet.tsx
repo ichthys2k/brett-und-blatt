@@ -36,7 +36,7 @@ function moved(a: Pose7 | null, b: Pose7 | null): boolean {
 /** Schickt die eigene Pose: über offene Kanäle bis zehnmal je Sekunde, im Rückfall einmal je Sekunde nur den Kopf über den Raum. */
 export function PoseSender({ mesh, xrMembers, sendRoomPose, origin, scale = 1 }: { mesh: PeerMesh; xrMembers: string[]; sendRoomPose: (head: Pose7) => void; origin: [number, number, number]; scale?: number }) {
   const { camera, gl } = useThree();
-  const last = useRef<{ at: number; fallbackAt: number; head: Pose7 | null; left: Pose7 | null; right: Pose7 | null; held: Held | null; point: string }>({ at: 0, fallbackAt: 0, head: null, left: null, right: null, held: null, point: '' });
+  const last = useRef<{ at: number; fallbackAt: number; head: Pose7 | null; left: Pose7 | null; right: Pose7 | null; held: Held | null; point: string; fingers: string }>({ at: 0, fallbackAt: 0, head: null, left: null, right: null, held: null, point: '', fingers: '' });
   const tmpP = useRef(new Vector3());
   const tmpQ = useRef(new Quaternion());
   useFrame(() => {
@@ -75,15 +75,17 @@ export function PoseSender({ mesh, xrMembers, sendRoomPose, origin, scale = 1 }:
       held = [hx!, hy!, hz!, presence.held[3]];
     }
     const pointKey = `${point[0]}${point[1]}`;
+    const fingers = { left: presence.fingers.left, right: presence.fingers.right };
+    const fingerKey = `${fingers.left?.join('') ?? ''}|${fingers.right?.join('') ?? ''}`;
     const heldMoved = (held === null) !== (state.held === null) || (held !== null && state.held !== null && (Math.hypot(held[0] - state.held[0], held[1] - state.held[1], held[2] - state.held[2]) > 0.005 || held[3] !== state.held[3]));
-    const changed = moved(head, state.head) || moved(left, state.left) || moved(right, state.right) || heldMoved || pointKey !== state.point;
+    const changed = moved(head, state.head) || moved(left, state.left) || moved(right, state.right) || heldMoved || pointKey !== state.point || fingerKey !== state.fingers;
     if (!changed && now - state.at < HEARTBEAT_MS) return;
-    mesh.broadcast(head, left, right, held, point);
+    mesh.broadcast(head, left, right, held, point, fingers);
     if (now - state.fallbackAt >= FALLBACK_EVERY_MS && mesh.needsFallback()) {
       sendRoomPose(head);
       state.fallbackAt = now;
     }
-    Object.assign(state, { at: now, head, left, right, held, point: pointKey });
+    Object.assign(state, { at: now, head, left, right, held, point: pointKey, fingers: fingerKey });
   });
   return null;
 }
@@ -105,6 +107,8 @@ function Figure({ pose, angle, info }: { pose: () => RemotePose | undefined; ang
   const chest = useRef<Group>(null);
   const left = useRef<Mesh>(null);
   const right = useRef<Mesh>(null);
+  // Finger (#385): je Hand fünf Gruppen, die nach den übertragenen Beugewerten einknicken.
+  const fingerRefs = useRef<(Group | null)[][]>([[], []]);
   const target = useRef({ p: new Vector3(), q: new Quaternion(), l: new Vector3(), r: new Vector3() });
   const heldRef = useRef<Group>(null);
   const heldBall = useRef<Mesh>(null);
@@ -159,8 +163,17 @@ function Figure({ pose, angle, info }: { pose: () => RemotePose | undefined; ang
       if (!ref.current) continue;
       ref.current.visible = Boolean(value);
       if (value) {
-        transform(value, angle, v, new Quaternion());
+        const handQ = new Quaternion();
+        transform(value, angle, v, handQ);
         ref.current.position.lerp(v, k);
+        ref.current.quaternion.slerp(handQ, k);
+        const side = ref === left ? 0 : 1;
+        const curls = side === 0 ? current.fingerLeft : current.fingerRight;
+        fingerRefs.current[side]!.forEach((finger, i) => {
+          if (!finger) return;
+          finger.visible = Boolean(curls);
+          if (curls) finger.rotation.x = -(curls[i] ?? 0) * (Math.PI / 2 / 9);
+        });
       }
     }
   });
@@ -204,6 +217,21 @@ function Figure({ pose, angle, info }: { pose: () => RemotePose | undefined; ang
         <mesh key={i} ref={ref} visible={false}>
           <sphereGeometry args={[0.035, 16, 12]} />
           <meshStandardMaterial color="#c9a27a" roughness={0.7} />
+          {[-0.03, -0.015, 0, 0.015, 0.03].map((x, f) => (
+            <group
+              key={f}
+              ref={(g) => {
+                fingerRefs.current[i]![f] = g;
+              }}
+              position={[f === 0 ? (i === 0 ? 0.035 : -0.035) : x * 0.8, 0, -0.03]}
+              visible={false}
+            >
+              <mesh position={[0, 0, -0.0225]}>
+                <boxGeometry args={[0.008, 0.008, f === 0 ? 0.03 : 0.045]} />
+                <meshStandardMaterial color="#c9a27a" roughness={0.7} />
+              </mesh>
+            </group>
+          ))}
         </mesh>
       ))}
     </group>

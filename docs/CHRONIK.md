@@ -8,6 +8,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**VR: Finger, Stuhlschilder und 👋 (14.11.2026, #385, #386):** Fingerhaltung bei Handtracking im Präsenzpaket (`apps/xr/src/presence.ts`, `gestures.ts`, `scene/Meet.tsx`), Stuhlschilder drehen sich zum Spieler am Zug (`scene/Seats.tsx`), Winken löst 👋 aus: `REACTIONS` in `packages/online/src/protocol.ts` um 👋 erweitert (Klang in `apps/web/src/lib/online.ts` vorläufig der des Daumens). Lastmessung in `docs/spiele/weitere-plattformen.md`. Test `tests/xr-praesenz.test.ts`; nicht mit zwei Brillen geprüft.
+
 **VR: Geschlagenes und gewonnene Stiche, Teil 2 (14.11.2026, #390):** Mühle und Vierer-Schach mit Ablage (`scene/Captured.tsx`, `scene/captured.ts`), Stichstapel beim Gewinner für Skat, Doppelkopf, Schafkopf, Binokel (`scene/cards.tsx`, `trickCounts` in `scene/card-views.ts`); Test `tests/xr-ablage.test.ts`. Nur gerechnet und typgeprüft, nicht im Browser gesehen, nicht in der Brille.
 
 **VR: Würfeln mit dem Becher (14.11.2026, #389):** Becher schütteln löst „Würfeln“ aus (Würfelblock, Mäxle, Nicht ärgern!), Rollanimation der Würfel, Würfel zum Halten in den Streifen legen (`scene/boards5.tsx`, `scene/boards3.tsx`, `scene/dice-shake.ts`, Test `tests/xr-wuerfel.test.ts`). Im Browser mit der Maus geprüft (Würfelblock: Schütteln würfelt); Mäxle, Nicht ärgern! und das Halten-Ablegen nicht eigens, nicht in der Brille.

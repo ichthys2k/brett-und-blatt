@@ -20,10 +20,25 @@ export interface Joints {
   littleKnuckle: Vec3;
 }
 
+/** Beugung eines Fingers 0 (gestreckt) … 9 (eingerollt) aus dem Abstand der Spitze zum Handgelenk im Verhältnis zum Fingergrundgelenk. */
+function curlOf(tip: Vec3, knuckle: Vec3, wrist: Vec3): number {
+  const ratio = dist(tip, wrist) / Math.max(dist(knuckle, wrist), 1e-6);
+  const open = 1.9;
+  const closed = 1.0;
+  return Math.max(0, Math.min(9, Math.round(((open - ratio) / (open - closed)) * 9)));
+}
+
+/** Fünf Beugewerte (Daumen bis kleiner Finger) für die Anzeige bei den anderen (#385). */
+export function fingerCurls(j: Joints): number[] {
+  // Daumen: Spitze nah an der Basis des Zeigefingers heißt eingeschlagen.
+  const thumb = Math.max(0, Math.min(9, Math.round((1 - Math.min(1, dist(j.thumbTip, j.indexKnuckle) / 0.1)) * 9)));
+  return [thumb, ...fingers(j).map(([tip, knuckle]) => curlOf(tip, knuckle, j.wrist))];
+}
+
 export type Gesture = 'thumbsUp' | 'wave' | 'clap';
 
-/** Welche vorhandene Reaktion eine Geste auslöst (👋 gibt es im Protokoll nicht, Winken zeigt 🎉). */
-export const GESTURE_REACTION: Record<Gesture, '👍' | '🎉' | '👏'> = { thumbsUp: '👍', wave: '🎉', clap: '👏' };
+/** Welche Reaktion eine Geste auslöst. */
+export const GESTURE_REACTION: Record<Gesture, '👍' | '👋' | '👏'> = { thumbsUp: '👍', wave: '👋', clap: '👏' };
 
 const HOLD_THUMBS_MS = 500;
 const COOLDOWN_MS = 5000;

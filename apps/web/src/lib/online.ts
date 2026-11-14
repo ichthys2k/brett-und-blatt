@@ -114,6 +114,8 @@ const REACTION_SOUNDS: Record<Reaction, SoundName> = {
   '😱': 'emoji-schreck',
   '🎉': 'emoji-konfetti',
   '❤️': 'emoji-herz',
+  // Winken hat noch keinen eigenen Klang (neue Klänge wählt Cornelius aus); bis dahin der des Daumens.
+  '👋': 'emoji-daumen',
 };
 /** Die eigene Reaktion kommt als Echo zurück und klingt leiser als die der anderen. */
 const OWN_SIGNAL_VOLUME = 0.6;

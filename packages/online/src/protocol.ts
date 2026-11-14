@@ -108,7 +108,7 @@ export const PHRASES = ['hello', 'goodGame', 'wellPlayed', 'oops', 'thanks', 'on
 export type Phrase = (typeof PHRASES)[number];
 
 /** Erlaubte Emoji-Reaktionen. */
-export const REACTIONS = ['👍', '👏', '😂', '😮', '🤔', '😏', '🤨', '😱', '🎉', '❤️'] as const;
+export const REACTIONS = ['👍', '👏', '😂', '😮', '🤔', '😏', '🤨', '😱', '🎉', '❤️', '👋'] as const;
 export type Reaction = (typeof REACTIONS)[number];
 
 /*
