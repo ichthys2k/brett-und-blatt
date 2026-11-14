@@ -157,6 +157,24 @@ Die Hintergrundebene der Taverne im Hauptmenü (`apps/web/src/menu/taverne-hinte
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 
+## Grafschaft: Landschaften und Hofaufträge (KI-erzeugt)
+
+Die sechs Landschaften der Plättchen (`packages/games/grafschaft/src/ui/land/*.webp`) und die 20 Vignetten der Hofaufträge (`…/auftraege/bub-grafschaft-q*.webp`): **KI-erzeugt** mit „gemini-3-pro-image“ (Google) nach eigenen Bildbeschreibungen, November 2026 (#318). Auswahl durch Cornelius Lipponer; Manifeste `grafschaft-land.json` und `grafschaft-auftraege.json`. Die Bilder zeigen Landschaften und Gegenstände ohne Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Marktstände: Waren und Stände (KI-erzeugt)
+
+Die vier Waren (`packages/games/market-stalls/src/ui/waren/*.webp`: Brot, Käse, Äpfel, Fisch) und die vier Stand-Kulissen (`…/staende/stand-*.webp`): **KI-erzeugt** mit „gemini-3-pro-image“ (Google) nach eigenen Bildbeschreibungen, November 2026 (#318). Auswahl durch Cornelius Lipponer; Manifeste `marktstaende-waren.json` und `marktstaende-staende.json`.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Rübenacker: Karten und Teile (KI-erzeugt)
+
+Die vier Karten (`packages/games/turnip-patch/src/ui/karten/*.webp`) und die zehn freigestellten Teile (`…/teile/*.webp`: sechs Hasen, Maulwurf, Erdhügel, Rübe, Zaunpfahl): **KI-erzeugt** mit einem Gemini-Bildmodell (Google) nach eigenen Bildbeschreibungen, November 2026 (#318). Auswahl durch Cornelius Lipponer; Manifeste `ruebenacker-karten.json` und `ruebenacker-teile.json`. Die Figuren sind eigene Erfindungen (Tiere im Märchenstil).
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
 ## Almendra
 
 
