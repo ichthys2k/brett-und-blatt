@@ -399,3 +399,32 @@
   width: 2.5rem;
   height: 2.5rem;
 }
+
+/* Pass (#315): gemalter Lederband als Kopf der Profilkarte und Pokalschrank als Bild über der Pokalliste; nur im Taverne-Aussehen. */
+.bub-cabinet-art {
+  display: none;
+}
+[data-look='tavern'] .bub-cabinet-art {
+  display: block;
+  width: 100%;
+  height: 7rem;
+  border-radius: 0.75rem;
+  object-fit: cover;
+  object-position: center 35%;
+}
+[data-look='tavern'] .bub-pass-cover {
+  background: linear-gradient(rgb(28 17 8 / 0.4), rgb(28 17 8 / 0.4)), url('./assets/ehrung/pass-einband.webp') center / cover no-repeat;
+  border-color: #5b3a24;
+  color: #f6e7c8;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.8);
+}
+[data-look='tavern'] .bub-pass-cover button {
+  color: inherit;
+}
+@media (prefers-contrast: more) {
+  [data-look='tavern'] .bub-pass-cover {
+    background: var(--color-surface);
+    color: inherit;
+    text-shadow: none;
+  }
+}
