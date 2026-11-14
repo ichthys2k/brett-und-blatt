@@ -36,3 +36,7 @@ Das bunte Ablegespiel für Familie und Freunde: Passend zur Farbe oder Zahl able
 - KI-Bot `unoBot` in drei Stufen (`easy`, `medium`, `hard`) mit Taktiken für Farbwahl, Aussetzen, Farbmehrheiten und Anprangern.
 - Oberfläche: Handkarten-Fächer (`CardFan` mit `minStep`) bricht bei vielen Karten in bis zu vier überlappende Reihen um, sodass von jeder Karte die Ecke mit Zahl oder Symbol sichtbar bleibt (31.10.2026, F-001); nicht spielbare Karten werden abgedunkelt statt durchscheinend. Mitspieler zeigen ihre Kartenzahl zusätzlich als kleinen verdeckten Fächer (W-019). Pointer Drag & Drop (`usePointerDrag`), sichtbare kaskadierende Flug-Animationen beim Kartenlegen und Nachziehen (inkl. Aufprall-Impuls und organischem Ablagewinkel), Richtungsring mit CSS-Animation, pulsierender „Eins!“-Button, Farbwahl-Modal.
 - Registriert auf dem Cloudflare-Spieleserver (`apps/server/src/games.ts` und `package.json`).
+
+## Viele Mitspieler am kleinen Bildschirm (14.11.2026, #377)
+
+Ab fünf Plätzen und wo der große Tischring (`SeatRing`, ab 680 × 560 px) nicht passt, sitzen die Mitspieler als kleiner Ring um die Tischmitte (`.uno-ring`, Positionen aus `seatRingPosition`): Name, Kartenzahl und „Eins!“-Marke, der Spieler am Zug ist hervorgehoben. Die Tischmitte schrumpft mit dem Ring (`ringScale`), die Leiste, die seitlich rollte, entfällt. In der Seitenleiste des Spielrahmens verlieren die Spieler-Chips im niedrigen Querformat bei vielen Plätzen die Detailzeile (`[data-crowded]` in `apps/web/src/styles.css`), damit die Liste nicht rollt.

@@ -142,3 +142,7 @@ type PokerMove =
 - Lernhilfe: Handname als Standard.
 - Klänge: Feine Abstufung aller Aktionen und Hand-Enden im Katalog (`catalog.json`); Playlist „Kartentisch“.
 - Bot-Name: „Pokerface“.
+
+## Menü im Handy-Querformat (14.11.2026, #378)
+
+`GameUi.seatsOnBoard` meldet, dass die Spieler schon auf dem Spielfeld stehen. Im niedrigen Querformat (Höhe bis 540 px) klappt die Seitenleiste des Spielrahmens dann zu einem Menüknopf ☰ ein und öffnet sich als Schublade über dem Spielfeld (Tipp daneben oder Escape schließt); ein Punkt am Knopf zeigt, dass man dran ist. Der Tisch bekommt dadurch die volle Breite. Desktop, Tablet und Hochformat bleiben unverändert.

@@ -17,6 +17,8 @@
 
 /* Kleines Hochformat, z. B. älteres Handy: Kopf und Knöpfe rücken zusammen, das Spielfeld bekommt den Platz. */
 @custom-variant short (@media (orientation: portrait) and (max-height: 720px));
+/* Sehr niedriges Querformat (Handy mit Browserleisten, #109) */
+@custom-variant tiny (@media (orientation: landscape) and (max-height: 420px));
 
 
 @theme {
@@ -96,6 +98,37 @@ body {
   [data-crowded] .bub-chip-score {
     min-width: 1.5rem;
     padding: 0.05rem 0.3rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Viele Spieler im niedrigen Querformat (#377): Chips ohne Detailzeile, damit die Liste nicht rollt. */
+@media (orientation: landscape) and (max-height: 420px) {
+  [data-crowded] .bub-chip-detail {
+    display: none;
+  }
+
+  [data-crowded] .bub-chip {
+    padding: 0.1rem 0.4rem 0.1rem 0.15rem;
+  }
+
+  [data-crowded] .bub-ring {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 380px) {
+  [data-crowded].bub-players {
+    gap: 0.25rem;
+  }
+
+  [data-crowded] .bub-ring {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
+  [data-crowded] .bub-ring-content > * {
     font-size: 0.8rem;
   }
 }

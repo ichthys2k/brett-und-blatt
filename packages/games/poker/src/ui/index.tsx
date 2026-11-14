@@ -670,6 +670,7 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
 }
 
 export const gameUi: GameUi<PokerView, PokerMove> = {
+  seatsOnBoard: true,
   Board,
   SeatSymbol,
   sounds: {

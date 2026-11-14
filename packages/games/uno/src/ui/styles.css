@@ -323,3 +323,94 @@
   text-decoration: line-through;
   opacity: 0.5;
 }
+
+/* Viele Mitspieler am kleinen Bildschirm (#377): Mini-Tischring statt rollender Leiste */
+.uno-ring {
+  position: relative;
+  flex: 1 1 0;
+  width: 100%;
+  min-height: 0;
+}
+
+.uno-ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.uno-ring-center > * {
+  pointer-events: auto;
+}
+
+.uno-ring-seat {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  min-width: 3.4rem;
+  max-width: 4.6rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+  padding: 0.15rem 0.3rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 0.5rem;
+  background: rgb(0 0 0 / 28%);
+  color: inherit;
+  font-size: 0.65rem;
+  line-height: 1.15;
+  transform: translate(-50%, -50%);
+}
+
+.uno-ring-seat[data-turn] {
+  border-color: #facc15;
+  background: rgb(250 204 21 / 25%);
+  font-weight: 700;
+}
+
+.uno-ring-seat[data-out] {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.uno-ring-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uno-ring-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.uno-ring-back {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.8rem;
+  border-radius: 0.12rem;
+  background: #b91c1c;
+  border: 1px solid rgb(255 255 255 / 60%);
+}
+
+.uno-ring-uno {
+  position: absolute;
+  top: -0.55rem;
+  right: -0.35rem;
+  padding: 0 0.25rem;
+  border-radius: 0.25rem;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 900;
+}
+
+.uno-table[data-ring] .uno-center-area {
+  padding: 0.25rem;
+}

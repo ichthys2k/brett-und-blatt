@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SeatRing, CardFan, useCallDeadline, useElementSize, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, seatRingPosition, CardFan, useCallDeadline, useElementSize, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { getActiveFace } from '../rules';
 import { DARK_COLORS, LIGHT_COLORS, type UnoCard, type UnoColor, type UnoMove, type UnoState } from '../types';
 import './styles.css';
@@ -93,6 +93,10 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
     [measureTable],
   );
   // Viele Mitspieler brauchen sonst mehrere Reihen, darum dort schon früher kompakt.
+  const miniRing = !table && !handOnly && state.hands.length >= 5;
+  // Tischmitte schrumpft, wenn der Ring klein ist, damit sie nicht über die Mitspieler ragt (#377).
+  const [ringRef, ringSize] = useElementSize<HTMLDivElement>();
+  const ringScale = ringSize.width > 0 && ringSize.height > 0 ? Math.max(0.4, Math.min(1, (ringSize.width * 0.84 - 132) / 200, (ringSize.height * 0.82 - 60) / 170)) : 1;
   const tight = !table && tableHeight > 0 && tableHeight < (state.hands.length > 5 ? CROWDED_TABLE_HEIGHT : TIGHT_TABLE_HEIGHT);
   const discardRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<HTMLDivElement | null>(null);
@@ -711,7 +715,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   );
 
   return (
-    <div ref={bindTable} className={`uno-table ${isDark ? 'bg-zinc-950 text-white' : 'text-zinc-900'}`} data-tight={tight || undefined} data-around={table ? '' : undefined} data-hand={handOnly ? '' : undefined}>
+    <div ref={bindTable} className={`uno-table ${isDark ? 'bg-zinc-950 text-white' : 'text-zinc-900'}`} data-tight={tight || undefined} data-around={table ? '' : undefined} data-ring={miniRing ? '' : undefined} data-hand={handOnly ? '' : undefined}>
       {/* 0. Animation Layer für fliegende Karten */}
       <div className="uno-flying-layer">
         {flyingCards.map((fc) => (
@@ -797,6 +801,38 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
         >
           {center}
         </SeatRing>
+      ) : miniRing ? (
+        // Viele Mitspieler am kleinen Bildschirm (#377): Sie sitzen rund um die Tischmitte, nichts rollt.
+        <>
+          <div ref={ringRef} className="uno-ring" data-seats={state.hands.length}>
+            {state.hands.map((hand: UnoCard[], idx: number) => {
+              if (idx === actor) return null;
+              const { x, y } = seatRingPosition(idx, state.hands.length, actor ?? 0);
+              return (
+                <div
+                  key={idx}
+                  ref={(el) => {
+                    if (el) seatRefs.current.set(idx, el);
+                    else seatRefs.current.delete(idx);
+                  }}
+                  className="uno-ring-seat"
+                  data-turn={state.turn === idx ? '' : undefined}
+                  data-out={state.eliminated[idx] ? '' : undefined}
+                  style={{ left: `clamp(2.1rem, ${x.toFixed(1)}%, calc(100% - 2.1rem))`, top: `${y.toFixed(1)}%` }}
+                >
+                  <span className="uno-ring-name">{seatNames[idx] ?? `Spieler ${idx + 1}`}</span>
+                  <span className="uno-ring-count">
+                    <span className={`uno-ring-back ${side === 'dark' ? 'uno-mini-back-dark' : ''}`} aria-hidden="true" /> {hand.length}
+                    <span className="sr-only"> Karten</span>
+                  </span>
+                  {hand.length === 1 && <span className="uno-ring-uno">Eins!</span>}
+                </div>
+              );
+            })}
+            <div className="uno-ring-center" style={{ transform: `scale(${ringScale.toFixed(2)})` }}>{center}</div>
+          </div>
+          {own}
+        </>
       ) : (
         <>
           {opponents}
