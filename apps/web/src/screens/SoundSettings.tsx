@@ -93,6 +93,7 @@ function LookChoice() {
               {TABLE_SURFACES.map((id: TableSurface) => (
                 <label key={id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-2">
                   <input type="radio" name="table-surface" className="accent-accent" checked={table === id} onChange={() => setTableSurface(id)} />
+                  <span className="bub-table-preview" data-surface={id} aria-hidden="true" />
                   <span className="text-sm font-medium">{t(`look.table.${id}`)}</span>
                 </label>
               ))}
