@@ -154,6 +154,8 @@ export interface BotDefinition<S, M, V = S> {
   id: string;
   name: string;
   levels: BotLevel[];
+  /** Zusatz-Bot, der in der Einrichtung neben dem Standard-Bot wählbar ist (z. B. Stockfish). */
+  selectable?: boolean;
   chooseMove(ctx: BotContext<S, M, V>): M;
   /**
    * Bedenkpause in Millisekunden, bevor die Spielleitung den gewählten Zug ausführt – etwa

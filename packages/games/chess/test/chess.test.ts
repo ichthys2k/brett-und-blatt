@@ -1,7 +1,7 @@
 import { computeBotMove, resolveOptions } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { describe, expect, it, test } from 'vitest';
-import { gameModule, type BoardMove, type ChessMove, type ChessState } from '../src';
+import { gameModule, parseUciMove, type BoardMove, type ChessMove, type ChessState } from '../src';
 import { loadFromPgn, positionKey, toPgn } from '../src/rules';
 import { ChessSearch } from '../src/search';
 import { BOOK_LINES, bookMoves } from '../src/book';
@@ -205,3 +205,25 @@ describe('Eröffnungsbuch', () => {
     expect(bookMoves(sicilian.fen).length).toBeGreaterThan(0);
   });
 });
+
+describe('Stockfish-Anbindung', () => {
+  it('wandelt UCI-Züge inklusive Umwandlung um und weist ungültige ab', () => {
+    expect(parseUciMove('e2e4')).toEqual({ type: 'move', from: 'e2', to: 'e4' });
+    expect(parseUciMove('e7e8q')).toEqual({ type: 'move', from: 'e7', to: 'e8', promotion: 'q' });
+    expect(parseUciMove('a7a8n\n')).toEqual({ type: 'move', from: 'a7', to: 'a8', promotion: 'n' });
+    expect(parseUciMove('(none)')).toBeNull();
+    expect(parseUciMove('z9z9')).toBeNull();
+    expect(parseUciMove('')).toBeNull();
+  });
+
+  it('bietet Stockfish als wählbaren Zusatz-Bot mit Rückfallzug an', () => {
+    const sf = gameModule.bots.find((b) => b.id === 'stockfish');
+    expect(sf).toBeDefined();
+    expect(sf?.selectable).toBe(true);
+    expect(sf?.levels).toEqual(['hard']);
+    const start = gameModule.setup(2, {}, 'sf-test') as ChessState;
+    const move = computeBotMove(gameModule, { gameId: 'chess', botId: 'stockfish', level: 'hard', seat: 0, view: start, seed: 'sf', timeBudgetMs: 200 }) as ChessMove;
+    expect(gameModule.isLegal?.(start, 0, move)).toBe(true);
+  });
+});
+
