@@ -1,6 +1,31 @@
 import type { Result, SeatId } from '@brett-und-blatt/engine';
-import { useEffect, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { t } from '../i18n';
+
+/** Gemalte Siegerehrungs-Bilder (#315); fehlt eines, bleibt das Emoji. */
+const ART_URLS = {
+  'pokal-gold': new URL('../assets/ehrung/pokal-gold.webp', import.meta.url).href,
+  'pokal-silber': new URL('../assets/ehrung/pokal-silber.webp', import.meta.url).href,
+  'pokal-bronze': new URL('../assets/ehrung/pokal-bronze.webp', import.meta.url).href,
+  kranz: new URL('../assets/ehrung/kranz.webp', import.meta.url).href,
+  handschlag: new URL('../assets/ehrung/handschlag.webp', import.meta.url).href,
+  trostkerze: new URL('../assets/ehrung/trostkerze.webp', import.meta.url).href,
+} as const;
+type ArtName = keyof typeof ART_URLS;
+
+/**
+ * Gemaltes Bild mit Emoji dahinter: Nur im Tavernen-Aussehen (`data-look='tavern'`, CSS in look.css) ersetzt das
+ * Bild das Emoji. „Schlicht“, erhöhter Kontrast oder ein Ladefehler lassen das Emoji stehen.
+ */
+function CeremonyArt({ name, emoji }: { name: ArtName; emoji: string }) {
+  const [broken, setBroken] = useState(false);
+  return (
+    <>
+      {!broken && <img className="bub-art-img" src={ART_URLS[name]} alt="" decoding="async" onError={() => setBroken(true)} />}
+      <span className="bub-art-emoji">{emoji}</span>
+    </>
+  );
+}
 
 /** Ein Platz auf dem Siegertreppchen bzw. in der Rangliste. */
 export interface CeremonySeat {
@@ -85,6 +110,7 @@ export function Ceremony({ result, title, reason, seats, actions, trophyNote, on
   const youWon = result.kind === 'win' && seats.some((s) => s.you && result.winners.includes(s.seat));
   const festive = result.kind === 'win' && (youWon || !seats.some((s) => s.you) || seats.filter((s) => s.you).length > 1 || solo);
   const emoji = result.kind === 'draw' ? '🤝' : result.kind === 'loss' ? '🌧️' : solo ? '🎉' : '🏆';
+  const art: ArtName = result.kind === 'draw' ? 'handschlag' : result.kind === 'loss' ? 'trostkerze' : solo ? 'kranz' : 'pokal-gold';
   // Treppchen: höchstens drei Stufen in der Reihenfolge 2 – 1 – 3, Gleichstände nebeneinander auf der Stufe.
   const podium = solo ? [] : [2, 1, 3].map((place) => ({ place, seats: ranked.filter((r) => r.place === place).map((r) => r.seat) })).filter((step) => step.seats.length > 0);
   const onPodium = new Set(podium.flatMap((step) => step.seats.map((s) => s.seat)));
@@ -110,7 +136,9 @@ export function Ceremony({ result, title, reason, seats, actions, trophyNote, on
         </button>
         <div className="bub-ceremony-trophy" aria-hidden="true">
           <span className="bub-ceremony-rays" />
-          <span className="bub-ceremony-emoji">{emoji}</span>
+          <span className="bub-ceremony-emoji">
+            <CeremonyArt name={art} emoji={emoji} />
+          </span>
         </div>
         <h2 id="bub-ceremony-title" className="bub-ceremony-title">
           {title}
@@ -132,7 +160,9 @@ export function Ceremony({ result, title, reason, seats, actions, trophyNote, on
                   ))}
                 </div>
                 <div className="bub-podium-block">
-                  <span>{step.place === 1 ? '🥇' : step.place === 2 ? '🥈' : '🥉'}</span>
+                  <span>
+                    <CeremonyArt name={step.place === 1 ? 'pokal-gold' : step.place === 2 ? 'pokal-silber' : 'pokal-bronze'} emoji={step.place === 1 ? '🥇' : step.place === 2 ? '🥈' : '🥉'} />
+                  </span>
                 </div>
               </li>
             ))}

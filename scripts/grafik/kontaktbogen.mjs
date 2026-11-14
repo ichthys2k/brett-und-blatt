@@ -27,7 +27,7 @@ const uebernommeneVariante = (id, dateien) => {
 const abschnitte = { offen: [], nachtrag: [], fest: [], leer: [] };
 manifest.motive.forEach((m) => {
   const dir = resolve(basis, m.id);
-  const dateien = existsSync(dir) ? readdirSync(dir).filter((d) => /^(cf-)?v\d+\.(png|jpg)$/.test(d)).sort() : [];
+  const dateien = existsSync(dir) ? readdirSync(dir).filter((d) => /^(cf-)?v\d+(-ganz)?\.(png|jpg)$/.test(d) && d.includes('-ganz') === Boolean(manifest.rohSuffix)).sort() : [];
   const eigene = dateien.filter((d) => !d.startsWith('cf-'));
   const webp = webpPfad(m.id);
   const uebernommen = webp && existsSync(webp);

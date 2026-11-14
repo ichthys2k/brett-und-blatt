@@ -8,6 +8,7 @@ import {
   CARD_BACK_KEY,
   type CardBackUnlockState,
 } from '../apps/web/src/lib/cardBacks';
+import { PAINTED_CARD_BACK_IDS } from '../packages/ui/src/cards/paintedBacks';
 import { createPassBook, type Store } from '../apps/web/src/lib/passes';
 import type { Book } from '../apps/web/src/lib/partiebuch';
 
@@ -20,7 +21,7 @@ function emptyBook(): Book {
 }
 
 describe('Kartenrücken-Katalog & Freischaltungen (K2, #272)', () => {
-  it('enthält alle 7 definierten Kartenrücken mit vollständigen Beschreibungen', () => {
+  it('enthält die 7 gezeichneten und die gemalten Kartenrücken mit vollständigen Beschreibungen', () => {
     const expectedIds = [
       'classic-red',
       'classic-blue',
@@ -31,7 +32,10 @@ describe('Kartenrücken-Katalog & Freischaltungen (K2, #272)', () => {
       'dragon-scale',
     ];
 
-    expect(CARD_BACK_CATALOG.map((c) => c.id)).toEqual(expectedIds);
+    // Die gemalten Rücken (#314) erscheinen, sobald ihre Bilddatei im Repo liegt, und folgen den sieben gezeichneten.
+    const ids = CARD_BACK_CATALOG.map((c) => c.id);
+    expect(ids.slice(0, expectedIds.length)).toEqual(expectedIds);
+    expect(ids.slice(expectedIds.length).every((id) => (PAINTED_CARD_BACK_IDS as readonly string[]).includes(id))).toBe(true);
     for (const entry of CARD_BACK_CATALOG) {
       expect(entry.name.length).toBeGreaterThan(0);
       expect(entry.description.length).toBeGreaterThan(0);

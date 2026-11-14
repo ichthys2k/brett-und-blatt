@@ -48,7 +48,8 @@ const uebernommen = [];
 for (const wahl of positionen.slice(1)) {
   const [id, v] = wahl.split('=');
   if (!motivFuer(id)) throw new Error(`Motiv „${id}“ steht nicht im Manifest ${manifest.name}.`);
-  let quelle = resolve(ordner(manifest.name, id), `v${v}.png`);
+  // Manifest-Option „rohSuffix“: übernommen wird v<n><Suffix>.png (z. B. -ganz bei zusammengesetzten Kartenrücken).
+  let quelle = resolve(ordner(manifest.name, id), `v${v}${manifest.rohSuffix ?? ''}.png`);
   if (!existsSync(quelle)) {
     // Rohbild fehlt: aus dem Varianten-Archiv holen (verlustfreies WebP → PNG).
     const archiv = resolve(VARIANTEN, manifest.name, id, `v${v}.webp`);
