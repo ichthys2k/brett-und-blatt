@@ -534,3 +534,23 @@
 [data-look='tavern'] .bub-podium-people {
   padding-bottom: 0;
 }
+
+/* Kulissen der Spiele (#316): die gemalte Kulisse liegt als Seitenhintergrund hinter Einrichtung, Lobby und Spieltisch-Rand
+   (das Spielfeld bleibt auf seiner Tischfläche). Nur im Taverne-Aussehen, ausschaltbar unter Optionen. */
+html[data-look='tavern']:not([data-scenes='off'])[data-scene] body {
+  /* Heller Schleier: Die dunkle Schrift der Seiten bleibt lesbar, die Kulisse scheint gedämpft durch. */
+  background-image: linear-gradient(rgb(246 236 214 / 0.7), rgb(246 236 214 / 0.82)), var(--bub-scene);
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-look='tavern']:not([data-scenes='off'])[data-scene] body {
+    background-image: linear-gradient(rgb(20 12 6 / 0.55), rgb(20 12 6 / 0.7)), var(--bub-scene);
+  }
+}
+@media (prefers-reduced-data: reduce) {
+  html[data-look='tavern'][data-scene] body {
+    background-image: none;
+  }
+}

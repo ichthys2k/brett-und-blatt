@@ -880,6 +880,8 @@ const de = {
   'look.light.nacht': 'Nacht',
   'look.light.winter': 'Winter',
   'look.light.fest': 'Fest',
+  'look.scenes.title': 'Kulissen der Spiele zeigen',
+  'look.scenes.text': 'Gemalte Hintergründe je Rubrik und Spiel um Einrichtung, Lobby und Spieltisch. Aus bei „Schlicht“, erhöhtem Kontrast und Datensparmodus.',
   'look.menu3d.title': '3D-Taverne im Hauptmenü',
   'look.menu3d.text': 'Bewegte Taverne mit Kamerafahrt, Funken und Mausbewegung. Aus: ruhiges Standbild (schont Akku und Augen).',
   'look.contrast': 'Dein Gerät wünscht erhöhten Kontrast, darum bleibt es bei „Schlicht“.',
