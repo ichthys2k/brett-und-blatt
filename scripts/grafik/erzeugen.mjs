@@ -8,6 +8,7 @@
 //     --varianten=3   Varianten je Motiv (Standard 3)
 //     --nur=k-h,d-s   nur diese Motive (Kennungen, kommagetrennt)
 //     --modell=…      Bildmodell (Standard: GEMINI_BILDMODELL oder gemini-3.1-flash-image)
+//     --groesse=2K    Bildgröße (1K, 2K, 4K; nur Pro und neuere Modelle), teurer; ohne Angabe die Standardgröße
 //     --pause=4       Sekunden Pause zwischen Anfragen (Standard 4)
 //     --anbieter=cloudflare   statt Gemini Cloudflare Workers AI (Standardmodell FLUX.1 schnell); braucht
 //                     CLOUDFLARE_ACCOUNT_ID und CLOUDFLARE_API_TOKEN (Berechtigung „Workers AI“). Keine Referenzbilder,
@@ -87,7 +88,7 @@ async function einBild(motiv, nr) {
     contents: [{ parts: [...eigeneReferenzen, { text }] }],
     generationConfig: {
       responseModalities: ['IMAGE'],
-      imageConfig: { aspectRatio: motiv.format ?? manifest.format ?? '4:5' },
+      imageConfig: { aspectRatio: motiv.format ?? manifest.format ?? '4:5', ...(optionen.groesse ? { imageSize: String(optionen.groesse) } : {}) },
     },
   };
   for (let versuch = 1; versuch <= 6; versuch++) {

@@ -115,6 +115,42 @@ Die Tischflächen des Tavernen-Aussehens (`apps/web/src/assets/tische/*.webp`: E
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 
+## Bot-Porträts (KI-erzeugt)
+
+Die 47 Porträts der Computergegner (`packages/ui/src/bots/portraits/bot-*.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-lite-image“) nach eigenen Bildbeschreibungen und mit zwei Porträts aus Marktplatz und Narrenhof als Stilvorlage, November 2026 (#311). Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `bots.json`). Die Figuren sind eigene Erfindungen (Fabeltiere als Uhrwerk-Automaten im barocken Gewand), keine echten Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Kulissen je Rubrik und Spiel (KI-erzeugt)
+
+Die zwölf Hintergrundbilder je Rubrik und Spiel (`apps/web/src/assets/kulissen/*.webp` und `*@2x.webp`: Strategie, Karten, Familie, Mathe, Hafen, Acker, Bach, Nachtweide, Schreibstube, Sternwarte, Marktplatz, Würfelstube): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3-pro-image“) nach eigenen Bildbeschreibungen, November 2026 (#316). Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `kulissen-spiele.json`). Die Bilder zeigen leere Räume und Landschaften ohne Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Gemalte Kartenrücken (KI-erzeugt)
+
+Die sechs gemalten Kartenrücken (`packages/ui/src/cards/backs/bub-ruecken-*.webp`: Tavernenlaterne, Burgsaal, Schreibstube, Schlossgarten, Jahrmarkt, Sternenhimmel): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3-pro-image“) nach eigenen Bildbeschreibungen, November 2026 (#314). Erzeugt wird ein Viertel, der ganze Rücken entsteht durch Spiegeln (punktsymmetrisch). Auswahl und Zusammenbau durch Cornelius Lipponer; Werkzeuge in `scripts/grafik/` (Manifest `kartenruecken.json`). Es sind reine Ornamente ohne Figuren.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Tischflächen, Ergänzung (KI-erzeugt)
+
+Die Texturen für grünen Spielfilz (dunkel), roten Samtfilz, Schiefer und Marmor (jeweils hell und dunkel) in `apps/web/src/assets/tische/` sind wie die übrigen Tischflächen **KI-erzeugt**, hier mit „gemini-3-pro-image“ (Google), November 2026 (#313; Manifest `tische.json`).
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Hauptmenü-Stationen (KI-erzeugt)
+
+Die sieben freigestellten Gegenstände der Taverne (`apps/web/src/menu/stationen/*.webp`: Spieltisch, runder Tisch, Turniertafel, Kamin, Wappenschild, Schwarzes Brett, Karteikasten): **KI-erzeugt** mit „gemini-3-pro-image“ (Google) nach eigenen Bildbeschreibungen, November 2026 (#317). Auswahl und Freistellen durch Cornelius Lipponer; Manifest `menue-stationen.json`.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Siegerehrung und Pass (KI-erzeugt)
+
+Die 14 Bilder für Siegerehrung, Urkunde, Pokalschrank und Pass-Einband (`apps/web/src/assets/ehrung/*.webp`: Pokale, Lorbeerkranz, Handschlag, Trostkerze, Turnierkelch, Siegel, Stempel, Treppchen, Urkunde, Pokalschrank, Einband): **KI-erzeugt** mit „gemini-3-pro-image“ (Google) nach eigenen Bildbeschreibungen, November 2026 (#315). Auswahl und Freistellen durch Cornelius Lipponer; Manifest `ehrung.json`. Es sind Gegenstände und Flächen ohne Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
 ## Almendra
 
 

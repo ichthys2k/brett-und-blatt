@@ -62,6 +62,13 @@ const TEXTURE_EXTREMES: Record<string, { theme: 'hell' | 'dunkel'; min: string; 
   'green-felt-light': { theme: 'hell', min: '#b4c1a6', max: '#c0ceae' },
   'oak-dark': { theme: 'dunkel', min: '#261609', max: '#352818' },
   'walnut-dark': { theme: 'dunkel', min: '#19100f', max: '#34251d' },
+  'green-felt-dark': { theme: 'dunkel', min: '#0d2818', max: '#0f2b1b' },
+  'red-felt-light': { theme: 'hell', min: '#d9aea8', max: '#e0c2b7' },
+  'red-felt-dark': { theme: 'dunkel', min: '#1a0707', max: '#210e12' },
+  'slate-light': { theme: 'hell', min: '#b2b7b8', max: '#dadedf' },
+  'slate-dark': { theme: 'dunkel', min: '#111516', max: '#3c3e40' },
+  'marble-light': { theme: 'hell', min: '#dfdcd2', max: '#faf9f0' },
+  'marble-dark': { theme: 'dunkel', min: '#151611', max: '#343530' },
 };
 
 describe('Tischtexturen: Kontraste an dunkelster und hellster Stelle (#313)', () => {

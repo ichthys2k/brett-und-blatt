@@ -84,6 +84,19 @@ const TABLE_TEXTURES: Record<string, { light?: string; dark?: string }> = {
   },
   'green-felt': {
     light: new URL('../assets/tische/green-felt-light.webp', import.meta.url).href,
+    dark: new URL('../assets/tische/green-felt-dark.webp', import.meta.url).href,
+  },
+  'red-felt': {
+    light: new URL('../assets/tische/red-felt-light.webp', import.meta.url).href,
+    dark: new URL('../assets/tische/red-felt-dark.webp', import.meta.url).href,
+  },
+  'slate': {
+    light: new URL('../assets/tische/slate-light.webp', import.meta.url).href,
+    dark: new URL('../assets/tische/slate-dark.webp', import.meta.url).href,
+  },
+  'marble': {
+    light: new URL('../assets/tische/marble-light.webp', import.meta.url).href,
+    dark: new URL('../assets/tische/marble-dark.webp', import.meta.url).href,
   },
 };
 
