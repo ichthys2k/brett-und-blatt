@@ -25,6 +25,7 @@ import { bindHapticSession, pulse } from '../haptics';
 import { alignOffset, type Offset } from './view-align';
 import { SCALE_STEP, TablePlacer, clampScale, placementOrigin, scaleAboutTable, type Placement } from './Placement';
 import { handAnchor } from '../hand-fan';
+import { clampOffset, dragOffset, inEdgeZone, pinchScale, tableGrab, tableLocked, type Offset as GrabOffset } from '../table-grab';
 import { GESTURE_REACTION, GestureTracker, gesturesEnabled, type Joints, type Vec3 } from '../gestures';
 import { SpatialAudio } from './SpatialAudio';
 import type { VoiceChat } from '@brett-und-blatt/rtc';
@@ -54,30 +55,56 @@ interface SceneProps {
 }
 
 const VIEW_KEY = 'brett-und-blatt-xr-tisch';
+const SCALE_KEY = 'brett-und-blatt-xr-tischgroesse';
+
+function readScale(): number {
+  try {
+    const value = Number(localStorage.getItem(SCALE_KEY));
+    return value > 0 ? clampScale(value) : 1;
+  } catch {
+    return 1;
+  }
+}
 
 /** Tischhöhe und Abstand je Gerät (Sitzen oder Stehen); verschiebt den eigenen Standpunkt. */
 function useViewOffset() {
-  const [offset, setOffset] = useState<{ y: number; z: number }>(() => {
+  const [offset, setOffset] = useState<GrabOffset>(() => {
     try {
-      const raw = JSON.parse(localStorage.getItem(VIEW_KEY) ?? 'null') as { y?: number; z?: number } | null;
-      return { y: raw?.y ?? 0, z: raw?.z ?? 0 };
+      const raw = JSON.parse(localStorage.getItem(VIEW_KEY) ?? 'null') as { x?: number; y?: number; z?: number } | null;
+      return clampOffset({ x: raw?.x ?? 0, y: raw?.y ?? 0, z: raw?.z ?? 0 });
     } catch {
-      return { y: 0, z: 0 };
+      return { x: 0, y: 0, z: 0 };
     }
   });
+  const save = (next: GrabOffset) => {
+    try {
+      localStorage.setItem(VIEW_KEY, JSON.stringify(next));
+    } catch {
+      // ohne Speicher gilt die Einstellung nur bis zum Neuladen
+    }
+  };
   const change = (dy: number, dz: number) =>
     setOffset((o) => {
-      const next = { y: Math.max(-0.5, Math.min(0.5, o.y + dy)), z: Math.max(-0.6, Math.min(0.6, o.z + dz)) };
-      try {
-        localStorage.setItem(VIEW_KEY, JSON.stringify(next));
-      } catch {
-        // ohne Speicher gilt die Einstellung nur bis zum Neuladen
-      }
+      const next = clampOffset({ ...o, y: o.y + dy, z: o.z + dz });
+      save(next);
       return next;
     });
   return {
     offset,
-    adjust: { up: () => change(0.05, 0), down: () => change(-0.05, 0), closer: () => change(0, -0.05), farther: () => change(0, 0.05) },
+    // Während des Greifens (#387) laufend setzen, am Ende einmal speichern.
+    live: (next: GrabOffset) => setOffset(next),
+    save,
+    adjust: {
+      up: () => change(0.05, 0),
+      down: () => change(-0.05, 0),
+      closer: () => change(0, -0.05),
+      farther: () => change(0, 0.05),
+      reset: () => {
+        const zero = { x: 0, y: 0, z: 0 };
+        setOffset(zero);
+        save(zero);
+      },
+    },
   };
 }
 
@@ -207,6 +234,67 @@ function GestureWatcher({ send }: { send: (m: ClientMessage) => void }) {
   return null;
 }
 
+/** Tisch mit den Händen greifen (#387): Griff-Taste an der Tischkante; eine Hand verschiebt und hebt, zwei skalieren. */
+function TableGrab({ origin, scale, mixed, offset, onOffset, onSaveOffset, tableScale, onScale, onSaveScale }: { origin: [number, number, number]; scale: number; mixed: boolean; offset: GrabOffset; onOffset: (o: GrabOffset) => void; onSaveOffset: (o: GrabOffset) => void; tableScale: number; onScale: (k: number) => void; onSaveScale: (k: number) => void }) {
+  const gl = useThree((s) => s.gl);
+  const live = useRef({ origin, scale, offset, tableScale });
+  live.current = { origin, scale, offset, tableScale };
+  const state = useRef<{ mode: 'none' | 'move' | 'scale'; hand0: Vec3; offset0: GrabOffset; dist0: number; scale0: number; last: GrabOffset; lastScale: number }>({ mode: 'none', hand0: [0, 0, 0], offset0: offset, dist0: 0, scale0: 1, last: offset, lastScale: 1 });
+  useFrame(() => {
+    const s = state.current;
+    const session = gl.xr.getSession();
+    const grips: { p: Vec3; zone: boolean }[] = [];
+    if (session && !tableLocked()) {
+      session.inputSources.forEach((source, i) => {
+        if (!source.gamepad?.buttons[1]?.pressed) return;
+        const controller = gl.xr.getController(i);
+        if (!controller.visible) return;
+        const p: Vec3 = [controller.position.x, controller.position.y, controller.position.z];
+        const o = live.current.origin;
+        const inTable: Vec3 = [p[0] + o[0], p[1] + o[1], p[2] + o[2]];
+        const k = live.current.scale;
+        const zone = inEdgeZone(k !== 1 ? scaleAboutTable(inTable, k) : inTable, TABLE_CENTER);
+        grips.push({ p, zone });
+      });
+    }
+    const gripped = grips.filter((g) => g.zone);
+    if (s.mode === 'none') {
+      if (gripped.length >= 2 && mixed) {
+        Object.assign(s, { mode: 'scale', dist0: Math.hypot(gripped[0]!.p[0] - gripped[1]!.p[0], gripped[0]!.p[1] - gripped[1]!.p[1], gripped[0]!.p[2] - gripped[1]!.p[2]), scale0: live.current.tableScale, lastScale: live.current.tableScale });
+        tableGrab.active = true;
+        pulse('select');
+      } else if (gripped.length >= 1) {
+        Object.assign(s, { mode: 'move', hand0: gripped[0]!.p, offset0: live.current.offset, last: live.current.offset });
+        tableGrab.active = true;
+        pulse('select');
+      }
+      return;
+    }
+    if (s.mode === 'move') {
+      if (gripped.length === 0) {
+        onSaveOffset(s.last);
+        s.mode = 'none';
+        tableGrab.active = false;
+        return;
+      }
+      s.last = dragOffset(s.offset0, s.hand0, gripped[0]!.p);
+      onOffset(s.last);
+      return;
+    }
+    // Skalieren mit zwei Händen
+    if (gripped.length < 2) {
+      onSaveScale(s.lastScale);
+      s.mode = 'none';
+      tableGrab.active = false;
+      return;
+    }
+    const d = Math.hypot(gripped[0]!.p[0] - gripped[1]!.p[0], gripped[0]!.p[1] - gripped[1]!.p[1], gripped[0]!.p[2] - gripped[1]!.p[2]);
+    s.lastScale = pinchScale(s.scale0, s.dist0, d);
+    onScale(s.lastScale);
+  });
+  return null;
+}
+
 /** Meldet dem Vibrationshelfer die laufende Sitzung (#380). */
 function HapticsBridge() {
   const gl = useThree((state) => state.gl);
@@ -303,15 +391,22 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
   useEffect(() => {
     if (error) pulse('error');
   }, [error]);
-  const { offset, adjust } = useViewOffset();
+  const { offset, adjust, live, save: saveOffset } = useViewOffset();
   const [align, setAlign] = useState<Offset>({ x: 0, y: 0, z: 0 });
   // Mixed Reality (#369, #370): Tisch auf einer echten Fläche (`placed`), verkleinert um `tableScale`.
   const [mixed, setMixed] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [placed, setPlaced] = useState<Placement | null>(null);
-  const [tableScale, setTableScale] = useState(1);
+  const [tableScale, setTableScale] = useState(readScale);
+  const saveScale = (k: number) => {
+    try {
+      localStorage.setItem(SCALE_KEY, String(k));
+    } catch {
+      // nur bis zum Neuladen
+    }
+  };
   const base = placed ?? align;
-  const origin: [number, number, number] = [base.x, base.y - offset.y, base.z + offset.z];
+  const origin: [number, number, number] = [base.x + offset.x, base.y - offset.y, base.z + offset.z];
   const scale = mixed ? tableScale : 1;
   const placement = mixed
     ? {
@@ -321,8 +416,8 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         start: () => setPlacing(true),
         cancel: () => setPlacing(false),
         release: () => setPlaced(null),
-        bigger: () => setTableScale((k) => clampScale(k + SCALE_STEP)),
-        smaller: () => setTableScale((k) => clampScale(k - SCALE_STEP)),
+        bigger: () => setTableScale((k) => (saveScale(clampScale(k + SCALE_STEP)), clampScale(k + SCALE_STEP))),
+        smaller: () => setTableScale((k) => (saveScale(clampScale(k - SCALE_STEP)), clampScale(k - SCALE_STEP))),
       }
     : undefined;
   const seats = seatInfos(room, game, you, gameAt, now).map((s) => (s.memberId && speaking.includes(s.memberId) ? { ...s, speaking: true } : s));
@@ -376,6 +471,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         <HapticsBridge />
         <HandAnchor origin={origin} scale={scale} />
         <GestureWatcher send={send} />
+        <TableGrab origin={origin} scale={scale} mixed={mixed} offset={offset} onOffset={live} onSaveOffset={saveOffset} tableScale={tableScale} onScale={setTableScale} onSaveScale={saveScale} />
         <SpatialAudio seats={seats} scale={scale} voice={voiceChat} />
         <ModeProbe onMixed={setMixed} />
         <TablePlacer

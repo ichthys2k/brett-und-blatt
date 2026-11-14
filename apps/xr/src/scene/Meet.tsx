@@ -10,6 +10,7 @@ import { useRef } from 'react';
 import { Quaternion, Vector3, type Group, type Mesh } from 'three';
 import type { PeerMesh, Pose7, RemotePose } from '../peers';
 import { presence, type Held } from '../presence';
+import { tableGrab } from '../table-grab';
 import type { SeatInfo } from './Seats';
 import { scaleAboutTable } from './Placement';
 import { TABLE_CENTER } from './Tavern';
@@ -62,7 +63,7 @@ export function PoseSender({ mesh, xrMembers, sendRoomPose, origin, scale = 1 }:
         if (source.handedness === 'left') left = value;
         else right = value;
         // Zeigestrahl (#385): nur, solange die Griff-Taste gehalten wird.
-        const pointing = Boolean(source.gamepad?.buttons[1]?.pressed);
+        const pointing = Boolean(source.gamepad?.buttons[1]?.pressed) && !tableGrab.active;
         if (source.handedness === 'left') point[0] = pointing;
         else point[1] = pointing;
       });

@@ -17,6 +17,7 @@ import { isCardGame } from './cards';
 import { onVibrationChange, setVibration, vibrationEnabled } from '../haptics';
 import { fanMode, onFanModeChange, setFanMode } from '../hand-fan';
 import { gesturesEnabled, onGesturesChange, setGesturesEnabled } from '../gestures';
+import { onTableLockedChange, setTableLocked, tableLocked } from '../table-grab';
 import { getVolume, onVolumeChange, setVolume } from '../sound';
 
 const PAGE = 6;
@@ -64,6 +65,7 @@ export interface ViewAdjust {
   down: () => void;
   closer: () => void;
   farther: () => void;
+  reset: () => void;
 }
 
 interface PanelProps {
@@ -99,6 +101,7 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
   useEffect(() => onVibrationChange(() => redraw((n) => n + 1)), []);
   useEffect(() => onFanModeChange(() => redraw((n) => n + 1)), []);
   useEffect(() => onGesturesChange(() => redraw((n) => n + 1)), []);
+  useEffect(() => onTableLockedChange(() => redraw((n) => n + 1)), []);
   // Während der Partie rückt das Fenster zur Seite, damit Brett oder Spieltafel frei bleiben (#358); nur beim Kartentisch bleibt es mittig.
   const beside = Boolean(game && !game.result && !isCardGame(game.gameId));
   const position = beside ? SIDE_POS : CENTER_POS;
@@ -143,6 +146,10 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
     rows.push([
       { label: 'Tisch näher', press: adjust.closer },
       { label: 'Tisch weiter weg', press: adjust.farther },
+    ]);
+    rows.push([
+      { label: tableLocked() ? '🔒 Tisch fest' : '✋ Tisch greifbar', press: () => setTableLocked(!tableLocked()), active: !tableLocked() },
+      { label: 'Zurücksetzen', press: adjust.reset },
     ]);
     if (placement) {
       if (placement.placing) lines.push('Blick auf eine Fläche, Abzug oder Tippen legt den Tisch ab.');

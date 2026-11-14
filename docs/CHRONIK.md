@@ -8,6 +8,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**VR: Tisch mit den Händen greifen (14.11.2026, #387):** Griff-Taste an der Tischkante verschiebt und hebt den Tisch (eine Hand) bzw. skaliert ihn (zwei Hände, Mixed Reality); Stellung und Größe bleiben gespeichert, Schalter „Tisch fest“ und „Zurücksetzen“ unter „↕ Tisch“. `apps/xr/src/table-grab.ts` (Rechnung, Test `tests/xr-tischgriff.test.ts`), `TableGrab` und `useViewOffset` (jetzt mit x) in `scene/Scene.tsx`. Nur gerechnet, nicht in der Brille geprüft; Drehen fehlt.
+
 **VR: Gesten als Reaktionen (14.11.2026, #386):** Daumen hoch 👍, Klatschen 👏, Winken 🎉 aus den Handgelenken des Handtrackings (`apps/xr/src/gestures.ts`, `GestureWatcher` in `scene/Scene.tsx`, Schalter unter „↕ Tisch“). Test `tests/xr-gesten.test.ts` mit künstlichen Gelenken; nicht mit echten Händen geprüft.
 
 **VR: Gehaltenes und Zeigen sichtbar, Teil 1 (14.11.2026, #385):** Mitspieler sehen die gegriffene Figur (Kugel bzw. Kartenrückseite) und den Zeigestrahl (Griff-Taste). `apps/xr/src/presence.ts` (Paketformat), `peers.ts`, `scene/Meet.tsx`, `scene/grab.tsx` (setzt das Gehaltene); Test `tests/xr-praesenz.test.ts`. Nur gerechnet und getestet, nicht mit zwei Brillen geprüft. Offen: Finger, Stuhlschild dreht sich zum Spieler am Zug.
