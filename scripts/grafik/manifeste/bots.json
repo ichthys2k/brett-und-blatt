@@ -32,12 +32,22 @@
     {
       "id": "kartenmischer",
       "titel": "Kartenmischer (Schwarzer Peter)",
-      "prompt": "A black cat in a chimney sweep's cap shuffling cards, faces turned away, mischievous smile."
+      "prompt": "A black cat in a chimney sweep's cap shuffling cards, faces turned away, mischievous smile.",
+      "referenzen": [
+        "packages/ui/src/bots/portraits/bot-bibelkenner.webp",
+        "packages/ui/src/bots/portraits/bot-weitblick.webp"
+      ],
+      "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer, steam pipes, steam engines, boilers, top hats, rivets, exposed machinery, robot face, metal face, screens, wires, rust, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs, badger"
     },
     {
       "id": "wortflitzer",
       "titel": "Wortflitzer (Kategorien-Sprint)",
-      "prompt": "A quick squirrel scribe with a quill behind its ear and ink on its paws."
+      "prompt": "A quick squirrel scribe with a quill behind its ear and ink on its paws.",
+      "referenzen": [
+        "packages/ui/src/bots/portraits/bot-bibelkenner.webp",
+        "packages/ui/src/bots/portraits/bot-weitblick.webp"
+      ],
+      "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer, steam pipes, steam engines, boilers, top hats, rivets, exposed machinery, robot face, metal face, screens, wires, rust, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs, badger"
     },
     {
       "id": "vorausrechner",
@@ -62,12 +72,22 @@
     {
       "id": "wortakrobat",
       "titel": "Wortakrobat (Verboten!, Wort-Salat)",
-      "prompt": "A parrot in a small jester collar, beak open as if reciting."
+      "prompt": "A parrot in a small jester collar, beak open as if reciting.",
+      "referenzen": [
+        "packages/ui/src/bots/portraits/bot-bibelkenner.webp",
+        "packages/ui/src/bots/portraits/bot-weitblick.webp"
+      ],
+      "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer, steam pipes, steam engines, boilers, top hats, rivets, exposed machinery, robot face, metal face, screens, wires, rust, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs, badger"
     },
     {
       "id": "drachenhueter",
       "titel": "Drachenhüter (Drachenspiel)",
-      "prompt": "A calm old salamander keeper in a leather hood with a tiny sleepy dragon hatchling on its shoulder."
+      "prompt": "A calm old salamander keeper in a leather hood with a tiny sleepy dragon hatchling on its shoulder.",
+      "referenzen": [
+        "packages/ui/src/bots/portraits/bot-bibelkenner.webp",
+        "packages/ui/src/bots/portraits/bot-weitblick.webp"
+      ],
+      "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer, steam pipes, steam engines, boilers, top hats, rivets, exposed machinery, robot face, metal face, screens, wires, rust, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs, badger"
     },
     {
       "id": "renn-ente",
@@ -107,7 +127,12 @@
     {
       "id": "wolkenspringer",
       "titel": "Wolkenspringer (Tiefflug)",
-      "prompt": "A swallow in a tiny aviator cap among soft clouds."
+      "prompt": "A swallow in a tiny aviator cap among soft clouds.",
+      "referenzen": [
+        "packages/ui/src/bots/portraits/bot-bibelkenner.webp",
+        "packages/ui/src/bots/portraits/bot-weitblick.webp"
+      ],
+      "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer, steam pipes, steam engines, boilers, top hats, rivets, exposed machinery, robot face, metal face, screens, wires, rust, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs, badger"
     },
     {
       "id": "wuerfelmeister",
@@ -232,7 +257,12 @@
     {
       "id": "geduldsschnecke",
       "titel": "Geduldsschnecke (Solitaire)",
-      "prompt": "A patient old snail with spectacles, a single card on its shell-side table."
+      "prompt": "A patient old snail with spectacles, a single card on its shell-side table.",
+      "referenzen": [
+        "packages/ui/src/bots/portraits/bot-bibelkenner.webp",
+        "packages/ui/src/bots/portraits/bot-weitblick.webp"
+      ],
+      "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer, steam pipes, steam engines, boilers, top hats, rivets, exposed machinery, robot face, metal face, screens, wires, rust, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs, badger"
     },
     {
       "id": "kreidekaetzchen",
@@ -247,7 +277,12 @@
     {
       "id": "zufall",
       "titel": "allgemeine Bots der Engine (Zufall u. a.)",
-      "prompt": "A cheerful jester's monkey tossing a die in the air (pips only)."
+      "prompt": "A cheerful jester's monkey tossing a die in the air (pips only).",
+      "referenzen": [
+        "packages/ui/src/bots/portraits/bot-bibelkenner.webp",
+        "packages/ui/src/bots/portraits/bot-weitblick.webp"
+      ],
+      "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer, steam pipes, steam engines, boilers, top hats, rivets, exposed machinery, robot face, metal face, screens, wires, rust, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs, badger"
     }
   ]
 }
