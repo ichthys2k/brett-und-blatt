@@ -2,8 +2,8 @@ import { describe, expect, it, test } from 'vitest';
 import { Rng, computeBotMove } from '@brett-und-blatt/engine';
 import { gameContractChecks } from '@brett-und-blatt/engine/testing';
 import { gameModule } from '../src';
-import { ORDERS, buildCards, deckSize, mathNotations, mathValue, setSize, shared, symbolText, SYMBOL_SETS } from '../src/deck';
-import { applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type SymbolMatchMove, type SymbolMatchState } from '../src/rules';
+import { FRACTION_GROUPS, ORDERS, buildCards, deckSize, mathNotations, mathValue, setSize, shared, symbolText, SYMBOL_SETS } from '../src/deck';
+import { DUEL_MS, applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, systemDelayMs, type SymbolMatchMove, type SymbolMatchState } from '../src/rules';
 
 describe('symbol-match: allgemeine Prüfungen', () => {
   for (const check of gameContractChecks(gameModule)) test(check.name, check.run, 120_000);
@@ -29,7 +29,19 @@ describe('symbol-match: Kartensatz', () => {
     for (const { value } of SYMBOL_SETS) {
       expect(setSize(value)).toBeGreaterThanOrEqual(57);
       const texts = new Set(Array.from({ length: 57 }, (_, s) => symbolText(value, s, 0)));
-      if (value !== 'math') expect(texts.size).toBe(57);
+      if (value !== 'math' && value !== 'fractions') expect(texts.size).toBe(57);
+    }
+  });
+
+  it('Brüche & Einheiten: 57 eindeutige Gruppen ohne doppelte Schreibweisen', () => {
+    expect(FRACTION_GROUPS).toHaveLength(57);
+    const seen = new Set<string>();
+    for (const group of FRACTION_GROUPS) {
+      expect(group.length).toBeGreaterThanOrEqual(3);
+      for (const text of group) {
+        expect(seen.has(text)).toBe(false);
+        seen.add(text);
+      }
     }
   });
 
@@ -54,7 +66,7 @@ function table(patch: Partial<SymbolMatchState>, seats = 2, options: Record<stri
   return { ...setup(seats, options, 'test'), ...patch };
 }
 
-const claimFor = (state: SymbolMatchState, seat: number, target = seat, symbol?: number): SymbolMatchMove => ({
+const claimFor = (state: SymbolMatchState, seat: number, target = seat, symbol?: number): Extract<SymbolMatchMove, { type: 'claim' }> => ({
   type: 'claim',
   symbol: symbol ?? shared(state.options.order, state.center!, state.stacks[target]!.at(-1)!),
   center: state.center!,
@@ -149,9 +161,56 @@ describe('symbol-match: Regeln', () => {
     expect(r && r.kind === 'win' && r.winners).toEqual([0, 2]);
   });
 
-  it('allein gibt es nur den Turmbau', () => {
+  it('allein gibt es Turmbau und Zeit-Duell', () => {
     expect(setup(1, { mode: 'gift' }, 'i').options.mode).toBe('tower');
     expect(setup(1, { mode: 'fountain' }, 'i').options.mode).toBe('tower');
+    expect(setup(1, { mode: 'hotPotato' }, 'i').options.mode).toBe('tower');
+    expect(setup(1, { mode: 'duel' }, 'i').options.mode).toBe('duel');
+  });
+
+  it('Heiße Kartoffel: Stapel weitergeben, Runden verlieren, wenigste Verluste gewinnen', () => {
+    let s = setup(3, { order: '3', mode: 'hotPotato', rounds: '3' }, 'hp-1');
+    expect(s.center).toBeNull();
+    expect(s.stacks.map((x) => x.length)).toEqual([1, 1, 1]);
+    // Platz 0 gibt an Platz 1 ab -> Platz 0 ist für diese Runde sicher.
+    const move0 = legalMoves(s, 0).find((m) => m.type === 'claim' && m.target === 1)!;
+    s = applyMove(s, 0, move0).state;
+    expect(s.stacks.map((x) => x.length)).toEqual([0, 2, 1]);
+    expect(currentPlayers(s)).toEqual([1, 2]);
+    // Platz 1 gibt an Platz 2 ab -> Runde 1 endet, Platz 2 verliert Runde 1, Runde 2 startet.
+    const move1 = legalMoves(s, 1).find((m) => m.type === 'claim' && m.target === 2)!;
+    s = applyMove(s, 1, move1).state;
+    expect(s.losses).toEqual([0, 0, 1]);
+    expect(s.round).toBe(2);
+    expect(s.stacks.map((x) => x.length)).toEqual([1, 1, 1]);
+    // Bis Spielende spielen (Runde 2 und 3).
+    while (s.phase === 'play') {
+      const seat = currentPlayers(s)[0] as number;
+      s = applyMove(s, seat, legalMoves(s, seat)[0]!).state;
+    }
+    expect(s.phase).toBe('gameEnd');
+    expect(s.losses.reduce((a, b) => a + b, 0)).toBe(3);
+    const r = result(s);
+    expect(r?.kind).toBe('win');
+  });
+
+  it('Zeit-Duell: 60s-Timer, Deck wird neu gemischt, System-Timeout beendet das Spiel', () => {
+    let s = setup(2, { order: '3', mode: 'duel' }, 'duel-1');
+    expect(systemDelayMs(s)).toBe(DUEL_MS);
+    expect(currentPlayers(s)).toContain('system');
+    // Mehr als 13 Züge (Deckgröße von order 3) spielen -> Deck mischt automatisch nach.
+    for (let i = 0; i < 16; i++) {
+      const seat = i % 2;
+      s = applyMove(s, seat, legalMoves(s, seat)[0]!).state;
+      expect(s.phase).toBe('play');
+    }
+    expect(s.hits).toEqual([8, 8]);
+    // Noch einen für Platz 0, dann Timeout.
+    s = applyMove(s, 0, legalMoves(s, 0)[0]!).state;
+    s = applyMove(s, 'system', { type: 'timeout' }).state;
+    expect(s.phase).toBe('gameEnd');
+    expect(systemDelayMs(s)).toBe(0);
+    expect(result(s)).toEqual({ kind: 'win', winners: [0] });
   });
 
   it('Sicht: Stapel verdeckt, sampleHidden gibt dieselbe Sicht zurück', () => {
@@ -167,23 +226,36 @@ describe('symbol-match: Regeln', () => {
   it('legalMoves nennt je Ziel das richtige Symbol', () => {
     const s = setup(3, { order: '7', mode: 'gift' }, 'k');
     const moves = legalMoves(s, 0);
-    expect(moves.map((m) => m.target)).toEqual([1, 2]);
+    expect(moves.map((m) => (m.type === 'claim' ? m.target : -1))).toEqual([1, 2]);
     for (const m of moves) expect(isLegal(s, 0, m)).toBe(true);
   });
 });
 
 describe('symbol-match: Bot', () => {
   for (const level of ['easy', 'medium', 'hard'] as const) {
-    for (const mode of ['tower', 'fountain', 'gift']) {
+    for (const mode of ['tower', 'fountain', 'gift', 'hotPotato']) {
       it(`spielt auf „${level}“ eine ganze Partie (${mode})`, () => {
-        let s = gameModule.setup(3, { order: '3', mode }, `bot-${level}-${mode}`);
+        let s = gameModule.setup(3, { order: '3', mode, rounds: '3' }, `bot-${level}-${mode}`);
         for (let guard = 0; !gameModule.result(s) && guard < 2000; guard++) {
-          const seat = currentPlayers(s)[guard % currentPlayers(s).length] as number;
+          const players = currentPlayers(s).filter((a): a is number => typeof a === 'number');
+          const seat = players[guard % players.length]!;
           const move = computeBotMove(gameModule, { gameId: 'symbol-match', botId: 'adlerauge', level, seat, view: playerView(s, seat), seed: `${guard}`, timeBudgetMs: 50 }) as SymbolMatchMove;
           s = applyMove(s, seat, move).state;
         }
         expect(gameModule.result(s)).not.toBeNull();
       });
     }
+
+    it(`spielt auf „${level}“ im Zeit-Duell bis zum Timeout`, () => {
+      let s = gameModule.setup(2, { order: '3', mode: 'duel' }, `bot-${level}-duel`);
+      for (let guard = 0; guard < 20; guard++) {
+        const players = currentPlayers(s).filter((a): a is number => typeof a === 'number');
+        const seat = players[guard % players.length]!;
+        const move = computeBotMove(gameModule, { gameId: 'symbol-match', botId: 'adlerauge', level, seat, view: playerView(s, seat), seed: `${guard}`, timeBudgetMs: 50 }) as SymbolMatchMove;
+        s = applyMove(s, seat, move).state;
+      }
+      s = applyMove(s, 'system', { type: 'timeout' }).state;
+      expect(gameModule.result(s)).not.toBeNull();
+    });
   }
 });
