@@ -2,6 +2,10 @@
   "beschreibung": "G5 (#313): kachelbare Tischflächen, hell und dunkel; Zielfarben aus apps/web/src/look.css.",
   "stil": "Seamless tileable texture, painted in a soft painterly oil style, viewed exactly from straight above, perfectly flat and evenly lit with no light source, no shadows, no vignette, no perspective. Very low contrast and calm, so that playing cards and text placed on top stay clearly readable. The left edge continues into the right edge and the top edge into the bottom edge without any visible seam. No objects, no text, no letters, no numbers.",
   "ohne": "objects, cards, dice, cups, stains, knots larger than a coin, strong highlights, shadows, vignette, perspective, border, frame, text, watermark, visible seams, repeating eye-catching spots, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "referenzen": [
+    "apps/web/src/menu/taverne-vorn.webp",
+    "apps/web/src/assets/raeume/burgsaal.webp"
+  ],
   "format": "1:1",
   "ziel": "apps/web/src/assets/tische",
   "groesse": [
