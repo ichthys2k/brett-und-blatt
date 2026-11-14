@@ -14,7 +14,7 @@
       "titel": "Schiff Länge 2 · wood",
       "satz": "wood",
       "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, evenly lit from above with no visible light direction, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
-      "format": "2:1",
+      "format": "3:2",
       "groesse": [
         192,
         96
@@ -27,7 +27,7 @@
       "titel": "Schiff Länge 3 · wood",
       "satz": "wood",
       "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, evenly lit from above with no visible light direction, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
-      "format": "3:1",
+      "format": "4:1",
       "groesse": [
         288,
         96
@@ -53,7 +53,7 @@
       "titel": "Schiff Länge 5 · wood",
       "satz": "wood",
       "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, evenly lit from above with no visible light direction, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
-      "format": "5:1",
+      "format": "4:1",
       "groesse": [
         480,
         96
@@ -82,7 +82,7 @@
       "titel": "Schiff Länge 2 · metal",
       "satz": "metal",
       "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
-      "format": "2:1",
+      "format": "3:2",
       "groesse": [
         192,
         96
@@ -95,7 +95,7 @@
       "titel": "Schiff Länge 3 · metal",
       "satz": "metal",
       "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
-      "format": "3:1",
+      "format": "4:1",
       "groesse": [
         288,
         96
@@ -121,7 +121,7 @@
       "titel": "Schiff Länge 5 · metal",
       "satz": "metal",
       "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
-      "format": "5:1",
+      "format": "4:1",
       "groesse": [
         480,
         96
@@ -150,7 +150,7 @@
       "titel": "Schiff Länge 2 · fable",
       "satz": "fable",
       "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
-      "format": "2:1",
+      "format": "3:2",
       "groesse": [
         192,
         96
@@ -163,7 +163,7 @@
       "titel": "Schiff Länge 3 · fable",
       "satz": "fable",
       "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
-      "format": "3:1",
+      "format": "4:1",
       "groesse": [
         288,
         96
@@ -189,7 +189,7 @@
       "titel": "Schiff Länge 5 · fable",
       "satz": "fable",
       "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
-      "format": "5:1",
+      "format": "4:1",
       "groesse": [
         480,
         96

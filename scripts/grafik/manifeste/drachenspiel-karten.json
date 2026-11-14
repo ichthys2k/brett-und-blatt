@@ -170,7 +170,8 @@
       "id": "sea_starfish",
       "titel": "Seestern",
       "haus": "sea",
-      "prompt": "House colours deep blue and silver, wave emblem; sea shore or underwater background. An orange starfish on a rock in shallow clear water."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. THE SUBJECT: an orange starfish with five arms on a rock in clear shallow water, no insect anywhere.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro painting of ONE tiny real creature, drawn exactly as it looks in nature, seen from the side or from above, filling most of the frame and sitting exactly in the centre. The creature wears nothing, has no arms, no hands, no clothes and no humanoid features. Warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus. It is the only living thing in the picture; no mammal, no insect other than the one described, and no person appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "sea_ray",
@@ -330,7 +331,7 @@
       "id": "farm_hen",
       "titel": "Henne",
       "haus": "farm",
-      "prompt": "House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A brown hen sitting proudly on a nest of straw."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. House colours warm yellow and red, wheat sheaf emblem; farmyard and fields background. A brown hen sitting proudly on a nest of straw."
     },
     {
       "id": "farm_sheepdog",
@@ -592,43 +593,48 @@
       "id": "bug_moth",
       "titel": "Motte",
       "haus": "bugs",
-      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A soft grey moth circling a lantern."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. THE SUBJECT: a soft grey moth with spread wings, circling a lantern.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro painting of ONE tiny real creature, drawn exactly as it looks in nature, seen from the side or from above, filling most of the frame and sitting exactly in the centre. The creature wears nothing, has no arms, no hands, no clothes and no humanoid features. Warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus. It is the only living thing in the picture; no mammal, no insect other than the one described, and no person appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "bug_ladybug",
       "titel": "Marienkäfer",
       "haus": "bugs",
-      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A ladybird on a leaf, shell like a small red shield."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A ladybird on a leaf, shell like a small red shield.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro painting of ONE tiny real creature in its natural anatomy (insect legs, wings and antennae exactly as in nature), seen from the side, filling most of the frame and sitting exactly in the centre. The creature wears nothing, has no arms, no hands, no clothes and no humanoid features. Warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus. It is the only living thing in the picture; no mammal and no person appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "bug_firefly",
       "titel": "Glühwürmchen",
       "haus": "bugs",
-      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A firefly glowing warmly in the dusk."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A firefly glowing warmly in the dusk.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro painting of ONE tiny real creature in its natural anatomy (insect legs, wings and antennae exactly as in nature), seen from the side, filling most of the frame and sitting exactly in the centre. The creature wears nothing, has no arms, no hands, no clothes and no humanoid features. Warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus. It is the only living thing in the picture; no mammal and no person appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "bug_wasp",
       "titel": "Wespe",
       "haus": "bugs",
-      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A wasp in flight, sting like a tiny lance."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A wasp in flight, sting like a tiny lance.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro portrait of ONE tiny creature that fills most of the frame and sits exactly in the centre, with at most one small medieval accessory (a tiny pennant or a scrap of heraldic cloth), warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus; the tiny creature is the only living thing in the picture and no mammal appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "bug_centipede",
       "titel": "Tausendfüßler",
       "haus": "bugs",
-      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A centipede marching, many tiny boots."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A centipede marching, many tiny boots."
     },
     {
       "id": "bug_dragonfly",
       "titel": "Libelle",
       "haus": "bugs",
-      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A dragonfly hovering over water, shimmering wings."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A dragonfly hovering over water, shimmering wings.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro painting of ONE tiny real creature in its natural anatomy (insect legs, wings and antennae exactly as in nature), seen from the side, filling most of the frame and sitting exactly in the centre. The creature wears nothing, has no arms, no hands, no clothes and no humanoid features. Warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus. It is the only living thing in the picture; no mammal and no person appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "bug_stagbeetle",
       "titel": "Hirschkäfer",
       "haus": "bugs",
-      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A stag beetle with mighty antler jaws, polished armour."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A stag beetle with mighty antler jaws, polished armour."
     },
     {
       "id": "bug_tarantula",
@@ -670,13 +676,14 @@
       "id": "token_bigmoth",
       "titel": "Falter",
       "haus": "bugs",
-      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A large colourful butterfly with patterned wings."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A large colourful butterfly with patterned wings.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro portrait of ONE tiny creature that fills most of the frame and sits exactly in the centre, with at most one small medieval accessory (a tiny pennant or a scrap of heraldic cloth), warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus; the tiny creature is the only living thing in the picture and no mammal appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "token_swarmqueen",
       "titel": "Schwarmkönigin",
       "haus": "bugs",
-      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A queen bee surrounded by a ring of bees like a royal guard."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A queen bee surrounded by a ring of bees like a royal guard."
     },
     {
       "id": "dragon_bugs",
@@ -722,7 +729,8 @@
       "id": "n_kobold",
       "titel": "Kobold",
       "haus": "neutral",
-      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small friendly house goblin with a pointed cap and a lantern."
+      "prompt": "THE SUBJECT: a small friendly house goblin with a pointed cap, holding a lantern, large in the centre, alone. Background: a blurred village road.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: a portrait of ONE creature that fills most of the frame and sits or stands exactly in the centre, seen from the front or in three-quarter view. It is the only creature in the picture: no second creature of any kind, no person and no traveller appears anywhere, not even small and not in the background. Warm atmospheric lighting, rich colours; the soft painted background is blurred and out of focus. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "n_hamster",
@@ -794,7 +802,8 @@
       "id": "n_eagle",
       "titel": "Adler",
       "haus": "neutral",
-      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. An eagle soaring over mountains."
+      "prompt": "THE SUBJECT: a golden eagle in flight with spread wings, seen from the front, large in the centre, alone. Background: mountains, blurred.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: a portrait of ONE creature that fills most of the frame and sits or stands exactly in the centre, seen from the front or in three-quarter view. It is the only creature in the picture: no second creature of any kind, no person and no traveller appears anywhere, not even small and not in the background. Warm atmospheric lighting, rich colours; the soft painted background is blurred and out of focus. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "n_dragonling",
@@ -824,7 +833,8 @@
       "id": "n_phoenix",
       "titel": "Phönix",
       "haus": "neutral",
-      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A phoenix rising with wings of warm flame."
+      "prompt": "THE SUBJECT: a phoenix, a great bird made of warm flame with spread wings, large in the centre, alone. Background: a blurred landscape at dusk.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: a portrait of ONE creature that fills most of the frame and sits or stands exactly in the centre, seen from the front or in three-quarter view. It is the only creature in the picture: no second creature of any kind, no person and no traveller appears anywhere, not even small and not in the background. Warm atmospheric lighting, rich colours; the soft painted background is blurred and out of focus. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "n_basilisk",
@@ -848,7 +858,8 @@
       "id": "token_eggdragon",
       "titel": "Eidrache",
       "haus": "neutral",
-      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A tiny dragon just hatching, half still in its eggshell."
+      "prompt": "THE SUBJECT: a tiny dragon just hatching, half still in its cracked eggshell, large in the centre, alone. Background: a blurred village road.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: a portrait of ONE creature that fills most of the frame and sits or stands exactly in the centre, seen from the front or in three-quarter view. It is the only creature in the picture: no second creature of any kind, no person and no traveller appears anywhere, not even small and not in the background. Warm atmospheric lighting, rich colours; the soft painted background is blurred and out of focus. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "n_tower",
@@ -894,7 +905,8 @@
       "id": "c3",
       "titel": "Fliege",
       "haus": "bugs",
-      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A housefly with big round eyes sitting on a leaf."
+      "prompt": "THE SUBJECT: a housefly with big round eyes sitting on a green leaf. Background: blurred meadow in violet and honey-gold tones.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro painting of ONE tiny real creature, drawn exactly as it looks in nature, seen from the side or from above, filling most of the frame and sitting exactly in the centre. The creature wears nothing, has no arms, no hands, no clothes and no humanoid features. Warm atmospheric lighting, rich colours; the soft painted background is strongly blurred and out of focus. It is the only living thing in the picture; no mammal, no person and no second creature appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "c4",
@@ -1080,7 +1092,8 @@
       "id": "c34",
       "titel": "Affe",
       "haus": "wild",
-      "prompt": "House colours ochre and crimson, sun emblem; savannah background. A small monkey swinging on a liana."
+      "prompt": "THE SUBJECT: a small monkey swinging on a liana, large in the centre, alone. Background: a blurred savannah in ochre and crimson tones.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: a portrait of ONE creature that fills most of the frame and sits or stands exactly in the centre, seen from the front or in three-quarter view. It is the only creature in the picture: no second creature of any kind, no person and no traveller appears anywhere, not even small and not in the background. Warm atmospheric lighting, rich colours; the soft painted background is blurred and out of focus. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "c35",
@@ -1182,7 +1195,8 @@
       "id": "c51",
       "titel": "Raupe",
       "haus": "bugs",
-      "prompt": "House colours violet and honey gold, honeycomb emblem; meadow undergrowth seen from close to the ground. A green caterpillar on a leaf with a bite taken out."
+      "prompt": "THE SUBJECT: a green caterpillar on a leaf with a bite taken out. Background: blurred meadow in violet and honey-gold tones.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro painting of ONE tiny real creature, drawn exactly as it looks in nature, seen from the side or from above, filling most of the frame and sitting exactly in the centre. The creature wears nothing, has no arms, no hands, no clothes and no humanoid features. Warm atmospheric lighting, rich colours; the soft painted background is strongly blurred and out of focus. It is the only living thing in the picture; no mammal, no person and no second creature appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "c52",
@@ -1206,19 +1220,22 @@
       "id": "token_butterfly",
       "titel": "Schmetterling",
       "haus": "neutral",
-      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small pale butterfly fluttering over a road-side flower."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. THE SUBJECT: a pale butterfly with spread wings on a road-side flower.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro painting of ONE tiny real creature, drawn exactly as it looks in nature, seen from the side or from above, filling most of the frame and sitting exactly in the centre. The creature wears nothing, has no arms, no hands, no clothes and no humanoid features. Warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus. It is the only living thing in the picture; no mammal, no insect other than the one described, and no person appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "token_mussel",
       "titel": "Muschel",
       "haus": "neutral",
-      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A closed mussel shell on wet sand with a tiny pearl glint."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. THE SUBJECT: an open blue-black mussel shell with a pearl, no insect anywhere.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro painting of ONE tiny real creature, drawn exactly as it looks in nature, seen from the side or from above, filling most of the frame and sitting exactly in the centre. The creature wears nothing, has no arms, no hands, no clothes and no humanoid features. Warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus. It is the only living thing in the picture; no mammal, no insect other than the one described, and no person appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "token_shrimp",
       "titel": "Garnele",
       "haus": "neutral",
-      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small pink shrimp on a pebble."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small pink shrimp on a pebble.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro portrait of ONE tiny creature that fills most of the frame and sits exactly in the centre, with at most one small medieval accessory (a tiny pennant or a scrap of heraldic cloth), warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus; the tiny creature is the only living thing in the picture and no mammal appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "token_seahorse",
@@ -1363,7 +1380,7 @@
       "id": "token_ant",
       "titel": "Ameisen-Soldat",
       "haus": "neutral",
-      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A brave soldier ant with a tiny helmet and spear."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. No house colours, plain travelling folk of the kingdom; road, village or mountain background. A brave soldier ant with a tiny helmet and spear."
     },
     {
       "id": "token_chick",
@@ -1381,13 +1398,15 @@
       "id": "token_sardine",
       "titel": "Sardine",
       "haus": "neutral",
-      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A single small silver sardine."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. No house colours, plain travelling folk of the kingdom; road, village or mountain background. A single small silver sardine.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro painting of ONE tiny real creature in its natural anatomy (insect legs, wings and antennae exactly as in nature), seen from the side, filling most of the frame and sitting exactly in the centre. The creature wears nothing, has no arms, no hands, no clothes and no humanoid features. Warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus. It is the only living thing in the picture; no mammal and no person appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "token_bee",
       "titel": "Biene",
       "haus": "neutral",
-      "prompt": "No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small worker bee in flight."
+      "prompt": "Close-up portrait: the creature described below is the one and only subject, drawn large and exactly in the centre so that it fills about 60 percent of the image height; no other animal, bird or larger creature appears anywhere in the picture. No house colours, plain travelling folk of the kingdom; road, village or mountain background. A small worker bee in flight.",
+      "stil": "Painterly storybook oil illustration, fantasy card art: an extreme close-up macro painting of ONE tiny real creature in its natural anatomy (insect legs, wings and antennae exactly as in nature), seen from the side, filling most of the frame and sitting exactly in the centre. The creature wears nothing, has no arms, no hands, no clothes and no humanoid features. Warm atmospheric lighting, rich colours; the soft painted background in the house landscape is strongly blurred and out of focus. It is the only living thing in the picture; no mammal and no person appears anywhere. No text, no letters, no numbers, no card frame, no border."
     },
     {
       "id": "token_youngdragon",

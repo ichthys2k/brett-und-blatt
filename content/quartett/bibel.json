@@ -93,6 +93,7 @@
       "id": "A1",
       "name": "Abraham",
       "emoji": "⭐",
+      "image": "bub-quartett-bibel-a1.webp",
       "values": {
         "verses": 280,
         "chapters": 82,
@@ -106,6 +107,7 @@
       "id": "A2",
       "name": "Sara",
       "emoji": "👵",
+      "image": "bub-quartett-bibel-a2.webp",
       "values": {
         "verses": 49,
         "chapters": 17,
@@ -119,6 +121,7 @@
       "id": "A3",
       "name": "Isaak",
       "emoji": "🐏",
+      "image": "bub-quartett-bibel-a3.webp",
       "values": {
         "verses": 122,
         "chapters": 52,
@@ -132,6 +135,7 @@
       "id": "A4",
       "name": "Jakob",
       "emoji": "🪜",
+      "image": "bub-quartett-bibel-a4.webp",
       "values": {
         "verses": 344,
         "chapters": 137,
@@ -145,6 +149,7 @@
       "id": "B1",
       "name": "Mose",
       "emoji": "📜",
+      "image": "bub-quartett-bibel-b1.webp",
       "values": {
         "verses": 775,
         "chapters": 199,
@@ -158,6 +163,7 @@
       "id": "B2",
       "name": "Aaron",
       "emoji": "🪄",
+      "image": "bub-quartett-bibel-b2.webp",
       "values": {
         "verses": 333,
         "chapters": 101,
@@ -171,6 +177,7 @@
       "id": "B3",
       "name": "Mirjam",
       "emoji": "🥁",
+      "image": "bub-quartett-bibel-b3.webp",
       "values": {
         "verses": 14,
         "chapters": 8,
@@ -184,6 +191,7 @@
       "id": "B4",
       "name": "Josua",
       "emoji": "🎺",
+      "image": "bub-quartett-bibel-b4.webp",
       "values": {
         "verses": 203,
         "chapters": 52,
@@ -197,6 +205,7 @@
       "id": "C1",
       "name": "Saul",
       "emoji": "👑",
+      "image": "bub-quartett-bibel-c1.webp",
       "values": {
         "verses": 334,
         "chapters": 60,
@@ -210,6 +219,7 @@
       "id": "C2",
       "name": "David",
       "emoji": "🎵",
+      "image": "bub-quartett-bibel-c2.webp",
       "values": {
         "verses": 932,
         "chapters": 251,
@@ -223,6 +233,7 @@
       "id": "C3",
       "name": "Salomo",
       "emoji": "🏛️",
+      "image": "bub-quartett-bibel-c3.webp",
       "values": {
         "verses": 276,
         "chapters": 68,
@@ -236,6 +247,7 @@
       "id": "C4",
       "name": "Hiskia",
       "emoji": "🛡️",
+      "image": "bub-quartett-bibel-c4.webp",
       "values": {
         "verses": 125,
         "chapters": 28,
@@ -249,6 +261,7 @@
       "id": "D1",
       "name": "Elia",
       "emoji": "🔥",
+      "image": "bub-quartett-bibel-d1.webp",
       "values": {
         "verses": 96,
         "chapters": 27,
@@ -262,6 +275,7 @@
       "id": "D2",
       "name": "Elisa",
       "emoji": "🧥",
+      "image": "bub-quartett-bibel-d2.webp",
       "values": {
         "verses": 65,
         "chapters": 14,
@@ -275,6 +289,7 @@
       "id": "D3",
       "name": "Jesaja",
       "emoji": "🕊️",
+      "image": "bub-quartett-bibel-d3.webp",
       "values": {
         "verses": 61,
         "chapters": 34,
@@ -288,6 +303,7 @@
       "id": "D4",
       "name": "Jeremia",
       "emoji": "😢",
+      "image": "bub-quartett-bibel-d4.webp",
       "values": {
         "verses": 138,
         "chapters": 47,
@@ -301,6 +317,7 @@
       "id": "E1",
       "name": "Rut",
       "emoji": "🌾",
+      "image": "bub-quartett-bibel-e1.webp",
       "values": {
         "verses": 14,
         "chapters": 5,
@@ -314,6 +331,7 @@
       "id": "E2",
       "name": "Ester",
       "emoji": "👸",
+      "image": "bub-quartett-bibel-e2.webp",
       "values": {
         "verses": 44,
         "chapters": 7,
@@ -327,6 +345,7 @@
       "id": "E3",
       "name": "Debora",
       "emoji": "🌴",
+      "image": "bub-quartett-bibel-e3.webp",
       "values": {
         "verses": 10,
         "chapters": 3,
@@ -340,6 +359,7 @@
       "id": "E4",
       "name": "Hanna",
       "emoji": "🙏",
+      "image": "bub-quartett-bibel-e4.webp",
       "values": {
         "verses": 16,
         "chapters": 6,
@@ -353,6 +373,7 @@
       "id": "F1",
       "name": "Petrus",
       "emoji": "🗝️",
+      "image": "bub-quartett-bibel-f1.webp",
       "values": {
         "verses": 166,
         "chapters": 52,
@@ -366,6 +387,7 @@
       "id": "F2",
       "name": "Andreas",
       "emoji": "🎣",
+      "image": "bub-quartett-bibel-f2.webp",
       "values": {
         "verses": 12,
         "chapters": 10,
@@ -379,6 +401,7 @@
       "id": "F3",
       "name": "Thomas",
       "emoji": "✋",
+      "image": "bub-quartett-bibel-f3.webp",
       "values": {
         "verses": 11,
         "chapters": 8,
@@ -392,6 +415,7 @@
       "id": "F4",
       "name": "Matthäus",
       "emoji": "💰",
+      "image": "bub-quartett-bibel-f4.webp",
       "values": {
         "verses": 6,
         "chapters": 5,
@@ -405,6 +429,7 @@
       "id": "G1",
       "name": "Paulus",
       "emoji": "✉️",
+      "image": "bub-quartett-bibel-g1.webp",
       "values": {
         "verses": 186,
         "chapters": 43,
@@ -418,6 +443,7 @@
       "id": "G2",
       "name": "Barnabas",
       "emoji": "🤝",
+      "image": "bub-quartett-bibel-g2.webp",
       "values": {
         "verses": 29,
         "chapters": 10,
@@ -431,6 +457,7 @@
       "id": "G3",
       "name": "Timotheus",
       "emoji": "📖",
+      "image": "bub-quartett-bibel-g3.webp",
       "values": {
         "verses": 24,
         "chapters": 20,
@@ -444,6 +471,7 @@
       "id": "G4",
       "name": "Silas",
       "emoji": "🎶",
+      "image": "bub-quartett-bibel-g4.webp",
       "values": {
         "verses": 18,
         "chapters": 8,
@@ -457,6 +485,7 @@
       "id": "H1",
       "name": "Maria Magdalena",
       "emoji": "🌅",
+      "image": "bub-quartett-bibel-h1.webp",
       "values": {
         "verses": 12,
         "chapters": 8,
@@ -470,6 +499,7 @@
       "id": "H2",
       "name": "Marta",
       "emoji": "🍲",
+      "image": "bub-quartett-bibel-h2.webp",
       "values": {
         "verses": 12,
         "chapters": 3,
@@ -483,6 +513,7 @@
       "id": "H3",
       "name": "Zachäus",
       "emoji": "🌳",
+      "image": "bub-quartett-bibel-h3.webp",
       "values": {
         "verses": 3,
         "chapters": 1,
@@ -496,6 +527,7 @@
       "id": "H4",
       "name": "Nikodemus",
       "emoji": "🌙",
+      "image": "bub-quartett-bibel-h4.webp",
       "values": {
         "verses": 5,
         "chapters": 3,

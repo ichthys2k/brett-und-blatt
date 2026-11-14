@@ -77,6 +77,7 @@
       "id": "A1",
       "name": "Tyrannosaurus",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-a1.webp",
       "values": {
         "length": 12.3,
         "weight": 8400,
@@ -90,6 +91,7 @@
       "id": "A2",
       "name": "Spinosaurus",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-a2.webp",
       "values": {
         "length": 14,
         "weight": 7400,
@@ -103,6 +105,7 @@
       "id": "A3",
       "name": "Giganotosaurus",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-a3.webp",
       "values": {
         "length": 12.5,
         "weight": 8000,
@@ -116,6 +119,7 @@
       "id": "A4",
       "name": "Allosaurus",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-a4.webp",
       "values": {
         "length": 9.5,
         "weight": 2300,
@@ -129,6 +133,7 @@
       "id": "B1",
       "name": "Velociraptor",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-b1.webp",
       "values": {
         "length": 2,
         "weight": 15,
@@ -142,6 +147,7 @@
       "id": "B2",
       "name": "Deinonychus",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-b2.webp",
       "values": {
         "length": 3.4,
         "weight": 73,
@@ -155,6 +161,7 @@
       "id": "B3",
       "name": "Compsognathus",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-b3.webp",
       "values": {
         "length": 1,
         "weight": 3,
@@ -168,6 +175,7 @@
       "id": "B4",
       "name": "Troodon",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-b4.webp",
       "values": {
         "length": 2.4,
         "weight": 50,
@@ -181,6 +189,7 @@
       "id": "C1",
       "name": "Brachiosaurus",
       "emoji": "🦕",
+      "image": "bub-quartett-dinosaurier-c1.webp",
       "values": {
         "length": 26,
         "weight": 40000,
@@ -194,6 +203,7 @@
       "id": "C2",
       "name": "Diplodocus",
       "emoji": "🦕",
+      "image": "bub-quartett-dinosaurier-c2.webp",
       "values": {
         "length": 26,
         "weight": 15000,
@@ -207,6 +217,7 @@
       "id": "C3",
       "name": "Argentinosaurus",
       "emoji": "🦕",
+      "image": "bub-quartett-dinosaurier-c3.webp",
       "values": {
         "length": 35,
         "weight": 70000,
@@ -220,6 +231,7 @@
       "id": "C4",
       "name": "Apatosaurus",
       "emoji": "🦕",
+      "image": "bub-quartett-dinosaurier-c4.webp",
       "values": {
         "length": 22,
         "weight": 23000,
@@ -233,6 +245,7 @@
       "id": "D1",
       "name": "Triceratops",
       "emoji": "🦏",
+      "image": "bub-quartett-dinosaurier-d1.webp",
       "values": {
         "length": 9,
         "weight": 9000,
@@ -246,6 +259,7 @@
       "id": "D2",
       "name": "Styracosaurus",
       "emoji": "🦏",
+      "image": "bub-quartett-dinosaurier-d2.webp",
       "values": {
         "length": 5.5,
         "weight": 2700,
@@ -259,6 +273,7 @@
       "id": "D3",
       "name": "Protoceratops",
       "emoji": "🦏",
+      "image": "bub-quartett-dinosaurier-d3.webp",
       "values": {
         "length": 1.8,
         "weight": 85,
@@ -272,6 +287,7 @@
       "id": "D4",
       "name": "Pachycephalosaurus",
       "emoji": "🪖",
+      "image": "bub-quartett-dinosaurier-d4.webp",
       "values": {
         "length": 4.5,
         "weight": 450,
@@ -285,6 +301,7 @@
       "id": "E1",
       "name": "Stegosaurus",
       "emoji": "🦕",
+      "image": "bub-quartett-dinosaurier-e1.webp",
       "values": {
         "length": 9,
         "weight": 5000,
@@ -298,6 +315,7 @@
       "id": "E2",
       "name": "Ankylosaurus",
       "emoji": "🛡️",
+      "image": "bub-quartett-dinosaurier-e2.webp",
       "values": {
         "length": 8,
         "weight": 6000,
@@ -311,6 +329,7 @@
       "id": "E3",
       "name": "Kentrosaurus",
       "emoji": "🦕",
+      "image": "bub-quartett-dinosaurier-e3.webp",
       "values": {
         "length": 4.5,
         "weight": 1100,
@@ -324,6 +343,7 @@
       "id": "E4",
       "name": "Euoplocephalus",
       "emoji": "🛡️",
+      "image": "bub-quartett-dinosaurier-e4.webp",
       "values": {
         "length": 5.5,
         "weight": 2500,
@@ -337,6 +357,7 @@
       "id": "F1",
       "name": "Parasaurolophus",
       "emoji": "🦕",
+      "image": "bub-quartett-dinosaurier-f1.webp",
       "values": {
         "length": 9.5,
         "weight": 2500,
@@ -350,6 +371,7 @@
       "id": "F2",
       "name": "Iguanodon",
       "emoji": "🦕",
+      "image": "bub-quartett-dinosaurier-f2.webp",
       "values": {
         "length": 10,
         "weight": 3500,
@@ -363,6 +385,7 @@
       "id": "F3",
       "name": "Edmontosaurus",
       "emoji": "🦕",
+      "image": "bub-quartett-dinosaurier-f3.webp",
       "values": {
         "length": 12,
         "weight": 4000,
@@ -376,6 +399,7 @@
       "id": "F4",
       "name": "Maiasaura",
       "emoji": "🦕",
+      "image": "bub-quartett-dinosaurier-f4.webp",
       "values": {
         "length": 9,
         "weight": 3000,
@@ -389,6 +413,7 @@
       "id": "G1",
       "name": "Carnotaurus",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-g1.webp",
       "values": {
         "length": 7.5,
         "weight": 1500,
@@ -402,6 +427,7 @@
       "id": "G2",
       "name": "Baryonyx",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-g2.webp",
       "values": {
         "length": 9,
         "weight": 1700,
@@ -415,6 +441,7 @@
       "id": "G3",
       "name": "Dilophosaurus",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-g3.webp",
       "values": {
         "length": 7,
         "weight": 400,
@@ -428,6 +455,7 @@
       "id": "G4",
       "name": "Ceratosaurus",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-g4.webp",
       "values": {
         "length": 6,
         "weight": 600,
@@ -441,6 +469,7 @@
       "id": "H1",
       "name": "Archaeopteryx",
       "emoji": "🪶",
+      "image": "bub-quartett-dinosaurier-h1.webp",
       "values": {
         "length": 0.5,
         "weight": 1,
@@ -454,6 +483,7 @@
       "id": "H2",
       "name": "Plateosaurus",
       "emoji": "🦕",
+      "image": "bub-quartett-dinosaurier-h2.webp",
       "values": {
         "length": 8,
         "weight": 700,
@@ -467,6 +497,7 @@
       "id": "H3",
       "name": "Eoraptor",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-h3.webp",
       "values": {
         "length": 1,
         "weight": 10,
@@ -480,6 +511,7 @@
       "id": "H4",
       "name": "Coelophysis",
       "emoji": "🦖",
+      "image": "bub-quartett-dinosaurier-h4.webp",
       "values": {
         "length": 3,
         "weight": 20,

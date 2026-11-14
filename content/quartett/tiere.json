@@ -76,6 +76,7 @@
       "id": "A1",
       "name": "Afrikanischer Elefant",
       "emoji": "🐘",
+      "image": "bub-quartett-tiere-a1.webp",
       "values": {
         "weight": 6000,
         "length": 650,
@@ -89,6 +90,7 @@
       "id": "A2",
       "name": "Giraffe",
       "emoji": "🦒",
+      "image": "bub-quartett-tiere-a2.webp",
       "values": {
         "weight": 1200,
         "length": 450,
@@ -102,6 +104,7 @@
       "id": "A3",
       "name": "Löwe",
       "emoji": "🦁",
+      "image": "bub-quartett-tiere-a3.webp",
       "values": {
         "weight": 190,
         "length": 200,
@@ -115,6 +118,7 @@
       "id": "A4",
       "name": "Breitmaulnashorn",
       "emoji": "🦏",
+      "image": "bub-quartett-tiere-a4.webp",
       "values": {
         "weight": 2300,
         "length": 380,
@@ -128,6 +132,7 @@
       "id": "B1",
       "name": "Rothirsch",
       "emoji": "🦌",
+      "image": "bub-quartett-tiere-b1.webp",
       "values": {
         "weight": 160,
         "length": 220,
@@ -141,6 +146,7 @@
       "id": "B2",
       "name": "Wildschwein",
       "emoji": "🐗",
+      "image": "bub-quartett-tiere-b2.webp",
       "values": {
         "weight": 100,
         "length": 150,
@@ -154,6 +160,7 @@
       "id": "B3",
       "name": "Rotfuchs",
       "emoji": "🦊",
+      "image": "bub-quartett-tiere-b3.webp",
       "values": {
         "weight": 7,
         "length": 70,
@@ -167,6 +174,7 @@
       "id": "B4",
       "name": "Braunbär",
       "emoji": "🐻",
+      "image": "bub-quartett-tiere-b4.webp",
       "values": {
         "weight": 300,
         "length": 230,
@@ -180,6 +188,7 @@
       "id": "C1",
       "name": "Hausrind",
       "emoji": "🐄",
+      "image": "bub-quartett-tiere-c1.webp",
       "values": {
         "weight": 700,
         "length": 250,
@@ -193,6 +202,7 @@
       "id": "C2",
       "name": "Hausschwein",
       "emoji": "🐖",
+      "image": "bub-quartett-tiere-c2.webp",
       "values": {
         "weight": 200,
         "length": 150,
@@ -206,6 +216,7 @@
       "id": "C3",
       "name": "Hauspferd",
       "emoji": "🐎",
+      "image": "bub-quartett-tiere-c3.webp",
       "values": {
         "weight": 500,
         "length": 240,
@@ -219,6 +230,7 @@
       "id": "C4",
       "name": "Hausschaf",
       "emoji": "🐑",
+      "image": "bub-quartett-tiere-c4.webp",
       "values": {
         "weight": 70,
         "length": 140,
@@ -232,6 +244,7 @@
       "id": "D1",
       "name": "Blauwal",
       "emoji": "🐋",
+      "image": "bub-quartett-tiere-d1.webp",
       "values": {
         "weight": 130000,
         "length": 2500,
@@ -245,6 +258,7 @@
       "id": "D2",
       "name": "Schwertwal",
       "emoji": "🐳",
+      "image": "bub-quartett-tiere-d2.webp",
       "values": {
         "weight": 5500,
         "length": 750,
@@ -258,6 +272,7 @@
       "id": "D3",
       "name": "Weißer Hai",
       "emoji": "🦈",
+      "image": "bub-quartett-tiere-d3.webp",
       "values": {
         "weight": 1100,
         "length": 450,
@@ -271,6 +286,7 @@
       "id": "D4",
       "name": "Großer Tümmler",
       "emoji": "🐬",
+      "image": "bub-quartett-tiere-d4.webp",
       "values": {
         "weight": 300,
         "length": 300,
@@ -284,6 +300,7 @@
       "id": "E1",
       "name": "Haushund",
       "emoji": "🐕",
+      "image": "bub-quartett-tiere-e1.webp",
       "values": {
         "weight": 35,
         "length": 110,
@@ -297,6 +314,7 @@
       "id": "E2",
       "name": "Hauskatze",
       "emoji": "🐈",
+      "image": "bub-quartett-tiere-e2.webp",
       "values": {
         "weight": 4,
         "length": 50,
@@ -310,6 +328,7 @@
       "id": "E3",
       "name": "Hauskaninchen",
       "emoji": "🐇",
+      "image": "bub-quartett-tiere-e3.webp",
       "values": {
         "weight": 2,
         "length": 40,
@@ -323,6 +342,7 @@
       "id": "E4",
       "name": "Meerschweinchen",
       "emoji": "🐹",
+      "image": "bub-quartett-tiere-e4.webp",
       "values": {
         "weight": 1,
         "length": 25,
@@ -336,6 +356,7 @@
       "id": "F1",
       "name": "Strauß",
       "emoji": "🪶",
+      "image": "bub-quartett-tiere-f1.webp",
       "values": {
         "weight": 120,
         "length": 200,
@@ -349,6 +370,7 @@
       "id": "F2",
       "name": "Steinadler",
       "emoji": "🦅",
+      "image": "bub-quartett-tiere-f2.webp",
       "values": {
         "weight": 5,
         "length": 85,
@@ -362,6 +384,7 @@
       "id": "F3",
       "name": "Wanderfalke",
       "emoji": "🐦",
+      "image": "bub-quartett-tiere-f3.webp",
       "values": {
         "weight": 1,
         "length": 45,
@@ -375,6 +398,7 @@
       "id": "F4",
       "name": "Kaiserpinguin",
       "emoji": "🐧",
+      "image": "bub-quartett-tiere-f4.webp",
       "values": {
         "weight": 35,
         "length": 115,
@@ -388,6 +412,7 @@
       "id": "G1",
       "name": "Tiger",
       "emoji": "🐅",
+      "image": "bub-quartett-tiere-g1.webp",
       "values": {
         "weight": 220,
         "length": 220,
@@ -401,6 +426,7 @@
       "id": "G2",
       "name": "Großer Panda",
       "emoji": "🐼",
+      "image": "bub-quartett-tiere-g2.webp",
       "values": {
         "weight": 100,
         "length": 150,
@@ -414,6 +440,7 @@
       "id": "G3",
       "name": "Orang-Utan",
       "emoji": "🦧",
+      "image": "bub-quartett-tiere-g3.webp",
       "values": {
         "weight": 75,
         "length": 130,
@@ -427,6 +454,7 @@
       "id": "G4",
       "name": "Komodowaran",
       "emoji": "🦎",
+      "image": "bub-quartett-tiere-g4.webp",
       "values": {
         "weight": 80,
         "length": 260,
@@ -440,6 +468,7 @@
       "id": "H1",
       "name": "Eisbär",
       "emoji": "🐻‍❄️",
+      "image": "bub-quartett-tiere-h1.webp",
       "values": {
         "weight": 450,
         "length": 230,
@@ -453,6 +482,7 @@
       "id": "H2",
       "name": "Walross",
       "emoji": "🦭",
+      "image": "bub-quartett-tiere-h2.webp",
       "values": {
         "weight": 1200,
         "length": 330,
@@ -466,6 +496,7 @@
       "id": "H3",
       "name": "Rentier",
       "emoji": "🦌",
+      "image": "bub-quartett-tiere-h3.webp",
       "values": {
         "weight": 120,
         "length": 190,
@@ -479,6 +510,7 @@
       "id": "H4",
       "name": "Polarfuchs",
       "emoji": "🦊",
+      "image": "bub-quartett-tiere-h4.webp",
       "values": {
         "weight": 4,
         "length": 60,

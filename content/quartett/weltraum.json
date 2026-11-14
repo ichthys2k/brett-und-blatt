@@ -76,6 +76,7 @@
       "id": "A1",
       "name": "Merkur",
       "emoji": "🪨",
+      "image": "bub-quartett-weltraum-a1.webp",
       "values": {
         "diameter": 4879,
         "mass": 0.055,
@@ -89,6 +90,7 @@
       "id": "A2",
       "name": "Venus",
       "emoji": "🌕",
+      "image": "bub-quartett-weltraum-a2.webp",
       "values": {
         "diameter": 12104,
         "mass": 0.815,
@@ -102,6 +104,7 @@
       "id": "A3",
       "name": "Erde",
       "emoji": "🌍",
+      "image": "bub-quartett-weltraum-a3.webp",
       "values": {
         "diameter": 12742,
         "mass": 1,
@@ -115,6 +118,7 @@
       "id": "A4",
       "name": "Mars",
       "emoji": "🔴",
+      "image": "bub-quartett-weltraum-a4.webp",
       "values": {
         "diameter": 6779,
         "mass": 0.107,
@@ -128,6 +132,7 @@
       "id": "B1",
       "name": "Jupiter",
       "emoji": "🪐",
+      "image": "bub-quartett-weltraum-b1.webp",
       "values": {
         "diameter": 139820,
         "mass": 317.8,
@@ -141,6 +146,7 @@
       "id": "B2",
       "name": "Saturn",
       "emoji": "🪐",
+      "image": "bub-quartett-weltraum-b2.webp",
       "values": {
         "diameter": 116460,
         "mass": 95.2,
@@ -154,6 +160,7 @@
       "id": "B3",
       "name": "Uranus",
       "emoji": "🔵",
+      "image": "bub-quartett-weltraum-b3.webp",
       "values": {
         "diameter": 50724,
         "mass": 14.5,
@@ -167,6 +174,7 @@
       "id": "B4",
       "name": "Neptun",
       "emoji": "🔵",
+      "image": "bub-quartett-weltraum-b4.webp",
       "values": {
         "diameter": 49244,
         "mass": 17.1,
@@ -180,6 +188,7 @@
       "id": "C1",
       "name": "Ceres",
       "emoji": "🪨",
+      "image": "bub-quartett-weltraum-c1.webp",
       "values": {
         "diameter": 940,
         "mass": 0.00016,
@@ -193,6 +202,7 @@
       "id": "C2",
       "name": "Pluto",
       "emoji": "🤍",
+      "image": "bub-quartett-weltraum-c2.webp",
       "values": {
         "diameter": 2377,
         "mass": 0.0022,
@@ -206,6 +216,7 @@
       "id": "C3",
       "name": "Eris",
       "emoji": "⚪",
+      "image": "bub-quartett-weltraum-c3.webp",
       "values": {
         "diameter": 2326,
         "mass": 0.0028,
@@ -219,6 +230,7 @@
       "id": "C4",
       "name": "Haumea",
       "emoji": "🥚",
+      "image": "bub-quartett-weltraum-c4.webp",
       "values": {
         "diameter": 1600,
         "mass": 0.00067,
@@ -232,6 +244,7 @@
       "id": "D1",
       "name": "Mond",
       "emoji": "🌙",
+      "image": "bub-quartett-weltraum-d1.webp",
       "values": {
         "diameter": 3475,
         "mass": 0.0123,
@@ -245,6 +258,7 @@
       "id": "D2",
       "name": "Phobos",
       "emoji": "🥔",
+      "image": "bub-quartett-weltraum-d2.webp",
       "values": {
         "diameter": 22,
         "mass": 1.8e-09,
@@ -258,6 +272,7 @@
       "id": "D3",
       "name": "Deimos",
       "emoji": "🥔",
+      "image": "bub-quartett-weltraum-d3.webp",
       "values": {
         "diameter": 12,
         "mass": 2.5e-10,
@@ -271,6 +286,7 @@
       "id": "D4",
       "name": "Charon",
       "emoji": "🌑",
+      "image": "bub-quartett-weltraum-d4.webp",
       "values": {
         "diameter": 1212,
         "mass": 0.00027,
@@ -284,6 +300,7 @@
       "id": "E1",
       "name": "Io",
       "emoji": "🟡",
+      "image": "bub-quartett-weltraum-e1.webp",
       "values": {
         "diameter": 3643,
         "mass": 0.015,
@@ -297,6 +314,7 @@
       "id": "E2",
       "name": "Europa",
       "emoji": "🧊",
+      "image": "bub-quartett-weltraum-e2.webp",
       "values": {
         "diameter": 3122,
         "mass": 0.008,
@@ -310,6 +328,7 @@
       "id": "E3",
       "name": "Ganymed",
       "emoji": "🌑",
+      "image": "bub-quartett-weltraum-e3.webp",
       "values": {
         "diameter": 5268,
         "mass": 0.025,
@@ -323,6 +342,7 @@
       "id": "E4",
       "name": "Kallisto",
       "emoji": "🌑",
+      "image": "bub-quartett-weltraum-e4.webp",
       "values": {
         "diameter": 4821,
         "mass": 0.018,
@@ -336,6 +356,7 @@
       "id": "F1",
       "name": "Titan",
       "emoji": "🟠",
+      "image": "bub-quartett-weltraum-f1.webp",
       "values": {
         "diameter": 5150,
         "mass": 0.0225,
@@ -349,6 +370,7 @@
       "id": "F2",
       "name": "Enceladus",
       "emoji": "❄️",
+      "image": "bub-quartett-weltraum-f2.webp",
       "values": {
         "diameter": 504,
         "mass": 1.8e-05,
@@ -362,6 +384,7 @@
       "id": "F3",
       "name": "Titania",
       "emoji": "🌑",
+      "image": "bub-quartett-weltraum-f3.webp",
       "values": {
         "diameter": 1578,
         "mass": 0.00057,
@@ -375,6 +398,7 @@
       "id": "F4",
       "name": "Triton",
       "emoji": "🧊",
+      "image": "bub-quartett-weltraum-f4.webp",
       "values": {
         "diameter": 2707,
         "mass": 0.0036,
@@ -388,6 +412,7 @@
       "id": "G1",
       "name": "Sonne",
       "emoji": "☀️",
+      "image": "bub-quartett-weltraum-g1.webp",
       "values": {
         "diameter": 1392700,
         "mass": 333000,
@@ -401,6 +426,7 @@
       "id": "G2",
       "name": "Proxima Centauri",
       "emoji": "🔴",
+      "image": "bub-quartett-weltraum-g2.webp",
       "values": {
         "diameter": 210000,
         "mass": 41000,
@@ -414,6 +440,7 @@
       "id": "G3",
       "name": "Alpha Centauri A",
       "emoji": "🟡",
+      "image": "bub-quartett-weltraum-g3.webp",
       "values": {
         "diameter": 1700000,
         "mass": 360000,
@@ -427,6 +454,7 @@
       "id": "G4",
       "name": "Sirius A",
       "emoji": "⚪",
+      "image": "bub-quartett-weltraum-g4.webp",
       "values": {
         "diameter": 2400000,
         "mass": 690000,
@@ -440,6 +468,7 @@
       "id": "H1",
       "name": "Beteigeuze",
       "emoji": "🔴",
+      "image": "bub-quartett-weltraum-h1.webp",
       "values": {
         "diameter": 1100000000,
         "mass": 5500000,
@@ -453,6 +482,7 @@
       "id": "H2",
       "name": "Rigel",
       "emoji": "🔵",
+      "image": "bub-quartett-weltraum-h2.webp",
       "values": {
         "diameter": 110000000,
         "mass": 7000000,
@@ -466,6 +496,7 @@
       "id": "H3",
       "name": "Wega",
       "emoji": "⚪",
+      "image": "bub-quartett-weltraum-h3.webp",
       "values": {
         "diameter": 3500000,
         "mass": 700000,
@@ -479,6 +510,7 @@
       "id": "H4",
       "name": "Polarstern",
       "emoji": "⭐",
+      "image": "bub-quartett-weltraum-h4.webp",
       "values": {
         "diameter": 64000000,
         "mass": 1800000,
