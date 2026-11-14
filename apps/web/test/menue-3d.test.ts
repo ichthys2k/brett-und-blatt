@@ -39,4 +39,9 @@ describe('3D-Taverne im Hauptmenü', () => {
     expect(store[KEY]).toBe('aus');
     expect(look.menu3dEnabled()).toBe(false);
   });
+
+  it('gilt nur, solange die 3D-Taverne angeboten wird', async () => {
+    const look = await lade({ [KEY]: 'an' });
+    expect(look.menu3dActive()).toBe(look.MENU_3D_AVAILABLE);
+  });
 });

@@ -53,6 +53,14 @@ function loadRoom(): RoomScene {
   }
 }
 
+/**
+ * Ob die 3D-Taverne überhaupt angeboten wird. Vorerst abgeschaltet (14.11.2026): Hauptmenü und
+ * Unterseiten zeigen nur das gemalte Bild, die Option fehlt in den Einstellungen. Der Code der
+ * 3D-Bühne (TavernScene, tavern3d.ts) bleibt erhalten; zum Wiedereinschalten hier `true` setzen.
+ * Eine früher gespeicherte Wahl bleibt im Speicher und gilt dann wieder.
+ */
+export const MENU_3D_AVAILABLE = false;
+
 /** Bewegte 3D-Taverne im Hauptmenü: nur wer sie einschaltet, bekommt Parallax, Kamerafahrt und Funken (Standard: aus). */
 function loadMenu3d(): boolean {
   try {
@@ -216,11 +224,13 @@ export const useChosenLook = (): Look => useSyncExternalStore(subscribe, () => c
 export const useActiveLook = (): Look => useSyncExternalStore(subscribe, activeLook);
 export const useChosenTable = (): TableSurface => useSyncExternalStore(subscribe, () => chosenTable);
 export const useChosenRoom = (): RoomScene => useSyncExternalStore(subscribe, () => chosenRoom);
-/** Ob die bewegte 3D-Taverne im Hauptmenü gilt (Standard: nein). */
+/** Die gespeicherte Wahl zur bewegten 3D-Taverne (Standard: aus). */
 export const menu3dEnabled = (): boolean => chosenMenu3d;
+/** Ob die 3D-Taverne gerade gilt: nur wenn sie angeboten wird und gewählt ist. */
+export const menu3dActive = (): boolean => MENU_3D_AVAILABLE && chosenMenu3d;
 export const useChosenLight = (): LightChoice => useSyncExternalStore(subscribe, () => chosenLight);
 export const lightChoice = (): LightChoice => chosenLight;
-export const useMenu3d = (): boolean => useSyncExternalStore(subscribe, () => chosenMenu3d);
+export const useMenu3d = (): boolean => useSyncExternalStore(subscribe, menu3dActive);
 export const contrastForcesPlain = (): boolean => contrastQuery.matches;
 
 contrastQuery.addEventListener('change', apply);
