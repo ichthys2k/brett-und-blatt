@@ -62,6 +62,8 @@ interface GrabOptions<I> {
   floorCenter?: [number, number];
   /** Was Mitspieler sehen (#385): `card` = nur eine Kartenrückseite, sonst eine offene Figur. */
   heldKind?: 'card' | 'piece';
+  /** Bei jeder Bewegung der gegriffenen Figur (z. B. zum Erkennen des Schüttelns). */
+  onTrack?: (x: number, z: number) => void;
 }
 
 /** Hält die gegriffene Figur und liefert die unsichtbare Fläche, die Bewegung und Loslassen auffängt. */
@@ -80,6 +82,7 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
   const track = (x: number, z: number) => {
     const h = current.current;
     if (!h) return;
+    latest.current.onTrack?.(x, z);
     const all = latest.current.targets(h.id);
     const snap = latest.current.alongX ? nearestTarget([x, 0], all.map((t) => ({ ...t, z: 0 })), latest.current.radius) : nearestTarget([x, z], all, latest.current.radius);
     if (snap && snap.id !== h.snap?.id) pulse('move');

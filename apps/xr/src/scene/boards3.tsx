@@ -11,6 +11,7 @@ import { GOLD, labelTexture } from './text';
 import { Button3D, Sign } from './ui3d';
 import { pulse } from '../haptics';
 import { useGrab } from './grab';
+import { RollCup } from './boards5';
 
 const TOP = TABLE_CENTER[1] + 0.002;
 /** Farben der Plätze 1–6 (wie die Spielfarben der Web-App ungefähr). */
@@ -694,6 +695,7 @@ export function LudoBoard({ game, onMove }: BoardProps) {
           <Tile label={String(view.dice)} position={[0, 0.0152, 0]} size={0.028} background="#fbf5e6" />
         </group>
       )}
+      {roll && <RollCup position={[0.36, 0, 0.12]} onRoll={() => onMove(roll.move)} />}
       {roll && <Button3D label="🎲 Würfeln" position={[0, 0.07, 0.06]} rotation={[-Math.PI / 4, 0, 0]} width={0.16} height={0.045} active onPress={() => onMove(roll.move)} />}
     </group>
   );

@@ -4,7 +4,12 @@
  * wird nur die Sicht, anklickbar sind nur Ziele aus `legalMoves`, geschickt wird der Eintrag selbst.
  */
 import type { GameMessage } from '@brett-und-blatt/online';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useFrame } from '@react-three/fiber';
+import type { Group } from 'three';
+import { pulse } from '../haptics';
+import { useGrab } from './grab';
+import { ROLL_MS, rollProgress, shaken } from './dice-shake';
 import type { BoardProps } from './boards';
 import { Choices, Tile } from './boards4';
 import { peterFace } from './card-views';
@@ -26,10 +31,35 @@ export function Tafel({ game, lines: extra }: { game: GameMessage; lines?: strin
 }
 
 /** Ein Würfel mit Augenzahl; gehaltene Würfel stehen etwas höher und leuchten. */
-function Die({ value, position, held, onPress }: { value: number | null; position: [number, number, number]; held?: boolean; onPress?: () => void }) {
+function Die({ value, position, held, onPress, onGrab, tick, tumble = true }: { value: number | null; position: [number, number, number]; held?: boolean; onPress?: () => void; onGrab?: () => void; tick?: string; tumble?: boolean }) {
   const s = 0.05;
+  // Rollanimation (#389): kippt und hüpft kurz und endet flach auf dem gemeldeten Wert; reine Optik.
+  const spin = useRef<Group>(null);
+  const born = useRef(-1);
+  const seen = useRef(tick);
+  useEffect(() => {
+    if (tick !== seen.current) {
+      seen.current = tick;
+      if (tumble && value !== null) born.current = performance.now();
+    }
+  }, [tick, tumble, value]);
+  useFrame(() => {
+    const g = spin.current;
+    if (!g) return;
+    const k = born.current < 0 ? 0 : rollProgress(performance.now() - born.current);
+    if (k === 0) {
+      born.current = -1;
+      g.rotation.set(0, 0, 0);
+      g.position.y = s / 2;
+      return;
+    }
+    g.rotation.set(k * 7, k * 9, k * 5);
+    g.position.y = s / 2 + Math.abs(Math.sin((1 - k) * Math.PI * 3)) * 0.06 * k;
+  });
   return (
-    <group position={[position[0], position[1] + (held ? 0.012 : 0), position[2]]}>
+    <group position={[position[0], position[1] + (held ? 0.012 : 0), position[2]]} onPointerDown={onGrab ? (e) => (e.stopPropagation(), onGrab()) : undefined}>
+      <group ref={spin} position={[0, s / 2, 0]}>
+      <group position={[0, -s / 2, 0]}>
       <mesh
         position={[0, s / 2, 0]}
         onClick={
@@ -45,9 +75,59 @@ function Die({ value, position, held, onPress }: { value: number | null; positio
         <meshStandardMaterial color={held ? '#f6e3a8' : '#fbf5e6'} roughness={0.35} />
       </mesh>
       <Tile label={value === null ? '?' : String(value)} position={[0, s + 0.0006, 0]} size={s * 0.92} background={held ? '#f6e3a8' : '#fbf5e6'} glow={Boolean(onPress)} onPress={onPress} />
+      </group>
+      </group>
     </group>
   );
 }
+
+/** Becher zum Würfeln (#389): greifen, schütteln, loslassen löst denselben Zug wie der Knopf aus. */
+export function RollCup({ position, onRoll }: { position: [number, number, number]; onRoll: () => void }) {
+  const path = useRef<[number, number][]>([]);
+  const grab = useGrab<string>({
+    size: 0.9,
+    floorY: 0.12,
+    radius: 0,
+    targets: () => [],
+    onTrack: (x, z) => {
+      path.current.push([x, z]);
+      if (path.current.length > 80) path.current.shift();
+    },
+    onDrop: () => {
+      const ok = shaken(path.current);
+      path.current = [];
+      if (ok) {
+        pulse('move');
+        onRoll();
+      }
+    },
+  });
+  const cup = (x: number, y: number, z: number, glow = false) => (
+    <mesh position={[x, y, z]}>
+      <cylinderGeometry args={[0.05, 0.062, 0.1, 24]} />
+      <meshStandardMaterial color="#5a3b22" roughness={0.6} emissive={glow ? GOLD : '#000000'} emissiveIntensity={glow ? 0.25 : 0} />
+    </mesh>
+  );
+  return (
+    <>
+      {grab.held === null && (
+        <group
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            path.current = [];
+            grab.begin('becher', position[0], position[2]);
+          }}
+        >
+          {cup(position[0], 0.05, position[2])}
+        </group>
+      )}
+      {grab.held && cup(grab.held.x, 0.15, grab.held.z, true)}
+      {grab.layer}
+    </>
+  );
+}
+
+export const ROLL_ANIMATION_MS = ROLL_MS;
 
 // ---------------------------------------------------------------------------
 // Würfelblock
@@ -64,13 +144,38 @@ export function KniffelBoard({ game, onMove }: BoardProps) {
   const moves = game.legalMoves as { type: string; index?: number }[];
   const roll = moves.find((m) => m.type === 'roll');
   const holdMove = (index: number) => moves.find((m) => (m.type === 'toggleHold' || m.type === 'hold' || m.type === 'unhold') && m.index === index);
+  // Zum Halten zur Seite legen (#389): Würfel greifen und in den Streifen vorn legen; Antippen bleibt.
+  const tray = { x: 0, z: 0.2 };
+  const grab = useGrab<number>({
+    size: 0.9,
+    floorY: 0.1,
+    radius: 0.14,
+    targets: () => [{ id: 'ablage', x: tray.x, z: tray.z }],
+    onDrop: (i, to) => {
+      const move = holdMove(i);
+      if (to !== null && move) onMove(move);
+    },
+  });
+  const tick = `${view.turn}-${view.rollsLeft}`;
   return (
     <>
       <group position={[TABLE_CENTER[0], TOP, TABLE_CENTER[2]]}>
+        {grab.held && (
+          <>
+            <mesh position={[tray.x, 0.001, tray.z]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[0.5, 0.1]} />
+              <meshBasicMaterial color={GOLD} transparent opacity={0.3} />
+            </mesh>
+            <Die value={view.dice?.values[grab.held.id] ?? null} position={[grab.held.x, 0.08, grab.held.z]} held tumble={false} />
+          </>
+        )}
+        {grab.layer}
         {(view.dice?.values ?? [null, null, null, null, null]).map((value, i) => {
+          if (grab.held?.id === i) return null;
           const move = holdMove(i);
-          return <Die key={i} value={value} position={[(i - 2) * 0.08, 0, 0.05]} held={view.dice?.held[i]} onPress={move ? () => onMove(move) : undefined} />;
+          return <Die key={i} value={value} position={[(i - 2) * 0.08, 0, 0.05]} held={view.dice?.held[i]} tick={tick} tumble={!view.dice?.held[i]} onPress={move ? () => onMove(move) : undefined} onGrab={move ? () => grab.begin(i, (i - 2) * 0.08, 0.05) : undefined} />;
         })}
+        {roll && <RollCup position={[0.38, 0, 0.2]} onRoll={() => onMove(roll)} />}
         {roll && <Button3D label={`🎲 Würfeln (noch ${view.rollsLeft})`} position={[0.27, 0.07, 0.1]} rotation={[-0.6, -0.3, 0]} width={0.24} height={0.045} active onPress={() => onMove(roll)} />}
       </group>
       <Tafel game={game} lines={[`${game.seats[view.turn]?.name ?? ''} ist dran · noch ${view.rollsLeft} Würfe`, `Punkte: ${view.sheets.map((s, i) => `${game.seats[i]?.name ?? i + 1} ${s.total}`).join(' · ')}`, 'Würfel antippen hält sie; Eintragen im Fenster.']} />
@@ -100,13 +205,14 @@ export function MaexleBoard({ game, onMove }: BoardProps) {
     <>
       <group position={[TABLE_CENTER[0], TOP, TABLE_CENTER[2]]}>
         {view.dice ? (
-          view.dice.map((value, i) => <Die key={i} value={value} position={[(i - 0.5) * 0.07, 0, 0.05]} />)
+          view.dice.map((value, i) => <Die key={i} value={value} position={[(i - 0.5) * 0.07, 0, 0.05]} tick={`${view.history.length}-${view.dice!.join('')}`} />)
         ) : (
           <mesh position={[0, 0.04, 0.05]}>
             <cylinderGeometry args={[0.05, 0.06, 0.08, 24]} />
             <meshStandardMaterial color="#5a3b22" roughness={0.6} />
           </mesh>
         )}
+        {roll && <RollCup position={[0.38, 0, 0.2]} onRoll={() => onMove(roll)} />}
         {roll && <Button3D label="🎲 Würfeln" position={[0.27, 0.07, 0.1]} rotation={[-0.6, -0.3, 0]} width={0.18} height={0.045} active onPress={() => onMove(roll)} />}
       </group>
       <Tafel
