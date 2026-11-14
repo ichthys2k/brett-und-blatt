@@ -13,6 +13,7 @@ import { Button } from '../components/controls';
 import { CustomCardsOverlay } from '../components/CustomCardsOverlay';
 import { HowToOverlay } from '../components/HowTo';
 import { MoreMenu } from '../components/MoreMenu';
+import { PieceSetQuick } from '../components/PieceSetQuick';
 import { SoundControl } from '../components/SoundControl';
 import { useDismiss } from '../components/useDismiss';
 import { t } from '../i18n';
@@ -478,6 +479,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   );
   const secondaryControls = online ? (
     <>
+      <PieceSetQuick gameId={info.id} />
       {online.isHost && online.onRestart && (
         <Button
           onClick={() => {
@@ -514,6 +516,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     </>
   ) : (
     <>
+      <PieceSetQuick gameId={info.id} />
       <Button onClick={() => local?.onRestart(false)}>{t('play.restart')}</Button>
       {canResign && (
         <Button variant="ghost" onClick={resign}>
