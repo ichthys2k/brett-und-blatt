@@ -52,3 +52,30 @@ describe('Kartenflug (#366)', () => {
     expect(f.otherDraws).toEqual({ 1: 2 });
   });
 });
+
+import { checkersCaptured, checkersStart, chessCaptured } from '../apps/xr/src/scene/captured';
+
+describe('Geschlagene Figuren (#390)', () => {
+  it('zählt im Ausgangsstand nichts als geschlagen', () => {
+    const r = chessCaptured('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    expect(r).toEqual({ white: [], black: [] });
+  });
+
+  it('findet fehlende Figuren je Farbe, wertvollste zuerst', () => {
+    // Weiß ohne Dame und einen Bauern, Schwarz ohne beide Springer
+    const r = chessCaptured('rnbqkb1r/pppppppp/8/8/8/8/PPPPPPP1/RNB1KBNR b KQkq - 0 1'.replace('rnbqkb1r', 'r1bqkb1r'));
+    expect(r.white).toEqual(['q', 'p']);
+    expect(r.black).toEqual(['n', 'n']);
+  });
+
+  it('zählt nie negativ (Umwandlung)', () => {
+    expect(chessCaptured('QQQQkbnr/8/8/8/8/8/8/4K3 w - - 0 1').white).not.toContain(undefined);
+  });
+
+  it('Dame: Startzahl und geschlagene Steine', () => {
+    expect(checkersStart(8)).toBe(12);
+    expect(checkersStart(10)).toBe(20);
+    const cells = [...Array.from({ length: 12 }, () => ({ seat: 0 })), ...Array.from({ length: 9 }, () => ({ seat: 1 })), null];
+    expect(checkersCaptured(8, cells)).toEqual([0, 3]);
+  });
+});

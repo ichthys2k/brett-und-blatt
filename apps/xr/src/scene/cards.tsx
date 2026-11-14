@@ -13,6 +13,7 @@ import { TABLE_CENTER, TABLE_RADIUS } from './Tavern';
 import { GOLD } from './text';
 import { Button3D } from './ui3d';
 import { NO_FLIGHTS, cardsOfMove, diffFlights, readCardView, type CardView, type Face, type Flights, type Origin } from './card-views';
+import { pulse } from '../haptics';
 
 export { cardMoveIndexes, isCardGame } from './card-views';
 
@@ -126,6 +127,7 @@ export function Card({ face, position, rotation, highlight, selected, onPress, s
           if (!onPress) return;
           e.stopPropagation();
           setHover(true);
+        pulse('hover');
         }}
         onPointerOut={() => setHover(false)}
       >

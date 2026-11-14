@@ -9,6 +9,7 @@ import { Piece, Plate, Target, type BoardProps } from './boards';
 import { TABLE_CENTER } from './Tavern';
 import { GOLD, labelTexture } from './text';
 import { Button3D, Sign } from './ui3d';
+import { pulse } from '../haptics';
 
 const TOP = TABLE_CENTER[1] + 0.002;
 /** Farben der Plätze 1–6 (wie die Spielfarben der Web-App ungefähr). */
@@ -35,6 +36,7 @@ function Tile({ label, position, size, background, color = '#1d1510', onPress, g
         if (!onPress) return;
         e.stopPropagation();
         setHover(true);
+        pulse('hover');
       }}
       onPointerOut={() => setHover(false)}
     >
@@ -95,6 +97,7 @@ function Stone({ color, selected, movable, onPress, scale = 1 }: { color: string
         if (!onPress) return;
         e.stopPropagation();
         setHover(true);
+        pulse('hover');
       }}
       onPointerOut={() => setHover(false)}
     >
