@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { nameToKey, SYNCED_KEYS } from '../apps/web/src/lib/settingsBlock';
 
 /** #325: Figurensätze je Spiel; Standard „classic“, eigene Wahl vor allem, bei Kontrast oder „Schlicht“ klassisch. */
 const KEY = 'brett-und-blatt:figuren';
@@ -66,5 +67,10 @@ describe('Figurensätze (#325)', () => {
     const fehlt: string[] = [];
     for (const set of ['wood', 'metal', 'fable']) for (const t of 'kqrbnp') for (const c of 'wb') if (!existsSync(new URL(`${set}-${t}-${c}.webp`, dir))) fehlt.push(`${set}-${t}-${c}`);
     expect(fehlt).toEqual([]);
+  });
+
+  it('die Figurenwahl reist im Einstellungsblock des Passes mit', () => {
+    expect(SYNCED_KEYS.figuren).toBe(KEY);
+    expect(nameToKey('figuren')).toBe(KEY);
   });
 });
