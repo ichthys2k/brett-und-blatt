@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" width="480" height="360" role="img" aria-label="Dodekaeder (Zwölfflächner)">
+<defs><radialGradient id="pergament" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#f7eed6"/><stop offset="1" stop-color="#e3cf9f"/></radialGradient><style> .flaeche { fill: #d9a400; fill-opacity: 0.22; stroke: none; } .kante, .umriss { fill: none; stroke: #3b2a1a; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; } .kante.verdeckt, .hilfslinie.verdeckt { stroke: #8a7658; stroke-width: 2; stroke-dasharray: 1.5 6; } .hilfslinie { fill: none; stroke: #8a7658; stroke-width: 1.6; } .achse { stroke: #9a6a2e; stroke-width: 1.6; stroke-dasharray: 10 7; } .ecke { fill: #3b2a1a; } .ecke.verdeckt { fill: #8a7658; } .glanz { fill: #fff8e6; fill-opacity: 0.55; } </style></defs>
+<rect width="480" height="360" fill="url(#pergament)" />
+<polygon class="flaeche" points="345.1,210.7 348.2,116 263.6,73.7 208.3,142.2 258.6,226.9" />
+<polygon class="flaeche" points="348.2,265.8 345.1,210.7 258.6,226.9 208.3,292 263.6,316" />
+<polygon class="flaeche" points="348.2,116 353.2,112.5 271.7,68 216.4,44 263.6,73.7" />
+<polygon class="flaeche" points="263.6,73.7 216.4,44 131.8,94.2 126.8,154.9 208.3,142.2" />
+<polygon class="flaeche" points="353.2,205.1 353.2,112.5 348.2,116 345.1,210.7 348.2,265.8" />
+<polygon class="flaeche" points="208.3,292 258.6,226.9 208.3,142.2 126.8,154.9 126.8,247.5" />
+<line class="kante" data-kante="0" x1="345.1" y1="210.7" x2="348.2" y2="116" />
+<line class="kante" data-kante="1" x1="263.6" y1="73.7" x2="348.2" y2="116" />
+<line class="kante" data-kante="2" x1="263.6" y1="73.7" x2="208.3" y2="142.2" />
+<line class="kante" data-kante="3" x1="258.6" y1="226.9" x2="208.3" y2="142.2" />
+<line class="kante" data-kante="4" x1="345.1" y1="210.7" x2="258.6" y2="226.9" />
+<line class="kante" data-kante="5" x1="345.1" y1="210.7" x2="348.2" y2="265.8" />
+<line class="kante" data-kante="6" x1="258.6" y1="226.9" x2="208.3" y2="292" />
+<line class="kante" data-kante="7" x1="263.6" y1="316" x2="208.3" y2="292" />
+<line class="kante" data-kante="8" x1="263.6" y1="316" x2="348.2" y2="265.8" />
+<line class="kante verdeckt" data-kante="9" x1="221.4" y1="133.1" x2="271.7" y2="68" />
+<line class="kante verdeckt" data-kante="10" x1="221.4" y1="133.1" x2="134.9" y2="149.3" />
+<line class="kante verdeckt" data-kante="11" x1="134.9" y1="149.3" x2="131.8" y2="94.2" />
+<line class="kante" data-kante="12" x1="216.4" y1="44" x2="131.8" y2="94.2" />
+<line class="kante" data-kante="13" x1="216.4" y1="44" x2="271.7" y2="68" />
+<line class="kante verdeckt" data-kante="14" x1="221.4" y1="133.1" x2="271.7" y2="217.8" />
+<line class="kante verdeckt" data-kante="15" x1="216.4" y1="286.3" x2="271.7" y2="217.8" />
+<line class="kante verdeckt" data-kante="16" x1="216.4" y1="286.3" x2="131.8" y2="244" />
+<line class="kante verdeckt" data-kante="17" x1="134.9" y1="149.3" x2="131.8" y2="244" />
+<line class="kante" data-kante="18" x1="348.2" y1="116" x2="353.2" y2="112.5" />
+<line class="kante" data-kante="19" x1="271.7" y1="68" x2="353.2" y2="112.5" />
+<line class="kante" data-kante="20" x1="263.6" y1="73.7" x2="216.4" y2="44" />
+<line class="kante" data-kante="21" x1="131.8" y1="94.2" x2="126.8" y2="154.9" />
+<line class="kante" data-kante="22" x1="208.3" y1="142.2" x2="126.8" y2="154.9" />
+<line class="kante verdeckt" data-kante="23" x1="271.7" y1="217.8" x2="353.2" y2="205.1" />
+<line class="kante" data-kante="24" x1="348.2" y1="265.8" x2="353.2" y2="205.1" />
+<line class="kante verdeckt" data-kante="25" x1="263.6" y1="316" x2="216.4" y2="286.3" />
+<line class="kante" data-kante="26" x1="208.3" y1="292" x2="126.8" y2="247.5" />
+<line class="kante verdeckt" data-kante="27" x1="131.8" y1="244" x2="126.8" y2="247.5" />
+<line class="kante" data-kante="28" x1="353.2" y1="112.5" x2="353.2" y2="205.1" />
+<line class="kante" data-kante="29" x1="126.8" y1="154.9" x2="126.8" y2="247.5" />
+<circle class="ecke" data-ecke="0" cx="345.1" cy="210.7" r="4" />
+<circle class="ecke" data-ecke="1" cx="258.6" cy="226.9" r="4" />
+<circle class="ecke" data-ecke="2" cx="263.6" cy="73.7" r="4" />
+<circle class="ecke" data-ecke="3" cx="348.2" cy="116" r="4" />
+<circle class="ecke" data-ecke="4" cx="208.3" cy="142.2" r="4" />
+<circle class="ecke" data-ecke="5" cx="263.6" cy="316" r="4" />
+<circle class="ecke" data-ecke="6" cx="348.2" cy="265.8" r="4" />
+<circle class="ecke" data-ecke="7" cx="208.3" cy="292" r="4" />
+<circle class="ecke verdeckt" data-ecke="8" cx="221.4" cy="133.1" r="3" />
+<circle class="ecke verdeckt" data-ecke="9" cx="134.9" cy="149.3" r="3" />
+<circle class="ecke" data-ecke="10" cx="216.4" cy="44" r="4" />
+<circle class="ecke" data-ecke="11" cx="271.7" cy="68" r="4" />
+<circle class="ecke" data-ecke="12" cx="131.8" cy="94.2" r="4" />
+<circle class="ecke verdeckt" data-ecke="13" cx="216.4" cy="286.3" r="3" />
+<circle class="ecke verdeckt" data-ecke="14" cx="271.7" cy="217.8" r="3" />
+<circle class="ecke verdeckt" data-ecke="15" cx="131.8" cy="244" r="3" />
+<circle class="ecke" data-ecke="16" cx="353.2" cy="112.5" r="4" />
+<circle class="ecke" data-ecke="17" cx="126.8" cy="154.9" r="4" />
+<circle class="ecke" data-ecke="18" cx="353.2" cy="205.1" r="4" />
+<circle class="ecke" data-ecke="19" cx="126.8" cy="247.5" r="4" />
+</svg>

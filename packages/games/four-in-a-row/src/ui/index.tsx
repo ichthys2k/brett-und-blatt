@@ -1,6 +1,7 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import { FitBox, GridBoard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useState, type CSSProperties } from 'react';
+import { describeMove } from '../describe';
 import type { FourInARowMove, FourInARowState } from '../rules';
 import './styles.css';
 
@@ -69,7 +70,9 @@ function Board({ view, legalMoves, onMove, events, activeSeat }: BoardProps<Four
           cellLabel={(col, displayRow) => {
             const seat = view.cells[col * view.rows + (view.rows - 1 - displayRow)];
             const content = seat === null || seat === undefined ? 'frei' : LABELS[seat];
-            return `Spalte ${col + 1}, Reihe ${view.rows - displayRow}: ${content}`;
+            const where = `Spalte ${col + 1}, Reihe ${view.rows - displayRow}: ${content}`;
+            // Jedes Feld einer spielbaren Spalte wirft dort ein (#335).
+            return drops.has(col) ? `${where} – ${describeMove(view, { type: 'drop', column: col })}` : where;
           }}
         />
 
@@ -77,7 +80,7 @@ function Board({ view, legalMoves, onMove, events, activeSeat }: BoardProps<Four
           <div className="c4-strip" style={{ gridTemplateColumns: `repeat(${view.cols}, 1fr)` }}>
             {columns.map((col) =>
               pops.has(col) ? (
-                <button key={col} type="button" className="c4-pop" onClick={() => onMove({ type: 'pop', column: col })} aria-label={`Unteren Stein aus Spalte ${col + 1} herausziehen`}>
+                <button key={col} type="button" className="c4-pop" onClick={() => onMove({ type: 'pop', column: col })} aria-label={describeMove(view, { type: 'pop', column: col })}>
                   ⤓
                 </button>
               ) : (

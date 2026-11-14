@@ -28,11 +28,12 @@
 
 ## Varianten (Optionen)
 
-- **Partielänge:** bis 100 (Standard), bis 50, feste Rundenzahl (3/5).
-- **Verdopplung** an/aus.
-- **Zeilen abräumen:** auch vier gleiche Werte in einer Zeile verschwinden (beliebte Hausregel).
-- **Diagonalen abräumen** (Hausregel, eher Spielerei; nur wenn einfach).
-- **Gedächtnis-Modus:** Ausgetauschte Karten auf der Ablage sind nur kurz zu sehen; für Fortgeschrittene.
+- **Partielänge:** bis 100 (Standard), bis 50, 3 Runden, eine Runde.
+- **Verdopplung** an/aus (Standard: an).
+- **Zeilen abräumen:** auch vier gleiche Werte in einer Zeile verschwinden (Standard: aus).
+- **Diagonalen abräumen:** Drei gleiche Werte auf den Diagonalen eines 3×3- oder 3×4-Rasters verschwinden (Standard: aus).
+- **Aktionskarten (7, 8, 9, 10):** Beim Abwerfen einer vom Stapel gezogenen Karte wird die Sonderaktion ausgelöst: 7 = Spähen (eine beliebige verdeckte Karte ansehen), 8 = Kartentausch (eine eigene Karte mit einem Mitspieler tauschen), 9 = Doppelzug (sofort noch einmal ziehen), 10 = Doppelaufdecken (zwei eigene verdeckte Karten aufdecken) (Standard: aus).
+- **Gedächtnis-Modus:** Gespähte Karten werden nicht als Erinnerungshilfe im Raster markiert; der Spieler muss sich die Werte merken (Standard: aus).
 - **Junior:** eigener, vereinfachter Regelsatz für Kinder (siehe unten).
 
 ## Junior
@@ -106,11 +107,13 @@ Gemütlich (ohne Uhr), Normal 30 s je Zug, Schnell 15 s.
   - Himmel-Hintergrund (Junior gelb), Mitspieler-Raster verkleinert oben mit Summe der offenen Karten, Stapel – gezogene Karte – Ablage in der Mitte, eigenes Raster unten.
   - Antippen: Stapel oder Ablage, dann ein Feld zum Tauschen. Zum Abwerfen die Ablage oder „Abwerfen & aufdecken“ antippen, dann eine verdeckte Karte.
   - Karten nach Wert gefärbt, die Zahl groß darauf (lesbar ohne Farbe). Aufdeck-Animation, Tipp-Hervorhebung, Rundenende-Tabelle mit hervorgehobener Verdopplung.
+- **Varianten (November 2026, #248):**
+  - Diagonalen abräumen: Diagonale Dreierketten werden wie Spalten und Zeilen abgeräumt.
+  - Aktionskarten (7, 8, 9, 10): Beim Abwerfen einer vom Stapel gezogenen Karte können Sonderaktionen ausgeführt werden (Spähen, Kartentausch, Doppelzug, Doppelaufdecken).
+  - Gedächtnis-Modus: Gespähte Karten werden nicht dauerhaft im Interface vermerkt, sondern müssen im Kopf behalten werden.
+  - Bot „Wolkenspringer“ nutzt und bewertet alle Linien (Spalten, Zeilen, Diagonalen) und Aktionszüge.
 - **Klänge** aus dem Katalog: `aufdecken`, `karte-ziehen`, `karte-legen`, `paar` (Spalte abgeräumt), `ansage` (letzte Runde), `mischen`. Playlist „Spielabend“, Rubrik Familie, online eingetragen.
 
 ## Offene Punkte
 
-- Gedächtnis-Modus (Ablage nur kurz sichtbar).
-- Diagonalen abräumen.
-- Skyjo Action (Aktionskarten) als spätere Erweiterung?
 - Junior mit Originalregeln abgleichen, falls Cornelius sie nachliefert.

@@ -3,9 +3,9 @@
  * niemand am Bildschirm der Nachbarn etwas abliest. Tags erscheint geheimes Wissen nur, solange
  * die Rollenkarte gedrückt ist – auch weil beim Hot-Seat alle auf dasselbe Gerät schauen.
  */
-import type { SeatId } from '@brett-und-blatt/engine';
-import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { BUB_COURT_CARD_NOTETYPE, renderCardSide, type SeatId } from '@brett-und-blatt/engine';
+import { GameCard, getNoteField, useCardCosmetics, useCardOverride, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { nightTargets, type DepartureCause, type Phase, type Role, type WolvesSheepMove, type WolvesSheepState } from '../rules';
 import './styles.css';
 
@@ -73,12 +73,29 @@ function publicTitle(view: WolvesSheepState): string {
 
 const CAUSE_LABELS: Record<DepartureCause, string> = { wolves: 'wurde versprengt', council: 'wurde vom Rat geschickt', hound: 'wurde vom Hütehund gepackt', grief: 'ist mitgegangen', left: 'ist gegangen' };
 
-function RoleCard({ role, shown, onShow }: { role: Role; shown: boolean; onShow: (shown: boolean) => void }) {
-  const image = cardImage(shown ? role : 'back');
+export function RoleCard({ role, shown, onShow }: { role: Role; shown: boolean; onShow: (shown: boolean) => void }) {
+  const cosmetics = useCardCosmetics();
+  const overrideNote =
+    useCardOverride(role) ??
+    useCardOverride(`woelfe:${role}`) ??
+    useCardOverride(`woelfe-${role}`);
+
+  const image = cardImage(role);
+  const effectiveTitle = getNoteField(overrideNote, 3) || ROLE_LABELS[role];
+  const effectiveHint = getNoteField(overrideNote, 9) || ROLE_HINTS[role];
+  const frameAsset = getNoteField(overrideNote, 12);
+
+  const ankiFront = useMemo(() => {
+    if (!overrideNote) return undefined;
+    return renderCardSide(BUB_COURT_CARD_NOTETYPE, overrideNote, 0, 'front', {
+      mediaUrlMap: cosmetics.mediaUrlMap,
+    });
+  }, [overrideNote, cosmetics.mediaUrlMap]);
+
   return (
     <button
       type="button"
-      className="ws-card"
+      className="ws-card ws-card-container"
       data-shown={shown}
       data-image={image ? '' : undefined}
       onPointerDown={() => onShow(true)}
@@ -88,18 +105,30 @@ function RoleCard({ role, shown, onShow }: { role: Role; shown: boolean; onShow:
       onKeyDown={(event) => event.key === ' ' && onShow(true)}
       onKeyUp={() => onShow(false)}
       onContextMenu={(event) => event.preventDefault()}
+      aria-label={shown ? `${effectiveTitle}: ${effectiveHint}` : 'Gedrückt halten: deine Rolle ansehen'}
     >
-      {image && <img className="ws-card-image" src={image} alt="" draggable={false} decoding="async" />}
-      <span className="ws-card-text">
+      <GameCard
+        faceDown={!shown}
+        cardBackProps={{ design: cosmetics.cardBack, crest: cosmetics.crest }}
+        ankiFront={shown ? ankiFront : undefined}
+        frameAsset={shown ? frameAsset : undefined}
+        className="ws-gamecard"
+        label={shown ? `${effectiveTitle}: ${effectiveHint}` : 'Gedrückt halten: deine Rolle ansehen'}
+      >
         {shown ? (
-          <>
-            <strong>{ROLE_LABELS[role]}</strong>
-            <span>{ROLE_HINTS[role]}</span>
-          </>
+          !ankiFront && (
+            <div className="ws-card-inner">
+              {image && <img className="ws-card-image" src={image} alt="" draggable={false} decoding="async" />}
+              <span className="ws-card-text">
+                <strong>{effectiveTitle}</strong>
+                <span>{effectiveHint}</span>
+              </span>
+            </div>
+          )
         ) : (
-          'Gedrückt halten: deine Rolle ansehen'
+          <span className="ws-card-back-prompt">Gedrückt halten: deine Rolle ansehen</span>
         )}
-      </span>
+      </GameCard>
     </button>
   );
 }

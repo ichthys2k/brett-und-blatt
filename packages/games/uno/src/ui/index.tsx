@@ -3,7 +3,9 @@ import { SeatRing, CardFan, useCallDeadline, useElementSize, usePointerDrag, typ
 import { getActiveFace } from '../rules';
 import { DARK_COLORS, LIGHT_COLORS, type UnoCard, type UnoColor, type UnoMove, type UnoState } from '../types';
 import './styles.css';
+import { describeMove } from '../describe';
 import { UnoCardView } from './UnoCard';
+import { unoCardDescription } from '../cardDescription';
 
 interface FlyingCard {
   id: string;
@@ -118,6 +120,12 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
         .map((m) => (m as { cardId: string }).cardId),
     );
   }, [moves]);
+
+  // Spielbare Karten nennen den Zug (#335); Wunschfarbe und Ziel folgen im Dialog.
+  const describeCard = (cardId: string) => {
+    const move = moves.find((m) => (m.type === 'play' || m.type === 'jumpIn') && m.cardId === cardId);
+    return move?.type === 'jumpIn' ? describeMove(state, { type: 'jumpIn', cardId }) : describeMove(state, { type: 'play', cardId });
+  };
 
   // Wer die vorletzte Karte gelegt hat, muss binnen 3 Sekunden „Eins!“ rufen – sonst 2 Strafkarten.
   const dueSeats = useMemo(
@@ -255,8 +263,17 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
     const tableRect = tableRef.current?.getBoundingClientRect();
     if (!tableRect) return;
 
-    const discardRect = discardRef.current?.getBoundingClientRect();
-    const deckRect = deckRef.current?.getBoundingClientRect();
+    // Ablage und Stapel messen wir an der Karte selbst, nicht an ihrem Rahmen: Der trägt unter der Karte noch die Farbmarke
+    // bzw. die Zahl der Karten, und die Flugkarte landete sonst zu hoch und zu groß. Größe ohne Drehung, Mitte aus dem Bild.
+    const cardRectOf = (el: Element | null | undefined) => {
+      if (!(el instanceof HTMLElement)) return undefined;
+      const r = el.getBoundingClientRect();
+      const width = el.offsetWidth || r.width;
+      const height = el.offsetHeight || r.height;
+      return { left: r.left + r.width / 2 - width / 2, top: r.top + r.height / 2 - height / 2, width, height };
+    };
+    const discardRect = cardRectOf(discardRef.current?.firstElementChild?.firstElementChild);
+    const deckRect = cardRectOf(deckRef.current?.firstElementChild);
     const handRect = handRef.current?.getBoundingClientRect();
 
     const newFlying: FlyingCard[] = [];
@@ -676,6 +693,8 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                     card={card}
                     side={side}
                     size="md"
+                    description={unoCardDescription(card, state)}
+                    label={isPlayable ? `${describeCard(card.id)} – ${unoCardDescription(card, state)}` : undefined}
                     mathMode={state.options.mathLabels === 'on'}
                     highlight={isPlayable}
                     disabled={!isPlayable}

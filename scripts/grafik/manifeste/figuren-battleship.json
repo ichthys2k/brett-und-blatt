@@ -1,0 +1,217 @@
+{
+  "beschreibung": "G12 (#325): Schiffe versenken. Schiffslängen 2 bis 5 wie in FLEETS (packages/games/battleship/src/rules.ts); Bug nach rechts, ohne Lichtrichtung, weil die Schiffe im Spiel gedreht werden. Bildwerkzeuge kennen die Formate 2:1 bis 5:1 oft nicht: dann breit erzeugen und mittig zuschneiden. Alle Motive freistellen.",
+  "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+  "ohne": "text, letters, numbers, watermark, border, frame, background scene, hands, people, modern objects, logos, photo, green on the object itself, cast shadow, perspective, horizon, waves around the ship, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "1:1",
+  "ziel": "packages/games/battleship/src/ui/figuren",
+  "groesse": [
+    96,
+    96
+  ],
+  "motive": [
+    {
+      "id": "wood-ship-2",
+      "titel": "Schiff Länge 2 · wood",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, evenly lit from above with no visible light direction, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "2:1",
+      "groesse": [
+        192,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: a wooden sailing ship seen exactly from straight above, deck and masts visible, bow pointing right, a small boat filling the whole width of a wide image with the proportions 2 to 1."
+    },
+    {
+      "id": "wood-ship-3",
+      "titel": "Schiff Länge 3 · wood",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, evenly lit from above with no visible light direction, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "3:1",
+      "groesse": [
+        288,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: a wooden sailing ship seen exactly from straight above, deck and masts visible, bow pointing right, a medium ship filling the whole width of a wide image with the proportions 3 to 1."
+    },
+    {
+      "id": "wood-ship-4",
+      "titel": "Schiff Länge 4 · wood",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, evenly lit from above with no visible light direction, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "4:1",
+      "groesse": [
+        384,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: a wooden sailing ship seen exactly from straight above, deck and masts visible, bow pointing right, a large ship filling the whole width of a wide image with the proportions 4 to 1."
+    },
+    {
+      "id": "wood-ship-5",
+      "titel": "Schiff Länge 5 · wood",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, evenly lit from above with no visible light direction, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "5:1",
+      "groesse": [
+        480,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: a wooden sailing ship seen exactly from straight above, deck and masts visible, bow pointing right, a very large flagship filling the whole width of a wide image with the proportions 5 to 1."
+    },
+    {
+      "id": "wood-hit",
+      "titel": "Treffer · wood",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, evenly lit from above with no visible light direction, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Subject: a small burst of flame and smoke seen from above."
+    },
+    {
+      "id": "wood-miss",
+      "titel": "Wasser · wood",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, evenly lit from above with no visible light direction, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Subject: a ring of white water ripples seen from above."
+    },
+    {
+      "id": "metal-ship-2",
+      "titel": "Schiff Länge 2 · metal",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "2:1",
+      "groesse": [
+        192,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: an armoured galley with bronze plating seen exactly from straight above, bow pointing right, a small boat filling the whole width of a wide image with the proportions 2 to 1."
+    },
+    {
+      "id": "metal-ship-3",
+      "titel": "Schiff Länge 3 · metal",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "3:1",
+      "groesse": [
+        288,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: an armoured galley with bronze plating seen exactly from straight above, bow pointing right, a medium ship filling the whole width of a wide image with the proportions 3 to 1."
+    },
+    {
+      "id": "metal-ship-4",
+      "titel": "Schiff Länge 4 · metal",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "4:1",
+      "groesse": [
+        384,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: an armoured galley with bronze plating seen exactly from straight above, bow pointing right, a large ship filling the whole width of a wide image with the proportions 4 to 1."
+    },
+    {
+      "id": "metal-ship-5",
+      "titel": "Schiff Länge 5 · metal",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "5:1",
+      "groesse": [
+        480,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: an armoured galley with bronze plating seen exactly from straight above, bow pointing right, a very large flagship filling the whole width of a wide image with the proportions 5 to 1."
+    },
+    {
+      "id": "metal-hit",
+      "titel": "Treffer · metal",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Subject: a small burst of flame and smoke seen from above."
+    },
+    {
+      "id": "metal-miss",
+      "titel": "Wasser · metal",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Subject: a ring of white water ripples seen from above."
+    },
+    {
+      "id": "fable-ship-2",
+      "titel": "Schiff Länge 2 · fable",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "2:1",
+      "groesse": [
+        192,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: a festive barge with a coloured canvas canopy seen exactly from straight above, bow pointing right, a small boat filling the whole width of a wide image with the proportions 2 to 1."
+    },
+    {
+      "id": "fable-ship-3",
+      "titel": "Schiff Länge 3 · fable",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "3:1",
+      "groesse": [
+        288,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: a festive barge with a coloured canvas canopy seen exactly from straight above, bow pointing right, a medium ship filling the whole width of a wide image with the proportions 3 to 1."
+    },
+    {
+      "id": "fable-ship-4",
+      "titel": "Schiff Länge 4 · fable",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "4:1",
+      "groesse": [
+        384,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: a festive barge with a coloured canvas canopy seen exactly from straight above, bow pointing right, a large ship filling the whole width of a wide image with the proportions 4 to 1."
+    },
+    {
+      "id": "fable-ship-5",
+      "titel": "Schiff Länge 5 · fable",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "5:1",
+      "groesse": [
+        480,
+        96
+      ],
+      "freistellen": true,
+      "prompt": "Subject: a festive barge with a coloured canvas canopy seen exactly from straight above, bow pointing right, a very large flagship filling the whole width of a wide image with the proportions 5 to 1."
+    },
+    {
+      "id": "fable-hit",
+      "titel": "Treffer · fable",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Subject: a small burst of flame and smoke seen from above."
+    },
+    {
+      "id": "fable-miss",
+      "titel": "Wasser · fable",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, evenly lit from above with no visible light direction, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Subject: a ring of white water ripples seen from above."
+    }
+  ]
+}

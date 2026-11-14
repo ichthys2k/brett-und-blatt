@@ -1,5 +1,6 @@
 import type { GameInfo, OptionSpec, Options } from '@brett-und-blatt/engine';
 import { cleanName } from '../names';
+import { parsePushSubscription, type ParsePushOptions, type PushSubscriptionData } from '../push';
 import { parseOrgCode } from '../org';
 import { DISCIPLINES_MAX, DISCIPLINES_MIN } from './disciplines';
 import { isBestOf } from './best-of';
@@ -53,7 +54,10 @@ export type TournamentClientMessage =
   | { type: 'attachSeries'; link: string }
   | { type: 'detachSeries' }
   /** Die Hauptleitung mit einem Übergabecode übernehmen. */
-  | { type: 'takeLeader'; code: string };
+  | { type: 'takeLeader'; code: string }
+  /** Hinweise aufs Gerät (Web Push, #242): Abo des Browsers melden oder widerrufen. */
+  | { type: 'pushSubscribe'; subscription: PushSubscriptionData }
+  | { type: 'pushUnsubscribe' };
 
 export type TournamentServerMessage =
   | { type: 'tournament'; view: TournamentView }
@@ -64,12 +68,14 @@ export type TournamentServerMessage =
   /** Antwort auf `leaderCode`: der Übergabecode und wann er abläuft; nur an den Absender. */
   | { type: 'leaderCode'; code: string; expiresAt: number }
   | { type: 'claimCode'; player: string; code: string }
+  /** Antwort auf `pushSubscribe`/`pushUnsubscribe` und nach `hello`: gilt für das Gerät des Empfängers, geht nur an ihn. */
+  | { type: 'pushState'; enabled: boolean }
   | { type: 'error'; message: string };
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isShort = (v: unknown, max = 40): v is string => typeof v === 'string' && v.length > 0 && v.length <= max;
 
-export function parseTournamentMessage(raw: string): TournamentClientMessage | null {
+export function parseTournamentMessage(raw: string, push: ParsePushOptions = {}): TournamentClientMessage | null {
   // Lang genug für eine Teilnehmerliste mit 128 Namen.
   if (raw.length > 8000) return null;
   let m: unknown;
@@ -142,6 +148,12 @@ export function parseTournamentMessage(raw: string): TournamentClientMessage | n
       return { type: 'detachSeries' };
     case 'takeLeader':
       return isShort(m.code, 20) ? { type: 'takeLeader', code: m.code } : null;
+    case 'pushSubscribe': {
+      const subscription = parsePushSubscription(m.subscription, push);
+      return subscription ? { type: 'pushSubscribe', subscription } : null;
+    }
+    case 'pushUnsubscribe':
+      return { type: 'pushUnsubscribe' };
     case 'keepLong':
       return typeof m.on === 'boolean' ? { type: 'keepLong', on: m.on } : null;
     case 'setReferees':

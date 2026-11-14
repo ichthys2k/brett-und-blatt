@@ -10,13 +10,16 @@ const manifest = ladeManifest(positionen[0]);
 const basis = ordner(manifest.name);
 const zeilen = manifest.motive.map((m) => {
   const dir = resolve(basis, m.id);
-  const dateien = existsSync(dir) ? readdirSync(dir).filter((d) => /^v\d+\.png$/.test(d)).sort() : [];
-  const bilder = dateien.map((d) => `<img src="${m.id}/${d}" data-id="${m.id}" data-v="${d.slice(1, -4)}" loading="lazy">`).join('');
+  const dateien = existsSync(dir) ? readdirSync(dir).filter((d) => /^(cf-)?v\d+\.(png|jpg)$/.test(d)).sort() : [];
+  const bilder = dateien.map((d) => {
+    const fremd = d.startsWith('cf-'); // Cloudflare-Bilder nur zum Vergleich, nicht wählbar
+    return `<figure${fremd ? ' class="fremd"' : ''}><img src="${m.id}/${d}" ${fremd ? '' : `data-id="${m.id}" data-v="${d.match(/^v(\d+)/)[1]}" `}loading="lazy"><figcaption>${fremd ? 'Cloudflare' : 'Gemini'} ${d.match(/v(\d+)/)[1]}</figcaption></figure>`;
+  }).join('');
   return `<section><h2>${m.titel ?? m.id} <small>${m.id}</small></h2>${m.beschreibung ? `<p class="funktion">${m.beschreibung}</p>` : ''}<div>${bilder || '<em>noch keine Bilder</em>'}</div></section>`;
 });
 const html = `<!doctype html><meta charset="utf-8"><title>${manifest.name}</title>
 <style>body{font:14px system-ui;background:#1c1712;color:#eee;margin:16px}h2{margin:18px 0 6px}small{opacity:.6;font-weight:400}.funktion{margin:0 0 8px;color:#e6c86e;max-width:70em}
-div{display:flex;gap:8px;flex-wrap:wrap}img{height:320px;border:4px solid transparent;border-radius:6px;cursor:pointer}
+div{display:flex;gap:8px;flex-wrap:wrap}figure{margin:0}figcaption{font-size:12px;opacity:.7;text-align:center}figure.fremd img{cursor:default}img{height:320px;border:4px solid transparent;border-radius:6px;cursor:pointer}
 img.gewaehlt{border-color:#e6b422}pre{position:sticky;bottom:0;background:#000;padding:10px;white-space:pre-wrap}</style>
 ${zeilen.join('\n')}
 <pre id="aus">Bilder anklicken, um sie zu wählen …</pre>

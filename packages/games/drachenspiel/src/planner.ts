@@ -64,7 +64,8 @@ function minionValue(minion: Minion): number {
   // Eier und Schläfer zählen schon, aber weniger; ein Bau zählt, was er noch bewirken kann.
   if (minion.dormant) {
     const def = CARDS_DB[CARDS_DB[minion.cardId]?.hatchesInto ?? minion.cardId];
-    return def ? (def.attack * 1.4 + def.health) * 0.6 : 2;
+    const progress = Math.max(0.4, 1 - (minion.dormant - 1) * 0.2);
+    return def ? (def.attack * 1.4 + def.health) * progress : 2;
   }
   if (minion.building) {
     const worth = (CARDS_DB[minion.cardId]?.building ?? []).reduce((sum, effect) => sum + effectValue(effect), 0);

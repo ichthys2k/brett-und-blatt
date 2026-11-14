@@ -13,7 +13,9 @@ import {
   setup as setupGame,
 } from './rules';
 import type { MauMauMove, MauMauOptions, MauMauState } from './types';
+import { describeMove } from './describe';
 
+export { mauMauCardDescription } from './cardDescription';
 export const options: OptionSpec[] = [
   deckStyleOption(),
   {
@@ -118,5 +120,7 @@ export const gameModule: GameModule<MauMauState, MauMauMove> = {
   playerView,
   sampleHidden,
   result,
+  // Kurzer Text je Zug für fremde Clients und den Bildschirmleser (#335).
+  describeMove,
   bots: [mauMauBot],
 };

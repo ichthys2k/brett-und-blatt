@@ -1,0 +1,207 @@
+{
+  "beschreibung": "G9a (#319): Quartett-Set weltraum, ein Bild je Karte (Anki-Medien, #270). Sachlich richtig; jede Auswahl gegen die Quelle der Karte prüfen.",
+  "stil": "Painterly astronomical illustration in oil colours, like a plate from a royal astronomer's star atlas: one celestial body as a sphere centred against a deep midnight-blue starry background, lit from the upper left, surface painted after its real known appearance. No spacecraft, no labels, no constellation lines, no text.",
+  "ohne": "text, letters, numbers, labels, watermark, border, frame, card layout, modern objects, logos, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "4:3",
+  "ziel": "content/quartett/bilder/weltraum",
+  "groesse": [
+    480,
+    360
+  ],
+  "praefix": "bub-quartett-weltraum-",
+  "qualitaet": 78,
+  "motive": [
+    {
+      "id": "a1",
+      "titel": "A1 Merkur",
+      "gruppe": "A Gesteinsplaneten",
+      "prompt": "Subject: Mercury (grey, cratered)."
+    },
+    {
+      "id": "a2",
+      "titel": "A2 Venus",
+      "gruppe": "A Gesteinsplaneten",
+      "prompt": "Subject: Venus (pale yellow cloud cover)."
+    },
+    {
+      "id": "a3",
+      "titel": "A3 Erde",
+      "gruppe": "A Gesteinsplaneten",
+      "prompt": "Subject: Earth (blue oceans, white clouds, Europe and Africa visible)."
+    },
+    {
+      "id": "a4",
+      "titel": "A4 Mars",
+      "gruppe": "A Gesteinsplaneten",
+      "prompt": "Subject: Mars (rust red, polar cap)."
+    },
+    {
+      "id": "b1",
+      "titel": "B1 Jupiter",
+      "gruppe": "B Gasriesen",
+      "prompt": "Subject: Jupiter (bands, Great Red Spot)."
+    },
+    {
+      "id": "b2",
+      "titel": "B2 Saturn",
+      "gruppe": "B Gasriesen",
+      "prompt": "Subject: Saturn (wide rings)."
+    },
+    {
+      "id": "b3",
+      "titel": "B3 Uranus",
+      "gruppe": "B Gasriesen",
+      "prompt": "Subject: Uranus (pale cyan, featureless, faint thin rings nearly vertical)."
+    },
+    {
+      "id": "b4",
+      "titel": "B4 Neptun",
+      "gruppe": "B Gasriesen",
+      "prompt": "Subject: Neptune (deep blue, a dark spot)."
+    },
+    {
+      "id": "c1",
+      "titel": "C1 Ceres",
+      "gruppe": "C Zwergplaneten",
+      "prompt": "Subject: Ceres (grey, a few bright spots)."
+    },
+    {
+      "id": "c2",
+      "titel": "C2 Pluto",
+      "gruppe": "C Zwergplaneten",
+      "prompt": "Subject: Pluto (tan with a large pale heart-shaped plain)."
+    },
+    {
+      "id": "c3",
+      "titel": "C3 Eris",
+      "gruppe": "C Zwergplaneten",
+      "prompt": "Subject: Eris (plain pale grey-white sphere)."
+    },
+    {
+      "id": "c4",
+      "titel": "C4 Haumea",
+      "gruppe": "C Zwergplaneten",
+      "prompt": "Subject: Haumea (elongated egg shape with a thin ring)."
+    },
+    {
+      "id": "d1",
+      "titel": "D1 Mond",
+      "gruppe": "D Kleine Monde",
+      "prompt": "Subject: the Moon (maria and craters)."
+    },
+    {
+      "id": "d2",
+      "titel": "D2 Phobos",
+      "gruppe": "D Kleine Monde",
+      "prompt": "Subject: Phobos (irregular potato shape, one large crater)."
+    },
+    {
+      "id": "d3",
+      "titel": "D3 Deimos",
+      "gruppe": "D Kleine Monde",
+      "prompt": "Subject: Deimos (small smooth irregular shape)."
+    },
+    {
+      "id": "d4",
+      "titel": "D4 Charon",
+      "gruppe": "D Kleine Monde",
+      "prompt": "Subject: Charon (grey with a dark reddish north pole)."
+    },
+    {
+      "id": "e1",
+      "titel": "E1 Io",
+      "gruppe": "E Jupitermonde",
+      "prompt": "Subject: Io (yellow-orange with dark volcanic spots)."
+    },
+    {
+      "id": "e2",
+      "titel": "E2 Europa",
+      "gruppe": "E Jupitermonde",
+      "prompt": "Subject: Europa (white ice with reddish-brown cracks)."
+    },
+    {
+      "id": "e3",
+      "titel": "E3 Ganymed",
+      "gruppe": "E Jupitermonde",
+      "prompt": "Subject: Ganymede (grey-brown with lighter grooved areas)."
+    },
+    {
+      "id": "e4",
+      "titel": "E4 Kallisto",
+      "gruppe": "E Jupitermonde",
+      "prompt": "Subject: Callisto (dark, densely cratered)."
+    },
+    {
+      "id": "f1",
+      "titel": "F1 Titan",
+      "gruppe": "F Ferne Monde",
+      "prompt": "Subject: Titan (hazy orange atmosphere)."
+    },
+    {
+      "id": "f2",
+      "titel": "F2 Enceladus",
+      "gruppe": "F Ferne Monde",
+      "prompt": "Subject: Enceladus (bright white ice, faint plumes at the south pole)."
+    },
+    {
+      "id": "f3",
+      "titel": "F3 Titania",
+      "gruppe": "F Ferne Monde",
+      "prompt": "Subject: Titania (grey, cratered, with long canyons)."
+    },
+    {
+      "id": "f4",
+      "titel": "F4 Triton",
+      "gruppe": "F Ferne Monde",
+      "prompt": "Subject: Triton (pinkish south, bluish-grey north)."
+    },
+    {
+      "id": "g1",
+      "titel": "G1 Sonne",
+      "gruppe": "G Nahe Sterne",
+      "prompt": "Subject: the Sun (yellow-white, granulated, a few sunspots)."
+    },
+    {
+      "id": "g2",
+      "titel": "G2 Proxima Centauri",
+      "gruppe": "G Nahe Sterne",
+      "prompt": "Subject: Proxima Centauri (small dim red star)."
+    },
+    {
+      "id": "g3",
+      "titel": "G3 Alpha Centauri A",
+      "gruppe": "G Nahe Sterne",
+      "prompt": "Subject: Alpha Centauri A (yellow sun-like star with a smaller orange companion far beside it)."
+    },
+    {
+      "id": "g4",
+      "titel": "G4 Sirius A",
+      "gruppe": "G Nahe Sterne",
+      "prompt": "Subject: Sirius A (brilliant blue-white star with a tiny white dot companion)."
+    },
+    {
+      "id": "h1",
+      "titel": "H1 Beteigeuze",
+      "gruppe": "H Helle Sterne",
+      "prompt": "Subject: Betelgeuse (huge orange-red star, slightly uneven)."
+    },
+    {
+      "id": "h2",
+      "titel": "H2 Rigel",
+      "gruppe": "H Helle Sterne",
+      "prompt": "Subject: Rigel (blue-white supergiant)."
+    },
+    {
+      "id": "h3",
+      "titel": "H3 Wega",
+      "gruppe": "H Helle Sterne",
+      "prompt": "Subject: Vega (blue-white, slightly flattened)."
+    },
+    {
+      "id": "h4",
+      "titel": "H4 Polarstern",
+      "gruppe": "H Helle Sterne",
+      "prompt": "Subject: Polaris (yellow-white star, high above a dark horizon)."
+    }
+  ]
+}

@@ -15,7 +15,9 @@ function formatTimeAgo(timeMs: number, now: number): string {
 
 function OpenGameCard({ room, now, onHide }: { room: OpenRoomListing; now: number; onHide?: () => void }) {
   const freeSeats = room.totalSeats - room.filledSeats;
-  const seatsText = room.tournament
+  const seatsText = room.running
+    ? t('join.running')
+    : room.tournament
     ? t('home.openGames.signedUp', { n: room.filledSeats })
     : freeSeats === 1
       ? t('home.openGames.oneSeat', { total: room.totalSeats })
@@ -28,7 +30,17 @@ function OpenGameCard({ room, now, onHide }: { room: OpenRoomListing; now: numbe
           {room.gameEmoji}
         </span>
         <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="truncate font-semibold">{room.gameName}</p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="truncate font-semibold">{room.gameName}</p>
+            {room.cardCatalogChecksum && (
+              <span
+                className="inline-flex items-center gap-0.5 rounded-full border border-accent/40 bg-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent"
+                title={`Eigenes Kartenset (Anki) Prüfsumme #${room.cardCatalogChecksum}`}
+              >
+                ✨ Anki #{room.cardCatalogChecksum}
+              </span>
+            )}
+          </div>
           <p className="truncate text-xs text-muted">
             <span aria-hidden="true">{room.hostAvatar} </span>
             {room.hostName}
@@ -45,7 +57,7 @@ function OpenGameCard({ room, now, onHide }: { room: OpenRoomListing; now: numbe
           </Button>
         )}
         <Button variant="primary" onClick={() => navigate(room.tournament ? paths.tournament(room.code) : paths.room(room.code))}>
-          {room.tournament ? t('home.openGames.signUp') : t('home.openGames.join')}
+          {room.tournament ? t('home.openGames.signUp') : room.running ? t('join.watch') : t('home.openGames.join')}
         </Button>
       </div>
     </li>

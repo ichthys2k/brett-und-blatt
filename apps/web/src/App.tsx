@@ -5,6 +5,7 @@ import { Home } from './screens/Home';
 import { Menu } from './screens/Menu';
 import { Datenschutz, Impressum } from './screens/Legal';
 import { Online } from './screens/Online';
+import { BoardScreen } from './screens/Board';
 import { AccountScreen } from './screens/Account';
 import { PassScreen } from './screens/Pass';
 import { PassView } from './screens/PassView';
@@ -22,13 +23,18 @@ import { SeriesScreen } from './screens/Series';
 import { TournamentBeamerScreen, TournamentEmbedScreen, TournamentScreen } from './screens/Tournament';
 import { Setup } from './screens/Setup';
 import { SoundSettingsScreen } from './screens/SoundSettings';
+import { HelpersScreen } from './screens/Helpers';
+import { CardCosmeticsProvider } from '@brett-und-blatt/ui';
+import { useActiveCardCosmetics } from './lib/cardBacks';
+import { useActiveLook } from './lib/look';
 
 export function App() {
+  const cosmetics = useActiveCardCosmetics(useActiveLook());
   return (
-    <>
+    <CardCosmeticsProvider value={cosmetics}>
       <Screen />
       <UpdateBanner />
-    </>
+    </CardCosmeticsProvider>
   );
 }
 
@@ -41,6 +47,8 @@ function Screen() {
       return <Play />;
     case 'online':
       return <Online />;
+    case 'board':
+      return <BoardScreen />;
     case 'tournaments':
       return <Tournaments />;
     case 'packView':
@@ -79,6 +87,8 @@ function Screen() {
       return <SeriesScreen key={route.code} code={route.code} embed />;
     case 'sound':
       return <SoundSettingsScreen />;
+    case 'helpers':
+      return <HelpersScreen tool={route.tool} />;
     case 'pass':
       return <PassScreen />;
     case 'account':

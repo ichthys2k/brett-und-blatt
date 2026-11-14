@@ -1,0 +1,75 @@
+{
+  "beschreibung": "Vergleichsprobe (Gemini gegen Cloudflare Workers AI): sechs Motive aus sechs Bildarten. Kein Paket, nichts davon wird übernommen. Siehe scripts/grafik/README.md, Abschnitt Vergleichsprobe.",
+  "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer, steam pipes, steam engines, boilers, top hats, rivets, exposed machinery, robot face, metal face, screens, wires, rust, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "motive": [
+    {
+      "id": "bots--admiral",
+      "titel": "Admiral (Schiffe versenken) [bots]",
+      "prompt": "An old sea otter admiral with a tricorn-like felt hat, brass spyglass and a weathered blue coat.",
+      "stil": "Painterly warm baroque oil portrait of a whimsical storybook animal character of a fairy-tale kingdom, a fixture of a medieval tavern gaming table: warm candlelight, rich textures, dark warm background with subtle damask pattern, gentle friendly expression with a clever twinkle, humorous but dignified. The character is an exquisite 18th-century clockwork automaton built by a master craftsman to play games with the guests: a polished brass wind-up key on its back, clearly visible behind one shoulder, fine brass seams at the joints, warm glossy glass eyes, still clearly a charming storybook animal with fur or feathers and fabric clothing. Bust portrait facing the viewer, head and shoulders fully inside the image, centred with space around so it can be cropped to a circle. No text, no letters, no numbers, no watermark.",
+      "format": "1:1",
+      "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer, steam pipes, steam engines, boilers, top hats, rivets, exposed machinery, robot face, metal face, screens, wires, rust, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+      "referenzen": [
+        "packages/games/marketplace/src/ui/figures/herald.webp",
+        "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp"
+      ]
+    },
+    {
+      "id": "tische--oak-dark",
+      "titel": "Eichenholz dunkel [tische]",
+      "prompt": "Dark stained old oak table planks with fine straight grain, plank joints running horizontally, overall colour close to #2e2015.",
+      "stil": "Seamless tileable texture, painted in a soft painterly oil style, viewed exactly from straight above, perfectly flat and evenly lit with no light source, no shadows, no vignette, no perspective. Very low contrast and calm, so that playing cards and text placed on top stay clearly readable. The left edge continues into the right edge and the top edge into the bottom edge without any visible seam. No objects, no text, no letters, no numbers.",
+      "format": "1:1",
+      "ohne": "objects, cards, dice, cups, stains, knots larger than a coin, strong highlights, shadows, vignette, perspective, border, frame, text, watermark, visible seams, repeating eye-catching spots, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+      "referenzen": [
+        "apps/web/src/menu/taverne-vorn.webp",
+        "apps/web/src/assets/raeume/burgsaal.webp"
+      ]
+    },
+    {
+      "id": "kulissen-spiele--rubrik-karten",
+      "titel": "Rubrik Karten & Stich [kulissen-spiele]",
+      "prompt": "A cosy back room of a tavern for card players: green felt wall hangings, brass lanterns, stacked wooden card boxes and hanging garlands of dried flowers at the sides, an empty round table in the calm centre.",
+      "stil": "Painterly storybook oil illustration of an empty medieval fantasy scene, wide landscape background for a game screen: rich warm colours, soft atmospheric light, detailed decoration at the left and right edges and the top, while the centre and lower middle stay calm, darker and uncluttered so that interface elements can be laid over it. No people, no animals, no characters, no faces, no text, no letters, no numbers, no frame.",
+      "format": "16:9",
+      "ohne": "people, animals, characters, faces, text, letters, numbers, signs with writing, watermark, border, frame, modern objects, logos, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs"
+    },
+    {
+      "id": "ehrung--pokal-gold",
+      "titel": "Pokal Gold (Sieg) [ehrung]",
+      "prompt": "A golden goblet-shaped trophy cup with two handles and a smooth blank front, small red gemstones on the stem.",
+      "stil": "Painterly storybook oil illustration of a single object, medieval tavern and fairy-tale kingdom mood: warm candlelight from the upper left, rich colours, soft shadow directly beneath, the object centred and fully inside the image with margin around it, on a plain flat pure green background (#00B140) so that it can be cut out. No text, no letters, no numbers, no engraving, no figures, no faces.",
+      "format": "1:1",
+      "ohne": "text, letters, numbers, engraved writing, coats of arms with letters, people, animals, faces, hands, modern objects, logos, watermark, photo; bei Gegenständen zusätzlich: green on the object itself, background gradient, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+      "referenzen": [
+        "packages/games/color-sorter/src/ui/items/dream-crestBook.webp"
+      ]
+    },
+    {
+      "id": "wappen--battleship",
+      "titel": "Schiffe versenken [wappen]",
+      "prompt": "Emblem motif: a tall wooden galleon sailing on dark waves, a small cannon flash on its side.",
+      "stil": "A bold, simple heraldic emblem for a board-game tile, painted like enamel on metal: ONE single central symbol, thick clean shapes, strong contrast, limited palette of deep colours with gold accents, subtle painterly texture, dark warm background filling the whole image, readable even when shrunk to 50 pixels. Medieval tavern and fairy-tale kingdom mood, consistent with a set of crests. The painted emblem artwork extends all the way to every edge of the square image: no margin, no visible plate or medallion edge, no corners, no white or black areas outside the artwork, the background texture continues to the borders. No text, no letters, no numbers, no border, no shield outline.",
+      "format": "4:5",
+      "ohne": "text, letters, numbers, watermark, border, frame, shield outline, real people, logos, thin details, plate, medallion edge, white background, black corners, letters on cards, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+      "referenzen": [
+        "apps/web/src/wappen/marketplace.webp",
+        "apps/web/src/wappen/dominoes.webp",
+        "apps/web/src/wappen/chess.webp"
+      ]
+    },
+    {
+      "id": "figuren-chess--wood-k-w",
+      "titel": "König · wood · hell [figuren-chess]",
+      "prompt": "Seen straight from the front. Subject: a chess king, tall, with a cross-topped crown, made of pale maple wood.",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "format": "1:1",
+      "ohne": "text, letters, numbers, watermark, border, frame, background scene, hands, people, modern objects, logos, photo, green on the object itself, cast shadow, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+      "referenzen": [
+        "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp",
+        "packages/ui/src/cards/portraits/koenig-herz.webp",
+        "packages/games/marketplace/src/ui/figures/herald.webp"
+      ]
+    }
+  ]
+}

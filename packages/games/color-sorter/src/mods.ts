@@ -74,6 +74,10 @@ export interface ModDef {
   multi?: GameMode[];
   /** Anzeige des Zählers, wenn „Stand: Zahl“ nichts sagt (Herold). */
   status?: (mod: Pick<ModInstance, 'value'>) => string;
+  /** In Anki bearbeitete Basispunkte (Chips) (#277, K7). */
+  baseChips?: number;
+  /** In Anki bearbeiteter Multiplikator (#277, K7). */
+  multiplier?: number;
 }
 
 const contains = (ctx: HandContext, type: HandType) => CONTAINS[ctx.type].includes(type);
@@ -950,10 +954,12 @@ const list: ModDef[] = [
 export const MODS: Record<string, ModDef> = Object.fromEntries(list.map((def) => [def.key, def]));
 export const MOD_KEYS = list.map((def) => def.key);
 
-export function modDef(key: string): ModDef {
+export function modDef(key: string, customMods?: Record<string, Partial<ModDef>>): ModDef {
   const def = MODS[key];
   if (!def) throw new Error(`Unbekannter Narr: ${key}`);
-  return def;
+  const override = customMods?.[key];
+  if (!override) return def;
+  return { ...def, ...override };
 }
 
 export const RARITY_INFO: Record<Rarity, { name: string; weight: number }> = {

@@ -2,6 +2,7 @@ import type { GameModule } from '@brett-und-blatt/engine';
 import { battleshipBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type BattleshipMove, type BattleshipState } from './rules';
+import { describeMove } from './describe';
 
 export type { BattleshipMove, BattleshipState, CoordMode, FleetKind, Ship, Shot, ShotResult } from './rules';
 export { CELLS, FLEETS, SIZE, colLabels, colOf, fleetProblem, formatCoord, knownWater, openCells, opponentOf, randomFleet, rowLabels, rowOf, salvoSize, shipCells } from './rules';
@@ -71,6 +72,7 @@ export const gameModule: GameModule<BattleshipState, BattleshipMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [battleshipBot],

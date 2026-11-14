@@ -1,5 +1,5 @@
 import { effectsText, specialCardText } from './core/text';
-import { GRUNDSET_ANIMALS, GRUNDSET_SPELLS, GRUNDSET_TOKENS, PHASE7_CARDS, PHASE7_TOKENS, tagOldCards } from './grundset';
+import { GRUNDSET_ANIMALS, GRUNDSET_SPELLS, GRUNDSET_TOKENS, PHASE7_CARDS, PHASE7_TOKENS, DRAGON_EGG_TOKENS, tagOldCards } from './grundset';
 import type { CardDefinition } from './types';
 
 export const STAR_CARD: CardDefinition = {
@@ -678,7 +678,7 @@ export const CARDS_DB: Record<string, CardDefinition> = {
 };
 
 for (const def of GRUNDSET_SPELLS) SPELLS_DB[def.id] = def;
-for (const def of [...GRUNDSET_ANIMALS, ...GRUNDSET_TOKENS, ...PHASE7_TOKENS]) CARDS_DB[def.id] = def;
+for (const def of [...GRUNDSET_ANIMALS, ...GRUNDSET_TOKENS, ...PHASE7_TOKENS, ...DRAGON_EGG_TOKENS]) CARDS_DB[def.id] = def;
 for (const def of PHASE7_CARDS) (def.isSpell ? SPELLS_DB : CARDS_DB)[def.id] = def;
 // Zauber stehen mit im Kartenverzeichnis, damit Hand und Deck sie wie Tiere nachschlagen.
 Object.assign(CARDS_DB, SPELLS_DB);

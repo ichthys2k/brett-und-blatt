@@ -43,6 +43,7 @@ import {
   type PokerState,
   type PokerView,
 } from './rules';
+import { describeMove } from './describe';
 
 export {
   bestFive,
@@ -87,6 +88,7 @@ export const gameModule: GameModule<PokerState, PokerMove, PokerView> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   resignMove,
   seatChangeMove,

@@ -4,14 +4,17 @@ import {
   CardFan,
   useCallDeadline,
   PlayingCard,
+  resolveSharedCardBack,
   SeatRing,
   SuitShape,
   usePointerDrag,
   type BoardProps,
   type GameUi,
 } from '@brett-und-blatt/ui';
+import { mauMauCardDescription } from '../cardDescription';
 import { getNextPlayer } from '../rules';
 import type { MauMauDeckStyle, MauMauMove, MauMauState } from '../types';
+import { describeMove } from '../describe';
 import './styles.css';
 
 /** Breite der Handkarten nach verfügbarem Platz (vorher per CSS: 3,1–4,75 rem). */
@@ -376,7 +379,13 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
           label=""
           cardWidth={16}
           arc={hand.length > 1 ? Math.min(40, hand.length * 5) : 0}
-          renderCard={() => <PlayingCard card={null} deckStyle={deckStyle} />}
+          renderCard={() => (
+            <PlayingCard
+              card={null}
+              deckStyle={deckStyle}
+              cardBackProps={resolveSharedCardBack({ deckStyle })}
+            />
+          )}
         />
       )}
     </div>
@@ -450,6 +459,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
             <PlayingCard
               card={null}
               deckStyle={deckStyle}
+              cardBackProps={resolveSharedCardBack({ deckStyle, label: 'Talon' })}
               onClick={canDraw && isActor ? () => onMove({ type: 'draw' }) : undefined}
               className={canDraw && isActor ? 'mau-pile-clickable' : ''}
             />
@@ -570,6 +580,9 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
                   <PlayingCard
                     card={card}
                     deckStyle={deckStyle}
+                    description={mauMauCardDescription(card, state)}
+                    // Spielbare Karten nennen den Zug (#335); die Wunschfarbe folgt im Dialog.
+                    label={isPlayable && isActor ? `${describeMove(state, { type: 'play', cardId: card })} – ${mauMauCardDescription(card, state)}` : undefined}
                     highlight={isPlayable ? 'hint' : null}
                     onClick={() => !dragState.isDragging && handleCardClick(card)}
                   />

@@ -16,6 +16,8 @@ export const CAPABILITIES = [
   'lockNames',
   /** Die Partie neu starten oder zurück in die Lobby. */
   'restart',
+  /** Anfragen von Zuschauern annehmen oder ablehnen, die ab der nächsten Runde mitspielen wollen (#299). */
+  'joinRequests',
   /** Turnier: Ergebnisse und Tischergebnisse eintragen (vor Ort auch Helfer). */
   'enterResult',
   /** Turnier: Teilnehmer eintragen oder entfernen, Turnier starten. */
@@ -40,7 +42,7 @@ export type Capability = (typeof CAPABILITIES)[number];
 
 import { orgCapabilities, type OrgRole } from './org-roles';
 
-const ROOM_CAPABILITIES: readonly Capability[] = ['kick', 'rename', 'unseat', 'lockNames', 'restart'];
+const ROOM_CAPABILITIES: readonly Capability[] = ['kick', 'rename', 'unseat', 'lockNames', 'restart', 'joinRequests'];
 
 /** Die Raumleitung darf alles im Raum; alle anderen nichts. */
 export function roomCapabilities(isHost: boolean): Capability[] {

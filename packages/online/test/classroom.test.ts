@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { CLASS_CODE_LENGTH, CLASS_MAX_MEMBERS, classView, configureClass, createClass, decide, enrollMember, joinClass, leaveClass, parseClassCode, putCard, randomClassCode, removeMember, setLead, updateMember, type ClassState } from '../src/classroom';
+import { CLASS_MAX_ROOMS, CLASS_ROOM_TTL_MS, announceClassRoom, closeClassRoom, CLASS_CODE_LENGTH, CLASS_MAX_MEMBERS, classView, configureClass, createClass, decide, enrollMember, joinClass, leaveClass, parseClassCode, putCard, randomClassCode, removeMember, setLead, updateMember, type ClassState } from '../src/classroom';
+import { classStamps, sanitizeCard, DEFAULT_CARD_SECTIONS } from '../src/classcard';
 
 const T = (n: number) => `token-${String(n).padStart(8, '0')}`;
 const person = (n: number, name = `Kind${n}`) => ({ token: T(n), name, avatar: '🦊' });
@@ -111,7 +112,13 @@ describe('Klasse', () => {
 });
 
 describe('Klassenkarten (#151)', () => {
-  const full = { stamps: [{ gameId: 'chess', kinds: ['first', 'win', 'bogus'] }, { gameId: '<x>', kinds: ['win'] }], trophies: [{ gameId: 'chess', count: 3 }, { gameId: 'chess', count: -1 }], favorites: ['skat', '../x'] };
+  const full = {
+    stamps: [{ gameId: 'chess', kinds: ['first', 'win', 'bogus'] }, { gameId: '<x>', kinds: ['win'] }],
+    trophies: [{ gameId: 'chess', count: 3 }, { gameId: 'chess', count: -1 }],
+    favorites: ['skat', '../x'],
+    album: [{ gameId: 'drachenspiel', count: 7 }, { gameId: 'bad', count: -1 }],
+    botRating: [{ gameId: 'chess', rating: 1250, games: 10, wins: 6 }, { gameId: 'bad', games: -5 }],
+  };
 
   it('legt eine geprüfte Karte ab und zeigt sie nur Mitgliedern', () => {
     const state = fresh();
@@ -121,6 +128,8 @@ describe('Klassenkarten (#151)', () => {
     expect(card?.stamps).toEqual([{ gameId: 'chess', kinds: ['first', 'win'] }]);
     expect(card?.trophies).toEqual([{ gameId: 'chess', count: 3 }]);
     expect(card?.favorites).toEqual(['skat']);
+    expect(card?.album).toEqual([{ gameId: 'drachenspiel', count: 7 }]);
+    expect(card?.botRating).toEqual([{ gameId: 'chess', rating: 1250, games: 10, wins: 6 }]);
     expect(classView(state, T(99)).members).toEqual([]);
     expect(putCard(state, T(99), full, 6)).toEqual({ error: expect.any(String) });
   });
@@ -130,13 +139,43 @@ describe('Klassenkarten (#151)', () => {
     joinClass(state, person(1), 2);
     putCard(state, T(1), full, 5);
     expect(configureClass(state, T(1), { sections: { trophies: false } }, 6)).toEqual({ error: expect.any(String) });
-    expect(configureClass(state, T(0), { sections: { trophies: false, favorites: false } }, 6)).toEqual({ ok: true });
+    expect(configureClass(state, T(0), { sections: { trophies: false, favorites: false, album: false, botRating: false } }, 6)).toEqual({ ok: true });
     const card = classView(state, T(0)).members.find((m) => m.name === 'Kind1')?.card;
     expect(card?.trophies).toBeUndefined();
     expect(card?.favorites).toBeUndefined();
+    expect(card?.album).toBeUndefined();
+    expect(card?.botRating).toBeUndefined();
     expect(card?.stamps).toBeDefined();
     putCard(state, T(1), full, 7);
     expect(classView(state, T(0)).members.find((m) => m.name === 'Kind1')?.card?.trophies).toBeUndefined();
+  });
+
+  it('berechnet Klassen-Stempel für Spiele, die alle aktuellen Mitglieder gespielt haben', () => {
+    const card1 = sanitizeCard({ stamps: [{ gameId: 'chess', kinds: ['first', 'win'] }, { gameId: 'skat', kinds: ['first'] }] }, DEFAULT_CARD_SECTIONS, 1)!;
+    const card2 = sanitizeCard({ stamps: [{ gameId: 'chess', kinds: ['first'] }, { gameId: 'checkers', kinds: ['first'] }] }, DEFAULT_CARD_SECTIONS, 1)!;
+    const card3 = sanitizeCard({ stamps: [{ gameId: 'chess', kinds: ['first'] }] }, DEFAULT_CARD_SECTIONS, 1)!;
+
+    // Mindestens 2 Mitglieder
+    expect(classStamps([card1])).toEqual([]);
+    // Schach haben beide Mitglieder gespielt
+    expect(classStamps([card1, card2])).toEqual(['chess']);
+    // Alle 3 Mitglieder haben Schach gespielt
+    expect(classStamps([card1, card2, card3])).toEqual(['chess']);
+    // Wenn ein Mitglied fehlt oder keinen Stempel hat: leer
+    expect(classStamps([card1, card2, undefined])).toEqual([]);
+    expect(classStamps([card1, card2, { at: 1, stamps: [] }])).toEqual([]);
+  });
+
+  it('steuert die Ranglisten-Option (Vorgabe aus)', () => {
+    const state = fresh();
+    joinClass(state, person(1), 2);
+    expect(classView(state, T(0)).leaderboard).toBe(false);
+    expect(configureClass(state, T(1), { leaderboard: true }, 3)).toEqual({ error: expect.any(String) });
+    expect(configureClass(state, T(0), { leaderboard: true }, 3)).toEqual({ ok: true });
+    expect(classView(state, T(0)).leaderboard).toBe(true);
+    expect(classView(state, T(1)).leaderboard).toBe(true);
+    expect(configureClass(state, T(0), { leaderboard: false }, 4)).toEqual({ ok: true });
+    expect(classView(state, T(1)).leaderboard).toBe(false);
   });
 
   it('enthält keine Geräte-Kennung', () => {
@@ -268,5 +307,65 @@ describe('Klassen im Rollenmodell (#232)', () => {
     expect(classRoles(state, B)).toEqual(['lead']);
     expect(classRoles(state, C)).toEqual([]);
     expect(classRoles(state, 'kennung-fremder-0000001')).toEqual([]);
+  });
+});
+
+describe('Offene Räume der Klasse (#151)', () => {
+  const ROOM = '🐶🐱🦊🐻';
+  function withMember(): ClassState {
+    const state = fresh();
+    joinClass(state, person(1, 'Mia'), 2);
+    joinClass(state, person(2, 'Ben'), 2);
+    return state;
+  }
+
+  it('zeigt Mitgliedern den Raum mit dem Namen, der ihn geöffnet hat', () => {
+    const state = withMember();
+    expect(announceClassRoom(state, T(1), ROOM, 10)).toEqual({ ok: true });
+    const view = classView(state, T(2), 11);
+    expect(view.rooms).toEqual([expect.objectContaining({ code: ROOM, name: 'Mia', mine: false })]);
+    expect(classView(state, T(1), 11).rooms[0]?.mine).toBe(true);
+  });
+
+  it('zeigt Fremden und Wartenden nichts', () => {
+    const state = withMember();
+    announceClassRoom(state, T(1), ROOM, 10);
+    expect(classView(state, T(99), 11).rooms).toEqual([]);
+  });
+
+  it('lehnt Fremde und ungültige Raumcodes ab', () => {
+    const state = withMember();
+    expect(announceClassRoom(state, T(99), ROOM, 10)).toEqual({ error: expect.any(String) });
+    expect(announceClassRoom(state, T(1), 'abc', 10)).toEqual({ error: expect.any(String) });
+    expect(announceClassRoom(state, T(1), '🐶🐱🦊', 10)).toEqual({ error: expect.any(String) });
+    expect(state.rooms).toBeUndefined();
+  });
+
+  it('meldet denselben Raum nicht doppelt, hält höchstens fünf und lässt alte verfallen', () => {
+    const state = withMember();
+    announceClassRoom(state, T(1), ROOM, 10);
+    announceClassRoom(state, T(1), ROOM, 20);
+    expect(classView(state, T(1), 21).rooms).toHaveLength(1);
+    const codes = ['🐶🐶🐶🐶', '🐱🐱🐱🐱', '🦊🦊🦊🦊', '🐻🐻🐻🐻', '🐸🐸🐸🐸', '🐧🐧🐧🐧'];
+    codes.forEach((code, i) => announceClassRoom(state, T(1), code, 100 + i));
+    expect(classView(state, T(1), 200).rooms).toHaveLength(CLASS_MAX_ROOMS);
+    expect(classView(state, T(1), 100 + CLASS_ROOM_TTL_MS + 10).rooms).toEqual([]);
+  });
+
+  it('erlaubt das Schließen dem Öffnenden und der Leitung, sonst niemandem', () => {
+    const state = withMember();
+    announceClassRoom(state, T(1), ROOM, 10);
+    expect(closeClassRoom(state, T(2), ROOM)).toEqual({ error: expect.any(String) });
+    expect(closeClassRoom(state, T(1), ROOM)).toEqual({ ok: true });
+    announceClassRoom(state, T(1), ROOM, 30);
+    expect(closeClassRoom(state, T(0), ROOM)).toEqual({ ok: true });
+    expect(closeClassRoom(state, T(0), ROOM)).toEqual({ error: expect.any(String) });
+  });
+
+  it('lässt den Raum verschwinden, wenn das Mitglied die Klasse verlässt', () => {
+    const state = withMember();
+    announceClassRoom(state, T(1), ROOM, 10);
+    leaveClass(state, T(1));
+    expect(classView(state, T(2), 11).rooms).toEqual([]);
   });
 });

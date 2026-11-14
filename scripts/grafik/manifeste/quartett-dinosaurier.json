@@ -1,0 +1,207 @@
+{
+  "beschreibung": "G9a (#319): Quartett-Set dinosaurier, ein Bild je Karte (Anki-Medien, #270). Sachlich richtig; jede Auswahl gegen die Quelle der Karte prüfen.",
+  "stil": "Painterly paleoart in warm oil colours, scientifically informed reconstruction: one dinosaur, whole body visible in side or three-quarter view, natural posture with horizontal spine and tail off the ground, plausible muted colours, in a softly painted prehistoric landscape of its period, warm even light. Calm, not attacking, no blood. No text.",
+  "ohne": "text, letters, numbers, labels, watermark, border, frame, card layout, modern objects, logos, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "4:3",
+  "ziel": "content/quartett/bilder/dinosaurier",
+  "groesse": [
+    480,
+    360
+  ],
+  "praefix": "bub-quartett-dinosaurier-",
+  "qualitaet": 78,
+  "motive": [
+    {
+      "id": "a1",
+      "titel": "A1 Tyrannosaurus",
+      "gruppe": "A Große Raubsaurier",
+      "prompt": "Subject: Tyrannosaurus (tiny two-fingered arms)."
+    },
+    {
+      "id": "a2",
+      "titel": "A2 Spinosaurus",
+      "gruppe": "A Große Raubsaurier",
+      "prompt": "Subject: Spinosaurus (tall back sail, long crocodile-like snout, at a riverbank)."
+    },
+    {
+      "id": "a3",
+      "titel": "A3 Giganotosaurus",
+      "gruppe": "A Große Raubsaurier",
+      "prompt": "Subject: Giganotosaurus."
+    },
+    {
+      "id": "a4",
+      "titel": "A4 Allosaurus",
+      "gruppe": "A Große Raubsaurier",
+      "prompt": "Subject: Allosaurus (small horns above the eyes)."
+    },
+    {
+      "id": "b1",
+      "titel": "B1 Velociraptor",
+      "gruppe": "B Kleine Räuber",
+      "prompt": "Subject: Velociraptor (turkey-sized, feathered)."
+    },
+    {
+      "id": "b2",
+      "titel": "B2 Deinonychus",
+      "gruppe": "B Kleine Räuber",
+      "prompt": "Subject: Deinonychus (feathered, large sickle claw)."
+    },
+    {
+      "id": "b3",
+      "titel": "B3 Compsognathus",
+      "gruppe": "B Kleine Räuber",
+      "prompt": "Subject: Compsognathus (chicken-sized)."
+    },
+    {
+      "id": "b4",
+      "titel": "B4 Troodon",
+      "gruppe": "B Kleine Räuber",
+      "prompt": "Subject: Troodon (feathered, large eyes)."
+    },
+    {
+      "id": "c1",
+      "titel": "C1 Brachiosaurus",
+      "gruppe": "C Langhälse",
+      "prompt": "Subject: Brachiosaurus (front legs longer, neck upright)."
+    },
+    {
+      "id": "c2",
+      "titel": "C2 Diplodocus",
+      "gruppe": "C Langhälse",
+      "prompt": "Subject: Diplodocus (very long whip tail, neck horizontal)."
+    },
+    {
+      "id": "c3",
+      "titel": "C3 Argentinosaurus",
+      "gruppe": "C Langhälse",
+      "prompt": "Subject: Argentinosaurus (enormous)."
+    },
+    {
+      "id": "c4",
+      "titel": "C4 Apatosaurus",
+      "gruppe": "C Langhälse",
+      "prompt": "Subject: Apatosaurus (sturdy)."
+    },
+    {
+      "id": "d1",
+      "titel": "D1 Triceratops",
+      "gruppe": "D Hörner und Kuppeln",
+      "prompt": "Subject: Triceratops (three horns, solid frill)."
+    },
+    {
+      "id": "d2",
+      "titel": "D2 Styracosaurus",
+      "gruppe": "D Hörner und Kuppeln",
+      "prompt": "Subject: Styracosaurus (one nose horn, long frill spikes)."
+    },
+    {
+      "id": "d3",
+      "titel": "D3 Protoceratops",
+      "gruppe": "D Hörner und Kuppeln",
+      "prompt": "Subject: Protoceratops (sheep-sized, no horns)."
+    },
+    {
+      "id": "d4",
+      "titel": "D4 Pachycephalosaurus",
+      "gruppe": "D Hörner und Kuppeln",
+      "prompt": "Subject: Pachycephalosaurus (domed skull, two legs)."
+    },
+    {
+      "id": "e1",
+      "titel": "E1 Stegosaurus",
+      "gruppe": "E Panzer und Platten",
+      "prompt": "Subject: Stegosaurus (two rows of back plates, four tail spikes)."
+    },
+    {
+      "id": "e2",
+      "titel": "E2 Ankylosaurus",
+      "gruppe": "E Panzer und Platten",
+      "prompt": "Subject: Ankylosaurus (armour, tail club)."
+    },
+    {
+      "id": "e3",
+      "titel": "E3 Kentrosaurus",
+      "gruppe": "E Panzer und Platten",
+      "prompt": "Subject: Kentrosaurus (plates in front, long spikes behind)."
+    },
+    {
+      "id": "e4",
+      "titel": "E4 Euoplocephalus",
+      "gruppe": "E Panzer und Platten",
+      "prompt": "Subject: Euoplocephalus (armour, tail club, smaller)."
+    },
+    {
+      "id": "f1",
+      "titel": "F1 Parasaurolophus",
+      "gruppe": "F Entenschnäbel",
+      "prompt": "Subject: Parasaurolophus (long backward head crest)."
+    },
+    {
+      "id": "f2",
+      "titel": "F2 Iguanodon",
+      "gruppe": "F Entenschnäbel",
+      "prompt": "Subject: Iguanodon (thumb spike)."
+    },
+    {
+      "id": "f3",
+      "titel": "F3 Edmontosaurus",
+      "gruppe": "F Entenschnäbel",
+      "prompt": "Subject: Edmontosaurus (flat duck bill, no crest)."
+    },
+    {
+      "id": "f4",
+      "titel": "F4 Maiasaura",
+      "gruppe": "F Entenschnäbel",
+      "prompt": "Subject: Maiasaura (beside a nest with eggs)."
+    },
+    {
+      "id": "g1",
+      "titel": "G1 Carnotaurus",
+      "gruppe": "G Mittlere Raubsaurier",
+      "prompt": "Subject: Carnotaurus (two bull-like horns, very tiny arms)."
+    },
+    {
+      "id": "g2",
+      "titel": "G2 Baryonyx",
+      "gruppe": "G Mittlere Raubsaurier",
+      "prompt": "Subject: Baryonyx (long snout, large thumb claw, fishing)."
+    },
+    {
+      "id": "g3",
+      "titel": "G3 Dilophosaurus",
+      "gruppe": "G Mittlere Raubsaurier",
+      "prompt": "Subject: Dilophosaurus (two thin head crests, **no neck frill, not spitting**)."
+    },
+    {
+      "id": "g4",
+      "titel": "G4 Ceratosaurus",
+      "gruppe": "G Mittlere Raubsaurier",
+      "prompt": "Subject: Ceratosaurus (nose horn)."
+    },
+    {
+      "id": "h1",
+      "titel": "H1 Archaeopteryx",
+      "gruppe": "H Frühe Saurier und Urvogel",
+      "prompt": "Subject: Archaeopteryx (crow-sized, feathered wings with claws, toothed jaw)."
+    },
+    {
+      "id": "h2",
+      "titel": "H2 Plateosaurus",
+      "gruppe": "H Frühe Saurier und Urvogel",
+      "prompt": "Subject: Plateosaurus (long neck, mostly on two legs)."
+    },
+    {
+      "id": "h3",
+      "titel": "H3 Eoraptor",
+      "gruppe": "H Frühe Saurier und Urvogel",
+      "prompt": "Subject: Eoraptor (small, slender)."
+    },
+    {
+      "id": "h4",
+      "titel": "H4 Coelophysis",
+      "gruppe": "H Frühe Saurier und Urvogel",
+      "prompt": "Subject: Coelophysis (slender, long neck)."
+    }
+  ]
+}

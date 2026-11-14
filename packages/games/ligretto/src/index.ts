@@ -2,6 +2,7 @@ import type { GameModule } from '@brett-und-blatt/engine';
 import { ligrettoBot } from './bots';
 import { meta } from './meta';
 import { GOALS, applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type LigrettoMove, type LigrettoState, type LigrettoView } from './rules';
+import { describeMove } from './describe';
 
 export type { LigrettoMove, LigrettoState, LigrettoView } from './rules';
 
@@ -37,6 +38,7 @@ export const gameModule: GameModule<LigrettoState, LigrettoMove, LigrettoView> =
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [ligrettoBot],

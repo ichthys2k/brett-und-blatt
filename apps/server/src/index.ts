@@ -1,4 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
+import { CLIENT_PARAM, MessageBudget, PROTOCOL_VERSION, accessFor, type Access } from '@brett-und-blatt/online';
 import { exchangeCode } from './oidc';
 import {
   ATTEMPT_WINDOW_MS,
@@ -23,6 +24,8 @@ import {
   BACKUP_TTL_MS,
   CLASS_TTL_MS,
   addClassPack,
+  announceClassRoom,
+  closeClassRoom,
   aggregateDue,
   cleanDueReport,
   mayReportDue,
@@ -33,6 +36,10 @@ import {
   setLeadKey,
   classRoles,
   OpenRoomDirectory,
+  SeekingBoard,
+  parseBoardMessage,
+  type BoardServerMessage,
+  type SeekMatch,
   Room,
   SERIES_CODE_PATTERN,
   SeriesBook,
@@ -111,11 +118,33 @@ import {
   type LockOutcome,
   type LockRecord,
 } from '@brett-und-blatt/online';
-import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
+import {
+  BOARD_PUSH_MAX_AGE_MS,
+  boardPushFromJSON,
+  boardPushKinds,
+  boardPushToJSON,
+  deliverBoardPush,
+  newBoardPushState,
+  type BoardPushState,
+  type BoardSignature,
+  claimSilently,
+  deliverTurnPush,
+  parseClientMessage,
+  nextPushWakeup,
+  ownsToken,
+  pushStateFromJSON,
+  pushStateToJSON,
+  runTournamentPush,
+  type PushSender,
+  type PushSubscriptionData,
+  type TournamentPushState,
+} from '@brett-und-blatt/online';
+import { BOT_BUDGET_MS, BOT_PAUSE_MS, BOT_STEP_MS } from './bots';
 import { bibelQuizKatalog } from './bibelquiz';
 import { wortspielKataloge } from './wortspiele';
 import { onlineGames } from './games';
 import { isOperator } from './operator';
+import { allowLocalPush, makePushSender, pushConfigured } from './push';
 import {
   answerOffer,
   decideRequest,
@@ -193,8 +222,18 @@ interface Env {
   PASS_PEPPER?: string;
   /** Betreiber-Schlüssel (`wrangler secret put OPERATOR_KEY`): löscht per `DELETE /betreiber/…` Turniere und Klassen. Fehlt er, gibt es die Endpunkte nicht. */
   OPERATOR_KEY?: string;
+  /** Web Push (#242): privater Schlüssel als Secret (`wrangler secret put VAPID_PRIVATE_KEY`), öffentlicher Schlüssel und Absender als Variablen. Fehlt einer, ignoriert der Server Abos. */
+  VAPID_PRIVATE_KEY?: string;
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_SUBJECT?: string;
   TOURNAMENTS: DurableObjectNamespace<TournamentRoom>;
   ALLOWED_ORIGINS: string;
+  /**
+   * VR-Treffpunkt (#351): TURN-Schlüssel von Cloudflare Realtime (`wrangler secret put TURN_KEY_ID` und
+   * `TURN_KEY_API_TOKEN`). Fehlen sie, gibt `/rtc/ice` nur den freien STUN-Server aus.
+   */
+  TURN_KEY_ID?: string;
+  TURN_KEY_API_TOKEN?: string;
   /** "eu" im echten Betrieb. Nur der lokale Testserver kennt keine Jurisdiktionen und setzt "none". */
   ROOM_JURISDICTION: string;
 }
@@ -203,7 +242,15 @@ interface Env {
 interface Attachment {
   id: string;
   memberId: string | null;
+  /** Kennung eines Clients ohne Webseite (#334); fehlt bei der Web-App. */
+  client?: string;
+  /** VR-Brille bzw. im Sprachchat (#351, #352). */
+  xr?: boolean;
+  voice?: boolean;
 }
+
+/** Kopf, mit dem der Worker dem Raum die geprüfte Client-Kennung weiterreicht (nie vom Client übernommen). */
+const CLIENT_HEADER = 'X-Brett-Client';
 
 const gamesById = new Map(onlineGames.map((m) => [m.info.id, m]));
 const botRunner = serverBotRunner(onlineGames, { stepMs: BOT_STEP_MS });
@@ -330,10 +377,26 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
     : {};
 }
 
-/** Nur die eigene Web-App darf Räume anlegen und betreten. */
+/** Nur die eigene Web-App darf diese Wege nutzen (Schwarzes Brett, Turniere, Konten …). */
 function originAllowed(request: Request, env: Env): boolean {
   const origin = request.headers.get('Origin');
   return origin !== null && env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).includes(origin);
+}
+
+/**
+ * Räume anlegen, betreten und offene Räume ansehen dürfen auch Programme ohne Webseite (#334):
+ * ohne `Origin`, aber mit öffentlicher Kennung `?client=…`. Siehe `packages/online/src/access.ts`.
+ */
+function roomAccess(request: Request, url: URL, env: Env): Access | null {
+  return accessFor(request.headers.get('Origin'), url.searchParams.get(CLIENT_PARAM), env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()));
+}
+
+/** Reicht die Anfrage an den Raum weiter; die Client-Kennung kommt nur vom Worker, nie vom Client. */
+function forwardWithAccess(request: Request, access: Access): Request {
+  const headers = new Headers(request.headers);
+  headers.delete(CLIENT_HEADER);
+  if (access.kind === 'client') headers.set(CLIENT_HEADER, access.client);
+  return new Request(request, { headers });
 }
 
 /** Liest einen kleinen JSON-Körper; null bei Fehlern oder zu großer Länge. */
@@ -354,9 +417,41 @@ async function personKey(token: string): Promise<string> {
   return Array.from(new Uint8Array(digest).slice(0, 8), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+const STUN_SERVERS = [{ urls: 'stun:stun.cloudflare.com:3478' }];
+
+/** ICE-Server für WebRTC (#351): immer STUN, dazu TURN von Cloudflare Realtime, wenn der Schlüssel eingerichtet ist. */
+async function iceServers(env: Env): Promise<unknown[]> {
+  if (!env.TURN_KEY_ID || !env.TURN_KEY_API_TOKEN) return STUN_SERVERS;
+  try {
+    const response = await fetch(`https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(env.TURN_KEY_ID)}/credentials/generate-ice-servers`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.TURN_KEY_API_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ttl: 86_400 }),
+    });
+    if (!response.ok) return STUN_SERVERS;
+    const data = (await response.json()) as { iceServers?: unknown };
+    const servers = Array.isArray(data.iceServers) ? data.iceServers : data.iceServers ? [data.iceServers] : [];
+    return servers.length ? servers : STUN_SERVERS;
+  } catch {
+    return STUN_SERVERS;
+  }
+}
+
 function json(data: unknown, status: number, headers: Record<string, string>): Response {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...headers } });
 }
+
+/** Startseite des Servers: wohin fremde Clients schauen (#334). */
+const SERVER_INFO = [
+  'Brett & Blatt – Spieleserver',
+  '',
+  'Quellcode (AGPL-3.0): https://github.com/ichthys2k/brett-und-blatt',
+  `Protokoll (Version ${PROTOCOL_VERSION}) für eigene Clients: https://github.com/ichthys2k/brett-und-blatt/blob/main/docs/protokoll.md`,
+  '',
+  'Eigene Clients sind willkommen: kostenlos, ohne Anmeldung und ohne Gewähr.',
+  'Programme ohne Webseite hängen ?client=<name> an (3–40 Zeichen: a–z, 0–9, -).',
+  '',
+].join('\n');
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -365,7 +460,7 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
     if (url.pathname === '/rooms' && request.method === 'POST') {
-      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      if (!roomAccess(request, url, env)) return json({ error: 'origin' }, 403, cors);
       let isPublic = true;
       try {
         const body = (await request.json()) as { isPublic?: boolean };
@@ -381,14 +476,28 @@ export default {
       return json({ error: 'busy' }, 503, cors);
     }
 
+    // Schwarzes Brett „Wer hat Lust?“ (#65): live per WebSocket, ohne Upgrade nur die Zahl der Zettel.
+    if (url.pathname === '/brett' && request.method === 'GET') {
+      if (!originAllowed(request, env)) return request.headers.get('Upgrade') === 'websocket' ? new Response('Origin nicht erlaubt', { status: 403 }) : json({ error: 'origin' }, 403, cors);
+      if (request.headers.get('Upgrade') === 'websocket') return registryStub(env).fetch(request);
+      return json({ count: await registryStub(env).boardCount() }, 200, { ...cors, 'Cache-Control': 'no-store' });
+    }
+
     if ((url.pathname === '/rooms' || url.pathname === '/rooms/open') && request.method === 'GET') {
       if (request.headers.get('Upgrade') === 'websocket') {
-        if (!originAllowed(request, env)) return new Response('Origin nicht erlaubt', { status: 403 });
+        if (!roomAccess(request, url, env)) return new Response('Origin nicht erlaubt', { status: 403 });
         return registryStub(env).fetch(request);
       }
-      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      if (!roomAccess(request, url, env)) return json({ error: 'origin' }, 403, cors);
       const rooms = await registryStub(env).listOpen();
       return json(rooms, 200, cors);
+    }
+
+    // VR-Treffpunkt (#351): Server für den Verbindungsaufbau zwischen Brillen. STUN ist frei; TURN nur mit
+    // eingerichtetem Schlüssel, die Zugangsdaten gelten einen Tag und werden je Abruf neu erzeugt.
+    if (url.pathname === '/rtc/ice' && request.method === 'GET') {
+      if (!roomAccess(request, url, env)) return json({ error: 'origin' }, 403, cors);
+      return json({ iceServers: await iceServers(env) }, 200, { ...cors, 'Cache-Control': 'no-store' });
     }
 
     if (url.pathname === '/bibelquiz/fragen' && request.method === 'GET') {
@@ -939,11 +1048,12 @@ export default {
       if (request.headers.get('Upgrade') !== 'websocket') {
         return json({ exists: await roomStub(env, code).exists() }, 200, cors);
       }
-      if (!originAllowed(request, env)) return new Response('Origin nicht erlaubt', { status: 403 });
-      return roomStub(env, code).fetch(request);
+      const access = roomAccess(request, url, env);
+      if (!access) return new Response('Origin nicht erlaubt', { status: 403 });
+      return roomStub(env, code).fetch(forwardWithAccess(request, access));
     }
 
-    if (url.pathname === '/') return new Response('Brett & Blatt – Spieleserver. Quellcode: https://github.com/ichthys2k/brett-und-blatt', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    if (url.pathname === '/') return new Response(SERVER_INFO, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
     return new Response('Nicht gefunden', { status: 404 });
   },
 } satisfies ExportedHandler<Env>;
@@ -957,8 +1067,13 @@ export default {
 export class GameRoom extends DurableObject<Env> {
   private room: Room | null = null;
   private sockets = new Map<string, WebSocket>();
+  /** Ratenbegrenzung je Verbindung eines Clients ohne Webseite; nur im Speicher, beim Aufwachen frisch. */
+  private budgets = new Map<string, { budget: MessageBudget; warnedAt: number }>();
   /** Zuletzt ans Verzeichnis gemeldete Karte (undefined: seit dem Aufwachen noch nicht). */
   private lastListing: OpenRoomListing | null | undefined = undefined;
+  /** Web Push (#242, nur Fernpartien): Abos und Spam-Schutz unter dem eigenen Schlüssel `push`; weg mit dem Raum. */
+  private pushState: TournamentPushState | null = null;
+  private pushSenderCache: PushSender | null = null;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -971,6 +1086,7 @@ export class GameRoom extends DurableObject<Env> {
         this.sockets.set(attachment.id, ws);
         if (attachment.memberId) this.room.reattach(attachment.id, attachment.memberId);
         else this.room.connect(attachment.id);
+        if (attachment.xr || attachment.voice) this.room.restoreFlags(attachment.id, { xr: attachment.xr, voice: attachment.voice });
       }
     });
   }
@@ -979,6 +1095,16 @@ export class GameRoom extends DurableObject<Env> {
   async create(code: string, isPublic = true): Promise<boolean> {
     if (this.room) return false;
     this.room = new Room(code, this.deps(), isPublic);
+    await this.persist();
+    return true;
+  }
+
+  /** Legt den Raum für eine Gruppe vom Schwarzen Brett an: Spiel gewählt, die Verfasserin wird Raumleitung (#65). */
+  async createSeeking(code: string, gameId: string, hostToken: string | null): Promise<boolean> {
+    if (this.room) return false;
+    const room = new Room(code, this.deps(), false);
+    if (!room.preset(gameId, hostToken)) return false;
+    this.room = room;
     await this.persist();
     return true;
   }
@@ -1003,7 +1129,8 @@ export class GameRoom extends DurableObject<Env> {
     const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
     const id = crypto.randomUUID();
     this.ctx.acceptWebSocket(server);
-    server.serializeAttachment({ id, memberId: null } satisfies Attachment);
+    const clientId = request.headers.get(CLIENT_HEADER) ?? undefined;
+    server.serializeAttachment({ id, memberId: null, ...(clientId ? { client: clientId } : {}) } satisfies Attachment);
     this.sockets.set(id, server);
     this.room.connect(id);
     return new Response(null, { status: 101, webSocket: client });
@@ -1011,7 +1138,80 @@ export class GameRoom extends DurableObject<Env> {
 
   override async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
     if (typeof message !== 'string') return;
+    if (!this.withinBudget(ws)) return;
+    // Hinweise aufs Gerät (#242) gehören nicht in die Spielleitung: Abos bleiben im Adapter.
+    if (message.includes('"push') && (await this.handlePush(this.idOf(ws), message))) return;
     this.room?.receive(this.idOf(ws), message);
+  }
+
+  private pushSender(): PushSender | null {
+    this.pushSenderCache ??= makePushSender(this.env);
+    return this.pushSenderCache;
+  }
+
+  private async loadPush(): Promise<TournamentPushState> {
+    this.pushState ??= pushStateFromJSON(await this.ctx.storage.get('push'), { allowLocal: allowLocalPush(this.env) });
+    return this.pushState;
+  }
+
+  private async savePush(): Promise<void> {
+    if (this.pushState) await this.ctx.storage.put('push', pushStateToJSON(this.pushState));
+  }
+
+  /** `true`, wenn die Nachricht ein Push-Abo betraf und hier erledigt ist. */
+  private async handlePush(connectionId: string, raw: string): Promise<boolean> {
+    const room = this.room;
+    const message = parseClientMessage(raw, { allowLocal: allowLocalPush(this.env) });
+    if (!room || !message || (message.type !== 'pushSubscribe' && message.type !== 'pushUnsubscribe')) return false;
+    const error = (text: string) => this.send(connectionId, { type: 'error', code: 'notAllowed', message: text });
+    if (!pushConfigured(this.env)) {
+      error('Hinweise aufs Gerät sind hier nicht eingerichtet.');
+      return true;
+    }
+    const token = room.tokenOfConnection(connectionId);
+    if (!token) {
+      this.send(connectionId, { type: 'error', code: 'notReady', message: 'Erst anmelden.' });
+      return true;
+    }
+    const state = await this.loadPush();
+    if (message.type === 'pushUnsubscribe') {
+      state.book.remove(token);
+      await this.savePush();
+      this.send(connectionId, { type: 'pushState', enabled: false });
+      return true;
+    }
+    if (room.isMatchRoom() || !room.isCorrespondence()) {
+      error('Hinweise gibt es nur bei Fernpartien.');
+      return true;
+    }
+    if (!state.book.set(token, message.subscription, Date.now())) {
+      error('Es gibt schon zu viele Hinweis-Abos.');
+      return true;
+    }
+    await this.savePush();
+    this.send(connectionId, { type: 'pushState', enabled: true });
+    return true;
+  }
+
+  /** Nach dem Anmelden: Sagt dem Gerät, ob für es Hinweise an sind. Die Abo-Daten gehen nie an jemanden. */
+  private async sendPushState(connectionId: string, memberId: string): Promise<void> {
+    const token = this.room?.tokenOfMember(memberId);
+    if (!token) return;
+    this.send(connectionId, { type: 'pushState', enabled: (await this.loadPush()).book.has(token) });
+  }
+
+  /** „Du bist am Zug“ an getrennte Mitglieder einer Fernpartie, im Hintergrund. */
+  private async deliverTurn(tokens: string[]): Promise<void> {
+    const sender = this.pushSender();
+    const room = this.room;
+    if (!sender || !room) return;
+    try {
+      const state = await this.loadPush();
+      if (state.book.size === 0) return;
+      await deliverTurnPush(state, tokens, room.code, sender, Date.now(), { persist: () => this.savePush() });
+    } catch (err) {
+      console.error('Web Push fehlgeschlagen:', err instanceof Error ? err.name : 'Fehler');
+    }
   }
 
   override async webSocketClose(ws: WebSocket): Promise<void> {
@@ -1029,6 +1229,7 @@ export class GameRoom extends DurableObject<Env> {
     if (Date.now() >= room.expiresAt() && room.connectionCount === 0) {
       const code = room.code;
       this.room = null;
+      this.pushState = null;
       await this.ctx.storage.deleteAll();
       await registryStub(this.env).removeRoom(code);
       return;
@@ -1040,7 +1241,26 @@ export class GameRoom extends DurableObject<Env> {
   private dropSocket(ws: WebSocket): void {
     const id = this.idOf(ws);
     this.sockets.delete(id);
+    this.budgets.delete(id);
     this.room?.disconnect(id);
+  }
+
+  /**
+   * Ratenbegrenzung für Clients ohne Webseite (#334). Die Web-App bleibt unbegrenzt wie bisher.
+   * Zu schnelle Nachrichten werden verworfen; eine Fehlermeldung geht höchstens einmal je Sekunde hinaus.
+   */
+  private withinBudget(ws: WebSocket): boolean {
+    const attachment = ws.deserializeAttachment() as Attachment;
+    if (!attachment.client) return true;
+    const now = Date.now();
+    let budget = this.budgets.get(attachment.id);
+    if (!budget) this.budgets.set(attachment.id, (budget = { budget: new MessageBudget(now), warnedAt: 0 }));
+    if (budget.budget.take(now)) return true;
+    if (now - budget.warnedAt >= 1000) {
+      budget.warnedAt = now;
+      this.send(attachment.id, { type: 'error', code: 'tooFast', message: 'Zu viele Nachrichten – bitte langsamer.' });
+    }
+    return false;
   }
 
   private idOf(ws: WebSocket): string {
@@ -1051,8 +1271,10 @@ export class GameRoom extends DurableObject<Env> {
     return {
       now: () => Date.now(),
       findGame: (id) => gamesById.get(id),
+      listGames: () => [...gamesById.values()],
       botRunner,
       botBudgetMs: BOT_BUDGET_MS,
+      botPauseMs: BOT_PAUSE_MS,
       randomSeed,
       send: (id, message) => this.send(id, message),
       close: (id) => {
@@ -1064,6 +1286,16 @@ export class GameRoom extends DurableObject<Env> {
         this.sockets.delete(id);
       },
       changed: () => void this.persist(),
+      // Brille und Sprachchat (#351, #352) hängen an der Verbindung, damit sie das Schlafen des Raums überstehen.
+      flagsChanged: (id, flags) => {
+        const ws = this.sockets.get(id);
+        if (!ws) return;
+        const attachment = ws.deserializeAttachment() as Attachment;
+        ws.serializeAttachment({ ...attachment, xr: flags.xr || undefined, voice: flags.voice || undefined } satisfies Attachment);
+      },
+      notifyTurn: (tokens) => {
+        if (pushConfigured(this.env)) this.ctx.waitUntil(this.deliverTurn(tokens));
+      },
     };
   }
 
@@ -1071,7 +1303,11 @@ export class GameRoom extends DurableObject<Env> {
     const ws = this.sockets.get(id);
     if (!ws) return;
     // Nach der Anmeldung merkt sich die Verbindung ihr Mitglied – für das Aufwachen.
-    if (message.type === 'welcome') ws.serializeAttachment({ id, memberId: message.you } satisfies Attachment);
+    if (message.type === 'welcome') {
+      const { client, xr, voice } = ws.deserializeAttachment() as Attachment;
+      ws.serializeAttachment({ id, memberId: message.you, ...(client ? { client } : {}), ...(xr ? { xr } : {}), ...(voice ? { voice } : {}) } satisfies Attachment);
+      if (pushConfigured(this.env)) void this.sendPushState(id, message.you);
+    }
     try {
       ws.send(JSON.stringify(message));
     } catch {
@@ -1123,6 +1359,39 @@ export class GameRoom extends DurableObject<Env> {
   }
 }
 
+/** Was ein Brett-Browser am Socket hängen hat (Hibernation behält es). `owner` ist die Kurzkennung aus der Geräte-Kennung. */
+interface BoardAttachment {
+  kind: 'board';
+  owner: string | null;
+  /** Die geheime Geräte-Kennung – nur damit die Verfasserin beim Treffer die Raumleitung bekommt. */
+  token: string | null;
+}
+
+function boardAttachment(ws: WebSocket): BoardAttachment | null {
+  const attachment = ws.deserializeAttachment() as BoardAttachment | null;
+  return attachment?.kind === 'board' ? attachment : null;
+}
+
+/** Kurzkennung einer Person am Brett: ein Hash der Geräte-Kennung, nie die Kennung selbst. */
+async function boardOwnerId(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`brett:${token}`));
+  return `b${Array.from(new Uint8Array(digest).slice(0, 6), (byte) => byte.toString(16).padStart(2, '0')).join('')}`;
+}
+
+/** Das Brett kennt nur Spiele, die der Server online anbietet und die mindestens zwei spielen können. */
+function boardDeps(room: (code: string) => { gameId: string } | undefined, keepAway: (owner: string) => boolean) {
+  const asGame = (m: (typeof onlineGames)[number]) => ({ id: m.info.id, min: m.info.players.min, max: m.info.players.max });
+  const playable = () => onlineGames.filter((m) => m.info.players.max >= 2).map(asGame);
+  return {
+    now: () => Date.now(),
+    game: (id: string) => playable().find((g) => g.id === id),
+    games: playable,
+    room,
+    random: () => Math.random(),
+    keepAway,
+  };
+}
+
 /**
  * Zentrale Übersicht aller offenen Räume („Offene Runden“). Browser, die die Liste
  * ansehen, halten eine WebSocket-Verbindung (mit Hibernation: schlafende Verbindungen
@@ -1131,6 +1400,10 @@ export class GameRoom extends DurableObject<Env> {
  */
 export class LobbyRegistry extends DurableObject<Env> {
   private directory = new OpenRoomDirectory();
+  private board = this.makeBoard();
+  /** Web Push fürs Brett: Abos je Kurzkennung (nie die Geräte-Kennung) und Spam-Schutz, unter dem Schlüssel `boardPush`. */
+  private boardPush: BoardPushState = newBoardPushState();
+  private boardPushSender: PushSender | null = null;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -1139,23 +1412,142 @@ export class LobbyRegistry extends DurableObject<Env> {
     ctx.blockConcurrencyWhile(async () => {
       const saved = await ctx.storage.get<Record<string, OpenRoomListing>>('listings');
       this.directory = new OpenRoomDirectory(saved);
+      const board = await ctx.storage.get<ReturnType<SeekingBoard['toJSON']>>('board');
+      if (board) this.board = this.makeBoard(board);
+      this.boardPush = boardPushFromJSON(await ctx.storage.get('boardPush'), { allowLocal: allowLocalPush(env) });
     });
   }
 
-  override async fetch(): Promise<Response> {
+  private makeBoard(saved?: ReturnType<SeekingBoard['toJSON']>): SeekingBoard {
+    // Eine offene Runde ist eine, die gerade im Verzeichnis steht (öffentlich, mit freien Plätzen, kein Turnier).
+    return new SeekingBoard(
+      boardDeps((code) => {
+        const listing = this.directory.list().find((room) => room.code === code && !room.tournament);
+        return listing ? { gameId: listing.gameId } : undefined;
+      }, (owner) => this.boardPush.book.has(owner)),
+      saved,
+    );
+  }
+
+  override async fetch(request?: Request): Promise<Response> {
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
     this.ctx.acceptWebSocket(server);
+    if (request && new URL(request.url).pathname === '/brett') {
+      server.serializeAttachment({ kind: 'board', owner: null, token: null } satisfies BoardAttachment);
+      this.sendTo(server, this.boardMessage(null));
+      return new Response(null, { status: 101, webSocket: client });
+    }
     await this.prune();
     this.sendTo(server, this.message());
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  override async webSocketMessage(): Promise<void> {
-    // Browser schicken nur „ping“ (beantwortet Cloudflare selbst).
+  override async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
+    // Die Liste der offenen Runden kennt nur „ping“ (beantwortet Cloudflare selbst); das Schwarze Brett spricht mehr.
+    const attachment = boardAttachment(ws);
+    if (!attachment || typeof message !== 'string') return;
+    const msg = parseBoardMessage(message, { allowLocal: allowLocalPush(this.env) });
+    if (!msg) return this.sendTo(ws, JSON.stringify({ type: 'boardError', error: 'message' } satisfies BoardServerMessage));
+    if (msg.type === 'hello') {
+      const owner = await boardOwnerId(msg.token);
+      ws.serializeAttachment({ kind: 'board', owner, token: msg.token } satisfies BoardAttachment);
+      this.board.markAway(owner, false);
+      await this.boardChanged();
+      if (pushConfigured(this.env)) this.sendTo(ws, JSON.stringify({ type: 'pushState', enabled: this.boardPush.book.has(owner) } satisfies BoardServerMessage));
+      return;
+    }
+    const owner = attachment.owner;
+    if (!owner) return this.sendTo(ws, JSON.stringify({ type: 'boardError', error: 'hello' } satisfies BoardServerMessage));
+    if (msg.type === 'pushSubscribe' || msg.type === 'pushUnsubscribe') return this.handleBoardPush(ws, owner, msg);
+    const before = this.boardSignatures();
+    let result;
+    switch (msg.type) {
+      case 'post':
+        result = this.board.post(owner, msg);
+        break;
+      case 'postRoom':
+        result = this.board.postRoom(owner, msg);
+        break;
+      case 'withdraw':
+        result = this.board.withdraw(owner);
+        break;
+      case 'extend':
+        result = this.board.extend(owner);
+        break;
+      case 'join':
+        result = this.board.join(owner, msg.noteId, msg.gameId, msg.name);
+        break;
+      case 'unjoin':
+        result = this.board.unjoin(owner, msg.noteId);
+        break;
+      case 'confirm':
+        result = this.board.confirm(owner, msg.noteId, msg.ok);
+        break;
+    }
+    if (!result.ok && result.error) this.sendTo(ws, JSON.stringify({ type: 'boardError', error: result.error } satisfies BoardServerMessage));
+    await this.boardChanged(result.matches, before);
+  }
+
+  // Web Push fürs Brett
+
+  private pushSender(): PushSender | null {
+    this.boardPushSender ??= makePushSender(this.env);
+    return this.boardPushSender;
+  }
+
+  private async saveBoardPush(): Promise<void> {
+    await this.ctx.storage.put('boardPush', boardPushToJSON(this.boardPush));
+  }
+
+  private async handleBoardPush(ws: WebSocket, owner: string, msg: { type: 'pushSubscribe'; subscription: PushSubscriptionData } | { type: 'pushUnsubscribe' }): Promise<void> {
+    if (!pushConfigured(this.env)) return this.sendTo(ws, JSON.stringify({ type: 'pushState', enabled: false } satisfies BoardServerMessage));
+    if (msg.type === 'pushUnsubscribe') this.boardPush.book.remove(owner);
+    else if (!this.boardPush.book.set(owner, msg.subscription, Date.now())) return this.sendTo(ws, JSON.stringify({ type: 'boardError', error: 'rate' } satisfies BoardServerMessage));
+    await this.saveBoardPush();
+    this.sendTo(ws, JSON.stringify({ type: 'pushState', enabled: this.boardPush.book.has(owner) } satisfies BoardServerMessage));
+    await this.scheduleExpiry();
+  }
+
+  /** Zustand je Person mit Abo, vor einer Änderung des Bretts – damit danach klar ist, was neu ist. */
+  private boardSignatures(): Map<string, BoardSignature> {
+    const out = new Map<string, BoardSignature>();
+    if (!pushConfigured(this.env)) return out;
+    for (const { token: owner } of this.boardPush.book.toJSON()) out.set(owner, this.board.pushSignature(owner));
+    return out;
+  }
+
+  /** Hat die Person gerade eine offene Brett-Seite? Dann übernimmt die Seite selbst (Benachrichtigung im Browser). */
+  private boardConnected(owner: string): boolean {
+    return this.ctx.getWebSockets().some((ws) => boardAttachment(ws)?.owner === owner);
+  }
+
+  private async pushBoard(before: Map<string, BoardSignature>, matches: { owners: string[]; code: string }[]): Promise<void> {
+    const sender = this.pushSender();
+    if (!sender || !pushConfigured(this.env)) return;
+    try {
+      const now = Date.now();
+      const opts = { persist: () => this.saveBoardPush() };
+      for (const [owner, was] of before) {
+        if (this.boardConnected(owner)) continue;
+        for (const kind of boardPushKinds(was, this.board.pushSignature(owner))) await deliverBoardPush(this.boardPush, owner, kind, '#/brett', sender, now, opts);
+      }
+      for (const match of matches) for (const owner of match.owners) if (!this.boardConnected(owner)) await deliverBoardPush(this.boardPush, owner, 'boardRoom', `#/raum/${match.code}`, sender, now, opts);
+    } catch (err) {
+      console.error('Web Push (Brett) fehlgeschlagen:', err instanceof Error ? err.name : 'Fehler');
+    }
   }
 
   override async webSocketClose(ws: WebSocket, code: number): Promise<void> {
+    const attachment = boardAttachment(ws);
+    if (attachment?.owner) {
+      // Hat die Verfasserin keine Verbindung mehr, nimmt das Brett ihren Zettel nach einer Weile ab.
+      const stillThere = this.ctx.getWebSockets().some((other) => other !== ws && boardAttachment(other)?.owner === attachment.owner);
+      if (!stillThere) {
+        this.board.markAway(attachment.owner, true);
+        await this.boardChanged();
+      }
+    }
     try {
       ws.close(code === 1005 ? 1000 : code, 'Tschüss');
     } catch {
@@ -1178,7 +1570,49 @@ export class LobbyRegistry extends DurableObject<Env> {
 
   override async alarm(): Promise<void> {
     await this.prune();
+    const before = this.boardSignatures();
+    const matches = this.board.tick();
+    await this.boardChanged(matches, before);
     await this.scheduleExpiry();
+  }
+
+  /** Zahl der Zettel – für den Hinweis am Brett im Hauptmenü. */
+  async boardCount(): Promise<number> {
+    this.board.tick();
+    return this.board.size;
+  }
+
+  /** Das Brett hat sich geändert: Treffer zu Räumen machen, speichern, Wecker stellen und allen die neue Sicht schicken. */
+  private async boardChanged(matches: SeekMatch[] = [], before: Map<string, BoardSignature> = new Map()): Promise<void> {
+    const opened: { owners: string[]; code: string }[] = [];
+    for (const match of matches) {
+      const code = await this.openMatchedRoom(match);
+      if (code) opened.push({ owners: match.owners, code });
+    }
+    if (this.boardPush.book.prune(BOARD_PUSH_MAX_AGE_MS, Date.now()) > 0) await this.saveBoardPush();
+    await this.ctx.storage.put('board', this.board.toJSON());
+    await this.scheduleExpiry();
+    for (const ws of this.ctx.getWebSockets()) if (boardAttachment(ws)) this.sendTo(ws, this.boardMessage(boardAttachment(ws)!.owner));
+    await this.pushBoard(before, opened);
+  }
+
+  private boardMessage(owner: string | null): string {
+    return JSON.stringify({ type: 'board', you: owner, ...this.board.view(owner) } satisfies BoardServerMessage);
+  }
+
+  /** Eine Gruppe hat sich gefunden: Raum anlegen (die Verfasserin wird Raumleitung) und allen Bescheid geben. */
+  private async openMatchedRoom(match: SeekMatch): Promise<string | null> {
+    const sockets = this.ctx.getWebSockets().filter((ws) => boardAttachment(ws)?.owner && match.owners.includes(boardAttachment(ws)!.owner!));
+    const hostToken = sockets.map((ws) => boardAttachment(ws)!).find((a) => a.owner === match.host)?.token ?? null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = randomRoomCode(randomInt);
+      if (await roomStub(this.env, code).createSeeking(code, match.gameId, hostToken)) {
+        for (const ws of sockets) this.sendTo(ws, JSON.stringify({ type: 'matched', code, gameId: match.gameId } satisfies BoardServerMessage));
+        return code;
+      }
+    }
+    console.error('Schwarzes Brett: Raum für einen Treffer ließ sich nicht anlegen');
+    return null;
   }
 
   private async prune(): Promise<void> {
@@ -1190,11 +1624,17 @@ export class LobbyRegistry extends DurableObject<Env> {
     await this.ctx.storage.put('listings', this.directory.toJSON());
     await this.scheduleExpiry();
     const message = this.message();
-    for (const ws of this.ctx.getWebSockets()) this.sendTo(ws, message);
+    for (const ws of this.ctx.getWebSockets()) if (!boardAttachment(ws)) this.sendTo(ws, message);
+    // Zettel für eine Runde, die nicht mehr offen ist, fallen vom Brett.
+    const size = this.board.size;
+    const signatures = this.boardSignatures();
+    const matches = this.board.tick();
+    if (matches.length > 0 || this.board.size !== size) await this.boardChanged(matches, signatures);
   }
 
   private async scheduleExpiry(): Promise<void> {
-    const next = this.directory.nextExpiry();
+    const times = [this.directory.nextExpiry(), this.board.nextWakeup()].filter((t): t is number => t !== null);
+    const next = times.length > 0 ? Math.min(...times) : null;
     if (next === null) await this.ctx.storage.deleteAlarm();
     else await this.ctx.storage.setAlarm(Math.max(next + 1000, Date.now() + 1000));
   }
@@ -1407,10 +1847,16 @@ export class ClassRoom extends DurableObject<Env> {
         outcome = setLead(state, token, body.id, body.lead === true);
         break;
       case 'configure':
-        outcome = configureClass(state, token, { name: body.name, open: body.open, approval: body.approval, sections: body.sections, learning: body.learning, dueCards: body.dueCards }, now);
+        outcome = configureClass(state, token, { name: body.name, open: body.open, approval: body.approval, sections: body.sections, leaderboard: body.leaderboard, learning: body.learning, dueCards: body.dueCards }, now);
         // Ausgeschalteter Lernstand: alles Abgelegte wird gelöscht.
         if ('ok' in outcome && body.learning === false) await this.ctx.storage.delete([...(await this.ctx.storage.list({ prefix: 'progress:' })).keys()]);
         if ('ok' in outcome && body.dueCards === false) await this.ctx.storage.delete([...(await this.ctx.storage.list({ prefix: 'due:' })).keys()]);
+        break;
+      case 'announceRoom':
+        outcome = announceClassRoom(state, token, body.room, now);
+        break;
+      case 'closeRoom':
+        outcome = closeClassRoom(state, token, body.room);
         break;
       case 'addPack':
         outcome = addClassPack(state, token, { name: body.name, key: body.key }, now);
@@ -1951,6 +2397,9 @@ export class TournamentRoom extends DurableObject<Env> {
   /** Rollen aus der Organisation je Kennung, kurz gemerkt (#230); sie ändern sich selten, die Abfrage soll nicht jede Nachricht bremsen. */
   private orgCache = new Map<string, { roles: OrgRole[]; at: number }>();
   private lastListing: OpenRoomListing | null | undefined = undefined;
+  /** Web Push (#242): Abos, Spam-Schutz und gesendete Meldungen; liegt unter dem eigenen Schlüssel `push`, nicht im Turnier-Stand. */
+  private pushState: TournamentPushState | null = null;
+  private pushSenderCache: PushSender | null = null;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -2008,11 +2457,12 @@ export class TournamentRoom extends DurableObject<Env> {
   override async webSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
     const t = this.tournament;
     if (!t || typeof raw !== 'string') return;
-    const message = parseTournamentMessage(raw);
+    const message = parseTournamentMessage(raw, { allowLocal: allowLocalPush(this.env) });
     if (!message) return this.sendTo(ws, { type: 'error', message: 'Unbekannte Nachricht.' });
     if (message.type === 'hello') {
       await this.loadOrgRoles([message.token]);
       ws.serializeAttachment({ token: message.token, name: message.name, avatar: message.avatar } satisfies TournamentAttachment);
+      await this.sendPushState(ws, message.token);
       if (t.greet(message.token, message.name, message.avatar)) return this.changed();
       return this.sendView(ws);
     }
@@ -2020,6 +2470,7 @@ export class TournamentRoom extends DurableObject<Env> {
     if (!token) return this.sendTo(ws, { type: 'error', message: 'Erst anmelden.' });
     await this.loadOrgRoles([token]);
     if (message.type === 'attachSeries' || message.type === 'detachSeries') return this.handleSeries(ws, t, token, message);
+    if (message.type === 'pushSubscribe' || message.type === 'pushUnsubscribe') return this.handlePush(ws, t, token, message);
     const result = applyTournamentMessage(t, { token, name: name ?? '', avatar: avatar ?? '' }, message);
     if (result.kind === 'delete') return this.deleteTournament(t);
     if (result.kind === 'error') return this.sendTo(ws, { type: 'error', message: result.message });
@@ -2033,6 +2484,69 @@ export class TournamentRoom extends DurableObject<Env> {
       ws.close(code === 1005 ? 1000 : code, 'Tschüss');
     } catch {
       // Schon zu.
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Web Push (#242)
+
+  private pushConfigured(): boolean {
+    return pushConfigured(this.env);
+  }
+
+  private pushSender(): PushSender | null {
+    this.pushSenderCache ??= makePushSender(this.env);
+    return this.pushSenderCache;
+  }
+
+  private async loadPush(): Promise<TournamentPushState> {
+    this.pushState ??= pushStateFromJSON(await this.ctx.storage.get('push'), { allowLocal: allowLocalPush(this.env) });
+    return this.pushState;
+  }
+
+  private async savePush(): Promise<void> {
+    if (this.pushState) await this.ctx.storage.put('push', pushStateToJSON(this.pushState));
+  }
+
+  /** Sagt dem Gerät, ob für es Hinweise eingeschaltet sind; die Abo-Daten selbst gehen nie an jemanden. */
+  private async sendPushState(ws: WebSocket, token: string): Promise<void> {
+    if (!this.pushConfigured()) return;
+    this.sendTo(ws, { type: 'pushState', enabled: (await this.loadPush()).book.has(token) });
+  }
+
+  private async handlePush(ws: WebSocket, t: Tournament, token: string, message: { type: 'pushSubscribe'; subscription: PushSubscriptionData } | { type: 'pushUnsubscribe' }): Promise<void> {
+    if (!this.pushConfigured()) return this.sendTo(ws, { type: 'error', message: 'Hinweise aufs Gerät sind hier nicht eingerichtet.' });
+    const state = await this.loadPush();
+    if (message.type === 'pushUnsubscribe') {
+      state.book.remove(token);
+      await this.savePush();
+      return this.sendTo(ws, { type: 'pushState', enabled: false });
+    }
+    const snapshot = t.snapshot();
+    if (!snapshot.players.some((p) => ownsToken(p, token))) return this.sendTo(ws, { type: 'error', message: 'Hinweise gibt es nur für Teilnehmer.' });
+    if (!state.book.set(token, message.subscription, Date.now())) return this.sendTo(ws, { type: 'error', message: 'Es gibt schon zu viele Hinweis-Abos.' });
+    // Wer sich erst jetzt anmeldet, bekommt nichts über Vergangenes.
+    claimSilently(snapshot, state, token, Date.now());
+    await this.savePush();
+    this.sendTo(ws, { type: 'pushState', enabled: true });
+    await this.ctx.storage.setAlarm(Math.max(Math.min(t.nextWakeup(), nextPushWakeup(snapshot, Date.now()) ?? Infinity), Date.now() + 1000));
+  }
+
+  /** Versand im Hintergrund: Der Turnierablauf wartet nie darauf, Fehler halten ihn nicht auf. */
+  private async deliverPush(t: Tournament): Promise<void> {
+    const sender = this.pushSender();
+    if (!sender) return;
+    const state = await this.loadPush();
+    if (state.book.size === 0) return;
+    try {
+      const result = await runTournamentPush(t.snapshot(), state, sender, Date.now(), { persist: () => this.savePush() });
+      if (result.more) {
+        const soon = Date.now() + 10_000;
+        const current = await this.ctx.storage.getAlarm();
+        if (current === null || current > soon) await this.ctx.storage.setAlarm(soon);
+      }
+    } catch (err) {
+      console.error('Web Push fehlgeschlagen:', err instanceof Error ? err.name : 'Fehler');
     }
   }
 
@@ -2087,6 +2601,7 @@ export class TournamentRoom extends DurableObject<Env> {
   /** Löscht das Turnier samt Eintrag in „Offene Runden“; alle Verbindungen erfahren es. */
   private async deleteTournament(t: Tournament, reason = 'Turnier gelöscht'): Promise<void> {
     this.tournament = null;
+    this.pushState = null;
     await registryStub(this.env).removeRoom(t.snapshot().code).catch(() => undefined);
     await this.ctx.storage.deleteAll();
     for (const ws of this.ctx.getWebSockets()) {
@@ -2115,7 +2630,12 @@ export class TournamentRoom extends DurableObject<Env> {
     }
     if (!(await this.reportSeries(t)) && t.seriesDue()) retry = true;
     await this.ctx.storage.put('tournament', t.snapshot());
-    const wake = retry ? Date.now() + 30_000 : t.nextWakeup();
+    let wake = retry ? Date.now() + 30_000 : t.nextWakeup();
+    if (this.pushConfigured() && (await this.loadPush()).book.size > 0) {
+      // Erinnerung an die Frist (#242): der Wecker muss auch dann klingeln, wenn sonst nichts ansteht.
+      wake = Math.min(wake, nextPushWakeup(t.snapshot(), Date.now()) ?? Infinity);
+      this.ctx.waitUntil(this.deliverPush(t));
+    }
     await this.ctx.storage.setAlarm(Math.max(wake, Date.now() + 1000));
     await this.loadOrgRoles(this.ctx.getWebSockets().map((ws) => (ws.deserializeAttachment() as TournamentAttachment).token));
     for (const ws of this.ctx.getWebSockets()) this.sendView(ws);

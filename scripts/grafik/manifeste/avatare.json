@@ -1,0 +1,398 @@
+{
+  "beschreibung": "G4 (#312): 76 Spieler-Avatare; id = slug aus packages/online/src/avatars.ts, titel = Emoji-Kennung.",
+  "stil": "Painterly warm oil portrait of a friendly storybook animal as a guest in a medieval tavern, in the style of the reference images: simple medieval travelling clothes (hood, scarf, cap or collar, no armour), warm candlelight, plain dark warm brown background, big expressive eyes, cheerful and kind, suitable for children. Bust portrait facing the viewer, head large and centred so it stays recognisable inside a small circle, head and ears fully inside the image. No text, no letters, no numbers, no watermark.",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern clothing, logos, real people, weapons, scary or aggressive expression, busy background, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "1:1",
+  "ziel": "apps/web/src/assets/avatare",
+  "groesse": [
+    192,
+    192
+  ],
+  "praefix": "avatar-",
+  "referenzen": [
+    "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp",
+    "packages/games/marketplace/src/ui/figures/innkeeper.webp"
+  ],
+  "motive": [
+    {
+      "id": "hund",
+      "titel": "🐶",
+      "prompt": "A young beagle-like dog with a red neckerchief."
+    },
+    {
+      "id": "hund-2",
+      "titel": "🐕",
+      "prompt": "A tall golden farm dog with a leather collar."
+    },
+    {
+      "id": "pudel",
+      "titel": "🐩",
+      "prompt": "A white poodle with a lace collar."
+    },
+    {
+      "id": "fuehrhund",
+      "titel": "🦮",
+      "prompt": "A calm golden retriever with a leather harness."
+    },
+    {
+      "id": "assistenzhund",
+      "titel": "🐕‍🦺",
+      "prompt": "A black labrador with a blue cloth vest."
+    },
+    {
+      "id": "katze",
+      "titel": "🐱",
+      "prompt": "An orange tabby cat with a small bell."
+    },
+    {
+      "id": "katze-2",
+      "titel": "🐈",
+      "prompt": "A grey striped cat with a green scarf."
+    },
+    {
+      "id": "katze-3",
+      "titel": "🐈‍⬛",
+      "prompt": "A black cat with yellow eyes and a purple ribbon."
+    },
+    {
+      "id": "maus",
+      "titel": "🐭",
+      "prompt": "A grey mouse with a tiny felt cap."
+    },
+    {
+      "id": "maus-2",
+      "titel": "🐁",
+      "prompt": "A white mouse with a crumb of cheese."
+    },
+    {
+      "id": "ratte",
+      "titel": "🐀",
+      "prompt": "A brown rat in a patched hood, friendly."
+    },
+    {
+      "id": "hamster",
+      "titel": "🐹",
+      "prompt": "A golden hamster with full cheeks."
+    },
+    {
+      "id": "hase",
+      "titel": "🐰",
+      "prompt": "A white rabbit with a blue bow."
+    },
+    {
+      "id": "hase-2",
+      "titel": "🐇",
+      "prompt": "A brown hare with long ears and a straw hat."
+    },
+    {
+      "id": "kuh",
+      "titel": "🐮",
+      "prompt": "A brown-and-white cow with a flower behind the ear."
+    },
+    {
+      "id": "kuh-2",
+      "titel": "🐄",
+      "prompt": "A black-and-white cow with a cowbell."
+    },
+    {
+      "id": "schwein",
+      "titel": "🐷",
+      "prompt": "A pink piglet with a checked scarf."
+    },
+    {
+      "id": "schwein-2",
+      "titel": "🐖",
+      "prompt": "A large spotted pig with an apron."
+    },
+    {
+      "id": "pferd",
+      "titel": "🐎",
+      "prompt": "A chestnut horse with a braided mane."
+    },
+    {
+      "id": "ochse",
+      "titel": "🐂",
+      "prompt": "An ox with a wooden yoke ring."
+    },
+    {
+      "id": "wasserbueffel",
+      "titel": "🐃",
+      "prompt": "A water buffalo with wide horns and a woven band."
+    },
+    {
+      "id": "widder",
+      "titel": "🐏",
+      "prompt": "A ram with curled horns."
+    },
+    {
+      "id": "schaf",
+      "titel": "🐑",
+      "prompt": "A woolly sheep with a small bell."
+    },
+    {
+      "id": "ziege",
+      "titel": "🐐",
+      "prompt": "A goat with a little beard and a red cap."
+    },
+    {
+      "id": "lama",
+      "titel": "🦙",
+      "prompt": "A llama with a colourful woven blanket collar."
+    },
+    {
+      "id": "hirsch",
+      "titel": "🦌",
+      "prompt": "A stag with small antlers and a green cloak."
+    },
+    {
+      "id": "fuchs",
+      "titel": "🦊",
+      "prompt": "A red fox with a hooded cape."
+    },
+    {
+      "id": "baer",
+      "titel": "🐻",
+      "prompt": "A brown bear with a honey-coloured scarf."
+    },
+    {
+      "id": "dachs",
+      "titel": "🦡",
+      "prompt": "A badger with a waistcoat."
+    },
+    {
+      "id": "waschbaer",
+      "titel": "🦝",
+      "prompt": "A raccoon with a traveller's bag strap."
+    },
+    {
+      "id": "stinktier",
+      "titel": "🦨",
+      "prompt": "A skunk with a flower in its paw."
+    },
+    {
+      "id": "otter",
+      "titel": "🦦",
+      "prompt": "An otter with a fisherman's cap."
+    },
+    {
+      "id": "eichhoernchen",
+      "titel": "🐿️",
+      "prompt": "A red squirrel holding a hazelnut."
+    },
+    {
+      "id": "faultier",
+      "titel": "🦥",
+      "prompt": "A sleepy smiling sloth with a nightcap."
+    },
+    {
+      "id": "loewe",
+      "titel": "🦁",
+      "prompt": "A lion with a small golden circlet."
+    },
+    {
+      "id": "tiger",
+      "titel": "🐯",
+      "prompt": "A tiger cub face with a blue collar."
+    },
+    {
+      "id": "tiger-2",
+      "titel": "🐅",
+      "prompt": "An adult tiger with an orange sash, seen slightly from the side."
+    },
+    {
+      "id": "leopard",
+      "titel": "🐆",
+      "prompt": "A leopard with a spotted hood."
+    },
+    {
+      "id": "zebra",
+      "titel": "🦓",
+      "prompt": "A zebra with a red headband."
+    },
+    {
+      "id": "gorilla",
+      "titel": "🦍",
+      "prompt": "A gentle gorilla with a leather vest."
+    },
+    {
+      "id": "orangutan",
+      "titel": "🦧",
+      "prompt": "An orangutan with a straw hat."
+    },
+    {
+      "id": "affe",
+      "titel": "🐵",
+      "prompt": "A small monkey with a jester's collar."
+    },
+    {
+      "id": "elefant",
+      "titel": "🐘",
+      "prompt": "An elephant with a tasselled headcloth."
+    },
+    {
+      "id": "nilpferd",
+      "titel": "🦛",
+      "prompt": "A hippo with a tiny hat."
+    },
+    {
+      "id": "nashorn",
+      "titel": "🦏",
+      "prompt": "A rhino with a knitted scarf."
+    },
+    {
+      "id": "kamel",
+      "titel": "🐪",
+      "prompt": "A dromedary with a striped travelling cloth."
+    },
+    {
+      "id": "trampeltier",
+      "titel": "🐫",
+      "prompt": "A shaggy two-humped camel with a fur collar."
+    },
+    {
+      "id": "giraffe",
+      "titel": "🦒",
+      "prompt": "A giraffe, head and upper neck only, with a neck scarf."
+    },
+    {
+      "id": "kaenguru",
+      "titel": "🦘",
+      "prompt": "A kangaroo with a satchel strap."
+    },
+    {
+      "id": "panda",
+      "titel": "🐼",
+      "prompt": "A panda with a bamboo-green scarf."
+    },
+    {
+      "id": "koala",
+      "titel": "🐨",
+      "prompt": "A koala with a leaf."
+    },
+    {
+      "id": "krokodil",
+      "titel": "🐊",
+      "prompt": "A smiling crocodile with a little waistcoat, mouth closed."
+    },
+    {
+      "id": "frosch",
+      "titel": "🐸",
+      "prompt": "A green frog with a small ruffled court collar."
+    },
+    {
+      "id": "schildkroete",
+      "titel": "🐢",
+      "prompt": "An old tortoise with spectacles."
+    },
+    {
+      "id": "einhorn",
+      "titel": "🦄",
+      "prompt": "A white unicorn with a flower wreath."
+    },
+    {
+      "id": "ente",
+      "titel": "🦆",
+      "prompt": "A mallard duck with a sailor's scarf."
+    },
+    {
+      "id": "hahn",
+      "titel": "🐓",
+      "prompt": "A rooster with a proud red comb and a waistcoat."
+    },
+    {
+      "id": "truthahn",
+      "titel": "🦃",
+      "prompt": "A turkey with a wide ruff collar."
+    },
+    {
+      "id": "pfau",
+      "titel": "🦚",
+      "prompt": "A peacock with a few tail feathers visible behind the head."
+    },
+    {
+      "id": "papagei",
+      "titel": "🦜",
+      "prompt": "A red-and-blue parrot with a small sailor's cap."
+    },
+    {
+      "id": "schwan",
+      "titel": "🦢",
+      "prompt": "A white swan with a pearl ribbon."
+    },
+    {
+      "id": "flamingo",
+      "titel": "🦩",
+      "prompt": "A pink flamingo with a silk scarf."
+    },
+    {
+      "id": "taube",
+      "titel": "🕊️",
+      "prompt": "A white dove with a letter pouch strap."
+    },
+    {
+      "id": "biene",
+      "titel": "🐝",
+      "prompt": "A round friendly bee with a tiny cap."
+    },
+    {
+      "id": "krake",
+      "titel": "🐙",
+      "prompt": "An orange octopus with a tavern mug in one arm."
+    },
+    {
+      "id": "tintenfisch",
+      "titel": "🦑",
+      "prompt": "A pink squid with a quill pen."
+    },
+    {
+      "id": "garnele",
+      "titel": "🦐",
+      "prompt": "A pink shrimp with a tiny collar."
+    },
+    {
+      "id": "krabbe",
+      "titel": "🦀",
+      "prompt": "A red crab with a cook's hat."
+    },
+    {
+      "id": "kugelfisch",
+      "titel": "🐡",
+      "prompt": "A round pufferfish with a surprised smile."
+    },
+    {
+      "id": "tropenfisch",
+      "titel": "🐠",
+      "prompt": "A striped tropical fish with a ribbon."
+    },
+    {
+      "id": "fisch",
+      "titel": "🐟",
+      "prompt": "A blue river fish with a small hat."
+    },
+    {
+      "id": "delphin",
+      "titel": "🐬",
+      "prompt": "A dolphin with a shell necklace."
+    },
+    {
+      "id": "wal",
+      "titel": "🐳",
+      "prompt": "A small blue whale with a spout like a feather plume."
+    },
+    {
+      "id": "hai",
+      "titel": "🦈",
+      "prompt": "A friendly shark with a napkin collar, mouth closed."
+    },
+    {
+      "id": "raupe",
+      "titel": "🐛",
+      "prompt": "A green caterpillar with a tiny scarf."
+    },
+    {
+      "id": "schmetterling",
+      "titel": "🦋",
+      "prompt": "A blue butterfly, body and upper wings, with a tiny ruff."
+    }
+  ]
+}

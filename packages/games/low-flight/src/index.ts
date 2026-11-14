@@ -1,7 +1,8 @@
 import type { GameModule } from '@brett-und-blatt/engine';
 import { lowFlightBot } from './bots';
 import { meta } from './meta';
-import { GOALS, applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type LowFlightMove, type LowFlightState, type LowFlightView } from './rules';
+import { GOALS, applyMove, currentPlayers, eventView, isLegal, legalMoves, playerView, result, sampleHidden, setup, type LowFlightMove, type LowFlightState, type LowFlightView } from './rules';
+import { describeMove } from './describe';
 
 export type { LowFlightMove, LowFlightState, LowFlightView } from './rules';
 
@@ -47,6 +48,37 @@ export const gameModule: GameModule<LowFlightState, LowFlightMove, LowFlightView
       ],
       default: 'off',
     },
+    {
+      id: 'diagonals',
+      label: 'Diagonalen abräumen',
+      description: 'Auch eine ganze Diagonale gleicher Karten (Länge 3) wird abgeräumt.',
+      choices: [
+        { value: 'off', label: 'Aus' },
+        { value: 'on', label: 'An' },
+      ],
+      default: 'off',
+    },
+    {
+      id: 'actionCards',
+      label: 'Aktionskarten',
+      description: 'Kartenwerte 7 bis 10 lösen beim Abwerfen Aktionen aus (Spähen, Tauschen, Doppelzug, Doppel-Aufdecken).',
+      choices: [
+        { value: 'off', label: 'Aus' },
+        { value: 'on', label: 'An' },
+      ],
+      default: 'off',
+      when: { variant: ['classic'] },
+    },
+    {
+      id: 'memoryMode',
+      label: 'Gedächtnis-Modus',
+      description: 'Einmal angesehene verdeckte Karten dürfen während der Partie nicht erneut aufgedeckt eingesehen werden (keine Spickzettel-Notizen).',
+      choices: [
+        { value: 'off', label: 'Aus' },
+        { value: 'on', label: 'An' },
+      ],
+      default: 'off',
+    },
   ],
   timePresets: {
     relaxed: { kind: 'none' },
@@ -58,7 +90,9 @@ export const gameModule: GameModule<LowFlightState, LowFlightMove, LowFlightView
   legalMoves,
   isLegal,
   applyMove,
+  eventView,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [lowFlightBot],

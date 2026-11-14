@@ -160,6 +160,7 @@ Die Plattform richtet sich auch an Kinder, Schülerinnen, Schüler und Fremde. D
 - **Spitznamen-Filter;** die Raumleitung kann Spieler entfernen. Öffentliche Räume mit Fremden kommen erst später und bekommen eine Melden-Funktion. Standard sind private Räume per Code.
 - **Daten in der EU** (Durable Objects mit `jurisdiction('eu')`), kurze Speicherdauer (inaktive Räume werden gelöscht), keine Tracker, keine Werbung.
 - **Impressum und Datenschutzerklärung** auf `spiele.lipponer.de` (`#/impressum`, `#/datenschutz`); das Impressum verweist auf die Anbieterangaben auf lipponer.de. Die Datenschutzerklärung nennt auch Cloudflare als Betreiber des Spieleservers.
+- **Lernpakete und Lernstand (Anki-kompatibel, #101):** Importierte Pakete und der eigene Lernstand liegen auf dem Gerät und im verschlüsselten Pass-Abgleich. Ein Paket wird nur auf ausdrücklichen Knopfdruck geteilt (verschlüsselt als eine Datei in Cloudflare R2, EU; der Schlüssel steht nur im Link). Den Lernstand sieht eine Klassenleitung nur, wenn sie ihn einschaltet **und** das Mitglied (bei Kindern: die Eltern) zustimmt, Ende-zu-Ende verschlüsselt. Wortlaut in der Datenschutzerklärung (`Legal.tsx`), Stand und Dateien in [`spiele/spielerpass.md`](spiele/spielerpass.md).
 - **Schule:** Vor dem Einsatz im Unterricht mit dem schulischen Datenschutz abstimmen. Dank Datensparsamkeit ist das wenig Aufwand.
 - **Repo:** Keine Geheimnisse im Repo (Zugangsdaten nur als GitHub-Secrets), keine Schülerdaten in Code oder Issues. Commits laufen über die noreply-Adresse von GitHub.
 
@@ -208,6 +209,12 @@ brett-und-blatt/
 | 7 Komplett ✅ | Vollausbau + Familie/Mathe | Eins! (Uno), Mau-Mau, Dame, Nicht ärgern! (Ludo), Poker, Binokel, Wortgitter/Scrabble, Bibel-Quiz, Galgenmännchen, Wort-Salat, Mathe-Module (Zielzahl, Teiler-Duell, Rechenmauer, Enten-Rallye) |
 
 Die Pläne der einzelnen Spiele stehen in [`spiele/`](spiele/README.md).
+
+**Nach Etappe 7** kamen Plattform-Vorhaben dazu, die im Fahrplan oben nicht stehen: Tisch-Bildschirm und Hand-Ansicht (#100), Spielerpass mit Konto-Anmeldung (#135), Turniersoftware (W-058, [`spiele/turniersoftware.md`](spiele/turniersoftware.md)), Rechte und Rollen (#217, [`spiele/rechte-und-rollen.md`](spiele/rechte-und-rollen.md)) und Anki-kompatible Lernpakete (#101). Den laufenden Stand führen die GitHub-Issues, [`CLAUDE.md`](../CLAUDE.md) und [`spiele/offene-plaene.md`](spiele/offene-plaene.md).
+
+## Lernpakete (Anki-kompatibel, #101)
+
+Brett & Blatt versteht das Datenmodell von Anki (Notizen, Notiztypen, Stapel, Karten, später Medien und Lernstand mit FSRS). Pakete lassen sich aus Anki importieren (`.apkg`, alle drei Fassungen; Anki-Text), nach Anki exportieren (Legacy 2, später das neue Format) und im Spiel bearbeiten, ohne dass etwas verloren geht, das wir nicht verstehen (unbekannte Schlüssel bleiben erhalten). Die Spiele bekommen ein Paket über die Sicht „Paket = Stapel“ (Option `pack`); Paare finden meldet dem Lernbuch, welche Paare sicher saßen, und ein Karteikasten (`#/lernen`) plant Wiederholungen mit FSRS. Lehrkräfte legen Pakete in die Klasse (Teilen über R2). Entscheidungen und Rechercheergebnis: [`spiele/anki-recherche.md`](spiele/anki-recherche.md); Schritte L1 bis L8 (#218 bis #225) und Dateien: [`spiele/spielerpass.md`](spiele/spielerpass.md), Abschnitte „Stand #101“. Die Spielpläne [`paare-finden.md`](spiele/paare-finden.md), [`bingo.md`](spiele/bingo.md), [`schwarzer-peter.md`](spiele/schwarzer-peter.md) und [`quartett.md`](spiele/quartett.md) nennen, was jedes Spiel davon nutzt.
 
 ## Vorgemerkt: Farbe & Form (Qwirkle-artig)
 

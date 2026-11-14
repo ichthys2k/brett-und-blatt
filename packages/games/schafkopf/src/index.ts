@@ -23,12 +23,14 @@ export type {
   SchafkopfPhase,
   SchafkopfState,
 };
+export { schafkopfCardDescription } from './cardDescription.js';
 export {
   CONTRACT_RANKS,
   SCHAFKOPF_RANKS_LONG,
   SCHAFKOPF_RANKS_SHORT,
   createSchafkopfDeck,
 } from './rules.js';
+import { describeMove } from './describe';
 
 export const gameModule: GameModule<SchafkopfState, SchafkopfMove> = {
   info: meta,
@@ -95,6 +97,7 @@ export const gameModule: GameModule<SchafkopfState, SchafkopfMove> = {
   },
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [schafkopfBot, ...generalBots<SchafkopfState, SchafkopfMove, SchafkopfState>()],

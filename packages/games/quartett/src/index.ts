@@ -3,6 +3,7 @@ import { quartettBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, legalMoves, playerView, result, sampleHidden, setup, type QuartettMove, type QuartettState } from './rules';
 import { CARD_SETS, SET_IDS } from './sets';
+import { describeMove } from './describe';
 
 export type { Ask, Play, QuartettMode, QuartettMove, QuartettState, StackCard, Trick } from './rules';
 export { askTargets, askableCards, cardsInPlay, collectKnowledge, setOf } from './rules';
@@ -12,6 +13,16 @@ export { CARD_SETS, SET_IDS, cardOf, cardSet, compareValues, formatValue, format
 export const gameModule: GameModule<QuartettState, QuartettMove> = {
   info: meta,
   options: [
+    {
+      // Eigenes Kartenset aus Anki (#270, #277): nur geänderte Karten als JSON; das Spiel prüft sie mit sanitizeCustomCardCatalog.
+      id: 'customCardCatalog',
+      label: 'Eigenes Kartenset',
+      hidden: true,
+      pattern: '\\{[\\s\\S]*\\}',
+      maxLength: 14000,
+      choices: [{ value: '', label: 'Standardkarten' }],
+      default: '',
+    },
     {
       id: 'mode',
       label: 'Spielweise',
@@ -62,6 +73,7 @@ export const gameModule: GameModule<QuartettState, QuartettMove> = {
   legalMoves,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [quartettBot, ...generalBots<QuartettState, QuartettMove, QuartettState>()],

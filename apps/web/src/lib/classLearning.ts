@@ -50,18 +50,49 @@ export async function ensureLeadKeys(): Promise<LeadKeyPair> {
   return fresh;
 }
 
+import { passSyncSoon } from './playerPass';
+
 // ---------------------------------------------------------------- Zuordnung Klassenpaket ↔ Paket auf diesem Gerät
 
 export const CLASS_PACKS_KEY = 'brett-und-blatt:klassenpakete';
-type Links = Record<string, Record<string, string>>;
-const loadLinks = (): Links => {
+export type ClassPackLinks = Record<string, Record<string, string>>;
+const loadLinks = (): ClassPackLinks => {
   const value = read(CLASS_PACKS_KEY);
-  return value && typeof value === 'object' ? (value as Links) : {};
+  return value && typeof value === 'object' ? (value as ClassPackLinks) : {};
 };
 export const classPackLinks = (code: string): Record<string, string> => loadLinks()[code] ?? {};
 export function linkClassPack(code: string, classPackId: string, localId: string): void {
   const all = loadLinks();
   write(CLASS_PACKS_KEY, { ...all, [code]: { ...(all[code] ?? {}), [classPackId]: localId } });
+  passSyncSoon();
+}
+
+export function sanitizeClassPackLinks(value: unknown): ClassPackLinks {
+  if (!value || typeof value !== 'object') return {};
+  const out: ClassPackLinks = {};
+  for (const [code, map] of Object.entries(value)) {
+    if (typeof code !== 'string' || !map || typeof map !== 'object') continue;
+    const inner: Record<string, string> = {};
+    for (const [packId, localId] of Object.entries(map)) {
+      if (typeof packId === 'string' && typeof localId === 'string') {
+        inner[packId.slice(0, 40)] = localId.slice(0, 40);
+      }
+    }
+    out[code] = inner;
+  }
+  return out;
+}
+
+export function mergeClassPackLinks(remote: ClassPackLinks, local: ClassPackLinks): ClassPackLinks {
+  const merged: ClassPackLinks = { ...remote };
+  for (const [code, map] of Object.entries(local)) {
+    merged[code] = { ...(merged[code] ?? {}), ...map };
+  }
+  return merged;
+}
+
+export function sameClassPackLinks(a: ClassPackLinks, b: ClassPackLinks): boolean {
+  return JSON.stringify(sanitizeClassPackLinks(a)) === JSON.stringify(sanitizeClassPackLinks(b));
 }
 
 // ---------------------------------------------------------------- Einwilligung

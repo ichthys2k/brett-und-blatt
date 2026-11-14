@@ -191,6 +191,7 @@ export interface RunState {
   discardsUsed: number;
   /** Verlorene Leben (Abwehr). */
   livesLost: number;
+  customMods?: Record<string, any>;
 }
 
 export type GameMode = 'solo' | 'duel' | 'showdown' | 'survival' | 'race';
@@ -227,6 +228,8 @@ export interface SorterState {
   endless: boolean;
   /** Gesperrte Inhalte („mod:twins“, „tool:bin2“ …), siehe unlocks.ts. */
   locked: string[];
+  customMods?: Record<string, any>;
+  cardCatalogChecksum?: string;
 }
 
 export type SorterMove =

@@ -7,15 +7,21 @@ import { DeckSelection, MulliganPhase } from './phases';
 import { PlayBoard } from './PlayBoard';
 import './styles.css';
 import { albumSpec } from './album';
+import { setPartyCards } from './cardLookup';
+import type { CustomCard } from '../carddefs';
 
 const LABELS = ['Blau', 'Rot'];
 
 function Board(props: BoardProps<DrachenspielView, DrachenspielMove>) {
   const { view, viewer, onMove } = props;
-  const me = view.players[typeof viewer === 'number' ? viewer : 0];
+  setPartyCards(view.customCards as Record<string, CustomCard> | undefined);
+  const mySeat: SeatId = typeof viewer === 'number' ? viewer : 0;
+  const oppSeat: SeatId = (1 - mySeat) as SeatId;
+  const me = view.players[mySeat];
+  const opp = view.players[oppSeat];
   if (me.customDeck) markCustomDeck(view.options.playId);
-  if (view.phase === 'deckSelection') return <DeckSelection view={view} me={me} onMove={onMove} timed={Boolean(props.clock?.running)} />;
-  if (view.phase === 'mulligan') return <MulliganPhase me={me} onMove={onMove} />;
+  if (view.phase === 'deckSelection') return <DeckSelection view={view} me={me} oppTheme={opp?.deckTheme} onMove={onMove} timed={Boolean(props.clock?.running)} />;
+  if (view.phase === 'mulligan') return <MulliganPhase me={me} oppTheme={opp?.deckTheme} onMove={onMove} />;
   return <PlayBoard {...props} />;
 }
 
@@ -52,7 +58,7 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
   seatDetail: (view, seat) => {
     const p = view.players[seat];
     if (!p) return null;
-    return `❤️ ${p.health}${p.armor > 0 ? ` 🛡️ ${p.armor}` : ''} | 💧 ${p.mana}/${p.maxMana}`;
+    return `🚩 ${p.health}${p.armor > 0 ? ` 🛡️ ${p.armor}` : ''} | 🏇 ${p.mana}/${p.maxMana}`;
   },
 };
 

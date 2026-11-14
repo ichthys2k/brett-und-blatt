@@ -134,6 +134,10 @@ Eine Zug-Uhr für die Spieler gibt es nicht: Wer nicht markiert, verpasst nur et
 
 Lern-Bingo nutzt die vorhandenen Paare-Pakete unter `content/paare/`: `a` ist die Ansage, `b` steht auf der Karte. Voraussetzung ist, dass die `b`-Seiten eindeutig sind (beim Einmaleins steht 12 deshalb nur einmal drin). Für eine 5 × 5-Karte braucht ein Paket mindestens 24 Paare, besser 40 und mehr, damit sich die Karten unterscheiden. Eigene Bingo-Pakete (z. B. Bibelverse und Bücher, Hauptstädte) kommen in denselben Aufbau.
 
+## Lernpakete (Anki, #101)
+
+Auch hier kommt das Paket aus der Sammlung im Pass („Paket = Stapel“, Option `pack`). Mit „Fällige Karten bevorzugen“ zieht das Spiel zuerst Karten, die der Karteikasten fällig hat. Bingo meldet **keine** Ergebnisse ans Lernbuch zurück (das macht nur Paare finden). Siehe #101, L6 (#223).
+
 ## Tests
 
 - Zahlenkarten: Spalten im richtigen Bereich, keine doppelten Zahlen, freies Mittelfeld; alle Karten einer Partie verschieden.

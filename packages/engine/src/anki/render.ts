@@ -248,6 +248,59 @@ export interface RenderOptions {
   flag?: number;
 }
 
+export interface RenderCardOptions extends RenderOptions {
+  /** Überschreibt oder ergänzt Felder nur für diesen Render-Vorgang (z. B. dynamische Spielbeschreibung, Mathe-Term, Trumpf-Rolle). */
+  runtimeFields?: Record<string, string>;
+  /** Map von Dateiname -> Blob-URL / Asset-Pfad für <img src="..."> aus collection.media oder lokalen Spiel-Assets. */
+  mediaUrlMap?: Record<string, string>;
+}
+
+export interface RenderedCardSide {
+  html: string;
+  scopedCss: string;
+  errors: string[];
+}
+
+/** Bekannte dynamische Laufzeit-Platzhalter, die in Vorlagen bedingt verwendet werden können. */
+export const VIRTUAL_RUNTIME_FIELDS = [
+  'SpielHinweis',
+  'AnzeigeWert',
+  'TrumpfRang',
+  'StichHinweis',
+  'TrumpfRolle',
+  'AktuellerAngriff',
+  'AktuellesLeben',
+  'KartenStatus',
+] as const;
+
+function makeMediaResolver(options: RenderCardOptions): ((name: string) => string | null) | undefined {
+  if (!options.media && !options.mediaUrlMap) return undefined;
+  return (name: string): string | null => {
+    const raw = name.replace(/^\.\//, '');
+    if (options.mediaUrlMap) {
+      if (Object.prototype.hasOwnProperty.call(options.mediaUrlMap, raw)) {
+        return options.mediaUrlMap[raw] ?? null;
+      }
+      if (Object.prototype.hasOwnProperty.call(options.mediaUrlMap, name)) {
+        return options.mediaUrlMap[name] ?? null;
+      }
+    }
+    return options.media ? (options.media(raw) ?? options.media(name)) : null;
+  };
+}
+
+function applyMediaUrlMap(html: string, map?: Record<string, string>): string {
+  if (!map || Object.keys(map).length === 0) return html;
+  return html.replace(/<img\b([^>]*?)\bsrc=(["'])([^"']+)\2([^>]*?)>/gi, (match, before, quote, src, after) => {
+    const cleanSrc = src.replace(/^\.\//, '');
+    const mapped = map[cleanSrc] ?? map[src];
+    if (mapped) {
+      return `<img${before}src=${quote}${escapeHtml(mapped)}${quote}${after}>`;
+    }
+    return match;
+  });
+}
+
 export interface RenderedCard {
   question: string;
   answer: string;
@@ -257,14 +310,21 @@ export interface RenderedCard {
 }
 
 /** Zeichnet Vorder- und Rückseite der Karte `ord` (ab 0) einer Notiz. */
-export function renderCard(col: AnkiCollection, note: AnkiNote, ord: number, options: RenderOptions = {}): RenderedCard {
-  const nt = col.notetypes.find((t) => t.id === note.mid);
+export function renderCard(
+  colOrNotetype: AnkiCollection | AnkiNotetype,
+  note: AnkiNote,
+  ord: number,
+  options: RenderCardOptions = {},
+): RenderedCard {
+  const isCol = 'notetypes' in colOrNotetype && Array.isArray((colOrNotetype as AnkiCollection).decks);
+  const nt = 'flds' in colOrNotetype ? colOrNotetype : colOrNotetype.notetypes.find((t) => t.id === note.mid);
   if (!nt) return { question: '', answer: '', css: '', errors: ['Der Notiztyp fehlt.'] };
   const template = nt.type === 1 ? nt.tmpls[0] : nt.tmpls[ord];
   if (!template) return { question: '', answer: '', css: '', errors: [`Der Notiztyp „${nt.name}“ hat keine Vorlage Nummer ${ord + 1}.`] };
-  const deck = options.deckName ?? col.decks.find((d) => d.id === note.did)?.name ?? '';
+  const deck = options.deckName ?? (isCol ? (colOrNotetype as AnkiCollection).decks.find((d) => d.id === note.did)?.name : undefined) ?? '';
   const values = new Map<string, string>();
-  nt.flds.forEach((f, i) => values.set(f.name, note.fields[i] ?? ''));
+  const rawFields = note.fields ?? (note as unknown as { flds?: string[] }).flds ?? [];
+  nt.flds.forEach((f, i) => values.set(f.name, rawFields[i] ?? ''));
   const specials: Record<string, string> = {
     Tags: note.tags.join(' '),
     Type: nt.name,
@@ -274,6 +334,20 @@ export function renderCard(col: AnkiCollection, note: AnkiNote, ord: number, opt
     CardFlag: options.flag ? `flag${options.flag}` : '',
   };
   for (const [key, value] of Object.entries(specials)) if (!values.has(key)) values.set(key, escapeHtml(value));
+
+  // Virtuelle Laufzeit-Platzhalter vorab registrieren, damit {{#SpielHinweis}} und {{^SpielHinweis}} fehlerfrei ausgewertet werden
+  for (const field of VIRTUAL_RUNTIME_FIELDS) {
+    if (!values.has(field)) values.set(field, '');
+  }
+
+  // runtimeFields überschreibt oder ergänzt Felder für diesen Render-Vorgang
+  if (options.runtimeFields) {
+    for (const [key, value] of Object.entries(options.runtimeFields)) {
+      values.set(key, value);
+    }
+  }
+
+  const resolveMedia = makeMediaResolver(options);
   const errors: string[] = [];
   const cloze = nt.type === 1 ? ord + 1 : 0;
   const frontCtx: Context = { values, cloze, errors, answer: false, front: '', typeExpected: null, typed: options.typed };
@@ -281,11 +355,33 @@ export function renderCard(col: AnkiCollection, note: AnkiNote, ord: number, opt
   // Auf der Rückseite steht an der Stelle des Eingabefelds der Vergleich (Anki: „FrontSide“ zeigt das Eingabefeld der Vorderseite).
   const frontForAnswer = frontCtx.typeExpected === null ? front : front.split(TYPE_INPUT).join(typeAnswerHtml(frontCtx.typeExpected, options.typed));
   const answer = renderTokens(tokenize(template.afmt), { values, cloze, errors, answer: true, front: frontForAnswer, typeExpected: frontCtx.typeExpected, typed: options.typed });
-  const safe = (html: string) => sanitizeHtml(html, options.media ? { media: options.media } : {});
+  const safe = (html: string) => applyMediaUrlMap(sanitizeHtml(html, resolveMedia ? { media: resolveMedia } : {}), options.mediaUrlMap);
   // Bilder verdecken (L8): Die Vorlage von Anki zeichnet die Masken mit einem Programm; hier zeichnen wir sie selbst.
   const occluded = nt.type === 1 ? occlusionCard(nt, note, cloze, safe) : null;
-  if (occluded) return { question: occluded.question, answer: occluded.answer, css: scopeCss(nt.css, CARD_SCOPE, options.media), errors: [...new Set(errors)] };
-  return { question: safe(front), answer: safe(answer), css: scopeCss(nt.css, CARD_SCOPE, options.media), errors: [...new Set(errors)] };
+  if (occluded) return { question: occluded.question, answer: occluded.answer, css: scopeCss(nt.css, CARD_SCOPE, resolveMedia), errors: [...new Set(errors)] };
+  return { question: safe(front), answer: safe(answer), css: scopeCss(nt.css, CARD_SCOPE, resolveMedia), errors: [...new Set(errors)] };
+}
+
+/**
+ * Rendert eine einzelne Seite einer Karte (z. B. für <GameCard ankiFront={...}>).
+ * Unterstützt dynamische runtimeFields, mediaUrlMap und sowohl AnkiCollection als auch AnkiNotetype.
+ */
+export function renderCardSide(
+  colOrNotetype: AnkiCollection | AnkiNotetype,
+  note: AnkiNote,
+  ord = 0,
+  sideOrOptions: 'front' | 'back' | 'question' | 'answer' | RenderCardOptions = 'front',
+  maybeOptions: RenderCardOptions = {},
+): RenderedCardSide {
+  const side = typeof sideOrOptions === 'string' ? sideOrOptions : 'front';
+  const options = typeof sideOrOptions === 'object' && sideOrOptions !== null ? sideOrOptions : maybeOptions;
+  const isAnswer = side === 'back' || side === 'answer';
+  const rendered = renderCard(colOrNotetype, note, ord, options);
+  return {
+    html: isAnswer ? rendered.answer : rendered.question,
+    scopedCss: rendered.css,
+    errors: rendered.errors,
+  };
 }
 
 /**
@@ -309,7 +405,7 @@ function occlusionCard(nt: AnkiNotetype, note: AnkiNote, active: number, safe: (
 }
 
 /** Vorschau für Notiztyp-Editor und Notizen: die Karten (Vorlagen bzw. Lücken), die diese Notiz ergibt, mit Vorder- und Rückseite. */
-export function previewCards(col: AnkiCollection, note: AnkiNote, options: RenderOptions = {}): { ord: number; name: string; card: RenderedCard }[] {
+export function previewCards(col: AnkiCollection, note: AnkiNote, options: RenderCardOptions = {}): { ord: number; name: string; card: RenderedCard }[] {
   const nt = col.notetypes.find((t) => t.id === note.mid) as AnkiNotetype | undefined;
   if (!nt) return [];
   const ords = nt.type === 1 ? clozeOrds(nt, note.fields) : nt.req.filter(([, kind]) => kind !== 'none').map(([ord]) => ord);

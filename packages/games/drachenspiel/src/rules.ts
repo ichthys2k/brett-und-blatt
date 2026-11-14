@@ -10,6 +10,7 @@ import {
   type Result,
   type SeatId,
   type TimePresets,
+  sanitizeCustomCardCatalog,
 } from '@brett-und-blatt/engine';
 import { ALL_CARD_IDS, ALL_SPELL_IDS, CARDS_DB, STAR_CARD } from './cards';
 import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, TRAP_LIMIT, advanceQuest, canStrike, canUseBuilding, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueueOwnBoard, enqueuePlayed, fireTraps, isOverTurnLimit, refreshStats, resolveChoice, settle, strike, wakeDormant } from './core/effects';
@@ -18,6 +19,11 @@ import { DECK_THEMES, DECK_THEME_IDS, themeCardIds } from './decks';
 import { SCENARIO_PATTERN, scenarioFrom, TREASURES_PATTERN, type Scenario, type SideSetup } from './modes/scenarios';
 import { HOUSE_POWERS, powerIsUsable } from './powers';
 import { meta } from './meta';
+
+import { cardDefOf } from './carddefs';
+import { drachenspielCustomCards } from './customcards';
+
+export { cardDefOf };
 import type {
   CardDefinition,
   CardInstance,
@@ -35,8 +41,19 @@ import type {
 } from './types';
 import { bots } from './bots';
 import { prepare } from './server';
+import { describeMove } from './describe';
 
 export const options: OptionSpec[] = [
+  {
+    // Eigenes Kartenset aus Anki (#270, #277): nur geänderte Karten als JSON; das Spiel prüft sie mit sanitizeCustomCardCatalog.
+    id: 'customCardCatalog',
+    label: 'Eigenes Kartenset',
+    hidden: true,
+    pattern: '\\{[\\s\\S]*\\}',
+    maxLength: 14000,
+    choices: [{ value: '', label: 'Standardkarten' }],
+    default: '',
+  },
   {
     id: 'deckSelection',
     label: 'Deck-Wahl',
@@ -91,8 +108,8 @@ export const options: OptionSpec[] = [
   },
   {
     id: 'spells',
-    label: 'Zauberkarten',
-    description: 'Jedes Deck tauscht drei Tierpaare gegen drei Zauberpaare (Blitzschlag, Honigtopf, Flutwelle …).',
+    label: 'Kniffe',
+    description: 'Jedes Deck tauscht drei Tierpaare gegen drei Kniffe (Blitzschlag, Honigtopf, Flutwelle …).',
     choices: [
       { value: 'on', label: 'An' },
       { value: 'off', label: 'Aus (nur Tiere)' },
@@ -108,6 +125,16 @@ export const options: OptionSpec[] = [
     ],
     default: 'on',
   },
+  {
+    id: 'dragonEgg',
+    label: 'Drachenei',
+    description: 'Neben jedem Turnierherrn liegt ein Drachenei, das nach drei Runden als Jungdrache mit der Fähigkeit seines Wappenhauses schlüpft.',
+    choices: [
+      { value: 'off', label: 'Aus' },
+      { value: 'on', label: 'An (Jungdrachen)' },
+    ],
+    default: 'off',
+  },
 ];
 
 export const timePresets: TimePresets = {
@@ -117,6 +144,19 @@ export const timePresets: TimePresets = {
 };
 
 export const spellsOn = (opts: Options) => (opts.spells ?? 'on') !== 'off';
+export const dragonEggOn = (opts: Options) => (opts.dragonEgg ?? 'off') === 'on';
+
+export function placeDragonEgg(state: DrachenspielState, seat: SeatId, events?: GameEvent[]): void {
+  const player = state.players[seat];
+  if (player.board.length >= BOARD_LIMIT) return;
+  const house = player.power ?? (player.deckTheme && player.deckTheme !== 'mixed' ? player.deckTheme : null) ?? 'forest';
+  const eggCardId = `egg_${house}`;
+  const def = cardDefOf(state, eggCardId);
+  if (!def) return;
+  const minion = createMinion(state, def, seat);
+  player.board.push(minion);
+  events?.push({ type: 'minionSummoned', seat, minion });
+}
 
 function createDeck(theme: string, rng: Rng, nextId: () => number, withSpells: boolean, custom?: string[]): CardInstance[] {
   let cardIds: string[];
@@ -204,11 +244,25 @@ function createPlayer(seat: SeatId): PlayerState {
   };
 }
 
+function parseCustomCardsFromOptions(opts: Options): {
+  customCards?: Record<string, Partial<CardDefinition>>;
+  cardCatalogChecksum?: string;
+} {
+  const raw = (opts as Record<string, unknown>).customCards ?? (opts as Record<string, unknown>).customCardCatalog ?? opts.cardCatalog;
+  if (!raw) return {};
+  // Werte, Darstellung, geprüfte Effekte und neue Begleiter (#270, #277); nie Kartenart oder unbekannte Effekte.
+  const catalog = sanitizeCustomCardCatalog(raw, 'combat');
+  const customCards = drachenspielCustomCards(catalog);
+  if (!customCards) return {};
+  return { customCards: customCards as Record<string, Partial<CardDefinition>>, ...(catalog?.checksum ? { cardCatalogChecksum: catalog.checksum } : {}) };
+}
+
 /** Ein Solo-Kampf: Platz 0 beginnt, Aufstellung und Decks kommen aus dem Szenario. */
 function setupScenario(scenario: Scenario, opts: Options, seed: string): DrachenspielState {
   const rng = Rng.fromSeed(seed);
   let entityCounter = 1;
   const nextId = () => entityCounter++;
+  const { customCards, cardCatalogChecksum } = parseCustomCardsFromOptions(opts);
   const state: DrachenspielState = {
     phase: 'play',
     activeSeat: 0,
@@ -219,6 +273,8 @@ function setupScenario(scenario: Scenario, opts: Options, seed: string): Drachen
     rng: rng.state,
     queue: [],
     options: { ...opts },
+    ...(customCards ? { customCards } : {}),
+    ...(cardCatalogChecksum ? { cardCatalogChecksum } : {}),
   };
   const sides: [SideSetup, SideSetup] = [scenario.me, scenario.enemy];
   sides.forEach((side, seat) => {
@@ -239,7 +295,7 @@ function setupScenario(scenario: Scenario, opts: Options, seed: string): Drachen
   state.nextEntityId = entityCounter;
   sides.forEach((side, seat) => {
     for (const cardId of side.board ?? []) {
-      const def = CARDS_DB[cardId];
+      const def = cardDefOf(state, cardId);
       if (!def) continue;
       const minion = createMinion(state, def, seat as SeatId);
       minion.canAttack = true;
@@ -247,6 +303,10 @@ function setupScenario(scenario: Scenario, opts: Options, seed: string): Drachen
       state.players[seat as SeatId].board.push(minion);
     }
   });
+  if (dragonEggOn(state.options)) {
+    placeDragonEgg(state, 0);
+    placeDragonEgg(state, 1);
+  }
   startTurn(state, 0, []);
   return state;
 }
@@ -262,9 +322,11 @@ export function setup(seats: number, opts: Options, seed: string): DrachenspielS
   const players: [PlayerState, PlayerState] = [createPlayer(0), createPlayer(1)];
 
   // Ein vorgegebener Code gilt für beide Plätze; ist er ungültig, wählt jeder im Spiel.
-  const preset = opts.deckSelection === 'code' ? parseDeckCode(opts.deckCode ?? '') : null;
+  const preset = opts.deckSelection === 'code' ? parseDeckCode(opts.deckCode ?? '', parseCustomCardsFromOptions(opts).customCards) : null;
   const deckOption = preset ? preset.house : opts.deckSelection === 'code' ? 'inGame' : (opts.deckSelection ?? 'inGame');
   const mulliganOption = opts.mulligan ?? 'on';
+
+  const { customCards, cardCatalogChecksum } = parseCustomCardsFromOptions(opts);
 
   const state: DrachenspielState = {
     phase: deckOption === 'inGame' ? 'deckSelection' : 'mulligan',
@@ -276,6 +338,8 @@ export function setup(seats: number, opts: Options, seed: string): DrachenspielS
     rng: rng.state,
     queue: [],
     options: { ...opts },
+    ...(customCards ? { customCards } : {}),
+    ...(cardCatalogChecksum ? { cardCatalogChecksum } : {}),
   };
 
   if (deckOption !== 'inGame') {
@@ -316,6 +380,10 @@ function dealStartingHands(state: DrachenspielState, willMulligan: boolean): voi
     // Second player gets Star card
     pSecond.hand.push({ uid: `star_${state.nextEntityId++}`, defId: STAR_CARD.id });
     state.phase = 'play';
+    if (dragonEggOn(state.options)) {
+      placeDragonEgg(state, 0);
+      placeDragonEgg(state, 1);
+    }
     startTurn(state, state.startingSeat, []);
   }
 }
@@ -412,7 +480,7 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
     // Play card
     for (let i = 0; i < player.hand.length; i++) {
       const card = player.hand[i];
-      const def = CARDS_DB[card.defId];
+      const def = cardDefOf(state, card.defId);
       if (!def) continue;
       if (def.cost <= player.mana) {
         if (def.trap) {
@@ -447,7 +515,7 @@ export function legalMoves(state: DrachenspielState, actor: Actor): Drachenspiel
       if (canUseBuilding(minion)) moves.push({ type: 'useBuilding', minionId: minion.id });
     }
     for (let i = 0; i < player.hand.length; i++) {
-      if (player.mana >= TRADE_COST && player.hand[i]!.fleeting !== true && CARDS_DB[player.hand[i]!.defId]?.keywords?.includes('tradeable')) {
+      if (player.mana >= TRADE_COST && player.hand[i]!.fleeting !== true && cardDefOf(state, player.hand[i]!.defId)?.keywords?.includes('tradeable')) {
         moves.push({ type: 'tradeCard', handIndex: i });
       }
     }
@@ -492,7 +560,7 @@ export function applyMove(
       throw new Error('Deck-Wahl jetzt nicht erlaubt');
     }
     // Die Spielleitung prüft hier auch online jedes eigene Deck.
-    const custom = move.code === undefined ? null : parseDeckCode(move.code);
+    const custom = move.code === undefined ? null : parseDeckCode(move.code, next.customCards);
     if (move.code !== undefined && custom?.house !== move.deck) throw new Error('Ungültiges Deck');
     player.deckTheme = move.deck;
     player.power = move.deck;
@@ -543,6 +611,10 @@ export function applyMove(
       const pSecond = next.players[1 - next.startingSeat];
       pSecond.hand.push({ uid: `star_${nextEntityId()}`, defId: STAR_CARD.id });
       next.phase = 'play';
+      if (dragonEggOn(next.options)) {
+        placeDragonEgg(next, 0, events);
+        placeDragonEgg(next, 1, events);
+      }
       startTurn(next, next.startingSeat, events);
     }
     return { state: next, events };
@@ -571,7 +643,7 @@ export function applyMove(
   if (move.type === 'playCard') {
     const card = player.hand[move.handIndex];
     if (!card) throw new Error('Karte nicht vorhanden');
-    const def = CARDS_DB[card.defId];
+    const def = cardDefOf(next, card.defId);
     if (!def) throw new Error('Unbekannte Karte');
     if (def.cost > player.mana) throw new Error('Nicht genug Mana');
 
@@ -635,14 +707,14 @@ export function applyMove(
     minion.damage += 1;
     refreshStats(minion);
     events.push({ type: 'buildingUsed', seat: actor, minionId: minion.id, name: minion.name, health: minion.health });
-    enqueue(next, CARDS_DB[minion.cardId]?.building, actor, minion.cardId, minion.id, null);
+    enqueue(next, cardDefOf(next, minion.cardId)?.building, actor, minion.cardId, minion.id, null);
     settle(next, events);
     return { state: next, events };
   }
 
   if (move.type === 'tradeCard') {
     const card = player.hand[move.handIndex];
-    if (!card || card.fleeting || !CARDS_DB[card.defId]?.keywords?.includes('tradeable')) throw new Error('Karte lässt sich nicht tauschen');
+    if (!card || card.fleeting || !cardDefOf(next, card.defId)?.keywords?.includes('tradeable')) throw new Error('Karte lässt sich nicht tauschen');
     if (player.mana < TRADE_COST) throw new Error('Nicht genug Mana');
     player.mana -= TRADE_COST;
     player.hand.splice(move.handIndex, 1);
@@ -870,6 +942,8 @@ export function playerView(
     viewerSeat: seat,
     ...(state.pending ? { pending: { ...state.pending, count: state.pending.options.length, options: state.pending.seat === seat ? state.pending.options : [] } } : {}),
     options: { ...state.options },
+    ...(state.customCards ? { customCards: state.customCards } : {}),
+    ...(state.cardCatalogChecksum ? { cardCatalogChecksum: state.cardCatalogChecksum } : {}),
   };
 }
 
@@ -923,6 +997,8 @@ export function sampleHidden(
     queue: [],
     ...(view.pending ? { pending: samplePending(view.pending) } : {}),
     options: { ...view.options },
+    ...(view.customCards ? { customCards: view.customCards } : {}),
+    ...(view.cardCatalogChecksum ? { cardCatalogChecksum: view.cardCatalogChecksum } : {}),
   };
 }
 
@@ -1046,6 +1122,7 @@ export const drachenspiel: GameModule<DrachenspielState, DrachenspielMove, Drach
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   timeoutMove,
   sampleHidden,

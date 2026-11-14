@@ -1,0 +1,162 @@
+{
+  "beschreibung": "G12 (#325): Spielfiguren für Vierer-Schach (neutrale Meister, einfärben in die vier Platzfarben). Motiv-id = <satz>-<figur>[-<seite>]; w = hell, b = dunkel, n = neutraler Meister zum Einfärben in die Platzfarben. Alle Motive freistellen (grüner Grund #00B140 → Alphakanal).",
+  "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+  "ohne": "text, letters, numbers, watermark, border, frame, background scene, hands, people, modern objects, logos, photo, green on the object itself, cast shadow, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "1:1",
+  "ziel": "packages/games/four-player-chess/src/ui/figuren",
+  "groesse": [
+    192,
+    192
+  ],
+  "referenzen": [
+    "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp",
+    "packages/ui/src/cards/portraits/koenig-herz.webp",
+    "packages/games/marketplace/src/ui/figures/herald.webp"
+  ],
+  "motive": [
+    {
+      "id": "wood-k-n",
+      "titel": "König · wood · neutral (wird eingefärbt)",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess king, tall, with a cross-topped crown, made of ivory-coloured unpainted wood."
+    },
+    {
+      "id": "wood-q-n",
+      "titel": "Dame · wood · neutral (wird eingefärbt)",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess queen with a pointed coronet, made of ivory-coloured unpainted wood."
+    },
+    {
+      "id": "wood-r-n",
+      "titel": "Turm · wood · neutral (wird eingefärbt)",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess rook, a round crenellated tower, made of ivory-coloured unpainted wood."
+    },
+    {
+      "id": "wood-b-n",
+      "titel": "Läufer · wood · neutral (wird eingefärbt)",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess bishop with a slit mitre top, made of ivory-coloured unpainted wood."
+    },
+    {
+      "id": "wood-n-n",
+      "titel": "Springer · wood · neutral (wird eingefärbt)",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess knight, a horse head in profile facing left, made of ivory-coloured unpainted wood."
+    },
+    {
+      "id": "wood-p-n",
+      "titel": "Bauer · wood · neutral (wird eingefärbt)",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess pawn, small with a round head, made of ivory-coloured unpainted wood."
+    },
+    {
+      "id": "metal-k-n",
+      "titel": "König · metal · neutral (wird eingefärbt)",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess king, tall, with a cross-topped crown, made of ivory-coloured enamelled metal."
+    },
+    {
+      "id": "metal-q-n",
+      "titel": "Dame · metal · neutral (wird eingefärbt)",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess queen with a pointed coronet, made of ivory-coloured enamelled metal."
+    },
+    {
+      "id": "metal-r-n",
+      "titel": "Turm · metal · neutral (wird eingefärbt)",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess rook, a round crenellated tower, made of ivory-coloured enamelled metal."
+    },
+    {
+      "id": "metal-b-n",
+      "titel": "Läufer · metal · neutral (wird eingefärbt)",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess bishop with a slit mitre top, made of ivory-coloured enamelled metal."
+    },
+    {
+      "id": "metal-n-n",
+      "titel": "Springer · metal · neutral (wird eingefärbt)",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess knight, a horse head in profile facing left, made of ivory-coloured enamelled metal."
+    },
+    {
+      "id": "metal-p-n",
+      "titel": "Bauer · metal · neutral (wird eingefärbt)",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a chess pawn, small with a round head, made of ivory-coloured enamelled metal."
+    },
+    {
+      "id": "fable-k-n",
+      "titel": "König · fable · neutral (wird eingefärbt)",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a lion king with crown and sceptre, the tallest figure of the set, in plain ivory-coloured clothes on an ivory-coloured base."
+    },
+    {
+      "id": "fable-q-n",
+      "titel": "Dame · fable · neutral (wird eingefärbt)",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a swan queen with a small crown, almost as tall as the king, in plain ivory-coloured clothes on an ivory-coloured base."
+    },
+    {
+      "id": "fable-r-n",
+      "titel": "Turm · fable · neutral (wird eingefärbt)",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a bear guard holding a tower-shaped shield, in plain ivory-coloured clothes on an ivory-coloured base."
+    },
+    {
+      "id": "fable-b-n",
+      "titel": "Läufer · fable · neutral (wird eingefärbt)",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a fox herald with a tall pointed hat and a staff, in plain ivory-coloured clothes on an ivory-coloured base."
+    },
+    {
+      "id": "fable-n-n",
+      "titel": "Springer · fable · neutral (wird eingefärbt)",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a horse knight in profile facing left, in plain ivory-coloured clothes on an ivory-coloured base."
+    },
+    {
+      "id": "fable-p-n",
+      "titel": "Bauer · fable · neutral (wird eingefärbt)",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game figurine of an anthropomorphic animal in medieval clothes, in the style of the reference portraits, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the figurine centred and fully inside the image with margin, standing on a small round base, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen straight from the front. Subject: a small hedgehog squire with a simple cap, the smallest figure of the set, in plain ivory-coloured clothes on an ivory-coloured base."
+    }
+  ]
+}

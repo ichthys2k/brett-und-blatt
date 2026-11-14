@@ -15,14 +15,19 @@ export {
   SIGNAL_INTERVAL_MS,
   SIGNAL_MAX_PER_WINDOW,
   SIGNAL_WINDOW_MS,
+  XR_POSE_INTERVAL_MS,
+  XR_RTC_PER_MINUTE,
   TAKE_BACK_GAP,
+  AFTER_GAME_MS,
   TAKE_BACK_MS,
   type MatchRoomConfig,
   type MatchRoomReport,
   type RoomDeps,
   type RoomSnapshot,
+  type ConnectionFlags,
 } from './room';
 export { serverBotRunner } from './server-bots';
+export { CLIENT_BURST, CLIENT_ID_PATTERN, CLIENT_PARAM, CLIENT_PER_SECOND, MessageBudget, accessFor, parseClientId, type Access } from './access';
 export { OnlineSession, extrapolateClock, type OnlineSessionDeps } from './client';
 export {
   OPEN_ROOM_MAX_AGE_MS,
@@ -44,5 +49,11 @@ export * from './org';
 export * from './org-requests';
 export * from './classcard';
 export * from './series';
+export * from './seeking';
+export * from './board-push';
 export * from './series-book';
 export * from './package-share';
+export * from './push';
+export * from './webpush';
+export { DEADLINE_LEAD_MS, PUSH_SENDS_PER_RUN, claimSilently, newTournamentPushState, nextPushWakeup, planTournamentPush, pushApplies, pushStateFromJSON, pushStateToJSON, runTournamentPush, type PushNotice, type TournamentPushState } from './tournament/push';
+export { TTL_TURN_S, deliverTurnPush } from './room-push';

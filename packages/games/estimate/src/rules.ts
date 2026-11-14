@@ -87,6 +87,7 @@ export const gameModule = makeRoundGame<EstimateQuestion, number>({
   },
   publicQuestion: (q) => ({ ...q, answer: null }),
   isValidAnswer: (q, a): a is number => typeof a === 'number' && Number.isInteger(a) && a >= q.min && a <= q.max,
+  describeAnswer: (q, a) => `${a.toLocaleString('de-DE')} ${q.unit} schätzen`,
   sampleAnswers: (q) => [q.min, Math.round((q.min + q.max) / 2), q.max],
   scoreRound: (q, answers) => scoreEstimate(q.answer!, answers),
   botAnswer(q, level, rng) {

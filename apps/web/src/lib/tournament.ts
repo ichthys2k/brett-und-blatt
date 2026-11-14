@@ -1,6 +1,7 @@
 import type { TournamentClientMessage, TournamentServerMessage, TournamentSettings, TournamentView } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState } from 'react';
 import { GAME_SERVER } from './server';
+import { currentSubscribeMessage, onPushSubscriptionChange } from './push';
 import { applyOfflineMessage, deleteOfflineRecord, isOfflineCode, loadOfflineRecord, offlineView } from './offlineTournament';
 import { storage, type Profile } from './storage';
 
@@ -154,6 +155,8 @@ export interface TournamentState {
   claim: { player: string; code: string } | null;
   /** Übergabecode für die Hauptleitung, den die Hauptleitung gerade erzeugt hat (#203). */
   leaderCode?: { code: string; expiresAt: number } | null;
+  /** Hinweise aufs Gerät (#242): hat der Server für dieses Gerät ein Abo? `null`, solange er nichts gesagt hat (nicht eingerichtet, oder ohne Netz). */
+  push?: boolean | null;
 }
 
 const PING_MS = 30_000;
@@ -195,6 +198,11 @@ function useOnlineTournament(code: string, profile: Profile | null): [Tournament
         else if (message.type === 'deleted') setState((s) => ({ ...s, status: 'gone', view: null }));
         else if (message.type === 'claimCode') setState((s) => ({ ...s, claim: { player: message.player, code: message.code } }));
         else if (message.type === 'leaderCode') setState((s) => ({ ...s, leaderCode: { code: message.code, expiresAt: message.expiresAt } }));
+        else if (message.type === 'pushState') {
+          setState((s) => ({ ...s, push: message.enabled }));
+          // Wünscht dieses Gerät Hinweise, der Server kennt aber kein Abo: neu melden (#242).
+          if (!message.enabled) void currentSubscribeMessage().then((m) => m && ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(m)));
+        }
         else if (message.type === 'error') {
           setState((s) => ({ ...s, error: message.message }));
           window.clearTimeout(errorTimer);
@@ -227,7 +235,10 @@ function useOnlineTournament(code: string, profile: Profile | null): [Tournament
 
     connect();
     document.addEventListener('visibilitychange', onVisible);
+    // Der Service Worker hat das Abo erneuert: dem Server das neue melden (#242).
+    const stopPushWatch = onPushSubscriptionChange(() => void currentSubscribeMessage().then((m) => m && send(m)));
     return () => {
+      stopPushWatch();
       stopped = true;
       window.clearTimeout(retryTimer);
       window.clearInterval(pingTimer);

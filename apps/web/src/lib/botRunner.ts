@@ -1,5 +1,6 @@
 import { computeBotMove, type BotRequest, type BotRunner } from '@brett-und-blatt/engine';
 import { loadRules } from './modules';
+import { disposeStockfish, requestStockfishMove } from './stockfishBot';
 
 type Reply = { id: number; move: unknown } | { id: number; error: string };
 
@@ -41,6 +42,19 @@ export function createBotRunner(minThinkMs = 450): BotRunner & { dispose(): void
     return worker;
   };
 
+  const runInBotWorker = (request: BotRequest, withPause: (move: unknown) => Promise<unknown>): Promise<unknown> => {
+    const target = getWorker();
+    if (!target) {
+      // Ohne Worker rechnet der Bot im Hauptfenster.
+      return loadRules(request.gameId).then((module) => withPause(computeBotMove(module, request)));
+    }
+    const id = nextId++;
+    return new Promise<unknown>((resolve, reject) => {
+      pending.set(id, { resolve: (move) => withPause(move).then(resolve), reject });
+      target.postMessage({ id, request });
+    });
+  };
+
   return {
     requestMove(request: BotRequest) {
       const started = performance.now();
@@ -48,21 +62,17 @@ export function createBotRunner(minThinkMs = 450): BotRunner & { dispose(): void
       const withPause = (move: unknown) =>
         new Promise<unknown>((resolve) => setTimeout(() => resolve(move), Math.max(0, delay - (performance.now() - started))));
 
-      const target = getWorker();
-      if (!target) {
-        // Ohne Worker rechnet der Bot im Hauptfenster.
-        return loadRules(request.gameId).then((module) => withPause(computeBotMove(module, request)));
+      const chessView = request.gameId === 'chess' && request.botId === 'stockfish' ? (request.view as { fen?: string; drawOffer?: { by?: number | null } } | null) : null;
+      if (chessView?.fen && chessView.drawOffer?.by == null) {
+        return requestStockfishMove(chessView.fen, request.timeBudgetMs).then(withPause, () => runInBotWorker(request, withPause));
       }
-      const id = nextId++;
-      return new Promise<unknown>((resolve, reject) => {
-        pending.set(id, { resolve: (move) => withPause(move).then(resolve), reject });
-        target.postMessage({ id, request });
-      });
+      return runInBotWorker(request, withPause);
     },
     dispose() {
       rejectAll(new Error('beendet'));
       worker?.terminate();
       worker = null;
+      disposeStockfish();
     },
   };
 }

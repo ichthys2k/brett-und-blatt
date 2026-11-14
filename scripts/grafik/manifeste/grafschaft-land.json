@@ -1,0 +1,43 @@
+{
+  "beschreibung": "G9 (#318) A1: sechs Landschaften als Füllung der Sechsecke.",
+  "stil": "Painterly storybook oil illustration of a small piece of landscape seen from high above at a steep bird's-eye angle, like a hand-painted board game tile of a fairy-tale county: rich warm colours, soft even daylight, the landscape fills the whole square image edge to edge and stays similar towards all edges so that neighbouring tiles blend. No roads, no rivers, no buildings unless described. No text, no figures.",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "1:1",
+  "ziel": "packages/games/grafschaft/src/ui/land",
+  "groesse": [
+    256,
+    256
+  ],
+  "motive": [
+    {
+      "id": "forest",
+      "titel": "Wald",
+      "prompt": "Dense dark green mixed forest canopy with a few lighter treetops."
+    },
+    {
+      "id": "meadow",
+      "titel": "Wiese",
+      "prompt": "A soft green meadow with scattered wildflowers and a few grazing-worn paths of lighter grass."
+    },
+    {
+      "id": "field",
+      "titel": "Feld",
+      "prompt": "Golden grain fields in narrow strips with thin hedges between them."
+    },
+    {
+      "id": "pond",
+      "titel": "Teich",
+      "prompt": "A calm blue pond with reeds and lily pads, grassy shore at the edges."
+    },
+    {
+      "id": "village",
+      "titel": "Dorf",
+      "prompt": "A cluster of five half-timbered houses with red roofs around a tiny square with a well."
+    },
+    {
+      "id": "mountain",
+      "titel": "Berg",
+      "prompt": "A grey rocky peak with snow on top and pine trees at its foot."
+    }
+  ]
+}

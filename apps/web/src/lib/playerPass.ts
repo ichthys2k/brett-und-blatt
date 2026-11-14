@@ -29,6 +29,7 @@ import {
   type PlayerPass,
 } from '@brett-und-blatt/ui/sync';
 import { cleanCrest } from '@brett-und-blatt/engine';
+import { updateClassesAfterProfileChange } from './classes';
 import { GAME_SERVER } from './online';
 import { passBook } from './passes';
 import { storage, type Profile } from './storage';
@@ -153,6 +154,7 @@ export function saveOwnProfile(profile: Profile): void {
   storage.saveProfile(profile);
   syncPassEntry();
   passChanged();
+  updateClassesAfterProfileChange();
 }
 
 export async function createPlayerCode(): Promise<void> {

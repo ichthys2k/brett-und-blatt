@@ -1,7 +1,7 @@
 {
   "beschreibung": "W-048: Porträts für Bube, Dame und König im französischen Kartenbild (12 Motive). Das deutsche Blatt (Unter, Ober, König) kommt mit eigenem Manifest nach der Stilauswahl.",
   "stil": "Painterly Old-Master style portrait of an anthropomorphic animal in royal costume, in the same style as the reference images: dark warm background with subtle damask pattern, rich velvet, brocade and fur trim, soft candlelight, warm gold and deep colours, detailed expressive face, slightly humorous but dignified, bust portrait facing the viewer. Playing-card court figure, vertical composition, figure centred with space around so it can be cropped. No text, no letters, no numbers, no card frame, no suit symbols in the corners.",
-  "ohne": "text, watermark, border, frame, playing card layout, miniature playing cards or card corners as jewellery, candles at the image edge, real people, celebrities, modern clothing",
+  "ohne": "text, watermark, border, frame, playing card layout, miniature playing cards or card corners as jewellery, candles at the image edge, real people, celebrities, modern clothing, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "referenzen": [
     "packages/games/color-sorter/src/ui/portraits/boss-bear-2.webp"
   ],

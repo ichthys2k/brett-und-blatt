@@ -107,11 +107,16 @@ Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis:
 
 ## Wappen der Spielkacheln (KI-erzeugt)
 
-Die 54 Wappen auf den Kacheln der Startseite (`apps/web/src/wappen/*.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge in `scripts/grafik/`. Sie zeigen allgemeine Sinnbilder (Schachpferd, Würfel, Drache u. a.), keine echten Personen und keine fremden Marken. Die Spiele selbst sind eigene Fassungen.
+Die 56 Wappen auf den Kacheln der Startseite (`apps/web/src/wappen/*.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge in `scripts/grafik/`. Sie zeigen allgemeine Sinnbilder (Schachpferd, Würfel, Drache u. a.), keine echten Personen und keine fremden Marken. Die Spiele selbst sind eigene Fassungen.
+
+## Tischflächen (KI-erzeugt)
+
+Die Tischflächen des Tavernen-Aussehens (`apps/web/src/assets/tische/*.webp`: Eichenholz, Nussholz, grüner Spielfilz): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `tische.json`). Sie zeigen schlichte, nahtlos kachelbare Oberflächenstrukturen ohne Gegenstände oder Personen.
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 
 ## Almendra
+
 
 Zierschrift für Überschriften im Aussehen „Taverne“ (`apps/web`), über `@fontsource/almendra`. https://github.com/fontsource/font-files
 
@@ -271,7 +276,7 @@ SOFTWARE.
 
 ## KaTeX
 
-Formeln `\(…\)` und `\[…\]` in Anki-Karten setzen (`apps/web`, Version 0.16.47, erst bei Bedarf geladen, Schriften aus dem Paket). https://github.com/KaTeX/KaTeX
+Formeln `\(…\)` und `\[…\]` in Anki-Karten setzen (`apps/web`, Version 0.18.11, erst bei Bedarf geladen, Schriften aus dem Paket). https://github.com/KaTeX/KaTeX
 
 ```
 The MIT License (MIT)
@@ -405,4 +410,77 @@ Die drei zusätzlichen Raumkulissen (`apps/web/src/assets/raeume/*.webp`: Burgsa
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 
+## Themenhaus-Kulissen im Drachenspiel (KI-erzeugt)
+
+Die fünf Hintergrundkulissen für die Themenhäuser im Drachenspiel (`packages/games/drachenspiel/src/ui/kulissen/*.webp`: Wald, Meer, Bauernhof, Wildnis, Krabbeltiere ; die Originale in voller Auflösung liegen im privaten Repo `ichthys2k/brett-und-blatt-grafik`): **KI-erzeugt** mit einem Bildmodell nach eigenen Bildbeschreibungen im Storybook-Fantasy-Stil, November 2026. Auswahl durch Cornelius Lipponer. Die Bilder zeigen leere Landschaften und Naturkulissen ohne Personen, Figuren, Text oder Interface-Elemente.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+
+
+
+## ts-json-schema-generator
+
+Nur Werkzeug beim Entwickeln: erzeugt `docs/protokoll.schema.json` aus `packages/online/src/protocol.ts` (`scripts/protokoll-schema.mjs`); nicht in der Web-App oder im Server enthalten. https://github.com/vega/ts-json-schema-generator
+
+```
+The MIT License
+
+Copyright (c) 2019, TypeScript JSON Schema Generator
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+```
+
+## three.js, React Three Fiber, @react-three/xr (VR-App)
+
+Nur in der VR-App `apps/xr` (#339), nicht in der Web-App oder im Server. Alle unter der MIT-Lizenz; der Lizenztext unten gilt jeweils mit dem genannten Urheberhinweis.
+
+- **three.js** – Copyright © 2010-2024 three.js authors – https://github.com/mrdoob/three.js
+- **@react-three/fiber**, **its-fine**, **tunnel-rat** – Copyright (c) 2019–2025 Poimandres – https://github.com/pmndrs/react-three-fiber
+- **@react-three/xr**, **@pmndrs/xr**, **@pmndrs/pointer-events**, **@pmndrs/handle** – Copyright 2024 Bela Bohlender – https://github.com/pmndrs/xr
+- **zustand**, **suspend-react** – Copyright (c) 2019/2021 Paul Henschel – https://github.com/pmndrs/zustand
+
+Der Quest-Nachbau aus @react-three/xr (IWER mit Font-Awesome-Symbolen) wird nur beim Entwickeln geladen; der Build ersetzt ihn durch ein leeres Modul (`apps/xr/vite.config.ts`). Die Taverne der VR-App besteht aus selbst gebauten einfachen Körpern und gemalten Texturen – **keine fremden 3D-Modelle**.
+
+```
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## stockfish (stockfish.js)
+
+Starker Schach-Zusatz-Bot („Stockfish (Großmeister)“) als WebAssembly in einem eigenen Web Worker (`apps/web/src/lib/stockfishBot.ts`, Paket `stockfish` Version 19.0.1, genutzt wird `stockfish-19-lite-single.js` + `.wasm`, erst bei Bedarf geladen). https://github.com/nmrugg/stockfish.js (auf Basis von Stockfish, https://github.com/official-stockfish/Stockfish).
+
+**Lizenz & Verträglichkeit:** Stockfish steht unter der **GNU General Public License Version 3 (GPL-3.0)**. Sowohl GPL-3.0 (Abschnitt 13, *„Remote Network Interaction; Use with the GNU General Public License“*) als auch die Lizenz dieses Projekts (**AGPL-3.0**, ebenfalls Abschnitt 13) erlauben ausdrücklich das Verbinden beider Lizenzen zu einem gemeinsamen Werk: Das Gesamtwerk unterliegt der AGPL-3.0, während für den Stockfish-Bestandteil weiterhin die GPL-3.0 gilt. Vollständiger Lizenztext: https://www.gnu.org/licenses/gpl-3.0.txt (`Copying.txt` im Paket).
 

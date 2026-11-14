@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import type { HelperTool } from './helpers';
 
 /**
  * Einfache Navigation über den Teil hinter dem # in der Adresse. So funktioniert
@@ -10,6 +11,8 @@ export type Route =
   | { name: 'setup'; gameId: string; params?: Record<string, string> }
   | { name: 'play' }
   | { name: 'online' }
+  /** Schwarzes Brett „Wer hat Lust?“ (#65). */
+  | { name: 'board' }
   | { name: 'tournaments' }
   | { name: 'classes' }
   | { name: 'orgs' }
@@ -30,6 +33,7 @@ export type Route =
   | { name: 'series'; code: string; leader?: string }
   | { name: 'seriesEmbed'; code: string }
   | { name: 'sound' }
+  | { name: 'helpers'; tool?: HelperTool }
   | { name: 'pass' }
   | { name: 'account'; ticket?: string; provider?: string; error?: string; reason?: string }
   | { name: 'passView'; key: string }
@@ -63,6 +67,7 @@ export function parseRoute(hash: string): Route {
   }
   if (parts[0] === 'partie') return { name: 'play' };
   if (parts[0] === 'online' || parts[0] === 'mehrspieler') return { name: 'online' };
+  if (parts[0] === 'brett' || parts[0] === 'spielersuche') return { name: 'board' };
   if (parts[0] === 'turniere') return { name: 'tournaments' };
   if (parts[0] === 'klassen') return { name: 'classes' };
   if (parts[0] === 'organisationen') return { name: 'orgs' };
@@ -81,6 +86,11 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'turnier' && parts[1] && parts[2] === 'ansicht') return { name: 'tournamentEmbed', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'turnier' && parts[1]) return { name: 'tournament', code: decodeURIComponent(parts[1]), ...(params.neu ? { claim: params.neu } : {}), ...(params.helfer ? { helper: params.helfer } : {}), ...(params.leitung ? { leader: params.leitung } : {}) };
   if (parts[0] === 'ton') return { name: 'sound' };
+  if (parts[0] === 'helfer') {
+    const tool = parts[1];
+    const valid = tool === 'wuerfel' || tool === 'zufall' || tool === 'startspieler' || tool === 'uhren' || tool === 'punkte' ? tool : undefined;
+    return valid ? { name: 'helpers', tool: valid } : { name: 'helpers' };
+  }
   if (parts[0] === 'konto') return { name: 'account', ...(params.ticket ? { ticket: params.ticket } : {}), ...(params.anbieter ? { provider: params.anbieter } : {}), ...(params.fehler ? { error: params.fehler } : {}), ...(params.grund ? { reason: params.grund.slice(0, 80).replace(/[^A-Za-z0-9_. -]/g, '') } : {}) };
   if (parts[0] === 'pass' && parts[1] === 'ansehen') return { name: 'passView', key: params.k ?? '' };
   if (parts[0] === 'pass') return { name: 'pass' };
@@ -112,6 +122,8 @@ export const paths = {
   },
   play: '#/partie',
   online: '#/online',
+  /** Schwarzes Brett „Wer hat Lust?“ (#65). */
+  board: '#/brett',
   tournaments: '#/turniere',
   classes: '#/klassen',
   /** „Verein oder Schule“ (#217). */
@@ -134,6 +146,8 @@ export const paths = {
   series: (code: string) => `#/serie/${encodeURIComponent(code)}`,
   seriesEmbed: (code: string) => `#/serie/${encodeURIComponent(code)}/ansicht`,
   sound: '#/ton',
+  helpers: '#/helfer',
+  helper: (tool: HelperTool) => `#/helfer/${tool}`,
   pass: '#/pass',
   account: '#/konto',
   imprint: '#/impressum',

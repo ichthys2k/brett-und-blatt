@@ -129,15 +129,108 @@ describe('low-flight: Regeln', () => {
     const world = sampleHidden(view, 0, new Rng([1, 2, 3, 4]));
     expect(world.deck.length + world.players.flatMap((p) => p.grid).length + world.discard.length).toBe(150);
   });
+
+  it('räumt mit Option auch Diagonalen ab (Klassisch 3x4 und Junior 3x3)', () => {
+    // 3x4: Diagonale [0, 5, 10]
+    const grid1 = twelve((i) => (i === 0 || i === 5 ? open(6) : hidden(1)));
+    const s1 = run(table([grid1, twelve(() => hidden(5))], { discard: [6] }, { diagonals: 'on' }), [0, { type: 'takeDiscard' }], [0, { type: 'swap', slot: 10 }]);
+    expect([0, 5, 10].map((i) => s1.players[0]!.grid[i])).toEqual([null, null, null]);
+
+    // 3x4: Steigende Diagonale [3, 6, 9]
+    const grid2 = twelve((i) => (i === 3 || i === 6 ? open(8) : hidden(1)));
+    const s2 = run(table([grid2, twelve(() => hidden(5))], { discard: [8] }, { diagonals: 'on' }), [0, { type: 'takeDiscard' }], [0, { type: 'swap', slot: 9 }]);
+    expect([3, 6, 9].map((i) => s2.players[0]!.grid[i])).toEqual([null, null, null]);
+
+    // Junior 3x3: Diagonale [0, 4, 8]
+    const juniorGrid = Array.from({ length: 9 }, (_, i) => (i === 0 || i === 4 ? open(2) : hidden(1)));
+    const s3State = setup(2, { variant: 'junior', diagonals: 'on' }, 'j');
+    s3State.phase = 'turn';
+    s3State.players[0]!.grid = juniorGrid;
+    s3State.discard = [2];
+    const s3 = run(s3State, [0, { type: 'takeDiscard' }], [0, { type: 'swap', slot: 8 }]);
+    expect([0, 4, 8].map((i) => s3.players[0]!.grid[i])).toEqual([null, null, null]);
+  });
+
+  it('führt Aktionskarte 7 (Spähen) aus und respektiert den Gedächtnis-Modus', () => {
+    const a = twelve((i) => (i === 2 ? hidden(4) : hidden(1)));
+    const b = twelve((i) => (i === 3 ? hidden(11) : hidden(2)));
+    // Normaler Modus (memoryMode: off): Karte wird in knownCards gemerkt
+    const s0 = table([a, b], { deck: [7] }, { actionCards: 'on', memoryMode: 'off' });
+    const sAfterDraw = run(s0, [0, { type: 'draw' }]);
+    expect(isLegal(sAfterDraw, 0, { type: 'actionPeek', targetSeat: 1, slot: 3 })).toBe(true);
+
+    const s = run(sAfterDraw, [0, { type: 'actionPeek', targetSeat: 1, slot: 3 }]);
+    expect(s.discard[s.discard.length - 1]).toBe(7);
+    expect(s.players[1]!.grid[3]!.open).toBe(false); // bleibt verdeckt
+    expect(s.turn).toBe(1); // Zug ging weiter
+
+    const view0 = playerView(s, 0);
+    expect(view0.knownCards).toContainEqual({ targetSeat: 1, slot: 3, value: 11 });
+    const view1 = playerView(s, 1);
+    expect(view1.knownCards).toHaveLength(0); // Gegner erfährt nicht den Späh-Wert
+
+    // Im Gedächtnis-Modus (memoryMode: on): knownCards bleibt leer
+    const sMem0 = table([a, b], { deck: [7] }, { actionCards: 'on', memoryMode: 'on' });
+    const sMem = run(sMem0, [0, { type: 'draw' }], [0, { type: 'actionPeek', targetSeat: 1, slot: 3 }]);
+    const viewMem = playerView(sMem, 0);
+    expect(viewMem.knownCards).toHaveLength(0);
+  });
+
+  it('eventView maskiert gespähte Werte für fremde Plätze', () => {
+    const ev = { type: 'peeked', seat: 0, targetSeat: 1, slot: 3, value: 11 };
+    expect(gameModule.eventView!(ev, 0)).toEqual(ev);
+    expect(gameModule.eventView!(ev, 1)).toEqual({ type: 'peeked', seat: 0, targetSeat: 1, slot: 3 });
+    expect(gameModule.eventView!(ev, 'spectator')).toEqual({ type: 'peeked', seat: 0, targetSeat: 1, slot: 3 });
+  });
+
+  it('führt Aktionskarte 8 (Karten tauschen) aus', () => {
+    const a = twelve((i) => (i === 0 ? open(12) : hidden(1)));
+    const b = twelve((i) => (i === 2 ? open(0) : hidden(2)));
+    const s0 = table([a, b], { deck: [8] }, { actionCards: 'on' });
+    const s = run(s0, [0, { type: 'draw' }], [0, { type: 'actionSwap', mySlot: 0, targetSeat: 1, targetSlot: 2 }]);
+    expect(s.players[0]!.grid[0]).toEqual(open(0));
+    expect(s.players[1]!.grid[2]).toEqual(open(12));
+    expect(s.discard[s.discard.length - 1]).toBe(8);
+  });
+
+  it('führt Aktionskarte 9 (Doppelzug) aus', () => {
+    const a = twelve(() => hidden(1));
+    const b = twelve(() => hidden(2));
+    const s0 = table([a, b], { deck: [9] }, { actionCards: 'on' });
+    const s = run(s0, [0, { type: 'draw' }], [0, { type: 'actionExtraTurn' }]);
+    expect(s.turn).toBe(0); // bleibt am Zug
+    expect(s.drawn).toBeNull();
+    expect(s.discard[s.discard.length - 1]).toBe(9);
+  });
+
+  it('führt Aktionskarte 10 (Doppel-Aufdecken) aus', () => {
+    const a = twelve(() => hidden(1));
+    const b = twelve(() => hidden(2));
+    const s0 = table([a, b], { deck: [10] }, { actionCards: 'on' });
+    const s = run(s0, [0, { type: 'draw' }], [0, { type: 'actionDoubleFlip', slot1: 1, slot2: 4 }]);
+    expect(s.players[0]!.grid[1]!.open).toBe(true);
+    expect(s.players[0]!.grid[4]!.open).toBe(true);
+    expect(s.turn).toBe(1);
+  });
 });
 
 describe('low-flight: Bot', () => {
   for (const level of ['easy', 'medium', 'hard'] as const) {
-    it(`spielt auf „${level}“ eine ganze Partie`, () => {
+    it(`spielt auf „${level}“ eine ganze Partie (Grundspiel)`, () => {
       let s = gameModule.setup(3, {}, `bot-${level}`);
       for (let guard = 0; !gameModule.result(s) && guard < 5000; guard++) {
         const seat = currentPlayers(s)[0] as number;
         const move = computeBotMove(gameModule, { gameId: 'low-flight', botId: 'wolkenspringer', level, seat, view: playerView(s, seat), seed: `${level}/${guard}`, timeBudgetMs: 100 }) as LowFlightMove;
+        s = applyMove(s, seat, move).state;
+      }
+      expect(gameModule.result(s)).not.toBeNull();
+    }, 60_000);
+
+    it(`spielt auf „${level}“ eine Partie mit allen Varianten (Diagonalen, Aktionskarten, Gedächtnis-Modus)`, () => {
+      let s = gameModule.setup(2, { diagonals: 'on', actionCards: 'on', memoryMode: 'on', rows: 'on' }, `bot-vars-${level}`);
+      for (let guard = 0; !gameModule.result(s) && guard < 5000; guard++) {
+        const seat = currentPlayers(s)[0] as number;
+        const move = computeBotMove(gameModule, { gameId: 'low-flight', botId: 'wolkenspringer', level, seat, view: playerView(s, seat), seed: `vars-${level}/${guard}`, timeBudgetMs: 100 }) as LowFlightMove;
         s = applyMove(s, seat, move).state;
       }
       expect(gameModule.result(s)).not.toBeNull();

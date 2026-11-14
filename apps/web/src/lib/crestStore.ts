@@ -12,7 +12,14 @@ import { categoryStamp, stampCount } from './stamps';
  */
 
 const listeners = new Set<() => void>();
+const saveListeners = new Set<() => void>();
 let version = 0;
+
+/** Meldet einen Listener an, der nach dem Speichern eines neuen Wappens benachrichtigt wird. */
+export function onCrestSaved(listener: () => void): () => void {
+  saveListeners.add(listener);
+  return () => saveListeners.delete(listener);
+}
 
 /** Das gespeicherte Wappen, sonst die Vorgabe mit dem Bild des Passes als Tier. */
 export function currentCrest(): CrestSpec {
@@ -29,6 +36,7 @@ export function saveCrest(spec: CrestSpec): void {
   storage.saveCrestText(serializeCrest(spec));
   version++;
   for (const listener of listeners) listener();
+  for (const listener of saveListeners) listener();
   syncPassEntry();
   passSyncSoon();
 }

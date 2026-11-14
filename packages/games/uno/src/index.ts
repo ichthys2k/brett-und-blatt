@@ -3,8 +3,10 @@ import { unoBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, defaultOptions, isLegal, legalMoves, mathCardLabel, playerView, result, sampleHidden, setup, UNO_MATH_POOL } from './rules';
 import type { UnoMove, UnoOptions, UnoState } from './types';
+import { describeMove } from './describe';
 
 export { mathCardLabel, UNO_MATH_POOL };
+export { unoCardDescription } from './cardDescription';
 
 export const options: OptionSpec[] = [
   {
@@ -111,5 +113,7 @@ export const gameModule: GameModule<UnoState, UnoMove> = {
   playerView,
   sampleHidden,
   result,
+  // Kurzer Text je Zug für fremde Clients und den Bildschirmleser (#335).
+  describeMove,
   bots: [unoBot],
 };

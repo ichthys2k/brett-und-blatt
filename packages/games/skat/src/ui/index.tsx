@@ -2,6 +2,7 @@ import { sortHand, cardEyePoints, cardSuit, type CardId, type SeatId } from '@br
 import {
   CardFan,
   PlayingCard,
+  resolveSharedCardBack,
   RoundSummary,
   type RoundSummaryPlayer,
   SeatRing,
@@ -13,6 +14,7 @@ import {
   type GameUi,
   type TrickTableSlot,
 } from '@brett-und-blatt/ui';
+import { skatCardDescription } from '../cardDescription.js';
 import { useState } from 'react';
 import {
   getContract,
@@ -269,6 +271,7 @@ export function SkatBoard({
               <PlayingCard
                 card={card === 'back' ? null : card}
                 deckStyle={view.deckStyle}
+                description={card === 'back' ? undefined : skatCardDescription(card, view)}
                 highlight={playableCards.has(card) ? 'target' : null}
                 selected={isSelected}
                 onClick={() => {
@@ -329,6 +332,7 @@ export function SkatBoard({
     <>
       {(view.phase === 'roundOver' || view.phase === 'passedOut') && (
         <RoundSummary
+          modal={Boolean(table)}
           title={view.phase === 'passedOut' ? 'Spiel eingepasst' : `Spiel ${view.gameNumber} beendet`}
           subtitle={
             lastSummary ? (
@@ -382,7 +386,18 @@ export function SkatBoard({
             <>
               {(display || seat !== mySeat) && (view.hands[seat]?.length ?? 0) > 0 && (
                 <div className="w-20" aria-hidden="true">
-                  <CardFan count={view.hands[seat]!.length} label="" cardWidth={16} renderCard={() => <PlayingCard card={null} deckStyle={view.deckStyle} />} />
+                  <CardFan
+                    count={view.hands[seat]!.length}
+                    label=""
+                    cardWidth={16}
+                    renderCard={() => (
+                      <PlayingCard
+                        card={null}
+                        deckStyle={view.deckStyle}
+                        cardBackProps={resolveSharedCardBack({ deckStyle: view.deckStyle })}
+                      />
+                    )}
+                  />
                 </div>
               )}
               {table.seatChip(seat)}

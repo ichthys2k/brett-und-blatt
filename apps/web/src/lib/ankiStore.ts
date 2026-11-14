@@ -1,4 +1,4 @@
-import { buildQueue, clampOptions, reconcileCards, todaysCounts, type AnkiCollection, type ApkgData, type LearnOptions } from '@brett-und-blatt/engine';
+import { buildQueue, clampOptions, isSpecialCardNote, reconcileCards, todaysCounts, type AnkiCollection, type ApkgData, type LearnOptions } from '@brett-und-blatt/engine';
 import { passBook } from './passes';
 
 /*
@@ -35,6 +35,8 @@ export interface PackSummary {
   media: number;
   mediaBytes: number;
   learned: number;
+  /** Spezialkarten (Drachenspiel, Narrenhof, Quartett, Wölfe): als Kartenset wählbar (#270). */
+  specialCards: number;
   crt: number | null;
   /** Heute zu lernen: neue, Lern- und Wiederholungskarten (mit den Tageslimits des Pakets). */
   due: { new: number; learning: number; review: number };
@@ -150,6 +152,7 @@ export async function listPacks(): Promise<PackSummary[]> {
         media: keys.filter((k) => typeof k === 'string' && k.startsWith(`${p.id}\u0000`)).length,
         mediaBytes: p.mediaBytes,
         learned: p.cards.filter((c) => c.reps > 0 || c.type > 0).length,
+        specialCards: p.collection.notes.filter(isSpecialCardNote).length,
         crt: p.crt ?? null,
         due: (() => {
           const crt = p.crt ?? Math.floor(Date.now() / 1000 / 86400) * 86400;

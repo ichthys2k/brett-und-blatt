@@ -17,6 +17,7 @@ import {
   type SprintMove,
   type SprintState,
 } from './rules';
+import { describeMove } from './describe';
 
 export { meta } from './meta';
 export * from './catalog';
@@ -42,6 +43,7 @@ export const gameModule: GameModule<SprintState, SprintMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   sampleHidden,
   timeoutMove,
   result,

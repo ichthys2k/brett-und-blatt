@@ -1,4 +1,4 @@
-import { Rng, type Actor, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
+import { Rng, sanitizeCustomCardCatalog, type Actor, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { ACE, HAND_TYPES, HANDS, handLabel, isFace, JACK, standardDeck } from './cards';
 import {
   BOSS_LIST,
@@ -22,7 +22,7 @@ import {
   TOOL_PRICE,
   TOOLS,
 } from './content';
-import { MOD_KEYS, modDef, RARITY_INFO, type TableInfo } from './mods';
+import { MOD_KEYS, MODS, modDef, RARITY_INFO, type TableInfo } from './mods';
 import { decodeUnlocks, lockedFor, type PoolChoice } from './unlocks';
 import { favoriteHand, isDebuffed, scoreHand } from './scoring';
 import type {
@@ -93,6 +93,18 @@ export function setup(seats: number, options: Options, seed: string): SorterStat
   const fx = Rng.fromSeed(seed, 'effekte').state;
   const ids = new Rng(Rng.fromSeed(seed, 'kennungen').state).shuffle([...Array(52).keys()]);
 
+  let customMods: Record<string, any> | undefined;
+  let cardCatalogChecksum: string | undefined;
+  const rawCatalog = (options as Record<string, unknown>).customCardCatalog ?? (options as Record<string, unknown>).customMods ?? options.cardCatalog;
+  if (rawCatalog) {
+    // Nur Preis, Basiswert, Multiplikator und Darstellung in sicheren Grenzen (#277), nie Effekte.
+    const cat = sanitizeCustomCardCatalog(rawCatalog, 'court');
+    if (cat && Object.keys(cat.courtCards).length > 0) {
+      customMods = Object.fromEntries(Object.entries(cat.courtCards).filter(([key]) => MODS[key] !== undefined));
+      cardCatalogChecksum = cat.checksum || undefined;
+    }
+  }
+
   const runs: RunState[] = Array.from({ length: seats }, (_, seat) => {
     const deck = standardDeck().map((card, i): Card => ({ ...card, id: ids[i]! }));
     const run: RunState = {
@@ -139,6 +151,7 @@ export function setup(seats: number, options: Options, seed: string): SorterStat
       duelsWon: 0,
       discardsUsed: 0,
       livesLost: 0,
+      ...(customMods ? { customMods } : {}),
     };
     return run;
   });
@@ -157,6 +170,8 @@ export function setup(seats: number, options: Options, seed: string): SorterStat
     key,
     endless,
     locked,
+    ...(customMods ? { customMods } : {}),
+    ...(cardCatalogChecksum ? { cardCatalogChecksum } : {}),
   };
   for (const run of runs) {
     const rng = new Rng(run.rng.shop);

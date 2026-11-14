@@ -5,6 +5,7 @@ import { meta } from './meta';
 import { applyMove, currentPlayers, eventView, isLegal, legalMoves, playerView, result, setup } from './rules';
 import { prepare } from './server';
 import type { SorterMove, SorterState } from './types';
+import { describeMove } from './describe';
 
 export type * from './types';
 export * from './cards';
@@ -20,6 +21,16 @@ export const gameModule: GameModule<SorterState, SorterMove> = {
   prepare,
   info: meta,
   options: [
+    {
+      // Eigenes Kartenset aus Anki (#270, #277): nur geänderte Karten als JSON; das Spiel prüft sie mit sanitizeCustomCardCatalog.
+      id: 'customCardCatalog',
+      label: 'Eigenes Kartenset',
+      hidden: true,
+      pattern: '\\{[\\s\\S]*\\}',
+      maxLength: 14000,
+      choices: [{ value: '', label: 'Standardkarten' }],
+      default: '',
+    },
     {
       id: 'mode',
       label: 'Spielart (ab 2 Spielern)',
@@ -108,6 +119,7 @@ export const gameModule: GameModule<SorterState, SorterMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   eventView,
   result,
   bots: [sorterBot],

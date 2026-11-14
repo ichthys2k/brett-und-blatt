@@ -40,32 +40,32 @@ export interface Lesson {
 export const LESSONS: Lesson[] = [
   {
     id: 'mana',
-    title: 'Mana und Tiere',
-    tips: ['Unten siehst du deine Karten. Die blaue Zahl sagt, wie viel Mana (💧) eine Karte kostet.', 'Tippe eine Karte an: Das Tier kommt aufs Feld. Im nächsten Zug darf es angreifen.', 'Beende deinen Zug mit dem Knopf. Jeden Zug bekommst du einen Kristall mehr.', 'Greife den gegnerischen Helden an: Tippe dein Tier an, dann den Helden oben. Bei 0 Leben hast du gewonnen.'],
+    title: 'Knappen und Tiere',
+    tips: ['Unten siehst du deine Karten. Die Zahl sagt, wie viele Knappen eine Karte braucht.', 'Tippe eine Karte an: Das Tier kommt aufs Feld. Im nächsten Zug darf es angreifen.', 'Beende deinen Zug mit dem Knopf. Jeden Zug eilt ein Knappe mehr herbei.', 'Greife den gegnerischen Turnierherrn an: Tippe dein Tier an, dann den Turnierherrn oben. Bei 0 Wimpeln hast du gewonnen.'],
     scenario: { me: { house: 'farm', deck: simpleDeck(), hand: ['c7', 'n_kobold', 'n_crow'], mana: 2 }, enemy: { house: 'farm', deck: simpleDeck(), health: 6, hand: [] }, level: 'easy' },
   },
   {
     id: 'trade',
     title: 'Abtausch',
-    tips: ['Greifst du ein Tier an, schlagen beide zu: Jedes verliert so viele Leben, wie das andere Angriff hat.', 'Dein Reiher (4/3) räumt die Krähe (3/2) ab, fällt dabei aber selbst. Dein Bison (4/5) übersteht das. Probiere aus, welcher Tausch sich lohnt.', 'Ein Tier des Gegners wegzuräumen schützt deinen Helden oft mehr als ein Treffer.'],
+    tips: ['Greifst du ein Tier an, schlagen beide zu: Jedes verliert so viele Leben, wie das andere Angriff hat.', 'Dein Reiher (4/3) räumt die Krähe (3/2) ab, fällt dabei aber selbst. Dein Bison (4/5) übersteht das. Probiere aus, welcher Tausch sich lohnt.', 'Ein Tier des Gegners wegzuräumen schützt deinen Turnierherrn oft mehr als ein Treffer.'],
     scenario: { me: { house: 'farm', deck: simpleDeck(), board: ['n_heron', 'n_bison'], mana: 2 }, enemy: { house: 'farm', deck: simpleDeck(), health: 10, board: ['n_crow', 'n_kobold'], hand: [] }, level: 'easy' },
   },
   {
     id: 'guard',
-    title: 'Beschützer',
-    tips: ['Tiere mit 🛡️ Beschützer musst du zuerst angreifen, bevor du etwas anderes treffen darfst.', 'Lange drücken zeigt jede Karte groß, mit allen Fähigkeiten.'],
+    title: 'Schildwall',
+    tips: ['Tiere im 🛡️ Schildwall musst du zuerst angreifen, bevor du etwas anderes treffen darfst.', 'Lange drücken zeigt jede Karte groß, mit allen Fähigkeiten.'],
     scenario: { me: { house: 'farm', deck: simpleDeck(), board: ['n_heron', 'n_heron'], mana: 3 }, enemy: { house: 'forest', deck: simpleDeck(), health: 8, board: ['f_dormouse', 'sea_hermit'], hand: [] }, level: 'easy' },
   },
   {
     id: 'power',
     title: 'Hauskraft',
-    tips: ['Der runde Knopf neben „Zug beenden“ ist deine Hauskraft: einmal je Zug, 2 Mana.', 'Dein Hof ruft damit Küken. Wenn Mana übrig ist, lohnt sie sich fast immer.'],
+    tips: ['Der runde Knopf neben „Zug beenden“ ist deine Hauskraft: einmal je Zug, 2 Knappen.', 'Dein Hof ruft damit Küken. Wenn Knappen übrig sind, lohnt sie sich fast immer.'],
     scenario: { me: { house: 'farm', deck: simpleDeck(), hand: ['c7'], mana: 3 }, enemy: { house: 'farm', deck: simpleDeck(), health: 8, board: ['n_kobold'], hand: [] }, level: 'easy' },
   },
   {
     id: 'spell',
-    title: 'Zauber',
-    tips: ['Zauber wirken sofort und sind dann weg. Manche brauchen ein Ziel: erst die Karte antippen, dann das Ziel.', 'Blitzschlag trifft Gegner oder Helden, der Honigtopf stärkt dein eigenes Tier.'],
+    title: 'Kniffe',
+    tips: ['Kniffe wirken sofort und sind dann abgelegt. Manche brauchen ein Ziel: erst die Karte antippen, dann das Ziel.', 'Blitzschlag trifft Gegner oder Turnierherrn, der Honigtopf stärkt dein eigenes Tier.'],
     scenario: { me: { house: 'wild', deck: simpleDeck(), board: ['n_crow'], hand: ['s_lightning', 's_honey', 's_lightning'], mana: 4 }, enemy: { house: 'farm', deck: simpleDeck(), health: 10, board: ['n_heron'], hand: [] }, level: 'easy' },
   },
   {
@@ -77,7 +77,7 @@ export const LESSONS: Lesson[] = [
   {
     id: 'final',
     title: 'Dein erstes Duell',
-    tips: ['Jetzt alles zusammen: ein ganzes Deck, ein echter Gegner, er hat nur etwas weniger Leben.', 'Tipp: Der Knopf „Tipp“ unter dem Feld schlägt dir einen Zug vor.'],
+    tips: ['Jetzt alles zusammen: ein ganzes Deck, ein echter Gegner, er hat nur etwas weniger Wimpel.', 'Tipp: Der Knopf „Tipp“ unter dem Feld schlägt dir einen Zug vor.'],
     scenario: { me: { house: 'farm', deck: themeCardIds('farm', true) }, enemy: { house: 'forest', deck: themeCardIds('forest', true), health: 18 }, level: 'easy' },
   },
 ];
@@ -97,14 +97,14 @@ export interface RunFoe {
 
 /** Die Wanderschaft: acht Gegner, nach dem Tierepos und eigenen Sagen. */
 export const RUN_FOES: RunFoe[] = [
-  { name: 'Lampe der Hase', emoji: '🐇', rule: 'Hat wenig Leben, ist aber schnell dabei.', house: 'farm', health: 14, board: ['n_kobold'], level: 'easy' },
+  { name: 'Lampe der Hase', emoji: '🐇', rule: 'Hat wenige Wimpel, ist aber schnell dabei.', house: 'farm', health: 14, board: ['n_kobold'], level: 'easy' },
   { name: 'Henning der Hahn', emoji: '🐓', rule: 'Beginnt mit zwei Küken.', house: 'farm', health: 16, board: ['token_chick', 'token_chick'], level: 'easy' },
   { name: 'Hinze der Kater', emoji: '🐈', rule: 'Lauert hinter einer Wildkatze.', house: 'wild', health: 18, board: ['n_wildcat'], level: 'easy' },
   { name: 'Mira im Moor', emoji: '🕷️', rule: 'Ihr Bienenstock steht schon.', house: 'bugs', health: 20, board: ['bug_hive'], level: 'medium' },
   { name: 'Grimbart im Hain', emoji: '🦡', rule: 'Trägt 5 Rüstung.', house: 'forest', health: 22, armor: 5, level: 'medium' },
-  { name: 'Kapitän Krabbe', emoji: '🦀', rule: 'Hält dich mit zwei Beschützern auf.', house: 'sea', health: 24, board: ['sea_hermit', 'sea_hermit'], level: 'medium' },
-  { name: 'Isegrim der Wolf', emoji: '🐺', rule: 'Hat von Anfang an zwei Kristalle mehr.', house: 'wild', health: 26, mana: 3, level: 'hard' },
-  { name: 'König Nobel', emoji: '🦁', rule: 'Die letzte Prüfung: 30 Leben, 5 Rüstung und ein Platzhirsch.', house: 'forest', health: 30, armor: 5, board: ['f_stag'], level: 'hard' },
+  { name: 'Kapitän Krabbe', emoji: '🦀', rule: 'Hält dich mit zwei Tieren im Schildwall auf.', house: 'sea', health: 24, board: ['sea_hermit', 'sea_hermit'], level: 'medium' },
+  { name: 'Isegrim der Wolf', emoji: '🐺', rule: 'Hat von Anfang an zwei Knappen mehr.', house: 'wild', health: 26, mana: 3, level: 'hard' },
+  { name: 'König Nobel', emoji: '🦁', rule: 'Die letzte Prüfung: 30 Wimpel, 5 Rüstung und ein Platzhirsch.', house: 'forest', health: 30, armor: 5, board: ['f_stag'], level: 'hard' },
 ];
 
 export interface Treasure {
@@ -115,12 +115,12 @@ export interface Treasure {
 }
 
 export const TREASURES: Treasure[] = [
-  { id: 'vigor', name: 'Kräutertee', emoji: '🍵', text: '5 Leben mehr in jedem Kampf.' },
+  { id: 'vigor', name: 'Kräutertee', emoji: '🍵', text: '5 Wimpel mehr in jedem Kampf.' },
   { id: 'shield', name: 'Alter Schild', emoji: '🛡️', text: '5 Rüstung in jedem Kampf.' },
-  { id: 'mana', name: 'Kristallsplitter', emoji: '💎', text: 'Jeder Kampf beginnt mit einem Kristall mehr.' },
+  { id: 'mana', name: 'Knappenbrief', emoji: '📜', text: 'Jeder Kampf beginnt mit einem Knappen mehr.' },
   { id: 'chick', name: 'Treues Küken', emoji: '🐥', text: 'In jedem Kampf liegt zu Beginn ein Küken bei dir.' },
   { id: 'scout', name: 'Spähtrupp', emoji: '🐜', text: 'In jedem Kampf liegen zu Beginn zwei Ameisen bei dir.' },
-  { id: 'guard', name: 'Treuer Käfer', emoji: '🪲', text: 'In jedem Kampf liegt zu Beginn ein Käfer als Beschützer bei dir.' },
+  { id: 'guard', name: 'Treuer Käfer', emoji: '🪲', text: 'In jedem Kampf liegt zu Beginn ein Käfer im Schildwall bei dir.' },
 ];
 
 export const SCENARIO_PATTERN = '[a-z0-9-]+';

@@ -87,6 +87,28 @@ function deviceCounterId(): string {
   }
 }
 
+type RecordListener = () => void;
+let recordListeners: Set<RecordListener> | undefined;
+function getRecordListeners(): Set<RecordListener> {
+  return (recordListeners ??= new Set<RecordListener>());
+}
+
+export function onGameRecorded(listener: RecordListener): () => void {
+  const set = getRecordListeners();
+  set.add(listener);
+  return () => set.delete(listener);
+}
+function notifyRecordListeners(): void {
+  if (!recordListeners) return;
+  for (const l of recordListeners) {
+    try {
+      l();
+    } catch {
+      // still
+    }
+  }
+}
+
 /** Schreibt die Zeilen ins Partiebuch ihrer Pässe und legt Pokale ab. Liefert, ob der aktive Pass einen Pokal bekam. */
 export function saveRows(rows: readonly RecordRow[], seats: readonly SeatConfig[]): boolean {
   if (rows.length === 0) return false;
@@ -120,6 +142,7 @@ export function saveRows(rows: readonly RecordRow[], seats: readonly SeatConfig[
     }
   }
   passSyncSoon();
+  notifyRecordListeners();
   return trophyForActive;
 }
 
@@ -146,6 +169,7 @@ export function saveFinds(chapter: string, total: number, ids: readonly string[]
     return JSON.stringify(recordFinds(album, chapter, total, ids, Date.now()));
   });
   passSyncSoon();
+  notifyRecordListeners();
 }
 
 /** Haken im Spieltisch: zeichnet das Ergebnis genau einmal je Partie auf. */

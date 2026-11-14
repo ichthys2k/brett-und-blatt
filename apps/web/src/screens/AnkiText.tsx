@@ -7,6 +7,9 @@ import { loadLearnBook } from '../lib/learnStore';
 import { OWN } from '../lib/collectionSource';
 import { downloadFile } from '../lib/download';
 import { loadCollection, saveCollection } from '../lib/library';
+import { currentArchiveLink, publishArchive, stopArchiveShare } from '../lib/archiveShare';
+import { QrCode } from '../components/OnlineParts';
+import { GAME_SERVER } from '../lib/server';
 
 /*
  * Import und Export im Anki-Textformat (#101, L2): Text einfügen oder eine Datei wählen, Spalten den Feldern zuordnen, Duplikate wie in Anki
@@ -255,6 +258,33 @@ export function AnkiExport({ onDone }: { onDone: () => void }) {
       setMessage('Das Paket konnte nicht erstellt werden.');
     }
   };
+
+  const packId = useMemo(() => (deck === 'all' ? 'own:all' : `own:deck:${deck}`), [deck]);
+  const [shareLink, setShareLink] = useState<string | null>(() => currentArchiveLink(packId));
+  const [sharingOpen, setSharingOpen] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
+
+  useEffect(() => {
+    setShareLink(currentArchiveLink(packId));
+  }, [packId]);
+
+  const sharePackage = async () => {
+    setShareBusy(true);
+    setMessage(null);
+    try {
+      const media = await loadMedia(OWN);
+      const deckName = deck === 'all' ? 'Eigene Sammlung' : (col.decks.find((d) => d.id === deck)?.name ?? 'Stapel');
+      const bytes = await exportApkg({ collection: col, media, ...(deck === 'all' ? {} : { deckId: deck }) }, { scheduling: false, media: true });
+      const link = await publishArchive(packId, bytes, { name: deckName, notes: count, cards: count });
+      setShareLink(link);
+      setSharingOpen(true);
+      setMessage('Paket geteilt.');
+    } catch {
+      setMessage('Das Paket konnte nicht geteilt werden.');
+    } finally {
+      setShareBusy(false);
+    }
+  };
   return (
     <section className="space-y-3" aria-labelledby="anki-export">
       <h2 id="anki-export" className="text-xl">
@@ -306,6 +336,39 @@ export function AnkiExport({ onDone }: { onDone: () => void }) {
       <Button className="w-full" disabled={count === 0} onClick={() => void savePackage()}>
         📦 Als Anki-Paket (.apkg) speichern
       </Button>
+      {GAME_SERVER && (
+        <Button className="w-full" disabled={count === 0 || shareBusy} onClick={() => (setSharingOpen(!sharingOpen), !shareLink && void sharePackage())}>
+          🔗 {shareLink ? 'Geteiltes Anki-Paket anzeigen' : 'Als Anki-Paket (.apkg) teilen'}
+        </Button>
+      )}
+      {(sharingOpen || shareLink) && shareLink && (
+        <div className="space-y-2 rounded-xl border border-line p-3">
+          <p className="text-sm text-muted">
+            Das Paket wird mit allen Bildern und Tönen, aber ohne deinen Lernstand, im Browser verschlüsselt und als eine Datei abgelegt. Nur wer den Link oder QR-Code hat, kann es öffnen; es gibt keine öffentliche Liste. Nach einem Jahr ohne Abruf wird es gelöscht. Teile nur, was du teilen darfst.
+          </p>
+          <input readOnly className={FIELD} value={shareLink} aria-label="Link zum Paket" onFocus={(e) => e.currentTarget.select()} />
+          <QrCode text={shareLink} label="QR-Code für das Paket" />
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => void navigator.clipboard?.writeText(shareLink).then(() => setMessage('Link kopiert.'))}>Kopieren</Button>
+            <Button
+              disabled={shareBusy}
+              onClick={async () => {
+                setShareBusy(true);
+                try {
+                  await stopArchiveShare(packId);
+                  setShareLink(null);
+                  setSharingOpen(false);
+                  setMessage('Geteilt wird nicht mehr; der Link zeigt nichts mehr.');
+                } finally {
+                  setShareBusy(false);
+                }
+              }}
+            >
+              Teilen beenden
+            </Button>
+          </div>
+        </div>
+      )}
       {message && <p role="status" className="text-sm">{message}</p>}
       <Button variant="ghost" onClick={onDone}>
         Schließen

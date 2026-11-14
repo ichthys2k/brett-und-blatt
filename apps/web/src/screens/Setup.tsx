@@ -1,4 +1,5 @@
 import { BOT_LEVELS, randomSeed, resolveOptions, teamsFor, timePresetsOf, type BotLevel, type Options, type SeatConfig, type SeatKind, type TimePresetId } from '@brett-und-blatt/engine';
+import { CardSetNote } from '../components/CardSetNote';
 import { useEffect, useState } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
 import { HowToList } from '../components/HowTo';
@@ -18,6 +19,7 @@ interface SeatDraft {
   kind: SeatKind;
   name: string;
   level: BotLevel;
+  botId?: string;
   /** Pass dieses Geräts (#139); fehlt bei freiem Namen. */
   passId?: string;
 }
@@ -29,6 +31,12 @@ interface SetupDraft {
 }
 
 const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
+
+function selectableBotsOf(module: LoadedGame['module']) {
+  const extras = module.bots.filter((b) => b.selectable);
+  if (extras.length === 0) return [module.bots[0]!];
+  return [module.bots[0]!, ...extras.filter((b) => b !== module.bots[0])];
+}
 
 function defaultDraft(game: LoadedGame): SetupDraft {
   return {
@@ -55,9 +63,24 @@ function restoreDraft(game: LoadedGame, params?: Record<string, string>): SetupD
     return { ...fallback, options: mergedOptions };
   }
   const { min, max } = game.info.players;
+  const selectableBots = selectableBotsOf(game.module);
   const seats = saved.seats.filter((s) => s && (s.kind === 'human' || s.kind === 'bot')).slice(0, max);
   return {
-    seats: seats.length >= min ? seats.map((s) => ({ kind: s.kind, name: String(s.name ?? ''), level: BOT_LEVELS.includes(s.level) ? s.level : 'medium', ...(s.kind === 'human' && s.passId && passBook.list().some((p) => p.id === s.passId) ? { passId: s.passId } : {}) })) : fallback.seats,
+    seats:
+      seats.length >= min
+        ? seats.map((s) => {
+            const matchedBot = s.botId ? selectableBots.find((b) => b.id === s.botId) : undefined;
+            const level = BOT_LEVELS.includes(s.level) ? s.level : 'medium';
+            const validLevel = matchedBot && !matchedBot.levels.includes(level) ? matchedBot.levels[0]! : level;
+            return {
+              kind: s.kind,
+              name: String(s.name ?? ''),
+              level: validLevel,
+              ...(matchedBot ? { botId: matchedBot.id } : {}),
+              ...(s.kind === 'human' && s.passId && passBook.list().some((p) => p.id === s.passId) ? { passId: s.passId } : {}),
+            };
+          })
+        : fallback.seats,
     options: mergedOptions,
     time: TIME_PRESETS.includes(saved.time) ? saved.time : fallback.time,
   };
@@ -74,7 +97,7 @@ function toSeatConfigs(seats: SeatDraft[]): SeatConfig[] {
       return { kind: 'human', name: seat.name.trim() || t('setup.defaultName', { n: i + 1 }), avatar: profile?.avatar };
     }
     botNumber++;
-    return { kind: 'bot', name: botCount > 1 ? `${t('setup.botName')} ${botNumber}` : t('setup.botName'), level: seat.level };
+    return { kind: 'bot', name: botCount > 1 ? `${t('setup.botName')} ${botNumber}` : t('setup.botName'), level: seat.level, ...(seat.botId ? { botId: seat.botId } : {}) };
   });
 }
 
@@ -174,6 +197,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
         </div>
       )}
 
+      <CardSetNote gameId={info.id} />
       <Button variant="primary" className="w-full text-lg" disabled={humansMissing > 0} onClick={start}>
         {t('setup.start')}
       </Button>
@@ -238,12 +262,37 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
                   onChange={(event) => updateSeat(index, { name: event.target.value })}
                 />
               ) : seat.kind === 'human' ? null : (
-                <Segmented
-                  label={`Stärke (${ui.seatLabel(index, draft.seats.length)})`}
-                  value={seat.level}
-                  choices={BOT_LEVELS.map((level) => ({ value: level, label: levelLabel(level) }))}
-                  onChange={(level) => updateSeat(index, { level })}
-                />
+                (() => {
+                  const selectableBots = selectableBotsOf(module);
+                  const activeBot = selectableBots.find((b) => b.id === seat.botId) ?? selectableBots[0]!;
+                  const levels = activeBot?.levels ?? BOT_LEVELS;
+                  return (
+                    <div className="space-y-2">
+                      {selectableBots.length > 1 && (
+                        <Segmented
+                          label={`Bot (${ui.seatLabel(index, draft.seats.length)})`}
+                          value={activeBot.id}
+                          choices={selectableBots.map((b) => ({ value: b.id, label: b.name }))}
+                          onChange={(botId) => {
+                            const nextBot = selectableBots.find((b) => b.id === botId);
+                            const nextLevel = nextBot && !nextBot.levels.includes(seat.level) ? nextBot.levels[0]! : seat.level;
+                            updateSeat(index, { botId, level: nextLevel });
+                          }}
+                        />
+                      )}
+                      {levels.length > 1 ? (
+                        <Segmented
+                          label={`Stärke (${ui.seatLabel(index, draft.seats.length)})`}
+                          value={seat.level}
+                          choices={levels.map((level) => ({ value: level, label: levelLabel(level) }))}
+                          onChange={(level) => updateSeat(index, { level })}
+                        />
+                      ) : (
+                        <p className="text-xs text-muted">Stärke: {levelLabel(levels[0] ?? 'hard')} (Großmeister)</p>
+                      )}
+                    </div>
+                  );
+                })()
               )}
             </li>
           ))}

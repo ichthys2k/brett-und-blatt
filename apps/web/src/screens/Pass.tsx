@@ -5,6 +5,7 @@ import { ShareDialog } from '../components/ShareDialog';
 import { AccountPanel } from '../components/AccountPanel';
 import { PlayerPassPanel } from '../components/PlayerPassPanel';
 import { AlbumBook } from '../components/AlbumBook';
+import { CardBackPicker } from '../components/CardBackPicker';
 import { RescueHint } from '../components/RescueHint';
 import { StampBook } from '../components/StampBook';
 import { TavernPage } from '../components/TavernPage';
@@ -154,6 +155,8 @@ export function PassScreen() {
       <RescueHint />
 
       <StampBook />
+
+      <CardBackPicker />
 
       <TrophyCabinet />
 

@@ -3,9 +3,11 @@ import { meta } from './meta';
 import { applyMove, currentPlayers, isLegal, legalMoves, result, setup, type ChessMove, type ChessState, type Promotion } from './rules';
 import { bookMoves } from './book';
 import { ChessSearch } from './search';
+import { describeMove } from './describe';
 
 export type { BoardMove, ChessEnd, ChessMove, ChessState, Promotion } from './rules';
 export { loadFromPgn, toPgn, turnSeat } from './rules';
+export { parseUciMove } from './stockfish';
 
 /**
  * Ab welchem Rückstand (in Hundertstel Bauern, aus Sicht des Bots) nimmt er ein Remis an?
@@ -59,6 +61,21 @@ const chessBot: BotDefinition<ChessState, ChessMove> = {
   },
 };
 
+/**
+ * Zusatz-Bot für die höchste Spielstärke („Großmeister“).
+ * Im Browser übernimmt die WebAssembly-Engine Stockfish im eigenen Web Worker (`apps/web/src/lib/stockfishBot.ts`);
+ * auf dem Server und in synchronen Tests dient der Alpha-Beta-Bot als Rückfall.
+ */
+const stockfishBot: BotDefinition<ChessState, ChessMove> = {
+  id: 'stockfish',
+  name: 'Stockfish (Großmeister)',
+  levels: ['hard'],
+  selectable: true,
+  chooseMove(ctx) {
+    return chessBot.chooseMove({ ...ctx, level: 'hard' });
+  },
+};
+
 export const gameModule: GameModule<ChessState, ChessMove> = {
   info: meta,
   options: [
@@ -95,6 +112,8 @@ export const gameModule: GameModule<ChessState, ChessMove> = {
   applyMove,
   playerView: (state) => state,
   result,
+  // Kurzer Text je Zug für fremde Clients und den Bildschirmleser (#335).
+  describeMove,
   // Die allgemeine Monte-Carlo-Suche ist für Schach zu schwach und zu langsam; der Zufallsbot bleibt zum Testen.
-  bots: [chessBot, randomBot as unknown as BotDefinition<ChessState, ChessMove>],
+  bots: [chessBot, stockfishBot, randomBot as unknown as BotDefinition<ChessState, ChessMove>],
 };

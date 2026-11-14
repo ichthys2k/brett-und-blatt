@@ -45,7 +45,7 @@ function cleanStyle(value: string): string {
 }
 
 function mediaName(src: string): string | null {
-  const raw = decodeAttr(src).trim();
+  const raw = decodeAttr(src).trim().replace(/^\.\//, '');
   if (!raw || /^(?:[a-z][a-z0-9+.-]*:|\/\/|\/)/i.test(raw) || raw.includes('..') || raw.includes('\\')) return null;
   try {
     return decodeURIComponent(raw).normalize('NFC');

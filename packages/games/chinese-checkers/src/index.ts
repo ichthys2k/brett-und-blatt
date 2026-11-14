@@ -13,6 +13,7 @@ import {
   type ChineseCheckersMove,
   type ChineseCheckersState,
 } from './rules';
+import { describeMove } from './describe';
 
 export * from './rules';
 export * from './bots';
@@ -57,6 +58,7 @@ export const gameModule: GameModule<ChineseCheckersState, ChineseCheckersMove> =
   applyMove,
   // Offenes Spiel: Jeder darf alles sehen.
   playerView: (state) => state,
+  describeMove,
   result,
   resignMove,
   timeoutMove,

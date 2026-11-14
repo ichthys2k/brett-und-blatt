@@ -1,6 +1,6 @@
 # Brett & Blatt – Hinweise für KI-Agenten
 
-Diese Datei ist für Agenten außer Claude Code gedacht (Google Antigravity/Gemini, Codex, Cursor u. a.). **Die ausführliche Übergabe steht in [`CLAUDE.md`](CLAUDE.md) – lies sie vor jeder Aufgabe ganz.** Sie gilt für alle Agenten gleich, auch wenn sie nach Claude benannt ist. Hier stehen nur die Kernregeln und Wegweiser; bei Widersprüchen gilt `CLAUDE.md`, und neue Erkenntnisse gehören dorthin (nicht hierher), damit es nur eine Quelle gibt.
+Diese Datei ist für Agenten außer Claude Code gedacht (Google Antigravity/Gemini, Codex, Cursor u. a.). **Die ausführliche Übergabe steht in [`CLAUDE.md`](CLAUDE.md) – lies sie vor jeder Aufgabe ganz.** Sie gilt für alle Agenten gleich, auch wenn sie nach Claude benannt ist. Hier stehen nur die Kernregeln und Wegweiser; bei Widersprüchen gilt `CLAUDE.md`. Neue Regeln und Technik-Erkenntnisse gehören nach `CLAUDE.md`, **neuer Stand gehört in die Chronik [`docs/CHRONIK.md`](docs/CHRONIK.md)** (nicht hierher), damit es je Sache nur eine Quelle gibt.
 
 Freie Spielesammlung im Browser (Karten- und Brettspiele für Handy und Desktop): allein gegen Bots, zu mehreren an einem Gerät, online. Live unter https://spiele.lipponer.de, Spieleserver auf Cloudflare unter https://brett-und-blatt.lipponer.workers.dev. Lizenz AGPL-3.0, Inhalte CC BY-SA 4.0.
 
@@ -11,12 +11,14 @@ Freie Spielesammlung im Browser (Karten- und Brettspiele für Handy und Desktop)
 - **Eigener Zweig – selbstständig; `main` – nur auf „deploy“:** Arbeite immer auf einem eigenen Zweig. Den eigenen Arbeitszweig committest und lädst du ohne einzelne Anweisung hoch und öffnest einen PR mit `Refs #…` (nicht `Fixes #…`, damit das Issue erst nach Cornelius' Prüfung geschlossen wird). Kein Force-Push, keine fremden Zweige verändern. **Mergen oder pushen nach `main` nur auf Cornelius' ausdrückliches Wort „deploy“.**
 - **Jeder Push auf `main` veröffentlicht sofort:** Die CI (`.github/workflows/ci.yml`) prüft, veröffentlicht dann den Spieleserver auf Cloudflare und danach die Web-App über GitHub Pages.
 - **Vor dem Hochladen:** `corepack pnpm check` (Typprüfung, alle Tests, Build) muss grün sein, und die Änderung im Browser ansehen (`corepack pnpm --filter @brett-und-blatt/web dev`, http://localhost:5173).
+- **Offenes Protokoll (#334):** Nach jeder Änderung an `packages/online/src/protocol.ts` das Schema mit `node scripts/protokoll-schema.mjs` neu erzeugen (sonst scheitert `tests/protokoll-schema.test.ts`); Ablauf für fremde Clients in `docs/protokoll.md`.
 - **Ein Spiel gilt erst als fertig,** wenn seine Tests die Vertragsprüfungen wirklich ausführen (`for (const check of gameContractChecks(gameModule)) it(check.name, check.run)`), `corepack pnpm rauchtest` (Browser) und `PRUEFSTAND=1 PRUEFSTAND_SPIELE=<id> corepack pnpm pruefstand` grün sind und man es selbst im Browser gegen den Bot gespielt hat. Unfertige Spiele bekommen `draft: true` im Steckbrief und bleiben so von Startseite und Server fern. CSS-Klassen immer mit eigenem Spielpräfix.
-- **Commit-Adresse:** `855814+ichthys2k@users.noreply.github.com` (vorher mit `git config user.email` prüfen).
+- **Commit-Adresse:** `855814+ichthys2k@users.noreply.github.com` (vorher mit `git config user.email` prüfen). In der Cloud über Umgebungsvariablen gesetzt; die CI lässt Commits mit anderer Autor- oder Committer-Adresse scheitern (`scripts/commit-adresse-pruefen.sh`).
 - **GitHub ist die einzige gemeinsame Quelle:** Repo-Ordner nicht per Synology Drive o. Ä. synchronisieren; jeder Arbeitsgang beginnt mit `git pull` und endet mit Commit und Push des Arbeitszweigs (nach `main` nur auf „deploy“). Aufgaben und Ideen liegen als GitHub Issues; neue Ideen stehen auf `status: Idee`, nur Cornelius setzt sie auf `status: Ready`. Zu Beginn jeder Sitzung die Issues mit `status: Ready` und `status: Review` abrufen (`gh issue list --label "status: Ready"`) und kurz nennen. Agenten bearbeiten nur Ready-Issues und reservieren sie vorab durch Kommentar mit Konto und Zweig (🔒); keine Assignees oder Labels für die Reservierung verwenden.
 - **Keine Geheimnisse ins Repo** (`.env`, Tokens, Zugangsdaten). Nichts außerhalb dieses Repos anfassen, was nicht zur Aufgabe gehört.
 - **Klänge:** Die MP3s liegen im **privaten** Repo `ichthys2k/brett-und-blatt-klaenge` (ElevenLabs-Lizenz) und dürfen nie ins öffentliche Repo kopiert werden. Nur die CI holt sie per Secret. Lokal läuft alles auch ohne – fehlende Klänge sind dann nur ein Hinweis. Neue Klänge nur nach Auswahl durch Cornelius – Werkzeuge im Klang-Repo (`tools/erzeugen.mjs`, `stimme.mjs`, `hoerprobe.mjs`, `uebernehmen.mjs`), Stand in `docs/spiele/klaenge-alle-spiele.md`. Dateinamen dort mit Unterstrichen, Katalognamen mit Bindestrichen, Sprachausrufe `ruf-…`; in Worktrees `KLAENGE_DIR=$HOME/code/brett-und-blatt-klaenge` setzen.
 - **Abhängigkeiten:** pnpm 12 nur über corepack (`corepack pnpm …`, `pnpm` ist nicht im PATH). pnpm hat eine Wartefrist für neue Paketversionen – **keine `minimumReleaseAgeExclude`-Ausnahmen**, sondern ältere Versionen wählen. Neue Fremdbibliotheken in `THIRD_PARTY.md` eintragen.
+- **Originale der gemalten Bilder nur im privaten Repo:** Jedes generierte Bild wird in **maximaler Original-Auflösung** archiviert, ausschließlich im privaten Repo `ichthys2k/brett-und-blatt-grafik` (`../brett-und-blatt-grafik/originale/<Zielordner>/<name>.png`); ins öffentliche Repo kommt nur die WebP-Fassung, nie ein Ordner `original/` oder ein PNG über 1 MB. `scripts/grafik/uebernehmen.mjs` legt das Original ab und bricht ohne das private Repo ab. Bilder erzeugen nach [`.agent/workflows/grafik-erzeugen.md`](.agent/workflows/grafik-erzeugen.md) und der Stilbibel [`docs/grafik/STILBIBEL.md`](docs/grafik/STILBIBEL.md).
 
 ## Arbeitsablauf mit GitHub Issues
 
@@ -40,7 +42,9 @@ corepack pnpm exec vitest run packages/games/<id>     # Tests eines Spiels
 corepack pnpm neues-spiel <id> "<Name>"               # neues Spiel aus der Vorlage
 corepack pnpm --filter @brett-und-blatt/web dev       # Web-App, http://localhost:5173
 corepack pnpm --filter @brett-und-blatt/server dev    # Spieleserver, http://127.0.0.1:8787
+corepack pnpm --filter @brett-und-blatt/xr dev        # VR-App (#339), http://localhost:5175/?server=http://127.0.0.1:8787
 node apps/server/scripts/smoke.mjs                    # Rauchtest gegen den lokalen Server
+node apps/cli/test/partie.mjs                         # Text-Client spielt gegen den lokalen Server (#336)
 corepack pnpm rauchtest                               # nach dem Build: jedes Spiel im Browser starten
 PRUEFSTAND=1 corepack pnpm pruefstand                 # gründlicher Prüfstand (PRUEFSTAND_SPIELE=<id> für einzelne)
 ```
@@ -49,30 +53,16 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 
 ## Wo was steht
 
-- [`CLAUDE.md`](CLAUDE.md) – Übergabe: Regeln, Technik, aktueller Stand, nächste Schritte.
+- [`CLAUDE.md`](CLAUDE.md) – Übergabe: Regeln, Werkzeuge, Technik, Rechnerwechsel.
+- [`docs/CHRONIK.md`](docs/CHRONIK.md) – Chronik: was wann umgesetzt wurde, mit Dateipfaden (früher „Stand“, „Nächste Schritte“ und „Rückblick“ in `CLAUDE.md`). Neuer Stand gehört hierher.
 - [`PLANUNG.md`](PLANUNG.md) – Wegweiser: fertige Filter-Links (Ansichten), Projekt-Board, Archiv #72; die Aufgabenliste selbst sind [GitHub Issues](https://github.com/ichthys2k/brett-und-blatt/issues).
 - [`docs/spiele/offene-plaene.md`](docs/spiele/offene-plaene.md) – Übergabe: offene Pläne mit nächstem Auftrag (zuerst Marktplatz-Probe nur mit Bots, Paket C wartet auf Ja), Fehler, Konzepte.
 - [`docs/KONZEPT.md`](docs/KONZEPT.md) – Entscheidungen, Spielmodul-Schnittstelle, Muster, Fahrplan.
 - [`docs/spiele/`](docs/spiele/README.md) – ein Plan pro Spiel (Regeln, Optionen, Bot, Oberfläche, Umsetzungsstand), Übersicht im README.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) – wie ein neues Spiel angelegt wird.
-- Code: `apps/web` (React-App), `apps/server` (Cloudflare-Worker), `packages/engine`, `packages/online`, `packages/ui`, `packages/games/<id>` (Ordnername = Spiel-`id`), `content/`.
-
-## Fahrplan-Stand (Oktober 2026)
-
-- ✅ Etappe 1 Fundament, ✅ Etappe 2 Offline-Sammlung, ✅ Etappe 3 Online (Schiffe versenken, Quartett, Mäxle, Bingo), ✅ Etappe 4 Großes Brett (Go, Domino, Farbe & Form).
-- ✅ Etappe 5 Stichspiele (Skat, Schafkopf, Doppelkopf): Stich-Kern und Serien-Rahmen in der Engine, 4-Farben- und Bayerisch/Deutsches Blatt, Skat (ISkO, Seeger-Fabian), Schafkopf (Sauspiel, Wenz, Solo, Ramsch), Doppelkopf (DDV, Soli, Hochzeit, Ansagen).
-- ✅ Etappe 6 Eigene Spiele: abgeschlossen – Farbensortierer und Drachenspiel (Emojistone) sind live.
-- ✅ Etappe 7: **Eins!** (Uno), **Mau-Mau**, **Dame** (Checkers), **Nicht ärgern!** (Ludo), **Poker** (Texas Hold'em), **Wortgitter/Scrabble**, sowie **Bibel-Quiz**, **Galgenmännchen**, **Wort-Salat**. **Binokel** und **Wortgitter** wurden am 28.10. neu geschrieben und sind spielbar.
-- ✅ Weitere Spiele: **Gomoku** (Fünf in einer Reihe), **Kartenblitz** (früher Ligretto, Reaktionsspiel), **Würfelblock** (früher Kniffel). Mathe-Übungen für Klasse 5 & 6 (Zielzahl, Teiler-Duell, Rechenmauer, Enten-Rallye) und erweiterte Mathe-Modi in Klassikern umgesetzt.
-
-- Korrekturplan aus dem Prüfbericht (28.10.2026): ✅ Etappe 1 Lecks, ✅ Etappe 2 Prüfnetz, ✅ Etappe 3 Reparaturen (Stichspiele, Bots für Skat, Schafkopf, Doppelkopf, Kniffel; Wortgitter und Binokel neu), ✅ Etappe 4 Rechtliches (Umbenennungen, freies Wörterbuch, Enten-Rallye-Klänge im privaten Klang-Repo). Details in `CLAUDE.md`.
-
-- Nachträge 28.10.2026: Sonderspiele der Stichspiel-Bots (Null, Tout, Bettel, Durch), Schafkopf-Ansagen und -Abrechnung korrigiert, Bibel-Quiz-Lösung in der Sicht verborgen, PWA lädt vorab nur ~6 MB, Git-Geschichte von den Enten-Rallye-MP3s bereinigt (andere Rechner: `git fetch && git reset --hard origin/main`).
-- Fahrplan ab 29.10.2026: A Doku-Abgleich → B Schach (Remis, PGN, Eröffnungsbuch) → C Stichspiele (Schafkopf-Frühende, Skat-Ansagen, PIMC-Bot) → D Klassenzimmer (Kartenblitz geteilter Bildschirm) → E Spieltiefe ✅ → F neue Spiele (Speed ✅, Präsident ✅, Tiefflug ✅, Fix gefunden! ✅; Pläne in `docs/spiele/`). Details unter „Nächste Schritte“ in `CLAUDE.md`.
-- Paket B Wortspiele (1.11.2026): Bausteine Texteingabe mit Prüfung, Abstimmung, Teams in der Lobby; Spiele Kategorien-Sprint, Wer bin ich?, Verboten!. Kataloge (freigegeben) in `content/wortspiele/`, vom Spieleserver geladen. Kein freier Chat.
-
-Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; alle 20 Musikstücke sind eingetragen. Offene Punkte und nächste Schritte stehen in `CLAUDE.md`.
+- [`docs/grafik/STILBIBEL.md`](docs/grafik/STILBIBEL.md) – Stil, Verbote und Regeln für gemalte Bilder; Ablauf zum Erzeugen in [`.agent/workflows/grafik-erzeugen.md`](.agent/workflows/grafik-erzeugen.md), Bestand in [`docs/grafik/BESTAND.md`](docs/grafik/BESTAND.md).
+- Code: `apps/web` (React-App), `apps/xr` (VR-App, `docs/vr.md`), `apps/cli` (Text-Client), `apps/server` (Cloudflare-Worker), `packages/engine`, `packages/online`, `packages/rtc` (WebRTC: VR-Treffpunkt, Sprachchat), `packages/ui`, `packages/games/<id>` (Ordnername = Spiel-`id`), `content/`.
 
 ## Zum Abschluss einer Aufgabe
 
-Wenn sich am Stand etwas ändert, den Abschnitt „Stand“ bzw. „Nächste Schritte“ in `CLAUDE.md` und den Plan des Spiels in `docs/spiele/` nachtragen – mit auf dem Arbeitszweig, damit es im PR sichtbar ist.
+Wenn sich am Stand etwas ändert, die Chronik `docs/CHRONIK.md` (neuer Stand gehört in die Chronik, nicht nach `CLAUDE.md`) und den Plan des Spiels in `docs/spiele/` nachtragen – mit auf dem Arbeitszweig, damit es im PR sichtbar ist.
