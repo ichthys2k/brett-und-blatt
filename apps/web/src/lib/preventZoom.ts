@@ -7,8 +7,12 @@
  * - Durch `preventDefault()` bei Safari-Gesten (`gesturestart`, `gesturechange`), bei `touchmove` mit mehr als
  *   einem Finger sowie bei `wheel`-Ereignissen mit gesetztem `ctrlKey` (Trackpad-Pinch) bleibt die Ansicht
  *   fest eingepasst, während normales Tippen, Ziehen und Scrollen mit einem Finger unberührt bleiben.
- * - Die Sperre greift nur, solange die Seite nicht vergrößert ist. Ist sie doch einmal vergrößert (iOS zoomt
- *   z. B. beim Antippen kleiner Eingabefelder, Android mit „Zoomen immer erlauben“), bleibt Zurückzoomen mit
+ * - Schon beim Aufsetzen des zweiten Fingers (`touchstart`) wird abgebrochen: Hat der Browser mit dem ersten
+ *   Finger bereits zu wischen begonnen, sind die folgenden `touchmove` nicht mehr abbrechbar (`cancelable: false`),
+ *   und „erst wischen, dann zweiten Finger dazu“ zoomte trotz Sperre (iOS ignoriert `user-scalable=no`; #397).
+ *   Pointer-Ereignisse (Startspieler-Helfer mit mehreren Fingern) bleiben davon unberührt.
+ * - Die Sperre greift nur, solange die Seite nicht vergrößert ist. Ist sie doch einmal vergrößert (eine Lücke,
+ *   die wir nicht kennen, oder Android mit „Zoomen immer erlauben“), bleibt Zurückzoomen mit
  *   zwei Fingern möglich – sonst säße man in der Vergrößerung fest (4er-Schach am Handy, 14.11.2026).
  */
 
@@ -25,6 +29,14 @@ export function disablePinchZoom(target: EventTarget = document, scale: ScaleSou
 
   const onGesture = (event: Event): void => {
     if (!zoomed()) event.preventDefault();
+  };
+
+  // Zweiter Finger setzt auf: Mehr-Finger-Geste von Anfang an unterbinden.
+  const onTouchStart = (event: Event): void => {
+    const touchEvent = event as TouchEvent;
+    if (touchEvent.touches && touchEvent.touches.length > 1 && event.cancelable && !zoomed()) {
+      event.preventDefault();
+    }
   };
 
   const onTouchMove = (event: Event): void => {
@@ -44,12 +56,14 @@ export function disablePinchZoom(target: EventTarget = document, scale: ScaleSou
   const options: AddEventListenerOptions = { passive: false };
   target.addEventListener('gesturestart', onGesture, options);
   target.addEventListener('gesturechange', onGesture, options);
+  target.addEventListener('touchstart', onTouchStart, options);
   target.addEventListener('touchmove', onTouchMove, options);
   target.addEventListener('wheel', onWheel, options);
 
   return () => {
     target.removeEventListener('gesturestart', onGesture);
     target.removeEventListener('gesturechange', onGesture);
+    target.removeEventListener('touchstart', onTouchStart);
     target.removeEventListener('touchmove', onTouchMove);
     target.removeEventListener('wheel', onWheel);
   };
