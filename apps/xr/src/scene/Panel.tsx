@@ -16,6 +16,7 @@ import { HEAD_PAD, ROW_GAP, ROW_STEP, BUTTON_H, headHeight, liftAboveTable, seat
 import { isCardGame } from './cards';
 import { onVibrationChange, setVibration, vibrationEnabled } from '../haptics';
 import { fanMode, onFanModeChange, setFanMode } from '../hand-fan';
+import { gesturesEnabled, onGesturesChange, setGesturesEnabled } from '../gestures';
 import { getVolume, onVolumeChange, setVolume } from '../sound';
 
 const PAGE = 6;
@@ -97,6 +98,7 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
   useEffect(() => onVolumeChange(() => redraw((n) => n + 1)), []);
   useEffect(() => onVibrationChange(() => redraw((n) => n + 1)), []);
   useEffect(() => onFanModeChange(() => redraw((n) => n + 1)), []);
+  useEffect(() => onGesturesChange(() => redraw((n) => n + 1)), []);
   // Während der Partie rückt das Fenster zur Seite, damit Brett oder Spieltafel frei bleiben (#358); nur beim Kartentisch bleibt es mittig.
   const beside = Boolean(game && !game.result && !isCardGame(game.gameId));
   const position = beside ? SIDE_POS : CENTER_POS;
@@ -162,6 +164,7 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
     ]);
     rows.push([{ label: vibrationEnabled() ? '📳 Vibration an' : 'Vibration aus', press: () => setVibration(!vibrationEnabled()), active: vibrationEnabled() }]);
     rows.push([{ label: fanMode() === 'hand' ? '🃏 Fächer an der Hand' : '🃏 Fächer am Tisch', press: () => setFanMode(fanMode() === 'hand' ? 'table' : 'hand'), active: fanMode() === 'hand' }]);
+    rows.push([{ label: gesturesEnabled() ? '👍 Gesten an' : 'Gesten aus', press: () => setGesturesEnabled(!gesturesEnabled()), active: gesturesEnabled() }]);
     lines.push('Neu ausrichten: Meta-Taste gedrückt halten.');
     rows.push([back]);
   } else if (room.phase === 'lobby' || !game) {

@@ -8,6 +8,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**VR: Gesten als Reaktionen (14.11.2026, #386):** Daumen hoch 👍, Klatschen 👏, Winken 🎉 aus den Handgelenken des Handtrackings (`apps/xr/src/gestures.ts`, `GestureWatcher` in `scene/Scene.tsx`, Schalter unter „↕ Tisch“). Test `tests/xr-gesten.test.ts` mit künstlichen Gelenken; nicht mit echten Händen geprüft.
+
 **VR: Gehaltenes und Zeigen sichtbar, Teil 1 (14.11.2026, #385):** Mitspieler sehen die gegriffene Figur (Kugel bzw. Kartenrückseite) und den Zeigestrahl (Griff-Taste). `apps/xr/src/presence.ts` (Paketformat), `peers.ts`, `scene/Meet.tsx`, `scene/grab.tsx` (setzt das Gehaltene); Test `tests/xr-praesenz.test.ts`. Nur gerechnet und getestet, nicht mit zwei Brillen geprüft. Offen: Finger, Stuhlschild dreht sich zum Spieler am Zug.
 
 **VR: Karten greifen, Teil 1 (14.11.2026, #384):** In `apps/xr/src/scene/cards.tsx` lassen sich Handkarten und die oberste Stapelkarte greifen und in die Tischmitte legen (`useGrab` mit `floorY`/`floorCenter`, `scene/grab.tsx`). Mit der Maus im Browser geprüft (Mau-Mau, Karte ziehen). Fächer an der Haltehand (linker Controller, `apps/xr/src/hand-fan.ts`, `HandAnchor`, Umschalter unter „↕ Tisch“, Test `tests/xr-faecher.test.ts`) nur gerechnet. Offen: Wurf, zwei Reihen.

@@ -25,6 +25,7 @@ import { bindHapticSession, pulse } from '../haptics';
 import { alignOffset, type Offset } from './view-align';
 import { SCALE_STEP, TablePlacer, clampScale, placementOrigin, scaleAboutTable, type Placement } from './Placement';
 import { handAnchor } from '../hand-fan';
+import { GESTURE_REACTION, GestureTracker, gesturesEnabled, type Joints, type Vec3 } from '../gestures';
 import { SpatialAudio } from './SpatialAudio';
 import type { VoiceChat } from '@brett-und-blatt/rtc';
 import { Figures, POSE_STALE_MS, PoseSender } from './Meet';
@@ -154,6 +155,54 @@ function HandAnchor({ origin, scale }: { origin: [number, number, number]; scale
     const h = scale !== 1 ? scaleAboutTable([tmp.current.x, tmp.current.y, tmp.current.z], scale) : [tmp.current.x, tmp.current.y, tmp.current.z];
     handAnchor.headX = h[0]!;
     handAnchor.headZ = h[2]!;
+  });
+  return null;
+}
+
+const JOINT_NAMES = {
+  wrist: 'wrist',
+  thumbTip: 'thumb-tip',
+  indexTip: 'index-finger-tip',
+  indexKnuckle: 'index-finger-phalanx-proximal',
+  middleTip: 'middle-finger-tip',
+  middleKnuckle: 'middle-finger-phalanx-proximal',
+  ringTip: 'ring-finger-tip',
+  ringKnuckle: 'ring-finger-phalanx-proximal',
+  littleTip: 'pinky-finger-tip',
+  littleKnuckle: 'pinky-finger-phalanx-proximal',
+} as const;
+
+function readJoints(frame: XRFrame, hand: XRHand, space: XRReferenceSpace): Joints | null {
+  const out: Partial<Record<keyof typeof JOINT_NAMES, Vec3>> = {};
+  for (const [key, name] of Object.entries(JOINT_NAMES) as [keyof typeof JOINT_NAMES, XRHandJoint][]) {
+    const joint = hand.get(name);
+    const pose = joint ? frame.getJointPose?.(joint, space) : undefined;
+    if (!pose) return null;
+    out[key] = [pose.transform.position.x, pose.transform.position.y, pose.transform.position.z];
+  }
+  return out as Joints;
+}
+
+/** Gesten als Reaktionen (#386): Daumen hoch, Winken, Klatschen aus dem Handtracking. */
+function GestureWatcher({ send }: { send: (m: ClientMessage) => void }) {
+  const gl = useThree((s) => s.gl);
+  const tracker = useRef(new GestureTracker());
+  useFrame((_, __, frame) => {
+    if (!gesturesEnabled() || !frame) return;
+    const session = gl.xr.getSession();
+    const space = gl.xr.getReferenceSpace();
+    if (!session || !space) return;
+    const hands: { left: Joints | null; right: Joints | null } = { left: null, right: null };
+    for (const source of session.inputSources) {
+      if (!source.hand || (source.handedness !== 'left' && source.handedness !== 'right')) continue;
+      hands[source.handedness] = readJoints(frame, source.hand, space);
+    }
+    if (!hands.left && !hands.right) return;
+    const gesture = tracker.current.feed(performance.now(), hands);
+    if (gesture) {
+      send({ type: 'react', emoji: GESTURE_REACTION[gesture] });
+      pulse('turn');
+    }
   });
   return null;
 }
@@ -326,6 +375,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         <Backdrop />
         <HapticsBridge />
         <HandAnchor origin={origin} scale={scale} />
+        <GestureWatcher send={send} />
         <SpatialAudio seats={seats} scale={scale} voice={voiceChat} />
         <ModeProbe onMixed={setMixed} />
         <TablePlacer
