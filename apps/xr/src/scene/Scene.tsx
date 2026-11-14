@@ -15,11 +15,13 @@ import { BattleshipBoard, ChineseCheckersBoard, FactorGridBoard, FourPlayerChess
 import { ColorShapeBoard, DominoBoard, GrafschaftBoard, WordGridBoard } from './boards4';
 import { KniffelBoard, LowFlightBoard, MaexleBoard, PairsBoard, Tafel } from './boards5';
 import { InputDesk } from './input';
+import { CAPTURED_GAMES, CapturedTray } from './Captured';
 import { hiddenMoveIndexes, inputPlan } from './input-spec';
 import { CardTable, cardMoveIndexes, isCardGame } from './cards';
 import { Panel, ReactionBar, type VoiceControls } from './Panel';
 import { Seats, seatAngle, type SeatInfo } from './Seats';
 import { TABLE_CENTER, Tavern } from './Tavern';
+import { bindHapticSession, pulse } from '../haptics';
 import { alignOffset, type Offset } from './view-align';
 import { SCALE_STEP, TablePlacer, clampScale, placementOrigin, type Placement } from './Placement';
 import { Figures, POSE_STALE_MS, PoseSender } from './Meet';
@@ -41,6 +43,8 @@ interface SceneProps {
   /** Sprachchat (#352): Bedienung für das 2D-Fenster und wer gerade spricht. */
   voice: VoiceControls;
   speaking: string[];
+  /** Letzte Fehlermeldung des Raums (abgelehnte Eingabe), löst einen Fehlerimpuls aus. */
+  error?: string | null;
 }
 
 const VIEW_KEY = 'brett-und-blatt-xr-tisch';
@@ -122,6 +126,16 @@ function HeadAlign({ origin, onAlign }: { origin: [number, number, number]; onAl
   return null;
 }
 
+/** Meldet dem Vibrationshelfer die laufende Sitzung (#380). */
+function HapticsBridge() {
+  const gl = useThree((state) => state.gl);
+  useEffect(() => {
+    bindHapticSession(() => gl.xr.getSession());
+    return () => bindHapticSession(() => null);
+  }, [gl]);
+  return null;
+}
+
 /** Meldet, ob gerade eine Mixed-Reality-Sitzung läuft (der Zustand ist nur innerhalb von <XR> lesbar). */
 function ModeProbe({ onMixed }: { onMixed: (mixed: boolean) => void }) {
   const mixed = useXR((state) => state.mode) === 'immersive-ar';
@@ -190,7 +204,7 @@ function seatInfos(room: RoomMessage | null, game: GameMessage | null, you: stri
   });
 }
 
-export function Scene({ store, room, game, you, signals, send, onMove, gameAt, mesh, xrMembers, voice, speaking }: SceneProps) {
+export function Scene({ store, room, game, you, signals, send, onMove, gameAt, mesh, xrMembers, voice, speaking, error = null }: SceneProps) {
   const [now, setNow] = useState(() => Date.now());
   const ticking = Boolean(game && !game.result && game.clocks.some((c) => c?.running));
   useEffect(() => {
@@ -198,6 +212,16 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [ticking]);
+  // Vibration (#380): „Du bist dran“ beim Wechsel an die Reihe, Fehlerimpuls bei abgelehnter Eingabe.
+  const myTurn = Boolean(game && !game.result && game.yourSeat !== null && game.current.includes(game.yourSeat));
+  const wasMyTurn = useRef(false);
+  useEffect(() => {
+    if (myTurn && !wasMyTurn.current) pulse('turn');
+    wasMyTurn.current = myTurn;
+  }, [myTurn]);
+  useEffect(() => {
+    if (error) pulse('error');
+  }, [error]);
   const { offset, adjust } = useViewOffset();
   const [align, setAlign] = useState<Offset>({ x: 0, y: 0, z: 0 });
   // Mixed Reality (#369, #370): Tisch auf einer echten Fläche (`placed`), verkleinert um `tableScale`.
@@ -258,13 +282,17 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
   const moveByValue = (move: unknown) => {
     if (!game) return;
     const index = game.legalMoves.indexOf(move);
-    if (index >= 0) onMove(index);
+    if (index >= 0) {
+      pulse('move');
+      onMove(index);
+    }
   };
   const shown = game ?? null;
   return (
     <Canvas camera={{ fov: 60, near: 0.02, far: 40 }} dpr={[1, 2]}>
       <XR store={store}>
         <Backdrop />
+        <HapticsBridge />
         <ModeProbe onMixed={setMixed} />
         <TablePlacer
           active={placing && mixed}
@@ -283,6 +311,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         <Seats seats={seats} signals={signals} memberAvatar={(id) => room?.members.find((m) => m.id === id)?.avatar ?? null} figures={figures} />
         {mesh && <PoseSender mesh={mesh} xrMembers={xrMembers} sendRoomPose={(head) => send({ type: 'pose', head })} origin={origin} scale={scale} />}
         {mesh && <Figures mesh={mesh} members={figures} seatOf={seatOf} mySeatBase={myBase} count={seatCount} infos={seats} />}
+        {shown && (CAPTURED_GAMES as readonly string[]).includes(shown.gameId) && <CapturedTray game={shown} />}
         {shown?.gameId === 'tic-tac-toe' && <TicTacToeBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'four-in-a-row' && <FourInARowBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'chess' && <ChessBoard key={`${shown.round}`} game={shown} onMove={moveByValue} />}
@@ -305,12 +334,18 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         {shown?.gameId === 'pairs' && <PairsBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'low-flight' && <LowFlightBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         {shown && !isBoardGame(shown.gameId) && !isCardGame(shown.gameId) && !(playing && inputPlan(playing)) && <Tafel game={shown} />}
-        {playing && <InputDesk game={playing} onMove={(move) => send({ type: 'move', version: playing.version, move })} />}
+        {playing && <InputDesk game={playing} onMove={(move) => {
+          pulse('move');
+          send({ type: 'move', version: playing.version, move });
+        }} />}
         {shown?.gameId === 'grafschaft' && <GrafschaftBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         {shown && isCardGame(shown.gameId) && <CardTable key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         </group>
         </group>
-        <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={onMove} adjust={adjust} placement={placement} voice={voice} />
+        <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={(index) => {
+          pulse('move');
+          onMove(index);
+        }} adjust={adjust} placement={placement} voice={voice} />
         {room && <ReactionBar send={send} />}
       </XR>
     </Canvas>

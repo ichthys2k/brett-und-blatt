@@ -8,6 +8,7 @@ import { useState, type ReactNode } from 'react';
 import { TABLE_CENTER } from './Tavern';
 import { GOLD } from './text';
 import { Button3D } from './ui3d';
+import { pulse } from '../haptics';
 
 export interface BoardProps {
   game: GameMessage;
@@ -61,6 +62,7 @@ export function Target({ position, size, onPress, label }: { position: [number, 
       onPointerOver={(e) => {
         e.stopPropagation();
         setHover(true);
+        pulse('hover');
       }}
       onPointerOut={() => setHover(false)}
       userData={{ label }}
@@ -209,6 +211,7 @@ function ColumnTarget({ x, y, width, height, onPress }: { x: number; y: number; 
       onPointerOver={(e) => {
         e.stopPropagation();
         setHover(true);
+        pulse('hover');
       }}
       onPointerOut={() => setHover(false)}
     >

@@ -10,7 +10,7 @@ Eine eigene Web-App für die Meta Quest (und jeden Browser mit WebGL): ein Tisch
 ## So spielt man
 
 1. In der Quest den Browser öffnen, die Adresse aufrufen, Name und Bild wählen.
-2. **Neuen Raum anlegen** oder den **Raumcode** einer Runde eingeben. Ein Link mit `#<Raumcode>` führt direkt in den Raum.
+2. **Neuen Raum anlegen** oder den **Raumcode** einer Runde eingeben – mit den Emoji-Tasten auf der Seite, ohne Systemtastatur (#393). Ein Link mit `#<Raumcode>` führt direkt in den Raum.
 3. In der Lobby (Leiste rechts oder 2D-Fenster über dem Tisch) wählt die Raumleitung eines der 55 Online-Spiele (im Fenster mit ◀ ▶, in Zehnerschritten mit ⏪ ⏩), besetzt Plätze mit Bots und beginnt.
 4. **In VR betreten** – oder auf der Quest 3 **In Mixed Reality betreten**: Dann bleibt deine echte Umgebung sichtbar (Passthrough), und nur Tischplatte, Kerzen, Karten und Menü schweben vor dir (#369). Unter „↕ Tisch“ lässt sich der Tisch mit „Auf Fläche legen“ (Blick auf Tisch oder Boden, Abzug oder Antippen) auf eine echte Fläche setzen und mit „Tisch kleiner/größer“ verkleinern (#370). Gezogen wird durch Zeigen mit dem Controller (Abzug) oder Antippen mit dem Finger.
 
@@ -25,6 +25,8 @@ Eine eigene Web-App für die Meta Quest (und jeden Browser mit WebGL): ein Tisch
 | alle übrigen Online-Spiele (#358) | **Spieltafel** auf dem Tisch mit dem Stand (Frage und Antworten, Galgenmännchen-Wort, Bingo-Karte, eigene Quartett-Karte, Marktstände …), gezogen wird über die Knöpfe mit den Zugtexten im Fenster. |
 
 **Alles in der Brille (#349):** Das 2D-Fenster über dem Tisch kann alles, was die Leiste kann. In der Lobby wählt die Raumleitung mit ◀ ▶ das Spiel, ändert die Platzzahl und schaltet freie Plätze durch: frei → Bot leicht → mittel → schwer → frei. In der Partie gibt es dort Aufgeben (mit Rückfrage), Remis anbieten (Schach, Dame), die Bitte ums Zurücknehmen samt Abstimmung und **„💬 Nachricht“** für die Schnellnachrichten. Unter **„↕ Tisch“** stellt man Tischhöhe und Abstand ein (bleibt im Gerät gespeichert) und die Lautstärke. Neu ausrichten geht wie immer mit gedrückter Meta-Taste; danach (und beim Eintreten) setzt sich der Tisch mittig vor den Kopf, mit den Augen über der Tischplatte (#365). Bei vielen Plätzen zeigt die Lobby sie seitenweise, das Fenster bleibt über der Tischplatte (#364). Uhren stehen als „⏱ 0:42“ auf den Schildern.
+
+**Vibration (#380):** Die Controller vibrieren leicht beim Überfahren eines antippbaren Ziels, deutlicher beim Ziehen, mit eigenem Muster bei „Du bist dran“ und bei abgelehnter Eingabe. Abschaltbar unter „↕ Tisch“ → „Vibration“.
 
 **Klänge:** Züge, Schlagen, Mühle, Sieg und „Du bist dran“ klingen wie in der Web-App. Die Dateien kommen nur beim Bauen aus dem privaten Klang-Repo (`apps/xr/klaenge.ts`, Auswahl in `apps/xr/src/sound-names.ts`); ohne sie bleibt die App stumm.
 
