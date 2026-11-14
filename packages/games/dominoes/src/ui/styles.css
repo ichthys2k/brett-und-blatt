@@ -289,3 +289,105 @@
 .dm-end-sep {
   opacity: 0.5;
 }
+
+/* Mexican Train */
+.dm-mexican-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+  margin: auto 0;
+}
+
+.dm-hub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 10px;
+  background: rgb(0 0 0 / 0.22);
+  color: #fff;
+  font-weight: 700;
+}
+
+.dm-hub-label {
+  font-size: 0.92rem;
+}
+
+.dm-trains {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.dm-train-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 10px;
+  background: rgb(0 0 0 / 0.14);
+  color: #fff;
+}
+
+.dm-train-row.dm-train-open {
+  border-color: rgb(250 204 21 / 0.65);
+  background: rgb(0 0 0 / 0.22);
+}
+
+.dm-train-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.dm-train-title {
+  font-weight: 700;
+}
+
+.dm-train-badge {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgb(250 204 21 / 0.25);
+  color: #fde047;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.dm-train-val {
+  margin-left: auto;
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+.dm-train-stones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.2rem;
+  min-height: 2.2rem;
+}
+
+.dm-train-stones .dm-upright {
+  rotate: 90deg;
+  width: 3.6rem;
+  height: 1.8rem;
+  margin: 0 -0.9rem;
+}
+
+.dm-train-stones .dm-stone-math.dm-upright {
+  width: 4.4rem;
+  height: 2.2rem;
+  margin: 0 -1.1rem;
+}
+
+.dm-train-empty {
+  font-size: 0.8rem;
+  opacity: 0.72;
+  font-style: italic;
+}

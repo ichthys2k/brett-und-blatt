@@ -12,8 +12,8 @@ const THINK: Record<BotLevel, { base: number; perSymbol: number; spread: number 
 /** Wie oft der Bot danebentippt. */
 const SLIP: Record<BotLevel, number> = { easy: 0.15, medium: 0.04, hard: 0 };
 
-function claim(view: SymbolMatchView, target: SeatId, symbol: number): SymbolMatchMove {
-  return { type: 'claim', symbol, center: view.center!, target, top: view.players[target]!.top! };
+function claim(source: number, target: SeatId, top: number, symbol: number): SymbolMatchMove {
+  return { type: 'claim', symbol, center: source, target, top };
 }
 
 export const symbolMatchBot: BotDefinition<SymbolMatchState, SymbolMatchMove, SymbolMatchView> = {
@@ -25,15 +25,18 @@ export const symbolMatchBot: BotDefinition<SymbolMatchState, SymbolMatchMove, Sy
     return t.base + t.perSymbol * (view.options.order + 1) + rng.int(t.spread);
   },
   chooseMove({ view, seat, level, rng }) {
-    const targets = targetsFor({ options: view.options, stacks: view.players.map(() => []) }, seat).filter((t) => view.players[t]!.top !== null);
+    const stacks = view.players.map((p) => (p.top === null ? [] : [p.top]));
+    const targets = targetsFor({ options: view.options, stacks }, seat).filter((t) => view.players[t]!.top !== null);
     const target = rng.pick(targets);
+    const source = view.options.mode === 'hotPotato' ? view.players[seat]!.top! : view.center!;
+    const targetTop = view.players[target]!.top!;
+    const right = shared(view.options.order, source, targetTop);
     if (rng.chance(SLIP[level])) {
       // Danebentippen: irgendein anderes Symbol.
-      const right = shared(view.options.order, view.center!, view.players[target]!.top!);
       const wrong = (right + 1 + rng.int(deckSize(view.options.order) - 1)) % deckSize(view.options.order);
-      return claim(view, target, wrong);
+      return claim(source, target, targetTop, wrong);
     }
-    return claim(view, target, shared(view.options.order, view.center!, view.players[target]!.top!));
+    return claim(source, target, targetTop, right);
   },
 };
 

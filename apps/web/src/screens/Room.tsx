@@ -1,5 +1,5 @@
 import { PlayerCrest } from '@brett-und-blatt/ui';
-import { BOT_LEVELS, parseCrest, teamsFor, timePresetsOf, type CustomCardCatalog, type TimePresetId } from '@brett-und-blatt/engine';
+import { BOT_LEVELS, parseCrest, resolveOptions, teamsFor, timePresetsOf, type CustomCardCatalog, type TimePresetId } from '@brett-und-blatt/engine';
 import { CARD_SET_GAMES, useActiveCardSet, useChangedCatalog } from '../lib/activeCardSet';
 import { MAX_SEATS, TOURNAMENT_CODE_PATTERN, parseRoomCode, roomCapabilities, type Capability, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -635,6 +635,11 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu
                     </div>
                   );
                 })}
+              {/* Eigenes Paket aus der Bibliothek (#218): dieselbe Wahl wie in der Einrichtung, nur für Spiele mit der verborgenen Option „pack“. */}
+              {isHost && game.ui.SetupExtra && game.module.options.some((spec) => spec.id === 'pack' && spec.hidden) && (
+                <game.ui.SetupExtra options={resolveOptions(game.module, lobby.options)} seats={lobby.seats.length} setOption={(id, value) => send({ type: 'setOption', id, value })} />
+              )}
+              {!isHost && typeof lobby.options.pack === 'string' && lobby.options.pack !== '' && <p className="text-sm text-muted">📚 Eigenes Paket der Raumleitung</p>}
             </Section>
           )}
 

@@ -146,6 +146,8 @@ export interface RoomDeps {
   changed?(): void;
   /** Bedenkzeit der Bots je Stufe – auf dem Server eventuell knapper. */
   botBudgetMs?: Partial<Record<BotLevel, number>>;
+  /** Mindest-Bedenkzeit der Bots in rundenbasierten Spielen (`SessionDeps.botPauseMs`); fehlt: ohne Pause. */
+  botPauseMs?: { minMs: number; maxMs: number };
   /** Alle online angebotenen Spiele – für „zufälliges Spiel“ am Rundenende. Fehlt: nur vorgeschlagene Spiele. */
   listGames?(): AnyGameModule[];
   /** Zufallszahl in [0, 1) für Lobby-Dinge wie „Teams mischen“ (Standard: Math.random). */
@@ -821,7 +823,9 @@ export class Room {
       case 'setOption': {
         const module = this.lobbyModule();
         const spec = module?.options.find((o) => o.id === message.id);
-        if (!isHost || this.phase !== 'lobby' || !spec?.choices.some((c) => c.value === message.value)) return deny();
+        // Auswahl oder – bei verborgenen Optionen wie dem eigenen Paket (#218) – ein Wert, der zum Muster passt.
+        const fits = spec && (spec.choices.some((c) => c.value === message.value) || (spec.hidden && resolveOptions(module!, { [spec.id]: message.value })[spec.id] === message.value));
+        if (!isHost || this.phase !== 'lobby' || !fits) return deny();
         this.lobby.options = { ...this.lobby.options, [message.id]: message.value };
         this.applyTeams();
         return this.broadcastRoom();
@@ -1266,6 +1270,7 @@ export class Room {
       now: () => this.deps.now(),
       graceMs: CLOCK_GRACE_MS,
       botBudgetMs: this.deps.botBudgetMs,
+      botPauseMs: this.deps.botPauseMs,
       // Ein Bot hat einen Zug mit Bedenkpause geparkt: speichern lassen, damit der Wecker neu gestellt wird.
       deadlineChanged: () => this.deps.changed?.(),
     };

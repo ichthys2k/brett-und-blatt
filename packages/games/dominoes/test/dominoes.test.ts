@@ -122,6 +122,77 @@ describe('Regeln', () => {
       expect(FRACTION_POOL[p]).toContain(halfLabel(p, 'fractions', 5, 0));
     }
   });
+
+  it('Mannschaften zu viert (2 gegen 2): Partner teilen Punkte und gewinnen gemeinsam', () => {
+    // Sitz 0 und 2 sind ein Team, Sitz 1 und 3 sind das gegnerische Team
+    const s = {
+      ...custom(
+        [[id(5, 6)], [id(2, 3)], [id(4, 4)], [id(1, 6)]],
+        { variant: 'draw', teams: 'yes', target: '50' },
+        [{ stone: id(3, 5), left: 3, right: 5 }],
+      ),
+      scores: [40, 10, 40, 10],
+    };
+    expect(s.teams).toBe(true);
+    // Sitz 0 legt seinen letzten Stein [5|6]. Partner (Sitz 2) hat [4|4] (8 Augen), Gegner (Sitz 1 & 3) haben 5 + 7 = 12 Augen.
+    // Im Team-Modus zählen nur die Restaugen des gegnerischen Teams (+12 Punkte -> 52 >= 50)!
+    const { state } = gameModule.applyMove(s, 0, { type: 'play', stone: id(5, 6), end: 'right' });
+    expect(state.scores[0]).toBe(52);
+    expect(state.scores[2]).toBe(52);
+    expect(state.scores[1]).toBe(10);
+    expect(state.scores[3]).toBe(10);
+    expect(state.over).toBe(true);
+    expect(gameModule.result(state)).toEqual({ kind: 'win', winners: [0, 2] });
+  });
+
+  it('Mexican Train: Bahnhof, eigene Züge, Öffnen bei Passen und Pasch-Zusatzzug', () => {
+    const s0 = start({ variant: 'mexican', setSize: '9' }, 3, 'mex-seed');
+    expect(s0.variant).toBe('mexican');
+    expect(s0.setSize).toBe(9);
+    expect(s0.engineValue).toBe(9);
+    expect(s0.chain).toEqual([{ stone: id(9, 9), left: 9, right: 9 }]);
+    expect(s0.playerTrains).toHaveLength(3);
+    expect(s0.trainOpen).toEqual([false, false, false]);
+
+    // Künstlicher Zustand: Bahnhof [6|6], Spieler 0 am Zug
+    const mState: DominoState = {
+      ...start({ variant: 'mexican', setSize: '6' }, 2, 'mex-2'),
+      engineValue: 6,
+      chain: [{ stone: id(6, 6), left: 6, right: 6 }],
+      playerTrains: [[], []],
+      mexicanTrain: [],
+      trainOpen: [false, false],
+      drewThisTurn: false,
+      hands: [[id(6, 4), id(4, 4), id(4, 1)], [id(1, 2), id(2, 3)]],
+      boneyard: [id(0, 1)],
+      turn: 0,
+    };
+
+    // Spieler 0 kann an seinen eigenen Zug ('seat-0') oder den 'mexican'-Zug anlegen, aber nicht an 'seat-1' (geschlossen)
+    const moves0 = gameModule.legalMoves(mState, 0);
+    expect(moves0).toContainEqual({ type: 'play', stone: id(6, 4), end: 'seat-0' });
+    expect(moves0).toContainEqual({ type: 'play', stone: id(6, 4), end: 'mexican' });
+    expect(moves0).not.toContainEqual({ type: 'play', stone: id(6, 4), end: 'seat-1' });
+
+    // Spieler 0 legt [6|4] auf seinen Zug 'seat-0' -> Ende ist nun 4, Spieler 1 ist dran
+    const after1 = gameModule.applyMove(mState, 0, { type: 'play', stone: id(6, 4), end: 'seat-0' }).state;
+    expect(after1.playerTrains![0]).toEqual([{ stone: id(6, 4), left: 6, right: 4 }]);
+    expect(after1.turn).toBe(1);
+
+    // Spieler 1 hat keine 6 (für seinen Zug oder Mexican Train) -> muss erst 1 Stein ziehen
+    expect(gameModule.legalMoves(after1, 1)).toEqual([{ type: 'draw' }]);
+    const afterDraw = gameModule.applyMove(after1, 1, { type: 'draw' }).state;
+    expect(afterDraw.drewThisTurn).toBe(true);
+    // Der gezogene Stein [0|1] passt auch nicht -> jetzt muss Spieler 1 passen und sein Zug wird öffentlich!
+    expect(gameModule.legalMoves(afterDraw, 1)).toEqual([{ type: 'pass' }]);
+    const afterPass = gameModule.applyMove(afterDraw, 1, { type: 'pass' }).state;
+    expect(afterPass.trainOpen![1]).toBe(true);
+    expect(afterPass.turn).toBe(0);
+
+    // Spieler 0 legt Pasch [4|4] auf seinen Zug 'seat-0' -> bekommt sofort einen Zusatzzug!
+    const afterDouble = gameModule.applyMove(afterPass, 0, { type: 'play', stone: id(4, 4), end: 'seat-0' }).state;
+    expect(afterDouble.turn).toBe(0);
+  });
 });
 
 describe('Bot', () => {

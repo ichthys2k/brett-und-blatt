@@ -310,3 +310,7 @@ Stufen: Schwer schlägt Mittel zu 90 %, Mittel schlägt Leicht zu 73 %. Festes D
 - **Geprüft:** Regeln, Angebote, Zähler und Zusammenführen per Test (`test/solo.test.ts`); jede Lektion gewinnt der Bot „schwer“ als Spieler in mindestens einer von sechs Partien. Im Browser (Hochformat) die erste Lektion bis zum Sieg und weiter zur zweiten, ein gewonnener erster Wanderschaftskampf bis zur Beutewahl, das Turnier bis zum ersten Kampf.
 - **Grenzen:** „Neu starten“ und Aufgeben lassen sich im Lauf nicht ausschließen: Aufgeben zählt als Niederlage, Neu starten wiederholt den Kampf. Die Uhr aus den Einstellungen gilt auch im Solo-Kampf, die Lektionen haben also ein Zeitlimit. Wie schwer die Wanderschaft für Menschen ist, ist nicht gemessen, Mittelteil und Ende auch nicht gespielt. Beutewahl, Schatz, Rahmen und Wappen sind im Browser nicht bedient worden.
 
+
+## Zug beenden am Handy (14.11.2026, #391)
+
+In schmalen Arenen (Container `ds-arena` bis 420 px, Handy im Hochformat) war die Heldenzeile breiter als die Arena: Der Knopf „Zug beenden“ ragte bis zu 42 px über den Rand und wurde abgeschnitten. Jetzt gibt die Heldenkarte Platz ab (`flex: 1 1 0`, kleinere Abstände), der Nachziehstapel zeigt nur die Zahl, und die Aktionen behalten ihre Breite. Der Rauchtest (`scripts/rauchtest.mjs`) meldet es, wenn der Knopf nach dem Start über den Rand der Arena ragt. Geprüft bei 320 × 568, 360 × 640, 375 × 667, 390 × 844, 412 × 915 und im Querformat 844 × 390.

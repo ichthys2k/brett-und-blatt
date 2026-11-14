@@ -42,17 +42,17 @@ interface ZoneProps {
   onDragTarget: (seat: SeatId, target: string | null) => void;
 }
 
-/** Der Bereich eines Spielers: fünf Handkarten, Nachziehstapel und „Festgefahren“. */
 function PlayerZone({ seat, player, deckStyle, legalMoves, onMove, name, rotated, phase, otherStuck, onDropAt, onDragTarget }: ZoneProps) {
   const plays = useMemo(() => legalMoves.filter((m): m is PlayMove => m.type === 'play'), [legalMoves]);
   const canStuck = legalMoves.some((m) => m.type === 'stuck');
+  const canDraw = legalMoves.some((m) => m.type === 'draw');
   const [shake, setShake] = useState<CardId | null>(null);
   const timer = useRef<number | null>(null);
   useEffect(() => () => void (timer.current !== null && window.clearTimeout(timer.current)), []);
 
   // Nichts mehr zu legen: nach kurzer Pause von selbst „Festgefahren“ melden.
   // `onMove` ist bei jedem Neuzeichnen eine neue Funktion – sonst begänne die Pause ständig von vorn.
-  const autoStuck = canStuck && plays.length === 0 && phase === 'play';
+  const autoStuck = canStuck && plays.length === 0 && !canDraw && phase === 'play';
   const onMoveRef = useRef(onMove);
   onMoveRef.current = onMove;
   useEffect(() => {
@@ -97,9 +97,24 @@ function PlayerZone({ seat, player, deckStyle, legalMoves, onMove, name, rotated
   let status: string | null = null;
   if (phase === 'play') {
     if (player.stuck) status = 'Festgefahren – wartet auf den anderen …';
+    else if (canDraw) status = 'Karte nachziehen!';
     else if (autoStuck) status = 'Keine passende Karte.';
     else if (otherStuck) status = `${otherStuck} kommt nicht weiter.`;
   }
+
+  const drawPileContent = (
+    <div
+      className={`spd-draw${canDraw ? ' spd-draw-clickable' : ''}`}
+      aria-label={`Nachziehstapel: ${player.drawCount} Karten${canDraw ? ' (Klicken zum Nachziehen)' : ''}`}
+      onClick={canDraw ? () => onMove({ type: 'draw' }) : undefined}
+      role={canDraw ? 'button' : undefined}
+      tabIndex={canDraw ? 0 : undefined}
+    >
+      {player.drawCount > 0 ? <PlayingCard card={null} className="spd-card" /> : <span className="spd-slot" />}
+      <span className="spd-count">{player.drawCount}</span>
+      {canDraw && <span className="spd-draw-hint">Nachziehen</span>}
+    </div>
+  );
 
   return (
     <div className={`spd-zone${rotated ? ' spd-rotated' : ''}`} data-seat={seat}>
@@ -108,22 +123,20 @@ function PlayerZone({ seat, player, deckStyle, legalMoves, onMove, name, rotated
         {status}
       </div>
       <div className="spd-zone-row">
-        <div className="spd-draw" aria-label={`Nachziehstapel: ${player.drawCount} Karten`}>
-          {player.drawCount > 0 ? <PlayingCard card={null} className="spd-card" /> : <span className="spd-slot" />}
-          <span className="spd-count">{player.drawCount}</span>
-        </div>
+        {drawPileContent}
         <div className="spd-hand">
-          {player.hand.map((card) => {
+          {player.hand.map((card, idx) => {
             const can = plays.some((m) => m.card === card);
             const drag = dragging === card;
             const bind = bindDrag(card);
+            const spitDown = player.spitDownCounts?.[idx] ?? 0;
             return (
               <button
                 key={card}
                 type="button"
                 data-card-id={card}
                 className={`spd-hand-card${can ? ' spd-playable' : ''}${shake === card ? ' spd-shake' : ''}`}
-                aria-label={`${cardName(card)}${can ? ', passt' : ''}`}
+                aria-label={`${cardName(card)}${can ? ', passt' : ''}${spitDown > 0 ? `, noch ${spitDown} verdeckt darunter` : ''}`}
                 disabled={legalMoves.length === 0}
                 {...bind}
                 style={{
@@ -138,6 +151,7 @@ function PlayerZone({ seat, player, deckStyle, legalMoves, onMove, name, rotated
                 }}
               >
                 <PlayingCard card={card} deckStyle={deckStyle} className="spd-card" />
+                {spitDown > 0 && <span className="spd-spit-badge">+{spitDown}</span>}
               </button>
             );
           })}
@@ -162,10 +176,10 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, humanSeats
     : [{ seat: me ?? 0, legalMoves: me === null ? [] : legalMoves, onMove }];
   const bottom = zones[zones.length - 1]!;
   const top = split ? zones[0]! : null;
-  const opponent: SeatId = bottom.seat === 0 ? 1 : 0;
+  const opponents = view.players.map((_, s) => s).filter((s) => s !== bottom.seat);
 
   const tableRef = useRef<HTMLDivElement | null>(null);
-  const pileRefs = useRef<(HTMLElement | null)[]>([null, null]);
+  const pileRefs = useRef<(HTMLElement | null)[]>([]);
   const opponentRef = useRef<HTMLDivElement | null>(null);
   const cardRects = useRef(new Map<string, DOMRect>());
   const [flights, setFlights] = useState<Flight[]>([]);
@@ -230,8 +244,9 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, humanSeats
   const tableRect = tableRef.current?.getBoundingClientRect();
   const name = (seat: SeatId) => seatNames[seat] ?? `Spieler ${seat + 1}`;
   const stuckName = (seat: SeatId) => {
-    const other = seat === 0 ? 1 : 0;
-    return view.players[other]?.stuck ? name(other) : null;
+    const others = view.players.map((_, s) => s).filter((s) => s !== seat && view.players[s]?.stuck);
+    if (others.length === 0) return null;
+    return others.map(name).join(', ');
   };
 
   const zone = (z: (typeof zones)[number], rotated: boolean) => (
@@ -253,7 +268,6 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, humanSeats
     />
   );
 
-  const other = view.players[opponent]!;
   const sideStack = (i: 0 | 1) => (
     <div className="spd-side" aria-label={`Seitenstapel: ${view.sideCounts[i]} Karten`}>
       {view.sideCounts[i] > 0 ? <PlayingCard card={null} className="spd-card" /> : <span className="spd-slot" />}
@@ -270,24 +284,37 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, humanSeats
       {top ? (
         zone(top, true)
       ) : (
-        <div ref={opponentRef} className={`spd-opponent${other.stuck ? ' spd-opponent-stuck' : ''}`}>
-          <span className="spd-opponent-name">{name(opponent)}</span>
-          <span className="spd-opponent-hand" aria-label={`${other.hand.length} Handkarten`}>
-            {other.hand.map((card) => (
-              <PlayingCard key={card} card={card} deckStyle={view.deckStyle} className="spd-card spd-mini" />
-            ))}
-          </span>
-          <span className="spd-opponent-draw" title="Karten im Nachziehstapel">
-            🂠 {other.drawCount}
-          </span>
-          {other.stuck && <span title="Kommt nicht weiter">✋</span>}
+        <div className="spd-opponents-row">
+          {opponents.map((s) => {
+            const p = view.players[s]!;
+            const spitTotal = p.spitDownCounts ? p.spitDownCounts.reduce((a, b) => a + b, 0) : 0;
+            return (
+              <div key={s} ref={s === opponents[0] ? opponentRef : undefined} className={`spd-opponent${p.stuck ? ' spd-opponent-stuck' : ''}`}>
+                <span className="spd-opponent-name">{name(s)}</span>
+                <span className="spd-opponent-hand" aria-label={`${p.hand.length} Handkarten`}>
+                  {p.hand.map((card, idx) => {
+                    const down = p.spitDownCounts?.[idx] ?? 0;
+                    return (
+                      <span key={card} className="spd-mini-wrap">
+                        <PlayingCard card={card} deckStyle={view.deckStyle} className="spd-card spd-mini" />
+                        {down > 0 && <span className="spd-spit-badge spd-mini-badge">+{down}</span>}
+                      </span>
+                    );
+                  })}
+                </span>
+                <span className="spd-opponent-draw" title="Karten im Nachziehstapel">
+                  🂠 {p.drawCount + spitTotal}
+                </span>
+                {p.stuck && <span title="Kommt nicht weiter">✋</span>}
+              </div>
+            );
+          })}
         </div>
       )}
 
       <div className={`spd-center${flash ? ' spd-flash' : ''}`} aria-label="Mitte">
         {sideStack(0)}
-        {[0, 1].map((i) => {
-          const pile = view.piles[i]!;
+        {view.piles.map((pile, i) => {
           const shown = landing.has(i) ? pile[pile.length - 2] : topOf(pile);
           return (
             <div
@@ -411,11 +438,14 @@ export const gameUi: GameUi<SpeedView, SpeedMove> = {
   seatDetail: (view, seat) => {
     const p = view.players[seat];
     if (!p) return null;
-    return `${p.hand.length + p.drawCount} Karten · ${p.wins} ${p.wins === 1 ? 'Sieg' : 'Siege'}`;
+    const spitTotal = p.spitDownCounts ? p.spitDownCounts.reduce((a, b) => a + b, 0) : 0;
+    const total = p.hand.length + p.drawCount + spitTotal;
+    return `${total} Karten · ${p.wins} ${p.wins === 1 ? 'Sieg' : 'Siege'}`;
   },
   sounds: {
     played: 'karten-klatsch',
     flipped: 'karte-ziehen',
+    drew: 'karte-ziehen',
     stuck: 'festgefahren',
     reshuffled: 'mischen',
     speed: 'ruf-speed',

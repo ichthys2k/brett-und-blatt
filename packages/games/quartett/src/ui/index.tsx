@@ -2,7 +2,7 @@ import { BUB_QUARTETT_CARD_NOTETYPE, renderCardSide, type GameEvent, type SeatId
 import { GameCard, SeatRing, getNoteField, useCardCosmetics, useCardOverride, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { setOf, type Ask, type QuartettMove, type QuartettState, type Trick } from '../rules';
-import { cardOf, formatWithUnit, groupOf, valueOf, type CardId, type CardSet } from '../sets';
+import { CARD_SETS, cardOf, formatWithUnit, groupOf, valueOf, type CardId, type CardSet } from '../sets';
 import './styles.css';
 import { albumSpec } from './album';
 
@@ -30,7 +30,7 @@ export function QCard({
   hint?: string | null;
   winner?: boolean;
 }) {
-  const data = cardOf(set.id, card);
+  const data = cardOf(set.id, card, set);
   const group = groupOf(card);
   const groupName = set.groups.find((g) => g.id === group)?.name ?? '';
   const [info, setInfo] = useState(false);
@@ -43,6 +43,11 @@ export function QCard({
     useCardOverride(`${set.id}-${card}`) ??
     useCardOverride(card);
 
+  // Bild der Karte (#319): aus einem Anki-Kartenset (Medium) oder bei den Inhalten; Rückfall Emoji.
+  const [brokenImage, setBrokenImage] = useState(false);
+  const imageUrl = data.image ? (cosmetics.mediaUrlMap?.[data.image] ?? (set.id in CARD_SETS ? `quartett/bilder/${set.id}/${data.image}` : undefined)) : undefined;
+  const showImage = Boolean(imageUrl) && !brokenImage;
+  useEffect(() => setBrokenImage(false), [imageUrl]);
   const effectiveName = getNoteField(overrideNote, 4) || data.name;
   const effectiveEmoji = getNoteField(overrideNote, 5) || data.emoji;
   const effectiveInfo = getNoteField(overrideNote, 29) || set.note;
@@ -93,7 +98,8 @@ export function QCard({
               </button>
             )}
           </header>
-          <div className="qt-card-face">
+          <div className={`qt-card-face${showImage ? ' qt-has-image' : ''}`}>
+            {showImage && <img className="qt-image" src={imageUrl} alt="" loading="lazy" decoding="async" onError={() => setBrokenImage(true)} />}
             <span className="qt-emoji" aria-hidden="true">
               {effectiveEmoji}
             </span>
@@ -123,7 +129,7 @@ export function QCard({
               {set.properties
                 .filter((p) => size === 'large' || !highlight || p.id === highlight)
                 .map((p) => {
-                  const text = formatWithUnit(p, valueOf(set.id, card, p.id));
+                  const text = formatWithUnit(p, valueOf(set.id, card, p.id, set));
                   const classes = `qt-value ${highlight === p.id ? 'qt-chosen' : ''} ${hint === p.id ? 'qt-hint' : ''}`;
                   const content = (
                     <>
@@ -322,7 +328,7 @@ function TrumpBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint,
 function AskText({ ask, set, names }: { ask: Ask; set: CardSet; names: string[] }) {
   return (
     <>
-      {nameOf(names, ask.asker)} fragt {nameOf(names, ask.target)} nach {ask.card} {cardOf(set.id, ask.card).name} – {ask.got ? 'Treffer!' : 'leider nicht.'}
+      {nameOf(names, ask.asker)} fragt {nameOf(names, ask.target)} nach {ask.card} {cardOf(set.id, ask.card, set).name} – {ask.got ? 'Treffer!' : 'leider nicht.'}
       {ask.drew.includes(ask.asker) && !ask.got ? ` ${nameOf(names, ask.asker)} zieht eine Karte.` : ''}
     </>
   );
@@ -405,7 +411,7 @@ function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
               <div className="qt-group-cards">
                 {[1, 2, 3, 4].map((n) => {
                   const id = `${group.id}${n}`;
-                  const data = cardOf(set.id, id);
+                  const data = cardOf(set.id, id, set);
                   if (hand.includes(id))
                     return (
                       <span key={id} className="qt-mini" title={data.name}>
@@ -446,7 +452,7 @@ function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
       <div className="qt-controls">
         {legalMoves.length > 0 && (
           <button type="button" className="qt-button qt-primary" disabled={!ready} onClick={() => target !== null && card !== null && ready && onMove({ type: 'ask', target, card })}>
-            {ready && target !== null && card !== null ? `${nameOf(seatNames, target)}, hast du ${card} ${cardOf(set.id, card).name}?` : 'Fragen'}
+            {ready && target !== null && card !== null ? `${nameOf(seatNames, target)}, hast du ${card} ${cardOf(set.id, card, set).name}?` : 'Fragen'}
           </button>
         )}
         {quartetsOf(viewer === 'spectator' ? -1 : viewer).length > 0 && (

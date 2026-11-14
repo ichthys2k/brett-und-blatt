@@ -9,6 +9,7 @@ import { Plate, Target, type BoardProps } from './boards';
 import { TABLE_CENTER, TABLE_RADIUS } from './Tavern';
 import { GOLD, labelTexture } from './text';
 import { Button3D, Sign } from './ui3d';
+import { pulse } from '../haptics';
 
 const TOP = TABLE_CENTER[1] + 0.002;
 const SEAT_COLORS = ['#3a6fb0', '#a32a1c', '#2f7d4a', '#d9a400', '#7b2fa8', '#0d8478'];
@@ -37,6 +38,7 @@ export function Tile({ label, position, size, background, color = '#1d1510', onP
         if (!onPress) return;
         e.stopPropagation();
         setHover(true);
+        pulse('hover');
       }}
       onPointerOut={() => setHover(false)}
     >
@@ -319,6 +321,7 @@ function Hex({ land, position, owner, onPress, glow, r = 0.036 }: { land: string
           if (!onPress) return;
           e.stopPropagation();
           setHover(true);
+        pulse('hover');
         }}
         onPointerOut={() => setHover(false)}
       >

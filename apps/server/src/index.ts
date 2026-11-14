@@ -139,7 +139,7 @@ import {
   type PushSubscriptionData,
   type TournamentPushState,
 } from '@brett-und-blatt/online';
-import { BOT_BUDGET_MS, BOT_STEP_MS } from './bots';
+import { BOT_BUDGET_MS, BOT_PAUSE_MS, BOT_STEP_MS } from './bots';
 import { bibelQuizKatalog } from './bibelquiz';
 import { wortspielKataloge } from './wortspiele';
 import { onlineGames } from './games';
@@ -1274,6 +1274,7 @@ export class GameRoom extends DurableObject<Env> {
       listGames: () => [...gamesById.values()],
       botRunner,
       botBudgetMs: BOT_BUDGET_MS,
+      botPauseMs: BOT_PAUSE_MS,
       randomSeed,
       send: (id, message) => this.send(id, message),
       close: (id) => {

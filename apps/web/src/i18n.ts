@@ -67,6 +67,8 @@ const de = {
   'play.more': 'Weitere Aktionen',
   'play.players': 'Spieler',
   'play.showPlayers': 'Spieler zeigen',
+  'play.showMenu': 'Menü öffnen',
+  'play.hideMenu': 'Menü schließen',
   'play.hidePlayers': 'Spieler ausblenden',
   'play.clock': 'Restzeit am Zug',
   'play.back': 'Zum Menü',

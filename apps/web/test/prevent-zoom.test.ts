@@ -66,4 +66,55 @@ describe('Pinch-to-Zoom unterbinden (#267)', () => {
     target.dispatchEvent(afterCleanup);
     expect(afterCleanup.defaultPrevented).toBe(false);
   });
+
+  it('bricht schon beim Aufsetzen des zweiten Fingers ab, nicht beim ersten (#397)', () => {
+    const target = new EventTarget();
+    let scale = 1;
+    const cleanup = disablePinchZoom(target, () => scale);
+    const start = (fingers: number) =>
+      Object.assign(new Event('touchstart', { cancelable: true }), {
+        touches: Array.from({ length: fingers }, (_, i) => ({ identifier: i })),
+      });
+
+    const one = start(1);
+    target.dispatchEvent(one);
+    expect(one.defaultPrevented).toBe(false);
+    const two = start(2);
+    target.dispatchEvent(two);
+    expect(two.defaultPrevented).toBe(true);
+
+    // Vergrößert: Zurückzoomen bleibt möglich.
+    scale = 2;
+    const zoomedTwo = start(2);
+    target.dispatchEvent(zoomedTwo);
+    expect(zoomedTwo.defaultPrevented).toBe(false);
+    cleanup();
+  });
+
+  it('lässt Zurückzoomen zu, wenn die Seite schon vergrößert ist', () => {
+    const target = new EventTarget();
+    let scale = 1.8;
+    const cleanup = disablePinchZoom(target, () => scale);
+    const pinch = () =>
+      Object.assign(new Event('touchmove', { cancelable: true }), {
+        touches: [{ identifier: 1 }, { identifier: 2 }],
+      });
+
+    const whileZoomed = pinch();
+    target.dispatchEvent(whileZoomed);
+    expect(whileZoomed.defaultPrevented).toBe(false);
+    const gesture = new Event('gesturechange', { cancelable: true });
+    target.dispatchEvent(gesture);
+    expect(gesture.defaultPrevented).toBe(false);
+    const wheel = Object.assign(new Event('wheel', { cancelable: true }), { ctrlKey: true });
+    target.dispatchEvent(wheel);
+    expect(wheel.defaultPrevented).toBe(false);
+
+    // Wieder auf normaler Größe: Die Sperre greift erneut.
+    scale = 1;
+    const atNormal = pinch();
+    target.dispatchEvent(atNormal);
+    expect(atNormal.defaultPrevented).toBe(true);
+    cleanup();
+  });
 });

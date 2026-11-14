@@ -12,7 +12,9 @@ import { GAME_CHOICES, LEVEL_TEXT, PHRASE_TEXT, gameName, isBoardGame } from '..
 import { TABLE_CENTER } from './Tavern';
 import { WOOD_DARK } from './text';
 import { Button3D, Sign } from './ui3d';
+import { HEAD_PAD, ROW_GAP, ROW_STEP, BUTTON_H, headHeight, liftAboveTable, seatPageRange } from './panel-layout';
 import { isCardGame } from './cards';
+import { onVibrationChange, setVibration, vibrationEnabled } from '../haptics';
 import { getVolume, onVolumeChange, setVolume } from '../sound';
 
 const PAGE = 6;
@@ -23,7 +25,6 @@ const SIDE_ROT: [number, number, number] = [0, Math.atan2(0.68, 0.62 - TABLE_CEN
 const CENTER_POS: [number, number, number] = [TABLE_CENTER[0], 1.25, TABLE_CENTER[2] - 0.3];
 const CENTER_ROT: [number, number, number] = [0, 0, 0];
 const WIDTH = 0.62;
-const ROW = 0.05;
 
 type BotLevel = Extract<LobbySeat, { kind: 'bot' }>['level'];
 
@@ -44,6 +45,18 @@ export interface VoiceControls {
   report: () => void;
 }
 
+/** Mixed Reality (#370): Tisch auf eine Fläche legen und verkleinern; nur in einer Mixed-Reality-Sitzung vorhanden. */
+export interface ViewPlacement {
+  placing: boolean;
+  placed: boolean;
+  percent: number;
+  start: () => void;
+  cancel: () => void;
+  release: () => void;
+  bigger: () => void;
+  smaller: () => void;
+}
+
 export interface ViewAdjust {
   up: () => void;
   down: () => void;
@@ -60,6 +73,7 @@ interface PanelProps {
   boardMoves: Set<number>;
   onMove: (index: number) => void;
   adjust: ViewAdjust;
+  placement?: ViewPlacement;
   voice: VoiceControls;
 }
 
@@ -72,13 +86,15 @@ interface Btn {
 
 type Mode = 'main' | 'phrases' | 'view' | 'voice';
 
-export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice }: PanelProps) {
+export function Panel({ room, game, you, send, boardMoves, onMove, adjust, placement, voice }: PanelProps) {
   const [page, setPage] = useState(0);
+  const [seatPage, setSeatPage] = useState(0);
   const [mode, setMode] = useState<Mode>('main');
   const [confirmResign, setConfirmResign] = useState(false);
   const [confirmReport, setConfirmReport] = useState(false);
   const [, redraw] = useState(0);
   useEffect(() => onVolumeChange(() => redraw((n) => n + 1)), []);
+  useEffect(() => onVibrationChange(() => redraw((n) => n + 1)), []);
   // Während der Partie rückt das Fenster zur Seite, damit Brett oder Spieltafel frei bleiben (#358); nur beim Kartentisch bleibt es mittig.
   const beside = Boolean(game && !game.result && !isCardGame(game.gameId));
   const position = beside ? SIDE_POS : CENTER_POS;
@@ -124,12 +140,25 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice
       { label: 'Tisch näher', press: adjust.closer },
       { label: 'Tisch weiter weg', press: adjust.farther },
     ]);
+    if (placement) {
+      if (placement.placing) lines.push('Blick auf eine Fläche, Abzug oder Tippen legt den Tisch ab.');
+      rows.push([
+        placement.placing ? { label: 'Abbrechen', press: placement.cancel } : { label: 'Auf Fläche legen', press: placement.start, active: placement.placed },
+        { label: 'Schweben', press: placement.release, disabled: !placement.placed },
+      ]);
+      rows.push([
+        { label: 'Tisch kleiner', press: placement.smaller },
+        { label: `Größe ${placement.percent} %`, press: () => {}, disabled: true },
+        { label: 'Tisch größer', press: placement.bigger },
+      ]);
+    }
     const volume = getVolume();
     rows.push([
       { label: '🔈 leiser', press: () => setVolume(volume - 0.1) },
       { label: volume > 0 ? `Ton ${Math.round(volume * 100)} %` : 'Ton aus', press: () => setVolume(volume > 0 ? 0 : 0.7), active: volume > 0 },
       { label: '🔊 lauter', press: () => setVolume(volume + 0.1) },
     ]);
+    rows.push([{ label: vibrationEnabled() ? '📳 Vibration an' : 'Vibration aus', press: () => setVibration(!vibrationEnabled()), active: vibrationEnabled() }]);
     lines.push('Neu ausrichten: Meta-Taste gedrückt halten.');
     rows.push([back]);
   } else if (room.phase === 'lobby' || !game) {
@@ -156,7 +185,9 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice
       ]);
     } else lines.push(`Spiel: ${gameName(lobby.gameId)}`);
     const mine = lobby.seats.findIndex((s) => s.kind === 'human' && s.memberId === you);
+    const seatRange = seatPageRange(lobby.seats.length, seatPage);
     lobby.seats.forEach((seat, i) => {
+      if (i < seatRange.from || i >= seatRange.to) return;
       const member = seat.kind === 'human' ? room.members.find((m) => m.id === seat.memberId) : undefined;
       const text = seat.kind === 'bot' ? `🤖 Bot ${LEVEL_TEXT[seat.level]}` : member ? `${member.avatar} ${member.name}${member.id === you ? ' (du)' : ''}` : 'frei';
       const row: Btn[] = [{ label: `${i + 1}: ${text}`, press: () => {}, disabled: true }];
@@ -169,6 +200,14 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice
       if (seat.kind === 'human' && seat.memberId === you) row.push({ label: 'Aufstehen', press: () => send({ type: 'leaveSeat' }) });
       rows.push(row);
     });
+    // Viele Plätze: seitenweise zeigen, damit das Fenster nicht unter den Tisch reicht (#364).
+    if (seatRange.pages > 1) {
+      rows.push([
+        { label: '▲ davor', press: () => setSeatPage((seatRange.current - 1 + seatRange.pages) % seatRange.pages) },
+        { label: `Plätze ${seatRange.from + 1}–${seatRange.to} von ${lobby.seats.length}`, press: () => {}, disabled: true },
+        { label: 'danach ▼', press: () => setSeatPage((seatRange.current + 1) % seatRange.pages) },
+      ]);
+    }
     if (host) rows.push([{ label: 'Partie beginnen', press: () => send({ type: 'start' }), active: true, disabled: !lobby.gameId }]);
     else lines.push('Die Raumleitung beginnt die Partie.');
     rows.push([
@@ -229,21 +268,23 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, voice
     ]);
   }
 
-  const lineH = 0.045;
-  const height = lines.length * lineH + 0.04;
+  const height = headHeight(lines.length);
+  // Reicht das Fenster nach unten bis unter die Tischplatte, rückt es als Ganzes nach oben (#364).
+  const lift = liftAboveTable(position[1], lines.length, rows.length, TABLE_CENTER[1]);
   return (
-    <group position={position} rotation={rotation}>
-      <Sign lines={lines} position={[0, 0, 0]} width={WIDTH} height={height} background={WOOD_DARK} />
+    <group position={[position[0], position[1] + lift, position[2]]} rotation={rotation}>
+      <Sign lines={lines} position={[0, 0, 0]} width={WIDTH} height={height} background={WOOD_DARK} overlay />
       {rows.map((row, r) => {
         const gap = 0.01;
-        const w = (WIDTH - 0.04 - gap * (row.length - 1)) / row.length;
+        const w = (WIDTH - HEAD_PAD - gap * (row.length - 1)) / row.length;
         return row.map((b, k) => (
           <Button3D
             key={`${r}-${k}-${b.label}`}
             label={b.label}
-            position={[-(WIDTH - 0.04) / 2 + w / 2 + k * (w + gap), -height / 2 - 0.035 - r * ROW, 0]}
+            position={[-(WIDTH - HEAD_PAD) / 2 + w / 2 + k * (w + gap), -height / 2 - ROW_GAP - r * ROW_STEP, 0]}
             width={w}
-            height={0.042}
+            height={BUTTON_H}
+            overlay
             onPress={b.press}
             active={b.active}
             disabled={b.disabled}

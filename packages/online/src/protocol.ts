@@ -400,7 +400,8 @@ export function parseClientMessage(raw: string, push: ParsePushOptions = {}): Cl
     case 'setGame':
       return isString(m.gameId, 60) ? { type: 'setGame', gameId: m.gameId } : null;
     case 'setOption':
-      return isString(m.id, 60) && isString(m.value, 60) ? { type: 'setOption', id: m.id, value: m.value } : null;
+      // Verborgene Optionen (eigenes Paket, #218) sind länger; ob der Wert passt, prüft der Raum am Muster der Option.
+      return isString(m.id, 60) && isString(m.value, 14000) ? { type: 'setOption', id: m.id, value: m.value } : null;
     case 'setCustomCardCatalog':
       if (m.catalog === null) return { type: 'setCustomCardCatalog', catalog: null };
       {

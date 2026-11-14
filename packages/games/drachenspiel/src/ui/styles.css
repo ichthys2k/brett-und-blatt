@@ -2011,6 +2011,27 @@
     display: none;
   }
 
+  /* Zug beenden muss ganz zu sehen sein (#391): Heldenkarte gibt Platz ab, der Stapel zeigt nur die Zahl. */
+  .ds-player-zone {
+    gap: 4px;
+  }
+
+  .ds-player-zone > .ds-hero-card {
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 6px;
+    padding: 4px 6px;
+  }
+
+  .ds-actions {
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+
+  .ds-actions .ds-deck-with-back > :first-child {
+    display: none;
+  }
+
   .ds-btn-endturn {
     max-width: 70px;
     font-size: 0.78rem;
@@ -2109,4 +2130,92 @@
 
 .ds-minion .ds-minion-gamecard .bub-game-card-anki {
   border-radius: inherit;
+}
+
+/* Kleine Karten (Hand, Feld, Kartenwahl): Die Anki-Vorlage ist für große Karten gebaut (14 px Schrift,
+   80 px Bildfläche, Regeltext). Hier nur Kosten, Name, Bild und Werte – den Text zeigt das Vergrößern. */
+.bub-card.ds-combat-card-game .bub-combat-card,
+.bub-card.ds-minion-gamecard .bub-combat-card {
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 11px;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-header,
+.bub-card.ds-minion-gamecard .bub-combat-header {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1px;
+  margin-bottom: 0;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-cost,
+.bub-card.ds-minion-gamecard .bub-combat-cost {
+  align-self: flex-start;
+  padding: 1px 4px;
+  font-size: 0.72rem;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-cost-gem,
+.bub-card.ds-minion-gamecard .bub-combat-cost-gem {
+  font-size: 0.6rem;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-title-bar,
+.bub-card.ds-minion-gamecard .bub-combat-title-bar {
+  text-align: center;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-name,
+.bub-card.ds-minion-gamecard .bub-combat-name {
+  font-size: 0.66rem;
+  line-height: 1.15;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-tribe,
+.bub-card.ds-minion-gamecard .bub-combat-tribe,
+.bub-card.ds-combat-card-game .bub-combat-body,
+.bub-card.ds-minion-gamecard .bub-combat-body,
+.bub-card.ds-combat-card-game .bub-card-runtime-hint,
+.bub-card.ds-minion-gamecard .bub-card-runtime-hint {
+  display: none;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-media,
+.bub-card.ds-minion-gamecard .bub-combat-media {
+  min-height: 0;
+  margin: 2px 0;
+  background: transparent;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-image,
+.bub-card.ds-minion-gamecard .bub-combat-image {
+  font-size: 1.9rem;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-image img,
+.bub-card.ds-minion-gamecard .bub-combat-image img {
+  max-height: 100%;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-footer {
+  margin-top: 0;
+  padding: 0;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-stat {
+  gap: 1px;
+  padding: 1px 3px;
+  font-size: 0.68rem;
+}
+
+.bub-card.ds-combat-card-game .bub-combat-stat-icon {
+  font-size: 0.6rem;
+}
+
+/* Auf dem Feld zeigen die Plaketten von <GameCard> die aktuellen Werte; die Kosten zählen dort nicht. */
+.bub-card.ds-minion-gamecard .bub-combat-footer,
+.bub-card.ds-minion-gamecard .bub-combat-cost {
+  display: none;
 }

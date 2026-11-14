@@ -1,4 +1,4 @@
-import { inlineBotRunner, teamOption, teamsFromOptions, type AnyGameModule, type GameModule } from '@brett-und-blatt/engine';
+import { encodePairsOption, inlineBotRunner, teamOption, teamsFromOptions, type AnyGameModule, type GameModule } from '@brett-und-blatt/engine';
 import { gameModule as blackPeter } from '@brett-und-blatt/game-black-peter';
 import { gameModule as ticTacToe } from '@brett-und-blatt/game-tic-tac-toe';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -374,6 +374,27 @@ describe('Raum und Lobby', () => {
     expect(anna.game().seats.map((s) => s.memberId)).toEqual(['m1', 'm2']);
     expect(anna.game().yourSeat).toBe(0);
     expect(ben.game().yourSeat).toBe(1);
+  });
+
+  it('eigenes Paket als verborgene Option: die Raumleitung setzt es, die Partie nutzt es (#218)', () => {
+    const anna = env.client('anna');
+    const ben = env.client('ben');
+    anna.hello();
+    ben.hello();
+    anna.send({ type: 'setGame', gameId: 'black-peter' });
+    const pack = encodePairsOption({ name: 'Hauptstädte', rows: [{ a: 'Frankreich', b: 'Paris', id: 'r1' }, { a: 'Italien', b: 'Rom', id: 'r2' }, { a: 'Spanien', b: 'Madrid', id: 'r3' }, { a: 'Polen', b: 'Warschau', id: 'r4' }, { a: 'Ungarn', b: 'Budapest', id: 'r5' }, { a: 'Irland', b: 'Dublin', id: 'r6' }] }, () => 0);
+    anna.send({ type: 'setOption', id: 'pack', value: pack });
+    expect(anna.room().lobby.options.pack).toBe(pack);
+    // Andere Optionen bleiben auf ihre Auswahl beschränkt, und nur die Raumleitung darf setzen.
+    anna.send({ type: 'setOption', id: 'set', value: 'gibt-es-nicht' });
+    expect(anna.room().lobby.options.set).not.toBe('gibt-es-nicht');
+    ben.send({ type: 'setOption', id: 'pack', value: '' });
+    expect(anna.room().lobby.options.pack).toBe(pack);
+    anna.send({ type: 'takeSeat', index: 0 });
+    ben.send({ type: 'takeSeat', index: 1 });
+    anna.send({ type: 'start' });
+    expect(anna.room().phase).toBe('playing');
+    expect(JSON.stringify(anna.game().view)).toMatch(/"set":"eigen"|Hauptst|Paris|Rom/);
   });
 
   it('wer einen Platz wechselt, gibt den alten frei', () => {

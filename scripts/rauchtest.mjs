@@ -151,6 +151,19 @@ try {
       fresh.set(id, m);
       await firstSteps[id]?.(page);
       if (shots) await page.screenshot({ path: `${shots}/${id}.png` });
+      // Drachenspiel (#391): „Zug beenden“ muss ganz im Spielfeld liegen und darf nicht am Rand abgeschnitten sein.
+      if (id === 'drachenspiel') {
+        const cut = await page.evaluate(() => {
+          const button = document.querySelector('.ds-btn-endturn');
+          const arena = document.querySelector('.ds-arena');
+          if (!button || !arena) return null;
+          const b = button.getBoundingClientRect();
+          const a = arena.getBoundingClientRect();
+          return Math.round(Math.max(b.right - a.right, a.left - b.left, b.right - window.innerWidth, 0));
+        });
+        if (cut === null) problems.push(`${id}: Knopf „Zug beenden“ nicht gefunden`);
+        else if (cut > 1) problems.push(`${id}: Knopf „Zug beenden“ ragt ${cut} px über den Rand`);
+      }
       if (errors.length) problems.push(`${id}: Fehler beim Start – ${errors.slice(0, 2).join(' | ')}`);
       const violations = await page.evaluate(() => window.__csp ?? []);
       if (violations.length) problems.push(`${id}: CSP-Verletzung – ${violations.slice(0, 2).join(' | ')}`);
@@ -305,6 +318,21 @@ try {
     const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (wide > 1) problems.push(`Pass-Seite: rollt waagerecht (${wide} px)`);
     if (errors.length > 0) problems.push(`Pass-Seite: ${errors[0]}`);
+    await context.close();
+  }
+  // Spielhelfer (#106): Übersicht und alle 5 Werkzeuge ohne Fehler und ohne waagerechtes Rollen.
+  {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    for (const hash of ['#/helfer', '#/helfer/wuerfel', '#/helfer/zufall', '#/helfer/startspieler', '#/helfer/uhren', '#/helfer/punkte']) {
+      await page.goto(`${base}${hash}`);
+      await page.locator('.bub-tav-frame').waitFor({ timeout: 10_000 });
+      const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      if (wide > 1) problems.push(`Spielhelfer (${hash}): rollt waagerecht (${wide} px)`);
+    }
+    if (errors.length > 0) problems.push(`Spielhelfer: ${errors[0]}`);
     await context.close();
   }
 } finally {

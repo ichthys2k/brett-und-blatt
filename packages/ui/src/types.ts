@@ -107,6 +107,11 @@ export interface GameUi<V = unknown, M = unknown> {
   handView?: boolean;
   /** Das Spiel kann seine Plätze mit `SeatRing` um den Tisch setzen, wenn `BoardProps.table` gesetzt ist. */
   seatsAround?: boolean;
+  /**
+   * Die Spieler stehen schon auf dem Spielfeld (z. B. Poker): Im niedrigen Querformat (Handy) klappt die
+   * Seitenleiste zu einem Menüknopf ☰ ein und öffnet sich bei Bedarf über dem Spielfeld (#378).
+   */
+  seatsOnBoard?: boolean;
   /** Online: Schnellnachrichten an diesem Tisch statt der üblichen, z. B. die Tierrufe des Drachenspiels. */
   phrases?: readonly string[];
   /** Klänge zu den Ereignissen, z. B. `{ placed: 'stein-setzen' }`. Sieg, Niederlage und Zeit vertont die Plattform selbst. */

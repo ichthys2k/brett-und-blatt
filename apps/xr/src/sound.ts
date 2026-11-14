@@ -67,7 +67,37 @@ function load(file: string): Promise<AudioBuffer | null> {
   return hit;
 }
 
-export function play(name: XrSoundName): void {
+type Placer = (event: unknown) => [number, number, number] | null;
+let placer: Placer | null = null;
+
+/** Die Szene meldet, wo ein Ereignis erklingt; `null` (Browser) heißt: ohne Ort. */
+export function setPlacer(next: Placer | null): void {
+  placer = next;
+}
+
+export function placeOf(event: unknown): [number, number, number] | null {
+  return placer ? placer(event) : null;
+}
+
+/** Hörer (Kopf) im Raum; die Szene meldet ihn jeden Bildaufbau. Ohne Aufruf hört man alles ohne Ort. */
+export function setListener(position: [number, number, number], forward: [number, number, number], up: [number, number, number]): void {
+  const l = context?.listener;
+  if (!l) return;
+  if (l.positionX) {
+    l.positionX.value = position[0];
+    l.positionY.value = position[1];
+    l.positionZ.value = position[2];
+    l.forwardX.value = forward[0];
+    l.forwardY.value = forward[1];
+    l.forwardZ.value = forward[2];
+    l.upX.value = up[0];
+    l.upY.value = up[1];
+    l.upZ.value = up[2];
+  }
+}
+
+/** `at` gesetzt (in Brille): der Klang kommt von dort; sonst wie bisher ohne Ort. */
+export function play(name: XrSoundName, at?: [number, number, number] | null): void {
   if (volume <= 0 || !context) return;
   const spec = (catalog as Record<string, Spec>)[name];
   if (!spec) return;
@@ -77,7 +107,19 @@ export function play(name: XrSoundName): void {
     source.buffer = buffer;
     const gain = context.createGain();
     gain.gain.value = volume * (spec.gain ?? 1) * 0.6;
-    source.connect(gain).connect(context.destination);
+    if (at) {
+      const panner = context.createPanner();
+      panner.panningModel = 'HRTF';
+      panner.distanceModel = 'inverse';
+      panner.refDistance = 0.8;
+      panner.rolloffFactor = 0.8;
+      panner.positionX.value = at[0];
+      panner.positionY.value = at[1];
+      panner.positionZ.value = at[2];
+      source.connect(gain).connect(panner).connect(context.destination);
+    } else {
+      source.connect(gain).connect(context.destination);
+    }
     const start = spec.start ?? 0;
     source.start(0, start, spec.end !== undefined ? Math.max(0.05, spec.end - start) : undefined);
   });

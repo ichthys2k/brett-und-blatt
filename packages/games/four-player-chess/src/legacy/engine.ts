@@ -694,14 +694,27 @@ function isForfeited(state: FourChessState, c: Color): boolean {
   return state.out[c] === 'resign' || state.out[c] === 'time';
 }
 
+/**
+ * Beendet eine Partie „Jeder gegen jeden“. Ist nur noch eine Farbe übrig (alle anderen
+ * matt, patt, aufgegeben oder ohne Zeit), gewinnt sie – unabhängig von den Punkten.
+ * Bei Sieganspruch und Remis entscheiden die Punkte; wer aufgegeben hat, kann nicht gewinnen.
+ */
 function finishFfa(state: FourChessState, reason: string): void {
+  const alive = activeColors(state);
+  const survivor = reason === 'last' && alive.length === 1 ? alive[0] : null;
   const ranking = [...COLORS].sort((a, b) => {
+    // Wer übrig bleibt, steht vorn.
+    if (survivor && (a === survivor) !== (b === survivor)) return a === survivor ? -1 : 1;
     // Nicht-aufgebende Spieler vor aufgebenden Spielern, danach nach Punkten
     const forfeitA = isForfeited(state, a) ? 1 : 0;
     const forfeitB = isForfeited(state, b) ? 1 : 0;
     if (forfeitA !== forfeitB) return forfeitA - forfeitB;
     return state.scores[b] - state.scores[a];
   });
+  if (survivor) {
+    state.result = { reason, winners: [survivor], ranking };
+    return;
+  }
   const eligible = (COLORS as Color[]).filter((c) => !isForfeited(state, c));
   if (eligible.length === 0) {
     state.result = { reason, winners: [], ranking };

@@ -8,6 +8,8 @@ import { useState, type ReactNode } from 'react';
 import { TABLE_CENTER } from './Tavern';
 import { GOLD } from './text';
 import { Button3D } from './ui3d';
+import { pulse } from '../haptics';
+import { movesFor, useGrab } from './grab';
 
 export interface BoardProps {
   game: GameMessage;
@@ -61,6 +63,7 @@ export function Target({ position, size, onPress, label }: { position: [number, 
       onPointerOver={(e) => {
         e.stopPropagation();
         setHover(true);
+        pulse('hover');
       }}
       onPointerOut={() => setHover(false)}
       userData={{ label }}
@@ -209,6 +212,7 @@ function ColumnTarget({ x, y, width, height, onPress }: { x: number; y: number; 
       onPointerOver={(e) => {
         e.stopPropagation();
         setHover(true);
+        pulse('hover');
       }}
       onPointerOut={() => setHover(false)}
     >
@@ -324,10 +328,26 @@ export function ChessBoard({ game, onMove }: BoardProps) {
   const pieces = parsePlacement(view.fen);
   const moves = (game.legalMoves as ChessMove[]).map((move, i) => ({ move, label: game.moveLabels?.[i] ?? `${move.from}–${move.to}` })).filter((m) => m.move.type === 'move');
   const movable = new Set(moves.map((m) => m.move.from));
-  const targets = selected ? moves.filter((m) => m.move.from === selected) : [];
-  const targetSquares = [...new Set(targets.map((m) => m.move.to))];
   const last = view.lastMove ? new Set([view.lastMove.from, view.lastMove.to]) : new Set<string>();
 
+  const grab = useGrab<string>({
+    size: 8 * s,
+    radius: s * 0.7,
+    targets: (from) => [...new Set(moves.filter((m) => m.move.from === from).map((m) => m.move.to))].map((to) => ({ id: to, x: at(to)[0], z: at(to)[1] })),
+    onDrop: (from, to) => {
+      if (to === null) return;
+      setSelected(from);
+      const options = movesFor(moves, (m) => m.move.from, (m) => m.move.to, from, to);
+      if (options.length === 1) {
+        onMove(options[0]!.move);
+        setSelected(null);
+      } else if (options.length > 1) setPromotion({ moves: options });
+    },
+  });
+  // Beim Greifen leuchten die Ziele der gegriffenen Figur, sonst die der angetippten.
+  const source = grab.held?.id ?? selected;
+  const targets = source ? moves.filter((m) => m.move.from === source) : [];
+  const targetSquares = [...new Set(targets.map((m) => m.move.to))];
   const choose = (to: string) => {
     const options = targets.filter((m) => m.move.to === to);
     if (options.length === 1) {
@@ -359,10 +379,15 @@ export function ChessBoard({ game, onMove }: BoardProps) {
             <boxGeometry args={[s, 0.002, s]} />
             <meshStandardMaterial color={square === selected ? '#2f5d3a' : last.has(square) ? '#c49a4a' : dark ? '#6b4728' : '#d9b98a'} />
           </mesh>
-          {piece && (
+          {piece && grab.held?.id !== square && (
             <group
               position={[0, 0.018, 0]}
               rotation={[0, flip ? Math.PI : 0, 0]}
+              onPointerDown={(e) => {
+                if (!canSelect) return;
+                e.stopPropagation();
+                grab.begin(square, x, z);
+              }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (canSelect) {
@@ -381,6 +406,12 @@ export function ChessBoard({ game, onMove }: BoardProps) {
   return (
     <Plate size={[8 * s + 0.04, 8 * s + 0.04]} color="#3f2a18">
       {squares}
+      {grab.held && pieces.get(grab.held.id) && (
+        <group position={[grab.held.x, 0.06, grab.held.z]} rotation={[0, flip ? Math.PI : 0, 0]}>
+          <Piece type={pieces.get(grab.held.id)!.type} white={pieces.get(grab.held.id)!.white} />
+        </group>
+      )}
+      {grab.layer}
       {targetSquares.map((to) => {
         const [x, z] = at(to);
         return <Target key={to} position={[x, 0.02, z]} size={s * 0.3} onPress={() => choose(to)} label={targets.find((m) => m.move.to === to)?.label} />;

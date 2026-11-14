@@ -74,12 +74,23 @@ export interface ParsedQuartettCard {
   sources?: Record<string, string>;
 }
 
+/** Ein ganz eigenes Quartett-Set aus Anki (#270): Gruppen A, B, … mit je vier Karten A1–A4. */
+export interface CustomQuartettSet {
+  name: string;
+  emoji: string;
+  properties: { id: string; label: string; unit: string; higherWins: boolean; format?: 'plain' | 'year' }[];
+  groups: { id: string; name: string }[];
+  cards: { id: string; name: string; emoji: string; image?: string; values: Record<string, number>; source?: string }[];
+}
+
 export interface CustomCardCatalog {
   checksum: string;
   notices: string[];
   combatCards: Record<string, ParsedCombatCard>;
   courtCards: Record<string, ParsedCourtCard>;
   quartettCards: Record<string, ParsedQuartettCard>;
+  /** Statt einzelner geänderter Karten ein ganzes eigenes Quartett-Set. */
+  quartettSet?: CustomQuartettSet;
 }
 
 /**
@@ -261,8 +272,11 @@ export function parseCombatCardSpec(
     ...(keywords !== undefined ? { keywords } : {}),
   };
 
+  const klasse = get('Klasse');
+  if (klasse) (card as { house?: string }).house = klasse;
   const bild = get('Bild');
-  if (bild) card.emoji = bild;
+  // Ein Medium (`<img src="…">`, #309) ist Darstellung; das Emoji bleibt dann das bisherige.
+  if (bild && !/<img\b/i.test(bild)) card.emoji = bild;
   const spruch = get('Spruch');
   if (spruch) card.quote = spruch;
   const regeltext = get('Regeltext');
@@ -521,7 +535,13 @@ export function sanitizeCustomCardCatalog(raw: unknown, legacy?: 'combat' | 'cou
   const combatCards: Record<string, ParsedCombatCard> = {};
   for (const [id, card] of entriesOf(source.combatCards)) {
     const keywords = Array.isArray(card.keywords) ? [...new Set(card.keywords.filter((k): k is string => typeof k === 'string' && KNOWN_KEYWORDS.has(k)))] : undefined;
+    // Auslöser, Effekte und Zielwahl gehen nur roh und klein weiter; ihre Form prüft das Drachenspiel selbst (#270).
+    const rawRules = (value: unknown) => (value !== undefined && JSON.stringify(value).length <= 4000 ? JSON.parse(JSON.stringify(value)) : undefined);
     combatCards[id] = withOptional({ id, name: cleanText(card.name, 60) ?? id } as ParsedCombatCard, {
+      triggers: Array.isArray(card.triggers) ? rawRules(card.triggers) : undefined,
+      effects: Array.isArray(card.effects) ? rawRules(card.effects) : undefined,
+      targeting: cleanText(card.targeting, 20),
+      house: cleanText(card.house, 20),
       cost: cleanInt(card.cost, 0, 20),
       attack: cleanInt(card.attack, 0, 99),
       health: cleanInt(card.health, 1, 99),
@@ -556,7 +576,47 @@ export function sanitizeCustomCardCatalog(raw: unknown, legacy?: 'combat' | 'cou
 
   const checksum = typeof value.checksum === 'string' && /^[0-9a-f]{1,16}$/i.test(value.checksum) ? value.checksum : '';
   const notices = Array.isArray(value.notices) ? value.notices.filter((n): n is string => typeof n === 'string').slice(0, 50).map((n) => n.slice(0, 300)) : [];
-  return { checksum, notices, combatCards, courtCards, quartettCards };
+  const quartettSet = sanitizeQuartettSet(value.quartettSet);
+  return { checksum, notices, combatCards, courtCards, quartettCards, ...(quartettSet ? { quartettSet } : {}) };
+}
+
+/**
+ * Prüft ein eigenes Quartett-Set: 2–16 Gruppen (Buchstaben A–P) mit genau vier Karten (A1–A4),
+ * 2–6 Eigenschaften, endliche Werte. Sonst null – dann gilt das gewählte Standard-Set.
+ */
+export function sanitizeQuartettSet(raw: unknown): CustomQuartettSet | null {
+  if (!isPlainRecord(raw) || !Array.isArray(raw.properties) || !Array.isArray(raw.cards)) return null;
+  const properties = raw.properties
+    .filter(isPlainRecord)
+    .map((p) => ({
+      id: typeof p.id === 'string' && /^[a-z][a-z0-9_]{0,29}$/.test(p.id) ? p.id : '',
+      label: cleanText(p.label, 30) ?? '',
+      unit: cleanText(p.unit, 12) ?? '',
+      higherWins: p.higherWins !== false,
+      ...(p.format === 'plain' || p.format === 'year' ? { format: p.format as 'plain' | 'year' } : {}),
+    }))
+    .filter((p, i, all) => p.id && p.label && all.findIndex((q) => q.id === p.id) === i)
+    .slice(0, 6);
+  if (properties.length < 2) return null;
+  const cards = raw.cards
+    .filter(isPlainRecord)
+    .filter((c) => typeof c.id === 'string' && /^[A-P][1-4]$/.test(c.id))
+    .map((c) => {
+      const values: Record<string, number> = {};
+      const rawValues = isPlainRecord(c.values) ? c.values : {};
+      for (const p of properties) {
+        const num = typeof rawValues[p.id] === 'string' ? Number(rawValues[p.id]) : rawValues[p.id];
+        values[p.id] = typeof num === 'number' && Number.isFinite(num) ? Math.min(1e12, Math.max(-1e12, num)) : 0;
+      }
+      const image = typeof c.image === 'string' && /^[\w.-]{1,80}\.(webp|png|jpe?g|svg|gif)$/i.test(c.image) ? c.image : undefined;
+      return withOptional({ id: c.id as string, name: cleanText(c.name, 60) ?? (c.id as string), emoji: cleanText(c.emoji, 16) ?? '🃏', values }, { source: cleanText(c.source, 200), image });
+    })
+    .filter((c, i, all) => all.findIndex((d) => d.id === c.id) === i);
+  const groupIds = [...new Set(cards.map((c) => c.id[0]!))].sort();
+  if (groupIds.length < 2 || groupIds.length > 16 || groupIds.some((g) => cards.filter((c) => c.id[0] === g).length !== 4)) return null;
+  const rawGroups = Array.isArray(raw.groups) ? raw.groups.filter(isPlainRecord) : [];
+  const groups = groupIds.map((id) => ({ id, name: cleanText(rawGroups.find((g) => g.id === id)?.name, 40) ?? `Gruppe ${id}` }));
+  return { name: cleanText(raw.name, 60) ?? 'Eigenes Set', emoji: cleanText(raw.emoji, 16) ?? '🃏', properties, groups, cards };
 }
 
 const SPECIAL_TAGS = ['combat', 'drachenspiel', 'court', 'narrenhof', 'quartett', 'woelfe', 'role'];

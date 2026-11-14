@@ -7,6 +7,8 @@ import { useState, type ReactNode } from 'react';
 import { TABLE_CENTER } from './Tavern';
 import { GOLD } from './text';
 import type { BoardProps } from './boards';
+import { pulse } from '../haptics';
+import { movesFor, useGrab } from './grab';
 
 const TOP = TABLE_CENTER[1] + 0.002;
 const BOARD = 0.42;
@@ -39,6 +41,7 @@ function Spot({ x, z, r, onPress, y = 0.019 }: { x: number; z: number; r: number
       onPointerOver={(e) => {
         e.stopPropagation();
         setHover(true);
+        pulse('hover');
       }}
       onPointerOut={() => setHover(false)}
     >
@@ -191,7 +194,22 @@ export function CheckersBoard({ game, onMove }: BoardProps) {
   };
   const moves = (game.legalMoves as CheckersMove[]).filter((m) => m.type === 'move');
   const movable = new Set(moves.map((m) => m.from));
-  const targets = selected === null ? [] : moves.filter((m) => m.from === selected);
+  const grab = useGrab<number>({
+    size: BOARD,
+    radius: cell * 0.7,
+    targets: (from) => [...new Set(moves.filter((m) => m.from === from).map((m) => m.to))].map((to) => ({ id: to, x: at(to)[0], z: at(to)[1] })),
+    onDrop: (from, to) => {
+      if (to === null) return;
+      const options = movesFor(moves, (m) => m.from, (m) => m.to, from, to);
+      // Gleiches Ziel über verschiedene Sprungwege: erst einen der Wege antippen.
+      if (options.length === 1) {
+        onMove(options[0]);
+        setSelected(null);
+      } else setSelected(from);
+    },
+  });
+  const source = grab.held?.id ?? selected;
+  const targets = source === null ? [] : moves.filter((m) => m.from === source);
   const squares: ReactNode[] = [];
   for (let i = 0; i < size * size; i++) {
     const dark = ((i % size) + Math.floor(i / size)) % 2 === 1;
@@ -209,8 +227,13 @@ export function CheckersBoard({ game, onMove }: BoardProps) {
           <boxGeometry args={[cell, 0.002, cell]} />
           <meshStandardMaterial color={i === selected ? '#2f5d3a' : dark ? '#6b4728' : '#d9b98a'} />
         </mesh>
-        {piece && (
+        {piece && grab.held?.id !== i && (
           <group
+            onPointerDown={(e) => {
+              if (!movable.has(i)) return;
+              e.stopPropagation();
+              grab.begin(i, x, z);
+            }}
             onClick={(e) => {
               e.stopPropagation();
               if (movable.has(i)) setSelected(i === selected ? null : i);
@@ -237,6 +260,21 @@ export function CheckersBoard({ game, onMove }: BoardProps) {
   return (
     <Plate size={BOARD + 0.03} color="#3f2a18">
       {squares}
+      {grab.held && view.cells[grab.held.id] && (
+        <group position={[grab.held.x, 0.04, grab.held.z]}>
+          <mesh position={[0, 0.024, 0]}>
+            <cylinderGeometry args={[cell * 0.38, cell * 0.4, 0.012, 24]} />
+            <meshStandardMaterial color={view.cells[grab.held.id]!.seat === 0 ? LIGHT : DARK} roughness={0.4} />
+          </mesh>
+          {view.cells[grab.held.id]!.king && (
+            <mesh position={[0, 0.036, 0]}>
+              <cylinderGeometry args={[cell * 0.32, cell * 0.36, 0.012, 24]} />
+              <meshStandardMaterial color={GOLD} metalness={0.5} roughness={0.35} />
+            </mesh>
+          )}
+        </group>
+      )}
+      {grab.layer}
       {[...byTarget.entries()].flatMap(([to, list]) => {
         const [x, z] = at(to);
         return list.map((m, k) => (
@@ -296,6 +334,25 @@ export function MillBoard({ game, onMove }: BoardProps) {
   const removing = to === null ? [] : forFrom.filter((m) => m.to === to);
   const removable = [...new Set(removing.flatMap((m) => m.remove))];
 
+  // Greifen: Stein auf dem Brett (Zugphase) oder Stein aus dem Vorrat (Setzphase, id -1).
+  const HAND = -1;
+  const placing = moves.some((m) => m.type === 'place');
+  const grab = useGrab<number>({
+    size: BOARD,
+    radius: 0.03,
+    targets: (source) =>
+      [...new Set(moves.filter((m) => (source === HAND ? m.type === 'place' : m.type === 'move' && m.from === source)).map((m) => m.to))].map((point) => ({ id: point, x: millPoint(point)[0], z: millPoint(point)[1] })),
+    onDrop: (source, point) => {
+      if (point === null) return;
+      const options = moves.filter((m) => m.to === point && (source === HAND ? m.type === 'place' : m.type === 'move' && m.from === source));
+      if (source !== HAND) setFrom(source);
+      if (options.length === 1 && options[0]!.remove.length === 0) {
+        onMove(options[0]);
+        setFrom(null);
+      } else setTo(point as number);
+    },
+  });
+  const grabTargets = (source: number) => [...new Set(moves.filter((m) => (source === HAND ? m.type === 'place' : m.type === 'move' && m.from === source)).map((m) => m.to))];
   const chooseTarget = (point: number) => {
     const options = forFrom.filter((m) => m.to === point);
     if (options.length === 1 && options[0]!.remove.length === 0) {
@@ -333,10 +390,15 @@ export function MillBoard({ game, onMove }: BoardProps) {
       {lines}
       {view.cells.map((seat, p) => {
         const [x, z] = millPoint(p);
-        if (seat === null || seat === undefined) return null;
+        if (seat === null || seat === undefined || grab.held?.id === p) return null;
         return (
           <group
             key={p}
+            onPointerDown={(e) => {
+              if (!movable.has(p) || removable.includes(p)) return;
+              e.stopPropagation();
+              grab.begin(p, x, z);
+            }}
             onClick={(e) => {
               e.stopPropagation();
               if (removable.includes(p)) chooseRemove(p);
@@ -350,15 +412,36 @@ export function MillBoard({ game, onMove }: BoardProps) {
           </group>
         );
       })}
-      {targets.map((p) => {
+      {grab.held && view.cells[grab.held.id] !== undefined && view.cells[grab.held.id] !== null && (
+        <Stone x={grab.held.x} z={grab.held.z} r={r} white={view.cells[grab.held.id] === 0} glow />
+      )}
+      {grab.held && grab.held.id === HAND && <Stone x={grab.held.x} z={grab.held.z} r={r} white={game.yourSeat === 0} glow />}
+      {grab.layer}
+      {(grab.held ? grabTargets(grab.held.id) : targets).map((p) => {
         const [x, z] = millPoint(p);
         return <Spot key={`t${p}`} x={x} z={z} r={r} onPress={() => chooseTarget(p)} />;
       })}
       {/* Steine im Vorrat neben dem Brett */}
       {[0, 1].map((seat) =>
-        Array.from({ length: view.inHand[seat as 0 | 1] }, (_, k) => (
-          <Stone key={`h${seat}-${k}`} x={(seat === 0 ? 1 : -1) * (BOARD / 2 + 0.03)} z={-BOARD / 2 + 0.02 + k * 0.042} r={0.014} white={seat === 0} />
-        )),
+        Array.from({ length: view.inHand[seat as 0 | 1] }, (_, k) => {
+          const x = (seat === 0 ? 1 : -1) * (BOARD / 2 + 0.03);
+          const z = -BOARD / 2 + 0.02 + k * 0.042;
+          const last = k === view.inHand[seat as 0 | 1] - 1;
+          // Der oberste Stein des eigenen Vorrats lässt sich in der Setzphase greifen.
+          const grabbable = placing && seat === game.yourSeat && last && grab.held?.id !== HAND;
+          return grab.held?.id === HAND && grabbable === false && seat === game.yourSeat && last ? null : (
+            <group
+              key={`h${seat}-${k}`}
+              onPointerDown={(e) => {
+                if (!grabbable) return;
+                e.stopPropagation();
+                grab.begin(HAND, x, z);
+              }}
+            >
+              <Stone x={x} z={z} r={0.014} white={seat === 0} />
+            </group>
+          );
+        }),
       )}
     </Plate>
   );

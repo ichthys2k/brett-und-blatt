@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { CARDS_DB } from '../cards';
 import { HOUSE_POWERS } from '../powers';
 import { heroAttackValue } from '../rules';
-import type { DeckThemeId, DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
+import type { CardDefinition, DeckThemeId, DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
 import { playCreatureAudio } from './audio';
 import { attackClass, CardFace, CardZoom, Fuse, GameLog, healthClass, renderCombatCardAnki, TargetArrow, TraitBadge, type ArrowPoints, type ZoomItem } from './parts';
 import type { Float, ShownMinion } from './sequence';
@@ -13,6 +13,7 @@ import { currentCrest, ScenarioTip, useCosmetics } from './SoloHub';
 import { HOUSE_ICONS, HOUSE_NAMES } from './champions';
 import { useBeats } from './useBeats';
 import { useLongPress } from './useLongPress';
+import { uiCard } from './cardLookup';
 
 const LABELS = ['Blau', 'Rot'];
 /** Ab dieser Restzeit brennt die Lunte. */
@@ -86,13 +87,14 @@ function MinionView({
 }) {
   const { minion, dying, fresh } = shown;
   const traits = getMinionTraits(minion);
-  const def = CARDS_DB[minion.cardId] ?? {
+  const def: CardDefinition = uiCard(minion.cardId) ?? {
     id: minion.cardId,
     name: minion.name,
     cost: 0,
     attack: minion.attack,
     health: minion.health,
     emoji: minion.emoji,
+    quote: '',
   };
   const cosmetics = useCardCosmetics();
   const overrideNote = useCardOverride(def.id);
@@ -219,12 +221,12 @@ function HeroBar({
   crest?: string | undefined;
   elementRef: (el: HTMLElement | null) => void;
 }) {
-  const quest = player.quest ? CARDS_DB[player.quest.cardId] : undefined;
+  const quest = player.quest ? uiCard(player.quest.cardId) : undefined;
   const info = (text: string) => (event: { stopPropagation: () => void }) => {
     event.stopPropagation();
     onInfo(text);
   };
-  const trapText = player.traps ? player.traps.map((card) => CARDS_DB[card.defId]?.text ?? '').join(' ') : `${player.trapCount} verdeckte ${player.trapCount === 1 ? 'Falle' : 'Fallen'}.`;
+  const trapText = player.traps ? player.traps.map((card) => uiCard(card.defId)?.text ?? '').join(' ') : `${player.trapCount} verdeckte ${player.trapCount === 1 ? 'Falle' : 'Fallen'}.`;
   const house: DeckThemeId =
     player.power ?? (player.deckTheme && player.deckTheme !== 'mixed' ? player.deckTheme : null) ?? (seat === 0 ? 'forest' : 'sea');
   const houseName = HOUSE_NAMES[house];
@@ -774,7 +776,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           <h3 className="ds-phase-title">Wähle eins</h3>
           <div className="ds-choice-row">
             {view.pending.options.map((option, index) => {
-              const def = option.cardId ? CARDS_DB[option.cardId] : undefined;
+              const def = option.cardId ? uiCard(option.cardId) : undefined;
               const hinted = hint?.type === 'choose' && hint.index === index;
               return (
                 <button
@@ -819,7 +821,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
 
       <div className="ds-hand" data-frame={cosmetics.frame ?? undefined} style={{ '--ds-hand-gaps': Math.max(1, (me.hand?.length ?? 1) - 1) } as CSSProperties}>
         {me.hand?.map((card, idx) => {
-          const def = CARDS_DB[card.defId];
+          const def = uiCard(card.defId);
           if (!def) return null;
           const isPlayable = isMyTurn && playableCardIndices.has(idx);
           const needsTarget = legalMoves.some((m) => m.type === 'playCard' && m.handIndex === idx && m.target !== undefined);

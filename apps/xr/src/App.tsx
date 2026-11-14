@@ -4,15 +4,18 @@
  * In der Brille übernimmt das 2D-Fenster über dem Tisch dieselben Aufgaben.
  */
 import { AVATARS, parseRoomCode } from '@brett-und-blatt/online';
+import { CodeKeyboard } from './CodeKeyboard';
+import { codeComplete } from './code-keys';
 import { createXRStore } from '@react-three/xr';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { GAME_CHOICES, LEVEL_TEXT, gameName } from './catalog';
 import { createRoom, loadProfile, saveProfile, sendMove, serverUrl, useRoom } from './net';
 import { Scene } from './scene/Scene';
 import type { VoiceControls } from './scene/Panel';
-import { play, soundsFor, unlockAudio } from './sound';
+import { placeOf, play, soundsFor, unlockAudio } from './sound';
 import { PeerMesh } from './peers';
 import { VoiceChat, type VoiceState } from '@brett-und-blatt/rtc';
+import type { XrSoundName } from './sound-names';
 
 const noSubscribe = () => () => {};
 const NO_VOICE: VoiceState = { joined: false, muted: false, silenced: [], speaking: [], error: null };
@@ -39,9 +42,11 @@ export function App() {
   const [joining, setJoining] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
   const [vrSupported, setVrSupported] = useState(false);
+  const [arSupported, setArSupported] = useState(false);
 
   useEffect(() => {
     void navigator.xr?.isSessionSupported('immersive-vr').then(setVrSupported, () => setVrSupported(false));
+    void navigator.xr?.isSessionSupported('immersive-ar').then(setArSupported, () => setArSupported(false));
     const onHash = () => setCode(codeFromHash());
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
@@ -106,8 +111,10 @@ export function App() {
     const fresh = game.round !== last.round || game.version > last.version;
     const myTurn = game.yourSeat !== null && !game.result && game.current.includes(game.yourSeat) && game.legalMoves.length > 0;
     if (fresh && last.version >= 0) {
-      const names = new Set(game.events.flatMap((event) => soundsFor(game.gameId, event)));
-      for (const name of names) play(name);
+      // Jeder Klang einmal, am Ort des ersten Ereignisses, das ihn auslöst (in der Brille, #381).
+      const names = new Map<XrSoundName, unknown>();
+      for (const event of game.events) for (const name of soundsFor(game.gameId, event)) if (!names.has(name)) names.set(name, event);
+      for (const [name, event] of names) play(name, placeOf(event));
       if (myTurn && !last.myTurn && game.seats.length > 1) play('dein-zug');
       if (game.result?.kind === 'win' && game.yourSeat !== null && game.result.winners.includes(game.yourSeat)) play('sieg');
     }
@@ -167,7 +174,8 @@ export function App() {
             Raumcode
             <input value={joining} onChange={(e) => setJoining(e.target.value)} placeholder="🐻🦊🌈🚀" />
           </label>
-          <button type="submit">Beitreten</button>
+          <CodeKeyboard value={joining} onChange={setJoining} />
+          <button type="submit" disabled={!codeComplete(joining) && !parseRoomCode(joining)}>Beitreten</button>
         </form>
         {problem && <p role="alert">{problem}</p>}
       </main>
@@ -191,7 +199,7 @@ export function App() {
   return (
     <div className="xr-shell">
       <div className="xr-canvas">
-        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} gameAt={room.gameAt} mesh={mesh} xrMembers={xrMembers} voice={voiceControls} speaking={voiceState.speaking} />
+        <Scene store={store} room={room.room} game={game} you={room.you} signals={room.signals} send={send} onMove={onMove} gameAt={room.gameAt} mesh={mesh} xrMembers={xrMembers} voice={voiceControls} speaking={voiceState.speaking} voiceChat={voice} error={room.error} />
       </div>
       <aside className="xr-bar" aria-label="Raum und Züge">
         <header>
@@ -200,6 +208,11 @@ export function App() {
           {vrSupported && (
             <button type="button" className="xr-primary" onClick={() => void store.enterVR()}>
               In VR betreten
+            </button>
+          )}
+          {arSupported && (
+            <button type="button" className="xr-primary" onClick={() => void store.enterAR()}>
+              In Mixed Reality betreten
             </button>
           )}
           <button type="button" onClick={() => { location.hash = ''; setCode(null); }}>
