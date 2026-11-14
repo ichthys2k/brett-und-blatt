@@ -10,6 +10,7 @@ import { useRef } from 'react';
 import { Quaternion, Vector3, type Group, type Mesh } from 'three';
 import type { PeerMesh, Pose7, RemotePose } from '../peers';
 import type { SeatInfo } from './Seats';
+import { scaleAboutTable } from './Placement';
 import { TABLE_CENTER } from './Tavern';
 import { Sign } from './ui3d';
 
@@ -31,7 +32,7 @@ function moved(a: Pose7 | null, b: Pose7 | null): boolean {
 }
 
 /** Schickt die eigene Pose: über offene Kanäle bis zehnmal je Sekunde, im Rückfall einmal je Sekunde nur den Kopf über den Raum. */
-export function PoseSender({ mesh, xrMembers, sendRoomPose, origin }: { mesh: PeerMesh; xrMembers: string[]; sendRoomPose: (head: Pose7) => void; origin: [number, number, number] }) {
+export function PoseSender({ mesh, xrMembers, sendRoomPose, origin, scale = 1 }: { mesh: PeerMesh; xrMembers: string[]; sendRoomPose: (head: Pose7) => void; origin: [number, number, number]; scale?: number }) {
   const { camera, gl } = useThree();
   const last = useRef<{ at: number; fallbackAt: number; head: Pose7 | null; left: Pose7 | null; right: Pose7 | null }>({ at: 0, fallbackAt: 0, head: null, left: null, right: null });
   const tmpP = useRef(new Vector3());
@@ -41,6 +42,8 @@ export function PoseSender({ mesh, xrMembers, sendRoomPose, origin }: { mesh: Pe
     const state = last.current;
     if (now - state.at < SEND_EVERY_MS) return;
     camera.getWorldPosition(tmpP.current);
+    // Ist der Tisch verkleinert (#370), liegt der Kopf im Tischsystem entsprechend weiter weg.
+    if (scale !== 1) tmpP.current.set(...scaleAboutTable([tmpP.current.x, tmpP.current.y, tmpP.current.z], scale));
     camera.getWorldQuaternion(tmpQ.current);
     const head = pose7(tmpP.current, tmpQ.current);
     let left: Pose7 | null = null;
@@ -52,6 +55,7 @@ export function PoseSender({ mesh, xrMembers, sendRoomPose, origin }: { mesh: Pe
         const controller = gl.xr.getController(i);
         if (!controller.visible) return;
         const p = controller.position.clone().add(new Vector3(...origin));
+        if (scale !== 1) p.set(...scaleAboutTable([p.x, p.y, p.z], scale));
         const value = pose7(p, controller.quaternion);
         if (source.handedness === 'left') left = value;
         else right = value;

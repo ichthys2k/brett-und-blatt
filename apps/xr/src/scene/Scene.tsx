@@ -21,6 +21,7 @@ import { Panel, ReactionBar, type VoiceControls } from './Panel';
 import { Seats, seatAngle, type SeatInfo } from './Seats';
 import { TABLE_CENTER, Tavern } from './Tavern';
 import { alignOffset, type Offset } from './view-align';
+import { SCALE_STEP, TablePlacer, clampScale, placementOrigin, type Placement } from './Placement';
 import { Figures, POSE_STALE_MS, PoseSender } from './Meet';
 import type { PeerMesh } from '../peers';
 
@@ -121,6 +122,13 @@ function HeadAlign({ origin, onAlign }: { origin: [number, number, number]; onAl
   return null;
 }
 
+/** Meldet, ob gerade eine Mixed-Reality-Sitzung läuft (der Zustand ist nur innerhalb von <XR> lesbar). */
+function ModeProbe({ onMixed }: { onMixed: (mixed: boolean) => void }) {
+  const mixed = useXR((state) => state.mode) === 'immersive-ar';
+  useEffect(() => onMixed(mixed), [mixed, onMixed]);
+  return null;
+}
+
 /** Hintergrund und Nebel der Taverne; in Mixed Reality (#369) keins von beiden, damit das Passthrough-Bild durchscheint. */
 function Backdrop() {
   const mixed = useXR((state) => state.mode) === 'immersive-ar';
@@ -192,7 +200,26 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
   }, [ticking]);
   const { offset, adjust } = useViewOffset();
   const [align, setAlign] = useState<Offset>({ x: 0, y: 0, z: 0 });
-  const origin: [number, number, number] = [align.x, align.y - offset.y, align.z + offset.z];
+  // Mixed Reality (#369, #370): Tisch auf einer echten Fläche (`placed`), verkleinert um `tableScale`.
+  const [mixed, setMixed] = useState(false);
+  const [placing, setPlacing] = useState(false);
+  const [placed, setPlaced] = useState<Placement | null>(null);
+  const [tableScale, setTableScale] = useState(1);
+  const base = placed ?? align;
+  const origin: [number, number, number] = [base.x, base.y - offset.y, base.z + offset.z];
+  const scale = mixed ? tableScale : 1;
+  const placement = mixed
+    ? {
+        placing,
+        placed: placed !== null,
+        percent: Math.round(tableScale * 100),
+        start: () => setPlacing(true),
+        cancel: () => setPlacing(false),
+        release: () => setPlaced(null),
+        bigger: () => setTableScale((k) => clampScale(k + SCALE_STEP)),
+        smaller: () => setTableScale((k) => clampScale(k - SCALE_STEP)),
+      }
+    : undefined;
   const seats = seatInfos(room, game, you, gameAt, now).map((s) => (s.memberId && speaking.includes(s.memberId) ? { ...s, speaking: true } : s));
 
   // Figuren der anderen Brillen: nur mit frischer Pose; einmal je Sekunde neu entschieden.
@@ -238,12 +265,23 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
     <Canvas camera={{ fov: 60, near: 0.02, far: 40 }} dpr={[1, 2]}>
       <XR store={store}>
         <Backdrop />
+        <ModeProbe onMixed={setMixed} />
+        <TablePlacer
+          active={placing && mixed}
+          origin={origin}
+          onPlace={(hit) => {
+            setPlaced(placementOrigin(hit));
+            setPlacing(false);
+          }}
+        />
         <XROrigin position={origin} />
         <HeadAlign origin={origin} onAlign={setAlign} />
         <DesktopCamera />
+        <group position={TABLE_CENTER} scale={scale}>
+        <group position={[-TABLE_CENTER[0], -TABLE_CENTER[1], -TABLE_CENTER[2]]}>
         <Tavern chairs={seats.filter((s) => !s.mine).map((s) => ({ angle: s.angle, mine: false }))} />
         <Seats seats={seats} signals={signals} memberAvatar={(id) => room?.members.find((m) => m.id === id)?.avatar ?? null} figures={figures} />
-        {mesh && <PoseSender mesh={mesh} xrMembers={xrMembers} sendRoomPose={(head) => send({ type: 'pose', head })} origin={origin} />}
+        {mesh && <PoseSender mesh={mesh} xrMembers={xrMembers} sendRoomPose={(head) => send({ type: 'pose', head })} origin={origin} scale={scale} />}
         {mesh && <Figures mesh={mesh} members={figures} seatOf={seatOf} mySeatBase={myBase} count={seatCount} infos={seats} />}
         {shown?.gameId === 'tic-tac-toe' && <TicTacToeBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'four-in-a-row' && <FourInARowBoard game={shown} onMove={moveByValue} />}
@@ -270,7 +308,9 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         {playing && <InputDesk game={playing} onMove={(move) => send({ type: 'move', version: playing.version, move })} />}
         {shown?.gameId === 'grafschaft' && <GrafschaftBoard key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
         {shown && isCardGame(shown.gameId) && <CardTable key={`${shown.round}-${shown.version}`} game={shown} onMove={moveByValue} />}
-        <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={onMove} adjust={adjust} voice={voice} />
+        </group>
+        </group>
+        <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={onMove} adjust={adjust} placement={placement} voice={voice} />
         {room && <ReactionBar send={send} />}
       </XR>
     </Canvas>
