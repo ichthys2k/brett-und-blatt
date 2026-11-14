@@ -1,6 +1,6 @@
 // Gemeinsame Hilfen für die Bilderzeugung (scripts/grafik).
 import { execFileSync } from 'node:child_process';
-import { readFileSync, readdirSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, mkdirSync, existsSync, statSync } from 'node:fs';
 import { dirname, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -42,6 +42,39 @@ export function argumente(argv) {
 export const ORIGINALE = resolve(process.env.GRAFIK_ORIGINALE_DIR ?? resolve(WURZEL, '../brett-und-blatt-grafik/originale'));
 /** Dateiendungen, die als Original zählen (die alten Drachenspiel-Master sind JPG). */
 export const ORIGINAL_ENDUNGEN = ['png', 'jpg', 'jpeg', 'webp'];
+
+/**
+ * Archiv aller erzeugten Varianten (auch der nicht gewählten) im privaten Repo, neben `originale/`:
+ * varianten/<manifest>/<motiv-id>/v<n>.webp (verlustfrei, volle Auflösung). So lässt sich später
+ * eine andere Variante wählen, auch wenn `grafik-roh/` gelöscht wurde.
+ */
+export const VARIANTEN = resolve(ORIGINALE, '..', 'varianten');
+
+/**
+ * Kopiert die Varianten v<n>.png eines Manifests aus grafik-roh/ als verlustfreies WebP ins Archiv.
+ * Bereits archivierte werden übersprungen. `ids` begrenzt auf bestimmte Motive. Gibt die Zahl neuer Dateien zurück.
+ */
+export function archiviereVarianten(manifestName, ids = null) {
+  const basis = resolve(ROH, manifestName);
+  if (!existsSync(basis)) return 0;
+  const im = magick();
+  let neu = 0;
+  for (const id of readdirSync(basis)) {
+    if (ids && !ids.includes(id)) continue;
+    const quellDir = resolve(basis, id);
+    if (!statSync(quellDir).isDirectory()) continue;
+    for (const datei of readdirSync(quellDir)) {
+      const treffer = /^v(\d+)\.png$/.exec(datei);
+      if (!treffer) continue;
+      const ziel = resolve(VARIANTEN, manifestName, id, `v${treffer[1]}.webp`);
+      if (existsSync(ziel)) continue;
+      mkdirSync(dirname(ziel), { recursive: true });
+      execFileSync(im, [resolve(quellDir, datei), '-define', 'webp:lossless=true', '-quality', '100', ziel]);
+      neu++;
+    }
+  }
+  return neu;
+}
 
 /** Bricht mit klarer Meldung ab, wenn das private Repo mit den Originalen fehlt. */
 export function originaleOrdnerOderAbbruch() {
