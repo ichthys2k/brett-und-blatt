@@ -17,6 +17,7 @@ Stil, Verbote, Kartenregeln und Referenzbilder: [`docs/grafik/STILBIBEL.md`](../
 | `erzeugen.mjs <Manifest>` | Varianten über die Gemini-API erzeugen (braucht `GEMINI_API_KEY`) |
 | `kontaktbogen.mjs <Manifest>` | Auswahlseite `grafik-roh/<name>/kontaktbogen.html` bauen |
 | `uebernehmen.mjs <Manifest> <id>=<v> …` | WebP schreiben, bei `"freistellen": true` grünen Grund entfernen (`--fuzz=<Prozent>`, Standard 22), Original ins private Repo; ImageMagick 6 (`convert`) oder 7 (`magick`) |
+| `varianten-archivieren.mjs <Manifest>` | alle erzeugten Varianten (auch nicht gewählte) verlustfrei ins private Repo (`varianten/<Manifest>/<Motiv>/v<n>.webp`); `uebernehmen.mjs` tut das für die gewählten Motive selbst und holt bei fehlendem `grafik-roh/` die Wahl aus diesem Archiv |
 | `originale-pruefen.mjs [--alle]` | WebP ohne Original melden (Altfälle in `originale-fehlen.json`); nicht in der CI |
 | `bestand.mjs` | `docs/grafik/BESTAND.md` neu erzeugen |
 

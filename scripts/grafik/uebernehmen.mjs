@@ -3,12 +3,16 @@
 // und archiviert das Original im privaten Repo (G0, #307).
 //   node scripts/grafik/uebernehmen.mjs <Manifest> k-h=2 d-s=1 …
 // Optionen: --fuzz=22 (Toleranz in % beim Freistellen des grünen Grunds)
+// Alle erzeugten Varianten der gewählten Motive (auch die nicht gewählten) kommen verlustfrei nach
+// <privates Repo>/varianten/<Manifest>/<Motiv>/v<n>.webp. Fehlt grafik-roh/, wird eine gewählte
+// Variante aus diesem Archiv geholt: so kann man sich später umentscheiden.
 // Benötigt ImageMagick (`magick` oder `convert`) und den Ordner der Originale
 // (Standard ../brett-und-blatt-grafik/originale, sonst GRAFIK_ORIGINALE_DIR).
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, relative, resolve } from 'node:path';
-import { argumente, ladeManifest, magick, ordner, originaleOrdnerOderAbbruch, WURZEL } from './gemeinsam.mjs';
+import { archiviereVarianten, argumente, ladeManifest, magick, ordner, originaleOrdnerOderAbbruch, VARIANTEN, WURZEL } from './gemeinsam.mjs';
 import { pruefeOriginale } from './originale-pruefen.mjs';
 
 const { positionen, optionen } = argumente(process.argv.slice(2));
@@ -44,8 +48,15 @@ const uebernommen = [];
 for (const wahl of positionen.slice(1)) {
   const [id, v] = wahl.split('=');
   if (!motivFuer(id)) throw new Error(`Motiv „${id}“ steht nicht im Manifest ${manifest.name}.`);
-  const quelle = resolve(ordner(manifest.name, id), `v${v}.png`);
-  if (!existsSync(quelle)) throw new Error(`Variante fehlt: ${relative(WURZEL, quelle)}`);
+  let quelle = resolve(ordner(manifest.name, id), `v${v}.png`);
+  if (!existsSync(quelle)) {
+    // Rohbild fehlt: aus dem Varianten-Archiv holen (verlustfreies WebP → PNG).
+    const archiv = resolve(VARIANTEN, manifest.name, id, `v${v}.webp`);
+    if (!existsSync(archiv)) throw new Error(`Variante fehlt: ${relative(WURZEL, quelle)} (auch nicht im Archiv ${archiv})`);
+    quelle = resolve(mkdtempSync(resolve(tmpdir(), 'grafik-')), `v${v}.png`);
+    execFileSync(im, [archiv, quelle]);
+    console.log(`${id} v${v}: aus dem Varianten-Archiv geholt`);
+  }
   const name = `${manifest.praefix ?? ''}${id}${manifest.suffix ?? ''}`;
   const ziel = resolve(zielDir, `${name}.webp`);
   const rand = randFuer(id);
@@ -72,9 +83,13 @@ for (const wahl of positionen.slice(1)) {
   console.log(`${id} v${v}${frei ? ' (freigestellt)' : ''} → ${relative(WURZEL, ziel)} (${Math.round(statSync(ziel).size / 1024)} KB) + Original: ${zielOriginal}`);
 }
 
+const gewaehlteIds = positionen.slice(1).map((w) => w.split('=')[0]);
+const archiviert = archiviereVarianten(manifest.name, gewaehlteIds);
+if (archiviert) console.log(`${archiviert} Variante(n) ins Archiv ${VARIANTEN}/${manifest.name} geschrieben.`);
+
 const fehlend = pruefeOriginale().filter((f) => uebernommen.includes(f));
 if (fehlend.length) {
   console.error('Achtung, ohne Original:', fehlend.join(', '));
   process.exit(1);
 }
-console.log(`Fertig. Im privaten Repo committen und pushen: cd ${resolve(originale, '..')} && git add -A && git commit -m "Originale: ${manifest.name}" && git push`);
+console.log(`Fertig. Im privaten Repo committen und pushen: cd ${resolve(originale, '..')} && git add -A && git commit -m "Originale und Varianten: ${manifest.name}" && git push`);
