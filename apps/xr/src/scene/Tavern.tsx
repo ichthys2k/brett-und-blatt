@@ -4,6 +4,7 @@
  * Stil nach docs/grafik/STILBIBEL.md: warmes Kerzenlicht, Holzbraun, Gold; ohne Alkohol.
  */
 import { useFrame } from '@react-three/fiber';
+import { useXR } from '@react-three/xr';
 import { useMemo, useRef } from 'react';
 import { RepeatWrapping, type Mesh, type PointLight } from 'three';
 import { woodTexture } from './text';
@@ -102,10 +103,14 @@ export function Tavern({ chairs }: { chairs: { angle: number; mine: boolean }[] 
     return t;
   }, []);
   const top = woodTexture();
+  // Mixed Reality (#369): Nur Tischplatte und Kerzen, die echte Umgebung bleibt über Passthrough sichtbar.
+  const mixed = useXR((state) => state.mode) === 'immersive-ar';
   return (
     <group>
       <ambientLight color="#ffd9a8" intensity={0.25} />
       <hemisphereLight args={['#ffcf99', '#2a1a10', 0.35]} />
+      {!mixed && (
+        <>
       {/* Boden, Wände, Decke mit Balken */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[12, 12]} />
@@ -133,26 +138,32 @@ export function Tavern({ chairs }: { chairs: { angle: number; mine: boolean }[] 
         </mesh>
       ))}
       <Fireplace />
+        </>
+      )}
       {/* Runder Holztisch mit Mittelfuß */}
       <group position={[TABLE_CENTER[0], 0, TABLE_CENTER[2]]}>
         <mesh position={[0, TABLE_CENTER[1] - 0.025, 0]} receiveShadow>
           <cylinderGeometry args={[TABLE_RADIUS, TABLE_RADIUS, 0.05, 64]} />
           <meshStandardMaterial map={top} color="#a07850" roughness={0.6} />
         </mesh>
-        <mesh position={[0, 0.36, 0]}>
-          <cylinderGeometry args={[0.07, 0.1, 0.7, 16]} />
-          <meshStandardMaterial color="#3f2a18" />
-        </mesh>
-        <mesh position={[0, 0.02, 0]}>
-          <cylinderGeometry args={[0.32, 0.36, 0.04, 32]} />
-          <meshStandardMaterial color="#3f2a18" />
-        </mesh>
+        {!mixed && (
+          <>
+            <mesh position={[0, 0.36, 0]}>
+              <cylinderGeometry args={[0.07, 0.1, 0.7, 16]} />
+              <meshStandardMaterial color="#3f2a18" />
+            </mesh>
+            <mesh position={[0, 0.02, 0]}>
+              <cylinderGeometry args={[0.32, 0.36, 0.04, 32]} />
+              <meshStandardMaterial color="#3f2a18" />
+            </mesh>
+          </>
+        )}
       </group>
       <Candle position={[TABLE_CENTER[0] - 0.42, TABLE_CENTER[1], TABLE_CENTER[2] - 0.3]} phase={0} />
       <Candle position={[TABLE_CENTER[0] + 0.42, TABLE_CENTER[1], TABLE_CENTER[2] - 0.3]} phase={2.1} />
       {/* Laterne über dem Tisch, Licht von oben links wie in der Stilbibel */}
       <pointLight position={[-0.6, 2.2, -0.3]} color="#ffc27a" intensity={3} distance={6} decay={2} />
-      {chairs.map((c, i) => (
+      {!mixed && chairs.map((c, i) => (
         <Chair key={i} angle={c.angle} highlight={c.mine} />
       ))}
     </group>

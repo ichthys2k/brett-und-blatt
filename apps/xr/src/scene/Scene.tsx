@@ -4,7 +4,7 @@
  */
 import type { ClientMessage, GameMessage, RoomMessage } from '@brett-und-blatt/online';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { XR, XROrigin, type XRStore } from '@react-three/xr';
+import { XR, XROrigin, useXR, type XRStore } from '@react-three/xr';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Vector3 } from 'three';
 import { isBoardGame } from '../catalog';
@@ -121,6 +121,18 @@ function HeadAlign({ origin, onAlign }: { origin: [number, number, number]; onAl
   return null;
 }
 
+/** Hintergrund und Nebel der Taverne; in Mixed Reality (#369) keins von beiden, damit das Passthrough-Bild durchscheint. */
+function Backdrop() {
+  const mixed = useXR((state) => state.mode) === 'immersive-ar';
+  if (mixed) return null;
+  return (
+    <>
+      <color attach="background" args={['#1d1510']} />
+      <fog attach="fog" args={['#1d1510', 4, 11]} />
+    </>
+  );
+}
+
 /** Ohne Brille: Blick vom eigenen Platz schräg auf den Tisch. */
 function DesktopCamera() {
   const camera = useThree((s) => s.camera);
@@ -224,9 +236,8 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
   const shown = game ?? null;
   return (
     <Canvas camera={{ fov: 60, near: 0.02, far: 40 }} dpr={[1, 2]}>
-      <color attach="background" args={['#1d1510']} />
-      <fog attach="fog" args={['#1d1510', 4, 11]} />
       <XR store={store}>
+        <Backdrop />
         <XROrigin position={origin} />
         <HeadAlign origin={origin} onAlign={setAlign} />
         <DesktopCamera />
