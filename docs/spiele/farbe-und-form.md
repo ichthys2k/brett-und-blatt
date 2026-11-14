@@ -23,7 +23,7 @@
 - Getauschte Steine kommen unten in den Beutel, gezogen wird oben – so braucht `applyMove` keinen Zufall.
 - `placements` sucht alle Legezüge: von jedem freien Nachbarfeld aus Stein für Stein in beide Richtungen verlängern, gleiche Arten nur einmal.
 - Sicht: eigenes Bänkchen, von den anderen und vom Beutel nur die Anzahl; `eventView` verrät gezogene Steine nur dem Ziehenden.
-- Bot: leicht (oft zufällig), mittel (gierig), schwer (Punkte + Wert des Rest-Bänkchens, vermeidet Fünferreihen für den Gegner, tauscht ein schlechtes Bänkchen).
+- Bot: leicht (oft zufällig), mittel (gierig), schwer (Punkte + Wert des Rest-Bänkchens, Steinzählung über verdeckte Steine, Vorausschau auf gegnerische Anschlüsse wie 5er-/4er-Reihen und Kreuzungspunkte, tauscht ein schlechtes Bänkchen).
 - Farben nach Okabe-Ito, zusätzlich durch die Form unterscheidbar.
 - Steuerung: Steine auf der Bank können angetippt oder per Drag & Drop direkt auf gültige Rasterfelder des Bretts gezogen werden.
 - Drag & Drop: Der Stein folgt dem Mauszeiger exakt (kein Versatz durch die Vergrößerung beim Ziehen).
@@ -32,4 +32,4 @@
 
 ## Offen
 
-- Bot mit Determinisierung und Vorausschau auf die Antwort des Gegners.
+- Bot mit voller Determinisierung (Sampling gegnerischer Hände).
