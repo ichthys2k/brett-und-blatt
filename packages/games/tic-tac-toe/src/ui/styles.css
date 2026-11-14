@@ -106,29 +106,13 @@
   }
 }
 
-/* Gemalte Figuren (#325): Satz über data-pieces-tic-tac-toe auf <html>. */
-[data-pieces-tic-tac-toe='wood'] .ttt-mark.ttt-x {
-  background: url('./figuren/wood-x.webp') center / contain no-repeat;
+/* Gemalte Figuren (#325): Satz über data-pieces-tic-tac-toe auf <html>, Bilder über --fig-tic-tac-toe-<figur>. */
+[data-pieces-tic-tac-toe] .ttt-mark.ttt-x {
+  background: var(--fig-tic-tac-toe-x) center / contain no-repeat;
   animation: ttt-img-in 0.2s ease-out;
 }
-[data-pieces-tic-tac-toe='wood'] .ttt-mark.ttt-o {
-  background: url('./figuren/wood-o.webp') center / contain no-repeat;
-  animation: ttt-img-in 0.2s ease-out;
-}
-[data-pieces-tic-tac-toe='metal'] .ttt-mark.ttt-x {
-  background: url('./figuren/metal-x.webp') center / contain no-repeat;
-  animation: ttt-img-in 0.2s ease-out;
-}
-[data-pieces-tic-tac-toe='metal'] .ttt-mark.ttt-o {
-  background: url('./figuren/metal-o.webp') center / contain no-repeat;
-  animation: ttt-img-in 0.2s ease-out;
-}
-[data-pieces-tic-tac-toe='fable'] .ttt-mark.ttt-x {
-  background: url('./figuren/fable-x.webp') center / contain no-repeat;
-  animation: ttt-img-in 0.2s ease-out;
-}
-[data-pieces-tic-tac-toe='fable'] .ttt-mark.ttt-o {
-  background: url('./figuren/fable-o.webp') center / contain no-repeat;
+[data-pieces-tic-tac-toe] .ttt-mark.ttt-o {
+  background: var(--fig-tic-tac-toe-o) center / contain no-repeat;
   animation: ttt-img-in 0.2s ease-out;
 }
 [data-pieces-tic-tac-toe] .ttt-mark > * {

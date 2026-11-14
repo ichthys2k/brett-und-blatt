@@ -275,94 +275,34 @@
   vertical-align: middle;
 }
 
-/* Gemalte Figuren (#325): der Satz kommt als Attribut data-pieces-checkers auf <html>; ohne Attribut gilt die heutige Darstellung. */
-[data-pieces-checkers='wood'] .dk-piece.dk-white {
-  background: url('./figuren/wood-man-w.webp') center / contain no-repeat;
+/* Gemalte Figuren (#325): Satz über data-pieces-checkers auf <html>, Bilder über --fig-checkers-<figur>; ohne Attribut die heutige Darstellung. */
+[data-pieces-checkers] .dk-piece.dk-white {
+  background: var(--fig-checkers-man-w) center / contain no-repeat;
   border: 0;
   box-shadow: none;
 }
-[data-pieces-checkers='wood'] .dk-piece.dk-white:has(.dk-crown) {
-  background: url('./figuren/wood-king-w.webp') center / contain no-repeat;
+[data-pieces-checkers] .dk-piece.dk-white:has(.dk-crown) {
+  background: var(--fig-checkers-king-w) center / contain no-repeat;
   border: 0;
   box-shadow: none;
 }
-[data-pieces-checkers='wood'] .dk-piece.dk-black {
-  background: url('./figuren/wood-man-b.webp') center / contain no-repeat;
+[data-pieces-checkers] .dk-piece.dk-black {
+  background: var(--fig-checkers-man-b) center / contain no-repeat;
   border: 0;
   box-shadow: none;
 }
-[data-pieces-checkers='wood'] .dk-piece.dk-black:has(.dk-crown) {
-  background: url('./figuren/wood-king-b.webp') center / contain no-repeat;
+[data-pieces-checkers] .dk-piece.dk-black:has(.dk-crown) {
+  background: var(--fig-checkers-king-b) center / contain no-repeat;
   border: 0;
   box-shadow: none;
 }
-[data-pieces-checkers='wood'] .dk-mini-stone.dk-mini-white {
-  background: url('./figuren/wood-man-w.webp') center / contain no-repeat;
+[data-pieces-checkers] .dk-mini-stone.dk-mini-white {
+  background: var(--fig-checkers-man-w) center / contain no-repeat;
   border: 0;
   box-shadow: none;
 }
-[data-pieces-checkers='wood'] .dk-mini-stone.dk-mini-black {
-  background: url('./figuren/wood-man-b.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='metal'] .dk-piece.dk-white {
-  background: url('./figuren/metal-man-w.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='metal'] .dk-piece.dk-white:has(.dk-crown) {
-  background: url('./figuren/metal-king-w.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='metal'] .dk-piece.dk-black {
-  background: url('./figuren/metal-man-b.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='metal'] .dk-piece.dk-black:has(.dk-crown) {
-  background: url('./figuren/metal-king-b.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='metal'] .dk-mini-stone.dk-mini-white {
-  background: url('./figuren/metal-man-w.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='metal'] .dk-mini-stone.dk-mini-black {
-  background: url('./figuren/metal-man-b.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='fable'] .dk-piece.dk-white {
-  background: url('./figuren/fable-man-w.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='fable'] .dk-piece.dk-white:has(.dk-crown) {
-  background: url('./figuren/fable-king-w.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='fable'] .dk-piece.dk-black {
-  background: url('./figuren/fable-man-b.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='fable'] .dk-piece.dk-black:has(.dk-crown) {
-  background: url('./figuren/fable-king-b.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='fable'] .dk-mini-stone.dk-mini-white {
-  background: url('./figuren/fable-man-w.webp') center / contain no-repeat;
-  border: 0;
-  box-shadow: none;
-}
-[data-pieces-checkers='fable'] .dk-mini-stone.dk-mini-black {
-  background: url('./figuren/fable-man-b.webp') center / contain no-repeat;
+[data-pieces-checkers] .dk-mini-stone.dk-mini-black {
+  background: var(--fig-checkers-man-b) center / contain no-repeat;
   border: 0;
   box-shadow: none;
 }

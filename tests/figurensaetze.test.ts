@@ -5,13 +5,23 @@ const KEY = 'brett-und-blatt:figuren';
 type Fs = { existsSync(path: URL): boolean };
 const { existsSync } = (globalThis as unknown as { process: { getBuiltinModule(name: 'node:fs'): Fs } }).process.getBuiltinModule('node:fs');
 
+let attributes: Record<string, string> = {};
+
 async function lade(store: Record<string, string>, opts: { contrast?: boolean; look?: string } = {}) {
   vi.resetModules();
   vi.stubGlobal('window', {
     matchMedia: () => ({ matches: Boolean(opts.contrast) }),
     localStorage: { getItem: (k: string) => store[k] ?? null, setItem: (k: string, v: string) => void (store[k] = v) },
   });
-  vi.stubGlobal('document', { documentElement: { dataset: { look: opts.look ?? 'tavern' } } });
+  const attrs: Record<string, string> = {};
+  attributes = attrs;
+  vi.stubGlobal('document', {
+    documentElement: {
+      dataset: { look: opts.look ?? 'tavern' },
+      setAttribute: (k: string, v: string) => void (attrs[k] = v),
+      removeAttribute: (k: string) => void delete attrs[k],
+    },
+  });
   return import('../packages/ui/src/pieces/pieceSets');
 }
 
@@ -31,8 +41,10 @@ describe('Figurensätze (#325)', () => {
     expect(p.resolvePieceSet('chess')).toBe('wood');
     expect(p.resolvePieceSet('checkers')).toBe('classic');
     expect(JSON.parse(store[KEY]!)).toEqual({ chess: 'wood' });
+    expect(attributes['data-pieces-chess']).toBe('wood');
     p.setPieceSet('chess', null);
     expect(p.resolvePieceSet('chess')).toBe('classic');
+    expect(attributes['data-pieces-chess']).toBeUndefined();
   });
 
   it('ignoriert ungültige gespeicherte Werte', async () => {

@@ -40,6 +40,15 @@ function load(): Record<string, PieceSetId> {
 
 let chosen = load();
 const applied = new Set<string>();
+const appliedVars = new Map<string, string[]>();
+
+/** Liefert die Bild-Adressen eines Satzes (Name der Figur → Adresse); die Web-App meldet sie an. */
+let imageResolver: ((game: string, set: PieceSetId) => Record<string, string>) | null = null;
+
+export function setPieceImageResolver(next: ((game: string, set: PieceSetId) => Record<string, string>) | null): void {
+  imageResolver = next;
+  applyAttributes();
+}
 
 /**
  * Spiele, die ihre Steine über CSS austauschen, lesen den Satz am Attribut `data-pieces-<spiel>` auf <html>
@@ -51,12 +60,18 @@ function applyAttributes(): void {
   const games = new Set([...Object.keys(chosen), ...Object.keys(PIECE_SET_DEFAULTS), ...applied]);
   for (const game of games) {
     const set = resolvePieceSet(game);
+    for (const name of appliedVars.get(game) ?? []) root.style.removeProperty(`--fig-${game}-${name}`);
+    appliedVars.delete(game);
     if (set === 'classic') {
       root.removeAttribute(`data-pieces-${game}`);
       applied.delete(game);
     } else {
       root.setAttribute(`data-pieces-${game}`, set);
       applied.add(game);
+      // Bilder als CSS-Variablen: Die Stile der Spiele nennen keine Dateien, sondern `var(--fig-<spiel>-<figur>)`.
+      const urls = imageResolver?.(game, set) ?? {};
+      for (const [name, url] of Object.entries(urls)) root.style.setProperty(`--fig-${game}-${name}`, `url("${url}")`);
+      appliedVars.set(game, Object.keys(urls));
     }
   }
 }

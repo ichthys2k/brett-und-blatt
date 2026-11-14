@@ -133,28 +133,12 @@
   }
 }
 
-/* Gemalte Figuren (#325): der Satz kommt als Attribut data-pieces-mill auf <html>; ohne Attribut gilt die heutige Darstellung. */
-[data-pieces-mill='wood'] .ml-stone.ml-white {
-  background: url('./figuren/wood-stone-w.webp') center / contain no-repeat;
+/* Gemalte Figuren (#325): Satz über data-pieces-mill auf <html>, Bilder über --fig-mill-<figur>; ohne Attribut die heutige Darstellung. */
+[data-pieces-mill] .ml-stone.ml-white {
+  background: var(--fig-mill-stone-w) center / contain no-repeat;
   box-shadow: none;
 }
-[data-pieces-mill='wood'] .ml-stone.ml-black {
-  background: url('./figuren/wood-stone-b.webp') center / contain no-repeat;
-  box-shadow: none;
-}
-[data-pieces-mill='metal'] .ml-stone.ml-white {
-  background: url('./figuren/metal-stone-w.webp') center / contain no-repeat;
-  box-shadow: none;
-}
-[data-pieces-mill='metal'] .ml-stone.ml-black {
-  background: url('./figuren/metal-stone-b.webp') center / contain no-repeat;
-  box-shadow: none;
-}
-[data-pieces-mill='fable'] .ml-stone.ml-white {
-  background: url('./figuren/fable-stone-w.webp') center / contain no-repeat;
-  box-shadow: none;
-}
-[data-pieces-mill='fable'] .ml-stone.ml-black {
-  background: url('./figuren/fable-stone-b.webp') center / contain no-repeat;
+[data-pieces-mill] .ml-stone.ml-black {
+  background: var(--fig-mill-stone-b) center / contain no-repeat;
   box-shadow: none;
 }
