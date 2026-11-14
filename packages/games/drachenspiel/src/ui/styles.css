@@ -2011,6 +2011,27 @@
     display: none;
   }
 
+  /* Zug beenden muss ganz zu sehen sein (#391): Heldenkarte gibt Platz ab, der Stapel zeigt nur die Zahl. */
+  .ds-player-zone {
+    gap: 4px;
+  }
+
+  .ds-player-zone > .ds-hero-card {
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 6px;
+    padding: 4px 6px;
+  }
+
+  .ds-actions {
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+
+  .ds-actions .ds-deck-with-back > :first-child {
+    display: none;
+  }
+
   .ds-btn-endturn {
     max-width: 70px;
     font-size: 0.78rem;

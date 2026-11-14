@@ -151,6 +151,19 @@ try {
       fresh.set(id, m);
       await firstSteps[id]?.(page);
       if (shots) await page.screenshot({ path: `${shots}/${id}.png` });
+      // Drachenspiel (#391): „Zug beenden“ muss ganz im Spielfeld liegen und darf nicht am Rand abgeschnitten sein.
+      if (id === 'drachenspiel') {
+        const cut = await page.evaluate(() => {
+          const button = document.querySelector('.ds-btn-endturn');
+          const arena = document.querySelector('.ds-arena');
+          if (!button || !arena) return null;
+          const b = button.getBoundingClientRect();
+          const a = arena.getBoundingClientRect();
+          return Math.round(Math.max(b.right - a.right, a.left - b.left, b.right - window.innerWidth, 0));
+        });
+        if (cut === null) problems.push(`${id}: Knopf „Zug beenden“ nicht gefunden`);
+        else if (cut > 1) problems.push(`${id}: Knopf „Zug beenden“ ragt ${cut} px über den Rand`);
+      }
       if (errors.length) problems.push(`${id}: Fehler beim Start – ${errors.slice(0, 2).join(' | ')}`);
       const violations = await page.evaluate(() => window.__csp ?? []);
       if (violations.length) problems.push(`${id}: CSP-Verletzung – ${violations.slice(0, 2).join(' | ')}`);
