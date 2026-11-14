@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import cabinetArt from '../assets/ehrung/pokalschrank.webp';
 import { t } from '../i18n';
 import { printCertificate } from '../lib/certificate';
 import { loadBook } from '../lib/chronikStore';
@@ -28,6 +29,7 @@ export function TrophyCabinet() {
 
   return (
     <section className="space-y-3 rounded-2xl border border-line bg-surface p-4" aria-labelledby="trophy-title">
+      <img className="bub-cabinet-art" src={cabinetArt} alt="" aria-hidden="true" draggable={false} loading="lazy" />
       <h2 id="trophy-title" className="text-xl font-bold">
         🏆 {t('pass.trophy.title')}
       </h2>

@@ -5,7 +5,6 @@ import { fetchBoardCount } from '../lib/board';
 import { useBoardHidden } from '../lib/boardPrefs';
 import { useCrest } from '../lib/crestStore';
 import { findGame } from '../lib/registry';
-import { useMenu3d } from '../lib/look';
 import { navigate, paths } from '../lib/router';
 import { GAME_SERVER } from '../lib/server';
 import { storage } from '../lib/storage';
@@ -34,7 +33,6 @@ const ENTRIES: readonly MenuEntry[] = [
 
 export function Menu() {
   const crest = useCrest();
-  const animated = useMenu3d();
   const [hint, setHint] = useState('');
   const profile = storage.loadProfile();
   const resume = storage.loadActive();
@@ -66,7 +64,7 @@ export function Menu() {
 
   return (
     <div className="bub-menu">
-      <TavernScene still={!animated} />
+      <TavernScene />
 
       <h1 className="bub-menu-logo">
         Brett &amp; Blatt
