@@ -16,10 +16,23 @@ export const PIECE_SET_LABELS: Record<PieceSetId, string> = {
 };
 
 /**
- * Standardsatz je Spiel für alle, die selbst nichts gewählt haben. Fehlt ein Spiel, gilt „classic“.
- * Cornelius trägt hier ein, welcher Satz bei welchem Spiel der Standard sein soll.
+ * Standardsatz je Spiel für alle, die selbst nichts gewählt haben: überall Holz (Wunsch von Cornelius, 15.11.2026).
+ * Fehlt ein Spiel, gilt „classic“. Eine eigene Wahl, auch „Klassisch“, geht vor; bei erhöhtem Kontrast und im
+ * Aussehen „Schlicht“ gilt „classic“.
  */
-export const PIECE_SET_DEFAULTS: Readonly<Record<string, PieceSetId>> = {};
+export const PIECE_SET_DEFAULTS: Readonly<Record<string, PieceSetId>> = {
+  chess: 'wood',
+  'four-player-chess': 'wood',
+  checkers: 'wood',
+  mill: 'wood',
+  reversi: 'wood',
+  go: 'wood',
+  'four-in-a-row': 'wood',
+  'tic-tac-toe': 'wood',
+  ludo: 'wood',
+  'chinese-checkers': 'wood',
+  battleship: 'wood',
+};
 
 const KEY = 'brett-und-blatt:figuren';
 const listeners = new Set<() => void>();

@@ -29,9 +29,11 @@ async function lade(store: Record<string, string>, opts: { contrast?: boolean; l
 afterEach(() => vi.unstubAllGlobals());
 
 describe('Figurensätze (#325)', () => {
-  it('ohne Wahl gilt der klassische Satz', async () => {
+  it('ohne Wahl gilt der Standard des Spiels: überall Holz, unbekannte Spiele klassisch', async () => {
     const p = await lade({});
-    expect(p.resolvePieceSet('chess')).toBe('classic');
+    expect(p.resolvePieceSet('chess')).toBe('wood');
+    expect(p.resolvePieceSet('battleship')).toBe('wood');
+    expect(p.resolvePieceSet('unbekannt')).toBe('classic');
     expect(p.chosenPieceSet('chess')).toBeNull();
   });
 
@@ -40,19 +42,24 @@ describe('Figurensätze (#325)', () => {
     const p = await lade(store);
     p.setPieceSet('chess', 'wood');
     expect(p.resolvePieceSet('chess')).toBe('wood');
-    expect(p.resolvePieceSet('checkers')).toBe('classic');
-    expect(JSON.parse(store[KEY]!)).toEqual({ chess: 'wood' });
-    expect(attributes['data-pieces-chess']).toBe('wood');
-    p.setPieceSet('chess', null);
+    p.setPieceSet('chess', 'metal');
+    expect(p.resolvePieceSet('chess')).toBe('metal');
+    expect(p.resolvePieceSet('checkers')).toBe('wood');
+    expect(JSON.parse(store[KEY]!)).toEqual({ chess: 'metal' });
+    expect(attributes['data-pieces-chess']).toBe('metal');
+    p.setPieceSet('chess', 'classic');
     expect(p.resolvePieceSet('chess')).toBe('classic');
     expect(attributes['data-pieces-chess']).toBeUndefined();
+    p.setPieceSet('chess', null);
+    expect(p.resolvePieceSet('chess')).toBe('wood');
+    expect(attributes['data-pieces-chess']).toBe('wood');
   });
 
   it('ignoriert ungültige gespeicherte Werte', async () => {
     const p = await lade({ [KEY]: JSON.stringify({ chess: 'gold', go: 'metal', ludo: 5 }) });
-    expect(p.resolvePieceSet('chess')).toBe('classic');
+    expect(p.resolvePieceSet('chess')).toBe('wood');
     expect(p.resolvePieceSet('go')).toBe('metal');
-    expect(p.resolvePieceSet('ludo')).toBe('classic');
+    expect(p.resolvePieceSet('ludo')).toBe('wood');
   });
 
   it('bei erhöhtem Kontrast und im Aussehen „Schlicht“ bleibt es klassisch, eine eigene Wahl gewinnt', async () => {
@@ -72,5 +79,17 @@ describe('Figurensätze (#325)', () => {
   it('die Figurenwahl reist im Einstellungsblock des Passes mit', () => {
     expect(SYNCED_KEYS.figuren).toBe(KEY);
     expect(nameToKey('figuren')).toBe(KEY);
+  });
+
+  it('jedes Spiel mit Standardsatz hat Bilder für Holz, Metall und Märchen', async () => {
+    const p = await lade({});
+    type FsDir = { readdirSync(path: URL): string[] };
+    const { readdirSync } = (globalThis as unknown as { process: { getBuiltinModule(name: 'node:fs'): FsDir } }).process.getBuiltinModule('node:fs');
+    const fehlt: string[] = [];
+    for (const game of Object.keys(p.PIECE_SET_DEFAULTS)) {
+      const files = readdirSync(new URL(`../packages/games/${game}/src/ui/figuren/`, import.meta.url));
+      for (const set of ['wood', 'metal', 'fable']) if (!files.some((f) => f.startsWith(`${set}-`))) fehlt.push(`${game}/${set}`);
+    }
+    expect(fehlt).toEqual([]);
   });
 });
