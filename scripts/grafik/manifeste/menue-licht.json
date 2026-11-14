@@ -14,24 +14,31 @@
   ],
   "motive": [
     {
+      "id": "abend",
+      "titel": "Abend (neue Vorlage ohne Flaschen und Fässer)",
+      "stil": "Edit the reference image. Keep the composition, the camera, the lighting, the colours and the position of every object exactly as they are. Change only the objects described. Same painterly oil style. No text, no people, no animals.",
+      "prompt": "Replace exactly these objects and keep everything else identical: (1) the bottles on the mantelpiece and on the shelves become closed books, small unlit candles and clay plates; (2) the wooden barrel on the floor in the left foreground becomes a plain wooden storage crate; (3) the small round barrel with metal hoops standing at the back on the counter in the alcove becomes a round wheel of hard cheese of the same size and shape; (4) the bottle and cups on the counter become a clay bowl and a loaf of bread. Do not add anything else, no firewood stack. No barrel, cask, keg or bottle may remain anywhere.",
+      "ohne": "text, people, animals, changed composition, moved or added objects other than described, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs, bottles, flasks, jugs, barrels, casks, kegs, changed composition"
+    },
+    {
       "id": "morgen",
       "titel": "6–10 Uhr",
-      "prompt": "Cool pale morning light through the windows, fireplace only glowing embers, lanterns off, light mist outside."
+      "prompt": "Cool pale morning light through the windows, fireplace only glowing embers, lanterns off, light mist outside. Keep the solid stone wall on the right completely unchanged: no new windows, no new openings; the light enters only through the windows that already exist."
     },
     {
       "id": "tag",
       "titel": "10–17 Uhr",
-      "prompt": "Bright warm daylight through the windows, fireplace small, lanterns off, blue sky outside."
+      "prompt": "Bright warm daylight through the windows, fireplace small, lanterns off, blue sky outside. Keep the solid stone wall on the right completely unchanged: no new windows, no new openings; the light enters only through the windows that already exist."
     },
     {
       "id": "nacht",
       "titel": "22–6 Uhr",
-      "prompt": "Deep night: windows dark blue with a few stars and a moon, strong warm glow from fireplace and lanterns, longer shadows."
+      "prompt": "Deep night: windows dark blue with a few stars and a moon, strong warm glow from fireplace and lanterns, longer shadows. Keep the solid stone wall on the right completely unchanged: no new windows, no new openings; only the windows that already exist change."
     },
     {
       "id": "winter",
       "titel": "Dezember, Januar",
-      "prompt": "Evening lighting as now, but snow on the window sills outside, frost flowers on the glass, a fir garland with red ribbons over the fireplace."
+      "prompt": "Evening lighting as now. Add only these three things: a fir garland with red ribbons over the fireplace mantel, frost flowers on the glass of the two small existing windows in the back alcove, and a faint cold blue tint in those two windows. The big stone wall on the right stays completely plain, exactly as in the reference, without any window, opening or frame."
     },
     {
       "id": "fest",

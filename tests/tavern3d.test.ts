@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   buildTavernGeometry,
   getHoveredStation,
+  moodAt,
   pickHotspot,
   projectPoint,
+  roomPalette,
   setHoveredStation,
   shadeFaceColor,
   STATION_CAMERAS,
@@ -11,8 +13,11 @@ import {
   stepCamera,
   TAVERN_HOTSPOTS,
 } from '../apps/web/src/lib/tavern3d';
-import type { RoomScene, TableSurface } from '../apps/web/src/lib/look';
+import type { RoomScene, TableSurface, TavernMood } from '../apps/web/src/lib/look';
 
+type Fs = { existsSync(path: URL): boolean };
+const { existsSync } = (globalThis as unknown as { process: { getBuiltinModule(name: 'node:fs'): Fs } }).process.getBuiltinModule('node:fs');
+const TAVERN_MOODS: readonly TavernMood[] = ['morgen', 'tag', 'abend', 'nacht', 'winter', 'fest'];
 const ROOM_SCENES: readonly RoomScene[] = ['tavern', 'castle', 'library', 'garden'];
 const TABLE_SURFACES: readonly TableSurface[] = ['auto', 'oak', 'walnut', 'green-felt', 'red-felt', 'slate', 'marble'];
 
@@ -31,8 +36,8 @@ describe('Begehbare 3D-Taverne (#262)', () => {
     expect(stationForRoute('pass')).toBe('profile');
     expect(stationForRoute('account')).toBe('profile');
     expect(stationForRoute('library')).toBe('profile');
-    expect(stationForRoute('learn')).toBe('profile');
-    expect(stationForRoute('learning')).toBe('profile');
+    expect(stationForRoute('learn')).toBe('learn');
+    expect(stationForRoute('learning')).toBe('learn');
     expect(stationForRoute('collection')).toBe('profile');
   });
 
@@ -87,5 +92,55 @@ describe('Begehbare 3D-Taverne (#262)', () => {
     expect(getHoveredStation()).toBe('online');
     setHoveredStation(null);
     expect(getHoveredStation()).toBeNull();
+  });
+});
+
+describe('Stationen und Lichtstimmungen der Taverne (#317)', () => {
+  const menu = new URL('../apps/web/src/menu/', import.meta.url);
+
+  it('zu jeder Station gibt es ein freigestelltes Bild und eine Kamera', () => {
+    for (const spot of TAVERN_HOTSPOTS) {
+      expect(existsSync(new URL(`stationen/${spot.id}.webp`, menu)), spot.id).toBe(true);
+      expect(STATION_CAMERAS[spot.id], spot.id).toBeDefined();
+    }
+    expect(TAVERN_HOTSPOTS.map((s) => s.id)).toContain('learn');
+  });
+
+  it('zu jeder Lichtstimmung gibt es ein Hintergrundbild (Abend ist die Grundebene)', () => {
+    for (const mood of TAVERN_MOODS) {
+      const file = mood === 'abend' ? 'taverne-hinten.webp' : `taverne-hinten-${mood}.webp`;
+      expect(existsSync(new URL(file, menu)), mood).toBe(true);
+    }
+  });
+
+  it('wählt die Stimmung nach Uhrzeit', () => {
+    const at = (hour: number, month = 5) => moodAt(new Date(2026, month, 15, hour, 30));
+    expect(at(5)).toBe('nacht');
+    expect(at(6)).toBe('morgen');
+    expect(at(9)).toBe('morgen');
+    expect(at(10)).toBe('tag');
+    expect(at(16)).toBe('tag');
+    expect(at(17)).toBe('abend');
+    expect(at(21)).toBe('abend');
+    expect(at(22)).toBe('nacht');
+    expect(at(0)).toBe('nacht');
+  });
+
+  it('zeigt im Dezember und Januar den Winter, das Fest nur auf Wunsch', () => {
+    expect(moodAt(new Date(2026, 11, 24, 12))).toBe('winter');
+    expect(moodAt(new Date(2027, 0, 3, 8))).toBe('winter');
+    expect(moodAt(new Date(2026, 1, 3, 12))).toBe('tag');
+    expect(moodAt(new Date(2026, 5, 3, 12), true)).toBe('fest');
+  });
+
+  it('färbt nur die Taverne je Stimmung, die anderen Räume bleiben', () => {
+    expect(roomPalette('tavern', 'nacht').bgMid).not.toBe(roomPalette('tavern', 'abend').bgMid);
+    expect(roomPalette('castle', 'nacht')).toEqual(roomPalette('castle', 'abend'));
+  });
+
+  it('ordnet Lernen der eigenen Station zu', () => {
+    expect(stationForRoute('learn')).toBe('learn');
+    expect(stationForRoute('learning')).toBe('learn');
+    expect(stationForRoute('pass')).toBe('profile');
   });
 });

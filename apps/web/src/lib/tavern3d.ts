@@ -1,4 +1,4 @@
-import type { RoomScene, TableSurface } from './look';
+import type { RoomScene, TableSurface, TavernMood } from './look';
 import type { Route } from './router';
 
 /**
@@ -9,7 +9,7 @@ import type { Route } from './router';
  * direkt prüfbar sind und der Canvas-Zustand über Routenwechsel hinweg erhalten bleibt.
  */
 
-export type TavernStationId = 'home' | 'single' | 'online' | 'tournaments' | 'options' | 'profile' | 'board';
+export type TavernStationId = 'home' | 'single' | 'online' | 'tournaments' | 'options' | 'profile' | 'board' | 'learn';
 
 export interface Vec3 {
   x: number;
@@ -56,6 +56,7 @@ export const STATION_CAMERAS: Record<TavernStationId, CameraPose> = {
   options: { x: -1.78, y: 1.32, z: -2.85, yaw: 0.54, pitch: 0.12 },
   profile: { x: -1.68, y: 2.18, z: -2.75, yaw: 0.5, pitch: -0.06 },
   board: { x: -1.7, y: 1.35, z: -4.7, yaw: -0.25, pitch: 0.14 },
+  learn: { x: -1.68, y: 2.0, z: -2.75, yaw: 0.5, pitch: -0.02 },
 };
 
 /** Anklickbare 3D-Stationen im Raum (für das Hauptmenü `#/`). */
@@ -66,6 +67,7 @@ export const TAVERN_HOTSPOTS: readonly TavernHotspot[] = [
   { id: 'options', label: '🔥 Optionen', to: '#/ton', pos: { x: -2.85, y: 1.0, z: 0.65 }, radius: 40 },
   { id: 'profile', label: '🛡️ Profil & Pass', to: '#/pass', pos: { x: -2.75, y: 2.25, z: 0.65 }, radius: 36 },
   { id: 'board', label: '📌 Schwarzes Brett', to: '#/brett', pos: { x: -2.55, y: 1.1, z: -2.7 }, radius: 40 },
+  { id: 'learn', label: '🗂️ Lernen', to: '#/lernen', pos: { x: -2.2, y: 1.75, z: -0.9 }, radius: 36 },
 ];
 
 /** Ordnet jeder Route die passende 3D-Kamerastation zu. */
@@ -98,10 +100,11 @@ export function stationForRoute(routeName: Route['name']): TavernStationId {
     case 'account':
     case 'library':
     case 'packView':
-    case 'learn':
-    case 'learning':
     case 'collection':
       return 'profile';
+    case 'learn':
+    case 'learning':
+      return 'learn';
     default:
       return 'home';
   }
@@ -283,8 +286,33 @@ const TABLE_COLORS: Record<TableSurface, { top: string; side: string }> = {
   marble: { top: '#d6d3cd', side: '#9ca3af' },
 };
 
-export function roomPalette(room: RoomScene): Palette {
-  return ROOM_PALETTES[room] ?? ROOM_PALETTES.tavern;
+/**
+ * Welche Lichtstimmung der Taverne gilt (#317): `fest` nur auf ausdrücklichen Wunsch, im Dezember und Januar
+ * `winter`, sonst nach Uhrzeit: 6–10 morgen, 10–17 tag, 17–22 abend, danach nacht.
+ */
+export function moodAt(date: Date, festive = false): TavernMood {
+  if (festive) return 'fest';
+  const month = date.getMonth();
+  if (month === 11 || month === 0) return 'winter';
+  const hour = date.getHours();
+  if (hour >= 6 && hour < 10) return 'morgen';
+  if (hour >= 10 && hour < 17) return 'tag';
+  if (hour >= 17 && hour < 22) return 'abend';
+  return 'nacht';
+}
+
+/** Hintergrundfarben der Tavernen-Bühne je Lichtstimmung (der Abend ist die Grundpalette). */
+const MOOD_BACKGROUNDS: Record<Exclude<TavernMood, 'abend'>, Pick<Palette, 'bgTop' | 'bgMid' | 'bgBot'>> = {
+  morgen: { bgTop: '#1d2430', bgMid: '#151b24', bgBot: '#0d1118' },
+  tag: { bgTop: '#2a2116', bgMid: '#1e170f', bgBot: '#130e09' },
+  nacht: { bgTop: '#0e1522', bgMid: '#0a101a', bgBot: '#06090f' },
+  winter: { bgTop: '#1a2029', bgMid: '#12171f', bgBot: '#0b0f14' },
+  fest: { bgTop: '#2a1a12', bgMid: '#1d120a', bgBot: '#120a05' },
+};
+
+export function roomPalette(room: RoomScene, mood: TavernMood = 'abend'): Palette {
+  const base = ROOM_PALETTES[room] ?? ROOM_PALETTES.tavern;
+  return room === 'tavern' && mood !== 'abend' ? { ...base, ...MOOD_BACKGROUNDS[mood] } : base;
 }
 
 function addBox(
