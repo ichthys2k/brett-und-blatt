@@ -175,6 +175,30 @@ Die vier Karten (`packages/games/turnip-patch/src/ui/karten/*.webp`) und die zeh
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 
+## Avatare der Spielerinnen und Spieler (KI-erzeugt)
+
+Die 76 Tavernengäste (`apps/web/src/assets/avatare/avatar-*.webp`, ein Tier je bisherigem Emoji-Avatar): **KI-erzeugt** mit „gemini-3.1-flash-lite-image“ (Google) nach eigenen Bildbeschreibungen, November 2026 (#312). Auswahl durch Cornelius Lipponer; Manifest `avatare.json`. Die Figuren sind eigene Erfindungen (Tiere in einfacher Reisekleidung), keine echten Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Gemalte Spielfiguren der Brettspiele (KI-erzeugt)
+
+Die Figurensätze (Holz, Metall, Märchen) für Schach, Vierer-Schach, Dame, Mühle, Reversi, Go, Ludo, Vier in einer Reihe, Chinesisches Dame, Tic-Tac-Toe und Schiffe versenken (`packages/games/<spiel>/src/ui/figuren/*.webp`, zusammen 120 Bilder): **KI-erzeugt** mit „gemini-3.1-flash-lite-image“ (Google) nach eigenen Bildbeschreibungen, November 2026 (#325), freigestellt über grünen Grund. Auswahl durch Cornelius Lipponer; Manifeste `figuren-*.json`.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Bilder der Quartett-Karten (KI-erzeugt)
+
+Die Kartenbilder der Sets Tiere, Weltraum, Bibel und Dinosaurier (`content/quartett/bilder/<set>/bub-quartett-*.webp`, je 32): **KI-erzeugt** mit „gemini-3.1-flash-lite-image“ (Google) nach eigenen Bildbeschreibungen, November 2026 (#319). Auswahl durch Cornelius Lipponer; Manifeste `quartett-*.json`. Sie gehören zu den Inhaltspaketen und lassen sich mit den Karten nach Anki exportieren.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
+## Drachenspiel-Karten (KI-erzeugt)
+
+Die 234 Kartenbilder des Drachenspiels (`packages/games/drachenspiel/src/ui/karten/bub-ds-*.webp`): **KI-erzeugt** mit „gemini-3.1-flash-lite-image“ (Google) nach eigenen Bildbeschreibungen, November 2026 (#309). Auswahl durch Cornelius Lipponer; Manifest `drachenspiel-karten.json`. Die Figuren sind eigene Erfindungen (Tiere im Märchenstil), keine echten Personen.
+
+Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
+
 ## Almendra
 
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Baut grafik-roh/<Manifest>/kontaktbogen.html: alle Varianten auf einer Seite zur Auswahl.
 // Im Browser öffnen: Bild anklicken = genehmigen, „↻ Neue Version“ = weitere Variante wünschen.
-// Reihenfolge: zuerst alles, was nicht festgelegt ist (1. noch nichts übernommen, 2. neuere Variante seit der Übernahme),
-// dann die festgelegten Motive (die übernommene Variante ist markiert), zuletzt Motive ohne Bilder.
+// Reihenfolge: zuerst alles Neue und Unentschiedene (1. neue Version, noch nichts übernommen, 2. neuere Variante seit der Übernahme,
+// 3. eine Variante, noch nichts übernommen), dann die festgelegten Motive (die übernommene Variante ist markiert), zuletzt Motive ohne Bilder.
 // Unten stehen die Zeilen für übernehmen.mjs und (für gewünschte Neuerzeugungen) erzeugen.mjs.
 //   --modell=… --schluessel=…   werden in die erzeugen.mjs-Zeile übernommen (mit --ja, die Kosten sind bekannt)
 import { readdirSync, writeFileSync, existsSync, readFileSync, statSync } from 'node:fs';
@@ -24,7 +24,7 @@ const uebernommeneVariante = (id, dateien) => {
   const treffer = dateien.find((d) => !d.startsWith('cf-') && readFileSync(resolve(basis, id, d)).equals(soll));
   return treffer ? treffer.match(/v(\d+)/)[1] : null;
 };
-const abschnitte = { offen: [], nachtrag: [], fest: [], leer: [] };
+const abschnitte = { neu: [], nachtrag: [], offen: [], fest: [], leer: [] };
 manifest.motive.forEach((m) => {
   const dir = resolve(basis, m.id);
   const dateien = existsSync(dir) ? readdirSync(dir).filter((d) => /^(cf-)?v\d+(-ganz)?\.(png|jpg)$/.test(d) && d.includes('-ganz') === Boolean(manifest.rohSuffix)).sort() : [];
@@ -38,16 +38,17 @@ manifest.motive.forEach((m) => {
     const fremd = d.startsWith('cf-'); // Cloudflare-Bilder nur zum Vergleich, nicht wählbar
     const v = d.match(/v(\d+)/)[1];
     const klasse = [fremd && 'fremd', !fremd && v === gewaehlt && 'uebernommen'].filter(Boolean).join(' ');
-    const neuHinweis = !fremd && uebernommen && neuer.includes(d) ? ' · neu' : '';
+    const neuHinweis = !fremd && ((uebernommen && neuer.includes(d)) || (!uebernommen && Number(v) > 1)) ? ' · neu' : '';
     return `<figure${klasse ? ` class="${klasse}"` : ''}><img src="${m.id}/${d}" ${fremd ? '' : `data-id="${m.id}" data-v="${v}" `}loading="lazy"><figcaption>${fremd ? 'Cloudflare' : 'Gemini'} ${v}${!fremd && v === gewaehlt ? ' · übernommen' : ''}${neuHinweis}</figcaption></figure>`;
   }).join('');
-  const gruppe = !eigene.length ? 'leer' : !uebernommen ? 'offen' : neuer.length ? 'nachtrag' : 'fest';
+  const gruppe = !eigene.length ? 'leer' : !uebernommen ? (eigene.length > 1 ? 'neu' : 'offen') : neuer.length ? 'nachtrag' : 'fest';
   abschnitte[gruppe].push(`<section><h2>${m.titel ?? m.id} <small>${m.id}</small> <button data-neu="${m.id}" data-n="${eigene.reduce((n, d) => Math.max(n, Number(d.match(/v(\d+)/)[1])), 0)}">↻ Neue Version</button></h2>${m.beschreibung ? `<p class="funktion">${m.beschreibung}</p>` : ''}<div>${bilder || '<em>noch keine Bilder</em>'}</div></section>`);
 });
 const kopf = (titel, hinweis, n) => `<h1>${titel} <small>(${n})</small></h1><p class="hinweis">${hinweis}</p>`;
 const zeilen = [
-  abschnitte.offen.length && kopf('Nicht festgelegt: noch nichts übernommen', 'Bilder sind da, aber für diese Motive ist noch keine Variante im Repo.', abschnitte.offen.length), ...abschnitte.offen,
-  abschnitte.nachtrag.length && kopf('Nicht festgelegt: neue Variante seit der Übernahme', 'Eine Variante ist übernommen, danach kam aber ein neueres Bild dazu („neu“).', abschnitte.nachtrag.length), ...abschnitte.nachtrag,
+  abschnitte.neu.length && kopf('Neue Version erzeugt: noch nichts übernommen', 'Für diese Motive gibt es mehrere Varianten („neu“ = v2 oder höher); noch keine ist im Repo.', abschnitte.neu.length), ...abschnitte.neu,
+  abschnitte.nachtrag.length && kopf('Neue Version seit der Übernahme', 'Eine Variante ist übernommen, danach kam aber ein neueres Bild dazu („neu“).', abschnitte.nachtrag.length), ...abschnitte.nachtrag,
+  abschnitte.offen.length && kopf('Nicht festgelegt: noch nichts übernommen', 'Eine Variante je Motiv, noch keine im Repo.', abschnitte.offen.length), ...abschnitte.offen,
   abschnitte.fest.length && kopf('Festgelegt', 'Übernommene Variante hat den grünen Rahmen und „übernommen“; dein Klick färbt gelb. Nichts Neueres seitdem.', abschnitte.fest.length), ...abschnitte.fest,
   abschnitte.leer.length && kopf('Noch ohne Bilder', 'Für diese Motive wurde noch nichts erzeugt.', abschnitte.leer.length), ...abschnitte.leer,
 ].filter(Boolean);
