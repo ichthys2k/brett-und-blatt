@@ -27,14 +27,19 @@ export function StampBook() {
 
   return (
     <div className="space-y-4">
-      <section className="bub-pass-cover space-y-1 rounded-2xl border-2 border-line bg-surface p-5 text-center shadow-sm" aria-labelledby="cover-title">
-        <div className="flex justify-center text-ink">
-          <PlayerCrest spec={crest} size={112} label={t('crest.of', { name: profile?.name || t('pass.cover.noName') })} />
+      <section className="bub-pass-cover-wrap space-y-1 rounded-2xl border-2 border-line bg-surface p-5 text-center shadow-sm" aria-labelledby="cover-title">
+        {/* Im Taverne-Aussehen ein gemalter Buchdeckel: das Wappen sitzt im Oval, Name und Titel stehen unten auf dem Leder (#315). */}
+        <div className="bub-pass-cover space-y-1">
+          <div className="bub-cover-crest flex justify-center text-ink">
+            <PlayerCrest spec={crest} size={112} label={t('crest.of', { name: profile?.name || t('pass.cover.noName') })} />
+          </div>
+          <div className="bub-cover-title space-y-1">
+            <h2 id="cover-title" className="text-2xl font-bold">
+              {profile?.name || t('pass.cover.noName')}
+            </h2>
+            <p className="text-sm text-muted">{t('pass.cover.title')}</p>
+          </div>
         </div>
-        <h2 id="cover-title" className="text-2xl font-bold">
-          {profile?.name || t('pass.cover.noName')}
-        </h2>
-        <p className="text-sm text-muted">{t('pass.cover.title')}</p>
         <p className="text-sm">{t('pass.cover.numbers', { stamps: stampCount(book, allIds), played: sum.played, won: sum.won })}</p>
         <div className="pt-2">
           <Button onClick={() => setDesigning(!designing)} aria-expanded={designing}>

@@ -412,20 +412,66 @@
   object-fit: cover;
   object-position: center 35%;
 }
+/* Einband als Buchdeckel (#315): Das Deckblatt des Stempelhefts ist ein gemalter Lederband, das Wappen sitzt im Oval,
+   Name und Titel stehen unten auf dem Leder. Nur im Taverne-Aussehen; sonst die schlichte Karte. */
 [data-look='tavern'] .bub-pass-cover {
-  background: linear-gradient(rgb(28 17 8 / 0.4), rgb(28 17 8 / 0.4)), url('./assets/ehrung/pass-einband.webp') center / cover no-repeat;
-  border-color: #5b3a24;
+  position: relative;
+  container-type: inline-size;
+  width: 100%;
+  max-width: 17rem;
+  aspect-ratio: 3 / 4;
+  margin: 0 auto 0.5rem;
+  border-radius: 0.9rem;
+  background: url('./assets/ehrung/pass-einband.webp') center / cover no-repeat;
   color: #f6e7c8;
   text-shadow: 0 1px 3px rgb(0 0 0 / 0.8);
 }
-[data-look='tavern'] .bub-pass-cover button {
-  color: inherit;
+[data-look='tavern'] .bub-cover-crest {
+  position: absolute;
+  top: 48.5%;
+  left: 51%;
+  width: 31cqw;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.55));
+}
+[data-look='tavern'] .bub-cover-crest svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+[data-look='tavern'] .bub-cover-title {
+  position: absolute;
+  right: 11%;
+  bottom: 9%;
+  left: 11%;
+}
+[data-look='tavern'] .bub-cover-title h2 {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+[data-look='tavern'] .bub-cover-title p {
+  color: #f6e7c8;
+  font-size: 0.8rem;
 }
 @media (prefers-contrast: more) {
   [data-look='tavern'] .bub-pass-cover {
-    background: var(--color-surface);
+    position: static;
+    max-width: none;
+    aspect-ratio: auto;
+    margin: 0;
+    background: none;
     color: inherit;
     text-shadow: none;
+  }
+  [data-look='tavern'] .bub-cover-crest,
+  [data-look='tavern'] .bub-cover-title {
+    position: static;
+    width: auto;
+    transform: none;
+    filter: none;
+  }
+  [data-look='tavern'] .bub-cover-title p {
+    color: var(--color-muted);
   }
 }
 
@@ -450,4 +496,41 @@
   width: 2.3rem;
   height: 2.3rem;
   vertical-align: middle;
+}
+
+/* Gemaltes Treppchen (#315): Die Kisten des Bildes sind die Stufen 2 – 1 – 3; die Personen stehen auf ihren Oberkanten.
+   Die Lage folgt dem Bild (Oberkanten bei etwa 38 %, 18 % und 35 % der Bildhöhe). Nur im Taverne-Aussehen. */
+[data-look='tavern'] .bub-podium {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 28rem;
+  aspect-ratio: 16 / 9;
+  margin: 5.5rem auto 0;
+  background: url('./assets/ehrung/treppchen.webp') center / contain no-repeat;
+}
+[data-look='tavern'] .bub-podium-step {
+  position: absolute;
+  max-width: none;
+}
+[data-look='tavern'] .bub-podium-step[data-place='2'] {
+  bottom: 61.5%;
+  left: 11%;
+  width: 21%;
+}
+[data-look='tavern'] .bub-podium-step[data-place='1'] {
+  bottom: 82%;
+  left: 33%;
+  width: 34%;
+}
+[data-look='tavern'] .bub-podium-step[data-place='3'] {
+  bottom: 65%;
+  left: 68%;
+  width: 23%;
+}
+[data-look='tavern'] .bub-podium-block {
+  display: none;
+}
+[data-look='tavern'] .bub-podium-people {
+  padding-bottom: 0;
 }
