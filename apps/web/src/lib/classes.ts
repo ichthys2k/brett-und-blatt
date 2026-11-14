@@ -8,7 +8,6 @@ import { storage } from './storage';
 import { ALBUM_KEY, sanitizeAlbum } from './album';
 import { loadBook } from './chronikStore';
 import { levelStats, ratingOf } from './botRating';
-import { onGameRecorded } from './passRecorder';
 
 /*
  * Klassen im Browser (#150): Aufrufe an den Spieleserver und die Merkliste dieses Passes.
@@ -294,11 +293,13 @@ export async function updateClassCardsNow(): Promise<void> {
   }
 }
 
-// Nach jedem Partieende oder Fund werden die Klassenkarten aller gemerkten Klassen nachgeführt (#151).
-if (typeof window !== 'undefined') {
-  onGameRecorded(() => {
-    updateClassCardsSoon();
-  });
+/**
+ * Nach jedem Partieende oder Fund werden die Klassenkarten aller gemerkten Klassen nachgeführt (#151).
+ * Angemeldet wird beim Start der App (`main.tsx`), nicht beim Laden dieses Moduls: Sonst entsteht der
+ * Importkreis passRecorder → playerPass → classes → passRecorder, und im Dev-Server bleibt die Seite leer (#361).
+ */
+export function startClassCardSync(onGameRecorded: (listener: () => void) => () => void): () => void {
+  return onGameRecorded(() => updateClassCardsSoon());
 }
 
 /** Aktualisiert Name, Bild und Wappen bei allen Klassen, in denen man Mitglied ist (#150). */
@@ -311,4 +312,3 @@ export function updateClassesAfterProfileChange(): void {
 }
 
 onCrestSaved(updateClassesAfterProfileChange);
-

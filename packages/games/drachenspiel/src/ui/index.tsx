@@ -7,11 +7,14 @@ import { DeckSelection, MulliganPhase } from './phases';
 import { PlayBoard } from './PlayBoard';
 import './styles.css';
 import { albumSpec } from './album';
+import { setPartyCards } from './cardLookup';
+import type { CustomCard } from '../carddefs';
 
 const LABELS = ['Blau', 'Rot'];
 
 function Board(props: BoardProps<DrachenspielView, DrachenspielMove>) {
   const { view, viewer, onMove } = props;
+  setPartyCards(view.customCards as Record<string, CustomCard> | undefined);
   const mySeat: SeatId = typeof viewer === 'number' ? viewer : 0;
   const oppSeat: SeatId = (1 - mySeat) as SeatId;
   const me = view.players[mySeat];

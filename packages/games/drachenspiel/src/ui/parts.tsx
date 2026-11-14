@@ -9,13 +9,17 @@ import { GameCard, useCardCosmetics, useCardOverride } from '@brett-und-blatt/ui
 import { CARDS_DB } from '../cards';
 import type { CardDefinition, HousePower, Minion } from '../types';
 import { cardOrigin, getCardTraits, getMinionTraits, type TraitInfo } from './traits';
+import { uiCard } from './cardLookup';
+import { cardArtOf, withCardArt } from './cardArt';
 
 const baseCombatNotes = new Map<string, AnkiNote>();
 
 export function getCombatCardBaseNote(def: CardDefinition): AnkiNote {
   let note = baseCombatNotes.get(def.id);
   if (!note) {
-    const col = drachenspielCardsToAnki([def]);
+    // Mit gemaltem Bild (#309) steht es als Medium im Feld „Bild“, sonst das Emoji.
+    const image = cardArtOf(def.id);
+    const col = drachenspielCardsToAnki([image ? { ...def, image } : def]);
     note = col.notes[0]!;
     baseCombatNotes.set(def.id, note);
   }
@@ -49,7 +53,7 @@ export function renderCombatCardAnki(
   }
   return renderCardSide(BUB_COMBAT_CARD_NOTETYPE, note, 0, 'front', {
     runtimeFields,
-    mediaUrlMap: options.mediaUrlMap,
+    mediaUrlMap: withCardArt(options.mediaUrlMap),
   });
 }
 
@@ -152,7 +156,7 @@ export function CardZoom({ item, onClose }: { item: ZoomItem; onClose: () => voi
     );
   }
 
-  const def = CARDS_DB[item.kind === 'card' ? item.defId : item.minion.cardId];
+  const def = uiCard(item.kind === 'card' ? item.defId : item.minion.cardId);
   if (!def) return null;
   const minion = item.kind === 'minion' ? item.minion : null;
   const traits = minion ? getMinionTraits(minion) : getCardTraits(def);

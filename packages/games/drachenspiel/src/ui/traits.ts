@@ -1,6 +1,7 @@
 import { CARDS_DB } from '../cards';
 import { effectsText, FAMILY_NAMES, SCHOOL_NAMES } from '../core/text';
 import type { CardDefinition, KeywordId, Minion, SpellTargeting, Trigger } from '../types';
+import { uiCard } from './cardLookup';
 
 export interface TraitInfo {
   id: string;
@@ -126,11 +127,11 @@ export function getMinionTraits(minion: Minion): TraitInfo[] {
   const keywords = (['taunt', 'bubble', 'poisonous', 'stealth', 'rush', 'sprinter', 'doubleStrike', 'lifesteal', 'frostbite', 'reborn', 'immune', 'elusive'] as const)
     .filter((k) => minion[k])
     .map(keywordTrait);
-  const deaths = minion.silenced ? [] : (CARDS_DB[minion.cardId]?.triggers ?? []).filter((t) => t.on !== 'played').map((trigger, index) => triggerTrait(trigger, index));
+  const deaths = minion.silenced ? [] : (uiCard(minion.cardId)?.triggers ?? []).filter((t) => t.on !== 'played').map((trigger, index) => triggerTrait(trigger, index));
   const states = [
     ...(minion.spellPower ? [natureTrait(minion.spellPower)] : []),
     ...(minion.dormant ? [stateTrait('dormant', '💤', 'Winterschlaf', `Unangreifbar, wacht in ${minion.dormant} ${minion.dormant === 1 ? 'Zug' : 'Zügen'} auf.`)] : []),
-    ...(minion.building && !minion.silenced ? [stateTrait('building', '🏗️', 'Bau', CARDS_DB[minion.cardId]?.text ?? '')] : []),
+    ...(minion.building && !minion.silenced ? [stateTrait('building', '🏗️', 'Bau', uiCard(minion.cardId)?.text ?? '')] : []),
     ...(minion.frozen ? [stateTrait('frozen', '🧊', 'Erstarrt', 'Setzt den nächsten Angriff aus.')] : []),
     ...(minion.silenced ? [stateTrait('silenced', '😌', 'Beruhigt', 'Hat seine Fähigkeiten verloren.')] : []),
   ];

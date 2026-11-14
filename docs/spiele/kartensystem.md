@@ -28,13 +28,25 @@ Alle Kartenspiele zeichnen ihre Karten über **einen gemeinsamen Baustein**. Kar
 
 Ein Kartenset kann von einem fremden Client kommen. Deshalb gilt `sanitizeCustomCardCatalog` (`cardSpecParser.ts`) an zwei Stellen: beim Lesen der Nachricht (`packages/online/src/protocol.ts`) und in `setup()` der drei Spiele. Durchgelassen werden nur:
 
-- **Kampfkarten:** Name, Kosten 0–20, Angriff 0–99, Leben 1–99, bekannte Schlüsselwörter, Bild, Spruch, Regeltext;
+- **Kampfkarten:** Name, Kosten 0–20, Angriff 0–99, Leben 1–99, bekannte Schlüsselwörter, Bild, Spruch, Regeltext, Haus (`Klasse`). Auslöser (`triggers`), Effekte (`effects`) und Zielwahl gehen nur roh und klein weiter (höchstens 4000 Zeichen je Karte);
 - **Hofkarten:** Name, Kaufpreis 0–99, Basiswert 0–999, Multiplikator 1–99, Bild, Text. Narrenhof nimmt nur bekannte Narren.
 - **Quartettkarten:** Name, Bild und endliche Zahlen (±10¹²) für die Eigenschaften des Satzes.
+- **Eigenes Quartett-Set** (`quartettSet`, `sanitizeQuartettSet`): 2–16 Gruppen A–P mit genau vier Karten A1–A4, 2–6 Eigenschaften, endliche Werte.
 
-Effekte, Kartenart, Zielwahl und unbekannte Felder kommen nie ins Spiel. Höchstens 400 Karten je Verzeichnis werden übernommen. `EffektDatenJSON` bleibt beim Rundlauf nach Anki erhalten, wirkt aber nicht auf die Regeln. Geprüft wird das in `tests/kartenset.test.ts`.
+Höchstens 400 Karten je Verzeichnis werden übernommen. Geprüft wird das in `tests/kartenset.test.ts`.
+
+## Effekte und neue Karten im Drachenspiel (13.11.2026)
+
+- **Eine Quelle für Karten:** Regeln und Effekte lesen Karten nur noch über `cardDefOf(state, id)` (`packages/games/drachenspiel/src/carddefs.ts`). Vorher kamen Werte, Auslöser, Fallen und Aufgaben an vielen Stellen direkt aus `CARDS_DB`. Geänderte Werte wirkten deshalb zwar auf die Kosten, aber nicht auf Auslöser und Beschwörungen. Die Oberfläche nutzt `uiCard(id)` (`ui/cardLookup.ts`), das die Karten der laufenden Partie kennt.
+- **Geprüfte Effekte** (`customcards.ts`): Zauber dürfen ihre Effekte, Tiere ihre Auslöser aus Anki (`EffektDatenJSON`) ändern. Angenommen werden nur die Effektarten des Spiels mit begrenzten Zahlen (Schaden 0–20, Heilen 0–30, Ziehen 1–5, Rüstung 0–20 …), bekannte Ziele, Schlüsselwörter und Familien sowie Karten-ids aus dem Grundspiel. Höchstens 6 Effekte und 4 Auslöser, keine verschachtelte Wahl. Was nicht passt, fällt still weg. Die Kartenart (Tier, Zauber, Bau, Falle) bleibt fest.
+- **Neue Begleiter:** Eine Notiz mit neuer Kennung (z. B. `drachenspiel:igel_ingo`) wird ein einfacher Begleiter mit Werten, Schlüsselwörtern, geprüften Auslösern und Haus aus `Klasse`. Höchstens 60 je Kartenset. Spielbar sind sie im **eigenen Deck** (Deckbau und Deck-Code prüfen sie über `buildableCards`/`deckProblems` mit den Karten der Partie). In Themendecks und gemischten Decks kommen sie nicht vor.
+- Der Bot-Planer (`planner.ts`) schätzt Auslöser weiter aus den Grundkarten. Neue Karten spielt er, bewertet ihre Auslöser aber nur grob.
+
+## Eigene Quartett-Sets (13.11.2026)
+
+Enthält ein Anki-Paket ein Quartett-Set mit anderen Eigenschaften oder Karten als die offiziellen Sätze, gibt die Web-App das **ganze Set** weiter (`catalogOf`, `isOwnQuartettSet` in `activeCardSet.ts`). Es ersetzt dann das gewählte Set: Regeln, Bots und Oberfläche spielen damit (`customCardSet`). Die Oberfläche fragt Karten seitdem immer mit dem Set der Partie ab; vorher zeigte sie auch bei geänderten Werten die Standardwerte. Ein umbenanntes oder umbewertetes offizielles Set zählt weiter als „geänderte Karten“.
 
 ## Offen
 
-- Eigene, neue Karten (nicht nur geänderte vorhandene) sind im Spiel noch nicht spielbar.
 - Wölfe im Schafspelz und Tiefflug haben keine Werte, die Anki ändern könnte; dort wirkt nur die Darstellung.
+- Neue Zauber, Bauten, Fallen und Narren aus Anki gibt es nicht. Sie bräuchten Effekte, die das Spiel nicht kennt.

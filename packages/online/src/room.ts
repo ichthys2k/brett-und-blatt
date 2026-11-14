@@ -821,7 +821,9 @@ export class Room {
       case 'setOption': {
         const module = this.lobbyModule();
         const spec = module?.options.find((o) => o.id === message.id);
-        if (!isHost || this.phase !== 'lobby' || !spec?.choices.some((c) => c.value === message.value)) return deny();
+        // Auswahl oder – bei verborgenen Optionen wie dem eigenen Paket (#218) – ein Wert, der zum Muster passt.
+        const fits = spec && (spec.choices.some((c) => c.value === message.value) || (spec.hidden && resolveOptions(module!, { [spec.id]: message.value })[spec.id] === message.value));
+        if (!isHost || this.phase !== 'lobby' || !fits) return deny();
         this.lobby.options = { ...this.lobby.options, [message.id]: message.value };
         this.applyTeams();
         return this.broadcastRoom();

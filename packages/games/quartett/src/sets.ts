@@ -22,6 +22,8 @@ export interface QuartettCard {
   id: string;
   name: string;
   emoji: string;
+  /** Bild der Karte (#319): Dateiname unter `content/quartett/bilder/<set>/`, zugleich Medienname in Anki. */
+  image?: string;
   values: Record<string, number>;
   /** Quelle für alle Werte der Karte … */
   source?: string;

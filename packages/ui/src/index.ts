@@ -37,6 +37,7 @@ export {
   type GameCardRuntimeBadge,
 } from './cards/GameCard';
 export { setCardPortraits, useCardPortraits } from './cards/portraits';
+export { isPaintedCardBack, PAINTED_CARD_BACK_IDS, paintedCardBackFile, paintedCardBackUrl, type PaintedCardBackId } from './cards/paintedBacks';
 export { RoundFrame, RoundStandings, type RoundFrameProps } from './classroom/RoundFrame';
 export { TRICK_HAND_MIN_STEP, TrickTable, trickHandCardWidth, useTrickDisplay, type TrickTableProps, type TrickTableSlot } from './cards/TrickTable';
 export { CardFan, fanLayout, type CardFanProps, type FanLayout } from './cards/CardFan';

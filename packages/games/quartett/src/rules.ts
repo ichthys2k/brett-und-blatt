@@ -88,7 +88,12 @@ export function setup(seats: number, options: Options, seed: string): QuartettSt
   if (rawCatalog) {
     // Nur Werte, Name und Bild in sicheren Grenzen (#277).
     const cat = sanitizeCustomCardCatalog(rawCatalog, 'quartett');
-    {
+    if (cat?.quartettSet) {
+      // Ein ganz eigenes Set aus Anki (#270): ersetzt das gewählte Set.
+      const own = cat.quartettSet;
+      customCardSet = { id: 'eigen', name: own.name, emoji: own.emoji, license: 'eigenes Set aus Anki', description: 'Eigenes Kartenset aus Anki', note: '', properties: own.properties, groups: own.groups, cards: own.cards };
+      cardCatalogChecksum = cat.checksum || undefined;
+    } else {
       if (cat && Object.keys(cat.quartettCards).length > 0) {
         const cards = baseSet.cards.map((c) => {
           const override = cat.quartettCards[c.id];

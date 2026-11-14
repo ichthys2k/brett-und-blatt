@@ -8,6 +8,7 @@ import { DeckManager } from './DeckBuilder';
 import { CardFace } from './parts';
 import { getCardFullTitle, getCardTraits } from './traits';
 import { championImage } from './champions';
+import { uiCard } from './cardLookup';
 
 /** Deckwahl: eigene Komponente, damit jede Phase ihre eigenen Hooks hat. */
 export function DeckSelection({
@@ -124,7 +125,7 @@ export function MulliganPhase({
         </p>
         <div className="ds-mulligan-row">
           {me.hand.map((card, idx) => {
-            const def = CARDS_DB[card.defId];
+            const def = uiCard(card.defId);
             if (!def) return null;
             const isDiscarded = mulliganDiscard.has(idx);
             const cardTraits = getCardTraits(def);
