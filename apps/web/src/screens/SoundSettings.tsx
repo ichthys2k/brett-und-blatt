@@ -16,6 +16,7 @@ import {
   type TableSurface,
   setLook,
   setLight,
+  MENU_3D_AVAILABLE,
   setMenu3d,
   setRoomScene,
   setTableSurface,
@@ -92,7 +93,7 @@ function LookChoice() {
         {contrastForcesPlain() && <p className="text-sm text-muted">{t('look.contrast')}</p>}
       </fieldset>
 
-      {chosen === 'tavern' && !contrastForcesPlain() && (
+      {MENU_3D_AVAILABLE && chosen === 'tavern' && !contrastForcesPlain() && (
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line bg-surface p-4">
           <input type="checkbox" className="mt-1 accent-accent" checked={menu3d} onChange={(event) => setMenu3d(event.target.checked)} />
           <span>
