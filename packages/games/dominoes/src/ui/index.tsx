@@ -1,10 +1,10 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import { SeatRing, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useState } from 'react';
-import { halfLabel, isDouble, pipsOf, STONES, type DominoDisplay, type DominoMove, type DominoState, type StoneId } from '../rules';
+import { halfLabel, isDouble, pipsOf, stoneIdOf, STONES, type ChainStone, type DominoDisplay, type DominoEnd, type DominoMove, type DominoState, type StoneId } from '../rules';
 import './styles.css';
 
-/** Augenpositionen in einem Feld von 100 × 100. */
+/** Augenpositionen in einem Feld von 100 × 100 (für Werte 0 … 12). */
 const PIPS: Record<number, [number, number][]> = {
   0: [],
   1: [[50, 50]],
@@ -13,6 +13,12 @@ const PIPS: Record<number, [number, number][]> = {
   4: [[28, 28], [72, 28], [28, 72], [72, 72]],
   5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
   6: [[28, 24], [72, 24], [28, 50], [72, 50], [28, 76], [72, 76]],
+  7: [[26, 24], [74, 24], [26, 50], [50, 50], [74, 50], [26, 76], [74, 76]],
+  8: [[26, 20], [74, 20], [26, 40], [74, 40], [26, 60], [74, 60], [26, 80], [74, 80]],
+  9: [[26, 24], [50, 24], [74, 24], [26, 50], [50, 50], [74, 50], [26, 76], [50, 76], [74, 76]],
+  10: [[26, 20], [74, 20], [26, 40], [50, 32], [74, 40], [26, 60], [50, 68], [74, 60], [26, 80], [74, 80]],
+  11: [[24, 20], [76, 20], [24, 40], [50, 30], [76, 40], [50, 50], [24, 60], [50, 70], [76, 60], [24, 80], [76, 80]],
+  12: [[24, 20], [50, 20], [76, 20], [24, 40], [50, 40], [76, 40], [24, 60], [50, 60], [76, 60], [24, 80], [50, 80], [76, 80]],
 };
 
 function Half({ n, x, text, upright }: { n: number; x: number; text?: string; upright?: boolean }) {
@@ -34,10 +40,12 @@ function Half({ n, x, text, upright }: { n: number; x: number; text?: string; up
       </g>
     );
   }
+  const dots = PIPS[n] ?? [];
+  const radius = n >= 10 ? 6.5 : n >= 7 ? 7.5 : 9;
   return (
     <g transform={`translate(${x} 0)`}>
-      {PIPS[n]!.map(([cx, cy], i) => (
-        <circle key={i} cx={cx} cy={cy} r="9" className="dm-pip" />
+      {dots.map(([cx, cy], i) => (
+        <circle key={i} cx={cx} cy={cy} r={radius} className="dm-pip" />
       ))}
     </g>
   );
@@ -61,7 +69,7 @@ export function Stone({
   className?: string;
   label?: string;
 }) {
-  const sId = stone ?? 0;
+  const sId = stone ?? stoneIdOf(left, right);
   const orig = STONES[sId];
   const swapped = orig ? orig[0] !== left || orig[1] !== right : false;
   const leftText = display !== 'pips' ? halfLabel(left, display, sId, swapped ? 1 : 0) : undefined;
@@ -128,38 +136,82 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, table, handO
     else if (options.length > 1) setSelected(selected === stone ? null : stone);
   };
   const choices = activeStone !== null ? endsFor(activeStone) : [];
-  const endButton = (end: 'left' | 'right' | 'up' | 'down') => {
+  const name = (s: SeatId) => seatNames[s] ?? `Platz ${s + 1}`;
+  const teamLabel = (s: SeatId) => {
+    if (!view.teams || view.seats !== 4) return name(s);
+    const partner = (s + 2) % 4;
+    const lo = Math.min(s, partner);
+    const hi = Math.max(s, partner);
+    return `Team ${name(lo)} & ${name(hi)}`;
+  };
+
+  const endButton = (end: DominoEnd, customLabel?: string) => {
     const move = choices.find((m) => m.end === end);
     if (!move) return null;
-    const labels = {
+    const defaultLabels: Record<string, string> = {
       left: 'Links anlegen',
       right: 'Rechts anlegen',
       up: 'Oben anlegen',
       down: 'Unten anlegen',
+      mexican: 'An Mexican Train anlegen',
     };
-    const symbols = {
+    const defaultSymbols: Record<string, string> = {
       left: '◀',
       right: '▶',
       up: '▲',
       down: '▼',
+      mexican: '🚂',
     };
+    const labelText = customLabel ?? defaultLabels[end] ?? 'Anlegen';
+    const symbolText = defaultSymbols[end] ?? '▶';
     const isTargetActive = dragState.isDragging && dragState.targetId === end;
     return (
       <button
         type="button"
         className={`dm-end dm-end-${end}`}
         onClick={() => onMove(move)}
-        aria-label={labels[end]}
+        aria-label={labelText}
         data-drop-target={end}
         data-drop-active={isTargetActive ? 'true' : undefined}
       >
-        {symbols[end]}
+        {symbolText}
       </button>
     );
   };
 
-  const summary = view.lastRound && view.chain.length === 0 ? view.lastRound : null;
-  const name = (s: SeatId) => seatNames[s] ?? `Platz ${s + 1}`;
+  const summary = view.lastRound && (view.variant === 'mexican' ? (view.playerTrains ?? []).every((t) => t.length === 0) && (view.mexicanTrain?.length ?? 0) === 0 : view.chain.length === 0) ? view.lastRound : null;
+
+  const renderTrainRow = (end: DominoEnd, title: string, train: readonly ChainStone[], isOpen: boolean, engineVal: number) => {
+    const currentEndVal = train.length > 0 ? train[train.length - 1]!.right : engineVal;
+    return (
+      <div key={end} className={`dm-train-row ${isOpen ? 'dm-train-open' : ''}`}>
+        <div className="dm-train-head">
+          <span className="dm-train-title">{title}</span>
+          {isOpen && <span className="dm-train-badge" title="Öffentlich spielbar">🪙 Offen</span>}
+          <span className="dm-train-val">Ende: {currentEndVal}</span>
+        </div>
+        <div className="dm-train-stones">
+          {train.length === 0 ? (
+            <span className="dm-train-empty">Start am Bahnhof [{engineVal}|{engineVal}]</span>
+          ) : (
+            train.map((c, i) => (
+              <Stone
+                key={`${end}-${c.stone}-${i}`}
+                stone={c.stone}
+                display={view.display}
+                left={c.left}
+                right={c.right}
+                upright={isDouble(c.stone)}
+                className={view.lastPlayed?.stone === c.stone ? 'dm-last' : ''}
+                label={`${c.left} und ${c.right}`}
+              />
+            ))
+          )}
+          {endButton(end, `An ${title} anlegen`)}
+        </div>
+      </div>
+    );
+  };
 
   const center = (
     <>
@@ -171,7 +223,7 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, table, handO
         {summary && (
           <div className="dm-summary" role="status">
             <strong>
-              Runde {summary.round}: {summary.winner === null ? 'gesperrt, niemand punktet' : `${name(summary.winner)} gewinnt +${summary.points}`}
+              Runde {summary.round}: {summary.winner === null ? 'gesperrt, niemand punktet' : `${teamLabel(summary.winner)} gewinnt +${summary.points}`}
               {summary.blocked && summary.winner !== null ? ' (gesperrt, wenigste Augen)' : ''}
             </strong>
             <div className="dm-reveal">
@@ -185,7 +237,34 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, table, handO
             </div>
           </div>
         )}
-        {handOnly ? (
+        {view.variant === 'mexican' ? (
+          <div className="dm-mexican-board" aria-label="Mexican Train">
+            <div className="dm-hub">
+              <span className="dm-hub-label">🚂 Bahnhof [{view.engineValue ?? 0}|{view.engineValue ?? 0}]</span>
+              {view.chain[0] && (
+                <Stone
+                  stone={view.chain[0].stone}
+                  display={view.display}
+                  left={view.chain[0].left}
+                  right={view.chain[0].right}
+                  label={`Bahnhof ${view.engineValue}`}
+                />
+              )}
+            </div>
+            <div className="dm-trains">
+              {(view.playerTrains ?? []).map((tr, s) =>
+                renderTrainRow(
+                  `seat-${s}`,
+                  `Zug ${name(s)}${s === seat ? ' (deiner)' : ''}`,
+                  tr,
+                  Boolean(view.trainOpen?.[s]),
+                  view.engineValue ?? 0,
+                ),
+              )}
+              {renderTrainRow('mexican', 'Mexican Train (gemeinsam)', view.mexicanTrain ?? [], true, view.engineValue ?? 0)}
+            </div>
+          </div>
+        ) : handOnly ? (
           // Hand-Ansicht fürs Handy (#214): Die Kette zeigt der Tisch-Bildschirm; hier stehen nur die Enden zum Anlegen.
           <div className="dm-ends" aria-label="Enden der Kette">
             {view.chain.length === 0 ? (
@@ -203,49 +282,59 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, table, handO
             )}
           </div>
         ) : (
-        <div className="dm-chain" aria-label="Kette">
-          {endButton('left')}
-          {view.chain.map((c, i) => {
-            const isSpinner = view.spinnerIndex === i;
-            const stoneEl = (
-              <Stone
-                key={`${c.stone}-${i}`}
-                stone={c.stone}
-                display={view.display}
-                left={c.left}
-                right={c.right}
-                upright={isDouble(c.stone)}
-                className={`${view.lastPlayed?.stone === c.stone ? 'dm-last' : ''} ${isSpinner ? 'dm-spinner' : ''}`}
-                label={`${c.left} und ${c.right}`}
-              />
-            );
-            if (!isSpinner || (!view.upBranch?.length && !view.downBranch?.length && !choices.some((m) => m.end === 'up' || m.end === 'down'))) {
-              return stoneEl;
-            }
-            return (
-              <div key={`spinner-col-${i}`} className="dm-spinner-col">
-                {endButton('up')}
-                {view.upBranch?.slice().reverse().map((b, bi) => (
-                  <Stone key={`up-${b.stone}-${bi}`} stone={b.stone} display={view.display} left={b.right} right={b.left} upright className={view.lastPlayed?.stone === b.stone ? 'dm-last' : ''} />
-                ))}
-                {stoneEl}
-                {view.downBranch?.map((b, bi) => (
-                  <Stone key={`down-${b.stone}-${bi}`} stone={b.stone} display={view.display} left={b.left} right={b.right} upright className={view.lastPlayed?.stone === b.stone ? 'dm-last' : ''} />
-                ))}
-                {endButton('down')}
-              </div>
-            );
-          })}
-          {endButton('right')}
-          {view.chain.length === 0 && !summary && <p className="dm-empty">Der erste Stein kommt in die Mitte.</p>}
-        </div>
+          <div className="dm-chain" aria-label="Kette">
+            {endButton('left')}
+            {view.chain.map((c, i) => {
+              const isSpinner = view.spinnerIndex === i;
+              const stoneEl = (
+                <Stone
+                  key={`${c.stone}-${i}`}
+                  stone={c.stone}
+                  display={view.display}
+                  left={c.left}
+                  right={c.right}
+                  upright={isDouble(c.stone)}
+                  className={`${view.lastPlayed?.stone === c.stone ? 'dm-last' : ''} ${isSpinner ? 'dm-spinner' : ''}`}
+                  label={`${c.left} und ${c.right}`}
+                />
+              );
+              if (!isSpinner || (!view.upBranch?.length && !view.downBranch?.length && !choices.some((m) => m.end === 'up' || m.end === 'down'))) {
+                return stoneEl;
+              }
+              return (
+                <div key={`spinner-col-${i}`} className="dm-spinner-col">
+                  {endButton('up')}
+                  {view.upBranch?.slice().reverse().map((b, bi) => (
+                    <Stone key={`up-${b.stone}-${bi}`} stone={b.stone} display={view.display} left={b.right} right={b.left} upright className={view.lastPlayed?.stone === b.stone ? 'dm-last' : ''} />
+                  ))}
+                  {stoneEl}
+                  {view.downBranch?.map((b, bi) => (
+                    <Stone key={`down-${b.stone}-${bi}`} stone={b.stone} display={view.display} left={b.left} right={b.right} upright className={view.lastPlayed?.stone === b.stone ? 'dm-last' : ''} />
+                  ))}
+                  {endButton('down')}
+                </div>
+              );
+            })}
+            {endButton('right')}
+            {view.chain.length === 0 && !summary && <p className="dm-empty">Der erste Stein kommt in die Mitte.</p>}
+          </div>
         )}
       </div>
 
       <div className="dm-controls" aria-live="polite">
         <span className="dm-info">
-          {view.lastPlayed && view.lastPlayed.scored > 0 ? `${name(view.lastPlayed.seat)}: +${view.lastPlayed.scored} Fünferpunkte` : choices.length > 1 ? 'Wähle das Ende' : `Runde ${view.round} · Ziel ${view.target}`}
-          <small>{view.variant === 'block' ? 'Block-Domino' : `Vorrat: ${view.boneyard.length}`}</small>
+          {view.lastPlayed && view.lastPlayed.scored > 0
+            ? `${teamLabel(view.lastPlayed.seat)}: +${view.lastPlayed.scored} Fünferpunkte`
+            : choices.length > 1
+              ? 'Wähle das Ende'
+              : `Runde ${view.round} · Ziel ${view.target}${view.teams ? ' · Teams (2 vs 2)' : ''}`}
+          <small>
+            {view.variant === 'block'
+              ? `Block-Domino (Doppel-${view.setSize ?? 6})`
+              : view.variant === 'mexican'
+                ? `Mexican Train (Doppel-${view.setSize ?? 9}) · Vorrat: ${view.boneyard.length}`
+                : `Vorrat: ${view.boneyard.length} (Doppel-${view.setSize ?? 6})`}
+          </small>
         </span>
         {draw && (
           <button type="button" className="dm-button dm-primary" onClick={() => onMove(draw)}>
@@ -333,5 +422,8 @@ export const gameUi: GameUi<DominoState, DominoMove> = {
   SeatSymbol,
   sounds: { played: 'domino-klack', drew: 'stein-ziehen' },
   seatLabel: (seat) => `Platz ${seat + 1}`,
-  seatDetail: (view, seat) => `${view.scores[seat]} Pkt. · ${view.hands[seat]?.length ?? 0} St.`,
+  seatDetail: (view, seat) => {
+    const teamTag = view.teams && view.seats === 4 ? `Team ${(seat % 2) + 1} · ` : '';
+    return `${teamTag}${view.scores[seat]} Pkt. · ${view.hands[seat]?.length ?? 0} St.`;
+  },
 };

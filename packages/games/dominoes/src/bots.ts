@@ -1,5 +1,5 @@
 import { stateFor, type BotDefinition, type Rng } from '@brett-und-blatt/engine';
-import { applyMove, endSum, isDouble, legalMoves, pipsOf, STONES, type DominoMove, type DominoState, type StoneId } from './rules';
+import { applyMove, endSum, isDouble, legalMoves, mexicanOpenTargets, pipsOf, STONES, type DominoMove, type DominoState, type StoneId } from './rules';
 
 function best<T>(items: T[], score: (item: T) => number, rng: Rng): T {
   let top = items[0] as T;
@@ -20,7 +20,8 @@ function best<T>(items: T[], score: (item: T) => number, rng: Rng): T {
  * - mittel: Fünfer-Punkte zuerst, sonst den schwersten Stein loswerden
  * - schwer: zusätzlich Pasche früh legen, eigene Zahlen offen halten, Zahlen legen, die der Gegner
  *   nicht hat, und beim Fünfer-Domino dem Nächsten möglichst keine Punkte vorlegen (geschätzt aus
- *   mehreren Belegungen der verdeckten Steine)
+ *   mehreren Belegungen der verdeckten Steine). Beim Mexican Train bevorzugt er den eigenen Zug,
+ *   wenn dieser offen (mit Münze) steht, und spielt Pasche bevorzugt dann, wenn er einen Anschlussstein hat.
  */
 export const dominoBot: BotDefinition<DominoState, DominoMove> = {
   id: 'dominoes',
@@ -37,12 +38,22 @@ export const dominoBot: BotDefinition<DominoState, DominoMove> = {
     // Für Probezüge eine vollständige Belegung (applyMove rechnet am Rundenende mit allen Händen).
     const base = stateFor(ctx);
     const fives = view.variant === 'fives';
+    const mexican = view.variant === 'mexican';
     const immediate = (m: Extract<DominoMove, { type: 'play' }>) => {
       if (!fives) return 0;
       const sum = endSum(applyMove(base, ctx.seat, m).state);
       return sum > 0 && sum % 5 === 0 ? sum : 0;
     };
-    if (ctx.level === 'medium') return best(plays, (m) => immediate(m) * 10 + pipsOf(m.stone), ctx.rng);
+    if (ctx.level === 'medium') {
+      return best(
+        plays,
+        (m) => {
+          const ownBonus = mexican && m.end === `seat-${ctx.seat}` && view.trainOpen?.[ctx.seat] ? 15 : 0;
+          return immediate(m) * 10 + pipsOf(m.stone) + ownBonus;
+        },
+        ctx.rng,
+      );
+    }
 
     const next = (ctx.seat + 1) % view.seats;
     const samples = fives ? Array.from({ length: 6 }, () => stateFor(ctx)) : [];
@@ -53,6 +64,16 @@ export const dominoBot: BotDefinition<DominoState, DominoMove> = {
         // Damit ist die Runde (oder das Spiel) gewonnen.
         if (after.round !== view.round || after.over) return 1_000 + immediate(m);
         const rest = hand.filter((s) => s !== m.stone);
+
+        if (mexican) {
+          const targets = mexicanOpenTargets(after, ctx.seat);
+          const openVals = new Set(targets.map((t) => t.value));
+          const keep = rest.filter((s) => STONES[s]!.some((n) => openVals.has(n))).length;
+          const closedOwnTrain = m.end === `seat-${ctx.seat}` && view.trainOpen?.[ctx.seat] ? 20 : 0;
+          const doubleCover = isDouble(m.stone) ? (keep > 0 ? 12 : -4) : 0;
+          return pipsOf(m.stone) * 1.5 + keep * 3 + closedOwnTrain + doubleCover;
+        }
+
         const [l, r] = [after.chain[0]!.left, after.chain[after.chain.length - 1]!.right];
         // Wie viele eigene Steine passen danach noch? Wer seine Zahlen offen hält, muss seltener ziehen.
         const keep = rest.filter((s) => STONES[s]!.some((n) => n === l || n === r)).length;
