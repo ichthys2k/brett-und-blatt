@@ -4,9 +4,10 @@
  * geschickt hätte. Antippen bleibt unverändert möglich. Ohne Spielregeln: Die Ziele kommen aus
  * `legalMoves`. Die Zuordnung (`nearestTarget`, `movesFor`) ist rein und getestet.
  */
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Group } from 'three';
 import { pulse } from '../haptics';
+import { presence } from '../presence';
 
 export interface GrabTarget {
   id: string | number;
@@ -59,6 +60,8 @@ interface GrabOptions<I> {
   /** Waagerechte Auffangfläche: Höhe und Mitte (Standard: knapp über dem Brett, Mitte 0/0). */
   floorY?: number;
   floorCenter?: [number, number];
+  /** Was Mitspieler sehen (#385): `card` = nur eine Kartenrückseite, sonst eine offene Figur. */
+  heldKind?: 'card' | 'piece';
 }
 
 /** Hält die gegriffene Figur und liefert die unsichtbare Fläche, die Bewegung und Loslassen auffängt. */
@@ -82,8 +85,10 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
     if (snap && snap.id !== h.snap?.id) pulse('move');
     setHeld({ id: h.id, x: snap?.x ?? x, z: latest.current.alongX ? z : (snap?.z ?? z), snap });
   };
+  useEffect(() => () => void (presence.held = null), []);
   const release = (drop: boolean) => {
     const h = current.current;
+    presence.held = null;
     if (!h) return;
     current.current = null;
     setHeld(null);
@@ -100,6 +105,7 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
           e.stopPropagation();
           const local = frame.current?.worldToLocal(e.point.clone());
           if (local) track(local.x, wall ? local.y : local.z);
+          presence.held = [e.point.x, e.point.y + 0.02, e.point.z, latest.current.heldKind === 'card' ? 1 : 0];
         }}
         onPointerUp={(e) => {
           e.stopPropagation();

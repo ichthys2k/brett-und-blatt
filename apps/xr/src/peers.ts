@@ -7,7 +7,8 @@ import type { ClientMessage, MemberInfo, RtcSignal } from '@brett-und-blatt/onli
 import { RtcMesh, peerWishes } from '@brett-und-blatt/rtc';
 
 /** [x, y, z, qx, qy, qz, qw] im eigenen Tischsystem (eigener Platz vorn). */
-export type Pose7 = number[];
+import { decodePacket, encodePacket, type Held, type Pose7 as Pose } from './presence';
+export type Pose7 = Pose;
 
 export interface RemotePose {
   head: Pose7;
@@ -17,6 +18,10 @@ export interface RemotePose {
   at: number;
   /** Kam über den Raum (Rückfall, nur Kopf). */
   viaRoom: boolean;
+  /** Gegriffenes Objekt (#385): Ort im Tischsystem des Senders und Art, nie ein Kartenwert. */
+  held?: Held | null;
+  pointLeft?: boolean;
+  pointRight?: boolean;
 }
 
 /** Nach so langer Zeit ohne offenen Kanal gilt der Rückfall über den Raum. */
@@ -35,12 +40,9 @@ export class PeerMesh {
     this.rtc = new RtcMesh(send, you, {
       onAudio,
       onData: (from, text) => {
-        try {
-          const data = JSON.parse(text) as { h?: Pose7; l?: Pose7 | null; r?: Pose7 | null };
-          if (Array.isArray(data.h) && data.h.length === 7) this.poses.set(from, { head: data.h, left: data.l ?? null, right: data.r ?? null, at: Date.now(), viaRoom: false });
-        } catch {
-          // kaputtes Paket überspringen
-        }
+        // Kaputte Pakete werden übersprungen.
+        const packet = decodePacket(text);
+        if (packet) this.poses.set(from, { ...packet, at: Date.now(), viaRoom: false });
       },
     });
   }
@@ -75,8 +77,8 @@ export class PeerMesh {
     });
   }
 
-  broadcast(head: Pose7, left: Pose7 | null, right: Pose7 | null): void {
-    this.rtc.broadcast(JSON.stringify({ h: head, l: left, r: right }));
+  broadcast(head: Pose7, left: Pose7 | null, right: Pose7 | null, held: Held | null = null, point: [boolean, boolean] = [false, false]): void {
+    this.rtc.broadcast(encodePacket({ head, left, right, held, pointLeft: point[0], pointRight: point[1] }));
   }
 
   status(): Record<string, string> {

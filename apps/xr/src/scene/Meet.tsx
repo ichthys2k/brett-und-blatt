@@ -9,6 +9,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useRef } from 'react';
 import { Quaternion, Vector3, type Group, type Mesh } from 'three';
 import type { PeerMesh, Pose7, RemotePose } from '../peers';
+import { presence, type Held } from '../presence';
 import type { SeatInfo } from './Seats';
 import { scaleAboutTable } from './Placement';
 import { TABLE_CENTER } from './Tavern';
@@ -34,7 +35,7 @@ function moved(a: Pose7 | null, b: Pose7 | null): boolean {
 /** Schickt die eigene Pose: über offene Kanäle bis zehnmal je Sekunde, im Rückfall einmal je Sekunde nur den Kopf über den Raum. */
 export function PoseSender({ mesh, xrMembers, sendRoomPose, origin, scale = 1 }: { mesh: PeerMesh; xrMembers: string[]; sendRoomPose: (head: Pose7) => void; origin: [number, number, number]; scale?: number }) {
   const { camera, gl } = useThree();
-  const last = useRef<{ at: number; fallbackAt: number; head: Pose7 | null; left: Pose7 | null; right: Pose7 | null }>({ at: 0, fallbackAt: 0, head: null, left: null, right: null });
+  const last = useRef<{ at: number; fallbackAt: number; head: Pose7 | null; left: Pose7 | null; right: Pose7 | null; held: Held | null; point: string }>({ at: 0, fallbackAt: 0, head: null, left: null, right: null, held: null, point: '' });
   const tmpP = useRef(new Vector3());
   const tmpQ = useRef(new Quaternion());
   useFrame(() => {
@@ -48,6 +49,7 @@ export function PoseSender({ mesh, xrMembers, sendRoomPose, origin, scale = 1 }:
     const head = pose7(tmpP.current, tmpQ.current);
     let left: Pose7 | null = null;
     let right: Pose7 | null = null;
+    const point: [boolean, boolean] = [false, false];
     const session = gl.xr.getSession();
     if (session) {
       // Zeigestrahl der Controller bzw. der Hände; liegt im Raum der Brille, also um den eigenen Standpunkt verschoben.
@@ -59,16 +61,28 @@ export function PoseSender({ mesh, xrMembers, sendRoomPose, origin, scale = 1 }:
         const value = pose7(p, controller.quaternion);
         if (source.handedness === 'left') left = value;
         else right = value;
+        // Zeigestrahl (#385): nur, solange die Griff-Taste gehalten wird.
+        const pointing = Boolean(source.gamepad?.buttons[1]?.pressed);
+        if (source.handedness === 'left') point[0] = pointing;
+        else point[1] = pointing;
       });
     }
-    const changed = moved(head, state.head) || moved(left, state.left) || moved(right, state.right);
+    // Gegriffenes Objekt (#385): nur Ort und Art, im Tischsystem des Senders.
+    let held: Held | null = null;
+    if (presence.held) {
+      const [hx, hy, hz] = scale !== 1 ? scaleAboutTable([presence.held[0], presence.held[1], presence.held[2]], scale) : [presence.held[0], presence.held[1], presence.held[2]];
+      held = [hx!, hy!, hz!, presence.held[3]];
+    }
+    const pointKey = `${point[0]}${point[1]}`;
+    const heldMoved = (held === null) !== (state.held === null) || (held !== null && state.held !== null && (Math.hypot(held[0] - state.held[0], held[1] - state.held[1], held[2] - state.held[2]) > 0.005 || held[3] !== state.held[3]));
+    const changed = moved(head, state.head) || moved(left, state.left) || moved(right, state.right) || heldMoved || pointKey !== state.point;
     if (!changed && now - state.at < HEARTBEAT_MS) return;
-    mesh.broadcast(head, left, right);
+    mesh.broadcast(head, left, right, held, point);
     if (now - state.fallbackAt >= FALLBACK_EVERY_MS && mesh.needsFallback()) {
       sendRoomPose(head);
       state.fallbackAt = now;
     }
-    Object.assign(state, { at: now, head, left, right });
+    Object.assign(state, { at: now, head, left, right, held, point: pointKey });
   });
   return null;
 }
@@ -91,6 +105,10 @@ function Figure({ pose, angle, info }: { pose: () => RemotePose | undefined; ang
   const left = useRef<Mesh>(null);
   const right = useRef<Mesh>(null);
   const target = useRef({ p: new Vector3(), q: new Quaternion(), l: new Vector3(), r: new Vector3() });
+  const heldRef = useRef<Group>(null);
+  const heldBall = useRef<Mesh>(null);
+  const heldCard = useRef<Mesh>(null);
+  const beams = [useRef<Mesh>(null), useRef<Mesh>(null)];
   useFrame((_, delta) => {
     const current = pose();
     if (!current || !head.current) return;
@@ -110,6 +128,29 @@ function Figure({ pose, angle, info }: { pose: () => RemotePose | undefined; ang
       chest.current.position.set(head.current.position.x + forward.x, head.current.position.y - 0.32, head.current.position.z + forward.z);
       chest.current.quaternion.slerp(yaw.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI)), k);
     }
+    // Gehaltenes (#385): Kugel für Figuren, Kartenrückseite für Karten; nie ein Wert.
+    const heldNow = current.held ?? null;
+    if (heldRef.current) {
+      heldRef.current.visible = Boolean(heldNow);
+      if (heldNow) {
+        transform([heldNow[0], heldNow[1], heldNow[2], 0, 0, 0, 1], angle, heldRef.current.position, new Quaternion());
+        if (heldBall.current) heldBall.current.visible = heldNow[3] === 0;
+        if (heldCard.current) heldCard.current.visible = heldNow[3] === 1;
+      }
+    }
+    // Zeigestrahl (#385): dünner Strahl aus der Hand nach vorn.
+    [current.left, current.right].forEach((hand, side) => {
+      const beam = beams[side]!.current;
+      if (!beam) return;
+      const on = Boolean(hand) && Boolean(side === 0 ? current.pointLeft : current.pointRight);
+      beam.visible = on;
+      if (!hand || !on) return;
+      const q = new Quaternion();
+      const p = new Vector3();
+      transform(hand, angle, p, q);
+      beam.position.copy(p).add(new Vector3(0, 0, -0.5).applyQuaternion(q));
+      beam.quaternion.copy(q).multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2));
+    });
     for (const [ref, value, v] of [
       [left, current.left, t.l],
       [right, current.right, t.r],
@@ -142,6 +183,22 @@ function Figure({ pose, angle, info }: { pose: () => RemotePose | undefined; ang
       <group ref={chest}>
         <Sign lines={[`${info?.avatar ?? ''} ${info?.name ?? ''}`.trim(), status]} position={[0, 0, 0]} width={0.3} height={0.11} />
       </group>
+      <group ref={heldRef} visible={false}>
+        <mesh ref={heldBall}>
+          <sphereGeometry args={[0.016, 16, 12]} />
+          <meshStandardMaterial color="#e6b450" emissive="#e6b450" emissiveIntensity={0.3} />
+        </mesh>
+        <mesh ref={heldCard} visible={false} rotation={[-0.55, 0, 0]}>
+          <boxGeometry args={[0.058, 0.002, 0.09]} />
+          <meshStandardMaterial color="#7a2a1e" />
+        </mesh>
+      </group>
+      {beams.map((ref, i) => (
+        <mesh key={`beam${i}`} ref={ref} visible={false}>
+          <cylinderGeometry args={[0.002, 0.002, 1, 6]} />
+          <meshBasicMaterial color="#ffd27a" transparent opacity={0.7} toneMapped={false} />
+        </mesh>
+      ))}
       {[left, right].map((ref, i) => (
         <mesh key={i} ref={ref} visible={false}>
           <sphereGeometry args={[0.035, 16, 12]} />

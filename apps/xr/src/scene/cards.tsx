@@ -263,6 +263,7 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
   // Greifen (#384): Karte aus dem Fächer (oder oberste vom Stapel) nehmen und in die Tischmitte legen.
   const grab = useGrab<string>({
     size: 1.4,
+    heldKind: 'card',
     floorY: y + 0.14,
     floorCenter: [TABLE_CENTER[0], TABLE_CENTER[2]],
     radius: 0.3,
