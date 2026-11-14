@@ -29,7 +29,7 @@
 - **Umwandlung** auf der 8. Reihe, Figur nach Wahl (Option „Umwandlung“: „Immer Dame“ wie im Original; seit 31.10.2026, W-015). Eine umgewandelte Figur zählt beim Schlagen 1 Punkt.
 - **Sieg beanspruchen:** Sind nur noch zwei übrig und liegt jemand 21 Punkte oder mehr vorn, kann diese Person die Partie beenden. Der andere bekommt dann +20.
 - **Unentschieden-Regeln** (dreifache Wiederholung, 50 Züge je aktivem Spieler ohne Schlagen und Bauernzug, nur noch Könige): Die Partie endet, alle Aktiven bekommen +10.
-- **Ende:** Wenn nur noch einer übrig ist. Es gewinnt, wer die meisten Punkte hat; bei Gleichstand gewinnen mehrere.
+- **Ende:** Wenn nur noch einer übrig ist, gewinnt diese Person – egal, wie viele Punkte die Ausgeschiedenen haben (seit 14.11.2026; vorher gewann der Punktbeste, sodass ein früh Mattgesetzter siegen konnte). Endet die Partie durch Sieganspruch oder eine Unentschieden-Regel, gewinnt, wer die meisten Punkte hat; bei Gleichstand gewinnen mehrere. Wer aufgegeben hat oder ohne Zeit ist, gewinnt nie.
 
 ### Teams
 

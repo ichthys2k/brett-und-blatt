@@ -66,4 +66,31 @@ describe('Pinch-to-Zoom unterbinden (#267)', () => {
     target.dispatchEvent(afterCleanup);
     expect(afterCleanup.defaultPrevented).toBe(false);
   });
+
+  it('lässt Zurückzoomen zu, wenn die Seite schon vergrößert ist', () => {
+    const target = new EventTarget();
+    let scale = 1.8;
+    const cleanup = disablePinchZoom(target, () => scale);
+    const pinch = () =>
+      Object.assign(new Event('touchmove', { cancelable: true }), {
+        touches: [{ identifier: 1 }, { identifier: 2 }],
+      });
+
+    const whileZoomed = pinch();
+    target.dispatchEvent(whileZoomed);
+    expect(whileZoomed.defaultPrevented).toBe(false);
+    const gesture = new Event('gesturechange', { cancelable: true });
+    target.dispatchEvent(gesture);
+    expect(gesture.defaultPrevented).toBe(false);
+    const wheel = Object.assign(new Event('wheel', { cancelable: true }), { ctrlKey: true });
+    target.dispatchEvent(wheel);
+    expect(wheel.defaultPrevented).toBe(false);
+
+    // Wieder auf normaler Größe: Die Sperre greift erneut.
+    scale = 1;
+    const atNormal = pinch();
+    target.dispatchEvent(atNormal);
+    expect(atNormal.defaultPrevented).toBe(true);
+    cleanup();
+  });
 });

@@ -10,10 +10,10 @@ export const meta: GameInfo = {
   patterns: ['open'],
   hiddenInformation: false,
   takeBack: true,
-  ruleVersion: 1,
+  ruleVersion: 2,
   howToPlay: [
     'Rot, Blau, Gelb und Grün ziehen im Uhrzeigersinn. Die Figuren ziehen wie beim Schach, auch Rochade und en passant gibt es.',
-    'Jeder gegen jeden: Schlagen bringt Punkte (Bauer 1, Springer 3, Läufer 5, Turm 5, Dame 9), Matt setzen 20. Wer matt ist, scheidet aus; seine Figuren bleiben grau stehen. Am Ende gewinnt, wer die meisten Punkte hat.',
+    'Jeder gegen jeden: Schlagen bringt Punkte (Bauer 1, Springer 3, Läufer 5, Turm 5, Dame 9), Matt setzen 20. Wer matt ist, scheidet aus; seine Figuren bleiben grau stehen. Wer als Letzter übrig bleibt, gewinnt. Endet die Partie vorher (Sieganspruch, Remis), gewinnt, wer die meisten Punkte hat.',
     'Teams: Rot und Gelb spielen gegen Blau und Grün. Das erste Matt entscheidet.',
     'Bauern werden auf der 8. Reihe (jeder gegen jeden) bzw. der 11. Reihe (Teams) umgewandelt.',
     'Sind nur noch zwei übrig und liegt jemand 21 Punkte vorn, kann diese Person den Sieg beanspruchen.',
