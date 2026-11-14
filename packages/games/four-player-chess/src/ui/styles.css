@@ -726,3 +726,17 @@
     animation: none;
   }
 }
+
+/* Gemalte Figuren (#325): das Bild füllt dieselbe Fläche wie das Zeichen (1em = Figurengröße). */
+.fc-piece-img {
+  display: block;
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+.fc-glyph .fc-piece-img {
+  display: inline-block;
+  vertical-align: -0.15em;
+}

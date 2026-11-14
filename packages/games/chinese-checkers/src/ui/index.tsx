@@ -3,7 +3,7 @@
  * ein markiertes Ziel; Sprungketten laufen Loch für Loch ab.
  */
 import type { SeatId } from '@brett-und-blatt/engine';
-import { FitBox, useLatestEvent, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { FitBox, TintFilter, tintFilter, useLatestEvent, usePieceSet, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CELLS,
@@ -14,6 +14,7 @@ import {
   type ChineseCheckersMove,
   type ChineseCheckersState,
 } from '../rules';
+import { marbleImage } from './bilder';
 import './styles.css';
 
 /** Farben je Platz mit Formzeichen, damit sie auch ohne Farbsehen unterscheidbar sind. */
@@ -54,6 +55,7 @@ function armPolygon(arm: number): string {
 }
 
 function Board({ view, legalMoves, onMove, events, viewer, activeSeat, hint, seatNames }: BoardProps<ChineseCheckersState, ChineseCheckersMove>) {
+  const marble = marbleImage(usePieceSet('chinese-checkers'));
   const [selected, setSelected] = useState<number | null>(null);
   const pieceRefs = useRef(new Map<number, SVGGElement>());
   const movers = useMemo(
@@ -143,6 +145,13 @@ function Board({ view, legalMoves, onMove, events, viewer, activeSeat, hint, sea
     <div className="chk-wrap">
       <FitBox ratio={1}>
         <svg className="chk-board" viewBox="-7.8 -7.8 15.6 15.6" role="group" aria-label="Sternbrett">
+          {marble && (
+            <defs>
+              {PLAYERS.map((player) => (
+                <TintFilter key={player.fill} color={player.fill} />
+              ))}
+            </defs>
+          )}
           <g transform={`rotate(${rotation})`}>
             <polygon className="chk-hex" points={Array.from({ length: 6 }, (_, i) => {
               const a = (-60 + 60 * i) * (Math.PI / 180);
@@ -209,7 +218,15 @@ function Board({ view, legalMoves, onMove, events, viewer, activeSeat, hint, sea
                   className={`chk-piece${isSelected ? ' chk-piece-selected' : ''}${movers.has(cell) ? ' chk-piece-movable' : ''}${view.out[owner] ? ' chk-piece-out' : ''}`}
                   onClick={movers.has(cell) ? () => click(cell) : undefined}
                 >
-                  <circle cx={p.x} cy={p.y} r={0.4} fill={style.fill} />
+                  {marble ? (
+                    <>
+                      {/* Unsichtbarer Kreis behält die Klickfläche; das Bild liefert das Aussehen. */}
+                      <circle cx={p.x} cy={p.y} r={0.4} fill="transparent" />
+                      <image href={marble} x={p.x - 0.46} y={p.y - 0.46} width={0.92} height={0.92} filter={tintFilter(style.fill)} pointerEvents="none" />
+                    </>
+                  ) : (
+                    <circle cx={p.x} cy={p.y} r={0.4} fill={style.fill} />
+                  )}
                   <text x={p.x} y={p.y} transform={`rotate(${-rotation} ${p.x} ${p.y})`} className="chk-mark">
                     {style.mark}
                   </text>

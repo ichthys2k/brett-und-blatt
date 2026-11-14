@@ -427,3 +427,95 @@
     animation: none;
   }
 }
+
+/* Gemalte Figuren (#325): Satz über data-pieces-battleship auf <html>, Bilder über --fig-battleship-<name>.
+   Ein eigenes Schiff wird als Streifen auf seine Felder verteilt (senkrecht gedreht), Treffer und Fehlschuss tragen Bilder. */
+[data-pieces-battleship] .bs-seg {
+  position: relative;
+  background: color-mix(in srgb, #74c0fc 35%, var(--color-surface));
+}
+[data-pieces-battleship] .bs-seg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+[data-pieces-battleship] .bs-seg.bs-v::before {
+  transform: rotate(90deg);
+}
+[data-pieces-battleship] .bs-L2::before {
+  background-image: var(--fig-battleship-ship-2);
+  background-size: 200% 100%;
+}
+[data-pieces-battleship] .bs-L2.bs-k0::before {
+  background-position: 0% 50%;
+}
+[data-pieces-battleship] .bs-L2.bs-k1::before {
+  background-position: 100% 50%;
+}
+[data-pieces-battleship] .bs-L3::before {
+  background-image: var(--fig-battleship-ship-3);
+  background-size: 300% 100%;
+}
+[data-pieces-battleship] .bs-L3.bs-k0::before {
+  background-position: 0% 50%;
+}
+[data-pieces-battleship] .bs-L3.bs-k1::before {
+  background-position: 50% 50%;
+}
+[data-pieces-battleship] .bs-L3.bs-k2::before {
+  background-position: 100% 50%;
+}
+[data-pieces-battleship] .bs-L4::before {
+  background-image: var(--fig-battleship-ship-4);
+  background-size: 400% 100%;
+}
+[data-pieces-battleship] .bs-L4.bs-k0::before {
+  background-position: 0% 50%;
+}
+[data-pieces-battleship] .bs-L4.bs-k1::before {
+  background-position: 33% 50%;
+}
+[data-pieces-battleship] .bs-L4.bs-k2::before {
+  background-position: 67% 50%;
+}
+[data-pieces-battleship] .bs-L4.bs-k3::before {
+  background-position: 100% 50%;
+}
+[data-pieces-battleship] .bs-L5::before {
+  background-image: var(--fig-battleship-ship-5);
+  background-size: 500% 100%;
+}
+[data-pieces-battleship] .bs-L5.bs-k0::before {
+  background-position: 0% 50%;
+}
+[data-pieces-battleship] .bs-L5.bs-k1::before {
+  background-position: 25% 50%;
+}
+[data-pieces-battleship] .bs-L5.bs-k2::before {
+  background-position: 50% 50%;
+}
+[data-pieces-battleship] .bs-L5.bs-k3::before {
+  background-position: 75% 50%;
+}
+[data-pieces-battleship] .bs-L5.bs-k4::before {
+  background-position: 100% 50%;
+}
+[data-pieces-battleship] .bs-hit .bs-mark,
+[data-pieces-battleship] .bs-sunk .bs-mark {
+  position: relative;
+  display: block;
+  width: 86%;
+  height: 86%;
+  background: var(--fig-battleship-hit) center / contain no-repeat;
+  color: transparent;
+  font-size: 0;
+}
+[data-pieces-battleship] .bs-water .bs-dot,
+[data-pieces-battleship] .bs-known .bs-dot {
+  width: 70%;
+  height: 70%;
+  border-radius: 0;
+  background: var(--fig-battleship-miss) center / contain no-repeat;
+}
