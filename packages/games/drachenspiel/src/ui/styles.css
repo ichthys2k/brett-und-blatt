@@ -37,13 +37,21 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 900px;
+  max-width: 1240px;
   height: 100%;
-  max-height: 850px;
+  max-height: 1000px;
   margin: 0 auto;
   padding: 8px;
   box-sizing: border-box;
   user-select: none;
+  /* Kartenmaße als Variablen (#420): Handy und kleine Flächen behalten diese Werte, große Flächen
+     setzen sie in den Stufen am Ende der Datei hoch (Regeln „Mitwachsende Karten“). */
+  --ds-card-w: 82px;
+  --ds-card-h: 110px;
+  --ds-minion-w: 78px;
+  --ds-minion-h: 98px;
+  --ds-row-h: 95px;
+  --ds-s: 1;
   font-family: inherit;
   position: relative;
   /* Die Arena misst ihre Höhe selbst (siehe Kompakt-Regeln am Ende). Passt trotzdem nicht alles,
@@ -1016,7 +1024,7 @@
   justify-content: center;
   align-items: center;
   gap: clamp(2px, 1vw, 8px);
-  min-height: 95px;
+  min-height: var(--ds-row-h);
   width: 100%;
 }
 
@@ -1029,9 +1037,9 @@
 /* Minions */
 /* Sieben Tiere passen auf jede Breite: Die Figuren schrumpfen, statt über den Rand zu laufen. */
 .ds-minion {
-  flex: 0 1 78px;
+  flex: 0 1 var(--ds-minion-w);
   min-width: 0;
-  height: 98px;
+  height: var(--ds-minion-h);
   background: var(--color-surface, #ffffff);
   border: 2px solid var(--color-border, #b2bec3);
   border-radius: 12px;
@@ -1086,7 +1094,7 @@
 .ds-minion-icons {
   display: flex;
   gap: 3px;
-  font-size: 0.75rem;
+  font-size: calc(0.75rem * var(--ds-s, 1));
   line-height: 1;
   position: relative;
   z-index: 5;
@@ -1235,7 +1243,7 @@
 
 /* Bis zu zehn Karten passen ohne Scrollen: Wird es eng, überlappen sie, die Kostenecke bleibt frei. */
 .ds-hand > .ds-card + .ds-card {
-  margin-left: min(6px, calc((100cqw - 90px) / var(--ds-hand-gaps) - 82px));
+  margin-left: min(6px, calc((100cqw - var(--ds-card-w) - 8px) / var(--ds-hand-gaps) - var(--ds-card-w)));
 }
 
 .ds-hand > .ds-card:hover,
@@ -1245,8 +1253,8 @@
 }
 
 .ds-card {
-  width: 82px;
-  height: 110px;
+  width: var(--ds-card-w);
+  height: var(--ds-card-h);
   background: var(--color-surface, #ffffff);
   border: 2px solid var(--color-border, #dfe6e9);
   border-radius: 10px;
@@ -2201,7 +2209,7 @@
   padding: 0;
   border: none;
   background: transparent;
-  font-size: 11px;
+  font-size: calc(11px * var(--ds-s, 1));
 }
 
 .bub-card.ds-combat-card-game .bub-combat-header,
@@ -2215,13 +2223,13 @@
 .bub-card.ds-combat-card-game .bub-combat-cost,
 .bub-card.ds-minion-gamecard .bub-combat-cost {
   align-self: flex-start;
-  padding: 1px 4px;
-  font-size: 0.72rem;
+  padding: calc(1px * var(--ds-s, 1)) calc(4px * var(--ds-s, 1));
+  font-size: calc(0.72rem * var(--ds-s, 1));
 }
 
 .bub-card.ds-combat-card-game .bub-combat-cost-gem,
 .bub-card.ds-minion-gamecard .bub-combat-cost-gem {
-  font-size: 0.6rem;
+  font-size: calc(0.6rem * var(--ds-s, 1));
 }
 
 .bub-card.ds-combat-card-game .bub-combat-title-bar,
@@ -2231,7 +2239,7 @@
 
 .bub-card.ds-combat-card-game .bub-combat-name,
 .bub-card.ds-minion-gamecard .bub-combat-name {
-  font-size: 0.66rem;
+  font-size: calc(0.66rem * var(--ds-s, 1));
   line-height: 1.15;
 }
 
@@ -2253,7 +2261,7 @@
 
 .bub-card.ds-combat-card-game .bub-combat-image,
 .bub-card.ds-minion-gamecard .bub-combat-image {
-  font-size: 1.9rem;
+  font-size: calc(1.9rem * var(--ds-s, 1));
 }
 
 .bub-card.ds-combat-card-game .bub-combat-image img,
@@ -2268,16 +2276,48 @@
 
 .bub-card.ds-combat-card-game .bub-combat-stat {
   gap: 1px;
-  padding: 1px 3px;
-  font-size: 0.68rem;
+  padding: calc(1px * var(--ds-s, 1)) calc(3px * var(--ds-s, 1));
+  font-size: calc(0.68rem * var(--ds-s, 1));
 }
 
 .bub-card.ds-combat-card-game .bub-combat-stat-icon {
-  font-size: 0.6rem;
+  font-size: calc(0.6rem * var(--ds-s, 1));
 }
 
 /* Auf dem Feld zeigen die Plaketten von <GameCard> die aktuellen Werte; die Kosten zählen dort nicht. */
 .bub-card.ds-minion-gamecard .bub-combat-footer,
 .bub-card.ds-minion-gamecard .bub-combat-cost {
   display: none;
+}
+
+/* Plaketten der Tiere (aktueller Angriff und Leben) wachsen mit der Karte (#420). */
+.ds-minion .bub-game-card-runtime-badge {
+  font-size: calc(0.72rem * var(--ds-s, 1));
+}
+
+/*
+ * Mitwachsende Karten (#420): Auf großen Flächen (Desktop, Tablet quer) werden Handkarten und Tiere
+ * größer, damit die gemalten Bilder zur Geltung kommen. Eine Container-Regel kann die Arena selbst
+ * nicht ändern, deshalb erben ihre Kinder die neuen Werte. Unter diesen Größen bleibt alles wie am Handy.
+ */
+@container ds-arena (min-width: 660px) and (min-height: 640px) {
+  .ds-arena > * {
+    --ds-card-w: 104px;
+    --ds-card-h: 140px;
+    --ds-minion-w: 96px;
+    --ds-minion-h: 121px;
+    --ds-row-h: 118px;
+    --ds-s: 1.25;
+  }
+}
+
+@container ds-arena (min-width: 1000px) and (min-height: 800px) {
+  .ds-arena > * {
+    --ds-card-w: 132px;
+    --ds-card-h: 177px;
+    --ds-minion-w: 118px;
+    --ds-minion-h: 148px;
+    --ds-row-h: 145px;
+    --ds-s: 1.55;
+  }
 }

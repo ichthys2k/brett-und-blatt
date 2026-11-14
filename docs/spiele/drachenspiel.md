@@ -318,3 +318,7 @@ In schmalen Arenen (Container `ds-arena` bis 420 px, Handy im Hochformat) war di
 ## Großansicht mit Kartenbild (14.11.2026, #417)
 
 Die große Karte (lange drücken, Rechtsklick, Taste `i`) zeigt in Partie, Deckbau und Solo das gemalte Kartenbild statt des Emojis; ein Bild aus einem eigenen Kartenset (Anki-Feld „Bild“) hat Vorrang. Am Handy steht das Bild über dem Text und nimmt höchstens 42 % der Höhe ein, ab 620 px Breite liegt es links neben dem Text. Teil des Vorhabens #416 (gemalte Bilder zur Geltung bringen).
+
+## Mitwachsende Karten (14.11.2026, #420)
+
+Auf großen Flächen werden Handkarten und Tiere größer, damit die Kartenbilder zur Geltung kommen: ab 660 × 640 px Arena-Fläche 104 px breite Handkarten, ab 1000 × 800 px 132 px (Tiere 96 bzw. 118 px), Schrift und Plaketten wachsen mit. Die Maße stehen als Variablen auf `.ds-arena`; Handy und Querformat behalten die bisherigen Werte. Die Arena ist höchstens 1240 × 1000 px groß.
