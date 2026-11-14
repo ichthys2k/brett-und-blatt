@@ -17,16 +17,23 @@ import {
   type TurnipMove,
   type TurnipState,
 } from '../rules';
+import { cardImage, teilImage, type TeilName } from './bilder';
 import './styles.css';
 
 const PLAYERS = [
-  { name: 'Rot', fill: '#DC2626', mark: '●' },
-  { name: 'Blau', fill: '#2563EB', mark: '▲' },
-  { name: 'Grün', fill: '#16A34A', mark: '■' },
-  { name: 'Gelb', fill: '#CA8A04', mark: '★' },
-  { name: 'Lila', fill: '#9333EA', mark: '◆' },
-  { name: 'Türkis', fill: '#0D9488', mark: '✚' },
-] as const;
+  { name: 'Rot', fill: '#DC2626', mark: '●', teil: 'hase-rot' },
+  { name: 'Blau', fill: '#2563EB', mark: '▲', teil: 'hase-blau' },
+  { name: 'Grün', fill: '#16A34A', mark: '■', teil: 'hase-gruen' },
+  { name: 'Gelb', fill: '#CA8A04', mark: '★', teil: 'hase-gelb' },
+  { name: 'Lila', fill: '#9333EA', mark: '◆', teil: 'hase-lila' },
+  { name: 'Türkis', fill: '#0D9488', mark: '✚', teil: 'hase-tuerkis' },
+] as const satisfies readonly { name: string; fill: string; mark: string; teil: TeilName }[];
+
+/** Gemaltes Teil (nur Taverne-Aussehen, CSS in styles.css); die gezeichnete Form dahinter bleibt als Rückfall. */
+function Art({ name, x, y, size }: { name: TeilName; x: number; y: number; size: number }) {
+  const url = teilImage(name);
+  return url ? <image className="rub-art" href={url} x={x} y={y} width={size} height={size} /> : null;
+}
 
 const WIDTH = 600;
 const HEIGHT = 860;
@@ -64,6 +71,7 @@ function CardFace({ card }: { card: Card | null }) {
   if (card === 'mole') {
     return (
       <div className="rub-card rub-card-mole" aria-label="Karte: Maulwurf">
+        {cardImage('mole') && <img className="rub-card-img" src={cardImage('mole')} alt="" draggable={false} />}
         <svg viewBox="-30 -30 60 60" aria-hidden="true">
           <Mole />
         </svg>
@@ -73,6 +81,7 @@ function CardFace({ card }: { card: Card | null }) {
   }
   return (
     <div className="rub-card" aria-label={`Karte: ${card}`}>
+      {cardImage(card as 1 | 2 | 3) && <img className="rub-card-img" src={cardImage(card as 1 | 2 | 3)} alt="" draggable={false} />}
       <span className="rub-card-number">{card}</span>
       <span className="rub-card-paws" aria-hidden="true">{'🐾'.repeat(card)}</span>
     </div>
@@ -83,12 +92,15 @@ function CardFace({ card }: { card: Card | null }) {
 function Mole() {
   return (
     <g>
+      <Art name="maulwurf" x={-32} y={-34} size={64} />
+      <g className="rub-shape">
       <ellipse cx="0" cy="8" rx="20" ry="16" fill="#4b3b33" />
       <circle cx="0" cy="-6" r="14" fill="#5b4a40" />
       <circle cx="-5" cy="-9" r="2.2" fill="#111" />
       <circle cx="5" cy="-9" r="2.2" fill="#111" />
       <ellipse cx="0" cy="-1" rx="5" ry="3.6" fill="#f9a8d4" />
       <path d="M-14 14 q-6 4 -10 0 M14 14 q6 4 10 0" stroke="#f9a8d4" strokeWidth="3" fill="none" strokeLinecap="round" />
+      </g>
     </g>
   );
 }
@@ -97,6 +109,11 @@ function Hare({ seat }: { seat: SeatId }) {
   const style = PLAYERS[seat % PLAYERS.length]!;
   return (
     <g>
+      <Art name={style.teil} x={-36} y={-48} size={72} />
+      <text y="30" className="rub-hare-mark rub-art-mark" fill={style.fill}>
+        {style.mark}
+      </text>
+      <g className="rub-shape">
       <ellipse cx="-7" cy="-26" rx="5" ry="13" fill="#f5f5f4" stroke={style.fill} strokeWidth="3" />
       <ellipse cx="7" cy="-26" rx="5" ry="13" fill="#f5f5f4" stroke={style.fill} strokeWidth="3" />
       <circle r="17" fill="#f5f5f4" stroke={style.fill} strokeWidth="5" />
@@ -106,6 +123,7 @@ function Hare({ seat }: { seat: SeatId }) {
       <text y="14" className="rub-hare-mark" fill={style.fill}>
         {style.mark}
       </text>
+      </g>
     </g>
   );
 }
@@ -172,9 +190,12 @@ function Board({ view, legalMoves, onMove, events, activeSeat, hint, seatNames }
             <text className="rub-label" x={MEADOW_POS.x} y={MEADOW_POS.y + 36}>Wiese</text>
             {/* Riesenrübe */}
             <g transform={`translate(${TURNIP_POS.x} ${TURNIP_POS.y})`} className="rub-turnip">
+              <Art name="ruebe" x={-70} y={-96} size={140} />
+              <g className="rub-shape">
               <path d="M-14 -40 q-18 -26 -6 -38 q8 14 10 30 q4 -22 16 -30 q8 16 -6 38 z" fill="#16a34a" />
               <path d="M-48 -18 q48 -40 96 0 q-8 44 -48 76 q-40 -32 -48 -76 z" fill="#f97316" stroke="#c2410c" strokeWidth="3" />
               <path d="M-20 0 h16 M-10 18 h14 M2 34 h10" stroke="#c2410c" strokeWidth="3" strokeLinecap="round" />
+              </g>
             </g>
             {Array.from({ length: TRACK_LENGTH }, (_, i) => i + 1).map((field) => {
               const p = fieldPos(field);
@@ -184,8 +205,11 @@ function Board({ view, legalMoves, onMove, events, activeSeat, hint, seatNames }
                 <g key={field}>
                   {isFence && (
                     <g className="rub-fence" transform={`translate(${p.x + (fieldPos(field).x < WIDTH / 2 ? -44 : 44)} ${p.y - 28})`} aria-label="Zaunpfahl">
-                      <rect x="-5" y="-6" width="10" height="38" rx="2" />
-                      <path d="M-5 -6 l5 -8 l5 8 z" />
+                      <Art name="zaunpfahl" x={-28} y={-24} size={56} />
+                      <g className="rub-shape">
+                        <rect x="-5" y="-6" width="10" height="38" rx="2" />
+                        <path d="M-5 -6 l5 -8 l5 8 z" />
+                      </g>
                     </g>
                   )}
                   <circle
@@ -196,7 +220,10 @@ function Board({ view, legalMoves, onMove, events, activeSeat, hint, seatNames }
                   />
                   {field === hill && (
                     <g className="rub-mound" aria-label="Erdhügel: hier taucht der Maulwurf als Nächstes auf">
-                      <path d={`M${p.x - 36} ${p.y + 30} q36 -52 72 0 z`} />
+                      <Art name="erdhuegel" x={p.x - 40} y={p.y - 34} size={80} />
+                      <g className="rub-shape">
+                        <path d={`M${p.x - 36} ${p.y + 30} q36 -52 72 0 z`} />
+                      </g>
                     </g>
                   )}
                   {field === nextHill && (

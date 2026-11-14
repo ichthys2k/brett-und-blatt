@@ -11,6 +11,7 @@ import {
   type MarketStallsMove,
   type MarketStallsState,
 } from '../rules';
+import { standImage, wareImage } from './bilder';
 import './styles.css';
 
 const WARE_NAMES = ['Brot', 'Käse', 'Äpfel', 'Fisch'];
@@ -25,11 +26,13 @@ function cardLabel(card: number): string {
 }
 
 function WareCard({ card }: { card: number }) {
+  const image = wareImage(wareOf(card));
   return (
     <div className={`mst-card mst-w-${wareOf(card)}`} aria-label={cardLabel(card)}>
       <span className="mst-card-number">{card}</span>
       <span className="mst-card-icon" aria-hidden="true">
-        {WARE_ICONS[wareOf(card)]}
+        {image && <img className="mst-ware-img" src={image} alt="" draggable={false} />}
+        <span className="mst-ware-emoji">{WARE_ICONS[wareOf(card)]}</span>
       </span>
       <span className="mst-card-stars" aria-hidden="true">
         {'★'.repeat(starsOf(card))}
@@ -124,6 +127,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint, table }: Boa
               className={`mst-stand ${target ? 'mst-stand-target' : ''} ${takes > 0 ? 'mst-stand-take' : ''} ${hintStand === index ? 'mst-stand-hint' : ''}`}
               aria-label={`Stand ${index + 1}: ${stand.length === 0 ? 'leer' : stand.map(cardLabel).join('; ')}${takes > 0 ? `. Du nimmst ${takes} Karten` : target ? '. Hier anlegen' : ''}`}
             >
+              {standImage(index) && <img className="mst-stand-art" src={standImage(index)} alt="" aria-hidden="true" draggable={false} />}
               {Array.from({ length: STAND_CAPACITY }, (_, slot) => {
                 const card = stand[slot];
                 return card !== undefined ? (
