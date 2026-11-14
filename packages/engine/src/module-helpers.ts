@@ -63,3 +63,12 @@ export function replay<S, M>(
   }
   return state;
 }
+
+/**
+ * Zugtexte (#335) zu einer Liste erlaubter Züge – null, wenn das Spiel keine beschreibt.
+ * Die Texte entstehen nur aus der Sicht des ziehenden Platzes.
+ */
+export function describeMoves<V, M>(module: { describeMove?(view: V, move: M): string }, view: V, moves: readonly M[]): string[] | null {
+  if (!module.describeMove) return null;
+  return moves.map((move) => module.describeMove!(view, move));
+}

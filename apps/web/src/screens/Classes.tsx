@@ -1,4 +1,4 @@
-import { parseClassCode, CLASS_CODE_LENGTH, type CardSection, type ClassView } from '@brett-und-blatt/online';
+import { parseClassCode, CLASS_CODE_LENGTH, CARD_SECTIONS, classStamps, type CardSection, type ClassView } from '@brett-und-blatt/online';
 import { PlayerCrest } from '@brett-und-blatt/ui';
 import { parseCrest } from '@brett-und-blatt/engine';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -6,7 +6,7 @@ import { ClassPacks, DueLead, DueMember, LearningLead, LearningMember, LearningN
 import { Button } from '../components/controls';
 import { EmojiKeypad, QrCode } from '../components/OnlineParts';
 import { TavernPage } from '../components/TavernPage';
-import { buildClassCard, classAct, createClassOnServer, forgetClass, hiddenSections, loadClasses, rememberClass, setSectionHidden } from '../lib/classes';
+import { buildClassCard, classAct, createClassOnServer, forgetClass, hiddenSections, loadClasses, markCardSent, openClassRoom, rememberClass, setSectionHidden } from '../lib/classes';
 import { createClassPasses, loadChildPasses, printChildCards, resetChildPin } from '../lib/classPasses';
 import { parseNames } from '../lib/classPassesCore';
 import { findGame } from '../lib/registry';
@@ -16,6 +16,22 @@ import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 
 const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
+
+const SECTION_LABELS: Record<CardSection, string> = {
+  stamps: 'Stempel (Stempelwand)',
+  trophies: 'Pokale',
+  favorites: 'Lieblingsspiele',
+  album: 'Album-Fortschritt',
+  botRating: 'Bot-Wertung',
+};
+
+const MEMBER_SECTION_LABELS: Record<CardSection, string> = {
+  stamps: 'Stempel',
+  trophies: 'Pokale',
+  favorites: 'Lieblingsspiele',
+  album: 'Album-Fortschritt',
+  botRating: 'Bot-Wertung',
+};
 
 /** Klassen (#150): eigene Klassen, neue Klasse anlegen, mit Emoji-Code beitreten. */
 export function Classes() {
@@ -58,6 +74,19 @@ export function Classes() {
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {!storage.loadPlayerCode() && (
+        <section className="space-y-1 rounded-xl border border-line bg-surface p-3 text-sm">
+          <p className="font-medium">💡 Tipp: Spielercode anlegen</p>
+          <p className="text-muted">
+            Dein Ausweis ist gerade nur auf diesem Gerät gespeichert. Lege auf deinem{' '}
+            <button type="button" className="underline font-medium" onClick={() => navigate(paths.pass)}>
+              Spielerausweis
+            </button>{' '}
+            einen Spielercode an, damit deine Klassenmitgliedschaft nicht verloren geht, wenn du das Gerät wechselst oder Browser-Daten löschst.
+          </p>
         </section>
       )}
 
@@ -131,7 +160,15 @@ export function ClassPage({ code }: { code: string }) {
   const [names, setNames] = useState('');
   const [progress, setProgress] = useState<string | null>(null);
   const [children, setChildren] = useState(() => loadChildPasses().filter((c) => c.classCode === code));
+  const [bigQr, setBigQr] = useState(false);
   const alive = useRef(true);
+
+  useEffect(() => {
+    // #150: Klassencode nach dem Einlesen aus der Adresszeile nehmen
+    if (window.location.hash.startsWith('#/klasse/')) {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#/klassen`);
+    }
+  }, []);
 
   const apply = useCallback(
     async (action: string, extra: Record<string, unknown> = {}) => {
@@ -148,6 +185,7 @@ export function ClassPage({ code }: { code: string }) {
           const key = JSON.stringify([card, reply.view.sections]);
           if (action === 'view' && key !== sent.current) {
             sent.current = key;
+            markCardSent(code, card);
             void classAct(code, 'card', { card }).then((r) => r.ok && alive.current && setView(r.view));
           }
         }
@@ -198,6 +236,18 @@ export function ClassPage({ code }: { code: string }) {
               <p>
                 Willst du der Klasse <strong>{view.name}</strong> beitreten? Die anderen sehen dann deinen Namen, dein Bild und dein Wappen.
               </p>
+              {!storage.loadPlayerCode() && (
+                <div className="space-y-1 rounded-xl border border-line bg-surface p-3 text-sm">
+                  <p className="font-medium">💡 Tipp: Spielercode anlegen</p>
+                  <p className="text-muted">
+                    Dein Ausweis ist gerade nur auf diesem Gerät gespeichert. Lege auf deinem{' '}
+                    <button type="button" className="underline font-medium" onClick={() => navigate(paths.pass)}>
+                      Spielerausweis
+                    </button>{' '}
+                    einen Spielercode an, damit deine Klassenmitgliedschaft nicht verloren geht, wenn du das Gerät wechselst oder Browser-Daten löschst.
+                  </p>
+                </div>
+              )}
               {view.learning && <LearningNotice />}
               <Button variant="primary" className="w-full" onClick={() => void apply('join')}>
                 Beitreten{view.approval ? ' (die Leitung muss zustimmen)' : ''}
@@ -211,6 +261,47 @@ export function ClassPage({ code }: { code: string }) {
 
       {view?.me && (
         <>
+          <section className="space-y-2" aria-labelledby="class-rooms">
+            <h2 id="class-rooms" className="text-xl">
+              Offene Räume der Klasse
+            </h2>
+            {view.rooms.length === 0 ? (
+              <p className="text-sm text-muted">Gerade ist kein Raum für die Klasse offen.</p>
+            ) : (
+              <ul className="space-y-2">
+                {view.rooms.map((room) => (
+                  <li key={room.code} className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3">
+                    <span aria-hidden="true">{room.avatar}</span>
+                    <span className="min-w-0 flex-1 text-sm">
+                      Raum von <strong>{room.name}</strong>
+                    </span>
+                    <Button variant="primary" onClick={() => navigate(paths.room(room.code))}>
+                      Beitreten
+                    </Button>
+                    {(room.mine || view.lead) && (
+                      <Button variant="ghost" aria-label={`Raum von ${room.name} aus der Liste nehmen`} title="Aus der Liste nehmen" onClick={() => void apply('closeRoom', { room: room.code })}>
+                        ✕
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Button
+              onClick={() =>
+                void openClassRoom(code).then((result) => {
+                  if (!alive.current) return;
+                  if ('error' in result) return setMessage(result.error);
+                  if (result.warning) setMessage(result.warning);
+                  navigate(paths.room(result.room));
+                })
+              }
+            >
+              Raum für die Klasse öffnen
+            </Button>
+            <p className="text-xs text-muted">Der Raum ist nicht öffentlich: Nur Mitglieder dieser Klasse sehen ihn hier. Er bleibt sechs Stunden in der Liste.</p>
+          </section>
+
           <section className="space-y-2" aria-labelledby="class-members">
             <h2 id="class-members" className="text-xl">
               Mitglieder ({view.members.length})
@@ -264,6 +355,22 @@ export function ClassPage({ code }: { code: string }) {
                       <p className="text-sm">🏆 {member.card.trophies.map((t) => `${findGame(t.gameId)?.name ?? t.gameId} ${t.count}`).join(' · ')}</p>
                     )}
                     {member.card.favorites && member.card.favorites.length > 0 && <p className="text-sm">⭐ {member.card.favorites.map((id) => findGame(id)?.name ?? id).join(' · ')}</p>}
+                    {member.card.album && member.card.album.length > 0 && (
+                      <p className="text-sm">📖 Album: {member.card.album.map((a) => `${findGame(a.gameId)?.name ?? a.gameId} (${a.count} ${a.count === 1 ? 'Fund' : 'Funde'})`).join(' · ')}</p>
+                    )}
+                    {member.card.botRating && member.card.botRating.length > 0 && (
+                      <div className="space-y-0.5 text-sm">
+                        <p className="font-medium">🤖 Bot-Wertung:</p>
+                        <ul className="list-disc pl-5 text-xs text-muted space-y-0.5">
+                          {member.card.botRating.map((b) => (
+                            <li key={b.gameId}>
+                              <span className="text-foreground">{findGame(b.gameId)?.name ?? b.gameId}</span>:{' '}
+                              {b.rating ? `${b.rating} Elo` : 'Noch keine Wertung'} ({b.games} {b.games === 1 ? 'Partie' : 'Partien'}{typeof b.wins === 'number' ? `, ${b.wins} Siege` : ''})
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </>
                 )}
                 <Button variant="ghost" onClick={() => setSelected(null)}>Schließen</Button>
@@ -274,27 +381,134 @@ export function ClassPage({ code }: { code: string }) {
           {view.sections.stamps && (() => {
             const games = [...new Set(view.members.flatMap((m) => m.card?.stamps?.map((s) => s.gameId) ?? []))];
             if (games.length === 0) return null;
+            const shared = classStamps(view.members.map((m) => m.card));
             return (
               <section className="space-y-2" aria-labelledby="class-wall">
                 <h2 id="class-wall" className="text-xl">Stempelwand</h2>
+                {shared.length > 0 && (
+                  <div className="space-y-1 rounded-xl border border-accent/40 bg-accent/10 p-3">
+                    <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+                      <span>🎖️</span>
+                      <span>Klassen-Stempel ({shared.length})</span>
+                    </h3>
+                    <p className="text-xs text-muted">Von allen aktuellen Mitgliedern der Klasse schon gespielt:</p>
+                    <ul className="flex flex-wrap gap-1.5 pt-1">
+                      {shared.map((gameId) => (
+                        <li key={gameId} className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-medium shadow-sm">
+                          <span>🌟</span>
+                          <span>{findGame(gameId)?.name ?? gameId}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <ul className="space-y-1">
-                  {games.map((gameId) => (
-                    <li key={gameId} className="flex flex-wrap items-center gap-2 rounded-lg bg-surface p-2 text-sm">
-                      <span className="min-w-32 font-medium">{findGame(gameId)?.name ?? gameId}</span>
-                      {view.members.flatMap((m) => {
-                        const entry = m.card?.stamps?.find((s) => s.gameId === gameId);
-                        return entry ? [<span key={m.id} className="rounded-full bg-surface-2 px-2 py-0.5" title={`${m.name}: ${entry.kinds.map((k) => STAMP_LABEL[k as StampKind]).join(', ')}`}>{m.avatar} {entry.kinds.length}</span>] : [];
-                      })}
-                    </li>
-                  ))}
+                  {games.map((gameId) => {
+                    const isClassShared = shared.includes(gameId);
+                    return (
+                      <li key={gameId} className="flex flex-wrap items-center gap-2 rounded-lg bg-surface p-2 text-sm">
+                        <span className="flex min-w-32 items-center gap-1.5 font-medium">
+                          <span>{findGame(gameId)?.name ?? gameId}</span>
+                          {isClassShared && <span title="Von allen aktuellen Mitgliedern gespielt!" aria-label="Von allen gespielt">🎖️</span>}
+                        </span>
+                        {view.members.flatMap((m) => {
+                          const entry = m.card?.stamps?.find((s) => s.gameId === gameId);
+                          return entry ? [<span key={m.id} className="rounded-full bg-surface-2 px-2 py-0.5" title={`${m.name}: ${entry.kinds.map((k) => STAMP_LABEL[k as StampKind]).join(', ')}`}>{m.avatar} {entry.kinds.length}</span>] : [];
+                        })}
+                      </li>
+                    );
+                  })}
                 </ul>
+              </section>
+            );
+          })()}
+
+          {view.leaderboard && (() => {
+            const gamesWithStats = [...new Set(view.members.flatMap((m) => [
+              ...(m.card?.botRating?.map((b) => b.gameId) ?? []),
+              ...(m.card?.trophies?.map((t) => t.gameId) ?? []),
+            ]))].sort((a, b) => (findGame(a)?.name ?? a).localeCompare(findGame(b)?.name ?? b));
+
+            if (gamesWithStats.length === 0) return null;
+
+            return (
+              <section className="space-y-3" aria-labelledby="class-leaderboard">
+                <div className="flex items-center justify-between">
+                  <h2 id="class-leaderboard" className="flex items-center gap-2 text-xl font-semibold">
+                    <span>🏆</span>
+                    <span>Rangliste</span>
+                  </h2>
+                  <span className="text-xs text-muted">Bot-Wertung &amp; Pokale</span>
+                </div>
+                <div className="space-y-3">
+                  {gamesWithStats.map((gameId) => {
+                    const ranked = view.members
+                      .flatMap((m) => {
+                        const ratingEntry = m.card?.botRating?.find((b) => b.gameId === gameId);
+                        const trophyEntry = m.card?.trophies?.find((t) => t.gameId === gameId);
+                        if (!ratingEntry && !trophyEntry) return [];
+                        return [{
+                          member: m,
+                          rating: ratingEntry?.rating ?? null,
+                          games: ratingEntry?.games ?? 0,
+                          wins: ratingEntry?.wins ?? 0,
+                          trophies: trophyEntry?.count ?? 0,
+                        }];
+                      })
+                      .sort((a, b) => {
+                        if (a.rating !== null && b.rating !== null) return b.rating - a.rating;
+                        if (a.rating !== null) return -1;
+                        if (b.rating !== null) return 1;
+                        if (a.trophies !== b.trophies) return b.trophies - a.trophies;
+                        if (a.wins !== b.wins) return b.wins - a.wins;
+                        return b.games - a.games;
+                      });
+
+                    if (ranked.length === 0) return null;
+
+                    return (
+                      <div key={gameId} className="space-y-2 rounded-xl border border-line bg-surface p-3">
+                        <h3 className="flex items-center justify-between text-sm font-medium text-foreground">
+                          <span>{findGame(gameId)?.name ?? gameId}</span>
+                          <span className="text-xs text-muted">{ranked.length} {ranked.length === 1 ? 'Teilnehmer' : 'Teilnehmer'}</span>
+                        </h3>
+                        <ol className="space-y-1.5">
+                          {ranked.map((entry, idx) => {
+                            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+                            return (
+                              <li key={entry.member.id} className="flex items-center justify-between gap-2 rounded-lg bg-surface-2 px-2.5 py-1.5 text-xs">
+                                <div className="flex min-w-0 items-center gap-2">
+                                  <span className="w-5 text-center font-bold text-muted">{medal}</span>
+                                  <span className="text-base" aria-hidden="true">{entry.member.avatar}</span>
+                                  <span className="truncate font-medium">{entry.member.name}</span>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-2.5 text-muted">
+                                  {entry.rating !== null ? (
+                                    <span className="font-semibold text-foreground">{entry.rating} Elo</span>
+                                  ) : entry.games > 0 ? (
+                                    <span>{entry.games} {entry.games === 1 ? 'Partie' : 'Partien'}</span>
+                                  ) : null}
+                                  {entry.trophies > 0 && (
+                                    <span title={`${entry.trophies} Pokale`} className="font-medium text-foreground">
+                                      🏆 {entry.trophies}
+                                    </span>
+                                  )}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      </div>
+                    );
+                  })}
+                </div>
               </section>
             );
           })()}
 
           <fieldset className="space-y-1 rounded-xl border border-line bg-surface p-3 text-sm">
             <legend className="px-1">Das zeige ich den anderen</legend>
-            {(['stamps', 'trophies', 'favorites'] as const).map((section) => (
+            {CARD_SECTIONS.map((section) => (
               <label key={section} className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -308,7 +522,7 @@ export function ClassPage({ code }: { code: string }) {
                     void apply('view');
                   }}
                 />
-                {{ stamps: 'Stempel', trophies: 'Pokale', favorites: 'Lieblingsspiele' }[section]}
+                {MEMBER_SECTION_LABELS[section]}
                 {!view.sections[section] && <span className="text-xs text-muted">(von der Leitung ausgeschaltet)</span>}
               </label>
             ))}
@@ -345,7 +559,34 @@ export function ClassPage({ code }: { code: string }) {
               </h2>
               <p className="text-sm text-muted">Zeig den QR-Code an der Tafel oder schick den Link. Der Code: <span className="text-xl">{code}</span></p>
               <QrCode text={link} label={`QR-Code für die Klasse ${view.name}`} />
-              <Button onClick={() => void navigator.clipboard?.writeText(link).then(() => setMessage('Link kopiert.'))}>Link kopieren</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => void navigator.clipboard?.writeText(link).then(() => setMessage('Link kopiert.'))}>Link kopieren</Button>
+                <Button onClick={() => setBigQr(true)}>An der Tafel groß anzeigen</Button>
+              </div>
+              {bigQr && (
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Klassencode für die Tafel"
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                  onClick={() => setBigQr(false)}
+                >
+                  <div
+                    className="max-h-[90vh] w-full max-w-lg space-y-4 overflow-y-auto rounded-3xl border border-line bg-surface p-6 text-center text-text shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <h2 className="text-2xl sm:text-3xl font-bold">{view.name}</h2>
+                    <p className="text-sm text-muted">Mit der Kamera scannen oder auf brett-und-blatt.de/klassen eingeben:</p>
+                    <div className="text-4xl sm:text-5xl font-mono tracking-widest py-2 select-all">{code}</div>
+                    <div className="mx-auto max-w-xs sm:max-w-sm rounded-2xl bg-white p-4 shadow-inner">
+                      <QrCode text={link} label={`QR-Code für die Klasse ${view.name}`} />
+                    </div>
+                    <Button variant="primary" className="w-full" onClick={() => setBigQr(false)}>
+                      Schließen
+                    </Button>
+                  </div>
+                </div>
+              )}
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" className="h-4 w-4 accent-accent" checked={view.open} onChange={(e) => void apply('configure', { open: e.target.checked })} />
                 Beitritt ist offen
@@ -354,12 +595,16 @@ export function ClassPage({ code }: { code: string }) {
                 <input type="checkbox" className="h-4 w-4 accent-accent" checked={view.approval} onChange={(e) => void apply('configure', { approval: e.target.checked })} />
                 Beitritte bestätigen
               </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" className="h-4 w-4 accent-accent" checked={view.leaderboard} onChange={(e) => void apply('configure', { leaderboard: e.target.checked })} />
+                Rangliste anzeigen (Bot-Wertung, Pokale)
+              </label>
               <fieldset className="space-y-1 text-sm">
                 <legend className="mb-1">Das dürfen die Klassenkarten zeigen</legend>
-                {(['stamps', 'trophies', 'favorites'] as const).map((section) => (
+                {CARD_SECTIONS.map((section) => (
                   <label key={section} className="flex items-center gap-2">
                     <input type="checkbox" className="h-4 w-4 accent-accent" checked={view.sections[section]} onChange={(e) => void apply('configure', { sections: { [section]: e.target.checked } })} />
-                    {{ stamps: 'Stempel (Stempelwand)', trophies: 'Pokale', favorites: 'Lieblingsspiele' }[section]}
+                    {SECTION_LABELS[section]}
                   </label>
                 ))}
               </fieldset>

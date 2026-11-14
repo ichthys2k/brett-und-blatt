@@ -2,6 +2,7 @@ import { deckStyleOption, type GameModule } from '@brett-und-blatt/engine';
 import { speedBot } from './bots';
 import { meta } from './meta';
 import { GOALS, applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type SpeedMove, type SpeedState, type SpeedView } from './rules';
+import { describeMove } from './describe';
 
 export type { SpeedMove, SpeedState, SpeedView } from './rules';
 
@@ -33,6 +34,7 @@ export const gameModule: GameModule<SpeedState, SpeedMove, SpeedView> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [speedBot],

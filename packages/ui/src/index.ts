@@ -5,10 +5,39 @@ export { GridBoard, type GridBoardProps } from './GridBoard';
 export { ClockRing, PlayerChip, formatClock, type PlayerChipProps } from './PlayerChip';
 export { NetBoard, type NetBoardProps } from './NetBoard';
 export { useElementSize } from './useElementSize';
-export { SeatRing, seatRingFits, seatRingPosition, type SeatRingProps } from './SeatRing';
+export { SEAT_RING_POKER_MIN_WIDTH, SEAT_RING_WIDE_MAX_SEATS, SeatRing, seatRingFits, seatRingPosition, type SeatRingFitOptions, type SeatRingProps } from './SeatRing';
 export { useCallDeadline } from './useCallDeadline';
 export { cardSuitColor, PlayingCard, SuitShape, type DeckStyle, type PlayingCardProps } from './cards/PlayingCard';
+export {
+  CardBack,
+  DEFAULT_CREST_SPEC,
+  type CardBackId,
+  type CardBackProps,
+  type CardSize,
+  type PlayerCrestData,
+} from './cards/CardBack';
+export {
+  resolveSharedCardBack,
+  type SharedCardBackOptions,
+} from './cards/sharedCardBack';
+export {
+  CardCosmeticsProvider,
+  DEFAULT_CARD_COSMETICS,
+  getNoteField,
+  useCardCosmetics,
+  useCardOverride,
+  type CardCosmetics,
+  type CardCosmeticsProviderProps,
+} from './cards/CardCosmeticsContext';
+export {
+  GameCard,
+  type GameCardAnkiSide,
+  type GameCardBadge,
+  type GameCardProps,
+  type GameCardRuntimeBadge,
+} from './cards/GameCard';
 export { setCardPortraits, useCardPortraits } from './cards/portraits';
+export { isPaintedCardBack, PAINTED_CARD_BACK_IDS, paintedCardBackFile, paintedCardBackUrl, type PaintedCardBackId } from './cards/paintedBacks';
 export { RoundFrame, RoundStandings, type RoundFrameProps } from './classroom/RoundFrame';
 export { TRICK_HAND_MIN_STEP, TrickTable, trickHandCardWidth, useTrickDisplay, type TrickTableProps, type TrickTableSlot } from './cards/TrickTable';
 export { CardFan, fanLayout, type CardFanProps, type FanLayout } from './cards/CardFan';

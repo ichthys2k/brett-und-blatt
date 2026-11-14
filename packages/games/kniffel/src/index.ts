@@ -2,6 +2,7 @@ import { generalBots, type GameModule } from '@brett-und-blatt/engine';
 import { kniffelBot } from './bots';
 import { meta } from './meta';
 import { applyMove, calculateScore, currentPlayers, evaluate, isLegal, legalMoves, playerView, result, sampleHidden, setup, type KniffelMove, type KniffelState } from './rules';
+import { describeMove } from './describe';
 
 export type { KniffelMove, KniffelState, Category, UpperCategory, LowerCategory } from './rules';
 export { calculateScore };
@@ -20,6 +21,7 @@ export const gameModule: GameModule<KniffelState, KniffelMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   sampleHidden,
   result,
   evaluate,

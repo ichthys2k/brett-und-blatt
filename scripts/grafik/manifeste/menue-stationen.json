@@ -1,0 +1,59 @@
+{
+  "beschreibung": "G10 (#317) Teil A: Stationen als freigestellte Gegenstände.",
+  "stil": "Painterly storybook oil illustration of a single object from a medieval tavern, in exactly the style, colour palette and warm candlelight of the reference image, lit from the fireplace side, seen slightly from above at the same viewing angle as the tavern table in the reference. The object is centred and fully inside the image with margin around it, on a plain flat pure green background (#00B140) so that it can be cut out, with only a soft contact shadow beneath. No text, no letters, no numbers, no figures, no faces.",
+  "ohne": "text, letters, numbers, writing on paper or signs, people, animals, faces, hands, modern objects, logos, watermark, green on the object, background gradient, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "1:1",
+  "ziel": "apps/web/src/menu/stationen",
+  "groesse": [
+    512,
+    512
+  ],
+  "referenzen": [
+    "apps/web/src/menu/taverne-hinten.webp",
+    "apps/web/src/menu/taverne-vorn.webp"
+  ],
+  "motive": [
+    {
+      "id": "single",
+      "titel": "Lokales Spiel",
+      "freistellen": true,
+      "prompt": "A small wooden game table set for one: a chessboard with a few carved pieces, a deck of face-down cards and two dice (pips only)."
+    },
+    {
+      "id": "online",
+      "titel": "Online Spiel",
+      "freistellen": true,
+      "prompt": "A large round wooden table with six empty stools around it and a glowing lantern in the middle."
+    },
+    {
+      "id": "tournaments",
+      "titel": "Turniere",
+      "freistellen": true,
+      "prompt": "A tall wooden tournament board on a stand with empty parchment strips pinned in a bracket shape, a small golden cup on top."
+    },
+    {
+      "id": "options",
+      "titel": "Optionen",
+      "freistellen": true,
+      "prompt": "A stone fireplace with burning logs, a kettle hook and a set of fire irons."
+    },
+    {
+      "id": "profile",
+      "titel": "Profil & Pass",
+      "freistellen": true,
+      "prompt": "A wooden heraldic shield with a blank painted field hanging on a wall hook, a leather-bound passbook on a small shelf below."
+    },
+    {
+      "id": "board",
+      "titel": "Schwarzes Brett",
+      "freistellen": true,
+      "prompt": "A wooden notice board with several blank paper notes pinned with brass tacks."
+    },
+    {
+      "id": "learn",
+      "titel": "Lernen (Karteikasten)",
+      "freistellen": true,
+      "prompt": "An open wooden index-card box with blank cards and a quill beside it."
+    }
+  ]
+}

@@ -56,6 +56,51 @@
   -webkit-touch-callout: none;
 }
 
+.ws-card.ws-card-container {
+  padding: 0;
+  border: none;
+  background: none;
+  overflow: visible;
+}
+
+.ws-card-container .ws-gamecard {
+  width: 100%;
+  min-height: 4.5rem;
+  aspect-ratio: auto;
+}
+
+.ws-card-container .bub-game-card-anki {
+  width: 100%;
+  height: 100%;
+}
+
+.ws-card-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ws-card-back-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  padding: 0.5rem 1rem;
+  background: rgb(0 0 0 / 0.55);
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  margin: auto;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+}
+
 .ws-card[data-image] {
   flex-direction: row;
   align-items: center;

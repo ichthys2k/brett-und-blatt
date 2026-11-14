@@ -1,0 +1,36 @@
+{
+  "beschreibung": "G9 (#318) B2: vier Marktstände, Tresen unten leer.",
+  "stil": "A quaint medieval market stall in the fantasy animal kingdom of Brezelbach, seen straight from the front, the counter at the bottom empty so that cards can be laid on it. Classic oil painting and storybook fairy tale style, warm lighting, rich textures, charming details. No text, no modern elements, no characters.",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo, people, animals, goods on the counter, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "4:3",
+  "ziel": "packages/games/market-stalls/src/ui/staende",
+  "groesse": [
+    480,
+    360
+  ],
+  "referenzen": [
+    "packages/games/marketplace/src/ui/fields/corner-fair.webp"
+  ],
+  "motive": [
+    {
+      "id": "stand-1",
+      "titel": "Stand 1",
+      "prompt": "A stall with a red and white striped awning."
+    },
+    {
+      "id": "stand-2",
+      "titel": "Stand 2",
+      "prompt": "A stall with a blue and gold striped awning."
+    },
+    {
+      "id": "stand-3",
+      "titel": "Stand 3",
+      "prompt": "A stall with a green awning and hanging herbs."
+    },
+    {
+      "id": "stand-4",
+      "titel": "Stand 4",
+      "prompt": "A stall with a patched purple awning and a small lantern."
+    }
+  ]
+}

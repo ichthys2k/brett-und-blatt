@@ -215,6 +215,22 @@ export const PHASE7_TOKENS: CardDefinition[] = [
   animal(B, 'token_swarmqueen', 'Schwarmkönigin', 5, 5, 6, '👑', 'Alle zu mir!', ['crawlers'], { token: true, textName: 'die Schwarmkönigin', kw: ['poisonous'], t: [played({ kind: 'summon', cardId: 'token_bee', count: 3 })] }),
 ];
 
+/** Jungdrachen und Eier für die Drachenei-Option (W-025, #261). */
+export const DRAGON_EGG_TOKENS: CardDefinition[] = [
+  // Eier
+  { ...sleeper(F, 'egg_forest', 'Drachenei', 0, 0, 3, '🥚', 'Aus dem Eichenhain.', ['dragons'], 3, 'dragon_forest'), token: true, textName: 'ein Drachenei' },
+  { ...sleeper(S, 'egg_sea', 'Drachenei', 0, 0, 3, '🥚', 'Aus den Tiefen des Meeres.', ['dragons'], 3, 'dragon_sea'), token: true, textName: 'ein Drachenei' },
+  { ...sleeper(H, 'egg_farm', 'Drachenei', 0, 0, 3, '🥚', 'Aus dem warmen Stroh.', ['dragons'], 3, 'dragon_farm'), token: true, textName: 'ein Drachenei' },
+  { ...sleeper(W, 'egg_wild', 'Drachenei', 0, 0, 3, '🥚', 'Aus der roten Wüste.', ['dragons'], 3, 'dragon_wild'), token: true, textName: 'ein Drachenei' },
+  { ...sleeper(B, 'egg_bugs', 'Drachenei', 0, 0, 3, '🥚', 'Aus dem dunklen Moor.', ['dragons'], 3, 'dragon_bugs'), token: true, textName: 'ein Drachenei' },
+  // Jungdrachen
+  animal(F, 'dragon_forest', 'Grüner Jungdrache', 3, 3, 4, '🐉', 'Der Eichenhain erwacht.', ['dragons'], { token: true, textName: 'einen Grünen Jungdrachen', kw: ['bubble'], t: [turnEnd({ kind: 'heal', amount: 1, to: ALL_OWN })] }),
+  animal(S, 'dragon_sea', 'Blauer Jungdrache', 3, 3, 4, '🐉', 'Kalt wie die Tiefsee.', ['dragons'], { token: true, textName: 'einen Blauen Jungdrachen', kw: ['frostbite'] }),
+  animal(H, 'dragon_farm', 'Goldener Jungdrache', 3, 3, 5, '🐉', 'Beschützt den ganzen Hof.', ['dragons'], { token: true, textName: 'einen Goldenen Jungdrachen', kw: ['taunt'] }),
+  animal(W, 'dragon_wild', 'Roter Jungdrache', 3, 4, 4, '🐉', 'Wild und ungestüm.', ['dragons'], { token: true, textName: 'einen Roten Jungdrachen', kw: ['rush'] }),
+  animal(B, 'dragon_bugs', 'Violetter Jungdrache', 3, 2, 4, '🐉', 'Ein giftiger Hauch.', ['dragons'], { token: true, textName: 'einen Violetten Jungdrachen', kw: ['poisonous'] }),
+];
+
 export const PHASE7_CARDS: CardDefinition[] = [
   building(F, 'f_dam', 'Biberdamm', 3, 4, '🪵', 'Hält dicht.', [{ kind: 'armor', amount: 2 }]),
   building(S, 'sea_reef', 'Korallenriff', 3, 4, '🪸', 'Hier ist Platz für alle.', [{ kind: 'heal', amount: 1, to: ALL_OWN }, { kind: 'heal', amount: 1, to: OWN_HERO }]),

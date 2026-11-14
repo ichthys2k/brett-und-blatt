@@ -1,7 +1,8 @@
-import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
+import { randomSeed, sanitizeCustomCardCatalog, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { AlbumSpec } from '@brett-und-blatt/ui';
+import { AfterGameBar } from '../components/AfterGameBar';
 import { Ceremony } from '../components/Ceremony';
 import { Notes } from '../components/Notes';
 import { hasNote, notesKey } from '../lib/notes';
@@ -9,6 +10,7 @@ import { Replay, canReplay } from '../components/Replay';
 import { usePassRecorder } from '../lib/passRecorder';
 import { setHandView, useHandView, useHandViewChoice } from '../lib/handView';
 import { Button } from '../components/controls';
+import { CustomCardsOverlay } from '../components/CustomCardsOverlay';
 import { HowToOverlay } from '../components/HowTo';
 import { MoreMenu } from '../components/MoreMenu';
 import { SoundControl } from '../components/SoundControl';
@@ -16,6 +18,7 @@ import { useDismiss } from '../components/useDismiss';
 import { t } from '../i18n';
 import { getActiveGame, resumeGame, saveProgress, startGame, type ActiveGame } from '../lib/activeGame';
 import { levelLabel } from '../lib/format';
+import type { AfterState } from '../lib/online';
 import type { LoadedGame } from '../lib/registry';
 import { useGameMusic } from '../lib/music';
 import { categoryOf } from './Home';
@@ -79,6 +82,8 @@ export interface OnlineTableProps {
   onRestart?(rotate: boolean): void;
   onLobby(): void;
   onLeave(): void;
+  /** Abstimmung am Rundenende (#298): Nochmal, anderes Spiel oder Aussteigen. */
+  after?: { info: AfterState; seatCount: number; onVote(choice: 'again' | 'other'): void; onPropose(gameId: string): void; onPick(gameId: string): void };
   /** Avatare (Emojis) der Plätze in Sitzreihenfolge, falls bekannt. */
   avatars?: (string | null)[];
   /** Z. B. die Plätze zum Übernehmen. */
@@ -131,6 +136,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const [replaying, setReplaying] = useState(false);
   /** Notizblock (#105) geöffnet. */
   const [notesOpen, setNotesOpen] = useState(false);
+  /** Anki-Kartenset Modal geöffnet. */
+  const [showCustomCards, setShowCustomCards] = useState(false);
 
   useSyncExternalStore(
     (onChange) => session.subscribe(onChange),
@@ -222,6 +229,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   // Online geht der Hinweis nur an den, dessen Platz der Computer übernommen hat.
   const awaySeats = humans.filter((seat) => session.isAway(seat) && (!online || seat === online.yourSeat));
   const publicView = session.view('spectator');
+  // Lokal wie online steht das Kartenset als geprüfter JSON-Text in den Optionen (#270).
+  const customCatalog = sanitizeCustomCardCatalog((session.config.options as Record<string, unknown> | undefined)?.customCardCatalog) ?? undefined;
+  const cardCatalogChecksum =
+    ((publicView as any)?.cardCatalogChecksum as string | undefined) ??
+    ((session.config.options as any)?.cardCatalogChecksum as string | undefined) ??
+    (customCatalog?.checksum || undefined);
 
   const askHint = async () => {
     if (actingSeat === undefined) return;
@@ -309,7 +322,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       ▶ {t('replay.open')}
     </Button>
   ) : null;
-  const resultActionsBase = online ? (
+  const afterBar =
+    online?.after?.info.canVote && result ? (
+      <AfterGameBar after={online.after.info} gameId={info.id} seatCount={online.after.seatCount} onVote={online.after.onVote} onPropose={online.after.onPropose} onPick={online.after.onPick} onLeave={online.onLeave} />
+    ) : null;
+  const resultActionsOnline = online ? (
     online.isHost ? (
       <>
         {online.onRestart && (
@@ -322,8 +339,14 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         </Button>
       </>
     ) : (
-      online.display ? null : <p className="text-sm text-muted">{online.finishedNote ?? t('online.waitForHost')}</p>
+      online.display || afterBar ? null : <p className="text-sm text-muted">{online.finishedNote ?? t('online.waitForHost')}</p>
     )
+  ) : null;
+  const resultActionsBase = online ? (
+    <>
+      {afterBar}
+      {resultActionsOnline}
+    </>
   ) : (
     <>
       {endAction ? (
@@ -512,6 +535,16 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             <span aria-hidden="true">{info.emoji} </span>
             {info.name}
           </h1>
+          {cardCatalogChecksum && (
+            <button
+              type="button"
+              onClick={() => setShowCustomCards(true)}
+              className="inline-flex flex-none items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent hover:bg-accent/20 cursor-pointer transition"
+              title={`Eigenes Kartenset (Anki) #${cardCatalogChecksum} – Details anzeigen`}
+            >
+              <span>✨ Anki #{cardCatalogChecksum}</span>
+            </button>
+          )}
           {around && inviteBox}
           {around && (
             <footer className="ml-auto flex flex-none items-center gap-1 [&>button]:min-h-9 [&>button]:px-2 [&>button]:text-sm [&>button]:whitespace-nowrap">
@@ -659,6 +692,16 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           />
         )}
         {showHowTo && <HowToOverlay info={info} onClose={() => setShowHowTo(false)} />}
+        {showCustomCards && cardCatalogChecksum && (
+          <CustomCardsOverlay
+            checksum={cardCatalogChecksum}
+            catalog={customCatalog}
+            customCards={(publicView as any)?.customCards}
+            customMods={(publicView as any)?.customMods}
+            customCardSet={(publicView as any)?.customCardSet}
+            onClose={() => setShowCustomCards(false)}
+          />
+        )}
         {result && !ceremonyClosed && (
           <Ceremony
             result={result}

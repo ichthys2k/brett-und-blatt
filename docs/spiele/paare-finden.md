@@ -46,6 +46,10 @@ Erste Sets (`content/paare/`):
 - Negative Zahlen (`ganze-zahlen.json`)
 - Vokabeln Deutsch–Englisch (`englisch.json`)
 
+## Lernpakete (Anki, #101)
+
+Das Paket kommt aus der Sammlung im Pass („Paket = Stapel“, Option `pack`, Helfer `packages/engine/src/anki/pairs.ts`); eigene und importierte Anki-Pakete funktionieren wie die Inhaltspakete oben. Mit dem Schalter „Fällige Karten bevorzugen“ (`PackPicker`) zieht das Spiel zuerst die Karten, die der Karteikasten zur Wiederholung vorsieht. Paare finden meldet je Paar, ob es sicher saß oder unsicher war (`GameUi.learning`, `state.slips`); der Pass nimmt das über `usePassRecorder` → `recordGameLearning` → `applyGameResults` als Gut oder Schwer ins Lernbuch (nie vor der Fälligkeit). Siehe Vorhaben #101, L6 (#223).
+
 ## Optionen in der Lobby
 
 | Option | Werte | Standard |

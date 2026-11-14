@@ -12,6 +12,7 @@ import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { applyOfflineMessage, createOfflineTournament, isOfflineCode, loadOfflineRecord, syncOfflineTournament } from '../lib/offlineTournament';
 import { buildIcs, calendarEvents } from '../lib/calendar';
+import { PushToggle } from '../components/PushToggle';
 import { createTournament, useTournament, type TournamentState } from '../lib/tournament';
 import { FullscreenButton, Stage, useWakeLock } from './Display';
 
@@ -432,6 +433,12 @@ export function TournamentScreen({ code, claim, helper, leader }: { code: string
     </p>
   );
 
+  /** Hinweise aufs Gerät (#242): nur für Teilnehmer eines Online-Turniers, wenn der Server sie eingerichtet hat. */
+  const pushToggle =
+    !local && !isOfflineCode(code) && view.you && state.push != null ? (
+      <PushToggle enabled={state.push} onEnable={(message) => send(message)} onDisable={() => send({ type: 'pushUnsubscribe' })} />
+    ) : null;
+
   if (view.phase === 'signup') {
     return (
       <Page>
@@ -439,6 +446,7 @@ export function TournamentScreen({ code, claim, helper, leader }: { code: string
         {subtitle}
         {isOfflineCode(code) && <OfflineBar code={code} />}
         {local ? <LocalSignup view={view} code={code} send={send} /> : <SignupView view={view} code={code} send={send} />}
+        {pushToggle}
         {banners}
       </Page>
     );
@@ -489,6 +497,7 @@ export function TournamentScreen({ code, claim, helper, leader }: { code: string
           <History view={view} />
         </>
       )}
+      {view.phase === 'running' && pushToggle}
       {can(capsOf(view), 'tools') && <LeaderTools view={view} code={code} send={send} claim={state.claim} onBoard={() => setBoard(true)} />}
       {can(capsOf(view), 'print') && <PrintTools view={view} onPrint={setPrinting} />}
       {banners}

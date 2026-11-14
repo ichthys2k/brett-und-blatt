@@ -2551,3 +2551,22 @@ button.cs-tile {
     font-size: 0.8rem;
   }
 }
+
+/* Einheitliches Kartensystem: GameCard & CardBack Integration (K6) */
+.cs-gamecard-back {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cs-tile-gamecard {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}

@@ -1,0 +1,253 @@
+{
+  "beschreibung": "G3 (#311): Bot-Porträts, rund beschnitten im Spielerchip. Die Bots sind Uhrwerk-Automaten des Barock (Aufziehschlüssel als gemeinsames Erkennungszeichen), kein Steampunk; erst ein Probelauf mit vorausrechner, admiral und reizkeiler.",
+  "stil": "Painterly warm baroque oil portrait of a whimsical storybook animal character of a fairy-tale kingdom, a fixture of a medieval tavern gaming table: warm candlelight, rich textures, dark warm background with subtle damask pattern, gentle friendly expression with a clever twinkle, humorous but dignified. The character is an exquisite 18th-century clockwork automaton built by a master craftsman to play games with the guests: a polished brass wind-up key on its back, clearly visible behind one shoulder, fine brass seams at the joints, warm glossy glass eyes, still clearly a charming storybook animal with fur or feathers and fabric clothing. Bust portrait facing the viewer, head and shoulders fully inside the image, centred with space around so it can be cropped to a circle. No text, no letters, no numbers, no watermark.",
+  "ohne": "text, letters, readable numbers, watermark, border, frame, modern clothing, logos, real people, celebrities, playing-card layout, weapons pointed at the viewer, steam pipes, steam engines, boilers, top hats, rivets, exposed machinery, robot face, metal face, screens, wires, rust, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "1:1",
+  "ziel": "packages/ui/src/bots/portraits",
+  "groesse": [
+    256,
+    256
+  ],
+  "praefix": "bot-",
+  "referenzen": [
+    "packages/games/marketplace/src/ui/figures/herald.webp",
+    "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp"
+  ],
+  "motive": [
+    {
+      "id": "admiral",
+      "titel": "Admiral (Schiffe versenken)",
+      "prompt": "An old sea otter admiral with a tricorn-like felt hat, brass spyglass and a weathered blue coat."
+    },
+    {
+      "id": "bibelkenner",
+      "titel": "Bibelkenner (Bibel-Quiz)",
+      "prompt": "A gentle old owl in a simple monk's habit holding a large closed book with a ribbon marker."
+    },
+    {
+      "id": "schwaben-ass",
+      "titel": "Schwaben-Ass (Binokel)",
+      "prompt": "A jolly badger in a traditional green waistcoat with silver buttons, fanning a few cards whose faces are turned away."
+    },
+    {
+      "id": "kartenmischer",
+      "titel": "Kartenmischer (Schwarzer Peter)",
+      "prompt": "A black cat in a chimney sweep's cap shuffling cards, faces turned away, mischievous smile."
+    },
+    {
+      "id": "wortflitzer",
+      "titel": "Wortflitzer (Kategorien-Sprint)",
+      "prompt": "A quick squirrel scribe with a quill behind its ear and ink on its paws."
+    },
+    {
+      "id": "vorausrechner",
+      "titel": "Vorausrechner (Schach, Dame, Mühle, Reversi, Vier in einer Reihe)",
+      "prompt": "A thoughtful eagle owl scholar in a dark robe, one wing at its chin, a wooden chess knight on the table."
+    },
+    {
+      "id": "weitblick",
+      "titel": "Weitblick (Vierer-Schach)",
+      "prompt": "A four-eyed-looking wise old tortoise with two pairs of spectacles pushed up on its head, a tiny crown-shaped game piece before it."
+    },
+    {
+      "id": "sternspringer",
+      "titel": "Sternspringer (Sternhalma)",
+      "prompt": "A lively frog in a star-patterned cape, caught mid-hop."
+    },
+    {
+      "id": "musterelster",
+      "titel": "Musterelster (Farbe & Form)",
+      "prompt": "A tidy magpie craftsman with a leather apron holding a coloured wooden tile."
+    },
+    {
+      "id": "wortakrobat",
+      "titel": "Wortakrobat (Verboten!, Wort-Salat)",
+      "prompt": "A parrot in a small jester collar, beak open as if reciting."
+    },
+    {
+      "id": "drachenhueter",
+      "titel": "Drachenhüter (Drachenspiel)",
+      "prompt": "A calm old salamander keeper in a leather hood with a tiny sleepy dragon hatchling on its shoulder."
+    },
+    {
+      "id": "renn-ente",
+      "titel": "Renn-Ente (Enten-Rallye)",
+      "prompt": "A determined duck with leather racing goggles and a red scarf blowing back."
+    },
+    {
+      "id": "zahlenzwerg",
+      "titel": "Zahlenzwerg (Elf zuerst!)",
+      "prompt": "A small hedgehog in a pointed cap counting on an abacus with plain beads."
+    },
+    {
+      "id": "zahlengenie",
+      "titel": "Zahlengenie (Teiler-Duell)",
+      "prompt": "A raven mathematician with a compass and a slate (the slate shows only abstract dots)."
+    },
+    {
+      "id": "landvogt",
+      "titel": "Landvogt (Grafschaft)",
+      "prompt": "A dignified stag in a bailiff's fur-trimmed coat with a chain of office and a rolled map."
+    },
+    {
+      "id": "buchstabenfuchs",
+      "titel": "Buchstabenfuchs (Galgenmännchen)",
+      "prompt": "A clever fox librarian peering over half-moon glasses, a blank scroll in its paws."
+    },
+    {
+      "id": "wuerfelkoenig",
+      "titel": "Würfelkönig (Würfelblock)",
+      "prompt": "A plump hamster king with a small crown holding a leather dice cup."
+    },
+    {
+      "id": "flinke-hand",
+      "titel": "Flinke Hand (Kartenblitz)",
+      "prompt": "A raccoon with quick hands, several cards flying in the air around it, faces blurred."
+    },
+    {
+      "id": "wolkenspringer",
+      "titel": "Wolkenspringer (Tiefflug)",
+      "prompt": "A swallow in a tiny aviator cap among soft clouds."
+    },
+    {
+      "id": "wuerfelmeister",
+      "titel": "Würfelmeister (Nicht ärgern!)",
+      "prompt": "A cheerful dormouse game master with a big wooden die under its arm (pips only)."
+    },
+    {
+      "id": "wuerfelfuchs",
+      "titel": "Würfelfuchs (Mäxle)",
+      "prompt": "A sly fox hiding a dice cup under one paw, innocent look."
+    },
+    {
+      "id": "marktschreier",
+      "titel": "Marktschreier (Marktstände)",
+      "prompt": "A rooster market crier with a striped apron, wing raised, beak wide open."
+    },
+    {
+      "id": "kraemer",
+      "titel": "Krämer (Marktplatz)",
+      "prompt": "A thrifty mole merchant with a money pouch and a pair of scales."
+    },
+    {
+      "id": "mau-mau-meister",
+      "titel": "Mau-Mau-Meister (Mau-Mau)",
+      "prompt": "A grinning tomcat in a patched waistcoat holding a single card to its chest."
+    },
+    {
+      "id": "mauerbaumeister",
+      "titel": "Mauerbaumeister (Rechenmauer)",
+      "prompt": "A beaver master builder with a trowel and a brick."
+    },
+    {
+      "id": "merkfant",
+      "titel": "Merkfant (Paare finden)",
+      "prompt": "A small elephant in a scholar's cap, one finger of its trunk raised as if remembering."
+    },
+    {
+      "id": "pokerface",
+      "titel": "Pokerface (Poker)",
+      "prompt": "A completely expressionless bulldog in a dark doublet, two face-down cards before it."
+    },
+    {
+      "id": "kartenkanzler",
+      "titel": "Kartenkanzler (Präsident)",
+      "prompt": "A heron chancellor with a high collar and a seal ring, looking down its beak."
+    },
+    {
+      "id": "kartenkenner",
+      "titel": "Kartenkenner (Quartett)",
+      "prompt": "A lynx collector with a monocle examining a card whose face is turned away."
+    },
+    {
+      "id": "wortmeister",
+      "titel": "Wortmeister (Wortgitter)",
+      "prompt": "An old raven schoolmaster with a small wooden letter tile showing only a blank face."
+    },
+    {
+      "id": "flinker-finger",
+      "titel": "Flinker Finger (Speed)",
+      "prompt": "A nimble weasel leaning forward, paws ready over the table."
+    },
+    {
+      "id": "adlerauge",
+      "titel": "Adlerauge (Fix gefunden!)",
+      "prompt": "An eagle with one eye huge behind a magnifying glass."
+    },
+    {
+      "id": "rechenfuchs",
+      "titel": "Rechenfuchs (Zielzahl)",
+      "prompt": "A young fox apprentice with chalk dust on its nose and a slate with abstract tally marks."
+    },
+    {
+      "id": "spuernase",
+      "titel": "Spürnase (Wer bin ich?)",
+      "prompt": "A bloodhound detective in a hooded cloak, sniffing, a lantern in its paw."
+    },
+    {
+      "id": "huetehelfer",
+      "titel": "Hütehelfer (Wölfe im Schafspelz)",
+      "prompt": "A friendly sheepdog with a shepherd's crook and a small lantern at night."
+    },
+    {
+      "id": "kartenprofi",
+      "titel": "Kartenhai / Kartenprofi (Eins!)",
+      "prompt": "A pike in a gambler's short cape with a confident smile, fins holding face-down cards."
+    },
+    {
+      "id": "langohr",
+      "titel": "Langohr (Rübenacker)",
+      "prompt": "A hare with very long ears and a turnip under its arm."
+    },
+    {
+      "id": "reizkeiler",
+      "titel": "Reizkeiler (Skat)",
+      "prompt": "A boar in a card player's cap, one eyebrow raised, counting on its hooves."
+    },
+    {
+      "id": "frau-dulle",
+      "titel": "Frau Dulle (Doppelkopf)",
+      "prompt": "An elegant goose lady with a lace collar and a fan of face-down cards."
+    },
+    {
+      "id": "sauspieler",
+      "titel": "Sauspieler (Schafkopf)",
+      "prompt": "A sturdy ibex in an alpine felt hat with a feather, cards face down."
+    },
+    {
+      "id": "steinmeister",
+      "titel": "Steinmeister (Go)",
+      "prompt": "A serene crane in a plain grey robe holding one black stone between its feathers."
+    },
+    {
+      "id": "steinleger",
+      "titel": "Steinleger (Domino)",
+      "prompt": "A walrus with a big moustache stacking blank-faced tiles."
+    },
+    {
+      "id": "kugelrufer",
+      "titel": "Kugelrufer (Bingo)",
+      "prompt": "A frog caller with a small hand bell and a lottery ball without number."
+    },
+    {
+      "id": "geduldsschnecke",
+      "titel": "Geduldsschnecke (Solitaire)",
+      "prompt": "A patient old snail with spectacles, a single card on its shell-side table."
+    },
+    {
+      "id": "kreidekaetzchen",
+      "titel": "Kreidekätzchen (Tic-Tac-Toe), Würfelprobe (Ultimate Tic-Tac-Toe)",
+      "prompt": "A playful kitten with chalk on its paws."
+    },
+    {
+      "id": "fuenferpanda",
+      "titel": "Fünferpanda (Gomoku)",
+      "prompt": "A young panda student holding a white stone."
+    },
+    {
+      "id": "zufall",
+      "titel": "allgemeine Bots der Engine (Zufall u. a.)",
+      "prompt": "A cheerful jester's monkey tossing a die in the air (pips only)."
+    }
+  ]
+}

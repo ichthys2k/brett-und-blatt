@@ -1,5 +1,6 @@
 import React from 'react';
 import { getActiveFace, mathCardLabel } from '../rules';
+import { unoFaceName } from '../describe';
 import type { CardFace, UnoCard, UnoColor } from '../types';
 
 export interface UnoCardViewProps {
@@ -12,6 +13,9 @@ export interface UnoCardViewProps {
   selected?: boolean;
   size?: 'sm' | 'md' | 'lg';
   mathMode?: boolean;
+  description?: string;
+  /** Vorlesetext statt Name und Beschreibung, etwa der Zugtext (#335). */
+  label?: string;
   onClick?: () => void;
   className?: string;
 }
@@ -95,6 +99,8 @@ export const UnoCardView: React.FC<UnoCardViewProps> = ({
   selected = false,
   size = 'md',
   mathMode = false,
+  description,
+  label,
   onClick,
   className = '',
 }) => {
@@ -133,6 +139,9 @@ export const UnoCardView: React.FC<UnoCardViewProps> = ({
   const mathExpr = mathMode ? mathCardLabel(face.type, card?.id ?? face.type) : null;
   const symbols = formatCardSymbol(face, mathExpr);
 
+  const baseTitle = unoFaceName(face, mathExpr);
+  const fullTitle = description ? `${baseTitle} – ${description}` : baseTitle;
+
   return (
     <button
       type="button"
@@ -147,7 +156,8 @@ export const UnoCardView: React.FC<UnoCardViewProps> = ({
         backgroundColor: isWild ? '#18181b' : colorInfo.bg,
         borderColor: isWild ? '#a1a1aa' : '#ffffff44',
       }}
-      title={`${colorInfo.name} ${mathExpr ?? face.type}`}
+      title={fullTitle}
+      aria-label={label ?? fullTitle}
     >
       {/* Obere linke Ecke */}
       <div className="text-left font-black leading-none drop-shadow-sm text-white">{symbols.corner}</div>

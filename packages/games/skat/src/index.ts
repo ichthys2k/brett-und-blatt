@@ -17,6 +17,7 @@ import {
 } from './rules.js';
 
 export type { SkatDeclaration, SkatGameType, SkatMove, SkatPhase, SkatState };
+export { skatCardDescription } from './cardDescription.js';
 export {
   ALL_BID_VALUES,
   SKAT_BASE_VALUES,
@@ -26,6 +27,7 @@ export {
   createSkatDeck,
   nextPossibleBid,
 } from './rules.js';
+import { describeMove } from './describe';
 
 export const gameModule: GameModule<SkatState, SkatMove> = {
   info: meta,
@@ -87,5 +89,7 @@ export const gameModule: GameModule<SkatState, SkatMove> = {
   playerView,
   result,
   sampleHidden,
+  // Kurzer Text je Zug für fremde Clients und den Bildschirmleser (#335).
+  describeMove,
   bots: [skatBot, ...generalBots<SkatState, SkatMove, SkatState>()],
 };

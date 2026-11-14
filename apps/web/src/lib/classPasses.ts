@@ -1,7 +1,7 @@
-import { PLAYER_EMOJIS, PLAYER_SALT, SyncError, createPassLock, createPlayerLock, fetchRemote, keysFromCode, putRemote, randomCode, randomPassKey, resetPassLock, revokePlayerLock, seal, stretchSecret, type PlayerPass } from '@brett-und-blatt/ui/sync';
+import { PLAYER_EMOJIS, PLAYER_SALT, SyncError, createPassLock, createPlayerLock, fetchRemote, hasPassLock, keysFromCode, putRemote, randomCode, randomPassKey, resetPassLock, revokePlayerLock, seal, stretchSecret, type PlayerPass } from '@brett-und-blatt/ui/sync';
 import { renderSVG } from 'uqr';
 import { classAct } from './classes';
-import { mergeChildPasses, randomPin, sanitizeChildPasses, type ChildPass, type ChildPasses } from './classPassesCore';
+import { mergeChildPasses, pickFreePlayerCode, randomPin, sanitizeChildPasses, type ChildPass, type ChildPasses, type ParsedChildName } from './classPassesCore';
 import { passServer, passSyncSoon, playerLink } from './playerPass';
 
 /*
@@ -34,10 +34,15 @@ function randomToken(): string {
 }
 
 /** Legt einen Ausweis mit Start-PIN für ein Kind an und trägt es in die Klasse ein. */
-async function createChildPass(classCode: string, name: string): Promise<ChildPass> {
-  const avatar = PLAYER_EMOJIS[crypto.getRandomValues(new Uint8Array(1))[0]! % PLAYER_EMOJIS.length]!;
-  const pass: PlayerPass = { token: randomToken(), name, avatar, code: null, passKey: randomPassKey() };
-  const playerCode = await createPlayerLock(passServer, pass);
+async function createChildPass(classCode: string, entry: ParsedChildName): Promise<ChildPass> {
+  const avatar = entry.avatar ?? PLAYER_EMOJIS[crypto.getRandomValues(new Uint8Array(1))[0]! % PLAYER_EMOJIS.length]!;
+  const pass: PlayerPass = { token: randomToken(), name: entry.name, avatar, code: null, passKey: randomPassKey() };
+  // Dubletten-Prüfung beim Spielercode (#152): Vor dem Anlegen prüfen, ob der gezogene Code schon ein Schloss hat
+  const playerCode = await pickFreePlayerCode(
+    () => createPlayerLock(passServer, pass),
+    (candidate) => hasPassLock(passServer, candidate),
+    (candidate) => revokePlayerLock(passServer, candidate),
+  );
   const withCode: PlayerPass = { ...pass, code: playerCode };
   // Rettungscode des Kindes: der Ausweis als Block der gemeinsamen Sicherung, wie bei einem eigenen Pass.
   let syncCode = '';
@@ -51,19 +56,24 @@ async function createChildPass(classCode: string, name: string): Promise<ChildPa
   const pin = randomPin();
   await createPassLock(passServer, playerCode, await stretchSecret(playerCode, pin), syncCode, withCode);
   await revokePlayerLock(passServer, playerCode).catch(() => undefined);
-  const reply = await classAct(classCode, 'enroll', { who: { token: pass.token, name, avatar } });
+  const reply = await classAct(classCode, 'enroll', { who: { token: pass.token, name: entry.name, avatar } });
   if (!reply.ok) throw new SyncError(reply.error || 'Das Kind ließ sich nicht in die Klasse eintragen.');
-  return { classCode, name, avatar, playerCode, syncCode, passKey: pass.passKey!, token: pass.token, pin, at: Date.now() };
+  return { classCode, name: entry.name, avatar, playerCode, syncCode, passKey: pass.passKey!, token: pass.token, pin, at: Date.now() };
 }
 
 /** Legt für jeden Namen einen Klassenausweis an; meldet nach jedem Kind den Stand. Fehler beenden den Lauf, Fertiges bleibt gespeichert. */
-export async function createClassPasses(classCode: string, names: readonly string[], onProgress: (done: number, total: number) => void): Promise<{ created: ChildPass[]; error?: string }> {
+export async function createClassPasses(
+  classCode: string,
+  names: readonly (string | ParsedChildName)[],
+  onProgress: (done: number, total: number) => void,
+): Promise<{ created: ChildPass[]; error?: string }> {
   const created: ChildPass[] = [];
   try {
-    for (const name of names) {
-      const entry = await createChildPass(classCode, name);
-      created.push(entry);
-      saveChildPasses(mergeChildPasses(loadChildPasses(), [entry]));
+    for (const raw of names) {
+      const entry: ParsedChildName = typeof raw === 'string' ? { name: raw } : raw;
+      const child = await createChildPass(classCode, entry);
+      created.push(child);
+      saveChildPasses(mergeChildPasses(loadChildPasses(), [child]));
       onProgress(created.length, names.length);
     }
     return { created };

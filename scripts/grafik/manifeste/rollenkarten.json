@@ -1,7 +1,7 @@
 {
  "beschreibung": "Rollenkarten für Wölfe im Schafspelz: 9 Rollen, das Zusatzamt Leithammel und eine Rückseite. Im Kontaktbogen steht zu jeder Karte die Funktion aus dem Spiel.",
  "stil": "Painterly storybook oil illustration of anthropomorphic animal characters on a moonlit pastoral meadow, in the same painterly style as the reference image: rich textures, dark midnight blue and deep green night palette, warm lantern or candle light accents, soft wool and fur details, expressive face, gentle and slightly mysterious mood, a consistent set of role cards. Bust or half-figure portrait, vertical composition, centred with space around so it can be cropped. No text, no letters, no numbers, no card frame, no border.",
- "ohne": "text, letters, numbers, watermark, border, frame, playing card layout, real people, modern clothing, logos, blood, gore, violence",
+ "ohne": "text, letters, numbers, watermark, border, frame, playing card layout, real people, modern clothing, logos, blood, gore, violence, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
  "referenzen": [
   "packages/games/color-sorter/src/ui/portraits/boss-bear-2.webp"
  ],
@@ -82,7 +82,7 @@
    "prompt": "Card back motif: a repeating pattern of wool curls and stars (no figures at all).",
    "stil": "A flat, symmetrical, ornamental playing-card back design (a pure decorative pattern, NOT a scene and NOT a character): deep midnight-blue background, a dense repeating pattern of cream wool curls, small stars and tiny crescent moons, thin gold border lines inside the edge, slightly worn printed-card look. The pattern fills the whole image edge to edge.",
    "referenzen": [],
-   "ohne": "animals, sheep, wolves, people, characters, faces, landscape, scenery, text, letters, numbers, watermark, frame outside the pattern, collage, several cards",
+   "ohne": "animals, sheep, wolves, people, characters, faces, landscape, scenery, text, letters, numbers, watermark, frame outside the pattern, collage, several cards, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
    "zuschnittRand": 0.14
   }
  ]

@@ -1,11 +1,11 @@
 import type { CardDefinition, Effect, FamilyId, KeywordId, SchoolId, Selector, SpellTargeting } from '../types';
 
 export const KEYWORD_NAMES: Record<KeywordId, string> = {
-  taunt: 'Beschützer',
-  rush: 'Flink',
-  bubble: 'Schutzblase',
-  poisonous: 'Giftig',
-  stealth: 'Versteckt',
+  taunt: 'Schildwall',
+  rush: 'Ansturm',
+  bubble: 'Prunkschild',
+  poisonous: 'Meisterstoß',
+  stealth: 'Verkleidet',
   sprinter: 'Sprinter',
   doubleStrike: 'Doppelschlag',
   lifesteal: 'Lebenskraft',
@@ -45,7 +45,7 @@ export const SCHOOL_NAMES: Record<SchoolId, string> = {
 
 const CHOSEN: Record<SpellTargeting, string> = {
   none: 'dem Ziel',
-  enemyAny: 'einem gegnerischen Tier oder Helden',
+  enemyAny: 'einem gegnerischen Tier oder Turnierherrn',
   enemyMinion: 'einem gegnerischen Tier',
   ownMinion: 'einem eigenen Tier',
   trigger: 'dem auslösenden Tier',
@@ -58,7 +58,7 @@ function dative(selector: Selector, targeting: SpellTargeting): string {
     case 'self':
       return 'sich';
     case 'hero':
-      return selector.side === 'own' ? 'deinem Helden' : 'dem gegnerischen Helden';
+      return selector.side === 'own' ? 'deinem Turnierherrn' : 'dem gegnerischen Turnierherrn';
     case 'allMinions':
       return `allen ${selector.exceptSelf ? 'anderen ' : ''}${selector.side === 'own' ? 'eigenen' : 'gegnerischen'} Tieren${selector.family ? ` der Familie ${FAMILY_NAMES[selector.family]}` : ''}`;
     case 'random':
@@ -68,7 +68,7 @@ function dative(selector: Selector, targeting: SpellTargeting): string {
 
 function accusative(selector: Selector, targeting: SpellTargeting): string {
   if (selector.pick === 'self') return 'sich';
-  if (selector.pick === 'hero') return selector.side === 'own' ? 'deinen Helden' : 'den gegnerischen Helden';
+  if (selector.pick === 'hero') return selector.side === 'own' ? 'deinen Turnierherrn' : 'den gegnerischen Turnierherrn';
   if (selector.pick === 'allMinions') return `alle ${selector.exceptSelf ? 'anderen ' : ''}${selector.side === 'own' ? 'eigenen' : 'gegnerischen'} Tiere${selector.family ? ` der Familie ${FAMILY_NAMES[selector.family]}` : ''}`;
   if (selector.pick === 'random') return `ein zufälliges ${selector.side === 'own' ? 'eigenes' : 'gegnerisches'} Tier`;
   return CHOSEN[targeting].replace('einem gegnerischen', 'ein gegnerisches').replace('einem eigenen', 'ein eigenes').replace('dem auslösenden', 'das auslösende');
@@ -103,7 +103,7 @@ function effectText(effect: Effect, targeting: SpellTargeting, lookup: Record<st
     case 'returnToHand':
       return `Spült ${accusative(effect.to, targeting)} zurück auf die Hand (Spielsteine und bei voller Hand: weg).`;
     case 'mana':
-      return `+${effect.amount} Mana in dieser Runde.`;
+      return `+${effect.amount} ${effect.amount === 1 ? 'Knappe' : 'Knappen'} in dieser Runde.`;
     case 'freeze':
       return `Versetzt ${accusative(effect.to, targeting)} in Kältestarre: Der nächste Angriff fällt aus.`;
     case 'silence':
@@ -113,7 +113,7 @@ function effectText(effect: Effect, targeting: SpellTargeting, lookup: Record<st
     case 'rebirth':
       return 'Kehrt mit 1 Leben zurück.';
     case 'discover':
-      return `Fährte suchen: Wähle aus 3 zufälligen ${effect.pool === 'spell' ? 'Zaubern' : 'Tieren'} eine Karte für deine Hand.`;
+      return `Fährte suchen: Wähle aus 3 zufälligen ${effect.pool === 'spell' ? 'Kniffen' : 'Tieren'} eine Karte für deine Hand.`;
     case 'chooseOne':
       return `Wähle: ${effect.options.map((option) => option.label).join(' oder ')}.`;
     case 'adapt':
@@ -121,18 +121,18 @@ function effectText(effect: Effect, targeting: SpellTargeting, lookup: Record<st
     case 'armor':
       return `+${effect.amount} Rüstung.`;
     case 'heroAttack':
-      return `Dein Held hat in diesem Zug +${effect.amount} Angriff.`;
+      return `Dein Turnierherr hat in diesem Zug +${effect.amount} Angriff.`;
     case 'equip':
-      return `Rüstzeug für deinen Helden: ${effect.gear.name} (${effect.gear.attack} Angriff, hält ${effect.gear.durability} Angriffe).`;
+      return `Rüstzeug für deinen Turnierherrn: ${effect.gear.name} (${effect.gear.attack} Angriff, hält ${effect.gear.durability} Angriffe).`;
     case 'summonRandom':
       return `Ruft zufällig ${effect.cardIds.map((id) => summonText(lookup[id])).join(', ').replace(/, ([^,]*)$/, ' oder $1')} herbei.`;
   }
 }
 
 const TRAP_WHEN = {
-  heroAttacked: 'Greift ein Tier deinen Helden an',
+  heroAttacked: 'Greift ein Tier deinen Turnierherrn an',
   minionPlayed: 'Spielt der Gegner ein Tier',
-  spellCast: 'Wirkt der Gegner einen Zauber',
+  spellCast: 'Nutzt der Gegner einen Kniff',
 };
 
 /** Regeltext der besonderen Kartentypen, aus denselben Daten wie ihre Wirkung. */
@@ -141,7 +141,7 @@ export function specialCardText(def: CardDefinition, lookup: Record<string, Card
   if (def.building) return `Bau, einmal je Zug nutzbar (kostet 1 Leben): ${effectsText(def.building, 'none', lookup)}`;
   if (def.quest) {
     const { goal, count, reward } = def.quest;
-    const what = goal.kind === 'playFamily' ? `Spiele ${count} Tiere der Familie ${FAMILY_NAMES[goal.family]}` : goal.kind === 'playSpells' ? `Wirke ${count} Zauber` : `Sammle ${count} Rüstung`;
+    const what = goal.kind === 'playFamily' ? `Spiele ${count} Tiere der Familie ${FAMILY_NAMES[goal.family]}` : goal.kind === 'playSpells' ? `Nutze ${count} Kniffe` : `Sammle ${count} Rüstung`;
     return `Aufgabe: ${what}. Belohnung: ${lookup[reward]?.name ?? 'eine Karte'}.`;
   }
   if (def.dormant) {

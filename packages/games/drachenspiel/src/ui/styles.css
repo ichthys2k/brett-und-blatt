@@ -1,14 +1,36 @@
-/* Original-Hintergrundbild aus dem Vorlagen-Klon (Emojiclicker), unter einem Schleier in der
-   Flächenfarbe, damit Text und Karten lesbar bleiben (wie die Kulissen im Narrenhof). */
+/* Arena-Kulisse: wird dynamisch durch das Themenhaus des Gegners bestimmt
+   (unter einem Schleier in der Flächenfarbe, damit Text und Karten lesbar bleiben). */
 .ds-arena,
 .ds-phase-overlay {
+  --ds-bg-image: url('./kulissen/drachenarena.webp');
   background:
     linear-gradient(
       color-mix(in srgb, var(--color-surface, #ffffff) 48%, transparent),
       color-mix(in srgb, var(--color-surface, #ffffff) 74%, transparent)
     ),
-    url('./kulissen/drachenarena.webp') center / cover no-repeat;
+    var(--ds-bg-image) center / cover no-repeat;
   border-radius: 16px;
+}
+
+.ds-arena[data-theme='forest'],
+.ds-phase-overlay[data-theme='forest'] {
+  --ds-bg-image: url('./kulissen/wald.webp');
+}
+.ds-arena[data-theme='sea'],
+.ds-phase-overlay[data-theme='sea'] {
+  --ds-bg-image: url('./kulissen/meer.webp');
+}
+.ds-arena[data-theme='farm'],
+.ds-phase-overlay[data-theme='farm'] {
+  --ds-bg-image: url('./kulissen/bauernhof.webp');
+}
+.ds-arena[data-theme='wild'],
+.ds-phase-overlay[data-theme='wild'] {
+  --ds-bg-image: url('./kulissen/wildnis.webp');
+}
+.ds-arena[data-theme='bugs'],
+.ds-phase-overlay[data-theme='bugs'] {
+  --ds-bg-image: url('./kulissen/krabbeltiere.webp');
 }
 
 .ds-arena {
@@ -161,12 +183,210 @@
 .ds-hero-card {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 6px 12px;
   background: var(--color-surface, #ffffff);
   border: 2px solid var(--color-border, #dfe6e9);
-  border-radius: 24px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  border-radius: 18px;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Wappenhaus-spezifische Rahmen und Akzente */
+.ds-hero-card.ds-hero-forest {
+  --ds-wimpel-color: #2e7d32;
+  border-color: rgba(46, 125, 50, 0.5);
+}
+.ds-hero-card.ds-hero-sea {
+  --ds-wimpel-color: #1976d2;
+  border-color: rgba(25, 118, 210, 0.5);
+}
+.ds-hero-card.ds-hero-farm {
+  --ds-wimpel-color: #d97706;
+  border-color: rgba(217, 119, 6, 0.5);
+}
+.ds-hero-card.ds-hero-wild {
+  --ds-wimpel-color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.5);
+}
+.ds-hero-card.ds-hero-bugs {
+  --ds-wimpel-color: #7c3aed;
+  border-color: rgba(124, 58, 237, 0.5);
+}
+
+.ds-hero-avatar-frame {
+  position: relative;
+  width: 42px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px 6px 16px 16px;
+  border: 2px solid #b89758;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  background: radial-gradient(circle at 50% 30%, #fffef7 0%, #f4e9cf 100%);
+  flex-shrink: 0;
+}
+
+.ds-crest-frame-forest {
+  border-color: #2e7d32;
+  background: radial-gradient(circle at 50% 30%, #f0fdf4 0%, #dcfce7 100%);
+}
+.ds-crest-frame-sea {
+  border-color: #1976d2;
+  background: radial-gradient(circle at 50% 30%, #f0f9ff 0%, #e0f2fe 100%);
+}
+.ds-crest-frame-farm {
+  border-color: #d97706;
+  background: radial-gradient(circle at 50% 30%, #fffbeb 0%, #fef3c7 100%);
+}
+.ds-crest-frame-wild {
+  border-color: #dc2626;
+  background: radial-gradient(circle at 50% 30%, #fef2f2 0%, #fee2e2 100%);
+}
+.ds-crest-frame-bugs {
+  border-color: #7c3aed;
+  background: radial-gradient(circle at 50% 30%, #faf5ff 0%, #f3e8ff 100%);
+}
+
+.ds-hero-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.ds-hero-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ds-hero-name {
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: var(--color-ink);
+}
+
+.ds-hero-house-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.ds-banner-forest {
+  background: #e8f5e9;
+  color: #1b5e20;
+  border-color: #a5d6a7;
+}
+.ds-banner-sea {
+  background: #e1f5fe;
+  color: #01579b;
+  border-color: #81d4fa;
+}
+.ds-banner-farm {
+  background: #fff8e1;
+  color: #b78103;
+  border-color: #ffe082;
+}
+.ds-banner-wild {
+  background: #fbe9e7;
+  color: #bf360c;
+  border-color: #ffab91;
+}
+.ds-banner-bugs {
+  background: #f3e5f5;
+  color: #4a148c;
+  border-color: #ce93d8;
+}
+
+/* Tribüne mit 30 fallenden Wimpeln */
+.ds-tribune {
+  display: flex;
+  flex-direction: column;
+  margin: 1px 0;
+}
+
+.ds-tribune-pennants {
+  display: flex;
+  gap: 2px;
+  align-items: flex-start;
+  height: 9px;
+  padding: 1px 2px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+  max-width: 160px;
+}
+
+.ds-wimpel {
+  width: 3px;
+  height: 7px;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: var(--ds-wimpel-color, #dc2626);
+  flex-shrink: 0;
+  transition: transform 0.35s ease, opacity 0.35s ease, background-color 0.35s ease;
+}
+
+.ds-wimpel.active {
+  opacity: 0.95;
+  transform: translateY(0) rotate(0deg);
+}
+
+.ds-wimpel.fallen {
+  opacity: 0.2;
+  background: #94a3b8 !important;
+  transform: translateY(2px) rotate(45deg) scale(0.65);
+}
+
+/* Knappen-Leiste (1–10) */
+.ds-mana-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ds-knappen-track {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.ds-knappe-slot {
+  width: 5px;
+  height: 8px;
+  border-radius: 1px 1px 2px 2px;
+  box-sizing: border-box;
+  transition: background 0.2s, opacity 0.2s, transform 0.2s;
+}
+
+.ds-knappe-slot.ready {
+  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+  border: 0.5px solid #1d4ed8;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.4);
+}
+
+.ds-knappe-slot.spent {
+  background: #cbd5e1;
+  opacity: 0.45;
+  border: 0.5px solid #94a3b8;
+}
+
+.ds-knappe-slot.locked {
+  background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+  border: 0.5px solid #b45309;
+}
+
+.ds-knappe-slot.unrecruited {
+  background: transparent;
+  border: 0.5px dashed rgba(150, 150, 150, 0.3);
+  opacity: 0.25;
 }
 
 .ds-hero-card.targetable {
@@ -1208,8 +1428,8 @@
   pointer-events: none !important;
 }
 
-/* Angreifer, der beim Schlag durch Gegenschaden besiegt wird: Vorstoß, Aufprall, danach Verblassen */
-@keyframes ds-attack-strike-and-die {
+/* Angreifer, der beim Schlag durch Gegenschaden abtritt: Vorstoß, Aufprall, danach Verbeugung und Abtreten */
+@keyframes ds-attack-strike-and-retire {
   0% {
     transform: translate3d(0, 0, 0) scale(1);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
@@ -1224,57 +1444,62 @@
   }
   48% {
     transform: translate3d(calc(var(--atk-dx, 0px) * 0.82), calc(var(--atk-dy, -30px) * 0.82), 0) scale(1.16);
-    box-shadow: 0 10px 24px rgba(231, 76, 60, 0.55);
-    border-color: #e74c3c;
+    box-shadow: 0 10px 24px rgba(184, 151, 88, 0.55);
+    border-color: #b89758;
     opacity: 1;
     z-index: 60;
   }
-  60% {
-    transform: translate3d(calc(var(--atk-dx, 0px) * 0.78), calc(var(--atk-dy, -30px) * 0.78), 0) scale(1.1);
-    opacity: 0.9;
-    filter: brightness(1.2);
+  65% {
+    /* Verbeugung nach dem Stoß */
+    transform: translate3d(calc(var(--atk-dx, 0px) * 0.5), calc(var(--atk-dy, -30px) * 0.5), 0) scale(0.95) rotate(-5deg);
+    opacity: 0.85;
+    filter: brightness(1.05) drop-shadow(0 2px 6px rgba(184, 151, 88, 0.3));
     z-index: 60;
   }
   100% {
-    transform: translate3d(0, 0, 0) scale(0.8);
+    /* Ehrenvolles Abtreten */
+    transform: translate3d(calc(var(--atk-dx, 0px) * 0.2), calc(var(--atk-dy, -30px) * 0.2 + 16px), 0) scale(0.75) rotate(-2deg);
     opacity: 0;
-    filter: grayscale(100%);
+    filter: blur(1px);
     z-index: 1;
   }
 }
 
 .ds-minion.ds-attacking.ds-minion-dying {
-  animation: ds-attack-strike-and-die 0.55s cubic-bezier(0.2, 0.8, 0.25, 1) forwards !important;
+  animation: ds-attack-strike-and-retire 0.55s cubic-bezier(0.2, 0.8, 0.25, 1) forwards !important;
   z-index: 60 !important;
   pointer-events: none !important;
 }
 
-/* Sterbende Minions (Verteidiger): Bleiben für die Animation sichtbar und verblassen nach dem Treffer */
-@keyframes ds-minion-fade {
+/* Abtretende Tiere (Verteidiger): Respektvolle Verbeugung und Abtreten vom Turnierplatz */
+@keyframes ds-minion-retire {
   0% {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateY(0) rotate(0deg);
     filter: none;
   }
-  45% {
+  30% {
+    /* Respektvolle Verbeugung nach vorne */
     opacity: 1;
-    transform: scale(1);
-    filter: brightness(1.2);
+    transform: scale(0.96) translateY(4px) rotate(-5deg);
+    filter: brightness(1.06) drop-shadow(0 2px 6px rgba(184, 151, 88, 0.5));
   }
   65% {
-    opacity: 0.8;
-    transform: scale(0.96);
-    filter: grayscale(40%) contrast(90%);
+    /* Zurücktreten */
+    opacity: 0.75;
+    transform: scale(0.88) translateY(10px) translateX(8px) rotate(-3deg);
+    filter: brightness(1.03) drop-shadow(0 2px 4px rgba(184, 151, 88, 0.25));
   }
   100% {
+    /* Tritt ab */
     opacity: 0;
-    transform: scale(0.8);
-    filter: grayscale(100%);
+    transform: scale(0.75) translateY(20px) translateX(16px) rotate(-1deg);
+    filter: blur(1px);
   }
 }
 
 .ds-minion.ds-minion-dying {
-  animation: ds-minion-fade 0.55s ease-out forwards;
+  animation: ds-minion-retire 0.55s ease-out forwards;
   pointer-events: none !important;
 }
 
@@ -1364,26 +1589,108 @@
 }
 
 
-/* Zauberkarten (W-004) */
+/* Kniffe (früher Zauberkarten, W-025) mit Pergamentrahmen und rotem Wachssiegel */
 .ds-card.ds-card-spell {
-  background: linear-gradient(160deg, #f3e8ff 0%, var(--color-surface, #ffffff) 70%);
-  border-color: #a78bfa;
+  background: linear-gradient(155deg, #fbf7ee 0%, #f4ebd9 50%, #eae0c8 100%);
+  border: 2px double #b89758;
+  box-shadow: inset 0 0 8px rgba(139, 90, 43, 0.15);
+  color: #2b1f14;
+  position: relative;
 }
+
+.ds-card.ds-card-spell::after,
+.bub-kind-Kniff .bub-combat-card::after {
+  content: '📜';
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #b91c1c 0%, #7f1d1d 80%, #450a0a 100%);
+  border: 1px solid #991b1b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+}
+
 @media (prefers-color-scheme: dark) {
   .ds-card.ds-card-spell {
-    background: linear-gradient(160deg, #3b2a5c 0%, var(--color-surface, #1e1e2a) 70%);
+    background: linear-gradient(155deg, #2e261d 0%, #221c15 50%, #1a1510 100%);
+    border-color: #8c734b;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
+    color: #f4ebd9;
+  }
+  .ds-card.ds-card-spell::after,
+  .bub-kind-Kniff .bub-combat-card::after {
+    background: radial-gradient(circle at 35% 35%, #991b1b 0%, #5b1111 80%, #300606 100%);
+    border-color: #7f1d1d;
   }
   .ds-spell-hint {
-    background: #3b2a5c;
-    color: #ede9fe;
+    background: #3a2e1d;
+    color: #f7eedb;
   }
 }
 .ds-card.ds-card-spell.playable {
-  border-color: #7c3aed;
+  border-color: #d97706;
+  box-shadow: 0 0 8px rgba(217, 119, 6, 0.45);
 }
 .ds-card.ds-card-selected {
   transform: translateY(-10px);
-  box-shadow: 0 0 0 3px #7c3aed, 0 8px 18px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 0 0 3px #d97706, 0 8px 18px rgba(217, 119, 6, 0.35);
+}
+.bub-kind-Kniff.bub-combat-card,
+.bub-kind-Kniff .bub-combat-card {
+  background: linear-gradient(155deg, #fbf7ee 0%, #f4ebd9 50%, #eae0c8 100%) !important;
+  border: 2px double #b89758 !important;
+  box-shadow: inset 0 0 10px rgba(139, 90, 43, 0.15) !important;
+  position: relative;
+}
+
+/* Wappenhaus-Rahmen für Minions auf dem Spielfeld */
+.ds-minion.ds-minion-house-forest {
+  border-color: rgba(46, 125, 50, 0.6);
+  box-shadow: 0 0 0 1.5px rgba(46, 125, 50, 0.35);
+}
+.ds-minion.ds-minion-house-sea {
+  border-color: rgba(25, 118, 210, 0.6);
+  box-shadow: 0 0 0 1.5px rgba(25, 118, 210, 0.35);
+}
+.ds-minion.ds-minion-house-farm {
+  border-color: rgba(217, 119, 6, 0.6);
+  box-shadow: 0 0 0 1.5px rgba(217, 119, 6, 0.35);
+}
+.ds-minion.ds-minion-house-wild {
+  border-color: rgba(220, 38, 38, 0.6);
+  box-shadow: 0 0 0 1.5px rgba(220, 38, 38, 0.35);
+}
+.ds-minion.ds-minion-house-bugs {
+  border-color: rgba(124, 58, 237, 0.6);
+  box-shadow: 0 0 0 1.5px rgba(124, 58, 237, 0.35);
+}
+
+/* Deckauswahl Champion-Rahmen */
+.ds-deck-champion-frame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 3px;
+  border: 2px solid #b89758;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  background: radial-gradient(circle at 50% 30%, #fffef7 0%, #f4e9cf 100%);
+}
+.ds-deck-choice .ds-house-banner {
+  font-size: 0.78rem;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-top: -4px;
 }
 .ds-card-spelltext {
   font-size: 0.52rem;
@@ -1764,4 +2071,42 @@
   .ds-card-emoji {
     font-size: 1.25rem;
   }
+}
+
+/* Einheitliches Kartensystem: GameCard & CardBack Integration (K6) */
+.ds-deck-with-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ds-deck-with-back .bub-card-size-xs {
+  width: 18px;
+  height: 25px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.ds-card .ds-combat-card-game {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: inherit;
+}
+
+.ds-minion .ds-minion-gamecard {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: inherit;
+  position: relative;
+}
+
+.ds-minion .ds-minion-gamecard .bub-game-card-anki {
+  border-radius: inherit;
 }

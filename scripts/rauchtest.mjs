@@ -113,6 +113,11 @@ if (shots) mkdirSync(shots, { recursive: true });
 const contextOptions = { viewport, colorScheme: process.env.RAUCHTEST_FARBE === 'dark' ? 'dark' : 'light' };
 const newPage = async () => {
   const page = await browser.newPage(contextOptions);
+  // Jede Verletzung der Content-Security-Policy (#322) mitschreiben; sie gilt als Fehler.
+  await page.addInitScript(() => {
+    window.__csp = [];
+    document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
+  });
   if (process.env.RAUCHTEST_LOOK) await page.addInitScript((look) => localStorage.setItem('brett-und-blatt:aussehen', look), process.env.RAUCHTEST_LOOK);
   return page;
 };
@@ -147,6 +152,8 @@ try {
       await firstSteps[id]?.(page);
       if (shots) await page.screenshot({ path: `${shots}/${id}.png` });
       if (errors.length) problems.push(`${id}: Fehler beim Start – ${errors.slice(0, 2).join(' | ')}`);
+      const violations = await page.evaluate(() => window.__csp ?? []);
+      if (violations.length) problems.push(`${id}: CSP-Verletzung – ${violations.slice(0, 2).join(' | ')}`);
       if (m.interactive === 0) problems.push(`${id}: Spielfeld ohne Bedienelemente`);
       if (m.pageHeight > viewport.height + 2) problems.push(`${id}: Seite ist ${m.pageHeight} px hoch und rollt (Bildschirm ${viewport.height} px)`);
       if (m.footerBlocked > 0) problems.push(`${id}: ${m.footerBlocked} Knöpfe unter dem Spielfeld verdeckt oder außerhalb des Bildschirms`);
@@ -232,6 +239,61 @@ try {
       await context.close();
     }
   }
+  // Poker setzt bis zu zehn Spieler mit dem gemeinsamen Tisch (SeatRing): kein Überlappen, nichts außerhalb.
+  if (ids.includes('poker')) {
+    for (const [width, height, count] of [[1280, 800, 10], [768, 1024, 10], [1024, 768, 6], [1280, 800, 2]]) {
+      const context = await browser.newContext({ viewport: { width, height } });
+      const pokerPage = await context.newPage();
+      await pokerPage.goto(base);
+      await pokerPage.evaluate(
+        ([seats]) => localStorage.setItem('brett-und-blatt:einstellungen:poker', JSON.stringify({ seats, options: {} })),
+        [Array.from({ length: count }, (_, i) => (i === 0 ? { kind: 'human', name: 'Du' } : { kind: 'bot', name: '', level: 'medium' }))],
+      );
+      const m = await startGame(pokerPage, 'poker');
+      const ring = await pokerPage.evaluate(() => {
+        const stage = document.querySelector('.bub-seat-ring-stage')?.getBoundingClientRect();
+        const center = document.querySelector('.bub-seat-ring-center')?.getBoundingClientRect();
+        const seats = [...document.querySelectorAll('.bub-seat-ring-seat')].map((el) => el.firstElementChild.getBoundingClientRect());
+        const overlap = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+        return {
+          shown: Boolean(center),
+          collisions: seats.filter((a, i) => seats.slice(i + 1).some((b) => overlap(a, b)) || (center && overlap(a, center))).length,
+          outside: stage ? seats.filter((a) => a.left < 0 || a.right > innerWidth || a.top < 0).length : 0,
+        };
+      });
+      const where = `poker zu ${count} bei ${width}×${height}`;
+      if (!ring.shown) problems.push(`${where}: Tisch fehlt`);
+      if (ring.collisions > 0) problems.push(`${where}: ${ring.collisions} Plätze überlappen`);
+      if (ring.outside > 0) problems.push(`${where}: ${ring.outside} Plätze ragen aus dem Bild`);
+      if (m.pageHeight > height + 2) problems.push(`${where}: Seite rollt (${m.pageHeight} px)`);
+      await context.close();
+    }
+  }
+  // CSP (#322): Selbst wenn der Bereiniger für Anki-Karten umgangen würde, läuft eingeschleustes Skript nicht.
+  {
+    const page = await newPage();
+    await page.goto(base);
+    const meta = await page.evaluate(() => document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute('content') ?? '');
+    if (!meta.includes("script-src 'self'")) problems.push('CSP fehlt in index.html');
+    const ran = await page.evaluate(async () => {
+      window.__eingeschleust = false;
+      const box = document.createElement('div');
+      // Genau das, was ein bösartiges Kartenfeld versuchen würde: Inline-Handler und Inline-Skript.
+      box.innerHTML = '<img src="data:," onerror="window.__eingeschleust = true">';
+      document.body.append(box);
+      const script = document.createElement('script');
+      script.textContent = 'window.__eingeschleust = true';
+      document.body.append(script);
+      await new Promise((r) => setTimeout(r, 300));
+      box.remove();
+      script.remove();
+      return window.__eingeschleust;
+    });
+    if (ran) problems.push('CSP: eingeschleustes Skript lief');
+    const blocked = await page.evaluate(() => window.__csp.length);
+    if (blocked === 0) problems.push('CSP: der Versuch wurde nicht als Verletzung gemeldet');
+    await page.close();
+  }
   // Pass-Seite (#145): im Handy-Hochformat rollt nichts waagerecht, und es gibt keine Fehler.
   {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -243,6 +305,21 @@ try {
     const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (wide > 1) problems.push(`Pass-Seite: rollt waagerecht (${wide} px)`);
     if (errors.length > 0) problems.push(`Pass-Seite: ${errors[0]}`);
+    await context.close();
+  }
+  // Spielhelfer (#106): Übersicht und alle 5 Werkzeuge ohne Fehler und ohne waagerechtes Rollen.
+  {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    for (const hash of ['#/helfer', '#/helfer/wuerfel', '#/helfer/zufall', '#/helfer/startspieler', '#/helfer/uhren', '#/helfer/punkte']) {
+      await page.goto(`${base}${hash}`);
+      await page.locator('.bub-tav-frame').waitFor({ timeout: 10_000 });
+      const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      if (wide > 1) problems.push(`Spielhelfer (${hash}): rollt waagerecht (${wide} px)`);
+    }
+    if (errors.length > 0) problems.push(`Spielhelfer: ${errors[0]}`);
     await context.close();
   }
 } finally {

@@ -501,9 +501,29 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
     <>
       {run.mods.map((mod, index) => {
         const d = describeMod(mod);
+        const def = modDef(mod.key);
+        const courtCard = {
+          id: `fool-${mod.key}`,
+          name: def.name,
+          game: 'narrenhof',
+          category: 'Narr',
+          rarity: def.rarity,
+          cost: sellValue(mod),
+          mult: mod.value,
+          text: def.text,
+          emoji: def.emoji,
+          image: portraitUrl(`fool-${mod.key}`),
+        };
+        const runtimeFields: Record<string, string> = {};
+        if (mod.value !== undefined) {
+          runtimeFields.Multiplikator = String(mod.value);
+          runtimeFields.SpielHinweis = `Aktueller Bonus: ×${mod.value}`;
+        }
         return (
           <Tile
             key={mod.uid}
+            courtCard={courtCard}
+            runtimeFields={runtimeFields}
             emoji={d.emoji}
             image={portraitUrl(`fool-${mod.key}`)}
             title={d.title}
@@ -536,9 +556,18 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
     <>
       {run.consumables.map((item, index) => {
         const d = describeConsumable(item);
+        const courtCard = {
+          id: `cons-${item.key}`,
+          name: d.title,
+          game: 'narrenhof',
+          category: 'Kuriosität',
+          text: d.text,
+          emoji: d.emoji,
+        };
         return (
           <Tile
             key={`c-${index}`}
+            courtCard={courtCard}
             emoji={d.emoji}
             symbol={d.symbol}
             title={d.title}

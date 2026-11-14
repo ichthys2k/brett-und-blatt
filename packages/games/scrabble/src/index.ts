@@ -14,6 +14,7 @@ import {
   type ScrabbleMove,
   type ScrabbleState,
 } from './rules';
+import { describeMove } from './describe';
 
 export type { BoardCell, LastMove, PlacedTile, ScrabbleMove, ScrabbleState } from './rules';
 export { checkPlay, EXCHANGE_MIN_BAG } from './rules';
@@ -63,6 +64,7 @@ export const gameModule: GameModule<ScrabbleState, ScrabbleMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   evaluate,
   sampleHidden,

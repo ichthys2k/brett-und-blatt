@@ -1,0 +1,66 @@
+{
+  "beschreibung": "G12 (#325): Spielfiguren für Go und Gomoku (geteilt). Motiv-id = <satz>-<figur>[-<seite>]; w = hell, b = dunkel, n = neutraler Meister zum Einfärben in die Platzfarben. Alle Motive freistellen (grüner Grund #00B140 → Alphakanal).",
+  "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+  "ohne": "text, letters, numbers, watermark, border, frame, background scene, hands, people, modern objects, logos, photo, green on the object itself, cast shadow, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "1:1",
+  "ziel": "packages/games/go/src/ui/figuren",
+  "groesse": [
+    96,
+    96
+  ],
+  "referenzen": [
+    "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp",
+    "packages/ui/src/cards/portraits/koenig-herz.webp",
+    "packages/games/marketplace/src/ui/figures/herald.webp"
+  ],
+  "motive": [
+    {
+      "id": "wood-stone-w",
+      "titel": "Stein · wood · hell",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen exactly from straight above. Subject: a polished wooden lens-shaped go stone, perfectly round, with a soft highlight, made of pale maple wood."
+    },
+    {
+      "id": "wood-stone-b",
+      "titel": "Stein · wood · dunkel",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen exactly from straight above. Subject: a polished wooden lens-shaped go stone, perfectly round, with a soft highlight, made of dark walnut wood."
+    },
+    {
+      "id": "metal-stone-w",
+      "titel": "Stein · metal · hell",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen exactly from straight above. Subject: a polished metal lens-shaped go stone, perfectly round, with a soft highlight, made of bright pewter."
+    },
+    {
+      "id": "metal-stone-b",
+      "titel": "Stein · metal · dunkel",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen exactly from straight above. Subject: a polished metal lens-shaped go stone, perfectly round, with a soft highlight, made of dark bronze."
+    },
+    {
+      "id": "fable-stone-w",
+      "titel": "Stein · fable · hell",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen exactly from straight above. Subject: a smooth pale river pebble, perfectly round, with a soft highlight, in pale cream colours."
+    },
+    {
+      "id": "fable-stone-b",
+      "titel": "Stein · fable · dunkel",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen exactly from straight above. Subject: a smooth dark slate pebble, perfectly round, with a soft highlight, in deep dark colours."
+    }
+  ]
+}

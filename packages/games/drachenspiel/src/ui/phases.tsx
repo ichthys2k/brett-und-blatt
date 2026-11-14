@@ -3,18 +3,32 @@ import { CARDS_DB } from '../cards';
 import { DECK_THEMES, DECK_THEME_IDS } from '../decks';
 import { HOUSE_POWERS } from '../powers';
 import { decodeDeck } from '../deckcode';
-import type { DrachenspielMove, DrachenspielView, HiddenPlayerView } from '../types';
+import type { DeckThemeId, DrachenspielMove, DrachenspielView, HiddenPlayerView } from '../types';
 import { DeckManager } from './DeckBuilder';
 import { CardFace } from './parts';
 import { getCardFullTitle, getCardTraits } from './traits';
 import { championImage } from './champions';
+import { uiCard } from './cardLookup';
 
 /** Deckwahl: eigene Komponente, damit jede Phase ihre eigenen Hooks hat. */
-export function DeckSelection({ view, me, onMove, timed }: { view: DrachenspielView; me: HiddenPlayerView; onMove: (move: DrachenspielMove) => void; timed: boolean }) {
+export function DeckSelection({
+  view,
+  me,
+  oppTheme,
+  onMove,
+  timed,
+}: {
+  view: DrachenspielView;
+  me: HiddenPlayerView;
+  oppTheme?: DeckThemeId | 'mixed' | null;
+  onMove: (move: DrachenspielMove) => void;
+  timed: boolean;
+}) {
   const [own, setOwn] = useState(false);
+  const themeAttr = oppTheme && oppTheme !== 'mixed' ? oppTheme : undefined;
   if (!me.deckTheme && own) {
     return (
-      <div className="ds-phase-overlay ds-phase-top">
+      <div className="ds-phase-overlay ds-phase-top" data-theme={themeAttr}>
         <h2 className="ds-phase-title">Eigene Decks</h2>
         {timed && (
           <p className="ds-phase-subtitle" role="status">
@@ -33,10 +47,10 @@ export function DeckSelection({ view, me, onMove, timed }: { view: DrachenspielV
   }
   if (!me.deckTheme) {
     return (
-      <div className="ds-phase-overlay">
+      <div className="ds-phase-overlay" data-theme={themeAttr}>
         <h2 className="ds-phase-title">Wähle dein Themendeck</h2>
         <p className="ds-phase-subtitle">
-          {view.options.spells === 'off' ? 'Jedes Deck enthält 30 Tierkarten mit besonderen Stärken.' : 'Jedes Deck enthält 30 Karten: 24 Tiere und 6 Zauber.'}
+          {view.options.spells === 'off' ? 'Jedes Deck enthält 30 Tierkarten mit besonderen Stärken.' : 'Jedes Deck enthält 30 Karten: 24 Tiere und 6 Kniffe.'}
         </p>
         <button type="button" className="ds-btn" onClick={() => setOwn(true)}>
           🃏 Eigenes Deck, Vorschläge, Deck-Code
@@ -48,18 +62,20 @@ export function DeckSelection({ view, me, onMove, timed }: { view: DrachenspielV
             return (
               <div
                 key={themeId}
-                className="ds-deck-choice"
+                className={`ds-deck-choice ds-house-${themeId}`}
                 onClick={() => onMove({ type: 'chooseDeck', deck: themeId })}
                 role="button"
                 tabIndex={0}
               >
-                {img ? (
-                  <img src={img} alt={theme.houseName} className="ds-deck-champion" width={72} height={96} loading="lazy" />
-                ) : (
-                  <span className="ds-deck-emoji">{theme.emoji}</span>
-                )}
+                <div className={`ds-deck-champion-frame ds-crest-frame-${themeId}`}>
+                  {img ? (
+                    <img src={img} alt={theme.houseName} className="ds-deck-champion" width={72} height={96} loading="lazy" />
+                  ) : (
+                    <span className="ds-deck-emoji">{theme.emoji}</span>
+                  )}
+                </div>
                 <span className="ds-deck-name">{theme.houseName}</span>
-                <span className="ds-deck-sub">{theme.emoji} {theme.name}</span>
+                <span className={`ds-house-banner ds-banner-${themeId}`}>{theme.emoji} {theme.name}</span>
                 <span className="ds-deck-desc">{theme.description}</span>
                 <span className="ds-deck-power">
                   {HOUSE_POWERS[themeId].emoji} <strong>{HOUSE_POWERS[themeId].name}:</strong> {HOUSE_POWERS[themeId].text}
@@ -72,15 +88,24 @@ export function DeckSelection({ view, me, onMove, timed }: { view: DrachenspielV
     );
   }
   return (
-    <div className="ds-phase-overlay">
+    <div className="ds-phase-overlay" data-theme={themeAttr}>
       <h2 className="ds-phase-title">Deck gewählt!</h2>
       <p className="ds-phase-subtitle">Warte auf deinen Mitspieler...</p>
     </div>
   );
 }
 
-export function MulliganPhase({ me, onMove }: { me: HiddenPlayerView; onMove: (move: DrachenspielMove) => void }) {
+export function MulliganPhase({
+  me,
+  oppTheme,
+  onMove,
+}: {
+  me: HiddenPlayerView;
+  oppTheme?: DeckThemeId | 'mixed' | null;
+  onMove: (move: DrachenspielMove) => void;
+}) {
   const [mulliganDiscard, setMulliganDiscard] = useState<Set<number>>(new Set());
+  const themeAttr = oppTheme && oppTheme !== 'mixed' ? oppTheme : undefined;
 
   if (!me.mulliganDone && me.hand) {
     const toggleDiscard = (idx: number) => {
@@ -93,14 +118,14 @@ export function MulliganPhase({ me, onMove }: { me: HiddenPlayerView; onMove: (m
     };
 
     return (
-      <div className="ds-phase-overlay">
+      <div className="ds-phase-overlay" data-theme={themeAttr}>
         <h2 className="ds-phase-title">Startkarten tauschen</h2>
         <p className="ds-phase-subtitle">
           Tippe auf Karten, die du abwerfen möchtest, um neue aus dem Deck zu ziehen.
         </p>
         <div className="ds-mulligan-row">
           {me.hand.map((card, idx) => {
-            const def = CARDS_DB[card.defId];
+            const def = uiCard(card.defId);
             if (!def) return null;
             const isDiscarded = mulliganDiscard.has(idx);
             const cardTraits = getCardTraits(def);
@@ -135,7 +160,7 @@ export function MulliganPhase({ me, onMove }: { me: HiddenPlayerView; onMove: (m
     );
   }
   return (
-    <div className="ds-phase-overlay">
+    <div className="ds-phase-overlay" data-theme={themeAttr}>
       <h2 className="ds-phase-title">Startkarten gewählt!</h2>
       <p className="ds-phase-subtitle">Warte auf den Start der Partie...</p>
     </div>

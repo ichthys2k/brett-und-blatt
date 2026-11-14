@@ -3,6 +3,7 @@ import { bingoBot } from './bots';
 import { PACKS } from './content';
 import { meta } from './meta';
 import { applyMove, currentPlayers, eventView, legalMoves, playerView, result, setup, type BingoMove, type BingoState } from './rules';
+import { describeMove } from './describe';
 
 export type { BingoCall, BingoMove, BingoState, FalseCall, Goal } from './rules';
 export { CALLER, canCall, drawnIds, eventView, hasCard, isPlaying, linesOf, missing, unmarkedCells } from './rules';
@@ -94,6 +95,7 @@ export const gameModule: GameModule<BingoState, BingoMove> = {
   applyMove,
   eventView,
   playerView,
+  describeMove,
   result,
   bots: [bingoBot],
 };

@@ -1,6 +1,7 @@
 import { generalBots, mctsSearch, stateFor, type BotDefinition, type BotLevel, type GameModule } from '@brett-und-blatt/engine';
 import { meta } from './meta';
 import { applyMove, currentPlayers, legalMoves, result, setup, type UltimateMove, type UltimateState } from './rules';
+import { describeMove } from './describe';
 
 export type { UltimateMove, UltimateState } from './rules';
 export { playableBoards } from './rules';
@@ -58,6 +59,7 @@ export const gameModule: GameModule<UltimateState, UltimateMove> = {
   legalMoves,
   applyMove,
   playerView: (state) => state,
+  describeMove,
   result,
   bots: [ultimateBot, ...generalBots<UltimateState, UltimateMove, UltimateState>()],
 };

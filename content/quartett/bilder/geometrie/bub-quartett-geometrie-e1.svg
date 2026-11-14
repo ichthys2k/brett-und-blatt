@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" width="480" height="360" role="img" aria-label="Dreiecksprisma (Toblerone-Form)">
+<defs><radialGradient id="pergament" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#f7eed6"/><stop offset="1" stop-color="#e3cf9f"/></radialGradient><style> .flaeche { fill: #d9a400; fill-opacity: 0.22; stroke: none; } .kante, .umriss { fill: none; stroke: #3b2a1a; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; } .kante.verdeckt, .hilfslinie.verdeckt { stroke: #8a7658; stroke-width: 2; stroke-dasharray: 1.5 6; } .hilfslinie { fill: none; stroke: #8a7658; stroke-width: 1.6; } .achse { stroke: #9a6a2e; stroke-width: 1.6; stroke-dasharray: 10 7; } .ecke { fill: #3b2a1a; } .ecke.verdeckt { fill: #8a7658; } .glanz { fill: #fff8e6; fill-opacity: 0.55; } </style></defs>
+<rect width="480" height="360" fill="url(#pergament)" />
+<polygon class="flaeche" points="105.4,104.1 166.7,310.4 44,257.4" />
+<polygon class="flaeche" points="105.4,104.1 166.7,310.4 436,255.9 374.6,49.6" />
+<line class="kante" data-kante="0" x1="105.4" y1="104.1" x2="166.7" y2="310.4" />
+<line class="kante" data-kante="1" x1="166.7" y1="310.4" x2="44" y2="257.4" />
+<line class="kante" data-kante="2" x1="105.4" y1="104.1" x2="44" y2="257.4" />
+<line class="kante verdeckt" data-kante="3" x1="436" y1="255.9" x2="313.3" y2="202.9" />
+<line class="kante" data-kante="4" x1="374.6" y1="49.6" x2="436" y2="255.9" />
+<line class="kante verdeckt" data-kante="5" x1="374.6" y1="49.6" x2="313.3" y2="202.9" />
+<line class="kante" data-kante="6" x1="166.7" y1="310.4" x2="436" y2="255.9" />
+<line class="kante" data-kante="7" x1="105.4" y1="104.1" x2="374.6" y2="49.6" />
+<line class="kante verdeckt" data-kante="8" x1="44" y1="257.4" x2="313.3" y2="202.9" />
+<circle class="ecke" data-ecke="0" cx="105.4" cy="104.1" r="4" />
+<circle class="ecke" data-ecke="1" cx="166.7" cy="310.4" r="4" />
+<circle class="ecke" data-ecke="2" cx="44" cy="257.4" r="4" />
+<circle class="ecke" data-ecke="3" cx="374.6" cy="49.6" r="4" />
+<circle class="ecke" data-ecke="4" cx="436" cy="255.9" r="4" />
+<circle class="ecke verdeckt" data-ecke="5" cx="313.3" cy="202.9" r="3" />
+</svg>

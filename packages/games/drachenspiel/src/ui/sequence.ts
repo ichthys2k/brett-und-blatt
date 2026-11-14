@@ -2,6 +2,7 @@ import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { CARDS_DB } from '../cards';
 import { HOUSE_POWERS } from '../powers';
 import type { CardInstance, DeckThemeId, DrachenspielView, Gear, Minion, SpellTarget } from '../types';
+import { uiCard } from './cardLookup';
 
 /** Eine aufsteigende Anzeige über einem Tier oder Helden. Schlüssel: Tier-Kennung oder `hero-<Platz>`. */
 export interface Float {
@@ -140,7 +141,7 @@ export function buildBeats(
       }
       case 'cardPlayed': {
         const { seat, card, minion } = event as unknown as { seat: SeatId; card: CardInstance; minion?: Minion };
-        const def = CARDS_DB[card.defId];
+        const def = uiCard(card.defId);
         current.log.push(`🎴 ${nameOf(seat)} legt ${def?.emoji ?? ''} ${def?.name ?? 'eine Karte'}`);
         if (def && !def.isSpell) current.calls.push({ name: def.name, kind: 'play', sound: def.sound });
         if ((def?.cost ?? 0) >= HEAVY_COST) current.heavy = true;
@@ -152,9 +153,9 @@ export function buildBeats(
       }
       case 'spellCast': {
         const { seat, card, target } = event as unknown as { seat: SeatId; card: CardInstance; target: SpellTarget | null };
-        const def = CARDS_DB[card.defId];
-        const on = target?.kind === 'minion' ? ` auf ${nameOfMinion(target.id)}` : target?.kind === 'hero' ? ` auf den Helden von ${nameOf((1 - seat) as SeatId)}` : '';
-        current.log.push(`✨ ${nameOf(seat)} wirkt ${def?.emoji ?? ''} ${def?.name ?? 'einen Zauber'}${on}`);
+        const def = uiCard(card.defId);
+        const on = target?.kind === 'minion' ? ` auf ${nameOfMinion(target.id)}` : target?.kind === 'hero' ? ` auf den Turnierherrn von ${nameOf((1 - seat) as SeatId)}` : '';
+        current.log.push(`✨ ${nameOf(seat)} nutzt ${def?.emoji ?? ''} ${def?.name ?? 'einen Kniff'}${on}`);
         current.floats.push({ target: `hero-${seat}`, text: def?.emoji ?? '✨', kind: 'fx' });
         break;
       }
@@ -165,7 +166,7 @@ export function buildBeats(
         const targetKey = target.kind === 'minion' ? target.id : `hero-${(1 - owner) as SeatId}`;
         current.attack = { attackerId, target: targetKey };
         current.impacted.push(targetKey);
-        const victim = target.kind === 'minion' ? nameOfMinion(target.id) : `den Helden von ${nameOf((1 - owner) as SeatId)}`;
+        const victim = target.kind === 'minion' ? nameOfMinion(target.id) : `den Turnierherrn von ${nameOf((1 - owner) as SeatId)}`;
         current.log.push(`⚔️ ${nameOfMinion(attackerId)} greift ${victim} an`);
         if (attacker) current.calls.push({ name: attacker.minion.name, kind: 'attack', sound: attacker.minion.sound });
         break;
@@ -182,7 +183,7 @@ export function buildBeats(
         const targetKey = target.kind === 'minion' ? target.id : `hero-${(1 - seat) as SeatId}`;
         current.attack = { attackerId: `hero-${seat}`, target: targetKey };
         current.impacted.push(targetKey);
-        const victim = target.kind === 'minion' ? nameOfMinion(target.id) : `den Helden von ${nameOf((1 - seat) as SeatId)}`;
+        const victim = target.kind === 'minion' ? nameOfMinion(target.id) : `den Turnierherrn von ${nameOf((1 - seat) as SeatId)}`;
         current.log.push(`⚔️ ${nameOf(seat)} greift ${victim} an`);
         break;
       }
@@ -225,7 +226,7 @@ export function buildBeats(
           if (hit.armor !== undefined) current.armor[hit.targetSeat] = hit.armor;
           const lost = hit.lost ?? hit.amount;
           const blocked = hit.amount - lost;
-          current.log.push(blocked > 0 ? `🛡️ ${nameOf(hit.targetSeat)}: Rüstung fängt ${blocked} ab, ${lost} Leben verloren` : `💥 ${nameOf(hit.targetSeat)} verliert ${lost} Leben`);
+          current.log.push(blocked > 0 ? `🛡️ ${nameOf(hit.targetSeat)}: Rüstung fängt ${blocked} ab, ${lost} Wimpel verloren` : `💥 ${nameOf(hit.targetSeat)} verliert ${lost} Wimpel`);
         }
         break;
       }
@@ -254,7 +255,7 @@ export function buildBeats(
         const { seat, amount, health } = event as unknown as { seat: SeatId; amount: number; health: number };
         current.floats.push({ target: `hero-${seat}`, text: `+${amount}`, kind: 'heal' });
         current.heroes[seat] = health;
-        current.log.push(`💚 ${nameOf(seat)} heilt ${amount} Leben`);
+        current.log.push(`💚 ${nameOf(seat)} erneuert ${amount} Wimpel`);
         break;
       }
       case 'bubblePopped': {
@@ -263,7 +264,7 @@ export function buildBeats(
         current.floats.push({ target: minionId, text: '🫧', kind: 'fx' });
         const shown = findShown(current, minionId);
         if (shown) shown.minion = { ...shown.minion, bubble: false };
-        current.log.push(`🫧 Die Schutzblase von ${nameOfMinion(minionId)} platzt`);
+        current.log.push(`🛡️ Der Prunkschild von ${nameOfMinion(minionId)} splittert`);
         break;
       }
       case 'damageBlocked': {
@@ -299,7 +300,7 @@ export function buildBeats(
       }
       case 'trapSprung': {
         const { seat, card } = event as unknown as { seat: SeatId; card: CardInstance };
-        const def = CARDS_DB[card.defId];
+        const def = uiCard(card.defId);
         current.floats.push({ target: `hero-${seat}`, text: def?.emoji ?? '🪤', kind: 'fx' });
         const text = `🪤 Falle von ${nameOf(seat)}: ${def?.name ?? 'Falle'}!`;
         current.log.push(text);
@@ -308,12 +309,12 @@ export function buildBeats(
       }
       case 'questStarted': {
         const { seat, cardId } = event as unknown as { seat: SeatId; cardId: string };
-        current.log.push(`📜 ${nameOf(seat)} beginnt die Aufgabe ${CARDS_DB[cardId]?.name ?? ''}`);
+        current.log.push(`📜 ${nameOf(seat)} beginnt die Aufgabe ${uiCard(cardId)?.name ?? ''}`);
         break;
       }
       case 'questDone': {
         const { seat, cardId, reward } = event as unknown as { seat: SeatId; cardId: string; reward: string };
-        const text = `📜 ${nameOf(seat)}: ${CARDS_DB[cardId]?.name ?? 'Aufgabe'} geschafft! Belohnung: ${CARDS_DB[reward]?.name ?? 'eine Karte'}`;
+        const text = `📜 ${nameOf(seat)}: ${uiCard(cardId)?.name ?? 'Aufgabe'} geschafft! Belohnung: ${uiCard(reward)?.name ?? 'eine Karte'}`;
         current.log.push(text);
         current.notices.push(text);
         break;
@@ -353,7 +354,7 @@ export function buildBeats(
       }
       case 'handFull': {
         const { seat, cardId } = event as unknown as { seat: SeatId; cardId: string };
-        const text = `🚫 ${nameOf(seat)}: Hand voll, ${CARDS_DB[cardId]?.name ?? 'Karte'} geht verloren`;
+        const text = `🚫 ${nameOf(seat)}: Hand voll, ${uiCard(cardId)?.name ?? 'Karte'} geht verloren`;
         current.log.push(text);
         current.notices.push(text);
         break;
@@ -388,19 +389,19 @@ export function buildBeats(
         const shown = findShown(current, minionId);
         if (shown) shown.dying = true;
         current.calls.push({ name, kind: 'death' });
-        current.log.push(`💀 ${name} geht vom Feld`);
+        current.log.push(`🕊️ ${name} verbeugt sich und tritt ab`);
         break;
       }
       case 'boardFull': {
         const { seat, cardId } = event as unknown as { seat: SeatId; cardId: string };
-        const text = `🚫 ${nameOf(seat)}: Feld voll, ${CARDS_DB[cardId]?.name ?? 'Tier'} kommt nicht aufs Feld`;
+        const text = `🚫 ${nameOf(seat)}: Feld voll, ${uiCard(cardId)?.name ?? 'Tier'} kommt nicht aufs Feld`;
         current.log.push(text);
         current.notices.push(text);
         break;
       }
       case 'cardBurned': {
         const { seat, card } = event as unknown as { seat: SeatId; card: CardInstance };
-        const text = `🔥 ${nameOf(seat)}: Hand voll, ${CARDS_DB[card.defId]?.name ?? 'Karte'} verbrennt`;
+        const text = `🔥 ${nameOf(seat)}: Hand voll, ${uiCard(card.defId)?.name ?? 'Karte'} verbrennt`;
         current.log.push(text);
         current.notices.push(text);
         break;

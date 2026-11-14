@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Button } from '../components/controls';
 import { t } from '../i18n';
+import { PUSH_PUBLIC_KEY } from '../lib/push';
 import { navigate, paths } from '../lib/router';
 
 /**
@@ -61,6 +62,50 @@ export function Impressum() {
         </a>
       </p>
     </LegalPage>
+  );
+}
+
+/**
+ * Hinweise aufs Gerät (Web Push, #242). **Entwurf, nicht juristisch geprüft** – Cornelius liest gegen. Der Abschnitt erscheint nur,
+ * wenn die Funktion sichtbar ist (öffentlicher Schlüssel im Build), damit die Erklärung nie etwas beschreibt, das es noch nicht gibt.
+ */
+export function PushPrivacy() {
+  return (
+    <>
+      <h2>Hinweise aufs Gerät (Web Push)</h2>
+      <p>
+        Auf Wunsch schickt der Spieleserver dir eine Meldung aufs Gerät, auch wenn die App geschlossen ist: wenn eine Turnierpartie von dir aufgerufen wird,
+        eine Frist bald abläuft, ein Turnier beginnt oder endet oder du in einer Fernpartie am Zug bist. Das ist freiwillig und für das Spielen nicht nötig. Es
+        passiert nur, wenn du ausdrücklich „Hinweise einschalten“ wählst und dein Browser es zusätzlich erlaubt; nie beim bloßen Öffnen einer Seite.
+      </p>
+      <p>
+        Auch am Schwarzen Brett („Wer hat Lust?“) gibt es diese Hinweise, ebenfalls nur auf ausdrücklichen Wunsch: wenn jemand auf deinem Zettel „Bin dabei“ sagt, ein
+        Vorschlag auf deine Zusage wartet oder dein Raum steht. Dort speichert der Spieleserver das Abo unter einer aus deiner Geräte-Kennung abgeleiteten
+        Kurzkennung (nicht unter der Kennung selbst) und vergisst es spätestens nach drei Stunden; mit einem Abo bleibt dein Zettel hängen, auch wenn du die Seite schließt,
+        bis er nach 30 Minuten (mit Verlängern später) abläuft. Die Meldung nennt weder Namen noch Spielnamen.
+      </p>
+      <p>Dafür speichert der Spieleserver beim jeweiligen Turnier oder Raum (Rechenzentren in der EU):</p>
+      <ul>
+        <li>die Adresse („Endpunkt“) des Push-Dienstes deines Browsers und zwei Schlüssel, mit denen die Meldung nur für dein Gerät lesbar verschlüsselt wird,</li>
+        <li>deine Geräte-Kennung und den Zeitpunkt der Anmeldung,</li>
+        <li>zum Schutz vor zu vielen Meldungen die Zeitpunkte der zuletzt gesendeten Meldungen (höchstens eine je Art und 30 Minuten) und welche Meldungen schon gesendet wurden.</li>
+      </ul>
+      <p>
+        Die Meldung enthält nur die Art („Du bist am Zug“) und den Link zum Turnier oder Raum, keine Namen und keine Spielinhalte. Sie läuft über den Push-Dienst
+        deines Browser-Herstellers (Google, Apple, Mozilla oder Microsoft); dort können Daten in Länder außerhalb der EU gelangen, und es gelten deren
+        Datenschutzbestimmungen. Der Inhalt ist Ende-zu-Ende verschlüsselt, der Push-Dienst sieht nur Endpunkt, Größe und Zeitpunkt.
+      </p>
+      <p>
+        Die Daten bleiben, bis du die Hinweise ausschaltest, bis der Push-Dienst das Abo als ungültig meldet oder bis das Turnier (30 Tage nach seinem Ende, Ligen
+        nach einem Jahr) bzw. der Raum (Fernpartien 30 Tage nach der letzten Aktivität) gelöscht wird. Widerrufen kannst du jederzeit: in der App mit „Hinweise sind an –
+        ausschalten“ (in einem Turnier, in einer Fernpartie oder unter „Optionen“) und in den Einstellungen deines Browsers. Auf deinem Gerät merkt sich die App nur,
+        dass du Hinweise wünschst (Local Storage); das Abo selbst verwaltet dein Browser.
+      </p>
+      <p>
+        Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du mit dem Einschalten erteilst und jederzeit mit Wirkung für die Zukunft widerrufen
+        kannst. Ein Hinweis ist keine Zustellgarantie; Spielregeln und Fristen hängen nie davon ab, dass eine Meldung ankam.
+      </p>
+    </>
   );
 }
 
@@ -152,7 +197,7 @@ export function Datenschutz() {
       <p>
         <strong>Klassen:</strong> Legst du eine Klasse an oder trittst bei, speichert der Spieleserver in der EU den Namen der Klasse, die Geräte-Kennung jedes Mitglieds (zum Ausweisen, sie wird nie anderen
         Mitgliedern gezeigt) sowie Spitzname, Bild und – wenn du eines gewählt hast – das Wappen. Alle Mitglieder sehen Spitzname, Bild und Wappen der anderen Mitglieder; Fremde ohne Mitgliedschaft sehen nur den
-        Namen der Klasse. Dazu legt dein Gerät, solange du die Klassenseite offen hast, eine „Klassenkarte“ ab: je nach Einstellung der Leitung und deiner eigenen Wahl deine Stempel, die Zahl deiner Pokale je Spiel und deine Lieblingsspiele (nie Codes, Kennungen oder Lernstände); du kannst jeden Teil abwählen. Die Leitung kann Mitglieder entfernen und die Klasse auflösen; du kannst jederzeit gehen. Eine Klasse ohne Aktivität wird nach einem Jahr gelöscht. Legt die Leitung Klassenausweise an, entstehen dabei auf dem Spieleserver Ausweise für die Kinder (nur Spitzname und ein Tierbild als Platzhalter) mit Spielercode und Start-PIN; die zugehörigen Codes
+        Namen der Klasse. Dazu legt dein Gerät eine „Klassenkarte“ ab (und führt sie nach Partieende nach): je nach Einstellung der Leitung und deiner eigenen Wahl deine Stempel, die Zahl deiner Pokale je Spiel, deine Lieblingsspiele, deinen Album-Fortschritt (nur die Zahl der Funde je Spiel) und deine Bot-Wertung (aggregierte Elo-Leistungszahl, Zahl der Partien und Siege gegen Bots; nie Codes, Kennungen oder Lernstände einzelner Karten); du kannst jeden Teil abwählen. Schaltet die Leitung die Rangliste ein, können Mitglieder die Bot-Wertung und Pokale je Spiel in einer Übersicht vergleichen. Öffnet ein Mitglied einen Raum für die Klasse, merkt sich der Server den Raumcode und wer ihn geöffnet hat für sechs Stunden und zeigt ihn nur Mitgliedern der Klasse; der Raum selbst ist nicht öffentlich. Die Leitung kann Mitglieder entfernen und die Klasse auflösen; du kannst jederzeit gehen. Eine Klasse ohne Aktivität wird nach einem Jahr gelöscht. Legt die Leitung Klassenausweise an, entstehen dabei auf dem Spieleserver Ausweise für die Kinder (nur Spitzname und ein Tierbild als Platzhalter) mit Spielercode und Start-PIN; die zugehörigen Codes
         speichert die Leitung verschlüsselt in ihrem eigenen Pass, um vergessene PINs zurückzusetzen. Bei Schulklassen ist die Schule
         für die Teilnahme der Kinder verantwortlich. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
@@ -219,6 +264,31 @@ export function Datenschutz() {
         übermittelt werden. Cloudflare ist nach dem EU-US Data Privacy Framework zertifiziert. Wie lange Cloudflare diese Daten speichert, bestimmt
         Cloudflare; Näheres steht in der <ExternalLink href={CLOUDFLARE_PRIVACY_URL}>Datenschutzerklärung von Cloudflare</ExternalLink>. Ich selbst
         werte keine Zugriffsprotokolle aus und speichere keine IP-Adressen.
+      </p>
+
+      {PUSH_PUBLIC_KEY && <PushPrivacy />}
+
+      <h2>Sprachchat in privaten Räumen</h2>
+      <p>
+        In privaten Räumen (nur wer den Raumcode hat) kannst du mit den anderen sprechen – in der Web-App wie in der VR-App. Das Mikrofon geht erst an, wenn
+        du ausdrücklich „Mitsprechen“ wählst und es im Browser erlaubst; du kannst dich jederzeit stumm schalten, aussteigen oder einzelne Mitspieler für dich
+        stumm schalten. Die Stimme läuft direkt zwischen den Geräten (WebRTC) und wird weder auf dem Spieleserver noch sonst irgendwo aufgezeichnet oder
+        gespeichert. Der Spieleserver vermittelt nur den Verbindungsaufbau und weiß, wer gerade mitspricht. Dabei erfahren die Geräte im Sprachchat
+        gegenseitig ihre IP-Adressen. Für den Verbindungsaufbau wird der STUN-Server von Cloudflare genutzt, in schwierigen Netzen gegebenenfalls ein
+        TURN-Server von Cloudflare, der die verschlüsselten Daten nur durchleitet. Wer „Melden“ wählt, schaltet den Sprachchat für alle im Raum bis zur
+        nächsten Partie ab; dabei wird nichts gespeichert oder weitergegeben. In öffentlichen Räumen gibt es keinen Sprachchat. Rechtsgrundlage ist Art. 6
+        Abs. 1 lit. a DSGVO (deine Einwilligung durch das Einschalten des Mikrofons), die du jederzeit durch Aussteigen widerrufen kannst.
+      </p>
+
+      <h2>VR-App (vr.spiele.lipponer.de)</h2>
+      <p>
+        Die VR-App für die Meta Quest nutzt denselben Spieleserver wie diese Seite; dafür gilt das oben Gesagte. Sie wird von Cloudflare Pages ausgeliefert, wobei
+        Cloudflare wie oben technisch notwendige Daten wie deine IP-Adresse verarbeitet. Sitzen mehrere Leute mit Brille im selben Raum, schicken sich die Brillen
+        Kopf- und Handpositionen direkt zu (WebRTC), damit ihr euch als Figuren seht. Dabei erfahren die Brillen gegenseitig ihre IP-Adressen; der Spieleserver
+        vermittelt nur den Verbindungsaufbau und speichert weder Positionen noch Adressen. Kommt keine direkte Verbindung zustande, geht höchstens einmal je
+        Sekunde nur die Kopfposition über den Spieleserver an die anderen Brillen, ohne gespeichert zu werden. Für den Verbindungsaufbau wird der STUN-Server von
+        Cloudflare genutzt, bei schwierigen Netzen gegebenenfalls ein TURN-Server von Cloudflare, der die Daten nur durchleitet. Wer am Handy oder Rechner
+        spielt, sendet keine Positionen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
       </p>
 
       <h2>Speicherung auf deinem Gerät</h2>

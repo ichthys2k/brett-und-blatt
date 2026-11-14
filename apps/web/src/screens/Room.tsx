@@ -1,5 +1,6 @@
 import { PlayerCrest } from '@brett-und-blatt/ui';
-import { BOT_LEVELS, parseCrest, teamsFor, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
+import { BOT_LEVELS, parseCrest, resolveOptions, teamsFor, timePresetsOf, type CustomCardCatalog, type TimePresetId } from '@brett-und-blatt/engine';
+import { CARD_SET_GAMES, useActiveCardSet, useChangedCatalog } from '../lib/activeCardSet';
 import { MAX_SEATS, TOURNAMENT_CODE_PATTERN, parseRoomCode, roomCapabilities, type Capability, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
@@ -10,6 +11,7 @@ import { t } from '../i18n';
 import { announceAvatar } from '../lib/avatar-sounds';
 import { describeTime, levelLabel } from '../lib/format';
 import { requestNotificationPermission } from '../lib/notifications';
+import { PushToggle } from '../components/PushToggle';
 import { GAME_SERVER, useRoomConnection, type RoomConnection, type RoomState } from '../lib/online';
 import { saveOwnProfile } from '../lib/playerPass';
 import { games, loadGame, type LoadedGame } from '../lib/registry';
@@ -17,7 +19,12 @@ import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { GameTable } from './Play';
 import { TakeBackBar } from '../components/TakeBackBar';
+import { PinRoom } from '../components/PinRoom';
+import { GAME_SERVER as BOARD_SERVER } from '../lib/server';
 import { TeamChip, TeamSummary } from '../components/Teams';
+import { CustomCardsOverlay } from '../components/CustomCardsOverlay';
+import { VoiceMenu } from '../components/VoiceMenu';
+import { useVoice } from '../lib/voice';
 
 const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
 /** Online gibt es nur Spiele für mehrere Personen. */
@@ -45,6 +52,8 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
   const code = parseRoomCode(rawCode);
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
   const [state, connection] = useRoomConnection(code ?? '', code ? profile : null);
+  // Sprachchat (#352): vor allen frühen Rückgaben, wie es React für Hooks verlangt.
+  const { voice, voiceState } = useVoice(connection, state);
 
   useEffect(() => {
     if (code && profile) {
@@ -111,6 +120,13 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
     const seat = room.lobby.seats[index];
     return (seat?.kind === 'human' && room.members.find((m) => m.id === seat.memberId)?.name) || '?';
   };
+  /** Hinweise aufs Gerät (#242): nur bei Fernpartien und nur, wenn der Server sie eingerichtet hat. */
+  const pushToggle =
+    room.correspondence && state.push !== null ? (
+      <div className="mx-3 mt-2">
+        <PushToggle enabled={state.push} onEnable={(message) => connection.send(message)} onDisable={() => connection.send({ type: 'pushUnsubscribe' })} />
+      </div>
+    ) : null;
   const toTournament = room.match && (
     <Button className="w-full" onClick={() => navigate(paths.tournament(room.match!.tournament))}>
       🏆 {t('tournament.backToPage')}
@@ -120,6 +136,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
     <p className="fixed inset-x-0 bottom-0 z-30 bg-warning px-3 py-2 text-center text-sm font-medium text-white">{t('online.reconnecting')}</p>
   );
   const toasts = <SignalToasts signals={state.signals} members={room.members} />;
+  const voiceMenu = (inBar: boolean) => <VoiceMenu voice={voice} state={voiceState} members={room.members} you={state.you} off={room.voiceOff} onReport={() => connection.send({ type: 'reportVoice' })} inBar={inBar} />;
   const errorBox = state.error ? (
     <p role="alert" className="fixed inset-x-3 top-3 z-30 mx-auto max-w-md rounded-xl bg-danger px-3 py-2 text-center text-sm text-white shadow-md">
       {state.error}
@@ -148,6 +165,17 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             onRestart: (rotate: boolean) => connection.send({ type: 'start', rotate }),
             onLobby: () => connection.send({ type: 'toLobby' }),
             onLeave: leave,
+            ...(state.after
+              ? {
+                  after: {
+                    info: state.after,
+                    seatCount: room.lobby.seats.filter((seat) => seat.kind === 'bot' || seat.memberId !== null).length,
+                    onVote: (choice: 'again' | 'other') => connection.send({ type: 'afterVote', choice }),
+                    onPropose: (gameId: string) => connection.send({ type: 'afterPropose', gameId }),
+                    onPick: (gameId: string) => connection.send({ type: 'afterPick', gameId }),
+                  },
+                }
+              : {}),
             avatars: state.room?.lobby.seats.map((seat) => {
               if (seat.kind !== 'human' || !seat.memberId) return null;
               return state.room?.members.find((m) => m.id === seat.memberId)?.avatar ?? null;
@@ -155,7 +183,10 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
             ...(loaded.info.takeBack ? { bar: <TakeBackBar session={session} /> } : {}),
             chat: (inBar: boolean) => (
-              <ReactionMenu inBar={inBar} onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} phrases={loaded.ui.phrases} />
+              <>
+                {voiceMenu(inBar)}
+                <ReactionMenu inBar={inBar} onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} phrases={loaded.ui.phrases} />
+              </>
             ),
             extra: (
               <>
@@ -165,6 +196,8 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
                   </p>
                 )}
                 {toTournament}
+                {pushToggle}
+                <JoinRequest room={room} you={state.you} yourSeat={session.yourSeat} info={loaded.info} connection={connection} />
                 <GameSeats session={session} seatLabel={loaded.ui.seatLabel} room={room} send={connection.send.bind(connection)} />
                 <ModeratorEntry session={session} seatLabel={loaded.ui.seatLabel} room={room} you={state.you} capabilities={roomCapabilities(isHost)} connection={connection} />
               </>
@@ -204,7 +237,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
 
   return (
     <>
-      <Lobby room={room} state={state} connection={connection} isHost={isHost} onLeave={leave} />
+      <Lobby room={room} state={state} connection={connection} isHost={isHost} onLeave={leave} pushToggle={pushToggle} voiceMenu={voiceMenu(false)} />
       {toasts}
       {errorBox}
       {banner}
@@ -280,6 +313,7 @@ function ModeratorEntry({
     () => session.version,
   );
   if (capabilities.length === 0) return null;
+  const requests = room.members.filter((member) => member.join === 'asking');
   const seatCount = session.config.seats.length;
   const members: ModeratorMember[] = room.members.map((member) => {
     const index = session.config.seats.findIndex((_, i) => session.seatMember(i) === member.id);
@@ -297,6 +331,11 @@ function ModeratorEntry({
       <div className="mx-3 mt-2">
         <Button variant="secondary" className="min-h-9 text-sm" onClick={() => setOpen(true)}>
           🛠 {t('mod.open')}
+          {requests.length > 0 && (
+            <span className="rounded-full bg-accent px-1.5 text-xs text-white" aria-label={t('join.requests')}>
+              🙋 {requests.length}
+            </span>
+          )}
         </Button>
       </div>
       {open && (
@@ -305,6 +344,11 @@ function ModeratorEntry({
           members={members}
           namesLocked={room.lobby.namesLocked ?? false}
           displays={room.displays ?? 0}
+          requests={requests}
+          acceptRequests={room.lobby.acceptRequests ?? room.lobby.isPublic}
+          onAnswerJoin={(memberId, ok) => connection.send({ type: 'answerJoin', memberId, ok })}
+          onAcceptAllJoins={() => connection.send({ type: 'acceptAllJoins' })}
+          onSetAcceptRequests={(allowed) => connection.send({ type: 'setAcceptRequests', allowed })}
           onRename={(memberId, profile) => {
             if (memberId === you) {
               saveOwnProfile(profile);
@@ -338,12 +382,16 @@ export function useLoadedGame(gameId: string | null): LoadedGame | null {
   return loaded;
 }
 
-function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage; state: RoomState; connection: RoomConnection; isHost: boolean; onLeave: () => void }) {
+function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu }: { room: RoomMessage; state: RoomState; connection: RoomConnection; isHost: boolean; onLeave: () => void; pushToggle?: React.ReactNode; voiceMenu?: React.ReactNode }) {
   const { lobby } = room;
   const game = useLoadedGame(lobby.gameId);
   const teams = game ? teamsFor(game.info, lobby.options, lobby.seats.length) : undefined;
   const [showQr, setShowQr] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showCustomCards, setShowCustomCards] = useState(false);
+  const checksum =
+    (typeof lobby.options?.cardCatalogChecksum === 'string' && lobby.options.cardCatalogChecksum) ||
+    parseCatalogOption(lobby.options?.customCardCatalog)?.checksum;
   // Neue Mitglieder kündigen sich mit ihrem Tier an – nicht beim Öffnen der Lobby und
   // nicht beim Wiederverbinden, denn dabei bleibt die Mitglieds-ID gleich.
   const announced = useRef<Set<string> | null>(null);
@@ -391,13 +439,26 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
           ←
         </Button>
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm text-muted">{t('online.room')}</p>
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${lobby.isPublic ? 'border-accent/40 bg-accent/10 text-accent' : 'border-line bg-surface text-muted'}`}>
               {lobby.isPublic ? `🌐 ${t('online.badge.public')}` : `🔒 ${t('online.badge.private')}`}
             </span>
+            {checksum && (
+              <button
+                type="button"
+                onClick={() => setShowCustomCards(true)}
+                className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent hover:bg-accent/20 cursor-pointer"
+                title={`Eigenes Kartenset (Anki) #${checksum} – Details anzeigen`}
+              >
+                ✨ Anki #{checksum}
+              </button>
+            )}
           </div>
-          <h1 className="bub-room-code text-3xl tracking-widest">{room.code}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="bub-room-code text-3xl tracking-widest">{room.code}</h1>
+            {voiceMenu}
+          </div>
         </div>
       </header>
 
@@ -436,6 +497,24 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
             </div>
             <span className="text-xl" aria-hidden="true">
               🌐
+            </span>
+          </label>
+        )}
+        {isHost && lobby.isPublic && lobby.gameId && BOARD_SERVER && <PinRoom code={room.code} />}
+        {isHost && (
+          <label className="flex cursor-pointer select-none items-center gap-3 border-t border-line pt-2">
+            <input
+              type="checkbox"
+              checked={lobby.acceptRequests ?? lobby.isPublic}
+              onChange={(e) => send({ type: 'setAcceptRequests', allowed: e.target.checked })}
+              className="h-4 w-4 rounded accent-accent"
+            />
+            <div className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">{t('join.allow')}</span>
+              <span className="block text-xs text-muted">{t('join.allowHint')}</span>
+            </div>
+            <span className="text-xl" aria-hidden="true">
+              🙋
             </span>
           </label>
         )}
@@ -502,6 +581,7 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
           <p className="text-muted">{t('online.noGame')}</p>
         )}
       </Section>
+      {isHost && lobby.gameId && <CardSetLobbyControl gameId={lobby.gameId} checksum={checksum} onSet={(catalog) => send({ type: 'setCustomCardCatalog', catalog })} />}
 
       {game && (
         <>
@@ -555,6 +635,11 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
                     </div>
                   );
                 })}
+              {/* Eigenes Paket aus der Bibliothek (#218): dieselbe Wahl wie in der Einrichtung, nur für Spiele mit der verborgenen Option „pack“. */}
+              {isHost && game.ui.SetupExtra && game.module.options.some((spec) => spec.id === 'pack' && spec.hidden) && (
+                <game.ui.SetupExtra options={resolveOptions(game.module, lobby.options)} seats={lobby.seats.length} setOption={(id, value) => send({ type: 'setOption', id, value })} />
+              )}
+              {!isHost && typeof lobby.options.pack === 'string' && lobby.options.pack !== '' && <p className="text-sm text-muted">📚 Eigenes Paket der Raumleitung</p>}
             </Section>
           )}
 
@@ -574,6 +659,8 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
           </Section>
         </>
       )}
+
+      {pushToggle}
 
       <Section title={t('online.members')}>
         {!isHost && lobby.namesLocked && <p className="text-sm text-muted">🔒 {t('online.namesLockedNotice')}</p>}
@@ -611,7 +698,42 @@ function Lobby({ room, state, connection, isHost, onLeave }: { room: RoomMessage
       ) : !isHost ? (
         <p className="text-center text-sm text-muted">{t('online.startHint')}</p>
       ) : null}
+      {showCustomCards && checksum && (
+        <CustomCardsOverlay
+          checksum={checksum}
+          catalog={parseCatalogOption(lobby.options?.customCardCatalog)}
+          onClose={() => setShowCustomCards(false)}
+        />
+      )}
     </Page>
+  );
+}
+
+/**
+ * Zuschauer in einer laufenden Partie: fragen, ob sie ab der nächsten Runde mitspielen dürfen (#299). Die Raumleitung
+ * entscheidet; hier steht nur der eigene Stand (frei, angefragt, vorgemerkt).
+ */
+function JoinRequest({ room, you, yourSeat, info, connection }: { room: RoomMessage; you: string | null; yourSeat: number | null; info: LoadedGame['info']; connection: RoomConnection }) {
+  const me = room.members.find((member) => member.id === you);
+  const allowed = !room.match && (room.lobby.acceptRequests ?? room.lobby.isPublic) && !info.joinMidGame && info.players.max > info.players.min;
+  if (!me || yourSeat !== null || !allowed) return null;
+  if (me.join === 'queued') return <p className="mx-3 mt-2 rounded-xl bg-accent/10 px-3 py-2 text-center text-sm font-semibold">✅ {t('join.queued')}</p>;
+  if (me.join === 'asking') {
+    return (
+      <div className="mx-3 mt-2 flex flex-wrap items-center justify-center gap-2 rounded-xl bg-surface-2 px-3 py-2 text-sm">
+        <span>🙋 {t('join.asking')}</span>
+        <Button variant="ghost" className="min-h-9 text-sm" onClick={() => connection.send({ type: 'cancelAskToJoin' })}>
+          {t('join.cancel')}
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <div className="mx-3 mt-2">
+      <Button variant="secondary" className="min-h-9 w-full text-sm" onClick={() => connection.send({ type: 'askToJoin' })}>
+        🙋 {t('join.ask')}
+      </Button>
+    </div>
   );
 }
 
@@ -649,6 +771,7 @@ function MemberRow({
           {member.name}
           {isYou && ` (${t('online.you')})`}
           {isRoomHost && <span className="ml-2 text-xs text-muted">👑 {t('online.host')}</span>}
+          {member.join && <span className="ml-2 text-xs text-muted">🙋 {member.join === 'queued' ? t('join.queuedTag') : t('join.askingTag')}</span>}
           {member.nameFixed && (
             <span className="ml-1 text-xs" title={t('online.nameFixed')}>
               🔒<span className="sr-only"> {t('online.nameFixed')}</span>
@@ -777,3 +900,37 @@ function SeatRow({
     </li>
   );
 }
+
+/** Die Option `customCardCatalog` steht im Raum als JSON-Text (#270). */
+function parseCatalogOption(value: unknown): CustomCardCatalog | undefined {
+  if (typeof value !== 'string') return undefined;
+  try {
+    return JSON.parse(value) as CustomCardCatalog;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Raumleitung: das aktive Kartenset aus der Bibliothek für diese Partie verwenden oder entfernen (#270). */
+function CardSetLobbyControl({ gameId, checksum, onSet }: { gameId: string; checksum: string | undefined; onSet: (catalog: CustomCardCatalog | null) => void }) {
+  const set = useActiveCardSet();
+  const changed = useChangedCatalog(gameId, set?.catalog);
+  if (!CARD_SET_GAMES[gameId]) return null;
+  if (checksum) {
+    return (
+      <p className="flex flex-wrap items-center gap-2 text-sm">
+        🎴 Eigenes Kartenset aktiv (Anki #{checksum}).
+        <Button variant="ghost" onClick={() => onSet(null)}>
+          Standardkarten verwenden
+        </Button>
+      </p>
+    );
+  }
+  if (!set || !changed) return null;
+  return (
+    <Button variant="ghost" onClick={() => onSet(changed)}>
+      🎴 Eigenes Kartenset „{set.name}“ verwenden
+    </Button>
+  );
+}
+

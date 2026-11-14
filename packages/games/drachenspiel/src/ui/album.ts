@@ -10,7 +10,7 @@ export const albumSpec: AlbumSpec<DrachenspielView> = {
   title: 'Drachenspiel',
   catalog: () => [
     ...ALL_CARD_IDS.map((id) => ({ id, label: CARDS_DB[id]!.name, group: 'Tiere', icon: CARDS_DB[id]!.emoji })),
-    ...ALL_SPELL_IDS.map((id) => ({ id, label: SPELLS_DB[id]!.name, group: 'Zauber', icon: SPELLS_DB[id]!.emoji })),
+    ...ALL_SPELL_IDS.map((id) => ({ id, label: SPELLS_DB[id]!.name, group: 'Kniffe', icon: SPELLS_DB[id]!.emoji })),
   ],
   finds: ({ view, seat, result }) => {
     if (!result || result.kind !== 'win' || !result.winners.includes(seat)) return [];

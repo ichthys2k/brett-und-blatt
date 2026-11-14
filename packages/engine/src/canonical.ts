@@ -1,6 +1,6 @@
 /** JSON mit sortierten Schlüsseln: Gleiche Werte ergeben immer denselben Text. */
 export function canonicalJson(value: unknown): string {
-  return JSON.stringify(sortKeys(value));
+  return JSON.stringify(sortKeys(value)) ?? 'undefined';
 }
 
 /** Vergleicht zwei JSON-Werte inhaltlich, unabhängig von der Reihenfolge der Schlüssel. */

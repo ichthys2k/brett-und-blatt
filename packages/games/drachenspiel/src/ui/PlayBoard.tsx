@@ -1,17 +1,19 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { usePointerDrag, type BoardProps } from '@brett-und-blatt/ui';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { GameCard, useCardCosmetics, useCardOverride, usePointerDrag, type BoardProps } from '@brett-und-blatt/ui';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { CARDS_DB } from '../cards';
 import { HOUSE_POWERS } from '../powers';
 import { heroAttackValue } from '../rules';
-import type { DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
+import type { CardDefinition, DeckThemeId, DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
 import { playCreatureAudio } from './audio';
-import { attackClass, CardFace, CardZoom, Fuse, GameLog, healthClass, TargetArrow, TraitBadge, type ArrowPoints, type ZoomItem } from './parts';
+import { attackClass, CardFace, CardZoom, Fuse, GameLog, healthClass, renderCombatCardAnki, TargetArrow, TraitBadge, type ArrowPoints, type ZoomItem } from './parts';
 import type { Float, ShownMinion } from './sequence';
 import { getCardFullTitle, getCardTraits, getMinionFullTitle, getMinionTraits } from './traits';
 import { currentCrest, ScenarioTip, useCosmetics } from './SoloHub';
+import { HOUSE_ICONS, HOUSE_NAMES } from './champions';
 import { useBeats } from './useBeats';
 import { useLongPress } from './useLongPress';
+import { uiCard } from './cardLookup';
 
 const LABELS = ['Blau', 'Rot'];
 /** Ab dieser Restzeit brennt die Lunte. */
@@ -85,8 +87,33 @@ function MinionView({
 }) {
   const { minion, dying, fresh } = shown;
   const traits = getMinionTraits(minion);
+  const def: CardDefinition = uiCard(minion.cardId) ?? {
+    id: minion.cardId,
+    name: minion.name,
+    cost: 0,
+    attack: minion.attack,
+    health: minion.health,
+    emoji: minion.emoji,
+    quote: '',
+  };
+  const cosmetics = useCardCosmetics();
+  const overrideNote = useCardOverride(def.id);
+  const rendered = useMemo(
+    () =>
+      renderCombatCardAnki(def, {
+        attack: minion.attack,
+        health: minion.health,
+        hint: traits.length > 0 ? traits.map((t) => t.name).join(', ') : undefined,
+        overrideNote,
+        mediaUrlMap: cosmetics.mediaUrlMap,
+      }),
+    [def, minion.attack, minion.health, traits, overrideNote, cosmetics.mediaUrlMap],
+  );
+
+  const cardHouse = def.house && def.house !== 'neutral' ? def.house : undefined;
   const classes = [
     'ds-minion',
+    cardHouse && `ds-minion-house-${cardHouse}`,
     canAttack && !attackVector && 'can-attack',
     isSelected && !attackVector && 'selected',
     isTargetable && 'targetable',
@@ -126,18 +153,29 @@ function MinionView({
       aria-label={`${minion.name}, Angriff ${minion.attack}, Leben ${minion.health}${traits.length > 0 ? ` [${traits.map((t) => t.name).join(', ')}]` : ''}`}
       title={getMinionFullTitle(minion)}
     >
-      <FloatBadges floats={floats} />
-      <div className="ds-minion-icons">
-        {traits.map((trait) => (
-          <TraitBadge key={trait.id} trait={trait} isOpponent={!isOwner} />
-        ))}
-      </div>
-      <div className="ds-minion-emoji">{minion.emoji}</div>
-      <div className="ds-minion-name">{minion.name}</div>
-      <div className="ds-minion-stats">
-        <span className={attackClass(minion)}>{minion.attack}</span>
-        <span className={healthClass(minion)}>{minion.health}</span>
-      </div>
+      <GameCard
+        ankiFront={rendered}
+        className="ds-minion-gamecard"
+        runtimeBadges={[
+          {
+            position: 'bottom-left',
+            label: String(minion.attack),
+            tone: minion.attack > minion.baseAttack ? 'success' : minion.attack < minion.baseAttack ? 'danger' : 'default',
+          },
+          {
+            position: 'bottom-right',
+            label: String(minion.health),
+            tone: minion.health < minion.maxHealth ? 'danger' : minion.maxHealth > minion.baseHealth ? 'success' : 'default',
+          },
+        ]}
+      >
+        <FloatBadges floats={floats} />
+        <div className="ds-minion-icons">
+          {traits.map((trait) => (
+            <TraitBadge key={trait.id} trait={trait} isOpponent={!isOwner} />
+          ))}
+        </div>
+      </GameCard>
     </div>
   );
 }
@@ -183,24 +221,28 @@ function HeroBar({
   crest?: string | undefined;
   elementRef: (el: HTMLElement | null) => void;
 }) {
-  const quest = player.quest ? CARDS_DB[player.quest.cardId] : undefined;
+  const quest = player.quest ? uiCard(player.quest.cardId) : undefined;
   const info = (text: string) => (event: { stopPropagation: () => void }) => {
     event.stopPropagation();
     onInfo(text);
   };
-  const trapText = player.traps ? player.traps.map((card) => CARDS_DB[card.defId]?.text ?? '').join(' ') : `${player.trapCount} verdeckte ${player.trapCount === 1 ? 'Falle' : 'Fallen'}.`;
+  const trapText = player.traps ? player.traps.map((card) => uiCard(card.defId)?.text ?? '').join(' ') : `${player.trapCount} verdeckte ${player.trapCount === 1 ? 'Falle' : 'Fallen'}.`;
+  const house: DeckThemeId =
+    player.power ?? (player.deckTheme && player.deckTheme !== 'mixed' ? player.deckTheme : null) ?? (seat === 0 ? 'forest' : 'sea');
+  const houseName = HOUSE_NAMES[house];
+  const houseIcon = HOUSE_ICONS[house];
   const strength = heroAttackValue(player);
   const interactive = targetable || canAttack;
   return (
     <div
       ref={elementRef}
-      className={`ds-hero-card ${targetable ? 'targetable' : ''} ${canAttack && !attackVector ? 'can-attack' : ''} ${selected && !attackVector ? 'selected' : ''} ${attackVector ? 'ds-attacking' : ''} ${hinted ? 'ds-hinted' : ''} ${impacted ? 'bub-animate-shake ds-hit-impact' : ''}`}
+      className={`ds-hero-card ds-hero-${house} ${targetable ? 'targetable' : ''} ${canAttack && !attackVector ? 'can-attack' : ''} ${selected && !attackVector ? 'selected' : ''} ${attackVector ? 'ds-attacking' : ''} ${hinted ? 'ds-hinted' : ''} ${impacted ? 'bub-animate-shake ds-hit-impact' : ''}`}
       onClick={onClick}
       onPointerDown={onPointerDown}
       onKeyDown={interactive && onClick ? (event) => activate(event, onClick, () => undefined) : undefined}
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
-      title={targetable ? 'Gegnerischen Helden angreifen!' : canAttack ? 'Mit deinem Helden angreifen' : undefined}
+      title={targetable ? 'Gegnerischen Turnierherrn angreifen!' : canAttack ? 'Mit deinem Turnierherrn angreifen' : undefined}
       style={{
         position: 'relative',
         touchAction: canAttack ? 'none' : undefined,
@@ -211,13 +253,31 @@ function HeroBar({
       data-hero-seat={seat}
     >
       <FloatBadges floats={floats} />
-      <span className="ds-hero-avatar">{crest ?? (seat === 0 ? '🐉' : '🐲')}</span>
-      <div>
-        <div className="ds-hero-name" style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{name}</div>
+      <div className={`ds-hero-avatar-frame ds-crest-frame-${house}`}>
+        <span className="ds-hero-avatar">{crest ?? (seat === 0 ? '🐉' : '🐲')}</span>
+      </div>
+      <div className="ds-hero-details">
+        <div className="ds-hero-header">
+          <div className="ds-hero-name" style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{name}</div>
+          <span className={`ds-hero-house-banner ds-banner-${house}`} title={`Wappenhaus: ${houseName}`}>
+            <span className="ds-house-icon">{houseIcon}</span>
+            <span className="ds-house-name">{houseName}</span>
+          </span>
+        </div>
+        <div className="ds-tribune" aria-hidden="true" title={`${health}/30 Wimpel an der Tribüne`}>
+          <div className="ds-tribune-pennants">
+            {Array.from({ length: 30 }, (_, i) => (
+              <span
+                key={i}
+                className={`ds-wimpel ${i < health ? 'active' : 'fallen'}`}
+              />
+            ))}
+          </div>
+        </div>
         <div className="ds-hero-badges">
-          <span className="ds-badge ds-badge-hp">❤️ {health}</span>
+          <span className="ds-badge ds-badge-hp" title="Wimpel an der Tribüne">🚩 {health}</span>
           {armor > 0 && (
-            <span className="ds-badge ds-badge-armor" title="Rüstung fängt Schaden vor den Leben ab">
+            <span className="ds-badge ds-badge-armor" title="Rüstung fängt Schaden vor den Wimpeln ab">
               🛡️ {armor}
             </span>
           )}
@@ -232,16 +292,31 @@ function HeroBar({
             </button>
           )}
           {strength > 0 && (
-            <span className="ds-badge ds-badge-gear" title={player.gear ? `${player.gear.name}: hält noch ${player.gear.durability} Angriffe` : 'Angriff des Helden in diesem Zug'}>
+            <span className="ds-badge ds-badge-gear" title={player.gear ? `${player.gear.name}: hält noch ${player.gear.durability} Angriffe` : 'Angriff des Turnierherrn in diesem Zug'}>
               ⚔️ {strength}
               {player.gear ? ` · ${player.gear.durability}×` : ''}
             </span>
           )}
-          <span className="ds-badge ds-badge-mana">
-            💧 {player.mana}/{player.maxMana}
-            {player.locked > 0 ? ` 🔒${player.locked}` : ''}
-            {player.overloadNext > 0 ? ` →🔒${player.overloadNext}` : ''}
-          </span>
+          <div className="ds-mana-group">
+            <span className="ds-badge ds-badge-mana" title="Knappen (bereit / herbeigeeilt)">
+              🏇 {player.mana}/{player.maxMana}
+              {player.locked > 0 ? ` 🔒${player.locked}` : ''}
+              {player.overloadNext > 0 ? ` →🔒${player.overloadNext}` : ''}
+            </span>
+            <div className="ds-knappen-track" aria-hidden="true" title={`Knappen: ${player.mana}/${player.maxMana} bereit`}>
+              {Array.from({ length: 10 }, (_, i) => {
+                const isRecruited = i < player.maxMana;
+                const isReady = i < player.mana;
+                const isLocked = !isReady && isRecruited && i >= player.maxMana - player.locked;
+                return (
+                  <span
+                    key={i}
+                    className={`ds-knappe-slot ${!isRecruited ? 'unrecruited' : isReady ? 'ready' : isLocked ? 'locked' : 'spent'}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -249,6 +324,7 @@ function HeroBar({
 }
 
 export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events, hint, clock }: BoardProps<DrachenspielView, DrachenspielMove>) {
+  const cardCosmetics = useCardCosmetics();
   const [selectedAttackerId, setSelectedAttackerId] = useState<string | null>(null);
   /** Handkarte eines Zaubers mit Ziel, der gerade auf sein Ziel wartet. */
   const [selectedSpell, setSelectedSpell] = useState<number | null>(null);
@@ -499,11 +575,13 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
 
   const myBoard = boardOf(mySeat);
   const oppBoard = boardOf(oppSeat);
+  const oppTheme = opp?.deckTheme;
 
   return (
     <div
       ref={arenaRef}
       className={`ds-arena ${beat?.heavy ? 'ds-heavy' : ''}`}
+      data-theme={oppTheme && oppTheme !== 'mixed' ? oppTheme : undefined}
       onPointerMove={aiming && !dragState.isDragging ? (event) => setAimPoint({ x: event.clientX, y: event.clientY }) : undefined}
     >
       <div className="ds-opponent-zone">
@@ -536,8 +614,14 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
               {oppPower.emoji}
             </button>
           )}
-          <span className="ds-badge ds-badge-deck">🎴 {opp.handCount}</span>
-          <span className="ds-badge ds-badge-deck">📚 {opp.deckCount}</span>
+          <span className="ds-badge ds-badge-deck ds-deck-with-back" title={`Gegnerische Hand: ${opp.handCount} Karten`}>
+            <GameCard faceDown size="xs" cardBackProps={{ design: 'dragon-scale' }} />
+            <span>🎴 {opp.handCount}</span>
+          </span>
+          <span className="ds-badge ds-badge-deck ds-deck-with-back" title={`Gegnerisches Deck: ${opp.deckCount} Karten`}>
+            <GameCard faceDown size="xs" cardBackProps={{ design: 'dragon-scale' }} />
+            <span>📚 {opp.deckCount}</span>
+          </span>
           <GameLog entries={log} />
         </div>
       </div>
@@ -638,7 +722,10 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           elementRef={heroRef(mySeat)}
         />
         <div className="ds-actions">
-          <span className="ds-badge ds-badge-deck">📚 {me.deckCount}</span>
+          <span className="ds-badge ds-badge-deck ds-deck-with-back" title={`Dein Nachziehstapel: ${me.deckCount} Karten`}>
+            <GameCard faceDown size="xs" cardBackProps={{ design: cardCosmetics.cardBack, crest: cardCosmetics.crest }} />
+            <span>📚 {me.deckCount}</span>
+          </span>
           {myPower && (
             <button
               type="button"
@@ -689,7 +776,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           <h3 className="ds-phase-title">Wähle eins</h3>
           <div className="ds-choice-row">
             {view.pending.options.map((option, index) => {
-              const def = option.cardId ? CARDS_DB[option.cardId] : undefined;
+              const def = option.cardId ? uiCard(option.cardId) : undefined;
               const hinted = hint?.type === 'choose' && hint.index === index;
               return (
                 <button
@@ -734,7 +821,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
 
       <div className="ds-hand" data-frame={cosmetics.frame ?? undefined} style={{ '--ds-hand-gaps': Math.max(1, (me.hand?.length ?? 1) - 1) } as CSSProperties}>
         {me.hand?.map((card, idx) => {
-          const def = CARDS_DB[card.defId];
+          const def = uiCard(card.defId);
           if (!def) return null;
           const isPlayable = isMyTurn && playableCardIndices.has(idx);
           const needsTarget = legalMoves.some((m) => m.type === 'playCard' && m.handIndex === idx && m.target !== undefined);
@@ -793,8 +880,8 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
                 <button
                   type="button"
                   className="ds-card-trade"
-                  title="Für 1 Mana zurück ins Deck mischen und neu ziehen"
-                  aria-label={`${def.name} für 1 Mana tauschen`}
+                  title="Mit 1 Knappe zurück ins Deck mischen und neu ziehen"
+                  aria-label={`${def.name} mit 1 Knappe tauschen`}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={(event) => {
                     event.stopPropagation();

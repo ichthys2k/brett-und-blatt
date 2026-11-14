@@ -1,13 +1,16 @@
 import { ApkgError, packsOf, savePackRows, withoutScheduling, type ApkgData } from '@brett-und-blatt/engine';
-import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { Button } from '../components/controls';
 import { QrCode } from '../components/OnlineParts';
 import { APKG_LIMIT_TEXT, exportApkg, importApkg } from '../lib/ankiPackage';
-import { currentArchiveLink, publishArchive, stopArchiveShare } from '../lib/archiveShare';
+import { currentArchiveLink, fetchArchive, listArchiveShares, publishArchive, stopArchiveShare } from '../lib/archiveShare';
 import { deletePackStored, keepStorage, listPacks, loadPack, savePack, type PackSummary } from '../lib/ankiStore';
 import { downloadFile, safeFileName } from '../lib/download';
 import { loadCollection, saveCollection } from '../lib/library';
 import { navigate, paths } from '../lib/router';
+import { GAME_CARD_TEMPLATES, exportGameCardTemplateApkg, type GameCardTemplateId } from '../lib/gameCardTemplates';
+import { setActiveCardSetId, useActiveCardSetId } from '../lib/activeCardSet';
+import { setActiveSheetPackageId, useActiveSheetPackageId } from '../lib/activeSheetPackage';
 
 /*
  * Anki-Pakete (.apkg) importieren, ansehen, wieder nach Anki exportieren (#101, L3). Ein importiertes Paket bleibt unverändert als Ganzes
@@ -121,17 +124,32 @@ export function ApkgImport({ onDone }: { onDone: () => void }) {
 
 /** Liste der gespeicherten Pakete mit Export, „Paare übernehmen“ und Löschen. */
 export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
+  const activeSheetId = useActiveSheetPackageId();
+  const activeCardSetId = useActiveCardSetId();
   const [packs, setPacks] = useState<PackSummary[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [options, setOptions] = useState<{ id: string; scheduling: boolean; media: boolean; latest: boolean } | null>(null);
   const [sharing, setSharing] = useState<string | null>(null);
   const [links, setLinks] = useState<Record<string, string | null>>({});
+  const [shares, setShares] = useState(() => listArchiveShares());
   const refresh = useCallback(() => {
-    listPacks().then(setPacks, () => setPacks([]));
+    listPacks().then((loaded) => {
+      setPacks(loaded);
+      setShares(listArchiveShares());
+    }, () => {
+      setPacks([]);
+      setShares(listArchiveShares());
+    });
   }, []);
   useEffect(refresh, [refresh]);
-  if (!packs || packs.length === 0) return null;
+
+  const uninstalled = useMemo(() => {
+    const localIds = new Set(packs?.map((p) => p.id) ?? []);
+    return Object.entries(shares).filter(([id]) => !id.startsWith('own:') && !localIds.has(id));
+  }, [packs, shares]);
+
+  if ((!packs || packs.length === 0) && uninstalled.length === 0) return null;
 
   const run = async (id: string, task: () => Promise<void>) => {
     setBusy(id);
@@ -158,8 +176,9 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
       const stored = await loadPack(pack.id);
       if (!stored) return;
       const bytes = await exportApkg({ collection: stored.pack.collection, media: stored.media, conf: stored.pack.conf, dconf: stored.pack.dconf }, { scheduling: false, media: true });
-      const link = await publishArchive(pack.id, bytes);
+      const link = await publishArchive(pack.id, bytes, { name: pack.name, notes: pack.notes, cards: pack.cards });
       setLinks((old) => ({ ...old, [pack.id]: link }));
+      setShares(listArchiveShares());
     });
   const takePairs = (pack: PackSummary) =>
     run(pack.id, async () => {
@@ -186,7 +205,7 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
         Anki-Pakete
       </h2>
       <ul className="space-y-2">
-        {packs.map((pack) => (
+        {(packs ?? []).map((pack) => (
           <li key={pack.id} className="space-y-2 rounded-xl border border-line bg-surface p-3">
             <div>
               <span className="block truncate font-medium">{pack.name}</span>
@@ -224,6 +243,28 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={activeSheetId === pack.id ? 'primary' : 'ghost'}
+                  title={activeSheetId === pack.id ? 'Aktives Spielblatt in klassischen Spielen (Klicken zum Deaktivieren)' : 'Dieses Anki-Paket als Spielblatt für Skat, Schafkopf, Mau-Mau etc. verwenden'}
+                  onClick={() => {
+                    setActiveSheetPackageId(activeSheetId === pack.id ? null : pack.id);
+                  }}
+                >
+                  {activeSheetId === pack.id ? '✅ Aktives Spielblatt' : '🃏 Als Spielblatt verwenden'}
+                </Button>
+                {pack.specialCards > 0 && (
+                  <Button
+                    variant={activeCardSetId === pack.id ? 'primary' : 'ghost'}
+                    title={
+                      activeCardSetId === pack.id
+                        ? 'Aktives Kartenset für Drachenspiel, Narrenhof, Quartett und Wölfe (Klicken zum Deaktivieren)'
+                        : 'Geänderte Werte, Namen und Bilder dieser Karten in Drachenspiel, Narrenhof, Quartett und Wölfe verwenden'
+                    }
+                    onClick={() => setActiveCardSetId(activeCardSetId === pack.id ? null : pack.id)}
+                  >
+                    {activeCardSetId === pack.id ? '✅ Aktives Kartenset' : `🎴 Als Kartenset verwenden (${pack.specialCards})`}
+                  </Button>
+                )}
                 <Button variant="ghost" onClick={() => navigate(paths.collection(pack.id))}>
                   ✏️ Bearbeiten
                 </Button>
@@ -282,9 +323,135 @@ export function ApkgList({ onPacksChanged }: { onPacksChanged: () => void }) {
           </li>
         ))}
       </ul>
+      {uninstalled.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <h3 className="text-sm font-medium text-muted">Aus deinem Spielerpass verfügbar (auf diesem Gerät noch nicht geladen)</h3>
+          <ul className="space-y-2">
+            {uninstalled.map(([id, entry]) => (
+              <li key={id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-3">
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">📦 {entry.name || 'Geteiltes Paket'}</span>
+                  <span className="block text-xs text-muted">
+                    {entry.notes ? `${entry.notes} Notizen` : ''}
+                    {entry.cards ? ` · ${entry.cards} Karten` : ''}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="primary"
+                    disabled={busy === id}
+                    onClick={() =>
+                      void run(id, async () => {
+                        const bytes = await fetchArchive(entry.key);
+                        if (typeof bytes === 'string') {
+                          setNote(bytes === 'missing' ? 'Dieses Paket gibt es nicht mehr.' : 'Konnte nicht geladen werden.');
+                          return;
+                        }
+                        await keepStorage();
+                        const data = await importApkg(bytes);
+                        await savePack(entry.name || 'Anki-Paket', withoutScheduling(data));
+                        refresh();
+                        onPacksChanged();
+                        setNote(`„${entry.name || 'Paket'}“ wurde auf dieses Gerät geladen.`);
+                      })
+                    }
+                  >
+                    {busy === id ? 'Lade …' : '📥 Auf dieses Gerät laden'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    aria-label="Teilen beenden"
+                    disabled={busy === id}
+                    onClick={() =>
+                      void run(id, async () => {
+                        await stopArchiveShare(id);
+                        refresh();
+                        setNote('Teilen beendet.');
+                      })
+                    }
+                  >
+                    🗑️
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {note && (
         <p role="status" className="text-sm">
           {note}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** Vorlagen-Export für Spielkarten als .apkg (K4, #274). */
+export function GameCardTemplatesExport() {
+  const [open, setOpen] = useState(false);
+  const [busyId, setBusyId] = useState<GameCardTemplateId | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+
+  const download = async (id: GameCardTemplateId) => {
+    setBusyId(id);
+    setStatus(null);
+    try {
+      const { fileName, bytes } = await exportGameCardTemplateApkg(id);
+      downloadFile(fileName, bytes as BlobPart, 'application/octet-stream');
+      setStatus(`„${fileName}“ wurde heruntergeladen.`);
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : 'Export fehlgeschlagen.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <section className="space-y-3 rounded-xl border border-line bg-surface p-3" aria-labelledby="game-templates-title">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h2 id="game-templates-title" className="text-lg font-medium">
+            🎴 Spielkarten-Vorlagen für Anki (.apkg)
+          </h2>
+          <p className="text-xs text-muted">
+            Offizielle Kartensätze (Spielblatt, Drachenspiel, Narrenhof, Quartett, Wölfe) direkt als Anki-Paket exportieren.
+          </p>
+        </div>
+        <Button variant="ghost" onClick={() => setOpen(!open)} aria-expanded={open}>
+          {open ? 'Schließen' : 'Anzeigen'}
+        </Button>
+      </div>
+
+      {open && (
+        <div className="space-y-2 pt-2 border-t border-line">
+          <ul className="space-y-2">
+            {GAME_CARD_TEMPLATES.map((tmpl) => (
+              <li key={tmpl.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-line bg-surface-2 p-2.5">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 font-medium text-sm">
+                    <span>{tmpl.emoji}</span>
+                    <span>{tmpl.title}</span>
+                  </div>
+                  <p className="text-xs text-muted mt-0.5">{tmpl.description}</p>
+                </div>
+                <Button
+                  variant="primary"
+                  className="sm:self-center shrink-0 text-xs"
+                  disabled={busyId === tmpl.id}
+                  onClick={() => void download(tmpl.id)}
+                >
+                  {busyId === tmpl.id ? 'Erstelle …' : '📥 .apkg laden'}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {status && (
+        <p role="status" className="text-xs text-muted">
+          {status}
         </p>
       )}
     </section>

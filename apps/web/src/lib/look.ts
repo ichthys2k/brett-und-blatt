@@ -72,6 +72,34 @@ const BAR_COLORS: Record<Look, { light: string; dark: string }> = {
   tavern: { light: '#5a3b22', dark: '#1d1510' },
 };
 
+/** Vorab-Laden der gewählten Tisch-Textur (#313). */
+const TABLE_TEXTURES: Record<string, { light?: string; dark?: string }> = {
+  oak: {
+    light: new URL('../assets/tische/oak-light.webp', import.meta.url).href,
+    dark: new URL('../assets/tische/oak-dark.webp', import.meta.url).href,
+  },
+  walnut: {
+    light: new URL('../assets/tische/walnut-light.webp', import.meta.url).href,
+    dark: new URL('../assets/tische/walnut-dark.webp', import.meta.url).href,
+  },
+  'green-felt': {
+    light: new URL('../assets/tische/green-felt-light.webp', import.meta.url).href,
+  },
+};
+
+function preloadTable(table: TableSurface): void {
+  if (typeof window === 'undefined') return;
+  const target = table === 'auto' ? 'oak' : table;
+  const urls = TABLE_TEXTURES[target];
+  if (!urls) return;
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const url = isDark ? (urls.dark ?? urls.light) : urls.light;
+  if (url) {
+    const img = new Image();
+    img.src = url;
+  }
+}
+
 function apply(): void {
   const look = activeLook();
   document.documentElement.dataset.look = look;
@@ -84,6 +112,7 @@ function apply(): void {
   for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
     meta.content = BAR_COLORS[look][meta.media.includes('dark') ? 'dark' : 'light'];
   }
+  preloadTable(chosenTable);
   for (const listener of listeners) listener();
 }
 

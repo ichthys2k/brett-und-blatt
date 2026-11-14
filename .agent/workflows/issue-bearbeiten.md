@@ -37,7 +37,7 @@ Gilt für alle Agenten (Claude Code, Antigravity/Gemini, Codex …). Aufgaben st
 
 - Den Abschnitt **„Fertig, wenn“** im Issue als Maßstab nehmen; Pläne unter **„Links“** lesen.
 - Regeln aus `AGENTS.md`/`CLAUDE.md`: Tests, `corepack pnpm check`, bei Spielen `corepack pnpm rauchtest` und `PRUEFSTAND=1 PRUEFSTAND_SPIELE=<id> corepack pnpm pruefstand`, Blick im Browser.
-- Doku nachziehen (Spielplan unter `docs/spiele/`, ggf. Stand in `CLAUDE.md`).
+- Doku nachziehen (Spielplan unter `docs/spiele/`, ggf. Stand in `docs/CHRONIK.md`).
 
 ## 4. Hochladen und PR
 

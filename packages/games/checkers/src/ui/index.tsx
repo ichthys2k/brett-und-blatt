@@ -19,6 +19,7 @@ import {
   type CheckersStep,
   type CheckersState,
 } from '../rules';
+import { describeMove } from '../describe';
 import './styles.css';
 
 const LABELS = ['Weiß', 'Schwarz'];
@@ -264,8 +265,10 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
             const index = toBoard(dc, dr);
             const piece = view.cells[index];
             const name = squareName(index, size);
-            if (!piece) return name;
-            return `${name}: ${LABELS[piece.seat]} ${piece.king ? 'Dame' : 'Stein'}`;
+            const where = piece ? `${name}: ${LABELS[piece.seat]} ${piece.king ? 'Dame' : 'Stein'}` : name;
+            // Bei gewähltem Stein nennen die Zielfelder den Zug (#335).
+            const toHere = selected !== null && targets.has(index) ? legalMoves.find((m) => m.from === selected && m.to === index) : undefined;
+            return toHere ? `${where} – ${describeMove(view, toHere)}` : where;
           }}
         />
 

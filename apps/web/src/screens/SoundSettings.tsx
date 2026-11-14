@@ -21,7 +21,11 @@ import {
   useChosenTable,
 } from '../lib/look';
 import { music, useMusicPrefs } from '../lib/music';
+import { PushToggle } from '../components/PushToggle';
+import { loadPushWish } from '../lib/push';
+import { setBoardHidden, useBoardHidden } from '../lib/boardPrefs';
 import { navigate, paths } from '../lib/router';
+import { GAME_SERVER } from '../lib/server';
 import { setSoundSettings } from '../lib/sound';
 
 /** Version der App, Suche nach Updates und Notlösung zum Zurücksetzen (#175). */
@@ -89,6 +93,7 @@ function LookChoice() {
               {TABLE_SURFACES.map((id: TableSurface) => (
                 <label key={id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-2">
                   <input type="radio" name="table-surface" className="accent-accent" checked={table === id} onChange={() => setTableSurface(id)} />
+                  <span className="bub-table-preview" data-surface={id} aria-hidden="true" />
                   <span className="text-sm font-medium">{t(`look.table.${id}`)}</span>
                 </label>
               ))}
@@ -126,6 +131,27 @@ function PortraitChoice() {
   );
 }
 
+/** Gesamtschalter für Hinweise aufs Gerät (#242): gilt für dieses Gerät; Turniere und Fernpartien melden das Abo beim nächsten Öffnen selbst. */
+function PushSwitch() {
+  const [on, setOn] = useState(() => loadPushWish());
+  return <PushToggle enabled={on} onEnable={() => setOn(true)} onDisable={() => setOn(false)} note={t('push.global')} />;
+}
+
+/** Schwarzes Brett ausblenden (#65): je Gerät, für Eltern, Schulen und alle, die es nicht brauchen. */
+function BoardChoice() {
+  const hidden = useBoardHidden();
+  if (!GAME_SERVER) return null;
+  return (
+    <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line bg-surface p-4">
+      <input type="checkbox" className="mt-1 accent-accent" checked={hidden} onChange={(event) => setBoardHidden(event.target.checked)} />
+      <span>
+        <span className="block font-semibold">Spielersuche ausblenden</span>
+        <span className="block text-sm text-muted">Das Schwarze Brett „Wer hat Lust?“ verschwindet aus dem Hauptmenü. Auf diesem Gerät, jederzeit wieder einzuschalten.</span>
+      </span>
+    </label>
+  );
+}
+
 export function SoundSettingsScreen() {
   const prefs = useMusicPrefs();
   // Probehören endet mit dem Verlassen der Seite.
@@ -135,7 +161,9 @@ export function SoundSettingsScreen() {
     <TavernPage title="Optionen" subtitle="Ton, Musik, Aussehen und Updates.">
       <LookChoice />
       <AppVersion />
+      <PushSwitch />
       <PortraitChoice />
+      <BoardChoice />
       <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
         <VolumeControls showClientOption />
       </div>

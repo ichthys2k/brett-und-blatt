@@ -148,16 +148,19 @@ export function scoreHand(run: RunState, played: Card[], held: Card[], rng: Rng,
   }
 
   for (const mod of active) {
+    const def = modDef(mod.key, ctx.run.customMods);
+    if (def.baseChips) apply('mod', mod.uid, { chips: def.baseChips });
+    if (def.multiplier) apply('mod', mod.uid, { xmult: def.multiplier });
     if (mod.foil === 'hot') apply('mod', mod.uid, { chips: 50 });
     if (mod.foil === 'holo') apply('mod', mod.uid, { mult: 10 });
-    apply('mod', mod.uid, modDef(mod.key).onHand?.(ctx, mod) ?? null);
+    apply('mod', mod.uid, def.onHand?.(ctx, mod) ?? null);
     if (mod.foil === 'iris') apply('mod', mod.uid, { xmult: 1.5 });
   }
 
   // Zähler fortschreiben (Eiswaffel schmilzt, Busfahrt zählt weiter …).
   const after: ModInstance[] = [];
   for (const mod of mods) {
-    const def = modDef(mod.key);
+    const def = modDef(mod.key, ctx.run.customMods);
     if (mod.spent || !def.afterHand) {
       after.push(mod);
       continue;

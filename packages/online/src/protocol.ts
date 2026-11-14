@@ -1,10 +1,24 @@
-import type { BotLevel, ClockReading, Forfeit, GameEvent, Options, ReplayData, Result, SeatId, TimePresetId } from '@brett-und-blatt/engine';
+import { parsePushSubscription, type ParsePushOptions, type PushSubscriptionData } from './push';
+import { sanitizeCustomCardCatalog } from '@brett-und-blatt/engine';
+import type { BotLevel, ClockReading, CustomCardCatalog, Forfeit, GameEvent, Options, ReplayData, Result, SeatId, TimePresetId } from '@brett-und-blatt/engine';
 
 /**
  * Das Nachrichtenformat zwischen Browser und Server (JSON über WebSocket).
  * Steigt bei Änderungen, die alte Browser nicht mehr verstehen würden.
  */
 export const PROTOCOL_VERSION = 1;
+
+/**
+ * Älteste Version, die der Server noch versteht (#334, offenes Protokoll). Wer `PROTOCOL_VERSION`
+ * erhöht, lässt diese Grenze eine Übergangszeit lang stehen (Richtwert: drei Monate), damit fremde
+ * Clients nachziehen können, und beschreibt die Änderung in `docs/protokoll.md`.
+ */
+export const MIN_PROTOCOL_VERSION = 1;
+
+/** Versteht der Server einen Client dieser Protokollversion? */
+export function protocolSupported(version: number): boolean {
+  return Number.isInteger(version) && version >= MIN_PROTOCOL_VERSION && version <= PROTOCOL_VERSION;
+}
 
 /** Größte erlaubte Nachricht vom Browser in Zeichen – schützt den Server vor Datenmüll. */
 export const MAX_MESSAGE_LENGTH = 16_000;
@@ -28,7 +42,17 @@ export interface LobbySettings {
   namesLocked?: boolean;
   /** Dürfen Spieler online einen Zug zurücknehmen, wenn alle zustimmen (`GameInfo.takeBack`)? Fehlt: an. */
   takeBack?: boolean;
+  /**
+   * Dürfen Zuschauer anfragen, ab der nächsten Runde mitzuspielen (#299)? Die Raumleitung entscheidet.
+   * Fehlt: an in öffentlichen, aus in privaten Räumen.
+   */
+  acceptRequests?: boolean;
 }
+
+/** Wie lange eine abgelehnte Anfrage gesperrt bleibt, bevor dieselbe Person wieder fragen darf. */
+export const JOIN_DENIED_MS = 2 * 60 * 1000;
+/** Höchstens so viele Anfragen und Vorgemerkte zugleich (Anfragende plus Warteliste). */
+export const MAX_JOIN_QUEUE = 30;
 
 /** Kompakte Übersicht für offene Spiele auf dem Startbildschirm. */
 export interface OpenRoomListing {
@@ -44,6 +68,10 @@ export interface OpenRoomListing {
   updatedAt: number;
   /** Ausschreibung eines Turniers (Einschreibung läuft): `code` ist der Turniercode, `gameName` der Turniername. */
   tournament?: boolean;
+  /** Die Partie läuft schon: Zuschauer können anfragen, ob sie ab der nächsten Runde mitspielen dürfen (#299). */
+  running?: boolean;
+  /** Prüfsumme eines aktiven Anki-Kartensets (falls Raum benutzerdefinierte Karten nutzt) */
+  cardCatalogChecksum?: string;
 }
 
 /** Ein Mitglied des Raums, wie es alle sehen. Die geheime Kennung steht nie darin. */
@@ -56,6 +84,12 @@ export interface MemberInfo {
   connected: boolean;
   /** Name und Bild hat die Raumleitung festgelegt – das Mitglied kann sie nicht mehr ändern. */
   nameFixed?: boolean;
+  /** Anfrage ums Mitspielen ab der nächsten Runde (#299): `asking` wartet auf die Raumleitung, `queued` ist angenommen. */
+  join?: 'asking' | 'queued';
+  /** Ist das Mitglied gerade mit einer VR-Brille da, die andere Brillen sehen möchte (#351)? Fehlt sonst. */
+  xr?: true;
+  /** Macht das Mitglied gerade beim Sprachchat mit (#352)? Fehlt sonst. */
+  voice?: true;
 }
 
 export type RoomPhase = 'lobby' | 'playing' | 'finished';
@@ -99,6 +133,7 @@ export type ClientMessage =
   // Lobby (nur die Raumleitung, außer takeSeat/leaveSeat)
   | { type: 'setGame'; gameId: string }
   | { type: 'setOption'; id: string; value: string }
+  | { type: 'setCustomCardCatalog'; catalog: CustomCardCatalog | null }
   | { type: 'setTime'; time: TimePresetId }
   | { type: 'setSeatCount'; count: number }
   | { type: 'setSeat'; index: number; seat: 'open' | { bot: BotLevel } }
@@ -129,14 +164,86 @@ export type ClientMessage =
   /** Bitte, den eigenen letzten Zug zurückzunehmen; die anderen Menschen stimmen ab. */
   | { type: 'takeBack' }
   | { type: 'answerTakeBack'; accept: boolean }
+  // Rundenende (#298): Nochmal oder anderes Spiel; Aussteigen ist `leave`.
+  | { type: 'afterVote'; choice: AfterChoice }
+  /** Ein Spiel für die Abstimmung vorschlagen (zählt zugleich als Stimme für „anderes Spiel“). */
+  | { type: 'afterPropose'; gameId: string }
+  /** Für einen Kandidaten stimmen (`random` = zufälliges Spiel); zählt zugleich als Stimme für „anderes Spiel“. */
+  | { type: 'afterPick'; gameId: string }
+  // Mitspielen ab der nächsten Runde (#299)
+  /** Zuschauer: fragt an, ob er ab der nächsten Runde mitspielen darf. */
+  | { type: 'askToJoin' }
+  | { type: 'cancelAskToJoin' }
+  /** Raumleitung: eine Anfrage annehmen oder ablehnen. */
+  | { type: 'answerJoin'; memberId: string; ok: boolean }
+  /** Raumleitung: alle offenen Anfragen annehmen. */
+  | { type: 'acceptAllJoins' }
+  /** Raumleitung: Anfragen zulassen oder nicht. */
+  | { type: 'setAcceptRequests'; allowed: boolean }
   // Flüchtige Signale
   | { type: 'react'; emoji: string }
   | { type: 'say'; phrase: string }
   | { type: 'leave' }
-  | { type: 'ping' };
+  /** Hinweise aufs Gerät (Web Push, #242): Abo des Browsers melden oder widerrufen; nur für Fernpartien wirksam. */
+  | { type: 'pushSubscribe'; subscription: PushSubscriptionData }
+  | { type: 'pushUnsubscribe' }
+  | { type: 'ping' }
+  // VR-Treffpunkt (#351): Kopf und Hände laufen direkt zwischen den Brillen (WebRTC); der Raum vermittelt nur.
+  /** Diese Verbindung ist eine VR-Brille, die andere Brillen sehen möchte (oder nicht mehr). */
+  | { type: 'xr'; on: boolean }
+  /** Verbindungsaufbau zu einem anderen VR-Mitglied weiterreichen (Angebot, Antwort, ICE-Kandidat, Ende). */
+  | { type: 'rtc'; to: string; signal: RtcSignal }
+  /** Rückfall ohne direkte Verbindung: nur der Kopf, höchstens zweimal je Sekunde, an die anderen Brillen. */
+  | { type: 'pose'; head: number[] }
+  /** Sprachchat (#352, nur private Räume): mitmachen oder aussteigen. Die Stimme läuft direkt zwischen den Geräten. */
+  | { type: 'voice'; on: boolean }
+  /** Sprachchat melden: schaltet ihn für alle bis zur nächsten Partie ab. */
+  | { type: 'reportVoice' };
+
+/** Vermittlungsdaten für WebRTC zwischen zwei Brillen (#351); der Raum liest sie nicht, er reicht sie nur weiter. */
+export type RtcSignal =
+  | { kind: 'offer' | 'answer'; sdp: string }
+  | { kind: 'ice'; candidate: string; sdpMid?: string | null; sdpMLineIndex?: number | null }
+  | { kind: 'bye' };
+
+/** Höchstlängen für weitergereichte Vermittlungsdaten. */
+export const RTC_SDP_MAX = 12_000;
+export const RTC_CANDIDATE_MAX = 1_000;
+/** Kopf als [x, y, z, qx, qy, qz, qw] in Metern bzw. als Quaternion, im eigenen Tischsystem. */
+export const POSE_LENGTH = 7;
 
 // ---------------------------------------------------------------------------
 // Server → Browser
+
+/** Was die Gruppe nach einer Partie wählen kann (Aussteigen ist kein Votum, sondern `leave`). */
+export type AfterChoice = 'again' | 'other';
+/** Kandidat „Zufälliges Spiel“ in der Abstimmung. */
+export const AFTER_RANDOM = 'random';
+/** Höchstens so viele vorgeschlagene Spiele stehen zur Wahl (ohne „Zufällig“). */
+export const AFTER_MAX_CANDIDATES = 4;
+
+/**
+ * Die Abstimmung am Rundenende (#298) aus Sicht einer Verbindung. Wer was gewählt hat, sehen nur die Zähler;
+ * `you` ist die eigene Stimme. Fehlt die Nachricht (`null`), läuft keine Abstimmung.
+ */
+export interface AfterGameInfo {
+  /** Zur Partie (`GameMessage.round`), die gerade zu Ende ist. */
+  round: number;
+  /** Bis wann abgestimmt werden kann (Serverzeit). */
+  deadline: number;
+  serverNow: number;
+  /** Wie viele Menschen stimmen berechtigt ab und wie viele schon abgestimmt haben. */
+  voters: number;
+  voted: number;
+  again: number;
+  other: number;
+  /** Vorgeschlagene Spiele mit Stimmen; `random` steht immer am Ende. */
+  candidates: { gameId: string; votes: number }[];
+  /** Eigene Stimme; fehlt bei Zuschauern und wer noch nichts gewählt hat. */
+  you?: { choice?: AfterChoice; pick?: string; proposed?: string };
+  /** Darf diese Verbindung abstimmen (Mensch mit Platz in der Partie)? */
+  canVote: boolean;
+}
 
 export interface RoomMessage {
   type: 'room';
@@ -147,6 +254,13 @@ export interface RoomMessage {
   lobby: LobbySettings;
   /** Wie viele Tisch-Bildschirme verbunden sind; fehlt, wenn keiner da ist. */
   displays?: number;
+  /** Läuft der Raum als Fernpartie? Nur dann bietet die Oberfläche Hinweise aufs Gerät an (#242); fehlt sonst. */
+  correspondence?: true;
+  /**
+   * Sprachchat (#352) nicht möglich: `public` in öffentlichen Räumen, `reported` nach einer Meldung bis zur
+   * nächsten Partie. Fehlt, wenn man mitsprechen kann.
+   */
+  voiceOff?: 'public' | 'reported';
   /** Nur bei Turnierpartien: zu welchem Turnier der Raum gehört. */
   match?: { tournament: string; label: string; noShow: boolean; series?: { bestOf: number; score: [number, number]; next: number | null; done: boolean } };
 }
@@ -185,6 +299,11 @@ export interface GameMessage {
   view: unknown;
   /** Nur die Züge, die der eigene Platz gerade machen darf. */
   legalMoves: unknown[];
+  /**
+   * Kurze deutsche Texte zu `legalMoves`, gleiche Reihenfolge (#335) – etwa „Kreuz auf Mitte“.
+   * Nur bei Spielen mit Zugtexten und nur, wenn es Züge gibt; aus der eigenen Sicht erzeugt.
+   */
+  moveLabels?: string[];
   /** Darf der eigene Platz aufgeben? (Nicht mehr, wenn er schon ausgeschieden ist.) */
   canResign: boolean;
   /** Darf der eigene Platz gerade bitten, seinen letzten Zug zurückzunehmen? Fehlt bei älteren Servern. */
@@ -213,17 +332,41 @@ export type ServerMessage =
   | RoomMessage
   | GameMessage
   | { type: 'signal'; from: string; kind: 'react' | 'say'; value: string }
+  /** VR-Treffpunkt (#351): Vermittlungsdaten von einem anderen VR-Mitglied – nur an Brillen. */
+  | { type: 'rtc'; from: string; signal: RtcSignal }
+  /** VR-Treffpunkt (#351): Kopf eines anderen VR-Mitglieds ohne direkte Verbindung – nur an Brillen. */
+  | { type: 'pose'; from: string; head: number[] }
+  /** Abstimmung am Rundenende; `null`, wenn keine (mehr) läuft. */
+  | { type: 'afterGame'; after: AfterGameInfo | null }
+  /** Die Raumleitung hat die Anfrage abgelehnt (nur an die fragende Person). */
+  | { type: 'joinDenied' }
   | { type: 'error'; code: ErrorCode; message: string }
   | { type: 'kicked' }
+  /** Antwort auf `pushSubscribe`/`pushUnsubscribe` und nach `hello`: gilt für das Gerät des Empfängers, geht nur an ihn. */
+  | { type: 'pushState'; enabled: boolean }
   | { type: 'pong'; serverNow: number };
 
 /** Statt einer Mitgliedsnummer im `welcome` eines Tisch-Bildschirms. */
 export const DISPLAY_MEMBER = '@display';
 
-export type ErrorCode = 'badMessage' | 'protocol' | 'notAllowed' | 'roomFull' | 'badName' | 'notReady' | 'staleMove' | 'illegalMove' | 'tooLate';
+export type ErrorCode = 'badMessage' | 'protocol' | 'notAllowed' | 'roomFull' | 'badName' | 'notReady' | 'staleMove' | 'illegalMove' | 'tooLate' | 'tooFast';
 
 // ---------------------------------------------------------------------------
 // Prüfen eingehender Nachrichten: Alles vom Browser ist erst einmal unbekannt.
+
+function parseRtcSignal(v: unknown): RtcSignal | null {
+  if (!isRecord(v)) return null;
+  if ((v.kind === 'offer' || v.kind === 'answer') && isString(v.sdp, RTC_SDP_MAX)) return { kind: v.kind, sdp: v.sdp };
+  if (v.kind === 'ice' && isString(v.candidate, RTC_CANDIDATE_MAX)) {
+    return {
+      kind: 'ice',
+      candidate: v.candidate,
+      ...(v.sdpMid === null || isString(v.sdpMid, 50) ? { sdpMid: v.sdpMid as string | null } : {}),
+      ...(v.sdpMLineIndex === null || isInt(v.sdpMLineIndex, 0, 100) ? { sdpMLineIndex: v.sdpMLineIndex as number | null } : {}),
+    };
+  }
+  return v.kind === 'bye' ? { kind: 'bye' } : null;
+}
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isString = (v: unknown, max = 200): v is string => typeof v === 'string' && v.length <= max;
@@ -231,8 +374,11 @@ const isInt = (v: unknown, min = 0, max = 1_000_000): v is number => typeof v ==
 const isLevel = (v: unknown): v is BotLevel => v === 'easy' || v === 'medium' || v === 'hard';
 const isTime = (v: unknown): v is TimePresetId => v === 'relaxed' || v === 'normal' || v === 'fast';
 
-/** Liest eine Nachricht vom Browser. Ungültiges ergibt null. */
-export function parseClientMessage(raw: string): ClientMessage | null {
+/**
+ * Liest eine Nachricht vom Browser. Ungültiges ergibt null.
+ * `push.allowLocal` erlaubt Loopback-Abos nur im Testserver (siehe `parsePushSubscription`).
+ */
+export function parseClientMessage(raw: string, push: ParsePushOptions = {}): ClientMessage | null {
   if (raw.length > MAX_MESSAGE_LENGTH) return null;
   let data: unknown;
   try {
@@ -254,7 +400,15 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     case 'setGame':
       return isString(m.gameId, 60) ? { type: 'setGame', gameId: m.gameId } : null;
     case 'setOption':
-      return isString(m.id, 60) && isString(m.value, 60) ? { type: 'setOption', id: m.id, value: m.value } : null;
+      // Verborgene Optionen (eigenes Paket, #218) sind länger; ob der Wert passt, prüft der Raum am Muster der Option.
+      return isString(m.id, 60) && isString(m.value, 14000) ? { type: 'setOption', id: m.id, value: m.value } : null;
+    case 'setCustomCardCatalog':
+      if (m.catalog === null) return { type: 'setCustomCardCatalog', catalog: null };
+      {
+        // Nur Werte und Darstellung in sicheren Grenzen (#270, #277); fremde Felder fallen weg.
+        const catalog = sanitizeCustomCardCatalog(m.catalog);
+        return catalog ? { type: 'setCustomCardCatalog', catalog } : null;
+      }
     case 'setTime':
       return isTime(m.time) ? { type: 'setTime', time: m.time } : null;
     case 'setSeatCount':
@@ -282,6 +436,20 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return typeof m.allowed === 'boolean' ? { type: 'setTakeBack', allowed: m.allowed } : null;
     case 'answerTakeBack':
       return typeof m.accept === 'boolean' ? { type: 'answerTakeBack', accept: m.accept } : null;
+    case 'afterVote':
+      return m.choice === 'again' || m.choice === 'other' ? { type: 'afterVote', choice: m.choice } : null;
+    case 'afterPropose':
+      return isString(m.gameId, 60) && m.gameId !== AFTER_RANDOM ? { type: 'afterPropose', gameId: m.gameId } : null;
+    case 'afterPick':
+      return isString(m.gameId, 60) ? { type: 'afterPick', gameId: m.gameId } : null;
+    case 'answerJoin':
+      return isString(m.memberId, 20) && typeof m.ok === 'boolean' ? { type: 'answerJoin', memberId: m.memberId, ok: m.ok } : null;
+    case 'setAcceptRequests':
+      return typeof m.allowed === 'boolean' ? { type: 'setAcceptRequests', allowed: m.allowed } : null;
+    case 'askToJoin':
+    case 'cancelAskToJoin':
+    case 'acceptAllJoins':
+      return { type: m.type };
     case 'move':
       return isInt(m.version) && 'move' in m ? { type: 'move', version: m.version, move: m.move } : null;
     case 'react':
@@ -290,6 +458,10 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return isString(m.phrase, 40) ? { type: 'say', phrase: m.phrase } : null;
     case 'start':
       return { type: 'start', ...(typeof m.rotate === 'boolean' ? { rotate: m.rotate } : {}) };
+    case 'pushSubscribe': {
+      const subscription = parsePushSubscription(m.subscription, push);
+      return subscription ? { type: 'pushSubscribe', subscription } : null;
+    }
     case 'leaveSeat':
     case 'fillSeats':
     case 'shuffleTeams':
@@ -298,8 +470,22 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     case 'returnSeat':
     case 'takeBack':
     case 'leave':
+    case 'pushUnsubscribe':
     case 'ping':
       return { type: m.type };
+    case 'xr':
+    case 'voice':
+      return typeof m.on === 'boolean' ? { type: m.type, on: m.on } : null;
+    case 'reportVoice':
+      return { type: 'reportVoice' };
+    case 'rtc': {
+      const signal = parseRtcSignal(m.signal);
+      return isString(m.to, 20) && signal ? { type: 'rtc', to: m.to, signal } : null;
+    }
+    case 'pose':
+      return Array.isArray(m.head) && m.head.length === POSE_LENGTH && m.head.every((n) => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= 100)
+        ? { type: 'pose', head: m.head.map((n) => Math.round((n as number) * 1000) / 1000) }
+        : null;
     default:
       return null;
   }

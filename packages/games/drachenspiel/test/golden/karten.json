@@ -4933,6 +4933,635 @@
    }
   ]
  },
+ "dragon_bugs": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "dragon_bugs:2/4/4 poison"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star",
+     "f_treefolk"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "dragon_farm": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "dragon_farm:3/5/5 taunt"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star",
+     "f_treefolk"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "dragon_forest": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "dragon_forest:3/4/4 bubble"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star",
+     "f_treefolk"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/4/4 ready"
+    ]
+   }
+  ]
+ },
+ "dragon_sea": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "dragon_sea:3/4/4"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star",
+     "f_treefolk"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/47/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "dragon_wild": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "dragon_wild:4/4/4 rush ready"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star",
+     "f_treefolk"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/46/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 7,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "egg_bugs": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 10,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "egg_bugs:0/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star",
+     "f_treefolk"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/50/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 10,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "egg_farm": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 10,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "egg_farm:0/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star",
+     "f_treefolk"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/50/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 10,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "egg_forest": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 10,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "egg_forest:0/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star",
+     "f_treefolk"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/50/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 10,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "egg_sea": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 10,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "egg_sea:0/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star",
+     "f_treefolk"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/50/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 10,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
+ "egg_wild": {
+  "played": [
+   {
+    "health": 20,
+    "mana": 0,
+    "deck": 26,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 10,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready",
+     "egg_wild:0/3/3"
+    ]
+   }
+  ],
+  "gone": [
+   {
+    "health": 20,
+    "mana": 1,
+    "deck": 25,
+    "hand": [
+     "f_seed",
+     "c54",
+     "f_faun",
+     "f_faun",
+     "special_star",
+     "f_treefolk"
+    ],
+    "board": [
+     "c43:3/5/5 ready",
+     "c43:2/1/1 ready",
+     "c43:1/2/2 bubble ready",
+     "c43:1/1/1 stealth ready",
+     "c43:50/50/50 ready"
+    ]
+   },
+   {
+    "health": 20,
+    "mana": 10,
+    "deck": 26,
+    "hand": [],
+    "board": [
+     "c43:2/3/4 ready"
+    ]
+   }
+  ]
+ },
  "f_badger": {
   "played": [
    {

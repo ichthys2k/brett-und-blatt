@@ -21,6 +21,7 @@ import {
   type WallRoundSummary,
   type WallSubmission,
 } from './rules';
+import { describeMove } from './describe';
 
 export type { NumberWallMove, NumberWallState, WallNumberMode, WallRoundSummary, WallSubmission };
 export { formatStoneValue, scoreWallSubmission, solveWallFromGivens, stoneIndex, totalStones };
@@ -71,6 +72,7 @@ export const gameModule: GameModule<NumberWallState, NumberWallMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   sampleHidden,
   result,
   bots: [numberWallBot],

@@ -1,0 +1,2202 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ichthys2k/brett-und-blatt/blob/main/docs/protokoll.schema.json",
+  "title": "Brett & Blatt – Online-Protokoll",
+  "description": "Nachrichten zwischen Client und Spieleserver (JSON über WebSocket). Erzeugt aus packages/online/src/protocol.ts mit scripts/protokoll-schema.mjs – nicht von Hand ändern. Beschreibung: docs/protokoll.md.",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/ClientMessage"
+    },
+    {
+      "$ref": "#/definitions/ServerMessage"
+    }
+  ],
+  "definitions": {
+    "Actor": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SeatId"
+        },
+        {
+          "type": "string",
+          "const": "system"
+        }
+      ],
+      "description": "Wer einen Zug macht: ein Platz oder die Spielleitung selbst (Systemzug, z. B. Würfeln)."
+    },
+    "AfterChoice": {
+      "type": "string",
+      "enum": [
+        "again",
+        "other"
+      ],
+      "description": "Was die Gruppe nach einer Partie wählen kann (Aussteigen ist kein Votum, sondern `leave`)."
+    },
+    "AfterGameInfo": {
+      "type": "object",
+      "properties": {
+        "round": {
+          "type": "number",
+          "description": "Zur Partie (`GameMessage.round`), die gerade zu Ende ist."
+        },
+        "deadline": {
+          "type": "number",
+          "description": "Bis wann abgestimmt werden kann (Serverzeit)."
+        },
+        "serverNow": {
+          "type": "number"
+        },
+        "voters": {
+          "type": "number",
+          "description": "Wie viele Menschen stimmen berechtigt ab und wie viele schon abgestimmt haben."
+        },
+        "voted": {
+          "type": "number"
+        },
+        "again": {
+          "type": "number"
+        },
+        "other": {
+          "type": "number"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "gameId": {
+                "type": "string"
+              },
+              "votes": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "gameId",
+              "votes"
+            ]
+          },
+          "description": "Vorgeschlagene Spiele mit Stimmen; `random` steht immer am Ende."
+        },
+        "you": {
+          "type": "object",
+          "properties": {
+            "choice": {
+              "$ref": "#/definitions/AfterChoice"
+            },
+            "pick": {
+              "type": "string"
+            },
+            "proposed": {
+              "type": "string"
+            }
+          },
+          "description": "Eigene Stimme; fehlt bei Zuschauern und wer noch nichts gewählt hat."
+        },
+        "canVote": {
+          "type": "boolean",
+          "description": "Darf diese Verbindung abstimmen (Mensch mit Platz in der Partie)?"
+        }
+      },
+      "required": [
+        "round",
+        "deadline",
+        "serverNow",
+        "voters",
+        "voted",
+        "again",
+        "other",
+        "candidates",
+        "canVote"
+      ],
+      "description": "Die Abstimmung am Rundenende (#298) aus Sicht einer Verbindung. Wer was gewählt hat, sehen nur die Zähler; `you` ist die eigene Stimme. Fehlt die Nachricht (`null`), läuft keine Abstimmung."
+    },
+    "BotLevel": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ]
+    },
+    "ClientMessage": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "hello"
+            },
+            "protocol": {
+              "type": "number"
+            },
+            "token": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "avatar": {
+              "type": "string"
+            },
+            "crest": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "protocol",
+            "token",
+            "name",
+            "avatar"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "display"
+            },
+            "protocol": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "type",
+            "protocol"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setName"
+            },
+            "name": {
+              "type": "string"
+            },
+            "avatar": {
+              "type": "string"
+            },
+            "crest": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "name",
+            "avatar"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setGame"
+            },
+            "gameId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "gameId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setOption"
+            },
+            "id": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setCustomCardCatalog"
+            },
+            "catalog": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/CustomCardCatalog"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "catalog"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setTime"
+            },
+            "time": {
+              "$ref": "#/definitions/TimePresetId"
+            }
+          },
+          "required": [
+            "type",
+            "time"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setSeatCount"
+            },
+            "count": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "type",
+            "count"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setSeat"
+            },
+            "index": {
+              "type": "number"
+            },
+            "seat": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "open"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "bot": {
+                      "$ref": "#/definitions/BotLevel"
+                    }
+                  },
+                  "required": [
+                    "bot"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "index",
+            "seat"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setPublic"
+            },
+            "isPublic": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "isPublic"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "takeSeat"
+            },
+            "index": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "type",
+            "index"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "leaveSeat"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "fillSeats"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setTeam"
+            },
+            "index": {
+              "type": "number"
+            },
+            "team": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "type",
+            "index",
+            "team"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "shuffleTeams"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "kick"
+            },
+            "memberId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "memberId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "unseat"
+            },
+            "index": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "type",
+            "index"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "renameMember"
+            },
+            "memberId": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "avatar": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "memberId",
+            "name",
+            "avatar"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setNamesLocked"
+            },
+            "locked": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "locked"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setTakeBack"
+            },
+            "allowed": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "allowed"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "start"
+            },
+            "rotate": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "toLobby"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "move"
+            },
+            "version": {
+              "type": "number"
+            },
+            "move": {}
+          },
+          "required": [
+            "type",
+            "version",
+            "move"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "resign"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "returnSeat"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "takeBack"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "answerTakeBack"
+            },
+            "accept": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "accept"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "afterVote"
+            },
+            "choice": {
+              "$ref": "#/definitions/AfterChoice"
+            }
+          },
+          "required": [
+            "type",
+            "choice"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "afterPropose"
+            },
+            "gameId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "gameId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "afterPick"
+            },
+            "gameId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "gameId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "askToJoin"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "cancelAskToJoin"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "answerJoin"
+            },
+            "memberId": {
+              "type": "string"
+            },
+            "ok": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "memberId",
+            "ok"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "acceptAllJoins"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setAcceptRequests"
+            },
+            "allowed": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "allowed"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "react"
+            },
+            "emoji": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "emoji"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "say"
+            },
+            "phrase": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "phrase"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "leave"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "pushSubscribe"
+            },
+            "subscription": {
+              "$ref": "#/definitions/PushSubscriptionData"
+            }
+          },
+          "required": [
+            "type",
+            "subscription"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "pushUnsubscribe"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "ping"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "xr"
+            },
+            "on": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "on"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "rtc"
+            },
+            "to": {
+              "type": "string"
+            },
+            "signal": {
+              "$ref": "#/definitions/RtcSignal"
+            }
+          },
+          "required": [
+            "type",
+            "to",
+            "signal"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "pose"
+            },
+            "head": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "type",
+            "head"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "voice"
+            },
+            "on": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "on"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "reportVoice"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    "ClockReading": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "none",
+            "perMove",
+            "chessClock",
+            "byoyomi"
+          ]
+        },
+        "running": {
+          "type": "boolean"
+        },
+        "leftMs": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Restzeit für den aktuellen Zug (Zugzeit) bzw. Gesamtzeit (Schachuhr)."
+        },
+        "bankLeftMs": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Rest der Zeitbank (nur Zugzeit mit Zeitbank)."
+        },
+        "fraction": {
+          "type": "number",
+          "description": "Füllstand für den Uhr-Ring, 0 bis 1."
+        },
+        "usingBank": {
+          "type": "boolean",
+          "description": "true, wenn gerade die Zeitbank angebrochen wird."
+        },
+        "periodsLeft": {
+          "type": "number",
+          "description": "Byo-yomi: verbleibende Perioden (einschließlich der laufenden)."
+        },
+        "expired": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "running",
+        "leftMs",
+        "bankLeftMs",
+        "fraction",
+        "usingBank",
+        "expired"
+      ],
+      "description": "Was die Oberfläche über die Uhr eines Platzes wissen muss."
+    },
+    "CustomCardCatalog": {
+      "type": "object",
+      "properties": {
+        "checksum": {
+          "type": "string"
+        },
+        "notices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "combatCards": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ParsedCombatCard"
+          }
+        },
+        "courtCards": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ParsedCourtCard"
+          }
+        },
+        "quartettCards": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ParsedQuartettCard"
+          }
+        },
+        "quartettSet": {
+          "$ref": "#/definitions/CustomQuartettSet",
+          "description": "Statt einzelner geänderter Karten ein ganzes eigenes Quartett-Set."
+        }
+      },
+      "required": [
+        "checksum",
+        "notices",
+        "combatCards",
+        "courtCards",
+        "quartettCards"
+      ]
+    },
+    "CustomQuartettSet": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "higherWins": {
+                "type": "boolean"
+              },
+              "format": {
+                "type": "string",
+                "enum": [
+                  "plain",
+                  "year"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "unit",
+              "higherWins"
+            ]
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ]
+          }
+        },
+        "cards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "emoji": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              },
+              "values": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "emoji",
+              "values"
+            ]
+          }
+        }
+      },
+      "required": [
+        "name",
+        "emoji",
+        "properties",
+        "groups",
+        "cards"
+      ],
+      "description": "Ein ganz eigenes Quartett-Set aus Anki (#270): Gruppen A, B, … mit je vier Karten A1–A4."
+    },
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "badMessage",
+        "protocol",
+        "notAllowed",
+        "roomFull",
+        "badName",
+        "notReady",
+        "staleMove",
+        "illegalMove",
+        "tooLate",
+        "tooFast"
+      ]
+    },
+    "Forfeit": {
+      "type": "object",
+      "properties": {
+        "seat": {
+          "$ref": "#/definitions/SeatId"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "time",
+            "resign"
+          ]
+        }
+      },
+      "required": [
+        "seat",
+        "reason"
+      ]
+    },
+    "GameEvent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": {},
+      "description": "Beschreibt, was passiert ist – die Oberfläche animiert danach."
+    },
+    "GameMessage": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "game"
+        },
+        "gameId": {
+          "type": "string"
+        },
+        "round": {
+          "type": "number",
+          "description": "Laufende Nummer der Partie im Raum – eine Revanche ist eine neue Partie."
+        },
+        "version": {
+          "type": "number",
+          "description": "Zählt jede Änderung; Züge nennen die Version, die der Browser gesehen hat."
+        },
+        "seats": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PublicSeat"
+          }
+        },
+        "options": {
+          "$ref": "#/definitions/Options"
+        },
+        "time": {
+          "$ref": "#/definitions/TimePresetId"
+        },
+        "yourSeat": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SeatId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Der eigene Platz – null für Zuschauer."
+        },
+        "view": {},
+        "legalMoves": {
+          "type": "array",
+          "items": {},
+          "description": "Nur die Züge, die der eigene Platz gerade machen darf."
+        },
+        "moveLabels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Kurze deutsche Texte zu `legalMoves`, gleiche Reihenfolge (#335) – etwa „Kreuz auf Mitte“. Nur bei Spielen mit Zugtexten und nur, wenn es Züge gibt; aus der eigenen Sicht erzeugt."
+        },
+        "canResign": {
+          "type": "boolean",
+          "description": "Darf der eigene Platz aufgeben? (Nicht mehr, wenn er schon ausgeschieden ist.)"
+        },
+        "canTakeBack": {
+          "type": "boolean",
+          "description": "Darf der eigene Platz gerade bitten, seinen letzten Zug zurückzunehmen? Fehlt bei älteren Servern."
+        },
+        "takeBack": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TakeBackInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Offene Bitte ums Zurücknehmen oder ihr Ausgang (bis zum nächsten Zug)."
+        },
+        "current": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SeatId"
+          }
+        },
+        "away": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SeatId"
+          }
+        },
+        "thinking": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SeatId"
+          }
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Result"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "forfeit": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Forfeit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "clocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClockReading"
+          },
+          "description": "Uhrenstände zum Zeitpunkt `serverNow`; der Browser zählt selbst weiter."
+        },
+        "serverNow": {
+          "type": "number"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GameEvent"
+          },
+          "description": "Was seit der letzten Nachricht passiert ist – schon für diesen Platz gefiltert."
+        },
+        "replay": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ReplayData"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Seed und Zugliste zum Nachspielen (#99) – nur nach Partieende (der Seed verriete sonst alles Verdeckte) und nur bei überschaubarer Länge. Fehlt bei älteren Servern."
+        }
+      },
+      "required": [
+        "type",
+        "gameId",
+        "round",
+        "version",
+        "seats",
+        "options",
+        "time",
+        "yourSeat",
+        "view",
+        "legalMoves",
+        "canResign",
+        "current",
+        "away",
+        "thinking",
+        "result",
+        "forfeit",
+        "clocks",
+        "serverNow",
+        "events"
+      ]
+    },
+    "LobbySeat": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "team": {
+              "type": "number",
+              "description": "Nur bei Teamspielen (`GameInfo.teams`): Team dieses Platzes, 0, 1, …"
+            },
+            "kind": {
+              "type": "string",
+              "const": "human"
+            },
+            "memberId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "memberId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "team": {
+              "type": "number",
+              "description": "Nur bei Teamspielen (`GameInfo.teams`): Team dieses Platzes, 0, 1, …"
+            },
+            "kind": {
+              "type": "string",
+              "const": "bot"
+            },
+            "level": {
+              "$ref": "#/definitions/BotLevel"
+            }
+          },
+          "required": [
+            "kind",
+            "level"
+          ]
+        }
+      ],
+      "description": "Ein Platz in der Lobby: offen für einen Menschen, von einem Mitglied besetzt oder ein Bot."
+    },
+    "LobbySettings": {
+      "type": "object",
+      "properties": {
+        "gameId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "options": {
+          "$ref": "#/definitions/Options"
+        },
+        "time": {
+          "$ref": "#/definitions/TimePresetId"
+        },
+        "seats": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LobbySeat"
+          }
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "namesLocked": {
+          "type": "boolean",
+          "description": "Nur die Raumleitung darf Namen und Bilder ändern (fehlt in älteren Räumen: aus)."
+        },
+        "takeBack": {
+          "type": "boolean",
+          "description": "Dürfen Spieler online einen Zug zurücknehmen, wenn alle zustimmen (`GameInfo.takeBack`)? Fehlt: an."
+        },
+        "acceptRequests": {
+          "type": "boolean",
+          "description": "Dürfen Zuschauer anfragen, ab der nächsten Runde mitzuspielen (#299)? Die Raumleitung entscheidet. Fehlt: an in öffentlichen, aus in privaten Räumen."
+        }
+      },
+      "required": [
+        "gameId",
+        "options",
+        "time",
+        "seats",
+        "isPublic"
+      ]
+    },
+    "MemberInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
+        },
+        "crest": {
+          "type": "string",
+          "description": "Wappen des Spielerpasses (Beschreibung, siehe `player-crest.ts` in der Engine); nur wenn die Person es zeigen will."
+        },
+        "connected": {
+          "type": "boolean"
+        },
+        "nameFixed": {
+          "type": "boolean",
+          "description": "Name und Bild hat die Raumleitung festgelegt – das Mitglied kann sie nicht mehr ändern."
+        },
+        "join": {
+          "type": "string",
+          "enum": [
+            "asking",
+            "queued"
+          ],
+          "description": "Anfrage ums Mitspielen ab der nächsten Runde (#299): `asking` wartet auf die Raumleitung, `queued` ist angenommen."
+        },
+        "xr": {
+          "type": "boolean",
+          "const": true,
+          "description": "Ist das Mitglied gerade mit einer VR-Brille da, die andere Brillen sehen möchte (#351)? Fehlt sonst."
+        },
+        "voice": {
+          "type": "boolean",
+          "const": true,
+          "description": "Macht das Mitglied gerade beim Sprachchat mit (#352)? Fehlt sonst."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "avatar",
+        "connected"
+      ],
+      "description": "Ein Mitglied des Raums, wie es alle sehen. Die geheime Kennung steht nie darin."
+    },
+    "Options": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "ParsedCombatCard": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "cost": {
+          "type": "number"
+        },
+        "attack": {
+          "type": "number"
+        },
+        "health": {
+          "type": "number"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string",
+          "description": "Gemaltes Kartenbild (Medienname, z. B. `bub-ds-fuchs.webp`, #309); im Feld „Bild“ als `<img>`."
+        },
+        "quote": {
+          "type": "string"
+        },
+        "isSpell": {
+          "type": "boolean"
+        },
+        "house": {
+          "type": "string"
+        },
+        "families": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "school": {
+          "type": "string"
+        },
+        "rarity": {
+          "type": "string"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "text": {
+          "type": "string"
+        },
+        "building": {},
+        "triggers": {},
+        "effects": {},
+        "targeting": {},
+        "trap": {},
+        "quest": {},
+        "customEngineData": {}
+      },
+      "required": [
+        "cost",
+        "id",
+        "name"
+      ]
+    },
+    "ParsedCourtCard": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "rarity": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "text": {
+          "type": "string"
+        },
+        "game": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "baseChips": {
+          "type": "number"
+        },
+        "multiplier": {
+          "type": "number"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "quote": {
+          "type": "string"
+        },
+        "customEngineData": {}
+      },
+      "required": [
+        "key",
+        "name"
+      ]
+    },
+    "ParsedQuartettCard": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "source": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "values"
+      ]
+    },
+    "PublicSeat": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "human",
+            "bot"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/definitions/BotLevel"
+        },
+        "memberId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "memberId"
+      ],
+      "description": "Ein Platz der laufenden Partie, wie ihn alle sehen."
+    },
+    "PushSubscriptionData": {
+      "type": "object",
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "keys": {
+          "type": "object",
+          "properties": {
+            "p256dh": {
+              "type": "string"
+            },
+            "auth": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "p256dh",
+            "auth"
+          ]
+        }
+      },
+      "required": [
+        "endpoint",
+        "keys"
+      ],
+      "description": "Web Push (#242, Schritt 1): Datentypen, Prüfung von Abonnements, Abo-Buch und Spam-Schutz. Reine Logik ohne Anbieterbindung und ohne Krypto (die steht in `webpush.ts`).\n\nSicherheitsgrenze: Der Server ruft später die Endpunkt-Adresse eines Abos an. Ohne die Zulassungsliste würde er beliebige vom Browser genannte Adressen anrufen (SSRF)."
+    },
+    "ReplayData": {
+      "type": "object",
+      "properties": {
+        "seed": {
+          "type": "string"
+        },
+        "options": {
+          "$ref": "#/definitions/Options"
+        },
+        "seats": {
+          "type": "number",
+          "description": "Platzzahl beim Start (`SessionConfig.initialSeats` bzw. Zahl der Plätze)."
+        },
+        "log": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "actor": {
+                "$ref": "#/definitions/Actor"
+              },
+              "move": {}
+            },
+            "required": [
+              "actor",
+              "move"
+            ]
+          }
+        }
+      },
+      "required": [
+        "seed",
+        "options",
+        "seats",
+        "log"
+      ],
+      "description": "Alles, was man zum Nachspielen einer beendeten Partie braucht (#99): Seed, Optionen, Platzzahl und die Zugliste. Der Seed verrät bei Spielen mit Geheimnissen alle verdeckten Karten – darum gibt eine Spielleitung diese Daten erst heraus, wenn die Partie zu Ende ist."
+    },
+    "Result": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "win"
+            },
+            "winners": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SeatId"
+              }
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "winners"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "draw"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "loss"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "RoomMessage": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "room"
+        },
+        "code": {
+          "type": "string"
+        },
+        "phase": {
+          "$ref": "#/definitions/RoomPhase"
+        },
+        "hostId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MemberInfo"
+          }
+        },
+        "lobby": {
+          "$ref": "#/definitions/LobbySettings"
+        },
+        "displays": {
+          "type": "number",
+          "description": "Wie viele Tisch-Bildschirme verbunden sind; fehlt, wenn keiner da ist."
+        },
+        "correspondence": {
+          "type": "boolean",
+          "const": true,
+          "description": "Läuft der Raum als Fernpartie? Nur dann bietet die Oberfläche Hinweise aufs Gerät an (#242); fehlt sonst."
+        },
+        "voiceOff": {
+          "type": "string",
+          "enum": [
+            "public",
+            "reported"
+          ],
+          "description": "Sprachchat (#352) nicht möglich: `public` in öffentlichen Räumen, `reported` nach einer Meldung bis zur nächsten Partie. Fehlt, wenn man mitsprechen kann."
+        },
+        "match": {
+          "type": "object",
+          "properties": {
+            "tournament": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "noShow": {
+              "type": "boolean"
+            },
+            "series": {
+              "type": "object",
+              "properties": {
+                "bestOf": {
+                  "type": "number"
+                },
+                "score": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "next": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "done": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "bestOf",
+                "score",
+                "next",
+                "done"
+              ]
+            }
+          },
+          "required": [
+            "tournament",
+            "label",
+            "noShow"
+          ],
+          "description": "Nur bei Turnierpartien: zu welchem Turnier der Raum gehört."
+        }
+      },
+      "required": [
+        "type",
+        "code",
+        "phase",
+        "hostId",
+        "members",
+        "lobby"
+      ]
+    },
+    "RoomPhase": {
+      "type": "string",
+      "enum": [
+        "lobby",
+        "playing",
+        "finished"
+      ]
+    },
+    "RtcSignal": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "offer",
+                "answer"
+              ]
+            },
+            "sdp": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "sdp"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "ice"
+            },
+            "candidate": {
+              "type": "string"
+            },
+            "sdpMid": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sdpMLineIndex": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "candidate"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "bye"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ],
+      "description": "Vermittlungsdaten für WebRTC zwischen zwei Brillen (#351); der Raum liest sie nicht, er reicht sie nur weiter."
+    },
+    "SeatId": {
+      "type": "number",
+      "description": "Platz am Tisch: 0, 1, 2, … in Sitzreihenfolge."
+    },
+    "ServerMessage": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "welcome"
+            },
+            "protocol": {
+              "type": "number"
+            },
+            "you": {
+              "type": "string"
+            },
+            "serverNow": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "type",
+            "protocol",
+            "you",
+            "serverNow"
+          ]
+        },
+        {
+          "$ref": "#/definitions/RoomMessage"
+        },
+        {
+          "$ref": "#/definitions/GameMessage"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "signal"
+            },
+            "from": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "react",
+                "say"
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "from",
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "rtc"
+            },
+            "from": {
+              "type": "string"
+            },
+            "signal": {
+              "$ref": "#/definitions/RtcSignal"
+            }
+          },
+          "required": [
+            "type",
+            "from",
+            "signal"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "pose"
+            },
+            "from": {
+              "type": "string"
+            },
+            "head": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "type",
+            "from",
+            "head"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "afterGame"
+            },
+            "after": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/AfterGameInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "after"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "joinDenied"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "error"
+            },
+            "code": {
+              "$ref": "#/definitions/ErrorCode"
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "code",
+            "message"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "kicked"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "pushState"
+            },
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "enabled"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "pong"
+            },
+            "serverNow": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "type",
+            "serverNow"
+          ]
+        }
+      ]
+    },
+    "TakeBackInfo": {
+      "type": "object",
+      "properties": {
+        "seat": {
+          "$ref": "#/definitions/SeatId",
+          "description": "Wer zurücknehmen möchte."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "accepted",
+            "declined",
+            "expired"
+          ]
+        },
+        "moves": {
+          "type": "number",
+          "description": "Wie viele Züge die Rücknahme umfasst (der eigene und alle danach)."
+        },
+        "accepted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SeatId"
+          },
+          "description": "Wer schon zugestimmt hat und auf wen noch gewartet wird (Menschen ohne die bittende Person)."
+        },
+        "waiting": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SeatId"
+          }
+        },
+        "deadline": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Bis wann abgestimmt werden kann (Serverzeit, nur bei `pending`)."
+        },
+        "by": {
+          "$ref": "#/definitions/SeatId",
+          "description": "Wer abgelehnt hat (bei `declined`)."
+        }
+      },
+      "required": [
+        "seat",
+        "status",
+        "moves",
+        "accepted",
+        "waiting",
+        "deadline"
+      ],
+      "description": "Eine Bitte ums Zurücknehmen, wie sie alle sehen: offen (`pending`) oder ihr Ausgang, bis zum nächsten Zug. Während sie offen ist, ruht die Partie (keine Züge, Uhren stehen)."
+    },
+    "TimePresetId": {
+      "type": "string",
+      "enum": [
+        "relaxed",
+        "normal",
+        "fast"
+      ]
+    }
+  }
+}

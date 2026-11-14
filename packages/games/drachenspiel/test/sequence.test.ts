@@ -64,7 +64,7 @@ describe('Drachenspiel: Animationsreihe', () => {
     expect(beats[0]!.boards[seat][0]!.minion.health).toBe(4);
     const dying = beats[1]!.boards[(1 - seat) as SeatId];
     expect(dying.map((s) => [s.minion.id, s.dying])).toEqual([['Hase', true]]);
-    expect(beats[1]!.log.join()).toContain('Hase geht vom Feld');
+    expect(beats[1]!.log.join()).toContain('Hase verbeugt sich und tritt ab');
   });
 
   it('nennt im Verlauf keine gezogenen Karten', () => {

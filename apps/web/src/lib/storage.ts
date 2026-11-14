@@ -157,6 +157,7 @@ export const storage = {
     remove(PASS_KEY_KEY);
     remove(LOCK_KEY);
     remove(CREST_KEY);
+    remove('brett-und-blatt:kartenruecken');
     remove(RESCUE_KEY);
     remove(TOURNAMENTS_KEY);
   },

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" width="480" height="360" role="img" aria-label="Tetraeder (Vierflächner)">
+<defs><radialGradient id="pergament" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#f7eed6"/><stop offset="1" stop-color="#e3cf9f"/></radialGradient><style> .flaeche { fill: #d9a400; fill-opacity: 0.22; stroke: none; } .kante, .umriss { fill: none; stroke: #3b2a1a; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; } .kante.verdeckt, .hilfslinie.verdeckt { stroke: #8a7658; stroke-width: 2; stroke-dasharray: 1.5 6; } .hilfslinie { fill: none; stroke: #8a7658; stroke-width: 1.6; } .achse { stroke: #9a6a2e; stroke-width: 1.6; stroke-dasharray: 10 7; } .ecke { fill: #3b2a1a; } .ecke.verdeckt { fill: #8a7658; } .glanz { fill: #fff8e6; fill-opacity: 0.55; } </style></defs>
+<rect width="480" height="360" fill="url(#pergament)" />
+<polygon class="flaeche" points="373.8,265.9 106.2,316 197.8,44" />
+<polygon class="flaeche" points="106.2,316 113.4,211.5 197.8,44" />
+<line class="kante" data-kante="0" x1="373.8" y1="265.9" x2="106.2" y2="316" />
+<line class="kante" data-kante="1" x1="106.2" y1="316" x2="113.4" y2="211.5" />
+<line class="kante verdeckt" data-kante="2" x1="373.8" y1="265.9" x2="113.4" y2="211.5" />
+<line class="kante" data-kante="3" x1="106.2" y1="316" x2="197.8" y2="44" />
+<line class="kante" data-kante="4" x1="373.8" y1="265.9" x2="197.8" y2="44" />
+<line class="kante" data-kante="5" x1="113.4" y1="211.5" x2="197.8" y2="44" />
+<circle class="ecke" data-ecke="0" cx="373.8" cy="265.9" r="4" />
+<circle class="ecke" data-ecke="1" cx="106.2" cy="316" r="4" />
+<circle class="ecke" data-ecke="2" cx="113.4" cy="211.5" r="4" />
+<circle class="ecke" data-ecke="3" cx="197.8" cy="44" r="4" />
+</svg>

@@ -1,0 +1,114 @@
+{
+  "beschreibung": "G12 (#325): Spielfiguren für Dame. Motiv-id = <satz>-<figur>[-<seite>]; w = hell, b = dunkel, n = neutraler Meister zum Einfärben in die Platzfarben. Alle Motive freistellen (grüner Grund #00B140 → Alphakanal).",
+  "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+  "ohne": "text, letters, numbers, watermark, border, frame, background scene, hands, people, modern objects, logos, photo, green on the object itself, cast shadow, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "1:1",
+  "ziel": "packages/games/checkers/src/ui/figuren",
+  "groesse": [
+    192,
+    192
+  ],
+  "referenzen": [
+    "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp",
+    "packages/ui/src/cards/portraits/koenig-herz.webp",
+    "packages/games/marketplace/src/ui/figures/herald.webp"
+  ],
+  "motive": [
+    {
+      "id": "wood-man-w",
+      "titel": "Stein · wood · hell",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: a flat round draughts piece with a ridged rim, made of pale maple wood."
+    },
+    {
+      "id": "wood-man-b",
+      "titel": "Stein · wood · dunkel",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: a flat round draughts piece with a ridged rim, made of dark walnut wood."
+    },
+    {
+      "id": "wood-king-w",
+      "titel": "Dame · wood · hell",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: two flat round draughts pieces stacked, with a small crown symbol on top, made of pale maple wood."
+    },
+    {
+      "id": "wood-king-b",
+      "titel": "Dame · wood · dunkel",
+      "satz": "wood",
+      "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: two flat round draughts pieces stacked, with a small crown symbol on top, made of dark walnut wood."
+    },
+    {
+      "id": "metal-man-w",
+      "titel": "Stein · metal · hell",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: a flat round draughts piece with a ridged rim, made of bright pewter."
+    },
+    {
+      "id": "metal-man-b",
+      "titel": "Stein · metal · dunkel",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: a flat round draughts piece with a ridged rim, made of dark bronze."
+    },
+    {
+      "id": "metal-king-w",
+      "titel": "Dame · metal · hell",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: two flat round draughts pieces stacked, with a small crown symbol on top, made of bright pewter."
+    },
+    {
+      "id": "metal-king-b",
+      "titel": "Dame · metal · dunkel",
+      "satz": "metal",
+      "stil": "Painterly storybook oil illustration of a single cast metal game piece with fine engraved lines, soft highlights from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: two flat round draughts pieces stacked, with a small crown symbol on top, made of dark bronze."
+    },
+    {
+      "id": "fable-man-w",
+      "titel": "Stein · fable · hell",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: a flat round token with a small mouse face relief, in pale cream colours."
+    },
+    {
+      "id": "fable-man-b",
+      "titel": "Stein · fable · dunkel",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: a flat round token with a small mouse face relief, in deep dark colours."
+    },
+    {
+      "id": "fable-king-w",
+      "titel": "Dame · fable · hell",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: two flat round tokens stacked, the upper one with a crowned mouse face relief, in pale cream colours."
+    },
+    {
+      "id": "fable-king-b",
+      "titel": "Dame · fable · dunkel",
+      "satz": "fable",
+      "stil": "Painterly storybook oil illustration of a single small game piece from a fairy-tale kingdom, warm candlelight from the upper left, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
+      "freistellen": true,
+      "prompt": "Seen from slightly above at an angle. Subject: two flat round tokens stacked, the upper one with a crowned mouse face relief, in deep dark colours."
+    }
+  ]
+}

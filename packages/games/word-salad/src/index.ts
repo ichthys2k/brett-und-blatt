@@ -25,6 +25,7 @@ import {
   type SaladCategory,
   type StemEntry,
 } from './words';
+import { describeMove } from './describe';
 
 export {
   STEM_CATALOG,
@@ -105,6 +106,7 @@ export const gameModule: GameModule<WordSaladState, WordSaladMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   bots: [wordSaladBot],
 };
