@@ -34,6 +34,8 @@ import { setBoardHidden, useBoardHidden } from '../lib/boardPrefs';
 import { navigate, paths } from '../lib/router';
 import { GAME_SERVER } from '../lib/server';
 import { setSoundSettings } from '../lib/sound';
+import { PieceSetPicker } from '../components/PieceSetPicker';
+import { PIECE_GAMES } from '../lib/pieceGames';
 
 /** Version der App, Suche nach Updates und Notlösung zum Zurücksetzen (#175). */
 function AppVersion() {
@@ -63,6 +65,21 @@ function AppVersion() {
         <Button onClick={() => void resetApp()}>{t('update.reset')}</Button>
       </details>
     </div>
+  );
+}
+
+/** Figurensätze der Brettspiele (#325): je Spiel vier Kacheln mit Vorschau. */
+function PieceSets() {
+  return (
+    <section className="space-y-2" aria-labelledby="pieces-title">
+      <h2 id="pieces-title" className="text-lg font-bold">
+        {t('pieces.title')}
+      </h2>
+      <p className="text-sm text-muted">{t('pieces.hint')}</p>
+      {PIECE_GAMES.map((game) => (
+        <PieceSetPicker key={game.id} game={game} />
+      ))}
+    </section>
   );
 }
 
@@ -194,6 +211,7 @@ export function SoundSettingsScreen() {
   return (
     <TavernPage title="Optionen" subtitle="Ton, Musik, Aussehen und Updates.">
       <LookChoice />
+      <PieceSets />
       <AppVersion />
       <PushSwitch />
       <PortraitChoice />

@@ -1,5 +1,6 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { DrawOfferBar, FitBox, GridBoard, useGridMoveAnimation, usePointerDrag, type BoardProps, type GameUi, type MoveAnimationItem } from '@brett-und-blatt/ui';
+import { DrawOfferBar, FitBox, GridBoard, useGridMoveAnimation, usePieceSet, usePointerDrag, type BoardProps, type GameUi, type MoveAnimationItem, type PieceSetId } from '@brett-und-blatt/ui';
+import { pieceImage } from './bilder';
 import { Chess, type Move, type Square } from 'chess.js';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { describeMove } from '../describe';
@@ -18,6 +19,12 @@ interface Piece {
 const GLYPHS: Record<PieceType, string> = { k: '♚︎', q: '♛︎', r: '♜︎', b: '♝︎', n: '♞︎', p: '♟︎' };
 const PIECE_NAMES: Record<PieceType, string> = { k: 'König', q: 'Dame', r: 'Turm', b: 'Läufer', n: 'Springer', p: 'Bauer' };
 const VALUES: Record<PieceType, number> = { k: 0, q: 9, r: 5, b: 3, n: 3, p: 1 };
+/** Figur als Zeichen oder – bei einem gemalten Satz – als Bild in derselben Größe (1em = Zellgröße der Figur). */
+function PieceFace({ type, white, set }: { type: PieceType; white: boolean; set: PieceSetId }) {
+  const url = pieceImage(set, type, white);
+  return url ? <img className="ch-piece-img" src={url} alt="" draggable={false} /> : <>{GLYPHS[type]}</>;
+}
+
 const PROMOTIONS: Promotion[] = ['q', 'r', 'b', 'n'];
 const FILES = 'abcdefgh';
 
@@ -60,11 +67,14 @@ function capturedBy(board: (Piece | null)[], white: boolean): PieceType[] {
 }
 
 function CaptureStrip({ board, white, lead }: { board: (Piece | null)[]; white: boolean; lead: number }) {
+  const set = usePieceSet('chess');
   const taken = capturedBy(board, white);
   return (
     <div className="ch-strip" aria-label={`${white ? 'Weiß' : 'Schwarz'} hat geschlagen: ${taken.length ? taken.map((t) => PIECE_NAMES[t]).join(', ') : 'nichts'}`}>
       <span className={`ch-taken ${white ? 'ch-black' : 'ch-white'}`} aria-hidden="true">
-        {taken.map((t) => GLYPHS[t]).join('')}
+        {taken.map((t, i) => (
+          <PieceFace key={`${t}${i}`} type={t} white={!white} set={set} />
+        ))}
       </span>
       {lead > 0 && <span className="ch-lead">+{lead}</span>}
     </div>
@@ -119,17 +129,18 @@ function premoveCandidates(fen: string, white: boolean): { from: number; to: num
 }
 
 function MoveText({ move }: { move: Move }) {
+  const set = usePieceSet('chess');
   const white = move.color === 'w';
   const castle = move.san.startsWith('O-O');
   return (
     <span className="ch-log-move">
-      <span className={`ch-log-glyph ${white ? 'ch-white' : 'ch-black'}`}>{GLYPHS[move.piece as PieceType]}</span>
+      <span className={`ch-log-glyph ${white ? 'ch-white' : 'ch-black'}`}><PieceFace type={move.piece as PieceType} white={white} set={set} /></span>
       <span className="ch-log-san">{germanSan(move.san)}</span>
       {castle ? (
         <span className="ch-log-note">{move.san.startsWith('O-O-O') ? 'lange Rochade' : 'kurze Rochade'}</span>
       ) : move.captured ? (
         <span className="ch-log-capture">
-          schlägt <span className={`ch-log-glyph ${white ? 'ch-black' : 'ch-white'}`}>{GLYPHS[move.captured as PieceType]}</span>
+          schlägt <span className={`ch-log-glyph ${white ? 'ch-black' : 'ch-white'}`}><PieceFace type={move.captured as PieceType} white={!white} set={set} /></span>
           <span className="ch-log-note">{PIECE_NAMES[move.captured as PieceType]}</span>
         </span>
       ) : null}
@@ -151,6 +162,7 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
   const legalMoves = allMoves.filter((m): m is BoardMove => m.type === 'move');
   const hint = anyHint?.type === 'move' ? anyHint : null;
   const [selected, setSelected] = useState<number | null>(null);
+  const pieceSet = usePieceSet('chess');
   const [promotion, setPromotion] = useState<BoardMove[] | null>(null);
   const [showMoves, setShowMoves] = useState(false);
   const [warning, setWarning] = useState<CheckWarning | null>(null);
@@ -473,7 +485,7 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
                       }}
                       onAnimationEnd={slide.onAnimationEnd}
                     >
-                      {GLYPHS[piece.type]}
+                      <PieceFace type={piece.type} white={piece.white} set={pieceSet} />
                     </span>
                   ) : effectiveTargets.has(index) ? (
                     <span className={canPremove ? 'ch-dot ch-dot-pre' : 'ch-dot'} />
@@ -602,7 +614,7 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
             onAnimationEnd={() => setFly(null)}
             aria-hidden="true"
           >
-            {GLYPHS[fly.type]}
+            <PieceFace type={fly.type} white={fly.white} set={pieceSet} />
           </span>
         )}
         {showMoves && (
@@ -621,7 +633,7 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
           <div className="ch-promotion" role="dialog" aria-label="Umwandlung wählen">
             {promotion.map((m) => (
               <button key={m.promotion} type="button" onClick={() => onMove(m)} aria-label={PIECE_NAMES[m.promotion ?? 'q']}>
-                <span className={`ch-piece ${whiteToMove ? 'ch-white' : 'ch-black'}`}>{GLYPHS[m.promotion ?? 'q']}</span>
+                <span className={`ch-piece ${whiteToMove ? 'ch-white' : 'ch-black'}`}><PieceFace type={m.promotion ?? 'q'} white={whiteToMove} set={pieceSet} /></span>
               </button>
             ))}
           </div>
