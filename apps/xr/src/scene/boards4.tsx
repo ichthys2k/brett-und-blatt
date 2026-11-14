@@ -10,6 +10,7 @@ import { TABLE_CENTER, TABLE_RADIUS } from './Tavern';
 import { GOLD, labelTexture } from './text';
 import { Button3D, Sign } from './ui3d';
 import { pulse } from '../haptics';
+import { useGrab } from './grab';
 
 const TOP = TABLE_CENTER[1] + 0.002;
 const SEAT_COLORS = ['#3a6fb0', '#a32a1c', '#2f7d4a', '#d9a400', '#7b2fa8', '#0d8478'];
@@ -116,8 +117,19 @@ export function DominoBoard({ game, onMove }: BoardProps) {
     if (options.length === 1) onMove(options[0]!.move);
     else if (options.length > 1) setChoice(stone);
   };
+  // Greifen (#383): Stein aus der Hand nehmen und auf die Kette legen; mehrere Enden: Wahlknöpfe.
+  const grab = useGrab<number>({
+    size: 0.9,
+    radius: 0.4,
+    targets: () => [{ id: 'kette', x: 0, z: 0 }],
+    onDrop: (stone, to) => {
+      if (to !== null) press(stone);
+    },
+  });
   return (
     <group position={[TABLE_CENTER[0], TOP, TABLE_CENTER[2]]}>
+      {grab.held && <DominoStone a={STONES[grab.held.id]![0]} b={STONES[grab.held.id]![1]} position={[grab.held.x, 0.03, grab.held.z]} size={size * 1.2} glow />}
+      {grab.layer}
       {view.chain.map((c, k) => {
         const [x, z] = chainAt(k);
         const double = c.left === c.right;
@@ -130,17 +142,19 @@ export function DominoBoard({ game, onMove }: BoardProps) {
       {hand.map((stone, i) => {
         const [a, b] = STONES[stone]!;
         const playable = plays.some((m) => m.move.stone === stone);
+        if (grab.held?.id === stone) return null;
+        const at: [number, number, number] = [(i - (hand.length - 1) / 2) * size * 3, HAND_Y, FRONT];
         return (
-          <DominoStone
+          <group
             key={stone}
-            a={a}
-            b={b}
-            position={[(i - (hand.length - 1) / 2) * size * 3, HAND_Y, FRONT]}
-            rotation={[-0.55 + Math.PI / 2, 0, 0]}
-            size={size * 1.2}
-            glow={playable}
-            onPress={playable ? () => press(stone) : undefined}
-          />
+            onPointerDown={(e) => {
+              if (!playable) return;
+              e.stopPropagation();
+              grab.begin(stone, at[0], at[2]);
+            }}
+          >
+            <DominoStone a={a} b={b} position={at} rotation={[-0.55 + Math.PI / 2, 0, 0]} size={size * 1.2} glow={playable} onPress={playable ? () => press(stone) : undefined} />
+          </group>
         );
       })}
       {view.boneyard.length > 0 && (
@@ -188,8 +202,20 @@ export function WordGridBoard({ game, onMove }: BoardProps) {
   const reachable = new Set(plays.flatMap((p) => p.cells));
   const options = cell === null ? [] : plays.filter((p) => p.cells.includes(cell)).sort((a, b) => b.cells.length - a.cells.length || a.label.localeCompare(b.label));
   const rack = (view.racks[me] ?? []).filter((t): t is string => t !== null);
+  const cellAt = (i: number): [number, number] => [((i % 15) - 7) * c, (Math.floor(i / 15) - 7) * c];
+  // Greifen (#383): Buchstabe aus der Bank auf ein leuchtendes Feld legen, dann das Wort wählen.
+  const grab = useGrab<number>({
+    size: 15 * c,
+    radius: c * 0.75,
+    targets: () => [...reachable].map((i) => ({ id: i, x: cellAt(i)[0], z: cellAt(i)[1] })),
+    onDrop: (_, to) => {
+      if (to !== null) setCell(to as number);
+    },
+  });
   return (
     <Plate size={[15 * c + 0.03, 15 * c + 0.03]} color="#3f2a18">
+      {grab.held && <Tile label={rack[grab.held.id] === '?' || rack[grab.held.id] === '' ? '?' : (rack[grab.held.id] ?? '')} position={[grab.held.x, 0.05, grab.held.z]} size={c * 0.92} background="#f3dfae" glow />}
+      {grab.layer}
       {view.board.map((tile, i) => {
         const x = ((i % 15) - 7) * c;
         const z = (Math.floor(i / 15) - 7) * c;
@@ -207,9 +233,20 @@ export function WordGridBoard({ game, onMove }: BoardProps) {
           />
         );
       })}
-      {rack.map((letter, i) => (
-        <Tile key={`r${i}`} label={letter === '?' || letter === '' ? '?' : letter} position={[(i - (rack.length - 1) / 2) * 0.05, 0.06, 15 * c * 0.5 + 0.09]} size={0.044} background="#f3dfae" rotation={[-0.6, 0, 0]} />
-      ))}
+      {rack.map((letter, i) =>
+        grab.held?.id === i ? null : (
+          <group
+            key={`r${i}`}
+            onPointerDown={(e) => {
+              if (reachable.size === 0) return;
+              e.stopPropagation();
+              grab.begin(i, (i - (rack.length - 1) / 2) * 0.05, 15 * c * 0.5 + 0.09);
+            }}
+          >
+            <Tile label={letter === '?' || letter === '' ? '?' : letter} position={[(i - (rack.length - 1) / 2) * 0.05, 0.06, 15 * c * 0.5 + 0.09]} size={0.044} background="#f3dfae" rotation={[-0.6, 0, 0]} />
+          </group>
+        ),
+      )}
       {cell !== null && options.length > 0 && (
         <Choices
           options={options}
@@ -257,8 +294,18 @@ export function ColorShapeBoard({ game, onMove }: BoardProps) {
   const at = (x: number, y: number): [number, number] => [(x - (minX + maxX) / 2) * c, (y - (minY + maxY) / 2) * c];
   const options = spot === null ? [] : places.filter((p) => p.spots.includes(spot));
   const hand = (view.hands[me] ?? []).filter((t): t is number => t !== null);
+  const grab = useGrab<number>({
+    size: Math.max(0.5, span * c),
+    radius: c * 0.75,
+    targets: () => [...reachable.entries()].map(([key, p]) => ({ id: key, x: at(p.x, p.y)[0], z: at(p.x, p.y)[1] })),
+    onDrop: (_, to) => {
+      if (to !== null) setSpot(String(to));
+    },
+  });
   return (
     <Plate size={[Math.max(0.3, (maxX - minX + 2) * c), Math.max(0.3, (maxY - minY + 2) * c)]} color="#2b1b10">
+      {grab.held && <Tile label={csShape(grab.held.id)} position={[grab.held.x, 0.05, grab.held.z]} size={c * 0.92} background="#1d1510" color={csColor(grab.held.id)} glow />}
+      {grab.layer}
       {view.board.map((b) => {
         const [x, z] = at(b.x, b.y);
         return <Tile key={`${b.x},${b.y}`} label={csShape(b.tile)} position={[x, 0.0185, z]} size={c * 0.92} background="#1d1510" color={csColor(b.tile)} />;
@@ -267,9 +314,23 @@ export function ColorShapeBoard({ game, onMove }: BoardProps) {
         const [x, z] = at(p.x, p.y);
         return <Target key={key} position={[x, 0.019, z]} size={c * 0.3} onPress={() => setSpot(key === spot ? null : key)} />;
       })}
-      {hand.map((tile, i) => (
-        <Tile key={`h${tile}`} label={csShape(tile)} position={[(i - (hand.length - 1) / 2) * 0.055, 0.06, Math.max(0.3, (maxY - minY + 2) * c) / 2 + 0.08]} size={0.048} background="#1d1510" color={csColor(tile)} rotation={[-0.6, 0, 0]} />
-      ))}
+      {hand.map((tile, i) => {
+        if (grab.held?.id === tile) return null;
+        const hx = (i - (hand.length - 1) / 2) * 0.055;
+        const hz = Math.max(0.3, (maxY - minY + 2) * c) / 2 + 0.08;
+        return (
+          <group
+            key={`h${tile}`}
+            onPointerDown={(e) => {
+              if (reachable.size === 0) return;
+              e.stopPropagation();
+              grab.begin(tile, hx, hz);
+            }}
+          >
+            <Tile label={csShape(tile)} position={[hx, 0.06, hz]} size={0.048} background="#1d1510" color={csColor(tile)} rotation={[-0.6, 0, 0]} />
+          </group>
+        );
+      })}
       {spot !== null && options.length > 0 && (
         <Choices
           options={options}
@@ -350,21 +411,48 @@ export function GrafschaftBoard({ game, onMove }: BoardProps) {
   const targets = market === null ? [] : moves.filter((x) => x.m.marketIndex === market);
   const d = 0.036;
   const hexAt = (q: number, r: number): [number, number] => [d * Math.sqrt(3) * (q + r / 2), d * 1.5 * r];
+  // Greifen (#383): Plättchen vom Markt auf einen leuchtenden Platz legen.
+  const grab = useGrab<number>({
+    size: 0.7,
+    radius: d * 0.9,
+    targets: (index) => moves.filter((x) => x.m.marketIndex === index).map((x) => ({ id: `${x.m.q},${x.m.r}`, x: hexAt(x.m.q, x.m.r)[0], z: hexAt(x.m.q, x.m.r)[1] })),
+    onDrop: (index, to) => {
+      const hit = moves.find((x) => x.m.marketIndex === index && `${x.m.q},${x.m.r}` === to);
+      if (hit) {
+        onMove(hit.move);
+        setMarket(null);
+      }
+    },
+  });
+  const shown = grab.held ? moves.filter((x) => x.m.marketIndex === grab.held!.id) : targets;
   return (
     <group position={[TABLE_CENTER[0], TOP, TABLE_CENTER[2]]}>
+      {grab.held && <Hex land={view.market[grab.held.id]?.type ?? ''} position={[grab.held.x, 0.03, grab.held.z]} glow />}
+      {grab.layer}
       {Object.values(view.board).map((t) => {
         const [x, z] = hexAt(t.q, t.r);
         return <Hex key={`${t.q},${t.r}`} land={t.type} owner={t.owner} position={[x, 0, z]} />;
       })}
-      {targets.map(({ m, move, label }) => {
+      {shown.map(({ m, move, label }) => {
         const [x, z] = hexAt(m.q, m.r);
         return <Target key={`${m.q},${m.r}`} position={[x, 0.004, z]} size={0.018} onPress={() => (onMove(move), setMarket(null))} label={label} />;
       })}
-      {view.market.map((t, i) => (
-        <group key={i} position={[(i - (view.market.length - 1) / 2) * 0.09, HAND_Y, FRONT]} rotation={[Math.PI / 2 - 0.55, 0, 0]}>
-          <Hex land={t.type} position={[0, 0, 0]} glow={market === i} onPress={usable.has(i) ? () => setMarket(market === i ? null : i) : undefined} />
-        </group>
-      ))}
+      {view.market.map((t, i) =>
+        grab.held?.id === i ? null : (
+          <group
+            key={i}
+            position={[(i - (view.market.length - 1) / 2) * 0.09, HAND_Y, FRONT]}
+            rotation={[Math.PI / 2 - 0.55, 0, 0]}
+            onPointerDown={(e) => {
+              if (!usable.has(i)) return;
+              e.stopPropagation();
+              grab.begin(i, (i - (view.market.length - 1) / 2) * 0.09, FRONT);
+            }}
+          >
+            <Hex land={t.type} position={[0, 0, 0]} glow={market === i} onPress={usable.has(i) ? () => setMarket(market === i ? null : i) : undefined} />
+          </group>
+        ),
+      )}
       <Sign lines={[market === null ? 'Plättchen vom Markt wählen' : 'Leuchtenden Platz antippen']} position={[0, HAND_Y + 0.07, FRONT - 0.03]} rotation={[-0.55, 0, 0]} width={0.3} height={0.03} />
     </group>
   );

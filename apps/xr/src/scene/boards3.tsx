@@ -311,8 +311,46 @@ export function BattleshipBoard({ game, onMove }: BoardProps) {
   );
   const left = -grid / 2 - 0.02;
   const right = grid / 2 + 0.02;
+  // Greifen (#383): Kugel vom Stapel vorn nehmen und über dem Feld des Gegners loslassen.
+  const ballX = right;
+  const ballZ = grid / 2 + 0.07;
+  const grab = useGrab<string>({
+    size: 2 * grid,
+    radius: c * 0.7,
+    targets: () => shots.map(({ move }) => ({ id: move.cell, x: right + cell(move.cell)[0], z: cell(move.cell)[1] })),
+    onDrop: (_, to) => {
+      const hit = shots.find(({ move }) => move.cell === to);
+      if (hit) onMove(hit.move);
+    },
+  });
   return (
     <Plate size={[2 * grid + 0.08, grid + 0.04]} color="#3f2a18">
+      {shots.length > 0 && (
+        <group
+          position={[ballX, 0.03, ballZ]}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            grab.begin('kugel', ballX, ballZ);
+          }}
+        >
+          {grab.held === null && (
+            <mesh>
+              <sphereGeometry args={[0.012, 16, 12]} />
+              <meshStandardMaterial color="#2a2a2e" metalness={0.6} roughness={0.35} />
+            </mesh>
+          )}
+          <mesh visible={false}>
+            <sphereGeometry args={[0.03, 8, 6]} />
+          </mesh>
+        </group>
+      )}
+      {grab.held && (
+        <mesh position={[grab.held.x, 0.05, grab.held.z]}>
+          <sphereGeometry args={[0.012, 16, 12]} />
+          <meshStandardMaterial color="#c62828" metalness={0.4} roughness={0.35} emissive={GOLD} emissiveIntensity={0.4} />
+        </mesh>
+      )}
+      {grab.layer}
       <Water x={left} />
       <Water x={right} />
       <Lines x={left} />
@@ -588,8 +626,20 @@ export function LudoBoard({ game, onMove }: BoardProps) {
   const moves = game.legalMoves.map((move, i) => ({ move: move as { type: string; pieceIndex?: number }, label: game.moveLabels?.[i] ?? '' }));
   const roll = moves.find((m) => m.move.type === 'roll');
   const pieceMoves = new Map(moves.filter((m) => m.move.type === 'move').map((m) => [m.move.pieceIndex!, m.move]));
+  // Greifen (#383): Der Zug nennt nur die Figur, das Ziel ergibt sich aus der Augenzahl. Figur greifen und aufs Brett legen = Zug.
+  const grab = useGrab<number>({
+    size: 0.8,
+    radius: 0.35,
+    targets: () => [{ id: 'brett', x: 0, z: 0 }],
+    onDrop: (piece, to) => {
+      const move = pieceMoves.get(piece);
+      if (to !== null && move) onMove(move);
+    },
+  });
   return (
     <group position={[TABLE_CENTER[0], TOP, TABLE_CENTER[2]]}>
+      {grab.held && <group position={[grab.held.x, 0.04, grab.held.z]}><Stone color={ludoColor(me, view.seats)} selected scale={1.25} /></group>}
+      {grab.layer}
       <mesh position={[0, 0.008, 0]}>
         <cylinderGeometry args={[0.31, 0.31, 0.016, 48]} />
         <meshStandardMaterial color="#efe3c8" roughness={0.8} />
@@ -627,9 +677,10 @@ export function LudoBoard({ game, onMove }: BoardProps) {
         pieces.map((p, k) => {
           const [x, z] = where(seat, p, k);
           const move = seat === me ? pieceMoves.get(k) : undefined;
+          if (seat === me && grab.held?.id === k) return null;
           return (
             <group key={`p${seat}-${k}`} position={[x, 0.016, z]}>
-              <Stone color={ludoColor(seat, view.seats)} movable={Boolean(move)} onPress={move ? () => onMove(move) : undefined} scale={1.25} />
+              <Stone color={ludoColor(seat, view.seats)} movable={Boolean(move)} onPress={move ? () => onMove(move) : undefined} onGrab={move ? () => grab.begin(k, x, z) : undefined} scale={1.25} />
             </group>
           );
         }),
