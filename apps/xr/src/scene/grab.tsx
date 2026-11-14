@@ -56,6 +56,9 @@ interface GrabOptions<I> {
   alongX?: boolean;
   /** Mitte der Auffangfläche beim senkrechten Brett (Höhe des Gestells). */
   wallCenterY?: number;
+  /** Waagerechte Auffangfläche: Höhe und Mitte (Standard: knapp über dem Brett, Mitte 0/0). */
+  floorY?: number;
+  floorCenter?: [number, number];
 }
 
 /** Hält die gegriffene Figur und liefert die unsichtbare Fläche, die Bewegung und Loslassen auffängt. */
@@ -91,7 +94,7 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
   const layer = held ? (
     <group ref={frame}>
       <mesh
-        position={wall ? [0, latest.current.wallCenterY ?? 0, 0.03] : [0, 0.09, 0]}
+        position={wall ? [0, latest.current.wallCenterY ?? 0, 0.03] : [latest.current.floorCenter?.[0] ?? 0, latest.current.floorY ?? 0.09, latest.current.floorCenter?.[1] ?? 0]}
         rotation={wall ? [0, 0, 0] : [-Math.PI / 2, 0, 0]}
         onPointerMove={(e) => {
           e.stopPropagation();

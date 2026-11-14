@@ -7,6 +7,7 @@
 import type { GameMessage } from '@brett-und-blatt/online';
 import { useFrame } from '@react-three/fiber';
 import { useRef, useState } from 'react';
+import { useGrab } from './grab';
 import { CanvasTexture, SRGBColorSpace, type Group } from 'three';
 import { seatAngle } from './Seats';
 import { TABLE_CENTER, TABLE_RADIUS } from './Tavern';
@@ -239,15 +240,40 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
     const r = TABLE_RADIUS - 0.06;
     return [TABLE_CENTER[0] + Math.sin(a) * r, y + 0.1, TABLE_CENTER[2] + Math.cos(a) * r];
   };
+  // Greifen (#384): Karte aus dem Fächer (oder oberste vom Stapel) nehmen und in die Tischmitte legen.
+  const grab = useGrab<string>({
+    size: 1.4,
+    floorY: y + 0.14,
+    floorCenter: [TABLE_CENTER[0], TABLE_CENTER[2]],
+    radius: 0.3,
+    targets: () => [{ id: 'mitte', x: TABLE_CENTER[0], z: TABLE_CENTER[2] }],
+    onDrop: (id, to) => {
+      if (to === null) return;
+      if (id === 'stock') {
+        if (drawMove) onMove(drawMove.move);
+      } else press(id);
+    },
+  });
+  const heldFace = grab.held ? (grab.held.id === 'stock' ? null : (view.hand.find((c) => c.id === grab.held!.id)?.face ?? null)) : null;
   let dealt = 0;
   return (
     <group>
+      {grab.held && <Card face={heldFace} position={[grab.held.x, y + 0.16, grab.held.z]} rotation={[-Math.PI / 2.6, 0, 0]} scale={1.15} highlight />}
+      {grab.layer}
       {view.hand.map((card, i) => {
         const offset = i - (n - 1) / 2;
         const isPlayable = playable.has(card.id);
+        if (grab.held?.id === card.id) return null;
         return (
-          <Card
+          <group
             key={card.id}
+            onPointerDown={(e) => {
+              if (!isPlayable) return;
+              e.stopPropagation();
+              grab.begin(card.id, offset * spread, fanZ);
+            }}
+          >
+          <Card
             face={card.face}
             position={[offset * spread, y + 0.11 + (isPlayable ? 0.012 : 0) - Math.abs(offset) * 0.002, fanZ - Math.abs(offset) * 0.004 + i * 0.0005]}
             rotation={[-0.55, 0, -offset * 0.03]}
@@ -257,6 +283,7 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
             flyFrom={startOf(flights.handDraws[card.id])}
             flyDelay={flights.handDraws[card.id] ? dealt++ * 0.08 : 0}
           />
+          </group>
         );
       })}
       {view.piles.map((face, k) => (face ? <Card key={`pile-${k}`} face={face} position={[pileX(k), y + 0.001, TABLE_CENTER[2]]} rotation={[-Math.PI / 2, 0, 0]} scale={1.2} flyFrom={startOf(flights.piles[k])} /> : null))}
@@ -268,10 +295,18 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
         </group>
       ))}
       {stockShown > 0 && (
+        <group
+          onPointerDown={(e) => {
+            if (!drawMove) return;
+            e.stopPropagation();
+            grab.begin('stock', stockPos[0], stockPos[2]);
+          }}
+        >
         <group position={[TABLE_CENTER[0] - (view.rows.length ? 0.32 : 0.08) - (view.piles.length > 1 ? 0.08 : 0), y, TABLE_CENTER[2]]}>
           {Array.from({ length: stockShown }, (_, k) => (
             <Card key={k} face={null} position={[0, 0.001 + k * 0.0015, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={1.2} highlight={Boolean(drawMove) && k === stockShown - 1} onPress={drawMove ? () => onMove(drawMove.move) : undefined} />
           ))}
+        </group>
         </group>
       )}
       {view.trick.map((t, k) => {

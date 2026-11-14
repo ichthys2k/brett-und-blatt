@@ -8,6 +8,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**VR: Karten greifen, Teil 1 (14.11.2026, #384):** In `apps/xr/src/scene/cards.tsx` lassen sich Handkarten und die oberste Stapelkarte greifen und in die Tischmitte legen (`useGrab` mit `floorY`/`floorCenter`, `scene/grab.tsx`). Mit der Maus im Browser geprüft (Mau-Mau, Karte ziehen). Offen: Fächer an der Haltehand, Wurf, zwei Reihen.
+
 **VR: Greifen in weiteren Spielen (14.11.2026, #383):** Mit dem Baustein aus #382 (`scene/grab.tsx`, `Bowl`, senkrechte Auffangfläche) spielbar durch Greifen: Tic-Tac-Toe, Go, Gomoku, Reversi, Vier in einer Reihe, Sternhalma, Vierer-Schach (`boards.tsx`, `boards2.tsx`, `boards3.tsx`) sowie Schiffe versenken, Nicht ärgern!, Domino, Wortgitter, Farbe & Form und Grafschaft (`boards3.tsx`, `boards4.tsx`). Im Browser mit der Maus geprüft: Tic-Tac-Toe, Gomoku, Vier in einer Reihe, Domino; die übrigen nur Typprüfung. Nicht in der Brille.
 
 **VR: Greifen und Ablegen (14.11.2026, #382):** Schach, Dame und Mühle: Figur greifen, über das Brett führen, am erlaubten Ziel einrasten, loslassen sendet den Zug aus `legalMoves`. Baustein `apps/xr/src/scene/grab.tsx` (`useGrab` mit unsichtbarer Auffangfläche, reine `nearestTarget`/`movesFor`, Test `tests/xr-greifen.test.ts`), eingehängt in `boards.tsx` (Schach, mit Umwandlungsauswahl) und `boards2.tsx` (Dame, Mühle inkl. Vorrat). Mit der Maus im Browser geprüft (e2–e3 gegen den Bot); nicht in der Brille. Entfernen nach Mühle bleibt Antippen.
