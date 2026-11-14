@@ -68,13 +68,13 @@ interface CardProps {
 function SymbolCard({ card, options, onPick, flash, className = '', label }: CardProps) {
   const symbols = useMemo(() => buildCards(options.order)[card]!, [options.order, card]);
   const placed = useMemo(() => layout(card, symbols, options.calm), [card, symbols, options.calm]);
-  const math = options.symbols === 'math';
+  const math = options.symbols === 'math' || options.symbols === 'fractions';
   return (
     <div className={`sm-card ${className}`} role="group" aria-label={label} key={card}>
       {placed.map((p) => {
         const text = symbolText(options.symbols as SymbolSet, p.symbol, card);
         const hit = flash?.symbol === p.symbol ? ` sm-flash-${flash.kind}` : '';
-        const fs = math ? p.size * (text.length <= 3 ? 30 : text.length <= 5 ? 22 : 18) : p.size * 62;
+        const fs = math ? p.size * (text.length <= 3 ? 28 : text.length <= 5 ? 21 : text.length <= 7 ? 17 : 14) : p.size * 62;
         const style: CSSProperties = {
           left: `${p.x * 100}%`,
           top: `${p.y * 100}%`,
@@ -107,19 +107,27 @@ function name(names: string[], seat: SeatId): string {
 function countLabel(view: SymbolMatchView, seat: SeatId): string {
   const n = view.players[seat]?.count ?? 0;
   if (view.options.mode === 'fountain') return `${n} übrig`;
+  if (view.options.mode === 'hotPotato') return `${view.losses[seat] ?? 0} verl.`;
+  if (view.options.mode === 'duel') return `${view.hits[seat] ?? 0} Pkt.`;
   return `${n} ${n === 1 ? 'Karte' : 'Karten'}`;
 }
 
 function ZoneView({ zone, view, names, rotated, flash }: { zone: Zone; view: SymbolMatchView; names: string[]; rotated: boolean; flash: CardProps['flash'] }) {
   const { options } = view;
+  const hotPotato = options.mode === 'hotPotato';
+  const ownTop = view.players[zone.seat]?.top;
   const active = zone.legalMoves.length > 0 && view.phase === 'play';
   const locked = view.locked[zone.seat] && view.phase === 'play';
   const pick = (target: SeatId) => (symbol: number) => {
     const top = view.players[target]?.top;
-    if (view.center === null || top === null || top === undefined) return;
-    zone.onMove({ type: 'claim', symbol, center: view.center, target, top });
+    const source = hotPotato ? ownTop : view.center;
+    if (source === null || source === undefined || top === null || top === undefined) return;
+    zone.onMove({ type: 'claim', symbol, center: source, target, top });
   };
-  const targets = options.mode === 'gift' ? view.players.map((_, s) => s).filter((s) => s !== zone.seat) : [zone.seat];
+  const targets =
+    options.mode === 'gift' || hotPotato
+      ? view.players.map((_, s) => s).filter((s) => s !== zone.seat && view.players[s]?.top != null)
+      : [zone.seat];
   return (
     <div className={`sm-zone${rotated ? ' sm-rotated' : ''}${locked ? ' sm-locked' : ''}`}>
       <div className="sm-zone-head">
@@ -127,17 +135,34 @@ function ZoneView({ zone, view, names, rotated, flash }: { zone: Zone; view: Sym
         <span>{countLabel(view, zone.seat)}</span>
         {view.mistakes[zone.seat]! > 0 && <span className="sm-miss">✗ {view.mistakes[zone.seat]}</span>}
       </div>
-      <div className={`sm-zone-cards${options.mode === 'gift' ? ' sm-zone-gift' : ''}`}>
-        {targets.map((t) => {
-          const top = view.players[t]?.top;
-          return top === null || top === undefined ? null : (
-            <div key={t} className="sm-target">
-              {options.mode === 'gift' && <span className="sm-target-name">{name(names, t)}</span>}
-              <SymbolCard card={top} options={options} onPick={active ? pick(t) : undefined} flash={flash} className="sm-card-zone sm-pop" label={options.mode === 'gift' ? `Karte von ${name(names, t)}` : 'Deine Karte'} />
+      {hotPotato && ownTop == null && view.phase === 'play' ? (
+        <div className="sm-safe">Sicher für diese Runde! ✓</div>
+      ) : (
+        <div className={`sm-zone-cards${options.mode === 'gift' || hotPotato ? ' sm-zone-gift' : ''}`}>
+          {hotPotato && ownTop != null && (
+            <div className="sm-target">
+              <span className="sm-target-name">Deine Karte</span>
+              <SymbolCard card={ownTop} options={options} flash={flash} className="sm-card-zone sm-card-own sm-pop" label="Deine Karte" />
             </div>
-          );
-        })}
-      </div>
+          )}
+          {targets.map((t) => {
+            const top = view.players[t]?.top;
+            return top === null || top === undefined ? null : (
+              <div key={t} className="sm-target">
+                {(options.mode === 'gift' || hotPotato) && <span className="sm-target-name">{name(names, t)}</span>}
+                <SymbolCard
+                  card={top}
+                  options={options}
+                  onPick={active ? pick(t) : undefined}
+                  flash={flash}
+                  className="sm-card-zone sm-pop"
+                  label={options.mode === 'gift' || hotPotato ? `Karte von ${name(names, t)}` : 'Deine Karte'}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
       {locked && <div className="sm-veil">Daneben! Warte auf die nächste Karte.</div>}
     </div>
   );
@@ -165,10 +190,22 @@ export function SymbolMatchBoard({ view, legalMoves, onMove, viewer, seatNames, 
     return () => window.clearTimeout(timer);
   }, [events]);
 
+  // Live-Countdown für das 60-Sekunden-Zeit-Duell.
+  const [secondsLeft, setSecondsLeft] = useState(60);
+  useEffect(() => {
+    if (options.mode !== 'duel' || view.phase !== 'play') return;
+    setSecondsLeft(60);
+    const start = Date.now();
+    const id = window.setInterval(() => {
+      setSecondsLeft(Math.max(0, Math.ceil((60_000 - (Date.now() - start)) / 1000)));
+    }, 250);
+    return () => window.clearInterval(id);
+  }, [options.mode, view.phase]);
+
   // Allein am Gerät kann man auch das Symbol auf der Mittelkarte antippen.
   const single = zones.length === 1 ? zones[0]! : null;
   const centerPick =
-    single && single.legalMoves.length > 0 && view.phase === 'play' && view.center !== null
+    single && single.legalMoves.length > 0 && view.phase === 'play' && view.center !== null && options.mode !== 'hotPotato'
       ? (symbol: number) => {
           const cards = buildCards(options.order);
           const candidates = options.mode === 'gift' ? view.players.map((_, s) => s).filter((s) => s !== single.seat) : [single.seat];
@@ -187,6 +224,7 @@ export function SymbolMatchBoard({ view, legalMoves, onMove, viewer, seatNames, 
   if (view.phase === 'play') {
     if (view.last && !view.last.ok) status = `${name(seatNames, view.last.seat)}: daneben!${view.last.burned ? ' Die Karte wird verworfen.' : ''}`;
     else if (view.last) status = `${name(seatNames, view.last.seat)} hat es gefunden!`;
+    else if (options.mode === 'hotPotato') status = 'Vergleiche deine Karte mit einer fremden!';
     else status = 'Findet das gleiche Symbol!';
   }
 
@@ -200,7 +238,15 @@ export function SymbolMatchBoard({ view, legalMoves, onMove, viewer, seatNames, 
             {view.locked[seat] && view.phase === 'play' && <span title="Gesperrt bis zur nächsten Karte">🔒</span>}
           </div>
         ))}
-        {options.mode !== 'fountain' && <div className="sm-chip sm-chip-deck">Stapel: {view.deckCount + (view.center === null ? 0 : 1)}</div>}
+        {options.mode === 'duel' && view.phase === 'play' && <div className="sm-chip sm-chip-timer">⏱ {secondsLeft} s</div>}
+        {options.mode === 'hotPotato' && (
+          <div className="sm-chip sm-chip-deck">
+            Runde {view.round} / {options.rounds}
+          </div>
+        )}
+        {(options.mode === 'tower' || options.mode === 'gift') && (
+          <div className="sm-chip sm-chip-deck">Stapel: {view.deckCount + (view.center === null ? 0 : 1)}</div>
+        )}
       </div>
 
       {split && (
@@ -211,9 +257,20 @@ export function SymbolMatchBoard({ view, legalMoves, onMove, viewer, seatNames, 
         </div>
       )}
 
-      <div className="sm-center">
-        {view.center !== null ? <SymbolCard card={view.center} options={options} onPick={centerPick} flash={flash} className="sm-card-center sm-pop" label="Mittelkarte" /> : <div className="sm-card sm-card-center sm-empty" />}
-      </div>
+      {options.mode === 'hotPotato' ? (
+        <div className="sm-round-banner">
+          Runde {view.round} von {options.rounds}
+          {view.roundLoser !== null && ` · Letzte Runde verloren: ${name(seatNames, view.roundLoser)}`}
+        </div>
+      ) : (
+        <div className="sm-center">
+          {view.center !== null ? (
+            <SymbolCard card={view.center} options={options} onPick={centerPick} flash={flash} className="sm-card-center sm-pop" label="Mittelkarte" />
+          ) : (
+            <div className="sm-card sm-card-center sm-empty" />
+          )}
+        </div>
+      )}
 
       <div className="sm-status" aria-live="polite">
         {status}
@@ -236,7 +293,15 @@ export function SymbolMatchBoard({ view, legalMoves, onMove, viewer, seatNames, 
             <thead>
               <tr>
                 <th />
-                <th>{options.mode === 'fountain' ? 'Karten übrig' : 'Karten'}</th>
+                <th>
+                  {options.mode === 'fountain'
+                    ? 'Karten übrig'
+                    : options.mode === 'hotPotato'
+                      ? 'Verloren'
+                      : options.mode === 'duel'
+                        ? 'Punkte'
+                        : 'Karten'}
+                </th>
                 <th>Treffer</th>
                 <th>✗</th>
               </tr>
@@ -245,7 +310,7 @@ export function SymbolMatchBoard({ view, legalMoves, onMove, viewer, seatNames, 
               {view.players.map((p, seat) => (
                 <tr key={seat}>
                   <td>{name(seatNames, seat)}</td>
-                  <td>{p.count}</td>
+                  <td>{options.mode === 'hotPotato' ? view.losses[seat] : options.mode === 'duel' ? view.hits[seat] : p.count}</td>
                   <td>{view.hits[seat]}</td>
                   <td>{view.mistakes[seat]}</td>
                 </tr>
@@ -263,7 +328,7 @@ export const gameUi: GameUi<SymbolMatchView, SymbolMatchMove> = {
   SeatSymbol: ({ className }) => <span className={className}>🔍</span>,
   seatLabel: (seat) => `Platz ${Number(seat) + 1}`,
   seatDetail: (view, seat) => countLabel(view, seat),
-  seatScore: (view, seat) => view.hits[seat] ?? 0,
+  seatScore: (view, seat) => (view.options.mode === 'hotPotato' ? (view.losses[seat] ?? 0) : (view.hits[seat] ?? 0)),
   sounds: {
     claimed: 'paar',
     mistake: 'kein-paar',

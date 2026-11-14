@@ -53,18 +53,28 @@ export function shared(order: Order, a: number, b: number): number {
 
 // ── Symbolpakete ─────────────────────────────────────────────────────────────
 
-export type SymbolSet = 'emoji' | 'animals' | 'bible' | 'math';
+export type SymbolSet = 'emoji' | 'animals' | 'bible' | 'math' | 'fractions';
 
 export const SYMBOL_SETS: { value: SymbolSet; label: string }[] = [
   { value: 'emoji', label: 'Bunte Emojis' },
   { value: 'animals', label: 'Tiere' },
   { value: 'bible', label: 'Bibel' },
   { value: 'math', label: 'Mathe (gleicher Wert)' },
+  { value: 'fractions', label: 'Brüche & Einheiten' },
 ];
 
 const EMOJI = [...'🍎🚗⭐🌙🔥💧🎈🎁🔔🎵📚🏠🌳🌸🍕🍦⚽🚀🎨🔑💡🧲🎲🧩🪁🍄🌈☀❄⚡🍓🍌🍇🥕🌽🍪🎂🧸👑💎🪑🧦👓🎩🪴🚲🎻🥁🪄🔭⏰🧭🎯🛶🍩🥨🧀🍉🥝🍒⛺🧊'];
 const ANIMALS = [...'🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🐔🐧🐦🦆🦉🦇🐺🐴🦄🐝🐛🦋🐌🐞🐜🐢🐍🦎🐙🦑🦀🐠🐟🐬🐳🦈🐊🐅🐆🦓🦒🐘🦏🐪🦘🦥🦔🦩🦜🦢🦚🐓🐇🐿'];
-const BIBLE = [...'🚢🕊🌈🐟🍞👑⭐🐑🐍🍎🌳🔥🌊🌾🍇🫒📜🏺⚖🗡🛡🦁🐋🪙🥖🍷🌿🌙☀⛪🏠🚪🔑✝🎺🥁🎶👣🤲🧺🪔🏛🐫🦅🦂🐜🧱🌋💧🪨🐴🐕🌟🕯🍯🥚🪵🧂🧵'];
+
+/** Kuratierte biblische Symbole (57 eindeutige Zeichen). */
+const BIBLE: string[] = [
+  '🚢', '🕊️', '🌈', '🐟', '🍞', '🍷', '👑', '⭐', '🐑', '🐍',
+  '🌳', '🍎', '🔥', '🌊', '🌾', '🍇', '🫒', '📜', '🏺', '⚖️',
+  '🗡️', '🛡️', '🦁', '🐋', '🪙', '🌴', '🌙', '☀️', '⛪', '🚪',
+  '🔑', '✝️', '🎺', '🎶', '🪔', '🧺', '🐫', '🦅', '🪨', '🫏',
+  '🕯️', '🍯', '⛺', '💧', '⛰️', '⚓', '❤️', '🙏', '🏛️', '🪵',
+  '💍', '☁️', '⚡', '📖', '👶', '🪽', '👣',
+];
 
 /** Mathe-Paket: Symbol v ist der Wert v + 2, gezeigt in wechselnden Schreibweisen. */
 export interface Notation {
@@ -89,18 +99,93 @@ export function mathValue(symbol: number): number {
   return symbol + 2;
 }
 
-const SETS: Record<Exclude<SymbolSet, 'math'>, string[]> = { emoji: EMOJI, animals: ANIMALS, bible: BIBLE };
+/**
+ * Brüche & Einheiten (Mathe Klasse 5/6): 57 eindeutige Werte mit jeweils mehreren Schreibweisen.
+ * Jeder Eintrag gehört zu genau einem Symbol (0..56), damit keine Verwechslung entsteht.
+ */
+export const FRACTION_GROUPS: readonly (readonly string[])[] = [
+  // Brüche, Dezimalzahlen, Prozente (30)
+  ['½', '0,5', '50 %', '2/4'],
+  ['¼', '0,25', '25 %', '2/8'],
+  ['¾', '0,75', '75 %', '6/8'],
+  ['⅕', '0,2', '20 %', '2/10'],
+  ['⅖', '0,4', '40 %', '4/10'],
+  ['⅗', '0,6', '60 %', '6/10'],
+  ['⅘', '0,8', '80 %', '8/10'],
+  ['⅒', '0,1', '10 %', '1/10'],
+  ['3/10', '0,3', '30 %', '6/20'],
+  ['7/10', '0,7', '70 %', '14/20'],
+  ['9/10', '0,9', '90 %', '18/20'],
+  ['⅛', '0,125', '12,5 %', '1/8'],
+  ['⅜', '0,375', '37,5 %', '3/8'],
+  ['⅝', '0,625', '62,5 %', '5/8'],
+  ['⅞', '0,875', '87,5 %', '7/8'],
+  ['⅓', '2/6', '3/9', '4/12'],
+  ['⅔', '4/6', '6/9', '8/12'],
+  ['⅙', '2/12', '3/18', '1/6'],
+  ['⅚', '10/12', '15/18', '5/6'],
+  ['1/20', '0,05', '5 %', '2/40'],
+  ['3/20', '0,15', '15 %', '6/40'],
+  ['7/20', '0,35', '35 %', '14/40'],
+  ['9/20', '0,45', '45 %', '18/40'],
+  ['11/20', '0,55', '55 %', '22/40'],
+  ['1/25', '0,04', '4 %', '2/50'],
+  ['1/50', '0,02', '2 %', '2/100'],
+  ['1/100', '0,01', '1 %'],
+  ['1', '100 %', '2/2', '4/4'],
+  ['1½', '1,5', '150 %', '3/2'],
+  ['2', '200 %', '4/2', '6/3'],
+  // Längen (10)
+  ['1 cm', '10 mm', '0,1 dm'],
+  ['5 cm', '50 mm', '0,5 dm'],
+  ['1 dm', '10 cm', '100 mm'],
+  ['5 dm', '50 cm', '0,5 m'],
+  ['1 m', '100 cm', '10 dm'],
+  ['2 m', '200 cm', '20 dm'],
+  ['5 m', '500 cm', '50 dm'],
+  ['1 km', '1000 m', '2·500 m'],
+  ['0,5 km', '500 m', '½ km'],
+  ['0,25 km', '250 m', '¼ km'],
+  // Gewichte (6)
+  ['1 kg', '1000 g', '2·500 g'],
+  ['0,5 kg', '500 g', '½ kg'],
+  ['0,25 kg', '250 g', '¼ kg'],
+  ['0,1 kg', '100 g', '1/10 kg'],
+  ['1 t', '1000 kg', '2·500 kg'],
+  ['0,5 t', '500 kg', '½ t'],
+  // Zeit (6)
+  ['1 min', '60 s', '2·30 s'],
+  ['2 min', '120 s', '2·60 s'],
+  ['0,5 min', '30 s', '½ min'],
+  ['1 h', '60 min', '3600 s'],
+  ['0,5 h', '30 min', '½ h'],
+  ['0,25 h', '15 min', '¼ h'],
+  // Geld & Hohlmaße (5)
+  ['1 €', '100 ct', '2·50 ct'],
+  ['0,50 €', '50 ct', '½ €'],
+  ['1 l', '1000 ml', '2·500 ml'],
+  ['0,5 l', '500 ml', '½ l'],
+  ['0,25 l', '250 ml', '¼ l'],
+];
 
-/** Wie ein Symbol auf einer bestimmten Karte aussieht (beim Mathe-Paket wechselt die Schreibweise je Karte). */
+const SETS: Record<Exclude<SymbolSet, 'math' | 'fractions'>, string[]> = { emoji: EMOJI, animals: ANIMALS, bible: BIBLE };
+
+/** Wie ein Symbol auf einer bestimmten Karte aussieht (bei Mathe & Brüche/Einheiten wechselt die Schreibweise je Karte). */
 export function symbolText(set: SymbolSet, symbol: number, card: number): string {
   if (set === 'math') {
     const list = mathNotations(mathValue(symbol));
     return list[(card * 7 + symbol * 3) % list.length]!.text;
+  }
+  if (set === 'fractions') {
+    const list = FRACTION_GROUPS[symbol % FRACTION_GROUPS.length]!;
+    return list[(card * 7 + symbol * 3) % list.length]!;
   }
   const list = SETS[set];
   return list[symbol % list.length]!;
 }
 
 export function setSize(set: SymbolSet): number {
-  return set === 'math' ? 57 : SETS[set].length;
+  if (set === 'math') return 57;
+  if (set === 'fractions') return FRACTION_GROUPS.length;
+  return SETS[set].length;
 }
