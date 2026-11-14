@@ -53,7 +53,8 @@ const MOTES_3D: Mote3D[] = Array.from({ length: 22 }, (_, i) => ({
  *   (Spieltisch, Online-Rundtisch, Turniertafel, Kamin oder Wappenschild).
  * - Bei `prefers-reduced-motion: reduce` oder im Aussehen „Schlicht“ steht die Szene still.
  */
-export function TavernScene({ calm = false, station }: { calm?: boolean; station?: TavernStationId }) {
+/** `still`: ruhiges Standbild ohne Parallax, Kamerafahrt und Funken (Hauptmenü ohne die optionale 3D-Taverne). */
+export function TavernScene({ calm = false, station, still = false }: { calm?: boolean; station?: TavernStationId; still?: boolean }) {
   const scene = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const route = useRoute();
@@ -71,7 +72,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches || look === 'plain';
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches || look === 'plain' || still;
     const pointer = { x: 0, y: 0 };
     const smoothPointer = { x: 0, y: 0 };
     let localHover: TavernHotspot | null = null;
@@ -267,7 +268,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
       window.removeEventListener('click', onClick);
       window.removeEventListener('resize', onResize);
     };
-  }, [calm, look, room, table, targetStation]);
+  }, [calm, still, look, room, table, targetStation]);
 
   return (
     <div
@@ -296,7 +297,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
 
       <div className="bub-menu-layer bub-menu-glow" />
       {isTavern && <div className="bub-menu-layer bub-menu-hearth" />}
-      {calm ? null : (
+      {calm || still ? null : (
         <div className="bub-menu-layer bub-menu-motes">
           {Array.from({ length: 14 }, (_, i) => (
             <span

@@ -18,6 +18,7 @@ export const ROOM_SCENES: readonly RoomScene[] = ['tavern', 'castle', 'library',
 const LOOK_KEY = 'brett-und-blatt:aussehen';
 const TABLE_KEY = 'brett-und-blatt:tisch';
 const ROOM_KEY = 'brett-und-blatt:raum';
+const MENU3D_KEY = 'brett-und-blatt:menue-3d';
 
 function loadLook(): Look {
   try {
@@ -45,11 +46,21 @@ function loadRoom(): RoomScene {
   }
 }
 
+/** Bewegte 3D-Taverne im Hauptmenü: nur wer sie einschaltet, bekommt Parallax, Kamerafahrt und Funken (Standard: aus). */
+function loadMenu3d(): boolean {
+  try {
+    return window.localStorage.getItem(MENU3D_KEY) === 'an';
+  } catch {
+    return false;
+  }
+}
+
 const contrastQuery = window.matchMedia('(prefers-contrast: more)');
 const listeners = new Set<() => void>();
 let chosen = loadLook();
 let chosenTable = loadTable();
 let chosenRoom = loadRoom();
+let chosenMenu3d = loadMenu3d();
 
 /** Das Aussehen, das gerade wirklich gilt. */
 export function activeLook(): Look {
@@ -146,6 +157,16 @@ export function setRoomScene(next: RoomScene): void {
   apply();
 }
 
+export function setMenu3d(next: boolean): void {
+  chosenMenu3d = next;
+  try {
+    window.localStorage.setItem(MENU3D_KEY, next ? 'an' : 'aus');
+  } catch {
+    // Ohne Speicher gilt die Wahl nur bis zum Neuladen.
+  }
+  apply();
+}
+
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
@@ -155,6 +176,9 @@ export const useChosenLook = (): Look => useSyncExternalStore(subscribe, () => c
 export const useActiveLook = (): Look => useSyncExternalStore(subscribe, activeLook);
 export const useChosenTable = (): TableSurface => useSyncExternalStore(subscribe, () => chosenTable);
 export const useChosenRoom = (): RoomScene => useSyncExternalStore(subscribe, () => chosenRoom);
+/** Ob die bewegte 3D-Taverne im Hauptmenü gilt (Standard: nein). */
+export const menu3dEnabled = (): boolean => chosenMenu3d;
+export const useMenu3d = (): boolean => useSyncExternalStore(subscribe, () => chosenMenu3d);
 export const contrastForcesPlain = (): boolean => contrastQuery.matches;
 
 contrastQuery.addEventListener('change', apply);
