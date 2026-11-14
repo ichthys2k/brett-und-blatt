@@ -38,3 +38,28 @@ export function checkersCaptured(size: number, cells: ({ seat: number } | null)[
   for (const cell of cells) if (cell && (cell.seat === 0 || cell.seat === 1)) left[cell.seat]! += 1;
   return [Math.max(0, start - left[0]!), Math.max(0, start - left[1]!)];
 }
+
+/** Geschlagene Steine der Mühle je Platz: neun zu Beginn, abzüglich Steinen auf dem Brett und im Vorrat. */
+export function millCaptured(cells: (number | null)[], inHand: [number, number]): [number, number] {
+  const onBoard = [0, 0];
+  for (const cell of cells) if (cell === 0 || cell === 1) onBoard[cell]! += 1;
+  return [Math.max(0, 9 - onBoard[0]! - inHand[0]), Math.max(0, 9 - onBoard[1]! - inHand[1])];
+}
+
+const FOUR_START: Record<string, number> = { Q: 1, R: 2, B: 2, N: 2, P: 8 };
+export const FOUR_ORDER = ['Q', 'R', 'B', 'N', 'P'] as const;
+
+/** Fehlende Figuren je Farbe beim Vierer-Schach (Aufstellung: Dame, 2 Türme, Läufer, Springer, 8 Bauern). Ob sie ein Gegner schlug, nennt die Sicht nicht; sie stehen bei ihrem Besitzer. */
+export function fourChessLost(board: ({ c: string; t: string } | null)[]): Record<string, string[]> {
+  const present: Record<string, Record<string, number>> = {};
+  for (const piece of board) {
+    if (!piece) continue;
+    present[piece.c] ??= {};
+    present[piece.c]![piece.t.toUpperCase()] = (present[piece.c]![piece.t.toUpperCase()] ?? 0) + 1;
+  }
+  const lost: Record<string, string[]> = {};
+  for (const color of Object.keys(present)) {
+    lost[color] = FOUR_ORDER.flatMap((type) => Array.from({ length: Math.max(0, (FOUR_START[type] ?? 0) - (present[color]![type] ?? 0)) }, () => type));
+  }
+  return lost;
+}

@@ -8,6 +8,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**VR: Geschlagenes und gewonnene Stiche, Teil 2 (14.11.2026, #390):** Mühle und Vierer-Schach mit Ablage (`scene/Captured.tsx`, `scene/captured.ts`), Stichstapel beim Gewinner für Skat, Doppelkopf, Schafkopf, Binokel (`scene/cards.tsx`, `trickCounts` in `scene/card-views.ts`); Test `tests/xr-ablage.test.ts`. Nur gerechnet und typgeprüft, nicht im Browser gesehen, nicht in der Brille.
+
 **VR: Würfeln mit dem Becher (14.11.2026, #389):** Becher schütteln löst „Würfeln“ aus (Würfelblock, Mäxle, Nicht ärgern!), Rollanimation der Würfel, Würfel zum Halten in den Streifen legen (`scene/boards5.tsx`, `scene/boards3.tsx`, `scene/dice-shake.ts`, Test `tests/xr-wuerfel.test.ts`). Im Browser mit der Maus geprüft (Würfelblock: Schütteln würfelt); Mäxle, Nicht ärgern! und das Halten-Ablegen nicht eigens, nicht in der Brille.
 
 **VR: Handgelenk-Menü, Händigkeit, Sitzen/Stehen (14.11.2026, #388):** Menü an der Haltehand (`scene/WristMenu.tsx`), einklappbares Fenster und Einstellungen in `scene/Panel.tsx`, Speicher und Rechnung in `apps/xr/src/ui-state.ts` (Test `tests/xr-handgelenk.test.ts`). Im Browser nur die Einklapp-Zeile gesehen; Handgelenk-Menü nicht in der Brille geprüft, mit Handtracking fehlt es noch.

@@ -193,6 +193,22 @@ function trickOf(cards: { player: number; card: string }[] | undefined, deck?: s
 
 const EMPTY: Omit<CardView, 'hand'> = { piles: [], trick: [], rows: [], stock: 0, others: [] };
 
+/** Spiele, deren Sicht gewonnene Stiche offen nennt (`completedTricks` mit Gewinner, #390). */
+export const TRICK_PILE_GAMES = ['skat', 'doppelkopf', 'schafkopf', 'binokel'] as const;
+
+/** Zahl der gewonnenen Stiche je Platz; `null`, wo die Sicht keine nennt. Nur Gewinner und Zahl, nie Karten. */
+export function trickCounts(game: GameMessage): number[] | null {
+  if (!(TRICK_PILE_GAMES as readonly string[]).includes(game.gameId)) return null;
+  const completed = (game.view as { completedTricks?: { winner?: unknown }[] }).completedTricks;
+  if (!Array.isArray(completed)) return null;
+  const counts = game.seats.map(() => 0);
+  for (const trick of completed) {
+    const winner = trick?.winner;
+    if (typeof winner === 'number' && winner >= 0 && winner < counts.length) counts[winner]!++;
+  }
+  return counts.some((n) => n > 0) ? counts : null;
+}
+
 export function readCardView(game: GameMessage): CardView | null {
   const me = game.yourSeat;
   const view = game.view as Record<string, unknown>;

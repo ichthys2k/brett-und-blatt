@@ -13,8 +13,8 @@ import { CanvasTexture, SRGBColorSpace, type Group } from 'three';
 import { seatAngle } from './Seats';
 import { TABLE_CENTER, TABLE_RADIUS } from './Tavern';
 import { GOLD } from './text';
-import { Button3D } from './ui3d';
-import { NO_FLIGHTS, cardsOfMove, diffFlights, readCardView, type CardView, type Face, type Flights, type Origin } from './card-views';
+import { Button3D, Sign } from './ui3d';
+import { NO_FLIGHTS, cardsOfMove, diffFlights, readCardView, trickCounts, type CardView, type Face, type Flights, type Origin } from './card-views';
 import { pulse } from '../haptics';
 
 export { cardMoveIndexes, isCardGame } from './card-views';
@@ -211,6 +211,13 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
       fan.current.scale.setScalar(1);
     }
   });
+  // Gewonnene Stiche (#390): verdeckter Stapel beim Gewinner; der neueste Stich gleitet aus der Tischmitte dorthin.
+  const stacks = trickCounts(game);
+  const stackSeen = useRef<number[] | null>(null);
+  const stackBefore = stackSeen.current;
+  useEffect(() => {
+    stackSeen.current = stacks;
+  });
   const view = readCardView(game);
   if (!view) return null;
   const flights = flightsFor(game, view);
@@ -347,6 +354,32 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
           />
         ));
       })}
+      {stacks &&
+        game.seats.map((_, seat) => {
+          const n = stacks[seat] ?? 0;
+          if (n === 0) return null;
+          const angle = seatAngle(seat, game.yourSeat, count);
+          const r = TABLE_RADIUS - 0.22;
+          const sx = TABLE_CENTER[0] + Math.sin(angle) * r + Math.cos(angle) * 0.2;
+          const sz = TABLE_CENTER[2] + Math.cos(angle) * r - Math.sin(angle) * 0.2;
+          const shown = Math.min(n, 8);
+          const grew = stackBefore !== null && n > (stackBefore[seat] ?? 0);
+          return (
+            <group key={`stack-${seat}`}>
+              {Array.from({ length: shown }, (_, k) => (
+                <Card
+                  key={k === shown - 1 ? `top-${n}` : k}
+                  face={null}
+                  position={[sx, y + 0.001 + k * 0.0015, sz]}
+                  rotation={[-Math.PI / 2, 0, angle]}
+                  scale={0.9}
+                  flyFrom={k === shown - 1 && grew ? [TABLE_CENTER[0], y + 0.05, TABLE_CENTER[2]] : undefined}
+                />
+              ))}
+              <Sign lines={[`${n}`]} position={[sx, y + 0.03 + shown * 0.0015, sz]} rotation={[-0.6, angle + Math.PI, 0]} width={0.06} height={0.035} />
+            </group>
+          );
+        })}
       {view.others.map((o) => {
         const angle = seatAngle(o.seat, game.yourSeat, count);
         const r = TABLE_RADIUS - 0.14;
