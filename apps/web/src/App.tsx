@@ -25,9 +25,10 @@ import { Setup } from './screens/Setup';
 import { SoundSettingsScreen } from './screens/SoundSettings';
 import { CardCosmeticsProvider } from '@brett-und-blatt/ui';
 import { useActiveCardCosmetics } from './lib/cardBacks';
+import { useActiveLook } from './lib/look';
 
 export function App() {
-  const cosmetics = useActiveCardCosmetics();
+  const cosmetics = useActiveCardCosmetics(useActiveLook());
   return (
     <CardCosmeticsProvider value={cosmetics}>
       <Screen />

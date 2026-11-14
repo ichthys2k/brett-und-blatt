@@ -1463,6 +1463,10 @@
         "emoji": {
           "type": "string"
         },
+        "image": {
+          "type": "string",
+          "description": "Gemaltes Kartenbild (Medienname, z. B. `bub-ds-fuchs.webp`, #309); im Feld „Bild“ als `<img>`."
+        },
         "quote": {
           "type": "string"
         },

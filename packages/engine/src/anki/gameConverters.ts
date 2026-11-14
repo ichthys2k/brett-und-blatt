@@ -28,6 +28,8 @@ export interface CombatCardLike {
   attack?: number;
   health?: number;
   emoji?: string;
+  /** Gemaltes Kartenbild (Medienname, z. B. `bub-ds-fuchs.webp`, #309); im Feld „Bild“ als `<img>`. */
+  image?: string;
   quote?: string;
   isSpell?: boolean;
   house?: string;
@@ -78,7 +80,8 @@ export function drachenspielCardsToAnki<T extends CombatCardLike>(cards: readonl
     const schluesselwoerter = (card.keywords && card.keywords.length > 0) ? card.keywords.join(', ') : '';
     const regeltext = card.text ?? '';
     const spruch = card.quote ?? '';
-    const bild = card.emoji ?? '';
+    // Mit Bild steht das Medium im Feld „Bild“; das Emoji reist in EffektDatenJSON mit (#309).
+    const bild = card.image ? `<img src="${card.image}">` : (card.emoji ?? '');
     const rahmen = '';
     const effektDatenJSON = JSON.stringify(card);
 
@@ -170,7 +173,9 @@ export function ankiToDrachenspielCards<T extends CombatCardLike = CombatCardLik
       text: regeltext || (base.text as string) || '',
     };
 
-    if (bild) card.emoji = bild;
+    const imageMatch = /<img[^>]*\bsrc\s*=\s*["']([^"']+)["']/i.exec(bild);
+    if (imageMatch) card.image = imageMatch[1]!;
+    else if (bild) card.emoji = bild;
     if (seltenheit) card.rarity = seltenheit;
     if (klasse) card.house = klasse;
     if (angriffRaw !== '') card.attack = Number.parseInt(angriffRaw, 10);

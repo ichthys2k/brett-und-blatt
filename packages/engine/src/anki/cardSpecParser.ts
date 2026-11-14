@@ -275,7 +275,8 @@ export function parseCombatCardSpec(
   const klasse = get('Klasse');
   if (klasse) (card as { house?: string }).house = klasse;
   const bild = get('Bild');
-  if (bild) card.emoji = bild;
+  // Ein Medium (`<img src="…">`, #309) ist Darstellung; das Emoji bleibt dann das bisherige.
+  if (bild && !/<img\b/i.test(bild)) card.emoji = bild;
   const spruch = get('Spruch');
   if (spruch) card.quote = spruch;
   const regeltext = get('Regeltext');
