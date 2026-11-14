@@ -4,6 +4,7 @@ import { Button } from '../components/controls';
 import { EmojiKeypad, ProfileForm } from '../components/OnlineParts';
 import { OpenRooms } from '../components/OpenRooms';
 import { OrgRequestNotice } from '../components/OrgRequestNotice';
+import { QrScanner } from '../components/QrScanner';
 import { TavernPage } from '../components/TavernPage';
 import { t } from '../i18n';
 import { GAME_SERVER, createRoom, roomExists, useOpenRooms } from '../lib/online';
@@ -103,6 +104,7 @@ export function Online() {
             <section className="space-y-3 rounded-xl border border-line bg-surface p-4">
               <p className="text-sm text-muted">{t('online.codeHint')}</p>
               <EmojiKeypad onComplete={join} />
+              <QrScanner onFound={join} />
               <form
                 className="flex gap-2"
                 onSubmit={(event) => {

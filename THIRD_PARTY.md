@@ -36,7 +36,7 @@ Die Feldtabellen des Schach-Bots folgen der frei veröffentlichten „Simplified
 
 ## uqr
 
-QR-Codes für Einladungen in Online-Räume (`apps/web`). https://github.com/unjs/uqr
+QR-Codes für Einladungen in Online-Räume (`apps/web`, `apps/xr`: Lobby-Fenster der VR-App). https://github.com/unjs/uqr
 
 ```
 MIT License

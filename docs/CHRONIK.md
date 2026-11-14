@@ -8,6 +8,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**QR-Code zum Beitreten (14.11.2026, #394):** VR-Lobby zeigt den QR-Code des Raums (`apps/xr/src/scene/QrPlate.tsx`, `uqr`), die Web-App kann QR-Codes scannen (`apps/web/src/lib/qrScan.ts`, `components/QrScanner.tsx`, Knopf auf `#/online`; nur `BarcodeDetector`). Scannen in der VR-App nicht möglich (Quest-Browser gibt die Kamera nicht frei), dokumentiert in `docs/vr.md`. Tests `tests/xr-qr.test.ts`, `apps/web/test/qr-scan.test.ts`. Im Browser nur die VR-Anzeige gesehen; Scannen nicht mit echter Kamera geprüft.
+
 **VR: Finger, Stuhlschilder und 👋 (14.11.2026, #385, #386):** Fingerhaltung bei Handtracking im Präsenzpaket (`apps/xr/src/presence.ts`, `gestures.ts`, `scene/Meet.tsx`), Stuhlschilder drehen sich zum Spieler am Zug (`scene/Seats.tsx`), Winken löst 👋 aus: `REACTIONS` in `packages/online/src/protocol.ts` um 👋 erweitert (Klang in `apps/web/src/lib/online.ts` vorläufig der des Daumens). Lastmessung in `docs/spiele/weitere-plattformen.md`. Test `tests/xr-praesenz.test.ts`; nicht mit zwei Brillen geprüft.
 
 **VR: Geschlagenes und gewonnene Stiche, Teil 2 (14.11.2026, #390):** Mühle und Vierer-Schach mit Ablage (`scene/Captured.tsx`, `scene/captured.ts`), Stichstapel beim Gewinner für Skat, Doppelkopf, Schafkopf, Binokel (`scene/cards.tsx`, `trickCounts` in `scene/card-views.ts`); Test `tests/xr-ablage.test.ts`. Nur gerechnet und typgeprüft, nicht im Browser gesehen, nicht in der Brille.

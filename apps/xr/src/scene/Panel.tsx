@@ -18,6 +18,7 @@ import { onVibrationChange, setVibration, vibrationEnabled } from '../haptics';
 import { fanMode, onFanModeChange, setFanMode } from '../hand-fan';
 import { gesturesEnabled, onGesturesChange, setGesturesEnabled } from '../gestures';
 import { onTableLockedChange, setTableLocked, tableLocked } from '../table-grab';
+import { QrPlate } from './QrPlate';
 import { getHandedness, getPosture, isCollapsed, onPanelCommand, onUiStateChange, setCollapsed, setHandedness, setPosture } from '../ui-state';
 import { getVolume, onVolumeChange, setVolume } from '../sound';
 
@@ -315,6 +316,8 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
   return (
     <group position={[position[0], position[1] + lift, position[2]]} rotation={rotation}>
       <Sign lines={lines} position={[0, 0, 0]} width={WIDTH} height={height} background={WOOD_DARK} overlay />
+      {/* QR-Code zum Beitreten für Handy-Spieler im selben Raum (#394) */}
+      {mode === 'main' && (room.phase === 'lobby' || !game) && <QrPlate code={room.code} position={[WIDTH / 2 + 0.13, 0, 0]} />}
       {rows.map((row, r) => {
         const gap = 0.01;
         const w = (WIDTH - HEAD_PAD - gap * (row.length - 1)) / row.length;
