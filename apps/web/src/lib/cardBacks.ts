@@ -1,10 +1,12 @@
-import type { CardBackId } from '@brett-und-blatt/ui';
+import { isPaintedCardBack, paintedCardBackFile, paintedCardBackUrl, type CardBackId, type PaintedCardBackId } from '@brett-und-blatt/ui';
 import { useActiveCardSet } from './activeCardSet';
 import type { CrestSpec } from '@brett-und-blatt/engine';
 import { useSyncExternalStore } from 'react';
 import { loadBook } from './chronikStore';
 import { currentCrest, hasCrest, useCrest } from './crestStore';
-import type { Book } from './partiebuch';
+import { loadLearnBook } from './learnStore';
+import type { Look } from './look';
+import { totals, type Book } from './partiebuch';
 import { passSyncSoon, syncPassEntry } from './playerPass';
 import { stampCount } from './stamps';
 
@@ -14,6 +16,10 @@ export interface CardBackUnlockState {
   book: Book;
   hasCrest: boolean;
   jesterUnlocked?: boolean;
+  /** Tage mit Lernsitzung im Karteikasten (#314). */
+  learnDays?: number;
+  /** Spiele der Rubrik „Familie & Gesellschaft“ (aus der Startseite, nachgeladen). */
+  familyGameIds?: readonly string[];
 }
 
 export interface CardBackDefinition {
@@ -25,7 +31,7 @@ export interface CardBackDefinition {
 
 export const TRICK_GAMES = ['skat', 'schafkopf', 'doppelkopf', 'binokel'] as const;
 
-export const CARD_BACK_CATALOG: readonly CardBackDefinition[] = [
+const SVG_CARD_BACKS: readonly CardBackDefinition[] = [
   {
     id: 'classic-red',
     name: 'Klassisch Karmin',
@@ -125,8 +131,90 @@ export const CARD_BACK_CATALOG: readonly CardBackDefinition[] = [
   },
 ] as const;
 
+/** Wie oft in einem Spiel gespielt bzw. gewonnen wurde, über alle Geräte und Modi. */
+function gameCount(book: Book, gameId: string, field: 'played' | 'won'): number {
+  return totals(book, gameId)[field];
+}
+
+function progress(have: number, needed: number, done: string, todo: (missing: number) => string): { unlocked: boolean; progressLabel: string } {
+  return have >= needed ? { unlocked: true, progressLabel: done } : { unlocked: false, progressLabel: `${todo(needed - have)} (${have}/${needed})` };
+}
+
+/**
+ * Gemalte Rücken (#314). Die Freischaltregeln sind Cornelius' Vorschläge aus dem Issue. Angeboten wird
+ * ein Rücken erst, wenn sein Bild im Repo liegt (`paintedCardBackUrl`).
+ */
+export const PAINTED_CARD_BACK_CATALOG: readonly (CardBackDefinition & { id: PaintedCardBackId })[] = [
+  {
+    id: 'tavern-lantern',
+    name: 'Tavernenlaterne',
+    description: 'Gemalte Hopfenranken und Gerstenähren um eine runde Laternenrosette, in Braun und Bernstein.',
+    unlockCheck: () => ({ unlocked: true, progressLabel: 'Von Anfang an verfügbar' }),
+  },
+  {
+    id: 'castle-banner',
+    name: 'Burgsaal',
+    description: 'Gemalter Damast in Burgunder und Gold mit Lilien und Schildbuckel.',
+    unlockCheck: (state) => {
+      const played = totals(state.book).played;
+      return progress(played, 10, 'Freigeschaltet nach 10 Partien', (n) => `Noch ${n} ${n === 1 ? 'Partie' : 'Partien'}`);
+    },
+  },
+  {
+    id: 'library-ink',
+    name: 'Schreibstube',
+    description: 'Gemalte Buchmalerei in Nachtblau und Pergament mit Efeu und Kompassrose.',
+    unlockCheck: (state) =>
+      progress(state.learnDays ?? 0, 5, 'Freigeschaltet durch 5 Lerntage im Karteikasten', (n) => `Noch ${n} ${n === 1 ? 'Lerntag' : 'Lerntage'} im Karteikasten`),
+  },
+  {
+    id: 'garden-rose',
+    name: 'Schlossgarten',
+    description: 'Gemaltes Rosenspalier in Waldgrün und Rosé um einen Brunnen, von oben gesehen.',
+    unlockCheck: (state) => {
+      const distinct = (state.familyGameIds ?? []).filter((id) => gameCount(state.book, id, 'played') > 0).length;
+      return progress(distinct, 3, 'Freigeschaltet durch 3 verschiedene Familienspiele', (n) => `Noch ${n} ${n === 1 ? 'Familienspiel' : 'verschiedene Familienspiele'}`);
+    },
+  },
+  {
+    id: 'fairground',
+    name: 'Jahrmarkt',
+    description: 'Gemalte Harlekin-Rauten in Rot und Gold mit Glöckchen und Bändern.',
+    unlockCheck: (state) =>
+      progress(gameCount(state.book, 'color-sorter', 'won') > 0 ? 1 : 0, 1, 'Freigeschaltet durch Sieg im Narrenhof', () => 'Erfordert 1 Sieg im Narrenhof'),
+  },
+  {
+    id: 'night-sky',
+    name: 'Sternenhimmel',
+    description: 'Gemalter Nachthimmel mit goldenen Sternen und Sonne-und-Mond-Medaillon.',
+    unlockCheck: (state) =>
+      progress(totals(state.book, undefined, 'tournament').played > 0 ? 1 : 0, 1, 'Freigeschaltet durch ein Turnier', () => 'Erfordert 1 beendetes Turnier'),
+  },
+];
+
+/** Alle wählbaren Rücken: die gezeichneten und die gemalten, deren Bild vorhanden ist. */
+export const CARD_BACK_CATALOG: readonly CardBackDefinition[] = [...SVG_CARD_BACKS, ...PAINTED_CARD_BACK_CATALOG.filter((entry) => paintedCardBackUrl(entry.id))];
+
 export function getCardBackDefinition(id: CardBackId): CardBackDefinition {
   return CARD_BACK_CATALOG.find((entry) => entry.id === id) ?? CARD_BACK_CATALOG[0]!;
+}
+
+let familyGameIds: readonly string[] | undefined;
+let familyLoading = false;
+/** Die Familienspiele kommen aus der Startseite; nachgeladen, damit dieses Modul klein bleibt (wie `crestProgress`). */
+function loadFamilyGames(): readonly string[] {
+  if (!familyGameIds && !familyLoading && typeof window !== 'undefined') {
+    familyLoading = true;
+    void import('../screens/Home')
+      .then(({ CATEGORIES }) => {
+        familyGameIds = CATEGORIES.find((category) => category.id === 'family')?.gameIds ?? [];
+        notifyChange();
+      })
+      .catch(() => {
+        familyLoading = false;
+      });
+  }
+  return familyGameIds ?? [];
 }
 
 const listeners = new Set<() => void>();
@@ -166,10 +254,18 @@ export function currentUnlockState(): CardBackUnlockState {
   } catch {
     // ignorieren
   }
+  let learnDays = 0;
+  try {
+    learnDays = loadLearnBook().days.length;
+  } catch {
+    // ohne Lernbuch keine Lerntage
+  }
   return {
     book,
     hasCrest: hasCrest(),
     jesterUnlocked,
+    learnDays,
+    familyGameIds: loadFamilyGames(),
   };
 }
 
@@ -235,17 +331,22 @@ export function useActiveCardBack(): CardBackId {
   );
 }
 
-import { useActivePlayingCardOverrides } from './activeSheetPackage';
+import { useActivePlayingCardOverrides, useSheetMediaUrl } from './activeSheetPackage';
 import type { CardCosmetics } from '@brett-und-blatt/ui';
 
 /**
  * Liefert die Kosmetik-Daten (Kartenrücken, Pass-Wappen und aktive Anki-Spielblatt-Overrides) für den CardCosmeticsProvider.
  */
-export function useActiveCardCosmetics(): CardCosmetics {
-  const cardBack = useActiveCardBack();
+export function useActiveCardCosmetics(look: Look = 'tavern'): CardCosmetics {
+  const chosenBack = useActiveCardBack();
+  // „Schlicht“ und erhöhter Kontrast (`activeLook`): statt eines gemalten Rückens der ruhige SVG-Rücken (#314).
+  const plainBack = look === 'plain' && isPaintedCardBack(chosenBack);
+  // Ein in Anki ersetztes Bild gleichen Namens (im aktiven Spielblatt-Paket) hat Vorrang.
+  const replaced = useSheetMediaUrl(isPaintedCardBack(chosenBack) && !plainBack ? paintedCardBackFile(chosenBack) : null);
+  const cardBack: CardBackId = plainBack ? 'classic-red' : replaced ? 'custom-media' : chosenBack;
   const crest = useCrest();
   const playingCardOverrides = useActivePlayingCardOverrides();
   // Bilder, Namen und Texte der Spezialkarten aus dem aktiven Kartenset (#270).
   const cardSet = useActiveCardSet();
-  return { cardBack, crest, playingCardOverrides, ...(cardSet ? { ankiOverrides: cardSet.ankiOverrides, mediaUrlMap: cardSet.mediaUrlMap } : {}) };
+  return { cardBack, crest, playingCardOverrides, ...(replaced ? { customImageUrl: replaced } : {}), ...(cardSet ? { ankiOverrides: cardSet.ankiOverrides, mediaUrlMap: cardSet.mediaUrlMap } : {}) };
 }

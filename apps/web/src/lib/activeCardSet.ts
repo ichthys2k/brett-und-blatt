@@ -7,8 +7,10 @@
  * Die Spiele prüfen die Werte selbst noch einmal (`sanitizeCustomCardCatalog`).
  */
 import {
+  ankiToQuartettSet,
   isSpecialCardNote,
   parseCustomCardCatalog,
+  type AnkiCollection,
   type AnkiNote,
   type CustomCardCatalog,
 } from '@brett-und-blatt/engine';
@@ -94,10 +96,10 @@ function officialCatalogs(gameId: string): Promise<CustomCardCatalog[]> {
   return hit;
 }
 
-/** Was an einer Karte für das Spiel zählt: Name und Werte, nicht Bild oder Text. */
+/** Was an einer Karte für das Spiel zählt: Name, Werte, Auslöser und Effekte, nicht Bild oder Text. */
 function cardKey(card: Record<string, unknown>): string {
   const keywords = Array.isArray(card.keywords) ? [...(card.keywords as string[])].sort() : undefined;
-  return JSON.stringify([card.name, card.cost, card.attack, card.health, keywords, card.price, card.baseChips, card.multiplier, card.values]);
+  return JSON.stringify([card.name, card.cost, card.attack, card.health, keywords, card.price, card.baseChips, card.multiplier, card.values, card.triggers, card.effects, card.targeting, card.house]);
 }
 
 /**
@@ -119,9 +121,44 @@ export function changedCatalog(gameId: string, catalog: CustomCardCatalog | null
   return { checksum: catalog.checksum, notices: [], combatCards: {}, courtCards: {}, quartettCards: {}, [part]: changed } as CustomCardCatalog;
 }
 
+/** Das Kartenset eines Pakets; mit Quartettkarten zusätzlich das ganze Set, falls es ein eigenes ist (#270). */
+export function catalogOf(collection: AnkiCollection): CustomCardCatalog | null {
+  const notes = collection.notes.filter(isSpecialCardNote);
+  if (notes.length === 0) return null;
+  const catalog = parseCustomCardCatalog({ notes });
+  if (Object.keys(catalog.quartettCards).length > 0) {
+    try {
+      const set = ankiToQuartettSet({ ...collection, notes });
+      catalog.quartettSet = { name: set.name, emoji: set.emoji ?? '🃏', properties: [...set.properties] as never, groups: [...set.groups], cards: set.cards.map((c) => ({ id: c.id, name: c.name, emoji: c.emoji ?? '🃏', values: c.values, ...(c.source ? { source: c.source } : {}), ...(c.image ? { image: c.image } : {}) })) };
+    } catch {
+      // kein vollständiges Set – dann zählen nur geänderte Karten
+    }
+  }
+  return catalog;
+}
+
+const officialSets = new Map<string, Promise<{ labels: string; ids: string }[]>>();
+/** Ob ein Quartett-Set aus Anki ein eigenes ist (andere Eigenschaften oder Karten als jedes offizielle Set). */
+async function isOwnQuartettSet(set: NonNullable<CustomCardCatalog['quartettSet']>): Promise<boolean> {
+  let hit = officialSets.get('quartett');
+  if (!hit) {
+    hit = Promise.all(OFFICIAL.quartett!.map(async (id) => {
+      const official = ankiToQuartettSet(await generateTemplateCollection(id));
+      return { labels: official.properties.map((p) => p.label).sort().join('|'), ids: official.cards.map((c) => c.id).sort().join('|') };
+    }));
+    officialSets.set('quartett', hit);
+  }
+  const labels = set.properties.map((p) => p.label).sort().join('|');
+  const ids = set.cards.map((c) => c.id).sort().join('|');
+  return !(await hit).some((o) => o.labels === labels && o.ids === ids);
+}
+
 /** Das Kartenset als Spieloption (JSON-Text) für ein Spiel, falls es dort Karten ändert. */
 export async function catalogOptionFor(gameId: string, catalog: CustomCardCatalog | null | undefined): Promise<string | null> {
   if (!catalog || !CARD_SET_GAMES[gameId]) return null;
+  if (gameId === 'quartett' && catalog.quartettSet && (await isOwnQuartettSet(catalog.quartettSet))) {
+    return JSON.stringify({ checksum: catalog.checksum, notices: [], combatCards: {}, courtCards: {}, quartettCards: {}, quartettSet: catalog.quartettSet });
+  }
   const changed = changedCatalog(gameId, catalog, await officialCatalogs(gameId));
   return changed ? JSON.stringify(changed) : null;
 }
@@ -133,7 +170,7 @@ export function useChangedCatalog(gameId: string | null | undefined, catalog: Cu
     let cancelled = false;
     setChanged(null);
     if (!gameId || !catalog || !CARD_SET_GAMES[gameId]) return;
-    void officialCatalogs(gameId).then((official) => !cancelled && setChanged(changedCatalog(gameId, catalog, official)));
+    void catalogOptionFor(gameId, catalog).then((json) => !cancelled && setChanged(json ? (JSON.parse(json) as CustomCardCatalog) : null));
     return () => {
       cancelled = true;
     };
@@ -158,8 +195,7 @@ export async function loadActiveCatalog(): Promise<CustomCardCatalog | null> {
   try {
     const stored = await loadPack(id);
     if (!stored) return null;
-    const notes = stored.pack.collection.notes.filter(isSpecialCardNote);
-    return notes.length ? parseCustomCardCatalog({ notes }) : null;
+    return catalogOf(stored.pack.collection);
   } catch {
     return null;
   }
@@ -190,7 +226,7 @@ export function useActiveCardSet(): ActiveCardSet | null {
           urls.push(url);
           mediaUrlMap[name] = url;
         }
-        setSet({ id, name: stored.pack.name, catalog: parseCustomCardCatalog({ notes }), ankiOverrides: overrideIndex(notes), mediaUrlMap });
+        setSet({ id, name: stored.pack.name, catalog: catalogOf(stored.pack.collection)!, ankiOverrides: overrideIndex(notes), mediaUrlMap });
       } catch {
         if (!cancelled) setSet(null);
       }

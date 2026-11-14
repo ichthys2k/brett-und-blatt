@@ -477,3 +477,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## stockfish (stockfish.js)
+
+Starker Schach-Zusatz-Bot („Stockfish (Großmeister)“) als WebAssembly in einem eigenen Web Worker (`apps/web/src/lib/stockfishBot.ts`, Paket `stockfish` Version 19.0.1, genutzt wird `stockfish-19-lite-single.js` + `.wasm`, erst bei Bedarf geladen). https://github.com/nmrugg/stockfish.js (auf Basis von Stockfish, https://github.com/official-stockfish/Stockfish).
+
+**Lizenz & Verträglichkeit:** Stockfish steht unter der **GNU General Public License Version 3 (GPL-3.0)**. Sowohl GPL-3.0 (Abschnitt 13, *„Remote Network Interaction; Use with the GNU General Public License“*) als auch die Lizenz dieses Projekts (**AGPL-3.0**, ebenfalls Abschnitt 13) erlauben ausdrücklich das Verbinden beider Lizenzen zu einem gemeinsamen Werk: Das Gesamtwerk unterliegt der AGPL-3.0, während für den Stockfish-Bestandteil weiterhin die GPL-3.0 gilt. Vollständiger Lizenztext: https://www.gnu.org/licenses/gpl-3.0.txt (`Copying.txt` im Paket).
+

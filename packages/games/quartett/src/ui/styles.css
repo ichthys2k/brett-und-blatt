@@ -140,6 +140,17 @@ button.qt-seat:hover {
   aspect-ratio: auto;
 }
 
+/* Quartettkarten sind so hoch wie ihr Inhalt: Die Vorderseite fließt mit, statt absolut über
+   einer Wendefläche ohne Höhe zu liegen (sonst blieb nur der Rand sichtbar, #319). */
+.qt-card.qt-gamecard .bub-game-card-flipper {
+  height: auto;
+}
+
+.qt-card.qt-gamecard .bub-game-card-front {
+  position: relative;
+  height: auto;
+}
+
 .qt-card.qt-gamecard .bub-game-card-anki {
   width: 100%;
   height: 100%;
@@ -216,6 +227,42 @@ button.qt-seat:hover {
 
 .qt-small .qt-emoji {
   font-size: 1.6rem;
+}
+
+/* Bild statt Emoji (#319); „Schlicht“ und hoher Kontrast zeigen weiter das Emoji. */
+.qt-image {
+  width: 4.8rem;
+  aspect-ratio: 4 / 3;
+  flex: none;
+  border-radius: 0.35rem;
+  object-fit: cover;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+}
+
+.qt-small .qt-image {
+  width: 3rem;
+}
+
+.qt-has-image .qt-emoji {
+  display: none;
+}
+
+:root[data-look='plain'] .qt-image {
+  display: none;
+}
+
+:root[data-look='plain'] .qt-has-image .qt-emoji {
+  display: inline;
+}
+
+@media (prefers-contrast: more) {
+  .qt-image {
+    display: none;
+  }
+
+  .qt-has-image .qt-emoji {
+    display: inline;
+  }
 }
 
 .qt-name {

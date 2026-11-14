@@ -94,10 +94,10 @@ export function inputPlan(game: GameMessage): InputPlan | null {
     }
     case 'symbol-match': {
       if (!types.has('claim')) return null;
-      const v = view as { center: number | null; options: { order: Order; symbols: SymbolSet }; players: { top: number | null }[] };
-      if (v.center === null) return null;
+      const v = view as { center: number | null; options: { mode?: string; order: Order; symbols: SymbolSet }; players: { top: number | null }[] };
+      const center = v.options.mode === 'hotPotato' ? (v.players[me]?.top ?? null) : v.center;
+      if (center === null) return null;
       const cards = buildCards(v.options.order);
-      const center = v.center;
       const targets = [...new Set(game.legalMoves.map((m) => (m as { target: number }).target))];
       return {
         spec: {

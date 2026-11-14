@@ -131,8 +131,15 @@ export async function generateTemplateCollection(id: GameCardTemplateId): Promis
       return createPlayingCardCollection({ deck: 'bavarian-32' });
     case 'drachenspiel': {
       // CARDS_DB enthält die Zauber schon; doppelte Karten ließen den Export scheitern (#270).
-      const { CARDS_DB } = await import('../../../../packages/games/drachenspiel/src/cards');
-      return drachenspielCardsToAnki(Object.values(CARDS_DB));
+      const [{ CARDS_DB }, { cardArtOf }] = await Promise.all([
+        import('../../../../packages/games/drachenspiel/src/cards'),
+        import('../../../../packages/games/drachenspiel/src/ui/cardArt'),
+      ]);
+      // Gemalte Kartenbilder (#309) stehen als Medium im Feld „Bild“.
+      return drachenspielCardsToAnki(Object.values(CARDS_DB).map((card) => {
+        const image = cardArtOf(card.id);
+        return image ? { ...card, image } : card;
+      }));
     }
     case 'narrenhof': {
       const { MODS } = await import('../../../../packages/games/color-sorter/src/mods');
@@ -160,6 +167,56 @@ export async function exportGameCardTemplateApkg(id: GameCardTemplateId): Promis
   if (!template) throw new Error(`Vorlage ${id} nicht gefunden.`);
 
   const collection = await generateTemplateCollection(id);
-  const bytes = await exportApkg({ collection }, { scheduling: false, media: false, format: 'legacy2' });
+  const media = await templateMedia(id);
+  const bytes = await exportApkg({ collection, ...(media.size ? { media } : {}) }, { scheduling: false, media: media.size > 0, format: 'legacy2' });
   return { fileName: template.fileName, bytes };
+}
+
+/**
+ * Bilder eines Quartett-Sets als Anki-Medien (#319): Das Feld „Bild“ nennt sie mit `<img src="…">`, die Dateien
+ * kommen von `quartett/bilder/<set>/`. Fehlt ein Bild (noch nicht erzeugt), bleibt es weg.
+ */
+async function templateMedia(id: GameCardTemplateId): Promise<Map<string, Uint8Array>> {
+  const media = new Map<string, Uint8Array>();
+  if (id.startsWith('spielblatt-')) {
+    // Gemalter Kartenrücken (#314): der gewählte liegt als Medium bei; in Anki ersetzt und wieder
+    // eingelesen, zeigt die App das neue Bild (`useSheetMediaUrl`).
+    const [{ loadActiveCardBack }, { isPaintedCardBack, paintedCardBackFile, paintedCardBackUrl }] = await Promise.all([import('./cardBacks'), import('@brett-und-blatt/ui')]);
+    const back = loadActiveCardBack();
+    const url = isPaintedCardBack(back) ? paintedCardBackUrl(back) : undefined;
+    if (url && isPaintedCardBack(back)) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) media.set(paintedCardBackFile(back), new Uint8Array(await response.arrayBuffer()));
+      } catch {
+        // ohne Netz: Paket ohne Rücken
+      }
+    }
+    return media;
+  }
+  if (id === 'drachenspiel') {
+    const { CARD_ART_MEDIA } = await import('../../../../packages/games/drachenspiel/src/ui/cardArt');
+    for (const [name, url] of Object.entries(CARD_ART_MEDIA)) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) media.set(name, new Uint8Array(await response.arrayBuffer()));
+      } catch {
+        // ohne Netz: Paket ohne dieses Bild
+      }
+    }
+    return media;
+  }
+  if (!id.startsWith('quartett-')) return media;
+  const setId = id.replace('quartett-', '');
+  const { cardSet } = await import('../../../../packages/games/quartett/src/sets');
+  for (const card of cardSet(setId).cards) {
+    if (!card.image) continue;
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL}quartett/bilder/${setId}/${card.image}`);
+      if (response.ok) media.set(card.image, new Uint8Array(await response.arrayBuffer()));
+    } catch {
+      // ohne Netz: Paket ohne dieses Bild
+    }
+  }
+  return media;
 }

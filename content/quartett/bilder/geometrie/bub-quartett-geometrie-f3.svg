@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" width="480" height="360" role="img" aria-label="Sechseckspyramide (h = 20 cm)">
+<defs><radialGradient id="pergament" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#f7eed6"/><stop offset="1" stop-color="#e3cf9f"/></radialGradient><style> .flaeche { fill: #d9a400; fill-opacity: 0.22; stroke: none; } .kante, .umriss { fill: none; stroke: #3b2a1a; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; } .kante.verdeckt, .hilfslinie.verdeckt { stroke: #8a7658; stroke-width: 2; stroke-dasharray: 1.5 6; } .hilfslinie { fill: none; stroke: #8a7658; stroke-width: 1.6; } .achse { stroke: #9a6a2e; stroke-width: 1.6; stroke-dasharray: 10 7; } .ecke { fill: #3b2a1a; } .ecke.verdeckt { fill: #8a7658; } .glanz { fill: #fff8e6; fill-opacity: 0.55; } </style></defs>
+<rect width="480" height="360" fill="url(#pergament)" />
+<polygon class="flaeche" points="364.5,270 305.1,314.7 240,44" />
+<polygon class="flaeche" points="305.1,314.7 180.6,316 240,44" />
+<polygon class="flaeche" points="180.6,316 115.5,272.7 240,44" />
+<line class="kante" data-kante="0" x1="364.5" y1="270" x2="305.1" y2="314.7" />
+<line class="kante" data-kante="1" x1="305.1" y1="314.7" x2="180.6" y2="316" />
+<line class="kante" data-kante="2" x1="180.6" y1="316" x2="115.5" y2="272.7" />
+<line class="kante verdeckt" data-kante="3" x1="115.5" y1="272.7" x2="174.9" y2="228.1" />
+<line class="kante verdeckt" data-kante="4" x1="174.9" y1="228.1" x2="299.4" y2="226.8" />
+<line class="kante verdeckt" data-kante="5" x1="364.5" y1="270" x2="299.4" y2="226.8" />
+<line class="kante" data-kante="6" x1="305.1" y1="314.7" x2="240" y2="44" />
+<line class="kante" data-kante="7" x1="364.5" y1="270" x2="240" y2="44" />
+<line class="kante" data-kante="8" x1="180.6" y1="316" x2="240" y2="44" />
+<line class="kante" data-kante="9" x1="115.5" y1="272.7" x2="240" y2="44" />
+<line class="kante verdeckt" data-kante="10" x1="174.9" y1="228.1" x2="240" y2="44" />
+<line class="kante verdeckt" data-kante="11" x1="299.4" y1="226.8" x2="240" y2="44" />
+<circle class="ecke" data-ecke="0" cx="364.5" cy="270" r="4" />
+<circle class="ecke" data-ecke="1" cx="305.1" cy="314.7" r="4" />
+<circle class="ecke" data-ecke="2" cx="180.6" cy="316" r="4" />
+<circle class="ecke" data-ecke="3" cx="115.5" cy="272.7" r="4" />
+<circle class="ecke verdeckt" data-ecke="4" cx="174.9" cy="228.1" r="3" />
+<circle class="ecke verdeckt" data-ecke="5" cx="299.4" cy="226.8" r="3" />
+<circle class="ecke" data-ecke="6" cx="240" cy="44" r="4" />
+</svg>

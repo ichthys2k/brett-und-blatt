@@ -28,6 +28,8 @@ export interface CombatCardLike {
   attack?: number;
   health?: number;
   emoji?: string;
+  /** Gemaltes Kartenbild (Medienname, z. B. `bub-ds-fuchs.webp`, #309); im Feld „Bild“ als `<img>`. */
+  image?: string;
   quote?: string;
   isSpell?: boolean;
   house?: string;
@@ -78,7 +80,8 @@ export function drachenspielCardsToAnki<T extends CombatCardLike>(cards: readonl
     const schluesselwoerter = (card.keywords && card.keywords.length > 0) ? card.keywords.join(', ') : '';
     const regeltext = card.text ?? '';
     const spruch = card.quote ?? '';
-    const bild = card.emoji ?? '';
+    // Mit Bild steht das Medium im Feld „Bild“; das Emoji reist in EffektDatenJSON mit (#309).
+    const bild = card.image ? `<img src="${card.image}">` : (card.emoji ?? '');
     const rahmen = '';
     const effektDatenJSON = JSON.stringify(card);
 
@@ -170,7 +173,9 @@ export function ankiToDrachenspielCards<T extends CombatCardLike = CombatCardLik
       text: regeltext || (base.text as string) || '',
     };
 
-    if (bild) card.emoji = bild;
+    const imageMatch = /<img[^>]*\bsrc\s*=\s*["']([^"']+)["']/i.exec(bild);
+    if (imageMatch) card.image = imageMatch[1]!;
+    else if (bild) card.emoji = bild;
     if (seltenheit) card.rarity = seltenheit;
     if (klasse) card.house = klasse;
     if (angriffRaw !== '') card.attack = Number.parseInt(angriffRaw, 10);
@@ -355,6 +360,8 @@ export interface QuartettCardLike {
   id: string;
   name: string;
   emoji?: string;
+  /** Bild der Karte (Medienname, z. B. `bub-quartett-tiere-a1.webp`, #319); im Feld „Bild“ als `<img>`. */
+  image?: string;
   values: Record<string, number>;
   source?: string;
   sources?: Record<string, string>;
@@ -392,7 +399,7 @@ export function quartettSetToAnki<T extends QuartettSetLike>(set: T, options: Ca
     const guid = `bub-quartett-${set.id}-${card.id}`;
     const groupCode = card.id.length >= 2 ? card.id.slice(0, 1) : card.id;
     const groupName = groupMap.get(groupCode) ?? groupCode;
-    const bild = card.emoji ?? '';
+    const bild = card.image ? `<img src="${card.image}">` : (card.emoji ?? '');
     const infoText = card.source ? `Quelle: ${card.source}` : '';
 
     const fields: string[] = [
@@ -421,6 +428,7 @@ export function quartettSetToAnki<T extends QuartettSetLike>(set: T, options: Ca
     const effektDatenJSON = JSON.stringify({
       setId: set.id,
       cardId: card.id,
+      cardEmoji: card.emoji,
       cardValues: card.values,
       cardSource: card.source,
       cardSources: card.sources,
@@ -538,10 +546,13 @@ export function ankiToQuartettSet<T extends QuartettSetLike = QuartettSetLike>(c
       cardId = cardId.split(':')[1]!;
     }
 
+    // „Bild“ ist ein Emoji oder ein Medium (`<img src="…">`, #319); das Emoji reist dann in EffektDatenJSON mit.
+    const imageMatch = /<img[^>]*\bsrc\s*=\s*["']([^"']+)["']/i.exec(bild);
     const card: QuartettCardLike = {
       id: cardId,
       name: cardName,
-      emoji: bild,
+      emoji: imageMatch ? ((baseJson.cardEmoji as string | undefined) ?? '') : bild,
+      ...(imageMatch ? { image: imageMatch[1]! } : {}),
       values,
       source: infoText.startsWith('Quelle: ') ? infoText.replace('Quelle: ', '') : infoText,
       sources: baseJson.cardSources as Record<string, string> | undefined,

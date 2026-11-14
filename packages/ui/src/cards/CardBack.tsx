@@ -2,6 +2,7 @@ import type { CrestSpec } from '@brett-und-blatt/engine';
 import { useId, type CSSProperties } from 'react';
 import { PlayerCrest } from '../crest/PlayerCrest';
 import { useCardCosmetics } from './CardCosmeticsContext';
+import { isPaintedCardBack, paintedCardBackUrl, type PaintedCardBackId } from './paintedBacks';
 
 export type CardBackId =
   | 'classic-red'
@@ -11,7 +12,8 @@ export type CardBackId =
   | 'jester-velvet'
   | 'dragon-scale'
   | 'royal-crest'
-  | 'custom-media';
+  | 'custom-media'
+  | PaintedCardBackId;
 
 export type CardSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -60,15 +62,18 @@ export function CardBack({
   const cosmetics = useCardCosmetics();
   const rawId = useId().replace(/:/g, '');
 
-  const effectiveDesign: CardBackId = design ?? cosmetics.cardBack ?? 'classic-red';
+  const chosenDesign: CardBackId = design ?? cosmetics.cardBack ?? 'classic-red';
   const effectiveCrest = crest ?? cosmetics.crest ?? DEFAULT_CREST_SPEC;
-  const effectiveCustomImage = customImageUrl ?? cosmetics.customImageUrl;
+  // Gemalte Rücken (#314) zeigen ihr Bild wie custom-media; fehlt die Datei, gilt classic-red.
+  const paintedUrl = isPaintedCardBack(chosenDesign) ? paintedCardBackUrl(chosenDesign) : undefined;
+  const effectiveDesign: CardBackId = isPaintedCardBack(chosenDesign) && !paintedUrl ? 'classic-red' : chosenDesign;
+  const effectiveCustomImage = paintedUrl ?? customImageUrl ?? cosmetics.customImageUrl;
 
   const sizeClass = size ? `bub-card-size-${size}` : '';
   const classes = `bub-card-back bub-card-back--${effectiveDesign} ${sizeClass} ${className}`.trim();
 
   // custom-media: Bild zeigen, falls URL vorhanden; sonst eleganter Fallback auf classic-red
-  if (effectiveDesign === 'custom-media' && effectiveCustomImage) {
+  if ((effectiveDesign === 'custom-media' || paintedUrl) && effectiveCustomImage) {
     return (
       <div className={classes} style={style} role="img" aria-label={label}>
         <img

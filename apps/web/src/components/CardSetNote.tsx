@@ -8,6 +8,16 @@ export function CardSetNote({ gameId }: { gameId: string }) {
   const part = CARD_SET_GAMES[gameId];
   if (!part || !set || !changed) return null;
   const count = Object.keys(changed[part]).length;
+  if (changed.quartettSet) {
+    return (
+      <p className="rounded-2xl border border-line bg-surface p-3 text-sm shadow-sm" role="note">
+        🎴 Eigenes Quartett-Set „{changed.quartettSet.name}“ aus Anki ({changed.quartettSet.cards.length} Karten) ersetzt das gewählte Set, auch für die Bots.{' '}
+        <button type="button" className="underline" onClick={() => navigate(paths.library)}>
+          In der Bibliothek ändern
+        </button>
+      </p>
+    );
+  }
   return (
     <p className="rounded-2xl border border-line bg-surface p-3 text-sm shadow-sm" role="note">
       🎴 Eigenes Kartenset „{set.name}“ (Anki #{set.catalog.checksum}): {count} geänderte {count === 1 ? 'Karte gilt' : 'Karten gelten'} für diese Partie, auch für die Bots.{' '}

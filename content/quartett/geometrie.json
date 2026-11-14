@@ -83,7 +83,8 @@
         "symmetries": 4,
         "area": 100
       },
-      "source": "Geometrische Grundformel (a = 10 cm): A = a² = 100 cm², 4 Symmetrieachsen."
+      "source": "Geometrische Grundformel (a = 10 cm): A = a² = 100 cm², 4 Symmetrieachsen.",
+      "image": "bub-quartett-geometrie-a1.svg"
     },
     {
       "id": "A2",
@@ -96,7 +97,8 @@
         "symmetries": 2,
         "area": 200
       },
-      "source": "Geometrische Grundformel (a = 10 cm, b = 20 cm): A = a · b = 200 cm², 2 Symmetrieachsen."
+      "source": "Geometrische Grundformel (a = 10 cm, b = 20 cm): A = a · b = 200 cm², 2 Symmetrieachsen.",
+      "image": "bub-quartett-geometrie-a2.svg"
     },
     {
       "id": "A3",
@@ -109,7 +111,8 @@
         "symmetries": 2,
         "area": 87
       },
-      "source": "Geometrische Grundformel (a = 10 cm, α = 60°): A = a² · sin(60°) ≈ 87 cm², 2 Diagonalen als Symmetrieachsen."
+      "source": "Geometrische Grundformel (a = 10 cm, α = 60°): A = a² · sin(60°) ≈ 87 cm², 2 Diagonalen als Symmetrieachsen.",
+      "image": "bub-quartett-geometrie-a3.svg"
     },
     {
       "id": "A4",
@@ -122,7 +125,8 @@
         "symmetries": 1,
         "area": 130
       },
-      "source": "Geometrische Grundformel (Grundseiten 20 cm und 10 cm, Schenkel 10 cm): A = 15 · √75 ≈ 130 cm², 1 Symmetrieachse."
+      "source": "Geometrische Grundformel (Grundseiten 20 cm und 10 cm, Schenkel 10 cm): A = 15 · √75 ≈ 130 cm², 1 Symmetrieachse.",
+      "image": "bub-quartett-geometrie-a4.svg"
     },
     {
       "id": "B1",
@@ -135,7 +139,8 @@
         "symmetries": 3,
         "area": 43
       },
-      "source": "Geometrische Grundformel (a = 10 cm): A = (√3 / 4) · a² ≈ 43 cm², 3 Symmetrieachsen."
+      "source": "Geometrische Grundformel (a = 10 cm): A = (√3 / 4) · a² ≈ 43 cm², 3 Symmetrieachsen.",
+      "image": "bub-quartett-geometrie-b1.svg"
     },
     {
       "id": "B2",
@@ -148,7 +153,8 @@
         "symmetries": 0,
         "area": 60
       },
-      "source": "Ägyptisches Dreieck mit Seiten 10 cm, 12 cm (Katheten) und 15,6 cm: A = (10 · 12) / 2 = 60 cm²."
+      "source": "Ägyptisches Dreieck mit Seiten 10 cm, 12 cm (Katheten) und 15,6 cm: A = (10 · 12) / 2 = 60 cm².",
+      "image": "bub-quartett-geometrie-b2.svg"
     },
     {
       "id": "B3",
@@ -161,7 +167,8 @@
         "symmetries": 1,
         "area": 157
       },
-      "source": "Geometrische Grundformel (r = 10 cm): A = ½ · π · r² ≈ 157 cm², 1 Symmetrieachse."
+      "source": "Geometrische Grundformel (r = 10 cm): A = ½ · π · r² ≈ 157 cm², 1 Symmetrieachse.",
+      "image": "bub-quartett-geometrie-b3.svg"
     },
     {
       "id": "B4",
@@ -174,7 +181,8 @@
         "symmetries": 100,
         "area": 314
       },
-      "source": "Geometrische Grundformel (r = 10 cm): A = π · r² ≈ 314 cm²; unendlich viele Symmetrieachsen (Wert 100)."
+      "source": "Geometrische Grundformel (r = 10 cm): A = π · r² ≈ 314 cm²; unendlich viele Symmetrieachsen (Wert 100).",
+      "image": "bub-quartett-geometrie-b4.svg"
     },
     {
       "id": "C1",
@@ -187,7 +195,8 @@
         "symmetries": 5,
         "area": 172
       },
-      "source": "Regelmäßiges Pentagon (a = 10 cm): A ≈ 1,72 · a² = 172 cm², 5 Symmetrieachsen."
+      "source": "Regelmäßiges Pentagon (a = 10 cm): A ≈ 1,72 · a² = 172 cm², 5 Symmetrieachsen.",
+      "image": "bub-quartett-geometrie-c1.svg"
     },
     {
       "id": "C2",
@@ -200,7 +209,8 @@
         "symmetries": 6,
         "area": 260
       },
-      "source": "Regelmäßiges Hexagon (a = 10 cm, 6 gleichseitige Dreiecke): A = (3√3 / 2) · a² ≈ 260 cm²."
+      "source": "Regelmäßiges Hexagon (a = 10 cm, 6 gleichseitige Dreiecke): A = (3√3 / 2) · a² ≈ 260 cm².",
+      "image": "bub-quartett-geometrie-c2.svg"
     },
     {
       "id": "C3",
@@ -213,7 +223,8 @@
         "symmetries": 8,
         "area": 483
       },
-      "source": "Regelmäßiges Oktogon (a = 10 cm): A = 2 · (1 + √2) · a² ≈ 483 cm², 8 Symmetrieachsen."
+      "source": "Regelmäßiges Oktogon (a = 10 cm): A = 2 · (1 + √2) · a² ≈ 483 cm², 8 Symmetrieachsen.",
+      "image": "bub-quartett-geometrie-c3.svg"
     },
     {
       "id": "C4",
@@ -226,7 +237,8 @@
         "symmetries": 10,
         "area": 769
       },
-      "source": "Regelmäßiges Dekagon (a = 10 cm): A ≈ 7,69 · a² = 769 cm², 10 Symmetrieachsen."
+      "source": "Regelmäßiges Dekagon (a = 10 cm): A ≈ 7,69 · a² = 769 cm², 10 Symmetrieachsen.",
+      "image": "bub-quartett-geometrie-c4.svg"
     },
     {
       "id": "D1",
@@ -239,7 +251,8 @@
         "symmetries": 6,
         "area": 173
       },
-      "source": "Platonischer Körper aus 4 gleichseitigen Dreiecken (a = 10 cm): O = √3 · a² ≈ 173 cm², 6 Symmetrieebenen."
+      "source": "Platonischer Körper aus 4 gleichseitigen Dreiecken (a = 10 cm): O = √3 · a² ≈ 173 cm², 6 Symmetrieebenen.",
+      "image": "bub-quartett-geometrie-d1.svg"
     },
     {
       "id": "D2",
@@ -252,7 +265,8 @@
         "symmetries": 9,
         "area": 600
       },
-      "source": "Platonischer Körper aus 6 Quadraten (a = 10 cm): O = 6 · a² = 600 cm², 9 Symmetrieebenen."
+      "source": "Platonischer Körper aus 6 Quadraten (a = 10 cm): O = 6 · a² = 600 cm², 9 Symmetrieebenen.",
+      "image": "bub-quartett-geometrie-d2.svg"
     },
     {
       "id": "D3",
@@ -265,7 +279,8 @@
         "symmetries": 9,
         "area": 346
       },
-      "source": "Platonischer Körper aus 8 gleichseitigen Dreiecken (a = 10 cm): O = 2√3 · a² ≈ 346 cm², 9 Symmetrieebenen."
+      "source": "Platonischer Körper aus 8 gleichseitigen Dreiecken (a = 10 cm): O = 2√3 · a² ≈ 346 cm², 9 Symmetrieebenen.",
+      "image": "bub-quartett-geometrie-d3.svg"
     },
     {
       "id": "D4",
@@ -278,7 +293,8 @@
         "symmetries": 15,
         "area": 866
       },
-      "source": "Platonischer Körper aus 20 gleichseitigen Dreiecken (a = 10 cm): O = 5√3 · a² ≈ 866 cm², 15 Symmetrieebenen."
+      "source": "Platonischer Körper aus 20 gleichseitigen Dreiecken (a = 10 cm): O = 5√3 · a² ≈ 866 cm², 15 Symmetrieebenen.",
+      "image": "bub-quartett-geometrie-d4.svg"
     },
     {
       "id": "E1",
@@ -291,7 +307,8 @@
         "symmetries": 4,
         "area": 687
       },
-      "source": "Gerades Prisma (Grundkante 10 cm, Höhe 20 cm): O = 2 · 43,3 + 3 · 200 ≈ 687 cm², 4 Symmetrieebenen."
+      "source": "Gerades Prisma (Grundkante 10 cm, Höhe 20 cm): O = 2 · 43,3 + 3 · 200 ≈ 687 cm², 4 Symmetrieebenen.",
+      "image": "bub-quartett-geometrie-e1.svg"
     },
     {
       "id": "E2",
@@ -304,7 +321,8 @@
         "symmetries": 5,
         "area": 1000
       },
-      "source": "Quadratische Säule (10 × 10 × 20 cm): O = 2 · 100 + 4 · 200 = 1000 cm², 5 Symmetrieebenen."
+      "source": "Quadratische Säule (10 × 10 × 20 cm): O = 2 · 100 + 4 · 200 = 1000 cm², 5 Symmetrieebenen.",
+      "image": "bub-quartett-geometrie-e2.svg"
     },
     {
       "id": "E3",
@@ -317,7 +335,8 @@
         "symmetries": 6,
         "area": 1344
       },
-      "source": "Gerades Prisma (a = 10 cm, h = 20 cm): O = 2 · 172 + 5 · 200 = 1344 cm², 6 Symmetrieebenen."
+      "source": "Gerades Prisma (a = 10 cm, h = 20 cm): O = 2 · 172 + 5 · 200 = 1344 cm², 6 Symmetrieebenen.",
+      "image": "bub-quartett-geometrie-e3.svg"
     },
     {
       "id": "E4",
@@ -330,7 +349,8 @@
         "symmetries": 7,
         "area": 1720
       },
-      "source": "Gerades Prisma (a = 10 cm, h = 20 cm): O = 2 · 260 + 6 · 200 = 1720 cm², 7 Symmetrieebenen."
+      "source": "Gerades Prisma (a = 10 cm, h = 20 cm): O = 2 · 260 + 6 · 200 = 1720 cm², 7 Symmetrieebenen.",
+      "image": "bub-quartett-geometrie-e4.svg"
     },
     {
       "id": "F1",
@@ -343,7 +363,8 @@
         "symmetries": 4,
         "area": 273
       },
-      "source": "Johnson-Pyramide J1 aus 1 Quadrat und 4 gleichseitigen Dreiecken (a = 10 cm): O = 100 + 173 = 273 cm²."
+      "source": "Johnson-Pyramide J1 aus 1 Quadrat und 4 gleichseitigen Dreiecken (a = 10 cm): O = 100 + 173 = 273 cm².",
+      "image": "bub-quartett-geometrie-f1.svg"
     },
     {
       "id": "F2",
@@ -356,7 +377,8 @@
         "symmetries": 5,
         "area": 389
       },
-      "source": "Johnson-Pyramide J2 aus 1 Fünfeck und 5 gleichseitigen Dreiecken (a = 10 cm): O = 172 + 217 = 389 cm²."
+      "source": "Johnson-Pyramide J2 aus 1 Fünfeck und 5 gleichseitigen Dreiecken (a = 10 cm): O = 172 + 217 = 389 cm².",
+      "image": "bub-quartett-geometrie-f2.svg"
     },
     {
       "id": "F3",
@@ -369,7 +391,8 @@
         "symmetries": 6,
         "area": 886
       },
-      "source": "Gerade Pyramide (Grundkante 10 cm, Höhe 20 cm): Grundfläche 260 cm² + Mantel 626 cm² = 886 cm²."
+      "source": "Gerade Pyramide (Grundkante 10 cm, Höhe 20 cm): Grundfläche 260 cm² + Mantel 626 cm² = 886 cm².",
+      "image": "bub-quartett-geometrie-f3.svg"
     },
     {
       "id": "F4",
@@ -382,7 +405,8 @@
         "symmetries": 4,
         "area": 1100
       },
-      "source": "Quadratischer Stumpf (Grundflächen 400 cm² und 100 cm², Seitenhöhe 10 cm): O = 400 + 100 + 4 · 150 = 1100 cm²."
+      "source": "Quadratischer Stumpf (Grundflächen 400 cm² und 100 cm², Seitenhöhe 10 cm): O = 400 + 100 + 4 · 150 = 1100 cm².",
+      "image": "bub-quartett-geometrie-f4.svg"
     },
     {
       "id": "G1",
@@ -395,7 +419,8 @@
         "symmetries": 100,
         "area": 1885
       },
-      "source": "Gerader Kreiszylinder (r = 10 cm, h = 20 cm): O = 2πr² + 2πrh = 600π ≈ 1885 cm²."
+      "source": "Gerader Kreiszylinder (r = 10 cm, h = 20 cm): O = 2πr² + 2πrh = 600π ≈ 1885 cm².",
+      "image": "bub-quartett-geometrie-g1.svg"
     },
     {
       "id": "G2",
@@ -408,7 +433,8 @@
         "symmetries": 100,
         "area": 1017
       },
-      "source": "Gerader Kreiskegel (r = 10 cm, h = 20 cm, s ≈ 22,36 cm): O = πr(r + s) ≈ 1017 cm²."
+      "source": "Gerader Kreiskegel (r = 10 cm, h = 20 cm, s ≈ 22,36 cm): O = πr(r + s) ≈ 1017 cm².",
+      "image": "bub-quartett-geometrie-g2.svg"
     },
     {
       "id": "G3",
@@ -421,7 +447,8 @@
         "symmetries": 100,
         "area": 942
       },
-      "source": "Massive Halbkugel mit Kreisboden (r = 10 cm): O = 3 · π · r² ≈ 942 cm²."
+      "source": "Massive Halbkugel mit Kreisboden (r = 10 cm): O = 3 · π · r² ≈ 942 cm².",
+      "image": "bub-quartett-geometrie-g3.svg"
     },
     {
       "id": "G4",
@@ -434,7 +461,8 @@
         "symmetries": 100,
         "area": 1257
       },
-      "source": "Geometrische Kugeloberfläche (r = 10 cm): O = 4 · π · r² ≈ 1257 cm²."
+      "source": "Geometrische Kugeloberfläche (r = 10 cm): O = 4 · π · r² ≈ 1257 cm².",
+      "image": "bub-quartett-geometrie-g4.svg"
     },
     {
       "id": "H1",
@@ -447,7 +475,8 @@
         "symmetries": 12,
         "area": 1120
       },
-      "source": "Regelmäßiges Dodekagon (a = 10 cm): A = 3 · (2 + √3) · a² ≈ 1120 cm², 12 Symmetrieachsen."
+      "source": "Regelmäßiges Dodekagon (a = 10 cm): A = 3 · (2 + √3) · a² ≈ 1120 cm², 12 Symmetrieachsen.",
+      "image": "bub-quartett-geometrie-h1.svg"
     },
     {
       "id": "H2",
@@ -460,7 +489,8 @@
         "symmetries": 5,
         "area": 388
       },
-      "source": "Regelmäßiger 5-Stern (Außenkante a = 10 cm): Innenfünfeck 172 cm² + 5 Zacken à 43,3 cm² = 388 cm²."
+      "source": "Regelmäßiger 5-Stern (Außenkante a = 10 cm): Innenfünfeck 172 cm² + 5 Zacken à 43,3 cm² = 388 cm².",
+      "image": "bub-quartett-geometrie-h2.svg"
     },
     {
       "id": "H3",
@@ -473,7 +503,8 @@
         "symmetries": 6,
         "area": 520
       },
-      "source": "Regelmäßiger 6-Stern (12 gleichseitige Dreiecke mit a = 10 cm): A = 12 · 43,3 ≈ 520 cm², 6 Symmetrieachsen."
+      "source": "Regelmäßiger 6-Stern (12 gleichseitige Dreiecke mit a = 10 cm): A = 12 · 43,3 ≈ 520 cm², 6 Symmetrieachsen.",
+      "image": "bub-quartett-geometrie-h3.svg"
     },
     {
       "id": "H4",
@@ -486,7 +517,8 @@
         "symmetries": 15,
         "area": 2065
       },
-      "source": "Platonischer Körper aus 12 regelmäßigen Fünfecken (a = 10 cm): O = 12 · 172,05 ≈ 2065 cm², 15 Symmetrieebenen."
+      "source": "Platonischer Körper aus 12 regelmäßigen Fünfecken (a = 10 cm): O = 12 · 172,05 ≈ 2065 cm², 15 Symmetrieebenen.",
+      "image": "bub-quartett-geometrie-h4.svg"
     }
   ]
 }
