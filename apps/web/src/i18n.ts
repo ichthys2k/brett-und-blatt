@@ -847,6 +847,7 @@ const de = {
   'howto.title': 'So geht’s',
   'howto.open': 'Anleitung anzeigen',
   'look.title': 'Aussehen',
+  'pieces.quick': 'Figuren',
   'pieces.title': 'Figuren der Brettspiele',
   'pieces.hint': 'Gemalte Figuren in Holz, Metall oder Märchen statt der gezeichneten. Die Wahl gilt je Spiel auf diesem Gerät und wirkt sofort, auch mitten in der Partie.',
   'look.plain': 'Schlicht',
