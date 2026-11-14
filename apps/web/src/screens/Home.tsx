@@ -628,6 +628,40 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
         )}
       </div>
 
+      {/* Spielhelfer für echte Brettspiele (#106) */}
+      {activeFilter === 'all' && !searchQuery.trim() && players === null && (
+        <section className="space-y-3">
+          <div className="space-y-0.5">
+            <h2 className="flex items-center gap-2 text-lg font-bold">
+              <span aria-hidden="true">🧰</span>
+              <span>Tischwerkzeuge</span>
+            </h2>
+            <p className="text-xs text-muted">Nützliche Helfer für den analogen Spieleabend und den Unterricht.</p>
+          </div>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            <li>
+              <a
+                href={paths.helpers}
+                className="bub-tile flex h-full items-start gap-4 rounded-2xl border border-accent/35 bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-3 focus-visible:outline-accent"
+              >
+                <span className="bub-tile-crest text-4xl leading-none" aria-hidden="true">
+                  🎲
+                </span>
+                <span className="min-w-0 space-y-1">
+                  <span className="block font-semibold">Spielhelfer</span>
+                  <span className="block text-sm text-muted">
+                    Würfel (W4–W20 &amp; eigene), Münze &amp; Zufall, Startspieler &amp; Teams, Sanduhr, Schachuhr und Punktezettel.
+                  </span>
+                  <span className="inline-block rounded-full bg-accent/15 px-2 py-0.5 text-[11px] font-semibold text-accent">
+                    5 Werkzeuge · offline
+                  </span>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </section>
+      )}
+
       {/* Weitere Spiele auf eigenen Seiten (nur verlinkt) */}
       {activeFilter === 'all' && !searchQuery.trim() && players === null && (
         <section className="space-y-3">

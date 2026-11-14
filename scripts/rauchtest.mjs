@@ -307,6 +307,21 @@ try {
     if (errors.length > 0) problems.push(`Pass-Seite: ${errors[0]}`);
     await context.close();
   }
+  // Spielhelfer (#106): Übersicht und alle 5 Werkzeuge ohne Fehler und ohne waagerechtes Rollen.
+  {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    for (const hash of ['#/helfer', '#/helfer/wuerfel', '#/helfer/zufall', '#/helfer/startspieler', '#/helfer/uhren', '#/helfer/punkte']) {
+      await page.goto(`${base}${hash}`);
+      await page.locator('.bub-tav-frame').waitFor({ timeout: 10_000 });
+      const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      if (wide > 1) problems.push(`Spielhelfer (${hash}): rollt waagerecht (${wide} px)`);
+    }
+    if (errors.length > 0) problems.push(`Spielhelfer: ${errors[0]}`);
+    await context.close();
+  }
 } finally {
   await browser.close();
   stop();
