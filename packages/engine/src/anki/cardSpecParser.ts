@@ -462,3 +462,106 @@ export function parseCustomCardCatalog(
     quartettCards,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Prüfung beim Spielstart (#270, #277): Ein Kartenset kommt im Online-Raum von der Raumleitung
+// oder über das offene Protokoll von einem fremden Client. Die Spiele übernehmen daraus nur
+// Werte und Darstellung – in denselben Grenzen wie beim Einlesen aus Anki –, nie Effekte,
+// Kartenart oder unbekannte Felder. So rechnen Server, Bots und alle Mitspieler mit sicheren Zahlen.
+
+const MAX_CATALOG_CARDS = 400;
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+const KNOWN_KEYWORDS = new Set(Object.values(DRACHENSPIEL_KEYWORD_MAP));
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function cleanText(value: unknown, max: number): string | undefined {
+  return typeof value === 'string' && value.trim() !== '' ? value.slice(0, max) : undefined;
+}
+
+function cleanInt(value: unknown, min: number, max: number): number | undefined {
+  const num = typeof value === 'string' ? Number(value) : value;
+  if (typeof num !== 'number' || !Number.isFinite(num)) return undefined;
+  return Math.min(max, Math.max(min, Math.round(num)));
+}
+
+/** Einträge eines Kartenverzeichnisses: höchstens 400, gültige Kennungen, nur Objekte. */
+function entriesOf(map: unknown): [string, Record<string, unknown>][] {
+  if (!isPlainRecord(map)) return [];
+  return Object.entries(map)
+    .filter((entry): entry is [string, Record<string, unknown>] => entry[0].length > 0 && entry[0].length <= 80 && !FORBIDDEN_KEYS.has(entry[0]) && isPlainRecord(entry[1]))
+    .slice(0, MAX_CATALOG_CARDS);
+}
+
+function withOptional<T extends object>(target: T, extra: Record<string, unknown>): T {
+  for (const [key, value] of Object.entries(extra)) if (value !== undefined) (target as Record<string, unknown>)[key] = value;
+  return target;
+}
+
+/**
+ * Prüft ein Kartenset, wie es im Spielstart-Option `customCardCatalog` steht (als Objekt oder
+ * JSON-Text). Liefert null, wenn es kein Objekt ist. `legacy` deutet ein Objekt ohne die drei
+ * Verzeichnisse als Verzeichnis dieser Kartenart (ältere Optionen `customCards`/`customMods`).
+ */
+export function sanitizeCustomCardCatalog(raw: unknown, legacy?: 'combat' | 'court' | 'quartett'): CustomCardCatalog | null {
+  let value = raw;
+  if (typeof value === 'string') {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+  if (!isPlainRecord(value)) return null;
+  const shaped = 'combatCards' in value || 'courtCards' in value || 'quartettCards' in value;
+  const source: Record<string, unknown> = shaped ? value : legacy ? { [`${legacy}Cards`]: value } : {};
+
+  const combatCards: Record<string, ParsedCombatCard> = {};
+  for (const [id, card] of entriesOf(source.combatCards)) {
+    const keywords = Array.isArray(card.keywords) ? [...new Set(card.keywords.filter((k): k is string => typeof k === 'string' && KNOWN_KEYWORDS.has(k)))] : undefined;
+    combatCards[id] = withOptional({ id, name: cleanText(card.name, 60) ?? id } as ParsedCombatCard, {
+      cost: cleanInt(card.cost, 0, 20),
+      attack: cleanInt(card.attack, 0, 99),
+      health: cleanInt(card.health, 1, 99),
+      keywords,
+      emoji: cleanText(card.emoji, 16),
+      quote: cleanText(card.quote, 200),
+      text: cleanText(card.text, 300),
+    });
+  }
+
+  const courtCards: Record<string, ParsedCourtCard> = {};
+  for (const [key, card] of entriesOf(source.courtCards)) {
+    courtCards[key] = withOptional({ key, id: key, name: cleanText(card.name, 60) ?? key } as ParsedCourtCard, {
+      price: cleanInt(card.price, 0, 99),
+      baseChips: cleanInt(card.baseChips, 0, 999),
+      multiplier: cleanInt(card.multiplier, 1, 99),
+      emoji: cleanText(card.emoji, 16),
+      text: cleanText(card.text, 300),
+    });
+  }
+
+  const quartettCards: Record<string, ParsedQuartettCard> = {};
+  for (const [id, card] of entriesOf(source.quartettCards)) {
+    const values: Record<string, number> = {};
+    const rawValues = isPlainRecord(card.values) ? Object.entries(card.values) : [];
+    for (const [prop, raw] of rawValues.filter(([k]) => k.length > 0 && k.length <= 40 && !FORBIDDEN_KEYS.has(k)).slice(0, 20)) {
+      const num = typeof raw === 'string' ? Number(raw) : raw;
+      if (typeof num === 'number' && Number.isFinite(num)) values[prop] = Math.min(1e12, Math.max(-1e12, num));
+    }
+    quartettCards[id] = withOptional({ id, name: cleanText(card.name, 60) ?? id, values } as ParsedQuartettCard, { emoji: cleanText(card.emoji, 16) });
+  }
+
+  const checksum = typeof value.checksum === 'string' && /^[0-9a-f]{1,16}$/i.test(value.checksum) ? value.checksum : '';
+  const notices = Array.isArray(value.notices) ? value.notices.filter((n): n is string => typeof n === 'string').slice(0, 50).map((n) => n.slice(0, 300)) : [];
+  return { checksum, notices, combatCards, courtCards, quartettCards };
+}
+
+const SPECIAL_TAGS = ['combat', 'drachenspiel', 'court', 'narrenhof', 'quartett', 'woelfe', 'role'];
+
+/** Ob eine Notiz eine Spezialkarte ist (Drachenspiel, Narrenhof, Quartett, Wölfe) – nach Notiztyp oder Schlagwort. */
+export function isSpecialCardNote(note: Pick<AnkiNote, 'mid' | 'tags'>): boolean {
+  return note.mid === BUB_COMBAT_CARD_NOTETYPE_ID || note.mid === BUB_COURT_CARD_NOTETYPE_ID || note.mid === BUB_QUARTETT_CARD_NOTETYPE_ID || note.tags.some((tag) => SPECIAL_TAGS.includes(tag));
+}

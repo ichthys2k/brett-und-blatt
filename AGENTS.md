@@ -11,13 +11,14 @@ Freie Spielesammlung im Browser (Karten- und Brettspiele für Handy und Desktop)
 - **Eigener Zweig – selbstständig; `main` – nur auf „deploy“:** Arbeite immer auf einem eigenen Zweig. Den eigenen Arbeitszweig committest und lädst du ohne einzelne Anweisung hoch und öffnest einen PR mit `Refs #…` (nicht `Fixes #…`, damit das Issue erst nach Cornelius' Prüfung geschlossen wird). Kein Force-Push, keine fremden Zweige verändern. **Mergen oder pushen nach `main` nur auf Cornelius' ausdrückliches Wort „deploy“.**
 - **Jeder Push auf `main` veröffentlicht sofort:** Die CI (`.github/workflows/ci.yml`) prüft, veröffentlicht dann den Spieleserver auf Cloudflare und danach die Web-App über GitHub Pages.
 - **Vor dem Hochladen:** `corepack pnpm check` (Typprüfung, alle Tests, Build) muss grün sein, und die Änderung im Browser ansehen (`corepack pnpm --filter @brett-und-blatt/web dev`, http://localhost:5173).
+- **Offenes Protokoll (#334):** Nach jeder Änderung an `packages/online/src/protocol.ts` das Schema mit `node scripts/protokoll-schema.mjs` neu erzeugen (sonst scheitert `tests/protokoll-schema.test.ts`); Ablauf für fremde Clients in `docs/protokoll.md`.
 - **Ein Spiel gilt erst als fertig,** wenn seine Tests die Vertragsprüfungen wirklich ausführen (`for (const check of gameContractChecks(gameModule)) it(check.name, check.run)`), `corepack pnpm rauchtest` (Browser) und `PRUEFSTAND=1 PRUEFSTAND_SPIELE=<id> corepack pnpm pruefstand` grün sind und man es selbst im Browser gegen den Bot gespielt hat. Unfertige Spiele bekommen `draft: true` im Steckbrief und bleiben so von Startseite und Server fern. CSS-Klassen immer mit eigenem Spielpräfix.
-- **Commit-Adresse:** `855814+ichthys2k@users.noreply.github.com` (vorher mit `git config user.email` prüfen).
+- **Commit-Adresse:** `855814+ichthys2k@users.noreply.github.com` (vorher mit `git config user.email` prüfen). In der Cloud über Umgebungsvariablen gesetzt; die CI lässt Commits mit anderer Autor- oder Committer-Adresse scheitern (`scripts/commit-adresse-pruefen.sh`).
 - **GitHub ist die einzige gemeinsame Quelle:** Repo-Ordner nicht per Synology Drive o. Ä. synchronisieren; jeder Arbeitsgang beginnt mit `git pull` und endet mit Commit und Push des Arbeitszweigs (nach `main` nur auf „deploy“). Aufgaben und Ideen liegen als GitHub Issues; neue Ideen stehen auf `status: Idee`, nur Cornelius setzt sie auf `status: Ready`. Zu Beginn jeder Sitzung die Issues mit `status: Ready` und `status: Review` abrufen (`gh issue list --label "status: Ready"`) und kurz nennen. Agenten bearbeiten nur Ready-Issues und reservieren sie vorab durch Kommentar mit Konto und Zweig (🔒); keine Assignees oder Labels für die Reservierung verwenden.
 - **Keine Geheimnisse ins Repo** (`.env`, Tokens, Zugangsdaten). Nichts außerhalb dieses Repos anfassen, was nicht zur Aufgabe gehört.
 - **Klänge:** Die MP3s liegen im **privaten** Repo `ichthys2k/brett-und-blatt-klaenge` (ElevenLabs-Lizenz) und dürfen nie ins öffentliche Repo kopiert werden. Nur die CI holt sie per Secret. Lokal läuft alles auch ohne – fehlende Klänge sind dann nur ein Hinweis. Neue Klänge nur nach Auswahl durch Cornelius – Werkzeuge im Klang-Repo (`tools/erzeugen.mjs`, `stimme.mjs`, `hoerprobe.mjs`, `uebernehmen.mjs`), Stand in `docs/spiele/klaenge-alle-spiele.md`. Dateinamen dort mit Unterstrichen, Katalognamen mit Bindestrichen, Sprachausrufe `ruf-…`; in Worktrees `KLAENGE_DIR=$HOME/code/brett-und-blatt-klaenge` setzen.
 - **Abhängigkeiten:** pnpm 12 nur über corepack (`corepack pnpm …`, `pnpm` ist nicht im PATH). pnpm hat eine Wartefrist für neue Paketversionen – **keine `minimumReleaseAgeExclude`-Ausnahmen**, sondern ältere Versionen wählen. Neue Fremdbibliotheken in `THIRD_PARTY.md` eintragen.
-- **Grafik-Assets in maximaler Auflösung speichern:** Alle generierten Bilder, Kulissen, Karten und Porträts müssen immer in ihrer **maximal verfügbaren Original-Auflösung** im Repository archiviert werden (z. B. unter `assets/originale/` oder `<zielordner>/original/`), selbst wenn die Web-App zur Laufzeit eine herunterskalierte Fassung (WebP) nutzt. Niemals nur die verkleinerte Web-Fassung committen und das hochauflösende Original verwerfen, damit spätere Abwandlungen und Druckvarianten jederzeit möglich bleiben.
+- **Originale der gemalten Bilder nur im privaten Repo:** Jedes generierte Bild wird in **maximaler Original-Auflösung** archiviert, ausschließlich im privaten Repo `ichthys2k/brett-und-blatt-grafik` (`../brett-und-blatt-grafik/originale/<Zielordner>/<name>.png`); ins öffentliche Repo kommt nur die WebP-Fassung, nie ein Ordner `original/` oder ein PNG über 1 MB. `scripts/grafik/uebernehmen.mjs` legt das Original ab und bricht ohne das private Repo ab. Bilder erzeugen nach [`.agent/workflows/grafik-erzeugen.md`](.agent/workflows/grafik-erzeugen.md) und der Stilbibel [`docs/grafik/STILBIBEL.md`](docs/grafik/STILBIBEL.md).
 
 ## Arbeitsablauf mit GitHub Issues
 
@@ -41,7 +42,9 @@ corepack pnpm exec vitest run packages/games/<id>     # Tests eines Spiels
 corepack pnpm neues-spiel <id> "<Name>"               # neues Spiel aus der Vorlage
 corepack pnpm --filter @brett-und-blatt/web dev       # Web-App, http://localhost:5173
 corepack pnpm --filter @brett-und-blatt/server dev    # Spieleserver, http://127.0.0.1:8787
+corepack pnpm --filter @brett-und-blatt/xr dev        # VR-App (#339), http://localhost:5175/?server=http://127.0.0.1:8787
 node apps/server/scripts/smoke.mjs                    # Rauchtest gegen den lokalen Server
+node apps/cli/test/partie.mjs                         # Text-Client spielt gegen den lokalen Server (#336)
 corepack pnpm rauchtest                               # nach dem Build: jedes Spiel im Browser starten
 PRUEFSTAND=1 corepack pnpm pruefstand                 # gründlicher Prüfstand (PRUEFSTAND_SPIELE=<id> für einzelne)
 ```
@@ -57,7 +60,8 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 - [`docs/KONZEPT.md`](docs/KONZEPT.md) – Entscheidungen, Spielmodul-Schnittstelle, Muster, Fahrplan.
 - [`docs/spiele/`](docs/spiele/README.md) – ein Plan pro Spiel (Regeln, Optionen, Bot, Oberfläche, Umsetzungsstand), Übersicht im README.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) – wie ein neues Spiel angelegt wird.
-- Code: `apps/web` (React-App), `apps/server` (Cloudflare-Worker), `packages/engine`, `packages/online`, `packages/ui`, `packages/games/<id>` (Ordnername = Spiel-`id`), `content/`.
+- [`docs/grafik/STILBIBEL.md`](docs/grafik/STILBIBEL.md) – Stil, Verbote und Regeln für gemalte Bilder; Ablauf zum Erzeugen in [`.agent/workflows/grafik-erzeugen.md`](.agent/workflows/grafik-erzeugen.md), Bestand in [`docs/grafik/BESTAND.md`](docs/grafik/BESTAND.md).
+- Code: `apps/web` (React-App), `apps/xr` (VR-App, `docs/vr.md`), `apps/cli` (Text-Client), `apps/server` (Cloudflare-Worker), `packages/engine`, `packages/online`, `packages/rtc` (WebRTC: VR-Treffpunkt, Sprachchat), `packages/ui`, `packages/games/<id>` (Ordnername = Spiel-`id`), `content/`.
 
 ## Zum Abschluss einer Aufgabe
 

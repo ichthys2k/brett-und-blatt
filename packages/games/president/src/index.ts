@@ -2,6 +2,7 @@ import { deckStyleOption, type GameModule } from '@brett-und-blatt/engine';
 import { presidentBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type PresidentMove, type PresidentState, type PresidentView } from './rules';
+import { describeMove } from './describe';
 
 export type { PresidentMove, PresidentState, PresidentView } from './rules';
 
@@ -88,6 +89,7 @@ export const gameModule: GameModule<PresidentState, PresidentMove, PresidentView
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [presidentBot],

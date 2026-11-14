@@ -1,5 +1,6 @@
 import { PlayerCrest } from '@brett-und-blatt/ui';
-import { BOT_LEVELS, parseCrest, teamsFor, timePresetsOf, type TimePresetId } from '@brett-und-blatt/engine';
+import { BOT_LEVELS, parseCrest, teamsFor, timePresetsOf, type CustomCardCatalog, type TimePresetId } from '@brett-und-blatt/engine';
+import { CARD_SET_GAMES, useActiveCardSet, useChangedCatalog } from '../lib/activeCardSet';
 import { MAX_SEATS, TOURNAMENT_CODE_PATTERN, parseRoomCode, roomCapabilities, type Capability, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Button, PlayerCount, Section, Segmented } from '../components/controls';
@@ -22,6 +23,8 @@ import { PinRoom } from '../components/PinRoom';
 import { GAME_SERVER as BOARD_SERVER } from '../lib/server';
 import { TeamChip, TeamSummary } from '../components/Teams';
 import { CustomCardsOverlay } from '../components/CustomCardsOverlay';
+import { VoiceMenu } from '../components/VoiceMenu';
+import { useVoice } from '../lib/voice';
 
 const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
 /** Online gibt es nur Spiele für mehrere Personen. */
@@ -49,6 +52,8 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
   const code = parseRoomCode(rawCode);
   const [profile, setProfile] = useState<Profile | null>(() => storage.loadProfile());
   const [state, connection] = useRoomConnection(code ?? '', code ? profile : null);
+  // Sprachchat (#352): vor allen frühen Rückgaben, wie es React für Hooks verlangt.
+  const { voice, voiceState } = useVoice(connection, state);
 
   useEffect(() => {
     if (code && profile) {
@@ -131,6 +136,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
     <p className="fixed inset-x-0 bottom-0 z-30 bg-warning px-3 py-2 text-center text-sm font-medium text-white">{t('online.reconnecting')}</p>
   );
   const toasts = <SignalToasts signals={state.signals} members={room.members} />;
+  const voiceMenu = (inBar: boolean) => <VoiceMenu voice={voice} state={voiceState} members={room.members} you={state.you} off={room.voiceOff} onReport={() => connection.send({ type: 'reportVoice' })} inBar={inBar} />;
   const errorBox = state.error ? (
     <p role="alert" className="fixed inset-x-3 top-3 z-30 mx-auto max-w-md rounded-xl bg-danger px-3 py-2 text-center text-sm text-white shadow-md">
       {state.error}
@@ -177,7 +183,10 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
             ...(loaded.info.takeBack ? { bar: <TakeBackBar session={session} /> } : {}),
             chat: (inBar: boolean) => (
-              <ReactionMenu inBar={inBar} onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} phrases={loaded.ui.phrases} />
+              <>
+                {voiceMenu(inBar)}
+                <ReactionMenu inBar={inBar} onReact={(emoji) => connection.send({ type: 'react', emoji })} onSay={(phrase) => connection.send({ type: 'say', phrase })} phrases={loaded.ui.phrases} />
+              </>
             ),
             extra: (
               <>
@@ -228,7 +237,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
 
   return (
     <>
-      <Lobby room={room} state={state} connection={connection} isHost={isHost} onLeave={leave} pushToggle={pushToggle} />
+      <Lobby room={room} state={state} connection={connection} isHost={isHost} onLeave={leave} pushToggle={pushToggle} voiceMenu={voiceMenu(false)} />
       {toasts}
       {errorBox}
       {banner}
@@ -373,7 +382,7 @@ export function useLoadedGame(gameId: string | null): LoadedGame | null {
   return loaded;
 }
 
-function Lobby({ room, state, connection, isHost, onLeave, pushToggle }: { room: RoomMessage; state: RoomState; connection: RoomConnection; isHost: boolean; onLeave: () => void; pushToggle?: React.ReactNode }) {
+function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu }: { room: RoomMessage; state: RoomState; connection: RoomConnection; isHost: boolean; onLeave: () => void; pushToggle?: React.ReactNode; voiceMenu?: React.ReactNode }) {
   const { lobby } = room;
   const game = useLoadedGame(lobby.gameId);
   const teams = game ? teamsFor(game.info, lobby.options, lobby.seats.length) : undefined;
@@ -382,9 +391,7 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle }: { room:
   const [showCustomCards, setShowCustomCards] = useState(false);
   const checksum =
     (typeof lobby.options?.cardCatalogChecksum === 'string' && lobby.options.cardCatalogChecksum) ||
-    (lobby.options?.customCardCatalog && typeof (lobby.options.customCardCatalog as any).checksum === 'string'
-      ? (lobby.options.customCardCatalog as any).checksum
-      : undefined);
+    parseCatalogOption(lobby.options?.customCardCatalog)?.checksum;
   // Neue Mitglieder kündigen sich mit ihrem Tier an – nicht beim Öffnen der Lobby und
   // nicht beim Wiederverbinden, denn dabei bleibt die Mitglieds-ID gleich.
   const announced = useRef<Set<string> | null>(null);
@@ -448,7 +455,10 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle }: { room:
               </button>
             )}
           </div>
-          <h1 className="bub-room-code text-3xl tracking-widest">{room.code}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="bub-room-code text-3xl tracking-widest">{room.code}</h1>
+            {voiceMenu}
+          </div>
         </div>
       </header>
 
@@ -571,6 +581,7 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle }: { room:
           <p className="text-muted">{t('online.noGame')}</p>
         )}
       </Section>
+      {isHost && lobby.gameId && <CardSetLobbyControl gameId={lobby.gameId} checksum={checksum} onSet={(catalog) => send({ type: 'setCustomCardCatalog', catalog })} />}
 
       {game && (
         <>
@@ -685,7 +696,7 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle }: { room:
       {showCustomCards && checksum && (
         <CustomCardsOverlay
           checksum={checksum}
-          catalog={lobby.options?.customCardCatalog as any}
+          catalog={parseCatalogOption(lobby.options?.customCardCatalog)}
           onClose={() => setShowCustomCards(false)}
         />
       )}
@@ -884,3 +895,37 @@ function SeatRow({
     </li>
   );
 }
+
+/** Die Option `customCardCatalog` steht im Raum als JSON-Text (#270). */
+function parseCatalogOption(value: unknown): CustomCardCatalog | undefined {
+  if (typeof value !== 'string') return undefined;
+  try {
+    return JSON.parse(value) as CustomCardCatalog;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Raumleitung: das aktive Kartenset aus der Bibliothek für diese Partie verwenden oder entfernen (#270). */
+function CardSetLobbyControl({ gameId, checksum, onSet }: { gameId: string; checksum: string | undefined; onSet: (catalog: CustomCardCatalog | null) => void }) {
+  const set = useActiveCardSet();
+  const changed = useChangedCatalog(gameId, set?.catalog);
+  if (!CARD_SET_GAMES[gameId]) return null;
+  if (checksum) {
+    return (
+      <p className="flex flex-wrap items-center gap-2 text-sm">
+        🎴 Eigenes Kartenset aktiv (Anki #{checksum}).
+        <Button variant="ghost" onClick={() => onSet(null)}>
+          Standardkarten verwenden
+        </Button>
+      </p>
+    );
+  }
+  if (!set || !changed) return null;
+  return (
+    <Button variant="ghost" onClick={() => onSet(changed)}>
+      🎴 Eigenes Kartenset „{set.name}“ verwenden
+    </Button>
+  );
+}
+

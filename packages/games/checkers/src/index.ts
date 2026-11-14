@@ -15,6 +15,7 @@ import {
   type CheckersState,
   type CheckersVariant,
 } from './rules';
+import { describeMove } from './describe';
 
 export type { CheckersMove, CheckersPiece, CheckersState, CheckersStep, CheckersVariant } from './rules';
 export { countPieces, isDarkSquare, squareIndex, squareName } from './rules';
@@ -79,5 +80,7 @@ export const gameModule: GameModule<CheckersState, CheckersMove> = {
   playerView: (state) => state,
   result,
   evaluate,
+  // Kurzer Text je Zug für fremde Clients und den Bildschirmleser (#335).
+  describeMove,
   bots: [checkersBot, ...generalBots<CheckersState, CheckersMove, CheckersState>()],
 };

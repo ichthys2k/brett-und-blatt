@@ -113,6 +113,11 @@ if (shots) mkdirSync(shots, { recursive: true });
 const contextOptions = { viewport, colorScheme: process.env.RAUCHTEST_FARBE === 'dark' ? 'dark' : 'light' };
 const newPage = async () => {
   const page = await browser.newPage(contextOptions);
+  // Jede Verletzung der Content-Security-Policy (#322) mitschreiben; sie gilt als Fehler.
+  await page.addInitScript(() => {
+    window.__csp = [];
+    document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
+  });
   if (process.env.RAUCHTEST_LOOK) await page.addInitScript((look) => localStorage.setItem('brett-und-blatt:aussehen', look), process.env.RAUCHTEST_LOOK);
   return page;
 };
@@ -147,6 +152,8 @@ try {
       await firstSteps[id]?.(page);
       if (shots) await page.screenshot({ path: `${shots}/${id}.png` });
       if (errors.length) problems.push(`${id}: Fehler beim Start – ${errors.slice(0, 2).join(' | ')}`);
+      const violations = await page.evaluate(() => window.__csp ?? []);
+      if (violations.length) problems.push(`${id}: CSP-Verletzung – ${violations.slice(0, 2).join(' | ')}`);
       if (m.interactive === 0) problems.push(`${id}: Spielfeld ohne Bedienelemente`);
       if (m.pageHeight > viewport.height + 2) problems.push(`${id}: Seite ist ${m.pageHeight} px hoch und rollt (Bildschirm ${viewport.height} px)`);
       if (m.footerBlocked > 0) problems.push(`${id}: ${m.footerBlocked} Knöpfe unter dem Spielfeld verdeckt oder außerhalb des Bildschirms`);
@@ -261,6 +268,31 @@ try {
       if (m.pageHeight > height + 2) problems.push(`${where}: Seite rollt (${m.pageHeight} px)`);
       await context.close();
     }
+  }
+  // CSP (#322): Selbst wenn der Bereiniger für Anki-Karten umgangen würde, läuft eingeschleustes Skript nicht.
+  {
+    const page = await newPage();
+    await page.goto(base);
+    const meta = await page.evaluate(() => document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute('content') ?? '');
+    if (!meta.includes("script-src 'self'")) problems.push('CSP fehlt in index.html');
+    const ran = await page.evaluate(async () => {
+      window.__eingeschleust = false;
+      const box = document.createElement('div');
+      // Genau das, was ein bösartiges Kartenfeld versuchen würde: Inline-Handler und Inline-Skript.
+      box.innerHTML = '<img src="data:," onerror="window.__eingeschleust = true">';
+      document.body.append(box);
+      const script = document.createElement('script');
+      script.textContent = 'window.__eingeschleust = true';
+      document.body.append(script);
+      await new Promise((r) => setTimeout(r, 300));
+      box.remove();
+      script.remove();
+      return window.__eingeschleust;
+    });
+    if (ran) problems.push('CSP: eingeschleustes Skript lief');
+    const blocked = await page.evaluate(() => window.__csp.length);
+    if (blocked === 0) problems.push('CSP: der Versuch wurde nicht als Verletzung gemeldet');
+    await page.close();
   }
   // Pass-Seite (#145): im Handy-Hochformat rollt nichts waagerecht, und es gibt keine Fehler.
   {

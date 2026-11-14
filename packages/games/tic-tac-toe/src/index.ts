@@ -1,5 +1,6 @@
 import { generalBots, type GameModule } from '@brett-und-blatt/engine';
 import { ticTacToeBot } from './bots';
+import { describeMove } from './describe';
 import { meta } from './meta';
 import { applyMove, currentPlayers, evaluate, legalMoves, result, setup, type TicTacToeMove, type TicTacToeState } from './rules';
 
@@ -25,6 +26,8 @@ export const gameModule: GameModule<TicTacToeState, TicTacToeMove> = {
   // Offenes Spiel: Jeder darf alles sehen, die Sicht ist der Spielstand selbst.
   playerView: (state) => state,
   result,
+  // Kurzer Text je Zug für fremde Clients und den Bildschirmleser (#335).
+  describeMove,
   evaluate,
   // Der erste Bot ist der Standard in der Lobby; dahinter die allgemeinen Bots.
   bots: [ticTacToeBot, ...generalBots<TicTacToeState, TicTacToeMove, TicTacToeState>()],

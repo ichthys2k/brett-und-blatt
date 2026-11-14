@@ -2,6 +2,7 @@ import { randomBot, type BotDefinition, type GameModule } from '@brett-und-blatt
 import { colorShapeBot } from './bots';
 import { meta } from './meta';
 import { applyMove, currentPlayers, eventView, isLegal, legalMoves, playerView, result, sampleHidden, setup, type ColorShapeMove, type ColorShapeState } from './rules';
+import { describeMove } from './describe';
 
 export type { ColorShapeMove, ColorShapeState, Placed, PlacementCheck, TileId } from './rules';
 export { checkPlacement, colorOf, HAND_SIZE, placements, shapeOf, validLine } from './rules';
@@ -20,6 +21,7 @@ export const gameModule: GameModule<ColorShapeState, ColorShapeMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   eventView,

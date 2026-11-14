@@ -1,7 +1,7 @@
 {
   "beschreibung": "G2 (#309): Kartenbilder des Drachenspiels. Kartenbild = Anki-Medium (#270): nur das Motiv, Dateiname bub-ds-<id>.webp. Gegenstände tragen einen eigenen Stil-Kopf.",
   "stil": "Painterly storybook oil illustration, fantasy card art for a medieval animal tournament: a single animal character as the main subject, three-quarter view, natural animal body with small medieval accessories (heraldic cloth, leather straps, a small pennant or piece of armour in the house colours), warm atmospheric lighting, rich colours, expressive friendly face, soft painted background in the house's landscape, slightly darker towards the edges. Subject centred, fully inside the image with generous margin on all sides so the picture can be cropped. No text, no letters, no numbers, no card frame, no border.",
-  "ohne": "text, letters, numbers, watermark, border, frame, card layout, stat icons, logos, modern objects, photo, real people, blood, gore, frightening horror imagery (die Karten sind für Kinder)",
+  "ohne": "text, letters, numbers, watermark, border, frame, card layout, stat icons, logos, modern objects, photo, real people, blood, gore, frightening horror imagery (die Karten sind für Kinder), alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "3:4",
   "ziel": "packages/games/drachenspiel/src/ui/karten",
   "groesse": [

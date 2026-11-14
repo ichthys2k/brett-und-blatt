@@ -3,6 +3,7 @@ import { SeatRing, CardFan, useCallDeadline, useElementSize, usePointerDrag, typ
 import { getActiveFace } from '../rules';
 import { DARK_COLORS, LIGHT_COLORS, type UnoCard, type UnoColor, type UnoMove, type UnoState } from '../types';
 import './styles.css';
+import { describeMove } from '../describe';
 import { UnoCardView } from './UnoCard';
 import { unoCardDescription } from '../cardDescription';
 
@@ -119,6 +120,12 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
         .map((m) => (m as { cardId: string }).cardId),
     );
   }, [moves]);
+
+  // Spielbare Karten nennen den Zug (#335); Wunschfarbe und Ziel folgen im Dialog.
+  const describeCard = (cardId: string) => {
+    const move = moves.find((m) => (m.type === 'play' || m.type === 'jumpIn') && m.cardId === cardId);
+    return move?.type === 'jumpIn' ? describeMove(state, { type: 'jumpIn', cardId }) : describeMove(state, { type: 'play', cardId });
+  };
 
   // Wer die vorletzte Karte gelegt hat, muss binnen 3 Sekunden „Eins!“ rufen – sonst 2 Strafkarten.
   const dueSeats = useMemo(
@@ -687,6 +694,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                     side={side}
                     size="md"
                     description={unoCardDescription(card, state)}
+                    label={isPlayable ? `${describeCard(card.id)} – ${unoCardDescription(card, state)}` : undefined}
                     mathMode={state.options.mathLabels === 'on'}
                     highlight={isPlayable}
                     disabled={!isPlayable}

@@ -13,6 +13,7 @@ import {
   type ElevensMove,
   type ElevensState,
 } from './rules';
+import { describeMove } from './describe';
 
 export * from './rules';
 export * from './bots';
@@ -55,6 +56,7 @@ export const gameModule: GameModule<ElevensState, ElevensMove> = {
   legalMoves,
   applyMove,
   playerView,
+  describeMove,
   sampleHidden,
   result,
   timeoutMove,

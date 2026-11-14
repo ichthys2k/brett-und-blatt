@@ -1,4 +1,4 @@
-import { randomSeed, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
+import { randomSeed, sanitizeCustomCardCatalog, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { AlbumSpec } from '@brett-und-blatt/ui';
@@ -229,11 +229,12 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   // Online geht der Hinweis nur an den, dessen Platz der Computer übernommen hat.
   const awaySeats = humans.filter((seat) => session.isAway(seat) && (!online || seat === online.yourSeat));
   const publicView = session.view('spectator');
-  const customCatalog = (session.config.options as any)?.customCardCatalog;
+  // Lokal wie online steht das Kartenset als geprüfter JSON-Text in den Optionen (#270).
+  const customCatalog = sanitizeCustomCardCatalog((session.config.options as Record<string, unknown> | undefined)?.customCardCatalog) ?? undefined;
   const cardCatalogChecksum =
     ((publicView as any)?.cardCatalogChecksum as string | undefined) ??
     ((session.config.options as any)?.cardCatalogChecksum as string | undefined) ??
-    (customCatalog?.checksum as string | undefined);
+    (customCatalog?.checksum || undefined);
 
   const askHint = async () => {
     if (actingSeat === undefined) return;

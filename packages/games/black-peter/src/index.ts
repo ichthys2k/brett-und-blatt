@@ -2,6 +2,7 @@ import { generalBots, type BotDefinition, type BotLevel, type GameModule } from 
 import { faceOf, PAIR_SETS, PETER } from './content';
 import { meta } from './meta';
 import { applyMove, currentPlayers, legalMoves, playerView, result, sampleHidden, setup, type BlackPeterMove, type BlackPeterState } from './rules';
+import { describeMove } from './describe';
 
 export type { BlackPeterMove, BlackPeterState, Card } from './rules';
 export { sourceOf } from './rules';
@@ -65,6 +66,7 @@ export const gameModule: GameModule<BlackPeterState, BlackPeterMove> = {
   legalMoves,
   applyMove,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [blackPeterBot, ...generalBots<BlackPeterState, BlackPeterMove, BlackPeterState>()],

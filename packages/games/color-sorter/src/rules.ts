@@ -1,4 +1,4 @@
-import { Rng, type Actor, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
+import { Rng, sanitizeCustomCardCatalog, type Actor, type GameEvent, type MoveResult, type Options, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { ACE, HAND_TYPES, HANDS, handLabel, isFace, JACK, standardDeck } from './cards';
 import {
   BOSS_LIST,
@@ -22,7 +22,7 @@ import {
   TOOL_PRICE,
   TOOLS,
 } from './content';
-import { MOD_KEYS, modDef, RARITY_INFO, type TableInfo } from './mods';
+import { MOD_KEYS, MODS, modDef, RARITY_INFO, type TableInfo } from './mods';
 import { decodeUnlocks, lockedFor, type PoolChoice } from './unlocks';
 import { favoriteHand, isDebuffed, scoreHand } from './scoring';
 import type {
@@ -97,16 +97,11 @@ export function setup(seats: number, options: Options, seed: string): SorterStat
   let cardCatalogChecksum: string | undefined;
   const rawCatalog = (options as Record<string, unknown>).customCardCatalog ?? (options as Record<string, unknown>).customMods ?? options.cardCatalog;
   if (rawCatalog) {
-    try {
-      const cat = typeof rawCatalog === 'string' ? JSON.parse(rawCatalog) : rawCatalog;
-      if (cat.courtCards) {
-        customMods = cat.courtCards;
-        cardCatalogChecksum = cat.checksum;
-      } else if (typeof cat === 'object') {
-        customMods = cat;
-      }
-    } catch {
-      // ignore
+    // Nur Preis, Basiswert, Multiplikator und Darstellung in sicheren Grenzen (#277), nie Effekte.
+    const cat = sanitizeCustomCardCatalog(rawCatalog, 'court');
+    if (cat && Object.keys(cat.courtCards).length > 0) {
+      customMods = Object.fromEntries(Object.entries(cat.courtCards).filter(([key]) => MODS[key] !== undefined));
+      cardCatalogChecksum = cat.checksum || undefined;
     }
   }
 

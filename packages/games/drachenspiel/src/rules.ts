@@ -10,6 +10,7 @@ import {
   type Result,
   type SeatId,
   type TimePresets,
+  sanitizeCustomCardCatalog,
 } from '@brett-und-blatt/engine';
 import { ALL_CARD_IDS, ALL_SPELL_IDS, CARDS_DB, STAR_CARD } from './cards';
 import { BOARD_LIMIT, MAX_MANA, SECOND_SEAT_ARMOR, TRAP_LIMIT, advanceQuest, canStrike, canUseBuilding, createMinion, damageHero, damageMinion, drawCard, enqueue, enqueueOwnBoard, enqueuePlayed, fireTraps, isOverTurnLimit, refreshStats, resolveChoice, settle, strike, wakeDormant } from './core/effects';
@@ -49,8 +50,19 @@ import type {
 } from './types';
 import { bots } from './bots';
 import { prepare } from './server';
+import { describeMove } from './describe';
 
 export const options: OptionSpec[] = [
+  {
+    // Eigenes Kartenset aus Anki (#270, #277): nur geänderte Karten als JSON; das Spiel prüft sie mit sanitizeCustomCardCatalog.
+    id: 'customCardCatalog',
+    label: 'Eigenes Kartenset',
+    hidden: true,
+    pattern: '\\{[\\s\\S]*\\}',
+    maxLength: 14000,
+    choices: [{ value: '', label: 'Standardkarten' }],
+    default: '',
+  },
   {
     id: 'deckSelection',
     label: 'Deck-Wahl',
@@ -247,24 +259,10 @@ function parseCustomCardsFromOptions(opts: Options): {
 } {
   const raw = (opts as Record<string, unknown>).customCards ?? (opts as Record<string, unknown>).customCardCatalog ?? opts.cardCatalog;
   if (!raw) return {};
-  try {
-    const cat = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    if (cat.combatCards) {
-      return {
-        customCards: cat.combatCards,
-        cardCatalogChecksum: cat.checksum,
-      };
-    }
-    if (typeof cat === 'object') {
-      return {
-        customCards: cat,
-        cardCatalogChecksum: (cat as any).checksum,
-      };
-    }
-  } catch {
-    // ungültiges JSON ignorieren
-  }
-  return {};
+  // Nur Werte und Darstellung in sicheren Grenzen (#277): nie Effekte oder Kartenart.
+  const catalog = sanitizeCustomCardCatalog(raw, 'combat');
+  if (!catalog || Object.keys(catalog.combatCards).length === 0) return {};
+  return { customCards: catalog.combatCards as Record<string, Partial<CardDefinition>>, ...(catalog.checksum ? { cardCatalogChecksum: catalog.checksum } : {}) };
 }
 
 /** Ein Solo-Kampf: Platz 0 beginnt, Aufstellung und Decks kommen aus dem Szenario. */
@@ -1132,6 +1130,7 @@ export const drachenspiel: GameModule<DrachenspielState, DrachenspielMove, Drach
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   result,
   timeoutMove,
   sampleHidden,

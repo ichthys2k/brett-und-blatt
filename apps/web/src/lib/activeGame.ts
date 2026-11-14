@@ -1,4 +1,5 @@
 import { LocalSession, type SessionConfig } from '@brett-und-blatt/engine';
+import { CARD_SET_GAMES, catalogOptionFor, loadActiveCatalog } from './activeCardSet';
 import { createBotRunner } from './botRunner';
 import { loadGame, type LoadedGame } from './registry';
 import { storage } from './storage';
@@ -22,6 +23,12 @@ export function getActiveGame(): ActiveGame | null {
 
 export async function startGame(config: SessionConfig): Promise<ActiveGame> {
   const game = await loadGame(config.gameId);
+  // Eigenes Kartenset (#270, #277): Werte aus dem aktiven Anki-Paket gelten für diese Partie,
+  // auch für die Bots. Neustart und Fortsetzen übernehmen sie mit den Optionen.
+  if (CARD_SET_GAMES[config.gameId] && !config.options.customCardCatalog) {
+    const catalog = await catalogOptionFor(config.gameId, await loadActiveCatalog());
+    if (catalog) config = { ...config, options: { ...config.options, customCardCatalog: catalog } };
+  }
   active?.session.dispose();
   const session = new LocalSession(game.module, config, { botRunner: runner() });
   active = { game, session };

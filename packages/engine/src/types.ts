@@ -251,6 +251,14 @@ export interface GameModule<S, M, V = S> {
    */
   eventView?(event: GameEvent, seat: SeatId | 'spectator'): GameEvent | null;
 
+  /**
+   * Kurzer deutscher Text zu einem erlaubten Zug, etwa „Kreuz auf Mitte“ oder „Herz-Ass spielen“
+   * (#335) – für fremde Clients (`GameMessage.moveLabels`) und den Bildschirmleser. Bekommt nur
+   * die Sicht des ziehenden Platzes und verrät deshalb nichts Verdecktes. Die Texte aller Züge
+   * aus `legalMoves` müssen nicht leer und untereinander verschieden sein (Vertragsprüfung).
+   */
+  describeMove?(view: V, move: M): string;
+
   /** Mindestens einer. Der erste ist der Standard-Bot in der Lobby. */
   bots: BotDefinition<S, M, V>[];
 }

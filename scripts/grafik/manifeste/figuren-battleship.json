@@ -1,7 +1,7 @@
 {
   "beschreibung": "G12 (#325): Schiffe versenken. Schiffslängen 2 bis 5 wie in FLEETS (packages/games/battleship/src/rules.ts); Bug nach rechts, ohne Lichtrichtung, weil die Schiffe im Spiel gedreht werden. Bildwerkzeuge kennen die Formate 2:1 bis 5:1 oft nicht: dann breit erzeugen und mittig zuschneiden. Alle Motive freistellen.",
   "stil": "Painterly storybook oil illustration of a single hand-carved and lathe-turned wooden game piece, warm candlelight from the upper left, visible fine wood grain, simple bold silhouette that stays readable at very small size, the piece centred and fully inside the image with margin, on a plain flat pure green background (#00B140) so that it can be cut out, no cast shadow. No text.",
-  "ohne": "text, letters, numbers, watermark, border, frame, background scene, hands, people, modern objects, logos, photo, green on the object itself, cast shadow, perspective, horizon, waves around the ship",
+  "ohne": "text, letters, numbers, watermark, border, frame, background scene, hands, people, modern objects, logos, photo, green on the object itself, cast shadow, perspective, horizon, waves around the ship, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "1:1",
   "ziel": "packages/games/battleship/src/ui/figuren",
   "groesse": [

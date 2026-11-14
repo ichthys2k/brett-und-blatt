@@ -252,6 +252,8 @@ export function legalMoves(state: SprintState, actor: Actor): SprintMove[] {
   }
   if (state.phase === 'review' && state.vote && state.vote.ballots[actor] === null && state.vote.voters.includes(actor)) {
     const n = state.disputed.length;
+    // Ohne Zweifelsfälle sind alle drei Stimmzettel gleich; dann genügt einer (eindeutige Zugtexte, #358).
+    if (n === 0) return [{ type: 'review', verdicts: [] }];
     return [
       { type: 'review', verdicts: Array.from({ length: n }, () => 1) },
       { type: 'review', verdicts: Array.from({ length: n }, () => 0) },

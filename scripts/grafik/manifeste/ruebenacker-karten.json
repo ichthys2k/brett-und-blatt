@@ -1,7 +1,7 @@
 {
   "beschreibung": "G9 (#318) C: Kartenmotive ohne Zahl (Anki-Medien, #270).",
   "stil": "Painterly storybook oil illustration for young children, friendly and round shapes, bright but warm colours, the motif of a playing card: the subject centred on a plain dark earth-brown background, filling about 70% of the image. No text, no numbers.",
-  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo",
+  "ohne": "text, letters, numbers, watermark, border, frame, modern objects, logos, real people, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
   "format": "3:4",
   "ziel": "packages/games/turnip-patch/src/ui/karten",
   "groesse": [

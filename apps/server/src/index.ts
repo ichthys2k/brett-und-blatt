@@ -1,4 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
+import { CLIENT_PARAM, MessageBudget, PROTOCOL_VERSION, accessFor, type Access } from '@brett-und-blatt/online';
 import { exchangeCode } from './oidc';
 import {
   ATTEMPT_WINDOW_MS,
@@ -227,6 +228,12 @@ interface Env {
   VAPID_SUBJECT?: string;
   TOURNAMENTS: DurableObjectNamespace<TournamentRoom>;
   ALLOWED_ORIGINS: string;
+  /**
+   * VR-Treffpunkt (#351): TURN-Schlüssel von Cloudflare Realtime (`wrangler secret put TURN_KEY_ID` und
+   * `TURN_KEY_API_TOKEN`). Fehlen sie, gibt `/rtc/ice` nur den freien STUN-Server aus.
+   */
+  TURN_KEY_ID?: string;
+  TURN_KEY_API_TOKEN?: string;
   /** "eu" im echten Betrieb. Nur der lokale Testserver kennt keine Jurisdiktionen und setzt "none". */
   ROOM_JURISDICTION: string;
 }
@@ -235,7 +242,15 @@ interface Env {
 interface Attachment {
   id: string;
   memberId: string | null;
+  /** Kennung eines Clients ohne Webseite (#334); fehlt bei der Web-App. */
+  client?: string;
+  /** VR-Brille bzw. im Sprachchat (#351, #352). */
+  xr?: boolean;
+  voice?: boolean;
 }
+
+/** Kopf, mit dem der Worker dem Raum die geprüfte Client-Kennung weiterreicht (nie vom Client übernommen). */
+const CLIENT_HEADER = 'X-Brett-Client';
 
 const gamesById = new Map(onlineGames.map((m) => [m.info.id, m]));
 const botRunner = serverBotRunner(onlineGames, { stepMs: BOT_STEP_MS });
@@ -362,10 +377,26 @@ function corsHeaders(request: Request, env: Env): Record<string, string> {
     : {};
 }
 
-/** Nur die eigene Web-App darf Räume anlegen und betreten. */
+/** Nur die eigene Web-App darf diese Wege nutzen (Schwarzes Brett, Turniere, Konten …). */
 function originAllowed(request: Request, env: Env): boolean {
   const origin = request.headers.get('Origin');
   return origin !== null && env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).includes(origin);
+}
+
+/**
+ * Räume anlegen, betreten und offene Räume ansehen dürfen auch Programme ohne Webseite (#334):
+ * ohne `Origin`, aber mit öffentlicher Kennung `?client=…`. Siehe `packages/online/src/access.ts`.
+ */
+function roomAccess(request: Request, url: URL, env: Env): Access | null {
+  return accessFor(request.headers.get('Origin'), url.searchParams.get(CLIENT_PARAM), env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()));
+}
+
+/** Reicht die Anfrage an den Raum weiter; die Client-Kennung kommt nur vom Worker, nie vom Client. */
+function forwardWithAccess(request: Request, access: Access): Request {
+  const headers = new Headers(request.headers);
+  headers.delete(CLIENT_HEADER);
+  if (access.kind === 'client') headers.set(CLIENT_HEADER, access.client);
+  return new Request(request, { headers });
 }
 
 /** Liest einen kleinen JSON-Körper; null bei Fehlern oder zu großer Länge. */
@@ -386,9 +417,41 @@ async function personKey(token: string): Promise<string> {
   return Array.from(new Uint8Array(digest).slice(0, 8), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+const STUN_SERVERS = [{ urls: 'stun:stun.cloudflare.com:3478' }];
+
+/** ICE-Server für WebRTC (#351): immer STUN, dazu TURN von Cloudflare Realtime, wenn der Schlüssel eingerichtet ist. */
+async function iceServers(env: Env): Promise<unknown[]> {
+  if (!env.TURN_KEY_ID || !env.TURN_KEY_API_TOKEN) return STUN_SERVERS;
+  try {
+    const response = await fetch(`https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(env.TURN_KEY_ID)}/credentials/generate-ice-servers`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.TURN_KEY_API_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ttl: 86_400 }),
+    });
+    if (!response.ok) return STUN_SERVERS;
+    const data = (await response.json()) as { iceServers?: unknown };
+    const servers = Array.isArray(data.iceServers) ? data.iceServers : data.iceServers ? [data.iceServers] : [];
+    return servers.length ? servers : STUN_SERVERS;
+  } catch {
+    return STUN_SERVERS;
+  }
+}
+
 function json(data: unknown, status: number, headers: Record<string, string>): Response {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...headers } });
 }
+
+/** Startseite des Servers: wohin fremde Clients schauen (#334). */
+const SERVER_INFO = [
+  'Brett & Blatt – Spieleserver',
+  '',
+  'Quellcode (AGPL-3.0): https://github.com/ichthys2k/brett-und-blatt',
+  `Protokoll (Version ${PROTOCOL_VERSION}) für eigene Clients: https://github.com/ichthys2k/brett-und-blatt/blob/main/docs/protokoll.md`,
+  '',
+  'Eigene Clients sind willkommen: kostenlos, ohne Anmeldung und ohne Gewähr.',
+  'Programme ohne Webseite hängen ?client=<name> an (3–40 Zeichen: a–z, 0–9, -).',
+  '',
+].join('\n');
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -397,7 +460,7 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
     if (url.pathname === '/rooms' && request.method === 'POST') {
-      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      if (!roomAccess(request, url, env)) return json({ error: 'origin' }, 403, cors);
       let isPublic = true;
       try {
         const body = (await request.json()) as { isPublic?: boolean };
@@ -422,12 +485,19 @@ export default {
 
     if ((url.pathname === '/rooms' || url.pathname === '/rooms/open') && request.method === 'GET') {
       if (request.headers.get('Upgrade') === 'websocket') {
-        if (!originAllowed(request, env)) return new Response('Origin nicht erlaubt', { status: 403 });
+        if (!roomAccess(request, url, env)) return new Response('Origin nicht erlaubt', { status: 403 });
         return registryStub(env).fetch(request);
       }
-      if (!originAllowed(request, env)) return json({ error: 'origin' }, 403, cors);
+      if (!roomAccess(request, url, env)) return json({ error: 'origin' }, 403, cors);
       const rooms = await registryStub(env).listOpen();
       return json(rooms, 200, cors);
+    }
+
+    // VR-Treffpunkt (#351): Server für den Verbindungsaufbau zwischen Brillen. STUN ist frei; TURN nur mit
+    // eingerichtetem Schlüssel, die Zugangsdaten gelten einen Tag und werden je Abruf neu erzeugt.
+    if (url.pathname === '/rtc/ice' && request.method === 'GET') {
+      if (!roomAccess(request, url, env)) return json({ error: 'origin' }, 403, cors);
+      return json({ iceServers: await iceServers(env) }, 200, { ...cors, 'Cache-Control': 'no-store' });
     }
 
     if (url.pathname === '/bibelquiz/fragen' && request.method === 'GET') {
@@ -978,11 +1048,12 @@ export default {
       if (request.headers.get('Upgrade') !== 'websocket') {
         return json({ exists: await roomStub(env, code).exists() }, 200, cors);
       }
-      if (!originAllowed(request, env)) return new Response('Origin nicht erlaubt', { status: 403 });
-      return roomStub(env, code).fetch(request);
+      const access = roomAccess(request, url, env);
+      if (!access) return new Response('Origin nicht erlaubt', { status: 403 });
+      return roomStub(env, code).fetch(forwardWithAccess(request, access));
     }
 
-    if (url.pathname === '/') return new Response('Brett & Blatt – Spieleserver. Quellcode: https://github.com/ichthys2k/brett-und-blatt', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    if (url.pathname === '/') return new Response(SERVER_INFO, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
     return new Response('Nicht gefunden', { status: 404 });
   },
 } satisfies ExportedHandler<Env>;
@@ -996,6 +1067,8 @@ export default {
 export class GameRoom extends DurableObject<Env> {
   private room: Room | null = null;
   private sockets = new Map<string, WebSocket>();
+  /** Ratenbegrenzung je Verbindung eines Clients ohne Webseite; nur im Speicher, beim Aufwachen frisch. */
+  private budgets = new Map<string, { budget: MessageBudget; warnedAt: number }>();
   /** Zuletzt ans Verzeichnis gemeldete Karte (undefined: seit dem Aufwachen noch nicht). */
   private lastListing: OpenRoomListing | null | undefined = undefined;
   /** Web Push (#242, nur Fernpartien): Abos und Spam-Schutz unter dem eigenen Schlüssel `push`; weg mit dem Raum. */
@@ -1013,6 +1086,7 @@ export class GameRoom extends DurableObject<Env> {
         this.sockets.set(attachment.id, ws);
         if (attachment.memberId) this.room.reattach(attachment.id, attachment.memberId);
         else this.room.connect(attachment.id);
+        if (attachment.xr || attachment.voice) this.room.restoreFlags(attachment.id, { xr: attachment.xr, voice: attachment.voice });
       }
     });
   }
@@ -1055,7 +1129,8 @@ export class GameRoom extends DurableObject<Env> {
     const [client, server] = Object.values(pair) as [WebSocket, WebSocket];
     const id = crypto.randomUUID();
     this.ctx.acceptWebSocket(server);
-    server.serializeAttachment({ id, memberId: null } satisfies Attachment);
+    const clientId = request.headers.get(CLIENT_HEADER) ?? undefined;
+    server.serializeAttachment({ id, memberId: null, ...(clientId ? { client: clientId } : {}) } satisfies Attachment);
     this.sockets.set(id, server);
     this.room.connect(id);
     return new Response(null, { status: 101, webSocket: client });
@@ -1063,6 +1138,7 @@ export class GameRoom extends DurableObject<Env> {
 
   override async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
     if (typeof message !== 'string') return;
+    if (!this.withinBudget(ws)) return;
     // Hinweise aufs Gerät (#242) gehören nicht in die Spielleitung: Abos bleiben im Adapter.
     if (message.includes('"push') && (await this.handlePush(this.idOf(ws), message))) return;
     this.room?.receive(this.idOf(ws), message);
@@ -1165,7 +1241,26 @@ export class GameRoom extends DurableObject<Env> {
   private dropSocket(ws: WebSocket): void {
     const id = this.idOf(ws);
     this.sockets.delete(id);
+    this.budgets.delete(id);
     this.room?.disconnect(id);
+  }
+
+  /**
+   * Ratenbegrenzung für Clients ohne Webseite (#334). Die Web-App bleibt unbegrenzt wie bisher.
+   * Zu schnelle Nachrichten werden verworfen; eine Fehlermeldung geht höchstens einmal je Sekunde hinaus.
+   */
+  private withinBudget(ws: WebSocket): boolean {
+    const attachment = ws.deserializeAttachment() as Attachment;
+    if (!attachment.client) return true;
+    const now = Date.now();
+    let budget = this.budgets.get(attachment.id);
+    if (!budget) this.budgets.set(attachment.id, (budget = { budget: new MessageBudget(now), warnedAt: 0 }));
+    if (budget.budget.take(now)) return true;
+    if (now - budget.warnedAt >= 1000) {
+      budget.warnedAt = now;
+      this.send(attachment.id, { type: 'error', code: 'tooFast', message: 'Zu viele Nachrichten – bitte langsamer.' });
+    }
+    return false;
   }
 
   private idOf(ws: WebSocket): string {
@@ -1190,6 +1285,13 @@ export class GameRoom extends DurableObject<Env> {
         this.sockets.delete(id);
       },
       changed: () => void this.persist(),
+      // Brille und Sprachchat (#351, #352) hängen an der Verbindung, damit sie das Schlafen des Raums überstehen.
+      flagsChanged: (id, flags) => {
+        const ws = this.sockets.get(id);
+        if (!ws) return;
+        const attachment = ws.deserializeAttachment() as Attachment;
+        ws.serializeAttachment({ ...attachment, xr: flags.xr || undefined, voice: flags.voice || undefined } satisfies Attachment);
+      },
       notifyTurn: (tokens) => {
         if (pushConfigured(this.env)) this.ctx.waitUntil(this.deliverTurn(tokens));
       },
@@ -1201,7 +1303,8 @@ export class GameRoom extends DurableObject<Env> {
     if (!ws) return;
     // Nach der Anmeldung merkt sich die Verbindung ihr Mitglied – für das Aufwachen.
     if (message.type === 'welcome') {
-      ws.serializeAttachment({ id, memberId: message.you } satisfies Attachment);
+      const { client, xr, voice } = ws.deserializeAttachment() as Attachment;
+      ws.serializeAttachment({ id, memberId: message.you, ...(client ? { client } : {}), ...(xr ? { xr } : {}), ...(voice ? { voice } : {}) } satisfies Attachment);
       if (pushConfigured(this.env)) void this.sendPushState(id, message.you);
     }
     try {

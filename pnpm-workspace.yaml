@@ -3,6 +3,7 @@ packages:
   - packages/engine
   - packages/ui
   - packages/online
+  - packages/rtc
   - packages/games/*
 allowBuilds:
   esbuild: true

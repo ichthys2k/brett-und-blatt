@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { kataloge } from './kataloge.ts';
+import { csp } from './csp.ts';
 import { klaenge } from './klaenge.ts';
 
 /** Kennung dieses Builds (Commit-Kurzform aus der CI, sonst „dev“) und Zeitpunkt – für die Versionsanzeige (#175). */
@@ -23,6 +24,7 @@ export default defineConfig({
         this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ id: buildId, time: buildTime }) });
       },
     },
+    csp(),
     react(),
     tailwindcss(),
     klaenge(),

@@ -45,6 +45,8 @@ export interface RoundGameSpec<Q, A> {
   scoreRound(question: Q, answers: (A | null)[]): number[];
   botAnswer(question: Q, level: BotLevel, rng: Rng): A;
   botName: string;
+  /** Zugtext einer Antwort (#335, #358), nur aus der öffentlichen Frage; fehlt er, steht dort die Antwort als JSON. */
+  describeAnswer?(question: Q, answer: A): string;
 }
 
 /** Auswahl für alle Klassenspiele: Anzahl, Zeit und wie es nach der Auflösung weitergeht. */
@@ -158,6 +160,12 @@ export function makeRoundGame<Q, A>(spec: RoundGameSpec<Q, A>): GameModule<Round
       return state.phase === 'reveal' ? state.revealMs : 0;
     },
     systemTimerKey: (state) => `${state.phase}:${state.round}`,
+    describeMove(view, move) {
+      if (move.type === 'close') return 'Zeit ist um';
+      if (move.type === 'next') return 'Weiter';
+      const question = view.questions[view.round];
+      return question && spec.describeAnswer ? spec.describeAnswer(question, move.answer) : `Antwort ${JSON.stringify(move.answer)}`;
+    },
     playerView(state, seat) {
       const shown = state.phase !== 'answer';
       return {

@@ -2,6 +2,7 @@ import type { SeatId } from '@brett-und-blatt/engine';
 import { FitBox, NetBoard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useState } from 'react';
 import { LINES, POINTS, pointName } from '../board';
+import { describeStep } from '../describe';
 import { phaseOf, stonesOnBoard, type MillMove, type MillState } from '../rules';
 import './styles.css';
 
@@ -113,7 +114,13 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<MillState, MillMov
             }
             pointLabel={(point) => {
               const owner = view.cells[point];
-              return `${pointName(point)}: ${owner === null || owner === undefined ? 'frei' : LABELS[owner]}`;
+              const where = `${pointName(point)}: ${owner === null || owner === undefined ? 'frei' : LABELS[owner]}`;
+              // Ziele und wegnehmbare Steine nennen den Zug (#335).
+              if (removableNow.has(point)) return `${where} – wegnehmen`;
+              if (!targets.has(point)) return where;
+              const moves = forFrom.filter((m) => m.to === point);
+              const step = describeStep(view, moves[0]!);
+              return `${where} – ${moves.some((m) => m.remove.length > 0) ? `${step}, Mühle` : step}`;
             }}
           />
         </div>

@@ -1,5 +1,6 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import { FitBox, GridBoard, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { describeMove } from '../describe';
 import type { GomokuMove, GomokuState } from '../types';
 import './styles.css';
 
@@ -29,6 +30,8 @@ function Board({ view, legalMoves, onMove }: BoardProps<GomokuState, GomokuMove>
         className="gomoku-board"
         renderCell={(col, row) => {
           const cell = row * size + col;
+          // Spielbare Felder nennen den Zug (#335).
+          if (playable.has(cell)) return describeMove(view, { type: 'place', cell });
           const seat = view.board[cell];
           return seat === null || seat === undefined ? null : <Stone seat={seat} win={winning.has(cell)} />;
         }}
@@ -37,6 +40,8 @@ function Board({ view, legalMoves, onMove }: BoardProps<GomokuState, GomokuMove>
         cellClassName={(col, row) => (winning.has(row * size + col) ? 'gomoku-win-cell' : '')}
         cellLabel={(col, row) => {
           const cell = row * size + col;
+          // Spielbare Felder nennen den Zug (#335).
+          if (playable.has(cell)) return describeMove(view, { type: 'place', cell });
           const seat = view.board[cell];
           return `Reihe ${row + 1}, Spalte ${col + 1}: ${seat === null || seat === undefined ? 'frei' : LABELS[seat]}`;
         }}

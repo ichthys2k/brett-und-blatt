@@ -159,6 +159,8 @@ export class RoomConnection {
   private retryTimer: number | undefined;
   private stopped = false;
   private nextSignal = 1;
+  /** Sprachchat (#352): Vermittlungsdaten anderer Geräte, nicht im Zustand. */
+  private rtcListeners = new Set<(message: Extract<ServerMessage, { type: 'rtc' }>) => void>();
   /** Spielnachricht, die eintraf, während die Regeln noch geladen werden. */
   private pendingGame: GameMessage | null = null;
   private loadingGame: string | null = null;
@@ -183,6 +185,12 @@ export class RoomConnection {
   };
 
   getState = (): RoomState => this.state;
+
+  /** Sprachchat (#352): Vermittlungsdaten anderer Geräte abonnieren. */
+  onRtc = (listener: (message: Extract<ServerMessage, { type: 'rtc' }>) => void): (() => void) => {
+    this.rtcListeners.add(listener);
+    return () => this.rtcListeners.delete(listener);
+  };
 
   send(message: ClientMessage): void {
     if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(message));
@@ -317,6 +325,12 @@ export class RoomConnection {
         if (!message.enabled) void this.reportPush();
         return;
       case 'pong':
+        return;
+      case 'rtc':
+        for (const listener of this.rtcListeners) listener(message);
+        return;
+      case 'pose':
+        // Nur für Brillen; die Web-App bekommt keine, falls doch: übergehen.
         return;
     }
   }

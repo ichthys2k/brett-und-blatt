@@ -15,6 +15,8 @@ export {
   SIGNAL_INTERVAL_MS,
   SIGNAL_MAX_PER_WINDOW,
   SIGNAL_WINDOW_MS,
+  XR_POSE_INTERVAL_MS,
+  XR_RTC_PER_MINUTE,
   TAKE_BACK_GAP,
   AFTER_GAME_MS,
   TAKE_BACK_MS,
@@ -22,8 +24,10 @@ export {
   type MatchRoomReport,
   type RoomDeps,
   type RoomSnapshot,
+  type ConnectionFlags,
 } from './room';
 export { serverBotRunner } from './server-bots';
+export { CLIENT_BURST, CLIENT_ID_PATTERN, CLIENT_PARAM, CLIENT_PER_SECOND, MessageBudget, accessFor, parseClientId, type Access } from './access';
 export { OnlineSession, extrapolateClock, type OnlineSessionDeps } from './client';
 export {
   OPEN_ROOM_MAX_AGE_MS,

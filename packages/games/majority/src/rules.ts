@@ -73,6 +73,7 @@ export const gameModule = makeRoundGame<MajorityQuestion, number>({
   },
   publicQuestion: (q) => q,
   isValidAnswer: (q, a): a is number => typeof a === 'number' && Number.isInteger(a) && a >= 0 && a < q.options.length,
+  describeAnswer: (q, a) => `${q.options[a] ?? `Antwort ${a + 1}`} wählen`,
   sampleAnswers: (q) => q.options.map((_, i) => i),
   scoreRound: (_q, answers) => scoreMajority(answers),
   botAnswer(q, level, rng) {

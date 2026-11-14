@@ -27,6 +27,7 @@ import {
   type RallyDifficulty,
   type RallyTopic,
 } from './rules';
+import { describeMove } from './describe';
 
 export {
   applyMove,
@@ -107,6 +108,7 @@ export const gameModule: GameModule<DuckRallyState, DuckRallyMove> = {
   applyMove,
   systemDelayMs,
   playerView,
+  describeMove,
   result,
   bots: [duckRallyBot],
 };

@@ -6,7 +6,7 @@
   "license": "AGPL-3.0-or-later",
   "description": "Spieleserver: dünner Cloudflare-Adapter (Worker + Durable Object pro Raum) um packages/online",
   "scripts": {
-    "dev": "wrangler dev --var ROOM_JURISDICTION:none",
+    "dev": "wrangler dev --var ROOM_JURISDICTION:none --var ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,http://localhost:5175,http://127.0.0.1:5175,http://localhost:4175,http://127.0.0.1:4175",
     "deploy": "wrangler deploy",
     "typecheck": "tsc -p tsconfig.json"
   },

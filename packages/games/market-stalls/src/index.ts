@@ -13,6 +13,7 @@ import {
   type MarketStallsMove,
   type MarketStallsState,
 } from './rules';
+import { describeMove } from './describe';
 
 export * from './rules';
 export * from './bots';
@@ -44,6 +45,7 @@ export const gameModule: GameModule<MarketStallsState, MarketStallsMove> = {
   legalMoves,
   applyMove,
   playerView,
+  describeMove,
   sampleHidden,
   result,
   timeoutMove,

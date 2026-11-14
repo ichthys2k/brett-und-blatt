@@ -22,6 +22,7 @@ import {
   type BibleQuizMove,
   type BibleQuizState,
 } from './rules';
+import { describeMove } from './describe';
 
 export { meta } from './meta';
 export * from './questions';
@@ -89,6 +90,7 @@ export const gameModule: GameModule<BibleQuizState, BibleQuizMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   sampleHidden,
   timeoutMove,
   result,

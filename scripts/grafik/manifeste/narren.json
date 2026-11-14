@@ -1,7 +1,7 @@
 {
  "beschreibung": "W-049: Porträts für die 81 Narren des Narrenhofs (Stimmung 1, schmunzelnd). Im Kontaktbogen steht zu jedem Bild die Funktion des Narren.",
  "stil": "Painterly dark baroque oil portrait of a whimsical court character of a fairy-tale kingdom, in the same style as the reference images: dark warm background with subtle ornamental damask, rich fabric textures, soft candle-like light, warm gold and deep colours, a detailed expressive friendly face with a gentle smirking smile, humorous but dignified, bust portrait facing the viewer, the character wears or carries the small jester attributes described. Vertical composition, figure centred with space around so it can be cropped. No text, no letters, no numbers.",
- "ohne": "text, letters, readable numbers, watermark, border, frame, playing card layout, real people, celebrities, modern clothing, logos",
+ "ohne": "text, letters, readable numbers, watermark, border, frame, playing card layout, real people, celebrities, modern clothing, logos, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
  "referenzen": [
   "packages/games/color-sorter/src/ui/portraits/boss-bear-2.webp",
   "packages/games/color-sorter/src/ui/portraits/court-fox-1.webp"
@@ -290,7 +290,7 @@
    "id": "cupbearer",
    "titel": "Der Mundschenk 🍷",
    "beschreibung": "gewöhnlich · 5 🥨 – +3 Lachen je gewertete Karte, solange du in dieser Audienz noch nicht getauscht hast",
-   "prompt": "Character: a cupbearer jester carrying a tray with a golden goblet of red wine, a velvet livery, an elegant bow, a napkin over his arm."
+   "prompt": "Character: a cupbearer jester carrying a tray with a golden jug of water and a bowl of fruit, a velvet livery, an elegant bow, a napkin over his arm."
   },
   {
    "id": "candle",

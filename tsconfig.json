@@ -22,10 +22,12 @@
     "packages/ui/test",
     "packages/online/src",
     "packages/online/test",
+    "packages/rtc/src",
     "apps/server/test",
     "tests",
     "packages/games/*/src",
     "packages/games/*/test",
-    "apps/web/src"
+    "apps/web/src",
+    "apps/xr/src"
   ]
 }

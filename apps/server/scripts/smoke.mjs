@@ -2,7 +2,8 @@
 // Aufruf (Server läuft, z. B. lokal mit `wrangler dev`):
 //   node apps/server/scripts/smoke.mjs [http://127.0.0.1:8787]
 // Prüft: Raum erstellen, Anmelden, Lobby, eine ganze Partie, Wiedereinstieg,
-// Herkunftsprüfung, Bot-Antwortzeit, Zeitablauf mit Bot-Zug und Emoji-Reaktion.
+// Herkunftsprüfung, Bot-Antwortzeit, Zeitablauf mit Bot-Zug und Emoji-Reaktion,
+// dazu einen fremden Client ohne Webseite (#334): Kennung, Partie gegen einen Bot, Ratenbegrenzung.
 
 const base = process.argv[2] ?? 'http://127.0.0.1:8787';
 const origin = 'http://localhost:5173';
@@ -14,9 +15,10 @@ function check(ok, text) {
 }
 
 /** Ein nachgebauter Browser mit einer WebSocket-Verbindung. */
-async function client(code, name, token = `${name}-${crypto.randomUUID()}`) {
-  const url = `${base.replace(/^http/, 'ws')}/rooms/${encodeURIComponent(code)}`;
-  const ws = new WebSocket(url, { headers: { Origin: origin } });
+async function client(code, name, token = `${name}-${crypto.randomUUID()}`, { cli } = {}) {
+  // Ein Programm ohne Webseite (#334) schickt keinen Origin, sondern nennt seine Kennung.
+  const url = `${base.replace(/^http/, 'ws')}/rooms/${encodeURIComponent(code)}${cli ? `?client=${cli}` : ''}`;
+  const ws = new WebSocket(url, cli ? {} : { headers: { Origin: origin } });
   const messages = [];
   const waiting = [];
   ws.addEventListener('message', (event) => {
@@ -200,5 +202,44 @@ check((await signal).value === '👏', 'Emoji-Reaktion kommt an');
 
 anna.close();
 benAgain.close();
+
+// Fremder Client ohne Webseite (#334): ohne Kennung abgewiesen, mit Kennung eine ganze Partie gegen einen Bot.
+const noId = await fetch(`${base}/rooms`, { method: 'POST' });
+check(noId.status === 403, 'ohne Origin und ohne Kennung kein Raum');
+const fakeSite = await fetch(`${base}/rooms?client=smoke-cli`, { method: 'POST', headers: { Origin: 'https://fremde-seite.example' } });
+check(fakeSite.status === 403, 'eine fremde Webseite kann sich nicht als Programm ausgeben');
+const cliCreated = await fetch(`${base}/rooms?client=smoke-cli`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isPublic: false }) });
+const cliCode = (await cliCreated.json()).code;
+check(cliCreated.status === 201 && typeof cliCode === 'string', `fremder Client legt Raum an: ${cliCode}`);
+const cliOpen = await fetch(`${base}/rooms/open?client=smoke-cli`);
+check(cliOpen.status === 200, 'fremder Client sieht die offenen Räume');
+const cli = await client(cliCode, 'Kommandozeile', undefined, { cli: 'smoke-cli' });
+check(cli.you === 'm1', 'fremder Client ist angemeldet und leitet den Raum');
+await cli.step({ type: 'setGame', gameId: 'tic-tac-toe' }, (m) => m.lobby.gameId === 'tic-tac-toe');
+await cli.step({ type: 'setSeat', index: 1, seat: { bot: 'easy' } }, (m) => m.lobby.seats[1]?.kind === 'bot');
+await cli.step({ type: 'takeSeat', index: 0 }, (m) => m.lobby.seats[0]?.memberId === cli.you);
+let cliGame = await (() => {
+  const started = cli.next((m) => m.type === 'game');
+  cli.send({ type: 'start' });
+  return started;
+})();
+for (let turn = 0; turn < 20 && !cliGame.result; turn++) {
+  if (!cliGame.current.includes(0) || cliGame.legalMoves.length === 0) {
+    cliGame = await cli.next((m) => m.type === 'game' && m.version > cliGame.version);
+    continue;
+  }
+  if (turn < 2) check(cliGame.moveLabels?.length === cliGame.legalMoves.length && cliGame.moveLabels[0].startsWith('Kreuz auf'), `Zugtexte kommen mit (#335): ${cliGame.moveLabels?.[0]}`);
+  const next = cli.next((m) => m.type === 'game' && m.version > cliGame.version);
+  cli.send({ type: 'move', version: cliGame.version, move: cliGame.legalMoves[0] });
+  cliGame = await next;
+}
+check(cliGame.result !== null, `fremder Client spielt eine ganze Partie gegen den Bot: ${JSON.stringify(cliGame.result)}`);
+
+// Ratenbegrenzung: Ein Schwall von Nachrichten wird gebremst.
+const tooFast = cli.next((m) => m.type === 'error' && m.code === 'tooFast', 5000).catch(() => null);
+for (let i = 0; i < 80; i++) cli.send({ type: 'ping' });
+check((await tooFast) !== null, 'zu viele Nachrichten eines fremden Clients werden gebremst');
+cli.close();
+
 console.log(failures === 0 ? '\nAlles in Ordnung.' : `\n${failures} Prüfung(en) fehlgeschlagen.`);
 process.exit(failures === 0 ? 0 : 1);

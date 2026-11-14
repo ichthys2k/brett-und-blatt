@@ -2,6 +2,7 @@ import type { GameModule } from '@brett-und-blatt/engine';
 import { lowFlightBot } from './bots';
 import { meta } from './meta';
 import { GOALS, applyMove, currentPlayers, eventView, isLegal, legalMoves, playerView, result, sampleHidden, setup, type LowFlightMove, type LowFlightState, type LowFlightView } from './rules';
+import { describeMove } from './describe';
 
 export type { LowFlightMove, LowFlightState, LowFlightView } from './rules';
 
@@ -91,6 +92,7 @@ export const gameModule: GameModule<LowFlightState, LowFlightMove, LowFlightView
   applyMove,
   eventView,
   playerView,
+  describeMove,
   result,
   sampleHidden,
   bots: [lowFlightBot],

@@ -17,6 +17,7 @@ import {
   type DuelMove,
   type DuelState,
 } from './rules';
+import { describeMove } from './describe';
 
 export { meta } from './meta';
 export * from './catalog';
@@ -41,6 +42,7 @@ export const gameModule: GameModule<DuelState, DuelMove> = {
   isLegal,
   applyMove,
   playerView,
+  describeMove,
   sampleHidden,
   timeoutMove,
   result,
