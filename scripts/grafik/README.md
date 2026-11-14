@@ -49,3 +49,7 @@ node scripts/grafik/kontaktbogen.mjs scripts/grafik/manifeste/vergleich-pilot.js
 ```
 
 Ergebnis: `grafik-roh/vergleich-pilot/kontaktbogen.html`, je Motiv Gemini- und Cloudflare-Bilder nebeneinander. Cloudflare bekommt nur Stil und Motiv-Prompt (keine Referenzbilder, keine Verbote, festes Format); darauf achten, wenn die Bilder verglichen werden.
+
+### Gemini-Schlüssel: gratis und bezahlt getrennt
+
+Zwei Umgebungsvariablen, nie im Repo: `GEMINI_API_KEY_GRATIS` und `GEMINI_API_KEY_BEZAHLT`. `erzeugen.mjs` nimmt standardmäßig den Gratis-Schlüssel; `--schluessel=bezahlt` nimmt den kostenpflichtigen und fragt vorher nach der Zahl der Bilder (`--ja` überspringt die Frage). Bei einem Limit wird nie selbst auf den bezahlten Schlüssel gewechselt. Der alte Name `GEMINI_API_KEY` gilt nur, wenn keine der beiden neuen Variablen gesetzt ist, und dann als gratis.

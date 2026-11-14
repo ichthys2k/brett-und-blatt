@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 // Erzeugt Bildvarianten aus einem Manifest mit der Gemini-API (oder Cloudflare Workers AI).
 //
-//   GEMINI_API_KEY=… node scripts/grafik/erzeugen.mjs scripts/grafik/manifeste/bildkarten.json
+//   node scripts/grafik/erzeugen.mjs scripts/grafik/manifeste/bildkarten.json
+//     --schluessel=gratis|bezahlt   welcher Gemini-Schlüssel (Standard gratis); die Schlüssel stehen in
+//                     GEMINI_API_KEY_GRATIS bzw. GEMINI_API_KEY_BEZAHLT. „bezahlt“ fragt vorher nach (Bilderzahl),
+//                     außer mit --ja. Es wird nie von selbst auf den bezahlten Schlüssel gewechselt.
 //     --varianten=3   Varianten je Motiv (Standard 3)
 //     --nur=k-h,d-s   nur diese Motive (Kennungen, kommagetrennt)
 //     --modell=…      Bildmodell (Standard: GEMINI_BILDMODELL oder gemini-3.1-flash-image)
@@ -20,9 +23,17 @@ import { argumente, ladeManifest, ordner, WURZEL } from './gemeinsam.mjs';
 const API = 'https://generativelanguage.googleapis.com/v1beta';
 const { positionen, optionen } = argumente(process.argv.slice(2));
 const cloudflare = optionen.anbieter === 'cloudflare';
-const schluessel = process.env.GEMINI_API_KEY;
+const art = String(optionen.schluessel ?? 'gratis');
+if (!['gratis', 'bezahlt'].includes(art)) {
+  console.error('--schluessel=gratis oder --schluessel=bezahlt');
+  process.exit(1);
+}
+const vorname = art === 'bezahlt' ? 'GEMINI_API_KEY_BEZAHLT' : 'GEMINI_API_KEY_GRATIS';
+// Alter Name GEMINI_API_KEY zählt nur, wenn keiner der beiden neuen gesetzt ist, und dann nur als gratis.
+const alt = !process.env.GEMINI_API_KEY_GRATIS && !process.env.GEMINI_API_KEY_BEZAHLT && art === 'gratis' ? process.env.GEMINI_API_KEY : undefined;
+const schluessel = process.env[vorname] ?? alt;
 if (!cloudflare && !schluessel) {
-  console.error('GEMINI_API_KEY fehlt. In der fish-Shell: set -x GEMINI_API_KEY <dein Schlüssel>');
+  console.error(`${vorname} fehlt. In der fish-Shell: set -x ${vorname} "dein-schluessel"`);
   process.exit(1);
 }
 
@@ -140,6 +151,14 @@ async function einBildCloudflare(motiv, nr) {
 
 const motive = manifest.motive.filter((m) => !nur || nur.has(m.id));
 console.log(`${manifest.name}: ${motive.length} Motive × ${varianten} Varianten, Modell ${modell}${cloudflare ? ' (Cloudflare)' : ''}`);
+if (!cloudflare) console.log(`Schlüssel: ${art}${art === 'bezahlt' ? ' (KOSTENPFLICHTIG)' : ''}`);
+if (!cloudflare && art === 'bezahlt' && !optionen.ja) {
+  const { createInterface } = await import('node:readline/promises');
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const antwort = await rl.question(`Mit dem bezahlten Schlüssel bis zu ${motive.length * varianten} Bilder erzeugen? (j/N) `);
+  rl.close();
+  if (!/^j/i.test(antwort.trim())) { console.log('Abgebrochen.'); process.exit(0); }
+}
 let nummer = 0;
 for (const motiv of motive) {
   for (let v = 1; v <= varianten; v++) {
