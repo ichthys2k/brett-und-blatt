@@ -6,8 +6,9 @@
  */
 import type { GameMessage } from '@brett-und-blatt/online';
 import { useFrame } from '@react-three/fiber';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGrab } from './grab';
+import { fanAttached, fanMode, fanYaw, handAnchor, onFanModeChange } from '../hand-fan';
 import { CanvasTexture, SRGBColorSpace, type Group } from 'three';
 import { seatAngle } from './Seats';
 import { TABLE_CENTER, TABLE_RADIUS } from './Tavern';
@@ -191,6 +192,25 @@ function OpponentHand({ seat, angle, count, newCount, stock, y, onPress, highlig
 export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: unknown) => void }) {
   const [choice, setChoice] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
+  // Fächer an der Haltehand (#384): folgt der linken Hand, solange sie über dem Tisch angehoben ist.
+  const fan = useRef<Group>(null);
+  const [onHand, setOnHand] = useState(false);
+  const [, redrawMode] = useState(0);
+  useEffect(() => onFanModeChange(() => redrawMode((n) => n + 1)), []);
+  useFrame(() => {
+    const attached = fanAttached(fanMode(), handAnchor.active, handAnchor.y, TABLE_CENTER[1]);
+    setOnHand((before) => (before === attached ? before : attached));
+    if (!fan.current) return;
+    if (attached) {
+      fan.current.position.set(handAnchor.x, handAnchor.y + 0.1, handAnchor.z);
+      fan.current.rotation.y = fanYaw([handAnchor.x, handAnchor.z], [handAnchor.headX, handAnchor.headZ]);
+      fan.current.scale.setScalar(0.8);
+    } else {
+      fan.current.position.set(0, TABLE_CENTER[1] + 0.003 + 0.11, TABLE_CENTER[2] + TABLE_RADIUS - 0.2);
+      fan.current.rotation.y = 0;
+      fan.current.scale.setScalar(1);
+    }
+  });
   const view = readCardView(game);
   if (!view) return null;
   const flights = flightsFor(game, view);
@@ -260,6 +280,8 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
     <group>
       {grab.held && <Card face={heldFace} position={[grab.held.x, y + 0.16, grab.held.z]} rotation={[-Math.PI / 2.6, 0, 0]} scale={1.15} highlight />}
       {grab.layer}
+      <group ref={fan}>
+      <group position={[0, -(y + 0.11), -fanZ]}>
       {view.hand.map((card, i) => {
         const offset = i - (n - 1) / 2;
         const isPlayable = playable.has(card.id);
@@ -280,12 +302,14 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
             highlight={isPlayable}
             selected={picked.includes(card.id) || choice === card.id}
             onPress={isPlayable ? () => press(card.id) : undefined}
-            flyFrom={startOf(flights.handDraws[card.id])}
+            flyFrom={onHand ? undefined : startOf(flights.handDraws[card.id])}
             flyDelay={flights.handDraws[card.id] ? dealt++ * 0.08 : 0}
           />
           </group>
         );
       })}
+      </group>
+      </group>
       {view.piles.map((face, k) => (face ? <Card key={`pile-${k}`} face={face} position={[pileX(k), y + 0.001, TABLE_CENTER[2]]} rotation={[-Math.PI / 2, 0, 0]} scale={1.2} flyFrom={startOf(flights.piles[k])} /> : null))}
       {view.rows.map((row, r) => (
         <group key={`row-${r}`} position={[TABLE_CENTER[0], y + 0.001, TABLE_CENTER[2] - 0.05 + (r - (view.rows.length - 1) / 2) * 0.1]}>

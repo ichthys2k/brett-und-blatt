@@ -23,7 +23,8 @@ import { Seats, seatAngle, type SeatInfo } from './Seats';
 import { TABLE_CENTER, Tavern } from './Tavern';
 import { bindHapticSession, pulse } from '../haptics';
 import { alignOffset, type Offset } from './view-align';
-import { SCALE_STEP, TablePlacer, clampScale, placementOrigin, type Placement } from './Placement';
+import { SCALE_STEP, TablePlacer, clampScale, placementOrigin, scaleAboutTable, type Placement } from './Placement';
+import { handAnchor } from '../hand-fan';
 import { SpatialAudio } from './SpatialAudio';
 import type { VoiceChat } from '@brett-und-blatt/rtc';
 import { Figures, POSE_STALE_MS, PoseSender } from './Meet';
@@ -126,6 +127,33 @@ function HeadAlign({ origin, onAlign }: { origin: [number, number, number]; onAl
     const o = originRef.current;
     onAlign(alignOffset({ x: head.x - o[0], y: head.y - o[1], z: head.z - o[2] }));
     measured.current = true;
+  });
+  return null;
+}
+
+/** Schreibt die Lage der linken Hand (Haltehand) und des Kopfes im Tischsystem für den Kartenfächer (#384). */
+function HandAnchor({ origin, scale }: { origin: [number, number, number]; scale: number }) {
+  const { camera, gl } = useThree();
+  const tmp = useRef(new Vector3());
+  useFrame(() => {
+    handAnchor.active = false;
+    const session = gl.xr.getSession();
+    if (!session) return;
+    session.inputSources.forEach((source, i) => {
+      if (source.handedness !== 'left') return;
+      const controller = gl.xr.getController(i);
+      if (!controller.visible) return;
+      const p = controller.position.clone().add(new Vector3(...origin));
+      const q = scale !== 1 ? scaleAboutTable([p.x, p.y, p.z], scale) : ([p.x, p.y, p.z] as [number, number, number]);
+      handAnchor.active = true;
+      handAnchor.x = q[0];
+      handAnchor.y = q[1];
+      handAnchor.z = q[2];
+    });
+    camera.getWorldPosition(tmp.current);
+    const h = scale !== 1 ? scaleAboutTable([tmp.current.x, tmp.current.y, tmp.current.z], scale) : [tmp.current.x, tmp.current.y, tmp.current.z];
+    handAnchor.headX = h[0]!;
+    handAnchor.headZ = h[2]!;
   });
   return null;
 }
@@ -297,6 +325,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
       <XR store={store}>
         <Backdrop />
         <HapticsBridge />
+        <HandAnchor origin={origin} scale={scale} />
         <SpatialAudio seats={seats} scale={scale} voice={voiceChat} />
         <ModeProbe onMixed={setMixed} />
         <TablePlacer
