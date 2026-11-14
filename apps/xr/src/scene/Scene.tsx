@@ -25,6 +25,8 @@ import { bindHapticSession, pulse } from '../haptics';
 import { alignOffset, type Offset } from './view-align';
 import { SCALE_STEP, TablePlacer, clampScale, placementOrigin, scaleAboutTable, type Placement } from './Placement';
 import { handAnchor } from '../hand-fan';
+import { POSTURE_LIFT, getPosture, holdingHand, onUiStateChange } from '../ui-state';
+import { WristMenu } from './WristMenu';
 import { clampOffset, dragOffset, inEdgeZone, pinchScale, tableGrab, tableLocked, type Offset as GrabOffset } from '../table-grab';
 import { GESTURE_REACTION, GestureTracker, gesturesEnabled, type Joints, type Vec3 } from '../gestures';
 import { SpatialAudio } from './SpatialAudio';
@@ -168,7 +170,7 @@ function HandAnchor({ origin, scale }: { origin: [number, number, number]; scale
     const session = gl.xr.getSession();
     if (!session) return;
     session.inputSources.forEach((source, i) => {
-      if (source.handedness !== 'left') return;
+      if (source.handedness !== holdingHand()) return;
       const controller = gl.xr.getController(i);
       if (!controller.visible) return;
       const p = controller.position.clone().add(new Vector3(...origin));
@@ -392,6 +394,8 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
     if (error) pulse('error');
   }, [error]);
   const { offset, adjust, live, save: saveOffset } = useViewOffset();
+  const [, redrawUi] = useState(0);
+  useEffect(() => onUiStateChange(() => redrawUi((n) => n + 1)), []);
   const [align, setAlign] = useState<Offset>({ x: 0, y: 0, z: 0 });
   // Mixed Reality (#369, #370): Tisch auf einer echten Fläche (`placed`), verkleinert um `tableScale`.
   const [mixed, setMixed] = useState(false);
@@ -406,7 +410,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
     }
   };
   const base = placed ?? align;
-  const origin: [number, number, number] = [base.x + offset.x, base.y - offset.y, base.z + offset.z];
+  const origin: [number, number, number] = [base.x + offset.x, base.y - offset.y - POSTURE_LIFT[getPosture()], base.z + offset.z];
   const scale = mixed ? tableScale : 1;
   const placement = mixed
     ? {
@@ -471,6 +475,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         <HapticsBridge />
         <HandAnchor origin={origin} scale={scale} />
         <GestureWatcher send={send} />
+        <WristMenu origin={origin} canResign={Boolean(game?.canResign && !game.result)} send={send} />
         <TableGrab origin={origin} scale={scale} mixed={mixed} offset={offset} onOffset={live} onSaveOffset={saveOffset} tableScale={tableScale} onScale={setTableScale} onSaveScale={saveScale} />
         <SpatialAudio seats={seats} scale={scale} voice={voiceChat} />
         <ModeProbe onMixed={setMixed} />

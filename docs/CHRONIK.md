@@ -8,6 +8,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**VR: Handgelenk-Menü, Händigkeit, Sitzen/Stehen (14.11.2026, #388):** Menü an der Haltehand (`scene/WristMenu.tsx`), einklappbares Fenster und Einstellungen in `scene/Panel.tsx`, Speicher und Rechnung in `apps/xr/src/ui-state.ts` (Test `tests/xr-handgelenk.test.ts`). Im Browser nur die Einklapp-Zeile gesehen; Handgelenk-Menü nicht in der Brille geprüft, mit Handtracking fehlt es noch.
+
 **VR: Tisch mit den Händen greifen (14.11.2026, #387):** Griff-Taste an der Tischkante verschiebt und hebt den Tisch (eine Hand) bzw. skaliert ihn (zwei Hände, Mixed Reality); Stellung und Größe bleiben gespeichert, Schalter „Tisch fest“ und „Zurücksetzen“ unter „↕ Tisch“. `apps/xr/src/table-grab.ts` (Rechnung, Test `tests/xr-tischgriff.test.ts`), `TableGrab` und `useViewOffset` (jetzt mit x) in `scene/Scene.tsx`. Nur gerechnet, nicht in der Brille geprüft; Drehen fehlt.
 
 **VR: Gesten als Reaktionen (14.11.2026, #386):** Daumen hoch 👍, Klatschen 👏, Winken 🎉 aus den Handgelenken des Handtrackings (`apps/xr/src/gestures.ts`, `GestureWatcher` in `scene/Scene.tsx`, Schalter unter „↕ Tisch“). Test `tests/xr-gesten.test.ts` mit künstlichen Gelenken; nicht mit echten Händen geprüft.

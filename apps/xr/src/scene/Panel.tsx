@@ -18,6 +18,7 @@ import { onVibrationChange, setVibration, vibrationEnabled } from '../haptics';
 import { fanMode, onFanModeChange, setFanMode } from '../hand-fan';
 import { gesturesEnabled, onGesturesChange, setGesturesEnabled } from '../gestures';
 import { onTableLockedChange, setTableLocked, tableLocked } from '../table-grab';
+import { getHandedness, getPosture, isCollapsed, onPanelCommand, onUiStateChange, setCollapsed, setHandedness, setPosture } from '../ui-state';
 import { getVolume, onVolumeChange, setVolume } from '../sound';
 
 const PAGE = 6;
@@ -102,6 +103,19 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
   useEffect(() => onFanModeChange(() => redraw((n) => n + 1)), []);
   useEffect(() => onGesturesChange(() => redraw((n) => n + 1)), []);
   useEffect(() => onTableLockedChange(() => redraw((n) => n + 1)), []);
+  useEffect(() => onUiStateChange(() => redraw((n) => n + 1)), []);
+  // Befehle vom Handgelenk-Menü (#388): Seite öffnen, Fenster aufklappen.
+  useEffect(
+    () =>
+      onPanelCommand((command) => {
+        setCollapsed(false);
+        if (command === 'resign') {
+          setMode('main');
+          setConfirmResign(true);
+        } else setMode(command);
+      }),
+    [],
+  );
   // Während der Partie rückt das Fenster zur Seite, damit Brett oder Spieltafel frei bleiben (#358); nur beim Kartentisch bleibt es mittig.
   const beside = Boolean(game && !game.result && !isCardGame(game.gameId));
   const position = beside ? SIDE_POS : CENTER_POS;
@@ -171,6 +185,10 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
     ]);
     rows.push([{ label: vibrationEnabled() ? '📳 Vibration an' : 'Vibration aus', press: () => setVibration(!vibrationEnabled()), active: vibrationEnabled() }]);
     rows.push([{ label: fanMode() === 'hand' ? '🃏 Fächer an der Hand' : '🃏 Fächer am Tisch', press: () => setFanMode(fanMode() === 'hand' ? 'table' : 'hand'), active: fanMode() === 'hand' }]);
+    rows.push([
+      { label: getHandedness() === 'right' ? '🤚 Rechtshänder' : '🤚 Linkshänder', press: () => setHandedness(getHandedness() === 'right' ? 'left' : 'right') },
+      { label: getPosture() === 'sitting' ? '🪑 Sitzen' : '🧍 Stehen', press: () => setPosture(getPosture() === 'sitting' ? 'standing' : 'sitting') },
+    ]);
     rows.push([{ label: gesturesEnabled() ? '👍 Gesten an' : 'Gesten aus', press: () => setGesturesEnabled(!gesturesEnabled()), active: gesturesEnabled() }]);
     lines.push('Neu ausrichten: Meta-Taste gedrückt halten.');
     rows.push([back]);
@@ -279,6 +297,16 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
       { label: voice.joined ? (voice.muted ? '🔇 Sprache' : '🎙 Sprache') : '🎙 Sprache', press: () => setMode('voice'), active: voice.joined && !voice.muted },
       { label: '↕ Tisch', press: () => setMode('view') },
     ]);
+  }
+
+  // In der Partie lässt sich das Fenster zu einer schmalen Zeile einklappen (#388); Uhr und „am Zug“ bleiben sichtbar.
+  const playing = Boolean(game && !game.result && room.phase !== 'lobby');
+  if (playing && mode === 'main') {
+    if (isCollapsed()) {
+      lines.splice(1);
+      rows.length = 0;
+      rows.push([{ label: '▸ Menü aufklappen', press: () => setCollapsed(false) }]);
+    } else rows.push([{ label: '▴ Einklappen', press: () => setCollapsed(true) }]);
   }
 
   const height = headHeight(lines.length);
