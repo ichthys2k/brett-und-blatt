@@ -302,3 +302,11 @@
     margin: 0 auto;
   }
 }
+
+/* Gemalte Figuren (#325): Satz über data-pieces-go auf <html>, Bilder über --fig-go-<figur>; ohne Attribut die heutige Darstellung. */
+[data-pieces-go] .go-stone.go-white {
+  background: var(--fig-go-stone-w) center / contain no-repeat;
+}
+[data-pieces-go] .go-stone.go-black {
+  background: var(--fig-go-stone-b) center / contain no-repeat;
+}

@@ -274,3 +274,38 @@
   height: 1.4rem;
   vertical-align: middle;
 }
+
+/* Gemalte Figuren (#325): Satz über data-pieces-checkers auf <html>, Bilder über --fig-checkers-<figur>; ohne Attribut die heutige Darstellung. */
+[data-pieces-checkers] .dk-piece.dk-white {
+  background: var(--fig-checkers-man-w) center / contain no-repeat;
+  border: 0;
+  box-shadow: none;
+}
+[data-pieces-checkers] .dk-piece.dk-white:has(.dk-crown) {
+  background: var(--fig-checkers-king-w) center / contain no-repeat;
+  border: 0;
+  box-shadow: none;
+}
+[data-pieces-checkers] .dk-piece.dk-black {
+  background: var(--fig-checkers-man-b) center / contain no-repeat;
+  border: 0;
+  box-shadow: none;
+}
+[data-pieces-checkers] .dk-piece.dk-black:has(.dk-crown) {
+  background: var(--fig-checkers-king-b) center / contain no-repeat;
+  border: 0;
+  box-shadow: none;
+}
+[data-pieces-checkers] .dk-mini-stone.dk-mini-white {
+  background: var(--fig-checkers-man-w) center / contain no-repeat;
+  border: 0;
+  box-shadow: none;
+}
+[data-pieces-checkers] .dk-mini-stone.dk-mini-black {
+  background: var(--fig-checkers-man-b) center / contain no-repeat;
+  border: 0;
+  box-shadow: none;
+}
+[data-pieces-checkers] .dk-piece .dk-crown {
+  display: none;
+}

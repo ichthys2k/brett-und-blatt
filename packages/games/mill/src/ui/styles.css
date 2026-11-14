@@ -132,3 +132,13 @@
     animation: none;
   }
 }
+
+/* Gemalte Figuren (#325): Satz über data-pieces-mill auf <html>, Bilder über --fig-mill-<figur>; ohne Attribut die heutige Darstellung. */
+[data-pieces-mill] .ml-stone.ml-white {
+  background: var(--fig-mill-stone-w) center / contain no-repeat;
+  box-shadow: none;
+}
+[data-pieces-mill] .ml-stone.ml-black {
+  background: var(--fig-mill-stone-b) center / contain no-repeat;
+  box-shadow: none;
+}

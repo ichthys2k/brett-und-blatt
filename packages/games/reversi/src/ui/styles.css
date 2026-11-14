@@ -83,3 +83,13 @@
     animation: none;
   }
 }
+
+/* Gemalte Figuren (#325): Satz über data-pieces-reversi auf <html>, Bilder über --fig-reversi-<figur>; ohne Attribut die heutige Darstellung. */
+[data-pieces-reversi] .rv-stone.rv-white {
+  background: var(--fig-reversi-disc-w) center / contain no-repeat;
+  box-shadow: none;
+}
+[data-pieces-reversi] .rv-stone.rv-black {
+  background: var(--fig-reversi-disc-b) center / contain no-repeat;
+  box-shadow: none;
+}

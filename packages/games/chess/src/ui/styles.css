@@ -592,3 +592,19 @@ button.ch-log-cell:hover {
   }
 }
 
+
+/* Gemalte Figuren (#325): das Bild füllt dieselbe Fläche wie das Zeichen (1em = Figurengröße). */
+.ch-piece-img {
+  display: block;
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.ch-log-glyph .ch-piece-img,
+.ch-taken .ch-piece-img {
+  display: inline-block;
+  vertical-align: -0.2em;
+}

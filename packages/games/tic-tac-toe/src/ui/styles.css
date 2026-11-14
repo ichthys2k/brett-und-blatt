@@ -105,3 +105,22 @@
     animation: none;
   }
 }
+
+/* Gemalte Figuren (#325): Satz über data-pieces-tic-tac-toe auf <html>, Bilder über --fig-tic-tac-toe-<figur>. */
+[data-pieces-tic-tac-toe] .ttt-mark.ttt-x {
+  background: var(--fig-tic-tac-toe-x) center / contain no-repeat;
+  animation: ttt-img-in 0.2s ease-out;
+}
+[data-pieces-tic-tac-toe] .ttt-mark.ttt-o {
+  background: var(--fig-tic-tac-toe-o) center / contain no-repeat;
+  animation: ttt-img-in 0.2s ease-out;
+}
+[data-pieces-tic-tac-toe] .ttt-mark > * {
+  display: none;
+}
+@keyframes ttt-img-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}

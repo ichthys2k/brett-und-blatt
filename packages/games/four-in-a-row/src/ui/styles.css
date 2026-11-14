@@ -208,3 +208,16 @@
   }
 }
 
+
+/* Gemalte Figuren (#325): Satz über data-pieces-four-in-a-row auf <html>, Bilder über --fig-four-in-a-row-<figur>; ohne Attribut die heutige Darstellung. */
+[data-pieces-four-in-a-row] .c4-disc.c4-seat-0 {
+  background: var(--fig-four-in-a-row-disc-w) center / contain no-repeat;
+  box-shadow: none;
+}
+[data-pieces-four-in-a-row] .c4-disc.c4-seat-1 {
+  background: var(--fig-four-in-a-row-disc-b) center / contain no-repeat;
+  box-shadow: none;
+}
+[data-pieces-four-in-a-row] .c4-symbol {
+  opacity: 0.7;
+}
