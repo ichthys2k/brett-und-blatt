@@ -25,6 +25,7 @@ export {
 } from './cards/sharedCardBack';
 export {
   CardCosmeticsProvider,
+  cardOverrideOf,
   DEFAULT_CARD_COSMETICS,
   getNoteField,
   useCardCosmetics,
@@ -87,3 +88,22 @@ export {
   type RoundSummaryPlayer,
   type RoundSummaryProps,
 } from './RoundSummary';
+export { useLongPress } from './dnd/useLongPress';
+export {
+  CardInspectProvider,
+  INSPECT_FLOAT_MIN_WIDTH,
+  INSPECT_HOVER_DELAY_MS,
+  INSPECT_PRESS_MS,
+  InspectBody,
+  useInspect,
+  useInspectProps,
+  type InspectApi,
+  type InspectContent,
+  type InspectExtraProps,
+  type InspectImage,
+  type InspectKeyword,
+  type InspectOptions,
+  type InspectSource,
+  type InspectStat,
+} from './inspect/CardInspect';
+export { INSPECT_EDGE, inspectPosition, type InspectPlacement, type InspectRect } from './inspect/inspectPosition';

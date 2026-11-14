@@ -1,4 +1,5 @@
 import { clearSyncError, connectSync, connectWithPasskey, createPasskey, createSync, disconnectSync, formatCode, passkeySupport, scheduleSync, syncAvailable, syncLink, syncNow, takeLinkCode, useSyncState } from '@brett-und-blatt/ui/sync';
+import { CardInspectProvider, useCardCosmetics, useInspect } from '@brett-und-blatt/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { renderSVG } from 'uqr';
 import { CARDS_DB } from '../cards';
@@ -8,10 +9,8 @@ import { HOUSE_POWERS } from '../powers';
 import { syncServerUrl } from '../server';
 import type { CardDefinition, DeckThemeId } from '../types';
 import { decksBlock, deleteDeck, saveDeck, useDecks, type SavedDeck } from './deckStore';
-import { CardFace, CardZoom, type ZoomItem } from './parts';
-import { getCardFullTitle } from './traits';
+import { CardFace, zoomContent, type ZoomItem } from './parts';
 import { SoloHub } from './SoloHub';
-import { useLongPress } from './useLongPress';
 import { championImage } from './champions';
 import { partyCards, uiCard } from './cardLookup';
 
@@ -38,8 +37,8 @@ function Builder({ start, onDone, onCancel }: { start: { id?: string; name: stri
   const [name, setName] = useState(start?.name ?? '');
   const [look, setLook] = useState<Look>('all');
   const [search, setSearch] = useState('');
-  const [zoom, setZoom] = useState<ZoomItem | null>(null);
-  const longPress = useLongPress<ZoomItem>(setZoom);
+  const inspect = useInspect();
+  const cosmetics = useCardCosmetics();
 
   if (!house) {
     return (
@@ -128,14 +127,9 @@ function Builder({ start, onDone, onCancel }: { start: { id?: string; name: stri
               type="button"
               data-rarity={def.rarity}
               className={`ds-card ds-builder-card ${def.isSpell ? 'ds-card-spell' : ''} ${n > 0 ? 'ds-card-selected' : ''}`}
-              title={getCardFullTitle(def)}
               aria-label={`${def.name}, Kosten ${def.cost}, ${n} im Deck`}
+              {...inspect.props(() => zoomContent(item, cosmetics))}
               onClick={() => add(def.id)}
-              onContextMenu={(event) => longPress.contextMenu(event, item)}
-              onPointerDown={(event) => longPress.start(event, item)}
-              onKeyDown={(event) => {
-                if (event.key === 'i') setZoom(item);
-              }}
             >
               <CardFace def={def} />
               {n > 0 && <span className="ds-builder-count">×{n}</span>}
@@ -178,7 +172,6 @@ function Builder({ start, onDone, onCancel }: { start: { id?: string; name: stri
           Speichern
         </button>
       </div>
-      {zoom && <CardZoom item={zoom} onClose={() => setZoom(null)} />}
     </div>
   );
 }
@@ -437,7 +430,9 @@ export function SetupExtra({ options, setOption }: { options: Record<string, str
       </button>
       {solo && (
         <div className="ds-builder-overlay" role="dialog" aria-modal="true" aria-label="Solo">
-          <SoloHub onClose={() => setSolo(false)} />
+          <CardInspectProvider>
+            <SoloHub onClose={() => setSolo(false)} />
+          </CardInspectProvider>
         </div>
       )}
       <button type="button" className="ds-btn" onClick={() => setOpen(true)}>
@@ -445,7 +440,9 @@ export function SetupExtra({ options, setOption }: { options: Record<string, str
       </button>
       {open && (
         <div className="ds-builder-overlay" role="dialog" aria-modal="true" aria-label="Meine Decks">
-          <DeckManager onClose={() => setOpen(false)} />
+          <CardInspectProvider>
+            <DeckManager onClose={() => setOpen(false)} />
+          </CardInspectProvider>
         </div>
       )}
     </div>

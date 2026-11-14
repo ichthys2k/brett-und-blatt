@@ -6,7 +6,7 @@ import {
   renderCardSide,
   type AnkiNote,
 } from '@brett-und-blatt/engine';
-import { GameCard, getNoteField, useCardCosmetics, useCardOverride } from '@brett-und-blatt/ui';
+import { cardOverrideOf, GameCard, getNoteField, useCardCosmetics, useCardOverride, type CardCosmetics, type InspectContent, type InspectStat } from '@brett-und-blatt/ui';
 import { CARDS_DB } from '../cards';
 import type { CardDefinition, HousePower, Minion } from '../types';
 import { cardOrigin, getCardTraits, getMinionTraits, type TraitInfo } from './traits';
@@ -131,87 +131,56 @@ export function healthClass(minion: Minion): string {
 /** Was groß angesehen wird: eine Handkarte oder ein Tier auf dem Feld mit seinen aktuellen Werten. */
 export type ZoomItem = { kind: 'card'; defId: string } | { kind: 'minion'; minion: Minion } | { kind: 'power'; power: HousePower };
 
-export function CardZoom({ item, onClose }: { item: ZoomItem; onClose: () => void }) {
-  const closeRef = useRef<HTMLButtonElement>(null);
-  // Gemaltes Bild (#417): Hooks vor jedem frühen return, auch für die Hauskraft (die bleibt beim Emoji).
-  const cardId = item.kind === 'card' ? item.defId : item.kind === 'minion' ? item.minion.cardId : '';
-  const cosmetics = useCardCosmetics();
-  const overrideNote = useCardOverride(cardId);
-  const artUrl = cardId ? cardArtUrl(cardId, getNoteField(overrideNote, BILD_FIELD), cosmetics.mediaUrlMap) : undefined;
-  const [brokenArt, setBrokenArt] = useState(false);
-  useEffect(() => setBrokenArt(false), [artUrl]);
-  useEffect(() => {
-    closeRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+/** Kartengestaltung der Partie, aus der die Großansicht Bilder und Anki-Änderungen liest. */
+export type ZoomCosmetics = Pick<CardCosmetics, 'ankiOverrides' | 'mediaUrlMap'>;
 
+const statChange = (value: number, base: number): 'up' | 'down' | undefined => (value > base ? 'up' : value < base ? 'down' : undefined);
+
+/**
+ * Inhalt der Großansicht (#418, früher `CardZoom`): gemaltes Bild (#417; ein Bild aus dem Anki-Feld
+ * „Bild“ eines eigenen Kartensets hat Vorrang), Kosten und Werte, Regeltext, Schlüsselwörter, Herkunft
+ * und Spruch. Die Hauskraft zeigt ihr Emoji.
+ */
+export function zoomContent(item: ZoomItem, cosmetics: ZoomCosmetics): InspectContent | undefined {
   if (item.kind === 'power') {
     const { power } = item;
-    return (
-      <div className="ds-zoom" role="dialog" aria-modal="true" aria-label={power.name} onClick={onClose}>
-        <div className="ds-zoom-card ds-card-spell">
-          <span className="ds-card-cost ds-zoom-cost">{power.cost}</span>
-          <span className="ds-zoom-emoji">{power.emoji}</span>
-          <strong className="ds-zoom-name">{power.name}</strong>
-          <p className="ds-zoom-text">Hauskraft, einmal je Zug. {power.text}</p>
-          <button ref={closeRef} type="button" className="ds-btn" onClick={onClose}>
-            Schließen
-          </button>
-        </div>
-      </div>
-    );
+    return {
+      title: power.name,
+      subtitle: 'Hauskraft, einmal je Zug',
+      emoji: power.emoji,
+      stats: [{ label: 'Kosten', value: String(power.cost), tone: 'cost' }],
+      lines: [power.text],
+    };
   }
-
   const def = uiCard(item.kind === 'card' ? item.defId : item.minion.cardId);
-  if (!def) return null;
+  if (!def) return undefined;
   const minion = item.kind === 'minion' ? item.minion : null;
   const traits = minion ? getMinionTraits(minion) : getCardTraits(def);
   const quote = minion?.quote ?? def.quote;
-  const showArt = Boolean(artUrl) && !brokenArt;
-
-  return (
-    <div className="ds-zoom" role="dialog" aria-modal="true" aria-label={def.name} onClick={onClose}>
-      <div className={`ds-zoom-card ${def.isSpell ? 'ds-card-spell' : ''} ${showArt ? 'ds-zoom-has-art' : ''}`}>
-        <span className="ds-card-cost ds-zoom-cost">{def.cost}</span>
-        {showArt ? (
-          <img className="ds-zoom-art" src={artUrl} alt="" decoding="async" draggable={false} onError={() => setBrokenArt(true)} />
-        ) : (
-          <span className="ds-zoom-emoji">{def.emoji}</span>
-        )}
-        <div className="ds-zoom-info">
-          <strong className="ds-zoom-name">{def.name}</strong>
-          {def.text && <p className="ds-zoom-text">{def.text}</p>}
-          {traits.length > 0 && (
-            <ul className="ds-zoom-traits">
-              {traits.map((trait) => (
-                <li key={trait.id}>
-                  <strong>
-                    {trait.emoji} {trait.name}:
-                  </strong>{' '}
-                  {trait.description}
-                </li>
-              ))}
-            </ul>
-          )}
-          {cardOrigin(def) && <p className="ds-zoom-origin">{cardOrigin(def)}</p>}
-          {quote && <p className="ds-zoom-quote">„{quote}“</p>}
-          {!def.isSpell && !def.quest && (
-            <div className="ds-minion-stats ds-zoom-stats">
-              <span className={minion ? attackClass(minion) : 'ds-stat-atk'}>{minion?.attack ?? def.attack}</span>
-              <span className={minion ? healthClass(minion) : 'ds-stat-hp'}>{minion?.health ?? def.health}</span>
-            </div>
-          )}
-          <button ref={closeRef} type="button" className="ds-btn" onClick={onClose}>
-            Schließen
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  const bild = getNoteField(cardOverrideOf(cosmetics.ankiOverrides, def.id), BILD_FIELD);
+  const art = cardArtUrl(def.id, bild, cosmetics.mediaUrlMap);
+  const stats: InspectStat[] = [{ label: 'Kosten', value: String(def.cost), tone: 'cost' }];
+  if (!def.isSpell && !def.quest) {
+    stats.push(
+      { label: 'Angriff', value: String(minion?.attack ?? def.attack ?? 0), tone: 'attack', change: minion ? statChange(minion.attack, minion.baseAttack) : undefined },
+      {
+        label: 'Leben',
+        value: String(minion?.health ?? def.health ?? 0),
+        tone: 'health',
+        change: minion ? (minion.health < minion.maxHealth ? 'down' : statChange(minion.maxHealth, minion.baseHealth)) : undefined,
+      },
+    );
+  }
+  return {
+    title: def.name,
+    subtitle: cardOrigin(def) || undefined,
+    image: art ? { src: art, aspect: 3 / 4 } : undefined,
+    emoji: def.emoji,
+    stats,
+    lines: def.text ? [def.text] : undefined,
+    keywords: traits.map((trait) => ({ emoji: trait.emoji, name: trait.name, text: trait.description })),
+    quote: quote || undefined,
+  };
 }
 
 /** Spielverlauf: neueste Aktion oben, aufklappbar, damit das Feld auf dem Handy nicht schrumpft. */

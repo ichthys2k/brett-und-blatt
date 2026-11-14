@@ -14,6 +14,7 @@ Alle Kartenspiele zeichnen ihre Karten über **einen gemeinsamen Baustein**. Kar
 | Notiztypen Kampfkarte, Hof- & Rollenkarte, Quartettkarte; Rundlauf für Drachenspiel, Narrenhof, Quartett, Wölfe; Export in `#/bibliothek` | `gameNotetypes.ts`, `gameConverters.ts`, `apps/web/src/lib/gameCardTemplates.ts` | K4 #274 |
 | Klassisches Blatt: Spielblatt-Paket aus der Bibliothek, Kartenhinweise je Spiel (`cardDescription.ts` in Skat, Schafkopf, Doppelkopf, Mau-Mau, Eins!), gleicher Rücken am gemeinsamen Tisch | `packages/ui/src/cards/PlayingCard.tsx`, `sharedCardBack.ts`, `apps/web/src/lib/activeSheetPackage.ts` | K5 #275 |
 | Spezialkarten über `<GameCard>`: Drachenspiel, Narrenhof, Quartett, Wölfe im Schafspelz, Tiefflug | jeweils `src/ui/` | K6 #276 |
+| Großansicht `CardInspect` (`CardInspectProvider`, `useInspect`, `useInspectProps`, `InspectBody`, `inspectPosition`, `useLongPress`): Bild, Werte, Regeltext, Schlüsselwörter; schwebend am Desktop, Fenster nach Rechtsklick, Taste `i` oder langem Drücken; erster Nutzer Drachenspiel (`zoomContent` in `parts.tsx`) | `packages/ui/src/inspect/` | #418 |
 | Kartenwerte aus Anki im Spiel: Parser mit Grenzen, Prüfsumme, Abzeichen „✨ Anki #…“ und Übersicht | `packages/engine/src/anki/cardSpecParser.ts`, `apps/web/src/components/CustomCardsOverlay.tsx` | K7 #277 |
 
 ## So kommt ein eigenes Kartenset ins Spiel (13.11.2026)
