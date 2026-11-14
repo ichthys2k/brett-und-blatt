@@ -1,6 +1,6 @@
 import type { SeatId } from '@brett-und-blatt/engine';
 import { type BoardProps, type GameUi } from '@brett-und-blatt/ui';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import {
   HEX_DIRECTIONS,
   hexKey,
@@ -12,6 +12,7 @@ import {
   type QuestDef,
   type Tile,
 } from '../rules';
+import { landImage, questImage } from './bilder';
 import './styles.css';
 
 const PLAYER_COLORS = ['#2563eb', '#dc2626', '#16a34a', '#d97706', '#9333ea'];
@@ -55,10 +56,26 @@ function hexPolygonPoints(cx: number, cy: number, radius = HEX_RADIUS): string {
   return pts.join(' ');
 }
 
+/** Gemalte Landschaft im Sechseck (nur Taverne-Aussehen, CSS in styles.css); Rahmen und Merkmale bleiben Vektor. */
+function HexArt({ type, cx, cy, radius, clipId }: { type: Landscape; cx: number; cy: number; radius: number; clipId: string }) {
+  const url = landImage(type);
+  if (!url) return null;
+  return (
+    <>
+      <clipPath id={clipId}>
+        <polygon points={hexPolygonPoints(cx, cy, radius)} />
+      </clipPath>
+      <image className="gs-hex-art" href={url} x={cx - radius} y={cy - radius} width={radius * 2} height={radius * 2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
+    </>
+  );
+}
+
 function TileHexSvg({ tile, cx = 30, cy = 30, radius = 26 }: { tile: Tile; cx?: number; cy?: number; radius?: number }) {
   const points = hexPolygonPoints(cx, cy, radius);
+  const clipId = `gs-clip-${useId().replace(/:/g, '')}`;
   return (
     <svg viewBox={`0 0 ${cx * 2} ${cy * 2}`} className="gs-tile-preview-svg" aria-hidden="true">
+      <HexArt type={tile.type} cx={cx} cy={cy} radius={radius} clipId={clipId} />
       <polygon points={points} className={`gs-hex gs-hex--${tile.type}`} />
       {tile.river && <path d={`M ${cx - radius * 0.7} ${cy - radius * 0.3} Q ${cx} ${cy + radius * 0.5} ${cx + radius * 0.7} ${cy - radius * 0.2}`} className="gs-feature-river" />}
       {tile.road && <path d={`M ${cx - radius * 0.7} ${cy + radius * 0.3} Q ${cx} ${cy - radius * 0.4} ${cx + radius * 0.7} ${cy + radius * 0.4}`} className="gs-feature-road" />}
@@ -238,6 +255,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames }: BoardProps<Grafs
 
             return (
               <g key={key} className="gs-hex-group">
+                <HexArt type={tile.type} cx={cx} cy={cy} radius={HEX_RADIUS} clipId={`gs-clip-${tile.q}_${tile.r}`.replace(/-/g, 'm')} />
                 <polygon
                   points={points}
                   className={`gs-hex gs-hex--${tile.type} ${isLast ? 'gs-hex--last' : ''}`}
@@ -303,6 +321,7 @@ function Board({ view, legalMoves, onMove, viewer, seatNames }: BoardProps<Grafs
             {activeQuests.map((quest) => (
               <div key={quest.id} className="gs-quest-card">
                 <div className="gs-quest-card-header">
+                  {questImage(quest.id) && <img className="gs-quest-img" src={questImage(quest.id)} alt="" draggable={false} />}
                   <span className="gs-quest-name">{quest.name}</span>
                   <span className="gs-quest-badge">+{quest.points} Punkte</span>
                 </div>

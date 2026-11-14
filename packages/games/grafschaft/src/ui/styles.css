@@ -422,3 +422,33 @@
   color: #e09f3e;
   border-color: rgba(224, 159, 62, 0.3);
 }
+
+/* Gemalte Landschaften und Auftrags-Vignetten (G9, #318): nur im Taverne-Aussehen; sonst die heutige Darstellung. */
+.gs-hex-art,
+.gs-quest-img {
+  display: none;
+}
+[data-look='tavern'] .gs-hex-art {
+  display: inline;
+}
+[data-look='tavern'] .gs-hex-group:has(.gs-hex-art) .gs-hex,
+[data-look='tavern'] .gs-tile-preview-svg:has(.gs-hex-art) .gs-hex {
+  fill-opacity: 0;
+}
+[data-look='tavern'] .gs-hex-group:has(.gs-hex-art) .gs-hex-symbol,
+[data-look='tavern'] .gs-tile-preview-svg:has(.gs-hex-art) .gs-hex-symbol {
+  display: none;
+}
+[data-look='tavern'] .gs-quest-img {
+  display: block;
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-line, rgba(0, 0, 0, 0.25));
+}
+[data-look='tavern'] .gs-quest-img + .gs-quest-name {
+  margin-right: auto;
+  margin-left: 0.5rem;
+}
