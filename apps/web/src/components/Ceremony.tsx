@@ -1,6 +1,7 @@
 import type { Result, SeatId } from '@brett-und-blatt/engine';
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { t } from '../i18n';
+import { Avatar } from './Avatar';
 
 /** Gemalte Siegerehrungs-Bilder (#315); fehlt eines, bleibt das Emoji. */
 const ART_URLS = {
@@ -153,7 +154,7 @@ export function Ceremony({ result, title, reason, seats, actions, trophyNote, on
                 <div className="bub-podium-people">
                   {step.seats.map((s) => (
                     <div key={s.seat} className="bub-podium-person" data-you={s.you || undefined}>
-                      <span className="bub-podium-avatar">{s.avatar ?? <span className="bub-ceremony-symbol">{s.symbol}</span>}</span>
+                      <span className="bub-podium-avatar">{s.avatar ? <Avatar value={s.avatar} /> : <span className="bub-ceremony-symbol">{s.symbol}</span>}</span>
                       <span className="bub-podium-name">{s.name}</span>
                       {s.score !== null && <span className="bub-podium-score">{s.score}</span>}
                     </div>
@@ -174,7 +175,7 @@ export function Ceremony({ result, title, reason, seats, actions, trophyNote, on
             {others.slice(0, 7).map(({ place, seat }) => (
               <li key={seat.seat} data-you={seat.you || undefined}>
                 <span className="bub-ceremony-place">{place !== null ? `${place}.` : ''}</span>
-                <span className="bub-ceremony-symbol">{seat.avatar ?? seat.symbol}</span>
+                <span className="bub-ceremony-symbol">{seat.avatar ? <Avatar value={seat.avatar} /> : seat.symbol}</span>
                 <span className="truncate">{seat.name}</span>
                 {seat.score !== null && <span className="bub-ceremony-points">{seat.score}</span>}
               </li>

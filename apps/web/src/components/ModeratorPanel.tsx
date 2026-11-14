@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import type { Profile } from '../lib/storage';
 import { Button } from './controls';
 import { ProfileForm } from './OnlineParts';
+import { Avatar } from './Avatar';
 
 /** Ein Mitglied mit dem, was die Moderation über seinen Platz wissen muss. */
 export interface ModeratorMember {
@@ -89,7 +90,7 @@ export function ModeratorPanel({ capabilities, members, namesLocked, displays, r
                     {requests.map((member) => (
                       <li key={member.id} className="flex flex-wrap items-center gap-2">
                         <span className="min-w-0 flex-1 font-medium">
-                          <span aria-hidden="true">{member.avatar} </span>
+                          <span aria-hidden="true"><Avatar value={member.avatar} /> </span>
                           {member.name}
                         </span>
                         <Button variant="primary" className="min-h-9 text-sm" aria-label={`${t('join.accept')}: ${member.name}`} onClick={() => onAnswerJoin(member.id, true)}>
@@ -149,7 +150,7 @@ export function ModeratorPanel({ capabilities, members, namesLocked, displays, r
             <li key={member.id} className="space-y-2 rounded-xl bg-surface-2 px-3 py-2">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xl" aria-hidden="true">
-                  {member.avatar}
+                  <Avatar value={member.avatar} />
                 </span>
                 <span className={`min-w-0 flex-1 ${member.connected ? '' : 'text-muted'}`}>
                   <span className="font-medium">

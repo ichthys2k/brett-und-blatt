@@ -21,6 +21,7 @@ import { GAME_SERVER } from '../lib/online';
 import { saveOwnProfile } from '../lib/playerPass';
 import { paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
+import { Avatar } from '../components/Avatar';
 
 const OUTCOME_ICON = { win: '🏆', draw: '🤝', loss: '▫️' } as const;
 
@@ -137,7 +138,7 @@ export function PassScreen() {
       ) : (
         <section className="bub-pass-cover flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 shadow-sm">
           <span className="text-3xl" aria-hidden="true">
-            {profile.avatar}
+            <Avatar value={profile.avatar} />
           </span>
           <span className="flex-1 text-lg font-semibold">{profile.name}</span>
           <Button variant="ghost" onClick={() => setEditing(true)}>

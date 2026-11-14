@@ -19,6 +19,7 @@ import { crestProgress, saveCrest, useCrest } from '../lib/crestStore';
 import { saveOwnProfile } from '../lib/playerPass';
 import { storage } from '../lib/storage';
 import { Button } from './controls';
+import { Avatar } from './Avatar';
 
 const base = 'min-h-11 rounded-xl px-4 text-sm';
 const chosen = 'border-[3px] border-ink bg-bg font-semibold';
@@ -130,7 +131,7 @@ export function CrestDesigner({ name, onClose }: { name: string; onClose(): void
           <div className="flex max-h-32 flex-wrap gap-1 overflow-y-auto rounded-xl border border-line bg-bg p-2">
             {AVATARS.map((emoji) => (
               <button key={emoji} type="button" className={`grid size-11 place-items-center rounded-lg text-2xl ${safe.animal === emoji ? 'bg-accent/20 ring-2 ring-ink' : 'hover:bg-surface-2'}`} aria-pressed={safe.animal === emoji} aria-label={emoji} onClick={() => change({ animal: emoji })}>
-                {emoji}
+                <Avatar value={emoji} />
               </button>
             ))}
           </div>

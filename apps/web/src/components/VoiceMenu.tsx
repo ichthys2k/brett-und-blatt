@@ -9,6 +9,7 @@ import { useCallback, useRef, useState } from 'react';
 import { t } from '../i18n';
 import { Button } from './controls';
 import { useDismiss } from './useDismiss';
+import { Avatar } from './Avatar';
 
 export function VoiceMenu({
   voice,
@@ -90,7 +91,7 @@ export function VoiceMenu({
                       <li key={m.id} className="flex items-center justify-between gap-2 text-sm">
                         <span>
                           {state.speaking.includes(m.id) ? '🔊 ' : ''}
-                          {m.avatar} {m.name}
+                          <Avatar value={m.avatar} /> {m.name}
                         </span>
                         <Button variant="ghost" className="px-2 py-1 text-xs" aria-pressed={silenced} onClick={() => voice.silence(m.id, !silenced)}>
                           {silenced ? t('voice.unsilence') : t('voice.silence')}

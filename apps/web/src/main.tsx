@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { startAppUpdates } from './lib/appUpdate';
 import './lib/look';
+import './lib/avatarRender';
 import { registerWebPassBlocks } from './lib/passBlocks';
 import { startClassProgressSync } from './lib/classLearning';
 import { startClassCardSync } from './lib/classes';

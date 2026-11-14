@@ -15,6 +15,7 @@ import { buildIcs, calendarEvents } from '../lib/calendar';
 import { PushToggle } from '../components/PushToggle';
 import { createTournament, useTournament, type TournamentState } from '../lib/tournament';
 import { FullscreenButton, Stage, useWakeLock } from './Display';
+import { Avatar } from '../components/Avatar';
 
 type Match = TournamentView['matches'][number];
 type Slot = Match['slots'][number];
@@ -547,7 +548,7 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
             <li key={p.id} className="flex min-w-0 items-center gap-1 rounded-xl border border-line bg-surface py-1 pr-1 pl-2 text-sm">
               <span className="min-w-0 flex-1 truncate">
                 {view.settings.checkin && <span aria-hidden="true">{p.present ? '✅ ' : '⬜ '}</span>}
-                {p.avatar} {p.name}
+                <Avatar value={p.avatar} /> {p.name}
               </span>
               {view.settings.checkin && can(capsOf(view), 'checkin') && (
                 <button type="button" className="min-h-8 rounded-lg px-2 text-muted hover:bg-line/40" aria-label={`${p.present ? t('tournament.checkoutOne') : t('tournament.checkinOne')}: ${p.name}`} onClick={() => send({ type: 'present', player: p.id, on: !p.present })}>
@@ -1100,7 +1101,7 @@ function SignupView({ view, code, send }: { view: TournamentView; code: string; 
               {waiting.map((p) => (
                 <li key={p.id} className="flex items-center gap-2 text-sm">
                   <span className="min-w-0 flex-1 truncate">
-                    {p.avatar} {p.name}
+                    <Avatar value={p.avatar} /> {p.name}
                   </span>
                   <Button className="text-xs" variant="primary" onClick={() => send({ type: 'approve', player: p.id, ok: true })}>
                     ✔️ {t('tournament.approve')}
@@ -1118,7 +1119,7 @@ function SignupView({ view, code, send }: { view: TournamentView; code: string; 
             <li key={p.id} className={`flex min-w-0 items-center gap-1 rounded-xl border px-2 py-1 text-sm ${p.id === view.you ? 'border-accent bg-accent/10 font-semibold' : 'border-line bg-surface'}`}>
               <span className="min-w-0 flex-1 truncate">
                 {checkin && <span aria-hidden="true">{p.present ? '✅ ' : '⬜ '}</span>}
-                {p.avatar} {p.name}
+                <Avatar value={p.avatar} /> {p.name}
               </span>
               {checkin && view.isLeader && (
                 <button type="button" className="min-h-8 rounded-lg px-1 text-xs text-muted hover:bg-line/40" aria-label={`${p.present ? t('tournament.checkoutOne') : t('tournament.checkinOne')}: ${p.name}`} onClick={() => send({ type: 'present', player: p.id, on: !p.present })}>
