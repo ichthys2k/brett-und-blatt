@@ -281,6 +281,21 @@ test('Aufgeben im FFA: Figuren grau, letzter Spieler beendet das Spiel und gewin
   assert.equal(applyAction(s, { t: 'resign', p: 'r' }), false, 'nach Spielende geht nichts mehr');
 });
 
+test('Wer als Letzter übrig bleibt, gewinnt – auch gegen einen Mattgesetzten mit mehr Punkten', () => {
+  const s = newGame();
+  // Grün wurde früh matt gesetzt, hatte aber viele Punkte gesammelt.
+  s.active.g = false;
+  s.out.g = 'mate';
+  s.scores.g = 40;
+  s.scores.r = 12;
+  s.scores.y = 30;
+  applyAction(s, { t: 'resign', p: 'b' });
+  applyAction(s, { t: 'resign', p: 'y' });
+  assert.equal(s.result?.reason, 'last');
+  assert.deepEqual(s.result?.winners, ['r']);
+  assert.deepEqual(s.result?.ranking, ['r', 'g', 'y', 'b']);
+});
+
 test('Sieg beanspruchen bei 21 Punkten Vorsprung', () => {
   const s = newGame();
   applyAction(s, { t: 'resign', p: 'b' });
