@@ -2,7 +2,7 @@ import type { GameModule } from '@brett-und-blatt/engine';
 import { symbolMatchBot } from './bots';
 import { SYMBOL_SETS } from './deck';
 import { meta } from './meta';
-import { MODES, applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, type SymbolMatchMove, type SymbolMatchState, type SymbolMatchView } from './rules';
+import { MODES, ROUNDS, applyMove, currentPlayers, isLegal, legalMoves, playerView, result, sampleHidden, setup, systemDelayMs, systemTimerKey, type SymbolMatchMove, type SymbolMatchState, type SymbolMatchView } from './rules';
 import { describeMove } from './describe';
 
 export type { SymbolMatchMove, SymbolMatchState, SymbolMatchView } from './rules';
@@ -13,9 +13,17 @@ export const gameModule: GameModule<SymbolMatchState, SymbolMatchMove, SymbolMat
     {
       id: 'mode',
       label: 'Spielart',
-      description: 'Allein gibt es nur den Turmbau (als Training).',
+      description: 'Allein gibt es Turmbau und Zeit-Duell.',
       choices: MODES,
       default: 'tower',
+    },
+    {
+      id: 'rounds',
+      label: 'Runden',
+      description: 'Wie viele Runden gespielt werden.',
+      when: { mode: ['hotPotato'] },
+      choices: ROUNDS.map((r) => ({ value: String(r), label: `${r} Runden` })),
+      default: '5',
     },
     {
       id: 'order',
@@ -48,6 +56,8 @@ export const gameModule: GameModule<SymbolMatchState, SymbolMatchMove, SymbolMat
   },
   setup,
   currentPlayers,
+  systemDelayMs,
+  systemTimerKey,
   legalMoves,
   isLegal,
   applyMove,

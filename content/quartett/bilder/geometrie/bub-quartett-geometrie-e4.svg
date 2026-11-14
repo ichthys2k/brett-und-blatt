@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" width="480" height="360" role="img" aria-label="Sechsecksprisma (Bienenzelle)">
+<defs><radialGradient id="pergament" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#f7eed6"/><stop offset="1" stop-color="#e3cf9f"/></radialGradient><style> .flaeche { fill: #d9a400; fill-opacity: 0.22; stroke: none; } .kante, .umriss { fill: none; stroke: #3b2a1a; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; } .kante.verdeckt, .hilfslinie.verdeckt { stroke: #8a7658; stroke-width: 2; stroke-dasharray: 1.5 6; } .hilfslinie { fill: none; stroke: #8a7658; stroke-width: 1.6; } .achse { stroke: #9a6a2e; stroke-width: 1.6; stroke-dasharray: 10 7; } .ecke { fill: #3b2a1a; } .ecke.verdeckt { fill: #8a7658; } .glanz { fill: #fff8e6; fill-opacity: 0.55; } </style></defs>
+<rect width="480" height="360" fill="url(#pergament)" />
+<polygon class="flaeche" points="305,44 168.7,45.5 103.7,94.3 175,141.7 311.3,140.3 376.3,91.4" />
+<polygon class="flaeche" points="376.3,265.7 311.3,314.5 311.3,140.3 376.3,91.4" />
+<polygon class="flaeche" points="311.3,314.5 175,316 175,141.7 311.3,140.3" />
+<polygon class="flaeche" points="175,316 103.7,268.6 103.7,94.3 175,141.7" />
+<line class="kante" data-kante="0" x1="376.3" y1="265.7" x2="311.3" y2="314.5" />
+<line class="kante" data-kante="1" x1="311.3" y1="314.5" x2="175" y2="316" />
+<line class="kante" data-kante="2" x1="175" y1="316" x2="103.7" y2="268.6" />
+<line class="kante verdeckt" data-kante="3" x1="103.7" y1="268.6" x2="168.7" y2="219.7" />
+<line class="kante verdeckt" data-kante="4" x1="168.7" y1="219.7" x2="305" y2="218.3" />
+<line class="kante verdeckt" data-kante="5" x1="376.3" y1="265.7" x2="305" y2="218.3" />
+<line class="kante" data-kante="6" x1="168.7" y1="45.5" x2="305" y2="44" />
+<line class="kante" data-kante="7" x1="103.7" y1="94.3" x2="168.7" y2="45.5" />
+<line class="kante" data-kante="8" x1="175" y1="141.7" x2="103.7" y2="94.3" />
+<line class="kante" data-kante="9" x1="311.3" y1="140.3" x2="175" y2="141.7" />
+<line class="kante" data-kante="10" x1="376.3" y1="91.4" x2="311.3" y2="140.3" />
+<line class="kante" data-kante="11" x1="376.3" y1="91.4" x2="305" y2="44" />
+<line class="kante" data-kante="12" x1="311.3" y1="314.5" x2="311.3" y2="140.3" />
+<line class="kante" data-kante="13" x1="376.3" y1="265.7" x2="376.3" y2="91.4" />
+<line class="kante" data-kante="14" x1="175" y1="316" x2="175" y2="141.7" />
+<line class="kante" data-kante="15" x1="103.7" y1="268.6" x2="103.7" y2="94.3" />
+<line class="kante verdeckt" data-kante="16" x1="168.7" y1="219.7" x2="168.7" y2="45.5" />
+<line class="kante verdeckt" data-kante="17" x1="305" y1="218.3" x2="305" y2="44" />
+<circle class="ecke" data-ecke="0" cx="376.3" cy="265.7" r="4" />
+<circle class="ecke" data-ecke="1" cx="311.3" cy="314.5" r="4" />
+<circle class="ecke" data-ecke="2" cx="175" cy="316" r="4" />
+<circle class="ecke" data-ecke="3" cx="103.7" cy="268.6" r="4" />
+<circle class="ecke verdeckt" data-ecke="4" cx="168.7" cy="219.7" r="3" />
+<circle class="ecke verdeckt" data-ecke="5" cx="305" cy="218.3" r="3" />
+<circle class="ecke" data-ecke="6" cx="376.3" cy="91.4" r="4" />
+<circle class="ecke" data-ecke="7" cx="311.3" cy="140.3" r="4" />
+<circle class="ecke" data-ecke="8" cx="175" cy="141.7" r="4" />
+<circle class="ecke" data-ecke="9" cx="103.7" cy="94.3" r="4" />
+<circle class="ecke" data-ecke="10" cx="168.7" cy="45.5" r="4" />
+<circle class="ecke" data-ecke="11" cx="305" cy="44" r="4" />
+</svg>

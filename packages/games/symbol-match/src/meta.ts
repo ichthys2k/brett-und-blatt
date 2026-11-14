@@ -22,8 +22,10 @@ export const meta: GameInfo = {
     'Turmbau: Jeder hat eine Karte vor sich, in der Mitte liegt die nächste. Tippe das gleiche Symbol an – dann kommt die Mittelkarte auf deinen Turm. Der höchste Turm gewinnt.',
     'Brunnen: Alle Karten sind verteilt. Passt deine oberste Karte zur Mittelkarte, legst du sie in die Mitte. Wer zuerst keine Karte mehr hat, gewinnt.',
     'Vergiftetes Geschenk: Findest du das gleiche Symbol zwischen der Mittelkarte und der Karte eines Mitspielers, bekommt er sie. Wer am Ende die wenigsten Karten hat, gewinnt.',
-    'Alle spielen gleichzeitig. Ein falsches Symbol sperrt dich, bis eine neue Karte in der Mitte liegt.',
-    'Allein spielst du Turmbau als Training. Zu mehreren an einem Tablet bekommt jeder seine eigene Bildschirmhälfte.',
-    'Mit „Mathe“ als Symbolpaket suchst du den gleichen Wert in verschiedener Schreibweise, z. B. 12 und 3·4.',
+    'Heiße Kartoffel: Jeder hat eine Karte. Findest du das gleiche Symbol zwischen deiner Karte und der eines Mitspielers, legst du deinen Stapel darauf. Wer am Ende der Runde übrig bleibt, verliert die Runde.',
+    'Zeit-Duell: Sammle 60 Sekunden lang so viele Treffer wie möglich gegen die Uhr.',
+    'Alle spielen gleichzeitig. Ein falsches Symbol sperrt dich bis zur nächsten Karte.',
+    'Allein spielst du Turmbau oder Zeit-Duell. Zu mehreren an einem Tablet bekommt jeder seine eigene Bildschirmhälfte.',
+    'Mit „Mathe“ oder „Brüche & Einheiten“ suchst du den gleichen Wert in verschiedener Schreibweise, z. B. 12 und 3·4 oder ½ und 50 %.',
   ],
 };

@@ -83,9 +83,16 @@ Im Klassen-Modus besser keine Bots, damit Kinder gegeneinander spielen.
 - **Klänge** aus dem Katalog: `paar` (Treffer), `kein-paar` (Fehlgriff), `karte-ziehen` (Karte verworfen). Playlist „Spielabend“, Rubrik Familie, online eingetragen.
 - Tests (`test/symbol-match.test.ts`, 31): Kartensatz, Mathe-Werte, alle drei Spielarten, Sperre, verworfene Mitte, zu späte Züge, Sicht und `sampleHidden`, Bot-Partien je Stufe und Spielart, `gameContractChecks`.
 
+## Umsetzung (14.11.2026, #250)
+
+- **Neue Spielmodi** (`src/rules.ts`, `src/index.ts`, `src/ui/`):
+  - **Heiße Kartoffel** (`hotPotato`, ab 2 Plätzen, mit Option *Runden* 3/5/7): ohne Mittelkarte; wer zwischen eigener Karte und fremder Karte das gleiche Symbol findet, legt seinen gesamten Stapel darauf und ist für diese Runde sicher. Wer am Ende der Runde übrig bleibt, verliert die Runde (`losses`); die wenigsten Verluste gewinnen.
+  - **Zeit-Duell** (`duel`, 1–8 Plätze): 60 Sekunden lang über `systemDelayMs`/`systemTimerKey` gegen die Uhr; jeder Treffer gibt 1 Punkt, die Mittelkarte wird die neue eigene Karte, das Deck mischt bei Bedarf automatisch nach. Oberfläche zeigt einen Live-Countdown.
+- **Neue/überarbeitete Kartensets** (`src/deck.ts`):
+  - **Brüche & Einheiten** (`fractions`, Mathe Kl. 5/6): 57 eindeutige Werte (Brüche, Dezimalzahlen, Prozente sowie Längen, Gewichte, Zeit, Geld, Hohlmaße) mit je 3–4 Schreibweisen ohne doppelte Werte.
+  - **Bibel** (`bible`): auf 57 eindeutige biblische Symbole kuratiert.
+- **Tests** (`test/symbol-match.test.ts`, 41 Tests): Projektive Ebene (Ordnung 3, 5, 7), Eindeutigkeit der 57 `FRACTION_GROUPS`, Regeln und Bot-Partien für alle fünf Spielarten, `gameContractChecks`.
+
 ## Offene Punkte
 
-- Heiße Kartoffel (mehrere Runden) und Zeit-Duell (60 s) fehlen.
-- Brüche- und Einheiten-Paket für Mathe.
-- Eine echte Strafzeit in Sekunden ginge nur mit Zeit im Zug (die Sperre „bis zur nächsten Karte“ ersetzt sie).
-- Bibel-Symbole auf passende Begriffe kuratieren (jetzt allgemeine Emojis mit Bibelbezug).
+- Eine echte Strafzeit in Sekunden bei Fehlgriff ginge nur mit Zeit im Zug (die Sperre „bis zur nächsten Karte“ ersetzt sie).

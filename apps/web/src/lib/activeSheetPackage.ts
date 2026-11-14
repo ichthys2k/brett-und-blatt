@@ -165,3 +165,32 @@ export function useActivePlayingCardOverrides(): Record<string, PlayingCardOverr
 
   return overrides;
 }
+
+/**
+ * Ein ersetzter Kartenrücken aus dem aktiven Spielblatt-Paket (#314): Liegt dort ein Medium mit dem
+ * Namen des gewählten gemalten Rückens (`bub-ruecken-<id>.webp`), zeigt die App dieses Bild.
+ */
+export function useSheetMediaUrl(name: string | null): string | undefined {
+  const activePackageId = useActiveSheetPackageId();
+  const [url, setUrl] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    let created: string | undefined;
+    setUrl(undefined);
+    if (!activePackageId || !name) return;
+    void loadMedia(activePackageId)
+      .then((media) => {
+        const bytes = media.get(name);
+        if (cancelled || !bytes) return;
+        const ext = name.split('.').pop()?.toLowerCase() ?? '';
+        created = URL.createObjectURL(new Blob([bytes as BlobPart], { type: MIME_MAP[ext] ?? 'image/png' }));
+        setUrl(created);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+      if (created) URL.revokeObjectURL(created);
+    };
+  }, [activePackageId, name]);
+  return url;
+}
