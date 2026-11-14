@@ -135,7 +135,7 @@ export function PassScreen() {
           />
         </Section>
       ) : (
-        <section className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 shadow-sm">
+        <section className="bub-pass-cover flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 shadow-sm">
           <span className="text-3xl" aria-hidden="true">
             {profile.avatar}
           </span>
