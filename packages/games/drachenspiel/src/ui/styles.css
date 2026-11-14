@@ -45,7 +45,8 @@
   box-sizing: border-box;
   user-select: none;
   /* Kartenmaße als Variablen (#420): Handy und kleine Flächen behalten diese Werte, große Flächen
-     setzen sie in den Stufen am Ende der Datei hoch (Regeln „Mitwachsende Karten“). */
+     setzen sie in den Stufen am Ende der Datei hoch (Regeln „Mitwachsende Karten“). Karten außerhalb
+     der Arena (Deckbau, Solo, Kartenwahl) nutzen die Rückfallwerte in den Regeln selbst. */
   --ds-card-w: 82px;
   --ds-card-h: 110px;
   --ds-minion-w: 78px;
@@ -1019,7 +1020,7 @@
   justify-content: center;
   align-items: center;
   gap: clamp(2px, 1vw, 8px);
-  min-height: var(--ds-row-h);
+  min-height: var(--ds-row-h, 95px);
   width: 100%;
 }
 
@@ -1032,9 +1033,9 @@
 /* Minions */
 /* Sieben Tiere passen auf jede Breite: Die Figuren schrumpfen, statt über den Rand zu laufen. */
 .ds-minion {
-  flex: 0 1 var(--ds-minion-w);
+  flex: 0 1 var(--ds-minion-w, 78px);
   min-width: 0;
-  height: var(--ds-minion-h);
+  height: var(--ds-minion-h, 98px);
   background: var(--color-surface, #ffffff);
   border: 2px solid var(--color-border, #b2bec3);
   border-radius: 12px;
@@ -1238,7 +1239,7 @@
 
 /* Bis zu zehn Karten passen ohne Scrollen: Wird es eng, überlappen sie, die Kostenecke bleibt frei. */
 .ds-hand > .ds-card + .ds-card {
-  margin-left: min(6px, calc((100cqw - var(--ds-card-w) - 8px) / var(--ds-hand-gaps) - var(--ds-card-w)));
+  margin-left: min(6px, calc((100cqw - var(--ds-card-w, 82px) - 8px) / var(--ds-hand-gaps) - var(--ds-card-w, 82px)));
 }
 
 .ds-hand > .ds-card:hover,
@@ -1248,8 +1249,8 @@
 }
 
 .ds-card {
-  width: var(--ds-card-w);
-  height: var(--ds-card-h);
+  width: var(--ds-card-w, 82px);
+  height: var(--ds-card-h, 110px);
   background: var(--color-surface, #ffffff);
   border: 2px solid var(--color-border, #dfe6e9);
   border-radius: 10px;
