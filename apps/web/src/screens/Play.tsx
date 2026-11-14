@@ -201,6 +201,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
    * Kopfzeile. Gemessen wird das ganze Fenster, nicht das Spielfeld: Das wächst durch den Wegfall der Leiste selbst.
    */
   const around = Boolean(ui.seatsAround) && seatRingFits(seats.length, rootSize.width, rootSize.height - TABLE_BAR_HEIGHT);
+  // Poker & Co. (#378): Im niedrigen Querformat klappt die Seitenleiste zum Menüknopf ☰ ein, der Tisch bekommt die Breite.
+  const [sideOpen, setSideOpen] = useState(false);
+  const sideBox = useRef<HTMLDivElement>(null);
+  useDismiss(sideOpen, useCallback(() => setSideOpen(false), []), sideBox);
+  const collapsedSide = Boolean(ui.seatsOnBoard) && !around && rootSize.width > rootSize.height && rootSize.height > 0 && rootSize.height <= 540;
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
   const { trophy: trophyLaid } = usePassRecorder({ session, gameId: info.id, seatScore: ui.seatScore as ((view: never, seat: number) => number | string | null) | undefined, album: ui.album as AlbumSpec<never> | undefined, learning: ui.learning as { report: (view: never, seat: number) => { row: string; sure: boolean }[] } | undefined, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.finishedNote !== undefined, display: online.display } } : {}) });
@@ -524,8 +529,34 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       className={`flex ${online?.display ? 'h-full' : 'h-dvh'} flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around ? '' : 'mx-auto max-w-3xl side:max-w-none side:flex-row'}`}
     >
       {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
-      <div className={around ? 'contents' : `contents side:flex side:flex-none side:flex-col side:overflow-y-auto ${crowded ? 'side:w-80' : 'side:w-64 wide:w-72'}`}>
-        <header className={`flex h-14 flex-none items-center gap-2 px-3 short:h-11 ${around ? 'relative z-30' : ''}`}>
+      <div ref={sideBox} className={collapsedSide ? 'relative flex-none' : 'contents'}>
+      {collapsedSide && (
+        <div className="flex h-full w-11 flex-col items-center gap-2 py-2">
+          <button
+            type="button"
+            className="relative flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-lg border border-line bg-surface text-lg hover:bg-surface-2"
+            aria-expanded={sideOpen}
+            aria-label={sideOpen ? t('play.hideMenu') : t('play.showMenu')}
+            title={sideOpen ? t('play.hideMenu') : t('play.showMenu')}
+            onClick={() => setSideOpen(!sideOpen)}
+          >
+            <span aria-hidden="true">☰</span>
+            {yourMove && <span className="absolute -right-0.5 -top-0.5 h-3 w-3 animate-pulse rounded-full border border-surface bg-accent" aria-hidden="true" />}
+          </button>
+        </div>
+      )}
+      <div
+        className={
+          collapsedSide
+            ? sideOpen
+              ? 'absolute left-11 top-0 z-40 flex h-full w-72 flex-col overflow-y-auto rounded-r-xl border border-line bg-surface shadow-xl'
+              : 'hidden'
+            : around
+              ? 'contents'
+              : `contents side:flex side:flex-none side:flex-col side:overflow-y-auto ${crowded ? 'side:w-80' : 'side:w-64 wide:w-72'}`
+        }
+      >
+        <header className={`flex h-14 flex-none items-center gap-2 px-3 short:h-11 tiny:h-10 ${around ? 'relative z-30' : ''}`}>
           {!online?.display && (
             <Button variant="ghost" className="px-3" aria-label={online ? t('online.leave') : t('play.back')} onClick={() => (online ? online.onLeave() : navigate(paths.home))}>
               ←
@@ -642,12 +673,13 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         )}
 
         {!around && (
-          <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:justify-center-safe short:overflow-x-auto short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:flex-none short:[&>button]:px-2 short:[&>button]:text-sm short:[&>button]:whitespace-nowrap">
+          <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:justify-center-safe short:overflow-x-auto short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:flex-none short:[&>button]:px-2 short:[&>button]:text-sm short:[&>button]:whitespace-nowrap tiny:gap-1 tiny:pt-1 tiny:pb-0 tiny:[&>button]:min-h-8 tiny:[&>button]:px-2 tiny:[&>button]:text-xs">
             {primaryControls}
             {!result && secondaryControls}
           </footer>
         )}
         {around ? online?.extra && <div className="order-2 flex-none">{online.extra}</div> : online?.extra}
+      </div>
       </div>
 
       <main className="bub-table relative order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 side:py-2 side:px-4" data-category={categoryOf(info.id)}>

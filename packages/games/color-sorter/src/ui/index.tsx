@@ -403,7 +403,7 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
   const handAvail = big ? size.width - sideW - 12 - (tight || desk ? 0 : 224) - 24 : (wide ? size.width * 0.58 : size.width) - 12;
   const cardW = big
     ? Math.max(56, Math.min(180, handAvail / (handCount * 0.86 + 0.14 + (desk ? 1.25 : 0)), desk ? (size.height - benchTileW * 1.62 - 400) / 1.4 : (size.height - (tight ? 200 : 160)) / 2.7))
-    : Math.max(40, Math.min(96, handAvail / (handCount * 0.86), size.height > 0 ? size.height / (wide ? 3.6 : size.width > size.height * 1.25 ? 7.6 : 6.4) : 96));
+    : Math.max(40, Math.min(96, handAvail / (handCount * 0.86), size.height > 0 ? size.height / (wide ? 6.4 : size.width > size.height * 1.25 ? 7.6 : 6.4) : 96));
   const tileW = cards ? benchTileW : Math.max(60, Math.min(150, cardW * 0.78));
 
   const hintCards = hint && (hint.type === 'play' || hint.type === 'discard') ? hint.cards : [];

@@ -2510,10 +2510,6 @@ button.cs-tile {
     font-size: 0.7rem;
   }
 
-  .cs-board:not(.cs-bigmode) .cs-hand {
-    --cw: min(var(--cw), 44px) !important;
-  }
-
   .cs-board:not(.cs-bigmode) .cs-score {
     padding: 0.15rem 0.4rem;
     font-size: 0.8rem;
@@ -2549,6 +2545,46 @@ button.cs-tile {
   .cs-board:not(.cs-bigmode) .cs-panel.cs-center .cs-btn {
     padding: 0.25rem 0.6rem;
     font-size: 0.8rem;
+  }
+}
+
+/* Sehr niedriges Querformat (Handy mit Browserleisten, #109): Name und Marotte nebeneinander */
+@media (orientation: landscape) and (max-height: 360px) {
+  .cs-board:not(.cs-bigmode) .cs-enemy-text {
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 0.1rem 0.5rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-enemy-text .cs-applause {
+    flex: 1 1 100%;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-ribbon {
+    font-size: 0.7rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-score {
+    padding: 0.1rem 0.4rem;
+  }
+
+  /* Vorbereitung, Jahrmarkt und Co.: weniger Luft, kleinere Knöpfe */
+  .cs-board:not(.cs-bigmode) .cs-panel.cs-center {
+    gap: 0.1rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-panel.cs-center p {
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-panel.cs-center .cs-muted {
+    font-size: 0.68rem;
+  }
+
+  .cs-board:not(.cs-bigmode) .cs-panel.cs-center .cs-btn {
+    min-height: 2rem;
+    padding: 0.15rem 0.6rem;
   }
 }
 
