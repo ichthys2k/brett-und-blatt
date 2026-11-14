@@ -8,6 +8,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**VR: Tisch drehen, Kartenwurf und zwei Reihen, Handgelenk-Menü mit Handtracking (14.11.2026, #387, #384, #388):** `apps/xr/src/table-frame.ts` (Raum ↔ Tischsystem mit Größe und Drehung), Drehen mit zwei Händen und Knöpfen in `scene/Scene.tsx`/`Panel.tsx`; Wurf und Zweireihen-Fächer in `scene/fan-layout.ts`/`cards.tsx`; Handflächen-Normale `palmNormal` und `choiceOffset` in `ui-state.ts`, `scene/WristMenu.tsx`. Tests `tests/xr-tischdrehen.test.ts`, `tests/xr-faecher2.test.ts`, `tests/xr-handgelenk.test.ts`. Im Browser nur gesehen, dass die Szene unverändert rendert; nicht in der Brille geprüft.
+
 **QR-Code zum Beitreten (14.11.2026, #394):** VR-Lobby zeigt den QR-Code des Raums (`apps/xr/src/scene/QrPlate.tsx`, `uqr`), die Web-App kann QR-Codes scannen (`apps/web/src/lib/qrScan.ts`, `components/QrScanner.tsx`, Knopf auf `#/online`; nur `BarcodeDetector`). Scannen in der VR-App nicht möglich (Quest-Browser gibt die Kamera nicht frei), dokumentiert in `docs/vr.md`. Tests `tests/xr-qr.test.ts`, `apps/web/test/qr-scan.test.ts`. Im Browser nur die VR-Anzeige gesehen; Scannen nicht mit echter Kamera geprüft.
 
 **VR: Finger, Stuhlschilder und 👋 (14.11.2026, #385, #386):** Fingerhaltung bei Handtracking im Präsenzpaket (`apps/xr/src/presence.ts`, `gestures.ts`, `scene/Meet.tsx`), Stuhlschilder drehen sich zum Spieler am Zug (`scene/Seats.tsx`), Winken löst 👋 aus: `REACTIONS` in `packages/online/src/protocol.ts` um 👋 erweitert (Klang in `apps/web/src/lib/online.ts` vorläufig der des Daumens). Lastmessung in `docs/spiele/weitere-plattformen.md`. Test `tests/xr-praesenz.test.ts`; nicht mit zwei Brillen geprüft.

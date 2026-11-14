@@ -28,6 +28,7 @@ import { handAnchor } from '../hand-fan';
 import { POSTURE_LIFT, getPosture, holdingHand, onUiStateChange } from '../ui-state';
 import { WristMenu } from './WristMenu';
 import { clampOffset, dragOffset, inEdgeZone, pinchScale, tableGrab, tableLocked, type Offset as GrabOffset } from '../table-grab';
+import { angleDelta, lineAngle, snapYaw, tableFrame, worldToTable } from '../table-frame';
 import { GESTURE_REACTION, GestureTracker, fingerCurls, gesturesEnabled, type Joints, type Vec3 } from '../gestures';
 import { presence } from '../presence';
 import { SpatialAudio } from './SpatialAudio';
@@ -59,6 +60,16 @@ interface SceneProps {
 
 const VIEW_KEY = 'brett-und-blatt-xr-tisch';
 const SCALE_KEY = 'brett-und-blatt-xr-tischgroesse';
+const YAW_KEY = 'brett-und-blatt-xr-tischdrehung';
+
+function readYaw(): number {
+  try {
+    const value = Number(localStorage.getItem(YAW_KEY));
+    return Number.isFinite(value) ? value : 0;
+  } catch {
+    return 0;
+  }
+}
 
 function readScale(): number {
   try {
@@ -163,7 +174,7 @@ function HeadAlign({ origin, onAlign }: { origin: [number, number, number]; onAl
 }
 
 /** Schreibt die Lage der linken Hand (Haltehand) und des Kopfes im Tischsystem für den Kartenfächer (#384). */
-function HandAnchor({ origin, scale }: { origin: [number, number, number]; scale: number }) {
+function HandAnchor({ origin }: { origin: [number, number, number] }) {
   const { camera, gl } = useThree();
   const tmp = useRef(new Vector3());
   useFrame(() => {
@@ -175,14 +186,14 @@ function HandAnchor({ origin, scale }: { origin: [number, number, number]; scale
       const controller = gl.xr.getController(i);
       if (!controller.visible) return;
       const p = controller.position.clone().add(new Vector3(...origin));
-      const q = scale !== 1 ? scaleAboutTable([p.x, p.y, p.z], scale) : ([p.x, p.y, p.z] as [number, number, number]);
+      const q = worldToTable([p.x, p.y, p.z]);
       handAnchor.active = true;
       handAnchor.x = q[0];
       handAnchor.y = q[1];
       handAnchor.z = q[2];
     });
     camera.getWorldPosition(tmp.current);
-    const h = scale !== 1 ? scaleAboutTable([tmp.current.x, tmp.current.y, tmp.current.z], scale) : [tmp.current.x, tmp.current.y, tmp.current.z];
+    const h = worldToTable([tmp.current.x, tmp.current.y, tmp.current.z]);
     handAnchor.headX = h[0]!;
     handAnchor.headZ = h[2]!;
   });
@@ -244,11 +255,11 @@ function GestureWatcher({ send }: { send: (m: ClientMessage) => void }) {
 }
 
 /** Tisch mit den Händen greifen (#387): Griff-Taste an der Tischkante; eine Hand verschiebt und hebt, zwei skalieren. */
-function TableGrab({ origin, scale, mixed, offset, onOffset, onSaveOffset, tableScale, onScale, onSaveScale }: { origin: [number, number, number]; scale: number; mixed: boolean; offset: GrabOffset; onOffset: (o: GrabOffset) => void; onSaveOffset: (o: GrabOffset) => void; tableScale: number; onScale: (k: number) => void; onSaveScale: (k: number) => void }) {
+function TableGrab({ origin, mixed, offset, onOffset, onSaveOffset, tableScale, onScale, onSaveScale, yaw, onYaw, onSaveYaw }: { origin: [number, number, number]; mixed: boolean; offset: GrabOffset; onOffset: (o: GrabOffset) => void; onSaveOffset: (o: GrabOffset) => void; tableScale: number; onScale: (k: number) => void; onSaveScale: (k: number) => void; yaw: number; onYaw: (a: number) => void; onSaveYaw: (a: number) => void }) {
   const gl = useThree((s) => s.gl);
-  const live = useRef({ origin, scale, offset, tableScale });
-  live.current = { origin, scale, offset, tableScale };
-  const state = useRef<{ mode: 'none' | 'move' | 'scale'; hand0: Vec3; offset0: GrabOffset; dist0: number; scale0: number; last: GrabOffset; lastScale: number }>({ mode: 'none', hand0: [0, 0, 0], offset0: offset, dist0: 0, scale0: 1, last: offset, lastScale: 1 });
+  const live = useRef({ origin, offset, tableScale, yaw });
+  live.current = { origin, offset, tableScale, yaw };
+  const state = useRef<{ mode: 'none' | 'move' | 'scale'; hand0: Vec3; offset0: GrabOffset; dist0: number; scale0: number; last: GrabOffset; lastScale: number; angle0: number; yaw0: number; lastYaw: number }>({ mode: 'none', hand0: [0, 0, 0], offset0: offset, dist0: 0, scale0: 1, last: offset, lastScale: 1, angle0: 0, yaw0: 0, lastYaw: 0 });
   useFrame(() => {
     const s = state.current;
     const session = gl.xr.getSession();
@@ -261,15 +272,15 @@ function TableGrab({ origin, scale, mixed, offset, onOffset, onSaveOffset, table
         const p: Vec3 = [controller.position.x, controller.position.y, controller.position.z];
         const o = live.current.origin;
         const inTable: Vec3 = [p[0] + o[0], p[1] + o[1], p[2] + o[2]];
-        const k = live.current.scale;
-        const zone = inEdgeZone(k !== 1 ? scaleAboutTable(inTable, k) : inTable, TABLE_CENTER);
+        const zone = inEdgeZone(worldToTable(inTable), TABLE_CENTER);
         grips.push({ p, zone });
       });
     }
     const gripped = grips.filter((g) => g.zone);
     if (s.mode === 'none') {
-      if (gripped.length >= 2 && mixed) {
-        Object.assign(s, { mode: 'scale', dist0: Math.hypot(gripped[0]!.p[0] - gripped[1]!.p[0], gripped[0]!.p[1] - gripped[1]!.p[1], gripped[0]!.p[2] - gripped[1]!.p[2]), scale0: live.current.tableScale, lastScale: live.current.tableScale });
+      if (gripped.length >= 2) {
+        // Zwei Hände: drehen (immer) und skalieren (nur Mixed Reality).
+        Object.assign(s, { mode: 'scale', angle0: lineAngle(gripped[0]!.p, gripped[1]!.p), yaw0: live.current.yaw, lastYaw: live.current.yaw, dist0: Math.hypot(gripped[0]!.p[0] - gripped[1]!.p[0], gripped[0]!.p[1] - gripped[1]!.p[1], gripped[0]!.p[2] - gripped[1]!.p[2]), scale0: live.current.tableScale, lastScale: live.current.tableScale });
         tableGrab.active = true;
         pulse('select');
       } else if (gripped.length >= 1) {
@@ -290,16 +301,24 @@ function TableGrab({ origin, scale, mixed, offset, onOffset, onSaveOffset, table
       onOffset(s.last);
       return;
     }
-    // Skalieren mit zwei Händen
+    // Drehen und Skalieren mit zwei Händen
     if (gripped.length < 2) {
-      onSaveScale(s.lastScale);
+      if (mixed) onSaveScale(s.lastScale);
+      s.lastYaw = snapYaw(s.lastYaw);
+      onYaw(s.lastYaw);
+      onSaveYaw(s.lastYaw);
       s.mode = 'none';
       tableGrab.active = false;
       return;
     }
     const d = Math.hypot(gripped[0]!.p[0] - gripped[1]!.p[0], gripped[0]!.p[1] - gripped[1]!.p[1], gripped[0]!.p[2] - gripped[1]!.p[2]);
-    s.lastScale = pinchScale(s.scale0, s.dist0, d);
-    onScale(s.lastScale);
+    if (mixed) {
+      s.lastScale = pinchScale(s.scale0, s.dist0, d);
+      onScale(s.lastScale);
+    }
+    // Die Tischdrehung folgt der Drehung der Linie zwischen den Händen (von oben gesehen).
+    s.lastYaw = s.yaw0 - angleDelta(s.angle0, lineAngle(gripped[0]!.p, gripped[1]!.p));
+    onYaw(s.lastYaw);
   });
   return null;
 }
@@ -408,6 +427,14 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
   const [mixed, setMixed] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [placed, setPlaced] = useState<Placement | null>(null);
+  const [tableYaw, setTableYaw] = useState(readYaw);
+  const saveYaw = (a: number) => {
+    try {
+      localStorage.setItem(YAW_KEY, String(a));
+    } catch {
+      // nur bis zum Neuladen
+    }
+  };
   const [tableScale, setTableScale] = useState(readScale);
   const saveScale = (k: number) => {
     try {
@@ -419,6 +446,24 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
   const base = placed ?? align;
   const origin: [number, number, number] = [base.x + offset.x, base.y - offset.y - POSTURE_LIFT[getPosture()], base.z + offset.z];
   const scale = mixed ? tableScale : 1;
+  // Lage des Tisches für alle Umrechnungen Raum ↔ Tischsystem (#370, #387).
+  tableFrame.scale = scale;
+  tableFrame.yaw = tableYaw;
+  const turn = (deg: number) => {
+    const next = snapYaw(tableYaw + (deg * Math.PI) / 180, 15, 8);
+    setTableYaw(next);
+    saveYaw(next);
+  };
+  const viewAdjust = {
+    ...adjust,
+    turnLeft: () => turn(-15),
+    turnRight: () => turn(15),
+    reset: () => {
+      adjust.reset();
+      setTableYaw(0);
+      saveYaw(0);
+    },
+  };
   const placement = mixed
     ? {
         placing,
@@ -480,10 +525,10 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
       <XR store={store}>
         <Backdrop />
         <HapticsBridge />
-        <HandAnchor origin={origin} scale={scale} />
+        <HandAnchor origin={origin} />
         <GestureWatcher send={send} />
         <WristMenu origin={origin} canResign={Boolean(game?.canResign && !game.result)} send={send} />
-        <TableGrab origin={origin} scale={scale} mixed={mixed} offset={offset} onOffset={live} onSaveOffset={saveOffset} tableScale={tableScale} onScale={setTableScale} onSaveScale={saveScale} />
+        <TableGrab origin={origin} yaw={tableYaw} onYaw={setTableYaw} onSaveYaw={saveYaw} mixed={mixed} offset={offset} onOffset={live} onSaveOffset={saveOffset} tableScale={tableScale} onScale={setTableScale} onSaveScale={saveScale} />
         <SpatialAudio seats={seats} scale={scale} voice={voiceChat} />
         <ModeProbe onMixed={setMixed} />
         <TablePlacer
@@ -497,7 +542,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         <XROrigin position={origin} />
         <HeadAlign origin={origin} onAlign={setAlign} />
         <DesktopCamera />
-        <group position={TABLE_CENTER} scale={scale}>
+        <group position={TABLE_CENTER} rotation={[0, tableYaw, 0]} scale={scale}>
         <group position={[-TABLE_CENTER[0], -TABLE_CENTER[1], -TABLE_CENTER[2]]}>
         <Tavern chairs={seats.filter((s) => !s.mine).map((s) => ({ angle: s.angle, mine: false }))} />
         <Seats seats={seats} signals={signals} memberAvatar={(id) => room?.members.find((m) => m.id === id)?.avatar ?? null} figures={figures} />
@@ -537,7 +582,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         <Panel room={room} game={game} you={you} send={send} boardMoves={playing ? boardMoves : new Set()} onMove={(index) => {
           pulse('move');
           onMove(index);
-        }} adjust={adjust} placement={placement} voice={voice} />
+        }} adjust={viewAdjust} placement={placement} voice={voice} />
         {room && <ReactionBar send={send} />}
       </XR>
     </Canvas>

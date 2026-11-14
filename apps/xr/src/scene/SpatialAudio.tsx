@@ -8,7 +8,8 @@ import { useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
 import type { VoiceChat } from '@brett-und-blatt/rtc';
 import { setListener, setPlacer } from '../sound';
-import { eventSpot, seatHead, toWorld, type Spot } from '../sound-spot';
+import { eventSpot, seatHead, type Spot } from '../sound-spot';
+import { tableToWorld } from '../table-frame';
 import type { SeatInfo } from './Seats';
 
 export function SpatialAudio({ seats, scale, voice }: { seats: SeatInfo[]; scale: number; voice: VoiceChat | null }) {
@@ -22,7 +23,8 @@ export function SpatialAudio({ seats, scale, voice }: { seats: SeatInfo[]; scale
     setPlacer((event) => {
       if (!gl.xr.isPresenting) return null;
       const { seats: all, scale: k } = live.current;
-      return toWorld(eventSpot(event, (seat) => all.find((s) => s.index === seat)?.angle ?? null), k);
+      void k;
+      return tableToWorld(eventSpot(event, (seat) => all.find((s) => s.index === seat)?.angle ?? null));
     });
     return () => setPlacer(null);
   }, [gl]);
@@ -44,7 +46,7 @@ export function SpatialAudio({ seats, scale, voice }: { seats: SeatInfo[]; scale
     setListener(head, forward, up);
     voice?.listen(head, forward, up);
     for (const seat of live.current.seats) {
-      if (seat.memberId && !seat.mine) voice?.place(seat.memberId, toWorld(seatHead(seat.angle), live.current.scale));
+      if (seat.memberId && !seat.mine) voice?.place(seat.memberId, tableToWorld(seatHead(seat.angle)));
     }
   });
   return null;

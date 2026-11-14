@@ -12,7 +12,7 @@ import type { PeerMesh, Pose7, RemotePose } from '../peers';
 import { presence, type Held } from '../presence';
 import { tableGrab } from '../table-grab';
 import type { SeatInfo } from './Seats';
-import { scaleAboutTable } from './Placement';
+import { tableFrame, worldToTable } from '../table-frame';
 import { TABLE_CENTER } from './Tavern';
 import { Sign } from './ui3d';
 
@@ -24,8 +24,14 @@ export const POSE_STALE_MS = 3000;
 
 const round = (n: number) => Math.round(n * 1000) / 1000;
 
+/** Dreht eine Blickrichtung/Handlage aus dem Raum ins Tischsystem (Tisch um `yaw` gedreht). */
+function inTable(quaternion: Quaternion): Quaternion {
+  return tableFrame.yaw === 0 ? quaternion : new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -tableFrame.yaw).multiply(quaternion);
+}
+
 function pose7(position: Vector3, quaternion: Quaternion): Pose7 {
-  return [position.x, position.y, position.z, quaternion.x, quaternion.y, quaternion.z, quaternion.w].map(round);
+  const q = inTable(quaternion);
+  return [position.x, position.y, position.z, q.x, q.y, q.z, q.w].map(round);
 }
 
 function moved(a: Pose7 | null, b: Pose7 | null): boolean {
@@ -44,8 +50,8 @@ export function PoseSender({ mesh, xrMembers, sendRoomPose, origin, scale = 1 }:
     const state = last.current;
     if (now - state.at < SEND_EVERY_MS) return;
     camera.getWorldPosition(tmpP.current);
-    // Ist der Tisch verkleinert (#370), liegt der Kopf im Tischsystem entsprechend weiter weg.
-    if (scale !== 1) tmpP.current.set(...scaleAboutTable([tmpP.current.x, tmpP.current.y, tmpP.current.z], scale));
+    // Ist der Tisch verkleinert (#370) oder gedreht (#387), liegt der Kopf im Tischsystem entsprechend anders.
+    tmpP.current.set(...worldToTable([tmpP.current.x, tmpP.current.y, tmpP.current.z]));
     camera.getWorldQuaternion(tmpQ.current);
     const head = pose7(tmpP.current, tmpQ.current);
     let left: Pose7 | null = null;
@@ -58,7 +64,7 @@ export function PoseSender({ mesh, xrMembers, sendRoomPose, origin, scale = 1 }:
         const controller = gl.xr.getController(i);
         if (!controller.visible) return;
         const p = controller.position.clone().add(new Vector3(...origin));
-        if (scale !== 1) p.set(...scaleAboutTable([p.x, p.y, p.z], scale));
+        p.set(...worldToTable([p.x, p.y, p.z]));
         const value = pose7(p, controller.quaternion);
         if (source.handedness === 'left') left = value;
         else right = value;
@@ -71,7 +77,7 @@ export function PoseSender({ mesh, xrMembers, sendRoomPose, origin, scale = 1 }:
     // Gegriffenes Objekt (#385): nur Ort und Art, im Tischsystem des Senders.
     let held: Held | null = null;
     if (presence.held) {
-      const [hx, hy, hz] = scale !== 1 ? scaleAboutTable([presence.held[0], presence.held[1], presence.held[2]], scale) : [presence.held[0], presence.held[1], presence.held[2]];
+      const [hx, hy, hz] = worldToTable([presence.held[0], presence.held[1], presence.held[2]]);
       held = [hx!, hy!, hz!, presence.held[3]];
     }
     const pointKey = `${point[0]}${point[1]}`;

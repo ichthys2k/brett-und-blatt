@@ -68,6 +68,22 @@ export const onPanelCommand = (fn: (command: PanelCommand) => void): (() => void
 };
 export const sendPanelCommand = (command: PanelCommand): void => commandListeners.forEach((fn) => fn(command));
 
+/** Seite der Wahlknöpfe: bei der schreibenden Hand (Rechtshänder rechts), in Metern von der Tischmitte. */
+export const choiceOffset = (): number => (handedness === 'right' ? 0.25 : -0.25);
+
+/**
+ * Handflächen-Normale aus Handgelenk und den Grundgelenken von Zeige- und kleinem Finger (Handtracking).
+ * Rechte Hand mit Fläche nach unten: Zeigefinger links, kleiner Finger rechts → Kreuzprodukt zeigt nach unten,
+ * also aus der Handfläche heraus; bei der linken Hand dreht sich das Vorzeichen.
+ */
+export function palmNormal(wrist: [number, number, number], indexBase: [number, number, number], pinkyBase: [number, number, number], hand: 'left' | 'right'): [number, number, number] {
+  const a = [indexBase[0] - wrist[0], indexBase[1] - wrist[1], indexBase[2] - wrist[2]];
+  const b = [pinkyBase[0] - wrist[0], pinkyBase[1] - wrist[1], pinkyBase[2] - wrist[2]];
+  const c: [number, number, number] = [a[1]! * b[2]! - a[2]! * b[1]!, a[2]! * b[0]! - a[0]! * b[2]!, a[0]! * b[1]! - a[1]! * b[0]!];
+  const sign = hand === 'right' ? 1 : -1;
+  return [c[0] * sign, c[1] * sign, c[2] * sign];
+}
+
 /** Blickt man auf die Innenseite des Handgelenks? `up` zeigt von der Handfläche weg (Controller-Oberseite). */
 export function facesHead(hand: [number, number, number], up: [number, number, number], head: [number, number, number], minDot = 0.6): boolean {
   const to = [head[0] - hand[0], head[1] - hand[1], head[2] - hand[2]] as const;

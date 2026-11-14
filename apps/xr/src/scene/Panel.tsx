@@ -68,6 +68,8 @@ export interface ViewAdjust {
   closer: () => void;
   farther: () => void;
   reset: () => void;
+  turnLeft: () => void;
+  turnRight: () => void;
 }
 
 interface PanelProps {
@@ -157,6 +159,10 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
     rows.push([
       { label: 'Tisch höher ▲', press: adjust.up },
       { label: 'Tisch tiefer ▼', press: adjust.down },
+    ]);
+    rows.push([
+      { label: '↺ Tisch drehen', press: adjust.turnLeft },
+      { label: 'Tisch drehen ↻', press: adjust.turnRight },
     ]);
     rows.push([
       { label: 'Tisch näher', press: adjust.closer },

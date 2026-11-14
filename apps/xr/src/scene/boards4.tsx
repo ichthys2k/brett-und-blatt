@@ -11,6 +11,7 @@ import { GOLD, labelTexture } from './text';
 import { Button3D, Sign } from './ui3d';
 import { pulse } from '../haptics';
 import { useGrab } from './grab';
+import { choiceOffset } from '../ui-state';
 
 const TOP = TABLE_CENTER[1] + 0.002;
 const SEAT_COLORS = ['#3a6fb0', '#a32a1c', '#2f7d4a', '#d9a400', '#7b2fa8', '#0d8478'];
@@ -56,7 +57,7 @@ export function Choices({ options, onPick, onClose }: { options: { move: unknown
   const pages = Math.max(1, Math.ceil(options.length / per));
   const shown = options.slice(page * per, page * per + per);
   return (
-    <group position={[0, 0.3, FRONT - 0.1]} rotation={[-0.35, 0, 0]}>
+    <group position={[choiceOffset(), 0.3, FRONT - 0.1]} rotation={[-0.35, 0, 0]}>
       {shown.map((o, i) => (
         <Button3D key={`${page}-${o.label || i}`} label={o.label} position={[0, -i * 0.042, 0]} width={0.46} height={0.038} onPress={() => onPick(o.move)} />
       ))}

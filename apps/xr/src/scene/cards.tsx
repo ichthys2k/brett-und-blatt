@@ -8,6 +8,8 @@ import type { GameMessage } from '@brett-und-blatt/online';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
 import { useGrab } from './grab';
+import { fanSlot, isThrow, type Sample } from './fan-layout';
+import { choiceOffset } from '../ui-state';
 import { fanAttached, fanMode, fanYaw, handAnchor, onFanModeChange } from '../hand-fan';
 import { CanvasTexture, SRGBColorSpace, type Group } from 'three';
 import { seatAngle } from './Seats';
@@ -247,15 +249,14 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
 
   // Fächer: auf einem Bogen an der eigenen Tischkante, leicht aufgestellt.
   const n = view.hand.length;
-  const spread = Math.min(0.055, 0.5 / Math.max(n, 1));
   const fanZ = TABLE_CENTER[2] + TABLE_RADIUS - 0.2;
   const pileX = (k: number) => TABLE_CENTER[0] + 0.05 + (k - (view.piles.length - 1) / 2) * 0.1;
   // Ist der Stapel leer, darf aber gezogen werden (die Ablage wird gemischt), liegt trotzdem eine Karte da.
   const stockShown = Math.max(drawMove ? 1 : 0, Math.min(6, Math.ceil(view.stock / 5)));
   const stockPos: [number, number, number] = [TABLE_CENTER[0] - (view.rows.length ? 0.32 : 0.08) - (view.piles.length > 1 ? 0.08 : 0), y + 0.01, TABLE_CENTER[2]];
   const handPos = (index: number, total: number): [number, number, number] => {
-    const off = index - (total - 1) / 2;
-    return [off * Math.min(0.055, 0.5 / Math.max(total, 1)), y + 0.11, fanZ - Math.abs(off) * 0.004];
+    const slot = fanSlot(index, total);
+    return [slot.x, y + 0.11 + slot.dy, fanZ + slot.dz];
   };
   /** Weltposition, von der eine Karte losfliegt (#366). */
   const startOf = (origin: Origin | null | undefined): [number, number, number] | undefined => {
@@ -267,6 +268,7 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
     const r = TABLE_RADIUS - 0.06;
     return [TABLE_CENTER[0] + Math.sin(a) * r, y + 0.1, TABLE_CENTER[2] + Math.cos(a) * r];
   };
+  const samples = useRef<Sample[]>([]);
   // Greifen (#384): Karte aus dem Fächer (oder oberste vom Stapel) nehmen und in die Tischmitte legen.
   const grab = useGrab<string>({
     size: 1.4,
@@ -275,8 +277,15 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
     floorCenter: [TABLE_CENTER[0], TABLE_CENTER[2]],
     radius: 0.3,
     targets: () => [{ id: 'mitte', x: TABLE_CENTER[0], z: TABLE_CENTER[2] }],
+    onTrack: (x, z) => {
+      samples.current.push({ x, z, t: performance.now() });
+      if (samples.current.length > 8) samples.current.shift();
+    },
     onDrop: (id, to) => {
-      if (to === null) return;
+      // Ein schneller Wurf Richtung Mitte zählt wie Ablegen (#384).
+      const thrown = to === null && isThrow(samples.current, [TABLE_CENTER[0], TABLE_CENTER[2]]);
+      samples.current = [];
+      if (to === null && !thrown) return;
       if (id === 'stock') {
         if (drawMove) onMove(drawMove.move);
       } else press(id);
@@ -291,7 +300,7 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
       <group ref={fan}>
       <group position={[0, -(y + 0.11), -fanZ]}>
       {view.hand.map((card, i) => {
-        const offset = i - (n - 1) / 2;
+        const slot = fanSlot(i, n);
         const isPlayable = playable.has(card.id);
         if (grab.held?.id === card.id) return null;
         return (
@@ -300,13 +309,13 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
             onPointerDown={(e) => {
               if (!isPlayable) return;
               e.stopPropagation();
-              grab.begin(card.id, offset * spread, fanZ);
+              grab.begin(card.id, slot.x, fanZ + slot.dz);
             }}
           >
           <Card
             face={card.face}
-            position={[offset * spread, y + 0.11 + (isPlayable ? 0.012 : 0) - Math.abs(offset) * 0.002, fanZ - Math.abs(offset) * 0.004 + i * 0.0005]}
-            rotation={[-0.55, 0, -offset * 0.03]}
+            position={[slot.x, y + 0.11 + (isPlayable ? 0.012 : 0) + slot.dy, fanZ + slot.dz + i * 0.0005]}
+            rotation={[-0.55, 0, slot.tilt]}
             highlight={isPlayable}
             selected={picked.includes(card.id) || choice === card.id}
             onPress={isPlayable ? () => press(card.id) : undefined}
@@ -408,7 +417,7 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
       })}
       {view.note && <Button3D label={view.note} position={[TABLE_CENTER[0] + 0.05, y + 0.08, TABLE_CENTER[2] - 0.12]} width={0.32} height={0.045} disabled />}
       {choices.length > 0 && (
-        <group position={[TABLE_CENTER[0], y + 0.25, fanZ - 0.08]} rotation={[-0.4, 0, 0]}>
+        <group position={[TABLE_CENTER[0] + choiceOffset(), y + 0.25, fanZ - 0.08]} rotation={[-0.4, 0, 0]}>
           {choices.map((m, k) => (
             <Button3D
               key={m.label || k}
@@ -426,7 +435,7 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
         </group>
       )}
       {picked.length > 0 && (
-        <group position={[TABLE_CENTER[0], y + 0.25, fanZ - 0.06]} rotation={[-0.4, 0, 0]}>
+        <group position={[TABLE_CENTER[0] + choiceOffset(), y + 0.25, fanZ - 0.06]} rotation={[-0.4, 0, 0]}>
           {pickedMoves.length === 0 && <Button3D label={`${picked.length} Karte${picked.length === 1 ? '' : 'n'} gewählt – weitere antippen`} position={[0, 0, 0]} width={0.42} height={0.04} disabled />}
           {pickedMoves.map((m, k) => (
             <Button3D

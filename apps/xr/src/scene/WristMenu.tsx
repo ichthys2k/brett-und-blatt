@@ -7,7 +7,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
 import { Vector3, type Group } from 'three';
 import type { ClientMessage } from '@brett-und-blatt/online';
-import { facesHead, holdingHand, sendPanelCommand, setCollapsed } from '../ui-state';
+import { facesHead, holdingHand, palmNormal, sendPanelCommand, setCollapsed } from '../ui-state';
 import { Button3D, Sign } from './ui3d';
 
 export function WristMenu({ origin, canResign, send }: { origin: [number, number, number]; canResign: boolean; send: (m: ClientMessage) => void }) {
@@ -20,7 +20,7 @@ export function WristMenu({ origin, canResign, send }: { origin: [number, number
     const id = window.setTimeout(() => setConfirm(false), 4000);
     return () => window.clearTimeout(id);
   }, [confirm]);
-  useFrame(() => {
+  useFrame((_, __, frame) => {
     const g = group.current;
     if (!g) return;
     g.visible = false;
@@ -28,6 +28,30 @@ export function WristMenu({ origin, canResign, send }: { origin: [number, number
     if (!session) return;
     session.inputSources.forEach((source, i) => {
       if (source.handedness !== holdingHand()) return;
+      // Handtracking: Handgelenk und Handflächen-Normale aus den Gelenken.
+      if (source.hand && frame) {
+        const space = gl.xr.getReferenceSpace();
+        const at = (name: XRHandJoint): Vector3 | null => {
+          const joint = source.hand!.get(name);
+          const pose = joint && space ? frame.getJointPose?.(joint, space) : undefined;
+          return pose ? new Vector3(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z) : null;
+        };
+        const wrist = at('wrist');
+        const index = at('index-finger-metacarpal');
+        const pinky = at('pinky-finger-metacarpal');
+        if (!wrist || !index || !pinky) return;
+        const t = tmp.current;
+        const hand = holdingHand();
+        const normal = palmNormal([wrist.x, wrist.y, wrist.z], [index.x, index.y, index.z], [pinky.x, pinky.y, pinky.z], hand);
+        t.up.set(...normal).normalize();
+        t.hand.copy(wrist).add(new Vector3(...origin));
+        camera.getWorldPosition(t.head);
+        if (!facesHead([t.hand.x, t.hand.y, t.hand.z], [t.up.x, t.up.y, t.up.z], [t.head.x, t.head.y, t.head.z])) return;
+        g.position.copy(t.hand).addScaledVector(t.up, 0.1);
+        g.lookAt(t.head);
+        g.visible = true;
+        return;
+      }
       const controller = gl.xr.getController(i);
       if (!controller.visible) return;
       const t = tmp.current;
