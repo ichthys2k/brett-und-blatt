@@ -12,16 +12,20 @@ export interface PieceGame {
   previews: Partial<Record<PieceSetId, string>>;
 }
 
-const chess = import.meta.glob<string>('../../../../packages/games/chess/src/ui/figuren/*-n-w.webp', { eager: true, query: '?url', import: 'default' });
+const FILES = import.meta.glob<string>('../../../../packages/games/*/src/ui/figuren/*.webp', { eager: true, query: '?url', import: 'default' });
 
-const pick = (files: Record<string, string>, set: string, piece: string): string | undefined =>
-  Object.entries(files).find(([path]) => path.endsWith(`/${set}-${piece}.webp`))?.[1];
+/** Vorschau eines Satzes: Bild `<satz>-<figur>.webp` im Figuren-Ordner des Spiels. */
+function previews(game: string, piece: string): PieceGame['previews'] {
+  const find = (set: string) => Object.entries(FILES).find(([path]) => path.includes(`/games/${game}/`) && path.endsWith(`/${set}-${piece}.webp`))?.[1];
+  return { wood: find('wood'), metal: find('metal'), fable: find('fable') };
+}
 
 export const PIECE_GAMES: readonly PieceGame[] = [
-  {
-    id: 'chess',
-    name: 'Schach',
-    classicGlyph: '♞',
-    previews: { wood: pick(chess, 'wood', 'n-w'), metal: pick(chess, 'metal', 'n-w'), fable: pick(chess, 'fable', 'n-w') },
-  },
+  { id: 'chess', name: 'Schach', classicGlyph: '♞', previews: previews('chess', 'n-w') },
+  { id: 'checkers', name: 'Dame', classicGlyph: '⛀', previews: previews('checkers', 'king-w') },
+  { id: 'mill', name: 'Mühle', classicGlyph: '●', previews: previews('mill', 'stone-w') },
+  { id: 'reversi', name: 'Reversi', classicGlyph: '◐', previews: previews('reversi', 'disc-w') },
+  { id: 'go', name: 'Go', classicGlyph: '●', previews: previews('go', 'stone-b') },
+  { id: 'four-in-a-row', name: 'Vier in einer Reihe', classicGlyph: '🔴', previews: previews('four-in-a-row', 'disc-w') },
+  { id: 'tic-tac-toe', name: 'Tic-Tac-Toe', classicGlyph: '✕', previews: previews('tic-tac-toe', 'x') },
 ];

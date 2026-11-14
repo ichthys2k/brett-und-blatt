@@ -39,6 +39,27 @@ function load(): Record<string, PieceSetId> {
 }
 
 let chosen = load();
+const applied = new Set<string>();
+
+/**
+ * Spiele, die ihre Steine über CSS austauschen, lesen den Satz am Attribut `data-pieces-<spiel>` auf <html>
+ * (nur gesetzt, solange nicht „classic“ gilt). Spiele mit Bildern im Markup (Schach) nutzen den Haken.
+ */
+function applyAttributes(): void {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  const games = new Set([...Object.keys(chosen), ...Object.keys(PIECE_SET_DEFAULTS), ...applied]);
+  for (const game of games) {
+    const set = resolvePieceSet(game);
+    if (set === 'classic') {
+      root.removeAttribute(`data-pieces-${game}`);
+      applied.delete(game);
+    } else {
+      root.setAttribute(`data-pieces-${game}`, set);
+      applied.add(game);
+    }
+  }
+}
 
 /** Was der Spieler selbst gewählt hat (`null`: nichts, es gilt der Standard). */
 export function chosenPieceSet(gameId: string): PieceSetId | null {
@@ -56,6 +77,7 @@ export function setPieceSet(gameId: string, set: PieceSetId | null): void {
   } catch {
     // Ohne Speicher gilt die Wahl nur bis zum Neuladen.
   }
+  applyAttributes();
   for (const listener of listeners) listener();
 }
 
@@ -87,5 +109,13 @@ export function usePieceSet(gameId: string): PieceSetId {
 /** Für Tests: gespeicherte Wahl neu einlesen. */
 export function reloadPieceSets(): void {
   chosen = load();
+  applyAttributes();
   for (const listener of listeners) listener();
+}
+
+if (typeof window !== 'undefined') {
+  applyAttributes();
+  // Aussehen oder Kontrast ändern sich: Attribute neu setzen.
+  window.matchMedia?.('(prefers-contrast: more)').addEventListener?.('change', applyAttributes);
+  if (typeof MutationObserver !== 'undefined') new MutationObserver(applyAttributes).observe(document.documentElement, { attributes: true, attributeFilter: ['data-look'] });
 }

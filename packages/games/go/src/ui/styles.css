@@ -302,3 +302,23 @@
     margin: 0 auto;
   }
 }
+
+/* Gemalte Figuren (#325): der Satz kommt als Attribut data-pieces-go auf <html>; ohne Attribut gilt die heutige Darstellung. */
+[data-pieces-go='wood'] .go-stone.go-white {
+  background: url('./figuren/wood-stone-w.webp') center / contain no-repeat;
+}
+[data-pieces-go='wood'] .go-stone.go-black {
+  background: url('./figuren/wood-stone-b.webp') center / contain no-repeat;
+}
+[data-pieces-go='metal'] .go-stone.go-white {
+  background: url('./figuren/metal-stone-w.webp') center / contain no-repeat;
+}
+[data-pieces-go='metal'] .go-stone.go-black {
+  background: url('./figuren/metal-stone-b.webp') center / contain no-repeat;
+}
+[data-pieces-go='fable'] .go-stone.go-white {
+  background: url('./figuren/fable-stone-w.webp') center / contain no-repeat;
+}
+[data-pieces-go='fable'] .go-stone.go-black {
+  background: url('./figuren/fable-stone-b.webp') center / contain no-repeat;
+}

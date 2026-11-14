@@ -208,3 +208,32 @@
   }
 }
 
+
+/* Gemalte Figuren (#325): der Satz kommt als Attribut data-pieces-four-in-a-row auf <html>; ohne Attribut gilt die heutige Darstellung. */
+[data-pieces-four-in-a-row='wood'] .c4-disc.c4-seat-0 {
+  background: url('./figuren/wood-disc-w.webp') center / contain no-repeat;
+  box-shadow: none;
+}
+[data-pieces-four-in-a-row='wood'] .c4-disc.c4-seat-1 {
+  background: url('./figuren/wood-disc-b.webp') center / contain no-repeat;
+  box-shadow: none;
+}
+[data-pieces-four-in-a-row='metal'] .c4-disc.c4-seat-0 {
+  background: url('./figuren/metal-disc-w.webp') center / contain no-repeat;
+  box-shadow: none;
+}
+[data-pieces-four-in-a-row='metal'] .c4-disc.c4-seat-1 {
+  background: url('./figuren/metal-disc-b.webp') center / contain no-repeat;
+  box-shadow: none;
+}
+[data-pieces-four-in-a-row='fable'] .c4-disc.c4-seat-0 {
+  background: url('./figuren/fable-disc-w.webp') center / contain no-repeat;
+  box-shadow: none;
+}
+[data-pieces-four-in-a-row='fable'] .c4-disc.c4-seat-1 {
+  background: url('./figuren/fable-disc-b.webp') center / contain no-repeat;
+  box-shadow: none;
+}
+[data-pieces-four-in-a-row] .c4-symbol {
+  opacity: 0.7;
+}
