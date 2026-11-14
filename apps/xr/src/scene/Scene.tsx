@@ -15,6 +15,7 @@ import { BattleshipBoard, ChineseCheckersBoard, FactorGridBoard, FourPlayerChess
 import { ColorShapeBoard, DominoBoard, GrafschaftBoard, WordGridBoard } from './boards4';
 import { KniffelBoard, LowFlightBoard, MaexleBoard, PairsBoard, Tafel } from './boards5';
 import { InputDesk } from './input';
+import { CAPTURED_GAMES, CapturedTray } from './Captured';
 import { hiddenMoveIndexes, inputPlan } from './input-spec';
 import { CardTable, cardMoveIndexes, isCardGame } from './cards';
 import { Panel, ReactionBar, type VoiceControls } from './Panel';
@@ -310,6 +311,7 @@ export function Scene({ store, room, game, you, signals, send, onMove, gameAt, m
         <Seats seats={seats} signals={signals} memberAvatar={(id) => room?.members.find((m) => m.id === id)?.avatar ?? null} figures={figures} />
         {mesh && <PoseSender mesh={mesh} xrMembers={xrMembers} sendRoomPose={(head) => send({ type: 'pose', head })} origin={origin} scale={scale} />}
         {mesh && <Figures mesh={mesh} members={figures} seatOf={seatOf} mySeatBase={myBase} count={seatCount} infos={seats} />}
+        {shown && (CAPTURED_GAMES as readonly string[]).includes(shown.gameId) && <CapturedTray game={shown} />}
         {shown?.gameId === 'tic-tac-toe' && <TicTacToeBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'four-in-a-row' && <FourInARowBoard game={shown} onMove={moveByValue} />}
         {shown?.gameId === 'chess' && <ChessBoard key={`${shown.round}`} game={shown} onMove={moveByValue} />}
