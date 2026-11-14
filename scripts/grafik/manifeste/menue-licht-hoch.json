@@ -1,0 +1,44 @@
+{
+  "beschreibung": "G10 (#317): Hochformat-Ebene der Taverne für Handys, ohne Alkohol (Refs #329) und mit denselben Lichtstimmungen wie menue-licht.json.",
+  "stil": "Edit the reference image. Keep the composition, the camera, every object and every position exactly as they are. Change only the lighting and what is seen as described. Same painterly oil style. No text, no people, no animals.",
+  "ohne": "text, people, animals, changed composition, moved or added objects other than described, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "9:16",
+  "ziel": "apps/web/src/menu",
+  "groesse": [
+    768,
+    1376
+  ],
+  "praefix": "taverne-hoch-",
+  "referenzen": [
+    "apps/web/src/menu/taverne-hoch.webp"
+  ],
+  "motive": [
+    {
+      "id": "abend",
+      "titel": "Abend (neue Vorlage ohne Alkohol)",
+      "stil": "Edit the reference image. Keep the composition, the camera, the lighting, the colours and the position of every object exactly as they are. Change only the objects described. Same painterly oil style. No text, no people, no animals.",
+      "prompt": "Replace exactly these objects and keep everything else identical: (1) all bottles on the fireplace mantel, on the high beam and on the shelves become closed books, small unlit candles, clay plates and small herb jars; (2) the large drinking mugs on the bar, on the shelf and on the far right table become plain clay bowls; (3) the pewter pitcher and the stemmed glass on the table become a brass candle holder with an unlit candle and a small clay bowl of apples; (4) the wooden barrel with iron hoops standing on the floor directly to the right of the fireplace, at the foot of the bar counter, becomes a bundle of firewood logs tied with a rope, of the same size and in the same place; do not add any stool or crate. No bottle, glass, mug, jug, pitcher, barrel, cask or keg may remain anywhere. Do not add anything else.",
+      "ohne": "text, people, animals, changed composition, moved or added objects other than described, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs, bottles, flasks, jugs, pitchers, glasses, mugs, tankards, barrels, casks, kegs, changed composition"
+    },
+    {
+      "id": "morgen",
+      "prompt": "Cool pale morning light entering through the arched door at the back and the openings, fireplace only glowing embers, lanterns off, light mist. Keep the composition, the stone fireplace, the beams, the lanterns, the cards and dice on the table exactly as they are."
+    },
+    {
+      "id": "tag",
+      "prompt": "Bright warm daylight entering through the arched door at the back and the openings, fireplace small, lanterns off. Keep the composition, the stone fireplace, the beams, the lanterns, the cards and dice on the table exactly as they are."
+    },
+    {
+      "id": "nacht",
+      "prompt": "Deep night: the arched door and openings dark blue, strong warm glow from the fireplace and lanterns, longer shadows. Keep the composition, the stone fireplace, the beams, the lanterns, the cards and dice on the table exactly as they are."
+    },
+    {
+      "id": "winter",
+      "prompt": "Evening lighting as now. Add only: a fir garland with red ribbons along the fireplace mantel and a faint cold blue tint in the arched door at the back. Keep the composition, the stone fireplace, the beams, the lanterns, the cards and dice on the table exactly as they are."
+    },
+    {
+      "id": "fest",
+      "prompt": "Evening lighting as now, plus colourful bunting and paper lanterns across the ceiling beams. Keep the composition, the stone fireplace, the beams, the lanterns, the cards and dice on the table exactly as they are."
+    }
+  ]
+}

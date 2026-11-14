@@ -153,7 +153,7 @@ Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis:
 
 ## Lichtstimmungen der Taverne (KI-erzeugt)
 
-Die Hintergrundebene der Taverne im Hauptmenü (`apps/web/src/menu/taverne-hinten.webp`, Abend) und ihre Lichtstimmungen (`taverne-hinten-morgen|tag|nacht|winter|fest.webp`): **KI-erzeugt** durch Bildbearbeitung mit „gemini-3-pro-image“ (Google), November 2026 (#317). Die Abend-Ebene entstand aus dem früheren Hauptbild, aus dem Flaschen und Fässer entfernt wurden (Alkohol-Verbot). Die Stimmungen verändern nur Licht und Ausblick. Auswahl durch Cornelius Lipponer; Manifest `menue-licht.json`. Die Bilder zeigen leere Räume ohne Personen.
+Die Hintergrundebene der Taverne im Hauptmenü (`apps/web/src/menu/taverne-hinten.webp`, Abend) und ihre Lichtstimmungen (`taverne-hinten-morgen|tag|nacht|winter|fest.webp`): **KI-erzeugt** durch Bildbearbeitung mit „gemini-3-pro-image“ (Google), November 2026 (#317). Die Abend-Ebene entstand aus dem früheren Hauptbild, aus dem Flaschen und Fässer entfernt wurden (Alkohol-Verbot). Die Stimmungen verändern nur Licht und Ausblick. Auswahl durch Cornelius Lipponer; Manifest `menue-licht.json`. Die Bilder zeigen leere Räume ohne Personen. Dasselbe gilt für die Hochformat-Ebene für schmale Ansichten (`taverne-hoch.webp` und `taverne-hoch-morgen|tag|nacht|winter|fest.webp`, Manifest `menue-licht-hoch.json`): Auch dort wurden Flaschen, Krüge, Gläser und das Fass entfernt.
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 

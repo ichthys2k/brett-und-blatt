@@ -33,6 +33,16 @@ const MOOD_IMAGES: Record<TavernMood, string> = {
   fest: new URL('../menu/taverne-hinten-fest.webp', import.meta.url).href,
 };
 
+/** Dieselben Stimmungen im Hochformat für schmale Ansichten (Handys). */
+const MOOD_PORTRAITS: Record<TavernMood, string> = {
+  morgen: new URL('../menu/taverne-hoch-morgen.webp', import.meta.url).href,
+  tag: new URL('../menu/taverne-hoch-tag.webp', import.meta.url).href,
+  abend: portrait,
+  nacht: new URL('../menu/taverne-hoch-nacht.webp', import.meta.url).href,
+  winter: new URL('../menu/taverne-hoch-winter.webp', import.meta.url).href,
+  fest: new URL('../menu/taverne-hoch-fest.webp', import.meta.url).href,
+};
+
 /** Gemalte Stationen im Raum (#317, freigestellt); Größe in Metern, die Beschriftung liefert der Hotspot. */
 const STATION_SPRITES: Record<string, { url: string; size: number }> = {
   single: { url: new URL('../menu/stationen/single.webp', import.meta.url).href, size: 0.9 },
@@ -139,8 +149,13 @@ export function TavernScene({ calm = false, station, still = false }: { calm?: b
       bgGrad.addColorStop(0, pal.bgTop);
       bgGrad.addColorStop(0.6, pal.bgMid);
       bgGrad.addColorStop(1, pal.bgBot);
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, w, h);
+      // Im Taverne-Aussehen bleibt der Grund durchsichtig: Dahinter liegt das gemalte Bild der Lichtstimmung (#317).
+      if (look === 'tavern') {
+        ctx.clearRect(0, 0, w, h);
+      } else {
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, w, h);
+      }
 
       const activeHighlight =
         getHoveredStation() ?? localHover?.id ?? (targetStation !== 'home' ? targetStation : null);
@@ -334,7 +349,7 @@ export function TavernScene({ calm = false, station, still = false }: { calm?: b
       <div className="bub-menu-layer bub-menu-back">
         {isTavern ? (
           <picture>
-            <source media="(max-width: 760px)" srcSet={portrait} />
+            <source media="(max-width: 760px)" srcSet={MOOD_PORTRAITS[mood]} />
             <img src={MOOD_IMAGES[mood]} alt="" draggable={false} />
           </picture>
         ) : (
