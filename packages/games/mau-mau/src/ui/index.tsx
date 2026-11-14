@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cardRank, type CardId, type Suit } from '@brett-und-blatt/engine';
 import {
   CardFan,
+  dragTilt,
   useCallDeadline,
   PlayingCard,
   resolveSharedCardBack,
@@ -557,7 +558,7 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
               const isSnapping = dragState.snapping && dragState.item === card;
               const dragStyle: React.CSSProperties = isDragged
                 ? {
-                    transform: `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0) scale(1.08) rotate(2deg)`,
+                    transform: `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0) scale(1.08) rotate(${2 + dragTilt(dragState.velocity)}deg)`,
                     zIndex: 60,
                     pointerEvents: 'none',
                   }
@@ -574,8 +575,10 @@ export const MauMauBoard: React.FC<BoardProps<MauMauState, MauMauMove>> = ({
                   className={`mau-hand-card ${isDragged ? 'mau-card-dragging' : ''} ${
                     isSnapping ? 'mau-card-snapping' : ''
                   }`}
-                  style={dragStyle}
+                  // Erst die Eigenschaften zum Ziehen, dann der Stil: Sonst überschreibt `touch-action` aus
+                  // bindDrag die Verschiebung, und die gezogene Karte folgt dem Zeiger nicht (#421).
                   {...(isPlayable && isActor ? bindDrag(card) : {})}
+                  style={{ ...(isPlayable && isActor ? { touchAction: 'none' as const } : {}), ...dragStyle }}
                 >
                   <PlayingCard
                     card={card}

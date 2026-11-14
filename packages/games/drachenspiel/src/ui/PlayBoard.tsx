@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { GameCard, useCardCosmetics, useCardOverride, useInspect, usePointerDrag, type BoardProps, type InspectExtraProps } from '@brett-und-blatt/ui';
+import { dragTilt, GameCard, useCardCosmetics, useCardOverride, useInspect, usePointerDrag, type BoardProps, type InspectExtraProps } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { CARDS_DB } from '../cards';
 import { HOUSE_POWERS } from '../powers';
@@ -826,7 +826,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
               className={`ds-card bub-animate-deal ${def.isSpell ? 'ds-card-spell' : ''} ${selectedSpell === idx || draggedCardIdx === idx ? 'ds-card-selected' : ''} ${isPlayable ? 'playable' : ''} ${hintedCard === idx ? 'ds-hinted' : ''} ${followsFinger ? 'bub-dragging' : ''} ${dragState.snapping && followsFinger ? 'bub-snapping' : ''}`}
               style={{
                 animationDelay: `${idx * 40}ms`,
-                transform: followsFinger ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)` : undefined,
+                transform: followsFinger ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0) rotate(${dragTilt(dragState.velocity)}deg)` : undefined,
                 position: followsFinger ? 'relative' : undefined,
                 zIndex: followsFinger ? 1000 : undefined,
                 touchAction: isPlayable ? 'none' : undefined,

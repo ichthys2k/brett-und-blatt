@@ -9,7 +9,13 @@ const INITIAL_STATE = {
   delta: { x: 0, y: 0 },
   targetId: null,
   snapping: false,
+  velocity: { x: 0, y: 0 },
 };
+
+/** Ohne Bewegung in dieser Zeit gilt die Karte als ruhend: Die Neigung geht zurück (#421). */
+const VELOCITY_IDLE_MS = 80;
+/** Anteil der neuen Messung in der Glättung der Geschwindigkeit. */
+const VELOCITY_WEIGHT = 0.3;
 
 /**
  * Universeller Hook für Drag & Drop via Pointer Events (Touch, Maus, Stift).
@@ -26,6 +32,7 @@ export function usePointerDrag<T>({
 }: UsePointerDragOptions<T> = {}): PointerDragControls<T> {
   const [dragState, setDragState] = useState<DragState<T>>(INITIAL_STATE as DragState<T>);
   const snapTimeoutRef = useRef<number | null>(null);
+  const idleTimeoutRef = useRef<number | null>(null);
 
   const callbacksRef = useRef({ onDragStart, onDragMove, onDrop, onClick });
   callbacksRef.current = { onDragStart, onDragMove, onDrop, onClick };
@@ -36,12 +43,20 @@ export function usePointerDrag<T>({
     startY: number;
     hasStarted: boolean;
     targetId: string | null;
+    lastX: number;
+    lastY: number;
+    lastT: number;
+    velocity: Point;
   } | null>(null);
 
   const cancelDrag = useCallback(() => {
     if (snapTimeoutRef.current !== null) {
       window.clearTimeout(snapTimeoutRef.current);
       snapTimeoutRef.current = null;
+    }
+    if (idleTimeoutRef.current !== null) {
+      window.clearTimeout(idleTimeoutRef.current);
+      idleTimeoutRef.current = null;
     }
     activeRef.current = null;
     setDragState(INITIAL_STATE as DragState<T>);
@@ -68,6 +83,10 @@ export function usePointerDrag<T>({
         startY,
         hasStarted: false,
         targetId: null,
+        lastX: startX,
+        lastY: startY,
+        lastT: performance.now(),
+        velocity: { x: 0, y: 0 },
       };
 
       const findDropTarget = (clientX: number, clientY: number): string | null => {
@@ -107,6 +126,25 @@ export function usePointerDrag<T>({
         const currentPoint: Point = { x: moveEv.clientX, y: moveEv.clientY };
         const delta: Point = { x: deltaX, y: deltaY };
 
+        // Geschwindigkeit geglättet messen (#421), damit die Karte sich ruhig in Zugrichtung neigt.
+        const now = performance.now();
+        const dt = Math.max(1, now - active.lastT);
+        active.velocity = {
+          x: active.velocity.x * (1 - VELOCITY_WEIGHT) + ((moveEv.clientX - active.lastX) / dt) * VELOCITY_WEIGHT,
+          y: active.velocity.y * (1 - VELOCITY_WEIGHT) + ((moveEv.clientY - active.lastY) / dt) * VELOCITY_WEIGHT,
+        };
+        active.lastX = moveEv.clientX;
+        active.lastY = moveEv.clientY;
+        active.lastT = now;
+        if (idleTimeoutRef.current !== null) window.clearTimeout(idleTimeoutRef.current);
+        idleTimeoutRef.current = window.setTimeout(() => {
+          idleTimeoutRef.current = null;
+          const still = activeRef.current;
+          if (!still) return;
+          still.velocity = { x: 0, y: 0 };
+          setDragState((prev) => (prev.isDragging && !prev.snapping ? { ...prev, velocity: { x: 0, y: 0 } } : prev));
+        }, VELOCITY_IDLE_MS);
+
         setDragState({
           isDragging: true,
           item: active.item,
@@ -115,20 +153,30 @@ export function usePointerDrag<T>({
           delta,
           targetId,
           snapping: false,
+          velocity: active.velocity,
         });
 
         callbacksRef.current.onDragMove?.(active.item, delta, currentPoint, targetId);
       };
 
+      // Bilder sind im Browser von Haus aus ziehbar: Mit der Maus startete sonst ein eigenes Bild-Ziehen
+      // (dragstart, danach pointercancel), und Karten mit gemaltem Bild ließen sich nicht ziehen (#421).
+      const preventNativeDrag = (dragEv: DragEvent) => dragEv.preventDefault();
+
       const cleanupWindowListeners = () => {
         window.removeEventListener('pointermove', onWindowPointerMove);
         window.removeEventListener('pointerup', onWindowPointerUp);
         window.removeEventListener('pointercancel', onWindowPointerCancel);
+        window.removeEventListener('dragstart', preventNativeDrag, true);
       };
 
       const onWindowPointerUp = (upEv: PointerEvent) => {
         if (!mine(upEv)) return;
         cleanupWindowListeners();
+        if (idleTimeoutRef.current !== null) {
+          window.clearTimeout(idleTimeoutRef.current);
+          idleTimeoutRef.current = null;
+        }
         const active = activeRef.current;
         if (!active) return;
 
@@ -154,6 +202,7 @@ export function usePointerDrag<T>({
               ...prev,
               snapping: true,
               delta: { x: 0, y: 0 },
+              velocity: { x: 0, y: 0 },
             }));
             snapTimeoutRef.current = window.setTimeout(() => {
               cancelDrag();
@@ -177,6 +226,7 @@ export function usePointerDrag<T>({
       window.addEventListener('pointermove', onWindowPointerMove);
       window.addEventListener('pointerup', onWindowPointerUp);
       window.addEventListener('pointercancel', onWindowPointerCancel);
+      window.addEventListener('dragstart', preventNativeDrag, true);
     },
     [disabled, threshold, targetAttribute, cancelDrag],
   );
@@ -185,6 +235,9 @@ export function usePointerDrag<T>({
     return () => {
       if (snapTimeoutRef.current !== null) {
         window.clearTimeout(snapTimeoutRef.current);
+      }
+      if (idleTimeoutRef.current !== null) {
+        window.clearTimeout(idleTimeoutRef.current);
       }
     };
   }, []);

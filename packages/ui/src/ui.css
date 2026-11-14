@@ -191,11 +191,30 @@ button.bub-cell:focus-visible {
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
   transition:
     transform 0.15s,
+    translate 0.15s,
+    scale 0.15s,
     box-shadow 0.15s;
 }
 
 .bub-card-clickable {
   cursor: pointer;
+}
+
+/* Anheben in der Hand (#421): Nur mit Maus hebt sich die Karte unter dem Zeiger und liegt über den
+   Nachbarn. Eigene Eigenschaften (translate, scale), damit eine gewählte Karte ihre Verschiebung behält. */
+@media (hover: hover) and (pointer: fine) {
+  .bub-fan-slot:has(> .bub-card-clickable:hover) {
+    z-index: 30;
+  }
+
+  .bub-fan-slot > .bub-card-clickable:not(.bub-card-disabled):hover {
+    scale: 1.06;
+    box-shadow: 0 8px 18px rgb(0 0 0 / 0.3);
+  }
+
+  .bub-fan-slot > .bub-card-clickable:not(.bub-card-disabled):not(.bub-card-selected):hover {
+    translate: 0 -10%;
+  }
 }
 
 .bub-card-face {
@@ -303,6 +322,10 @@ button.bub-cell:focus-visible {
   pointer-events: none;
   border-radius: inherit;
   z-index: 5;
+  /* Der Schimmer folgt der Maus (#421); ohne Maus steht er in der Mitte. */
+  background-size: 200% 200%;
+  background-position: var(--bub-foil-x, 50%) var(--bub-foil-y, 50%);
+  transition: background-position 0.1s linear;
 }
 
 .bub-game-card-foil--gold {
@@ -859,7 +882,8 @@ button.bub-net-point:not(:disabled) {
 
 @media (prefers-reduced-motion: reduce) {
   .bub-dragging,
-  .bub-snapping {
+  .bub-snapping,
+  .bub-game-card-foil {
     transition: none !important;
   }
   .bub-piece-slide {

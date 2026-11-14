@@ -47,6 +47,7 @@ export { TRICK_HAND_MIN_STEP, TrickTable, trickHandCardWidth, useTrickDisplay, t
 export { CardFan, fanLayout, type CardFanProps, type FanLayout } from './cards/CardFan';
 export { ContentCard, type ContentCardProps } from './cards/ContentCard';
 export { usePointerDrag } from './dnd/usePointerDrag';
+export { dragTilt } from './dnd/dragTilt';
 export { useSpawnAnimation, type SpawnAnimationOptions } from './dnd/useSpawnAnimation';
 export { useGridMoveAnimation, type UseGridMoveAnimationOptions, type MoveAnimationItem, type CellSlideProps, type ActiveSlide } from './dnd/useGridMoveAnimation';
 export type { DragState, Point, PointerDragControls, UsePointerDragOptions } from './dnd/types';

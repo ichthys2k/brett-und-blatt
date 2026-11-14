@@ -109,6 +109,7 @@ export function CardFace({
   return (
     <GameCard
       ankiFront={rendered}
+      foil={def.rarity === 'mythic' ? 'gold' : 'none'}
       className={`ds-combat-card-game ${className}`}
       label={`${def.name}, Kosten ${def.cost} Knappen${currentAttack !== undefined || def.attack !== undefined ? `, Angriff ${currentAttack ?? def.attack}` : ''}${currentHealth !== undefined || def.health !== undefined ? `, Leben ${currentHealth ?? def.health}` : ''}`}
     />
