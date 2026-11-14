@@ -110,6 +110,8 @@ describe('Stationen und Lichtstimmungen der Taverne (#317)', () => {
     for (const mood of TAVERN_MOODS) {
       const file = mood === 'abend' ? 'taverne-hinten.webp' : `taverne-hinten-${mood}.webp`;
       expect(existsSync(new URL(file, menu)), mood).toBe(true);
+      const portrait = mood === 'abend' ? 'taverne-hoch.webp' : `taverne-hoch-${mood}.webp`;
+      expect(existsSync(new URL(portrait, menu)), `${mood} (Hochformat)`).toBe(true);
     }
   });
 
