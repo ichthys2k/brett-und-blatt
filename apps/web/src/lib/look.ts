@@ -12,6 +12,12 @@ export type Look = 'plain' | 'tavern';
 export type TableSurface = 'auto' | 'oak' | 'walnut' | 'green-felt' | 'red-felt' | 'slate' | 'marble';
 export type RoomScene = 'tavern' | 'castle' | 'library' | 'garden';
 
+/** Lichtstimmung der Taverne im Hauptmenü (#317): nach Tageszeit und Jahreszeit oder fest gewählt. */
+export type TavernMood = 'morgen' | 'tag' | 'abend' | 'nacht' | 'winter' | 'fest';
+export type LightChoice = 'auto' | TavernMood;
+export const TAVERN_MOODS: readonly TavernMood[] = ['morgen', 'tag', 'abend', 'nacht', 'winter', 'fest'];
+export const LIGHT_CHOICES: readonly LightChoice[] = ['auto', ...TAVERN_MOODS];
+
 export const TABLE_SURFACES: readonly TableSurface[] = ['auto', 'oak', 'walnut', 'green-felt', 'red-felt', 'slate', 'marble'];
 export const ROOM_SCENES: readonly RoomScene[] = ['tavern', 'castle', 'library', 'garden'];
 
@@ -19,6 +25,7 @@ const LOOK_KEY = 'brett-und-blatt:aussehen';
 const TABLE_KEY = 'brett-und-blatt:tisch';
 const ROOM_KEY = 'brett-und-blatt:raum';
 const MENU3D_KEY = 'brett-und-blatt:menue-3d';
+const LIGHT_KEY = 'brett-und-blatt:licht';
 
 function loadLook(): Look {
   try {
@@ -55,12 +62,22 @@ function loadMenu3d(): boolean {
   }
 }
 
+function loadLight(): LightChoice {
+  try {
+    const val = window.localStorage.getItem(LIGHT_KEY);
+    return val && (LIGHT_CHOICES as readonly string[]).includes(val) ? (val as LightChoice) : 'auto';
+  } catch {
+    return 'auto';
+  }
+}
+
 const contrastQuery = window.matchMedia('(prefers-contrast: more)');
 const listeners = new Set<() => void>();
 let chosen = loadLook();
 let chosenTable = loadTable();
 let chosenRoom = loadRoom();
 let chosenMenu3d = loadMenu3d();
+let chosenLight = loadLight();
 
 /** Das Aussehen, das gerade wirklich gilt. */
 export function activeLook(): Look {
@@ -180,6 +197,16 @@ export function setMenu3d(next: boolean): void {
   apply();
 }
 
+export function setLight(next: LightChoice): void {
+  chosenLight = next;
+  try {
+    window.localStorage.setItem(LIGHT_KEY, next);
+  } catch {
+    // Ohne Speicher gilt die Wahl nur bis zum Neuladen.
+  }
+  apply();
+}
+
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
@@ -191,6 +218,8 @@ export const useChosenTable = (): TableSurface => useSyncExternalStore(subscribe
 export const useChosenRoom = (): RoomScene => useSyncExternalStore(subscribe, () => chosenRoom);
 /** Ob die bewegte 3D-Taverne im Hauptmenü gilt (Standard: nein). */
 export const menu3dEnabled = (): boolean => chosenMenu3d;
+export const useChosenLight = (): LightChoice => useSyncExternalStore(subscribe, () => chosenLight);
+export const lightChoice = (): LightChoice => chosenLight;
 export const useMenu3d = (): boolean => useSyncExternalStore(subscribe, () => chosenMenu3d);
 export const contrastForcesPlain = (): boolean => contrastQuery.matches;
 

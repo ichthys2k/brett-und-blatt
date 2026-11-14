@@ -8,17 +8,21 @@ import { t } from '../i18n';
 import { APP_DATE, APP_VERSION, checkForUpdate, resetApp } from '../lib/appUpdate';
 import {
   contrastForcesPlain,
+  LIGHT_CHOICES,
   ROOM_SCENES,
+  type LightChoice,
   type Look,
   type RoomScene,
   type TableSurface,
   setLook,
+  setLight,
   setMenu3d,
   setRoomScene,
   setTableSurface,
   TABLE_SURFACES,
   useChosenLook,
   useChosenRoom,
+  useChosenLight,
   useMenu3d,
   useChosenTable,
 } from '../lib/look';
@@ -67,6 +71,7 @@ function LookChoice() {
   const table = useChosenTable();
   const room = useChosenRoom();
   const menu3d = useMenu3d();
+  const light = useChosenLight();
   const options: readonly { id: Look; label: string; text: string }[] = [
     { id: 'plain', label: t('look.plain'), text: t('look.plain.text') },
     { id: 'tavern', label: t('look.tavern'), text: t('look.tavern.text') },
@@ -95,6 +100,21 @@ function LookChoice() {
             <span className="block text-sm text-muted">{t('look.menu3d.text')}</span>
           </span>
         </label>
+      )}
+
+      {chosen === 'tavern' && !contrastForcesPlain() && (
+        <fieldset className="space-y-2 rounded-2xl border border-line bg-surface p-4">
+          <legend className="px-1 font-semibold">{t('look.light.title')}</legend>
+          <p className="text-xs text-muted">{t('look.light.hint')}</p>
+          <div className="grid gap-1 pt-1 sm:grid-cols-2">
+            {LIGHT_CHOICES.map((id: LightChoice) => (
+              <label key={id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-2">
+                <input type="radio" name="tavern-light" className="accent-accent" checked={light === id} onChange={() => setLight(id)} />
+                <span className="text-sm font-medium">{t(`look.light.${id}`)}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
       )}
 
       {chosen === 'tavern' && !contrastForcesPlain() && (
