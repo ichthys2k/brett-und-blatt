@@ -160,6 +160,28 @@ export async function exportGameCardTemplateApkg(id: GameCardTemplateId): Promis
   if (!template) throw new Error(`Vorlage ${id} nicht gefunden.`);
 
   const collection = await generateTemplateCollection(id);
-  const bytes = await exportApkg({ collection }, { scheduling: false, media: false, format: 'legacy2' });
+  const media = await templateMedia(id);
+  const bytes = await exportApkg({ collection, ...(media.size ? { media } : {}) }, { scheduling: false, media: media.size > 0, format: 'legacy2' });
   return { fileName: template.fileName, bytes };
+}
+
+/**
+ * Bilder eines Quartett-Sets als Anki-Medien (#319): Das Feld „Bild“ nennt sie mit `<img src="…">`, die Dateien
+ * kommen von `quartett/bilder/<set>/`. Fehlt ein Bild (noch nicht erzeugt), bleibt es weg.
+ */
+async function templateMedia(id: GameCardTemplateId): Promise<Map<string, Uint8Array>> {
+  const media = new Map<string, Uint8Array>();
+  if (!id.startsWith('quartett-')) return media;
+  const setId = id.replace('quartett-', '');
+  const { cardSet } = await import('../../../../packages/games/quartett/src/sets');
+  for (const card of cardSet(setId).cards) {
+    if (!card.image) continue;
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL}quartett/bilder/${setId}/${card.image}`);
+      if (response.ok) media.set(card.image, new Uint8Array(await response.arrayBuffer()));
+    } catch {
+      // ohne Netz: Paket ohne dieses Bild
+    }
+  }
+  return media;
 }

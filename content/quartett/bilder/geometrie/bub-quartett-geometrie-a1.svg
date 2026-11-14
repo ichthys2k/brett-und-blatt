@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" width="480" height="360" role="img" aria-label="Quadrat">
+<defs><radialGradient id="pergament" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#f7eed6"/><stop offset="1" stop-color="#e3cf9f"/></radialGradient><style> .flaeche { fill: #d9a400; fill-opacity: 0.22; stroke: none; } .kante, .umriss { fill: none; stroke: #3b2a1a; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; } .kante.verdeckt, .hilfslinie.verdeckt { stroke: #8a7658; stroke-width: 2; stroke-dasharray: 1.5 6; } .hilfslinie { fill: none; stroke: #8a7658; stroke-width: 1.6; } .achse { stroke: #9a6a2e; stroke-width: 1.6; stroke-dasharray: 10 7; } .ecke { fill: #3b2a1a; } .ecke.verdeckt { fill: #8a7658; } .glanz { fill: #fff8e6; fill-opacity: 0.55; } </style></defs>
+<rect width="480" height="360" fill="url(#pergament)" />
+<polygon class="flaeche" points="104,44 376,44 376,316 104,316" />
+<line class="achse" x1="24.6" y1="180" x2="455.4" y2="180" />
+<line class="achse" x1="240" y1="-35.4" x2="240" y2="395.4" />
+<line class="achse" x1="87.7" y1="27.7" x2="392.3" y2="332.3" />
+<line class="achse" x1="87.7" y1="332.3" x2="392.3" y2="27.7" />
+<line class="kante" data-kante="0" x1="104" y1="44" x2="376" y2="44" />
+<line class="kante" data-kante="1" x1="376" y1="44" x2="376" y2="316" />
+<line class="kante" data-kante="2" x1="376" y1="316" x2="104" y2="316" />
+<line class="kante" data-kante="3" x1="104" y1="316" x2="104" y2="44" />
+<circle class="ecke" data-ecke="0" cx="104" cy="44" r="4" />
+<circle class="ecke" data-ecke="1" cx="376" cy="44" r="4" />
+<circle class="ecke" data-ecke="2" cx="376" cy="316" r="4" />
+<circle class="ecke" data-ecke="3" cx="104" cy="316" r="4" />
+</svg>

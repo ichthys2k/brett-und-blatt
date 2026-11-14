@@ -2,7 +2,7 @@ import { BUB_QUARTETT_CARD_NOTETYPE, renderCardSide, type GameEvent, type SeatId
 import { GameCard, SeatRing, getNoteField, useCardCosmetics, useCardOverride, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { setOf, type Ask, type QuartettMove, type QuartettState, type Trick } from '../rules';
-import { cardOf, formatWithUnit, groupOf, valueOf, type CardId, type CardSet } from '../sets';
+import { CARD_SETS, cardOf, formatWithUnit, groupOf, valueOf, type CardId, type CardSet } from '../sets';
 import './styles.css';
 import { albumSpec } from './album';
 
@@ -43,6 +43,11 @@ export function QCard({
     useCardOverride(`${set.id}-${card}`) ??
     useCardOverride(card);
 
+  // Bild der Karte (#319): aus einem Anki-Kartenset (Medium) oder bei den Inhalten; Rückfall Emoji.
+  const [brokenImage, setBrokenImage] = useState(false);
+  const imageUrl = data.image ? (cosmetics.mediaUrlMap?.[data.image] ?? (set.id in CARD_SETS ? `quartett/bilder/${set.id}/${data.image}` : undefined)) : undefined;
+  const showImage = Boolean(imageUrl) && !brokenImage;
+  useEffect(() => setBrokenImage(false), [imageUrl]);
   const effectiveName = getNoteField(overrideNote, 4) || data.name;
   const effectiveEmoji = getNoteField(overrideNote, 5) || data.emoji;
   const effectiveInfo = getNoteField(overrideNote, 29) || set.note;
@@ -93,7 +98,8 @@ export function QCard({
               </button>
             )}
           </header>
-          <div className="qt-card-face">
+          <div className={`qt-card-face${showImage ? ' qt-has-image' : ''}`}>
+            {showImage && <img className="qt-image" src={imageUrl} alt="" loading="lazy" decoding="async" onError={() => setBrokenImage(true)} />}
             <span className="qt-emoji" aria-hidden="true">
               {effectiveEmoji}
             </span>

@@ -80,7 +80,7 @@ export interface CustomQuartettSet {
   emoji: string;
   properties: { id: string; label: string; unit: string; higherWins: boolean; format?: 'plain' | 'year' }[];
   groups: { id: string; name: string }[];
-  cards: { id: string; name: string; emoji: string; values: Record<string, number>; source?: string }[];
+  cards: { id: string; name: string; emoji: string; image?: string; values: Record<string, number>; source?: string }[];
 }
 
 export interface CustomCardCatalog {
@@ -607,7 +607,8 @@ export function sanitizeQuartettSet(raw: unknown): CustomQuartettSet | null {
         const num = typeof rawValues[p.id] === 'string' ? Number(rawValues[p.id]) : rawValues[p.id];
         values[p.id] = typeof num === 'number' && Number.isFinite(num) ? Math.min(1e12, Math.max(-1e12, num)) : 0;
       }
-      return withOptional({ id: c.id as string, name: cleanText(c.name, 60) ?? (c.id as string), emoji: cleanText(c.emoji, 16) ?? '🃏', values }, { source: cleanText(c.source, 200) });
+      const image = typeof c.image === 'string' && /^[\w.-]{1,80}\.(webp|png|jpe?g|svg|gif)$/i.test(c.image) ? c.image : undefined;
+      return withOptional({ id: c.id as string, name: cleanText(c.name, 60) ?? (c.id as string), emoji: cleanText(c.emoji, 16) ?? '🃏', values }, { source: cleanText(c.source, 200), image });
     })
     .filter((c, i, all) => all.findIndex((d) => d.id === c.id) === i);
   const groupIds = [...new Set(cards.map((c) => c.id[0]!))].sort();

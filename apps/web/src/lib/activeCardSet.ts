@@ -129,7 +129,7 @@ export function catalogOf(collection: AnkiCollection): CustomCardCatalog | null 
   if (Object.keys(catalog.quartettCards).length > 0) {
     try {
       const set = ankiToQuartettSet({ ...collection, notes });
-      catalog.quartettSet = { name: set.name, emoji: set.emoji ?? '🃏', properties: [...set.properties] as never, groups: [...set.groups], cards: set.cards.map((c) => ({ id: c.id, name: c.name, emoji: c.emoji ?? '🃏', values: c.values, ...(c.source ? { source: c.source } : {}) })) };
+      catalog.quartettSet = { name: set.name, emoji: set.emoji ?? '🃏', properties: [...set.properties] as never, groups: [...set.groups], cards: set.cards.map((c) => ({ id: c.id, name: c.name, emoji: c.emoji ?? '🃏', values: c.values, ...(c.source ? { source: c.source } : {}), ...(c.image ? { image: c.image } : {}) })) };
     } catch {
       // kein vollständiges Set – dann zählen nur geänderte Karten
     }

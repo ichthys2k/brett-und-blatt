@@ -1053,6 +1053,9 @@
               "emoji": {
                 "type": "string"
               },
+              "image": {
+                "type": "string"
+              },
               "values": {
                 "type": "object",
                 "additionalProperties": {

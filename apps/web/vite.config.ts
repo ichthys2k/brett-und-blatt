@@ -2,6 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { inhaltsbilder } from './inhaltsbilder.ts';
 import { kataloge } from './kataloge.ts';
 import { csp } from './csp.ts';
 import { klaenge } from './klaenge.ts';
@@ -29,6 +30,7 @@ export default defineConfig({
     tailwindcss(),
     klaenge(),
     kataloge(),
+    inhaltsbilder(),
     VitePWA({
       // „prompt“: Eine neue Version wartet, bis wir sie anwenden (Hinweisleiste oder Pause zwischen Partien) – statt mitten im Spiel neu zu laden.
       registerType: 'prompt',
@@ -57,9 +59,19 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,mp3,json,woff2}'],
         // Musik, Tierstimmen (Drachenspiel, rund 14 MB), Avatar-Ansagen (gut 5 MB) und Enten-Rallye-Ton
         // sind zu groß zum Vorab-Speichern: Sie kommen beim ersten Abspielen in einen eigenen Speicher.
-        globIgnores: ['**/version.json', '**/klaenge/musik/**', '**/klaenge/tiere/**', '**/klaenge/avatare/**', '**/klaenge/duck-rally/**'],
+        globIgnores: ['**/version.json', '**/quartett/bilder/**', '**/klaenge/musik/**', '**/klaenge/tiere/**', '**/klaenge/avatare/**', '**/klaenge/duck-rally/**'],
         navigateFallback: 'index.html',
         runtimeCaching: [
+          {
+            // Quartett-Bilder (#319): je Set beim ersten Spielen laden, dann offline da.
+            urlPattern: ({ url }) => url.pathname.includes('/quartett/bilder/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'quartett-bilder',
+              expiration: { maxEntries: 400, purgeOnQuotaError: true },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             urlPattern: ({ url }) => url.pathname.includes('/klaenge/tiere/'),
             handler: 'CacheFirst',
