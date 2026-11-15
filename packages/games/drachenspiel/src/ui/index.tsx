@@ -48,6 +48,8 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
   SeatSymbol,
   SetupExtra,
   prepareOptions,
+  // Der gemalte Tisch bekommt die ganze Fläche; Spieler, Status und Knöpfe liegen im Menü ☰ (#430).
+  fullBleed: true,
   endAction,
   sounds: {
     cardDrawn: 'drachen-karte-ziehen',
