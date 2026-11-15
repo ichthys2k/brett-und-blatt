@@ -1087,15 +1087,6 @@
   filter: contrast(80%);
 }
 
-.ds-minion-icons {
-  display: flex;
-  gap: 3px;
-  font-size: calc(0.75rem * var(--ds-s, 1));
-  line-height: 1;
-  position: relative;
-  z-index: 5;
-}
-
 .ds-card-traits {
   display: flex;
   gap: 2px;
@@ -2050,84 +2041,58 @@
   border-radius: inherit;
 }
 
-.ds-minion .ds-minion-gamecard {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  border-radius: inherit;
-  position: relative;
-}
-
-.ds-minion .ds-minion-gamecard .bub-game-card-anki {
-  border-radius: inherit;
-}
-
-/* Kleine Karten (Hand, Feld, Kartenwahl): Die Anki-Vorlage ist für große Karten gebaut (14 px Schrift,
+/* Kleine Karten (Hand, Kartenwahl): Die Anki-Vorlage ist für große Karten gebaut (14 px Schrift,
    80 px Bildfläche, Regeltext). Hier nur Kosten, Name, Bild und Werte – den Text zeigt das Vergrößern. */
-.bub-card.ds-combat-card-game .bub-combat-card,
-.bub-card.ds-minion-gamecard .bub-combat-card {
+.bub-card.ds-combat-card-game .bub-combat-card {
   padding: 0;
   border: none;
   background: transparent;
   font-size: calc(11px * var(--ds-s, 1));
 }
 
-.bub-card.ds-combat-card-game .bub-combat-header,
-.bub-card.ds-minion-gamecard .bub-combat-header {
+.bub-card.ds-combat-card-game .bub-combat-header {
   flex-direction: column;
   align-items: stretch;
   gap: 1px;
   margin-bottom: 0;
 }
 
-.bub-card.ds-combat-card-game .bub-combat-cost,
-.bub-card.ds-minion-gamecard .bub-combat-cost {
+.bub-card.ds-combat-card-game .bub-combat-cost {
   align-self: flex-start;
   padding: calc(1px * var(--ds-s, 1)) calc(4px * var(--ds-s, 1));
   font-size: calc(0.72rem * var(--ds-s, 1));
 }
 
-.bub-card.ds-combat-card-game .bub-combat-cost-gem,
-.bub-card.ds-minion-gamecard .bub-combat-cost-gem {
+.bub-card.ds-combat-card-game .bub-combat-cost-gem {
   font-size: calc(0.6rem * var(--ds-s, 1));
 }
 
-.bub-card.ds-combat-card-game .bub-combat-title-bar,
-.bub-card.ds-minion-gamecard .bub-combat-title-bar {
+.bub-card.ds-combat-card-game .bub-combat-title-bar {
   text-align: center;
 }
 
-.bub-card.ds-combat-card-game .bub-combat-name,
-.bub-card.ds-minion-gamecard .bub-combat-name {
+.bub-card.ds-combat-card-game .bub-combat-name {
   font-size: calc(0.66rem * var(--ds-s, 1));
   line-height: 1.15;
 }
 
 .bub-card.ds-combat-card-game .bub-combat-tribe,
-.bub-card.ds-minion-gamecard .bub-combat-tribe,
 .bub-card.ds-combat-card-game .bub-combat-body,
-.bub-card.ds-minion-gamecard .bub-combat-body,
-.bub-card.ds-combat-card-game .bub-card-runtime-hint,
-.bub-card.ds-minion-gamecard .bub-card-runtime-hint {
+.bub-card.ds-combat-card-game .bub-card-runtime-hint {
   display: none;
 }
 
-.bub-card.ds-combat-card-game .bub-combat-media,
-.bub-card.ds-minion-gamecard .bub-combat-media {
+.bub-card.ds-combat-card-game .bub-combat-media {
   min-height: 0;
   margin: 2px 0;
   background: transparent;
 }
 
-.bub-card.ds-combat-card-game .bub-combat-image,
-.bub-card.ds-minion-gamecard .bub-combat-image {
+.bub-card.ds-combat-card-game .bub-combat-image {
   font-size: calc(1.9rem * var(--ds-s, 1));
 }
 
-.bub-card.ds-combat-card-game .bub-combat-image img,
-.bub-card.ds-minion-gamecard .bub-combat-image img {
+.bub-card.ds-combat-card-game .bub-combat-image img {
   max-height: 100%;
 }
 
@@ -2144,17 +2109,6 @@
 
 .bub-card.ds-combat-card-game .bub-combat-stat-icon {
   font-size: calc(0.6rem * var(--ds-s, 1));
-}
-
-/* Auf dem Feld zeigen die Plaketten von <GameCard> die aktuellen Werte; die Kosten zählen dort nicht. */
-.bub-card.ds-minion-gamecard .bub-combat-footer,
-.bub-card.ds-minion-gamecard .bub-combat-cost {
-  display: none;
-}
-
-/* Plaketten der Tiere (aktueller Angriff und Leben) wachsen mit der Karte (#420). */
-.ds-minion .bub-game-card-runtime-badge {
-  font-size: calc(0.72rem * var(--ds-s, 1));
 }
 
 /*

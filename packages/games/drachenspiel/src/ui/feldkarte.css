@@ -1,0 +1,190 @@
+/* Feldkarte des Drachenspiels (#435, Strang #425, Glied S2): Ein Tier auf dem Feld ist ein Bild im Oval
+   mit Angriff (unten links) und Leben (unten rechts) als Symbol, darunter seine Statuszeichen.
+   Größe und Platz kommen weiter aus `.ds-minion` (styles.css); hier nur das Aussehen.
+   Doppelte Klasse `.ds-field.ds-field`, damit diese Regeln die alten Rahmen von `.ds-minion` sicher ersetzen. */
+
+.ds-minion.ds-field.ds-field {
+  container-type: inline-size;
+  padding: 0;
+  border: 0;
+  border-radius: 50% / 46%;
+  background: none;
+  box-shadow: none;
+  outline: none;
+  overflow: visible;
+  /* Symbole wachsen mit der Figur: sieben Tiere auf 360 px Breite bleiben lesbar. */
+  --ds-sym-stat-feld: clamp(17px, 36cqw, 44px);
+  --ds-sym-mark-feld: clamp(13px, 24cqw, 30px);
+}
+
+.ds-minion.ds-field.ds-field[data-drop-active='true'] {
+  box-shadow: none !important;
+}
+
+/* Das Oval: lässt unten Platz für die halb überstehenden Wertesymbole. */
+.ds-field-oval {
+  position: absolute;
+  inset: 0 4% 8%;
+  border-radius: 50%;
+  --ds-field-ring-base: rgb(60 45 25 / 0.85);
+  background: radial-gradient(circle at 50% 40%, #f3e6c8, #b99a66);
+  box-shadow:
+    0 0 0 2px var(--ds-field-ring, var(--ds-field-ring-base)),
+    0 3px 8px rgb(0 0 0 / 0.35);
+  transition: box-shadow 0.15s;
+}
+
+.ds-field-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 38%;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.ds-field-emoji {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: clamp(1.2rem, 48cqw, 3.4rem);
+  line-height: 1;
+}
+
+.ds-field .ds-field-atk,
+.ds-field .ds-field-hp {
+  position: absolute;
+  bottom: 0;
+  z-index: 3;
+}
+
+.ds-field .ds-field-atk {
+  left: -1%;
+}
+
+.ds-field .ds-field-hp {
+  right: -1%;
+}
+
+/* Statuszeichen unten mittig zwischen den Werten, über dem Rand des Ovals. */
+.ds-field-marks {
+  position: absolute;
+  bottom: 9%;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 4;
+  display: flex;
+  gap: 1px;
+  align-items: center;
+}
+
+/* Zeichen ohne eigenes Symbol (Fanfare, Vermächtnis, Winterschlaf …) als runde Emoji-Münze. */
+.ds-field-marks .ds-trait-badge,
+.ds-field-more {
+  width: var(--ds-sym-mark-feld);
+  height: var(--ds-sym-mark-feld);
+  border-radius: 50%;
+  background: #f6ecd6;
+  box-shadow: 0 0 0 1.5px #1a120a;
+  font-size: calc(var(--ds-sym-mark-feld) * 0.62);
+  line-height: 1;
+}
+
+.ds-field-more {
+  display: inline-grid;
+  place-items: center;
+  font-weight: 800;
+  color: #1a120a;
+  font-size: calc(var(--ds-sym-mark-feld) * 0.5);
+  cursor: help;
+}
+
+/* Zustände als Ring und Leuchten am Oval statt am Kasten */
+.ds-field.ds-minion-house-forest {
+  --ds-field-ring: #2e7d32;
+}
+.ds-field.ds-minion-house-sea {
+  --ds-field-ring: #1976d2;
+}
+.ds-field.ds-minion-house-farm {
+  --ds-field-ring: #d97706;
+}
+.ds-field.ds-minion-house-wild {
+  --ds-field-ring: #dc2626;
+}
+.ds-field.ds-minion-house-bugs {
+  --ds-field-ring: #7c3aed;
+}
+
+.ds-field.can-attack .ds-field-oval {
+  box-shadow:
+    0 0 0 3px #2ecc71,
+    0 0 12px 3px rgb(46 204 113 / 0.75);
+}
+
+.ds-field.selected .ds-field-oval {
+  box-shadow:
+    0 0 0 3px #f1c40f,
+    0 0 16px 4px rgb(241 196 15 / 0.9);
+}
+
+.ds-minion.ds-field.ds-field.targetable {
+  animation: none;
+}
+
+.ds-field.targetable .ds-field-oval {
+  animation: ds-field-target 1s infinite alternate;
+}
+
+@keyframes ds-field-target {
+  from {
+    box-shadow:
+      0 0 0 3px #e74c3c,
+      0 0 4px 1px rgb(231 76 60 / 0.6);
+  }
+  to {
+    box-shadow:
+      0 0 0 3px #e74c3c,
+      0 0 14px 4px rgb(231 76 60 / 0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-field.targetable .ds-field-oval {
+    animation: none;
+    box-shadow: 0 0 0 3px #e74c3c, 0 0 12px 3px rgb(231 76 60 / 0.8);
+  }
+}
+
+.ds-field[data-drop-active='true'] .ds-field-oval {
+  box-shadow:
+    0 0 0 4px #ff4757,
+    0 0 16px 4px rgb(255 71 87 / 0.6);
+}
+
+.ds-field.ds-hinted .ds-field-oval {
+  outline: 3px dashed #f1c40f;
+  outline-offset: 3px;
+}
+
+/* Erstarrt (vom Gegner eingefroren): bläulich und blass */
+.ds-field.frozen .ds-field-img,
+.ds-field.frozen .ds-field-emoji {
+  filter: saturate(0.35) brightness(1.15) sepia(0.2) hue-rotate(170deg);
+}
+
+.ds-field.building .ds-field-oval,
+.ds-field.building .ds-field-img {
+  border-radius: 14%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ds-field-oval {
+    --ds-field-ring-base: rgb(235 220 190 / 0.75);
+    background: radial-gradient(circle at 50% 40%, #4a3d2a, #241c12);
+  }
+}

@@ -1,17 +1,22 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { dragTilt, GameCard, useCardCosmetics, useCardOverride, useInspect, usePointerDrag, type BoardProps, type InspectExtraProps } from '@brett-und-blatt/ui';
+import { dragTilt, GameCard, getNoteField, useCardCosmetics, useCardOverride, useInspect, usePointerDrag, type BoardProps, type InspectExtraProps } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { CARDS_DB } from '../cards';
 import { HOUSE_POWERS } from '../powers';
 import { heroAttackValue } from '../rules';
-import type { CardDefinition, DeckThemeId, DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
+import type { CardDefinition, DeckThemeId, KeywordId, DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
 import { playCreatureAudio } from './audio';
-import { attackClass, CardFace, Fuse, GameLog, healthClass, renderCombatCardAnki, TargetArrow, TraitBadge, zoomContent, type ArrowPoints, type ZoomItem } from './parts';
+import { BILD_FIELD, CardFace, Fuse, GameLog, TargetArrow, TraitBadge, zoomContent, type ArrowPoints, type ZoomItem } from './parts';
 import type { Float, ShownMinion } from './sequence';
 import { getCardFullTitle, getCardTraits, getMinionTraits } from './traits';
 import { currentCrest, ScenarioTip, useCosmetics } from './SoloHub';
 import { HOUSE_ICONS, HOUSE_NAMES } from './champions';
 import { useBeats } from './useBeats';
+import { KEYWORD_SYMBOLS, KeywordEdges, KeywordMark, StatGem } from './symbole';
+import { cardArtUrl } from './cardArt';
+
+/** Höchstens so viele Statuszeichen unter dem Bild eines Tiers; der Rest steht als „+n“ da. */
+const FIELD_MARKS = 3;
 import { uiCard } from './cardLookup';
 
 const LABELS = ['Blau', 'Rot'];
@@ -92,21 +97,17 @@ function MinionView({
   };
   const cosmetics = useCardCosmetics();
   const overrideNote = useCardOverride(def.id);
-  const rendered = useMemo(
-    () =>
-      renderCombatCardAnki(def, {
-        attack: minion.attack,
-        health: minion.health,
-        hint: traits.length > 0 ? traits.map((t) => t.name).join(', ') : undefined,
-        overrideNote,
-        mediaUrlMap: cosmetics.mediaUrlMap,
-      }),
-    [def, minion.attack, minion.health, traits, overrideNote, cosmetics.mediaUrlMap],
-  );
+  const art = useMemo(() => cardArtUrl(def.id, getNoteField(overrideNote, BILD_FIELD), cosmetics.mediaUrlMap), [def.id, overrideNote, cosmetics.mediaUrlMap]);
+  const keywords = traits.map((t) => t.id).filter((id): id is KeywordId => id in KEYWORD_SYMBOLS);
+  // Schildwall, Prunkschild, Verkleidet und Kältestarre zeigt der Rand ums Bild; alles Übrige die Zeichenreihe.
+  const marks = traits.filter((t) => !(t.id in KEYWORD_SYMBOLS) || !KEYWORD_SYMBOLS[t.id as KeywordId].edge);
+  const shownMarks = marks.length > FIELD_MARKS ? marks.slice(0, FIELD_MARKS - 1) : marks;
+  const hiddenMarks = marks.slice(shownMarks.length);
 
   const cardHouse = def.house && def.house !== 'neutral' ? def.house : undefined;
   const classes = [
     'ds-minion',
+    'ds-field',
     cardHouse && `ds-minion-house-${cardHouse}`,
     canAttack && !attackVector && 'can-attack',
     isSelected && !attackVector && 'selected',
@@ -144,29 +145,41 @@ function MinionView({
       tabIndex={dying ? undefined : 0}
       aria-label={`${minion.name}, Angriff ${minion.attack}, Leben ${minion.health}${traits.length > 0 ? ` [${traits.map((t) => t.name).join(', ')}]` : ''}`}
     >
-      <GameCard
-        ankiFront={rendered}
-        className="ds-minion-gamecard"
-        runtimeBadges={[
-          {
-            position: 'bottom-left',
-            label: String(minion.attack),
-            tone: minion.attack > minion.baseAttack ? 'success' : minion.attack < minion.baseAttack ? 'danger' : 'default',
-          },
-          {
-            position: 'bottom-right',
-            label: String(minion.health),
-            tone: minion.health < minion.maxHealth ? 'danger' : minion.maxHealth > minion.baseHealth ? 'success' : 'default',
-          },
-        ]}
-      >
-        <FloatBadges floats={floats} />
-        <div className="ds-minion-icons">
-          {traits.map((trait) => (
-            <TraitBadge key={trait.id} trait={trait} isOpponent={!isOwner} />
-          ))}
+      <div className="ds-field-oval">
+        {art ? (
+          <img className="ds-field-img" src={art} alt="" draggable={false} />
+        ) : (
+          <span className="ds-field-emoji" aria-hidden="true">
+            {minion.emoji}
+          </span>
+        )}
+        <KeywordEdges keywords={keywords} />
+      </div>
+      <StatGem kind="attack" value={minion.attack} state={minion.attack > minion.baseAttack ? 'buffed' : minion.attack < minion.baseAttack ? 'hurt' : 'base'} size="feld" className="ds-field-atk" />
+      <StatGem
+        kind="health"
+        value={minion.health}
+        state={minion.health < minion.maxHealth ? 'hurt' : minion.maxHealth > minion.baseHealth ? 'buffed' : 'base'}
+        size="feld"
+        className="ds-field-hp"
+      />
+      {marks.length > 0 && (
+        <div className="ds-field-marks">
+          {shownMarks.map((trait) =>
+            trait.id in KEYWORD_SYMBOLS ? (
+              <KeywordMark key={trait.id} keyword={trait.id as KeywordId} size="feld" />
+            ) : (
+              <TraitBadge key={trait.id} trait={trait} isOpponent={!isOwner} />
+            ),
+          )}
+          {hiddenMarks.length > 0 && (
+            <span className="ds-field-more" title={hiddenMarks.map((t) => t.fullTitle).join('\n')} aria-label={`und ${hiddenMarks.length} weitere: ${hiddenMarks.map((t) => t.name).join(', ')}`}>
+              +{hiddenMarks.length}
+            </span>
+          )}
         </div>
-      </GameCard>
+      )}
+      <FloatBadges floats={floats} />
     </div>
   );
 }
