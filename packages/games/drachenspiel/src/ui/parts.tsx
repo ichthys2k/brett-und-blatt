@@ -12,6 +12,7 @@ import type { CardDefinition, HousePower, Minion } from '../types';
 import { cardOrigin, getCardTraits, getMinionTraits, type TraitInfo } from './traits';
 import { uiCard } from './cardLookup';
 import { cardArtOf, cardArtUrl, withCardArt } from './cardArt';
+import { KeywordMark, StatGem } from './symbole';
 
 const baseCombatNotes = new Map<string, AnkiNote>();
 /** Stelle des Felds „Bild“ in der Anki-Kampfkarte (eigene Kartensets bringen dort ihr Bild mit). */
@@ -78,7 +79,26 @@ export function TraitBadge({ trait, isOpponent }: { trait: TraitInfo; isOpponent
   );
 }
 
-/** Inhalt einer Karte auf der Hand und beim Kartentausch über <GameCard> und BUB_COMBAT_CARD_NOTETYPE. */
+/** Art der Karte für den Rahmen der Handkarte (#436): Tier, Kniff, Falle, Aufgabe oder Bau. */
+export type HandKind = 'minion' | 'spell' | 'trap' | 'quest' | 'building';
+
+export function handKind(def: CardDefinition): HandKind {
+  if (def.quest) return 'quest';
+  if (def.trap) return 'trap';
+  if (def.isSpell) return 'spell';
+  if (def.building) return 'building';
+  return 'minion';
+}
+
+/** So viele Schlüsselwort-Zeichen passen in die Kurzzeile der Handkarte; den Rest zeigt die Großansicht. */
+const HAND_MARKS = 3;
+
+/**
+ * Handkarte (#436, Strang #425, Glied S3) für Hand, Kartentausch, Kartenwahl und Deckbau. Der Inhalt
+ * kommt weiter aus der Anki-Vorlage `BUB_COMBAT_CARD_NOTETYPE` (eigene Kartensets und ersetzte Bilder
+ * bleiben), `handkarte.css` ordnet ihn neu: Bild oben, Namensband, eine Zeile Kurztext. Kosten, Angriff
+ * und Leben liegen als Symbole aus S1 in den Ecken, Schlüsselwörter als Zeichen in der Kurzzeile.
+ */
 export function CardFace({
   def,
   currentAttack,
@@ -105,14 +125,32 @@ export function CardFace({
       }),
     [def, currentAttack, currentHealth, hint, overrideNote, cosmetics.mediaUrlMap],
   );
+  const kind = handKind(def);
+  // Werte haben nur Tiere und Bauten; Kniffe, Fallen und Aufgaben zeigen dort ihren Text.
+  const fighter = kind === 'minion' || kind === 'building';
+  const attack = fighter ? (currentAttack ?? def.attack ?? 0) : undefined;
+  const health = fighter ? (currentHealth ?? def.health ?? 0) : undefined;
+  const keywords = def.keywords ?? [];
 
   return (
     <GameCard
       ankiFront={rendered}
       foil={def.rarity === 'mythic' ? 'gold' : 'none'}
-      className={`ds-combat-card-game ${className}`}
-      label={`${def.name}, Kosten ${def.cost} Knappen${currentAttack !== undefined || def.attack !== undefined ? `, Angriff ${currentAttack ?? def.attack}` : ''}${currentHealth !== undefined || def.health !== undefined ? `, Leben ${currentHealth ?? def.health}` : ''}`}
-    />
+      className={`ds-combat-card-game ds-hand-card ds-hand-${kind}${keywords.length > 0 ? ' ds-hand-marked' : ''} ${className}`}
+      label={`${def.name}, Kosten ${def.cost} Knappen${attack !== undefined ? `, Angriff ${attack}` : ''}${health !== undefined ? `, Leben ${health}` : ''}`}
+    >
+      <StatGem kind="cost" value={def.cost} size="hand" className="ds-hand-cost" />
+      {attack !== undefined && <StatGem kind="attack" value={attack} size="hand" className="ds-hand-atk" />}
+      {health !== undefined && <StatGem kind="health" value={health} size="hand" className="ds-hand-hp" />}
+      {keywords.length > 0 && (
+        <span className="ds-hand-marks">
+          {keywords.slice(0, HAND_MARKS).map((keyword) => (
+            <KeywordMark key={keyword} keyword={keyword} size="hand" />
+          ))}
+          {keywords.length > HAND_MARKS && <span className="ds-hand-more">+{keywords.length - HAND_MARKS}</span>}
+        </span>
+      )}
+    </GameCard>
   );
 }
 

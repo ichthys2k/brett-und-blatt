@@ -1593,37 +1593,12 @@
   position: relative;
 }
 
-.ds-card.ds-card-spell::after,
-.bub-kind-Kniff .bub-combat-card::after {
-  content: '📜';
-  position: absolute;
-  bottom: 3px;
-  right: 3px;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #b91c1c 0%, #7f1d1d 80%, #450a0a 100%);
-  border: 1px solid #991b1b;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.35);
-  font-size: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  z-index: 5;
-}
-
 @media (prefers-color-scheme: dark) {
   .ds-card.ds-card-spell {
     background: linear-gradient(155deg, #2e261d 0%, #221c15 50%, #1a1510 100%);
     border-color: #8c734b;
     box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
     color: #f4ebd9;
-  }
-  .ds-card.ds-card-spell::after,
-  .bub-kind-Kniff .bub-combat-card::after {
-    background: radial-gradient(circle at 35% 35%, #991b1b 0%, #5b1111 80%, #300606 100%);
-    border-color: #7f1d1d;
   }
   .ds-spell-hint {
     background: #3a2e1d;
@@ -1637,13 +1612,6 @@
 .ds-card.ds-card-selected {
   transform: translateY(-10px);
   box-shadow: 0 0 0 3px #d97706, 0 8px 18px rgba(217, 119, 6, 0.35);
-}
-.bub-kind-Kniff.bub-combat-card,
-.bub-kind-Kniff .bub-combat-card {
-  background: linear-gradient(155deg, #fbf7ee 0%, #f4ebd9 50%, #eae0c8 100%) !important;
-  border: 2px double #b89758 !important;
-  box-shadow: inset 0 0 10px rgba(139, 90, 43, 0.15) !important;
-  position: relative;
 }
 
 /* Wappenhaus-Rahmen für Minions auf dem Spielfeld */
@@ -2030,85 +1998,6 @@
   flex-shrink: 0;
   border-radius: 3px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-}
-
-.ds-card .ds-combat-card-game {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  border-radius: inherit;
-}
-
-/* Kleine Karten (Hand, Kartenwahl): Die Anki-Vorlage ist für große Karten gebaut (14 px Schrift,
-   80 px Bildfläche, Regeltext). Hier nur Kosten, Name, Bild und Werte – den Text zeigt das Vergrößern. */
-.bub-card.ds-combat-card-game .bub-combat-card {
-  padding: 0;
-  border: none;
-  background: transparent;
-  font-size: calc(11px * var(--ds-s, 1));
-}
-
-.bub-card.ds-combat-card-game .bub-combat-header {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 1px;
-  margin-bottom: 0;
-}
-
-.bub-card.ds-combat-card-game .bub-combat-cost {
-  align-self: flex-start;
-  padding: calc(1px * var(--ds-s, 1)) calc(4px * var(--ds-s, 1));
-  font-size: calc(0.72rem * var(--ds-s, 1));
-}
-
-.bub-card.ds-combat-card-game .bub-combat-cost-gem {
-  font-size: calc(0.6rem * var(--ds-s, 1));
-}
-
-.bub-card.ds-combat-card-game .bub-combat-title-bar {
-  text-align: center;
-}
-
-.bub-card.ds-combat-card-game .bub-combat-name {
-  font-size: calc(0.66rem * var(--ds-s, 1));
-  line-height: 1.15;
-}
-
-.bub-card.ds-combat-card-game .bub-combat-tribe,
-.bub-card.ds-combat-card-game .bub-combat-body,
-.bub-card.ds-combat-card-game .bub-card-runtime-hint {
-  display: none;
-}
-
-.bub-card.ds-combat-card-game .bub-combat-media {
-  min-height: 0;
-  margin: 2px 0;
-  background: transparent;
-}
-
-.bub-card.ds-combat-card-game .bub-combat-image {
-  font-size: calc(1.9rem * var(--ds-s, 1));
-}
-
-.bub-card.ds-combat-card-game .bub-combat-image img {
-  max-height: 100%;
-}
-
-.bub-card.ds-combat-card-game .bub-combat-footer {
-  margin-top: 0;
-  padding: 0;
-}
-
-.bub-card.ds-combat-card-game .bub-combat-stat {
-  gap: 1px;
-  padding: calc(1px * var(--ds-s, 1)) calc(3px * var(--ds-s, 1));
-  font-size: calc(0.68rem * var(--ds-s, 1));
-}
-
-.bub-card.ds-combat-card-game .bub-combat-stat-icon {
-  font-size: calc(0.6rem * var(--ds-s, 1));
 }
 
 /*
