@@ -190,8 +190,9 @@ const statChange = (value: number, base: number): 'up' | 'down' | undefined => (
 const stateOf = (change: 'up' | 'down' | undefined): StatState => (change === 'up' ? 'buffed' : change === 'down' ? 'hurt' : 'base');
 
 /**
- * Zoomkarte (#437, Strang #425, Glied S4): die Handkarte groß mit vollem Regeltext, darunter jede
- * Eigenschaft mit Zeichen, Name und Beschreibung, Herkunft und Spruch. Nur aus der Sicht.
+ * Zoomkarte (#437, Strang #425, Glied S4): die Handkarte groß, alles steht auf der Karte: im Textfeld der
+ * volle Regeltext, jede Eigenschaft mit Zeichen, Name und Beschreibung und der Spruch, unten mittig die
+ * Herkunft. Ohne Fensterrahmen (`bare`), Antippen schließt. Nur aus der Sicht.
  */
 function ZoomCard({ def, minion, traits, rules, origin, quote }: { def: CardDefinition; minion: Minion | null; traits: TraitInfo[]; rules?: string; origin: string; quote?: string }) {
   return (
@@ -224,10 +225,10 @@ function ZoomCard({ def, minion, traits, rules, origin, quote }: { def: CardDefi
               ))}
             </ul>
           )}
+          {quote && <p className="ds-zoom-quote">„{quote}“</p>}
         </div>
+        {origin && <p className="ds-zoom-origin">{origin}</p>}
       </CardFace>
-      {origin && <p className="ds-zoom-origin">{origin}</p>}
-      {quote && <p className="ds-zoom-quote">„{quote}“</p>}
     </div>
   );
 }
@@ -278,6 +279,7 @@ export function zoomContent(item: ZoomItem, cosmetics: ZoomCosmetics): InspectCo
     keywords: traits.map((trait) => ({ emoji: trait.emoji, name: trait.name, text: trait.description })),
     quote: quote || undefined,
     // Ein eigenes Kartenset darf den Regeltext ersetzen, wie es auch das Bild ersetzt.
+    bare: true,
     body: <ZoomCard def={def} minion={minion} traits={traits} rules={plainText(getNoteField(override, RULES_FIELD)) || def.text} origin={cardOrigin(def)} quote={quote || undefined} />,
   };
 }

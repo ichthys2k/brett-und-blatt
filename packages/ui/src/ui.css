@@ -1823,6 +1823,20 @@ button.bub-net-point:not(:disabled) {
 }
 
 /* Beim Ziehen stört die Ansicht nur. */
+/* Ohne Rahmen (`InspectContent.bare`): die eigene Darstellung steht frei, Antippen schließt. */
+.bub-inspect-float.bub-inspect-bare,
+.bub-inspect-panel.bub-inspect-bare {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.bub-inspect-panel.bub-inspect-bare {
+  cursor: pointer;
+  outline: none;
+}
+
 body:has(.bub-dragging) .bub-inspect-float {
   display: none;
 }

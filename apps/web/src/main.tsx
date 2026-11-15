@@ -11,6 +11,7 @@ import { startClassCardSync } from './lib/classes';
 import { onGameRecorded } from './lib/passRecorder';
 import { passSyncSoon, syncPassEntry } from './lib/playerPass';
 import { disablePinchZoom } from './lib/preventZoom';
+import { disableContextMenu } from './lib/preventContextMenu';
 import './styles.css';
 
 // Spielerpass (#137): Blöcke anmelden und beim Start einmal abgleichen.
@@ -26,6 +27,9 @@ startAppUpdates();
 
 // Pinch-to-Zoom unterbinden, damit sich das Layout nicht versehentlich verschiebt (#267).
 disablePinchZoom();
+
+// Kein Kontextmenü von Browser und System (Rechtsklick, langes Drücken): Es störte mitten im Spiel.
+disableContextMenu();
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Element #root fehlt.');
