@@ -682,7 +682,13 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         )}
 
         {!around && (
-          <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:justify-center-safe short:overflow-x-auto short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:flex-none short:[&>button]:px-2 short:[&>button]:text-sm short:[&>button]:whitespace-nowrap tiny:gap-1 tiny:pt-1 tiny:pb-0 tiny:[&>button]:min-h-8 tiny:[&>button]:px-2 tiny:[&>button]:text-xs">
+          <footer
+            className={
+              collapsedSide
+                ? 'order-2 flex flex-none flex-wrap justify-center gap-1.5 px-3 py-2 [&>button]:min-h-9 [&>button]:px-2.5 [&>button]:text-sm [&>button]:whitespace-nowrap'
+                : 'order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:justify-center-safe short:overflow-x-auto short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:flex-none short:[&>button]:px-2 short:[&>button]:text-sm short:[&>button]:whitespace-nowrap tiny:gap-1 tiny:pt-1 tiny:pb-0 tiny:[&>button]:min-h-8 tiny:[&>button]:px-2 tiny:[&>button]:text-xs'
+            }
+          >
             {primaryControls}
             {!result && secondaryControls}
           </footer>

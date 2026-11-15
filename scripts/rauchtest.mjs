@@ -281,6 +281,31 @@ try {
       if (m.pageHeight > height + 2) problems.push(`${where}: Seite rollt (${m.pageHeight} px)`);
       await context.close();
     }
+    // Handy-Querformat (#378): Seitenleiste in ☰-Schublade, kein Überlauf in .poker-controls (auch bei eigenem Zug).
+    for (const [width, height, count] of [[844, 390, 2], [740, 360, 2], [667, 375, 2], [667, 320, 2], [844, 390, 10]]) {
+      const context = await browser.newContext({ viewport: { width, height } });
+      const pokerPage = await context.newPage();
+      await pokerPage.goto(base);
+      await pokerPage.evaluate(
+        ([seats]) => localStorage.setItem('brett-und-blatt:einstellungen:poker', JSON.stringify({ seats, options: {} })),
+        [Array.from({ length: count }, (_, i) => (i === 0 ? { kind: 'human', name: 'Du' } : { kind: 'bot', name: '', level: 'medium' }))],
+      );
+      const m = await startGame(pokerPage, 'poker');
+      const flat = await pokerPage.evaluate(() => {
+        const ctrl = document.querySelector('.poker-controls');
+        const footer = document.querySelector('footer');
+        return {
+          ctrlOverflow: ctrl ? Math.round(ctrl.scrollHeight - ctrl.clientHeight) : 0,
+          footerShown: Boolean(footer && footer.getBoundingClientRect().height > 0),
+        };
+      });
+      const where = `poker quer zu ${count} bei ${width}×${height}`;
+      if (m.overflow > 2) problems.push(`${where}: Spielfeld rollt (${m.overflow} px)`);
+      if (flat.ctrlOverflow > 2) problems.push(`${where}: Bedienleiste (.poker-controls) rollt (${flat.ctrlOverflow} px)`);
+      if (flat.footerShown) problems.push(`${where}: Aktionsknöpfe außerhalb der ☰-Schublade sichtbar`);
+      if (m.pageHeight > height + 2) problems.push(`${where}: Seite rollt (${m.pageHeight} px)`);
+      await context.close();
+    }
   }
   // CSP (#322): Selbst wenn der Bereiniger für Anki-Karten umgangen würde, läuft eingeschleustes Skript nicht.
   {
