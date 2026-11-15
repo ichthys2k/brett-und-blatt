@@ -9,8 +9,7 @@
   margin: 0;
   padding: 0 clamp(4px, 1.5%, 24px);
   border-radius: 0;
-  /* Platzhalter für alle Häuser, bis die gemalten Tische (B1, #427) da sind: dann je Haus
-     `--ds-table` auf `tische/tisch-<haus>-quer.webp` setzen. Es lädt nur das Bild der Arena. */
+  /* Standard (gemischtes oder noch unbekanntes Gegner-Deck): allgemeine Arena. */
   --ds-table: url('./tische/tisch-arena-quer.webp');
   background: #24140c var(--ds-table) center top / cover no-repeat;
   color: #f5ead6;
@@ -20,12 +19,67 @@
   --ds-plate-ink: #f5ead6;
 }
 
+.ds-arena.ds-arena[data-theme='wald'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='wald'] {
+  --ds-table: url('./tische/tisch-wald-quer.webp');
+}
+
+.ds-arena.ds-arena[data-theme='meer'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='meer'] {
+  --ds-table: url('./tische/tisch-meer-quer.webp');
+}
+
+.ds-arena.ds-arena[data-theme='bauernhof'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='bauernhof'] {
+  --ds-table: url('./tische/tisch-bauernhof-quer.webp');
+}
+
+.ds-arena.ds-arena[data-theme='krabbeltiere'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='krabbeltiere'] {
+  --ds-table: url('./tische/tisch-krabbeltiere-quer.webp');
+}
+
+.ds-arena.ds-arena[data-theme='wildnis'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='wildnis'] {
+  --ds-table: url('./tische/tisch-wildnis-quer.webp');
+}
+
 @media (orientation: portrait) {
   .ds-arena.ds-arena {
     --ds-table: url('./tische/tisch-arena-hoch.webp');
-    /* Das Probebild hat einen hellen Pinselrand: leicht vergrößert verschwindet er (bis B1, #427). */
+    /* Das Probebild hat einen hellen Pinselrand: leicht vergrößert verschwindet er. */
     background-size: 112% auto;
     background-position: center 30%;
+  }
+
+  .ds-arena.ds-arena[data-theme] {
+    background-size: cover;
+    background-position: center center;
+  }
+
+  .ds-arena.ds-arena[data-theme='wald'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='wald'] {
+    --ds-table: url('./tische/tisch-wald-hoch.webp');
+  }
+
+  .ds-arena.ds-arena[data-theme='meer'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='meer'] {
+    --ds-table: url('./tische/tisch-meer-hoch.webp');
+  }
+
+  .ds-arena.ds-arena[data-theme='bauernhof'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='bauernhof'] {
+    --ds-table: url('./tische/tisch-bauernhof-hoch.webp');
+  }
+
+  .ds-arena.ds-arena[data-theme='krabbeltiere'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='krabbeltiere'] {
+    --ds-table: url('./tische/tisch-krabbeltiere-hoch.webp');
+  }
+
+  .ds-arena.ds-arena[data-theme='wildnis'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='wildnis'] {
+    --ds-table: url('./tische/tisch-wildnis-hoch.webp');
   }
 }
 
@@ -86,6 +140,11 @@
     --ds-table: url('./tische/tisch-arena-hoch.webp');
     background-size: auto, 112% auto;
     background-position: center, center 30%;
+  }
+
+  .ds-phase-overlay.ds-phase-overlay[data-theme] {
+    background-size: auto, cover;
+    background-position: center, center center;
   }
 }
 
