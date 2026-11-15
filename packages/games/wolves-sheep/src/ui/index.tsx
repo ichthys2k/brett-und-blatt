@@ -4,7 +4,7 @@
  * die Rollenkarte gedrückt ist – auch weil beim Hot-Seat alle auf dasselbe Gerät schauen.
  */
 import { BUB_COURT_CARD_NOTETYPE, renderCardSide, type SeatId } from '@brett-und-blatt/engine';
-import { GameCard, getNoteField, useCardCosmetics, useCardOverride, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { GameCard, getNoteField, useCardCosmetics, useCardOverride, useInspect, type BoardProps, type GameUi, type InspectContent } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { nightTargets, type DepartureCause, type Phase, type Role, type WolvesSheepMove, type WolvesSheepState } from '../rules';
 import './styles.css';
@@ -69,6 +69,15 @@ function publicTitle(view: WolvesSheepState): string {
       if (view.winner === 'flock') return '🐑 Die Herde gewinnt';
       return view.winner === 'pair' ? '🎀 Die Verbundenen gewinnen' : 'Niemand gewinnt';
   }
+}
+
+/**
+ * Großansicht einer öffentlich bekannten Rolle (#422): nur für ausgeschiedene Plätze oder am Ende, nie für die
+ * eigene geheime Rolle oder Wissen aus der Nacht – das könnte am gemeinsamen Bildschirm jemand mitlesen.
+ */
+function roleInspect(role: Role): InspectContent {
+  const image = cardImage(role);
+  return { title: ROLE_LABELS[role], image: image ? { src: image, aspect: 4 / 5 } : undefined, lines: [ROLE_HINTS[role]] };
 }
 
 const CAUSE_LABELS: Record<DepartureCause, string> = { wolves: 'wurde versprengt', council: 'wurde vom Rat geschickt', hound: 'wurde vom Hütehund gepackt', grief: 'ist mitgegangen', left: 'ist gegangen' };
@@ -183,6 +192,7 @@ function waitingFor(view: WolvesSheepState): SeatId[] {
  * abgeschlossene Abstimmungen), ist also auch dann sicher, wenn der Erzähler sie öffnet.
  */
 function Wallboard({ view, seatNames, invite, debateLeft, onClose }: { view: WolvesSheepState; seatNames: string[]; invite?: { code: string; link: string }; debateLeft: number; onClose: () => void }) {
+  const inspect = useInspect();
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // Vollbild, wo der Browser es erlaubt; sonst füllt die Tafel einfach das Fenster.
@@ -217,7 +227,7 @@ function Wallboard({ view, seatNames, invite, debateLeft, onClose }: { view: Wol
           const role = gone?.role ?? (finished ? view.roles[seat] : null);
           const votes = showCount ? council!.votes.reduce<number>((sum, vote, voter) => sum + (vote === seat ? (voter === view.leader ? 2 : 1) : 0), 0) : 0;
           return (
-            <div key={seat} className="ws-wall-person" data-gone={gone !== undefined}>
+            <div key={seat} className="ws-wall-person" data-gone={gone !== undefined} {...inspect.props(role ? () => roleInspect(role) : undefined)}>
               <span>
                 {seat === view.leader && view.alive[seat] ? '🔔 ' : ''}
                 {seatName}
@@ -234,6 +244,7 @@ function Wallboard({ view, seatNames, invite, debateLeft, onClose }: { view: Wol
 }
 
 function Board({ view, legalMoves, onMove, viewer, seatNames, invite }: BoardProps<WolvesSheepState, WolvesSheepMove>) {
+  const inspect = useInspect();
   const [wall, setWall] = useState(false);
   const closeWall = useCallback(() => setWall(false), []);
   const [cardShown, setCardShown] = useState(false);
@@ -420,7 +431,16 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, invite }: BoardPro
               (isBinding && binding.includes(seat)) ||
               (voted && ownSeat !== null && view.votes[ownSeat] === seat);
             return (
-              <button key={seat} type="button" className="ws-person" disabled={!selectable(seat)} data-chosen={chosen} data-gone={!view.alive[seat]} onClick={() => choose(seat)}>
+              <button
+                key={seat}
+                type="button"
+                className="ws-person"
+                disabled={!selectable(seat)}
+                data-chosen={chosen}
+                data-gone={!view.alive[seat]}
+                {...inspect.props(!view.alive[seat] && view.roles[seat] ? () => roleInspect(view.roles[seat]!) : undefined)}
+                onClick={() => choose(seat)}
+              >
                 <span className="ws-person-name">
                   {seat === view.leader && view.alive[seat] ? '🔔 ' : ''}
                   {seatName}

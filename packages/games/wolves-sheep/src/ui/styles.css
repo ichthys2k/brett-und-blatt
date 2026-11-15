@@ -84,6 +84,17 @@
   box-sizing: border-box;
 }
 
+/* Am Desktop ist Platz: Die Rolle zeigt sich groß, solange man sie gedrückt hält (#422). */
+@media (min-width: 900px) and (min-height: 700px) {
+  .ws-card-container .ws-card-image {
+    width: min(15rem, 30vw);
+  }
+
+  .ws-card-container .ws-card-text {
+    font-size: 1.1rem;
+  }
+}
+
 .ws-card-back-prompt {
   display: flex;
   align-items: center;
