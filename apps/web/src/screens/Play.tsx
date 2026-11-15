@@ -1,5 +1,5 @@
 import { randomSeed, sanitizeCustomCardCatalog, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
-import { PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
+import { CardInspectProvider, PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { AlbumSpec } from '@brett-und-blatt/ui';
 import { AfterGameBar } from '../components/AfterGameBar';
@@ -526,7 +526,9 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     </>
   );
 
+  // Großansicht (#418/#422) für Spielfeld, Spielerchips und Sitzring; Spiele mit eigenem Provider dürfen ihn ersetzen.
   return (
+    <CardInspectProvider>
     <div
       ref={rootRef}
       className={`flex ${online?.display ? 'h-full' : 'h-dvh'} flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around ? '' : 'mx-auto max-w-3xl side:max-w-none side:flex-row'}`}
@@ -781,5 +783,6 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         )}
       </main>
     </div>
+    </CardInspectProvider>
   );
 }
