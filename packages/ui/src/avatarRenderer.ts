@@ -13,3 +13,17 @@ export function setAvatarRenderer(next: ((avatar: string) => ReactNode) | null):
 export function renderAvatar(avatar: string): ReactNode {
   return renderer ? renderer(avatar) : avatar;
 }
+
+/**
+ * Bild zu einem Avatar für die Großansicht des Spielerchips (#422). Die Web-App meldet hier ihre gemalten
+ * Avatare an; ohne Bild bleibt der Chip ohne Großansicht.
+ */
+let imageResolver: ((avatar: string) => string | undefined) | null = null;
+
+export function setAvatarImageResolver(next: ((avatar: string) => string | undefined) | null): void {
+  imageResolver = next;
+}
+
+export function avatarImageOf(avatar: string): string | undefined {
+  return imageResolver ? imageResolver(avatar) : undefined;
+}
