@@ -1,0 +1,134 @@
+/* Spieltisch des Drachenspiels (#428, Strang #425, Glied S5): Die Arena füllt die ganze Fläche, der
+   gemalte Tisch ist der Hintergrund, Helden, Reihen und Hand liegen als HTML darauf. Kein Kasten,
+   kein Schleier. Desktop und Querformat; das Handy-Hochformat folgt in S6 (#429).
+   Doppelte Klassen, damit diese Regeln die Grundregeln aus styles.css sicher ersetzen. */
+
+.ds-arena.ds-arena {
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0 clamp(4px, 1.5%, 24px);
+  border-radius: 0;
+  /* Platzhalter für alle Häuser, bis die gemalten Tische (B1, #427) da sind: dann je Haus
+     `--ds-table` auf `tische/tisch-<haus>-quer.webp` setzen. Es lädt nur das Bild der Arena. */
+  --ds-table: url('./tische/tisch-arena-quer.webp');
+  background: #24140c var(--ds-table) center top / cover no-repeat;
+  color: #f5ead6;
+  /* Plaketten, Zähler und Fenster bekommen eine eigene Fläche, damit sie auf jedem Tisch lesbar sind. */
+  --ds-plate: rgb(28 18 10 / 0.74);
+  --ds-plate-line: rgb(214 170 96 / 0.55);
+  --ds-plate-ink: #f5ead6;
+}
+
+@media (orientation: portrait) {
+  .ds-arena.ds-arena {
+    --ds-table: url('./tische/tisch-arena-hoch.webp');
+  }
+}
+
+/* Gegner oben auf dem Zierrand, eigener Held unten auf dem Tischrand */
+.ds-arena .ds-opponent-zone,
+.ds-arena .ds-player-zone {
+  position: relative;
+  z-index: 2;
+}
+
+.ds-arena .ds-hero-card {
+  background: var(--ds-plate);
+  border-color: var(--ds-plate-line);
+  color: var(--ds-plate-ink);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.ds-arena .ds-hero-card .ds-hero-name {
+  color: var(--ds-plate-ink);
+}
+
+/* Zähler und Knöpfe neben den Helden */
+.ds-arena .ds-opponent-info > .ds-badge,
+.ds-arena .ds-opponent-info > button:not(.ds-badge),
+.ds-arena .ds-actions > .ds-badge-deck {
+  background: var(--ds-plate);
+  color: var(--ds-plate-ink);
+  box-shadow: 0 0 0 1px var(--ds-plate-line);
+}
+
+/* Die Spielmatte: kein Kasten mehr, die Reihen liegen frei auf dem Tuch. */
+.ds-arena .ds-board-container.ds-board-container {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0 4%;
+  justify-content: space-evenly;
+}
+
+/* Tiefe: die Gegnerreihe liegt weiter hinten, die eigene etwas näher (flach, nur verkleinert). */
+.ds-arena .ds-board-row:first-child {
+  transform: scale(0.82);
+  transform-origin: 50% 70%;
+}
+
+.ds-arena .ds-board-row:last-child {
+  transform: scale(1.04);
+  transform-origin: 50% 30%;
+}
+
+.ds-arena .ds-board-row.empty-hint {
+  color: rgb(255 240 220 / 0.6);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+}
+
+.ds-arena .ds-board-row[data-drop-active='true'] {
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 3px rgb(255 214 120 / 0.8);
+  background: rgb(255 214 120 / 0.12);
+}
+
+/* Hinweise und Meldungen auf eigener Fläche */
+.ds-arena .ds-spell-hint {
+  background: var(--ds-plate);
+  color: var(--ds-plate-ink);
+  box-shadow: 0 0 0 1px var(--ds-plate-line);
+}
+
+/* Die Hand liegt flach am unteren Rand über dem dunklen Tischrand. */
+.ds-arena .ds-hand {
+  position: relative;
+  z-index: 3;
+}
+
+/* Niedrige Arena (Handy quer): kompakte Plaketten ohne Wimpelreihe und Hausband, damit Gegner,
+   beide Reihen, eigener Held und Hand ohne Rollen auf den Tisch passen. Die Werte bleiben. */
+@container ds-arena (max-height: 470px) {
+  .ds-arena .ds-hero-card {
+    padding: 2px 8px;
+    gap: 6px;
+  }
+
+  .ds-arena .ds-hero-card .ds-tribune,
+  .ds-arena .ds-hero-card .ds-hero-house-banner {
+    display: none;
+  }
+
+  .ds-arena .ds-hero-avatar-frame {
+    width: 30px;
+    height: 34px;
+  }
+
+  .ds-arena .ds-opponent-zone,
+  .ds-arena .ds-player-zone {
+    padding-block: 2px;
+  }
+
+  .ds-arena .ds-board-container.ds-board-container {
+    min-height: 0;
+    gap: 0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .ds-arena.ds-arena {
+    --ds-plate: rgb(14 10 6 / 0.8);
+  }
+}

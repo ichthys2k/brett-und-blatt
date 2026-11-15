@@ -1,6 +1,5 @@
-/* Arena-Kulisse: wird dynamisch durch das Themenhaus des Gegners bestimmt
-   (unter einem Schleier in der Flächenfarbe, damit Text und Karten lesbar bleiben). */
-.ds-arena,
+/* Kulisse der Vorphasen (Deckwahl, Starthand): wird durch das Themenhaus des Gegners bestimmt
+   (unter einem Schleier in der Flächenfarbe). Die Arena selbst zeigt den gemalten Tisch (tisch.css). */
 .ds-phase-overlay {
   --ds-bg-image: url('./kulissen/drachenarena.webp');
   background:
@@ -12,23 +11,18 @@
   border-radius: 16px;
 }
 
-.ds-arena[data-theme='forest'],
 .ds-phase-overlay[data-theme='forest'] {
   --ds-bg-image: url('./kulissen/wald.webp');
 }
-.ds-arena[data-theme='sea'],
 .ds-phase-overlay[data-theme='sea'] {
   --ds-bg-image: url('./kulissen/meer.webp');
 }
-.ds-arena[data-theme='farm'],
 .ds-phase-overlay[data-theme='farm'] {
   --ds-bg-image: url('./kulissen/bauernhof.webp');
 }
-.ds-arena[data-theme='wild'],
 .ds-phase-overlay[data-theme='wild'] {
   --ds-bg-image: url('./kulissen/wildnis.webp');
 }
-.ds-arena[data-theme='bugs'],
 .ds-phase-overlay[data-theme='bugs'] {
   --ds-bg-image: url('./kulissen/krabbeltiere.webp');
 }
@@ -37,11 +31,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 1240px;
   height: 100%;
-  max-height: 1000px;
-  margin: 0 auto;
-  padding: 8px;
   box-sizing: border-box;
   user-select: none;
   /* Kartenmaße als Variablen (#420): Handy und kleine Flächen behalten diese Werte, große Flächen
@@ -1002,15 +992,6 @@
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  /* 30 % durchsichtig, damit das Original-Hintergrundbild auch in der Mitte durchscheint. */
-  background: color-mix(
-    in srgb,
-    color-mix(in srgb, var(--color-surface, #ffffff) 85%, #74b9ff 15%) 70%,
-    transparent
-  );
-  border-radius: 16px;
-  padding: 8px;
-  border: 2px dashed var(--color-border, #dfe6e9);
   min-height: 220px;
   gap: 8px;
 }
