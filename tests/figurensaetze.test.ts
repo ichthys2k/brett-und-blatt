@@ -76,13 +76,13 @@ describe('Figurensätze (#325)', () => {
     expect(fehlt).toEqual([]);
   });
 
-  it('für Schach und Vierer-Schach gibt es wuchtige SVG-Figuren (bold)', () => {
+  it('für Schach und Vierer-Schach gibt es klassische SVG-Figuren (classic)', () => {
     const chessDir = new URL('../packages/games/chess/src/ui/figuren/', import.meta.url);
     const fcDir = new URL('../packages/games/four-player-chess/src/ui/figuren/', import.meta.url);
     const fehlt: string[] = [];
     for (const t of 'kqrbnp') {
-      for (const c of 'wb') if (!existsSync(new URL(`bold-${t}-${c}.svg`, chessDir))) fehlt.push(`chess/bold-${t}-${c}.svg`);
-      if (!existsSync(new URL(`bold-${t}-n.svg`, fcDir))) fehlt.push(`four-player-chess/bold-${t}-n.svg`);
+      for (const c of 'wb') if (!existsSync(new URL(`classic-${t}-${c}.svg`, chessDir))) fehlt.push(`chess/classic-${t}-${c}.svg`);
+      if (!existsSync(new URL(`classic-${t}-n.svg`, fcDir))) fehlt.push(`four-player-chess/classic-${t}-n.svg`);
     }
     expect(fehlt).toEqual([]);
   });

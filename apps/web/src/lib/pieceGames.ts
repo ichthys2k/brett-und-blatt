@@ -18,7 +18,7 @@ const FILES = import.meta.glob<string>('../../../../packages/games/*/src/ui/figu
 function previews(game: string, piece: string): PieceGame['previews'] {
   const find = (set: string) =>
     Object.entries(FILES).find(([path]) => path.includes(`/games/${game}/`) && (path.endsWith(`/${set}-${piece}.svg`) || path.endsWith(`/${set}-${piece}.webp`)))?.[1];
-  return { bold: find('bold'), wood: find('wood'), metal: find('metal'), fable: find('fable') };
+  return { classic: find('classic'), wood: find('wood'), metal: find('metal'), fable: find('fable') };
 }
 
 export const PIECE_GAMES: readonly PieceGame[] = [

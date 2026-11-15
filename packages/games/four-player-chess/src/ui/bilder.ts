@@ -4,7 +4,6 @@ import type { PieceSetId } from '@brett-und-blatt/ui';
 const FIGUREN = import.meta.glob<string>('./figuren/*.{webp,svg}', { eager: true, query: '?url', import: 'default' });
 
 export const pieceImage = (set: PieceSetId, type: string): string | undefined => {
-  if (set === 'classic') return undefined;
   const t = type.toLowerCase();
   return FIGUREN[`./figuren/${set}-${t}-n.svg`] ?? FIGUREN[`./figuren/${set}-${t}-n.webp`];
 };

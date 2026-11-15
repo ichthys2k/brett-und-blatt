@@ -1,16 +1,15 @@
 import { useSyncExternalStore } from 'react';
 
 /**
- * Figurensätze der Brettspiele (#325): „classic“ ist die heutige Darstellung (Zeichen und gezeichnete Formen),
- * „bold“ sind wuchtige SVG-Figuren für Schach/Vierer-Schach, die übrigen drei sind gemalte Bilder. Die Wahl gilt je Spiel und Gerät.
+ * Figurensätze der Brettspiele (#325): „classic“ ist der Standardsatz (Zeichen bzw. Neo-SVG bei Schach),
+ * die drei anderen sind gemalte Bilder. Die Wahl gilt je Spiel und Gerät.
  */
-export type PieceSetId = 'classic' | 'bold' | 'wood' | 'metal' | 'fable';
+export type PieceSetId = 'classic' | 'wood' | 'metal' | 'fable';
 
-export const PIECE_SET_IDS: readonly PieceSetId[] = ['classic', 'bold', 'wood', 'metal', 'fable'];
+export const PIECE_SET_IDS: readonly PieceSetId[] = ['classic', 'wood', 'metal', 'fable'];
 
 export const PIECE_SET_LABELS: Record<PieceSetId, string> = {
   classic: 'Klassisch',
-  bold: 'Wuchtig',
   wood: 'Holz',
   metal: 'Metall',
   fable: 'Märchen',
@@ -44,7 +43,8 @@ function load(): Record<string, PieceSetId> {
     const parsed = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
     const out: Record<string, PieceSetId> = {};
     for (const [game, set] of Object.entries(parsed)) {
-      if (typeof set === 'string' && (PIECE_SET_IDS as readonly string[]).includes(set)) out[game] = set as PieceSetId;
+      if (set === 'bold') out[game] = 'classic';
+      else if (typeof set === 'string' && (PIECE_SET_IDS as readonly string[]).includes(set)) out[game] = set as PieceSetId;
     }
     return out;
   } catch {

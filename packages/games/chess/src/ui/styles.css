@@ -610,6 +610,8 @@ button.ch-log-cell:hover {
   display: block;
   width: 1em;
   height: 1em;
+  max-width: none;
+  max-height: none;
   object-fit: contain;
   pointer-events: none;
   user-select: none;

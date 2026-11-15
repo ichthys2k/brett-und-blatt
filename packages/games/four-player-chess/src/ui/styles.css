@@ -11,6 +11,7 @@
 .fc-area {
   position: relative;
   min-height: 0;
+  padding-top: 2.5%;
 }
 
 .fc-board {
@@ -744,6 +745,8 @@
   display: block;
   width: 1em;
   height: 1em;
+  max-width: none;
+  max-height: none;
   object-fit: contain;
   pointer-events: none;
   user-select: none;

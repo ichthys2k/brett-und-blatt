@@ -387,7 +387,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
   return (
     <FitBox ratio={14 / 15}>
       <div className="fc-wrap">
-        {pieceSet !== 'classic' && <TintFilters colors={Object.values(TINTS)} />}
+        <TintFilters colors={Object.values(TINTS)} />
         <div className="fc-area" ref={sizeRef}>
           <div className={`fc-scroll ${zoomed ? 'fc-zoomed' : ''}`} ref={scrollRef}>
             <div className="fc-zoom">
