@@ -1,7 +1,7 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { ContentCard, FitBox, GridBoard, PackPicker, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState } from 'react';
-import { faceImageOf, faceOf } from '../content';
+import { faceImageOf, faceOf, PAIR_SETS } from '../content';
 import { learningReport, type PairsMove, type PairsState } from '../rules';
 import './styles.css';
 import { albumSpec } from './album';
@@ -77,8 +77,55 @@ function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string
   );
 }
 
+const SET_GROUPS = ['Tiere', 'Quartett', 'Drachenspiel', 'Spielewelt', 'Lernen'] as const;
+
 function PairsSetup({ options, setOption }: { options: Record<string, string>; setOption: (id: string, value: string) => void }) {
-  return <PackPicker options={options} setOption={setOption} />;
+  const activeSet = options.set ?? 'tiere';
+  const hasPack = Boolean(options.pack);
+  const allSets = Object.values(PAIR_SETS);
+  return (
+    <div className="pf-setup">
+      <section className="pf-sets-section" aria-label="Kartenset">
+        <h3 className="pf-sets-heading">Kartenset</h3>
+        {SET_GROUPS.map((group) => {
+          const sets = allSets.filter((s) => (s.group ?? 'Lernen') === group);
+          if (sets.length === 0) return null;
+          return (
+            <div key={group} className="pf-set-group">
+              <p className="pf-set-group-title">{group}</p>
+              <div className="pf-set-grid">
+                {sets.map((set) => {
+                  const sample = set.pairs[0];
+                  const image = sample ? resolvePairImage(sample.image) : undefined;
+                  const selected = !hasPack && activeSet === set.id;
+                  return (
+                    <button
+                      key={set.id}
+                      type="button"
+                      className={`pf-set-btn ${selected ? 'pf-set-btn-active' : ''} ${image ? '' : 'pf-set-btn-text'}`}
+                      aria-pressed={selected}
+                      onClick={() => {
+                        if (hasPack) setOption('pack', '');
+                        setOption('set', set.id);
+                      }}
+                    >
+                      <ContentCard
+                        content={sample?.a ?? '?'}
+                        image={image}
+                        caption={set.name}
+                        highlight={selected ? 'target' : null}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </section>
+      <PackPicker options={options} setOption={setOption} />
+    </div>
+  );
 }
 
 export const gameUi: GameUi<PairsState, PairsMove> = {

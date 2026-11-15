@@ -624,7 +624,7 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu
           {game.module.options.some((spec) => !spec.hidden) && (
             <Section title={t('setup.rules')}>
               {game.module.options
-                .filter((spec) => !spec.hidden)
+                .filter((spec) => !spec.hidden && (!isHost || !spec.customUi))
                 .filter((spec) => !spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(lobby.options[id] ?? '')))
                 .map((spec) => {
                   const value = lobby.options[spec.id] ?? spec.default;
@@ -639,8 +639,8 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu
                     </div>
                   );
                 })}
-              {/* Eigenes Paket aus der Bibliothek (#218): dieselbe Wahl wie in der Einrichtung, nur für Spiele mit der verborgenen Option „pack“. */}
-              {isHost && game.ui.SetupExtra && game.module.options.some((spec) => spec.id === 'pack' && spec.hidden) && (
+              {/* Eigenes Paket aus der Bibliothek (#218) oder eigene Set-Auswahl: dieselbe Wahl wie in der Einrichtung. */}
+              {isHost && game.ui.SetupExtra && game.module.options.some((spec) => (spec.id === 'pack' && spec.hidden) || spec.customUi) && (
                 <game.ui.SetupExtra options={resolveOptions(game.module, lobby.options)} seats={lobby.seats.length} setOption={(id, value) => send({ type: 'setOption', id, value })} />
               )}
               {!isHost && typeof lobby.options.pack === 'string' && lobby.options.pack !== '' && <p className="text-sm text-muted">📚 Eigenes Paket der Raumleitung</p>}
