@@ -23,6 +23,63 @@
 @media (orientation: portrait) {
   .ds-arena.ds-arena {
     --ds-table: url('./tische/tisch-arena-hoch.webp');
+    /* Das Probebild hat einen hellen Pinselrand: leicht vergrößert verschwindet er (bis B1, #427). */
+    background-size: 112% auto;
+    background-position: center 30%;
+  }
+}
+
+/* Nie seitlich überlaufen: Helden geben Platz ab, Zähler rücken in eine zweite Zeile, die Hand beginnt
+   nie links außerhalb (sonst rollt die Arena seitlich, und Held und Hand sind links angeschnitten). */
+.ds-arena .ds-hand {
+  justify-content: safe center;
+}
+
+.ds-arena .ds-opponent-zone > .ds-hero-card,
+.ds-arena .ds-player-zone > .ds-hero-card {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.ds-arena .ds-opponent-info {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+/* Hochformat und schmale Arena (S6, #429): Helden schmal in den Ecken – Wappen, Wimpel als Zahl,
+   Rüstung und Knappenleiste; Wimpelreihe und Hausband zeigt das Antippen bzw. die Großansicht. */
+@container ds-arena (max-width: 560px) {
+  .ds-arena .ds-hero-card .ds-tribune,
+  .ds-arena .ds-hero-card .ds-hero-house-banner {
+    display: none;
+  }
+
+  .ds-arena .ds-hero-card {
+    padding: 3px 8px 3px 4px;
+    gap: 6px;
+  }
+
+  .ds-arena .ds-hero-avatar-frame {
+    width: 32px;
+    height: 36px;
+  }
+
+  .ds-arena .ds-hero-card .ds-hero-badges {
+    max-width: none;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .ds-arena .ds-opponent-zone,
+  .ds-arena .ds-player-zone {
+    padding-block: 3px;
+  }
+
+  /* „Zug beenden“ bekommt Platz für das ganze Wort; die Helden-Plakette gibt ihn ab (vgl. #391). */
+  .ds-arena .ds-actions .ds-btn-endturn {
+    max-width: 88px;
+    padding-inline: 8px;
   }
 }
 

@@ -114,8 +114,8 @@ export interface GameUi<V = unknown, M = unknown> {
   seatsOnBoard?: boolean;
   /**
    * Das Spielfeld bekommt die ganze Fläche (#430, Drachenspiel): Im Querformat und am Desktop ist die
-   * Seitenleiste immer zum Menüknopf ☰ eingeklappt (Spieler, Status, Tipp, Neu starten …), und das
-   * Spielfeld hat keinen Innenrand. Das Hochformat bleibt, wie es ist.
+   * Seitenleiste immer zum Menüknopf ☰ eingeklappt (Spieler, Status, Tipp, Neu starten …), im Hochformat
+   * bleibt davon nur eine schmale Zeile oben mit ☰, Status und Uhr (#429). Das Spielfeld hat keinen Innenrand.
    */
   fullBleed?: boolean;
   /** Online: Schnellnachrichten an diesem Tisch statt der üblichen, z. B. die Tierrufe des Drachenspiels. */

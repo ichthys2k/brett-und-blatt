@@ -100,6 +100,8 @@ async function startGame(page, id) {
     let footerBlocked = 0;
     for (const button of document.querySelectorAll('footer button')) {
       const r = button.getBoundingClientRect();
+      // Im eingeklappten Menü ☰ (`GameUi.fullBleed`, `seatsOnBoard`) sind die Knöpfe versteckt, nicht verdeckt.
+      if (r.width === 0 && r.height === 0 && button.closest('.hidden')) continue;
       const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
       if (r.bottom > window.innerHeight + 1 || (hit && !button.contains(hit))) footerBlocked++;
     }
@@ -178,6 +180,9 @@ try {
       // Hochformat: Die Spielerleiste ist eingeklappt und klappt über ☰ über dem Spielfeld auf, ohne die Seite zu verlängern (#114).
       const players = page.locator('#bub-players');
       if (await players.isVisible()) problems.push(`${id}: Spielerleiste ist im Hochformat nicht eingeklappt`);
+      // Spiele mit eingeklapptem Menü (#429): erst ☰ öffnen, darin liegt die Spielerleiste.
+      const menu = page.locator('[data-bub-menu]');
+      if (await menu.isVisible()) await menu.click();
       await page.locator('.bub-players-toggle').click({ timeout: 2_000 });
       const opened = await page.evaluate(() => ({
         shown: document.querySelector('#bub-players')?.getBoundingClientRect().height ?? 0,
