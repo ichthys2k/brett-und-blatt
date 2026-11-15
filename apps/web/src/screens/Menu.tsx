@@ -112,42 +112,44 @@ export function Menu() {
         </p>
       </nav>
 
-      {GAME_SERVER && !boardHidden && (
+      <div className="bub-menu-dock">
+        {GAME_SERVER && !boardHidden && (
+          <button
+            type="button"
+            className="bub-menu-board"
+            aria-label={`Schwarzes Brett${boardCount !== null ? `, ${boardCount} ${boardCount === 1 ? 'Zettel' : 'Zettel'}` : ''}`}
+            onClick={() => navigate(paths.board)}
+            onMouseEnter={() => activate('board', 'Mitspieler finden: Zettel anheften und „Bin dabei“ sagen – ohne Chat.')}
+            onFocus={() => activate('board', 'Mitspieler finden: Zettel anheften und „Bin dabei“ sagen – ohne Chat.')}
+            onMouseLeave={deactivate}
+            onBlur={deactivate}
+          >
+            <span aria-hidden="true">📌</span>
+            <span className="bub-menu-board-text">
+              <span className="bub-menu-board-title">Schwarzes Brett</span>
+              <span className="bub-menu-board-sub">Wer hat Lust? {boardCount !== null && boardCount > 0 ? `${boardCount} ${boardCount === 1 ? 'Zettel' : 'Zettel'}` : 'Hänge einen Zettel auf'}</span>
+            </span>
+          </button>
+        )}
+
         <button
           type="button"
-          className="bub-menu-board"
-          aria-label={`Schwarzes Brett${boardCount !== null ? `, ${boardCount} ${boardCount === 1 ? 'Zettel' : 'Zettel'}` : ''}`}
-          onClick={() => navigate(paths.board)}
-          onMouseEnter={() => activate('board', 'Mitspieler finden: Zettel anheften und „Bin dabei“ sagen – ohne Chat.')}
-          onFocus={() => activate('board', 'Mitspieler finden: Zettel anheften und „Bin dabei“ sagen – ohne Chat.')}
+          className="bub-menu-plaque bub-menu-plaque-link"
+          aria-label={profile ? `Profil von ${profile.name} öffnen` : 'Profil anlegen'}
+          title="Name, Wappen, Spielerpass und Sicherung"
+          onClick={() => navigate(paths.pass)}
+          onMouseEnter={() => activate('profile', 'Name, Wappen, Spielerpass und Sicherung.')}
+          onFocus={() => activate('profile', 'Name, Wappen, Spielerpass und Sicherung.')}
           onMouseLeave={deactivate}
           onBlur={deactivate}
         >
-          <span aria-hidden="true">📌</span>
-          <span className="bub-menu-board-text">
-            <span className="bub-menu-board-title">Schwarzes Brett</span>
-            <span className="bub-menu-board-sub">Wer hat Lust? {boardCount !== null && boardCount > 0 ? `${boardCount} ${boardCount === 1 ? 'Zettel' : 'Zettel'}` : 'Hänge einen Zettel auf'}</span>
+          <span className="bub-menu-shield" aria-hidden="true">
+            <PlayerCrest spec={crest} size={40} />
           </span>
+          <span className="bub-menu-name">{profile?.name ?? 'Noch kein Name'}</span>
+          <span className="bub-menu-switch">Profil</span>
         </button>
-      )}
-
-      <button
-        type="button"
-        className="bub-menu-plaque bub-menu-plaque-link"
-        aria-label={profile ? `Profil von ${profile.name} öffnen` : 'Profil anlegen'}
-        title="Name, Wappen, Spielerpass und Sicherung"
-        onClick={() => navigate(paths.pass)}
-        onMouseEnter={() => activate('profile', 'Name, Wappen, Spielerpass und Sicherung.')}
-        onFocus={() => activate('profile', 'Name, Wappen, Spielerpass und Sicherung.')}
-        onMouseLeave={deactivate}
-        onBlur={deactivate}
-      >
-        <span className="bub-menu-shield" aria-hidden="true">
-          <PlayerCrest spec={crest} size={40} />
-        </span>
-        <span className="bub-menu-name">{profile?.name ?? 'Noch kein Name'}</span>
-        <span className="bub-menu-switch">Profil</span>
-      </button>
+      </div>
 
       <footer className="bub-menu-foot">
         <a href="#/impressum">Impressum</a> · <a href="#/datenschutz">Datenschutz</a>
