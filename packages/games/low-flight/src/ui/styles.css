@@ -48,6 +48,7 @@
 }
 
 .lf-card.lf-gamecard {
+  display: block;
   perspective: 1000px;
 }
 
@@ -140,7 +141,7 @@
   background: #a7f3d0;
 }
 
-.lf-junior .lf-card:not(.lf-card-hidden) {
+.lf-junior .lf-card:not(.lf-card-hidden) .bub-game-card-front {
   grid-template-rows: auto 1fr;
   align-content: start;
   padding-top: 6%;
@@ -165,7 +166,8 @@
   display: none;
 }
 
-.lf-grid-small .lf-card:not(.lf-card-hidden) {
+.lf-grid-small .lf-card:not(.lf-card-hidden) .bub-game-card-front {
+  grid-template-rows: auto;
   align-content: center;
   padding-top: 0;
 }
