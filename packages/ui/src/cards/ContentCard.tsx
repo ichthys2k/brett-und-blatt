@@ -7,7 +7,9 @@ const EMOJI = /^(\p{Extended_Pictographic}|\p{Emoji_Component}|‍|️)+$/u;
 export interface ContentCardProps {
   /** Inhalt (Emoji oder kurzer Text) – oder null für eine verdeckte Karte. */
   content: string | null;
-  /** Kleine Beschriftung unter einem Emoji, z. B. „Schwarzer Peter“. */
+  /** Optionales Bild (z. B. WebP/SVG-URL); ersetzt in der Darstellung Emoji/Text. */
+  image?: string;
+  /** Kleine Beschriftung unter einem Emoji oder Bild, z. B. „Schwarzer Peter“. */
   caption?: string;
   highlight?: 'target' | 'hint' | null;
   dimmed?: boolean;
@@ -24,7 +26,7 @@ export interface ContentCardProps {
  * Schwarzer Peter und Lernkarten (Einmaleins, Vokabeln). Die Schrift passt sich
  * der Kartengröße an.
  */
-export function ContentCard({ content, caption, highlight, dimmed, onClick, label, className = '', style, anim }: ContentCardProps) {
+export function ContentCard({ content, image, caption, highlight, dimmed, onClick, label, className = '', style, anim }: ContentCardProps) {
   const animClass = anim ? `bub-animate-${anim}` : '';
   const classes = `bub-ccard ${content === null ? 'bub-ccard-down' : ''} ${highlight ? `bub-card-${highlight}` : ''} ${dimmed ? 'bub-ccard-dimmed' : ''} ${onClick ? 'bub-card-clickable' : ''} ${animClass} ${className}`;
   const inner =
@@ -32,7 +34,11 @@ export function ContentCard({ content, caption, highlight, dimmed, onClick, labe
       <CardBack />
     ) : (
       <span className="bub-ccard-face">
-        <span className={EMOJI.test(content) ? 'bub-ccard-emoji' : 'bub-ccard-text'}>{content}</span>
+        {image ? (
+          <img className="bub-ccard-img" src={image} alt="" loading="lazy" draggable={false} />
+        ) : (
+          <span className={EMOJI.test(content) ? 'bub-ccard-emoji' : 'bub-ccard-text'}>{content}</span>
+        )}
         {caption && <span className="bub-ccard-caption">{caption}</span>}
       </span>
     );
