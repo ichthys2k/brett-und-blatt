@@ -184,19 +184,6 @@
   border-color: rgba(124, 58, 237, 0.5);
 }
 
-.ds-hero-avatar-frame {
-  position: relative;
-  width: 42px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px 6px 16px 16px;
-  border: 2px solid #b89758;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.5);
-  background: radial-gradient(circle at 50% 30%, #fffef7 0%, #f4e9cf 100%);
-  flex-shrink: 0;
-}
 
 .ds-crest-frame-forest {
   border-color: #2e7d32;
@@ -217,38 +204,6 @@
 .ds-crest-frame-bugs {
   border-color: #7c3aed;
   background: radial-gradient(circle at 50% 30%, #faf5ff 0%, #f3e8ff 100%);
-}
-
-.ds-hero-details {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  gap: 2px;
-}
-
-.ds-hero-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.ds-hero-name {
-  font-weight: bold;
-  font-size: 0.85rem;
-  color: var(--color-ink);
-}
-
-.ds-hero-house-banner {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 4px;
-  border: 1px solid transparent;
-  white-space: nowrap;
 }
 
 .ds-banner-forest {
@@ -277,13 +232,6 @@
   border-color: #ce93d8;
 }
 
-/* Tribüne mit 30 fallenden Wimpeln */
-.ds-tribune {
-  display: flex;
-  flex-direction: column;
-  margin: 1px 0;
-}
-
 .ds-tribune-pennants {
   display: flex;
   gap: 2px;
@@ -295,79 +243,10 @@
   max-width: 160px;
 }
 
-.ds-wimpel {
-  width: 3px;
-  height: 7px;
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
-  background: var(--ds-wimpel-color, #dc2626);
-  flex-shrink: 0;
-  transition: transform 0.35s ease, opacity 0.35s ease, background-color 0.35s ease;
-}
-
-.ds-wimpel.active {
-  opacity: 0.95;
-  transform: translateY(0) rotate(0deg);
-}
-
-.ds-wimpel.fallen {
-  opacity: 0.2;
-  background: #94a3b8 !important;
-  transform: translateY(2px) rotate(45deg) scale(0.65);
-}
-
-/* Knappen-Leiste (1–10) */
-.ds-mana-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.ds-knappen-track {
-  display: inline-flex;
-  gap: 2px;
-  align-items: center;
-}
-
-.ds-knappe-slot {
-  width: 5px;
-  height: 8px;
-  border-radius: 1px 1px 2px 2px;
-  box-sizing: border-box;
-  transition: background 0.2s, opacity 0.2s, transform 0.2s;
-}
-
-.ds-knappe-slot.ready {
-  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
-  border: 0.5px solid #1d4ed8;
-  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.4);
-}
-
-.ds-knappe-slot.spent {
-  background: #cbd5e1;
-  opacity: 0.45;
-  border: 0.5px solid #94a3b8;
-}
-
-.ds-knappe-slot.locked {
-  background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
-  border: 0.5px solid #b45309;
-}
-
-.ds-knappe-slot.unrecruited {
-  background: transparent;
-  border: 0.5px dashed rgba(150, 150, 150, 0.3);
-  opacity: 0.25;
-}
-
 .ds-hero-card.targetable {
   border-color: #e74c3c;
   cursor: crosshair;
   animation: ds-target-pulse 1s infinite alternate;
-}
-
-.ds-hero-avatar {
-  font-size: 1.8rem;
-  line-height: 1;
 }
 
 .ds-badge {
@@ -380,36 +259,9 @@
   border-radius: 12px;
 }
 
-.ds-badge-hp {
-  background: #ff7675;
-  color: white;
-}
-
-.ds-badge-mana {
-  background: #74b9ff;
-  color: #0984e3;
-}
-
 .ds-badge-deck {
   background: #dfe6e9;
   color: #2d3436;
-}
-
-.ds-badge-armor {
-  background: #636e72;
-  color: white;
-}
-
-.ds-badge-gear {
-  background: #fdcb6e;
-  color: #2d3436;
-}
-
-.ds-hero-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 2px;
 }
 
 .ds-opponent-info {
@@ -452,30 +304,6 @@
   opacity: 1;
 }
 
-.ds-power-cost {
-  position: absolute;
-  right: -4px;
-  bottom: -4px;
-  min-width: 18px;
-  height: 18px;
-  font-size: 0.75rem;
-  font-weight: bold;
-  line-height: 18px;
-  border-radius: 50%;
-  background: #0984e3;
-  color: white;
-}
-
-.ds-power-badge {
-  background: #dfe6e9;
-  border: none;
-  cursor: pointer;
-}
-
-.ds-power-badge.used {
-  opacity: 0.45;
-}
-
 .ds-deck-power {
   font-size: 0.75rem;
   opacity: 0.9;
@@ -483,9 +311,7 @@
 
 /* Handy: Der Name steht schon im Spieler-Chip darüber; so bleibt die Hand ganz sichtbar. */
 @media (max-width: 480px) {
-  .ds-hero-name {
-    display: none;
-  }
+  
 
   .ds-hero-card {
     padding: 4px 8px;
@@ -494,9 +320,7 @@
     flex-shrink: 0;
   }
 
-  .ds-hero-avatar {
-    font-size: 1.4rem;
-  }
+  
 
   .ds-opponent-zone,
   .ds-player-zone {
@@ -520,9 +344,8 @@
     gap: 2px;
   }
 
-  .ds-hero-badges {
-    max-width: 72px;
-  }
+  
+
 }
 
 .ds-badge {
@@ -1678,10 +1501,7 @@
     padding: 3px 8px;
   }
 
-  .ds-hero-badges {
-    margin-top: 0;
-    gap: 3px;
-  }
+  
 
   .ds-board-container {
     min-height: auto;
@@ -1714,13 +1534,6 @@
   }
 
   
-}
-
-/* Wenig Höhe, aber etwas Breite: Werte des Helden zu zweit nebeneinander statt untereinander. */
-@container ds-arena (max-height: 600px) and (min-width: 330px) {
-  .ds-hero-badges {
-    max-width: 112px;
-  }
 }
 
 /* Schmal: Verlauf nur als Symbol, damit Zeile und Zug-Knopf nicht über den Rand laufen. */
@@ -1777,19 +1590,9 @@
   }
 }
 
-/* Sehr wenig Höhe und genug Breite (Querformat): Werte des Helden in einer Zeile. */
-@container ds-arena (max-height: 470px) and (min-width: 440px) {
-  .ds-hero-badges {
-    max-width: none;
-    flex-wrap: nowrap;
-  }
-}
-
 /* Sehr wenig Höhe: Figuren und Karten noch flacher. */
 @container ds-arena (max-height: 470px) {
-  .ds-hero-avatar {
-    font-size: 1.3rem;
-  }
+  
 
   .ds-board-row {
     min-height: 70px;

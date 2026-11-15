@@ -1,16 +1,17 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { dragTilt, GameCard, getNoteField, useCardCosmetics, useCardOverride, useInspect, usePointerDrag, type BoardProps, type InspectExtraProps } from '@brett-und-blatt/ui';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { dragTilt, GameCard, getNoteField, useCardCosmetics, useCardOverride, useInspect, usePointerDrag, type BoardProps, type InspectContent, type InspectExtraProps, type InspectOptions } from '@brett-und-blatt/ui';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { CARDS_DB } from '../cards';
 import { HOUSE_POWERS } from '../powers';
 import { heroAttackValue } from '../rules';
-import type { CardDefinition, DeckThemeId, KeywordId, DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
+import type { CardDefinition, DeckThemeId, HousePower, KeywordId, DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
 import { playCreatureAudio } from './audio';
 import { BILD_FIELD, CardFace, Fuse, GameLog, TargetArrow, TraitBadge, zoomContent, type ArrowPoints, type ZoomItem } from './parts';
 import type { Float, ShownMinion } from './sequence';
 import { getCardFullTitle, getCardTraits, getMinionTraits } from './traits';
 import { currentCrest, ScenarioTip, useCosmetics } from './SoloHub';
-import { HOUSE_ICONS, HOUSE_NAMES } from './champions';
+import { championImage, HOUSE_CHAMPIONS, HOUSE_ICONS, HOUSE_NAMES } from './champions';
+import { KnappenRow, WimpelGem } from './held';
 import { useBeats } from './useBeats';
 import { KEYWORD_SYMBOLS, KeywordEdges, KeywordMark, StatGem } from './symbole';
 import { cardArtUrl } from './cardArt';
@@ -203,6 +204,8 @@ function HeroBar({
   dropTarget,
   onInfo,
   crest,
+  power,
+  inspectOptions,
   elementRef,
 }: {
   seat: SeatId;
@@ -223,8 +226,12 @@ function HeroBar({
   dropTarget?: string;
   onInfo: (text: string) => void;
   crest?: string | undefined;
+  /** Medaillon der Hauskraft, rechts neben dem Porträt. */
+  power?: ReactNode;
+  inspectOptions?: InspectOptions;
   elementRef: (el: HTMLElement | null) => void;
 }) {
+  const inspect = useInspect();
   const quest = player.quest ? uiCard(player.quest.cardId) : undefined;
   const info = (text: string) => (event: { stopPropagation: () => void }) => {
     event.stopPropagation();
@@ -237,18 +244,43 @@ function HeroBar({
   const houseIcon = HOUSE_ICONS[house];
   const strength = heroAttackValue(player);
   const interactive = targetable || canAttack;
+  const champion = HOUSE_CHAMPIONS[house];
+  const image = championImage(house);
+  const housePower: HousePower | null = player.power ? HOUSE_POWERS[player.power] : null;
+  // Großansicht des Turnierherrn (#464): nur, was die Sicht ohnehin zeigt.
+  const zoom = (): InspectContent => ({
+    title: name,
+    subtitle: `${champion.title} · ${houseName}`,
+    ...(image ? { image: { src: image, aspect: 358 / 480 } } : {}),
+    emoji: houseIcon,
+    stats: [
+      { label: 'Wimpel', value: `${health}/30`, tone: 'health', ...(health < 30 ? { change: 'down' as const } : {}) },
+      ...(armor > 0 ? [{ label: 'Rüstung', value: String(armor) }] : []),
+      ...(strength > 0 ? [{ label: 'Angriff', value: String(strength), tone: 'attack' as const }] : []),
+      { label: 'Knappen', value: `${player.mana}/${player.maxMana}`, tone: 'cost' },
+    ],
+    lines: [
+      housePower ? `Hauskraft ${housePower.name} (${housePower.cost} Knappen): ${housePower.text}` : '',
+      player.gear ? `${player.gear.name}: Angriff ${player.gear.attack}, hält noch ${player.gear.durability} Angriffe.` : '',
+      player.quest && quest?.quest ? `Auftrag ${quest.name} (${player.quest.progress}/${quest.quest.count}): ${quest.text}` : '',
+      player.trapCount > 0 ? `Fallen: ${trapText}` : '',
+    ].filter(Boolean),
+  });
+  const ownProps: InspectExtraProps = {
+    ...(onPointerDown ? { onPointerDown } : {}),
+    ...(interactive && onClick ? { onKeyDown: (event: KeyboardEvent<HTMLElement>) => activate(event, onClick) } : {}),
+  };
   return (
     <div
       ref={elementRef}
-      className={`ds-hero-card ds-hero-${house} ${targetable ? 'targetable' : ''} ${canAttack && !attackVector ? 'can-attack' : ''} ${selected && !attackVector ? 'selected' : ''} ${attackVector ? 'ds-attacking' : ''} ${hinted ? 'ds-hinted' : ''} ${impacted ? 'bub-animate-shake ds-hit-impact' : ''}`}
+      className={`ds-hero-card ds-held ds-hero-${house} ${targetable ? 'targetable' : ''} ${canAttack && !attackVector ? 'can-attack' : ''} ${selected && !attackVector ? 'selected' : ''} ${attackVector ? 'ds-attacking' : ''} ${hinted ? 'ds-hinted' : ''} ${impacted ? 'bub-animate-shake ds-hit-impact' : ''}`}
+      {...inspect.props(zoom, ownProps, inspectOptions)}
       onClick={onClick}
-      onPointerDown={onPointerDown}
-      onKeyDown={interactive && onClick ? (event) => activate(event, onClick) : undefined}
-      role={interactive ? 'button' : undefined}
-      tabIndex={interactive ? 0 : undefined}
+      role={interactive ? 'button' : 'group'}
+      aria-label={`${name}, ${houseName}: ${health} Wimpel${armor > 0 ? `, Rüstung ${armor}` : ''}${strength > 0 ? `, Angriff ${strength}` : ''}, Knappen ${player.mana} von ${player.maxMana}`}
+      tabIndex={0}
       title={targetable ? 'Gegnerischen Turnierherrn angreifen!' : canAttack ? 'Mit deinem Turnierherrn angreifen' : undefined}
       style={{
-        position: 'relative',
         touchAction: canAttack ? 'none' : undefined,
         ...(attackVector ? ({ '--atk-dx': `${attackVector.dx}px`, '--atk-dy': `${attackVector.dy}px` } as CSSProperties) : {}),
       }}
@@ -257,72 +289,49 @@ function HeroBar({
       data-hero-seat={seat}
     >
       <FloatBadges floats={floats} />
-      <div className={`ds-hero-avatar-frame ds-crest-frame-${house}`}>
-        <span className="ds-hero-avatar">{crest ?? (seat === 0 ? '🐉' : '🐲')}</span>
-      </div>
-      <div className="ds-hero-details">
-        <div className="ds-hero-header">
-          <div className="ds-hero-name" style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{name}</div>
-          <span className={`ds-hero-house-banner ds-banner-${house}`} title={`Wappenhaus: ${houseName}`}>
-            <span className="ds-house-icon">{houseIcon}</span>
-            <span className="ds-house-name">{houseName}</span>
-          </span>
-        </div>
-        <div className="ds-tribune" aria-hidden="true" title={`${health}/30 Wimpel an der Tribüne`}>
-          <div className="ds-tribune-pennants">
-            {Array.from({ length: 30 }, (_, i) => (
-              <span
-                key={i}
-                className={`ds-wimpel ${i < health ? 'active' : 'fallen'}`}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="ds-hero-badges">
-          <span className="ds-badge ds-badge-hp" title="Wimpel an der Tribüne">🚩 {health}</span>
-          {armor > 0 && (
-            <span className="ds-badge ds-badge-armor" title="Rüstung fängt Schaden vor den Wimpeln ab">
-              🛡️ {armor}
-            </span>
-          )}
-          {player.trapCount > 0 && (
-            <button type="button" className="ds-badge ds-info-badge" aria-label={trapText} title={trapText} onClick={info(trapText)}>
-              🪤 {player.trapCount}
-            </button>
-          )}
-          {player.quest && quest?.quest && (
-            <button type="button" className="ds-badge ds-info-badge" aria-label={quest.text} title={quest.text} onClick={info(`${quest.name}: ${quest.text}`)}>
-              📜 {player.quest.progress}/{quest.quest.count}
-            </button>
-          )}
+      <div className="ds-held-row">
+        <div className="ds-held-side ds-held-left">
           {strength > 0 && (
-            <span className="ds-badge ds-badge-gear" title={player.gear ? `${player.gear.name}: hält noch ${player.gear.durability} Angriffe` : 'Angriff des Turnierherrn in diesem Zug'}>
-              ⚔️ {strength}
-              {player.gear ? ` · ${player.gear.durability}×` : ''}
+            <span className="ds-held-gear" title={player.gear ? `${player.gear.name}: hält noch ${player.gear.durability} Angriffe` : 'Angriff des Turnierherrn in diesem Zug'}>
+              <StatGem kind="attack" value={strength} size="hand" />
+              {player.gear && <span className="ds-held-uses">{player.gear.durability}×</span>}
             </span>
           )}
-          <div className="ds-mana-group">
-            <span className="ds-badge ds-badge-mana" title="Knappen (bereit / herbeigeeilt)">
-              🏇 {player.mana}/{player.maxMana}
-              {player.locked > 0 ? ` 🔒${player.locked}` : ''}
-              {player.overloadNext > 0 ? ` →🔒${player.overloadNext}` : ''}
+        </div>
+        <div className="ds-held-portrait">
+          <div className="ds-held-pic" data-low={health <= 10 ? 'true' : undefined}>
+            <span className="ds-held-frame">{image ? <img src={image} alt="" draggable={false} /> : <span aria-hidden="true">{houseIcon}</span>}</span>
+            {(player.trapCount > 0 || (player.quest && quest?.quest)) && (
+              <div className="ds-held-seals">
+                {player.trapCount > 0 && (
+                  <button type="button" className="ds-held-seal ds-held-seal-trap" aria-label={trapText} title={trapText} onClick={info(trapText)}>
+                    🪤{player.trapCount > 1 ? player.trapCount : ''}
+                  </button>
+                )}
+                {player.quest && quest?.quest && (
+                  <button type="button" className="ds-held-seal ds-held-seal-quest" aria-label={quest.text} title={quest.text} onClick={info(`${quest.name}: ${quest.text}`)}>
+                    📜 {player.quest.progress}/{quest.quest.count}
+                  </button>
+                )}
+              </div>
+            )}
+            {armor > 0 && <StatGem kind="armor" value={armor} size="feld" className="ds-held-armor" />}
+            <WimpelGem health={health} />
+          </div>
+          <div className="ds-held-band">
+            <span className="ds-held-name">
+              {crest && <span aria-hidden="true">{crest} </span>}
+              {name}
             </span>
-            <div className="ds-knappen-track" aria-hidden="true" title={`Knappen: ${player.mana}/${player.maxMana} bereit`}>
-              {Array.from({ length: 10 }, (_, i) => {
-                const isRecruited = i < player.maxMana;
-                const isReady = i < player.mana;
-                const isLocked = !isReady && isRecruited && i >= player.maxMana - player.locked;
-                return (
-                  <span
-                    key={i}
-                    className={`ds-knappe-slot ${!isRecruited ? 'unrecruited' : isReady ? 'ready' : isLocked ? 'locked' : 'spent'}`}
-                  />
-                );
-              })}
-            </div>
+            <span className="ds-held-house">
+              <span aria-hidden="true">{houseIcon} </span>
+              {houseName}
+            </span>
           </div>
         </div>
+        <div className="ds-held-side ds-held-right">{power}</div>
       </div>
+      <KnappenRow mana={player.mana} maxMana={player.maxMana} locked={player.locked} overloadNext={player.overloadNext} />
     </div>
   );
 }
@@ -594,23 +603,28 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           hinted={hintedIds.has(`hero-${oppSeat}`)}
           dropActive={dragState.isDragging && dragState.targetId === 'enemy-hero' && canTargetHero}
           onClick={handleHeroClick}
+          inspectOptions={inspectOptions}
+          power={
+            oppPower && (
+              <button
+                type="button"
+                className={`ds-power ds-power-opp ${opp.powerUsed ? 'used' : 'ready'}`}
+                aria-label={`Hauskraft des Gegners: ${oppPower.name}${opp.powerUsed ? ' (in diesem Zug benutzt)' : ''}. ${oppPower.text}`}
+                {...inspect.props(zoomOf({ kind: 'power', power: oppPower }), {}, inspectOptions)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  const content = zoomContent({ kind: 'power', power: oppPower }, cardCosmetics);
+                  if (content) inspect.open(content, event.currentTarget);
+                }}
+              >
+                <span aria-hidden="true">{oppPower.emoji}</span>
+                <StatGem kind="cost" value={oppPower.cost} size="feld" className="ds-power-gem" />
+              </button>
+            )
+          }
           elementRef={heroRef(oppSeat)}
         />
         <div className="ds-opponent-info">
-          {oppPower && (
-            <button
-              type="button"
-              className={`ds-badge ds-power-badge ${opp.powerUsed ? 'used' : ''}`}
-              aria-label={`Hauskraft des Gegners: ${oppPower.name}. ${oppPower.text}`}
-              {...inspect.props(zoomOf({ kind: 'power', power: oppPower }), {}, inspectOptions)}
-              onClick={(event) => {
-                const content = zoomContent({ kind: 'power', power: oppPower }, cardCosmetics);
-                if (content) inspect.open(content, event.currentTarget);
-              }}
-            >
-              {oppPower.emoji}
-            </button>
-          )}
           <span className="ds-badge ds-badge-deck ds-deck-with-back" title={`Gegnerische Hand: ${opp.handCount} Karten`}>
             <GameCard faceDown size="xs" cardBackProps={{ design: 'dragon-scale' }} />
             <span>🎴 {opp.handCount}</span>
@@ -711,6 +725,25 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           onPointerDown={heroCanAttack ? bindDrag({ kind: 'minion', minionId: HERO_ATTACKER }).onPointerDown : undefined}
           floats={floatsOf(`hero-${mySeat}`)}
           impacted={isImpacted(`hero-${mySeat}`)}
+          inspectOptions={inspectOptions}
+          power={
+            myPower && (
+              <button
+                type="button"
+                className={`ds-power ${canUsePower ? 'playable' : ''} ${me.powerUsed ? 'used' : ''} ${hint?.type === 'heroPower' ? 'ds-hinted' : ''}`}
+                aria-disabled={!canUsePower}
+                aria-label={`Hauskraft ${myPower.name}, Kosten ${myPower.cost}. ${myPower.text}`}
+                {...inspect.props(zoomOf({ kind: 'power', power: myPower }), { onPointerDown: (event) => event.stopPropagation() }, inspectOptions)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (canUsePower) onMove({ type: 'heroPower' });
+                }}
+              >
+                <span aria-hidden="true">{myPower.emoji}</span>
+                <StatGem kind="cost" value={myPower.cost} size="feld" className="ds-power-gem" />
+              </button>
+            )
+          }
           elementRef={heroRef(mySeat)}
         />
         <div className="ds-actions">
@@ -718,23 +751,6 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
             <GameCard faceDown size="xs" cardBackProps={{ design: cardCosmetics.cardBack, crest: cardCosmetics.crest }} />
             <span>📚 {me.deckCount}</span>
           </span>
-          {myPower && (
-            <button
-              type="button"
-              className={`ds-power ${canUsePower ? 'playable' : ''} ${hint?.type === 'heroPower' ? 'ds-hinted' : ''}`}
-              aria-disabled={!canUsePower}
-              aria-label={`Hauskraft ${myPower.name}, Kosten ${myPower.cost}. ${myPower.text}`}
-              {...inspect.props(zoomOf({ kind: 'power', power: myPower }), {}, inspectOptions)}
-              onClick={() => {
-                if (canUsePower) onMove({ type: 'heroPower' });
-              }}
-            >
-              <span aria-hidden="true">{myPower.emoji}</span>
-              <span className="ds-power-cost" aria-hidden="true">
-                {myPower.cost}
-              </span>
-            </button>
-          )}
           <div className="ds-endturn-wrap">
             <button
               className={`ds-btn ds-btn-endturn ${isMyTurn && nothingLeft ? 'sparkle' : ''}`}
