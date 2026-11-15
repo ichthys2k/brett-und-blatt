@@ -11,7 +11,7 @@ import type { Float, ShownMinion } from './sequence';
 import { getCardFullTitle, getCardTraits, getMinionTraits } from './traits';
 import { currentCrest, ScenarioTip, useCosmetics } from './SoloHub';
 import { championImage, HOUSE_CHAMPIONS, HOUSE_ICONS, HOUSE_NAMES } from './champions';
-import { KnappenRow, WimpelGem } from './held';
+import { HeroZoomCard, KnappenRow, WimpelGem } from './held';
 import { useBeats } from './useBeats';
 import { KEYWORD_SYMBOLS, KeywordEdges, KeywordMark, StatGem } from './symbole';
 import { cardArtUrl } from './cardArt';
@@ -247,7 +247,13 @@ function HeroBar({
   const champion = HOUSE_CHAMPIONS[house];
   const image = championImage(house);
   const housePower: HousePower | null = player.power ? HOUSE_POWERS[player.power] : null;
-  // Großansicht des Turnierherrn (#464): nur, was die Sicht ohnehin zeigt.
+  // Großansicht des Turnierherrn (#464, als Karte #472): nur, was die Sicht ohnehin zeigt.
+  const zoomLines = [
+    housePower ? `Hauskraft ${housePower.name} (${housePower.cost} Knappen): ${housePower.text}` : '',
+    player.gear ? `${player.gear.name}: Angriff ${player.gear.attack}, hält noch ${player.gear.durability} Angriffe.` : '',
+    player.quest && quest?.quest ? `Auftrag ${quest.name} (${player.quest.progress}/${quest.quest.count}): ${quest.text}` : '',
+    player.trapCount > 0 ? `Fallen: ${trapText}` : '',
+  ].filter(Boolean);
   const zoom = (): InspectContent => ({
     title: name,
     subtitle: `${champion.title} · ${houseName}`,
@@ -259,12 +265,22 @@ function HeroBar({
       ...(strength > 0 ? [{ label: 'Angriff', value: String(strength), tone: 'attack' as const }] : []),
       { label: 'Knappen', value: `${player.mana}/${player.maxMana}`, tone: 'cost' },
     ],
-    lines: [
-      housePower ? `Hauskraft ${housePower.name} (${housePower.cost} Knappen): ${housePower.text}` : '',
-      player.gear ? `${player.gear.name}: Angriff ${player.gear.attack}, hält noch ${player.gear.durability} Angriffe.` : '',
-      player.quest && quest?.quest ? `Auftrag ${quest.name} (${player.quest.progress}/${quest.quest.count}): ${quest.text}` : '',
-      player.trapCount > 0 ? `Fallen: ${trapText}` : '',
-    ].filter(Boolean),
+    lines: zoomLines,
+    // Als Karte im Stil der Zoomkarte, ohne Fensterrahmen (#472).
+    bare: true,
+    body: (
+      <HeroZoomCard
+        name={name}
+        origin={champion.title}
+        image={image}
+        emoji={houseIcon}
+        health={health}
+        armor={armor}
+        strength={strength}
+        mana={player.mana}
+        lines={zoomLines}
+      />
+    ),
   });
   const ownProps: InspectExtraProps = {
     ...(onPointerDown ? { onPointerDown } : {}),

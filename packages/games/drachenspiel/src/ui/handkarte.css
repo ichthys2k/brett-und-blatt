@@ -150,7 +150,8 @@
   max-width: none;
   max-height: none;
   object-fit: cover;
-  object-position: 50% 35%;
+  /* Motiv mittig (Cornelius, 15.11.2026: vorher saßen die Porträts zu tief). */
+  object-position: 50% 50%;
 }
 
 /* Namensband überlappt den unteren Rand des Bilds. */

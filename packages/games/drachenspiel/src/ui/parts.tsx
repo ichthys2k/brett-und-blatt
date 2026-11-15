@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   BUB_COMBAT_CARD_FIELDS,
   BUB_COMBAT_CARD_NOTETYPE,
@@ -190,11 +190,39 @@ const statChange = (value: number, base: number): 'up' | 'down' | undefined => (
 const stateOf = (change: 'up' | 'down' | undefined): StatState => (change === 'up' ? 'buffed' : change === 'down' ? 'hurt' : 'base');
 
 /**
+ * Text, der in sein Feld passen muss (Zoomkarte, Heldenkarte #472): Die Schrift wird schrittweise kleiner,
+ * bis nichts mehr übersteht – das Textfeld rollt nie. Untergrenze etwa die Hälfte der Ausgangsgröße.
+ */
+export function useFitText<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || typeof getComputedStyle === 'undefined') return;
+    const fit = () => {
+      el.style.fontSize = '';
+      let size = parseFloat(getComputedStyle(el).fontSize);
+      const min = size * 0.5;
+      while (el.scrollHeight > el.clientHeight + 1 && size > min) {
+        size *= 0.93;
+        el.style.fontSize = `${size}px`;
+      }
+    };
+    fit();
+    // Bilder und Schrift laden nach, das Fenster ändert die Größe: neu einpassen.
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit);
+    observer?.observe(el);
+    return () => observer?.disconnect();
+  });
+  return ref;
+}
+
+/**
  * Zoomkarte (#437, Strang #425, Glied S4): die Handkarte groß, alles steht auf der Karte: im Textfeld der
  * volle Regeltext, jede Eigenschaft mit Zeichen, Name und Beschreibung und der Spruch, unten mittig die
  * Herkunft. Ohne Fensterrahmen (`bare`), Antippen schließt. Nur aus der Sicht.
  */
 function ZoomCard({ def, minion, traits, rules, origin, quote }: { def: CardDefinition; minion: Minion | null; traits: TraitInfo[]; rules?: string; origin: string; quote?: string }) {
+  const textRef = useFitText<HTMLDivElement>();
   return (
     <div className="ds-zoom-card">
       <CardFace
@@ -205,7 +233,7 @@ function ZoomCard({ def, minion, traits, rules, origin, quote }: { def: CardDefi
         healthState={minion ? (minion.health < minion.maxHealth ? 'hurt' : stateOf(statChange(minion.maxHealth, minion.baseHealth))) : undefined}
         className="ds-zoom-face"
       >
-        <div className="ds-zoom-text">
+        <div ref={textRef} className="ds-zoom-text">
           {rules && <p className="ds-zoom-rules">{rules}</p>}
           {traits.length > 0 && (
             <ul className="ds-zoom-traits">

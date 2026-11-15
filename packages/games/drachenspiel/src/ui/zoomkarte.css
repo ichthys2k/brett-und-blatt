@@ -22,7 +22,7 @@
 }
 
 .ds-zoom-card .ds-zoom-face .bub-combat-media {
-  flex-basis: 50%;
+  flex-basis: 44%;
 }
 
 /* Das Textfeld der Vorlage (Kurzzeile) weicht dem vollen Text samt Eigenschaften mit Zeichen. */
@@ -34,11 +34,12 @@
 .ds-zoom-text {
   position: absolute;
   z-index: 2;
-  top: 63%;
+  top: 57%;
   left: 7cqw;
   right: 7cqw;
   bottom: 17cqw;
-  overflow-y: auto;
+  /* Rollt nie: useFitText verkleinert die Schrift, bis alles passt. */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 1.5cqw;
@@ -113,4 +114,66 @@
   font-style: italic;
   font-size: 0.92em;
   opacity: 0.8;
+}
+
+/* Großansicht des Turnierherrn als Karte (#472): goldener Rahmen, Porträt im Bogenfenster. */
+.bub-card.ds-hand-card.ds-hand-hero {
+  --ds-hand-frame: #9a6b05;
+  --ds-hand-frame-hi: #f2c94c;
+  --ds-hand-face: linear-gradient(170deg, #fff4cf, #e6c77a);
+  --ds-hand-band: linear-gradient(#7a4a12, #3e240a);
+  /* Wimpel und Rüstung aus held.css messen sich an --ds-held. */
+  --ds-held: 22cqw;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bub-card.ds-hand-card.ds-hand-hero {
+    --ds-hand-face: linear-gradient(170deg, #3d3214, #241d0a);
+  }
+}
+
+/* Ohne Vorlage gerendert: die Bausteine der Vorlage als Blöcke. */
+.ds-hand-hero .bub-combat-title-bar,
+.ds-hand-hero .bub-combat-name,
+.ds-zoom-text .ds-zoom-rules {
+  display: block;
+}
+
+.ds-hand-hero .bub-combat-media {
+  flex-basis: 44%;
+}
+
+.ds-hand-hero .bub-combat-image img {
+  object-position: 50% 30%;
+}
+
+.ds-hand-hero .ds-hero-zoom-hp {
+  position: absolute;
+  z-index: 3;
+  right: 4cqw;
+  bottom: 5cqw;
+  width: calc(var(--ds-held) * 0.56);
+  height: calc(var(--ds-held) * 0.63);
+}
+
+.ds-hand-hero .ds-zoom-origin {
+  max-width: 62%;
+}
+
+.ds-hand-hero .ds-hero-zoom-hp .ds-held-hp {
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ds-hand-hero .ds-hero-zoom-hp .ds-held-hp-num {
+  font-size: calc(var(--ds-held) * 0.34);
+}
+
+.ds-hand-hero .ds-hero-zoom-armor {
+  position: absolute;
+  z-index: 3;
+  right: 4cqw;
+  bottom: calc(5cqw + var(--ds-held) * 0.66);
 }
