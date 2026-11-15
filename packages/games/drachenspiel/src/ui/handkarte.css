@@ -184,8 +184,10 @@
 }
 
 .bub-card.ds-hand-card .bub-combat-name {
-  font-size: 11cqw;
-  font-weight: 800;
+  /* Zierschrift des Schriftzugs „Brett & Blatt“ (Startseite); die App lädt sie in fett. */
+  font-family: Almendra, Georgia, 'Noto Serif', serif;
+  font-size: 11.5cqw;
+  font-weight: 700;
   line-height: 1.15;
   color: #fff6e0;
   text-shadow: 0 1px 0 rgb(0 0 0 / 0.8);

@@ -63,6 +63,20 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
+  /* Langes Drücken öffnet am Handy kein Systemmenü (Bild sichern, Link teilen …); siehe preventContextMenu.ts. */
+  -webkit-touch-callout: none;
+}
+
+/* Am Spieltisch markiert langes Drücken keinen Text (sonst springt die Textauswahl mit ihrem Menü auf). */
+.bub-table {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.bub-table :is(input, textarea, [contenteditable='true']) {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 /* Wer mit der Tastatur spielt, soll immer sehen, wo er gerade ist. */

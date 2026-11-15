@@ -69,6 +69,11 @@ export interface InspectContent {
    * Name des Fensters, Tests, Spiele ohne eigene Darstellung). Nur aus der Sicht, nichts Verdecktes.
    */
   body?: ReactNode;
+  /**
+   * Nur mit `body`: ohne Fensterrahmen und ohne Knopf „Schließen“ – die eigene Darstellung steht frei auf dem
+   * abgedunkelten Grund, Antippen schließt sie (Drachenspiel-Karte, 15.11.2026). Escape und Tippen daneben auch.
+   */
+  bare?: boolean;
 }
 
 /** Inhalt oder eine Funktion, die ihn erst beim Ansehen baut (spart Arbeit bei vielen Karten). */
@@ -306,7 +311,7 @@ function InspectFloat({ content, rect }: { content: InspectContent; rect: DOMRec
     return () => observer?.disconnect();
   }, [rect, content]);
   return (
-    <div ref={ref} className="bub-inspect-float" role="tooltip" style={{ visibility: 'hidden' }}>
+    <div ref={ref} className={`bub-inspect-float ${content.body && content.bare ? 'bub-inspect-bare' : ''}`} role="tooltip" style={{ visibility: 'hidden' }}>
       <InspectBody content={content} />
     </div>
   );
@@ -314,8 +319,12 @@ function InspectFloat({ content, rect }: { content: InspectContent; rect: DOMRec
 
 function InspectDialog({ content, onClose }: { content: InspectContent; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const bare = Boolean(content.body && content.bare);
+  // Nur ein Tippen, das auf der Karte beginnt, schließt sie – nicht das Loslassen nach langem Drücken.
+  const downInside = useRef(false);
   useEffect(() => {
-    closeRef.current?.focus({ preventScroll: true });
+    (closeRef.current ?? panelRef.current)?.focus({ preventScroll: true });
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -332,8 +341,25 @@ function InspectDialog({ content, onClose }: { content: InspectContent; onClose:
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="bub-inspect-panel" role="dialog" aria-modal="true" aria-label={content.title}>
-        <InspectBody content={content} onClose={onClose} closeRef={closeRef} />
+      <div
+        ref={panelRef}
+        className={`bub-inspect-panel ${bare ? 'bub-inspect-bare' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={content.title}
+        tabIndex={bare ? -1 : undefined}
+        title={bare ? 'Antippen schließt' : undefined}
+        onPointerDown={bare ? () => (downInside.current = true) : undefined}
+        onClick={
+          bare
+            ? () => {
+                if (downInside.current) onClose();
+                downInside.current = false;
+              }
+            : undefined
+        }
+      >
+        <InspectBody content={content} onClose={bare ? undefined : onClose} closeRef={closeRef} />
       </div>
     </div>
   );
