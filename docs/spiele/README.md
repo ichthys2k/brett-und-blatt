@@ -58,6 +58,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Wölfe im Schafspelz](woelfe-im-schafspelz.md) (Werwolf-artig) | 8–18, mit Erzähler 19 | verdeckt, gleichzeitig | geheime Rollen, Warteschlange für Folgen, `minHumans` | L | L | M | fertig, live getestet |
 | [Präsident](praesident.md) („Arschloch“) | 3–8 | verdeckt, Kartentausch | Spielkarten, Handfächer | S | M | M | ✅ 29.10. |
 | [Tiefflug](tiefflug.md) (Skyjo-artig, mit Junior) | 2–8 | verdeckt (für alle) | Zahlenkarten, Raster 3×4, Serienwertung | S | M | M | ✅ 29.10. |
+| [Maulwurfsgänge](maulwurfsgaenge.md) (Schiebe-Labyrinth, eigene Fassung) | 2–4 | offen | eigenes Schiebebrett, Hasen/Rübe/Maulwurf aus Rübenacker | M | L | M | Plan |
 | [Marktstände](marktstaende.md) (eigene Fassung statt 6 nimmt!) | 2–10 | gleichzeitig, verdeckt | vier Stände, Kammern, Handfächer | S | M | S | W-039, Paket C |
 | [Grafschaft](grafschaft.md) (Landschaftsleger) | 2–5 | reihum, offene Auslage | Sechseckbrett, Hofaufträge, Dorfvielfalt | M | L | M | W-039, Bot-Probe fertig |
 | [Elf zuerst!](elf-zuerst.md) (Elfer raus) | 2–6 | verdeckt | Zahlenkarten 1–20, Auslage 4×20, Handfächer | S | M | S | Planungsliste Etappe 7 |
