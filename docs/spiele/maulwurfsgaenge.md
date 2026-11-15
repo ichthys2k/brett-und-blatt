@@ -1,6 +1,6 @@
 # Maulwurfsgänge
 
-*Schiebe-Labyrinth für 2–4 Spieler ab etwa 6 Jahren: Hasen suchen Rüben in einem Tunnelsystem, das sich bei jedem Zug verschiebt. Gärtner Maulwurf sitzt in einem Gang und versperrt den Weg.*
+*Vorhaben [#457](https://github.com/ichthys2k/brett-und-blatt/issues/457). Schiebe-Labyrinth für 2–4 Spieler ab etwa 6 Jahren: Hasen suchen Rüben in einem Tunnelsystem, das sich bei jedem Zug verschiebt. Gärtner Maulwurf sitzt in einem Gang und versperrt den Weg.*
 
 > **Name und Herkunft:** eigene Fassung in der Art von „Das verrückte Labyrinth“ (Ravensburger); Name, Bilder und Kernregel sind eigen (Regel des Projekts: keine Nachbauten bestimmter Verlagsspiele). Arbeitstitel „Maulwurfsgänge“, id `mole-tunnels`. **Die eigene Kernregel:** Die Rüben liegen **offen** auf dem Brett (keine verdeckten Schatzkarten), wer zuerst die vereinbarte Zahl geerntet hat, gewinnt; geerntete Rüben wachsen woanders nach; ein Maulwurf-Marker sperrt ein Teil. Verdeckte Aufträge nach Art des Vorbilds sind ausdrücklich **nicht** im Umfang (siehe „Entscheidungen“).
 
