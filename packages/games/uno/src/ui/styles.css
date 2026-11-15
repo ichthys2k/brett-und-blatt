@@ -264,10 +264,33 @@
   min-height: 0;
 }
 
-/* Am Tisch ist die Mitte das Wichtigste: Die Stapel werden größer. */
+/* Am Tisch ist die Mitte das Wichtigste: Die Stapel wachsen nur so weit, wie die Mitte hoch ist. */
 .uno-table[data-around] .uno-center-area {
-  zoom: 1.35;
+  align-self: center;
+  zoom: 1.25;
   margin-block: auto;
+}
+
+.uno-table[data-around] .uno-direction-ring {
+  inset: 0;
+}
+
+@container (max-height: 360px) {
+  .uno-table[data-around] .uno-center-area {
+    zoom: 1;
+  }
+}
+
+@container (max-height: 280px) {
+  .uno-table[data-around] .uno-center-area {
+    zoom: 0.85;
+  }
+}
+
+@container (max-height: 220px) {
+  .uno-table[data-around] .uno-center-area {
+    zoom: 0.7;
+  }
 }
 
 /* Hand-Ansicht (#100): kleine Tischübersicht oben, die eigene Hand unten */
