@@ -16,6 +16,9 @@ import { passBook } from '../lib/passes';
 import { loadGame, type LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
+import { useGameScene } from '../lib/gameScene';
+import { botAvatar, botName } from '../lib/botPortraits';
+import { Avatar } from '../components/Avatar';
 
 interface SeatDraft {
   kind: SeatKind;
@@ -88,7 +91,7 @@ function restoreDraft(game: LoadedGame, params?: Record<string, string>): SetupD
   };
 }
 
-function toSeatConfigs(seats: SeatDraft[]): SeatConfig[] {
+function toSeatConfigs(seats: SeatDraft[], gameId: string): SeatConfig[] {
   const profile = storage.loadProfile();
   const botCount = seats.filter((s) => s.kind === 'bot').length;
   let botNumber = 0;
@@ -99,11 +102,13 @@ function toSeatConfigs(seats: SeatDraft[]): SeatConfig[] {
       return { kind: 'human', name: seat.name.trim() || t('setup.defaultName', { n: i + 1 }), avatar: profile?.avatar };
     }
     botNumber++;
-    return { kind: 'bot', name: botCount > 1 ? `${t('setup.botName')} ${botNumber}` : t('setup.botName'), level: seat.level, ...(seat.botId ? { botId: seat.botId } : {}) };
+    const botLabel = botName(gameId);
+    return { kind: 'bot', name: botCount > 1 ? `${botLabel} ${botNumber}` : botLabel, level: seat.level, ...(seat.botId ? { botId: seat.botId } : {}) };
   });
 }
 
 export function Setup({ gameId, params }: { gameId: string; params?: Record<string, string> }) {
+  useGameScene(gameId);
   const [game, setGame] = useState<LoadedGame | null>(null);
   const [draft, setDraft] = useState<SetupDraft | null>(null);
   const [failed, setFailed] = useState(false);
@@ -123,7 +128,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
           else storage.saveSetup(loaded.info.id, withoutHidden(loaded.module, restored));
           await startGame({
             gameId: loaded.info.id,
-            seats: toSeatConfigs(restored.seats),
+            seats: toSeatConfigs(restored.seats, loaded.info.id),
             options: loaded.ui.prepareOptions ? loaded.ui.prepareOptions(restored.options) : restored.options,
             seed: randomSeed(),
             time: timePresetsOf(loaded.module, restored.options)[restored.time],
@@ -170,7 +175,7 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
     storage.saveSetup(info.id, withoutHidden(module, draft));
     await startGame({
       gameId: info.id,
-      seats: toSeatConfigs(draft.seats),
+      seats: toSeatConfigs(draft.seats, info.id),
       options: ui.prepareOptions ? ui.prepareOptions(draft.options) : draft.options,
       seed: randomSeed(),
       time: timePresetsOf(module, draft.options)[draft.time],
@@ -271,6 +276,12 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
                   const levels = activeBot?.levels ?? BOT_LEVELS;
                   return (
                     <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <span className="text-2xl" aria-hidden="true">
+                          <Avatar value={botAvatar(gameId)} />
+                        </span>
+                        {botName(gameId)}
+                      </div>
                       {selectableBots.length > 1 && (
                         <Segmented
                           label={`Bot (${ui.seatLabel(index, draft.seats.length)})`}
