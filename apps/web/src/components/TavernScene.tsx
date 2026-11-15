@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { StationEditor } from './StationEditor';
 import { useActiveLook, useChosenLight, useChosenRoom, useChosenTable, useMenu3d, type RoomScene, type TavernMood } from '../lib/look';
 import { navigate, useRoute } from '../lib/router';
 import {
@@ -66,13 +67,13 @@ interface Station2D {
  * verankert (die Bühne `bub-menu-stage` folgt dem Zuschnitt des Bildes). Der Kamin steht links an der Wand.
  */
 const STATIONS_2D: readonly Station2D[] = [
-  { id: 'options', label: '🔥 Optionen', to: '#/ton', x: 13, y: 55, w: 17 },
-  { id: 'board', label: '📌 Schwarzes Brett', to: '#/brett', x: 30, y: 33, w: 9 },
-  { id: 'profile', label: '🛡️ Profil & Pass', to: '#/pass', x: 46, y: 38, w: 9 },
-  { id: 'learn', label: '🗂️ Lernen', to: '#/lernen', x: 27, y: 63, w: 7 },
-  { id: 'tournaments', label: '🏆 Turniere', to: '#/turniere', x: 50, y: 62, w: 10 },
-  { id: 'online', label: '🌐 Online Spiel', to: '#/online', x: 43, y: 87, w: 15 },
-  { id: 'single', label: '♟️ Lokales Spiel', to: '#/einzelspieler', x: 34, y: 73, w: 12 },
+  { id: 'options', label: '🔥 Optionen', to: '#/ton', x: 13.6, y: 58.5, w: 28.4 },
+  { id: 'board', label: '📌 Schwarzes Brett', to: '#/brett', x: 77.8, y: 72.6, w: 22.1 },
+  { id: 'profile', label: '🛡️ Profil & Pass', to: '#/pass', x: 76.8, y: 39.3, w: 21.3 },
+  { id: 'learn', label: '🗂️ Lernen', to: '#/lernen', x: 42.3, y: 61.8, w: 6.2 },
+  { id: 'tournaments', label: '🏆 Turniere', to: '#/turniere', x: 29.6, y: 58.1, w: 16.4 },
+  { id: 'online', label: '🌐 Online Spiel', to: '#/online', x: 47.5, y: 66, w: 15.1 },
+  { id: 'single', label: '♟️ Lokales Spiel', to: '#/einzelspieler', x: 39.4, y: 81.7, w: 26 },
 ];
 import castle from '../assets/raeume/burgsaal.webp';
 import library from '../assets/raeume/bibliothek.webp';
@@ -125,7 +126,27 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
   const targetStation: TavernStationId = station ?? (calm ? stationForRoute(route.name) : 'home');
   const [spotLabel, setSpotLabel] = useState<{ text: string; x: number; y: number } | null>(null);
   const [hoveredStation, setLocalHoveredStation] = useState<TavernStationId | null>(() => getHoveredStation());
-  const activeStation = STATIONS_2D.find((st) => st.id === hoveredStation);
+  // Bearbeitungsmodus (nur Dev-Server, ?stationen): Positionen mit der Maus setzen, im Browser gemerkt.
+  const editMode = import.meta.env.DEV && typeof location !== 'undefined' && new URLSearchParams(location.search).has('stationen');
+  const [layout, setLayout] = useState<Station2D[]>(() => {
+    if (!editMode) return [...STATIONS_2D];
+    try {
+      const saved = JSON.parse(localStorage.getItem('bub-station-layout') ?? 'null') as Station2D[] | null;
+      if (saved && saved.length === STATIONS_2D.length) return saved;
+    } catch {
+      /* ohne gespeicherten Stand starten */
+    }
+    return [...STATIONS_2D];
+  });
+  useEffect(() => {
+    if (!editMode) return;
+    try {
+      localStorage.setItem('bub-station-layout', JSON.stringify(layout));
+    } catch {
+      /* Speichern ist nur eine Bequemlichkeit */
+    }
+  }, [editMode, layout]);
+  const activeStation = layout.find((st) => st.id === hoveredStation);
 
   useEffect(() => {
     setLocalHoveredStation(getHoveredStation());
@@ -412,7 +433,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
           {!calm && isTavern && (
             <div className="bub-menu-layer bub-menu-stations">
               <div className="bub-menu-stage">
-                {STATIONS_2D.map((st) => (
+                {!editMode && layout.map((st) => (
                   <button
                     key={st.id}
                     type="button"
@@ -453,6 +474,14 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
         </div>
       )}
       <div className="bub-menu-shade" />
+      {editMode && !calm && isTavern && !use3d && (
+        <StationEditor
+          stations={layout}
+          onChange={(next) => setLayout(next as Station2D[])}
+          onReset={() => setLayout([...STATIONS_2D])}
+          spriteUrl={(id) => STATION_SPRITES[id]?.url}
+        />
+      )}
     </div>
   );
 }

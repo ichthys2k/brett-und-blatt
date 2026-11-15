@@ -431,3 +431,14 @@
   }
 }
 
+
+/* Bearbeitungsmodus für die Stationen (nur Dev-Server, #454) */
+.bub-menu-edit { position: fixed; inset: -3%; z-index: 40; transform: none !important; pointer-events: none; }
+.bub-menu-edit-item { position: absolute; transform: translate(-50%, -50%); cursor: move; pointer-events: auto; outline: 1px dashed #f2d27aaa; touch-action: none; }
+.bub-menu-edit-item[data-selected='true'] { outline: 2px solid #f2d27a; }
+.bub-menu-edit-item img { display: block; width: 100%; height: auto; pointer-events: none; }
+.bub-menu-edit-tag { position: absolute; left: 0; top: -1.3em; padding: 0 0.35em; background: #140d07dd; color: #f2d27a; font: 11px/1.4 monospace; white-space: nowrap; pointer-events: none; }
+.bub-menu-edit-grip { position: absolute; right: -7px; bottom: -7px; width: 14px; height: 14px; background: #f2d27a; border: 2px solid #140d07; border-radius: 3px; cursor: nwse-resize; }
+.bub-menu-edit-panel { position: fixed; right: 12px; top: 12px; z-index: 50; display: flex; flex-direction: column; gap: 6px; width: 400px; max-width: calc(100vw - 24px); padding: 10px 12px; background: #140d07ee; border: 1px solid #f2d27a; border-radius: 8px; color: #f6e7c1; font: 12px/1.4 system-ui; }
+.bub-menu-edit-panel pre { margin: 0; padding: 6px; max-height: 180px; overflow: auto; background: #000a; font: 11px/1.4 monospace; white-space: pre; }
+.bub-menu-edit-panel button { margin-right: 6px; padding: 4px 10px; cursor: pointer; }
