@@ -6,6 +6,7 @@ import { endAction, markCustomDeck, prepareOptions } from './SoloHub';
 import { DeckSelection, MulliganPhase } from './phases';
 import { PlayBoard } from './PlayBoard';
 import './styles.css';
+import './feldkarte.css';
 import { albumSpec } from './album';
 import { setPartyCards } from './cardLookup';
 import type { CustomCard } from '../carddefs';

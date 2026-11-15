@@ -15,7 +15,7 @@ import { cardArtOf, cardArtUrl, withCardArt } from './cardArt';
 
 const baseCombatNotes = new Map<string, AnkiNote>();
 /** Stelle des Felds „Bild“ in der Anki-Kampfkarte (eigene Kartensets bringen dort ihr Bild mit). */
-const BILD_FIELD = BUB_COMBAT_CARD_FIELDS.indexOf('Bild');
+export const BILD_FIELD = BUB_COMBAT_CARD_FIELDS.indexOf('Bild');
 
 export function getCombatCardBaseNote(def: CardDefinition): AnkiNote {
   let note = baseCombatNotes.get(def.id);
