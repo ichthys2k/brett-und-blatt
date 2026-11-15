@@ -3,7 +3,7 @@
  * Maulwurfspur und Erdhügel. Karte ziehen, dann einen Hasen antippen (oder sein Ziel).
  */
 import type { SeatId } from '@brett-und-blatt/engine';
-import { FitBox, useLatestEvent, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { FitBox, useLatestEvent, type BoardProps, type GameUi, useInspectProps } from '@brett-und-blatt/ui';
 import {
   FENCE_POSTS,
   MEADOW,
@@ -66,11 +66,20 @@ function crowdOffset(index: number, count: number, spread: number): { dx: number
   return { dx: (col - (inRow - 1) / 2) * spread, dy: (row - (Math.ceil(count / perRow) - 1) / 2) * spread * 0.8 };
 }
 
+/** Großansicht einer gezogenen Karte (#422); Texte aus der Kurzanleitung. */
+function cardInspect(card: Card) {
+  const art = cardImage(card === 'mole' ? 'mole' : (card as 1 | 2 | 3));
+  return card === 'mole'
+    ? { title: 'Maulwurf', image: art ? { src: art } : undefined, emoji: '🕳️', lines: ['Gärtner Maulwurf taucht am Erdhügel auf: Ein Hase dort purzelt ins Loch und muss zurück zum letzten Zaunpfahl.', 'Danach wandert der Maulwurf auf seiner Spur zum nächsten Hügel.'] }
+    : { title: `${card} ${card === 1 ? 'Feld' : 'Felder'} vorwärts`, image: art ? { src: art } : undefined, emoji: '🐾', lines: [`Ein Hase deiner Wahl hoppelt ${card} ${card === 1 ? 'Feld' : 'Felder'} vorwärts; besetzte Felder werden übersprungen und nicht mitgezählt.`] };
+}
+
 function CardFace({ card }: { card: Card | null }) {
+  const inspect = useInspectProps(card === null ? undefined : () => cardInspect(card));
   if (card === null) return <div className="rub-card rub-card-empty" aria-hidden="true" />;
   if (card === 'mole') {
     return (
-      <div className="rub-card rub-card-mole" aria-label="Karte: Maulwurf">
+      <div className="rub-card rub-card-mole" aria-label="Karte: Maulwurf" {...inspect}>
         {cardImage('mole') && <img className="rub-card-img" src={cardImage('mole')} alt="" draggable={false} />}
         <svg viewBox="-30 -30 60 60" aria-hidden="true">
           <Mole />
@@ -80,7 +89,7 @@ function CardFace({ card }: { card: Card | null }) {
     );
   }
   return (
-    <div className="rub-card" aria-label={`Karte: ${card}`}>
+    <div className="rub-card" aria-label={`Karte: ${card}`} {...inspect}>
       {cardImage(card as 1 | 2 | 3) && <img className="rub-card-img" src={cardImage(card as 1 | 2 | 3)} alt="" draggable={false} />}
       <span className="rub-card-number">{card}</span>
       <span className="rub-card-paws" aria-hidden="true">{'🐾'.repeat(card)}</span>
