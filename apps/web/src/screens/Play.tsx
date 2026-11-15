@@ -211,8 +211,10 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   useDismiss(sideOpen, useCallback(() => setSideOpen(false), []), sideBox);
   const landscape = rootSize.width > rootSize.height && rootSize.height > 0;
   // Spiele mit `fullBleed` (Drachenspiel, #430) klappen die Leiste im Querformat immer ein und nutzen die Fläche ganz.
-  const fullBleed = Boolean(ui.fullBleed) && !around && landscape;
-  const collapsedSide = !around && landscape && ((Boolean(ui.seatsOnBoard) && rootSize.height <= 540) || fullBleed);
+  const fullBleed = Boolean(ui.fullBleed) && !around && rootSize.height > 0;
+  const collapsedSide = !around && ((landscape && Boolean(ui.seatsOnBoard) && rootSize.height <= 540) || fullBleed);
+  // Im Hochformat wird aus der eingeklappten Leiste eine schmale Zeile oben (☰ und Status), das Menü klappt darunter auf.
+  const collapsedTop = collapsedSide && !landscape;
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
   const { trophy: trophyLaid } = usePassRecorder({ session, gameId: info.id, seatScore: ui.seatScore as ((view: never, seat: number) => number | string | null) | undefined, album: ui.album as AlbumSpec<never> | undefined, learning: ui.learning as { report: (view: never, seat: number) => { row: string; sure: boolean }[] } | undefined, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.finishedNote !== undefined, display: online.display } } : {}) });
@@ -543,10 +545,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
       <div ref={sideBox} className={collapsedSide ? 'relative flex-none' : 'contents'}>
       {collapsedSide && (
-        <div className="flex h-full w-11 flex-col items-center gap-2 py-2">
+        <div className={collapsedTop ? 'flex h-11 items-center gap-2 px-2' : 'flex h-full w-11 flex-col items-center gap-2 py-2'}>
           <button
             type="button"
             className="relative flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-lg border border-line bg-surface text-lg hover:bg-surface-2"
+            data-bub-menu
             aria-expanded={sideOpen}
             aria-label={sideOpen ? t('play.hideMenu') : t('play.showMenu')}
             title={sideOpen ? t('play.hideMenu') : t('play.showMenu')}
@@ -555,13 +558,25 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             <span aria-hidden="true">☰</span>
             {yourMove && <span className="absolute -right-0.5 -top-0.5 h-3 w-3 animate-pulse rounded-full border border-surface bg-accent" aria-hidden="true" />}
           </button>
+          {collapsedTop && (
+            <p className="min-w-0 flex-1 truncate text-center text-sm font-medium" aria-live="polite">
+              {statusContent}
+            </p>
+          )}
+          {collapsedTop && turnClock && (
+            <span className="flex-none rounded-full bg-surface-2 px-2 py-0.5 text-sm font-semibold tabular-nums" title={t('play.clock')}>
+              ⏱ {turnClock}
+            </span>
+          )}
         </div>
       )}
       <div
         className={
           collapsedSide
             ? sideOpen
-              ? 'absolute left-11 top-0 z-40 flex h-full w-72 flex-col overflow-y-auto rounded-r-xl border border-line bg-surface shadow-xl'
+              ? collapsedTop
+                ? 'absolute left-0 top-11 z-40 flex max-h-[85dvh] w-[min(20rem,100%)] flex-col overflow-y-auto rounded-br-xl border border-line bg-surface shadow-xl'
+                : 'absolute left-11 top-0 z-40 flex h-full w-72 flex-col overflow-y-auto rounded-r-xl border border-line bg-surface shadow-xl'
               : 'hidden'
             : around
               ? 'contents'

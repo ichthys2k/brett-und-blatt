@@ -639,20 +639,9 @@
   min-height: 140px;
 }
 
-.ds-choice-option .ds-card-spelltext {
-  overflow: visible;
-  display: block;
-  -webkit-line-clamp: unset;
-}
-
 .ds-choice-emoji {
   font-size: 2rem;
   line-height: 1;
-}
-
-
-.ds-card[data-rarity='rare'] .ds-card-name {
-  color: #0984e3;
 }
 
 .ds-card[data-rarity='mythic'] {
@@ -1068,14 +1057,6 @@
   filter: contrast(80%);
 }
 
-.ds-card-traits {
-  display: flex;
-  gap: 2px;
-  font-size: 0.7rem;
-  line-height: 1;
-  position: relative;
-}
-
 .ds-trait-badge {
   position: relative;
   display: inline-flex;
@@ -1162,29 +1143,6 @@
   }
 }
 
-.ds-minion-emoji {
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.ds-minion-name {
-  font-size: 0.65rem;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.ds-minion-stats {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  font-weight: bold;
-  font-size: 0.8rem;
-  line-height: 1;
-}
-
 .ds-stat-atk {
   background: #f39c12;
   color: white;
@@ -1246,47 +1204,6 @@
 .ds-card.playable:hover {
   transform: translateY(-10px) scale(1.06);
   z-index: 20;
-}
-
-.ds-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.ds-card-cost {
-  background: #0984e3;
-  color: white;
-  font-weight: bold;
-  font-size: 0.75rem;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ds-card-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.ds-card-emoji {
-  font-size: 1.8rem;
-  line-height: 1;
-}
-
-.ds-card-name {
-  font-size: 0.65rem;
-  font-weight: bold;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 }
 
 /* Action controls */
@@ -1388,21 +1305,6 @@
 }
 
 /* Fallback falls keine Vektorkoordinaten vorliegen */
-.ds-attacking-up {
-  --atk-dx: 0px;
-  --atk-dy: -100px;
-  animation: ds-attack-strike 0.52s cubic-bezier(0.2, 0.8, 0.25, 1) !important;
-  z-index: 60 !important;
-  pointer-events: none !important;
-}
-
-.ds-attacking-down {
-  --atk-dx: 0px;
-  --atk-dy: 100px;
-  animation: ds-attack-strike 0.52s cubic-bezier(0.2, 0.8, 0.25, 1) !important;
-  z-index: 60 !important;
-  pointer-events: none !important;
-}
 
 /* Angreifer, der beim Schlag durch Gegenschaden abtritt: Vorstoß, Aufprall, danach Verbeugung und Abtreten */
 @keyframes ds-attack-strike-and-retire {
@@ -1501,16 +1403,6 @@
   animation: bub-shake 0.25s ease-in-out 0.16s both, ds-impact-flash 0.35s ease-out 0.16s both !important;
 }
 
-.ds-bubble-pop {
-  animation: ds-bubble-pop-anim 0.35s ease-out forwards;
-}
-
-@keyframes ds-bubble-pop-anim {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.6); opacity: 0.8; }
-  100% { transform: scale(2); opacity: 0; }
-}
-
 .ds-damage-badge {
   color: #ff4757;
   font-size: 1.5rem;
@@ -1526,14 +1418,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ds-minion.ds-attacking,
-  .ds-hero-card.ds-attacking,
-  .ds-minion.ds-attacking.ds-minion-dying,
-  .ds-attacking-up,
-  .ds-attacking-down,
-  .ds-bubble-pop,
-  .ds-minion.ds-minion-dying,
-  .ds-hit-impact,
-  .ds-damage-badge {
+.ds-hero-card.ds-attacking,
+.ds-minion.ds-attacking.ds-minion-dying,
+.ds-minion.ds-minion-dying,
+.ds-hit-impact,
+.ds-damage-badge {
     animation: none !important;
     transform: none !important;
     animation-delay: 0s !important;
@@ -1563,7 +1452,6 @@
 .ds-hero-card[data-drop-active='true'] {
   box-shadow: 0 0 0 4px #ff4757, 0 0 16px rgba(255, 71, 87, 0.5) !important;
 }
-
 
 /* Kniffe (früher Zauberkarten, W-025) mit Pergamentrahmen und rotem Wachssiegel */
 .ds-card.ds-card-spell {
@@ -1636,16 +1524,7 @@
   border-radius: 4px;
   margin-top: -4px;
 }
-.ds-card-spelltext {
-  font-size: 0.52rem;
-  line-height: 1.15;
-  text-align: center;
-  color: var(--color-text-muted, var(--color-muted, #636e72));
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-}
+
 .ds-spell-hint {
   display: flex;
   align-items: center;
@@ -1852,9 +1731,7 @@
     padding: 2px;
   }
 
-  .ds-minion-emoji {
-    font-size: 1.6rem;
-  }
+  
 
   .ds-hand {
     padding-top: 4px;
@@ -1865,9 +1742,7 @@
     padding: 3px;
   }
 
-  .ds-card-emoji {
-    font-size: 1.45rem;
-  }
+  
 }
 
 /* Wenig Höhe, aber etwas Breite: Werte des Helden zu zweit nebeneinander statt untereinander. */
@@ -1953,17 +1828,13 @@
     height: 70px;
   }
 
-  .ds-minion-emoji {
-    font-size: 1.35rem;
-  }
+  
 
   .ds-card {
     height: 80px;
   }
 
-  .ds-card-emoji {
-    font-size: 1.25rem;
-  }
+  
 }
 
 /* Einheitliches Kartensystem: GameCard & CardBack Integration (K6) */
