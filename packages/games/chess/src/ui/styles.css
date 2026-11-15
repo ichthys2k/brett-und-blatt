@@ -412,6 +412,11 @@ button.ch-log-cell:hover {
   paint-order: stroke fill;
 }
 
+.ch-board .ch-piece {
+  font-size: 122cqmin;
+  translate: 0 -18%;
+}
+
 /* Gefüllte Zeichen für beide Farben: Weiß mit heller Füllung und dunkler Kontur. */
 .ch-white {
   color: #fdfaf3;

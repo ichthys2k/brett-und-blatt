@@ -14,14 +14,13 @@ export function PieceSetPicker(props: { game: PieceGame; compact?: boolean }) {
 function PieceSetTiles({ game, compact = false }: { game: PieceGame; compact?: boolean }) {
   const current = usePieceSet(game.id);
   const inspect = useInspect();
+  const visible = PIECE_SET_IDS.filter((id) => id === 'classic' || Boolean(game.previews[id]));
   return (
     <fieldset className={compact ? 'space-y-1 rounded-xl border-0 p-0' : 'space-y-2 rounded-2xl border border-line bg-surface p-4'}>
       <legend className={compact ? 'sr-only' : 'px-1 font-semibold'}>{game.name}</legend>
-      <div className={compact ? 'grid grid-cols-2 gap-1.5' : 'grid grid-cols-2 gap-2 sm:grid-cols-4'}>
-        {PIECE_SET_IDS.map((id: PieceSetId) => {
+      <div className={compact ? 'grid grid-cols-2 gap-1.5' : `grid grid-cols-2 gap-2 ${visible.length >= 5 ? 'sm:grid-cols-5' : 'sm:grid-cols-4'}`}>
+        {visible.map((id: PieceSetId) => {
           const preview = game.previews[id];
-          // Ein Satz ohne Vorschau und ohne Bilder wäre nicht wählbar (außer „Klassisch“).
-          if (id !== 'classic' && !preview) return null;
           return (
             <label
               key={id}
