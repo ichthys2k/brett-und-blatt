@@ -108,6 +108,8 @@ let chosenMenu3d = loadMenu3d();
 let chosenLight = loadLight();
 let chosenStations = loadMenuStations();
 /** Die Stationen-Szene gibt es nur auf breiten Bildschirmen; am Handy und in fast quadratischen Fenstern gilt die ursprüngliche Ansicht. */
+/** Nur im Dev-Server: `?stationen` in der Adresse schaltet die Stationen-Szene samt Positions-Editor ein (#454). */
+const stationsForcedByDev = import.meta.env.DEV && new URLSearchParams(window.location.search).has('stationen');
 const wideQuery = window.matchMedia('(min-width: 761px) and (min-aspect-ratio: 13/10)');
 let chosenScenes = loadScenes();
 
@@ -283,7 +285,7 @@ export const useMenu3d = (): boolean => useSyncExternalStore(subscribe, menu3dAc
 export const menuStationsEnabled = (): boolean => chosenStations;
 /** Ob das Hauptmenü gerade die Stationen-Szene zeigt: gewählt, Taverne, breiter Bildschirm, keine 3D-Bühne. */
 export const menuStationsActive = (): boolean =>
-  chosenStations && activeLook() === 'tavern' && chosenRoom === 'tavern' && wideQuery.matches && !menu3dActive();
+  (chosenStations || stationsForcedByDev) && activeLook() === 'tavern' && chosenRoom === 'tavern' && wideQuery.matches && !menu3dActive();
 /** Die gespeicherte Wahl für den Schalter in den Optionen (unabhängig von der Bildschirmbreite). */
 export const useMenuStationsChoice = (): boolean => useSyncExternalStore(subscribe, () => chosenStations);
 export const useMenuStations = (): boolean => useSyncExternalStore(subscribe, menuStationsActive);
