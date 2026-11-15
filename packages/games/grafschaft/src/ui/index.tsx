@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { useInspect, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useId, useState } from 'react';
 import {
   HEX_DIRECTIONS,
@@ -90,6 +90,8 @@ function TileHexSvg({ tile, cx = 30, cy = 30, radius = 26 }: { tile: Tile; cx?: 
 }
 
 function Board({ view, legalMoves, onMove, viewer, seatNames }: BoardProps<GrafschaftState, GrafschaftMove>) {
+  // Großansicht (#422): Landschaftsbild der Plättchen und Vignette der Hofaufträge groß.
+  const inspect = useInspect();
   const [selectedMarketIndex, setSelectedMarketIndex] = useState<number>(0);
 
   const mySeat = viewer === 'spectator' ? null : viewer;
@@ -224,6 +226,11 @@ function Board({ view, legalMoves, onMove, viewer, seatNames }: BoardProps<Grafs
                 className={`gs-market-tile ${isSelected ? 'gs-market-tile--selected' : ''}`}
                 disabled={!isMyTurn}
                 onClick={() => setSelectedMarketIndex(idx)}
+                {...inspect.props(() => {
+                  const art = landImage(tile.type);
+                  const features = [tile.river && '🌊 Flusslauf', tile.road && '🛤️ Weg', tile.mill && '⚙️ Mühle'].filter((line): line is string => Boolean(line));
+                  return { title: LANDSCAPE_NAMES[tile.type], image: art ? { src: art, aspect: 1 } : undefined, lines: features.length > 0 ? features : undefined };
+                })}
                 aria-label={`${LANDSCAPE_NAMES[tile.type]}${tile.river ? ', mit Fluss' : ''}${tile.road ? ', mit Weg' : ''}${tile.mill ? ', mit Mühle' : ''}`}
               >
                 <TileHexSvg tile={tile} />
@@ -319,7 +326,20 @@ function Board({ view, legalMoves, onMove, viewer, seatNames }: BoardProps<Grafs
           </div>
           <div className="gs-quests-grid">
             {activeQuests.map((quest) => (
-              <div key={quest.id} className="gs-quest-card">
+              <div
+                key={quest.id}
+                className="gs-quest-card"
+                {...inspect.props(() => {
+                  const art = questImage(quest.id);
+                  return {
+                    title: quest.name,
+                    image: art ? { src: art, aspect: 1, round: true } : undefined,
+                    emoji: '📜',
+                    stats: [{ label: 'Punkte', value: `+${quest.points}` }],
+                    lines: [quest.text],
+                  };
+                })}
+              >
                 <div className="gs-quest-card-header">
                   {questImage(quest.id) && <img className="gs-quest-img" src={questImage(quest.id)} alt="" draggable={false} />}
                   <span className="gs-quest-name">{quest.name}</span>

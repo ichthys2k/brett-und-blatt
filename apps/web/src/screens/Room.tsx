@@ -26,6 +26,8 @@ import { CustomCardsOverlay } from '../components/CustomCardsOverlay';
 import { VoiceMenu } from '../components/VoiceMenu';
 import { useVoice } from '../lib/voice';
 import { Avatar } from '../components/Avatar';
+import { useGameScene } from '../lib/gameScene';
+import { botAvatar, botName } from '../lib/botPortraits';
 
 const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
 /** Online gibt es nur Spiele für mehrere Personen. */
@@ -385,6 +387,7 @@ export function useLoadedGame(gameId: string | null): LoadedGame | null {
 
 function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu }: { room: RoomMessage; state: RoomState; connection: RoomConnection; isHost: boolean; onLeave: () => void; pushToggle?: React.ReactNode; voiceMenu?: React.ReactNode }) {
   const { lobby } = room;
+  useGameScene(lobby.gameId ?? undefined);
   const game = useLoadedGame(lobby.gameId);
   const teams = game ? teamsFor(game.info, lobby.options, lobby.seats.length) : undefined;
   const [showQr, setShowQr] = useState(false);
@@ -857,7 +860,7 @@ function SeatRow({
           />
         )}
         <span className={`flex-1 font-medium ${compact ? 'min-w-0 truncate' : ''}`}>
-          {seat.kind === 'bot' ? (compact ? '🤖' : `🤖 ${t('setup.bot')} · ${levelLabel(seat.level)}`) : member ? `${member.avatar} ${member.name}` : compact && isHost ? '' : t('online.seatOpen')}
+          {seat.kind === 'bot' ? (<><Avatar value={botAvatar(game.info.id)} />{compact ? '' : ` ${botName(game.info.id)} · ${levelLabel(seat.level)}`}</>) : member ? `${member.avatar} ${member.name}` : compact && isHost ? '' : t('online.seatOpen')}
         </span>
         {seat.kind === 'human' && seat.memberId === null && (
           <Button variant={mySeat < 0 ? 'primary' : 'secondary'} className="min-h-9 text-sm" onClick={() => send({ type: 'takeSeat', index })}>

@@ -709,8 +709,8 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
           {desk && <DeckPile count={run.pileCount ?? run.pile.length} total={run.deck.length} cardW={cardW} />}
         </div>
         <div className="cs-actions">
-          <button type="button" className={`cs-btn cs-btn-play ${hint?.type === 'play' ? 'cs-hint' : ''}`} disabled={!playMove} onClick={() => playMove && (playEffect('fs-abschicken'), onMove(playMove))}>
-            Vorführen
+          <button type="button" className={`cs-btn cs-btn-discard ${hint?.type === 'discard' ? 'cs-hint' : ''}`} disabled={!discardMove} onClick={() => discardMove && (playEffect('fs-verwerfen'), onMove(discardMove))}>
+            Tauschen ({round.discardsLeft})
           </button>
           <span className="cs-sort">
             <small>Sortieren</small>
@@ -726,8 +726,8 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
               </span>
             )}
           </span>
-          <button type="button" className={`cs-btn cs-btn-discard ${hint?.type === 'discard' ? 'cs-hint' : ''}`} disabled={!discardMove} onClick={() => discardMove && (playEffect('fs-verwerfen'), onMove(discardMove))}>
-            Tauschen ({round.discardsLeft})
+          <button type="button" className={`cs-btn cs-btn-play ${hint?.type === 'play' ? 'cs-hint' : ''}`} disabled={!playMove} onClick={() => playMove && (playEffect('fs-abschicken'), onMove(playMove))}>
+            Vorführen
           </button>
           {desk && (
             <button type="button" className="cs-link cs-kombilink" onClick={() => setShowLevels((v) => !v)} title="Stufen, gespielte Kombis, Privilegien und Gefallen">
@@ -810,8 +810,8 @@ function Board({ view, legalMoves, onMove, events, hint, viewer, seatNames }: Bo
       const cards = picked.includes(dragging.index) ? sortedPick : [dragging.index];
       zones = (
         <>
-          {zone('play', '▶ Vorführen', !!find((m) => m.type === 'play' && same(m.cards, cards)))}
           {zone('discard', `↻ Tauschen (${round.discardsLeft})`, !!find((m) => m.type === 'discard' && same(m.cards, cards)))}
+          {zone('play', '▶ Vorführen', !!find((m) => m.type === 'play' && same(m.cards, cards)))}
         </>
       );
     } else if (dragging.kind === 'mod' || dragging.kind === 'cons') {

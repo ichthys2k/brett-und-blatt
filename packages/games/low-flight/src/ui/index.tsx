@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
-import { GameCard, RoundSummary, getNoteField, useCardCosmetics, useCardOverride, type BoardProps, type GameUi, type RoundSummaryPlayer } from '@brett-und-blatt/ui';
+import { GameCard, RoundSummary, cardOverrideOf, getNoteField, useCardCosmetics, type BoardProps, type GameUi, type RoundSummaryPlayer } from '@brett-und-blatt/ui';
 import { hiddenSlots, openSum, type LowFlightMove, type LowFlightView } from '../rules';
 import './styles.css';
 
@@ -45,7 +45,7 @@ export function Card({
 
   const overrideNote =
     value !== null
-      ? useCardOverride(`tiefflug:${value}`) ?? useCardOverride(String(value))
+      ? cardOverrideOf(cosmetics.ankiOverrides, `tiefflug:${value}`) ?? cardOverrideOf(cosmetics.ankiOverrides, String(value))
       : undefined;
 
   const text = label ?? (isHidden ? (typeof knownValue === 'number' ? `verdeckte Karte (gemerkt: ${knownValue})` : 'verdeckte Karte') : valueLabel(value, junior));

@@ -1546,37 +1546,6 @@ button.cs-card {
 
 /* Sprechblase beim Überfahren (Maus) oder Tastaturfokus; liegt außerhalb des Bretts im <body> */
 
-.cs-tip {
-  position: fixed;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  max-width: min(20rem, calc(100vw - 16px));
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--color-line);
-  border-radius: 12px;
-  background: var(--color-surface);
-  box-shadow: 0 6px 20px rgb(0 0 0 / 28%);
-  color: var(--color-ink);
-  font-size: 0.85rem;
-  line-height: 1.3;
-  pointer-events: none;
-}
-
-.cs-tip-title {
-  font-size: 0.95rem;
-}
-
-.cs-tip-line {
-  color: var(--color-muted);
-}
-
-/* Beim Ziehen stört die Blase nur. */
-body:has(.cs-dragging) .cs-tip {
-  display: none;
-}
-
 /* Ziehen und Ablegen */
 
 .cs-mainarea {
@@ -1723,7 +1692,7 @@ button.cs-tile {
   grid-template-rows: minmax(0, 1fr) auto auto;
   grid-template-areas:
     'stage stage stage'
-    'play hand discard'
+    'discard hand play'
     '. meta .';
   min-height: 0;
 }
@@ -1757,13 +1726,13 @@ button.cs-tile {
   display: contents;
 }
 
-.cs-bigmode .cs-actions > .cs-btn:first-child {
+.cs-bigmode .cs-actions > .cs-btn-play {
   grid-area: play;
   align-self: center;
   justify-self: stretch;
 }
 
-.cs-bigmode .cs-actions > .cs-btn:last-child {
+.cs-bigmode .cs-actions > .cs-btn-discard {
   grid-area: discard;
   align-self: center;
   justify-self: stretch;

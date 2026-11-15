@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { SeatRing, CardFan, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, CardFan, useInspectProps, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import {
   STAND_CAPACITY,
   WARES,
@@ -27,8 +27,18 @@ function cardLabel(card: number): string {
 
 function WareCard({ card }: { card: number }) {
   const image = wareImage(wareOf(card));
+  // Großansicht (#422): Ware als Bild, dazu Zahl und Sterne.
+  const inspect = useInspectProps(() => ({
+    title: WARE_NAMES[wareOf(card)]!,
+    image: image ? { src: image, aspect: 1, round: true } : undefined,
+    emoji: WARE_ICONS[wareOf(card)],
+    stats: [
+      { label: 'Zahl', value: String(card) },
+      { label: 'Sterne', value: '★'.repeat(starsOf(card)) },
+    ],
+  }));
   return (
-    <div className={`mst-card mst-w-${wareOf(card)}`} aria-label={cardLabel(card)}>
+    <div className={`mst-card mst-w-${wareOf(card)}`} aria-label={cardLabel(card)} {...inspect}>
       <span className="mst-card-number">{card}</span>
       <span className="mst-card-icon" aria-hidden="true">
         {image && <img className="mst-ware-img" src={image} alt="" draggable={false} />}

@@ -1,5 +1,5 @@
 import { randomSeed, sanitizeCustomCardCatalog, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
-import { PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
+import { CardInspectProvider, PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { AlbumSpec } from '@brett-und-blatt/ui';
 import { AfterGameBar } from '../components/AfterGameBar';
@@ -27,6 +27,8 @@ import { navigate, paths } from '../lib/router';
 import { useSoundSettings } from '../lib/sound';
 import { storage, type Profile } from '../lib/storage';
 import { useGameSounds } from '../lib/useGameSounds';
+import { useGameScene } from '../lib/gameScene';
+import { botAvatar } from '../lib/botPortraits';
 
 export function Play() {
   const [active, setActive] = useState<ActiveGame | null>(() => getActiveGame());
@@ -163,6 +165,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
 
   useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined, ui.ownSoundsOnly);
   useGameMusic(info.id, playMusic && !info.ownMusic);
+  useGameScene(info.id);
 
   // Uhren prüfen und anzeigen.
   useEffect(() => {
@@ -381,7 +384,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     const seat = seats[index]!;
     const profile = !online ? storage.loadProfile() : null;
     const localAvatar = !online && seat.kind === 'human' ? (profile?.avatar ?? seat.avatar ?? null) : (seat.avatar ?? null);
-    const avatar = online ? (seat.avatar ?? online.avatars?.[index] ?? null) : localAvatar;
+    // Computergegner zeigen das gemalte Porträt ihres Spiels (#311); der Wert `bot:<kennung>` wird nur gezeichnet, nie als Text benutzt.
+    const avatar = seat.kind === 'bot' ? botAvatar(info.id) : online ? (seat.avatar ?? online.avatars?.[index] ?? null) : localAvatar;
     return (
       <PlayerChip
         key={index}
@@ -526,7 +530,9 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     </>
   );
 
+  // Großansicht (#418/#422) für Spielfeld, Spielerchips und Sitzring; Spiele mit eigenem Provider dürfen ihn ersetzen.
   return (
+    <CardInspectProvider>
     <div
       ref={rootRef}
       className={`flex ${online?.display ? 'h-full' : 'h-dvh'} flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around ? '' : 'mx-auto max-w-3xl side:max-w-none side:flex-row'}`}
@@ -676,7 +682,13 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         )}
 
         {!around && (
-          <footer className="order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:justify-center-safe short:overflow-x-auto short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:flex-none short:[&>button]:px-2 short:[&>button]:text-sm short:[&>button]:whitespace-nowrap tiny:gap-1 tiny:pt-1 tiny:pb-0 tiny:[&>button]:min-h-8 tiny:[&>button]:px-2 tiny:[&>button]:text-xs">
+          <footer
+            className={
+              collapsedSide
+                ? 'order-2 flex flex-none flex-wrap justify-center gap-1.5 px-3 py-2 [&>button]:min-h-9 [&>button]:px-2.5 [&>button]:text-sm [&>button]:whitespace-nowrap'
+                : 'order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:justify-center-safe short:overflow-x-auto short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:flex-none short:[&>button]:px-2 short:[&>button]:text-sm short:[&>button]:whitespace-nowrap tiny:gap-1 tiny:pt-1 tiny:pb-0 tiny:[&>button]:min-h-8 tiny:[&>button]:px-2 tiny:[&>button]:text-xs'
+            }
+          >
             {primaryControls}
             {!result && secondaryControls}
           </footer>
@@ -745,7 +757,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             seats={seats.map((seat, index) => ({
               seat: index,
               name: seat.name,
-              avatar: (online ? (seat.avatar ?? online.avatars?.[index]) : seat.kind === 'human' ? (storage.loadProfile()?.avatar ?? seat.avatar) : seat.avatar) ?? null,
+              avatar: seat.kind === 'bot' ? botAvatar(info.id) : (online ? (seat.avatar ?? online.avatars?.[index]) : seat.kind === 'human' ? (storage.loadProfile()?.avatar ?? seat.avatar) : seat.avatar) ?? null,
               symbol: <ui.SeatSymbol seat={index} seats={seats.length} />,
               score: ui.seatScore?.(publicView, index) ?? null,
               you: online ? index === online.yourSeat : seat.kind === 'human',
@@ -781,5 +793,6 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         )}
       </main>
     </div>
+    </CardInspectProvider>
   );
 }

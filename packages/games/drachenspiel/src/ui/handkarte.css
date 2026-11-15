@@ -1,0 +1,293 @@
+/* Handkarte des Drachenspiels (#436, Strang #425, Glied S3): eigens gestaltete mittlere Stufe für
+   Hand, Kartentausch, Kartenwahl und Deckbau. Der Inhalt kommt aus der Anki-Vorlage (Kampfkarte);
+   hier wird er neu geordnet: Bild oben, Namensband, eine Zeile Kurztext. Kosten, Angriff und Leben
+   liegen als Symbole aus symbole.tsx in den Ecken. Die Art der Karte zeigt der Rahmen.
+   Die Regeln der Vorlage sind auf `.bub-card` begrenzt; drei Klassen hier gewinnen gegen sie.
+   Die Wurzel der Vorlage wird über ihre Lage angesprochen: Bei Bauten („bub-kind-Gebäude“) verwirft die
+   Bereinigung das class-Attribut wegen des Umlauts. */
+
+/* Die Hülle (.ds-card) trägt nur noch Größe, Lage und Leuchten; Rahmen und Fläche malt die Karte. */
+.ds-card.ds-card.ds-card {
+  padding: 0;
+  border: 0;
+  border-radius: 9% / 6.5%;
+  background: none;
+}
+
+.ds-choice-option.ds-card.ds-card {
+  height: 142px;
+  min-height: 0;
+}
+
+.bub-card.ds-hand-card {
+  container-type: inline-size;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 9% / 6.5%;
+  background: none;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+  /* Rahmen und Fläche je Art */
+  --ds-hand-frame: #7a4f26;
+  --ds-hand-frame-hi: #c99a5b;
+  --ds-hand-face: linear-gradient(170deg, #f3e4c2, #dcc28e);
+  --ds-hand-ink: #2b1f14;
+  --ds-hand-band: linear-gradient(#6a4526, #3e2714);
+  --ds-sym-stat-hand: clamp(18px, 29cqw, 46px);
+  --ds-sym-mark-hand: clamp(15px, 19cqw, 26px);
+}
+
+.bub-card.ds-hand-card.ds-hand-spell {
+  --ds-hand-frame: #4a3a8a;
+  --ds-hand-frame-hi: #9d8be0;
+  --ds-hand-face: linear-gradient(170deg, #f6efe0, #e6d8f0);
+  --ds-hand-band: linear-gradient(#5a4aa0, #352a66);
+}
+
+.bub-card.ds-hand-card.ds-hand-trap {
+  --ds-hand-frame: #7f1d1d;
+  --ds-hand-frame-hi: #d06a5a;
+  --ds-hand-face: linear-gradient(170deg, #efd9cf, #d6a99a);
+  --ds-hand-band: linear-gradient(#8a2a22, #4f1010);
+}
+
+.bub-card.ds-hand-card.ds-hand-quest {
+  --ds-hand-frame: #9a6b05;
+  --ds-hand-frame-hi: #f2c94c;
+  --ds-hand-face: linear-gradient(170deg, #fff4cf, #edd38a);
+  --ds-hand-band: linear-gradient(#b8860b, #6f4d05);
+}
+
+.bub-card.ds-hand-card.ds-hand-building {
+  --ds-hand-frame: #555c66;
+  --ds-hand-frame-hi: #a7b0bb;
+  --ds-hand-face: linear-gradient(170deg, #e7e9ec, #c4c9cf);
+  --ds-hand-band: linear-gradient(#5f6670, #353a41);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bub-card.ds-hand-card {
+    --ds-hand-face: linear-gradient(170deg, #3a2c1c, #241a10);
+    --ds-hand-ink: #f2e6cf;
+  }
+  .bub-card.ds-hand-card.ds-hand-spell {
+    --ds-hand-face: linear-gradient(170deg, #2e2745, #1d1830);
+  }
+  .bub-card.ds-hand-card.ds-hand-trap {
+    --ds-hand-face: linear-gradient(170deg, #3d1a16, #24100d);
+  }
+  .bub-card.ds-hand-card.ds-hand-quest {
+    --ds-hand-face: linear-gradient(170deg, #3d3214, #241d0a);
+  }
+  .bub-card.ds-hand-card.ds-hand-building {
+    --ds-hand-face: linear-gradient(170deg, #343840, #22252a);
+  }
+}
+
+/* Form je Art: Falle mit abgeschrägten Ecken, Bau eckig. */
+.bub-card.ds-hand-card.ds-hand-trap .bub-game-card-anki {
+  border-radius: 0;
+  clip-path: polygon(8% 0, 92% 0, 100% 6%, 100% 94%, 92% 100%, 8% 100%, 0 94%, 0 6%);
+}
+
+.ds-card.ds-card.ds-card:has(> .ds-hand-building),
+.bub-card.ds-hand-card.ds-hand-building {
+  border-radius: 4%;
+}
+
+.bub-card.ds-hand-card .bub-game-card-anki-html > * {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 4.5cqw 4.5cqw 3cqw;
+  border: 3.5cqw solid var(--ds-hand-frame);
+  border-radius: inherit;
+  background: var(--ds-hand-face);
+  box-shadow: inset 0 0 0 1px var(--ds-hand-frame-hi);
+  color: var(--ds-hand-ink);
+  font-size: 9cqw;
+}
+
+.bub-card.ds-hand-card.ds-hand-trap .bub-game-card-anki-html > * {
+  border-radius: 0;
+}
+
+/* Bildfenster: Tiere mit Bogen oben, Kniffe und Fallen rechteckig, Aufgaben rund. */
+.bub-card.ds-hand-card .bub-combat-media {
+  order: 1;
+  flex: 0 0 56%;
+  min-height: 0;
+  margin: 0;
+  border-radius: 50% 50% 8% 8% / 34% 34% 6% 6%;
+  background: rgb(0 0 0 / 0.12);
+  box-shadow: 0 0 0 1.5px var(--ds-hand-frame);
+  overflow: hidden;
+}
+
+.bub-card.ds-hand-card.ds-hand-spell .bub-combat-media,
+.bub-card.ds-hand-card.ds-hand-trap .bub-combat-media,
+.bub-card.ds-hand-card.ds-hand-building .bub-combat-media {
+  border-radius: 6%;
+}
+
+.bub-card.ds-hand-card.ds-hand-quest .bub-combat-media {
+  border-radius: 50%;
+}
+
+.bub-card.ds-hand-card .bub-combat-image {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 32cqw;
+}
+
+.bub-card.ds-hand-card .bub-combat-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  object-position: 50% 35%;
+}
+
+/* Namensband überlappt den unteren Rand des Bilds. */
+.bub-card.ds-hand-card .bub-combat-header {
+  order: 2;
+  position: relative;
+  z-index: 1;
+  display: block;
+  flex: none;
+  margin: -5cqw -3cqw 0;
+}
+
+.bub-card.ds-hand-card .bub-combat-cost,
+.bub-card.ds-hand-card .bub-combat-tribe,
+.bub-card.ds-hand-card .bub-combat-badges,
+.bub-card.ds-hand-card .bub-combat-keywords,
+.bub-card.ds-hand-card .bub-combat-quote,
+.bub-card.ds-hand-card .bub-combat-footer,
+.bub-card.ds-hand-card .bub-card-runtime-hint {
+  display: none;
+}
+
+.bub-card.ds-hand-card .bub-combat-title-bar {
+  padding: 1.5cqw 3cqw;
+  border-radius: 2.5cqw;
+  background: var(--ds-hand-band);
+  box-shadow:
+    0 0 0 1px var(--ds-hand-frame-hi),
+    0 1px 3px rgb(0 0 0 / 0.45);
+  text-align: center;
+}
+
+.bub-card.ds-hand-card .bub-combat-name {
+  font-size: 11cqw;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #fff6e0;
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Kurzzeile: eine Zeile Regeltext zwischen Angriff und Leben, bei Kniffen ohne Werte zwei Zeilen. */
+.bub-card.ds-hand-card .bub-combat-body {
+  order: 3;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  margin: 0;
+  padding: 1cqw 24cqw 0;
+  border-radius: 0;
+  background: none;
+  text-align: center;
+  font-size: 8.5cqw;
+  line-height: 1.15;
+}
+
+.bub-card.ds-hand-card.ds-hand-spell .bub-combat-body,
+.bub-card.ds-hand-card.ds-hand-trap .bub-combat-body,
+.bub-card.ds-hand-card.ds-hand-quest .bub-combat-body {
+  padding-inline: 2cqw;
+}
+
+.bub-card.ds-hand-card .bub-combat-rules {
+  margin: 0;
+  color: inherit;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.bub-card.ds-hand-card.ds-hand-spell .bub-combat-rules,
+.bub-card.ds-hand-card.ds-hand-trap .bub-combat-rules,
+.bub-card.ds-hand-card.ds-hand-quest .bub-combat-rules {
+  -webkit-line-clamp: 2;
+}
+
+/* Mit Schlüsselwörtern zeigt die Kurzzeile deren Zeichen statt des Texts. */
+.bub-card.ds-hand-card.ds-hand-marked .bub-combat-rules {
+  visibility: hidden;
+}
+
+.ds-hand-card .ds-hand-marks {
+  position: absolute;
+  left: 50%;
+  bottom: 4cqw;
+  translate: -50% 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.ds-hand-card .ds-hand-more {
+  font-weight: 800;
+  font-size: 9cqw;
+  color: var(--ds-hand-ink);
+}
+
+.ds-hand-card .ds-hand-cost,
+.ds-hand-card .ds-hand-atk,
+.ds-hand-card .ds-hand-hp {
+  position: absolute;
+  z-index: 3;
+}
+
+.ds-hand-card .ds-hand-cost {
+  top: 1cqw;
+  left: 1cqw;
+}
+
+.ds-hand-card .ds-hand-atk {
+  bottom: 1cqw;
+  left: 1cqw;
+}
+
+.ds-hand-card .ds-hand-hp {
+  bottom: 1cqw;
+  right: 1cqw;
+}
+
+/* Tauschen und Flüchtig rücken nach oben rechts, weg von den Werten. */
+.ds-card .ds-card-trade {
+  left: auto;
+  right: 2px;
+  top: 2px;
+  bottom: auto;
+  z-index: 4;
+}
+
+.ds-card .ds-card-fleeting {
+  right: 3px;
+  top: 30px;
+  bottom: auto;
+  z-index: 4;
+}

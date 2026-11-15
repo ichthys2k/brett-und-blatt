@@ -1,6 +1,7 @@
 import type { ClockReading } from '@brett-und-blatt/engine';
 import type { ReactNode } from 'react';
-import { renderAvatar } from './avatarRenderer';
+import { avatarImageOf, renderAvatar } from './avatarRenderer';
+import { useInspectProps } from './inspect/CardInspect';
 
 /** Ring um das Spielerzeichen, der mit der Zeit abläuft. */
 export function ClockRing({ clock, children }: { clock: ClockReading | null; children: ReactNode }) {
@@ -48,8 +49,11 @@ export interface PlayerChipProps {
 /** Ein Platz in der Spielerleiste: Zeichen mit Uhr-Ring, Name, Zustand. */
 export function PlayerChip({ name, symbol, avatar, detail, active, thinking, away, winner, clock, score }: PlayerChipProps) {
   const time = clock && clock.kind !== 'none' && clock.running ? formatClock(clock) : null;
+  // Großansicht des gemalten Avatars (#422): beim Überfahren, Rechtsklick oder langem Drücken.
+  const image = avatar ? avatarImageOf(avatar) : undefined;
+  const inspect = useInspectProps(image ? () => ({ title: name, subtitle: detail, image: { src: image, aspect: 1, round: true }, emoji: avatar }) : undefined);
   return (
-    <div className="bub-chip" data-active={active || undefined} data-winner={winner || undefined} aria-current={active ? 'true' : undefined}>
+    <div className="bub-chip" data-active={active || undefined} data-winner={winner || undefined} aria-current={active ? 'true' : undefined} {...inspect}>
       <ClockRing clock={clock}>{symbol}</ClockRing>
       <span className="bub-chip-text">
         <span className="bub-chip-name">

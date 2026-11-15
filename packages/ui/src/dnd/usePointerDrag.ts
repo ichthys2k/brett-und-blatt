@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
+import { INSPECT_OPEN_EVENT } from '../inspect/CardInspect';
 import type { DragState, Point, PointerDragControls, UsePointerDragOptions } from './types';
 
 const INITIAL_STATE = {
@@ -162,12 +163,18 @@ export function usePointerDrag<T>({
       // Bilder sind im Browser von Haus aus ziehbar: Mit der Maus startete sonst ein eigenes Bild-Ziehen
       // (dragstart, danach pointercancel), und Karten mit gemaltem Bild ließen sich nicht ziehen (#421).
       const preventNativeDrag = (dragEv: DragEvent) => dragEv.preventDefault();
+      // Geht beim langen Drücken die Großansicht auf (#422), ist das kein Klick und kein Ziehen mehr.
+      const onInspectOpen = () => {
+        cleanupWindowListeners();
+        cancelDrag();
+      };
 
       const cleanupWindowListeners = () => {
         window.removeEventListener('pointermove', onWindowPointerMove);
         window.removeEventListener('pointerup', onWindowPointerUp);
         window.removeEventListener('pointercancel', onWindowPointerCancel);
         window.removeEventListener('dragstart', preventNativeDrag, true);
+        window.removeEventListener(INSPECT_OPEN_EVENT, onInspectOpen);
       };
 
       const onWindowPointerUp = (upEv: PointerEvent) => {
@@ -227,6 +234,7 @@ export function usePointerDrag<T>({
       window.addEventListener('pointerup', onWindowPointerUp);
       window.addEventListener('pointercancel', onWindowPointerCancel);
       window.addEventListener('dragstart', preventNativeDrag, true);
+      window.addEventListener(INSPECT_OPEN_EVENT, onInspectOpen);
     },
     [disabled, threshold, targetAttribute, cancelDrag],
   );
