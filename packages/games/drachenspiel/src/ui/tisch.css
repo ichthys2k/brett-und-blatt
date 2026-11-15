@@ -50,26 +50,14 @@
 /* Hochformat und schmale Arena (S6, #429): Helden schmal in den Ecken – Wappen, Wimpel als Zahl,
    Rüstung und Knappenleiste; Wimpelreihe und Hausband zeigt das Antippen bzw. die Großansicht. */
 @container ds-arena (max-width: 560px) {
-  .ds-arena .ds-hero-card .ds-tribune,
-  .ds-arena .ds-hero-card .ds-hero-house-banner {
-    display: none;
-  }
+  
 
   .ds-arena .ds-hero-card {
     padding: 3px 8px 3px 4px;
     gap: 6px;
   }
 
-  .ds-arena .ds-hero-avatar-frame {
-    width: 32px;
-    height: 36px;
-  }
-
-  .ds-arena .ds-hero-card .ds-hero-badges {
-    max-width: none;
-    flex-wrap: wrap;
-    gap: 3px;
-  }
+  
 
   .ds-arena .ds-opponent-zone,
   .ds-arena .ds-player-zone {
@@ -129,10 +117,6 @@
   color: var(--ds-plate-ink);
   box-shadow: 0 3px 12px rgb(0 0 0 / 0.45);
   backdrop-filter: blur(3px);
-}
-
-.ds-arena .ds-hero-card .ds-hero-name {
-  color: var(--ds-plate-ink);
 }
 
 /* Zähler und Knöpfe neben den Helden */
@@ -196,15 +180,7 @@
     gap: 6px;
   }
 
-  .ds-arena .ds-hero-card .ds-tribune,
-  .ds-arena .ds-hero-card .ds-hero-house-banner {
-    display: none;
-  }
-
-  .ds-arena .ds-hero-avatar-frame {
-    width: 30px;
-    height: 34px;
-  }
+  
 
   .ds-arena .ds-opponent-zone,
   .ds-arena .ds-player-zone {
