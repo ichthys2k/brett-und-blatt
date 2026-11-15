@@ -2,14 +2,15 @@ import { useSyncExternalStore } from 'react';
 
 /**
  * Figurensätze der Brettspiele (#325): „classic“ ist die heutige Darstellung (Zeichen und gezeichnete Formen),
- * die drei anderen sind gemalte Bilder. Die Wahl gilt je Spiel und Gerät.
+ * „bold“ sind wuchtige SVG-Figuren für Schach/Vierer-Schach, die übrigen drei sind gemalte Bilder. Die Wahl gilt je Spiel und Gerät.
  */
-export type PieceSetId = 'classic' | 'wood' | 'metal' | 'fable';
+export type PieceSetId = 'classic' | 'bold' | 'wood' | 'metal' | 'fable';
 
-export const PIECE_SET_IDS: readonly PieceSetId[] = ['classic', 'wood', 'metal', 'fable'];
+export const PIECE_SET_IDS: readonly PieceSetId[] = ['classic', 'bold', 'wood', 'metal', 'fable'];
 
 export const PIECE_SET_LABELS: Record<PieceSetId, string> = {
   classic: 'Klassisch',
+  bold: 'Wuchtig',
   wood: 'Holz',
   metal: 'Metall',
   fable: 'Märchen',

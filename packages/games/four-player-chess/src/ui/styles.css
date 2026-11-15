@@ -57,6 +57,11 @@
   paint-order: stroke fill;
 }
 
+.fc-board .fc-piece {
+  font-size: 122cqmin;
+  translate: 0 -18%;
+}
+
 .fc-r {
   color: #d62828;
 }

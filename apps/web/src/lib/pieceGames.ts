@@ -12,12 +12,13 @@ export interface PieceGame {
   previews: Partial<Record<PieceSetId, string>>;
 }
 
-const FILES = import.meta.glob<string>('../../../../packages/games/*/src/ui/figuren/*.webp', { eager: true, query: '?url', import: 'default' });
+const FILES = import.meta.glob<string>('../../../../packages/games/*/src/ui/figuren/*.{webp,svg}', { eager: true, query: '?url', import: 'default' });
 
-/** Vorschau eines Satzes: Bild `<satz>-<figur>.webp` im Figuren-Ordner des Spiels. */
+/** Vorschau eines Satzes: Bild `<satz>-<figur>.{webp,svg}` im Figuren-Ordner des Spiels. */
 function previews(game: string, piece: string): PieceGame['previews'] {
-  const find = (set: string) => Object.entries(FILES).find(([path]) => path.includes(`/games/${game}/`) && path.endsWith(`/${set}-${piece}.webp`))?.[1];
-  return { wood: find('wood'), metal: find('metal'), fable: find('fable') };
+  const find = (set: string) =>
+    Object.entries(FILES).find(([path]) => path.includes(`/games/${game}/`) && (path.endsWith(`/${set}-${piece}.svg`) || path.endsWith(`/${set}-${piece}.webp`)))?.[1];
+  return { bold: find('bold'), wood: find('wood'), metal: find('metal'), fable: find('fable') };
 }
 
 export const PIECE_GAMES: readonly PieceGame[] = [

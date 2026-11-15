@@ -424,6 +424,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
                   return movable.has(index) || targets.has(index) || Boolean(isOwnPiece) || selected !== null;
                 }}
                 onActivate={(dc, dr) => tap(toBoard(dc, dr, perspective))}
+                cellProps={(_dc, dr) => ({ style: { zIndex: dr + 1 } })}
                 cellClassName={(dc, dr) => {
                   const index = toBoard(dc, dr, perspective);
                   const row = Math.floor(index / 14);

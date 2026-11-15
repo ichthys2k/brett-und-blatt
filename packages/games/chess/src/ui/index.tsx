@@ -506,13 +506,16 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
             onActivate={(dc, dr) => tap(toBoard(dc, dr))}
             cellProps={(dc, dr) => {
               const index = toBoard(dc, dr);
-              if (reviewing) return {};
+              const isDragged = (dragState.isDragging || dragState.snapping) && dragState.item === index;
+              const baseStyle: CSSProperties = { zIndex: isDragged ? 50 : dr + 1 };
+              if (reviewing) return { style: baseStyle };
               const piece = board[index];
               const isTarget = dragTargets !== null && dragTargets.has(index);
               const isDropActive = isTarget && dragState.targetId === String(index);
               const draggable = canPremove ? preMovable.has(index) : movable.has(index) || (piece && piece.white === whiteToMove);
               const dragBind = draggable ? bindDrag(index) : undefined;
               return {
+                style: baseStyle,
                 'data-drop-target': String(index),
                 'data-drop-active': isDropActive ? 'true' : undefined,
                 ...dragBind,
