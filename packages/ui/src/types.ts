@@ -1,6 +1,6 @@
 import type { ClockReading, GameEvent, Options, Result, SeatId } from '@brett-und-blatt/engine';
 import type { ComponentType, ReactNode } from 'react';
-import type { SoundMap } from './audio/sound';
+import type { HapticMap, SoundMap } from './audio/sound';
 
 export interface BoardProps<V, M> {
   view: V;
@@ -122,6 +122,8 @@ export interface GameUi<V = unknown, M = unknown> {
   phrases?: readonly string[];
   /** Klänge zu den Ereignissen, z. B. `{ placed: 'stein-setzen' }`. Sieg, Niederlage und Zeit vertont die Plattform selbst. */
   sounds?: SoundMap;
+  /** Spielspezifische Vibrationsmuster (z. B. je Kreatur oder Zauber); hat Vorrang vor der klangbasierten Vibration. */
+  haptics?: HapticMap;
   /**
    * Alle spielen gleichzeitig und unabhängig (z. B. Narrenhof): Klänge zu Ereignissen anderer Plätze
    * bleiben stumm, man hört nur die eigenen. Ereignisse ohne Platz (Rundenstart, Spielende) klingen weiter.

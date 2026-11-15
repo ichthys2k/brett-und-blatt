@@ -164,7 +164,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const soundSettings = useSoundSettings();
   const playMusic = !soundSettings.musicOff && (!isClient || Boolean(soundSettings.clientMusic));
 
-  useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined, ui.ownSoundsOnly);
+  useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined, ui.ownSoundsOnly, ui.haptics);
   useGameMusic(info.id, playMusic && !info.ownMusic);
   useGameScene(info.id);
 
