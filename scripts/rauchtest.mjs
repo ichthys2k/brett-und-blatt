@@ -147,6 +147,11 @@ try {
       if (m.type() === 'error' && !/Failed to load resource|klaenge|\.mp3|bibelquiz\/fragen|wortspiele\/|klassenspiele\//i.test(m.text())) errors.push(m.text());
     });
     try {
+      await page.goto(`${base}#/neu/${id}`);
+      await page.locator('h1').waitFor({ timeout: 10_000 });
+      const setupOverflow = await page.evaluate(() => Math.round(document.documentElement.scrollWidth - window.innerWidth));
+      if (setupOverflow > 1) problems.push(`${id}: Einrichtung ragt ${setupOverflow} px über den rechten Rand`);
+
       const m = await startGame(page, id);
       fresh.set(id, m);
       await firstSteps[id]?.(page);
