@@ -28,6 +28,7 @@ Für die Grafik-Pakete G2 bis G10 und G12 liegen fertige Manifeste in `scripts/g
 | Paket | Issue | Manifest(e) |
 |---|---|---|
 | G2 Drachenspiel-Karten | #309 | `drachenspiel-karten.json` (alle Karten aus `CARDS_DB`) |
+| Drachenspiel Tischansicht T0/T1 | #426, #427 | `drachenspiel-tische.json` (6 Häuser × Hoch- und Querformat, 12 Motive) |
 | G3 Bot-Porträts | #311 | `bots.json` |
 | G4 Avatare | #312 | `avatare.json` |
 | G5 Tischflächen | #313 | `tische.json` |
