@@ -1,32 +1,3 @@
-/* Kulisse der Vorphasen (Deckwahl, Starthand): wird durch das Themenhaus des Gegners bestimmt
-   (unter einem Schleier in der Flächenfarbe). Die Arena selbst zeigt den gemalten Tisch (tisch.css). */
-.ds-phase-overlay {
-  --ds-bg-image: url('./kulissen/drachenarena.webp');
-  background:
-    linear-gradient(
-      color-mix(in srgb, var(--color-surface, #ffffff) 48%, transparent),
-      color-mix(in srgb, var(--color-surface, #ffffff) 74%, transparent)
-    ),
-    var(--ds-bg-image) center / cover no-repeat;
-  border-radius: 16px;
-}
-
-.ds-phase-overlay[data-theme='forest'] {
-  --ds-bg-image: url('./kulissen/wald.webp');
-}
-.ds-phase-overlay[data-theme='sea'] {
-  --ds-bg-image: url('./kulissen/meer.webp');
-}
-.ds-phase-overlay[data-theme='farm'] {
-  --ds-bg-image: url('./kulissen/bauernhof.webp');
-}
-.ds-phase-overlay[data-theme='wild'] {
-  --ds-bg-image: url('./kulissen/wildnis.webp');
-}
-.ds-phase-overlay[data-theme='bugs'] {
-  --ds-bg-image: url('./kulissen/krabbeltiere.webp');
-}
-
 .ds-arena {
   display: flex;
   flex-direction: column;
