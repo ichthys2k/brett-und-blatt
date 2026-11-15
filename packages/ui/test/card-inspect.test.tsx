@@ -79,6 +79,14 @@ describe('useInspectProps', () => {
     expect(keys).toEqual(['onBlur', 'onContextMenu', 'onFocus', 'onKeyDown', 'onPointerDown', 'onPointerEnter', 'onPointerLeave', 'title']);
   });
 
+  it('eigene Darstellung (body) ersetzt die Standardansicht, Schließen bleibt', () => {
+    const html = renderToStaticMarkup(<InspectBody content={{ ...content, body: <div className="probe-karte">Karte</div> }} onClose={() => undefined} />);
+    expect(html).toContain('bub-inspect-custom');
+    expect(html).toContain('probe-karte');
+    expect(html).not.toContain('bub-inspect-title');
+    expect(html).toContain('Schließen');
+  });
+
   it('useInspect ohne Provider tut nichts', () => {
     let ok = false;
     function Open() {

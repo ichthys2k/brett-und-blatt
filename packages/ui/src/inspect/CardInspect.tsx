@@ -63,6 +63,12 @@ export interface InspectContent {
   quote?: string;
   stats?: InspectStat[];
   footer?: ReactNode;
+  /**
+   * Eigene Darstellung des ganzen Inhalts (z. B. die Karte im Rahmen des Spiels, #437). Ersetzt Bild,
+   * Titel, Werte und Text der Standardansicht; die übrigen Felder bleiben die Beschreibung (Titel als
+   * Name des Fensters, Tests, Spiele ohne eigene Darstellung). Nur aus der Sicht, nichts Verdecktes.
+   */
+  body?: ReactNode;
 }
 
 /** Inhalt oder eine Funktion, die ihn erst beim Ansehen baut (spart Arbeit bei vielen Karten). */
@@ -338,6 +344,18 @@ export function InspectBody({ content, onClose, closeRef }: { content: InspectCo
   const [broken, setBroken] = useState(false);
   useEffect(() => setBroken(false), [content.image?.src]);
   const showArt = Boolean(content.image) && !broken;
+  if (content.body) {
+    return (
+      <div className="bub-inspect-body bub-inspect-custom">
+        {content.body}
+        {onClose && (
+          <button ref={closeRef} type="button" className="bub-inspect-close" onClick={onClose}>
+            Schließen
+          </button>
+        )}
+      </div>
+    );
+  }
   return (
     <div className={`bub-inspect-body ${showArt ? 'bub-inspect-has-art' : ''}`}>
       {showArt && content.image ? (

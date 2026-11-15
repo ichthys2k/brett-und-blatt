@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   BUB_COMBAT_CARD_FIELDS,
   BUB_COMBAT_CARD_NOTETYPE,
@@ -12,11 +12,15 @@ import type { CardDefinition, HousePower, Minion } from '../types';
 import { cardOrigin, getCardTraits, getMinionTraits, type TraitInfo } from './traits';
 import { uiCard } from './cardLookup';
 import { cardArtOf, cardArtUrl, withCardArt } from './cardArt';
-import { KeywordMark, StatGem } from './symbole';
+import { KEYWORD_SYMBOLS, KeywordMark, StatGem, type StatState } from './symbole';
+import type { KeywordId } from '../types';
 
 const baseCombatNotes = new Map<string, AnkiNote>();
 /** Stelle des Felds „Bild“ in der Anki-Kampfkarte (eigene Kartensets bringen dort ihr Bild mit). */
 export const BILD_FIELD = BUB_COMBAT_CARD_FIELDS.indexOf('Bild');
+const RULES_FIELD = BUB_COMBAT_CARD_FIELDS.indexOf('Regeltext');
+/** Feldinhalt einer Anki-Notiz als schlichter Text (ohne Auszeichnung). */
+const plainText = (html: string | undefined) => (html ?? '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 
 export function getCombatCardBaseNote(def: CardDefinition): AnkiNote {
   let note = baseCombatNotes.get(def.id);
@@ -103,14 +107,22 @@ export function CardFace({
   def,
   currentAttack,
   currentHealth,
+  attackState,
+  healthState,
   hint,
   className = '',
+  children,
 }: {
   def: CardDefinition;
   currentAttack?: number;
   currentHealth?: number;
+  /** Verstärkt oder verletzt (nur für Tiere auf dem Feld in der Großansicht). */
+  attackState?: StatState;
+  healthState?: StatState;
   hint?: string;
   className?: string;
+  /** Zusätzlicher Inhalt auf der Karte (Textfeld der Zoomkarte). */
+  children?: ReactNode;
 }) {
   const cosmetics = useCardCosmetics();
   const overrideNote = useCardOverride(def.id);
@@ -140,8 +152,8 @@ export function CardFace({
       label={`${def.name}, Kosten ${def.cost} Knappen${attack !== undefined ? `, Angriff ${attack}` : ''}${health !== undefined ? `, Leben ${health}` : ''}`}
     >
       <StatGem kind="cost" value={def.cost} size="hand" className="ds-hand-cost" />
-      {attack !== undefined && <StatGem kind="attack" value={attack} size="hand" className="ds-hand-atk" />}
-      {health !== undefined && <StatGem kind="health" value={health} size="hand" className="ds-hand-hp" />}
+      {attack !== undefined && <StatGem kind="attack" value={attack} state={attackState} size="hand" className="ds-hand-atk" />}
+      {health !== undefined && <StatGem kind="health" value={health} state={healthState} size="hand" className="ds-hand-hp" />}
       {keywords.length > 0 && (
         <span className="ds-hand-marks">
           {keywords.slice(0, HAND_MARKS).map((keyword) => (
@@ -150,6 +162,7 @@ export function CardFace({
           {keywords.length > HAND_MARKS && <span className="ds-hand-more">+{keywords.length - HAND_MARKS}</span>}
         </span>
       )}
+      {children}
     </GameCard>
   );
 }
@@ -174,6 +187,50 @@ export type ZoomItem = { kind: 'card'; defId: string } | { kind: 'minion'; minio
 export type ZoomCosmetics = Pick<CardCosmetics, 'ankiOverrides' | 'mediaUrlMap'>;
 
 const statChange = (value: number, base: number): 'up' | 'down' | undefined => (value > base ? 'up' : value < base ? 'down' : undefined);
+const stateOf = (change: 'up' | 'down' | undefined): StatState => (change === 'up' ? 'buffed' : change === 'down' ? 'hurt' : 'base');
+
+/**
+ * Zoomkarte (#437, Strang #425, Glied S4): die Handkarte groß mit vollem Regeltext, darunter jede
+ * Eigenschaft mit Zeichen, Name und Beschreibung, Herkunft und Spruch. Nur aus der Sicht.
+ */
+function ZoomCard({ def, minion, traits, rules, origin, quote }: { def: CardDefinition; minion: Minion | null; traits: TraitInfo[]; rules?: string; origin: string; quote?: string }) {
+  return (
+    <div className="ds-zoom-card">
+      <CardFace
+        def={def}
+        currentAttack={minion?.attack}
+        currentHealth={minion?.health}
+        attackState={minion ? stateOf(statChange(minion.attack, minion.baseAttack)) : undefined}
+        healthState={minion ? (minion.health < minion.maxHealth ? 'hurt' : stateOf(statChange(minion.maxHealth, minion.baseHealth))) : undefined}
+        className="ds-zoom-face"
+      >
+        <div className="ds-zoom-text">
+          {rules && <p className="ds-zoom-rules">{rules}</p>}
+          {traits.length > 0 && (
+            <ul className="ds-zoom-traits">
+              {traits.map((trait) => (
+                <li key={trait.id}>
+                  {trait.id in KEYWORD_SYMBOLS ? (
+                    <KeywordMark keyword={trait.id as KeywordId} size="zoom" />
+                  ) : (
+                    <span className="ds-zoom-emoji" aria-hidden="true">
+                      {trait.emoji}
+                    </span>
+                  )}
+                  <span>
+                    <strong>{trait.name}:</strong> {trait.description}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </CardFace>
+      {origin && <p className="ds-zoom-origin">{origin}</p>}
+      {quote && <p className="ds-zoom-quote">„{quote}“</p>}
+    </div>
+  );
+}
 
 /**
  * Inhalt der Großansicht (#418, früher `CardZoom`): gemaltes Bild (#417; ein Bild aus dem Anki-Feld
@@ -196,7 +253,8 @@ export function zoomContent(item: ZoomItem, cosmetics: ZoomCosmetics): InspectCo
   const minion = item.kind === 'minion' ? item.minion : null;
   const traits = minion ? getMinionTraits(minion) : getCardTraits(def);
   const quote = minion?.quote ?? def.quote;
-  const bild = getNoteField(cardOverrideOf(cosmetics.ankiOverrides, def.id), BILD_FIELD);
+  const override = cardOverrideOf(cosmetics.ankiOverrides, def.id);
+  const bild = getNoteField(override, BILD_FIELD);
   const art = cardArtUrl(def.id, bild, cosmetics.mediaUrlMap);
   const stats: InspectStat[] = [{ label: 'Kosten', value: String(def.cost), tone: 'cost' }];
   if (!def.isSpell && !def.quest) {
@@ -219,6 +277,8 @@ export function zoomContent(item: ZoomItem, cosmetics: ZoomCosmetics): InspectCo
     lines: def.text ? [def.text] : undefined,
     keywords: traits.map((trait) => ({ emoji: trait.emoji, name: trait.name, text: trait.description })),
     quote: quote || undefined,
+    // Ein eigenes Kartenset darf den Regeltext ersetzen, wie es auch das Bild ersetzt.
+    body: <ZoomCard def={def} minion={minion} traits={traits} rules={plainText(getNoteField(override, RULES_FIELD)) || def.text} origin={cardOrigin(def)} quote={quote || undefined} />,
   };
 }
 

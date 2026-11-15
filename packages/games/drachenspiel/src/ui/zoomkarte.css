@@ -1,0 +1,99 @@
+/* Zoomkarte des Drachenspiels (#437, Strang #425, Glied S4): Die Großansicht zeigt die Handkarte (S3)
+   groß mit vollem Regeltext, darunter jede Eigenschaft mit Zeichen und Beschreibung, Herkunft und
+   Spruch. Der gemeinsame Baustein CardInspect bleibt; das Drachenspiel füllt `InspectContent.body`. */
+
+.ds-zoom-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+}
+
+/* Die Bilder sind 360 px breit; die Karte bleibt darunter und passt in niedrige Fenster. */
+.ds-zoom-card .bub-card.ds-hand-card.ds-zoom-face {
+  display: block;
+  flex: none;
+  width: min(100%, 300px, calc(62vh * 5 / 7));
+  height: auto;
+  aspect-ratio: 5 / 7;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.35);
+}
+
+.ds-zoom-card .ds-zoom-face .bub-combat-media {
+  flex-basis: 50%;
+}
+
+/* Das Textfeld der Vorlage (Kurzzeile) weicht dem vollen Text samt Eigenschaften mit Zeichen. */
+.ds-zoom-card .bub-card.ds-zoom-face .bub-combat-body,
+.ds-zoom-card .ds-zoom-face .ds-hand-marks {
+  visibility: hidden;
+}
+
+.ds-zoom-text {
+  position: absolute;
+  z-index: 2;
+  top: 63%;
+  left: 7cqw;
+  right: 7cqw;
+  bottom: 16cqw;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5cqw;
+  color: var(--ds-hand-ink);
+  font-size: 5.2cqw;
+  line-height: 1.3;
+  text-align: left;
+  --ds-sym-mark-zoom: 7.5cqw;
+}
+
+.ds-hand-spell .ds-zoom-text,
+.ds-hand-trap .ds-zoom-text,
+.ds-hand-quest .ds-zoom-text {
+  bottom: 6cqw;
+}
+
+.ds-zoom-rules {
+  margin: 0;
+}
+
+.ds-zoom-traits {
+  display: grid;
+  gap: 1.2cqw;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ds-zoom-traits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 2cqw;
+}
+
+.ds-zoom-emoji {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--ds-sym-mark-zoom);
+  height: var(--ds-sym-mark-zoom);
+  border-radius: 50%;
+  background: #f6ecd6;
+  box-shadow: 0 0 0 1.5px #1a120a;
+  font-size: calc(var(--ds-sym-mark-zoom) * 0.6);
+  line-height: 1;
+}
+
+.ds-zoom-origin,
+.ds-zoom-quote {
+  width: 100%;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-muted, #5d646d);
+}
+
+.ds-zoom-quote {
+  font-style: italic;
+}
