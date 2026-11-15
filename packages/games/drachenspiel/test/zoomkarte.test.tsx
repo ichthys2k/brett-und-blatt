@@ -21,6 +21,9 @@ describe('Drachenspiel Zoomkarte (#437)', () => {
     expect(html).toContain('Schließen');
     // Die Beschreibung für Titel und Tests bleibt erhalten.
     expect(content.title).toBe(def.name);
+    // Ohne Fensterrahmen: Antippen der Karte schließt, kein eigener Knopf im Fenster.
+    expect(content.bare).toBe(true);
+    expect(html).toContain('ds-zoom-origin');
     expect(content.stats?.map((s) => s.label)).toEqual(['Kosten', 'Angriff', 'Leben']);
   });
 

@@ -87,6 +87,12 @@ describe('useInspectProps', () => {
     expect(html).toContain('Schließen');
   });
 
+  it('ohne Rahmen (bare) zeigt die eigene Darstellung ohne Knopf „Schließen“', () => {
+    const html = renderToStaticMarkup(<InspectBody content={{ ...content, body: <div className="probe-karte">Karte</div>, bare: true }} />);
+    expect(html).toContain('probe-karte');
+    expect(html).not.toContain('Schließen');
+  });
+
   it('useInspect ohne Provider tut nichts', () => {
     let ok = false;
     function Open() {
