@@ -1692,7 +1692,7 @@ button.cs-tile {
   grid-template-rows: minmax(0, 1fr) auto auto;
   grid-template-areas:
     'stage stage stage'
-    'play hand discard'
+    'discard hand play'
     '. meta .';
   min-height: 0;
 }
@@ -1726,13 +1726,13 @@ button.cs-tile {
   display: contents;
 }
 
-.cs-bigmode .cs-actions > .cs-btn:first-child {
+.cs-bigmode .cs-actions > .cs-btn-play {
   grid-area: play;
   align-self: center;
   justify-self: stretch;
 }
 
-.cs-bigmode .cs-actions > .cs-btn:last-child {
+.cs-bigmode .cs-actions > .cs-btn-discard {
   grid-area: discard;
   align-self: center;
   justify-self: stretch;
