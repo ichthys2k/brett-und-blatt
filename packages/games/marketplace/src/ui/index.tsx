@@ -1,4 +1,4 @@
-import { Die3D, useRollCounter, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { Die3D, useInspect, useRollCounter, type BoardProps, type GameUi, type InspectContent } from '@brett-und-blatt/ui';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { CARD_TEXT, FAMILIES, FAMILY_COLORS, FAMILY_ICONS, FIELD_COUNT, FIELD_ICONS, FIELD_NAMES, GUILDS, NEWS_TEXT, SEASONS, guildOf, priceOf, type CardId, type NewsId } from '../board';
@@ -83,6 +83,25 @@ function fieldInfo(view: MarketView, field: number, name: (seat: SeatId) => stri
   const g = guildOf(field);
   const owner = view.owner[field]!;
   return { g, owner, ownerName: owner >= 0 ? name(owner) : null, rent: rentOf(view, field) };
+}
+
+/** Inhalt der Großansicht eines Feldes (#422): nur, was auch das Feldblatt zeigt. */
+function fieldInspect(view: MarketView, field: number, name: (seat: SeatId) => string): InspectContent {
+  const { g, ownerName } = fieldInfo(view, field, name);
+  const guild = g !== null && g >= 0 ? GUILDS[g]! : null;
+  const figure = figureForField(field);
+  const art = fieldGraphicFor(field) ?? figure?.image;
+  const lines: string[] = [];
+  if (figure) lines.push(`${figure.name}, ${figure.title}`);
+  else if (SPECIAL[field]) lines.push(SPECIAL[field]!);
+  if (g !== null) lines.push(ownerName ? `Gehört ${ownerName}` : `Frei, Preis ${priceOf(field)} 🥨`);
+  return {
+    title: `${FIELD_ICONS[field]} ${FIELD_NAMES[field]}`,
+    subtitle: guild ? `Zunft der ${guild.name}` : undefined,
+    image: art ? { src: art, aspect: 1 } : undefined,
+    lines: lines.length > 0 ? lines : undefined,
+    quote: figure ? (field === 9 ? jesterJoke(view.round) : figure.quote) : undefined,
+  };
 }
 
 function FieldSheet({ view, field, name, onClose }: { view: MarketView; field: number; name: (seat: SeatId) => string; onClose(): void }) {
@@ -436,6 +455,8 @@ function Actions({ view, seat, legalMoves, hint, onMove, name, openManage, openT
 }
 
 function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint }: Props) {
+  // Großansicht (#422): Feldbild bzw. Figur mit Name, Zunft und Preis beim Überfahren; Antippen öffnet weiter das Feldblatt.
+  const inspect = useInspect();
   const name = (seat: SeatId) => seatNames[seat] ?? `Familie ${FAMILIES[seat]}`;
   const seat = typeof viewer === 'number' ? viewer : null;
   const [sheet, setSheet] = useState<'manage' | 'trade' | null>(null);
@@ -485,6 +506,7 @@ function Board({ view, legalMoves, onMove, events, viewer, seatNames, hint }: Pr
               data-mortgaged={view.mortgaged[field] || undefined}
               data-pick={wellChoices.has(field) || undefined}
               aria-label={`${FIELD_NAMES[field]}${owner >= 0 ? `, gehört ${name(owner)}` : g !== null ? ', frei' : ''}`}
+              {...inspect.props(graphic ? () => fieldInspect(view, field, name) : undefined, {}, { hover: true })}
               onClick={() => tapField(field)}
             >
               {g !== null && <span className="mkt-strip" style={{ background: g >= 0 ? GUILDS[g]!.color : '#a8a29e' }} />}

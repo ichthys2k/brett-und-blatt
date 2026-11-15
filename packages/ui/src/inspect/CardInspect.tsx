@@ -86,6 +86,8 @@ export interface InspectApi {
 }
 
 export const INSPECT_HOVER_DELAY_MS = 300;
+/** Ereignis am Fenster, wenn das Fenster der Großansicht aufgeht. */
+export const INSPECT_OPEN_EVENT = 'bub-inspect-open';
 export const INSPECT_PRESS_MS = 450;
 const MOVE_TOLERANCE_PX = 8;
 /** Unterhalb dieser Fensterbreite gibt es nur das Fenster, keine schwebende Ansicht. */
@@ -127,6 +129,8 @@ export function CardInspectProvider({ children }: { children: ReactNode }) {
       if (!content) return;
       hideFloat();
       options?.onOpen?.();
+      // Ein laufender Druck zum Ziehen (usePointerDrag) bricht ab, sonst spielte das Loslassen die Karte aus.
+      window.dispatchEvent(new CustomEvent(INSPECT_OPEN_EVENT));
       setDialog({ content, from });
     };
     const showFloat = (source: InspectSource, el: HTMLElement, delay: number) => {
@@ -186,7 +190,8 @@ export function CardInspectProvider({ children }: { children: ReactNode }) {
           ...extra,
           onPointerEnter: (e) => {
             extra.onPointerEnter?.(e);
-            if (e.pointerType === 'mouse' && options.hover !== false && finePointer() && floatAllowed()) showFloat(source, e.currentTarget, INSPECT_HOVER_DELAY_MS);
+            // e.buttons ≠ 0: Es wird gerade etwas gezogen, dann stört die Ansicht nur.
+            if (e.pointerType === 'mouse' && e.buttons === 0 && options.hover !== false && finePointer() && floatAllowed()) showFloat(source, e.currentTarget, INSPECT_HOVER_DELAY_MS);
           },
           onPointerLeave: (e) => {
             extra.onPointerLeave?.(e);
@@ -336,7 +341,7 @@ export function InspectBody({ content, onClose, closeRef }: { content: InspectCo
   return (
     <div className={`bub-inspect-body ${showArt ? 'bub-inspect-has-art' : ''}`}>
       {showArt && content.image ? (
-        <InspectArt image={content.image} onBroken={() => setBroken(true)} />
+        <InspectArt key={`${content.image.src}|${content.image.largeSrc ?? ''}`} image={content.image} onBroken={() => setBroken(true)} />
       ) : content.emoji ? (
         <span className="bub-inspect-emoji" aria-hidden="true">
           {content.emoji}
@@ -395,9 +400,8 @@ export function InspectBody({ content, onClose, closeRef }: { content: InspectCo
 function InspectArt({ image, onBroken }: { image: InspectImage; onBroken: () => void }) {
   const [src, setSrc] = useState(image.src);
   const [natural, setNatural] = useState<number | null>(null);
+  // Ein anderes Bild bekommt einen neuen Baustein (key in InspectBody); hier wird nur die große Fassung vorgeladen.
   useEffect(() => {
-    setSrc(image.src);
-    setNatural(null);
     if (!image.largeSrc || typeof Image === 'undefined') return;
     let active = true;
     const large = new Image();
@@ -419,6 +423,10 @@ function InspectArt({ image, onBroken }: { image: InspectImage; onBroken: () => 
       decoding="async"
       draggable={false}
       style={style}
+      // Liegt das Bild schon im Zwischenspeicher, kommt onLoad vor dem Anhängen des Handlers: dann hier messen.
+      ref={(img) => {
+        if (img?.complete && img.naturalWidth && natural !== img.naturalWidth) setNatural(img.naturalWidth);
+      }}
       onLoad={(event) => setNatural(event.currentTarget.naturalWidth || null)}
       onError={() => (src === image.src ? onBroken() : setSrc(image.src))}
     />

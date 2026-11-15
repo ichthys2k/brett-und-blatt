@@ -203,7 +203,9 @@ export function Tile({
     });
   }, [effectiveCourtCard, overrideNote, runtimeFields, cosmetics.mediaUrlMap]);
 
-  const props = useTipProps(tip, extra);
+  // Großansicht mit Porträt bzw. Medaillon (#422): im Spiel sind die Symbole oft nur gut 20 px groß.
+  const shownTip = tip && !tip.image && (symbol || image) ? { ...tip, image: symbol ?? image, round: Boolean(symbol) } : tip;
+  const props = useTipProps(shownTip, extra);
   const classes = ['cs-tile', text !== undefined ? 'cs-tile-text' : '', tone, selected ? 'cs-selected' : '', hint ? 'cs-hint' : '', dim ? 'cs-dim' : '', className].join(' ');
   const content = (
     <GameCard ankiFront={ankiFront} className="cs-tile-gamecard">
