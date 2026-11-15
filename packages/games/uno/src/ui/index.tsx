@@ -92,12 +92,12 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
     },
     [measureTable],
   );
-  // Viele Mitspieler brauchen sonst mehrere Reihen, darum dort schon früher kompakt.
-  const miniRing = !table && !handOnly && state.hands.length >= 5;
+  const tight = !table && tableHeight > 0 && tableHeight < (state.hands.length > 5 ? CROWDED_TABLE_HEIGHT : TIGHT_TABLE_HEIGHT);
+  // Viele Mitspieler (oder 4 bei wenig Höhe) brauchen sonst mehrere Reihen, darum dort als Ring.
+  const miniRing = !table && !handOnly && (state.hands.length >= 5 || (tight && state.hands.length >= 4));
   // Tischmitte schrumpft, wenn der Ring klein ist, damit sie nicht über die Mitspieler ragt (#377).
   const [ringRef, ringSize] = useElementSize<HTMLDivElement>();
   const ringScale = ringSize.width > 0 && ringSize.height > 0 ? Math.max(0.4, Math.min(1, (ringSize.width * 0.84 - 132) / 200, (ringSize.height * 0.82 - 60) / 170)) : 1;
-  const tight = !table && tableHeight > 0 && tableHeight < (state.hands.length > 5 ? CROWDED_TABLE_HEIGHT : TIGHT_TABLE_HEIGHT);
   const discardRef = useRef<HTMLDivElement | null>(null);
   const deckRef = useRef<HTMLDivElement | null>(null);
   const handRef = useRef<HTMLDivElement | null>(null);
@@ -486,7 +486,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   const opponents = (
     <>
       {/* 1. Obere Leiste: Mitspieler & Richtungsanzeige */}
-      <div className={`w-full flex items-center gap-2 bg-black/10 rounded-xl ${tight ? 'flex-none overflow-x-auto p-1' : 'flex-wrap justify-around p-2'}`}>
+      <div className={`w-full flex items-center gap-2 bg-black/10 rounded-xl flex-wrap justify-around ${tight ? 'flex-none p-1' : 'p-2'}`}>
         {state.hands.map((hand: UnoCard[], idx: number) => {
           if (idx === actor) return null; // Eigene Hand ist unten
           const isTurn = state.turn === idx;
@@ -500,7 +500,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                 if (el) seatRefs.current.set(idx, el);
                 else seatRefs.current.delete(idx);
               }}
-              className={`flex flex-none items-center gap-2 rounded-lg border transition-all ${tight ? 'px-2 py-0.5' : 'px-3 py-1.5'} ${
+              className={`flex min-w-0 items-center gap-2 rounded-lg border transition-all ${tight ? 'px-2 py-0.5' : 'px-3 py-1.5'} ${
                 isTurn ? 'border-yellow-400 bg-yellow-400/20 font-bold' : 'border-white/10 bg-black/20'
               } ${isEliminated ? 'opacity-40 line-through' : ''}`}
             >
