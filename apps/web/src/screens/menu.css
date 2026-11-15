@@ -38,16 +38,50 @@
   object-fit: cover;
   object-position: 30% 100%;
 }
-.bub-menu-back { transform: translate(calc(var(--mx) * -8px), calc(var(--my) * -5px)); }
+.bub-menu-back { transform: translate(calc(var(--mx) * -8px), calc(var(--my) * -5px)); pointer-events: none; }
 .bub-menu-front { transform: translate(calc(var(--mx) * -30px), calc(var(--my) * -14px)); pointer-events: none; }
 .bub-menu-glow {
   background: radial-gradient(circle at 34% 20%, #ffd27a33 0, transparent 12%), radial-gradient(circle at 52% 14%, #ffd27a33 0, transparent 10%);
   transform: translate(calc(var(--mx) * -14px), calc(var(--my) * -8px));
+  pointer-events: none;
+}
+.bub-menu-stations {
+  transform: translate(calc(var(--mx) * -18px), calc(var(--my) * -9px));
+  pointer-events: none;
+}
+.bub-menu-station {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.18s ease, filter 0.18s ease, background 0.18s ease;
+}
+.bub-menu-station img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 6px 10px rgba(10, 6, 3, 0.65));
+}
+.bub-menu-station[data-hot='true'] {
+  transform: translate(-50%, -50%) scale(1.07);
+  filter: drop-shadow(0 0 14px rgba(242, 210, 122, 0.85)) brightness(1.12);
+}
+.bub-menu-station[data-hearth='true'] {
+  border-radius: 50%;
+}
+.bub-menu-station[data-hearth='true'][data-hot='true'] {
+  transform: translate(-50%, -50%);
+  filter: none;
+  background: radial-gradient(ellipse at 50% 58%, rgba(255, 190, 95, 0.34) 0%, rgba(255, 130, 40, 0.14) 55%, transparent 78%);
 }
 .bub-menu-shade {
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, transparent 45%, #140d0766 80%);
+  pointer-events: none;
 }
 /* Unterseiten rollen: die Szene bleibt stehen */
 .bub-tav .bub-menu-scene { position: fixed; }
@@ -188,7 +222,8 @@
   .bub-menu-foot { grid-row: 4; }
   .bub-menu-shade { background: linear-gradient(#140d0733, #140d07cc 70%); }
   .bub-menu-layer { transform: none !important; }
-  .bub-menu-front { display: none; }
+  .bub-menu-front,
+  .bub-menu-stations { display: none; }
   .bub-menu-back img { object-position: 50% 100%; }
 }
 
@@ -348,6 +383,7 @@
 }
 .bub-menu-hotspot-label {
   position: absolute;
+  z-index: 2;
   transform: translate(-50%, -100%);
   padding: 0.25rem 0.65rem;
   border: 1.5px solid #e0b25a;

@@ -53,6 +53,31 @@ const STATION_SPRITES: Record<string, { url: string; size: number }> = {
   board: { url: new URL('../menu/stationen/board.webp', import.meta.url).href, size: 1.0 },
   learn: { url: new URL('../menu/stationen/learn.webp', import.meta.url).href, size: 0.8 },
 };
+
+interface Station2D {
+  id: Exclude<TavernStationId, 'home'>;
+  label: string;
+  to: string;
+  left: string;
+  top: string;
+  width: string;
+  height?: string;
+  image?: string;
+}
+
+/**
+ * Stationen im 2D-Tavernenbild (Option A): nutzen die freigestellten Einzelbilder auf den freien
+ * Flächen von `taverne-hinten-*.webp`; der bereits gemalte Kamin links dient direkt als Hotspot für Optionen.
+ */
+const STATIONS_2D: readonly Station2D[] = [
+  { id: 'options', label: '🔥 Optionen', to: '#/ton', left: '10%', top: '54%', width: '16%', height: '38%' },
+  { id: 'learn', label: '🗂️ Lernen', to: '#/lernen', left: '23.5%', top: '62%', width: 'clamp(46px, 4.8vw, 72px)', image: STATION_SPRITES.learn.url },
+  { id: 'board', label: '📌 Schwarzes Brett', to: '#/brett', left: '45%', top: '37%', width: 'clamp(56px, 6vw, 90px)', image: STATION_SPRITES.board.url },
+  { id: 'profile', label: '🛡️ Profil & Pass', to: '#/pass', left: '60%', top: '28%', width: 'clamp(56px, 6vw, 90px)', image: STATION_SPRITES.profile.url },
+  { id: 'tournaments', label: '🏆 Turniere', to: '#/turniere', left: '53%', top: '55%', width: 'clamp(78px, 8.8vw, 132px)', image: STATION_SPRITES.tournaments.url },
+  { id: 'online', label: '🌐 Online Spiel', to: '#/online', left: '45%', top: '57%', width: 'clamp(112px, 13vw, 196px)', image: STATION_SPRITES.online.url },
+  { id: 'single', label: '♟️ Lokales Spiel', to: '#/einzelspieler', left: '30%', top: '71%', width: 'clamp(92px, 10.5vw, 156px)', image: STATION_SPRITES.single.url },
+];
 import castle from '../assets/raeume/burgsaal.webp';
 import library from '../assets/raeume/bibliothek.webp';
 import garden from '../assets/raeume/schlossgarten.webp';
@@ -103,6 +128,36 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
   const isTavern = room === 'tavern';
   const targetStation: TavernStationId = station ?? (calm ? stationForRoute(route.name) : 'home');
   const [spotLabel, setSpotLabel] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [hoveredStation, setLocalHoveredStation] = useState<Exclude<TavernStationId, 'home'> | null>(() => getHoveredStation());
+  const [roomSpot, setRoomSpot] = useState<{ text: string; left: string; top: string } | null>(null);
+
+  useEffect(() => {
+    setLocalHoveredStation(getHoveredStation());
+    return subscribeHoveredStation(() => setLocalHoveredStation(getHoveredStation()));
+  }, []);
+
+  // 2D-Parallax auch ohne 3D-Bühne aktivieren (#317)
+  useEffect(() => {
+    const el = scene.current;
+    if (use3d || calm || !el) return;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) return;
+
+    const onPointerMove = (event: PointerEvent) => {
+      const mx = event.clientX / Math.max(1, window.innerWidth) - 0.5;
+      const my = event.clientY / Math.max(1, window.innerHeight) - 0.5;
+      el.style.setProperty('--mx', String(mx));
+      el.style.setProperty('--my', String(my));
+      const parentMenu = el.closest<HTMLElement>('.bub-menu');
+      if (parentMenu) {
+        parentMenu.style.setProperty('--mx', String(mx));
+        parentMenu.style.setProperty('--my', String(my));
+      }
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    return () => window.removeEventListener('pointermove', onPointerMove);
+  }, [use3d, calm]);
 
   useEffect(() => {
     const el = scene.current;
@@ -366,6 +421,40 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
           </div>
           <div className="bub-menu-layer bub-menu-glow" />
           {isTavern && <div className="bub-menu-layer bub-menu-hearth" />}
+          {!calm && isTavern && (
+            <div className="bub-menu-layer bub-menu-stations">
+              {STATIONS_2D.map((s) => {
+                const isHot = hoveredStation === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    tabIndex={-1}
+                    className="bub-menu-station"
+                    data-station={s.id}
+                    data-hot={isHot ? 'true' : undefined}
+                    data-hearth={!s.image ? 'true' : undefined}
+                    style={{ left: s.left, top: s.top, width: s.width, height: s.height }}
+                    onMouseEnter={() => {
+                      setHoveredStation(s.id);
+                      setRoomSpot({ text: s.label, left: s.left, top: s.top });
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredStation(null);
+                      setRoomSpot(null);
+                    }}
+                    onClick={() => {
+                      setHoveredStation(null);
+                      setRoomSpot(null);
+                      navigate(s.to);
+                    }}
+                  >
+                    {s.image ? <img src={s.image} alt="" draggable={false} /> : null}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {calm || !isTavern ? null : (
             <div className="bub-menu-layer bub-menu-front">
               <img src={front} alt="" draggable={false} />
@@ -379,6 +468,14 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
           style={{ left: `${spotLabel.x}px`, top: `${spotLabel.y - 16}px` }}
         >
           {spotLabel.text}
+        </div>
+      )}
+      {!use3d && !calm && isTavern && roomSpot && (
+        <div
+          className="bub-menu-hotspot-label"
+          style={{ left: roomSpot.left, top: roomSpot.top }}
+        >
+          {roomSpot.text}
         </div>
       )}
       <div className="bub-menu-shade" />
