@@ -147,6 +147,11 @@ try {
       if (m.type() === 'error' && !/Failed to load resource|klaenge|\.mp3|bibelquiz\/fragen|wortspiele\/|klassenspiele\//i.test(m.text())) errors.push(m.text());
     });
     try {
+      await page.goto(`${base}#/neu/${id}`);
+      await page.locator('h1').waitFor({ timeout: 10_000 });
+      const setupOverflow = await page.evaluate(() => Math.round(document.documentElement.scrollWidth - window.innerWidth));
+      if (setupOverflow > 1) problems.push(`${id}: Einrichtung ragt ${setupOverflow} px über den rechten Rand`);
+
       const m = await startGame(page, id);
       fresh.set(id, m);
       await firstSteps[id]?.(page);
@@ -278,6 +283,31 @@ try {
       if (!ring.shown) problems.push(`${where}: Tisch fehlt`);
       if (ring.collisions > 0) problems.push(`${where}: ${ring.collisions} Plätze überlappen`);
       if (ring.outside > 0) problems.push(`${where}: ${ring.outside} Plätze ragen aus dem Bild`);
+      if (m.pageHeight > height + 2) problems.push(`${where}: Seite rollt (${m.pageHeight} px)`);
+      await context.close();
+    }
+    // Handy-Querformat (#378): Seitenleiste in ☰-Schublade, kein Überlauf in .poker-controls (auch bei eigenem Zug).
+    for (const [width, height, count] of [[844, 390, 2], [740, 360, 2], [667, 375, 2], [667, 320, 2], [844, 390, 10]]) {
+      const context = await browser.newContext({ viewport: { width, height } });
+      const pokerPage = await context.newPage();
+      await pokerPage.goto(base);
+      await pokerPage.evaluate(
+        ([seats]) => localStorage.setItem('brett-und-blatt:einstellungen:poker', JSON.stringify({ seats, options: {} })),
+        [Array.from({ length: count }, (_, i) => (i === 0 ? { kind: 'human', name: 'Du' } : { kind: 'bot', name: '', level: 'medium' }))],
+      );
+      const m = await startGame(pokerPage, 'poker');
+      const flat = await pokerPage.evaluate(() => {
+        const ctrl = document.querySelector('.poker-controls');
+        const footer = document.querySelector('footer');
+        return {
+          ctrlOverflow: ctrl ? Math.round(ctrl.scrollHeight - ctrl.clientHeight) : 0,
+          footerShown: Boolean(footer && footer.getBoundingClientRect().height > 0),
+        };
+      });
+      const where = `poker quer zu ${count} bei ${width}×${height}`;
+      if (m.overflow > 2) problems.push(`${where}: Spielfeld rollt (${m.overflow} px)`);
+      if (flat.ctrlOverflow > 2) problems.push(`${where}: Bedienleiste (.poker-controls) rollt (${flat.ctrlOverflow} px)`);
+      if (flat.footerShown) problems.push(`${where}: Aktionsknöpfe außerhalb der ☰-Schublade sichtbar`);
       if (m.pageHeight > height + 2) problems.push(`${where}: Seite rollt (${m.pageHeight} px)`);
       await context.close();
     }

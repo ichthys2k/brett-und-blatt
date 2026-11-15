@@ -216,6 +216,10 @@
 }
 
 /* Hand */
+.mst-hand {
+  width: 100%;
+}
+
 .mst-hand-card {
   display: block;
   width: 100%;
@@ -240,9 +244,10 @@
   .mst-stand { grid-template-columns: repeat(5, minmax(0, 2.3rem)); }
   .mst-queue li { flex-basis: 2.3rem; }
   .mst-pantries { max-height: 5.5rem; }
+  .mst-board[data-phase='place'] .mst-hand { display: none; }
 }
 
-@media (max-height: 900px) {
+@media (max-height: 540px) {
   .mst-board[data-phase='place'] .mst-hand { display: none; }
 }
 

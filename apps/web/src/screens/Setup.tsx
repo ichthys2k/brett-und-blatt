@@ -226,11 +226,11 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
         <ol className="space-y-2">
           {draft.seats.map((seat, index) => (
             <li key={index} className="space-y-2 rounded-2xl border border-line bg-surface p-3 shadow-sm">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <ui.SeatSymbol seat={index} seats={draft.seats.length} className="block size-8 flex-none" />
                 <span className="text-sm text-muted">{ui.seatLabel(index, draft.seats.length)}</span>
                 {teamsInfo && <TeamChip names={teamsInfo.names} team={index % teamsInfo.count} />}
-                <div className="ml-auto w-48">
+                <div className="ml-auto w-48 max-w-full">
                   <Segmented
                     label={`${ui.seatLabel(index, draft.seats.length)}: ${t('setup.human')} oder ${t('setup.bot')}`}
                     value={seat.kind}
