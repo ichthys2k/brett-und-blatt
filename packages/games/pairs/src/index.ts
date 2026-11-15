@@ -65,6 +65,7 @@ export const gameModule: GameModule<PairsState, PairsMove> = {
     {
       id: 'set',
       label: 'Kartenset',
+      customUi: true,
       choices: Object.values(PAIR_SETS).map((set) => ({ value: set.id, label: set.name })),
       default: 'tiere',
     },

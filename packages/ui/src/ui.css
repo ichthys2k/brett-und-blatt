@@ -789,13 +789,18 @@ button.bub-net-point:not(:disabled) {
   animation: bub-reveal 0.25s ease-out;
 }
 
+.bub-ccard-face-image {
+  position: relative;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
 .bub-ccard-img {
   width: 100%;
   height: 100%;
-  min-height: 0;
-  flex: 1;
-  object-fit: contain;
-  border-radius: 6px;
+  object-fit: cover;
+  display: block;
   user-select: none;
   pointer-events: none;
 }
@@ -822,6 +827,22 @@ button.bub-net-point:not(:disabled) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.bub-ccard-face-image .bub-ccard-caption {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 16% 7% 6%;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.84) 0%, rgb(0 0 0 / 0.58) 65%, rgb(0 0 0 / 0) 100%);
+  color: #fff;
+  font-size: min(12cqw, 12cqh);
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .bub-ccard-dimmed {

@@ -33,7 +33,7 @@ export function ContentCard({ content, image, caption, highlight, dimmed, onClic
     content === null ? (
       <CardBack />
     ) : (
-      <span className="bub-ccard-face">
+      <span className={`bub-ccard-face ${image ? 'bub-ccard-face-image' : ''}`}>
         {image ? (
           <img className="bub-ccard-img" src={image} alt="" loading="lazy" draggable={false} />
         ) : (

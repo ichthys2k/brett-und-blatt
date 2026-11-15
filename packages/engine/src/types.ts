@@ -86,6 +86,8 @@ export interface OptionSpec {
    * verborgene Option nicht setzen, dort gilt immer der Standard.
    */
   hidden?: boolean;
+  /** Wird nicht als Standard-Knopfreihe gerendert, sondern durch `GameUi.SetupExtra` dargestellt. */
+  customUi?: boolean;
   /** Freier Wert statt Auswahl: erlaubt ist außer den Auswahlen jeder Text, der ganz auf dieses Muster passt (höchstens `maxLength` Zeichen). */
   pattern?: string;
   /** Höchstlänge für freie Werte (`pattern`), Standard 256 – z. B. mehr für eingefügte Partien (SGF, PGN). */
