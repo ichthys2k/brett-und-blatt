@@ -80,6 +80,11 @@ export function getNoteField(note: AnkiNote | undefined, idx: number): string | 
  */
 export function useCardOverride(idOrGuid: string): AnkiNote | undefined {
   const { ankiOverrides } = useCardCosmetics();
+  return cardOverrideOf(ankiOverrides, idOrGuid);
+}
+
+/** Wie `useCardOverride`, aber ohne Hook – für Inhalte, die erst beim Ansehen gebaut werden (#418). */
+export function cardOverrideOf(ankiOverrides: CardCosmetics['ankiOverrides'], idOrGuid: string): AnkiNote | undefined {
   if (!ankiOverrides) return undefined;
   return (
     ankiOverrides[idOrGuid] ??

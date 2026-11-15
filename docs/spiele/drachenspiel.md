@@ -322,3 +322,7 @@ Die große Karte (lange drücken, Rechtsklick, Taste `i`) zeigt in Partie, Deckb
 ## Mitwachsende Karten (14.11.2026, #420)
 
 Auf großen Flächen werden Handkarten und Tiere größer, damit die Kartenbilder zur Geltung kommen: ab 660 × 640 px Arena-Fläche 104 px breite Handkarten, ab 1000 × 800 px 132 px (Tiere 96 bzw. 118 px), Schrift und Plaketten wachsen mit. Die Maße stehen als Variablen auf `.ds-arena`; Handy und Querformat behalten die bisherigen Werte. Die Arena ist höchstens 1240 × 1000 px groß.
+
+## Großansicht beim Überfahren (14.11.2026, #418)
+
+Am Desktop erscheint die große Karte schon beim Verweilen mit der Maus (300 ms) neben Handkarte, Tier oder Hauskraft, ohne Klick; Rechtsklick und Taste `i` öffnen sie als Fenster, am Handy langes Drücken. Grundlage ist der gemeinsame Baustein `CardInspect` (`packages/ui`); `CardZoom` und die Stile `.ds-zoom*` sind entfallen.

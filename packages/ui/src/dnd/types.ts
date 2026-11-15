@@ -13,6 +13,8 @@ export interface DragState<T> {
   delta: Point;
   targetId: string | null;
   snapping: boolean;
+  /** Geglättete Zuggeschwindigkeit in Pixeln je Millisekunde (#421); 0 im Stillstand, beim Zurückfedern und außerhalb des Ziehens. */
+  velocity: Point;
 }
 
 export interface UsePointerDragOptions<T> {

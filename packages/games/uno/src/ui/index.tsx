@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SeatRing, seatRingPosition, CardFan, useCallDeadline, useElementSize, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { SeatRing, seatRingPosition, CardFan, dragTilt, useCallDeadline, useElementSize, usePointerDrag, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { getActiveFace } from '../rules';
 import { DARK_COLORS, LIGHT_COLORS, type UnoCard, type UnoColor, type UnoMove, type UnoState } from '../types';
 import './styles.css';
@@ -668,7 +668,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
 
               const dragStyle: React.CSSProperties = isCardDragged
                 ? {
-                    transform: `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0) scale(1.1) rotate(3deg)`,
+                    transform: `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0) scale(1.1) rotate(${3 + dragTilt(dragState.velocity)}deg)`,
                     zIndex: 60,
                     touchAction: 'none',
                   }
@@ -679,7 +679,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                     }
                   : {};
 
-              const dragProps = isPlayable && (isActor || state.options.jumpIn === 'on') ? bindDrag(card) : {};
+              const dragProps = isPlayable && (isActor || state.options.jumpIn === 'on') ? bindDrag(card) : undefined;
 
               return (
                 <div
@@ -690,8 +690,10 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                   className={`uno-hand-card-wrapper ${isCardDragged ? 'uno-card-dragging' : ''} ${
                     isCardSnapping ? 'uno-card-snapping' : ''
                   }`}
-                  style={dragStyle}
-                  {...dragProps}
+                  // Erst die Eigenschaften zum Ziehen, dann der Stil: Sonst überschreibt `touch-action` aus
+                  // bindDrag die Verschiebung, und die gezogene Karte folgt dem Zeiger nicht (#421).
+                  onPointerDown={dragProps?.onPointerDown}
+                  style={{ ...dragProps?.style, ...dragStyle }}
                 >
                   <UnoCardView
                     card={card}

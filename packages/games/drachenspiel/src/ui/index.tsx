@@ -1,5 +1,5 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import type { BoardProps, GameUi } from '@brett-und-blatt/ui';
+import { CardInspectProvider, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import type { DrachenspielMove, DrachenspielView } from '../types';
 import { SetupExtra } from './DeckBuilder';
 import { endAction, markCustomDeck, prepareOptions } from './SoloHub';
@@ -20,9 +20,18 @@ function Board(props: BoardProps<DrachenspielView, DrachenspielMove>) {
   const me = view.players[mySeat];
   const opp = view.players[oppSeat];
   if (me.customDeck) markCustomDeck(view.options.playId);
-  if (view.phase === 'deckSelection') return <DeckSelection view={view} me={me} oppTheme={opp?.deckTheme} onMove={onMove} timed={Boolean(props.clock?.running)} />;
-  if (view.phase === 'mulligan') return <MulliganPhase me={me} oppTheme={opp?.deckTheme} onMove={onMove} />;
-  return <PlayBoard {...props} />;
+  // Großansicht der Karten (#418) für Deckwahl, Kartentausch und Partie.
+  return (
+    <CardInspectProvider>
+      {view.phase === 'deckSelection' ? (
+        <DeckSelection view={view} me={me} oppTheme={opp?.deckTheme} onMove={onMove} timed={Boolean(props.clock?.running)} />
+      ) : view.phase === 'mulligan' ? (
+        <MulliganPhase me={me} oppTheme={opp?.deckTheme} onMove={onMove} />
+      ) : (
+        <PlayBoard {...props} />
+      )}
+    </CardInspectProvider>
+  );
 }
 
 function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string }) {

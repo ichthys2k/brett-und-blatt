@@ -3,6 +3,7 @@ import {
   type CSSProperties,
   type KeyboardEventHandler,
   type MouseEventHandler,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
 import { CardBack, type CardBackProps, type CardSize } from './CardBack';
@@ -128,6 +129,26 @@ export function GameCard({
     }
   };
 
+  // Glanz folgt der Maus (#421): Lage direkt am Element setzen, ohne neu zu zeichnen.
+  const foilHandlers =
+    foil && foil !== 'none'
+      ? {
+          onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
+            if (event.pointerType !== 'mouse') return;
+            const rect = event.currentTarget.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+            const x = Math.round(((event.clientX - rect.left) / rect.width) * 100);
+            const y = Math.round(((event.clientY - rect.top) / rect.height) * 100);
+            event.currentTarget.style.setProperty('--bub-foil-x', `${x}%`);
+            event.currentTarget.style.setProperty('--bub-foil-y', `${y}%`);
+          },
+          onPointerLeave: (event: ReactPointerEvent<HTMLElement>) => {
+            event.currentTarget.style.removeProperty('--bub-foil-x');
+            event.currentTarget.style.removeProperty('--bub-foil-y');
+          },
+        }
+      : {};
+
   const frontContent = (
     <>
       {effectiveHtml ? (
@@ -243,11 +264,12 @@ export function GameCard({
       disabled={disabled}
       aria-label={computedLabel}
       aria-pressed={selected || undefined}
+      {...foilHandlers}
     >
       {innerFlipper}
     </button>
   ) : (
-    <span className={classes} style={style} role="img" aria-label={computedLabel}>
+    <span className={classes} style={style} role="img" aria-label={computedLabel} {...foilHandlers}>
       {innerFlipper}
     </span>
   );

@@ -1,3 +1,4 @@
+import { useCardCosmetics, useInspect } from '@brett-und-blatt/ui';
 import { useMemo, useState } from 'react';
 import { CARDS_DB } from '../cards';
 import { DECK_SIZE, encodeDeck } from '../deckcode';
@@ -25,9 +26,7 @@ import { LESSONS, lessonOf, RUN_FOES, TREASURES } from '../modes/scenarios';
 import { HOUSE_POWERS } from '../powers';
 import type { DeckThemeId, DrachenspielView } from '../types';
 import { currentBook, updateBook, useBook } from './deckStore';
-import { CardFace, CardZoom, type ZoomItem } from './parts';
-import { getCardFullTitle } from './traits';
-import { useLongPress } from './useLongPress';
+import { CardFace, zoomContent, type ZoomItem } from './parts';
 
 const HUB_PATH = '#/neu/drachenspiel?solo=1';
 const newSeed = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`;
@@ -255,8 +254,8 @@ function Wanderschaft() {
 
 function Turnier() {
   const { arena } = useBook();
-  const [zoom, setZoom] = useState<ZoomItem | null>(null);
-  const longPress = useLongPress<ZoomItem>(setZoom);
+  const inspect = useInspect();
+  const cosmetics = useCardCosmetics();
   const begin = (
     <button type="button" className="ds-btn ds-btn-endturn" onClick={() => updateBook((book) => ({ ...book, arena: startArena(newSeed()), updatedAt: Date.now() }))}>
       Neues Turnier
@@ -298,18 +297,15 @@ function Turnier() {
                 type="button"
                 data-rarity={def.rarity}
                 className={`ds-card ds-builder-card ${def.isSpell ? 'ds-card-spell' : ''}`}
-                title={getCardFullTitle(def)}
                 aria-label={`${def.name}, Kosten ${def.cost}`}
+                {...inspect.props(() => zoomContent(item, cosmetics))}
                 onClick={() => updateBook((book) => (book.arena ? { ...book, arena: { ...book.arena, cards: [...book.arena.cards, id] }, updatedAt: Date.now() } : book))}
-                onContextMenu={(event) => longPress.contextMenu(event, item)}
-                onPointerDown={(event) => longPress.start(event, item)}
               >
                 <CardFace def={def} />
               </button>
             );
           })}
         </div>
-        {zoom && <CardZoom item={zoom} onClose={() => setZoom(null)} />}
       </section>
     );
   }

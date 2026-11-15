@@ -1,18 +1,17 @@
 import type { SeatId } from '@brett-und-blatt/engine';
-import { GameCard, useCardCosmetics, useCardOverride, usePointerDrag, type BoardProps } from '@brett-und-blatt/ui';
+import { dragTilt, GameCard, useCardCosmetics, useCardOverride, useInspect, usePointerDrag, type BoardProps, type InspectExtraProps } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { CARDS_DB } from '../cards';
 import { HOUSE_POWERS } from '../powers';
 import { heroAttackValue } from '../rules';
 import type { CardDefinition, DeckThemeId, DrachenspielMove, DrachenspielView, HiddenPlayerView, Minion, SpellTarget } from '../types';
 import { playCreatureAudio } from './audio';
-import { attackClass, CardFace, CardZoom, Fuse, GameLog, healthClass, renderCombatCardAnki, TargetArrow, TraitBadge, type ArrowPoints, type ZoomItem } from './parts';
+import { attackClass, CardFace, Fuse, GameLog, healthClass, renderCombatCardAnki, TargetArrow, TraitBadge, zoomContent, type ArrowPoints, type ZoomItem } from './parts';
 import type { Float, ShownMinion } from './sequence';
-import { getCardFullTitle, getCardTraits, getMinionFullTitle, getMinionTraits } from './traits';
+import { getCardFullTitle, getCardTraits, getMinionTraits } from './traits';
 import { currentCrest, ScenarioTip, useCosmetics } from './SoloHub';
 import { HOUSE_ICONS, HOUSE_NAMES } from './champions';
 import { useBeats } from './useBeats';
-import { useLongPress } from './useLongPress';
 import { uiCard } from './cardLookup';
 
 const LABELS = ['Blau', 'Rot'];
@@ -28,13 +27,11 @@ const strikerOf = (move: Strike) => (move.type === 'attack' ? move.attackerId : 
 /** Auch der eigene Held wird wie ein Tier gezogen, mit der Kennung `HERO_ATTACKER`. */
 type DrachenDragItem = { kind: 'card'; handIndex: number } | { kind: 'minion'; minionId: string };
 
-const activate = (event: KeyboardEvent<HTMLElement>, onClick: () => void, onZoom: () => void) => {
+/** Enter und Leertaste lösen aus; „i“ (groß ansehen) übernimmt die Großansicht (#418). */
+const activate = (event: KeyboardEvent<HTMLElement>, onClick: () => void) => {
   if (event.key === 'Enter' || event.key === ' ') {
     event.preventDefault();
     onClick();
-  } else if (event.key === 'i') {
-    event.preventDefault();
-    onZoom();
   }
 };
 
@@ -61,9 +58,7 @@ function MinionView({
   floats,
   isImpacted,
   onClick,
-  onZoom,
-  onPointerDown,
-  onContextMenu,
+  inspectProps,
   dropTarget,
   dropActive,
   elementRef,
@@ -78,9 +73,8 @@ function MinionView({
   floats: Float[];
   isImpacted: boolean;
   onClick: () => void;
-  onZoom: () => void;
-  onPointerDown?: (e: ReactPointerEvent<HTMLElement>) => void;
-  onContextMenu?: (e: React.MouseEvent<HTMLElement>) => void;
+  /** Großansicht (#418) samt Ziehen und Tastatur, zusammengeführt von `useInspect().props`. */
+  inspectProps: InspectExtraProps;
   dropTarget?: string;
   dropActive?: boolean;
   elementRef: (el: HTMLElement | null) => void;
@@ -136,10 +130,8 @@ function MinionView({
     <div
       ref={elementRef}
       className={classes}
+      {...(dying ? {} : inspectProps)}
       onClick={dying ? undefined : onClick}
-      onPointerDown={dying ? undefined : onPointerDown}
-      onContextMenu={dying ? undefined : onContextMenu}
-      onKeyDown={dying ? undefined : (event) => activate(event, onClick, onZoom)}
       style={{
         ...(attackVector ? ({ '--atk-dx': `${attackVector.dx}px`, '--atk-dy': `${attackVector.dy}px` } as CSSProperties) : {}),
         position: attackVector ? 'relative' : undefined,
@@ -151,7 +143,6 @@ function MinionView({
       role={dying ? undefined : 'button'}
       tabIndex={dying ? undefined : 0}
       aria-label={`${minion.name}, Angriff ${minion.attack}, Leben ${minion.health}${traits.length > 0 ? ` [${traits.map((t) => t.name).join(', ')}]` : ''}`}
-      title={getMinionFullTitle(minion)}
     >
       <GameCard
         ankiFront={rendered}
@@ -239,7 +230,7 @@ function HeroBar({
       className={`ds-hero-card ds-hero-${house} ${targetable ? 'targetable' : ''} ${canAttack && !attackVector ? 'can-attack' : ''} ${selected && !attackVector ? 'selected' : ''} ${attackVector ? 'ds-attacking' : ''} ${hinted ? 'ds-hinted' : ''} ${impacted ? 'bub-animate-shake ds-hit-impact' : ''}`}
       onClick={onClick}
       onPointerDown={onPointerDown}
-      onKeyDown={interactive && onClick ? (event) => activate(event, onClick, () => undefined) : undefined}
+      onKeyDown={interactive && onClick ? (event) => activate(event, onClick) : undefined}
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
       title={targetable ? 'Gegnerischen Turnierherrn angreifen!' : canAttack ? 'Mit deinem Turnierherrn angreifen' : undefined}
@@ -331,7 +322,6 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   const [attackVector, setAttackVector] = useState<{ id: string; dx: number; dy: number } | null>(null);
   /** Kurzer Hinweis auf Regeln, die sonst unbemerkt zuschlagen (Hand voll, leeres Deck). */
   const [notice, setNotice] = useState<string | null>(null);
-  const [zoom, setZoom] = useState<ZoomItem | null>(null);
   /** Maus über der Arena, solange ein Ziel gesucht wird; so folgt der Pfeil auch ohne Ziehen. */
   const [aimPoint, setAimPoint] = useState<{ x: number; y: number } | null>(null);
 
@@ -426,15 +416,10 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
     },
   });
 
-  const openZoom = useCallback(
-    (item: ZoomItem) => {
-      cancelDrag();
-      setZoom(item);
-    },
-    [cancelDrag],
-  );
-  const closeZoom = useCallback(() => setZoom(null), []);
-  const longPress = useLongPress<ZoomItem>(openZoom);
+  // Großansicht (#418): Inhalt erst beim Ansehen bauen; ein begonnenes Ziehen bricht ab, wenn sie aufgeht.
+  const inspect = useInspect();
+  const zoomOf = (item: ZoomItem) => () => zoomContent(item, cardCosmetics);
+  const inspectOptions = { onOpen: cancelDrag };
 
   const draggedMinionId = dragState.isDragging && dragState.item?.kind === 'minion' ? dragState.item.minionId : null;
   const effectiveAttackerId = draggedMinionId ?? selectedAttackerId;
@@ -568,10 +553,6 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
     if (el) heroElsRef.current.set(seat, el);
     else heroElsRef.current.delete(seat);
   };
-  const zoomMinion = (minion: Minion) => ({
-    onContextMenu: (event: React.MouseEvent<HTMLElement>) => longPress.contextMenu(event, { kind: 'minion', minion }),
-    onZoom: () => openZoom({ kind: 'minion', minion }),
-  });
 
   const myBoard = boardOf(mySeat);
   const oppBoard = boardOf(oppSeat);
@@ -608,8 +589,11 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
               type="button"
               className={`ds-badge ds-power-badge ${opp.powerUsed ? 'used' : ''}`}
               aria-label={`Hauskraft des Gegners: ${oppPower.name}. ${oppPower.text}`}
-              title={`${oppPower.name}: ${oppPower.text}`}
-              onClick={() => openZoom({ kind: 'power', power: oppPower })}
+              {...inspect.props(zoomOf({ kind: 'power', power: oppPower }), {}, inspectOptions)}
+              onClick={(event) => {
+                const content = zoomContent({ kind: 'power', power: oppPower }, cardCosmetics);
+                if (content) inspect.open(content, event.currentTarget);
+              }}
             >
               {oppPower.emoji}
             </button>
@@ -634,7 +618,6 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
             oppBoard.map((shown) => {
               const m = shown.minion;
               const isTargetable = !shown.dying && (targetableMinionIds.has(m.id) || spellTargetIds.has(m.id));
-              const zoomBinds = zoomMinion(m);
               return (
                 <MinionView
                   key={m.id}
@@ -648,9 +631,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
                   floats={floatsOf(m.id)}
                   isImpacted={isImpacted(m.id)}
                   onClick={() => handleMinionClick(m, false)}
-                  onZoom={zoomBinds.onZoom}
-                  onContextMenu={zoomBinds.onContextMenu}
-                  onPointerDown={(event) => longPress.start(event, { kind: 'minion', minion: m })}
+                  inspectProps={inspect.props(zoomOf({ kind: 'minion', minion: m }), { onKeyDown: (event) => activate(event, () => handleMinionClick(m, false)) }, inspectOptions)}
                   dropTarget={`minion-${m.id}`}
                   dropActive={!shown.dying && dragState.isDragging && dragState.targetId === `minion-${m.id}` && isTargetable}
                   elementRef={minionRef(m.id)}
@@ -672,7 +653,6 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
               const m = shown.minion;
               const canAttack = !shown.dying && (attackersReady.has(m.id) || usableBuildings.has(m.id));
               const dragBind = !shown.dying && attackersReady.has(m.id) ? bindDrag({ kind: 'minion', minionId: m.id }) : undefined;
-              const zoomBinds = zoomMinion(m);
               return (
                 <MinionView
                   key={m.id}
@@ -686,12 +666,11 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
                   floats={floatsOf(m.id)}
                   isImpacted={isImpacted(m.id)}
                   onClick={() => handleMinionClick(m, true)}
-                  onZoom={zoomBinds.onZoom}
-                  onContextMenu={zoomBinds.onContextMenu}
-                  onPointerDown={(event) => {
-                    dragBind?.onPointerDown(event);
-                    longPress.start(event, { kind: 'minion', minion: m });
-                  }}
+                  inspectProps={inspect.props(
+                    zoomOf({ kind: 'minion', minion: m }),
+                    { onPointerDown: dragBind?.onPointerDown, onKeyDown: (event) => activate(event, () => handleMinionClick(m, true)) },
+                    inspectOptions,
+                  )}
                   dropTarget={spellTargetIds.has(m.id) ? `minion-${m.id}` : undefined}
                   dropActive={!shown.dying && dragState.isDragging && dragState.targetId === `minion-${m.id}` && spellTargetIds.has(m.id)}
                   elementRef={minionRef(m.id)}
@@ -732,15 +711,10 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
               className={`ds-power ${canUsePower ? 'playable' : ''} ${hint?.type === 'heroPower' ? 'ds-hinted' : ''}`}
               aria-disabled={!canUsePower}
               aria-label={`Hauskraft ${myPower.name}, Kosten ${myPower.cost}. ${myPower.text}`}
-              title={`${myPower.name}: ${myPower.text}`}
+              {...inspect.props(zoomOf({ kind: 'power', power: myPower }), {}, inspectOptions)}
               onClick={() => {
                 if (canUsePower) onMove({ type: 'heroPower' });
               }}
-              onKeyDown={(event) => {
-                if (event.key === 'i') openZoom({ kind: 'power', power: myPower });
-              }}
-              onContextMenu={(event) => longPress.contextMenu(event, { kind: 'power', power: myPower })}
-              onPointerDown={(event) => longPress.start(event, { kind: 'power', power: myPower })}
             >
               <span aria-hidden="true">{myPower.emoji}</span>
               <span className="ds-power-cost" aria-hidden="true">
@@ -852,23 +826,17 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
               className={`ds-card bub-animate-deal ${def.isSpell ? 'ds-card-spell' : ''} ${selectedSpell === idx || draggedCardIdx === idx ? 'ds-card-selected' : ''} ${isPlayable ? 'playable' : ''} ${hintedCard === idx ? 'ds-hinted' : ''} ${followsFinger ? 'bub-dragging' : ''} ${dragState.snapping && followsFinger ? 'bub-snapping' : ''}`}
               style={{
                 animationDelay: `${idx * 40}ms`,
-                transform: followsFinger ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0)` : undefined,
+                transform: followsFinger ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0) rotate(${dragTilt(dragState.velocity)}deg)` : undefined,
                 position: followsFinger ? 'relative' : undefined,
                 zIndex: followsFinger ? 1000 : undefined,
                 touchAction: isPlayable ? 'none' : undefined,
               }}
+              {...inspect.props(zoomOf(zoomItem), { onPointerDown: dragBind?.onPointerDown, onKeyDown: (event) => activate(event, play) }, inspectOptions)}
               onClick={play}
-              onKeyDown={(event) => activate(event, play, () => openZoom(zoomItem))}
-              onContextMenu={(event) => longPress.contextMenu(event, zoomItem)}
-              onPointerDown={(event) => {
-                dragBind?.onPointerDown(event);
-                longPress.start(event, zoomItem);
-              }}
               role="button"
               tabIndex={0}
               aria-label={`${def.name}, Kosten ${def.cost}${traits.length > 0 ? ` [${traits.map((t) => t.name).join(', ')}]` : ''}`}
               aria-disabled={!isPlayable}
-              title={getCardFullTitle(def)}
             >
               <CardFace def={def} />
               {card.fleeting && (
@@ -897,7 +865,6 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
       </div>
 
       {arrow && <TargetArrow {...arrow} />}
-      {zoom && <CardZoom item={zoom} onClose={closeZoom} />}
     </div>
   );
 }

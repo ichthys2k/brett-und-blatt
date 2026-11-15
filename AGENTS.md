@@ -49,6 +49,8 @@ corepack pnpm rauchtest                               # nach dem Build: jedes Sp
 PRUEFSTAND=1 corepack pnpm pruefstand                 # gründlicher Prüfstand (PRUEFSTAND_SPIELE=<id> für einzelne)
 ```
 
+Karten, Plättchen oder Porträts groß zeigen nur über den Baustein `CardInspect` (`packages/ui`, #418; Einzelheiten in `CLAUDE.md` unter „Technik in Kürze“), keine eigenen Zoom-Fenster.
+
 Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrspieler-Spiele (ab 2 Plätzen) zusätzlich in `apps/server/src/games.ts` und `apps/server/package.json` eintragen.
 
 ## Wo was steht

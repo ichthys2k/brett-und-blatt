@@ -25,6 +25,7 @@ export {
 } from './cards/sharedCardBack';
 export {
   CardCosmeticsProvider,
+  cardOverrideOf,
   DEFAULT_CARD_COSMETICS,
   getNoteField,
   useCardCosmetics,
@@ -46,6 +47,7 @@ export { TRICK_HAND_MIN_STEP, TrickTable, trickHandCardWidth, useTrickDisplay, t
 export { CardFan, fanLayout, type CardFanProps, type FanLayout } from './cards/CardFan';
 export { ContentCard, type ContentCardProps } from './cards/ContentCard';
 export { usePointerDrag } from './dnd/usePointerDrag';
+export { dragTilt } from './dnd/dragTilt';
 export { useSpawnAnimation, type SpawnAnimationOptions } from './dnd/useSpawnAnimation';
 export { useGridMoveAnimation, type UseGridMoveAnimationOptions, type MoveAnimationItem, type CellSlideProps, type ActiveSlide } from './dnd/useGridMoveAnimation';
 export type { DragState, Point, PointerDragControls, UsePointerDragOptions } from './dnd/types';
@@ -87,3 +89,22 @@ export {
   type RoundSummaryPlayer,
   type RoundSummaryProps,
 } from './RoundSummary';
+export { useLongPress } from './dnd/useLongPress';
+export {
+  CardInspectProvider,
+  INSPECT_FLOAT_MIN_WIDTH,
+  INSPECT_HOVER_DELAY_MS,
+  INSPECT_PRESS_MS,
+  InspectBody,
+  useInspect,
+  useInspectProps,
+  type InspectApi,
+  type InspectContent,
+  type InspectExtraProps,
+  type InspectImage,
+  type InspectKeyword,
+  type InspectOptions,
+  type InspectSource,
+  type InspectStat,
+} from './inspect/CardInspect';
+export { INSPECT_EDGE, inspectPosition, type InspectPlacement, type InspectRect } from './inspect/inspectPosition';
