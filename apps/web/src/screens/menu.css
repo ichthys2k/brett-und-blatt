@@ -90,14 +90,9 @@
   transform: translate(-50%, -50%) scale(1.07);
   filter: drop-shadow(0 0 14px rgba(242, 210, 122, 0.85)) brightness(1.12);
 }
-/* Fast quadratische Fenster: der Menürahmen würde Stationen verdecken */
-@media (max-aspect-ratio: 13/10) {
-  .bub-menu-stations { display: none; }
-}
-/* Querformat: der leere Raum trägt keinen alten Kaminschein und keine Vordergrundebene */
-@media (min-width: 761px) {
-  .bub-menu-hearth { display: none; }
-}
+/* Stationen-Szene: der leere Raum trägt keinen alten Kaminschein */
+.bub-menu-scene[data-stationen] .bub-menu-hearth { display: none; }
+.bub-menu-station:focus-visible { outline: 3px solid #f2d27a; outline-offset: 4px; border-radius: 6px; }
 /* Unterseiten rollen: die Szene bleibt stehen */
 .bub-tav .bub-menu-scene { position: fixed; }
 .bub-menu-scene[data-calm] .bub-menu-shade { background: linear-gradient(#140d07bb, #140d07ee); }
@@ -349,7 +344,6 @@
   .bub-menu-glow, .bub-menu-hearth { animation: none; }
 }
 @media (max-width: 760px) {
-  .bub-menu-stations { display: none; }
   .bub-menu-hearth { background: radial-gradient(ellipse 22% 10% at 18% 74%, #ff9a3c55 0, transparent 75%); }
 }
 .bub-menu-plaque-link { cursor: pointer; }

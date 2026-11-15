@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { StationEditor } from './StationEditor';
-import { useActiveLook, useChosenLight, useChosenRoom, useChosenTable, useMenu3d, type RoomScene, type TavernMood } from '../lib/look';
+import { useActiveLook, useChosenLight, useChosenRoom, useChosenTable, useMenu3d, useMenuStations, type RoomScene, type TavernMood } from '../lib/look';
+import { useBoardHidden } from '../lib/boardPrefs';
 import { navigate, useRoute } from '../lib/router';
+import { GAME_SERVER } from '../lib/server';
 import {
   buildTavernGeometry,
   getHoveredStation,
@@ -20,7 +22,19 @@ import {
   type TavernHotspot,
   type TavernStationId,
 } from '../lib/tavern3d';
+import behind from '../menu/taverne-hinten.webp';
 import portrait from '../menu/taverne-hoch.webp';
+import front from '../menu/taverne-vorn.webp';
+
+/** Ursprüngliche Hintergründe je Lichtstimmung (#317); der Abend ist die Grundebene. */
+const MOOD_IMAGES: Record<TavernMood, string> = {
+  morgen: new URL('../menu/taverne-hinten-morgen.webp', import.meta.url).href,
+  tag: new URL('../menu/taverne-hinten-tag.webp', import.meta.url).href,
+  abend: behind,
+  nacht: new URL('../menu/taverne-hinten-nacht.webp', import.meta.url).href,
+  winter: new URL('../menu/taverne-hinten-winter.webp', import.meta.url).href,
+  fest: new URL('../menu/taverne-hinten-fest.webp', import.meta.url).href,
+};
 
 /** Leerer Tavernenraum für die Stationen im Querformat (#454, Option B); Hochformat bleibt unten unverändert. */
 const MOOD_LEER: Record<TavernMood, string> = {
@@ -119,6 +133,8 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
   const table = useChosenTable();
   const look = useActiveLook();
   const menu3d = useMenu3d();
+  const stationen = useMenuStations();
+  const boardHidden = useBoardHidden();
   const use3d = menu3d && look === 'tavern';
   const light = useChosenLight();
   const mood: TavernMood = light === 'auto' ? moodAt(new Date()) : light;
@@ -127,7 +143,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
   const [spotLabel, setSpotLabel] = useState<{ text: string; x: number; y: number } | null>(null);
   const [hoveredStation, setLocalHoveredStation] = useState<TavernStationId | null>(() => getHoveredStation());
   // Bearbeitungsmodus (nur Dev-Server, ?stationen): Positionen mit der Maus setzen, im Browser gemerkt.
-  const editMode = import.meta.env.DEV && typeof location !== 'undefined' && new URLSearchParams(location.search).has('stationen');
+  const editMode = import.meta.env.DEV && stationen && typeof location !== 'undefined' && new URLSearchParams(location.search).has('stationen');
   const [layout, setLayout] = useState<Station2D[]>(() => {
     if (!editMode) return [...STATIONS_2D];
     try {
@@ -146,7 +162,8 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
       /* Speichern ist nur eine Bequemlichkeit */
     }
   }, [editMode, layout]);
-  const activeStation = layout.find((st) => st.id === hoveredStation);
+  const visibleStations = layout.filter((st) => st.id !== 'board' || (GAME_SERVER && !boardHidden));
+  const activeStation = visibleStations.find((st) => st.id === hoveredStation);
 
   useEffect(() => {
     setLocalHoveredStation(getHoveredStation());
@@ -156,7 +173,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
   // 2D-Parallax auch ohne 3D-Bühne (#454)
   useEffect(() => {
     const el = scene.current;
-    if (use3d || calm || !el) return;
+    if (use3d || calm || !stationen || !el) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const onPointerMove = (event: PointerEvent) => {
       const mx = event.clientX / Math.max(1, window.innerWidth) - 0.5;
@@ -166,7 +183,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
     };
     window.addEventListener('pointermove', onPointerMove);
     return () => window.removeEventListener('pointermove', onPointerMove);
-  }, [use3d, calm]);
+  }, [use3d, calm, stationen]);
 
   useEffect(() => {
     const el = scene.current;
@@ -405,7 +422,8 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
     <div
       className="bub-menu-scene"
       ref={scene}
-      aria-hidden="true"
+      aria-hidden={stationen && !calm ? undefined : true}
+      data-stationen={stationen || undefined}
       data-calm={calm || undefined}
       data-room={room}
       data-mode={use3d ? '3d' : 'bild'}
@@ -418,32 +436,34 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
       ) : (
         <>
           {/* Gemaltes Standbild: Lichtstimmung (#317) bzw. Raumkulisse (#107) */}
-          <div className="bub-menu-layer bub-menu-back">
+          <div className="bub-menu-layer bub-menu-back" aria-hidden="true">
             {isTavern ? (
               <picture>
                 <source media="(max-width: 760px)" srcSet={MOOD_PORTRAITS[mood]} />
-                <img src={MOOD_LEER[mood]} alt="" draggable={false} />
+                <img src={stationen ? MOOD_LEER[mood] : MOOD_IMAGES[mood]} alt="" draggable={false} />
               </picture>
             ) : (
               <img src={ROOM_IMAGES[room]} alt="" draggable={false} />
             )}
           </div>
-          <div className="bub-menu-layer bub-menu-glow" />
-          {isTavern && <div className="bub-menu-layer bub-menu-hearth" />}
-          {!calm && isTavern && (
+          <div className="bub-menu-layer bub-menu-glow" aria-hidden="true" />
+          {isTavern && <div className="bub-menu-layer bub-menu-hearth" aria-hidden="true" />}
+          {stationen && !calm && isTavern && (
             <div className="bub-menu-layer bub-menu-stations">
               <div className="bub-menu-stage">
-                {!editMode && layout.map((st) => (
+                {!editMode && visibleStations.map((st) => (
                   <button
                     key={st.id}
                     type="button"
-                    tabIndex={-1}
+                    aria-label={st.label.replace(/^\S+\s/, '')}
                     className="bub-menu-station"
                     data-station={st.id}
                     data-hot={hoveredStation === st.id ? 'true' : undefined}
                     style={{ left: `${st.x}%`, top: `${st.y}%`, width: `${st.w}%` }}
                     onMouseEnter={() => setHoveredStation(st.id)}
                     onMouseLeave={() => setHoveredStation(null)}
+                    onFocus={() => setHoveredStation(st.id)}
+                    onBlur={() => setHoveredStation(null)}
                     onClick={() => {
                       setHoveredStation(null);
                       navigate(st.to);
@@ -463,6 +483,11 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
               </div>
             </div>
           )}
+          {calm || !isTavern || stationen ? null : (
+            <div className="bub-menu-layer bub-menu-front">
+              <img src={front} alt="" draggable={false} />
+            </div>
+          )}
         </>
       )}
       {!calm && spotLabel && (
@@ -473,7 +498,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
           {spotLabel.text}
         </div>
       )}
-      <div className="bub-menu-shade" />
+      <div className="bub-menu-shade" aria-hidden="true" />
       {editMode && !calm && isTavern && !use3d && (
         <StationEditor
           stations={layout}

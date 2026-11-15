@@ -25,6 +25,7 @@ const LOOK_KEY = 'brett-und-blatt:aussehen';
 const TABLE_KEY = 'brett-und-blatt:tisch';
 const ROOM_KEY = 'brett-und-blatt:raum';
 const MENU3D_KEY = 'brett-und-blatt:menue-3d';
+const STATIONS_KEY = 'brett-und-blatt:menue-stationen';
 const LIGHT_KEY = 'brett-und-blatt:licht';
 const SCENES_KEY = 'brett-und-blatt:kulissen';
 
@@ -71,6 +72,15 @@ function loadMenu3d(): boolean {
   }
 }
 
+/** Tavernenszene mit anklickbaren Stationen statt Menütafel (#454): Standard aus. */
+function loadMenuStations(): boolean {
+  try {
+    return window.localStorage.getItem(STATIONS_KEY) === 'an';
+  } catch {
+    return false;
+  }
+}
+
 /** Kulissen der Spiele als Seitenhintergrund (#316): Standard an. */
 function loadScenes(): boolean {
   try {
@@ -96,6 +106,9 @@ let chosenTable = loadTable();
 let chosenRoom = loadRoom();
 let chosenMenu3d = loadMenu3d();
 let chosenLight = loadLight();
+let chosenStations = loadMenuStations();
+/** Die Stationen-Szene gibt es nur auf breiten Bildschirmen; am Handy und in fast quadratischen Fenstern gilt die ursprüngliche Ansicht. */
+const wideQuery = window.matchMedia('(min-width: 761px) and (min-aspect-ratio: 13/10)');
 let chosenScenes = loadScenes();
 
 /** Das Aussehen, das gerade wirklich gilt. */
@@ -218,6 +231,16 @@ export function setMenu3d(next: boolean): void {
   apply();
 }
 
+export function setMenuStations(next: boolean): void {
+  chosenStations = next;
+  try {
+    window.localStorage.setItem(STATIONS_KEY, next ? 'an' : 'aus');
+  } catch {
+    // Ohne Speicher gilt die Wahl nur bis zum Neuladen.
+  }
+  apply();
+}
+
 export function setScenes(next: boolean): void {
   chosenScenes = next;
   try {
@@ -256,7 +279,16 @@ export const scenesEnabled = (): boolean => chosenScenes;
 export const useChosenLight = (): LightChoice => useSyncExternalStore(subscribe, () => chosenLight);
 export const lightChoice = (): LightChoice => chosenLight;
 export const useMenu3d = (): boolean => useSyncExternalStore(subscribe, menu3dActive);
+/** Die gespeicherte Wahl zur Stationen-Szene (Standard: aus). */
+export const menuStationsEnabled = (): boolean => chosenStations;
+/** Ob das Hauptmenü gerade die Stationen-Szene zeigt: gewählt, Taverne, breiter Bildschirm, keine 3D-Bühne. */
+export const menuStationsActive = (): boolean =>
+  chosenStations && activeLook() === 'tavern' && chosenRoom === 'tavern' && wideQuery.matches && !menu3dActive();
+/** Die gespeicherte Wahl für den Schalter in den Optionen (unabhängig von der Bildschirmbreite). */
+export const useMenuStationsChoice = (): boolean => useSyncExternalStore(subscribe, () => chosenStations);
+export const useMenuStations = (): boolean => useSyncExternalStore(subscribe, menuStationsActive);
 export const contrastForcesPlain = (): boolean => contrastQuery.matches;
 
 contrastQuery.addEventListener('change', apply);
+wideQuery.addEventListener('change', apply);
 apply();
