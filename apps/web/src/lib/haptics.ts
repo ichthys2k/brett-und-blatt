@@ -9,13 +9,15 @@ const KEY = 'brett-und-blatt:vibration';
 
 /** Muster in Millisekunden (Vibrieren, Pause, …). */
 export const HAPTIC_PATTERNS = {
-  /** Würfel, Stein setzen: ein leichtes Tippen. */
+  /** Würfel, Stein setzen, Klopfen, letzte Karte: ein leichtes Tippen. */
   tick: [12],
-  /** Treffer, Schlagen, richtige Antwort. */
+  /** Treffer, Schlagen, richtige Antwort, Klatschen. */
   hit: [35],
-  /** Fehler, falsche Antwort, Verlust: zwei kurze Stöße. */
+  /** Kräftiger Stoß: All-In, Schachmatt, Umwandlung, Revolution, große Ansagen. */
+  heavy: [60, 40, 80],
+  /** Fehler, falsche Antwort, Strafe, Verlust, Schach geboten: zwei kurze Stöße. */
   error: [30, 60, 30],
-  /** Sieg: aufsteigend. */
+  /** Sieg, Bingo, Speed: aufsteigend. */
   win: [30, 50, 30, 50, 80],
 } as const;
 export type HapticKind = keyof typeof HAPTIC_PATTERNS;
@@ -24,37 +26,72 @@ const KINDS: Record<string, HapticKind> = {
   wuerfeln: 'tick',
   'wuerfel-einzeln': 'tick',
   'wuerfel-halten': 'tick',
+  'wuerfelbecher-schuetteln': 'tick',
   'bingo-stempel': 'tick',
+  'stein-fallen': 'tick',
+  'klopfen-stoss': 'tick',
+  'reizen-klopfen': 'tick',
+  'schach-rochade': 'tick',
+  'ruebenacker-hopps': 'tick',
+  'ruf-mau': 'tick',
+  'ruf-eins': 'tick',
   treffer: 'hit',
   versenkt: 'hit',
   'schiff-treffer': 'hit',
   'schiff-versenkt': 'hit',
   'flotte-versenkt': 'hit',
   'stein-schlagen': 'hit',
+  'go-gefangene': 'hit',
   'fs-treffer': 'hit',
+  'fs-angriff': 'hit',
   'drachen-schaden-tier': 'hit',
   'drachen-schaden-held': 'hit',
   'quiz-richtig': 'hit',
   'buchstabe-richtig': 'hit',
   'wort-perle': 'hit',
   'wort-lang': 'hit',
+  'wort-mittel': 'hit',
+  'wort-kurz': 'hit',
   paar: 'hit',
+  'karten-klatsch': 'hit',
   'stapel-fertig': 'hit',
   'mauer-stein': 'hit',
+  'mauer-fertig': 'hit',
   'gomoku-fuenf': 'hit',
   muehle: 'hit',
-  'schach-matt': 'hit',
+  'schach-umwandlung': 'hit',
+  'poker-pot': 'hit',
+  'ruf-fertig': 'hit',
+  'ruf-re': 'hit',
+  'ruf-kontra': 'hit',
+  'ruf-sauspiel': 'hit',
+  'ruf-wenz': 'hit',
+  'ruf-revolution': 'hit',
+  'schach-matt': 'heavy',
+  'poker-all-in': 'heavy',
+  'ruf-maexle': 'heavy',
+  'ruf-tout': 'heavy',
+  'ruf-solo': 'heavy',
+  'ruf-schwarz': 'heavy',
+  'ruf-schneider': 'heavy',
   'kein-paar': 'error',
   'quiz-falsch': 'error',
   'rechnen-falsch': 'error',
   'galgen-falsch': 'error',
   'galgen-verloren': 'error',
   'steuer-nimmt': 'error',
+  'strafe-ziehen': 'error',
+  'peter-gezogen': 'error',
+  'ruebenacker-maulwurf': 'error',
+  'ruf-schach': 'error',
   'nh-buh': 'error',
   'leben-weg': 'error',
   'zeit-um': 'error',
   niederlage: 'error',
   sieg: 'win',
+  'ruf-bingo': 'win',
+  'ruf-speed': 'win',
+  'ruf-kartenblitz': 'win',
 };
 
 /** Welches Muster gehört zu einem Klangnamen? null: keines. */
@@ -98,12 +135,17 @@ export function useHaptics(): boolean {
   );
 }
 
-/** Vibriert, wenn das Gerät es kann, der Schalter an ist und die Person nicht „weniger Bewegung“ wünscht. */
+/** Vibriert mit einem benannten Muster, wenn das Gerät es kann, der Schalter an ist und „weniger Bewegung“ aus ist. */
 export function vibrate(kind: HapticKind): void {
-  if (!enabled || !hapticsSupported()) return;
+  vibratePattern(HAPTIC_PATTERNS[kind]);
+}
+
+/** Vibriert mit einem beliebigen Muster in Millisekunden (z. B. je Kreatur oder Zauber). */
+export function vibratePattern(pattern: readonly number[]): void {
+  if (!enabled || !hapticsSupported() || pattern.length === 0) return;
   try {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    navigator.vibrate(HAPTIC_PATTERNS[kind] as unknown as number[]);
+    navigator.vibrate([...pattern]);
   } catch {
     // ohne Vibration weiterspielen
   }

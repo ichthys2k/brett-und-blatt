@@ -5,6 +5,7 @@ import { SetupExtra } from './DeckBuilder';
 import { endAction, markCustomDeck, prepareOptions } from './SoloHub';
 import { DeckSelection, MulliganPhase } from './phases';
 import { PlayBoard } from './PlayBoard';
+import { DRACHENSPIEL_HAPTICS } from './haptics';
 import './styles.css';
 import './feldkarte.css';
 import './handkarte.css';
@@ -69,6 +70,7 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
     cardTraded: 'mischen',
     damageBlocked: 'stein-heraus',
   },
+  haptics: DRACHENSPIEL_HAPTICS,
   phrases: ['hello', 'thanks', 'wellPlayed', 'wow', 'oops', 'grr'],
   seatLabel: (seat) => LABELS[seat] ?? `Platz ${seat + 1}`,
   seatDetail: (view, seat) => {
