@@ -209,7 +209,10 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const [sideOpen, setSideOpen] = useState(false);
   const sideBox = useRef<HTMLDivElement>(null);
   useDismiss(sideOpen, useCallback(() => setSideOpen(false), []), sideBox);
-  const collapsedSide = Boolean(ui.seatsOnBoard) && !around && rootSize.width > rootSize.height && rootSize.height > 0 && rootSize.height <= 540;
+  const landscape = rootSize.width > rootSize.height && rootSize.height > 0;
+  // Spiele mit `fullBleed` (Drachenspiel, #430) klappen die Leiste im Querformat immer ein und nutzen die Fläche ganz.
+  const fullBleed = Boolean(ui.fullBleed) && !around && landscape;
+  const collapsedSide = !around && landscape && ((Boolean(ui.seatsOnBoard) && rootSize.height <= 540) || fullBleed);
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
   const { trophy: trophyLaid } = usePassRecorder({ session, gameId: info.id, seatScore: ui.seatScore as ((view: never, seat: number) => number | string | null) | undefined, album: ui.album as AlbumSpec<never> | undefined, learning: ui.learning as { report: (view: never, seat: number) => { row: string; sure: boolean }[] } | undefined, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.finishedNote !== undefined, display: online.display } } : {}) });
@@ -535,7 +538,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     <CardInspectProvider>
     <div
       ref={rootRef}
-      className={`flex ${online?.display ? 'h-full' : 'h-dvh'} flex-col pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),0.75rem)] side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around ? '' : 'mx-auto max-w-3xl side:max-w-none side:flex-row'}`}
+      className={`flex ${online?.display ? 'h-full' : 'h-dvh'} flex-col pt-[env(safe-area-inset-top)] ${fullBleed ? 'pb-[env(safe-area-inset-bottom)]' : 'pb-[max(env(safe-area-inset-bottom),0.75rem)]'} side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around ? '' : 'mx-auto max-w-3xl side:max-w-none side:flex-row'}`}
     >
       {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
       <div ref={sideBox} className={collapsedSide ? 'relative flex-none' : 'contents'}>
@@ -697,7 +700,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       </div>
       </div>
 
-      <main className="bub-table relative order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 side:py-2 side:px-4" data-category={categoryOf(info.id)}>
+      <main className={`bub-table relative order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain ${fullBleed ? 'p-0' : 'px-3 side:py-2 side:px-4'}`} data-category={categoryOf(info.id)}>
         {yourMove && <div key={`${session.version}`} className="bub-turn-frame" aria-hidden="true" />}
         <ui.Board
           view={session.view(viewer)}

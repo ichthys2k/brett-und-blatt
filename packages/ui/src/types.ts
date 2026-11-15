@@ -112,6 +112,12 @@ export interface GameUi<V = unknown, M = unknown> {
    * Seitenleiste zu einem Menüknopf ☰ ein und öffnet sich bei Bedarf über dem Spielfeld (#378).
    */
   seatsOnBoard?: boolean;
+  /**
+   * Das Spielfeld bekommt die ganze Fläche (#430, Drachenspiel): Im Querformat und am Desktop ist die
+   * Seitenleiste immer zum Menüknopf ☰ eingeklappt (Spieler, Status, Tipp, Neu starten …), und das
+   * Spielfeld hat keinen Innenrand. Das Hochformat bleibt, wie es ist.
+   */
+  fullBleed?: boolean;
   /** Online: Schnellnachrichten an diesem Tisch statt der üblichen, z. B. die Tierrufe des Drachenspiels. */
   phrases?: readonly string[];
   /** Klänge zu den Ereignissen, z. B. `{ placed: 'stein-setzen' }`. Sieg, Niederlage und Zeit vertont die Plattform selbst. */

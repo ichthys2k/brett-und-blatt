@@ -9,6 +9,7 @@ import './styles.css';
 import './feldkarte.css';
 import './handkarte.css';
 import './zoomkarte.css';
+import './tisch.css';
 import { albumSpec } from './album';
 import { setPartyCards } from './cardLookup';
 import type { CustomCard } from '../carddefs';
@@ -47,6 +48,8 @@ export const gameUi: GameUi<DrachenspielView, DrachenspielMove> = {
   SeatSymbol,
   SetupExtra,
   prepareOptions,
+  // Der gemalte Tisch bekommt die ganze Fläche; Spieler, Status und Knöpfe liegen im Menü ☰ (#430).
+  fullBleed: true,
   endAction,
   sounds: {
     cardDrawn: 'drachen-karte-ziehen',
