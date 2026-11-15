@@ -19,18 +19,16 @@ import {
   type TavernHotspot,
   type TavernStationId,
 } from '../lib/tavern3d';
-import behind from '../menu/taverne-hinten.webp';
 import portrait from '../menu/taverne-hoch.webp';
-import front from '../menu/taverne-vorn.webp';
 
-/** Hintergrund je Lichtstimmung (#317); der Abend ist die Grundebene. */
-const MOOD_IMAGES: Record<TavernMood, string> = {
-  morgen: new URL('../menu/taverne-hinten-morgen.webp', import.meta.url).href,
-  tag: new URL('../menu/taverne-hinten-tag.webp', import.meta.url).href,
-  abend: behind,
-  nacht: new URL('../menu/taverne-hinten-nacht.webp', import.meta.url).href,
-  winter: new URL('../menu/taverne-hinten-winter.webp', import.meta.url).href,
-  fest: new URL('../menu/taverne-hinten-fest.webp', import.meta.url).href,
+/** Leerer Tavernenraum für die Stationen im Querformat (#454, Option B); Hochformat bleibt unten unverändert. */
+const MOOD_LEER: Record<TavernMood, string> = {
+  morgen: new URL('../menu/taverne-leer-morgen.webp', import.meta.url).href,
+  tag: new URL('../menu/taverne-leer-tag.webp', import.meta.url).href,
+  abend: new URL('../menu/taverne-leer-abend.webp', import.meta.url).href,
+  nacht: new URL('../menu/taverne-leer-nacht.webp', import.meta.url).href,
+  winter: new URL('../menu/taverne-leer-winter.webp', import.meta.url).href,
+  fest: new URL('../menu/taverne-leer-fest.webp', import.meta.url).href,
 };
 
 /** Dieselben Stimmungen im Hochformat für schmale Ansichten (Handys). */
@@ -53,6 +51,29 @@ const STATION_SPRITES: Record<string, { url: string; size: number }> = {
   board: { url: new URL('../menu/stationen/board.webp', import.meta.url).href, size: 1.0 },
   learn: { url: new URL('../menu/stationen/learn.webp', import.meta.url).href, size: 0.8 },
 };
+interface Station2D {
+  id: Exclude<TavernStationId, 'home'>;
+  label: string;
+  to: string;
+  /** Mittelpunkt und Breite in Prozent der Bildbreite (Bild 1376 × 768). */
+  x: number;
+  y: number;
+  w: number;
+}
+
+/**
+ * Stationen im leeren 2D-Tavernenraum (#454): freigestellte Einzelbilder, per Prozent auf dem Bild
+ * verankert (die Bühne `bub-menu-stage` folgt dem Zuschnitt des Bildes). Der Kamin steht links an der Wand.
+ */
+const STATIONS_2D: readonly Station2D[] = [
+  { id: 'options', label: '🔥 Optionen', to: '#/ton', x: 13, y: 55, w: 17 },
+  { id: 'board', label: '📌 Schwarzes Brett', to: '#/brett', x: 30, y: 33, w: 9 },
+  { id: 'profile', label: '🛡️ Profil & Pass', to: '#/pass', x: 46, y: 38, w: 9 },
+  { id: 'learn', label: '🗂️ Lernen', to: '#/lernen', x: 27, y: 63, w: 7 },
+  { id: 'tournaments', label: '🏆 Turniere', to: '#/turniere', x: 50, y: 62, w: 10 },
+  { id: 'online', label: '🌐 Online Spiel', to: '#/online', x: 43, y: 87, w: 15 },
+  { id: 'single', label: '♟️ Lokales Spiel', to: '#/einzelspieler', x: 34, y: 73, w: 12 },
+];
 import castle from '../assets/raeume/burgsaal.webp';
 import library from '../assets/raeume/bibliothek.webp';
 import garden from '../assets/raeume/schlossgarten.webp';
@@ -103,6 +124,28 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
   const isTavern = room === 'tavern';
   const targetStation: TavernStationId = station ?? (calm ? stationForRoute(route.name) : 'home');
   const [spotLabel, setSpotLabel] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [hoveredStation, setLocalHoveredStation] = useState<TavernStationId | null>(() => getHoveredStation());
+  const activeStation = STATIONS_2D.find((st) => st.id === hoveredStation);
+
+  useEffect(() => {
+    setLocalHoveredStation(getHoveredStation());
+    return subscribeHoveredStation(() => setLocalHoveredStation(getHoveredStation()));
+  }, []);
+
+  // 2D-Parallax auch ohne 3D-Bühne (#454)
+  useEffect(() => {
+    const el = scene.current;
+    if (use3d || calm || !el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const onPointerMove = (event: PointerEvent) => {
+      const mx = event.clientX / Math.max(1, window.innerWidth) - 0.5;
+      const my = event.clientY / Math.max(1, window.innerHeight) - 0.5;
+      el.style.setProperty('--mx', String(mx));
+      el.style.setProperty('--my', String(my));
+    };
+    window.addEventListener('pointermove', onPointerMove);
+    return () => window.removeEventListener('pointermove', onPointerMove);
+  }, [use3d, calm]);
 
   useEffect(() => {
     const el = scene.current;
@@ -358,7 +401,7 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
             {isTavern ? (
               <picture>
                 <source media="(max-width: 760px)" srcSet={MOOD_PORTRAITS[mood]} />
-                <img src={MOOD_IMAGES[mood]} alt="" draggable={false} />
+                <img src={MOOD_LEER[mood]} alt="" draggable={false} />
               </picture>
             ) : (
               <img src={ROOM_IMAGES[room]} alt="" draggable={false} />
@@ -366,9 +409,37 @@ export function TavernScene({ calm = false, station }: { calm?: boolean; station
           </div>
           <div className="bub-menu-layer bub-menu-glow" />
           {isTavern && <div className="bub-menu-layer bub-menu-hearth" />}
-          {calm || !isTavern ? null : (
-            <div className="bub-menu-layer bub-menu-front">
-              <img src={front} alt="" draggable={false} />
+          {!calm && isTavern && (
+            <div className="bub-menu-layer bub-menu-stations">
+              <div className="bub-menu-stage">
+                {STATIONS_2D.map((st) => (
+                  <button
+                    key={st.id}
+                    type="button"
+                    tabIndex={-1}
+                    className="bub-menu-station"
+                    data-station={st.id}
+                    data-hot={hoveredStation === st.id ? 'true' : undefined}
+                    style={{ left: `${st.x}%`, top: `${st.y}%`, width: `${st.w}%` }}
+                    onMouseEnter={() => setHoveredStation(st.id)}
+                    onMouseLeave={() => setHoveredStation(null)}
+                    onClick={() => {
+                      setHoveredStation(null);
+                      navigate(st.to);
+                    }}
+                  >
+                    <img src={STATION_SPRITES[st.id]?.url} alt="" draggable={false} />
+                  </button>
+                ))}
+                {activeStation && (
+                  <div
+                    className="bub-menu-hotspot-label"
+                    style={{ left: `${activeStation.x}%`, top: `${activeStation.y - activeStation.w * 0.9}%` }}
+                  >
+                    {activeStation.label}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </>

@@ -48,6 +48,55 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, transparent 45%, #140d0766 80%);
+  pointer-events: none;
+}
+/* Stationen im leeren 2D-Raum (#454): die Bühne hat das Seitenverhältnis des Bildes und folgt
+   seinem Zuschnitt (cover, Ausschnitt 30 % / 100 %), damit die Prozentwerte am Bild kleben. */
+.bub-menu-back, .bub-menu-glow { pointer-events: none; }
+.bub-menu-stations {
+  container-type: size;
+  transform: translate(calc(var(--mx) * -18px), calc(var(--my) * -9px));
+  pointer-events: none;
+}
+.bub-menu-stage {
+  position: absolute;
+  width: max(100cqw, 100cqh * 1.7917);
+  height: max(100cqh, 100cqw / 1.7917);
+  left: calc((100cqw - max(100cqw, 100cqh * 1.7917)) * 0.3);
+  top: calc(100cqh - max(100cqh, 100cqw / 1.7917));
+}
+.bub-menu-station {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+.bub-menu-station img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 6px 10px rgba(10, 6, 3, 0.65));
+}
+/* Der Kamin trägt einen Feuerschein-Rand mit grünem Saum; unten ausblenden */
+.bub-menu-station[data-station='options'] img {
+  -webkit-mask-image: linear-gradient(to bottom, #000 77%, transparent 81%);
+  mask-image: linear-gradient(to bottom, #000 77%, transparent 81%);
+}
+.bub-menu-station[data-hot='true'] {
+  transform: translate(-50%, -50%) scale(1.07);
+  filter: drop-shadow(0 0 14px rgba(242, 210, 122, 0.85)) brightness(1.12);
+}
+/* Fast quadratische Fenster: der Menürahmen würde Stationen verdecken */
+@media (max-aspect-ratio: 13/10) {
+  .bub-menu-stations { display: none; }
+}
+/* Querformat: der leere Raum trägt keinen alten Kaminschein und keine Vordergrundebene */
+@media (min-width: 761px) {
+  .bub-menu-hearth { display: none; }
 }
 /* Unterseiten rollen: die Szene bleibt stehen */
 .bub-tav .bub-menu-scene { position: fixed; }
@@ -300,6 +349,7 @@
   .bub-menu-glow, .bub-menu-hearth { animation: none; }
 }
 @media (max-width: 760px) {
+  .bub-menu-stations { display: none; }
   .bub-menu-hearth { background: radial-gradient(ellipse 22% 10% at 18% 74%, #ff9a3c55 0, transparent 75%); }
 }
 .bub-menu-plaque-link { cursor: pointer; }
@@ -348,6 +398,8 @@
 }
 .bub-menu-hotspot-label {
   position: absolute;
+  z-index: 2;
+  pointer-events: none;
   transform: translate(-50%, -100%);
   padding: 0.25rem 0.65rem;
   border: 1.5px solid #e0b25a;

@@ -13,7 +13,7 @@ Spalten: **WebP** im öffentlichen Repo · **Original im Archiv** (privates Repo
 | `apps/web/src/assets/kulissen` | 24 | 24 |  |  | `kulissen-spiele` | gemini-3-pro-image, November 2026 |
 | `apps/web/src/assets/raeume` | 3 | 0 | 3 |  | `raeume` | Bildmodell ohne Angabe, November 2026 |
 | `apps/web/src/assets/tische` | 12 | 7 |  | 5 | `tische` | gemini-3.1-flash-image, November 2026; gemini-3-pro-image, November 2026 |
-| `apps/web/src/menu` | 13 | 12 | 1 |  | `menue-licht-hoch`, `menue-licht` | gemini-3-pro-image, November 2026; gemini-3.1-flash-image, November 2026 |
+| `apps/web/src/menu` | 19 | 18 | 1 |  | `menue-leer-licht`, `menue-leer`, `menue-licht-hoch`, `menue-licht` | gemini-3-pro-image, November 2026; gemini-3.1-flash-image, November 2026 |
 | `apps/web/src/menu/stationen` | 7 | 7 |  |  | `menue-stationen` | gemini-3-pro-image, November 2026 |
 | `apps/web/src/wappen` | 56 | 0 | 54 | 2 | `wappen` | gemini-3.1-flash-image, November 2026 |
 | `content/quartett/bilder/bibel` | 32 | 32 |  |  | `quartett-bibel` | – (kein Abschnitt in THIRD_PARTY.md) |
@@ -50,7 +50,7 @@ Spalten: **WebP** im öffentlichen Repo · **Original im Archiv** (privates Repo
 | `packages/ui/src/bots/portraits` | 47 | 47 |  |  | `bots` | gemini-3.1-flash-lite-image, November 2026 |
 | `packages/ui/src/cards/backs` | 6 | 6 |  |  | `kartenruecken` | gemini-3-pro-image, November 2026 |
 | `packages/ui/src/cards/portraits` | 24 | 0 | 24 |  | `bildkarten-deutsch`, `bildkarten` | gemini-3.1-flash-image, November 2026 |
-| **Summe** | **1227** | **741** | **479** | **7** | | |
+| **Summe** | **1233** | **747** | **479** | **7** | | |
 
 ## Geplant (Manifest vorhanden, noch keine Bilder)
 
