@@ -29,6 +29,7 @@ import { storage, type Profile } from '../lib/storage';
 import { useGameSounds } from '../lib/useGameSounds';
 import { useGameScene } from '../lib/gameScene';
 import { botAvatar } from '../lib/botPortraits';
+import { useWakeLock } from '../lib/useWakeLock';
 
 export function Play() {
   const [active, setActive] = useState<ActiveGame | null>(() => getActiveGame());
@@ -163,7 +164,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const soundSettings = useSoundSettings();
   const playMusic = !soundSettings.musicOff && (!isClient || Boolean(soundSettings.clientMusic));
 
-  useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined, ui.ownSoundsOnly);
+  useGameSounds(session, ui.sounds, online ? online.yourSeat : undefined, ui.ownSoundsOnly, ui.haptics);
   useGameMusic(info.id, playMusic && !info.ownMusic);
   useGameScene(info.id);
 
@@ -217,6 +218,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const collapsedTop = collapsedSide && !landscape;
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
+  useWakeLock(!result && !session.paused);
   const { trophy: trophyLaid } = usePassRecorder({ session, gameId: info.id, seatScore: ui.seatScore as ((view: never, seat: number) => number | string | null) | undefined, album: ui.album as AlbumSpec<never> | undefined, learning: ui.learning as { report: (view: never, seat: number) => { row: string; sure: boolean }[] } | undefined, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.finishedNote !== undefined, display: online.display } } : {}) });
   const current = session.currentSeats();
   /** Der Mensch, der jetzt am Gerät dran ist – auch während einer Pause. */
