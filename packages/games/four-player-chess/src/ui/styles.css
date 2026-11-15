@@ -62,6 +62,13 @@
   translate: 0 -18%;
 }
 
+:root[data-pieces-four-player-chess='wood'] .fc-board .fc-piece,
+:root[data-pieces-four-player-chess='metal'] .fc-board .fc-piece,
+:root[data-pieces-four-player-chess='fable'] .fc-board .fc-piece {
+  font-size: 180cqmin;
+  translate: 0 -22%;
+}
+
 .fc-r {
   color: #d62828;
 }
