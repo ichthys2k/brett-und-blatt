@@ -83,6 +83,39 @@
   }
 }
 
+/* Vorphasen (Deckwahl, Starthand, Warten) liegen auf demselben Tisch, leicht abgedunkelt für den Text (S7, #430). */
+.ds-phase-overlay.ds-phase-overlay {
+  --ds-table: url('./tische/tisch-arena-quer.webp');
+  background:
+    linear-gradient(rgb(20 12 6 / 0.35), rgb(20 12 6 / 0.6)),
+    #24140c var(--ds-table) center top / cover no-repeat;
+  border-radius: 0;
+  color: #f5ead6;
+}
+
+@media (orientation: portrait) {
+  .ds-phase-overlay.ds-phase-overlay {
+    --ds-table: url('./tische/tisch-arena-hoch.webp');
+    background-size: auto, 112% auto;
+    background-position: center, center 30%;
+  }
+}
+
+.ds-phase-overlay .ds-phase-title {
+  color: #fff3dc;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 0.7);
+}
+
+.ds-phase-overlay .ds-deck-choice,
+.ds-phase-overlay .ds-builder-overlay {
+  color: var(--color-ink, #1f2328);
+}
+
+.ds-phase-overlay .ds-phase-subtitle {
+  color: rgb(255 240 220 / 0.88);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.7);
+}
+
 /* Gegner oben auf dem Zierrand, eigener Held unten auf dem Tischrand */
 .ds-arena .ds-opponent-zone,
 .ds-arena .ds-player-zone {
