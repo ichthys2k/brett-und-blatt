@@ -420,11 +420,21 @@ button.ch-log-cell:hover {
   translate: -50% -62%;
 }
 
+.ch-board .ch-piece.ch-pawn {
+  font-size: 102cqmin;
+}
+
 :root[data-pieces-chess='wood'] .ch-board .ch-piece,
 :root[data-pieces-chess='metal'] .ch-board .ch-piece,
 :root[data-pieces-chess='fable'] .ch-board .ch-piece {
   font-size: 145cqmin;
   translate: -50% -66%;
+}
+
+:root[data-pieces-chess='wood'] .ch-board .ch-piece.ch-pawn,
+:root[data-pieces-chess='metal'] .ch-board .ch-piece.ch-pawn,
+:root[data-pieces-chess='fable'] .ch-board .ch-piece.ch-pawn {
+  font-size: 122cqmin;
 }
 
 /* Gefüllte Zeichen für beide Farben: Weiß mit heller Füllung und dunkler Kontur. */

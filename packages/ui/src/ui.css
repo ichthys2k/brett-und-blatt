@@ -900,7 +900,7 @@ button.bub-net-point:not(:disabled) {
 }
 
 .bub-cell-sliding {
-  z-index: 10 !important;
+  z-index: 50 !important;
 }
 
 .bub-piece-slide {
