@@ -1,10 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
 
-  <g fill="#1f2328" stroke="#e8dfd0" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M 45 6 L 55 6 L 55 13 L 64 13 L 64 23 L 55 23 L 55 32 L 45 32 L 45 23 L 36 23 L 36 13 L 45 13 Z"/>
-    <path d="M 20 91 L 80 91 L 75 78 L 25 78 Z"/>
-    <path d="M 27 78 C 19 57, 17 41, 26 31 C 34 24, 44 29, 50 37 C 56 29, 66 24, 74 31 C 83 41, 81 57, 73 78 Z"/>
+  <ellipse cx="50" cy="90" rx="25" ry="3.2" fill="rgb(0 0 0 / 0.16)"/>
+  <g stroke="#1b1a18" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M 47.5 11 L 52.5 11 L 52.5 16.5 L 58.5 16.5 L 58.5 21.5 L 52.5 21.5 L 52.5 29 L 47.5 29 L 47.5 21.5 L 41.5 21.5 L 41.5 16.5 L 47.5 16.5 Z" fill="#4a4744"/>
+    <path d="M 27 88 C 27 82, 31 78, 34 76 L 66 76 C 69 78, 73 82, 73 88 Z" fill="#4a4744"/>
+    <path d="M 34 76 C 27 60, 25 46, 32 37 C 39 30, 46 34, 50 40 C 54 34, 61 30, 68 37 C 75 46, 73 60, 66 76 Z" fill="#4a4744"/>
+    <path d="M 58 34 C 67 34, 73 43, 71 57 C 69 65, 67 71, 65 76 L 70 87 L 56 87 L 56 48 Z" fill="#2e2c2a" stroke="none"/>
+    <path d="M 27 88 C 27 82, 31 78, 34 76 L 66 76 C 69 78, 73 82, 73 88 Z" fill="none"/>
+    <path d="M 34 76 C 27 60, 25 46, 32 37 C 39 30, 46 34, 50 40 C 54 34, 61 30, 68 37 C 75 46, 73 60, 66 76 Z" fill="none"/>
   </g>
-  <line x1="27" y1="68" x2="73" y2="68" stroke="#e8dfd0" stroke-width="4.5" stroke-linecap="round"/>
-  <line x1="50" y1="38" x2="50" y2="68" stroke="#e8dfd0" stroke-width="4.5" stroke-linecap="round"/>
+  <line x1="35" y1="68" x2="65" y2="68" stroke="#cfc8bc" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="50" y1="41" x2="50" y2="68" stroke="#cfc8bc" stroke-width="2.2" stroke-linecap="round"/>
 </svg>
