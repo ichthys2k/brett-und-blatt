@@ -1,10 +1,13 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { ContentCard, FitBox, GridBoard, PackPicker, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState } from 'react';
-import { faceOf } from '../content';
+import { faceImageOf, faceOf } from '../content';
 import { learningReport, type PairsMove, type PairsState } from '../rules';
 import './styles.css';
 import { albumSpec } from './album';
+import { resolvePairImage, setPairImageResolver } from './imageResolver';
+
+export { setPairImageResolver };
 
 const SEAT_COLORS = ['#d6336c', '#1c7ed6', '#2f9e44', '#f08c00', '#7048e8', '#0c8599'];
 
@@ -37,11 +40,15 @@ function Board({ view, legalMoves, onMove, hint, events }: BoardProps<PairsState
           const status = view.status[card];
           const taken = typeof status === 'object' ? status.takenBy : null;
           const isMismatched = mismatched.includes(card);
+          const text = face ? faceOf(view.set, face.pair, face.side, view.custom) : null;
+          const image = face ? resolvePairImage(faceImageOf(view.set, face.pair, view.custom)) : undefined;
           return (
             <span className="pf-slot" style={taken !== null ? { outlineColor: SEAT_COLORS[taken % SEAT_COLORS.length] } : undefined}>
               <ContentCard
                 key={face ? 'offen' : 'verdeckt'}
-                content={face ? faceOf(view.set, face.pair, face.side, view.custom) : null}
+                content={text}
+                image={image}
+                caption={image && view.set !== 'tiere' && text ? text : undefined}
                 dimmed={taken !== null}
                 highlight={hint?.card === card ? 'hint' : null}
                 anim={isMismatched ? 'shake' : null}

@@ -34,9 +34,12 @@ Ein Paar besteht aus zwei Seiten, die **gleich** oder **zusammengehörig** sein 
 }
 ```
 
-Erste Sets (`content/paare/`):
+Erste Sets (`content/paare/` und `packages/games/pairs/src/imageSets.ts`, #470):
 
-- Tiere (Emojis)
+- Tiere (gemalte Spieleravatare über `avatarMap.json`)
+- Quartett-Sets: Tiere, Weltraum, Bibel, Dinosaurier, Geometrie (Bilder aus `content/quartett/bilder/`)
+- Drachenspiel-Helden: Haus Eichenhain (Wald), Seefahrergilde (Meer), Hahnfeld (Bauernhof), Fernländer (Wildnis), Moorbach (Krabbeltiere) sowie „Alle Helden & Drachen“
+- Weitere Spielewelt-Sets aus vorhandenen Bildern: Tavernen-Bots, Jahrmarkt, Narrenhof, Spielwappen, Hofkarten (Klassik), Grafschaft, Marktplatz
 - Kleines Einmaleins (`einmaleins.json`)
 - Großes Einmaleins (`grosses-einmaleins.json`)
 - Potenzen & Rechengesetze (`kopfrechnen.json`)
