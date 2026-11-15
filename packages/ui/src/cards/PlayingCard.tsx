@@ -15,6 +15,7 @@ import { CardBack, type CardBackProps } from './CardBack';
 import { useCardCosmetics } from './CardCosmeticsContext';
 import { GameCard } from './GameCard';
 import { portraitUrl, useCardPortraits } from './portraits';
+import { useInspectProps } from '../inspect/CardInspect';
 
 export type { DeckStyle };
 
@@ -209,6 +210,21 @@ export function PlayingCard({
       )
     : undefined;
 
+  // Großansicht (#422) nur auf Wunsch (Rechtsklick, Taste i, lange drücken), nie beim Überfahren: Beim
+  // schnellen Spielen stört sie sonst. Gezeigt werden Porträt der Bildkarte und Kartenhinweis.
+  const inspectPortrait = !isDown && card ? override?.image || portraitUrl(card, deckStyle) : undefined;
+  const inspect = useInspectProps(
+    !isDown && card && (description || inspectPortrait)
+      ? () => ({
+          title: override?.name ?? cardName(card),
+          image: inspectPortrait ? { src: inspectPortrait, aspect: 4 / 5 } : undefined,
+          lines: description ? [description] : undefined,
+        })
+      : undefined,
+    {},
+    { hover: false },
+  );
+
   const frameClass = override?.frame ? `bub-card-frame--${override.frame}` : '';
   const classes = `bub-card ${selected ? 'bub-card-selected' : ''} ${highlight ? `bub-card-${highlight}` : ''} ${onClick ? 'bub-card-clickable' : ''} ${animClass} ${frameClass} ${className}`.trim();
 
@@ -253,11 +269,12 @@ export function PlayingCard({
       title={titleText}
       aria-label={fullLabel}
       aria-pressed={selected || undefined}
+      {...inspect}
     >
       {content}
     </button>
   ) : (
-    <span className={classes} style={style} role="img" title={titleText} aria-label={fullLabel}>
+    <span className={classes} style={style} role="img" title={titleText} aria-label={fullLabel} {...inspect}>
       {content}
     </span>
   );
