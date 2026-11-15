@@ -8,6 +8,7 @@ import { PlayBoard } from './PlayBoard';
 import './styles.css';
 import './feldkarte.css';
 import './handkarte.css';
+import './zoomkarte.css';
 import { albumSpec } from './album';
 import { setPartyCards } from './cardLookup';
 import type { CustomCard } from '../carddefs';
