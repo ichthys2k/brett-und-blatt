@@ -1,0 +1,452 @@
+/* Turnierherr als Figur am Tisch (#464, Strang #425, Glied S8): Porträt des Haus-Champions im
+   Bogenrahmen, Wimpel mit Lebenszahl, Rüstung, Waffe links, Hauskraft rechts, Knappen als Edelsteine.
+   Die Zustände (Ziel, kann angreifen, ausgewählt, Abwurfziel) leuchten am Rahmen statt an einer Plakette.
+   Doppelte Klassen (.ds-hero-card.ds-held), damit diese Regeln die alten Plakettenregeln sicher ersetzen. */
+
+.ds-arena .ds-held {
+  /* Breite des Porträts: wächst mit der Höhe der Arena. (Am Helden gesetzt, nicht an der Arena:
+     Container-Abfragen und cqh gelten erst für Nachfahren des Containers.) */
+  --ds-held: clamp(54px, 12.5cqh, 104px);
+}
+
+/* Der eigene und der gegnerische Held stehen mittig, Zähler und Knöpfe rechts daneben. */
+.ds-arena .ds-opponent-zone,
+.ds-arena .ds-player-zone {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.ds-arena .ds-opponent-zone > .ds-held,
+.ds-arena .ds-player-zone > .ds-held {
+  grid-column: 2;
+}
+
+.ds-arena .ds-opponent-zone > .ds-opponent-info,
+.ds-arena .ds-player-zone > .ds-actions {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.ds-arena .ds-hero-card.ds-held {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  color: #f5ead6;
+  outline-offset: 4px;
+}
+
+.ds-held-row {
+  display: grid;
+  grid-template-columns: minmax(calc(var(--ds-held) * 0.5), 1fr) auto minmax(calc(var(--ds-held) * 0.5), 1fr);
+  align-items: end;
+  gap: calc(var(--ds-held) * 0.1);
+}
+
+.ds-held-side {
+  display: flex;
+  padding-bottom: calc(var(--ds-held) * 0.2);
+}
+
+.ds-held-left {
+  justify-content: flex-end;
+}
+
+.ds-held-portrait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ds-held-pic {
+  position: relative;
+  width: var(--ds-held);
+  height: calc(var(--ds-held) * 1.16);
+}
+
+.ds-held-frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: calc(var(--ds-held) * 0.5) calc(var(--ds-held) * 0.5) calc(var(--ds-held) * 0.12) calc(var(--ds-held) * 0.12);
+  border: max(2px, calc(var(--ds-held) * 0.035)) solid #dcae4d;
+  background: #2b1a0e;
+  box-shadow:
+    0 0 0 2px #1a120a,
+    0 4px 12px rgb(0 0 0 / 0.6);
+  font-size: calc(var(--ds-held) * 0.5);
+  transition: box-shadow 0.15s;
+}
+
+/* Die Champions sind Ganzkörperbilder: Ausschnitt auf Kopf und Schultern. */
+.ds-held-frame > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0;
+  transform: scale(1.75);
+  transform-origin: 50% 16%;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.ds-held-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 calc(var(--ds-held) * -0.3) calc(var(--ds-held) * 0.25) calc(var(--ds-held) * -0.12) rgb(0 0 0 / 0.75);
+  pointer-events: none;
+}
+
+/* Hausfarbe als feiner innerer Ring */
+.ds-hero-forest .ds-held-frame { border-color: #b9c96a; }
+.ds-hero-sea .ds-held-frame { border-color: #8ec3e6; }
+.ds-hero-farm .ds-held-frame { border-color: #f0c04f; }
+.ds-hero-wild .ds-held-frame { border-color: #e9a05c; }
+.ds-hero-bugs .ds-held-frame { border-color: #b79be8; }
+
+/* Unter 10 Wimpeln: Risse im Rahmen und ein roter Schein. */
+.ds-held-pic[data-low='true'] .ds-held-frame::after {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 116' fill='none' stroke='%23fff' stroke-opacity='.75' stroke-width='1.6' stroke-linejoin='round'%3E%3Cpath d='M70 0 62 18 72 30 60 46 66 58M0 70 16 64 24 74 40 70M100 84 84 80 78 92'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  box-shadow:
+    inset 0 calc(var(--ds-held) * -0.3) calc(var(--ds-held) * 0.25) calc(var(--ds-held) * -0.12) rgb(0 0 0 / 0.75),
+    inset 0 0 calc(var(--ds-held) * 0.22) rgb(255 60 40 / 0.65);
+}
+
+/* Wimpel mit der Lebenszahl, rechts unten am Porträt */
+.ds-held-hp {
+  position: absolute;
+  right: calc(var(--ds-held) * -0.3);
+  bottom: calc(var(--ds-held) * 0.1);
+  width: calc(var(--ds-held) * 0.46);
+  height: calc(var(--ds-held) * 0.52);
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.55));
+  z-index: 2;
+}
+
+.ds-held-hp > svg {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ds-held-hp-num {
+  grid-area: 1 / 1;
+  margin-top: -18%;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-weight: 900;
+  font-size: calc(var(--ds-held) * 0.26);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: #fffaf0;
+  -webkit-text-stroke: max(2px, calc(var(--ds-held) * 0.03)) #1a120a;
+  paint-order: stroke fill;
+}
+
+.ds-held-hp[data-state='hurt'] .ds-held-hp-num {
+  color: #ffc2b5;
+}
+
+.ds-held-armor.ds-held-armor {
+  position: absolute;
+  right: calc(var(--ds-held) * -0.26);
+  bottom: calc(var(--ds-held) * 0.58);
+  --ds-sym-stat: calc(var(--ds-held) * 0.36);
+  z-index: 2;
+}
+
+/* Siegel für Fallen und Auftrag, links oben am Porträt */
+.ds-held-seals {
+  position: absolute;
+  left: calc(var(--ds-held) * -0.22);
+  top: calc(var(--ds-held) * 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  z-index: 2;
+}
+
+.ds-held-seal {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 1.5px solid #dcae4d;
+  background: #4a2358;
+  color: #fff6e0;
+  font: 700 0.68rem / 1 var(--font-sans, system-ui, sans-serif);
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+}
+
+.ds-held-seal-quest {
+  background: #5d4a14;
+}
+
+/* Namensband unter dem Porträt */
+.ds-held-band {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: calc(var(--ds-held) * 1.7);
+  min-width: calc(var(--ds-held) * 1.08);
+  margin-top: calc(var(--ds-held) * -0.1);
+  padding: 2px 8px;
+  border-radius: 5px;
+  border: 1.5px solid #dcae4d;
+  background: linear-gradient(#6c2028, #48141b);
+  box-shadow: 0 2px 5px rgb(0 0 0 / 0.5);
+  line-height: 1.15;
+}
+
+.ds-held-name,
+.ds-held-house {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-held-name {
+  font-weight: 700;
+  font-size: clamp(0.68rem, calc(var(--ds-held) * 0.14), 0.9rem);
+  color: #fff3dc;
+}
+
+.ds-held-house {
+  font-size: clamp(0.56rem, calc(var(--ds-held) * 0.1), 0.68rem);
+  color: #ecc9a2;
+}
+
+/* Waffe bzw. Angriff des Turnierherrn, links */
+.ds-held-gear {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  --ds-sym-stat-hand: calc(var(--ds-held) * 0.46);
+}
+
+.ds-held-uses {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.65);
+  font: 700 0.62rem / 1.3 var(--font-sans, system-ui, sans-serif);
+  color: #fff3dc;
+}
+
+/* Hauskraft als Medaillon, rechts */
+.ds-arena .ds-held .ds-power {
+  position: relative;
+  width: calc(var(--ds-held) * 0.56);
+  height: calc(var(--ds-held) * 0.56);
+  min-width: 34px;
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--ds-held) * 0.28);
+  border-radius: 50%;
+  border: 2px solid #8c7440;
+  background: radial-gradient(circle at 40% 32%, #7a6a54, #3a2c1c);
+  box-shadow: 0 0 0 2px #1a120a, 0 2px 6px rgb(0 0 0 / 0.5);
+  filter: grayscale(0.7) brightness(0.9);
+  opacity: 1;
+  cursor: pointer;
+}
+
+.ds-arena .ds-held .ds-power.playable,
+.ds-arena .ds-held .ds-power-opp.ready {
+  border-color: #f0c04f;
+  background: radial-gradient(circle at 40% 32%, #a9864a, #4a3216);
+  filter: none;
+}
+
+.ds-arena .ds-held .ds-power.playable {
+  box-shadow: 0 0 0 2px #1a120a, 0 0 12px 2px rgb(240 192 79 / 0.75);
+}
+
+.ds-arena .ds-held .ds-power-opp {
+  cursor: help;
+}
+
+.ds-power-gem.ds-power-gem {
+  position: absolute;
+  top: -32%;
+  left: 50%;
+  translate: -50% 0;
+  --ds-sym-stat: max(18px, calc(var(--ds-held) * 0.26));
+}
+
+/* Knappen als Reihe von Edelsteinen */
+.ds-held-mana {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(14 10 6 / 0.72);
+  box-shadow: 0 0 0 1px rgb(120 160 220 / 0.35);
+}
+
+.ds-held-mana-num {
+  font: 800 0.7rem / 1 var(--font-sans, system-ui, sans-serif);
+  font-variant-numeric: tabular-nums;
+  color: #cfe3ff;
+  white-space: nowrap;
+}
+
+.ds-held-gems {
+  display: flex;
+  gap: 2px;
+}
+
+.ds-held-gem {
+  width: 9px;
+  height: 12px;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  background: #3d86e6;
+}
+
+.ds-held-gem[data-state='spent'] {
+  background: #243f63;
+}
+
+.ds-held-gem[data-state='locked'] {
+  background: #8a6a2c;
+  clip-path: polygon(15% 15%, 85% 15%, 85% 85%, 15% 85%);
+}
+
+.ds-held-gem[data-state='none'] {
+  background: rgb(255 255 255 / 0.14);
+}
+
+/* Zustände am Rahmen */
+.ds-arena .ds-held.targetable .ds-held-frame {
+  box-shadow:
+    0 0 0 2px #1a120a,
+    0 0 0 5px #ff4f42,
+    0 0 16px 4px rgb(255 79 66 / 0.7);
+}
+
+.ds-arena .ds-held.targetable {
+  animation: none;
+}
+
+.ds-arena .ds-held.can-attack .ds-held-frame {
+  box-shadow:
+    0 0 0 2px #1a120a,
+    0 0 0 5px #33d08f,
+    0 0 14px 3px rgb(51 208 143 / 0.65);
+}
+
+.ds-arena .ds-held.selected .ds-held-frame {
+  box-shadow:
+    0 0 0 2px #1a120a,
+    0 0 0 5px #ffd166,
+    0 0 16px 4px rgb(255 209 102 / 0.8);
+}
+
+.ds-arena .ds-hero-card.ds-held[data-drop-active='true'] {
+  box-shadow: none !important;
+}
+
+.ds-arena .ds-held[data-drop-active='true'] .ds-held-frame {
+  box-shadow:
+    0 0 0 2px #1a120a,
+    0 0 0 6px #ff4757,
+    0 0 20px 6px rgb(255 71 87 / 0.8);
+}
+
+/* Handy-Hochformat und schmale Arena: Medaillon in der Ecke, ohne Hauszeile. */
+@container ds-arena (max-width: 560px) {
+  .ds-arena .ds-held {
+    --ds-held: clamp(46px, 8.5cqh, 64px);
+  }
+
+  .ds-arena .ds-opponent-zone,
+  .ds-arena .ds-player-zone {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .ds-arena .ds-opponent-zone > .ds-held,
+  .ds-arena .ds-player-zone > .ds-held {
+    grid-column: 1;
+  }
+
+  .ds-arena .ds-opponent-zone > .ds-opponent-info,
+  .ds-arena .ds-player-zone > .ds-actions {
+    grid-column: 2;
+  }
+
+  .ds-arena .ds-hero-card.ds-held {
+    padding: 0;
+    gap: 2px;
+  }
+
+  .ds-held-row {
+    grid-template-columns: auto auto auto;
+  }
+
+  .ds-held-left:empty {
+    display: none;
+  }
+
+  .ds-held-house {
+    display: none;
+  }
+
+  .ds-held-band {
+    padding: 0 6px;
+  }
+
+  .ds-held-gem {
+    width: 7px;
+    height: 10px;
+  }
+}
+
+/* Niedrige Arena (Handy quer): kleines Porträt, Knappen neben statt unter dem Helden. */
+@container ds-arena (max-height: 470px) {
+  .ds-arena .ds-held {
+    --ds-held: clamp(40px, 13cqh, 56px);
+  }
+
+  .ds-arena .ds-hero-card.ds-held {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+  }
+
+  .ds-held-house {
+    display: none;
+  }
+
+  .ds-held-band {
+    padding: 0 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-held-frame {
+    transition: none;
+  }
+}
