@@ -413,15 +413,18 @@ button.ch-log-cell:hover {
 }
 
 .ch-board .ch-piece {
+  position: absolute;
+  left: 50%;
+  top: 50%;
   font-size: 122cqmin;
-  translate: 0 -18%;
+  translate: -50% -62%;
 }
 
 :root[data-pieces-chess='wood'] .ch-board .ch-piece,
 :root[data-pieces-chess='metal'] .ch-board .ch-piece,
 :root[data-pieces-chess='fable'] .ch-board .ch-piece {
-  font-size: 180cqmin;
-  translate: 0 -22%;
+  font-size: 145cqmin;
+  translate: -50% -66%;
 }
 
 /* Gefüllte Zeichen für beide Farben: Weiß mit heller Füllung und dunkler Kontur. */
