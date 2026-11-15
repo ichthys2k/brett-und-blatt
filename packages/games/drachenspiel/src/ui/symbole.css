@@ -1,0 +1,151 @@
+/* Symbolsatz des Drachenspiels (#434): Wertesymbole, Schlüsselwort-Zeichen, Rand-Effekte.
+   Bausteine in symbole.tsx; eingebaut wird erst in S2 bis S4 (Feld-, Hand-, Zoomkarte). */
+
+/* Größenstufen: die Karten setzen sie bei Bedarf über die Variablen neu. */
+.ds-sym-feld {
+  --ds-sym-stat: var(--ds-sym-stat-feld, 26px);
+  --ds-sym-mark: var(--ds-sym-mark-feld, 20px);
+}
+.ds-sym-hand {
+  --ds-sym-stat: var(--ds-sym-stat-hand, 32px);
+  --ds-sym-mark: var(--ds-sym-mark-hand, 24px);
+}
+.ds-sym-zoom {
+  --ds-sym-stat: var(--ds-sym-stat-zoom, 52px);
+  --ds-sym-mark: var(--ds-sym-mark-zoom, 36px);
+}
+
+/* Heller Saum, damit die dunkle Kontur auf dunklem Grund nicht verschwindet. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ds-sym-halo: drop-shadow(0 0 1px rgb(255 255 255 / 0.55));
+  }
+}
+
+.ds-sym-stat,
+.ds-sym-mark {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  line-height: 1;
+  filter: var(--ds-sym-halo, none) drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.45));
+}
+
+.ds-sym-stat {
+  width: var(--ds-sym-stat);
+  height: var(--ds-sym-stat);
+}
+
+.ds-sym-mark {
+  width: var(--ds-sym-mark);
+  height: var(--ds-sym-mark);
+}
+
+.ds-sym-stat > svg,
+.ds-sym-mark > svg {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Die Zahl bleibt Text: groß, fett, mit dicker dunkler Kontur. */
+.ds-sym-num {
+  grid-area: 1 / 1;
+  position: relative;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-weight: 900;
+  font-size: calc(var(--ds-sym-stat) * 0.56);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  color: #fff;
+  -webkit-text-stroke: calc(var(--ds-sym-stat) * 0.09) #1a120a;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 0 #1a120a;
+}
+
+/* Zahl in der Mitte der jeweiligen Form */
+.ds-sym-stat-attack .ds-sym-num {
+  top: -6%;
+}
+.ds-sym-stat-health .ds-sym-num {
+  top: 2%;
+}
+.ds-sym-stat-armor .ds-sym-num {
+  top: -2%;
+}
+
+.ds-sym-stat[data-state='buffed'] .ds-sym-num {
+  color: #6dff8a;
+}
+.ds-sym-stat[data-state='hurt'] .ds-sym-num {
+  color: #ff7a6b;
+}
+/* Kosten: billiger ist gut (grün), teurer rot – wie bei den übrigen Werten. */
+
+/* Rand-Effekte um das Kartenbild; sie übernehmen die Rundung des Elternbausteins. */
+.ds-sym-edge {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Schildwall: breiter Rand aus grauem Stein mit Nieten-Glanz */
+.ds-sym-edge-shield {
+  inset: calc(var(--ds-sym-edge-width, 6px) * -1);
+  border: var(--ds-sym-edge-width, 6px) solid #8a929c;
+  box-shadow:
+    0 0 0 2px #1a120a,
+    inset 0 0 0 2px #1a120a,
+    inset 0 2px 0 3px rgb(255 255 255 / 0.25);
+  background: none;
+}
+
+/* Prunkschild: schimmernde goldene Blase */
+.ds-sym-edge-bubble {
+  inset: -3px;
+  background: radial-gradient(ellipse at 30% 22%, rgb(255 250 215 / 0.55), rgb(255 230 140 / 0.18) 38%, rgb(255 210 80 / 0.08) 62%, rgb(255 200 60 / 0.35));
+  box-shadow:
+    0 0 0 2px rgb(255 214 90 / 0.95),
+    0 0 10px 2px rgb(255 214 90 / 0.65),
+    inset 0 0 12px rgb(255 236 160 / 0.7);
+  animation: ds-sym-shimmer 2.6s ease-in-out infinite;
+}
+
+@keyframes ds-sym-shimmer {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Verkleidet: dunkler Schleier über dem Bild */
+.ds-sym-edge-veil {
+  background:
+    radial-gradient(ellipse at 50% 45%, rgb(30 18 60 / 0.15), rgb(30 18 60 / 0.6) 70%, rgb(20 10 40 / 0.85)),
+    repeating-linear-gradient(135deg, rgb(255 255 255 / 0.06) 0 3px, transparent 3px 8px);
+  box-shadow: inset 0 0 0 2px rgb(150 120 220 / 0.7);
+}
+
+/* Kältestarre: Eisrand mit gezackten Kristallen */
+.ds-sym-edge-ice {
+  inset: -2px;
+  box-shadow:
+    inset 0 0 0 3px #bfe8ff,
+    inset 0 0 10px 4px rgb(140 210 255 / 0.75),
+    0 0 0 2px #1d5a8a;
+  background:
+    linear-gradient(135deg, rgb(220 245 255 / 0.55) 0 10%, transparent 10% 90%, rgb(220 245 255 / 0.55) 90%),
+    linear-gradient(45deg, rgb(220 245 255 / 0.45) 0 8%, transparent 8% 92%, rgb(220 245 255 / 0.45) 92%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-sym-edge-bubble {
+    animation: none;
+  }
+}
