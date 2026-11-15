@@ -41,6 +41,24 @@ export function soundsForEvents(events: GameEvent[], map: SoundMap | undefined):
   return names;
 }
 
+/** Vibrationsmuster in Millisekunden (Vibrieren, Pause, …), z. B. `[75, 35, 110]`. */
+export type HapticPattern = readonly number[];
+
+/** Spielspezifische Vibrationsmuster: Ereignistyp → Muster oder Funktion für Feinheiten (z. B. je Karte/Zauber). */
+export type HapticMap = Record<string, HapticPattern | ((event: GameEvent) => HapticPattern | null)>;
+
+/** Die spielspezifischen Vibrationsmuster zu den Ereignissen eines Zugs, in Reihenfolge. */
+export function hapticsForEvents(events: GameEvent[], map: HapticMap | undefined): HapticPattern[] {
+  if (!map) return [];
+  const patterns: HapticPattern[] = [];
+  for (const event of events) {
+    const entry = map[event.type];
+    const found = typeof entry === 'function' ? entry(event) : entry;
+    if (found && found.length > 0) patterns.push(found);
+  }
+  return patterns;
+}
+
 /**
  * Nur die Ereignisse, die zu den eigenen Plätzen gehören (oder zu keinem bestimmten Platz).
  * Für Spiele, in denen alle gleichzeitig und unabhängig spielen: Was andere tun, soll man nicht hören (#116).
