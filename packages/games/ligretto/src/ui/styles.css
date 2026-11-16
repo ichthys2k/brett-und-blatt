@@ -545,3 +545,11 @@
   font-size: 0.85rem;
   color: #fde68a;
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .lg-table {
+    max-width: none;
+    --card-w: clamp(44px, min(14cqi, 14cqh), 116px);
+    --center-w: clamp(42px, min(13.5cqi, 13cqh), 108px);
+  }
+}
