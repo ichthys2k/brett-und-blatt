@@ -1,53 +1,61 @@
 import { seatRingFits } from './SeatRing';
 
-/** Höhe der Kopfzeile über dem Spieltisch (px). */
 export const TABLE_BAR_HEIGHT = 56;
 
-/**
- * Zustand des Spieltischs:
- * - `ring`: Spieler sitzen rund um den Tisch (`SeatRing`), nur eine Kopfzeile oben.
- * - `side`: feste Seitenleiste links (Querformat).
- * - `stack`: Hochformat mit Kopfzeile, Status und Knöpfen.
- * - `rail`: eingeklappte ☰-Schiene links (Querformat).
- * - `bar`: eingeklappte ☰-Zeile oben (Hochformat).
- */
 export type TableMode = 'ring' | 'side' | 'stack' | 'rail' | 'bar';
 
 export interface TableLayoutInput {
-  /** Fensterbreite des Spieltischs in px (0 = noch nicht gemessen). */
   width: number;
-  /** Fensterhöhe des Spieltischs in px (0 = noch nicht gemessen). */
   height: number;
-  /** Platzzahl der Partie. */
   seats: number;
-  /** Das Spiel kann Spieler um den Tisch setzen (`GameUi.seatsAround`). */
   seatsAround?: boolean;
-  /** Das Spiel zeigt die Plätze selbst auf dem Brett (`GameUi.seatsOnBoard`). */
   seatsOnBoard?: boolean;
-  /** Das Spiel nutzt die ganze Fläche (`GameUi.fullBleed`). */
   fullBleed?: boolean;
 }
 
 export interface TableLayout {
+  /** ring: Sitzring · side: Leiste links · stack: Hochformat · rail: ☰-Schiene links · bar: ☰-Zeile oben */
   mode: TableMode;
-  /** `rail` oder `bar`. */
   collapsed: boolean;
   landscape: boolean;
-  /** Mehr als zwei Plätze. */
   crowded: boolean;
+  /** Breite der Seitenleiste in px im Zustand `side` (#493). */
+  sideWidth: number;
 }
 
-/** Höchste Höhe (px), bei der Spiele mit `seatsOnBoard` im Querformat ihre Leiste einklappen. */
-const RAIL_MAX_HEIGHT = 540;
+/** Breite (px) der Seitenleiste im Zustand `side` (#493). */
+export function sideBarWidth(width: number, seats: number): number {
+  if (width >= 1400) return 352;
+  if (width >= 1100) return 320;
+  return seats > 2 ? 320 : 288;
+}
 
-/** Rechnet aus Fenstergröße, Platzzahl und Spieleigenschaften den Zustand des Spieltischs. */
-export function tableLayout({ width, height, seats, seatsAround, seatsOnBoard, fullBleed }: TableLayoutInput): TableLayout {
-  const measured = height > 0;
-  const landscape = width > height && measured;
+/** Breite (px) des Spielerschilds in der Leiste; 0 = kompakte Chips wie bisher (#493). */
+export function sideShieldSize(seats: number, sideHeight: number): number {
+  if (seats <= 0) return 0;
+  const available = sideHeight - 56 - 60 - 170;
+  if (available <= 0) return 0;
+  const perCard = available / seats;
+  if (perCard >= 170) return 96;
+  if (perCard >= 124) return 72;
+  if (perCard >= 88) return 52;
+  return 0;
+}
+
+/** Entscheidet den Layout-Zustand des Spieltischs aus Fenstergröße, Platzzahl und Spielangaben (#484, #493). */
+export function tableLayout(input: TableLayoutInput): TableLayout {
+  const { width, height, seats, seatsAround, seatsOnBoard, fullBleed } = input;
   const crowded = seats > 2;
-  const result = (mode: TableMode): TableLayout => ({ mode, collapsed: mode === 'rail' || mode === 'bar', landscape, crowded });
-
-  if (seatsAround && seatRingFits(seats, width, height - TABLE_BAR_HEIGHT)) return result('ring');
-  if ((fullBleed && measured) || (landscape && seatsOnBoard && height <= RAIL_MAX_HEIGHT)) return result(landscape ? 'rail' : 'bar');
-  return result(landscape ? 'side' : 'stack');
+  const landscape = width > height && height > 0;
+  const around = Boolean(seatsAround) && seatRingFits(seats, width, height - TABLE_BAR_HEIGHT);
+  const fullBleedActive = Boolean(fullBleed) && !around && height > 0;
+  const collapsed = !around && ((landscape && Boolean(seatsOnBoard) && height <= 540) || fullBleedActive);
+  const mode: TableMode = around ? 'ring' : collapsed ? (landscape ? 'rail' : 'bar') : landscape ? 'side' : 'stack';
+  return {
+    mode,
+    collapsed,
+    landscape,
+    crowded,
+    sideWidth: sideBarWidth(width, seats),
+  };
 }
