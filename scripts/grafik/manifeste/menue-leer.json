@@ -1,0 +1,23 @@
+{
+  "beschreibung": "#454 Teil 1: leerer 2D-Tavernenraum (Abendlicht) als Grundbild für die sieben Menü-Stationen (Option B). Kein Kamin, keine Möbel; die Stationen kommen als freigestellte Bilder darüber. Größe wie taverne-hinten.webp (1376 × 768). Lichtstimmungen folgen in menue-leer-licht.json nach Wahl des Abends.",
+  "stil": "Painterly warm baroque oil illustration of an empty medieval fairy-tale tavern interior, wide landscape background for a game menu, in the same style, camera, colours and warm lantern light as the reference image. Wooden beams and arches, two hanging lanterns, a stone flagstone floor, a dark solid stone wall filling the right 38 percent of the picture (keep it calm and uncluttered for menu buttons). The room is EMPTY and open: wide free stone floor in the left and middle, and bare plain walls and empty arched alcoves, so that furniture can be placed there later. No furniture, no fireplace, no counter, no table, no chair, no bench, no crate, no barrel, no shelf, no objects on the floor. No text, no people, no animals.",
+  "ohne": "text, letters, numbers, people, animals, fireplace, hearth, chimney, furniture, table, chairs, stools, bench, counter, bar, crate, chest, shelves, books, barrel, cask, keg, firewood, objects on the floor, watermark, border, frame, logos, modern objects, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs, bottles, flasks, jugs",
+  "format": "16:9",
+  "ziel": "apps/web/src/menu",
+  "groesse": [
+    1376,
+    768
+  ],
+  "praefix": "taverne-leer-",
+  "qualitaet": 80,
+  "referenzen": [
+    "apps/web/src/menu/taverne-hinten.webp"
+  ],
+  "motive": [
+    {
+      "id": "abend",
+      "titel": "Abend, leerer Raum",
+      "prompt": "Evening mood: warm golden lantern light, long soft shadows on the floor, the same room architecture as the reference (beams, arch, two lanterns, stone wall on the right) but completely emptied: remove the fireplace, mantel, shelves, counter, crate, firewood and everything on the floor and in the alcoves; the alcoves show only plain plastered walls."
+    }
+  ]
+}

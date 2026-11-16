@@ -8,6 +8,7 @@ import { findGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { GAME_SERVER } from '../lib/server';
 import { storage } from '../lib/storage';
+import { useMenuStations } from '../lib/look';
 import { setHoveredStation, type TavernStationId } from '../lib/tavern3d';
 import './menu.css';
 
@@ -39,6 +40,7 @@ export function Menu() {
   const resumeGame = resume ? findGame(resume.config.gameId) : undefined;
   const [boardCount, setBoardCount] = useState<number | null>(null);
   const boardHidden = useBoardHidden();
+  const stationen = useMenuStations();
 
   useEffect(() => () => setHoveredStation(null), []);
 
@@ -71,6 +73,22 @@ export function Menu() {
         <small>Karten- und Brettspiele für alle</small>
       </h1>
 
+      {stationen ? (
+        resume && (
+          <div className="bub-menu-dock">
+            <button
+              type="button"
+              className="bub-menu-plaque bub-menu-plaque-link"
+              onClick={() => navigate(paths.play)}
+              aria-label={resumeGame ? `Weiterspielen: ${resumeGame.name}` : 'Weiterspielen'}
+            >
+              <span aria-hidden="true">{resumeGame?.emoji ?? '▶'}</span>
+              <span className="bub-menu-name">Weiterspielen{resumeGame ? `: ${resumeGame.name}` : ''}</span>
+            </button>
+          </div>
+        )
+      ) : (
+      <>
       <nav className="bub-menu-frame" aria-label="Hauptmenü">
         {resume ? (
           <button
@@ -150,6 +168,8 @@ export function Menu() {
           <span className="bub-menu-switch">Profil</span>
         </button>
       </div>
+      </>
+      )}
 
       <footer className="bub-menu-foot">
         <a href="#/impressum">Impressum</a> · <a href="#/datenschutz">Datenschutz</a>
