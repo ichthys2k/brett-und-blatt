@@ -177,19 +177,41 @@ try {
       if (m.interactive === 0) problems.push(`${id}: Spielfeld ohne Bedienelemente`);
       if (m.pageHeight > viewport.height + 2) problems.push(`${id}: Seite ist ${m.pageHeight} px hoch und rollt (Bildschirm ${viewport.height} px)`);
       if (m.footerBlocked > 0) problems.push(`${id}: ${m.footerBlocked} Knöpfe unter dem Spielfeld verdeckt oder außerhalb des Bildschirms`);
-      // Hochformat: Die Spielerleiste ist eingeklappt und klappt über ☰ über dem Spielfeld auf, ohne die Seite zu verlängern (#114).
-      const players = page.locator('#bub-players');
-      if (await players.isVisible()) problems.push(`${id}: Spielerleiste ist im Hochformat nicht eingeklappt`);
-      // Spiele mit eingeklapptem Menü (#429): erst ☰ öffnen, darin liegt die Spielerleiste.
+      // Hochformat (#485): nur die schmale Leiste mit ☰ über dem Spielfeld; Spielerliste und Knöpfe liegen in der Schublade.
       const menu = page.locator('[data-bub-menu]');
-      if (await menu.isVisible()) await menu.click();
-      await page.locator('.bub-players-toggle').click({ timeout: 2_000 });
-      const opened = await page.evaluate(() => ({
-        shown: document.querySelector('#bub-players')?.getBoundingClientRect().height ?? 0,
-        pageHeight: document.documentElement.scrollHeight,
-      }));
-      if (opened.shown === 0) problems.push(`${id}: Spielerleiste klappt mit ☰ nicht auf`);
-      if (opened.pageHeight > viewport.height + 2) problems.push(`${id}: aufgeklappte Spielerleiste verlängert die Seite (${opened.pageHeight} px)`);
+      if (!(await menu.isVisible())) problems.push(`${id}: Leiste mit ☰ fehlt im Hochformat`);
+      else {
+        const closedState = await page.evaluate(() => {
+          const bar = document.querySelector('[data-bub-menu]').parentElement.getBoundingClientRect();
+          const main = document.querySelector('main').getBoundingClientRect();
+          const players = document.querySelector('#bub-players');
+          return { barHeight: Math.round(bar.height), share: main.height / window.innerHeight, playersShown: Boolean(players && players.getBoundingClientRect().height > 0) };
+        });
+        if (closedState.barHeight > 48) problems.push(`${id}: Leiste ist ${closedState.barHeight} px hoch (höchstens 48)`);
+        if (closedState.share < 0.88) problems.push(`${id}: Spielfeld nur ${Math.round(closedState.share * 100)} % des Bildschirms (mindestens 88 %)`);
+        if (closedState.playersShown) problems.push(`${id}: Spielerliste ist ohne ☰ sichtbar`);
+        // Schublade öffnen: Spielerliste und alle Knöpfe sichtbar und antippbar, die Seite rollt nicht; zweiter Klick schließt.
+        await menu.click();
+        const opened = await page.evaluate(() => {
+          const drawerButtons = [...document.querySelectorAll('header button, footer button')].filter((b) => !b.closest('[data-bub-menu]'));
+          const blocked = drawerButtons.filter((b) => {
+            const r = b.getBoundingClientRect();
+            if (r.width === 0 || r.height === 0) return false;
+            const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+            return !hit || !b.contains(hit) || r.bottom > window.innerHeight + 1;
+          }).length;
+          return {
+            players: document.querySelector('#bub-players')?.getBoundingClientRect().height ?? 0,
+            blocked,
+            pageHeight: document.documentElement.scrollHeight,
+          };
+        });
+        if (opened.players === 0) problems.push(`${id}: Spielerliste klappt mit ☰ nicht auf`);
+        if (opened.blocked > 0) problems.push(`${id}: ${opened.blocked} Knöpfe in der Schublade verdeckt oder nicht antippbar`);
+        if (opened.pageHeight > viewport.height + 2) problems.push(`${id}: geöffnete Schublade verlängert die Seite (${opened.pageHeight} px)`);
+        await menu.click();
+        if ((await page.locator('#bub-players').boundingBox()) !== null) problems.push(`${id}: Schublade schließt mit zweitem Klick auf ☰ nicht`);
+      }
       await page.keyboard.press('Escape');
     } catch (e) {
       problems.push(`${id}: startet nicht – ${e.message.split('\n')[0]}`);
@@ -316,6 +338,45 @@ try {
       if (flat.ctrlOverflow > 2) problems.push(`${where}: Bedienleiste (.poker-controls) rollt (${flat.ctrlOverflow} px)`);
       if (flat.footerShown) problems.push(`${where}: Aktionsknöpfe außerhalb der ☰-Schublade sichtbar`);
       if (m.pageHeight > height + 2) problems.push(`${where}: Seite rollt (${m.pageHeight} px)`);
+      await context.close();
+    }
+  }
+  // Handy-Querformat (#486): Für jedes Spiel nur die schmale Schiene mit ☰ links, Spielfeld fast randlos, Schublade mit allen Knöpfen.
+  const railGames = ['chess', 'skat', 'uno', 'kniffel', 'ludo', 'wolves-sheep', 'poker', 'drachenspiel'];
+  for (const id of railGames.filter((game) => ids.includes(game))) {
+    for (const [width, height] of [[844, 390], [740, 360], [667, 375], [667, 320]]) {
+      const context = await browser.newContext({ viewport: { width, height } });
+      const railPage = await context.newPage();
+      await railPage.goto(base);
+      await startGame(railPage, id);
+      const where = `${id} quer bei ${width}×${height}`;
+      const menu = railPage.locator('[data-bub-menu]');
+      if (!(await menu.isVisible())) problems.push(`${where}: Schiene mit ☰ fehlt`);
+      else {
+        const closed = await railPage.evaluate(() => {
+          const rail = document.querySelector('[data-bub-menu]').parentElement.getBoundingClientRect();
+          const main = document.querySelector('main').getBoundingClientRect();
+          return { railWidth: Math.round(rail.width), share: (main.width * main.height) / (window.innerWidth * window.innerHeight), pageHeight: document.documentElement.scrollHeight, pageWidth: document.documentElement.scrollWidth };
+        });
+        if (closed.railWidth > 48) problems.push(`${where}: Schiene ist ${closed.railWidth} px breit (höchstens 48)`);
+        if (closed.share < 0.88) problems.push(`${where}: Spielfeld nur ${Math.round(closed.share * 100)} % des Bildschirms (mindestens 88 %)`);
+        await menu.click();
+        const opened = await railPage.evaluate(() => {
+          const drawerButtons = [...document.querySelectorAll('header button, footer button')].filter((b) => !b.closest('[data-bub-menu]') && b.getBoundingClientRect().width > 0);
+          let blocked = 0;
+          for (const b of drawerButtons) {
+            b.scrollIntoView({ block: 'nearest' });
+            const r = b.getBoundingClientRect();
+            const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+            if (!hit || !b.contains(hit)) blocked++;
+          }
+          return { blocked, count: drawerButtons.length, pageHeight: document.documentElement.scrollHeight, pageWidth: document.documentElement.scrollWidth };
+        });
+        if (opened.count === 0) problems.push(`${where}: Schublade zeigt keine Knöpfe`);
+        if (opened.blocked > 0) problems.push(`${where}: ${opened.blocked} Knöpfe in der Schublade verdeckt oder nicht antippbar`);
+        if (opened.pageHeight > height + 2 || opened.pageWidth > width + 2) problems.push(`${where}: geöffnete Schublade lässt die Seite rollen (${opened.pageWidth}×${opened.pageHeight} px)`);
+        await menu.click();
+      }
       await context.close();
     }
   }
