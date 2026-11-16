@@ -33,6 +33,8 @@ export interface CeremonySeat {
   seat: SeatId;
   name: string;
   avatar: string | null;
+  /** Wappen als Beschreibung (#492). */
+  crest?: string | null;
   symbol: ReactNode;
   score: number | string | null;
   /** Der Mensch an diesem Gerät (bzw. online: man selbst). */

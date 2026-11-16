@@ -28,7 +28,8 @@ import { useSoundSettings } from '../lib/sound';
 import { storage, type Profile } from '../lib/storage';
 import { useGameSounds } from '../lib/useGameSounds';
 import { useGameScene } from '../lib/gameScene';
-import { botAvatar } from '../lib/botPortraits';
+import { seatIdentity } from '../lib/seatIdentity';
+import { crestForRoom } from '../lib/crestText';
 import { useWakeLock } from '../lib/useWakeLock';
 
 export function Play() {
@@ -90,6 +91,8 @@ export interface OnlineTableProps {
   after?: { info: AfterState; seatCount: number; onVote(choice: 'again' | 'other'): void; onPropose(gameId: string): void; onPick(gameId: string): void };
   /** Avatare (Emojis) der Plätze in Sitzreihenfolge, falls bekannt. */
   avatars?: (string | null)[];
+  /** Wappen der Plätze in Sitzreihenfolge, falls bekannt (#492). */
+  crests?: (string | null)[];
   /** Z. B. die Plätze zum Übernehmen. */
   extra?: ReactNode;
   /** Knopf 💬 für Reaktionen und Schnellnachrichten; steht immer in der Kopfzeile (`inBar`: über dem Tisch). */
@@ -387,17 +390,35 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     </>
   );
 
+  const humanSeats = seats.filter((seat) => seat.kind === 'human');
+  // Lokal gilt das eigene Profil nur, wenn genau ein Mensch am Gerät spielt (#492).
+  const ownProfile = !online && humanSeats.length === 1 ? {
+    avatar: storage.loadProfile()?.avatar ?? null,
+    crest: crestForRoom(storage.loadCrestText()) ?? null,
+  } : null;
+
+  const seatIdentityFor = (index: SeatId) => {
+    const seat = seats[index]!;
+    return seatIdentity({
+      index,
+      kind: seat.kind,
+      gameId: info.id,
+      seatAvatar: seat.avatar,
+      memberAvatar: online?.avatars?.[index],
+      memberCrest: online?.crests?.[index],
+      own: seat.kind === 'human' ? ownProfile : null,
+    });
+  };
+
   const seatChip = (index: SeatId) => {
     const seat = seats[index]!;
-    const profile = !online ? storage.loadProfile() : null;
-    const localAvatar = !online && seat.kind === 'human' ? (profile?.avatar ?? seat.avatar ?? null) : (seat.avatar ?? null);
-    // Computergegner zeigen das gemalte Porträt ihres Spiels (#311); der Wert `bot:<kennung>` wird nur gezeichnet, nie als Text benutzt.
-    const avatar = seat.kind === 'bot' ? botAvatar(info.id) : online ? (seat.avatar ?? online.avatars?.[index] ?? null) : localAvatar;
+    const id = seatIdentityFor(index);
     return (
       <PlayerChip
         key={index}
         name={seat.name}
-        avatar={avatar ?? undefined}
+        avatar={id.avatar}
+        crest={id.crest}
         symbol={<ui.SeatSymbol seat={index} seats={seats.length} />}
         score={ui.seatScore?.(publicView, index)}
         detail={ui.seatDetail?.(publicView, index) ?? (seat.kind === 'bot' ? `${ui.seatLabel(index, seats.length)} · ${levelLabel(seat.level ?? 'medium')}` : ui.seatLabel(index, seats.length))}
@@ -774,14 +795,18 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             result={result}
             title={status}
             reason={reasonText}
-            seats={seats.map((seat, index) => ({
-              seat: index,
-              name: seat.name,
-              avatar: seat.kind === 'bot' ? botAvatar(info.id) : (online ? (seat.avatar ?? online.avatars?.[index]) : seat.kind === 'human' ? (storage.loadProfile()?.avatar ?? seat.avatar) : seat.avatar) ?? null,
-              symbol: <ui.SeatSymbol seat={index} seats={seats.length} />,
-              score: ui.seatScore?.(publicView, index) ?? null,
-              you: online ? index === online.yourSeat : seat.kind === 'human',
-            }))}
+            seats={seats.map((seat, index) => {
+              const id = seatIdentityFor(index);
+              return {
+                seat: index,
+                name: seat.name,
+                avatar: id.avatar,
+                crest: id.crest,
+                symbol: <ui.SeatSymbol seat={index} seats={seats.length} />,
+                score: ui.seatScore?.(publicView, index) ?? null,
+                you: online ? index === online.yourSeat : seat.kind === 'human',
+              };
+            })}
             actions={resultActions}
             trophyNote={trophyLaid}
             onClose={() => setCeremonyClosed(true)}

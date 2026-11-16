@@ -11,6 +11,7 @@ import { paths } from '../lib/router';
 import { GameTable } from './Play';
 import { useLoadedGame } from './Room';
 import { useGameScene } from '../lib/gameScene';
+import { seatMember } from '../lib/seatIdentity';
 
 /** Hält den Bildschirm wach, solange der Tisch läuft (Fernseher, Beamer, Tablet). */
 export function useWakeLock(): void {
@@ -135,6 +136,7 @@ function Scene({ state }: { state: RoomState }) {
   const game = useLoadedGame(room.lobby.gameId);
   if (state.game && room.phase !== 'lobby') {
     const { session, loaded } = state.game;
+    const seatMembers = room.lobby.seats.map((seat) => seatMember(seat, room.members));
     return (
       <Stage>
         <GameTable
@@ -147,7 +149,8 @@ function Scene({ state }: { state: RoomState }) {
             display: true,
             onLobby: () => undefined,
             onLeave: () => undefined,
-            avatars: room.lobby.seats.map((seat) => (seat.kind === 'human' && seat.memberId ? (room.members.find((m) => m.id === seat.memberId)?.avatar ?? null) : null)),
+            avatars: seatMembers.map((m) => m?.avatar ?? null),
+            crests: seatMembers.map((m) => m?.crest ?? null),
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
           }}
         />
