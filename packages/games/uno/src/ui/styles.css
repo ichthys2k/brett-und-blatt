@@ -437,3 +437,9 @@
 .uno-table[data-ring] .uno-center-area {
   padding: 0.25rem;
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .uno-table:not([data-ring]) {
+    max-width: none;
+  }
+}
