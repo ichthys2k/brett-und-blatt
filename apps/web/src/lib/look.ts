@@ -109,7 +109,7 @@ let chosenLight = loadLight();
 let chosenStations = loadMenuStations();
 /** Die Stationen-Szene gibt es nur auf breiten Bildschirmen; am Handy und in fast quadratischen Fenstern gilt die ursprüngliche Ansicht. */
 /** Nur im Dev-Server: `?stationen` in der Adresse schaltet die Stationen-Szene samt Positions-Editor ein (#454). */
-const stationsForcedByDev = import.meta.env.DEV && new URLSearchParams(window.location.search).has('stationen');
+const stationsForcedByDev = import.meta.env.DEV && new URLSearchParams(window.location?.search ?? '').has('stationen');
 const wideQuery = window.matchMedia('(min-width: 761px) and (min-aspect-ratio: 13/10)');
 let chosenScenes = loadScenes();
 
