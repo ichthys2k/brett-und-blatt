@@ -316,6 +316,7 @@
   }
 
   .dk-wrap {
+    container-type: size;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto 1fr auto;
     column-gap: 0.9rem;
@@ -325,7 +326,8 @@
   .dk-wrap > .dk-board {
     grid-column: 1;
     grid-row: 1 / 4;
-    height: 100%;
+    width: min(100cqw - 13rem, 100cqh);
+    height: min(100cqw - 13rem, 100cqh);
     aspect-ratio: 1;
     justify-self: center;
   }
