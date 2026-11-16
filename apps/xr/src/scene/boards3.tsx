@@ -10,7 +10,7 @@ import { TABLE_CENTER } from './Tavern';
 import { GOLD, labelTexture } from './text';
 import { Button3D, Sign } from './ui3d';
 import { pulse } from '../haptics';
-import { useGrab } from './grab';
+import { useGrab, type GrabEvent } from './grab';
 import { RollCup } from './boards5';
 
 const TOP = TABLE_CENTER[1] + 0.002;
@@ -82,7 +82,7 @@ function Peg({ color, height = 0.012, radius = 0.007 }: { color: string; height?
 }
 
 /** Ein Spielstein zum Antippen (Kugel auf Fuß); leuchtet, wenn er gewählt oder wählbar ist. */
-function Stone({ color, selected, movable, onPress, onGrab, scale = 1 }: { color: string; selected?: boolean; movable?: boolean; onPress?: () => void; onGrab?: () => void; scale?: number }) {
+function Stone({ color, selected, movable, onPress, onGrab, scale = 1 }: { color: string; selected?: boolean; movable?: boolean; onPress?: () => void; onGrab?: (e: GrabEvent) => void; scale?: number }) {
   const [hover, setHover] = useState(false);
   return (
     <group
@@ -91,7 +91,7 @@ function Stone({ color, selected, movable, onPress, onGrab, scale = 1 }: { color
         onGrab
           ? (e) => {
               e.stopPropagation();
-              onGrab();
+              onGrab(e);
             }
           : undefined
       }
@@ -331,7 +331,7 @@ export function BattleshipBoard({ game, onMove }: BoardProps) {
           position={[ballX, 0.03, ballZ]}
           onPointerDown={(e) => {
             e.stopPropagation();
-            grab.begin('kugel', ballX, ballZ);
+            grab.begin('kugel', ballX, ballZ, e);
           }}
         >
           {grab.held === null && (
@@ -467,7 +467,7 @@ export function FourPlayerChessBoard({ game, onMove }: BoardProps) {
             onPointerDown={(e) => {
               if (!canSelect) return;
               e.stopPropagation();
-              grab.begin(i, x, z);
+              grab.begin(i, x, z, e);
             }}
             onClick={(e) => {
               e.stopPropagation();
@@ -568,7 +568,7 @@ export function ChineseCheckersBoard({ game, onMove }: BoardProps) {
                 <meshStandardMaterial color="#3f2a18" />
               </mesh>
               {owner !== null && owner !== undefined && grab.held?.id !== i && (
-                <Stone color={SEAT_COLORS[owner % SEAT_COLORS.length]!} selected={select.selected === i} movable={select.movable.has(i) && select.selected === null} onPress={select.movable.has(i) ? () => select.pick(i) : undefined} onGrab={select.movable.has(i) ? () => grab.begin(i, x, z) : undefined} />
+                <Stone color={SEAT_COLORS[owner % SEAT_COLORS.length]!} selected={select.selected === i} movable={select.movable.has(i) && select.selected === null} onPress={select.movable.has(i) ? () => select.pick(i) : undefined} onGrab={select.movable.has(i) ? (e) => grab.begin(i, x, z, e) : undefined} />
               )}
               {isTarget && <Target position={[0, 0.003, 0]} size={0.01} onPress={() => select.choose(i, onMove)} label={select.targets.find((t) => t.to === i)?.label} />}
             </group>
@@ -681,7 +681,7 @@ export function LudoBoard({ game, onMove }: BoardProps) {
           if (seat === me && grab.held?.id === k) return null;
           return (
             <group key={`p${seat}-${k}`} position={[x, 0.016, z]}>
-              <Stone color={ludoColor(seat, view.seats)} movable={Boolean(move)} onPress={move ? () => onMove(move) : undefined} onGrab={move ? () => grab.begin(k, x, z) : undefined} scale={1.25} />
+              <Stone color={ludoColor(seat, view.seats)} movable={Boolean(move)} onPress={move ? () => onMove(move) : undefined} onGrab={move ? (e) => grab.begin(k, x, z, e) : undefined} scale={1.25} />
             </group>
           );
         }),

@@ -151,7 +151,7 @@ export function DominoBoard({ game, onMove }: BoardProps) {
             onPointerDown={(e) => {
               if (!playable) return;
               e.stopPropagation();
-              grab.begin(stone, at[0], at[2]);
+              grab.begin(stone, at[0], at[2], e);
             }}
           >
             <DominoStone a={a} b={b} position={at} rotation={[-0.55 + Math.PI / 2, 0, 0]} size={size * 1.2} glow={playable} onPress={playable ? () => press(stone) : undefined} />
@@ -241,7 +241,7 @@ export function WordGridBoard({ game, onMove }: BoardProps) {
             onPointerDown={(e) => {
               if (reachable.size === 0) return;
               e.stopPropagation();
-              grab.begin(i, (i - (rack.length - 1) / 2) * 0.05, 15 * c * 0.5 + 0.09);
+              grab.begin(i, (i - (rack.length - 1) / 2) * 0.05, 15 * c * 0.5 + 0.09, e);
             }}
           >
             <Tile label={letter === '?' || letter === '' ? '?' : letter} position={[(i - (rack.length - 1) / 2) * 0.05, 0.06, 15 * c * 0.5 + 0.09]} size={0.044} background="#f3dfae" rotation={[-0.6, 0, 0]} />
@@ -325,7 +325,7 @@ export function ColorShapeBoard({ game, onMove }: BoardProps) {
             onPointerDown={(e) => {
               if (reachable.size === 0) return;
               e.stopPropagation();
-              grab.begin(tile, hx, hz);
+              grab.begin(tile, hx, hz, e);
             }}
           >
             <Tile label={csShape(tile)} position={[hx, 0.06, hz]} size={0.048} background="#1d1510" color={csColor(tile)} rotation={[-0.6, 0, 0]} />
@@ -447,7 +447,7 @@ export function GrafschaftBoard({ game, onMove }: BoardProps) {
             onPointerDown={(e) => {
               if (!usable.has(i)) return;
               e.stopPropagation();
-              grab.begin(i, (i - (view.market.length - 1) / 2) * 0.09, FRONT);
+              grab.begin(i, (i - (view.market.length - 1) / 2) * 0.09, FRONT, e);
             }}
           >
             <Hex land={t.type} position={[0, 0, 0]} glow={market === i} onPress={usable.has(i) ? () => setMarket(market === i ? null : i) : undefined} />

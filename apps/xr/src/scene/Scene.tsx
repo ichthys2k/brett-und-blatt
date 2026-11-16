@@ -22,6 +22,7 @@ import { Panel, ReactionBar, type VoiceControls } from './Panel';
 import { Seats, seatAngle, type SeatInfo } from './Seats';
 import { TABLE_CENTER, Tavern } from './Tavern';
 import { bindHapticSession, pulse } from '../haptics';
+import { bindPressSession } from '../press-tracking';
 import { alignOffset, type Offset } from './view-align';
 import { SCALE_STEP, TablePlacer, clampScale, placementOrigin, scaleAboutTable, type Placement } from './Placement';
 import { handAnchor } from '../hand-fan';
@@ -177,15 +178,25 @@ function HeadAlign({ origin, onAlign }: { origin: [number, number, number]; onAl
 function HandAnchor({ origin }: { origin: [number, number, number] }) {
   const { camera, gl } = useThree();
   const tmp = useRef(new Vector3());
-  useFrame(() => {
+  useFrame((_, __, frame) => {
     handAnchor.active = false;
     const session = gl.xr.getSession();
     if (!session) return;
     session.inputSources.forEach((source, i) => {
       if (source.handedness !== holdingHand()) return;
-      const controller = gl.xr.getController(i);
-      if (!controller.visible) return;
-      const p = controller.position.clone().add(new Vector3(...origin));
+      let p: Vector3;
+      if (source.hand) {
+        // Handtracking (#384): Der Fächer hängt am Handgelenk, nicht am Zeigestrahl der Hand.
+        const space = gl.xr.getReferenceSpace();
+        const joint = source.hand.get('wrist');
+        const pose = joint && space && frame ? frame.getJointPose?.(joint, space) : undefined;
+        if (!pose) return;
+        p = new Vector3(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z).add(new Vector3(...origin));
+      } else {
+        const controller = gl.xr.getController(i);
+        if (!controller.visible) return;
+        p = controller.position.clone().add(new Vector3(...origin));
+      }
       const q = worldToTable([p.x, p.y, p.z]);
       handAnchor.active = true;
       handAnchor.x = q[0];
@@ -323,12 +334,27 @@ function TableGrab({ origin, mixed, offset, onOffset, onSaveOffset, tableScale, 
   return null;
 }
 
-/** Meldet dem Vibrationshelfer die laufende Sitzung (#380). */
+/** Meldet dem Vibrationshelfer (#380) und dem Greif-Baustein (#382, Ende des Drückens) die laufende Sitzung. */
 function HapticsBridge() {
   const gl = useThree((state) => state.gl);
   useEffect(() => {
     bindHapticSession(() => gl.xr.getSession());
-    return () => bindHapticSession(() => null);
+    // Ende jedes Drückens melden (Loslassen beim Greifen auch ohne pointerup, #382).
+    let detach: (() => void) | null = null;
+    const attach = () => {
+      detach?.();
+      const session = gl.xr.getSession();
+      detach = session ? bindPressSession(session) : null;
+    };
+    gl.xr.addEventListener('sessionstart', attach);
+    gl.xr.addEventListener('sessionend', attach);
+    attach();
+    return () => {
+      gl.xr.removeEventListener('sessionstart', attach);
+      gl.xr.removeEventListener('sessionend', attach);
+      detach?.();
+      bindHapticSession(() => null);
+    };
   }, [gl]);
   return null;
 }
