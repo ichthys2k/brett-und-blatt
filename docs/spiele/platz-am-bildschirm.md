@@ -127,3 +127,10 @@ Gemessen auf dem Stand vor Umsetzung von #484 ff., Voreinstellungen der Partie, 
 - Menschen ohne Wappen oder mit „im Raum verbergen“ bekommen ein Standardschild (`defaultCrest(index)` mit 8 kontrastreichen Farbkombinationen aus `crest-colors.ts`).
 - Lokal gilt das eigene Profil nur bei genau einem menschlichen Spieler am Gerät; bei mehreren Plätzen greifen die Standardwerte je Platz.
 - `OnlineTableProps` transportiert `crests` (`Display.tsx`, `Room.tsx` über Hilfsfunktion `seatMember`), `seatChip` und Siegerehrung (`Ceremony`) nutzen `seatIdentity`.
+
+### D5 – Lobby: Mitspieler als Porträt im Wappenschild (#495, umgesetzt 16.11.2026)
+
+- `MemberRow` (`apps/web/src/screens/Room.tsx`): links `PlayerShield` (36 px am Handy, 56 px ab `wide:` bzw. 900 px Breite) mit `seatIdentity` (`avatar` + `crest`); ab `wide:` Name größer und Zusätze (👑, 🙋, 🔒, offline) als Marken darunter, Knöpfe rechts.
+- Mitgliederliste (`Room.tsx`): ab 1100 px Breite zweispaltig bei mehr als 4 Mitgliedern (`Page` ab 1100 px `max-w-4xl`).
+- `SeatRow` und Turnier-Warteraum (`Room.tsx`): zeigen ebenfalls `PlayerShield` (28–34 px) statt Emoji-Text bzw. reinem Avatar (Bots mit Bot-Porträt im Standardschild).
+
