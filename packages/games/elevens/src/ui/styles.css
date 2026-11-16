@@ -255,3 +255,10 @@
   font-weight: 700;
   opacity: 1;
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .elv-board {
+    max-width: 64rem;
+    gap: 1rem;
+  }
+}
