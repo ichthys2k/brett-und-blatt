@@ -151,8 +151,8 @@
   max-height: none;
   object-fit: cover;
   /* Die Motive sitzen in den 3:4-Bildern eher unten; das Namensband verdeckt den unteren Rand.
-     Darum zeigt das Fenster den unteren Bildteil (Cornelius, 16.11.2026: Motive waren abgeschnitten). */
-  object-position: 50% 72%;
+     Das Fenster zeigt die Bildmitte, leicht nach oben (Cornelius, 16.11.2026: Motiv saß zu tief). */
+  object-position: 50% 45%;
 }
 
 /* Namensband überlappt den unteren Rand des Bilds. */
