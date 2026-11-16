@@ -6,18 +6,18 @@
   "ziel": "packages/games/drachenspiel/src/ui/tische",
   "praefix": "tisch-",
   "groesse": [
-    2560,
-    1440
+    3840,
+    2160
   ],
-  "qualitaet": 80,
+  "qualitaet": 78,
   "motive": [
     {
       "id": "arena-quer",
       "titel": "Tisch Drachenarena, Querformat (Desktop)",
       "format": "16:9",
       "groesse": [
-        2560,
-        1440
+        3840,
+        2160
       ],
       "prompt": "Use the attached reference image as the exact guide for composition, perspective, colours, mat and decoration, and repaint this very same table as a sharp, richly detailed, high-resolution painting: fine brush strokes, crisp wood grain, clean edges, no blur. Theme: dragon tournament arena. A table of dark carved oak with carved dragon heads at the two far corners, small pennants on poles at the far edge and a glowing volcano far behind it. The playing mat is deep red felt. Landscape composition: the far edge with its decoration fills the top fifth of the picture, the playing mat the wide middle, the plain table rim the bottom; decoration also at the left and right corners.",
       "referenzen": [
@@ -29,8 +29,8 @@
       "titel": "Tisch Wald, Querformat (Desktop)",
       "format": "16:9",
       "groesse": [
-        2560,
-        1440
+        3840,
+        2160
       ],
       "prompt": "Use the attached reference image as the exact guide for composition, perspective, colours, mat and decoration, and repaint this very same table as a sharp, richly detailed, high-resolution painting: fine brush strokes, crisp wood grain, clean edges, no blur. Theme: enchanted forest. A table made of a huge moss-covered tree slab, roots curling over the far edge, ferns, glowing mushrooms and drifting fireflies behind it, soft light rays from above. The playing mat is dark green moss. Landscape composition: the far edge with its decoration fills the top fifth of the picture, the playing mat the wide middle, the plain table rim the bottom; decoration also at the left and right corners.",
       "referenzen": [
@@ -42,8 +42,8 @@
       "titel": "Tisch Meer, Querformat (Desktop)",
       "format": "16:9",
       "groesse": [
-        2560,
-        1440
+        3840,
+        2160
       ],
       "prompt": "Use the attached reference image as the exact guide for composition, perspective, colours, mat and decoration, and repaint this very same table as a sharp, richly detailed, high-resolution painting: fine brush strokes, crisp wood grain, clean edges, no blur. Theme: sea and harbour. A table of weathered ship planks, coiled ropes and a hanging brass lantern at the far edge, a calm sea horizon with a distant lighthouse behind it. The playing mat is deep blue sailcloth. Landscape composition: the far edge with its decoration fills the top fifth of the picture, the playing mat the wide middle, the plain table rim the bottom; decoration also at the left and right corners.",
       "referenzen": [
@@ -55,8 +55,8 @@
       "titel": "Tisch Bauernhof, Querformat (Desktop)",
       "format": "16:9",
       "groesse": [
-        2560,
-        1440
+        3840,
+        2160
       ],
       "prompt": "IMPORTANT: the playing mat must stay DARK charcoal-brown, exactly as dark as in the reference image, never light, beige or linen-coloured, because light text lies on it. Use the attached reference image as the exact guide for composition, perspective, colours, mat and decoration, and repaint this very same table as a sharp, richly detailed, high-resolution painting: fine brush strokes, crisp wood grain, clean edges, no blur. Theme: farm. A rustic farmhouse table of scrubbed pine planks, straw bales and sunflowers at the far edge, a red barn and golden fields softly blurred behind it. The playing mat is natural linen with a woven border. Landscape composition: the far edge with its decoration fills the top fifth of the picture, the playing mat the wide middle, the plain table rim the bottom; decoration also at the left and right corners.",
       "referenzen": [
@@ -68,8 +68,8 @@
       "titel": "Tisch Wildnis, Querformat (Desktop)",
       "format": "16:9",
       "groesse": [
-        2560,
-        1440
+        3840,
+        2160
       ],
       "prompt": "Use the attached reference image as the exact guide for composition, perspective, colours, mat and decoration, and repaint this very same table as a sharp, richly detailed, high-resolution painting: fine brush strokes, crisp wood grain, clean edges, no blur. Theme: wilderness and savannah. A table made of a flat sandstone slab, tall dry grass and boulders at the far edge, a mountain range and a big sun low behind it. The playing mat is tan leather. Landscape composition: the far edge with its decoration fills the top fifth of the picture, the playing mat the wide middle, the plain table rim the bottom; decoration also at the left and right corners.",
       "referenzen": [
@@ -81,8 +81,8 @@
       "titel": "Tisch Krabbeltiere, Querformat (Desktop)",
       "format": "16:9",
       "groesse": [
-        2560,
-        1440
+        3840,
+        2160
       ],
       "prompt": "Use the attached reference image as the exact guide for composition, perspective, colours, mat and decoration, and repaint this very same table as a sharp, richly detailed, high-resolution painting: fine brush strokes, crisp wood grain, clean edges, no blur. Theme: tiny bugs world. A table made of a giant slab of bark, with huge blades of grass, oversized dewdrops and toadstools at the far edge, towering flowers behind it. The playing mat is a smooth leaf green. Landscape composition: the far edge with its decoration fills the top fifth of the picture, the playing mat the wide middle, the plain table rim the bottom; decoration also at the left and right corners.",
       "referenzen": [
