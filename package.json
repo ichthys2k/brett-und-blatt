@@ -17,7 +17,8 @@
     "check": "pnpm typecheck && pnpm test && pnpm build",
     "neues-spiel": "node scripts/new-game.mjs",
     "rauchtest": "node scripts/rauchtest.mjs",
-    "pruefstand": "vitest run tests/pruefstand.test.ts"
+    "pruefstand": "vitest run tests/pruefstand.test.ts",
+    "platz-messen": "node scripts/platz-messen.mjs"
   },
   "devDependencies": {
     "@bokuweb/zstd-wasm": "0.0.27",
