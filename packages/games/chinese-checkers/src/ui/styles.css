@@ -49,7 +49,9 @@
   cursor: pointer;
 }
 
+.chk-cell-active:focus,
 .chk-cell-active:focus-visible {
+  /* Chrome zeichnet beim Mausklick sonst seinen Fokusring um das <g>; im skalierten SVG wird er riesig (#506). */
   outline: none;
 }
 
