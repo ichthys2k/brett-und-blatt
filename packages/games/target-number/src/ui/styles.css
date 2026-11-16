@@ -346,3 +346,29 @@
     font-size: 1.2rem;
   }
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .tn-layout {
+    max-width: 60rem;
+    gap: 1rem;
+  }
+
+  .tn-target-number {
+    font-size: clamp(2.4rem, 3.5vw, 3.4rem);
+  }
+
+  .tn-term-display {
+    font-size: clamp(1.4rem, 2vw, 1.9rem);
+  }
+
+  .tn-card {
+    min-height: clamp(4.2rem, 8vh, 5.8rem);
+    font-size: clamp(1.4rem, 2vw, 1.85rem);
+  }
+
+  .tn-op-btn {
+    width: clamp(3.2rem, 4vw, 4.2rem);
+    height: clamp(3.2rem, 4vw, 4.2rem);
+    font-size: clamp(1.3rem, 1.8vw, 1.7rem);
+  }
+}
