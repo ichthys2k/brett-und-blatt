@@ -204,3 +204,26 @@
     grid-template-columns: repeat(10, minmax(0, 1fr));
   }
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .fg-layout {
+    max-width: 60rem;
+    gap: 0.9rem;
+  }
+
+  .fg-grid {
+    gap: 0.6rem;
+  }
+
+  .fg-cell {
+    min-height: clamp(3.6rem, 7.5vh, 5.2rem);
+  }
+
+  .fg-cell-num {
+    font-size: clamp(1.25rem, 1.8vw, 1.65rem);
+  }
+
+  .fg-cell-sub {
+    font-size: clamp(0.7rem, 0.9vw, 0.85rem);
+  }
+}
