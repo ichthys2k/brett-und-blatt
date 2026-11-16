@@ -341,6 +341,45 @@ try {
       await context.close();
     }
   }
+  // Handy-Querformat (#486): Für jedes Spiel nur die schmale Schiene mit ☰ links, Spielfeld fast randlos, Schublade mit allen Knöpfen.
+  const railGames = ['chess', 'skat', 'uno', 'kniffel', 'ludo', 'wolves-sheep', 'poker', 'drachenspiel'];
+  for (const id of railGames.filter((game) => ids.includes(game))) {
+    for (const [width, height] of [[844, 390], [740, 360], [667, 375], [667, 320]]) {
+      const context = await browser.newContext({ viewport: { width, height } });
+      const railPage = await context.newPage();
+      await railPage.goto(base);
+      await startGame(railPage, id);
+      const where = `${id} quer bei ${width}×${height}`;
+      const menu = railPage.locator('[data-bub-menu]');
+      if (!(await menu.isVisible())) problems.push(`${where}: Schiene mit ☰ fehlt`);
+      else {
+        const closed = await railPage.evaluate(() => {
+          const rail = document.querySelector('[data-bub-menu]').parentElement.getBoundingClientRect();
+          const main = document.querySelector('main').getBoundingClientRect();
+          return { railWidth: Math.round(rail.width), share: (main.width * main.height) / (window.innerWidth * window.innerHeight), pageHeight: document.documentElement.scrollHeight, pageWidth: document.documentElement.scrollWidth };
+        });
+        if (closed.railWidth > 48) problems.push(`${where}: Schiene ist ${closed.railWidth} px breit (höchstens 48)`);
+        if (closed.share < 0.88) problems.push(`${where}: Spielfeld nur ${Math.round(closed.share * 100)} % des Bildschirms (mindestens 88 %)`);
+        await menu.click();
+        const opened = await railPage.evaluate(() => {
+          const drawerButtons = [...document.querySelectorAll('header button, footer button')].filter((b) => !b.closest('[data-bub-menu]') && b.getBoundingClientRect().width > 0);
+          let blocked = 0;
+          for (const b of drawerButtons) {
+            b.scrollIntoView({ block: 'nearest' });
+            const r = b.getBoundingClientRect();
+            const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+            if (!hit || !b.contains(hit)) blocked++;
+          }
+          return { blocked, count: drawerButtons.length, pageHeight: document.documentElement.scrollHeight, pageWidth: document.documentElement.scrollWidth };
+        });
+        if (opened.count === 0) problems.push(`${where}: Schublade zeigt keine Knöpfe`);
+        if (opened.blocked > 0) problems.push(`${where}: ${opened.blocked} Knöpfe in der Schublade verdeckt oder nicht antippbar`);
+        if (opened.pageHeight > height + 2 || opened.pageWidth > width + 2) problems.push(`${where}: geöffnete Schublade lässt die Seite rollen (${opened.pageWidth}×${opened.pageHeight} px)`);
+        await menu.click();
+      }
+      await context.close();
+    }
+  }
   // CSP (#322): Selbst wenn der Bereiniger für Anki-Karten umgangen würde, läuft eingeschleustes Skript nicht.
   {
     const page = await newPage();

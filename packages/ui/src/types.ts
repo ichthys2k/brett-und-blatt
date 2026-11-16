@@ -108,8 +108,8 @@ export interface GameUi<V = unknown, M = unknown> {
   /** Das Spiel kann seine Plätze mit `SeatRing` um den Tisch setzen, wenn `BoardProps.table` gesetzt ist. */
   seatsAround?: boolean;
   /**
-   * Die Spieler stehen schon auf dem Spielfeld (z. B. Poker): Im niedrigen Querformat (Handy) klappt die
-   * Seitenleiste zu einem Menüknopf ☰ ein und öffnet sich bei Bedarf über dem Spielfeld (#378).
+   * Die Spieler stehen schon auf dem Spielfeld (z. B. Poker). Auf das Layout wirkt das seit #486 nicht mehr:
+   * Im Handy-Querformat (unter 600 px Höhe) ersetzt die schmale Schiene mit ☰ die Seitenleiste für alle Spiele (#378).
    */
   seatsOnBoard?: boolean;
   /**

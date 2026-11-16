@@ -164,3 +164,9 @@ Gemessen auf dem Stand vor Umsetzung von #484 ff., Voreinstellungen der Partie, 
 - `tableLayout`: Hochformat ohne Sitzring → `bar` für alle Spiele und jede Breite (Tablets eingeschlossen); `stack` entfällt. 768 × 1024 mit `seatsAround` und 3–8 Plätzen bleibt `ring`.
 - Leiste 44 px: ☰ (Punkt bei eigenem Zug), Status (`aria-live`), laufende Uhr, bei geschlossener Siegerehrung „Revanche“, rechts 💬. Alles andere liegt in der Schublade (Kopfzeile, Raumcode, Spielerliste, Knöpfe); Meldungen stehen direkt unter der Leiste.
 - Messung 390 × 844: Durchschnitt 74 % → 94 %, kein Spiel unter 88 %.
+
+### H2 – Handy-Querformat: schmale Schiene für alle Spiele (#486, umgesetzt 16.11.2026)
+
+- `tableLayout`: Querformat und Höhe unter `COMPACT_SHORT_SIDE` (600 px) → `rail` für alle Spiele; ab 600 px Höhe wie bisher `side` bzw. `ring`. `seatsOnBoard` hat keinen Einfluss aufs Layout mehr.
+- Schiene 44 px: ☰, wer ist dran (Platzzeichen mit Uhr-Ring), Restzeit, unten 💬. Status wird per `aria-live` vorgelesen. Meldungen stehen oben im Spielfeld, die Schublade rollt, die Kopfzeile bleibt oben.
+- Messung 844 × 390: Durchschnitt 64 % → 94 %, kein Spiel unter 88 %; 1024 × 768 und 1440 × 900 unverändert.

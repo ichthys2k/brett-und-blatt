@@ -2,6 +2,9 @@ import { seatRingFits } from './SeatRing';
 
 export const TABLE_BAR_HEIGHT = 56;
 
+/** Im Querformat gilt unter dieser Höhe (px) die schmale Schiene statt der Seitenleiste (#486). */
+export const COMPACT_SHORT_SIDE = 600;
+
 export type TableMode = 'ring' | 'side' | 'rail' | 'bar';
 
 export interface TableLayoutInput {
@@ -9,7 +12,6 @@ export interface TableLayoutInput {
   height: number;
   seats: number;
   seatsAround?: boolean;
-  seatsOnBoard?: boolean;
   fullBleed?: boolean;
 }
 
@@ -44,13 +46,13 @@ export function sideShieldSize(seats: number, sideHeight: number): number {
 
 /** Entscheidet den Layout-Zustand des Spieltischs aus Fenstergröße, Platzzahl und Spielangaben (#484, #493). */
 export function tableLayout(input: TableLayoutInput): TableLayout {
-  const { width, height, seats, seatsAround, seatsOnBoard, fullBleed } = input;
+  const { width, height, seats, seatsAround, fullBleed } = input;
   const crowded = seats > 2;
   const landscape = width > height && height > 0;
   const around = Boolean(seatsAround) && seatRingFits(seats, width, height - TABLE_BAR_HEIGHT);
   // Hochformat ohne Sitzring: immer die schmale Leiste oben, für alle Spiele und jede Breite (#485); auch noch ungemessen.
-  // Querformat: Schiene links bei `fullBleed` oder `seatsOnBoard` mit wenig Höhe, sonst die Seitenleiste.
-  const rail = landscape && (Boolean(fullBleed) || (Boolean(seatsOnBoard) && height <= 540));
+  // Querformat: Schiene links bei `fullBleed` oder unter 600 px Höhe (Handy, für alle Spiele, #486), sonst die Seitenleiste.
+  const rail = landscape && (Boolean(fullBleed) || height < COMPACT_SHORT_SIDE);
   const mode: TableMode = around ? 'ring' : !landscape ? 'bar' : rail ? 'rail' : 'side';
   const collapsed = mode === 'rail' || mode === 'bar';
   return {

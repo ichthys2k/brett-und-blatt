@@ -1,5 +1,5 @@
 import { randomSeed, sanitizeCustomCardCatalog, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
-import { CardInspectProvider, PlayerChip, formatClock, sideShieldSize, tableLayout, useElementSize } from '@brett-und-blatt/ui';
+import { CardInspectProvider, ClockRing, PlayerChip, formatClock, sideShieldSize, tableLayout, useElementSize } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import type { AlbumSpec } from '@brett-und-blatt/ui';
 import { AfterGameBar } from '../components/AfterGameBar';
@@ -221,7 +221,6 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     height: rootSize.height,
     seats: seats.length,
     seatsAround: ui.seatsAround,
-    seatsOnBoard: ui.seatsOnBoard,
     fullBleed: ui.fullBleed,
   });
   const { crowded, collapsed: collapsedSide } = layout;
@@ -466,6 +465,19 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const clockReading = session.timed && clockSeat !== undefined ? session.clock(clockSeat) : null;
   const turnClock = clockReading && clockReading.kind !== 'none' && clockReading.running ? formatClock(clockReading) : null;
 
+  // Schiene (Handy quer, #486): Wer dran ist als Platzzeichen mit ablaufendem Ring; Pause und Partieende als Zeichen.
+  const railIndicator = result ? (
+    <span className="text-2xl" aria-hidden="true">🏆</span>
+  ) : session.paused ? (
+    <span className="text-2xl" aria-hidden="true">⏸</span>
+  ) : clockSeat === undefined ? null : (
+    <span className={`flex items-center justify-center rounded-full ${yourMove ? 'ring-2 ring-accent' : ''} [&_.bub-ring]:h-9 [&_.bub-ring]:w-9`}>
+      <ClockRing clock={clockReading}>
+        <ui.SeatSymbol seat={clockSeat} seats={seats.length} />
+      </ClockRing>
+    </span>
+  );
+
   const statusContent = (
     <>
       {yourMove ? (
@@ -657,6 +669,20 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               ⏱ {turnClock}
             </span>
           )}
+          {!collapsedTop && (
+            <>
+              <p className="sr-only" aria-live="polite">
+                {statusContent}
+              </p>
+              {railIndicator && (
+                <div className="flex flex-none flex-col items-center gap-0.5" title={status} role="img" aria-label={status}>
+                  {railIndicator}
+                  {turnClock && <span className="text-center text-[0.7rem] font-semibold leading-tight tabular-nums">{turnClock}</span>}
+                </div>
+              )}
+              {online?.chat && <div className="relative mt-auto flex flex-none">{online.chat(false)}</div>}
+            </>
+          )}
           {collapsedTop && barAction}
           {collapsedTop && online?.chat && <div className="relative flex flex-none">{online.chat(true)}</div>}
         </div>
@@ -676,7 +702,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         }
         style={layout.mode === 'side' ? { width: layout.sideWidth } : undefined}
       >
-        <header className={`flex h-14 flex-none items-center gap-2 px-3 tiny:h-10 ${around ? 'relative z-30' : ''}`}>
+        <header className={`flex h-14 flex-none items-center gap-2 px-3 ${around ? 'relative z-30' : collapsedSide ? 'sticky top-0 z-10 bg-surface' : ''}`}>
           {!online?.display && (
             <Button variant="ghost" className="px-3" aria-label={online ? t('online.leave') : t('play.back')} onClick={() => (online ? online.onLeave() : navigate(paths.home))}>
               ←
@@ -731,7 +757,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             <section
               ref={playersRef}
               id="bub-players"
-              className={`bub-players flex min-h-20 flex-initial flex-col flex-nowrap gap-2 overflow-x-hidden overflow-y-auto px-3 ${collapsedSide ? 'py-1' : 'py-0'} ${crowded ? 'flat:grid flat:grid-cols-2 flat:content-start' : ''}`}
+              className={`bub-players flex min-h-20 flex-initial flex-col flex-nowrap gap-2 overflow-x-hidden overflow-y-auto px-3 ${collapsedSide ? 'py-1' : 'py-0'}`}
               data-crowded={crowded || undefined}
               aria-label={t('play.players')}
             >
@@ -753,7 +779,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             className={
               collapsedSide
                 ? 'flex flex-none flex-col gap-2 px-3 py-2 [&>*]:w-full [&>button]:min-h-10'
-                : 'order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 tiny:gap-1 tiny:pt-1 tiny:pb-0 tiny:[&>button]:min-h-8 tiny:[&>button]:px-2 tiny:[&>button]:text-xs'
+                : 'order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3'
             }
             onClick={collapsedSide ? closeDrawerOnAction : undefined}
           >
