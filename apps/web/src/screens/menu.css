@@ -48,7 +48,51 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, transparent 45%, #140d0766 80%);
+  pointer-events: none;
 }
+/* Stationen im leeren 2D-Raum (#454): die Bühne hat das Seitenverhältnis des Bildes und folgt
+   seinem Zuschnitt (cover, Ausschnitt 30 % / 100 %), damit die Prozentwerte am Bild kleben. */
+.bub-menu-back, .bub-menu-glow { pointer-events: none; }
+.bub-menu-stations {
+  container-type: size;
+  transform: translate(calc(var(--mx) * -18px), calc(var(--my) * -9px));
+  pointer-events: none;
+}
+.bub-menu-stage {
+  position: absolute;
+  width: max(100cqw, 100cqh * 1.7917);
+  height: max(100cqh, 100cqw / 1.7917);
+  left: calc((100cqw - max(100cqw, 100cqh * 1.7917)) * 0.3);
+  top: calc(100cqh - max(100cqh, 100cqw / 1.7917));
+}
+.bub-menu-station {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+.bub-menu-station img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 6px 10px rgba(10, 6, 3, 0.65));
+}
+/* Der Kamin trägt einen Feuerschein-Rand mit grünem Saum; unten ausblenden */
+.bub-menu-station[data-station='options'] img {
+  -webkit-mask-image: linear-gradient(to bottom, #000 77%, transparent 81%);
+  mask-image: linear-gradient(to bottom, #000 77%, transparent 81%);
+}
+.bub-menu-station[data-hot='true'] {
+  transform: translate(-50%, -50%) scale(1.07);
+  filter: drop-shadow(0 0 14px rgba(242, 210, 122, 0.85)) brightness(1.12);
+}
+/* Stationen-Szene: der leere Raum trägt keinen alten Kaminschein */
+.bub-menu-scene[data-stationen] .bub-menu-hearth { display: none; }
+.bub-menu-station:focus-visible { outline: 3px solid #f2d27a; outline-offset: 4px; border-radius: 6px; }
 /* Unterseiten rollen: die Szene bleibt stehen */
 .bub-tav .bub-menu-scene { position: fixed; }
 .bub-menu-scene[data-calm] .bub-menu-shade { background: linear-gradient(#140d07bb, #140d07ee); }
@@ -348,6 +392,8 @@
 }
 .bub-menu-hotspot-label {
   position: absolute;
+  z-index: 2;
+  pointer-events: none;
   transform: translate(-50%, -100%);
   padding: 0.25rem 0.65rem;
   border: 1.5px solid #e0b25a;
@@ -379,3 +425,14 @@
   }
 }
 
+
+/* Bearbeitungsmodus für die Stationen (nur Dev-Server, #454) */
+.bub-menu-edit { position: fixed; inset: -3%; z-index: 40; transform: none !important; pointer-events: none; }
+.bub-menu-edit-item { position: absolute; transform: translate(-50%, -50%); cursor: move; pointer-events: auto; outline: 1px dashed #f2d27aaa; touch-action: none; }
+.bub-menu-edit-item[data-selected='true'] { outline: 2px solid #f2d27a; }
+.bub-menu-edit-item img { display: block; width: 100%; height: auto; pointer-events: none; }
+.bub-menu-edit-tag { position: absolute; left: 0; top: -1.3em; padding: 0 0.35em; background: #140d07dd; color: #f2d27a; font: 11px/1.4 monospace; white-space: nowrap; pointer-events: none; }
+.bub-menu-edit-grip { position: absolute; right: -7px; bottom: -7px; width: 14px; height: 14px; background: #f2d27a; border: 2px solid #140d07; border-radius: 3px; cursor: nwse-resize; }
+.bub-menu-edit-panel { position: fixed; right: 12px; top: 12px; z-index: 50; display: flex; flex-direction: column; gap: 6px; width: 400px; max-width: calc(100vw - 24px); padding: 10px 12px; background: #140d07ee; border: 1px solid #f2d27a; border-radius: 8px; color: #f6e7c1; font: 12px/1.4 system-ui; }
+.bub-menu-edit-panel pre { margin: 0; padding: 6px; max-height: 180px; overflow: auto; background: #000a; font: 11px/1.4 monospace; white-space: pre; }
+.bub-menu-edit-panel button { margin-right: 6px; padding: 4px 10px; cursor: pointer; }

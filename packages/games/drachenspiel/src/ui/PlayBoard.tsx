@@ -11,8 +11,9 @@ import type { Float, ShownMinion } from './sequence';
 import { getCardFullTitle, getCardTraits, getMinionTraits } from './traits';
 import { currentCrest, ScenarioTip, useCosmetics } from './SoloHub';
 import { championImage, HOUSE_CHAMPIONS, HOUSE_ICONS, HOUSE_NAMES } from './champions';
-import { KnappenRow, WimpelGem } from './held';
+import { HeroZoomCard, KnappenRow, WimpelGem } from './held';
 import { useBeats } from './useBeats';
+import { DeckPile } from './pile';
 import { KEYWORD_SYMBOLS, KeywordEdges, KeywordMark, StatGem } from './symbole';
 import { cardArtUrl } from './cardArt';
 
@@ -247,7 +248,13 @@ function HeroBar({
   const champion = HOUSE_CHAMPIONS[house];
   const image = championImage(house);
   const housePower: HousePower | null = player.power ? HOUSE_POWERS[player.power] : null;
-  // Großansicht des Turnierherrn (#464): nur, was die Sicht ohnehin zeigt.
+  // Großansicht des Turnierherrn (#464, als Karte #472): nur, was die Sicht ohnehin zeigt.
+  const zoomLines = [
+    housePower ? `Hauskraft ${housePower.name} (${housePower.cost} Knappen): ${housePower.text}` : '',
+    player.gear ? `${player.gear.name}: Angriff ${player.gear.attack}, hält noch ${player.gear.durability} Angriffe.` : '',
+    player.quest && quest?.quest ? `Auftrag ${quest.name} (${player.quest.progress}/${quest.quest.count}): ${quest.text}` : '',
+    player.trapCount > 0 ? `Fallen: ${trapText}` : '',
+  ].filter(Boolean);
   const zoom = (): InspectContent => ({
     title: name,
     subtitle: `${champion.title} · ${houseName}`,
@@ -259,12 +266,22 @@ function HeroBar({
       ...(strength > 0 ? [{ label: 'Angriff', value: String(strength), tone: 'attack' as const }] : []),
       { label: 'Knappen', value: `${player.mana}/${player.maxMana}`, tone: 'cost' },
     ],
-    lines: [
-      housePower ? `Hauskraft ${housePower.name} (${housePower.cost} Knappen): ${housePower.text}` : '',
-      player.gear ? `${player.gear.name}: Angriff ${player.gear.attack}, hält noch ${player.gear.durability} Angriffe.` : '',
-      player.quest && quest?.quest ? `Auftrag ${quest.name} (${player.quest.progress}/${quest.quest.count}): ${quest.text}` : '',
-      player.trapCount > 0 ? `Fallen: ${trapText}` : '',
-    ].filter(Boolean),
+    lines: zoomLines,
+    // Als Karte im Stil der Zoomkarte, ohne Fensterrahmen (#472).
+    bare: true,
+    body: (
+      <HeroZoomCard
+        name={name}
+        origin={champion.title}
+        image={image}
+        emoji={houseIcon}
+        health={health}
+        armor={armor}
+        strength={strength}
+        mana={player.mana}
+        lines={zoomLines}
+      />
+    ),
   });
   const ownProps: InspectExtraProps = {
     ...(onPointerDown ? { onPointerDown } : {}),
@@ -355,6 +372,9 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   const mySeat: SeatId = typeof viewer === 'number' ? viewer : 0;
   const oppSeat: SeatId = (1 - mySeat) as SeatId;
   const me = view.players[mySeat];
+  const reducedMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  // Ziel der gezogenen Karte: die letzte Handkarte, aus dem DOM gelesen (die Refs hängen beim Ziehen noch nicht wieder).
+  const lastHandCard = useCallback(() => arenaRef.current?.querySelector<HTMLElement>('.ds-hand > .ds-card:last-child') ?? null, []);
   const opp = view.players[oppSeat];
   const isMyTurn = view.phase === 'play' && view.activeSeat === mySeat;
 
@@ -747,8 +767,8 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           elementRef={heroRef(mySeat)}
         />
         <div className="ds-actions">
-          <span className="ds-badge ds-badge-deck ds-deck-with-back" title={`Dein Nachziehstapel: ${me.deckCount} Karten`}>
-            <GameCard faceDown size="xs" cardBackProps={{ design: cardCosmetics.cardBack, crest: cardCosmetics.crest }} />
+          <DeckPile count={me.deckCount} handTarget={lastHandCard} reducedMotion={reducedMotion} />
+          <span className="ds-badge ds-badge-deck ds-pile-badge" title={`Dein Nachziehstapel: ${me.deckCount} Karten`}>
             <span>📚 {me.deckCount}</span>
           </span>
           <div className="ds-endturn-wrap">

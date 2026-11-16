@@ -71,7 +71,7 @@ export function setup(_seats = 2, options: Options = {}): ChessState {
       // Ungültig: normal beginnen. Die Oberfläche prüft die Partie schon beim Einfügen.
     }
   }
-  return { fen: START_FEN, positions: { [positionKey(START_FEN)]: 1 }, history: [], lastMove: null, inCheck: false, end: null, winner: null, rotate: options.board !== 'fixed' };
+  return { fen: START_FEN, positions: { [positionKey(START_FEN)]: 1 }, history: [], lastMove: null, inCheck: false, end: null, winner: null, rotate: options.board === 'turn' };
 }
 
 export function currentPlayers(state: ChessState): Actor[] {

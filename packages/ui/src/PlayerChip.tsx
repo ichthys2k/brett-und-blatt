@@ -1,6 +1,9 @@
 import type { ClockReading } from '@brett-und-blatt/engine';
 import type { ReactNode } from 'react';
 import { avatarImageOf, renderAvatar } from './avatarRenderer';
+import { clockTone } from './clockTone';
+import { PlayerShield } from './PlayerShield';
+import { SEAT_SHIELD_SIZE, useSeatRingScale } from './SeatRingScale';
 import { useInspectProps } from './inspect/CardInspect';
 
 /** Ring um das Spielerzeichen, der mit der Zeit abläuft. */
@@ -8,7 +11,7 @@ export function ClockRing({ clock, children }: { clock: ClockReading | null; chi
   const radius = 21;
   const circumference = 2 * Math.PI * radius;
   const fraction = clock && clock.kind !== 'none' ? Math.max(0, Math.min(1, clock.fraction)) : 1;
-  const tone = !clock || clock.kind === 'none' || !clock.running ? 'idle' : clock.usingBank || fraction < 0.15 ? 'danger' : fraction < 0.35 ? 'warning' : 'ok';
+  const tone = clockTone(clock);
   return (
     <span className="bub-ring" data-tone={tone}>
       <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -44,24 +47,37 @@ export interface PlayerChipProps {
   clock: ClockReading | null;
   /** Punktestand – steht als eigenes Abzeichen rechts und wird nie abgeschnitten. */
   score?: number | string | null;
+  /** `card`: großer Platz mit Porträt im Wappenschild statt Ring und Symbol (#491); Vorgabe `compact`, am Sitzring nach dessen Stufe. */
+  size?: 'compact' | 'card';
+  /** Wappen als Beschreibung (wie `MemberInfo.crest`); nur bei `size="card"`. */
+  crest?: string;
+  /** Breite des Schilds in px bei `size="card"` (Vorgabe 72). */
+  shieldSize?: number;
 }
 
 /** Ein Platz in der Spielerleiste: Zeichen mit Uhr-Ring, Name, Zustand. */
-export function PlayerChip({ name, symbol, avatar, detail, active, thinking, away, winner, clock, score }: PlayerChipProps) {
+export function PlayerChip({ name, symbol, avatar, detail, active, thinking, away, winner, clock, score, size, crest, shieldSize }: PlayerChipProps) {
+  // Am Sitzring bestimmt dessen Stufe die Größe (#494); sonst gelten die Eigenschaften.
+  const scale = useSeatRingScale();
+  const fromRing = size === undefined && scale !== 'compact';
+  size = size ?? (fromRing ? 'card' : 'compact');
+  shieldSize = shieldSize ?? (fromRing ? SEAT_SHIELD_SIZE[scale] : 72);
   const time = clock && clock.kind !== 'none' && clock.running ? formatClock(clock) : null;
   // Großansicht des gemalten Avatars (#422): beim Überfahren, Rechtsklick oder langem Drücken.
   const image = avatar ? avatarImageOf(avatar) : undefined;
   const inspect = useInspectProps(image ? () => ({ title: name, subtitle: detail, image: { src: image, aspect: 1, round: true }, emoji: avatar }) : undefined);
+  const card = size === 'card';
+  const detailText = away ? 'abwesend – Computer spielt' : thinking ? 'denkt nach …' : (time ?? detail ?? '');
   return (
-    <div className="bub-chip" data-active={active || undefined} data-winner={winner || undefined} aria-current={active ? 'true' : undefined} {...inspect}>
-      <ClockRing clock={clock}>{symbol}</ClockRing>
+    <div className="bub-chip" data-size={card ? 'card' : undefined} data-active={active || undefined} data-winner={winner || undefined} aria-current={active ? 'true' : undefined} {...inspect}>
+      {card ? <PlayerShield avatar={avatar ?? ''} crest={crest} size={shieldSize} clock={clock} symbol={symbol} label={`Wappen von ${name}`} /> : <ClockRing clock={clock}>{symbol}</ClockRing>}
       <span className="bub-chip-text">
         <span className="bub-chip-name">
           {winner ? '🏆 ' : ''}
-          {avatar ? <span aria-hidden="true">{renderAvatar(avatar)} </span> : null}
+          {!card && avatar ? <span aria-hidden="true">{renderAvatar(avatar)} </span> : null}
           {name}
         </span>
-        <span className="bub-chip-detail">{away ? 'abwesend – Computer spielt' : thinking ? 'denkt nach …' : (time ?? detail ?? '')}</span>
+        <span className="bub-chip-detail">{detailText}</span>
       </span>
       {score !== undefined && score !== null && (
         <span className="bub-chip-score" aria-label={`${score} Punkte`} title={`${score} Punkte`}>

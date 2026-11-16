@@ -348,3 +348,9 @@ button.sm-symbol:focus-visible {
     padding: 0.25rem;
   }
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .sm-table {
+    max-width: none;
+  }
+}

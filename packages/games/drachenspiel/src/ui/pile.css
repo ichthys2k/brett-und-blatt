@@ -1,0 +1,78 @@
+/* Nachziehstapel als echter Kartenstapel mit gezogenen, fliegenden Karten (Wunsch 16.11.2026).
+   Eigene Klassen mit Präfix ds-pile. Am Handy bleibt der kleine Zähler (styles.css blendet die Karte aus). */
+
+.ds-pile {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+  /* Genau so groß wie eine Handkarte (Cornelius, 16.11.2026). */
+  width: var(--ds-card-w, 82px);
+  height: var(--ds-card-h, 110px);
+  margin: 0 8px 0 0;
+}
+
+.ds-pile-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: 6%;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.55);
+}
+
+.ds-pile-layer > * {
+  width: 100%;
+  height: 100%;
+}
+
+.ds-pile-empty {
+  position: absolute;
+  inset: 0;
+  border: 2px dashed rgb(245 234 214 / 0.45);
+  border-radius: 6%;
+}
+
+.ds-pile-count {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  min-width: 1.6em;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--ds-plate, rgb(28 18 10 / 0.74));
+  border: 1px solid var(--ds-plate-line, rgb(214 170 96 / 0.55));
+  color: var(--ds-plate-ink, #f5ead6);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  z-index: 8;
+}
+
+.ds-pile-flight {
+  position: fixed;
+  z-index: 3000;
+  border-radius: 6%;
+  overflow: hidden;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.ds-pile-flight > * {
+  width: 100%;
+  height: 100%;
+}
+
+/* Der Zähler als Plakette erscheint nur, wo der Stapel selbst ausgeblendet ist. */
+.ds-pile-badge {
+  display: none;
+}
+
+@media (max-width: 560px), (max-height: 470px) {
+  .ds-pile {
+    display: none;
+  }
+
+  .ds-pile-badge {
+    display: inline-flex;
+  }
+}

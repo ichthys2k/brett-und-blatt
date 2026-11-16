@@ -124,3 +124,28 @@
 .est-end-high {
   right: 0;
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .bub-round:has(.est-question) {
+    max-width: 60rem;
+    gap: 0.9rem;
+  }
+
+  .est-question {
+    font-size: clamp(1.3rem, 2.2vw, 1.9rem);
+    max-width: 68ch;
+    margin-inline: auto;
+  }
+
+  .est-input {
+    width: 11rem;
+    min-height: 3.25rem;
+    font-size: 1.4rem;
+  }
+
+  .est-send {
+    min-height: 3.25rem;
+    padding: 0 1.35rem;
+    font-size: 1.05rem;
+  }
+}

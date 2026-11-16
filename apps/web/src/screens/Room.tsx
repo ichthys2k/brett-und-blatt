@@ -1,5 +1,5 @@
-import { PlayerCrest } from '@brett-und-blatt/ui';
-import { BOT_LEVELS, parseCrest, resolveOptions, teamsFor, timePresetsOf, type CustomCardCatalog, type TimePresetId } from '@brett-und-blatt/engine';
+import { PlayerShield } from '@brett-und-blatt/ui';
+import { BOT_LEVELS, resolveOptions, teamsFor, timePresetsOf, type CustomCardCatalog, type TimePresetId } from '@brett-und-blatt/engine';
 import { CARD_SET_GAMES, useActiveCardSet, useChangedCatalog } from '../lib/activeCardSet';
 import { MAX_SEATS, TOURNAMENT_CODE_PATTERN, parseRoomCode, roomCapabilities, type Capability, type LobbySeat, type MemberInfo, type OnlineSession, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -25,16 +25,16 @@ import { TeamChip, TeamSummary } from '../components/Teams';
 import { CustomCardsOverlay } from '../components/CustomCardsOverlay';
 import { VoiceMenu } from '../components/VoiceMenu';
 import { useVoice } from '../lib/voice';
-import { Avatar } from '../components/Avatar';
 import { useGameScene } from '../lib/gameScene';
-import { botAvatar, botName } from '../lib/botPortraits';
+import { botName } from '../lib/botPortraits';
+import { seatIdentity, seatMember } from '../lib/seatIdentity';
 
 const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
 /** Online gibt es nur Spiele für mehrere Personen. */
 const onlineGames = games.filter((info) => info.players.max >= 2);
 
 function Page({ children }: { children: React.ReactNode }) {
-  return <div className="bub-lobby mx-auto flex min-h-full max-w-xl flex-col gap-5 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.5rem)]">{children}</div>;
+  return <div className="bub-lobby mx-auto flex min-h-full max-w-xl min-[1100px]:max-w-4xl flex-col gap-5 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.5rem)]">{children}</div>;
 }
 
 function Notice({ text, action }: { text: string; action?: React.ReactNode }) {
@@ -154,6 +154,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
 
   if (state.game && room.phase !== 'lobby') {
     const { session, loaded } = state.game;
+    const seatMembers = (state.room?.lobby.seats ?? []).map((seat) => seatMember(seat, state.room?.members ?? []));
     return (
       <>
         <GameTable
@@ -179,10 +180,8 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
                   },
                 }
               : {}),
-            avatars: state.room?.lobby.seats.map((seat) => {
-              if (seat.kind !== 'human' || !seat.memberId) return null;
-              return state.room?.members.find((m) => m.id === seat.memberId)?.avatar ?? null;
-            }),
+            avatars: seatMembers.map((m) => m?.avatar ?? null),
+            crests: seatMembers.map((m) => m?.crest ?? null),
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
             ...(loaded.info.takeBack ? { bar: <TakeBackBar session={session} /> } : {}),
             chat: (inBar: boolean) => (
@@ -222,10 +221,27 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
           <p className="text-muted">{room.match.noShow ? t('tournament.room.noShow') : room.lobby.seats.length > 2 ? t('tournament.room.waitingTable') : t('tournament.room.waiting')}</p>
           <ul className="space-y-1">
             {room.lobby.seats.map((seat, index) => {
-              const member = seat.kind === 'human' ? room.members.find((m) => m.id === seat.memberId) : undefined;
+              const member = seatMember(seat, room.members);
+              const identity = member
+                ? seatIdentity({
+                    index,
+                    kind: 'human',
+                    gameId: room.lobby.gameId ?? '',
+                    memberAvatar: member.avatar,
+                    memberCrest: member.crest,
+                  })
+                : null;
               return (
-                <li key={index} className="rounded-xl border border-line bg-surface px-3 py-2">
-                  {member ? `${member.avatar} ${member.name} ${member.connected ? '✅' : '⏳'}` : `⏳ ${t('tournament.room.empty')}`}
+                <li key={index} className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
+                  {member && identity ? (
+                    <>
+                      <PlayerShield avatar={identity.avatar} crest={identity.crest} size={32} label={t('crest.of', { name: member.name })} />
+                      <span className="min-w-0 flex-1 truncate font-medium">{member.name}</span>
+                      <span>{member.connected ? '✅' : '⏳'}</span>
+                    </>
+                  ) : (
+                    <span>⏳ {t('tournament.room.empty')}</span>
+                  )}
                 </li>
               );
             })}
@@ -624,7 +640,7 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu
           {game.module.options.some((spec) => !spec.hidden) && (
             <Section title={t('setup.rules')}>
               {game.module.options
-                .filter((spec) => !spec.hidden)
+                .filter((spec) => !spec.hidden && (!isHost || !spec.customUi))
                 .filter((spec) => !spec.when || Object.entries(spec.when).every(([id, values]) => values.includes(lobby.options[id] ?? '')))
                 .map((spec) => {
                   const value = lobby.options[spec.id] ?? spec.default;
@@ -639,8 +655,8 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu
                     </div>
                   );
                 })}
-              {/* Eigenes Paket aus der Bibliothek (#218): dieselbe Wahl wie in der Einrichtung, nur für Spiele mit der verborgenen Option „pack“. */}
-              {isHost && game.ui.SetupExtra && game.module.options.some((spec) => spec.id === 'pack' && spec.hidden) && (
+              {/* Eigenes Paket aus der Bibliothek (#218) oder eigene Set-Auswahl: dieselbe Wahl wie in der Einrichtung. */}
+              {isHost && game.ui.SetupExtra && game.module.options.some((spec) => (spec.id === 'pack' && spec.hidden) || spec.customUi) && (
                 <game.ui.SetupExtra options={resolveOptions(game.module, lobby.options)} seats={lobby.seats.length} setOption={(id, value) => send({ type: 'setOption', id, value })} />
               )}
               {!isHost && typeof lobby.options.pack === 'string' && lobby.options.pack !== '' && <p className="text-sm text-muted">📚 Eigenes Paket der Raumleitung</p>}
@@ -668,26 +684,37 @@ function Lobby({ room, state, connection, isHost, onLeave, pushToggle, voiceMenu
 
       <Section title={t('online.members')}>
         {!isHost && lobby.namesLocked && <p className="text-sm text-muted">🔒 {t('online.namesLockedNotice')}</p>}
-        <ul className="space-y-1">
-          {room.members.map((member) => (
-            <MemberRow
-              key={member.id}
-              member={member}
-              isYou={member.id === state.you}
-              isHost={isHost}
-              isRoomHost={member.id === room.hostId}
-              canEdit={member.id === state.you ? isHost || (!member.nameFixed && !lobby.namesLocked) : isHost}
-              onSave={(profile) => {
-                if (member.id === state.you) {
-                  saveOwnProfile(profile);
-                  connection.rename(profile);
-                } else {
-                  send({ type: 'renameMember', memberId: member.id, name: profile.name, avatar: profile.avatar });
-                }
-              }}
-              onKick={() => window.confirm(t('online.kickConfirm', { name: member.name })) && send({ type: 'kick', memberId: member.id })}
-            />
-          ))}
+        <ul className={room.members.length > 4 ? 'grid grid-cols-1 gap-2 min-[1100px]:grid-cols-2' : 'space-y-1.5'}>
+          {room.members.map((member, memberIndex) => {
+            const seatIndex = lobby.seats.findIndex((seat) => seat.kind === 'human' && seat.memberId === member.id);
+            const identity = seatIdentity({
+              index: seatIndex >= 0 ? seatIndex : memberIndex,
+              kind: 'human',
+              gameId: lobby.gameId ?? '',
+              memberAvatar: member.avatar,
+              memberCrest: member.crest,
+            });
+            return (
+              <MemberRow
+                key={member.id}
+                member={member}
+                identity={identity}
+                isYou={member.id === state.you}
+                isHost={isHost}
+                isRoomHost={member.id === room.hostId}
+                canEdit={member.id === state.you ? isHost || (!member.nameFixed && !lobby.namesLocked) : isHost}
+                onSave={(profile) => {
+                  if (member.id === state.you) {
+                    saveOwnProfile(profile);
+                    connection.rename(profile);
+                  } else {
+                    send({ type: 'renameMember', memberId: member.id, name: profile.name, avatar: profile.avatar });
+                  }
+                }}
+                onKick={() => window.confirm(t('online.kickConfirm', { name: member.name })) && send({ type: 'kick', memberId: member.id })}
+              />
+            );
+          })}
         </ul>
       </Section>
 
@@ -743,6 +770,7 @@ function JoinRequest({ room, you, yourSeat, info, connection }: { room: RoomMess
 
 function MemberRow({
   member,
+  identity,
   isYou,
   isHost,
   isRoomHost,
@@ -751,6 +779,7 @@ function MemberRow({
   onKick,
 }: {
   member: MemberInfo;
+  identity: { avatar: string; crest: string };
   isYou: boolean;
   isHost: boolean;
   isRoomHost: boolean;
@@ -759,45 +788,72 @@ function MemberRow({
   onKick: () => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const shieldLabel = t('crest.of', { name: member.name });
+  const hasBadges = isRoomHost || Boolean(member.join) || Boolean(member.nameFixed) || !member.connected;
   return (
     <li className="space-y-2 rounded-xl bg-surface px-3 py-2">
-      <div className="flex flex-wrap items-center gap-2">
-        {parseCrest(member.crest) ? (
-          <span className="text-ink">
-            <PlayerCrest spec={parseCrest(member.crest)!} size={28} label={t('crest.of', { name: member.name })} />
-          </span>
-        ) : (
-          <span className="text-xl" aria-hidden="true">
-            <Avatar value={member.avatar} />
-          </span>
-        )}
-        <span className={`min-w-0 flex-1 font-medium ${member.connected ? '' : 'text-muted'}`}>
-          {member.name}
-          {isYou && ` (${t('online.you')})`}
-          {isRoomHost && <span className="ml-2 text-xs text-muted">👑 {t('online.host')}</span>}
-          {member.join && <span className="ml-2 text-xs text-muted">🙋 {member.join === 'queued' ? t('join.queuedTag') : t('join.askingTag')}</span>}
-          {member.nameFixed && (
-            <span className="ml-1 text-xs" title={t('online.nameFixed')}>
-              🔒<span className="sr-only"> {t('online.nameFixed')}</span>
-            </span>
-          )}
-          {!member.connected && <span className="ml-2 text-xs">· {t('online.offline')}</span>}
+      <div className="flex items-center gap-2.5 wide:gap-3">
+        <span className="shrink-0 wide:hidden">
+          <PlayerShield avatar={identity.avatar} crest={identity.crest} size={36} label={shieldLabel} />
         </span>
-        {canEdit && !editing && (
-          <Button
-            variant="ghost"
-            className="min-h-9 text-sm"
-            aria-label={isYou ? t('online.editProfile') : t('online.editProfileFor', { name: member.name })}
-            onClick={() => setEditing(true)}
-          >
-            ✏️ {t('online.editProfile')}
-          </Button>
-        )}
-        {isHost && !isYou && (
-          <Button variant="ghost" className="min-h-9 text-sm" onClick={onKick}>
-            {t('online.kick')}
-          </Button>
-        )}
+        <span className="hidden shrink-0 wide:block">
+          <PlayerShield avatar={identity.avatar} crest={identity.crest} size={56} label={shieldLabel} />
+        </span>
+        <div className={`min-w-0 flex-1 ${member.connected ? '' : 'text-muted'}`}>
+          <div className="wide:flex wide:flex-col wide:gap-1">
+            <span className="break-words font-medium wide:text-base wide:font-semibold">
+              {member.name}
+              {isYou && ` (${t('online.you')})`}
+            </span>
+            {hasBadges && (
+              <span className="inline wide:flex wide:flex-wrap wide:items-center wide:gap-1.5">
+                {isRoomHost && (
+                  <span className="ml-2 text-xs text-muted wide:ml-0 wide:inline-flex wide:items-center wide:rounded-full wide:border wide:border-line wide:bg-surface-2 wide:px-2 wide:py-0.5">
+                    👑 {t('online.host')}
+                  </span>
+                )}
+                {member.join && (
+                  <span className="ml-2 text-xs text-muted wide:ml-0 wide:inline-flex wide:items-center wide:rounded-full wide:border wide:border-line wide:bg-surface-2 wide:px-2 wide:py-0.5">
+                    🙋 {member.join === 'queued' ? t('join.queuedTag') : t('join.askingTag')}
+                  </span>
+                )}
+                {member.nameFixed && (
+                  <span
+                    className="ml-1 text-xs wide:ml-0 wide:inline-flex wide:items-center wide:rounded-full wide:border wide:border-line wide:bg-surface-2 wide:px-2 wide:py-0.5"
+                    title={t('online.nameFixed')}
+                  >
+                    🔒<span className="sr-only wide:not-sr-only wide:ml-1">{t('online.nameFixed')}</span>
+                  </span>
+                )}
+                {!member.connected && (
+                  <span className="ml-2 text-xs wide:ml-0 wide:inline-flex wide:items-center wide:rounded-full wide:border wide:border-line wide:bg-surface-2 wide:px-2 wide:py-0.5">
+                    <span className="wide:hidden">· </span>
+                    {t('online.offline')}
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
+        </div>
+        {(canEdit && !editing) || (isHost && !isYou) ? (
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+            {canEdit && !editing && (
+              <Button
+                variant="ghost"
+                className="min-h-9 text-sm"
+                aria-label={isYou ? t('online.editProfile') : t('online.editProfileFor', { name: member.name })}
+                onClick={() => setEditing(true)}
+              >
+                ✏️ {t('online.editProfile')}
+              </Button>
+            )}
+            {isHost && !isYou && (
+              <Button variant="ghost" className="min-h-9 text-sm" onClick={onKick}>
+                {t('online.kick')}
+              </Button>
+            )}
+          </div>
+        ) : null}
       </div>
       {editing && (
         <div className="space-y-2 border-t border-line pt-2">
@@ -842,11 +898,18 @@ function SeatRow({
   isHost: boolean;
   you: string | null;
   mySeat: number;
-  member: { name: string; avatar: string } | undefined;
+  member: MemberInfo | undefined;
   send: RoomConnection['send'];
 }) {
   const { ui } = game;
   const mine = seat.kind === 'human' && seat.memberId === you;
+  const shieldSize = compact ? 28 : 34;
+  const identity =
+    seat.kind === 'bot'
+      ? seatIdentity({ index, kind: 'bot', gameId: game.info.id })
+      : member
+        ? seatIdentity({ index, kind: 'human', gameId: game.info.id, memberAvatar: member.avatar, memberCrest: member.crest })
+        : null;
   return (
     <li className={`space-y-2 border shadow-sm ${compact ? 'rounded-xl px-3 py-1.5' : 'rounded-2xl p-3'} ${mine ? 'border-accent bg-accent/5' : 'border-line bg-surface'}`}>
       <div className={`flex items-center ${compact ? 'gap-2' : 'flex-wrap gap-3'}`}>
@@ -859,8 +922,20 @@ function SeatRow({
             onSwitch={isHost || mine ? () => send({ type: 'setTeam', index, team: (seat.team! + 1) % teams.count }) : undefined}
           />
         )}
-        <span className={`flex-1 font-medium ${compact ? 'min-w-0 truncate' : ''}`}>
-          {seat.kind === 'bot' ? (<><Avatar value={botAvatar(game.info.id)} />{compact ? '' : ` ${botName(game.info.id)} · ${levelLabel(seat.level)}`}</>) : member ? `${member.avatar} ${member.name}` : compact && isHost ? '' : t('online.seatOpen')}
+        <span className={`flex min-w-0 flex-1 items-center gap-2 font-medium`}>
+          {seat.kind === 'bot' && identity ? (
+            <>
+              <PlayerShield avatar={identity.avatar} crest={identity.crest} size={shieldSize} label={t('crest.of', { name: botName(game.info.id) })} />
+              {!compact && <span className="min-w-0 truncate">{botName(game.info.id)} · {levelLabel(seat.level)}</span>}
+            </>
+          ) : member && identity ? (
+            <>
+              <PlayerShield avatar={identity.avatar} crest={identity.crest} size={shieldSize} label={t('crest.of', { name: member.name })} />
+              <span className="min-w-0 truncate">{member.name}</span>
+            </>
+          ) : (
+            <span>{compact && isHost ? '' : t('online.seatOpen')}</span>
+          )}
         </span>
         {seat.kind === 'human' && seat.memberId === null && (
           <Button variant={mySeat < 0 ? 'primary' : 'secondary'} className="min-h-9 text-sm" onClick={() => send({ type: 'takeSeat', index })}>

@@ -193,6 +193,10 @@ Die Kartenbilder der Sets Tiere, Weltraum, Bibel und Dinosaurier (`content/quart
 
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 
+## Hauptmenü: leerer Tavernenraum (KI-erzeugt)
+
+Die sechs Hintergründe des Hauptmenüs im Querformat (`apps/web/src/menu/taverne-leer-{abend,morgen,tag,nacht,winter,fest}.webp`; die Originale in voller Auflösung und alle Varianten liegen im privaten Repo `ichthys2k/brett-und-blatt-grafik`): **KI-erzeugt** mit „gemini-3.1-flash-image“ (Google) nach eigenen Bildbeschreibungen im Storybook-Fantasy-Stil, November 2026 (#454). Auswahl und Zuschnitt durch Cornelius Lipponer; Manifeste und Prompts in `scripts/grafik/manifeste/menue-leer.json` (Abend) und `menue-leer-licht.json` (Lichtstimmungen als Bearbeitung des Abendbilds). Die Bilder zeigen einen leeren Raum mit Balken, Laternen und Steinwand ohne Personen, Tiere, Möbel, Text oder Interface-Elemente.
+
 ## Drachenspiel-Karten (KI-erzeugt)
 
 Die 234 Kartenbilder des Drachenspiels (`packages/games/drachenspiel/src/ui/karten/bub-ds-*.webp`): **KI-erzeugt** mit „gemini-3.1-flash-lite-image“ (Google) nach eigenen Bildbeschreibungen, November 2026 (#309). Auswahl durch Cornelius Lipponer; Manifest `drachenspiel-karten.json`. Die Figuren sind eigene Erfindungen (Tiere im Märchenstil), keine echten Personen.

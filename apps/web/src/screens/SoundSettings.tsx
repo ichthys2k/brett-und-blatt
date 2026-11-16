@@ -18,6 +18,8 @@ import {
   setLight,
   MENU_3D_AVAILABLE,
   setMenu3d,
+  setMenuStations,
+  useMenuStationsChoice,
   setScenes,
   setRoomScene,
   setTableSurface,
@@ -92,6 +94,7 @@ function LookChoice() {
   const room = useChosenRoom();
   const menu3d = useMenu3d();
   const scenes = useScenesOn();
+  const stations = useMenuStationsChoice();
   const light = useChosenLight();
   const options: readonly { id: Look; label: string; text: string }[] = [
     { id: 'plain', label: t('look.plain'), text: t('look.plain.text') },
@@ -119,6 +122,16 @@ function LookChoice() {
           <span>
             <span className="block font-medium">{t('look.menu3d.title')}</span>
             <span className="block text-sm text-muted">{t('look.menu3d.text')}</span>
+          </span>
+        </label>
+      )}
+
+      {chosen === 'tavern' && room === 'tavern' && !contrastForcesPlain() && (
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-line bg-surface p-4">
+          <input type="checkbox" className="mt-1 accent-accent" checked={stations} onChange={(event) => setMenuStations(event.target.checked)} />
+          <span>
+            <span className="block font-medium">{t('look.stations.title')}</span>
+            <span className="block text-sm text-muted">{t('look.stations.text')}</span>
           </span>
         </label>
       )}

@@ -351,3 +351,29 @@
 [data-look='tavern'] .rub-art ~ .rub-shape {
   display: none;
 }
+
+@media (orientation: landscape) and (max-height: 599px) {
+  :root {
+    --bub-ratio: 1.35 !important;
+  }
+
+  .rub-wrap {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: 1fr;
+    align-items: center;
+    gap: 0.75rem;
+    height: 100%;
+  }
+
+  .rub-board-area {
+    height: 100%;
+  }
+
+  .rub-controls {
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

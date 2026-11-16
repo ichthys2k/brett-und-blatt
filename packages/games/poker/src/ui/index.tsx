@@ -381,6 +381,7 @@ function Board({
             <SeatRing
               seats={view.seats.length}
               bottomSeat={heroSeat}
+              scale="compact"
               renderSeat={(seat) => {
                 const s = view.seats[seat];
                 return s ? renderSeatNode(s) : null;

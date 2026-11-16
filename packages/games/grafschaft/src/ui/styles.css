@@ -452,3 +452,317 @@
   margin-right: auto;
   margin-left: 0.5rem;
 }
+
+@media (min-width: 1180px) and (min-height: 700px) {
+  .gs-root {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 21rem;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    align-items: start;
+    height: 100%;
+    max-width: none;
+    gap: 0.65rem;
+  }
+
+  .gs-board-wrapper {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+
+  .gs-header,
+  .gs-market-section,
+  .gs-quests-section {
+    grid-column: 2;
+  }
+
+  .gs-quests-section {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+}
+
+/* Handy Hochformat: Spielfeld füllt die verbleibende Höhe, kein Rollen */
+@media (max-width: 599px) and (orientation: portrait) {
+  .gs-root {
+    height: 100%;
+    min-height: 0;
+    gap: 6px;
+    padding: 4px 2px;
+    overflow: hidden;
+  }
+
+  .gs-header {
+    padding: 4px 8px;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .gs-turn-indicator {
+    display: none;
+  }
+
+  .gs-scores {
+    gap: 4px;
+  }
+
+  .gs-player-chip {
+    padding: 2px 6px;
+    font-size: 0.75rem;
+  }
+
+  .gs-deck-info {
+    font-size: 0.75rem;
+  }
+
+  .gs-market-section {
+    padding: 4px 8px;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .gs-market-title {
+    font-size: 0.75rem;
+  }
+
+  .gs-market-title span:last-child {
+    display: none;
+  }
+
+  .gs-market-tiles {
+    display: flex;
+    justify-content: space-around;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .gs-market-tile {
+    width: auto;
+    height: auto;
+    padding: 3px 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .gs-tile-preview-svg {
+    width: 34px;
+    height: 34px;
+  }
+
+  .gs-tile-label {
+    font-size: 0.65rem;
+    margin-top: 2px;
+  }
+
+  .gs-tile-features {
+    font-size: 0.65rem;
+    margin-top: 1px;
+  }
+
+  .gs-board-wrapper {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: auto;
+    width: 100%;
+  }
+
+  .gs-quests-section {
+    padding: 4px 8px;
+    gap: 4px;
+    flex-shrink: 0;
+    max-height: 120px;
+  }
+
+  .gs-quests-title {
+    font-size: 0.75rem;
+  }
+
+  .gs-quests-title span:last-child {
+    display: none;
+  }
+
+  .gs-quests-grid {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .gs-quest-card {
+    flex: 1 0 130px;
+    min-width: 120px;
+    padding: 4px 8px;
+  }
+
+  .gs-quest-name {
+    font-size: 0.75rem;
+  }
+
+  .gs-quest-badge {
+    font-size: 0.65rem;
+    padding: 1px 4px;
+  }
+
+  .gs-quest-text {
+    font-size: 0.68rem;
+    line-height: 1.15;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .gs-completed-quests {
+    display: none;
+  }
+}
+
+/* Handy Querformat: zweispaltig, Brett links, Leisten rechts */
+@media (orientation: landscape) and (max-height: 599px) {
+  :root {
+    --bub-ratio: 1.35 !important;
+  }
+
+  .gs-root {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 270px);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    align-items: start;
+    height: 100%;
+    max-width: none;
+    gap: 0.4rem;
+    padding: 2px 4px;
+    overflow: hidden;
+  }
+
+  .gs-board-wrapper {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+
+  .gs-header,
+  .gs-market-section,
+  .gs-quests-section {
+    grid-column: 2;
+  }
+
+  .gs-header {
+    padding: 3px 6px;
+    gap: 4px;
+  }
+
+  .gs-turn-indicator {
+    display: none;
+  }
+
+  .gs-scores {
+    gap: 4px;
+  }
+
+  .gs-player-chip {
+    padding: 2px 5px;
+    font-size: 0.72rem;
+  }
+
+  .gs-deck-info {
+    font-size: 0.72rem;
+  }
+
+  .gs-market-section {
+    padding: 3px 6px;
+    gap: 3px;
+  }
+
+  .gs-market-title {
+    font-size: 0.72rem;
+  }
+
+  .gs-market-title span:last-child {
+    display: none;
+  }
+
+  .gs-market-tiles {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .gs-market-tile {
+    width: auto;
+    height: auto;
+    padding: 2px 4px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .gs-tile-preview-svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .gs-tile-label {
+    font-size: 0.62rem;
+    margin-top: 1px;
+  }
+
+  .gs-tile-features {
+    font-size: 0.6rem;
+    margin-top: 1px;
+  }
+
+  .gs-quests-section {
+    padding: 3px 6px;
+    gap: 3px;
+    max-height: 100%;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  .gs-quests-title {
+    font-size: 0.72rem;
+  }
+
+  .gs-quests-title span:last-child {
+    display: none;
+  }
+
+  .gs-quests-grid {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .gs-quest-card {
+    padding: 3px 6px;
+  }
+
+  .gs-quest-name {
+    font-size: 0.72rem;
+  }
+
+  .gs-quest-badge {
+    font-size: 0.62rem;
+    padding: 1px 4px;
+  }
+
+  .gs-quest-text {
+    font-size: 0.65rem;
+    line-height: 1.15;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .gs-completed-quests {
+    display: none;
+  }
+}

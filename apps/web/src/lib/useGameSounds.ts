@@ -1,7 +1,16 @@
 import type { GameSession, Result, SeatId } from '@brett-und-blatt/engine';
-import { eventsOfSeats, soundCatalog, soundDuration, soundsForEvents, type SoundMap, type SoundName } from '@brett-und-blatt/ui';
+import {
+  eventsOfSeats,
+  hapticsForEvents,
+  soundCatalog,
+  soundDuration,
+  soundsForEvents,
+  type HapticMap,
+  type SoundMap,
+  type SoundName,
+} from '@brett-und-blatt/ui';
 import { useEffect, useRef } from 'react';
-import { hapticFor, vibrate } from './haptics';
+import { hapticFor, vibrate, vibratePattern } from './haptics';
 import { sound } from './sound';
 
 /** Ab hier warnt die Uhr – aber nur, wenn der Zug mit mehr Zeit begonnen hat. */
@@ -14,10 +23,18 @@ const OTHERS_VOLUME = 0.6;
  * Spiels), dazu Sieg, Niederlage, Zeitwarnung und online „Du bist dran“.
  * Beim Fortsetzen einer gespeicherten Partie spielt nichts nach.
  */
-export function useGameSounds(session: GameSession, sounds: SoundMap | undefined, yourSeat: SeatId | null | undefined, ownOnly = false) {
+export function useGameSounds(
+  session: GameSession,
+  sounds: SoundMap | undefined,
+  yourSeat: SeatId | null | undefined,
+  ownOnly = false,
+  haptics?: HapticMap,
+) {
   const online = yourSeat !== undefined;
   const soundsRef = useRef(sounds);
   soundsRef.current = sounds;
+  const hapticsRef = useRef(haptics);
+  hapticsRef.current = haptics;
 
   useEffect(() => {
     sound.preload(Object.keys(soundCatalog) as SoundName[]);
@@ -34,14 +51,23 @@ export function useGameSounds(session: GameSession, sounds: SoundMap | undefined
 
       const movers = entry && typeof entry.actor === 'number' ? [entry.actor] : previous.current;
       const volume = movers.some((seat) => local.includes(seat)) || local.length === 0 ? 1 : OTHERS_VOLUME;
-      const names = soundsForEvents(ownOnly && local.length > 0 ? eventsOfSeats(events, local) : events, soundsRef.current);
+      const relevant = ownOnly && local.length > 0 ? eventsOfSeats(events, local) : events;
+      const names = soundsForEvents(relevant, soundsRef.current);
       if (events.some((event) => event.type === 'forfeit' && event.reason === 'time')) names.push('zeit-um');
 
       let delay = 0;
       // Vibration, wenn an diesem Gerät ein Mensch spielt (auch wenn der Gegner trifft); Zuschauer spüren nichts.
       const buzz = local.length > 0;
+      const customPatterns = buzz ? hapticsForEvents(relevant, hapticsRef.current) : [];
+      if (customPatterns.length > 0) {
+        let hapticDelayMs = 0;
+        for (const pattern of customPatterns) {
+          window.setTimeout(() => vibratePattern(pattern), hapticDelayMs);
+          hapticDelayMs += pattern.reduce((sum, ms) => sum + ms, 0) + 40;
+        }
+      }
       for (const name of names) {
-        const kind = buzz ? hapticFor(name) : null;
+        const kind = buzz && customPatterns.length === 0 ? hapticFor(name) : null;
         if (kind) window.setTimeout(() => vibrate(kind), delay * 1000);
         sound.play(name, { volume, delay });
         delay += Math.min(soundDuration(name) * 0.7, 0.8);

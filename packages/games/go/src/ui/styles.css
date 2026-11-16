@@ -277,29 +277,37 @@
   height: 100%;
 }
 
-/* Handy im Querformat: Das Brett füllt den Rahmen, die Knöpfe stehen im freien Raum rechts daneben (nur wenn er reicht). */
-@media (orientation: landscape) and (max-height: 540px) and (min-width: 820px) {
+/* Handy im Querformat (#488): Brett füllt die Höhe, Knöpfe und Anzeigen rechts daneben. */
+@media (orientation: landscape) and (max-height: 599px) {
+  .go-fit {
+    --bub-ratio: 1.35 !important;
+  }
+
   .go-layout {
-    position: relative;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+
+  .go-wrap {
+    flex: none;
+    width: auto;
+    height: 100%;
+    aspect-ratio: 1;
   }
 
   .go-layout > .go-bar {
-    position: absolute;
-    top: 0;
-    left: calc(100% + 0.5rem);
-    width: 7.5rem;
-    max-height: 100%;
     flex-direction: column;
     align-items: stretch;
-    overflow-y: auto;
+    min-width: 7rem;
+    max-width: 11rem;
+    font-size: 0.85rem;
   }
-}
 
-/* Kleines Hochformat: Das Brett lässt Platz für die Zeile darunter. */
-@media (orientation: portrait) and (max-height: 720px) {
-  .go-wrap {
-    width: min(100%, calc(100dvh - 20.5rem));
-    margin: 0 auto;
+  .go-button {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.85rem;
   }
 }
 
@@ -309,4 +317,32 @@
 }
 [data-pieces-go] .go-stone.go-black {
   background: var(--fig-go-stone-b) center / contain no-repeat;
+}
+
+@media (min-width: 1180px) and (min-height: 700px) {
+  .go-fit {
+    /* überschreibt die Inline-Vorgabe von FitBox für das Hochformat-Verhältnis */
+    --bub-ratio: 1.24 !important;
+  }
+
+  .go-layout {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+  }
+
+  .go-wrap {
+    flex: none;
+    width: auto;
+    height: 100%;
+    aspect-ratio: 1;
+  }
+
+  .go-layout > .go-bar {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 11rem;
+    max-width: 13rem;
+  }
 }

@@ -4,6 +4,9 @@
  * Das Porträt selbst setzt `HeroBar` in PlayBoard.tsx zusammen.
  */
 
+import { StatGem } from './symbole';
+import { useFitText } from './parts';
+
 const OUTLINE = '#1a120a';
 
 /** Wimpel am Porträt: große Zahl, unter dem Startwert als „verletzt“ gefärbt. */
@@ -52,6 +55,64 @@ export function KnappenRow({ mana, maxMana, locked, overloadNext }: KnappenRowPr
           return <span key={i} className="ds-held-gem" data-state={!recruited ? 'none' : ready ? 'ready' : isLocked ? 'locked' : 'spent'} />;
         })}
       </span>
+    </div>
+  );
+}
+
+export interface HeroZoomCardProps {
+  name: string;
+  /** Titel des Champions und Haus, unten mittig wie die Herkunft einer Karte. */
+  origin: string;
+  image?: string;
+  emoji: string;
+  health: number;
+  armor: number;
+  strength: number;
+  mana: number;
+  /** Hauskraft, Waffe, Auftrag, Fallen – je eine Zeile im Textfeld. */
+  lines: string[];
+}
+
+/**
+ * Großansicht des Turnierherrn als Karte (#472): derselbe Aufbau wie Hand- und Zoomkarte (Klassen der
+ * Kampfkarten-Vorlage, `handkarte.css`/`zoomkarte.css`), goldener Rahmen, Knappen als Edelstein oben links,
+ * Angriff unten links, Wimpel unten rechts, darüber die Rüstung. Nur, was die Sicht ohnehin zeigt.
+ */
+export function HeroZoomCard({ name, origin, image, emoji, health, armor, strength, mana, lines }: HeroZoomCardProps) {
+  const textRef = useFitText<HTMLDivElement>();
+  return (
+    <div className="ds-zoom-card">
+      <div className="bub-card bub-game-card ds-hand-card ds-hand-hero ds-zoom-face" role="img" aria-label={`${name}: ${health} Wimpel`}>
+        <div className="bub-game-card-anki">
+          <div className="bub-game-card-anki-html">
+            <div className="bub-combat-card">
+              <div className="bub-combat-header">
+                <div className="bub-combat-title-bar">
+                  <div className="bub-combat-name">{name}</div>
+                </div>
+              </div>
+              <div className="bub-combat-media">
+                <div className="bub-combat-image">{image ? <img src={image} alt="" draggable={false} /> : emoji}</div>
+              </div>
+              <div className="bub-combat-body" />
+            </div>
+          </div>
+          <StatGem kind="cost" value={mana} size="hand" className="ds-hand-cost" />
+          {strength > 0 && <StatGem kind="attack" value={strength} size="hand" className="ds-hand-atk" />}
+          {armor > 0 && <StatGem kind="armor" value={armor} size="hand" className="ds-hero-zoom-armor" />}
+          <div className="ds-hero-zoom-hp">
+            <WimpelGem health={health} />
+          </div>
+          <div ref={textRef} className="ds-zoom-text">
+            {lines.map((line) => (
+              <p key={line} className="ds-zoom-rules">
+                {line}
+              </p>
+            ))}
+          </div>
+          <p className="ds-zoom-origin">{origin}</p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -84,10 +84,10 @@ export const gameModule: GameModule<ChessState, ChessMove> = {
       label: 'Brett drehen',
       description: 'Wichtig, wenn zwei an einem Gerät spielen: Soll sich das Brett nach jedem Zug zur Farbe am Zug drehen?',
       choices: [
-        { value: 'turn', label: 'Zum Spieler am Zug' },
         { value: 'fixed', label: 'Fest' },
+        { value: 'turn', label: 'Zum Spieler am Zug' },
       ],
-      default: 'turn',
+      default: 'fixed',
     },
     {
       // Eingefügte Partie zum Fortsetzen – füllt `SetupExtra` der Oberfläche (nur am eigenen Gerät).

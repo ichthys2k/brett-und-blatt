@@ -9,6 +9,13 @@
   --ds-held: clamp(54px, 12.5cqh, 104px);
 }
 
+/* Eigene Figur auf großen Flächen um die Hälfte größer (Wunsch 16.11.2026); am Handy und auf kleinen Flächen unverändert. */
+@container ds-arena (min-width: 1500px) and (min-height: 780px) {
+  .ds-arena .ds-player-zone > .ds-held {
+    --ds-held: clamp(81px, 18.75cqh, 156px);
+  }
+}
+
 /* Der eigene und der gegnerische Held stehen mittig, Zähler und Knöpfe rechts daneben. */
 .ds-arena .ds-opponent-zone,
 .ds-arena .ds-player-zone {

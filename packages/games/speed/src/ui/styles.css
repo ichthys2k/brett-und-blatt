@@ -440,3 +440,11 @@
     animation: none;
   }
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .spd-table {
+    max-width: none;
+    --card-w: clamp(48px, min(14cqi, 15cqh), 130px);
+    --center-w: clamp(54px, min(18cqi, 19cqh), 150px);
+  }
+}

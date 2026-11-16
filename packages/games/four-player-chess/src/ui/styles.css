@@ -5,6 +5,7 @@
   width: 100%;
   height: 100%;
   container: fc-wrap / inline-size;
+  overflow-x: clip;
 }
 
 /* Brett mit Ecken, Pfeilen und Hinweisen */
@@ -531,8 +532,15 @@
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  font-size: 2.7cqw;
+  gap: 0.12em;
+  font-size: clamp(13px, 3.8cqw, 24px);
   line-height: 1.05;
+}
+
+:root[data-pieces-four-player-chess='wood'] .fc-corner-trophies .fc-piece-img,
+:root[data-pieces-four-player-chess='metal'] .fc-corner-trophies .fc-piece-img,
+:root[data-pieces-four-player-chess='fable'] .fc-corner-trophies .fc-piece-img {
+  transform: scale(1.22);
 }
 
 .fc-glyph {

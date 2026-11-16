@@ -1,0 +1,5940 @@
+{
+  "date": "2026-11-16",
+  "sizes": [
+    [
+      390,
+      844
+    ],
+    [
+      844,
+      390
+    ],
+    [
+      1024,
+      768
+    ],
+    [
+      1440,
+      900
+    ]
+  ],
+  "games": {
+    "battleship": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 114,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "bible-quiz": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          535
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          203
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          640,
+          357
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          640,
+          357
+        ],
+        "overflow": 0
+      }
+    },
+    "bingo": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "binokel": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 3,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          0,
+          56,
+          1024,
+          700
+        ],
+        "share": 91,
+        "footerHeight": 44,
+        "chips": 3,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          992,
+          684
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          0,
+          56,
+          1440,
+          832
+        ],
+        "share": 92,
+        "footerHeight": 44,
+        "chips": 3,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          1408,
+          816
+        ],
+        "overflow": 0
+      }
+    },
+    "black-peter": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "category-sprint": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          760,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "checkers": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 114,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "chess": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 114,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "chinese-checkers": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 114,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "color-and-shape": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "color-sorter": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "describe-duel": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 4,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          320,
+          0,
+          704,
+          756
+        ],
+        "share": 68,
+        "footerHeight": 112,
+        "chips": 4,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          320,
+          0,
+          1120,
+          888
+        ],
+        "share": 77,
+        "footerHeight": 112,
+        "chips": 4,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          760,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "dominoes": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "doppelkopf": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 4,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          0,
+          56,
+          1024,
+          700
+        ],
+        "share": 91,
+        "footerHeight": 44,
+        "chips": 4,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          992,
+          684
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          0,
+          56,
+          1440,
+          832
+        ],
+        "share": 92,
+        "footerHeight": 44,
+        "chips": 4,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          1408,
+          816
+        ],
+        "overflow": 0
+      }
+    },
+    "drachenspiel": {
+      "390x844": {
+        "main": [
+          0,
+          44,
+          390,
+          800
+        ],
+        "share": 95,
+        "footerHeight": 0,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": true,
+        "board": [
+          390,
+          800
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          44,
+          0,
+          800,
+          390
+        ],
+        "share": 95,
+        "footerHeight": 0,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": true,
+        "board": [
+          800,
+          390
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          44,
+          0,
+          980,
+          768
+        ],
+        "share": 96,
+        "footerHeight": 0,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": true,
+        "board": [
+          980,
+          768
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          44,
+          0,
+          1396,
+          900
+        ],
+        "share": 97,
+        "footerHeight": 0,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": true,
+        "board": [
+          1396,
+          900
+        ],
+        "overflow": 0
+      }
+    },
+    "duck-rally": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "elevens": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          334
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          245
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          403
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          896,
+          455
+        ],
+        "overflow": 0
+      }
+    },
+    "estimate": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          668
+        ],
+        "share": 79,
+        "footerHeight": 60,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          668
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 36,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "factor-grid": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          580
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          328
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          442
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          736,
+          442
+        ],
+        "overflow": 0
+      }
+    },
+    "four-in-a-row": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 114,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "four-player-chess": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 78,
+        "chips": 4,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          320,
+          0,
+          704,
+          756
+        ],
+        "share": 68,
+        "footerHeight": 112,
+        "chips": 4,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          320,
+          0,
+          1120,
+          888
+        ],
+        "share": 77,
+        "footerHeight": 112,
+        "chips": 4,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1088,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "go": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 114,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "gomoku": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 106
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 59
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 63
+      }
+    },
+    "grafschaft": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          1207
+        ],
+        "overflow": 591
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          979
+        ],
+        "overflow": 617
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          996
+        ],
+        "overflow": 256
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1100,
+          961
+        ],
+        "overflow": 89
+      }
+    },
+    "hangman": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "kniffel": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          727
+        ],
+        "overflow": 111
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          727
+        ],
+        "overflow": 365
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          727
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          720,
+          727
+        ],
+        "overflow": 0
+      }
+    },
+    "ligretto": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          980,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "low-flight": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          900,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "ludo": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 114,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "maexle": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "majority": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          668
+        ],
+        "share": 79,
+        "footerHeight": 60,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          668
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 36,
+        "chips": 3,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          320,
+          0,
+          704,
+          756
+        ],
+        "share": 68,
+        "footerHeight": 60,
+        "chips": 3,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          320,
+          0,
+          1120,
+          888
+        ],
+        "share": 77,
+        "footerHeight": 60,
+        "chips": 3,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "market-stalls": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          506
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          488
+        ],
+        "overflow": 126
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          550
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          572
+        ],
+        "overflow": 0
+      }
+    },
+    "marketplace": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "mau-mau": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          980,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "mill": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 114,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 6
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "number-wall": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          610
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          229
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          467
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          467
+        ],
+        "overflow": 0
+      }
+    },
+    "pairs": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "poker": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 30
+      },
+      "844x390": {
+        "main": [
+          44,
+          0,
+          800,
+          378
+        ],
+        "share": 92,
+        "footerHeight": 0,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": true,
+        "board": [
+          768,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "president": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 3,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          0,
+          56,
+          1024,
+          700
+        ],
+        "share": 91,
+        "footerHeight": 44,
+        "chips": 3,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          992,
+          684
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          0,
+          56,
+          1440,
+          832
+        ],
+        "share": 92,
+        "footerHeight": 44,
+        "chips": 3,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          1408,
+          816
+        ],
+        "overflow": 0
+      }
+    },
+    "quartett": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "reversi": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 114,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "schafkopf": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 4,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          0,
+          56,
+          1024,
+          700
+        ],
+        "share": 91,
+        "footerHeight": 44,
+        "chips": 4,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          992,
+          684
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          0,
+          56,
+          1440,
+          832
+        ],
+        "share": 92,
+        "footerHeight": 44,
+        "chips": 4,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          1408,
+          816
+        ],
+        "overflow": 0
+      }
+    },
+    "scrabble": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 16
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "skat": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 3,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 13
+      },
+      "1024x768": {
+        "main": [
+          0,
+          56,
+          1024,
+          700
+        ],
+        "share": 91,
+        "footerHeight": 44,
+        "chips": 3,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          992,
+          684
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          0,
+          56,
+          1440,
+          832
+        ],
+        "share": 92,
+        "footerHeight": 44,
+        "chips": 3,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          1408,
+          816
+        ],
+        "overflow": 0
+      }
+    },
+    "solitaire": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "speed": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          900,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "symbol-match": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          900,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "target-number": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          613
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          353
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          422
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          422
+        ],
+        "overflow": 0
+      }
+    },
+    "tic-tac-toe": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 114,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "timeline": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          668
+        ],
+        "share": 79,
+        "footerHeight": 60,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          668
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 36,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "turnip-patch": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 164,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "ultimate-tic-tac-toe": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "uno": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 2,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 2,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          900,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "who-am-i": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 3,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          320,
+          0,
+          704,
+          756
+        ],
+        "share": 68,
+        "footerHeight": 112,
+        "chips": 3,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          320,
+          0,
+          1120,
+          888
+        ],
+        "share": 77,
+        "footerHeight": 112,
+        "chips": 3,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          820,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "wolves-sheep": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          668
+        ],
+        "share": 79,
+        "footerHeight": 60,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          390,
+          668
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 36,
+        "chips": 8,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          524,
+          378
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          320,
+          0,
+          704,
+          756
+        ],
+        "share": 68,
+        "footerHeight": 60,
+        "chips": 8,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          756
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          320,
+          0,
+          1120,
+          888
+        ],
+        "share": 77,
+        "footerHeight": 60,
+        "chips": 8,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          888
+        ],
+        "overflow": 0
+      }
+    },
+    "word-salad": {
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          885
+        ],
+        "overflow": 269
+      },
+      "844x390": {
+        "main": [
+          256,
+          0,
+          588,
+          378
+        ],
+        "share": 68,
+        "footerHeight": 72,
+        "chips": 1,
+        "chip": [
+          232,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          556,
+          383
+        ],
+        "overflow": 21
+      },
+      "1024x768": {
+        "main": [
+          288,
+          0,
+          736,
+          756
+        ],
+        "share": 71,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          558
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          288,
+          0,
+          1152,
+          888
+        ],
+        "share": 79,
+        "footerHeight": 112,
+        "chips": 1,
+        "chip": [
+          264,
+          61
+        ],
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          820,
+          497
+        ],
+        "overflow": 0
+      }
+    }
+  },
+  "averages": {
+    "390x844": 74,
+    "844x390": 67,
+    "1024x768": 73,
+    "1440x900": 80
+  },
+  "maxSeats": {
+    "ludo": {
+      "seats": 6,
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 78,
+        "chips": 6,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          320,
+          0,
+          704,
+          756
+        ],
+        "share": 68,
+        "footerHeight": 164,
+        "chips": 6,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          320,
+          0,
+          1120,
+          888
+        ],
+        "share": 77,
+        "footerHeight": 164,
+        "chips": 6,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1088,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "uno": {
+      "seats": 10,
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 10,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          320,
+          0,
+          704,
+          756
+        ],
+        "share": 68,
+        "footerHeight": 112,
+        "chips": 10,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          320,
+          0,
+          1120,
+          888
+        ],
+        "share": 77,
+        "footerHeight": 112,
+        "chips": 10,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          900,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "wolves-sheep": {
+      "seats": 19,
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          668
+        ],
+        "share": 79,
+        "footerHeight": 60,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          390,
+          668
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 36,
+        "chips": 19,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          524,
+          378
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          320,
+          0,
+          704,
+          756
+        ],
+        "share": 68,
+        "footerHeight": 60,
+        "chips": 19,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          704,
+          756
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          320,
+          0,
+          1120,
+          888
+        ],
+        "share": 77,
+        "footerHeight": 60,
+        "chips": 19,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1120,
+          888
+        ],
+        "overflow": 0
+      }
+    },
+    "kniffel": {
+      "seats": 6,
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          727
+        ],
+        "overflow": 111
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 6,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          727
+        ],
+        "overflow": 365
+      },
+      "1024x768": {
+        "main": [
+          320,
+          0,
+          704,
+          756
+        ],
+        "share": 68,
+        "footerHeight": 112,
+        "chips": 6,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          727
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          320,
+          0,
+          1120,
+          888
+        ],
+        "share": 77,
+        "footerHeight": 112,
+        "chips": 6,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          720,
+          727
+        ],
+        "overflow": 0
+      }
+    },
+    "skat": {
+      "seats": 4,
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 4,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          0,
+          56,
+          1024,
+          700
+        ],
+        "share": 91,
+        "footerHeight": 44,
+        "chips": 4,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          992,
+          684
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          0,
+          56,
+          1440,
+          832
+        ],
+        "share": 92,
+        "footerHeight": 44,
+        "chips": 4,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          1408,
+          816
+        ],
+        "overflow": 0
+      }
+    },
+    "doppelkopf": {
+      "seats": 5,
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 5,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          0,
+          56,
+          1024,
+          700
+        ],
+        "share": 91,
+        "footerHeight": 44,
+        "chips": 5,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          992,
+          684
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          0,
+          56,
+          1440,
+          832
+        ],
+        "share": 92,
+        "footerHeight": 44,
+        "chips": 5,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          1408,
+          816
+        ],
+        "overflow": 0
+      }
+    },
+    "poker": {
+      "seats": 10,
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          44,
+          0,
+          800,
+          378
+        ],
+        "share": 92,
+        "footerHeight": 0,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": true,
+        "board": [
+          768,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          320,
+          0,
+          704,
+          756
+        ],
+        "share": 68,
+        "footerHeight": 112,
+        "chips": 10,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          672,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          320,
+          0,
+          1120,
+          888
+        ],
+        "share": 77,
+        "footerHeight": 112,
+        "chips": 10,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          1088,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "maexle": {
+      "seats": 10,
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 10,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          320,
+          0,
+          704,
+          756
+        ],
+        "share": 68,
+        "footerHeight": 112,
+        "chips": 10,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          672,
+          740
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          320,
+          0,
+          1120,
+          888
+        ],
+        "share": 77,
+        "footerHeight": 112,
+        "chips": 10,
+        "chip": [
+          296,
+          61
+        ],
+        "portrait": 22,
+        "ring": false,
+        "menu": false,
+        "board": [
+          1088,
+          872
+        ],
+        "overflow": 0
+      }
+    },
+    "president": {
+      "seats": 8,
+      "390x844": {
+        "main": [
+          0,
+          104,
+          390,
+          616
+        ],
+        "share": 73,
+        "footerHeight": 112,
+        "chips": 0,
+        "chip": null,
+        "portrait": 0,
+        "ring": false,
+        "menu": false,
+        "board": [
+          366,
+          616
+        ],
+        "overflow": 0
+      },
+      "844x390": {
+        "main": [
+          320,
+          0,
+          524,
+          378
+        ],
+        "share": 60,
+        "footerHeight": 72,
+        "chips": 8,
+        "chip": [
+          144,
+          36
+        ],
+        "portrait": 18,
+        "ring": false,
+        "menu": false,
+        "board": [
+          492,
+          362
+        ],
+        "overflow": 0
+      },
+      "1024x768": {
+        "main": [
+          0,
+          56,
+          1024,
+          700
+        ],
+        "share": 91,
+        "footerHeight": 44,
+        "chips": 8,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          992,
+          684
+        ],
+        "overflow": 0
+      },
+      "1440x900": {
+        "main": [
+          0,
+          56,
+          1440,
+          832
+        ],
+        "share": 92,
+        "footerHeight": 44,
+        "chips": 8,
+        "chip": [
+          168,
+          61
+        ],
+        "portrait": 22,
+        "ring": true,
+        "menu": false,
+        "board": [
+          1408,
+          816
+        ],
+        "overflow": 0
+      }
+    }
+  }
+}

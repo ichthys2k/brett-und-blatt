@@ -219,3 +219,10 @@
   margin: 0 0.25rem 0 0.1rem;
   vertical-align: middle;
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .ud-root {
+    max-width: 60rem;
+    gap: 1rem;
+  }
+}

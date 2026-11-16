@@ -318,20 +318,22 @@ export function Setup({ gameId, params }: { gameId: string; params?: Record<stri
         )}
       </Section>
 
-      {visibleOptions.length > 0 && (
+      {visibleOptions.some((spec) => !spec.customUi) && (
         <Section title={t('setup.rules')}>
-          {visibleOptions.map((spec) => (
-            <div key={spec.id} className="space-y-1">
-              <p className="font-medium">{spec.label}</p>
-              {spec.description && <p className="text-sm text-muted">{spec.description}</p>}
-              <Segmented
-                label={spec.label}
-                value={draft.options[spec.id] ?? spec.default}
-                choices={spec.choices.map((choice) => ({ value: choice.value, label: choice.label }))}
-                onChange={(value) => update({ options: { ...draft.options, [spec.id]: value } })}
-              />
-            </div>
-          ))}
+          {visibleOptions
+            .filter((spec) => !spec.customUi)
+            .map((spec) => (
+              <div key={spec.id} className="space-y-1">
+                <p className="font-medium">{spec.label}</p>
+                {spec.description && <p className="text-sm text-muted">{spec.description}</p>}
+                <Segmented
+                  label={spec.label}
+                  value={draft.options[spec.id] ?? spec.default}
+                  choices={spec.choices.map((choice) => ({ value: choice.value, label: choice.label }))}
+                  onChange={(value) => update({ options: { ...draft.options, [spec.id]: value } })}
+                />
+              </div>
+            ))}
         </Section>
       )}
 

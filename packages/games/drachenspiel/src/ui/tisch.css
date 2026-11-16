@@ -9,8 +9,7 @@
   margin: 0;
   padding: 0 clamp(4px, 1.5%, 24px);
   border-radius: 0;
-  /* Platzhalter für alle Häuser, bis die gemalten Tische (B1, #427) da sind: dann je Haus
-     `--ds-table` auf `tische/tisch-<haus>-quer.webp` setzen. Es lädt nur das Bild der Arena. */
+  /* Standard (gemischtes oder noch unbekanntes Gegner-Deck): allgemeine Arena. */
   --ds-table: url('./tische/tisch-arena-quer.webp');
   background: #24140c var(--ds-table) center top / cover no-repeat;
   color: #f5ead6;
@@ -20,12 +19,67 @@
   --ds-plate-ink: #f5ead6;
 }
 
+.ds-arena.ds-arena[data-theme='forest'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='forest'] {
+  --ds-table: url('./tische/tisch-wald-quer.webp');
+}
+
+.ds-arena.ds-arena[data-theme='sea'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='sea'] {
+  --ds-table: url('./tische/tisch-meer-quer.webp');
+}
+
+.ds-arena.ds-arena[data-theme='farm'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='farm'] {
+  --ds-table: url('./tische/tisch-bauernhof-quer.webp');
+}
+
+.ds-arena.ds-arena[data-theme='bugs'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='bugs'] {
+  --ds-table: url('./tische/tisch-krabbeltiere-quer.webp');
+}
+
+.ds-arena.ds-arena[data-theme='wild'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='wild'] {
+  --ds-table: url('./tische/tisch-wildnis-quer.webp');
+}
+
 @media (orientation: portrait) {
   .ds-arena.ds-arena {
     --ds-table: url('./tische/tisch-arena-hoch.webp');
-    /* Das Probebild hat einen hellen Pinselrand: leicht vergrößert verschwindet er (bis B1, #427). */
+    /* Das Probebild hat einen hellen Pinselrand: leicht vergrößert verschwindet er. */
     background-size: 112% auto;
     background-position: center 30%;
+  }
+
+  .ds-arena.ds-arena[data-theme] {
+    background-size: cover;
+    background-position: center center;
+  }
+
+  .ds-arena.ds-arena[data-theme='forest'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='forest'] {
+    --ds-table: url('./tische/tisch-wald-hoch.webp');
+  }
+
+  .ds-arena.ds-arena[data-theme='sea'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='sea'] {
+    --ds-table: url('./tische/tisch-meer-hoch.webp');
+  }
+
+  .ds-arena.ds-arena[data-theme='farm'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='farm'] {
+    --ds-table: url('./tische/tisch-bauernhof-hoch.webp');
+  }
+
+  .ds-arena.ds-arena[data-theme='bugs'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='bugs'] {
+    --ds-table: url('./tische/tisch-krabbeltiere-hoch.webp');
+  }
+
+  .ds-arena.ds-arena[data-theme='wild'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='wild'] {
+    --ds-table: url('./tische/tisch-wildnis-hoch.webp');
   }
 }
 
@@ -86,6 +140,11 @@
     --ds-table: url('./tische/tisch-arena-hoch.webp');
     background-size: auto, 112% auto;
     background-position: center, center 30%;
+  }
+
+  .ds-phase-overlay.ds-phase-overlay[data-theme] {
+    background-size: auto, cover;
+    background-position: center, center center;
   }
 }
 
@@ -196,5 +255,36 @@
 @media (prefers-color-scheme: dark) {
   .ds-arena.ds-arena {
     --ds-plate: rgb(14 10 6 / 0.8);
+  }
+}
+
+/* Querformat und Desktop (#472): Der eigene Held steht links unten auf Höhe der Hand, Stapel und
+   „Zug beenden“ rechts – keine eigene Zeile mehr, die Spielmatte bekommt die Höhe. Der Held wächst mit
+   der Höhe der Arena. Im schmalen Hochformat (bis 560 px) bleibt die Zone über der Hand (S6). */
+@container ds-arena (min-width: 561px) {
+  .ds-arena .ds-player-zone.ds-player-zone {
+    position: absolute;
+    left: clamp(4px, 1.5%, 24px);
+    right: clamp(4px, 1.5%, 24px);
+    bottom: 6px;
+    z-index: 4;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .ds-arena .ds-player-zone > * {
+    pointer-events: auto;
+  }
+
+  .ds-arena .ds-player-zone > .ds-held {
+    --ds-held: clamp(60px, 15cqh, 170px);
+  }
+
+  /* Die Hand lässt links Platz für den Helden und rechts für Stapel und „Zug beenden“. */
+  .ds-arena .ds-hand {
+    padding-inline: max(calc(clamp(60px, 15cqh, 170px) * 2.3), 220px);
   }
 }

@@ -170,8 +170,66 @@ button.bub-cell:focus-visible {
   height: 100%;
 }
 
+/* Großer Platz (#491, #493): Porträt im Wappenschild. Gemalte Bilder nur im Taverne-Aussehen (look.css), sonst das Emoji. */
+.bub-chip[data-size='card'] {
+  border-radius: 1rem;
+  padding: 0.5rem 0.9rem 0.5rem 0.5rem;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.bub-players .bub-chip[data-size='card'] {
+  flex: none;
+  width: 100%;
+}
+
+.bub-players .bub-chip[data-size='card'] .bub-chip-text {
+  flex: 1;
+}
+
+.bub-chip[data-size='card'] .bub-chip-name {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.bub-shield {
+  position: relative;
+  flex: none;
+  display: block;
+}
+
+.bub-shield-badge {
+  position: absolute;
+  right: 0;
+  bottom: 14%;
+  display: grid;
+  place-items: center;
+  padding: 12%;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #e9e4d8;
+  border: 2px solid var(--color-line);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+}
+
+.bub-shield-badge > * {
+  width: 100%;
+  height: 100%;
+}
+
+.bub-crest-portrait {
+  display: none;
+}
+
+.bub-crest-ring {
+  transition: stroke-dashoffset 0.25s linear;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bub-chip,
+  .bub-crest-ring,
   .bub-ring-bar {
     transition: none;
   }
@@ -789,6 +847,22 @@ button.bub-net-point:not(:disabled) {
   animation: bub-reveal 0.25s ease-out;
 }
 
+.bub-ccard-face-image {
+  position: relative;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.bub-ccard-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+}
+
 .bub-ccard-emoji {
   font-size: min(62cqw, 62cqh);
   line-height: 1;
@@ -803,9 +877,30 @@ button.bub-net-point:not(:disabled) {
 }
 
 .bub-ccard-caption {
+  max-width: 100%;
   font-size: min(11cqw, 11cqh);
   font-weight: 600;
+  line-height: 1.15;
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bub-ccard-face-image .bub-ccard-caption {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 16% 7% 6%;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.84) 0%, rgb(0 0 0 / 0.58) 65%, rgb(0 0 0 / 0) 100%);
+  color: #fff;
+  font-size: min(12cqw, 12cqh);
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .bub-ccard-dimmed {
@@ -863,7 +958,7 @@ button.bub-net-point:not(:disabled) {
 }
 
 .bub-cell-sliding {
-  z-index: 10 !important;
+  z-index: 50 !important;
 }
 
 .bub-piece-slide {
@@ -1397,6 +1492,11 @@ button.bub-net-point:not(:disabled) {
 
 /* Spieler rund um den Tisch (SeatRing): nur bei genug Platz, das Spiel liegt in der Mitte. */
 .bub-seat-ring {
+  /* Maße der Plätze; die Stufe (data-scale) setzt sie größer, SeatRing.tsx rechnet damit (#494). */
+  --bub-seat-w: 10.5rem;
+  --bub-seat-gap-x: 5.5rem;
+  --bub-seat-gap-y: 3.6rem;
+  --bub-seat-h: 0px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -1427,7 +1527,7 @@ button.bub-net-point:not(:disabled) {
   flex-direction: column;
   align-items: center;
   gap: 0.15rem;
-  width: 10.5rem;
+  width: var(--bub-seat-w);
   transform: translate(-50%, -50%);
 }
 
@@ -1484,7 +1584,35 @@ button.bub-net-point:not(:disabled) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 11rem;
+  width: var(--bub-own-w, 11rem);
+}
+
+.bub-seat-ring[data-scale='medium'] {
+  --bub-seat-w: 12.5rem;
+  --bub-seat-gap-x: 6.5rem;
+  --bub-seat-h: 13rem;
+  --bub-seat-gap-y: 6.5rem;
+  --bub-own-w: 13rem;
+}
+
+.bub-seat-ring[data-scale='large'] {
+  --bub-seat-w: 15rem;
+  --bub-seat-gap-x: 8rem;
+  --bub-seat-h: 15rem;
+  --bub-seat-gap-y: 7.5rem;
+  --bub-own-w: 13rem;
+}
+
+/* Großes Sitzschild der Mitspieler: Schild oben mittig, darunter Name, Detail, Punkte. Der eigene Platz unten behält die Zeile (Schild links). */
+.bub-seat-ring-seat .bub-chip[data-size='card'] {
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem;
+  text-align: center;
+}
+
+.bub-seat-ring-seat .bub-chip[data-size='card'] .bub-chip-text {
+  align-items: center;
 }
 
 /* =========================================================================

@@ -1,6 +1,6 @@
 import type { ClockReading, GameEvent, Options, Result, SeatId } from '@brett-und-blatt/engine';
 import type { ComponentType, ReactNode } from 'react';
-import type { SoundMap } from './audio/sound';
+import type { HapticMap, SoundMap } from './audio/sound';
 
 export interface BoardProps<V, M> {
   view: V;
@@ -108,20 +108,22 @@ export interface GameUi<V = unknown, M = unknown> {
   /** Das Spiel kann seine Plätze mit `SeatRing` um den Tisch setzen, wenn `BoardProps.table` gesetzt ist. */
   seatsAround?: boolean;
   /**
-   * Die Spieler stehen schon auf dem Spielfeld (z. B. Poker): Im niedrigen Querformat (Handy) klappt die
-   * Seitenleiste zu einem Menüknopf ☰ ein und öffnet sich bei Bedarf über dem Spielfeld (#378).
+   * Die Spieler stehen schon auf dem Spielfeld (z. B. Poker). Auf das Layout wirkt das seit #486 nicht mehr:
+   * Im Handy-Querformat (unter 600 px Höhe) ersetzt die schmale Schiene mit ☰ die Seitenleiste für alle Spiele (#378).
    */
   seatsOnBoard?: boolean;
   /**
    * Das Spielfeld bekommt die ganze Fläche (#430, Drachenspiel): Im Querformat und am Desktop ist die
-   * Seitenleiste immer zum Menüknopf ☰ eingeklappt (Spieler, Status, Tipp, Neu starten …), im Hochformat
-   * bleibt davon nur eine schmale Zeile oben mit ☰, Status und Uhr (#429). Das Spielfeld hat keinen Innenrand.
+   * Seitenleiste immer zum Menüknopf ☰ eingeklappt (Spieler, Status, Tipp, Neu starten …). Das Spielfeld hat keinen
+   * Innenrand. Das Einklappen zur schmalen Zeile oben mit ☰, Status und Uhr gilt im Hochformat für alle Spiele (#485).
    */
   fullBleed?: boolean;
   /** Online: Schnellnachrichten an diesem Tisch statt der üblichen, z. B. die Tierrufe des Drachenspiels. */
   phrases?: readonly string[];
   /** Klänge zu den Ereignissen, z. B. `{ placed: 'stein-setzen' }`. Sieg, Niederlage und Zeit vertont die Plattform selbst. */
   sounds?: SoundMap;
+  /** Spielspezifische Vibrationsmuster (z. B. je Kreatur oder Zauber); hat Vorrang vor der klangbasierten Vibration. */
+  haptics?: HapticMap;
   /**
    * Alle spielen gleichzeitig und unabhängig (z. B. Narrenhof): Klänge zu Ereignissen anderer Plätze
    * bleiben stumm, man hört nur die eigenen. Ereignisse ohne Platz (Rundenstart, Spielende) klingen weiter.

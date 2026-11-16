@@ -438,7 +438,7 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
 
   // 8 : 10 – Brett, Leisten darüber und darunter und die Remis-Zeile.
   return (
-    <FitBox ratio={8 / 10}>
+    <FitBox ratio={8 / 10} className="ch-fit">
       <div className="ch-wrap">
         {reviewing ? (
           <div className="ch-review">
@@ -476,11 +476,10 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
                   {piece ? (
                     <span
                       key={slide.isSliding ? `slide-${index}` : undefined}
-                      className={`ch-piece ${piece.white ? 'ch-white' : 'ch-black'} ${isDragged ? 'bub-dragging' : ''} ${dragState.snapping && isDragged ? 'bub-snapping' : ''} ${slide.pieceClassName ?? ''}`}
+                      className={`ch-piece ${piece.white ? 'ch-white' : 'ch-black'} ${piece.type === 'p' ? 'ch-pawn' : ''} ${isDragged ? 'bub-dragging' : ''} ${dragState.snapping && isDragged ? 'bub-snapping' : ''} ${slide.pieceClassName ?? ''}`}
                       style={{
                         ...slide.style,
                         transform: pieceTransform,
-                        position: isDragged ? 'relative' : undefined,
                         zIndex: isDragged ? 1000 : undefined,
                       }}
                       onAnimationEnd={slide.onAnimationEnd}
@@ -515,10 +514,10 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
               const draggable = canPremove ? preMovable.has(index) : movable.has(index) || (piece && piece.white === whiteToMove);
               const dragBind = draggable ? bindDrag(index) : undefined;
               return {
-                style: baseStyle,
+                ...dragBind,
+                style: { ...(dragBind?.style as CSSProperties | undefined), ...baseStyle },
                 'data-drop-target': String(index),
                 'data-drop-active': isDropActive ? 'true' : undefined,
-                ...dragBind,
               };
             }}
             cellClassName={(dc, dr) => {

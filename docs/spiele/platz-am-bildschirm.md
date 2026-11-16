@@ -1,0 +1,263 @@
+# Platz am Bildschirm (Vorhaben #482)
+
+Grundsatz (Cornelius, 16.11.2026): Jeder Spieler wird durch genau ein Bild dargestellt – sein Porträt im Wappenschild; Menschen und Computergegner gleich. Das Platzzeichen des Spiels bleibt als kleine Plakette am Schild. Die Schritte stehen als Unter-Issues von [#482](https://github.com/ichthys2k/brett-und-blatt/issues/482).
+
+## Ziel
+
+Das Vorhaben [#482](https://github.com/ichthys2k/brett-und-blatt/issues/482) optimiert die Bildschirmnutzung der Spieltische für alle 56 Spiele: Auf Mobilgeräten und Tablets im Hochformat soll das Spielfeld maximalen Platz erhalten, während Menüleisten und sekundäre Elemente in ein kompaktes Menü (☰) wandern. Auf Desktop-Bildschirmen steht reichlich Fläche zur Verfügung, auf der Spieler mit Porträts und Wappenschildern groß zur Geltung kommen. Alle weiteren Schritte von #482 belegen ihr Vorher und Nachher mit dem Messwerkzeug `platz-messen.mjs` ([#483](https://github.com/ichthys2k/brett-und-blatt/issues/483)).
+
+## Die drei Tischzustände
+
+Welcher Layoutzustand gilt, entscheidet eine zentrale Funktion anhand von Fensterbreite, Fensterhöhe, Platzzahl und Spieleigenschaften:
+
+| Zustand | Wann | Aussehen |
+|---|---|---|
+| **`compact`** (eingeklappt) | Hochformat ohne Sitzring (Handy und Tablet); Querformat mit Höhe unter 600 px | Schmale Leiste (hoch: oben 44 px; quer: links 44 px) mit aktivem Platz, Uhr und Schublade ☰ |
+| **`ring`** (Sitzring) | Spiele mit `seatsAround`, freie Fläche ab 680 × 560 px, 3–8 Plätze (Poker 2–10) | Spieler sitzen rund um den Spieltisch, schmale Kopfzeile oben |
+| **`side`** (Seitenleiste) | Sonst im Querformat ab 600 px Höhe | Feste Seitenleiste links mit Spielerchips und Steuerknöpfen |
+
+## Messwerkzeug
+
+Das Skript misst für jedes Spiel in vier festen Bildschirmgrößen den Anteil des Spielfelds (`main.bub-table`) am sichtbaren Fenster, Überläufe mit Scrollbalken sowie die Abmessungen von Spielerchips und Porträts:
+
+```sh
+corepack pnpm build
+node scripts/platz-messen.mjs [--bilder <Ordner>] [--json <Datei>] [Spiel-ids …]
+corepack pnpm platz-messen
+```
+
+- **Ohne Argumente:** Misst alle fertigen Spiele (56 Spiele) und führt anschließend einen zweiten Durchlauf mit maximaler Platzzahl für eine repräsentative Auswahl durch.
+- **`[Spiel-ids …]`:** Misst gezielt nur die angegebenen Spiele.
+- **`--bilder <Ordner>`:** Speichert je Spiel und Größe ein Bildschirmfoto (z. B. `chess-1440x900.png`).
+- **`--json <Datei>`:** Speichert alle Rohmesswerte strukturiert als JSON-Datei.
+
+## Ausgangswerte (Stand: 16. November 2026)
+
+Gemessen auf dem Stand vor Umsetzung von #484 ff., Voreinstellungen der Partie, Aussehen „Taverne“:
+
+| Spiel | 390×844 | 844×390 | 1024×768 | 1440×900 | Überlauf | Chip (1440×900) | Porträt | Zustand |
+|---|---|---|---|---|---|---|---|---|
+| battleship | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| bible-quiz | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| bingo | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| binokel | 73 % | 60 % | 91 % | 92 % | - | 168 × 61 px | 22 px | ring |
+| black-peter | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| category-sprint | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| checkers | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| chess | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| chinese-checkers | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| color-and-shape | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| color-sorter | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| describe-duel | 73 % | 60 % | 68 % | 77 % | - | 296 × 61 px | 22 px | side |
+| dominoes | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| doppelkopf | 73 % | 60 % | 91 % | 92 % | - | 168 × 61 px | 22 px | ring |
+| drachenspiel | 95 % | 95 % | 96 % | 97 % | - | - | - | compact |
+| duck-rally | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| elevens | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| estimate | 79 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| factor-grid | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| four-in-a-row | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| four-player-chess | 73 % | 60 % | 68 % | 77 % | - | 296 × 61 px | 22 px | side |
+| go | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| gomoku | 73 % | 68 % | 71 % | 79 % | 106q / 59t / 63d px | 264 × 61 px | 22 px | side |
+| grafschaft | 73 % | 68 % | 71 % | 79 % | 591h / 617q / 256t / 89d px | 264 × 61 px | 22 px | side |
+| hangman | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| kniffel | 73 % | 68 % | 71 % | 79 % | 111h / 365q px | 264 × 61 px | - | side |
+| ligretto | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| low-flight | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| ludo | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| maexle | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| majority | 79 % | 60 % | 68 % | 77 % | - | 296 × 61 px | 22 px | side |
+| market-stalls | 73 % | 68 % | 71 % | 79 % | 126q px | 264 × 61 px | 22 px | side |
+| marketplace | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| mau-mau | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| mill | 73 % | 68 % | 71 % | 79 % | 6q px | 264 × 61 px | 22 px | side |
+| number-wall | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| pairs | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| poker | 73 % | 92 % | 71 % | 79 % | 30h px | 264 × 61 px | 22 px | ring |
+| president | 73 % | 60 % | 91 % | 92 % | - | 168 × 61 px | 22 px | ring |
+| quartett | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| reversi | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| schafkopf | 73 % | 60 % | 91 % | 92 % | - | 168 × 61 px | 22 px | ring |
+| scrabble | 73 % | 68 % | 71 % | 79 % | 16t px | 264 × 61 px | 22 px | side |
+| skat | 73 % | 60 % | 91 % | 92 % | 13q px | 168 × 61 px | 22 px | ring |
+| solitaire | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| speed | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| symbol-match | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| target-number | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| tic-tac-toe | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| timeline | 79 % | 68 % | 71 % | 79 % | - | 264 × 61 px | - | side |
+| turnip-patch | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| ultimate-tic-tac-toe | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| uno | 73 % | 68 % | 71 % | 79 % | - | 264 × 61 px | 22 px | side |
+| who-am-i | 73 % | 60 % | 68 % | 77 % | - | 296 × 61 px | 22 px | side |
+| wolves-sheep | 79 % | 60 % | 68 % | 77 % | - | 296 × 61 px | 22 px | side |
+| word-salad | 73 % | 68 % | 71 % | 79 % | 269h / 21q px | 264 × 61 px | - | side |
+| **Durchschnitt** | **74 %** | **67 %** | **73 %** | **80 %** | | | | |
+
+### Höchste Platzzahl (Auswahl)
+
+| Spiel | Plätze | 390×844 | 844×390 | 1024×768 | 1440×900 | Überlauf | Chip (1440×900) | Zustand |
+|---|---|---|---|---|---|---|---|---|
+| ludo | 6 | 73 % | 60 % | 68 % | 77 % | - | 296 × 61 px | side |
+| uno | 10 | 73 % | 60 % | 68 % | 77 % | - | 296 × 61 px | side |
+| wolves-sheep | 19 | 79 % | 60 % | 68 % | 77 % | - | 296 × 61 px | side |
+| kniffel | 6 | 73 % | 60 % | 68 % | 77 % | 111h / 365q px | 296 × 61 px | side |
+| skat | 4 | 73 % | 60 % | 91 % | 92 % | - | 168 × 61 px | ring |
+| doppelkopf | 5 | 73 % | 60 % | 91 % | 92 % | - | 168 × 61 px | ring |
+| poker | 10 | 73 % | 92 % | 68 % | 77 % | - | 296 × 61 px | ring |
+| maexle | 10 | 73 % | 60 % | 68 % | 77 % | - | 296 × 61 px | side |
+| president | 8 | 73 % | 60 % | 91 % | 92 % | - | 168 × 61 px | ring |
+
+## Umgesetzte Schritte
+
+### D1 – Spielerschild (#491, umgesetzt 16.11.2026)
+
+- `PlayerCrest` (`packages/ui/src/crest/PlayerCrest.tsx`): optional `portrait`, `portraitEmoji`, `ring`. Medaillon-Maße je Schildform in `PORTRAIT_MEDALLION` (klassisch/rund/rolle Mitte y 80, Radius 34; spitz y 70, Radius 30 – gerechnet gegen die Schildkontur).
+- `PlayerShield` (`packages/ui/src/PlayerShield.tsx`): Avatar + Wappenbeschreibung + Uhr + Platzzeichen; Medaillon nie über 192 px (`shieldWidth`).
+- `PlayerChip size="card"` mit `crest` und `shieldSize` (Vorgabe 72); kompakt unverändert.
+- Gemalte Bilder nur im Aussehen „Taverne“; „Schlicht“ und erhöhter Kontrast zeigen das Emoji (Entscheidung 4 in #482).
+- Einsatz folgt in D3 (Leiste links), D4 (Sitzring) und D5 (Lobby).
+
+### D2 – Porträt und Wappenschild für jeden Platz (#492, umgesetzt 16.11.2026)
+
+- `seatIdentity` (`apps/web/src/lib/seatIdentity.ts`): liefert für jeden Platz `avatar` und `crest`.
+- Bots bekommen das gemalte Porträt ihres Spiels (`botAvatar`) und ein Standardschild (`defaultCrest(index)`).
+- Menschen ohne gewählten Avatar bekommen ein festes gemaltes Bild je Platz (`defaultAvatar(index)`) aus 42 unterscheidbaren Tier-Avataren.
+- Menschen ohne Wappen oder mit „im Raum verbergen“ bekommen ein Standardschild (`defaultCrest(index)` mit 8 kontrastreichen Farbkombinationen aus `crest-colors.ts`).
+- Lokal gilt das eigene Profil nur bei genau einem menschlichen Spieler am Gerät; bei mehreren Plätzen greifen die Standardwerte je Platz.
+- `OnlineTableProps` transportiert `crests` (`Display.tsx`, `Room.tsx` über Hilfsfunktion `seatMember`), `seatChip` und Siegerehrung (`Ceremony`) nutzen `seatIdentity`.
+
+### D3 – Leiste links am Desktop (#493, umgesetzt 16.11.2026)
+
+- `packages/ui/src/tableLayout.ts` (`sideBarWidth`, `sideShieldSize`, `tableLayout` mit `mode`, `collapsed`, `landscape`, `crowded`, `sideWidth`; Tests in `packages/ui/test/table-layout.test.ts`):
+  - Leistenbreite im Zustand `side`: `< 1100 px` → `288 px` (`320 px` ab 3 Plätzen), `≥ 1100 px` → `320 px`, `≥ 1400 px` → `352 px`.
+  - Schildbreite `sideShieldSize(seats, sideHeight)` aus verfügbarer Höhe (`sideHeight − 56 − 60 − 170`) geteilt durch Platzzahl: `≥ 170` → `96 px`, `≥ 124` → `72 px`, `≥ 88` → `52 px`, sonst `0` (kompakter Chip).
+- `PlayerShield.tsx`: Containerhöhe bei `width < CREST_ORNAMENT_MIN_SIZE` (`56 px`) auf `(width * 106) / 80` korrigiert.
+- `packages/ui/src/ui.css`: `.bub-players .bub-chip[data-size='card']` über volle Breite, `.bub-chip-text` füllt den Platz rechts neben dem Schild.
+- `apps/web/src/screens/Play.tsx`: nutzt `tableLayout` und `sideShieldSize`, setzt `size={sideShield > 0 ? 'card' : 'compact'}` und `shieldSize={sideShield}` in `seatChip` sowie `style={{ width: layout.sideWidth }}` im Zustand `side`.
+- `scripts/platz-messen.mjs`: zählt nun auch `.bub-chip .bub-crest-portrait` (SVG-`<image>`) zur Porträtmessung.
+- Messwerte bei `1440 × 900` (Aussehen „Taverne“):
+  - `chess`, `checkers`, `go`, `reversi`, `ludo`, `bingo` (2 Plätze): Chip `328 × 164 px`, Porträt-Medaillon `61 px` (vorher `22 px`), Brett-Höhe unverändert `872 px`, Spielfeld-Anteil `75 %` (vorher `79 %`, `-4` Prozentpunkte).
+  - `four-player-chess` (4 Plätze): Chip `328 × 128 px`, Porträt-Medaillon `46 px`, Brett-Höhe unverändert `872 px`, Anteil `75 %` (vorher `77 %`).
+  - `wolves-sheep` (8 Plätze): kompakte Chips `328 × 61 px`, Porträt `22 px`, Anteil `75 %` (vorher `77 %`).
+
+### D5 – Lobby: Mitspieler als Porträt im Wappenschild (#495, umgesetzt 16.11.2026)
+
+- `MemberRow` (`apps/web/src/screens/Room.tsx`): links `PlayerShield` (36 px am Handy, 56 px ab `wide:` bzw. 900 px Breite) mit `seatIdentity` (`avatar` + `crest`); ab `wide:` Name größer und Zusätze (👑, 🙋, 🔒, offline) als Marken darunter, Knöpfe rechts.
+- Mitgliederliste (`Room.tsx`): ab 1100 px Breite zweispaltig bei mehr als 4 Mitgliedern (`Page` ab 1100 px `max-w-4xl`).
+- `SeatRow` und Turnier-Warteraum (`Room.tsx`): zeigen ebenfalls `PlayerShield` (28–34 px) statt Emoji-Text bzw. reinem Avatar (Bots mit Bot-Porträt im Standardschild).
+
+## D4: Sitzring am Desktop (16.11.2026, #494)
+
+- Stufen (Fläche des Rings selbst, etwa Fenster − 48 × − 144 px): bis 4 Plätze `large` ab 1312 × 716, `medium` ab 1132 × 576; 5 Plätze `large` ab 1580 breit, `medium` ab 1312 × 716; 6 Plätze `medium` ab 1312 × 716; 7–8 Plätze `medium` ab 1800 × 900. Die Startwerte des Issues (1360 × 820 usw.) rechneten mit dem Fenster; bei 5 und mehr Plätzen rücken Nachbarn auf dem festen Oval so nah, dass breitere Schilder früher einander überlappen. Die Werte sind mit dem Rauchtest (1440 × 900, 1920 × 1080) bestätigt.
+- Gemessen bei 1440 × 900 (Tischmitte vorher → nachher): Skat zu dritt 838 × 531 → 758 × 488, Mau-Mau zu fünft 912 × 352 → 880 × 286, Quartett zu sechst 850 × 590 → 818 × 505, also etwa 17–21 % weniger Fläche statt der angestrebten höchstens 10 %. Größere Schilder kosten Mitte; ein Rückschritt auf kleinere Stufen wäre in `seatRingScale` und den Variablen in `ui.css` zu stellen.
+- Schild 80 px breit ergibt ein Medaillon von etwa 54 px (≥ 50 px), `medium` mit 56 px etwa 38 px.
+### G1 – Layout-Entscheidung als reine Funktion (#484, umgesetzt 16.11.2026)
+
+- `tableLayout` (`packages/ui/src/tableLayout.ts`) rechnet aus Breite, Höhe, Platzzahl und `seatsAround`, `seatsOnBoard`, `fullBleed` den Zustand `ring` · `side` · `stack` · `rail` · `bar` (`compact` oben = `rail` quer, `bar` hoch); `Play.tsx` leitet seine Layout-Werte nur daraus ab, `TABLE_BAR_HEIGHT` kommt aus `packages/ui`. Gelandet zusammen mit D3 (#493).
+- Regeln: `ring` bei `seatsAround` und `seatRingFits(seats, width, height − 56)`; sonst `rail`/`bar` bei `fullBleed` oder (`seatsOnBoard`, quer, Höhe ≤ 540); sonst `side` (quer) bzw. `stack` (hoch); ungemessen immer `stack`.
+- Tests in `packages/ui/test/table-layout.test.ts` mit Tabelle der Grenzfälle. Messung vorher/nachher mit `platz-messen.mjs`: Anteil, `ring`, `menu`, Chipgrößen unverändert.
+
+### H1 – Hochformat: schmale Leiste und ☰ für alle Spiele (#485, umgesetzt 16.11.2026)
+
+- `tableLayout`: Hochformat ohne Sitzring → `bar` für alle Spiele und jede Breite (Tablets eingeschlossen); `stack` entfällt. 768 × 1024 mit `seatsAround` und 3–8 Plätzen bleibt `ring`.
+- Leiste 44 px: ☰ (Punkt bei eigenem Zug), Status (`aria-live`), laufende Uhr, bei geschlossener Siegerehrung „Revanche“, rechts 💬. Alles andere liegt in der Schublade (Kopfzeile, Raumcode, Spielerliste, Knöpfe); Meldungen stehen direkt unter der Leiste.
+- Messung 390 × 844: Durchschnitt 74 % → 94 %, kein Spiel unter 88 %.
+
+### H2 – Handy-Querformat: schmale Schiene für alle Spiele (#486, umgesetzt 16.11.2026)
+
+- `tableLayout`: Querformat und Höhe unter `COMPACT_SHORT_SIDE` (600 px) → `rail` für alle Spiele; ab 600 px Höhe wie bisher `side` bzw. `ring`. `seatsOnBoard` hat keinen Einfluss aufs Layout mehr.
+- Schiene 44 px: ☰, wer ist dran (Platzzeichen mit Uhr-Ring), Restzeit, unten 💬. Status wird per `aria-live` vorgelesen. Meldungen stehen oben im Spielfeld, die Schublade rollt, die Kopfzeile bleibt oben.
+- Messung 844 × 390: Durchschnitt 64 % → 94 %, kein Spiel unter 88 %; 1024 × 768 und 1440 × 900 unverändert.
+
+### H3 – Handy: Spielfeld ohne Innenrand, Rahmen schmaler (#487, umgesetzt 16.11.2026)
+
+- `apps/web/src/screens/Play.tsx`:
+  - `main.bub-table` erhält bei eingeklappter Leiste/Schiene (`collapsedSide`, Zustände `bar` und `rail`) `px-1 py-0` (statt `px-3 side:py-2 side:px-4`) sowie Attribut `data-collapsed`.
+  - Außenabstand unten `pb` nutzt bei `fullBleed || collapsedSide` nun `pb-[env(safe-area-inset-bottom)]` statt `pb-[max(...,0.75rem)]`.
+- `apps/web/src/styles.css`:
+  - `.bub-table[data-collapsed] .bub-turn-frame`: `inset: 0`, `border-radius: 8px`, `box-shadow: inset 0 0 0 2px var(--color-accent), inset 0 0 16px color-mix(in srgb, var(--color-accent) 40%, transparent)` mit Animation `@keyframes bub-turn-frame-collapsed` (Strichbreite bleibt fest bei höchstens 2 px).
+- Messung bei 390 × 844:
+  - Quadratische Bretter (`chess`, `checkers`, `go`, `mill`, `reversi`, `tic-tac-toe`): von 366 × 366 px auf 382 × 382 px gewachsen (+16 px, Vorgabe ≥ 380 px erfüllt).
+  - Spielfeldhöhe (`main.bub-table`): von 796 px auf 800 px gewachsen.
+  - Spielfeld-Anteil: von 94 % auf 95 % gestiegen.
+
+### H4a – Brett- und Legespiele nutzen die gewonnene Fläche am Handy (#488, umgesetzt 16.11.2026)
+
+Alle 18 Brett- und Legespiele am Handy (390×844, 360×640, 844×390, 667×375) geprüft und optimiert; Desktop und Tablet unverändert (pro Spiel ein Commit):
+
+- **Überlauf vollständig beseitigt:**
+  - `grafschaft`: Zuvor massiver Überlauf (518 px hoch, 595 px quer). Im Hochformat füllt das Hex-Spielfeld nun mit `flex: 1 1 0` die gesamte Resthöhe bei kompaktem Header, Jahrmarkt und Aufträgen. Im Querformat (`max-height: 599px`) zweispaltig mit Brett links und Leisten rechts. Überlauf: 0 px!
+  - `gomoku`: Unbeschnittene Subpixel-Linien des 15×15-Rasters beseitigt durch `overflow: clip` auf `.gomoku-board`. Überlauf: 0 px!
+  - `mill`: Vertikalen Überlauf im Querformat (11–13 px) behoben durch zweispaltiges Layout (`max-height: 599px`, `--bub-ratio: 1.35 !important`). Überlauf: 0 px!
+  - `go`: Vertikalen Überlauf bei 667×375 (49 px) behoben; veraltete Abfragen (`min-width: 820px`, Abzug `20.5rem`) durch zweispaltiges Layout (`max-height: 599px`, `--bub-ratio: 1.35 !important`) ersetzt. Überlauf: 0 px!
+  - `chess` & `four-player-chess`: Subpixel-Überlauf im Hochformat (h:1–7) behoben durch `overflow-x: clip;` auf `.ch-wrap` und `.fc-wrap`.
+- **Fläche im Querformat optimal genutzt (Bretter füllen 100 % der Höhe):**
+  - `chess`: Brett wächst bei 844×390 von 312×312 auf 390×390 px (100 % H), bei 667×375 auf 375×375 px.
+  - `checkers`: Brett wächst bei 844×390 von 305×305 auf 348×383 px, bei 667×375 auf 327×362 px.
+  - `mill`: Brett wächst auf 390×390 px bzw. 375×375 px (volle Höhe).
+  - `go`: Brett wächst bei 360×640 von 312 auf 352 px (volle Breite) und im Querformat auf 390×390 / 375×375 px (volle Höhe).
+  - `chinese-checkers`: Sternbrett wächst im Querformat von 342×342 auf 390×390 px bzw. von 327×327 auf 375×375 px (Bedienelemente seitlich).
+  - `turnip-patch`: Vertikales Acker-Brett wächst im Querformat von 211×302 auf 272×390 px bzw. 262×375 px (+29 % Höhe, Stapel/Karten seitlich).
+  - `color-and-shape`: Tischfläche wächst im Querformat von 267×267 auf 390×390 px bzw. 375×375 px (+46 % Fläche, Bänkchen und Aktionen seitlich).
+- **Passte schon (bereits optimal ohne Überlauf):**
+  - `reversi`, `four-in-a-row`, `tic-tac-toe`, `ultimate-tic-tac-toe`, `battleship`, `ludo`, `marketplace`, `scrabble`.
+
+### H4b – Karten- und Würfelspiele nutzen die gewonnene Fläche am Handy (#489, umgesetzt 16.11.2026)
+
+Alle 20 Karten- und Würfelspiele am Handy (390×844, 360×640, 844×390, 667×375) sowie mit maximaler Platzzahl (bis zu 8 bzw. 10 Plätze) geprüft und optimiert; Desktop und Tablet unverändert (pro Spiel ein Commit):
+
+- **Überlauf vollständig beseitigt:**
+  - `kniffel`: Zuvor Überlauf im kompakten Hochformat (128 px bei 360×640) und massiv im Querformat (337 px bei 844×390, 352 px bei 667×375). Im Querformat (`max-height: 599px`) zweispaltig mit `--bub-ratio: 1.35 !important`, Würfelbereich links und Wertungsblock rechts. Im kompakten Hochformat (`max-width: 599px` und `max-height: 700px`) kompakte Tabellenzeilen (`padding: 0.12rem 0.3rem`, Schrift `0.74rem`). Überlauf: 0 px auf allen 4 Größen!
+  - `market-stalls`: Zuvor vertikaler Überlauf im Querformat (99 px bei 844×390, 110 px bei 667×375), da die 4 Marktstände untereinander gestapelt waren. Im Querformat (`max-height: 599px`) werden die Stände im 2×2-Raster angeordnet mit `--bub-ratio: 1.35 !important;`. Überlauf: 0 px auf allen 4 Größen!
+  - `binokel`: Zuvor vertikaler Überlauf im Querformat bei 844×390 (18 px), da der leere Stichtisch unter dem Reiz-Dialog gerendert wurde. Außerhalb des Sitzrings wird der Stichtisch nun erst ab der Spielphase gerendert. Überlauf: 0 px auf allen 4 Größen!
+- **Passte schon (bereits optimal ohne Überlauf, 0 px auf allen 4 Handygrößen):**
+  - `skat`, `schafkopf`, `doppelkopf`: `TrickTable` skaliert Karten dynamisch (55–60 px im Hochformat, 59 px im Querformat), 0 px Überlauf.
+  - `mau-mau`, `uno`: Handkarten und Ablagestapel füllen 95 % des Bildschirms, 0 px Überlauf (bei Uno auch mit 10 Spielern).
+  - `elevens`: Hand- und Ablagereihen passen mit 0 px Überlauf (Kartenbreite 60–65 px hoch, 49–51 px quer).
+  - `president`: Handkarten 38–43 px, Tischmitte und Hand optimal verteilt, 0 px Überlauf (auch bei 8 Spielern).
+  - `black-peter`: Handkarten und Ziehfächer 64–90 px, 0 px Überlauf.
+  - `quartett`: Große Karten 314–474 px, 0 px Überlauf.
+  - `dominoes`: Kette und Steine auf der Hand passen ohne Überlauf (0 px).
+  - `maexle`: Becher, Würfel und Ansage-Leiter passen vollständig auf den Bildschirm, 0 px Überlauf (auch bei 10 Spielern).
+  - `low-flight`: Handkarten und Ablage mit 0 px Überlauf (auch bei 8 Spielern).
+  - `solitaire`: 7 Spalten und 4 Ablagestapel passen sauber (Karten 45–67 px), 0 px Überlauf.
+  - `speed`: Spieltisch und Handkarten (40–46 px) ohne Überlauf (0 px).
+  - `ligretto`: 3 Vorratsstapel, Hand und Mitte passen ohne Überlauf (0 px, auch bei 8 Spielern).
+  - `poker`: Eigene mobile Ansichten nutzen 95 % des Bildschirms ohne Überlauf (auch bei 10 Spielern).
+  - `pairs`: Aufgedeckte Kärtchen (75–83 px) füllen das Raster ohne Überlauf (0 px).
+
+### H4c – Klassen-, Quiz-, Wort- und Rechenspiele nutzen die gewonnene Fläche am Handy (#490, umgesetzt 16.11.2026)
+
+Alle 17 Klassen-, Quiz-, Wort- und Rechenspiele am Handy (390×844, 360×640, 844×390, 667×375) sowie bei maximaler Platzzahl (bis zu 10 Plätze bei `who-am-i`, 19 Plätze bei `wolves-sheep`, bis zu 30 Plätze bei `bingo`, `estimate`, `majority`, `timeline`, `category-sprint`) geprüft und optimiert; Desktop und Tablet unverändert (pro Spiel ein Commit):
+
+- **Überlauf vollständig beseitigt & Querformat optimiert:**
+  - `word-salad`: Zuvor vertikaler Überlauf von 8 px im kompakten Querformat (667×375). Im kompakten Querformat (`max-height: 599px`) zweispaltiges Layout mit `--bub-ratio: 1.35 !important;`, Salatschüssel mit Buchstaben links und Gefunden-Kasten rechts; im kompakten Hochformat (`max-height: 720px`) kompaktere Abstände des Gefunden-Kastens. Überlauf: 0 px auf allen 4 Größen (667×375 nutzt 353 px Höhe, 94 % von `main`).
+- **Höhe im mobilen Hochformat voll ausgenutzt (mindestens 85 % / 100 % der Viewport-Höhe von `main` bei 390×844):**
+  - `bible-quiz`: Im Hochformat (390×844) füllt die Emoji-Karte mit `height: 100%` auf `.bq-layout` und `flex: 1 1 0` auf `.bq-emoji-card` 800 px (100 % der Höhe von `main`, zuvor nur 501 px / 63 % < 85 %); im Querformat (`max-height: 720px`) kompakt mit `height: auto; flex: none;`. Überlauf: 0 px.
+  - `factor-grid`: Im Hochformat (390×844) füllt das 6×6-Zahlengitter mit `height: 100%` auf `.fg-layout` und `flex: 1 1 0` auf `.fg-grid` sowie `height: 100%` auf den Zellen 800 px (100 % der Höhe von `main`, zuvor nur 561 px / 70 % < 85 %); im Querformat kompakt mit `height: auto; flex: none;`. Überlauf: 0 px.
+  - `target-number`: Im Hochformat (390×844) füllt das Kartenfeld mit `height: 100%; justify-content: space-between;` auf `.tn-layout` und `flex: 1 1 auto; height: 100%;` auf den Ziffernkarten 800 px (100 % der Höhe von `main`, zuvor 613 px / 77 % < 85 %); im Querformat kompakt mit `height: auto; flex: none;`. Überlauf: 0 px.
+  - `number-wall`: Im Hochformat (390×844) füllt die Zahlenpyramide mit `height: 100%; justify-content: space-between;` auf `.nw-layout` und `flex: 1 1 auto; justify-content: center;` auf `.nw-pyramid` 800 px (100 % der Höhe von `main`, zuvor 610 px / 76 % < 85 %); im Querformat kompakt mit `height: auto; flex: none;`. Überlauf: 0 px.
+- **Passte schon (bereits optimal ohne Überlauf, 0 px auf allen 4 Handygrößen und 100 % Höhe):**
+  - `bingo`, `category-sprint`, `describe-duel`, `duck-rally`, `estimate`, `hangman`, `majority`, `symbol-match`, `timeline`, `who-am-i`, `wolves-sheep`, `color-sorter`.
+- **Virtuelle Tastatur & hohe Spielerzahlen:**
+  - Tastatur: Text-Eingaben (`estimate`, `category-sprint`, `word-salad`, `who-am-i`, `hangman`) scrollen innerhalb des Spielfelds bzw. verbergen während der Eingabe nicht benötigte Ranglisten (`@media (max-height: 720px)` in `.bub-round`), sodass Eingabefelder und Knöpfe beim Öffnen der Tastatur sichtbar und bedienbar bleiben.
+  - Hohe Spielerzahlen: `who-am-i` (10 Plätze), `wolves-sheep` (19 Plätze) sowie Klassenspiele (`bingo`, `estimate`, `majority`, `timeline`, `category-sprint` mit bis zu 30 Plätzen) bleiben dank flexibler Raster und kompakter Ranglisten (`RoundStandings` zeigt max. Top 3 + eigener Platz) bei 0 px Überlauf über alle 4 mobilen Viewports.
+
+### D6 – Bretter und Spielflächen am Desktop (#496, umgesetzt 16.11.2026)
+
+Alle 27 betroffenen Spiele mit Seitenleiste am Desktop angepasst (Handy/kleines Tablet unter `900×700 px`, `packages/ui`, Spielregeln, Bots und Sitzring unverändert; ein Commit je Spiel):
+
+- **Brettspiele (ab `1180×700` zweispaltig mit Nebenanzeigen neben dem Brett bzw. breiteres Brett):**
+  - `chess` (`.ch-fit` + `--bub-ratio: 1.24 !important`): inneres `.ch-board` bei `1440×900` nun `852×852 px` (96 % H, ≥ 780 px)
+  - `checkers` (`.dk-fit` + `--bub-ratio: 1.24 !important`): inneres `.dk-board` `848×848 px` (95 % H)
+  - `go` (`.go-fit` + `--bub-ratio: 1.24 !important`): inneres `.go-wrap` `852×852 px` (96 % H)
+  - `mill` (`.ml-fit` + `--bub-ratio: 1.24 !important`): inneres `.ml-board` `852×852 px` (96 % H)
+  - `scrabble` (`78cqw` im `@container`): inneres `.wg-board-wrap` `824×824 px` (93 % H)
+  - `grafschaft` (zweispaltig ab `1180×700`): `.gs-board-wrapper` `694×856 px` (96 % H), `89d px`-Überlauf behoben
+  - `color-and-shape` (ab `900×700`): `.ff-rack` auf `max-width: 34rem` erweitert
+- **Quiz-, Wort- und Rechenspiele (ab `900×700` auf `max-width: 60rem`, `clamp()`-Schriften und -Knöpfe):**
+  - `bible-quiz` (`640×357 → 960×426`, 88 % B), `factor-grid` (`736×442 → 960×488`, 88 % B), `number-wall` (`672×467 → 960×510`, 88 % B), `target-number` (`672×422 → 960×443`, 88 % B), `estimate` (`704×872 → 960×872`, 88 % B), `majority` (`704×872 → 960×872`, 88 % B), `timeline` (`704×872 → 960×872`, 88 % B), `category-sprint` (`760×872 → 960×872`, 88 % B), `describe-duel` (`760×872 → 960×872`, 88 % B), `word-salad` (`820×497 → 960×475`, 88 % B), `who-am-i` (`820×872 → 960×872`, 88 % B), `hangman` (Tastatur `max-width: 52rem`, größere Felder/Tasten)
+- **Karten- und Würfelspiele mit Seitenleiste (ab `900×700` eine Stufe größer):**
+  - `elevens` (`896×455 → 1024×508`, 94 % B), `market-stalls` (`704×573 → 992×549`, 91 % B, 2×2-Ständeraster), `kniffel` (`720×727 → 992×579`, 91 % B, Würfelbereich neben dem Block), `low-flight` (`900×872 → 1056×872`, 97 % B), `speed` (`900×872 → 1056×872`, 97 % B), `symbol-match` (`900×872 → 1056×872`, 97 % B), `ligretto` (`980×872 → 1056×872`, 97 % B), `mau-mau` (`980×872 → 1056×872`, 97 % B, `:not([data-ring])`), `uno` (`900×872 → 1056×872`, 97 % B, `:not([data-ring])`)
