@@ -289,7 +289,7 @@
   .wg-status,
   .wg-rack,
   .wg-bar {
-    margin-left: min(100cqh, 66cqw);
+    margin-left: min(100cqh, 74cqw);
     padding-left: 0.5rem;
   }
 
@@ -297,13 +297,13 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: min(100cqh, 66cqw);
+    width: min(100cqh, 74cqw);
     margin: 0;
   }
 
   .wg-rack {
     flex-wrap: wrap;
-    margin-left: calc(min(100cqh, 66cqw) + 0.5rem);
+    margin-left: calc(min(100cqh, 74cqw) + 0.5rem);
     padding-left: 0.2rem;
   }
 
