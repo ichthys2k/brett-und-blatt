@@ -99,7 +99,7 @@
 
 .ds-sym-edge-shield {
   --ds-shield: polygon(0% 8%, 50% 0%, 100% 8%, 100% 44%, 95% 66%, 82% 84%, 50% 100%, 18% 84%, 5% 66%, 0% 44%);
-  inset: -17% -26% -26%;
+  inset: -9% -15% -15%;
   z-index: -1;
   border-radius: 0;
   background: #1a120a;
@@ -109,7 +109,7 @@
 .ds-sym-edge-shield::before {
   content: '';
   position: absolute;
-  inset: 4%;
+  inset: 3%;
   clip-path: var(--ds-shield);
   background: linear-gradient(150deg, #d5dbe2 0%, #9aa2ad 38%, #646b76 100%);
 }
@@ -118,7 +118,7 @@
 .ds-sym-edge-shield::after {
   content: '';
   position: absolute;
-  inset: 11%;
+  inset: 7%;
   clip-path: var(--ds-shield);
   background: linear-gradient(330deg, #4a515b 0%, #7d8591 50%, #bcc3cc 100%);
 }
