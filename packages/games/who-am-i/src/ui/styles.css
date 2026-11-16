@@ -213,3 +213,10 @@
   margin-right: 0.3rem;
   vertical-align: -0.15rem;
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .wbi-root {
+    max-width: 60rem;
+    gap: 1.1rem;
+  }
+}

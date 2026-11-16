@@ -138,3 +138,30 @@
 .kniffel-scored > .bub-plop {
   display: inline-block;
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .kniffel {
+    max-width: 62rem;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .kniffel-dice-area {
+    flex: 0 0 22rem;
+    padding: 1.1rem;
+  }
+
+  .kniffel-die {
+    max-width: 68px;
+  }
+
+  .kniffel-sheet-wrap {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .kniffel-sheet {
+    font-size: 1rem;
+  }
+}

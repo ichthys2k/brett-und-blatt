@@ -303,3 +303,18 @@
   color: var(--color-accent);
   font-weight: 800;
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .ks-root {
+    max-width: 60rem;
+    gap: 1.1rem;
+  }
+
+  .ks-title {
+    font-size: clamp(1.4rem, 2vw, 1.85rem);
+  }
+
+  .ks-sheet {
+    gap: 0.85rem;
+  }
+}

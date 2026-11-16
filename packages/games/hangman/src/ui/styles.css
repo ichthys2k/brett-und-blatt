@@ -157,3 +157,21 @@
     font-size: 0.9rem;
   }
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .hm-letter-slot {
+    width: clamp(2.4rem, 3.2vw, 3.4rem);
+    height: clamp(2.9rem, 4.2vh, 3.9rem);
+    font-size: clamp(1.4rem, 2vw, 1.9rem);
+  }
+
+  .hm-keyboard {
+    max-width: 52rem;
+    gap: 0.5rem;
+  }
+
+  .hm-key {
+    min-height: 3rem;
+    font-size: 1.15rem;
+  }
+}

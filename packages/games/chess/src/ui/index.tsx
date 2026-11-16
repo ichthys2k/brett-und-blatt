@@ -438,7 +438,7 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
 
   // 8 : 10 – Brett, Leisten darüber und darunter und die Remis-Zeile.
   return (
-    <FitBox ratio={8 / 10}>
+    <FitBox ratio={8 / 10} className="ch-fit">
       <div className="ch-wrap">
         {reviewing ? (
           <div className="ch-review">

@@ -170,3 +170,20 @@ Gemessen auf dem Stand vor Umsetzung von #484 ff., Voreinstellungen der Partie, 
 - `tableLayout`: Querformat und Höhe unter `COMPACT_SHORT_SIDE` (600 px) → `rail` für alle Spiele; ab 600 px Höhe wie bisher `side` bzw. `ring`. `seatsOnBoard` hat keinen Einfluss aufs Layout mehr.
 - Schiene 44 px: ☰, wer ist dran (Platzzeichen mit Uhr-Ring), Restzeit, unten 💬. Status wird per `aria-live` vorgelesen. Meldungen stehen oben im Spielfeld, die Schublade rollt, die Kopfzeile bleibt oben.
 - Messung 844 × 390: Durchschnitt 64 % → 94 %, kein Spiel unter 88 %; 1024 × 768 und 1440 × 900 unverändert.
+
+### D6 – Bretter und Spielflächen am Desktop (#496, umgesetzt 16.11.2026)
+
+Alle 27 betroffenen Spiele mit Seitenleiste am Desktop angepasst (Handy/kleines Tablet unter `900×700 px`, `packages/ui`, Spielregeln, Bots und Sitzring unverändert; ein Commit je Spiel):
+
+- **Brettspiele (ab `1180×700` zweispaltig mit Nebenanzeigen neben dem Brett bzw. breiteres Brett):**
+  - `chess` (`.ch-fit` + `--bub-ratio: 1.24 !important`): inneres `.ch-board` bei `1440×900` nun `852×852 px` (96 % H, ≥ 780 px)
+  - `checkers` (`.dk-fit` + `--bub-ratio: 1.24 !important`): inneres `.dk-board` `848×848 px` (95 % H)
+  - `go` (`.go-fit` + `--bub-ratio: 1.24 !important`): inneres `.go-wrap` `852×852 px` (96 % H)
+  - `mill` (`.ml-fit` + `--bub-ratio: 1.24 !important`): inneres `.ml-board` `852×852 px` (96 % H)
+  - `scrabble` (`78cqw` im `@container`): inneres `.wg-board-wrap` `824×824 px` (93 % H)
+  - `grafschaft` (zweispaltig ab `1180×700`): `.gs-board-wrapper` `694×856 px` (96 % H), `89d px`-Überlauf behoben
+  - `color-and-shape` (ab `900×700`): `.ff-rack` auf `max-width: 34rem` erweitert
+- **Quiz-, Wort- und Rechenspiele (ab `900×700` auf `max-width: 60rem`, `clamp()`-Schriften und -Knöpfe):**
+  - `bible-quiz` (`640×357 → 960×426`, 88 % B), `factor-grid` (`736×442 → 960×488`, 88 % B), `number-wall` (`672×467 → 960×510`, 88 % B), `target-number` (`672×422 → 960×443`, 88 % B), `estimate` (`704×872 → 960×872`, 88 % B), `majority` (`704×872 → 960×872`, 88 % B), `timeline` (`704×872 → 960×872`, 88 % B), `category-sprint` (`760×872 → 960×872`, 88 % B), `describe-duel` (`760×872 → 960×872`, 88 % B), `word-salad` (`820×497 → 960×475`, 88 % B), `who-am-i` (`820×872 → 960×872`, 88 % B), `hangman` (Tastatur `max-width: 52rem`, größere Felder/Tasten)
+- **Karten- und Würfelspiele mit Seitenleiste (ab `900×700` eine Stufe größer):**
+  - `elevens` (`896×455 → 1024×508`, 94 % B), `market-stalls` (`704×573 → 992×549`, 91 % B, 2×2-Ständeraster), `kniffel` (`720×727 → 992×579`, 91 % B, Würfelbereich neben dem Block), `low-flight` (`900×872 → 1056×872`, 97 % B), `speed` (`900×872 → 1056×872`, 97 % B), `symbol-match` (`900×872 → 1056×872`, 97 % B), `ligretto` (`980×872 → 1056×872`, 97 % B), `mau-mau` (`980×872 → 1056×872`, 97 % B, `:not([data-ring])`), `uno` (`900×872 → 1056×872`, 97 % B, `:not([data-ring])`)

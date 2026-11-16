@@ -482,3 +482,33 @@
     font-size: 0.85rem;
   }
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .bq-layout {
+    max-width: 60rem;
+    gap: 1.1rem;
+  }
+
+  .bq-emoji-card {
+    min-height: clamp(8.5rem, 18vh, 13rem);
+    padding: 1.5rem;
+  }
+
+  .bq-emoji-text {
+    font-size: clamp(3.6rem, 6vw, 5.5rem);
+  }
+
+  .bq-options-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .bq-option-btn {
+    padding: 1.25rem 1.4rem;
+    font-size: clamp(1.05rem, 1.3vw, 1.25rem);
+  }
+
+  .bq-feedback-card {
+    max-width: 68ch;
+  }
+}

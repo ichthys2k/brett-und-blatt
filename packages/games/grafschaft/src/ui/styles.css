@@ -452,3 +452,35 @@
   margin-right: auto;
   margin-left: 0.5rem;
 }
+
+@media (min-width: 1180px) and (min-height: 700px) {
+  .gs-root {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 21rem;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    align-items: start;
+    height: 100%;
+    max-width: none;
+    gap: 0.65rem;
+  }
+
+  .gs-board-wrapper {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: auto;
+  }
+
+  .gs-header,
+  .gs-market-section,
+  .gs-quests-section {
+    grid-column: 2;
+  }
+
+  .gs-quests-section {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+}

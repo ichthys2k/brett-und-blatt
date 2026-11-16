@@ -81,7 +81,7 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<MillState, MillMov
   const last = view.lastMove;
 
   return (
-    <FitBox ratio={1 / 1.12}>
+    <FitBox ratio={1 / 1.12} className="ml-fit">
       <div className="ml-layout">
         <div className="ml-hands" aria-label="Steine im Vorrat">
           {[0, 1].map((seat) => (

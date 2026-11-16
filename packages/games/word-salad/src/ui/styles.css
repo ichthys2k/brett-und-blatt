@@ -384,3 +384,21 @@
     font-size: 0.78rem;
   }
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .bb-ws-root {
+    width: 100%;
+    max-width: 60rem;
+    gap: 1.2rem;
+  }
+
+  .bb-ws-stem-title {
+    font-size: clamp(1.4rem, 2vw, 1.9rem);
+  }
+
+  .bb-ws-tile {
+    width: clamp(2.8rem, 4vw, 3.6rem);
+    height: clamp(3rem, 4.4vh, 3.8rem);
+    font-size: clamp(1.25rem, 1.8vw, 1.65rem);
+  }
+}

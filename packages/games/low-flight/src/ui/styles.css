@@ -560,3 +560,11 @@
   gap: 0.5rem;
   justify-content: center;
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .lf-table {
+    max-width: none;
+    --lf-card: clamp(54px, min(14cqi, 10.5cqh), 104px);
+    --lf-small: clamp(22px, min(5.5cqi, 4.5cqh), 42px);
+  }
+}
