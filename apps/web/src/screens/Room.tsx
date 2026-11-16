@@ -28,6 +28,7 @@ import { useVoice } from '../lib/voice';
 import { Avatar } from '../components/Avatar';
 import { useGameScene } from '../lib/gameScene';
 import { botAvatar, botName } from '../lib/botPortraits';
+import { seatMember } from '../lib/seatIdentity';
 
 const TIME_PRESETS: TimePresetId[] = ['relaxed', 'normal', 'fast'];
 /** Online gibt es nur Spiele für mehrere Personen. */
@@ -154,6 +155,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
 
   if (state.game && room.phase !== 'lobby') {
     const { session, loaded } = state.game;
+    const seatMembers = (state.room?.lobby.seats ?? []).map((seat) => seatMember(seat, state.room?.members ?? []));
     return (
       <>
         <GameTable
@@ -179,10 +181,8 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
                   },
                 }
               : {}),
-            avatars: state.room?.lobby.seats.map((seat) => {
-              if (seat.kind !== 'human' || !seat.memberId) return null;
-              return state.room?.members.find((m) => m.id === seat.memberId)?.avatar ?? null;
-            }),
+            avatars: seatMembers.map((m) => m?.avatar ?? null),
+            crests: seatMembers.map((m) => m?.crest ?? null),
             invite: { code: room.code, link: `${window.location.origin}${window.location.pathname}${paths.room(room.code)}` },
             ...(loaded.info.takeBack ? { bar: <TakeBackBar session={session} /> } : {}),
             chat: (inBar: boolean) => (
