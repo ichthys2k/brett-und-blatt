@@ -12,6 +12,7 @@ import './handkarte.css';
 import './zoomkarte.css';
 import './tisch.css';
 import './held.css';
+import './pile.css';
 import { albumSpec } from './album';
 import { setPartyCards } from './cardLookup';
 import type { CustomCard } from '../carddefs';

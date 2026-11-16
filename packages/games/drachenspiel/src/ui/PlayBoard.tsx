@@ -13,6 +13,7 @@ import { currentCrest, ScenarioTip, useCosmetics } from './SoloHub';
 import { championImage, HOUSE_CHAMPIONS, HOUSE_ICONS, HOUSE_NAMES } from './champions';
 import { HeroZoomCard, KnappenRow, WimpelGem } from './held';
 import { useBeats } from './useBeats';
+import { DeckPile } from './pile';
 import { KEYWORD_SYMBOLS, KeywordEdges, KeywordMark, StatGem } from './symbole';
 import { cardArtUrl } from './cardArt';
 
@@ -371,6 +372,9 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   const mySeat: SeatId = typeof viewer === 'number' ? viewer : 0;
   const oppSeat: SeatId = (1 - mySeat) as SeatId;
   const me = view.players[mySeat];
+  const reducedMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  // Ziel der gezogenen Karte: die letzte Handkarte, aus dem DOM gelesen (die Refs hängen beim Ziehen noch nicht wieder).
+  const lastHandCard = useCallback(() => arenaRef.current?.querySelector<HTMLElement>('.ds-hand > .ds-card:last-child') ?? null, []);
   const opp = view.players[oppSeat];
   const isMyTurn = view.phase === 'play' && view.activeSeat === mySeat;
 
@@ -763,8 +767,8 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           elementRef={heroRef(mySeat)}
         />
         <div className="ds-actions">
-          <span className="ds-badge ds-badge-deck ds-deck-with-back" title={`Dein Nachziehstapel: ${me.deckCount} Karten`}>
-            <GameCard faceDown size="xs" cardBackProps={{ design: cardCosmetics.cardBack, crest: cardCosmetics.crest }} />
+          <DeckPile count={me.deckCount} handTarget={lastHandCard} reducedMotion={reducedMotion} />
+          <span className="ds-badge ds-badge-deck ds-pile-badge" title={`Dein Nachziehstapel: ${me.deckCount} Karten`}>
             <span>📚 {me.deckCount}</span>
           </span>
           <div className="ds-endturn-wrap">

@@ -116,7 +116,7 @@
 /* Bildfenster: Tiere mit Bogen oben, Kniffe und Fallen rechteckig, Aufgaben rund. */
 .bub-card.ds-hand-card .bub-combat-media {
   order: 1;
-  flex: 0 0 56%;
+  flex: 0 0 62%;
   min-height: 0;
   margin: 0;
   border-radius: 50% 50% 8% 8% / 34% 34% 6% 6%;
@@ -150,8 +150,9 @@
   max-width: none;
   max-height: none;
   object-fit: cover;
-  /* Motiv mittig (Cornelius, 15.11.2026: vorher saßen die Porträts zu tief). */
-  object-position: 50% 50%;
+  /* Die Motive sitzen in den 3:4-Bildern eher unten; das Namensband verdeckt den unteren Rand.
+     Darum zeigt das Fenster den unteren Bildteil (Cornelius, 16.11.2026: Motive waren abgeschnitten). */
+  object-position: 50% 72%;
 }
 
 /* Namensband überlappt den unteren Rand des Bilds. */
