@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { avatarImageOf, renderAvatar } from './avatarRenderer';
 import { clockTone } from './clockTone';
 import { PlayerShield } from './PlayerShield';
+import { SEAT_SHIELD_SIZE, useSeatRingScale } from './SeatRingScale';
 import { useInspectProps } from './inspect/CardInspect';
 
 /** Ring um das Spielerzeichen, der mit der Zeit abläuft. */
@@ -46,7 +47,7 @@ export interface PlayerChipProps {
   clock: ClockReading | null;
   /** Punktestand – steht als eigenes Abzeichen rechts und wird nie abgeschnitten. */
   score?: number | string | null;
-  /** `card`: großer Platz mit Porträt im Wappenschild statt Ring und Symbol (#491); Vorgabe `compact`. */
+  /** `card`: großer Platz mit Porträt im Wappenschild statt Ring und Symbol (#491); Vorgabe `compact`, am Sitzring nach dessen Stufe. */
   size?: 'compact' | 'card';
   /** Wappen als Beschreibung (wie `MemberInfo.crest`); nur bei `size="card"`. */
   crest?: string;
@@ -55,7 +56,12 @@ export interface PlayerChipProps {
 }
 
 /** Ein Platz in der Spielerleiste: Zeichen mit Uhr-Ring, Name, Zustand. */
-export function PlayerChip({ name, symbol, avatar, detail, active, thinking, away, winner, clock, score, size = 'compact', crest, shieldSize = 72 }: PlayerChipProps) {
+export function PlayerChip({ name, symbol, avatar, detail, active, thinking, away, winner, clock, score, size, crest, shieldSize }: PlayerChipProps) {
+  // Am Sitzring bestimmt dessen Stufe die Größe (#494); sonst gelten die Eigenschaften.
+  const scale = useSeatRingScale();
+  const fromRing = size === undefined && scale !== 'compact';
+  size = size ?? (fromRing ? 'card' : 'compact');
+  shieldSize = shieldSize ?? (fromRing ? SEAT_SHIELD_SIZE[scale] : 72);
   const time = clock && clock.kind !== 'none' && clock.running ? formatClock(clock) : null;
   // Großansicht des gemalten Avatars (#422): beim Überfahren, Rechtsklick oder langem Drücken.
   const image = avatar ? avatarImageOf(avatar) : undefined;

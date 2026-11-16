@@ -1492,6 +1492,11 @@ button.bub-net-point:not(:disabled) {
 
 /* Spieler rund um den Tisch (SeatRing): nur bei genug Platz, das Spiel liegt in der Mitte. */
 .bub-seat-ring {
+  /* Maße der Plätze; die Stufe (data-scale) setzt sie größer, SeatRing.tsx rechnet damit (#494). */
+  --bub-seat-w: 10.5rem;
+  --bub-seat-gap-x: 5.5rem;
+  --bub-seat-gap-y: 3.6rem;
+  --bub-seat-h: 0px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -1522,7 +1527,7 @@ button.bub-net-point:not(:disabled) {
   flex-direction: column;
   align-items: center;
   gap: 0.15rem;
-  width: 10.5rem;
+  width: var(--bub-seat-w);
   transform: translate(-50%, -50%);
 }
 
@@ -1579,7 +1584,35 @@ button.bub-net-point:not(:disabled) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 11rem;
+  width: var(--bub-own-w, 11rem);
+}
+
+.bub-seat-ring[data-scale='medium'] {
+  --bub-seat-w: 12.5rem;
+  --bub-seat-gap-x: 6.5rem;
+  --bub-seat-h: 13rem;
+  --bub-seat-gap-y: 6.5rem;
+  --bub-own-w: 13rem;
+}
+
+.bub-seat-ring[data-scale='large'] {
+  --bub-seat-w: 15rem;
+  --bub-seat-gap-x: 8rem;
+  --bub-seat-h: 15rem;
+  --bub-seat-gap-y: 7.5rem;
+  --bub-own-w: 13rem;
+}
+
+/* Großes Sitzschild der Mitspieler: Schild oben mittig, darunter Name, Detail, Punkte. Der eigene Platz unten behält die Zeile (Schild links). */
+.bub-seat-ring-seat .bub-chip[data-size='card'] {
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem;
+  text-align: center;
+}
+
+.bub-seat-ring-seat .bub-chip[data-size='card'] .bub-chip-text {
+  align-items: center;
 }
 
 /* =========================================================================

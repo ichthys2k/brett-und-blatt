@@ -222,13 +222,15 @@ try {
   const ringGames = { 'mau-mau': 5, skat: 4, schafkopf: 4, doppelkopf: 5, binokel: 4, elevens: 6, president: 8, 'black-peter': 6, uno: 8, quartett: 6, dominoes: 4, maexle: 8, 'market-stalls': 8 };
   for (const [id, count] of Object.entries(ringGames)) {
     if (!ids.includes(id)) continue;
-    for (const [width, height] of [[1024, 768], [1280, 800], [768, 1024], [390, 844]]) {
+    // Große Bildschirme (#494): Sitzschilder in den Stufen medium/large, auch mit der kleinsten Platzzahl (3).
+    const sizes = [[1024, 768], [1280, 800], [768, 1024], [390, 844], [1440, 900], [1920, 1080]];
+    for (const [width, height, seatCount = count] of [...sizes, ...sizes.slice(4).map(([w, h]) => [w, h, 3])]) {
       const context = await browser.newContext({ viewport: { width, height } });
       const ringPage = await context.newPage();
       await ringPage.goto(base);
       await ringPage.evaluate(
         ([game, seats]) => localStorage.setItem(`brett-und-blatt:einstellungen:${game}`, JSON.stringify({ seats, options: {} })),
-        [id, Array.from({ length: count }, (_, i) => (i === 0 ? { kind: 'human', name: 'Du' } : { kind: 'bot', name: '', level: 'medium' }))],
+        [id, Array.from({ length: seatCount }, (_, i) => (i === 0 ? { kind: 'human', name: 'Du' } : { kind: 'bot', name: '', level: 'medium' }))],
       );
       const m = await startGame(ringPage, id);
       const ring = await ringPage.evaluate(() => {
@@ -250,7 +252,7 @@ try {
           outside: seats.filter((a) => a.left < main.left - 1 || a.right > main.right + 1 || a.top < main.top - 1 || a.bottom > main.bottom + 1).length,
         };
       });
-      const where = `${id} zu ${count} bei ${width}×${height}`;
+      const where = `${id} zu ${seatCount} bei ${width}×${height}`;
       if (ring.shown !== width >= 768) problems.push(`${where}: Tisch ${ring.shown ? 'erscheint auf dem Handy' : 'fehlt'}`);
       if (ring.shown && ring.mainWidth < width - 2) problems.push(`${where}: Seitenleiste nimmt noch Platz (${ring.mainWidth} px)`);
       if (ring.shown && width >= 1024 && ring.pileWidth !== null && ring.pileWidth < 100) problems.push(`${where}: Stapel zu klein (${ring.pileWidth} px)`);
