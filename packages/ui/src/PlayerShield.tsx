@@ -1,7 +1,7 @@
 import { DEFAULT_CREST, parseCrest, type ClockReading } from '@brett-und-blatt/engine';
 import type { ReactNode } from 'react';
 import { avatarImageOf } from './avatarRenderer';
-import { PlayerCrest } from './crest/PlayerCrest';
+import { CREST_ORNAMENT_MIN_SIZE, PlayerCrest } from './crest/PlayerCrest';
 import { clockTone } from './clockTone';
 
 /** Das Medaillon hat höchstens diesen Durchmesser (px): Bilder werden nie größer als ihre Datei (192 px bei Avataren). */
@@ -35,8 +35,9 @@ export function PlayerShield({ avatar, crest, size, clock = null, symbol, label 
   const emoji = avatar.startsWith('bot:') ? '🤖' : avatar || spec.animal;
   const ring = clock && clock.kind !== 'none' ? { fraction: clock.fraction, tone: clockTone(clock) } : undefined;
   const badge = Math.max(18, Math.round(width * 0.3));
+  const height = width < CREST_ORNAMENT_MIN_SIZE ? (width * 106) / 80 : width * 1.5;
   return (
-    <span className="bub-shield" style={{ width, height: width * 1.5 }}>
+    <span className="bub-shield" style={{ width, height }}>
       <PlayerCrest spec={spec} size={width} label={label} portrait={image ?? ''} portraitEmoji={emoji} ring={ring} />
       {symbol ? (
         <span className="bub-shield-badge" style={{ width: badge, height: badge }}>

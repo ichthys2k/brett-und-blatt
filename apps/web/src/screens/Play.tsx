@@ -1,5 +1,5 @@
 import { randomSeed, sanitizeCustomCardCatalog, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
-import { CardInspectProvider, PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
+import { CardInspectProvider, PlayerChip, formatClock, sideShieldSize, tableLayout, useElementSize } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { AlbumSpec } from '@brett-und-blatt/ui';
 import { AfterGameBar } from '../components/AfterGameBar';
@@ -192,8 +192,6 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   }, [session, isOnline]);
 
   const seats = session.config.seats;
-  /** Ab drei Spielern wird die linke Spalte im Querformat breiter; auf flachen Handy-Bildschirmen stehen die Spieler zu zweit nebeneinander. */
-  const crowded = seats.length > 2;
   const playersRef = useRef<HTMLElement>(null);
   /**
    * Im Hochformat ist die Spielerleiste ein Menü (☰ in der Statuszeile): eingeklappt, bis jemand sie braucht, und sie
@@ -204,21 +202,22 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const playersBox = useRef<HTMLDivElement>(null);
   useDismiss(playersOpen, useCallback(() => setPlayersOpen(false), []), playersBox);
   const [rootRef, rootSize] = useElementSize<HTMLDivElement>();
-  /**
-   * Genug Platz: Das Spiel setzt die Spieler um seinen Tisch, die Seitenleiste entfällt, und über dem Tisch bleibt nur die
-   * Kopfzeile. Gemessen wird das ganze Fenster, nicht das Spielfeld: Das wächst durch den Wegfall der Leiste selbst.
-   */
-  const around = Boolean(ui.seatsAround) && seatRingFits(seats.length, rootSize.width, rootSize.height - TABLE_BAR_HEIGHT);
-  // Poker & Co. (#378): Im niedrigen Querformat klappt die Seitenleiste zum Menüknopf ☰ ein, der Tisch bekommt die Breite.
   const [sideOpen, setSideOpen] = useState(false);
   const sideBox = useRef<HTMLDivElement>(null);
   useDismiss(sideOpen, useCallback(() => setSideOpen(false), []), sideBox);
-  const landscape = rootSize.width > rootSize.height && rootSize.height > 0;
-  // Spiele mit `fullBleed` (Drachenspiel, #430) klappen die Leiste im Querformat immer ein und nutzen die Fläche ganz.
+  const layout = tableLayout({
+    width: rootSize.width,
+    height: rootSize.height,
+    seats: seats.length,
+    seatsAround: ui.seatsAround,
+    seatsOnBoard: ui.seatsOnBoard,
+    fullBleed: ui.fullBleed,
+  });
+  const { crowded, landscape, collapsed: collapsedSide } = layout;
+  const around = layout.mode === 'ring';
+  const collapsedTop = layout.mode === 'bar';
   const fullBleed = Boolean(ui.fullBleed) && !around && rootSize.height > 0;
-  const collapsedSide = !around && ((landscape && Boolean(ui.seatsOnBoard) && rootSize.height <= 540) || fullBleed);
-  // Im Hochformat wird aus der eingeklappten Leiste eine schmale Zeile oben (☰ und Status), das Menü klappt darunter auf.
-  const collapsedTop = collapsedSide && !landscape;
+  const sideShield = layout.mode === 'side' ? sideShieldSize(seats.length, rootSize.height) : 0;
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
   useWakeLock(!result && !session.paused);
@@ -427,6 +426,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         away={session.isAway(index)}
         winner={result?.kind === 'win' && result.winners.includes(index)}
         clock={session.timed ? session.clock(index) : null}
+        size={sideShield > 0 ? 'card' : 'compact'}
+        shieldSize={sideShield}
       />
     );
   };
@@ -603,8 +604,9 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               : 'hidden'
             : around
               ? 'contents'
-              : `contents side:flex side:flex-none side:flex-col side:overflow-y-auto ${crowded ? 'side:w-80' : 'side:w-64 wide:w-72'}`
+              : 'contents side:flex side:flex-none side:flex-col side:overflow-y-auto'
         }
+        style={layout.mode === 'side' ? { width: layout.sideWidth } : undefined}
       >
         <header className={`flex h-14 flex-none items-center gap-2 px-3 short:h-11 tiny:h-10 ${around ? 'relative z-30' : ''}`}>
           {!online?.display && (
