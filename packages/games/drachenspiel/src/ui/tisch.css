@@ -19,28 +19,28 @@
   --ds-plate-ink: #f5ead6;
 }
 
-.ds-arena.ds-arena[data-theme='wald'],
-.ds-phase-overlay.ds-phase-overlay[data-theme='wald'] {
+.ds-arena.ds-arena[data-theme='forest'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='forest'] {
   --ds-table: url('./tische/tisch-wald-quer.webp');
 }
 
-.ds-arena.ds-arena[data-theme='meer'],
-.ds-phase-overlay.ds-phase-overlay[data-theme='meer'] {
+.ds-arena.ds-arena[data-theme='sea'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='sea'] {
   --ds-table: url('./tische/tisch-meer-quer.webp');
 }
 
-.ds-arena.ds-arena[data-theme='bauernhof'],
-.ds-phase-overlay.ds-phase-overlay[data-theme='bauernhof'] {
+.ds-arena.ds-arena[data-theme='farm'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='farm'] {
   --ds-table: url('./tische/tisch-bauernhof-quer.webp');
 }
 
-.ds-arena.ds-arena[data-theme='krabbeltiere'],
-.ds-phase-overlay.ds-phase-overlay[data-theme='krabbeltiere'] {
+.ds-arena.ds-arena[data-theme='bugs'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='bugs'] {
   --ds-table: url('./tische/tisch-krabbeltiere-quer.webp');
 }
 
-.ds-arena.ds-arena[data-theme='wildnis'],
-.ds-phase-overlay.ds-phase-overlay[data-theme='wildnis'] {
+.ds-arena.ds-arena[data-theme='wild'],
+.ds-phase-overlay.ds-phase-overlay[data-theme='wild'] {
   --ds-table: url('./tische/tisch-wildnis-quer.webp');
 }
 
@@ -57,28 +57,28 @@
     background-position: center center;
   }
 
-  .ds-arena.ds-arena[data-theme='wald'],
-  .ds-phase-overlay.ds-phase-overlay[data-theme='wald'] {
+  .ds-arena.ds-arena[data-theme='forest'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='forest'] {
     --ds-table: url('./tische/tisch-wald-hoch.webp');
   }
 
-  .ds-arena.ds-arena[data-theme='meer'],
-  .ds-phase-overlay.ds-phase-overlay[data-theme='meer'] {
+  .ds-arena.ds-arena[data-theme='sea'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='sea'] {
     --ds-table: url('./tische/tisch-meer-hoch.webp');
   }
 
-  .ds-arena.ds-arena[data-theme='bauernhof'],
-  .ds-phase-overlay.ds-phase-overlay[data-theme='bauernhof'] {
+  .ds-arena.ds-arena[data-theme='farm'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='farm'] {
     --ds-table: url('./tische/tisch-bauernhof-hoch.webp');
   }
 
-  .ds-arena.ds-arena[data-theme='krabbeltiere'],
-  .ds-phase-overlay.ds-phase-overlay[data-theme='krabbeltiere'] {
+  .ds-arena.ds-arena[data-theme='bugs'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='bugs'] {
     --ds-table: url('./tische/tisch-krabbeltiere-hoch.webp');
   }
 
-  .ds-arena.ds-arena[data-theme='wildnis'],
-  .ds-phase-overlay.ds-phase-overlay[data-theme='wildnis'] {
+  .ds-arena.ds-arena[data-theme='wild'],
+  .ds-phase-overlay.ds-phase-overlay[data-theme='wild'] {
     --ds-table: url('./tische/tisch-wildnis-hoch.webp');
   }
 }
