@@ -1,0 +1,38 @@
+{
+  "beschreibung": "Drachenspiel B2 (#467): vier gemalte Medaillons für die Hauskräfte (Wald, Meer, Wildnis, Krabbeltiere); das Küken des Bauernhofs kommt aus dem vorhandenen Kartenbild.",
+  "stil": "Painterly storybook oil illustration of a single round medallion emblem, medieval tavern and fairy-tale kingdom mood: warm candlelight from the upper left, rich colours, the symbol centred, fully inside a circular composition with margin around it, on a calm, dark, uncluttered background so that it reads clearly at 40 pixels. No text, no letters, no numbers, no frame, no border.",
+  "ohne": "text, letters, numbers, frame, border, people, faces, hands, modern objects, logos, watermark, photo, alcohol, beer, wine, spirits, beer mugs, tankards, wine glasses, liquor bottles, beer barrels, drunkenness, tobacco, smoking pipes, smoking, cigarettes, drugs",
+  "format": "1:1",
+  "ziel": "packages/games/drachenspiel/src/ui/hauskraefte",
+  "praefix": "kraft-",
+  "groesse": [
+    192,
+    192
+  ],
+  "qualitaet": 82,
+  "referenzen": [
+    "packages/games/drachenspiel/src/ui/karten/bub-ds-token_chick.webp"
+  ],
+  "motive": [
+    {
+      "id": "forest",
+      "titel": "Eichenkraft (Wald)",
+      "prompt": "A glossy acorn with a small oak leaf and a little gleam like a shield highlight."
+    },
+    {
+      "id": "sea",
+      "titel": "Gezeitenruf (Meer)",
+      "prompt": "An open seashell from which a curling wave rises."
+    },
+    {
+      "id": "wild",
+      "titel": "Dickes Fell (Wildnis)",
+      "prompt": "A thick rhinoceros-hide shield with a single curved horn on it."
+    },
+    {
+      "id": "bugs",
+      "titel": "Kleiner Stachel (Krabbeltiere)",
+      "prompt": "A bee stinger shaped like a tiny rapier, with a drop of golden honey."
+    }
+  ]
+}

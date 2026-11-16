@@ -14,6 +14,7 @@ import { championImage, HOUSE_CHAMPIONS, HOUSE_ICONS, HOUSE_NAMES } from './cham
 import { HeroZoomCard, KnappenRow, WimpelGem } from './held';
 import { useBeats } from './useBeats';
 import { DeckPile } from './pile';
+import { PowerIcon } from './hauskraefte';
 import { KEYWORD_SYMBOLS, KeywordEdges, KeywordMark, StatGem } from './symbole';
 import { cardArtUrl } from './cardArt';
 
@@ -637,7 +638,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
                   if (content) inspect.open(content, event.currentTarget);
                 }}
               >
-                <span aria-hidden="true">{oppPower.emoji}</span>
+                <PowerIcon power={oppPower} />
                 <StatGem kind="cost" value={oppPower.cost} size="feld" className="ds-power-gem" />
               </button>
             )
@@ -759,7 +760,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
                   if (canUsePower) onMove({ type: 'heroPower' });
                 }}
               >
-                <span aria-hidden="true">{myPower.emoji}</span>
+                <PowerIcon power={myPower} />
                 <StatGem kind="cost" value={myPower.cost} size="feld" className="ds-power-gem" />
               </button>
             )
