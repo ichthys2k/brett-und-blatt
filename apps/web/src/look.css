@@ -491,6 +491,13 @@
 [data-look='tavern'] .bub-av-img + .bub-av-emoji {
   display: none;
 }
+/* Porträt im Wappenschild (#491): im Taverne-Aussehen das Bild, sonst das Emoji. */
+[data-look='tavern'] .bub-crest-portrait {
+  display: inline;
+}
+[data-look='tavern'] .bub-crest-portrait + .bub-crest-emoji {
+  display: none;
+}
 [data-look='tavern'] button[data-avatar] .bub-av-img,
 [data-look='tavern'] fieldset button .bub-av-img {
   width: 2.3rem;

@@ -15,6 +15,13 @@ const SHIELDS = {
 } as const;
 /** Das Tierfeld sitzt bei der spitzen Form etwas höher, weil unten weniger Platz ist. */
 const MEDALLION_Y = { klassisch: 80, rund: 80, spitz: 76, rolle: 80 } as const;
+/** Mit Porträt (#491): Mitte und Außenradius des größeren Medaillons je Form; liegt in allen vier Formen innerhalb des Schilds. */
+export const PORTRAIT_MEDALLION = {
+  klassisch: { y: 80, r: 34 },
+  rund: { y: 80, r: 34 },
+  spitz: { y: 70, r: 30 },
+  rolle: { y: 80, r: 34 },
+} as const;
 /** Ab dieser Breite (px) wird die Zier gezeichnet. */
 export const CREST_ORNAMENT_MIN_SIZE = 56;
 
@@ -25,9 +32,15 @@ export interface PlayerCrestProps {
   /** Sichtbarer Name für Screenreader, z. B. „Wappen von Mia“. */
   label?: string;
   className?: string;
+  /** Bild-URL des Porträts; ersetzt im Schild das Wappentier-Emoji und füllt ein größeres Medaillon. */
+  portrait?: string;
+  /** Emoji, das „Schlicht“ und erhöhter Kontrast statt des Porträts zeigen (Vorgabe: `spec.animal`). */
+  portraitEmoji?: string;
+  /** Uhr als Ring um das Medaillon: Anteil 0–1 und Ton wie bei `ClockRing`; ohne Angabe kein Zeitbalken. */
+  ring?: { fraction: number; tone: 'idle' | 'ok' | 'warning' | 'danger' };
 }
 
-export function PlayerCrest({ spec, size = 64, label, className }: PlayerCrestProps) {
+export function PlayerCrest({ spec, size = 64, label, className, portrait, portraitEmoji, ring }: PlayerCrestProps) {
   const id = useId().replace(/:/g, '');
   const small = size < CREST_ORNAMENT_MIN_SIZE;
   const palette = CREST_PALETTE[spec.colors] ?? CREST_PALETTE['rot-gold']!;
@@ -64,11 +77,64 @@ export function PlayerCrest({ spec, size = 64, label, className }: PlayerCrestPr
         </>
       )}
       {has('krone') && <path d="M30 26 L33 8 L42 18 L50 4 L58 18 L67 8 L70 26 Z" fill="#E0A800" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" />}
-      <circle cx="50" cy={y} r={small ? 26 : 20} fill="#FFF7E3" stroke="currentColor" strokeWidth={small ? 4 : 2} />
-      <text x="50" y={y + (small ? 12 : 9)} textAnchor="middle" fontSize={small ? 36 : 26} aria-hidden="true">
-        {spec.animal}
-      </text>
+      {portrait !== undefined ? (
+        <Medallion id={id} y={PORTRAIT_MEDALLION[spec.shield].y} r={PORTRAIT_MEDALLION[spec.shield].r} portrait={portrait} emoji={portraitEmoji ?? spec.animal} ring={ring} />
+      ) : (
+        <>
+          <circle cx="50" cy={y} r={small ? 26 : 20} fill="#FFF7E3" stroke="currentColor" strokeWidth={small ? 4 : 2} />
+          <text x="50" y={y + (small ? 12 : 9)} textAnchor="middle" fontSize={small ? 36 : 26} aria-hidden="true">
+            {spec.animal}
+          </text>
+        </>
+      )}
       {has('band') && <path d="M16 126 H84 L78 135 L84 144 H16 L22 135 Z" fill={b} stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />}
     </svg>
+  );
+}
+
+/** Farbe des Zeitrings je Ton; dieselben Farben wie `.bub-ring-bar` in ui.css. */
+const RING_TONE_VAR = { idle: 'var(--color-accent)', ok: 'var(--color-accent)', warning: 'var(--color-warning)', danger: 'var(--color-danger)' } as const;
+
+/** Medaillon mit Porträt (Bild und Emoji; CSS schaltet um) und optional dem Zeitbalken als Rand. */
+function Medallion({ id, y, r, portrait, emoji, ring }: { id: string; y: number; r: number; portrait: string; emoji: string; ring: PlayerCrestProps['ring'] }) {
+  const band = ring ? 4 : 2;
+  const inner = r - band;
+  const ringRadius = r - band / 2;
+  const circumference = 2 * Math.PI * ringRadius;
+  const fraction = ring ? Math.max(0, Math.min(1, ring.fraction)) : 1;
+  return (
+    <g className="bub-crest-medallion">
+      <defs>
+        <clipPath id={`portrait-${id}`}>
+          <circle cx="50" cy={y} r={inner} />
+        </clipPath>
+      </defs>
+      <circle cx="50" cy={y} r={r} fill="#FFF7E3" />
+      {portrait && <image className="bub-crest-portrait" href={portrait} x={50 - inner} y={y - inner} width={inner * 2} height={inner * 2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#portrait-${id})`} />}
+      <text className="bub-crest-emoji" x="50" y={y + inner * 0.36} textAnchor="middle" fontSize={inner * 1.25} aria-hidden="true">
+        {emoji}
+      </text>
+      {ring ? (
+        <>
+          <circle cx="50" cy={y} r={ringRadius} fill="none" stroke="currentColor" strokeOpacity="0.25" strokeWidth={band} />
+          <circle
+            className="bub-crest-ring"
+            cx="50"
+            cy={y}
+            r={ringRadius}
+            fill="none"
+            stroke={RING_TONE_VAR[ring.tone]}
+            strokeWidth={band}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - fraction)}
+            transform={`rotate(-90 50 ${y})`}
+            data-tone={ring.tone}
+          />
+        </>
+      ) : (
+        <circle cx="50" cy={y} r={r - 1} fill="none" stroke="currentColor" strokeWidth="2" />
+      )}
+    </g>
   );
 }
