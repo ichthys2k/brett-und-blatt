@@ -148,3 +148,8 @@ Gemessen auf dem Stand vor Umsetzung von #484 ff., Voreinstellungen der Partie, 
 - Mitgliederliste (`Room.tsx`): ab 1100 px Breite zweispaltig bei mehr als 4 Mitgliedern (`Page` ab 1100 px `max-w-4xl`).
 - `SeatRow` und Turnier-Warteraum (`Room.tsx`): zeigen ebenfalls `PlayerShield` (28–34 px) statt Emoji-Text bzw. reinem Avatar (Bots mit Bot-Porträt im Standardschild).
 
+### G1 – Layout-Entscheidung als reine Funktion (#484, umgesetzt 16.11.2026)
+
+- `tableLayout` (`packages/ui/src/tableLayout.ts`) rechnet aus Breite, Höhe, Platzzahl und `seatsAround`, `seatsOnBoard`, `fullBleed` den Zustand `ring` · `side` · `stack` · `rail` · `bar` (`compact` oben = `rail` quer, `bar` hoch); `Play.tsx` leitet seine Layout-Werte nur daraus ab, `TABLE_BAR_HEIGHT` kommt aus `packages/ui`. Gelandet zusammen mit D3 (#493).
+- Regeln: `ring` bei `seatsAround` und `seatRingFits(seats, width, height − 56)`; sonst `rail`/`bar` bei `fullBleed` oder (`seatsOnBoard`, quer, Höhe ≤ 540); sonst `side` (quer) bzw. `stack` (hoch); ungemessen immer `stack`.
+- Tests in `packages/ui/test/table-layout.test.ts` mit Tabelle der Grenzfälle. Messung vorher/nachher mit `platz-messen.mjs`: Anteil, `ring`, `menu`, Chipgrößen unverändert.

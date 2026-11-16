@@ -46,3 +46,29 @@ describe('tableLayout', () => {
     expect(tableLayout({ width: 1440, height: 900, seats: 2 })).toMatchObject({ mode: 'side', sideWidth: 352 });
   });
 });
+
+describe('tableLayout: Tabelle der Fälle (#484)', () => {
+  type Input = Parameters<typeof tableLayout>[0];
+  const cases: [string, Input, 'ring' | 'side' | 'stack' | 'rail' | 'bar'][] = [
+    ['Handy quer, seatsOnBoard', { width: 844, height: 390, seats: 2, seatsOnBoard: true }, 'rail'],
+    ['Handy hoch, seatsOnBoard', { width: 390, height: 844, seats: 2, seatsOnBoard: true }, 'stack'],
+    ['Querformat genau 540 px, seatsOnBoard', { width: 1024, height: 540, seats: 2, seatsOnBoard: true }, 'rail'],
+    ['Querformat 600 px, seatsOnBoard', { width: 1024, height: 600, seats: 2, seatsOnBoard: true }, 'side'],
+    ['Tablet quer, 2 Plätze, seatsAround', { width: 1024, height: 768, seats: 2, seatsAround: true }, 'side'],
+    ['Tablet quer, 3 Plätze, seatsAround', { width: 1024, height: 768, seats: 3, seatsAround: true }, 'ring'],
+    ['Tablet quer, 8 Plätze, seatsAround', { width: 1024, height: 768, seats: 8, seatsAround: true }, 'ring'],
+    ['Tablet quer, 9 Plätze, seatsAround', { width: 1024, height: 768, seats: 9, seatsAround: true }, 'side'],
+    ['Tablet hoch, 3 Plätze, seatsAround', { width: 768, height: 1024, seats: 3, seatsAround: true }, 'ring'],
+    ['Tablet hoch, 9 Plätze, seatsAround', { width: 768, height: 1024, seats: 9, seatsAround: true }, 'stack'],
+    ['Ring schlägt fullBleed', { width: 1024, height: 768, seats: 4, seatsAround: true, fullBleed: true }, 'ring'],
+    ['Kopfzeile zählt zur Ringhöhe: 600 zu niedrig', { width: 1024, height: 600, seats: 4, seatsAround: true }, 'side'],
+    ['Kopfzeile zählt zur Ringhöhe: 616 genug', { width: 1024, height: 616, seats: 4, seatsAround: true }, 'ring'],
+    ['Ungemessen mit fullBleed bleibt offen', { width: 0, height: 0, seats: 2, fullBleed: true }, 'stack'],
+    ['Ungemessen mit seatsAround bleibt offen', { width: 0, height: 0, seats: 4, seatsAround: true, seatsOnBoard: true }, 'stack'],
+  ];
+  it.each(cases)('%s', (_name, input, mode) => {
+    const layout = tableLayout(input);
+    expect(layout.mode).toBe(mode);
+    expect(layout.collapsed).toBe(mode === 'rail' || mode === 'bar');
+  });
+});
