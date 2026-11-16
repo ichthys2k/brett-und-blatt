@@ -143,6 +143,48 @@
   box-shadow: none;
 }
 
+@media (orientation: landscape) and (max-height: 599px) {
+  .ml-fit {
+    --bub-ratio: 1.35 !important;
+  }
+
+  .ml-layout {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr;
+    column-gap: 0.6rem;
+    align-items: center;
+  }
+
+  .ml-board {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    aspect-ratio: 1;
+    justify-self: center;
+  }
+
+  .ml-hands {
+    grid-column: 2;
+    grid-row: 1;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 6.5rem;
+    max-width: 10rem;
+  }
+
+  .ml-help {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    max-width: 10rem;
+    text-align: left;
+    font-size: 0.8rem;
+  }
+}
+
 @media (min-width: 1180px) and (min-height: 700px) {
   .ml-fit {
     /* überschreibt die Inline-Vorgabe von FitBox für das Hochformat-Verhältnis */
