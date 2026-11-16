@@ -236,3 +236,27 @@
     width: 3.4rem;
   }
 }
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .nw-layout {
+    max-width: 60rem;
+    gap: 1.1rem;
+  }
+
+  .nw-pyramid {
+    gap: 0.55rem;
+    padding: 1.5rem 1rem;
+  }
+
+  .nw-brick {
+    width: clamp(5.6rem, 7vw, 7.5rem);
+    height: clamp(3.4rem, 5.5vh, 4.4rem);
+    font-size: clamp(1.3rem, 1.8vw, 1.7rem);
+  }
+
+  .nw-chip {
+    min-width: clamp(3.4rem, 4vw, 4.4rem);
+    padding: 0.45rem 0.8rem;
+    font-size: clamp(1.05rem, 1.4vw, 1.3rem);
+  }
+}
