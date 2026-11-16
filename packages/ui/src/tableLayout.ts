@@ -2,7 +2,7 @@ import { seatRingFits } from './SeatRing';
 
 export const TABLE_BAR_HEIGHT = 56;
 
-export type TableMode = 'ring' | 'side' | 'stack' | 'rail' | 'bar';
+export type TableMode = 'ring' | 'side' | 'rail' | 'bar';
 
 export interface TableLayoutInput {
   width: number;
@@ -14,7 +14,7 @@ export interface TableLayoutInput {
 }
 
 export interface TableLayout {
-  /** ring: Sitzring · side: Leiste links · stack: Hochformat · rail: ☰-Schiene links · bar: ☰-Zeile oben */
+  /** ring: Sitzring · side: Leiste links · rail: ☰-Schiene links (quer) · bar: ☰-Zeile oben (Hochformat, #485) */
   mode: TableMode;
   collapsed: boolean;
   landscape: boolean;
@@ -48,9 +48,11 @@ export function tableLayout(input: TableLayoutInput): TableLayout {
   const crowded = seats > 2;
   const landscape = width > height && height > 0;
   const around = Boolean(seatsAround) && seatRingFits(seats, width, height - TABLE_BAR_HEIGHT);
-  const fullBleedActive = Boolean(fullBleed) && !around && height > 0;
-  const collapsed = !around && ((landscape && Boolean(seatsOnBoard) && height <= 540) || fullBleedActive);
-  const mode: TableMode = around ? 'ring' : collapsed ? (landscape ? 'rail' : 'bar') : landscape ? 'side' : 'stack';
+  // Hochformat ohne Sitzring: immer die schmale Leiste oben, für alle Spiele und jede Breite (#485); auch noch ungemessen.
+  // Querformat: Schiene links bei `fullBleed` oder `seatsOnBoard` mit wenig Höhe, sonst die Seitenleiste.
+  const rail = landscape && (Boolean(fullBleed) || (Boolean(seatsOnBoard) && height <= 540));
+  const mode: TableMode = around ? 'ring' : !landscape ? 'bar' : rail ? 'rail' : 'side';
+  const collapsed = mode === 'rail' || mode === 'bar';
   return {
     mode,
     collapsed,

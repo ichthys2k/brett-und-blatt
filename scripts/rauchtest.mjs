@@ -177,19 +177,41 @@ try {
       if (m.interactive === 0) problems.push(`${id}: Spielfeld ohne Bedienelemente`);
       if (m.pageHeight > viewport.height + 2) problems.push(`${id}: Seite ist ${m.pageHeight} px hoch und rollt (Bildschirm ${viewport.height} px)`);
       if (m.footerBlocked > 0) problems.push(`${id}: ${m.footerBlocked} Knöpfe unter dem Spielfeld verdeckt oder außerhalb des Bildschirms`);
-      // Hochformat: Die Spielerleiste ist eingeklappt und klappt über ☰ über dem Spielfeld auf, ohne die Seite zu verlängern (#114).
-      const players = page.locator('#bub-players');
-      if (await players.isVisible()) problems.push(`${id}: Spielerleiste ist im Hochformat nicht eingeklappt`);
-      // Spiele mit eingeklapptem Menü (#429): erst ☰ öffnen, darin liegt die Spielerleiste.
+      // Hochformat (#485): nur die schmale Leiste mit ☰ über dem Spielfeld; Spielerliste und Knöpfe liegen in der Schublade.
       const menu = page.locator('[data-bub-menu]');
-      if (await menu.isVisible()) await menu.click();
-      await page.locator('.bub-players-toggle').click({ timeout: 2_000 });
-      const opened = await page.evaluate(() => ({
-        shown: document.querySelector('#bub-players')?.getBoundingClientRect().height ?? 0,
-        pageHeight: document.documentElement.scrollHeight,
-      }));
-      if (opened.shown === 0) problems.push(`${id}: Spielerleiste klappt mit ☰ nicht auf`);
-      if (opened.pageHeight > viewport.height + 2) problems.push(`${id}: aufgeklappte Spielerleiste verlängert die Seite (${opened.pageHeight} px)`);
+      if (!(await menu.isVisible())) problems.push(`${id}: Leiste mit ☰ fehlt im Hochformat`);
+      else {
+        const closedState = await page.evaluate(() => {
+          const bar = document.querySelector('[data-bub-menu]').parentElement.getBoundingClientRect();
+          const main = document.querySelector('main').getBoundingClientRect();
+          const players = document.querySelector('#bub-players');
+          return { barHeight: Math.round(bar.height), share: main.height / window.innerHeight, playersShown: Boolean(players && players.getBoundingClientRect().height > 0) };
+        });
+        if (closedState.barHeight > 48) problems.push(`${id}: Leiste ist ${closedState.barHeight} px hoch (höchstens 48)`);
+        if (closedState.share < 0.88) problems.push(`${id}: Spielfeld nur ${Math.round(closedState.share * 100)} % des Bildschirms (mindestens 88 %)`);
+        if (closedState.playersShown) problems.push(`${id}: Spielerliste ist ohne ☰ sichtbar`);
+        // Schublade öffnen: Spielerliste und alle Knöpfe sichtbar und antippbar, die Seite rollt nicht; zweiter Klick schließt.
+        await menu.click();
+        const opened = await page.evaluate(() => {
+          const drawerButtons = [...document.querySelectorAll('header button, footer button')].filter((b) => !b.closest('[data-bub-menu]'));
+          const blocked = drawerButtons.filter((b) => {
+            const r = b.getBoundingClientRect();
+            if (r.width === 0 || r.height === 0) return false;
+            const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+            return !hit || !b.contains(hit) || r.bottom > window.innerHeight + 1;
+          }).length;
+          return {
+            players: document.querySelector('#bub-players')?.getBoundingClientRect().height ?? 0,
+            blocked,
+            pageHeight: document.documentElement.scrollHeight,
+          };
+        });
+        if (opened.players === 0) problems.push(`${id}: Spielerliste klappt mit ☰ nicht auf`);
+        if (opened.blocked > 0) problems.push(`${id}: ${opened.blocked} Knöpfe in der Schublade verdeckt oder nicht antippbar`);
+        if (opened.pageHeight > viewport.height + 2) problems.push(`${id}: geöffnete Schublade verlängert die Seite (${opened.pageHeight} px)`);
+        await menu.click();
+        if ((await page.locator('#bub-players').boundingBox()) !== null) problems.push(`${id}: Schublade schließt mit zweitem Klick auf ☰ nicht`);
+      }
       await page.keyboard.press('Escape');
     } catch (e) {
       problems.push(`${id}: startet nicht – ${e.message.split('\n')[0]}`);

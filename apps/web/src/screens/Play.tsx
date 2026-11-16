@@ -1,6 +1,6 @@
 import { randomSeed, sanitizeCustomCardCatalog, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
 import { CardInspectProvider, PlayerChip, formatClock, sideShieldSize, tableLayout, useElementSize } from '@brett-und-blatt/ui';
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import type { AlbumSpec } from '@brett-und-blatt/ui';
 import { AfterGameBar } from '../components/AfterGameBar';
 import { Ceremony } from '../components/Ceremony';
@@ -193,18 +193,29 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
 
   const seats = session.config.seats;
   const playersRef = useRef<HTMLElement>(null);
-  /**
-   * Im Hochformat ist die Spielerleiste ein Menü (☰ in der Statuszeile): eingeklappt, bis jemand sie braucht, und sie
-   * klappt beim nächsten Tipp daneben wieder zu. So bleibt dem Spielfeld die Höhe. In der Seitenleiste stehen die
-   * Spieler weiter offen da – dort nehmen sie dem Spielfeld nichts weg.
-   */
-  const [playersOpen, setPlayersOpen] = useState(false);
-  const playersBox = useRef<HTMLDivElement>(null);
-  useDismiss(playersOpen, useCallback(() => setPlayersOpen(false), []), playersBox);
   const [rootRef, rootSize] = useElementSize<HTMLDivElement>();
   const [sideOpen, setSideOpen] = useState(false);
   const sideBox = useRef<HTMLDivElement>(null);
   useDismiss(sideOpen, useCallback(() => setSideOpen(false), []), sideBox);
+  // Schublade (#485): Beim Öffnen springt der Fokus hinein, nach dem Schließen (Esc, Aktion) zurück auf ☰.
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerWasOpen = useRef(false);
+  useEffect(() => {
+    if (sideOpen) {
+      drawerWasOpen.current = true;
+      drawerRef.current?.querySelector<HTMLElement>('button, a[href], [tabindex]:not([tabindex="-1"])')?.focus();
+    } else if (drawerWasOpen.current) {
+      drawerWasOpen.current = false;
+      const active = document.activeElement;
+      if (!active || active === document.body || sideBox.current?.contains(active)) menuButtonRef.current?.focus();
+    }
+  }, [sideOpen]);
+  /** Ein Tipp auf einen auslösenden Knopf in der Schublade schließt sie; Schalter (`data-keep-open`) lassen sie offen. */
+  const closeDrawerOnAction = (event: ReactMouseEvent) => {
+    const button = (event.target as HTMLElement).closest('button');
+    if (button && !button.closest('details, [data-keep-open]') && button.getAttribute('aria-pressed') === null) setSideOpen(false);
+  };
   const layout = tableLayout({
     width: rootSize.width,
     height: rootSize.height,
@@ -213,7 +224,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     seatsOnBoard: ui.seatsOnBoard,
     fullBleed: ui.fullBleed,
   });
-  const { crowded, landscape, collapsed: collapsedSide } = layout;
+  const { crowded, collapsed: collapsedSide } = layout;
   const around = layout.mode === 'ring';
   const collapsedTop = layout.mode === 'bar';
   const fullBleed = Boolean(ui.fullBleed) && !around && rootSize.height > 0;
@@ -291,7 +302,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       top: chip.offsetTop - (list.clientHeight - chip.offsetHeight) / 2,
       behavior: 'smooth',
     });
-  }, [turnChip, playersOpen]);
+  }, [turnChip, sideOpen]);
   const reasonText =
     result?.reason === 'time' ? t('play.reason.time') : result?.reason === 'resign' ? t('play.reason.resign') : result?.reason === 'agreement' ? t('play.reason.agreement') : null;
 
@@ -382,6 +393,25 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       </Button>
     </>
   );
+  // Siegerehrung geschlossen: Die eingeklappte Leiste zeigt die wichtigste Aktion (Revanche) selbst (#485).
+  const barAction =
+    result && ceremonyClosed ? (
+      online ? (
+        online.isHost && online.onRestart ? (
+          <Button variant="primary" className="min-h-9 flex-none px-2.5 text-sm" onClick={() => online.onRestart?.(true)}>
+            {t('play.rematch')}
+          </Button>
+        ) : null
+      ) : endAction ? (
+        <Button variant="primary" className="min-h-9 flex-none px-2.5 text-sm" onClick={() => navigate(endAction.path)}>
+          {endAction.label}
+        </Button>
+      ) : (
+        <Button variant="primary" className="min-h-9 flex-none px-2.5 text-sm" onClick={() => local?.onRestart(true)}>
+          {t('play.rematch')}
+        </Button>
+      )
+    ) : null;
   const resultActions = (
     <>
       {replayButton}
@@ -453,7 +483,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   );
 
   const inviteBox = online?.invite && (
-    <div className={`flex-none items-center justify-between gap-3 rounded-xl border border-line/70 bg-surface px-3 py-1.5 text-xs text-muted ${around ? 'flex' : 'order-2 mx-3 mb-1 hidden side:flex'}`}>
+    <div className={`flex-none items-center justify-between gap-3 rounded-xl border border-line/70 bg-surface px-3 py-1.5 text-xs text-muted ${around ? 'flex' : collapsedSide ? 'mx-3 mb-1 flex' : 'order-2 mx-3 mb-1 hidden side:flex'}`}>
       <span>
         {t('online.room')}: <strong className="font-semibold text-ink">{online.invite.code}</strong>
       </span>
@@ -559,20 +589,55 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     </>
   );
 
+  // Meldungen, die man ohne ☰ sehen muss (#485): eingeklappt über dem Spielfeld, sonst wie bisher in der Spalte.
+  const noticeOrder = around || collapsedSide ? '' : 'order-2';
+  const noticeItems = (
+    <>
+        {hintMissing && <p className={`flex-none pt-2 text-center text-sm text-muted ${noticeOrder}`}>{t('play.noHint')}</p>}
+
+        {online?.bar && !result && <div className={`flex-none ${noticeOrder}`}>{online.bar}</div>}
+        {offerHandView && (
+          <div className={`flex flex-none flex-wrap items-center gap-2 px-3 py-1 text-sm ${noticeOrder}`} role="status">
+            <span className="min-w-0 flex-1">📺 {t('play.handViewOffer')}</span>
+            <Button className="min-h-9 px-3" variant="primary" onClick={() => setHandView(true)}>
+              {t('play.handViewYes')}
+            </Button>
+            <Button className="min-h-9 px-3" variant="ghost" onClick={() => setHandViewDeclined(true)}>
+              {t('play.handViewNo')}
+            </Button>
+          </div>
+        )}
+
+        {awaySeats.length > 0 && !result && (
+          <div className={`mx-3 mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm ${noticeOrder}`}>
+            {awaySeats.map((seat) => (
+              <span key={seat} className="flex flex-1 flex-wrap items-center gap-2">
+                {online ? t('online.away') : t('play.away', { name: seats[seat]?.name ?? '' })}
+                <Button variant="primary" onClick={() => session.returnSeat(seat)}>
+                  {t('play.takeBack')}
+                </Button>
+              </span>
+            ))}
+          </div>
+        )}
+    </>
+  );
+
   // Großansicht (#418/#422) für Spielfeld, Spielerchips und Sitzring; Spiele mit eigenem Provider dürfen ihn ersetzen.
   return (
     <CardInspectProvider>
     <div
       ref={rootRef}
-      className={`flex ${online?.display ? 'h-full' : 'h-dvh'} flex-col pt-[env(safe-area-inset-top)] ${fullBleed ? 'pb-[env(safe-area-inset-bottom)]' : 'pb-[max(env(safe-area-inset-bottom),0.75rem)]'} side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around ? '' : 'mx-auto max-w-3xl side:max-w-none side:flex-row'}`}
+      className={`flex ${online?.display ? 'h-full' : 'h-dvh'} flex-col pt-[env(safe-area-inset-top)] ${fullBleed ? 'pb-[env(safe-area-inset-bottom)]' : collapsedSide ? 'pb-[max(env(safe-area-inset-bottom),0.25rem)]' : 'pb-[max(env(safe-area-inset-bottom),0.75rem)]'} side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around || collapsedTop ? '' : 'side:flex-row'}`}
     >
-      {/* Im Hochformat löst sich diese Spalte auf (contents); die Reihenfolge regelt order. */}
+      {/* Eingeklappt (Hochformat: Leiste oben, Querformat: Schiene links) liegt alles hinter ☰; die Seitenleiste ist eine Spalte. */}
       <div ref={sideBox} className={collapsedSide ? 'relative flex-none' : 'contents'}>
       {collapsedSide && (
         <div className={collapsedTop ? 'flex h-11 items-center gap-2 px-2' : 'flex h-full w-11 flex-col items-center gap-2 py-2'}>
           <button
+            ref={menuButtonRef}
             type="button"
-            className="relative flex min-h-10 min-w-10 cursor-pointer items-center justify-center rounded-lg border border-line bg-surface text-lg hover:bg-surface-2"
+            className="relative flex min-h-10 min-w-10 flex-none cursor-pointer items-center justify-center rounded-lg border border-line bg-surface text-lg hover:bg-surface-2"
             data-bub-menu
             aria-expanded={sideOpen}
             aria-label={sideOpen ? t('play.hideMenu') : t('play.showMenu')}
@@ -592,15 +657,18 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               ⏱ {turnClock}
             </span>
           )}
+          {collapsedTop && barAction}
+          {collapsedTop && online?.chat && <div className="relative flex flex-none">{online.chat(true)}</div>}
         </div>
       )}
       <div
+        ref={drawerRef}
         className={
           collapsedSide
             ? sideOpen
               ? collapsedTop
-                ? 'absolute left-0 top-11 z-40 flex max-h-[85dvh] w-[min(20rem,100%)] flex-col overflow-y-auto rounded-br-xl border border-line bg-surface shadow-xl'
-                : 'absolute left-11 top-0 z-40 flex h-full w-72 flex-col overflow-y-auto rounded-r-xl border border-line bg-surface shadow-xl'
+                ? 'absolute left-0 top-11 z-50 flex max-h-[85dvh] w-[min(20rem,100%)] flex-col overflow-y-auto rounded-br-xl border border-line bg-surface pb-1 shadow-xl'
+                : 'absolute left-11 top-0 z-50 flex h-full w-72 flex-col overflow-y-auto rounded-r-xl border border-line bg-surface shadow-xl'
               : 'hidden'
             : around
               ? 'contents'
@@ -608,7 +676,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         }
         style={layout.mode === 'side' ? { width: layout.sideWidth } : undefined}
       >
-        <header className={`flex h-14 flex-none items-center gap-2 px-3 short:h-11 tiny:h-10 ${around ? 'relative z-30' : ''}`}>
+        <header className={`flex h-14 flex-none items-center gap-2 px-3 tiny:h-10 ${around ? 'relative z-30' : ''}`}>
           {!online?.display && (
             <Button variant="ghost" className="px-3" aria-label={online ? t('online.leave') : t('play.back')} onClick={() => (online ? online.onLeave() : navigate(paths.home))}>
               ←
@@ -635,9 +703,9 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               {!result && <MoreMenu>{secondaryControls}</MoreMenu>}
             </footer>
           )}
-          {online?.chat && <div className={`flex flex-none ${around ? '' : 'ml-auto'}`}>{online.chat(around)}</div>}
+          {online?.chat && !collapsedSide && <div className={`flex flex-none ${around ? '' : 'ml-auto'}`}>{online.chat(around)}</div>}
           {!online?.display && (
-            <Button variant="ghost" className={`px-3 text-lg ${around || online?.chat ? '' : 'ml-auto'}`} aria-label={t('howto.open')} title={t('howto.open')} onClick={() => setShowHowTo(true)}>
+            <Button variant="ghost" className={`px-3 text-lg ${around || (online?.chat && !collapsedSide) ? '' : 'ml-auto'}`} aria-label={t('howto.open')} title={t('howto.open')} onClick={() => { setShowHowTo(true); setSideOpen(false); }}>
               ?
             </Button>
           )}
@@ -657,90 +725,54 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
 
         {!around && inviteBox}
 
-        {/* Hochformat: Statuszeile mit Knopf ☰, darunter klappt die Spielerliste über dem Spielfeld auf. Seitenleiste: wie bisher. */}
+        {/* Spielerliste: in Seitenleiste und Schublade immer offen untereinander (#485); die Statuszeile steht nur in der Seitenleiste, eingeklappt in der Leiste. */}
         {!around && (
-          <div ref={playersBox} className="relative flex-none side:contents">
+          <>
             <section
               ref={playersRef}
               id="bub-players"
-              className={`bub-players ${playersOpen ? 'absolute inset-x-3 top-full z-30 flex max-h-[60dvh] overflow-y-auto rounded-xl border border-line bg-surface p-2 shadow-md' : 'hidden'} flex-wrap gap-2 side:static side:z-auto side:flex side:min-h-20 side:max-h-none side:flex-initial side:flex-col side:flex-nowrap side:overflow-x-hidden side:overflow-y-auto side:rounded-none side:border-0 side:bg-transparent side:px-3 side:py-0 side:shadow-none ${crowded ? 'flat:grid flat:grid-cols-2 flat:content-start' : ''}`}
+              className={`bub-players flex min-h-20 flex-initial flex-col flex-nowrap gap-2 overflow-x-hidden overflow-y-auto px-3 ${collapsedSide ? 'py-1' : 'py-0'} ${crowded ? 'flat:grid flat:grid-cols-2 flat:content-start' : ''}`}
               data-crowded={crowded || undefined}
-              data-open={playersOpen || undefined}
               aria-label={t('play.players')}
             >
               {seats.map((_, index) => seatChip(index))}
             </section>
-            <div className="flex items-center gap-2 px-3 py-1.5 short:py-1 side:justify-center side:py-2">
-              <button
-                type="button"
-                className="bub-players-toggle flex min-h-9 flex-none cursor-pointer items-center gap-1 rounded-full border border-line bg-surface px-2.5 text-sm font-medium hover:bg-surface-2 side:hidden"
-                aria-expanded={playersOpen}
-                aria-controls="bub-players"
-                aria-label={playersOpen ? t('play.hidePlayers') : t('play.showPlayers')}
-                title={playersOpen ? t('play.hidePlayers') : t('play.showPlayers')}
-                onClick={() => setPlayersOpen(!playersOpen)}
-              >
-                <span aria-hidden="true">☰</span>
-                <span aria-hidden="true">{seats.length}</span>
-              </button>
-              <p className="min-w-0 flex-1 text-center font-medium side:flex-initial" aria-live="polite">
-                {statusContent}
-              </p>
-              {/* Eingeklappt muss die laufende Uhr trotzdem zu sehen sein. */}
-              {turnClock && (
-                <span className="flex-none rounded-full bg-surface-2 px-2 py-0.5 text-sm font-semibold tabular-nums side:hidden" title={t('play.clock')}>
-                  ⏱ {turnClock}
-                </span>
-              )}
-            </div>
-          </div>
+            {!collapsedSide && (
+              <div className="flex items-center justify-center gap-2 px-3 py-2">
+                <p className="min-w-0 text-center font-medium" aria-live="polite">
+                  {statusContent}
+                </p>
+              </div>
+            )}
+          </>
         )}
 
-        {hintMissing && <p className={`flex-none pt-2 text-center text-sm text-muted ${around ? '' : 'order-2'}`}>{t('play.noHint')}</p>}
-
-        {online?.bar && !result && <div className={`flex-none ${around ? '' : 'order-2'}`}>{online.bar}</div>}
-        {offerHandView && (
-          <div className={`flex flex-none flex-wrap items-center gap-2 px-3 py-1 text-sm ${around ? '' : 'order-2'}`} role="status">
-            <span className="min-w-0 flex-1">📺 {t('play.handViewOffer')}</span>
-            <Button className="min-h-9 px-3" variant="primary" onClick={() => setHandView(true)}>
-              {t('play.handViewYes')}
-            </Button>
-            <Button className="min-h-9 px-3" variant="ghost" onClick={() => setHandViewDeclined(true)}>
-              {t('play.handViewNo')}
-            </Button>
-          </div>
-        )}
-
-        {awaySeats.length > 0 && !result && (
-          <div className={`mx-3 mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface p-3 text-sm ${around ? '' : 'order-2'}`}>
-            {awaySeats.map((seat) => (
-              <span key={seat} className="flex flex-1 flex-wrap items-center gap-2">
-                {online ? t('online.away') : t('play.away', { name: seats[seat]?.name ?? '' })}
-                <Button variant="primary" onClick={() => session.returnSeat(seat)}>
-                  {t('play.takeBack')}
-                </Button>
-              </span>
-            ))}
-          </div>
-        )}
-
+        {!collapsedSide && noticeItems}
         {!around && (
           <footer
             className={
               collapsedSide
-                ? 'order-2 flex flex-none flex-wrap justify-center gap-1.5 px-3 py-2 [&>button]:min-h-9 [&>button]:px-2.5 [&>button]:text-sm [&>button]:whitespace-nowrap'
-                : 'order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 short:flex-nowrap short:justify-center-safe short:overflow-x-auto short:gap-1 short:pt-1 short:pb-0 short:[&>button]:min-h-9 short:[&>button]:flex-none short:[&>button]:px-2 short:[&>button]:text-sm short:[&>button]:whitespace-nowrap tiny:gap-1 tiny:pt-1 tiny:pb-0 tiny:[&>button]:min-h-8 tiny:[&>button]:px-2 tiny:[&>button]:text-xs'
+                ? 'flex flex-none flex-col gap-2 px-3 py-2 [&>*]:w-full [&>button]:min-h-10'
+                : 'order-2 flex flex-none side:mt-auto flex-wrap justify-center gap-2 px-3 pt-3 pb-1 [&>button]:px-3 tiny:gap-1 tiny:pt-1 tiny:pb-0 tiny:[&>button]:min-h-8 tiny:[&>button]:px-2 tiny:[&>button]:text-xs'
             }
+            onClick={collapsedSide ? closeDrawerOnAction : undefined}
           >
             {primaryControls}
             {!result && secondaryControls}
           </footer>
         )}
-        {around ? online?.extra && <div className="order-2 flex-none">{online.extra}</div> : online?.extra}
+        {!collapsedSide && (around ? online?.extra && <div className="order-2 flex-none">{online.extra}</div> : online?.extra)}
       </div>
       </div>
 
-      <main className={`bub-table relative order-1 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain ${fullBleed ? 'p-0' : 'px-3 side:py-2 side:px-4'}`} data-category={categoryOf(info.id)}>
+      <div className="order-1 flex min-h-0 min-w-0 flex-1 flex-col">
+      {collapsedSide && (
+        <div className="flex max-h-[40dvh] flex-none flex-col overflow-y-auto empty:hidden">
+          {noticeItems}
+          {online?.extra}
+        </div>
+      )}
+      <main className={`bub-table relative min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain ${fullBleed ? 'p-0' : 'px-3 side:py-2 side:px-4'}`} data-category={categoryOf(info.id)}>
         {yourMove && <div key={`${session.version}`} className="bub-turn-frame" aria-hidden="true" />}
         <ui.Board
           view={session.view(viewer)}
@@ -839,6 +871,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           </button>
         )}
       </main>
+      </div>
     </div>
     </CardInspectProvider>
   );
