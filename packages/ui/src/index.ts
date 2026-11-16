@@ -6,6 +6,8 @@ export { avatarImageOf, renderAvatar, setAvatarImageResolver, setAvatarRenderer 
 export { TintFilter, TintFilters, tintFilter, tintId } from './pieces/tint';
 export { PIECE_SET_DEFAULTS, PIECE_SET_IDS, PIECE_SET_LABELS, chosenPieceSet, reloadPieceSets, resolvePieceSet, setPieceImageResolver, setPieceSet, usePieceSet, type PieceSetId } from './pieces/pieceSets';
 export { ClockRing, PlayerChip, formatClock, type PlayerChipProps } from './PlayerChip';
+export { clockTone, type ClockTone } from './clockTone';
+export { PlayerShield, SHIELD_MAX_PORTRAIT, shieldWidth, type PlayerShieldProps } from './PlayerShield';
 export { NetBoard, type NetBoardProps } from './NetBoard';
 export { useElementSize } from './useElementSize';
 export { SEAT_RING_POKER_MIN_WIDTH, SEAT_RING_WIDE_MAX_SEATS, SeatRing, seatRingFits, seatRingPosition, type SeatRingFitOptions, type SeatRingProps } from './SeatRing';

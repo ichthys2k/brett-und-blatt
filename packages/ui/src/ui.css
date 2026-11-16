@@ -170,8 +170,57 @@ button.bub-cell:focus-visible {
   height: 100%;
 }
 
+/* Großer Platz (#491): Porträt im Wappenschild. Gemalte Bilder nur im Taverne-Aussehen (look.css), sonst das Emoji. */
+.bub-chip[data-size='card'] {
+  border-radius: 1rem;
+  padding: 0.5rem 0.9rem 0.5rem 0.5rem;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.bub-chip[data-size='card'] .bub-chip-name {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.bub-shield {
+  position: relative;
+  flex: none;
+  display: block;
+}
+
+.bub-shield-badge {
+  position: absolute;
+  right: 0;
+  bottom: 14%;
+  display: grid;
+  place-items: center;
+  padding: 12%;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #e9e4d8;
+  border: 2px solid var(--color-line);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+}
+
+.bub-shield-badge > * {
+  width: 100%;
+  height: 100%;
+}
+
+.bub-crest-portrait {
+  display: none;
+}
+
+.bub-crest-ring {
+  transition: stroke-dashoffset 0.25s linear;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bub-chip,
+  .bub-crest-ring,
   .bub-ring-bar {
     transition: none;
   }
