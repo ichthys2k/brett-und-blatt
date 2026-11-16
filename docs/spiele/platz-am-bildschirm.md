@@ -183,6 +183,27 @@ Gemessen auf dem Stand vor Umsetzung von #484 ff., Voreinstellungen der Partie, 
   - Spielfeldhöhe (`main.bub-table`): von 796 px auf 800 px gewachsen.
   - Spielfeld-Anteil: von 94 % auf 95 % gestiegen.
 
+### H4a – Brett- und Legespiele nutzen die gewonnene Fläche am Handy (#488, umgesetzt 16.11.2026)
+
+Alle 18 Brett- und Legespiele am Handy (390×844, 360×640, 844×390, 667×375) geprüft und optimiert; Desktop und Tablet unverändert (pro Spiel ein Commit):
+
+- **Überlauf vollständig beseitigt:**
+  - `grafschaft`: Zuvor massiver Überlauf (518 px hoch, 595 px quer). Im Hochformat füllt das Hex-Spielfeld nun mit `flex: 1 1 0` die gesamte Resthöhe bei kompaktem Header, Jahrmarkt und Aufträgen. Im Querformat (`max-height: 599px`) zweispaltig mit Brett links und Leisten rechts. Überlauf: 0 px!
+  - `gomoku`: Unbeschnittene Subpixel-Linien des 15×15-Rasters beseitigt durch `overflow: clip` auf `.gomoku-board`. Überlauf: 0 px!
+  - `mill`: Vertikalen Überlauf im Querformat (11–13 px) behoben durch zweispaltiges Layout (`max-height: 599px`, `--bub-ratio: 1.35 !important`). Überlauf: 0 px!
+  - `go`: Vertikalen Überlauf bei 667×375 (49 px) behoben; veraltete Abfragen (`min-width: 820px`, Abzug `20.5rem`) durch zweispaltiges Layout (`max-height: 599px`, `--bub-ratio: 1.35 !important`) ersetzt. Überlauf: 0 px!
+  - `chess` & `four-player-chess`: Subpixel-Überlauf im Hochformat (h:1–7) behoben durch `overflow-x: clip;` auf `.ch-wrap` und `.fc-wrap`.
+- **Fläche im Querformat optimal genutzt (Bretter füllen 100 % der Höhe):**
+  - `chess`: Brett wächst bei 844×390 von 312×312 auf 390×390 px (100 % H), bei 667×375 auf 375×375 px.
+  - `checkers`: Brett wächst bei 844×390 von 305×305 auf 348×383 px, bei 667×375 auf 327×362 px.
+  - `mill`: Brett wächst auf 390×390 px bzw. 375×375 px (volle Höhe).
+  - `go`: Brett wächst bei 360×640 von 312 auf 352 px (volle Breite) und im Querformat auf 390×390 / 375×375 px (volle Höhe).
+  - `chinese-checkers`: Sternbrett wächst im Querformat von 342×342 auf 390×390 px bzw. von 327×327 auf 375×375 px (Bedienelemente seitlich).
+  - `turnip-patch`: Vertikales Acker-Brett wächst im Querformat von 211×302 auf 272×390 px bzw. 262×375 px (+29 % Höhe, Stapel/Karten seitlich).
+  - `color-and-shape`: Tischfläche wächst im Querformat von 267×267 auf 390×390 px bzw. 375×375 px (+46 % Fläche, Bänkchen und Aktionen seitlich).
+- **Passte schon (bereits optimal ohne Überlauf):**
+  - `reversi`, `four-in-a-row`, `tic-tac-toe`, `ultimate-tic-tac-toe`, `battleship`, `ludo`, `marketplace`, `scrabble`.
+
 ### D6 – Bretter und Spielflächen am Desktop (#496, umgesetzt 16.11.2026)
 
 Alle 27 betroffenen Spiele mit Seitenleiste am Desktop angepasst (Handy/kleines Tablet unter `900×700 px`, `packages/ui`, Spielregeln, Bots und Sitzring unverändert; ein Commit je Spiel):

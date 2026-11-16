@@ -167,3 +167,41 @@
     max-width: 34rem;
   }
 }
+
+@media (orientation: landscape) and (max-height: 599px) {
+  :root {
+    --bub-ratio: 1.35 !important;
+  }
+
+  .ff-layout {
+    display: grid;
+    grid-template-columns: 1fr minmax(160px, 220px);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "area rack"
+      "area bar";
+    gap: 0.5rem;
+    height: 100%;
+  }
+
+  .ff-area {
+    grid-area: area;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .ff-rack {
+    grid-area: rack;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .ff-bar {
+    grid-area: bar;
+    flex-direction: column;
+    align-items: stretch;
+    align-content: flex-start;
+    gap: 0.35rem;
+  }
+}

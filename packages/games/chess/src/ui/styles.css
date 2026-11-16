@@ -6,6 +6,7 @@
   width: 100%;
   height: 100%;
   container-type: inline-size;
+  overflow-x: clip;
 }
 
 .ch-board {
@@ -634,6 +635,63 @@ button.ch-log-cell:hover {
 .ch-taken .ch-piece-img {
   display: inline-block;
   vertical-align: -0.2em;
+}
+
+@media (orientation: landscape) and (max-height: 599px) {
+  .ch-fit {
+    --bub-ratio: 1.35 !important;
+  }
+
+  .ch-wrap {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr auto;
+    column-gap: 0.6rem;
+    align-items: center;
+  }
+
+  .ch-board-area {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    height: 100%;
+    aspect-ratio: 1;
+    justify-self: center;
+  }
+
+  .ch-wrap > .ch-strip,
+  .ch-wrap > .ch-review {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 7rem;
+    max-width: 11rem;
+    font-size: 1rem;
+  }
+
+  .ch-wrap > .bub-draw-bar {
+    grid-column: 2;
+    grid-row: 2;
+    flex-direction: column;
+    align-items: stretch;
+    justify-self: stretch;
+  }
+
+  .ch-wrap > .ch-bottom {
+    grid-column: 2;
+    grid-row: 3;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 7rem;
+    max-width: 11rem;
+    gap: 0.3rem;
+  }
+
+  .ch-bottom .ch-strip {
+    font-size: 1rem;
+  }
+
+  .ch-moves-button {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
+  }
 }
 
 @media (min-width: 1180px) and (min-height: 700px) {
