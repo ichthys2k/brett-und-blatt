@@ -640,7 +640,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     <CardInspectProvider>
     <div
       ref={rootRef}
-      className={`flex ${online?.display ? 'h-full' : 'h-dvh'} flex-col pt-[env(safe-area-inset-top)] ${fullBleed ? 'pb-[env(safe-area-inset-bottom)]' : collapsedSide ? 'pb-[max(env(safe-area-inset-bottom),0.25rem)]' : 'pb-[max(env(safe-area-inset-bottom),0.75rem)]'} side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around || collapsedTop ? '' : 'side:flex-row'}`}
+      className={`flex ${online?.display ? 'h-full' : 'h-dvh'} flex-col pt-[env(safe-area-inset-top)] ${fullBleed || collapsedSide ? 'pb-[env(safe-area-inset-bottom)]' : 'pb-[max(env(safe-area-inset-bottom),0.75rem)]'} side:pl-[env(safe-area-inset-left)] side:pr-[env(safe-area-inset-right)] ${around || collapsedTop ? '' : 'side:flex-row'}`}
     >
       {/* Eingeklappt (Hochformat: Leiste oben, Querformat: Schiene links) liegt alles hinter ☰; die Seitenleiste ist eine Spalte. */}
       <div ref={sideBox} className={collapsedSide ? 'relative flex-none' : 'contents'}>
@@ -798,7 +798,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           {online?.extra}
         </div>
       )}
-      <main className={`bub-table relative min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain ${fullBleed ? 'p-0' : 'px-3 side:py-2 side:px-4'}`} data-category={categoryOf(info.id)}>
+      <main
+        className={`bub-table relative min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain ${fullBleed ? 'p-0' : collapsedSide ? 'px-1 py-0' : 'px-3 side:py-2 side:px-4'}`}
+        data-category={categoryOf(info.id)}
+        data-collapsed={collapsedSide || undefined}
+      >
         {yourMove && <div key={`${session.version}`} className="bub-turn-frame" aria-hidden="true" />}
         <ui.Board
           view={session.view(viewer)}

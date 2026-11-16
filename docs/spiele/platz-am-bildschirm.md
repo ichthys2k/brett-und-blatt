@@ -171,6 +171,18 @@ Gemessen auf dem Stand vor Umsetzung von #484 ff., Voreinstellungen der Partie, 
 - Schiene 44 px: ☰, wer ist dran (Platzzeichen mit Uhr-Ring), Restzeit, unten 💬. Status wird per `aria-live` vorgelesen. Meldungen stehen oben im Spielfeld, die Schublade rollt, die Kopfzeile bleibt oben.
 - Messung 844 × 390: Durchschnitt 64 % → 94 %, kein Spiel unter 88 %; 1024 × 768 und 1440 × 900 unverändert.
 
+### H3 – Handy: Spielfeld ohne Innenrand, Rahmen schmaler (#487, umgesetzt 16.11.2026)
+
+- `apps/web/src/screens/Play.tsx`:
+  - `main.bub-table` erhält bei eingeklappter Leiste/Schiene (`collapsedSide`, Zustände `bar` und `rail`) `px-1 py-0` (statt `px-3 side:py-2 side:px-4`) sowie Attribut `data-collapsed`.
+  - Außenabstand unten `pb` nutzt bei `fullBleed || collapsedSide` nun `pb-[env(safe-area-inset-bottom)]` statt `pb-[max(...,0.75rem)]`.
+- `apps/web/src/styles.css`:
+  - `.bub-table[data-collapsed] .bub-turn-frame`: `inset: 0`, `border-radius: 8px`, `box-shadow: inset 0 0 0 2px var(--color-accent), inset 0 0 16px color-mix(in srgb, var(--color-accent) 40%, transparent)` mit Animation `@keyframes bub-turn-frame-collapsed` (Strichbreite bleibt fest bei höchstens 2 px).
+- Messung bei 390 × 844:
+  - Quadratische Bretter (`chess`, `checkers`, `go`, `mill`, `reversi`, `tic-tac-toe`): von 366 × 366 px auf 382 × 382 px gewachsen (+16 px, Vorgabe ≥ 380 px erfüllt).
+  - Spielfeldhöhe (`main.bub-table`): von 796 px auf 800 px gewachsen.
+  - Spielfeld-Anteil: von 94 % auf 95 % gestiegen.
+
 ### D6 – Bretter und Spielflächen am Desktop (#496, umgesetzt 16.11.2026)
 
 Alle 27 betroffenen Spiele mit Seitenleiste am Desktop angepasst (Handy/kleines Tablet unter `900×700 px`, `packages/ui`, Spielregeln, Bots und Sitzring unverändert; ein Commit je Spiel):
