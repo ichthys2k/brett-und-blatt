@@ -312,7 +312,8 @@
 
 @media (min-width: 1180px) and (min-height: 700px) {
   .dk-fit {
-    --bub-ratio: 1.24;
+    /* überschreibt die Inline-Vorgabe von FitBox für das Hochformat-Verhältnis */
+    --bub-ratio: 1.24 !important;
   }
 
   .dk-wrap {
