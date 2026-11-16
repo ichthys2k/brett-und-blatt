@@ -32,3 +32,5 @@ Nachträglich angelegt (28.10.2026) aus dem vorhandenen Code.
 
 - ✅ Name „Kniffel“ ist eine Marke – umbenannt in **Würfelblock** (Etappe 4 des Korrekturplans); die Kennung `kniffel` bleibt.
 - ✅ Startseite: Rubrik *Familien-, Lege- & Gesellschaftsspiele*; Playlist „Spielabend“ (29.10.2026).
+- ✅ Handy und Bildschirmplatz (#489, 16.11.2026): Im Querformat zweispaltig (Würfel links, Block rechts), im kompakten Hochformat kompaktere Zeilen; 0 px Überlauf.
+
