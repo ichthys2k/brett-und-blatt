@@ -143,7 +143,7 @@ async function measureGameSize(browser, id, size, customSeats = null, takeScreen
         const main = r(mainEl);
         const footer = document.querySelector('footer');
         const chips = [...document.querySelectorAll('.bub-chip')].map(r).filter((x) => x && x.width > 0);
-        const portraits = [...document.querySelectorAll('.bub-chip img, .bub-seat-ring img')].map(r).filter((x) => x && x.width > 0);
+        const portraits = [...document.querySelectorAll('.bub-chip img, .bub-chip .bub-crest-portrait, .bub-seat-ring img')].map(r).filter((x) => x && x.width > 0);
         let board = { width: 0, height: 0 };
         for (const el of mainEl.querySelectorAll(':scope > *:not(.bub-turn-frame)')) {
           const b = el.getBoundingClientRect();

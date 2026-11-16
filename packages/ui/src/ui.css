@@ -170,12 +170,21 @@ button.bub-cell:focus-visible {
   height: 100%;
 }
 
-/* Großer Platz (#491): Porträt im Wappenschild. Gemalte Bilder nur im Taverne-Aussehen (look.css), sonst das Emoji. */
+/* Großer Platz (#491, #493): Porträt im Wappenschild. Gemalte Bilder nur im Taverne-Aussehen (look.css), sonst das Emoji. */
 .bub-chip[data-size='card'] {
   border-radius: 1rem;
   padding: 0.5rem 0.9rem 0.5rem 0.5rem;
   gap: 0.8rem;
   align-items: center;
+}
+
+.bub-players .bub-chip[data-size='card'] {
+  flex: none;
+  width: 100%;
+}
+
+.bub-players .bub-chip[data-size='card'] .bub-chip-text {
+  flex: 1;
 }
 
 .bub-chip[data-size='card'] .bub-chip-name {

@@ -128,6 +128,20 @@ Gemessen auf dem Stand vor Umsetzung von #484 ff., Voreinstellungen der Partie, 
 - Lokal gilt das eigene Profil nur bei genau einem menschlichen Spieler am Gerät; bei mehreren Plätzen greifen die Standardwerte je Platz.
 - `OnlineTableProps` transportiert `crests` (`Display.tsx`, `Room.tsx` über Hilfsfunktion `seatMember`), `seatChip` und Siegerehrung (`Ceremony`) nutzen `seatIdentity`.
 
+### D3 – Leiste links am Desktop (#493, umgesetzt 16.11.2026)
+
+- `packages/ui/src/tableLayout.ts` (`sideBarWidth`, `sideShieldSize`, `tableLayout` mit `mode`, `collapsed`, `landscape`, `crowded`, `sideWidth`; Tests in `packages/ui/test/table-layout.test.ts`):
+  - Leistenbreite im Zustand `side`: `< 1100 px` → `288 px` (`320 px` ab 3 Plätzen), `≥ 1100 px` → `320 px`, `≥ 1400 px` → `352 px`.
+  - Schildbreite `sideShieldSize(seats, sideHeight)` aus verfügbarer Höhe (`sideHeight − 56 − 60 − 170`) geteilt durch Platzzahl: `≥ 170` → `96 px`, `≥ 124` → `72 px`, `≥ 88` → `52 px`, sonst `0` (kompakter Chip).
+- `PlayerShield.tsx`: Containerhöhe bei `width < CREST_ORNAMENT_MIN_SIZE` (`56 px`) auf `(width * 106) / 80` korrigiert.
+- `packages/ui/src/ui.css`: `.bub-players .bub-chip[data-size='card']` über volle Breite, `.bub-chip-text` füllt den Platz rechts neben dem Schild.
+- `apps/web/src/screens/Play.tsx`: nutzt `tableLayout` und `sideShieldSize`, setzt `size={sideShield > 0 ? 'card' : 'compact'}` und `shieldSize={sideShield}` in `seatChip` sowie `style={{ width: layout.sideWidth }}` im Zustand `side`.
+- `scripts/platz-messen.mjs`: zählt nun auch `.bub-chip .bub-crest-portrait` (SVG-`<image>`) zur Porträtmessung.
+- Messwerte bei `1440 × 900` (Aussehen „Taverne“):
+  - `chess`, `checkers`, `go`, `reversi`, `ludo`, `bingo` (2 Plätze): Chip `328 × 164 px`, Porträt-Medaillon `61 px` (vorher `22 px`), Brett-Höhe unverändert `872 px`, Spielfeld-Anteil `75 %` (vorher `79 %`, `-4` Prozentpunkte).
+  - `four-player-chess` (4 Plätze): Chip `328 × 128 px`, Porträt-Medaillon `46 px`, Brett-Höhe unverändert `872 px`, Anteil `75 %` (vorher `77 %`).
+  - `wolves-sheep` (8 Plätze): kompakte Chips `328 × 61 px`, Porträt `22 px`, Anteil `75 %` (vorher `77 %`).
+
 ### D5 – Lobby: Mitspieler als Porträt im Wappenschild (#495, umgesetzt 16.11.2026)
 
 - `MemberRow` (`apps/web/src/screens/Room.tsx`): links `PlayerShield` (36 px am Handy, 56 px ab `wide:` bzw. 900 px Breite) mit `seatIdentity` (`avatar` + `crest`); ab `wide:` Name größer und Zusätze (👑, 🙋, 🔒, offline) als Marken darunter, Knöpfe rechts.

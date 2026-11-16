@@ -11,6 +11,7 @@ export { PlayerShield, SHIELD_MAX_PORTRAIT, shieldWidth, type PlayerShieldProps 
 export { NetBoard, type NetBoardProps } from './NetBoard';
 export { useElementSize } from './useElementSize';
 export { SEAT_RING_POKER_MIN_WIDTH, SEAT_RING_WIDE_MAX_SEATS, SeatRing, seatRingFits, seatRingPosition, type SeatRingFitOptions, type SeatRingProps } from './SeatRing';
+export { TABLE_BAR_HEIGHT, sideBarWidth, sideShieldSize, tableLayout, type TableLayout, type TableLayoutInput, type TableMode } from './tableLayout';
 export { useCallDeadline } from './useCallDeadline';
 export { cardSuitColor, PlayingCard, SuitShape, type DeckStyle, type PlayingCardProps } from './cards/PlayingCard';
 export {
