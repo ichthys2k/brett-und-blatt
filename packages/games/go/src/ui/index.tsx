@@ -110,7 +110,7 @@ function Board({ view, legalMoves, onMove, hint, activeSeat, seatNames }: BoardP
   const lastPass = view.lastMove === -1 && view.phase === 'play';
 
   return (
-    <FitBox ratio={0.86}>
+    <FitBox ratio={0.86} className="go-fit">
       <div className="go-layout">
         <div className="go-wrap" ref={sizeRef}>
           <div className={`go-scroll ${zoomed ? 'go-zoomed' : ''}`} ref={scrollRef}>
