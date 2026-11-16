@@ -185,7 +185,7 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
 
   // 8 : 10 – Brett, Leisten darüber und darunter und die Remis-Zeile.
   return (
-    <FitBox ratio={8 / 10}>
+    <FitBox ratio={8 / 10} className="dk-fit">
       <div className="dk-wrap">
         <CaptureStrip view={view} forWhite={flipped} lead={flipped ? whiteLead : blackLead} />
 

@@ -309,3 +309,58 @@
 [data-pieces-checkers] .dk-piece .dk-crown {
   display: none;
 }
+
+@media (min-width: 1180px) and (min-height: 700px) {
+  .dk-fit {
+    --bub-ratio: 1.24;
+  }
+
+  .dk-wrap {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr auto;
+    column-gap: 0.9rem;
+    align-items: center;
+  }
+
+  .dk-wrap > .dk-board {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    height: 100%;
+    aspect-ratio: 1;
+    justify-self: center;
+  }
+
+  .dk-wrap > .dk-strip {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 11rem;
+    max-width: 14rem;
+    font-size: 1.25rem;
+  }
+
+  .dk-wrap > .bub-draw-bar {
+    grid-column: 2;
+    grid-row: 2;
+    flex-direction: column;
+    align-items: stretch;
+    justify-self: stretch;
+  }
+
+  .dk-wrap > .dk-bottom {
+    grid-column: 2;
+    grid-row: 3;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 11rem;
+    max-width: 14rem;
+  }
+
+  .dk-bottom .dk-strip {
+    font-size: 1.25rem;
+  }
+
+  .dk-moves-button {
+    font-size: 0.95rem;
+    padding: 0.3rem 0.75rem;
+  }
+}
