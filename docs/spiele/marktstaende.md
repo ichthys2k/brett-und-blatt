@@ -35,3 +35,5 @@ Leicht wählt zufällig. Mittel wählt die Karte, die sofort am meisten bringt, 
 - Eigene Klänge (Auswahl durch Cornelius); bisher vorhandene Kartenklänge.
 - `SeatRing` (W-020) noch nicht genutzt.
 - Probepartien mit Menschen: Spieldauer und Wirkung der häufigen Minuspunkte.
+- ✅ Handy und Bildschirmplatz (#489, 16.11.2026): Im Querformat 2×2-Raster der Marktstände; 0 px Überlauf auf allen Handygrößen.
+

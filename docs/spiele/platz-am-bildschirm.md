@@ -204,6 +204,30 @@ Alle 18 Brett- und Legespiele am Handy (390×844, 360×640, 844×390, 667×375) 
 - **Passte schon (bereits optimal ohne Überlauf):**
   - `reversi`, `four-in-a-row`, `tic-tac-toe`, `ultimate-tic-tac-toe`, `battleship`, `ludo`, `marketplace`, `scrabble`.
 
+### H4b – Karten- und Würfelspiele nutzen die gewonnene Fläche am Handy (#489, umgesetzt 16.11.2026)
+
+Alle 20 Karten- und Würfelspiele am Handy (390×844, 360×640, 844×390, 667×375) sowie mit maximaler Platzzahl (bis zu 8 bzw. 10 Plätze) geprüft und optimiert; Desktop und Tablet unverändert (pro Spiel ein Commit):
+
+- **Überlauf vollständig beseitigt:**
+  - `kniffel`: Zuvor Überlauf im kompakten Hochformat (128 px bei 360×640) und massiv im Querformat (337 px bei 844×390, 352 px bei 667×375). Im Querformat (`max-height: 599px`) zweispaltig mit `--bub-ratio: 1.35 !important`, Würfelbereich links und Wertungsblock rechts. Im kompakten Hochformat (`max-width: 599px` und `max-height: 700px`) kompakte Tabellenzeilen (`padding: 0.12rem 0.3rem`, Schrift `0.74rem`). Überlauf: 0 px auf allen 4 Größen!
+  - `market-stalls`: Zuvor vertikaler Überlauf im Querformat (99 px bei 844×390, 110 px bei 667×375), da die 4 Marktstände untereinander gestapelt waren. Im Querformat (`max-height: 599px`) werden die Stände im 2×2-Raster angeordnet mit `--bub-ratio: 1.35 !important;`. Überlauf: 0 px auf allen 4 Größen!
+  - `binokel`: Zuvor vertikaler Überlauf im Querformat bei 844×390 (18 px), da der leere Stichtisch unter dem Reiz-Dialog gerendert wurde. Außerhalb des Sitzrings wird der Stichtisch nun erst ab der Spielphase gerendert. Überlauf: 0 px auf allen 4 Größen!
+- **Passte schon (bereits optimal ohne Überlauf, 0 px auf allen 4 Handygrößen):**
+  - `skat`, `schafkopf`, `doppelkopf`: `TrickTable` skaliert Karten dynamisch (55–60 px im Hochformat, 59 px im Querformat), 0 px Überlauf.
+  - `mau-mau`, `uno`: Handkarten und Ablagestapel füllen 95 % des Bildschirms, 0 px Überlauf (bei Uno auch mit 10 Spielern).
+  - `elevens`: Hand- und Ablagereihen passen mit 0 px Überlauf (Kartenbreite 60–65 px hoch, 49–51 px quer).
+  - `president`: Handkarten 38–43 px, Tischmitte und Hand optimal verteilt, 0 px Überlauf (auch bei 8 Spielern).
+  - `black-peter`: Handkarten und Ziehfächer 64–90 px, 0 px Überlauf.
+  - `quartett`: Große Karten 314–474 px, 0 px Überlauf.
+  - `dominoes`: Kette und Steine auf der Hand passen ohne Überlauf (0 px).
+  - `maexle`: Becher, Würfel und Ansage-Leiter passen vollständig auf den Bildschirm, 0 px Überlauf (auch bei 10 Spielern).
+  - `low-flight`: Handkarten und Ablage mit 0 px Überlauf (auch bei 8 Spielern).
+  - `solitaire`: 7 Spalten und 4 Ablagestapel passen sauber (Karten 45–67 px), 0 px Überlauf.
+  - `speed`: Spieltisch und Handkarten (40–46 px) ohne Überlauf (0 px).
+  - `ligretto`: 3 Vorratsstapel, Hand und Mitte passen ohne Überlauf (0 px, auch bei 8 Spielern).
+  - `poker`: Eigene mobile Ansichten nutzen 95 % des Bildschirms ohne Überlauf (auch bei 10 Spielern).
+  - `pairs`: Aufgedeckte Kärtchen (75–83 px) füllen das Raster ohne Überlauf (0 px).
+
 ### D6 – Bretter und Spielflächen am Desktop (#496, umgesetzt 16.11.2026)
 
 Alle 27 betroffenen Spiele mit Seitenleiste am Desktop angepasst (Handy/kleines Tablet unter `900×700 px`, `packages/ui`, Spielregeln, Bots und Sitzring unverändert; ein Commit je Spiel):
