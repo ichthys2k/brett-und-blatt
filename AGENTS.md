@@ -47,6 +47,7 @@ node apps/server/scripts/smoke.mjs                    # Rauchtest gegen den loka
 node apps/cli/test/partie.mjs                         # Text-Client spielt gegen den lokalen Server (#336)
 corepack pnpm rauchtest                               # nach dem Build: jedes Spiel im Browser starten
 PRUEFSTAND=1 corepack pnpm pruefstand                 # gründlicher Prüfstand (PRUEFSTAND_SPIELE=<id> für einzelne)
+node scripts/platz-messen.mjs                         # misst Spielfeld- und Porträtgrößen in vier Bildschirmgrößen (#483)
 ```
 
 Karten, Plättchen oder Porträts groß zeigen nur über den Baustein `CardInspect` (`packages/ui`, #418; Einzelheiten in `CLAUDE.md` unter „Technik in Kürze“), keine eigenen Zoom-Fenster.
