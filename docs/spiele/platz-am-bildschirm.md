@@ -228,6 +228,23 @@ Alle 20 Karten- und Würfelspiele am Handy (390×844, 360×640, 844×390, 667×3
   - `poker`: Eigene mobile Ansichten nutzen 95 % des Bildschirms ohne Überlauf (auch bei 10 Spielern).
   - `pairs`: Aufgedeckte Kärtchen (75–83 px) füllen das Raster ohne Überlauf (0 px).
 
+### H4c – Klassen-, Quiz-, Wort- und Rechenspiele nutzen die gewonnene Fläche am Handy (#490, umgesetzt 16.11.2026)
+
+Alle 17 Klassen-, Quiz-, Wort- und Rechenspiele am Handy (390×844, 360×640, 844×390, 667×375) sowie bei maximaler Platzzahl (bis zu 10 Plätze bei `who-am-i`, 19 Plätze bei `wolves-sheep`, bis zu 30 Plätze bei `bingo`, `estimate`, `majority`, `timeline`, `category-sprint`) geprüft und optimiert; Desktop und Tablet unverändert (pro Spiel ein Commit):
+
+- **Überlauf vollständig beseitigt & Querformat optimiert:**
+  - `word-salad`: Zuvor vertikaler Überlauf von 8 px im kompakten Querformat (667×375). Im kompakten Querformat (`max-height: 599px`) zweispaltiges Layout mit `--bub-ratio: 1.35 !important;`, Salatschüssel mit Buchstaben links und Gefunden-Kasten rechts; im kompakten Hochformat (`max-height: 720px`) kompaktere Abstände des Gefunden-Kastens. Überlauf: 0 px auf allen 4 Größen (667×375 nutzt 353 px Höhe, 94 % von `main`).
+- **Höhe im mobilen Hochformat voll ausgenutzt (mindestens 85 % / 100 % der Viewport-Höhe von `main` bei 390×844):**
+  - `bible-quiz`: Im Hochformat (390×844) füllt die Emoji-Karte mit `height: 100%` auf `.bq-layout` und `flex: 1 1 0` auf `.bq-emoji-card` 800 px (100 % der Höhe von `main`, zuvor nur 501 px / 63 % < 85 %); im Querformat (`max-height: 720px`) kompakt mit `height: auto; flex: none;`. Überlauf: 0 px.
+  - `factor-grid`: Im Hochformat (390×844) füllt das 6×6-Zahlengitter mit `height: 100%` auf `.fg-layout` und `flex: 1 1 0` auf `.fg-grid` sowie `height: 100%` auf den Zellen 800 px (100 % der Höhe von `main`, zuvor nur 561 px / 70 % < 85 %); im Querformat kompakt mit `height: auto; flex: none;`. Überlauf: 0 px.
+  - `target-number`: Im Hochformat (390×844) füllt das Kartenfeld mit `height: 100%; justify-content: space-between;` auf `.tn-layout` und `flex: 1 1 auto; height: 100%;` auf den Ziffernkarten 800 px (100 % der Höhe von `main`, zuvor 613 px / 77 % < 85 %); im Querformat kompakt mit `height: auto; flex: none;`. Überlauf: 0 px.
+  - `number-wall`: Im Hochformat (390×844) füllt die Zahlenpyramide mit `height: 100%; justify-content: space-between;` auf `.nw-layout` und `flex: 1 1 auto; justify-content: center;` auf `.nw-pyramid` 800 px (100 % der Höhe von `main`, zuvor 610 px / 76 % < 85 %); im Querformat kompakt mit `height: auto; flex: none;`. Überlauf: 0 px.
+- **Passte schon (bereits optimal ohne Überlauf, 0 px auf allen 4 Handygrößen und 100 % Höhe):**
+  - `bingo`, `category-sprint`, `describe-duel`, `duck-rally`, `estimate`, `hangman`, `majority`, `symbol-match`, `timeline`, `who-am-i`, `wolves-sheep`, `color-sorter`.
+- **Virtuelle Tastatur & hohe Spielerzahlen:**
+  - Tastatur: Text-Eingaben (`estimate`, `category-sprint`, `word-salad`, `who-am-i`, `hangman`) scrollen innerhalb des Spielfelds bzw. verbergen während der Eingabe nicht benötigte Ranglisten (`@media (max-height: 720px)` in `.bub-round`), sodass Eingabefelder und Knöpfe beim Öffnen der Tastatur sichtbar und bedienbar bleiben.
+  - Hohe Spielerzahlen: `who-am-i` (10 Plätze), `wolves-sheep` (19 Plätze) sowie Klassenspiele (`bingo`, `estimate`, `majority`, `timeline`, `category-sprint` mit bis zu 30 Plätzen) bleiben dank flexibler Raster und kompakter Ranglisten (`RoundStandings` zeigt max. Top 3 + eigener Platz) bei 0 px Überlauf über alle 4 mobilen Viewports.
+
 ### D6 – Bretter und Spielflächen am Desktop (#496, umgesetzt 16.11.2026)
 
 Alle 27 betroffenen Spiele mit Seitenleiste am Desktop angepasst (Handy/kleines Tablet unter `900×700 px`, `packages/ui`, Spielregeln, Bots und Sitzring unverändert; ein Commit je Spiel):
