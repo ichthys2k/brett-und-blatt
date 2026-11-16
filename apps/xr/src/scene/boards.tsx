@@ -132,7 +132,7 @@ export function TicTacToeBoard({ game, onMove }: BoardProps) {
   return (
     <Plate size={[0.4, 0.4]}>
       {places.length > 0 && game.yourSeat !== null && (
-        <Bowl x={0} z={bowlZ} onGrab={() => grab.begin('bowl', 0, bowlZ)}>
+        <Bowl x={0} z={bowlZ} onGrab={(e) => grab.begin('bowl', 0, bowlZ, e)}>
           {grab.held === null && mark(game.yourSeat, 0, 0, 0.04)}
         </Bowl>
       )}
@@ -226,7 +226,7 @@ export function FourInARowBoard({ game, onMove }: BoardProps) {
         <group
           onPointerDown={(e) => {
             e.stopPropagation();
-            grab.begin('disc', 0, discY);
+            grab.begin('disc', 0, discY, e);
           }}
         >
           {grab.held === null && disc(0, discY)}
@@ -458,7 +458,7 @@ export function ChessBoard({ game, onMove }: BoardProps) {
               onPointerDown={(e) => {
                 if (!canSelect) return;
                 e.stopPropagation();
-                grab.begin(square, x, z);
+                grab.begin(square, x, z, e);
               }}
               onClick={(e) => {
                 e.stopPropagation();
