@@ -329,7 +329,7 @@ function BinokelBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
       ) : (
         <>
           {dialogs}
-          {trick}
+          {view.phase === 'play' && trick}
           {!onTv && handFan}
           {roundEnd}
         </>
