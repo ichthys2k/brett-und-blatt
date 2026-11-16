@@ -1,5 +1,5 @@
 import { randomSeed, sanitizeCustomCardCatalog, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
-import { CardInspectProvider, PlayerChip, formatClock, seatRingFits, useElementSize } from '@brett-und-blatt/ui';
+import { CardInspectProvider, PlayerChip, formatClock, tableLayout, useElementSize } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { AlbumSpec } from '@brett-und-blatt/ui';
 import { AfterGameBar } from '../components/AfterGameBar';
@@ -53,9 +53,6 @@ export function Play() {
 }
 
 /** Eine Partie im Browser: speichern nach jedem Zug, neu starten, Revanche. */
-/** Höhe der Kopfzeile über dem Spieltisch (px). */
-const TABLE_BAR_HEIGHT = 56;
-
 function LocalTable({ active, onRestart }: { active: ActiveGame; onRestart: (game: ActiveGame) => void }) {
   const restart = async (rotate: boolean) => {
     const config = active.session.config;
@@ -192,8 +189,6 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   }, [session, isOnline]);
 
   const seats = session.config.seats;
-  /** Ab drei Spielern wird die linke Spalte im Querformat breiter; auf flachen Handy-Bildschirmen stehen die Spieler zu zweit nebeneinander. */
-  const crowded = seats.length > 2;
   const playersRef = useRef<HTMLElement>(null);
   /**
    * Im Hochformat ist die Spielerleiste ein Menü (☰ in der Statuszeile): eingeklappt, bis jemand sie braucht, und sie
@@ -208,17 +203,19 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
    * Genug Platz: Das Spiel setzt die Spieler um seinen Tisch, die Seitenleiste entfällt, und über dem Tisch bleibt nur die
    * Kopfzeile. Gemessen wird das ganze Fenster, nicht das Spielfeld: Das wächst durch den Wegfall der Leiste selbst.
    */
-  const around = Boolean(ui.seatsAround) && seatRingFits(seats.length, rootSize.width, rootSize.height - TABLE_BAR_HEIGHT);
+  const layout = tableLayout({ width: rootSize.width, height: rootSize.height, seats: seats.length, seatsAround: Boolean(ui.seatsAround), seatsOnBoard: Boolean(ui.seatsOnBoard), fullBleed: Boolean(ui.fullBleed) });
+  const around = layout.mode === 'ring';
   // Poker & Co. (#378): Im niedrigen Querformat klappt die Seitenleiste zum Menüknopf ☰ ein, der Tisch bekommt die Breite.
   const [sideOpen, setSideOpen] = useState(false);
   const sideBox = useRef<HTMLDivElement>(null);
   useDismiss(sideOpen, useCallback(() => setSideOpen(false), []), sideBox);
-  const landscape = rootSize.width > rootSize.height && rootSize.height > 0;
+  /** Ab drei Spielern wird die linke Spalte im Querformat breiter; auf flachen Handy-Bildschirmen stehen die Spieler zu zweit nebeneinander. */
+  const { landscape, crowded } = layout;
   // Spiele mit `fullBleed` (Drachenspiel, #430) klappen die Leiste im Querformat immer ein und nutzen die Fläche ganz.
   const fullBleed = Boolean(ui.fullBleed) && !around && rootSize.height > 0;
-  const collapsedSide = !around && ((landscape && Boolean(ui.seatsOnBoard) && rootSize.height <= 540) || fullBleed);
+  const collapsedSide = layout.collapsed;
   // Im Hochformat wird aus der eingeklappten Leiste eine schmale Zeile oben (☰ und Status), das Menü klappt darunter auf.
-  const collapsedTop = collapsedSide && !landscape;
+  const collapsedTop = layout.mode === 'bar';
   const humans = seats.map((seat, i) => (seat.kind === 'human' ? i : -1)).filter((i) => i >= 0);
   const result = session.result;
   useWakeLock(!result && !session.paused);

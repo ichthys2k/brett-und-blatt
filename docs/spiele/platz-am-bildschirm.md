@@ -127,3 +127,10 @@ Gemessen auf dem Stand vor Umsetzung von #484 ff., Voreinstellungen der Partie, 
 - Menschen ohne Wappen oder mit „im Raum verbergen“ bekommen ein Standardschild (`defaultCrest(index)` mit 8 kontrastreichen Farbkombinationen aus `crest-colors.ts`).
 - Lokal gilt das eigene Profil nur bei genau einem menschlichen Spieler am Gerät; bei mehreren Plätzen greifen die Standardwerte je Platz.
 - `OnlineTableProps` transportiert `crests` (`Display.tsx`, `Room.tsx` über Hilfsfunktion `seatMember`), `seatChip` und Siegerehrung (`Ceremony`) nutzen `seatIdentity`.
+
+### G1 – Layout-Entscheidung als reine Funktion (#484, umgesetzt 16.11.2026)
+
+- `tableLayout` (`packages/ui/src/tableLayout.ts`) rechnet aus Breite, Höhe, Platzzahl und den Spieleigenschaften `seatsAround`, `seatsOnBoard`, `fullBleed` den Zustand `ring` · `side` · `stack` · `rail` · `bar` (siehe oben: `compact` = `rail` quer, `bar` hoch). `Play.tsx` nutzt nur noch dieses Ergebnis; `TABLE_BAR_HEIGHT` kommt aus `packages/ui`.
+- Regeln unverändert: `ring` bei `seatsAround` und `seatRingFits(seats, width, height − 56)`; sonst `rail`/`bar` bei `fullBleed` oder (`seatsOnBoard`, quer, Höhe ≤ 540); sonst `side` (quer) bzw. `stack` (hoch); ungemessen immer `stack`.
+- Die Tailwind-Varianten in den Klassen und Poker (`seatRingFits` selbst) bleiben; neue Schwellen folgen in H1/H2.
+- Messung vorher/nachher: Anteil, `ring`, `menu`, Chipgrößen und Durchschnitte identisch.
