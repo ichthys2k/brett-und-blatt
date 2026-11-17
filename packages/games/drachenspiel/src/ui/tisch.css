@@ -264,7 +264,7 @@
 @container ds-arena (min-width: 561px) {
   .ds-arena .ds-player-zone.ds-player-zone {
     position: absolute;
-    left: clamp(4px, 1.5%, 24px);
+    left: 4px;
     right: clamp(4px, 1.5%, 24px);
     bottom: 6px;
     z-index: 4;
@@ -279,12 +279,76 @@
     pointer-events: auto;
   }
 
+  /* Der eigene Held steht ganz links: leere Seitenspalten schrumpfen auf ihren Inhalt. */
+  .ds-arena .ds-player-zone .ds-held-row {
+    grid-template-columns: auto auto auto;
+  }
+
   .ds-arena .ds-player-zone > .ds-held {
-    --ds-held: clamp(60px, 15cqh, 170px);
+    --ds-held: clamp(108px, 27cqh, 300px);
   }
 
   /* Die Hand lässt links Platz für den Helden und rechts für Stapel und „Zug beenden“. */
   .ds-arena .ds-hand {
-    padding-inline: max(calc(clamp(60px, 15cqh, 170px) * 2.3), 220px);
+    padding-left: max(calc(clamp(108px, 27cqh, 300px) * 1.45 + 12px), 200px);
+    padding-right: 330px;
+  }
+}
+
+/* Handkarten umsortieren: Die Karte, über der die gezogene Karte schwebt, zeigt den Platz an. */
+.ds-arena .ds-hand > .ds-hand-over {
+  transform: translateY(-10px);
+  box-shadow: -6px 0 0 0 rgb(255 214 120 / 0.9);
+}
+
+/* Mittellinie des Tischbilds (16.11.2026): Jedes Bild hat eine waagerechte Linie in der Mitte der Matte.
+   --ds-line ist ihre Höhe in der Arena. Das Bild füllt die Arena mit `cover` und sitzt oben; es ist 16:9,
+   seine gezeigte Höhe also max(Arenahöhe, Breite × 9/16). Anteil der Linie je Bild (gemessen). */
+.ds-arena.ds-arena {
+  --ds-line-at: 0.501;
+}
+.ds-arena.ds-arena[data-theme='wald'] { --ds-line-at: 0.514; }
+.ds-arena.ds-arena[data-theme='meer'] { --ds-line-at: 0.491; }
+.ds-arena.ds-arena[data-theme='bauernhof'] { --ds-line-at: 0.51; }
+.ds-arena.ds-arena[data-theme='krabbeltiere'] { --ds-line-at: 0.525; }
+.ds-arena.ds-arena[data-theme='wildnis'] { --ds-line-at: 0.501; }
+
+/* Querformat und Desktop: Gegnerreihe liegt ganz über der Linie, die eigene ganz darunter. */
+@container ds-arena (min-width: 561px) and (min-height: 471px) {
+  .ds-arena .ds-board-container.ds-board-container {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 0;
+    min-height: 0;
+    pointer-events: none;
+    --ds-line: calc(max(100cqh, 56.25cqw) * var(--ds-line-at));
+  }
+
+  /* Die Matte liegt frei über der Fläche; die Hand bleibt unten. */
+  .ds-arena .ds-hand.ds-hand {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 6px;
+    z-index: 3;
+  }
+
+  .ds-arena .ds-board-container > .ds-board-row {
+    position: absolute;
+    left: 4%;
+    right: 4%;
+    width: auto;
+    pointer-events: auto;
+  }
+
+  .ds-arena .ds-board-row:first-child {
+    bottom: calc(100% - var(--ds-line) + 14px);
+    transform-origin: 50% 100%;
+  }
+
+  .ds-arena .ds-board-row:last-child {
+    top: calc(var(--ds-line) + 14px);
+    transform-origin: 50% 0;
   }
 }
