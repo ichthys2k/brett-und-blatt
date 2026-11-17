@@ -6,7 +6,7 @@
 export type Handedness = 'right' | 'left';
 export type Posture = 'sitting' | 'standing';
 
-const KEYS = { hand: 'brett-und-blatt-xr-haendigkeit', posture: 'brett-und-blatt-xr-haltung', collapsed: 'brett-und-blatt-xr-fenster-zu' } as const;
+const KEYS = { hand: 'brett-und-blatt-xr-haendigkeit', posture: 'brett-und-blatt-xr-haltung', collapsed: 'brett-und-blatt-xr-fenster-zu', wrist: 'brett-und-blatt-xr-handgelenk-menue' } as const;
 
 function read(key: string): string | null {
   try {
@@ -26,6 +26,7 @@ function write(key: string, value: string): void {
 let handedness: Handedness = read(KEYS.hand) === 'left' ? 'left' : 'right';
 let posture: Posture = read(KEYS.posture) === 'standing' ? 'standing' : 'sitting';
 let collapsed = read(KEYS.collapsed) === 'zu';
+let wristMenu = read(KEYS.wrist) !== 'aus';
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((fn) => fn());
 
@@ -59,6 +60,14 @@ export function setCollapsed(next: boolean): void {
   notify();
 }
 
+/** Handgelenk-Menü (#388): abschaltbar; dann bleibt nur das Fenster über dem Tisch. */
+export const isWristMenuOn = (): boolean => wristMenu;
+export function setWristMenu(next: boolean): void {
+  wristMenu = next;
+  write(KEYS.wrist, next ? 'an' : 'aus');
+  notify();
+}
+
 /** Befehl des Handgelenk-Menüs an das Fenster: Seite öffnen oder Aufgeben vorbereiten. */
 export type PanelCommand = 'phrases' | 'voice' | 'view' | 'resign';
 const commandListeners = new Set<(command: PanelCommand) => void>();
@@ -86,8 +95,13 @@ export function palmNormal(wrist: [number, number, number], indexBase: [number, 
 
 /** Blickt man auf die Innenseite des Handgelenks? `up` zeigt von der Handfläche weg (Controller-Oberseite). */
 export function facesHead(hand: [number, number, number], up: [number, number, number], head: [number, number, number], minDot = 0.6): boolean {
+  return facingDot(hand, up, head) > minDot;
+}
+
+/** Kosinus zwischen der Richtung „aus der Handfläche heraus“ und der Richtung von der Hand zum Kopf. */
+export function facingDot(hand: [number, number, number], up: [number, number, number], head: [number, number, number]): number {
   const to = [head[0] - hand[0], head[1] - hand[1], head[2] - hand[2]] as const;
   const length = Math.hypot(...to) || 1;
   const upLength = Math.hypot(...up) || 1;
-  return (to[0] * up[0] + to[1] * up[1] + to[2] * up[2]) / (length * upLength) > minDot;
+  return (to[0] * up[0] + to[1] * up[1] + to[2] * up[2]) / (length * upLength);
 }

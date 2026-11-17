@@ -117,7 +117,7 @@ function GridBoard({ game, onMove, spec }: BoardProps & { spec: GridSpec }) {
     <Plate size={BOARD + (points ? cell : 0.02)} color={spec.surface}>
       {lines}
       {placeMoves.length > 0 && game.yourSeat !== null && (
-        <Bowl x={0} z={bowlZ} onGrab={() => grab.begin('bowl', 0, bowlZ)}>
+        <Bowl x={0} z={bowlZ} onGrab={(e) => grab.begin('bowl', 0, bowlZ, e)}>
           {grab.held === null && (
             <group position={[0, 0.014, 0]}>
               <Stone x={0} z={0} r={r} white={myWhite} />
@@ -263,7 +263,7 @@ export function CheckersBoard({ game, onMove }: BoardProps) {
             onPointerDown={(e) => {
               if (!movable.has(i)) return;
               e.stopPropagation();
-              grab.begin(i, x, z);
+              grab.begin(i, x, z, e);
             }}
             onClick={(e) => {
               e.stopPropagation();
@@ -428,7 +428,7 @@ export function MillBoard({ game, onMove }: BoardProps) {
             onPointerDown={(e) => {
               if (!movable.has(p) || removable.includes(p)) return;
               e.stopPropagation();
-              grab.begin(p, x, z);
+              grab.begin(p, x, z, e);
             }}
             onClick={(e) => {
               e.stopPropagation();
@@ -466,7 +466,7 @@ export function MillBoard({ game, onMove }: BoardProps) {
               onPointerDown={(e) => {
                 if (!grabbable) return;
                 e.stopPropagation();
-                grab.begin(HAND, x, z);
+                grab.begin(HAND, x, z, e);
               }}
             >
               <Stone x={x} z={z} r={0.014} white={seat === 0} />

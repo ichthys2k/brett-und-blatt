@@ -16,7 +16,8 @@ export interface FanSlot {
   tilt: number;
 }
 
-export function fanSlot(index: number, total: number): FanSlot {
+/** `widen` spreizt den Fächer seitlich (an der Hand, damit sich jede Karte einzeln mit dem Strahl treffen lässt). */
+export function fanSlot(index: number, total: number, widen = 1): FanSlot {
   const two = total > MAX_SINGLE_ROW;
   const perRow = two ? Math.ceil(total / 2) : total;
   const row: 0 | 1 = two && index >= perRow ? 1 : 0;
@@ -24,7 +25,7 @@ export function fanSlot(index: number, total: number): FanSlot {
   const count = row === 0 ? perRow : total - perRow;
   const off = col - (count - 1) / 2;
   const spread = Math.min(0.055, 0.5 / Math.max(count, 1));
-  return { row, x: off * spread, dy: -row * 0.06 - Math.abs(off) * 0.002, dz: row * 0.045 - Math.abs(off) * 0.004, tilt: -off * 0.03 };
+  return { row, x: off * spread * widen, dy: -row * 0.06 - Math.abs(off) * 0.002, dz: row * 0.045 - Math.abs(off) * 0.004, tilt: -off * 0.03 };
 }
 
 export interface Sample {

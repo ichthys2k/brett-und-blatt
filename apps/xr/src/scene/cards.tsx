@@ -249,6 +249,8 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
 
   // Fächer: auf einem Bogen an der eigenen Tischkante, leicht aufgestellt.
   const n = view.hand.length;
+  // An der Hand liegen die Karten weiter auseinander: Mit Strahl und Pinch trifft man sonst die Nachbarkarte.
+  const widen = onHand ? 1.3 : 1;
   const fanZ = TABLE_CENTER[2] + TABLE_RADIUS - 0.2;
   const pileX = (k: number) => TABLE_CENTER[0] + 0.05 + (k - (view.piles.length - 1) / 2) * 0.1;
   // Ist der Stapel leer, darf aber gezogen werden (die Ablage wird gemischt), liegt trotzdem eine Karte da.
@@ -298,9 +300,10 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
       {grab.held && <Card face={heldFace} position={[grab.held.x, y + 0.16, grab.held.z]} rotation={[-Math.PI / 2.6, 0, 0]} scale={1.15} highlight />}
       {grab.layer}
       <group ref={fan}>
+      {playable.size > 0 && !grab.held && n > 0 && <Sign lines={['Karte greifen und in die Mitte legen']} position={[0, 0.1, 0.02]} width={0.34} height={0.032} />}
       <group position={[0, -(y + 0.11), -fanZ]}>
       {view.hand.map((card, i) => {
-        const slot = fanSlot(i, n);
+        const slot = fanSlot(i, n, widen);
         const isPlayable = playable.has(card.id);
         if (grab.held?.id === card.id) return null;
         return (
@@ -309,7 +312,7 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
             onPointerDown={(e) => {
               if (!isPlayable) return;
               e.stopPropagation();
-              grab.begin(card.id, slot.x, fanZ + slot.dz);
+              grab.begin(card.id, slot.x, fanZ + slot.dz, e);
             }}
           >
           <Card
@@ -340,7 +343,7 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
           onPointerDown={(e) => {
             if (!drawMove) return;
             e.stopPropagation();
-            grab.begin('stock', stockPos[0], stockPos[2]);
+            grab.begin('stock', stockPos[0], stockPos[2], e);
           }}
         >
         <group position={[TABLE_CENTER[0] - (view.rows.length ? 0.32 : 0.08) - (view.piles.length > 1 ? 0.08 : 0), y, TABLE_CENTER[2]]}>

@@ -92,15 +92,35 @@
   pointer-events: none;
 }
 
-/* Schildwall: breiter Rand aus grauem Stein mit Nieten-Glanz */
+/* Schildwall: ein ganzes Schild (Wappenform) steht hinter dem Tier, das Bild liegt davor (vgl. Hearthstone). */
+.ds-field-oval:has(> .ds-sym-edge-shield) {
+  isolation: isolate;
+}
+
 .ds-sym-edge-shield {
-  inset: calc(var(--ds-sym-edge-width, 6px) * -1);
-  border: var(--ds-sym-edge-width, 6px) solid #8a929c;
-  box-shadow:
-    0 0 0 2px #1a120a,
-    inset 0 0 0 2px #1a120a,
-    inset 0 2px 0 3px rgb(255 255 255 / 0.25);
-  background: none;
+  --ds-shield: polygon(0% 8%, 50% 0%, 100% 8%, 100% 44%, 95% 66%, 82% 84%, 50% 100%, 18% 84%, 5% 66%, 0% 44%);
+  inset: -9% -15% -15%;
+  z-index: -1;
+  border-radius: 0;
+  background: #1a120a;
+  clip-path: var(--ds-shield);
+}
+
+.ds-sym-edge-shield::before {
+  content: '';
+  position: absolute;
+  inset: 3%;
+  clip-path: var(--ds-shield);
+  background: linear-gradient(150deg, #d5dbe2 0%, #9aa2ad 38%, #646b76 100%);
+}
+
+/* Innere Wulst mit Glanz, damit es wie getriebenes Metall wirkt. */
+.ds-sym-edge-shield::after {
+  content: '';
+  position: absolute;
+  inset: 7%;
+  clip-path: var(--ds-shield);
+  background: linear-gradient(330deg, #4a515b 0%, #7d8591 50%, #bcc3cc 100%);
 }
 
 /* Prunkschild: schimmernde goldene Blase */

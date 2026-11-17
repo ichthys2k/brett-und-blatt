@@ -33,7 +33,7 @@ const isStrike = (move: DrachenspielMove): move is Strike => move.type === 'atta
 const strikerOf = (move: Strike) => (move.type === 'attack' ? move.attackerId : HERO_ATTACKER);
 
 /** Auch der eigene Held wird wie ein Tier gezogen, mit der Kennung `HERO_ATTACKER`. */
-type DrachenDragItem = { kind: 'card'; handIndex: number } | { kind: 'minion'; minionId: string };
+type DrachenDragItem = { kind: 'card'; handIndex: number; uid: string } | { kind: 'minion'; minionId: string };
 
 /** Enter und Leertaste lösen aus; „i“ (groß ansehen) übernimmt die Großansicht (#418). */
 const activate = (event: KeyboardEvent<HTMLElement>, onClick: () => void) => {
@@ -373,6 +373,27 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
   const mySeat: SeatId = typeof viewer === 'number' ? viewer : 0;
   const oppSeat: SeatId = (1 - mySeat) as SeatId;
   const me = view.players[mySeat];
+  /** Eigene Reihenfolge der Handkarten (nur Anzeige, nicht im Spielstand): Karten-uids, vorn = links. */
+  const [handOrder, setHandOrder] = useState<string[]>([]);
+  const shownHand = useMemo(() => {
+    const cards = (me.hand ?? []).map((card, idx) => ({ card, idx }));
+    const rank = (uid: string) => {
+      const at = handOrder.indexOf(uid);
+      return at < 0 ? Number.MAX_SAFE_INTEGER : at;
+    };
+    // Bekannte Karten nach eigener Ordnung, neue (noch nicht einsortierte) hinten in Spielreihenfolge (stabil).
+    return [...cards].sort((a, b) => rank(a.card.uid) - rank(b.card.uid));
+  }, [me.hand, handOrder]);
+  const moveHandCard = (uid: string, beforeUid: string) => {
+    if (uid === beforeUid) return;
+    const ids = shownHand.map((entry) => entry.card.uid);
+    const from = ids.indexOf(uid);
+    const to = ids.indexOf(beforeUid);
+    if (from < 0 || to < 0) return;
+    ids.splice(from, 1);
+    ids.splice(to, 0, uid);
+    setHandOrder(ids);
+  };
   const reducedMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
   // Ziel der gezogenen Karte: die letzte Handkarte, aus dem DOM gelesen (die Refs hängen beim Ziehen noch nicht wieder).
   const lastHandCard = useCallback(() => arenaRef.current?.querySelector<HTMLElement>('.ds-hand > .ds-card:last-child') ?? null, []);
@@ -421,6 +442,10 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
     threshold: 6,
     onDrop: (item, targetId) => {
       if (!targetId) return false;
+      if (item.kind === 'card' && targetId.startsWith('hand:')) {
+        moveHandCard(item.uid, targetId.slice(5));
+        return true;
+      }
       if (item.kind === 'card') {
         if (legalMoves.some((m) => m.type === 'playCard' && m.handIndex === item.handIndex && m.target !== undefined)) {
           // Karte mit Ziel: aufs Ziel ziehen.
@@ -438,7 +463,7 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
           }
           return false;
         }
-        if (targetId === 'battlefield') {
+        if (targetId === 'battlefield' && legalMoves.some((m) => m.type === 'playCard' && m.handIndex === item.handIndex)) {
           onMove({ type: 'playCard', handIndex: item.handIndex });
           return true;
         }
@@ -844,14 +869,14 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
       <ScenarioTip options={view.options} />
 
       <div className="ds-hand" data-frame={cosmetics.frame ?? undefined} style={{ '--ds-hand-gaps': Math.max(1, (me.hand?.length ?? 1) - 1) } as CSSProperties}>
-        {me.hand?.map((card, idx) => {
+        {shownHand.map(({ card, idx }) => {
           const def = uiCard(card.defId);
           if (!def) return null;
           const isPlayable = isMyTurn && playableCardIndices.has(idx);
           const needsTarget = legalMoves.some((m) => m.type === 'playCard' && m.handIndex === idx && m.target !== undefined);
           // Karten mit Ziel bleiben liegen, der Pfeil zeigt das Ziel; alles andere folgt dem Finger.
           const followsFinger = !needsTarget && (dragState.isDragging || dragState.snapping) && dragState.item?.kind === 'card' && dragState.item.handIndex === idx;
-          const dragBind = isPlayable ? bindDrag({ kind: 'card', handIndex: idx }) : undefined;
+          const dragBind = bindDrag({ kind: 'card', handIndex: idx, uid: card.uid });
           const traits = getCardTraits(def);
           const play = () => {
             if (!isPlayable) return;
@@ -873,13 +898,14 @@ export function PlayBoard({ view, legalMoves, onMove, viewer, seatNames, events,
                 else handElsRef.current.delete(idx);
               }}
               data-rarity={def.rarity}
-              className={`ds-card bub-animate-deal ${def.isSpell ? 'ds-card-spell' : ''} ${selectedSpell === idx || draggedCardIdx === idx ? 'ds-card-selected' : ''} ${isPlayable ? 'playable' : ''} ${hintedCard === idx ? 'ds-hinted' : ''} ${followsFinger ? 'bub-dragging' : ''} ${dragState.snapping && followsFinger ? 'bub-snapping' : ''}`}
+              data-drop-target={`hand:${card.uid}`}
+              className={`ds-card bub-animate-deal ${def.isSpell ? 'ds-card-spell' : ''} ${selectedSpell === idx || draggedCardIdx === idx ? 'ds-card-selected' : ''} ${isPlayable ? 'playable' : ''} ${hintedCard === idx ? 'ds-hinted' : ''} ${dragState.isDragging && dragState.item?.kind === 'card' && dragState.targetId === `hand:${card.uid}` && !followsFinger ? 'ds-hand-over' : ''} ${followsFinger ? 'bub-dragging' : ''} ${dragState.snapping && followsFinger ? 'bub-snapping' : ''}`}
               style={{
                 animationDelay: `${idx * 40}ms`,
                 transform: followsFinger ? `translate3d(${dragState.delta.x}px, ${dragState.delta.y}px, 0) rotate(${dragTilt(dragState.velocity)}deg)` : undefined,
                 position: followsFinger ? 'relative' : undefined,
                 zIndex: followsFinger ? 1000 : undefined,
-                touchAction: isPlayable ? 'none' : undefined,
+                touchAction: 'none',
               }}
               {...inspect.props(zoomOf(zoomItem), { onPointerDown: dragBind?.onPointerDown, onKeyDown: (event) => activate(event, play) }, inspectOptions)}
               onClick={play}

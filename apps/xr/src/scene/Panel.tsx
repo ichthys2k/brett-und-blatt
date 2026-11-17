@@ -19,7 +19,7 @@ import { fanMode, onFanModeChange, setFanMode } from '../hand-fan';
 import { gesturesEnabled, onGesturesChange, setGesturesEnabled } from '../gestures';
 import { onTableLockedChange, setTableLocked, tableLocked } from '../table-grab';
 import { QrPlate } from './QrPlate';
-import { getHandedness, getPosture, isCollapsed, onPanelCommand, onUiStateChange, setCollapsed, setHandedness, setPosture } from '../ui-state';
+import { getHandedness, getPosture, isCollapsed, isWristMenuOn, onPanelCommand, onUiStateChange, setCollapsed, setHandedness, setPosture, setWristMenu } from '../ui-state';
 import { getVolume, onVolumeChange, setVolume } from '../sound';
 
 const PAGE = 6;
@@ -196,7 +196,10 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
       { label: getHandedness() === 'right' ? '🤚 Rechtshänder' : '🤚 Linkshänder', press: () => setHandedness(getHandedness() === 'right' ? 'left' : 'right') },
       { label: getPosture() === 'sitting' ? '🪑 Sitzen' : '🧍 Stehen', press: () => setPosture(getPosture() === 'sitting' ? 'standing' : 'sitting') },
     ]);
-    rows.push([{ label: gesturesEnabled() ? '👍 Gesten an' : 'Gesten aus', press: () => setGesturesEnabled(!gesturesEnabled()), active: gesturesEnabled() }]);
+    rows.push([
+      { label: gesturesEnabled() ? '👍 Gesten an' : 'Gesten aus', press: () => setGesturesEnabled(!gesturesEnabled()), active: gesturesEnabled() },
+      { label: isWristMenuOn() ? '⌚ Handgelenk-Menü an' : 'Handgelenk-Menü aus', press: () => setWristMenu(!isWristMenuOn()), active: isWristMenuOn() },
+    ]);
     lines.push('Neu ausrichten: Meta-Taste gedrückt halten.');
     rows.push([back]);
   } else if (room.phase === 'lobby' || !game) {

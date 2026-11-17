@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { Group } from 'three';
 import { pulse } from '../haptics';
-import { useGrab } from './grab';
+import { useGrab, type GrabEvent } from './grab';
 import { ROLL_MS, rollProgress, shaken } from './dice-shake';
 import type { BoardProps } from './boards';
 import { Choices, Tile } from './boards4';
@@ -31,7 +31,7 @@ export function Tafel({ game, lines: extra }: { game: GameMessage; lines?: strin
 }
 
 /** Ein Würfel mit Augenzahl; gehaltene Würfel stehen etwas höher und leuchten. */
-function Die({ value, position, held, onPress, onGrab, tick, tumble = true }: { value: number | null; position: [number, number, number]; held?: boolean; onPress?: () => void; onGrab?: () => void; tick?: string; tumble?: boolean }) {
+function Die({ value, position, held, onPress, onGrab, tick, tumble = true }: { value: number | null; position: [number, number, number]; held?: boolean; onPress?: () => void; onGrab?: (e: GrabEvent) => void; tick?: string; tumble?: boolean }) {
   const s = 0.05;
   // Rollanimation (#389): kippt und hüpft kurz und endet flach auf dem gemeldeten Wert; reine Optik.
   const spin = useRef<Group>(null);
@@ -57,7 +57,7 @@ function Die({ value, position, held, onPress, onGrab, tick, tumble = true }: { 
     g.position.y = s / 2 + Math.abs(Math.sin((1 - k) * Math.PI * 3)) * 0.06 * k;
   });
   return (
-    <group position={[position[0], position[1] + (held ? 0.012 : 0), position[2]]} onPointerDown={onGrab ? (e) => (e.stopPropagation(), onGrab()) : undefined}>
+    <group position={[position[0], position[1] + (held ? 0.012 : 0), position[2]]} onPointerDown={onGrab ? (e) => (e.stopPropagation(), onGrab(e)) : undefined}>
       <group ref={spin} position={[0, s / 2, 0]}>
       <group position={[0, -s / 2, 0]}>
       <mesh
@@ -115,7 +115,7 @@ export function RollCup({ position, onRoll }: { position: [number, number, numbe
           onPointerDown={(e) => {
             e.stopPropagation();
             path.current = [];
-            grab.begin('becher', position[0], position[2]);
+            grab.begin('becher', position[0], position[2], e);
           }}
         >
           {cup(position[0], 0.05, position[2])}
@@ -173,7 +173,7 @@ export function KniffelBoard({ game, onMove }: BoardProps) {
         {(view.dice?.values ?? [null, null, null, null, null]).map((value, i) => {
           if (grab.held?.id === i) return null;
           const move = holdMove(i);
-          return <Die key={i} value={value} position={[(i - 2) * 0.08, 0, 0.05]} held={view.dice?.held[i]} tick={tick} tumble={!view.dice?.held[i]} onPress={move ? () => onMove(move) : undefined} onGrab={move ? () => grab.begin(i, (i - 2) * 0.08, 0.05) : undefined} />;
+          return <Die key={i} value={value} position={[(i - 2) * 0.08, 0, 0.05]} held={view.dice?.held[i]} tick={tick} tumble={!view.dice?.held[i]} onPress={move ? () => onMove(move) : undefined} onGrab={move ? (e) => grab.begin(i, (i - 2) * 0.08, 0.05, e) : undefined} />;
         })}
         {roll && <RollCup position={[0.38, 0, 0.2]} onRoll={() => onMove(roll)} />}
         {roll && <Button3D label={`🎲 Würfeln (noch ${view.rollsLeft})`} position={[0.27, 0.07, 0.1]} rotation={[-0.6, -0.3, 0]} width={0.24} height={0.045} active onPress={() => onMove(roll)} />}
