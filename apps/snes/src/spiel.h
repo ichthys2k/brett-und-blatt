@@ -140,8 +140,14 @@ extern const Spiel spiel_president;
 extern const Spiel spiel_speed;
 extern const Spiel spiel_ligretto;
 extern const Spiel spiel_poker;
+extern const Spiel spiel_skat;
+extern const Spiel spiel_schafkopf;
+extern const Spiel spiel_doppelkopf;
+extern const Spiel spiel_binokel;
+extern const Spiel spiel_chess;
+extern const Spiel spiel_go;
 
-#define SPIELE_ANZAHL 25
+#define SPIELE_ANZAHL 31
 extern const Spiel *const spiele[SPIELE_ANZAHL];
 
 /** Der gemeinsame Spielstand (Partie und Prüfmodus laufen nie gleichzeitig). Liegt wie die

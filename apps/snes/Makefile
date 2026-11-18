@@ -7,8 +7,8 @@ export ROMTITLE := BRETT UND BLATT 16
 # ROM mit SRAM und Batterie, 2 KB SRAM für die Statistik
 export CARTRIDGETYPE := 02
 export SRAMSIZE := 01
-export ROMSIZE := 09
-export ROMBANKS := 16
+export ROMSIZE := 0a
+export ROMBANKS := 32
 
 include $(PVSNESLIB_HOME)/devkitsnes/snes_rules
 

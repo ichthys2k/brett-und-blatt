@@ -250,6 +250,10 @@ function applyVorfuehrung(state: DokoState): DokoState {
 }
 
 export function currentPlayers(state: DokoState): Actor[] {
+  if (seriesOver(state)) {
+    return [];
+  }
+
   if (state.phase === 'roundOver') {
     return [state.activeSeats[0]];
   }
@@ -277,7 +281,7 @@ export function currentPlayers(state: DokoState): Actor[] {
 }
 
 export function legalMoves(state: DokoState, actor: Actor): DokoMove[] {
-  if (actor === 'system') return [];
+  if (actor === 'system' || seriesOver(state)) return [];
   const player = Number(actor);
 
   if (state.phase === 'roundOver') {

@@ -8,6 +8,20 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**Brett & Blatt 16 – SNES-ROM, Stufe 5: Stichspiele und Schach (18.11.2026, #524, Vorhaben #515):** Sechs anspruchsvolle Klassiker im ROM (jetzt 31 Spiele gesamt):
+- `apps/snes/src/skat.c`: Skat für 3 Spieler (Seeger/Fabian-Zählung, Grand, Farbspiele, Null, Reizen gegen Mittelhand/Hinterhand, Skataufnahme und Drücken).
+- `schafkopf.c`: Schafkopf für 4 Spieler (Sauspiel/Rufspiel mit alter/blauer/runder Sau, Wenz, Farbsolo).
+- `doppelkopf.c`: Doppelkopf für 4 Spieler (Kreuz-Damen-Findung, Re/Kontra, Keine 90/60/30/schwarz-Ansagen).
+- `binokel.c`: Binokel / Württembergischer Binokel für 3–4 Spieler (Reizen, Dabb aufnehmen, Melden aller Kombinationen, 1000 Punkte Rundenziel).
+- `chess.c`: Schach für 2 Spieler (0x88-Brettdarstellung, vollständige Züge mit Rochade, En Passant, Bauernumwandlung, Schach/Matt/Patt, 50-Züge-Regel und Minimax-Alpha-Beta-Bot).
+- `go.c`: Go für 2 Spieler auf 9 × 9 (Freiheiten-Zählung mit Flutfüllung in Bank $7F, Superko-Historie, automatisches Auszählen nach Tromp-Taylor-Flächenwertung).
+
+Dazu Erweiterungen am Unterbau:
+- Gemeinsamer Stichspiel-Motor `apps/snes/src/stich.c` / `stich.h` mit Vorstich-Bewerter, Fehlfarben-Prüfung, Augensummen und Stichabwicklung.
+- Stack-Sicherheit für 816-tcc: Große BFS/DFS-Puffer für die Flutfüllung in Go in Bank $7F ausgelagert, um den 255-Byte-Stack-Rahmen des Compilers nicht zu überschreiten.
+- ROM-Größe im `Makefile` auf 1 MB (32 Bänke LoROM, `brett-und-blatt-16.sfc`) verdoppelt.
+- Alle 6 Spiele mit 100 % grünem Schiedsrichter- und Bot-Vergleich in `apps/snes/test/regeln.test.ts` und `bots.test.ts` (insgesamt 31 Spiele Zug für Zug verifiziert).
+
 **Brett & Blatt 16 – SNES-ROM, Tiermotive für Memory-Karten (18.11.2026, #520, Vorhaben #515):**
 - 32 liebevoll gestaltete 16×16-Pixel-Art-Tiermotive (`apps/snes/werkzeuge/grafik.mjs`) für alle 32 Tierpaare in „Paare finden“ (`apps/snes/src/paare.c`).
 - Dedizierte 8-Farben-Palette für Tierillustrationen; transparente Kartenvorderseite ohne Textüberlagerung bei Tier-Set.

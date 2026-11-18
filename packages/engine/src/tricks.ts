@@ -262,16 +262,18 @@ const SKAT_JACK_POWERS: Record<Suit, number> = {
   D: 101, // Karo-Bube
 };
 
-/** Fehlfarben-Rangfolge im Standardspiel: Ass(14) > 10(13) > K(12) > D(11) > 9(10) > 8(9) > 7(8). */
+/** Fehlfarben-Rangfolge im Standardspiel: Ass(15) > 10(14) > K(13) > D(12) > B(11) > 9(10) > 8(9) > 7(8). */
 function standardSuitPower(rank: Rank): number {
   switch (rank) {
     case 1:
-      return 14;
+      return 15;
     case 10:
-      return 13;
+      return 14;
     case 13:
-      return 12;
+      return 13;
     case 12:
+      return 12;
+    case 11:
       return 11;
     case 9:
       return 10;
