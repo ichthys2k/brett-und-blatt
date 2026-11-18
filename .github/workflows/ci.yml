@@ -99,6 +99,53 @@ jobs:
         with:
           path: apps/web/dist
 
+  # Brett & Blatt 16 (#516): SNES-ROM bauen und im Prüf-Emulator gegen die Spielmodule der
+  # Web-App prüfen (Snes9x mit Speicherzugriff, bsnes für den Bildvergleich). Eigener Job ohne
+  # Einfluss auf die Veröffentlichung der Web-App; ROM und Bildschirmfotos liegen als Artefakt bereit.
+  snes:
+    name: SNES-ROM bauen und prüfen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Abhängigkeiten installieren
+        run: pnpm install --frozen-lockfile
+
+      # Werkzeugkette (PVSnesLib, Snes9x, bsnes, Prüf-Emulator) – etwa eine Minute ohne Zwischenspeicher.
+      - name: Werkzeugkette aus dem Zwischenspeicher
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/brett-und-blatt-snes
+          key: snes-werkzeuge-${{ hashFiles('apps/snes/werkzeuge/werkzeugkette.sh', 'apps/snes/werkzeuge/emu/emu.c') }}
+
+      - name: Werkzeugkette bauen
+        run: apps/snes/werkzeuge/werkzeugkette.sh | sed 's/^export //' >> "$GITHUB_ENV"
+
+      - name: ROM bauen
+        run: make -C apps/snes
+
+      - name: ROM im Prüf-Emulator prüfen
+        run: pnpm exec vitest run apps/snes --disable-console-intercept
+        env:
+          SNES_BILDER: ${{ github.workspace }}/snes-bilder
+
+      - name: ROM und Bildschirmfotos bereitstellen
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: brett-und-blatt-16
+          path: |
+            apps/snes/brett-und-blatt-16.sfc
+            snes-bilder/
+          if-no-files-found: ignore
+
   # Spieleserver (Cloudflare-Worker) – vor der Web-App, damit die neue
   # Web-App nie auf einen alten Server trifft. Braucht das Secret
   # CLOUDFLARE_API_TOKEN (nur „Workers Scripts: Bearbeiten“); die
