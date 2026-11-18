@@ -2,12 +2,14 @@ import type { SeatId } from '@brett-und-blatt/engine';
 import { DrawOfferBar, FitBox, GridBoard, useGridMoveAnimation, usePieceSet, usePointerDrag, type BoardProps, type GameUi, type MoveAnimationItem, type PieceSetId } from '@brett-und-blatt/ui';
 import { pieceImage } from './bilder';
 import { Chess, type Move, type Square } from 'chess.js';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { describeMove } from '../describe';
 import { START_FEN, toPgn, type BoardMove, type ChessMove, type ChessState, type Promotion } from '../rules';
 import { PgnSetup } from './PgnSetup';
 import { getCheckWarning, type CheckWarning } from './checkWarning';
 import './styles.css';
+import './zeitreise.css';
+import { EraContext, TimeMachine, eraStyle, useChessEra } from './zeitreise';
 
 type PieceType = 'k' | 'q' | 'r' | 'b' | 'n' | 'p';
 interface Piece {
@@ -21,7 +23,9 @@ const PIECE_NAMES: Record<PieceType, string> = { k: 'König', q: 'Dame', r: 'Tur
 const VALUES: Record<PieceType, number> = { k: 0, q: 9, r: 5, b: 3, n: 3, p: 1 };
 /** Figur als Zeichen oder – bei einem gemalten Satz – als Bild in derselben Größe (1em = Zellgröße der Figur). */
 function PieceFace({ type, white, set }: { type: PieceType; white: boolean; set: PieceSetId }) {
-  const url = pieceImage(set, type, white);
+  // Auf Zeitreise (#512) gelten Zeichen: Nur sie lassen sich in den Farben des Jahrgangs zeigen.
+  const era = useContext(EraContext);
+  const url = era ? undefined : pieceImage(set, type, white);
   return url ? <img className="ch-piece-img" src={url} alt="" draggable={false} /> : <>{GLYPHS[type]}</>;
 }
 
@@ -163,6 +167,7 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
   const hint = anyHint?.type === 'move' ? anyHint : null;
   const [selected, setSelected] = useState<number | null>(null);
   const pieceSet = usePieceSet('chess');
+  const era = useChessEra();
   const [promotion, setPromotion] = useState<BoardMove[] | null>(null);
   const [showMoves, setShowMoves] = useState(false);
   const [warning, setWarning] = useState<CheckWarning | null>(null);
@@ -438,8 +443,10 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
 
   // 8 : 10 – Brett, Leisten darüber und darunter und die Remis-Zeile.
   return (
+    <EraContext.Provider value={era}>
     <FitBox ratio={8 / 10} className="ch-fit">
-      <div className="ch-wrap">
+      <div className="ch-wrap" data-ch-era={era ?? undefined} style={eraStyle(era)}>
+        <TimeMachine era={era} />
         {reviewing ? (
           <div className="ch-review">
             <button type="button" onClick={() => step(-1)} disabled={review === 0} aria-label="Zug zurück" title="Zug zurück (←)">
@@ -566,6 +573,12 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
               })}
             </svg>
           )}
+          {/* Oberfläche des Jahrgangs: Korn, Zeilen, Bildstörungen. Je Zug neu, damit E-Paper aufblitzt. */}
+          {era && (
+            <span key={`${era}-${view.history.length}`} className="ch-era-fx" aria-hidden="true">
+              <span className="ch-era-osd">PLAY ▶</span>
+            </span>
+          )}
         </div>
         {warning && (
           <div className="ch-warning-banner" role="alert" aria-live="polite">
@@ -642,6 +655,7 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
         )}
       </div>
     </FitBox>
+    </EraContext.Provider>
   );
 }
 

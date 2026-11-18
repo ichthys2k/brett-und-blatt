@@ -1,0 +1,610 @@
+/*
+ * Zeitmaschine (#512): Schach in acht Jahrgängen. Jeder Jahrgang setzt nur Variablen; die Regeln darunter
+ * verteilen sie auf Gehäuse, Felder, Figuren und Leisten. `.ch-era-fx` liegt über dem Brett und trägt
+ * Korn, Zeilen und Störungen, ohne Klicks abzufangen.
+ */
+
+/* ---------- Das Astrolabium ---------- */
+.ch-time {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.ch-time-machine {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0.2rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #b48a3c;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.ch-time-machine:hover,
+.ch-time-machine:focus-visible,
+.ch-time-machine.ch-time-on {
+  opacity: 1;
+}
+
+.ch-time-machine:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.ch-time-machine svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.45));
+}
+
+.ch-time-ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.ch-time-tick {
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+
+.ch-time-rete {
+  fill: rgb(180 138 60 / 0.18);
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 1.6 1.4;
+}
+
+.ch-time-glass {
+  fill: none;
+  stroke: #f3e2b3;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+}
+
+.ch-time-sand {
+  fill: #f3e2b3;
+}
+
+.ch-time-spin .ch-time-rete,
+.ch-time-spin .ch-time-tick {
+  transform-origin: 16px 16px;
+  animation: ch-time-whirl 0.7s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+
+.ch-time-spin .ch-time-glass,
+.ch-time-spin .ch-time-sand {
+  transform-origin: 16px 16px;
+  animation: ch-time-turn 0.7s ease-in-out;
+}
+
+@keyframes ch-time-whirl {
+  from {
+    rotate: -540deg;
+  }
+}
+
+@keyframes ch-time-turn {
+  from {
+    rotate: 180deg;
+  }
+}
+
+.ch-time-year {
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.55);
+  color: #f3e2b3;
+  font: 700 0.72rem/1.2 system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Platz für das Astrolabium in der Leiste darüber. */
+.ch-wrap > .ch-strip,
+.ch-wrap > .ch-review {
+  padding-right: 2.4rem;
+}
+
+.ch-wrap[data-ch-era] > .ch-strip,
+.ch-wrap[data-ch-era] > .ch-review {
+  padding-right: 5.6rem;
+}
+
+/* ---------- Gemeinsame Regeln aller Jahrgänge ---------- */
+.ch-wrap[data-ch-era] {
+  padding: 0.55rem;
+  border-radius: var(--ch-era-radius, 12px);
+  background: var(--ch-era-case);
+  box-shadow: var(--ch-era-case-shadow, 0 10px 24px rgb(0 0 0 / 0.45));
+  color: var(--ch-era-ink);
+  font-family: var(--ch-era-font);
+}
+
+.ch-wrap[data-ch-era] .ch-board-area {
+  box-shadow: var(--ch-era-frame, none);
+}
+
+.ch-wrap[data-ch-era] .ch-board .bub-cell.ch-light {
+  background: var(--ch-era-light);
+}
+
+.ch-wrap[data-ch-era] .ch-board .bub-cell.ch-dark {
+  background: var(--ch-era-dark);
+}
+
+.ch-wrap[data-ch-era] .ch-board .bub-cell.ch-check {
+  background: radial-gradient(circle, var(--ch-era-check) 0%, transparent 72%), var(--ch-era-light);
+}
+
+.ch-wrap[data-ch-era] .ch-board .bub-cell.ch-last {
+  box-shadow: inset 0 0 0 100vmax var(--ch-era-last);
+}
+
+.ch-wrap[data-ch-era] .ch-white {
+  color: var(--ch-era-white);
+  -webkit-text-stroke: var(--ch-era-white-stroke);
+}
+
+.ch-wrap[data-ch-era] .ch-black {
+  color: var(--ch-era-black);
+  -webkit-text-stroke: var(--ch-era-black-stroke);
+}
+
+.ch-wrap[data-ch-era] .ch-piece {
+  text-shadow: var(--ch-era-glow, none);
+}
+
+/* Zeichen statt Bilder: dieselben Größen wie beim klassischen Satz. */
+.ch-wrap[data-ch-era][data-ch-era] .ch-board .ch-piece {
+  font-size: 122cqmin;
+  translate: -50% -62%;
+}
+
+.ch-wrap[data-ch-era][data-ch-era] .ch-board .ch-piece.ch-pawn {
+  font-size: 102cqmin;
+}
+
+.ch-wrap[data-ch-era] .ch-coord {
+  color: var(--ch-era-accent);
+  opacity: 0.8;
+}
+
+.ch-wrap[data-ch-era] .ch-dot {
+  background: var(--ch-era-accent);
+  opacity: 0.5;
+}
+
+.ch-wrap[data-ch-era] .ch-lead {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.ch-wrap[data-ch-era] .ch-moves-button {
+  border-color: currentColor;
+  background: transparent;
+  color: inherit;
+}
+
+/* Die Remis-Leiste ist ein gemeinsamer Baustein mit eigener Fläche: sie bleibt in den Farben der App. */
+.ch-wrap[data-ch-era] .bub-draw {
+  color: var(--color-ink);
+  text-shadow: none;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.ch-era-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  border-radius: var(--ch-era-screen-radius, 0);
+  pointer-events: none;
+  background: var(--ch-era-fx, none);
+}
+
+.ch-era-fx::before,
+.ch-era-fx::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+/* Korn von Papier, Film oder Band */
+.ch-era-fx::before {
+  background: var(--ch-era-noise, none);
+  mix-blend-mode: var(--ch-era-noise-blend, normal);
+  opacity: var(--ch-era-noise-opacity, 1);
+}
+
+/* Bandanzeige des Videorekorders */
+.ch-era-osd {
+  display: none;
+}
+
+/* ---------- 1455: Buchdruck mit beweglichen Lettern ---------- */
+.ch-wrap[data-ch-era='1455'] {
+  --ch-era-case: radial-gradient(ellipse at 20% 85%, rgb(201 168 106 / 0.35), transparent 40%), #efe3c4;
+  --ch-era-case-shadow: inset 0 0 0 2px #1c1410, inset 0 0 0 5px #efe3c4, inset 0 0 0 6px #a8231b, 0 10px 24px rgb(0 0 0 / 0.5);
+  --ch-era-ink: #1c1410;
+  --ch-era-font: Almendra, Georgia, serif;
+  --ch-era-light: #efe3c4;
+  --ch-era-dark: repeating-linear-gradient(135deg, #1c1410 0 1.3px, #e8d8b2 1.3px 4.2px);
+  --ch-era-check: rgb(168 35 27 / 0.75);
+  --ch-era-last: rgb(168 35 27 / 0.16);
+  --ch-era-white: #f7efdc;
+  --ch-era-white-stroke: 1.4px #1c1410;
+  --ch-era-black: #1c1410;
+  --ch-era-black-stroke: 0.5px #1c1410;
+  --ch-era-accent: #a8231b;
+  --ch-era-frame: 0 0 0 2px #1c1410;
+  --ch-era-noise: var(--ch-era-grain);
+  --ch-era-noise-blend: multiply;
+  --ch-era-noise-opacity: 0.16;
+  padding: 0.8rem;
+}
+
+.ch-wrap[data-ch-era='1455'] .ch-lead {
+  color: #a8231b;
+  opacity: 1;
+}
+
+/* ---------- 1910: Zeitungsdruck ---------- */
+.ch-wrap[data-ch-era='1910'] {
+  --ch-era-case: radial-gradient(ellipse at 75% 80%, rgb(216 197 156 / 0.4), transparent 40%), #ece2c8;
+  --ch-era-ink: #1f1b15;
+  --ch-era-font: Georgia, 'Times New Roman', serif;
+  --ch-era-radius: 2px;
+  --ch-era-light: #ece2c8;
+  --ch-era-dark: radial-gradient(#1f1b15 32%, transparent 36%) 0 0 / 5px 5px, #ddd1b4;
+  --ch-era-check: rgb(31 27 21 / 0.55);
+  --ch-era-last: rgb(31 27 21 / 0.12);
+  --ch-era-white: #ece2c8;
+  --ch-era-white-stroke: 1.3px #1f1b15;
+  --ch-era-black: #1f1b15;
+  --ch-era-black-stroke: 0.4px #1f1b15;
+  --ch-era-accent: #1f1b15;
+  --ch-era-frame: 0 0 0 1px #1f1b15, 0 0 0 4px #ece2c8, 0 0 0 5px #1f1b15;
+  --ch-era-noise: var(--ch-era-grain);
+  --ch-era-noise-blend: multiply;
+  --ch-era-noise-opacity: 0.14;
+  rotate: -0.6deg;
+}
+
+/* ---------- 1948: Wochenschau ---------- */
+.ch-wrap[data-ch-era='1948'] {
+  --ch-era-case: #121110;
+  --ch-era-ink: #e8e4dc;
+  --ch-era-font: 'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', sans-serif;
+  --ch-era-light: #b9b4ab;
+  --ch-era-dark: #55524c;
+  --ch-era-check: rgb(255 255 255 / 0.7);
+  --ch-era-last: rgb(255 255 255 / 0.18);
+  --ch-era-white: #f3efe8;
+  --ch-era-white-stroke: 1px #151413;
+  --ch-era-black: #151413;
+  --ch-era-black-stroke: 0.6px rgb(240 236 228 / 0.55);
+  --ch-era-accent: #f3efe8;
+  --ch-era-screen-radius: 6px;
+  --ch-era-fx: radial-gradient(ellipse at 50% 50%, transparent 45%, rgb(0 0 0 / 0.85) 100%);
+  --ch-era-noise: var(--ch-era-grain);
+  --ch-era-noise-blend: overlay;
+  --ch-era-noise-opacity: 0.55;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ch-wrap[data-ch-era='1948'] .ch-board-area {
+  filter: grayscale(1) sepia(0.18) contrast(1.12);
+  animation: ch-era-projector 0.25s steps(6) infinite, ch-era-weave 0.5s steps(12) infinite;
+}
+
+.ch-wrap[data-ch-era='1948'] .ch-era-fx::before {
+  animation: ch-era-grain 0.4s steps(4) infinite;
+}
+
+.ch-wrap[data-ch-era='1948'] .ch-era-fx::after {
+  background: linear-gradient(90deg, transparent 0 23%, rgb(255 255 255 / 0.5) 23.1% 23.3%, transparent 23.4% 71%, rgb(0 0 0 / 0.6) 71.1% 71.25%, transparent 71.3%);
+  animation: ch-era-scratch 1.3s steps(5) infinite;
+}
+
+@keyframes ch-era-projector {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  33% {
+    opacity: 0.9;
+  }
+  66% {
+    opacity: 0.97;
+  }
+}
+
+@keyframes ch-era-weave {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  25% {
+    translate: 0.15% -0.3%;
+  }
+  50% {
+    translate: -0.1% 0.2%;
+  }
+  75% {
+    translate: 0.1% 0.35%;
+  }
+}
+
+@keyframes ch-era-grain {
+  0% {
+    background-position: 0 0;
+  }
+  25% {
+    background-position: -37px 21px;
+  }
+  50% {
+    background-position: 53px -44px;
+  }
+  75% {
+    background-position: -18px 66px;
+  }
+}
+
+@keyframes ch-era-scratch {
+  0% {
+    translate: 0;
+  }
+  20% {
+    translate: 8%;
+  }
+  40% {
+    translate: -14%;
+  }
+  60% {
+    translate: 3%;
+    opacity: 0.3;
+  }
+  80% {
+    translate: 19%;
+  }
+}
+
+/* ---------- 1982: grünes Terminal ---------- */
+.ch-wrap[data-ch-era='1982'] {
+  --ch-era-case: radial-gradient(ellipse at 50% 45%, #072a13, #041409 75%);
+  --ch-era-case-shadow: 0 0 0 6px #2a2824, 0 0 0 7px #4a463f, inset 0 0 40px #000, 0 12px 28px rgb(0 0 0 / 0.55);
+  --ch-era-radius: 22px;
+  --ch-era-ink: #3dff7a;
+  --ch-era-font: ui-monospace, 'Cascadia Mono', 'Courier New', monospace;
+  --ch-era-light: #041409;
+  --ch-era-dark: #0b3a1b;
+  --ch-era-check: rgb(61 255 122 / 0.6);
+  --ch-era-last: rgb(61 255 122 / 0.16);
+  --ch-era-white: #3dff7a;
+  --ch-era-white-stroke: 0 transparent;
+  --ch-era-black: #041409;
+  --ch-era-black-stroke: 1.3px #3dff7a;
+  --ch-era-glow: 0 0 6px rgb(61 255 122 / 0.7);
+  --ch-era-accent: #3dff7a;
+  --ch-era-frame: 0 0 0 1px rgb(61 255 122 / 0.6);
+  --ch-era-fx: radial-gradient(ellipse at 50% 50%, transparent 58%, rgb(0 0 0 / 0.6) 100%), repeating-linear-gradient(0deg, rgb(0 0 0 / 0.35) 0 1px, transparent 1px 3px);
+  text-shadow: 0 0 2px #3dff7a, 0 0 8px rgb(61 255 122 / 0.5);
+  animation: ch-era-flicker 4s steps(1) infinite;
+}
+
+@keyframes ch-era-flicker {
+  0% {
+    opacity: 1;
+  }
+  31% {
+    opacity: 0.94;
+  }
+  32% {
+    opacity: 1;
+  }
+  77% {
+    opacity: 0.97;
+  }
+  78% {
+    opacity: 1;
+  }
+}
+
+/* ---------- 1986: Videoband im Fernseher ---------- */
+.ch-wrap[data-ch-era='1986'] {
+  --ch-era-case: radial-gradient(ellipse at 50% 40%, #1a2a78, #0b1440 80%);
+  --ch-era-case-shadow: 0 0 0 8px #8c8478, 0 0 0 9px #6f685e, inset 0 0 50px rgb(0 0 0 / 0.8), 0 12px 28px rgb(0 0 0 / 0.55);
+  --ch-era-radius: 24px;
+  --ch-era-ink: #f4f4f4;
+  --ch-era-font: ui-monospace, 'Courier New', monospace;
+  --ch-era-light: #9aa8ee;
+  --ch-era-dark: #2c3c9e;
+  --ch-era-check: rgb(255 79 110 / 0.85);
+  --ch-era-last: rgb(255 255 255 / 0.2);
+  --ch-era-white: #ffffff;
+  --ch-era-white-stroke: 0.6px #0b1440;
+  --ch-era-black: #121212;
+  --ch-era-black-stroke: 0.5px rgb(255 255 255 / 0.5);
+  --ch-era-glow: 2px 0 rgb(255 42 85 / 0.55), -2px 0 rgb(42 212 255 / 0.55);
+  --ch-era-accent: #ffffff;
+  --ch-era-screen-radius: 10px;
+  --ch-era-fx: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.3) 0 1px, transparent 1px 3px);
+  --ch-era-noise: var(--ch-era-grain);
+  --ch-era-noise-blend: screen;
+  --ch-era-noise-opacity: 0.22;
+  text-shadow: 2px 0 rgb(255 0 64 / 0.45), -2px 0 rgb(0 224 255 / 0.45);
+}
+
+.ch-wrap[data-ch-era='1986'] .ch-board-area {
+  filter: blur(0.35px) saturate(1.3);
+  animation: ch-era-jitter 7s infinite;
+}
+
+.ch-wrap[data-ch-era='1986'] .ch-era-fx::before {
+  animation: ch-era-grain 0.3s steps(3) infinite;
+}
+
+.ch-wrap[data-ch-era='1986'] .ch-era-osd {
+  position: absolute;
+  top: 3%;
+  left: 4%;
+  display: block;
+  color: #fff;
+  font: 700 clamp(0.7rem, 4cqw, 1.3rem) / 1 ui-monospace, 'Courier New', monospace;
+  text-shadow: 2px 0 rgb(255 0 64 / 0.6), -2px 0 rgb(0 224 255 / 0.6), 0 0 3px #000;
+}
+
+.ch-wrap[data-ch-era='1986'] .ch-era-fx::after {
+  inset: auto 0;
+  top: -15%;
+  height: 12%;
+  background: linear-gradient(transparent, rgb(255 255 255 / 0.18) 40%, rgb(255 255 255 / 0.35) 50%, rgb(255 255 255 / 0.12) 60%, transparent);
+  animation: ch-era-tracking 6.5s linear infinite;
+}
+
+@keyframes ch-era-jitter {
+  0%,
+  90%,
+  100% {
+    transform: none;
+  }
+  91% {
+    transform: translateX(0.6%) skewX(-1deg);
+  }
+  93% {
+    transform: translateX(-0.4%);
+  }
+  95% {
+    transform: translateX(0.2%);
+  }
+}
+
+@keyframes ch-era-tracking {
+  from {
+    top: -15%;
+  }
+  to {
+    top: 115%;
+  }
+}
+
+/* ---------- 1989: Taschen-LCD ---------- */
+.ch-wrap[data-ch-era='1989'] {
+  --ch-era-case: linear-gradient(160deg, #5b6577, #454e5e);
+  --ch-era-case-shadow: inset 0 1px 0 #7a849a, 0 12px 28px rgb(0 0 0 / 0.55);
+  --ch-era-radius: 18px;
+  --ch-era-ink: #dfe4ee;
+  --ch-era-font: ui-monospace, 'Courier New', monospace;
+  --ch-era-light: #aab78c;
+  --ch-era-dark: #909e72;
+  --ch-era-check: rgb(40 50 29 / 0.7);
+  --ch-era-last: rgb(40 50 29 / 0.18);
+  --ch-era-white: #c3cfa2;
+  --ch-era-white-stroke: 1.5px #28321d;
+  --ch-era-black: #28321d;
+  --ch-era-black-stroke: 0 transparent;
+  --ch-era-accent: #28321d;
+  --ch-era-screen-radius: 3px;
+  --ch-era-frame: 0 0 0 8px #262b33, 0 0 0 9px #1a1e24;
+  --ch-era-fx: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.07) 0 1px, transparent 1px 4px), repeating-linear-gradient(90deg, rgb(0 0 0 / 0.07) 0 1px, transparent 1px 4px);
+  padding: 0.9rem;
+  text-transform: uppercase;
+}
+
+.ch-wrap[data-ch-era='1989'] .ch-board .ch-piece {
+  filter: drop-shadow(1px 1px 0 rgb(40 50 29 / 0.25));
+}
+
+/* ---------- 2007: E-Paper ---------- */
+.ch-wrap[data-ch-era='2007'] {
+  --ch-era-case: linear-gradient(#3a3b3e, #2c2d30);
+  --ch-era-case-shadow: inset 0 1px 0 #55575c, 0 12px 28px rgb(0 0 0 / 0.55);
+  --ch-era-radius: 16px;
+  --ch-era-ink: #d9d8d2;
+  --ch-era-font: Georgia, 'Iowan Old Style', serif;
+  --ch-era-light: #dcdbd5;
+  --ch-era-dark: #aeada7;
+  --ch-era-check: rgb(38 38 42 / 0.55);
+  --ch-era-last: rgb(38 38 42 / 0.14);
+  --ch-era-white: #f4f4f0;
+  --ch-era-white-stroke: 1.2px #26262a;
+  --ch-era-black: #26262a;
+  --ch-era-black-stroke: 0 transparent;
+  --ch-era-accent: #26262a;
+  --ch-era-screen-radius: 2px;
+  --ch-era-frame: inset 0 1px 4px rgb(0 0 0 / 0.4);
+  --ch-era-noise: var(--ch-era-grain);
+  --ch-era-noise-blend: multiply;
+  --ch-era-noise-opacity: 0.1;
+  padding: 0.9rem 0.8rem;
+}
+
+/* Bei jedem Zug baut sich die Anzeige neu auf: einmal schwarz, einmal weiß. */
+.ch-wrap[data-ch-era='2007'] .ch-era-fx::after {
+  opacity: 0;
+  animation: ch-era-eink 0.45s steps(1);
+}
+
+@keyframes ch-era-eink {
+  0% {
+    background: #000;
+    opacity: 1;
+  }
+  30% {
+    background: #fff;
+    opacity: 1;
+  }
+  60% {
+    background: #000;
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---------- 2026: OLED ---------- */
+.ch-wrap[data-ch-era='2026'] {
+  --ch-era-case: #000;
+  --ch-era-case-shadow: 0 0 0 1px #2a2a2e, inset 0 0 0 1px #3a3a40, 0 12px 28px rgb(0 0 0 / 0.55);
+  --ch-era-radius: 26px;
+  --ch-era-ink: #f2f2f4;
+  --ch-era-font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ch-era-light: #1f1f24;
+  --ch-era-dark: #101013;
+  --ch-era-check: rgb(255 77 77 / 0.8);
+  --ch-era-last: rgb(79 209 197 / 0.2);
+  --ch-era-white: #f2f2f4;
+  --ch-era-white-stroke: 0 transparent;
+  --ch-era-black: #ff7a59;
+  --ch-era-black-stroke: 0 transparent;
+  --ch-era-glow: 0 0 10px rgb(255 255 255 / 0.12);
+  --ch-era-accent: #4fd1c5;
+  --ch-era-screen-radius: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-wrap[data-ch-era],
+  .ch-wrap[data-ch-era] .ch-board-area,
+  .ch-era-fx,
+  .ch-era-fx::before,
+  .ch-era-fx::after,
+  .ch-time-machine svg * {
+    animation: none !important;
+  }
+}
