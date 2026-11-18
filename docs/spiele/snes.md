@@ -24,7 +24,15 @@ Empfehlung: zuerst ein **Probelauf** (Stufe 0 und 1, wenige Wochen Abendarbeit),
 - **Bot:** „leicht“ zieht jeden zweiten Zug zufällig, „mittel“ gewinnt, wehrt ab oder nimmt die Mitte, „schwer“ rechnet vollständig (Negamax mit Bitmasken) und verliert nie. Die erste, einfache Fassung brauchte für die zweite Antwort sieben Sekunden – die heutige höchstens 0,7. Für Stufe 2 heißt das: Bots für größere Bretter brauchen von Anfang an Bitbretter und ein Zeitbudget, voraussichtlich mit Assembler in der innersten Schleife.
 - **Erkenntnisse zu 816-tcc:** siehe „Stolpersteine“ in der README (nicht gelöschte Variablen, Rückgabewerte über Funktionszeiger, Klangindex, Tonhöhe).
 
-**Zu prüfen (Cornelius):** das ROM aus dem CI-Artefakt „brett-und-blatt-16“ in Mesen oder RetroArch öffnen, eine Partie gegen jeden Bot und eine zu zweit spielen, auf Lesbarkeit und Klang achten.
+**Stufe 2 umgesetzt (18.11.2026, #518):** sechs Brettklassiker zusätzlich zu Tic-Tac-Toe – Vier in einer Reihe (alle Brettgrößen, PopOut), Reversi (6/8/10, freie Eröffnung), Gomoku, Ultimate Tic-Tac-Toe (beide Varianten), Mühle (alle Optionen) und Dame (Deutsch, International, Englisch; 8 × 8 und 10 × 10).
+
+- **Unterbau:** Züge sind Bytefolgen je Spiel statt 16-Bit-Zahlen (Mühle mit Wegnehmen, Dame mit Sprungketten). Spiele haben Optionen. Die Bedienung läuft für alle Spiele gleich über Felderfolgen (Stein, Ziel, Sprungfelder, wegzunehmender Stein).
+- **Grafik:** Jedes Spiel hat drei eigene Brettpaletten. Gleiche Kacheln werden zusammengelegt (630 Kacheln insgesamt).
+- **Prüfungen:** Alle Regeln stimmen in 20 Optionskombinationen Zug für Zug mit der Web-App überein, über mehrere tausend Partien. Alle Bots ziehen erlaubt, rechnen höchstens etwa 2,5 Sekunden, und „schwer“ schlägt einen Zufallsspieler in fast allen Partien. Alle 50 Prüfungen laufen in etwa 4 Minuten.
+- **Nicht auf dem SNES:** Remis-Angebote bei Dame (in der Web-App kein Teil von `legalMoves`).
+- **„Wölfe im Schafspelz“** stand versehentlich in Stufe 2. Es ist ein Partyspiel für 8–19 Spieler und gehört nicht hierher.
+
+**Zu prüfen (Cornelius):** das ROM aus dem CI-Artefakt „brett-und-blatt-16“ in Mesen oder RetroArch öffnen, jedes Spiel einmal gegen den Bot spielen und Lesbarkeit, Farben und Bedienung ansehen (besonders Mühle und Dame mit mehreren Schritten je Zug).
 
 ## Was das SNES kann und was nicht
 
@@ -64,7 +72,7 @@ Besonders wichtig für Kartenspiele: Am Fernseher sehen alle alles. Verdeckte H�
 
 ## Welche Spiele passen
 
-**Gut geeignet (Stufe 2–3):** Tic-Tac-Toe, Ultimate Tic-Tac-Toe, Vier in einer Reihe, Gomoku, Reversi, Mühle, Dame, Wölfe im Schafspelz, Schiffe versenken (mit Wechselbildschirm), Würfelblock, Mäxle, Nicht ärgern! (4 Spieler über Multitap), Paare finden, Solitaire, Elf zuerst!, Domino, Zielzahl, Rechenmauer, Teiler-Duell.
+**Gut geeignet (Stufe 2–3):** Tic-Tac-Toe, Ultimate Tic-Tac-Toe, Vier in einer Reihe, Gomoku, Reversi, Mühle, Dame, Schiffe versenken (mit Wechselbildschirm), Würfelblock, Mäxle, Nicht ärgern! (4 Spieler über Multitap), Paare finden, Solitaire, Elf zuerst!, Domino, Zielzahl, Rechenmauer, Teiler-Duell.
 
 **Geeignet mit Mehraufwand (Stufe 4–5):** Mau-Mau, Eins!, Schwarzer Peter, Quartett, Präsident, Speed und Kartenblitz (Echtzeit mit zwei Controllern – auf dem SNES sogar besonders schön), Sternhalma, Rübenacker, Bingo, Poker, Skat, Schafkopf, Doppelkopf, Binokel (Bots nur regelbasiert), Schach (Suche in Assembler, Stärke eines Anfängers bis Vereinsspielers), Go auf 9×9.
 
@@ -89,9 +97,9 @@ Jede Stufe endet mit einem spielbaren ROM. Danach kann man aufhören, ohne dass 
 - **Schiedsrichter-Test:** `apps/snes/test/snes.test.ts` steuert den Prüf-Emulator, spielt Zufallspartien und vergleicht Stand und erlaubte Züge mit `packages/games/tic-tac-toe`.
 - **Fertig, wenn:** Tic-Tac-Toe gegen Bot und zu zweit spielbar, Vergleichstest grün in der CI.
 
-### Stufe 2 – Brettklassiker (mittel)
+### Stufe 2 – Brettklassiker (mittel) – erledigt
 
-- Vier in einer Reihe, Gomoku, Reversi, Mühle, Dame, Ultimate Tic-Tac-Toe, Wölfe im Schafspelz.
+- Vier in einer Reihe, Gomoku, Reversi, Mühle, Dame, Ultimate Tic-Tac-Toe.
 - Baustein „Raster mit Cursor“ (Gegenstück zu `GridBoard`), optional SNES-Maus.
 - Minimax mit Alpha-Beta in C, Zeitbudget je Zug (z. B. 2 s, gemessen in Bildern), heiße Schleifen bei Bedarf in Assembler.
 - Erstes ROM-Release (GitHub Release mit `.sfc`), Eintrag auf der Seite „Weitere Spiele“ oder einer eigenen Seite mit EmulatorJS.
@@ -153,6 +161,7 @@ Die größten Unsicherheiten: die Geschwindigkeit des C-Compilers (Bots), die Le
 
 - Vorhaben [#515](https://github.com/ichthys2k/brett-und-blatt/issues/515) mit den Stufen 0–6.
 - Stufe 0 und 1: [#516](https://github.com/ichthys2k/brett-und-blatt/issues/516).
+- Stufe 2: [#518](https://github.com/ichthys2k/brett-und-blatt/issues/518).
 
 ## Quellen
 
