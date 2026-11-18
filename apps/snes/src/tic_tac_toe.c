@@ -20,11 +20,12 @@ static const u8 REIHEN[8][3] = {
   {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {2, 4, 6},
 };
 
-static void ttt_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
+static void ttt_aufbauen(u8 *stand, const u8 *optionen, u8 plaetze, const char *seed) {
   Ttt *t = (Ttt *)stand;
   u8 i;
   (void)optionen;
-  (void)z;
+  (void)plaetze;
+  (void)seed;
   for (i = 0; i < 9; i++) t->brett[i] = 0;
   t->zug = 0;
   t->sieger = PLATZ_KEIN;
@@ -35,7 +36,7 @@ static void ttt_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
 static u8 ttt_ergebnis(const u8 *stand, u8 *sieger) {
   const Ttt *t = (const Ttt *)stand;
   if (t->sieger != PLATZ_KEIN) {
-    if (sieger) *sieger = t->sieger;
+    if (sieger) *sieger = 1 << (t->sieger);
     return ERGEBNIS_SIEG;
   }
   if (t->belegt == 9) return ERGEBNIS_REMIS;
@@ -277,6 +278,7 @@ const Spiel spiel_tic_tac_toe = {
   "✚ Feld wählen · A setzen · Start: Pause",
   PLATZ_NAMEN,
   PLATZ_PALETTEN,
+  2,
   2,
   0,
   0,

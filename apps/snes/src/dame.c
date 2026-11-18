@@ -266,10 +266,11 @@ static void merken(Dame *m) {
   m->gesehen_n++;
 }
 
-static void dame_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
+static void dame_aufbauen(u8 *stand, const u8 *optionen, u8 plaetze, const char *seed) {
   Dame *m = (Dame *)stand;
   u8 r, c, g, reihen;
-  (void)z;
+  (void)plaetze;
+  (void)seed;
   m->variante = optionen[0];
   g = optionen[1] ? 10 : 8;
   m->groesse = g;
@@ -295,7 +296,7 @@ static void dame_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
 static u8 dame_ergebnis(const u8 *stand, u8 *sieger) {
   const Dame *m = (const Dame *)stand;
   if (m->sieger != PLATZ_KEIN) {
-    if (sieger) *sieger = m->sieger;
+    if (sieger) *sieger = 1 << (m->sieger);
     return ERGEBNIS_SIEG;
   }
   return m->ende ? ERGEBNIS_REMIS : ERGEBNIS_LAEUFT;
@@ -383,7 +384,8 @@ static u16 dame_ausgeben(const u8 *stand, u8 *p) {
 #define TIEFE_MAX 5
 #define SUCHE_ZUEGE 48
 static u8 b_f[TIEFE_MAX + 1][ZELLEN_MAX];
-static Zug b_zuege[TIEFE_MAX][SUCHE_ZUEGE];
+extern Zug dame_suche[TIEFE_MAX][SUCHE_ZUEGE]; /* in Bank $7F (ram.asm) */
+#define b_zuege dame_suche
 static u8 b_g, b_var, b_abbruch;
 static u16 b_start, b_budget;
 
@@ -559,6 +561,7 @@ const Spiel spiel_dame = {
   "A wählt den Stein, dann das Ziel bzw. jedes Sprungfeld nacheinander · B zurück",
   PLATZ_NAMEN,
   PLATZ_PALETTEN,
+  2,
   2,
   0,
   OPTIONEN,

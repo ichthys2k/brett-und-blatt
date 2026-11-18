@@ -17,13 +17,16 @@ void eingabe_start(void) {
     halten[p] = 0;
   }
   eingabe_unruhe = 0;
+  // Multitap für bis zu fünf Controller (sonst bleiben die Controller 3–5 stumm).
+  detectMPlay5();
 }
 
 void eingabe_lesen(void) {
   u8 p;
   u16 jetzt;
   for (p = 0; p < CONTROLLER; p++) {
-    jetzt = padsCurrent(p);
+    // Ohne Multitap liest PVSnesLib nur zwei Controller; die übrigen Felder enthalten dann Müll.
+    jetzt = (p < 2 || snes_mplay5) ? padsCurrent(p) : 0;
     // Ein Controller, der nicht steckt, meldet manchmal alle Bits – das ignorieren wir.
     if (jetzt == 0xffff) jetzt = 0;
     neu[p] = jetzt & ~vorher[p];
@@ -45,9 +48,9 @@ u16 tasten_neu(u8 port) {
 }
 
 u16 tasten_alle(void) {
-  return neu[0] | neu[1];
+  return neu[0] | neu[1] | neu[2] | neu[3] | neu[4];
 }
 
 void tasten_loslassen(void) {
-  while (vorher[0] | vorher[1]) bild_warten();
+  while (vorher[0] | vorher[1] | vorher[2] | vorher[3] | vorher[4]) bild_warten();
 }

@@ -29,10 +29,11 @@ static const u8 REIHEN[8][3] = {
   {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {2, 4, 6},
 };
 
-static void uttt_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
+static void uttt_aufbauen(u8 *stand, const u8 *optionen, u8 plaetze, const char *seed) {
   Uttt *u = (Uttt *)stand;
   u8 i;
-  (void)z;
+  (void)plaetze;
+  (void)seed;
   for (i = 0; i < 81; i++) u->zellen[i] = 0;
   for (i = 0; i < 9; i++) u->felder[i] = OFFEN;
   u->zwang = OFFEN;
@@ -76,7 +77,7 @@ static u8 zaehlt(const Uttt *u, const u8 *felder, u8 feld, u8 platz) {
 static u8 uttt_ergebnis(const u8 *stand, u8 *sieger) {
   const Uttt *u = (const Uttt *)stand;
   if (u->sieger != PLATZ_KEIN) {
-    if (sieger) *sieger = u->sieger;
+    if (sieger) *sieger = 1 << (u->sieger);
     return ERGEBNIS_SIEG;
   }
   return u->remis ? ERGEBNIS_REMIS : ERGEBNIS_LAEUFT;
@@ -390,6 +391,7 @@ const Spiel spiel_uttt = {
   "✚ Zelle wählen · A setzen · Helles Holz: hier darfst du setzen",
   PLATZ_NAMEN,
   PLATZ_PALETTEN,
+  2,
   2,
   0,
   OPTIONEN,

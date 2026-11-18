@@ -31,9 +31,10 @@ describe.skipIf(!AKTIV)('Bots im ROM', () => {
         for (let partie = 0; partie < partien; partie++) {
           const wahl = Rng.fromSeed(`bot-${a.id}-${v.name}-${partie}`);
           await p.zufall(`bot-${a.id}-${partie}/main`);
-          const botPlatz = partie % 2;
-          let s = a.modul.setup(2, resolveOptions(a.modul, v.optionen), `bot-${partie}`);
-          await p.start(a.nr, v.snes);
+          const plaetze = v.plaetze ?? 2;
+          const botPlatz = partie % plaetze;
+          let s = a.modul.setup(plaetze, resolveOptions(a.modul, v.optionen), `bot-${partie}`);
+          await p.start(a.nr, v.snes, plaetze, `bot-${partie}`);
           let n = 0;
           while (!a.modul.result(s)) {
             const actor = a.modul.currentPlayers(s)[0];
@@ -59,7 +60,7 @@ describe.skipIf(!AKTIV)('Bots im ROM', () => {
             n++;
           }
           const r = a.modul.result(s);
-          if (r.kind === 'win' && r.winners[0] === botPlatz) siege++;
+          if (r.kind === 'win' && r.winners.includes(botPlatz)) siege++;
           if (r.kind === 'draw') remis++;
         }
         console.log(`${a.id} (${v.name}): Rechenzeit in Bildern leicht ${rechenzeit[0]}, mittel ${rechenzeit[1]}, schwer ${rechenzeit[2]}; „schwer“ gegen Zufall ${siege} Siege, ${remis} Remis aus ${partien}`);

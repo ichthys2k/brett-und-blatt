@@ -70,10 +70,11 @@ static u8 kann_setzen(const u8 *f, u8 groesse, u8 platz) {
   return 0;
 }
 
-static void reversi_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
+static void reversi_aufbauen(u8 *stand, const u8 *optionen, u8 plaetze, const char *seed) {
   Reversi *r = (Reversi *)stand;
   u8 i, k;
-  (void)z;
+  (void)plaetze;
+  (void)seed;
   r->groesse = GROESSEN[optionen[0]];
   r->frei = optionen[1];
   for (i = 0; i < ZELLEN_MAX; i++) r->felder[i] = 0;
@@ -105,7 +106,7 @@ static u8 reversi_ergebnis(const u8 *stand, u8 *sieger) {
   if (!r->vorbei) return ERGEBNIS_LAEUFT;
   zaehlen(r, &s, &w);
   if (s == w) return ERGEBNIS_REMIS;
-  if (sieger) *sieger = s > w ? 0 : 1;
+  if (sieger) *sieger = 1 << (s > w ? 0 : 1);
   return ERGEBNIS_SIEG;
 }
 
@@ -389,6 +390,7 @@ const Spiel spiel_reversi = {
   "✚ Feld wählen · A setzen (Punkte zeigen erlaubte Felder)",
   PLATZ_NAMEN,
   PLATZ_PALETTEN,
+  2,
   2,
   0,
   OPTIONEN,

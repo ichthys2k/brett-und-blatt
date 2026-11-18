@@ -22,11 +22,12 @@ typedef struct {
 
 static const s8 RICHTUNGEN[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}}; /* (Spalte, Reihe) */
 
-static void gomoku_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
+static void gomoku_aufbauen(u8 *stand, const u8 *optionen, u8 plaetze, const char *seed) {
   Gomoku *g = (Gomoku *)stand;
   u8 i;
   (void)optionen;
-  (void)z;
+  (void)plaetze;
+  (void)seed;
   for (i = 0; i < ZELLEN; i++) g->felder[i] = 0;
   g->zug = 0;
   g->sieger = PLATZ_KEIN;
@@ -38,7 +39,7 @@ static void gomoku_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
 static u8 gomoku_ergebnis(const u8 *stand, u8 *sieger) {
   const Gomoku *g = (const Gomoku *)stand;
   if (g->sieger != PLATZ_KEIN) {
-    if (sieger) *sieger = g->sieger;
+    if (sieger) *sieger = 1 << (g->sieger);
     return ERGEBNIS_SIEG;
   }
   return g->belegt == ZELLEN ? ERGEBNIS_REMIS : ERGEBNIS_LAEUFT;
@@ -289,6 +290,7 @@ const Spiel spiel_gomoku = {
   "✚ Schnittpunkt wählen · A setzen · Start: Pause",
   PLATZ_NAMEN,
   PLATZ_PALETTEN,
+  2,
   2,
   0,
   0,

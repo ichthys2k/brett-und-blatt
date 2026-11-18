@@ -11,6 +11,8 @@ export interface Variante {
   snes: number[];
   /** Dieselben Optionen für die Web-App. */
   optionen: Options;
+  /** Zahl der Plätze (Standard 2). */
+  plaetze?: number;
 }
 
 export interface SpielAdapter<S, M> {

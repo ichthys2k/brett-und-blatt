@@ -87,8 +87,10 @@ export class Pruefmodus {
     return { status, ergebnis: kopf[0]!, sieger: kopf[1]!, amZug: kopf[2]!, zuege, stand: [...rest.slice(zugBytes, zugBytes + standBytes)] };
   }
 
-  start(spiel: number, optionen: number[] = []) {
-    return this.auszug(SPIEL_START, [spiel, ...optionen, 0, 0, 0, 0].slice(0, 5));
+  /** Wie setup(plaetze, optionen, seed); Seed höchstens 50 Bytes. */
+  start(spiel: number, optionen: number[] = [], plaetze = 2, seed = 'snes') {
+    const opt = [...optionen, 0, 0, 0, 0, 0, 0, 0, 0].slice(0, 8);
+    return this.auszug(SPIEL_START, [spiel, plaetze, ...opt, ...Buffer.from(`${seed}\0`, 'utf8')]);
   }
 
   zug(bytes: number[]) {

@@ -8,7 +8,9 @@ void zufall_aus_text(Zufall *z, const char *text) {
   u32 k;
   const u8 *p = (const u8 *)text;
   while (*p) {
+    // Wie charCodeAt in der Web-App: UTF-8 bis U+07FF zu einem Zeichen zusammenfassen (z. B. „würfel“).
     k = *p++;
+    if ((k & 0xe0) == 0xc0 && (*p & 0xc0) == 0x80) k = ((k & 0x1f) << 6) | (*p++ & 0x3f);
     h1 = h2 ^ ((h1 ^ k) * 597399067UL);
     h2 = h3 ^ ((h2 ^ k) * 2869860233UL);
     h3 = h4 ^ ((h3 ^ k) * 951274213UL);
@@ -26,6 +28,26 @@ void zufall_aus_text(Zufall *z, const char *text) {
   z->s[1] = h2;
   z->s[2] = h3;
   z->s[3] = h4;
+}
+
+void zufall_strom(Zufall *z, const char *seed, const char *strom) {
+  static char text[96];
+  u8 n = 0;
+  while (*seed && n < 60) text[n++] = *seed++;
+  text[n++] = '/';
+  while (*strom && n < 94) text[n++] = *strom++;
+  text[n] = 0;
+  zufall_aus_text(z, text);
+}
+
+void seed_aus_zahl(char *seed, u16 zahl) {
+  u8 i;
+  seed[0] = 's';
+  for (i = 0; i < 5; i++) {
+    seed[5 - i] = '0' + zahl % 10;
+    zahl /= 10;
+  }
+  seed[6] = 0;
 }
 
 void zufall_aus_zahl(Zufall *z, u16 zahl) {

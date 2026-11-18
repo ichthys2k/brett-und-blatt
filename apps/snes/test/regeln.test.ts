@@ -22,8 +22,8 @@ function erwartet(a: SpielAdapter<any, any>, s: any) {
   const ergebnis = a.modul.result(s);
   const amZug: number | undefined = a.modul.currentPlayers(s)[0];
   return {
-    ergebnis: ergebnis ? (ergebnis.kind === 'win' ? 1 : 2) : 0,
-    sieger: ergebnis?.kind === 'win' ? ergebnis.winners[0] : KEIN,
+    ergebnis: ergebnis ? (ergebnis.kind === 'win' ? 1 : ergebnis.kind === 'draw' ? 2 : 3) : 0,
+    sieger: ergebnis?.kind === 'win' ? ergebnis.winners.reduce((m: number, w: number) => m | (1 << w), 0) : 0,
     amZug: amZug ?? KEIN,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     zuege: amZug === undefined ? [] : a.modul.legalMoves(s, amZug).map((m: any) => schluessel(a.zug(s, m))).sort(),
@@ -50,8 +50,9 @@ describe.skipIf(!AKTIV)('Regeln wie in der Web-App', () => {
         let laengste = 0;
         for (let partie = 0; partie < a.partien; partie++) {
           const wahl = Rng.fromSeed(`${a.id}-${v.name}-${partie}`);
-          let s = a.modul.setup(2, resolveOptions(a.modul, v.optionen), `snes-${partie}`);
-          let x = await p.start(a.nr, v.snes);
+          const plaetze = v.plaetze ?? 2;
+          let s = a.modul.setup(plaetze, resolveOptions(a.modul, v.optionen), `snes-${partie}`);
+          let x = await p.start(a.nr, v.snes, plaetze, `snes-${partie}`);
           expect(x.status, 'Start').toBe(1);
           expect(ist(x), `Partie ${partie}, Start`).toEqual(erwartet(a, s));
           let n = 0;

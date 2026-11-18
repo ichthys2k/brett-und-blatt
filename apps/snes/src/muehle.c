@@ -179,10 +179,11 @@ static u16 zuege_erzeugen(const Muehle *m, const u8 *p, const u8 *hand, u8 platz
 
 /* ------------------------------------------------------------------ Regeln */
 
-static void muehle_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
+static void muehle_aufbauen(u8 *stand, const u8 *optionen, u8 plaetze, const char *seed) {
   Muehle *m = (Muehle *)stand;
   u8 i;
-  (void)z;
+  (void)plaetze;
+  (void)seed;
   for (i = 0; i < PUNKTE; i++) m->punkte[i] = 0;
   m->hand[0] = m->hand[1] = 9;
   m->zug = 0;
@@ -200,7 +201,7 @@ static void muehle_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
 static u8 muehle_ergebnis(const u8 *stand, u8 *sieger) {
   const Muehle *m = (const Muehle *)stand;
   if (m->sieger != PLATZ_KEIN) {
-    if (sieger) *sieger = m->sieger;
+    if (sieger) *sieger = 1 << (m->sieger);
     return ERGEBNIS_SIEG;
   }
   return m->remis ? ERGEBNIS_REMIS : ERGEBNIS_LAEUFT;
@@ -297,7 +298,8 @@ static u16 muehle_ausgeben(const u8 *stand, u8 *p) {
 static u8 b_p[TIEFE_MAX + 1][PUNKTE];
 static u8 b_h[TIEFE_MAX + 1][2];
 #define SUCHE_ZUEGE 100 /* je Tiefe; mehr Züge sieht die Suche nicht (Speicher) */
-static Zug b_zuege[TIEFE_MAX][SUCHE_ZUEGE];
+extern Zug muehle_suche[TIEFE_MAX][SUCHE_ZUEGE]; /* in Bank $7F (ram.asm) */
+#define b_zuege muehle_suche
 static const Muehle *b_m;
 static u16 b_start, b_budget;
 static u8 b_abbruch;
@@ -491,6 +493,7 @@ const Spiel spiel_muehle = {
   "A wählt Punkte nacheinander: Stein, Ziel, dann den Stein zum Wegnehmen · B zurück",
   PLATZ_NAMEN,
   PLATZ_PALETTEN,
+  2,
   2,
   0,
   OPTIONEN,

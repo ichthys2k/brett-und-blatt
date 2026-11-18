@@ -14,6 +14,10 @@ typedef struct {
 
 /** Wie `Rng.fromSeed(seed, stream)`: Text ist „seed/stream“. */
 void zufall_aus_text(Zufall *z, const char *text);
+/** Wie `Rng.fromSeed(seed, strom)`. */
+void zufall_strom(Zufall *z, const char *seed, const char *strom);
+/** Seed-Text „s12345“ aus einer Zahl (für Partien auf dem SNES selbst; mindestens 7 Zeichen Platz). */
+void seed_aus_zahl(char *seed, u16 zahl);
 /** Startwert aus einer Zahl (für Partien auf dem SNES selbst). */
 void zufall_aus_zahl(Zufall *z, u16 zahl);
 /** Nächste 32-Bit-Zahl (im Browser: `next() * 2^32`). */

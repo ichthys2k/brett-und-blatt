@@ -11,12 +11,11 @@
 #include "spiel.h"
 #include "zufall.h"
 
-#define VERSION_TEXT "Version 0.2 · November 2026"
+#define VERSION_TEXT "Version 0.3 · November 2026"
 
 const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle, &spiel_dame};
 
-u8 spielstand[SPIELSTAND_GROESSE];
-Zug zugliste[ZUEGE_MAX];
+/* spielstand und zugliste liegen in Bank $7F (ram.asm). */
 
 u8 zug_gleich(const Zug *a, const Zug *b) {
   u8 i;
@@ -41,15 +40,17 @@ void zug_zufaellig(const Spiel *spiel, const u8 *stand, Zufall *z, Zug *zug) {
 
 /* ------------------------------------------------------------------ Teilnehmer und Einstellungen */
 
-enum { T_CONTROLLER_1, T_CONTROLLER_2, T_BOT_LEICHT, T_BOT_MITTEL, T_BOT_SCHWER, T_ANZAHL };
-static const char *const TEILNEHMER_NAMEN[T_ANZAHL] = {"Controller 1", "Controller 2", "Bot leicht", "Bot mittel", "Bot schwer"};
+/* Controller 3–5 brauchen den Multitap (Super Multitap / MultiPlayer 5). */
+enum { T_CONTROLLER_1, T_CONTROLLER_2, T_CONTROLLER_3, T_CONTROLLER_4, T_CONTROLLER_5, T_BOT_LEICHT, T_BOT_MITTEL, T_BOT_SCHWER, T_ANZAHL };
+static const char *const TEILNEHMER_NAMEN[T_ANZAHL] = {"Controller 1", "Controller 2", "Controller 3", "Controller 4", "Controller 5", "Bot leicht", "Bot mittel", "Bot schwer"};
 #define IST_BOT(t) ((t) >= T_BOT_LEICHT)
 #define BOT_STUFE(t) ((t) - T_BOT_LEICHT)
 
 static const u8 PARTIEN_WAHL[3] = {1, 3, 5};
 
 /* Einstellungen der Spielvorbereitung (bleiben bis zum Ausschalten erhalten). */
-static u8 teilnehmer[PLAETZE_MAX] = {T_CONTROLLER_1, T_BOT_MITTEL};
+static u8 teilnehmer[PLAETZE_MAX] = {T_CONTROLLER_1, T_BOT_MITTEL, T_BOT_MITTEL, T_BOT_MITTEL, T_BOT_MITTEL, T_BOT_MITTEL};
+static u8 spieler[SPIELE_ANZAHL];
 static u8 partien_index;
 static u8 seiten_tauschen = 1;
 static u8 optionen[SPIELE_ANZAHL][OPTIONEN_MAX];
@@ -61,6 +62,7 @@ u8 folge_n;
 static u8 markierung[FELDER_MAX];
 static Zufall partie_zufall;
 static u8 platz_teilnehmer[PLAETZE_MAX];
+static char partie_seed[SEED_MAX];
 
 /* ------------------------------------------------------------------ Hilfen */
 
@@ -180,7 +182,7 @@ static void statistik(void) {
     kachel(28, 5, Z_PFEIL_RECHTS, PAL_GRAU);
     text(3, y + 1, "Partien gesamt", PAL_TEXT);
     zahl(23, y + 1, s->partien, 5, PAL_TEXT);
-    text(3, y + 2, "davon zu zweit", PAL_TEXT);
+    text(3, y + 2, "nur Menschen", PAL_TEXT);
     zahl(23, y + 2, s->hotseat, 5, PAL_TEXT);
     text(3, y + 4, "Gegen Bot  Sieg Remis Nied.", PAL_GRAU);
     for (t = 0; t < STUFEN; t++) {
@@ -239,56 +241,71 @@ static void wert_zeigen(u8 y, const char *wert, u8 aktiv) {
   kachel(29, y, Z_PFEIL_RECHTS, aktiv ? PAL_GELB : PAL_GRAU);
 }
 
-/* Zeilen: Platz 0, Platz 1, Partien, Seiten, Optionen …, Anleitung, Los. */
-#define ZEILE_PLATZ0 0
-#define ZEILE_PLATZ1 1
-#define ZEILE_PARTIEN 2
-#define ZEILE_TAUSCH 3
-#define ZEILE_OPTION 4
+/*
+ * Zeilen: Spielerzahl (wenn wählbar), je Platz der Teilnehmer, Partien, Plätze tauschen,
+ * Optionen …, Anleitung, Los. Alle einzeilig ab Zeile 5, damit auch sechs Plätze und viele
+ * Optionen auf den Bildschirm passen.
+ */
+enum { Z_SPIELER, Z_PLATZ, Z_PARTIEN, Z_TAUSCH, Z_OPTION, Z_ANLEITUNG, Z_LOS };
+static u8 zeilen_art[24], zeilen_nr[24];
 
-static u8 zeile_y(u8 zeile, u8 n_opt) {
-  if (zeile <= ZEILE_PLATZ1) return 6 + zeile;
-  if (zeile <= ZEILE_TAUSCH) return 7 + zeile;
-  if (zeile < ZEILE_OPTION + n_opt) return 8 + zeile;
-  return 9 + zeile;
+static u8 zeilen_bauen(const Spiel *spiel, u8 n) {
+  u8 z = 0, i;
+  if (spiel->plaetze_min < spiel->plaetze_max) zeilen_art[z++] = Z_SPIELER;
+  for (i = 0; i < n; i++) {
+    zeilen_art[z] = Z_PLATZ;
+    zeilen_nr[z++] = i;
+  }
+  zeilen_art[z++] = Z_PARTIEN;
+  if (n > 1) zeilen_art[z++] = Z_TAUSCH;
+  for (i = 0; i < spiel->optionen_anzahl; i++) {
+    zeilen_art[z] = Z_OPTION;
+    zeilen_nr[z++] = i;
+  }
+  zeilen_art[z++] = Z_ANLEITUNG;
+  zeilen_art[z++] = Z_LOS;
+  return z;
 }
 
 /* Gibt 1 zurück, wenn die Partie beginnen soll, 0 für zurück zum Menü. */
 static u8 vorbereitung(u8 spiel_nr) {
   static const char *const PARTIEN_TEXT[3] = {"1", "3", "5"};
+  static const char *const ZAHLEN[7] = {"0", "1", "2", "3", "4", "5", "6"};
   const Spiel *spiel = spiele[spiel_nr];
-  u8 n_opt = spiel->optionen_anzahl;
-  u8 zeile_anleitung = ZEILE_OPTION + n_opt;
-  u8 zeile_los = zeile_anleitung + 1;
-  u8 zeilen = zeile_los + 1;
-  u8 zeile = zeile_los;
-  u8 i, y, o;
+  u8 zeilen = zeilen_bauen(spiel, spieler[spiel_nr]);
+  u8 zeile = zeilen - 1;
+  u8 i, y, o, art, n;
   u16 t;
   s8 schritt;
   const Option *opt;
   while (1) {
     kopfzeile(spiel->name);
     tafel(1, 3, 30, 22);
-    text(3, 4, "Wer spielt?", PAL_GRAU);
     tasten_loslassen();
     while (1) {
       for (i = 0; i < zeilen; i++) {
-        y = zeile_y(i, n_opt);
+        y = 5 + i;
+        art = zeilen_art[i];
         kachel(3, y, i == zeile ? K_PFEIL : 0, PAL_GELB);
-        if (i <= ZEILE_PLATZ1) {
-          text(5, y, spiel->platz_namen[i], spiel->platz_paletten[i]);
-          wert_zeigen(y, TEILNEHMER_NAMEN[teilnehmer[i]], i == zeile);
-        } else if (i == ZEILE_PARTIEN) {
+        flaeche_leeren(5, y, 9, 1);
+        if (art == Z_SPIELER) {
+          text(5, y, "Spieler", PAL_TEXT);
+          wert_zeigen(y, ZAHLEN[spieler[spiel_nr]], i == zeile);
+        } else if (art == Z_PLATZ) {
+          n = zeilen_nr[i];
+          text(5, y, spiel->platz_namen[n], spiel->platz_paletten[n]);
+          wert_zeigen(y, TEILNEHMER_NAMEN[teilnehmer[n]], i == zeile);
+        } else if (art == Z_PARTIEN) {
           text(5, y, "Partien", PAL_TEXT);
           wert_zeigen(y, PARTIEN_TEXT[partien_index], i == zeile);
-        } else if (i == ZEILE_TAUSCH) {
-          text(5, y, "Seiten", PAL_TEXT);
+        } else if (art == Z_TAUSCH) {
+          text(5, y, "Plätze", PAL_TEXT);
           wert_zeigen(y, seiten_tauschen ? "tauschen" : "behalten", i == zeile);
-        } else if (i < zeile_anleitung) {
-          opt = &spiel->optionen[i - ZEILE_OPTION];
+        } else if (art == Z_OPTION) {
+          opt = &spiel->optionen[zeilen_nr[i]];
           text(5, y, opt->name, PAL_TEXT);
-          wert_zeigen(y, opt->werte[optionen[spiel_nr][i - ZEILE_OPTION]], i == zeile);
-        } else if (i == zeile_anleitung) {
+          wert_zeigen(y, opt->werte[optionen[spiel_nr][zeilen_nr[i]]], i == zeile);
+        } else if (art == Z_ANLEITUNG) {
           text(5, y, "Anleitung", i == zeile ? PAL_GELB : PAL_TEXT);
         } else {
           text(5, y, "Los geht's!", i == zeile ? PAL_GELB : PAL_TEXT);
@@ -308,17 +325,26 @@ static u8 vorbereitung(u8 spiel_nr) {
       if (t & KEY_START) return 1;
       if (!schritt) continue;
       klang_spielen(KLANG_KLICK);
-      if (zeile <= ZEILE_PLATZ1) {
-        teilnehmer[zeile] = (teilnehmer[zeile] + T_ANZAHL + schritt) % T_ANZAHL;
-      } else if (zeile == ZEILE_PARTIEN) {
+      art = zeilen_art[zeile];
+      if (art == Z_SPIELER) {
+        n = spieler[spiel_nr] + schritt;
+        if (n < spiel->plaetze_min) n = spiel->plaetze_max;
+        if (n > spiel->plaetze_max) n = spiel->plaetze_min;
+        spieler[spiel_nr] = n;
+        zeilen = zeilen_bauen(spiel, n);
+        break;
+      } else if (art == Z_PLATZ) {
+        n = zeilen_nr[zeile];
+        teilnehmer[n] = (teilnehmer[n] + T_ANZAHL + schritt) % T_ANZAHL;
+      } else if (art == Z_PARTIEN) {
         partien_index = (partien_index + 3 + schritt) % 3;
-      } else if (zeile == ZEILE_TAUSCH) {
+      } else if (art == Z_TAUSCH) {
         seiten_tauschen ^= 1;
-      } else if (zeile < zeile_anleitung) {
-        o = zeile - ZEILE_OPTION;
+      } else if (art == Z_OPTION) {
+        o = zeilen_nr[zeile];
         opt = &spiel->optionen[o];
         optionen[spiel_nr][o] = (optionen[spiel_nr][o] + opt->anzahl + schritt) % opt->anzahl;
-      } else if (zeile == zeile_anleitung) {
+      } else if (art == Z_ANLEITUNG) {
         if (t & KEY_A) {
           anleitung(spiel);
           break;
@@ -334,19 +360,31 @@ static u8 vorbereitung(u8 spiel_nr) {
 
 static void platz_text(const Spiel *spiel, u8 y, u8 platz, const char *nachsatz) {
   u8 n = text_laenge(spiel->platz_namen[platz]) + text_laenge(nachsatz);
-  u8 x = (BILD_B - n) / 2;
+  u8 x = n >= BILD_B ? 0 : (BILD_B - n) / 2;
   flaeche_leeren(0, y, 32, 1);
   x += text(x, y, spiel->platz_namen[platz], spiel->platz_paletten[platz]);
   text(x, y, nachsatz, PAL_TEXT);
 }
 
-/* Vor einem Zug mit verdeckten Karten: Bildschirm leeren, bis der richtige Mensch übernimmt. */
+/* „ ist dran (Controller 3)“ */
+static char dran_text[32];
+static const char *dran(u8 port) {
+  static const char VORNE[] = " ist dran (Controller ";
+  u8 i;
+  for (i = 0; VORNE[i]; i++) dran_text[i] = VORNE[i];
+  dran_text[i++] = '1' + port;
+  dran_text[i++] = ')';
+  dran_text[i] = 0;
+  return dran_text;
+}
+
+/* Vor einem Zug mit verdeckten Informationen: Bildschirm leeren, bis der richtige Mensch übernimmt. */
 static void wechselbildschirm(const Spiel *spiel, u8 platz, u8 port) {
   bild_leeren();
   tafel(3, 8, 26, 11);
   platz_text(spiel, 10, platz, " ist dran");
-  text_mitte(13, port == 0 ? "Controller 1 nehmen" : "Controller 2 nehmen", PAL_TEXT);
-  text_mitte(16, "A: Karten zeigen", PAL_GRAU);
+  text_mitte(13, TEILNEHMER_NAMEN[port], PAL_TEXT);
+  text_mitte(16, "A: weiter", PAL_GRAU);
   tasten_loslassen();
   while (!(tasten_neu(port) & KEY_A)) bild_warten();
 }
@@ -364,7 +402,17 @@ static u8 pause(void) {
   return wahl == 1;
 }
 
-static void partie_bild(const Spiel *spiel, u8 nummer, u8 anzahl, const u8 *siege) {
+/* Siege je Teilnehmer der Vorbereitung als „1 : 0“ bzw. „1 · 0 · 2“ ab Spalte x. */
+static void siege_zeigen(u8 x, u8 y, u8 n, const u8 *siege) {
+  u8 i;
+  for (i = 0; i < n; i++) {
+    if (i) text(x - 1, y, n == 2 ? ":" : "·", PAL_GRAU);
+    zahl(x, y, siege[i], 1, PAL_TEXT);
+    x += 3;
+  }
+}
+
+static void partie_bild(const Spiel *spiel, u8 nummer, u8 anzahl, const u8 *siege, u8 n) {
   kopfzeile(spiel->name);
   flaeche_leeren(0, 25, 32, 1);
   if (anzahl > 1) {
@@ -372,10 +420,7 @@ static void partie_bild(const Spiel *spiel, u8 nummer, u8 anzahl, const u8 *sieg
     zahl(8, 25, nummer + 1, 1, PAL_GRAU);
     text(10, 25, "von", PAL_GRAU);
     zahl(14, 25, anzahl, 1, PAL_GRAU);
-    text(18, 25, "Stand", PAL_GRAU);
-    zahl(24, 25, siege[0], 2, PAL_TEXT);
-    text(27, 25, ":", PAL_GRAU);
-    zahl(29, 25, siege[1], 2, PAL_TEXT);
+    if (n > 1) siege_zeigen(18, 25, n, siege);
   }
 }
 
@@ -427,11 +472,12 @@ static void cursor_bewegen(const Spiel *spiel, s8 dx, s8 dy) {
 }
 
 /* Wartet auf die Wahl eines Menschen. Gibt 1 zurück, wenn `zug` gesetzt ist, 0 bei Abbruch. */
-static u8 mensch_waehlt(const Spiel *spiel, u8 port, Zug *zug, u8 nummer, u8 anzahl, const u8 *siege, u8 platz) {
+static u8 mensch_waehlt(const Spiel *spiel, u8 port, Zug *zug, u8 nummer, u8 anzahl, const u8 *siege, u8 platz, u8 n_plaetze) {
   u16 n = spiel->zuege(spielstand, zugliste);
   u16 tasten, fertig;
   u8 feld, ziel;
   folge_n = 0;
+  if (spiel->feld_an(spielstand, cursor_x, cursor_y) == FELD_KEIN) cursor_bewegen(spiel, 1, 0);
   markieren(spiel, n);
   spiel->zeichnen(spielstand, markierung, 1);
   while (1) {
@@ -439,8 +485,8 @@ static u8 mensch_waehlt(const Spiel *spiel, u8 port, Zug *zug, u8 nummer, u8 anz
     tasten = tasten_neu(port);
     if (tasten_alle() & KEY_START) {
       if (pause()) return 0;
-      partie_bild(spiel, nummer, anzahl, siege);
-      platz_text(spiel, 3, platz, port == 0 ? " ist dran (Controller 1)" : " ist dran (Controller 2)");
+      partie_bild(spiel, nummer, anzahl, siege, n_plaetze);
+      platz_text(spiel, 3, platz, dran(port));
       fusszeile("A: wählen · Start: Pause");
       markieren(spiel, n);
       spiel->zeichnen(spielstand, markierung, 1);
@@ -451,11 +497,14 @@ static u8 mensch_waehlt(const Spiel *spiel, u8 port, Zug *zug, u8 nummer, u8 anz
     if (tasten & KEY_RIGHT) cursor_bewegen(spiel, 1, 0);
     if (tasten & KEY_UP) cursor_bewegen(spiel, 0, -1);
     if (tasten & KEY_DOWN) cursor_bewegen(spiel, 0, 1);
-    if ((tasten & KEY_B) && folge_n > 0) folge_n--;
+    if (tasten & KEY_B) {
+      if (folge_n > 0) folge_n--;
+    }
     if (tasten & KEY_A) {
       feld = spiel->feld_an(spielstand, cursor_x, cursor_y);
       markieren(spiel, n);
-      ziel = feld != FELD_KEIN && (markierung[feld] & MARK_ZIEL);
+      ziel = 0;
+      if (feld != FELD_KEIN) ziel = markierung[feld] & MARK_ZIEL;
       if (ziel && folge_n < FOLGE_MAX) {
         folge[folge_n++] = feld;
         fertig = markieren(spiel, n);
@@ -471,29 +520,24 @@ static u8 mensch_waehlt(const Spiel *spiel, u8 port, Zug *zug, u8 nummer, u8 anz
   }
 }
 
-/* Spielt eine Partie. Gibt ERGEBNIS_… zurück (Sieger in *sieger) oder 0xff bei Abbruch. */
-static u8 eine_partie(u8 spiel_nr, u8 nummer, u8 anzahl, const u8 *siege, u8 *sieger) {
+/* Spielt eine Partie. Gibt ERGEBNIS_… zurück (Gewinner als Bitmaske in *sieger) oder 0xff bei Abbruch. */
+static u8 eine_partie(u8 spiel_nr, u8 n, u8 nummer, u8 anzahl, const u8 *siege, u8 *sieger) {
   const Spiel *spiel = spiele[spiel_nr];
-  u8 platz, t, port, ergebnis, menschen_port = 0xff, gleicher_controller = 0;
+  u8 platz, t, port, ergebnis, menschen = 0, zuletzt = PLATZ_KEIN;
   u16 i;
   Zug zug;
 
-  zufall_aus_zahl(&partie_zufall, eingabe_unruhe);
-  spiel->aufbauen(spielstand, optionen[spiel_nr], &partie_zufall);
+  seed_aus_zahl(partie_seed, eingabe_unruhe);
+  zufall_strom(&partie_zufall, partie_seed, "bots");
+  spiel->aufbauen(spielstand, optionen[spiel_nr], n, partie_seed);
   cursor_x = spiel->cursor_x;
   cursor_y = spiel->cursor_y;
   if (spiel->feld_an(spielstand, cursor_x, cursor_y) == FELD_KEIN) cursor_bewegen(spiel, 1, 0);
   brett_farben(spiel->brett_farben);
-  partie_bild(spiel, nummer, anzahl, siege);
+  partie_bild(spiel, nummer, anzahl, siege, n);
   for (i = 0; i < FELDER_MAX; i++) markierung[i] = 0;
-
-  // Teilen sich zwei Menschen einen Controller, braucht ein verdecktes Spiel den Wechselbildschirm.
-  for (platz = 0; platz < spiel->plaetze; platz++) {
-    t = platz_teilnehmer[platz];
-    if (IST_BOT(t)) continue;
-    if (menschen_port == t) gleicher_controller = 1;
-    menschen_port = t;
-  }
+  for (platz = 0; platz < n; platz++)
+    if (!IST_BOT(platz_teilnehmer[platz])) menschen++;
 
   while (1) {
     platz = spiel->am_zug(spielstand);
@@ -514,13 +558,15 @@ static u8 eine_partie(u8 spiel_nr, u8 nummer, u8 anzahl, const u8 *siege, u8 *si
       spiel->bot(spielstand, BOT_STUFE(t), &partie_zufall, &zug);
     } else {
       port = t;
-      if (spiel->verdeckt && gleicher_controller) {
+      // Verdeckte Informationen am selben Fernseher: vor jedem Wechsel zwischen Menschen wegschauen lassen.
+      if (spiel->verdeckt && menschen > 1 && platz != zuletzt) {
         wechselbildschirm(spiel, platz, port);
-        partie_bild(spiel, nummer, anzahl, siege);
+        partie_bild(spiel, nummer, anzahl, siege, n);
       }
-      platz_text(spiel, 3, platz, port == 0 ? " ist dran (Controller 1)" : " ist dran (Controller 2)");
+      zuletzt = platz;
+      platz_text(spiel, 3, platz, dran(port));
       fusszeile("A: wählen · Start: Pause");
-      if (!mensch_waehlt(spiel, port, &zug, nummer, anzahl, siege, platz)) return 0xff;
+      if (!mensch_waehlt(spiel, port, &zug, nummer, anzahl, siege, platz, n)) return 0xff;
     }
     if (!zug_erlaubt(spiel, spielstand, &zug)) continue;
     klang_spielen(spiel->ziehen(spielstand, &zug));
@@ -528,30 +574,43 @@ static u8 eine_partie(u8 spiel_nr, u8 nummer, u8 anzahl, const u8 *siege, u8 *si
     spiel->zeichnen(spielstand, markierung, 0);
     bild_warten();
   }
+  *sieger = 0;
   ergebnis = spiel->ergebnis(spielstand, sieger);
   for (i = 0; i < FELDER_MAX; i++) markierung[i] = 0;
   spiel->zeichnen(spielstand, markierung, 0);
   return ergebnis;
 }
 
-static void statistik_eintragen(u8 spiel_nr, u8 ergebnis, u8 sieger) {
+/*
+ * Statistik: „nur Menschen“, wenn keine Bots mitspielen; gegen Bots die Bilanz des einzigen
+ * Menschen gegen die stärkste Bot-Stufe am Tisch.
+ */
+static void statistik_eintragen(u8 spiel_nr, u8 n, u8 ergebnis, u8 sieger) {
   SpielStatistik *s = &speicher.spiele[spiel_nr];
-  u8 mensch = 0xff, bot = 0xff, p, bilanz;
+  u8 menschen = 0, mensch = 0, stufe = 0, bots = 0, p, bilanz, t;
   s->partien++;
-  for (p = 0; p < PLAETZE_MAX; p++) {
-    if (IST_BOT(platz_teilnehmer[p])) bot = p;
-    else mensch = p;
+  for (p = 0; p < n; p++) {
+    t = platz_teilnehmer[p];
+    if (IST_BOT(t)) {
+      bots++;
+      if (BOT_STUFE(t) > stufe) stufe = BOT_STUFE(t);
+    } else {
+      menschen++;
+      mensch = p;
+    }
   }
-  if (mensch != 0xff && bot == 0xff) s->hotseat++;
-  if (mensch != 0xff && bot != 0xff) {
-    bilanz = ergebnis == ERGEBNIS_REMIS ? BILANZ_REMIS : sieger == mensch ? BILANZ_SIEG : BILANZ_NIEDERLAGE;
-    s->gegen_bot[BOT_STUFE(platz_teilnehmer[bot])][bilanz]++;
+  if (menschen > 1 && !bots) s->hotseat++;
+  if (menschen == 1 && bots) {
+    if (ergebnis == ERGEBNIS_REMIS) bilanz = BILANZ_REMIS;
+    else if (ergebnis == ERGEBNIS_SIEG && (sieger & (1 << mensch))) bilanz = BILANZ_SIEG;
+    else bilanz = BILANZ_NIEDERLAGE;
+    s->gegen_bot[stufe][bilanz]++;
   }
   speicher_sichern();
 }
 
-/* Stand der Serie in zwei Zeilen: Überschrift und „Controller 1 1 : 0 Bot mittel“. */
-static void serienstand(u8 letzte, u8 nummer, u8 anzahl, const u8 *siege) {
+/* Stand der Serie in zwei Zeilen: Überschrift und Siege je Teilnehmer. */
+static void serienstand(u8 letzte, u8 nummer, u8 anzahl, const u8 *siege, u8 n) {
   const char *a = TEILNEHMER_NAMEN[teilnehmer[0]];
   const char *b = TEILNEHMER_NAMEN[teilnehmer[1]];
   u8 x = (BILD_B - (text_laenge(a) + text_laenge(b) + 7)) / 2;
@@ -564,39 +623,63 @@ static void serienstand(u8 letzte, u8 nummer, u8 anzahl, const u8 *siege) {
     text(20, 24, "von", PAL_GRAU);
     zahl(24, 24, anzahl, 1, PAL_GRAU);
   }
-  x += text(x, 25, a, PAL_TEXT) + 1;
-  zahl(x, 25, siege[0], 1, PAL_GELB);
-  text(x + 2, 25, ":", PAL_GRAU);
-  zahl(x + 4, 25, siege[1], 1, PAL_GELB);
-  text(x + 6, 25, b, PAL_TEXT);
+  if (n == 2) {
+    x += text(x, 25, a, PAL_TEXT) + 1;
+    zahl(x, 25, siege[0], 1, PAL_GELB);
+    text(x + 2, 25, ":", PAL_GRAU);
+    zahl(x + 4, 25, siege[1], 1, PAL_GELB);
+    text(x + 6, 25, b, PAL_TEXT);
+  } else if (n > 2) {
+    text(6, 25, "Siege", PAL_GRAU);
+    siege_zeigen(13, 25, n, siege);
+  }
 }
 
-/* Eine Serie aus 1, 3 oder 5 Partien. */
+/* Text zum Ergebnis in Zeile 3. */
+static void ergebnis_text(const Spiel *spiel, u8 ergebnis, u8 sieger, u8 n) {
+  u8 p, anzahl = 0, erster = 0;
+  for (p = 0; p < n; p++) {
+    if (!(sieger & (1 << p))) continue;
+    if (!anzahl) erster = p;
+    anzahl++;
+  }
+  flaeche_leeren(0, 3, 32, 1);
+  if (ergebnis == ERGEBNIS_SIEG && anzahl == 1) platz_text(spiel, 3, erster, n == 1 ? " hat es geschafft!" : " gewinnt!");
+  else if (ergebnis == ERGEBNIS_SIEG) text_mitte(3, "Gleichstand an der Spitze", PAL_TEXT);
+  else if (ergebnis == ERGEBNIS_VERLOREN) text_mitte(3, "Leider verloren", PAL_TEXT);
+  else text_mitte(3, "Unentschieden", PAL_TEXT);
+}
+
+/* Eine Serie aus 1, 3 oder 5 Partien; mit „Plätze tauschen“ rücken die Teilnehmer je Partie einen Platz weiter. */
 static void serie(u8 spiel_nr) {
   const Spiel *spiel = spiele[spiel_nr];
+  u8 n = spieler[spiel_nr];
   u8 anzahl = PARTIEN_WAHL[partien_index];
-  u8 siege[PLAETZE_MAX] = {0, 0};
-  u8 nummer = 0, tausch = 0, ergebnis, sieger = PLATZ_KEIN, p, letzte;
+  u8 siege[PLAETZE_MAX];
+  u8 nummer = 0, versatz = 0, ergebnis, sieger = 0, p, letzte, mensch_gewinnt, menschen;
   u16 t;
+  for (p = 0; p < PLAETZE_MAX; p++) siege[p] = 0;
   while (1) {
-    for (p = 0; p < spiel->plaetze; p++) platz_teilnehmer[p] = teilnehmer[p ^ tausch];
-    ergebnis = eine_partie(spiel_nr, nummer, anzahl, siege, &sieger);
+    // Platz p spielt Teilnehmer (p + versatz) mod n.
+    for (p = 0; p < n; p++) platz_teilnehmer[p] = teilnehmer[(p + versatz) % n];
+    ergebnis = eine_partie(spiel_nr, n, nummer, anzahl, siege, &sieger);
     if (ergebnis == 0xff) return;
-    statistik_eintragen(spiel_nr, ergebnis, sieger);
-    // Siege zählen je Teilnehmer der Vorbereitung, nicht je Platz – sonst verwirrt der Seitentausch.
-    if (ergebnis == ERGEBNIS_SIEG) siege[sieger ^ tausch]++;
-    letzte = nummer + 1 >= anzahl;
-
-    if (ergebnis == ERGEBNIS_SIEG) {
-      platz_text(spiel, 3, sieger, " gewinnt!");
-      klang_spielen(IST_BOT(platz_teilnehmer[sieger]) && !IST_BOT(platz_teilnehmer[sieger ^ 1]) ? KLANG_ENDE : KLANG_SIEG);
-    } else {
-      flaeche_leeren(0, 3, 32, 1);
-      text_mitte(3, "Unentschieden", PAL_TEXT);
-      klang_spielen(KLANG_ENDE);
+    statistik_eintragen(spiel_nr, n, ergebnis, sieger);
+    mensch_gewinnt = menschen = 0;
+    for (p = 0; p < n; p++) {
+      if (!IST_BOT(platz_teilnehmer[p])) menschen++;
+      if (ergebnis != ERGEBNIS_SIEG) continue;
+      if (!(sieger & (1 << p))) continue;
+      // Siege zählen je Teilnehmer der Vorbereitung, nicht je Platz – sonst verwirrt der Tausch.
+      siege[(p + versatz) % n]++;
+      if (!IST_BOT(platz_teilnehmer[p])) mensch_gewinnt = 1;
     }
+    letzte = nummer + 1 >= anzahl;
+    ergebnis_text(spiel, ergebnis, sieger, n);
+    // Fanfare, wenn ein Mensch gewinnt oder nur Bots spielen; sonst der leise Abschluss.
+    klang_spielen(ergebnis == ERGEBNIS_SIEG && (mensch_gewinnt || !menschen) ? KLANG_SIEG : KLANG_ENDE);
     flaeche_leeren(0, 24, 32, 2);
-    if (anzahl > 1) serienstand(letzte, nummer, anzahl, siege);
+    if (anzahl > 1) serienstand(letzte, nummer, anzahl, siege, n);
     fusszeile(letzte ? "A: noch einmal · B: Menü" : "A: nächste Partie · B: Menü");
     tasten_loslassen();
     while (1) {
@@ -608,11 +691,11 @@ static void serie(u8 spiel_nr) {
     klang_spielen(KLANG_KLICK);
     if (letzte) {
       nummer = 0;
-      siege[0] = siege[1] = 0;
-      tausch = 0;
+      for (p = 0; p < PLAETZE_MAX; p++) siege[p] = 0;
+      versatz = 0;
     } else {
       nummer++;
-      if (seiten_tauschen) tausch ^= 1;
+      if (seiten_tauschen) versatz = (versatz + 1) % n;
     }
   }
 }
@@ -629,8 +712,14 @@ static void variablen_start(void) {
   cursor_x = cursor_y = 0;
   folge_n = 0;
   for (i = 0; i < PLAETZE_MAX; i++) platz_teilnehmer[i] = 0;
-  for (i = 0; i < SPIELE_ANZAHL; i++)
+  for (i = 0; i < SPIELE_ANZAHL; i++) {
     for (o = 0; o < OPTIONEN_MAX; o++) optionen[i][o] = o < spiele[i]->optionen_anzahl ? spiele[i]->optionen[o].standard : 0;
+    // Standard: zwei Plätze, wenn möglich.
+    o = 2;
+    if (o < spiele[i]->plaetze_min) o = spiele[i]->plaetze_min;
+    if (o > spiele[i]->plaetze_max) o = spiele[i]->plaetze_max;
+    spieler[i] = o;
+  }
   eingabe_start();
   pruef_start();
 }
@@ -651,7 +740,8 @@ int main(void) {
     tafel(1, 3, 30, 22);
     fusszeile("✚ wählen · A bestätigen");
     tasten_loslassen();
-    wahl = menue(4, 5, (const char *const *)eintraege, SPIELE_ANZAHL + 2, wahl, 2);
+    // Bis zehn Einträge mit Leerzeile dazwischen, darüber dicht.
+    wahl = menue(4, 5, (const char *const *)eintraege, SPIELE_ANZAHL + 2, wahl, SPIELE_ANZAHL + 2 > 10 ? 1 : 2);
     tasten_loslassen();
     if (wahl < SPIELE_ANZAHL) {
       if (vorbereitung(wahl)) serie(wahl);
