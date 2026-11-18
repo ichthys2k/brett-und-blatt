@@ -97,7 +97,39 @@ function pixelPiece(type: PieceType, white: boolean): string {
   return `<g shape-rendering="crispEdges">${rects}</g>`;
 }
 
+/**
+ * Pixelschlacht (1988): Dieselben Pixelfiguren werden zu kleinen Kriegern mit Augen. Beide Armeen nutzen die
+ * Form der weißen Figur; die Farben unterscheiden sie: Silber mit dunklen Augen gegen Schwarz mit glühenden Augen.
+ */
+const ARMY_WHITE = ['#f7f4ec', '#c6cddc', '#7c87a2', '#1b1f2e'];
+const ARMY_BLACK = ['#6d7284', '#4a4e5c', '#2c2f38', '#0b0c10'];
+const EYES: Record<PieceType, [number, number][]> = {
+  k: [[7, 7], [9, 7]],
+  q: [[7, 8], [9, 8]],
+  r: [[7, 8], [9, 8]],
+  b: [[7, 8]],
+  n: [[7, 5]],
+  p: [[7, 5], [9, 5]],
+};
+
+export function battleSpriteMarkup(type: PieceType, white: boolean): string {
+  const rows = PIXEL_PIECES[`${type}w`] ?? [];
+  const palette = white ? ARMY_WHITE : ARMY_BLACK;
+  const cell = 100 / 16;
+  const px = (x: number, y: number, fill: string) =>
+    `<rect x="${(x * cell).toFixed(2)}" y="${(y * cell).toFixed(2)}" width="${cell.toFixed(2)}" height="${cell.toFixed(2)}" fill="${fill}"/>`;
+  let rects = '';
+  rows.forEach((row, y) => {
+    [...row].forEach((ch, x) => {
+      if (ch !== '.') rects += px(x, y, palette[Number(ch)] ?? palette[3]!);
+    });
+  });
+  const eyes = EYES[type].map(([x, y]) => px(x, y, white ? '#1b1f2e' : '#ff4a3d')).join('');
+  return `<g shape-rendering="crispEdges">${rects}<g class="ch-battle-eyes">${eyes}</g></g>`;
+}
+
 const DRAWN: Partial<Record<Era, (type: PieceType, white: boolean) => string>> = {
+  '1988': battleSpriteMarkup,
   '1455': inkPiece,
   '1910': printPiece,
   '1982': asciiPiece,

@@ -6,7 +6,7 @@ import { createContext, useState, useSyncExternalStore, type CSSProperties } fro
  * vom Buchdruck 1455 bis zum OLED-Bildschirm 2026, danach wieder die gewohnte Ansicht.
  * Alles ist reines CSS (`zeitreise.css`); die Wahl gilt je Gerät.
  */
-export const ERAS = ['1455', '1910', '1948', '1982', '1986', '1989', '2007', '2026'] as const;
+export const ERAS = ['1455', '1910', '1948', '1982', '1986', '1988', '1989', '2007', '2026'] as const;
 export type Era = (typeof ERAS)[number];
 
 export const ERA_NAMES: Record<Era, string> = {
@@ -15,6 +15,7 @@ export const ERA_NAMES: Record<Era, string> = {
   '1948': 'Wochenschau',
   '1982': 'Terminal',
   '1986': 'Videoband',
+  '1988': 'Pixelschlacht',
   '1989': 'Taschen-LCD',
   '2007': 'E-Paper',
   '2026': 'OLED',

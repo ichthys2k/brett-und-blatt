@@ -9,8 +9,10 @@ import { PgnSetup } from './PgnSetup';
 import { getCheckWarning, type CheckWarning } from './checkWarning';
 import './styles.css';
 import './zeitreise.css';
+import './schlacht.css';
 import { EraContext, TimeMachine, eraStyle, useChessEra } from './zeitreise';
 import { EraPiece, eraPieceMarkup } from './zeitfiguren';
+import { BattleScene, type Battle } from './schlacht';
 
 type PieceType = 'k' | 'q' | 'r' | 'b' | 'n' | 'p';
 interface Piece {
@@ -178,6 +180,8 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
   /** Rückblick: Halbzug (0-basiert), dessen Stellung gezeigt wird – oder null für die laufende Partie. */
   const [review, setReview] = useState<number | null>(null);
   const [fly, setFly] = useState<Fly | null>(null);
+  /** Pixelschlacht (#512): Kampfszenen nach Schlagzügen, nacheinander – schlägt der Bot sofort zurück, wartet sein Kampf. */
+  const [battles, setBattles] = useState<Battle[]>([]);
   const [lastView, setLastView] = useState(view);
   if (lastView !== view) {
     setLastView(view);
@@ -286,6 +290,10 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
     const move = played.moves.at(-1);
     if (!move?.captured) return;
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    if (era === '1988') {
+      const next: Battle = { key: view.history.length, attacker: move.piece as PieceType, attackerWhite: move.color === 'w', victim: move.captured as PieceType };
+      setBattles((list) => [...list, next].slice(-3));
+    }
     const at = toDisplayCoord(move.to);
     if (!at) return;
     const capturerWhite = move.color === 'w';
@@ -576,6 +584,7 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
             </svg>
           )}
           {/* Oberfläche des Jahrgangs: Korn, Zeilen, Bildstörungen. Je Zug neu, damit E-Paper aufblitzt. */}
+          {battles[0] && era === '1988' && <BattleScene key={battles[0].key} battle={battles[0]} onDone={() => setBattles((list) => list.slice(1))} />}
           {era && (
             <span key={`${era}-${view.history.length}`} className="ch-era-fx" aria-hidden="true">
               <span className="ch-era-osd">PLAY ▶</span>

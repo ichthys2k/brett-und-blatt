@@ -1,0 +1,557 @@
+/*
+ * Pixelschlacht (Jahrgang 1988 der Zeitmaschine, #512): Brett als Burghof, Figuren als kleine Pixelkrieger mit
+ * Augen, die auf ihrem Feld wippen und blinzeln, und eine Kampfszene bei jedem Schlagzug (schlacht.tsx).
+ * Alle Abläufe der Szene teilen sich 2,6 s; der Treffer liegt bei 42 %.
+ */
+
+/* ---------- Brett ---------- */
+.ch-wrap[data-ch-era='1988'] {
+  --ch-era-case:
+    repeating-linear-gradient(0deg, #15121a 0 2px, transparent 2px 18px),
+    repeating-linear-gradient(90deg, #15121a 0 2px, transparent 2px 36px),
+    #2c2734;
+  --ch-era-case-shadow: inset 0 0 0 3px #15121a, 0 12px 28px rgb(0 0 0 / 0.55);
+  --ch-era-radius: 6px;
+  --ch-era-ink: #ffe9a8;
+  --ch-era-font: ui-monospace, 'Courier New', monospace;
+  --ch-era-light: #d6c193;
+  --ch-era-dark: #8f7b56;
+  --ch-era-check: rgb(255 74 61 / 0.85);
+  --ch-era-last: rgb(255 211 77 / 0.32);
+  --ch-era-white: #f7f4ec;
+  --ch-era-white-stroke: 0 transparent;
+  --ch-era-black: #4a4e5c;
+  --ch-era-black-stroke: 0 transparent;
+  --ch-era-accent: #3b2f1e;
+  --ch-era-frame: 0 0 0 4px #15121a, 0 0 0 7px #6b5a3e;
+  --ch-era-piece-filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.35));
+  --ch-era-fx: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.05) 0 1px, transparent 1px 4px), repeating-linear-gradient(90deg, rgb(0 0 0 / 0.05) 0 1px, transparent 1px 4px);
+  text-transform: uppercase;
+}
+
+/* Wippen auf dem Feld, versetzt je Feld, und gelegentliches Blinzeln. */
+.ch-wrap[data-ch-era='1988'] .ch-board .ch-era-piece {
+  animation: ch-battle-idle 0.9s steps(1) infinite;
+}
+
+.ch-wrap[data-ch-era='1988'] .ch-board .bub-cell:nth-child(odd) .ch-era-piece {
+  animation-delay: -0.45s;
+}
+
+.ch-wrap[data-ch-era='1988'] .ch-era-piece .ch-battle-eyes {
+  animation: ch-battle-blink 3.7s steps(1) infinite;
+}
+
+.ch-wrap[data-ch-era='1988'] .ch-board .bub-cell:nth-child(3n) .ch-battle-eyes {
+  animation-delay: -1.6s;
+}
+
+@keyframes ch-battle-idle {
+  50% {
+    translate: 0 -4%;
+  }
+}
+
+@keyframes ch-battle-blink {
+  0%,
+  94% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0;
+  }
+}
+
+/* ---------- Kampfszene ---------- */
+.ch-battle {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  background: rgb(10 8 14 / 0.6);
+  cursor: pointer;
+  animation: ch-battle-fade 2.6s steps(26) forwards;
+}
+
+@keyframes ch-battle-fade {
+  0% {
+    opacity: 0;
+  }
+  6%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.ch-battle-stage {
+  position: relative;
+  width: 94%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 4px solid #15121a;
+  box-shadow: 0 0 0 3px #ffd34d, 0 10px 30px rgb(0 0 0 / 0.6);
+  /* Himmel in harten Farbstufen wie auf alten Spielkonsolen */
+  background: linear-gradient(#1d2766 0 16%, #2b3b8f 16% 30%, #3d56b8 30% 44%, #5a78d6 44% 58%, #8fb0ee 58% 70%);
+  animation: ch-battle-shake 2.6s linear forwards;
+  container-type: inline-size;
+}
+
+/* Boden mit Grasnarbe und Erdschichten */
+.ch-battle-stage::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 30%;
+  background:
+    repeating-linear-gradient(90deg, #5aa04a 0 4%, #4b8c3e 4% 8%) top / 100% 12% no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 11%, #6b4a2c 11% 14%, transparent 14% 23%) 0 45% / 100% 10% no-repeat,
+    #7a5634;
+}
+
+/* Ferne Zinnen am Horizont */
+.ch-battle-stage::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 30%;
+  height: 12%;
+  background: repeating-linear-gradient(90deg, #2c2734 0 6%, transparent 6% 9%) top / 100% 30% no-repeat, #2c2734;
+  opacity: 0.55;
+}
+
+.ch-battle-banner {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  z-index: 3;
+  translate: -50% 0;
+  padding: 0.15em 0.6em;
+  background: #15121a;
+  color: #ffd34d;
+  font: 700 clamp(0.6rem, 4.2cqw, 1.1rem) / 1.2 ui-monospace, 'Courier New', monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ch-battle-fighter {
+  position: absolute;
+  bottom: 22%;
+  z-index: 2;
+  width: 30%;
+  aspect-ratio: 1;
+  animation-duration: 2.6s;
+  animation-fill-mode: forwards;
+  animation-timing-function: steps(3, end);
+}
+
+.ch-battle-sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 0 rgb(0 0 0 / 0.35));
+}
+
+.ch-battle-flip {
+  scale: -1 1;
+}
+
+.ch-battle-atk {
+  left: 8%;
+  animation-name: ch-battle-charge;
+}
+
+.ch-battle-by-n .ch-battle-atk,
+.ch-battle-by-r .ch-battle-atk {
+  animation-name: ch-battle-leap;
+}
+
+.ch-battle-by-b .ch-battle-atk,
+.ch-battle-by-q .ch-battle-atk {
+  animation-name: ch-battle-cast;
+}
+
+.ch-battle-def {
+  right: 8%;
+  transform-origin: 50% 100%;
+  animation-name: ch-battle-hit;
+}
+
+@keyframes ch-battle-charge {
+  0% {
+    transform: translateX(-170%);
+  }
+  15%,
+  30% {
+    transform: translateX(0);
+  }
+  41% {
+    transform: translateX(95%);
+  }
+  47% {
+    transform: translateX(70%);
+  }
+  62% {
+    transform: translateX(0);
+  }
+  72% {
+    transform: translateY(-20%);
+  }
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes ch-battle-leap {
+  0% {
+    transform: translateX(-170%);
+  }
+  15%,
+  27% {
+    transform: translateX(0);
+  }
+  34% {
+    transform: translate(45%, -60%);
+  }
+  41% {
+    transform: translate(95%, 0);
+  }
+  47% {
+    transform: translate(75%, 0);
+  }
+  62% {
+    transform: translateX(0);
+  }
+  72% {
+    transform: translateY(-20%);
+  }
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes ch-battle-cast {
+  0% {
+    transform: translateX(-170%);
+  }
+  15%,
+  26% {
+    transform: translateX(0);
+  }
+  32% {
+    transform: translateY(-10%);
+  }
+  38% {
+    transform: translate(-8%, 0);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  72% {
+    transform: translateY(-20%);
+  }
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes ch-battle-hit {
+  0% {
+    transform: translateX(170%);
+  }
+  15%,
+  41% {
+    transform: translateX(0);
+    filter: none;
+  }
+  42%,
+  46% {
+    transform: translateX(6%);
+    filter: brightness(0) invert(1);
+  }
+  44%,
+  48% {
+    filter: none;
+  }
+  52% {
+    transform: translateX(20%);
+  }
+  58% {
+    transform: translateX(22%) rotate(0deg);
+    opacity: 1;
+  }
+  66% {
+    transform: translateX(26%) rotate(90deg);
+    opacity: 1;
+  }
+  72% {
+    transform: translateX(26%) rotate(90deg) scaleY(0.5);
+    opacity: 0.6;
+  }
+  76%,
+  100% {
+    transform: translateX(26%) rotate(90deg) scaleY(0);
+    opacity: 0;
+  }
+}
+
+/* Geschoss des Läufers (Lichtkugel) und Strahl der Dame */
+.ch-battle-shot {
+  position: absolute;
+  bottom: 36%;
+  left: 36%;
+  z-index: 3;
+  display: none;
+  width: 6%;
+  aspect-ratio: 1;
+  background: #b9fbff;
+  box-shadow: 0 0 0 0.25em #3fd2ff, 0 0 0 0.5em rgb(63 210 255 / 0.4);
+  opacity: 0;
+}
+
+.ch-battle-by-b .ch-battle-shot {
+  display: block;
+  animation: ch-battle-orb 2.6s steps(26) forwards;
+}
+
+.ch-battle-by-q .ch-battle-shot {
+  display: block;
+  width: 0;
+  height: 9%;
+  aspect-ratio: auto;
+  background: linear-gradient(#ff9bf5, #fff 40% 60%, #ff9bf5);
+  box-shadow: 0 0 0 0.3em rgb(255 79 210 / 0.5);
+  animation: ch-battle-beam 2.6s steps(26) forwards;
+}
+
+@keyframes ch-battle-orb {
+  0%,
+  33% {
+    opacity: 0;
+    left: 34%;
+  }
+  34% {
+    opacity: 1;
+    left: 34%;
+  }
+  41% {
+    opacity: 1;
+    left: 66%;
+  }
+  42%,
+  100% {
+    opacity: 0;
+    left: 66%;
+  }
+}
+
+@keyframes ch-battle-beam {
+  0%,
+  33% {
+    opacity: 0;
+    width: 0;
+  }
+  34% {
+    opacity: 1;
+    width: 2%;
+  }
+  41% {
+    opacity: 1;
+    width: 32%;
+  }
+  44% {
+    opacity: 0.5;
+    width: 32%;
+  }
+  46% {
+    opacity: 1;
+    width: 32%;
+  }
+  50%,
+  100% {
+    opacity: 0;
+    width: 32%;
+  }
+}
+
+/* Hieb: weißer Bogen über dem Opfer */
+.ch-battle-slash {
+  position: absolute;
+  right: 10%;
+  bottom: 24%;
+  z-index: 3;
+  width: 28%;
+  aspect-ratio: 1;
+  border: 0.55em solid transparent;
+  border-top-color: #fff;
+  border-radius: 50%;
+  opacity: 0;
+  animation: ch-battle-swing 2.6s steps(26) forwards;
+}
+
+.ch-battle-by-b .ch-battle-slash,
+.ch-battle-by-q .ch-battle-slash {
+  display: none;
+}
+
+@keyframes ch-battle-swing {
+  0%,
+  40% {
+    opacity: 0;
+    rotate: -80deg;
+  }
+  41% {
+    opacity: 1;
+    rotate: -60deg;
+  }
+  46% {
+    opacity: 1;
+    rotate: 50deg;
+  }
+  48%,
+  100% {
+    opacity: 0;
+    rotate: 70deg;
+  }
+}
+
+/* Lautmalerei */
+.ch-battle-bang {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  z-index: 4;
+  color: #ffd34d;
+  font: 900 clamp(1rem, 11cqw, 3rem) / 1 ui-monospace, 'Courier New', monospace;
+  text-shadow: 0.08em 0.08em 0 #b8321f, -0.04em -0.04em 0 #15121a;
+  white-space: nowrap;
+  translate: -50% 0;
+  scale: 0;
+  opacity: 0;
+  animation: ch-battle-pop 2.6s steps(26) forwards;
+}
+
+@keyframes ch-battle-pop {
+  0%,
+  41% {
+    scale: 0;
+    opacity: 0;
+    rotate: 0deg;
+  }
+  43% {
+    scale: 1.35;
+    opacity: 1;
+    rotate: -7deg;
+  }
+  48%,
+  68% {
+    scale: 1;
+    opacity: 1;
+    rotate: -4deg;
+  }
+  74%,
+  100% {
+    scale: 1;
+    opacity: 0;
+  }
+}
+
+/* Zerfall in Pixel */
+.ch-battle-dust {
+  position: absolute;
+  right: 18%;
+  bottom: 30%;
+  z-index: 3;
+  width: 0;
+  height: 0;
+}
+
+.ch-battle-dust i {
+  position: absolute;
+  width: 0.55em;
+  height: 0.55em;
+  background: #ffd34d;
+  opacity: 0;
+  animation: ch-battle-burst 2.6s steps(26) forwards;
+}
+
+.ch-battle-dust i:nth-child(even) {
+  background: #fff;
+}
+
+@keyframes ch-battle-burst {
+  0%,
+  64% {
+    opacity: 0;
+    translate: 0 0;
+  }
+  67% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: calc(cos(var(--i) * 36deg) * 5em) calc(sin(var(--i) * 36deg) * 4em - 2em);
+  }
+}
+
+@keyframes ch-battle-shake {
+  0%,
+  40%,
+  50%,
+  100% {
+    translate: 0 0;
+  }
+  42% {
+    translate: -2% 1%;
+  }
+  44% {
+    translate: 2% -1%;
+  }
+  46% {
+    translate: -1% 0.5%;
+  }
+  48% {
+    translate: 1% 0;
+  }
+}
+
+.ch-battle-by-r .ch-battle-stage {
+  animation-name: ch-battle-quake;
+}
+
+@keyframes ch-battle-quake {
+  0%,
+  40%,
+  54%,
+  100% {
+    translate: 0 0;
+  }
+  42% {
+    translate: -4% 3%;
+  }
+  44% {
+    translate: 4% -2%;
+  }
+  46% {
+    translate: -3% 2%;
+  }
+  48% {
+    translate: 3% -1%;
+  }
+  50% {
+    translate: -1% 1%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-wrap[data-ch-era='1988'] .ch-era-piece,
+  .ch-wrap[data-ch-era='1988'] .ch-battle-eyes {
+    animation: none !important;
+  }
+}
