@@ -498,6 +498,108 @@ farben('DAME', [
   for (const art of ['leer', 'weiss', 'schwarz', 'weiss-dame', 'schwarz-dame']) karte(`DAME_${art.toUpperCase().replace('-', '_')}`, feld(true, art));
 }
 
+// ---------------------------------------------------------------- Würfel 16 × 16
+const wuerfelFarben = (hell, mittel, schatten) => ({ 1: hell, 2: mittel, 3: schatten, 4: '#1a1410', 5: '#c8352c', 11: '#f4ead2' });
+farben('WUERFEL', [
+  { ...holz('#dcb27a', '#c99c64', '#ad8049'), ...wuerfelFarben('#fbf6ea', '#e2dac8', '#a89e8a') },
+  { ...holz('#dcb27a', '#c99c64', '#ad8049'), ...wuerfelFarben('#fff2a0', '#f2d870', '#c4a840') },
+  { ...holz('#dcb27a', '#c99c64', '#ad8049'), ...wuerfelFarben('#b8ecc0', '#94d8a0', '#5ea86c') },
+]);
+{
+  // Augen je Wert als Positionen auf einem 3 × 3-Raster (0–8).
+  const AUGEN = { 1: [4], 2: [2, 6], 3: [2, 4, 6], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+  for (let w = 1; w <= 6; w++) {
+    karte(`WUERFEL_${w}`, male(16, 16, (x, y) => {
+      // Abgerundetes Quadrat mit Schatten unten rechts.
+      const ex = Math.min(x, 15 - x);
+      const ey = Math.min(y, 15 - y);
+      if (ex + ey < 2 || x > 14 || y > 14) return 0;
+      for (const a of AUGEN[w]) {
+        const ax = 3.5 + (a % 3) * 4;
+        const ay = 3.5 + Math.floor(a / 3) * 4;
+        if ((x - ax) ** 2 + (y - ay) ** 2 < 2.6) return w === 1 ? 5 : 4;
+      }
+      if (x >= 13 || y >= 13) return 3;
+      if (x <= 1 || y <= 1) return 1;
+      return 2;
+    }));
+  }
+  karte('WUERFEL_LEER', male(16, 16, (x, y) => {
+    const ex = Math.min(x, 15 - x);
+    const ey = Math.min(y, 15 - y);
+    if (ex + ey < 2 || x > 14 || y > 14) return 0;
+    return (x + y) % 4 === 0 ? 3 : 0;
+  }));
+}
+
+// ---------------------------------------------------------------- Paare-Karten 48 × 24 (Ebene 2, Schrift darüber)
+// Farbe 1 ist die Tinte der Schrift, Farbe 2 der Schriftschatten – beide passen zum Papier.
+const paareFarben = (papier, schatten, ruecken, rueckenHell, rueckenDunkel) => ({
+  1: '#2a1c10', 2: papier, 3: schatten, 4: ruecken, 5: rueckenHell, 6: rueckenDunkel, 7: '#3e2814',
+});
+farben('PAARE', [
+  paareFarben('#f8f0dc', '#d8ccb0', '#3c64a8', '#6c92d0', '#243e70'),
+  paareFarben('#fff4a8', '#e0cc70', '#d8a030', '#f4c860', '#946818'),
+  paareFarben('#d4f4d0', '#a4d4a0', '#3c8a50', '#6cba7c', '#245a34'),
+]);
+{
+  const rand = (x, y) => {
+    const ex = Math.min(x, 47 - x);
+    const ey = Math.min(y, 23 - y);
+    if (ex + ey < 2) return 0;
+    return ex === 0 || ey === 0 || ex + ey === 2 ? 7 : null;
+  };
+  karte('PAARE_RUECKEN', male(48, 24, (x, y) => {
+    const r = rand(x, y);
+    if (r !== null) return r;
+    if (Math.min(x, 47 - x) < 3 || Math.min(y, 23 - y) < 3) return 2;
+    // Rautenmuster
+    const d = (x + y) % 8 === 0 || (x - y + 64) % 8 === 0;
+    return d ? 5 : (x * 5 + y * 3) % 13 === 0 ? 6 : 4;
+  }));
+  karte('PAARE_OFFEN', male(48, 24, (x, y) => {
+    const r = rand(x, y);
+    if (r !== null) return r;
+    return x >= 45 || y >= 21 ? 3 : 2;
+  }));
+}
+
+// ---------------------------------------------------------------- Nicht ärgern! (Felder und Figuren)
+// Farbe 1 Feld, 2 Feldrand, 3 Glanzpunkt, ab 4 je Spielerfarbe Füllung und Kante (Gelb, Grün, Rot,
+// Blau, Lila, Türkis wie PLAYER_STYLES in packages/games/ludo/src/ui/index.tsx).
+{
+  const SPIELER = [['#eab308', '#a16207'], ['#22c55e', '#15803d'], ['#ef4444', '#b91c1c'], ['#3b82f6', '#1d4ed8'], ['#a855f7', '#7e22ce'], ['#14b8a6', '#0f766e']];
+  const palette = (feld, rand, kante) => {
+    const p = { 1: feld, 2: rand, 3: '#fffaf0' };
+    SPIELER.forEach(([f, k], i) => {
+      p[4 + i * 2] = f;
+      p[5 + i * 2] = kante ?? k;
+    });
+    return p;
+  };
+  farben('LUDO', [palette('#f4ead2', '#3e2814'), palette('#fff6c4', '#ffe040', '#fff060'), palette('#9ee08a', '#2c6a24')]);
+  const feld = (groesse, r, farbe) => male(groesse, groesse, (x, y) => {
+    const m = (groesse - 1) / 2;
+    const d = Math.sqrt((x - m) ** 2 + (y - m) ** 2);
+    if (d > r) return 0;
+    if (d > r - (groesse > 8 ? 1.3 : 1)) return 2;
+    return farbe === null ? 1 : 4 + farbe * 2;
+  });
+  const figur = (groesse, r, farbe) => male(groesse, groesse, (x, y) => {
+    const m = (groesse - 1) / 2;
+    const f = stein(x - m, y - m, r, [4 + farbe * 2, 5 + farbe * 2, 3]);
+    return f ?? 0;
+  });
+  karte('LUDO_FELD', feld(16, 6.2, null));
+  karte('LUDO_KFELD', feld(8, 3.6, null));
+  for (let i = 0; i < 6; i++) {
+    karte(`LUDO_FELD_${i}`, feld(16, 6.2, i));
+    karte(`LUDO_FIGUR_${i}`, figur(16, 6.9, i));
+    karte(`LUDO_KFELD_${i}`, feld(8, 3.6, i));
+    karte(`LUDO_KFIGUR_${i}`, figur(8, 3.9, i));
+  }
+}
+
 // ---------------------------------------------------------------- Titel in doppelter Größe
 function grosseSchrift(name, text) {
   const zeichen = [...text];

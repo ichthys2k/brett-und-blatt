@@ -11,6 +11,10 @@ export interface Variante {
   snes: number[];
   /** Dieselben Optionen für die Web-App. */
   optionen: Options;
+  /** Zahl der Plätze (Standard 2). */
+  plaetze?: number;
+  /** Nötige Siege von „schwer“ gegen Zufall, wenn sie vom Adapter abweichen (etwa bei vielen Mitspielern). */
+  siege?: number;
 }
 
 export interface SpielAdapter<S, M> {
@@ -28,6 +32,10 @@ export interface SpielAdapter<S, M> {
   partien: number;
   /** Höchste Rechenzeit der Bots in Bildern je Stufe (leicht, mittel, schwer). */
   botBilder: [number, number, number];
+  /** Freie Eingaben: Sind diese Zugbytes erlaubt (wie isLegal), obwohl sie in keiner Liste stehen? */
+  pruefen?: (stand: S, bytes: number[]) => boolean;
+  /** Zusatzzüge wie isLegal, aber nicht in legalMoves (z. B. Würfel halten). */
+  extra?: (stand: S) => M[];
   /** Partien Bot „schwer“ gegen Zufall und nötige Siege. */
   gegenZufall: [partien: number, siege: number];
 }

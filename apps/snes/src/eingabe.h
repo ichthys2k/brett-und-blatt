@@ -7,7 +7,7 @@
 
 #include <snes.h>
 
-#define CONTROLLER 2
+#define CONTROLLER 5
 
 /** Beim Start: Zustand löschen (der Startcode von PVSnesLib löscht nicht alle Variablen). */
 void eingabe_start(void);

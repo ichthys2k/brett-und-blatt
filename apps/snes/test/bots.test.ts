@@ -25,20 +25,22 @@ describe.skipIf(!AKTIV)('Bots im ROM', () => {
     for (const v of a.varianten) {
       it(`${a.id} (${v.name}): Bots ziehen erlaubt, schnell genug und „schwer“ schlägt Zufall`, async () => {
         const rechenzeit = [0, 0, 0];
-        const [partien, noetig] = a.gegenZufall;
+        const [partien, standard] = a.gegenZufall;
+        const noetig = v.siege ?? standard;
         let siege = 0;
         let remis = 0;
         for (let partie = 0; partie < partien; partie++) {
           const wahl = Rng.fromSeed(`bot-${a.id}-${v.name}-${partie}`);
           await p.zufall(`bot-${a.id}-${partie}/main`);
-          const botPlatz = partie % 2;
-          let s = a.modul.setup(2, resolveOptions(a.modul, v.optionen), `bot-${partie}`);
-          await p.start(a.nr, v.snes);
+          const plaetze = v.plaetze ?? 2;
+          const botPlatz = partie % plaetze;
+          let s = a.modul.setup(plaetze, resolveOptions(a.modul, v.optionen), `bot-${partie}`);
+          await p.start(a.nr, v.snes, plaetze, `bot-${partie}`);
           let n = 0;
           while (!a.modul.result(s)) {
             const actor = a.modul.currentPlayers(s)[0];
             const moves = a.modul.legalMoves(s, actor);
-            const erlaubt = new Map(moves.map((m: unknown) => [schluessel(a.zug(s, m)), m]));
+            const erlaubt = new Map([...moves, ...(a.extra?.(s) ?? [])].map((m: unknown) => [schluessel(a.zug(s, m)), m]));
             let zug: unknown;
             if (actor === botPlatz) {
               // In den ersten Partien alle Stufen an derselben Stellung prüfen, gezogen wird mit „schwer“.
@@ -59,7 +61,7 @@ describe.skipIf(!AKTIV)('Bots im ROM', () => {
             n++;
           }
           const r = a.modul.result(s);
-          if (r.kind === 'win' && r.winners[0] === botPlatz) siege++;
+          if (r.kind === 'win' && r.winners.includes(botPlatz)) siege++;
           if (r.kind === 'draw') remis++;
         }
         console.log(`${a.id} (${v.name}): Rechenzeit in Bildern leicht ${rechenzeit[0]}, mittel ${rechenzeit[1]}, schwer ${rechenzeit[2]}; „schwer“ gegen Zufall ${siege} Siege, ${remis} Remis aus ${partien}`);

@@ -15,7 +15,7 @@ enum {
   BEFEHL_ZUFALL_TEXT = 0x01,   /* arg: Text mit 0 → aus: Zustand (4 × u32) */
   BEFEHL_ZUFALL_ZAHLEN = 0x02, /* arg[0]: Anzahl (≤ 32) → aus: Zahlen (u32) */
   BEFEHL_ZUFALL_BIS = 0x03,    /* arg[0]: Anzahl, arg[1..2]: Grenze → aus: Zahlen (u16) */
-  BEFEHL_SPIEL_START = 0x10,   /* arg[0]: Spiel, arg[1..4]: Optionen → aus: Auszug */
+  BEFEHL_SPIEL_START = 0x10,   /* arg[0]: Spiel, arg[1]: Plätze, arg[2..9]: Optionen, arg[10..]: Seed-Text → aus: Auszug */
   BEFEHL_SPIEL_ZUG = 0x11,     /* arg[0]: Länge, arg[1..]: Zugbytes → aus: Auszug, Status 2 bei unerlaubtem Zug */
   BEFEHL_BOT = 0x12,           /* arg[0]: Stufe → aus[0..1]: Bilder Rechenzeit, aus[2]: Länge, aus[3..]: Zug */
 };
@@ -68,7 +68,7 @@ static void schreibe32(u8 *p, u32 v) {
  */
 static u8 auszug(void) {
   u8 *aus = pruef_postfach.aus;
-  u8 sieger = PLATZ_KEIN;
+  u8 sieger = 0; /* Bitmaske der Gewinner */
   u8 ergebnis, am_zug, j;
   u16 n, i, stelle, stand;
   const Zug *z;
@@ -123,7 +123,8 @@ static u8 ausfuehren(u8 befehl) {
     case BEFEHL_SPIEL_START:
       if (arg[0] >= SPIELE_ANZAHL) return 2;
       pruef_spiel = spiele[arg[0]];
-      pruef_spiel->aufbauen(spielstand, arg + 1, &pruef_zufall);
+      arg[63] = 0;
+      pruef_spiel->aufbauen(spielstand, arg + 2, arg[1], (const char *)(arg + 10));
       return auszug() ? 1 : 3;
     case BEFEHL_SPIEL_ZUG:
       if (!pruef_spiel || arg[0] > ZUG_BYTES) return 2;

@@ -8,6 +8,22 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**Brett & Blatt 16 – SNES-ROM, Stufe 3: Würfel- und Familienspiele (18.11.2026, #520, Vorhaben #515):** Acht weitere Spiele im ROM (jetzt 15 Spiele gesamt):
+- `apps/snes/src/teiler.c`: Teiler-Duell (Steuer- und Kettenspiel).
+- `kniffel.c`: Würfelblock für 1–6 Spieler, mit Würfelbildern und Halten.
+- `maexle.c`: Mäxle für 2–6 Spieler, normal, blind und mit Strafpunkten.
+- `paare.c`: Paare finden für 1–6 Spieler, Sets Tiere, Einmaleins und Englisch bis 30 Paare.
+- `ludo.c`: Nicht ärgern! für 2–6 Spieler auf Kreuz- und Sternplan.
+- `domino.c`: Domino in den Varianten Ziehen, Block, Fünfer, Spinner und Teams.
+- `mauer.c`: Rechenmauer (3–4 Stufen, Addition und Multiplikation).
+- `zielzahl.c`: Zielzahl (Modus „Klassisch 24“).
+
+Dazu Erweiterungen an Unterbau und Klängen:
+- Unterbau: 1 bis 6 Plätze, Controller 1–5 mit Super Multitap, `Spiel.zusatz` für Zusatzzüge, `Spiel.erlaubt` für freie Rechnungen (`isLegal`), Zufalls-Startwert mit Umlauten wie `Rng.fromSeed`.
+- ROM-Kapazität im `Makefile` auf 512 KB (16 Bänke LoROM, `ROMSIZE := 09`, `ROMBANKS := 16`) verdoppelt; große Puffer (`spielstand`, `zugliste`, `ziel_kandidaten`) liegen im 64-KB-RAM in Bank $7F (`ram.asm`).
+- Klänge in `werkzeuge/klang.mjs` und `src/klang.c` um Würfelgeräusch (`KLANG_WUERFELN`, klackernde Würfel im Becher/auf Filz für Würfelblock, Mäxle und Nicht ärgern!) und eine aufsteigende Anfangs-Fanfare (`KLANG_START`) erweitert.
+- Alle 8 Spiele mit vollständigem Regel- und Bot-Vergleich in `apps/snes/test/regeln.test.ts` und `bots.test.ts` (100 % grün gegen TypeScript-Module).
+
 **Brett & Blatt 16 – SNES-ROM, Stufe 2: Brettklassiker (18.11.2026, #518, Vorhaben #515):** Sechs weitere Spiele im ROM:
 - `apps/snes/src/vier.c`: Vier in einer Reihe mit allen Brettgrößen und PopOut.
 - `reversi.c`: Reversi.

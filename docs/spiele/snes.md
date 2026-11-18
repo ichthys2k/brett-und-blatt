@@ -104,11 +104,13 @@ Jede Stufe endet mit einem spielbaren ROM. Danach kann man aufhören, ohne dass 
 - Minimax mit Alpha-Beta in C, Zeitbudget je Zug (z. B. 2 s, gemessen in Bildern), heiße Schleifen bei Bedarf in Assembler.
 - Erstes ROM-Release (GitHub Release mit `.sfc`), Eintrag auf der Seite „Weitere Spiele“ oder einer eigenen Seite mit EmulatorJS.
 
-### Stufe 3 – Würfel und Familie (mittel)
+### Stufe 3 – Würfel und Familie (mittel) – erledigt (#520)
 
-- Würfelblock, Mäxle, Nicht ärgern! (Multitap, 4 Plätze), Paare finden, Domino, Zielzahl, Rechenmauer, Teiler-Duell.
-- Baustein Würfel (Sprite-Animation) und Spielerleiste für bis zu 5 Plätze.
-- Erste Musik: zwei bis drei eigene Tracker-Stücke, Klangeffekte für Würfeln, Ziehen, Sieg.
+- Acht Würfel-, Rechen- und Familienspiele: Teiler-Duell (`teiler.c`), Würfelblock (`kniffel.c`), Mäxle (`maexle.c`), Paare finden (`paare.c`, Sets Tiere/Einmaleins/Englisch, Raster bis 30), Nicht ärgern! (`ludo.c`, Kreuz und Stern), Domino (`domino.c`, Ziehen/Block/Fünfer/Spinner/Teams), Rechenmauer (`mauer.c`, Addition und Multiplikation) und Zielzahl (`zielzahl.c`, Klassisch 24).
+- Unterbau: 1 bis 6 Plätze mit Spielerwahl, Controller 1–5 (Super Multitap), `Spiel.zusatz` (Zusatzzüge), `Spiel.erlaubt` (freie Rechnungen wie `isLegal`), `karte_unten` (Kachelkarte auf Ebene 2 unter der Schrift), Puffer in Bank $7F (`ram.asm`).
+- ROM-Größe auf 512 KB (16 Bänke LoROM) erweitert, um allen 15 Spielen und künftigen Stufen Platz zu geben.
+- Klänge erweitert um Würfeln (`KLANG_WUERFELN`, klackernde Würfel im Becher/auf Filz) und Anfangs-Fanfare (`KLANG_START`); Tracker-Hintergrundstücke (.it) für spätere Stufe vorgemerkt.
+- Alle 8 Spiele mit 100% grünem Regelvergleich (`regeln.test.ts`) gegen das jeweilige TypeScript-Modul und Bot-Prüfung (`bots.test.ts`).
 
 ### Stufe 4 – Karten ohne Stiche (mittel bis groß)
 

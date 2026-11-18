@@ -89,10 +89,11 @@ static u8 vierer_finden(const Vier *v, u8 wert, u8 (*linien)[4]) {
   return n;
 }
 
-static void vier_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
+static void vier_aufbauen(u8 *stand, const u8 *optionen, u8 plaetze, const char *seed) {
   Vier *v = (Vier *)stand;
   u8 i;
-  (void)z;
+  (void)plaetze;
+  (void)seed;
   v->spalten = GROESSEN[optionen[0]][0];
   v->reihen = GROESSEN[optionen[0]][1];
   for (i = 0; i < ZELLEN_MAX; i++) v->felder[i] = 0;
@@ -111,7 +112,7 @@ static void vier_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
 static u8 vier_ergebnis(const u8 *stand, u8 *sieger) {
   const Vier *v = (const Vier *)stand;
   if (v->sieger != PLATZ_KEIN) {
-    if (sieger) *sieger = v->sieger;
+    if (sieger) *sieger = 1 << (v->sieger);
     return ERGEBNIS_SIEG;
   }
   return v->remis ? ERGEBNIS_REMIS : ERGEBNIS_LAEUFT;
@@ -563,6 +564,7 @@ const Spiel spiel_vier = {
   "✚ Spalte · A einwerfen · PopOut: ✚ runter, A zieht heraus",
   PLATZ_NAMEN,
   PLATZ_PALETTEN,
+  2,
   2,
   0,
   OPTIONEN,

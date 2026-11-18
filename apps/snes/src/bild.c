@@ -102,6 +102,21 @@ void flaeche_leeren(u8 x, u8 y, u8 b, u8 h) {
   karte1_neu = 1;
 }
 
+void karte_unten(u8 x, u8 y, u16 adresse, u8 b, u8 h, u8 pal) {
+  const u8 *k = (const u8 *)(&karten + adresse);
+  u8 i, j;
+  u16 stelle;
+  u16 hoch = (u16)pal << 10;
+  for (j = 0; j < h; j++) {
+    stelle = (u16)(y + j) * 32 + x;
+    for (i = 0; i < b; i++) {
+      karte2[stelle + i] = (k[0] | ((u16)k[1] << 8)) | hoch;
+      k += 2;
+    }
+  }
+  karte2_neu = 1;
+}
+
 void tafel(u8 x, u8 y, u8 b, u8 h) {
   u8 i, j;
   u16 nr;

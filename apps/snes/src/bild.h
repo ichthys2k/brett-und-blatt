@@ -25,6 +25,8 @@ void bild_leeren(void);
 void kachel(u8 x, u8 y, u16 nr, u8 pal);
 /** Kachelkarte aus werkzeuge/grafik.mjs (KARTE_…) mit b × h Kacheln zeichnen. */
 void karte(u8 x, u8 y, u16 adresse, u8 b, u8 h, u8 pal);
+/** Wie karte(), aber auf Ebene 2 (unter der Schrift) – etwa Spielkarten mit Text darauf. */
+void karte_unten(u8 x, u8 y, u16 adresse, u8 b, u8 h, u8 pal);
 /** Brettpaletten 5–7 eines Spiels (FARBEN_…) im nächsten Bildwechsel laden. */
 void brett_farben(u16 adresse);
 /** Rechteck auf Ebene 1 leeren. */

@@ -8,7 +8,7 @@
  * Bildvergleich mit bsnes (SNES_KERN_BSNES). Regeln und Bots aller Spiele prüfen regeln.test.ts
  * und bots.test.ts. Mit SNES_BILDER=<ordner> entstehen Bildschirmfotos.
  */
-import { copyFileSync, mkdirSync, mkdtempSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { hashSeed, Rng } from '../../../packages/engine/src/random';
@@ -52,7 +52,7 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Zufall und Tic-Tac-Toe-Bot', () => {
   });
 
   it('Zufall: Startwert und Zahlenfolge wie in der Web-App', async () => {
-    const texte = ['abc/main', 'seed-1/mischen', '/main', 'Brett & Blatt 16/test', 'x'.repeat(60)];
+    const texte = ['abc/main', 'seed-1/mischen', '/main', 'Brett & Blatt 16/test', 'x'.repeat(60), 'snes-1/würfel', 'Ää Öö Üü ß/×·'];
     for (const t of texte) {
       const { aus } = await p.zufall(t);
       expect([0, 1, 2, 3].map((i) => u32(aus, i * 4)), t).toEqual(hashSeed(t));
@@ -122,6 +122,15 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Zufall und Tic-Tac-Toe-Bot', () => {
   }, 600_000);
 });
 
+describe.skipIf(!AKTIV)('Brett & Blatt 16: Speicheraufteilung', () => {
+  it('C-Variablen in Bank $7E bleiben unter $8000 (darüber liegen feste Bereiche von PVSnesLib)', () => {
+    const zeilen = readFileSync(SYM.replace(/\.sym$/, '.symfull'), 'utf8').split('\n');
+    const enden = zeilen.filter((z) => z.endsWith(' SECTIONEND_.bss')).map((z) => parseInt(z.slice(0, 8), 16)).filter((a) => a >> 16 === 0x7e);
+    expect(enden.length).toBeGreaterThan(0);
+    expect(Math.max(...enden).toString(16)).toMatch(/^7e[0-7]/);
+  });
+});
+
 describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
   let emu: PruefEmu;
   const s = AKTIV ? symbole(SYM) : new Map<string, number>();
@@ -161,11 +170,11 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
   it('Partie zu zweit mit zwei Controllern: Kreuz gewinnt, Statistik im SRAM', async () => {
     await emu.druecke(0, KNOPF.A, 10); // Tic-Tac-Toe
     expect(await zeile(1)).toContain('Tic-Tac-Toe');
-    // Von „Los geht's!“ hoch bis „Kreis“, dann zweimal links: Bot mittel → Bot leicht → Controller 2.
+    // Von „Los geht's!“ hoch bis „Kreis“, dann fünfmal links: Bot mittel → Bot leicht → Controller 5 … 2.
     for (let i = 0; i < 4; i++) await emu.druecke(0, KNOPF.HOCH);
-    await emu.druecke(0, KNOPF.LINKS);
-    await emu.druecke(0, KNOPF.LINKS, 10);
-    expect(await zeile(7)).toContain('Controller 2');
+    for (let i = 0; i < 5; i++) await emu.druecke(0, KNOPF.LINKS);
+    await emu.run(10);
+    expect(await zeile(6)).toContain('Controller 2');
     await bildschirm('3-vorbereitung');
     await emu.druecke(0, KNOPF.START, 20);
 
@@ -208,7 +217,7 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
     expect(await zeile(1)).toContain('Statistik');
     expect(await zeile(5)).toContain('Tic-Tac-Toe');
     expect(await zeile(8)).toMatch(/Partien gesamt\s+1$/);
-    expect(await zeile(9)).toMatch(/davon zu zweit\s+1$/);
+    expect(await zeile(9)).toMatch(/nur Menschen\s+1$/);
     await bildschirm('6-statistik');
   });
 });
