@@ -508,5 +508,5 @@ const Spiel spiel_muehle = {
   muehle_felder,
   muehle_zeichnen,
   3,
-  3,
+  0,
 };

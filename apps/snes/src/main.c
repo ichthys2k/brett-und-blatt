@@ -13,7 +13,7 @@
 
 #define VERSION_TEXT "Version 0.2 · November 2026"
 
-const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle};
+const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle, &spiel_dame};
 
 u8 spielstand[SPIELSTAND_GROESSE];
 Zug zugliste[ZUEGE_MAX];
@@ -482,6 +482,7 @@ static u8 eine_partie(u8 spiel_nr, u8 nummer, u8 anzahl, const u8 *siege, u8 *si
   spiel->aufbauen(spielstand, optionen[spiel_nr], &partie_zufall);
   cursor_x = spiel->cursor_x;
   cursor_y = spiel->cursor_y;
+  if (spiel->feld_an(spielstand, cursor_x, cursor_y) == FELD_KEIN) cursor_bewegen(spiel, 1, 0);
   brett_farben(spiel->brett_farben);
   partie_bild(spiel, nummer, anzahl, siege);
   for (i = 0; i < FELDER_MAX; i++) markierung[i] = 0;
