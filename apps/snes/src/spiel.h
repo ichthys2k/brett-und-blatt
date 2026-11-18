@@ -114,8 +114,9 @@ extern const Spiel spiel_muehle;
 extern const Spiel spiel_dame;
 extern const Spiel spiel_teiler;
 extern const Spiel spiel_kniffel;
+extern const Spiel spiel_maexle;
 
-#define SPIELE_ANZAHL 9
+#define SPIELE_ANZAHL 10
 extern const Spiel *const spiele[SPIELE_ANZAHL];
 
 /** Der gemeinsame Spielstand (Partie und Prüfmodus laufen nie gleichzeitig). Liegt wie die

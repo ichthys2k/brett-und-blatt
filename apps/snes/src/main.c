@@ -13,7 +13,7 @@
 
 #define VERSION_TEXT "Version 0.3 · November 2026"
 
-const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle, &spiel_dame, &spiel_teiler, &spiel_kniffel};
+const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle, &spiel_dame, &spiel_teiler, &spiel_kniffel, &spiel_maexle};
 
 /* spielstand und zugliste liegen in Bank $7F (ram.asm). */
 
