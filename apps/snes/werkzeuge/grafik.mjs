@@ -538,6 +538,14 @@ farben('WUERFEL', [
 // Farbe 1 ist die Tinte der Schrift, Farbe 2 der Schriftschatten – beide passen zum Papier.
 const paareFarben = (papier, schatten, ruecken, rueckenHell, rueckenDunkel) => ({
   1: '#2a1c10', 2: papier, 3: schatten, 4: ruecken, 5: rueckenHell, 6: rueckenDunkel, 7: '#3e2814',
+  8: '#9c5a2b',  // Braun (Hund, Bär, Affe, Pferd)
+  9: '#e67e22',  // Orange (Katze, Fuchs, Tiger, Löwe)
+  10: '#ea5858', // Rot / Koralle (Hahn, Ferkel, Flamingo, Krabbe, Ohren)
+  11: '#2ea043', // Grün (Frosch, Schildkröte, Pfau)
+  12: '#388bfd', // Blau (Wal, Delfin, Krake, Pfau)
+  13: '#f1b600', // Gelb (Ente, Biene, Löwenmähne, Giraffe)
+  14: '#8c959f', // Grau (Maus, Elefant, Koala, Dachs)
+  15: '#ffffff', // Weiß (Panda, Einhorn, Augen, Bauch)
 });
 farben('PAARE', [
   paareFarben('#f8f0dc', '#d8ccb0', '#3c64a8', '#6c92d0', '#243e70'),
@@ -564,6 +572,94 @@ farben('PAARE', [
     if (r !== null) return r;
     return x >= 45 || y >= 21 ? 3 : 2;
   }));
+
+  // 32 Tiermotive für Paare finden (16 × 16 zentriert in 48 × 24 Karte)
+  const TIER_FARBEN = {
+    '.': 2, 'X': 1, 'B': 8, 'O': 9, 'P': 10, 'R': 10,
+    'G': 11, 'C': 12, 'Y': 13, 'A': 14, 'W': 15,
+  };
+  const TIER_SPRITES = [
+    // 0: Hund
+    ["...BB......BB...","..BBB......BBB..","..BBXXXXXXXXBB..",".BBXBBBBBBBBXBB.",".BXBWWXBBXWWXBX.",".BXBWXXBBXXWXBX.",".BXBXXXXXXXXXBX.","..BXXBBBBBBXXB..","...XBBPXXPBBX...","...XBBXXXXBBX...","...XBBBPPBBBX...","...XBBBBBBBBX...","....XXXXXXXX....","................","................","................"],
+    // 1: Katze
+    ["..OX........XO..",".OPX........XPO.",".OPPX......XPPO.",".OPPOXXXXXXOPPO.",".OXOOOOOOOOOOXO.",".XOXWWXOOXWWXOXX",".XOXWXXOOXXWXOXX","XXOXXXXXXXXXXOXX","..XOOOXPPXOOOX..","..XOOOOXXXXOOX..","...XOOOOOOOOX...","....XXXXXXXX....","................","................","................","................"],
+    // 2: Maus
+    ["..PP........PP..",".PAAP......PAAP.",".PAAAPXXXXPAAAP.","..PAXXXXXXXXAP..","...XAAAAAAAAX...","..XAWWXAAXWWX...","..XAWXXAAXXWX...",".XXXXXXXXXXXX..","..XAAAXPPXAAX...","...XAAXXXXAAX...","....XAAAAAAX....",".....XXXXXX.....","................","................","................","................"],
+    // 3: Hamster
+    ["...XX......XX...","..XPX......XPX..","..XPXXXXXXXXPX..",".XXOOOOOOOOOOXX.",".XOWWXOOOOXWWXOX",".XOWXXOOOOXXWXOX",".XOWWXXXXXXWWXOX",".XWWWWWWWWWWWWX.","..XWWWPXXPWWWX..","..XWWWXXXXWWWX..","...XWWWWWWWWX...","....XXXXXXXX....","................","................","................","................"],
+    // 4: Hase
+    ["..XX........XX..",".XPWX......XPWX.",".XPWX......XPWX.",".XPWX......XPWX.",".XPWX......XPWX.",".XPWXXXXXXXXPWX.","..XWWWWWWWWWWX..",".XWWXWWXXWWXWWX.",".XWWXXWXXWXXWWX.",".XWWXXXXXXXXWWX.","..XWWWPXXPWWWX..","..XWWWXXXXWWWX..","...XWWWWWWWWX...","....XXXXXXXX....","................","................"],
+    // 5: Fuchs
+    ["..XX........XX..",".XXX........XXX.",".XOX........XOX.",".XOOXXXXXXXXOOX.",".XOOOOOOOOOOOOX.",".XOWWXOOOOXWWXOX",".XOWXXOOOOXXWXOX","XWWXXXXXXXXXXWWX","XWWWWXOOOOXWWWWX",".XWWWWXXXXWWWWX.","..XWWWWXXWWWWX..","...XWWXXXXWWX...","....XWWXXWWX....",".....XXXXXX.....","................","................"],
+    // 6: Bär
+    ["..XX........XX..",".XBBX......XBBX.",".XBBXXXXXXXXBBX.",".XBBBBBBBBBBBBX.","XBBWWXBBBBXWWXBB","XBBWXXBBBBXXWXBB","XBBXXXXXXXXXXBBX","XBBBYYYYYYYYBBBX",".XBYYYYYYYYYYBX.",".XBYYXXYYXXYYBX.","..XYYXXXXXXYYX..","...XYYYYYYYYX...","....XXXXXXXX....","................","................","................"],
+    // 7: Panda
+    ["..XX........XX..",".XXXX......XXXX.",".XXXXXXXXXX.XXX.",".XXWWWWWWWWWWXX.","XXWWXXXXXXXXWWXX","XXWWXWWXXWWXWWXX","XXWWXXXXXXXXWWXX",".XWWWWWWWWWWWWX.","..XWWWXXXXWWWX..","...XWWXXXXWWX...","....XWWWWWWX....",".....XXXXXX.....","................","................","................","................"],
+    // 8: Koala
+    [".WWWW......WWWW.","WWAAWWXXXXWWAAWW","WAAAAWAAAAWAAAAW",".WAAXXXXXXXXAAW.","..XAAAAAAAAAAX..",".XAAWXAAAAXWAAX.",".XAAXXAAAAXXAAX.",".XAAXXXXXXXXAAX.","..XAXXXXXXXXAX..","..XAXXXXXXXXAX..","...XAXXXXXXAX...","....XAAAAAAX....",".....XXXXXX.....","................","................","................"],
+    // 9: Tiger
+    ["..XX........XX..",".XOX........XOX.",".XOXXXXXXXXXXOX.","XOOOOXXOOXXOOOOX","XOOOOXXOOXXOOOOX","XXWWXOOXXOOXWWXX","XXWXXOOXXOOXXWXX","XOOXXXXXXXXXXOOX","XOOXWWXPPXWWXOOX",".XOXWWXXXXWWXOX.","..XOWWWWWWWWX...","...XXXXXXXXX....","................","................","................","................"],
+    // 10: Löwe
+    ["...XXXXXXXXXX...","..XYYYYYYYYYYX..",".XYYYXXXXXXYYYX.",".XYYXOOOOOOXYYX.","XYYXOWXOOXWOXYYX","XYYXOWXOOXWOXYYX","XYYXOXXXXXXOXYYX","XYYXOOXPPXOOXYYX",".XYYOOXXXXOOYYX.",".XYYYOOOOOOYYYX.","..XYYYYYYYYYYX..","...XXXXXXXXXX...","................","................","................","................"],
+    // 11: Kuh
+    [".YY..........YY.",".XYXXXXXXXXXXYX.","..XWWWWWWXXXXX..",".XWWWWWWWWXXXXX.",".XWWXWWXXWWXXXW.",".XWWXXWXXWXXXXW.",".XWWXXXXXXXXXXW.",".XWWWWWWWWWWWWX.","..XPPPPPPPPPPX..","..XPXXPPPPXXPX..","..XPXXPPPPXXPX..","...XPPPPPPPPX...","....XXXXXXXX....","................","................","................"],
+    // 12: Ferkel
+    ["..PP........PP..",".PPPP......PPPP.",".PPPPXXXXXXPPPP.",".XPPPPPPPPPPPPX.",".XPWWXPPPPXWWXP.",".XPWXXPPPPXXWXP.",".XPXXXXXXXXXXPX.",".XPPPPPPPPPPPPX.","..XPPPPPPPPPPX..","..XPXXPPPPXXPX..","..XPXXPPPPXXPX..","...XPPPPPPPPX...","....XXXXXXXX....","................","................","................"],
+    // 13: Frosch
+    ["..XXXX....XXXX..",".XWWWWX..XWWWWX.",".XWXXWX..XWXXWX.",".XWXXWXXXXWXXWX.",".XWWWWGGGGWWWWX.","XGGGGGGGGGGGGGGX","XGGGGGGGGGGGGGGX","XGGXXXXXXXXXXGGX","XGGGGGGGGGGGGGGX",".XGGGGGGGGGGGGX.","..XGGYYYYYYGGX..","...XGGYYYYGGX...","....XXXXXXXX....","................","................","................"],
+    // 14: Affe
+    [".BBB........BBB.","BBBBXXXXXXXXBBBB","BBXXXXXXXXXXXXBB","BXXYYYYYYYYYYXXB",".XYWWXYYYYXWWXY.",".XYWXXYYYYXXWXY.",".XYXXXXXXXXXXXY.",".XYYYYYXXYYYYY..","..XYYYXXXXYYYX..","...XYYYYYYYYX...","....XXXXXXXX....","................","................","................","................","................"],
+    // 15: Hahn
+    [".....RRRR.......","....RRRRRR......","....RRXXXXXXXX..","...RRXWWWWWWWWX.","...RRXWWXWWWWWX.","..YYYYXWWWWWWWX.",".YYYYYXWWWWWWWX.","..YYYYXWWWWWWWX.","...RRXWWWWWWWWX.","....RRXWWWWWWX..",".....RRXXXXXX...","................","................","................","................","................"],
+    // 16: Pfau
+    ["....GG.GG.GG....","...GCCGCCGCCG...","..GCCCCCCCCCXG..","..GCCCCCCCCCCG..","...GXXXCCXXXG...","....XCCWWCCX....","....XCCXWCCX....","....XCCCCCCX....","....XCCXXCCX....",".....XCCCCX.....","......XCCX......",".......XX.......","................","................","................","................"],
+    // 17: Papagei
+    [".....XXXX.......","....XRRRRX......","...XRRWWRRX.....","..XXRRXWRRXXXX..",".XXYYRRRRXXXXXX.",".XYYYYRRRXXXXXX.","..XYYYRRRXXXXX..","...XGGGGGGXXXX..","....XGGGGGGXXX..",".....XCCCCCCXX..","......XCCCCX....",".......XXXX.....","................","................","................","................"],
+    // 18: Ente
+    [".....XXXXXX.....","....XGGGGGGX....","...XGGXWGGGGX...","..YYXGGGGGGGGX..",".YYYYXGGGGGGGX..","..YYXGGGGGGGGX..","...XWWWWWWWWX...","...XBBBBBBBBX...","..XBBBBBBBBBBX..",".XBBBBBBBBBBBBX.","..XXXXXXXXXXXX..","................","................","................","................","................"],
+    // 19: Flamingo
+    ["......XXXX......",".....XPPPPX.....","...XXXPPXWPX....","..XXXXXPPPPX....",".XXXXXXPPPPX....","......XPPPPX....","......XPPPX.....",".....XPPPX......","....XPPPX.......","...XPPPPPPX.....","..XPPPPPPPPX....","...XXXXXXXX.....","................","................","................","................"],
+    // 20: Pferd
+    ["....BB..BB......","...XBBXXBBX.....","..XBBBBBBBBX....",".XBBBBWWBBBBX...",".XBBBBXWBBBBX...",".XBBBBBBBBBBX...",".XBBBBWWBBBBX...","..XBBBBBBBBX....","...XBBBBBBX.....","...XBBBBBBX.....","...XBBXXXXX.....","...XBBX.........","....XX..........","................","................","................"],
+    // 21: Einhorn
+    [".......YY.......","......YYYY......",".....YYYY.......","....BB..BB......","...XWWXXWWX.....","..XWWWWWWWWX....",".XWWWWXWWWWWX...",".XWWWWXWWWWWX...",".XWWWWWWWWWWX...","..XWWWWWWWWX....","...XWWWWWWX.....","...XWWXXXXX.....","....XX..........","................","................","................"],
+    // 22: Biene
+    ["...WW....WW.....","..WWWW..WWWW....","..WWWW..WWWW....","...XXXX..XX.....","..XYYYYXXYYX....",".XYYYYYYYYYYX...",".XBBBBBBBBBBX...",".XYYYYYYYYYYX...",".XBBBBBBBBBBX...",".XYYYYYYYYYYX...","..XYYYYYYYYX....","...XXXXXXXX.....","................","................","................","................"],
+    // 23: Dachs
+    ["..AA......AA....",".XAAX....XAAX...",".XAAXXXXXXAAX...",".XWWXXWWXXWWX...",".XWWXXWWXXWWX...",".XWXXXXXXXXWX...",".XWWXXWWXXWWX...",".XWWXXWWXXWWX...","..XAAAAAAAAX....","...XAAAAAAX.....","....XAAAAX......",".....XXXX.......","................","................","................","................"],
+    // 24: Falter
+    [".XX........XX...","..XX..XX..XX....",".XOOXX..XXOOX...","XOOOOX..XOOOOX..","XOWWOX..XOWWOX..","XOOOOXXXXOOOOX..",".XOOXAAAAXOOX...","..XX.AAAA.XX....",".XCCXAAAAXCCX...","XCCCCX..XCCCCX..",".XCCX....XCCX...","..XX......XX....","................","................","................","................"],
+    // 25: Schildkröte
+    [".....GGGG.......","....XGGGGX......","....XGXXGX......","...GGXXXXGG.....","..GGGGGGGGGG....",".XGGXXGGXXGGX...",".XGGGGGGGGGGX...",".XGGXXGGXXGGX...",".XGGGGGGGGGGX...","..XGGGGGGGGX....","...GGXXXXGG.....","................","................","................","................","................"],
+    // 26: Krake
+    ["....CCCCCC......","...CCCCCCCC.....","..CCCCCCCCCC....","..CCWWCCWWCC....","..CCXWCCXWCC....","..CCCCCCCCCC....","...CCCCCCCC.....","..CC.CCCC.CC....",".CC..CCCC..CC...",".CC.CC..CC.CC...","..CCC....CCC....","................","................","................","................","................"],
+    // 27: Krabbe
+    [".OO........OO...",".OOO......OOO...","..OOXXXXXXOO....","...XOOOOOOX.....","..XOWXOOXWOX....","..XOWXOOXWOX....",".XOOOOOOOOOOX...",".XOOOOOOOOOOX...","..XOOOOOOOOX....",".O.XOOOOOOX.O...","OO..XXXXXX..OO..","................","................","................","................","................"],
+    // 28: Delfin
+    [".......CCC......","......CCCC......",".....CCCCC......","..CCCCCCCCC.....",".CCCCXWCCCCC....","CCCCCCCCCCCC....","CCCWWWWCCCCCC...",".CWWWWWWCCCCC...","..WWWWWW.CCCC...",".........CCC....","........CC.CC...","................","................","................","................","................"],
+    // 29: Wal
+    [".......CC.......",".....CCCCCC.....","....CCCCCCCC....","...CCCCCCCCCC...","..CCCCCCCCCCCC..",".CCCCCCCCCCCCCC.",".CCCXWCCCCCCCCCC",".CCCCCCCCCCCCCC.","..CWWWWWWWWWWCC.","..CWWWWWWWWWW...","...WWWWWWWWWW...","................","................","................","................","................"],
+    // 30: Giraffe
+    ["....YY..YY......","...XYYXXYYX.....","...XYYYYYYX.....","...XYXWYXWX.....","...XYYYYYYX.....","....XYYYYX......",".....XYYX.......",".....XYYX.......",".....XYOX.......",".....XYYX.......",".....XYYX.......",".....XOYYX......","......XXXX......","................","................","................"],
+    // 31: Elefant
+    ["....AAAAAA......","...AAAAAAAA.....","..AAAAAAAAAA....",".AAAAAAAAAAAA...",".AAAAXWAAAAAA...",".AAAAAAAAAA.....",".AAAAAAAAAA.....","..AAAA..AAA.....","..AAAA..AAA.....","........AAA.....","........AAA.....","........AAAA....","................","................","................","................"]
+  ];
+
+  TIER_SPRITES.forEach((sprite, idx) => {
+    karte(`PAAR_TIER_${idx}`, male(48, 24, (x, y) => {
+      const r = rand(x, y);
+      if (r !== null) return r;
+      const sx = x - 16;
+      const sy = y - 4;
+      if (sx >= 0 && sx < 16 && sy >= 0 && sy < 16) {
+        const ch = sprite[sy]?.[sx];
+        if (ch && ch !== '.') {
+          return TIER_FARBEN[ch] ?? 1;
+        }
+      }
+      return x >= 45 || y >= 21 ? 3 : 2;
+    }));
+  });
 }
 
 // ---------------------------------------------------------------- Nicht ärgern! (Felder und Figuren)
