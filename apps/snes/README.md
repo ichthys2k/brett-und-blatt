@@ -2,7 +2,7 @@
 
 Eine Auswahl der Spiele als Super-Nintendo-ROM für Emulatoren (Snes9x, bsnes, Mesen, RetroArch) und echte Hardware mit Flash-Modul. Kein Port, sondern ein Nachbau in C mit [PVSnesLib](https://github.com/alekmaul/pvsneslib); die TypeScript-Spielmodule der Web-App sind der Schiedsrichter in den Tests. Plan und Stand: [`docs/spiele/snes.md`](../../docs/spiele/snes.md), Vorhaben #515, Stufe 0 und 1: #516, Stufe 2: #518.
 
-**Stand (Stufe 2):** Titel, Hauptmenü, Spielvorbereitung (Mensch an Controller 1 oder 2, Bot in drei Stufen, Serien aus 1/3/5 Partien, Seitentausch, Spieloptionen), Anleitung, Pause, Ergebnis, Statistik je Spiel im Batteriespeicher, Klänge. Sieben Spiele: **Tic-Tac-Toe, Vier in einer Reihe** (alle Brettgrößen, PopOut), **Reversi** (6/8/10, freie Eröffnung), **Gomoku, Ultimate Tic-Tac-Toe** (beide Varianten), **Mühle** (alle Optionen) und **Dame** (Deutsch, International, Englisch; 8 × 8 und 10 × 10).
+**Stand (Stufe 3):** Titel, Hauptmenü, Spielvorbereitung (1–6 Plätze, Mensch an Controller 1–5 mit Multitap, Bot in drei Stufen, Serien aus 1/3/5 Partien, Seitentausch, Spieloptionen), Anleitung, Pause, Ergebnis, Statistik je Spiel im Batteriespeicher, Klänge (inkl. Würfeln und Fanfare). Fünfzehn Spiele: **Tic-Tac-Toe, Vier in einer Reihe** (alle Brettgrößen, PopOut), **Reversi** (6/8/10, freie Eröffnung), **Gomoku, Ultimate Tic-Tac-Toe** (beide Varianten), **Mühle** (alle Optionen), **Dame** (Deutsch, International, Englisch; 8 × 8 und 10 × 10), **Teiler-Duell** (Steuer- und Kettenspiel), **Würfelblock** (1–6 Spieler), **Mäxle** (2–6 Spieler, normal/blind/Strafpunkte), **Paare finden** (1–6 Spieler, bis 30 Paare), **Nicht ärgern!** (Kreuz- und Sternplan, bis 6 Spieler), **Domino** (Ziehen, Block, Fünfer, Spinner, Teams), **Rechenmauer** (3–4 Stufen, Addition und Multiplikation) und **Zielzahl** (Klassisch 24).
 
 ## Bauen
 
@@ -18,7 +18,7 @@ Dann das ROM:
 make -C apps/snes
 ```
 
-Ergebnis: `apps/snes/brett-und-blatt-16.sfc` (256 KB, LoROM, 2 KB SRAM). Das ROM lässt sich in jedem SNES-Emulator öffnen; Controller 1 und 2 sind die ersten beiden Eingabegeräte.
+Ergebnis: `apps/snes/brett-und-blatt-16.sfc` (512 KB, 16 Bänke LoROM, 2 KB SRAM). Das ROM lässt sich in jedem SNES-Emulator öffnen; Controller 1 und 2 sind die ersten beiden Eingabegeräte, bis zu 5 Controller über Multitap.
 
 ## Prüfen
 
@@ -42,7 +42,7 @@ Die Prüfungen:
 | --- | --- |
 | `src/main.c` | Rahmen: Titel, Menüs, Vorbereitung, Partie, Ergebnis, Statistik |
 | `src/spiel.h` | Spielschnittstelle (schlanke C-Fassung von `GameModule`) |
-| `src/tic_tac_toe.c`, `vier.c`, `reversi.c`, `gomoku.c`, `uttt.c`, `muehle.c`, `dame.c` | Regeln, Bot und Darstellung je Spiel |
+| `src/tic_tac_toe.c`, `vier.c`, `reversi.c`, `gomoku.c`, `uttt.c`, `muehle.c`, `dame.c`, `teiler.c`, `kniffel.c`, `maexle.c`, `paare.c`, `ludo.c`, `domino.c`, `mauer.c`, `zielzahl.c` | Regeln, Bot und Darstellung je Spiel |
 | `src/bild.c` | Zwei Hintergrundebenen, Text in UTF-8 mit Umlauten, Tafeln, Übertragung im Bildwechsel |
 | `src/eingabe.c` | Knöpfe mit Wiederholung des Steuerkreuzes |
 | `src/zufall.c` | cyrb128 und sfc32 wie in der Web-App |
@@ -82,3 +82,5 @@ Grafik und Klänge entstehen beim Bauen; im Repo liegen nur die Erzeuger. Es gib
 - **32-Bit-Werte (s32/u32):** Vergleiche mit `s32` innerhalb von `&&`/`||` (auch im `for`-Kopf) übersetzt 816-tcc falsch – in einzelne `if` aufteilen (Rechenmauer). Ein `s8`-Wert wird bei `(s32)` nicht richtig erweitert. Schiebe um eine Variable (`v >> (j * 8)`) braucht eine fehlende Hilfsroutine (`tcc__lshrdi3`); feste Schiebeweiten gehen.
 - **Feldindex aus Funktionsaufruf:** `a[f(x)] = …` und `x = a[f(y)]` führen zu „ICE 2“ – Index erst in eine Variable.
 - **Wiederholungsregeln** (Vier in einer Reihe mit PopOut, Mühle, Dame): Die Liste der Stellungen wird nach jedem unumkehrbaren Zug (Schlagen, Steinzug) geleert – frühere Stellungen können nie wiederkehren, so bleibt die Liste kurz und die Regel trotzdem genau.
+- **ROM-Größe und wlalink-Bänke:** Standardmäßig legt `snes_rules` 256 KB LoROM (8 Bänke zu 32 KB) fest. Mit 15 Spielen passten die superfreien Funktionsabschnitte nicht mehr in Bank 0 (`INSERT_SECTIONS: No room for section…`). Das `Makefile` exportiert darum `ROMSIZE := 09` und `ROMBANKS := 16` für 512 KB (16 Bänke LoROM).
+- **Große Puffer in Bank $7F (`ram.asm`):** Spielstand (`spielstand`), Zugliste (`zugliste`) und große Zwischenspeicher wie `ziel_kandidaten` (für die Kandidatensuche in Zielzahl) liegen im oberen 64-KB-Arbeitsspeicher in Bank $7F, um den normalen Nullseiten-/Direktseiten-RAM frei zu halten.

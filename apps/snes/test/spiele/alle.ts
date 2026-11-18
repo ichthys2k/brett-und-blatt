@@ -13,7 +13,8 @@ import { reversi } from './reversi';
 import { teiler } from './teiler';
 import { uttt } from './uttt';
 import { vier } from './vier';
+import { zielzahl } from './zielzahl';
 import type { SpielAdapter } from './typen';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ALLE: SpielAdapter<any, any>[] = [ticTacToe, vier, reversi, gomoku, uttt, muehle, dame, teiler, kniffel, maexle, paare, ludo, domino, mauer];
+export const ALLE: SpielAdapter<any, any>[] = [ticTacToe, vier, reversi, gomoku, uttt, muehle, dame, teiler, kniffel, maexle, paare, ludo, domino, mauer, zielzahl];

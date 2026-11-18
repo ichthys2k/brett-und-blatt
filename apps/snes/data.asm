@@ -38,4 +38,7 @@ klang_sieg_ende:
 klang_ende_brr:
 .incbin "res/ende.brr"
 klang_ende_ende:
+klang_wuerfeln:
+.incbin "res/wuerfeln.brr"
+klang_wuerfeln_ende:
 .ends

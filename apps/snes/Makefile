@@ -7,11 +7,13 @@ export ROMTITLE := BRETT UND BLATT 16
 # ROM mit SRAM und Batterie, 2 KB SRAM für die Statistik
 export CARTRIDGETYPE := 02
 export SRAMSIZE := 01
+export ROMSIZE := 09
+export ROMBANKS := 16
 
 include $(PVSNESLIB_HOME)/devkitsnes/snes_rules
 
 GRAFIK := res/kacheln_a.bin res/kacheln_b.bin res/karten.bin res/spielfarben.bin res/palette.bin res/grafik.h
-KLAENGE := res/klick.brr res/setzen.brr res/start.brr res/sieg.brr res/ende.brr
+KLAENGE := res/klick.brr res/setzen.brr res/start.brr res/sieg.brr res/ende.brr res/wuerfeln.brr
 
 .PHONY: all clean ressourcen
 .DEFAULT_GOAL := all

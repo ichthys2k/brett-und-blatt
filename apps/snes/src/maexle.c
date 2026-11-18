@@ -198,7 +198,7 @@ static u8 maexle_ziehen(u8 *stand, const Zug *zug) {
   switch (zug->b[0]) {
     case 0:
       wuerfeln(m, ich);
-      return KLANG_SETZEN;
+      return KLANG_WUERFELN;
     case 1:
     case 4:
       m->ansagen[m->ansagen_n].sitz = ich;
@@ -215,7 +215,7 @@ static u8 maexle_ziehen(u8 *stand, const Zug *zug) {
         return KLANG_ENDE;
       }
       wuerfeln(m, ich);
-      return KLANG_SETZEN;
+      return KLANG_WUERFELN;
   }
   // Anzweifeln: aufdecken.
   ist = wert_von(m->w1, m->w2);

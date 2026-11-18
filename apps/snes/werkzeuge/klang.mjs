@@ -70,8 +70,14 @@ function mische(a, b, versatz) {
 }
 // Menüklick: heller, sehr kurzer Ton.
 wav('klick', ton(1320, 0.05, { abkling: 70, obertoene: [1, 0.2] }));
-// Start: aufsteigender Zweiklang.
-wav('start', folge(ton(659, 0.09, { abkling: 14 }), ton(988, 0.22, { abkling: 9 })));
+// Start: fröhliche Anfangs-Fanfare C–E–G–C (aufsteigend mit Hall).
+{
+  let s = ton(523, 0.35, { abkling: 12, obertoene: [1, 0.4, 0.15] });
+  s = mische(s, ton(659, 0.32, { abkling: 12, obertoene: [1, 0.4, 0.15] }), Math.round(0.07 * RATE));
+  s = mische(s, ton(784, 0.30, { abkling: 11, obertoene: [1, 0.4, 0.15] }), Math.round(0.14 * RATE));
+  s = mische(s, ton(1047, 0.45, { abkling: 8, obertoene: [1, 0.5, 0.2] }), Math.round(0.21 * RATE));
+  wav('start', s.map((v) => v * 0.6));
+}
 // Sieg: kleine Fanfare C–E–G–C.
 {
   let s = ton(523, 0.5, { abkling: 7 });
@@ -82,4 +88,27 @@ wav('start', folge(ton(659, 0.09, { abkling: 14 }), ton(988, 0.22, { abkling: 9 
 }
 // Unentschieden/Niederlage: zwei absteigende Töne.
 wav('ende', folge(ton(440, 0.14, { abkling: 10 }), ton(330, 0.3, { abkling: 7 })));
-console.log('Klänge: setzen, klick, start, sieg, ende');
+// Würfeln: klackernde Würfel im Becher bzw. auf Filz.
+{
+  const n = Math.round(0.24 * RATE);
+  let x = 42;
+  const s = new Float64Array(n);
+  const schlaege = [0, 0.038, 0.076, 0.12, 0.165, 0.20];
+  const tonhoehen = [580, 720, 480, 650, 520, 680];
+  const staerken = [0.75, 0.85, 0.65, 0.55, 0.45, 0.3];
+  for (let k = 0; k < schlaege.length; k++) {
+    const startIdx = Math.round(schlaege[k] * RATE);
+    const f = tonhoehen[k];
+    const amp = staerken[k];
+    for (let i = startIdx; i < n; i++) {
+      const t = (i - startIdx) / RATE;
+      if (t > 0.04) break;
+      x = (x * 1103515245 + 12345) & 0x7fffffff;
+      const rauschen = (x / 0x7fffffff - 0.5) * Math.exp(-t * 120);
+      const klack = Math.sin(2 * Math.PI * f * t) * Math.exp(-t * 70);
+      s[i] += (klack * 0.7 + rauschen * 0.5) * amp;
+    }
+  }
+  wav('wuerfeln', Array.from(s));
+}
+console.log('Klänge: setzen, klick, start, sieg, ende, wuerfeln');

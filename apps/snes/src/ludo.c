@@ -279,18 +279,18 @@ static u8 ludo_ziehen(u8 *stand, const Zug *zug) {
       l->wuerfe = 0;
       l->nochmal = w == 6;
       l->letzt_platz = l->letzt_wurf = KEINER;
-      return KLANG_KLICK;
+      return KLANG_WUERFELN;
     }
     if (l->wuerfe) {
       l->wurf = w;
       l->nochmal = 0;
       l->letzt_platz = l->letzt_wurf = KEINER;
-      return KLANG_KLICK;
+      return KLANG_WUERFELN;
     }
     l->letzt_platz = platz;
     l->letzt_wurf = w;
     naechster(l);
-    return KLANG_KLICK;
+    return KLANG_WUERFELN;
   }
   if (zug->b[0] == 2) {
     naechster(l);

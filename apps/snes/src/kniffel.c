@@ -192,7 +192,7 @@ static u8 kniffel_ziehen(u8 *stand, const Zug *zug) {
     k->hat_wuerfel = 1;
     k->wuerfe--;
     k->eintragen = k->wuerfe == 0;
-    return KLANG_SETZEN;
+    return KLANG_WUERFELN;
   }
   if (zug->b[0] == 2) {
     k->gehalten[zug->b[1]] ^= 1;

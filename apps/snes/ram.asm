@@ -10,4 +10,5 @@ zugliste        DSB 6144        ; Zug zugliste[ZUEGE_MAX], 256 × 24 Bytes
 muehle_suche    DSB 9600        ; Zug [4][100] (muehle.c)
 dame_suche      DSB 5760        ; Zug [5][48] (dame.c)
 domino_probe    DSB 1536        ; Probezüge des Domino-Bots (domino.c)
+ziel_kandidaten DSB 9600        ; Kandidat [400] (zielzahl.c)
 .ENDS
