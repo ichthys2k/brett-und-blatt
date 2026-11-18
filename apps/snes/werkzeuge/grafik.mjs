@@ -532,6 +532,38 @@ farben('WUERFEL', [
   }));
 }
 
+// ---------------------------------------------------------------- Paare-Karten 48 × 24 (Ebene 2, Schrift darüber)
+// Farbe 1 ist die Tinte der Schrift, Farbe 2 der Schriftschatten – beide passen zum Papier.
+const paareFarben = (papier, schatten, ruecken, rueckenHell, rueckenDunkel) => ({
+  1: '#2a1c10', 2: papier, 3: schatten, 4: ruecken, 5: rueckenHell, 6: rueckenDunkel, 7: '#3e2814',
+});
+farben('PAARE', [
+  paareFarben('#f8f0dc', '#d8ccb0', '#3c64a8', '#6c92d0', '#243e70'),
+  paareFarben('#fff4a8', '#e0cc70', '#d8a030', '#f4c860', '#946818'),
+  paareFarben('#d4f4d0', '#a4d4a0', '#3c8a50', '#6cba7c', '#245a34'),
+]);
+{
+  const rand = (x, y) => {
+    const ex = Math.min(x, 47 - x);
+    const ey = Math.min(y, 23 - y);
+    if (ex + ey < 2) return 0;
+    return ex === 0 || ey === 0 || ex + ey === 2 ? 7 : null;
+  };
+  karte('PAARE_RUECKEN', male(48, 24, (x, y) => {
+    const r = rand(x, y);
+    if (r !== null) return r;
+    if (Math.min(x, 47 - x) < 3 || Math.min(y, 23 - y) < 3) return 2;
+    // Rautenmuster
+    const d = (x + y) % 8 === 0 || (x - y + 64) % 8 === 0;
+    return d ? 5 : (x * 5 + y * 3) % 13 === 0 ? 6 : 4;
+  }));
+  karte('PAARE_OFFEN', male(48, 24, (x, y) => {
+    const r = rand(x, y);
+    if (r !== null) return r;
+    return x >= 45 || y >= 21 ? 3 : 2;
+  }));
+}
+
 // ---------------------------------------------------------------- Titel in doppelter Größe
 function grosseSchrift(name, text) {
   const zeichen = [...text];
