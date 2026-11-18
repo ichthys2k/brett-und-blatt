@@ -25,7 +25,8 @@ describe.skipIf(!AKTIV)('Bots im ROM', () => {
     for (const v of a.varianten) {
       it(`${a.id} (${v.name}): Bots ziehen erlaubt, schnell genug und „schwer“ schlägt Zufall`, async () => {
         const rechenzeit = [0, 0, 0];
-        const [partien, noetig] = a.gegenZufall;
+        const [partien, standard] = a.gegenZufall;
+        const noetig = v.siege ?? standard;
         let siege = 0;
         let remis = 0;
         for (let partie = 0; partie < partien; partie++) {

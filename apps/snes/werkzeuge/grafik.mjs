@@ -564,6 +564,42 @@ farben('PAARE', [
   }));
 }
 
+// ---------------------------------------------------------------- Nicht ärgern! (Felder und Figuren)
+// Farbe 1 Feld, 2 Feldrand, 3 Glanzpunkt, ab 4 je Spielerfarbe Füllung und Kante (Gelb, Grün, Rot,
+// Blau, Lila, Türkis wie PLAYER_STYLES in packages/games/ludo/src/ui/index.tsx).
+{
+  const SPIELER = [['#eab308', '#a16207'], ['#22c55e', '#15803d'], ['#ef4444', '#b91c1c'], ['#3b82f6', '#1d4ed8'], ['#a855f7', '#7e22ce'], ['#14b8a6', '#0f766e']];
+  const palette = (feld, rand, kante) => {
+    const p = { 1: feld, 2: rand, 3: '#fffaf0' };
+    SPIELER.forEach(([f, k], i) => {
+      p[4 + i * 2] = f;
+      p[5 + i * 2] = kante ?? k;
+    });
+    return p;
+  };
+  farben('LUDO', [palette('#f4ead2', '#3e2814'), palette('#fff6c4', '#ffe040', '#fff060'), palette('#9ee08a', '#2c6a24')]);
+  const feld = (groesse, r, farbe) => male(groesse, groesse, (x, y) => {
+    const m = (groesse - 1) / 2;
+    const d = Math.sqrt((x - m) ** 2 + (y - m) ** 2);
+    if (d > r) return 0;
+    if (d > r - (groesse > 8 ? 1.3 : 1)) return 2;
+    return farbe === null ? 1 : 4 + farbe * 2;
+  });
+  const figur = (groesse, r, farbe) => male(groesse, groesse, (x, y) => {
+    const m = (groesse - 1) / 2;
+    const f = stein(x - m, y - m, r, [4 + farbe * 2, 5 + farbe * 2, 3]);
+    return f ?? 0;
+  });
+  karte('LUDO_FELD', feld(16, 6.2, null));
+  karte('LUDO_KFELD', feld(8, 3.6, null));
+  for (let i = 0; i < 6; i++) {
+    karte(`LUDO_FELD_${i}`, feld(16, 6.2, i));
+    karte(`LUDO_FIGUR_${i}`, figur(16, 6.9, i));
+    karte(`LUDO_KFELD_${i}`, feld(8, 3.6, i));
+    karte(`LUDO_KFIGUR_${i}`, figur(8, 3.9, i));
+  }
+}
+
 // ---------------------------------------------------------------- Titel in doppelter Größe
 function grosseSchrift(name, text) {
   const zeichen = [...text];

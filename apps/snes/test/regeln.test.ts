@@ -66,7 +66,7 @@ describe.skipIf(!AKTIV)('Regeln wie in der Web-App', () => {
               const i = wahl.int(falsch.length);
               falsch[i] = (falsch[i]! + 1 + wahl.int(254)) & 0xff;
               const erlaubt = new Set([...x.zuege.map(schluessel), ...(a.extra?.(s) ?? []).map((m: unknown) => schluessel(a.zug(s, m)))]);
-              if (!erlaubt.has(schluessel(falsch))) {
+              if (!erlaubt.has(schluessel(falsch)) && !a.pruefen?.(s, falsch)) {
                 const abgelehnt = await p.zug(falsch);
                 expect(abgelehnt.status, `verfälschter Zug ${falsch}`).toBe(2);
               }

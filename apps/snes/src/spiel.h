@@ -103,6 +103,16 @@ typedef struct {
    * verglichene Zugliste nicht.
    */
   u16 (*zusatz)(const u8 *stand, Zug *liste);
+  /**
+   * Name und Farbe eines Platzes hängen von der Spielerzahl ab (optional, sonst 0): gibt den Index
+   * in platz_namen/platz_paletten zurück – etwa „Nicht ärgern!“ zu zweit mit Gelb und Rot.
+   */
+  u8 (*platz_farbe)(u8 plaetze, u8 platz);
+  /**
+   * Freie Eingaben (optional, sonst 0): erlaubt einen Zug wie isLegal, auch wenn er in keiner Liste
+   * steht – etwa eine selbst ausgerechnete Rechenmauer. zug_erlaubt fragt es nach den Listen.
+   */
+  u8 (*erlaubt)(const u8 *stand, const Zug *zug);
 } Spiel;
 
 extern const Spiel spiel_tic_tac_toe;
@@ -116,8 +126,11 @@ extern const Spiel spiel_teiler;
 extern const Spiel spiel_kniffel;
 extern const Spiel spiel_maexle;
 extern const Spiel spiel_paare;
+extern const Spiel spiel_ludo;
+extern const Spiel spiel_domino;
+extern const Spiel spiel_mauer;
 
-#define SPIELE_ANZAHL 11
+#define SPIELE_ANZAHL 14
 extern const Spiel *const spiele[SPIELE_ANZAHL];
 
 /** Der gemeinsame Spielstand (Partie und Prüfmodus laufen nie gleichzeitig). Liegt wie die

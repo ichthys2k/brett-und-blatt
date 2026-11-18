@@ -13,7 +13,7 @@
 
 #define VERSION_TEXT "Version 0.3 · November 2026"
 
-const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle, &spiel_dame, &spiel_teiler, &spiel_kniffel, &spiel_maexle, &spiel_paare};
+const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle, &spiel_dame, &spiel_teiler, &spiel_kniffel, &spiel_maexle, &spiel_paare, &spiel_ludo, &spiel_domino, &spiel_mauer};
 
 /* spielstand und zugliste liegen in Bank $7F (ram.asm). */
 
@@ -35,9 +35,12 @@ u16 alle_zuege(const Spiel *spiel, const u8 *stand) {
 u8 zug_erlaubt(const Spiel *spiel, const u8 *stand, const Zug *zug) {
   u16 n = alle_zuege(spiel, stand);
   u16 i;
+  u8 frei;
   for (i = 0; i < n; i++)
     if (zug_gleich(&zugliste[i], zug)) return 1;
-  return 0;
+  if (!spiel->erlaubt) return 0;
+  frei = spiel->erlaubt(stand, zug);
+  return frei;
 }
 
 void zug_zufaellig(const Spiel *spiel, const u8 *stand, Zufall *z, Zug *zug) {
@@ -256,6 +259,15 @@ static void wert_zeigen(u8 y, const char *wert, u8 aktiv) {
 enum { Z_SPIELER, Z_PLATZ, Z_PARTIEN, Z_TAUSCH, Z_OPTION, Z_ANLEITUNG, Z_LOS };
 static u8 zeilen_art[24], zeilen_nr[24];
 
+/* Name und Farbe eines Platzes je nach Spielerzahl (Spiel.platz_farbe, sonst der Platz selbst). */
+static u8 akt_spieler; /* Spielerzahl der gewählten Partie (setzt die Vorbereitung) */
+static u8 farbe(const Spiel *spiel, u8 platz) {
+  u8 f;
+  if (!spiel->platz_farbe) return platz;
+  f = spiel->platz_farbe(akt_spieler, platz);
+  return f;
+}
+
 static u8 zeilen_bauen(const Spiel *spiel, u8 n) {
   u8 z = 0, i;
   if (spiel->plaetze_min < spiel->plaetze_max) zeilen_art[z++] = Z_SPIELER;
@@ -290,6 +302,7 @@ static u8 vorbereitung(u8 spiel_nr) {
     tafel(1, 3, 30, 22);
     tasten_loslassen();
     while (1) {
+      akt_spieler = spieler[spiel_nr];
       for (i = 0; i < zeilen; i++) {
         y = 5 + i;
         art = zeilen_art[i];
@@ -300,7 +313,7 @@ static u8 vorbereitung(u8 spiel_nr) {
           wert_zeigen(y, ZAHLEN[spieler[spiel_nr]], i == zeile);
         } else if (art == Z_PLATZ) {
           n = zeilen_nr[i];
-          text(5, y, spiel->platz_namen[n], spiel->platz_paletten[n]);
+          text(5, y, spiel->platz_namen[farbe(spiel, n)], spiel->platz_paletten[farbe(spiel, n)]);
           wert_zeigen(y, TEILNEHMER_NAMEN[teilnehmer[n]], i == zeile);
         } else if (art == Z_PARTIEN) {
           text(5, y, "Partien", PAL_TEXT);
@@ -366,6 +379,7 @@ static u8 vorbereitung(u8 spiel_nr) {
 /* ------------------------------------------------------------------ Partie */
 
 static void platz_text(const Spiel *spiel, u8 y, u8 platz, const char *nachsatz) {
+  platz = farbe(spiel, platz);
   u8 n = text_laenge(spiel->platz_namen[platz]) + text_laenge(nachsatz);
   // Zu lang für eine Zeile (z. B. „Spieler 1 ist dran (Controller 1)“): ohne Klammer.
   if (n > BILD_B) {
