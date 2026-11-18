@@ -200,7 +200,9 @@ static u16 ttt_bot_feld(const u8 *stand, u8 stufe, Zufall *z) {
   }
 
   // Leicht: jeder zweite Zug ist zufällig (wie in der Web-App).
-  if (stufe == STUFE_LEICHT && zufall_halb(z)) return zufaelliger_zug(stand, z);
+  if (stufe == STUFE_LEICHT) {
+    if (zufall_halb(z)) return zufaelliger_zug(stand, z);
+  }
   // Mittel: gewinnen, sonst abwehren, sonst Mitte, sonst zufällig.
   i = gewinnfeld(eigen, belegt);
   if (i < 9) return i;

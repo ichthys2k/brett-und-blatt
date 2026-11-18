@@ -233,7 +233,7 @@ function male(b, h, f) {
 /** Je Spiel drei Brettpaletten (normal, Cursor, markiert) für die Paletten 5–7. */
 const spielfarben = [];
 function farben(name, paletten) {
-  konstanten.push([`FARBEN_${name}`, spielfarben.length * 96]);
+  konstanten.push([`FARBEN_${name}`, spielfarben.length * 2]);
   for (const p of paletten) {
     for (let i = 0; i < 16; i++) spielfarben.push(p[i] ? bgr555(hex(p[i])) : 0);
   }

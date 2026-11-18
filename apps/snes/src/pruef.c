@@ -136,7 +136,8 @@ static u8 ausfuehren(u8 befehl) {
       pruef_spiel->ziehen(spielstand, &zug);
       return auszug() ? 1 : 3;
     case BEFEHL_BOT:
-      if (!pruef_spiel || pruef_spiel->am_zug(spielstand) == PLATZ_KEIN) return 2;
+      if (!pruef_spiel) return 2;
+      if (pruef_spiel->am_zug(spielstand) == PLATZ_KEIN) return 2;
       start = BILDER();
       pruef_spiel->bot(spielstand, arg[0], &pruef_zufall, &zug);
       wert = BILDER() - start;

@@ -13,7 +13,7 @@
 
 #define VERSION_TEXT "Version 0.2 · November 2026"
 
-const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe};
+const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi};
 
 u8 spielstand[SPIELSTAND_GROESSE];
 Zug zugliste[ZUEGE_MAX];
@@ -506,7 +506,9 @@ static u8 eine_partie(u8 spiel_nr, u8 nummer, u8 anzahl, const u8 *siege, u8 *si
       // Kurz warten, damit man den Zug des Bots mitverfolgen kann.
       for (i = 0; i < 24; i++) {
         bild_warten();
-        if ((tasten_alle() & KEY_START) && pause()) return 0xff;
+        if (tasten_alle() & KEY_START) {
+          if (pause()) return 0xff;
+        }
       }
       spiel->bot(spielstand, BOT_STUFE(t), &partie_zufall, &zug);
     } else {

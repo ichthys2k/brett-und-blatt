@@ -39,6 +39,11 @@ void bild_start(void) {
 
 void bild_warten(void) {
   WaitForVBlank();
+  // Farben zuerst: CGRAM darf nur in der Austastlücke beschrieben werden, die Karten danach sind groß.
+  if (farben_neu) {
+    dmaCopyCGram((u8 *)(&spielfarben + farben_neu - 1), 5 * 16, 96);
+    farben_neu = 0;
+  }
   // Im Bildwechsel ist Zeit für etwa 5 KB; beide Karten zusammen sind 4 KB.
   if (karte1_neu) {
     dmaCopyVram((u8 *)karte1, VRAM_KARTE1, sizeof(karte1));
@@ -47,10 +52,6 @@ void bild_warten(void) {
   if (karte2_neu) {
     dmaCopyVram((u8 *)karte2, VRAM_KARTE2, sizeof(karte2));
     karte2_neu = 0;
-  }
-  if (farben_neu) {
-    dmaCopyCGram((u8 *)(&spielfarben + farben_neu - 1), 5 * 16, 96);
-    farben_neu = 0;
   }
   eingabe_lesen();
   klang_bedienen();
