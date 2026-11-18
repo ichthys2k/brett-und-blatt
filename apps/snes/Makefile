@@ -10,7 +10,7 @@ export SRAMSIZE := 01
 
 include $(PVSNESLIB_HOME)/devkitsnes/snes_rules
 
-GRAFIK := res/kacheln.bin res/palette.bin res/grafik.h
+GRAFIK := res/kacheln_a.bin res/kacheln_b.bin res/karten.bin res/spielfarben.bin res/palette.bin res/grafik.h
 KLAENGE := res/klick.brr res/setzen.brr res/start.brr res/sieg.brr res/ende.brr
 
 .PHONY: all clean ressourcen

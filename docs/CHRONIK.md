@@ -8,6 +8,21 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**Brett & Blatt 16 – SNES-ROM, Stufe 2: Brettklassiker (18.11.2026, #518, Vorhaben #515):** Sechs weitere Spiele im ROM:
+- `apps/snes/src/vier.c`: Vier in einer Reihe mit allen Brettgrößen und PopOut.
+- `reversi.c`: Reversi.
+- `gomoku.c`: Gomoku.
+- `uttt.c`: Ultimate Tic-Tac-Toe.
+- `muehle.c`: Mühle mit allen Optionen.
+- `dame.c`: Dame in den Varianten Deutsch, International und Englisch, auf 8 × 8 und 10 × 10.
+
+Dazu kommt ein neuer Unterbau:
+- `spiel.h`: Züge als Bytefolgen, Spieloptionen, Bedienung über Felderfolgen.
+- `main.c`: Spieleliste, Optionen in der Vorbereitung, Statistik je Spiel.
+- `werkzeuge/grafik.mjs`: Dedup der Kacheln, Kachelkarten, drei Brettpaletten je Spiel.
+
+Die Tests sind in `apps/snes/test/regeln.test.ts` und `bots.test.ts` zusammengefasst und nutzen je Spiel einen Adapter in `test/spiele/`. Sie vergleichen jedes Spiel in mehreren Optionskombinationen Zug für Zug mit seinem TypeScript-Modul und prüfen die Bots auf Budget und Spielstärke gegen Zufall. Neue Stolpersteine von 816-tcc stehen in `apps/snes/README.md`.
+
 **Brett & Blatt 16 – SNES-ROM, Stufe 0 und 1 (18.11.2026, #516, Vorhaben #515):** Neues Verzeichnis `apps/snes` (kein pnpm-Paket): ein Super-Nintendo-ROM in C mit PVSnesLib 4.7.1, gebaut mit `make -C apps/snes` nach `eval "$(apps/snes/werkzeuge/werkzeugkette.sh)"` (holt und baut PVSnesLib, Snes9x 1.63 und bsnes als libretro-Kerne sowie den Prüf-Emulator `werkzeuge/emu/emu.c` nach `~/.cache/brett-und-blatt-snes`). Rahmen in `src/main.c` (Titel, Hauptmenü, Vorbereitung mit Mensch an Controller 1/2 oder Bot in drei Stufen, Serien 1/3/5, Seitentausch, Anleitung, Pause, Ergebnis, Statistik im SRAM `src/speicher.c`, Wechselbildschirm für verdeckte Spiele), Spielschnittstelle `src/spiel.h` als C-Fassung von `GameModule`, erstes Spiel `src/tic_tac_toe.c`, Zufall `src/zufall.c` wie `packages/engine/src/random.ts`. Grafik (Schrift aus font8x8 mit Umlauten, Tafeln, Filz, Holzbrett, Titel) und Klänge entstehen beim Bauen aus Formeln (`werkzeuge/grafik.mjs`, `werkzeuge/klang.mjs`), keine Dateien aus den privaten Repos. Prüfmodus `src/pruef.c`: ein Postfach im Arbeitsspeicher, über das `apps/snes/test/snes.test.ts` (Vitest, nur mit `SNES_EMU`/`SNES_KERN`) Zufall, Regeln (300 Zufallspartien gegen `packages/games/tic-tac-toe`) und Bot (bestmöglich, nie verloren, ≤ 1 s) prüft; dazu Bedienung über Controller und ein Bildvergleich Snes9x/bsnes. CI-Job „SNES-ROM bauen und prüfen“ in `.github/workflows/ci.yml` (eigener Job, blockiert die Veröffentlichung nicht; ROM und Bildschirmfotos als Artefakt). Stolpersteine von 816-tcc/PVSnesLib in `apps/snes/README.md`. Plan: `docs/spiele/snes.md`.
 
 **Schach: Zeitmaschine als Easter Egg (18.11.2026, #512):** Rechts oben im Schachspiel sitzt ein kleines Astrolabium mit Sanduhr (`TimeMachine` in `packages/games/chess/src/ui/zeitreise.tsx`). Jeder Klick reist in den nächsten Jahrgang – 1455 Buchdruck, 1910 Zeitung, 1948 Wochenschau, 1982 Terminal, 1986 Videoband, 1989 Taschen-LCD, 2007 E-Paper, 2026 OLED – und danach zurück in die Gegenwart; die Wahl gilt je Gerät (`brett-und-blatt:schach-zeitreise`). Der Jahrgang steht als `data-ch-era` auf `.ch-wrap`; `zeitreise.css` setzt je Jahrgang nur Variablen (Gehäuse, Felder, Figuren, Schrift) und legt `.ch-era-fx` mit Korn, Zeilen, Kratzern, Bandstörung oder E-Paper-Aufblitzen (je Zug neu) über das Brett. Auf Zeitreise zeigen alle Figuren Zeichen statt gemalter Bilder (`EraContext` in `PieceFace`), weil sich nur Zeichen umfärben lassen. Das SVG-Rauschen kommt als CSS-Variable aus dem TSX, damit keine Adresse im CSS steht (`tests/repo.test.ts`). Nur CSS, keine neuen Schriften oder Abhängigkeiten; `prefers-reduced-motion` schaltet alle Bewegung ab. Test `packages/games/chess/test/zeitreise.test.ts`. Vorlage war ein Entwurf mit Tic-Tac-Toe als Artefakt.

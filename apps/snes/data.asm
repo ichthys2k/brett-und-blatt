@@ -1,12 +1,22 @@
 ; Grafik und Klänge von Brett & Blatt 16 (erzeugt von werkzeuge/grafik.mjs und werkzeuge/klang.mjs)
 .include "hdr.asm"
 
-.section ".grafik" superfree
-kacheln:
-.incbin "res/kacheln.bin"
-kacheln_ende:
+.section ".grafik1" superfree
+kacheln_a:
+.incbin "res/kacheln_a.bin"
+kacheln_a_ende:
 farben:
 .incbin "res/palette.bin"
+.ends
+
+.section ".grafik2" superfree
+kacheln_b:
+.incbin "res/kacheln_b.bin"
+kacheln_b_ende:
+karten:
+.incbin "res/karten.bin"
+spielfarben:
+.incbin "res/spielfarben.bin"
 .ends
 
 .section ".klang1" superfree

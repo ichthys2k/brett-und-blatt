@@ -3,8 +3,17 @@
  * (packages/engine/src/types.ts). Regeln und Bot sind getrennt von der Oberfläche, damit der
  * Prüfmodus (pruef.c) sie ohne Bildschirm mit der Web-App vergleichen kann.
  *
- * Der Spielstand liegt in einem festen Puffer (SPIELSTAND_GROESSE Bytes); jedes Spiel legt darin
- * seine eigene Struktur ab. Züge sind 16-Bit-Zahlen, ihre Bedeutung bestimmt das Spiel.
+ * Spielstand: ein fester Puffer (SPIELSTAND_GROESSE Bytes), in dem jedes Spiel seine eigene
+ * Struktur ablegt.
+ *
+ * Züge: ein `Zug` sind bis zu ZUG_BYTES Bytes, deren Bedeutung das Spiel festlegt (`n` gültige
+ * Bytes). Zwei Züge sind gleich, wenn ihre Bytes gleich sind. Der Vergleichstest übersetzt die
+ * Züge der Web-App in dieselbe Form (test/spiele/<id>.ts).
+ *
+ * Bedienung: Jeder Zug ist eine Folge von Feldern, die man nacheinander mit dem Cursor wählt
+ * (Tic-Tac-Toe: ein Feld; Mühle: von, nach, wegnehmen; Dame: Start und Sprungfelder). Den Cursor,
+ * die Auswahl und die passenden nächsten Felder verwaltet der Rahmen (main.c); das Spiel sagt nur,
+ * welches Feld an welcher Gitterstelle liegt, und zeichnet die Felder mit ihrer Markierung.
  */
 #ifndef SPIEL_H
 #define SPIEL_H
@@ -12,57 +21,104 @@
 #include <snes.h>
 #include "zufall.h"
 
-#define SPIELSTAND_GROESSE 128
-#define ZUEGE_MAX 64
-#define ZUG_KEIN 0xffff
+#define SPIELSTAND_GROESSE 4096
+#define ZUEGE_MAX 256
+#define ZUG_BYTES 23
 #define PLATZ_KEIN 0xff
 #define PLAETZE_MAX 2
+#define OPTIONEN_MAX 4
+#define FELD_KEIN 0xff
+#define FELDER_MAX 256
+#define FOLGE_MAX 16
 
 enum { ERGEBNIS_LAEUFT, ERGEBNIS_SIEG, ERGEBNIS_REMIS };
 enum { STUFE_LEICHT, STUFE_MITTEL, STUFE_SCHWER, STUFEN };
 
+/* Markierung eines Feldes beim Zeichnen (Bits). */
+#define MARK_CURSOR 1
+#define MARK_GEWAEHLT 2
+#define MARK_ZIEL 4
+
+typedef struct {
+  u8 n;
+  u8 b[ZUG_BYTES];
+} Zug;
+
+typedef struct {
+  const char *name;            /* höchstens 10 Zeichen */
+  const char *const *werte;    /* Anzeigetexte, höchstens 12 Zeichen */
+  u8 anzahl;
+  u8 standard;
+} Option;
+
 typedef struct {
   /* Steckbrief */
   const char *name;
-  const char *const *anleitung; /* Zeilen à höchstens 26 Zeichen, mit 0 beendet */
+  const char *const *anleitung; /* Absätze, mit 0 beendet; bild.c bricht die Zeilen um */
+  const char *bedienung;        /* Kurzhilfe für die Anleitung, z. B. „A setzen“ */
   const char *const *platz_namen;
   const u8 *platz_paletten;
   u8 plaetze;
   /** Verdeckte Informationen: Im Hot-Seat erscheint vor jedem Zug ein Wechselbildschirm. */
   u8 verdeckt;
+  const Option *optionen;
+  u8 optionen_anzahl;
+  /** Drei Brettpaletten (Paletten 5–7) aus werkzeuge/grafik.mjs (FARBEN_…), beim Partiebeginn geladen. */
+  u16 brett_farben;
 
   /* Regeln */
-  void (*aufbauen)(u8 *stand, Zufall *z);
+  void (*aufbauen)(u8 *stand, const u8 *optionen, Zufall *z);
   /** Wer am Zug ist, oder PLATZ_KEIN nach Spielende. */
   u8 (*am_zug)(const u8 *stand);
-  /** Schreibt alle erlaubten Züge in `zuege` und gibt ihre Zahl zurück. */
-  u8 (*zuege)(const u8 *stand, u16 *zuege);
-  /** Führt einen erlaubten Zug aus und meldet ein Ereignis für den Klang (KLANG_…). */
-  u8 (*ziehen)(u8 *stand, u16 zug);
+  /** Schreibt alle erlaubten Züge in `liste` (höchstens ZUEGE_MAX) und gibt ihre Zahl zurück. */
+  u16 (*zuege)(const u8 *stand, Zug *liste);
+  /** Führt einen erlaubten Zug aus und gibt den passenden Klang zurück (KLANG_…). */
+  u8 (*ziehen)(u8 *stand, const Zug *zug);
   /** ERGEBNIS_…; bei einem Sieg steht der Gewinnerplatz in `sieger`. */
   u8 (*ergebnis)(const u8 *stand, u8 *sieger);
 
-  /* Bot */
-  u16 (*bot)(const u8 *stand, u8 stufe, Zufall *z);
+  /* Bot: schreibt einen erlaubten Zug nach `zug`. */
+  void (*bot)(const u8 *stand, u8 stufe, Zufall *z, Zug *zug);
 
-  /* Prüfmodus: Spielstand in einer festen Form ausgeben (siehe test/spiele/<id>.ts). */
-  u8 (*ausgeben)(const u8 *stand, u8 *puffer);
+  /* Prüfmodus: Spielstand in fester Form ausgeben, gibt die Länge zurück. */
+  u16 (*ausgeben)(const u8 *stand, u8 *puffer);
 
   /* Oberfläche */
-  /** Zeichnet das Spielfeld. `auswahl` ist die Cursorstelle, `hinweis` 1 = Cursor zeigen. */
-  void (*zeichnen)(const u8 *stand, u16 auswahl, u8 cursor);
-  /** Bewegt die Auswahl mit dem Steuerkreuz; gibt bei A den gewählten Zug zurück, sonst ZUG_KEIN. */
-  u16 (*bedienen)(const u8 *stand, u16 *auswahl, u16 tasten);
+  /** Größe des Cursorgitters. */
+  void (*gitter)(const u8 *stand, u8 *breite, u8 *hoehe);
+  /** Feld an einer Gitterstelle oder FELD_KEIN. */
+  u8 (*feld_an)(const u8 *stand, u8 x, u8 y);
+  /** Die Felderfolge, mit der man einen Zug wählt. Gibt die Länge zurück. */
+  u8 (*felder)(const u8 *stand, const Zug *zug, u8 *felder);
+  /** Zeichnet das Spielfeld; `markierung[feld]` trägt MARK_… (Länge FELDER_MAX). */
+  void (*zeichnen)(const u8 *stand, const u8 *markierung, u8 aktiv);
   /** Startstelle des Cursors. */
-  u16 auswahl_start;
+  u8 cursor_x, cursor_y;
 } Spiel;
 
 extern const Spiel spiel_tic_tac_toe;
+extern const Spiel spiel_vier;
+extern const Spiel spiel_reversi;
+extern const Spiel spiel_gomoku;
+extern const Spiel spiel_uttt;
+extern const Spiel spiel_muehle;
+extern const Spiel spiel_dame;
 
-#define SPIELE_ANZAHL 1
+#define SPIELE_ANZAHL 7
 extern const Spiel *const spiele[SPIELE_ANZAHL];
 
-/** Prüft, ob `zug` in der Liste der erlaubten Züge steht. */
-u8 zug_erlaubt(const Spiel *spiel, const u8 *stand, u16 zug);
+/** Der gemeinsame Spielstand (Partie und Prüfmodus laufen nie gleichzeitig). */
+extern u8 spielstand[SPIELSTAND_GROESSE];
+/** Gemeinsame Zugliste für den Rahmen und den Prüfmodus. */
+extern Zug zugliste[ZUEGE_MAX];
+
+/** Sind zwei Züge gleich? */
+u8 zug_gleich(const Zug *a, const Zug *b);
+/** Steht `zug` in der Liste der erlaubten Züge? (Erzeugt die Liste in `zugliste` neu.) */
+u8 zug_erlaubt(const Spiel *spiel, const u8 *stand, const Zug *zug);
+/** Zufälliger erlaubter Zug (für die leichten Bots). */
+void zug_zufaellig(const Spiel *spiel, const u8 *stand, Zufall *z, Zug *zug);
+/** Bilder seit dem Einschalten (für Zeitbudgets der Bots). */
+#define BILDER() (snes_vblank_count)
 
 #endif

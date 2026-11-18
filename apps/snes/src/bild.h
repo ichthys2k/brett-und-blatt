@@ -23,8 +23,10 @@ void bild_pause(u16 bilder);
 void bild_leeren(void);
 /** Eine Kachel auf Ebene 1 setzen. */
 void kachel(u8 x, u8 y, u16 nr, u8 pal);
-/** Einen Block fortlaufender Kacheln (b × h) ab `start` setzen. */
-void kachelblock(u8 x, u8 y, u16 start, u8 b, u8 h, u8 pal);
+/** Kachelkarte aus werkzeuge/grafik.mjs (KARTE_…) mit b × h Kacheln zeichnen. */
+void karte(u8 x, u8 y, u16 adresse, u8 b, u8 h, u8 pal);
+/** Brettpaletten 5–7 eines Spiels (FARBEN_…) im nächsten Bildwechsel laden. */
+void brett_farben(u16 adresse);
 /** Rechteck auf Ebene 1 leeren. */
 void flaeche_leeren(u8 x, u8 y, u8 b, u8 h);
 /** Tafel (Rahmen mit Holzfläche) auf Ebene 2; mindestens 2 × 2 Kacheln. */

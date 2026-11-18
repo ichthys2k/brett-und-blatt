@@ -25,9 +25,11 @@ void speicher_loeschen(void) {
 }
 
 void speicher_laden(void) {
+  u16 soll;
   consoleLoadSram((u8 *)&speicher, sizeof(Speicher));
+  soll = summe();
   if (speicher.kennung[0] != 'B' || speicher.kennung[1] != 'B' || speicher.kennung[2] != '1' ||
-      speicher.kennung[3] != '6' || speicher.version != VERSION || speicher.pruefsumme != summe()) {
+      speicher.kennung[3] != '6' || speicher.version != VERSION || speicher.pruefsumme != soll) {
     speicher_loeschen();
   }
 }
