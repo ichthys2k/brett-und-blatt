@@ -10,6 +10,7 @@ import { getCheckWarning, type CheckWarning } from './checkWarning';
 import './styles.css';
 import './zeitreise.css';
 import { EraContext, TimeMachine, eraStyle, useChessEra } from './zeitreise';
+import { EraPiece, eraPieceMarkup } from './zeitfiguren';
 
 type PieceType = 'k' | 'q' | 'r' | 'b' | 'n' | 'p';
 interface Piece {
@@ -23,9 +24,10 @@ const PIECE_NAMES: Record<PieceType, string> = { k: 'König', q: 'Dame', r: 'Tur
 const VALUES: Record<PieceType, number> = { k: 0, q: 9, r: 5, b: 3, n: 3, p: 1 };
 /** Figur als Zeichen oder – bei einem gemalten Satz – als Bild in derselben Größe (1em = Zellgröße der Figur). */
 function PieceFace({ type, white, set }: { type: PieceType; white: boolean; set: PieceSetId }) {
-  // Auf Zeitreise (#512) gelten Zeichen: Nur sie lassen sich in den Farben des Jahrgangs zeigen.
+  // Auf Zeitreise (#512) zeichnet der Jahrgang selbst – oder es gilt der kontrastreiche klassische Satz.
   const era = useContext(EraContext);
-  const url = era ? undefined : pieceImage(set, type, white);
+  if (era && eraPieceMarkup(era, type, white) !== null) return <EraPiece era={era} type={type} white={white} />;
+  const url = pieceImage(era ? 'classic' : set, type, white);
   return url ? <img className="ch-piece-img" src={url} alt="" draggable={false} /> : <>{GLYPHS[type]}</>;
 }
 
