@@ -247,7 +247,10 @@ static u8 ausfuehren(u8 *f, u8 g, const Zug *z) {
     if (platz == 1 && reihe == g - 1) wert = S_DAME;
   }
   f[nach] = wert;
-  return n > 0 || !IST_DAME(f[nach]) || wert != f[nach];
+  // Ohne `|| !…` (816-tcc übersetzt das teils falsch); der Rückgabewert wird nicht genutzt.
+  if (n > 0) return 1;
+  if (wert != W_DAME && wert != S_DAME) return 1;
+  return 0;
 }
 
 /* ------------------------------------------------------------------ Regeln */

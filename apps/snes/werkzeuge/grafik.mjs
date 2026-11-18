@@ -498,6 +498,40 @@ farben('DAME', [
   for (const art of ['leer', 'weiss', 'schwarz', 'weiss-dame', 'schwarz-dame']) karte(`DAME_${art.toUpperCase().replace('-', '_')}`, feld(true, art));
 }
 
+// ---------------------------------------------------------------- Würfel 16 × 16
+const wuerfelFarben = (hell, mittel, schatten) => ({ 1: hell, 2: mittel, 3: schatten, 4: '#1a1410', 5: '#c8352c', 11: '#f4ead2' });
+farben('WUERFEL', [
+  { ...holz('#dcb27a', '#c99c64', '#ad8049'), ...wuerfelFarben('#fbf6ea', '#e2dac8', '#a89e8a') },
+  { ...holz('#dcb27a', '#c99c64', '#ad8049'), ...wuerfelFarben('#fff2a0', '#f2d870', '#c4a840') },
+  { ...holz('#dcb27a', '#c99c64', '#ad8049'), ...wuerfelFarben('#b8ecc0', '#94d8a0', '#5ea86c') },
+]);
+{
+  // Augen je Wert als Positionen auf einem 3 × 3-Raster (0–8).
+  const AUGEN = { 1: [4], 2: [2, 6], 3: [2, 4, 6], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+  for (let w = 1; w <= 6; w++) {
+    karte(`WUERFEL_${w}`, male(16, 16, (x, y) => {
+      // Abgerundetes Quadrat mit Schatten unten rechts.
+      const ex = Math.min(x, 15 - x);
+      const ey = Math.min(y, 15 - y);
+      if (ex + ey < 2 || x > 14 || y > 14) return 0;
+      for (const a of AUGEN[w]) {
+        const ax = 3.5 + (a % 3) * 4;
+        const ay = 3.5 + Math.floor(a / 3) * 4;
+        if ((x - ax) ** 2 + (y - ay) ** 2 < 2.6) return w === 1 ? 5 : 4;
+      }
+      if (x >= 13 || y >= 13) return 3;
+      if (x <= 1 || y <= 1) return 1;
+      return 2;
+    }));
+  }
+  karte('WUERFEL_LEER', male(16, 16, (x, y) => {
+    const ex = Math.min(x, 15 - x);
+    const ey = Math.min(y, 15 - y);
+    if (ex + ey < 2 || x > 14 || y > 14) return 0;
+    return (x + y) % 4 === 0 ? 3 : 0;
+  }));
+}
+
 // ---------------------------------------------------------------- Titel in doppelter Größe
 function grosseSchrift(name, text) {
   const zeichen = [...text];

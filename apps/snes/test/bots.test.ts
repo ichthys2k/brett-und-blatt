@@ -39,7 +39,7 @@ describe.skipIf(!AKTIV)('Bots im ROM', () => {
           while (!a.modul.result(s)) {
             const actor = a.modul.currentPlayers(s)[0];
             const moves = a.modul.legalMoves(s, actor);
-            const erlaubt = new Map(moves.map((m: unknown) => [schluessel(a.zug(s, m)), m]));
+            const erlaubt = new Map([...moves, ...(a.extra?.(s) ?? [])].map((m: unknown) => [schluessel(a.zug(s, m)), m]));
             let zug: unknown;
             if (actor === botPlatz) {
               // In den ersten Partien alle Stufen an derselben Stellung prüfen, gezogen wird mit „schwer“.

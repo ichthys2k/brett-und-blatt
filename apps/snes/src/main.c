@@ -13,7 +13,7 @@
 
 #define VERSION_TEXT "Version 0.3 · November 2026"
 
-const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle, &spiel_dame, &spiel_teiler};
+const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle, &spiel_dame, &spiel_teiler, &spiel_kniffel};
 
 /* spielstand und zugliste liegen in Bank $7F (ram.asm). */
 
@@ -25,8 +25,15 @@ u8 zug_gleich(const Zug *a, const Zug *b) {
   return 1;
 }
 
-u8 zug_erlaubt(const Spiel *spiel, const u8 *stand, const Zug *zug) {
+/* Erlaubte Züge und Zusatzzüge zusammen in `zugliste`. */
+u16 alle_zuege(const Spiel *spiel, const u8 *stand) {
   u16 n = spiel->zuege(stand, zugliste);
+  if (spiel->zusatz) n += spiel->zusatz(stand, zugliste + n);
+  return n;
+}
+
+u8 zug_erlaubt(const Spiel *spiel, const u8 *stand, const Zug *zug) {
+  u16 n = alle_zuege(spiel, stand);
   u16 i;
   for (i = 0; i < n; i++)
     if (zug_gleich(&zugliste[i], zug)) return 1;
@@ -360,6 +367,11 @@ static u8 vorbereitung(u8 spiel_nr) {
 
 static void platz_text(const Spiel *spiel, u8 y, u8 platz, const char *nachsatz) {
   u8 n = text_laenge(spiel->platz_namen[platz]) + text_laenge(nachsatz);
+  // Zu lang für eine Zeile (z. B. „Spieler 1 ist dran (Controller 1)“): ohne Klammer.
+  if (n > BILD_B) {
+    nachsatz = " ist dran";
+    n = text_laenge(spiel->platz_namen[platz]) + text_laenge(nachsatz);
+  }
   u8 x = n >= BILD_B ? 0 : (BILD_B - n) / 2;
   flaeche_leeren(0, y, 32, 1);
   x += text(x, y, spiel->platz_namen[platz], spiel->platz_paletten[platz]);
@@ -473,7 +485,7 @@ static void cursor_bewegen(const Spiel *spiel, s8 dx, s8 dy) {
 
 /* Wartet auf die Wahl eines Menschen. Gibt 1 zurück, wenn `zug` gesetzt ist, 0 bei Abbruch. */
 static u8 mensch_waehlt(const Spiel *spiel, u8 port, Zug *zug, u8 nummer, u8 anzahl, const u8 *siege, u8 platz, u8 n_plaetze) {
-  u16 n = spiel->zuege(spielstand, zugliste);
+  u16 n = alle_zuege(spiel, spielstand);
   u16 tasten, fertig;
   u8 feld, ziel;
   folge_n = 0;
@@ -677,7 +689,12 @@ static void serie(u8 spiel_nr) {
     letzte = nummer + 1 >= anzahl;
     ergebnis_text(spiel, ergebnis, sieger, n);
     // Fanfare, wenn ein Mensch gewinnt oder nur Bots spielen; sonst der leise Abschluss.
-    klang_spielen(ergebnis == ERGEBNIS_SIEG && (mensch_gewinnt || !menschen) ? KLANG_SIEG : KLANG_ENDE);
+    t = KLANG_ENDE;
+    if (ergebnis == ERGEBNIS_SIEG) {
+      if (mensch_gewinnt) t = KLANG_SIEG;
+      if (menschen == 0) t = KLANG_SIEG;
+    }
+    klang_spielen(t);
     flaeche_leeren(0, 24, 32, 2);
     if (anzahl > 1) serienstand(letzte, nummer, anzahl, siege, n);
     fusszeile(letzte ? "A: noch einmal · B: Menü" : "A: nächste Partie · B: Menü");

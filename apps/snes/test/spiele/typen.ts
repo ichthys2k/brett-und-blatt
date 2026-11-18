@@ -30,6 +30,8 @@ export interface SpielAdapter<S, M> {
   partien: number;
   /** Höchste Rechenzeit der Bots in Bildern je Stufe (leicht, mittel, schwer). */
   botBilder: [number, number, number];
+  /** Zusatzzüge wie isLegal, aber nicht in legalMoves (z. B. Würfel halten). */
+  extra?: (stand: S) => M[];
   /** Partien Bot „schwer“ gegen Zufall und nötige Siege. */
   gegenZufall: [partien: number, siege: number];
 }

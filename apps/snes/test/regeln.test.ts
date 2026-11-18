@@ -65,13 +65,15 @@ describe.skipIf(!AKTIV)('Regeln wie in der Web-App', () => {
               const falsch = [...echt];
               const i = wahl.int(falsch.length);
               falsch[i] = (falsch[i]! + 1 + wahl.int(254)) & 0xff;
-              const erlaubt = new Set(x.zuege.map(schluessel));
+              const erlaubt = new Set([...x.zuege.map(schluessel), ...(a.extra?.(s) ?? []).map((m: unknown) => schluessel(a.zug(s, m)))]);
               if (!erlaubt.has(schluessel(falsch))) {
                 const abgelehnt = await p.zug(falsch);
                 expect(abgelehnt.status, `verfälschter Zug ${falsch}`).toBe(2);
               }
             }
-            const zug = wahl.pick(moves);
+            // Zusatzzüge (wie Würfel halten) ab und zu einstreuen.
+            const extra = a.extra?.(s) ?? [];
+            const zug = extra.length && wahl.chance(0.3) ? wahl.pick(extra) : wahl.pick(moves);
             const bytes = a.zug(s, zug);
             s = a.modul.applyMove(s, actor, zug).state;
             x = await p.zug(bytes);
