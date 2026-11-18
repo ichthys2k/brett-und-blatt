@@ -172,6 +172,10 @@ static u8 naechstes_zeichen(void) {
     if (d == 0x96 && e == 0xbc) return 0x91; /* ▼ */
     if (d == 0x97 && e == 0x8f) return 0x92; /* ● */
     if (d == 0x97 && e == 0x8b) return 0x93; /* ○ */
+    if (d == 0x99 && e == 0xa5) return 0x94; /* ♥ */
+    if (d == 0x99 && e == 0xa6) return 0x95; /* ♦ */
+    if (d == 0x99 && e == 0xa3) return 0x96; /* ♣ */
+    if (d == 0x99 && e == 0xa0) return 0x97; /* ♠ */
     return '?';
   }
   return '?';

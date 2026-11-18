@@ -418,7 +418,7 @@ static s16 bewerten(const Ludo *l, u8 figur) {
     }
     feld = absolut(l, platz, weiter);
     g = gegner_auf(l, platz, feld);
-    if (g > 1) wert += 400 + (g - 1) * 5;
+    if (g > 0) wert += 400 + (g - 1) * 5;
     vorher = bedroht(l, platz, absolut(l, platz, l->stelle[k]));
     nachher = bedroht(l, platz, feld);
     if (vorher && !nachher) wert += 150;

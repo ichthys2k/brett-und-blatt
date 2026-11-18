@@ -13,7 +13,7 @@
 
 #define VERSION_TEXT "Version 0.3 · November 2026"
 
-const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle, &spiel_dame, &spiel_teiler, &spiel_kniffel, &spiel_maexle, &spiel_paare, &spiel_ludo, &spiel_domino, &spiel_mauer, &spiel_zielzahl};
+const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle, &spiel_dame, &spiel_teiler, &spiel_kniffel, &spiel_maexle, &spiel_paare, &spiel_ludo, &spiel_domino, &spiel_mauer, &spiel_zielzahl, &spiel_elevens, &spiel_solitaire, &spiel_mau_mau, &spiel_uno, &spiel_peter, &spiel_quartett, &spiel_president, &spiel_speed, &spiel_ligretto, &spiel_poker};
 
 /* spielstand und zugliste liegen in Bank $7F (ram.asm). */
 
@@ -87,25 +87,52 @@ static void fusszeile(const char *hinweis) {
   text_mitte(26, hinweis, PAL_GRAU);
 }
 
-/* Senkrechtes Menü mit Pfeil. Gibt die Wahl zurück oder 0xff bei B. */
+/* Senkrechtes Menü mit Pfeil und Bildlauf bei vielen Einträgen. Gibt die Wahl zurück oder 0xff bei B. */
 static u8 menue(u8 x, u8 y, const char *const *eintraege, u8 anzahl, u8 wahl, u8 abstand) {
-  u8 i;
+  u8 i, oben = 0, neu_zeichnen = 1, fenster = 19;
   u16 t;
+  if (anzahl <= fenster) fenster = anzahl;
+  if (wahl >= fenster) oben = wahl - fenster + 1;
   while (1) {
-    for (i = 0; i < anzahl; i++) {
-      kachel(x, y + i * abstand, i == wahl ? K_PFEIL : 0, PAL_GELB);
-      text(x + 2, y + i * abstand, eintraege[i], i == wahl ? PAL_GELB : PAL_TEXT);
+    if (wahl < oben) { oben = wahl; neu_zeichnen = 1; }
+    if (wahl >= oben + fenster) { oben = wahl - fenster + 1; neu_zeichnen = 1; }
+    if (neu_zeichnen) {
+      for (i = 0; i < fenster; i++) {
+        u8 idx = oben + i;
+        kachel(x, y + i * abstand, idx == wahl ? K_PFEIL : 0, PAL_GELB);
+        flaeche_leeren(x + 2, y + i * abstand, 24, 1);
+        text(x + 2, y + i * abstand, eintraege[idx], idx == wahl ? PAL_GELB : PAL_TEXT);
+      }
+      neu_zeichnen = 0;
     }
     bild_warten();
     if (pruef_angefordert()) pruef_schleife();
     t = tasten_alle();
     if (t & KEY_UP) {
+      if (wahl >= oben && wahl < oben + fenster) {
+        kachel(x, y + (wahl - oben) * abstand, 0, PAL_GELB);
+        text(x + 2, y + (wahl - oben) * abstand, eintraege[wahl], PAL_TEXT);
+      }
       wahl = wahl == 0 ? anzahl - 1 : wahl - 1;
       klang_spielen(KLANG_KLICK);
+      if (wahl < oben || wahl >= oben + fenster) neu_zeichnen = 1;
+      else {
+        kachel(x, y + (wahl - oben) * abstand, K_PFEIL, PAL_GELB);
+        text(x + 2, y + (wahl - oben) * abstand, eintraege[wahl], PAL_GELB);
+      }
     }
     if (t & KEY_DOWN) {
+      if (wahl >= oben && wahl < oben + fenster) {
+        kachel(x, y + (wahl - oben) * abstand, 0, PAL_GELB);
+        text(x + 2, y + (wahl - oben) * abstand, eintraege[wahl], PAL_TEXT);
+      }
       wahl = wahl == anzahl - 1 ? 0 : wahl + 1;
       klang_spielen(KLANG_KLICK);
+      if (wahl < oben || wahl >= oben + fenster) neu_zeichnen = 1;
+      else {
+        kachel(x, y + (wahl - oben) * abstand, K_PFEIL, PAL_GELB);
+        text(x + 2, y + (wahl - oben) * abstand, eintraege[wahl], PAL_GELB);
+      }
     }
     if (t & (KEY_A | KEY_START)) {
       klang_spielen(KLANG_KLICK);

@@ -223,7 +223,7 @@ static u16 vier_ausgeben(const u8 *stand, u8 *p) {
  * und wird beim Ziehen nur für die Fenster durch das neue Feld nachgeführt – eine volle
  * Bewertung je Stellung wäre auf dem 65816 zu langsam.
  */
-#define FENSTER_MAX 96
+#define FENSTER_MAX 128
 #define FENSTER_JE_FELD 16
 static u8 b_spalten, b_reihen, b_hoehe[9];
 static u8 b_feld[ZELLEN_MAX];
@@ -237,7 +237,11 @@ static u16 b_start, b_budget;
 static u8 abbruch;
 static const s16 WERT[5] = {0, 1, 5, 40, 0};
 static const u8 MITTE_ZUERST[10][9] = {
-  {0}, {0}, {0}, {0}, {0}, {2, 3, 1, 4, 0, 5}, {3, 2, 4, 1, 5, 0, 6}, {3, 4, 2, 5, 1, 6, 0, 7}, {4, 3, 5, 2, 6, 1, 7, 0, 8},
+  {0}, {0}, {0}, {0}, {0}, {0},
+  {2, 3, 1, 4, 0, 5},                /* 6 Spalten */
+  {3, 2, 4, 1, 5, 0, 6},             /* 7 Spalten */
+  {3, 4, 2, 5, 1, 6, 0, 7},          /* 8 Spalten */
+  {4, 3, 5, 2, 6, 1, 7, 0, 8},       /* 9 Spalten */
 };
 
 static s16 fenster_wert(u8 w) {

@@ -116,6 +116,7 @@ function glyphe(zeilen, schatten = true) {
 export const SONDERZEICHEN = [
   [0x80, 0x00c4], [0x81, 0x00d6], [0x82, 0x00dc], [0x83, 0x00e4], [0x84, 0x00f6], [0x85, 0x00fc],
   [0x86, 0x00df], [0x87, 0x00d7], [0x88, 0x00b7],
+  [0x94, 0x2665], [0x95, 0x2666], [0x96, 0x2663], [0x97, 0x2660],
 ];
 for (let c = 0x20; c < 0x7f; c++) setze(c, glyphe(GLYPHEN[c]));
 for (const [code, cp] of SONDERZEICHEN) setze(code, glyphe(GLYPHEN[cp]));
@@ -128,6 +129,7 @@ setze(0x8d, glyphe([0x02, 0x06, 0x0e, 0x1e, 0x0e, 0x06, 0x02, 0])); // ▶ (klei
 setze(0x8e, glyphe([0x18, 0x18, 0x7e, 0x7e, 0x18, 0x18, 0, 0])); // ✚ (Steuerkreuz)
 setze(0x8f, glyphe([0, 0, 0, 0, 0, 0, 0x49, 0])); // …
 konstanten.push(['Z_AE', 0x80], ['Z_PFEIL_LINKS', 0x8c], ['Z_PFEIL_RECHTS', 0x8d], ['Z_KREUZ', 0x8e]);
+konstanten.push(['Z_HERZ', 0x94], ['Z_KARO', 0x95], ['Z_KREUZ_BLATT', 0x96], ['Z_PIK', 0x97]);
 setze(0x90, glyphe([0x08, 0x1c, 0x3e, 0x7f, 0x1c, 0x1c, 0x1c, 0])); // ▲
 setze(0x91, glyphe([0x1c, 0x1c, 0x1c, 0x7f, 0x3e, 0x1c, 0x08, 0])); // ▼
 setze(0x92, glyphe([0x1c, 0x3e, 0x7f, 0x7f, 0x7f, 0x3e, 0x1c, 0])); // ●
@@ -627,6 +629,58 @@ function grosseSchrift(name, text) {
   const k = karte(name, umriss);
   konstanten.push([`${name}_B`, k.b], [`${name}_H`, k.h]);
 }
+// ---------------------------------------------------------------- Spielkarten 24 × 32
+// Für Solitaire, Elf zuerst!, Mau-Mau, Eins!, Schwarzer Peter, Quartett, Präsident, Speed, Ligretto, Poker.
+const kartenFarben = (papier, schatten, ruecken, rueckenHell, rueckenDunkel, rand) => ({
+  1: papier,
+  2: schatten,
+  3: '#18120c',
+  4: rand,
+  5: ruecken,
+  6: rueckenHell,
+  7: rueckenDunkel,
+  8: '#15803d',
+  9: '#dc2626',
+  10: '#eab308',
+  11: '#1e3a8a',
+  12: '#18181b',
+});
+farben('KARTEN', [
+  kartenFarben('#fdfbf7', '#ded8c8', '#1e3a8a', '#3b82f6', '#172554', '#261c14'),
+  kartenFarben('#fffdf0', '#fef08a', '#b45309', '#fde047', '#78350f', '#854d0e'),
+  kartenFarben('#f0fdf4', '#bbf7d0', '#15803d', '#4ade80', '#14532d', '#166534'),
+]);
+{
+  const kartenRand = (x, y) => {
+    const ex = Math.min(x, 23 - x);
+    const ey = Math.min(y, 31 - y);
+    if (ex + ey < 3) return 0;
+    if (ex === 0 || ey === 0 || ex + ey === 3) return 4;
+    return null;
+  };
+  karte('KARTENBLANKO', male(24, 32, (x, y) => {
+    const r = kartenRand(x, y);
+    if (r !== null) return r;
+    if (x === 22 || y === 30) return 2;
+    return 1;
+  }));
+  karte('KARTENRUECKEN', male(24, 32, (x, y) => {
+    const r = kartenRand(x, y);
+    if (r !== null) return r;
+    if (Math.min(x, 23 - x) < 2 || Math.min(y, 31 - y) < 2) return 1;
+    if (Math.min(x, 23 - x) === 2 || Math.min(y, 31 - y) === 2) return 7;
+    const d = (x + y) % 6 === 0 || (x - y + 60) % 6 === 0;
+    return d ? 6 : 5;
+  }));
+  karte('KARTENLEER', male(24, 32, (x, y) => {
+    const ex = Math.min(x, 23 - x);
+    const ey = Math.min(y, 31 - y);
+    if (ex + ey < 3) return 0;
+    if ((ex === 0 || ey === 0 || ex + ey === 3) && ((x + y) % 4 < 2)) return 4;
+    return 0;
+  }));
+}
+
 grosseSchrift('TITEL', 'Brett & Blatt');
 grosseSchrift('TITEL_16', '16');
 

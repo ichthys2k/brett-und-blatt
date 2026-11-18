@@ -210,9 +210,10 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
     await emu.reset();
     await emu.run(150);
     await emu.druecke(0, KNOPF.START, 20);
+    await emu.run(20);
     // Hauptmenü: zweimal hoch landet auf „Statistik“ (vorletzter Eintrag).
-    await emu.druecke(0, KNOPF.HOCH);
-    await emu.druecke(0, KNOPF.HOCH);
+    await emu.druecke(0, KNOPF.HOCH, 10);
+    await emu.druecke(0, KNOPF.HOCH, 10);
     await emu.druecke(0, KNOPF.A, 20);
     expect(await zeile(1)).toContain('Statistik');
     expect(await zeile(5)).toContain('Tic-Tac-Toe');
