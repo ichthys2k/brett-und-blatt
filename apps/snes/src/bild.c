@@ -2,7 +2,7 @@
 #include "eingabe.h"
 #include "klang.h"
 
-extern char kacheln, kacheln_ende, farben;
+extern char kacheln_a, kacheln_a_ende, kacheln_b, kacheln_b_ende, farben, karten, spielfarben;
 
 #define VRAM_KACHELN 0x0000
 #define VRAM_KARTE1 0x6000
@@ -12,12 +12,15 @@ u16 karte1[BILD_B * 32];
 u16 karte2[BILD_B * 32];
 u8 karte1_neu;
 u8 karte2_neu;
+static u16 farben_neu; /* 0 = nichts, sonst Adresse in spielfarben + 1 */
 
 #define EINTRAG(nr, pal) ((nr) | ((u16)(pal) << 10))
 
 void bild_start(void) {
   setBrightness(0);
-  dmaCopyVram((u8 *)&kacheln, VRAM_KACHELN, (u16)(&kacheln_ende - &kacheln));
+  // Die Kacheln liegen in zwei ROM-Abschnitten (je höchstens 512 Kacheln = 16 KB).
+  dmaCopyVram((u8 *)&kacheln_a, VRAM_KACHELN, (u16)(&kacheln_a_ende - &kacheln_a));
+  dmaCopyVram((u8 *)&kacheln_b, VRAM_KACHELN + 512 * 16, (u16)(&kacheln_b_ende - &kacheln_b));
   dmaCopyCGram((u8 *)&farben, 0, 256);
   bgSetGfxPtr(0, VRAM_KACHELN);
   bgSetGfxPtr(1, VRAM_KACHELN);
@@ -30,6 +33,7 @@ void bild_start(void) {
   dmaCopyVram((u8 *)karte2, VRAM_KARTE2, sizeof(karte2));
   karte1_neu = 0;
   karte2_neu = 0;
+  farben_neu = 0;
   setScreenOn();
 }
 
@@ -43,6 +47,10 @@ void bild_warten(void) {
   if (karte2_neu) {
     dmaCopyVram((u8 *)karte2, VRAM_KARTE2, sizeof(karte2));
     karte2_neu = 0;
+  }
+  if (farben_neu) {
+    dmaCopyCGram((u8 *)(&spielfarben + farben_neu - 1), 5 * 16, 96);
+    farben_neu = 0;
   }
   eingabe_lesen();
   klang_bedienen();
@@ -67,11 +75,23 @@ void kachel(u8 x, u8 y, u16 nr, u8 pal) {
   karte1_neu = 1;
 }
 
-void kachelblock(u8 x, u8 y, u16 start, u8 b, u8 h, u8 pal) {
+void karte(u8 x, u8 y, u16 adresse, u8 b, u8 h, u8 pal) {
+  const u8 *k = (const u8 *)(&karten + adresse);
   u8 i, j;
-  for (j = 0; j < h; j++)
-    for (i = 0; i < b; i++) karte1[(u16)(y + j) * 32 + x + i] = EINTRAG(start + (u16)j * b + i, pal);
+  u16 stelle;
+  u16 hoch = (u16)pal << 10;
+  for (j = 0; j < h; j++) {
+    stelle = (u16)(y + j) * 32 + x;
+    for (i = 0; i < b; i++) {
+      karte1[stelle + i] = (k[0] | ((u16)k[1] << 8)) | hoch;
+      k += 2;
+    }
+  }
   karte1_neu = 1;
+}
+
+void brett_farben(u16 adresse) {
+  farben_neu = adresse + 1;
 }
 
 void flaeche_leeren(u8 x, u8 y, u8 b, u8 h) {
@@ -132,6 +152,10 @@ static u8 naechstes_zeichen(void) {
     if (d == 0x97 && e == 0x80) return 0x8c; /* ◀ */
     if (d == 0x96 && e == 0xb6) return 0x8d; /* ▶ */
     if (d == 0x9c && e == 0x9a) return 0x8e; /* ✚ */
+    if (d == 0x96 && e == 0xb2) return 0x90; /* ▲ */
+    if (d == 0x96 && e == 0xbc) return 0x91; /* ▼ */
+    if (d == 0x97 && e == 0x8f) return 0x92; /* ● */
+    if (d == 0x97 && e == 0x8b) return 0x93; /* ○ */
     return '?';
   }
   return '?';

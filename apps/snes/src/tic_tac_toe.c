@@ -20,9 +20,10 @@ static const u8 REIHEN[8][3] = {
   {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {2, 4, 6},
 };
 
-static void ttt_aufbauen(u8 *stand, Zufall *z) {
+static void ttt_aufbauen(u8 *stand, const u8 *optionen, Zufall *z) {
   Ttt *t = (Ttt *)stand;
   u8 i;
+  (void)optionen;
   (void)z;
   for (i = 0; i < 9; i++) t->brett[i] = 0;
   t->zug = 0;
@@ -46,18 +47,24 @@ static u8 ttt_am_zug(const u8 *stand) {
   return ((const Ttt *)stand)->zug;
 }
 
-static u8 ttt_zuege(const u8 *stand, u16 *zuege) {
+/* Ein Zug ist ein Byte: das Feld 0–8. */
+static u16 ttt_zuege(const u8 *stand, Zug *zuege) {
   const Ttt *t = (const Ttt *)stand;
   u8 i, n = 0;
   if (ttt_ergebnis(stand, 0) != ERGEBNIS_LAEUFT) return 0;
-  for (i = 0; i < 9; i++)
-    if (t->brett[i] == 0) zuege[n++] = i;
+  for (i = 0; i < 9; i++) {
+    if (t->brett[i]) continue;
+    zuege[n].n = 1;
+    zuege[n].b[0] = i;
+    n++;
+  }
   return n;
 }
 
-static u8 ttt_ziehen(u8 *stand, u16 zug) {
+static u8 ttt_ziehen(u8 *stand, const Zug *z) {
   Ttt *t = (Ttt *)stand;
   u8 zeichen = t->zug + 1;
+  u8 zug = z->b[0];
   u8 r;
   t->brett[zug] = zeichen;
   t->belegt++;
@@ -74,7 +81,7 @@ static u8 ttt_ziehen(u8 *stand, u16 zug) {
   return KLANG_SETZEN;
 }
 
-static u8 ttt_ausgeben(const u8 *stand, u8 *puffer) {
+static u16 ttt_ausgeben(const u8 *stand, u8 *puffer) {
   const Ttt *t = (const Ttt *)stand;
   u8 i;
   for (i = 0; i < 9; i++) puffer[i] = t->brett[i] == 0 ? PLATZ_KEIN : t->brett[i] - 1;
@@ -145,12 +152,12 @@ static s16 suche(u16 eigen, u16 gegner, u8 frei, s16 alpha, s16 beta) {
 }
 
 static u16 zufaelliger_zug(const u8 *stand, Zufall *z) {
-  u16 zuege[9];
+  Zug zuege[9];
   u8 n = ttt_zuege(stand, zuege);
-  return zuege[zufall_bis(z, n)];
+  return zuege[zufall_bis(z, n)].b[0];
 }
 
-static u16 ttt_bot(const u8 *stand, u8 stufe, Zufall *z) {
+static u16 ttt_bot_feld(const u8 *stand, u8 stufe, Zufall *z) {
   const Ttt *t = (const Ttt *)stand;
   u16 eigen = 0, gegner = 0, belegt;
   u8 i, k, n, frei;
@@ -203,39 +210,51 @@ static u16 ttt_bot(const u8 *stand, u8 stufe, Zufall *z) {
   return zufaelliger_zug(stand, z);
 }
 
+static void ttt_bot(const u8 *stand, u8 stufe, Zufall *z, Zug *zug) {
+  zug->n = 1;
+  zug->b[0] = ttt_bot_feld(stand, stufe, z);
+}
+
 /* ------------------------------------------------------------------ Oberfläche */
 
 #define BRETT_X 7
 #define BRETT_Y 5
+#define FELD 6 /* Kacheln je Feld */
 
-static void ttt_zeichnen(const u8 *stand, u16 auswahl, u8 cursor) {
-  const Ttt *t = (const Ttt *)stand;
-  u8 i, pal;
-  u16 bild;
-  u8 laeuft = ttt_ergebnis(stand, 0) == ERGEBNIS_LAEUFT;
-  for (i = 0; i < 9; i++) {
-    pal = PAL_BRETT;
-    if (t->sieger != PLATZ_KEIN && (t->reihe[0] == i || t->reihe[1] == i || t->reihe[2] == i)) pal = PAL_BRETT_SIEG;
-    else if (cursor && laeuft && i == auswahl) pal = PAL_BRETT_AUSWAHL;
-    if (t->brett[i] == 1) bild = K_FELD_KREUZ;
-    else if (t->brett[i] == 2) bild = K_FELD_KREIS;
-    else if (cursor && laeuft && i == auswahl) bild = t->zug == 0 ? K_FELD_GEIST_KREUZ : K_FELD_GEIST_KREIS;
-    else bild = K_FELD_LEER;
-    kachelblock(BRETT_X + (i % 3) * FELD_KACHELN, BRETT_Y + (i / 3) * FELD_KACHELN, bild, FELD_KACHELN, FELD_KACHELN, pal);
-  }
+static void ttt_gitter(const u8 *stand, u8 *b, u8 *h) {
+  (void)stand;
+  *b = 3;
+  *h = 3;
 }
 
-static u16 ttt_bedienen(const u8 *stand, u16 *auswahl, u16 tasten) {
+static u8 ttt_feld_an(const u8 *stand, u8 x, u8 y) {
+  (void)stand;
+  return y * 3 + x;
+}
+
+static u8 ttt_felder(const u8 *stand, const Zug *zug, u8 *felder) {
+  (void)stand;
+  felder[0] = zug->b[0];
+  return 1;
+}
+
+static void ttt_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
   const Ttt *t = (const Ttt *)stand;
-  u8 x = *auswahl % 3;
-  u8 y = *auswahl / 3;
-  if (tasten & KEY_LEFT) x = x == 0 ? 2 : x - 1;
-  if (tasten & KEY_RIGHT) x = x == 2 ? 0 : x + 1;
-  if (tasten & KEY_UP) y = y == 0 ? 2 : y - 1;
-  if (tasten & KEY_DOWN) y = y == 2 ? 0 : y + 1;
-  *auswahl = y * 3 + x;
-  if ((tasten & KEY_A) && t->brett[*auswahl] == 0) return *auswahl;
-  return ZUG_KEIN;
+  u8 i, pal, cursor;
+  u16 bild;
+  (void)aktiv;
+  tafel(BRETT_X - 1, BRETT_Y - 1, 3 * FELD + 2, 3 * FELD + 2);
+  for (i = 0; i < 9; i++) {
+    cursor = markierung[i] & MARK_CURSOR;
+    pal = PAL_BRETT;
+    if (t->sieger != PLATZ_KEIN && (t->reihe[0] == i || t->reihe[1] == i || t->reihe[2] == i)) pal = PAL_BRETT_MARKE;
+    else if (cursor) pal = PAL_BRETT_AUSWAHL;
+    if (t->brett[i] == 1) bild = KARTE_TTT_KREUZ;
+    else if (t->brett[i] == 2) bild = KARTE_TTT_KREIS;
+    else if (cursor) bild = t->zug == 0 ? KARTE_TTT_GEIST_KREUZ : KARTE_TTT_GEIST_KREIS;
+    else bild = KARTE_TTT_LEER;
+    karte(BRETT_X + (i % 3) * FELD, BRETT_Y + (i / 3) * FELD, bild, FELD, FELD, pal);
+  }
 }
 
 /* ------------------------------------------------------------------ Steckbrief */
@@ -253,10 +272,14 @@ static const u8 PLATZ_PALETTEN[] = {PAL_ROT, PAL_BLAU};
 const Spiel spiel_tic_tac_toe = {
   "Tic-Tac-Toe",
   ANLEITUNG,
+  "✚ Feld wählen · A setzen · Start: Pause",
   PLATZ_NAMEN,
   PLATZ_PALETTEN,
   2,
   0,
+  0,
+  0,
+  FARBEN_TTT,
   ttt_aufbauen,
   ttt_am_zug,
   ttt_zuege,
@@ -264,7 +287,10 @@ const Spiel spiel_tic_tac_toe = {
   ttt_ergebnis,
   ttt_bot,
   ttt_ausgeben,
+  ttt_gitter,
+  ttt_feld_an,
+  ttt_felder,
   ttt_zeichnen,
-  ttt_bedienen,
-  4,
+  1,
+  1,
 };
