@@ -24,7 +24,18 @@ import { president } from './president';
 import { speed } from './speed';
 import { ligretto } from './ligretto';
 import { poker } from './poker';
+import { skat } from './skat';
+import { schafkopf } from './schafkopf';
+import { doppelkopf } from './doppelkopf';
+import { binokel } from './binokel';
+import { chess } from './chess';
+import { go } from './go';
 import type { SpielAdapter } from './typen';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ALLE: SpielAdapter<any, any>[] = [ticTacToe, vier, reversi, gomoku, uttt, muehle, dame, teiler, kniffel, maexle, paare, ludo, domino, mauer, zielzahl, elevens, solitaire, mauMau, uno, peter, quartett, president, speed, ligretto, poker];
+export const ALLE: SpielAdapter<any, any>[] = [
+  ticTacToe, vier, reversi, gomoku, uttt, muehle, dame, teiler, kniffel, maexle,
+  paare, ludo, domino, mauer, zielzahl, elevens, solitaire, mauMau, uno, peter,
+  quartett, president, speed, ligretto, poker, skat, schafkopf, doppelkopf,
+  binokel, chess, go
+];

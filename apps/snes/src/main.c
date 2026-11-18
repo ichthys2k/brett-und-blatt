@@ -11,9 +11,17 @@
 #include "spiel.h"
 #include "zufall.h"
 
-#define VERSION_TEXT "Version 0.3 · November 2026"
+#define VERSION_TEXT "Version 0.5 · November 2026"
 
-const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle, &spiel_dame, &spiel_teiler, &spiel_kniffel, &spiel_maexle, &spiel_paare, &spiel_ludo, &spiel_domino, &spiel_mauer, &spiel_zielzahl, &spiel_elevens, &spiel_solitaire, &spiel_mau_mau, &spiel_uno, &spiel_peter, &spiel_quartett, &spiel_president, &spiel_speed, &spiel_ligretto, &spiel_poker};
+const Spiel *const spiele[SPIELE_ANZAHL] = {
+  &spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt,
+  &spiel_muehle, &spiel_dame, &spiel_teiler, &spiel_kniffel, &spiel_maexle,
+  &spiel_paare, &spiel_ludo, &spiel_domino, &spiel_mauer, &spiel_zielzahl,
+  &spiel_elevens, &spiel_solitaire, &spiel_mau_mau, &spiel_uno, &spiel_peter,
+  &spiel_quartett, &spiel_president, &spiel_speed, &spiel_ligretto, &spiel_poker,
+  &spiel_skat, &spiel_schafkopf, &spiel_doppelkopf, &spiel_binokel, &spiel_chess,
+  &spiel_go
+};
 
 /* spielstand und zugliste liegen in Bank $7F (ram.asm). */
 

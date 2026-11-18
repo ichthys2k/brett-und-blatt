@@ -137,11 +137,14 @@ Jede Stufe endet mit einem spielbaren ROM. Danach kann man aufhören, ohne dass 
 - Neuer Klang: `KLANG_KARTE` (Kartenabwurf/Kartenziehen).
 - Alle 10 Spiele Zug für Zug gegen TypeScript-Module geprüft (`regeln.test.ts`, 25 Spiele gesamt grün).
 
-### Stufe 5 – Stichspiele und Schach (groß)
+### Stufe 5 – Stichspiele und Schach (groß) – erledigt (#524)
 
-- Skat, Schafkopf, Doppelkopf, Binokel mit Reizen bzw. Ansagen; regelbasierte Bots (Spielstärke deutlich unter den heutigen MCTS-Bots, das gehört ehrlich in die Anleitung).
-- Schach mit eigener Zuggenerierung (Bitbretter sind auf 16 Bit unhandlich, besser 0x88-Brett) und Suche in Assembler; Go 9×9.
-- Prüfung gegen `chess.js`-Modul und die Stichspiel-Module wie in Stufe 1.
+- Sechs anspruchsvolle Klassiker im ROM (jetzt 31 Spiele gesamt): Skat (`skat.c`), Schafkopf (`schafkopf.c`), Doppelkopf (`doppelkopf.c`), Binokel (`binokel.c`), Schach (`chess.c`), Go 9×9 (`go.c`).
+- Neuer Stichspiel-Motor `src/stich.h` / `src/stich.c`: flexibles Reizen/Ansagen (Skat-Reizwerte, Schafkopf-Spiele, Doko-Ansagen Re/Kontra/Keine 90 etc., Binokel-Melden und -Runden), Vorstich- und Fehlfarben-Auswertung, Augenzählung, Schmierkarten-Logik und Heuristik-Bots.
+- Schach (`chess.c`): 0x88-Brett-Repräsentation, vollständige Zuggenerierung (inkl. Rochade, En Passant, Bauernumwandlung, Schach/Matt/Patt und 50-Züge-Regel), Minimax-Suche mit Alpha-Beta-Pruning.
+- Go (`go.c`): 9×9-Brett, Freiheiten-Zählung mit Flutfüllung (Puffer in Bank $7F ausgelagert, um 816-tcc-Stack-Grenzen einzuhalten), Superko-Historie, automatisches Auszählen (Area Scoring / Tromp-Taylor) nach zweimal Passen.
+- ROM-Größe im `Makefile` auf 1 MB (32 Bänke LoROM, `ROMSIZE := 0a`, `ROMBANKS := 32`, `brett-und-blatt-16.sfc`) erweitert.
+- Alle 6 Spiele mit 100 % grünem Schiedsrichter- und Bot-Vergleich in `apps/snes/test/regeln.test.ts` und `bots.test.ts`.
 
 ### Stufe 6 – Feinschliff und echte Hardware (offen)
 
@@ -183,6 +186,9 @@ Die größten Unsicherheiten: die Geschwindigkeit des C-Compilers (Bots), die Le
 - Vorhaben [#515](https://github.com/ichthys2k/brett-und-blatt/issues/515) mit den Stufen 0–6.
 - Stufe 0 und 1: [#516](https://github.com/ichthys2k/brett-und-blatt/issues/516).
 - Stufe 2: [#518](https://github.com/ichthys2k/brett-und-blatt/issues/518).
+- Stufe 3: [#520](https://github.com/ichthys2k/brett-und-blatt/issues/520).
+- Stufe 4: [#522](https://github.com/ichthys2k/brett-und-blatt/issues/522).
+- Stufe 5: [#524](https://github.com/ichthys2k/brett-und-blatt/issues/524).
 
 ## Quellen
 

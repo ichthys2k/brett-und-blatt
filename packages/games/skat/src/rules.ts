@@ -316,6 +316,10 @@ export function setup(
 }
 
 export function currentPlayers(state: SkatState): Actor[] {
+  if (state.gameNumber > state.totalGames) {
+    return [];
+  }
+
   if (state.phase === 'roundOver' || state.phase === 'passedOut') {
     return [state.activeSeats[0]];
   }
@@ -342,7 +346,7 @@ export function currentPlayers(state: SkatState): Actor[] {
 }
 
 export function legalMoves(state: SkatState, actor: Actor): SkatMove[] {
-  if (actor === 'system') return [];
+  if (actor === 'system' || state.gameNumber > state.totalGames) return [];
   const player = Number(actor);
 
   if (state.phase === 'roundOver' || state.phase === 'passedOut') {
@@ -571,7 +575,7 @@ function handleBiddingMove(state: SkatState, move: SkatMove, player: number): Sk
       const passed = [...state.passedSeats, player];
       // Wenn der Sprecher (HH) passt: Der Listener ist der Sieger!
       // Wenn der Listener (der frühere Sieger) passt: Der Sprecher (HH) ist der Sieger!
-      const winner = state.biddingAwaitingAnswer ? state.biddingListener : state.biddingListener;
+      const winner = state.biddingAwaitingAnswer ? hh : state.biddingListener;
 
       // Haben alle drei gepasst? (Eingepasst)
       if (passed.length >= 3 || (passed.includes(mh) && passed.includes(hh) && state.highestBid === 0)) {
@@ -584,6 +588,7 @@ function handleBiddingMove(state: SkatState, move: SkatMove, player: number): Sk
 
       return {
         ...state,
+        passedSeats: passed,
         phase: 'skatDecision',
         declarerSeat: winner,
         highestBid: Math.max(18, state.highestBid),

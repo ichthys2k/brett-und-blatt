@@ -221,6 +221,10 @@ export function setup(
 }
 
 export function currentPlayers(state: SchafkopfState): Actor[] {
+  if (state.gameNumber > state.totalGames) {
+    return [];
+  }
+
   if (state.phase === 'roundOver' || state.phase === 'passedOut') {
     return [state.activeSeats[0]];
   }
@@ -252,7 +256,7 @@ export function currentPlayers(state: SchafkopfState): Actor[] {
 }
 
 export function legalMoves(state: SchafkopfState, actor: Actor): SchafkopfMove[] {
-  if (actor === 'system') return [];
+  if (actor === 'system' || state.gameNumber > state.totalGames) return [];
   const player = Number(actor);
 
   if (state.phase === 'roundOver' || state.phase === 'passedOut') {
