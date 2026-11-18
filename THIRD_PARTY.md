@@ -34,6 +34,37 @@ POSSIBILITY OF SUCH DAMAGE.
 
 Die Feldtabellen des Schach-Bots folgen der frei veröffentlichten „Simplified Evaluation Function“ von Tomasz Michniewski (Chess Programming Wiki).
 
+## PVSnesLib und SNESMod (nur im SNES-ROM)
+
+Bibliothek, Startcode und Klangtreiber im ROM von Brett & Blatt 16 (`apps/snes`), beim Bauen aus PVSnesLib 4.7.1 gelinkt. https://github.com/alekmaul/pvsneslib – SNESMod von mukunda, nach WLA DX übertragen von KungFuFurby.
+
+```
+Copyright (C) 2012-2026 Alekmaul
+
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any
+damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any
+purpose, including commercial applications, and to alter it and
+redistribute it freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you
+   must not claim that you wrote the original software. If you use
+   this software in a product, an acknowledgment in the product
+   documentation would be appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and
+   must not be misrepresented as being the original software.
+3. This notice may not be removed or altered from any source
+   distribution.
+```
+
+## font8x8 (nur im SNES-ROM)
+
+8×8-Schrift von Daniel Hepper, gemeinfrei (Public Domain). https://github.com/dhepper/font8x8 – die benötigten Zeichen stehen in `apps/snes/werkzeuge/schrift8x8.mjs`.
+
+Snes9x und bsnes dienen nur als Prüfwerkzeuge in der CI und werden nicht weitergegeben.
+
 ## uqr
 
 QR-Codes für Einladungen in Online-Räume (`apps/web`, `apps/xr`: Lobby-Fenster der VR-App). https://github.com/unjs/uqr

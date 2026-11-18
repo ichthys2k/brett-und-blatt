@@ -1,0 +1,11 @@
+# Erzeugt beim Bauen (make)
+res/
+*.sfc
+*.sym
+*.symfull
+*.obj
+*.ps
+src/*.asm
+hdr.asm
+linkfile
+*.srm

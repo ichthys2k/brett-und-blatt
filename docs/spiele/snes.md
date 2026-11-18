@@ -1,6 +1,6 @@
 # Super Nintendo: Brett & Blatt als ROM für Emulatoren
 
-18.11.2026 · Recherche und Stufenplan (noch kein Issue)
+18.11.2026 · Recherche und Stufenplan · Vorhaben [#515](https://github.com/ichthys2k/brett-und-blatt/issues/515), Stufe 0 und 1: [#516](https://github.com/ichthys2k/brett-und-blatt/issues/516)
 
 > Wäre es möglich, Brett und Blatt teilweise oder vollständig auf Super Nintendo zu portieren, so dass man es als Image in einem Emulator spielen kann? Recherchiere dazu und entwickle einen Plan, wie so etwas Stück für Stück umzusetzen wäre.
 
@@ -13,6 +13,18 @@ Das ist allerdings **kein Port, sondern ein Nachbau**. Vom heutigen Code läuft 
 Nicht aufs SNES kommen: Online-Spiel, Klassen, Turniere, Spielerpass, Wortspiele mit großem Wörterbuch, Quiz mit Freitext, die gemalte Grafik in heutiger Qualität und die ElevenLabs-Klänge (Lizenz). Realistisch sind etwa **20 bis 30 der 56 Spiele**, davon die ersten zehn mit überschaubarem Aufwand.
 
 Empfehlung: zuerst ein **Probelauf** (Stufe 0 und 1, wenige Wochen Abendarbeit), danach entscheiden. Lohnend ist das Vorhaben als Liebhaberstück und Schaufenster („läuft sogar auf dem SNES“), nicht als Weg zu mehr Spielern.
+
+## Stand
+
+**Stufe 0 und 1 umgesetzt (18.11.2026, #516)** in `apps/snes` – Bauen, Prüfen und Aufbau stehen in [`apps/snes/README.md`](../../apps/snes/README.md).
+
+- **Werkzeugkette:** PVSnesLib 4.7.1 wird aus dem Quellcode gebaut (die vorgebauten Archive von GitHub-Releases sind aus der Cloud-Umgebung nicht erreichbar; der Bau dauert 20 s). Snes9x 1.63 und bsnes (fester Commit) als libretro-Kerne, dazu ein eigener Prüf-Emulator ohne Fenster (`werkzeuge/emu/emu.c`, etwa 300 Zeilen C), den die Tests über stdin steuern. Mesen ließ sich ohne Fenster nicht einbinden (braucht .NET); das ROM sollte Cornelius einmal von Hand in Mesen öffnen.
+- **ROM:** 256 KB LoROM mit 2 KB SRAM. Titel, Hauptmenü, Vorbereitung, Anleitung (Wortlaut aus `meta.ts`, mit Zeilenumbruch), Partie mit Cursor und Vorschau des Zeichens, Pause, Ergebnis mit Gewinnreihe, Serien, Statistik. Schrift mit Umlauten, Gedankenstrich und Anführungszeichen; fünf Klangeffekte.
+- **Prüfungen:** Zufall, Regeln und Bot genau wie in der Web-App (Postfach im Arbeitsspeicher statt Knopfdrücken), Bedienung über zwei Controller, Statistik nach Neustart, gleiche Bilder in Snes9x und bsnes. Gesamtdauer etwa 15 s.
+- **Bot:** „leicht“ zieht jeden zweiten Zug zufällig, „mittel“ gewinnt, wehrt ab oder nimmt die Mitte, „schwer“ rechnet vollständig (Negamax mit Bitmasken) und verliert nie. Die erste, einfache Fassung brauchte für die zweite Antwort sieben Sekunden – die heutige höchstens 0,7. Für Stufe 2 heißt das: Bots für größere Bretter brauchen von Anfang an Bitbretter und ein Zeitbudget, voraussichtlich mit Assembler in der innersten Schleife.
+- **Erkenntnisse zu 816-tcc:** siehe „Stolpersteine“ in der README (nicht gelöschte Variablen, Rückgabewerte über Funktionszeiger, Klangindex, Tonhöhe).
+
+**Zu prüfen (Cornelius):** das ROM aus dem CI-Artefakt „brett-und-blatt-16“ in Mesen oder RetroArch öffnen, eine Partie gegen jeden Bot und eine zu zweit spielen, auf Lesbarkeit und Klang achten.
 
 ## Was das SNES kann und was nicht
 
@@ -62,19 +74,19 @@ Besonders wichtig für Kartenspiele: Am Fernseher sehen alle alles. Verdeckte H�
 
 Jede Stufe endet mit einem spielbaren ROM. Danach kann man aufhören, ohne dass Arbeit verloren ist.
 
-### Stufe 0 – Probelauf Werkzeugkette (klein)
+### Stufe 0 – Probelauf Werkzeugkette (klein) – erledigt
 
-- Neuer Ordner `apps/snes` (oder eigenes Repo `brett-und-blatt-snes`, siehe offene Fragen) mit PVSnesLib, Makefile und einem „Hallo“-ROM: Titelbild, Schrift mit Umlauten, ein Ton.
+- Neuer Ordner `apps/snes` mit PVSnesLib, Makefile und einem „Hallo“-ROM: Titelbild, Schrift mit Umlauten, ein Ton.
 - Bau in einem Docker-Bild oder per Skript reproduzierbar unter Linux; CI-Schritt, der das ROM baut und in Mesen ohne Fenster 300 Bilder lang laufen lässt und ein Bildschirmfoto vergleicht.
 - **Fertig, wenn:** `make` erzeugt `brett-und-blatt.sfc`, es startet in Mesen, Snes9x und bsnes, und die CI baut es.
 
-### Stufe 1 – Rahmen und erstes Spiel (klein bis mittel)
+### Stufe 1 – Rahmen und erstes Spiel (klein bis mittel) – erledigt
 
 - **Rahmen:** Hauptmenü mit Spielauswahl, Optionen (wie `options` im Steckbrief), Platzwahl Mensch/Bot je Controller, Wechselbildschirm für Hot-Seat, Ergebnisbild, Statistik im SRAM.
 - **Kleine Spielschnittstelle in C**, angelehnt an `GameModule`: `setup(seed, options)`, `legal_moves(state, out)`, `apply_move(state, move)`, `result(state)`, `bot_move(state, level)`, dazu eine Zeichenfunktion je Spiel. Spielstand als feste Struktur.
 - **Zufall** als C-Fassung von cyrb128/sfc32; Startwert aus Bildzähler und Knopfdrücken.
 - **Erstes Spiel: Tic-Tac-Toe** (wie die Vorlage im Web).
-- **Schiedsrichter-Test:** Node-Skript `apps/snes/test/vergleich.mjs` startet Mesen mit Lua-Skript, spielt 1000 Zufallspartien und vergleicht Stand und erlaubte Züge mit `packages/games/tic-tac-toe`.
+- **Schiedsrichter-Test:** `apps/snes/test/snes.test.ts` steuert den Prüf-Emulator, spielt Zufallspartien und vergleicht Stand und erlaubte Züge mit `packages/games/tic-tac-toe`.
 - **Fertig, wenn:** Tic-Tac-Toe gegen Bot und zu zweit spielbar, Vergleichstest grün in der CI.
 
 ### Stufe 2 – Brettklassiker (mittel)
@@ -119,7 +131,7 @@ Jede Stufe endet mit einem spielbaren ROM. Danach kann man aufhören, ohne dass 
 | 4 | Kartenbaustein 3–5, je Spiel 1–3 Sitzungen |
 | 5 | je Stichspiel 3–6, Schach 5–10 Sitzungen |
 
-Die größten Unsicherheiten: die Geschwindigkeit des C-Compilers (Bots), die Lesbarkeit der Karten bei 256 × 224 auf einem Handy-Emulator und wie gut sich Mesen in der CI fernsteuern lässt (Stufe 0 klärt das).
+Die größten Unsicherheiten: die Geschwindigkeit des C-Compilers (Bots), die Lesbarkeit der Karten bei 256 × 224 auf einem Handy-Emulator und wie gut sich ein Emulator in der CI fernsteuern lässt. Geklärt in Stufe 0: über ein eigenes libretro-Frontend mit Snes9x und bsnes gut, Mesen nur von Hand.
 
 ## Recht und Lizenzen
 
@@ -132,21 +144,23 @@ Die größten Unsicherheiten: die Geschwindigkeit des C-Compilers (Bots), die Le
 ## Offene Fragen an Cornelius
 
 1. **Lohnt das Vorhaben überhaupt?** Es bindet viel Zeit, die sonst in die Web-App fließt, und bringt kaum neue Spieler – eher Freude und Aufmerksamkeit (Retro-Szene, itch.io, SNES-Jams).
-2. **Eigenes Repo oder `apps/snes`?** Für ein eigenes Repo spricht die ganz andere Werkzeugkette (C, Assembler, Docker); für `apps/snes` der Vergleichstest gegen die TypeScript-Module in derselben CI. Mein Vorschlag: `apps/snes` mit eigenem, optionalem CI-Schritt.
+2. ~~Eigenes Repo oder `apps/snes`?~~ Umgesetzt als `apps/snes` mit eigenem CI-Job (18.11.2026).
 3. **Welche drei Spiele zuerst** nach Tic-Tac-Toe? Vorschlag: Vier in einer Reihe, Reversi, Würfelblock.
-4. **Name des ROMs**, z. B. „Brett & Blatt 16“.
+4. **Name des ROMs:** vorläufig „Brett & Blatt 16“.
 5. **Echte Hardware** als Ziel oder nur Emulatoren?
 
-## Vorschlag für Issues
+## Issues
 
-- Vorhaben: „Technik: Brett & Blatt als SNES-ROM (Stufen 0–6)“ mit `status: Idee`, `vorhaben`, `bereich: Technik`, `recherche`.
-- Unter-Issues je Stufe; Stufe 0 und 1 zuerst zur Freigabe.
+- Vorhaben [#515](https://github.com/ichthys2k/brett-und-blatt/issues/515) mit den Stufen 0–6.
+- Stufe 0 und 1: [#516](https://github.com/ichthys2k/brett-und-blatt/issues/516).
 
 ## Quellen
 
 - PVSnesLib: <https://github.com/alekmaul/pvsneslib> und Wiki <https://github.com/alekmaul/pvsneslib/wiki>
 - libSFX: <https://github.com/Optiroc/libSFX>
 - tcc-65816 (Compiler aus dem SNES-SDK): <https://git.applefritter.com/6502/tcc-65816>
+- font8x8 (gemeinfrei): <https://github.com/dhepper/font8x8>
+- Snes9x: <https://github.com/snes9xgit/snes9x>, bsnes für libretro: <https://github.com/libretro/bsnes>
 - Erfahrungsbericht SNES-Entwicklung: <https://therealmjp.github.io/posts/adventures-in-retro-development-snes-edition>
 - Celeste-Demake (nutzt Calypsi/VBCC): <https://john-smit.itch.io/celeste-snes-demake>
 - Multitap: <https://snes.nesdev.org/wiki/Multitap>, Mesen-S und Multitap: <https://docs.libretro.com/library/mesen-s/>

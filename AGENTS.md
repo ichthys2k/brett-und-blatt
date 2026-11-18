@@ -45,6 +45,7 @@ corepack pnpm --filter @brett-und-blatt/server dev    # Spieleserver, http://127
 corepack pnpm --filter @brett-und-blatt/xr dev        # VR-App (#339), http://localhost:5175/?server=http://127.0.0.1:8787
 node apps/server/scripts/smoke.mjs                    # Rauchtest gegen den lokalen Server
 node apps/cli/test/partie.mjs                         # Text-Client spielt gegen den lokalen Server (#336)
+eval "$(apps/snes/werkzeuge/werkzeugkette.sh)" && make -C apps/snes   # SNES-ROM (#516), prüfen: corepack pnpm exec vitest run apps/snes
 corepack pnpm rauchtest                               # nach dem Build: jedes Spiel im Browser starten
 PRUEFSTAND=1 corepack pnpm pruefstand                 # gründlicher Prüfstand (PRUEFSTAND_SPIELE=<id> für einzelne)
 node scripts/platz-messen.mjs                         # misst Spielfeld- und Porträtgrößen in vier Bildschirmgrößen (#483)
@@ -64,7 +65,7 @@ Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrs
 - [`docs/spiele/`](docs/spiele/README.md) – ein Plan pro Spiel (Regeln, Optionen, Bot, Oberfläche, Umsetzungsstand), Übersicht im README.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) – wie ein neues Spiel angelegt wird.
 - [`docs/grafik/STILBIBEL.md`](docs/grafik/STILBIBEL.md) – Stil, Verbote und Regeln für gemalte Bilder; Ablauf zum Erzeugen in [`.agent/workflows/grafik-erzeugen.md`](.agent/workflows/grafik-erzeugen.md), Bestand in [`docs/grafik/BESTAND.md`](docs/grafik/BESTAND.md).
-- Code: `apps/web` (React-App), `apps/xr` (VR-App, `docs/vr.md`), `apps/cli` (Text-Client), `apps/server` (Cloudflare-Worker), `packages/engine`, `packages/online`, `packages/rtc` (WebRTC: VR-Treffpunkt, Sprachchat), `packages/ui`, `packages/games/<id>` (Ordnername = Spiel-`id`), `content/`.
+- Code: `apps/web` (React-App), `apps/xr` (VR-App, `docs/vr.md`), `apps/cli` (Text-Client), `apps/snes` (SNES-ROM, `docs/spiele/snes.md`), `apps/server` (Cloudflare-Worker), `packages/engine`, `packages/online`, `packages/rtc` (WebRTC: VR-Treffpunkt, Sprachchat), `packages/ui`, `packages/games/<id>` (Ordnername = Spiel-`id`), `content/`.
 
 ## Zum Abschluss einer Aufgabe
 
