@@ -416,8 +416,12 @@ static void paare_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
     }
     pal = cursor ? PAL_BRETT_AUSWAHL : offen ? PAL_BRETT_MARKE : PAL_BRETT;
     if (offen) {
-      karte_unten(x, y, KARTE_PAARE_OFFEN, KARTE_B, KARTE_H, pal);
-      kartentext(x, y, seite_text(p->satz, p->paar[i], p->seite[i]), pal);
+      if (p->satz == 0) {
+        karte_unten(x, y, KARTE_PAAR_TIER_0 + (u16)p->paar[i] * 36, KARTE_B, KARTE_H, pal);
+      } else {
+        karte_unten(x, y, KARTE_PAARE_OFFEN, KARTE_B, KARTE_H, pal);
+        kartentext(x, y, seite_text(p->satz, p->paar[i], p->seite[i]), pal);
+      }
     } else {
       karte_unten(x, y, KARTE_PAARE_RUECKEN, KARTE_B, KARTE_H, pal);
     }

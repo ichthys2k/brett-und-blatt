@@ -8,6 +8,11 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**Brett & Blatt 16 – SNES-ROM, Tiermotive für Memory-Karten (18.11.2026, #520, Vorhaben #515):**
+- 32 liebevoll gestaltete 16×16-Pixel-Art-Tiermotive (`apps/snes/werkzeuge/grafik.mjs`) für alle 32 Tierpaare in „Paare finden“ (`apps/snes/src/paare.c`).
+- Dedizierte 8-Farben-Palette für Tierillustrationen; transparente Kartenvorderseite ohne Textüberlagerung bei Tier-Set.
+
+
 **Brett & Blatt 16 – SNES-ROM, Stufe 4: Karten ohne Stiche (18.11.2026, #522, Vorhaben #515):** Zehn weitere Kartenspiele im ROM (jetzt 25 Spiele gesamt):
 - `apps/snes/src/elevens.c`: Elf zuerst! (Klondike-Ablage mit 11er-Paaren und JQK).
 - `solitaire.c`: Solitaire (Klondike 1 und 3 Karten, Talon, Hilfsstapel, Fundamente).
