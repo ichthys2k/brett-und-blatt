@@ -104,7 +104,14 @@ Jede Stufe endet mit einem spielbaren ROM. Danach kann man aufhören, ohne dass 
 - Minimax mit Alpha-Beta in C, Zeitbudget je Zug (z. B. 2 s, gemessen in Bildern), heiße Schleifen bei Bedarf in Assembler.
 - Erstes ROM-Release (GitHub Release mit `.sfc`), Eintrag auf der Seite „Weitere Spiele“ oder einer eigenen Seite mit EmulatorJS.
 
-### Stufe 3 – Würfel und Familie (mittel)
+### Stufe 3 – Würfel und Familie (mittel) – in Arbeit (#520, Zweig `claude/sleepy-bell-1eoy7r`)
+
+**Stand 18.11.2026 (Übergabe):**
+
+- Fertig und mit Regel- und Bot-Vergleich grün (`SNES_SPIELE=<id> corepack pnpm exec vitest run apps/snes`): Teiler-Duell (`teiler.c`), Würfelblock (`kniffel.c`), Mäxle (`maexle.c`), Paare finden (`paare.c`, nur Sets Tiere/Einmaleins/Englisch, Raster bis 30), Nicht ärgern! (`ludo.c`, Kreuz und Stern), Domino (`domino.c`, ohne Mexican Train und Rechenterme), Rechenmauer (`mauer.c`).
+- Unterbau: Plätze 1–6 mit Multitap, `Spiel.zusatz` (Zusatzzüge wie isLegal), `Spiel.platz_farbe` (Name/Farbe je Spielerzahl), `Spiel.erlaubt` (freie Eingaben wie isLegal), `karte_unten` (Kachelkarte auf Ebene 2 unter der Schrift), große Puffer in Bank $7F (`ram.asm`). Tests: `Variante.siege` (nötige Siege bei vielen Mitspielern), `Adapter.pruefen` (freie Eingaben beim Probezug).
+- **Offen – Zielzahl:** Entwurf in `apps/snes/entwurf/zielzahl.c` (nur Modus „Klassisch 24“; Kandidatensuche wie `findCandidateMoves`, Bedienung über Zusatzzüge `[10, a, Zeichen, b]`, `[11]` zurück, Abgabe `[0, Schritte, …, Endkarte]`). Er kompiliert, aber der Linker bricht ab (Ursache noch nicht angesehen, vermutlich fehlende 32-Bit-Hilfsroutine wie bei `>> variable`, siehe README). Zum Weitermachen: Datei nach `src/` verschieben, `spiel_zielzahl` in `spiel.h` (SPIELE_ANZAHL 15) und `main.c` (`spiele[]`) eintragen, in `ram.asm` `ziel_kandidaten DSB 9600` ergänzen, `make` und Fehlermeldung lesen; danach Adapter `test/spiele/zielzahl.ts` (nr 14) nach dem Muster von `test/spiele/mauer.ts` mit `pruefen` und `extra`.
+- **Offen:** erste Musik, Doku (README Stolpersteine, CHRONIK), `corepack pnpm check`, PR mit `Refs #520`, Issue #520 auf `status: Review`.
 
 - Würfelblock, Mäxle, Nicht ärgern! (Multitap, 4 Plätze), Paare finden, Domino, Zielzahl, Rechenmauer, Teiler-Duell.
 - Baustein Würfel (Sprite-Animation) und Spielerleiste für bis zu 5 Plätze.
