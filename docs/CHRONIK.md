@@ -8,6 +8,24 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**Brett & Blatt 16 – SNES-ROM, Stufe 4: Karten ohne Stiche (18.11.2026, #522, Vorhaben #515):** Zehn weitere Kartenspiele im ROM (jetzt 25 Spiele gesamt):
+- `apps/snes/src/elevens.c`: Elf zuerst! (Klondike-Ablage mit 11er-Paaren und JQK).
+- `solitaire.c`: Solitaire (Klondike 1 und 3 Karten, Talon, Hilfsstapel, Fundamente).
+- `mau_mau.c`: Mau-Mau für 2–4 Spieler (7er stapeln, 8er aussetzen, Bube-Farbe wünschen, Ass extra, Ziehen bis passend).
+- `uno.c`: Eins! für 2–4 Spieler (Zieh-2, Richtungswechsel, Aussetzen, Farbwahl, Zieh-4).
+- `peter.c`: Schwarzer Peter für 2–6 Spieler (Paare ablegen, Peter vermeiden).
+- `quartett.c`: Quartett für 2–6 Spieler (Erfragen bestimmter Karten bei Mitspielern, Quartette bilden).
+- `president.c`: Präsident für 3–6 Spieler (Hierarchien von Präsident bis Bettler, Kartentausch, Pasch, Revolution und Super-Revolution).
+- `speed.c`: Speed für 2 Spieler in Echtzeit über zwei Controller gleichzeitig (Hand auffüllen, Ablegen ±1, Blockade-Zug).
+- `ligretto.c`: Kartenblitz für 2–4 Spieler in Echtzeit nach Ligretto-Regeln (Stapel 1–10 in der Mitte, Ligretto-Ruf).
+- `poker.c`: Poker (Texas Hold'em: No Limit, Fixed Limit, Pot Limit, Sit&Go-Turnier bis 6 Spieler) mit 7-Karten-Bewerter, Split Pots, Side Pots und Chen-Score-Bot.
+
+Dazu Erweiterungen am Unterbau:
+- Gemeinsamer Kartenbaustein `apps/snes/src/karten.c` / `karten.h` mit Deckverwaltung, Mischroutinen, Symbolen und Farb-/Wertkonvertierung.
+- Echtzeit-Eingabe-Handling `eingabe_spieler(p)` für Controller 1 und 2 gleichzeitig in Speed und Ligretto.
+- Neuer BRR-Klangeffekt `KLANG_KARTE` in `werkzeuge/klang.mjs` und `src/klang.c` für Kartenlegen und Abwurf.
+- Alle 10 Spiele mit 100 % grünem Regel- und Bot-Vergleich in `apps/snes/test/regeln.test.ts` und `bots.test.ts` (insgesamt 25 Spiele Zug für Zug gegen ihre TypeScript-Module verifiziert).
+
 **Brett & Blatt 16 – SNES-ROM, Stufe 3: Würfel- und Familienspiele (18.11.2026, #520, Vorhaben #515):** Acht weitere Spiele im ROM (jetzt 15 Spiele gesamt):
 - `apps/snes/src/teiler.c`: Teiler-Duell (Steuer- und Kettenspiel).
 - `kniffel.c`: Würfelblock für 1–6 Spieler, mit Würfelbildern und Halten.

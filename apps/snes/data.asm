@@ -41,4 +41,7 @@ klang_ende_ende:
 klang_wuerfeln:
 .incbin "res/wuerfeln.brr"
 klang_wuerfeln_ende:
+klang_karte:
+.incbin "res/karte.brr"
+klang_karte_ende:
 .ends

@@ -130,8 +130,18 @@ extern const Spiel spiel_ludo;
 extern const Spiel spiel_domino;
 extern const Spiel spiel_mauer;
 extern const Spiel spiel_zielzahl;
+extern const Spiel spiel_elevens;
+extern const Spiel spiel_solitaire;
+extern const Spiel spiel_mau_mau;
+extern const Spiel spiel_uno;
+extern const Spiel spiel_peter;
+extern const Spiel spiel_quartett;
+extern const Spiel spiel_president;
+extern const Spiel spiel_speed;
+extern const Spiel spiel_ligretto;
+extern const Spiel spiel_poker;
 
-#define SPIELE_ANZAHL 15
+#define SPIELE_ANZAHL 25
 extern const Spiel *const spiele[SPIELE_ANZAHL];
 
 /** Der gemeinsame Spielstand (Partie und Prüfmodus laufen nie gleichzeitig). Liegt wie die

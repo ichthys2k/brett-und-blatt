@@ -13,7 +13,7 @@ export ROMBANKS := 16
 include $(PVSNESLIB_HOME)/devkitsnes/snes_rules
 
 GRAFIK := res/kacheln_a.bin res/kacheln_b.bin res/karten.bin res/spielfarben.bin res/palette.bin res/grafik.h
-KLAENGE := res/klick.brr res/setzen.brr res/start.brr res/sieg.brr res/ende.brr res/wuerfeln.brr
+KLAENGE := res/klick.brr res/setzen.brr res/start.brr res/sieg.brr res/ende.brr res/wuerfeln.brr res/karte.brr
 
 .PHONY: all clean ressourcen
 .DEFAULT_GOAL := all

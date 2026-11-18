@@ -32,7 +32,23 @@ Empfehlung: zuerst ein **Probelauf** (Stufe 0 und 1, wenige Wochen Abendarbeit),
 - **Nicht auf dem SNES:** Remis-Angebote bei Dame (in der Web-App kein Teil von `legalMoves`).
 - **„Wölfe im Schafspelz“** stand versehentlich in Stufe 2. Es ist ein Partyspiel für 8–19 Spieler und gehört nicht hierher.
 
-**Zu prüfen (Cornelius):** das ROM aus dem CI-Artefakt „brett-und-blatt-16“ in Mesen oder RetroArch öffnen, jedes Spiel einmal gegen den Bot spielen und Lesbarkeit, Farben und Bedienung ansehen (besonders Mühle und Dame mit mehreren Schritten je Zug).
+**Stufe 3 umgesetzt (18.11.2026, #520):** acht Würfel-, Rechen- und Familienspiele – Teiler-Duell (`teiler.c`), Würfelblock (`kniffel.c`), Mäxle (`maexle.c`), Paare finden (`paare.c`), Nicht ärgern! (`ludo.c`), Domino (`domino.c`), Rechenmauer (`mauer.c`) und Zielzahl (`zielzahl.c`). 1–6 Spieler, Multitap für bis zu 5 Controller, Puffer in Bank $7F (`ram.asm`), Klänge für Würfeln und Start-Fanfare.
+
+**Stufe 4 umgesetzt (18.11.2026, #522):** zehn Kartenspiele ohne Stiche (jetzt 25 Spiele im ROM):
+- **Elf zuerst!** (`elevens.c`): Klondike-Ablage mit 11er-Paaren und JQK-Drillingen.
+- **Solitaire** (`solitaire.c`): Klondike 1 und 3 Karten mit Talon, Hilfsstapeln und Fundamenten.
+- **Mau-Mau** (`mau_mau.c`): 2–4 Spieler, 7er ziehen/stapeln, 8er aussetzen, Bube-Farbe wünschen, Ass extra.
+- **Eins!** (`uno.c`): 2–4 Spieler, Farbkarten, Zieh-2, Richtungswechsel, Aussetzen, Farbwahl, Zieh-4.
+- **Schwarzer Peter** (`peter.c`): 2–6 Spieler, Karten ziehen, Paare ablegen, Peter vermeiden.
+- **Quartett** (`quartett.c`): 2–6 Spieler, gezieltes Erfragen von Kartenwerten bei Mitspielern.
+- **Präsident** (`president.c`): 3–6 Spieler, Rangfolgen (Präsident bis Bettler), Kartentausch, Pasch, Revolution und Super-Revolution.
+- **Speed** (`speed.c`): 2 Spieler in Echtzeit über zwei Controller gleichzeitig, Hand auffüllen, Ablegen bei ±1 Wert, gleichzeitiges Ziehen bei Blockade.
+- **Kartenblitz** (`ligretto.c`): 2–4 Spieler in Echtzeit (Ligretto), Stapel 1–10 aufsteigend auf der Tischmitte, Hand/Ablagestapel, Ligretto-Ruf bei leerem Ligretto-Stapel.
+- **Poker** (`poker.c`): Texas Hold'em (No Limit, Fixed Limit, Pot Limit, Sit&Go-Turnier bis 6 Spieler), 7-Karten-Bewerter, Split Pots, Side Pots, Bots mit Chen-Score und aggressiver Postflop-Einschätzung.
+- Gemeinsamer Kartenbaustein `src/karten.c` / `karten.h` und Klang `KLANG_KARTE`.
+- Alle 10 Spiele mit 100 % grünem Regel- und Bot-Vergleich in `regeln.test.ts` und `bots.test.ts`.
+
+**Zu prüfen (Cornelius):** das ROM aus dem CI-Artefakt „brett-und-blatt-16“ in Mesen oder RetroArch öffnen, Spiele ausprobieren (insbesondere Echtzeit-Duelle wie Speed und Ligretto an zwei Controllern sowie Texas Hold'em Poker).
 
 ## Was das SNES kann und was nicht
 
@@ -112,11 +128,14 @@ Jede Stufe endet mit einem spielbaren ROM. Danach kann man aufhören, ohne dass 
 - Klänge erweitert um Würfeln (`KLANG_WUERFELN`, klackernde Würfel im Becher/auf Filz) und Anfangs-Fanfare (`KLANG_START`); Tracker-Hintergrundstücke (.it) für spätere Stufe vorgemerkt.
 - Alle 8 Spiele mit 100% grünem Regelvergleich (`regeln.test.ts`) gegen das jeweilige TypeScript-Modul und Bot-Prüfung (`bots.test.ts`).
 
-### Stufe 4 – Karten ohne Stiche (mittel bis groß)
+### Stufe 4 – Karten ohne Stiche (mittel bis groß) – erledigt (#522)
 
-- Kartenbaustein: Französisches und Deutsches Blatt als Kacheln (etwa 24 × 32 Bildpunkte je Karte), Fächer, Ablage, Stapel.
-- Solitaire, Elf zuerst!, Mau-Mau, Eins!, Schwarzer Peter, Quartett, Präsident, Speed, Kartenblitz, Poker.
-- Wechselbildschirm für verdeckte Hände; Echtzeitspiele mit zwei Controllern gleichzeitig.
+- Kartenbaustein: Französisches Blatt (Kreuz, Pik, Herz, Karo, 1..13), Eins!-Karten (4 Farben, Aktionen), Tier-Quartette, Ablagen, Fächer und Hilfsstapel.
+- Zehn Kartenspiele umgesetzt und getestet: Solitaire, Elf zuerst!, Mau-Mau, Eins!, Schwarzer Peter, Quartett, Präsident, Speed, Kartenblitz, Poker.
+- Wechselbildschirm für verdeckte Hände im Hot-Seat; Echtzeit-Handling für Speed und Kartenblitz über zwei Controller gleichzeitig (`eingabe_spieler(p)`).
+- Poker (Texas Hold'em) mit Hand-Bewerter (High Card bis Royal Flush), Split Pots, Side Pots, No Limit/Fixed Limit/Pot Limit/Turnier bis 6 Spieler und Chen-Score-Bot.
+- Neuer Klang: `KLANG_KARTE` (Kartenabwurf/Kartenziehen).
+- Alle 10 Spiele Zug für Zug gegen TypeScript-Module geprüft (`regeln.test.ts`, 25 Spiele gesamt grün).
 
 ### Stufe 5 – Stichspiele und Schach (groß)
 

@@ -111,4 +111,17 @@ wav('ende', folge(ton(440, 0.14, { abkling: 10 }), ton(330, 0.3, { abkling: 7 })
   }
   wav('wuerfeln', Array.from(s));
 }
-console.log('Klänge: setzen, klick, start, sieg, ende, wuerfeln');
+// Karte: sanftes Schiebegeräusch / Kartenziehen.
+{
+  const n = Math.round(0.08 * RATE);
+  let x = 123;
+  const s = Array.from({ length: n }, (_, i) => {
+    const t = i / RATE;
+    x = (x * 1103515245 + 12345) & 0x7fffffff;
+    const rauschen = (x / 0x7fffffff - 0.5) * Math.exp(-t * 55);
+    const ton = Math.sin(2 * Math.PI * (900 - t * 5000) * t) * Math.exp(-t * 60);
+    return (ton * 0.4 + rauschen * 0.6) * Math.min(1, t / 0.005) * 0.8;
+  });
+  wav('karte', s);
+}
+console.log('Klänge: setzen, klick, start, sieg, ende, wuerfeln, karte');
