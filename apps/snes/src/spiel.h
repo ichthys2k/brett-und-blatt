@@ -106,8 +106,9 @@ extern const Spiel spiel_gomoku;
 extern const Spiel spiel_uttt;
 extern const Spiel spiel_muehle;
 extern const Spiel spiel_dame;
+extern const Spiel spiel_teiler;
 
-#define SPIELE_ANZAHL 7
+#define SPIELE_ANZAHL 8
 extern const Spiel *const spiele[SPIELE_ANZAHL];
 
 /** Der gemeinsame Spielstand (Partie und Prüfmodus laufen nie gleichzeitig). Liegt wie die
