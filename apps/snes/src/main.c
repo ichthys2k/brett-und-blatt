@@ -13,7 +13,7 @@
 
 #define VERSION_TEXT "Version 0.2 · November 2026"
 
-const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt};
+const Spiel *const spiele[SPIELE_ANZAHL] = {&spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt, &spiel_muehle};
 
 u8 spielstand[SPIELSTAND_GROESSE];
 Zug zugliste[ZUEGE_MAX];
