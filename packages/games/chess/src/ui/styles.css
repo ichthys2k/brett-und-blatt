@@ -417,25 +417,10 @@ button.ch-log-cell:hover {
   position: absolute;
   left: 50%;
   top: 50%;
-  font-size: 122cqmin;
-  translate: -50% -62%;
-}
-
-.ch-board .ch-piece.ch-pawn {
-  font-size: 102cqmin;
-}
-
-:root[data-pieces-chess='wood'] .ch-board .ch-piece,
-:root[data-pieces-chess='metal'] .ch-board .ch-piece,
-:root[data-pieces-chess='fable'] .ch-board .ch-piece {
-  font-size: 145cqmin;
-  translate: -50% -66%;
-}
-
-:root[data-pieces-chess='wood'] .ch-board .ch-piece.ch-pawn,
-:root[data-pieces-chess='metal'] .ch-board .ch-piece.ch-pawn,
-:root[data-pieces-chess='fable'] .ch-board .ch-piece.ch-pawn {
-  font-size: 122cqmin;
+  /* Jede Figur bleibt im eigenen Feld (Wunsch von Cornelius, 18.11.2026): Zeichen und Bilder füllen
+     höchstens 94 % der Feldseite und stehen mittig, nichts ragt ins Nachbarfeld. */
+  font-size: 94cqmin;
+  translate: -50% -50%;
 }
 
 /* Gefüllte Zeichen für beide Farben: Weiß mit heller Füllung und dunkler Kontur. */

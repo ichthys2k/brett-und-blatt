@@ -164,17 +164,12 @@
 }
 
 .ch-wrap[data-ch-era] .ch-piece {
-  text-shadow: var(--ch-era-glow, none);
+  text-shadow: none;
 }
 
-/* Zeichen statt Bilder: dieselben Größen wie beim klassischen Satz. */
-.ch-wrap[data-ch-era][data-ch-era] .ch-board .ch-piece {
-  font-size: 122cqmin;
-  translate: -50% -62%;
-}
-
-.ch-wrap[data-ch-era][data-ch-era] .ch-board .ch-piece.ch-pawn {
-  font-size: 102cqmin;
+/* Figuren des Jahrgangs (zeitfiguren.tsx) oder der klassische Satz, gefärbt durch Film, Band oder Bildschirm. */
+.ch-wrap[data-ch-era] .ch-piece-img {
+  filter: var(--ch-era-piece-filter, none);
 }
 
 .ch-wrap[data-ch-era] .ch-coord {
@@ -399,7 +394,7 @@
   --ch-era-white-stroke: 0 transparent;
   --ch-era-black: #041409;
   --ch-era-black-stroke: 1.3px #3dff7a;
-  --ch-era-glow: 0 0 6px rgb(61 255 122 / 0.7);
+  --ch-era-piece-filter: drop-shadow(0 0 2px rgb(61 255 122 / 0.8));
   --ch-era-accent: #3dff7a;
   --ch-era-frame: 0 0 0 1px rgb(61 255 122 / 0.6);
   --ch-era-fx: radial-gradient(ellipse at 50% 50%, transparent 58%, rgb(0 0 0 / 0.6) 100%), repeating-linear-gradient(0deg, rgb(0 0 0 / 0.35) 0 1px, transparent 1px 3px);
@@ -440,7 +435,7 @@
   --ch-era-white-stroke: 0.6px #0b1440;
   --ch-era-black: #121212;
   --ch-era-black-stroke: 0.5px rgb(255 255 255 / 0.5);
-  --ch-era-glow: 2px 0 rgb(255 42 85 / 0.55), -2px 0 rgb(42 212 255 / 0.55);
+  --ch-era-piece-filter: drop-shadow(2px 0 0 rgb(255 42 85 / 0.6)) drop-shadow(-2px 0 0 rgb(42 212 255 / 0.6)) saturate(1.2);
   --ch-era-accent: #ffffff;
   --ch-era-screen-radius: 10px;
   --ch-era-fx: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.3) 0 1px, transparent 1px 3px);
@@ -545,6 +540,7 @@
   --ch-era-white-stroke: 1.2px #26262a;
   --ch-era-black: #26262a;
   --ch-era-black-stroke: 0 transparent;
+  --ch-era-piece-filter: grayscale(1) contrast(1.2);
   --ch-era-accent: #26262a;
   --ch-era-screen-radius: 2px;
   --ch-era-frame: inset 0 1px 4px rgb(0 0 0 / 0.4);
@@ -585,15 +581,15 @@
   --ch-era-radius: 26px;
   --ch-era-ink: #f2f2f4;
   --ch-era-font: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --ch-era-light: #1f1f24;
-  --ch-era-dark: #101013;
+  --ch-era-light: #34343c;
+  --ch-era-dark: #1c1c21;
   --ch-era-check: rgb(255 77 77 / 0.8);
   --ch-era-last: rgb(79 209 197 / 0.2);
   --ch-era-white: #f2f2f4;
   --ch-era-white-stroke: 0 transparent;
   --ch-era-black: #ff7a59;
   --ch-era-black-stroke: 0 transparent;
-  --ch-era-glow: 0 0 10px rgb(255 255 255 / 0.12);
+  --ch-era-piece-filter: drop-shadow(0 0 5px rgb(255 255 255 / 0.18));
   --ch-era-accent: #4fd1c5;
   --ch-era-screen-radius: 14px;
 }
