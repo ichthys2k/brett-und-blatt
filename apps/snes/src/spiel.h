@@ -99,8 +99,10 @@ typedef struct {
 extern const Spiel spiel_tic_tac_toe;
 extern const Spiel spiel_vier;
 extern const Spiel spiel_reversi;
+extern const Spiel spiel_gomoku;
+extern const Spiel spiel_uttt;
 
-#define SPIELE_ANZAHL 3
+#define SPIELE_ANZAHL 5
 extern const Spiel *const spiele[SPIELE_ANZAHL];
 
 /** Der gemeinsame Spielstand (Partie und Prüfmodus laufen nie gleichzeitig). */
