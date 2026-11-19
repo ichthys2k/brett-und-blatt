@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Erzeugt die Klangeffekte von Brett & Blatt 16 als kurze WAV-Dateien (16 Bit, mono, 16 kHz).
+ * Erzeugt die Klangeffekte von Brett & Blatt 16 als kurze WAV-Dateien (16 Bit, mono, 12 kHz).
  * Die Makefile-Regeln wandeln sie mit `snesbrr` in BRR-Samples für den Klangprozessor SPC700.
  * Alles wird aus Formeln erzeugt – keine fremden Aufnahmen, keine Lizenzfragen.
  *
@@ -11,7 +11,7 @@ import { join } from 'node:path';
 
 const out = process.argv[2] ?? 'res';
 mkdirSync(out, { recursive: true });
-const RATE = 16000;
+const RATE = 12000;
 
 function wav(name, samples) {
   // BRR arbeitet in Blöcken zu 16 Samples.
