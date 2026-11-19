@@ -35,6 +35,7 @@ export function loadInputSettings(): InputSettings {
           ? data.scanIntervalMs
           : DEFAULT_INPUT_SETTINGS.scanIntervalMs,
       haptics: typeof data.haptics === 'boolean' ? data.haptics : DEFAULT_INPUT_SETTINGS.haptics,
+      prompts: typeof data.prompts === 'boolean' ? data.prompts : DEFAULT_INPUT_SETTINGS.prompts,
       hotSeatMode: data.hotSeatMode === 'multi' ? 'multi' : 'pass',
     };
     return cachedParsed;

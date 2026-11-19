@@ -34,7 +34,7 @@ import {
   VirtualKeyboard,
 } from '@brett-und-blatt/ui';
 import { useActiveCardCosmetics } from './lib/cardBacks';
-import { useInputSettings } from './lib/inputSettings';
+import { saveInputSettings, useInputSettings } from './lib/inputSettings';
 import { useActiveLook } from './lib/look';
 
 export function App() {
@@ -48,7 +48,7 @@ export function App() {
         <Screen />
         <VirtualKeyboard />
         <SoftCursor />
-        <ButtonPrompt />
+        <ButtonPrompt onDismiss={() => saveInputSettings({ prompts: false })} />
         <UpdateBanner />
       </CardCosmeticsProvider>
     </InputProvider>

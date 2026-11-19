@@ -2268,6 +2268,30 @@ body:has(.bub-dragging) .bub-inspect-float {
   font-size: 0.72rem;
 }
 
+.bub-prompt-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: #f8fafc;
+  font-size: 0.68rem;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.bub-prompt-close:hover,
+.bub-prompt-close:focus-visible {
+  background: rgba(239, 68, 68, 0.85);
+  transform: scale(1.15);
+}
+
 .bub-carousel-bar {
   display: flex;
   align-items: center;

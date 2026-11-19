@@ -925,6 +925,8 @@ const de = {
   'input.scanSpeed': 'Scan-Geschwindigkeit ({ms} ms)',
   'input.deadzone': 'Stick-Totzone ({pct} %)',
   'input.haptics': 'Controller-Vibration bei Zügen',
+  'input.prompts': 'Tastenhinweise am Bildschirmrand einblenden',
+  'input.prompts.dismiss': 'Tastenhinweise dauerhaft ausblenden',
   'input.hotSeat': 'Mehrere am Gerät (Hot-Seat)',
   'input.hotSeat.pass': '1 Controller weiterreichen',
   'input.hotSeat.multi': 'Eigener Controller je Platz',

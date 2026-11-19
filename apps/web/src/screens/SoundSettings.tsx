@@ -310,6 +310,15 @@ function InputSettingsPanel() {
           <span>{t('input.haptics')}</span>
         </label>
 
+        <label className="inline-flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.prompts}
+            onChange={(e) => saveInputSettings({ prompts: e.target.checked })}
+          />
+          <span>{t('input.prompts')}</span>
+        </label>
+
         <div className="flex items-center gap-2 text-sm">
           <span className="text-muted">{t('input.hotSeat')}:</span>
           <Button

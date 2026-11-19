@@ -93,6 +93,18 @@ try {
     throw new Error('ButtonPrompt-Leiste sollte im Gamepad-Modus sichtbar sein');
   }
 
+  // Tastenhinweise dauerhaft über ✕-Knopf ausblenden
+  await page.locator('.bub-prompt-close').click();
+  const hiddenAfterClose = !(await page.locator('.bub-prompt-bar').isVisible());
+  if (!hiddenAfterClose) {
+    throw new Error('ButtonPrompt-Leiste sollte nach Klick auf ✕ ausgeblendet sein');
+  }
+  const rawStorage = await page.evaluate(() => localStorage.getItem('brett-und-blatt:eingabe'));
+  const savedPrompts = await page.evaluate(() => JSON.parse(localStorage.getItem('brett-und-blatt:eingabe') || '{}').prompts);
+  if (savedPrompts !== false) {
+    throw new Error(`Erwartet prompts: false in localStorage, erhalten: ${savedPrompts}, raw: ${rawStorage}`);
+  }
+
   // 2. Startseite (#/einzelspieler): Zonenwechsel per RB (Button 5)
   await page.goto(`${baseUrl}/#/einzelspieler`, { waitUntil: 'networkidle' });
   await page.evaluate(() => window.dispatchEvent(new Event('gamepadconnected')));
