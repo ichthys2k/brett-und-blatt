@@ -296,7 +296,23 @@ function PiecePin({
   // Gemalte Figur (#325): getöntes Bild statt Sockel und Kopf, das Formsymbol bleibt am Fuß sichtbar.
   if (pawn) {
     return (
-      <g className={`ludo-piece ${isMovable ? 'ludo-piece-movable' : 'ludo-piece-static'}`} onClick={onClick}>
+      <g
+        className={`ludo-piece ${isMovable ? 'ludo-piece-movable' : 'ludo-piece-static'}`}
+        onClick={onClick}
+        role={isMovable ? 'button' : undefined}
+        tabIndex={isMovable ? 0 : undefined}
+        aria-label={isMovable ? 'Figur ziehen' : undefined}
+        onKeyDown={
+          isMovable
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onClick?.();
+                }
+              }
+            : undefined
+        }
+      >
         <defs>
           <TintFilter color={style.fill} />
         </defs>

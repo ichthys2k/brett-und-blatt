@@ -24,17 +24,34 @@ import { TournamentBeamerScreen, TournamentEmbedScreen, TournamentScreen } from 
 import { Setup } from './screens/Setup';
 import { SoundSettingsScreen } from './screens/SoundSettings';
 import { HelpersScreen } from './screens/Helpers';
-import { CardCosmeticsProvider } from '@brett-und-blatt/ui';
+import {
+  ButtonPrompt,
+  CardCosmeticsProvider,
+  GlobalSpatialNavigator,
+  InputProvider,
+  ScanOverlay,
+  SoftCursor,
+  VirtualKeyboard,
+} from '@brett-und-blatt/ui';
 import { useActiveCardCosmetics } from './lib/cardBacks';
+import { useInputSettings } from './lib/inputSettings';
 import { useActiveLook } from './lib/look';
 
 export function App() {
   const cosmetics = useActiveCardCosmetics(useActiveLook());
+  const inputSettings = useInputSettings();
   return (
-    <CardCosmeticsProvider value={cosmetics}>
-      <Screen />
-      <UpdateBanner />
-    </CardCosmeticsProvider>
+    <InputProvider settings={inputSettings}>
+      <CardCosmeticsProvider value={cosmetics}>
+        <GlobalSpatialNavigator />
+        <ScanOverlay />
+        <Screen />
+        <VirtualKeyboard />
+        <SoftCursor />
+        <ButtonPrompt />
+        <UpdateBanner />
+      </CardCosmeticsProvider>
+    </InputProvider>
   );
 }
 

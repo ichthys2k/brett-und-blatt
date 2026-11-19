@@ -13,6 +13,7 @@ import {
   type RefObject,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { useInputIntent } from '../input/InputContext';
 import { inspectPosition } from './inspectPosition';
 
 /*
@@ -258,6 +259,21 @@ export function CardInspectProvider({ children }: { children: ReactNode }) {
       stopPress.current?.();
     };
   }, []);
+
+  useInputIntent((intent, source) => {
+    if (intent === 'cancel' && dialog) {
+      setDialog(null);
+      return true;
+    }
+    if (intent === 'inspect' && source === 'gamepad' && !dialog) {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement) {
+        active.dispatchEvent(new KeyboardEvent('keydown', { key: 'i', bubbles: true, cancelable: true }));
+        return true;
+      }
+    }
+    return false;
+  }, 18);
 
   const closeDialog = () => {
     const from = dialog?.from;

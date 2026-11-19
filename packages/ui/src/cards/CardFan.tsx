@@ -1,5 +1,6 @@
-import type { Key, ReactNode } from 'react';
+import { useRef, type Key, type ReactNode } from 'react';
 import { useElementSize } from '../useElementSize';
+import { useInputIntent } from '../input/InputContext';
 
 export interface CardFanProps {
   count: number;
@@ -75,11 +76,30 @@ export function CardFan({
   arc = 0,
 }: CardFanProps) {
   const [ref, { width }] = useElementSize<HTMLDivElement>();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const attachRef = (el: HTMLDivElement | null) => {
+    ref(el);
+    containerRef.current = el;
+  };
   const cardWidth = typeof cardWidthProp === 'function' ? cardWidthProp(width) : cardWidthProp;
   const minStep = typeof minStepProp === 'function' ? minStepProp(cardWidth) : minStepProp;
   const { rows, perRow, step } = fanLayout(count, cardWidth, width, minStep, maxRows);
   const overlap = cardWidth - step;
   const height = cardWidth * cardAspect;
+
+  useInputIntent((intent) => {
+    if (intent !== 'left' && intent !== 'right') return false;
+    const container = containerRef.current;
+    const active = typeof document !== 'undefined' ? document.activeElement : null;
+    if (!container || !(active instanceof HTMLElement) || !container.contains(active)) return false;
+    const items = [...container.querySelectorAll<HTMLElement>('button:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+    const idx = items.indexOf(active);
+    if (idx === -1) return false;
+    const nextIdx = intent === 'right' ? idx + 1 : idx - 1;
+    if (nextIdx < 0 || nextIdx >= items.length) return false;
+    items[nextIdx].focus({ preventScroll: false });
+    return true;
+  }, 5);
 
   const slot = (index: number, inRow: number, rowSize: number) => {
     const slotClasses = `bub-fan-slot ${shuffling ? 'bub-animate-shuffle' : ''} ${anim === 'deal' ? 'bub-animate-deal' : ''}`;
@@ -103,14 +123,14 @@ export function CardFan({
 
   if (rows <= 1) {
     return (
-      <div ref={ref} className={`bub-fan ${className}`} role="group" aria-label={label}>
+      <div ref={attachRef} className={`bub-fan ${className}`} role="group" aria-label={label}>
         {Array.from({ length: count }, (_, index) => slot(index, index, count))}
       </div>
     );
   }
 
   return (
-    <div ref={ref} className={`bub-fan bub-fan-rows ${className}`} role="group" aria-label={label}>
+    <div ref={attachRef} className={`bub-fan bub-fan-rows ${className}`} role="group" aria-label={label}>
       {Array.from({ length: rows }, (_, row) => {
         const start = row * perRow;
         const size = Math.max(0, Math.min(perRow, count - start));

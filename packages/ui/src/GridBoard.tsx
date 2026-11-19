@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
+import { useInputIntent } from './input/InputContext';
 
 export interface GridBoardProps {
   cols: number;
@@ -26,6 +27,37 @@ export interface GridBoardProps {
  * Die Zellen bleiben immer dieselben Elemente, damit Animationen nicht neu starten.
  */
 export function GridBoard({ cols, rows, label, renderCell, isActive, onActivate, cellLabel, cellClassName, onHoverColumn, className = '', cellProps }: GridBoardProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useInputIntent((intent) => {
+    if (intent !== 'up' && intent !== 'down' && intent !== 'left' && intent !== 'right') return false;
+    const root = rootRef.current;
+    const activeEl = typeof document !== 'undefined' ? document.activeElement : null;
+    if (!root || !(activeEl instanceof HTMLButtonElement) || !root.contains(activeEl)) return false;
+
+    const curCol = Number(activeEl.dataset.gridCol);
+    const curRow = Number(activeEl.dataset.gridRow);
+    if (!Number.isFinite(curCol) || !Number.isFinite(curRow)) return false;
+
+    const dc = intent === 'left' ? -1 : intent === 'right' ? 1 : 0;
+    const dr = intent === 'up' ? -1 : intent === 'down' ? 1 : 0;
+
+    // Nächste aktive Zelle in gewünschter Richtung suchen (erst gleiche Achse, dann ganze Reihe/Spalte)
+    let c = curCol + dc;
+    let r = curRow + dr;
+    while (c >= 0 && c < cols && r >= 0 && r < rows) {
+      const btn = root.querySelector<HTMLButtonElement>(`button[data-grid-col="${c}"][data-grid-row="${r}"]:not([disabled])`);
+      if (btn) {
+        btn.focus({ preventScroll: false });
+        return true;
+      }
+      c += dc;
+      r += dr;
+    }
+
+    return false;
+  }, 5);
+
   const cells: ReactNode[] = [];
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
@@ -35,6 +67,8 @@ export function GridBoard({ cols, rows, label, renderCell, isActive, onActivate,
         <button
           key={`${col}-${row}`}
           type="button"
+          data-grid-col={col}
+          data-grid-row={row}
           disabled={!active}
           aria-label={cellLabel?.(col, row)}
           className={`bub-cell ${cellClassName?.(col, row) ?? ''}`}
@@ -48,6 +82,7 @@ export function GridBoard({ cols, rows, label, renderCell, isActive, onActivate,
   }
   return (
     <div
+      ref={rootRef}
       role="group"
       aria-label={label}
       className={`bub-grid ${className}`}
