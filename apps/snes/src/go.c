@@ -575,24 +575,76 @@ static u8 go_felder(const u8 *stand, const Zug *zug, u8 *f) {
   return 0;
 }
 
+#include "../res/brett_grafik.h"
+extern char brett_bg, brett_bg_ende, brett_bg_pal;
+
+static void go_grafik_laden(void) {
+  bild_kacheln_laden((const u8 *)&brett_bg, (u16)(&brett_bg_ende - &brett_bg));
+  bild_bg_paletten((const u8 *)&brett_bg_pal, PAL_BRETT, 3);
+}
+
+static void go_block_unten(u8 x, u8 y, u16 basis) {
+  kachel_unten(x, y, basis, PAL_BRETT);
+  kachel_unten(x + 1, y, basis + 1, PAL_BRETT);
+  kachel_unten(x, y + 1, basis + 2, PAL_BRETT);
+  kachel_unten(x + 1, y + 1, basis + 3, PAL_BRETT);
+}
+
+static void go_block_oben(u8 x, u8 y, u16 basis) {
+  kachel(x, y, basis, PAL_BRETT);
+  kachel(x + 1, y, basis + 1, PAL_BRETT);
+  kachel(x, y + 1, basis + 2, PAL_BRETT);
+  kachel(x + 1, y + 1, basis + 3, PAL_BRETT);
+}
+
 static void go_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
   const GoState *s = (const GoState *)stand;
-  u8 p = go_am_zug(stand);
-  flaeche_leeren(0, 0, 32, 28);
+  u8 r, c, bx, by, pt, v;
+  u16 basis;
 
-  text(2, 1, "Go 9x9", PAL_TEXT);
-  char buf[32];
-  sprintf(buf, "Gefangen: S%d W%d", s->captures[0], s->captures[1]);
-  text(14, 1, buf, PAL_TEXT);
+  flaeche_leeren(0, 4, 32, 21);
+  text(0, 5, "Fang:", PAL_GRAU);
+  text(0, 6, "S:", PAL_TEXT);
+  zahl(2, 6, s->captures[0], 2, PAL_GELB);
+  text(0, 8, "W:", PAL_TEXT);
+  zahl(2, 8, s->captures[1], 2, PAL_TEXT);
 
-  u8 r, c;
+  /* Holzrahmen um das 18×18-Kaya-Brett (ab x=7, y=5) */
+  for (c = 0; c < 20; c++) {
+    kachel_unten(6 + c, 4, BRETT_GO_RAHMEN, PAL_BRETT);
+    kachel_unten(6 + c, 23, BRETT_GO_RAHMEN, PAL_BRETT);
+  }
+  for (r = 0; r < 18; r++) {
+    kachel_unten(6, 5 + r, BRETT_GO_RAHMEN, PAL_BRETT);
+    kachel_unten(25, 5 + r, BRETT_GO_RAHMEN, PAL_BRETT);
+  }
+
   for (r = 0; r < GO_B; r++) {
+    by = 5 + r * 2;
     for (c = 0; c < GO_B; c++) {
-      u8 pt = r * GO_B + c;
-      u8 v = s->board[pt];
-      const char *sym = (v == GO_SCHWARZ) ? "●" : (v == GO_WEISS ? "○" : "+");
-      u8 pal = (v == GO_SCHWARZ) ? PAL_BLAU : (v == GO_WEISS ? PAL_GELB : PAL_GRAU);
-      text(7 + c * 2, 4 + r * 2, sym, pal);
+      bx = 7 + c * 2;
+      pt = r * GO_B + c;
+      v = s->board[pt];
+
+      if (r == 0 && c == 0) basis = BRETT_GO_OL;
+      else if (r == 0 && c == 8) basis = BRETT_GO_OR;
+      else if (r == 8 && c == 0) basis = BRETT_GO_UL;
+      else if (r == 8 && c == 8) basis = BRETT_GO_UR;
+      else if (r == 0) basis = BRETT_GO_OBEN;
+      else if (r == 8) basis = BRETT_GO_UNTEN;
+      else if (c == 0) basis = BRETT_GO_LINKS;
+      else if (c == 8) basis = BRETT_GO_RECHTS;
+      else if ((r == 2 || r == 6) && (c == 2 || c == 6)) basis = BRETT_GO_HOSHI;
+      else if (r == 4 && c == 4) basis = BRETT_GO_HOSHI;
+      else basis = BRETT_GO_MITTE;
+
+      go_block_unten(bx, by, basis);
+      if (v == GO_SCHWARZ) go_block_oben(bx, by, BRETT_GO_SCHWARZ);
+      else if (v == GO_WEISS) go_block_oben(bx, by, BRETT_GO_WEISS);
+
+      if (aktiv && markierung && (markierung[pt] & MARK_CURSOR)) {
+        go_block_oben(bx, by, BRETT_GO_CURSOR);
+      }
     }
   }
 }
@@ -625,5 +677,8 @@ const Spiel spiel_go = {
   go_felder,
   go_zeichnen,
   4, 4,
-  0, 0, 0
+  0, 0, 0,
+  go_grafik_laden,
+  0,
+  0
 };

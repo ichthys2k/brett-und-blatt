@@ -614,34 +614,35 @@ static u8 domino_felder(const u8 *stand, const Zug *zug, u8 *felder) {
   return 2;
 }
 
-/* „a|b“ in einen Puffer; gibt die Länge zurück. */
-static u8 stein_text(char *t, u8 a, u8 b) {
-  u8 n = 0;
-  if (a >= 10) t[n++] = '1';
-  t[n++] = '0' + a % 10;
-  t[n++] = '|';
-  if (b >= 10) t[n++] = '1';
-  t[n++] = '0' + b % 10;
-  t[n] = 0;
-  return n;
+#include "../res/brett_grafik.h"
+extern char brett_bg, brett_bg_ende, brett_bg_pal;
+
+static void domino_grafik_laden(void) {
+  bild_kacheln_laden((const u8 *)&brett_bg, (u16)(&brett_bg_ende - &brett_bg));
+  bild_bg_paletten((const u8 *)&brett_bg_pal, PAL_BRETT, 3);
+}
+
+/* Zeichnet einen echten 16×8-Elfenbein-Dominostein (2 Kacheln breit) mit Augenpunkten. */
+static void domino_stein(u8 x, u8 y, u8 a, u8 b, u8 pal) {
+  kachel(x, y, BRETT_DOMINO_L_BASIS + a, pal);
+  kachel(x + 1, y, BRETT_DOMINO_R_BASIS + b, pal);
 }
 
 /* Eine Steinreihe mit Umbruch; gibt die nächste freie Zeile zurück. */
 static u8 reihe(u8 y, u8 y_max, const u8 *steine, const u8 *links, const u8 *rechts, u8 n, u8 zuletzt, u8 vorne) {
-  static char t[8];
-  u8 i, x = 1 + vorne, l, s, a, b;
+  u8 i, x = 1 + vorne, s, a, b, pal;
   for (i = 0; i < n; i++) {
     s = steine[i];
     a = links ? links[i] : STEIN_A[s];
     b = rechts[i];
-    l = stein_text(t, a, b);
-    if (x + l > 31) {
+    if (x + 2 > 31) {
       x = 1 + vorne;
       y++;
       if (y > y_max) return y;
     }
-    text(x, y, t, s == zuletzt ? PAL_GELB : pasch(s) ? PAL_TEXT : PAL_GRAU);
-    x += l + 1;
+    pal = s == zuletzt ? PAL_BRETT_AUSWAHL : pasch(s) ? PAL_BRETT_MARKE : PAL_BRETT;
+    domino_stein(x, y, a, b, pal);
+    x += 3;
   }
   return y + 1;
 }
@@ -653,7 +654,6 @@ static void knopf(u8 x, u8 y, const char *name, u8 feld, const u8 *markierung, u
 
 static void domino_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
   const Domino *d = (const Domino *)stand;
-  static char t[8];
   u8 i, p, x, y, s, pal, zuletzt = d->l_platz == KEIN ? KEIN : d->l_stein;
   tafel(0, 4, 32, 22);
   flaeche_leeren(1, 5, 30, 20);
@@ -703,10 +703,9 @@ static void domino_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
     s = d->hand[d->zug * STEINE + i];
     x = 1 + (i % HAND_SPALTEN) * 5;
     y = HAND_Y + i / HAND_SPALTEN;
-    stein_text(t, STEIN_A[s], STEIN_B[s]);
-    pal = markierung[s] & MARK_GEWAEHLT ? PAL_GELB : markierung[s] & MARK_ZIEL ? PAL_TEXT : PAL_GRAU;
-    kachel(x - 1 + (i % HAND_SPALTEN == 0), y, markierung[s] & MARK_CURSOR ? K_PFEIL : 0, PAL_GELB);
-    text(x + (i % HAND_SPALTEN == 0), y, t, pal);
+    pal = (markierung[s] & (MARK_GEWAEHLT | MARK_CURSOR)) ? PAL_BRETT_AUSWAHL : (markierung[s] & MARK_ZIEL) ? PAL_BRETT : PAL_BRETT_MARKE;
+    kachel(x, y, markierung[s] & MARK_CURSOR ? K_PFEIL : 0, PAL_GELB);
+    domino_stein(x + 1, y, STEIN_A[s], STEIN_B[s], pal);
   }
 }
 
@@ -762,4 +761,10 @@ const Spiel spiel_domino = {
   domino_zeichnen,
   1,
   1,
+  0,
+  0,
+  0,
+  domino_grafik_laden,
+  0,
+  0,
 };

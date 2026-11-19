@@ -5,6 +5,7 @@
 #include <snes.h>
 #include "bild.h"
 #include "eingabe.h"
+#include "karten.h"
 #include "klang.h"
 #include "pruef.h"
 #include "speicher.h"
@@ -737,6 +738,7 @@ static u8 eine_partie(u8 spiel_nr, u8 n, u8 nummer, u8 anzahl, const u8 *siege, 
   cursor_y = spiel->cursor_y;
   if (spiel->feld_an(spielstand, cursor_x, cursor_y) == FELD_KEIN) cursor_bewegen(spiel, 1, 0);
   if (spiel->grafik_laden) spiel->grafik_laden();
+  else if (spiel->brett_farben == FARBEN_KARTEN) karten_grafik_laden();
   else brett_farben(spiel->brett_farben);
   partie_bild(spiel, nummer, anzahl, siege, n);
   for (i = 0; i < FELDER_MAX; i++) markierung[i] = 0;
@@ -750,7 +752,7 @@ static u8 eine_partie(u8 spiel_nr, u8 n, u8 nummer, u8 anzahl, const u8 *siege, 
     if (IST_BOT(t)) {
       for (i = 0; i < FELDER_MAX; i++) markierung[i] = 0;
       spiel->zeichnen(spielstand, markierung, 0);
-      if (!spiel->grafik_laden) {
+      if (!spiel->vollbild) {
         platz_text(spiel, 3, platz, " überlegt …");
         fusszeile("Start: Pause");
       }
@@ -772,7 +774,7 @@ static u8 eine_partie(u8 spiel_nr, u8 n, u8 nummer, u8 anzahl, const u8 *siege, 
         partie_bild(spiel, nummer, anzahl, siege, n);
       }
       zuletzt = platz;
-      if (!spiel->grafik_laden) {
+      if (!spiel->vollbild) {
         platz_text(spiel, 3, platz, dran(port));
         fusszeile("A: wählen · Start: Pause");
       }

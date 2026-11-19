@@ -127,6 +127,10 @@ void bild_kacheln_standard(void) {
   setScreenOn();
 }
 
+u8 bild_sonder_aktiv(void) {
+  return sonder_kacheln;
+}
+
 void bild_bg_paletten(const u8 *pal, u8 start_pal, u8 anzahl) {
   WaitForVBlank();
   dmaCopyCGram((u8 *)pal, (u16)start_pal * 16, (u16)anzahl * 32);

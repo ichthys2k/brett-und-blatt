@@ -62,3 +62,19 @@ schach_spr:
 .incbin "res/schach_spr.bin"
 schach_spr_ende:
 .ends
+
+.section ".grafik_karten" superfree
+karten_bg:
+.incbin "res/karten_bg.bin"
+karten_bg_ende:
+karten_bg_pal:
+.incbin "res/karten_bg_pal.bin"
+.ends
+
+.section ".grafik_brett" superfree
+brett_bg:
+.incbin "res/brett_bg.bin"
+brett_bg_ende:
+brett_bg_pal:
+.incbin "res/brett_bg_pal.bin"
+.ends

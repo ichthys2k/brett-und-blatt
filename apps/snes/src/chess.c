@@ -978,5 +978,6 @@ const Spiel spiel_chess = {
   4, 6,
   0, 0, 0,
   chess_grafik_laden,
-  chess_animieren
+  chess_animieren,
+  1
 };

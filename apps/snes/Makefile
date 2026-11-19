@@ -27,6 +27,8 @@ include $(PVSNESLIB_HOME)/devkitsnes/snes_rules
 
 GRAFIK := res/kacheln_a.bin res/kacheln_b.bin res/karten.bin res/spielfarben.bin res/palette.bin res/grafik.h
 SCHACH_GRAFIK := res/schach_bg.bin res/schach_bg_pal.bin res/schach_spr.bin res/schach_spr_pal.bin res/schach_grafik.h
+KARTEN_GRAFIK := res/karten_bg.bin res/karten_bg_pal.bin res/karten_grafik.h
+BRETT_GRAFIK := res/brett_bg.bin res/brett_bg_pal.bin res/brett_grafik.h
 KLAENGE := res/klick.brr res/setzen.brr res/start.brr res/sieg.brr res/ende.brr res/wuerfeln.brr res/karte.brr
 
 .PHONY: all clean ressourcen
@@ -34,13 +36,19 @@ KLAENGE := res/klick.brr res/setzen.brr res/start.brr res/sieg.brr res/ende.brr 
 
 all: ressourcen $(ROMNAME).sfc
 
-ressourcen: $(GRAFIK) $(SCHACH_GRAFIK) $(KLAENGE) $(SOUNDBANK).asm
+ressourcen: $(GRAFIK) $(SCHACH_GRAFIK) $(KARTEN_GRAFIK) $(BRETT_GRAFIK) $(KLAENGE) $(SOUNDBANK).asm
 
 $(GRAFIK) &: werkzeuge/grafik.mjs werkzeuge/schrift8x8.mjs
 	node werkzeuge/grafik.mjs res
 
 $(SCHACH_GRAFIK) &: werkzeuge/schach_grafik.mjs
 	node werkzeuge/schach_grafik.mjs res
+
+$(KARTEN_GRAFIK) &: werkzeuge/karten_grafik.mjs
+	node werkzeuge/karten_grafik.mjs
+
+$(BRETT_GRAFIK) &: werkzeuge/brett_grafik.mjs
+	node werkzeuge/brett_grafik.mjs
 
 res/%.wav: werkzeuge/klang.mjs
 	node werkzeuge/klang.mjs res
@@ -49,7 +57,7 @@ $(MUSIK_IT) &: werkzeuge/musik.mjs
 	node werkzeuge/musik.mjs res/musik
 
 # Alle Objekte hängen von den erzeugten Dateien ab (Kachelnummern in grafik.h, Daten in data.asm, soundbank.h).
-$(OFILES): $(GRAFIK) $(SCHACH_GRAFIK) $(KLAENGE) $(SOUNDBANK).asm $(wildcard src/*.h)
+$(OFILES): $(GRAFIK) $(SCHACH_GRAFIK) $(KARTEN_GRAFIK) $(BRETT_GRAFIK) $(KLAENGE) $(SOUNDBANK).asm $(wildcard src/*.h)
 
 clean: cleanBuildRes cleanRom
 	rm -rf res

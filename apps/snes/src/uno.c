@@ -670,6 +670,24 @@ static u8 uno_felder(const u8 *stand, const Zug *zug, u8 *felder) {
   return 0;
 }
 
+static void uno_karte_zeichnen(u8 x, u8 y, u8 c, u8 pal) {
+  u8 col, typ;
+  uno_card_info(c, &col, &typ);
+  if (col < 4 && typ <= 9) {
+    karten_zahl(x, y, col, typ, 1, pal);
+  } else if (typ == UNO_TYPE_SKIP) {
+    karten_uno_aktion(x, y, col, 0, 1, pal);
+  } else if (typ == UNO_TYPE_REVERSE) {
+    karten_uno_aktion(x, y, col, 1, 1, pal);
+  } else if (typ == UNO_TYPE_DRAW2) {
+    karten_uno_aktion(x, y, col, 2, 1, pal);
+  } else if (typ == UNO_TYPE_WILD4) {
+    karten_uno_aktion(x, y, 4, 4, 1, pal);
+  } else {
+    karten_uno_aktion(x, y, 4, 3, 1, pal);
+  }
+}
+
 static void uno_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
   const Uno *u = (const Uno *)stand;
   u8 i, x, y;
@@ -699,15 +717,7 @@ static void uno_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
   /* Ablage */
   text(11, 9, "Ablage", PAL_TEXT);
   if (u->discard_n > 0) {
-    u8 c = u->discard[u->discard_n - 1];
-    u8 col, typ;
-    uno_card_info(c, &col, &typ);
-    if (col < 4) {
-      karten_zahl(11, 11, col, typ, 1, PAL_BRETT);
-    } else {
-      karten_koerper(11, 11, KARTEN_BLANKO, PAL_BRETT);
-      text(12, 12, (typ == UNO_TYPE_WILD4) ? "+4" : "W", PAL_TEXT);
-    }
+    uno_karte_zeichnen(11, 11, u->discard[u->discard_n - 1], PAL_BRETT);
   }
 
   /* Farbe */
@@ -748,15 +758,7 @@ static void uno_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
     x = 2 + i * 3;
     y = 21;
     if (x + 3 <= 31) {
-      u8 c = u->hands[0][i];
-      u8 col, typ;
-      uno_card_info(c, &col, &typ);
-      if (col < 4) {
-        karten_zahl(x, y, col, typ, 1, pal);
-      } else {
-        karten_koerper(x, y, KARTEN_BLANKO, pal);
-        text(x + 1, y + 1, (typ == UNO_TYPE_WILD4) ? "+4" : "W", PAL_TEXT);
-      }
+      uno_karte_zeichnen(x, y, u->hands[0][i], pal);
     }
   }
 }

@@ -382,6 +382,16 @@ static void aktion(u8 x, u8 y, const char *name, u8 feld, const u8 *markierung, 
   text(x + 1, y, name, aktiv && (markierung[feld] & MARK_ZIEL) ? PAL_TEXT : PAL_GRAU);
 }
 
+#include "../res/brett_grafik.h"
+extern char brett_bg, brett_bg_ende, brett_bg_pal;
+
+static void maexle_grafik_laden(void) {
+  brett_farben(FARBEN_WUERFEL);
+  bild_warten();
+  bild_kacheln_laden((const u8 *)&brett_bg, (u16)(&brett_bg_ende - &brett_bg));
+  bild_bg_paletten((const u8 *)&brett_bg_pal, PAL_BRETT_MARKE, 1);
+}
+
 static void maexle_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
   const Maexle *m = (const Maexle *)stand;
   const Ansage *a = letzte(m);
@@ -411,8 +421,15 @@ static void maexle_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
   // Den Wurf sieht nur, wer gewürfelt hat (am Zug und gerade beim Ansagen).
   zeigen = aktiv && m->hat_wurf && m->gewuerfelt_von == m->zug && m->phase == 1;
   text(2, 14, "Becher:", PAL_GRAU);
-  karte(10, 13, WUERFEL_BILD[zeigen ? m->w1 : 0], 2, 2, PAL_BRETT);
-  karte(13, 13, WUERFEL_BILD[zeigen ? m->w2 : 0], 2, 2, PAL_BRETT);
+  if (zeigen) {
+    karte(10, 13, WUERFEL_BILD[m->w1], 2, 2, PAL_BRETT);
+    karte(13, 13, WUERFEL_BILD[m->w2], 2, 2, PAL_BRETT);
+  } else {
+    u8 bx, by;
+    for (by = 0; by < 3; by++)
+      for (bx = 0; bx < 5; bx++)
+        kachel(10 + bx, 13 + by, BRETT_MAEXLE_BECHER + by * 5 + bx, PAL_BRETT_MARKE);
+  }
   // Letzte Aufdeckung.
   flaeche_leeren(1, 16, 30, 1);
   if (m->auf) {
@@ -489,6 +506,12 @@ const Spiel spiel_maexle = {
   maexle_feld_an,
   maexle_felder,
   maexle_zeichnen,
+  0,
+  0,
+  0,
+  0,
+  0,
+  maexle_grafik_laden,
   0,
   0,
 };
