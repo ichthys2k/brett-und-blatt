@@ -174,7 +174,7 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
     // Seitenweise blättern in „Alle (31)“
     await emu.druecke(0, KNOPF.R, 10);
     expect(await zeile(23)).toContain('Seite 2/2');
-    expect(await zeile(5)).toContain('Elf zuerst!');
+    expect(await zeile(5)).toContain('Solitaire');
     await emu.druecke(0, KNOPF.L, 10);
     expect(await zeile(23)).toContain('Seite 1/2');
     expect(await zeile(5)).toContain('Tic-Tac-Toe');
@@ -258,6 +258,38 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
     await emu.druecke(0, KNOPF.LINKS, 10);
     expect(await zeile(5)).toContain('Go');
     expect(await zeile(8)).toMatch(/Partien gesamt\s+0$/);
+  });
+
+  it('Musikbox zeigt alle 4 Stimmungen und 20 Soundtracks, spielt Musik und schaltet stumm', async () => {
+    // Aus der Statistik zurück ins Hauptmenü (Cursor steht auf „Statistik“), einmal hoch zu „Musikbox“.
+    await emu.druecke(0, KNOPF.B, 10);
+    await emu.druecke(0, KNOPF.HOCH, 10);
+    await emu.druecke(0, KNOPF.A, 15);
+    expect(await zeile(1)).toContain('Musikbox');
+    expect(await zeile(5)).toContain('Denkraum');
+    expect(await zeile(8)).toContain('Herbstbibliothek');
+    await emu.druecke(0, KNOPF.RECHTS, 10);
+    expect(await zeile(5)).toContain('Kartentisch');
+    expect(await zeile(8)).toContain('Cafe am Markt');
+    await emu.druecke(0, KNOPF.RECHTS, 10);
+    expect(await zeile(5)).toContain('Patience');
+    expect(await zeile(8)).toContain('Regennachmittag');
+    await emu.druecke(0, KNOPF.RECHTS, 10);
+    expect(await zeile(5)).toContain('Spielabend');
+    expect(await zeile(8)).toContain('Würfelglück');
+    // Stück abspielen und echten SPC700-Klang prüfen.
+    await emu.audio();
+    await emu.druecke(0, KNOPF.A, 20);
+    await emu.run(60);
+    expect(await emu.audio()).toBeGreaterThan(1000);
+    expect(await zeile(19)).toContain('An');
+    expect(await zeile(21)).toContain('Würfelglück');
+    await bildschirm('7-musikbox');
+    // Stummschalten mit X.
+    await emu.druecke(0, KNOPF.X, 15);
+    expect(await zeile(19)).toContain('Aus');
+    expect(await zeile(21)).toContain('Stille');
+    await emu.druecke(0, KNOPF.B, 10);
   });
 });
 

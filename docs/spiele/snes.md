@@ -48,7 +48,9 @@ Empfehlung: zuerst ein **Probelauf** (Stufe 0 und 1, wenige Wochen Abendarbeit),
 - Gemeinsamer Kartenbaustein `src/karten.c` / `karten.h` und Klang `KLANG_KARTE`.
 - Alle 10 Spiele mit 100 % grünem Regel- und Bot-Vergleich in `regeln.test.ts` und `bots.test.ts`.
 
-**Zu prüfen (Cornelius):** das ROM aus dem CI-Artefakt „brett-und-blatt-16“ in Mesen oder RetroArch öffnen, Spiele ausprobieren (insbesondere Echtzeit-Duelle wie Speed und Ligretto an zwei Controllern sowie Texas Hold'em Poker).
+**Stufe 5, Stufe 6 und 20 Soundtracks umgesetzt (18.11.2026, #524, #527):** Alle 31 Spiele (inkl. Skat, Schafkopf, Doppelkopf, Binokel, Schach, Go) im 1-MB-LoROM mit 32-Spiele-SRAM, Kategorien-Filter, L/R-Blättern sowie **20 eigens komponierten SNESMod-Soundtracks** (`apps/snes/werkzeuge/musik.mjs`) in den vier Stimmungen *Denkraum*, *Kartentisch*, *Patience* und *Spielabend* (je 5 Stücke), automatischer Stimmungszuordnung je Spiel, **Musikbox** im Hauptmenü und Musik-Steuerung im Pausenmenü.
+
+**Zu prüfen (Cornelius):** das ROM aus dem CI-Artefakt „brett-und-blatt-16“ in Mesen oder RetroArch öffnen, Spiele ausprobieren (insbesondere Echtzeit-Duelle wie Speed und Ligretto an zwei Controllern sowie Texas Hold'em Poker) und die Musikbox anhören.
 
 ## Was das SNES kann und was nicht
 
