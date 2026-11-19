@@ -8,6 +8,11 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**Brett & Blatt 16 – SNES-ROM, Stufe 6: Feinschliff, Menü und echte Hardware (18.11.2026, #527, Vorhaben #515):** Abschluss des SNES-ROMs als **Version 1.0** (`apps/snes/src/main.c`, `speicher.h`, `speicher.c`):
+- **SRAM-Erweiterung:** `SPEICHER_SPIELE` von 16 auf 32 angehoben (712 Bytes, SRAM-Version 2 mit Kennung `BB16` und Prüfsumme im 2-KB-Batteriespeicher), sodass alle 31 Spiele ohne Speicherüberlauf Statistik führen und beim Kaltstart sauber initialisiert werden.
+- **Menüführung:** Seitenweises Blättern mit `L`/`R` (mit Seitenanzeige `Seite 1/2`, auch in der Statistik) und Kategorien-Filter über `◀`/`▶` (*Alle*, *Brettspiele*, *Würfel & Familie*, *Kartenspiele*, *Stich- & Denksport*).
+- **Dokumentation & Prüfung:** Hardware-Hinweise (FXPak Pro, SD2SNES, Super Everdrive) in `apps/snes/README.md`, erweiterte Controller- und SRAM-Tests in `apps/snes/test/snes.test.ts`.
+
 **Brett & Blatt 16 – SNES-ROM, Stufe 5: Stichspiele und Schach (18.11.2026, #524, Vorhaben #515):** Sechs anspruchsvolle Klassiker im ROM (jetzt 31 Spiele gesamt):
 - `apps/snes/src/skat.c`: Skat für 3 Spieler (Seeger/Fabian-Zählung, Grand, Farbspiele, Null, Reizen gegen Mittelhand/Hinterhand, Skataufnahme und Drücken).
 - `schafkopf.c`: Schafkopf für 4 Spieler (Sauspiel/Rufspiel mit alter/blauer/runder Sau, Wenz, Farbsolo).

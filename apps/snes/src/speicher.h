@@ -8,7 +8,7 @@
 #include <snes.h>
 #include "spiel.h"
 
-#define SPEICHER_SPIELE 16
+#define SPEICHER_SPIELE 32
 
 enum { BILANZ_SIEG, BILANZ_REMIS, BILANZ_NIEDERLAGE };
 

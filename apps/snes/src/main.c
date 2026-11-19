@@ -11,7 +11,7 @@
 #include "spiel.h"
 #include "zufall.h"
 
-#define VERSION_TEXT "Version 0.5 · November 2026"
+#define VERSION_TEXT "Version 1.0 · November 2026"
 
 const Spiel *const spiele[SPIELE_ANZAHL] = {
   &spiel_tic_tac_toe, &spiel_vier, &spiel_reversi, &spiel_gomoku, &spiel_uttt,
@@ -95,11 +95,16 @@ static void fusszeile(const char *hinweis) {
   text_mitte(26, hinweis, PAL_GRAU);
 }
 
-/* Senkrechtes Menü mit Pfeil und Bildlauf bei vielen Einträgen. Gibt die Wahl zurück oder 0xff bei B. */
-static u8 menue(u8 x, u8 y, const char *const *eintraege, u8 anzahl, u8 wahl, u8 abstand) {
-  u8 i, oben = 0, neu_zeichnen = 1, fenster = 19;
+#define MENUE_LINKS 0xfd
+#define MENUE_RECHTS 0xfe
+#define MENUE_ZURUECK 0xff
+
+/* Senkrechtes Menü mit Pfeil, Bildlauf und L/R-Blättern. Gibt die Wahl zurück, oder MENUE_… */
+static u8 menue(u8 x, u8 y, const char *const *eintraege, u8 anzahl, u8 wahl, u8 abstand, u8 erlaubt_lr) {
+  u8 i, oben = 0, neu_zeichnen = 1, fenster = 18;
   u16 t;
   if (anzahl <= fenster) fenster = anzahl;
+  if (wahl >= anzahl) wahl = 0;
   if (wahl >= fenster) oben = wahl - fenster + 1;
   while (1) {
     if (wahl < oben) { oben = wahl; neu_zeichnen = 1; }
@@ -110,6 +115,15 @@ static u8 menue(u8 x, u8 y, const char *const *eintraege, u8 anzahl, u8 wahl, u8
         kachel(x, y + i * abstand, idx == wahl ? K_PFEIL : 0, PAL_GELB);
         flaeche_leeren(x + 2, y + i * abstand, 24, 1);
         text(x + 2, y + i * abstand, eintraege[idx], idx == wahl ? PAL_GELB : PAL_TEXT);
+      }
+      if (anzahl > fenster) {
+        u8 seite = (oben + fenster - 1) / fenster + 1;
+        u8 seiten = (anzahl + fenster - 1) / fenster;
+        flaeche_leeren(2, y + fenster, 28, 1);
+        text(11, y + fenster, "Seite", PAL_GRAU);
+        zahl(17, y + fenster, seite, 1, PAL_GRAU);
+        text(18, y + fenster, "/", PAL_GRAU);
+        zahl(19, y + fenster, seiten, 1, PAL_GRAU);
       }
       neu_zeichnen = 0;
     }
@@ -142,11 +156,44 @@ static u8 menue(u8 x, u8 y, const char *const *eintraege, u8 anzahl, u8 wahl, u8
         text(x + 2, y + (wahl - oben) * abstand, eintraege[wahl], PAL_GELB);
       }
     }
+    if ((t & KEY_R) && anzahl > fenster) {
+      if (oben + fenster < anzahl) {
+        oben += fenster;
+        if (oben + fenster > anzahl) oben = anzahl - fenster;
+        wahl = oben;
+        neu_zeichnen = 1;
+        klang_spielen(KLANG_KLICK);
+      } else if (wahl < anzahl - 1) {
+        wahl = anzahl - 1;
+        neu_zeichnen = 1;
+        klang_spielen(KLANG_KLICK);
+      }
+    }
+    if ((t & KEY_L) && anzahl > fenster) {
+      if (oben > 0) {
+        oben = oben > fenster ? oben - fenster : 0;
+        wahl = oben;
+        neu_zeichnen = 1;
+        klang_spielen(KLANG_KLICK);
+      } else if (wahl > 0) {
+        wahl = 0;
+        neu_zeichnen = 1;
+        klang_spielen(KLANG_KLICK);
+      }
+    }
+    if (erlaubt_lr && (t & KEY_LEFT)) {
+      klang_spielen(KLANG_KLICK);
+      return MENUE_LINKS;
+    }
+    if (erlaubt_lr && (t & KEY_RIGHT)) {
+      klang_spielen(KLANG_KLICK);
+      return MENUE_RECHTS;
+    }
     if (t & (KEY_A | KEY_START)) {
       klang_spielen(KLANG_KLICK);
       return wahl;
     }
-    if (t & KEY_B) return 0xff;
+    if (t & KEY_B) return MENUE_ZURUECK;
   }
 }
 
@@ -245,7 +292,7 @@ static void statistik(void) {
         klang_spielen(KLANG_KLICK);
         return;
       }
-      if (tasten & (KEY_LEFT | KEY_RIGHT | KEY_Y)) break;
+      if (tasten & (KEY_LEFT | KEY_RIGHT | KEY_L | KEY_R | KEY_Y)) break;
     }
     if (tasten & KEY_LEFT) {
       nr = nr == 0 ? SPIELE_ANZAHL - 1 : nr - 1;
@@ -254,6 +301,16 @@ static void statistik(void) {
     }
     if (tasten & KEY_RIGHT) {
       nr = nr == SPIELE_ANZAHL - 1 ? 0 : nr + 1;
+      klang_spielen(KLANG_KLICK);
+      continue;
+    }
+    if (tasten & KEY_L) {
+      nr = nr >= 5 ? nr - 5 : SPIELE_ANZAHL + nr - 5;
+      klang_spielen(KLANG_KLICK);
+      continue;
+    }
+    if (tasten & KEY_R) {
+      nr = (nr + 5) % SPIELE_ANZAHL;
       klang_spielen(KLANG_KLICK);
       continue;
     }
@@ -458,7 +515,7 @@ static u8 pause(void) {
   flaeche_leeren(7, 10, 18, 7);
   text_mitte(10, "Pause", PAL_GELB);
   tasten_loslassen();
-  wahl = menue(9, 12, EINTRAEGE, 2, 0, 2);
+  wahl = menue(9, 12, EINTRAEGE, 2, 0, 2, 0);
   tasten_loslassen();
   return wahl == 1;
 }
@@ -768,6 +825,18 @@ static void serie(u8 spiel_nr) {
 
 /* ------------------------------------------------------------------ Hauptmenü */
 
+/* Kategorien im Hauptmenü (entsprechen der Reihenfolge in spiele[]). */
+enum { KAT_ALLE, KAT_BRETT, KAT_FAMILIE, KAT_KARTEN, KAT_STICH, KAT_ANZAHL };
+static const char *const KAT_NAMEN[KAT_ANZAHL] = {
+  "Alle (31)",
+  "Brettspiele (7)",
+  "Würfel & Familie (8)",
+  "Kartenspiele (10)",
+  "Stich- & Denksport (6)"
+};
+static const u8 KAT_START[KAT_ANZAHL] = { 0, 0, 7, 15, 25 };
+static const u8 KAT_ENDE[KAT_ANZAHL] = { SPIELE_ANZAHL, 7, 15, 25, SPIELE_ANZAHL };
+
 /*
  * Der Startcode von PVSnesLib löscht nur den Variablenbereich der ersten Quelldatei. Darum setzt
  * jedes Modul seine Variablen ohne Startwert hier ausdrücklich.
@@ -792,32 +861,56 @@ static void variablen_start(void) {
 
 int main(void) {
   static const char *eintraege[SPIELE_ANZAHL + 2];
-  u8 wahl = 0, i;
+  static u8 eintrag_ziel[SPIELE_ANZAHL + 2];
+  u8 wahl = 0, kategorie = KAT_ALLE, anzahl, ziel, i;
   variablen_start();
-  for (i = 0; i < SPIELE_ANZAHL; i++) eintraege[i] = spiele[i]->name;
-  eintraege[SPIELE_ANZAHL] = "Statistik";
-  eintraege[SPIELE_ANZAHL + 1] = "Über Brett & Blatt 16";
   klang_start();
   bild_start();
   speicher_laden();
   titel();
   while (1) {
+    anzahl = 0;
+    for (i = KAT_START[kategorie]; i < KAT_ENDE[kategorie]; i++) {
+      eintraege[anzahl] = spiele[i]->name;
+      eintrag_ziel[anzahl] = i;
+      anzahl++;
+    }
+    eintraege[anzahl] = "Statistik";
+    eintrag_ziel[anzahl] = SPIELE_ANZAHL;
+    anzahl++;
+    eintraege[anzahl] = "Über Brett & Blatt 16";
+    eintrag_ziel[anzahl] = SPIELE_ANZAHL + 1;
+    anzahl++;
+    if (wahl >= anzahl) wahl = 0;
+
     kopfzeile("Brett & Blatt 16");
     tafel(1, 3, 30, 22);
-    fusszeile("✚ wählen · A bestätigen");
+    kachel(3, 4, Z_PFEIL_LINKS, PAL_GRAU);
+    text_mitte(4, KAT_NAMEN[kategorie], PAL_GELB);
+    kachel(28, 4, Z_PFEIL_RECHTS, PAL_GRAU);
+    fusszeile("✚ Wahl · L/R Seite · A los");
     tasten_loslassen();
-    // Bis zehn Einträge mit Leerzeile dazwischen, darüber dicht.
-    wahl = menue(4, 5, (const char *const *)eintraege, SPIELE_ANZAHL + 2, wahl, SPIELE_ANZAHL + 2 > 10 ? 1 : 2);
+    wahl = menue(4, 5, (const char *const *)eintraege, anzahl, wahl, 1, 1);
     tasten_loslassen();
-    if (wahl < SPIELE_ANZAHL) {
-      if (vorbereitung(wahl)) serie(wahl);
-    } else if (wahl == SPIELE_ANZAHL) {
-      statistik();
-    } else if (wahl == SPIELE_ANZAHL + 1) {
-      ueber();
-    } else {
+    if (wahl == MENUE_LINKS) {
+      kategorie = kategorie == 0 ? KAT_ANZAHL - 1 : kategorie - 1;
+      wahl = 0;
+    } else if (wahl == MENUE_RECHTS) {
+      kategorie = kategorie == KAT_ANZAHL - 1 ? 0 : kategorie + 1;
+      wahl = 0;
+    } else if (wahl == MENUE_ZURUECK) {
       titel();
       wahl = 0;
+      kategorie = KAT_ALLE;
+    } else {
+      ziel = eintrag_ziel[wahl];
+      if (ziel < SPIELE_ANZAHL) {
+        if (vorbereitung(ziel)) serie(ziel);
+      } else if (ziel == SPIELE_ANZAHL) {
+        statistik();
+      } else if (ziel == SPIELE_ANZAHL + 1) {
+        ueber();
+      }
     }
   }
   return 0;

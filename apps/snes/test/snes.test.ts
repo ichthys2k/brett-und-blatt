@@ -147,7 +147,7 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
     await emu?.beenden();
   });
 
-  it('Titel mit Umlauten, Startklang, Hauptmenü', async () => {
+  it('Titel mit Umlauten, Version 1.0, Startklang, Hauptmenü', async () => {
     await emu.run(150);
     // „Start drücken“ blinkt: bis zu 64 Bilder auf die sichtbare Phase warten.
     let blinkt = '';
@@ -158,16 +158,47 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
     await bildschirm('1-titel');
     expect(blinkt).toContain('Start drücken');
     expect(await zeile(12)).toContain('Freie Spielesammlung');
+    expect(await zeile(26)).toContain('Version 1.0');
     await emu.audio();
     await emu.druecke(0, KNOPF.START, 20);
     expect(await emu.audio()).toBeGreaterThan(1000);
     await emu.run(20);
     expect(await zeile(1)).toContain('Brett & Blatt 16');
+    expect(await zeile(4)).toContain('Alle (31)');
     expect(await zeile(5)).toContain('Tic-Tac-Toe');
+    expect(await zeile(23)).toContain('Seite 1/2');
     await bildschirm('2-hauptmenue');
   });
 
-  it('Partie zu zweit mit zwei Controllern: Kreuz gewinnt, Statistik im SRAM', async () => {
+  it('Hauptmenü: L/R blättert seitenweise, Links/Rechts wechselt Kategorien', async () => {
+    // Seitenweise blättern in „Alle (31)“
+    await emu.druecke(0, KNOPF.R, 10);
+    expect(await zeile(23)).toContain('Seite 2/2');
+    expect(await zeile(5)).toContain('Elf zuerst!');
+    await emu.druecke(0, KNOPF.L, 10);
+    expect(await zeile(23)).toContain('Seite 1/2');
+    expect(await zeile(5)).toContain('Tic-Tac-Toe');
+
+    // Kategorien-Filter durchschalten
+    await emu.druecke(0, KNOPF.RECHTS, 10);
+    expect(await zeile(4)).toContain('Brettspiele (7)');
+    expect(await zeile(5)).toContain('Tic-Tac-Toe');
+    await emu.druecke(0, KNOPF.RECHTS, 10);
+    expect(await zeile(4)).toContain('Würfel & Familie (8)');
+    expect(await zeile(5)).toContain('Teiler-Duell');
+    await emu.druecke(0, KNOPF.RECHTS, 10);
+    expect(await zeile(4)).toContain('Kartenspiele (10)');
+    expect(await zeile(5)).toContain('Elf zuerst!');
+    await emu.druecke(0, KNOPF.RECHTS, 10);
+    expect(await zeile(4)).toContain('Stich- & Denksport (6)');
+    expect(await zeile(5)).toContain('Skat');
+    // Zurück auf „Alle (31)“
+    await emu.druecke(0, KNOPF.RECHTS, 10);
+    expect(await zeile(4)).toContain('Alle (31)');
+    expect(await zeile(5)).toContain('Tic-Tac-Toe');
+  });
+
+  it('Partie zu zweit mit zwei Controllern: Kreuz gewinnt, Statistik im 32-Spiele-SRAM', async () => {
     await emu.druecke(0, KNOPF.A, 10); // Tic-Tac-Toe
     expect(await zeile(1)).toContain('Tic-Tac-Toe');
     // Von „Los geht's!“ hoch bis „Kreis“, dann fünfmal links: Bot mittel → Bot leicht → Controller 5 … 2.
@@ -199,14 +230,17 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
     expect(await zeile(3)).toContain('Kreuz gewinnt!');
     await bildschirm('5-sieg');
 
-    // SRAM: Kennung „BB16“, Version 1, dann Partien und Partien zu zweit von Tic-Tac-Toe.
-    const sram = await emu.speek(0, 10);
+    // SRAM (712 Bytes): Kennung „BB16“, Version 2, 32 × 22 Bytes Statistik, Prüfsumme.
+    const sram = await emu.speek(0, 712);
     expect(String.fromCharCode(...sram.slice(0, 4))).toBe('BB16');
+    expect(sram[4]).toBe(2);
     expect(sram[6]! | (sram[7]! << 8)).toBe(1);
     expect(sram[8]! | (sram[9]! << 8)).toBe(1);
+    // Alle übrigen 31 Plätze (Index 1..31, inkl. Spiele 16..30) sind nach Kaltstart sauber 0.
+    expect(sram.slice(6 + 22, 6 + 32 * 22).every((b) => b === 0)).toBe(true);
   });
 
-  it('Statistik bleibt nach einem Neustart erhalten', async () => {
+  it('Statistik bleibt nach einem Neustart erhalten und deckt alle 31 Spiele ab', async () => {
     await emu.reset();
     await emu.run(150);
     await emu.druecke(0, KNOPF.START, 20);
@@ -220,6 +254,10 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
     expect(await zeile(8)).toMatch(/Partien gesamt\s+1$/);
     expect(await zeile(9)).toMatch(/nur Menschen\s+1$/);
     await bildschirm('6-statistik');
+    // Einmal links springt zum 31. Spiel (Go, Index 30) – im erweiterten 32-Spiele-SRAM.
+    await emu.druecke(0, KNOPF.LINKS, 10);
+    expect(await zeile(5)).toContain('Go');
+    expect(await zeile(8)).toMatch(/Partien gesamt\s+0$/);
   });
 });
 
