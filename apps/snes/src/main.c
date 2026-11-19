@@ -580,6 +580,7 @@ static void wechselbildschirm(const Spiel *spiel, u8 platz, u8 port) {
 static u8 pause(void) {
   const char *eintraege[4];
   u8 wahl = 0, aktiv;
+  bild_sprites_leeren();
   while (1) {
     aktiv = musik_aktiv();
     eintraege[0] = "Weiter";
@@ -735,7 +736,8 @@ static u8 eine_partie(u8 spiel_nr, u8 n, u8 nummer, u8 anzahl, const u8 *siege, 
   cursor_x = spiel->cursor_x;
   cursor_y = spiel->cursor_y;
   if (spiel->feld_an(spielstand, cursor_x, cursor_y) == FELD_KEIN) cursor_bewegen(spiel, 1, 0);
-  brett_farben(spiel->brett_farben);
+  if (spiel->grafik_laden) spiel->grafik_laden();
+  else brett_farben(spiel->brett_farben);
   partie_bild(spiel, nummer, anzahl, siege, n);
   for (i = 0; i < FELDER_MAX; i++) markierung[i] = 0;
   for (platz = 0; platz < n; platz++)
@@ -748,13 +750,16 @@ static u8 eine_partie(u8 spiel_nr, u8 n, u8 nummer, u8 anzahl, const u8 *siege, 
     if (IST_BOT(t)) {
       for (i = 0; i < FELDER_MAX; i++) markierung[i] = 0;
       spiel->zeichnen(spielstand, markierung, 0);
-      platz_text(spiel, 3, platz, " überlegt …");
-      fusszeile("Start: Pause");
+      if (!spiel->grafik_laden) {
+        platz_text(spiel, 3, platz, " überlegt …");
+        fusszeile("Start: Pause");
+      }
       // Kurz warten, damit man den Zug des Bots mitverfolgen kann.
       for (i = 0; i < 24; i++) {
         bild_warten();
         if (tasten_alle() & KEY_START) {
           if (pause()) return 0xff;
+          spiel->zeichnen(spielstand, markierung, 0);
         }
       }
       spiel->bot(spielstand, BOT_STUFE(t), &partie_zufall, &zug);
@@ -762,15 +767,19 @@ static u8 eine_partie(u8 spiel_nr, u8 n, u8 nummer, u8 anzahl, const u8 *siege, 
       port = t;
       // Verdeckte Informationen am selben Fernseher: vor jedem Wechsel zwischen Menschen wegschauen lassen.
       if (spiel->verdeckt && menschen > 1 && platz != zuletzt) {
+        bild_sprites_leeren();
         wechselbildschirm(spiel, platz, port);
         partie_bild(spiel, nummer, anzahl, siege, n);
       }
       zuletzt = platz;
-      platz_text(spiel, 3, platz, dran(port));
-      fusszeile("A: wählen · Start: Pause");
+      if (!spiel->grafik_laden) {
+        platz_text(spiel, 3, platz, dran(port));
+        fusszeile("A: wählen · Start: Pause");
+      }
       if (!mensch_waehlt(spiel, port, &zug, nummer, anzahl, siege, platz, n)) return 0xff;
     }
     if (!zug_erlaubt(spiel, spielstand, &zug)) continue;
+    if (spiel->animieren) spiel->animieren(spielstand, &zug);
     klang_spielen(spiel->ziehen(spielstand, &zug));
     for (i = 0; i < FELDER_MAX; i++) markierung[i] = 0;
     spiel->zeichnen(spielstand, markierung, 0);
@@ -866,7 +875,11 @@ static void serie(u8 spiel_nr) {
     // Platz p spielt Teilnehmer (p + versatz) mod n.
     for (p = 0; p < n; p++) platz_teilnehmer[p] = teilnehmer[(p + versatz) % n];
     ergebnis = eine_partie(spiel_nr, n, nummer, anzahl, siege, &sieger);
-    if (ergebnis == 0xff) return;
+    if (ergebnis == 0xff) {
+      bild_sprites_leeren();
+      bild_kacheln_standard();
+      return;
+    }
     statistik_eintragen(spiel_nr, n, ergebnis, sieger);
     mensch_gewinnt = menschen = 0;
     for (p = 0; p < n; p++) {
@@ -894,7 +907,11 @@ static void serie(u8 spiel_nr) {
       bild_warten();
       t = tasten_alle();
       if (t & (KEY_A | KEY_START)) break;
-      if (t & KEY_B) return;
+      if (t & KEY_B) {
+        bild_sprites_leeren();
+        bild_kacheln_standard();
+        return;
+      }
     }
     klang_spielen(KLANG_KLICK);
     if (letzte) {

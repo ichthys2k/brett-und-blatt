@@ -7,8 +7,10 @@
 #include <string.h>
 #include "spiel.h"
 #include "bild.h"
+#include "eingabe.h"
 #include "klang.h"
 #include "../res/grafik.h"
+#include "../res/schach_grafik.h"
 
 #define KEIN 0xff
 
@@ -648,35 +650,311 @@ static u8 chess_felder(const u8 *stand, const Zug *zug, u8 *f) {
   return 2;
 }
 
-static const char *const FIGUREN_SYM[] = {
-  ".", "B", "S", "L", "T", "D", "K", "b", "s", "l", "t", "d", "k"
-};
+/* ==================================================================
+ * Battle-Chess-Darstellung (24×24-Felder, 32×32-OAM-Sprites & Kampf)
+ * ================================================================== */
+
+extern char schach_bg, schach_bg_ende, schach_bg_pal;
+extern char schach_spr, schach_spr_ende, schach_spr_pal, schach_spr_pal_ende;
+
+#define BRETT_X 2
+#define BRETT_Y 2
+
+static void schach_block_unten(u8 x, u8 y, u16 basis) {
+  u8 i, j;
+  for (j = 0; j < 3; j++)
+    for (i = 0; i < 3; i++)
+      kachel_unten(x + i, y + j, basis + j * 3 + i, PAL_BRETT);
+}
+
+static void schach_block_oben(u8 x, u8 y, u16 basis) {
+  u8 i, j;
+  for (j = 0; j < 3; j++)
+    for (i = 0; i < 3; i++)
+      kachel(x + i, y + j, basis + j * 3 + i, PAL_BRETT);
+}
+
+static u16 figur_sprite(u8 p, u8 frame) {
+  u8 typ = p <= W_KOENIG ? (p - 1) : (p - 7);
+  return ((u16)typ << 6) + ((u16)frame << 2);
+}
+
+static u8 figur_pal(u8 p) {
+  return IST_WEISS(p) ? SCHACH_PAL_WEISS : SCHACH_PAL_SCHWARZ;
+}
+
+static s16 feld_px(u8 f) {
+  return (s16)(BRETT_X * 8 + f * 24 - 4);
+}
+
+static s16 feld_py(u8 r) {
+  return (s16)(BRETT_Y * 8 + r * 24 - 8);
+}
+
+static void chess_grafik_laden(void) {
+  bild_kacheln_laden((const u8 *)&schach_bg, (u16)(&schach_bg_ende - &schach_bg));
+  bild_bg_paletten((const u8 *)&schach_bg_pal, PAL_BRETT, 1);
+  bild_sprites_laden(
+    (const u8 *)&schach_spr,
+    (u16)(&schach_spr_ende - &schach_spr),
+    (const u8 *)&schach_spr_pal,
+    (u16)(&schach_spr_pal_ende - &schach_spr_pal)
+  );
+}
+
+/* Zeichnet Brett, Rahmen, Koordinaten und alle Figuren (außer `verstecke1`/`verstecke2`). */
+static void chess_brett_und_figuren(const ChessState *s, const u8 *markierung, u8 aktiv, u8 verstecke1, u8 verstecke2, u8 oam_start) {
+  u8 r, f, sq, p, bx, by, m, slot;
+  s16 px, py;
+
+  bild_leeren();
+  // Kompakte Kopfzeile (Zeile 0)
+  text(2, 0, "Schach", PAL_GELB);
+  text(10, 0, s->turn == 0 ? "Weiß" : "Schwarz", s->turn == 0 ? PAL_TEXT : PAL_BLAU);
+  if (s->in_check) text(19, 0, "SCHACH!", PAL_ROT);
+
+  // Dezenter Holzrahmen um das 24×24-Brett
+  for (f = 0; f < 26; f++) {
+    kachel_unten(BRETT_X - 1 + f, BRETT_Y - 1, SCHACH_BG_RAHMEN, PAL_BRETT);
+    kachel_unten(BRETT_X - 1 + f, BRETT_Y + 24, SCHACH_BG_RAHMEN, PAL_BRETT);
+  }
+  for (r = 0; r < 24; r++) {
+    kachel_unten(BRETT_X - 1, BRETT_Y + r, SCHACH_BG_RAHMEN, PAL_BRETT);
+    kachel_unten(BRETT_X + 24, BRETT_Y + r, SCHACH_BG_RAHMEN, PAL_BRETT);
+  }
+
+  // 8×8 Holzfelder (je 3×3 Kacheln = 24×24 Pixel) + Markierungs-Overlays
+  for (r = 0; r < 8; r++) {
+    by = BRETT_Y + r * 3;
+    // Zeilennummer 8..1 links
+    kachel(0, by + 1, '8' - r, PAL_GRAU);
+    for (f = 0; f < 8; f++) {
+      bx = BRETT_X + f * 3;
+      sq = SQ(7 - r, f);
+      p = s->board[sq];
+      schach_block_unten(bx, by, ((r + f) & 1) == 0 ? SCHACH_BG_HELL : SCHACH_BG_DUNKEL);
+
+      if (markierung) {
+        m = markierung[sq];
+        if (m & MARK_ZIEL) {
+          if (p != LEER) {
+            u8 feind = s->turn == 0 ? (p >= S_BAUER) : (p <= W_KOENIG);
+            if (feind) schach_block_oben(bx, by, SCHACH_BG_SCHLAG);
+          } else {
+            kachel(bx + 1, by + 1, SCHACH_BG_ZIELPUNKT, PAL_BRETT);
+          }
+        }
+        if (m & MARK_GEWAEHLT) schach_block_oben(bx, by, SCHACH_BG_GEWAEHLT);
+        if (aktiv && (m & MARK_CURSOR)) schach_block_oben(bx, by, SCHACH_BG_CURSOR);
+      }
+    }
+  }
+  // Spaltenbuchstaben A..H unten
+  for (f = 0; f < 8; f++) kachel(BRETT_X + f * 3 + 1, 27, 'A' + f, PAL_GRAU);
+
+  // Rechte Info-Spalte (Spalten 27..31)
+  text(27, 2, "Zug", PAL_TEXT);
+  zahl(27, 3, (u16)(s->fullmove), 3, PAL_GELB);
+  text(27, 6, s->turn == 0 ? "Weiß" : "Schw.", s->turn == 0 ? PAL_TEXT : PAL_BLAU);
+  text(27, 22, "A Zug", PAL_GRAU);
+  text(27, 24, "Start", PAL_GRAU);
+  text(27, 25, "Pause", PAL_GRAU);
+
+  // Alle Figuren als 32×32-OAM-Sprites von unten nach oben (2,5D-Tiefenordnung!)
+  bild_sprites_leeren();
+  slot = oam_start;
+  for (r = 7; r < 8; r--) {
+    for (f = 0; f < 8; f++) {
+      sq = SQ(7 - r, f);
+      if (sq == verstecke1 || sq == verstecke2) continue;
+      p = s->board[sq];
+      if (p == LEER) continue;
+      px = feld_px(f);
+      py = feld_py(r);
+      oamSet(slot * 4, (u16)px, (u16)py, 3, IST_SCHWARZ(p) ? 1 : 0, 0, figur_sprite(p, 0), figur_pal(p));
+      oamSetEx(slot * 4, OBJ_LARGE, OBJ_SHOW);
+      slot++;
+      if (slot >= 120) return;
+    }
+  }
+}
 
 static void chess_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
+  chess_brett_und_figuren((const ChessState *)stand, markierung, aktiv, KEIN, KEIN, 0);
+}
+
+/* Prüft während einer Animation, ob der Spieler mit A oder B überspringen möchte. */
+static u8 anim_warten(void) {
+  u16 t;
+  bild_warten();
+  t = tasten_alle();
+  if (t & (KEY_A | KEY_B)) return 1;
+  return 0;
+}
+
+/* Battle-Chess-Animation: weiches Laufen/Springen + Kampfsequenz direkt auf dem Schachfeld! */
+static void chess_animieren(const u8 *stand, const Zug *zug) {
   const ChessState *s = (const ChessState *)stand;
-  flaeche_leeren(0, 0, 32, 28);
+  u8 from = zug->b[0], to = zug->b[1];
+  u8 angreifer = s->board[from];
+  u8 opfer = s->board[to];
+  u8 opfer_sq = to;
+  u8 typ_ang, ist_springer, ist_magie, ist_schwer;
+  u8 fr, fc, tr, tc, hflip_ang, hflip_def;
+  s16 sx, sy, tx, ty, ax, ay, dx, dy, gx, gy;
+  u8 schritte, i, f_ang, f_eff;
+  u16 eff_spr;
 
-  text(2, 1, "Schach", PAL_TEXT);
-  if (s->in_check) text(12, 1, "Schach!", PAL_ROT);
+  if (angreifer == LEER) return;
+  // En Passant: Bauer schlägt diagonal auf leeres Feld
+  if (opfer == LEER && (angreifer == W_BAUER || angreifer == S_BAUER) && COL(from) != COL(to)) {
+    opfer_sq = SQ(ROW(from), COL(to));
+    opfer = s->board[opfer_sq];
+  }
 
-  u8 r, f;
-  for (r = 0; r < 8; r++) {
-    for (f = 0; f < 8; f++) {
-      u8 sq = SQ(7 - r, f);
-      u8 p = s->board[sq];
-      u8 pal = IST_WEISS(p) ? PAL_GELB : (p != LEER ? PAL_BLAU : PAL_GRAU);
-      text(8 + f * 2, 4 + r * 2, FIGUREN_SYM[p], pal);
+  fr = 7 - ROW(from); fc = COL(from);
+  tr = 7 - ROW(to);   tc = COL(to);
+  sx = feld_px(fc);   sy = feld_py(fr);
+  tx = feld_px(tc);   ty = feld_py(tr);
+
+  typ_ang = angreifer <= W_KOENIG ? (angreifer - 1) : (angreifer - 7);
+  ist_springer = (typ_ang == 1);
+  ist_magie = (typ_ang == 2 || typ_ang == 4); /* Läufer oder Dame */
+  ist_schwer = (typ_ang == 3 || typ_ang == 5); /* Turm oder König */
+
+  // Brett ohne Angreifer (und bei Kampf ohne Verteidiger) zeichnen; Slots 0..2 frei für Animation
+  chess_brett_und_figuren(s, 0, 0, from, opfer != LEER ? opfer_sq : KEIN, 3);
+
+  hflip_ang = (tx < sx) ? 1 : (tx > sx ? 0 : (IST_SCHWARZ(angreifer) ? 1 : 0));
+  hflip_def = hflip_ang ? 0 : 1;
+
+  // Verteidiger auf Slot 2 positionieren (falls Schlagzug)
+  dx = feld_px(COL(opfer_sq));
+  dy = feld_py(7 - ROW(opfer_sq));
+  if (opfer != LEER) {
+    oamSet(8, (u16)dx, (u16)dy, 3, hflip_def, 0, figur_sprite(opfer, 0), figur_pal(opfer));
+    oamSetEx(8, OBJ_LARGE, OBJ_SHOW);
+  }
+
+  // Zielpunkt für Laufphase: bei Kampf 14 Pixel vor dem Verteidiger stehen bleiben!
+  gx = tx;
+  gy = ty;
+  if (opfer != LEER) {
+    gx = hflip_ang ? (dx + 14) : (dx - 14);
+    gy = dy;
+  }
+
+  // --- Phase 1: Lauf / Galopp über das Brett ---
+  schritte = ist_springer ? 20 : 18;
+  for (i = 0; i <= schritte; i++) {
+    ax = sx + ((gx - sx) * (s16)i) / (s16)schritte;
+    ay = sy + ((gy - sy) * (s16)i) / (s16)schritte;
+    if (ist_springer) {
+      // Parabel-Sprungbogen über andere Figuren hinweg
+      s16 bogen = (s16)i * (s16)(schritte - i);
+      ay -= bogen / 6;
     }
+    f_ang = ((i >> 2) & 1);
+    oamSet(4, (u16)ax, (u16)ay, 3, hflip_ang, 0, figur_sprite(angreifer, f_ang), figur_pal(angreifer));
+    oamSetEx(4, OBJ_LARGE, OBJ_SHOW);
+    if (i == 6 || i == 14) klang_spielen(KLANG_KLICK);
+    if (anim_warten()) { bild_wackeln(0, 0); return; }
+  }
+
+  // Kein Schlagzug -> fertig!
+  if (opfer == LEER) return;
+
+  // --- Phase 2: Battle-Chess-Duell direkt auf dem Schachfeld! ---
+  // A) Konfrontation (8 Bilder)
+  oamSet(4, (u16)gx, (u16)gy, 3, hflip_ang, 0, figur_sprite(angreifer, 0), figur_pal(angreifer));
+  oamSet(8, (u16)dx, (u16)dy, 3, hflip_def, 0, figur_sprite(opfer, 0), figur_pal(opfer));
+  for (i = 0; i < 8; i++) {
+    if (anim_warten()) { bild_wackeln(0, 0); return; }
+  }
+
+  // B) Erster Schlagabtausch mit Funken / Magieblitz (16 Bilder)
+  klang_spielen(KLANG_SETZEN);
+  for (i = 0; i < 16; i++) {
+    s16 stoss = (i < 8) ? (hflip_ang ? -5 : 5) : 0;
+    oamSet(4, (u16)(gx + stoss), (u16)gy, 3, hflip_ang, 0, figur_sprite(angreifer, i < 10 ? 2 : 0), figur_pal(angreifer));
+    // Verteidiger pariert kurz
+    oamSet(8, (u16)dx, (u16)dy, 3, hflip_def, 0, figur_sprite(opfer, (i >= 4 && i < 12) ? 2 : 0), figur_pal(opfer));
+    if (i >= 3 && i < 11) {
+      eff_spr = ist_magie ? (i < 7 ? SCHACH_SPR_MAGIE_A : SCHACH_SPR_MAGIE_B) : (i < 7 ? SCHACH_SPR_FUNKE_A : SCHACH_SPR_FUNKE_B);
+      oamSet(0, (u16)((gx + dx) / 2 + 8), (u16)(dy + 6), 3, 0, 0, eff_spr, SCHACH_PAL_EFFEKT);
+      oamSetEx(0, OBJ_SMALL, OBJ_SHOW);
+    } else {
+      oamSetEx(0, OBJ_SMALL, OBJ_HIDE);
+    }
+    if (anim_warten()) { bild_wackeln(0, 0); return; }
+  }
+
+  // C) Entscheidungsschlag + Treffer-Blitz + Screen-Shake! (18 Bilder)
+  klang_spielen(ist_schwer ? KLANG_WUERFELN : KLANG_SETZEN);
+  for (i = 0; i < 18; i++) {
+    s16 stoss = (i < 10) ? (hflip_ang ? -7 : 7) : 0;
+    u8 def_pal = (i >= 2 && i < 8 && (i & 1)) ? SCHACH_PAL_TREFFER : figur_pal(opfer);
+    s16 def_rueck = (i >= 2 && i < 10) ? (hflip_ang ? -3 : 3) : 0;
+    oamSet(4, (u16)(gx + stoss), (u16)gy, 3, hflip_ang, 0, figur_sprite(angreifer, i < 12 ? 2 : 0), figur_pal(angreifer));
+    oamSet(8, (u16)(dx + def_rueck), (u16)dy, 3, hflip_def, 0, figur_sprite(opfer, i < 10 ? 0 : 3), def_pal);
+
+    if (i >= 2 && i < 14) {
+      if (ist_magie) eff_spr = (i & 2) ? SCHACH_SPR_MAGIE_B : SCHACH_SPR_MAGIE_A;
+      else if (ist_schwer) eff_spr = (i & 2) ? SCHACH_SPR_STAUB_B : SCHACH_SPR_STAUB_A;
+      else eff_spr = (i & 2) ? SCHACH_SPR_FUNKE_B : SCHACH_SPR_FUNKE_A;
+      oamSet(0, (u16)(dx + 8), (u16)(dy + 8), 3, 0, 0, eff_spr, SCHACH_PAL_EFFEKT);
+      oamSetEx(0, OBJ_SMALL, OBJ_SHOW);
+    } else {
+      oamSetEx(0, OBJ_SMALL, OBJ_HIDE);
+    }
+
+    // Bildschirm-Wackeln beim Einschlag
+    if (i >= 2 && i < 8) {
+      s8 w = ist_schwer ? 3 : 2;
+      bild_wackeln((i & 1) ? w : -w, (i & 2) ? 1 : -1);
+    } else {
+      bild_wackeln(0, 0);
+    }
+    if (anim_warten()) { bild_wackeln(0, 0); return; }
+  }
+  bild_wackeln(0, 0);
+
+  // D) Sturz & Auflösen des Verteidigers + Staubwolke (16 Bilder)
+  for (i = 0; i < 16; i++) {
+    oamSet(4, (u16)gx, (u16)gy, 3, hflip_ang, 0, figur_sprite(angreifer, 0), figur_pal(angreifer));
+    if (i < 12 && ((i < 6) || (i & 1))) {
+      oamSet(8, (u16)dx, (u16)dy, 3, hflip_def, 0, figur_sprite(opfer, 3), figur_pal(opfer));
+      oamSetEx(8, OBJ_LARGE, OBJ_SHOW);
+    } else {
+      oamSetEx(8, OBJ_LARGE, OBJ_HIDE);
+    }
+    if (i < 10) {
+      f_eff = (i < 5) ? SCHACH_SPR_STAUB_A : SCHACH_SPR_STAUB_B;
+      oamSet(0, (u16)(dx + 8), (u16)(dy + 12), 3, 0, 0, f_eff, SCHACH_PAL_EFFEKT);
+      oamSetEx(0, OBJ_SMALL, OBJ_SHOW);
+    } else {
+      oamSetEx(0, OBJ_SMALL, OBJ_HIDE);
+    }
+    if (anim_warten()) return;
+  }
+
+  // E) Sieger rückt triumphierend auf das eroberte Feld ein (8 Bilder)
+  for (i = 0; i <= 8; i++) {
+    ax = gx + ((tx - gx) * (s16)i) / 8;
+    ay = gy + ((ty - gy) * (s16)i) / 8;
+    oamSet(4, (u16)ax, (u16)ay, 3, hflip_ang, 0, figur_sprite(angreifer, (i >> 2) & 1), figur_pal(angreifer));
+    if (anim_warten()) return;
   }
 }
 
 const Spiel spiel_chess = {
   "Schach",
   (const char *const[]){
-    "Klassisches Schach für 2 Spieler.",
+    "Battle Chess für 2 Spieler.",
     "",
     "Weiß beginnt. Matt, Patt,",
-    "Rochaden, En Passant und Bauernumwandlung.",
+    "Rochaden, En Passant und",
+    "animierte Kämpfe auf dem Brett.",
     0
   },
   "A Auswählen / Ziehen",
@@ -697,6 +975,8 @@ const Spiel spiel_chess = {
   chess_feld_an,
   chess_felder,
   chess_zeichnen,
-  4, 4,
-  0, 0, 0
+  4, 6,
+  0, 0, 0,
+  chess_grafik_laden,
+  chess_animieren
 };

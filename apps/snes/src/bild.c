@@ -5,6 +5,8 @@
 extern char kacheln_a, kacheln_a_ende, kacheln_b, kacheln_b_ende, farben, karten, spielfarben;
 
 #define VRAM_KACHELN 0x0000
+#define VRAM_KACHELN_SPIEL 0x1000 /* ab Kachel 0x100 (256): 768 Kacheln = 24 KB für das aktive Spiel */
+#define VRAM_OBJ 0x4000           /* 16 KB = 512 4bpp-Kacheln für OAM-Hardware-Sprites */
 #define VRAM_KARTE1 0x6000
 #define VRAM_KARTE2 0x6400
 
@@ -13,6 +15,7 @@ u16 karte2[BILD_B * 32];
 u8 karte1_neu;
 u8 karte2_neu;
 static u16 farben_neu; /* 0 = nichts, sonst Adresse in spielfarben + 1 */
+static u8 sonder_kacheln;
 
 #define EINTRAG(nr, pal) ((nr) | ((u16)(pal) << 10))
 
@@ -22,6 +25,9 @@ void bild_start(void) {
   dmaCopyVram((u8 *)&kacheln_a, VRAM_KACHELN, (u16)(&kacheln_a_ende - &kacheln_a));
   dmaCopyVram((u8 *)&kacheln_b, VRAM_KACHELN + 512 * 16, (u16)(&kacheln_b_ende - &kacheln_b));
   dmaCopyCGram((u8 *)&farben, 0, 256);
+  oamInit();
+  oamInitGfxAttr(VRAM_OBJ, OBJ_SIZE16_L32);
+  oamClear(0, 0);
   bgSetGfxPtr(0, VRAM_KACHELN);
   bgSetGfxPtr(1, VRAM_KACHELN);
   bgSetMapPtr(0, VRAM_KARTE1, SC_32x32);
@@ -34,6 +40,7 @@ void bild_start(void) {
   karte1_neu = 0;
   karte2_neu = 0;
   farben_neu = 0;
+  sonder_kacheln = 0;
   setScreenOn();
 }
 
@@ -76,6 +83,11 @@ void kachel(u8 x, u8 y, u16 nr, u8 pal) {
   karte1_neu = 1;
 }
 
+void kachel_unten(u8 x, u8 y, u16 nr, u8 pal) {
+  karte2[(u16)y * 32 + x] = EINTRAG(nr, pal);
+  karte2_neu = 1;
+}
+
 void karte(u8 x, u8 y, u16 adresse, u8 b, u8 h, u8 pal) {
   const u8 *k = (const u8 *)(&karten + adresse);
   u8 i, j;
@@ -93,6 +105,50 @@ void karte(u8 x, u8 y, u16 adresse, u8 b, u8 h, u8 pal) {
 
 void brett_farben(u16 adresse) {
   farben_neu = adresse + 1;
+}
+
+void bild_kacheln_laden(const u8 *daten, u16 laenge) {
+  WaitForVBlank();
+  setScreenOff();
+  dmaCopyVram((u8 *)daten, VRAM_KACHELN_SPIEL, laenge);
+  sonder_kacheln = 1;
+  setScreenOn();
+}
+
+void bild_kacheln_standard(void) {
+  if (!sonder_kacheln) return;
+  WaitForVBlank();
+  setScreenOff();
+  dmaCopyVram((u8 *)&kacheln_a, VRAM_KACHELN, (u16)(&kacheln_a_ende - &kacheln_a));
+  dmaCopyVram((u8 *)&kacheln_b, VRAM_KACHELN + 512 * 16, (u16)(&kacheln_b_ende - &kacheln_b));
+  dmaCopyCGram((u8 *)&farben, 0, 256);
+  oamClear(0, 0);
+  sonder_kacheln = 0;
+  setScreenOn();
+}
+
+void bild_bg_paletten(const u8 *pal, u8 start_pal, u8 anzahl) {
+  WaitForVBlank();
+  dmaCopyCGram((u8 *)pal, (u16)start_pal * 16, (u16)anzahl * 32);
+}
+
+void bild_sprites_laden(const u8 *daten, u16 laenge, const u8 *pal, u16 pal_laenge) {
+  WaitForVBlank();
+  setScreenOff();
+  oamInitGfxAttr(VRAM_OBJ, OBJ_SIZE16_L32);
+  dmaCopyVram((u8 *)daten, VRAM_OBJ, laenge);
+  dmaCopyCGram((u8 *)pal, 128, pal_laenge);
+  oamClear(0, 0);
+  setScreenOn();
+}
+
+void bild_sprites_leeren(void) {
+  oamClear(0, 0);
+}
+
+void bild_wackeln(s8 dx, s8 dy) {
+  bgSetScroll(0, (u16)(s16)dx, (u16)(s16)dy);
+  bgSetScroll(1, (u16)(s16)dx, (u16)(s16)dy);
 }
 
 void flaeche_leeren(u8 x, u8 y, u8 b, u8 h) {
