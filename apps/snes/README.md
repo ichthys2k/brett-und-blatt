@@ -51,13 +51,14 @@ Die Prüfungen:
 | `src/karten.c`, `karten.h` | Gemeinsamer Kartenbaustein: Kartensymbole, Werte, Farben, Ziehen und Stapel |
 | `src/tic_tac_toe.c`, `vier.c`, `reversi.c`, `gomoku.c`, `uttt.c`, `muehle.c`, `dame.c`, `teiler.c`, `kniffel.c`, `maexle.c`, `paare.c`, `ludo.c`, `domino.c`, `mauer.c`, `zielzahl.c` | Regeln, Bot und Darstellung der Brett- und Familienspiele |
 | `src/elevens.c`, `solitaire.c`, `mau_mau.c`, `uno.c`, `peter.c`, `quartett.c`, `president.c`, `speed.c`, `ligretto.c`, `poker.c` | Regeln, Bot und Darstellung der Kartenspiele |
-| `src/bild.c` | Zwei Hintergrundebenen, Text in UTF-8 mit Umlauten, Tafeln, Übertragung im Bildwechsel |
+| `src/bild.c` | Zwei Hintergrundebenen, dynamisches Nachladen von Spiel-Kacheln (`0x100..0x3FF`) und OAM-Hardware-Sprites (`VRAM_OBJ = 0x4000`), Bildschirm-Wackeln, UTF-8-Text, Tafeln |
 | `src/eingabe.c` | Knöpfe mit Wiederholung des Steuerkreuzes |
 | `src/zufall.c` | cyrb128 und sfc32 wie in der Web-App |
 | `src/speicher.c` | Statistik im SRAM mit Kennung und Prüfsumme |
 | `src/klang.c` | Klangeffekte (7 BRR-Samples) und 20 Hintergrund-Soundtracks in 4 Stimmungen über SNESMod |
 | `src/pruef.c` | Prüfmodus: Postfach im Arbeitsspeicher für die Tests |
 | `werkzeuge/grafik.mjs` | Erzeugt Schrift, Rahmen, Filz, Spielbrett und Titel als Kacheln aus Formeln |
+| `werkzeuge/schach_grafik.mjs` | Erzeugt das 24×24-Holzbrett und 6 pixelanimierte 32×32-Battle-Chess-Figuren (× 4 Posen) plus Kampfeffekte |
 | `werkzeuge/klang.mjs` | Erzeugt die Klangeffekte aus Formeln |
 | `werkzeuge/musik.mjs` | Erzeugt 20 mehrstimmige Impulse-Tracker-Soundtracks (`.it`) in 4 Stimmungen (Denkraum, Kartentisch, Patience, Spielabend) |
 | `werkzeuge/schrift8x8.mjs` | 8×8-Glyphen aus font8x8 (gemeinfrei) |

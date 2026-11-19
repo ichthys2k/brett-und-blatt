@@ -45,3 +45,20 @@ klang_karte:
 .incbin "res/karte.brr"
 klang_karte_ende:
 .ends
+
+.section ".grafik_schach" superfree
+schach_bg:
+.incbin "res/schach_bg.bin"
+schach_bg_ende:
+schach_bg_pal:
+.incbin "res/schach_bg_pal.bin"
+schach_spr_pal:
+.incbin "res/schach_spr_pal.bin"
+schach_spr_pal_ende:
+.ends
+
+.section ".grafik_schach_spr" superfree
+schach_spr:
+.incbin "res/schach_spr.bin"
+schach_spr_ende:
+.ends

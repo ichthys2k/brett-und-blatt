@@ -113,6 +113,10 @@ typedef struct {
    * steht – etwa eine selbst ausgerechnete Rechenmauer. zug_erlaubt fragt es nach den Listen.
    */
   u8 (*erlaubt)(const u8 *stand, const Zug *zug);
+  /** Optional: lädt spielspezifische BG-Kacheln (ab 0x100) und OAM-Sprites beim Partiebeginn. */
+  void (*grafik_laden)(void);
+  /** Optional: animiert einen Zug unmittelbar vor spiel->ziehen() (läuft nie im Prüfmodus). */
+  void (*animieren)(const u8 *stand, const Zug *zug);
 } Spiel;
 
 extern const Spiel spiel_tic_tac_toe;

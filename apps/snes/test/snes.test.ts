@@ -296,6 +296,56 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
     expect(await zeile(21)).toContain('Stille');
     await emu.druecke(0, KNOPF.B, 10);
   });
+
+  it('Battle Chess: großes 24×24-Brett, Zug- und Schlagkampf-Animation, saubere Rückkehr ins Menü', async () => {
+    // Im Hauptmenü auf „Stich- & Denksport“ (4× Rechts) → Schach (4× Runter).
+    for (let i = 0; i < 4; i++) await emu.druecke(0, KNOPF.RECHTS, 10);
+    for (let i = 0; i < 4; i++) await emu.druecke(0, KNOPF.RUNTER, 10);
+    await emu.druecke(0, KNOPF.A, 15);
+    expect(await zeile(1)).toContain('Schach');
+    // Schwarz auf Controller 2 umstellen, damit wir einen direkten Schlagkampf spielen können.
+    for (let i = 0; i < 4; i++) await emu.druecke(0, KNOPF.HOCH);
+    for (let i = 0; i < 5; i++) await emu.druecke(0, KNOPF.LINKS);
+    await emu.run(10);
+    await emu.druecke(0, KNOPF.START, 30);
+    expect(await zeile(0)).toContain('Schach');
+    expect(await zeile(0)).toContain('Weiß');
+    await bildschirm('8-battle-chess-start');
+
+    // Weiß: e2-e4
+    await emu.druecke(0, KNOPF.A, 15);
+    await emu.druecke(0, KNOPF.HOCH, 10);
+    await emu.druecke(0, KNOPF.HOCH, 10);
+    await emu.druecke(0, KNOPF.A, 80);
+    expect(await zeile(0)).toContain('Schwarz');
+
+    // Schwarz (Controller 2): d7-d5
+    await emu.druecke(1, KNOPF.LINKS, 10);
+    for (let i = 0; i < 3; i++) await emu.druecke(1, KNOPF.HOCH, 10);
+    await emu.druecke(1, KNOPF.A, 15);
+    await emu.druecke(1, KNOPF.RUNTER, 10);
+    await emu.druecke(1, KNOPF.RUNTER, 10);
+    await emu.druecke(1, KNOPF.A, 80);
+    expect(await zeile(0)).toContain('Weiß');
+
+    // Weiß (Controller 1): e4×d5 mit Kampf-Animation auf dem Brett
+    await emu.druecke(0, KNOPF.RECHTS, 10);
+    await emu.druecke(0, KNOPF.RUNTER, 10);
+    await emu.druecke(0, KNOPF.A, 15);
+    await emu.druecke(0, KNOPF.HOCH, 10);
+    await emu.druecke(0, KNOPF.LINKS, 10);
+    await emu.druecke(0, KNOPF.A, 2);
+    await emu.run(28);
+    await bildschirm('9-battle-chess-kampf');
+    await emu.run(120);
+    expect(await zeile(0)).toContain('Schwarz');
+
+    // Über Pause zurück ins Hauptmenü → Standard-Kacheln & -Paletten wiederhergestellt.
+    await emu.druecke(0, KNOPF.START, 20);
+    await emu.druecke(0, KNOPF.RUNTER, 10);
+    await emu.druecke(0, KNOPF.A, 35);
+    expect(await zeile(1)).toContain('Brett & Blatt 16');
+  });
 });
 
 describe.skipIf(!AKTIV || !env.SNES_KERN_BSNES)('Brett & Blatt 16 in bsnes: dieselben Bilder wie in Snes9x', () => {
