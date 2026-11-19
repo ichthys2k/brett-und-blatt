@@ -196,6 +196,11 @@ describe.skipIf(!AKTIV)('Brett & Blatt 16: Bedienung über Controller', () => {
     await emu.druecke(0, KNOPF.RECHTS, 10);
     expect(await zeile(4)).toContain('Alle (31)');
     expect(await zeile(5)).toContain('Tic-Tac-Toe');
+    // Menüklick darf nach dem Ausklingen nicht in einer Schleife hängen bleiben.
+    await emu.run(40);
+    await emu.audio();
+    await emu.run(90);
+    expect(await emu.audio()).toBe(0);
   });
 
   it('Partie zu zweit mit zwei Controllern: Kreuz gewinnt, Statistik im 32-Spiele-SRAM', async () => {

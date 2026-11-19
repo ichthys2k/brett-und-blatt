@@ -86,8 +86,8 @@ static u8 musik_an;
 static u8 aktuelles_stueck;
 static u8 stueck_laeuft;
 
-/* Die WAV-Dateien haben 16 kHz; Tonhöhe 8 (8 × 2 kHz) spielt sie in Originalgeschwindigkeit. */
-#define TONHOEHE 8
+/* Die WAV-Dateien haben 12 kHz; Tonhöhe 6 (6 × 2 kHz, Maximum von PVSnesLib digi_rates) spielt sie in Originalgeschwindigkeit. */
+#define TONHOEHE 6
 /* Musik etwas dezenter als die Effekte, damit Züge und Fanfaren klar hörbar bleiben. */
 #define MUSIK_LAUTSTAERKE 150
 

@@ -84,7 +84,7 @@ Grafik und Klänge entstehen beim Bauen; im Repo liegen nur die Erzeuger. Es gib
 - **Funktionsaufrufe in `&&` und `||`:** `if (a || !f(…))` übersetzte 816-tcc falsch (Reversi listete besetzte Felder als erlaubt). Solche Bedingungen in getrennte `if` aufteilen.
 - **Compilerabsturz „ICE 2“** bei `s->feld[f(…)] = …`: den Index erst in eine lokale Variable schreiben.
 - **Zweidimensionale `char`-Felder** wie `{"1", "3", "5"}` als `char[3][2]` lieferten Müll; Felder von Zeigern (`const char *const x[]`) gehen.
-- **Klänge:** `spcPlaySound(i)` liest den Eintrag `i` ab dem *zuletzt* eingetragenen Sample vorwärts. Darum die Samples rückwärts eintragen. Tonhöhe `n` heißt `n × 2 kHz`; die 16-kHz-Samples brauchen 8.
+- **Klänge:** `spcPlaySound(i)` liest den Eintrag `i` ab dem *zuletzt* eingetragenen Sample vorwärts. Darum die Samples rückwärts eintragen. Tonhöhe `n` heißt `n × 2 kHz`, wobei `digi_rates[]` in PVSnesLib nur `1..6` (bis 12 kHz) kennt – höhere Werte lesen außerhalb der Tabelle und lassen kurze Effekte in einer Endlosschleife hängen.
 - **Geschwindigkeit:** Der 65816 mit 816-tcc ist langsam. Die volle Suche für die zweite Antwort im Tic-Tac-Toe brauchte sieben Sekunden; mit Bitmasken, Zugreihenfolge und einer Eröffnungsregel sind es höchstens 0,7 Sekunden.
 - **Bildwechsel:** Beide Kachelkarten (je 2 KB) werden nur übertragen, wenn sie sich geändert haben. Die Paletten kommen zuerst: CGRAM darf nur in der Austastlücke beschrieben werden.
 - **Bots:** Alle Suchen arbeiten mit wachsender Tiefe und einem Zeitbudget in Bildern (`BILDER()`); die Bewertung wird möglichst nachgeführt statt neu berechnet (Vier in einer Reihe). Große Zuglisten je Suchtiefe kosten viel Arbeitsspeicher – darum sind sie in Mühle und Dame begrenzt.
