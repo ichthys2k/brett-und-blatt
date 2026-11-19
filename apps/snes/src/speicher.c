@@ -2,7 +2,7 @@
 
 Speicher speicher;
 
-#define VERSION 1
+#define VERSION 2
 
 static u16 summe(void) {
   const u8 *p = (const u8 *)&speicher;

@@ -146,11 +146,12 @@ Jede Stufe endet mit einem spielbaren ROM. Danach kann man aufhören, ohne dass 
 - ROM-Größe im `Makefile` auf 1 MB (32 Bänke LoROM, `ROMSIZE := 0a`, `ROMBANKS := 32`, `brett-und-blatt-16.sfc`) erweitert.
 - Alle 6 Spiele mit 100 % grünem Schiedsrichter- und Bot-Vergleich in `apps/snes/test/regeln.test.ts` und `bots.test.ts`.
 
-### Stufe 6 – Feinschliff und echte Hardware (offen)
+### Stufe 6 – Feinschliff und echte Hardware – erledigt (#527)
 
-- Test auf echtem SNES mit Flash-Modul (FXPak Pro oder Everdrive), Speicherstände im SRAM.
-- Wenn gewünscht: kleine Auflage als Modul (Leerplatinen gibt es für Homebrew), Etikett im Taverne-Stil.
-- Optional ein SNES-Hauptmenü im Stil der Taverne mit verkleinerten Wappen und Porträts.
+- **SRAM-Erweiterung:** `SPEICHER_SPIELE` in `src/speicher.h` von 16 auf 32 angehoben (712 Bytes mit Kennung `BB16`, Version 2 und Prüfsumme im 2-KB-Batteriespeicher), sodass alle 31 Spiele eigene Statistiken führen und beim Kaltstart sauber initialisiert werden.
+- **Menüführung:** Schnelles seitenweises Blättern mit `L` und `R` im Hauptmenü (mit Seitenanzeige `Seite 1/2`) und in der Statistik; Kategorien-Filter über `◀`/`▶` (*Alle*, *Brettspiele*, *Würfel & Familie*, *Kartenspiele*, *Stich- & Denksport*).
+- **Feinschliff & Hardware:** Versionsangabe auf **Version 1.0** angehoben, 1-MB-LoROM-Konfiguration (`ROMSIZE 0a`, `SRAMSIZE 01`, `CARTRIDGETYPE 02`) und Hardware-Hinweise (FXPak Pro, SD2SNES, Super Everdrive) in `apps/snes/README.md` dokumentiert.
+- Test auf echtem SNES mit Flash-Modul (FXPak Pro oder Everdrive) durch Cornelius ausstehend.
 
 ## Grober Aufwand
 
@@ -189,6 +190,7 @@ Die größten Unsicherheiten: die Geschwindigkeit des C-Compilers (Bots), die Le
 - Stufe 3: [#520](https://github.com/ichthys2k/brett-und-blatt/issues/520).
 - Stufe 4: [#522](https://github.com/ichthys2k/brett-und-blatt/issues/522).
 - Stufe 5: [#524](https://github.com/ichthys2k/brett-und-blatt/issues/524).
+- Stufe 6: [#527](https://github.com/ichthys2k/brett-und-blatt/issues/527).
 
 ## Quellen
 
