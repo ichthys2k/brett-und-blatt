@@ -24,6 +24,7 @@ export interface InputSettings {
   deadzone: number;
   scanIntervalMs: number;
   haptics: boolean;
+  prompts: boolean;
   hotSeatMode: HotSeatControllerMode;
 }
 
@@ -32,6 +33,7 @@ export const DEFAULT_INPUT_SETTINGS: InputSettings = {
   deadzone: 0.25,
   scanIntervalMs: 1200,
   haptics: true,
+  prompts: true,
   hotSeatMode: 'pass',
 };
 
@@ -147,7 +149,10 @@ export function InputProvider({
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const onPointer = () => {
+    const onPointer = (e: PointerEvent) => {
+      if ((e.target as HTMLElement | null)?.closest?.('.bub-prompt-bar')) {
+        return;
+      }
       setInputSource('pointer');
       if (cursorActiveRef.current) setCursorActive(false);
     };
