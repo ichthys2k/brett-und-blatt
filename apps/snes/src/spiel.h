@@ -117,6 +117,8 @@ typedef struct {
   void (*grafik_laden)(void);
   /** Optional: animiert einen Zug unmittelbar vor spiel->ziehen() (läuft nie im Prüfmodus). */
   void (*animieren)(const u8 *stand, const Zug *zug);
+  /** 1: Spiel zeichnet Kopf- und Fußzeile selbst im Vollbild (z. B. Battle Chess). */
+  u8 vollbild;
 } Spiel;
 
 extern const Spiel spiel_tic_tac_toe;

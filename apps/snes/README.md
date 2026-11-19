@@ -59,6 +59,8 @@ Die Prüfungen:
 | `src/pruef.c` | Prüfmodus: Postfach im Arbeitsspeicher für die Tests |
 | `werkzeuge/grafik.mjs` | Erzeugt Schrift, Rahmen, Filz, Spielbrett und Titel als Kacheln aus Formeln |
 | `werkzeuge/schach_grafik.mjs` | Erzeugt das 24×24-Holzbrett und 6 pixelanimierte 32×32-Battle-Chess-Figuren (× 4 Posen) plus Kampfeffekte |
+| `werkzeuge/karten_grafik.mjs` | Erzeugt das 16-Farben-Kartenpaket (Bildkarten B/D/K, Schmuck-Asse, Filigran-Rücken, Eins!-Aktionen, Schwarzer-Peter-Motive) |
+| `werkzeuge/brett_grafik.mjs` | Erzeugt das Kaya-Holzbrett mit glänzenden Steinen (Go), Elfenbein-Dominosteine mit Augen und den Leder-Würfelbecher (Mäxle) |
 | `werkzeuge/klang.mjs` | Erzeugt die Klangeffekte aus Formeln |
 | `werkzeuge/musik.mjs` | Erzeugt 20 mehrstimmige Impulse-Tracker-Soundtracks (`.it`) in 4 Stimmungen (Denkraum, Kartentisch, Patience, Spielabend) |
 | `werkzeuge/schrift8x8.mjs` | 8×8-Glyphen aus font8x8 (gemeinfrei) |

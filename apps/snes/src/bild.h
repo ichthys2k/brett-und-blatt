@@ -35,6 +35,8 @@ void brett_farben(u16 adresse);
 void bild_kacheln_laden(const u8 *daten, u16 laenge);
 /** Standard-BG-Kachelsatz (Hauptmenü und Standardspiele) wiederherstellen. */
 void bild_kacheln_standard(void);
+/** 1, wenn spielspezifische BG-Kacheln ab 0x100 geladen sind, sonst 0. */
+u8 bild_sonder_aktiv(void);
 /** Eigene BG-Paletten laden (start_pal 0..7, anzahl Paletten à 16 Farben = 32 Bytes). */
 void bild_bg_paletten(const u8 *pal, u8 start_pal, u8 anzahl);
 /** OAM-Sprites (ab VRAM 0x4000, 16x16 klein / 32x32 groß) und OAM-Paletten (CGRAM 128+) laden. */

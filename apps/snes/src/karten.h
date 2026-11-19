@@ -49,6 +49,12 @@ enum {
 /** Lädt die Brettpaletten für Spielkarten (FARBEN_KARTEN). */
 void karten_farben_laden(void);
 
+/** Lädt das dynamische Spielkarten-Grafikset (Bildkarten, Schmuck-Asse, Filigran-Rücken, Icons). */
+void karten_grafik_laden(void);
+
+/** Zeichnet ein 3×2-Kartenmotiv (24×16 px) in die Mitte einer Karte (x, y+1..y+2). */
+void karten_motiv(u8 x, u8 y, u16 basis, u8 pal);
+
 /** Zeichnet den Kartenkörper (Blanko, Rücken oder Leerfeld) auf Ebene 2. */
 void karten_koerper(u8 x, u8 y, u8 art, u8 pal);
 
@@ -56,11 +62,8 @@ void karten_koerper(u8 x, u8 y, u8 art, u8 pal);
 void karten_loeschen(u8 x, u8 y);
 
 /**
- * Zeichnet eine französische Spielkarte.
- * @param farbe 0=Herz, 1=Karo, 2=Pik, 3=Kreuz
- * @param rang 1 (Ass) bis 13 (König)
- * @param offen 1=aufgedeckt, 0=Kartenrücken
- * @param pal 5=normal, 6=ausgewählt/Cursor, 7=markiert
+ * Zeichnet eine französische Spielkarte mit echten Hofkarten-Porträts (B/D/K),
+ * Schmuck-Assen und großen Farbsymbolen.
  */
 void karten_franzoesisch(u8 x, u8 y, u8 farbe, u8 rang, u8 offen, u8 pal);
 
@@ -72,5 +75,17 @@ void karten_franzoesisch(u8 x, u8 y, u8 farbe, u8 rang, u8 offen, u8 pal);
  * @param pal 5=normal, 6=ausgewählt/Cursor, 7=markiert
  */
 void karten_zahl(u8 x, u8 y, u8 farb_idx, u8 zahl, u8 offen, u8 pal);
+
+/**
+ * Zeichnet eine Eins!/Uno-Aktionskarte mit echtem 24×16-Symbol.
+ * @param aktion 0=Aussetzen, 1=Richtungswechsel, 2=+2, 3=Farbwahl, 4=+4
+ */
+void karten_uno_aktion(u8 x, u8 y, u8 farb_idx, u8 aktion, u8 offen, u8 pal);
+
+/**
+ * Zeichnet eine Schwarzer-Peter-Karte (Kater oder buntes Paar-Motiv).
+ * @param paar_id 0..15 für Paare, 0xff für den Schwarzen Peter (Kater)
+ */
+void karten_peter(u8 x, u8 y, u8 paar_id, u8 offen, u8 pal);
 
 #endif

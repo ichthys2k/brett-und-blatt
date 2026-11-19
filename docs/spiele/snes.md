@@ -50,7 +50,9 @@ Empfehlung: zuerst ein **Probelauf** (Stufe 0 und 1, wenige Wochen Abendarbeit),
 
 **Stufe 5, Stufe 6 und 20 Soundtracks umgesetzt (18.11.2026, #524, #527):** Alle 31 Spiele (inkl. Skat, Schafkopf, Doppelkopf, Binokel, Schach, Go) im 1-MB-LoROM mit 32-Spiele-SRAM, Kategorien-Filter, L/R-Blättern sowie **20 eigens komponierten SNESMod-Soundtracks** (`apps/snes/werkzeuge/musik.mjs`) in den vier Stimmungen *Denkraum*, *Kartentisch*, *Patience* und *Spielabend* (je 5 Stücke), automatischer Stimmungszuordnung je Spiel, **Musikbox** im Hauptmenü und Musik-Steuerung im Pausenmenü.
 
-**Zu prüfen (Cornelius):** das ROM aus dem CI-Artefakt „brett-und-blatt-16“ in Mesen oder RetroArch öffnen, Spiele ausprobieren (insbesondere Echtzeit-Duelle wie Speed und Ligretto an zwei Controllern sowie Texas Hold'em Poker) und die Musikbox anhören.
+**Dynamische Spiel-Grafik, Battle Chess und Grafikpakete 2–4 umgesetzt (19.11.2026):** Spiele laden beim Start eigene 4bpp-Hintergrundkacheln (`0x100..0x3FF`) und OAM-Sprites (`0x4000`) ins VRAM. **Battle Chess** (`schach_grafik.mjs`, `chess.c`) füllt den Bildschirm mit einem 8×8-Holzbrett (24×24 px je Feld) und sechs pixelanimierten 32×32-Figuren (× 4 Posen) samt animierten Kampfduellen auf dem Schlagfeld. Alle **14 Kartenspiele** (`karten_grafik.mjs`, `karten.c`, `uno.c`, `peter.c`) zeigen 24×16-Bildkarten (Bube/Dame/König), Schmuck-Asse, Filigran-Rücken, Eins!-Aktionssymbole und Schwarzer-Peter-Motive. **Go**, **Domino** und **Mäxle** (`brett_grafik.mjs`) nutzen ein Kaya-Holzbrett mit glänzenden Steinen, Elfenbein-Dominosteine mit Augenpunkten und einen Sattelleder-Würfelbecher.
+
+**Zu prüfen (Cornelius):** das ROM aus dem CI-Artefakt „brett-und-blatt-16“ in Mesen oder RetroArch öffnen, Battle Chess, die neuen Karten-, Go-, Domino- und Mäxle-Grafiken sowie die Musikbox ausprobieren.
 
 ## Was das SNES kann und was nicht
 

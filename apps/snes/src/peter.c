@@ -444,11 +444,9 @@ static void peter_zeichnen(const u8 *stand, const u8 *markierung, u8 aktiv) {
     if (x + 3 <= 31) {
       u8 c = p->hands[0][i];
       if (c == PETER_KARTE) {
-        karten_koerper(x, y, KARTEN_BLANKO, PAL_BRETT);
-        text(x + 1, y + 1, "P", PAL_ROT);
+        karten_peter(x, y, 0xff, 1, PAL_BRETT);
       } else {
-        u8 pair = c / 2;
-        karten_zahl(x, y, pair % 4, pair + 1, 1, PAL_BRETT);
+        karten_peter(x, y, c / 2, 1, PAL_BRETT);
       }
     }
   }
