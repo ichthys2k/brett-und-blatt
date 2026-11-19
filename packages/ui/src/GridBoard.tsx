@@ -1,5 +1,7 @@
 import { useRef, type ReactNode } from 'react';
+import { collectFocusableCandidates } from './input/FocusZone';
 import { useInputIntent } from './input/InputContext';
+import { findNextFocusTarget } from './input/spatialNav';
 
 export interface GridBoardProps {
   cols: number;
@@ -42,7 +44,7 @@ export function GridBoard({ cols, rows, label, renderCell, isActive, onActivate,
     const dc = intent === 'left' ? -1 : intent === 'right' ? 1 : 0;
     const dr = intent === 'up' ? -1 : intent === 'down' ? 1 : 0;
 
-    // Nächste aktive Zelle in gewünschter Richtung suchen (erst gleiche Achse, dann ganze Reihe/Spalte)
+    // Zuerst streng orthogonal in derselben Zeile/Spalte suchen
     let c = curCol + dc;
     let r = curRow + dr;
     while (c >= 0 && c < cols && r >= 0 && r < rows) {
@@ -53,6 +55,27 @@ export function GridBoard({ cols, rows, label, renderCell, isActive, onActivate,
       }
       c += dc;
       r += dr;
+    }
+
+    // Fallback: räumlich nächste aktive Zelle im Brett (für schräge/Springer-Ziele in Schach/Dame)
+    const { candidates, byId } = collectFocusableCandidates(root);
+    const activeRect = activeEl.getBoundingClientRect();
+    const curId = activeEl.dataset.bubFocusId;
+    const nextId = findNextFocusTarget(
+      {
+        left: activeRect.left,
+        top: activeRect.top,
+        right: activeRect.right,
+        bottom: activeRect.bottom,
+        width: activeRect.width,
+        height: activeRect.height,
+      },
+      candidates.filter((cand) => cand.id !== curId),
+      intent,
+    );
+    if (nextId) {
+      byId.get(nextId)?.focus({ preventScroll: false });
+      return true;
     }
 
     return false;

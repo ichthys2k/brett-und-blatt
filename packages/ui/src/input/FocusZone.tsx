@@ -143,6 +143,15 @@ export function GlobalSpatialNavigator() {
       return false;
     }
 
+    // B-Taste (Zurück) im Gamepad-Modus navigiert in Unterseiten zurück
+    if (intent === 'cancel' && source === 'gamepad' && !trappedZone) {
+      if (typeof window !== 'undefined' && window.location.hash && window.location.hash !== '#/' && window.location.hash !== '#/menu') {
+        window.history.back();
+        return true;
+      }
+      return false;
+    }
+
     // Bestätigen per Gamepad A auf dem fokussierten Element
     if (intent === 'confirm' && source === 'gamepad') {
       if (active && active !== document.body) {

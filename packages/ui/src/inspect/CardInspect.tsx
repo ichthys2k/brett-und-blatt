@@ -260,9 +260,19 @@ export function CardInspectProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const closeDialog = () => {
+    const from = dialog?.from;
+    setDialog(null);
+    if (from?.isConnected) {
+      quietFocus.current = true;
+      from.focus({ preventScroll: true });
+      window.setTimeout(() => (quietFocus.current = false), 0);
+    }
+  };
+
   useInputIntent((intent, source) => {
     if (intent === 'cancel' && dialog) {
-      setDialog(null);
+      closeDialog();
       return true;
     }
     if (intent === 'inspect' && source === 'gamepad' && !dialog) {
@@ -274,16 +284,6 @@ export function CardInspectProvider({ children }: { children: ReactNode }) {
     }
     return false;
   }, 18);
-
-  const closeDialog = () => {
-    const from = dialog?.from;
-    setDialog(null);
-    if (from?.isConnected) {
-      quietFocus.current = true;
-      from.focus({ preventScroll: true });
-      window.setTimeout(() => (quietFocus.current = false), 0);
-    }
-  };
 
   const portal = typeof document !== 'undefined';
   return (

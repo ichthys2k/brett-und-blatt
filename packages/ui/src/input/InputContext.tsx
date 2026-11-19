@@ -64,6 +64,7 @@ interface InputContextValue {
   announcement: string;
   announce: (text: string) => void;
   activeSeatIndex: number | null;
+  setActiveSeatIndex: (seat: number | null) => void;
   subscribeIntent: (handler: InputIntentHandler, priority?: number) => () => void;
   subscribeDirect: (handler: DirectGamepadHandler) => () => void;
   registerZone: (zone: RegisteredZone) => () => void;
@@ -94,12 +95,17 @@ function isTextInputElement(el: Element | null): boolean {
 export function InputProvider({
   children,
   settings = DEFAULT_INPUT_SETTINGS,
-  activeSeatIndex = null,
+  activeSeatIndex: initialActiveSeat = null,
 }: InputProviderProps) {
   const [inputSource, setInputSource] = useState<InputSourceMode>('pointer');
   const [connectedGamepads, setConnectedGamepads] = useState<number>(0);
   const [cursorActive, setCursorActive] = useState<boolean>(false);
   const [announcement, setAnnouncement] = useState<string>('');
+  const [activeSeatIndex, setActiveSeatIndex] = useState<number | null>(initialActiveSeat);
+
+  useEffect(() => {
+    setActiveSeatIndex(initialActiveSeat);
+  }, [initialActiveSeat]);
 
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
@@ -288,6 +294,7 @@ export function InputProvider({
       announcement,
       announce,
       activeSeatIndex,
+      setActiveSeatIndex,
       subscribeIntent,
       subscribeDirect,
       registerZone,
