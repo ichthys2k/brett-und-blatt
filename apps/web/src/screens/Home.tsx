@@ -1,4 +1,5 @@
 import type { GameInfo, SessionSnapshot } from '@brett-und-blatt/engine';
+import { FocusZone } from '@brett-und-blatt/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/controls';
 import { t } from '../i18n';
@@ -447,6 +448,7 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
         />
       )}
 
+      <FocusZone id="home-filters" order={1} label="Suche & Filter" className="space-y-4">
       {/* Suche */}
       <section className="space-y-2">
         <label htmlFor="game-search" className="sr-only">
@@ -526,9 +528,10 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
           );
         })}
       </nav>
+      </FocusZone>
 
       {/* Strukturierte Spieleliste nach Rubriken, Lieblingsspiele vorweg */}
-      <div className="space-y-8">
+      <FocusZone id="home-games" order={2} label="Spieleliste" className="space-y-8">
         {favoriteGames.length > 0 && (
           <section className="space-y-3" aria-labelledby="home-favorites">
             <div className="bub-home-room space-y-0.5">
@@ -626,7 +629,7 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
             </section>
           ))
         )}
-      </div>
+      </FocusZone>
 
       {/* Spielhelfer für echte Brettspiele (#106) */}
       {activeFilter === 'all' && !searchQuery.trim() && players === null && (

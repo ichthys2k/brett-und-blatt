@@ -10,6 +10,7 @@ import {
   tableLayout,
   triggerGamepadHaptic,
   useElementSize,
+  useInputContext,
   useInputIntent,
   type MoveCarouselItem,
 } from '@brett-und-blatt/ui';
@@ -208,9 +209,22 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const seats = session.config.seats;
   const playersRef = useRef<HTMLElement>(null);
   const [rootRef, rootSize] = useElementSize<HTMLDivElement>();
+  const inputCtx = useInputContext();
   const [sideOpen, setSideOpen] = useState(false);
   const sideBox = useRef<HTMLDivElement>(null);
   useDismiss(sideOpen, useCallback(() => setSideOpen(false), []), sideBox);
+  useInputIntent((intent) => {
+    if (intent === 'menu') {
+      setSideOpen((v) => !v);
+      return true;
+    }
+    if (intent === 'cancel' && sideOpen) {
+      setSideOpen(false);
+      menuButtonRef.current?.focus();
+      return true;
+    }
+    return false;
+  }, 15);
   // Schublade (#485): Beim Öffnen springt der Fokus hinein, nach dem Schließen (Esc, Aktion) zurück auf ☰.
   const drawerRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -289,7 +303,13 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const concealed = !result && (ui.concealTurns?.(publicView) ?? false);
   const yourMove = !concealed && !result && !session.paused && handoverSeat === null && actingSeat !== undefined && current.length === 1 && seats.length > 1;
   useEffect(() => {
+    inputCtx?.setActiveSeatIndex(typeof actingSeat === 'number' ? actingSeat : null);
+    return () => inputCtx?.setActiveSeatIndex(null);
+  }, [inputCtx, actingSeat]);
+
+  useEffect(() => {
     if (!yourMove) return;
+    triggerGamepadHaptic('turn', loadHapticsPref());
     const before = document.title;
     document.title = `● ${t('play.yourTurn')} – ${before}`;
     return () => {
@@ -701,6 +721,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           {collapsedTop && online?.chat && <div className="relative flex flex-none">{online.chat(true)}</div>}
         </div>
       )}
+      <FocusZone id="play-menu" order={2} label="Spielmenü" trap={collapsedSide && sideOpen} className="contents">
       <div
         ref={drawerRef}
         className={
@@ -803,6 +824,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         )}
         {!collapsedSide && (around ? online?.extra && <div className="order-2 flex-none">{online.extra}</div> : online?.extra)}
       </div>
+      </FocusZone>
       </div>
 
       <FocusZone id="play-board" order={1} label="Spielfeld" className="order-1 flex min-h-0 min-w-0 flex-1 flex-col">
@@ -836,7 +858,10 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           legalMoves={legalMoves}
           onMove={(move) => {
             const seat = actingSeat !== undefined ? actingSeat : (typeof viewer === 'number' ? viewer : undefined);
-            return seat !== undefined && session.submit(seat, move);
+            if (seat === undefined) return false;
+            const ok = session.submit(seat, move);
+            triggerGamepadHaptic(ok ? 'confirm' : 'error', loadHapticsPref());
+            return ok;
           }}
           events={eventsRef.current}
           clock={session.timed && current[0] !== undefined ? session.clock(current[0]) : null}
