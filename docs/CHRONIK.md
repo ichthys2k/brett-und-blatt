@@ -8,6 +8,10 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**Brett & Blatt 16 – 20 SNES-Soundtracks und Musikbox (19.11.2026):** Zwanzig eigenständige, mehrstimmige SNESMod-Soundtracks für den SPC700-Klangprozessor, reproduzierbar erzeugt aus `apps/snes/werkzeuge/musik.mjs` (ohne Binärdateien im Repo):
+- **Vier Stimmungen wie in der Web-App** (`packages/ui/src/audio/music.json`), je 5 Stücke mit eigenen 16-Bit-Instrumenten (Klavier, Harfe, Flöte, Streicher, Kontrabass, Marimba, Akkordeon, Pulse16, Kick, Brush) und 4-teiliger Form: *Denkraum* (Herbstbibliothek, Bedenkzeit, Holzbrett, Nachtpartie, Stille Züge), *Kartentisch* (Café am Markt, Gemischtes Blatt, Sonntagsrunde, Stich für Stich, Wohnzimmerlicht), *Patience* (Regennachmittag, Kartenhaus, Morgentee, Wolkenzug, Kerzenschein) und *Spielabend* (Würfelglück, Volle Fahrt, Kunterbunt, Seegang, Siegertreppchen).
+- **Einbindung im ROM (`apps/snes/src/klang.c`, `klang.h`, `main.c`, `Makefile`):** 2 Soundbank-Bänke (`SOUNDBANK__0`/`__1` ab Bank 20, ~49 KB gesamt, ~2–3 KB im SPC700-RAM je Stück neben den 7 BRR-Klangeffekten), automatische Stimmungszuordnung für alle 31 Spiele, neue **Musikbox** im Hauptmenü sowie „Musik: An/Aus“ und „Nächstes Stück“ im Pausenmenü. Geprüft im Emulator (`apps/snes/test/snes.test.ts`).
+
 **Brett & Blatt 16 – SNES-ROM, Stufe 6: Feinschliff, Menü und echte Hardware (18.11.2026, #527, Vorhaben #515):** Abschluss des SNES-ROMs als **Version 1.0** (`apps/snes/src/main.c`, `speicher.h`, `speicher.c`):
 - **SRAM-Erweiterung:** `SPEICHER_SPIELE` von 16 auf 32 angehoben (712 Bytes, SRAM-Version 2 mit Kennung `BB16` und Prüfsumme im 2-KB-Batteriespeicher), sodass alle 31 Spiele ohne Speicherüberlauf Statistik führen und beim Kaltstart sauber initialisiert werden.
 - **Menüführung:** Seitenweises Blättern mit `L`/`R` (mit Seitenanzeige `Seite 1/2`, auch in der Statistik) und Kategorien-Filter über `◀`/`▶` (*Alle*, *Brettspiele*, *Würfel & Familie*, *Kartenspiele*, *Stich- & Denksport*).

@@ -55,10 +55,11 @@ Die Prüfungen:
 | `src/eingabe.c` | Knöpfe mit Wiederholung des Steuerkreuzes |
 | `src/zufall.c` | cyrb128 und sfc32 wie in der Web-App |
 | `src/speicher.c` | Statistik im SRAM mit Kennung und Prüfsumme |
-| `src/klang.c` | Klangeffekte (BRR-Samples) über SNESMod |
+| `src/klang.c` | Klangeffekte (7 BRR-Samples) und 20 Hintergrund-Soundtracks in 4 Stimmungen über SNESMod |
 | `src/pruef.c` | Prüfmodus: Postfach im Arbeitsspeicher für die Tests |
 | `werkzeuge/grafik.mjs` | Erzeugt Schrift, Rahmen, Filz, Spielbrett und Titel als Kacheln aus Formeln |
 | `werkzeuge/klang.mjs` | Erzeugt die Klangeffekte aus Formeln |
+| `werkzeuge/musik.mjs` | Erzeugt 20 mehrstimmige Impulse-Tracker-Soundtracks (`.it`) in 4 Stimmungen (Denkraum, Kartentisch, Patience, Spielabend) |
 | `werkzeuge/schrift8x8.mjs` | 8×8-Glyphen aus font8x8 (gemeinfrei) |
 | `werkzeuge/emu/emu.c` | Prüf-Emulator: libretro-Frontend ohne Fenster |
 | `werkzeuge/werkzeugkette.sh` | Holt und baut PVSnesLib 4.7.1, Snes9x 1.63, bsnes und den Prüf-Emulator |

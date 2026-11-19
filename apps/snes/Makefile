@@ -10,6 +10,19 @@ export SRAMSIZE := 01
 export ROMSIZE := 0a
 export ROMBANKS := 32
 
+MUSIK_IT := \
+	res/musik/00_herbstbibliothek.it res/musik/01_bedenkzeit.it res/musik/02_holzbrett.it \
+	res/musik/03_nachtpartie.it res/musik/04_stille-zuege.it \
+	res/musik/05_cafe-am-markt.it res/musik/06_gemischtes-blatt.it res/musik/07_sonntagsrunde.it \
+	res/musik/08_stich-fuer-stich.it res/musik/09_wohnzimmerlicht.it \
+	res/musik/10_regennachmittag.it res/musik/11_kartenhaus.it res/musik/12_morgentee.it \
+	res/musik/13_wolkenzug.it res/musik/14_kerzenschein.it \
+	res/musik/15_wuerfelglueck.it res/musik/16_volle-fahrt.it res/musik/17_kunterbunt.it \
+	res/musik/18_seegang.it res/musik/19_siegertreppchen.it
+AUDIOFILES := $(MUSIK_IT)
+export SOUNDBANK := res/soundbank
+SMCONVFLAGS := -s -o $(SOUNDBANK) -b 20
+
 include $(PVSNESLIB_HOME)/devkitsnes/snes_rules
 
 GRAFIK := res/kacheln_a.bin res/kacheln_b.bin res/karten.bin res/spielfarben.bin res/palette.bin res/grafik.h
@@ -20,7 +33,7 @@ KLAENGE := res/klick.brr res/setzen.brr res/start.brr res/sieg.brr res/ende.brr 
 
 all: ressourcen $(ROMNAME).sfc
 
-ressourcen: $(GRAFIK) $(KLAENGE)
+ressourcen: $(GRAFIK) $(KLAENGE) $(SOUNDBANK).asm
 
 $(GRAFIK) &: werkzeuge/grafik.mjs werkzeuge/schrift8x8.mjs
 	node werkzeuge/grafik.mjs res
@@ -28,8 +41,11 @@ $(GRAFIK) &: werkzeuge/grafik.mjs werkzeuge/schrift8x8.mjs
 res/%.wav: werkzeuge/klang.mjs
 	node werkzeuge/klang.mjs res
 
-# Alle Objekte hängen von den erzeugten Dateien ab (Kachelnummern in grafik.h, Daten in data.asm).
-$(OFILES): $(GRAFIK) $(KLAENGE) $(wildcard src/*.h)
+$(MUSIK_IT) &: werkzeuge/musik.mjs
+	node werkzeuge/musik.mjs res/musik
+
+# Alle Objekte hängen von den erzeugten Dateien ab (Kachelnummern in grafik.h, Daten in data.asm, soundbank.h).
+$(OFILES): $(GRAFIK) $(KLAENGE) $(SOUNDBANK).asm $(wildcard src/*.h)
 
 clean: cleanBuildRes cleanRom
 	rm -rf res

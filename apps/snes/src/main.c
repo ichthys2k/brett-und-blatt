@@ -205,6 +205,7 @@ static void warte_auf_a_oder_b(void) {
 
 static void titel(void) {
   u16 bild = 0;
+  musik_stoppen();
   bild_leeren();
   tafel(1, 3, 30, 12);
   karte((BILD_B - TITEL_B) / 2, 5, KARTE_TITEL, TITEL_B, TITEL_H, PAL_GELB);
@@ -329,6 +330,74 @@ static void statistik(void) {
         break;
       }
       if (tasten & (KEY_B | KEY_A)) break;
+    }
+  }
+}
+
+static void musikbox(void) {
+  u8 pl = 0, wahl = 0, i, nr, akt, laeuft, aktiv;
+  u16 tasten;
+  akt = musik_aktuell();
+  if (akt < MUSIK_ANZAHL) {
+    pl = musik_playlist[akt];
+    wahl = akt - pl * 5;
+  }
+  while (1) {
+    akt = musik_aktuell();
+    laeuft = musik_laeuft();
+    aktiv = musik_aktiv();
+    kopfzeile("Musikbox");
+    tafel(1, 3, 30, 22);
+    kachel(3, 5, Z_PFEIL_LINKS, PAL_GRAU);
+    text_mitte(5, musik_playlist_namen[pl], PAL_GELB);
+    kachel(28, 5, Z_PFEIL_RECHTS, PAL_GRAU);
+    for (i = 0; i < 5; i++) {
+      nr = pl * 5 + i;
+      kachel(3, 8 + i * 2, i == wahl ? K_PFEIL : 0, PAL_GELB);
+      zahl(5, 8 + i * 2, nr + 1, 2, PAL_GRAU);
+      text(7, 8 + i * 2, ".", PAL_GRAU);
+      text(9, 8 + i * 2, musik_namen[nr], i == wahl ? PAL_GELB : PAL_TEXT);
+      if (laeuft && akt == nr) text(27, 8 + i * 2, "*", PAL_GELB);
+    }
+    text(3, 19, "Musik:", PAL_GRAU);
+    text(10, 19, aktiv ? "An" : "Aus", aktiv ? PAL_GELB : PAL_TEXT);
+    text(3, 21, "Läuft:", PAL_GRAU);
+    if (laeuft && akt < MUSIK_ANZAHL) {
+      text(10, 21, musik_namen[akt], PAL_TEXT);
+    } else {
+      text(10, 21, "Stille", PAL_GRAU);
+    }
+    fusszeile("A spielen · X aus · B zurück");
+    tasten_loslassen();
+    while (1) {
+      bild_warten();
+      tasten = tasten_alle();
+      if (tasten & KEY_B) {
+        klang_spielen(KLANG_KLICK);
+        return;
+      }
+      if (tasten & (KEY_UP | KEY_DOWN | KEY_LEFT | KEY_RIGHT | KEY_L | KEY_R | KEY_A | KEY_START | KEY_X)) break;
+    }
+    if (tasten & KEY_UP) {
+      wahl = wahl == 0 ? 4 : wahl - 1;
+      klang_spielen(KLANG_KLICK);
+    } else if (tasten & KEY_DOWN) {
+      wahl = wahl == 4 ? 0 : wahl + 1;
+      klang_spielen(KLANG_KLICK);
+    } else if (tasten & (KEY_LEFT | KEY_L)) {
+      pl = pl == 0 ? PLAYLIST_ANZAHL - 1 : pl - 1;
+      wahl = 0;
+      klang_spielen(KLANG_KLICK);
+    } else if (tasten & (KEY_RIGHT | KEY_R)) {
+      pl = pl == PLAYLIST_ANZAHL - 1 ? 0 : pl + 1;
+      wahl = 0;
+      klang_spielen(KLANG_KLICK);
+    } else if (tasten & (KEY_A | KEY_START)) {
+      if (!musik_aktiv()) musik_umschalten();
+      musik_spielen(pl * 5 + wahl);
+    } else if (tasten & KEY_X) {
+      musik_umschalten();
+      klang_spielen(KLANG_KLICK);
     }
   }
 }
@@ -509,15 +578,30 @@ static void wechselbildschirm(const Spiel *spiel, u8 platz, u8 port) {
 
 /* Pausenmenü. Gibt 1 zurück, wenn die Partie abgebrochen werden soll. */
 static u8 pause(void) {
-  static const char *const EINTRAEGE[2] = {"Weiter", "Zum Hauptmenü"};
-  u8 wahl;
-  tafel(6, 9, 20, 9);
-  flaeche_leeren(7, 10, 18, 7);
-  text_mitte(10, "Pause", PAL_GELB);
-  tasten_loslassen();
-  wahl = menue(9, 12, EINTRAEGE, 2, 0, 2, 0);
-  tasten_loslassen();
-  return wahl == 1;
+  const char *eintraege[4];
+  u8 wahl = 0, aktiv;
+  while (1) {
+    aktiv = musik_aktiv();
+    eintraege[0] = "Weiter";
+    eintraege[1] = "Zum Hauptmenü";
+    eintraege[2] = aktiv ? "Musik: An" : "Musik: Aus";
+    eintraege[3] = "Nächstes Stück";
+    tafel(4, 7, 24, 13);
+    flaeche_leeren(5, 8, 22, 11);
+    text_mitte(8, "Pause", PAL_GELB);
+    tasten_loslassen();
+    wahl = menue(7, 10, (const char *const *)eintraege, 4, wahl, 2, 0);
+    tasten_loslassen();
+    if (wahl == 2) {
+      musik_umschalten();
+      continue;
+    }
+    if (wahl == 3) {
+      musik_naechstes();
+      continue;
+    }
+    return wahl == 1;
+  }
 }
 
 /* Siege je Teilnehmer der Vorbereitung als „1 : 0“ bzw. „1 · 0 · 2“ ab Spalte x. */
@@ -776,6 +860,7 @@ static void serie(u8 spiel_nr) {
   u8 siege[PLAETZE_MAX];
   u8 nummer = 0, versatz = 0, ergebnis, sieger = 0, p, letzte, mensch_gewinnt, menschen;
   u16 t;
+  musik_fuer_spiel(spiel_nr, eingabe_unruhe);
   for (p = 0; p < PLAETZE_MAX; p++) siege[p] = 0;
   while (1) {
     // Platz p spielt Teilnehmer (p + versatz) mod n.
@@ -860,8 +945,8 @@ static void variablen_start(void) {
 }
 
 int main(void) {
-  static const char *eintraege[SPIELE_ANZAHL + 2];
-  static u8 eintrag_ziel[SPIELE_ANZAHL + 2];
+  static const char *eintraege[SPIELE_ANZAHL + 3];
+  static u8 eintrag_ziel[SPIELE_ANZAHL + 3];
   u8 wahl = 0, kategorie = KAT_ALLE, anzahl, ziel, i;
   variablen_start();
   klang_start();
@@ -875,6 +960,9 @@ int main(void) {
       eintrag_ziel[anzahl] = i;
       anzahl++;
     }
+    eintraege[anzahl] = "Musikbox";
+    eintrag_ziel[anzahl] = SPIELE_ANZAHL + 2;
+    anzahl++;
     eintraege[anzahl] = "Statistik";
     eintrag_ziel[anzahl] = SPIELE_ANZAHL;
     anzahl++;
@@ -910,6 +998,8 @@ int main(void) {
         statistik();
       } else if (ziel == SPIELE_ANZAHL + 1) {
         ueber();
+      } else if (ziel == SPIELE_ANZAHL + 2) {
+        musikbox();
       }
     }
   }
