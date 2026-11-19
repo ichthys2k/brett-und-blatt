@@ -1,7 +1,8 @@
 import { TavernPage } from '../components/TavernPage';
-import { playlistTracks, setCardPortraits, useCardPortraits } from '@brett-und-blatt/ui';
+import { playlistTracks, setCardPortraits, useCardPortraits, useInputSource, type ControlMode } from '@brett-und-blatt/ui';
 import { useEffect, useState } from 'react';
 import { Button } from '../components/controls';
+import { saveInputSettings, useInputSettings } from '../lib/inputSettings';
 import { MusicList } from '../components/MusicList';
 import { VolumeControls } from '../components/SoundControl';
 import { t } from '../i18n';
@@ -229,6 +230,99 @@ function BoardChoice() {
   );
 }
 
+function InputSettingsPanel() {
+  const settings = useInputSettings();
+  const { connectedGamepads } = useInputSource();
+  const modes: readonly { id: ControlMode; label: string; hint: string }[] = [
+    { id: 'standard', label: t('input.mode.standard'), hint: t('input.mode.standard.hint') },
+    { id: 'legalMoves', label: t('input.mode.legalMoves'), hint: t('input.mode.legalMoves.hint') },
+    { id: 'scanAuto', label: t('input.mode.scanAuto'), hint: t('input.mode.scanAuto.hint') },
+    { id: 'scanStep', label: t('input.mode.scanStep'), hint: t('input.mode.scanStep.hint') },
+  ];
+
+  return (
+    <section className="space-y-3 rounded-2xl border border-line bg-surface p-4" aria-labelledby="input-settings-title">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="input-settings-title" className="text-lg font-bold">
+          {t('input.title')}
+        </h2>
+        <span className="text-xs text-muted">
+          {connectedGamepads > 0 ? t('input.connected', { count: connectedGamepads }) : t('input.noneConnected')}
+        </span>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={t('input.mode')}>
+        {modes.map((m) => {
+          const active = settings.mode === m.id;
+          return (
+            <button
+              key={m.id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => saveInputSettings({ mode: m.id })}
+              className={`rounded-xl border p-3 text-left transition ${
+                active ? 'border-accent bg-accent/15 font-semibold' : 'border-line bg-surface hover:border-accent/50'
+              }`}
+            >
+              <div>{m.label}</div>
+              <div className="mt-1 text-xs font-normal text-muted">{m.hint}</div>
+            </button>
+          );
+        })}
+      </div>
+
+      {(settings.mode === 'scanAuto' || settings.mode === 'scanStep') && (
+        <label className="block space-y-1 text-sm">
+          <span>{t('input.scanSpeed', { ms: settings.scanIntervalMs })}</span>
+          <input
+            type="range"
+            min={500}
+            max={2500}
+            step={100}
+            value={settings.scanIntervalMs}
+            onChange={(e) => saveInputSettings({ scanIntervalMs: Number(e.target.value) })}
+            className="w-full"
+          />
+        </label>
+      )}
+
+      <label className="block space-y-1 text-sm">
+        <span>{t('input.deadzone', { pct: Math.round(settings.deadzone * 100) })}</span>
+        <input
+          type="range"
+          min={15}
+          max={45}
+          step={5}
+          value={Math.round(settings.deadzone * 100)}
+          onChange={(e) => saveInputSettings({ deadzone: Number(e.target.value) / 100 })}
+          className="w-full"
+        />
+      </label>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <label className="inline-flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.haptics}
+            onChange={(e) => saveInputSettings({ haptics: e.target.checked })}
+          />
+          <span>{t('input.haptics')}</span>
+        </label>
+
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted">{t('input.hotSeat')}:</span>
+          <Button
+            onClick={() => saveInputSettings({ hotSeatMode: settings.hotSeatMode === 'pass' ? 'multi' : 'pass' })}
+          >
+            {settings.hotSeatMode === 'pass' ? t('input.hotSeat.pass') : t('input.hotSeat.multi')}
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function SoundSettingsScreen() {
   const prefs = useMusicPrefs();
   // Probehören endet mit dem Verlassen der Seite.
@@ -236,6 +330,7 @@ export function SoundSettingsScreen() {
 
   return (
     <TavernPage title="Optionen" subtitle="Ton, Musik, Aussehen und Updates.">
+      <InputSettingsPanel />
       <LookChoice />
       <PieceSets />
       <AppVersion />

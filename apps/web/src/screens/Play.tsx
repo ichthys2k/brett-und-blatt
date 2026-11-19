@@ -1,7 +1,21 @@
 import { randomSeed, sanitizeCustomCardCatalog, type GameEvent, type GameSession, type Result, type SeatId } from '@brett-und-blatt/engine';
-import { CardInspectProvider, ClockRing, PlayerChip, formatClock, sideShieldSize, tableLayout, useElementSize } from '@brett-und-blatt/ui';
+import {
+  CardInspectProvider,
+  ClockRing,
+  FocusZone,
+  MoveCarouselBar,
+  PlayerChip,
+  formatClock,
+  sideShieldSize,
+  tableLayout,
+  triggerGamepadHaptic,
+  useElementSize,
+  useInputIntent,
+  type MoveCarouselItem,
+} from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import type { AlbumSpec } from '@brett-und-blatt/ui';
+import { useInputSettings } from '../lib/inputSettings';
 import { AfterGameBar } from '../components/AfterGameBar';
 import { Ceremony } from '../components/Ceremony';
 import { Notes } from '../components/Notes';
@@ -791,7 +805,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       </div>
       </div>
 
-      <div className="order-1 flex min-h-0 min-w-0 flex-1 flex-col">
+      <FocusZone id="play-board" order={1} label="Spielfeld" className="order-1 flex min-h-0 min-w-0 flex-1 flex-col">
       {collapsedSide && (
         <div className="flex max-h-[40dvh] flex-none flex-col overflow-y-auto empty:hidden">
           {noticeItems}
@@ -804,6 +818,19 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         data-collapsed={collapsedSide || undefined}
       >
         {yourMove && <div key={`${session.version}`} className="bub-turn-frame" aria-hidden="true" />}
+        {yourMove && legalMoves.length > 0 && (
+          <PlayMoveCarousel
+            game={game}
+            view={session.view(viewer)}
+            legalMoves={legalMoves}
+            onMove={(move) => {
+              const seat = actingSeat !== undefined ? actingSeat : (typeof viewer === 'number' ? viewer : undefined);
+              if (seat === undefined) return;
+              const ok = session.submit(seat, move);
+              triggerGamepadHaptic(ok ? 'confirm' : 'error', loadHapticsPref());
+            }}
+          />
+        )}
         <ui.Board
           view={session.view(viewer)}
           legalMoves={legalMoves}
@@ -901,8 +928,58 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           </button>
         )}
       </main>
-      </div>
+      </FocusZone>
     </div>
     </CardInspectProvider>
   );
 }
+
+function loadHapticsPref(): boolean {
+  try {
+    const raw = localStorage.getItem('brett-und-blatt:eingabe');
+    if (!raw) return true;
+    const parsed = JSON.parse(raw) as { haptics?: boolean };
+    return parsed.haptics !== false;
+  } catch {
+    return true;
+  }
+}
+
+function PlayMoveCarousel({
+  game,
+  view,
+  legalMoves,
+  onMove,
+}: {
+  game: LoadedGame;
+  view: unknown;
+  legalMoves: readonly unknown[];
+  onMove: (move: unknown) => void;
+}) {
+  const settings = useInputSettings();
+  const items = useMemo<MoveCarouselItem[]>(() => {
+    if (settings.mode !== 'legalMoves') return [];
+    const describe = game.module.describeMove as ((v: unknown, m: unknown) => string) | undefined;
+    return legalMoves.slice(0, 120).map((move, idx) => ({
+      id: String(idx),
+      label: describe ? describe(view, move) : `Zug ${idx + 1}`,
+    }));
+  }, [settings.mode, game.module, view, legalMoves]);
+
+  if (settings.mode !== 'legalMoves' || items.length === 0) return null;
+
+  return (
+    <div className="mb-2 flex justify-center">
+      <MoveCarouselBar
+        items={items}
+        onExecuteMove={(id) => {
+          const idx = Number(id);
+          if (Number.isFinite(idx) && legalMoves[idx] !== undefined) {
+            onMove(legalMoves[idx]);
+          }
+        }}
+      />
+    </div>
+  );
+}
+

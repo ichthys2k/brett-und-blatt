@@ -115,3 +115,52 @@ export {
   type InspectStat,
 } from './inspect/CardInspect';
 export { INSPECT_EDGE, inspectPosition, type InspectPlacement, type InspectRect } from './inspect/inspectPosition';
+export {
+  applyDeadzone,
+  createRepeatTracker,
+  keyboardEventToIntent,
+  readGamepadRawState,
+  type ControlMode,
+  type GamepadSnapshot,
+  type InputIntent,
+  type InputSourceMode,
+  type RawGamepadState,
+  type RepeatTracker,
+} from './input/gamepadMapping';
+export {
+  findNextFocusTarget,
+  pickZoneEntryTarget,
+  type FocusCandidate,
+  type NavDirection,
+  type NavRect,
+} from './input/spatialNav';
+export { stepCarousel, type MoveCarouselItem } from './input/moveCarousel';
+export {
+  INITIAL_SCAN_STATE,
+  stepScanAdvance,
+  stepScanBack,
+  stepScanSelect,
+  type ScanState,
+} from './input/scanEngine';
+export { triggerGamepadHaptic } from './input/gamepadHaptics';
+export {
+  DEFAULT_INPUT_SETTINGS,
+  InputProvider,
+  useDirectGamepad,
+  useInputContext,
+  useInputIntent,
+  useInputSource,
+  type DirectGamepadHandler,
+  type DirectGamepadSample,
+  type HotSeatControllerMode,
+  type InputIntentHandler,
+  type InputProviderProps,
+  type InputSettings,
+} from './input/InputContext';
+export { FocusZone, GlobalSpatialNavigator, collectFocusableCandidates, type FocusZoneProps } from './input/FocusZone';
+export { ButtonPrompt, type ButtonPromptProps, type PromptItem } from './input/ButtonPrompt';
+export { ScanOverlay } from './input/ScanOverlay';
+export { VirtualKeyboard } from './input/VirtualKeyboard';
+export { SoftCursor } from './input/SoftCursor';
+export { MoveCarouselBar, type MoveCarouselBarProps } from './input/MoveCarouselBar';
+
