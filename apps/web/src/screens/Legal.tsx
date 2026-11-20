@@ -315,6 +315,27 @@ export function Datenschutz() {
         rechnen Computergegner auf dem Spieleserver.
       </p>
 
+      <h2>Stufen, Titel und Rahmen</h2>
+      <p>
+        Im Spielerpass zeigt die App eine Stufe mit Titel (von „Gast“ bis „Hofrat“). Sie wird ausschließlich auf deinem Gerät aus dem Partiebuch deines
+        Passes berechnet (gewertete Partien, Lerntage, Stempel). Es gibt dafür keine Ranglisten und keine Spielränge, und es wird nichts an einen Server
+        gemeldet. Gespeichert ist nur, welche Stufe du zuletzt gesehen hast und ob du die Anzeige abgeschaltet hast (beides im Local Storage und, wenn du
+        eine Sicherung anlegst, verschlüsselt im Block „Einstellungen“ deines Passes). Die Titel-Texte selbst werden nie gespeichert oder gesendet; sie
+        entstehen bei jeder Anzeige neu aus den Zahlen.
+      </p>
+      <p>
+        <strong>Was geteilt wird:</strong> Stufe und Titel verlassen dein Gerät nie von allein. Beim „Pass teilen“ gelangen sie nur in den Schnappschuss, wenn
+        du sie ausdrücklich ankreuzt (Vorgabe: aus). In Online-Räumen sieht niemand deine
+        Stufe oder deinen Titel; dort kann höchstens ein Avatar-Rahmen, eine kurze Kennung ohne Personenbezug, als Teil deines Raumprofils (neben Spitzname und
+        Emoji-Bild) mitgehen, und nur freiwillig. In Klassen und Schulgruppen ist das Anzeigen von Rahmen und Titel zunächst aus; nur die Leitung kann es für
+        ihre Klasse einschalten und wieder ausschalten. Nie gespeichert oder gesendet werden Spielstände, Züge oder Ergebnisse aus dem Partiebuch im Zuge
+        dieser Funktion; der Server kann nicht prüfen, ob ein Rahmen „verdient“ ist, und sieht deinen Pass nicht.
+      </p>
+      <p>
+        <strong>Ausschalten:</strong> Mit dem Schalter „Belohnungen nicht anzeigen“ im Stempelheft deines Passes blendest du Stufe, Titel und alle
+        Hinweise darauf aus. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.
+      </p>
+
       <h2>Namen beim Spielen</h2>
       <p>
         Namen für Spielerinnen und Spieler sind freiwillig und bleiben auf dem Gerät. Online sehen alle im Raum deinen Spitznamen; bitte keinen echten

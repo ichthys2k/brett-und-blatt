@@ -1,7 +1,7 @@
 import { resolveOptions } from '@brett-und-blatt/engine';
 import { describe, expect, it } from 'vitest';
 import { gameModule, type MillMove, type MillState } from '../src';
-import { motionsOf } from '../src/ui/motion';
+import { motionOfChoice, motionsOf } from '../src/ui/motion';
 
 const fresh = (): MillState => gameModule.setup(2, resolveOptions(gameModule, {}), 'test');
 
@@ -68,5 +68,25 @@ describe('Bewegung der Steine (#590)', () => {
     const c = play(b, { type: 'place', to: 5, remove: [] });
     expect(motionsOf(c, b)).toEqual([]);
     expect(motionsOf(a, c)).toEqual([]);
+  });
+});
+
+describe('Bewegung aus der Auswahl (#590, eigene Züge)', () => {
+  it('Setzen: vom Vorrat aufs Ziel', () => {
+    expect(motionOfChoice(fresh(), null, 4)).toEqual({ kind: 'place', seat: 0, to: 4 });
+  });
+
+  it('Ziehen entlang einer Linie gleitet, Springen fliegt', () => {
+    const slide = position([0, 3, 5, 20], [10, 11, 12, 22]);
+    expect(motionOfChoice(slide, 0, 1)).toEqual({ kind: 'slide', seat: 0, from: 0, to: 1 });
+    const fly = position([0, 3, 5], [10, 11, 12, 22]);
+    expect(motionOfChoice(fly, 0, 14)).toEqual({ kind: 'fly', seat: 0, from: 0, to: 14 });
+  });
+
+  it('ungültige Auswahl (besetztes Ziel, fremder Stein, leerer Vorrat) bewegt nichts', () => {
+    const state = position([0, 3, 5, 20], [10, 11, 12, 22]);
+    expect(motionOfChoice(state, 0, 3)).toBeNull();
+    expect(motionOfChoice(state, 10, 1)).toBeNull();
+    expect(motionOfChoice(state, null, 1)).toBeNull();
   });
 });
