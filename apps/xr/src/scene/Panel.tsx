@@ -43,12 +43,22 @@ const DRAW_GAMES = new Set(['chess', 'checkers']);
 export interface VoiceControls {
   joined: boolean;
   muted: boolean;
-  off: 'public' | 'reported' | null;
+  off: 'public' | 'closed' | 'reported' | null;
+  /** Selbst gemeldet: stumm, bis die Raumleitung freigibt. */
+  mutedByRoom: boolean;
+  /** Bin ich die Raumleitung? Nur sie erlaubt den Sprachchat und gibt Gemeldete frei. */
+  isHost: boolean;
   error: string | null;
   join: () => void;
   leave: () => void;
   mute: (muted: boolean) => void;
-  report: () => void;
+  allow: (allowed: boolean) => void;
+  /** Wer gerade mitspricht (ohne mich) – zum Melden. */
+  others: { id: string; name: string }[];
+  /** Gemeldete, die die Raumleitung freigeben kann. */
+  mutedMembers: { id: string; name: string }[];
+  report: (member: string) => void;
+  release: (member: string) => void;
 }
 
 /** Mixed Reality (#370): Tisch auf eine Fläche legen und verkleinern; nur in einer Mixed-Reality-Sitzung vorhanden. */
@@ -100,7 +110,7 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
   const [seatPage, setSeatPage] = useState(0);
   const [mode, setMode] = useState<Mode>('main');
   const [confirmResign, setConfirmResign] = useState(false);
-  const [confirmReport, setConfirmReport] = useState(false);
+  const [confirmReport, setConfirmReport] = useState<string | null>(null);
   const [, redraw] = useState(0);
   useEffect(() => onVolumeChange(() => redraw((n) => n + 1)), []);
   useEffect(() => onVibrationChange(() => redraw((n) => n + 1)), []);
@@ -139,7 +149,12 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
     rows.push([back]);
   } else if (mode === 'voice') {
     lines.push('Sprachchat');
-    if (voice.off) lines.push(voice.off === 'public' ? 'Nur in privaten Räumen.' : 'Für diese Runde abgeschaltet.');
+    if (voice.isHost && voice.off !== 'public') {
+      rows.push([{ label: voice.off === 'closed' ? 'Sprachchat erlauben' : '✓ Sprachchat erlaubt', press: () => voice.allow(voice.off === 'closed'), active: voice.off !== 'closed' }]);
+      for (const m of voice.mutedMembers) rows.push([{ label: `${m.name} freigeben`, press: () => voice.release(m.id) }]);
+    }
+    if (voice.off) lines.push(voice.off === 'public' ? 'Nur in privaten Räumen.' : voice.off === 'closed' ? 'Die Raumleitung hat ihn nicht eingeschaltet.' : 'Für diese Runde abgeschaltet.');
+    else if (voice.mutedByRoom) lines.push('Du wurdest gemeldet und bist stumm,', 'bis die Raumleitung dich freigibt.');
     else if (!voice.joined) {
       if (voice.error) lines.push(voice.error);
       rows.push([{ label: '🎙 Mitsprechen', press: voice.join, active: true }]);
@@ -148,11 +163,14 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
         { label: voice.muted ? '🎙 Mikro an' : '🔇 Stumm', press: () => voice.mute(!voice.muted), active: voice.muted },
         { label: 'Aussteigen', press: voice.leave },
       ]);
-      rows.push([
-        confirmReport
-          ? { label: 'Wirklich für alle abschalten?', press: () => (voice.report(), setConfirmReport(false)), active: true }
-          : { label: '⚠ Melden', press: () => setConfirmReport(true) },
-      ]);
+      // Melden trifft eine Person: erst antippen, dann bestätigen.
+      for (const m of voice.others) {
+        rows.push([
+          confirmReport === m.id
+            ? { label: `${m.name} für alle stumm?`, press: () => (voice.report(m.id), setConfirmReport(null)), active: true }
+            : { label: `⚠ ${m.name} melden`, press: () => setConfirmReport(m.id) },
+        ]);
+      }
     }
     rows.push([back]);
   } else if (mode === 'view') {

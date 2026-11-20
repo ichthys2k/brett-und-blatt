@@ -878,10 +878,45 @@
             "type": {
               "type": "string",
               "const": "reportVoice"
+            },
+            "member": {
+              "type": "string"
             }
           },
           "required": [
             "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "setVoice"
+            },
+            "allowed": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "allowed"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "releaseVoice"
+            },
+            "member": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "member"
           ]
         }
       ]
@@ -1382,6 +1417,10 @@
         "acceptRequests": {
           "type": "boolean",
           "description": "Dürfen Zuschauer anfragen, ab der nächsten Runde mitzuspielen (#299)? Die Raumleitung entscheidet. Fehlt: an in öffentlichen, aus in privaten Räumen."
+        },
+        "voice": {
+          "type": "boolean",
+          "description": "Erlaubt die Raumleitung den Sprachchat (#352)? Fehlt: aus. Nur in privaten Räumen wirksam; die Raumleitung trägt die Verantwortung für ihre Gruppe (keine Altersabfrage)."
         }
       },
       "required": [
@@ -1436,6 +1475,11 @@
           "type": "boolean",
           "const": true,
           "description": "Macht das Mitglied gerade beim Sprachchat mit (#352)? Fehlt sonst."
+        },
+        "voiceMuted": {
+          "type": "boolean",
+          "const": true,
+          "description": "Im Sprachchat gemeldet: für alle stumm, bis die Raumleitung wieder freigibt (#352). Fehlt sonst."
         }
       },
       "required": [
@@ -1804,9 +1848,10 @@
           "type": "string",
           "enum": [
             "public",
+            "closed",
             "reported"
           ],
-          "description": "Sprachchat (#352) nicht möglich: `public` in öffentlichen Räumen, `reported` nach einer Meldung bis zur nächsten Partie. Fehlt, wenn man mitsprechen kann."
+          "description": "Sprachchat (#352) nicht möglich: `public` in öffentlichen Räumen, `closed`, solange die Raumleitung ihn nicht erlaubt hat (`LobbySettings.voice`), `reported` nach einer Meldung ohne Person bis zur nächsten Partie. Fehlt, wenn man mitsprechen kann (außer man ist selbst `voiceMuted`)."
         },
         "match": {
           "type": "object",

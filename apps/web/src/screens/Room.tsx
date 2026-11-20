@@ -139,7 +139,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
     <p className="fixed inset-x-0 bottom-0 z-30 bg-warning px-3 py-2 text-center text-sm font-medium text-white">{t('online.reconnecting')}</p>
   );
   const toasts = <SignalToasts signals={state.signals} members={room.members} />;
-  const voiceMenu = (inBar: boolean) => <VoiceMenu voice={voice} state={voiceState} members={room.members} you={state.you} off={room.voiceOff} onReport={() => connection.send({ type: 'reportVoice' })} inBar={inBar} />;
+  const voiceMenu = (inBar: boolean) => <VoiceMenu voice={voice} state={voiceState} members={room.members} you={state.you} off={room.voiceOff} isHost={isHost} onAllow={(allowed) => connection.send({ type: 'setVoice', allowed })} onReport={(member) => connection.send({ type: 'reportVoice', member })} onRelease={(member) => connection.send({ type: 'releaseVoice', member })} inBar={inBar} />;
   const errorBox = state.error ? (
     <p role="alert" className="fixed inset-x-3 top-3 z-30 mx-auto max-w-md rounded-xl bg-danger px-3 py-2 text-center text-sm text-white shadow-md">
       {state.error}

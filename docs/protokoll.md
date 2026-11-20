@@ -121,14 +121,17 @@ Brillen können sich gegenseitig als Figur sehen. Kopf und Hände laufen **direk
 
 ### Sprachchat (optional, #352)
 
-Nur in **privaten Räumen**. Die Stimme läuft wie der VR-Treffpunkt direkt zwischen den Geräten (WebRTC); der Raum vermittelt nur, über dieselben `rtc`-Nachrichten.
+Nur in **privaten Räumen** und nur, wenn die Raumleitung ihn erlaubt hat (`room.lobby.voice`, Standard: aus). Die Stimme läuft wie der VR-Treffpunkt direkt zwischen den Geräten (WebRTC); der Raum vermittelt nur, über dieselben `rtc`-Nachrichten.
 
 | Nachricht | Bedeutung |
 | --- | --- |
 | `{ "type": "voice", "on": true }` | Mitsprechen. In `room.members` steht danach `"voice": true`. Zwischen allen mit `voice` oder `xr` reicht der Raum `rtc` weiter. |
 | `{ "type": "voice", "on": false }` | Aussteigen. |
-| `{ "type": "reportVoice" }` | Melden: Der Raum beendet den Sprachchat für alle und lässt ihn bis zur nächsten Partie nicht mehr zu. |
-| `room.voiceOff` | `"public"` (öffentlicher Raum) oder `"reported"` (gemeldet). Fehlt das Feld, kann man mitsprechen. |
+| `{ "type": "setVoice", "allowed": true }` | Nur die Raumleitung: Sprachchat erlauben oder abschalten. Abschalten beendet ihn für alle und hebt alle Stummschaltungen auf. |
+| `{ "type": "reportVoice", "member": "<id>" }` | Eine Person melden: Sie ist für alle stumm (`"voiceMuted": true` in `room.members`, `voice` entfällt), bis die Raumleitung sie freigibt. Melden kann nur, wer selbst mitspricht; das Ziel muss ebenfalls mitsprechen. Der Raum merkt sich nur, wer stumm ist. |
+| `{ "type": "releaseVoice", "member": "<id>" }` | Nur die Raumleitung: Die gemeldete Person darf wieder mitsprechen. |
+| `{ "type": "reportVoice" }` | Ohne `member` (ältere Clients): Der Raum beendet den Sprachchat für alle und lässt ihn bis zur nächsten Partie nicht mehr zu. |
+| `room.voiceOff` | `"public"` (öffentlicher Raum), `"closed"` (von der Raumleitung nicht erlaubt) oder `"reported"` (ohne Person gemeldet). Fehlt das Feld, kann man mitsprechen, außer man ist selbst `voiceMuted`. Clients sollten unbekannte Werte wie „aus“ behandeln. |
 
 - Ein Client schickt seine Tonspur nur an andere Mitglieder mit `voice` und spielt nur deren Ton ab.
 - Die Brillen der VR-App teilen sich mit dem Treffpunkt eine Verbindung je Paar: Datenkanal `pose` (ausgehandelt, Kennung 0) und Tonspur.
@@ -183,6 +186,7 @@ Der Prüfstein [`apps/cli/test/partie.mjs`](../apps/cli/test/partie.mjs) spielt 
 | 13.11.2026 | 1 | VR-Treffpunkt (#351): Nachrichten `xr`, `rtc`, `pose`, Feld `MemberInfo.xr`, Endpunkt `GET /rtc/ice` |
 | 13.11.2026 | 1 | Sprachchat (#352): Nachrichten `voice`, `reportVoice`, Felder `MemberInfo.voice`, `RoomMessage.voiceOff` |
 | 20.11.2026 | 1 | Neues optionales Feld `frame` (Avatar-Rahmen) in `hello`, `setName`, `MemberInfo`, `PublicSeat` (#572) |
+| 20.11.2026 | 1 | Sprachchat (#352): Die Raumleitung muss ihn erlauben (`setVoice`, `LobbySettings.voice`, `voiceOff: "closed"`); `reportVoice` mit `member` schaltet eine Person stumm (`MemberInfo.voiceMuted`), `releaseVoice` gibt sie frei. **Verhalten geändert:** ohne `setVoice` ist der Sprachchat aus |
 
 ## Lizenz
 
