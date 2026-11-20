@@ -460,6 +460,11 @@ export const gameUi: GameUi<SkatState, SkatMove> = {
   handView: true,
   Board: SkatBoard,
   seatsAround: true,
+  // Serie (#560): Aufgeben vor Ende der ersten Runde zählt im Partiebuch nicht.
+  seriesRoundsDone: (view) => {
+    const finished = view.phase === 'roundOver' || view.phase === 'passedOut' ? 1 : 0;
+    return Math.max(0, Math.min(view.totalGames, view.gameNumber - 1 + finished));
+  },
   sounds: {
     cardPlayed: 'karte-legen',
     trickTaken: 'stich-einsammeln',

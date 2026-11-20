@@ -16,7 +16,7 @@ vi.stubGlobal('window', {
 vi.mock('../apps/web/src/lib/playerPass', () => ({ passSyncSoon: () => undefined }));
 vi.mock('../apps/web/src/lib/chronikStore', () => ({ rememberReplay: () => undefined }));
 
-const { rowsFor, saveRows, saveFinds, albumSeat, BOOK_KEY, TROPHIES_KEY } = await import('../apps/web/src/lib/passRecorder');
+const { rowsFor, saveRows, countsAsGame, saveFinds, albumSeat, BOOK_KEY, TROPHIES_KEY } = await import('../apps/web/src/lib/passRecorder');
 const { ALBUM_KEY, sanitizeAlbum } = await import('../apps/web/src/lib/album');
 const { sanitizeBook } = await import('../apps/web/src/lib/partiebuch');
 const { sanitizeTrophies } = await import('../apps/web/src/lib/pokale');
@@ -122,5 +122,37 @@ describe('Recorder: Sammelalbum (#148)', () => {
     expect(Object.keys(album)).toEqual(['quartett']);
     expect(Object.keys(album.quartett!.found).sort()).toEqual(['tiere:A1', 'tiere:A2', 'tiere:B1']);
     expect(album.quartett!.total).toBe(32);
+  });
+
+  it('Serienspiele (#560): Aufgeben in der ersten Runde zählt nicht, das Serienende und spätere Aufgabe schon', () => {
+    const resigned = { kind: 'win' as const, winners: [1], reason: 'resign' };
+    const timeout = { kind: 'win' as const, winners: [1], reason: 'time' };
+    const seriesEnd = { kind: 'win' as const, winners: [0] };
+    expect(countsAsGame(resigned, 0)).toBe(false);
+    expect(countsAsGame(timeout, 0)).toBe(false);
+    expect(countsAsGame(resigned, 3)).toBe(true);
+    expect(countsAsGame(seriesEnd, 12)).toBe(true);
+    // Spiele ohne Serie bleiben unberührt.
+    expect(countsAsGame(resigned)).toBe(true);
+    expect(countsAsGame(resigned, null)).toBe(true);
+  });
+
+  it('Skat-Serie: nur das Ergebnis der ganzen Serie wird eine Zeile im Buch', async () => {
+    const { gameUi } = await import('../packages/games/skat/src/ui/index');
+    const done = gameUi.seriesRoundsDone!;
+    const view = (gameNumber: number, phase: string) => ({ gameNumber, phase, totalGames: 12 }) as never;
+    expect(done(view(1, 'bidding'))).toBe(0);
+    expect(done(view(1, 'play'))).toBe(0);
+    expect(done(view(1, 'roundOver'))).toBe(1);
+    expect(done(view(1, 'passedOut'))).toBe(1);
+    expect(done(view(5, 'bidding'))).toBe(4);
+    expect(done(view(13, 'roundOver'))).toBe(12);
+    const skatSeats = [{ kind: 'human' as const, name: 'Mia' }, { kind: 'bot' as const, name: 'Computer', level: 'medium' as const }];
+    const aufgabe = { kind: 'win' as const, winners: [1], reason: 'resign' };
+    if (countsAsGame(aufgabe, done(view(1, 'play')))) saveRows(rowsFor({ gameId: 'skat', sessionId: 'k1', result: aufgabe, seats: skatSeats, endedAt: 1, durationMs: 1 }), skatSeats);
+    expect(data.get(BOOK_KEY)).toBeUndefined();
+    const ende = { kind: 'win' as const, winners: [0] };
+    if (countsAsGame(ende, done(view(13, 'roundOver')))) saveRows(rowsFor({ gameId: 'skat', sessionId: 'k2', result: ende, seats: skatSeats, endedAt: 2, durationMs: 1 }), skatSeats);
+    expect(sanitizeBook(JSON.parse(data.get(BOOK_KEY)!)).recent.map((g) => g.outcome)).toEqual(['win']);
   });
 });
