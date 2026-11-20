@@ -53,6 +53,7 @@ export const SCOPED_KEYS = [
   'brett-und-blatt:bildkarten',
   'brett-und-blatt:kartenruecken',
   'brett-und-blatt:belohnungen',
+  'brett-und-blatt:stufe-gesehen',
   'brett-und-blatt:botvorschlag',
   'brett-und-blatt:farbensortierer:kartenbild',
   'bub-go-zoom',

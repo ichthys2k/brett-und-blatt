@@ -50,6 +50,8 @@ interface CeremonyProps {
   actions: ReactNode;
   /** Hinweis „in deinen Pokalschrank gelegt“ (#146). */
   trophyNote?: boolean;
+  /** Ruhige Zeile bei Stufenaufstieg, z. B. „Neuer Titel: Stammgast“ (#574). */
+  rewardNote?: string | null;
   onClose(): void;
 }
 
@@ -101,7 +103,7 @@ const CONFETTI = Array.from({ length: 36 }, (_, i) => {
  * Treppchen mit den besten drei und Konfetti. Erscheint kurz nach dem letzten Zug, damit dessen
  * Animation noch zu sehen ist, und lässt sich schließen, um das Spielfeld anzusehen.
  */
-export function Ceremony({ result, title, reason, seats, actions, trophyNote, onClose }: CeremonyProps) {
+export function Ceremony({ result, title, reason, seats, actions, trophyNote, rewardNote, onClose }: CeremonyProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -148,6 +150,11 @@ export function Ceremony({ result, title, reason, seats, actions, trophyNote, on
         </h2>
         {reason && <p className="bub-ceremony-reason">{reason}</p>}
         {trophyNote && <p className="bub-ceremony-reason">🏆 {t('pass.trophy.laid')}</p>}
+        {rewardNote && (
+          <p role="status" className="bub-ceremony-reason">
+            {rewardNote}
+          </p>
+        )}
 
         {podium.length > 0 && (
           <ol className="bub-podium" aria-label={t('ceremony.podium')}>
