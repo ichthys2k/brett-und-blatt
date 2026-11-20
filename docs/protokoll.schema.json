@@ -142,6 +142,9 @@
             },
             "crest": {
               "type": "string"
+            },
+            "frame": {
+              "type": "string"
             }
           },
           "required": [
@@ -182,6 +185,9 @@
               "type": "string"
             },
             "crest": {
+              "type": "string"
+            },
+            "frame": {
               "type": "string"
             }
           },
@@ -1402,6 +1408,10 @@
           "type": "string",
           "description": "Wappen des Spielerpasses (Beschreibung, siehe `player-crest.ts` in der Engine); nur wenn die Person es zeigen will."
         },
+        "frame": {
+          "type": "string",
+          "description": "Kennung des Avatar-Rahmens (`^[a-z0-9-]{1,20}$`, #572); fehlt er, zeigt der Client den Avatar ohne Rahmen. Nie Stufe oder Titel."
+        },
         "connected": {
           "type": "boolean"
         },
@@ -1609,6 +1619,10 @@
         },
         "avatar": {
           "type": "string"
+        },
+        "frame": {
+          "type": "string",
+          "description": "Avatar-Rahmen des Mitglieds auf diesem Platz (#572)."
         },
         "level": {
           "$ref": "#/definitions/BotLevel"

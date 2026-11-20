@@ -47,6 +47,7 @@ WebSocket auf `wss://…/rooms/<Code>?client=mein-client`. Die erste Nachricht i
 ```
 
 - `avatar` muss mitkommen. Ein Bild außerhalb der Liste `AVATARS` (`packages/online/src/avatars.ts`) ersetzt der Server durch das erste.
+- `frame` (optional, auch in `setName`) ist die Kennung des Avatar-Rahmens (#572): Kleinbuchstaben, Ziffern und Bindestrich, 1 bis 20 Zeichen (`^[a-z0-9-]{1,20}$`). Ungültige oder zu lange Werte verwirft der Server stillschweigend (die Nachricht bleibt gültig); er prüft nur die Form, nicht ob der Rahmen verdient ist. Er steht danach in `MemberInfo.frame` und `PublicSeat.frame`; fehlt er, zeigt ein Client den Avatar ohne Rahmen. Stufe und Titel werden nie übertragen.
 - `token` ist die **geheime Kennung dieses Geräts** (16 bis 100 Zeichen, zufällig erzeugen und sicher aufbewahren). Wer mit demselben Token wiederkommt, bekommt seinen Platz zurück (Wiedereinstieg). Das Token nie anzeigen oder weitergeben.
 - Antwort: `{ "type": "welcome", "protocol": 1, "you": "m1", "serverNow": … }`, danach sofort eine `room`-Nachricht. Das erste Mitglied leitet den Raum (`hostId`).
 - Ein Tisch-Bildschirm ohne Platz meldet sich stattdessen mit `{ "type": "display", "protocol": 1 }` an und bekommt nur die Zuschauersicht.
@@ -181,6 +182,7 @@ Der Prüfstein [`apps/cli/test/partie.mjs`](../apps/cli/test/partie.mjs) spielt 
 | 13.11.2026 | 1 | Text-Client `apps/cli` als Vorlage (#336); `avatar` in `hello` ist Pflicht (war es schon, jetzt dokumentiert) |
 | 13.11.2026 | 1 | VR-Treffpunkt (#351): Nachrichten `xr`, `rtc`, `pose`, Feld `MemberInfo.xr`, Endpunkt `GET /rtc/ice` |
 | 13.11.2026 | 1 | Sprachchat (#352): Nachrichten `voice`, `reportVoice`, Felder `MemberInfo.voice`, `RoomMessage.voiceOff` |
+| 20.11.2026 | 1 | Neues optionales Feld `frame` (Avatar-Rahmen) in `hello`, `setName`, `MemberInfo`, `PublicSeat` (#572) |
 
 ## Lizenz
 
