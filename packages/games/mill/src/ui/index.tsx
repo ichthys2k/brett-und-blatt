@@ -3,7 +3,7 @@ import { FitBox, NetBoard, type BoardProps, type GameUi } from '@brett-und-blatt
 import { useLayoutEffect, useRef, useState } from 'react';
 import { LINES, POINTS, pointName } from '../board';
 import { describeStep } from '../describe';
-import { FLY_MS, PLACE_MS, REMOVE_MS, SLIDE_MS, motionsOf, moverMs, type StoneMotion } from './motion';
+import { FLY_MS, PLACE_MS, REMOVE_MS, SLIDE_MS, motionOfChoice, motionsOf, moverMs, type StoneMotion } from './motion';
 import { phaseOf, stonesOnBoard, type MillMove, type MillState } from '../rules';
 import './styles.css';
 
@@ -159,8 +159,8 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<MillState, MillMov
   const finish = (moves: MillMove[], next: Selection) => {
     const done = moves.find((m) => m.remove.length === next.removed.length);
     if (done && (moves.length === 1 || next.removed.length > 0 || done.remove.length === 0)) {
-      // Stand der Stein schon (Ziel gewählt, dann Schlagsteine), gleitet er nicht noch einmal.
-      chosen.current = next.to !== null;
+      // Ist der Stein schon beim Antippen des Ziels gegleitet (dann Schlagsteine), gleitet er nicht noch einmal.
+      chosen.current = sel.to !== null;
       onMove(done);
       setSel(EMPTY);
     } else {
@@ -182,7 +182,12 @@ function Board({ view, legalMoves, onMove, hint }: BoardProps<MillState, MillMov
       const moves = forFrom.filter((m) => m.to === point);
       const next = { ...sel, to: point };
       if (moves.every((m) => m.remove.length === 0)) finish(moves, next);
-      else setSel(next);
+      else {
+        // Mühle: der Stein gleitet jetzt, danach folgt die Wahl des Schlagsteins.
+        const motion = reducedMotion() ? null : motionOfChoice(view, sel.from, point);
+        if (motion) setFx({ key: ++fxKey.current, motions: [motion], moverDone: false, chosen: false });
+        setSel(next);
+      }
       return;
     }
     if (selectable.has(point)) setSel({ ...EMPTY, from: point === sel.from ? null : point });
