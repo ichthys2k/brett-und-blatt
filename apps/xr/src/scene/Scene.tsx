@@ -28,7 +28,7 @@ import { SCALE_STEP, TablePlacer, clampScale, placementOrigin, scaleAboutTable, 
 import { handAnchor } from '../hand-fan';
 import { POSTURE_LIFT, getPosture, holdingHand, onUiStateChange } from '../ui-state';
 import { WristMenu } from './WristMenu';
-import { clampOffset, dragOffset, inEdgeZone, pinchScale, tableGrab, tableLocked, type Offset as GrabOffset } from '../table-grab';
+import { clampOffset, dragOffset, inEdgeZone, nextGrabMode, pinchScale, tableGrab, tableLocked, type Offset as GrabOffset } from '../table-grab';
 import { angleDelta, lineAngle, snapYaw, tableFrame, worldToTable } from '../table-frame';
 import { GESTURE_REACTION, GestureTracker, fingerCurls, gesturesEnabled, type Joints, type Vec3 } from '../gestures';
 import { presence } from '../presence';
@@ -288,17 +288,28 @@ function TableGrab({ origin, mixed, offset, onOffset, onSaveOffset, tableScale, 
       });
     }
     const gripped = grips.filter((g) => g.zone);
+    const startScale = () => {
+      // Zwei Hände: drehen (immer) und skalieren (nur Mixed Reality).
+      Object.assign(s, { mode: 'scale', angle0: lineAngle(gripped[0]!.p, gripped[1]!.p), yaw0: live.current.yaw, lastYaw: live.current.yaw, dist0: Math.hypot(gripped[0]!.p[0] - gripped[1]!.p[0], gripped[0]!.p[1] - gripped[1]!.p[1], gripped[0]!.p[2] - gripped[1]!.p[2]), scale0: live.current.tableScale, lastScale: live.current.tableScale });
+    };
     if (s.mode === 'none') {
-      if (gripped.length >= 2) {
-        // Zwei Hände: drehen (immer) und skalieren (nur Mixed Reality).
-        Object.assign(s, { mode: 'scale', angle0: lineAngle(gripped[0]!.p, gripped[1]!.p), yaw0: live.current.yaw, lastYaw: live.current.yaw, dist0: Math.hypot(gripped[0]!.p[0] - gripped[1]!.p[0], gripped[0]!.p[1] - gripped[1]!.p[1], gripped[0]!.p[2] - gripped[1]!.p[2]), scale0: live.current.tableScale, lastScale: live.current.tableScale });
+      const next = nextGrabMode('none', gripped.length);
+      if (next === 'scale') {
+        startScale();
         tableGrab.active = true;
         pulse('select');
-      } else if (gripped.length >= 1) {
+      } else if (next === 'move') {
         Object.assign(s, { mode: 'move', hand0: gripped[0]!.p, offset0: live.current.offset, last: live.current.offset });
         tableGrab.active = true;
         pulse('select');
       }
+      return;
+    }
+    // Zweite Hand greift später zu (#585): Verschieben abschließen und auf Drehen/Skalieren wechseln.
+    if (s.mode === 'move' && nextGrabMode('move', gripped.length) === 'scale') {
+      onSaveOffset(s.last);
+      startScale();
+      pulse('select');
       return;
     }
     if (s.mode === 'move') {

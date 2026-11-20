@@ -283,6 +283,13 @@ export function CardTable({ game, onMove }: { game: GameMessage; onMove: (move: 
       samples.current.push({ x, z, t: performance.now() });
       if (samples.current.length > 8) samples.current.shift();
     },
+    // Antippen (#585): Beim Druck verschwindet die Karte aus dem Fächer, ihr `onClick` kommt nicht mehr an.
+    onTap: (id) => {
+      samples.current = [];
+      if (id === 'stock') {
+        if (drawMove) onMove(drawMove.move);
+      } else press(id);
+    },
     onDrop: (id, to) => {
       // Ein schneller Wurf Richtung Mitte zählt wie Ablegen (#384).
       const thrown = to === null && isThrow(samples.current, [TABLE_CENTER[0], TABLE_CENTER[2]]);

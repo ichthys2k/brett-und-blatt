@@ -432,6 +432,7 @@ export function FourPlayerChessBoard({ game, onMove }: BoardProps) {
     size: 14 * s,
     radius: s * 0.7,
     targets: (from) => [...new Set(entries.filter((e) => e.from === from).map((e) => e.to))].map((to) => ({ id: to, x: pos(to)[0], z: pos(to)[1] })),
+    onTap: (from) => select.pick(from),
     onDrop: (from, to) => {
       if (to !== null) select.drop(from, to as number, onMove);
     },
@@ -542,6 +543,7 @@ export function ChineseCheckersBoard({ game, onMove }: BoardProps) {
     size: 0.5,
     radius: d * 0.7,
     targets: (from) => [...new Set(entries.filter((e) => e.from === from).map((e) => e.to))].map((to) => ({ id: to, x: pos(to)[0], z: pos(to)[1] })),
+    onTap: (from) => select.pick(from),
     onDrop: (from, to) => {
       if (to !== null) select.drop(from, to as number, onMove);
     },
@@ -632,6 +634,10 @@ export function LudoBoard({ game, onMove }: BoardProps) {
     size: 0.8,
     radius: 0.35,
     targets: () => [{ id: 'brett', x: 0, z: 0 }],
+    onTap: (piece) => {
+      const move = pieceMoves.get(piece);
+      if (move) onMove(move);
+    },
     onDrop: (piece, to) => {
       const move = pieceMoves.get(piece);
       if (to !== null && move) onMove(move);

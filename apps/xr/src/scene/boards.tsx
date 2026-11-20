@@ -49,11 +49,14 @@ export function boardMoveIndexes(gameId: string, moves: unknown[]): Set<number> 
   return handled;
 }
 
+/** Mindest-Trefferradius eines Ziels (#585): Mit Hand und Pinch trifft man kleiner als 1,5 cm nicht verlässlich. */
+export const MIN_TARGET_HIT = 0.016;
+
 /** Ein leuchtendes Ziel auf dem Brett: Zeigen, Antippen oder Greifen löst den Zug aus. */
 export function Target({ position, size, onPress, label }: { position: [number, number, number]; size: number; onPress: () => void; label?: string }) {
   const [hover, setHover] = useState(false);
   return (
-    <mesh
+    <group
       position={position}
       rotation={[-Math.PI / 2, 0, 0]}
       onClick={(e) => {
@@ -68,9 +71,17 @@ export function Target({ position, size, onPress, label }: { position: [number, 
       onPointerOut={() => setHover(false)}
       userData={{ label }}
     >
-      <circleGeometry args={[size, 32]} />
-      <meshBasicMaterial color={GOLD} transparent opacity={hover ? 0.85 : 0.45} toneMapped={false} />
-    </mesh>
+      <mesh>
+        <circleGeometry args={[size, 32]} />
+        <meshBasicMaterial color={GOLD} transparent opacity={hover ? 0.85 : 0.45} toneMapped={false} />
+      </mesh>
+      {/* Größere, unsichtbare Trefferfläche für kleine Ziele */}
+      {size < MIN_TARGET_HIT && (
+        <mesh visible={false}>
+          <circleGeometry args={[MIN_TARGET_HIT, 16]} />
+        </mesh>
+      )}
+    </group>
   );
 }
 
@@ -406,6 +417,11 @@ export function ChessBoard({ game, onMove }: BoardProps) {
     size: 8 * s,
     radius: s * 0.7,
     targets: (from) => [...new Set(moves.filter((m) => m.move.from === from).map((m) => m.move.to))].map((to) => ({ id: to, x: at(to)[0], z: at(to)[1] })),
+    // Antippen (#585): wie der `onClick` der Figur, der nach dem Beginn des Greifens nicht mehr ankommt.
+    onTap: (from) => {
+      setPromotion(null);
+      setSelected(from === selected ? null : from);
+    },
     onDrop: (from, to) => {
       if (to === null) return;
       setSelected(from);

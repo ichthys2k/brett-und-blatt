@@ -9,7 +9,7 @@ import { useFrame } from '@react-three/fiber';
 import type { Group } from 'three';
 import { pulse } from '../haptics';
 import { useGrab, type GrabEvent } from './grab';
-import { ROLL_MS, rollProgress, shaken } from './dice-shake';
+import { KNIFFEL_DIE_STEP, KNIFFEL_ROLL_BUTTON, KNIFFEL_ROLL_BUTTON_WIDTH, ROLL_MS, rollProgress, shaken } from './dice-shake';
 import type { BoardProps } from './boards';
 import { Choices, Tile } from './boards4';
 import { peterFace } from './card-views';
@@ -173,10 +173,10 @@ export function KniffelBoard({ game, onMove }: BoardProps) {
         {(view.dice?.values ?? [null, null, null, null, null]).map((value, i) => {
           if (grab.held?.id === i) return null;
           const move = holdMove(i);
-          return <Die key={i} value={value} position={[(i - 2) * 0.08, 0, 0.05]} held={view.dice?.held[i]} tick={tick} tumble={!view.dice?.held[i]} onPress={move ? () => onMove(move) : undefined} onGrab={move ? (e) => grab.begin(i, (i - 2) * 0.08, 0.05, e) : undefined} />;
+          return <Die key={i} value={value} position={[(i - 2) * KNIFFEL_DIE_STEP, 0, 0.05]} held={view.dice?.held[i]} tick={tick} tumble={!view.dice?.held[i]} onPress={move ? () => onMove(move) : undefined} onGrab={move ? (e) => grab.begin(i, (i - 2) * KNIFFEL_DIE_STEP, 0.05, e) : undefined} />;
         })}
         {roll && <RollCup position={[0.38, 0, 0.2]} onRoll={() => onMove(roll)} />}
-        {roll && <Button3D label={`🎲 Würfeln (noch ${view.rollsLeft})`} position={[0.27, 0.07, 0.1]} rotation={[-0.6, -0.3, 0]} width={0.24} height={0.045} active onPress={() => onMove(roll)} />}
+        {roll && <Button3D label={`🎲 Würfeln (noch ${view.rollsLeft})`} position={KNIFFEL_ROLL_BUTTON} rotation={[-0.6, -0.3, 0]} width={KNIFFEL_ROLL_BUTTON_WIDTH} height={0.045} active onPress={() => onMove(roll)} />}
       </group>
       <Tafel game={game} lines={[`${game.seats[view.turn]?.name ?? ''} ist dran · noch ${view.rollsLeft} Würfe`, `Punkte: ${view.sheets.map((s, i) => `${game.seats[i]?.name ?? i + 1} ${s.total}`).join(' · ')}`, 'Würfel antippen hält sie; Eintragen im Fenster.']} />
     </>
