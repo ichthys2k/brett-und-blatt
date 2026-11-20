@@ -4,7 +4,7 @@ Stand: 20.11.2026, **entschieden von Cornelius** (Abschnitt 8), noch nichts umge
 
 ## 1. Kurzfassung und Grundsätze
 
-Aus dem Partiebuch wird eine **Stufenleiter in fünf Stufen** (Gast, Stammgast, Zunftmitglied, Meister, Hofrat). Jede Stufe zeigt einen Titel im Pass; neue Schmuckstücke (Rahmen, Tischflächen, Kulisse, Kartenrücken) kommen **später** dazu, zunächst gibt es keine neuen Bilder (Entscheidung 2). Daneben bleiben die vorhandenen Einzelziele (Kartenrücken, Wappenteile) bestehen und werden nur technisch in einen gemeinsamen Baustein zusammengeführt. Gemessen wird Vielfalt, Können, Gemeinsames und Lernen, nicht Spielzeit.
+Aus dem Partiebuch wird eine **Stufenleiter in fünf Stufen** (Neuling, Stammgast, Zunftmitglied, Meister, Hofrat). Jede Stufe zeigt einen Titel im Pass; neue Schmuckstücke (Rahmen, Tischflächen, Kulisse, Kartenrücken) kommen **später** dazu, zunächst gibt es keine neuen Bilder (Entscheidung 2). Daneben bleiben die vorhandenen Einzelziele (Kartenrücken, Wappenteile) bestehen und werden nur technisch in einen gemeinsamen Baustein zusammengeführt. Gemessen wird Vielfalt, Können, Gemeinsames und Lernen, nicht Spielzeit.
 
 **Was bleibt frei [Code, `look.ts`, `Avatar`]:** 6 Tischflächen (Eiche, Nuss, grüner und roter Filz, Schiefer, Marmor, je hell und dunkel, dazu „automatisch“), 4 Raumkulissen (`tavern`, `castle`, `library`, `garden`), die Spiel-Kulissen als Seitenhintergrund (12 Motive, Schalter an/aus), 6 Lichtstimmungen im Hauptmenü, alle 76 Avatare, Taverne und Schlicht. Wer das heute wählen kann, kann es morgen noch. Die Ausgangsidee „Tische und Kulissen freischalten“ aus #324 trifft deshalb **nicht mehr** zu: Diese Bilder sind seit #313, #316 und #317 ausgeliefert und frei wählbar. Belohnungen sind darum nur **neue** Dinge; die Bestandsliste steht in Abschnitt 3.
 
@@ -21,7 +21,7 @@ Aus dem Partiebuch wird eine **Stufenleiter in fünf Stufen** (Gast, Stammgast, 
 
 Gezählt werden nur **gewertete Partien** (Mindestdauer, siehe unten). Eine Stufe gilt, wenn **alle** Zeilen ihrer Spalte erfüllt sind; nur in der letzten Zeile genügt eine der beiden Bedingungen („Gemeinsam oder Lernen“), damit auch Kinder ohne Online-Zugang aufsteigen. Die Stufe wird aus den Zählern **abgeleitet**, nie gespeichert; da die Zähler nur wachsen, sinkt sie nicht [Code: `mergeBooks` nimmt je Zahl den größeren Wert].
 
-| Zähler | Gast | 1 Stammgast | 2 Zunftmitglied | 3 Meister | 4 Hofrat |
+| Zähler | 0 Neuling | 1 Stammgast | 2 Zunftmitglied | 3 Meister | 4 Hofrat |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Partien insgesamt | 0 | 10 | 40 | 120 | 500 |
 | Verschiedene Spiele gespielt | 0 | 3 | 8 | 20 | 40 |
@@ -177,7 +177,7 @@ Jedes Issue hat `status: Idee`; `Ready` gibt Cornelius. Ohne Bilder (Entscheidun
 
 Cornelius hat im Chat alle zehn Fragen entschieden.
 
-1. **Stufenleiter:** fünf Stufen (Gast, Stammgast, Zunftmitglied, Meister, Hofrat) mit den Schwellen aus Abschnitt 2, übernommen.
+1. **Stufenleiter:** fünf Stufen (Neuling, Stammgast, Zunftmitglied, Meister, Hofrat) mit den Schwellen aus Abschnitt 2, übernommen.
 2. **Keine neuen Bilder zunächst:** nur Titel und Anzeige im Pass; Tischflächen, Kulisse und Kartenrücken später.
 3. **Hofrat bleibt bewusst nur für Vielspieler** erreichbar.
 4. **Bestehendes bleibt frei:** Tische, Kulissen, Lichtstimmungen und alle 76 Avatare für alle; Belohnungen sind nur Neues.
@@ -187,6 +187,9 @@ Cornelius hat im Chat alle zehn Fragen entschieden.
 8. **Klassen:** Rahmen und Titel standardmäßig aus, die Leitung kann sie einschalten.
 9. **Rückwirkung:** Bestehende Spieler steigen nach ihrem Partiebuch auf, mit einem gesammelten Hinweis.
 10. **Spielränge je Spiel** werden vorerst nicht eingeführt (spätere Erweiterung).
+11. **Stufe teilen (Nachlieferung, 20.11.2026, #573):** Beim „Pass teilen“ (Link und Passkarte als Bild) ist „Stufe und Titel“ eine Auswahlzeile, Vorgabe aus. Sie ist nicht wählbar und wird nie eingepackt, wenn der aktive Pass ein Gast ist oder „Belohnungen nicht anzeigen“ gewählt hat. Im Schnappschuss steht nur die Stufenzahl (`level`), der Titel kommt beim Ansehen aus `LEVELS`. Die Klassenkarte bleibt ohne Stufe.
+12. **Stufe 0 heißt „Neuling“,** nicht „Gast“ (der Gast-Pass ist etwas anderes und würde verwechselt).
+13. **Zuletzt gesehene Stufe** (`stufe-gesehen`) wird beim Zusammenführen der Einstellungen nicht nach „jüngster Änderung“, sondern nach **höherer Stufe** entschieden (`mergeItems` in `settingsBlock.ts`), damit ein Gerät mit älterem Stand keinen Aufstieg zurücknimmt und der Hinweis nicht doppelt kommt.
 
 ## Quellen
 

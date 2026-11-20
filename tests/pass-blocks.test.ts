@@ -41,6 +41,18 @@ describe('Pass-Block „einstellungen“ (#140)', () => {
     expect(collectItems(a.read, syncedNames([]), first, 400).musik).toEqual({ v: null, t: 400 });
   });
 
+  it('bei der zuletzt gesehenen Stufe gewinnt die höhere, nicht die jüngere (#573)', () => {
+    const local: Items = { 'stufe-gesehen': { v: '3', t: 10 } };
+    expect(mergeItems({ 'stufe-gesehen': { v: '2', t: 99 } }, local)['stufe-gesehen']).toEqual({ v: '3', t: 10 });
+    expect(mergeItems({ 'stufe-gesehen': { v: '4', t: 1 } }, local)['stufe-gesehen']).toEqual({ v: '4', t: 1 });
+    expect(mergeItems({ 'stufe-gesehen': { v: '3', t: 20 } }, local)['stufe-gesehen']?.t).toBe(20);
+    // ohne gültige Ziffer verliert der Wert gegen eine Stufe; fehlt lokal etwas, wird übernommen
+    expect(mergeItems({ 'stufe-gesehen': { v: null, t: 99 } }, local)['stufe-gesehen']?.v).toBe('3');
+    expect(mergeItems({ 'stufe-gesehen': { v: '1', t: 5 } }, {})['stufe-gesehen']?.v).toBe('1');
+    // andere Einträge bleiben bei „jüngste gewinnt“
+    expect(mergeItems({ musik: { v: 'b', t: 20 } }, { musik: { v: 'a', t: 10 } }).musik?.v).toBe('b');
+  });
+
   it('die jüngere Änderung gewinnt je Eintrag, bei Gleichstand der eigene Stand', () => {
     const local: Items = { musik: { v: 'a', t: 10 }, aussehen: { v: 'plain', t: 50 } };
     const remote: Items = { musik: { v: 'b', t: 20 }, aussehen: { v: 'tavern', t: 40 }, 'spiel:go': { v: '{}', t: 5 } };

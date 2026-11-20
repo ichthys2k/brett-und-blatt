@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { TavernPage } from '../components/TavernPage';
 import { fetchShare, type PassSnapshot } from '../lib/passShare';
 import { findGame } from '../lib/registry';
+import { LEVELS } from '../lib/stufen';
 import { STAMP_ICON, STAMP_LABEL } from '../lib/stamps';
 
 const nameOf = (id: string) => findGame(id)?.name ?? id;
@@ -38,6 +39,7 @@ function Snapshot({ snapshot }: { snapshot: PassSnapshot }) {
         {crest ? <PlayerCrest spec={crest} size={72} label={`Wappen von ${snapshot.name}`} /> : <span className="text-5xl" aria-hidden="true">{snapshot.avatar}</span>}
         <div>
           <h2 className="text-2xl">{snapshot.name}</h2>
+          {snapshot.level !== undefined && LEVELS[snapshot.level] && <p className="text-sm font-semibold">Stufe {snapshot.level}: {LEVELS[snapshot.level]!.title}</p>}
           {snapshot.at > 0 && <p className="text-sm text-muted">Stand {new Date(snapshot.at).toLocaleDateString('de-DE', { dateStyle: 'long' })}</p>}
         </div>
       </section>

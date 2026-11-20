@@ -6,6 +6,9 @@ import { serializeCrest } from '@brett-und-blatt/engine';
 import { parseFavorites, FAVORITES_KEY } from './favorites';
 import { GAME_SERVER } from './server';
 import { stampsFor } from './stamps';
+import { passBook } from './passes';
+import { currentProgress, rewardsHidden } from './rewards';
+import { levelOf } from './stufen';
 import { KEY_PATTERN, STORE_KEY, SHARE_SECTIONS, SHARE_LABEL, encryptSnapshot, decryptSnapshot, sanitizeSnapshot, shareId, type PassSnapshot, type ShareSection } from './passShareCore';
 
 export { SHARE_SECTIONS, SHARE_LABEL, encryptSnapshot, decryptSnapshot, sanitizeSnapshot, shareId };
@@ -47,7 +50,18 @@ export function buildSnapshot(sections: readonly ShareSection[], now = Date.now(
       snapshot.favorites = [];
     }
   }
+  // Stufe nur auf ausdrücklichen Wunsch (Vorgabe aus), nie bei Gast-Pass und nie bei „Belohnungen nicht anzeigen“.
+  if (sections.includes('level') && canShareLevel()) snapshot.level = levelOf(currentProgress()).rank;
   return snapshot;
+}
+
+/** Ob die Stufe teilbar ist: nicht für Gäste (keine Stufe) und nicht, wenn der Pass „Belohnungen nicht anzeigen“ gewählt hat. */
+export function canShareLevel(): boolean {
+  try {
+    return !passBook.activeIsGuest() && !rewardsHidden();
+  } catch {
+    return false;
+  }
 }
 
 const randomText = (): string => {

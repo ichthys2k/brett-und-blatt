@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { SHARE_LABEL, SHARE_SECTIONS, buildSnapshot, currentShareLink, publishShare, stopShare, type ShareSection } from '../lib/passShare';
+import { SHARE_LABEL, SHARE_SECTIONS, buildSnapshot, canShareLevel, currentShareLink, publishShare, stopShare, type ShareSection } from '../lib/passShare';
 import { findGame } from '../lib/registry';
+import { useRewardsHidden } from '../lib/rewards';
+import { LEVELS } from '../lib/stufen';
 import { Button } from './controls';
 
 /** PNG der Passkarte: Name, Bild und Zahlen, gezeichnet auf einem Canvas (nichts geht an einen Server). */
@@ -30,6 +32,7 @@ function cardPng(sections: readonly ShareSection[]): Promise<Blob | null> {
   if (snapshot.stamps) lines.push(`Stempel: ${snapshot.stamps.reduce((n, s) => n + s.kinds.length, 0)} in ${snapshot.stamps.length} Spielen`);
   if (snapshot.trophies) lines.push(`Pokale: ${snapshot.trophies.length}`);
   if (snapshot.favorites?.length) lines.push(`Lieblingsspiele: ${snapshot.favorites.map((id) => findGame(id)?.name ?? id).slice(0, 4).join(', ')}`);
+  if (snapshot.level !== undefined && LEVELS[snapshot.level]) lines.push(`Titel: ${LEVELS[snapshot.level]!.title}`);
   lines.forEach((line, i) => ctx.fillText(line, 48, 290 + i * 44));
   ctx.fillStyle = '#bba77a';
   ctx.font = '22px system-ui, sans-serif';
@@ -45,6 +48,9 @@ export function ShareDialog({ online }: { online: boolean }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  useRewardsHidden(); // zeichnet neu, wenn „Belohnungen nicht anzeigen“ wechselt
+  const levelOk = canShareLevel();
+  const chosen = sections.filter((section) => section !== 'level' || levelOk);
   const toggle = (section: ShareSection) => setSections((list) => (list.includes(section) ? list.filter((s) => s !== section) : [...list, section]));
   const run = async (task: () => Promise<void>) => {
     setBusy(true);
@@ -60,7 +66,7 @@ export function ShareDialog({ online }: { online: boolean }) {
 
   const shareImage = () =>
     run(async () => {
-      const blob = await cardPng(sections);
+      const blob = await cardPng(chosen);
       if (!blob) throw new Error('png');
       const file = new File([blob], 'spielerpass.png', { type: 'image/png' });
       if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], title: 'Mein Spielerpass' });
@@ -90,17 +96,24 @@ export function ShareDialog({ online }: { online: boolean }) {
         <legend className="sr-only">Was soll sichtbar sein?</legend>
         {SHARE_SECTIONS.map((section) => (
           <label key={section} className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="h-4 w-4 accent-accent" checked={sections.includes(section)} onChange={() => toggle(section)} />
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-accent"
+              checked={section === 'level' ? levelOk && sections.includes(section) : sections.includes(section)}
+              disabled={section === 'level' && !levelOk}
+              onChange={() => toggle(section)}
+            />
             {SHARE_LABEL[section]}
           </label>
         ))}
       </fieldset>
+      {!levelOk && <p className="text-xs text-muted">Die Stufe lässt sich nur mit einem Pass teilen, bei dem Belohnungen angezeigt werden.</p>}
       <div className="grid gap-2 sm:grid-cols-2">
         <Button disabled={busy} onClick={shareImage}>
           🖼️ Als Bild
         </Button>
         {online && (
-          <Button variant="primary" disabled={busy} onClick={() => run(async () => setLink(await publishShare(sections)))}>
+          <Button variant="primary" disabled={busy} onClick={() => run(async () => setLink(await publishShare(chosen)))}>
             🔗 {link ? 'Link aktualisieren' : 'Link erstellen'}
           </Button>
         )}

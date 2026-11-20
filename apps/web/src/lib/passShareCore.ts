@@ -2,13 +2,14 @@ import { STAMP_KINDS, type StampKind } from './stamps';
 
 /* Reiner Kern von „Pass teilen“ (#149): Verschlüsselung, Kennung, Prüfung. Siehe passShare.ts. */
 
-export const SHARE_SECTIONS = ['crest', 'stamps', 'trophies', 'favorites'] as const;
+export const SHARE_SECTIONS = ['crest', 'stamps', 'trophies', 'favorites', 'level'] as const;
 export type ShareSection = (typeof SHARE_SECTIONS)[number];
 export const SHARE_LABEL: Readonly<Record<ShareSection, string>> = {
   crest: 'Wappen',
   stamps: 'Stempel',
   trophies: 'Pokalschrank',
   favorites: 'Lieblingsspiele',
+  level: 'Stufe und Titel',
 };
 
 export interface PassSnapshot {
@@ -20,6 +21,8 @@ export interface PassSnapshot {
   stamps?: { gameId: string; kinds: StampKind[] }[];
   trophies?: { gameId: string; at: number }[];
   favorites?: string[];
+  /** Stufe 0 bis 4 (nur die Zahl; der Titel steht in `LEVELS`, so kann niemand einen eigenen Titel einschleusen). Nur bei Wahl „Stufe“. */
+  level?: number;
 }
 
 export const KEY_PATTERN = /^[A-Za-z0-9_-]{43}$/;
@@ -125,6 +128,7 @@ export function sanitizeSnapshot(value: unknown): PassSnapshot | null {
     });
   }
   if (Array.isArray(v.favorites)) snapshot.favorites = v.favorites.flatMap((x) => id(x) ?? []).slice(0, 60);
+  if (typeof v.level === 'number' && Number.isInteger(v.level) && v.level >= 0 && v.level <= 9) snapshot.level = v.level;
   return snapshot;
 }
 
