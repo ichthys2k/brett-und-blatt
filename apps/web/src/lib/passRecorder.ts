@@ -244,9 +244,8 @@ export function usePassRecorder(options: {
       // Zugabe, darf nie stören
     }
     try {
-      const saved = saveRows(rows, seats);
       if (!countsAsGame(result, roundsDone)) return;
-      const saved = saveRows(rowsFor({ gameId, sessionId: session.id, result, seats, endedAt: now, durationMs: now - started.current.at, scores, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.tournament } } : {}) }), seats);
+      const saved = saveRows(rows, seats);
       if (saved) setTrophy(true);
     } catch {
       // Das Partiebuch ist eine Zugabe und darf nie den Tisch stören.

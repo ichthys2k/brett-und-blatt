@@ -1,7 +1,8 @@
-import { readFileSync } from 'node:fs';
+/// <reference types="vite/client" />
 import { describe, expect, it } from 'vitest';
 
-const source = readFileSync(new URL('../apps/web/src/screens/Tournament.tsx', import.meta.url), 'utf8');
+const sources = import.meta.glob<string>('../apps/web/src/screens/Tournament.tsx', { eager: true, query: '?raw', import: 'default' });
+const source = Object.values(sources)[0] ?? '';
 
 describe('Turnierseite bindet ihre Bausteine ein (#551, #552)', () => {
   it('„Leitung übergeben“ und „Serie zuordnen“ werden irgendwo gerendert, nicht nur definiert', () => {
