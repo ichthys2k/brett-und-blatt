@@ -1,5 +1,5 @@
 /*
- * Zeitmaschine (#512): Schach in acht Jahrgängen. Jeder Jahrgang setzt nur Variablen; die Regeln darunter
+ * Zeitmaschine (#512): Schach in neun Jahrgängen. Jeder Jahrgang setzt nur Variablen; die Regeln darunter
  * verteilen sie auf Gehäuse, Felder, Figuren und Leisten. `.ch-era-fx` liegt über dem Brett und trägt
  * Korn, Zeilen und Störungen, ohne Klicks abzufangen.
  */
@@ -304,7 +304,8 @@
 
 .ch-wrap[data-ch-era='1948'] .ch-board-area {
   filter: grayscale(1) sepia(0.18) contrast(1.12);
-  animation: ch-era-projector 0.25s steps(6) infinite, ch-era-weave 0.5s steps(12) infinite;
+  /* nur Helligkeit flackert; keine Bewegung des Bretts (#583) */
+  animation: ch-era-projector 0.25s steps(6) infinite;
 }
 
 .ch-wrap[data-ch-era='1948'] .ch-era-fx::before {
@@ -326,22 +327,6 @@
   }
   66% {
     opacity: 0.97;
-  }
-}
-
-@keyframes ch-era-weave {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  25% {
-    translate: 0.15% -0.3%;
-  }
-  50% {
-    translate: -0.1% 0.2%;
-  }
-  75% {
-    translate: 0.1% 0.35%;
   }
 }
 
@@ -447,7 +432,6 @@
 
 .ch-wrap[data-ch-era='1986'] .ch-board-area {
   filter: blur(0.35px) saturate(1.3);
-  animation: ch-era-jitter 7s infinite;
 }
 
 .ch-wrap[data-ch-era='1986'] .ch-era-fx::before {
@@ -462,6 +446,7 @@
   color: #fff;
   font: 700 clamp(0.7rem, 4cqw, 1.3rem) / 1 ui-monospace, 'Courier New', monospace;
   text-shadow: 2px 0 rgb(255 0 64 / 0.6), -2px 0 rgb(0 224 255 / 0.6), 0 0 3px #000;
+  animation: ch-era-jitter 7s infinite;
 }
 
 .ch-wrap[data-ch-era='1986'] .ch-era-fx::after {
@@ -600,6 +585,7 @@
   .ch-era-fx,
   .ch-era-fx::before,
   .ch-era-fx::after,
+  .ch-era-osd,
   .ch-time-machine svg * {
     animation: none !important;
   }

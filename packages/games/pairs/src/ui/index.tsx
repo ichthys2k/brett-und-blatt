@@ -1,7 +1,19 @@
 import type { GameEvent, SeatId } from '@brett-und-blatt/engine';
 import { ContentCard, FitBox, GridBoard, PackPicker, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState } from 'react';
-import { faceImageOf, faceOf, PAIR_SETS } from '../content';
+
+/** Hochkant-Fenster: Karten werden höher als breit (3:4), damit sie den Platz füllen, statt klein in der Mitte zu sitzen. */
+function usePortrait(): boolean {
+  const get = () => typeof window !== 'undefined' && window.innerHeight > window.innerWidth * 1.1;
+  const [portrait, setPortrait] = useState(get);
+  useEffect(() => {
+    const onResize = () => setPortrait(get());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return portrait;
+}
+import { faceImageOf, faceOf, PAIR_SETS, spokenFaceOf } from '../content';
 import { learningReport, type PairsMove, type PairsState } from '../rules';
 import './styles.css';
 import { albumSpec } from './album';
@@ -27,8 +39,9 @@ function Board({ view, legalMoves, onMove, hint, events }: BoardProps<PairsState
     }
   }, [events]);
 
+  const portrait = usePortrait();
   return (
-    <FitBox ratio={view.cols / view.rows}>
+    <FitBox ratio={(view.cols * (portrait ? 0.75 : 1)) / view.rows}>
       <GridBoard
         cols={view.cols}
         rows={view.rows}
@@ -47,6 +60,7 @@ function Board({ view, legalMoves, onMove, hint, events }: BoardProps<PairsState
               <ContentCard
                 key={face ? 'offen' : 'verdeckt'}
                 content={text}
+                label={face ? spokenFaceOf(view.set, face.pair, face.side, view.custom) : undefined}
                 image={image}
                 caption={image && view.set !== 'tiere' && text ? text : undefined}
                 dimmed={taken !== null}
@@ -62,7 +76,7 @@ function Board({ view, legalMoves, onMove, hint, events }: BoardProps<PairsState
         cellLabel={(col, row) => {
           const card = row * view.cols + col;
           const face = view.faces[card];
-          return `Karte ${card + 1}: ${face ? faceOf(view.set, face.pair, face.side, view.custom) : 'verdeckt'}`;
+          return `Karte ${card + 1}: ${face ? spokenFaceOf(view.set, face.pair, face.side, view.custom) : 'verdeckt'}`;
         }}
       />
     </FitBox>
@@ -112,7 +126,7 @@ function PairsSetup({ options, setOption }: { options: Record<string, string>; s
                       <ContentCard
                         content={sample?.a ?? '?'}
                         image={image}
-                        caption={set.name}
+                        caption={set.name.startsWith(`${group}: `) ? set.name.slice(group.length + 2) : set.name}
                         highlight={selected ? 'target' : null}
                       />
                     </button>

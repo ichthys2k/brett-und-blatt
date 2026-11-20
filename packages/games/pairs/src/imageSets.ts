@@ -9,6 +9,8 @@ export interface PairEntry {
   b: string;
   /** Optionaler Bildschlüssel für die UI (wird über `setPairImageResolver` aufgelöst). */
   image?: string;
+  /** Gesprochener Name, wenn `a`/`b` nur ein Emoji sind. */
+  label?: string;
 }
 
 export interface PairSet {

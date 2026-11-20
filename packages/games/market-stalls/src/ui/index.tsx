@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { SeatId } from '@brett-und-blatt/engine';
 import { SeatRing, CardFan, useInspectProps, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import {
@@ -214,7 +215,12 @@ function Board({ view, legalMoves, onMove, viewer, seatNames, hint, table }: Boa
   );
 
   return (
-    <div className="mst-board" data-phase={view.phase} data-around={table ? '' : undefined}>
+    <div
+      className="mst-board"
+      data-phase={view.phase}
+      data-around={table ? '' : undefined}
+      style={table ? ({ '--mst-seats': view.seats } as CSSProperties) : undefined}
+    >
       {table ? (
         <SeatRing
           seats={view.seats}

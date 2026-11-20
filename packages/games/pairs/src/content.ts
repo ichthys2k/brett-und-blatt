@@ -11,10 +11,46 @@ import { IMAGE_PAIR_SETS, type PairEntry, type PairSet } from './imageSets';
 
 export type { PairEntry, PairSet };
 
+/** Namen der Tiere für Bildschirmleser (die Karten zeigen nur das Bild, die Kartenseite ist das Emoji). */
+const TIER_NAMEN: Record<string, string> = {
+  '🐶': 'Hund',
+  '🐱': 'Katze',
+  '🐭': 'Maus',
+  '🐹': 'Hamster',
+  '🐰': 'Hase',
+  '🦊': 'Fuchs',
+  '🐻': 'Bär',
+  '🐼': 'Panda',
+  '🐨': 'Koala',
+  '🐯': 'Tiger',
+  '🦁': 'Löwe',
+  '🐮': 'Kuh',
+  '🐷': 'Schwein',
+  '🐸': 'Frosch',
+  '🐵': 'Affe',
+  '🐓': 'Hahn',
+  '🦚': 'Pfau',
+  '🦜': 'Papagei',
+  '🦆': 'Ente',
+  '🦩': 'Flamingo',
+  '🐎': 'Pferd',
+  '🦄': 'Einhorn',
+  '🐝': 'Biene',
+  '🦡': 'Dachs',
+  '🦋': 'Schmetterling',
+  '🐢': 'Schildkröte',
+  '🐙': 'Krake',
+  '🦀': 'Krabbe',
+  '🐬': 'Delphin',
+  '🐳': 'Wal',
+  '🦒': 'Giraffe',
+  '🐘': 'Elefant',
+};
+
 const tiere: PairSet = {
   ...tiereRaw,
   group: 'Tiere',
-  pairs: tiereRaw.pairs.map((p) => ({ ...p, image: `avatar:${p.a}` })),
+  pairs: tiereRaw.pairs.map((p) => ({ ...p, image: `avatar:${p.a}`, label: TIER_NAMEN[p.a] })),
 };
 
 const withGroup = (set: PairSet, group: string): PairSet => ({ ...set, group });
@@ -40,6 +76,12 @@ export function pairSet(id: string): PairSet {
 export function faceOf(setId: string, pair: number, side: 'a' | 'b', custom?: { a: string; b: string }[]): string {
   const entry = (custom ?? pairSet(setId).pairs)[pair];
   return entry ? entry[side] : '?';
+}
+
+/** Name einer Kartenseite für Bildschirmleser, wo der Inhalt selbst nur ein Emoji ist (Tiere). */
+export function spokenFaceOf(setId: string, pair: number, side: 'a' | 'b', custom?: { a: string; b: string }[]): string {
+  const label = custom ? undefined : pairSet(setId).pairs[pair]?.label;
+  return label ?? faceOf(setId, pair, side, custom);
 }
 
 /** Bildschlüssel einer Kartenseite, falls das Set gemalte Bilder nutzt. */

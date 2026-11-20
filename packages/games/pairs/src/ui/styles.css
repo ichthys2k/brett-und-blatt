@@ -102,11 +102,42 @@
   padding: 16% 7% 6%;
   background: linear-gradient(to top, rgb(0 0 0 / 0.84) 0%, rgb(0 0 0 / 0.58) 65%, rgb(0 0 0 / 0) 100%);
   color: #fff;
-  font-size: min(12cqw, 12cqh);
+  font-size: min(10.5cqw, 10.5cqh);
   font-weight: 700;
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
   white-space: normal;
+  overflow-wrap: anywhere;
+  hyphens: auto;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+
+/* Textkarten in der Set-Auswahl: lange Wörter („Kleinste Primzahl“) umbrechen, statt die Kachel zu sprengen. */
+.pf-set-btn-text .bub-ccard-text {
+  font-size: min(15cqw, 18cqh);
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+}
+
+/* Spielfeld: Beschriftungen und Texte dürfen umbrechen statt abgeschnitten zu werden. */
+.pf-board .bub-ccard-face-image .bub-ccard-caption {
+  font-size: min(11cqw, 11cqh);
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  -webkit-line-clamp: 3;
+}
+
+.pf-board .bub-ccard-text {
+  font-size: min(20cqw, 28cqh);
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+}
+
+/* Set-Auswahl: lange Namen („Haus Eichenhain (Wald)“) bekommen bis zu vier Zeilen. */
+.pf-set-btn .bub-ccard-caption {
+  font-size: min(9.5cqw, 9.5cqh);
+  -webkit-line-clamp: 4;
 }

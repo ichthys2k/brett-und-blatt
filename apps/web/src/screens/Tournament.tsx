@@ -52,6 +52,12 @@ function formatDate(ms: number): string {
 const isLocalView = (view: TournamentView) => view.settings.mode === 'local';
 
 /** Was dieses Gerät im Turnier darf (Leitung, Mitleitung, Helfer): die Seite fragt `can`, nicht die Rolle. */
+/** Zeile „Deine Rolle in der Gruppe“ (#579): in Anmeldung und laufendem Turnier gleich. */
+function OrgRoleNote({ view }: { view: TournamentView }) {
+  if (view.orgRoles.length === 0) return null;
+  return <p className="text-sm text-muted">🏛️ Deine Rolle in der Gruppe dieses Turniers: {roleList(view.orgRoles)}</p>;
+}
+
 const capsOf = (view: TournamentView) => tournamentCapabilities({ isLeader: view.isLeader, helperRole: view.helperRole, mayDelete: view.mayDelete, orgRoles: view.orgRoles, local: view.settings.mode === 'local' });
 /** Wird ein Spielstand gezählt (Tore, Sätze, Punkte)? */
 const withScore = (view: TournamentView) => isLocalView(view) && view.settings.result !== undefined && view.settings.result !== 'winner';
@@ -447,6 +453,7 @@ export function TournamentScreen({ code, claim, helper, leader }: { code: string
         {subtitle}
         {isOfflineCode(code) && <OfflineBar code={code} />}
         {local ? <LocalSignup view={view} code={code} send={send} /> : <SignupView view={view} code={code} send={send} />}
+        <OrgRoleNote view={view} />
         {pushToggle}
         {banners}
       </Page>
@@ -483,11 +490,7 @@ export function TournamentScreen({ code, claim, helper, leader }: { code: string
       {view.phase === 'finished' && isLocalView(view) && view.isLeader && <NextPhase view={view} />}
       <RoundStart view={view} send={send} />
       {view.helperRole === 'helper' && <p className="text-sm text-muted">🤝 {t('tournament.youHelp')}</p>}
-      {view.orgRoles.length > 0 && (
-        <p className="text-sm text-muted">
-          🏛️ Deine Rolle in der Gruppe dieses Turniers: {roleList(view.orgRoles)}
-        </p>
-      )}
+      <OrgRoleNote view={view} />
       {view.helperRole === 'coleader' && <p className="text-sm text-muted">🛠 {t('tournament.youColead')}</p>}
       {view.settings.format === 'tables' ? (
         <TableRounds view={view} send={send} />

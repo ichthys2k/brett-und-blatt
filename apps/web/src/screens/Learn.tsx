@@ -108,7 +108,7 @@ export function LearnScreen({ source }: { source: string }) {
 }
 
 function Overview({ learner, deck, setDeck, info, onStart, onPractice }: { learner: Learner; deck: number | 'all'; setDeck: (d: number | 'all') => void; info: ReturnType<typeof dueInfo>; onStart: () => void; onPractice: (cards: ApkgCard[]) => void }) {
-  const tree = useMemo(() => deckTree(learner.collection), [learner.collection]);
+  const tree = useMemo(() => deckTree(learner.collection, { withParents: true }), [learner.collection]);
   const open = total(info.counts);
   return (
     <div className="space-y-4">

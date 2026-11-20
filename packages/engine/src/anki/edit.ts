@@ -289,20 +289,45 @@ export interface DeckNode {
   /** Notizen in diesem Stapel (ohne Unterstapel) und mit. */
   own: number;
   total: number;
+  /** Nur mit `withParents`: Elternstapel, den die Sammlung selbst nicht führt (z. B. „Latein“ bei nur „Latein::Nomen“); `id` ist negativ. */
+  virtual?: boolean;
 }
 
-/** Die Stapel als flache Liste in Baumreihenfolge. */
-export function deckTree(col: AnkiCollection): DeckNode[] {
+/**
+ * Die Stapel als flache Liste in Baumreihenfolge. Mit `withParents` erscheint auch jeder fehlende Elternstapel
+ * als eigene Zeile (mit negativer `id`, nur zum Auswählen und Filtern, nicht zum Umbenennen oder Löschen).
+ */
+export function deckTree(col: AnkiCollection, options: { withParents?: boolean } = {}): DeckNode[] {
   const counts = new Map<number, number>();
   for (const n of col.notes) counts.set(n.did, (counts.get(n.did) ?? 0) + 1);
-  return [...col.decks]
-    .sort((a, b) => a.name.localeCompare(b.name, 'de'))
-    .map((d) => {
-      const own = counts.get(d.id) ?? 0;
-      const total = col.decks.filter((o) => o.id === d.id || o.name.startsWith(`${d.name}::`)).reduce((sum, o) => sum + (counts.get(o.id) ?? 0), 0);
+  const entries: { id: number; name: string; virtual: boolean }[] = col.decks.map((d) => ({ id: d.id, name: d.name, virtual: false }));
+  if (options.withParents) {
+    const known = new Set(entries.map((e) => e.name));
+    for (const d of col.decks) {
       const parts = d.name.split('::');
-      return { id: d.id, name: d.name, label: parts[parts.length - 1]!, depth: parts.length - 1, own, total };
-    });
+      for (let i = 1; i < parts.length; i++) {
+        const name = parts.slice(0, i).join('::');
+        if (!known.has(name)) (known.add(name), entries.push({ id: 0, name, virtual: true }));
+      }
+    }
+  }
+  const sorted = entries.sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  let next = -1;
+  return sorted.map((d) => {
+    const id = d.virtual ? next-- : d.id;
+    const family = (o: { name: string }) => o.name === d.name || o.name.startsWith(`${d.name}::`);
+    const own = d.virtual ? 0 : (counts.get(d.id) ?? 0);
+    const total = col.decks.filter(family).reduce((sum, o) => sum + (counts.get(o.id) ?? 0), 0);
+    const parts = d.name.split('::');
+    return { id, name: d.name, label: parts[parts.length - 1]!, depth: parts.length - 1, own, total, ...(d.virtual ? { virtual: true } : {}) };
+  });
+}
+
+/** Alle Stapel-ids eines Stapels samt Unterstapeln; `id` darf auch ein Elternstapel aus `deckTree(…, { withParents: true })` sein. `null`, wenn es ihn nicht gibt. */
+export function deckFamilyIds(col: AnkiCollection, id: number): Set<number> | null {
+  const node = deckTree(col, { withParents: true }).find((d) => d.id === id);
+  if (!node) return null;
+  return new Set(col.decks.filter((d) => d.name === node.name || d.name.startsWith(`${node.name}::`)).map((d) => d.id));
 }
 
 // ---------------------------------------------------------------- Mehrere Notizen auf einmal
