@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Brett &amp; Blatt 16</title>
+    <!-- Keine Anfragen an fremde Server (EmulatorJS fragt sonst nach Updates bei cdn.emulatorjs.org). -->
+    <meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: data:" />
     <style>
       html, body { margin: 0; height: 100%; background: #14100c; color: #efe3c8; font-family: system-ui, sans-serif; overflow: hidden; }
       #spiel { width: 100%; height: 100%; }
