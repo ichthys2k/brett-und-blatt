@@ -1,9 +1,11 @@
 import { generalBots, type GameModule, type OptionSpec } from '@brett-und-blatt/engine';
+import { moleBot } from './bots';
 import { describeMove } from './describe';
 import { meta } from './meta';
 import { applyMove, currentPlayers, legalMoves, playerView, result, setup, timeoutMove, type MoleMove, type MoleState } from './rules';
 
 export * from './rules';
+export * from './bots';
 export { describeMove } from './describe';
 export { meta } from './meta';
 
@@ -68,6 +70,6 @@ export const gameModule: GameModule<MoleState, MoleMove> = {
   result,
   timeoutMove,
   describeMove,
-  // Eigener Bot „Wühlmaus“ folgt in M2; bis dahin die allgemeinen Bots.
-  bots: generalBots<MoleState, MoleMove, MoleState>(),
+  // Standard-Bot ist „Wühlmaus“; die allgemeinen Bots (und der Zufall für den Prüfstand) bleiben dabei.
+  bots: [moleBot, ...generalBots<MoleState, MoleMove, MoleState>()],
 };
