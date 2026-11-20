@@ -8,7 +8,8 @@ import { loadBook } from '../lib/chronikStore';
 import { crestUrl } from '../lib/crest';
 import { totals } from '../lib/partiebuch';
 import { games } from '../lib/registry';
-import { categoryStamp, STAMP_ICON, stampCount, stampDescription, stampsFor } from '../lib/stamps';
+import { loadLearnBook } from '../lib/learnStore';
+import { categoryStamp, learnStampDescription, learnStamps, STAMP_ICON, stampCount, stampDescription, stampsFor } from '../lib/stamps';
 import { storage } from '../lib/storage';
 import { CATEGORIES } from '../screens/Home';
 
@@ -26,6 +27,8 @@ export function StampBook() {
   const pages = CATEGORIES.map((category) => ({ category, list: category.gameIds.flatMap((id) => known.get(id) ?? []) }));
   const allIds = pages.flatMap((page) => page.list.map((game) => game.id));
   const sum = totals(book);
+  const learn = learnStamps(loadLearnBook().days);
+  const [learnInfo, setLearnInfo] = useState('');
 
   return (
     <div className="space-y-4">
@@ -50,6 +53,29 @@ export function StampBook() {
         </div>
       </section>
       {designing && <CrestDesigner name={profile?.name || t('pass.cover.noName')} onClose={() => setDesigning(false)} />}
+
+      <section className="space-y-3 rounded-2xl border border-line bg-surface p-4" aria-labelledby="stamps-learn">
+        <h2 id="stamps-learn" className="text-xl font-bold">
+          <span aria-hidden="true">📚 </span>Lernen
+        </h2>
+        <ul className="flex flex-wrap gap-2">
+          {learn.map((stamp) => (
+            <li key={stamp.days}>
+              <button
+                type="button"
+                aria-label={learnStampDescription(stamp)}
+                onClick={() => setLearnInfo(learnStampDescription(stamp))}
+                className={`grid size-12 place-items-center rounded-full border text-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${stamp.earned ? 'border-accent bg-accent/15' : 'border-dashed border-line opacity-40 grayscale'}`}
+              >
+                <span aria-hidden="true">{stamp.icon}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <p className="text-sm text-muted" role="status" aria-live="polite">
+          {learnInfo || 'Lerntage in Folge im Karteikasten: 1, 5 und 10.'}
+        </p>
+      </section>
 
       {pages.map(({ category, list }) => {
         const banner = categoryStamp(book, list.map((game) => game.id));

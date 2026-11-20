@@ -81,6 +81,39 @@ export function categoryStamp(book: Book, gameIds: readonly string[]): CategoryS
   return { earned, at: earned && dates.every((d) => d !== null) ? Math.max(...(dates as number[])) : null, played, total: gameIds.length };
 }
 
+/** Stempel fürs Lernen (#581): längste Folge von Lerntagen im Karteikasten. */
+export const LEARN_STAMP_DAYS = [1, 5, 10] as const;
+export const LEARN_STAMP_ICON = ['📖', '🔥', '🎓'] as const;
+
+export interface LearnStamp {
+  days: number;
+  icon: string;
+  earned: boolean;
+}
+
+/** Längste Reihe aufeinanderfolgender Tage in `days` (Tagesnummern). */
+export function longestStreak(days: readonly number[]): number {
+  const sorted = [...new Set(days)].sort((a, b) => a - b);
+  let best = 0;
+  let run = 0;
+  sorted.forEach((day, i) => {
+    run = i > 0 && day === sorted[i - 1]! + 1 ? run + 1 : 1;
+    best = Math.max(best, run);
+  });
+  return best;
+}
+
+export function learnStamps(days: readonly number[]): LearnStamp[] {
+  const best = longestStreak(days);
+  return LEARN_STAMP_DAYS.map((n, i) => ({ days: n, icon: LEARN_STAMP_ICON[i]!, earned: best >= n }));
+}
+
+/** Beschriftung eines Lern-Stempels für Tastatur und Screenreader. */
+export function learnStampDescription(stamp: LearnStamp): string {
+  const name = stamp.days === 1 ? '1 Lerntag' : `${stamp.days} Lerntage in Folge`;
+  return `${name}: ${stamp.earned ? 'erreicht' : 'offen'}`;
+}
+
 export function stampCount(book: Book, gameIds: readonly string[]): number {
   return gameIds.reduce((sum, id) => sum + stampsFor(book, id).filter((stamp) => stamp.earned).length, 0);
 }
