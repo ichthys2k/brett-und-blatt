@@ -115,7 +115,10 @@ export function saveRows(rows: readonly RecordRow[], seats: readonly SeatConfig[
   const level = strongestBot(seats);
   const device = deviceCounterId();
   let trophyForActive = false;
+  const guestId = passBook.activeIsGuest() ? passBook.activeId() : undefined;
   for (const row of rows) {
+    // Ein Gast zeichnet nichts auf (#558): weder Buch noch Pokal, auch kein „Pokal“-Jubel.
+    if (guestId !== undefined && (row.passId === null || row.passId === guestId)) continue;
     let firstHardWin = false;
     passBook.updateStored(row.passId, BOOK_KEY, (raw) => {
       let book = emptyBook();
@@ -202,25 +205,27 @@ export function usePassRecorder(options: {
       }
     });
     const now = Date.now();
+    const rows = rowsFor({ gameId, sessionId: session.id, result, seats, endedAt: now, durationMs: now - started.current.at, scores, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.tournament } } : {}) });
     // Lokale Partien: Zugliste für das Anheften in der Chronik merken (online kennt der Browser Seed und Züge nicht, siehe #99).
+    // Im Hot-Seat bekommt jeder beteiligte Pass die Zugliste in seine Ablage (#561); ein Gast zeichnet nichts auf (#558).
     try {
       const local = session as unknown as { snapshot?: () => { config: unknown; log: unknown } };
       if (!online && typeof local.snapshot === 'function') {
         const snap = local.snapshot();
-        rememberReplay(session.id, { config: snap.config as never, log: snap.log as never });
+        rememberReplay(session.id, { config: snap.config as never, log: snap.log as never }, [null, ...rows.map((row) => row.passId)]);
       }
     } catch {
       // Zugabe, darf nie stören
     }
     // Lernen beim Spielen: das Ergebnis des eigenen Platzes zählt als Wiederholung der Karten (mit niedrigem Gewicht).
     try {
-      const seat = learning ? albumSeat(seats, online ? { yourSeat: online.yourSeat } : undefined) : null;
+      const seat = learning && !passBook.activeIsGuest() ? albumSeat(seats, online ? { yourSeat: online.yourSeat } : undefined) : null;
       if (learning && seat !== null && !online?.tournament) recordGameLearning(learning.report(view, seat));
     } catch {
       // Zugabe, darf nie stören
     }
     try {
-      const saved = saveRows(rowsFor({ gameId, sessionId: session.id, result, seats, endedAt: now, durationMs: now - started.current.at, scores, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.tournament } } : {}) }), seats);
+      const saved = saveRows(rows, seats);
       if (saved) setTrophy(true);
     } catch {
       // Das Partiebuch ist eine Zugabe und darf nie den Tisch stören.

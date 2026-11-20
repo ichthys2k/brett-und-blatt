@@ -540,7 +540,7 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
                 <span>Lieblingsspiele</span>
                 <span className="text-xs font-normal text-muted">({favoriteGames.length})</span>
               </h2>
-              <p className="text-xs text-muted">Mit dem Stern angepinnt – nur auf diesem Gerät.</p>
+              <p className="text-xs text-muted">Mit dem Stern angepinnt – reisen mit deinem Pass.</p>
             </div>
             <ul className="grid gap-3 sm:grid-cols-2">
               {favoriteGames.map((info) => (

@@ -398,7 +398,7 @@ export class Tournament {
     const { days } = this.s.settings;
     const { minPlayers } = this.format;
     const waiting = this.s.players.filter((p) => p.pending).length;
-    if (waiting > 0) return `Noch ${waiting} Anmeldung${waiting === 1 ? '' : 'en'} wartet auf deine Freigabe.`;
+    if (waiting > 0) return waiting === 1 ? 'Noch 1 Anmeldung wartet auf deine Freigabe.' : `Noch ${waiting} Anmeldungen warten auf deine Freigabe.`;
     // Check-in: Wer fehlt, spielt nicht mit.
     if (this.s.settings.checkin) {
       const here = this.s.players.filter((p) => p.present);

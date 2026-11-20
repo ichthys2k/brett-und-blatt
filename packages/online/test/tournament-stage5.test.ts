@@ -40,7 +40,7 @@ describe('Anmeldung mit Freigabe', () => {
   it('Anfragen warten, bis die Leitung zulässt; der Start ist bis dahin gesperrt', () => {
     const t = online({ approval: true }, 4);
     expect(t.view(LEADER).players.every((p) => p.pending)).toBe(true);
-    expect(t.start(LEADER)).toMatch(/Freigabe/);
+    expect(t.start(LEADER)).toBe('Noch 4 Anmeldungen warten auf deine Freigabe.');
     const ids = t.view(LEADER).players.map((p) => p.id);
     expect(t.approve(token(0), ids[0]!, true)).toMatch(/Leitung/);
     for (const id of ids.slice(0, 3)) expect(t.approve(LEADER, id, true)).toBeNull();
@@ -48,6 +48,13 @@ describe('Anmeldung mit Freigabe', () => {
     expect(t.view(LEADER).players).toHaveLength(3);
     expect(t.approve(LEADER, ids[0]!, true)).toMatch(/keine offene Anfrage/);
     expect(t.start(LEADER)).toMatch(/mindestens/);
+  });
+
+  it('die Meldung steht in der Einzahl, wenn nur eine Anmeldung wartet (#564)', () => {
+    const t = online({ approval: true }, 4);
+    const ids = t.view(LEADER).players.map((p) => p.id);
+    for (const id of ids.slice(0, 3)) expect(t.approve(LEADER, id, true)).toBeNull();
+    expect(t.start(LEADER)).toBe('Noch 1 Anmeldung wartet auf deine Freigabe.');
   });
 
   it('ohne Freigabe ist jeder sofort zugelassen', () => {

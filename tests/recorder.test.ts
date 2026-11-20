@@ -80,6 +80,26 @@ describe('Recorder schreibt Buch und Pokale (#142, #146)', () => {
   });
 });
 
+describe('Recorder: Gast zeichnet nichts auf (#558)', () => {
+  beforeEach(() => data.clear());
+
+  it('eine Partie als Gast legt weder Buch noch Pokal noch Album an', () => {
+    const book = createPassBook({
+      get: (k) => data.get(k) ?? null,
+      set: (k, v) => void data.set(k, v),
+      remove: (k) => void data.delete(k),
+      keys: () => [...data.keys()],
+    });
+    book.createNew({ name: '', avatar: '', hasCode: false }, { guest: true });
+    expect(book.activeIsGuest()).toBe(true);
+    expect(finish('g1', 0, 5000)).toBe(false);
+    saveFinds('kapitel', 3, ['a']);
+    expect(data.get(BOOK_KEY)).toBeUndefined();
+    expect(data.get(TROPHIES_KEY)).toBeUndefined();
+    expect(data.get(ALBUM_KEY)).toBeUndefined();
+  });
+});
+
 describe('Recorder: Sammelalbum (#148)', () => {
   beforeEach(() => data.clear());
 
