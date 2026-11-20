@@ -95,6 +95,9 @@ export function applyTournamentMessage(t: Tournament, from: Sender, message: Exc
     case 'enterResult':
       error = t.enterResult(token, message.match, message.score ? { score: message.score } : { winner: message.winner! });
       break;
+    case 'setSpectators':
+      error = t.setSpectators(token, message.on);
+      break;
     case 'setFields':
       error = t.setFields(token, message.count);
       break;

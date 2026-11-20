@@ -586,7 +586,7 @@ function LocalSignup({ view, code, state, send }: { view: TournamentView; code: 
       </Section>
       {can(capsOf(view), 'tools') && (
         <Section title={t('tournament.tools')}>
-          <SpectatorLink view={view} code={code} />
+          <SpectatorLink view={view} code={code} {...(isOfflineCode(code) ? {} : { send })} />
           <Helpers view={view} code={code} send={send} />
           <SchedulePanel view={view} send={send} />
           <LeadershipTools view={view} code={code} state={state} send={send} />
@@ -845,13 +845,18 @@ function SeriesAttach({ view, send, offline }: { view: TournamentView; send: Sen
   );
 }
 
-function SpectatorLink({ view, code }: { view: TournamentView; code: string }) {
+function SpectatorLink({ view, code, send }: { view: TournamentView; code: string; send?: Send }) {
   const link = `${window.location.origin}${window.location.pathname}${paths.tournament(code)}`;
   const embed = `<iframe src="${window.location.origin}${window.location.pathname}${paths.tournamentEmbed(code)}" title="${view.settings.name.replace(/"/g, '')}" width="100%" height="600" style="border:0" loading="lazy"></iframe>`;
   if (!view.settings.spectators)
     return (
       <div className="space-y-2">
         <p className="text-sm text-muted">{t('tournament.noSpectators')}</p>
+        {send && (
+          <Button className="w-full" onClick={() => send({ type: 'setSpectators', on: true })}>
+            👀 {t('tournament.spectatorsOn')}
+          </Button>
+        )}
         <a className="block" href={paths.tournamentBeamer(code)} target="_blank" rel="noopener">
           <Button className="w-full" tabIndex={-1}>
             📺 {t('tournament.beamer')}
@@ -875,6 +880,11 @@ function SpectatorLink({ view, code }: { view: TournamentView; code: string }) {
         </Button>
       </a>
       <p className="text-xs text-muted">{t('tournament.beamerHint')}</p>
+      {send && (
+        <Button className="w-full" onClick={() => send({ type: 'setSpectators', on: false })}>
+          🙈 {t('tournament.spectatorsOff')}
+        </Button>
+      )}
       <p className="pt-1 text-xs text-muted">{t('tournament.embedHint')}</p>
       <Button className="w-full" onClick={() => navigator.clipboard?.writeText(embed)}>
         &lt;/&gt; {t('tournament.embedCopy')}
@@ -1926,7 +1936,7 @@ function LeaderTools({ view, code, state, send, claim, onBoard }: { view: Tourna
       <Button className="w-full" onClick={onBoard}>
         📺 {t('tournament.board')}
       </Button>
-      {local && !isOfflineCode(code) && <SpectatorLink view={view} code={code} />}
+      {local && !isOfflineCode(code) && <SpectatorLink view={view} code={code} send={send} />}
       {local && isOfflineCode(code) && <p className="text-sm text-muted">{t('tournament.offlineNoSpectators')}</p>}
       {!isOfflineCode(code) && <CopyTools view={view} />}
       <LeadershipTools view={view} code={code} state={state} send={send} />
@@ -2187,6 +2197,9 @@ function PrintTools({ view, onPrint }: { view: TournamentView; onPrint: (kind: P
           </Button>
         ))}
       </div>
+      {view.settings.format !== 'tables' && !printableMatches(view).some((m) => !m.outcome && m.slots[0].player && m.slots[1].player) && (
+        <p className="text-xs text-muted">{t('tournament.print.sheetsEmpty')}</p>
+      )}
       <div className="grid grid-cols-3 gap-2">
         <Button className="text-xs" onClick={exportMatches}>
           ⬇️ {t('tournament.csv.matches')}

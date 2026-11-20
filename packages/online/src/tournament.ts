@@ -713,6 +713,15 @@ export class Tournament {
     return null;
   }
 
+  /** Zuschaulink nachträglich ein- oder ausschalten (#553); nur Turniere vor Ort. */
+  setSpectators(token: string, on: boolean): string | null {
+    if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
+    if (!isLocal(this.s)) return 'Einen Zuschaulink gibt es nur vor Ort.';
+    this.s.settings.spectators = on;
+    this.touch();
+    return null;
+  }
+
   /** Zahl der Tische oder Felder; 0 schaltet den Aufruf ab. */
   setFields(token: string, count: number): string | null {
     if (!this.isLeader(token)) return 'Das darf nur die Leitung.';
