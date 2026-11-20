@@ -11,7 +11,7 @@ import { CARDS_DB } from '../cards';
 import type { CardDefinition, HousePower, Minion } from '../types';
 import { cardOrigin, getCardTraits, getMinionTraits, type TraitInfo } from './traits';
 import { uiCard } from './cardLookup';
-import { cardArtOf, cardArtUrl, withCardArt } from './cardArt';
+import { cardArtLargeUrlFor, cardArtOf, cardArtUrl, withCardArt } from './cardArt';
 import { KEYWORD_SYMBOLS, KeywordMark, StatGem, type StatState } from './symbole';
 import type { KeywordId } from '../types';
 
@@ -300,7 +300,7 @@ export function zoomContent(item: ZoomItem, cosmetics: ZoomCosmetics): InspectCo
   return {
     title: def.name,
     subtitle: cardOrigin(def) || undefined,
-    image: art ? { src: art, aspect: 3 / 4 } : undefined,
+    image: art ? { src: art, largeSrc: cardArtLargeUrlFor(def.id, bild, cosmetics.mediaUrlMap), aspect: 3 / 4 } : undefined,
     emoji: def.emoji,
     stats,
     lines: def.text ? [def.text] : undefined,

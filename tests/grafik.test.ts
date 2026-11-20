@@ -19,6 +19,8 @@ const root = new URL('../', import.meta.url);
 /** Ordner, die nicht zum Quellstand gehören (Bauergebnisse, Abhängigkeiten, lokale Rohbilder). */
 const SKIPPED = new Set(['node_modules', 'dist', '.git', '.wrangler', 'grafik-roh', 'test-results', 'playwright-report', 'coverage']);
 const PNG_MAX_BYTES = 1024 * 1024;
+/** Großfassungen (#419) werden erst beim Ansehen geladen, bleiben aber klein genug fürs Handy. */
+const GROSS_MAX_BYTES = 200 * 1024;
 
 function walk(relative: string, visit: (path: string, isDir: boolean) => void) {
   for (const entry of fs.readdirSync(new URL(relative, root), { withFileTypes: true })) {
@@ -42,6 +44,17 @@ describe('Originale-Archiv', () => {
     walk('', (path, isDir) => {
       if (isDir || !path.toLowerCase().endsWith('.png')) return;
       if (fs.statSync(new URL(path, root)).size > PNG_MAX_BYTES) found.push(path);
+    });
+    expect(found).toEqual([]);
+  });
+
+  it('jede Datei in gross/ hat eine gleichnamige kleine Fassung im Elternordner und ist höchstens 200 KB groß', () => {
+    const found: string[] = [];
+    walk('', (path, isDir) => {
+      if (isDir || !path.endsWith('.webp') || !/\/gross\/[^/]+$/.test(path)) return;
+      const small = path.replace(/\/gross\/([^/]+)$/, '/$1');
+      if (!fs.existsSync(new URL(small, root))) found.push(`${path}: keine kleine Fassung`);
+      if (fs.statSync(new URL(path, root)).size > GROSS_MAX_BYTES) found.push(`${path}: größer als 200 KB`);
     });
     expect(found).toEqual([]);
   });

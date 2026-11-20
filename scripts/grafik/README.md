@@ -10,6 +10,12 @@ Ablauf für gemalte Bilder (Porträts, Tierkarten, Illustrationen); Symbole, Fig
 
 Stil, Verbote, Kartenregeln und Referenzbilder: [`docs/grafik/STILBIBEL.md`](../../docs/grafik/STILBIBEL.md). Ablauf für Antigravity (eingebautes Bildwerkzeug statt API): [`.agent/workflows/grafik-erzeugen.md`](../../.agent/workflows/grafik-erzeugen.md).
 
+## Manifest-Optionen für Größen
+
+- `groesse: [Breite, Höhe]` und `qualitaet`: die kleine Fassung, die im Spiel gezeigt wird.
+- `zweifach: true`: zusätzlich `<name>@2x.webp` in doppelter Größe (Kulissen).
+- `gross: [Breite, Höhe]` und optional `grossQualitaet` (Standard 80): Großfassung für die Großansicht (`CardInspect`, #418/#419) im Unterordner `gross/` neben den kleinen Bildern, **mit demselben Dateinamen** (z. B. `…/karten/gross/bub-ds-<id>.webp`). Sie wird erst beim Ansehen geladen (nicht vorab, nicht im Service Worker, `globIgnores` in `apps/web/vite.config.ts`), muss kleiner als 200 KB bleiben (sonst `grossQualitaet` senken, z. B. 72; `tests/grafik.test.ts` prüft es) und braucht zu jeder Datei die kleine Fassung im Elternordner. Gebaut wird sie aus dem **Original** im privaten Repo (`gross-erzeugen.mjs` nachträglich für vorhandene Bilder, `uebernehmen.mjs` gleich mit der kleinen Fassung); gleiche Schritte wie dort (Rand, Freistellen). Gesetzt für `drachenspiel-karten` (720 × 960) und die vier Quartett-Sets (960 × 720).
+
 ## Skripte
 
 | Skript | Zweck |
@@ -17,6 +23,7 @@ Stil, Verbote, Kartenregeln und Referenzbilder: [`docs/grafik/STILBIBEL.md`](../
 | `erzeugen.mjs <Manifest>` | Varianten über die Gemini-API erzeugen (braucht `GEMINI_API_KEY`) |
 | `kontaktbogen.mjs <Manifest>` | Auswahlseite `grafik-roh/<name>/kontaktbogen.html` bauen |
 | `uebernehmen.mjs <Manifest> <id>=<v> …` | WebP schreiben, bei `"freistellen": true` grünen Grund entfernen (`--fuzz=<Prozent>`, Standard 22), Original ins private Repo; ImageMagick 6 (`convert`) oder 7 (`magick`) |
+| `gross-erzeugen.mjs <Manifest> [motiv-id …] [--neu]` | Großfassungen (#419) aus den archivierten Originalen bauen: `<ziel>/gross/<name>.webp` in der Größe der Manifest-Option `gross`; nie vergrößert (kleineres Original → Originalgröße, Warnung), fehlende Originale werden übersprungen und am Ende aufgelistet, vorhandene Dateien nur mit `--neu` überschrieben; Warnung über 200 KB |
 | `varianten-archivieren.mjs <Manifest>` | alle erzeugten Varianten (auch nicht gewählte) verlustfrei ins private Repo (`varianten/<Manifest>/<Motiv>/v<n>.webp`); `uebernehmen.mjs` tut das für die gewählten Motive selbst und holt bei fehlendem `grafik-roh/` die Wahl aus diesem Archiv |
 | `originale-pruefen.mjs [--alle]` | WebP ohne Original melden (Altfälle in `originale-fehlen.json`); nicht in der CI |
 | `bestand.mjs` | `docs/grafik/BESTAND.md` neu erzeugen |

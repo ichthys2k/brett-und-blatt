@@ -6,10 +6,11 @@
 //      Original in scripts/grafik/originale-fehlen.json eintragen; nur für die Altfälle vor dem 12.11.2026)
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { alleManifeste, argumente, AUSNAHMEN_DATEI, bildordner, ladeAusnahmen, ORIGINALE, originalZu, WURZEL } from './gemeinsam.mjs';
+import { alleManifeste, argumente, AUSNAHMEN_DATEI, bildordner, grossOrdner, ladeAusnahmen, ORIGINALE, originalZu, WURZEL } from './gemeinsam.mjs';
 
 const { optionen } = argumente(process.argv.slice(2));
 const ordnerListe = bildordner();
+const grossListe = grossOrdner(); // Großfassungen (#419): eigene Spalte statt eigener Zeilen
 const manifeste = alleManifeste();
 const archivDa = existsSync(ORIGINALE);
 
@@ -44,7 +45,7 @@ function herkunft(ordner) {
 
 const ausnahmen = ladeAusnahmen();
 const zeilen = [];
-let summe = { webp: 0, original: 0, verloren: 0, offen: 0 };
+let summe = { webp: 0, gross: 0, original: 0, verloren: 0, offen: 0 };
 for (const [ordner, liste] of ordnerListe) {
   let original = 0, verloren = 0, offen = 0;
   for (const datei of liste) {
@@ -54,8 +55,9 @@ for (const [ordner, liste] of ordnerListe) {
     else offen++;
   }
   const zu = manifeste.filter((m) => m.ziel === ordner).map((m) => `\`${m.name}\``).join(', ') || '–';
-  summe = { webp: summe.webp + liste.length, original: summe.original + original, verloren: summe.verloren + verloren, offen: summe.offen + offen };
-  zeilen.push(`| \`${ordner}\` | ${liste.length} | ${archivDa ? original : '?'} | ${verloren || ''} | ${offen || ''} | ${zu} | ${herkunft(ordner)} |`);
+  const gross = grossListe.get(ordner)?.length ?? 0;
+  summe = { webp: summe.webp + liste.length, gross: summe.gross + gross, original: summe.original + original, verloren: summe.verloren + verloren, offen: summe.offen + offen };
+  zeilen.push(`| \`${ordner}\` | ${liste.length} | ${gross || ''} | ${archivDa ? original : '?'} | ${verloren || ''} | ${offen || ''} | ${zu} | ${herkunft(ordner)} |`);
 }
 
 const geplant = manifeste
@@ -68,12 +70,12 @@ const md = `# Bestand der gemalten Bilder
 
 ${archivDa ? `Originale geprüft in \`${ORIGINALE.replace(resolve(WURZEL, '..') + '/', '../')}\`.` : '**Privates Repo nicht gefunden** – Spalte „Original im Archiv“ ungeprüft (?). Auf einem Rechner mit `../brett-und-blatt-grafik` erneut erzeugen.'}
 
-Spalten: **WebP** im öffentlichen Repo · **Original im Archiv** (privates Repo) · **Original verloren (vor 12.11.2026)** laut \`scripts/grafik/originale-fehlen.json\` · **ohne Original** (Fehler, meldet \`originale-pruefen.mjs\`).
+Spalten: **WebP** im öffentlichen Repo · **groß** Großfassungen im Unterordner \`gross/\` (#419, zählen nicht zusätzlich in „WebP“) · **Original im Archiv** (privates Repo) · **Original verloren (vor 12.11.2026)** laut \`scripts/grafik/originale-fehlen.json\` · **ohne Original** (Fehler, meldet \`originale-pruefen.mjs\`).
 
-| Bildordner | WebP | Original im Archiv | Original verloren (vor 12.11.2026) | ohne Original | Manifest | Modell laut THIRD_PARTY.md |
-|---|---:|---:|---:|---:|---|---|
+| Bildordner | WebP | groß | Original im Archiv | Original verloren (vor 12.11.2026) | ohne Original | Manifest | Modell laut THIRD_PARTY.md |
+|---|---:|---:|---:|---:|---:|---|---|
 ${zeilen.join('\n')}
-| **Summe** | **${summe.webp}** | **${archivDa ? summe.original : '?'}** | **${summe.verloren}** | **${summe.offen}** | | |
+| **Summe** | **${summe.webp}** | **${summe.gross || ''}** | **${archivDa ? summe.original : '?'}** | **${summe.verloren}** | **${summe.offen}** | | |
 
 ## Geplant (Manifest vorhanden, noch keine Bilder)
 

@@ -5,6 +5,15 @@
  */
 const files = import.meta.glob<string>('./karten/bub-ds-*.webp', { eager: true, query: '?url', import: 'default' });
 
+/**
+ * Großfassungen (#419) in `karten/gross/`: `eager` mit `?url` bindet nur die Adressen ein; die Bilddateien
+ * selbst werden erst geholt, wenn die Großansicht sie anzeigt.
+ */
+const largeFiles = import.meta.glob<string>('./karten/gross/bub-ds-*.webp', { eager: true, query: '?url', import: 'default' });
+const LARGE_ART_MEDIA: Readonly<Record<string, string>> = Object.fromEntries(
+  Object.entries(largeFiles).map(([path, url]) => [path.replace('./karten/gross/', ''), url]),
+);
+
 /** Medienname → Adresse aller vorhandenen Kartenbilder. */
 export const CARD_ART_MEDIA: Readonly<Record<string, string>> = Object.fromEntries(
   Object.entries(files).map(([path, url]) => [path.replace('./karten/', ''), url]),
@@ -28,6 +37,21 @@ export function cardArtOf(cardId: string): string | undefined {
 export function cardArtFileFor(cardId: string, bildField: string | undefined, builtIn: (id: string) => string | undefined = cardArtOf): string | undefined {
   const fromNote = /<img[^>]*\bsrc\s*=\s*["']([^"']+)["']/i.exec(bildField ?? '')?.[1];
   return fromNote ?? builtIn(cardId);
+}
+
+/** Adresse der Großfassung des eingebauten Kartenbilds, falls es eine gibt (#419). */
+export function cardArtLargeUrl(cardId: string): string | undefined {
+  return LARGE_ART_MEDIA[cardArtFile(cardId)];
+}
+
+/**
+ * Adresse der Großfassung für die Großansicht: nur, wenn die Karte ihr eingebautes Bild zeigt – ein Bild
+ * aus dem Anki-Feld „Bild“ oder ein Medium gleichen Namens aus dem Kartenset hat keine Großfassung.
+ */
+export function cardArtLargeUrlFor(cardId: string, bildField: string | undefined, mediaUrlMap: Record<string, string> | undefined): string | undefined {
+  const file = cardArtFileFor(cardId, bildField);
+  if (!file || file !== cardArtOf(cardId) || mediaUrlMap?.[file]) return undefined;
+  return cardArtLargeUrl(cardId);
 }
 
 /** Adresse des Kartenbilds für die Großansicht oder undefined, wenn die Karte keines hat (#417). */

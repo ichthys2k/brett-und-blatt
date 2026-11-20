@@ -8,6 +8,10 @@
     360,
     480
   ],
+  "gross": [
+    720,
+    960
+  ],
   "praefix": "bub-ds-",
   "qualitaet": 78,
   "motive": [

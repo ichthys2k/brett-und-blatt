@@ -126,8 +126,8 @@ Erzeugt wird **immer in der höchsten verfügbaren Auflösung** im Seitenverhäl
 | Hauptmenü-Ebene | 16:9 | 1376 × 768 | 80 | teils | vorab |
 | Hauptmenü-Station | 1:1 | 512 × 512 | 80 | ja | vorab |
 | Wappen | 4:5 (Ziel 160 × 184) | 160 × 184 | 78 | nein | vorab (Startseite) |
-| Drachenspiel-Karte | 3:4 | 360 × 480 | 78 | nein | bei Bedarf, ≤ 80 KB |
-| Quartett-Karte | 4:3 | 480 × 360 | 78 | nein | bei Bedarf, ≤ 80 KB |
+| Drachenspiel-Karte | 3:4 | 360 × 480 (Großfassung `gross/` 720 × 960, ≤ 200 KB) | 78 | nein | bei Bedarf, ≤ 80 KB |
+| Quartett-Karte | 4:3 | 480 × 360 (Großfassung `gross/` 960 × 720, ≤ 200 KB) | 78 | nein | bei Bedarf, ≤ 80 KB |
 | Kartenrücken (Viertel) | 5:7 | 500 × 700 | 80 | nein | bei Bedarf |
 | Textur (Tisch) | 1:1, kachelbar | 512 × 512 | 72 | nein | bei Bedarf |
 | Spielfigur | 1:1 | 192 × 192 (kleine Steine 96 × 96) | 80 | ja | bei Bedarf (gewählter Satz) |

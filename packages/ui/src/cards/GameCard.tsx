@@ -1,6 +1,7 @@
 import {
   useId,
   type CSSProperties,
+  type HTMLAttributes,
   type KeyboardEventHandler,
   type MouseEventHandler,
   type PointerEvent as ReactPointerEvent,
@@ -68,6 +69,8 @@ export interface GameCardProps {
   label?: string;
   className?: string;
   style?: CSSProperties;
+  /** Weitere Eigenschaften für das Wurzelelement, z. B. die der Großansicht (`useInspect().props`, #419). */
+  extraProps?: HTMLAttributes<HTMLElement>;
 }
 
 /**
@@ -99,6 +102,7 @@ export function GameCard({
   label,
   className = '',
   style,
+  extraProps,
 }: GameCardProps) {
   const scopeId = useId().replace(/:/g, '');
 
@@ -120,6 +124,7 @@ export function GameCard({
 
   // Tastaturbedienung für Barrierefreiheit (Enter & Space aktivieren onClick)
   const handleKeyDown: KeyboardEventHandler<HTMLElement> = (event) => {
+    extraProps?.onKeyDown?.(event);
     onKeyDown?.(event);
     if (event.defaultPrevented || disabled || !onClick) return;
     if (event.key === 'Enter' || event.key === ' ') {
@@ -148,6 +153,22 @@ export function GameCard({
           },
         }
       : {};
+
+  // Eigene Eigenschaften zuerst; Zeigerereignisse des Glanzes laufen zusätzlich zu denen von `extraProps`.
+  const rootProps: HTMLAttributes<HTMLElement> = { ...extraProps, ...foilHandlers };
+  delete rootProps.onKeyDown; // läuft über handleKeyDown
+  delete rootProps.onClick; // nur die Eigenschaft `onClick` der Karte zählt
+  if (extraProps && foilHandlers.onPointerMove) {
+    const own = extraProps;
+    rootProps.onPointerMove = (event) => {
+      own.onPointerMove?.(event);
+      foilHandlers.onPointerMove!(event);
+    };
+    rootProps.onPointerLeave = (event) => {
+      own.onPointerLeave?.(event);
+      foilHandlers.onPointerLeave!(event);
+    };
+  }
 
   const frontContent = (
     <>
@@ -264,12 +285,12 @@ export function GameCard({
       disabled={disabled}
       aria-label={computedLabel}
       aria-pressed={selected || undefined}
-      {...foilHandlers}
+      {...rootProps}
     >
       {innerFlipper}
     </button>
   ) : (
-    <span className={classes} style={style} role="img" aria-label={computedLabel} {...foilHandlers}>
+    <span className={classes} style={style} role="img" aria-label={computedLabel} {...rootProps}>
       {innerFlipper}
     </span>
   );
