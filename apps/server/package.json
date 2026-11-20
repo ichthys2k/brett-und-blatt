@@ -24,6 +24,7 @@
     "@brett-und-blatt/game-dominoes": "workspace:*",
     "@brett-und-blatt/game-doppelkopf": "workspace:*",
     "@brett-und-blatt/game-drachenspiel": "workspace:*",
+    "@brett-und-blatt/game-dragon-towers": "workspace:*",
     "@brett-und-blatt/game-duck-rally": "workspace:*",
     "@brett-und-blatt/game-chinese-checkers": "workspace:*",
     "@brett-und-blatt/game-elevens": "workspace:*",

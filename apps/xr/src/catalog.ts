@@ -43,6 +43,7 @@ const ALL_GAMES: [id: string, name: string][] = [
   ['dominoes', 'Domino'],
   ['doppelkopf', 'Doppelkopf'],
   ['drachenspiel', 'Drachenspiel'],
+  ['dragon-towers', 'Drachentürme'],
   ['uno', 'Eins!'],
   ['elevens', 'Elf zuerst!'],
   ['duck-rally', 'Enten-Rallye'],
