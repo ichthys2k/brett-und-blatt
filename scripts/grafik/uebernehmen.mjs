@@ -12,7 +12,7 @@ import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, relative, resolve } from 'node:path';
-import { archiviereVarianten, argumente, ladeManifest, magick, ordner, originaleOrdnerOderAbbruch, VARIANTEN, WURZEL } from './gemeinsam.mjs';
+import { archiviereVarianten, argumente, ladeManifest, magick, ordner, schreibeGross, schreibeWebp, originaleOrdnerOderAbbruch, VARIANTEN, WURZEL } from './gemeinsam.mjs';
 import { pruefeOriginale } from './originale-pruefen.mjs';
 
 const { positionen, optionen } = argumente(process.argv.slice(2));
@@ -36,14 +36,6 @@ const randFuer = (id) => motivFuer(id)?.zuschnittRand ?? manifest.zuschnittRand 
 const freistellenFuer = (id) => Boolean(motivFuer(id)?.freistellen ?? manifest.freistellen);
 const fuzz = Number(optionen.fuzz ?? 22);
 
-/*
- * Freistellen (grüner Grund #00B140): Grün durchsichtig machen, die Kante des Alphakanals
- * leicht weichzeichnen und wieder straffen (glatter Rand ohne Treppen), danach grünen
- * Farbsaum dämpfen (Grün nie heller als der hellere von Rot und Blau).
- */
-const freistellen = ['-alpha', 'set', '-fuzz', `${fuzz}%`, '-transparent', '#00B140', '-channel', 'A', '-blur', '0x0.8', '-level', '50%,100%', '+channel'];
-const gruenSaumDaempfen = ['-channel', 'G', '-fx', 'min(g,max(r,b))', '+channel'];
-
 const uebernommen = [];
 for (const wahl of positionen.slice(1)) {
   const [id, v] = wahl.split('=');
@@ -63,22 +55,18 @@ for (const wahl of positionen.slice(1)) {
   const rand = randFuer(id);
   const [breite, hoehe] = groesseFuer(id);
   const frei = freistellenFuer(id);
-  const zuschnitt = rand ? ['-gravity', 'center', '-crop', `${Math.round((1 - 2 * rand) * 100)}%x${Math.round((1 - 2 * rand) * 100)}%+0+0`, '+repage'] : [];
   // Manifest-Option „zweifach“: zusätzlich <name>@2x.webp in doppelter Größe (z. B. Kulissen für den Tisch-Bildschirm).
   const fassungen = [[ziel, 1], ...(manifest.zweifach ? [[resolve(zielDir, `${name}@2x.webp`), 2]] : [])];
   for (const [datei, faktor] of fassungen) {
-    execFileSync(im, [
-      quelle,
-      ...zuschnitt,
-      ...(frei ? freistellen : []),
-      ...(frei ? ['-background', 'none'] : []),
-      '-resize', `${breite * faktor}x${hoehe * faktor}^`, '-gravity', 'center', '-extent', `${breite * faktor}x${hoehe * faktor}`,
-      ...(frei ? gruenSaumDaempfen : []),
-      '-quality', String(manifest.qualitaet ?? 80),
-      ...(frei ? ['-define', 'webp:alpha-quality=95', '-define', 'webp:exact=false'] : []),
-      datei,
-    ]);
+    schreibeWebp({ quelle, ziel: datei, breite: breite * faktor, hoehe: hoehe * faktor, qualitaet: manifest.qualitaet ?? 80, rand, frei, fuzz });
     if (faktor === 2) uebernommen.push(relative(WURZEL, datei));
+  }
+  // Manifest-Option „gross“: Großfassung für die Großansicht (#419) in <ziel>/gross/, erst beim Ansehen geladen.
+  if (manifest.gross) {
+    const grossDatei = resolve(zielDir, 'gross', `${name}.webp`);
+    mkdirSync(dirname(grossDatei), { recursive: true });
+    schreibeGross({ quelle, ziel: grossDatei, manifest, motiv: motivFuer(id), rand, frei, fuzz });
+    uebernommen.push(relative(WURZEL, grossDatei));
   }
 
   // Original in voller Auflösung ins private Repo (nicht ins öffentliche).

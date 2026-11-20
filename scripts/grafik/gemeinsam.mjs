@@ -90,7 +90,10 @@ oder einen anderen Ort angeben: GRAFIK_ORIGINALE_DIR=/pfad/zu/originale node …
 
 /** Pfad des Originals zu einer WebP-Datei (relativ zur Repo-Wurzel), falls im Archiv vorhanden. */
 export function originalZu(webpRelativ) {
-  const ohneEndung = webpRelativ.replace(/\.webp$/, '').replace(/@2x$/, ''); // @2x-Fassungen teilen das Original
+  const ohneEndung = webpRelativ
+    .replace(/\.webp$/, '')
+    .replace(/@2x$/, '') // @2x-Fassungen teilen das Original
+    .replace(/\/gross\/([^/]+)$/, '/$1'); // Großfassungen (gross/) ebenso
   for (const endung of ORIGINAL_ENDUNGEN) {
     const pfad = resolve(ORIGINALE, `${ohneEndung}.${endung}`);
     if (existsSync(pfad)) return pfad;
@@ -114,8 +117,20 @@ export function magick() {
   process.exit(1);
 }
 
-/** Bildordner im öffentlichen Repo: Ordner unter apps/, packages/ und content/, die WebP-Dateien enthalten. */
+/**
+ * Bildordner im öffentlichen Repo: Ordner unter apps/, packages/ und content/, die WebP-Dateien enthalten.
+ * Unterordner `gross/` (Großfassungen, #419) zählen nicht als eigener Bildordner; sie stehen in `grossOrdner()`.
+ */
 export function bildordner() {
+  return sammleBilder(false);
+}
+
+/** Großfassungen: Map Elternordner → WebP-Dateinamen im Unterordner `gross/`. */
+export function grossOrdner() {
+  return sammleBilder(true);
+}
+
+function sammleBilder(nurGross) {
   const ausgelassen = new Set(['node_modules', 'dist', '.wrangler']);
   const treffer = new Map();
   const gehe = (relativ) => {
@@ -123,8 +138,11 @@ export function bildordner() {
       if (eintrag.isDirectory()) {
         if (!ausgelassen.has(eintrag.name) && !eintrag.name.startsWith('.')) gehe(`${relativ}/${eintrag.name}`);
       } else if (eintrag.name.endsWith('.webp')) {
-        if (!treffer.has(relativ)) treffer.set(relativ, []);
-        treffer.get(relativ).push(eintrag.name);
+        const istGross = basename(relativ) === 'gross';
+        if (istGross !== nurGross) continue;
+        const schluessel = istGross ? dirname(relativ) : relativ;
+        if (!treffer.has(schluessel)) treffer.set(schluessel, []);
+        treffer.get(schluessel).push(eintrag.name);
       }
     }
   };
@@ -144,4 +162,59 @@ export function ladeAusnahmen() {
 export function alleManifeste() {
   const dir = resolve(WURZEL, 'scripts/grafik/manifeste');
   return readdirSync(dir).filter((d) => d.endsWith('.json')).sort().map((d) => ladeManifest(resolve(dir, d)));
+}
+
+/** Standardqualität der Großfassungen (Manifest-Option `grossQualitaet`). */
+export const GROSS_QUALITAET = 80;
+
+/*
+ * Freistellen (grüner Grund #00B140): Grün durchsichtig machen, die Kante des Alphakanals
+ * leicht weichzeichnen und wieder straffen (glatter Rand ohne Treppen), danach grünen
+ * Farbsaum dämpfen (Grün nie heller als der hellere von Rot und Blau).
+ */
+const gruenSaumDaempfen = ['-channel', 'G', '-fx', 'min(g,max(r,b))', '+channel'];
+
+/**
+ * Schreibt ein Bild als WebP in Zielgröße (zuschneiden auf das Seitenverhältnis, nie verzerren).
+ * Gemeinsam für die kleine Fassung (uebernehmen.mjs) und die Großfassung (gross-erzeugen.mjs).
+ * `rand`: Anteil, der ringsum abgeschnitten wird; `frei`: grünen Grund freistellen (`fuzz` in %).
+ */
+export function schreibeWebp({ quelle, ziel, breite, hoehe, qualitaet = 80, rand = 0, frei = false, fuzz = 22 }) {
+  const zuschnitt = rand ? ['-gravity', 'center', '-crop', `${Math.round((1 - 2 * rand) * 100)}%x${Math.round((1 - 2 * rand) * 100)}%+0+0`, '+repage'] : [];
+  const freistellen = ['-alpha', 'set', '-fuzz', `${fuzz}%`, '-transparent', '#00B140', '-channel', 'A', '-blur', '0x0.8', '-level', '50%,100%', '+channel'];
+  execFileSync(magick(), [
+    quelle,
+    ...zuschnitt,
+    ...(frei ? freistellen : []),
+    ...(frei ? ['-background', 'none'] : []),
+    '-resize', `${breite}x${hoehe}^`, '-gravity', 'center', '-extent', `${breite}x${hoehe}`,
+    ...(frei ? gruenSaumDaempfen : []),
+    '-quality', String(qualitaet),
+    ...(frei ? ['-define', 'webp:alpha-quality=95', '-define', 'webp:exact=false'] : []),
+    ziel,
+  ]);
+}
+
+/** Pixelgröße eines Bildes als [Breite, Höhe]. */
+export function bildGroesse(datei) {
+  const [b, h] = execFileSync(magick(), [datei, '-ping', '-format', '%w %h', 'info:'], { encoding: 'utf8' }).trim().split(' ').map(Number);
+  return [b, h];
+}
+
+/**
+ * Schreibt die Großfassung (Manifest-Option `gross: [Breite, Höhe]`, `grossQualitaet`) aus dem Original.
+ * Wird nie vergrößert: Ist das Original (nach dem Rand-Zuschnitt) kleiner als die Zielgröße, bekommt die
+ * Datei die größtmögliche Größe im gleichen Seitenverhältnis. Gibt `{ breite, hoehe, verkleinert }` zurück;
+ * `verkleinert` ist wahr, wenn die Zielgröße unterschritten wurde.
+ */
+export function schreibeGross({ quelle, ziel, manifest, motiv, rand = 0, frei = false, fuzz = 22 }) {
+  const [zielB, zielH] = motiv?.gross ?? manifest.gross;
+  const [ob, oh] = bildGroesse(quelle);
+  const nutzB = ob * (1 - 2 * rand);
+  const nutzH = oh * (1 - 2 * rand);
+  const faktor = Math.min(1, nutzB / zielB, nutzH / zielH);
+  const breite = Math.floor(zielB * faktor);
+  const hoehe = Math.floor(zielH * faktor);
+  schreibeWebp({ quelle, ziel, breite, hoehe, qualitaet: manifest.grossQualitaet ?? GROSS_QUALITAET, rand, frei, fuzz });
+  return { breite, hoehe, verkleinert: faktor < 1 };
 }

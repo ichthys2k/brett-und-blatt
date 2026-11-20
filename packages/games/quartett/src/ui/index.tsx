@@ -1,5 +1,5 @@
 import { BUB_QUARTETT_CARD_NOTETYPE, renderCardSide, type GameEvent, type SeatId } from '@brett-und-blatt/engine';
-import { GameCard, SeatRing, getNoteField, useCardCosmetics, useCardOverride, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
+import { CardInspectProvider, GameCard, SeatRing, getNoteField, useCardCosmetics, useCardOverride, useInspect, type BoardProps, type GameUi, type InspectContent } from '@brett-und-blatt/ui';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { setOf, type Ask, type QuartettMove, type QuartettState, type Trick } from '../rules';
 import { CARD_SETS, cardOf, formatWithUnit, groupOf, valueOf, type CardId, type CardSet } from '../sets';
@@ -48,6 +48,9 @@ export function QCard({
   const imageUrl = data.image ? (cosmetics.mediaUrlMap?.[data.image] ?? (set.id in CARD_SETS ? `quartett/bilder/${set.id}/${data.image}` : undefined)) : undefined;
   const showImage = Boolean(imageUrl) && !brokenImage;
   useEffect(() => setBrokenImage(false), [imageUrl]);
+  // Großfassung (#419) liegt neben der kleinen im Unterordner gross/ und wird erst in der Großansicht geladen.
+  // Gibt es sie nicht, verwirft die Großansicht den Fehler still und behält die kleine Fassung.
+  const largeUrl = data.image && imageUrl === `quartett/bilder/${set.id}/${data.image}` ? `quartett/bilder/${set.id}/gross/${data.image}` : undefined;
   const effectiveName = getNoteField(overrideNote, 4) || data.name;
   const effectiveEmoji = getNoteField(overrideNote, 5) || data.emoji;
   const effectiveInfo = getNoteField(overrideNote, 29) || set.note;
@@ -59,6 +62,16 @@ export function QCard({
       mediaUrlMap: cosmetics.mediaUrlMap,
     });
   }, [overrideNote, cosmetics.mediaUrlMap]);
+
+  // Großansicht (#418/#419): nur Bild, Name, Gruppe und Werte der offen liegenden Karte.
+  const inspect = useInspect();
+  const inspectContent = (): InspectContent => ({
+    title: effectiveName,
+    subtitle: `${card}${groupName ? ` · ${groupName}` : ''}`,
+    image: showImage && imageUrl ? { src: imageUrl, largeSrc: largeUrl, aspect: 4 / 3 } : undefined,
+    emoji: effectiveEmoji,
+    stats: set.properties.map((p) => ({ label: p.label, value: formatWithUnit(p, valueOf(set.id, card, p.id, set)) })),
+  });
 
   const handleCardClick = (e: React.MouseEvent) => {
     if (!onPick || !ankiFront) return;
@@ -80,6 +93,7 @@ export function QCard({
       style={{ '--qt-group': GROUP_COLORS[group] } as CSSProperties}
       label={`${card} ${effectiveName}`}
       onClick={handleCardClick}
+      extraProps={inspect.props(inspectContent)}
     >
       {!ankiFront && (
         <>
@@ -545,7 +559,8 @@ function CollectBoard({ view, legalMoves, onMove, viewer, seatNames, hint, table
 }
 
 function Board(props: BoardProps<QuartettState, QuartettMove>) {
-  return props.view.mode === 'trump' ? <TrumpBoard {...props} /> : <CollectBoard {...props} />;
+  // Großansicht der Karten (#418) für den ganzen Tisch.
+  return <CardInspectProvider>{props.view.mode === 'trump' ? <TrumpBoard {...props} /> : <CollectBoard {...props} />}</CardInspectProvider>;
 }
 
 function SeatSymbol({ seat, className = '' }: { seat: SeatId; className?: string }) {
