@@ -1,4 +1,4 @@
-import { addDeck, changeNotetypeMany, deckTree, defaultFieldMap, moveDeck, moveNotes, tagNotes, findDuplicates, notesWithoutCards, removeDeck, removeNote, renameDeck, searchNotes, stripHtmlKeepMedia, type AnkiCollection, type AnkiNote } from '@brett-und-blatt/engine';
+import { addDeck, changeNotetypeMany, deckFamilyIds, deckTree, defaultFieldMap, moveDeck, moveNotes, tagNotes, findDuplicates, notesWithoutCards, removeDeck, removeNote, renameDeck, searchNotes, stripHtmlKeepMedia, type AnkiCollection, type AnkiNote } from '@brett-und-blatt/engine';
 import { useMemo, useState } from 'react';
 import { Button } from '../components/controls';
 import { TavernPage } from '../components/TavernPage';
@@ -28,14 +28,14 @@ export function CollectionScreen({ source }: { source: string }) {
   const [limit, setLimit] = useState(PAGE);
   const [picked, setPicked] = useState<ReadonlySet<number>>(new Set());
   const col = src.collection;
-  const tree = useMemo(() => deckTree(col), [col]);
+  const tree = useMemo(() => deckTree(col, { withParents: true }), [col]);
+  const addTree = useMemo(() => deckTree(col), [col]);
 
   const notes = useMemo(() => {
     const found = searchNotes(col, query);
     if (deckId === 'all') return found;
-    const deck = col.decks.find((d) => d.id === deckId);
-    if (!deck) return found;
-    const ids = new Set(col.decks.filter((d) => d.id === deck.id || d.name.startsWith(`${deck.name}::`)).map((d) => d.id));
+    const ids = deckFamilyIds(col, deckId);
+    if (!ids) return found;
     return found.filter((n) => ids.has(n.did));
   }, [col, query, deckId]);
 
@@ -55,7 +55,7 @@ export function CollectionScreen({ source }: { source: string }) {
           key={selected?.id ?? 'neu'}
           collection={col}
           note={selected}
-          defaultDeckId={deckId === 'all' ? (tree.find((d) => d.id !== 1)?.id ?? 1) : deckId}
+          defaultDeckId={deckId === 'all' || deckId < 0 ? (addTree.find((d) => d.id !== 1)?.id ?? 1) : deckId}
           media={media}
           onAddMedia={src.addMedia}
           onSave={src.update}

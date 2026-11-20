@@ -13,6 +13,7 @@ import {
   changeNotetype,
   cloneNotetype,
   computeReq,
+  deckFamilyIds,
   deckTree,
   emptyCollection,
   findDuplicates,
@@ -177,5 +178,17 @@ describe('Anki-Bearbeiten: Aufräumen und Baum', () => {
     const kind = addDeck(eltern.col, 'Latein::Nomen', T0 + 1);
     col = addNote(kind.col, { notetypeId: STOCK_BASIC_ID, deckId: kind.deck.id, fields: ['x', 'y'] }, T0).col;
     expect(deckTree(col).map((d) => [d.label, d.depth, d.own, d.total])).toEqual([['Latein', 0, 0, 1], ['Nomen', 1, 1, 1], ['Standard', 0, 0, 0]]);
+  });
+  it('Stapelbaum zeigt fehlende Elternstapel als eigene Zeile', () => {
+    let col = emptyCollection();
+    const kind = addDeck(col, 'Latein::Nomen', T0);
+    col = addNote(kind.col, { notetypeId: STOCK_BASIC_ID, deckId: kind.deck.id, fields: ['x', 'y'] }, T0).col;
+    expect(deckTree(col).map((d) => d.label)).toEqual(['Latein::Nomen', 'Standard'].map((n) => n.split('::').pop()));
+    const tree = deckTree(col, { withParents: true });
+    expect(tree.map((d) => [d.label, d.depth, d.total, d.virtual ?? false])).toEqual([['Latein', 0, 1, true], ['Nomen', 1, 1, false], ['Standard', 0, 0, false]]);
+    const eltern = tree[0]!;
+    expect(eltern.id).toBeLessThan(0);
+    expect(deckFamilyIds(col, eltern.id)).toEqual(new Set([kind.deck.id]));
+    expect(deckFamilyIds(col, 123456789)).toBeNull();
   });
 });

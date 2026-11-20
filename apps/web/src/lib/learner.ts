@@ -1,4 +1,4 @@
-import { answerCard, buildQueue, clampOptions, dayNumber, emptyCollection, learnCards, recordAnswer, recordPractice, reconcileCards, streakOf, tagNotes, todaysCounts, type AnkiCollection, type ApkgCard, type ApkgRevlog, type LearnBook, type LearnOptions, type QueueCounts, type Answer } from '@brett-und-blatt/engine';
+import { answerCard, buildQueue, clampOptions, dayNumber, deckFamilyIds, emptyCollection, learnCards, recordAnswer, recordPractice, reconcileCards, streakOf, tagNotes, todaysCounts, type AnkiCollection, type ApkgCard, type ApkgRevlog, type LearnBook, type LearnOptions, type QueueCounts, type Answer } from '@brett-und-blatt/engine';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { loadPack, savePackAnswer, savePackLearnSettings, updatePackCollection } from './ankiStore';
 import { OWN } from './collectionSource';
@@ -171,11 +171,8 @@ export interface DueInfo {
 export function dueInfo(learner: Pick<Learner, 'cards' | 'revlog' | 'crt' | 'options' | 'days' | 'collection'>, now: number, deckId: number | 'all' = 'all'): DueInfo {
   let cards = learner.cards;
   if (deckId !== 'all') {
-    const deck = learner.collection.decks.find((d) => d.id === deckId);
-    if (deck) {
-      const ids = new Set(learner.collection.decks.filter((d) => d.id === deck.id || d.name.startsWith(`${deck.name}::`)).map((d) => d.id));
-      cards = cards.filter((c) => ids.has(c.did));
-    }
+    const ids = deckFamilyIds(learner.collection, deckId);
+    if (ids) cards = cards.filter((c) => ids.has(c.did));
   }
   const today = todaysCounts(learner.revlog, learner.crt, now);
   if (learner.options.burySiblings) {
