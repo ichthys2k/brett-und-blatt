@@ -40,6 +40,10 @@ export interface Counter {
   won: number;
   drawn: number;
   lost: number;
+  /** Gewertete Partien (Mindestdauer und Mindestzüge, `isRated`) – nur diese zählen für die Stufen (#570). Immer höchstens `played`. */
+  rated: number;
+  /** Siege in gewerteten Partien, höchstens `rated` und `won`. */
+  ratedWon: number;
 }
 
 /** Zähler: Gerät → Spiel → Eimer (`<Modus>/<stärkste Bot-Stufe oder ->`). */
@@ -61,6 +65,17 @@ const OUTCOMES: readonly Outcome[] = ['win', 'draw', 'loss'];
 const LEVELS: readonly BotLevel[] = ['easy', 'medium', 'hard'];
 const ID_PATTERN = /^[\w.:/-]{1,80}$/;
 const GAME_PATTERN = /^[a-z0-9-]{1,40}$/;
+
+/** Ab wann eine Partie für die Stufen gewertet ist (Entscheidung 6, `docs/spiele/belohnungen.md`); Kurzspiele haben im Steckbrief `ratedAfter`. */
+export const RATED_AFTER = { ms: 60_000, moves: 6 } as const;
+
+/**
+ * Ist die Partie gewertet? Dauer und Züge müssen beide erreicht sein; kennt der Browser den Zuglog nicht (online, #99),
+ * zählt nur die Dauer.
+ */
+export function isRated(input: { durationMs: number; moves?: number | undefined }, ratedAfter: { ms: number; moves: number } = RATED_AFTER): boolean {
+  return input.durationMs >= ratedAfter.ms && (input.moves === undefined || input.moves >= ratedAfter.moves);
+}
 
 export const emptyBook = (): Book => ({ counts: {}, stamps: {}, recent: [] });
 
@@ -101,17 +116,20 @@ export function stampsEarnedBy(game: PlayedGame, level: BotLevel | null): string
 }
 
 /** Trägt eine Partie ein; liegt ihre Kennung schon in den letzten Partien, geschieht nichts. */
-export function recordGame(book: Book, game: PlayedGame, deviceId: string, level: BotLevel | null): Book {
+/** `rated`: Zählt die Partie für die Stufen (`isRated`)? Vorgabe ja, damit ältere Aufrufe wie bisher zählen. */
+export function recordGame(book: Book, game: PlayedGame, deviceId: string, level: BotLevel | null, rated = true): Book {
   if (book.recent.some((entry) => entry.id === game.id)) return book;
   const device = book.counts[deviceId] ?? {};
   const forGame = device[game.gameId] ?? {};
   const key = bucketOf(game.mode, level);
-  const before = forGame[key] ?? { played: 0, won: 0, drawn: 0, lost: 0 };
+  const before = forGame[key] ?? { played: 0, won: 0, drawn: 0, lost: 0, rated: 0, ratedWon: 0 };
   const after: Counter = {
     played: before.played + 1,
     won: before.won + (game.outcome === 'win' ? 1 : 0),
     drawn: before.drawn + (game.outcome === 'draw' ? 1 : 0),
     lost: before.lost + (game.outcome === 'loss' ? 1 : 0),
+    rated: before.rated + (rated ? 1 : 0),
+    ratedWon: before.ratedWon + (rated && game.outcome === 'win' ? 1 : 0),
   };
   const stamps = { ...(book.stamps ?? {}) };
   for (const name of stampsEarnedBy(game, level)) if (!(name in stamps)) stamps[name] = game.endedAt;
@@ -182,9 +200,12 @@ export function sanitizeBook(value: unknown): Book {
           const won = Math.min(natural(c.won), played);
           const drawn = Math.min(natural(c.drawn), played - won);
           const lost = Math.min(natural(c.lost), played - won - drawn);
+          // Alte Bücher kennen die gewerteten Zähler nicht: Dann gilt jede bisherige Partie als gewertet (#570).
+          const rated = Math.min(c.rated === undefined ? played : natural(c.rated), played);
+          const ratedWon = Math.min(c.ratedWon === undefined ? won : natural(c.ratedWon), won, rated);
           book.counts[deviceId] ??= {};
           book.counts[deviceId]![gameId] ??= {};
-          book.counts[deviceId]![gameId]![key] = { played, won, drawn, lost };
+          book.counts[deviceId]![gameId]![key] = { played, won, drawn, lost, rated, ratedWon };
         }
       }
     }
@@ -211,8 +232,15 @@ export function mergeBooks(remote: Book, local: Book): Book {
           const target = ((counts[deviceId] ??= {})[gameId] ??= {});
           const old = target[key];
           target[key] = old
-            ? { played: Math.max(old.played, counter.played), won: Math.max(old.won, counter.won), drawn: Math.max(old.drawn, counter.drawn), lost: Math.max(old.lost, counter.lost) }
-            : { ...counter };
+            ? {
+                played: Math.max(old.played, counter.played),
+                won: Math.max(old.won, counter.won),
+                drawn: Math.max(old.drawn, counter.drawn),
+                lost: Math.max(old.lost, counter.lost),
+                rated: Math.max(old.rated ?? old.played, counter.rated ?? counter.played),
+                ratedWon: Math.max(old.ratedWon ?? old.won, counter.ratedWon ?? counter.won),
+              }
+            : { ...counter, rated: counter.rated ?? counter.played, ratedWon: counter.ratedWon ?? counter.won };
         }
       }
     }
@@ -232,7 +260,7 @@ export function sameBooks(a: Book, b: Book): boolean {
 
 /** Summe über alle Geräte eines Spiels (oder aller Spiele), optional nur ein Modus. */
 export function totals(book: Book, gameId?: string, mode?: Mode): Counter {
-  const sum: Counter = { played: 0, won: 0, drawn: 0, lost: 0 };
+  const sum: Counter = { played: 0, won: 0, drawn: 0, lost: 0, rated: 0, ratedWon: 0 };
   for (const games of Object.values(book.counts)) {
     for (const [id, buckets] of Object.entries(games)) {
       if (gameId && id !== gameId) continue;
@@ -242,6 +270,8 @@ export function totals(book: Book, gameId?: string, mode?: Mode): Counter {
         sum.won += counter.won;
         sum.drawn += counter.drawn;
         sum.lost += counter.lost;
+        sum.rated += counter.rated ?? counter.played;
+        sum.ratedWon += counter.ratedWon ?? counter.won;
       }
     }
   }

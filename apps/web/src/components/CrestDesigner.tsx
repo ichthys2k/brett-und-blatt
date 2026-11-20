@@ -8,16 +8,15 @@ import {
   CREST_DIVISIONS,
   CREST_SHIELDS,
   clampCrest,
-  unlockOf,
-  type CrestProgress,
   type CrestSpec,
 } from '@brett-und-blatt/engine';
 import { PlayerCrest } from '@brett-und-blatt/ui';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { t } from '../i18n';
-import { crestProgress, saveCrest, useCrest } from '../lib/crestStore';
+import { currentCrestStats, saveCrest, useCrest } from '../lib/crestStore';
 import { saveOwnProfile } from '../lib/playerPass';
 import { storage } from '../lib/storage';
+import { crestProgressOf, crestUnlock } from '../lib/unlocks';
 import { Button } from './controls';
 import { Avatar } from './Avatar';
 
@@ -29,23 +28,21 @@ const locked = 'cursor-not-allowed border border-dashed border-line bg-surface-2
 /** Gestalter für das Wappen des Passes (#147): Teile wählen; gesperrte Teile sagen, was noch fehlt. */
 export function CrestDesigner({ name, onClose }: { name: string; onClose(): void }) {
   const spec = useCrest();
-  const [progress, setProgress] = useState<CrestProgress | null>(null);
+  const stats = useMemo(() => currentCrestStats(), []);
+  const progress = useMemo(() => crestProgressOf(stats), [stats]);
   const [query, setQuery] = useState('');
   const needle = query.trim().toLowerCase();
-  useEffect(() => {
-    void crestProgress().then(setProgress);
-  }, []);
   // Beim ersten Öffnen: nur freigeschaltete Teile übernehmen.
-  const safe = progress ? clampCrest(spec, progress) : spec;
+  const safe = clampCrest(spec, progress);
   const change = (patch: Partial<CrestSpec>) => {
-    saveCrest(progress ? clampCrest({ ...safe, ...patch }, progress) : { ...safe, ...patch });
+    saveCrest(clampCrest({ ...safe, ...patch }, progress));
     // Das Wappentier ist auch das Bild beim Spitznamen (Profil, Raum, Turniere): beides bleibt gleich.
     const profile = storage.loadProfile();
     if (patch.animal && profile && profile.avatar !== patch.animal) saveOwnProfile({ ...profile, avatar: patch.animal });
   };
 
   const choice = <T extends string>(kind: 'shield' | 'division' | 'colors' | 'ornament', value: T, current: boolean, label: string, onPick: () => void) => {
-    const lock = progress ? unlockOf(kind, value, progress) : { ok: true, hint: '' };
+    const lock = crestUnlock(kind, value, stats);
     return (
       <button
         key={value}
@@ -88,7 +85,7 @@ export function CrestDesigner({ name, onClose }: { name: string; onClose(): void
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted">{CREST_GROUP_LABELS[group]}</div>
                   <div className="flex flex-wrap gap-2">
                     {sets.map((set) => {
-                      const lock = progress ? unlockOf('colors', set.id, progress) : { ok: true, hint: '' };
+                      const lock = crestUnlock('colors', set.id, stats);
                       return (
                         <button
                           key={set.id}

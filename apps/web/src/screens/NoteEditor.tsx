@@ -14,6 +14,7 @@ export function NoteEditor({ collection, note, defaultDeckId, media, onAddMedia,
   const [fields, setFields] = useState<string[]>(note?.fields ?? firstType.flds.map(() => ''));
   const [tags, setTags] = useState((note?.tags ?? []).join(' '));
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(0);
   const nt = collection.notetypes.find((t) => t.id === mid) ?? firstType;
   const decks = deckTree(collection);
 
@@ -46,7 +47,10 @@ export function NoteEditor({ collection, note, defaultDeckId, media, onAddMedia,
       }
       onSave(next);
       if (close) onClose();
-      else if (!note) setFields(nt.flds.map(() => ''));
+      else if (!note) {
+        setFields(nt.flds.map(() => ''));
+        setSaved((n) => n + 1);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Das Speichern hat nicht geklappt.');
     }
@@ -87,12 +91,15 @@ export function NoteEditor({ collection, note, defaultDeckId, media, onAddMedia,
         <span>Tags (mit Leerzeichen getrennt)</span>
         <input className={FIELD} value={tags} onChange={(e) => setTags(e.target.value)} />
       </label>
+      <p role="status" aria-live="polite" className="text-sm text-muted">
+        {saved > 0 ? `Notiz gespeichert (${saved} in dieser Sitzung). Die Felder sind leer für die nächste.` : ''}
+      </p>
       {error && (
         <p role="alert" className="text-sm text-danger">
           {error}
         </p>
       )}
-      <div className="space-y-3" aria-label="Vorschau der Karten">
+      <div className="space-y-3" role="group" aria-label="Vorschau der Karten">
         <h3 className="text-lg">Karten</h3>
         {hints.length > 0 && (
           <ul className="list-disc pl-5 text-sm text-muted" aria-label="Hinweise zu dieser Notiz">

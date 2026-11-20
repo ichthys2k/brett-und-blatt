@@ -74,6 +74,17 @@ export interface OpenRoomListing {
   cardCatalogChecksum?: string;
 }
 
+/** Form einer Rahmen-Kennung (#572): Kleinbuchstaben, Ziffern, Bindestrich, 1 bis 20 Zeichen. */
+export const FRAME_PATTERN = /^[a-z0-9-]{1,20}$/;
+
+/**
+ * Der Avatar-Rahmen aus einer Nachricht: nur eine Kennung in der erlaubten Form, alles andere wird verworfen. Der Server
+ * kann nicht prüfen, ob der Rahmen verdient ist (er sieht den Pass nicht); Stufe und Titel gehen nie hinaus.
+ */
+export function frameField(raw: unknown): { frame?: string } {
+  return typeof raw === 'string' && FRAME_PATTERN.test(raw) ? { frame: raw } : {};
+}
+
 /** Ein Mitglied des Raums, wie es alle sehen. Die geheime Kennung steht nie darin. */
 export interface MemberInfo {
   id: string;
@@ -81,6 +92,8 @@ export interface MemberInfo {
   avatar: string;
   /** Wappen des Spielerpasses (Beschreibung, siehe `player-crest.ts` in der Engine); nur wenn die Person es zeigen will. */
   crest?: string;
+  /** Kennung des Avatar-Rahmens (`^[a-z0-9-]{1,20}$`, #572); fehlt er, zeigt der Client den Avatar ohne Rahmen. Nie Stufe oder Titel. */
+  frame?: string;
   connected: boolean;
   /** Name und Bild hat die Raumleitung festgelegt – das Mitglied kann sie nicht mehr ändern. */
   nameFixed?: boolean;
@@ -99,6 +112,8 @@ export interface PublicSeat {
   kind: 'human' | 'bot';
   name: string;
   avatar?: string;
+  /** Avatar-Rahmen des Mitglieds auf diesem Platz (#572). */
+  frame?: string;
   level?: BotLevel;
   memberId: string | null;
 }
@@ -123,13 +138,13 @@ export type { Avatar, AvatarSound } from './avatars';
 
 export type ClientMessage =
   /** Erste Nachricht jeder Verbindung. `token` ist die geheime, zufällige Kennung des Geräts für den Wiedereinstieg. */
-  | { type: 'hello'; protocol: number; token: string; name: string; avatar: string; crest?: string }
+  | { type: 'hello'; protocol: number; token: string; name: string; avatar: string; crest?: string; frame?: string }
   /**
    * Erste Nachricht eines Tisch-Bildschirms (Fernseher, Beamer, Tablet auf dem Tisch, #100): Er ist kein Mitglied,
    * hat keinen Platz und keinen Namen, bekommt nur die Zuschauersicht und darf nichts außer Lebenszeichen senden.
    */
   | { type: 'display'; protocol: number }
-  | { type: 'setName'; name: string; avatar: string; crest?: string }
+  | { type: 'setName'; name: string; avatar: string; crest?: string; frame?: string }
   // Lobby (nur die Raumleitung, außer takeSeat/leaveSeat)
   | { type: 'setGame'; gameId: string }
   | { type: 'setOption'; id: string; value: string }
@@ -391,12 +406,12 @@ export function parseClientMessage(raw: string, push: ParsePushOptions = {}): Cl
   switch (m.type) {
     case 'hello':
       return isInt(m.protocol) && isString(m.token, 100) && m.token.length >= 16 && isString(m.name) && isString(m.avatar, 20)
-        ? { type: 'hello', protocol: m.protocol, token: m.token, name: m.name, avatar: m.avatar, ...(typeof m.crest === 'string' && m.crest.length <= 120 ? { crest: m.crest } : {}) }
+        ? { type: 'hello', protocol: m.protocol, token: m.token, name: m.name, avatar: m.avatar, ...(typeof m.crest === 'string' && m.crest.length <= 120 ? { crest: m.crest } : {}), ...frameField(m.frame) }
         : null;
     case 'display':
       return isInt(m.protocol) ? { type: 'display', protocol: m.protocol } : null;
     case 'setName':
-      return isString(m.name) && isString(m.avatar, 20) ? { type: 'setName', name: m.name, avatar: m.avatar, ...(typeof m.crest === 'string' && m.crest.length <= 120 ? { crest: m.crest } : {}) } : null;
+      return isString(m.name) && isString(m.avatar, 20) ? { type: 'setName', name: m.name, avatar: m.avatar, ...(typeof m.crest === 'string' && m.crest.length <= 120 ? { crest: m.crest } : {}), ...frameField(m.frame) } : null;
     case 'setGame':
       return isString(m.gameId, 60) ? { type: 'setGame', gameId: m.gameId } : null;
     case 'setOption':

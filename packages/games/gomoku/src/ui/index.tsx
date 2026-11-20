@@ -30,8 +30,7 @@ function Board({ view, legalMoves, onMove }: BoardProps<GomokuState, GomokuMove>
         className="gomoku-board"
         renderCell={(col, row) => {
           const cell = row * size + col;
-          // Spielbare Felder nennen den Zug (#335).
-          if (playable.has(cell)) return describeMove(view, { type: 'place', cell });
+          // Der Zugtext gehört nur in `cellLabel` (Screenreader); als Inhalt der Zelle stand er sichtbar auf dem Brett.
           const seat = view.board[cell];
           return seat === null || seat === undefined ? null : <Stone seat={seat} win={winning.has(cell)} />;
         }}

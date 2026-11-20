@@ -11,6 +11,7 @@ export const meta: GameInfo = {
   hiddenInformation: true,
   privateViews: false,
   ruleVersion: 1,
+  ratedAfter: { ms: 20_000, moves: 3 },
   howToPlay: [
     'In jeder Runde wird ein geheimes Wort aus dem gewählten Themenpaket gesucht.',
     'Tippe auf einen Buchstaben der Bildschirm-Tastatur (oder drücke ihn auf deiner Tastatur), um zu prüfen, ob er im Wort vorkommt.',

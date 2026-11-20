@@ -147,6 +147,11 @@ const NEED: Readonly<Record<string, Need | undefined>> = {
   'ornament:band': { stat: 'categoriesComplete', min: 1, text: 'komplette Rubrik' },
 };
 
+/** Die Freischaltbedingungen aller gesperrten Teile als Daten (Schlüssel `<art>:<wert>`), für den Freischalt-Baustein der Web-App (#569). */
+export function crestNeeds(): readonly { id: string; stat: keyof CrestProgress; min: number; text: string }[] {
+  return Object.entries(NEED).flatMap(([id, need]) => (need ? [{ id, ...need }] : []));
+}
+
 /** Ist ein Teil frei? `kind`: schild, teilung (division), farben (colors) oder zier (ornament). */
 export function unlockOf(kind: 'shield' | 'division' | 'colors' | 'ornament', value: string, progress: CrestProgress): Unlock {
   const need = NEED[`${kind}:${value}`];

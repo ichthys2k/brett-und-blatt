@@ -66,12 +66,20 @@
   height: 100%;
 }
 
+/* Der Kreis hatte keine Füllung angegeben und wurde schwarz: Weiße Steine sahen aus wie schwarze mit Rand. Die Farbe kommt vom Verlauf am Stein. */
+.gomoku-stone circle {
+  fill: none;
+}
+
 .gomoku-seat-0 {
   background: radial-gradient(circle at 35% 30%, #4a4a4a, #000000 70%);
 }
 
 .gomoku-seat-1 {
   background: radial-gradient(circle at 35% 30%, #ffffff, #e0e0e0 70%);
+  box-shadow:
+    0 2px 4px rgb(0 0 0 / 0.4),
+    inset 0 0 0 1px rgb(0 0 0 / 0.25);
 }
 
 .gomoku-win {

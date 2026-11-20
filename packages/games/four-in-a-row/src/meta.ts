@@ -11,6 +11,7 @@ export const meta: GameInfo = {
   hiddenInformation: false,
   takeBack: true,
   ruleVersion: 1,
+  ratedAfter: { ms: 20_000, moves: 3 },
   howToPlay: [
     'Werft abwechselnd einen Stein in eine Spalte. Er fällt auf den untersten freien Platz.',
     'Wer zuerst vier eigene Steine in einer Reihe hat – waagerecht, senkrecht oder diagonal –, gewinnt.',

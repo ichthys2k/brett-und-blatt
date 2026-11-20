@@ -244,6 +244,8 @@ function Session({ learner, media, deck, now, refreshNow, practice, onStop }: { 
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
+      // Leertaste und Eingabe auf einem fokussierten Knopf (z. B. „Aufhören“) gehören dem Knopf selbst.
+      if (target && (target.tagName === 'BUTTON' || target.tagName === 'A') && (e.key === ' ' || e.key === 'Enter')) return;
       if (!shown && (e.key === ' ' || e.key === 'Enter')) {
         e.preventDefault();
         setShown(true);
@@ -310,13 +312,13 @@ function Session({ learner, media, deck, now, refreshNow, practice, onStop }: { 
         </figure>
       )}
       {!shown ? (
-        <Button variant="primary" className="w-full" onClick={() => setShown(true)}>
+        <Button variant="primary" className="w-full" autoFocus onClick={() => setShown(true)}>
           Antwort zeigen <span className="text-xs opacity-70">(Leertaste)</span>
         </Button>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label="Wie gut hast du die Karte gewusst?">
           {([1, 2, 3, 4] as const).map((a) => (
-            <Button key={a} variant={a === 3 ? 'primary' : 'secondary'} className="flex-col" onClick={() => give(a)} aria-label={preview ? `${ANSWER_LABELS[a]}, nächster Termin in ${preview[a].label}` : ANSWER_LABELS[a]}>
+            <Button key={a} variant={a === 3 ? 'primary' : 'secondary'} className="flex-col" autoFocus={a === 3} onClick={() => give(a)} aria-label={preview ? `${ANSWER_LABELS[a]}, nächster Termin in ${preview[a].label}` : ANSWER_LABELS[a]}>
               <span>{ANSWER_LABELS[a]}</span>
               <span className="text-xs opacity-80">{preview ? `${preview[a].label} · ` : ''}Taste {a}</span>
             </Button>

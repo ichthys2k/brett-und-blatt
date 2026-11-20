@@ -152,6 +152,7 @@ Gemessen auf dem Stand vor Umsetzung von #484 ff., Voreinstellungen der Partie, 
 
 - Stufen (Fläche des Rings selbst, etwa Fenster − 48 × − 144 px): bis 4 Plätze `large` ab 1312 × 716, `medium` ab 1132 × 576; 5 Plätze `large` ab 1580 breit, `medium` ab 1312 × 716; 6 Plätze `medium` ab 1312 × 716; 7–8 Plätze `medium` ab 1800 × 900. Die Startwerte des Issues (1360 × 820 usw.) rechneten mit dem Fenster; bei 5 und mehr Plätzen rücken Nachbarn auf dem festen Oval so nah, dass breitere Schilder früher einander überlappen. Die Werte sind mit dem Rauchtest (1440 × 900, 1920 × 1080) bestätigt.
 - Gemessen bei 1440 × 900 (Tischmitte vorher → nachher): Skat zu dritt 838 × 531 → 758 × 488, Mau-Mau zu fünft 912 × 352 → 880 × 286, Quartett zu sechst 850 × 590 → 818 × 505, also etwa 17–21 % weniger Fläche statt der angestrebten höchstens 10 %. Größere Schilder kosten Mitte; ein Rückschritt auf kleinere Stufen wäre in `seatRingScale` und den Variablen in `ui.css` zu stellen.
+- **Entscheidung Cornelius (20.11.2026, #548):** Bei sieben bis acht Plätzen unter 1800 × 900 bleiben es kompakte Chips ohne Wappenschild; Schilder gibt es dort erst ab 1920 × 1080. Die Tischmitte im Sitzring ist um etwa 17–21 % kleiner als vor D4; das gilt als akzeptierte Abweichung vom Plan (der nannte höchstens 10 %).
 - Schild 80 px breit ergibt ein Medaillon von etwa 54 px (≥ 50 px), `medium` mit 56 px etwa 38 px.
 ### G1 – Layout-Entscheidung als reine Funktion (#484, umgesetzt 16.11.2026)
 
