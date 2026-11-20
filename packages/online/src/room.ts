@@ -237,6 +237,8 @@ export interface RoomSnapshot {
   match?: { config: MatchRoomConfig; noShow: RoomReport | null; reported: boolean; series?: SeriesState };
   /** Sprachchat gemeldet in Runde … (#352). */
   voiceReported?: number;
+  /** Im Sprachchat gemeldete Mitglieder, stumm bis zur Freigabe durch die Raumleitung (#352). */
+  voiceMuted?: string[];
 }
 
 /**
@@ -258,6 +260,8 @@ export class Room {
   private voiceConnections = new Set<string>();
   /** Sprachchat gemeldet in dieser Runde (`rounds` beim Melden); mit der nächsten Partie wieder frei. */
   private voiceReported: number | null = null;
+  /** Gemeldete Mitglieder: für alle stumm, bis die Raumleitung sie freigibt. Nur diese Liste, kein Grund, kein Melder. */
+  private voiceMuted = new Set<string>();
   /** VR-Treffpunkt: wann je Verbindung zuletzt ein Rückfall-Kopf weitergereicht wurde und wie viele Vermittlungen zuletzt kamen. */
   private xrLimits = new Map<string, { pose: number; rtc: number[] }>();
   private hostId: string | null = null;
@@ -431,7 +435,7 @@ export class Room {
     const message = parseClientMessage(raw);
     if (!message) return this.error(connectionId, 'badMessage', 'Unbekannte Nachricht.');
     if (message.type === 'ping') return this.deps.send(connectionId, { type: 'pong', serverNow: this.deps.now() });
-    if (message.type === 'xr' || message.type === 'rtc' || message.type === 'pose' || message.type === 'voice' || message.type === 'reportVoice') return this.receiveXr(connectionId, message);
+    if (message.type === 'xr' || message.type === 'rtc' || message.type === 'pose' || message.type === 'voice' || message.type === 'reportVoice' || message.type === 'setVoice' || message.type === 'releaseVoice') return this.receiveXr(connectionId, message);
     if (message.type === 'display') return this.attachDisplay(connectionId, message);
     if (isDisplay) return message.type === 'leave' ? this.deps.close(connectionId) : this.error(connectionId, 'notAllowed', 'Ein Tisch-Bildschirm kann nur zuschauen.');
     if (message.type === 'hello') return this.hello(connectionId, message);
@@ -601,6 +605,7 @@ export class Room {
       ...(this.after ? { after: structuredClone(this.after) } : {}),
       ...(this.match ? { match: structuredClone(this.match) } : {}),
       ...(this.voiceReported !== null ? { voiceReported: this.voiceReported } : {}),
+      ...(this.voiceMuted.size > 0 ? { voiceMuted: [...this.voiceMuted] } : {}),
     };
   }
 
@@ -624,6 +629,7 @@ export class Room {
     room.lastActivity = snapshot.lastActivity;
     room.match = snapshot.match ?? null;
     room.voiceReported = snapshot.voiceReported ?? null;
+    room.voiceMuted = new Set(snapshot.voiceMuted ?? []);
     const now = deps.now();
     for (const m of snapshot.members) {
       // Wer schon vorher weg war, behält seinen Zeitpunkt – sonst begänne die Frist bei jedem
@@ -1402,6 +1408,7 @@ export class Room {
     if (seat !== null && this.phase === 'playing') this.vacateSeat(seat);
     else if (seat !== null && this.game) this.game.seatMembers[seat] = null;
     this.members.delete(member.id);
+    this.voiceMuted.delete(member.id);
     this.tokens.delete(member.token);
     if (this.hostId === member.id) this.hostId = [...this.members.values()].find((m) => m.disconnectedAt === null)?.id ?? this.members.keys().next().value ?? null;
     this.broadcastRoom();
@@ -1745,7 +1752,7 @@ export class Room {
   }
 
   private roomMessage(): RoomMessage {
-    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, ...(m.crest ? { crest: m.crest } : {}), ...(m.frame ? { frame: m.frame } : {}), connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}), ...(m.join ? { join: m.join } : {}), ...(this.isXrMember(m) ? { xr: true as const } : {}), ...(this.isVoiceMember(m) ? { voice: true as const } : {}) }));
+    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, ...(m.crest ? { crest: m.crest } : {}), ...(m.frame ? { frame: m.frame } : {}), connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}), ...(m.join ? { join: m.join } : {}), ...(this.isXrMember(m) ? { xr: true as const } : {}), ...(this.isVoiceMember(m) ? { voice: true as const } : {}), ...(this.voiceMuted.has(m.id) ? { voiceMuted: true as const } : {}) }));
     const series = this.match?.series;
     const match = this.match
       ? { tournament: this.match.config.tournament, label: this.match.config.label, noShow: this.match.noShow !== null, ...(series ? { series: { bestOf: series.bestOf, score: this.seriesScoreBySeat(series), next: series.nextAt, done: series.winner !== undefined } } : {}) }
@@ -1842,8 +1849,9 @@ export class Room {
   }
 
   /** Warum der Sprachchat gerade nicht geht – oder null. */
-  private voiceOff(): 'public' | 'reported' | null {
+  private voiceOff(): 'public' | 'closed' | 'reported' | null {
     if (this.lobby.isPublic) return 'public';
+    if (!this.lobby.voice) return 'closed';
     return this.voiceReported === this.rounds ? 'reported' : null;
   }
 
@@ -1851,14 +1859,15 @@ export class Room {
   restoreFlags(connectionId: string, flags: ConnectionFlags): void {
     if (!this.connections.has(connectionId)) return;
     if (flags.xr) this.xrConnections.add(connectionId);
-    if (flags.voice && !this.voiceOff()) this.voiceConnections.add(connectionId);
+    const memberId = this.connections.get(connectionId);
+    if (flags.voice && !this.voiceOff() && !(memberId && this.voiceMuted.has(memberId))) this.voiceConnections.add(connectionId);
   }
 
   private reportFlags(connectionId: string): void {
     this.deps.flagsChanged?.(connectionId, { xr: this.xrConnections.has(connectionId), voice: this.voiceConnections.has(connectionId) });
   }
 
-  /** Sprachchat für alle beenden (Meldung oder öffentlicher Raum). */
+  /** Sprachchat für alle beenden (Meldung ohne Person, öffentlicher Raum oder von der Raumleitung abgeschaltet). */
   private dropVoice(): void {
     const dropped = [...this.voiceConnections];
     this.voiceConnections.clear();
@@ -1871,14 +1880,18 @@ export class Room {
    * Gratis-Tarif nicht leidet: Vermittlungen höchstens 120 je Minute und Verbindung, Rückfall-Köpfe
    * höchstens zwei je Sekunde.
    */
-  private receiveXr(connectionId: string, message: Extract<ClientMessage, { type: 'xr' | 'rtc' | 'pose' | 'voice' | 'reportVoice' }>): void {
+  private receiveXr(connectionId: string, message: Extract<ClientMessage, { type: 'xr' | 'rtc' | 'pose' | 'voice' | 'reportVoice' | 'setVoice' | 'releaseVoice' }>): void {
     const memberId = this.connections.get(connectionId);
     const member = memberId ? this.members.get(memberId) : undefined;
     if (!member || this.displays.has(connectionId)) return this.error(connectionId, 'notAllowed', 'Erst anmelden.');
     if (message.type === 'xr' || message.type === 'voice') {
       const set = message.type === 'xr' ? this.xrConnections : this.voiceConnections;
       if (message.type === 'voice' && message.on && this.voiceOff()) {
-        return this.error(connectionId, 'notAllowed', this.voiceOff() === 'public' ? 'Sprachchat gibt es nur in privaten Räumen.' : 'Der Sprachchat ist für diese Runde abgeschaltet.');
+        const why = this.voiceOff();
+        return this.error(connectionId, 'notAllowed', why === 'public' ? 'Sprachchat gibt es nur in privaten Räumen.' : why === 'closed' ? 'Die Raumleitung hat den Sprachchat nicht eingeschaltet.' : 'Der Sprachchat ist für diese Runde abgeschaltet.');
+      }
+      if (message.type === 'voice' && message.on && this.voiceMuted.has(member.id)) {
+        return this.error(connectionId, 'notAllowed', 'Du wurdest gemeldet und bist stumm, bis die Raumleitung dich freigibt.');
       }
       const before = message.type === 'xr' ? this.isXrMember(member) : this.isVoiceMember(member);
       if (message.on) set.add(connectionId);
@@ -1886,6 +1899,39 @@ export class Room {
       this.reportFlags(connectionId);
       const after = message.type === 'xr' ? this.isXrMember(member) : this.isVoiceMember(member);
       if (before !== after) this.broadcastRoom();
+      return;
+    }
+    if (message.type === 'setVoice') {
+      // Nur die Raumleitung erlaubt Sprache für ihren privaten Raum (Entscheidung vom 16.11.2026, keine Altersabfrage).
+      if (member.id !== this.hostId) return this.error(connectionId, 'notAllowed', 'Das darf nur die Raumleitung.');
+      if (message.allowed && this.lobby.isPublic) return this.error(connectionId, 'notAllowed', 'Sprachchat gibt es nur in privaten Räumen.');
+      if ((this.lobby.voice ?? false) === message.allowed) return;
+      if (message.allowed) this.lobby.voice = true;
+      else {
+        delete this.lobby.voice;
+        this.dropVoice();
+        this.voiceMuted.clear();
+      }
+      this.broadcastRoom();
+      this.deps.changed?.();
+      return;
+    }
+    if (message.type === 'releaseVoice') {
+      if (member.id !== this.hostId) return this.error(connectionId, 'notAllowed', 'Das darf nur die Raumleitung.');
+      if (!this.voiceMuted.delete(message.member)) return;
+      this.broadcastRoom();
+      this.deps.changed?.();
+      return;
+    }
+    if (message.type === 'reportVoice' && message.member !== undefined) {
+      // Melden trifft nur die gemeldete Person: stumm für alle, bis die Raumleitung sie freigibt. Gespeichert
+      // wird nur, wer stumm ist – nicht, wer gemeldet hat, und nichts vom Gesprochenen.
+      const target = this.members.get(message.member);
+      if (this.voiceOff() || !target || target.id === member.id || !this.isVoiceMember(member) || !this.isVoiceMember(target)) return;
+      this.voiceMuted.add(target.id);
+      for (const connection of target.connections) if (this.voiceConnections.delete(connection)) this.reportFlags(connection);
+      this.broadcastRoom();
+      this.deps.changed?.();
       return;
     }
     if (message.type === 'reportVoice') {

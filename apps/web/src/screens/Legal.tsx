@@ -270,13 +270,15 @@ export function Datenschutz() {
 
       <h2>Sprachchat in privaten Räumen</h2>
       <p>
-        In privaten Räumen (nur wer den Raumcode hat) kannst du mit den anderen sprechen – in der Web-App wie in der VR-App. Das Mikrofon geht erst an, wenn
+        In privaten Räumen (nur wer den Raumcode hat) kannst du mit den anderen sprechen – in der Web-App wie in der VR-App –, sobald die Raumleitung den
+        Sprachchat für ihren Raum eingeschaltet hat. Eine Altersabfrage gibt es nicht; die Raumleitung trägt die Verantwortung für ihre Gruppe. Das Mikrofon geht erst an, wenn
         du ausdrücklich „Mitsprechen“ wählst und es im Browser erlaubst; du kannst dich jederzeit stumm schalten, aussteigen oder einzelne Mitspieler für dich
         stumm schalten. Die Stimme läuft direkt zwischen den Geräten (WebRTC) und wird weder auf dem Spieleserver noch sonst irgendwo aufgezeichnet oder
         gespeichert. Der Spieleserver vermittelt nur den Verbindungsaufbau und weiß, wer gerade mitspricht. Dabei erfahren die Geräte im Sprachchat
         gegenseitig ihre IP-Adressen. Für den Verbindungsaufbau wird der STUN-Server von Cloudflare genutzt, in schwierigen Netzen gegebenenfalls ein
-        TURN-Server von Cloudflare, der die verschlüsselten Daten nur durchleitet. Wer „Melden“ wählt, schaltet den Sprachchat für alle im Raum bis zur
-        nächsten Partie ab; dabei wird nichts gespeichert oder weitergegeben. In öffentlichen Räumen gibt es keinen Sprachchat. Rechtsgrundlage ist Art. 6
+        TURN-Server von Cloudflare, der die verschlüsselten Daten nur durchleitet. Wer eine Person „meldet“, schaltet sie für alle im Raum stumm, bis die
+        Raumleitung sie wieder freigibt. Der Raum merkt sich dafür nur, wer stumm ist, und das nur, solange es den Raum gibt; wer gemeldet hat und was
+        gesagt wurde, wird weder gespeichert noch weitergegeben. In öffentlichen Räumen gibt es keinen Sprachchat. Rechtsgrundlage ist Art. 6
         Abs. 1 lit. a DSGVO (deine Einwilligung durch das Einschalten des Mikrofons), die du jederzeit durch Aussteigen widerrufen kannst.
       </p>
 

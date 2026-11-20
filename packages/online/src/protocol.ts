@@ -47,6 +47,11 @@ export interface LobbySettings {
    * Fehlt: an in öffentlichen, aus in privaten Räumen.
    */
   acceptRequests?: boolean;
+  /**
+   * Erlaubt die Raumleitung den Sprachchat (#352)? Fehlt: aus. Nur in privaten Räumen wirksam; die
+   * Raumleitung trägt die Verantwortung für ihre Gruppe (keine Altersabfrage).
+   */
+  voice?: boolean;
 }
 
 /** Wie lange eine abgelehnte Anfrage gesperrt bleibt, bevor dieselbe Person wieder fragen darf. */
@@ -103,6 +108,8 @@ export interface MemberInfo {
   xr?: true;
   /** Macht das Mitglied gerade beim Sprachchat mit (#352)? Fehlt sonst. */
   voice?: true;
+  /** Im Sprachchat gemeldet: für alle stumm, bis die Raumleitung wieder freigibt (#352). Fehlt sonst. */
+  voiceMuted?: true;
 }
 
 export type RoomPhase = 'lobby' | 'playing' | 'finished';
@@ -212,8 +219,16 @@ export type ClientMessage =
   | { type: 'pose'; head: number[] }
   /** Sprachchat (#352, nur private Räume): mitmachen oder aussteigen. Die Stimme läuft direkt zwischen den Geräten. */
   | { type: 'voice'; on: boolean }
-  /** Sprachchat melden: schaltet ihn für alle bis zur nächsten Partie ab. */
-  | { type: 'reportVoice' };
+  /**
+   * Sprachchat melden. Mit `member`: Diese Person ist für alle stumm, bis die Raumleitung sie freigibt
+   * (`releaseVoice`); melden kann nur, wer selbst mitspricht. Ohne `member` (ältere Clients): Der
+   * Sprachchat ist für alle bis zur nächsten Partie aus.
+   */
+  | { type: 'reportVoice'; member?: string }
+  /** Nur die Raumleitung: Sprachchat für ihren privaten Raum erlauben oder abschalten (Standard: aus). */
+  | { type: 'setVoice'; allowed: boolean }
+  /** Nur die Raumleitung: ein gemeldetes Mitglied darf wieder mitsprechen. */
+  | { type: 'releaseVoice'; member: string };
 
 /** Vermittlungsdaten für WebRTC zwischen zwei Brillen (#351); der Raum liest sie nicht, er reicht sie nur weiter. */
 export type RtcSignal =
@@ -272,10 +287,11 @@ export interface RoomMessage {
   /** Läuft der Raum als Fernpartie? Nur dann bietet die Oberfläche Hinweise aufs Gerät an (#242); fehlt sonst. */
   correspondence?: true;
   /**
-   * Sprachchat (#352) nicht möglich: `public` in öffentlichen Räumen, `reported` nach einer Meldung bis zur
-   * nächsten Partie. Fehlt, wenn man mitsprechen kann.
+   * Sprachchat (#352) nicht möglich: `public` in öffentlichen Räumen, `closed`, solange die Raumleitung ihn
+   * nicht erlaubt hat (`LobbySettings.voice`), `reported` nach einer Meldung ohne Person bis zur nächsten
+   * Partie. Fehlt, wenn man mitsprechen kann (außer man ist selbst `voiceMuted`).
    */
-  voiceOff?: 'public' | 'reported';
+  voiceOff?: 'public' | 'closed' | 'reported';
   /** Nur bei Turnierpartien: zu welchem Turnier der Raum gehört. */
   match?: { tournament: string; label: string; noShow: boolean; series?: { bestOf: number; score: [number, number]; next: number | null; done: boolean } };
 }
@@ -492,7 +508,12 @@ export function parseClientMessage(raw: string, push: ParsePushOptions = {}): Cl
     case 'voice':
       return typeof m.on === 'boolean' ? { type: m.type, on: m.on } : null;
     case 'reportVoice':
-      return { type: 'reportVoice' };
+      if (m.member === undefined) return { type: 'reportVoice' };
+      return isString(m.member, 20) ? { type: 'reportVoice', member: m.member } : null;
+    case 'setVoice':
+      return typeof m.allowed === 'boolean' ? { type: 'setVoice', allowed: m.allowed } : null;
+    case 'releaseVoice':
+      return isString(m.member, 20) ? { type: 'releaseVoice', member: m.member } : null;
     case 'rtc': {
       const signal = parseRtcSignal(m.signal);
       return isString(m.to, 20) && signal ? { type: 'rtc', to: m.to, signal } : null;

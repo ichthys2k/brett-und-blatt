@@ -1,7 +1,8 @@
 /**
  * Sprachchat (#352): Knopf 🎙 neben den Reaktionen. Aufgeklappt: mitsprechen, stumm, aussteigen,
- * einzelne Mitspieler für sich stumm schalten, sehen, wer spricht, und melden (schaltet den
- * Sprachchat für alle bis zur nächsten Partie ab). Nur in privaten Räumen.
+ * einzelne Mitspieler für sich stumm schalten, sehen, wer spricht, und eine Person melden (sie ist
+ * dann für alle stumm, bis die Raumleitung sie freigibt). Nur in privaten Räumen und nur, wenn die
+ * Raumleitung den Sprachchat erlaubt hat; den Schalter dafür sieht nur sie.
  */
 import type { MemberInfo } from '@brett-und-blatt/online';
 import type { VoiceChat, VoiceState } from '@brett-und-blatt/rtc';
@@ -17,23 +18,32 @@ export function VoiceMenu({
   members,
   you,
   off,
+  isHost,
+  onAllow,
   onReport,
+  onRelease,
   inBar,
 }: {
   voice: VoiceChat | null;
   state: VoiceState;
   members: readonly MemberInfo[];
   you: string | null;
-  off: 'public' | 'reported' | undefined;
-  onReport: () => void;
+  off: 'public' | 'closed' | 'reported' | undefined;
+  isHost: boolean;
+  onAllow: (allowed: boolean) => void;
+  onReport: (member: string) => void;
+  onRelease: (member: string) => void;
   inBar?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useDismiss(open, useCallback(() => setOpen(false), []), box);
-  // Öffentliche Räume: kein Knopf, damit niemand ins Leere tippt.
-  if (off === 'public' || !voice) return null;
+  // Öffentliche Räume und nicht erlaubter Sprachchat: kein Knopf, damit niemand ins Leere tippt.
+  // Die Raumleitung sieht ihn in privaten Räumen immer, weil dort ihr Schalter sitzt.
+  if (off === 'public' || !voice || (off === 'closed' && !isHost)) return null;
   const others = members.filter((m) => m.voice && m.id !== you);
+  const mutedMembers = members.filter((m) => m.voiceMuted);
+  const mutedYou = mutedMembers.some((m) => m.id === you);
   const someoneSpeaks = others.some((m) => state.speaking.includes(m.id));
   const icon = state.joined ? (state.muted ? '🔇' : someoneSpeaks ? '🔊' : '🎙') : '🎙';
   return (
@@ -56,8 +66,40 @@ export function VoiceMenu({
           className={`z-30 space-y-2 rounded-xl border border-line bg-surface p-3 shadow-md ${inBar ? 'absolute top-full right-0 mt-1 w-72' : 'fixed inset-x-3 top-[calc(env(safe-area-inset-top)+3.5rem)] mx-auto max-w-sm side:top-12 side:right-auto side:left-2 side:mx-0 side:w-72'}`}
         >
           <p className="font-semibold">{t('voice.title')}</p>
-          {off === 'reported' ? (
+          {isHost && (
+            <label className="flex cursor-pointer select-none items-start gap-2 border-b border-line pb-2">
+              <input type="checkbox" checked={off !== 'closed'} onChange={(e) => onAllow(e.target.checked)} className="mt-1 h-4 w-4 rounded accent-accent" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">{t('voice.allow')}</span>
+                <span className="block text-xs text-muted">{t('voice.allowHint')}</span>
+              </span>
+            </label>
+          )}
+          {isHost && mutedMembers.length > 0 && (
+            <div className="border-b border-line pb-2">
+              <p className="text-xs text-muted">{t('voice.mutedList')}</p>
+              <ul className="space-y-1">
+                {mutedMembers.map((m) => (
+                  <li key={m.id} className="flex items-center justify-between gap-2 text-sm">
+                    <span>
+                      <Avatar value={m.avatar} /> {m.name}
+                    </span>
+                    <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => onRelease(m.id)}>
+                      {t('voice.release')}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {off === 'closed' ? (
+            <p className="text-sm text-muted">{t('voice.closed')}</p>
+          ) : off === 'reported' ? (
             <p className="text-sm">{t('voice.reported')}</p>
+          ) : mutedYou ? (
+            <p role="status" className="text-sm">
+              {t('voice.mutedYou')}
+            </p>
           ) : !state.joined ? (
             <>
               <p className="text-xs text-muted">{t('voice.joinHint')}</p>
@@ -93,23 +135,26 @@ export function VoiceMenu({
                           {state.speaking.includes(m.id) ? '🔊 ' : ''}
                           <Avatar value={m.avatar} /> {m.name}
                         </span>
-                        <Button variant="ghost" className="px-2 py-1 text-xs" aria-pressed={silenced} onClick={() => voice.silence(m.id, !silenced)}>
-                          {silenced ? t('voice.unsilence') : t('voice.silence')}
-                        </Button>
+                        <span className="flex flex-none gap-1">
+                          <Button variant="ghost" className="px-2 py-1 text-xs" aria-pressed={silenced} onClick={() => voice.silence(m.id, !silenced)}>
+                            {silenced ? t('voice.unsilence') : t('voice.silence')}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="px-2 py-1 text-xs text-danger"
+                            aria-label={t('voice.reportOne', { name: m.name })}
+                            onClick={() => {
+                              if (window.confirm(t('voice.reportConfirm', { name: m.name }))) onReport(m.id);
+                            }}
+                          >
+                            {t('voice.report')}
+                          </Button>
+                        </span>
                       </li>
                     );
                   })}
                 </ul>
               )}
-              <Button
-                variant="ghost"
-                className="w-full text-danger"
-                onClick={() => {
-                  if (window.confirm(t('voice.reportConfirm'))) onReport();
-                }}
-              >
-                {t('voice.report')}
-              </Button>
             </>
           )}
         </div>

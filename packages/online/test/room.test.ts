@@ -1252,8 +1252,76 @@ describe('Sprachchat (#352)', () => {
     const handy = env.client('handy');
     [anna, handy].forEach((c) => c.hello());
     anna.send({ type: 'setPublic', isPublic: false });
+    anna.send({ type: 'setVoice', allowed: true });
     return { anna, handy };
   };
+  const idOf = (c: ReturnType<Env['client']>, name: string) => c.room().members.find((m) => m.name === name)!.id;
+
+  it('ist aus, bis die Raumleitung ihn erlaubt – und nur sie darf das', () => {
+    const anna = env.client('anna');
+    const handy = env.client('handy');
+    [anna, handy].forEach((c) => c.hello());
+    anna.send({ type: 'setPublic', isPublic: false });
+    expect(anna.room().voiceOff).toBe('closed');
+    handy.send({ type: 'voice', on: true });
+    expect(handy.last('error')?.code).toBe('notAllowed');
+    handy.send({ type: 'setVoice', allowed: true });
+    expect(handy.room().voiceOff).toBe('closed');
+    anna.send({ type: 'setVoice', allowed: true });
+    expect(handy.room().voiceOff).toBeUndefined();
+    expect(handy.room().lobby.voice).toBe(true);
+    handy.send({ type: 'voice', on: true });
+    expect(anna.room().members.some((m) => m.voice)).toBe(true);
+    // Abschalten beendet den Sprachchat für alle.
+    anna.send({ type: 'setVoice', allowed: false });
+    expect(anna.room().voiceOff).toBe('closed');
+    expect(anna.room().members.some((m) => m.voice)).toBe(false);
+  });
+
+  it('lässt sich in öffentlichen Räumen nicht erlauben', () => {
+    const anna = env.client('anna');
+    anna.hello();
+    anna.send({ type: 'setPublic', isPublic: true });
+    anna.send({ type: 'setVoice', allowed: true });
+    expect(anna.last('error')?.code).toBe('notAllowed');
+    expect(anna.room().lobby.voice).toBeUndefined();
+  });
+
+  it('Melden schaltet nur die gemeldete Person stumm, bis die Raumleitung sie freigibt', () => {
+    const { anna, handy } = privateRoom();
+    const carl = env.client('carl');
+    carl.hello();
+    [anna, handy, carl].forEach((c) => c.send({ type: 'voice', on: true }));
+    const handyId = idOf(anna, 'handy');
+    carl.send({ type: 'reportVoice', member: handyId });
+    const members = anna.room().members;
+    expect(members.find((m) => m.id === handyId)).toMatchObject({ voiceMuted: true });
+    expect(members.find((m) => m.id === handyId)?.voice).toBeUndefined();
+    expect(members.filter((m) => m.voice).map((m) => m.name).sort()).toEqual(['anna', 'carl']);
+    expect(anna.room().voiceOff).toBeUndefined();
+    // Die gemeldete Person kommt nicht wieder hinein, auch nicht nach dem Schlafen des Raums.
+    handy.send({ type: 'voice', on: true });
+    expect(handy.last('error')?.code).toBe('notAllowed');
+    expect(env.room.snapshot().voiceMuted).toEqual([handyId]);
+    // Freigeben darf nur die Raumleitung.
+    carl.send({ type: 'releaseVoice', member: handyId });
+    expect(anna.room().members.find((m) => m.id === handyId)?.voiceMuted).toBe(true);
+    anna.send({ type: 'releaseVoice', member: handyId });
+    expect(anna.room().members.find((m) => m.id === handyId)?.voiceMuted).toBeUndefined();
+    handy.send({ type: 'voice', on: true });
+    expect(anna.room().members.find((m) => m.id === handyId)?.voice).toBe(true);
+  });
+
+  it('melden kann nur, wer selbst mitspricht, und nur jemanden im Sprachchat', () => {
+    const { anna, handy } = privateRoom();
+    anna.send({ type: 'voice', on: true });
+    const annaId = idOf(anna, 'anna');
+    const handyId = idOf(anna, 'handy');
+    handy.send({ type: 'reportVoice', member: annaId });
+    anna.send({ type: 'reportVoice', member: handyId });
+    anna.send({ type: 'reportVoice', member: annaId });
+    expect(anna.room().members.some((m) => m.voiceMuted)).toBe(false);
+  });
 
   it('gibt es nur in privaten Räumen', () => {
     const anna = env.client('anna');
@@ -1278,7 +1346,7 @@ describe('Sprachchat (#352)', () => {
     expect(handy.last('pose')).toBeUndefined();
   });
 
-  it('Melden schaltet den Sprachchat bis zur nächsten Partie ab', () => {
+  it('Melden ohne Person (ältere Clients) schaltet den Sprachchat bis zur nächsten Partie ab', () => {
     const { anna, handy } = privateRoom();
     anna.send({ type: 'voice', on: true });
     handy.send({ type: 'voice', on: true });

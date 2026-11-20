@@ -19,6 +19,13 @@ const styles = Object.fromEntries(
 /** Ordnername des Spiels aus einem Pfad wie „../packages/games/<ordner>/…“. */
 const folderOf = (path: string) => path.split('/')[3]!;
 
+/**
+ * Fertige Spiele, die vorläufig ohne Wappen erscheinen (Startseite zeigt das Emoji aus dem Steckbrief).
+ * Ausnahme nur mit Cornelius' Zustimmung (20.11.2026, Maulwurfsgänge, #568); sobald das Wappen da ist,
+ * den Eintrag streichen – der Test unten meldet einen überflüssigen Eintrag.
+ */
+const WITHOUT_CREST = new Set<string>(['mole-tunnels']);
+
 const games = Object.entries(metas).map(([path, info]) => ({ folder: folderOf(path), info }));
 
 /** Ruft eine Testdatei die Vertragsprüfungen nur auf oder führt sie auch aus? */
@@ -42,9 +49,12 @@ describe('Repo-Regeln', () => {
   it('jedes fertige Spiel hat ein Wappen und jedes Wappen gehört zu einem Spiel', () => {
     const missing = games
       .filter(({ info }) => !info.draft)
-      .filter(({ folder }) => !crestIds.has(folder))
+      .filter(({ folder }) => !crestIds.has(folder) && !WITHOUT_CREST.has(folder))
       .map(({ folder }) => folder);
     expect(missing).toEqual([]);
+
+    const stale = [...WITHOUT_CREST].filter((id) => crestIds.has(id) || !games.some(({ folder, info }) => folder === id && !info.draft));
+    expect(stale).toEqual([]);
 
     const gameFolders = new Set(games.map(({ folder }) => folder));
     const orphaned = [...crestIds].filter((id) => !gameFolders.has(id));

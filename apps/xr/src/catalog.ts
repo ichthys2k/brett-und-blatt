@@ -61,6 +61,7 @@ const ALL_GAMES: [id: string, name: string][] = [
   ['maexle', 'Mäxle'],
   ['majority', 'Mehrheitsfrage'],
   ['mill', 'Mühle'],
+  ['mole-tunnels', 'Maulwurfsgänge'],
   ['color-sorter', 'Narrenhof'],
   ['ludo', 'Nicht ärgern!'],
   ['pairs', 'Paare finden'],

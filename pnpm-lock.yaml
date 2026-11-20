@@ -315,6 +315,9 @@ importers:
       '@brett-und-blatt/game-mill':
         specifier: workspace:*
         version: link:../../packages/games/mill
+      '@brett-und-blatt/game-mole-tunnels':
+        specifier: workspace:*
+        version: link:../../packages/games/mole-tunnels
       '@brett-und-blatt/game-number-wall':
         specifier: workspace:*
         version: link:../../packages/games/number-wall

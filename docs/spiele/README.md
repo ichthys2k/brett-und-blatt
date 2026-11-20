@@ -64,7 +64,7 @@ Aufwand: S = klein, M = mittel, L = groß, XL = sehr groß.
 | [Elf zuerst!](elf-zuerst.md) (Elfer raus) | 2–6 | verdeckt | Zahlenkarten 1–20, Auslage 4×20, Handfächer | S | M | S | Planungsliste Etappe 7 |
 | [Sternhalma](sternhalma.md) | 2–6 | offen | SVG-Sternbrett, Sprungketten | S | M | M | Planungsliste Etappe 7 |
 | [Rübenacker](ruebenacker.md) (Lotti-Karotti-artig) | 2–6 | offen, Kartenstapel verdeckt | SVG-Beet, Maulwurfspur | S | M | S | Planungsliste Etappe 7 |
-| [Maulwurfsgänge](maulwurfsgaenge.md) (Schiebe-Labyrinth, eigene Fassung) | 2–4 | offen, Zug um Zug | Schiebe-Brett mit stabilen Teil-ids, Hasen/Rübe/Maulwurf aus Rübenacker | M | L | M | #457, M1 bis M4 fertig, M5 (Freischalten) vorbereitet, Entwurf bis Cornelius' Wort |
+| [Maulwurfsgänge](maulwurfsgaenge.md) (Schiebe-Labyrinth, eigene Fassung) | 2–4 | offen, Zug um Zug | Schiebe-Brett mit stabilen Teil-ids, Hasen/Rübe/Maulwurf aus Rübenacker | M | L | M | #457, M1 bis M5 fertig (freigeschaltet 20.11.2026, online, in der VR-Spieltafel); offen: Wappen (#568), Bot-Porträt (#567), endgültige Klänge |
 
 ## Gemeinsame Bausteine
 

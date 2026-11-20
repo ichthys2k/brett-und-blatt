@@ -82,10 +82,11 @@ export function App() {
   const voiceState = useSyncExternalStore(voice?.subscribe ?? noSubscribe, voice?.getState ?? noVoice);
   const members = room.room?.members;
   const xrMembers = useMemo(() => (members ?? []).filter((m) => m.xr && m.connected).map((m) => m.id), [members]);
-  // Meldung oder öffentlicher Raum: Sprachchat sofort beenden.
+  const mutedByRoom = members?.find((m) => m.id === room.you)?.voiceMuted === true;
+  // Öffentlicher Raum, von der Raumleitung abgeschaltet oder selbst gemeldet: Sprachchat sofort beenden.
   useEffect(() => {
-    if (room.room?.voiceOff && voiceState.joined) voice?.stopByRoom();
-  }, [room.room?.voiceOff, voiceState.joined, voice]);
+    if ((room.room?.voiceOff || mutedByRoom) && voiceState.joined) voice?.stopByRoom();
+  }, [room.room?.voiceOff, mutedByRoom, voiceState.joined, voice]);
   useEffect(() => {
     if (!mesh) return;
     mesh.update(members ?? [], voiceState.joined);
@@ -184,17 +185,25 @@ export function App() {
   }
 
   const voiceOff = room.room?.voiceOff ?? null;
+  const voiceHost = room.room?.hostId === room.you;
+  const voiceMembers = (room.room?.members ?? []).filter((m) => m.voice && m.id !== room.you);
+  const voiceMuted = (room.room?.members ?? []).filter((m) => m.voiceMuted);
   const voiceControls: VoiceControls = {
     joined: voiceState.joined,
     muted: voiceState.muted,
     off: voiceOff,
+    mutedByRoom,
+    isHost: voiceHost,
     error: voiceState.error,
     join: () => void voice?.join(),
     leave: () => voice?.leave(),
     mute: (muted) => voice?.setMuted(muted),
-    report: () => send({ type: 'reportVoice' }),
+    allow: (allowed) => send({ type: 'setVoice', allowed }),
+    others: voiceMembers.map((m) => ({ id: m.id, name: m.name })),
+    mutedMembers: voiceMuted.map((m) => ({ id: m.id, name: m.name })),
+    report: (member) => send({ type: 'reportVoice', member }),
+    release: (member) => send({ type: 'releaseVoice', member }),
   };
-  const voiceMembers = (room.room?.members ?? []).filter((m) => m.voice && m.id !== room.you);
   const lobby = room.room?.phase === 'lobby' ? room.room.lobby : null;
   const mySeat = lobby?.seats.findIndex((s) => s.kind === 'human' && s.memberId === room.you) ?? -1;
   return (
@@ -223,8 +232,32 @@ export function App() {
         {room.error && <p role="alert">{room.error}</p>}
         <section aria-label="Sprachchat">
           <h2>Sprachchat</h2>
+          {voiceHost && voiceOff !== 'public' && (
+            <>
+              <label>
+                <input type="checkbox" checked={voiceOff !== 'closed'} onChange={(e) => send({ type: 'setVoice', allowed: e.target.checked })} /> Sprachchat erlauben (nur du als
+                Raumleitung, du bist für deine Gruppe verantwortlich)
+              </label>
+              {voiceMuted.length > 0 && (
+                <ul className="xr-seats" aria-label="Gemeldet und stumm">
+                  {voiceMuted.map((m) => (
+                    <li key={m.id}>
+                      <span>
+                        {m.avatar} {m.name} (gemeldet, stumm)
+                      </span>
+                      <button type="button" onClick={() => send({ type: 'releaseVoice', member: m.id })}>
+                        Freigeben
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
           {voiceOff ? (
-            <p>{voiceOff === 'public' ? 'Sprachchat gibt es nur in privaten Räumen.' : 'Der Sprachchat ist für diese Runde abgeschaltet.'}</p>
+            <p>{voiceOff === 'public' ? 'Sprachchat gibt es nur in privaten Räumen.' : voiceOff === 'closed' ? 'Die Raumleitung hat den Sprachchat nicht eingeschaltet.' : 'Der Sprachchat ist für diese Runde abgeschaltet.'}</p>
+          ) : mutedByRoom ? (
+            <p role="status">Du wurdest gemeldet und bist stumm, bis die Raumleitung dich freigibt.</p>
           ) : !voiceState.joined ? (
             <>
               {voiceState.error && <p role="alert">{voiceState.error}</p>}
@@ -241,14 +274,6 @@ export function App() {
                 </button>{' '}
                 <button type="button" onClick={() => voice?.leave()}>
                   Aussteigen
-                </button>{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm('Sprachchat für alle bis zur nächsten Partie abschalten?')) send({ type: 'reportVoice' });
-                  }}
-                >
-                  ⚠ Melden
                 </button>
               </p>
               <ul className="xr-seats">
@@ -260,6 +285,15 @@ export function App() {
                     </span>
                     <button type="button" aria-pressed={voiceState.silenced.includes(m.id)} onClick={() => voice?.silence(m.id, !voiceState.silenced.includes(m.id))}>
                       {voiceState.silenced.includes(m.id) ? 'Wieder hören' : 'Für mich stumm'}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`${m.name} melden`}
+                      onClick={() => {
+                        if (window.confirm(`${m.name} melden? ${m.name} ist dann für alle stumm, bis die Raumleitung wieder freigibt.`)) send({ type: 'reportVoice', member: m.id });
+                      }}
+                    >
+                      ⚠ Melden
                     </button>
                   </li>
                 ))}

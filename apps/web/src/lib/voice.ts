@@ -34,10 +34,12 @@ export function useVoice(connection: RoomConnection | null, state: RoomState | n
   const members = state?.room?.members;
   const voiceOff = state?.room?.voiceOff;
 
-  // Meldung oder öffentlicher Raum: sofort beenden.
+  const mutedByRoom = members?.find((m) => m.id === you)?.voiceMuted === true;
+
+  // Öffentlicher Raum, von der Raumleitung abgeschaltet oder selbst gemeldet: sofort beenden.
   useEffect(() => {
-    if (voiceOff && voiceState.joined) parts?.voice.stopByRoom();
-  }, [voiceOff, voiceState.joined, parts]);
+    if ((voiceOff || mutedByRoom) && voiceState.joined) parts?.voice.stopByRoom();
+  }, [voiceOff, mutedByRoom, voiceState.joined, parts]);
 
   // Mit allen verbinden, die mitsprechen – solange man selbst mitspricht.
   useEffect(() => {

@@ -51,6 +51,13 @@ export function tafelLines(game: GameMessage): string[] {
       const v = view as { hares: number[][]; card: number | null; turn: number };
       return [...v.hares.map((h, s) => `${name(game, s)}: Hasen auf ${h.map((f) => (f === 0 ? 'Start' : f >= 25 ? 'Rübe' : f)).join(', ')}`), v.card ? `Gezogen: ${v.card}` : ''].filter(Boolean);
     }
+    case 'mole-tunnels': {
+      const v = view as { harvested: number[]; options: { goal: number }; phase: 'push' | 'walk'; turn: number };
+      return [
+        ...v.harvested.map((n, s) => `${name(game, s)}: ${n} von ${v.options.goal} Rüben`),
+        `${name(game, v.turn)}: ${v.phase === 'push' ? 'Teil einschieben' : 'laufen'}`,
+      ];
+    }
     case 'market-stalls': {
       const v = view as { day: number; days: number; stands: number[][]; hands: number[][]; pantries: number[][] };
       return [
