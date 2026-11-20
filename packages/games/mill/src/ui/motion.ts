@@ -49,6 +49,20 @@ export function motionsOf(prev: MillState | null, next: MillState): StoneMotion[
   return motions;
 }
 
+/**
+ * Bewegung aus der Auswahl des Spielers (eigener Zug): Stein vom Vorrat (`from` = null) oder von
+ * `from` nach `to`. So gleitet der Stein schon beim Antippen des Ziels, ohne den fertigen Zug abzuwarten;
+ * beim späteren echten Zugwechsel spielt `motionsOf` den Stein dann nicht noch einmal ab.
+ */
+export function motionOfChoice(state: MillState, from: number | null, to: number): StoneMotion | null {
+  const seat = state.turn;
+  if (state.cells[to] !== null) return null;
+  if (from === null) return state.inHand[seat as 0 | 1] > 0 ? { kind: 'place', seat, to } : null;
+  if (state.cells[from] !== seat) return null;
+  const adjacent = (NEIGHBORS[from] ?? []).includes(to);
+  return { kind: adjacent ? 'slide' : 'fly', seat, from, to };
+}
+
 export const SLIDE_MS = 320;
 export const FLY_MS = 480;
 export const PLACE_MS = 420;
