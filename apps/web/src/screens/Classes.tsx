@@ -12,7 +12,7 @@ import { parseNames } from '../lib/classPassesCore';
 import { findGame } from '../lib/registry';
 import { STAMP_ICON, STAMP_LABEL, type StampKind } from '../lib/stamps';
 import { GAME_SERVER } from '../lib/server';
-import { navigate, paths } from '../lib/router';
+import { navigate, pageAddress, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 
 const FIELD = 'min-h-11 w-full rounded-xl border border-line bg-surface px-3';
@@ -162,13 +162,6 @@ export function ClassPage({ code }: { code: string }) {
   const [children, setChildren] = useState(() => loadChildPasses().filter((c) => c.classCode === code));
   const [bigQr, setBigQr] = useState(false);
   const alive = useRef(true);
-
-  useEffect(() => {
-    // #150: Klassencode nach dem Einlesen aus der Adresszeile nehmen
-    if (window.location.hash.startsWith('#/klasse/')) {
-      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#/klassen`);
-    }
-  }, []);
 
   const apply = useCallback(
     async (action: string, extra: Record<string, unknown> = {}) => {
@@ -576,7 +569,7 @@ export function ClassPage({ code }: { code: string }) {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <h2 className="text-2xl sm:text-3xl font-bold">{view.name}</h2>
-                    <p className="text-sm text-muted">Mit der Kamera scannen oder auf brett-und-blatt.de/klassen eingeben:</p>
+                    <p className="text-sm text-muted">Mit der Kamera scannen oder auf {pageAddress(window.location, paths.classes).replace(/^https?:\/\//, '')} eingeben:</p>
                     <div className="text-4xl sm:text-5xl font-mono tracking-widest py-2 select-all">{code}</div>
                     <div className="mx-auto max-w-xs sm:max-w-sm rounded-2xl bg-white p-4 shadow-inner">
                       <QrCode text={link} label={`QR-Code für die Klasse ${view.name}`} />

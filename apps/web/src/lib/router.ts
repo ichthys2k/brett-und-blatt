@@ -154,6 +154,11 @@ export const paths = {
   privacy: '#/datenschutz',
 };
 
+/** Volle Adresse einer Seite der laufenden App (Ursprung + Pfad + Hash); für Anzeigen wie die Tafel (#578). */
+export function pageAddress(loc: { origin: string; pathname: string }, hash: string): string {
+  return `${loc.origin}${loc.pathname}${hash}`;
+}
+
 export function navigate(path: string): void {
   if (window.location.hash !== path) window.location.hash = path;
 }
