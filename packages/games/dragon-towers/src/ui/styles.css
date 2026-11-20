@@ -1,0 +1,243 @@
+/* Drachentürme – Präfix dt- */
+
+.dt-fit {
+  /* Die acht Farben von Brett und Türmen. */
+  --dt-c0: #ee8a1f;
+  --dt-c1: #2f6cd3;
+  --dt-c2: #7b43b8;
+  --dt-c3: #ef86b7;
+  --dt-c4: #f1cf2e;
+  --dt-c5: #d4352f;
+  --dt-c6: #2f9a4c;
+  --dt-c7: #7b4a24;
+}
+
+.dt-wrap {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  gap: 0.4rem;
+  container-type: inline-size;
+}
+
+/* Statuszeile: wer welchen Turm ziehen muss */
+.dt-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.2rem;
+  font-size: max(0.85rem, 3.6cqw);
+  line-height: 1.2;
+  text-align: center;
+}
+
+.dt-swatch {
+  flex: none;
+  width: 1.2em;
+  height: 1.2em;
+  border-radius: 0.3em;
+  background: var(--dt-color);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.dt-pass {
+  flex: none;
+  padding: 0.3rem 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-accent, #3b82f6);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Brett */
+.dt-board {
+  aspect-ratio: 1;
+  height: 100%;
+  max-width: 100%;
+  justify-self: center;
+}
+
+.dt-wrap > .dt-board {
+  width: auto;
+  border: 4px solid #2b2118;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+.dt-board .bub-cell.dt-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.12)), var(--dt-color);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+  touch-action: none;
+}
+
+.dt-board .bub-cell.dt-last-from::after {
+  content: '';
+  position: absolute;
+  inset: 30%;
+  border: 2px dashed rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.dt-board .bub-cell.dt-last-to {
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.7);
+}
+
+.dt-board .bub-cell.dt-selected {
+  box-shadow: inset 0 0 0 4px #fff, inset 0 0 0 6px rgba(0, 0, 0, 0.45);
+}
+
+.dt-board .bub-cell.dt-hint {
+  outline: 3px solid var(--color-accent, #3b82f6);
+  outline-offset: -3px;
+}
+
+/* Zielfelder: ein weißer Ring mit dunklem Rand, auf jeder Farbe gut sichtbar */
+.dt-target {
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* Türme: achteckiger Körper in Schwarz oder Gold mit farbiger Kappe */
+.dt-tower {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 78%;
+  height: 78%;
+  /* Der Schatten sitzt außen, das Achteck innen – sonst schneidet clip-path den Schatten ab. */
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45));
+  user-select: none;
+}
+
+.dt-body {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+}
+
+.dt-black .dt-body {
+  background: radial-gradient(circle at 35% 30%, #5a5a5a, #1d1d1d 60%, #080808);
+}
+
+.dt-gold .dt-body {
+  background: radial-gradient(circle at 35% 30%, #fff3c4, #e2b44a 55%, #9a7420);
+}
+
+.dt-cap {
+  width: 58%;
+  height: 58%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.55), transparent 45%), var(--dt-color);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55), inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.dt-gold .dt-cap {
+  box-shadow: 0 0 0 2px rgba(60, 40, 0, 0.55), inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+}
+
+/* Der Turm, der ziehen muss, pulsiert – über `scale`, nicht transform, damit das Gleiten frei bleibt. */
+.dt-tower.dt-required {
+  animation: dt-pulse 1.3s ease-in-out infinite;
+}
+
+@keyframes dt-pulse {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.08;
+  }
+}
+
+/*
+ * Gleiten: Der gemeinsame Baustein verschiebt den Turm per transform vom Start- zum Zielfeld
+ * (Dauer je nach Weg). Zusätzlich hebt er sich kurz an und landet wieder – über `scale`
+ * und den Schatten, die sich mit dem transform nicht in die Quere kommen.
+ */
+.dt-tower.dt-gliding.bub-piece-slide {
+  animation:
+    bub-piece-slide var(--slide-duration, 0.3s) cubic-bezier(0.25, 0.85, 0.3, 1) both,
+    dt-lift var(--slide-duration, 0.3s) ease-out both;
+}
+
+@keyframes dt-lift {
+  0% {
+    scale: 1;
+    filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45));
+  }
+  25% {
+    scale: 1.14;
+    filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.35));
+  }
+  85% {
+    scale: 1.03;
+  }
+  100% {
+    scale: 1;
+    filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45));
+  }
+}
+
+/* Kleine Türme für Spielerleiste und Status */
+.dt-mini {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: middle;
+  clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+}
+
+.dt-mini.dt-black {
+  background: radial-gradient(circle at 35% 30%, #5a5a5a, #111);
+}
+
+.dt-mini.dt-gold {
+  background: radial-gradient(circle at 35% 30%, #fff3c4, #c99a2e);
+}
+
+/* Koordinaten */
+.dt-coord {
+  position: absolute;
+  font-size: max(0.55rem, 2.2cqw);
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.dt-rank {
+  top: 4%;
+  left: 6%;
+}
+
+.dt-file {
+  bottom: 4%;
+  right: 6%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dt-tower.dt-required,
+  .dt-tower.dt-gliding.bub-piece-slide {
+    animation: none !important;
+  }
+}

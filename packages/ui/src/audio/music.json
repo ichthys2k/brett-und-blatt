@@ -1,6 +1,6 @@
 {
   "playlists": [
-    { "id": "denkraum", "title": "Denkraum", "mood": "ruhig und konzentriert", "games": ["checkers", "chess", "four-player-chess", "mill", "reversi", "go", "factor-grid", "number-wall", "target-number", "gomoku"] },
+    { "id": "denkraum", "title": "Denkraum", "mood": "ruhig und konzentriert", "games": ["checkers", "dragon-towers", "chess", "four-player-chess", "mill", "reversi", "go", "factor-grid", "number-wall", "target-number", "gomoku"] },
     { "id": "kartentisch", "title": "Kartentisch", "mood": "gesellig und leicht", "games": ["black-peter", "pairs", "quartett", "skat", "schafkopf", "doppelkopf", "uno", "mau-mau", "elevens", "market-stalls", "poker", "binokel", "speed", "president"] },
     { "id": "drachenspiel", "title": "Drachenspiel", "mood": "abenteuerlich und heldenhaft", "games": ["drachenspiel"] },
     { "id": "narrenhof", "title": "Narrenhof", "mood": "verspielt und höfisch", "games": ["color-sorter"] },
