@@ -217,7 +217,8 @@ export function setup(seats: number, options: Options, seed: string): MoleState 
 // --------------------------------------------------------------- Schieben
 
 /** Einschubfeld, Feld des herausfallenden Teils und Richtung, in die die Reihe rutscht. */
-function pushGeometry(size: number, side: Side, index: number): { entry: Pos; exit: Pos; dr: number; dc: number } {
+/** Ein- und Ausgang einer Schiebestelle und die Schubrichtung (für Oberfläche und Animation). */
+export function pushGeometry(size: number, side: Side, index: number): { entry: Pos; exit: Pos; dr: number; dc: number } {
   const last = size - 1;
   switch (side) {
     case 'top':

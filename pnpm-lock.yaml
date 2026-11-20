@@ -975,6 +975,9 @@ importers:
       '@brett-und-blatt/engine':
         specifier: workspace:*
         version: link:../../engine
+      '@brett-und-blatt/game-turnip-patch':
+        specifier: workspace:*
+        version: link:../turnip-patch
       '@brett-und-blatt/ui':
         specifier: workspace:*
         version: link:../../ui
