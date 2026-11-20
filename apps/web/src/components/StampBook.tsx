@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { t } from '../i18n';
 import { useCrest } from '../lib/crestStore';
 import { Button } from './controls';
+import { LevelPanel, useLevelTitle } from './LevelPanel';
 import { CrestDesigner } from './CrestDesigner';
 import { loadBook } from '../lib/chronikStore';
 import { crestUrl } from '../lib/crest';
@@ -29,6 +30,7 @@ export function StampBook() {
   const sum = totals(book);
   const learn = learnStamps(loadLearnBook().days);
   const [learnInfo, setLearnInfo] = useState('');
+  const levelTitle = useLevelTitle();
 
   return (
     <div className="space-y-4">
@@ -42,6 +44,7 @@ export function StampBook() {
             <h2 id="cover-title" className="text-2xl font-bold">
               {profile?.name || t('pass.cover.noName')}
             </h2>
+            {levelTitle && <p className="text-base font-semibold">{levelTitle}</p>}
             <p className="text-sm text-muted">{t('pass.cover.title')}</p>
           </div>
         </div>
@@ -53,6 +56,8 @@ export function StampBook() {
         </div>
       </section>
       {designing && <CrestDesigner name={profile?.name || t('pass.cover.noName')} onClose={() => setDesigning(false)} />}
+
+      <LevelPanel />
 
       <section className="space-y-3 rounded-2xl border border-line bg-surface p-4" aria-labelledby="stamps-learn">
         <h2 id="stamps-learn" className="text-xl font-bold">

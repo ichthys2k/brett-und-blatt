@@ -1,4 +1,4 @@
-import { CREST_LABELS, CREST_PALETTE, type CrestSpec } from '@brett-und-blatt/engine';
+import { CREST_LABELS, CREST_MEDALLION_FILL, CREST_MEDALLION_LINE, CREST_PALETTE, type CrestSpec } from '@brett-und-blatt/engine';
 import { useId } from 'react';
 
 /*
@@ -81,7 +81,7 @@ export function PlayerCrest({ spec, size = 64, label, className, portrait, portr
         <Medallion id={id} y={PORTRAIT_MEDALLION[spec.shield].y} r={PORTRAIT_MEDALLION[spec.shield].r} portrait={portrait} emoji={portraitEmoji ?? spec.animal} ring={ring} />
       ) : (
         <>
-          <circle cx="50" cy={y} r={small ? 26 : 20} fill="#FFF7E3" stroke="currentColor" strokeWidth={small ? 4 : 2} />
+          <circle cx="50" cy={y} r={small ? 26 : 20} fill={CREST_MEDALLION_FILL} stroke={CREST_MEDALLION_LINE} strokeWidth={small ? 4 : 2} />
           <text x="50" y={y + (small ? 12 : 9)} textAnchor="middle" fontSize={small ? 36 : 26} aria-hidden="true">
             {spec.animal}
           </text>
@@ -109,14 +109,14 @@ function Medallion({ id, y, r, portrait, emoji, ring }: { id: string; y: number;
           <circle cx="50" cy={y} r={inner} />
         </clipPath>
       </defs>
-      <circle cx="50" cy={y} r={r} fill="#FFF7E3" />
+      <circle cx="50" cy={y} r={r} fill={CREST_MEDALLION_FILL} />
       {portrait && <image className="bub-crest-portrait" href={portrait} x={50 - inner} y={y - inner} width={inner * 2} height={inner * 2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#portrait-${id})`} />}
       <text className="bub-crest-emoji" x="50" y={y + inner * 0.36} textAnchor="middle" fontSize={inner * 1.25} aria-hidden="true">
         {emoji}
       </text>
       {ring ? (
         <>
-          <circle cx="50" cy={y} r={ringRadius} fill="none" stroke="currentColor" strokeOpacity="0.25" strokeWidth={band} />
+          <circle cx="50" cy={y} r={ringRadius} fill="none" stroke={CREST_MEDALLION_LINE} strokeOpacity="0.25" strokeWidth={band} />
           <circle
             className="bub-crest-ring"
             cx="50"
@@ -133,7 +133,7 @@ function Medallion({ id, y, r, portrait, emoji, ring }: { id: string; y: number;
           />
         </>
       ) : (
-        <circle cx="50" cy={y} r={r - 1} fill="none" stroke="currentColor" strokeWidth="2" />
+        <circle cx="50" cy={y} r={r - 1} fill="none" stroke={CREST_MEDALLION_LINE} strokeWidth="2" />
       )}
     </g>
   );

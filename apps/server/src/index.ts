@@ -1797,7 +1797,7 @@ export class ClassRoom extends DurableObject<Env> {
   async create(code: string, json: string): Promise<string> {
     if (await this.ctx.storage.get('class')) return 'taken';
     const body = JSON.parse(json) as Record<string, unknown>;
-    const state = createClass(code, body.className, { token: body.token, name: body.name, avatar: body.avatar, crest: body.crest }, Date.now());
+    const state = createClass(code, body.className, { token: body.token, name: body.name, avatar: body.avatar, crest: body.crest, frame: body.frame }, Date.now());
     if (typeof state === 'string') return state;
     await this.save(state);
     return 'ok';
@@ -1816,7 +1816,7 @@ export class ClassRoom extends DurableObject<Env> {
       case 'view':
         return reply(200, { view: classView(state, token) });
       case 'join':
-        outcome = joinClass(state, { token, name: body.name, avatar: body.avatar, crest: body.crest }, now);
+        outcome = joinClass(state, { token, name: body.name, avatar: body.avatar, crest: body.crest, frame: body.frame }, now);
         break;
       case 'enroll': {
         const who = (body.who && typeof body.who === 'object' ? body.who : {}) as Record<string, unknown>;
@@ -1824,7 +1824,7 @@ export class ClassRoom extends DurableObject<Env> {
         break;
       }
       case 'update':
-        outcome = updateMember(state, token, { name: body.name, avatar: body.avatar, ...('crest' in body ? { crest: body.crest } : {}) }, now);
+        outcome = updateMember(state, token, { name: body.name, avatar: body.avatar, ...('crest' in body ? { crest: body.crest } : {}), ...('frame' in body ? { frame: body.frame } : {}) }, now);
         break;
       case 'card':
         outcome = putCard(state, token, body.card, now);
@@ -1847,7 +1847,7 @@ export class ClassRoom extends DurableObject<Env> {
         outcome = setLead(state, token, body.id, body.lead === true);
         break;
       case 'configure':
-        outcome = configureClass(state, token, { name: body.name, open: body.open, approval: body.approval, sections: body.sections, leaderboard: body.leaderboard, learning: body.learning, dueCards: body.dueCards }, now);
+        outcome = configureClass(state, token, { name: body.name, open: body.open, approval: body.approval, sections: body.sections, leaderboard: body.leaderboard, frames: body.frames, learning: body.learning, dueCards: body.dueCards }, now);
         // Ausgeschalteter Lernstand: alles Abgelegte wird gelöscht.
         if ('ok' in outcome && body.learning === false) await this.ctx.storage.delete([...(await this.ctx.storage.list({ prefix: 'progress:' })).keys()]);
         if ('ok' in outcome && body.dueCards === false) await this.ctx.storage.delete([...(await this.ctx.storage.list({ prefix: 'due:' })).keys()]);

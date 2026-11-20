@@ -61,6 +61,7 @@ const BOT_BY_GAME: Readonly<Record<string, string>> = {
   'category-sprint': 'wortflitzer',
   'chess': 'vorausrechner',
   'checkers': 'vorausrechner',
+  'dragon-towers': 'vorausrechner',
   'mill': 'vorausrechner',
   'reversi': 'vorausrechner',
   'four-in-a-row': 'vorausrechner',

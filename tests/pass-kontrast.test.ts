@@ -1,4 +1,4 @@
-import { CREST_COLOR_SETS } from '../packages/engine/src/crest-colors';
+import { CREST_COLOR_SETS, CREST_MEDALLION_FILL, CREST_MEDALLION_LINE } from '../packages/engine/src/crest-colors';
 import { describe, expect, it } from 'vitest';
 
 // Kontraste der Pass-Seite (#563, #565) und des Spielerwappens (#147) in hell und dunkel, im Aussehen „Schlicht“
@@ -51,9 +51,6 @@ const TEXT_PAIRS = [
   ['color-danger', 'color-surface'],
 ] as const;
 
-/** Bekannte Lücken der Grundfarben (nicht Teil von #563/#565), zur Beobachtung vermerkt: Warnorange auf Weiß erreicht in „Schlicht hell“ nur 4,2 : 1. */
-const KNOWN_GAPS = new Set(['Schlicht hell|color-warning|color-surface']);
-
 describe('Pass-Seite und Wappen: Kontraste in hell und dunkel', () => {
   it('liest alle vier Token-Blöcke', () => {
     for (const tokens of Object.values(VARIANTS)) expect(tokens['color-ink']).toBeDefined();
@@ -61,8 +58,7 @@ describe('Pass-Seite und Wappen: Kontraste in hell und dunkel', () => {
 
   for (const [name, tokens] of Object.entries(VARIANTS)) {
     for (const [fore, back] of TEXT_PAIRS) {
-      const run = KNOWN_GAPS.has(`${name}|${fore}|${back}`) ? it.skip : it;
-      run(`${name}: ${fore} auf ${back} erreicht 4,5:1`, () => {
+      it(`${name}: ${fore} auf ${back} erreicht 4,5:1`, () => {
         expect(contrast(tokens[fore]!, tokens[back]!)).toBeGreaterThanOrEqual(4.5);
       });
     }
@@ -74,6 +70,16 @@ describe('Pass-Seite und Wappen: Kontraste in hell und dunkel', () => {
       });
     }
   }
+
+  it('Medaillonlinie ist fest dunkel und hebt sich von der Cremefläche ab (3:1, unabhängig von hell/dunkel)', () => {
+    expect(contrast(CREST_MEDALLION_LINE, CREST_MEDALLION_FILL)).toBeGreaterThanOrEqual(3);
+  });
+
+  it('zeichnet die Medaillonlinie mit der festen Farbe statt currentColor', () => {
+    const source = fs.readFileSync(new URL('../packages/ui/src/crest/PlayerCrest.tsx', import.meta.url), 'utf8');
+    expect(source.match(/stroke=\{CREST_MEDALLION_LINE\}/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(source).not.toMatch(/<circle[^>]*fill=\{?["']?(?:none|CREST_MEDALLION_FILL)[^>]*stroke="currentColor"(?! strokeOpacity)/);
+  });
 
   it('hat Wappenfarben', () => {
     expect(CREST_COLOR_SETS.length).toBeGreaterThan(8);

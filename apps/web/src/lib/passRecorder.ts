@@ -8,6 +8,7 @@ import { rememberReplay } from './chronikStore';
 import { addTrophy, sanitizeTrophies, trophyFor } from './pokale';
 import { recordGameLearning } from './learnStore';
 import { passSyncSoon } from './playerPass';
+import { checkNotice } from './rewards';
 import { stampsFor } from './stamps';
 
 /*
@@ -208,9 +209,10 @@ export function usePassRecorder(options: {
   online?: { yourSeat: number | null; tournament: boolean; display?: boolean };
   /** Schwellen für „gewertet“ aus dem Steckbrief (`GameInfo.ratedAfter`). */
   ratedAfter?: { ms: number; moves: number };
-}): { trophy: boolean } {
+}): { trophy: boolean; reward: string | null } {
   const { session, gameId, seatScore, seriesRoundsDone, album, learning, online, ratedAfter } = options;
   const [trophy, setTrophy] = useState(false);
+  const [reward, setReward] = useState<string | null>(null);
   const started = useRef<{ id: string; at: number }>({ id: session.id, at: Date.now() });
   const done = useRef<string | null>(null);
   if (started.current.id !== session.id) started.current = { id: session.id, at: Date.now() };
@@ -268,12 +270,18 @@ export function usePassRecorder(options: {
       if (!countsAsGame(result, roundsDone)) return;
       const saved = saveRows(rows, seats);
       if (saved) setTrophy(true);
+      // Stufenaufstieg (#574): ruhige Zeile, nur wenn der aktive Pass mitgespielt hat (Gäste und „nicht anzeigen“ regelt `checkNotice`).
+      const activeId = passBook.activeId();
+      if (rows.some((row) => row.passId === null || row.passId === activeId)) setReward(checkNotice('game')?.text ?? null);
     } catch {
       // Das Partiebuch ist eine Zugabe und darf nie den Tisch stören.
     }
   }, [result, session, gameId, seatScore, seriesRoundsDone, learning, online, ratedAfter]);
   useEffect(() => {
-    if (!result) setTrophy(false);
+    if (!result) {
+      setTrophy(false);
+      setReward(null);
+    }
   }, [result]);
   // Sammelalbum (#148): Funde nach jeder Änderung (und einmal beim Öffnen des Tisches).
   const wantsAlbum = Boolean(album?.finds) && !online?.display;
@@ -296,5 +304,5 @@ export function usePassRecorder(options: {
     look([]);
     return session.subscribe((change) => look(change.events));
   }, [session, album, wantsAlbum, gameId, yourSeat, online]);
-  return { trophy };
+  return { trophy, reward };
 }

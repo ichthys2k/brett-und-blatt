@@ -26,6 +26,7 @@ export const CATEGORIES: readonly CategorySpec[] = [
       'chess',
       'four-player-chess',
       'checkers',
+      'dragon-towers',
       'go',
       'gomoku',
       'mill',
